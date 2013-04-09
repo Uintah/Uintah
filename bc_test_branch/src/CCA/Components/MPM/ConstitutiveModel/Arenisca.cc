@@ -34,11 +34,11 @@ which has some of the basic features needed for modeling geomaterials.
 To better explain the source code, the comments in this file frequently refer
 to the equations in the following three references:
 1. The Arenisca manual,
-2. R.M.	Brannon and S. Leelavanichkul, "A multi-stage return algorithm for
+2. R.M. Brannon and S. Leelavanichkul, "A multi-stage return algorithm for
    solving the classical damage component of constitutive models for rocks,
    ceramics, and other rock-like media", International Journal of Fracture,
    163, pp.133-149, 2010, and
-3. R.M.	Brannon, "Elements of Phenomenological Plasticity: Geometrical Insight,
+3. R.M. Brannon, "Elements of Phenomenological Plasticity: Geometrical Insight,
    Computational Algorithms, and Topics in Shock Physics", Shock Wave Science
    and Technology Reference Library: Solids I, Springer 2: pp. 189-274, 2007.
 
@@ -48,7 +48,7 @@ pressure-dependent strength (to model influence of friction at microscale
 sliding surfaces) and a cap yield function (to model influence of microscale
 porosity).
 
-*/ 
+*/
 
 /* NOTES
   1207 code control passed from Dr. Ali to James Colovos
@@ -59,26 +59,28 @@ porosity).
 //----------------suggested max line width (72char)-------------------->
 
 //----------JC DEFINE SECTION----------
+#define JC_ZETA_HARDENING
+#define JC_KAPPA_HARDENING
 //#define JC_ARENISCA_VERSION 0.1  //120826.1339
-#define JC_ARENISCA_VERSION 0.2  //120826.0827
-//#define JC_USE_BB_STATE_UPDATE
+//#define JC_ARENISCA_VERSION 0.2  //120826.0827
+#define JC_ARENISCA_VERSION 1.0  //121215.2310 JC & MH
 #define JC_USE_BB_DEFGRAD_UPDATE 2
+//#define CSM_PRESSURE_STABILIZATION
+//#define CSM_PORE_PRESSURE_INITIAL
 //#define JC_DEBUG_SMALL_TIMESTEP
-//#define JC_DEBUG_PARTICLE 249108234247
+//#define JC_DEBUG_PARTICLE 562958543486976 //Test 02_uniaxialstrainrotate
+//#define JC_DEBUG_PARTICLE 562958543486976 //Test 01_uniaxialstrainrotate
 //#define JC_DEBUG_DEBUG_PARTICLE 42501762304
 //#define JC_EPV
 #define JC_FREEZE_PARTICLE
 //#define JC_MAX_NESTED_RETURN
-//#define JC_DEBUG_FR_OUTSIDE_CAP
+//#define CSM_DEBUG_BISECTION
 //#define JC_LIMITER_PRINT
+//#define CSM_FORCE_MASSIVE_SUBCYCLING 10
 
 // INCLUDE SECTION: tells the preprocessor to include the necessary files
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#ifdef JC_USE_BB_STATE_UPDATE
-#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/InternalVariableModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/ModelState.h>
-#endif
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -94,6 +96,7 @@ porosity).
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <sci_values.h>
@@ -109,14 +112,67 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
   cout << "In Arenisca ver"<< JC_ARENISCA_VERSION;
+  //cout << endl
+  //     << "                                        ;1BB@B@B@@@B@8u:                        " << endl
+  //     << "                                   .Y@@@B@B@BB8GZMB@B@B@B@Mr                    " << endl
+  //     << "                                 Y@B@BB7.              :S@@B@Bi                 " << endl
+  //     << "                       BB.     EB@BG.                      rB@B@L               " << endl
+  //     << "                    iBOF@    5@B@L                            NB@Bi             " << endl
+  //     << "                     OB G  :B@Bv                                O@BM            " << endl
+  //     << "                   .@B@B@B@B@B  ;irr77777r77vL, .Yv77777777r7rr  :@B@           " << endl
+  //     << "                    B@BZS@@@2  :BBMMMMMMMMMMM@i ,@BMOMOMMMMMM@B    @@@          " << endl
+  //     << "                   L@B  i@@L   ,@E0q0PNPqPNPGB: .BGP0PNP0P0P08O     @B@         " << endl
+  //     << "                 uB5B. ,B@X    :B8qqXXSXSXkPNB: .@EqkXkXXPkPqO8      @@@        " << endl
+  //     << "                @Z BZ  B@B     i@M8PqkPkXkqPOBr :BMNPkXkPkPPGB@      v@Bi       " << endl
+  //     << "              ;@r BN  7@B:        r8XXSPSPXZ5     :8PXkPkXkZU         B@B       " << endl
+  //     << "             2@  u@   @B@         iONkPkPkqG1     .M0kPSPkqGu         XB@       " << endl
+  //     << "            F@  :@    B@P         rMPXkXkXXOS     .BqqkXkXXO1         :@@i      " << endl
+  //     << "           Y@   @v    @@L         7MNSXkPXNGX     ,M0kPkXSN8F         .B@7      " << endl
+  //     << "          :@    B: v  B@7         rMPPSXkXPOk     ,BqXkPSPPO5         .@@7      " << endl
+  //     << "          @r   @@  B. @BX         7ONkXSXXq8k     ,M0kXkXXNGS         rB@.      " << endl
+  //     << "         @B  .BG   @. B@B         7MqPkPkXXOF     .BqPkXSPPO1         O@B       " << endl
+  //     << "        :B   B@       uB@.        7MNkPSPkqG5     .O0kXkXSN8F         @BN       " << endl
+  //     << "        BL   LB   E:   @@@        rMqPkXkPkG2     ,OPPSPkXPO5        MB@        " << endl
+  //     << "       r@     @  u@Z   :@BY       7M0XPSPSXXZOBBBMONqSPSPk0ME       7B@v        " << endl
+  //     << "       @v    .   @B     B@B7      v@ENXPSPkqX00Z0EPPSXkPXEO@i      i@@Z         " << endl
+  //     << "      :B     GM  OM    B@0@Bu      J@80XPkPkPXqXPkqkqkqXZMZ       vB@8          " << endl
+  //     << "      BM     B@  :B    .B i@BB      .OM800N0qEq0q0q0qE0OBY       MB@1           " << endl
+  //     << "      @.     B    @,    Gq .@B@v      Y@@BBMBMBBBMBMBB@M,      L@@@:            " << endl
+  //     << "     .B     .@    P@    F@i  UB@B2      .. ............      jB@BS              " << endl
+  //     << "     2@  B.  P@    :    @B1    1@B@Br                     r@@B@F                " << endl
+  //     << "     @u  @:   B@      B@Br       rB@B@Bqi.           ,78B@B@B7                  " << endl
+  //     << "     @:  Gr    B2 ,8uB@B@           i0@B@B@B@B@B@B@@@@@@@Gr                     " << endl
+  //     << "     @   7Y    XBUP@B@@@                .ru8B@B@B@MZjr.                         " << endl
+  //     << "     B         B@B@B@B.                                                         " << endl
+  //     << "     @02    ..BM U@@@@      :LLrjM           ,.           r8,       N@.         " << endl
+  //     << "     B@@,r@ @@@   .B@     GB@B@B@BE      F@B@B@@@@7      :@B@      2@B@         " << endl
+  //     << "     uB@B@B@B@.         Y@B@i   B@k    qB@8:   .ru.      @B@B;     @B@B         " << endl
+  //     << "      U@@B@B@.         M@@7      .    NB@                B@@@O    :B@@@r        " << endl
+  //     << "       2B@B@:         B@B             M@@7              7@BEB@    B@E0BO        " << endl
+  //     << "        :B7          k@B               1@@@B@B@BF       @BE @B:  :@B .@B        " << endl
+  //     << "                     @B7                  .:iLZ@B@X    :@@, B@B  @@O  B@.       " << endl
+  //     << "                    :@@                         iB@;   B@@  r@@ :B@   @BG       " << endl
+  //     << "                     @Bi        ur               @BJ  .@@U   @BO@@2   Y@B       " << endl
+  //     << "                     P@BY    ;@B@B  iB@i       :@B@   8B@    u@B@B     B@5      " << endl
+  //     << "                      7@@@B@B@B@:    BB@@@MOB@B@B5    B@@     B@B7     @B@      " << endl
+  //     << "                        :Lk5v.         ;ZB@B@BU,      Z@r     :Ov      .@B.     " << endl
+  //     << endl
+  //     << "    University of Utah, Mechanical Engineering, Computational Solid Mechanics   " << endl << endl;
+
+#ifdef JC_ZETA_HARDENING
+  cout << ",JC_ZETA_HARDENING";
+#endif
+#ifdef JC_KAPPA_HARDENING
+  cout << ",JC_KAPPA_HARDENING";
+#endif
 #ifdef JC_DEBUG_PARTICLE
   cout << ",JC_DEBUG_PARTICLE=" << JC_DEBUG_PARTICLE ;
 #endif
-#ifdef JC_USE_BB_STATE_UPDATE
-  cout << ",JC_USE_BB_STATE_UPDATE";
-#endif
 #ifdef JC_USE_BB_DEFGRAD_UPDATE
   cout << ",JC_USE_BB_DEFGRAD_UPDATE=" << JC_USE_BB_DEFGRAD_UPDATE;
+#endif
+#ifdef CSM_PORE_PRESSURE_INITIAL
+  cout << ",PORE_PRESSURE_INITIAL";
 #endif
 #ifdef JC_DEBUG_SMALL_TIMESTEP
   cout << ",JC_DEBUG_SMALL_TIMESTEP";
@@ -133,85 +189,108 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
 #ifdef JC_DEBUG_FR_OUTSIDE_CAP
   cout << ",JC_DEBUG_FR_OUTSIDE_CAP";
 #endif
+#ifdef CSM_DEBUG_BISECTION
+  cout << ",CSM_DEBUG_BISECTION";
+#endif
 #ifdef JC_LIMITER_PRINT
   cout << ",JC_LIMITER_PRINT";
 #endif
   cout << endl;
-  
-  ps->require("FSLOPE",d_initialData.FSLOPE);
-  ps->require("FSLOPE_p",d_initialData.FSLOPE_p);
-  ps->require("hardening_modulus",d_initialData.hardening_modulus);
-  ps->require("CR",d_initialData.CR);
-  ps->require("p0_crush_curve",d_initialData.p0_crush_curve);
-  ps->require("p1_crush_curve",d_initialData.p1_crush_curve);
-  ps->require("p3_crush_curve",d_initialData.p3_crush_curve);
-  ps->require("p4_fluid_effect",d_initialData.p4_fluid_effect);
-  ps->require("fluid_B0",d_initialData.fluid_B0);
-  ps->require("fluid_pressure_initial",d_initialData.fluid_pressure_initial);
-  ps->require("subcycling_characteristic_number",d_initialData.subcycling_characteristic_number);
-  ps->require("kinematic_hardening_constant",d_initialData.kinematic_hardening_constant);
-  ps->require("PEAKI1",d_initialData.PEAKI1);
-  ps->require("B0",d_initialData.B0);
-  ps->require("G0",d_initialData.G0);
-  
-#ifdef JC_USE_BB_STATE_UPDATE
-  d_intvar = UintahBB::InternalVariableModelFactory::create(ps);
-  if(!d_intvar){
-    ostringstream desc;
-    desc << "**ERROR** Internal error while creating Arenisca_BB->InternalVariableModelFactory." << endl;
-    throw InternalError(desc.str(), __FILE__, __LINE__);
-  }
-#endif
+
+  one_third      = 1.0/(3.0);
+  two_third      = 2.0/(3.0);
+  four_third     = 4.0/(3.0);
+  sqrt_three     = sqrt(3.0);
+  one_sqrt_three = 1.0/sqrt_three;
+
+  ps->require("FSLOPE",d_cm.FSLOPE);
+  ps->require("FSLOPE_p",d_cm.FSLOPE_p);  // not used
+  ps->require("hardening_modulus",d_cm.hardening_modulus); //not used
+  ps->require("CR",d_cm.CR); // not used
+  ps->require("T1_rate_dependence",d_cm.T1_rate_dependence);
+  ps->require("T2_rate_dependence",d_cm.T2_rate_dependence);
+  ps->require("p0_crush_curve",d_cm.p0_crush_curve);
+  ps->require("p1_crush_curve",d_cm.p1_crush_curve);
+  ps->require("p3_crush_curve",d_cm.p3_crush_curve);
+  ps->require("p4_fluid_effect",d_cm.p4_fluid_effect); // b1
+  ps->require("fluid_B0",d_cm.fluid_B0);               // kf
+  ps->require("fluid_pressure_initial",d_cm.fluid_pressure_initial);             // Pf0
+  ps->require("gruneisen_parameter",d_cm.gruneisen_parameter);             // Pf0
+  ps->require("subcycling_characteristic_number",d_cm.subcycling_characteristic_number);
+  ps->require("kinematic_hardening_constant",d_cm.kinematic_hardening_constant); // not used
+  ps->require("PEAKI1",d_cm.PEAKI1);
+  ps->require("B0",d_cm.B0);
+  ps->require("G0",d_cm.G0);
+
   initializeLocalMPMLabels();
 }
 Arenisca::Arenisca(const Arenisca* cm)
   : ConstitutiveModel(cm)
 {
-  cout << "in Arenisca2";
-  d_initialData.FSLOPE = cm->d_initialData.FSLOPE;
-  d_initialData.FSLOPE_p = cm->d_initialData.FSLOPE_p;
-  d_initialData.hardening_modulus = cm->d_initialData.hardening_modulus;
-  d_initialData.CR = cm->d_initialData.CR;
-  d_initialData.p0_crush_curve = cm->d_initialData.p0_crush_curve;
-  d_initialData.p1_crush_curve = cm->d_initialData.p1_crush_curve;
-  d_initialData.p3_crush_curve = cm->d_initialData.p3_crush_curve;
-  d_initialData.p4_fluid_effect = cm->d_initialData.p4_fluid_effect;
-  d_initialData.fluid_B0 = cm->d_initialData.fluid_B0;
-  d_initialData.fluid_pressure_initial = cm->d_initialData.fluid_pressure_initial;
-  d_initialData.subcycling_characteristic_number = cm->d_initialData.subcycling_characteristic_number;
-  d_initialData.kinematic_hardening_constant = cm->d_initialData.kinematic_hardening_constant;
-  d_initialData.PEAKI1 = cm->d_initialData.PEAKI1;
-  d_initialData.B0 = cm->d_initialData.B0;
-  d_initialData.G0 = cm->d_initialData.G0;
-  
-#ifdef JC_USE_BB_STATE_UPDATE
-  d_intvar = UintahBB::InternalVariableModelFactory::createCopy(cm->d_intvar);
-#endif
-  
+  one_third      = 1.0/(3.0);
+  two_third      = 2.0/(3.0);
+  four_third     = 4.0/(3.0);
+  sqrt_three     = sqrt(3.0);
+  one_sqrt_three = 1.0/sqrt_three;
+
+  d_cm.FSLOPE = cm->d_cm.FSLOPE;
+  d_cm.FSLOPE_p = cm->d_cm.FSLOPE_p; // not used
+  d_cm.hardening_modulus = cm->d_cm.hardening_modulus;  // not used
+  d_cm.CR = cm->d_cm.CR;  // not used
+  d_cm.T1_rate_dependence = cm->d_cm.T1_rate_dependence;
+  d_cm.T2_rate_dependence = cm->d_cm.T2_rate_dependence;
+  d_cm.p0_crush_curve = cm->d_cm.p0_crush_curve;
+  d_cm.p1_crush_curve = cm->d_cm.p1_crush_curve;
+  d_cm.p3_crush_curve = cm->d_cm.p3_crush_curve;
+  d_cm.p4_fluid_effect = cm->d_cm.p4_fluid_effect; // b1
+  d_cm.fluid_B0 = cm->d_cm.fluid_B0;
+  d_cm.fluid_pressure_initial = cm->d_cm.fluid_pressure_initial; //pf0
+  d_cm.gruneisen_parameter = cm->d_cm.gruneisen_parameter; //pf0
+  d_cm.subcycling_characteristic_number = cm->d_cm.subcycling_characteristic_number;
+  d_cm.kinematic_hardening_constant = cm->d_cm.kinematic_hardening_constant;  // not supported
+  d_cm.PEAKI1 = cm->d_cm.PEAKI1;
+  d_cm.B0 = cm->d_cm.B0;
+  d_cm.G0 = cm->d_cm.G0;
+
   initializeLocalMPMLabels();
 }
 // DESTRUCTOR
 Arenisca::~Arenisca()
 {
-  VarLabel::destroy(pPlasticStrainLabel);
-  VarLabel::destroy(pPlasticStrainLabel_preReloc);
-  VarLabel::destroy(pPlasticStrainVolLabel);
-  VarLabel::destroy(pPlasticStrainVolLabel_preReloc);
-  VarLabel::destroy(pElasticStrainVolLabel);
-  VarLabel::destroy(pElasticStrainVolLabel_preReloc);
-  VarLabel::destroy(pKappaLabel);
-  VarLabel::destroy(pBackStressLabel);
-  VarLabel::destroy(pBackStressLabel_preReloc);
-  VarLabel::destroy(pBackStressIsoLabel);
-  VarLabel::destroy(pBackStressIsoLabel_preReloc);
-  VarLabel::destroy(pKappaFlagLabel);
-  VarLabel::destroy(pKappaFlagLabel_preReloc);
   VarLabel::destroy(pLocalizedLabel);
   VarLabel::destroy(pLocalizedLabel_preReloc);
-  
-#ifdef JC_USE_BB_STATE_UPDATE
-    delete d_intvar;
-#endif
+  VarLabel::destroy(pAreniscaFlagLabel);
+  VarLabel::destroy(pAreniscaFlagLabel_preReloc);
+  VarLabel::destroy(pScratchDouble1Label);
+  VarLabel::destroy(pScratchDouble1Label_preReloc);
+  VarLabel::destroy(pScratchDouble2Label);
+  VarLabel::destroy(pScratchDouble2Label_preReloc);
+  VarLabel::destroy(pPorePressureLabel);
+  VarLabel::destroy(pPorePressureLabel_preReloc);
+  VarLabel::destroy(pepLabel);               //Plastic Strain Tensor
+  VarLabel::destroy(pepLabel_preReloc);
+  VarLabel::destroy(pevpLabel);              //Plastic Volumetric Strain
+  VarLabel::destroy(pevpLabel_preReloc);
+  VarLabel::destroy(peveLabel);              //Elastic Volumetric Strain
+  VarLabel::destroy(peveLabel_preReloc);
+  VarLabel::destroy(pCapXLabel);
+  VarLabel::destroy(pCapXLabel_preReloc);
+  VarLabel::destroy(pCapXQSLabel);
+  VarLabel::destroy(pCapXQSLabel_preReloc);
+  VarLabel::destroy(pKappaLabel);
+  VarLabel::destroy(pKappaLabel_preReloc);
+  VarLabel::destroy(pStressQSLabel);
+  VarLabel::destroy(pStressQSLabel_preReloc);
+  VarLabel::destroy(pScratchMatrixLabel);
+  VarLabel::destroy(pScratchMatrixLabel_preReloc);
+  VarLabel::destroy(pZetaLabel);
+  VarLabel::destroy(pZetaLabel_preReloc);
+  VarLabel::destroy(pZetaQSLabel);
+  VarLabel::destroy(pZetaQSLabel_preReloc);
+  VarLabel::destroy(pIotaLabel);
+  VarLabel::destroy(pIotaLabel_preReloc);
+  VarLabel::destroy(pIotaQSLabel);
+  VarLabel::destroy(pIotaQSLabel_preReloc);
 }
 
 //adds problem specification values to checkpoint data for restart
@@ -222,25 +301,24 @@ void Arenisca::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
     cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","Arenisca");
   }
-  cm_ps->appendElement("FSLOPE",d_initialData.FSLOPE);
-  cm_ps->appendElement("FSLOPE_p",d_initialData.FSLOPE_p);
-  cm_ps->appendElement("hardening_modulus",d_initialData.hardening_modulus);
-  cm_ps->appendElement("CR",d_initialData.CR);
-  cm_ps->appendElement("p0_crush_curve",d_initialData.p0_crush_curve);
-  cm_ps->appendElement("p1_crush_curve",d_initialData.p1_crush_curve);
-  cm_ps->appendElement("p3_crush_curve",d_initialData.p3_crush_curve);
-  cm_ps->appendElement("p4_fluid_effect",d_initialData.p4_fluid_effect);
-  cm_ps->appendElement("fluid_B0",d_initialData.fluid_B0);
-  cm_ps->appendElement("fluid_pressure_initial",d_initialData.fluid_pressure_initial);
-  cm_ps->appendElement("subcycling_characteristic_number",d_initialData.subcycling_characteristic_number);
-  cm_ps->appendElement("kinematic_hardening_constant",d_initialData.kinematic_hardening_constant);
-  cm_ps->appendElement("PEAKI1",d_initialData.PEAKI1);
-  cm_ps->appendElement("B0",d_initialData.B0);
-  cm_ps->appendElement("G0",d_initialData.G0);
-
-#ifdef JC_USE_BB_STATE_UPDATE
-   d_intvar->outputProblemSpec(cm_ps);
-#endif
+  cm_ps->appendElement("FSLOPE",d_cm.FSLOPE);
+  cm_ps->appendElement("FSLOPE_p",d_cm.FSLOPE_p); //not used
+  cm_ps->appendElement("hardening_modulus",d_cm.hardening_modulus); //not used
+  cm_ps->appendElement("CR",d_cm.CR); //not used
+  cm_ps->appendElement("T1_rate_dependence",d_cm.T1_rate_dependence);
+  cm_ps->appendElement("T2_rate_dependence",d_cm.T2_rate_dependence);
+  cm_ps->appendElement("p0_crush_curve",d_cm.p0_crush_curve);
+  cm_ps->appendElement("p1_crush_curve",d_cm.p1_crush_curve);
+  cm_ps->appendElement("p3_crush_curve",d_cm.p3_crush_curve);
+  cm_ps->appendElement("p4_fluid_effect",d_cm.p4_fluid_effect); // b1
+  cm_ps->appendElement("fluid_B0",d_cm.fluid_B0); // kf
+  cm_ps->appendElement("fluid_pressure_initial",d_cm.fluid_pressure_initial); //Pf0
+  cm_ps->appendElement("gruneisen_parameter",d_cm.gruneisen_parameter); //Pf0
+  cm_ps->appendElement("subcycling_characteristic_number",d_cm.subcycling_characteristic_number);
+  cm_ps->appendElement("kinematic_hardening_constant",d_cm.kinematic_hardening_constant); // not used
+  cm_ps->appendElement("PEAKI1",d_cm.PEAKI1);
+  cm_ps->appendElement("B0",d_cm.B0);
+  cm_ps->appendElement("G0",d_cm.G0);
 }
 
 Arenisca* Arenisca::clone()
@@ -254,116 +332,219 @@ void Arenisca::initializeCMData(const Patch* patch,
 {
   // Initialize the variables shared by all constitutive models
   // This method is defined in the ConstitutiveModel base class.
-  initSharedDataForExplicit(patch, matl, new_dw);
-  
+  /////
   // Allocates memory for internal state variables at beginning of run.
+
+  // Get the particles in the current patch
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(),patch);
-  ParticleVariable<double> pPlasticStrain;
-  ParticleVariable<double> pPlasticStrainVol;
-  ParticleVariable<double> pElasticStrainVol;
-  ParticleVariable<double> pKappa;
-  ParticleVariable<Matrix3> pBackStress;
-  ParticleVariable<Matrix3> pBackStressIso;
-  ParticleVariable<double> pKappaFlag;
-  ParticleVariable<int> pLocalized;
-  new_dw->allocateAndPut(pPlasticStrain,    pPlasticStrainLabel,    pset);
-  new_dw->allocateAndPut(pPlasticStrainVol, pPlasticStrainVolLabel, pset);
-  new_dw->allocateAndPut(pElasticStrainVol, pElasticStrainVolLabel, pset);
-  new_dw->allocateAndPut(pKappa,            pKappaLabel,            pset);
-  new_dw->allocateAndPut(pBackStress,       pBackStressLabel,       pset);
-  new_dw->allocateAndPut(pBackStressIso,    pBackStressIsoLabel,    pset);
-  new_dw->allocateAndPut(pKappaFlag,        pKappaFlagLabel,        pset);
-  new_dw->allocateAndPut(pLocalized,        pLocalizedLabel,        pset);
+
+  Matrix3 Identity; Identity.Identity();
+  
+ 
+#ifdef CSM_PORE_PRESSURE_INITIAL
+  ParticleVariable<double>  pdTdt;
+  constParticleVariable<Matrix3> pDefGrad;
+  ParticleVariable<Matrix3> //pDefGrad,
+                            pStress;
+  
+  new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
+  //new_dw->get(pDefGrad,    lb->pDeformationMeasureLabel, pset);
+  new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
+  
+  // To fix : For a material that is initially stressed we need to
+  // modify the stress tensors to comply with the initial stress state
   ParticleSubset::iterator iter = pset->begin();
-  Matrix3 Identity;
-  Identity.Identity();
-  for(;iter != pset->end();iter++){
-    pPlasticStrain[*iter] = 0.0;
-    pPlasticStrainVol[*iter] = 0.0;
-    pElasticStrainVol[*iter] = 0.0;
-    pKappa[*iter] = ( d_initialData.p0_crush_curve +
-      d_initialData.CR*d_initialData.FSLOPE*d_initialData.PEAKI1 )/
-      (d_initialData.CR*d_initialData.FSLOPE+1.0);
-    pBackStress[*iter].set(0.0);
-    pBackStressIso[*iter] = Identity*d_initialData.fluid_pressure_initial;
-    pKappaFlag[*iter] = 0.0;
-    pLocalized[*iter] = 0.0;
+  for(; iter != pset->end(); iter++){
+    pdTdt[*iter] = 0.0;
+    //pDefGrad[*iter] = Identity;
+    pStress[*iter] = - one_third * d_cm.fluid_pressure_initial * Identity;
+  }
+#else
+  initSharedDataForExplicit(patch, matl, new_dw);
+#endif
+  // Allocate particle variables
+  ParticleVariable<int>     pLocalized,
+                            pAreniscaFlag;
+           
+  ParticleVariable<double>  pScratchDouble1, // Developer tool
+                            pScratchDouble2, // Developer tool
+                            pPorePressure,   // Plottable fluid pressure
+                            pevp,            // Plastic Volumetric Strain
+                            peve,            // Elastic Volumetric Strain
+                            pCapX,           // I1 of cap intercept
+                            pCapXQS,         // I1 of cap intercept, quasistatic
+                            pKappa,          // Not used
+                            pZeta,           // Trace of isotropic Backstress
+                            pZetaQS,         // Trace of isotropic Backstress, quasistatic
+                            pIota,           // void variable
+                            pIotaQS;         // void variable, quasistatic
+  ParticleVariable<Matrix3> pStressQS,       // stress, quasistatic
+                            pScratchMatrix,  // Developer tool
+                            pep;             // Plastic Strain Tensor
+
+  new_dw->allocateAndPut(pLocalized,      pLocalizedLabel,      pset);
+  new_dw->allocateAndPut(pAreniscaFlag,   pAreniscaFlagLabel,   pset);
+  new_dw->allocateAndPut(pScratchDouble1, pScratchDouble1Label, pset);
+  new_dw->allocateAndPut(pScratchDouble2, pScratchDouble2Label, pset);
+  new_dw->allocateAndPut(pPorePressure,   pPorePressureLabel,   pset);
+  new_dw->allocateAndPut(pep,             pepLabel,             pset);
+  new_dw->allocateAndPut(pevp,            pevpLabel,            pset);
+  new_dw->allocateAndPut(peve,            peveLabel,            pset);
+  new_dw->allocateAndPut(pCapX,           pCapXLabel,           pset);
+  new_dw->allocateAndPut(pCapXQS,         pCapXQSLabel,         pset);
+  new_dw->allocateAndPut(pKappa,          pKappaLabel,          pset);  //not used?
+  new_dw->allocateAndPut(pZeta,           pZetaLabel,           pset);
+  new_dw->allocateAndPut(pZetaQS,         pZetaQSLabel,         pset);
+  new_dw->allocateAndPut(pIota,           pIotaLabel,           pset);
+  new_dw->allocateAndPut(pIotaQS,         pIotaQSLabel,         pset);
+  new_dw->allocateAndPut(pStressQS,       pStressQSLabel,  pset);
+  new_dw->allocateAndPut(pScratchMatrix,  pScratchMatrixLabel,  pset);
+  
+  for(ParticleSubset::iterator iter = pset->begin();
+      iter != pset->end();iter++){
+    pLocalized[*iter] = 0;
+    pAreniscaFlag[*iter] = 0;
+    pScratchDouble1[*iter] = 0;
+    pScratchDouble2[*iter] = 0;
+    pPorePressure[*iter] = d_cm.fluid_pressure_initial;
+    pevp[*iter] = 0.0;
+    peve[*iter] = 0.0;
+    pCapX[*iter] = computeX(0.0);
+    pCapXQS[*iter] = computeX(0.0);
+    pKappa[*iter] = computeKappa(pCapX[*iter]);
+    pZeta[*iter] = -3.0 * d_cm.fluid_pressure_initial;   //MH: Also need to initialize I1 to equal zeta
+    pZetaQS[*iter] = -3.0 * d_cm.fluid_pressure_initial; //MH: Also need to initialize I1 to equal zeta
+    pIota[*iter] = 0.0;
+    pIotaQS[*iter] = 0.0;
+    pStressQS[*iter].set(0.0);
+    pScratchMatrix[*iter].set(0.0);
+    pep[*iter].set(0.0);
   }
   computeStableTimestep(patch, matl, new_dw);
-#ifdef JC_USE_BB_STATE_UPDATE
-  d_intvar->initializeInternalVariable(pset, new_dw);
-#endif
 }
 
-//T2D: remove function?
+//May be used in the future
 void Arenisca::allocateCMDataAdd(DataWarehouse* new_dw,
-                                         ParticleSubset* addset,
-          map<const VarLabel*, ParticleVariableBase*>* newState,
-                                         ParticleSubset* delset,
-                                         DataWarehouse* old_dw)
+                                 ParticleSubset* addset,
+            map<const VarLabel*, ParticleVariableBase*>* newState,
+                                 ParticleSubset* delset,
+                                 DataWarehouse* old_dw)
 {
-  //Needed by ConstitutiveModelFactory.cc:116
-  #ifdef JC_USE_BB_STATE_UPDATE
-    d_intvar->allocateCMDataAdd(new_dw,addset, newState, delset, old_dw);
-  #endif
 }
 
 // Compute stable timestep based on both the particle velocities
 // and wave speed
 void Arenisca::computeStableTimestep(const Patch* patch,
-                                             const MPMMaterial* matl,
-                                             DataWarehouse* new_dw)
+                                     //ParticleSubset* pset, //T2D: this should be const
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* new_dw)
 {
-  Vector dx = patch->dCell();
-  int dwi = matl->getDWIndex();
-
+  // MH: For fluid-effects or non-linear elasticity, the bulk modulus may is a function
+  //     of strain and/or pressure.  We calculate this at the beginning of the step
+  //     and hold it constant for all substeps.  This ensures that the stable time step
+  //     as well as the the trial stress increment for the step are consistent with the
+  //     calculations in each substep.  A more sophisticated approach would be to improve
+  //     the algorithm to allow for a different value of the bulk modulus for each substep.
+  //     To avoid needing the material state (i.e. the strain relative to ev0) for each
+  //     particle, the stable time step is computed with the conservative estimate that
+  //     bulk = B0 + B1, which should be greater than the K_eng model for the bulk modulus
+  //     of the saturated material for most input properties.
+  //
+  //define and initialize some variables
+  int     dwi = matl->getDWIndex();
+  double  c_dil = 0.0,
+          bulk = d_cm.B0 + d_cm.p4_fluid_effect, // bulk = B0 + B1
+          shear= d_cm.G0;                        // shear modulus
+  Vector  dx = patch->dCell(),
+          WaveSpeed(1.e-12,1.e-12,1.e-12);       // what is this doing?
+#ifdef JC_DEBUG_SMALL_TIMESTEP
+  Vector  idvel(1,1,1),
+          vbulk(1,1,1),
+          vshear(1,1,1);
+#endif
   // Get the particles in the current patch
   ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
 
   // Get particles mass, volume, and velocity
-  constParticleVariable<double> pmass, pvolume;
+  constParticleVariable<double> pmass,
+                                pvolume;
+  constParticleVariable<long64> pParticleID;
   constParticleVariable<Vector> pvelocity;
-  new_dw->get(pmass,     lb->pMassLabel,     pset);
-  new_dw->get(pvolume,   lb->pVolumeLabel,   pset);
-  new_dw->get(pvelocity, lb->pVelocityLabel, pset);
 
-  double c_dil = 0.0;
-  Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-//  Vector idvel(1,1,1);
-//T2D: Include fluid effects in initial timestep calculation
-  double bulk = d_initialData.B0;
-  double shear= d_initialData.G0;
+  new_dw->get(pmass,       lb->pMassLabel,       pset);
+  new_dw->get(pvolume,     lb->pVolumeLabel,     pset);
+  new_dw->get(pParticleID, lb->pParticleIDLabel, pset);
+  new_dw->get(pvelocity,   lb->pVelocityLabel,   pset);
 
-  // loop over the particles
+  // Allocate temporary particle variables
+  ParticleVariable<double> rho_cur;
+  new_dw->allocateTemporary(rho_cur,      pset);
+
+  // loop over the particles in the patch
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
-     particleIndex idx = *iter;
+    particleIndex idx = *iter;
 
-     // Compute wave speed + particle velocity at each particle,
-     // store the maximum
-     c_dil = sqrt((bulk+4.0*shear/3.0)*pvolume[idx]/pmass[idx]);
-/*     if(c_dil+fabs(pvelocity[idx].x()) > WaveSpeed.x()) idvel.x(idx);
-     if(c_dil+fabs(pvelocity[idx].y()) > WaveSpeed.y()) idvel.y(idx);
-     if(c_dil+fabs(pvelocity[idx].z()) > WaveSpeed.z()) idvel.z(idx);*/
-     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
-    }
-    
-    // Compute the stable timestep based on maximum value of
-    // "wave speed + particle velocity"
-    WaveSpeed = dx/WaveSpeed;
-/*    cout << "pvel.x: " << pvelocity[idvel.x()].x() 
-         << "; wavespeed.x: " << WaveSpeed.x() << endl;
-    cout << "pvel.y: " << pvelocity[idvel.y()].y() 
-         << "; wavespeed.y: " << WaveSpeed.y() << endl;
-    cout << "pvel.z: " << pvelocity[idvel.z()].z() 
-         << "; wavespeed.z: " << WaveSpeed.z() << endl;*/
-    double delT_new = WaveSpeed.minComponent();
-    if(delT_new < 1.e-12)
-      new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel, patch->getLevel());
-    else
-      new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
+    rho_cur[idx] = pmass[idx]/pvolume[idx];
+
+    // Compute wave speed + particle velocity at each particle,
+    // store the maximum
+    c_dil = sqrt((bulk+4.0*shear/3.0)/rho_cur[idx]);
+
+#ifdef JC_DEBUG_SMALL_TIMESTEP
+     if(c_dil+fabs(pvelocity[idx].x()) > WaveSpeed.x()){
+       idvel.x(idx); vbulk.x(bulk); vshear.x(shear);
+     }
+     if(c_dil+fabs(pvelocity[idx].y()) > WaveSpeed.y()){
+       idvel.y(idx); vbulk.y(bulk); vshear.y(shear);
+     }
+     if(c_dil+fabs(pvelocity[idx].z()) > WaveSpeed.z()){
+       idvel.z(idx); vbulk.z(bulk); vshear.z(shear);
+     }
+#endif
+    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+  }
+
+  // Compute the stable timestep based on maximum value of
+  // "wave speed + particle velocity"
+  WaveSpeed = dx/WaveSpeed;
+
+#ifdef JC_DEBUG_SMALL_TIMESTEP
+  //cout <<"delT_new="<<delT_new;
+  //cout <<"dx="<<dx<<endl;
+  if(delT_new==WaveSpeed.x()){
+    cout << "pvel.x=" << pvelocity[idvel.x()].x()
+         << ",wavespeed.x=" << WaveSpeed.x()
+         << ",bulk=" << vbulk.x()
+         << ",rho=" << rho_cur[idvel.x()]  << endl;
+  }
+  else if(delT_new==WaveSpeed.y()){
+    cout << "pvel.y: " << pvelocity[idvel.y()].y()
+         << ",wavespeed.y=" << WaveSpeed.y()
+         << ",bulk=" << vbulk.y()
+         << ",rho=" << rho_cur[idvel.y()] << endl;
+  }
+  else if(delT_new==WaveSpeed.z()){
+    cout << "pvel.z: " << pvelocity[idvel.z()].z()
+         << ",wavespeed.z=" << WaveSpeed.z()
+         << ",bulk=" << vbulk.z()
+         << ",rho=" << rho_cur[idvel.z()]  << endl;
+  }
+  else
+    cout << "ERROR in JC_DEBUG_SMALL_TIMESTEP" <<endl;
+#endif
+
+  //double delT_new = WaveSpeed.minComponent();
+  //new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
+
+  //cout<<"CST:delT_new="<<delT_new<<endl;
+
+  //if(delT_new < 1.e-12) //T2D: Should this be here?
+  //  new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel, patch->getLevel());
+  //else
+  //  new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
 }
 
 // ------------------------------------- BEGIN COMPUTE STRESS TENSOR FUNCTION
@@ -379,1685 +560,518 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                            DataWarehouse* new_dw)
 {
   // Define some constants
-  double one_third = 1.0/(3.0);
-  double two_third = 2.0/(3.0);
-  double four_third = 4.0/(3.0);
-  double sqrt_three = sqrt(3.0);
-  double one_sqrt_three = 1.0/sqrt_three;
+  Matrix3 Identity; Identity.Identity();
+
+  // Get the initial density
+  double rho_orig = matl->getInitialDensity();
+
+  // Get the Arenisca model parameters
+  const double FSLOPE = d_cm.FSLOPE,        //yield function
+               //FSLOPE_p = d_cm.FSLOPE_p,  //flow function
+               //hardening_modulus = d_cm.hardening_modulus,
+               //CR = d_cm.CR,
+               //XXp0 = d_cm.p0_crush_curve,    // initial value of X, used to compute characteristic length
+               //p1 = d_cm.p1_crush_curve,
+               //p3 = d_cm.p3_crush_curve,
+               subcycling_characteristic_number = d_cm.subcycling_characteristic_number,
+               //fluid_B0 = d_cm.fluid_B0,
+               //kinematic_hardening_constant = d_cm.kinematic_hardening_constant,
+               PEAKI1 = d_cm.PEAKI1,
+               B0 = d_cm.B0,
+               //XXB1 = d_cm.p4_fluid_effect,
+               G0 = d_cm.G0;
+  
+  // Compute kinematics variables (pDefGrad_new, pvolume, pLocalized_new, pVelGrad_new)
+  // computeKinematics(patches, matl, old_dw, new_dw);
 
   // Global loop over each patch
   for(int p=0;p<patches->size();p++){
-	
+
     // Declare and initial value assignment for some variables
     const Patch* patch = patches->get(p);
-    Matrix3 Identity,D,tensorL(0.0);
-    Matrix3 velGrad_old(0.0);
-    Identity.Identity();
-    double J,c_dil=0.0,se=0.0;
-    Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-    Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-	
-    // Declare the interpolator variables (CPDI, GIMP, linear, etc)
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());  ///< nodes affected by particle
-    vector<Vector> d_S(interpolator->size());    ///< gradient of grid shape fxn
-    vector<double> S(interpolator->size());      ///< grid shape fxn (T2D: needed?)
+    Matrix3 D;
+
+    double J,
+           c_dil=0.0,
+           se=0.0;
+    Vector WaveSpeed(1.e-12,1.e-12,1.e-12); //used to calc. stable timestep
+    Vector dx = patch->dCell(); //used to calc. artificial viscosity and timestep
 
     // Get particle subset for the current patch
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-    // Declare some particle ISVs and field variables
-    ParticleVariable<Matrix3>      deformationGradient_new;
-    constParticleVariable<Matrix3> deformationGradient;
-    constParticleVariable<Matrix3> stress_old;
-    ParticleVariable<Matrix3>      stress_new;
-    constParticleVariable<Point>   px;
-    constParticleVariable<double>  pmass;
-    ParticleVariable<double>       pvolume,
-                                   p_q;
-    constParticleVariable<Vector>  pvelocity;
-	  constParticleVariable<Matrix3> psize;
-    ParticleVariable<double>       pdTdt;
-    constParticleVariable<double>  pPlasticStrain;
-    ParticleVariable<double>       pPlasticStrain_new;
-    constParticleVariable<double>  pPlasticStrainVol;
-    ParticleVariable<double>       pPlasticStrainVol_new;
-    constParticleVariable<double>  pElasticStrainVol;
-    ParticleVariable<double>       pElasticStrainVol_new;
-    constParticleVariable<double>  pKappa;
-    ParticleVariable<double>       pKappa_new;
-    constParticleVariable<Matrix3> pBackStress;
-    ParticleVariable<Matrix3>      pBackStress_new;
-    constParticleVariable<Matrix3> pBackStressIso;
-    ParticleVariable<Matrix3>      pBackStressIso_new;
-    constParticleVariable<double>  pKappaFlag;
-    ParticleVariable<double>       pKappaFlag_new;
-    constParticleVariable<int>     pLocalized;
-    ParticleVariable<int>          pLocalized_new;
-    ParticleVariable<Matrix3>      velGrad,
-                                   rotation,
-                                   trial_stress;
-    ParticleVariable<double>       f_trial,
-                                   rho_cur;
+    // Get the particle variables
     delt_vartype                   delT;
-#ifdef JC_USE_BB_STATE_UPDATE
-    d_intvar->getInternalVariable(pset, old_dw, pKappa);
-    d_intvar->allocateAndPutInternalVariable(pset, new_dw, pKappa_new);
-#endif
-    // Get, allocate, and put the particle variables
-    old_dw->get(delT,              lb->delTLabel,          getLevel(patches));
-    old_dw->get(pPlasticStrain,    pPlasticStrainLabel,    pset);
-    old_dw->get(pPlasticStrainVol, pPlasticStrainVolLabel, pset);
-    old_dw->get(pElasticStrainVol, pElasticStrainVolLabel, pset);
-    old_dw->get(pKappa,            pKappaLabel,            pset);
-    old_dw->get(pBackStress,       pBackStressLabel,       pset);
-    old_dw->get(pBackStressIso,    pBackStressIsoLabel,    pset);
-    old_dw->get(pKappaFlag,        pKappaFlagLabel,       pset);
-    old_dw->get(pLocalized,        pLocalizedLabel,        pset);
-	//all of the above must be initialized in initializeCMData()
-    new_dw->allocateAndPut(pPlasticStrain_new,    pPlasticStrainLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pPlasticStrainVol_new, pPlasticStrainVolLabel_preReloc, pset);
-    new_dw->allocateAndPut(pElasticStrainVol_new, pElasticStrainVolLabel_preReloc, pset);
-    new_dw->allocateAndPut(pKappa_new,            pKappaLabel_preReloc,            pset);
-    new_dw->allocateAndPut(pBackStress_new,       pBackStressLabel_preReloc,       pset);
-    new_dw->allocateAndPut(pBackStressIso_new,    pBackStressIsoLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pKappaFlag_new,       pKappaFlagLabel_preReloc,       pset);
-    new_dw->allocateAndPut(pLocalized_new,        pLocalizedLabel_preReloc,        pset);
-    Ghost::GhostType  gac   = Ghost::AroundCells;
-	// variables needed for computing kinematics and timestep size
-	//T2D: rearrange by use
-    old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(psize,               lb->pSizeLabel,               pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(stress_old,          lb->pStressLabel,             pset);
-    new_dw->allocateAndPut(stress_new, lb->pStressLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pvolume,    lb->pVolumeLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pdTdt,      lb->pdTdtLabel_preReloc,               pset);
-    new_dw->allocateAndPut(deformationGradient_new,
-                                       lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocateAndPut(p_q,        lb->p_qLabel_preReloc,                 pset);
-    new_dw->allocateTemporary(velGrad,      pset);
-    new_dw->allocateTemporary(rotation,     pset);
-    new_dw->allocateTemporary(trial_stress, pset);
-    new_dw->allocateTemporary(f_trial,      pset);
-    new_dw->allocateTemporary(rho_cur,      pset);
+    constParticleVariable<int>     pLocalized,
+                                   pAreniscaFlag;
+    constParticleVariable<double>  pScratchDouble1,
+                                   pScratchDouble2,
+                                   pPorePressure,
+                                   pmass,           //used for stable timestep
+                                   pevp,
+                                   peve,
+                                   pCapX, pCapXQS,
+                                   pKappa,
+                                   pZeta, pZetaQS,
+                                   pIota, pIotaQS;
+    constParticleVariable<long64>  pParticleID;
+    constParticleVariable<Vector>  pvelocity;
+    constParticleVariable<Matrix3> pScratchMatrix,
+                                   pep,
+                                   pDefGrad,
+                                   pStress_old, pStressQS_old,
+                                   pBackStress,
+                                   pBackStressIso;
+
+    old_dw->get(delT,            lb->delTLabel,   getLevel(patches));
+    old_dw->get(pLocalized,      pLocalizedLabel,              pset); //initializeCMData()
+    old_dw->get(pAreniscaFlag,   pAreniscaFlagLabel,           pset); //initializeCMData()
+    old_dw->get(pScratchDouble1, pScratchDouble1Label,         pset); //initializeCMData()
+    old_dw->get(pScratchDouble2, pScratchDouble2Label,         pset); //initializeCMData()
+    old_dw->get(pPorePressure,   pPorePressureLabel,           pset); //initializeCMData()
+    old_dw->get(pmass,           lb->pMassLabel,               pset);
+    old_dw->get(pevp,            pevpLabel,                    pset); //initializeCMData()
+    old_dw->get(peve,            peveLabel,                    pset); //initializeCMData()
+    old_dw->get(pCapX,           pCapXLabel,                   pset); //initializeCMData()
+    old_dw->get(pCapXQS,         pCapXQSLabel,                 pset); //initializeCMData()
+    old_dw->get(pKappa,          pKappaLabel,                  pset); //initializeCMData()
+    old_dw->get(pZeta,           pZetaLabel,                   pset); //initializeCMData()
+    old_dw->get(pZetaQS,         pZetaQSLabel,                 pset); //initializeCMData()
+    old_dw->get(pIota,           pIotaLabel,                   pset); //initializeCMData()
+    old_dw->get(pIotaQS,         pIotaQSLabel,                 pset); //initializeCMData()
+    old_dw->get(pParticleID,     lb->pParticleIDLabel,         pset);
+    old_dw->get(pvelocity,       lb->pVelocityLabel,           pset);
+    old_dw->get(pScratchMatrix,  pScratchMatrixLabel,          pset); //initializeCMData()
+    old_dw->get(pep,             pepLabel,                     pset); //initializeCMData()
+    old_dw->get(pDefGrad,        lb->pDeformationMeasureLabel, pset);
+    old_dw->get(pStress_old,     lb->pStressLabel,             pset); //initializeCMData()
+    old_dw->get(pStressQS_old,   pStressQSLabel,             pset); //initializeCMData()
+
+    // Get the particle variables from interpolateToParticlesAndUpdate() in SerialMPM
     
-    //get particle ID incase simulation errs
-       // Get the particle IDs, useful in case a simulation goes belly up
-    constParticleVariable<long64> pParticleID; 
-    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
+    constParticleVariable<double>  pvolume;
+    constParticleVariable<Matrix3> pVelGrad_new,
+                                   pDefGrad_new;
 
-    // Get the Arenisca model parameters
-    const double FSLOPE = d_initialData.FSLOPE;      //yield function
-    const double FSLOPE_p = d_initialData.FSLOPE_p;  //flow function
-    const double hardening_modulus = d_initialData.hardening_modulus;
-    const double CR = d_initialData.CR;
-    const double p0_crush_curve = d_initialData.p0_crush_curve;
-    const double p1_crush_curve = d_initialData.p1_crush_curve;
-    const double p3_crush_curve = d_initialData.p3_crush_curve;
-    const double p4_fluid_effect = d_initialData.p4_fluid_effect;
-    const double subcycling_characteristic_number = d_initialData.subcycling_characteristic_number;
-    const double fluid_B0 = d_initialData.fluid_B0;
-    const double kinematic_hardening_constant = d_initialData.kinematic_hardening_constant;
-    const double PEAKI1 = d_initialData.PEAKI1;
-//    double bulk = d_initialData.B0;
-    const double shear= d_initialData.G0;
+    new_dw->get(pvolume,        lb->pVolumeLabel_preReloc,  pset);
+    new_dw->get(pVelGrad_new,   lb->pVelGradLabel_preReloc, pset);
+    new_dw->get(pDefGrad_new,
+                lb->pDeformationMeasureLabel_preReloc,      pset);
+    
+    // Get the particle variables from compute kinematics
 
-    // Get the initial density
-    double rho_orig = matl->getInitialDensity();
+    ParticleVariable<int>     pLocalized_new,
+                              pAreniscaFlag_new;
+       
+    new_dw->allocateAndPut(pLocalized_new, pLocalizedLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pAreniscaFlag_new,   pAreniscaFlagLabel_preReloc,    pset);
+    
+    // Allocate particle variables used in ComputeStressTensor
+    ParticleVariable<double>  p_q,
+                              pdTdt,
+                              pScratchDouble1_new,
+                              pScratchDouble2_new,
+                              pPorePressure_new,
+                              pevp_new,
+                              peve_new,
+                              pCapX_new, pCapXQS_new,
+                              pKappa_new,
+                              pZeta_new, pZetaQS_new,
+                              pIota_new, pIotaQS_new;
+    ParticleVariable<Matrix3> pScratchMatrix_new,
+                              pep_new,
+                              pStress_new, pStressQS_new;
 
-    // Get the deformation gradients first.
-    constNCVariable<Vector> gvelocity;  //NCV=Node Centered Variable
-    new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
+    new_dw->allocateAndPut(p_q,                 lb->p_qLabel_preReloc,         pset);
+    new_dw->allocateAndPut(pdTdt,               lb->pdTdtLabel_preReloc,       pset);
+    new_dw->allocateAndPut(pScratchDouble1_new, pScratchDouble1Label_preReloc, pset);
+    new_dw->allocateAndPut(pScratchDouble2_new, pScratchDouble2Label_preReloc, pset);
+    new_dw->allocateAndPut(pPorePressure_new,   pPorePressureLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pevp_new,            pevpLabel_preReloc,            pset);
+    new_dw->allocateAndPut(peve_new,            peveLabel_preReloc,            pset);
+    new_dw->allocateAndPut(pCapX_new,           pCapXLabel_preReloc,           pset);
+    new_dw->allocateAndPut(pCapXQS_new,         pCapXQSLabel_preReloc,         pset);
+    new_dw->allocateAndPut(pKappa_new,          pKappaLabel_preReloc,          pset);
+    new_dw->allocateAndPut(pZeta_new,           pZetaLabel_preReloc,           pset);
+    new_dw->allocateAndPut(pZetaQS_new,         pZetaQSLabel_preReloc,         pset);
+    new_dw->allocateAndPut(pIota_new,           pIotaLabel_preReloc,           pset);
+    new_dw->allocateAndPut(pIotaQS_new,         pIotaQSLabel_preReloc,         pset);
+    new_dw->allocateAndPut(pScratchMatrix_new,  pScratchMatrixLabel_preReloc,  pset);
+    new_dw->allocateAndPut(pep_new,             pepLabel_preReloc,             pset);
+    new_dw->allocateAndPut(pStress_new,         lb->pStressLabel_preReloc,     pset);
+    new_dw->allocateAndPut(pStressQS_new,       pStressQSLabel_preReloc,       pset);
 
-    // Loop over the particles of the current patch to compute particle
-    // deformation gradient, volume, and density
+    // Allocate temporary particle variables
+    ParticleVariable<double>       f_trial_step,
+                                   rho_cur; //used for calc. of stable timestep
+    ParticleVariable<Matrix3>      rotation;
+    
+    new_dw->allocateTemporary(f_trial_step, pset);
+    new_dw->allocateTemporary(rho_cur,      pset);
+    new_dw->allocateTemporary(rotation,     pset);
+
+    // Loop over the particles of the current patch to compute particle density
+    //T2D: remove once stable timestep is made into a modular function
     for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;
 
-      //re-zero the velocity gradient:
-      pLocalized_new[idx]=pLocalized[idx];
-      tensorL.set(0.0);
-      if(!flag->d_axisymmetric){
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                   deformationGradient[idx]);
-        computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity);
-      } else {  // axi-symmetric kinematics
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                   psize[idx],deformationGradient[idx]);
-        // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity,px[idx]);
-      }
-      velGrad_old=velGrad[idx];
-      velGrad[idx]=tensorL;
-
-      int num_scs = 4;
-      Matrix3 one; one.Identity();
-#ifdef JC_USE_BB_DEFGRAD_UPDATE
-      // Improve upon first order estimate of deformation gradient
-      Matrix3 Amat = (velGrad_old + velGrad[idx])*(0.5*delT);
-      Matrix3 Finc = Amat.Exponential(JC_USE_BB_DEFGRAD_UPDATE);
-      Matrix3 Fnew = Finc*deformationGradient[idx];
-      deformationGradient_new[idx] = Fnew;
-#else
-      // Update the deformation gradient in a new way using subcycling
-      Matrix3 F=deformationGradient[idx];
-      double Lnorm_dt = tensorL.Norm()*delT;
-      num_scs = max(4,2*((int) Lnorm_dt));
-      if(num_scs > 1000){
-        cout << "NUM_SCS = " << num_scs << endl;
-      }
-      double dtsc = delT/(double (num_scs));
-      Matrix3 OP_tensorL_DT = one + tensorL*dtsc;
-      for(int n=0;n<num_scs;n++){
-        F=OP_tensorL_DT*F;
-      }
-      deformationGradient_new[idx]=F;
-      // Update the deformation gradient, Old First Order Way
-      // deformationGradient_new[idx]=(tensorL*delT+Identity)*deformationGradient[idx];
-#endif
-      
-      // Compute the Jacobian and delete the particle in the case of negative Jacobian
-      J = deformationGradient_new[idx].Determinant();
-      if (J<=0 || J>10){
-        cout<<"ERROR, negative J! "<<endl;
-        cout<<"pParticleID="<<pParticleID[idx]<<endl;
-        cout<<"deformationGradient_new="<<deformationGradient_new[idx]<<endl<<endl;
-        cout<<"J= "<<J<<endl;
-        cout<<"Fnew= "<<deformationGradient_new[idx]<<endl;
-        cout<<"Fold= "<<deformationGradient[idx]<<endl;
-        cout<<"L= "<<tensorL<<endl;
-        cout<<"num_scs= "<<num_scs<<endl;
-        pLocalized_new[idx] = -999;
-        cout<<"DELETING Arenisca particle " << endl;
-        J=1;
-        deformationGradient_new[idx] = one;
-        //throw InvalidValue("**ERROR**:Negative Jacobian", __FILE__, __LINE__);
-      }
-#ifdef JC_FREEZE_PARTICLE
-      if (J>4000){
-        cout << "WARNING, massive $J! " << "J=" << J
-        //     <<", DELETING particleID=" <<pParticleID[idx]<< endl; 
-        //pLocalized_new[idx] = -999;
-             <<",FREEZING particleID="<<pParticleID[idx]<<endl;
-        J = deformationGradient[idx].Determinant();
-        deformationGradient_new[idx] = deformationGradient[idx];
-      }
-#endif
-
-      // Update particle volume and density
-      pvolume[idx]=(pmass[idx]/rho_orig)*J;
+      // Update particle density
+      J = pDefGrad_new[idx].Determinant();
       rho_cur[idx] = rho_orig/J;
-      
     }
 
-    // Compute the initial value of R=\kappa-X (see "fig:CapEccentricity" and
-    // "eq:initialValueOfR" in the Arenisca manual)
-    double cap_r_initial = CR*FSLOPE*(PEAKI1-p0_crush_curve)/(1.0+CR*FSLOPE);
-
-    // Define two limitations for \kappa and X (see "eq:limitationForX" and
-    // "eq:limitationForKappa" in the Arenisca manual)
-    double min_kappa = 1.0e5 * p0_crush_curve;
-    double max_X = 0.00001 * p0_crush_curve;
-#ifdef JC_USE_BB_STATE_UPDATE
-    UintahBB::ModelState* state = scinew UintahBB::ModelState();
-    state->local_var[0] = 0.0;            // kappa value
-    state->local_var[1] = cap_r_initial;  // initial cap radius
-    state->local_var[2] = max_X;          // max_X
-    state->local_var[3] = 0.0;            // eps_v
-    state->local_var[4] = 0.0;            // Delta eps_v
-    state->local_var[5] = 1.0;            // scale factor for Delta eps_v    
-#endif
-
-   
     // Loop over the particles of the current patch to update particle
     // stress at the end of the current timestep along with all other
     // required data such plastic strain, elastic strain, cap position, etc.
 #ifdef JC_DEBUG_SMALL_TIMESTEP
-	  Vector idvel(1,1,1);   // temp
-    Vector vbulk(1,1,1);   // temp
-	  Vector vshear(1,1,1);  // temp
+    Vector idvel(1,1,1);   // temp
+      Vector vbulk(1,1,1);   // temp
+    Vector vshear(1,1,1);  // temp
 #endif
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;  //patch index
-      
+        //cout<<"pID="<<pParticleID[idx]<<endl;
+
         // A parameter to consider the thermal effects of the plastic work which
         // is not coded in the current source code. Further development of Arenisca
         // may ativate this feature.
         pdTdt[idx] = 0.0;
 
-        // pKappaFlag is a flag indicating if the particle has met any of the
-        // limit values on \kappa and X. (see "eq:limitationForX"
-        // and "eq:limitationForKappa" in the Arenisca manual)
-        // 1: met the max_X limitation, 2: met the min_kappa limitation, 0: otherwise
-        pKappaFlag_new[idx] = pKappaFlag[idx];
+        //Set scratch parameters to old values
+        pScratchDouble1_new[idx] = pScratchDouble1[idx];
+        pScratchDouble2_new[idx] = pScratchDouble2[idx];
+        pScratchMatrix_new[idx]  = pScratchMatrix[idx];
 
-        
-        // Apply the hardening modulus for the Drucker-Prager part
-        //T2D: add reference to manual
-        double PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*pPlasticStrain[idx];
-
-        // Compute the current value of cap_radius=R=\kappa-X (see "fig:CapEccentricity" and
-        // "eq:initialValueOfR" in the Arenisca manual)
-        double pKappa1=pKappa[idx];
-        double cap_radius=-CR*(FSLOPE*pKappa1-PEAKI1_hardening);
-  #ifdef JC_USE_BB_STATE_UPDATE
-        double cap_radius_fac = FSLOPE*pKappa1 - PEAKI1_hardening;
-        cap_radius=-CR*cap_radius_fac;
-  #endif
-
-        // Apply the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca manual).
-        // The condition of "pKappa1>PEAKI1_hardening/FSLOPE" in the following IF condition
-        // indicates that the limitation should be applied if cap_radius<0.
-        // cond_fixed_cap_radius is a flag which indicates if the limit has been met or not?
-        int cond_fixed_cap_radius = 0;
-        if (cap_radius<0.1*cap_r_initial || pKappa1>PEAKI1_hardening/FSLOPE){
-  #ifdef JC_LIMITER_PRINT
-          cout << "$R";
-  #endif
-          cout<<",pKappa1_old="<<pKappa1;
-          pKappa1 = pKappa1 - cap_radius + 0.1*cap_r_initial;
-          cout<<",pKappa1_new="<<pKappa1;
-          cap_radius=0.1*cap_r_initial;
-          cond_fixed_cap_radius = 1;
-        }
+        //Set currently unused porepressure value to previous value
+        pPorePressure_new[idx]   = pPorePressure[idx];
 
         // Compute the symmetric part of the velocity gradient
-        Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*.5;
+        Matrix3 D = (pVelGrad_new[idx] + pVelGrad_new[idx].Transpose())*.5;
 
-        // Use polar decomposition to compute the rotation and stretch tensors
+        // Use poYieldFxn:I1=-35.3311, J2=7516lar decomposition to compute the rotation and stretch tensors
         Matrix3 tensorR, tensorU;
-        deformationGradient[idx].polarDecompositionRMB(tensorU, tensorR);
+        pDefGrad[idx].polarDecompositionRMB(tensorU, tensorR);
         rotation[idx]=tensorR;
 
-//#ifdef jc_freeze_particle
-//        if(tensorU.MaxAbsElem()>15){
-//          pLocalized_new[idx] = -999;  //T2D: May need more here
-//          cout << ",maxUhit";
-//        }
-//#endif
-          
         // Compute the unrotated symmetric part of the velocity gradient
         D = (tensorR.Transpose())*(D*tensorR);
 
-        // Compute the effective bulk modulus based on the fluid effects
-        //  See Section 4 of the user guide for more information on the fluid effects
-        double bulk_temp = exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx]);
-        double bulk_initial = d_initialData.B0;
-        double bulk = bulk_initial + fluid_B0*
-             ( exp(p3_crush_curve+p4_fluid_effect)-1.0 ) * bulk_temp
-             / ( (bulk_temp-1.0)*(bulk_temp-1.0) );
+        //MH: the bulk modulus function will be a bilinear function depending
+        //    on the total strain relative to the zero fluid pressure strain, ev0
+        //    this is a change from the old function that used plastic strain
+        //    Since this bulk modulus is used to compute the substeps and trial
+        //    stress, it should be held constant over the entire step, and thus
+        //    is computed based on initial values.  We must also pass this value
+        //    of the bulk modulus to the computeStep function, since the volumetric
+        //    strain at the beginning of the step will not be available within the
+        //    substep.
 
-        // Apply the limitation for the effective bulk modulus
-        // (see "eq:limitationForKe" in the Arenisca manual).
-        if (bulk>5.0*bulk_initial) {
-          //cout << "patch=" << patch->getID() << ",idx=" << idx << ":limit5xbulk_initial" ;
-  #ifdef JC_LIMITER_PRINT
-          cout << "$B";
-  #endif
-  #ifdef JC_DEBUG_PARTICLE //LIMITER
-          if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-            cout << ",EBLim,p="<<patch->getID()<<",idx="<<idx;
-  #endif
-          bulk = 5.0*bulk_initial;
-        }  //T2D: use min statement
+        double bulk  = computeBulkModulus( peve[idx] + pevp[idx] ),
+               shear = G0;
+
+        bulk=B0;//Hack
 
         // Compute the lame constant using the bulk and shear moduli
-        double lame = bulk - two_third*shear;
+        double lame       = bulk - two_third*shear,
+               threeKby2G = (3.0 * bulk) / (2.0 * shear);
 
         // Compute the unrotated stress at the first of the current timestep
-        Matrix3 unrotated_stress = (tensorR.Transpose())*(stress_old[idx]*tensorR);
+        Matrix3 unrotated_stress = (tensorR.Transpose())*(pStress_old[idx]*tensorR);
 
-        // Compute the unrotated trial stress
-        Matrix3 stress_diff = (Identity*lame*(D.Trace()*delT) + D*delT*2.0*shear);
-        trial_stress[idx] = unrotated_stress + stress_diff;
+        // Compute the unrotated trial stress for the full timestep
+        Matrix3 stress_diff_step  = (Identity*lame*(D.Trace()*delT) + D*delT*2.0*shear),
+                trial_stress_step = unrotated_stress + stress_diff_step;
 
-        // Compute shifted trial stress based on the back stress
-        trial_stress[idx] = trial_stress[idx] - pBackStress[idx];
+        if (isnan(trial_stress_step.Norm())) {  //Check stress_iteration for nan
+          cerr << "pParticleID=" << pParticleID[idx];
+          throw InvalidValue("**ERROR**: Nan in trial_stress_step", __FILE__, __LINE__);
+        }
 
-        // Compute the value of the yield function at the trial stress
-        f_trial[idx] = YieldFunction(trial_stress[idx],FSLOPE,pKappa1,cap_radius,PEAKI1_hardening);
+        // Compute stress invariants of the trial stress for the full timestep
+        double I1_trial_step,
+               J2_trial_step;
+        Matrix3 S_trial_step;
+        computeInvariants(trial_stress_step, S_trial_step, I1_trial_step, J2_trial_step);
+
+        // Compute the value of the test yield function at the trial stress.  This will
+        // return +/- 1 for plastic and elastic states, respectively, or 0 if the state
+        // is on the yield surface.
+        f_trial_step[idx] = YieldFunction(I1_trial_step,
+                                          J2_trial_step,
+                                          pCapX[idx],
+                                          pZeta[idx],
+                                          threeKby2G);
 
         // initial assignment for the updated values of plastic strains, volumetric
         // part of the plastic strain, volumetric part of the elastic strain, \kappa,
         // and the backstress. tentative assumption of elasticity
-        pPlasticStrain_new[idx]    = pPlasticStrain[idx];
-        pPlasticStrainVol_new[idx] = pPlasticStrainVol[idx];
-        pElasticStrainVol_new[idx] = pElasticStrainVol[idx] + D.Trace()*delT;
-        pKappa_new[idx]            = pKappa1;
-        pBackStress_new[idx]       = pBackStress[idx];
-        pBackStressIso_new[idx]    = pBackStressIso[idx];
+        pevp_new[idx]   = pevp[idx];
+        peve_new[idx]   = peve[idx] + D.Trace()*delT;
+        pCapX_new[idx]  = pCapX[idx];
+        pKappa_new[idx] = pKappa[idx];
+        pZeta_new[idx]  = pZeta[idx];
+        pep_new[idx]    = pep[idx];
 
-        // Compute stress invariants of the trial stress
-        double I1_trial,J2_trial;
-        Matrix3 S_trial;
-        computeInvariants(trial_stress[idx], S_trial, I1_trial, J2_trial);
+        // allocate and assign step values
+        double  evp_new_step    = pevp_new[idx],
+                eve_new_step    = peve_new[idx],
+                X_new_step      = pCapX_new[idx],
+                Kappa_new_step  = pKappa_new[idx],
+                Zeta_new_step   = pZeta_new[idx];
+        Matrix3 ep_new_step     = pep_new[idx],
+                stress_new_step = pStress_new[idx];
 
-        // Declare and assign two variables for evolving back stress tensor
-        Matrix3 deltaBackStress;
-        Matrix3 deltaBackStressIso;
-        deltaBackStress.set(0.0);  //tentative assumption of elasticity
-        deltaBackStressIso.set(0.0);
 
-        // Check if the stress is elastic or plastic?
-        if (f_trial[idx]<0){  // elastic
+        // MH: We now check if the entire step is elastic.  If it is, we update the
+        //     new stress to be our trial stress and compute the new elastic strain.
+        //     The plastic strain and internal state variables are unchanged.
+        if (f_trial_step[idx]<=0){  // elastic
 
           // An elastic step: the updated stres at the end of the current time step
           // is equal to the trial stress. otherwise, the plasticity return algrithm would be used.
-          stress_new[idx] = trial_stress[idx];  //T2D: make trial_stress a local variable
+          stress_new_step = trial_stress_step;
+          #ifdef JC_DEBUG_PARTICLE // print characteristic length of yeild surface
+          if(pParticleID[idx]==JC_DEBUG_PARTICLE){
+            cout << " elastic step";
+          }
+          #endif
 
         }else{  // plastic
 
           // An elasto-plasic/fully plastic step: the plasticity return algrithm should be used.
-          // The nested return algorithm is used (Brannon & Leelavanichkul 2010) in Arenisca.
+          // We first subdivide our trial stress into smaller increments.  To determine a suitable
+          // subdivision, we compare the magnitude of the stress difference (trial stress - old stress)
+          // over the entire step to a characteristic length of the yield surface.
 
-          // Determine a characteristic length of the yield surface.
-          // If Arenisca is used as the Drucker-Prager model, which is determined by a large negative
-          // \kappa value (pKappa1<-1.0e80), the characteristic length is two times the value of
-          // sqrt(J2) at I1=0 (T2D: use fraction of sqrt(J2) at a value of B0/1000 for softening),
-          // and if it leads to a small value the chracteristic length equals
-          // two times PEAKI1. If two-surface Arenisca is used, the minumum of the following two
-          // values is considered as the characteristic length: "PEAKI1-X" and "2*(FSLOPE*X-PEAKI1)" 
-          double clen;
-          double PI1_h_over_FSLOPE = PEAKI1_hardening/FSLOPE;
-          int char_length_yeild_surface_flag;
-          if (pKappa1<-1.0e80){  //no cap
-            if (I1_trial<0.0){
-              clen = abs(PI1_h_over_FSLOPE-FSLOPE*I1_trial);
-              char_length_yeild_surface_flag=1;
-            } else {
-              clen = abs(PI1_h_over_FSLOPE);
-              char_length_yeild_surface_flag=2;
-            }
-          } else {  //cap
-            if (PI1_h_over_FSLOPE-(pKappa1-cap_radius)
-                < -2.0*(FSLOPE*(pKappa_new[idx]-cap_radius)-PI1_h_over_FSLOPE)){
-              clen = PI1_h_over_FSLOPE-(pKappa1-cap_radius);
-              char_length_yeild_surface_flag=3;
-            } else {
-              clen = -1*(FSLOPE*(pKappa_new[idx]-cap_radius)//T2D: should this be 2*__?
-                                                -PI1_h_over_FSLOPE);
-              char_length_yeild_surface_flag=4;
-            }
-          }
+          ////////////////////////////////////////////////////////////////
+          //COMPUTE CHARACTERISTIC LENGTHS
+          double clenI1,
+                 clensqrtJ2,
+                 clen;
 
-#ifdef JC_DEBUG_PARTICLE // print characteristic length of yeild surface
+          // the characteristic length for volumetric terms (units of I1, Pa) is the
+          // distance from the vertex to the cap along the hydrostat.  To provide a
+          // a measure in the case of no cap, we also compute the value of stress
+          // corresponding to 0.1% volumetric strain.
+          clenI1 = min( bulk/1000 , PEAKI1 - pCapX[idx] );
+
+          // Similarly, for the deviator, the characteristic length the characteristic
+          // length (units of sqrt(J2), Pa), is the value of linear drucker-prager
+          // surface at X, or a stress corresponding to 0.1% shear strain.
+          clensqrtJ2 = min( 2*G0/1000 , FSLOPE * (PEAKI1 - pCapX[idx]) );
+
+          // the general characteristic length (units of I1 and sqrt(J2), Pa)
+          clen = sqrt( clenI1*clenI1 + clensqrtJ2*clensqrtJ2 );
+
+          #ifdef JC_DEBUG_PARTICLE // print characteristic length of yeild surface
           if(pParticleID[idx]==JC_DEBUG_PARTICLE){
-            cout << " clen=" << clen 
-                 << "@" << char_length_yeild_surface_flag;
-            cout << ", test@3="<<PI1_h_over_FSLOPE-(pKappa1-cap_radius);
-            cout << ", test@4="<<(-1*(FSLOPE*(pKappa_new[idx]-cap_radius)
-                                     -PI1_h_over_FSLOPE));
+            cout << " clen=" << clen << ", B0e-3=" << B0/1000
+                 << ", PEAKI1-p0=" << PEAKI1-p0 << ", 2G0e-3=" <<2*G0/1000
+                 << ", FSLOPE*(PEAKI1-p0)=" << FSLOPE*(PEAKI1-p0);
           }
-#endif
+          #endif
+
+          /* MH: Removed this
           // If the characteristic length gets a negative value, it means that there is an issue
           // with the yield surface, which should be reported.
-          if (clen<=0.0) {
+          if (clen<=0.0 || clenI1 <= 0 || clensqrtJ2<=0.0) {
             cout<<"ERROR! in clen"<<endl;
             cout<<"pParticleID="<<pParticleID[idx]<<endl;
-            cout<<"deformationGradient_new="<<deformationGradient_new[idx]<<endl<<endl;
             cout<<"clen="<<clen<<endl;
-            cout<<"pKappa_new[idx]="<<pKappa_new[idx]<<endl;
-            cout<<"cap_radius="<<cap_radius<<endl;
-            cout<<"PEAKI1_hardening/FSLOPE="<<PI1_h_over_FSLOPE<<endl;
-            cout<<"idx="<<idx<<endl;
             throw InvalidValue("**ERROR**:in characteristic length of yield surface (clen)",
                                __FILE__, __LINE__);
           }
-//---------------------------------------------------------------------------------
-//JC_BEGIN SUBCYCLING
-          // Compute the un-shifted trial stress
-          trial_stress[idx] = trial_stress[idx] + pBackStress[idx];
-          
-          // Compute total number of cycles in the plasticity subcycling
-          double sqrt_mag_trial_stress=sqrt(trial_stress[idx].Norm());
-          double num_subcycles = floor (sqrt_mag_trial_stress
-             /(sqrt(clen)/subcycling_characteristic_number) + 1);
+          */
 
-          if(num_subcycles > 1000){
-            cout << "WARNING: $num_subcycles="<<num_subcycles
-                 << " exceeds 1000 maximum for pID="<<pParticleID[idx] << endl;
-            num_subcycles=1000;
+          //////////////////////////////////////////////////////////////////////
+          //SUBCYCLING
+
+          // create and initialize flag variable for substep;
+          int flag_substep = 0,
+              massive_subcycling_flag = 1,
+              massive_subcycling_counter = 1;
+
+          // Compute total number of cycles in the plasticity subcycling
+      //   Will be the subcycling characteristic number unless stress_diff>clen
+          double num_steps = subcycling_characteristic_number*(
+                             floor(stress_diff_step.Norm()/clen) + 1.0);
+
+          #ifdef CSM_FORCE_MASSIVE_SUBCYCLING
+          num_steps = num_steps * CSM_FORCE_MASSIVE_SUBCYCLING;
+          #endif
+
+          #ifdef JC_DEBUG_PARTICLE // print characteristic length of yield surface
+          if(pParticleID[idx]==JC_DEBUG_PARTICLE){
+            cout << ", num_steps=" << num_steps
+                 << ", stress_diff_step.Norm()="<<stress_diff_step.Norm();
+          }
+          #endif
+          if (isnan(num_steps)) {  //Check stress_iteration for nan
+             cerr << "pParticleID=" << pParticleID[idx]
+                  << ", num_steps=" << num_steps << endl;
+            throw InvalidValue("**ERROR**: Nan in num_steps", __FILE__, __LINE__);
           }
 
-          // Remove the new changes from the trial stress so we can apply the changes in each sub-cycle
-          trial_stress[idx] = trial_stress[idx] - stress_diff; //T2D: consider setting trial_s to stress at beginning of ts
-          
-          // Changes in the trial stress in each sub-cycle assuming the elastic behavior
-          stress_diff = stress_diff/num_subcycles;
-          
-          //initial assignment
-          stress_new[idx] = trial_stress[idx];
-          Matrix3 trial_stress_loop;
-#ifdef JC_DEBUG_PARTICLE // print characteristic length of yeild surface
-          if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-            cout << ",smts="<<sqrt_mag_trial_stress<<",nSC=" << num_subcycles;
-#endif
-          // Loop over sub-cycles in the plasticity return algorithm
-          for (int subcycle_counter=0 ; subcycle_counter<=num_subcycles-1 ; subcycle_counter++){
-//JC_IF_FAIL_RESTART_WITH_MORE_SUBCYCLES
-#ifdef JC_DEBUG_PARTICLE  // Print number of subcycles
-            if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-              cout << endl << "  SCc=" << subcycle_counter << "/"<<num_subcycles-1;
-                  //<< ",tsr="<<trial_stress[idx].Norm();
-#endif
-            // Compute the trial stress for the current sub-cycle
-            trial_stress[idx] = stress_new[idx];
-            trial_stress[idx] = trial_stress[idx] + stress_diff;
-            
-            // Compute the shifted trial stress
-            trial_stress[idx] = trial_stress[idx] - pBackStress_new[idx];
-  #ifdef JC_DEBUG_PARTICLE  // Print number of subcycles
-            if(pParticleID[idx]==JC_DEBUG_PARTICLE){
-              Matrix3 S_trial_test;
-              double I1_trial_test,J2_trial_test;
-              computeInvariants(trial_stress[idx], S_trial_test, I1_trial_test, J2_trial_test);
-              cout << ",I1_test=" << I1_trial_test << ",J2_test="<<J2_trial_test;
+          // define and initialize values for the substep
+          double evp_new_substep   = evp_new_step,
+                 eve_new_substep   = eve_new_step,
+                 X_new_substep     = X_new_step,
+                 Kappa_new_substep = Kappa_new_step,
+                 Zeta_new_substep  = Zeta_new_step,
+                 num_substeps;
+
+          Matrix3 ep_new_substep = ep_new_step,
+                  trial_stress_substep,
+                  stress_diff_substep,
+                  stress_new_substep = trial_stress_step - stress_diff_step;
+
+          while(massive_subcycling_flag == 1
+                && massive_subcycling_counter <= 4){
+
+            // modify the number of subcycles depending on success
+            //  1st time through, num_subcycles remains the same.
+            //  2nd time through, num_subcycles is multiplied by 10
+            //  3rd time trhrugh, num_subcycles is multiplied by 100
+            //  4th and list time, num_subcycles is multiplied by 1000
+            num_substeps = num_steps * Pow(10,massive_subcycling_counter-1);
+
+            if(num_substeps > 15000){  //T2D: this might change, but keep high for node success
+              cout << "WARNING: $num_subcycles=" << num_substeps
+                   << " exceeds 15000 maximum for pID=" << pParticleID[idx] << endl;
+//              #ifndef CSM_FORCE_MASSIVE_SUBCYCLING
+              num_substeps=15000;
+//              #endif
             }
-  #endif
-            // 'condition_return_to_vertex' flag defines if we should do vertex treatment for the
-            // particle at the current timestep or not? 1: the trial stress will return back to the
-            // vertex, 0: the trial stress will not return back to the vertex.
-            int condition_return_to_vertex=0;
 
-            // Check if the vertex treatment is necessary or not? If I1>PEAKI1, we may need
-            // vertex treatment otherwise, we do not need vertex treatment.
-            if (I1_trial>PI1_h_over_FSLOPE){  //I1 to right of vertex
+            // Set initial values for the substep
+            evp_new_substep   = evp_new_step,
+            eve_new_substep   = eve_new_step,
+            X_new_substep     = X_new_step,
+            Kappa_new_substep = Kappa_new_step,
+            Zeta_new_substep  = Zeta_new_step;
+            ep_new_substep    = ep_new_step,
 
-              // In the case of hydrostatic tensile loading, the vertex treatment is needed.
-              if (J2_trial<1.0e-10*clen){  // the case of hydrostatic tensile loading
+            // Remove the new changes from the trial stress so we can apply the changes in each sub-cycle
+            trial_stress_substep = trial_stress_step - stress_diff_step; //unrotated stress
 
-                // The updated stress should be the vertex.
-                stress_new[idx] = Identity*PI1_h_over_FSLOPE*one_third;
+            // Changes in the trial stress in each sub-cycle assuming the elastic behavior
+            stress_diff_substep = stress_diff_step / num_substeps;
 
-                // 'condition_return_to_vertex' is set to one, which means that the trial stress
-                // is returned back to the vertex.
-                condition_return_to_vertex = 1;
+            //initial assignment
+            stress_new_substep = trial_stress_substep;
 
-              }else{  // test the case of non-hydrostatic tensile loading
+            // Loop over sub-cycles in the plasticity return algorithm
+            for (int substep_counter=0 ; substep_counter<=num_substeps-1 ; substep_counter++){
+              // Compute the trial stress for the current sub-cycle
+              trial_stress_substep = stress_new_substep + stress_diff_substep;
 
-                // To determine if we should apply vertex treatment or not, here it is checked
-                // if the trial stress is between two P tensors, the projection direction tensor,
-                // (see Eq. 22 and 24 in Brannon & Leelavanichkul 2010) at the vertex or not.
-                // If yes, we will do vertex treatment.
-
-                // Declare the variables needed for vertex treatment
-                double P_component_1,P_component_2;
-                double relative_stress_to_vertex_1,relative_stress_to_vertex_2;
-                Matrix3 relative_stress_to_vertex,relative_stress_to_vertex_deviatoric;
-                Matrix3 unit_tensor_vertex_1;
-                Matrix3 unit_tensor_vertex_2;
-                Matrix3 P,M,P_deviatoric;
-
-                // Compute the relative trial stress in respect with the vertex
-                relative_stress_to_vertex = trial_stress[idx] - Identity*PI1_h_over_FSLOPE*one_third;
-
-                // Compute two unit tensors of the stress space
-                unit_tensor_vertex_1 = Identity/sqrt_three; //T2D: use other 1/root3
-                unit_tensor_vertex_2 = S_trial/sqrt(2.0*J2_trial);  
-
-                // Compute the unit tensor in the direction of the plastic strain
-                M = ( Identity*FSLOPE_p + S_trial*(1.0/(2.0*sqrt(J2_trial))) )/sqrt(3.0*FSLOPE_p*FSLOPE_p + 0.5);
-
-                // Compute the projection direction tensor
-                P = (Identity*lame*(M.Trace()) + M*2.0*shear);
-
-                // Compute the components of P tensor in respect with two unit_tensor_vertex
-                P_component_1 = P.Trace()/sqrt_three;
-                P_deviatoric = P - unit_tensor_vertex_1*P_component_1;
-                int counter_1_fix=0;
-                int counter_2_fix=0;
-                for (int counter_1=0 ; counter_1<=2 ; counter_1++){
-                  for (int counter_2=0 ; counter_2<=2 ; counter_2++){
-                    if (fabs(unit_tensor_vertex_2(counter_1,counter_2))>
-                        fabs(unit_tensor_vertex_2(counter_1_fix,counter_2_fix))){
-                      counter_1_fix = counter_1;
-                      counter_2_fix = counter_2;
-                    }
-                  }
-                }
-                P_component_2 = P_deviatoric(counter_1_fix,counter_2_fix)/
-                                unit_tensor_vertex_2(counter_1_fix,counter_2_fix);
-
-                // Compute the components of relative_stress_to_vertex in respect with
-                // two unit_tensor_vertex
-                relative_stress_to_vertex_1 = relative_stress_to_vertex.Trace()*one_sqrt_three;
-                relative_stress_to_vertex_deviatoric = relative_stress_to_vertex -
-                                              unit_tensor_vertex_1*relative_stress_to_vertex_1;
-                relative_stress_to_vertex_2 =
-                            relative_stress_to_vertex_deviatoric(counter_1_fix,counter_2_fix)/
-                            unit_tensor_vertex_2(counter_1_fix,counter_2_fix);
-
-                // Check if the stress_trial is in the vertex zone or not?
-                if ( ((relative_stress_to_vertex_1*P_component_2 + relative_stress_to_vertex_2*P_component_1)/
-                   (P_component_1*P_component_1) >=0 ) ){
-
-                  // The updated stress should be the vertex.
-                  stress_new[idx] = Identity*one_third*PI1_h_over_FSLOPE;
-      #ifdef JC_DEBUG_PARTICLE
-                  if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                    cout << ",901:stress_new="<<stress_new[idx];
-      #endif
-
-                  // 'condition_return_to_vertex' is set to one, which means that the trial stress
-                  // is returned back to the vertex.
-                  condition_return_to_vertex = 1;
-                }
-
-              }
-
-              // If the trial stress is returned back to the vertex, other required particle variables
-              // such as the plastic strain, elastic strain, \kappa, back stress, etc. should also 
-              // be updated.
-              // T2D: cite manual.
-              if (condition_return_to_vertex == 1) {
-                // Compute two coefficients that are used in calculation of strain from stress
-                double shear_inverse = 0.5/shear;
-                double nu_over_E = (-1.0)*lame/(2.0*shear*(2.0*shear+3.0*lame));
-
-                // Compute the difference between the stress tensor at the beginning and end of
-                //the current time step
-                Matrix3 diff_stress_iteration = trial_stress[idx] - stress_new[idx];
-                
-  #ifdef JC_DEBUG_PARTICLE  // Print number of subcycles
-                if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                  cout << ",dsr="<<diff_stress_iteration.Norm();
-  #endif
-                
-                // Compute the plastic strain during the current timestep
-                Matrix3 strain_iteration = (Identity*nu_over_E*(diff_stress_iteration.Trace())
-                                           + diff_stress_iteration*shear_inverse);
-
-                // Update the plastic strain magnitude
-                pPlasticStrain_new[idx] = pPlasticStrain[idx] +strain_iteration.Norm();
-
-                // Update the volumetric part of the plastic strain
-                pPlasticStrainVol_new[idx] = pPlasticStrainVol[idx] + strain_iteration.Trace();
-      #ifdef JC_DEBUG_PARTICLE  // Print number of subcycles
-                if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                  cout << ",epv="<<pPlasticStrainVol_new[idx];
-      #endif      
-      #ifdef JC_EPV
-                if (pPlasticStrainVol_new[idx]<-p3_crush_curve) {
-                  cout<<"ERROR! in pPlasticStrainVol_new"<<endl;
-                  cout<<"pParticleID="<<pParticleID[idx]<<endl;
-                  cout<<"deformationGradient_new="<<deformationGradient_new[idx]<<endl<<endl;
-                  cout<<"epv=" << pPlasticStrainVol_new[idx]<<endl;
-                  cout<<"pKappa_new[idx]="<<pKappa_new[idx]<<endl;
-                  throw InvalidValue("**ERROR**:in pPlasticStrainVol calculation",
-                                     __FILE__, __LINE__);
-                }
-      #endif
-                // Update the volumetric part of the elastic strain
-                pElasticStrainVol_new[idx] = pElasticStrainVol_new[idx] - strain_iteration.Trace();
-
-                // Update the back stress (see "eq:backStressFluidEffect" in the Arenisca manual)
-                pBackStress_new[idx] = Identity*( -3.0*fluid_B0*
-                                       ((exp(pPlasticStrainVol_new[idx])-1.0)
-                                        * exp(p3_crush_curve+p4_fluid_effect))
-                                       /(exp(p3_crush_curve+p4_fluid_effect +
-                                         pPlasticStrainVol_new[idx])-1.0) )*
-                                       (pPlasticStrainVol_new[idx]);
-                if (isnan(pBackStress_new[idx].Trace())) {  //Check pBackStress for nan
-                  cerr << "ParticleID = " << pParticleID[idx] << " pBackStress_new[idx] = " << pBackStress_new[idx] << endl;
-                  cout<<"deformationGradient_new="<<deformationGradient_new[idx]<<endl<<endl;
-                  cout<<"epv=" << pPlasticStrainVol_new[idx]<<endl;
-                  cout<<"pKappa_new[idx]="<<pKappa_new[idx]<<endl;
-                  throw InvalidValue("**ERROR**: Nan in stress_iteration value", __FILE__, __LINE__);
-                }
-                
-      #ifdef JC_DEBUG_PARTICLE  // Print pPlasticStrainVol
-                if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                  cout << ",alpha=I*" << ( -3.0*fluid_B0*
-                                           ((exp(pPlasticStrainVol_new[idx])-1.0)
-                                           * exp(p3_crush_curve+p4_fluid_effect))
-                                           /(exp(p3_crush_curve+p4_fluid_effect +
-                                                 pPlasticStrainVol_new[idx])-1.0) )*
-                                          (pPlasticStrainVol_new[idx]);
-                
-      #endif
-                // Update \kappa (= the position of the cap) see "eq:evolutionOfKappaFluidEffect" in the
-                // Arenisca manual. (Also, see "fig:AreniscaYieldSurface" in the Arenisca manual)
-
-                // Declare and assign some axiliary variables
-                double pKappa_temp = exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx]);
-                double pKappa_temp1 = exp(p3_crush_curve+pPlasticStrainVol[idx]);
-                double var1;
-
-                // Compute the var1 which relates dX/de to d(kappa)/de: d(kappa)/de=dX/de * (1/var1)
-                // Consider the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca manual).
-                // 'cond_fixed_cap_radius' is a variable which indicates if the limit has been met or not?
-                if (cond_fixed_cap_radius==0) {  //T2D: limiter print?
-                  var1 = 1.0+FSLOPE*CR;
-                } else {
-                  var1 = 1.0;
-                }
-      #ifdef JC_USE_BB_STATE_UPDATE
-                // Update the model state
-                state->local_var[0] = pKappa1;                  // kappa value
-                state->local_var[1] = cap_radius;                  // cap radius
-                state->local_var[2] = max_X;                       // max_X
-                state->local_var[3] = pPlasticStrainVol[idx];      // eps_v
-                state->local_var[4] = strain_iteration.Trace();    // Delta eps_v
-                state->local_var[5] = var1;                      // scale factor for Delta eps_v
-                
-                // Compute internal variable
-                pKappa_new[idx] = d_intvar->computeInternalVariable(state);
-                // Set the kappa state flag
-                if (pKappa_new[idx] == (max_X + cap_radius)) pKappaFlag_new[idx] = 1.0;
-      #else
-                // Update \kappa (pKappa1) in the case of 
-                if (pKappa1-cap_radius-p0_crush_curve<0) {  // X < p0
-                  // Update \kappa in the case of X < p0
-                  // (see "fig:AreniscaYieldSurface" in the Arenisca manual)
-                  // (see "eq:evolutionOfKappaFluidEffect" in the Arenisca manual)
-                  double exp_p3_p4_m1 = exp(p3_crush_curve+p4_fluid_effect)-1.0;
-                  pKappa_new[idx] = pKappa1 + ( exp(-p1_crush_curve*
-                                    (pKappa1-cap_radius-p0_crush_curve))
-                                    /( p3_crush_curve*p1_crush_curve ) -
-                                    3.0*fluid_B0*(exp_p3_p4_m1)*pKappa_temp
-                                    /( (pKappa_temp-1.0)*(pKappa_temp-1.0) ) +
-                                    3.0*fluid_B0*(exp_p3_p4_m1)*pKappa_temp1
-                                    /( (pKappa_temp1-1.0)*(pKappa_temp1-1.0) ) )
-                                    *strain_iteration.Trace()/var1;
-       #ifdef JC_DEBUG_PARTICLE
-                  if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                    cout<<",X<p0,Knew="<<pKappa_new[idx];
-       #endif
-                   //cout<<",pKappa1="<<pKappa1<<",cap_radius="<<cap_radius<<",pKappa_temp1="<<pKappa_temp1
-                   //    <<",pKappa_temp="<<pKappa_temp<<",Tr(strain_itr)="<<strain_iteration.Trace()
-                   //    <<",exp(X-p0)="<<exp(-p1_crush_curve*(pKappa1-cap_radius-p0_crush_curve));
-                } else if (pKappa1-cap_radius<max_X) {  // p0 <= X < max_X
-                  // Update \kappa in the cae of p0 <= X < max_X
-                  // (see "fig:AreniscaYieldSurface" in the Arenisca manual)
-                  // (see "eq:evolutionOfKappaFluidEffect1" in the Arenisca manual)
-                  // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
-                  double exp_p3_p4_m1 = exp(p3_crush_curve+p4_fluid_effect)-1.0;
-                  pKappa_new[idx] = pKappa1 + ( pow( (pKappa1-cap_radius)/p0_crush_curve,
-                                               1-p0_crush_curve*p1_crush_curve*p3_crush_curve )
-                                               /( p3_crush_curve*p1_crush_curve ) -
-                                               3.0*fluid_B0*exp_p3_p4_m1*pKappa_temp
-                                               /( (pKappa_temp-1.0)*(pKappa_temp-1.0) ) +
-                                               3.0*fluid_B0*exp_p3_p4_m1*pKappa_temp1
-                                               /( (pKappa_temp1-1.0)*(pKappa_temp1-1.0) ) )
-                                               *strain_iteration.Trace()/var1;
-  #ifdef JC_DEBUG_PARTICLE
-                  if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                     cout<<",p0<=X<max_X,Knew="<<pKappa_new[idx];
-  #endif
-                } else {  // X >= max_X
-                  // Update \kappa in the cae of X >= max_X
-                  // (see "fig:AreniscaYieldSurface" in the Arenisca manual)
-                  // In this case it is assumed that X=max_X
-                  // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
-                  // pKappaFlag is a particle variable variable which defines if the particle
-                  // meet any of the limitation for \kappa and X or not?
-                  // pKappaFlag=1: means that the particle met the max_X limitation
-                  pKappa_new[idx] = max_X + cap_radius;
-                  pKappaFlag_new[idx] = 1.0;
-      #ifdef JC_LIMITER_PRINT
-                  cout << "$X";
-      #endif
-  #ifdef JC_DEBUG_PARTICLE
-                  if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                    cout<<",X>=max_X,Knew="<<pKappa_new[idx];
-  #endif
-                }
-      #endif
-                // \kappa limeter ensures \kappa >= \kappa_min (pKappa_new[idx]>=min_kappa)
-                if (pKappa_new[idx]<min_kappa){
-                  // Apply the lower limit for \kappa.
-                  // (for the limitation of min_kappa see "eq:limitationForKappa"
-                  // in the Arenisca manual)
-                  // pKappaFlag is a particle variable variable which defines if the particle
-                  // meet any of the limitation for \kappa and X or not?
-                  // pKappaFlag=2: means that the particle met the min_kappa limitation.
-                  pKappa_new[idx] = min_kappa;
-                  pKappaFlag_new[idx] = 2.0;
-      #ifdef JC_LIMITER_PRINT
-                  cout << "$K";
-      #endif
-  #ifdef JC_DEBUG_PARTICLE
-                  if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                    cout << ",Klim";
-  #endif
-                }
-
-                // Re-calculate the axiliary varable 'PEAKI1_hardening'
-                // because 'pPlasticStrain_new[idx]' has been updated 
-                PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*pPlasticStrain_new[idx];
-      #ifdef JC_USE_BB_STATE_UPDATE
-                cap_radius_fac = FSLOPE*pKappa_new[idx] - PEAKI1_hardening;
-      #endif
-                // R limiter ensures R >= 0.1*Rinit (cap_radius >= 0.1*cap_r_initial)
-                if (cond_fixed_cap_radius==0) {
-                  // Consider the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca manual).
-                  // 'cond_fixed_cap_radius' is a variable which indicates if the limit has been met or not?
-                  // If the limit has been met, updated \kappa should be modified.
-                  cap_radius=CR*abs(FSLOPE*pKappa_new[idx]-PEAKI1_hardening);
-                  if (cap_radius<0.1*cap_r_initial || pKappa_new[idx]>PEAKI1_hardening/FSLOPE) {
-                    pKappa_new[idx] = pKappa_new[idx] - cap_radius + 0.1*cap_r_initial;
-                    cap_radius=0.1*cap_r_initial;
-                    cond_fixed_cap_radius = 1;
-      #ifdef JC_LIMITER_PRINT
-                    cout << "$R";
-      #endif
-  #ifdef JC_DEBUG_PARTICLE
-                    //cout<<",cond_fixed_cap_radius="<<cond_fixed_cap_radius;
-                    if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                      cout << ",Rlim";
-  #endif
-                  }
-                }
-                
-                // X limiter ensures X < maxX (pKappa_new - cap_radius < max_X)
-                if (pKappa_new[idx]>max_X+cap_radius) {
-                  // Apply the upper limit for X. 
-                  // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
-                  // pKappaFlag is a particle variable variable which defines if the particle
-                  // meet any of the limitation for \kappa and X or not?
-                  // pKappaFlag=1: means that the particle met the max_X limitation
-                  // If the limit has been met, updated \kappa should be modified.
-                  pKappa_new[idx]=max_X+cap_radius;
-                  pKappaFlag_new[idx] = 1.0;
-        #ifdef JC_LIMITER_PRINT
-                  cout << "$X";
-        #endif
-  #ifdef JC_DEBUG_PARTICLE  // USE COLOVOS IN DEFINE NAME
-                  //cout<<",pKappaFlag_new[idx]=" << pKappaFlag_new[idx];
-                  if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                    cout << ",Xlim";
-  #endif
-                }
-                //compute the un-shifted stress
-                stress_new[idx] = stress_new[idx] + pBackStress_new[idx];
-              }
-            } //end of if for I1 to right of vertex
-
-            // 'condition_return_to_vertex' variable defines if we should do vertex treatment for the
-            // particle at the current timestep or not? (condition_return_to_vertex == 0) means that
-            // the trial stress is not returned back to the vertex so the nested return algorithm 
-            // (Brannon & Leelavanichkul 2010) should be used for returning back the trial stress to
-            // the yield surface.
-            if (condition_return_to_vertex == 0){
-
-#ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-              //if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-              //  cout << "  cSC=" << subcycle_counter << ",sftrStress="<<trial_stress[idx];
-#endif
-          //BEGIN NESTED RETURN ALGORITHM
-              // Declare and initialize some needed variables in the nested return algorithm
-              double gamma = 0.0;;
-              double I1_iteration,J2_iteration;
-              double beta_cap,FSLOPE_cap;
-              double f_new_loop = 1e99;
-              Matrix3 pBackStress_loop = pBackStress_new[idx];
-              double pKappa_loop = pKappa_new[idx];
-              int counter = 0;
-              Matrix3 P,M,G;
-              Matrix3 stress_iteration=trial_stress[idx];
-              trial_stress_loop = trial_stress[idx];
-              Matrix3 S_iteration;
-              Matrix3 plasStrain_loop;
-              plasStrain_loop.set(0.0);
-
-              // Nested return algorithm (Brannon & Leelavanichkul 2010) is an iterative method.
-              // The maximum allowed number of iterations is defined here. Large numbers may lead
-              // very slow simulations.
-              int max_number_of_iterations = 9;
-
-              // Loop for the nested return algorithm (Brannon & Leelavanichkul 2010).
-              // The loop will continue until the trial stress is returned back to the yield
-              // surface or the number of iterations exeeds the maximum number.
-
-              while(fabs(f_new_loop)>9.9e-2*clen
-                    && counter<=max_number_of_iterations ){//T2D: change 9.9e-2 to const, test how small
-
-                // Number of completed iterations
-              
-                counter=counter+1;
-                trial_stress_loop = stress_iteration;
-
-                if (isnan(stress_iteration.Trace())) {  //Check stress_iteration for nan
-                  cerr << "ParticleID = " << pParticleID[idx] << " stress_iteration = " << stress_iteration << endl;
-                  //cerr<<"I1_iter="<<I1_iteration_err<<endl;
-                  //cerr<<"J2_iter="<<J2_iteration_err<<endl;
-                  throw InvalidValue("**ERROR**: Nan in stress_iteration value", __FILE__, __LINE__);
-                }
-                // Compute the invariants of the trial stress for the current subcycle in the loop
-                computeInvariants(stress_iteration, S_iteration, I1_iteration, J2_iteration);
-
-                if (I1_iteration>PI1_h_over_FSLOPE){  //1st right of PEAKI1 & above vertex treatment
-        #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-                  if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                    cout << ",FR1";
-        #endif
-                  // Fast return algorithm in the case of I1>PEAKI1 (see "fig:AreniscaYieldSurface"
-                  // in the Arenisca manual). In this case, the fast returned position is the vertex.
-                  stress_iteration = Identity*(PI1_h_over_FSLOPE)/3.0;
-                  // Fast return algorithm in other cases (see "fig:AreniscaYieldSurface"
-                  // in the Arenisca manual). In this case, the radial fast returning is used.
-                  double I1_near_PEAKI1=PEAKI1_hardening/FSLOPE-1e-11*clen;
-        #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-                  if(pParticleID[idx]==JC_DEBUG_PARTICLE){
-                    cout << ",I1_near_PEAKI1=" <<I1_near_PEAKI1;
-                  }
-        #endif
-                  stress_iteration = stress_iteration + S_iteration*
-                                  ((PEAKI1_hardening-FSLOPE*I1_near_PEAKI1)/
-                                   sqrt(J2_iteration)-1);
-
-                }
-                else if ( (I1_iteration<pKappa_loop-0.9*cap_radius)
-                         || (I1_iteration<pKappa_loop && J2_iteration<0.01) ){  //2nd outside cap
-        #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-                  if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                    cout << ",FR2"<< ",I1_iter="<<I1_iteration<<",J2_iter="<<J2_iteration;
-        #endif
-                  // Fast return algorithm in the case of I1<X+0.1R (see "fig:CapEccentricity"
-                  // in the Arenisca manual) OR ( I1<\kappa && J2<0.01)
-
-                  // Declare some needed variables for the fast return algorithm.
-                  Matrix3 stress_iteration_temp;
-                  double I1_iteration1;
-                  double I1_iteration2;
-                  double I1_iteration3;
-                  double I1_diff;
-                  double f_iteration2;
-                  int counter_temp=0;
-
-                  // Compute the invariants of the fast returned stress in the loop
-                  computeInvariants(stress_iteration, S_iteration, I1_iteration, J2_iteration);
-
-                  // Compute the yield function of the fast returned stress in the loop
-                  f_iteration2=YieldFunction(stress_iteration,FSLOPE,pKappa_loop,
-                                             cap_radius,PEAKI1_hardening);
-
-                  if(f_iteration2<0.0){
-
-                    // If the fast returned stress in the loop is inside the yield surface,
-                    // find two stress positions, one should be inside the yield surface and another
-                    // should be outside the yield surface.
-
-                    // \kappa-2R is outside the yield surface
-                    I1_iteration1=pKappa_loop-2.0*cap_radius;
-
-                    // I1_iteration is inside the yield surface
-                    I1_iteration2=I1_iteration;
-
-                  }else{
-
-                    // If the fast returned stress in the loop is not inside the yield surface,
-                    // find two stress positions, one should be inside the yield surface and another
-                    // should be outside the yield surface.
-
-                    // I1_iteration is outside the yield surface
-                    I1_iteration1=I1_iteration;
-
-                    // We start with a value for I1_iteration2 which is guessed to be inside
-                    // the yield surface.
-                    if (pKappa_loop>PI1_h_over_FSLOPE) {
-                      I1_iteration2=(pKappa_loop-cap_radius + PI1_h_over_FSLOPE)/2.0;
-                    } else {
-                      I1_iteration2=pKappa_loop;
-                    }
-
-                    // Check if the selected value for I1_iteration2 is inside the yield surface or not?
-                    stress_iteration_temp = stress_iteration + Identity*I1_iteration*one_third*
-                                             (I1_iteration2/I1_iteration-1.0);
-                    f_new_loop=YieldFunction(stress_iteration_temp,FSLOPE,pKappa_loop,
-                                                 cap_radius,PEAKI1_hardening);
-
-                    if (f_new_loop>=0.0){  //outside yield surface
-
-                      // If the selected value for I1_iteration2 is not inside the yield surface,
-                      // find a suitable value for I1_iteration2 which is inside the yield surface.
-                      Matrix3 S_iteration_temp;
-                      double I1_iteration_temp;
-                      double J2_iteration_temp;
-                      double var1=1.0;
-
-                      // Compute the invariants of the stress related to I1_iteration2
-                      computeInvariants(stress_iteration_temp, S_iteration_temp, I1_iteration_temp, J2_iteration_temp);
-                      Matrix3 stress_iteration_temp_old = stress_iteration_temp;
-
-                      // Loop to find a suitable value for I1_iteration2 which is inside the yield surface.
-                      int counter_I1_iteration2=0;
-                      while (f_new_loop>=0.0){
-
-                        // If after 1000 cycles, a suitable value for I1_iteration2 which is inside the
-                        // yield surface is not found, an error should be reported.
-                        counter_I1_iteration2++;
-
-                        if (counter_I1_iteration2>1000) {
-                          cout<<"ERROR! in fast return algorithm"<<endl;
-                          cout<<"pParticleID="<<pParticleID[idx]<<endl;
-                          cout<<"deformationGradient_new="<<deformationGradient_new[idx]<<endl<<endl;
-                          throw InvalidValue("**ERROR**:in fast return algorithm",
-                                                               __FILE__, __LINE__);
-                        }
-
-                        // Compute a new value for the stress related to I1_iteration2
-                        beta_cap = sqrt( 1.0 - (pKappa_loop-I1_iteration_temp)*(pKappa_loop-I1_iteration_temp)/
-                                 ( (cap_radius)*(cap_radius) ) );
-                        var1=var1*0.5;
-                        stress_iteration_temp = stress_iteration_temp_old + S_iteration_temp*(sqrt(var1)-1);
-
-                        // Compute the yield function at the stress related to I1_iteration2
-                        f_new_loop=YieldFunction(stress_iteration_temp,FSLOPE,pKappa_loop,cap_radius,PEAKI1_hardening);
-
-                      }
-
-                      // Update the fast returned stress in the loop
-                      beta_cap = sqrt( 1.0 - (pKappa_loop-I1_iteration)*(pKappa_loop-I1_iteration)/
-                               ( (cap_radius)*(cap_radius) ) );
-                      stress_iteration = stress_iteration + S_iteration*(sqrt(var1)-1);
-                      computeInvariants(stress_iteration, S_iteration, I1_iteration, J2_iteration);
-                      f_new_loop=YieldFunction(stress_iteration,FSLOPE,pKappa_loop,cap_radius,PEAKI1_hardening);
-
-                      // If the fast returned stress in the loop is inside the yield surface,
-                      // re-compute I1_iteration1 and I1_iteration2.
-                      if (f_new_loop<=0.0){
-                        I1_iteration1=pKappa_loop-2.0*cap_radius;
-                        I1_iteration2=I1_iteration;
-                      }
-
-                    }
-                  }
-                  // Compute the mid-value between I1_iteration1 and I1_iteration2
-                  I1_diff=I1_iteration2-I1_iteration1;
-                  I1_iteration3=I1_iteration1+(I1_diff)*0.5;
-
-                  // Compute the stress related to I1_iteration3
-                  stress_iteration_temp = stress_iteration + Identity*I1_iteration*one_third
-                                              *(I1_iteration3/I1_iteration-1.0);
-
-                  // Compute the invariants of the stress related to I1_iteration3
-                  f_iteration2=YieldFunction(stress_iteration_temp,FSLOPE,pKappa_loop,
-                                                            cap_radius,PEAKI1_hardening);
-
-                  // Loop to finally find the fast returned back stress
-
-                  int counter_temp_max=100;
-                  while ((I1_diff>1.0e-11*clen && counter_temp<counter_temp_max)
-                         || counter_temp==0) {  //bisector/midpoint zero finding alg
-
-                    counter_temp++;
-
-#ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-                    if(pParticleID[idx]==JC_DEBUG_PARTICLE
-                        && counter_temp>=counter_temp_max)
-                      cout << ",maxiter_fastretbackstr";
-            #ifdef JC_DEBUG_FR_OUTSIDE_CAP
-                    if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                      cout << endl << "    c_t=" << counter_temp << ",f_iteration2=" << f_iteration2
-                           << ",I1_iterL=" <<I1_iteration1 <<",I1_iterM="<<I1_iteration3
-                           << ",I1_iterH="<<I1_iteration2<<",H-L="<<I1_iteration2-I1_iteration1;
-            #endif
-#endif
-                    if (f_iteration2<0.0){
-
-                      // I1_iteration1 is outside the yield surface and I1_iteration2 is inside the
-                      // yield surface. We want to find a point, between these two points, which is
-                      // on the yield surface. If "I1_iteration3=(I1_iteration1+I1_iteration2)*0.5"
-                      // is inside the yield surface, we put I1_iteration2=I1_iteration3.
-                      I1_iteration2=I1_iteration3;
-                    } else {
-
-                      // I1_iteration1 is outside the yield surface and I1_iteration2 is inside the
-                      // yield surface. We want to find a point, between these two points, which is
-                      // on the yield surface. If "I1_iteration3=(I1_iteration1+I1_iteration2)*0.5"
-                      // is outside the yield surface, we put I1_iteration1=I1_iteration3.
-                      I1_iteration1=I1_iteration3;
-                    }
-                    // Compute the mid-value between I1_iteration1 and I1_iteration2
-                    I1_diff=I1_iteration2-I1_iteration1;
-                    I1_iteration3=I1_iteration1+(I1_diff)*0.5;
-
-                    // Compute the stress related to I1_iteration3
-                    stress_iteration_temp = stress_iteration + Identity*I1_iteration*one_third
-                                                      *(I1_iteration3/I1_iteration-1.0);
-
-                  // Compute the invariants of the stress related to I1_iteration3
-                    f_iteration2=YieldFunction(stress_iteration_temp,FSLOPE,pKappa_loop,
-                                                        cap_radius,PEAKI1_hardening);
-
-                  }
-                  if(sqrt(abs(f_iteration2))<2.0e-6*clen)  //bisection method worked
-                    stress_iteration = stress_iteration_temp;
-                  else{  //bisection method ill-conditioned
-          #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-                    //if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                    //  cout << ",ILL_COND_BISECTION";
-          #endif
-            #ifdef JC_DEBUG_FR_OUTSIDE_CAP
-                    cerr<<"ERROR: Fast returned stress not on yield surface"<<endl;
-                    cerr<<"ParticleID = " << pParticleID[idx] << endl<<endl;
-                    cerr<<"f_iteration2 = " << f_iteration2<<endl; 
-                    cerr<< "1.e-11*clen="<<1.e-11*clen<<endl;
-                    cerr<<"pKappa_loop="<<pKappa_loop<<endl;
-                    cerr<<"R="<<cap_radius<<endl;
-                    cerr<<"PEAKI1="<<PEAKI1_hardening/FSLOPE<<endl;
-                    cerr<<"FSLOPE="<<FSLOPE<<endl;
-                    cerr<<"stress_iteration="<<stress_iteration<<endl;
-                    throw InvalidValue("**ERROR**: Fast returned stress not on yield surface", __FILE__, __LINE__);
-            #else
-                    //cerr<<"WARNING: Fast returned stress not on yield surface for pID="<<pParticleID[idx]<<endl;
-            #endif
-                    beta_cap = sqrt( 1.0 - (pKappa_loop-I1_iteration2)*(pKappa_loop-I1_iteration2)/
-                                     ( (cap_radius)*(cap_radius) ) );
-                    stress_iteration = stress_iteration + S_iteration*
-                                       ((PEAKI1_hardening-FSLOPE*I1_iteration2)*
-                                        beta_cap/sqrt(J2_iteration)-1);
-                    stress_iteration = stress_iteration_temp;//T2D check this
-                  }
-                }
-                else if (I1_iteration<pKappa_loop){  //3rd above cap
-            #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-                  if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                    cout << ",FR3";
-            #endif
-                  // Fast return algorithm in the case of I1<\kappa (see "fig:AreniscaYieldSurface"
-                  // in the Arenisca manual). In this case, the radial fast returning is used.
-                  beta_cap = sqrt( 1.0 - (pKappa_loop-I1_iteration)*(pKappa_loop-I1_iteration)/
-                           ( (cap_radius)*(cap_radius) ) );
-                  stress_iteration = stress_iteration + S_iteration*
-                                     ((PEAKI1_hardening-FSLOPE*I1_iteration)*
-                                      beta_cap/sqrt(J2_iteration)-1);
-
-                }
-                else{  //4th above normal drucker-p
-            #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-                  if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                    cout << ",FR4";
-            #endif
-                  // Fast return algorithm in other cases (see "fig:AreniscaYieldSurface"
-                  // in the Arenisca manual). In this case, the radial fast returning is used.
-                     stress_iteration = stress_iteration + S_iteration*
-                                      ((PEAKI1_hardening-FSLOPE*I1_iteration)/
-                                       sqrt(J2_iteration)-1);
-
-                }
-                if (isnan(stress_iteration.Trace())) {  //Check stress_iteration for nan
-                  cerr << "ParticleID = " << pParticleID[idx] << " stress_iteration = " << stress_iteration << endl;
-                  throw InvalidValue("**ERROR**: Nan in stress_iteration value", __FILE__, __LINE__);
-                }
-                // Compute the invariants of the fast returned stress in the loop
-                computeInvariants(stress_iteration, S_iteration, I1_iteration, J2_iteration);
-//end of fast return
-                if (I1_iteration>=pKappa_loop){
-
-                  // Compute the gradient of the yield surface and the unit tensor in the
-                  // direction of the plastic strain at the fast returned stress for the case
-                  // of I1>=\kappa (see "fig:AreniscaYieldSurface" in the Arenisca manual).
-                  // Also see Eqs. 14, 15, 17, and 18 in 'Brannon & Leelavanichkul 2010'.
-                  G = Identity*(-2.0)*FSLOPE*(FSLOPE*I1_iteration-PEAKI1_hardening) + S_iteration;
-          //#ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-          //        if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-          //          cout << endl<<"BEFORE:FSLOPE_p="<<FSLOPE_p<<",FSLOPE="<<FSLOPE<<",I1_iteration="<<I1_iteration
-          //               << ",PEAKI1_hardening="<<PEAKI1_hardening<<",S_iteration="<<S_iteration
-          //               <<",F*I1-PI1h="<<FSLOPE*I1_iteration-PEAKI1_hardening
-          //               <<",F*I1="<<FSLOPE*I1_iteration<<endl;
-          //#endif
-                  M = Identity*(-2.0)*FSLOPE_p*(FSLOPE*I1_iteration-PEAKI1_hardening) + S_iteration;
-          #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-                  if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                    cout << endl<<"M="<<M<<",M.Norm()="<<M.Norm()<<",F*I1-PI1h="<<FSLOPE*I1_iteration-PEAKI1_hardening<<endl;
-          #endif
-                  M = M/M.Norm();
-          #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-                  if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                    cout << ",FSLOPE_p="<<FSLOPE_p<<",FSLOPE="<<FSLOPE<<",I1_iteration="<<I1_iteration
-                         << ",PEAKI1_hardening="<<PEAKI1_hardening<<",S_iteration="<<S_iteration<<endl;
-          #endif
-
-                }else{
-
-                  // Compute the gradient of the yield surface and the unit tensor in the
-                  // direction of the plastic strain at the fast returned stress for the case
-                  // of I1<\kappa (see "fig:AreniscaYieldSurface" in the Arenisca manual).
-                  // Also see Eqs. 14, 15, 17, and 18 in 'Brannon & Leelavanichkul 2010'.
-                  beta_cap = 1.0 - (pKappa_loop-I1_iteration)*(pKappa_loop-I1_iteration)/
-                             ( (cap_radius)*(cap_radius) );
-                  double FS_I1_i_PI1_h = FSLOPE*I1_iteration-PEAKI1_hardening;
-                  FSLOPE_cap = -2.0*(FS_I1_i_PI1_h)*(FS_I1_i_PI1_h)
-                                   *(pKappa_loop-I1_iteration)/( cap_radius*cap_radius ) 
-                               -2.0*FSLOPE*beta_cap*(FSLOPE*I1_iteration-PEAKI1_hardening);
-                  G = Identity*FSLOPE_cap + S_iteration;
-                  M = G/G.Norm();
-                  if (G.Norm()<1.e-10) {
-                    Matrix3 var_Mat3(0.0,1.0,1.0,1.0,0.0,1.0,1.0,1.0,0.0);
-                    G = Identity*2.0 + var_Mat3/sqrt_three;
-                    M = Identity*2.0 + var_Mat3/sqrt_three;
-                  }
-                  M = M/M.Norm();
-
-                }
-                if (isnan(M.Trace())) {  //Check M for nan
-                  cerr << "ERRORpID = " << pParticleID[idx] << ", pKappa_loop= " << pKappa_loop 
-                       <<", I1_iteration=" << I1_iteration << endl;
-                  throw InvalidValue("**ERROR**: Nan in M value", __FILE__, __LINE__);
-                }
-                if (isnan(G.Trace())) {  //Check G for nan
-                  cerr << "ERRORpID = " << pParticleID[idx] << ", pKappa_loop= " << pKappa_loop 
-                       <<", I1_iteration=" << I1_iteration << endl;
-                  throw InvalidValue("**ERROR**: Nan in M value", __FILE__, __LINE__);
-                }
-
-                // Compute the back stress tensor
-                double deltaBackStressIso_temp = exp(p3_crush_curve+pPlasticStrainVol_new[idx]);
-                deltaBackStress = stress_iteration*kinematic_hardening_constant;
-                deltaBackStressIso = Identity*( 3.0*fluid_B0*0*
-                                    (exp(p3_crush_curve+p4_fluid_effect)-1.0) * deltaBackStressIso_temp
-                                    /( (deltaBackStressIso_temp-1.0)*(deltaBackStressIso_temp-1.0) ) );
-
-                // Compute the projection direction tensor at the fast returned stress position
-                // See Eq. 24 in 'Brannon & Leelavanichkul 2010'.
-                double I1_M,J2_M;
-                Matrix3 S_M;
-                computeInvariants(M, S_M, I1_M, J2_M);
-                P = (Identity*lame*(M.Trace()) + M*2.0*shear)
-                    -deltaBackStressIso*M.Trace()-deltaBackStress*sqrt(J2_M);
-
-                // Compute the multiplier Gamma
-                // See Eq. 35 in 'Brannon & Leelavanichkul 2010'.
-                   gamma = ( G.Contract(trial_stress_loop-stress_iteration) )/( G.Contract(P) );
-
-                // Loop to apply hardening in calculation of multiplier Gamma
-                int condGamma = 1;
-                double pKappa_loop_old = pKappa_loop;
-                double gamma_old=gamma;
-                int counter_gamma1=0;
-                double hardeningEns=-1e99;
-                while (condGamma == 1) {
-
-                  // If after 1000 cycles, gamma is not converged, an error should be reported.
-                  counter_gamma1++;
-                  if (counter_gamma1>1000) {
-                    cerr<<"ERROR! in nested retuen algorithm"<<endl;
-                    cerr<<"pParticleID="<<pParticleID[idx]<<endl;
-                    cerr<<"deformationGradient_new="<<deformationGradient_new[idx]<<endl<<endl;
-                    cerr<<"hardeningEns="<<hardeningEns<<endl;
-                    cerr<<"f_new_loop="<<f_new_loop<<endl;
-                    cerr<<"sqrt(abs(f_new_loop))="<<sqrt(abs(f_new_loop))<<endl;
-                    cerr<<"1e-4*clen="<<1e-4*clen<<endl;
-                    cerr<<"pKappa_loop="<<pKappa_loop<<endl;
-                    cerr<<"R="<<cap_radius<<endl;
-                    cerr<<"gamma="<<gamma<<endl;
-                    cerr<<"gamma_old="<<gamma_old<<endl;
-                    cerr<<"M="<<M<<endl;
-                    cerr<<"stress_iteration="<<stress_iteration<<endl;
-                    throw InvalidValue("**ERROR**:in nested retuen algorithm",
-                                                         __FILE__, __LINE__);
-                  }
-
-                  // Compute new trial stress for the current subcycle in the loop
-                  // See Eq. 22 in 'Brannon & Leelavanichkul 2010'.
-                     stress_iteration = trial_stress_loop - P*gamma;
-
-                  // Compute the un-shifted new trial stress for the current subcycle in the loop
-                  stress_iteration = stress_iteration + pBackStress_loop;
-                  trial_stress_loop = trial_stress_loop + pBackStress_loop;
-
-                  double I1_plasStrain,J2_plasStrain;
-                  Matrix3 S_plasStrain;
-
-                  // Compute the plastic strain increment based on the unit tensor in the
-                  // direction of the plastic strain and the multiplier Gamma
-                  plasStrain_loop = M*gamma;
-                  if (isnan(plasStrain_loop.Trace())) {  //Check plasStrain_loop for nan
-                    cerr << "ERRORpID = " << pParticleID[idx] << ", M = " << M <<", gamma=" << gamma << endl;
-                    throw InvalidValue("**ERROR**: Nan in plasStrain_loop value", __FILE__, __LINE__);
-                  }
-
-                  // Compute the invariants of the plastic strain increment
-                  computeInvariants(plasStrain_loop, S_plasStrain, I1_plasStrain, J2_plasStrain);
-
-                  // Compute back stress increments
-                  deltaBackStressIso_temp = exp(p3_crush_curve+(pPlasticStrainVol_new[idx]
-                                             +plasStrain_loop.Trace()));
-                  deltaBackStress = stress_iteration*kinematic_hardening_constant
-                                    *sqrt(J2_plasStrain);
-                  deltaBackStressIso = Identity*( -3.0*fluid_B0*
-                                      ((exp(pPlasticStrainVol_new[idx])-1.0)
-                                      * exp(p3_crush_curve+p4_fluid_effect))
-                                      /(exp(p3_crush_curve+p4_fluid_effect
-                                      +(pPlasticStrainVol_new[idx]+plasStrain_loop.Trace()))-1.0) )
-                                      *(pPlasticStrainVol_new[idx]+plasStrain_loop.Trace());
-                 
-                  pBackStress_loop = deltaBackStressIso;
-                  
-                  if (isnan(pBackStress_loop.Trace())) {  //Check pBackStress_loop for nan
-                    cerr << "ERRORpID = " << pParticleID[idx] << " pBackStress_loop = " << pBackStress_loop << endl;
-                    throw InvalidValue("**ERROR**: Nan in pBackStress_loop value", __FILE__, __LINE__);
-                  }
-
-                  // Compute the shifted new trial stress for the current subcycle in the loop
-                  stress_iteration = stress_iteration - pBackStress_loop;
-                  trial_stress_loop = trial_stress_loop - pBackStress_loop;
-
-                  //double hardeningEns;
-                  double hardeningEnsCond=-1.0;
-                  double FS_I1_i_PI1_h = FSLOPE*I1_iteration-PEAKI1_hardening;
-
-                  if (I1_iteration>=pKappa_loop){
-
-                    // Compute the hardening ensemble for the case of I1>=\kappa 
-                    // (see "fig:AreniscaYieldSurface" in the Arenisca manual).
-                    // Also, see Eq. 6.53 in 'Brannon 2007'.
-                    hardeningEns = -2.0*hardening_modulus*FS_I1_i_PI1_h/G.Norm();
-
-                  }else{
-
-                    // Compute the hardening ensemble for the case of I1<\kappa 
-                    // (see "fig:AreniscaYieldSurface" in the Arenisca manual).
-
-                    // Declare and initialize some auxiliaryvariables
-                    beta_cap = 1.0 - (pKappa_loop-I1_iteration)*(pKappa_loop-I1_iteration)/
-                               ( (cap_radius)*(cap_radius) );
-                    double pKappa_tempA = exp(p3_crush_curve+p4_fluid_effect
-                                          +pPlasticStrainVol_new[idx]+(M*gamma).Trace());
-                    double pKappa_tempA1 = exp(p3_crush_curve+pPlasticStrainVol_new[idx]
-                                           +(M*gamma).Trace());
-                    double pKappa_tempA2;
-
-                    if (cond_fixed_cap_radius==0) {
-
-                      // Consider the limitation for R=\kappa-X
-                      // (see "eq:limitationForR" in the Arenisca manual).
-                      // cond_fixed_cap_radius is a variable which indicates
-                      // if the limit has been met or not?
-                      // Compute auxiliary variable in the case that the limit has not been met.
-                      pKappa_tempA2 = 2.0/G.Norm()*CR*(FS_I1_i_PI1_h*FS_I1_i_PI1_h*FS_I1_i_PI1_h)
-                                              *(pKappa_loop-I1_iteration)
-                                              /( cap_radius*cap_radius*cap_radius*(1.0+FSLOPE*CR) );
-
-                    } else {
-
-                      // Compute auxiliary variable in the case that the limit has been met.
-                      pKappa_tempA2 = -2.0*FS_I1_i_PI1_h*FS_I1_i_PI1_h
-                                               *(pKappa_loop-I1_iteration)
-                                               /( G.Norm()*cap_radius*cap_radius );
-
-                    }
-
-                    // Compute the hardening ensemble (see Eq. 6.53 in 'Brannon 2007').
-                    hardeningEnsCond = -2.0*beta_cap*FS_I1_i_PI1_h
-                                       *hardening_modulus/G.Norm()
-                                   +pKappa_tempA2
-                                       *( exp(-p1_crush_curve*(pKappa_loop-cap_radius-p0_crush_curve))
-                                          /( p3_crush_curve*p1_crush_curve ) -
-                                          3.0*fluid_B0*0*(exp(p3_crush_curve+p4_fluid_effect)-1.0)
-                                          *pKappa_tempA
-                                          /( (pKappa_tempA-1.0)*(pKappa_tempA-1.0) ) +
-                                          3.0*fluid_B0*0*(exp(p3_crush_curve+p4_fluid_effect)-1.0)
-                                          *pKappa_tempA1
-                                          /( (pKappa_tempA1-1.0)*(pKappa_tempA1-1.0) ) )
-                                       *M.Trace();
-
-                    if (pKappa_loop-cap_radius-p0_crush_curve<0 || hardeningEnsCond>0) {
-
-                      // In the case of X<p_0 (see "fig:AreniscaYieldSurface" in the Arenisca manual),
-                      // consider the hardening ensemble.
-                      hardeningEns = hardeningEnsCond;
-
-                    } else {
-
-                      // In the case of X>p_0 (see "fig:AreniscaYieldSurface" in the Arenisca manual),
-                      // do not consider the full hardening ensemble. Consider only the Drucker-Prager
-                      // hardening ensemble. This may slow down the convergence of the plasticity return
-                      // algorithm but, it increases its robustness.
-                      hardeningEns = -2.0*beta_cap*(FSLOPE*I1_iteration-PEAKI1_hardening)
-                                         *hardening_modulus/G.Norm();
-                    }
-                  }
-
-                  if (hardeningEns<0.0) {
-
-                    // In the case of moving cap toward the vertex, do not consider the hardening ensemble.
-                    // This may slow down the convergence of the plasticity return
-                    // algorithm but, it increases its robustness.
-                    hardeningEns = 0.0;
-                    condGamma = 0;
-                  }
-
-                  // Re-compute the multiplier Gamma
-                  // See Eq. 35 in 'Brannon & Leelavanichkul 2010'.
-                  Matrix3 G_unit = G/G.Norm();
-                  gamma=(G_unit.Contract(P)/( G_unit.Contract(P)+hardeningEns ))*gamma;
-
-                  // Re-compute new trial stress for the current subcycle in the loop
-                  // See Eq. 22 in 'Brannon & Leelavanichkul 2010'.
-                     stress_iteration = trial_stress_loop - P*gamma;
-
-                  // Update \kappa (= the position of the cap) see "eq:evolutionOfKappaFluidEffect"
-                  // in the Arenisca manual
-
-                  // Declare and assign some axiliary variables
-                  double pKappa_temp = exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol_new[idx]
-                                       +(M*gamma).Trace());
-                  double pKappa_temp1 = exp(p3_crush_curve+pPlasticStrainVol_new[idx]
-                                        +(M*gamma).Trace());
-                  double var1;
-
-                  // Compute the var1 which relates dX/de to d(kappa)/de: d(kappa)/de=dX/de * (1/var1)
-                  // Consider the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca manual).
-                  // 'cond_fixed_cap_radius' is a variable which indicates if the limit has been met or not?
-                  if (cond_fixed_cap_radius==0) {
-                    var1 = 1.0+FSLOPE*CR;
-                  } else {
-                    var1 = 1.0;
-                  }
-            #ifdef JC_USE_BB_STATE_UPDATE
-                  // Update the model state
-                state->local_var[0] = pKappa_loop_old;              // kappa value
-                state->local_var[1] = cap_radius;                  // cap radius
-                state->local_var[2] = max_X;                       // max_X
-                state->local_var[3] = pPlasticStrainVol_new[idx];  // eps_v
-                state->local_var[4] = (M*gamma).Trace();           // Delta eps_v
-                state->local_var[5] = var1;                        // scale factor for Delta eps_v
-                
-                pKappa_loop = d_intvar->computeInternalVariable(state);
-                
-                // Set the kappa state flag
-                if (pKappa_loop == (max_X + cap_radius)) pKappaFlag_new[idx] = 1.0;
-                
-                if (pKappa_loop<min_kappa){
-                  pKappa_loop = min_kappa;
-                  pKappaFlag_new[idx] = 2.0;
-              #ifdef JC_LIMITER_PRINT
-                  cout << "$K";
-              #endif
-                }
-            #else
-                  // Update \kappa in the case of: 
-                  if (pKappa_loop-cap_radius-p0_crush_curve<0) {  //X < p0
-                    // (see "fig:AreniscaYieldSurface" in the Arenisca manual)
-                    // (see "eq:evolutionOfKappaFluidEffect" in the Arenisca manual)
-                    pKappa_loop = pKappa_loop_old + ( exp(-p1_crush_curve
-                                   *(pKappa_loop-cap_radius-p0_crush_curve))
-                                   /( p3_crush_curve*p1_crush_curve ) -
-                                   3.0*fluid_B0*(exp(p3_crush_curve+p4_fluid_effect)-1.0)*pKappa_temp
-                                   /( (pKappa_temp-1.0)*(pKappa_temp-1.0) ) +
-                                   3.0*fluid_B0*(exp(p3_crush_curve+p4_fluid_effect)-1.0)*pKappa_temp1
-                                   /( (pKappa_temp1-1.0)*(pKappa_temp1-1.0) ) )
-                                   *(M*gamma).Trace()/var1;
-            
-                    // Apply the lower limit for \kappa. 
-                    // (for the limitation of min_kappa see "eq:limitationForKappa"
-                    // in the Arenisca manual)
-                    // pKappaFlag is a particle flag variable which defines if the particle
-                    // meet any of the limitation for \kappa and X or not?
-                    // pKappaFlag=2: means that the particle met the min_kappa limitation.
-                    if (pKappa_loop<min_kappa){
-                      pKappa_loop = min_kappa;
-                      pKappaFlag_new[idx] = 2.0;
-                #ifdef JC_LIMITER_PRINT
-                      cout << "$K";
-                #endif
-                    }
-
-                  } else if (pKappa_loop-cap_radius-max_X<0) {  //p0 <= X < max_X
-                    // (see "fig:AreniscaYieldSurface" in the Arenisca manual)
-                    // (see "eq:evolutionOfKappaFluidEffect1" in the Arenisca manual)
-                    // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
-                    pKappa_loop = pKappa_loop + ( pow( abs( (pKappa_loop-cap_radius)/p0_crush_curve ),
-                                     1-p0_crush_curve*p1_crush_curve*p3_crush_curve )
-                                     /( p3_crush_curve*p1_crush_curve ) -
-                                     3.0*fluid_B0*(exp(p3_crush_curve+p4_fluid_effect)-1.0)*pKappa_temp
-                                     /( (pKappa_temp-1.0)*(pKappa_temp-1.0) ) +
-                                     3.0*fluid_B0*(exp(p3_crush_curve+p4_fluid_effect)-1.0)*pKappa_temp1
-                                     /( (pKappa_temp1-1.0)*(pKappa_temp1-1.0) ) )
-                                     *(M*gamma).Trace()/var1;
-
-                  } else {  //X >= max_X
-                    // (see "fig:AreniscaYieldSurface" in the Arenisca manual)
-                    // In this case it is assumed that X=max_X
-                    // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
-                    // pKappaFlag is a particle variable variable which defines if the particle
-                    // meet any of the limitation for \kappa and X or not?
-                    // pKappaFlag=1: means that the particle met the max_X limitation
-                    pKappa_loop = max_X + cap_radius;
-                    pKappaFlag_new[idx] = 1.0;
-                #ifdef JC_LIMITER_PRINT
-                    cout << "$R";
-                #endif
-                  }
-#endif
-                  // Re-calculate the axiliary varable 'PEAKI1_hardening'
-                  // because '(M*gamma).Norm()' has been updated 
-                  PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*(pPlasticStrain_new[idx]
-                                     +(M*gamma).Norm());
-
-                  // Consider the limitation for R=\kappa-X (see "eq:limitationForR" in the Arenisca manual).
-                  // 'cond_fixed_cap_radius' is a variable which indicates if the limit has been met or not?
-                  // If the limit has been met, updated \kappa should be modified.
-                  if (cond_fixed_cap_radius==0) {
-                    double cap_radius_old=cap_radius;
-                    cap_radius=-CR*(FSLOPE*pKappa_loop-PEAKI1_hardening);
-                #ifdef JC_USE_BB_STATE_UPDATE
-                    cap_radius_fac=FSLOPE*pKappa_loop-PEAKI1_hardening;
-                    cap_radius=-CR*cap_radius_fac;
-                #endif
-                    if (cap_radius<0.1*cap_r_initial || pKappa_loop>PEAKI1_hardening/FSLOPE) {
-                #ifdef JC_LIMITER_PRINT
-                      cout << "$R";
-                #endif
-                      pKappa_loop = pKappa_loop - cap_radius_old + 0.1*cap_r_initial;
-                      cap_radius=0.1*cap_r_initial;
-                      cond_fixed_cap_radius=1;
-                    }
-                  }
-
-                  // Apply the upper limit for X. 
-                  if (pKappa_loop>max_X+cap_radius){
-                    // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
-                    // pKappaFlag is a particle variable variable which defines if the particle
-                    // meet any of the limitation for \kappa and X or not?
-                    // pKappaFlag=1: means that the particle met the max_X limitation
-                    // If the limit has been met, updated \kappa should be modified.
-                    pKappa_loop = max_X+cap_radius;
-                    pKappaFlag_new[idx] = 1.0;
-                #ifdef JC_LIMITER_PRINT
-                    cout << "$X";
-                #endif
-                  }
-
-                  // Compute the yield function at the returned back stress in the loop
-                  f_new_loop=YieldFunction(stress_iteration,FSLOPE,pKappa_loop,
-                                           cap_radius,PEAKI1_hardening);
-
-                  // If the returned back stress is inside the yield surface, gamma 
-                  // should be decreased.
-                  if (hardeningEns>0.0 && gamma>0.0 && f_new_loop<0.0 && 
-//                      sqrt(abs(f_new_loop))>1.0e-4*char_length_yield_surface ) {
-                      sqrt(abs(f_new_loop))>1.0e-4*clen ) {
-                    gamma = gamma/2.0;
-                  } else {
-                    condGamma = 0;
-                  }
-
-                }
-
-                f_new_loop=sqrt(abs(f_new_loop));
- 
-    #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-                if(pParticleID[idx]==JC_DEBUG_PARTICLE){
-                  cout << endl << "   cNR="<<counter<<",f="<<f_new_loop
-                    <<",9.9e-2*clen="<<9.9e-2*clen;
-                }
-                if(pParticleID[idx]==JC_DEBUG_PARTICLE
-                    && fabs(f_new_loop)>9.9e-2*clen && counter>max_number_of_iterations)
-                  cout <<",maxNR";
-    #endif
-                #ifdef JC_MAX_NESTED_RETURN
-                if (fabs(f_new_loop)>9.9e-2*clen && counter>max_number_of_iterations) {
-                  cerr<<endl << "ERROR: Nested return loop not converged" << endl;
-                  cerr<<"ParticleID = " << pParticleID[idx] << endl <<endl;
-                  cerr<<"f_new_loop = " << f_new_loop << endl;
-                  cerr<<"9.9e-2*clen="<<9.9e-2*clen<<endl;
-                  cerr<<"pKappa_loop= "<<pKappa_loop<<endl;
-                  cerr<<"gamma="<<gamma<<endl;
-                  cerr<<"condGamma="<<condGamma<<endl;
-                  cerr<<"PEAKI1="<<PEAKI1_hardening/FSLOPE<<endl;
-                  cerr<<"R="<<cap_radius<<endl;
-                  cerr<<"FSLOPE="<<FSLOPE<<endl;
-                  cerr<<"stress_iteration="<<stress_iteration<<endl;
-                  Matrix3 S_iteration_err;
-                  double I1_iteration_err,J2_iteration_err;
-                  computeInvariants(stress_iteration, S_iteration_err, I1_iteration_err, J2_iteration_err);
-                  cerr<<"I1_iter="<<I1_iteration_err<<endl;
-                  cerr<<"J2_iter="<<J2_iteration_err<<endl;
-                  throw InvalidValue("**ERROR**: Nested return loop not converged", __FILE__, __LINE__);
-                }
-                #endif
-
-              }//END OF NR LOOP
-              if (isnan(pBackStress_loop.Trace())) {  //Check pBackStress_loop for nan
-                cerr << "ERRORpID = " << pParticleID[idx] << " pBackStress_loop = " << pBackStress_loop << endl;
-                throw InvalidValue("**ERROR**: Nan in pBackStress_loop value", __FILE__, __LINE__);
-              }
-              if (isnan(pKappa_loop)) {  //Check pKappa_loop for nan
-                cerr << "ERRORpID = " << pParticleID[idx] << " pKappa_loop = " << pKappa_loop << endl;
-                throw InvalidValue("**ERROR**: Nan in pKappa_loop value", __FILE__, __LINE__);
-              }
-              if (isnan(stress_iteration.Trace())) {  //Check stress_iteration for nan
-                cerr << "ERRORpID = " << pParticleID[idx] << " stress_iteration = " << stress_iteration << endl;
-                throw InvalidValue("**ERROR**: Nan in stress_iteration value", __FILE__, __LINE__);
-              }
-              if (isnan(trial_stress_loop.Trace())) {  //Check trial_stress_loop for nan
-                cerr << "ERRORpID = " << pParticleID[idx] << " trial_stress_loop = " << trial_stress_loop << endl;
-                throw InvalidValue("**ERROR**: Nan in trial_stress_loop value", __FILE__, __LINE__);
-              }
-
-              // Transfer the back stress, \kappa, and final stress in the current subcycle
-              // to the associated particle variables
-              pBackStress_new[idx] = pBackStress_loop;
-              pKappa_new[idx] = pKappa_loop;
-              stress_new[idx] = stress_iteration;
-
-              // Compute two coefficients that are used in calculation of strain from stress
-              double shear_inverse = 0.5/shear;
-              double nu_over_E = (-1.0)*lame/(2.0*shear*(2.0*shear+3.0*lame));
-
-              // Compute the difference between the stress tensor at the beginning and end of
-              // the current subcycle
-              Matrix3 diff_stress_iteration = trial_stress_loop - stress_new[idx];
-              Matrix3 strain_iteration = (Identity*nu_over_E*(diff_stress_iteration.Trace()) +
-                                          diff_stress_iteration*shear_inverse);
-              if (isnan(trial_stress_loop.Trace())) {  //Check trial_stress_loop for nan
-                cerr << "ERRORpID = " << pParticleID[idx] << " trial_stress_loop = " << trial_stress_loop << endl;
-                throw InvalidValue("**ERROR**: Nan in trial_stress_loop value", __FILE__, __LINE__);
-              }
-
-              // Update the plastic strain magnitude
-              pPlasticStrain_new[idx] = pPlasticStrain_new[idx] + strain_iteration.Norm();
-
-              // Update the volumetric part of the plastic strain
-              pPlasticStrainVol_new[idx] = pPlasticStrainVol_new[idx] + strain_iteration.Trace();
-  #ifdef JC_DEBUG_PARTICLE  // Print number of subcycles
+              #ifdef JC_DEBUG_PARTICLE  // Print number of subcycles
               if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-                cout << ",epv="<<pPlasticStrainVol_new[idx];
-  #endif                 
-  #ifdef JC_EPV
-              if (pPlasticStrainVol_new[idx]<-p3_crush_curve) {
-                cout<<"ERROR! in pPlasticStrainVol_new"<<endl;
-                cout<<"pParticleID="<<pParticleID[idx]<<endl;
-                cout<<"deformationGradient_new="<<deformationGradient_new[idx]<<endl<<endl;
-                cout<<"epv=" << pPlasticStrainVol_new[idx]<<endl;
-                cout<<"pKappa_new[idx]="<<pKappa_new[idx]<<endl;
-                throw InvalidValue("**ERROR**:in pPlasticStrainVol calculation",
-                __FILE__, __LINE__);
-              }
-  #endif
-              // Update the volumetric part of the elastic strain
-              pElasticStrainVol_new[idx] = pElasticStrainVol_new[idx] - strain_iteration.Trace();
-                                           
-              stress_new[idx] = stress_new[idx] + pBackStress_new[idx];//---------------
+                cout << endl << "  SCc=" << substep_counter << "/"<<num_substeps-1;
+              #endif
+              ///////////////////////////////////////
+              // COMPUTE STRESS TENSOR FOR SUBSTEP
+              //  flag_substep = 0 means no flag thrown (good)
 
-#ifdef JC_DEBUG_PARTICLE // Print end of subcyclcling routine for non-vertex treatment
-             // if(pParticleID[idx]==JC_DEBUG_PARTICLE)
-             //   cout << ",eoSC=" << subcycle_counter <<endl;
-#endif
-            }  //END Nested Return Routine for non-vertex treatment 
-//            // Compute the shifted stress
-//            stress_new[idx] = stress_new[idx] - pBackStress_new[idx];
-          }  //END OF SUBCYCLING ROUTINE 
-          // Compute the shifted stress
-          stress_new[idx] = stress_new[idx] - pBackStress_new[idx];
+              // MH: We call computeStressTensorStep with the bulk modulus for
+              // the entire step, since this must remain constant between substeps
+              // to be consistent with our intial trial stress definition:
+              flag_substep = computeStressTensorStep(trial_stress_substep,
+                                                     stress_new_substep,
+                                                     ep_new_substep,
+                                                     evp_new_substep,
+                                                     eve_new_substep,
+                                                     X_new_substep,
+                                                     Kappa_new_substep,
+                                                     Zeta_new_substep,
+                                                     bulk, // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                                                     pParticleID[idx]);
+
+              if(flag_substep!=0) //if flag thrown stop subcycling, end for loop
+                substep_counter=num_substeps;
+
+            } //End of subcycle loop
+
+            //if no flag was thrown during computeStressTensorStep do not substep again
+            if(flag_substep==0) //end while loop
+              massive_subcycling_flag = 0;
+            else{ //flag thrown, redo subcycling with more step
+              massive_subcycling_flag = 1;
+              massive_subcycling_counter++;
+
+              //report warning
+              cout<< "WARNING: massive subcycling needed with flag_substep="
+                  << flag_substep <<endl;
+            }
+          }//end while loop
+
+          //END OF SUBCYCLING ROUTINE for step
+          evp_new_step    = evp_new_substep;
+          eve_new_step    = eve_new_substep;
+          X_new_step      = X_new_substep;
+          Kappa_new_step  = Kappa_new_substep;
+          Zeta_new_step   = Zeta_new_substep;
+          ep_new_step     = ep_new_substep;
+          stress_new_step = stress_new_substep;
+
+          //Complete final check that after subcycling we are on the yield surface
+
+          // Compute the invariants of the new stress for the step
+          //double J2_new_step,I1_new_step;
+          //Matrix3 S_new_step;
+          //computeInvariants(stress_new_step, S_new_step, I1_new_step, J2_new_step);
 
           // Compute the yield function at the returned back stress to check
           // if it correctly returned back to the yield surface or not?
-          double f_new=YieldFunction(stress_new[idx],FSLOPE,pKappa_new[idx],
-                                      cap_radius,PEAKI1_hardening);
-          f_new=sqrt(abs(f_new));
+          //double f_new_step=YieldFunction(I1_new_step, J2_new_step, X_new_step,
+          //                                Kappa_new_step, Zeta_new_step);
 
-          // Compute the invariants of the returned stress
-          double J2_new,I1_new;
-          Matrix3 S_new;
-          computeInvariants(stress_new[idx], S_new, I1_new, J2_new);
-
-          // If X is larger than PEAKI1 send error message to the host code.
-          if (pKappa_new[idx]-cap_radius>PEAKI1_hardening/FSLOPE) {
-            cerr<<"ERROR! pKappa-R>PEAKI1 "<<endl;
-            cerr<<"pParticleID="<<pParticleID[idx]<<endl;
-            cerr<<"deformationGradient_new="<<deformationGradient_new[idx]<<endl<<endl;
-            cerr<<"J2_new= "<<J2_new<<endl;
-            cerr<<"I1_new= "<<I1_new<<endl;
-            cerr<<"pKappa_new[idx]= "<<pKappa_new[idx]<<endl;
-            cerr<<"f_new= "<<f_new<<endl;
-            cerr<<"clen= "<<clen<<endl;
-            cerr<<"PEAKI1="<<PEAKI1_hardening/FSLOPE<<endl;
-            cerr<<"R="<<cap_radius<<endl;
-            cerr<<"FSLOPE="<<FSLOPE<<endl;
-            throw InvalidValue("**ERROR**:pKappa-R>PEAKI1 ", __FILE__, __LINE__);
-          }
-
-          // If the new stress is not on the yield surface send error message to the host code.s
-          if (sqrt(abs(f_new))>1.0e-1*clen)
-          {
-            cerr<<"ERROR!  did not return to <1e-1 yield surface (Arenisca.cc)"<<endl;
-            cerr<<"pParticleID="<<pParticleID[idx]<<endl;
-            cerr<<"deformationGradient_new="<<deformationGradient_new[idx]<<endl<<endl;
-            cerr<<"deformationGradient_old="<<deformationGradient[idx]<<endl;
-            //cerr<<"condition_return_to_vertex="<<condition_return_to_vertex<<endl;
-            cerr<<"J2_new= "<<J2_new<<endl;
-            cerr<<"I1_new= "<<I1_new<<endl;
-            cerr<<"pKappa_new[idx]= "<<pKappa_new[idx]<<endl;
-            cerr<<"pKappaFlag_new[idx]= "<<pKappaFlag_new[idx]<<endl;
-            cerr<<"f_new= "<<f_new<<endl;
-            cerr<<"clen= "<<clen<<endl;
-            cerr<<"PEAKI1="<<PEAKI1_hardening/FSLOPE<<endl;
-            cerr<<"R="<<cap_radius<<endl;
-            cerr<<"FSLOPE="<<FSLOPE<<endl;
-            cerr<<"pvelocity[idx]="<<pvelocity[idx]<<endl;
-            cerr<<"rho_cur[idx]="<<rho_cur[idx]<<endl;
-            cerr<<"pBackStress_new[idx]="<<pBackStress_new[idx]<<endl;
-            cerr<<"stress_old[idx]="<<stress_old[idx]<<endl;
-            cerr<<"stress_new[idx]="<<stress_new[idx]<<endl;
-          throw InvalidValue("**ERROR**:did not return to yield surface ",
-                             __FILE__, __LINE__);
-          }
+          //// If the new stress is not on the yield surface send error message to the host code.s
+          //if (sqrt(abs(f_new_step))>1.0*clen)
+          //{
+          //  cerr<<"ERROR!  did not return to <1e-1 yield surface (Arenisca.cc)"<<endl;
+          //  cerr<<"pParticleID="<<pParticleID[idx]<<endl;
+          //  cerr<<"pDefGrad_new="<<pDefGrad_new[idx]<<endl<<endl;
+          //  cerr<<"pDefGrad_old="<<pDefGrad[idx]<<endl;
+          //  //cerr<<"condition_return_to_vertex="<<condition_return_to_vertex<<endl;
+          //  cerr<<"J2_new_step= "<<J2_new_step<<endl;
+          //  cerr<<"I1_new_step= "<<I1_new_step<<endl;
+          //  cerr<<"f_new_step= "<<f_new_step<<endl;
+          //  cerr<<"clen= "<<clen<<endl;
+          //  cerr<<"pStress_old[idx]="<<pStress_old[idx]<<endl;
+          //  cerr<<"pStress_new[idx]="<<pStress_new[idx]<<endl;
+          //  throw InvalidValue("**ERROR**:did not return to yield surface ",
+          //                     __FILE__, __LINE__);
+          //}
         }
 
-        // Compute the unshifted stress from the shifted stress
-        stress_new[idx] = stress_new[idx] + pBackStress_new[idx];
+        pevp_new[idx]    = evp_new_step;
+        peve_new[idx]    = eve_new_step;
+        pCapX_new[idx]   = X_new_step;
+        pKappa_new[idx]  = Kappa_new_step;
+        pZeta_new[idx]   = Zeta_new_step;
+        pIota_new[idx]   = 0.0; //T2D: Emad
+        pep_new[idx]     = ep_new_step;
+        pStress_new[idx] = stress_new_step;
 
+        // T2D: Cindy ADD RATE DEPENDENCE CODE HERE
+        pCapXQS_new[idx]   = pCapX_new[idx];
+        pZetaQS_new[idx]   = pZeta_new[idx];
+        pIotaQS_new[idx]   = pIota_new[idx];
+        pStressQS_new[idx] = pStress_new[idx];
+        //d_cm.T1_rate_dependence
+        //d_cm.T2_rate_dependence
+        
         // Compute the total strain energy and the stable timestep based on both
         // the particle velocities and wave speed.
 
         // Use polar decomposition to compute the rotation and stretch tensors
-        deformationGradient_new[idx].polarDecompositionRMB(tensorU, tensorR);
+        pDefGrad_new[idx].polarDecompositionRMB(tensorU, tensorR);
         rotation[idx]=tensorR;
 
         // Compute the rotated stress at the end of the current timestep
-        stress_new[idx] = (rotation[idx]*stress_new[idx])*(rotation[idx].Transpose());
+        pStress_new[idx] = (rotation[idx]*pStress_new[idx])*(rotation[idx].Transpose());
 
         // Compute wave speed + particle velocity at each particle,
         // store the maximum
@@ -2096,23 +1110,23 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         }
 
         // Compute the averaged stress
-        Matrix3 AvgStress = (stress_new[idx] + stress_old[idx])*0.5;
-                            
-  #ifdef JC_DEBUG_PARTICLE // Print plastic work //T2D UNFINISHED!!
+        Matrix3 AvgStress = (pStress_new[idx] + pStress_old[idx])*0.5;
+
+  #ifdef JC_DEBUG_PARTICLE // Print plastic work //T2D UNFINISHED aka wrong!!
         // Verify plastic work is positive
         //Given: AvgStress, delT, stress_new, stress_old, bulk, shear,
         if(pParticleID[idx]==JC_DEBUG_PARTICLE){
-          Matrix3 AvgStressRate = (stress_new[idx] + stress_old[idx])/delT;
-          Matrix3 AvgStressRateIso = one_third*AvgStressRate.Trace()*Identity;
-          Matrix3 EdE = D-0.5/shear*(AvgStressRate-AvgStressRateIso)-one_third/bulk*AvgStressRateIso;
-          Matrix3 PSR = (pPlasticStrain_new[idx] + pPlasticStrain[idx])/delT;  //AvgPlasticStrainRate
-          double pPlasticWork = (PSR(0,0)*AvgStress(0,0) +
-                                 PSR(1,1)*AvgStress(1,1) +
-                                 PSR(2,2)*AvgStress(2,2) +
-                             2.*(PSR(0,1)*AvgStress(0,1) +
-                                 PSR(0,2)*AvgStress(0,2) +
-                                 PSR(1,2)*AvgStress(1,2)));
-          //cout << ",pPlasticWork=" << pPlasticWork;
+          //Matrix3 AvgStressRate = (pStress_new[idx] + pStress_old[idx])/delT;
+          //Matrix3 AvgStressRateIso = one_third*AvgStressRate.Trace()*Identity;
+          //Matrix3 EdE = D-0.5/shear*(AvgStressRate-AvgStressRateIso)-one_third/bulk*AvgStressRateIso;
+          //Matrix3 PSR = (pep_new[idx] + pep[idx])/delT;  //AvgepRate
+          //double pPlasticWork = (PSR(0,0)*AvgStress(0,0) +
+          //                       PSR(1,1)*AvgStress(1,1) +
+          //                       PSR(2,2)*AvgStress(2,2) +
+          //                   2.*(PSR(0,1)*AvgStress(0,1) +
+          //                       PSR(0,2)*AvgStress(0,2) +
+          //                       PSR(1,2)*AvgStress(1,2)));
+          ////cout << ",pPlasticWork=" << pPlasticWork;
         }
   #endif
 
@@ -2133,51 +1147,353 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 #endif
 
     }
-#ifdef JC_DEBUG_PARTICLE // Undefine
-#undef JC_DEBUG_PARTICLE
-#endif
-                                         
+
     // Compute the stable timestep based on maximum value of
     // "wave speed + particle velocity"
     WaveSpeed = dx/WaveSpeed; //Variable now holds critical timestep (not speed)
 
     double delT_new = WaveSpeed.minComponent();
+    //cout<<"delT_new="<<delT_new<<endl;
+    //computeStableTimestep(patch,pset,matl,new_dw);
+
 #ifdef JC_DEBUG_SMALL_TIMESTEP
         //cout <<"delT_new="<<delT_new;
         //cout <<"dx="<<dx<<endl;
     if(delT_new==WaveSpeed.x()){
-      cout << "pvel.x=" << pvelocity[idvel.x()].x() 
+      cout << "pvel.x=" << pvelocity[idvel.x()].x()
            << ",wavespeed.x=" << WaveSpeed.x()
-           << ",bulk=" << vbulk.x() 
+           << ",bulk=" << vbulk.x()
            << ",rho=" << rho_cur[idvel.x()]  << endl;
     }
     else if(delT_new==WaveSpeed.y()){
-    cout << "pvel.y: " << pvelocity[idvel.y()].y() 
+    cout << "pvel.y: " << pvelocity[idvel.y()].y()
          << ",wavespeed.y=" << WaveSpeed.y()
-         << ",bulk=" << vbulk.y() 
+         << ",bulk=" << vbulk.y()
          << ",rho=" << rho_cur[idvel.y()] << endl;
     }
     else if(delT_new==WaveSpeed.z()){
-      cout << "pvel.z: " << pvelocity[idvel.z()].z() 
+      cout << "pvel.z: " << pvelocity[idvel.z()].z()
            << ",wavespeed.z=" << WaveSpeed.z()
-           << ",bulk=" << vbulk.z() 
+           << ",bulk=" << vbulk.z()
            << ",rho=" << rho_cur[idvel.z()]  << endl;
     }
     else
       cout << "ERROR in JC_DEBUG_SMALL_TIMESTEP" <<endl;
 #endif
-  
+
     // Put the stable timestep and total strain enrgy
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
     if (flag->d_reductionVars->accStrainEnergy ||
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
     }
-
-    delete interpolator;
-
   }
 } // -----------------------------------END OF COMPUTE STRESS TENSOR FUNCTION
+
+int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stress tensor
+                                      Matrix3& sigma_new,         // stress tensor
+                                      Matrix3& ep_new,            // plastic strain tensor
+                                      double&  evp_new,           // vol plastic strain
+                                      double&  eve_new,           // vol elastic strain
+                                      double&  X_new,             // cap intercept (shifted)
+                                      double&  Kappa_new,         // branch point (shifted)
+                                      double&  Zeta_new,          // trace of isotropic backstress
+                                      double&  bulk,              // bulk modulus for the step !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                                      long64   ParticleID)
+{
+  // Define and initialize some variables
+
+  // Many of the inputs are pointers that will be overwritten with updated values.  The input values are
+  // stored as _old
+  Matrix3 sigma_old = sigma_new,
+          ep_old    = ep_new;
+  double  evp_old   = evp_new,
+          //XXeve_old   = eve_new,
+          X_old     = X_new,
+          //XXKappa_old = Kappa_new,
+          Zeta_old  = Zeta_new;
+
+  double  FSLOPE = d_cm.FSLOPE,                         // slope of the linear drucker prager surface in rootJ2 vs. I1
+          //XXPEAKI1 = d_cm.PEAKI1,                         // shifted I1 value of the vertex
+          //bulk   = computeBulkModulus(eve_old+evp_old), // tangent bulk modulus for the step (stress)
+          shear  = d_cm.G0;                             // tangent shear modulus for the step (stress)
+  int     n      = 1,                                   // iteration counter
+          nmax   = 100;                                 // allowable iterations
+  Matrix3 ee_new,      // elastic strain tensor at the end of the step.
+          Identity;    // identity tensor
+  Identity.Identity(); // initialize identity tensor
+
+  // Frequently used constants from elastic properties
+  double  //XXtwoGby3K      = (2.0*shear) / (3.0*bulk),               // scale deviator from closest point space
+          threeKby2G    = (3.0*bulk)  / (2.0*shear),              // scale deviator to closest point space
+          oneby9k_1by6G = (1.0/(9.0*bulk)-1.0/(6.0*shear)),       // used to compute strain from stress
+          oneby2G       = 1.0/(2.0*shear);                        // used to compute strain from stress
+
+  // Compute invarients of the trial stress
+  double  I1_trial,
+          J2_trial;
+  Matrix3 S_trial;
+
+  // The computeInvarients function overwrites the input argumets for S, I1, and J2
+  computeInvariants(sigma_trial,S_trial,I1_trial,J2_trial);
+
+  // Shifted and transformed coordinates for closest-point space.
+  // Note, the shifted value for z_trial will change as the backstress
+  // is changed in the iterative solution
+  double  Beta = FSLOPE*threeKby2G*sqrt(6.0),  //slope of r vs z in transformed space
+          z_trial = (I1_trial - Zeta_old)*one_sqrt_three,
+          r_trial = threeKby2G * sqrt(2.0*J2_trial);
+
+  // Checking for elastic or plastic step:
+  if( TransformedYieldFunction(r_trial,z_trial,X_old,Beta) <= 0 )
+  {
+    // =========================================================== ELASTIC STEP
+    // Update stress to trial stress, and update volumetric elastic strain,
+    // which is done after the end of the plastic loop.  All other pointers
+    // are unchanged.
+    sigma_new = sigma_trial;
+  }
+  else
+  {
+    // =========================================================== PLASTIC STEP
+    // The step is at least partially plastic, so we use an iterative implicity
+    // method to find the stress, compute the plastic strain and to update the
+    // internal state variables.  The basic algorithm is as follows:
+    //
+    // (1) Compute the return to the initial yield surface assuming the yield
+    //     surface is fixed (no hardening, softening, backstress evolution, etc.)
+    // (2) Compute the increment in plastic strain for the non-hardening solution;
+    //     the actual increment (with hardening) will be a multiple of this, and
+    //     we will solve for the multiplier eta, 0<eta<1
+    // (3) Compute the updated yield surface as a function of the scaled increment
+    //     in plastic strain.
+    // (4) Compute the increment in plastic strain for the return to the updated
+    //     yield surface.
+    // (5) Compare the new plastic strain increment to the scaled non-hardening
+    //     and adjust eta using a bisection method; Return to (3) until converged.
+    //
+    // In computing the return to the yield surface, we map to a stress space in
+    // which the deviator has been scaled by a ratio of 3K/2G.  In that space, the
+    // solution is a closest-point return.  This is computed without iteration by
+    // making use of a flow function (g) that is defined such that the value at
+    // any point in the plastic domain is the distance in the transformed space to
+    // the closest point on the yield surface.  As such, the gradient of the flow
+    // function evaluated at the trial stress gives the return direction, and the
+    // product grad(g)*g gives the stress increment that returns the trial stress
+    // to the closest point.  Once the new stress is computed, it is transformed
+    // back to the normal stress space.  With this method, no special treatment
+    // of the vertex is needed.
+    // ........................................................................
+
+    // Initialize variables needed for plastic solution
+    double  gfcn,          // value of the flow function
+            r_new0,        // transformed r for non-hardening return
+            z_new0,        // transformed, shifted z for non hardening return
+            r_new,         // transformed r for hardening return
+            z_new,         // transformed, shifted z for hardening return
+            eta_out = 1.0, // inner bound for plastic scaler
+            eta_in  = 0.0, // outer bound for plastic scaler
+            eta_mid,       // solution for plastic scaler
+            eps_eta = 1.0, // convergence measure: eta_out-eta_in
+            TOL = 1.0e-9;  // convergence tolerance on eps_eta
+
+    Matrix3 sigma_new0,   // non-hardening return stress
+            d_sigma0,     // non-hardening increment stress over step
+            d_sigmaT = sigma_trial - sigma_old,
+            d_sigma,      // hardening increment stress over step
+            d_e,          // total strain increment over the step
+            d_ee0,        // non-hardening increment in elastic strain
+            d_ep0,        // non-hardening increment in plastic strain
+            d_ee,         // hardening increment in elastic strain
+            d_ep;         // hardening increment in plastic strain
+
+    // Non-hardening Closest Point Return in Transformed Space
+    gfcn   = TransformedFlowFunction(r_trial,z_trial,X_old,Beta);
+    r_new0 = r_trial - gfcn * dgdr(r_trial,z_trial,X_old,Beta);
+    z_new0 = z_trial - gfcn * dgdz(r_trial,z_trial,X_old,Beta);
+
+    // Update unshifted untransformed stress
+    sigma_new0 = one_third*(sqrt_three*z_new0+Zeta_old)*Identity;
+    if ( r_trial != 0.0 )
+      sigma_new0 = sigma_new0 + (r_new0/r_trial)*S_trial;
+
+    // Stress increment for non-hardening return
+    d_sigma0 = sigma_new0 - sigma_old;
+
+    //
+    // Increment in total strain from sigma_old to sigma_trial
+    d_e = oneby2G*d_sigmaT + oneby9k_1by6G*d_sigmaT.Trace()*Identity;
+
+    // Increment in elastic strain for the non-hardening return
+    d_ee0 = oneby2G*d_sigma0 + oneby9k_1by6G*d_sigma0.Trace()*Identity;
+
+    // Increment in plastic strain for the non-hardening return
+    d_ep0 = d_e - d_ee0;
+
+    /*
+    cout << endl << "Non-Hardening step, n = " << n
+    << ", Trace d_ee = "  << d_e.Trace()
+    << ", Trace d_ee0 = " << d_ee0.Trace()
+    << ", Trace d_ep0 = " << d_ep0.Trace()
+    << ", Trace d_sigma0 = " << d_sigma0.Trace()
+    << ", r_trial = " << r_trial
+    << ", r_new0 = " << r_new0
+    << ", z_trial = " << z_trial
+    << ", z_new0 = " << z_new0
+    << ", gfcn = " << gfcn <<endl;
+    */
+
+    // loop until the value of eta_mid is converged or max iterations exceeded
+    while( (eps_eta > TOL || evp_new <= -d_cm.p3_crush_curve) && (n <= nmax) )
+    {
+      n++;
+      // mid-point bisection on plastic strain scaler
+      eta_mid = 0.5*(eta_in + eta_out);
+
+      // plastic strain increment is a multiple of the non-hardening value
+      ep_new   = ep_old + eta_mid*d_ep0;
+      evp_new  = ep_new.Trace();
+
+      // Exact update of the cap:
+      X_new    = computeX(evp_new);
+
+      // Explicit update of zeta based on dZetadevp at beginning of step.
+      Zeta_new = Zeta_old + computedZetadevp(Zeta_old,evp_old)*(eta_mid*d_ep0.Trace());
+
+      // Recompute the shifted trial stress:
+      z_trial = (I1_trial - Zeta_new) * one_sqrt_three;
+
+      // Check if updated yield surface encloses the yield surface, or if the
+      // z-component of the return direction to the updated yield surface has
+      // changed sign.  If either of these has occured the increment in plastic
+      // strain was too large, so we scale back the multiplier eta.
+      if( TransformedYieldFunction( r_trial,z_trial,X_new,Beta ) <= 0.0 ||
+          Sign(dgdz(r_trial,z_trial,X_old,Beta)) != Sign(dgdz(r_trial,z_trial,X_new,Beta)) )
+      {
+        /*
+        cout << "BAD step, n = " << n
+        << ", eta_in = " << eta_in
+        << ", eta_out = " << eta_out
+        << ", eps_eta = " << eps_eta
+        << ", evp_new = " << evp_new
+        << ", eve_new = " << eve_new
+        << ", ZcapX_new = " << X_new*sqrt_three
+        << ", Zeta_new = " << Zeta_new<<endl
+        << ", r_trial = " << r_trial
+        << ", r_new = " << r_new
+        << ", z_trial = " << z_trial
+        << ", z_new = " << z_new
+        << ", f(r,z,x,beta) = " << TransformedYieldFunction(r_trial,z_trial,X_new,Beta)<<endl;
+        */
+        eta_out = eta_mid;
+      }
+
+      else
+      {
+        // Our updated yield surface has passed the above basic checks for a bad
+        // update so we compute the increment in plastic strain for a return to
+        // the updated surface, compare this to our scaled value of the non-
+        // hardening return, and adjust the scale parameter, eta, accordingly.
+
+        // Hardening Closest Point Return in Transformed Space
+        gfcn  = TransformedFlowFunction(r_trial,z_trial,X_new,Beta);
+        r_new = r_trial - gfcn * dgdr(r_trial,z_trial,X_new,Beta);
+        z_new = z_trial - gfcn * dgdz(r_trial,z_trial,X_new,Beta);
+
+        // Update unshifted untransformed stress
+        sigma_new = one_third*(sqrt_three*z_new+Zeta_new)*Identity;
+        if (r_trial!=0)
+          sigma_new = sigma_new + (r_new/r_trial)*S_trial;
+
+        // Stress increment for non-hardening return
+        d_sigma = sigma_new - sigma_old;
+
+        // Increment in elastic strain for the hardening solution: strain = (C^-1) : stress
+        d_ee =  oneby2G*d_sigma + oneby9k_1by6G*d_sigma.Trace()*Identity;
+
+        // Increment in plastic strain for the non-hardening solution
+        d_ep = d_e - d_ee;
+
+        // Compare magnitude of the computed plastic strain to the scaled
+        // non-hardening value and adjust eta_mid accordingly
+        if ( d_ep.Norm() > eta_mid*d_ep0.Norm() )
+        {
+          eta_in  = eta_mid;  // too little plastic strain
+        }
+        else
+        {
+          eta_out = eta_mid;  // too much plastic strain
+        }
+
+        eps_eta = eta_out - eta_in; // Only allow convergence in a good step.
+
+        /*
+        cout << "GOOD step, n = " << n
+             << ", eta_in = " << eta_in
+             << ", eta_out = " << eta_out
+             << ", eps_eta = " << eps_eta
+             << ", evp_new = " << evp_new
+             << ", eve_new = " << eve_new
+             << ", ZcapX_new = " << X_new/sqrt_three
+             << ", Zeta_new = " << Zeta_new<<endl
+             << ", r_trial = " << r_trial
+             << ", r_new = " << r_new
+             << ", z_trial = " << z_trial
+             << ", z_new = " << z_new
+             << ", gfcn = " << gfcn
+             << ", f = " << TransformedYieldFunction(r_trial,z_trial,X_new,Beta)<<endl;
+        */
+
+      } // end return to updated surface to adjust eta_mid
+    } // end while loop to find eta_mid
+  } // end plastic section
+
+  // Update elastic volumetric strain from converged result for sigma_new.
+  // All other variables that were called by reference in the function
+  // have been updated in previous steps.
+  ee_new = oneby2G*sigma_new + oneby9k_1by6G*sigma_new.Trace()*Identity;
+  eve_new = ee_new.Trace();
+
+  // Checks for a bad update
+  // -----------------------
+  if( n == nmax )
+  {
+    cout << "(1) Plastic strain scalar (eta) did not converge in nmax iterations"<< "@line:" << __LINE__;
+    return 1;
+  }
+  else if( evp_new <= -d_cm.p3_crush_curve )
+  {
+    cout << "(2) exceeded max allowable volumetric plastic strain"<< "@line:" << __LINE__;
+    return 2;
+  }
+  else if(isnan(sigma_new.Norm()) ||
+          isnan(ep_new.Norm())    ||
+          isnan(evp_new)          ||
+          isnan(eve_new)          ||
+          isnan(X_new)            ||
+          isnan(Kappa_new)        ||
+          isnan(Zeta_new) )
+  {
+    cout << "(3) NAN in output"<< "@line:" << __LINE__;
+    return 3;
+  }
+  /*
+  else if(delta > delta_TOL)
+   {
+    cout << "(4) magnitude difference of hardening and non-hardening returns exceeds allowable"<< "@line:" << __LINE__;
+    return 4;
+   }
+  else if(theta > theta_TOL)
+   {
+    cout << "(5) angle between of hardening and non-hardening returns exceeds allowable"<< "@line:" << __LINE__;
+    return 5;
+   }
+  */
+  else
+  {  // updated states has passed error checks
+    return 0; //No flags thrown
+  }
+}
 
 void Arenisca::computeInvariants(const Matrix3& stress, Matrix3& S,  double& I1, double& J2)
 {
@@ -2194,53 +1510,547 @@ void Arenisca::computeInvariants(const Matrix3& stress, Matrix3& S,  double& I1,
 
   // Compute the first invariants
   J2 = 0.5*S.Contract(S);  //Pa^2
+
+  if(sqrt(J2) < 1e-8*sqrt(Pow(I1,2)+J2))
+    J2=0;
 }
 
-double Arenisca::YieldFunction(const Matrix3& stress, const double& FSLOPE, const double& kappa,
-                               const double& cap_radius, const double&PEAKI1)
+// MH! Note the input arguements have changed!!!!!
+// Calls the Transformed Yield Function with Untransformed Arguments
+double Arenisca::YieldFunction(const double& I1,   // Unshifted
+                               const double& J2,   // Untransformed
+                               const double& X,    // Shifted
+                               const double& Zeta, // Trace of backstres
+                               const double& threeKby2G) // (3*K)/(2*G)
+
 {
-  // Compute the yield function.
+  // Calls the transformed yield function with untransformed arguments.
+  // This is a yield test function and is used only to compute whether
+  // a trial stress state is elastic or plastic.  Thus only the sign of
+  // the returned value is meaningful.  The function returns {-1,0,+1}
+  // The flow function is to be used to quantify the distance to the
+  // yield surface.
+
+  // define and initialize some variables
+  double FSLOPE = d_cm.FSLOPE,
+         R,
+         Z,
+         Beta,
+         f;
+
+  R = sqrt(2*J2)*threeKby2G;
+  Z = one_sqrt_three*(I1 - Zeta);
+  Beta = FSLOPE*threeKby2G*sqrt(6.0);
+  f = TransformedYieldFunction(R,Z,X,Beta);
+
+  //cout << " YieldFxn:I1="<<I1<<", J2="<<J2<<", X="<<X
+  //     <<", Zeta="<<Zeta<<", threeKby2G="<<threeKby2G
+  //     <<", R="<<R<<", Z="<<Z<<", Beta="<<Beta
+  //     <<",transf="<< f
+  //     <<",signtransf="<<Sign( f ) << endl;
+
+  f = Sign( f ); // + plastic, - elastic
+
+  return f;
+}
+
+// Compute the old yield function (Not Used)
+/*
+double Arenisca::YieldFunction(const double& I1, const double& J2, const double& X,
+                               const double& Kappa, const double& Zeta)
+{
   // See "fig:AreniscaYieldSurface" in the Arenisca manual.
 
-  Matrix3 S;
-  double I1,J2,b,var1,var2;
+  //define and initialize some varialbes
+  double FSLOPE = d_cm.FSLOPE,
+         PEAKI1 = d_cm.PEAKI1,
+         f;
 
-  // Compute the invariants of the stress tensor
-  computeInvariants(stress,S,I1,J2);
+  if(I1 - Zeta >= Kappa)
+    f = J2 - Pow(FSLOPE,2)*Pow(-I1 + PEAKI1 + Zeta,2);
 
-  // Compute an auxiliary variable
-  double FSI1_PI1 =  FSLOPE*I1 - PEAKI1;
+  else // I1 - Zeta < Kappa
+    f =  J2 - (1-Pow((I1-Zeta-Kappa)/(X-Kappa),2))
+              *Pow(FSLOPE,2)*Pow(-I1 + PEAKI1 + Zeta,2);
 
-  if (I1>kappa){
+  return f;
+}
+*/
 
-    // If I1>kappa, a linear Drucker-Prager yield function is calculated.
-    // See "eq:DruckerPragerPart" in the Arenisca manual.
-    double sqrtJ2=sqrt(J2);
-    var1 = sqrtJ2 - FSI1_PI1;
-    var2 = sqrtJ2 + FSI1_PI1;
-    if (var1<0.0 && var2>0.0 ) {
-      return -var1*var2;
-    } else {
-      return var1*var2;
+// Compute the Yield Test Function
+double Arenisca::TransformedYieldFunction(const double& R,
+                                          const double& Z,
+                                          const double& X,
+                                          const double& Beta)
+{
+  // This function is defined in a transformed and shifted stress space:
+  //
+  //       R = (3K/2G)*sqrt(2*J2)           Z = (I1-Zeta)/sqrt(3)
+  //
+  // This function is used ONLY to compute whether a trial stress state is elastic or
+  // plastic, and is not used to compute the plastic flow.  Thus only the sign of the
+  // returned value for f is important.
+
+  //define and initialize some varialbes
+  double Beta2 = Beta*Beta,
+         ZVertex = one_sqrt_three*d_cm.PEAKI1,
+         ZCapX   = one_sqrt_three*X,
+         //XXRKappa,
+         ZKappa,
+         ZApex,
+         f;
+
+  // Transformed R component of the branchpoint:
+  //XXRKappa = (Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*(-ZCapX + ZVertex))/(1 + Beta2);
+
+  // Shifted Z component of the branchpoint:
+  ZKappa = (ZCapX + Beta2*ZCapX + Beta*sqrt(1 + Beta2)*(-ZCapX + ZVertex))/(1 + Beta2);
+
+  // Shifted Z component of the apex:
+  ZApex = ((1 + Beta2)*(-Beta + sqrt(1 + Beta2))*ZCapX +
+     Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*ZVertex)/sqrt(1 + Beta2);
+
+  //cout << " TransYieldFxn:Beta="<<Beta<<", ZCapX="<<ZCapX
+  //     << ", ZVertex="<<ZVertex<<", RKappa="<<RKappa<<",ZKappa="<<ZKappa<<", ZApex="<<ZApex<< endl;
+
+  // Region I - closest point return to vertex
+  if( (Z <= ZCapX) || (Z >= ZVertex) )
+    f = 1;
+  else
+  {
+    if(Z >= ZKappa)
+    { // Region II - Linear Drucker Prager
+      if(R <= Beta*(ZVertex-Z))
+        f = -1.0;
+      else
+        f = 1.0;
     }
-
-  }else{
-
-    // If I1<kappa, the yield function is obtained by multiplying the linear Drucker-Prager
-    // yield function and a cap function.
-    // See "eq:CapPartOfTheYieldSurface" in the Arenisca manual.
-    b = 1.0 - ((kappa-I1)*(kappa-I1))/((cap_radius)*(cap_radius));
-    return J2 - b * FSI1_PI1*FSI1_PI1;
-
+    else
+    { // Region III - Circular Cap
+      if (R*R <= Pow(ZApex-ZCapX,2) - Pow(Z-ZApex,2))
+        f = -1.0;
+      else
+        f = 1.0;
+    }
   }
+  return f;
 }
 
+// Compute the Flow Function.
+double Arenisca::TransformedFlowFunction(const double& R,
+                                         const double& Z,
+                                         const double& X,
+                                         const double& Beta)
+{
+  // This function is defined in a transformed and shifted stress space:
+  //
+  //       R = (3K/2G)*sqrt(2*J2)           Z = (I1-Zeta)/sqrt(3)
+
+  //define and initialize some varialbes
+  double Beta2   = Beta*Beta,
+         ZVertex = d_cm.PEAKI1/sqrt(3),
+         ZCapX   = X/sqrt(3),
+         //XXRKappa,
+         //XXZKappa,
+         ZApex,
+         g;
+
+  // Transformed R component of the branchpoint:
+  //XXRKappa = (Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*(-ZCapX + ZVertex))/(1 + Beta2);
+
+  // Shifted Z component of the branchpoint:
+  //XXZKappa = (ZCapX + Beta2*ZCapX + Beta*sqrt(1 + Beta2)*(-ZCapX + ZVertex))/(1 + Beta2);
+
+  // Shifted Z component of the apex:
+  ZApex = ((1 + Beta2)*(-Beta + sqrt(1 + Beta2))*ZCapX +
+          Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*ZVertex)/sqrt(1 + Beta2);
+
+  // Region I - closest point return to vertex
+  if(R <= (Z - ZVertex) / Beta)
+    g = sqrt(Pow(R,2) + Pow(Z - ZVertex,2));
+
+  // Region II - closest point return to the linear Drucker-Prager surface
+  else if(R <= (Z - ZApex)/Beta)
+    g = (R + Beta*(Z - ZVertex))/sqrt(1 + Beta2);
+
+  // Region III - closest point return to a circular cap
+  else
+    g = sqrt( R*R + Pow(Z - ZApex,2)) - ZApex + ZCapX;
+
+  return g;
+}
+
+// Compute the R-component of the Gradient of the Transformed Flow Function.
+
+double Arenisca::dgdr(const double& R,
+                      const double& Z,
+                      const double& X,
+                      const double& Beta)
+{
+  // This function is defined in a transformed and shifted stress space:
+  //
+  //       R = (3K/2G)*sqrt(2*J2)           Z = (I1-Zeta)/sqrt(3)
+
+  //define and initialize some varialbes
+  double Beta2   = Beta*Beta,
+         ZVertex = d_cm.PEAKI1/sqrt(3),
+         ZCapX   = X/sqrt(3),
+         //XXRKappa,
+         //XXZKappa,
+         ZApex,
+         dgdr;
+
+  // Transformed R component of the branchpoint:
+  //XXRKappa = (Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*(-ZCapX + ZVertex))/(1 + Beta2);
+
+  // Shifted Z component of the branchpoint:
+  //XXZKappa = (ZCapX + Beta2*ZCapX + Beta*sqrt(1 + Beta2)*(-ZCapX + ZVertex))/(1 + Beta2);
+
+  // Shifted Z component of the apex:
+  ZApex = ((1 + Beta2)*(-Beta + sqrt(1 + Beta2))*ZCapX +
+     Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*ZVertex)/sqrt(1 + Beta2);
+
+  // Region I - closest point return to vertex
+  if(R <= (Z - ZVertex)/Beta)
+    dgdr = R/sqrt(Pow(R,2) + Pow(Z - ZVertex,2));
+
+  // Region II - closest point return to the linear Drucker-Prager surface
+  else if(R <= (Z - ZApex)/Beta)
+    dgdr = 1/sqrt(1 + Beta2);
+
+  // Region III - closest point return to a circular cap
+  else
+    dgdr = R/sqrt(Pow(R,2) + Pow(Z - ZApex,2));
+
+  return dgdr;
+}
+
+// Compute the Z-component of the Gradient of the Transformed Flow Function.
+double Arenisca::dgdz(const double& R,
+                      const double& Z,
+                      const double& X,
+                      const double& Beta)
+{
+  // This function is defined in a transformed and shifted stress space:
+  //
+  //       r = (3K/2G)*sqrt(2*J2)           z = (I1-Zeta)/sqrt(3)
+
+  //define and initialize some varialbes
+  double Beta2   = Beta*Beta,
+         ZVertex = d_cm.PEAKI1/sqrt(3),
+         ZCapX   = X/sqrt(3),
+         //XXRKappa,
+         //XXZKappa,
+         ZApex,
+         dgdz;
+
+  // Transformed R component of the branchpoint:
+  //XXRKappa = (Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*(-ZCapX + ZVertex))/(1 + Beta2);
+
+  // Shifted Z component of the branchpoint:
+  //XXZKappa = (ZCapX + Beta2*ZCapX + Beta*sqrt(1 + Beta2)*(-ZCapX + ZVertex))/(1 + Beta2);
+
+  // Shifted Z component of the apex:
+  ZApex = ((1 + Beta2)*(-Beta + sqrt(1 + Beta2))*ZCapX +
+     Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*ZVertex)/sqrt(1 + Beta2);
+
+  // Region I - closest point return to vertex
+  if(R <= (Z - ZVertex)/Beta)
+    dgdz = (Z - ZVertex)/sqrt(Pow(R,2) + Pow(Z - ZVertex,2));
+
+  // Region II - closest point return to the linear Drucker-Prager surface
+  else if(R <= (Z - ZApex)/Beta)
+    dgdz = Beta/sqrt(1 + Beta2);
+
+  // Region III - closest point return to a circular cap
+  else
+    dgdz = (Z - ZApex)/sqrt(Pow(R,2) + Pow(Z - ZApex,2));
+
+  return dgdz;
+}
+
+// Old Yield Function Gradient (Not Used)
+Matrix3 Arenisca::YieldFunctionGradient(const Matrix3& S,
+                             const double& I1,
+                             const double& J2,
+                             const Matrix3& S_trial,
+                             const double& I1_trial,
+                             const double& J2_trial,
+                             const double& X,
+                             const double& Kappa,
+                             const double& Zeta)
+{
+  //define and initialize some varialbes
+  double FSLOPE = d_cm.FSLOPE,
+         PEAKI1 = d_cm.PEAKI1;
+  Matrix3 Identity,
+          G;
+  Identity.Identity();
+
+  if(I1-Zeta != PEAKI1 || J2 != 0){ //not at vertex
+    if(I1 - Zeta > PEAKI1)
+      G=-2*Pow(FSLOPE,2)*(I1 - PEAKI1 - Zeta);
+    else if(I1 - Zeta >= Kappa && I1 - Zeta <= PEAKI1)
+      G=2*Pow(FSLOPE,2)*(I1 - PEAKI1 - Zeta);
+    else //if(I1 - Zeta < Kappa
+      G=2*Pow(FSLOPE,2)*(1 - Pow(I1 - Kappa - Zeta,2)/Pow(-Kappa + X,2))*(I1 - PEAKI1 - Zeta) -
+        (2*Pow(FSLOPE,2)*(I1 - Kappa - Zeta)*Pow(I1 - PEAKI1 - Zeta,2))/Pow(-Kappa + X,2);
+  }
+  else{ //at vertex
+    if(I1_trial-Zeta != PEAKI1)
+      G = YieldFunction(I1_trial, J2_trial, X, Kappa, Zeta)
+          / (I1_trial - Zeta - PEAKI1) * Identity;
+    else
+      G = Identity;
+  }
+  //if(I1 - Zeta >= Kappa)
+  //  G = S + 2*Pow(FSLOPE,2)*Identity*(-I1 + PEAKI1 + Zeta);
+  //else // I1 - Zeta < Kappa
+  //  G =  S + (2*Pow(FSLOPE,2)*Identity*(I1 - PEAKI1 - Zeta)*
+  //          (2*Pow(I1,2) - Pow(X,2) + PEAKI1*Zeta + 2*X*Zeta +
+  //           Pow(Zeta,2) + Kappa*(PEAKI1 + 2*X + Zeta) -
+  //           I1*(3*Kappa + PEAKI1 + 4*Zeta)))/Pow(Kappa - X + Zeta,2);
+
+  return G;
+}
+
+// Old Yield Function (Not Used)
+Matrix3 Arenisca::YieldFunctionBisection(const Matrix3& sigma_in,
+                               const Matrix3& sigma_out,
+                               const double& X,
+                               const double& Kappa,
+                               const double& Zeta,
+                               long64 ParticleID)
+{
+  int    counter_midpt=0,
+         counter_midpt_max;
+  double FSLOPE = d_cm.FSLOPE,
+         PEAKI1 = d_cm.PEAKI1,
+         I1_in,
+         J2_in,
+         I1_out,
+         J2_out,
+         I1_diff,
+         J2_diff,
+         r_in=0,
+         r_mid,
+         r_out,
+         r_out_initial,
+         r_max,
+         n_I1,
+         n_sqrtJ2,
+         f_mid;
+  Matrix3 S_in,
+          S_out,
+          S_diff,
+          Identity,
+          sigma_return;
+  Identity.Identity();
+
+  //compute invariants
+  computeInvariants(sigma_in,S_in,I1_in,J2_in);
+  computeInvariants(sigma_out,S_out,I1_out,J2_out);
+
+  #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
+  #ifdef CSM_DEBUG_BISECTION
+  if(ParticleID==JC_DEBUG_PARTICLE)
+    cout << ", I1_out=" << I1_out << ", J2_out=" << J2_out
+         << ", X=" << X << ", Kappa=" << Kappa << ", Zeta=" << Zeta;
+  #endif
+  #endif
+
+  if(I1_in == I1_out && J2_in == J2_out)
+    sigma_return = sigma_out;
+  else{
+    I1_diff = I1_out - I1_in;
+    J2_diff = J2_out - J2_in;
+    S_diff = S_out - S_in;
+
+    r_out = sqrt(I1_diff * I1_diff + J2_diff);
+    n_I1 = I1_diff/r_out;
+    n_sqrtJ2 = sqrt(J2_diff)/r_out;
+
+    r_out_initial = r_out;
+    r_max = sqrt(Pow(PEAKI1 - X, 2) + Pow(FSLOPE * (PEAKI1 - X), 2));
+
+    if(r_out > r_max){
+      r_out = r_max;
+      cout << endl << "WARNING: r_out > r_max in bisection" << endl;
+    }
+
+    counter_midpt_max=Floor(5*log10(r_out)+1);
+
+    #ifdef JC_DEBUG_PARTICLE
+    #ifdef CSM_DEBUG_BISECTION
+    if(ParticleID==JC_DEBUG_PARTICLE && 0)
+      cout << endl << "    FAST RETURN";
+    #endif
+    #endif
+
+    while(r_out-r_in > 1.0e-6 * r_out_initial &&
+      counter_midpt < counter_midpt_max){
+
+      counter_midpt++;
+
+      r_mid = 0.5*(r_out+r_in);
+      f_mid = YieldFunction(r_mid*n_I1 + I1_in,
+                            Pow(r_mid*n_sqrtJ2,2) + J2_in,X,Kappa,Zeta);
+
+      #ifdef JC_DEBUG_PARTICLE
+      #ifdef CSM_DEBUG_BISECTION
+      if(ParticleID==JC_DEBUG_PARTICLE)
+        cout<< endl << "    nFR=" << counter_midpt << "/" << counter_midpt_max
+        << ", r_in=" << r_in << ", r_out=" << r_out
+        << ", r_diff=" << r_out-r_in << ", f_mid="<<f_mid;
+        //<< ", I1_out=" << r_out*n_I1+I1_in
+        //<< ", J2_out=" << Pow(r_out*n_sqrtJ2,2)+J2_in
+        //<<", f_out="<<YieldFunction(r_out*n_I1+I1_in,Pow(r_out*n_sqrtJ2,2)+J2_in,X,Kappa,Zeta)
+        //<<", f_in="<<YieldFunction(r_in*n_I1+I1_in,Pow(r_in*n_sqrtJ2,2)+J2_in,X,Kappa,Zeta);
+      #endif
+      #endif
+
+      if(f_mid > 0)
+        r_out = r_mid;
+      else
+        r_in = r_mid;
+    }
+    //f_out = YieldFunction(r_out*n_I1+Zeta+Kappa,Pow(r_out*n_sqrtJ2,2),X,Kappa,Zeta);
+    sigma_return = sigma_in + (1/3.0) * r_out * n_I1 * Identity;
+    if(J2_diff != 0)
+      sigma_return += r_out * n_sqrtJ2 / sqrt(J2_diff) * S_diff;
+  }
+  return sigma_return;
+}
+
+// Old Yield Function Bisect (Not Used)
+Matrix3 Arenisca::YieldFunctionFastRet(const Matrix3& S,
+                                       const double& I1,
+                                       const double& J2,
+                                       const double& X,
+                                       const double& Kappa,
+                                       const double& Zeta,
+                                       long64 ParticleID)
+{
+  //define and initialize some variables
+  double FSLOPE = d_cm.FSLOPE,
+         PEAKI1 = d_cm.PEAKI1;
+  Matrix3 Identity,
+          sigmaF;
+  Identity.Identity();
+
+  #ifdef JC_DEBUG_PARTICLE
+  #ifdef CSM_DEBUG_FAST_RET
+  if(ParticleID==JC_DEBUG_PARTICLE)
+    cout << endl << "    FR: I1=" << I1  << ", J2=" << J2 << ", X=" << X
+         << ", Kappa=" << Kappa << ", Zeta=" << Zeta;
+  #endif
+  #endif
+
+  //HACK
+  if(YieldFunction(I1, J2, X, Kappa, Zeta) < 0)  //elastic
+    sigmaF = one_third * I1 * Identity + S;
+  else{
+    double apexI1=(3*Kappa + PEAKI1 - sqrt(9*Pow(Kappa,2) - 2*Kappa*PEAKI1 + Pow(PEAKI1,2)
+                                     - 16*Kappa*X + 8*Pow(X,2)) + 4*Zeta)/4;
+    #ifdef JC_DEBUG_PARTICLE
+    #ifdef CSM_DEBUG_FAST_RET
+    cout<<",apexI1="<<apexI1<<",X="<<X<<",Kappa="<<Kappa;
+    #endif
+    #endif
+    //     -----------------------------------
+    //     FASTRET Region III - Cap Region
+    //     -----------------------------------
+    //     This portion of the code could be replaced with a radial return to the point {kappa,0}
+    //     with an initial return to the radius equal to r = ||{X-kappa,Ff(X)}||
+    //
+    //     Algorithm:
+    //       1. calculate normalized unit vectors for radial line
+    //       2. calculate rmax
+    //       3. setup midpoint rules
+    if(sqrt(J2) > 1/FSLOPE * (I1 - apexI1)) {
+
+      #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
+      #ifdef CSM_DEBUG_FAST_RET
+      if(ParticleID==JC_DEBUG_PARTICLE)
+        cout << ",FastRet Region III";
+      #endif
+      #endif
+
+      sigmaF=YieldFunctionBisection(one_third * apexI1 * Identity,
+                                    one_third * I1 * Identity
+                                    + S, X, Kappa, Zeta, ParticleID);
+
+#ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
+#ifdef CSM_DEBUG_FAST_RET
+      //if(ParticleID==JC_DEBUG_PARTICLE)
+      //  cout << ", sigma_out="<<sigma_out<<", I1=" << I1 << ", J2=" << J2;
+#endif
+#endif
+      if (isnan(sigmaF.Trace())) {  //Check stress_iteration for nan
+        cerr << "ParticleID = " << ParticleID << " sigmaF = " << sigmaF << endl;
+        throw InvalidValue("**ERROR**: Nan in sigmaF value", __FILE__, __LINE__);
+      }
+    }
+
+    //     -----------------------------------
+    //     FASTRET Region II - Linear DP
+    //     -----------------------------------
+    //     Compute a radial return in the octahedral profile to the linear drucker-prager
+    //     surface.  If (PEAKI1>I1Trial>Kappa), sigmaF = {I1Trial, (PeakI1-I1Trial)*FSLOPE}
+    //     Note FSLOPE is the slope of rootJ2 vs. I1
+    else if(sqrt(J2) > 1/FSLOPE * (I1 - Zeta - PEAKI1)){  //above normal drucker-p
+      #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
+      #ifdef CSM_DEBUG_FAST_RET
+      if(ParticleID==JC_DEBUG_PARTICLE)
+        cout << ",FastRet Region II";
+      #endif
+      #endif
+
+      // Fast return algorithm in other cases (see "fig:AreniscaYieldSurface"
+      // in the Arenisca manual). In this case, the radial fast returning is used.
+      sigmaF=YieldFunctionBisection(one_third * Identity  * (I1 - FSLOPE * sqrt(J2)),
+                                    one_third * I1 * Identity + S,
+                                    X, Kappa, Zeta, ParticleID);
+
+      //cout << ", I1="<<I1<<",Zeta="<<Zeta<<",J2="<<J2
+      //<<",S="<<S;
+      if (isnan(sigmaF.Trace())) {  //Check stress_iteration for nan
+        cerr << "ParticleID = " << ParticleID << " sigmaF = " << sigmaF << endl;
+        throw InvalidValue("**ERROR**: Nan in sigmaF value", __FILE__, __LINE__);
+      }
+    }
+
+    //     -----------------------------------
+    //     FASTRET Region I - Return to vertex
+    //     -----------------------------------
+    else{  //sqrt(J2) <= 1/FSLOPE * (I1_sigmaP - ZetaP - PEAKI1)
+      #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
+      #ifdef CSM_DEBUG_FAST_RET
+      if(ParticleID==JC_DEBUG_PARTICLE)
+        cout << ",FastRet Region I";
+      #endif
+      #endif
+
+      // Fast return algorithm in the case of I1>PEAKI1 (see "fig:AreniscaYieldSurface"
+      // in the Arenisca manual). In this case, the fast returned position is the vertex.
+      sigmaF = one_third * Identity * (PEAKI1+Zeta);
+    }
+  }
+
+  // Compute the invariants of the fast returned stress in the loop
+  //computeInvariants(sigmaF, S_sigmaF, I1_sigmaF, J2_sigmaF);
+
+  // Calculate value of yield function at fast return
+  //f_new=YieldFunction(I1_sigmaF,J2_sigmaF,XP,KappaP,ZetaP);
+
+  return sigmaF;
+}
 void Arenisca::addRequiresDamageParameter(Task* task,
                                      const MPMMaterial* matl,
                                      const PatchSet* ) const
 {
   // Require the damage parameter
-  const MaterialSubset* matlset = matl->thisMaterial();
+  const MaterialSubset* matlset = matl->thisMaterial();//T2D; what is this?
   task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
 }
 
@@ -2255,7 +2065,7 @@ void Arenisca::getDamageParameter(const Patch* patch,
   ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
   constParticleVariable<int> pLocalized;
   new_dw->get(pLocalized, pLocalizedLabel_preReloc, pset);
-
+    
   ParticleSubset::iterator iter;
   // Loop over the particle in the current patch.
   for (iter = pset->begin(); iter != pset->end(); iter++) {
@@ -2278,13 +2088,6 @@ void Arenisca::carryForward(const PatchSubset* patches,
     // when using RigidMPM.
     // This method is defined in the ConstitutiveModel base class.
     carryForwardSharedData(pset, old_dw, new_dw, matl);
-    
-#ifdef JC_USE_BB_STATE_UPDATE
-    // Get and copy the internal variables
-    constParticleVariable<double> pKappa;
-    d_intvar->getInternalVariable(pset, old_dw, pKappa);
-    d_intvar->allocateAndPutRigid(pset, new_dw, pKappa);
-#endif
 
     // Carry forward the data local to this constitutive model
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
@@ -2303,27 +2106,42 @@ void Arenisca::addParticleState(std::vector<const VarLabel*>& from,
 {
   // Push back all the particle variables associated with Arenisca.
   // Important to keep from and to lists in same order!
-  from.push_back(pPlasticStrainLabel);
-  from.push_back(pPlasticStrainVolLabel);
-  from.push_back(pElasticStrainVolLabel);
-  from.push_back(pKappaLabel);
-  from.push_back(pBackStressLabel);
-  from.push_back(pBackStressIsoLabel);
-  from.push_back(pKappaFlagLabel);
   from.push_back(pLocalizedLabel);
-  to.push_back(  pPlasticStrainLabel_preReloc);
-  to.push_back(  pPlasticStrainVolLabel_preReloc);
-  to.push_back(  pElasticStrainVolLabel_preReloc);
-  to.push_back(  pKappaLabel_preReloc);
-  to.push_back(  pBackStressLabel_preReloc);
-  to.push_back(  pBackStressIsoLabel_preReloc);
-  to.push_back(  pKappaFlagLabel_preReloc);
+  from.push_back(pAreniscaFlagLabel);
+  from.push_back(pScratchDouble1Label);
+  from.push_back(pScratchDouble2Label);
+  from.push_back(pPorePressureLabel);
+  from.push_back(pepLabel);
+  from.push_back(pevpLabel);
+  from.push_back(peveLabel);
+  from.push_back(pCapXLabel);
+  from.push_back(pCapXQSLabel);
+  from.push_back(pKappaLabel);
+  from.push_back(pZetaLabel);
+  from.push_back(pZetaQSLabel);
+  from.push_back(pIotaLabel);
+  from.push_back(pIotaQSLabel);
+  from.push_back(pStressQSLabel);
+  from.push_back(pScratchMatrixLabel);
+  //Xfrom.push_back(pVelGradLabel); //needed?
   to.push_back(  pLocalizedLabel_preReloc);
-  
-#ifdef JC_USE_BB_STATE_UPDATE
-  // Add the particle state for the internal variable models
-  d_intvar->addParticleState(from, to);
-#endif
+  to.push_back(  pAreniscaFlagLabel_preReloc);
+  to.push_back(  pScratchDouble1Label_preReloc);
+  to.push_back(  pScratchDouble2Label_preReloc);
+  to.push_back(  pPorePressureLabel_preReloc);
+  to.push_back(  pepLabel_preReloc);
+  to.push_back(  pevpLabel_preReloc);
+  to.push_back(  peveLabel_preReloc);
+  to.push_back(  pCapXLabel_preReloc);
+  to.push_back(  pCapXQSLabel_preReloc);
+  to.push_back(  pKappaLabel_preReloc);
+  to.push_back(  pZetaLabel_preReloc);
+  to.push_back(  pZetaQSLabel_preReloc);
+  to.push_back(  pIotaLabel_preReloc);
+  to.push_back(  pIotaQSLabel_preReloc);
+  to.push_back(  pStressQSLabel_preReloc);
+  to.push_back(  pScratchMatrixLabel_preReloc);
+  //Xto.push_back(  pVelGradLabel_preReloc); //needed?
 }
 
 //T2D: move up
@@ -2331,26 +2149,30 @@ void Arenisca::addInitialComputesAndRequires(Task* task,
                                             const MPMMaterial* matl,
                                             const PatchSet* patch) const
 {
-
   // Add the computes and requires that are common to all explicit
   // constitutive models.  The method is defined in the ConstitutiveModel
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
 
   // Other constitutive model and input dependent computes and requires
-  task->computes(pPlasticStrainLabel,    matlset);
-  task->computes(pPlasticStrainVolLabel, matlset);
-  task->computes(pElasticStrainVolLabel, matlset);
-  task->computes(pKappaLabel,            matlset);
-  task->computes(pBackStressLabel,       matlset);
-  task->computes(pBackStressIsoLabel,    matlset);
-  task->computes(pKappaFlagLabel,        matlset);
-  task->computes(pLocalizedLabel,        matlset);
-
-#ifdef JC_USE_BB_STATE_UPDATE
-  // Add internal evolution variables computed by internal variable model
-  d_intvar->addInitialComputesAndRequires(task, matl, patch);
-#endif
+  task->computes(pLocalizedLabel,      matlset);
+  task->computes(pAreniscaFlagLabel,   matlset);
+  task->computes(pScratchDouble1Label, matlset);
+  task->computes(pScratchDouble2Label, matlset);
+  task->computes(pPorePressureLabel,   matlset);
+  task->computes(pepLabel,             matlset);
+  task->computes(pevpLabel,            matlset);
+  task->computes(peveLabel,            matlset);
+  task->computes(pCapXLabel,           matlset);
+  task->computes(pCapXQSLabel,         matlset);
+  task->computes(pKappaLabel,          matlset);
+  task->computes(pZetaLabel,           matlset);
+  task->computes(pZetaQSLabel,         matlset);
+  task->computes(pIotaLabel,           matlset);
+  task->computes(pIotaQSLabel,         matlset);
+  task->computes(pStressQSLabel,       matlset);
+  task->computes(pScratchMatrixLabel,  matlset);
+  //Xtask->computes(pVelGradLabel,        matlset);
 }
 
 void Arenisca::addComputesAndRequires(Task* task,
@@ -2362,28 +2184,43 @@ void Arenisca::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
-  task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, Ghost::None);
-  task->requires(Task::OldDW, pPlasticStrainVolLabel, matlset, Ghost::None);
-  task->requires(Task::OldDW, pElasticStrainVolLabel, matlset, Ghost::None);
-  task->requires(Task::OldDW, pKappaLabel,            matlset, Ghost::None);
-  task->requires(Task::OldDW, pBackStressLabel,       matlset, Ghost::None);
-  task->requires(Task::OldDW, pBackStressIsoLabel,    matlset, Ghost::None);
-  task->requires(Task::OldDW, pKappaFlagLabel,        matlset, Ghost::None);
-  task->requires(Task::OldDW, pLocalizedLabel,        matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, Ghost::None);
-  task->computes(pPlasticStrainLabel_preReloc,    matlset);
-  task->computes(pPlasticStrainVolLabel_preReloc, matlset);
-  task->computes(pElasticStrainVolLabel_preReloc, matlset);
-  task->computes(pKappaLabel_preReloc,            matlset);
-  task->computes(pBackStressLabel_preReloc,       matlset);
-  task->computes(pBackStressIsoLabel_preReloc,    matlset);
-  task->computes(pKappaFlagLabel_preReloc,        matlset);
-  task->computes(pLocalizedLabel_preReloc,        matlset);
-  
-#ifdef JC_USE_BB_STATE_UPDATE
-  // Add internal evolution variables computed by internal variable model
-  d_intvar->addComputesAndRequires(task, matl, patches);
-#endif
+  task->requires(Task::OldDW, pLocalizedLabel,      matlset, Ghost::None);
+  task->requires(Task::OldDW, pAreniscaFlagLabel,   matlset, Ghost::None);
+  task->requires(Task::OldDW, pScratchDouble1Label, matlset, Ghost::None);
+  task->requires(Task::OldDW, pScratchDouble2Label, matlset, Ghost::None);
+  task->requires(Task::OldDW, pPorePressureLabel,   matlset, Ghost::None);
+  task->requires(Task::OldDW, pepLabel,             matlset, Ghost::None);
+  task->requires(Task::OldDW, pevpLabel,            matlset, Ghost::None);
+  task->requires(Task::OldDW, peveLabel,            matlset, Ghost::None);
+  task->requires(Task::OldDW, pCapXLabel,           matlset, Ghost::None);
+  task->requires(Task::OldDW, pCapXQSLabel,         matlset, Ghost::None);
+  task->requires(Task::OldDW, pKappaLabel,          matlset, Ghost::None);
+  task->requires(Task::OldDW, pZetaLabel,           matlset, Ghost::None);
+  task->requires(Task::OldDW, pZetaQSLabel,         matlset, Ghost::None);
+  task->requires(Task::OldDW, pIotaLabel,           matlset, Ghost::None);
+  task->requires(Task::OldDW, pIotaQSLabel,         matlset, Ghost::None);
+  task->requires(Task::OldDW, pStressQSLabel,       matlset, Ghost::None);
+  task->requires(Task::OldDW, pScratchMatrixLabel,  matlset, Ghost::None);
+  //Xtask->requires(Task::OldDW, pVelGradLabel,        matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pParticleIDLabel, matlset, Ghost::None);
+  task->computes(pLocalizedLabel_preReloc,      matlset);
+  task->computes(pAreniscaFlagLabel_preReloc,   matlset);
+  task->computes(pScratchDouble1Label_preReloc, matlset);
+  task->computes(pScratchDouble2Label_preReloc, matlset);
+  task->computes(pPorePressureLabel_preReloc,   matlset);
+  task->computes(pepLabel_preReloc,             matlset);
+  task->computes(pevpLabel_preReloc,            matlset);
+  task->computes(peveLabel_preReloc,            matlset);
+  task->computes(pCapXLabel_preReloc,           matlset);
+  task->computes(pCapXQSLabel_preReloc,         matlset);
+  task->computes(pKappaLabel_preReloc,          matlset);
+  task->computes(pZetaLabel_preReloc,           matlset);
+  task->computes(pZetaQSLabel_preReloc,         matlset);
+  task->computes(pIotaLabel_preReloc,           matlset);
+  task->computes(pIotaQSLabel_preReloc,         matlset);
+  task->computes(pStressQSLabel_preReloc,       matlset);
+  task->computes(pScratchMatrixLabel_preReloc,  matlset);
+  //Xtask->computes(pVelGradLabel_preReloc,        matlset);
 }
 
 //T2D: Throw exception that this is not supported
@@ -2392,7 +2229,7 @@ void Arenisca::addComputesAndRequires(Task* ,
                                    const PatchSet* ,
                                    const bool ) const
 {
-	
+
 }
 
 //T2D: Throw exception that this is not supported
@@ -2405,7 +2242,7 @@ double Arenisca::computeRhoMicroCM(double pressure,
   double rho_orig = matl->getInitialDensity();
   double p_gauge = pressure - p_ref;
   double rho_cur;
-  double bulk = d_initialData.B0;
+  double bulk = d_cm.B0;
 
   rho_cur = rho_orig/(1-p_gauge/bulk);
 
@@ -2425,8 +2262,8 @@ void Arenisca::computePressEOSCM(double rho_cur,double& pressure,
                                          double temperature)
 {
 
-  double bulk = d_initialData.B0;
-  double shear = d_initialData.G0;
+  double bulk = d_cm.B0;
+  double shear = d_cm.G0;
   double rho_orig = matl->getInitialDensity();
 
   double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
@@ -2449,37 +2286,703 @@ double Arenisca::getCompressibility()
 // Initialize all labels of the particle variables associated with Arenisca.
 void Arenisca::initializeLocalMPMLabels()
 {
-  pPlasticStrainLabel = VarLabel::create("p.plasticStrain",
-    ParticleVariable<double>::getTypeDescription());
-  pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
-    ParticleVariable<double>::getTypeDescription());
-  pPlasticStrainVolLabel = VarLabel::create("p.plasticStrainVol",
-    ParticleVariable<double>::getTypeDescription());
-  pPlasticStrainVolLabel_preReloc = VarLabel::create("p.plasticStrainVol+",
-    ParticleVariable<double>::getTypeDescription());
-  pElasticStrainVolLabel = VarLabel::create("p.elasticStrainVol",
-    ParticleVariable<double>::getTypeDescription());
-  pElasticStrainVolLabel_preReloc = VarLabel::create("p.elasticStrainVol+",
-    ParticleVariable<double>::getTypeDescription());
-  pKappaLabel = VarLabel::create("p.kappa",
-    ParticleVariable<double>::getTypeDescription());
-  pKappaLabel_preReloc = VarLabel::create("p.kappa+",
-    ParticleVariable<double>::getTypeDescription());
-  pBackStressLabel = VarLabel::create("p.BackStress",
-    ParticleVariable<Matrix3>::getTypeDescription());
-  pBackStressLabel_preReloc = VarLabel::create("p.BackStress+",
-    ParticleVariable<Matrix3>::getTypeDescription());
-  pBackStressIsoLabel = VarLabel::create("p.BackStressIso",
-    ParticleVariable<Matrix3>::getTypeDescription());
-  pBackStressIsoLabel_preReloc = VarLabel::create("p.BackStressIso+",
-    ParticleVariable<Matrix3>::getTypeDescription());
-  pKappaFlagLabel = VarLabel::create("p.kappaState",
-    ParticleVariable<double>::getTypeDescription());
-  pKappaFlagLabel_preReloc = VarLabel::create("p.kappaState+",
-    ParticleVariable<double>::getTypeDescription());
+  //pLocalized
   pLocalizedLabel = VarLabel::create("p.localized",
     ParticleVariable<int>::getTypeDescription());
   pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
     ParticleVariable<int>::getTypeDescription());
-
+  //pAreniscaFlag
+  pAreniscaFlagLabel = VarLabel::create("p.AreniscaFlag",
+    ParticleVariable<int>::getTypeDescription());
+  pAreniscaFlagLabel_preReloc = VarLabel::create("p.AreniscaFlag+",
+    ParticleVariable<int>::getTypeDescription());
+  //pScratchDouble1
+  pScratchDouble1Label = VarLabel::create("p.ScratchDouble1",
+    ParticleVariable<double>::getTypeDescription());
+  pScratchDouble1Label_preReloc = VarLabel::create("p.ScratchDouble1+",
+    ParticleVariable<double>::getTypeDescription());
+  //pScratchDouble2
+  pScratchDouble2Label = VarLabel::create("p.ScratchDouble2",
+    ParticleVariable<double>::getTypeDescription());
+  pScratchDouble2Label_preReloc = VarLabel::create("p.ScratchDouble2+",
+    ParticleVariable<double>::getTypeDescription());
+  //pPorePressure
+  pPorePressureLabel = VarLabel::create("p.PorePressure",
+    ParticleVariable<double>::getTypeDescription());
+  pPorePressureLabel_preReloc = VarLabel::create("p.PorePressure+",
+    ParticleVariable<double>::getTypeDescription());
+  //pep
+  pepLabel = VarLabel::create("p.ep",
+    ParticleVariable<Matrix3>::getTypeDescription());
+  pepLabel_preReloc = VarLabel::create("p.ep+",
+    ParticleVariable<Matrix3>::getTypeDescription());
+  //pevp
+  pevpLabel = VarLabel::create("p.evp",
+    ParticleVariable<double>::getTypeDescription());
+  pevpLabel_preReloc = VarLabel::create("p.evp+",
+    ParticleVariable<double>::getTypeDescription());
+  //peve
+  peveLabel = VarLabel::create("p.eve",
+    ParticleVariable<double>::getTypeDescription());
+  peveLabel_preReloc = VarLabel::create("p.eve+",
+    ParticleVariable<double>::getTypeDescription());
+  //pKappa
+  pKappaLabel = VarLabel::create("p.Kappa",
+    ParticleVariable<double>::getTypeDescription());
+  pKappaLabel_preReloc = VarLabel::create("p.Kappa+",
+    ParticleVariable<double>::getTypeDescription());
+  //pCapX
+  pCapXLabel = VarLabel::create("p.CapX",
+    ParticleVariable<double>::getTypeDescription());
+  pCapXLabel_preReloc = VarLabel::create("p.CapX+",
+     ParticleVariable<double>::getTypeDescription());
+  //pCapXQS
+  pCapXQSLabel = VarLabel::create("p.CapXQS",
+    ParticleVariable<double>::getTypeDescription());
+  pCapXQSLabel_preReloc = VarLabel::create("p.CapXQS+",
+     ParticleVariable<double>::getTypeDescription());
+  //pZeta
+  pZetaLabel = VarLabel::create("p.Zeta",
+    ParticleVariable<double>::getTypeDescription());
+  pZetaLabel_preReloc = VarLabel::create("p.Zeta+",
+    ParticleVariable<double>::getTypeDescription());
+  //pZetaQS
+  pZetaQSLabel = VarLabel::create("p.ZetaQS",
+    ParticleVariable<double>::getTypeDescription());
+  pZetaQSLabel_preReloc = VarLabel::create("p.ZetaQS+",
+    ParticleVariable<double>::getTypeDescription());
+  //pIota
+  pIotaLabel = VarLabel::create("p.Iota",
+    ParticleVariable<double>::getTypeDescription());
+  pIotaLabel_preReloc = VarLabel::create("p.Iota+",
+    ParticleVariable<double>::getTypeDescription());
+  //pIotaQS
+  pIotaQSLabel = VarLabel::create("p.IotaQS",
+    ParticleVariable<double>::getTypeDescription());
+  pIotaQSLabel_preReloc = VarLabel::create("p.IotaQS+",
+    ParticleVariable<double>::getTypeDescription());
+  //pStressQS
+  pStressQSLabel = VarLabel::create("p.StressQS",
+    ParticleVariable<Matrix3>::getTypeDescription());
+  pStressQSLabel_preReloc = VarLabel::create("p.StressQS+",
+    ParticleVariable<Matrix3>::getTypeDescription());
+  //pScratchMatrix
+  pScratchMatrixLabel = VarLabel::create("p.ScratchMatrix",
+    ParticleVariable<Matrix3>::getTypeDescription());
+  pScratchMatrixLabel_preReloc = VarLabel::create("p.ScratchMatrix+",
+    ParticleVariable<Matrix3>::getTypeDescription());
+  //pVelGrad
+  //XpVelGradLabel = VarLabel::create("p.velGrad",
+  //X  ParticleVariable<Matrix3>::getTypeDescription());
+  //XpVelGradLabel_preReloc = VarLabel::create("p.velGrad+",
+  //X  ParticleVariable<Matrix3>::getTypeDescription());
 }
+
+//Compute Kinematics variables (Deformation Gradient, Velocity Gradient,
+// Volume, Density) for the particles in a patch
+// NO LONGER USED SINCE KINEMATICS MOVED TO SERIALMPM.cc
+void Arenisca::computeKinematics(const PatchSubset* patches,
+                                 const MPMMaterial* matl,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw)
+{
+  // Define some constants
+  Ghost::GhostType  gac   = Ghost::AroundCells;
+  Matrix3 Identity,tensorL(0.0);//T2D: is Identity used?
+  Identity.Identity();
+  double J;
+
+  // Get the initial density
+  double rho_orig = matl->getInitialDensity();
+
+  // Global loop over each patch
+  for(int p=0;p<patches->size();p++){
+
+    // Declare and initial value assignment for some variables
+    const Patch* patch = patches->get(p);
+
+    // Initialize for this patch
+    Vector dx = patch->dCell();
+    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+
+    // Declare the interpolator variables (CPDI, GIMP, linear, etc)
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());  ///< nodes affected by particle
+    vector<Vector> d_S(interpolator->size());    ///< gradient of grid shape fxn
+    vector<double> S(interpolator->size());      ///< grid shape fxn (T2D: needed?)
+
+    // Get particle subset for the current patch
+    int dwi = matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+    // Get the particle variables
+    delt_vartype                   delT;
+    constParticleVariable<int>     pLocalized,
+                                   pAreniscaFlag;
+    constParticleVariable<double>  pmass;
+    constParticleVariable<long64>  pParticleID;
+    constParticleVariable<Point>   px;
+    constParticleVariable<Vector>  pvelocity;
+    constParticleVariable<Matrix3> psize,
+                                   pVelGrad,
+                                   pDefGrad;
+
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
+    old_dw->get(pLocalized,          pLocalizedLabel,              pset);
+    old_dw->get(pAreniscaFlag,            pAreniscaFlagLabel,                pset);
+    old_dw->get(pmass,               lb->pMassLabel,               pset);
+    old_dw->get(pParticleID,         lb->pParticleIDLabel,         pset);
+    old_dw->get(px,                  lb->pXLabel,                  pset);
+    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
+    old_dw->get(psize,               lb->pSizeLabel,               pset);
+    old_dw->get(pVelGrad,            lb->pVelGradLabel,                pset);
+    old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
+
+    // Allocate the particle variables
+    ParticleVariable<int>          pLocalized_new,
+                                   pAreniscaFlag_new;
+    ParticleVariable<double>       pvolume;
+    ParticleVariable<Matrix3>      pVelGrad_new;
+    ParticleVariable<Matrix3>      pDefGrad_new;
+    new_dw->allocateAndPut(pLocalized_new,        pLocalizedLabel_preReloc,              pset);
+    new_dw->allocateAndPut(pAreniscaFlag_new,          pAreniscaFlagLabel_preReloc,                pset);
+    new_dw->allocateAndPut(pvolume,               lb->pVolumeLabel_preReloc,             pset);
+    new_dw->allocateAndPut(pVelGrad_new,          lb->pVelGradLabel_preReloc,                pset);
+    new_dw->allocateAndPut(pDefGrad_new,          lb->pDeformationMeasureLabel_preReloc, pset);
+
+    // Allocate some temporary particle variables
+    ParticleVariable<double>  rho_cur;
+    new_dw->allocateTemporary(rho_cur, pset);
+
+    // Get the grid variables
+    constNCVariable<Vector> gvelocity;  //NCV=Node Centered Variable
+    new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
+
+    // loop over the particles
+    for(ParticleSubset::iterator iter = pset->begin();
+    iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+
+      //re-zero the velocity gradient:
+      pLocalized_new[idx]=pLocalized[idx];
+
+      // pAreniscaFlag is a flag indicating if the particle has met any of the
+      // limit values on evp (pPlasticStrainVol) based on CM parameter p3,
+      // the maximum achieveable volumetric plastic strain in compression.
+      pAreniscaFlag_new[idx]=0.0;
+
+      tensorL.set(0.0);
+      if(!flag->d_axisymmetric){
+        // Get the node indices that surround the cell
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
+            pDefGrad[idx]);
+        computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity);
+      } else {  // axi-symmetric kinematics
+        // Get the node indices that surround the cell
+        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+            psize[idx],pDefGrad[idx]);
+        // x -> r, y -> z, z -> theta
+        computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity,px[idx]);
+      }
+      //pVelGrad=pVelGrad_new[idx];
+      pVelGrad_new[idx]=tensorL;
+
+      int num_scs = 4;
+      Matrix3 one; one.Identity();
+  #ifdef JC_USE_BB_DEFGRAD_UPDATE
+      // Improve upon first order estimate of deformation gradient
+      Matrix3 Amat = (pVelGrad[idx] + pVelGrad_new[idx])*(0.5*delT);
+      //Matrix3 Amat = ( pVelGrad_new[idx])*(0.5*delT);//HACK BUG
+      Matrix3 Finc = Amat.Exponential(JC_USE_BB_DEFGRAD_UPDATE);
+      Matrix3 Fnew = Finc*pDefGrad[idx];
+      pDefGrad_new[idx] = Fnew;
+  #else
+      // Update the deformation gradient in a new way using subcycling
+      Matrix3 F=pDefGrad[idx];
+      double Lnorm_dt = tensorL.Norm()*delT;
+      num_scs = max(4,2*((int) Lnorm_dt));
+      if(num_scs > 1000){
+        cout << "NUM_SCS = " << num_scs << endl;
+      }
+      double dtsc = delT/(double (num_scs));
+      Matrix3 OP_tensorL_DT = one + tensorL*dtsc;
+      for(int n=0;n<num_scs;n++){
+        F=OP_tensorL_DT*F;
+      }
+      pDefGrad_new[idx]=F;
+      // Update the deformation gradient, Old First Order Way
+      // pDefGrad_new[idx]=(tensorL*delT+Identity)*pDefGrad[idx];
+  #endif
+
+      // Compute the Jacobian and delete the particle in the case of negative Jacobian
+      J = pDefGrad_new[idx].Determinant();
+      if (J<=0 || J>10){
+        cout<<"ERROR, negative J! "<<endl;
+        cout<<"pParticleID="<<pParticleID[idx]<<endl;
+        cout<<"pDefGrad= "<<pDefGrad_new[idx]<<endl;
+        cout<<"pDefGrad_new="<<pDefGrad_new[idx]<<endl<<endl;
+        cout<<"J= "<<J<<endl;
+        cout<<"L= "<<tensorL<<endl;
+        cout<<"num_scs= "<<num_scs<<endl;
+        pLocalized_new[idx] = -999;
+        cout<<"DELETING Arenisca particle " << endl;
+        J=1;
+        pDefGrad_new[idx] = one;
+        //throw InvalidValue("**ERROR**:Negative Jacobian", __FILE__, __LINE__);
+      }
+  #ifdef JC_FREEZE_PARTICLE
+      if (J>4000){
+        cout << "WARNING, massive $J! " << "J=" << J
+        //     <<", DELETING particleID=" <<pParticleID[idx]<< endl;
+        //pLocalized_new[idx] = -999;
+        <<",FREEZING particleID="<<pParticleID[idx]<<endl;
+        J =pDefGrad[idx].Determinant();
+        pDefGrad_new[idx] = pDefGrad[idx];
+      }
+  #endif
+
+      // Update particle volume and density
+      pvolume[idx]=(pmass[idx]/rho_orig)*J;
+      //rho_cur[idx] = rho_orig/J;
+    }
+
+#ifdef CSM_PRESSURE_STABILIZATION
+    // The following is used only for pressure stabilization
+    CCVariable<double> J_CC;
+    new_dw->allocateTemporary(J_CC,       patch);
+    J_CC.initialize(0.);
+
+    CCVariable<double> vol_0_CC;
+    CCVariable<double> vol_CC;
+    new_dw->allocateTemporary(vol_0_CC, patch);
+    new_dw->allocateTemporary(vol_CC,   patch);
+
+    vol_0_CC.initialize(0.);
+    vol_CC.initialize(0.);
+    for(ParticleSubset::iterator iter = pset->begin();
+        iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+
+      // get the volumetric part of the deformation
+      double J = pDefGrad_new[idx].Determinant();
+
+      // Get the deformed volume
+      double rho_cur = rho_orig/J;
+      pvolume[idx] = pmass[idx]/rho_cur;
+
+      IntVector cell_index;
+      patch->findCell(px[idx],cell_index);
+
+      vol_CC[cell_index]  +=pvolume[idx];
+      vol_0_CC[cell_index]+=pmass[idx]/rho_orig;
+    }
+
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      J_CC[c]=vol_CC[c]/vol_0_CC[c];
+    }
+    //end of pressureStabilization loop  at the patch level
+
+    for(ParticleSubset::iterator iter = pset->begin();
+        iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+
+      double J = pDefGrad_new[idx].Determinant();
+
+      IntVector cell_index;
+      patch->findCell(px[idx],cell_index);
+
+      // Change F such that the determinant is equal to the average for
+      // the cell
+      pDefGrad_new[idx]*=cbrt(J_CC[cell_index]/J);
+      J=J_CC[cell_index];
+
+      if (J<=0.0) {
+        double Jold = pDefGrad[idx].Determinant();
+        cout<<"negative J in ProgramBurn, J="<<J<<", Jold = " << Jold << endl;
+        cout << "pos = " << px[idx] << endl;
+        pLocalized_new[idx]=-999;
+        cout<< "localizing (deleting) particle "<<pParticleID[idx]<<endl;
+        cout<< "material = " << dwi << endl << "Momentum deleted = "
+            << pvelocity[idx]*pmass[idx] <<endl;
+        J=1;
+      }
+    }
+#endif
+
+  }
+}
+
+// Compute the strain at zero pore pressure from initial pore pressure (Pf0)
+double Arenisca::computeev0()
+{
+  // The user-supplied initial pore pressure (Pf0) is the pore pressure at zero
+  // volumetric strain.  An estimate of the strain (ev0) at which the fluid pressure
+  // is zero is derived from M. Homel's engineering model of matrix compressibility:
+
+  //define and initialize some variables
+  double p3  = d_cm.p3_crush_curve, // max vol. plastic strain
+         Kf  = d_cm.fluid_B0,       // fluid bulk modulus
+         Pf0 = d_cm.fluid_pressure_initial,            // initial pore pressure
+         ev0;                       // strain at zero pore pressure
+
+   if(Pf0==0) // No initial pore pressure
+    ev0 = 0;
+
+   else       // Initial pore pressure
+    ev0 = -p3 + log(1 - exp(Pf0/Kf) + exp(p3 + Pf0/Kf));
+
+  return ev0;
+}
+
+// Compute derivative of yield function w.r.t. branch point
+double Arenisca::computedfdKappa(double I1,
+                                double X,
+                                double Kappa,
+                                double Zeta)
+{
+  // The branch point (Kappa) is the value of I1 that divides the linear
+  // Drucker-Prager region and the cap region of the yield function.
+  // Kappa is related to the hydrostative compressive strength (X), which
+  // evolves with plastic strain and governs the dependence of strength
+  // on porosity.
+
+  //define and initialize some variables
+  double FSLOPE = d_cm.FSLOPE,
+         PEAKI1 = d_cm.PEAKI1,
+         dfdKappa;
+
+ // Linear Drucker-Prager Region (I1-Zeta) >= Kappa
+  if(I1-Zeta >= Kappa)
+   dfdKappa = 0;
+
+ // Cap Region (I1-Zeta) < Kappa
+  else
+   dfdKappa = ( 2*Pow(FSLOPE,2)*(I1 - X)*(I1 - Kappa - Zeta)*Pow( -I1+PEAKI1+Zeta , 2 ) )
+              /Pow( -Kappa+X-Zeta , 3 );
+
+  return dfdKappa;
+}
+
+//Compute derivative of yield function w.r.t. trace of iso backstress
+double Arenisca::computedfdZeta(double I1,
+                                double X,
+                                double Kappa,
+                                double Zeta)
+{
+  // The trace of the isotropic back stress tensor (Zeta) is the value of I1
+  // corresponding to the fluid pressure evolved under volumetric plastic
+  // deformation.  This backstress results in a shift of the yield surface
+  // along the hydrostat.  Recall that the yield function is expressed in terms
+  // of unshifted stress, and therefore evolves with Zeta.
+
+  //define and initialize some varialbes
+  double FSLOPE = d_cm.FSLOPE,
+         Kf     = d_cm.fluid_B0, // fluid bulk modulus
+         PEAKI1 = d_cm.PEAKI1,
+         dfdZeta;
+
+  if(Kf == 0)  // No Fluid Effects ---------------------------------------
+   dfdZeta = 0;
+
+  else{        // Fluid Effects ------------------------------------------
+
+  // Linear Drucker-Prager Region (I1-Zeta) >= Kappa
+   if(I1-Zeta >= Kappa)
+    dfdZeta = -2*Pow(FSLOPE,2)*(-I1 + PEAKI1 + Zeta);
+
+  // Cap Region (I1-Zeta) < Kappa
+   else
+    dfdZeta = (2*Pow(FSLOPE,2)*(I1 - X)*(I1 - PEAKI1 - Zeta)*
+               ( Pow(I1,2) - Pow(X,2) + 3*X*(Kappa+Zeta) +
+                (-2*Kappa+PEAKI1-Zeta)*(Kappa+Zeta) - I1*(PEAKI1+X+Zeta) ) )
+               / Pow(-Kappa+X-Zeta , 3);
+
+  } //end fluid effects
+
+  return dfdZeta;
+}
+
+// Compute bulk modulus for tensile or compressive vol. strain
+double Arenisca::computeBulkModulus(double ev)
+{
+  //define and initialize some variables
+  double p3  = d_cm.p3_crush_curve, // max vol. plastic strain
+         B0  = d_cm.B0,             // low pressure bulk modulus
+         B1  = d_cm.p4_fluid_effect,// additional high pressure bulk modulus
+         Kf  = d_cm.fluid_B0,       // fluid bulk modulus
+         //Pf0 = d_cm.fluid_pressure_initial,            // initial pore pressure
+         ev0,                       // strain at zero pore pressure
+         K;                         // computed bulk modulus
+
+
+  if(Kf == 0){  // No Fluid Effects ---------------------------------------
+   // Bulk modulus is computed as a the low pressure value when in tension
+   // and as the mean of the low and high pressure values in compression
+
+   if(ev < 0)  // Compression
+    K = B0 + B1/2;
+   else        // Tension
+    K = B0;
+  }
+
+  else{        // Fluid Effects ------------------------------------------
+   // The linear elastic approximation to the bulk modulus is derived
+   // using M. Homel's engineering model of matrix compressibility.
+
+   ev0 = computeev0();            // strain at zero pore pressure
+
+   if(ev < ev0)  // Compression
+    K = B0 + ((B0 + B1)*exp(p3)*Kf)
+             /(B0*(exp(p3) - 1) + B1*(exp(p3) - 1) + Kf);
+   else        // Tension
+    K = B0;
+  }
+
+  return K;
+}
+
+// Compute state variable X (defines cap position)
+double Arenisca::computeX(double evp)
+{
+  // X is the value of (I1 - Zeta) at which the cap function crosses
+  // the hydrostat. For the drained material in compression. X(evp)
+  // is derived from the emprical Kayenta crush curve, but with p2 = 0.
+  // In tension, M. Homel's piecewsie formulation is used.
+
+  // define and initialize some variables
+  double p0  = d_cm.p0_crush_curve,
+         p1  = d_cm.p1_crush_curve,
+         p3  = d_cm.p3_crush_curve, // max vol. plastic strain
+         B0  = d_cm.B0,             // low pressure bulk modulus
+         B1  = d_cm.p4_fluid_effect,             // additional high pressure bulk modulus
+         Kf  = d_cm.fluid_B0,       // fluid bulk modulus
+         //Pf0 = d_cm.fluid_pressure_initial,            // initial pore pressure
+         ev0,                       // strain at zero pore pressure
+         Kfit,
+         Xfit,
+         Keng,
+         eveX,
+         X;
+
+  if(evp<=-p3)
+  { // Plastic strain exceeds allowable limit.========================
+    // The plastic strain for this iteration has exceed the allowable
+    // value.  X is not defined in this region, so we set it to a large
+    // negative number.  This will cause the plastic strain to be reduced
+    // in subsequent iterations.
+    X = 1.0e6 * p0;
+  }
+  else
+  { // Plastic strain is within allowable domain======================
+    if(Kf==0)
+    { // No Fluid Effects ---------------------------------------------
+      if(evp <= 0)
+        X = (p0*p1 + log((evp+p3)/p3))/p1;
+      else
+        X = p0*Pow(1+evp , 1/(p0*p1*p3));
+    }
+    else
+    { // Fluid Effects ------------------------------------------------
+      // First we evaluate the elastic volumetric strain to yield from the
+      // empirical crush curve (Xfit) and bulk modulus (Kfit) formula for
+      // the drained material.  These functions could be modified to use
+      // the full non-linear and elastic-plastic coupled input paramters
+      // without introducing the additional complexity of elastic-plastic
+      // coupling in the plasticity solution.
+      if(evp <= 0)
+      { // pore collapse
+        Kfit = B0 + B1;                     // drained bulk modulus function
+        Xfit = (p0*p1+log((evp+p3)/p3))/p1; // drained crush curve function
+      }
+      else
+      { // pore expansion
+        Kfit = B0;                                 // drained bulk modulus function
+        Xfit = Pow(1 + evp , 1 / (p0*p1*p3))*p0; // drained crush curve function
+      }
+
+      // Now we use our linear engineering model for the bulk modulus of the
+      // saturated material to compute the stress at our elastic strain to yield.
+      ev0  = computeev0();                // strain at zero pore pressure
+      Keng = computeBulkModulus(ev0-1);   // Saturated bulk modulus
+      eveX = one_third*Xfit/Kfit;         // Elastic vol. strain to compressive yield
+
+      // There are three regions depending on whether the elastic loading to yield
+      // occurs within the domain of fluid effects (ev < ev0)
+      if(evp <= ev0)                            // Fluid Effects
+        X = 3*Keng*eveX;
+      else if(evp > ev0 && evp+eveX < ev0)      // Transition
+        X = 3*B0*(evp-ev0) + 3*Keng*(evp+eveX-ev0);
+      else                                      // No Fluid Effects
+        X = 3*B0*eveX;
+    } //end fluid effects
+  } // end good/bad plastic strain
+  return X;
+}
+
+// Compute state variable rate dXdevp (used in cap evolution)
+double Arenisca::computedXdevp(double evp)
+{
+  //define and initialize some varialbes
+  double p0  = d_cm.p0_crush_curve,
+         p1  = d_cm.p1_crush_curve,
+         p3  = d_cm.p3_crush_curve,
+         B0  = d_cm.B0,             // low pressure bulk modulus
+         B1  = d_cm.p4_fluid_effect,             // additional high pressure bulk modulus
+         Kf  = d_cm.fluid_B0,       // fluid bulk modulus
+         //XXPf0 = d_cm.fluid_pressure_initial,
+         Kfit,
+         Xfit,
+         ev0,
+         deveXdevp,
+         Keng,
+         eveX,
+         pdXdevp;
+
+  if(Kf==0){ // No Fluid Effects -------------------------------------
+   if(evp <= 0)                        // pore collapse
+    pdXdevp = 1/(p1*(evp + p3));
+   else                                // pore expansion
+    pdXdevp = Pow(1 + evp,-1 + 1/(p0*p1*p3))/(p1*p3);
+  }
+
+  else{      //Fluid Effects -----------------------------------------
+
+  // First we evaluate the elastic volumetric strain to yield from the
+  // empirical crush curve (Xfit) and bulk modulus (Kfit) formula for
+  // the drained material.  These functions could be modified to use
+  // the full non-linear and elastic-plastic coupled input paramters
+  // without introducing the additional complexity of elastic-plastic
+  // coupling in the plasticity solution.
+  //
+
+  if(evp <= 0){                      // pore collapse
+    Kfit = B0 + B1;                     // drained bulk modulus function
+    Xfit = (p0*p1+log((evp+p3)/p3))/p1; // drained crush curve function
+    deveXdevp = 2/(3*(2*B0 + B1)*p1*(evp + p3));
+  }
+  else{                              // pore expansion
+    Kfit = B0;                                 // drained bulk modulus function
+    Xfit = Pow(1+evp , 1/(B0*p1*p3))*p0;       // drained crush curve function
+    deveXdevp = Pow( 1+evp , -1 + 1/(p0*p1*p3) ) / (3*B0*p1*p3);
+  }
+
+   // Now we use our linear engineering model for the bulk modulus of the
+   // saturated material to compute the stress at our elastic strain to yield.
+   // Now we use our linear engineering model for the bulk modulus of the
+   // saturated material to compute the stress at our elastic strain to yield.
+   ev0  = computeev0();                // vol. strain at zero fluid pressure
+   Keng = computeBulkModulus(ev0-1);   // Saturated bulk modulus
+   eveX = one_third*Xfit/Kfit;         // Elastic vol. strain to compressive yield
+
+   // There are three regions depending on whether the elastic loading to yield
+   // occurs within the domain of fluid effects (ev < ev0)
+   if(evp <= ev0)                            // Fluid Effects
+    pdXdevp = 3*Keng*deveXdevp;              // X(evp) = 3*Keng*eveX
+
+   else if(evp > ev0 && evp+eveX < ev0)      // Transition
+    pdXdevp = 3*B0 + 3*Keng*(1 + deveXdevp); // X(evp) = 3*b0*(evp - ev0)
+                                             //        + 3*Keng*(evp + eveX - ev0)
+   else                                      // No Fluid Effects
+    pdXdevp = 3*B0*deveXdevp;                // X(evp) = 3*b0*eveX
+  } //end fluid effects
+
+  return pdXdevp;
+}
+
+// Compute (dZeta/devp) Zeta and vol. plastic strain
+double Arenisca::computedZetadevp(double Zeta, double evp)
+{
+  // Computes the partial derivative of the trace of the
+  // isotropic backstress (Zeta) with respect to volumetric
+  // plastic strain (evp).
+  //
+  // From M. Homel's engineering model for matrix compressibility:
+  //
+  //define and initialize some varialbes
+  double p3  = d_cm.p3_crush_curve,
+         B0  = d_cm.B0,             // low pressure bulk modulus
+         B1  = d_cm.p4_fluid_effect,             // additional high pressure bulk modulus
+         Kf  = d_cm.fluid_B0,       // fluid bulk modulus
+         Pf0 = d_cm.fluid_pressure_initial,
+         ev0,
+         dZetadevp;
+
+  ev0  = computeev0();                // strain at zero pore pressure
+
+  if (evp <= ev0 && Kf != 0) // ev0, is material strain at zero fluid pressure
+    // Fluid Effects
+    dZetadevp = (3*(B0 + B1)*exp(evp + p3)*Kf)/
+                (B0*(exp(evp + p3) - exp(Zeta/(3*(B0 + B1)))) +
+                 B1*(exp(evp + p3) - exp(Zeta/(3*(B0 + B1)))) +
+                (exp(evp + p3) + exp((3*Pf0 + Zeta)/(3*Kf)) -
+                 exp(p3 + Pf0/Kf + Zeta/(3*Kf)))*Kf);
+  else
+    dZetadevp=0;
+
+  return dZetadevp;
+}
+
+// Compute (dKappa/devp) from vol. plastic strain
+double Arenisca::computedKappadevp(double evp)
+{
+  // The value of the partial derivative of the branch point
+  // (Kappa) with respect to volumetric plastic strain (evp)
+  // is computed using the chaing rule:
+  //
+  // dKappa    dKappa      dX
+  // ------ = -------- * ------
+  //  devp       dX       devp
+  //
+  //define and initialize some variables
+  double CR     = d_cm.CR,
+         FSLOPE = d_cm.FSLOPE,
+         dKappadevp;
+
+  dKappadevp= 1/(1+FSLOPE * CR) * computedXdevp(evp);
+
+  return dKappadevp;
+}
+
+// Compute branch point, kappa exactly from cap intercept X
+double Arenisca::computeKappa(double X)
+{
+  // The ratio of the branch point (Kappa) to the hydrostatic
+  // compressive strength, (X) is defined by the input parameter
+  // CR, defined such that:
+  //
+  //       FSLOPE*(PEAKI1-Kappa)
+  // CR = -----------------------
+  //           (Kappa - X)
+  //
+  //define and initialize some variables
+  double FSLOPE = d_cm.FSLOPE,
+         CR     = d_cm.CR,
+         PEAKI1 = d_cm.PEAKI1,
+         Kappa;
+
+  Kappa = (FSLOPE * PEAKI1 * CR + X)
+          /(1 + FSLOPE * CR);
+
+  return Kappa;
+}
+
+// Compute unique projection direction P = C:M +Z
+Matrix3 Arenisca::computeP(double lame,
+                 Matrix3 M,
+                 Matrix3 Z)
+{
+  //define and initialize some variables
+  double  shear = d_cm.G0;
+  Matrix3 Identity,
+          P;
+  Identity.Identity();
+
+  //P=C:M+Z
+  P = (Identity*lame*(M.Trace()) + M * 2.0*shear) + Z;
+
+  return P;
+}
+#ifdef JC_DEBUG_PARTICLE // Undefine
+#undef JC_DEBUG_PARTICLE
+#endif

@@ -322,49 +322,6 @@ void ViscoScramImplicit::initializeCMData(const Patch* patch,
 }
 
 void
-ViscoScramImplicit::allocateCMDataAddRequires( Task* task,
-                                                const MPMMaterial* matl,
-                                                const PatchSet* ,
-                                                MPMLabel* lb ) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial(); 
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
-                 matlset, Ghost::None);
-}
-
-void
-ViscoScramImplicit::allocateCMDataAdd( DataWarehouse* new_dw,
-                                        ParticleSubset* addset,
-                                        map<const VarLabel*, ParticleVariableBase*>* newState,
-                                        ParticleSubset* delset,
-                                        DataWarehouse* )
-{
-  // Put stuff in here to initialize each particle's
-  // constitutive model parameters and deformationMeasure
-  ParticleVariable<Matrix3> pstress,deformationGradient;
-  constParticleVariable<Matrix3> o_stress, o_deformationGradient;
-
-  new_dw->allocateTemporary(deformationGradient,addset);
-  new_dw->allocateTemporary(pstress,            addset);
-
-  new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,
-                                                                        delset);
-  new_dw->get(o_stress,             lb->pStressLabel_preReloc,          delset);
-
-  ParticleSubset::iterator o,n = addset->begin();
-  for (o=delset->begin(); o != delset->end(); o++, n++) {
-    deformationGradient[*n] = o_deformationGradient[*o];
-    pstress[*n] = o_stress[*o];
-  }
-
-  (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
-  (*newState)[lb->pStressLabel]=pstress.clone();
-}
-
-
-void
 ViscoScramImplicit::addParticleState( std::vector<const VarLabel*>& from,
                                        std::vector<const VarLabel*>& to )
 {

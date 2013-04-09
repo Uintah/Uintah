@@ -57,50 +57,6 @@ HypoElastic::HypoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
   d_initialData.alpha=0.0;
   ps->get("alpha",d_initialData.alpha); // for thermal stress 
 
-  if (flag->d_fracture) {
-    // Read in fracture criterion and the toughness curve
-    ProblemSpecP curve_ps = ps->findBlock("fracture_toughness_curve");
-    if(curve_ps!=0) {
-      crackPropagationCriterion="max_hoop_stress";        
-      curve_ps->get("crack_propagation_criterion",crackPropagationCriterion);     
-
-      if(crackPropagationCriterion!="max_hoop_stress" && 
-         crackPropagationCriterion!="max_principal_stress" &&
-         crackPropagationCriterion!="max_energy_release_rate" &&
-         crackPropagationCriterion!="strain_energy_density" &&
-         crackPropagationCriterion!="empirical_criterion") {
-        cout << "Error: undefinded crack propagation criterion: "
-             << crackPropagationCriterion 
-             << " for hypoelastic materials. Program terminated."
-             << endl;
-        exit(1);       
-      }     
-
-      if(crackPropagationCriterion=="empirical_criterion") {
-        // Get parameters p & q in the fracture locus equation
-        // (KI/Ic)^p+(KII/KIIc)^q=1 and KIIc=r*KIc       
-        p=q=2.0;  // Default elliptical fracture locus  
-        r=-1.;
-        curve_ps->get("p",p);
-        curve_ps->get("q",q);
-        curve_ps->get("r",r);
-      }
-            
-      for(ProblemSpecP child_ps=curve_ps->findBlock("point"); child_ps!=0; 
-          child_ps=child_ps->findNextBlock("point")) {
-        double Vc,KIc,KIIc;
-        child_ps->require("Vc",Vc);
-        child_ps->require("KIc",KIc);
-        if(r<0.) { // Input KIIc manually
-          child_ps->get("KIIc",KIIc);
-        }
-        else { // The ratio of KIIc to KIc is a constant (r) 
-          KIIc=r*KIc;
-        }       
-        d_initialData.Kc.push_back(Vector(Vc,KIc,KIIc));
-      }           
-    }
-  }
 }
 
 HypoElastic::HypoElastic(const HypoElastic* cm) : ConstitutiveModel(cm)
@@ -108,8 +64,6 @@ HypoElastic::HypoElastic(const HypoElastic* cm) : ConstitutiveModel(cm)
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
   d_initialData.alpha = cm->d_initialData.alpha; // for thermal stress
-  if (flag->d_fracture)
-    d_initialData.Kc = cm->d_initialData.Kc;
 }
 
 HypoElastic::~HypoElastic()
@@ -147,100 +101,13 @@ void HypoElastic::initializeCMData(const Patch* patch,
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
 
-  if (flag->d_fracture) {
-    // Put stuff in here to initialize each particle's
-    // constitutive model parameters and deformationMeasure
-    Matrix3 Identity, zero(0.);
-    Identity.Identity();
-
-    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-
-    // for J-Integral
-    ParticleVariable<Matrix3> pdispGrads;
-    ParticleVariable<double>  pstrainEnergyDensity;
-    new_dw->allocateAndPut(pdispGrads, lb->pDispGradsLabel, pset);
-    new_dw->allocateAndPut(pstrainEnergyDensity, lb->pStrainEnergyDensityLabel, 
-                           pset);
-
-    ParticleSubset::iterator iter = pset->begin();
-    for(;iter != pset->end();iter++){
-      pdispGrads[*iter] = zero;
-      pstrainEnergyDensity[*iter] = 0.0;
-    }
-  }
-
   computeStableTimestep(patch, matl, new_dw);
-}
-
-
-void HypoElastic::allocateCMDataAddRequires(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches,
-                                            MPMLabel* lb) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-
-  // Add requires local to this model
-  Ghost::GhostType  gnone = Ghost::None;
-  if (flag->d_fracture) {
-    task->requires(Task::NewDW, lb->pDispGradsLabel_preReloc, matlset, gnone);
-    task->requires(Task::NewDW, lb->pStrainEnergyDensityLabel_preReloc,
-                   matlset, gnone);
-  }
-}
-
-
-void HypoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
-                                    ParticleSubset* addset,
-     map<const VarLabel*, ParticleVariableBase*>* newState,
-                                    ParticleSubset* delset,
-                                    DataWarehouse* )
-{
-  // Copy the data common to all constitutive models from the particle to be 
-  // deleted to the particle to be added. 
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
-  // Copy the data local to this constitutive model from the particles to 
-  // be deleted to the particles to be added
-  if (flag->d_fracture) {
-    ParticleVariable<Matrix3> pdispGrads;
-    constParticleVariable<Matrix3> o_dispGrads;
-    ParticleVariable<double>  pstrainEnergyDensity;
-    constParticleVariable<double>  o_strainEnergyDensity;
-    // for J-Integral
-    new_dw->allocateTemporary(pdispGrads, addset);
-    new_dw->get(o_dispGrads,lb->pDispGradsLabel_preReloc,delset);
-    new_dw->allocateTemporary(pstrainEnergyDensity,addset);
-    new_dw->get(o_strainEnergyDensity,lb->pStrainEnergyDensityLabel_preReloc,
-                delset);
-
-    ParticleSubset::iterator o, n = addset->begin();
-    for (o=delset->begin(); o != delset->end(); o++, n++) {
-      pdispGrads[*n] = o_dispGrads[*o];
-      pstrainEnergyDensity[*n] = o_strainEnergyDensity[*o];
-    }
-
-    (*newState)[lb->pDispGradsLabel]=pdispGrads.clone();
-    (*newState)[lb->pStrainEnergyDensityLabel]=pstrainEnergyDensity.clone();
-  }
 }
 
 void HypoElastic::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
-  if (flag->d_fracture) {
-    from.push_back(lb->pDispGradsLabel);
-    from.push_back(lb->pStrainEnergyDensityLabel);
-    to.push_back(lb->pDispGradsLabel_preReloc);
-    to.push_back(lb->pStrainEnergyDensityLabel_preReloc);
-  }
 }
 
 void HypoElastic::computeStableTimestep(const Patch* patch,
@@ -287,93 +154,44 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
   for(int p=0;p<patches->size();p++){
     double se = 0.0;
     const Patch* patch = patches->get(p);
-    //
-    //  FIX  To do:  Read in table for vres
-    //               Obtain and modify particle temperature (deg K)
-    //
 
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-    vector<double> S(interpolator->size());
-
-    Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
-    double c_dil=0.0,Jinc;
+    Matrix3 Identity; Identity.Identity();
+    double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     double onethird = (1.0/3.0);
 
-    Identity.Identity();
-
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
     //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     int dwi = matl->getDWIndex();
     // Create array for the particle position
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    constParticleVariable<Point> px;
-    constParticleVariable<Matrix3> deformationGradient, pstress;
-    ParticleVariable<Matrix3> pstress_new;
-    ParticleVariable<Matrix3> deformationGradient_new;
-    constParticleVariable<double> pmass, pvolume, ptemperature, pTempPrevious;
-    ParticleVariable<double> pvolume_new;
+    constParticleVariable<Matrix3> pstress;
+    constParticleVariable<double> pmass, ptemperature, pTempPrevious;
+    constParticleVariable<double> pvolume_new;
     constParticleVariable<Vector> pvelocity;
-    constParticleVariable<Matrix3> psize;
-    constNCVariable<Vector> gvelocity;
+    constParticleVariable<Matrix3> velGrad, pDefGrad_new;
+
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
-    Ghost::GhostType  gac   = Ghost::AroundCells;
     
-    old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(pstress,             lb->pStressLabel,             pset);
-    old_dw->get(psize,               lb->pSizeLabel,               pset);
-    old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    old_dw->get(pstress,            lb->pStressLabel,             pset);
+    old_dw->get(pmass,              lb->pMassLabel,               pset);
+    old_dw->get(pvelocity,          lb->pVelocityLabel,           pset);
+    old_dw->get(ptemperature,       lb->pTemperatureLabel,        pset);
     // for thermal stress
-    old_dw->get(pTempPrevious,       lb->pTempPreviousLabel,       pset); 
+    old_dw->get(pTempPrevious,      lb->pTempPreviousLabel,       pset); 
 
-    new_dw->get(gvelocity,lb->gVelocityStarLabel, dwi,patch, gac, NGN);
-
-    constNCVariable<Vector> Gvelocity;
-    constParticleVariable<Short27> pgCode;
-    constParticleVariable<Matrix3> pdispGrads;
-    constParticleVariable<double>  pstrainEnergyDensity;
-    ParticleVariable<Matrix3> pdispGrads_new,pvelGrads;
-    ParticleVariable<double> pstrainEnergyDensity_new;
+    new_dw->get(pvolume_new,        lb->pVolumeLabel_preReloc,    pset);
+    new_dw->get(velGrad,            lb->pVelGradLabel_preReloc,   pset);
+    new_dw->get(pDefGrad_new,       lb->pDeformationMeasureLabel_preReloc,
+                                                                  pset);
+    ParticleVariable<Matrix3> pstress_new;
     ParticleVariable<double> pdTdt,p_q;
-    if (flag->d_fracture) {
-      new_dw->get(Gvelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
-      new_dw->get(pgCode,              lb->pgCodeLabel,              pset);
-      old_dw->get(pdispGrads,          lb->pDispGradsLabel,          pset);
-      old_dw->get(pstrainEnergyDensity,lb->pStrainEnergyDensityLabel,pset);
-      new_dw->allocateAndPut(pvelGrads,lb->pVelGradsLabel,           pset);
-      new_dw->allocateAndPut(pdispGrads_new, lb->pDispGradsLabel_preReloc,pset);
-      new_dw->allocateAndPut(pstrainEnergyDensity_new,
-                             lb->pStrainEnergyDensityLabel_preReloc, pset);
-    }
 
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pvolume_new,     lb->pVolumeLabel_preReloc,   pset);
     new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,     pset);
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
-    new_dw->allocateAndPut(deformationGradient_new,
-                           lb->pDeformationMeasureLabel_preReloc,        pset);
-    ParticleVariable<Matrix3> vG;
-    new_dw->allocateTemporary(vG, pset);
-
-    CCVariable<double> vol_0_CC,dvol_CC;
-    CCVariable<int> PPC;
-    new_dw->allocateTemporary(vol_0_CC,  patch);
-    new_dw->allocateTemporary(dvol_CC,  patch);
-    new_dw->allocateTemporary(PPC,  patch);
-
-    vol_0_CC.initialize(0.);
-    dvol_CC.initialize(0.);
-    PPC.initialize(0);
 
     double G    = d_initialData.G;
     double bulk = d_initialData.K;
@@ -385,90 +203,20 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
-      // Initialize velocity gradient
-      velGrad.set(0.0);
-
-      if(!flag->d_axisymmetric){
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
-
-        short pgFld[27];
-        if (flag->d_fracture) {
-         for(int k=0; k<27; k++){
-           pgFld[k]=pgCode[idx][k];
-         }
-         computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gvelocity,Gvelocity);
-        } else {
-         computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
-
-        }
-      } else {  // axi-symmetric kinematics
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                                    psize[idx],deformationGradient[idx]);
-        // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
-      }
-
-      // Rate of particle temperature change for thermal stress
-      double ptempRate=(ptemperature[idx]-pTempPrevious[idx])/delT; 
-      // Calculate rate of deformation D, and deviatoric rate DPrime,
-      // including effect of thermal strain
-      Matrix3 D = (velGrad + velGrad.Transpose())*.5-Identity*alpha*ptempRate;
-
-      vG[idx]=velGrad;
-
-      IntVector cell_index;
-      patch->findCell(px[idx],cell_index);
-
-      vol_0_CC[cell_index]+=pvolume[idx];
-      dvol_CC[cell_index]+=D.Trace()*pvolume[idx];
-      PPC[cell_index]++;
-    }
-
-    double press_stab=0.;
-    if(flag->d_doPressureStabilization) {
-      press_stab=1.;
-      for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-         IntVector c = *iter;
-         dvol_CC[c]/=vol_0_CC[c];
-      }
-    }
-
-    for(ParticleSubset::iterator iter = pset->begin();
-                                        iter != pset->end(); iter++){
-      particleIndex idx = *iter;
 
       // Rate of particle temperature change for thermal stress
       double ptempRate=(ptemperature[idx]-pTempPrevious[idx])/delT;
+
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       // including effect of thermal strain
-      IntVector cell_index;
-      patch->findCell(px[idx],cell_index);
-
-      Matrix3 D = (vG[idx] + vG[idx].Transpose())*.5-Identity*alpha*ptempRate;
+      Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())
+                * 0.5-Identity*alpha*ptempRate;
       double DTrace = D.Trace();
-      // Alter D to stabilize the pressure in each cell
-      D = D + Identity*onethird*press_stab*(dvol_CC[cell_index] - DTrace);
-      DTrace = D.Trace();
       Matrix3 DPrime = D - Identity*onethird*DTrace;
 
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient
-      // F_n^np1 = dudx * dt + Identity
-      deformationGradientInc = vG[idx] * delT + Identity;
-
-      Jinc = deformationGradientInc.Determinant();
-
-      // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx] = deformationGradientInc *
-                                     deformationGradient[idx];
-
       // get the volumetric part of the deformation
-      double J = deformationGradient[idx].Determinant();
-      pvolume_new[idx]=Jinc*pvolume[idx];
+      double J = pDefGrad_new[idx].Determinant();
 
-      // Compute the local sound speed
       double rho_cur = rho_orig/J;
       c_dil = sqrt((bulk + 4.*G/3.)/rho_cur);
        
@@ -487,15 +235,6 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
                   D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
 
       se += e;
-
-      if (flag->d_fracture) {
-        pvelGrads[idx]=vG[idx];
-        // Update particle displacement gradients
-        pdispGrads_new[idx] = pdispGrads[idx] + vG[idx] * delT;
-        // Update particle strain energy density 
-        pstrainEnergyDensity_new[idx] = pstrainEnergyDensity[idx] + 
-                                         e/pvolume_new[idx];
-      }
 
       // Compute wave speed at each particle, store the maximum
       Vector pvelocity_idx = pvelocity[idx];
@@ -516,12 +255,12 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
-    
+
+
     if (flag->d_reductionVars->accStrainEnergy ||
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
     }
-    delete interpolator;
   }
 }
 
@@ -865,17 +604,6 @@ void HypoElastic::addComputesAndRequires(Task* task,
   Ghost::GhostType gnone = Ghost::None;
   // for thermal stress
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-
-  // Other constitutive model and input dependent computes and requires
-  if (flag->d_fracture) {
-    Ghost::GhostType  gnone = Ghost::None;
-    task->requires(Task::OldDW, lb->pDispGradsLabel,           matlset, gnone);
-    task->requires(Task::OldDW, lb->pStrainEnergyDensityLabel, matlset, gnone);
-    
-    task->computes(lb->pDispGradsLabel_preReloc,             matlset);
-    task->computes(lb->pVelGradsLabel,                       matlset);
-    task->computes(lb->pStrainEnergyDensityLabel_preReloc,   matlset);
-  }
 }
 
 void 
@@ -936,27 +664,5 @@ double HypoElastic::getCompressibility()
 
 
 namespace Uintah {
-
-#if 0
-static MPI_Datatype makeMPI_CMData()
-{
-   ASSERTEQ(sizeof(HypoElastic::StateData), sizeof(double)*2);
-   MPI_Datatype mpitype;
-   MPI_Type_vector(1, 2, 2, MPI_DOUBLE, &mpitype);
-   MPI_Type_commit(&mpitype);
-   return mpitype;
-}
-
-const TypeDescription* fun_getTypeDescription(HypoElastic::StateData*)
-{
-   static TypeDescription* td = 0;
-   if(!td){
-      td = scinew
-        TypeDescription(TypeDescription::Other,
-                        "HypoElastic::StateData", true, &makeMPI_CMData);
-   }
-   return td;
-}
-#endif
 
 } // End namespace Uintah

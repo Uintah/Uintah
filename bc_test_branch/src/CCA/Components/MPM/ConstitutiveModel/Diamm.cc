@@ -239,51 +239,6 @@ void Diamm::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
-void Diamm::allocateCMDataAddRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches,
-                                        MPMLabel* lb) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patches);
-  // Add requires local to this model
-  for(int i=0;i<d_NINSV;i++){
-    task->requires(Task::NewDW,ISVLabels_preReloc[i], matlset, Ghost::None);
-  }
-}
-
-
-void Diamm::allocateCMDataAdd(DataWarehouse* new_dw,
-                                ParticleSubset* addset,
-                                map<const VarLabel*,
-                                ParticleVariableBase*>* newState,
-                                ParticleSubset* delset,
-                                DataWarehouse* )
-{
-  // Copy the data common to all constitutive models from the particle to be
-  // deleted to the particle to be added.
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-
-  StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
-  StaticArray<constParticleVariable<double> > o_ISVs(d_NINSV+1);
-
-  for(int i=0;i<d_NINSV;i++){
-    new_dw->allocateTemporary(ISVs[i], addset);
-    new_dw->get(o_ISVs[i],ISVLabels_preReloc[i], delset);
-
-    ParticleSubset::iterator o,n = addset->begin();
-    for (o=delset->begin(); o != delset->end(); o++, n++) {
-      ISVs[i][*n] = o_ISVs[i][*n];
-    }
-    (*newState)[ISVLabels[i]]=ISVs[i].clone();
-  }
-}
-
 void Diamm::addParticleState(std::vector<const VarLabel*>& from,
                                std::vector<const VarLabel*>& to)
 {
@@ -343,40 +298,24 @@ void Diamm::computeStressTensor(const PatchSubset* patches,
     double se = 0.0;
     const Patch* patch = patches->get(p);
 
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-    vector<double> S(interpolator->size());
-
-    Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
-    double c_dil=0.0,Jinc;
+    Matrix3 Identity; Identity.Identity();
+    double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-
-    Identity.Identity();
-
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
     int dwi = matl->getDWIndex();
     // Create array for the particle position
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    constParticleVariable<Point> px;
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3> pstress_new;
-    ParticleVariable<Matrix3> deformationGradient_new;
+    constParticleVariable<Matrix3> deformationGradient_new, velGrad;
     constParticleVariable<double> pmass, pvolume, ptemperature;
-    ParticleVariable<double> pvolume_new;
+    constParticleVariable<double> pvolume_new;
     constParticleVariable<Vector> pvelocity;
-    constParticleVariable<Matrix3> psize;
-    constNCVariable<Vector> gvelocity;
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    Ghost::GhostType  gac   = Ghost::AroundCells;
-
-    old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
-    old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
@@ -388,17 +327,15 @@ void Diamm::computeStressTensor(const PatchSubset* patches,
       old_dw->get(ISVs[i],           ISVLabels[i],                 pset);
     }
 
-    new_dw->get(gvelocity,lb->gVelocityStarLabel, dwi,patch, gac, NGN);
-
     ParticleVariable<double> pdTdt,p_q;
 
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pvolume_new,     lb->pVolumeLabel_preReloc,   pset);
     new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,     pset);
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
-    new_dw->allocateAndPut(deformationGradient_new,
-                           lb->pDeformationMeasureLabel_preReloc,        pset);
-
+    new_dw->get(deformationGradient_new,
+                                 lb->pDeformationMeasureLabel_preReloc,  pset);
+    new_dw->get(pvolume_new,     lb->pVolumeLabel_preReloc,              pset);
+    new_dw->get(velGrad,         lb->pVelGradLabel_preReloc,             pset);
 
     StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
@@ -411,39 +348,12 @@ void Diamm::computeStressTensor(const PatchSubset* patches,
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
-      // Initialize velocity gradient
-      velGrad.set(0.0);
-
-      if(!flag->d_axisymmetric){
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
-
-        computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
-
-      } else {  // axi-symmetric kinematics
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-							    psize[idx],deformationGradient[idx]);
-        // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
-      }
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
-      Matrix3 D = (velGrad + velGrad.Transpose())*.5;
-
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient
-      // F_n^np1 = dudx * dt + Identity
-      deformationGradientInc = velGrad * delT + Identity;
-
-      Jinc = deformationGradientInc.Determinant();
-
-      // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx] = deformationGradientInc *
-                                     deformationGradient[idx];
+      Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*.5;
 
       // get the volumetric part of the deformation
-      double J = deformationGradient[idx].Determinant();
+      double J = deformationGradient_new[idx].Determinant();
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
         cerr << getpid() ;
@@ -451,14 +361,12 @@ void Diamm::computeStressTensor(const PatchSubset* patches,
         old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
         cerr << "**ERROR** Negative Jacobian of deformation gradient"
              << " in particle " << pParticleID[idx] << endl;
-        cerr << "l = " << velGrad << endl;
+        cerr << "l = " << velGrad[idx] << endl;
         cerr << "F_old = " << deformationGradient[idx] << endl;
-        cerr << "F_inc = " << deformationGradientInc << endl;
         cerr << "F_new = " << deformationGradient_new[idx] << endl;
         cerr << "J = " << J << endl;
         throw InternalError("Negative Jacobian",__FILE__,__LINE__);
       }
-      pvolume_new[idx]=Jinc*pvolume[idx];
 
       // Compute the local sound speed
       double rho_cur = rho_orig/J;
@@ -524,10 +432,6 @@ void Diamm::computeStressTensor(const PatchSubset* patches,
       // ROTATE pstress_new: S=R*tensorSig*R^T
       pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
 
-#if 0
-      cout << pstress_new[idx] << endl;
-#endif
-
       c_dil = sqrt(USM/rho_cur);
 
       // Compute the strain energy for all the particles
@@ -552,7 +456,6 @@ void Diamm::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(UI[0]/rho_cur);
-        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
       } else {
         p_q[idx] = 0.;
@@ -566,8 +469,6 @@ void Diamm::computeStressTensor(const PatchSubset* patches,
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
     }
-
-    delete interpolator;
   }
 }
 

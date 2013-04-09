@@ -543,7 +543,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
   //           << (patches->get(0))->getID();
   // General stuff
   Matrix3 one; one.Identity(); Matrix3 zero(0.0);
-  Matrix3 tensorL(0.0); // Velocity gradient
+  Matrix3 tensorL(0.0); // Velocity Gradient
   Matrix3 tensorD(0.0); // Rate of deformation
   Matrix3 tensorW(0.0); // Spin 
   Matrix3 tensorF; tensorF.Identity(); // Deformation gradient
@@ -577,15 +577,9 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-
     //cerr << getpid() << " patch = " << patch->getID() << endl;
     // Get grid size
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     long64 totalLocalizedParticle = 0;
     // Get the set of particles
@@ -593,29 +587,12 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-    // GET GLOBAL DATA 
-
-    // Get the deformation gradient (F)
-    // Note : The deformation gradient from the old datawarehouse is no
-    // longer used, but it is updated for possible use elsewhere
-    constParticleVariable<Matrix3>  pDeformGrad;
-    old_dw->get(pDeformGrad, lb->pDeformationMeasureLabel, pset);
-
-    // Get the particle location, particle size, particle mass, particle volume
-    constParticleVariable<Point> px;
-    constParticleVariable<Matrix3> psize;
+    // Get the particle location, particle, particle mass, particle volume
     constParticleVariable<double> pMass, pVolume;
-    old_dw->get(px, lb->pXLabel, pset);
-    old_dw->get(psize, lb->pSizeLabel, pset);
     old_dw->get(pMass, lb->pMassLabel, pset);
 
-    // Get the velocity from the grid and particle velocity
     constParticleVariable<Vector> pVelocity;
-    constNCVariable<Vector> gVelocity;
     old_dw->get(pVelocity, lb->pVelocityLabel, pset);
-    Ghost::GhostType  gac = Ghost::AroundCells;
-//    new_dw->get(gVelocity, lb->gVelocityLabel, dwi, patch, gac, NGN);
-     new_dw->get(gVelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
 
     // Get the particle stress and temperature
     constParticleVariable<Matrix3> pStress;
@@ -627,14 +604,6 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
     // Get the time increment (delT)
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
-    constParticleVariable<Short27> pgCode;
-    constNCVariable<Vector> GVelocity;
-    if (flag->d_fracture) {
-      new_dw->get(pgCode, lb->pgCodeLabel, pset);
-//      new_dw->get(GVelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
-      new_dw->get(GVelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
-    }
 
    //Get ParticleID
    constParticleVariable<long64> pParticleID;
@@ -658,9 +627,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
     old_dw->get(pFailureVariable, pFailureVariableLabel, pset);
     old_dw->get(pPlasticStrain, pPlasticStrainLabel, pset);
-//     old_dw->get(pDamage, pDamageLabel, pset);
     old_dw->get(pStrainRate, pStrainRateLabel, pset);
-//     old_dw->get(pPorosity, pPorosityLabel, pset);
 
     // Get the particle localization state
     constParticleVariable<int> pLocalized;
@@ -668,15 +635,16 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
     // Create and allocate arrays for storing the updated information
     // GLOBAL
-    ParticleVariable<Matrix3> pDeformGrad_new, pStress_new;
-    ParticleVariable<double> pVolume_deformed;
-    new_dw->allocateAndPut(pDeformGrad_new,  
-                           lb->pDeformationMeasureLabel_preReloc, pset);
+    ParticleVariable<Matrix3>  pStress_new;
+    constParticleVariable<double> pVolume_deformed;
+    constParticleVariable<Matrix3>  pDeformGrad, pDeformGrad_new, velGrad;
+    old_dw->get(pDeformGrad, lb->pDeformationMeasureLabel, pset);
     new_dw->allocateAndPut(pStress_new,      
                            lb->pStressLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pVolume_deformed, 
-                           lb->pVolumeLabel_preReloc,              pset);
-//                           lb->pVolumeDeformedLabel,              pset);
+    new_dw->get(pDeformGrad_new,  
+                           lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->get(pVolume_deformed, lb->pVolumeLabel_preReloc,      pset);
+    new_dw->get(velGrad, lb->pVelGradLabel_preReloc,              pset);
 
     // LOCAL
     ParticleVariable<Matrix3> pLeftStretch_new, pRotation_new;
@@ -692,10 +660,6 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
                            pStrainRateLabel_preReloc,             pset);
     new_dw->allocateAndPut(pPlasticStrain_new,      
                            pPlasticStrainLabel_preReloc,          pset);
-//     new_dw->allocateAndPut(pDamage_new,      
-//                            pDamageLabel_preReloc,                 pset);
-//     new_dw->allocateAndPut(pPorosity_new,      
-//                            pPorosityLabel_preReloc,               pset);
     new_dw->allocateAndPut(pLocalized_new,      
                            pLocalizedLabel_preReloc,              pset);
     new_dw->allocateAndPut(pPlasticTemperature_new,      
@@ -726,63 +690,33 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
-      // Calculate the velocity gradient (L) from the grid velocity
-
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDeformGrad[idx]);
-
-      Matrix3 tensorL(0.0);
-      short pgFld[27];
-      if (flag->d_fracture) {
-        for(int k=0; k<27; k++) 
-          pgFld[k]=pgCode[idx][k];
-
-        computeVelocityGradient(tensorL,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
-      } else {
-        computeVelocityGradient(tensorL,ni,d_S,oodx,gVelocity);
-      }
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient F_n^np1 = dudx * dt + Identity
       // Update the deformation gradient tensor to its time n+1 value.
-      Matrix3 tensorFinc = tensorL*delT + one;
-      tensorF_new = tensorFinc*pDeformGrad[idx];
-      pDeformGrad_new[idx] = tensorF_new;
-      double J = tensorF_new.Determinant();
+      double J = pDeformGrad_new[idx].Determinant();
 
       if(d_setStressToZero && pLocalized[idx]){
-        pDeformGrad_new[idx] = pDeformGrad[idx];
         J = pDeformGrad[idx].Determinant();
         tensorF_new = pDeformGrad[idx];
       }
 
-      // Check 1: Look at Jacobian
+      tensorL=velGrad[idx];
+
       if (!(J > 0.0)) {
         cerr << getpid() ;
         cerr << "**ERROR** Negative Jacobian of deformation gradient"
              << " in particle " << pParticleID[idx] << endl;
-        cerr << "l = " << tensorL << endl;
+        cerr << "l = " << velGrad[idx] << endl;
         cerr << "F_old = " << pDeformGrad[idx] << endl;
-        cerr << "F_inc = " << tensorFinc << endl;
-        cerr << "F_new = " << tensorF_new << endl;
+        cerr << "F_new = " << pDeformGrad_new[idx] << endl;
         cerr << "J = " << J << endl;
         throw ParameterNotFound("**ERROR**:ViscoPlastic", __FILE__, __LINE__);
       }
 
       // Calculate the current density and deformed volume
       double rho_cur = rho_0/J;
-      pVolume_deformed[idx]=pMass[idx]/rho_cur;
-      if (d_usePolarDecompositionRMB) {
-          tensorF_new.polarDecompositionRMB(tensorV, tensorR);
-      } else {
-          tensorF_new.polarDecomposition(tensorV, tensorR, d_tol, false);
-      }
-
-      //tensorF_new.polarDecomposition(tensorV, tensorR, d_tol, false);
-
-      // Compute polar decomposition of F (F = RU) -
-      // Note that tensorV is really tensorU, the right stretch
-      // tensorV is never really used - should be deleted.
-      //tensorF_new.polarDecompositionRMB(tensorV, tensorR);
+      tensorF_new.polarDecompositionRMB(tensorV, tensorR);
 
       // Calculate rate of deformation tensor (D) and spin tensor (W)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
@@ -794,7 +728,6 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
         }
       }
 
-//       cout << "tensorD= " << tensorD << " \n";
       // Update the kinematic variables
       pLeftStretch_new[idx] = tensorV;
       pRotation_new[idx] = tensorR;
@@ -1057,7 +990,6 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
      new_dw->put(sumlong_vartype(totalLocalizedParticle),
           lb->TotalLocalizedParticleLabel);
 
-    delete interpolator;
   } //end patch
 
   // cout_CST << getpid() << "... Out" << endl;
@@ -2635,115 +2567,6 @@ ViscoPlastic::carryForward(const PatchSubset* patches,
   }
 }
 
-void
-ViscoPlastic::allocateCMDataAddRequires(Task* task,
-                                              const MPMMaterial* matl,
-                                              const PatchSet* patch,
-                                              MPMLabel* lb) const
-{
-  Ghost::GhostType  gnone = Ghost::None;
-  const MaterialSubset* matlset = matl->thisMaterial();
-
-  // Allocate the variables shared by all constitutive models
-  // for the particle convert operation
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedRForConvertExplicit(task, matlset, patch);
-
-  // Add requires local to this model
-  task->requires(Task::NewDW, pLeftStretchLabel_preReloc,    matlset, gnone);
-  task->requires(Task::NewDW, pRotationLabel_preReloc,       matlset, gnone);
-  task->requires(Task::NewDW, pStrainRateLabel_preReloc,     matlset, gnone);
-  task->requires(Task::NewDW, pPlasticStrainLabel_preReloc,  matlset, gnone);
-//   task->requires(Task::NewDW, pDamageLabel_preReloc,         matlset, gnone);
-  task->requires(Task::NewDW, pLocalizedLabel_preReloc,      matlset, gnone);
-//   task->requires(Task::NewDW, pPorosityLabel_preReloc,       matlset, gnone);
-  task->requires(Task::NewDW, pPlasticTempLabel_preReloc,    matlset, gnone);
-  task->requires(Task::NewDW, pPlasticTempIncLabel_preReloc, matlset, gnone);
-  task->requires(Task::NewDW, pFailureVariableLabel_preReloc, matlset, gnone);
-  d_plastic->allocateCMDataAddRequires(task,matl,patch,lb);
-}
-
-void
-ViscoPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
-                                      ParticleSubset* addset,
-                                      map<const VarLabel*, 
-                                      ParticleVariableBase*>* newState,
-                                      ParticleSubset* delset,
-                                      DataWarehouse* old_dw)
-{
-  // Copy the data common to all constitutive models from the particle to be 
-  // deleted to the particle to be added. 
-  // This method is defined in the ConstitutiveModel base class.
-  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-
-  // Copy the data local to this constitutive model from the particles to 
-  // be deleted to the particles to be added
-  ParticleSubset::iterator n,o;
-
-  ParticleVariable<Matrix3> pLeftStretch, pRotation;
-  ParticleVariable<double> pPlasticStrain, pDamage,pPorosity, pStrainRate;
-  ParticleVariable<int> pLocalized;
-  ParticleVariable<double> pPlasticTemperature, pPlasticTempInc, pFailureVariable;
-
-  constParticleVariable<Matrix3> o_LeftStretch, o_Rotation;
-  constParticleVariable<double> o_PlasticStrain, o_Damage,o_Porosity, 
-    o_StrainRate;
-  constParticleVariable<int> o_Localized;
-  constParticleVariable<double> o_PlasticTemperature, o_PlasticTempInc, o_FailureVariable;
-
-  new_dw->allocateTemporary(pLeftStretch,addset);
-  new_dw->allocateTemporary(pRotation,addset);
-  new_dw->allocateTemporary(pPlasticStrain,addset);
-//   new_dw->allocateTemporary(pDamage,addset);
-  new_dw->allocateTemporary(pStrainRate,addset);
-  new_dw->allocateTemporary(pLocalized,addset);
-//   new_dw->allocateTemporary(pPorosity,addset);
-  new_dw->allocateTemporary(pPlasticTemperature,addset);
-  new_dw->allocateTemporary(pPlasticTempInc,addset);
-  new_dw->allocateTemporary(pFailureVariable,addset);
-
-  new_dw->get(o_LeftStretch,pLeftStretchLabel_preReloc,delset);
-  new_dw->get(o_Rotation,pRotationLabel_preReloc,delset);
-  new_dw->get(o_StrainRate,pStrainRateLabel_preReloc,delset);
-  new_dw->get(o_PlasticStrain,pPlasticStrainLabel_preReloc,delset);
-//   new_dw->get(o_Damage,pDamageLabel_preReloc,delset);
-  new_dw->get(o_Localized,pLocalizedLabel_preReloc,delset);
-//   new_dw->get(o_Porosity,pPorosityLabel_preReloc,delset);
-  new_dw->get(o_PlasticTemperature,pPlasticTempLabel_preReloc,delset);
-  new_dw->get(o_PlasticTempInc,pPlasticTempIncLabel_preReloc,delset);
-  new_dw->get(o_FailureVariable,pFailureVariableLabel_preReloc,delset);
-
-  n = addset->begin();
-  for (o=delset->begin(); o != delset->end(); o++, n++) {
-
-    pLeftStretch[*n] = o_LeftStretch[*o];
-    pRotation[*n] = o_Rotation[*o];
-    pStrainRate[*n] = o_StrainRate[*o];
-    pPlasticStrain[*n] = o_PlasticStrain[*o];
-//     pDamage[*n] = o_Damage[*o];
-    pLocalized[*n] = o_Localized[*o];
-//     pPorosity[*n] = o_Porosity[*o];
-    pPlasticTemperature[*n] = o_PlasticTemperature[*o];
-    pPlasticTempInc[*n] = o_PlasticTempInc[*o];
-    pFailureVariable[*n] = o_FailureVariable[*o];
-  }
-
-  (*newState)[pLeftStretchLabel]=pLeftStretch.clone();
-  (*newState)[pRotationLabel]=pRotation.clone();
-  (*newState)[pStrainRateLabel]=pStrainRate.clone();
-  (*newState)[pPlasticStrainLabel]=pPlasticStrain.clone();
-//   (*newState)[pDamageLabel]=pDamage.clone();
-  (*newState)[pLocalizedLabel]=pLocalized.clone();
-//   (*newState)[pPorosityLabel]=pPorosity.clone();
-  (*newState)[pPlasticTempLabel]=pPlasticTemperature.clone();
-  (*newState)[pPlasticTempIncLabel]=pPlasticTempInc.clone();
-  (*newState)[pFailureVariableLabel]=pFailureVariable.clone();
-  
-  // Initialize the data for the plasticity model
-  d_plastic->allocateCMDataAdd(new_dw,addset, newState, delset, old_dw);
-}
-
-
 void 
 ViscoPlastic::getPlasticTemperatureIncrement(ParticleSubset* pset,
                                                    DataWarehouse* new_dw,
@@ -2996,54 +2819,6 @@ double
 ViscoPlastic::getCompressibility()
 {
   return 1.0/d_initialData.Bulk;
-}
-
-void
-ViscoPlastic::scheduleCheckNeedAddMPMMaterial(Task* task,
-                                                    const MPMMaterial* matl,
-                                                    const PatchSet* ) const
-{
-  Ghost::GhostType  gnone = Ghost::None;
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pPlasticStrainLabel_preReloc,   matlset, gnone);
-
-  task->computes(lb->NeedAddMPMMaterialLabel);
-}
-
-void
-ViscoPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
-                                            const MPMMaterial* matl,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw)
-{
-  if (cout_CST.active()) {
-    cout_CST << getpid() << "checkNeedAddMPMMaterial: In : Matl = " << matl
-             << " id = " << matl->getDWIndex() <<  " patch = "
-             << (patches->get(0))->getID();
-  }
-
-  double need_add=0.;
-                                                                                
-  // Loop thru patches
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    int dwi = matl->getDWIndex();
-    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    constParticleVariable<double> pPlasticStrain;
-    new_dw->get(pPlasticStrain, pPlasticStrainLabel_preReloc, pset);
-
-    // Loop thru particles
-    ParticleSubset::iterator iter = pset->begin(); 
-    for( ; iter != pset->end(); iter++){
-      particleIndex idx = *iter;
-      if(pPlasticStrain[idx]>5.e-2){
-        need_add = -1.;
-      }
-    }
-  }
-
-  new_dw->put(sum_vartype(need_add),     lb->NeedAddMPMMaterialLabel);
 }
 
 // check for failure
