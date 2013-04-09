@@ -31,7 +31,11 @@
     <!-- Spec for basic expression types -->
     <BasicExpression      spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,StepFunction,PlusProfile,SineTime,ExprAlgebra,Cylinder,WallDistanceFunction,ReadFromFile,RandomField,ExponentialVortex,LambsDipole)" >
+                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,
+                                       SineFunction,GaussianFunction,DoubleTanhFunction,
+                                       StepFunction,PlusProfile,SineTime,ExprAlgebra,Cylinder,
+                                       WallDistanceFunction,ReadFromFile,RandomField,
+                                       ExponentialVortex,LambsDipole,TimeDerivative)" >
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
       <Constant           spec="OPTIONAL DOUBLE" />
@@ -174,6 +178,11 @@
         </Coordinate2>
       </LambsDipole>
       
+      <!-- creates a time derivative expression. -->
+      <TimeDerivative     spec="OPTIONAL NO_DATA">
+      	<NameTag        spec="REQUIRED"/>  <!-- NameTag of the source field -->
+      </TimeDerivative>
+
     </BasicExpression>
 
     <!-- ========================================= -->    
@@ -643,8 +652,8 @@
         
     <MomentumEquations  spec="OPTIONAL NO_DATA">
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
-      <DisablePressureSolve   spec="OPTIONAL NO_DATA" />    
-      
+      <DisablePressureSolve   spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->   
+      <Disabledmomdt          spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->
       <X-Velocity             spec="OPTIONAL STRING" />
       <Y-Velocity             spec="OPTIONAL STRING" />
       <Z-Velocity             spec="OPTIONAL STRING" />
@@ -861,6 +870,20 @@
         <AggregationCoefficientExpression spec="OPTIONAL NO_DATA">
           <NameTag spec="REQUIRED"/>
         </AggregationCoefficientExpression>
+        <!-- make growth & size dependent efficiency kernel-->
+        <SizeDependentEfficiency spec="OPTIONAL NO_DATA">
+          <GrowthModel     spec="REQUIRED STRING 'CONSTANT, MONOSURFACE, BULK_DIFFUSION, KINETIC'"/>
+          <GrowthCoefficientExpression   spec="REQUIRED NO_DATA">  <!-- use the same tag here used in growth tags-->
+            <NameTag              spec="REQUIRED" />
+          </GrowthCoefficientExpression> 
+          <LengthParam spec="OPTIONAL DOUBLE" />
+          <Density spec="REQUIRED NO_DATA">
+            <NameTag spec="REQUIRED"/>
+          </Density>  
+          <EnergyDissipation spec="REQUIRED NO_DATA">
+            <NameTag spec="REQUIRED"/>
+          </EnergyDissipation>  
+        </SizeDependentEfficiency>  
       </AggregationExpression>
       
       <!-- ================================================================================== -->            
@@ -905,13 +928,22 @@
             
     </MomentTransportEquation>
 
-    <ForceOnGraph             spec="MULTIPLE NO_DATA"
-                    attribute1="tasklist REQUIRED STRING">
-      <NameTag                  spec="MULTIPLE" />
+    <ForceOnGraph spec="MULTIPLE NO_DATA" attribute1="tasklist REQUIRED STRING">
+      <NameTag          spec="MULTIPLE" />
     </ForceOnGraph>
 
+    <Cleave spec="MULTIPLE NO_DATA" attribute1="from REQUIRED STRING 'PARENTS,CHILDREN'">
+      <NameTag spec="MULTIPLE" />
+    </Cleave>
+    
+    <AttachDependency spec="MULTIPLE NO_DATA"
+                      attribute1="tasklist REQUIRED STRING 'initialization,advance_solution'">
+      <Source spec="REQUIRED NO_DATA"><NameTag spec="REQUIRED"/></Source> 
+      <Target spec="REQUIRED NO_DATA"><NameTag spec="REQUIRED"/></Target> 
+    </AttachDependency>
+
     <FieldClipping      spec="MULTIPLE NO_DATA"
-                        attribute1="tasklist REQUIRED STRING 'initialization,advance_solution">
+                        attribute1="tasklist REQUIRED STRING 'initialization,advance_solution'">
       <FieldExpression  spec="MULTIPLE NO_DATA"
                         attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
                         attribute2="min  REQUIRED DOUBLE"

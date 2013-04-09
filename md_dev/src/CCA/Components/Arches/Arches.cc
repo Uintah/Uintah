@@ -995,7 +995,7 @@ Arches::scheduleInitialize(const LevelP& level,
   if ( d_boundaryCondition->isUsingNewBC() ) {
     d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
     //d_boundaryCondition->printBCInfo();
-    d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls );
+    d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
     d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls );
     d_boundaryCondition->sched_setPrefill__NEW( sched, patches, matls );
   }
@@ -1716,6 +1716,18 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   printSchedule(level,dbg, "Arches::scheduleTimeAdvance");
 
   nofTimeSteps++ ;
+
+  if (d_doingRestart) {
+
+    const PatchSet* patches= level->eachPatch();
+    const MaterialSet* matls = d_sharedState->allArchesMaterials();
+
+    if ( d_boundaryCondition->isUsingNewBC() ) {
+      d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
+      d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
+    }
+
+  }
   
 #ifdef WASATCH_IN_ARCHES
 
@@ -1746,15 +1758,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     const PatchSet* patches= level->eachPatch();
     const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
-    if ( d_boundaryCondition->isUsingNewBC() ) {
-      d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
-      //d_boundaryCondition->printBCInfo();
-      d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls );
-      d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls );
-      d_doingRestart = false;
-      d_lab->recompile_taskgraph = true;
-    }
-
     if (d_newBC_on_Restart) {
 
       //Reapply BC in case there was a modification to input.xml in the uda.
@@ -1762,12 +1765,12 @@ Arches::scheduleTimeAdvance( const LevelP& level,
         d_boundaryCondition->sched_calculateArea(sched, patches, matls);
       }
       d_boundaryCondition->sched_setProfile(sched, patches, matls);
-      d_doingRestart = false;
-      d_lab->recompile_taskgraph = true;
     }
+
+    d_doingRestart = false;
+    d_lab->recompile_taskgraph = true;
+
   }
-
-
 }
 
 // ****************************************************************************

@@ -72,6 +72,9 @@
 #include <fstream>
 #include <sstream>
 
+//#define GE_Proj
+#undef GE_Proj
+
 using namespace Uintah;
 
 using namespace std;
@@ -327,6 +330,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
+  t->computes(lb->pVelGradLabel);
   t->computes(lb->pSizeLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
@@ -704,6 +708,9 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pMassLabel,             gan,NGP);
   t->requires(Task::OldDW, lb->pVolumeLabel,           gan,NGP);
   t->requires(Task::OldDW, lb->pVelocityLabel,         gan,NGP);
+#ifdef GE_Proj
+  t->requires(Task::OldDW, lb->pVelGradLabel,          gan,NGP);
+#endif
   t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
@@ -1534,6 +1541,7 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
   t->computes(lb->pTempPreviousLabel); // for therma  stresm analysis
   t->computes(lb->pdTdtLabel);
   t->computes(lb->pVelocityLabel);
+  t->computes(lb->pVelGradLabel);
   t->computes(lb->pExternalForceLabel);
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
@@ -1714,61 +1722,61 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
 
 
   // Calculate the force vector at each particle
-  int nofPressureBCs = 0;
-  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
-    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure") {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
 
-      // Get the material points per load curve
-      sumlong_vartype numPart = 0;
-      new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel,
-                  0, nofPressureBCs++);
+      ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
+      constParticleVariable<Point> px;
+      constParticleVariable<Matrix3> psize;
+      constParticleVariable<Matrix3> pDeformationMeasure;
+      new_dw->get(px, lb->pXLabel, pset);
+      new_dw->get(psize, lb->pSizeLabel, pset);
+      new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
+      constParticleVariable<int> pLoadCurveID;
+      new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+      ParticleVariable<Vector> pExternalForce;
+      new_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
 
-      // Save the material points per load curve in the PressureBC object
-      PressureBC* pbc =
-        dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      pbc->numMaterialPoints(numPart);
+      ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
+                              pExternalForceCorner3, pExternalForceCorner4;
+      if (flags->d_useCBDI) {
+        new_dw->allocateAndPut(pExternalForceCorner1,
+                               lb->pExternalForceCorner1Label, pset);
+        new_dw->allocateAndPut(pExternalForceCorner2,
+                               lb->pExternalForceCorner2Label, pset);
+        new_dw->allocateAndPut(pExternalForceCorner3,
+                               lb->pExternalForceCorner3Label, pset);
+        new_dw->allocateAndPut(pExternalForceCorner4,
+                               lb->pExternalForceCorner4Label, pset);
+      }
+      int nofPressureBCs = 0;
+      for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
+        string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+        if (bcs_type == "Pressure") {
 
-      if (cout_dbg.active())
-      cout_dbg << "    Load Curve = " << nofPressureBCs << " Num Particles = " << numPart << endl;
+          // Get the material points per load curve
+          sumlong_vartype numPart = 0;
+          new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel,
+                      0, nofPressureBCs++);
 
+          // Save the material points per load curve in the PressureBC object
+          PressureBC* pbc =
+            dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+          pbc->numMaterialPoints(numPart);
 
-      // Calculate the force per particle at t = 0.0
-      double forcePerPart = pbc->forcePerParticle(time);
+          if (cout_dbg.active())
+          cout_dbg << "    Load Curve = "
+                   << nofPressureBCs << " Num Particles = " << numPart << endl;
 
-      // Loop through the patches and calculate the force vector
-      // at each particle
-      for(int p=0;p<patches->size();p++){
-        const Patch* patch = patches->get(p);
-        int numMPMMatls=d_sharedState->getNumMPMMatls();
-        for(int m = 0; m < numMPMMatls; m++){
-          MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-          int dwi = mpm_matl->getDWIndex();
+          // Calculate the force per particle at t = 0.0
+          double forcePerPart = pbc->forcePerParticle(time);
 
-          ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
-          constParticleVariable<Point> px;
-          constParticleVariable<Matrix3> psize;
-          constParticleVariable<Matrix3> pDeformationMeasure;
-          new_dw->get(px, lb->pXLabel, pset);
-          new_dw->get(psize, lb->pSizeLabel, pset);
-          new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
-          constParticleVariable<int> pLoadCurveID;
-          new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
-          ParticleVariable<Vector> pExternalForce;
-          new_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
-
-          ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
-                                  pExternalForceCorner3, pExternalForceCorner4;
-          if (flags->d_useCBDI) {
-            new_dw->allocateAndPut(pExternalForceCorner1,
-                                   lb->pExternalForceCorner1Label, pset);
-            new_dw->allocateAndPut(pExternalForceCorner2,
-                                   lb->pExternalForceCorner2Label, pset);
-            new_dw->allocateAndPut(pExternalForceCorner3,
-                                   lb->pExternalForceCorner3Label, pset);
-            new_dw->allocateAndPut(pExternalForceCorner4,
-                                   lb->pExternalForceCorner4Label, pset);
-          }
+          // Loop through the patches and calculate the force vector
+          // at each particle
 
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
@@ -1786,13 +1794,13 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
               } else {
                pExternalForce[idx] = pbc->getForceVector(px[idx],
                                                         forcePerPart,time);
-              }
-            }
-          }
-        } // matl loop
-      }  // patch loop
-    }
-  }
+              }// if CBDI
+            } // if pLoadCurveID...
+          }  // loop over particles
+        }   // if pressure loop
+      }    // loop over all Physical BCs
+    }     // matl loop
+  }      // patch loop
 }
 
 void SerialMPM::actuallyInitialize(const ProcessorGroup*,
@@ -2040,6 +2048,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                                    pExternalForceCorner3, pExternalForceCorner4;
       constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pFOld;
+      constParticleVariable<Matrix3> pVelGrad;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
@@ -2048,6 +2057,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pmass,          lb->pMassLabel,          pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
+#ifdef GE_Proj
+      old_dw->get(pVelGrad,       lb->pVelGradLabel,       pset);
+#endif
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
       old_dw->get(psize,          lb->pSizeLabel,          pset);
       old_dw->get(pFOld,          lb->pDeformationMeasureLabel,pset);
@@ -2126,6 +2138,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         for(int k = 0; k < n8or27; k++) { // Iterates through the nodes which receive information from the current particle
           node = ni[k];
           if(patch->containsNode(node)) {
+#ifdef GE_Proj
+            Point gpos = patch->getNodePosition(node);
+            Vector distance = px[idx] - gpos;
+            Vector pvel_ext = pvelocity[idx] - pVelGrad[idx]*distance;
+            pmom = pvel_ext*pmass[idx];
+#endif
             gmass[node]          += pmass[idx]                     * S[k];
             gvelocity[node]      += pmom                           * S[k];
             gvolume[node]        += pvolume[idx]                   * S[k];
@@ -3245,14 +3263,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
-    bool combustion_problem=false;
+//    bool combustion_problem=false;
 
     Material* reactant;
-    int RMI = -99;
+//    int RMI = -99;
     reactant = d_sharedState->getMaterialByName("reactant");
     if(reactant != 0){
-      RMI = reactant->getDWIndex();
-      combustion_problem=true;
+//      RMI = reactant->getDWIndex();
+      //combustion_problem=true;
     }
     double move_particles=1.;
     if(!flags->d_doGridReset){
@@ -3510,6 +3528,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           // Change F such that the determinant is equal to the average for
           // the cell
           pFNew[idx]*=cbrt(J_CC[cell_index]/J);
+          // Change L such that it is consistent with the F          
+          double ThreedelT  = 3.0*delT;
+          pVelGrad[idx]+= Identity*((log(J_CC[cell_index]/J))/ThreedelT);
         }
       } //end of pressureStabilization loop  at the patch level
 
@@ -3767,14 +3788,14 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
-    bool combustion_problem=false;
+//    bool combustion_problem=false;
 
     Material* reactant;
     int RMI = -99;
     reactant = d_sharedState->getMaterialByName("reactant");
     if(reactant != 0){
       RMI = reactant->getDWIndex();
-      combustion_problem=true;
+      //combustion_problem=true;
     }
 
     for(int m = 0; m < numMPMMatls; m++){
@@ -3981,12 +4002,12 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     StaticArray<constNCVariable<Vector> > gvelocity(numMPMMatls);
     StaticArray<constNCVariable<double> > gmass(numMPMMatls);
-    double rho_init[numMPMMatls];
+    //double rho_init[numMPMMatls];
     Vector dx = patch-> dCell();
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      rho_init[m]=mpm_matl->getInitialDensity();
+      //rho_init[m]=mpm_matl->getInitialDensity();
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity[m], lb->gVelocityLabel,dwi, patch, gac, NGN);
       new_dw->get(gmass[m],     lb->gMassLabel,    dwi, patch, gac, NGN);
@@ -4613,7 +4634,7 @@ SerialMPM::refine(const ProcessorGroup*,
         ParticleVariable<Point>  px;
         ParticleVariable<double> pmass, pvolume, pTemperature;
         ParticleVariable<Vector> pvelocity, pexternalforce, pdisp;
-        ParticleVariable<Matrix3> psize;
+        ParticleVariable<Matrix3> psize, pVelGrad;
         ParticleVariable<double> pTempPrev,p_q;
         ParticleVariable<int>    pLoadCurve;
         ParticleVariable<long64> pID;
@@ -4624,6 +4645,7 @@ SerialMPM::refine(const ProcessorGroup*,
         new_dw->allocateAndPut(pmass,          lb->pMassLabel,          pset);
         new_dw->allocateAndPut(pvolume,        lb->pVolumeLabel,        pset);
         new_dw->allocateAndPut(pvelocity,      lb->pVelocityLabel,      pset);
+        new_dw->allocateAndPut(pVelGrad,       lb->pVelGradLabel,       pset);
         new_dw->allocateAndPut(pTemperature,   lb->pTemperatureLabel,   pset);
         new_dw->allocateAndPut(pTempPrev,      lb->pTempPreviousLabel,  pset);
         new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, pset);

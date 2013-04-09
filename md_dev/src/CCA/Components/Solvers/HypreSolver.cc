@@ -149,6 +149,7 @@ namespace Uintah {
                    SoleVariable<hypre_solver_structP>::getTypeDescription());
                    
       firstPassThrough = true;
+      totalsolvertime_ = 0.0;
     }
 
     virtual ~HypreStencil7() {
@@ -954,6 +955,7 @@ namespace Uintah {
         //__________________________________
         // Push the solution into Uintah data structure
         double solve_dt = Time::currentSeconds()-solve_start;
+        totalsolvertime_ += solve_dt;
 
         for(int p=0;p<patches->size();p++){
           const Patch* patch = patches->get(p);
@@ -1004,9 +1006,10 @@ namespace Uintah {
           cout << "Solve of " << X_label->getName() 
                << " on level " << level->getIndex()
                << " completed in " << dt 
-               << " seconds (solve only: " << solve_dt 
-               << " seconds, " << num_iterations 
-               << " iterations, residual=" << final_res_norm << ")\n";
+               << " s (solve only: " << solve_dt << " s, "
+               << "mean: " <<  totalsolvertime_/timestep << " s, "
+               << num_iterations << " iterations, residual = " << final_res_norm << ")."
+               << std::endl;
         }
         tstart = Time::currentSeconds();
       }
@@ -1139,7 +1142,7 @@ namespace Uintah {
     const VarLabel* hypre_solver_label;
     SoleVariable<hypre_solver_structP> d_hypre_solverP_;
     bool firstPassThrough;
-
+    double totalsolvertime_;
   };
   
   //______________________________________________________________________

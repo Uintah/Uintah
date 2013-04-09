@@ -5736,11 +5736,11 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
 void 
 BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
                                                      const PatchSet* patches,
-                                                     const MaterialSet* matls)
+                                                     const MaterialSet* matls, bool doing_restart )
 {
   // cell type initialization
   Task* tsk = scinew Task("BoundaryCondition::setupBCInletVelocities__NEW",
-                          this, &BoundaryCondition::setupBCInletVelocities__NEW);
+                          this, &BoundaryCondition::setupBCInletVelocities__NEW, doing_restart );
 
   for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
         bc_iter != d_bc_information.end(); bc_iter++){
@@ -5750,7 +5750,11 @@ BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
 
   }
 
-  tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 ); 
+  if ( doing_restart ){ 
+    tsk->requires( Task::OldDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 ); 
+  } else { 
+    tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 ); 
+  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -5759,8 +5763,9 @@ void
 BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset*,
-                                DataWarehouse*,
-                                DataWarehouse* new_dw)
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw, 
+                                bool doing_restart )
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -5771,9 +5776,14 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
     vector<Patch::FaceType>::const_iterator bf_iter;
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
-//    Vector Dx = patch->dCell(); 
+
     constCCVariable<double> density; 
-    new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
+
+    if ( doing_restart ){ 
+     old_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
+    } else { 
+     new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
+    }
 
     proc0cout << "\nDomain boundary condition summary: \n";
 

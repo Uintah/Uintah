@@ -707,7 +707,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
              inv_direction_vector = Vector(1.0)/direction_vector;       
             
             // get the intensity for this ray
-            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI, &_mTwister);
+            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, &_mTwister);
             sumProjI += cos(VRTheta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
                                                            // from all the rays up to that point
             sumI_prev = sumI;
@@ -895,7 +895,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
             ray_location[0] += origin.x();
             ray_location[1] += origin.y();
             ray_location[2] += origin.z();
-            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI, &_mTwister);
+            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, &_mTwister);
 
             sumProjI += cos(theta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
 
@@ -990,7 +990,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           ray_location[1] =   j +  _mTwister.rand() * DyDxRatio ;
           ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ;
         }
-        updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI, &_mTwister);
+        updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, &_mTwister);
         
       }  // Ray loop
       
@@ -1395,7 +1395,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             }
             tMax += lineup * tDelta[prevLev];
             
-            in_domain = domain_BB.inside(pos); 
+            in_domain = domain_BB.inside(pos);
 
             //__________________________________
             //  Update the ray location
@@ -1601,14 +1601,14 @@ bool Ray::has_a_boundary(const IntVector &c,
   adjacentCell = c;
   adjacentCell[0] = c[0] - 1; // west
 
-  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
-    boundaryFaces.push_back(0);
+  if (celltype[adjacentCell]+1){ // cell type of flow is -1, so when cellType+1 isn't false, we
+    boundaryFaces.push_back(0);     // know we're at a boundary
     hasBoundary = true;
   }
 
   adjacentCell[0] += 2; // east
 
-  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+  if (celltype[adjacentCell]+1){
     boundaryFaces.push_back(1);
     hasBoundary = true;
   }
@@ -1616,14 +1616,14 @@ bool Ray::has_a_boundary(const IntVector &c,
   adjacentCell[0] -= 1;
   adjacentCell[1] = c[1] - 1; // south
 
-  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+  if (celltype[adjacentCell]+1){
     boundaryFaces.push_back(2);
     hasBoundary = true;
   }
 
   adjacentCell[1] += 2; // north
 
-  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+  if (celltype[adjacentCell]+1){
     boundaryFaces.push_back(3);
     hasBoundary = true;
   }
@@ -1631,14 +1631,14 @@ bool Ray::has_a_boundary(const IntVector &c,
   adjacentCell[1] -= 1;
   adjacentCell[2] = c[2] - 1; // bottom
 
-  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+  if (celltype[adjacentCell]+1){
     boundaryFaces.push_back(4);
     hasBoundary = true;
   }
 
   adjacentCell[2] += 2; // top
 
-  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+  if (celltype[adjacentCell]+1){
     boundaryFaces.push_back(5);
     hasBoundary = true;
   }
@@ -1683,6 +1683,7 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   
   tsk->modifies( d_sigmaT4_label ); 
   tsk->modifies( d_abskgLabel );
+  tsk->modifies( d_cellTypeLabel );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
@@ -1716,12 +1717,12 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       CCVariable<double> temp;
       CCVariable<double> abskg;
       CCVariable<double> sigmaT4OverPi;
-      CCVariable<double> cellType;
+      CCVariable<int> cellType;
       
       new_dw->allocateTemporary(temp,  patch);
       new_dw->getModifiable( abskg,         d_abskgLabel,     d_matl, patch );
       new_dw->getModifiable( sigmaT4OverPi, d_sigmaT4_label,  d_matl, patch );
-      
+      new_dw->getModifiable( cellType,      d_cellTypeLabel,  d_matl, patch );
       //__________________________________
       // loop over boundary faces and backout the temperature 
       // one cell from the boundary.  Note that the temperature 
@@ -1751,9 +1752,9 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       
       //__________________________________
       // set the boundary conditions
-      setBC(abskg, d_abskgLabel->getName(),       patch, d_matl);
-      setBC(temp,  d_temperatureLabel->getName(), patch, d_matl);
-      setBC(cellType, d_cellTypeLabel->getName(), patch, d_matl);
+      setBC(abskg,    d_abskgLabel->getName(),       patch, d_matl);
+      setBC(temp,     d_temperatureLabel->getName(), patch, d_matl);
+      setBC(cellType, d_cellTypeLabel->getName(),    patch, d_matl);
 
 
       //__________________________________
@@ -1775,11 +1776,11 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
 
 //______________________________________________________________________
 //  Set Boundary conditions
-void 
-Ray::setBC(CCVariable<double>& Q_CC,
-           const string& desc,
-           const Patch* patch,
-           const int mat_id)
+template<class T>
+void Ray::setBC(CCVariable<T>& Q_CC,
+                const string& desc,
+                const Patch* patch,
+                const int mat_id)
 {
   if(patch->hasBoundaryFaces() == false || _onOff_SetBCs == false){
     return;
@@ -1803,7 +1804,7 @@ Ray::setBC(CCVariable<double>& Q_CC,
 
     // iterate over each geometry object along that face
     for (int child = 0;  child < numChildren; child++) {
-      double bc_value = -9;
+      T bc_value = -9;
       Iterator bound_ptr;
 
       bool foundIterator = 
@@ -1815,18 +1816,18 @@ Ray::setBC(CCVariable<double>& Q_CC,
         //__________________________________
         // Dirichlet
         if(bc_kind == "Dirichlet"){
-          nCells += setDirichletBC_CC<double>( Q_CC, bound_ptr, bc_value);
+          nCells += setDirichletBC_CC<T>( Q_CC, bound_ptr, bc_value);
         }
         //__________________________________
         // Neumann
         else if(bc_kind == "Neumann"){
-          nCells += setNeumannBC_CC<double>( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
+          nCells += setNeumannBC_CC<T>( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
         }                                   
         //__________________________________
         //  Symmetry
         else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
           bc_value = 0.0;
-          nCells += setNeumannBC_CC<double>( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
+          nCells += setNeumannBC_CC<T> ( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
         }
 
         //__________________________________
@@ -2143,6 +2144,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
                        const IntVector& domainHi,
                        constCCVariable<double>& sigmaT4OverPi,
                        constCCVariable<double>& abskg,
+                       constCCVariable<int>& celltype,
                        unsigned long int& size,
                        double& sumI,
                        MTRand * _mTwister)
@@ -2247,8 +2249,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
        ray_location[1] = ray_location[1] + (disMin  / inv_direction_vector[1]);
        ray_location[2] = ray_location[2] + (disMin  / inv_direction_vector[2]);
 
-       in_domain = containsCell(domainLo, domainHi, cur, face);
-
+       in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
        // The running total of alpha*length
        double optical_thickness_prev = optical_thickness;
        optical_thickness += Dx.x() * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..
@@ -2453,9 +2454,11 @@ Ray::filter( const ProcessorGroup*,
 }
 
 
+//______________________________________________________________________
+// Explicit template instantiations:
 
-
-
+template void Ray::setBC<int>(    CCVariable<int>&    Q_CC, const string& desc, const Patch* patch, const int mat_id);
+template void Ray::setBC<double>( CCVariable<double>& Q_CC, const string& desc, const Patch* patch, const int mat_id);
 
 //______________________________________________________________________
 // ISAAC's NOTES: 

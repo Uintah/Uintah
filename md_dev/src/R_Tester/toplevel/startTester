@@ -296,19 +296,35 @@ else
 
 
   echo $PATH
-  svn co https://gforge.sci.utah.edu/svn/uintah/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
-  retval=$?
+  
+  #__________________________________
+  # Try checking out the src tree 10 times
+  # Occassionally it will fail with svn: REPORT of '/svn/uintah/!svn/vcc/default': Could not read response body: Secure connection truncated (https://gforge.sci.utah.edu)
+  retval=-9
+  counter=1
+  while [[ $counter -le 10  &&  $retval -ne 0 ]]
+  do
+    
+    svn co https://gforge.sci.utah.edu/svn/uintah/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
+    retval=$?
 
-  if [ $VERBOSE = "yes" ]; then
-    cat "$BUILDROOT"/svn_co.log
-  fi
+    if [ $VERBOSE = "yes" ]; then
+      cat "$BUILDROOT"/svn_co.log
+    fi
 
-  if [ $retval -ne 0 ]; then
-    echo "SVN checkout failed with code $retval"
-    echo "Look at ${BUILDROOT}/svn_co.log for more information"
-    exit 1
-  fi
-
+    if [ $retval -ne 0 ]; then
+      echo "SVN checkout failed with code $retval" > "$BUILDROOT"/svn_co.log
+      echo "Look at ${BUILDROOT}/svn_co.log for more information"
+      sleep 60
+    fi
+    counter=$(( $counter + 1 ))
+    
+    if [ $counter -gt 10 ]; then
+      exit -1
+    fi
+    
+  done
+  
   cd "$BUILD_DIR"
 
   if [ $VERBOSE = "yes" ]; then

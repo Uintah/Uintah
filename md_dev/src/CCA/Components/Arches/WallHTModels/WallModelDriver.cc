@@ -472,67 +472,71 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars ){
 
           IntVector c = *iter; 
 
-          for ( int i = 0; i < 6; i++ ){ 
+          // is the point inside of region as defined by geom? 
+          if ( in_or_out( c, geom, patch ) ){ 
 
-            // is the current cell a solid? 
-            if ( vars.celltype[c] == BoundaryCondition_new::WALL ||
-                 vars.celltype[c] == BoundaryCondition_new::INTRUSION ){ 
+            for ( int i = 0; i < 6; i++ ){ 
 
-              // is the neighbor in the current direction a flow? 
-              if ( patch->containsCell( c + _d[i] ) ){ 
-                if ( vars.celltype[c + _d[i]] == FLOW ){ 
-                  
-                  q = get_flux( i, vars );  
-                  TW0 = vars.T_old[c];
-                  net_q = q[c+_d[i]] - _sigma_constant * pow( TW0 , 4 );
-                  net_q = net_q > 0 ? net_q : 0;
-                  TW1 = wi.T_inner + net_q * wi.dy / wi.k;
-                 
-                  if( TW1 < TW0 ){
-                      Tmax = TW0>wi.max_TW ? wi.max_TW : TW0;
-                      Tmin = TW1<wi.min_TW ? wi.min_TW : TW1;
-                  }
-                  else{
-                      Tmax = TW1>wi.max_TW ? wi.max_TW : TW1;
-                      Tmin = TW0<wi.min_TW ? wi.min_TW : TW0;
-                  }
+              // is the current cell a solid? 
+              if ( vars.celltype[c] == BoundaryCondition_new::WALL ||
+                   vars.celltype[c] == BoundaryCondition_new::INTRUSION ){ 
 
-                  initial_error = fabs( TW0 - TW1 ) / TW1;
-                  
-                  vars.T[c] = TW0;
+                // is the neighbor in the current direction a flow? 
+                if ( patch->containsCell( c + _d[i] ) ){ 
+                  if ( vars.celltype[c + _d[i]] == FLOW ){ 
+                    
+                    q = get_flux( i, vars );  
+                    TW0 = vars.T_old[c];
+                    net_q = q[c+_d[i]] - _sigma_constant * pow( TW0 , 4 );
+                    net_q = net_q > 0 ? net_q : 0;
+                    TW1 = wi.T_inner + net_q * wi.dy / wi.k;
+                   
+                    if( TW1 < TW0 ){
+                        Tmax = TW0>wi.max_TW ? wi.max_TW : TW0;
+                        Tmin = TW1<wi.min_TW ? wi.min_TW : TW1;
+                    }
+                    else{
+                        Tmax = TW1>wi.max_TW ? wi.max_TW : TW1;
+                        Tmin = TW0<wi.min_TW ? wi.min_TW : TW0;
+                    }
 
-                  error = 1;
-                  num = 0;
+                    initial_error = fabs( TW0 - TW1 ) / TW1;
+                    
+                    vars.T[c] = TW0;
 
-                  while ( initial_error > _init_tol && error > _tol && num < _max_it ){
+                    error = 1;
+                    num = 0;
 
-                      TW0 = ( Tmax + Tmin ) / 2.0; 
-                      net_q = q[c+_d[i]] - _sigma_constant * pow( TW0, 4 );
-                      net_q = net_q>0 ? net_q : 0;
-                      TW1 = wi.T_inner + net_q * wi.dy / wi.k;
+                    while ( initial_error > _init_tol && error > _tol && num < _max_it ){
 
-                      if( TW1 < TW0 ) {
+                        TW0 = ( Tmax + Tmin ) / 2.0; 
+                        net_q = q[c+_d[i]] - _sigma_constant * pow( TW0, 4 );
+                        net_q = net_q>0 ? net_q : 0;
+                        TW1 = wi.T_inner + net_q * wi.dy / wi.k;
 
-                          Tmax = TW0;
+                        if( TW1 < TW0 ) {
 
-                      } else {
+                            Tmax = TW0;
 
-                          Tmin = TW0;
+                        } else {
 
-                      }
-                      
-                      error = fabs( Tmax - Tmin ) / TW0;
+                            Tmin = TW0;
 
-                      num++;
+                        }
+                        
+                        error = fabs( Tmax - Tmin ) / TW0;
 
-                  }
+                        num++;
 
-                  vars.T[c] = (1-wi.relax)*vars.T_old[c]+wi.relax*TW0; 
+                    }
 
-                } 
-              }
+                    vars.T[c] = (1-wi.relax)*vars.T_old[c]+wi.relax*TW0; 
+
+                  } 
+                }
+              } 
             } 
-          } 
+          }
         } 
       } 
     }

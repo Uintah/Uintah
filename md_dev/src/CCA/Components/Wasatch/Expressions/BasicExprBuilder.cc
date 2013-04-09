@@ -36,7 +36,9 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/TaylorVortex.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
+#include <CCA/Components/Wasatch/Expressions/TimeDerivative.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/WallDistance.h>
+#include <CCA/Components/Wasatch/OldVariable.h>
 
 #include <CCA/Components/Wasatch/StringNames.h>
 
@@ -322,6 +324,21 @@ namespace Wasatch{
       typedef typename RandomField<FieldT>::Builder Builder;
       builder = scinew Builder( tag, low, high, seed );
     }
+    
+    else if( params->findBlock("TimeDerivative") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("TimeDerivative");
+      const Expr::Tag srcTag = parse_nametag( valParams->findBlock("NameTag") );
+      // create an old variable
+      OldVariable& oldVar = OldVariable::self();
+      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, srcTag);
+      
+      Expr::Tag srcOldTag = Expr::Tag( srcTag.name() + "_old", Expr::STATE_NONE );
+      const StringNames& sName = StringNames::self();
+      const Expr::Tag timestepTag(sName.timestep,Expr::STATE_NONE);
+      typedef typename TimeDerivative<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, srcTag, srcOldTag, timestepTag );
+    }
+
     return builder;
   }
   
@@ -861,14 +878,13 @@ namespace Wasatch{
     Expr::ExpressionBuilder* builder = NULL;
     
     //___________________________________
-    // parse and build basid expressions
+    // parse and build basic expressions
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("BasicExpression");
         exprParams != 0;
         exprParams = exprParams->findNextBlock("BasicExpression") ){
       
-      std::string fieldType, taskListName;
+      std::string fieldType;
       exprParams->getAttribute("type",fieldType);
-      exprParams->require("TaskList",taskListName);
       
       switch( get_field_type(fieldType) ){
         case SVOL : builder = build_basic_expr< SVolField >( exprParams );  break;
@@ -881,18 +897,8 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       
-      Category cat = INITIALIZATION;
-      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
-      else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
-      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
-      else{
-        std::ostringstream msg;
-        msg << "ERROR: unsupported task list '" << taskListName << "'" << std::endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-      
-      GraphHelper* const graphHelper = gc[cat];
-      graphHelper->exprFactory->register_expression( builder );
+      const Category cat = parse_tasklist(exprParams,false);
+      gc[cat]->exprFactory->register_expression( builder );
     }
     
     //________________________________________
@@ -901,14 +907,8 @@ namespace Wasatch{
         exprParams != 0;
         exprParams = exprParams->findNextBlock("TaylorVortexMMS") ){
       
-      std::string fieldType, taskListName;
+      std::string fieldType;
       exprParams->getAttribute("type",fieldType);
-      exprParams->require("TaskList",taskListName);
-      
-      //       std::cout << "Creating TaylorVortexMMS for variable '" << tag.name()
-      //                 << "' with state " << tag.context()
-      //                 << " on task list '" << taskListName << "'"
-      //                 << std::endl;
       
       switch( get_field_type(fieldType) ){
         case SVOL : builder = build_taylor_vortex_mms_expr< SVolField >( exprParams );  break;
@@ -921,18 +921,8 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       
-      Category cat = INITIALIZATION;
-      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
-      else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
-      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
-      else{
-        std::ostringstream msg;
-        msg << "ERROR: unsupported task list '" << taskListName << "'" << std::endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-      
-      GraphHelper* const graphHelper = gc[cat];
-      graphHelper->exprFactory->register_expression( builder );
+      const Category cat = parse_tasklist(exprParams,false);
+      gc[cat]->exprFactory->register_expression( builder );
     }
     
     //___________________________________________________
@@ -941,9 +931,8 @@ namespace Wasatch{
         exprParams != 0;
         exprParams = exprParams->findNextBlock("PrecipitationBasicExpression") ){
       
-      std::string fieldType, taskListName;
+      std::string fieldType;
       exprParams->getAttribute("type",fieldType);
-      exprParams->require("TaskList",taskListName);
       
       switch( get_field_type(fieldType) ){
         case SVOL : builder = build_precipitation_expr< SVolField >( exprParams , parser);  break;
@@ -956,18 +945,8 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       
-      Category cat = INITIALIZATION;
-      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
-      else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
-      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
-      else{
-        std::ostringstream msg;
-        msg << "ERROR: unsupported task list '" << taskListName << "'" << std::endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-      
-      GraphHelper* const graphHelper = gc[cat];
-      graphHelper->exprFactory->register_expression( builder );
+      const Category cat = parse_tasklist(exprParams,false);
+      gc[cat]->exprFactory->register_expression( builder );
     }
     
     //___________________________________________________
@@ -976,9 +955,8 @@ namespace Wasatch{
         exprParams != 0;
         exprParams = exprParams->findNextBlock("PostProcessingExpression") ){
       
-      std::string fieldType, taskListName;
+      std::string fieldType;
       exprParams->getAttribute("type",fieldType);
-      exprParams->require("TaskList",taskListName);
       
       switch( get_field_type(fieldType) ){
         case SVOL : builder = build_post_processing_expr< SVolField >( exprParams );  break;
@@ -991,19 +969,9 @@ namespace Wasatch{
           << "You were trying to register a postprocessing expression with a non cell centered destination field. Please revise you input file." << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      
-      Category cat = INITIALIZATION;
-      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
-      else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
-      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
-      else{
-        std::ostringstream msg;
-        msg << "ERROR: unsupported task list '" << taskListName << "'" << std::endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-      
-      GraphHelper* const graphHelper = gc[cat];
-      graphHelper->exprFactory->register_expression( builder );
+
+      const Category cat = parse_tasklist(exprParams,false);
+      gc[cat]->exprFactory->register_expression( builder );
     }
     
     //___________________________________________________

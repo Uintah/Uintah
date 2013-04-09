@@ -32,6 +32,9 @@
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                             <value> 1. </value>
         </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0"   label = "color"     var = "Dirichlet">
@@ -40,6 +43,9 @@
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1. </value>
         </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
       </Face>
       <Face side = "y-">
         <BCType id = "0"   label = "color"     var = "Dirichlet">
@@ -47,6 +53,9 @@
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
         </BCType> 
       </Face>               
       <Face side = "y+">
@@ -56,6 +65,9 @@
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1. </value>
         </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
       </Face>
       <Face side = "z-">
         <BCType id = "0"   label = "color"     var = "Dirichlet">
@@ -64,6 +76,9 @@
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1. </value>
         </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
       </Face>
       <Face side = "z+">
         <BCType id = "0"   label = "color"     var = "Dirichlet">
@@ -71,6 +86,9 @@
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
         </BCType>
       </Face>
     </BoundaryConditions>

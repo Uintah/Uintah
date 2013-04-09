@@ -29,7 +29,67 @@
 
 #ifdef HAVE_MAGMA
 #  include <magma.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// MAGMA error handling wrapper for CUDA and CUBLAS API calls
+#define MAGMA_CUDA_INIT()                                            \
+  CUdevice  dev;                                                     \
+  CUcontext context;                                                 \
+  if( CUDA_SUCCESS != cuInit( 0 ) ) {                                \
+    fprintf(stderr, "CUDA: Not initialized\n" ); exit(-1);           \
+  }                                                                  \
+  if( CUDA_SUCCESS != cuDeviceGet( &dev, 0 ) ) {                     \
+    fprintf(stderr, "CUDA: Cannot get the device\n"); exit(-1);      \
+  }                                                                  \
+  if( CUDA_SUCCESS != cuCtxCreate( &context, 0, dev ) ) {            \
+    fprintf(stderr, "CUDA: Cannot create the context\n"); exit(-1);  \
+  }                                                                  \
+  if( CUBLAS_STATUS_SUCCESS != cublasInit( ) ) {                     \
+    fprintf(stderr, "CUBLAS: Not initialized\n"); exit(-1);          \
+  }                                                                  \
+
+
+#define MAGMA_CUDA_FINALIZE()                                        \
+  cuCtxDetach( context );                                            \
+  cublasShutdown();
+
+
+#define MAGMA_MALLOC(__ptr, __type, __size)                          \
+  __ptr = (__type*)malloc((__size) * sizeof(__type));                \
+  if (__ptr == 0) {                                                  \
+    fprintf (stderr, "malloc failed for: %s\n", #__ptr );            \
+    exit(-1);                                                        \
+  }
+
+#define MAGMA_HOSTALLOC(__ptr, __type, __size)        \
+  if( cudaSuccess != cudaMallocHost( (void**)&__ptr, (__size)*sizeof(__type) ) ) {  \
+    fprintf (stderr, "cudaMallocHost failed for: %s\n", #__ptr );                   \
+    exit(-1);                                                                       \
+  }
+
+#define MAGMA_DEVALLOC(__ptr, __type, __size)                                       \
+  if( cudaSuccess != cudaMalloc( (void**)&__ptr, (__size)*sizeof(__type) ) ){       \
+    fprintf (stderr, "cublasAlloc failed for: %s\n", #__ptr );                      \
+    exit(-1);                                                                       \
+  }
+
+
+#define MAGMA_FREE(__ptr)         \
+  free(__ptr);
+
+#define MAGMA_HOSTFREE(__ptr)     \
+  cudaFreeHost( __ptr );
+
+#define MAGMA_DEVFREE(__ptr)      \
+  cudaFree( __ptr );
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif
 
+#endif

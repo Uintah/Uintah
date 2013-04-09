@@ -1722,6 +1722,10 @@ int main( int argc, const char* argv[] )
   myfile << "#Total Size : " << (int)ptList.size() << endl;
   myfile << (int)ptList.size()*(NT+1) << endl;
   myfile.precision(15);
+  double dx = (faceSide=="x-" || faceSide=="x+") ? Dx[0] : ( (faceSide=="y-"||faceSide=="y+") ? Dx[1] : Dx[2] );
+  myfile << "#Spacing:" << std::endl;
+  myfile << dx << std::endl;
+  myfile << "#t j k u v w" << std::endl;  
   for (int t=0; t<NT+1; t++) {
     for (std::vector<IntVector>::iterator it = ptList.begin() ; it != ptList.end() ; ++it) {
       int j, k;

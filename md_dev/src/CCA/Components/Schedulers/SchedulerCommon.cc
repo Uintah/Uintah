@@ -1018,6 +1018,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           copyThisVar = false;
         }
 
+
         if (copyThisVar) {
           if (dep->var->typeDescription()->getType() == TypeDescription::ReductionVariable)
             // we will take care of reduction variables in a different section
@@ -1166,7 +1167,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
         dataTasks[i]->computes(var, compset.get_rep(), matls);
       }
       if (modset && modset->size() > 0) {
-        dbg << "  Scheduling copy for var " << *var << " matl " << " Modifies: " << *modset.get_rep() << endl;
+        dbg << "  Scheduling copy for var " << *var << " matl " << *matls << " Modifies: " << *modset.get_rep() << endl;
         dataTasks[i]->modifies(var, modset.get_rep(), matls);
       }
     }

@@ -162,9 +162,11 @@ PressureBC::flagMaterialPoint(const Point& p,
     // Create box that is min-dxpp, max+dxpp;
     Box box = d_surface->getBoundingBox();
     GeometryPiece* volume = scinew BoxGeometryPiece(box.lower()-dxpp, 
-                                                 box.upper()+dxpp);
+                                                    box.upper()+dxpp);
 
-    if (volume->inside(p)) flag = true;
+    if (volume->inside(p)){
+      flag = true;
+    }
     delete volume;
 
   } else if (d_surfaceType == "cylinder") {
@@ -181,6 +183,7 @@ PressureBC::flagMaterialPoint(const Point& p,
                                                        cgp->radius()-tol);
 
       GeometryPiece* volume = scinew DifferenceGeometryPiece(outer, inner);
+
       if (volume->inside(p)){
         flag = true;
       }
@@ -190,7 +193,7 @@ PressureBC::flagMaterialPoint(const Point& p,
       Vector add_ends = tol*(cgp->top()-cgp->bottom())
                            /(cgp->top()-cgp->bottom()).length();
 
-      GeometryPiece* end = scinew CylinderGeometryPiece(cgp->top()+add_ends, 
+      GeometryPiece* end = scinew CylinderGeometryPiece(cgp->top()   +add_ends, 
                                                         cgp->bottom()-add_ends,
                                                         cgp->radius());
       if (end->inside(p)){
@@ -316,7 +319,7 @@ PressureBC::getForceVectorCBDI(const Point& px, const Matrix3& psize,
                               Point& pExternalForceCorner2,
                               Point& pExternalForceCorner3,
                               Point& pExternalForceCorner4,
-                              const Vector& dxCell) const
+                              const Vector& dx) const
 {
   Vector force(0.0,0.0,0.0);
   Vector normal(0.0, 0.0, 0.0);
@@ -360,14 +363,12 @@ PressureBC::getForceVectorCBDI(const Point& px, const Matrix3& psize,
   // The direction to px1 is determined by taking the dot product of the
   // normal vector with each of the r-vectors.  the one with a unity dot product
   // is the winner.  Then just go out to that surface.
-  // TODO:  There is much optimization to be done below, such as *0.5 instead
-  // of /2.0.  Also, bailing out of the loop as soon as px1 is found.  
+  // TODO:  Bailing out of the loop as soon as px1 is found.  
   int i1=0,i2=0;
   Matrix3 dsize=pDeformationMeasure*psize;
   Point px1;
   for (int i = 0; i < 3; ++i) {
-   Vector dummy=Vector(dsize(0,i)*dxCell[0],dsize(1,i)*dxCell[1],
-                                            dsize(2,i)*dxCell[2])/2.0;
+   Vector dummy=Vector(dsize(0,i)*dx[0],dsize(1,i)*dx[1],dsize(2,i)*dx[2])*0.5;
    if (abs(Dot(normal,dummy)/(normal.length()*dummy.length())-1.0)<0.1) {
     px1=Point(px.x()+dummy[0],px.y()+dummy[1],px.z()+dummy[2]);
     i1=(i+1)%3;
@@ -378,19 +379,18 @@ PressureBC::getForceVectorCBDI(const Point& px, const Matrix3& psize,
     i2=(i+2)%3;
    }
   }
-  // TODO:  eliminate /2.0 in favor of *0.5
-  pExternalForceCorner1=Point(px1.x()-dsize(0,i1)*dxCell[0]/2.0-dsize(0,i2)*dxCell[0]/2.0,
-                              px1.y()-dsize(1,i1)*dxCell[1]/2.0-dsize(1,i2)*dxCell[1]/2.0,
-                              px1.z()-dsize(2,i1)*dxCell[2]/2.0-dsize(2,i2)*dxCell[2]/2.0);
-  pExternalForceCorner2=Point(px1.x()+dsize(0,i1)*dxCell[0]/2.0-dsize(0,i2)*dxCell[0]/2.0,
-                              px1.y()+dsize(1,i1)*dxCell[1]/2.0-dsize(1,i2)*dxCell[1]/2.0,
-                              px1.z()+dsize(2,i1)*dxCell[2]/2.0-dsize(2,i2)*dxCell[2]/2.0);
-  pExternalForceCorner3=Point(px1.x()-dsize(0,i1)*dxCell[0]/2.0+dsize(0,i2)*dxCell[0]/2.0,
-                              px1.y()-dsize(1,i1)*dxCell[1]/2.0+dsize(1,i2)*dxCell[1]/2.0,
-                              px1.z()-dsize(2,i1)*dxCell[2]/2.0+dsize(2,i2)*dxCell[2]/2.0);
-  pExternalForceCorner4=Point(px1.x()+dsize(0,i1)*dxCell[0]/2.0+dsize(0,i2)*dxCell[0]/2.0,
-                              px1.y()+dsize(1,i1)*dxCell[1]/2.0+dsize(1,i2)*dxCell[1]/2.0,
-                              px1.z()+dsize(2,i1)*dxCell[2]/2.0+dsize(2,i2)*dxCell[2]/2.0);
+  pExternalForceCorner1=Point(px1.x()-.5*(dsize(0,i1)*dx[0]-dsize(0,i2)*dx[0]),
+                              px1.y()-.5*(dsize(1,i1)*dx[1]-dsize(1,i2)*dx[1]),
+                              px1.z()-.5*(dsize(2,i1)*dx[2]-dsize(2,i2)*dx[2]));
+  pExternalForceCorner2=Point(px1.x()+.5*(dsize(0,i1)*dx[0]-dsize(0,i2)*dx[0]),
+                              px1.y()+.5*(dsize(1,i1)*dx[1]-dsize(1,i2)*dx[1]),
+                              px1.z()+.5*(dsize(2,i1)*dx[2]-dsize(2,i2)*dx[2]));
+  pExternalForceCorner3=Point(px1.x()-.5*(dsize(0,i1)*dx[0]+dsize(0,i2)*dx[0]),
+                              px1.y()-.5*(dsize(1,i1)*dx[1]+dsize(1,i2)*dx[1]),
+                              px1.z()-.5*(dsize(2,i1)*dx[2]+dsize(2,i2)*dx[2]));
+  pExternalForceCorner4=Point(px1.x()+.5*(dsize(0,i1)*dx[0]+dsize(0,i2)*dx[0]),
+                              px1.y()+.5*(dsize(1,i1)*dx[1]+dsize(1,i2)*dx[1]),
+                              px1.z()+.5*(dsize(2,i1)*dx[2]+dsize(2,i2)*dx[2]));
   // Recalculate the force based on area changes (current vs. initial)
   Vector iniVec1(psize(0,i1),psize(1,i1),psize(2,i1));
   Vector iniVec2(psize(0,i2),psize(1,i2),psize(2,i2));

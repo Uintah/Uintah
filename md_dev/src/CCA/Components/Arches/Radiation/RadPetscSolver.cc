@@ -187,7 +187,8 @@ RadPetscSolver::setMatrix(const ProcessorGroup* ,
                            CCVariable<double>& AP,
                            CCVariable<double>& AE,
                            CCVariable<double>& AN,
-                           CCVariable<double>& AT)
+                           CCVariable<double>& AT, 
+                           const bool print )
 
 {
   //cout << d_myworld->myrank() <<"    RadPetscSolver::setMatrix " << patch->getGridIndex() <<  endl;
@@ -360,7 +361,7 @@ RadPetscSolver::setMatrix(const ProcessorGroup* ,
 //______________________________________________________________________
 //
 bool
-RadPetscSolver::radLinearSolve()
+RadPetscSolver::radLinearSolve( const int direcn, const bool print_all_info )
 {
   //cout << d_myworld->myrank() <<"    RadPetscSolver::radLinearSolve "<<  endl;
   bool test;

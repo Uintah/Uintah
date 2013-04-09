@@ -150,7 +150,6 @@
           <determines_properties/>
           <D_mol_constant value="0.001"/>
           <conv_scheme>super_bee</conv_scheme>
-          <addSources>false</addSources>
           <initialization type="constant">
             <constant>1.00</constant>
           </initialization>

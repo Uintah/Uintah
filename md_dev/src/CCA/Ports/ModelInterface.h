@@ -141,9 +141,6 @@ WARNING
      virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			       ModelSetup* setup) = 0;
       
-     virtual void activateModel(GridP& grid, SimulationStateP& sharedState,
-			        ModelSetup* setup);
-      
      virtual void scheduleInitialize(SchedulerP&,
 				     const LevelP& level,
 				     const ModelInfo*) = 0;
@@ -168,11 +165,7 @@ WARNING
                                      const int indx) = 0;
                                      
      virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                       SchedulerP& sched) =0;                                  
-    
-     virtual void scheduleCheckNeedAddMaterial(SchedulerP&,
-                                               const LevelP& level,
-                                               const ModelInfo*);
+                                       SchedulerP& sched) =0;
                                                
      virtual void scheduleTestConservation(SchedulerP&,
                                            const PatchSet* patches,

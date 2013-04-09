@@ -83,6 +83,9 @@ private:
   std::vector<int> minC_; //store indicies of lowest corner value of bounding box aroudn inlet
   int NT_, jSize_, kSize_, iComponent_, jComponent_;
 
+  double coord_;
+  double dx_;
+  bool firsttimestep_;
   // member functions
   int calculate_time_index();
 };
@@ -137,6 +140,7 @@ timePeriod_(timePeriod)
   getValue(ifs,minC_[2]);
   int nPts;
   getValue(ifs,nPts);
+  getValue(ifs,dx_);
   
   fluct_.resize(NT_,vector< vector<double> >(jSize_,vector<double>(kSize_)));
   int t,j,k;
@@ -150,7 +154,7 @@ timePeriod_(timePeriod)
     getValue(ifs,w);
     fluct_[t][j][k] = (velDir_.compare("X")==0) ? u : (velDir_.compare("Y")==0 ? v : w);
   }
-
+  firsttimestep_ = true;
 }
 
 //--------------------------------------------------------------------
@@ -176,25 +180,41 @@ TurbulentInletBC<FieldT>::bind_fields(const Expr::FieldManagerList& fml){
 template< typename FieldT >
 int
 TurbulentInletBC<FieldT>::calculate_time_index() {
-  //make sure if end of table is reached, it is repeated
-  //work for either a specified time period, or a number of steps
-  int t_index;
-  int timestep = (*dt_ == 0)? 0 : *t_/ *dt_;
-  double elapTime = *t_;
-  if (period_ != 0) { // give priority to period
-    while (timestep >= NT_*period_) {
-      timestep -= NT_*period_;
-    }
-    t_index = timestep/period_;
-    
-  } else {
-    while (elapTime >= NT_*timePeriod_) {
-      elapTime -= NT_*timePeriod_;
-    }
-    t_index = (int)(elapTime/timePeriod_);
-  }
   
-  return t_index;
+  //int n = *t_/dx_; // floor - get the number of dxs into the data
+  int tindex =(int) std::floor(*t_/dx_);
+  
+  while (tindex >= NT_- 1) {
+    tindex -= (NT_-1);
+  }
+
+  // coordinate relative to the current turbulent data interval
+  coord_ = *t_ - tindex*dx_;
+  
+//  if (coord_ < *dt_) coord_ = 0.0; // OPTIONAL: make sure we match the data point at the begining of new turbulent data
+  
+  return tindex;
+//  //make sure if end of table is reached, it is repeated
+//  //work for either a specified time period, or a number of steps
+//  int t_index;
+//  int timestep = (*dt_ == 0)? 0 : *t_/ *dt_;
+//  double elapTime = *t_;
+//  if (period_ != 0) { // give priority to period
+//    while (timestep >= NT_*period_) {
+//      timestep -= NT_*period_;
+//    }
+//    t_index = timestep/period_;
+//    
+//  } else {
+//    while (elapTime >= NT_*timePeriod_) {
+//      elapTime -= NT_*timePeriod_;
+//    }
+//    t_index = (int)(elapTime/timePeriod_);
+//  }
+//
+//  if (t_index == NT_) t_index = 0;
+//  
+//  return t_index;
 }
 
 //--------------------------------------------------------------------
@@ -217,11 +237,19 @@ evaluate()
   std::vector<int>::const_iterator ig = (this->flatGhostPoints_).begin();    // ig is the ghost flat index
   std::vector<int>::const_iterator ii = (this->flatInteriorPoints_).begin(); // ii is the interior flat index
 
+  double bcValue_ = 0.0;
   for( ; ig != (this->flatGhostPoints_).end(); ++ig, ++ii ){
     // get i,j,k index from flat index
     localCellIJK  = f.window_with_ghost().ijk_index_from_local(*ig);
     globalCellIJK = localCellIJK - SpatialOps::structured::IntVec(1,1,1) - minC_ + this->patchCellOffset_;
-    double bcValue_ = fluct_[tIndex][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
+
+    // linear interpolation between the turbulent-data points
+    double y0 = fluct_[tIndex][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
+    double y1 = fluct_[tIndex + 1][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
+    double a = (y1-y0)/dx_;
+    bcValue_ = a*coord_ + y0;
+    
+    //double bcValue_ = fluct_[tIndex][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
     f[*ig] = ( bcValue_ - ci * f[*ii] ) / cg;
   }
 }

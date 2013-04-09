@@ -100,7 +100,6 @@
         <Eqn label="scalar_superbee" type="CCscalar">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
-          <addSources>false</addSources>
           <conv_scheme>super_bee</conv_scheme>
           <initialization type="step">
             <step_direction>x</step_direction>
@@ -115,7 +114,6 @@
         <Eqn label="scalar_upwind" type="CCscalar">
           <doDiff>false</doDiff>
           <doConv>true</doConv>
-          <addSources>false</addSources>
           <conv_scheme>upwind</conv_scheme>
           <initialization type="step">
             <step_direction>x</step_direction>
@@ -129,7 +127,6 @@
         <Eqn label="scalar_constant" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <addSources>true</addSources>
           <conv_scheme>upwind</conv_scheme>
           <initialization type="step">
             <step_direction>x</step_direction>

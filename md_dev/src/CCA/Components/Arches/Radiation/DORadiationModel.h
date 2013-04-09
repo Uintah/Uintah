@@ -249,6 +249,7 @@ private:
 
       bool d_use_abskp;
       const VarLabel* d_abskpLabel;
+      bool d_print_all_info; 
 
 
 }; // end class RadiationModel

@@ -67,6 +67,11 @@ ifeq ($(HAVE_PETSC),yes)
           $(SRCDIR)/Filter.cc
 endif
 
+ifeq ($(HAVE_CUDA),yes)
+  SRCS += $(SRCDIR)/linearSolveKernels.cu          \
+          $(SRCDIR)/calculateMomentsKernels.cu
+endif
+
 
 PSELIBS :=
 ifeq ($(BUILD_WASATCH_IN_ARCHES),yes)

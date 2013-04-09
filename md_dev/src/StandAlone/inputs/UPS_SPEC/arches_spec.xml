@@ -532,6 +532,7 @@
             <ordinates                  spec="OPTIONAL INTEGER" />
             <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />
             <const_wall_temperature     spec="OPTIONAL NO_DATA" /> <!-- sets all solid wall temperatures to 293.0K --> 
+            <print_all_info             spec="OPTIONAL NO_DATA" /> <!-- if this tag is present, do a little more work in the radiation solver to print some extra information (initial norm, sum(RHS) ). Default is false. --> 
             <LinearSolver               spec="OPTIONAL NO_DATA" 
                                         attribute1="type REQUIRED STRING 'hypre, petsc'">
               <res_tol                  spec="REQUIRED DOUBLE" />
@@ -540,8 +541,6 @@
               <max_iter                 spec="REQUIRED INTEGER" />
             </LinearSolver>
             <spherical_harmonics        spec="OPTIONAL BOOLEAN" />
-            <wall_abskg                 spec="OPTIONAL DOUBLE"/>            <!-- solid domain wall boundary conditions --> 
-            <intrusion_abskg            spec="OPTIONAL DOUBLE"/>            <!-- solid intrusion boundary condition --> 
           </DORadiationModel>
         </EnthalpySolver>
 
@@ -636,7 +635,6 @@
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" /> <!-- Turbulence closure (D_T = mu_t/(Sc_t or Pr_t)), default = 0.4 -->    
           <doDiff                       spec="OPTIONAL BOOLEAN"/> <!-- Turn diffusion on/off --> 
           <doConv                       spec="OPTIONAL BOOLEAN"/> <!-- Turn convection on/off --> 
-          <addSources                   spec="OPTIONAL BOOLEAN"/> <!-- Add sources on/off --> 
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee, central, old_super_bee'"/> <!-- VAN LEER not working --> 
           <!--use_laminar_pr               spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/-->
@@ -804,7 +802,8 @@
               <allowReflect              spec="OPTIONAL BOOLEAN"/>
               <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
               <applyFilter               spec="OPTIONAL BOOLEAN"/>
-             
+              <ignore_BC_bulletproofing spec="OPTIONAL BOOLEAN"/>
+ 
  
               <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon, radprops'">
                 <min                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
@@ -835,8 +834,6 @@
               
             </RMCRT>
 
-            
-
             <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
             <!-- see Turns, pg. 156-157 -->
             <!-- A: pre-exponential factor.  Units for westbrook/dryer model are in (gmol/cm^3)^(1-m-n)/s and consistent with the choice of m and n. --> 
@@ -855,8 +852,10 @@
             <flammability_limit         spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- Use "nose" plot to turn on/off source term. Noses are specified immediately below --> 
               <!-- lower and upper flammability limits are approximated as straight lines, y=mx+b, where x = amount if diluent and y = amount of fuel. --> 
               <!-- slopes and intercepts should be computed from volume % nose plots --> 
-              <diluent                  spec="REQUIRED NO_DATA"
-                                        attribute1="label REQUIRED STRING"/><!-- label pointing to the diluent mass fraction -->
+              <!-- USE one of the next two options (<diluent> or <const_diluent>) --> 
+              <diluent                  spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"/> <!-- label pointing to the diluent mass fraction -->
+              <const_diluent            spec="OPTIONAL DOUBLE 'positive'"/>  <!-- rather than transport a diluent, use a constant --> 
               <lower                    spec="REQUIRED NO_DATA"                    
                                         attribute1="slope REQUIRED DOUBLE"
                                         attribute2="intercept REQUIRED DOUBLE"/> <!-- Defines the line for the lower flammability limit --> 
@@ -869,7 +868,6 @@
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) --> 
             <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- temperature label (default = temperature) --> 
             <density_label              spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- density label (default = "density) --> 
-            <pos                        spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"/><!-- source term is positive --> 
             <hot_spot                   spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- pilot light --> 
               <geom_object/>                                                                            <!-- defines the location of the pilot --> 
               <start_time               spec="REQUIRED DOUBLE 'positive'"/>                             <!-- pilot turns on at this time -->  
@@ -878,7 +876,7 @@
             </hot_spot>
 
             <!-- Bowman NOx rate expression --> 
-            <!-- A, E_R, o2_label, density_label, temperature_label are defined above in the westbrook dryer model --> 
+            <!-- A, E_R, o2_label, density_label, temperature_label are defined above in the westbrook dryer model description but apply here as well --> 
             <no2_label                  spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- mass fraction label for NO2 (default = NO2) --> 
                                         
             <!-- Intrusion inlets --> 

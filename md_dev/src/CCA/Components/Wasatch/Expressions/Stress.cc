@@ -97,18 +97,21 @@ evaluate()
   using namespace SpatialOps;
   StressT& stress = this->value();
   stress <<= 0.0;
-
-  SpatFldPtr<StressT> tmp = SpatialFieldStore::get<StressT>( stress );
-  *tmp <<= 0.0;
-
-  vel1GradOp_->apply_to_field( *vel1_, stress ); // dui/dxj
-  vel2GradOp_->apply_to_field( *vel2_, *tmp   ); // duj/dxi
-
-  stress <<= stress + *tmp; // dui/dxj + duj/dxi
+//
+//  SpatFldPtr<StressT> tmp = SpatialFieldStore::get<StressT>( stress );
+//  *tmp <<= 0.0;
+//
+//  vel1GradOp_->apply_to_field( *vel1_, stress ); // dui/dxj
+//  vel2GradOp_->apply_to_field( *vel2_, *tmp   ); // duj/dxi
+//
+//  stress <<= stress + *tmp; // dui/dxj + duj/dxi
+//  
+//  viscInterpOp_->apply_to_field( *visc_, *tmp );
+//  
+//  stress <<= - stress * *tmp; // - mu * (dui/dxj + duj/dxi)
   
-  viscInterpOp_->apply_to_field( *visc_, *tmp );
-  
-  stress <<= - stress * *tmp; // - mu * (dui/dxj + duj/dxi)
+  //
+  stress <<= - (*viscInterpOp_)(*visc_) * ( (*vel1GradOp_)(*vel1_) + (*vel2GradOp_)(*vel2_));
 }
 
 //--------------------------------------------------------------------
@@ -211,10 +214,12 @@ evaluate()
   SpatFldPtr<StressT> dilatation = SpatialFieldStore::get<StressT>( stress );
   //*velgrad <<= 0.0;
   //*dilatation <<= 0.0;
-  viscInterpOp_->apply_to_field( *visc_, stress ); // stress = mu
-  viscInterpOp_->apply_to_field( *dil_, *dilatation );
-  velGradOp_   ->apply_to_field( *vel_, *velgrad    );
-  stress <<= ( stress * -2.0*( *velgrad ) ) + 2.0/3.0 * stress * *dilatation; // stress = -2 (mu + mu_turbulent) * du/dx + 2/3 (mu + mu_turbulent) * div(u)
+//  viscInterpOp_->apply_to_field( *visc_, stress ); // stress = mu
+//  viscInterpOp_->apply_to_field( *dil_, *dilatation );
+//  velGradOp_   ->apply_to_field( *vel_, *velgrad    );
+//  stress <<= ( stress * -2.0*( *velgrad ) ) + 2.0/3.0 * stress * *dilatation; // stress = -2 (mu + mu_turbulent) * du/dx + 2/3 (mu + mu_turbulent) * div(u)
+  
+  stress <<= ((*viscInterpOp_)(*visc_))* -2.0 * ((*velGradOp_)(*vel_))  + 2.0/3.0*((*viscInterpOp_)(*visc_))*((*viscInterpOp_)(*dil_));
 }
 
 //--------------------------------------------------------------------

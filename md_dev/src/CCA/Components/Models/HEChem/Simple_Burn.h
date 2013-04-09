@@ -72,9 +72,6 @@ WARNING
     // Insert Documentation Here:
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
                               ModelSetup* setup);
-      
-    virtual void activateModel(GridP& grid, SimulationStateP& sharedState,
-                               ModelSetup* setup);
 
     virtual void scheduleInitialize(SchedulerP&,
                                     const LevelP& level,
@@ -101,10 +98,6 @@ WARNING
                                     
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched);
-
-   virtual void scheduleCheckNeedAddMaterial(SchedulerP&,
-                                             const LevelP& level,
-                                             const ModelInfo*);
                                              
    virtual void scheduleTestConservation(SchedulerP&,
                                          const PatchSet* patches,
@@ -117,13 +110,6 @@ WARNING
                              DataWarehouse*, 
                              DataWarehouse* new_dw, 
                              const ModelInfo*);
-
-    void checkNeedAddMaterial(const ProcessorGroup*, 
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse*,
-                              DataWarehouse* new_dw,
-                              const ModelInfo*);
     
     Simple_Burn(const Simple_Burn&);
     Simple_Burn& operator=(const Simple_Burn&);
@@ -144,7 +130,6 @@ WARNING
     MPMLabel* Mlb;
     MaterialSet* mymatls;
     
-    bool d_active;
     double d_thresholdTemp;
     double d_thresholdPress;
     double d_Enthalpy;

@@ -19,6 +19,16 @@
 
 #include <map>
 
+#include <sci_defs/cuda_defs.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+void launchSolveKernel();
+void launchCalcMomentsKernel();
+#ifdef __cplusplus
+}
+#endif
+
 namespace Uintah {
 
 //-------------------------------------------------------
