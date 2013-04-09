@@ -76,10 +76,12 @@ Expr::Tag pressure_tag();
 class Pressure
  : public Expr::Expression<SVolField>
 {
-  const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, currenttimet_;
+  const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, currenttimet_, volfract_;
 
   const bool doX_, doY_, doZ_, doDens_;
   bool didAllocateMatrix_;
+  bool didMatrixUpdate_;
+  bool hasMovingGeometry_;
   int  materialID_;
   int  rkStage_;
   const bool useRefPressure_;
@@ -98,6 +100,8 @@ class Pressure
 
   const SVolField* dilatation_;
   const SVolField* d2rhodt2_;
+  const SVolField* volfrac_;
+  
   const XVolField* fx_;
   const YVolField* fy_;
   const ZVolField* fz_;
@@ -130,6 +134,8 @@ class Pressure
             const Expr::Tag& diltationtag,
             const Expr::Tag& d2rhodt2tag,
             const Expr::Tag& timesteptag,
+            const Expr::Tag& volfractag,
+            const bool hasMovingGeometry,
             const bool       userefpressure,
             const double     refPressureValue,
             const SCIRun::IntVector refPressureLocation,
@@ -140,7 +146,8 @@ class Pressure
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_;
+    const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_,volfract_;
+    const bool hasMovingGeometry_;
     const bool userefpressure_;
     const double refpressurevalue_;
     const SCIRun::IntVector refpressurelocation_;
@@ -155,6 +162,8 @@ public:
              const Expr::Tag& diltationtag,            
              const Expr::Tag& d2rhodt2tag,
              const Expr::Tag& timesteptag,
+             const Expr::Tag& volfractag,
+             const bool hasMovingGeometry,
              const bool       useRefPressure,
              const double     refPressureValue,
              const SCIRun::IntVector refPressureLocation,
@@ -228,6 +237,8 @@ public:
    * \brief Calculates pressure coefficient matrix.
    */
   void setup_matrix();
+  
+  void process_embedded_boundaries();
 
   /**
    * \brief Special function to apply pressure boundary conditions after the pressure solve.
