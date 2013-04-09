@@ -166,7 +166,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     if (psizes) {
       if (!psizes->empty()) sizeiter = d_object_size[psizekey].begin();
     }
-    
+
     // For getting particles colors (if they exist)
     vector<double>::const_iterator coloriter;
     geomvols::key_type colorkey(patch,*obj);
@@ -758,7 +758,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   geomvecs::key_type   forcekey(patch,obj);
   geomvecs::key_type   fiberkey(patch,obj);
   geomvecs::key_type   pvelocitykey(patch,obj);
-  geomMat3s::key_type   psizekey(patch,obj);
+  geomMat3s::key_type  psizekey(patch,obj);
   GeometryPieceP piece = obj->getPiece();
   Box b1 = piece->getBoundingBox();
   Box b2 = patch->getExtraBox();
@@ -788,6 +788,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     vector<Vector>* pforces    = sgp->getForces();
     vector<Vector>* pfiberdirs = sgp->getFiberDirs();
     vector<Vector>* pvelocities= sgp->getVelocity();
+    vector<Matrix3>* psizes    = sgp->getSize();
     Point p;
     IntVector cell_idx;
     
@@ -816,6 +817,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
           if (!pvelocities->empty()) {
             Vector pvel = pvelocities->at(ii); 
             d_object_velocity[pvelocitykey].push_back(pvel);
+          }
+          if (!psizes->empty()) {
+            Matrix3 psz = psizes->at(ii); 
+            d_object_size[psizekey].push_back(psz);
           }
           if (!colors->empty()) {
             double color = colors->at(ii); 
