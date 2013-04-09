@@ -238,7 +238,7 @@ AMRSimulationController::run()
 
      delt = delt_var;
 
-     // delt adjusted based on timeinfo parameters
+    // delt adjusted based on timeinfo parameters
      adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
      newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
 
@@ -364,9 +364,34 @@ AMRSimulationController::run()
      }
      
      // override for the global level as well (which only matters on dw 0)
-     d_scheduler->get_dw(0)->override(delt_vartype(delt),
+     DataWarehouse* oldDW = d_scheduler->get_dw(0);
+     oldDW->override(delt_vartype(delt),
                                       d_sharedState->get_delt_label());
 
+     // a component may update the output interval or the checkpoint interval
+     // during a simulation.  For example in deflagration -> detonation simulations
+     if (d_output && d_sharedState->updateOutputInterval()) {
+       //if no value computed such as during the init timestep, use the value from ups file
+       if (!oldDW->exists(d_sharedState->get_outputInterval_label())) {
+         oldDW->override(min_vartype(d_output->getOutputInterval()),d_sharedState->get_outputInterval_label());
+       } else {
+         min_vartype outputInv_var;
+         oldDW->get(outputInv_var, d_sharedState->get_outputInterval_label());
+         d_output->updateOutputInterval(outputInv_var);
+       }
+     }
+
+     if (d_output && d_sharedState->updateCheckpointInterval()) {
+       if (!oldDW->exists(d_sharedState->get_checkpointInterval_label())) {
+         oldDW->override(min_vartype(d_output->getCheckpointInterval()),d_sharedState->get_checkpointInterval_label());
+       } else {
+         min_vartype checkInv_var;
+         oldDW->get(checkInv_var, d_sharedState->get_checkpointInterval_label());
+         d_output->updateCheckpointInterval(checkInv_var);
+       }
+     }
+     
+ 
      calcWallTime();
 
      printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
@@ -981,7 +1006,7 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
     d_sim->scheduleComputeStableTimestep(grid->getLevel(i), sched);
   }
 
-  Task* task = scinew Task("coarsenDelt", this, &AMRSimulationController::coarsenDelt);
+  Task* task = scinew Task("reduceSysVar", this, &AMRSimulationController::reduceSysVar);
 
   //coarsenDelT task requires that delT is computed on every level, even if no tasks are 
   // run on that level.  I think this is a bug.  --Todd
@@ -989,42 +1014,55 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
     task->requires(Task::NewDW, d_sharedState->get_delt_label(), grid->getLevel(i).get_rep());
   }
 
+  if (d_sharedState->updateOutputInterval())
+    task->requires(Task::NewDW, d_sharedState->get_outputInterval_label());
+
+  if (d_sharedState->updateCheckpointInterval())
+    task->requires(Task::NewDW, d_sharedState->get_checkpointInterval_label());
+  
   //coarsen delt computes the global delt variable
   task->computes(d_sharedState->get_delt_label());
   task->setType(Task::OncePerProc);
+  task->usesMPI(true);
   sched->addTask(task, d_lb->getPerProcessorPatchSet(grid), d_sharedState->allMaterials());
 }
 
 void
-AMRSimulationController::coarsenDelt( const ProcessorGroup*,
+AMRSimulationController::reduceSysVar( const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* /*matls*/,
                                       DataWarehouse* /*old_dw*/,
                                       DataWarehouse* new_dw )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::coarsenDelt()");
+  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::reduceSysVar()");
   // the goal of this task is to line up the delt across all levels.  If the coarse one
   // already exists (the one without an associated level), then we must not be doing AMR
-  if (patches->size() == 0 || new_dw->exists(d_sharedState->get_delt_label(), -1, 0))
-    return;
-  
-  int multiplier = 1;
-  const GridP grid = patches->get(0)->getLevel()->getGrid();
-  
-  for (int i = 0; i < grid->numLevels(); i++) {
-    const LevelP level = grid->getLevel(i);
-    
-    if (i > 0 && !d_sharedState->isLockstepAMR()){
-      multiplier *= level->getRefinementRatioMaxDim();
+  if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_delt_label(), -1, 0)) {
+    int multiplier = 1;
+    const GridP grid = patches->get(0)->getLevel()->getGrid();
+
+    for (int i = 0; i < grid->numLevels(); i++) {
+      const LevelP level = grid->getLevel(i);
+
+      if (i > 0 && !d_sharedState->isLockstepAMR()) {
+        multiplier *= level->getRefinementRatioMaxDim();
+      }
+
+      if (new_dw->exists(d_sharedState->get_delt_label(), -1, *level->patchesBegin())) {
+        delt_vartype deltvar;
+        double delt;
+        new_dw->get(deltvar, d_sharedState->get_delt_label(), level.get_rep());
+
+        delt = deltvar;
+        new_dw->put(delt_vartype(delt * multiplier), d_sharedState->get_delt_label());
+      }
     }
-        
-    if (new_dw->exists(d_sharedState->get_delt_label(), -1, *level->patchesBegin())) {
-      delt_vartype deltvar;
-      double delt;
-      new_dw->get(deltvar, d_sharedState->get_delt_label(), level.get_rep());
-      
-      delt = deltvar;
-      new_dw->put(delt_vartype(delt*multiplier), d_sharedState->get_delt_label());
-    }
+  }
+  if (d_myworld->size() > 1) {
+    new_dw->reduceMPI(d_sharedState->get_delt_label() , 0 , 0 , -1 ) ;
+    if (d_sharedState->updateOutputInterval())
+      new_dw->reduceMPI(d_sharedState->get_outputInterval_label() , 0 , 0 , -1 ) ;
+    if (d_sharedState->updateCheckpointInterval())
+      new_dw->reduceMPI(d_sharedState->get_checkpointInterval_label() , 0 , 0 , -1 ) ;
   }
 }
