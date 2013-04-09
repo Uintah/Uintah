@@ -75,6 +75,9 @@
         <BCType id="all" label="normalizedScalarVar" var="Neumann">
           <value>0.0</value>
         </BCType>
+        <BCType id="all" label="SolidWallTemperature" var="Dirichlet">
+          <value>293.0</value>
+        </BCType>
       </Face>
       <Face geometry="fuel inlet" side="x-">
         <BCType id="all" label="inlet" var="MassFlowInlet">
@@ -265,7 +268,6 @@
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
             <DORadiationModel>
               <opl>3.0</opl>
-              <const_wall_temperature/>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
                 <ksptype>gmres</ksptype>

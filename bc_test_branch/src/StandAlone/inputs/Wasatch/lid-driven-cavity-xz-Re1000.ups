@@ -9,12 +9,6 @@
   <Wasatch>
       <TimeIntegrator> FE </TimeIntegrator>
 
-    <BasicExpression type="SVOL">
-       <TaskList>initialization</TaskList>
-       <NameTag name="pressure" state="STATE_N" />
-       <Constant>0.0</Constant>
-    </BasicExpression>
-
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="vorticity_y" state="STATE_N" />
