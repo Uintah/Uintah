@@ -68,8 +68,9 @@ DDT1::DDT1(const ProcessorGroup* myworld,
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
   Mlb  = scinew MPMLabel();
-  
 
+  d_adj_IO_Press = scinew adj_IO();
+  d_adj_IO_Det   = scinew adj_IO();
   //__________________________________
   //  diagnostic labels JWL++
   reactedFractionLabel   = VarLabel::create("F",
@@ -125,6 +126,8 @@ DDT1::~DDT1()
   delete MIlb;
   delete Mlb;
   delete d_saveConservedVars;
+  delete d_adj_IO_Press;
+  delete d_adj_IO_Det;
 
   // JWL++
   VarLabel::destroy(reactedFractionLabel);
@@ -189,8 +192,8 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
     d_params->require("IgnitionConst",     d_IC);
     d_params->require("PressureShift",     d_PS);
     d_params->require("PreexpoConst",      d_Fb);
-    d_params->require("ExponentialConst",  d_Fc);
-    }
+    d_params->require("ExponentialConst",  d_Fc); 
+  }
   
   if(d_useCrackModel){
     d_params->require("Gcrack",           d_Gcrack);
@@ -205,7 +208,31 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
       throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     }
   }
-
+  
+  //__________________________________
+  //  Adjust the I/O intervals
+  ProblemSpecP adj_ps = d_params->findBlockWithOutAttribute( "adjust_IO_intervals" );
+  
+  if(adj_ps){
+    ProblemSpecP PS_ps = adj_ps->findBlockWithOutAttribute( "PressureSwitch" );
+    if( PS_ps ){
+      d_adj_IO_Press->onOff     = true;
+      d_adj_IO_Press->nTimesSet = 0;
+      PS_ps->require("PressureThreshold",     d_adj_IO_Press->pressThreshold );
+      PS_ps->require("newOutputInterval",     d_adj_IO_Press->output_interval );  
+      PS_ps->require("newCheckPointInterval", d_adj_IO_Press->chkPt_interval );
+    }
+  
+    ProblemSpecP DS_ps = adj_ps->findBlockWithOutAttribute( "DetonationDetected" );
+    if( DS_ps ){
+      d_adj_IO_Det->onOff     = true;
+      d_adj_IO_Det->nTimesSet = 0;
+      DS_ps->require("remainingTimesteps",    d_adj_IO_Det->timestepsLeft );
+      DS_ps->require("newOutputInterval",     d_adj_IO_Det->output_interval );  
+      DS_ps->require("newCheckPointInterval", d_adj_IO_Det->chkPt_interval );
+    }
+  }
+  
   /* initialize constants */
   CC1 = Ac*R*Kc/Ec/Cp;        
   CC2 = Qc/Cp/2;              
@@ -281,6 +308,27 @@ void DDT1::outputProblemSpec(ProblemSpecP& ps)
   model_ps->appendElement("PreexpoConst",      d_Fb );
   model_ps->appendElement("useInductionTime",  d_useInductionTime);
   
+  //__________________________________
+  // adjust output intervals
+  if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
+    ProblemSpecP adj_ps = model_ps->appendChild( "adjust_IO_intervals" );
+
+    if( d_adj_IO_Press->onOff ){
+      ProblemSpecP PS_ps = adj_ps->appendChild( "PressureSwitch" );
+      PS_ps->appendElement( "PressureThreshold",     d_adj_IO_Press->pressThreshold );
+      PS_ps->appendElement( "PressureThreshold",     d_adj_IO_Press->pressThreshold );
+      PS_ps->appendElement( "newOutputInterval",     d_adj_IO_Press->output_interval );  
+      PS_ps->appendElement( "newCheckPointInterval", d_adj_IO_Press->chkPt_interval );
+    }
+  
+    
+    if( d_adj_IO_Det->onOff ){
+      ProblemSpecP DS_ps = adj_ps->appendChild( "DetonationDetected" );
+      DS_ps->appendElement( "remainingTimesteps",    d_adj_IO_Det->timestepsLeft );
+      DS_ps->appendElement( "newOutputInterval",     d_adj_IO_Det->output_interval );  
+      DS_ps->appendElement( "newCheckPointInterval", d_adj_IO_Det->chkPt_interval );
+    }
+  }
  
   if(d_useCrackModel){
     model_ps->appendElement("useCrackModel",     d_useCrackModel);
@@ -448,7 +496,6 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   t1->requires(Task::OldDW, burningLabel,              react_matl, gac,1);
   t1->requires(Task::OldDW, inductionTimeLabel,        react_matl, gn);
   t1->requires(Task::OldDW, countTimeLabel,            react_matl, gn);
-  t1->requires(Task::OldDW, BurningCriteriaLabel,      react_matl, gac, 1);
   
   //__________________________________
   // Computes
@@ -458,6 +505,16 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   t1->computes(BurningCriteriaLabel,    react_matl);
   t1->computes(inductionTimeLabel,      react_matl);
   t1->computes(countTimeLabel,          react_matl);
+   
+  // if detonation occurs change the output interval
+  t1->requires(Task::OldDW, d_sharedState->get_outputInterval_label() );
+  t1->requires(Task::OldDW, d_sharedState->get_checkpointInterval_label() );  
+  
+  
+  t1->computes( d_sharedState->get_outputInterval_label() );
+  t1->computes( d_sharedState->get_checkpointInterval_label() );
+  d_sharedState->updateOutputInterval( true );
+  d_sharedState->updateCheckpointInterval( true ); 
    
   sched->addTask(t1, level->eachPatch(), d_mymatls);    
     
@@ -508,9 +565,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   t2->computes(delFLabel,               react_matl);
   t2->computes(burningLabel,            react_matl);
   t2->computes(onSurfaceLabel,          react_matl);
-  t2->computes(surfaceTempLabel,        react_matl);
-  
-  
+  t2->computes(surfaceTempLabel,        react_matl);  
 
   //__________________________________
   // Conserved Variables
@@ -631,7 +686,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
     // Old Reactant Quantities
     constCCVariable<double> cv_reactant, rctVolFrac;
     constCCVariable<double> rctTemp, rctRho, rctSpvol, rctFr, numPPC, inductionTimeOld,  countTimeOld;
-    constCCVariable<int> burningCellOld, BurningCriteriaOld;
+    constCCVariable<int> burningCellOld;
     constCCVariable<Vector> rctvel_CC;
     constNCVariable<double> NC_CCweight, rctMass_NC;
     constParticleVariable<Point> px;
@@ -656,7 +711,6 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
     old_dw->get(inductionTimeOld, inductionTimeLabel,   m0, patch,gn, 0);
     old_dw->get(countTimeOld,  countTimeLabel,          m0, patch,gn, 0);
     old_dw->get(burningCellOld,burningLabel,            m0, patch,gac,1);
-    old_dw->get(BurningCriteriaOld,BurningCriteriaLabel,m0, patch,gac,1);
     
     
     if(d_useCrackModel){
@@ -699,15 +753,27 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
     countTime.initialize(0.);
   
     IntVector nodeIdx[8];
+    
+    bool press_switch_adj_IO  = false;  // switch based on pressure to adjust the I/O intervals
+    bool det_switch_adj_IO    = false;  // switch based on detonation to adjust the I/O intervals
+    
     //__________________________________
     //  Loop over cells
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       if (rctVolFrac[c] > 1e-10){ //only look at cells with reactant
         // Detonation model For explosions
-        if (press_CC[c] > d_threshold_press_JWL && rctVolFrac[c] > d_threshold_volFrac){
+        
+        
+        // check to see if we should adjust the output intervals based on pressure 
+        if (press_CC[c] > d_adj_IO_Press->pressThreshold && numPPC[c] > 0){
+          press_switch_adj_IO = true;
+        }
+        
+        if (press_CC[c] > d_threshold_press_JWL && numPPC[c] > 0){
 
           detonating[c] = 1;   // Flag for detonating 
+          det_switch_adj_IO = true;
 
         } else if(press_CC[c] < d_threshold_press_JWL && press_CC[c] > d_thresholdPress_SB) {
           // Steady Burn Model for deflagration
@@ -955,6 +1021,43 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         }//else if(press_CC[c] < d_threshold_press_JWL && press_CC[c] > d_thresholdPress_SB) 
       } // if rctVolFrac > 1e-10  
     }//Cell iterator
+    
+
+    //__________________________________
+    // Update either the output and/or checkpoint intervals
+    min_vartype oldOUT, oldCKPT;
+    double newOUT, newCKPT;
+
+    old_dw->get( oldOUT,  d_sharedState->get_outputInterval_label() );
+    old_dw->get( oldCKPT, d_sharedState->get_checkpointInterval_label() );
+      
+    newOUT  = oldOUT;
+    newCKPT = oldCKPT; 
+      
+    // pressure exceeding threshold detected
+    if ( press_switch_adj_IO && d_adj_IO_Press->onOff && d_adj_IO_Press->nTimesSet == 0){
+
+      newOUT  = d_adj_IO_Press->output_interval;
+      newCKPT = d_adj_IO_Press->chkPt_interval;
+      d_adj_IO_Press->nTimesSet = 1;
+      cout << "\n__________________________________pressure exceeding threshold detected " << endl;
+      cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<<  endl;
+    }
+    
+    // detonation detected
+    if ( det_switch_adj_IO && d_adj_IO_Det->onOff && d_adj_IO_Det->nTimesSet == 0){
+
+      newOUT  = d_adj_IO_Det->output_interval;
+      newCKPT = d_adj_IO_Det->chkPt_interval;
+      d_adj_IO_Det->nTimesSet = 1;
+      cout << "__________________________________ Detonation detected " << endl;
+      cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<< endl;
+    }
+    
+    new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
+    new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
+    
+
   }//End for{Patches}
 }//end Task
 
@@ -1138,7 +1241,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
 
           Fr[c] = prodRho[c]/(rctRho[c]+prodRho[c]);   
          // Use the JWL++ model for explosion
-          if(Fr[c] >= 0. && Fr[c] < .99){
+          if(Fr[c] >= 0. && Fr[c] < 1.0){
             delF[c] = d_G*pow(press_CC[c], d_b)*(1.0 - Fr[c]);
           }
           

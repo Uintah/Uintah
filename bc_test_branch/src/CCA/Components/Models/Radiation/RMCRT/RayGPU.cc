@@ -30,7 +30,7 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream dbggpu("RAY_GPU", false);
+static DebugStream dbggpu("RAY", false);
 
 
 //---------------------------------------------------------------------------
