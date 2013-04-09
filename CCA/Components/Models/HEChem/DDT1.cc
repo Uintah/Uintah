@@ -280,18 +280,20 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
 void DDT1::problemSetup_BulletProofing(ProblemSpecP& ps)
 {
   ProblemSpecP root = ps->getRootNode();
-  ProblemSpecP amr = root->findBlock("AMR");      
-  ProblemSpecP reg_ps = amr->findBlock("Regridder");
-  if (reg_ps) {
+  ProblemSpecP amr_ps = root->findBlock("AMR"); 
+  if(amr_ps){     
+    ProblemSpecP reg_ps = amr_ps->findBlock("Regridder");
+    if (reg_ps) {
 
-    string regridder;
-    reg_ps->getAttribute( "type", regridder );
+      string regridder;
+      reg_ps->getAttribute( "type", regridder );
 
-    if (regridder != "Tiled") {
-      ostringstream msg;
-      msg << "\n ERROR:Model:DDT1: The (" << regridder << ") regridder will not work with this burn model. \n";
-      msg << "The only regridder that works with this burn model is the \"Tiled\" regridder\n"; 
-      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+      if (regridder != "Tiled") {
+        ostringstream msg;
+        msg << "\n ERROR:Model:DDT1: The (" << regridder << ") regridder will not work with this burn model. \n";
+        msg << "The only regridder that works with this burn model is the \"Tiled\" regridder\n"; 
+        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+      }
     }
   }
 }
