@@ -170,57 +170,6 @@ void TransIsoHyperImplicit::initializeCMData(const Patch* patch,
    }
 
 }
-void TransIsoHyperImplicit::allocateCMDataAddRequires(Task* task,
-                                                    const MPMMaterial* matl,
-                                                    const PatchSet* ,
-                                                    MPMLabel* lb) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc,             matlset, Ghost::None);
-
-  // Add requires local to this model
-  task->requires(Task::NewDW,pFailureLabel_preReloc,      matlset, Ghost::None);
-  task->requires(Task::NewDW,pStretchLabel_preReloc,      matlset, Ghost::None);
-}
-
-void TransIsoHyperImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
-                                            ParticleSubset* addset,
-                                            map<const VarLabel*, ParticleVariableBase*>* newState,
-                                            ParticleSubset* delset,
-                                            DataWarehouse* )
-{
-  // Put stuff in here to initialize each particle's
-  // constitutive model parameters and deformationMeasure
-  Matrix3 zero(0.);
-
-  ParticleVariable<Matrix3> deformationGradient, pstress;
-  constParticleVariable<Matrix3> o_defGrad, o_stress;
-  ParticleVariable<double> stretch,fail;
-  constParticleVariable<double> o_stretch,o_fail;
-
-  new_dw->allocateTemporary(deformationGradient,addset);
-  new_dw->allocateTemporary(pstress,            addset);
-  new_dw->allocateTemporary(stretch,            addset);
-  new_dw->allocateTemporary(fail,               addset);
-
-  new_dw->get(o_stretch,     pStretchLabel_preReloc,                  delset);
-  new_dw->get(o_fail,        pFailureLabel_preReloc,                  delset);
-  new_dw->get(o_defGrad,     lb->pDeformationMeasureLabel_preReloc,   delset);
-  new_dw->get(o_stress,      lb->pStressLabel_preReloc,               delset);
-
-  ParticleSubset::iterator o,n = addset->begin();
-  for (o=delset->begin(); o != delset->end(); o++, n++) {
-    deformationGradient[*n] = o_defGrad[*o];
-    pstress[*n] = o_stress[*o];
-    stretch[*n] = o_stretch[*o];
-    fail[*n] = o_fail[*o];
-  }
-  (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
-  (*newState)[lb->pStressLabel]=pstress.clone();
-  (*newState)[pStretchLabel]=stretch.clone();
-  (*newState)[pFailureLabel]=fail.clone();
-}
 
 void TransIsoHyperImplicit::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)

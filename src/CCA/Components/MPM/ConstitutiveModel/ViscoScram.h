@@ -204,20 +204,6 @@ namespace Uintah {
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw);
 
-    /*! Set up data required in the particle conversion process */
-    virtual void allocateCMDataAddRequires(Task* task, 
-                                           const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           MPMLabel* lb) const;
-
-    /*! Copy data from the delset to the addset in the particle 
-        conversion process */
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* subset,
-        map<const VarLabel*, ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
-
     /*! Add the particle data that have to be saved at the end of each 
         timestep */
     virtual void addParticleState(std::vector<const VarLabel*>& from,

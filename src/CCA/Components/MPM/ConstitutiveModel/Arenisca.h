@@ -55,6 +55,8 @@ namespace Uintah {
       double FSLOPE_p;
       double hardening_modulus;
       double CR;
+      double T1_rate_dependence;
+      double T2_rate_dependence;
       double p0_crush_curve;
       double p1_crush_curve;
       double p3_crush_curve;
@@ -62,29 +64,62 @@ namespace Uintah {
       double kinematic_hardening_constant;
       double fluid_B0;
       double fluid_pressure_initial;
+      double gruneisen_parameter;
       double subcycling_characteristic_number;
       double PEAKI1;
       double B0;
       double G0;
     };
-    const VarLabel* pPlasticStrainLabel;
-    const VarLabel* pPlasticStrainLabel_preReloc;
-    const VarLabel* pPlasticStrainVolLabel;
-    const VarLabel* pPlasticStrainVolLabel_preReloc;
-    const VarLabel* pElasticStrainVolLabel;
-    const VarLabel* pElasticStrainVolLabel_preReloc;
-    const VarLabel* pKappaLabel;
-    const VarLabel* pKappaLabel_preReloc;
-    const VarLabel* pBackStressLabel;
-    const VarLabel* pBackStressLabel_preReloc;
-    const VarLabel* pBackStressIsoLabel;
-    const VarLabel* pBackStressIsoLabel_preReloc;
-    const VarLabel* pKappaFlagLabel;
-    const VarLabel* pKappaFlagLabel_preReloc;
     const VarLabel* pLocalizedLabel;
     const VarLabel* pLocalizedLabel_preReloc;
+    const VarLabel* pAreniscaFlagLabel;          //0: ok, 1: pevp<-p3
+    const VarLabel* pAreniscaFlagLabel_preReloc;
+    const VarLabel* pScratchDouble1Label;
+    const VarLabel* pScratchDouble1Label_preReloc;
+    const VarLabel* pScratchDouble2Label;
+    const VarLabel* pScratchDouble2Label_preReloc;
+    const VarLabel* pPorePressureLabel;
+    const VarLabel* pPorePressureLabel_preReloc;
+    const VarLabel* pepLabel;               //Plastic Strain
+    const VarLabel* pepLabel_preReloc;
+    const VarLabel* pevpLabel;              //Plastic Volumetric Strain
+    const VarLabel* pevpLabel_preReloc;
+    const VarLabel* peveLabel;              //Elastic Volumetric Strain
+    const VarLabel* peveLabel_preReloc;
+    const VarLabel* pCapXLabel;
+    const VarLabel* pCapXLabel_preReloc;
+    const VarLabel* pCapXQSLabel;
+    const VarLabel* pCapXQSLabel_preReloc;
+    const VarLabel* pKappaLabel;
+    const VarLabel* pKappaLabel_preReloc;
+    const VarLabel* pZetaLabel;
+    const VarLabel* pZetaLabel_preReloc;
+    const VarLabel* pZetaQSLabel;
+    const VarLabel* pZetaQSLabel_preReloc;
+    const VarLabel* pIotaLabel;
+    const VarLabel* pIotaLabel_preReloc;
+    const VarLabel* pIotaQSLabel;
+    const VarLabel* pIotaQSLabel_preReloc;
+    const VarLabel* pStressQSLabel;
+    const VarLabel* pStressQSLabel_preReloc;
+    const VarLabel* pScratchMatrixLabel;
+    const VarLabel* pScratchMatrixLabel_preReloc;
+    //Xconst VarLabel* pVelGradLabel;
+    //Xconst VarLabel* pVelGradLabel_preReloc;
+    
+    //T2D: add more class variables
+    //double temp;
+    //Matrix3 Identity
+    
   private:
-    CMData d_initialData;
+    double one_third,
+           two_third,
+           four_third,
+           sqrt_three,
+           one_sqrt_three,
+           small_number,
+           big_number;
+    CMData d_cm;
 
     // Prevent copying of this class
     // copy constructor
@@ -118,11 +153,74 @@ namespace Uintah {
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
-    void computeInvariants(const Matrix3& stress, Matrix3& S,  double& I1, double& J2);
+    int computeStressTensorStep(const Matrix3& trial_stress,
+                                Matrix3& sigma_new,
+                                Matrix3& ep_new,
+                                double& evp_new,
+                                double& eve_new,
+                                double& X_new,
+                                double& Kappa_new,
+                                double& Zeta_new,
+                                double& bulk,
+                                long64 ParticleID);
+    
+    void computeInvariants(const Matrix3& stress,
+                           Matrix3& S,
+                           double& I1,
+                           double& J2);
 
 
-    double YieldFunction(const Matrix3& stress, const double& FSLOPE, const double& kappa, const double& cap_radius, const double& PEAKI1);
+    double YieldFunction(const double& I1,
+                         const double& J2,
+                         const double& X,
+                         const double& Zeta,
+                         const double& threeKby2G);
+    
+    double TransformedYieldFunction(const double& R,
+                                    const double& Z,
+                                    const double& X,
+                                    const double& Beta);
+    
+    double TransformedFlowFunction(const double& R,
+                                   const double& Z,
+                                   const double& X,
+                                   const double& Beta);
+    
+    double dgdr(const double& R,
+                const double& Z,
+                const double& X,
+                const double& Beta);
+    
+    double dgdz(const double& R,
+                const double& Z,
+                const double& X,
+                const double& Beta);
+    
+    Matrix3 YieldFunctionGradient(const Matrix3& S,
+                                 const double& I1,
+                                 const double& J2,
+                                 const Matrix3& S_trial,
+                                 const double& I1_trial,
+                                 const double& J2_trial,
+                                 const double& X,
+                                 const double& Kappa,
+                                 const double& Zeta);
+    
+    Matrix3 YieldFunctionBisection(const Matrix3& sigma_in,
+                                   const Matrix3& sigma_out,
+                                   const double& X,
+                                   const double& Kappa,
+                                   const double& Zeta,
+                                   long64 ParticleID);
 
+    Matrix3 YieldFunctionFastRet(const Matrix3& S,
+                                 const double& I1,
+                                 const double& J2,
+                                 const double& X,
+                                 const double& Kappa,
+                                 const double& Zeta,
+                                 long64 ParticleID);
+    
     ////////////////////////////////////////////////////////////////////////
     /* Make the value for pLocalized computed locally available outside of the model. */
     ////////////////////////////////////////////////////////////////////////
@@ -152,7 +250,7 @@ namespace Uintah {
                                   const MPMMaterial* matl,
                                   DataWarehouse* new_dw);
 
-
+    
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
@@ -190,7 +288,40 @@ namespace Uintah {
 
     virtual double getCompressibility();
 
-
+  private: //New functions for modularity by Colovos & Homel
+    void computeKinematics(const PatchSubset* patches,
+                           const MPMMaterial* matl,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw);
+    
+    double computeev0();
+    
+    double computedfdKappa(double I1,
+                           double X,
+                           double Kappa,
+                           double Zeta);
+    
+    double computedfdZeta(double I1,
+                          double X,
+                          double Kappa,
+                          double Zeta);
+    
+    double computeBulkModulus(double ev);
+        
+    double computeX(double evp);
+    
+    double computedXdevp(double evp);
+    
+    double computedZetadevp(double Zeta,
+                            double evp);
+    
+    double computedKappadevp(double evp);
+    
+    double computeKappa(double X);
+        
+    Matrix3 computeP(double lame,
+                     Matrix3 M,
+                     Matrix3 Z);
   };
 } // End namespace Uintah
 

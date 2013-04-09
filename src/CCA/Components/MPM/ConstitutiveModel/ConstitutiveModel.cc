@@ -126,13 +126,6 @@ ConstitutiveModel::addComputesAndRequires(Task*,
   throw InternalError("Stub Task: ConstitutiveModel::addComputesAndRequires ", __FILE__, __LINE__);  
 }
 
-void ConstitutiveModel::scheduleCheckNeedAddMPMMaterial(Task* task, 
-                                                        const MPMMaterial*,
-                                                        const PatchSet*) const
-{
-  task->computes(lb->NeedAddMPMMaterialLabel);
-}
-
 void 
 ConstitutiveModel::addSharedCRForHypoExplicit(Task* task,
                                               const MaterialSubset* matlset,
@@ -158,20 +151,16 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::OldDW, lb->pTemperatureLabel,        matlset, gnone);
   task->requires(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
-  task->requires(Task::NewDW, lb->gVelocityStarLabel,       matlset, gac, NGN);
-  if(!flag->d_doGridReset){
-    task->requires(Task::NewDW, lb->gDisplacementLabel,     matlset, gac, NGN);
-  }
-  task->requires(Task::OldDW, lb->pSizeLabel,               matlset, gnone);
-  task->requires(Task::OldDW, lb->pTempPreviousLabel,       matlset, gnone);
+  task->requires(Task::NewDW, lb->pVolumeLabel_preReloc,    matlset, gnone);
+  task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc, 
+                                                            matlset, gnone);
+  task->requires(Task::NewDW, lb->pVelGradLabel_preReloc,   matlset, gnone);
   if (flag->d_fracture) {
     task->requires(Task::NewDW, lb->pgCodeLabel,            matlset, gnone); 
     task->requires(Task::NewDW, lb->GVelocityStarLabel,     matlset, gac, NGN);
   }
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(lb->pVolumeLabel_preReloc,             matlset);
   task->computes(lb->pdTdtLabel_preReloc,               matlset);
   //task->computes(lb->p_qLabel_preReloc,                 matlset);
 }
@@ -194,17 +183,6 @@ ConstitutiveModel::computeStressTensorImplicit(const PatchSubset*,
   throw InternalError("Stub Task: ConstitutiveModel::computeStressTensorImplicit ", __FILE__, __LINE__);
 }
 
-void ConstitutiveModel::checkNeedAddMPMMaterial(const PatchSubset*,
-                                                const MPMMaterial*,
-                                                DataWarehouse* new_dw,
-                                                DataWarehouse*)
-{
-  double need_add=0.;
-                                                                                
-  new_dw->put(sum_vartype(need_add),     lb->NeedAddMPMMaterialLabel);
-}
-
-
 void 
 ConstitutiveModel::carryForward(const PatchSubset*,
                                 const MPMMaterial*,
@@ -220,87 +198,19 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
                                           DataWarehouse*  new_dw,
                                           const MPMMaterial* matl)
 {
-  double rho_orig = matl->getInitialDensity();
-  Matrix3 Id, Zero(0.0); Id.Identity();
-
-  constParticleVariable<double>  pMass;
-  constParticleVariable<Matrix3> pDefGrad_old;
-  old_dw->get(pMass,            lb->pMassLabel,               pset);
-  old_dw->get(pDefGrad_old,     lb->pDeformationMeasureLabel, pset);
-
-  ParticleVariable<double>  pVol_new, pIntHeatRate_new,p_q;
-  ParticleVariable<Matrix3> pDefGrad_new, pStress_new;
-  new_dw->allocateAndPut(pVol_new,         lb->pVolumeLabel_preReloc,  pset);
+  ParticleVariable<double>  pIntHeatRate_new,p_q;
+  ParticleVariable<Matrix3> pStress_new;
   new_dw->allocateAndPut(pIntHeatRate_new, lb->pdTdtLabel_preReloc,    pset);
-  new_dw->allocateAndPut(pDefGrad_new,  lb->pDeformationMeasureLabel_preReloc, 
-                                                                       pset);
   new_dw->allocateAndPut(pStress_new,   lb->pStressLabel_preReloc,     pset);
   new_dw->allocateAndPut(p_q,           lb->p_qLabel_preReloc,         pset);
 
   ParticleSubset::iterator iter = pset->begin();
   for(; iter != pset->end(); iter++){
     particleIndex idx = *iter;
-    pVol_new[idx] = (pMass[idx]/rho_orig);
     pIntHeatRate_new[idx] = 0.0;
-    pDefGrad_new[idx] = pDefGrad_old[idx];
-    //pDefGrad_new[idx] = Id;
-    pStress_new[idx] = Zero;
+    pStress_new[idx]=Matrix3(0.0);
     p_q[idx]=0.;
   }
-}
-
-void 
-ConstitutiveModel::allocateCMDataAddRequires(Task*, const MPMMaterial*,
-                                             const PatchSet*,
-                                             MPMLabel*) const
-{
-  throw InternalError("Stub Task: ConstitutiveModel::allocateCMDataAddRequires ", __FILE__, __LINE__);
-}
-
-void 
-ConstitutiveModel::addSharedRForConvertExplicit(Task* task,
-                                                const MaterialSubset* mset,
-                                                const PatchSet*) const
-{
-  Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::NewDW,lb->pdTdtLabel_preReloc,              mset,gnone);
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,mset,gnone);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc,            mset,gnone);
-}
-
-void
-ConstitutiveModel::copyDelToAddSetForConvertExplicit(DataWarehouse* new_dw,
-                                                     ParticleSubset* delset,
-                                                     ParticleSubset* addset,
-                                                     map<const VarLabel*, ParticleVariableBase*>* newState)
-{
-  constParticleVariable<double>  pIntHeatRate_del;
-  constParticleVariable<Matrix3> pDefGrad_del;
-  constParticleVariable<Matrix3> pStress_del;
-
-  new_dw->get(pIntHeatRate_del, lb->pdTdtLabel_preReloc,               delset);
-  new_dw->get(pDefGrad_del,     lb->pDeformationMeasureLabel_preReloc, delset);
-  new_dw->get(pStress_del,      lb->pStressLabel_preReloc,             delset);
-
-  ParticleVariable<double>  pIntHeatRate_add;
-  ParticleVariable<Matrix3> pDefGrad_add;
-  ParticleVariable<Matrix3> pStress_add;
-
-  new_dw->allocateTemporary(pIntHeatRate_add, addset);
-  new_dw->allocateTemporary(pDefGrad_add,     addset);
-  new_dw->allocateTemporary(pStress_add,      addset);
-
-  ParticleSubset::iterator del = delset->begin();
-  ParticleSubset::iterator add = addset->begin();
-  for (; del != delset->end(); del++, add++) {
-    pIntHeatRate_add[*add] = pIntHeatRate_del[*del];
-    pDefGrad_add[*add] = pDefGrad_del[*del];
-    pStress_add[*add]  = pStress_del[*del];
-  }
-
-  (*newState)[lb->pdTdtLabel] = pIntHeatRate_add.clone();
-  (*newState)[lb->pDeformationMeasureLabel] = pDefGrad_add.clone();
-  (*newState)[lb->pStressLabel] = pStress_add.clone();
 }
 
 void 
