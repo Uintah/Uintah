@@ -109,7 +109,7 @@ UnionBCData::determineIteratorLimits( const Patch::FaceType   face,
                                       const Patch           * patch, 
                                       const vector<Point>   & test_pts )
 {
-  cout << "UnionBCData::determineIteratorLimits() " << d_name << " (this: " << this << ")\n";
+  cout << "UnionBCData::determineIteratorLimits() " << d_name << "\n"; // (this: " << this << ")\n";
 
   map<int,const Patch*>::const_iterator iter = d_iteratorLimitsDetermined.find( patch->getID() );
 

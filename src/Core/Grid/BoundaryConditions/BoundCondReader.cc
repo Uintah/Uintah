@@ -351,7 +351,7 @@ createDifference( map<string,string>   values,
   }
 
 #if 0
-FIXME this is Tony's face name stuff... 
+FIXME this is Tonys face name stuff... 
 
     Patch::FaceType face_side;
     BCGeomBase* bcGeom = createBoundaryConditionFace(face_ps,grid_ps,face_side);
@@ -629,8 +629,8 @@ BoundCondReader::read( ProblemSpecP& bc_ps, const ProblemSpecP & grid_ps )
       cout << "Inserting into bcGeom (" << bcGeom->getName() << ") [mat_id = " << bc->getMatl()
            << "], bc name = " << bc->getVariable() 
            << ", bc type = " << bc->getType() 
-           << ", bc matl = " << bc->getMatl() 
-           << " ("  << bc  << ")\n";
+           << ", bc matl = " << bc->getMatl()  << "\n";
+      //           << " ("  << bc  << ")\n";
 
       bcGeom->addBC( bc );
     }

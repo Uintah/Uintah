@@ -63,7 +63,7 @@ SideBCData::print( int depth ) const
 {
   string indentation( depth*2, ' ' );
 
-  cout << indentation << "SideBCData Geom Piece: " << d_name << " [" << this << "]\n";
+  cout << indentation << "SideBCData Geom Piece: " << d_name << "\n"; // " [" << this << "]\n";
   for( map<int,BCData*>::const_iterator itr = d_bcs.begin(); itr != d_bcs.end(); itr++ ) {
     itr->second->print( depth + 2 );
   }
