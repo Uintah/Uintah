@@ -31,8 +31,10 @@
 
 //-- ExprLib includes --//
 #include <expression/Tag.h>
+#include <expression/ExpressionFactory.h>
 
 #include <string>
+#include <sstream>
 
 namespace Wasatch{
 
@@ -46,5 +48,93 @@ namespace Wasatch{
     param->getAttribute( "state", state );
     return Expr::Tag( exprName, Expr::str2context(state) );
   }
+
+  //============================================================================
+
+  Category
+  parse_tasklist( Uintah::ProblemSpecP param,
+                  const bool isAttribute )
+  {
+    // jcs note that if we have a vector of attributes, then this will not work properly.
+    std::string taskListName;
+    if( isAttribute ){
+      std::vector<std::string> tmp;
+      param->getAttribute( "tasklist", tmp );
+      if( tmp.size() > 1 ){
+        std::ostringstream msg;
+        msg << std::endl
+            << "parse_tasklist() can only be used to parse single attributes, not vectors of attributes"
+            << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      assert( tmp.size() == 1 );
+      taskListName = tmp[0];
+    }
+    else{
+      param->require("TaskList",taskListName);
+    }
+    return select_tasklist( taskListName );
+  }
+
+  Category
+  select_tasklist( const std::string& taskList )
+  {
+    Category cat = ADVANCE_SOLUTION;
+    if     ( taskList == "initialization"   )   cat = INITIALIZATION;
+    else if( taskList == "timestep_size"    )   cat = TIMESTEP_SELECTION;
+    else if( taskList == "advance_solution" )   cat = ADVANCE_SOLUTION;
+    else{
+      std::ostringstream msg;
+      msg << "ERROR: unsupported task list specified: '" << taskList << "'" << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+    return cat;
+  }
+
+  //============================================================================
+
+  void
+  parse_cleave_requests( Uintah::ProblemSpecP param,
+                         GraphCategories& graphCat )
+  {
+    Expr::ExpressionFactory* const factory = graphCat[ADVANCE_SOLUTION]->exprFactory;
+
+    for( Uintah::ProblemSpecP cleaveParams = param->findBlock("Cleave");
+        cleaveParams != 0;
+        cleaveParams = cleaveParams->findNextBlock("Cleave") ){
+
+      const Expr::Tag tag = parse_nametag( cleaveParams->findBlock("NameTag") );
+      std::string from;
+      cleaveParams->getAttribute( "from", from );
+      if( from == "PARENTS" ){
+        factory->cleave_from_parents( factory->get_id(tag) );
+      }
+      else{
+        factory->cleave_from_children( factory->get_id(tag) );
+      }
+    }
+  }
+
+  //============================================================================
+
+  void
+  parse_attach_dependencies( Uintah::ProblemSpecP param,
+                             GraphCategories& graphCat )
+  {
+    for( Uintah::ProblemSpecP attachParams = param->findBlock("AttachDependency");
+        attachParams != 0;
+        attachParams = attachParams->findNextBlock("AttachDependency") )
+    {
+      const Expr::Tag src    = parse_nametag( attachParams->findBlock("Source")->findBlock("NameTag") );
+      const Expr::Tag target = parse_nametag( attachParams->findBlock("Target")->findBlock("NameTag") );
+
+      // currently we only support adding, not subtracting - this could be
+      // easily changed by adding this to the parser.
+      const Category cat = parse_tasklist( attachParams, true );
+      graphCat[cat]->exprFactory->attach_dependency_to_expression( src, target );
+    }
+  }
+
+  //============================================================================
 
 } // namespace Wasatch
