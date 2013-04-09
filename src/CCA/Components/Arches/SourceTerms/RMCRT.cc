@@ -255,8 +255,8 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     //  on the finest level
     _RMCRT->sched_ROI_Extents( fineLevel, sched );
     
-    Task::WhichDW abskg_dw   = Task::NewDW;
-    Task::WhichDW sigmaT4_dw = Task::NewDW;
+    Task::WhichDW abskg_dw     = Task::NewDW;
+    Task::WhichDW sigmaT4_dw   = Task::NewDW;
     bool modifies_divQ       = false;
     _RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ);
   }

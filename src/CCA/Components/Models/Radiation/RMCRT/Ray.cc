@@ -707,7 +707,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
              inv_direction_vector = Vector(1.0)/direction_vector;       
             
             // get the intensity for this ray
-            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI, &_mTwister);
+            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, &_mTwister);
             sumProjI += cos(VRTheta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
                                                            // from all the rays up to that point
             sumI_prev = sumI;
@@ -895,7 +895,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
             ray_location[0] += origin.x();
             ray_location[1] += origin.y();
             ray_location[2] += origin.z();
-            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI, &_mTwister);
+            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, &_mTwister);
 
             sumProjI += cos(theta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
 
@@ -990,7 +990,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           ray_location[1] =   j +  _mTwister.rand() * DyDxRatio ;
           ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ;
         }
-        updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, size, sumI, &_mTwister);
+        updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, &_mTwister);
         
       }  // Ray loop
       
@@ -1395,7 +1395,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             }
             tMax += lineup * tDelta[prevLev];
             
-            in_domain = domain_BB.inside(pos); 
+            in_domain = domain_BB.inside(pos);
 
             //__________________________________
             //  Update the ray location
@@ -1601,14 +1601,14 @@ bool Ray::has_a_boundary(const IntVector &c,
   adjacentCell = c;
   adjacentCell[0] = c[0] - 1; // west
 
-  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
-    boundaryFaces.push_back(0);
+  if (celltype[adjacentCell]+1){ // cell type of flow is -1, so when cellType+1 isn't false, we
+    boundaryFaces.push_back(0);     // know we're at a boundary
     hasBoundary = true;
   }
 
   adjacentCell[0] += 2; // east
 
-  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+  if (celltype[adjacentCell]+1){
     boundaryFaces.push_back(1);
     hasBoundary = true;
   }
@@ -1616,14 +1616,14 @@ bool Ray::has_a_boundary(const IntVector &c,
   adjacentCell[0] -= 1;
   adjacentCell[1] = c[1] - 1; // south
 
-  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+  if (celltype[adjacentCell]+1){
     boundaryFaces.push_back(2);
     hasBoundary = true;
   }
 
   adjacentCell[1] += 2; // north
 
-  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+  if (celltype[adjacentCell]+1){
     boundaryFaces.push_back(3);
     hasBoundary = true;
   }
@@ -1631,14 +1631,14 @@ bool Ray::has_a_boundary(const IntVector &c,
   adjacentCell[1] -= 1;
   adjacentCell[2] = c[2] - 1; // bottom
 
-  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+  if (celltype[adjacentCell]+1){
     boundaryFaces.push_back(4);
     hasBoundary = true;
   }
 
   adjacentCell[2] += 2; // top
 
-  if (celltype[adjacentCell] == Uintah::BoundaryCondition::WALL){
+  if (celltype[adjacentCell]+1){
     boundaryFaces.push_back(5);
     hasBoundary = true;
   }
@@ -2144,6 +2144,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
                        const IntVector& domainHi,
                        constCCVariable<double>& sigmaT4OverPi,
                        constCCVariable<double>& abskg,
+                       constCCVariable<int>& celltype,
                        unsigned long int& size,
                        double& sumI,
                        MTRand * _mTwister)
@@ -2248,8 +2249,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
        ray_location[1] = ray_location[1] + (disMin  / inv_direction_vector[1]);
        ray_location[2] = ray_location[2] + (disMin  / inv_direction_vector[2]);
 
-       in_domain = containsCell(domainLo, domainHi, cur, face);
-
+       in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
        // The running total of alpha*length
        double optical_thickness_prev = optical_thickness;
        optical_thickness += Dx.x() * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..
