@@ -69,6 +69,8 @@ AnnulusBCData::inside( const Point & p ) const
 {
   Vector diff = p - d_origin;
 
+  cout << "AnnulusBCData::inside diff.length() is " << diff.length() << "\n";
+
   bool inside_outer = false;
   bool outside_inner = false;
 

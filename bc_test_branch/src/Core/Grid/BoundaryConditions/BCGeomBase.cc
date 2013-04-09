@@ -96,6 +96,10 @@ BCGeomBase::getCellFaceIterator( const Patch * patch ) const
 
   map<int,Iterator*>::const_iterator c_iter = d_cells.find( patch->getID() );
 
+  cout << "getCellFaceIterator\n";
+  cout << "first:  " << c_iter->first << "\n";
+  cout << "second: " << *(c_iter->second) << "\n";
+
   return *(c_iter->second);
 }
 
@@ -159,8 +163,8 @@ BCGeomBase::determineIteratorLimits( const Patch::FaceType   face,
 {
   // FIXME DEBUG STATEMENTS
   cout << "BCGeomBase::determineIteratorLimits() for " << patch->getFaceName( face )<< "\n";
-  cout << "     BCGeom name: " << d_name << ", side: " << d_faceSide << " (this: " << this << ")\n";
-  cout << "     patch: " << patch << ", " << patch->getID() << "\n";
+  cout << "     BCGeom name: " << d_name << ", side: " << d_faceSide << "\n"; // (this: " << this << ")\n";
+  cout << "     patch: "/* << patch*/ << ", patch id is: " << patch->getID() << "\n";
 
   if( d_iteratorLimitsDetermined[ patch->getID() ] != NULL ) {
 
@@ -213,6 +217,7 @@ BCGeomBase::determineIteratorLimits( const Patch::FaceType   face,
   }
 
   if (vec_cells.empty()) {
+    cout << "here: id is " << patch->getID() << ", vec_cells empty " << "\n";
     d_cells[ patch->getID() ] = scinew Iterator( GridIterator(IntVector(0,0,0),IntVector(0,0,0)) );
   }
   else {
@@ -220,7 +225,7 @@ BCGeomBase::determineIteratorLimits( const Patch::FaceType   face,
       list_cells.add(*i);
     }
 
-    cout << "here: id is " << patch->getID() << "\n";
+    cout << "here: id is " << patch->getID() << ", num of cells is " << list_cells.size() << "\n";
 
     d_cells[ patch->getID() ] = scinew Iterator( list_cells );
   }

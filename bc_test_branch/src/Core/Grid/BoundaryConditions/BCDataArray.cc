@@ -118,7 +118,7 @@ BCDataArray::determineIteratorLimits(       Patch::FaceType   face,
   patch->getFaceCells(face,-1,lpts,hpts);
   vector<Point> test_pts;
 
-  cout << "BCDataArray::determineIteratorLimits() for " << this << ", f/p: " << face << ", " << patch << "\n";
+  cout << "BCDataArray::determineIteratorLimits() for " /*<< this*/ << ", face: " << face << ", patch: " << patch->getID() << "\n";
   print();
 
   for (CellIterator candidatePoints(lpts,hpts); !candidatePoints.done(); candidatePoints++) {
@@ -442,7 +442,7 @@ BCDataArray::getChild( int mat_id, int child_index ) const
   if( mat_id == -1 || ( mat_id >= (int)d_BCDataArray.size() ) ) {
 
     if( d_BCDataArray.size() == 1 ) { 
-      // In this case, material id -1 does not exist, but there is only one material, so return in:
+      // In this case, material id -1 does not exist, but there is only one material, so return it:
       bcDataArrayType::const_iterator   iter = d_BCDataArray.begin();
       const vector<BCGeomBase*>       & vbcg = iter->second;
       int                               the_size = vbcg.size();
@@ -484,7 +484,7 @@ BCDataArray::print() const
 {
   bcDataArrayType::const_iterator bcda_itr;
 
-  cout << "BCDataArray (size: " << d_BCDataArray.size() << "):  [" << this << "]\n";
+  cout << "BCDataArray (size: " << d_BCDataArray.size() << "):\n"; //   [" << this << "]\n";
 
   for( bcda_itr = d_BCDataArray.begin(); bcda_itr != d_BCDataArray.end(); bcda_itr++ ) {
     cout << "mat_id = " << bcda_itr->first << "\n";

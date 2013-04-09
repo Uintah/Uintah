@@ -45,9 +45,9 @@ DifferenceBCData::DifferenceBCData( BCGeomBase * p1, BCGeomBase * p2, const stri
   d_bcs = p1->d_bcs;
 
     cout << "DifferenceBCData(p1, p2, name, side) called for " << name << "\n";
-    cout << "    p1: " << p1->getName() << ", " << p1 << ", " << p1->getSide() << "\n";
-    cout << "    p2: " << p2->getName() << ", " << p2 << ", " << p2->getSide() << "\n";
-    cout << "this: " << this << "\n";
+    cout << "    p1: " << p1->getName() << /*", " << p1 <<*/ ", " << p1->getSide() << "\n";
+    cout << "    p2: " << p2->getName() << /*", " << p2 <<*/ ", " << p2->getSide() << "\n";
+    //    cout << "this: " << this << "\n";
   
     print(5);
 }
@@ -87,7 +87,7 @@ DifferenceBCData::print( int depth ) const
   string indentation( depth*2, ' ' );
   string indent2( depth*2+2, ' ' );
 
-  cout << indentation << "DifferenceBCData: " << d_name << ", " << this << "\n";
+  cout << indentation << "DifferenceBCData: " << d_name << "\n"; //, " << this << "\n";
 
   for( map<int,BCData*>::const_iterator itr = d_bcs.begin(); itr != d_bcs.end(); itr++ ) {
     itr->second->print( depth + 1 );
@@ -107,7 +107,7 @@ DifferenceBCData::determineIteratorLimits( const Patch::FaceType   face,
                                            const Patch           * patch,
                                            const vector<Point>   & test_pts )
 {
-  cout << "DifferenceBCData::determineIteratorLimits(): " << d_name << " (this: " << this << ")\n";
+  cout << "DifferenceBCData::determineIteratorLimits(): " << d_name << "\n"; // " (this: " << this << ")\n";
 
   map<int,const Patch*>::const_iterator iter = d_iteratorLimitsDetermined.find( patch->getID() );
 
@@ -123,7 +123,7 @@ DifferenceBCData::determineIteratorLimits( const Patch::FaceType   face,
     }
   }
 
-  cout << "DifferenceBCData::determineIteratorLimits(): " << d_name << " (this: " << this << ")\n";
+  cout << "DifferenceBCData::determineIteratorLimits(): " << d_name << "\n"; // (this: " << this << ")\n";
 
   d_left->determineIteratorLimits(  face, patch, test_pts );
   d_right->determineIteratorLimits( face, patch, test_pts );
@@ -141,7 +141,7 @@ DifferenceBCData::determineIteratorLimits( const Patch::FaceType   face,
 
   d_iteratorLimitsDetermined[ patch->getID() ] = patch;
 
-  cout << "Difference Limits: " << this << "\n";
+  cout << "End Difference Limits:\n"; // " << this << "\n";
   printLimits();
 }
 
