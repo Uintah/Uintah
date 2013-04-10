@@ -228,9 +228,9 @@ public:
 			double var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[0][lo_index[0]])*(iv[0]-ind_1[0][lo_index[0]])+ table_vals[0];
 
 
-      if (var_val < 0.0){ 
-        var_val = 0.0;
-      }
+//      if (var_val < 0.0){ 
+//        var_val = 0.0;
+//      }
 
 			return var_val;
 			
@@ -342,9 +342,9 @@ public:
 			
 			double var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+ table_vals[0];
 
-      if (var_val < 0.0){ 
-        var_val = 0.0;
-      }
+//      if (var_val < 0.0){ 
+//        var_val = 0.0;
+//      }
 			return var_val;
 			
 		};
@@ -473,9 +473,9 @@ public:
 
 			var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
 
-      if (var_val < 0.0){ 
-        var_val = 0.0;
-      }
+//      if (var_val < 0.0){ 
+//        var_val = 0.0;
+//      }
 			return var_val;
 		};
 	}; 
@@ -599,9 +599,9 @@ public:
 			
 			table_vals[0] = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
 			var_value = table_vals[0];
-      if (var_value < 0.0){ 
-        var_value = 0.0;
-      }
+//      if (var_value < 0.0){ 
+//        var_value = 0.0;
+//      }
 			return var_value;
 			
 		};
@@ -762,9 +762,9 @@ public:
 			table_vals[0] = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
 			
 			var_value = table_vals[0];
-      if (var_value < 0.0){ 
-        var_value = 0.0;
-      }
+//      if (var_value < 0.0){ 
+//        var_value = 0.0;
+//      }
 			return var_value;
 			
 		}
