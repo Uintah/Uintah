@@ -530,11 +530,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   t1->computes(inductionTimeLabel,      react_matl);
   t1->computes(countTimeLabel,          react_matl);
    
-  // if detonation occurs change the output interval
-  t1->requires(Task::OldDW, d_sharedState->get_outputInterval_label() );
-  t1->requires(Task::OldDW, d_sharedState->get_checkpointInterval_label() );  
-  
-  
+  // if detonation occurs change the output interval  
   t1->computes( d_sharedState->get_outputInterval_label() );
   t1->computes( d_sharedState->get_checkpointInterval_label() );
   d_sharedState->updateOutputInterval( true );
@@ -777,7 +773,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
     IntVector nodeIdx[8];
     
     bool press_switch_adj_IO  = false;  // switch based on pressure to adjust the I/O intervals
-    bool det_switch_adj_IO    = false;  // switch based on detonation to adjust the I/O intervals
+    bool det_switch_adj_IO    = false;  // switch based on detonation to adjust the I/O intervals    
     
     //__________________________________
     //  Loop over cells
@@ -1046,39 +1042,31 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
 
     //__________________________________
     // Update either the output and/or checkpoint intervals
-    min_vartype oldOUT, oldCKPT;
-    double newOUT, newCKPT;
-
-    old_dw->get( oldOUT,  d_sharedState->get_outputInterval_label() );
-    old_dw->get( oldCKPT, d_sharedState->get_checkpointInterval_label() );
-      
-    newOUT  = oldOUT;
-    newCKPT = oldCKPT; 
-      
     // pressure exceeding threshold detected
     if ( press_switch_adj_IO && d_adj_IO_Press->onOff && d_adj_IO_Press->nTimesSet == 0){
 
-      newOUT  = d_adj_IO_Press->output_interval;
-      newCKPT = d_adj_IO_Press->chkPt_interval;
+      double newOUT  = d_adj_IO_Press->output_interval;
+      double newCKPT = d_adj_IO_Press->chkPt_interval;
       d_adj_IO_Press->nTimesSet = 1;
       cout << "\n__________________________________pressure exceeding threshold detected " << endl;
       cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<<  endl;
+      
+      new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
+      new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
     }
     
     // detonation detected
     if ( det_switch_adj_IO && d_adj_IO_Det->onOff && d_adj_IO_Det->nTimesSet == 0){
 
-      newOUT  = d_adj_IO_Det->output_interval;
-      newCKPT = d_adj_IO_Det->chkPt_interval;
+      double newOUT  = d_adj_IO_Det->output_interval;
+      double newCKPT = d_adj_IO_Det->chkPt_interval;
       d_adj_IO_Det->nTimesSet = 1;
       cout << "__________________________________ Detonation detected " << endl;
       cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<< endl;
+      
+      new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
+      new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
     }
-    
-    new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
-    new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
-    
-
   }//End for{Patches}
 }//end Task
 
