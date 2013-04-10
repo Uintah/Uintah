@@ -779,6 +779,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
       Vector dxpp = patch->dCell()/obj->getInitialData_IntVector("res");    
       double dx   = Min(Min(dxpp.x(),dxpp.y()), dxpp.z());
       sgp->setParticleSpacing(dx);
+      sgp->setCellSize(patch->dCell());
       numPts = sgp->createPoints();
     }
     vector<Point>* points      = sgp->getPoints();

@@ -168,3 +168,9 @@ SmoothGeomPiece::setParticleSpacing(double dx)
 {
   d_dx = dx;
 }
+
+void 
+SmoothGeomPiece::setCellSize(Vector DX)
+{
+  d_DX = DX;
+}

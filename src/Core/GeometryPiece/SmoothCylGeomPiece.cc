@@ -467,6 +467,9 @@ SmoothCylGeomPiece::createHollowCylPoints()
         double x = currRadius*cosphi;
         double y = currRadius*sinphi;
         double z = 0;
+	Matrix3 size(1.0,0.0,0.0,
+		     0.0,1.0,0.0,
+      		     0.0,0.0,1.0);
      
         // Rotate points to correct orientation and
         // Translate to correct position
@@ -476,6 +479,7 @@ SmoothCylGeomPiece::createHollowCylPoints()
 
         d_points.push_back(p);
         d_volume.push_back(axisInc*area);
+        d_size.push_back(size);
         //cout << "Point["<<count<<"]="<<p<<endl;
         count++;
       }
