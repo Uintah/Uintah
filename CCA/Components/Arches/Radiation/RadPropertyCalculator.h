@@ -173,7 +173,8 @@ namespace Uintah {
                 double value = (species[i])[c] * _sp_mw[i-1] * (species[0])[c];
                 //              ^^species^^^^    ^^MW^^^^^^    ^^^MIX MW^^^^^^^
                 if ( value < 0 ){ 
-                  throw InvalidValue( "Error: For some reason I am getting negative mol fractions in the radiation property calculator.",__FILE__,__LINE__);
+                  if (vale > -1e-5 ) value = 0;
+                  else  throw InvalidValue( "Error: For some reason I am getting negative mol fractions in the radiation property calculator.",__FILE__,__LINE__);
                 } 
                 mol_frac.push_back(value); 
               } 
