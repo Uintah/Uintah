@@ -2811,7 +2811,7 @@ if test "$with_mkl"; then
   elif test "$with_mkl"; then
     _sci_lib="$with_mkl/lib"
     _sci_inc="$with_mkl/include"
-    _sci_optional=specific
+    # _sci_optional=specific TESTING FOR SPECIFIC NOT IMPLEMENTED!!!
   fi
 
   case $host in
@@ -2819,25 +2819,27 @@ if test "$with_mkl"; then
        AC_MSG_ERROR(We recommend that you don't use MKL on a Mac... use the default vecLib instead.)
        ;;
      *)
-       # Newer version of MKL doesn't have libguide, so need two separate checks...
+       test_libs[[1]]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
+       test_libs[[2]]="mkl mkl_core mkl_intel_lp64"
+       test_libs[[3]]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
 
-       if test -e $_sci_lib/libguide.$SO_OR_ARCHIVE_EXTENSION; then
-         SCI_TRY_LINK(BLAS,1 - mkl version of (blas/lapack) libraries and headers,mkl_cblas.h mkl_lapack.h,
-                      $_sci_inc,mkl mkl_core mkl_intel_lp64 guide,$_sci_lib,
-                      $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG,[
+       num_libs=${#test_libs[*]}
+
+       for (( num=0; num<$num_libs; num++ ));
+       do
+          the_libs=${test_libs[[$num]]}
+          SCI_TRY_LINK(BLAS,${num} - mkl version of (blas/lapack) libraries and headers,mkl_cblas.h mkl_lapack.h,
+                       $_sci_inc,$the_libs,$_sci_lib,
+                       $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG,[
                                                                     float x[]={0.7f};
                                                                     float y[]={0.8f};
                                                                     float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
-                                                                    ],$_sci_optional)
-       else
-         SCI_TRY_LINK(BLAS,2 - mkl version of (blas/lapack) libraries and headers,mkl_cblas.h mkl_lapack.h,
-                      $_sci_inc,mkl mkl_core mkl_intel_lp64,$_sci_lib,
-                      $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG,[
-                                                                    float x[]={0.7f};
-                                                                    float y[]={0.8f};
-                                                                    float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
-                                                                    ],$_sci_optional)
-       fi
+                                                                    ],optional)
+          if test "$HAVE_BLAS" = "yes"; then
+             # FIXME: Really need to do 'specific' test here...
+             break
+          fi
+       done								    
 
        ;;
   esac
