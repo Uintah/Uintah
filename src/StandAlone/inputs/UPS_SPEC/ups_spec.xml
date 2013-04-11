@@ -240,6 +240,7 @@
       <tri                    spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
+      <smoothcyl              spec="MULTIPLE" />
     </union>
 
     <!-- FIXME: only can have 2 children, right? how to specify? -->
