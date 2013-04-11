@@ -553,8 +553,13 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* finePatch,
 }
 
 /*_____________________________________________________________________
- Function~  AMRICE::CoarseToFineOperator--
+ Method~  AMRICE::CoarseToFineOperator--
  Purpose~   push data from coarse Grid to the fine grid
+ 
+This method initializes the variables on all patches that the regridder
+creates.  The BNR and Hierarchical regridders will create patches that 
+are partially filled with old data.  We don't
+want to overwrite these data, thus only use the tiled regridder
 _____________________________________________________________________*/
 template<class T>
 void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
