@@ -78,8 +78,9 @@ be set to 1). A shortcut to this is to set min- and max\_grid\_level to
 The presence of the Regridder section specifies you want to run an
 adaptive problem.
 \begin{itemize}
-\item type (optional) - sets the Regridder type. The options are
-  "Tiled", "BNR" (Berger-Rigoutsos), "Hierarchical" (default).
+  \item type (optional) - sets the Regridder type. The options are
+   "Tiled", "BNR" (Berger-Rigoutsos), "Hierarchical" (default).
+  \red{Only the "Tiled" regridder can be used with ICE, AMRICE, MPMAMRICE problems.}
  \item max\_levels - maximum number of levels to create in the grid. 
  \item cell\_refinement\_ratio - How much to refine a cell in each
    dimension. This can be specified in a comma-separated list, as in
