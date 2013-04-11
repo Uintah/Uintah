@@ -186,7 +186,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-        <cfl>0.25</cfl>
+        <cfl>0.1</cfl>
        <ICE>
         <advection type = "FirstOrder" />
        
@@ -197,7 +197,7 @@
         
         <ImplicitSolver>
            <max_outer_iterations>           1     </max_outer_iterations>
-           <outer_iteration_tolerance>      1e-8  </outer_iteration_tolerance>
+           <outer_iteration_tolerance>      1e-7  </outer_iteration_tolerance>
            <iters_before_timestep_restart>  10    </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
             <solver>         amg     </solver>
@@ -222,12 +222,13 @@
           <Variable name = "press_CC"  value = "1e3" matl = "0" />
         </Refinement_Criteria_Thresholds>
       </ICE>
-      <Regridder type="Hierarchical">
-        <max_levels>2</max_levels>
-        <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
-        <lattice_refinement_ratio> [[5,5,1][2,2,1]]  </lattice_refinement_ratio>
-        <cell_stability_dilation>   [4,4,0]   </cell_stability_dilation>   
-        <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
+      
+      <Regridder type="Tiled">
+        <max_levels>                   2        </max_levels>
+        <cell_refinement_ratio>    [[2,2,1]]    </cell_refinement_ratio>
+        <cell_stability_dilation>   [4,4,0]     </cell_stability_dilation>
+        <min_patch_size>           [[10,10,1]]  </min_patch_size>   
+        <min_boundary_cells>       [1,1,0]      </min_boundary_cells>
       </Regridder>
       <useLockStep>       true  </useLockStep>
     </AMR>

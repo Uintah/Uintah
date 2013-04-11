@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+ 77<?xml version="1.0" encoding="UTF-8"?>
 <!-- @version: -->
 <Uintah_specification>
    <Meta>
@@ -148,7 +148,7 @@
         <max_grid_level>-1</max_grid_level>
       </MPM>
 
-      <Regridder type="BNR">
+      <Regridder type="Tiled">
         <min_patch_size> [[16,16,1][16,16,1]] </min_patch_size>
         <patch_ratio_to_target>.25</patch_ratio_to_target>
         <max_levels>                  3       </max_levels>

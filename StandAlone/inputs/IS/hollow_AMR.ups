@@ -176,8 +176,8 @@
         <max_grid_level>-1</max_grid_level>
       </MPM>
 
-      <Regridder type="BNR">
-        <min_patch_size> [[8,8,1]]   </min_patch_size>
+      <Regridder type="Tiled">
+        <min_patch_size>           [[8,8,1]]  </min_patch_size>
         <max_levels>                  3       </max_levels>
         <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
         <cell_stability_dilation>   [1,1,0]   </cell_stability_dilation>
@@ -187,7 +187,6 @@
       </Regridder>
 
       <useLockStep>       true </useLockStep>
-      <!--<doMultiTaskgraphing>true</doMultiTaskgraphing> -->
     </AMR> 
     
     
@@ -229,7 +228,7 @@
     <MaterialProperties>
        <MPM>
          <material name="Steel Ring">
-           <include href="inputs/MPM/MaterialData/MatConst4340St.xml"/>
+           <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
            <constitutive_model type="elastic_plastic">
              <isothermal>                    false </isothermal>
              <tolerance>                  1.0e-10  </tolerance>
@@ -247,14 +246,14 @@
              <!-- Warning: you must copy link this input file into your -->
              <!-- sus directory or these paths won't work.              -->
 
-             <include href="inputs/MPM/MaterialData/IsoElastic4340St.xml"/>
-             <include href="inputs/MPM/MaterialData/MieGrunEOS4340St.xml"/>
+             <include href="inputs/MPM/MaterialData/IsotropicElastic4340Steel.xml"/>
+             <include href="inputs/MPM/MaterialData/MieGruneisenEOS4340Steel.xml"/>
              <include href="inputs/MPM/MaterialData/ConstantShear.xml"/>
              <include href="inputs/MPM/MaterialData/ConstantTm.xml"/>
-             <include href="inputs/MPM/MaterialData/JCPlastic4340St.xml"/>
+             <include href="inputs/MPM/MaterialData/JohnsonCookPlastic4340Steel.xml"/>
              <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
              <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
-             <include href="inputs/MPM/MaterialData/JCDamage4340St.xml"/>
+             <include href="inputs/MPM/MaterialData/JohnsonCookDamage4340Steel.xml"/>
              <specific_heat_model type="steel_Cp"> </specific_heat_model>
 
              <initial_mean_porosity>         0.005 </initial_mean_porosity>

@@ -169,19 +169,15 @@
         </Refinement_Criteria_Thresholds>
       </ICE>
        
-      <Regridder type="BNR">
-        <max_levels>3</max_levels>
+      <Regridder type="Tiled">
+        <max_levels>                   3       </max_levels>
         <cell_refinement_ratio>    [[4,4,1]]   </cell_refinement_ratio>
         <cell_stability_dilation>   [1,1,0]    </cell_stability_dilation>   
-        <min_boundary_cells>       [1,1,0]     </min_boundary_cells>
+        <min_boundary_cells>        [1,1,0]    </min_boundary_cells>
  
-
-        <patch_split_tolerance>     1          </patch_split_tolerance>
-        <patch_combine_tolerance>   1          </patch_combine_tolerance>
         <patches_per_level_per_proc> 8         </patches_per_level_per_proc>
         <cell_regrid_dilation>     [1,1,0]     </cell_regrid_dilation>
         <min_patch_size>          [[8,8,1]]    </min_patch_size>
-        <dynamic_dilation>      false          </dynamic_dilation>
   
       </Regridder>
       
