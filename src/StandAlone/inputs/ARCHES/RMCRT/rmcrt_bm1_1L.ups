@@ -209,6 +209,7 @@
                 <randomSeed>         false     </randomSeed>
                 <abskg>             999        </abskg>
                 <NoOfRays>          5          </NoOfRays>
+                <nFluxRays>         1000           </nFluxRays>
                 <Threshold>         0.05       </Threshold>
                 <solveBoundaryFlux> true       </solveBoundaryFlux>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>

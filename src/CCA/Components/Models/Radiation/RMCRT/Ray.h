@@ -219,8 +219,8 @@ namespace Uintah{
       
        
       int    _NoOfRays;                      // number of rays per cell used to compute divQ
-      int    _NoRadRays;                     // number of rays per radiometer used to compute radiative flux
-      int    _NoOfFluxRays;                    // number of rays per cell used to compute radiative flux
+      int    _nRadRays;                     // number of rays per radiometer used to compute radiative flux
+      int    _nFluxRays;                    // number of rays per cell used to compute radiative flux
       int    d_matl;
       int    d_orderOfInterpolation;         // Order of interpolation for interior fine patch
       
