@@ -371,26 +371,16 @@ AMRSimulationController::run()
      // a component may update the output interval or the checkpoint interval
      // during a simulation.  For example in deflagration -> detonation simulations
      if (d_output && d_sharedState->updateOutputInterval()) {
-       //if no value computed such as during the init timestep, use the value from ups file
-       if (!oldDW->exists(d_sharedState->get_outputInterval_label())) {
-         oldDW->override(min_vartype(d_output->getOutputInterval()),d_sharedState->get_outputInterval_label());
-       } else {
          min_vartype outputInv_var;
          oldDW->get(outputInv_var, d_sharedState->get_outputInterval_label());
-         d_output->updateOutputInterval(outputInv_var);
-       }
+         if (!outputInv_var.isBenignValue()) d_output->updateOutputInterval(outputInv_var);
      }
 
      if (d_output && d_sharedState->updateCheckpointInterval()) {
-       if (!oldDW->exists(d_sharedState->get_checkpointInterval_label())) {
-         oldDW->override(min_vartype(d_output->getCheckpointInterval()),d_sharedState->get_checkpointInterval_label());
-       } else {
          min_vartype checkInv_var;
          oldDW->get(checkInv_var, d_sharedState->get_checkpointInterval_label());
-         d_output->updateCheckpointInterval(checkInv_var);
-       }
+         if (!checkInv_var.isBenignValue()) d_output->updateCheckpointInterval(checkInv_var);
      }
-     
  
      calcWallTime();
 
