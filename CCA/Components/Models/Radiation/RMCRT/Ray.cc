@@ -128,7 +128,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
                    const ProblemSpecP& rmcrtps) 
 {
   ProblemSpecP rmcrt_ps = rmcrtps;
-  rmcrt_ps->getWithDefault( "NoOfRays"  ,       _NoOfRays  ,      1000 );
+  rmcrt_ps->getWithDefault( "NoOfRays"  ,       _NoOfRays  ,      10 );
   rmcrt_ps->getWithDefault( "Threshold" ,       _Threshold ,      0.01 );       // When to terminate a ray
   rmcrt_ps->getWithDefault( "randomSeed",       _isSeedRandom,    true );       // random or deterministic seed.
   rmcrt_ps->getWithDefault( "benchmark" ,       _benchmark,       0 );  
@@ -140,8 +140,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "VROrientation"  ,  _orient,          Vector(0,0,1) );     // Normal vector of the radiometer orientation (Cartesian)
   rmcrt_ps->getWithDefault( "VRLocationsMin" ,  _VRLocationsMin,  IntVector(0,0,0) );  // minimum extent of the string or block of virtual radiometers
   rmcrt_ps->getWithDefault( "VRLocationsMax" ,  _VRLocationsMax,  IntVector(0,0,0) );  // maximum extent of the string or block or virtual radiometers
-  rmcrt_ps->getWithDefault( "NoRadRays"  ,      _NoRadRays  ,      1000 );
-  rmcrt_ps->getWithDefault( "NoOfFluxRays" ,    _NoOfFluxRays,     1000 );             // number of rays per cell for computation of boundary fluxes
+  rmcrt_ps->getWithDefault( "nRadRays"  ,      _nRadRays  ,      1000 );
+  rmcrt_ps->getWithDefault( "nFluxRays" ,    _nFluxRays,     500 );             // number of rays per cell for computation of boundary fluxes
   rmcrt_ps->getWithDefault( "sigmaScat"  ,      _sigmaScat  ,      0 );                // scattering coefficient
   rmcrt_ps->getWithDefault( "abskgBench4"  ,    _abskgBench4,      1 );                // absorption coefficient specific to Bench4
   rmcrt_ps->get(              "shouldSetBCs" ,  _onOff_SetBCs );                       // ignore applying boundary conditions
@@ -197,9 +197,9 @@ cout<< endl << "RAY_SCATTER IS DEFINED" << endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
-  if (_virtRad && _NoRadRays < int(15 + pow(5.4, _viewAng/40) ) ){
+  if (_virtRad && _nRadRays < int(15 + pow(5.4, _viewAng/40) ) ){
     ostringstream warn;
-    warn << "Number of rays:  ("<< _NoRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, _viewAng/40) ) <<"). Errors will exceed 1%. " << endl;
+    warn << "Number of rays:  ("<< _nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, _viewAng/40) ) <<"). Errors will exceed 1%. " << endl;
   } 
 
   //__________________________________
@@ -613,7 +613,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           double sldAngl   = 0; // solid angle of VR
           double VRTheta   = 0; // the polar angle of each ray from the radiometer normal
           // ray loop
-          for (int iRay=0; iRay < _NoRadRays; iRay++){
+          for (int iRay=0; iRay < _nRadRays; iRay++){
             
             if(_isSeedRandom == false){
               _mTwister.seed((i + j +k) * iRay +1);
@@ -716,7 +716,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
        
           //__________________________________
           //  Compute VRFlux
-          VRFlux[origin] = sumProjI * sldAngl/_NoRadRays;
+          VRFlux[origin] = sumProjI * sldAngl/_nRadRays;
         } // end of VR extents
       } // end if _virtRad
     } // end VR cell iterator
@@ -857,7 +857,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
           //__________________________________
           // Flux ray loop
-          for (int iRay=0; iRay < _NoOfFluxRays; iRay++){
+          for (int iRay=0; iRay < _nFluxRays; iRay++){
 
             IntVector cur = origin;
 
@@ -907,8 +907,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
           //__________________________________
           //  Compute Net Flux to the boundary
-          //itr->second.net = sumProjI * 2*_pi/_NoOfFluxRays - abskg[origin] * sigmaT4OverPi[origin] * _pi; // !!origin is a flow cell, not a wall
-          double fluxIn = sumProjI * 2 *_pi/_NoOfFluxRays;
+          //itr->second.net = sumProjI * 2*_pi/_nFluxRays - abskg[origin] * sigmaT4OverPi[origin] * _pi; // !!origin is a flow cell, not a wall
+          double fluxIn = sumProjI * 2 *_pi/_nFluxRays;
           switch(face){
           case 0 : boundFlux[origin].w = fluxIn; break;
           case 1 : boundFlux[origin].e = fluxIn; break;
@@ -917,7 +917,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           case 4 : boundFlux[origin].b = fluxIn; break;
           case 5 : boundFlux[origin].t = fluxIn; break;
           }
-          if(_benchmark==5)fprintf(f, "%lf \n",sumProjI * 2*_pi/_NoOfFluxRays);
+          if(_benchmark==5)fprintf(f, "%lf \n",sumProjI * 2*_pi/_nFluxRays);
 
 
         } // end of looping through the vector boundaryFaces

@@ -133,6 +133,6 @@
     <VROrientation>     [-1,0,0]     </VROrientation>
     <VRLocationsMin>    [0,0,0]      </VRLocationsMin>
     <VRLocationsMax>    [20,20,20]   </VRLocationsMax>
-    <NoRadRays>          10          </NoRadRays>
+    <nRadRays>          10          </nRadRays>
   </RMCRT>
 </Uintah_specification>

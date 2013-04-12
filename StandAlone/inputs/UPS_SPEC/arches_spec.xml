@@ -796,8 +796,8 @@
               <VROrientation             spec="OPTIONAL VECTOR"/>
               <VRLocationsMin            spec="OPTIONAL VECTOR 'positive'"/>
               <VRLocationsMax            spec="OPTIONAL VECTOR 'positive'"/>
-              <NoRadRays                 spec="OPTIONAL INTEGER 'positive'"/>        
-              <NoOfFluxRays              spec="OPTIONAL INTEGER 'positive'"/>        
+              <nRadRays                 spec="OPTIONAL INTEGER 'positive'"/>        
+              <nFluxRays              spec="OPTIONAL INTEGER 'positive'"/>        
               <halo                      spec="OPTIONAL VECTOR 'positive'"/>
               <allowReflect              spec="OPTIONAL BOOLEAN"/>
               <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
