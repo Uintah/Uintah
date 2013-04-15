@@ -245,8 +245,12 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, vector<MPI_
     }
   }
   if (dbg.active() && numReceived>0) {
-    dbg << pg->myrank() << " Time: " << Time::currentSeconds() << " , NumReceived= "
+    if (pg->myrank() == pg->size()/2) {
+      cerrLock.lock();
+      dbg << pg->myrank() << " Time: " << Time::currentSeconds() << " , NumReceived= "
          << numReceived << " , VolReceived: " << volReceived << endl;
+      cerrLock.unlock();
+    }
   }
   if(donecount == (int)ids.size()){
     ASSERT(totalBytes_==0);
