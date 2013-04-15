@@ -360,8 +360,10 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       runTask(task, iteration);
       numTasksDone++;
       if (taskorder.active()){
-        taskorder << d_myworld->myrank() << " Running task static order: " <<  task->getSaticOrder() << " , scheduled order: "
+        if (d_myworld->myrank() == d_myworld->size()/2) {
+          taskorder << d_myworld->myrank() << " Running task static order: " <<  task->getSaticOrder() << " , scheduled order: "
                 << numTasksDone << endl;
+        }
       }
       phaseTasksDone[task->getTask()->d_phase]++;
       //cout << d_myworld->myrank() << " finished task(0) " << *task << " scheduled in phase: " << task->getTask()->d_phase << ", tasks finished in that phase: " <<  phaseTasksDone[task->getTask()->d_phase] << " current phase:" << currphase << endl; 
@@ -396,8 +398,10 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
       numTasksDone++;
       if (taskorder.active()){
-        taskorder << d_myworld->myrank() << " Running task static order: " <<  task->getSaticOrder() << " , scheduled order: "
+        if (d_myworld->myrank() == d_myworld->size()/2) {
+          taskorder << d_myworld->myrank() << " Running task static order: " <<  reducetask->getSaticOrder() << " , scheduled order: "
                 << numTasksDone << endl;
+        }
       }
       phaseTasksDone[reducetask->getTask()->d_phase]++;
       //taskdbg << d_myworld->myrank() << " finished reduction task(1) " << *reducetask << " scheduled in phase: " << reducetask->getTask()->d_phase << ", tasks finished in that phase: " <<  phaseTasksDone[reducetask->getTask()->d_phase] << " current phase:" << currphase << endl; 
