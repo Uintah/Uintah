@@ -370,13 +370,13 @@ AMRSimulationController::run()
 
      // a component may update the output interval or the checkpoint interval
      // during a simulation.  For example in deflagration -> detonation simulations
-     if (d_output && d_sharedState->updateOutputInterval()) {
+     if (d_output && d_sharedState->updateOutputInterval() && iterations > 1) {
          min_vartype outputInv_var;
          oldDW->get(outputInv_var, d_sharedState->get_outputInterval_label());
          if (!outputInv_var.isBenignValue()) d_output->updateOutputInterval(outputInv_var);
      }
 
-     if (d_output && d_sharedState->updateCheckpointInterval()) {
+     if (d_output && d_sharedState->updateCheckpointInterval() && iterations > 1) {
          min_vartype checkInv_var;
          oldDW->get(checkInv_var, d_sharedState->get_checkpointInterval_label());
          if (!checkInv_var.isBenignValue()) d_output->updateCheckpointInterval(checkInv_var);
@@ -1025,6 +1025,7 @@ AMRSimulationController::reduceSysVar( const ProcessorGroup*,
                                       DataWarehouse* new_dw )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::reduceSysVar()");
+ 
   // the goal of this task is to line up the delt across all levels.  If the coarse one
   // already exists (the one without an associated level), then we must not be doing AMR
   if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_delt_label(), -1, 0)) {
@@ -1048,11 +1049,32 @@ AMRSimulationController::reduceSysVar( const ProcessorGroup*,
       }
     }
   }
-  if (d_myworld->size() > 1) {
+  
+  if (d_myworld->size() > 1) 
     new_dw->reduceMPI(d_sharedState->get_delt_label() , 0 , 0 , -1 ) ;
-    if (d_sharedState->updateOutputInterval())
+
+  // reduce output interval and checkpoint interval 
+  // if no value computed on that MPI rank,  benign value will be set
+  // when the reduction result is also benign value, this value will be ignored 
+  // that means no MPI rank want to change the interval
+
+  if (d_sharedState->updateOutputInterval()) {
+    if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_outputInterval_label(), -1, 0)) {
+      min_vartype inv;
+      inv.setBenignValue();
+      new_dw->put(inv, d_sharedState->get_outputInterval_label());
+    }
+    if (d_myworld->size() > 1) 
       new_dw->reduceMPI(d_sharedState->get_outputInterval_label() , 0 , 0 , -1 ) ;
-    if (d_sharedState->updateCheckpointInterval())
+  }
+
+  if (d_sharedState->updateCheckpointInterval()) {
+    if (patches->size() != 0 && !new_dw->exists(d_sharedState->get_checkpointInterval_label(), -1, 0)) {
+      min_vartype inv;
+      inv.setBenignValue();
+      new_dw->put(inv, d_sharedState->get_checkpointInterval_label());
+    }
+    if (d_myworld->size() > 1) 
       new_dw->reduceMPI(d_sharedState->get_checkpointInterval_label() , 0 , 0 , -1 ) ;
   }
 }
