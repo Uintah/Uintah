@@ -530,12 +530,14 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   t1->computes(inductionTimeLabel,      react_matl);
   t1->computes(countTimeLabel,          react_matl);
    
-  // if detonation occurs change the output interval  
-  t1->computes( d_sharedState->get_outputInterval_label() );
-  t1->computes( d_sharedState->get_checkpointInterval_label() );
-  d_sharedState->updateOutputInterval( true );
-  d_sharedState->updateCheckpointInterval( true ); 
-   
+  // if detonation occurs change the output interval  
+  if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
+    t1->computes( d_sharedState->get_outputInterval_label() );
+    t1->computes( d_sharedState->get_checkpointInterval_label() );
+    d_sharedState->updateOutputInterval( true );
+    d_sharedState->updateCheckpointInterval( true ); 
+  } 
+  
   sched->addTask(t1, level->eachPatch(), d_mymatls);    
     
     
