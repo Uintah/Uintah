@@ -42,7 +42,14 @@ Expr::Tag vreman_tensormagnitude_tag();
  *  \date   Jan, 2012. (Originally created: June, 2012).
  *  \ingroup Expressions
  *
- *  \brief given all components of the velocity, \f$u_i\f$, this calculates strain tensor magnitude, \f$|\tilde{S}|=(2\tilde{S_{kl}}\tilde{S_{kl}})^{1/2}\f$ where \f$S_{kl}=\frac{1}{2}(\frac{\partial\tilde{u}_k}{\partial x_l}+\frac{\partial\tilde{u}_l}{\partial x_k})\f$.
+ *  \brief Given filtered components of a velocity field, \f$\bar{u}_i\f$, this 
+ expression calculates the square of the filtered strain tensor magnitude,
+ \f$\tilde{S}_{kl}\tilde{S}_{kl}\f$ where
+ \f$S_{kl}=\frac{1}{2}(\frac{\partial\tilde{u}_k}{\partial x_l}+\frac{\partial\tilde{u}_l}{\partial x_k})\f$.
+ Note that \f$ \tilde{S}_{kl}\tilde{S}_{kl} \equiv \tfrac{1}{2}|\tilde{S}|^2 \f$.
+ The reason for calculating \f$ \tfrac{1}{2}|\tilde{S}|^2 \f$ instead of \f$ |\tilde{S}| \f$
+ is that it will be used in the WALE and VREMAN models which makes it easy to implement
+ a unified interface across these turbulence models.
  *
  */
 class StrainTensorMagnitude
