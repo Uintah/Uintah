@@ -148,7 +148,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     index_length = temp_moment_index.size();
   }
 
-  db->getWithDefault("save_moments", b_save_moments, true);
+  db->getWithDefault("save_moments", b_save_moments, false);
 #if defined(VERIFY_AB_CONSTRUCTION) || defined(VERIFY_LINEAR_SOLVER)
   b_save_moments = false;
 #endif
