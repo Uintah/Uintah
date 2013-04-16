@@ -328,7 +328,6 @@ AMRSimulationController::run()
          // writes to the DW in the next section below
          delt = new_init_delt;
        }
-       first = false;
        recompile( time, delt, currentGrid, totalFine );
      }
      else {
@@ -370,18 +369,20 @@ AMRSimulationController::run()
 
      // a component may update the output interval or the checkpoint interval
      // during a simulation.  For example in deflagration -> detonation simulations
-     if (d_output && d_sharedState->updateOutputInterval() && iterations > 1) {
+     if (d_output && d_sharedState->updateOutputInterval() && !first ) {
          min_vartype outputInv_var;
          oldDW->get(outputInv_var, d_sharedState->get_outputInterval_label());
          if (!outputInv_var.isBenignValue()) d_output->updateOutputInterval(outputInv_var);
      }
 
-     if (d_output && d_sharedState->updateCheckpointInterval() && iterations > 1) {
+     if (d_output && d_sharedState->updateCheckpointInterval() && !first ) {
          min_vartype checkInv_var;
          oldDW->get(checkInv_var, d_sharedState->get_checkpointInterval_label());
          if (!checkInv_var.isBenignValue()) d_output->updateCheckpointInterval(checkInv_var);
      }
  
+     if (first) first = false;
+
      calcWallTime();
 
      printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
