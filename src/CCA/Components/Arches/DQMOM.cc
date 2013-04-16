@@ -378,7 +378,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
 }
 
 // **********************************************
-// Actually solve system
+// Actually solve systems
 // **********************************************
 void
 DQMOM::solveLinearSystem( const ProcessorGroup* pc,  
@@ -570,19 +570,23 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
       
-      int dimension = (N_xi+1)*N_;
-     
+      int dimension = (N_xi+1)*N_; 
+        
       if (b_optimize == true) {
         ColumnMatrix* BB = scinew ColumnMatrix( dimension );
         ColumnMatrix* XX = scinew ColumnMatrix( dimension );
         BB->zero();
+        double start_AXBConstructionTime = Time::currentSeconds();
         //if(d_unweighted == true){
           constructBopt_unw( BB, d_opt_abscissas, models );
         //} else {
         //  constructBopt( BB, weights, d_opt_abscissas, models );
         //}
-
+          
+        total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime;
+        double start_SolveTime = Time::currentSeconds(); //timing 
         Mult( (*XX), (*AAopt), (*BB) );
+        total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
 
         int z=0; // equation loop counter
 
@@ -1366,6 +1370,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   } else if( d_solverType == "LU" ) {
     proc0cout << "    Time for Crout's Method solution: " << total_SolveTime << " seconds\n";
 
+  }else if( d_solverType == "Optimize"){
+    proc0cout << " Time for Optimized Method solution: " << total_SolveTime << "seconds\n";
   }
 
 #endif
