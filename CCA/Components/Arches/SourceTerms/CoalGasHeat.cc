@@ -124,27 +124,24 @@ CoalGasHeat::computeSource( const ProcessorGroup* pc,
       heatSrc.initialize(0.0);
     } 
 
+    for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
+      std::string model_name = _heat_model_name; 
+      std::string node;  
+      std::stringstream out; 
+      out << iqn; 
+      node = out.str(); 
+      model_name += "_qn";
+      model_name += node;
 
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
+      ModelBase& model = modelFactory.retrieve_model( model_name ); 
 
-
-      for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-        std::string model_name = _heat_model_name; 
-        std::string node;  
-        std::stringstream out; 
-        out << iqn; 
-        node = out.str(); 
-        model_name += "_qn";
-        model_name += node;
-
-        ModelBase& model = modelFactory.retrieve_model( model_name ); 
-
-        constCCVariable<double> qn_gas_heat;
-        const VarLabel* gasModelLabel = model.getGasSourceLabel(); 
+      constCCVariable<double> qn_gas_heat;
+      const VarLabel* gasModelLabel = model.getGasSourceLabel(); 
  
-        old_dw->get( qn_gas_heat, gasModelLabel, matlIndex, patch, gn, 0 );
+      old_dw->get( qn_gas_heat, gasModelLabel, matlIndex, patch, gn, 0 );
 
+      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
         heatSrc[c] += qn_gas_heat[c];
         //cout << "Heat source " << qn_gas_heat[c] << " " << node << " " << heatSrc[c] << endl;
       }
