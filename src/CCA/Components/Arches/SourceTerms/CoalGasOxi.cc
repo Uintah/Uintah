@@ -115,26 +115,27 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
     } 
 
 
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
 
 
-      for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-        std::string model_name = _oxi_model_name; 
-        std::string node;  
-        std::stringstream out; 
-        out << iqn; 
-        node = out.str(); 
-        model_name += "_qn";
-        model_name += node;
 
-        ModelBase& model = modelFactory.retrieve_model( model_name ); 
+    for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
+      std::string model_name = _oxi_model_name; 
+      std::string node;  
+      std::stringstream out; 
+      out << iqn; 
+      node = out.str(); 
+      model_name += "_qn";
+      model_name += node;
 
-        constCCVariable<double> qn_gas_oxi;
-        const VarLabel* gasModelLabel = model.getGasSourceLabel(); 
+      ModelBase& model = modelFactory.retrieve_model( model_name ); 
+
+      constCCVariable<double> qn_gas_oxi;
+      const VarLabel* gasModelLabel = model.getGasSourceLabel(); 
  
-        old_dw->get( qn_gas_oxi, gasModelLabel, matlIndex, patch, gn, 0 );
+      old_dw->get( qn_gas_oxi, gasModelLabel, matlIndex, patch, gn, 0 );
 
+      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+              IntVector c = *iter;
         oxiSrc[c] += qn_gas_oxi[c]; // All the work is performed in Char Oxidation model
       }
     }

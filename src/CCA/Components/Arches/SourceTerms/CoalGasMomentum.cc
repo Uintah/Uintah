@@ -166,56 +166,57 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       //old_dw->get( *iter.... ); 
     }
 
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
 
-       for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-        //std::string model_name = d_dragModelName; 
-        //std::string node;  
-        //std::stringstream out; 
-        //out << iqn; 
-        //node = out.str(); 
-        //model_name += "_qn";
-        //model_name += node;
 
-        //ModelBase& model = modelFactory.retrieve_model( model_name ); 
+    for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
+      //std::string model_name = d_dragModelName; 
+      //std::string node;  
+      //std::stringstream out; 
+      //out << iqn; 
+      //node = out.str(); 
+      //model_name += "_qn";
+      //model_name += node;
 
-        Vector qn_gas_drag;
+      //ModelBase& model = modelFactory.retrieve_model( model_name ); 
 
-        constCCVariable<double> qn_gas_xdrag;
-        std::string model_name = "xdragforce";
-        std::string node;
-        std::stringstream out;
-        out << iqn;
-        node = out.str();
-        model_name += "_qn";
-        model_name += node;
+      Vector qn_gas_drag;
 
-        ModelBase& modelx = modelFactory.retrieve_model( model_name );
+      constCCVariable<double> qn_gas_xdrag;
+      std::string model_name = "xdragforce";
+      std::string node;
+      std::stringstream out;
+      out << iqn;
+      node = out.str();
+      model_name += "_qn";
+      model_name += node;
 
-        const VarLabel* XDragGasLabel = modelx.getGasSourceLabel();  
-        old_dw->get( qn_gas_xdrag, XDragGasLabel, matlIndex, patch, gn, 0 );
+      ModelBase& modelx = modelFactory.retrieve_model( model_name );
 
-        constCCVariable<double> qn_gas_ydrag;
-        model_name = "ydragforce";
-        model_name += "_qn";
-        model_name += node;
+      const VarLabel* XDragGasLabel = modelx.getGasSourceLabel();  
+      old_dw->get( qn_gas_xdrag, XDragGasLabel, matlIndex, patch, gn, 0 );
 
-        ModelBase& modely = modelFactory.retrieve_model( model_name );
+      constCCVariable<double> qn_gas_ydrag;
+      model_name = "ydragforce";
+      model_name += "_qn";
+      model_name += node;
 
-        const VarLabel* YDragGasLabel = modely.getGasSourceLabel();
-        old_dw->get( qn_gas_ydrag, YDragGasLabel, matlIndex, patch, gn, 0 );
+      ModelBase& modely = modelFactory.retrieve_model( model_name );
 
-        constCCVariable<double> qn_gas_zdrag;
-        model_name = "zdragforce";
-        model_name += "_qn";
-        model_name += node;
+      const VarLabel* YDragGasLabel = modely.getGasSourceLabel();
+      old_dw->get( qn_gas_ydrag, YDragGasLabel, matlIndex, patch, gn, 0 );
 
-        ModelBase& modelz = modelFactory.retrieve_model( model_name );
+      constCCVariable<double> qn_gas_zdrag;
+      model_name = "zdragforce";
+      model_name += "_qn";
+      model_name += node;
 
-        const VarLabel* ZDragGasLabel = modelz.getGasSourceLabel();
-        old_dw->get( qn_gas_zdrag, ZDragGasLabel, matlIndex, patch, gn, 0 );
+      ModelBase& modelz = modelFactory.retrieve_model( model_name );
 
+      const VarLabel* ZDragGasLabel = modelz.getGasSourceLabel();
+      old_dw->get( qn_gas_zdrag, ZDragGasLabel, matlIndex, patch, gn, 0 );
+
+      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter; 
         qn_gas_drag = Vector(qn_gas_xdrag[c],qn_gas_ydrag[c],qn_gas_zdrag[c]);
 
         dragSrc[c] += qn_gas_drag; // All the work is performed in Drag model
