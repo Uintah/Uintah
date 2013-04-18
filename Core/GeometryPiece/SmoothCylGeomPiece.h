@@ -52,10 +52,10 @@ namespace Uintah {
           C-SAFE and Department of Mechanical Engineering \n
           University of Utah \n
 
-   Creates a smooth solid/hollow cylinder with/without end-caps from the 
+   Creates a smooth cylinder with/without end-caps from the 
    xml input 
    file description.
-   The input form for a solid cylinder looks like this: \n
+   The input form for a cylinder looks like this: \n
    \verbatim
    <smoothcyl> 
      <bottom>[0.0,0.0,0.0]</bottom> 
@@ -140,16 +140,10 @@ namespace Uintah {
     int createEndCapPoints();
 
     //////////////////////////////////////////////////////////////////////
-    /*! Creates the particles for the solid cylinder */
+    /*! Creates the particles for the cylinder */
     //////////////////////////////////////////////////////////////////////
-    int createSolidCylPoints();
+    int createCylPoints();
 
-    //////////////////////////////////////////////////////////////////////
-    /*! Creates the particles for the hollow cylinder */
-    //////////////////////////////////////////////////////////////////////
-    int createHollowCylPoints();
-
-	 
     Point  d_top;
     Point  d_bottom;
     double d_radius;
@@ -159,6 +153,8 @@ namespace Uintah {
     double d_angle;
     int d_numRadial;
     int d_numAxial;
+    int d_numAngular;
+    string d_discretization;
     string d_fileName;
 
   };

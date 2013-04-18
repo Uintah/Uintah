@@ -44,6 +44,10 @@ const string SmoothCylGeomPiece::TYPE_NAME = "smoothcyl";
 // Constructor : Initialize stuff
 SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
 {
+  ps->require("discretization_scheme", d_discretization);
+  if (d_discretization != "pie_slices" && d_discretization != "constant_particle_volumes") 
+    SCI_THROW(ProblemSetupException("SmoothCylGeom: Invalid discretization scheme (valid options are pie_slices and constant_particle_volumes)", __FILE__, __LINE__));
+
   ps->require("bottom", d_bottom);
   ps->require("top", d_top);
   if ((d_top-d_bottom).length2() <= 0.0)
@@ -60,6 +64,15 @@ SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
   ps->require("num_axial", d_numAxial);
   if (d_numAxial < 1)
     SCI_THROW(ProblemSetupException("SmoothCylGeom: Axial Divs < 1", __FILE__, __LINE__));
+
+  d_numAngular = 0.0;
+  ps->get("num_angular", d_numAngular);
+  if (d_discretization == "constant_particle_volumes") {
+    cout << "**WARNING** num_angular ignored for constant_particle_volumes discretization" << endl;
+  } else if (d_discretization == "pie_slices") {
+    if (d_numAngular < 1)
+      SCI_THROW(ProblemSetupException("SmoothCylGeom: Angular Divs < 1", __FILE__, __LINE__));
+  }
 
   d_thickness = d_radius;
   ps->get("thickness", d_thickness);
@@ -186,13 +199,9 @@ SmoothCylGeomPiece::createPoints()
     int count = createEndCapPoints();
     totCount += count;
   }
-  if (d_thickness < d_radius) {
-    int count = createHollowCylPoints();
-    totCount += count;
-  } else {
-    int count = createSolidCylPoints();
-    totCount += count;
-  }
+
+  int count = createCylPoints();
+  totCount += count;
 
   // Write the output if requested
   if (d_fileName != "none") {
@@ -332,93 +341,12 @@ SmoothCylGeomPiece::createEndCapPoints()
 
 //////////////////////////////////////////////////////////////////////////
 /*! Create the particles on a circle on the x-y plane and then
-  rotate them to the correct position.
-  First particle is located at the center. */
-//////////////////////////////////////////////////////////////////////////
-int 
-SmoothCylGeomPiece::createSolidCylPoints()
-{
-  cout << "Creating particles for the Solid Cylinder" << endl;
-
-  // Find the vector along the axis of the cylinder
-  Vector axis = d_top - d_bottom;
-  double length = axis.length();
-  axis /= length;
-
-  // Angle of rotation
-  Vector n0(0.0, 0.0, 1.0); // The normal to the xy-plane
-  double phi = acos(Dot(n0, axis));
-
-  // Rotation axis
-  Vector a = Cross(n0, axis);
-  a /= (a.length()+1.0e-100);
-
-  // Create Rotation matrix 
-  Matrix3 R(phi, a);
-
-  // Initialize count of the number of particles
-  int count = 0;
-
-  // Calculate the radial and axial material point spacing
-  double axisInc = length/(double) d_numAxial;
-  double radInc = d_radius/(double) d_numRadial;
-
-  // Create particles for the solid cylinder
-  double currZ = 0.5*axisInc;
-  for (int kk = 0; kk < d_numAxial; ++kk) {
-
-    Vector currCenter = d_bottom.asVector() + axis*currZ;
-
-    // Put a point at the center
-    //d_points.push_back(Point(currCenter));
-    //double area = 0.25*M_PI*radInc*radInc;
-    //d_volume.push_back(axisInc*area);
-    //count++;
-    
-    for (int ii = 0; ii < d_numRadial; ++ii) {
-      double prevRadius = ii*radInc;
-      double currRadius = prevRadius + 0.5*radInc;
-      double nextRadius = (ii+1)*radInc;
-      //int numCircum = (int) (2.0*M_PI*currRadius/radInc);
-      //double phiInc = 2.0*M_PI/(double) numCircum;
-      int numCircum = (int) (d_angle*currRadius/radInc);
-      double phiInc = d_angle/(double) numCircum;
-      double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
-      for (int jj = 0; jj < numCircum; ++jj) {
-        double phi = d_arcStart + jj*phiInc; 
-        double cosphi = cos(phi);
-        double sinphi = sin(phi);
-
-        // Create points on xy plane
-        double x = currRadius*cosphi;
-        double y = currRadius*sinphi;
-        double z = 0;
-        Vector pp(x, y, z);
-     
-        // Rotate points to correct orientation and
-        // Translate to correct position
-        pp = R*pp + currCenter;
-        Point p(pp);
-        d_points.push_back(p);
-        d_volume.push_back(axisInc*area);
-        //cout << "Point["<<count<<"]="<<p<<endl;
-        count++;
-      }
-    }
-    currZ += axisInc;
-  }
-  
-  return count;
-}
-
-//////////////////////////////////////////////////////////////////////////
-/*! Create the particles on a circle on the x-y plane and then
   rotate them to the correct position */
 //////////////////////////////////////////////////////////////////////////
 int 
-SmoothCylGeomPiece::createHollowCylPoints()
+SmoothCylGeomPiece::createCylPoints()
 {
-  cout << "Creating particles for the Hollow Cylinder" << endl;
+  cout << "Creating particles for the Cylinder" << endl;
 
   // Find the vector along the axis of the cylinder
   Vector axis = d_top - d_bottom;
@@ -440,52 +368,60 @@ SmoothCylGeomPiece::createHollowCylPoints()
   int count = 0;
 
   // Calculate the radial and axial material point spacing
+
   double axisInc = length/(double) d_numAxial;
-  double radInc = d_radius/(double) d_numRadial;
-  int numThick = (int)(d_thickness/radInc);
+  double radInc = d_thickness/(double) d_numRadial;
   double innerRad = d_radius - d_thickness;
+  int numAngular = d_numAngular;
 
   // Create particles for the hollow cylinder
   double currZ = 0.5*axisInc;
   for (int kk = 0; kk < d_numAxial; ++kk) {
     Vector currCenter = d_bottom.asVector() + axis*currZ;
-    for (int ii = 0; ii < numThick; ++ii) {
+    for (int ii = 0; ii < d_numRadial; ++ii) {
       double prevRadius = innerRad + ii*radInc;
-      double currRadius = prevRadius + radInc*0.5;
+      double r = prevRadius + radInc*0.5;
       double nextRadius = innerRad + (ii+1)*radInc;
-      //int numCircum = (int) (2.0*M_PI*currRadius/radInc);
-      //double phiInc = 2.0*M_PI/(double) numCircum;
-      int numCircum = (int) (d_angle*currRadius/radInc);
-      double phiInc = d_angle/(double) numCircum;
-      double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
-      for (int jj = 0; jj < numCircum; ++jj) {
-        double phi = d_arcStart + jj*phiInc; 
-        double cosphi = cos(phi);
-        double sinphi = sin(phi);
+   
+      if (d_discretization == "constant_particle_volumes") {
+	numAngular = (int) ((d_angle - d_arcStart)*r/radInc);
+	numAngular = max(numAngular,1);
+      }
+      double angularInc = (d_angle - d_arcStart)/(double) numAngular;
+      double area = 0.5*angularInc*(nextRadius*nextRadius-prevRadius*prevRadius);
+	
+      for (int jj = 0; jj < numAngular; ++jj) {
+	double phi = d_arcStart + (jj+0.5)*angularInc; 
+	double cosphi = cos(phi);
+	double sinphi = sin(phi);
 
-        // Create points on xy plane
-        double x = currRadius*cosphi;
-        double y = currRadius*sinphi;
-        double z = 0;
-	Matrix3 size(1.0,0.0,0.0,
-		     0.0,1.0,0.0,
-      		     0.0,0.0,1.0);
+	// Create points on xy plane
+	double x = r*cosphi;
+	double y = r*sinphi;
+	double z = 0;
+	Matrix3 size((d_angle - d_arcStart)*y/(numAngular*d_DX.x()),  d_thickness*x/(d_numRadial*r*d_DX.y()), 0.0,
+		     -(d_angle - d_arcStart)*x/(numAngular*d_DX.x()), d_thickness*y/(d_numRadial*r*d_DX.y()), 0.0,
+		     0.0                                            , 0.0                                   , length/(d_numAxial*d_DX.z()));
      
-        // Rotate points to correct orientation and
-        // Translate to correct position
-        Vector pp(x, y, z);
-        pp = R*pp + currCenter;
-        Point p(pp);
+	// Rotate points to correct orientation and
+	// Translate to correct position
+	Vector pp(x, y, z);
+	pp = R*pp + currCenter;
+	Point p(pp);
 
-        d_points.push_back(p);
-        d_volume.push_back(axisInc*area);
-        d_size.push_back(size);
-        //cout << "Point["<<count<<"]="<<p<<endl;
-        count++;
+	// Rotate size matrix
+	size = R*size*R.Transpose();
+
+	d_points.push_back(p);
+	d_volume.push_back(axisInc*area);
+	d_size.push_back(size);
+	//cout << "Point["<<count<<"]="<<p<<endl;
+	count++;
       }
     }
     currZ += axisInc;
-  }
+  } 
+
   
   return count;
 }
