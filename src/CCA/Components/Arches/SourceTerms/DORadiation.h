@@ -99,6 +99,7 @@ public:
 private:
 
   int _radiation_calc_freq; 
+  int _nQn_part; 
 
   bool _all_rk; 
   bool _using_prop_calculator; 
@@ -108,6 +109,8 @@ private:
   std::string _T_label_name; 
   std::string _abskp_label_name; 
   std::string _soot_label_name; 
+  std::string _size_label_name; 
+  std::string _pT_label_name; 
 
   DORadiationModel* _DO_model; 
   ArchesLabel*    _labels; 
@@ -117,6 +120,9 @@ private:
   const ProcessorGroup* _my_world;
 
   std::vector<const VarLabel*> _species_varlabels; 
+  std::vector<const VarLabel*> _size_varlabels; 
+  std::vector<const VarLabel*> _w_varlabels; 
+  std::vector<const VarLabel*> _T_varlabels; 
 
   const VarLabel* _co2_label; 
   const VarLabel* _h2o_label; 
