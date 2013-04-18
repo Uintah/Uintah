@@ -69,16 +69,6 @@ namespace Uintah {
                                               int dwi, const Patch* patch,
                                               DataWarehouse* new_dw);
 
-    virtual void allocateVariablesAddRequires(Task* task, 
-                                              const MPMMaterial* matl,
-                                              const PatchSet* patch) const;
-
-    virtual void allocateVariablesAdd(DataWarehouse* new_dw,
-                                      ParticleSubset* addset,
-                                      map<const VarLabel*,ParticleVariableBase*>* newState,
-                                      ParticleSubset* delset,
-                                      DataWarehouse* old_dw);
-
     virtual void registerPermanentParticleState(MPMMaterial* matl);
 
     virtual particleIndex countParticles(const Patch*,
