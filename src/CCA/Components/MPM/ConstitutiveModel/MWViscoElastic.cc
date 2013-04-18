@@ -34,8 +34,6 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Math/Short27.h> //for Fracture
-#include <Core/Grid/Variables/NodeIterator.h> // just added
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
