@@ -51,7 +51,6 @@
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Math/Short27.h> //for Fracture
 #include <Core/Math/TangentModulusTensor.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 

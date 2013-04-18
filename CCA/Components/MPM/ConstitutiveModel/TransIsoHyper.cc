@@ -35,8 +35,6 @@
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/TangentModulusTensor.h> //added this for stiffness
-#include <Core/Math/Short27.h> //for Fracture
-#include <Core/Grid/Variables/NodeIterator.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>

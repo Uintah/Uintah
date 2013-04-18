@@ -30,8 +30,6 @@
 #include <Core/Grid/Task.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Math/Short27.h> // for Fracture
-#include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Level.h>
