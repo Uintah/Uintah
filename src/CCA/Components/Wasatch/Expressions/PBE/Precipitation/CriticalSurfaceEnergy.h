@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef PrecipitationRCritical_Expr_h
-#define PrecipitationRCritical_Expr_h
+#ifndef CriticalSurfaceEnergy_Expr_h
+#define CriticalSurfaceEnergy_Expr_h
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
@@ -31,65 +31,68 @@
 
 /**
  *  \ingroup WasatchExpressions
- *  \class PrecipitationRCritical
+ *  \class CriticalSurfaceEnergy
  *  \author Alex Abboud
- *  \date February 2012
+ *  \date April 2013
  *
  *  \tparam FieldT the type of field.
  *
- *  \brief calculates the critical radius for Nucleation
- *  \f$ R^* = R_0 / \ln (S) \f$
- *  \f$ R_0 = 2*\sigma*\nu / R / T \f$
+ *  \brief calculates the critical surface energy for nucleation
+ *  \f$ \sigma = \sigma_\infty * ( 1 - 2*\delta_T/ r) \f$
+ *  where \f$ \sigma_\infty \f$ is the bulk surface energy, \f$ \delta_T \f$ is the Tolman lenght
+ *  and \f$ r \f$ is the nucleate size
+ *  since \f$ r \f$ is non-constant the expression can be sustituted in to give a quadratic equation for \f$ \sigma \f$
+ *  \f$ \sigma^2 - \sigma_\infty \sigma + 0.2 R T \ln (S) \f$
+ *  the highest value is used here for physical reasons
  */
 template< typename FieldT >
-class PrecipitationRCritical
+class CriticalSurfaceEnergy
 : public Expr::Expression<FieldT>
 {
   /* declare private variables such as fields, operators, etc. here */
   const Expr::Tag superSatTag_;
-  const Expr::Tag surfaceEngTag_;
-  const double rKnotVal_;
-  const FieldT* superSat_;    //field from table of supersaturation
-  const FieldT* surfaceEng_;  //critcal value of surface energy for small radii
-  
-  PrecipitationRCritical( const Expr::Tag& superSatTag,
-                          const Expr::Tag& surfaceEng,
-                          const double rKnotVal_);
+  const double bulkSurfaceEnergy_;
+  const double sqrtCoef_;
+  const FieldT* superSat_; //field from table of supersaturation
 
+  CriticalSurfaceEnergy( const Expr::Tag& superSatTag,
+                         const double bulkSurfaceEnergy_,
+                         const double sqrtCoef_);
+  
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::Tag& result,
              const Expr::Tag& superSatTag,
-             const Expr::Tag& surfaceEngTag,
-             const double rKnotVal)
+             const double bulkSurfaceEnergy,
+             const double sqrtCoef)
     : ExpressionBuilder(result),
     supersatt_(superSatTag),
-    surfaceengt_(surfaceEngTag),
-    rknotval_(rKnotVal)
+    bulksurfaceenergy_(bulkSurfaceEnergy),
+    sqrtcoef_(sqrtCoef)
     {}
-
+    
     ~Builder(){}
-
+    
     Expr::ExpressionBase* build() const
     {
-      return new PrecipitationRCritical<FieldT>( supersatt_, surfaceengt_, rknotval_ );
+      return new CriticalSurfaceEnergy<FieldT>( supersatt_, bulksurfaceenergy_, sqrtcoef_ );
     }
-
+    
   private:
     const Expr::Tag supersatt_;
-    const Expr::Tag surfaceengt_;
-    const double rknotval_;
+    const double bulksurfaceenergy_;
+    const double sqrtcoef_;
   };
-
-  ~PrecipitationRCritical();
-
+  
+  ~CriticalSurfaceEnergy();
+  
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
-
+  
 };
 
 
@@ -100,52 +103,48 @@ public:
 // ###################################################################
 
 template< typename FieldT >
-PrecipitationRCritical<FieldT>::
-PrecipitationRCritical( const Expr::Tag& superSatTag,
-                        const Expr::Tag& surfaceEngTag,
-                        const double rKnotVal)
+CriticalSurfaceEnergy<FieldT>::
+CriticalSurfaceEnergy( const Expr::Tag& superSatTag,
+                       const double bulkSurfaceEnergy,
+                       const double sqrtCoef)
 : Expr::Expression<FieldT>(),
-  superSatTag_(superSatTag),
-  surfaceEngTag_(surfaceEngTag),
-  rKnotVal_(rKnotVal)
+superSatTag_(superSatTag),
+bulkSurfaceEnergy_(bulkSurfaceEnergy),
+sqrtCoef_(sqrtCoef)
 {}
 
 //--------------------------------------------------------------------
 
 template< typename FieldT >
-PrecipitationRCritical<FieldT>::
-~PrecipitationRCritical()
+CriticalSurfaceEnergy<FieldT>::
+~CriticalSurfaceEnergy()
 {}
 
 //--------------------------------------------------------------------
 
 template< typename FieldT >
 void
-PrecipitationRCritical<FieldT>::
+CriticalSurfaceEnergy<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( superSatTag_ );
-  if (surfaceEngTag_ != Expr::Tag() )
-    exprDeps.requires_expression( surfaceEngTag_ );
 }
 
 //--------------------------------------------------------------------
 
 template< typename FieldT >
 void
-PrecipitationRCritical<FieldT>::
+CriticalSurfaceEnergy<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   superSat_ = &fml.template field_manager<FieldT>().field_ref( superSatTag_ );
-  if (surfaceEngTag_ != Expr::Tag() )
-    surfaceEng_ = &fml.template field_manager<FieldT>().field_ref( surfaceEngTag_ );
 }
 
 //--------------------------------------------------------------------
 
 template< typename FieldT >
 void
-PrecipitationRCritical<FieldT>::
+CriticalSurfaceEnergy<FieldT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {}
 
@@ -153,20 +152,16 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 template< typename FieldT >
 void
-PrecipitationRCritical<FieldT>::
+CriticalSurfaceEnergy<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  if (surfaceEngTag_ != Expr::Tag() ) {
-    result <<= cond( *superSat_ > 1.0, rKnotVal_ * *surfaceEng_ / log(*superSat_ ) )
-                   ( 0.0 );
-  } else {
-    result <<= cond( *superSat_ > 1.0, rKnotVal_ / log(*superSat_ ) )
-                   ( 0.0 ); //this is r*
-  }
+  result <<= cond( *superSat_ > 1.0, (bulkSurfaceEnergy_ + sqrt(bulkSurfaceEnergy_*bulkSurfaceEnergy_ - sqrtCoef_ * log(*superSat_)) )*0.5 )
+                 ( bulkSurfaceEnergy_ ); //make equal to bulk
 }
 
 //--------------------------------------------------------------------
 
-#endif // PrecipitationRCritical_Expr_h
+#endif // CriticalSurfaceEnergy_Expr_h
+
