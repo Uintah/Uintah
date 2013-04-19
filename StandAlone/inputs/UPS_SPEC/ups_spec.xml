@@ -206,8 +206,8 @@
       <discretization_scheme  spec="REQUIRED STRING" />
       <bottom                 spec="REQUIRED VECTOR" />
       <top                    spec="REQUIRED VECTOR" />
-      <radius                 spec="REQUIRED DOUBLE 'positive'" />
-      <thickness              spec="OPTIONAL DOUBLE 'positive'" />
+      <inner_radius           spec="REQUIRED DOUBLE 'positive'" />
+      <outer_radius           spec="OPTIONAL DOUBLE 'positive'" />
       <num_radial             spec="REQUIRED DOUBLE 'positive'" />
       <num_axial              spec="REQUIRED DOUBLE 'positive'" />
       <num_angular            spec="REQUIRED DOUBLE 'positive'" />

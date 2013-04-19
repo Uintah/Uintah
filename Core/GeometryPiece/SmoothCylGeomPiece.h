@@ -146,8 +146,8 @@ namespace Uintah {
 
     Point  d_top;
     Point  d_bottom;
-    double d_radius;
-    double d_thickness;
+    double d_outer_radius;
+    double d_inner_radius;
     double d_capThick;
     double d_arcStart;
     double d_angle;
