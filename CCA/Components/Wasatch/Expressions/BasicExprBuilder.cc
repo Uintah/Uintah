@@ -54,6 +54,8 @@
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitateEffectiveViscosity.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/CylindricalDiffusionCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/KineticGrowthCoefficient.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/HomogeneousNucleationCoefficient.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/CriticalSurfaceEnergy.h>
 
 #include <CCA/Components/Wasatch/Expressions/VelocityMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/Vorticity.h>
@@ -509,6 +511,25 @@ namespace Wasatch{
       builder = scinew Builder(tag, saturationTag, expcoef);
     }
     
+    else if (params->findBlock("HomogeneousNucleationCoefficient") ) {
+      double MolecularVolume, T, D;
+      double SurfaceEnergy = 1.0;
+      Uintah::ProblemSpecP coefParams = params->findBlock("HomogeneousNucleationCoefficient");
+      coefParams -> getAttribute("Molar_Vol",MolecularVolume);
+      if (coefParams->getAttribute("Surf_Eng",SurfaceEnergy) )
+        coefParams -> getAttribute("Surf_Eng",SurfaceEnergy);
+      coefParams -> getAttribute("Temperature",T);
+      coefParams -> getAttribute("Diff_Coef",D);
+      MolecularVolume = MolecularVolume/6.02214129e23; //convert molar to molecular volume in this term
+      Expr::Tag surfaceEngTag;
+      if ( coefParams->findBlock("SurfaceEnergy") )
+        surfaceEngTag = parse_nametag( coefParams->findBlock("SurfaceEnergy")->findBlock("NameTag") );
+      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
+      const Expr::Tag eqConcTag = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
+      typedef typename HomogeneousNucleationCoefficient<FieldT>::Builder Builder;
+      builder = scinew Builder(tag, saturationTag, eqConcTag,  surfaceEngTag, MolecularVolume, SurfaceEnergy, T, D);
+    }
+    
     else if (params->findBlock("PrecipitationSimpleRStarValue") ) {
       double RKnot, coef, CFCoef;
       Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationSimpleRStarValue");
@@ -516,8 +537,9 @@ namespace Wasatch{
       coefParams -> getAttribute("Conversion_Fac", CFCoef);
       coef = RKnot*CFCoef;
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
+      const Expr::Tag surfaceEngTag; //dummy tag since this uses same function as classic rStar
       typedef typename PrecipitationRCritical<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, coef);
+      builder = scinew Builder(tag, saturationTag, surfaceEngTag, coef);
     }
     
     else if (params->findBlock("PrecipitationClassicRStarValue") ) {
@@ -529,10 +551,31 @@ namespace Wasatch{
       coefParams -> getAttribute("Temperature", T);
       coefParams -> getAttribute("Molec_Vol",MolecularVolume);
       coef = 2.0*SurfaceEnergy*MolecularVolume/R/T*CFCoef;
+      Expr::Tag surfaceEngTag;
+      if (coefParams->findBlock("SurfaceEnergy") ) {
+        surfaceEngTag = parse_nametag( coefParams->findBlock("SurfaceEnergy")->findBlock("NameTag") ) ;
+        coef = 2.0*MolecularVolume/R/T*CFCoef;  //calcualte coefficient without the surface energy
+      }
+      
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       typedef typename PrecipitationRCritical<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, coef);
+      builder = scinew Builder(tag, saturationTag, surfaceEngTag, coef);
       //Note: both RStars are same basic form, same builder, but different coefficient parse
+    }
+    
+    else if(params->findBlock("CriticalSurfaceEnergy") ) {
+      double BulkSurfaceEnergy, T, MolarVolume, coef;
+      const double R = 8.314;
+      const double N_A = 6.023e23;
+      Uintah::ProblemSpecP coefParams = params->findBlock("CriticalSurfaceEnergy");
+      coefParams -> getAttribute("Temperature",T);
+      coefParams -> getAttribute("Bulk_Surf_Eng",BulkSurfaceEnergy);
+      coefParams -> getAttribute("Molar_Vol",MolarVolume);
+      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
+      double r1 = pow(3.0*MolarVolume/N_A/4.0/PI,1.0/3.0); //convert molar vol to molec radius
+      coef = 0.8 * R * T*BulkSurfaceEnergy* r1/MolarVolume;
+      typedef typename CriticalSurfaceEnergy<FieldT>::Builder Builder;
+      builder = scinew Builder(tag, saturationTag, BulkSurfaceEnergy, coef);
     }
     
     else if (params->findBlock("BrownianAggregationCoefficient") ) {
