@@ -151,13 +151,8 @@ public:
 
       rate *= 1.0e3 * d_MW_HC; 
 
-      // now check the rate based on local reactants: 
-      double constant = dt / den; 
-
-      // check limiting reactant
-      if ( std::abs( constant*rate ) > CxHy ){ 
-        rate = den / dt * CxHy; 
-      } 
+      // check the rate based on local O2 and CxHy
+      rate = std::min( den / dt * std::min( O2, CxHy ), rate ); 
 
       // check for nan
       if ( rate != rate ){ 
