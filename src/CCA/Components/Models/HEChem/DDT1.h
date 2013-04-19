@@ -122,6 +122,8 @@ WARNING
 
   private:    
   
+    bool isDoubleEqual(double a, double b);
+    
     void problemSetup_BulletProofing(ProblemSpecP& ps);
     
     
@@ -193,7 +195,10 @@ WARNING
     const VarLabel* inductionTimeLabel;
     const VarLabel* countTimeLabel;
     const VarLabel* BurningCriteriaLabel;
+    const VarLabel* adjOutIntervalsLabel;
+    
     enum typeofBurning{ NOTDEFINED, WARMINGUP, CONDUCTIVE, CONVECTIVE, ONSURFACE };
+    enum {ZERO, PRESSURE_EXCEEDED, DETONATION_DETECTED};
 
     const VarLabel* pCrackRadiusLabel;
     
@@ -299,7 +304,6 @@ WARNING
     // on either a pressure threshold exceeded or a detonation has been detected
     struct adj_IO{                  // pressure_switch
       bool onOff;                   // is this option on or off?
-      int nTimesSet;                // number of times the intervals have been adjusted
       double timestepsLeft;         // timesteps left until sus shuts down
       double pressThreshold;
       double output_interval;       // output interval in physical seconds
