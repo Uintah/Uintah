@@ -117,7 +117,9 @@ DDT1::DDT1(const ProcessorGroup* myworld,
     
   totalHeatReleasedLabel= VarLabel::create( "totalHeatReleased",
                                              sum_vartype::getTypeDescription() );
-
+                                             
+  adjOutIntervalsLabel= VarLabel::create( "adjOutIntervals",
+                                           max_vartype::getTypeDescription() );
 }
 
 DDT1::~DDT1()
@@ -134,7 +136,7 @@ DDT1::~DDT1()
   VarLabel::destroy(delFLabel);
   VarLabel::destroy(detLocalToLabel);
   VarLabel::destroy(detonatingLabel);
-  // Simple Burn
+
   VarLabel::destroy(BurningCriteriaLabel);
   VarLabel::destroy(surfaceTempLabel);
   VarLabel::destroy(onSurfaceLabel);
@@ -145,12 +147,17 @@ DDT1::~DDT1()
   VarLabel::destroy(numPPCLabel);
   VarLabel::destroy(inductionTimeLabel);
   VarLabel::destroy(countTimeLabel);
+  VarLabel::destroy( adjOutIntervalsLabel );
   
   if(d_mymatls && d_mymatls->removeReference())
     delete d_mymatls;
     
   if (d_one_matl && d_one_matl->removeReference())
     delete d_one_matl;
+}
+
+bool DDT1::isDoubleEqual(double a, double b){
+  return ( fabs(a-b) < DBL_EPSILON);
 }
 
 void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
@@ -217,7 +224,6 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
     ProblemSpecP PS_ps = adj_ps->findBlockWithOutAttribute( "PressureSwitch" );
     if( PS_ps ){
       d_adj_IO_Press->onOff     = true;
-      d_adj_IO_Press->nTimesSet = 0;
       PS_ps->require("PressureThreshold",     d_adj_IO_Press->pressThreshold );
       PS_ps->require("newOutputInterval",     d_adj_IO_Press->output_interval );  
       PS_ps->require("newCheckPointInterval", d_adj_IO_Press->chkPt_interval );
@@ -226,7 +232,6 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
     ProblemSpecP DS_ps = adj_ps->findBlockWithOutAttribute( "DetonationDetected" );
     if( DS_ps ){
       d_adj_IO_Det->onOff     = true;
-      d_adj_IO_Det->nTimesSet = 0;
       DS_ps->require("remainingTimesteps",    d_adj_IO_Det->timestepsLeft );
       DS_ps->require("newOutputInterval",     d_adj_IO_Det->output_interval );  
       DS_ps->require("newCheckPointInterval", d_adj_IO_Det->chkPt_interval );
@@ -378,6 +383,10 @@ void DDT1::scheduleInitialize(SchedulerP& sched,
   t->computes(BurningCriteriaLabel, react_matl);
   t->computes(inductionTimeLabel,   react_matl);
   t->computes(countTimeLabel,       react_matl);
+
+  if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
+    t->computes( adjOutIntervalsLabel );
+  }
   
   if(d_useCrackModel)
     t->computes(crackedEnoughLabel,   react_matl);
@@ -417,6 +426,11 @@ void DDT1::initialize(const ProcessorGroup*,
       new_dw->allocateAndPut(crack,crackedEnoughLabel,   m0, patch);
       crack.initialize(0.0);
     } 
+    
+    if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
+      new_dw->put( max_vartype( ZERO ), adjOutIntervalsLabel );
+    }
+    
 
     F.initialize(0.0);
     burningCellOld.initialize(0);
@@ -532,6 +546,9 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
    
   // if detonation occurs change the output interval  
   if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
+    t1->requires( Task::OldDW, adjOutIntervalsLabel );
+    t1->computes( adjOutIntervalsLabel );
+    
     t1->computes( d_sharedState->get_outputInterval_label() );
     t1->computes( d_sharedState->get_checkpointInterval_label() );
     d_sharedState->updateOutputInterval( true );
@@ -1045,29 +1062,41 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
     //__________________________________
     // Update either the output and/or checkpoint intervals
     // pressure exceeding threshold detected
-    if ( press_switch_adj_IO && d_adj_IO_Press->onOff && d_adj_IO_Press->nTimesSet == 0){
-
-      double newOUT  = d_adj_IO_Press->output_interval;
-      double newCKPT = d_adj_IO_Press->chkPt_interval;
-      d_adj_IO_Press->nTimesSet = 1;
-      cout << "\n__________________________________pressure exceeding threshold detected " << endl;
-      cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<<  endl;
-      
-      new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
-      new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
-    }
+    if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
     
-    // detonation detected
-    if ( det_switch_adj_IO && d_adj_IO_Det->onOff && d_adj_IO_Det->nTimesSet == 0){
+      max_vartype me;
+      old_dw->get( me,  adjOutIntervalsLabel );
+      double hasSwitched = me; 
+    
+      if ( press_switch_adj_IO && d_adj_IO_Press->onOff && isDoubleEqual( hasSwitched, ZERO) ){
 
-      double newOUT  = d_adj_IO_Det->output_interval;
-      double newCKPT = d_adj_IO_Det->chkPt_interval;
-      d_adj_IO_Det->nTimesSet = 1;
-      cout << "__________________________________ Detonation detected " << endl;
-      cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<< endl;
-      
-      new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
-      new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
+        double newOUT  = d_adj_IO_Press->output_interval;
+        double newCKPT = d_adj_IO_Press->chkPt_interval;
+        hasSwitched = PRESSURE_EXCEEDED;
+        
+        cout << "\n__________________________________pressure exceeding threshold detected in a cell on patch: " << endl;
+        cout << *patch << endl;
+        cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<<  endl;
+
+        new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
+        new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
+      }
+
+      // detonation detected
+      if ( det_switch_adj_IO && d_adj_IO_Det->onOff && isDoubleEqual(hasSwitched, PRESSURE_EXCEEDED) ){
+
+        double newOUT  = d_adj_IO_Det->output_interval;
+        double newCKPT = d_adj_IO_Det->chkPt_interval;
+        hasSwitched = DETONATION_DETECTED;
+        
+        cout << "__________________________________ Detonation detected in a cell on patch:" << endl;
+        cout << *patch << endl;
+        cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<< endl;
+
+        new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
+        new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
+      }
+      new_dw->put( max_vartype(hasSwitched), adjOutIntervalsLabel );
     }
   }//End for{Patches}
 }//end Task
