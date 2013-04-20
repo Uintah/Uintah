@@ -631,7 +631,8 @@
       <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract particleExtract minMax">
         <analyze                        spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING" 
-                                          attribute2="matl OPTIONAL STRING" />
+                                          attribute2="matl  OPTIONAL STRING"
+                                          attribute3="level OPTIONAL STRING" />
       </Variables>
 
       <lines                            spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract">

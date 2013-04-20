@@ -82,6 +82,10 @@ GENERAL INFORMATION
                                     const LevelP& level) {};
                                       
   private:
+  
+    bool isRightLevel( const int myLevel, 
+                       const int L_indx, 
+                       const LevelP& level);
 
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
@@ -120,30 +124,26 @@ GENERAL INFORMATION
     public:
       VarLabel* lastCompTimeLabel;
       VarLabel* fileVarsStructLabel;
-      std::map< std::string, const VarLabel* > LabelMap;
     };
     
     MinMaxLabel* d_lb;
-    
-    // structs that hold the min/max values
-    // and the 
-    struct patchMinMax_D{
-      double Q;
-      IntVector c;
-    };
-    
-    struct patchMinMax_V{
-      Vector Q;
-      IntVector c;
-    };
        
     //__________________________________
     // global constants always begin with "d_"
     double d_writeFreq; 
     double d_StartTime;
     double d_StopTime;
-    vector<VarLabel*> d_varLabels;
-    vector<int> d_varMatl;
+    
+    struct varProperties{
+      VarLabel* label;
+      VarLabel* reductionMinLabel;
+      VarLabel* reductionMaxLabel;
+      int matl;
+      int level;
+    };
+    
+    vector<varProperties> d_analyzeVars;
+    
     SimulationStateP d_sharedState;
     Output* d_dataArchiver;
     ProblemSpecP d_prob_spec;
