@@ -6514,7 +6514,7 @@ Decay of Isotropic Turbulence
 \begin_inset Float figure
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -6610,7 +6610,7 @@ Contours of velocity magnitude for the decay of isotropic turbulence in
 \begin_inset Float figure
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -6695,7 +6695,7 @@ Turbulent kinetic energy spectrum for the constant Smagorinsky model with
 \begin_inset Float figure
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -6779,7 +6779,7 @@ Turbulent kinetic energy spectrum for the WALE model with
 \begin_inset Float figure
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -6842,7 +6842,7 @@ status open
 \begin_inset Caption
 
 \begin_layout Plain Layout
-Turbulent kinetic energy spectrum for the constant Vreman model with 
+Turbulent kinetic energy spectrum for the Vreman model with 
 \begin_inset Formula $C_{\mathrm{s}}=0.2$
 \end_inset
 
@@ -6851,6 +6851,87 @@ Turbulent kinetic energy spectrum for the constant Vreman model with
 \end_inset
 
 ) and for grid sizes (a) 32x32x32, and (b) 64x64x64.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch-tke_dsmag_32_spectrum.pdf
+	width 3.13in
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/pdf/wasatch-tke_dsmag_64_spectrum.pdf
+	width 3.13in
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Turbulent kinetic energy spectrum for the dynamic Smagorinsky model for
+ grid sizes (a) 32x32x32, and (b) 64x64x64.
 \end_layout
 
 \end_inset
