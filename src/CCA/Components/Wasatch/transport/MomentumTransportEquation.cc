@@ -25,6 +25,7 @@
 
 // -- Uintah includes --//
 #include <CCA/Ports/SolverInterface.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/StringNames.h>
@@ -35,11 +36,11 @@
 #include <CCA/Components/Wasatch/Expressions/Stress.h>
 #include <CCA/Components/Wasatch/Expressions/Dilatation.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentViscosity.h>
+#include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorBase.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorMagnitude.h>
+#include <CCA/Components/Wasatch/Expressions/Turbulence/DynamicSmagorinskyCoefficient.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
-
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
-
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
@@ -48,6 +49,8 @@
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
+
+//-- ExprLib Includes --//
 #include <expression/ExprLib.h>
 
 using std::string;
@@ -63,7 +66,7 @@ namespace Wasatch{
 
     Expr::Tag strTsrMagTag  = Expr::Tag();
     Expr::Tag waleTsrMagTag  = Expr::Tag();
-    Expr::Tag dynSmagConstTag = Expr::Tag();
+    Expr::Tag dynSmagCoefTag = Expr::Tag();
     Expr::Tag vremanTsrMagTag  = Expr::Tag();    
     const Expr::Tag turbViscTag = turbulent_viscosity_tag();
     
@@ -73,7 +76,7 @@ namespace Wasatch{
       case SMAGORINSKY: {
         strTsrMagTag = straintensormagnitude_tag();//( "StrainTensorMagnitude", Expr::STATE_NONE );
         if( !factory.have_entry( strTsrMagTag ) ){
-          typedef StrainTensorMagnitude::Builder StrTsrMagT;
+          typedef StrainTensorSquare::Builder StrTsrMagT;
           factory.register_expression( scinew StrTsrMagT(strTsrMagTag, velTags[0], velTags[1], velTags[2]) );
         }
       }
@@ -93,7 +96,7 @@ namespace Wasatch{
         
         strTsrMagTag = straintensormagnitude_tag();//( "StrainTensorMagnitude", Expr::STATE_NONE );
         if( !factory.have_entry( strTsrMagTag ) ){
-          typedef StrainTensorMagnitude::Builder StrTsrMagT;
+          typedef StrainTensorSquare::Builder StrTsrMagT;
           factory.register_expression( scinew StrTsrMagT(strTsrMagTag, velTags[0], velTags[1], velTags[2]) );
         }
         
@@ -106,9 +109,35 @@ namespace Wasatch{
       }
         break;
       case DYNAMIC: {
+
+        // Disallow using the dynamic model in 1 or 2 dimensions
+        if (!( velTags[0]!=Expr::Tag() && velTags[1]!=Expr::Tag() && velTags[2]!=Expr::Tag() )) {
+          std::ostringstream msg;
+          msg << "ERROR: You cannot use the Dynamic Smagorinsky Model in one or two dimensions. Please revise your input file and make sure that you specify all three velocity/momentum components." << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+
+        strTsrMagTag = straintensormagnitude_tag();//( "StrainTensorMagnitude", Expr::STATE_NONE );
+
+        Expr::TagList dynamicSmagTagList;
+        dynamicSmagTagList.push_back( straintensormagnitude_tag() );
+        dynamicSmagTagList.push_back( dynamic_smagorinsky_coefficient_tag());
+
+//        if( !factory.have_entry( strTsrMagTag ) ){
+//          typedef StrainTensorMagnitude::Builder StrTsrMagT;
+//          factory.register_expression( scinew StrTsrMagT(strTsrMagTag, velTags[0], velTags[1], velTags[2]) );
+//        }
+
         // if DYNAMIC model is turned on, then create an expression for the dynamic smagorinsky expression
-        dynSmagConstTag = Expr::Tag("DynamicSmagorinskyConstant", Expr::STATE_NONE);
-        if( !factory.have_entry( dynSmagConstTag ) ){
+        dynSmagCoefTag = dynamic_smagorinsky_coefficient_tag();
+        if( !factory.have_entry( dynSmagCoefTag )&&
+            !factory.have_entry( strTsrMagTag )     ){
+          typedef DynamicSmagorinskyCoefficient::Builder dynSmagConstT;
+          factory.register_expression( scinew dynSmagConstT(dynamicSmagTagList,
+                                                            velTags[0],
+                                                            velTags[1],
+                                                            velTags[2],
+                                                            densTag ) );
         }
         
       }
@@ -119,7 +148,7 @@ namespace Wasatch{
 
     if( !factory.have_entry( turbViscTag ) ){
       typedef TurbulentViscosity::Builder TurbViscT;
-      factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, turbParams ) );
+      factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
     }
   }
   
@@ -448,7 +477,7 @@ namespace Wasatch{
 
     //__________________
     // dilatation
-    const Expr::Tag dilTag( "dilatation", Expr::STATE_NONE );
+    const Expr::Tag dilTag(sName.dilatation,Expr::STATE_NONE);
     if( !factory.have_entry( dilTag ) ){
       typedef typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
       // if dilatation expression has not been registered, then register it

@@ -24,93 +24,51 @@
 
 #include "StrainTensorMagnitude.h"
 
+//-- Wasatch includes --//
+#include <CCA/Components/Wasatch/StringNames.h>
+
+//-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
+
+//--------------------------------------------------------------------
+
 Expr::Tag straintensormagnitude_tag() {
-  return Expr::Tag( "StrainTensorMagnitude", Expr::STATE_NONE );
+  const Wasatch::StringNames& sName = Wasatch::StringNames::self();
+  return Expr::Tag( sName.straintensormag, Expr::STATE_NONE );
 }
 
 Expr::Tag wale_tensormagnitude_tag() {
-  return Expr::Tag( "WaleTensorMagnitude", Expr::STATE_NONE );
+  const Wasatch::StringNames& sName = Wasatch::StringNames::self();
+  return Expr::Tag( sName.waletensormag, Expr::STATE_NONE );
 }
 
 Expr::Tag vreman_tensormagnitude_tag() {
-  return Expr::Tag( "VremanTensorMagnitude", Expr::STATE_NONE );
+  const Wasatch::StringNames& sName = Wasatch::StringNames::self();
+  return Expr::Tag( sName.vremantensormag, Expr::STATE_NONE );
 }
 
-StrainTensorMagnitude::
-StrainTensorMagnitude( const Expr::Tag& vel1tag,
-                       const Expr::Tag& vel2tag,
-                       const Expr::Tag& vel3tag )
-  : Expr::Expression<SVolField>(),
-    vel1t_( vel1tag ),
-    vel2t_( vel2tag ),
-    vel3t_( vel3tag ),
-    doX_  ( vel1t_ != Expr::Tag() ),
-    doY_  ( vel2t_ != Expr::Tag() ),
-    doZ_  ( vel3t_ != Expr::Tag() )
+//********************************************************************
+// STRAIN TENSOR SQUARE (used for Smagorinsky, Vreman, and WALE models)
+//********************************************************************
+
+StrainTensorSquare::
+StrainTensorSquare( const Expr::Tag& vel1tag,
+                    const Expr::Tag& vel2tag,
+                    const Expr::Tag& vel3tag )
+  : StrainTensorBase(vel1tag,vel2tag,vel3tag)
 {}
 
 //--------------------------------------------------------------------
 
-StrainTensorMagnitude::
-~StrainTensorMagnitude()
+StrainTensorSquare::
+~StrainTensorSquare()
 {}
 
 //--------------------------------------------------------------------
 
 void
-StrainTensorMagnitude::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if( doX_ ) exprDeps.requires_expression( vel1t_ );
-  if( doY_ ) exprDeps.requires_expression( vel2t_ );
-  if( doZ_ ) exprDeps.requires_expression( vel3t_ );
-}
-
-//--------------------------------------------------------------------
-
-void
-StrainTensorMagnitude::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  if ( doX_ ) vel1_ = &fml.field_manager<XVolField>().field_ref( vel1t_ );
-  if ( doY_ ) vel2_ = &fml.field_manager<YVolField>().field_ref( vel2t_ );
-  if ( doZ_ ) vel3_ = &fml.field_manager<ZVolField>().field_ref( vel3t_ );
-}
-
-//--------------------------------------------------------------------
-
-void
-StrainTensorMagnitude::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{
-  dudxOp_ = opDB.retrieve_operator<dudxT>();
-  dudyOp_ = opDB.retrieve_operator<dudyT>();
-  dudzOp_ = opDB.retrieve_operator<dudzT>();
-
-  dvdxOp_ = opDB.retrieve_operator<dvdxT>();
-  dvdyOp_ = opDB.retrieve_operator<dvdyT>();
-  dvdzOp_ = opDB.retrieve_operator<dvdzT>();
-
-  dwdxOp_ = opDB.retrieve_operator<dwdxT>();
-  dwdyOp_ = opDB.retrieve_operator<dwdyT>();
-  dwdzOp_ = opDB.retrieve_operator<dwdzT>();
-
-  xyInterpOp_ = opDB.retrieve_operator<XYInterpT>();
-  yxInterpOp_ = opDB.retrieve_operator<YXInterpT>();
-
-  xzInterpOp_ = opDB.retrieve_operator<XZInterpT>();
-  zxInterpOp_ = opDB.retrieve_operator<ZXInterpT>();
-
-  yzInterpOp_ = opDB.retrieve_operator<YZInterpT>();
-  zyInterpOp_ = opDB.retrieve_operator<ZYInterpT>();
-}
-
-//--------------------------------------------------------------------
-
-void
-StrainTensorMagnitude::
+StrainTensorSquare::
 evaluate()
 {
   using namespace SpatialOps;
@@ -188,7 +146,7 @@ evaluate()
 
 //--------------------------------------------------------------------
 
-StrainTensorMagnitude::
+StrainTensorSquare::
 Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& vel1tag,
                   const Expr::Tag& vel2tag,
@@ -202,20 +160,20 @@ Builder::Builder( const Expr::Tag& result,
 //--------------------------------------------------------------------
 
 Expr::ExpressionBase*
-StrainTensorMagnitude::Builder::build() const
+StrainTensorSquare::Builder::build() const
 {
-  return new StrainTensorMagnitude( v1t_, v2t_, v3t_ );
+  return new StrainTensorSquare( v1t_, v2t_, v3t_ );
 }
 
-//--------------------------------------------------------------------
-//====================================================================
-//--------------------------------------------------------------------
+//********************************************************************
+// WALE MODEL
+//********************************************************************
 
 WaleTensorMagnitude::
 WaleTensorMagnitude( const Expr::Tag& vel1tag,
                       const Expr::Tag& vel2tag,
                       const Expr::Tag& vel3tag )
-: StrainTensorMagnitude( vel1tag, vel2tag, vel3tag )
+: StrainTensorBase( vel1tag, vel2tag, vel3tag )
 {}
 
 //--------------------------------------------------------------------
@@ -395,15 +353,15 @@ WaleTensorMagnitude::Builder::build() const
   return new WaleTensorMagnitude( v1t_, v2t_, v3t_ );
 }
 
-//--------------------------------------------------------------------
-//====================================================================
-//--------------------------------------------------------------------
+//********************************************************************
+// VREMAN MODEL
+//********************************************************************
 
 VremanTensorMagnitude::
 VremanTensorMagnitude( const Expr::Tag& vel1tag,
                             const Expr::Tag& vel2tag,
                             const Expr::Tag& vel3tag )
-: StrainTensorMagnitude( vel1tag, vel2tag, vel3tag )
+: StrainTensorBase( vel1tag, vel2tag, vel3tag )
 {}
 
 //--------------------------------------------------------------------
@@ -549,7 +507,7 @@ evaluate()
 
   // TSAAD: The reason that we are using conditionals over here has to do with
   // embedded boundaries. When embedded boundaries are present, and when taking
-  // the velocity field from Arches, it seems that bbeta/abeta are negative.
+  // the velocity field from Arches, bbeta/abeta are negative.
   // This can be easily avoided by multiplying abeta and bbeta by the volume
   // fraction. It seems, however, that some cells still exhibit undesirable behavior.
   // It seems that the most conveninent and compact way of dealing with this is
