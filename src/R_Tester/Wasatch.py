@@ -84,12 +84,12 @@ decayIsotropicTurbulenceWale64_ups = modUPS( turbulenceDir, \
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
-  ("decay-isotropic-turbulence-csmag32",       "TurbulenceVerification/"+decayIsotropicTurbulenceCSmag32_ups,  8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ), \
-  ("decay-isotropic-turbulence-csmag64",       "TurbulenceVerification/"+decayIsotropicTurbulenceCSmag64_ups,  8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ), \
-  ("decay-isotropic-turbulence-vreman32",      "TurbulenceVerification/"+decayIsotropicTurbulenceVreman32_ups, 8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ), \
-  ("decay-isotropic-turbulence-vreman64",      "TurbulenceVerification/"+decayIsotropicTurbulenceVreman64_ups, 8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ), \
-  ("decay-isotropic-turbulence-wale32",        "TurbulenceVerification/"+decayIsotropicTurbulenceWale32_ups,   8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ), \
-  ("decay-isotropic-turbulence-wale64",        "TurbulenceVerification/"+decayIsotropicTurbulenceWale64_ups,   8,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ), \
+  ("decay-isotropic-turbulence-csmag32",       "TurbulenceVerification/"+decayIsotropicTurbulenceCSmag32_ups,  8,  "Linux",  ["exactComparison","no_restart"] ), \
+  ("decay-isotropic-turbulence-csmag64",       "TurbulenceVerification/"+decayIsotropicTurbulenceCSmag64_ups,  8,  "Linux",  ["exactComparison","no_restart"] ), \
+  ("decay-isotropic-turbulence-vreman32",      "TurbulenceVerification/"+decayIsotropicTurbulenceVreman32_ups, 8,  "Linux",  ["exactComparison","no_restart"] ), \
+  ("decay-isotropic-turbulence-vreman64",      "TurbulenceVerification/"+decayIsotropicTurbulenceVreman64_ups, 8,  "Linux",  ["exactComparison","no_restart"] ), \
+  ("decay-isotropic-turbulence-wale32",        "TurbulenceVerification/"+decayIsotropicTurbulenceWale32_ups,   8,  "Linux",  ["exactComparison","no_restart"] ), \
+  ("decay-isotropic-turbulence-wale64",        "TurbulenceVerification/"+decayIsotropicTurbulenceWale64_ups,   8,  "Linux",  ["exactComparison","no_restart"] ), \
   ("turbulent-inlet-test-xminus",              "turbulent-inlet-test-xminus.ups",    12,  "Linux",  ["exactComparison","no_restart"] ),                         \
   ("turb-lid-driven-cavity-3D-VREMAN_perf",    liddrivencavity3Dvremanperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),         \
   ("turb-lid-driven-cavity-3D-SMAGORINSKY_perf",   liddrivencavity3Dsmagorinskyperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),         \
