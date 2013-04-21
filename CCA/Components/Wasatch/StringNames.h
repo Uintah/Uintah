@@ -83,10 +83,16 @@ namespace Wasatch{
     const std::string
       xvel, yvel, zvel,
       xmom, ymom, zmom,
-      pressure,
+      pressure, dilatation,
       tauxx, tauxy, tauxz,
       tauyx, tauyy, tauyz,
       tauzx, tauzy, tauzz;
+    
+    // turbulence related variables
+    const std::string
+      turbulentviscosity,
+      straintensormag, vremantensormag,
+      waletensormag, dynamicsmagcoef;
 
   private:
     StringNames();
