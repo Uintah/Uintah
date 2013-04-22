@@ -673,7 +673,6 @@
     <!-- ======================================================================== -->       
     <Turbulence              spec="OPTIONAL NO_DATA">
       <TurbulentSchmidt        spec="OPTIONAL DOUBLE"/>                                   
-      <KolmogorovScale         spec="OPTIONAL DOUBLE"/>                                   
       <EddyViscosityConstant   spec="OPTIONAL DOUBLE"/>                               
       <TurbulenceModel         spec="REQUIRED STRING 'SMAGORINSKY,DYNAMIC,WALE,VREMAN'">
       </TurbulenceModel>
