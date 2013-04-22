@@ -209,7 +209,6 @@
       </LinearFunction>
     </BasicExpression>
 
-
 <!-- create scalar with no conv/diff for rxn extent in wasatch -->
     <TransportEquation equation="generic">
       <SolutionVariable> rxn_extent </SolutionVariable>
@@ -220,55 +219,26 @@
     </TransportEquation>
 
 <!-- Initialized Moments -->
-<!-- Calcite -->
-    <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="m_Calcite_0" state="STATE_N" />
-      <Constant>1.0e-10</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="m_Calcite_1" state="STATE_N" />
-      <Constant>5.0e-8</Constant> 
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="m_Calcite_2" state="STATE_N" />
-      <Constant>3.333333333333e-5</Constant> 
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="m_Calcite_3" state="STATE_N" />
-      <Constant>0.025</Constant>
-    </BasicExpression>
 
-<!-- CalcMult -->
-    <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="m_CalcMult_0" state="STATE_N" />
-      <Constant>1.0e-10</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="m_CalcMult_1" state="STATE_N" />
-      <Constant>5.0e-8</Constant> 
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="m_CalcMult_2" state="STATE_N" />
-      <Constant>3.333333333333e-5</Constant> 
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="m_CalcMult_3" state="STATE_N" />
-      <Constant>0.025</Constant>
-    </BasicExpression>
+    <MomentInitialization>
+      <PopulationName> Calcite </PopulationName>
+      <Values> 
+        1.0e-10,
+        5.0e-8,
+        3.333333333333e-5,
+        0.025
+      </Values>
+    </MomentInitialization>
+
+    <MomentInitialization>
+      <PopulationName> CalcMult </PopulationName>
+      <Values>
+        1.0e-10,
+        5.0e-8,
+        3.333333333333e-5,
+        0.025
+      </Values>
+    </MomentInitialization>
 
 <!-- RXN Extent Source Calculations-->
     <BasicExpression type="SVOL">
@@ -401,10 +371,6 @@
       <PopulationName> Calcite </PopulationName>
       <NumberOfEnvironments>2</NumberOfEnvironments>
       <MolecVol> 3.693e-5 </MolecVol>
-        
-      <SupersaturationExpression>
-        <NameTag name="S" state="STATE_N" />
-      </SupersaturationExpression>
 
       <GrowthExpression>
         <GrowthModel>BULK_DIFFUSION</GrowthModel>
@@ -427,33 +393,6 @@
         </RStarExpression> 
       </BirthExpression>
 
-      <MultiEnvMixingModel>
-        <NameTag name="MultiEnv" state="STATE_NONE"/>
-      </MultiEnvMixingModel>
-
-      <!--ConvectiveFluxExpression>
-        <Method>UPWIND</Method> 
-        <Direction>X</Direction>
-        <AdvectiveVelocity>
-            <NameTag name="uVelocitySPBC" state="STATE_N"/>
-        </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-
-      <ConvectiveFluxExpression>
-        <Method> UPWIND </Method>
-        <Direction>Y</Direction>
-        <AdvectiveVelocity>
-            <NameTag name="vVelocitySPBC" state="STATE_N"/>
-        </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-
-      <ConvectiveFluxExpression>
-        <Method> UPWIND </Method>
-        <Direction>Z</Direction>
-        <AdvectiveVelocity>
-            <NameTag name="wVelocitySPBC" state="STATE_N"/>
-        </AdvectiveVelocity>
-      </ConvectiveFluxExpression-->
     </MomentTransportEquation>
 
 <!-- CalcMult Moment Transport-->
@@ -461,10 +400,6 @@
       <PopulationName> CalcMult </PopulationName>
       <NumberOfEnvironments>2</NumberOfEnvironments>
       <MolecVol> 3.693e-5 </MolecVol>
-        
-      <SupersaturationExpression>
-        <NameTag name="S_CalcMult" state="STATE_N" />
-      </SupersaturationExpression>
 
       <GrowthExpression>
         <GrowthModel>BULK_DIFFUSION</GrowthModel>
@@ -491,29 +426,6 @@
         <NameTag name="MultiEnv" state="STATE_NONE" />
       </MultiEnvMixingModel>
 
-      <!--ConvectiveFluxExpression>
-        <Method>UPWIND</Method> 
-        <Direction>X</Direction>
-        <AdvectiveVelocity>
-            <NameTag name="uVelocitySPBC" state="STATE_N"/>
-        </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-
-      <ConvectiveFluxExpression>
-        <Method> UPWIND </Method>
-        <Direction>Y</Direction>
-        <AdvectiveVelocity>
-            <NameTag name="vVelocitySPBC" state="STATE_N"/>
-        </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-
-      <ConvectiveFluxExpression>
-        <Method> UPWIND </Method>
-        <Direction>Z</Direction>
-        <AdvectiveVelocity>
-            <NameTag name="wVelocitySPBC" state="STATE_N"/>
-        </AdvectiveVelocity>
-      </ConvectiveFluxExpression-->
     </MomentTransportEquation>
 
 <!-- ForceONGraph to use as Arches Source -->
