@@ -50,7 +50,6 @@
     </BasicExpression>
 
     <Turbulence>
-       <KolmogorovScale>100000000000000</KolmogorovScale>
       <EddyViscosityConstant>0.2</EddyViscosityConstant>
       <TurbulenceModel> DYNAMIC </TurbulenceModel>
     </Turbulence>

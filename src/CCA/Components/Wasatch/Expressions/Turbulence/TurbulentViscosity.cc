@@ -144,8 +144,8 @@ evaluate()
   const double dy = 1.0 / std::abs( gradYOp_->get_plus_coef() );
   const double dz = 1.0 / std::abs( gradZOp_->get_plus_coef() );
   const double avgVol = std::pow(dx*dy*dz, 1.0/3.0);
-  double mixingLengthSq = turbulenceParameters_.eddyViscosityConstant * avgVol * (1.0 - avgVol/turbulenceParameters_.kolmogorovScale);
-  mixingLengthSq = mixingLengthSq * mixingLengthSq;
+  double mixingLengthSq = turbulenceParameters_.eddyViscosityConstant * avgVol; //* (1.0 - avgVol/turbulenceParameters_.kolmogorovScale);
+  mixingLengthSq = mixingLengthSq * mixingLengthSq; // (C_s * Delta)^2
   //const double deltaSquared  = pow(dx * dy * dz, 2.0/3.0);
   //const double eddyViscConstSq = turbulenceParameters_.eddyViscosityConstant * turbulenceParameters_.eddyViscosityConstant;
 
