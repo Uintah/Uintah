@@ -57,13 +57,23 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("Y", d_Y, 4);        // C_xH_y
   db->getWithDefault("m", d_m, -0.3);     // [C_xH_y]^m 
   db->getWithDefault("n", d_n, 1.3 );     // [O_2]^n 
-  db->require("fuel_mass_fraction", d_MF_HC_f1);           // Mass fraction of C_xH_y when f=1
-  db->require("oxidizer_O2_mass_fraction", d_MF_O2_f0);    // Mass fraction of O2 when f=0
+  db->require("fuel_mass_fraction", d_MF_HC_f1);                // Mass fraction of C_xH_y when f=1
+  db->require("stoich_fuel_O2_massratio", _stoich_massratio);  // kg fuel/kg ox for clipping the rate 
+
   // labels: 
   db->getWithDefault("temperature_label", d_T_label, "temperature");          // The name of the mixture fraction label
   db->getWithDefault("density_label", d_rho_label, "density");                // The name of the density label 
   db->require("cstar_fraction_label", d_cstar_label);                         // The name of the C* mixture fraction label
-  db->require("c_fraction_label", d_ceq_label);                               // The name of the secondary mixture fraciton label
+  
+  _using_xi = false; 
+  if ( db->findBlock("xi_label") ){ 
+    db->require("xi_label", d_xi_label);                                        // The name of the total mixture fraction label 
+    _using_xi = true; 
+  } else { 
+    db->require("eta_label", d_eta_label);                             // The name of the eta (intermediate fuel) mixture fraciton label
+    db->require("fp_label",  d_fp_label);
+  }
+
   db->getWithDefault("o2_label", d_o2_label, "O2");                           // The name of the O2 label
 
   if ( db->findBlock("temperature_clip") ){ 
@@ -136,11 +146,39 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
   _temperatureLabel   = VarLabel::find( d_T_label );
   _denLabel           = VarLabel::find( d_rho_label );
   _CstarMassFracLabel = VarLabel::find( d_cstar_label );
+
   if ( _CstarMassFracLabel == 0 ){ 
     throw ProblemSetupException( "Error: Could not locate the C* mass fraction label.", __FILE__, __LINE__);
   } 
-  _CEqMassFracLabel   = VarLabel::find( d_ceq_label );
+
+  if ( _using_xi ){ 
+
+    _XiLabel = 0;
+    _XiLabel   = VarLabel::find( d_xi_label ); 
+
+    if ( _XiLabel == 0 ) {
+      throw ProblemSetupException( "Error: Westbrook/Dryer-Using total mixture fraction (xi) but I can't find a label for it.", __FILE__, __LINE__);
+    } 
+
+  } else { 
+
+    _EtaLabel = 0;
+    _EtaLabel = VarLabel::find( d_eta_label );
+
+    _FpLabel = 0;
+    _FpLabel = VarLabel::find( d_fp_label ); 
+
+    if ( _EtaLabel == 0 ) {
+      throw ProblemSetupException( "Error: Westbrook/Dryer-Using eta but I can't find a label for it.", __FILE__, __LINE__);
+    } 
+    if ( _FpLabel == 0 ) {
+      throw ProblemSetupException( "Error: Westbrook/Dryer-Using fp but I can't find a label for it.", __FILE__, __LINE__);
+    } 
+
+  }
+
   _O2MassFracLabel    = VarLabel::find( d_o2_label ); 
+
   if ( _use_flam_limits && !_const_diluent ){ 
     _diluentLabel       = VarLabel::find( _diluent_label_name ); 
   }
@@ -155,7 +193,12 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
 
     tsk->requires( Task::OldDW, _temperatureLabel, Ghost::None, 0 ); 
     tsk->requires( Task::OldDW, _CstarMassFracLabel,  Ghost::None, 0 ); 
-    tsk->requires( Task::OldDW, _CEqMassFracLabel, Ghost::None, 0 ); 
+    if ( _using_xi ){ 
+      tsk->requires( Task::OldDW, _XiLabel, Ghost::None, 0 ); 
+    } else { 
+      tsk->requires( Task::OldDW, _EtaLabel, Ghost::None, 0 ); 
+      tsk->requires( Task::OldDW, _FpLabel, Ghost::None, 0 ); 
+    }
     tsk->requires( Task::OldDW, _denLabel,         Ghost::None, 0 ); 
     tsk->requires( Task::OldDW, _O2MassFracLabel,  Ghost::None, 0 ); 
     if ( _use_flam_limits && !_const_diluent ){ 
@@ -170,8 +213,13 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
 
     tsk->requires( Task::NewDW, _temperatureLabel, Ghost::None, 0 ); 
     tsk->requires( Task::NewDW, _CstarMassFracLabel,  Ghost::None, 0 ); 
+    if ( _using_xi ){ 
+      tsk->requires( Task::NewDW, _XiLabel, Ghost::None, 0 ); 
+    } else { 
+      tsk->requires( Task::NewDW, _EtaLabel, Ghost::None, 0 ); 
+      tsk->requires( Task::NewDW, _FpLabel, Ghost::None, 0 ); 
+    }
     tsk->requires( Task::NewDW, _denLabel,         Ghost::None, 0 ); 
-    tsk->requires( Task::NewDW, _CEqMassFracLabel, Ghost::None, 0 ); 
     tsk->requires( Task::NewDW, _O2MassFracLabel,  Ghost::None, 0 ); 
     if ( _use_flam_limits && !_const_diluent ){ 
       tsk->requires( Task::NewDW, _diluentLabel, Ghost::None, 0 ); 
@@ -217,7 +265,9 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     constCCVariable<double> T;      // temperature 
     constCCVariable<double> den;    // mixture density
     constCCVariable<double> Cstar;  // mass fraction of the hydrocarbon
-    constCCVariable<double> Ceq;    // mass fraction of hydrocarbon for equilibrium
+    constCCVariable<double> Eta;    // mass fraction of eta
+    constCCVariable<double> Fp;     // mass fraction of fp
+    constCCVariable<double> Xi;     // total mixture fraction 
     constCCVariable<double> O2;     // O2 mass fraction
     constCCVariable<double> diluent; // Diluent mass fraction
     
@@ -232,7 +282,13 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       new_dw->get( T     , _temperatureLabel   , matlIndex , patch , Ghost::None , 0 );
       new_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
       new_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
-      new_dw->get( Ceq   , _CEqMassFracLabel   , matlIndex , patch , Ghost::None , 0 );
+
+      if ( _using_xi ){ 
+        new_dw->get( Xi   , _XiLabel, matlIndex , patch , Ghost::None , 0 );
+      } else { 
+        new_dw->get( Eta   , _EtaLabel, matlIndex , patch , Ghost::None , 0 );
+        new_dw->get( Fp    , _FpLabel           , matlIndex , patch , Ghost::None , 0 );
+      } 
       new_dw->get( O2    , _O2MassFracLabel    , matlIndex , patch , Ghost::None , 0 ); 
       if ( _use_flam_limits && !_const_diluent ){ 
         new_dw->get( diluent, _diluentLabel,     matlIndex , patch , Ghost::None, 0 ); 
@@ -251,7 +307,12 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       old_dw->get( T     , _temperatureLabel   , matlIndex , patch , Ghost::None , 0 );
       old_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
       old_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
-      old_dw->get( Ceq   , _CEqMassFracLabel   , matlIndex , patch , Ghost::None , 0 );
+      if ( _using_xi ){ 
+        old_dw->get( Xi , _XiLabel, matlIndex, patch, Ghost::None, 0 ); 
+      } else { 
+        old_dw->get( Eta , _EtaLabel , matlIndex , patch , Ghost::None , 0 );
+        old_dw->get( Fp  , _FpLabel , matlIndex , patch , Ghost::None , 0 );
+      } 
       old_dw->get( O2    , _O2MassFracLabel    , matlIndex , patch , Ghost::None , 0 ); 
       if ( _use_flam_limits && !_const_diluent ){ 
         old_dw->get( diluent, _diluentLabel,     matlIndex , patch , Ghost::None, 0 ); 
@@ -268,7 +329,12 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
       IntVector c = *iter; 
 
-      double f = Ceq[c] + Cstar[c];
+      double f = 0.0;
+      if ( _using_xi ) {
+        f = Xi[c]; 
+      } else { 
+        f = Fp[c] + Eta[c];
+      }
       
       // Step 1: Compute stripping fraction and extent 
       double tiny = 1.0e-16;

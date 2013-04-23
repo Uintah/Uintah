@@ -53,6 +53,9 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
   varname = eqnName+"_scalar_prNo"; 
   d_prNo_label = VarLabel::create( varname, 
             CCVariable<double>::getTypeDescription()); 
+
+  _reinitialize_from_other_var = false; 
+
 }
 
 ScalarEqn::~ScalarEqn()
@@ -103,6 +106,13 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
   } 
 
+  if ( db->findBlock("reinitialize_from") ){ 
+
+    _reinitialize_from_other_var = true; 
+    db->findBlock("reinitialize_from")->getAttribute("label",_reinit_var_name); 
+
+  } 
+
 
   SourceTermFactory& factory = SourceTermFactory::self(); 
   factory.commonSrcProblemSetup( db ); 
@@ -128,28 +138,30 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   }
 
   // Clipping:
-  d_doClipping = false; 
+  // defaults: 
+  clip.activated = false;
+  clip.do_low  = false; 
+  clip.do_high = false; 
+
   ProblemSpecP db_clipping = db->findBlock("Clipping");
 
   if (db_clipping) {
-    //This seems like a *safe* number to assume 
-    double clip_default = -999999;
 
-    d_doLowClip = false; 
-    d_doHighClip = false; 
-    d_doClipping = true;
+    clip.activated = true; 
     
-    db_clipping->getWithDefault("low", d_lowClip,  clip_default);
-    db_clipping->getWithDefault("high",d_highClip, clip_default);
+    db_clipping->getWithDefault("low", clip.low,  -1.e16);
+    db_clipping->getWithDefault("high",clip.high, 1.e16);
+    db_clipping->getWithDefault("tolerance", clip.tol, 1e-10); 
 
-    if ( d_lowClip != clip_default ) 
-      d_doLowClip = true; 
+    if ( db_clipping->findBlock("low") ) 
+      clip.do_low = true; 
 
-    if ( d_highClip != clip_default ) 
-      d_doHighClip = true; 
+    if ( db_clipping->findBlock("high") ) 
+      clip.do_high = true;  
 
-    if ( !d_doHighClip && !d_doLowClip ) 
-      throw InvalidValue("A low or high clipping must be specified if the <Clipping> section is activated!", __FILE__, __LINE__);
+    if ( !clip.do_low && !clip.do_high ) 
+      throw InvalidValue("Error: A low or high clipping must be specified if the <Clipping> section is activated.", __FILE__, __LINE__);
+
   } 
 
   // Scaling information:
@@ -311,7 +323,21 @@ ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_prNo_label); 
 
   //Old
-  tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
+  if ( _reinitialize_from_other_var && d_fieldLabels->recompile_taskgraph ){ 
+
+    _reinit_var_label = 0;
+    _reinit_var_label = VarLabel::find( _reinit_var_name ); 
+    if ( _reinit_var_label == 0 ){ 
+      throw InvalidValue("Error: Cannot find the reinitialization label for the scalar eqn: "+d_eqnName, __FILE__, __LINE__);
+    } 
+    tsk->requires( Task::OldDW, _reinit_var_label, gn, 0 ); 
+
+  } else { 
+
+    tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
+
+  }
+
   if (d_laminar_pr){
     // This requires that the LaminarPrNo model is activated
     const VarLabel* pr_label = VarLabel::find(d_pr_label); 
@@ -344,7 +370,16 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
     constCCVariable<double> oldVar; 
     new_dw->allocateAndPut( newVar, d_transportVarLabel, matlIndex, patch );
     new_dw->allocateAndPut( rkoldVar, d_oldtransportVarLabel, matlIndex, patch ); 
-    old_dw->get(oldVar, d_transportVarLabel, matlIndex, patch, gn, 0);
+
+    if ( _reinitialize_from_other_var && d_fieldLabels->recompile_taskgraph ){ 
+
+      old_dw->get(oldVar, _reinit_var_label, matlIndex, patch, gn, 0);
+
+    } else { 
+
+      old_dw->get(oldVar, d_transportVarLabel, matlIndex, patch, gn, 0);
+
+    } 
 
     newVar.initialize(0.0);
     rkoldVar.initialize(0.0);
@@ -627,7 +662,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     //     to get phi^{(j+1)}
     d_timeIntegrator->singlePatchFEUpdate( patch, phi_at_jp1, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
 
-    if (d_doClipping) 
+    if ( clip.activated ) 
       clipPhi( patch, phi_at_jp1 ); 
 
     //----BOUNDARY CONDITIONS
@@ -700,10 +735,7 @@ ScalarEqn::timeAve( const ProcessorGroup* pc,
     old_dw->get( old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0); 
 
     //----Time averaging done here. 
-    d_timeIntegrator->timeAvePhi( patch, new_phi, old_phi, new_den, old_den, timeSubStep, curr_ssp_time ); 
-
-    if (d_doClipping) 
-      clipPhi( patch, new_phi ); 
+    d_timeIntegrator->timeAvePhi( patch, new_phi, old_phi, new_den, old_den, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high ); 
 
     //----BOUNDARY CONDITIONS
     //    must update BCs for next substep
@@ -739,14 +771,14 @@ ScalarEqn::clipPhi( const Patch* p,
 
     IntVector c = *iter; 
 
-    if (d_doLowClip) {
-      if (phi[c] < d_lowClip) 
-        phi[c] = d_lowClip; 
+    if ( clip.do_low ) {
+      if ( phi[c] < clip.low+clip.tol ) 
+        phi[c] = clip.low; 
     }
 
-    if (d_doHighClip) { 
-      if (phi[c] > d_highClip) 
-        phi[c] = d_highClip; 
+    if ( clip.do_high ) { 
+      if (phi[c] > clip.high-clip.tol) 
+        phi[c] = clip.high; 
     } 
   }
 }

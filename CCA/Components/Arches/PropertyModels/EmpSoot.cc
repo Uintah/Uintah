@@ -49,7 +49,7 @@ void EmpSoot::problemSetup( const ProblemSpecP& inputdb )
 
         src_db->findBlock("DORadiationModel")->require("opl", _opl ); 
 
-      } else { 
+      } else if ( type == "rmcrt") { 
 
         src_db->findBlock("RMCRT")->require( "opl", _opl ); 
 

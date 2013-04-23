@@ -142,7 +142,7 @@ public:
   /** @brief Clip values of phi that are too high or too low (after RK time averaging). */
   template<class phiType>
   void clipPhi( const Patch* p, 
-           phiType& phi );
+                phiType& phi );
 
 private:
 
@@ -155,6 +155,10 @@ private:
   std::string d_pr_label; 
 
   const VarLabel* d_prNo_label;           ///< Label for the prandlt number 
+
+  bool _reinitialize_from_other_var; 
+  std::string _reinit_var_name; 
+  const VarLabel* _reinit_var_label; 
 
 }; // class ScalarEqn
 } // namespace Uintah

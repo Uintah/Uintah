@@ -233,6 +233,12 @@ namespace Uintah {
             p->findBlock("coal")->getAttribute("eta_label", _index_2_name ); 
             doit = true; 
 
+          } else if ( p->findBlock("rcce") ){ 
+
+            p->findBlock("rcce")->getAttribute("fp_label", _index_1_name );
+            p->findBlock("rcce")->getAttribute("eta_label", _index_2_name ); 
+            doit = true; 
+
           } else if ( p->findBlock("acidbase") ){
 
             p->findBlock("acidbase")->getAttribute("fp_label", _index_1_name );
@@ -288,6 +294,184 @@ namespace Uintah {
       private: 
 
         double d_constant; 
+    };
+
+    class RCCETransform : public TransformBase {
+
+      public: 
+        RCCETransform(); 
+        ~RCCETransform(); 
+
+        bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
+
+          bool rcce_table_on = false; 
+          ProblemSpecP p = ps; 
+          bool doit = false; 
+
+          _rcce_fp  = false; 
+          _rcce_eta = false; 
+
+          if ( p->findBlock("rcce_fp") ){
+
+            p->findBlock("rcce_fp")->getAttribute("fp_label", _fp_name );
+            p->findBlock("rcce_fp")->getAttribute("xi_label", _xi_name ); 
+            p->findBlock("rcce_fp")->getAttribute("hl_label", _hl_name ); 
+            _rcce_fp = true; 
+            doit = true; 
+
+          } else if ( p->findBlock("rcce_eta") ){ 
+
+            p->findBlock("rcce_eta")->getAttribute("eta_label", _eta_name );
+            p->findBlock("rcce_eta")->getAttribute("xi_label",  _xi_name ); 
+            p->findBlock("rcce_eta")->getAttribute("hl_label",  _hl_name ); 
+            _rcce_eta = true; 
+            doit = true; 
+
+          } 
+
+          if ( _rcce_fp ) { 
+
+            _xi_index = -1; 
+            _fp_index = -1; 
+
+            int index = 0; 
+            for ( std::vector<std::string>::iterator i = names.begin(); i != names.end(); i++ ){
+
+              if ( *i == _fp_name ) 
+                _fp_index = index; 
+
+              if ( *i == _xi_name )
+                _xi_index = index; 
+
+              if ( *i == _hl_name )
+                _hl_index = index; 
+
+              index++; 
+
+            }
+
+            rcce_table_on = true; 
+
+            if ( _fp_index == -1 ) {
+              proc0cout << "Warning: Could not match Fp mixture fraction label to table variables!" << endl;
+              rcce_table_on = false; 
+            }
+            if ( _xi_index == -1 ) {
+              proc0cout << "Warning: Could not match Xi mixture fraction label to table variables!" << endl;
+              rcce_table_on = false; 
+            }
+            if ( _hl_index == -1 ) {
+              proc0cout << "Warning: Could not match heat loss label to table variables!" << endl;
+              rcce_table_on = false; 
+            }
+
+          } else if ( _rcce_eta ) { 
+
+            _xi_index = -1; 
+            _eta_index = -1; 
+
+            int index = 0; 
+            for ( std::vector<std::string>::iterator i = names.begin(); i != names.end(); i++ ){
+
+              if ( *i == _eta_name ) 
+                _eta_index = index; 
+
+              if ( *i == _xi_name )
+                _xi_index = index; 
+
+              if ( *i == _hl_name )
+                _hl_index = index; 
+
+              index++; 
+
+            }
+
+            rcce_table_on = true; 
+
+            if ( _eta_index == -1 ) {
+              proc0cout << "Warning: Could not match Eta mixture fraction label to table variables!" << endl;
+              rcce_table_on = false; 
+            }
+            if ( _xi_index == -1 ) {
+              proc0cout << "Warning: Could not match Xi mixture fraction label to table variables!" << endl;
+              rcce_table_on = false; 
+            }
+            if ( _hl_index == -1 ) {
+              proc0cout << "Warning: Could not match heat loss label to table variables!" << endl;
+              rcce_table_on = false; 
+            }
+
+          } 
+          return rcce_table_on; 
+        };  
+
+        void inline transform( std::vector<double>& iv ){
+
+          double f   = 0.0;
+          double eta = 0.0; 
+          double fp  = 0.0; 
+          double hl  = 0.0; 
+          double xi  = 0.0;
+
+          if ( _rcce_fp ) { 
+
+            fp = iv[_fp_index];
+            xi = iv[_xi_index];
+            hl = iv[_hl_index];
+
+            eta = xi - fp; 
+
+            f = ( fp ) / ( 1.0 - eta ); 
+
+            if ( f < 0.0 )
+              f = 0.0;
+            if ( f > 1.0 )
+              f = 1.0; 
+
+
+          } else if ( _rcce_eta ){ 
+
+            eta = iv[_eta_index];
+            xi  = iv[_xi_index];
+            hl  = iv[_hl_index];
+
+            double fp = xi - eta; 
+
+            f = ( fp ) / ( 1.0 - eta ); 
+
+            if ( f < 0.0 )
+              f = 0.0;
+            if ( f > 1.0 )
+              f = 1.0; 
+
+          } 
+
+          //reassign 
+          iv[_table_f_index]   = f; 
+          iv[_table_eta_index] = eta;
+          iv[_table_hl_index]  = hl; 
+        
+        }; 
+
+      private: 
+
+        bool _rcce_eta; 
+        bool _rcce_fp; 
+
+        std::string _eta_name;
+        std::string _hl_name; 
+        std::string _fp_name; 
+        std::string _xi_name; 
+
+        int _eta_index;
+        int _fp_index; 
+        int _hl_index; 
+        int _xi_index; 
+
+        int _table_eta_index; 
+        int _table_hl_index; 
+        int _table_f_index; 
+
     };
 
     class InertMixing : public TransformBase {

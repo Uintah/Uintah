@@ -298,6 +298,16 @@
           <coal                         spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+          <rcce                         spec="OPTIONAL NO_DATA"
+                                        attribute1="fp_label REQUIRED STRING"
+                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified ni the TransportEqn node --> 
+          <rcce_fp                      spec="OPTIONAL NO_DATA"
+                                        attribute1="xi_label REQUIRED STRING"
+                                        attribute2="hl_label REQUIRED STRING"
+                                        attribute3="fp_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified ni the TransportEqn node --> 
+          <rcce_eta                     spec="OPTIONAL NO_DATA"
+                                        attribute1="xi_label REQUIRED STRING"
+                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified ni the TransportEqn node --> 
           <acidbase                     spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
@@ -632,6 +642,8 @@
         <Eqn                            spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type  REQUIRED STRING 'CCscalar'">
+          <!--restart_from                 spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"/--> <!-- BEING TESTED: Allows this equation to restart from a predefined variable other than itself --> 
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" /> <!-- Turbulence closure (D_T = mu_t/(Sc_t or Pr_t)), default = 0.4 -->    
           <doDiff                       spec="OPTIONAL BOOLEAN"/> <!-- Turn diffusion on/off --> 
           <doConv                       spec="OPTIONAL BOOLEAN"/> <!-- Turn convection on/off --> 
@@ -682,6 +694,7 @@
           <Clipping                     spec="OPTIONAL NO_DATA">
             <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
             <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
+            <tol                        spec="OPTIONAL DOUBLE"/> <!-- Tolerance on the clipping (low+tol, high-tol) --> 
           </Clipping>
 
         </Eqn>
@@ -747,6 +760,8 @@
             <h2o_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of H2O, default = H2O --> 
             <T_label                    spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of temperature, default = temperature -->  
             <soot_label                 spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of absorbtion coefficient, default = absorpIN (old Arches variable) --> 
+            <psize_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of the particle size --> 
+            <ptemperature_label         spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of the particle size --> 
             <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >
               <opl                        spec="REQUIRED DOUBLE" />                                    <!-- optical path length --> 
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
@@ -863,10 +878,18 @@
             <Y                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 
             <m                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [C_xH_y]^m --> 
             <n                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [O_2]^n --> 
-            <fuel_mass_fraction         spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of hydrocarbon in the fuel stream --> 
-            <oxidizer_O2_mass_fraction  spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of O2 in the oxidizer stream --> 
+            <fuel_mass_fraction         spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of C_xH_y when f=1 --> 
+            <stoich_fuel_O2_massratio  spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Stoichiometric mass fuel/mass air for the slow step --> 
             <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- Name of the C*H mass fraction from the table --> 
-            <c_fraction_label           spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- CxHy mass fraction label for the fast chemistry step (this is usually transported) --> 
+
+            <!-- Use one set of the following two options: --> 
+            <!-- set 1. --> 
+            <eta_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer"/> <!-- Eta mass fraction label --> 
+            <fp_label                    spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer"/> <!-- Fp  mass fraction label -->
+            <!-- set 2. --> 
+            <xi_label                    spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer"/> <!-- Total fuel (conserved) mass fraction label --> 
+            <!-- end --> 
+
             <temperature_clip           spec="OPTIONAL DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Turns off the rate below this T --> 
             <flammability_limit         spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- Use "nose" plot to turn on/off source term. Noses are specified immediately below --> 
               <!-- lower and upper flammability limits are approximated as straight lines, y=mx+b, where x = amount if diluent and y = amount of fuel. --> 
@@ -1053,8 +1076,8 @@
           <scaling_const                spec="REQUIRED DOUBLE"/>                              
           <Clipping                     spec="OPTIONAL NO_DATA">
             <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
-            <small                      spec="OPTIONAL DOUBLE"/> <!-- this defaults to 1e-16, and is probably best left alone (but it can be changed, just in case) -->
             <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
+            <tol                        spec="OPTIONAL DOUBLE"/> <!-- Tolerance on the clipping (low+tol, high-tol) --> 
           </Clipping>
         </Weights>
 
@@ -1087,8 +1110,9 @@
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
           <Clipping                     spec="OPTIONAL NO_DATA">
-            <low                        spec="OPTIONAL DOUBLE"/>    <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
-            <high                       spec="OPTIONAL DOUBLE"/>    <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
+            <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
+            <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
+            <tol                        spec="OPTIONAL DOUBLE"/> <!-- Tolerance on the clipping (low+tol, high-tol) --> 
           </Clipping>
         </Ic>
 
