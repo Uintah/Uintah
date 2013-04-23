@@ -50,7 +50,6 @@ namespace Uintah {
     bool do_partvar;
     bool do_asci;
     bool do_cell_stresses;
-    bool do_rtdata;
     bool do_NCvar_double;
     bool do_NCvar_float;
     bool do_NCvar_point;
@@ -66,7 +65,6 @@ namespace Uintah {
     bool do_patch;
     bool do_material;
     bool do_verbose;
-    bool do_tecplot;
     bool do_all_ccvars;
 
     bool use_extra_cells;
@@ -102,7 +100,6 @@ namespace Uintah {
       do_partvar    = false;
       do_asci       = false;
       do_cell_stresses = false;
-      do_rtdata        = false;
       do_NCvar_double  = false;
       do_NCvar_float   = false;
       do_NCvar_point   = false;
@@ -118,7 +115,6 @@ namespace Uintah {
       do_patch         = false;
       do_material      = false;
       do_verbose       = false;
-      do_tecplot       = false;
       do_all_ccvars    = false;
 
       use_extra_cells = true;

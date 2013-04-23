@@ -41,8 +41,6 @@ SRCS := \
 	$(SRCDIR)/PIC.cc         \
 	$(SRCDIR)/POL.cc         \
 	$(SRCDIR)/AA_MMS.cc      \
-	$(SRCDIR)/rtdata.cc      \
-	$(SRCDIR)/tecplot.cc     \
 	$(SRCDIR)/util.cc        \
 	$(SRCDIR)/varsummary.cc  \
 	$(SRCDIR)/puda.cc        \
