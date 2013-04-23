@@ -12,11 +12,13 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <sci_defs/uintah_defs.h>
+
 #ifdef HAVE_RADPROPS
-#include <radprops/AbsCoeffGas.h>
-#include <radprops/RadiativeSpecies.h>
-#include <radprops/Particles.h>
+#  include <radprops/AbsCoeffGas.h>
+#  include <radprops/RadiativeSpecies.h>
+#  include <radprops/Particles.h>
 #endif
+
 namespace Uintah { 
 
   class RadPropertyCalculator{ 
@@ -102,10 +104,16 @@ namespace Uintah {
 
           virtual bool problemSetup( const ProblemSpecP& db )=0; 
           virtual void computeProps( const Patch* patch, RadCalcSpeciesList species, CCVariable<double>& abskg )=0; 
-          virtual void computePropsWithParticles( const Patch* patch, RadCalcSpeciesList species, RadCalcSpeciesList size, RadCalcSpeciesList pT,
-              RadCalcSpeciesList weight, const int N, CCVariable<double>& abskg, CCVariable<double>& abskp )=0;
-          virtual std::vector<std::string> get_sp()=0;
-          virtual const bool does_scattering()=0;
+          virtual void computePropsWithParticles( const Patch* patch,
+                                                  RadCalcSpeciesList species,
+                                                  RadCalcSpeciesList size,
+                                                  RadCalcSpeciesList pT,
+                                                  RadCalcSpeciesList weight,
+                                                  const int N,
+                                                  CCVariable<double>& abskg,
+                                                  CCVariable<double>& abskp ) = 0;
+          virtual std::vector<std::string> get_sp() = 0;
+          virtual const bool does_scattering() = 0;
       };
 #ifdef HAVE_RADPROPS
       //______________________________________________________________________
@@ -119,7 +127,7 @@ namespace Uintah {
             _part_radprops = 0; 
             _p_ros_abskp  = false; 
             _p_planck_abskp = false; 
-          };
+          }
           ~RadPropsInterface() {
           
             if ( _gg_radprops != 0 ) 
@@ -128,7 +136,7 @@ namespace Uintah {
             if ( _part_radprops != 0 ) 
               delete _part_radprops; 
 
-          };
+          }
           
           //__________________________________
           //
@@ -150,7 +158,7 @@ namespace Uintah {
 
               // mixture molecular weight will always be the first entry 
               // Note that we will assume the table value is the inverse
-               _species.insert(_species.begin(), _mix_mol_weight_name);
+              _species.insert(_species.begin(), _mix_mol_weight_name);
 
               // NOTE: this requires that the table names match the RadProps name.  This is, in general, a pretty 
               // bad assumption.  Need to make this more robust later on...
@@ -170,7 +178,6 @@ namespace Uintah {
                 } else if ( which_species == "OH" ){
                   _sp_mw.push_back(17.0); 
                 } 
-
               }
 
               // For particles: 
