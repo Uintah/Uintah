@@ -103,7 +103,7 @@ public:
 
 private: 
 
-  typedef std::map< std::string, map<std::string, BCFunctionBase* > > VarToMappedF; 
+  typedef std::map< std::string, std::map<std::string, BCFunctionBase* > > VarToMappedF; 
 
   class Dirichlet : public BCFunctionBase { 
 
