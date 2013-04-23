@@ -173,25 +173,25 @@ evaluate()
   BoxFilterOp_->apply_to_field(*tmp, *wwhat);
   
   // calculate the Leonard stress tensor, Lij
-  SpatFldPtr<SVolField> l11 = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *l11 <<= *uuhat - *ucchat * *ucchat;
-  SpatFldPtr<SVolField> l12 = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *l12 <<= *uvhat - *ucchat * *vcchat;
-  SpatFldPtr<SVolField> l13 = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *l13 <<= *uwhat - *ucchat * *wcchat;
-  SpatFldPtr<SVolField> l22 = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *l22 <<= *vvhat - *vcchat * *vcchat;
-  SpatFldPtr<SVolField> l23 = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *l23 <<= *vwhat - *vcchat * *wcchat;
-  SpatFldPtr<SVolField> l33 = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *l33 <<= *wwhat - *wcchat * *wcchat;
+  SpatFldPtr<SVolField> L11 = SpatialFieldStore::get<SVolField>( DynSmagConst );
+  *L11 <<= *uuhat - *ucchat * *ucchat;
+  SpatFldPtr<SVolField> L12 = SpatialFieldStore::get<SVolField>( DynSmagConst );
+  *L12 <<= *uvhat - *ucchat * *vcchat;
+  SpatFldPtr<SVolField> L13 = SpatialFieldStore::get<SVolField>( DynSmagConst );
+  *L13 <<= *uwhat - *ucchat * *wcchat;
+  SpatFldPtr<SVolField> L22 = SpatialFieldStore::get<SVolField>( DynSmagConst );
+  *L22 <<= *vvhat - *vcchat * *vcchat;
+  SpatFldPtr<SVolField> L23 = SpatialFieldStore::get<SVolField>( DynSmagConst );
+  *L23 <<= *vwhat - *vcchat * *wcchat;
+  SpatFldPtr<SVolField> L33 = SpatialFieldStore::get<SVolField>( DynSmagConst );
+  *L33 <<= *wwhat - *wcchat * *wcchat;
 
   // OPTIONAL
-//  SpatFldPtr<SVolField> lkk = SpatialFieldStore::get<SVolField>( DynSmagConst );
-//  *lkk <<= 1.0/3.0*(*l11 + *l22 + *l33);
-//  *l11 <<= *l11 - *lkk;
-//  *l22 <<= *l22 - *lkk;
-//  *l33 <<= *l33 - *lkk;
+//  SpatFldPtr<SVolField> Lkk = SpatialFieldStore::get<SVolField>( DynSmagConst );
+//  *Lkk <<= 1.0/3.0*(*L11 + *L22 + *L33);
+//  *L11 <<= *L11 - *Lkk;
+//  *L22 <<= *L22 - *Lkk;
+//  *L33 <<= *L33 - *Lkk;
 
   //----------------------------------------------------------------------------
   // CALCULATE test-filtered strain tensor
@@ -288,9 +288,9 @@ evaluate()
   //----------------------------------------------------------------------------
   // CALCULATE the dynamic constant!
   //----------------------------------------------------------------------------
-  SpatFldPtr<SVolField> num = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *num <<= 0.0;
-  *num <<= *l11 * *M11 + *l22 * *M22 + *l33 * *M33 + 2.0 * (*l12 * *M12 + *l13 * *M13  + *l23 * *M23);
+  SpatFldPtr<SVolField> LM = SpatialFieldStore::get<SVolField>( DynSmagConst );
+  *LM <<= 0.0;
+  *LM <<= *L11 * *M11 + *L22 * *M22 + *L33 * *M33 + 2.0 * (*L12 * *M12 + *L13 * *M13  + *L23 * *M23);
   
   // filtering the numerator and denominator here requires an MPI communication
   // at patch boundaries for it to work. We could potentially split this expression
@@ -299,16 +299,19 @@ evaluate()
 //  BoxFilterOp_->apply_to_field(*num,*tmp);
 //  *num <<= *tmp;
   
-  SpatFldPtr<SVolField> denom = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *denom <<= 0.0;
-  *denom <<= *M11 * *M11 + *M22 * *M22 + *M33 * *M33 + 2.0 * (*M12 * *M12 + *M13 * *M13 + *M23 * *M23);
+  SpatFldPtr<SVolField> MM = SpatialFieldStore::get<SVolField>( DynSmagConst );
+  *MM <<= 0.0;
+  *MM <<= *M11 * *M11 + *M22 * *M22 + *M33 * *M33 + 2.0 * (*M12 * *M12 + *M13 * *M13 + *M23 * *M23);
 //  *tmp<<= 0.0;
 //  BoxFilterOp_->apply_to_field(*denom,*tmp);
 //  *denom <<= *tmp;
   
-  // prevent backscatter, i.e. c_smag >= 0.0
-  DynSmagConst <<= 0.5 * *num / *denom;
-  DynSmagConst <<= cond( DynSmagConst <= 0.0 , 0.0 )
-                       ( DynSmagConst >= 0.3 , 0.3 )
-                       ( DynSmagConst );
+  // PREVENT BACKSCATTER, i.e. c_smag >= 0.0: given that MM (denominator) is positive,
+  // we only need to check when LM < 0.0. If LM < 0, then set the dynamic coefficient to 0
+  // PREVENT NANs: in the event that MM = 0, we can safely set the dynamic constant
+  // to zero since this means that our test and grid filtered fields are equally
+  // resolved (within the gradient diffusion modeling assumption).
+  const double eps = std::numeric_limits<double>::epsilon();
+  DynSmagConst <<= cond( *LM < 0.0 || *MM <= 2.0*eps , 0.0 )
+                       ( 0.5 * *LM / *MM );
 }
