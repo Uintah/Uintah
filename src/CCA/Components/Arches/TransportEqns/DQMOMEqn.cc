@@ -129,44 +129,51 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   }  
 
   // Clipping:
-  d_doClipping = false; 
+  // defaults: 
+  clip.activated = false;
+  clip.do_low  = false; 
+  clip.do_high = false; 
+
   ProblemSpecP db_clipping = db->findBlock("Clipping");
 
   if (db_clipping) {
-    //This seems like a *safe* number to assume 
-    double clip_default = -9999999999.0;
-    d_doLowClip = false; 
-    d_doHighClip = false; 
-    d_doClipping = true;
+
+    clip.activated = true; 
     
-    db_clipping->getWithDefault("low", d_lowClip,  clip_default);
-    db_clipping->getWithDefault("high",d_highClip, clip_default);
+    db_clipping->getWithDefault("low", clip.low,  -1.e16);
+    db_clipping->getWithDefault("high",clip.high, 1.e16);
+    db_clipping->getWithDefault("tolerance", clip.tol, 1e-10); 
 
-    if( d_weight ) {
-      db_clipping->getWithDefault("small", d_smallClip, 1e-16);
-    }
+    if ( db_clipping->findBlock("low") ) 
+      clip.do_low = true; 
 
-    if ( d_lowClip != clip_default ) 
-      d_doLowClip = true; 
+    if ( db_clipping->findBlock("high") ) 
+      clip.do_high = true;  
 
-    if ( d_highClip != clip_default ) 
-      d_doHighClip = true; 
+    if ( !clip.do_low && !clip.do_high ) 
+      throw InvalidValue("Error: A low or high clipping must be specified if the <Clipping> section is activated.", __FILE__, __LINE__);
 
-    if ( !d_doHighClip && !d_doLowClip ) 
-      throw ProblemSetupException("A low or high clipping must be specified if the <Clipping> section is activated!", __FILE__, __LINE__);
   } 
 
+  //bullet proofing for weights
   if (d_weight) { 
-    if (!d_doClipping) { 
+
+    if (!clip.activated) { 
+
       //By default, set the low value for this weight to 0 and run on low clipping
-      d_lowClip = 0;
-      d_doClipping = true; 
-      d_doLowClip = true;  
+      clip.activated = true; 
+      clip.low = 0.0; 
+      clip.tol = 1e-10; 
+      clip.do_low = true; 
+
     } else { 
-      if (!d_doLowClip){ 
+
+      if ( !clip.do_low ){
+
         //weights always have low clip values!  ie, negative weights not allowed
-        d_lowClip = 0;
-        d_doLowClip = true; 
+        clip.do_low = true; 
+        clip.low = 0; 
+
       } 
     }
   } 
@@ -708,20 +715,11 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
 
     d_timeIntegrator->singlePatchFEUpdate( patch, phi, RHS, dt, curr_ssp_time, d_eqnName );
+
     double factor = d_timeIntegrator->time_factor[timeSubStep]; 
     curr_ssp_time = curr_time + factor * dt; 
-    d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time ); 
 
-
-    if(d_weight){
-      if (d_doClipping)
-        clipPhi( patch, phi);
-    } else {
-      constCCVariable<double> w;
-      new_dw->get(w, d_weightLabel, matlIndex, patch, gn, 0);
-      if (d_doClipping)
-        clipWeightedPhi( patch, phi, w);
-    }
+    d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high ); 
 
     //----BOUNDARY CONDITIONS
     // For first time step, bc's have been set in dqmomInit
@@ -824,62 +822,6 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
     } //end if weight
   }
 }
-//---------------------------------------------------------------------------
-// Method: Compute the boundary conditions. 
-//---------------------------------------------------------------------------
-// -- See header file. 
-
-//---------------------------------------------------------------------------
-// Method: Clip the scalar 
-//---------------------------------------------------------------------------
-template<class phiType> void
-DQMOMEqn::clipPhi( const Patch* p, 
-                       phiType& phi )
-{
-  // probably should put these "if"s outside the loop   
-  for (CellIterator iter=p->getCellIterator(0); !iter.done(); iter++){
-
-    IntVector c = *iter; 
-
-    if (d_doLowClip) {
-      if (phi[c] < d_lowClip) 
-        phi[c] = d_lowClip; 
-    }
-
-    if (d_doHighClip) { 
-      if (phi[c] > d_highClip) 
-        phi[c] = d_highClip; 
-    }
-    if(phi[c]<d_w_small)
-      phi[c] = 0.0; 
-  }
-}
-
-template<class phiType> void
-DQMOMEqn::clipWeightedPhi( const Patch* p,
-                           phiType& phi,
-                           constCCVariable<double> weight )
-{
-  // probably should put these "if"s outside the loop   
-  for (CellIterator iter=p->getCellIterator(0); !iter.done(); iter++){
-
-    IntVector c = *iter;
-
-    if (d_doLowClip) {
-      if (phi[c]/weight[c] < d_lowClip)
-        phi[c] = weight[c]*d_lowClip;
-    }
-
-    if (d_doHighClip) {
-      if (phi[c]/weight[c] > d_highClip)
-        phi[c] = weight[c]*d_highClip;
-    }
-    if(weight[c]<d_w_small)
-      phi[c] = 0.0;
-
-  }
-}
-
 //---------------------------------------------------------------------------
 // Method: Schedule dummy initialization
 //---------------------------------------------------------------------------

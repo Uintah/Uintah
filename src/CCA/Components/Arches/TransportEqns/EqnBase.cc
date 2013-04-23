@@ -12,7 +12,6 @@ using namespace Uintah;
 
 EqnBase::EqnBase(ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName):
 d_fieldLabels(fieldLabels), d_timeIntegrator(timeIntegrator), d_eqnName(eqnName),
-d_doClipping(false), d_doLowClip(false), d_doHighClip(false), d_lowClip(-999999), d_highClip(-999999), d_smallClip(-999999),
 b_stepUsesCellLocation(false), b_stepUsesPhysicalLocation(false),
 d_constant_init(0.0), d_step_dir("x"), d_step_start(0.0), d_step_end(0.0), d_step_cellstart(0), d_step_cellend(0), d_step_value(0.0), 
 d_use_constant_D(false)
