@@ -421,7 +421,11 @@ namespace Uintah {
 
             eta = xi - fp; 
 
-            f = ( fp ) / ( 1.0 - eta ); 
+            if ( eta < 1.0 ){ 
+              f = ( fp ) / ( 1.0 - eta ); 
+            } else { 
+              f = 0.0; 
+            } 
 
             if ( f < 0.0 )
               f = 0.0;
@@ -437,7 +441,11 @@ namespace Uintah {
 
             double fp = xi - eta; 
 
-            f = ( fp ) / ( 1.0 - eta ); 
+            if ( eta < 1.0 ){ 
+              f = ( fp ) / ( 1.0 - eta ); 
+            } else { 
+              f = 0.0; 
+            } 
 
             if ( f < 0.0 )
               f = 0.0;
