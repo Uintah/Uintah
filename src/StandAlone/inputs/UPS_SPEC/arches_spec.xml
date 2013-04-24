@@ -879,7 +879,7 @@
             <m                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [C_xH_y]^m --> 
             <n                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [O_2]^n --> 
             <fuel_mass_fraction         spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of C_xH_y when f=1 --> 
-            <stoich_fuel_O2_massratio  spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Stoichiometric mass fuel/mass air for the slow step --> 
+            <stoich_fuel_O2_massratio   spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Stoichiometric mass fuel/mass air for the slow step --> 
             <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- Name of the C*H mass fraction from the table --> 
 
             <!-- Use one set of the following two options: --> 
