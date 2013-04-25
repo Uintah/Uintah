@@ -864,6 +864,7 @@
         <Temperature      spec="REQUIRED DOUBLE" />
         <ConversionFactor spec="OPTIONAL DOUBLE" /> <!-- defaults to 1.0 -->
         <RCutoff          spec="OPTIONAL DOUBLE" /> <!-- defaults to 0.1 -->
+        <TolmanLength     spec="OPTIONAL DOUBLE" /> <!-- defualts to 0.0 -->
       </OstwaldRipening>
       
       <!-- ================================================================================== -->            
