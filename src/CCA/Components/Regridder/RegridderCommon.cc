@@ -417,7 +417,13 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 
 //_________________________________________________________________
 void RegridderCommon::problemSetup_BulletProofing(const int k){
-
+  
+  if(d_maxLevels < 2){
+    ostringstream msg;
+    msg << "\nProblem Setup: Regridder: <max_levels> must be > 1 to use a regridder with adaptive mesh refinement \n";
+    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+  }
+  
   if(k == 0){  
     for(int dir = 0; dir <3; dir++){
       if (d_cellNum[k][dir] > 1 ) {  // ignore portions of this check for 1D and 2D problems
