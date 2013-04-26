@@ -491,12 +491,13 @@ BadHawkDevol::computeModel( const ProcessorGroup * pc,
         } else {
           raw_coal_mass = wa_raw_coal_mass[c] / weight[c];
         }
-        double testVal = -1.0*(k1+k2)*(raw_coal_mass);  
+        double testVal = (k1+k2)>1 ? -raw_coal_mass : -1.0*(k1+k2)*(raw_coal_mass));  
         if (testVal < -1.0e-16 )
-          devol_rate[c] = -1.0*(k1+k2)*(raw_coal_mass);  
+          devol_rate[c] = testVal;  
         else 
           devol_rate[c] = 0.0;
     
+        // what is Y1_ and Y2_??
         if(d_unweighted){
           testVal = (Y1_*k1 + Y2_*k2)*wa_raw_coal_mass[c]*weight[c]*d_rc_scaling_factor*d_w_scaling_factor;
         } else {
