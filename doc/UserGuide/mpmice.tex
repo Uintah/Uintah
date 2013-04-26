@@ -784,7 +784,7 @@ a cylinder.  For description of Simple Burn see \ref{Sec:SimpleBurn}.
 \item [Preprocessing on input file:]\hfill \\ 1) Comment out or remove $<$max\_Timesteps$>$ on line 21 \\
 2) Comment out $<$outputTimestepInterval$>$ on line 96 \\ 
 3) add $<$outputInterval$>$5e-5$<$outputInterval$>$ on line 97 \\
-\item [Command used to run input file:]\hfill mpirun -np 4 sus guni2dRT.ups
+\item [Command used to run input file:]\hfill mpirun -np 4 sus inputs/UintahRelease/MPMICE/guni2dRT.ups
 
 \item [Simulation Domain:]\hfill    8.636 x 8.636 x 0.16933 cm
 
@@ -872,7 +872,7 @@ This problem consistes of a cylinder initially at 600 K causing burning.  Steady
 \item [Component used:] \hfill mpmice (MPM-ICE)
 \item [Input file name:] \hfill SteadyBurn\_2dRT.ups
 \item [Preprocessing on input file:]\hfill \\ 1) Comment out or remove $<$max\_Timesteps$>$ \\ 2) Comment out $<$outputTimestepInterval$>$ and uncomment $<$outputInterval$>$ around line 101 \\
-\item [Command used to run input file:]\hfill mpirun -np 4 sus SteadyBurn\_2dRT.ups
+\item [Command used to run input file:]\hfill mpirun -np 4 sus inputs/UintahRelease/MPMICE/SteadyBurn\_2dRT.ups
 
 \item [Simulation Domain:]\hfill    9 x 9 x 0.1 cm
 
@@ -1035,5 +1035,47 @@ the importance
 
 %
 %__________________________________
+\newpage
+\section*{\center  Pinwheel}
+\addcontentsline{toc}{subsection}{Pinwheel}
+\subsection*{\underline{Problem Description}}
+This simulation provides an example of fluid-solid interaction through driving a pinwheel via a supersonic jet of air. A 500 m/s jet of air is directed at the face of one of four fins attached to a hollowed cylinder surrounding a pin. This continuous jet of air spins the wheel around the stationary pin creating an easily visually verifiable fluid-solid interaction model. 
+
+\subsection*{\underline{Simulation Specifics}}
+\begin{description}
+\item [Component used:] \hfill mpmice (MPM-ICE)
+\item [Input file name:] \hfill \TT{pinWheel.ups}
+\item [Command used to run input file:]\hfill 
+mpirun -np 6 sus inputs/UintahRelease/MPMICE/pinWheel.ups
+
+\item [Simulation Domain:]\hfill    4.5 x 3.0 x 4.5 m
+
+\item [Example Runtimes:] \hfill \\
+ 10 hours   (6 processors, 2.66 GHz Xeon)\\
+
+\item [Physical time simulated:] \hfill 1 second \\ 
+
+\item [Associated visit session:] \hfill pinWheel.session
+
+\end{description}
+
+\newpage
+
+\section*{\underline{Results}}
+
+
+\begin{figure}
+  \centering
+  \vspace{-40pt}
+  \subfloat[Pinwheel driven by a jet of air]{\label{pinwheel1}
+    \includegraphics[width=.8\textwidth]{pinWheel.png}}
+  \hspace{10pt}
+  \caption{}
+  \label{}
+
+\end{figure}
+
+Figure~\ref{pinwheel1} shows a visualization of the pinwheel alongside the air jet represented by the velocity vectors. The air jet contacts a fin on the wheel causing it to continuously rotate counterclockwise as seen by the colored velocity of the boxes.  
+
 \bibliographystyle{plain}
 \bibliography{ice}

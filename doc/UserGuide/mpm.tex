@@ -768,7 +768,7 @@ of the input file is not important.  {\bf The MPM, ICE and MPMICE components
 are dimensionless calculations.  It is the responsibility of the analyst
 to provide the following inputs using a consistent set of units.}
 
-\subsubsection{Common Inputs} \label{Sec:commonInputs}
+\subsection{Common Inputs} \label{Sec:commonInputs}
 
 Each Uintah component is invoked using a single executable called
 \it sus \normalfont, which chooses the type of simulation
@@ -816,7 +816,7 @@ resolution of the grid.  For more information, consult Section~\ref{Sec:Grid}.
 The other part specifies kinematic boundary conditions on the grid boundaries.
 These are discussed below in Section~\ref{Sec:MPM_BCs}.
 
-\subsubsection{Physical Constants} \label{Sec:physicalConstants}
+\subsection{Physical Constants} \label{Sec:physicalConstants}
 The only physical constant required (or optional for that matter) for
 MPM simulations is gravity, this is specified as:
 
@@ -826,7 +826,7 @@ MPM simulations is gravity, this is specified as:
 </PhysicalConstants>
 \end{Verbatim}
 
-\subsubsection{MPM Flags} \label{Sec:MPMFlags}
+\subsection{MPM Flags} \label{Sec:MPMFlags}
 
 There are many options available when running MPM simulations.  These
 are generally specified in the \tt <MPM> \normalfont section of the input file.
@@ -896,7 +896,7 @@ set for many, see \tt MPM/MPMFlags.cc \normalfont for more.
 
 
 
-\subsubsection{Material Properties} \label{Sec:mat_props}
+\subsection{Material Properties} \label{Sec:mat_props}
 
 The \tt Material Properties \normalfont section of the input file
 actually contains not only those, but also the geometry and initial
@@ -964,7 +964,7 @@ Their use is described in detail in Section~\ref{Sec:Contact}.
     </MaterialProperties>
 \end{Verbatim}
 
-\subsubsection{Constitutive Models} \label{Sec:ConstitutiveModels}
+\subsection{Constitutive Models} \label{Sec:ConstitutiveModels}
 
 The MPM code contains a large number of constitutive models that provide
 a Cauchy stress on each particle based on the velocity gradient computed at
@@ -1423,7 +1423,7 @@ There are a few models whose use is explicitly not recommended.  In particular,
 files calling for the first of these should be switched to the
 \tt ElasticPlastic \normalfont model instead.
 
-\subsubsection{Hypo-Elastic Plasticity in Uintah}  \label{Sec:ElasticPlastic}
+\subsection{Hypo-Elastic Plasticity in Uintah}  \label{Sec:ElasticPlastic}
 
 The hypoelastic-plastic stress update is a mix and match combination
 of isotropic models.  The equation of state may be varied
@@ -3200,7 +3200,7 @@ for the flow stress model but the same idea applies to other models) :
 \end{enumerate}
 
 
-\subsubsection{Contact}  \label{Sec:Contact}
+\subsection{Contact}  \label{Sec:Contact}
 
 When multiple materials are specified in the input file, each material
 interacts with its own field variables.  In other words, each material has
@@ -3350,7 +3350,7 @@ for this, assuming the rigid material is $0$ would look like:
 \end{Verbatim}
 An example of this usage can be found in \tt inputs/MPM/twoblock-single-rigid.ups. \normalfont
 
-\subsubsection{BoundaryConditions} \label{Sec:MPM_BCs}
+\subsection{BoundaryConditions} \label{Sec:MPM_BCs}
 
 Boundary conditions must be specified on each face of the computational
 domain $(x^-, x^+, y^-, y^+,z^-,z^+)$ for each material.  An example of their
@@ -3415,7 +3415,7 @@ There is also the field \tt id = "all" \normalfont.  In principal, one could
 set different boundary condition types for different materials.  In practice,
 this is rarely used, so the usage illustrated here should be used.
 
-\subsubsection{Physical Boundary Conditions} \label{sec:PhysicalBCs}
+\subsection{Physical Boundary Conditions} \label{sec:PhysicalBCs}
 
 It is often more convenient to apply a specified load at the MPM particles.
 The load may be a function of time.  Such a load versus time curve is called
@@ -3510,7 +3510,7 @@ An additional example which is used to achieve triaxial loading can be found
 at \verb|inputs/MPM/TXC.ups|.  There, the material geometry is a block, and so
 the regions described are flat surfaces upon which the pressure is applied.
 
-\subsubsection{On the Fly DataAnalysis} \label{Sec:OTFA_MPM}
+\subsection{On the Fly DataAnalysis} \label{Sec:OTFA_MPM}
 
 In the event that one wishes to monitor the data for a small region of a
 simulation at a rate that is more frequent than the what the DataArchiver
@@ -3562,7 +3562,7 @@ $1/$\tt <samplingFrequency> \normalfont time units, starting at
 It is also possible to save grid based data with this module,
 see Section~\ref{Sec:ICE} for more information.
 
-\subsubsection{Prescribed Motion} \label{Sec:PrescribedMotion} The prescribed motion
+\subsection{Prescribed Motion} \label{Sec:PrescribedMotion} The prescribed motion
 capability in Uintah allows the user to prescribe arbitrary material
 deformations and superimposed rotations.  This capability is particularly
 useful in verifying that the constitutive model is behaving as expected and is
@@ -3607,7 +3607,7 @@ As a final example the table:
 \end{Verbatim}
 would result in 50\% hydrostatic compression at time=1 with a 45 degree superimposed rotation about the 2-axis, followed by  simple shear and a 90 degree rotation about the 3-axis between time=1 and time=2.
 
-\subsubsection{Cohesive Zones} \label{Sec:CohesiveZones}
+\subsection{Cohesive Zones} \label{Sec:CohesiveZones}
 A cohesive zone formulation is available in Uintah based on the description
 by Daphalapurkar, et al.~\cite{Daphalapurkar}.  As in their implementation,
 that in Uintah has several limitations.  It is limited to a 2D implementation,
@@ -3696,7 +3696,7 @@ the ``length" parameter described above is actually going to be an area.
 Namely, the length in the plane of the simulation multiplied by the domain
 thickness in the out of plane direction.
 
-\subsubsection{Particle Insertion} \label{Sec:ParticleInsert}
+\subsection{Particle Insertion} \label{Sec:ParticleInsert}
 MPM has the ability to insert or transport blocks of particles into or
  around the computational domain.  The functionality uses a time threshold for 
 activation of the insertion. Currently, capabilities include translation some 
