@@ -658,7 +658,6 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
                 break;
               }
 
-
               if(f2*f1<0){
                  lower_bound = PO2_surf;
               } else if(f1*f3<0){
@@ -678,15 +677,18 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
                 q = ks*(pow(PO2_surf,n));
                 break;
               }
-
             }
           }              
         }
 
+        // if d_unweighted, char_production_rate_=single particle rate, else, total rate
         char_production_rate_ = devolChar[c];
-              
-        char_reaction_rate_ = -pi*(pow(unscaled_length,2.0))*WC*q;
-        particle_temp_rate_ = -pi*(pow(unscaled_length,2.0))*q/(1.0+CO2CO)*(CO2CO*HF_CO2 + HF_CO); // in J/s
+        if(d_unweighted)
+            char_reaction_rate_ = -(min(pi*(pow(unscaled_length,2.0))*WC*q, unscaled_char_mass+char_production_rate_+unscaled_raw_coal_mass));
+        else
+            char_reaction_rate_ = -(min(pi*(pow(unscaled_length,2.0))*WC*q, unscaled_char_mass+unscaled_raw_coal_mass+char_production_rate_/unscaled_weight));
+
+        particle_temp_rate_ = char_reaction_rate_/WC/(1.0+CO2CO)*(CO2CO*HF_CO2 + HF_CO); // in J/(s.#)
   
           //cout << "O2 " << O2[c] << " CO2 " << CO2[c] << " H2O " << H2O[c] << " N2 " << N2[c] << " MW_mix " << MW_mix << " Conc " << Conc << " DO2 " << DO2 << " q " << q << endl;
           //if(abs(PO2_surf/PO2_inf -1.0) > 0.01){
