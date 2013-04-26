@@ -226,6 +226,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     db_linear_solver->getWithDefault("type", d_solverType, "LU");
 
     b_optimize = false;
+    b_simplest = false;
 
     if( d_solverType == "Lapack-invert" ) {
       b_useLapack = true;
@@ -248,7 +249,9 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
         //}
         AAopt->invert();
       }
-    } else {
+    } else if( d_solverType == "Simplest" ) {
+        b_simplest = true;
+    }else {
       string err_msg = "ERROR: Arches: DQMOM: Unrecognized solver type "+d_solverType+": must be 'Lapack-invert', 'Lapack-svd', or 'LU'.\n";
       throw ProblemSetupException(err_msg,__FILE__,__LINE__);
     }
@@ -685,7 +688,99 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         delete BB;
         delete XX;
  
-      } else if( b_useLapack == false ) {
+      }else if( b_simplest == true ){
+   
+
+          ColumnMatrix* XX = scinew ColumnMatrix( dimension );
+          double start_AXBConstructionTime = Time::currentSeconds();
+
+          construct_Simplest_XX( XX, models );
+          
+          total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime;
+          double start_SolveTime = Time::currentSeconds(); //timing 
+
+          total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
+          
+          int z=0; // equation loop counter
+          
+#if defined(DEBUG_MATRICES)
+          
+          if( pc->myrank() == 0 ) {
+              if( b_writefile ) {
+                  char filename[28];
+                  int currentTimeStep;
+                  if( b_isFirstTimeStep ) {
+                      currentTimeStep = 0;
+                  } else {
+                      currentTimeStep = d_fieldLabels->d_sharedState->getCurrentTopLevelTimeStep();
+                  }
+                  int sizeofit;
+                  ofstream oStream;
+                  
+                  double start_FileWriteTime = Time::currentSeconds();
+                  
+                  
+                  // write X matrix
+                  sizeofit = sprintf( filename, "X_%.2d.mat", currentTimeStep );
+                  oStream.open(filename);
+                  for( int iRow = 0; iRow < dimension; ++iRow ) {
+                      oStream << scientific << setw(20) << setprecision(20) << " " << (*XX)[iRow] << endl;
+                  }
+                  oStream.close();
+                  
+                  
+                  total_FileWriteTime += Time::currentSeconds() - start_FileWriteTime;
+              }
+              b_writefile = false;
+          }
+          
+#endif
+          
+          // Weight equations:
+          for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
+              iEqn != weightEqns.end(); ++iEqn ) {
+              const VarLabel* source_label = (*iEqn)->getSourceLabel();
+              CCVariable<double> tempCCVar;
+              if( new_dw->exists(source_label, matlIndex, patch) ) {
+                  new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
+              } else {
+                  new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+              }
+              
+              if (z >= dimension ) {
+                  stringstream err_msg;
+                  err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
+                  throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
+              } else {
+                  tempCCVar[c] = (*XX)[z];
+              }
+              ++z;
+          }
+          // Weighted abscissa equations:
+          for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
+              iEqn != weightedAbscissaEqns.end(); ++iEqn) {
+              const VarLabel* source_label = (*iEqn)->getSourceLabel();
+              CCVariable<double> tempCCVar;
+              if (new_dw->exists(source_label, matlIndex, patch)) {
+                  new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
+              } else {
+                  new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+              }
+              
+              // Make sure several critera are met for an acceptable solution
+              if (z >= dimension ) {
+                  stringstream err_msg;
+                  err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
+                  throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
+              } else {
+                  tempCCVar[c] = (*XX)[z];
+              }
+              ++z;
+          }
+          
+          delete XX;
+      
+      }else if( b_useLapack == false ) {
 
         ///////////////////////////////////////////////////////
         // Use the LU solver
@@ -1372,6 +1467,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
   }else if( d_solverType == "Optimize"){
     proc0cout << " Time for Optimized Method solution: " << total_SolveTime << "seconds\n";
+  }else if( d_solverType == "Simplest"){
+      proc0cout << " Time for Simplest Method solution: " << total_SolveTime << "seconds\n";
   }
 
 #endif
@@ -1735,6 +1832,23 @@ DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
     (*BB)[k] = totalsumS;
   } // end moments
 }
+
+
+
+// **********************************************
+// Construct source terms directly for simplest linear type solver
+// **********************************************
+void
+DQMOM::construct_Simplest_XX( ColumnMatrix*  &XX,
+                         vector<double> &models)
+{
+    for ( unsigned int k = 0; k< N_; k++)
+        (*XX) [k] = 0.0;
+    for ( unsigned int k = 0; k < N_*N_xi; k++) {
+        (*XX) [k+N_] = models[k];
+    } // end moments
+}
+
 
 
 
