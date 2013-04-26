@@ -45,7 +45,9 @@ SRCS := \
 	$(SRCDIR)/varsummary.cc  \
 	$(SRCDIR)/puda.cc        \
 	$(SRCDIR)/GV_MMS.cc      \
-	$(SRCDIR)/ER_MMS.cc
+	$(SRCDIR)/ER_MMS.cc      \
+	$(SRCDIR)/todd1.cc       
+
 
 ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := $(CORE_STATIC_PSELIBS)

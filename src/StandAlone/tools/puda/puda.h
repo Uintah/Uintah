@@ -66,6 +66,7 @@ namespace Uintah {
     bool do_material;
     bool do_verbose;
     bool do_all_ccvars;
+    bool do_todd1;
 
     bool use_extra_cells;
 
@@ -78,7 +79,6 @@ namespace Uintah {
     int matl_jim;
     std::string i_xd;
     std::string filebase;
-    std::string raydatadir;
     std::string particleVariable;
     std::string ccVarInput;
 
@@ -116,6 +116,7 @@ namespace Uintah {
       do_material      = false;
       do_verbose       = false;
       do_all_ccvars    = false;
+      do_todd1         = false;
 
       use_extra_cells = true;
 
