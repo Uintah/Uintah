@@ -884,8 +884,8 @@ namespace Wasatch {
               // get the functor set associated with this field
               std::set<std::string>::iterator functorIter = (*iter).second.begin();
               while (functorIter != (*iter).second.end() ) {
-                std::string functorName = *functorIter;
-                Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
+                const std::string& functorName = *functorIter;
+                const Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
                 factory.attach_modifier_expression( modTag, phiTag, patch->getID(), true );
                 ++functorIter;
               }
@@ -901,11 +901,7 @@ namespace Wasatch {
 
           // loop over the boundary faces
           for( ; faceIterator!=bndFaces.end(); ++faceIterator ){
-            Uintah::Patch::FaceType face = *faceIterator;
-
-            //get the face direction
-            SCIRun::IntVector insideCellDir = patch->faceDirection(face);
-            //std::cout << "Inside Cell Dir: \n" << insideCellDir << std::endl;
+            const Uintah::Patch::FaceType face = *faceIterator;
 
             // get the number of children
             // jcs note that we need to do some error checking here.

@@ -7,6 +7,8 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/Arches/Directives.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 
 using namespace std;
 using namespace Uintah; 
@@ -103,7 +105,15 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "T_label", _T_label_name, "temperature" ); 
   db->getWithDefault( "abskp_label", _abskp_label_name, "new_abskp" ); 
   db->getWithDefault( "soot_label",  _soot_label_name, "sootFVIN" ); 
+  db->getWithDefault( "psize_label", _size_label_name, "length");
+  db->getWithDefault( "ptemperature_label", _pT_label_name, "temperature"); 
 
+  //get the number of quadrature nodes and store it locally 
+  _nQn_part = 0;
+  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") ){
+    db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
+  }
+  
   proc0cout << " --- DO Radiation Model Summary: --- " << endl;
   proc0cout << "   -> calculation frequency: " << _radiation_calc_freq << endl;
   proc0cout << "   -> co2 label name:    " << _co2_label_name << endl; 
@@ -167,6 +177,49 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
         }
       }
 
+      for ( int i = 0; i < _nQn_part; i++ ){ 
+
+        //--size--
+        std::string label_name = _size_label_name + "_qn"; 
+        std::stringstream out; 
+        out << i; 
+        label_name += out.str(); 
+
+        const VarLabel* sizelabel = VarLabel::find( label_name ); 
+        _size_varlabels.push_back( sizelabel ); 
+
+        if ( sizelabel != 0 ){ 
+          tsk->requires( Task::OldDW, sizelabel, Ghost::None, 0 ); 
+        } else { 
+          throw ProblemSetupException("Error: Could not find particle size quadrature node: " + label_name, __FILE__, __LINE__);
+        }
+
+        //--temperature--
+        label_name = _pT_label_name + "_qn"; 
+        label_name += out.str(); 
+
+        const VarLabel* tlabel = VarLabel::find( label_name ); 
+        _T_varlabels.push_back( tlabel ); 
+
+        if ( tlabel != 0 ){ 
+          tsk->requires( Task::OldDW, tlabel, Ghost::None, 0 ); 
+        } else { 
+          throw ProblemSetupException("Error: Could not find particle temperature quadrature node: " + label_name , __FILE__, __LINE__);
+        }
+
+        //--weight--
+        label_name = "w_qn"+i; 
+        const VarLabel* wlabel = VarLabel::find( label_name ); 
+        _w_varlabels.push_back( wlabel ); 
+
+        if ( wlabel != 0 ){ 
+          tsk->requires( Task::OldDW, wlabel, Ghost::None, 0 ); 
+        } else { 
+          throw ProblemSetupException("Error: Could not find particle weight quadrature node: w_qn"+i , __FILE__, __LINE__);
+        }
+
+      } 
+
     } else { 
 
       tsk->requires( Task::OldDW, _co2_label, gn,  0 ); 
@@ -194,6 +247,18 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     if ( _using_prop_calculator ){ 
 
       for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
+        tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
+      } 
+
+      for ( std::vector<const VarLabel*>::iterator iter = _size_varlabels.begin(); iter != _size_varlabels.end(); iter++) { 
+        tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
+      } 
+
+      for ( std::vector<const VarLabel*>::iterator iter = _w_varlabels.begin(); iter != _w_varlabels.end(); iter++) { 
+        tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
+      } 
+
+      for ( std::vector<const VarLabel*>::iterator iter = _T_varlabels.begin(); iter != _T_varlabels.end(); iter++) { 
         tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
       } 
 
@@ -265,17 +330,46 @@ DORadiation::computeSource( const ProcessorGroup* pc,
      
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    std::vector<constCCVariable<double> > species; 
+
+    typedef std::vector<constCCVariable<double> > CCCV; 
+    typedef std::vector<const VarLabel*> CCCVL; 
+
+    CCCV species; 
+    CCCV weights; 
+    CCCV size;
+    CCCV pT; 
 
     if ( timeSubStep == 0 ) { 
 
       if ( _using_prop_calculator ){ 
 
-        for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
+        //--species--
+        for ( CCCVL::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
           constCCVariable<double> var; 
           old_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
           species.push_back( var ); 
         }
+
+        //--size--
+        for ( CCCVL::iterator iter = _size_varlabels.begin(); iter != _size_varlabels.end(); iter++ ){ 
+          constCCVariable<double> var; 
+          old_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+          size.push_back( var ); 
+        } 
+
+        //--temperature--
+        for ( CCCVL::iterator iter = _T_varlabels.begin(); iter != _T_varlabels.end(); iter++ ){ 
+          constCCVariable<double> var; 
+          old_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+          pT.push_back( var ); 
+        } 
+
+        //--weight--
+        for ( CCCVL::iterator iter = _w_varlabels.begin(); iter != _w_varlabels.end(); iter++ ){ 
+          constCCVariable<double> var; 
+          old_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+          weights.push_back( var ); 
+        } 
 
         old_dw->getCopy( radiation_vars.temperature, _T_label, matlIndex , patch , gac , 1 );
 
@@ -326,11 +420,35 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     } else { 
 
       if ( _using_prop_calculator ){ 
+
+        //--species--
         for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
           constCCVariable<double> var; 
           new_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
           species.push_back( var ); 
         }
+
+        //--size--
+        for ( CCCVL::iterator iter = _size_varlabels.begin(); iter != _size_varlabels.end(); iter++ ){ 
+          constCCVariable<double> var; 
+          new_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+          size.push_back( var ); 
+        } 
+
+        //--temperature--
+        for ( CCCVL::iterator iter = _T_varlabels.begin(); iter != _T_varlabels.end(); iter++ ){ 
+          constCCVariable<double> var; 
+          new_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+          pT.push_back( var ); 
+        } 
+
+        //--weight--
+        for ( CCCVL::iterator iter = _w_varlabels.begin(); iter != _w_varlabels.end(); iter++ ){ 
+          constCCVariable<double> var; 
+          new_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+          weights.push_back( var ); 
+        } 
+
         new_dw->getCopy( radiation_vars.temperature, _T_label, matlIndex , patch , gac , 1 );
 
       } else { 
@@ -366,7 +484,8 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       } 
 
     } 
-    old_dw->get(     const_radiation_vars.cellType , _labels->d_cellTypeLabel, matlIndex, patch, gac, 1 ); 
+
+    old_dw->get( const_radiation_vars.cellType , _labels->d_cellTypeLabel, matlIndex, patch, gac, 1 ); 
 
     if ( do_radiation ){ 
 
@@ -374,7 +493,15 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
         if ( _using_prop_calculator ) { 
 
-          _prop_calculator->compute( patch, species, radiation_vars.ABSKG );
+          if ( _prop_calculator->does_scattering() ){ 
+
+            _prop_calculator->compute( patch, species, size, pT, weights, _nQn_part, radiation_vars.ABSKG, radiation_vars.ABSKP ); 
+
+          } else { 
+
+            _prop_calculator->compute( patch, species, radiation_vars.ABSKG );
+
+          } 
 
         } else { 
 

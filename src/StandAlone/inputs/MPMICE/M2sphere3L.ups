@@ -154,16 +154,15 @@
         <min_grid_level>-1</min_grid_level>
         <max_grid_level>-1</max_grid_level>
       </MPM>
-      <Regridder type="BNR">
-        <dynamic_dilation>false</dynamic_dilation>
-        <max_timestep_interval> 300 </max_timestep_interval>
-        <min_patch_size>        [[16,16,16]]        </min_patch_size>
-        <patches_per_level_per_proc> 8         </patches_per_level_per_proc>
-        <max_levels>3</max_levels>
+      <Regridder type="Tiled">
+        <max_timestep_interval>     300       </max_timestep_interval>
+        <min_patch_size>        [[16,16,16]]  </min_patch_size>
+        <patches_per_level_per_proc>  8       </patches_per_level_per_proc>
+        <max_levels>                  3       </max_levels>
         <cell_refinement_ratio>    [[4,4,4]]  </cell_refinement_ratio>
         <cell_stability_dilation>   [1,1,1]   </cell_stability_dilation>
-        <!--cell_regrid_dilation> [1,1,1] </cell_regrid_dilation-->
-        <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
+        <cell_regrid_dilation>      [0,0,0]   </cell_regrid_dilation>
+        <min_boundary_cells>        [1,1,1]   </min_boundary_cells>
       </Regridder>
       <useLockStep>       true  </useLockStep>
     </AMR>

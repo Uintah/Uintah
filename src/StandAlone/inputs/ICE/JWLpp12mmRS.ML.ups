@@ -192,12 +192,13 @@
           <Variable name = "press_CC" value = "4e10" matl = "0" />
         </Refinement_Criteria_Thresholds>
       </ICE>
-      <Regridder type="Hierarchical">
+      
+      <Regridder type="Tiled">
         <max_levels>2</max_levels>
-        <cell_refinement_ratio>    [[4,4,4]]  </cell_refinement_ratio>
-        <lattice_refinement_ratio> [[1,4,4],[1,2,2]] </lattice_refinement_ratio>
-        <cell_stability_dilation>   [2,2,2]   </cell_stability_dilation>
-        <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
+        <cell_refinement_ratio>    [[4,4,4]]    </cell_refinement_ratio>
+        <min_patch_size>           [[8,8,8]] </min_patch_size>
+        <cell_stability_dilation>   [2,2,2]     </cell_stability_dilation>
+        <min_boundary_cells>       [1,1,1]      </min_boundary_cells>
       </Regridder>
     </AMR>
     <!--____________________________________________________________________-->
@@ -246,7 +247,7 @@
          </material>
 
          <material name = "product">
-           <include href="inputs/ICE/EOS/Data/JWLEOSANFO.xml"/>
+           <include href="inputs/ICE/EOSData/JWLEOSANFO.xml"/>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          544.96              </specific_heat>

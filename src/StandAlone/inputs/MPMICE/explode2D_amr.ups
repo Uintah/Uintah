@@ -165,7 +165,7 @@
       <min_grid_level>-1</min_grid_level>
       <max_grid_level>-1</max_grid_level>
     </MPM>
-    <Regridder type="BNR">
+    <Regridder type="Tiled">
       <min_patch_size> [[8,8,1]] </min_patch_size>
       <max_levels>                  3       </max_levels>
       <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
@@ -173,7 +173,6 @@
       <cell_regrid_dilation>      [0,0,0]   </cell_regrid_dilation>
       <min_boundary_cells>        [1,1,0]   </min_boundary_cells>
       <max_timestep_interval>    0         </max_timestep_interval>
-      <patch_ratio_to_target>0.125</patch_ratio_to_target>
     </Regridder>
     <useLockStep>       true </useLockStep>
     <!--<doMultiTaskgraphing>true</doMultiTaskgraphing> -->

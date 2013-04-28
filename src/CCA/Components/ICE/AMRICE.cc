@@ -73,14 +73,35 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   ICE::problemSetup(params, restart_prob_spec,grid, sharedState);
   ProblemSpecP ice_ps;
   ProblemSpecP amr_ps = params->findBlock("AMR");
+  
+  
+  
+  
+  ProblemSpecP reg_ps = amr_ps->findBlock("Regridder");
+  if (reg_ps) {
+
+    string regridder;
+    reg_ps->getAttribute( "type", regridder );
+
+    if (regridder != "Tiled") {
+      ostringstream msg;
+      msg << "\n    ERROR:AMRICE With the (" << regridder << ") regridder the refine() task will overwrite \n";
+      msg << "    all data in any newly created patches on the fine level patches.  There could be valid data on these patches. \n" ;
+      msg << "    To prevent this you must select the \"Tiled\" regridder\n"; 
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }
+  }
+  
   if (amr_ps)
-    ice_ps = amr_ps->findBlock("ICE");
+    ice_ps = amr_ps->findBlock("ICE");  
+    
   if(!ice_ps){
     string warn;
     warn ="\n INPUT FILE ERROR:\n <ICE>  block not found inside of <AMR> block \n";
     throw ProblemSetupException(warn, __FILE__, __LINE__);
     
   }
+  
   ProblemSpecP refine_ps = ice_ps->findBlock("Refinement_Criteria_Thresholds");
   if(!refine_ps ){
     string warn;
@@ -699,7 +720,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
                    0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
     
     //__________________________________
-    // Model Variables.
+    // Models with transported variables
     if(d_modelSetup && d_modelSetup->tvars.size() > 0){
       vector<TransportedVariable*>::iterator iter;
       
@@ -711,6 +732,15 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
         task->computes(tvar->var);
       }
     }
+    
+    //__________________________________
+    // Models that need to refine/initialize
+    // variables on new patches  This will call both ICE and MPMICE based models
+    for(vector<ModelInterface*>::iterator iter = d_models.begin();
+      iter != d_models.end(); iter++){
+      (*iter)->scheduleRefine(patches, sched);
+    }
+    
     
     task->computes(lb->press_CCLabel, subset, Task::OutOfDomain);
     task->computes(lb->rho_CCLabel);
@@ -726,7 +756,11 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
 }
 
 /*___________________________________________________________________
- Function~  AMRICE::Refine--  
+This task initializes the variables on all patches that the regridder
+creates.  The BNR and Hierarchical regridders will create patches that 
+are partially filled with old data.  We don't
+want to overwrite these data, thus only use the tiled regridder
+ 
 _____________________________________________________________________*/
 void AMRICE::refine(const ProcessorGroup*,
                     const PatchSubset* patches,

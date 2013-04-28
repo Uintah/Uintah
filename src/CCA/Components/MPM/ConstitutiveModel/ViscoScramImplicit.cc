@@ -26,7 +26,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Math/Short27.h> //for Fracture
 #include <Core/Math/Rand48.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>

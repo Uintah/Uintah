@@ -572,6 +572,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       if ( !eqn->getDensityGuessBool() )
         eqn->sched_solveTransportEqn( level, sched, curr_level );
     }
+
     // Clean up after Scalar equation evaluations
     if (curr_level == numTimeIntegratorLevels-1){
       for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){

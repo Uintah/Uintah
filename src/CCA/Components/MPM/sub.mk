@@ -35,7 +35,6 @@ SRCDIR	:= CCA/Components/MPM
 SRCS += $(SRCDIR)/SerialMPM.cc    \
 	$(SRCDIR)/RigidMPM.cc     \
 	$(SRCDIR)/MPMCommon.cc    \
-	$(SRCDIR)/FractureMPM.cc  \
 	$(SRCDIR)/ImpMPM.cc       \
 	$(SRCDIR)/ShellMPM.cc     \
 	$(SRCDIR)/AMRMPM.cc       \
@@ -58,7 +57,6 @@ SUBDIRS := \
 	$(SRCDIR)/PhysicalBC        \
 	$(SRCDIR)/ParticleCreator   \
 	$(SRCDIR)/CohesiveZone   \
-	$(SRCDIR)/Crack		    \
 	$(SRCDIR)/HeatConduction    \
 	$(SRCDIR)/MMS
 

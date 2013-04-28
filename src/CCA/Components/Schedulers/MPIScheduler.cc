@@ -444,6 +444,7 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
   double dsend = Time::currentSeconds()-sendstart;
   mpi_info_.totalsend += dsend;
   if (dbgst.active() && numSend>0){
+    if (d_myworld->myrank() == d_myworld->size()/2 )
      dbgst << d_myworld->myrank() << " Time: " << Time::currentSeconds() << " , NumSend= "
          << numSend << " , VolSend: " << volSend << endl;
 

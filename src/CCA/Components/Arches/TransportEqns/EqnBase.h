@@ -184,6 +184,20 @@ public:
   	return _table_init; 
   };
 
+  // Clipping:
+  struct ClipInfo{ 
+
+    bool activated;                 ///< Clipping on/off for this scalar
+    bool do_low;                    ///< Do clipping on a min 
+    bool do_high;                   ///< Do clipping on a max
+    double low;                     ///< Low clipping value
+    double high;                    ///< High clipping value
+    double tol;                     ///< Tolerance value for the min and max
+
+  }; 
+
+  ClipInfo clip;                    ///< All the clipping information for this scalar
+
 protected:
 
   template<class T> 
@@ -223,16 +237,6 @@ protected:
   std::string d_initFunction;             ///< A functional form for initial value.
   std::string d_mol_D_label_name;         ///< Name of the molecular diffusivity label. 
   std::string d_init_dp_varname; 					///< The name of a table dependent variable which could be used to initialize the transported variable
-	
-
-  // Clipping:
-  bool d_doClipping;                ///< Boolean: are values clipped?
-  bool d_doLowClip;                 ///< Boolean: are low values clipped?
-  bool d_doHighClip;                ///< Boolean: are high values clipped?
-
-  double d_lowClip;                 ///< Value of low clipping
-  double d_highClip;                ///< Value of high clipping
-  double d_smallClip;               ///< Value of small clipping (used if scalar is a divisor, e.g. with DQMOM weights)
 
   // Initialization:
   bool b_stepUsesCellLocation;      ///< Boolean: is step function's cell location specified?

@@ -761,8 +761,12 @@ void UnifiedScheduler::runTasks(int t_id)
         havework = true;
         numTasksDone++;
         if (taskorder.active()){
-          taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " , scheduled order: "
+          if (d_myworld->myrank() == d_myworld->size()/2) {
+            cerrLock.lock();
+            taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " , scheduled order: "
                 << numTasksDone << endl;
+            cerrLock.unlock();
+          }
         }
         phaseTasksDone[readyTask->getTask()->d_phase]++;
         while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
@@ -804,8 +808,12 @@ void UnifiedScheduler::runTasks(int t_id)
 #endif
           numTasksDone++;
           if (taskorder.active()){
-            taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " , scheduled order: "
+            if (d_myworld->myrank() == d_myworld->size()/2) {
+              cerrLock.lock();
+              taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " , scheduled order: "
                 << numTasksDone << endl;
+              cerrLock.unlock();
+            }
           }
           phaseTasksDone[readyTask->getTask()->d_phase]++;
           while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
@@ -953,8 +961,12 @@ void UnifiedScheduler::runTasks(int t_id)
         postMPISends(readyTask, currentIteration, t_id);
         numTasksDone++;
         if (taskorder.active()){
-          taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " , scheduled order: "
+          if (d_myworld->myrank() == d_myworld->size()/2) {
+            cerrLock.lock();
+            taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " , scheduled order: "
                 << numTasksDone << endl;
+            cerrLock.unlock();
+          }
         }
         phaseTasksDone[readyTask->getTask()->d_phase]++;
         while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
@@ -1364,8 +1376,12 @@ void UnifiedScheduler::postMPISends(DetailedTask * task,
   double dsend = Time::currentSeconds() - sendstart;
   mpi_info_.totalsend += dsend;
   if (dbgst.active() && numSend>0){
-     dbgst << d_myworld->myrank() << " Time: " << Time::currentSeconds() << " , NumSend= "
+    if (d_myworld->myrank() == d_myworld->size()/2) {
+      cerrLock.lock();
+      dbgst << d_myworld->myrank() << " Time: " << Time::currentSeconds() << " , NumSend= "
          << numSend << " , VolSend: " << volSend << endl;
+      cerrLock.unlock();
+    }
   }
 }  // end postMPISends();
 

@@ -152,13 +152,14 @@ namespace Wasatch {
     ostwaldParams->get("SurfaceEnergy", Surf_Eng);
     ostwaldParams->get("Temperature", Temperature);
 
-    double CFCoef, RCutoff;
+    double CFCoef, RCutoff, tolmanLength;
     ostwaldParams->getWithDefault("ConversionFactor",CFCoef,1.0); //converts small radii to SI
     ostwaldParams->getWithDefault("RCutoff",RCutoff,0.1);
+    ostwaldParams->getWithDefault("TolmanLength",tolmanLength,0.0);
     expCoef = 2.0*Molec_Vol*Surf_Eng/R/Temperature / CFCoef;  //r is divided in this equation later
     
     typedef typename OstwaldRipening<FieldT>::Builder ostwald;
-    builder = scinew ostwald(ostwaldTag, weightsTagList, abscissaeTagList, m0Tag, expCoef, RCutoff);
+    builder = scinew ostwald(ostwaldTag, weightsTagList, abscissaeTagList, m0Tag, expCoef, tolmanLength, RCutoff);
     factory.register_expression( builder );
   }
 

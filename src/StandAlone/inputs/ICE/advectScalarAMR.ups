@@ -212,13 +212,12 @@
         <Refinement_Criteria_Thresholds>
         </Refinement_Criteria_Thresholds>
       </ICE>
-      <Regridder type = "BNR">
-        <max_levels>2</max_levels>
-        <min_patch_size>           [[4,4,1]]  </min_patch_size>
-        <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
-        <lattice_refinement_ratio> [[2,2,1]]  </lattice_refinement_ratio>
-        <cell_stability_dilation>   [2,1,1]   </cell_stability_dilation>   
-        <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
+      <Regridder type = "Tiled">
+        <max_levels>                   2      </max_levels>
+        <min_patch_size>           [[4,4,4]]  </min_patch_size>
+        <cell_refinement_ratio>    [[2,2,2]]  </cell_refinement_ratio>
+        <cell_stability_dilation>   [2,2,2]   </cell_stability_dilation>   
+        <min_boundary_cells>       [1,1,1]    </min_boundary_cells>
       </Regridder>   
     </AMR>
 

@@ -39,7 +39,7 @@
  *
  *  \brief calculates the critical radius for Nucleation
  *  \f$ R^* = R_0 / \ln (S) \f$
- *
+ *  \f$ R_0 = 2*\sigma*\nu / R / T \f$
  */
 template< typename FieldT >
 class PrecipitationRCritical
@@ -47,11 +47,13 @@ class PrecipitationRCritical
 {
   /* declare private variables such as fields, operators, etc. here */
   const Expr::Tag superSatTag_;
+  const Expr::Tag surfaceEngTag_;
   const double rKnotVal_;
-  const FieldT* superSat_; //field from table of supersaturation
-  const FieldT* eqConc_;   //field form table of equilibrium concentration
-
+  const FieldT* superSat_;    //field from table of supersaturation
+  const FieldT* surfaceEng_;  //critcal value of surface energy for small radii
+  
   PrecipitationRCritical( const Expr::Tag& superSatTag,
+                          const Expr::Tag& surfaceEng,
                           const double rKnotVal_);
 
 public:
@@ -60,9 +62,11 @@ public:
   public:
     Builder( const Expr::Tag& result,
              const Expr::Tag& superSatTag,
+             const Expr::Tag& surfaceEngTag,
              const double rKnotVal)
     : ExpressionBuilder(result),
     supersatt_(superSatTag),
+    surfaceengt_(surfaceEngTag),
     rknotval_(rKnotVal)
     {}
 
@@ -70,11 +74,12 @@ public:
 
     Expr::ExpressionBase* build() const
     {
-      return new PrecipitationRCritical<FieldT>( supersatt_, rknotval_ );
+      return new PrecipitationRCritical<FieldT>( supersatt_, surfaceengt_, rknotval_ );
     }
 
   private:
     const Expr::Tag supersatt_;
+    const Expr::Tag surfaceengt_;
     const double rknotval_;
   };
 
@@ -97,9 +102,11 @@ public:
 template< typename FieldT >
 PrecipitationRCritical<FieldT>::
 PrecipitationRCritical( const Expr::Tag& superSatTag,
+                        const Expr::Tag& surfaceEngTag,
                         const double rKnotVal)
 : Expr::Expression<FieldT>(),
   superSatTag_(superSatTag),
+  surfaceEngTag_(surfaceEngTag),
   rKnotVal_(rKnotVal)
 {}
 
@@ -118,6 +125,8 @@ PrecipitationRCritical<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( superSatTag_ );
+  if (surfaceEngTag_ != Expr::Tag() )
+    exprDeps.requires_expression( surfaceEngTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -128,6 +137,8 @@ PrecipitationRCritical<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   superSat_ = &fml.template field_manager<FieldT>().field_ref( superSatTag_ );
+  if (surfaceEngTag_ != Expr::Tag() )
+    surfaceEng_ = &fml.template field_manager<FieldT>().field_ref( surfaceEngTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -147,8 +158,13 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= cond( *superSat_ > 1.0, rKnotVal_ / log(*superSat_ ) )
-                 ( 0.0 ); //this is r*
+  if (surfaceEngTag_ != Expr::Tag() ) {
+    result <<= cond( *superSat_ > 1.0, rKnotVal_ * *surfaceEng_ / log(*superSat_ ) )
+                   ( 0.0 );
+  } else {
+    result <<= cond( *superSat_ > 1.0, rKnotVal_ / log(*superSat_ ) )
+                   ( 0.0 ); //this is r*
+  }
 }
 
 //--------------------------------------------------------------------

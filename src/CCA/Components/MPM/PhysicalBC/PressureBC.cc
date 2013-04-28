@@ -355,7 +355,7 @@ PressureBC::getForceVectorCBDI(const Point& px, const Matrix3& psize,
   force = force*0.25;
   // modify the sign of force if outward normal is not correctly defined
   if (!d_outwardNormal) {
-    force = force*(-1.0);
+    normal = normal*(-1.0);
   }
   // determine four boundary-corners of the particle
   // px1 is the position of the center of the boundary particle face
@@ -374,7 +374,7 @@ PressureBC::getForceVectorCBDI(const Point& px, const Matrix3& psize,
     i1=(i+1)%3;
     i2=(i+2)%3;
    } else if (abs(Dot(normal,dummy)/(normal.length()*dummy.length())+1.0)<0.1) {
-    Point px1(px.x()-dummy[0],px.y()-dummy[1],px.z()-dummy[2]);
+    px1 = Point(px.x()-dummy[0],px.y()-dummy[1],px.z()-dummy[2]);
     i1=(i+1)%3;
     i2=(i+2)%3;
    }
@@ -391,6 +391,7 @@ PressureBC::getForceVectorCBDI(const Point& px, const Matrix3& psize,
   pExternalForceCorner4=Point(px1.x()+.5*(dsize(0,i1)*dx[0]+dsize(0,i2)*dx[0]),
                               px1.y()+.5*(dsize(1,i1)*dx[1]+dsize(1,i2)*dx[1]),
                               px1.z()+.5*(dsize(2,i1)*dx[2]+dsize(2,i2)*dx[2]));
+
   // Recalculate the force based on area changes (current vs. initial)
   Vector iniVec1(psize(0,i1),psize(1,i1),psize(2,i1));
   Vector iniVec2(psize(0,i2),psize(1,i2),psize(2,i2));

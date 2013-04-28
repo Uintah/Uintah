@@ -106,20 +106,20 @@ class PCTProps : public MixingRxnModel {
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
-	/** @brief Return a table lookup for a variable given the independent variable space. **/ 
+  /** @brief Return a table lookup for a variable given the independent variable space. **/ 
   double getTableValue( std::vector<double>, std::string ); 
 
-	/** @brief Match the requested dependent variable with their table index. **/ 
-	void tableMatching(); 
+  /** @brief Match the requested dependent variable with their table index. **/ 
+  void tableMatching(); 
 
-	/** @brief Return a table lookup for a variable given the independent variables and set of inerts (may be an empty set) - Grid wise **/
-	double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c); 
+  /** @brief Return a table lookup for a variable given the independent variables and set of inerts (may be an empty set) - Grid wise **/
+  double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c); 
 
-	/** @brief Return a table lookup for a variable given the independent variables and set of inerts (may be an empty set) - single point wise**/
-	double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions );
+  /** @brief Return a table lookup for a variable given the independent variables and set of inerts (may be an empty set) - single point wise**/
+  double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions );
 
   /** @brief Method to find the index for any dependent variable.  **/
-  int inline findIndex( std::string name ){ return 0; };
+  /* int inline findIndex( std::string name ){ return 0; } */
 
   private: 
 

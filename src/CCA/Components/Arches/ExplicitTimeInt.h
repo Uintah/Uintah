@@ -43,12 +43,22 @@ public:
                               double dt, double time,
                               const string eqnName );
   
-    /** @brief A template for time averaging using a Runge-kutta form without density*/  
+    /** @brief A template for time averaging using a Runge-kutta form without explicit density and no clipping */  
     template <class phiT, class constphiT>
     void timeAvePhi( const Patch* patch, 
                      phiT& phi, 
                      constphiT& old_phi, 
-                     int step, double time);
+                     const int step, const double time );
+
+    /** @brief A template for time averaging using a Runge-kutta form without explicit density*/  
+    template <class phiT, class constphiT>
+    void timeAvePhi( const Patch* patch, 
+                     phiT& phi, 
+                     constphiT& old_phi, 
+                     const int step, const double time, 
+                     const double clip_tol, 
+                     const bool do_low_clip,  const double low_clip, 
+                     const bool do_high_clip, const double high_clip );
 
     /** @brief A template for time averaging using a Runge-kutta form with density */ 
     template <class phiT, class constphiT>
@@ -57,7 +67,10 @@ public:
                      constphiT& old_phi, 
                      constphiT& old_den, 
                      constphiT& new_den, 
-                     int step, double time ); 
+                     const int step, const double time,
+                     const double clip_tol, 
+                     const bool do_low_clip,  const double low_clip, 
+                     const bool do_high_clip, const double high_clip );
 
     /** @brief A task interface to the singlePatchFEUpdate */ 
     void sched_fe_update( SchedulerP& sched, 
@@ -215,6 +228,27 @@ private:
   }
 
 //---------------------------------------------------------------------------
+// Time averaging W/O explicit density and no clipping
+//---------------------------------------------------------------------------
+// ----RK AVERAGING
+//     to get the time averaged phi^{time averaged}
+//     See: Gottlieb et al., SIAM Review, vol 43, No 1, pp 89-112
+//          Strong Stability-Preserving High-Order Time Discretization Methods
+  template <class phiT, class constphiT>
+  void ExplicitTimeInt::timeAvePhi( const Patch* patch, 
+                                    phiT& phi, 
+                                    constphiT& old_phi, 
+                                    const int step, const double time )
+  {
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+      IntVector c = *iter; 
+
+      phi[*iter] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];        
+
+    }
+  }
+//---------------------------------------------------------------------------
 // Time averaging W/O density
 //---------------------------------------------------------------------------
 // ----RK AVERAGING
@@ -225,13 +259,29 @@ private:
   void ExplicitTimeInt::timeAvePhi( const Patch* patch, 
                                     phiT& phi, 
                                     constphiT& old_phi, 
-                                    int step, double time )
+                                    const int step, const double time,
+                                    const double clip_tol, 
+                                    const bool do_low_clip,  const double low_clip, 
+                                    const bool do_high_clip, const double high_clip )
   {
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
       IntVector c = *iter; 
-      phi[*iter] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];        
+
+      if ( do_low_clip && phi[c] < ( low_clip + clip_tol ) ){ 
+
+        phi[*iter] = low_clip; 
+
+      } else if ( do_high_clip && phi[c] > ( high_clip + clip_tol ) ){ 
+
+        phi[*iter] = high_clip; 
+
+      } else { 
+
+        phi[*iter] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];        
+
+      }
 
     }
 
@@ -276,7 +326,10 @@ private:
                                     constphiT& old_phi, 
                                     constphiT& new_den, 
                                     constphiT& old_den, 
-                                    int step, double time )
+                                    int step, double time, 
+                                    const double clip_tol, 
+                                    const bool do_low_clip,  const double low_clip, 
+                                    const bool do_high_clip, const double high_clip )
   {
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -286,10 +339,22 @@ private:
       double pred_density = ssp_alpha[step]*old_den[c] + ssp_beta[step]*new_den[c]; 
 
       if ( pred_density > 0 ) { 
-                          phi[*iter] = ( ssp_alpha[step] * (old_den[c] * old_phi[c])
-                   +   ssp_beta[step]  * (new_den[c] * phi[c]) ) / pred_density;        
-      }
 
+        if ( do_high_clip && phi[c] > ( high_clip - clip_tol) ){  
+
+          phi[*iter] = high_clip;
+
+        } else if ( do_low_clip && phi[c] < ( low_clip + clip_tol) ){ 
+
+          phi[*iter] = low_clip; 
+
+        } else { 
+
+          phi[*iter] = ( ssp_alpha[step] * (old_den[c] * old_phi[c])
+                       + ssp_beta[step]  * (new_den[c] * phi[c]) ) / pred_density;        
+
+        }
+      }
     }
   }
 

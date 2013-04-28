@@ -28,6 +28,7 @@
 #include <CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Box.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -197,7 +198,13 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
 void particleExtract::scheduleInitialize(SchedulerP& sched,
                                          const LevelP& level)
 {
-  cout_doing << "particleExtract::scheduleInitialize " << endl;
+  int L_indx = level->getIndex();
+  if(!doMPMOnLevel(L_indx,level->getGrid()->numLevels())){
+    return;
+  }
+  
+  printSchedule(level,cout_doing,"particleExtract::scheduleInitialize");
+  
   Task* t = scinew Task("particleExtract::initialize", 
                   this, &particleExtract::initialize);
   
@@ -212,9 +219,9 @@ void particleExtract::initialize(const ProcessorGroup*,
                                  DataWarehouse*,
                                  DataWarehouse* new_dw)
 {
-  cout_doing << "Doing Initialize \t\t\t\t\tparticleExtract" << endl;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,"Doing particleExtract::initialize");
      
     double tminus = -1.0/d_writeFreq;
     new_dw->put( max_vartype( tminus ), ps_lb->lastWriteTimeLabel );
@@ -269,7 +276,7 @@ void particleExtract::scheduleDoAnalysis_preReloc(SchedulerP& sched,
     return;
   }
 
-  cout_doing<< "particleExtract::scheduleDoAnalysis_preReloc " << endl;
+  printSchedule(level,cout_doing,"particleExtract::scheduleDoAnalysis_preReloc");
   Task* t = scinew Task("particleExtract::doAnalysis_preReloc", 
                    this,&particleExtract::doAnalysis_preReloc);
 
@@ -292,6 +299,9 @@ void particleExtract::doAnalysis_preReloc(const ProcessorGroup* pg,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    
+    printTask(patches, patch,cout_doing,"Doing particleExtract::doAnalysis_preReloc");
+    
     int indx = d_matl->getDWIndex();
     
     ParticleSubset* pset = old_dw->getParticleSubset(indx, patch);
@@ -330,7 +340,7 @@ void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
     return;
   }
 
-  cout_doing << "particleExtract::scheduleDoAnalysis " << endl;
+  printSchedule(level,cout_doing,"particleExtract::scheduleDoAnalysis");
   Task* t = scinew Task("particleExtract::doAnalysis", 
                    this,&particleExtract::doAnalysis);
                      
@@ -387,10 +397,8 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
     // and if it's time to write
     if( proc == pg->myrank() && now >= nextWriteTime){
     
-     cout_doing << pg->myrank() << " " 
-                << "Doing doAnalysis (particleExtract)\t\t\t\tL-"
-                << level->getIndex()
-                << " patch " << patch->getGridIndex()<< endl;
+      printTask(patches, patch,cout_doing,"Doing particleExtract::doAnalysis");
+
       //__________________________________
       // loop over each of the variables
       // load them into the data vectors
@@ -659,8 +667,5 @@ particleExtract::createDirectory(string& dirName, string& levelIndex)
 bool
 particleExtract::doMPMOnLevel(int level, int numLevels)
 {
-  int minGridLevel = 0;
-  int maxGridLevel = 1000;
-  return (level >= minGridLevel && level <= maxGridLevel) ||
-          (minGridLevel < 0 && level == numLevels + minGridLevel);
+  return ( level == numLevels - 1 );
 }

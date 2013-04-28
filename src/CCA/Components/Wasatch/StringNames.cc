@@ -66,6 +66,7 @@ namespace Wasatch{
     ymom("y-momentum"),
     zmom("z-momentum"),
     pressure("pressure"),
+    dilatation("dilatation"),
     tauxx("tau_xx"),
     tauxy("tau_xy"),
     tauxz("tau_xz"),
@@ -74,7 +75,15 @@ namespace Wasatch{
     tauyz("tau_yz"),
     tauzx("tau_zx"),
     tauzy("tau_zy"),
-    tauzz("tau_zz")
+    tauzz("tau_zz"),
+  
+    // turbulence related
+    turbulentviscosity("TurbulentViscosity"),
+    straintensormag("StrainTensorMagnitude"),
+    vremantensormag("VremanTensorMagnitude"),
+    waletensormag("WaleTensorMagnitude"),
+    dynamicsmagcoef("DynamicSmagorinskyCoefficient")
+
   {}
 
   //------------------------------------------------------------------

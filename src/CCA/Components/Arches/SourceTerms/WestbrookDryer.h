@@ -151,13 +151,9 @@ public:
 
       rate *= 1.0e3 * d_MW_HC; 
 
-      // now check the rate based on local reactants: 
-      double constant = dt / den; 
-
-      // check limiting reactant
-      if ( std::abs( constant*rate ) > CxHy ){ 
-        rate = den / dt * CxHy; 
-      } 
+      // check the rate based on local O2 and CxHy
+      rate = std::min( den / dt * std::min( O2 * _stoich_massratio , CxHy ), rate ); 
+      rate /= d_MF_HC_f1; 
 
       // check for nan
       if ( rate != rate ){ 
@@ -178,13 +174,13 @@ private:
   double d_MW_HC;    ///< Molecular weight of the hydrocarbon
   double d_MW_O2;    ///< Molecular weight of O2 (hard set) 
   double d_MF_HC_f1; ///< Mass fraction of hydrocarbon with f=1
-  double d_MF_O2_f0; ///< Mass fraction of O2 with f=0
   double d_R;        ///< Universal gas constant ( R [=] J/mol/K )
   double d_Press;    ///< Atmospheric pressure (set to atmospheric P for now ( 101,325 Pa )
   double d_T_clip;   ///< Temperature limit on the rate. Below this value, the rate turns off. 
   bool   _use_T_clip;      ///< Use clip or not
   bool   _use_flam_limits; ///< Use flamibility limits or not
   bool   _const_diluent;   ///< Indicates a constant diluent as specified in the input file
+  bool   _using_xi; 
   double _flam_low_m; ///< Lower flammability slope as defined by y=mx+b; 
   double _flam_low_b; ///< Lower flammability intercept
   double _flam_up_m;  ///< Upper flammability slope
@@ -204,7 +200,9 @@ private:
 
   std::string d_cstar_label; 
   std::string d_cstar_strip_label; 
-  std::string d_ceq_label; 
+  std::string d_eta_label; 
+  std::string d_xi_label; 
+  std::string d_fp_label;
   std::string d_mw_label; 
   std::string d_rho_label; 
   std::string d_T_label; 
@@ -212,11 +210,12 @@ private:
   std::string _diluent_label_name; 
 
   const VarLabel* _temperatureLabel; 
-  const VarLabel* _fLabel;           
   const VarLabel* _mixMWLabel;       
   const VarLabel* _denLabel;         
   const VarLabel* _CstarMassFracLabel;  
-  const VarLabel* _CEqMassFracLabel; 
+  const VarLabel* _EtaLabel; 
+  const VarLabel* _FpLabel; 
+  const VarLabel* _XiLabel; 
   const VarLabel* _O2MassFracLabel; 
   const VarLabel* _CstarStripLabel; 
   const VarLabel* _diluentLabel; 
@@ -225,6 +224,7 @@ private:
   double _T_hot_spot;                            ///< Temperature of the pilot light
   double _start_time_hot_spot;                   ///< Starting time for hot spot
   double _stop_time_hot_spot;                    ///< Ending time for hot spot
+  double _stoich_massratio;                      ///< mass fuel/mass o2
 
   ArchesLabel* _field_labels;
 

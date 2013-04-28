@@ -133,6 +133,15 @@ SmoothGeomPiece::deleteVolume()
 }
 
 //////////////////////////////////////////////////////////////////////
+/* Deletes the vector containing the set of particle sizes */
+//////////////////////////////////////////////////////////////////////
+void 
+SmoothGeomPiece::deleteSizes()
+{
+  d_size.clear();
+}
+
+//////////////////////////////////////////////////////////////////////
 /* Deletes the vector containing the set of particle temperatures */
 //////////////////////////////////////////////////////////////////////
 void 
@@ -158,4 +167,10 @@ void
 SmoothGeomPiece::setParticleSpacing(double dx)
 {
   d_dx = dx;
+}
+
+void 
+SmoothGeomPiece::setCellSize(Vector DX)
+{
+  d_DX = DX;
 }

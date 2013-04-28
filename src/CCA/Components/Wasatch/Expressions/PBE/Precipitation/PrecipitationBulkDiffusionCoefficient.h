@@ -169,10 +169,11 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
+  
   if ( sBarTag_ != Expr::Tag() ) {
-    result <<= growthCoefVal_ * *eqConc_ * ( *superSat_ - 1.0 );  // this is g0
+    result <<= growthCoefVal_ * *eqConc_ * ( *superSat_ - *sBar_);
   } else {
-    result <<= growthCoefVal_ * *eqConc_ * ( *superSat_ - *sBar_);  
+    result <<= growthCoefVal_ * *eqConc_ * ( *superSat_ - 1.0 );  // this is g0  
   }
 }
 

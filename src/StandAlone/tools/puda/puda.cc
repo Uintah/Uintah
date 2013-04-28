@@ -33,27 +33,6 @@
  *
  */
 
-/*
- *  Support for printing out Tecplot data added by Patric Hu
- *  Department of Mechanical Enginerring, U of U, 2003.
- *
- *  Currently it only supports CCVariables.
- * 
- * Usage of converting Uintah data archive to a tecplot data file
- * puda -tecplot <i_xd> <uda directory> :
- *       print all CCVariables into different tecplot data files 
- * puda -tecplot <i_xd> <CCVariable's Name> <uda directory>:
- *       print one CCVariable into a tecplot data file
- * puda -tecplot <i_xd> <tskip> <uda directory>:
- *       print all CCVariables into different tecplot data files
- *       by every tskip time steps
- * puda -tecplot <i_xd> <CCVariable's Name> <tskip> <uda directory>:
- *       print one CCVariable into a tecplot data file
- *       by every tskip time steps
- * i_xd may be i_1d, i_2d, i_3d for 1D, 2D and 3D problem
- *
- */
-
 #include <StandAlone/tools/puda/puda.h>
 
 #include <Core/DataArchive/DataArchive.h>
@@ -67,19 +46,19 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Math/Matrix3.h>
 
-#include <StandAlone/tools/puda/asci.h>
-#include <StandAlone/tools/puda/monica1.h>
-#include <StandAlone/tools/puda/monica2.h>
-#include <StandAlone/tools/puda/jim1.h>
-#include <StandAlone/tools/puda/jacquie.h>
-#include <StandAlone/tools/puda/jim2.h>
+#include <StandAlone/tools/puda/AA_MMS.h>
+#include <StandAlone/tools/puda/ER_MMS.h>
+#include <StandAlone/tools/puda/GV_MMS.h>
 #include <StandAlone/tools/puda/PIC.h>
 #include <StandAlone/tools/puda/POL.h>
-#include <StandAlone/tools/puda/AA_MMS.h>
-#include <StandAlone/tools/puda/GV_MMS.h>
-#include <StandAlone/tools/puda/ER_MMS.h>
-#include <StandAlone/tools/puda/rtdata.h>
-#include <StandAlone/tools/puda/tecplot.h>
+#include <StandAlone/tools/puda/asci.h>
+#include <StandAlone/tools/puda/jacquie.h>
+#include <StandAlone/tools/puda/jim1.h>
+#include <StandAlone/tools/puda/jim2.h>
+#include <StandAlone/tools/puda/monica1.h>
+#include <StandAlone/tools/puda/monica2.h>
+#include <StandAlone/tools/puda/todd1.h>
+
 #include <StandAlone/tools/puda/util.h>
 #include <StandAlone/tools/puda/varsummary.h>
 
@@ -128,6 +107,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -brief               (Makes varsummary print out a subset of information.)\n";
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
+  cerr << "  -todd1               ( 1st Law of thermo. control volume analysis) \n";
   cerr << "  -jacquie              (finds burn rate vs pressure)\n";
   cerr << "  -monica1             (Finds the maximum pressure in the domain.)\n";
   cerr << "  -monica2             (Finds the sum of the cell centered kinetic energy in the domain.)\n";
@@ -137,11 +117,9 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -ER_MMS              (Expanding Ring MMS)\n"; 
   cerr << "  -partvar <variable name>\n";
   cerr << "  -asci\n";
-  cerr << "  -tecplot <variable name>\n";
   cerr << "  -no_extra_cells      (Excludes extra cells when iterating over cells.\n";
   cerr << "                        Default is to include extra cells.)\n";
   cerr << "  -cell_stresses\n";
-  cerr << "  -rtdata <output directory>\n";
   cerr << "  -PTvar\n";
   cerr << "  -ptonly              (prints out only the point location)\n";
   cerr << "  -patch               (outputs patch id with data)\n";
@@ -164,7 +142,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "                       particle encountered.  'stressSplitting' only takes affect\n";
   cerr << "                       if the particle variable is p.stress, and splits the stress\n";
   cerr << "                       into hydrostatic and deviatoric parts.)\n";
-  cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n";
+  cerr << "*NOTE* to use -PTvar or -NVvar must be used\n";
   cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh "
        << "are used in conjuntion with -PTvar.\n\n";
     
@@ -269,24 +247,6 @@ main(int argc, char** argv)
              s == "-no_extracells" ||
              s == "-no_ExtraCells" ) {
       clf.use_extra_cells = false;
-    }
-    else if(s == "-tecplot"){ 
-      clf.do_tecplot = true;
-      if(argc == 4) {
-        clf.do_all_ccvars = true;
-        clf.i_xd = argv[i+1];
-        clf.tskip = 1;
-      } else if(argc == 5){
-        clf.do_all_ccvars = true;
-        clf.i_xd = argv[i+1];
-        clf.tskip = atoi(argv[i+2]);
-      } else if(argc == 6 ) {
-        clf.i_xd = argv[i+1];
-        clf.ccVarInput = argv[i+2];
-        clf.tskip = atoi(argv[i+3]);
-        if (clf.ccVarInput[0] == '-')
-          usage("-tecplot <i_xd> <ccVariable name> <tskip> ", argv[0]);
-      }
     } else if(s == "-gridstats" ||
               s == "-gridStats" ||
               s == "-grid_stats"){
@@ -311,7 +271,9 @@ main(int argc, char** argv)
       clf.do_jim1 = true;
     } else if(s == "-jim2"){
       clf.do_jim2 = true;
-    } else if(s == "-pic"){
+    } else if(s == "-todd1"){
+      clf.do_todd1 = true;
+    }else if(s == "-pic"){
       clf.do_PIC = true;
 
       if(i+3 >= argc)
@@ -387,15 +349,6 @@ main(int argc, char** argv)
       clf.do_asci=true;
     } else if(s == "-cell_stresses"){
       clf.do_cell_stresses=true;
-    } else if(s == "-rtdata") {
-      clf.do_rtdata = true;
-      if (++i < argc) {
-        s = argv[i];
-        if (s[0] == '-') {
-          usage("-rtdata", argv[0]);
-        }
-        clf.raydatadir = s;
-      }
     } else if(s == "-NCvar") {
       if (++i < argc) {
         s = argv[i];
@@ -559,9 +512,7 @@ main(int argc, char** argv)
       printParticleVariable( da, clf.particleVariable,
                              clf.time_step_lower, clf.time_step_upper, mat );
     }
-#if 0
-    tecplot();
-#endif
+
     //______________________________________________________________________
     //              V A R S U M M A R Y   O P T I O N
     if(clf.do_varsummary){
@@ -585,6 +536,10 @@ main(int argc, char** argv)
 
     if( clf.do_jim2 ){
       jim2( da, clf );
+    }
+
+    if( clf.do_todd1 ){
+      todd1( da, clf );
     }
 
     if( clf.do_PIC ){
@@ -740,11 +695,6 @@ main(int argc, char** argv)
       }
     } // end do_cell_stresses
     
-    //______________________________________________________________________
-    //              DO RTDATA
-    if (clf.do_rtdata) {
-      rtdata( da, clf );
-    }
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << "\n";
     abort();
