@@ -122,6 +122,14 @@ WARNING
       Op op;
       value = op.getBenignValue();
     }
+
+    // check if the value is benign value
+    virtual bool isBenignValue() {
+      Op op;
+      if (value==op.getBenignValue()) return true;
+      else return false;
+    }
+
   private:
     static TypeDescription* td;
     ReductionVariable<T, Op>& operator=(const ReductionVariable<T, Op>&copy);

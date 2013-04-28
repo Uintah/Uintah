@@ -35,8 +35,6 @@
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/TangentModulusTensor.h> //added this for stiffness
-#include <Core/Math/Short27.h> //for Fracture
-#include <Core/Grid/Variables/NodeIterator.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
@@ -724,7 +722,7 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
 
 
         //_________________________________viscoelastic terms
-        double fac1=0.,fac2=0.,fac3=0.,fac4=0.,fac5=0.,fac6=0.,fac=1.;
+        double fac1=0.,fac2=0.,fac3=0.,fac4=0.,fac5=0.,fac6=0.;//,fac;
         double exp1=0.,exp2=0.,exp3=0.,exp4=0.,exp5=0.,exp6=0.;
         if (t1 > 0.){
           exp1 = exp(-delT/t1);
@@ -777,7 +775,7 @@ ViscoTransIsoHyperImplicit::computeStressTensorImplicit(const PatchSubset* patch
          history6[idx]= Zero;
         }
 
-        fac = fac1*y1 + fac2*y2 + fac3*y3 + fac4*y4 + fac5*y5 + fac6*y6 + 1.;
+        //fac = fac1*y1 + fac2*y2 + fac3*y3 + fac4*y4 + fac5*y5 + fac6*y6 + 1.;
 
         }
         else{

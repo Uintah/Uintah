@@ -3516,6 +3516,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           J_CC[c]=vol_CC[c]/vol_0_CC[c];
         }
 
+        double ThreedelT  = 3.0*delT;
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){
           particleIndex idx = *iter;
@@ -3529,7 +3530,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           // the cell
           pFNew[idx]*=cbrt(J_CC[cell_index]/J);
           // Change L such that it is consistent with the F          
-          double ThreedelT  = 3.0*delT;
           pVelGrad[idx]+= Identity*((log(J_CC[cell_index]/J))/ThreedelT);
         }
       } //end of pressureStabilization loop  at the patch level

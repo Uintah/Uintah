@@ -89,6 +89,19 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
     double constant = 0.0; 
     _iv_transform = scinew CoalTransform( constant ); 
 
+  } else if ( db->findBlock("rcce") ){ 
+
+    double constant = 0.0; 
+    _iv_transform = scinew CoalTransform( constant ); 
+
+  } else if ( db->findBlock("rcce_fp") ){ 
+
+    _iv_transform = scinew RCCETransform(); 
+
+  } else if ( db->findBlock("rcce_eta") ){ 
+
+    _iv_transform = scinew RCCETransform(); 
+
   } else if ( db->findBlock("acidbase") ) {
 
     doubleMap::iterator iter = d_constants.find( "transform_constant" ); 
@@ -281,6 +294,12 @@ MixingRxnModel::NoTransform::NoTransform(){}
 MixingRxnModel::NoTransform::~NoTransform(){}
 MixingRxnModel::CoalTransform::CoalTransform( double constant ) : d_constant(constant){}
 MixingRxnModel::CoalTransform::~CoalTransform(){}
+MixingRxnModel::RCCETransform::RCCETransform(){
+  _table_eta_index = 0;
+  _table_hl_index  = 1; 
+  _table_f_index   = 2; 
+}
+MixingRxnModel::RCCETransform::~RCCETransform(){}
 MixingRxnModel::SlowFastTransform::SlowFastTransform(){}
 MixingRxnModel::SlowFastTransform::~SlowFastTransform(){}
 MixingRxnModel::InertMixing::InertMixing(){}

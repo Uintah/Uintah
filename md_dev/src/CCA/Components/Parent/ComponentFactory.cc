@@ -39,7 +39,6 @@
 #include <CCA/Components/ICE/ICE.h>
 #include <CCA/Components/ICE/impAMRICE.h>
 #include <CCA/Components/MPM/AMRMPM.h>
-#include <CCA/Components/MPM/FractureMPM.h>
 #include <CCA/Components/MPM/ImpMPM.h>
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/SerialMPM.h>
@@ -99,9 +98,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #ifndef NO_MPM
   if (sim_comp == "mpm" || sim_comp == "MPM") {
     return scinew SerialMPM(world);
-  } 
-  if (sim_comp == "mpmf" || sim_comp == "fracturempm" || sim_comp == "FRACTUREMPM") {
-    return scinew FractureMPM(world);
   } 
   if (sim_comp == "rmpm" || sim_comp == "rigidmpm" || sim_comp == "RIGIDMPM") {
     return scinew RigidMPM(world);

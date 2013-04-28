@@ -2216,8 +2216,8 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
                 gSumS[fineNode] +=S[k];
 
                 Vector Increment ( (div[k] * stresspress)  * pvol_coarse[idx] );
-                Vector Before = internalforce[fineNode];
-                Vector After  = Before - Increment;
+                //Vector Before = internalforce[fineNode];
+                //Vector After  = Before - Increment;
 
                 internalforce[fineNode] -=  Increment;
 
@@ -2822,7 +2822,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
-    Vector dx = patch->dCell();
+    //Vector dx = patch->dCell();
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their

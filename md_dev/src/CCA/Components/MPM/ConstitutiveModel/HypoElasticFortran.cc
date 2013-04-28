@@ -38,7 +38,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Math/Short27.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Malloc/Allocator.h>

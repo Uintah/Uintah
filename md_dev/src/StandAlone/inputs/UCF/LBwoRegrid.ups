@@ -186,7 +186,7 @@
         <max_grid_level>-1</max_grid_level>
       </MPM>
 
-      <Regridder type="BNR" >
+      <Regridder type="Tiled" >
         <min_patch_size> [[8,8,1]] </min_patch_size>
         <max_levels>                  2       </max_levels>
         <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>

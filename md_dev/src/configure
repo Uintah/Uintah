@@ -26901,7 +26901,7 @@ if test "$with_mkl"; then
   elif test "$with_mkl"; then
     _sci_lib="$with_mkl/lib"
     _sci_inc="$with_mkl/include"
-    _sci_optional=specific
+    # _sci_optional=specific TESTING FOR SPECIFIC NOT IMPLEMENTED!!!
   fi
 
   case $host in
@@ -26909,12 +26909,18 @@ if test "$with_mkl"; then
        as_fn_error $? "We recommend that you don't use MKL on a Mac... use the default vecLib instead." "$LINENO" 5
        ;;
      *)
-       # Newer version of MKL doesn't have libguide, so need two separate checks...
+       test_libs[0]="mkl mkl_core mkl_intel_lp64 guide" # Older version of MKL requires libguide...
+       test_libs[1]="mkl mkl_core mkl_intel_lp64"
+       test_libs[2]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
 
-       if test -e $_sci_lib/libguide.$SO_OR_ARCHIVE_EXTENSION; then
+       num_libs=${#test_libs[*]}
+
+       for (( num=0; num<$num_libs; num++ ));
+       do
+          the_libs=${test_libs[$num]}
 
 ##
-## SCI_TRY_LINK (BLAS):  1 - mkl version of (blas/lapack) libraries and headers
+## SCI_TRY_LINK (BLAS):  ${num} - mkl version of (blas/lapack) libraries and headers
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -26946,14 +26952,14 @@ if test "$with_mkl"; then
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : BLAS
-## arg 2 : 1 - mkl version of (blas/lapack) libraries and headers
+## arg 2 : ${num} - mkl version of (blas/lapack) libraries and headers
 ## arg 3 : mkl_cblas.h mkl_lapack.h
 ## arg 4 : $_sci_inc
-## arg 5 : mkl mkl_core mkl_intel_lp64 guide
+## arg 5 : $the_libs
 ## arg 6 : $_sci_lib
 ## arg 7 : $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
-## arg 9 : $_sci_optional
+## arg 9 : optional
 ##
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -26966,12 +26972,12 @@ if test "$with_mkl"; then
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for 1 - mkl version of (blas/lapack) libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for ${num} - mkl version of (blas/lapack) libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for 1 - mkl version of (blas/lapack) libraries and headers ($_sci_optional)" >&5
-$as_echo_n "checking for 1 - mkl version of (blas/lapack) libraries and headers ($_sci_optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for ${num} - mkl version of (blas/lapack) libraries and headers (optional)" >&5
+$as_echo_n "checking for ${num} - mkl version of (blas/lapack) libraries and headers (optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -26979,9 +26985,9 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
+if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for 1 - mkl version of (blas/lapack) libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for ${num} - mkl version of (blas/lapack) libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -27026,10 +27032,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "mkl mkl_core mkl_intel_lp64 guide"; then
+if test -n "$the_libs"; then
 
    found_framework=no
-   for lib in mkl mkl_core mkl_intel_lp64 guide; do
+   for lib in $the_libs; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -27114,7 +27120,7 @@ $as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... 
    done
 fi
 
-if test "$_sci_optional" = "specific"; then
+if test "optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
   ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
   __sci_pass=false
@@ -27276,7 +27282,7 @@ eval INC_BLAS_H=''
 eval HAVE_BLAS_H="no"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
 $as_echo "not found" >&6; }
-if test "$_sci_optional" != "optional"; then
+if test "optional" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -27315,7 +27321,7 @@ fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 
-if test "$_sci_optional" = "specific"; then
+if test "optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
   for i in "" mkl_cblas.h mkl_lapack.h; do
@@ -27325,7 +27331,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" mkl mkl_core mkl_intel_lp64 guide; do
+  for i in "" $the_libs; do
     if test -z "$i"; then
        continue
     fi
@@ -27350,454 +27356,15 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (BLAS):  1 - mkl version of (blas/lapack) libraries and headers
+## END of SCI_TRY_LINK (BLAS):  ${num} - mkl version of (blas/lapack) libraries and headers
 ##
 
 
-       else
-
-##
-## SCI_TRY_LINK (BLAS):  2 - mkl version of (blas/lapack) libraries and headers
-##
-## arguments mean:
-## arg 1 : variable base name (e.g., MATH)
-## arg 2 : checking message
-## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
-##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
-##           Any other -? args are removed.  (-faltivec is ok on mac)
-##           (Only one may be given if "Specific" (arg9) is chosen.)
-## arg 5 : list of libs to link against
-##           If the libraries do not have a '-l' on them, it is appeneded.
-##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
-##           is removed completely.  (-framework is also allowed for Mac support.)
-##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
-##           if the link is successful.
-## arg 6 : lib paths
-##           If the arg does not have -L on it, then -L will be added.
-##           If it has any other -?, then the arg is removed.
-##           (only one may be givein if "Specific" (arg9) is chosen.)
-## arg 7 : extra link flags
-##           This is where to put anything else you need for the compilation
-##           line.  NOTE, none of these args propagate anywhere.
-## arg 8 : body of code to compile. May be EMPTY, in which case a dummy routine is tried.
-## arg 9 : 'optional' or 'required' or 'specific' required argument
-##             If specific, then SCI_TRY_LINK will take only one lib
-##             path and one include path and will verify that the
-##             libs/includes are in that path.
-##
-## Here are the specific values for this invocation:
-##
-## arg 1 : BLAS
-## arg 2 : 2 - mkl version of (blas/lapack) libraries and headers
-## arg 3 : mkl_cblas.h mkl_lapack.h
-## arg 4 : $_sci_inc
-## arg 5 : mkl mkl_core mkl_intel_lp64
-## arg 6 : $_sci_lib
-## arg 7 : $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG
-## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
-## arg 9 : $_sci_optional
-##
-## after execution of macro, the following will be defined:
-##      Variable            Value
-##      --------            -----
-##      BLAS_LIB_DIR        => lib path
-##      BLAS_LIB_DIR_FLAG   => all the -L's
-##      BLAS_LIB_FLAG       => all the -l's
-##      HAVE_BLAS           => yes or no
-##      INC_BLAS_H          => all the -I's
-##      HAVE_BLAS_H         => yes or no
-
-if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for 2 - mkl version of (blas/lapack) libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
-fi
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for 2 - mkl version of (blas/lapack) libraries and headers ($_sci_optional)" >&5
-$as_echo_n "checking for 2 - mkl version of (blas/lapack) libraries and headers ($_sci_optional)... " >&6; }
-_sci_savelibs=$LIBS
-_sci_saveldflags=$LDFLAGS
-_sci_savecflags=$CFLAGS
-_sci_savecxxflags=$CXXFLAGS
-
-_sci_includes=
-
-if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
-     echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for 2 - mkl version of (blas/lapack) libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
-fi
-
-# If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
-
-for inc in $_sci_inc; do
-
-  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
-     echo ""
-     as_fn_error $? "Please do not specify /usr/include as the location for BLAS include files." "$LINENO" 5
-  fi
-
-  # Make sure it doesn't have any thing but -I
-  #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
-  has_minus_faltivec=no
-  has_minus=`echo $inc | sed 's/-.*//'`
-  if test -z "$has_minus"; then
-     has_minus_i=`echo $inc | sed 's/-I.*//'`
-     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
-     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
-        # Has some other -?.
-        if test "$debugging" = "yes"; then
-          echo
-          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS check.  Skipping $inc." >&5
-$as_echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS check.  Skipping $inc." >&2;}
-        fi
-        continue
-     fi
-  fi
-
-  the_inc=`echo $inc | grep "^\-I"`
-  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
-     # If the include arg does not already have -I on it.
-     if test -d $inc; then
-        # If the directory exists
-        _sci_includes="$_sci_includes -I$inc"
-     fi
-  else
-     # It already has -I so just add it directly.
-     _sci_includes="$_sci_includes $inc"
-  fi
-done
-
-### Take care of arg 5 (the list of libs)
-
-if test -n "mkl mkl_core mkl_intel_lp64"; then
-
-   found_framework=no
-   for lib in mkl mkl_core mkl_intel_lp64; do
-
-      if test "$found_framework" = "one"; then
-         found_framework=two
-      else
-         found_framework=no
-      fi
-
-      # Make sure it doesn't have any thing but -l
-      has_minus=`echo $lib | sed 's/-.*//'`
-      if test -z "$has_minus"; then
-         has_minus_l=`echo $lib | sed 's/-l.*//'`
-         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-
-         if test -z "$has_minus_framework"; then
-            # Two rounds for this loop with respect to frameworks.
-            # First round is to skip adding -l to the beginning of -framework.
-            # Second round is to not add -l to the framework lib.
-            found_framework=one
-         fi
-
-         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
-            # Has some other -?.
-            if test "$debugging" = "yes"; then
-              echo
-              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
-$as_echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&2;}
-            fi
-            continue
-         fi
-      fi
-
-      the_lib=`echo $lib | grep "^\-l"`
-      if test -z "$the_lib" && test "$found_framework" = "no"; then
-         # If the lib arg does not have -l on it, then add -l.
-         if test "$IS_VC" = "yes"; then
-           if test -n "`echo $lib | sed 's,.*\.lib,,'`"; then
-             final_lib=$lib.lib
-           else
-             final_lib=$lib
-           fi
-         else
-           final_lib=-l$lib
-         fi
-      else
-         # It already has -l so just add it directly.
-         final_lib=$lib
-      fi
-      _sci_libs="$_sci_libs $final_lib"
-   done
-fi
-
-### Take care of arg 6 (the list of lib paths)
-
-if test -n "$_sci_lib"; then
-
-   for path in $_sci_lib; do
-
-      # Make sure it doesn't have any thing but -L
-      has_minus=`echo $path | sed 's/-.*//'`
-      if test -z "$has_minus"; then
-         has_minus_L=`echo $path | sed 's/-L.*//'`
-         if test -n "$has_minus_L"; then
-            # Has some other -?.
-            if test "$debugging" = "yes"; then
-              echo
-              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -L options are allowed in arg 6 of BLAS check (disregarding $path)." >&5
-$as_echo "$as_me: WARNING: Only -L options are allowed in arg 6 of BLAS check (disregarding $path)." >&2;}
-            fi
-            continue
-         fi
-      fi
-
-      # Remove the '-L' (if it has one).
-      the_path=`echo $path | sed 's/-L//'`
-      if test -d "$the_path"; then
-         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
-      else
-         echo
-         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
-$as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
-      fi
-   done
-fi
-
-if test "$_sci_optional" = "specific"; then
-  # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
-  __sci_pass=false
-  __sci_first_time=true
-
-  # Must have the "" for the SGI sh.
-  for value in "" $_sci_lib; do
-    if test "$value" = ""; then
-      continue
-    fi
-    if test $__sci_first_time = "true"; then
-      __sci_first_time=false
-      __sci_pass=true
-    else
-      __sci_pass=false
-    fi
-  done
-  if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
-  fi
-  # and only one include path:
-  ### Determine if there is only one item in $_sci_inc
-  __sci_pass=false
-  __sci_first_time=true
-  for value in "" $_sci_inc; do
-    if test "$value" = ""; then
-      continue
-    fi
-    if test $__sci_first_time = "true"; then
-      __sci_first_time=false
-      __sci_pass=true
-    else
-      __sci_pass=false
-    fi
-  done
-  if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
-  fi
-fi
-
-### Debug messages:
-#echo "sci_includes: $_sci_includes"
-#echo "sci_libs: $_sci_libs"
-#echo "sci_lib_path: $_sci_lib_path"
-
-CFLAGS="$_sci_includes $CFLAGS"
-CXXFLAGS="$_sci_includes $CXXFLAGS"
-if test "$IS_VC" = "yes"; then
-  oldLIB=$LIB
-  export LIB="`echo $_sci_lib_path | sed 's, -LIBPATH:,;,g' | sed 's,-LIBPATH:,,g' | sed 's, -L,;,g' | sed 's,-L,,g'`;$LIB"
-else
-  LDFLAGS="$_sci_lib_path $LDFLAGS"
-fi
-
-LIBS="$_sci_libs $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $LIBS"
-
-# Build up a list of the #include <file> lines for use in compilation:
-__extern_c="no"
-__sci_pound_includes=""
-
-for inc in "" mkl_cblas.h mkl_lapack.h; do
-    if test "$inc" = "extern_C"; then
-       __sci_pound_includes="extern \"C\" {"
-       __extern_c=yes
-    else
-      # Have to have the "" for the SGI sh.
-      if test "$inc" = ""; then
-        continue
-      fi
-      __sci_pound_includes="$__sci_pound_includes
-#include <$inc>"
-    fi
-done
-
-if test "$__extern_c" = "yes"; then
-    __sci_pound_includes="$__sci_pound_includes
-}"
-fi
-
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-$__sci_pound_includes
-int
-main ()
-{
-
-                                                                    float x[]={0.7f};
-                                                                    float y[]={0.8f};
-                                                                    float test=cblas_sdsdot(1,0.0,x,1,y,-1);
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-
-
-if test "$IS_VC" = "yes"; then
-  LIB=$oldLIB
-fi
-
-eval BLAS_LIB_DIR='"$_sci_lib"'
-
-# Remove any bad (/usr/lib) lib paths and the thirdparty lib path
-_final_dirs=
-for _dir in $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
-    _final_dirs="$_final_dirs $_dir"
-  fi
-done
-
-# Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
-
-# Remove leading spaces
-_final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
-
-eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
-
-# Remove any -L from the list of libs.  (-L's should only be in the dir path.)
-final_libs=
-for _lib in "" $_sci_libs; do
-  bad_l_arg=`echo "$_lib" | grep "^\-L"`
-  bad_i_arg=`echo "$_lib" | grep "^\-I"`
-  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
-    final_libs="$final_libs $_lib"
-  fi
-done
-
-# Remove leading spaces
-final_libs=`echo $final_libs | sed "s/^ *//"`
-eval BLAS_LIB_FLAG="'$final_libs'"
-eval HAVE_BLAS="yes"
-
-final_incs=
-for inc in "" $_sci_includes; do
-   if test "$inc" != "$INC_SCI_THIRDPARTY_H"; then
-      final_incs="$final_incs $inc"
-   fi
-done
-
-# Remove leading spaces
-final_incs=`echo $final_incs | sed "s/^ *//"`
-
-eval INC_BLAS_H="'$final_incs'"
-eval HAVE_BLAS_H="yes"
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-
-else
-
-eval BLAS_LIB_DIR=''
-eval BLAS_LIB_DIR_FLAG=''
-eval BLAS_LIB_FLAG=''
-eval HAVE_BLAS="no"
-eval INC_BLAS_H=''
-eval HAVE_BLAS_H="no"
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-$as_echo "not found" >&6; }
-if test "$_sci_optional" != "optional"; then
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&5
-$as_echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-as_fn_error $? "Test for required BLAS failed.
-    To see the failed compile information, look in config.log,
-    search for BLAS. Please install the relevant libraries
-     or specify the correct paths and try to configure again." "$LINENO" 5
-
-fi
-
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-
-if test "$_sci_optional" = "specific"; then
-  #echo specific
-  # Make sure the exact includes were found
-  for i in "" mkl_cblas.h mkl_lapack.h; do
-    #echo looking for $_sci_inc/$i
-    if test ! -e $_sci_inc/$i; then
-     as_fn_error $? "Specifically requested BLAS include file '$_sci_inc/$i' was not found" "$LINENO" 5
-    fi
-  done
-  # Make sure the exact libraries were found
-  for i in "" mkl mkl_core mkl_intel_lp64; do
-    if test -z "$i"; then
-       continue
-    fi
-    has_minus=`echo $i | sed 's/-.*//'`
-    if test -z "$has_minus"; then
-       i=`echo $i | sed 's/-l//g'`
-    fi
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib && test ! -e $_sci_lib/lib$i.dylib; then
-     as_fn_error $? "Specifically requested BLAS library file '$_sci_lib/lib$i' (.so, .a, or .dylib) was not found" "$LINENO" 5
-    fi
-  done
-fi
-
-
-#restore variables
-CFLAGS=$_sci_savecflags
-CXXFLAGS=$_sci_savecxxflags
-LDFLAGS=$_sci_saveldflags
-LIBS=$_sci_savelibs
-_sci_lib_path=''
-_sci_libs=''
-_sci_includes=''
-
-##
-## END of SCI_TRY_LINK (BLAS):  2 - mkl version of (blas/lapack) libraries and headers
-##
-
-
-       fi
+          if test "$HAVE_BLAS" = "yes"; then
+             # FIXME: Really need to do 'specific' test here...
+             break
+          fi
+       done
 
        ;;
   esac

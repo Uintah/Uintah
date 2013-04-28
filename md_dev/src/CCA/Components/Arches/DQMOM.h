@@ -143,6 +143,9 @@ private:
   void constructBopt_unw( ColumnMatrix*  &BB,
                           vector<double> &Abscissas,
                           vector<double> &models);
+    
+  void construct_Simplest_XX( ColumnMatrix*  &XX,
+                           vector<double> &models);
 
 
   vector<string> InternalCoordinateEqnNames;
@@ -181,6 +184,7 @@ private:
   bool b_useLapack;
   bool b_calcConditionNumber;
   bool b_optimize;
+  bool b_simplest;
   bool d_unweighted;
   std::string d_which_dqmom; 
   std::string d_solverType;

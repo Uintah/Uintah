@@ -10,7 +10,6 @@
       <TimeIntegrator> FE </TimeIntegrator>
 
     <Turbulence>
-       <KolmogorovScale>1000000000000</KolmogorovScale>
       <EddyViscosityConstant>0.2</EddyViscosityConstant>
       <TurbulenceModel> WALE </TurbulenceModel>
     </Turbulence>

@@ -130,16 +130,16 @@
     </MPM>
     <useLockStep>  true </useLockStep>
     
-    <Regridder type="BNR">
-      <adaptive>false</adaptive>
-      <min_patch_size> [[8,8,8]] </min_patch_size>
-      <patch_ratio_to_target>1</patch_ratio_to_target>
+    <Regridder type="Tiled">
+      <adaptive>                  false     </adaptive>
+      <min_patch_size>          [[8,8,8]]   </min_patch_size>
+      <patch_ratio_to_target>       1       </patch_ratio_to_target>
       <max_levels>                  3       </max_levels>
       <cell_refinement_ratio>    [[4,4,4]]  </cell_refinement_ratio>
       <cell_stability_dilation>   [1,1,1]   </cell_stability_dilation>
       <cell_regrid_dilation>      [1,1,1]   </cell_regrid_dilation>
       <min_boundary_cells>        [1,1,1]   </min_boundary_cells>
-      <max_timestep_interval>    100 </max_timestep_interval>
+      <max_timestep_interval>    100        </max_timestep_interval>
     </Regridder>
     
   </AMR>

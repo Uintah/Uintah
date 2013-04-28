@@ -1049,7 +1049,7 @@
           <Clipping>
             <low>-1.0</low>
             <high>10.0</high>
-            <small>1e-9</small>
+            <tol>1e-9</tol>
           </Clipping>
           <conv_scheme>roe_minmod</conv_scheme>
         </Weights>

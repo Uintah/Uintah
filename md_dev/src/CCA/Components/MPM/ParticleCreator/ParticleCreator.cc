@@ -166,7 +166,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     if (psizes) {
       if (!psizes->empty()) sizeiter = d_object_size[psizekey].begin();
     }
-    
+
     // For getting particles colors (if they exist)
     vector<double>::const_iterator coloriter;
     geomvols::key_type colorkey(patch,*obj);
@@ -377,149 +377,6 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   }
   return subset;
 }
-
-void ParticleCreator::allocateVariablesAddRequires(Task* task, 
-                                                   const MPMMaterial* ,
-                                                   const PatchSet* ) const
-{
-  d_lock.writeLock();
-  Ghost::GhostType  gn = Ghost::None;
-  //const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,d_lb->pDispLabel,        gn);
-  task->requires(Task::OldDW,d_lb->pXLabel,           gn);
-  task->requires(Task::OldDW,d_lb->pMassLabel,        gn);
-  task->requires(Task::OldDW,d_lb->pParticleIDLabel,  gn);
-  task->requires(Task::OldDW,d_lb->pTemperatureLabel, gn);
-  task->requires(Task::OldDW,d_lb->pVelocityLabel,    gn);
-  task->requires(Task::NewDW,d_lb->pExtForceLabel_preReloc, gn);
-  //task->requires(Task::OldDW,d_lb->pExternalForceLabel,   gn);
-  task->requires(Task::NewDW,d_lb->pVolumeLabel_preReloc,   gn);
-  //task->requires(Task::OldDW,d_lb->pVolumeLabel,    gn);
-  task->requires(Task::OldDW,d_lb->pSizeLabel,        gn);
-  // for thermal stress
-  task->requires(Task::OldDW,d_lb->pTempPreviousLabel, gn); 
-
-  if (d_useLoadCurves){
-    task->requires(Task::OldDW,d_lb->pLoadCurveIDLabel, gn);
-  }
-  if (d_with_color){
-    task->requires(Task::OldDW,d_lb->pColorLabel,       gn);
-  }
-  if(d_artificial_viscosity){
-    task->requires(Task::OldDW,d_lb->p_qLabel,          gn);
-  }
-  d_lock.writeUnlock();
-}
-
-
-void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
-                                           ParticleSubset* addset,
-                                           map<const VarLabel*, ParticleVariableBase*>* newState,
-                                           ParticleSubset* delset,
-                                           DataWarehouse* old_dw)
-{
-  d_lock.writeLock();
-  ParticleSubset::iterator n,o;
-
-  constParticleVariable<Vector> o_disp;
-  constParticleVariable<Point>  o_position;
-  constParticleVariable<Vector> o_velocity;
-  constParticleVariable<Vector> o_external_force;
-  constParticleVariable<double> o_mass;
-  constParticleVariable<double> o_volume;
-  constParticleVariable<double> o_temperature;
-  constParticleVariable<double> o_sp_vol;
-  constParticleVariable<long64> o_particleID;
-  constParticleVariable<Matrix3> o_size;
-  constParticleVariable<int>    o_loadcurve;
-  constParticleVariable<double> o_tempPrevious; // for thermal stress
-  constParticleVariable<double> o_color;
-  constParticleVariable<double> o_q;
-  
-  new_dw->allocateTemporary(pdisp,          addset);
-  new_dw->allocateTemporary(position,       addset);
-  new_dw->allocateTemporary(pvelocity,      addset); 
-  new_dw->allocateTemporary(pexternalforce, addset);
-  new_dw->allocateTemporary(pmass,          addset);
-  new_dw->allocateTemporary(pvolume,        addset);
-  new_dw->allocateTemporary(ptemperature,   addset);
-  new_dw->allocateTemporary(pparticleID,    addset);
-  new_dw->allocateTemporary(psize,          addset);
-  new_dw->allocateTemporary(pLoadCurveID,   addset); 
-  new_dw->allocateTemporary(ptempPrevious,  addset);
-
-  old_dw->get(o_disp,           d_lb->pDispLabel,             delset);
-  old_dw->get(o_position,       d_lb->pXLabel,                delset);
-  old_dw->get(o_mass,           d_lb->pMassLabel,             delset);
-  old_dw->get(o_particleID,     d_lb->pParticleIDLabel,       delset);
-  old_dw->get(o_temperature,    d_lb->pTemperatureLabel,      delset);
-  old_dw->get(o_velocity,       d_lb->pVelocityLabel,         delset);
-  new_dw->get(o_external_force, d_lb->pExtForceLabel_preReloc,delset);
-  //old_dw->get(o_external_force,d_lb->pExternalForceLabel,   delset);
-  new_dw->get(o_volume,         d_lb->pVolumeLabel_preReloc,  delset);
-  //old_dw->get(o_volume,       d_lb->pVolumeLabel,           delset);
-  old_dw->get(o_size,           d_lb->pSizeLabel,             delset);
-  old_dw->get(o_tempPrevious,   d_lb->pTempPreviousLabel,     delset);
-  
-  if (d_useLoadCurves){ 
-    old_dw->get(o_loadcurve,    d_lb->pLoadCurveIDLabel,      delset);
-  }
-  if(d_with_color){
-    new_dw->allocateTemporary(pcolor,         addset); 
-    old_dw->get(o_color,        d_lb->pColorLabel,            delset);
-  }
-  if(d_artificial_viscosity){
-    new_dw->allocateTemporary(p_q,         addset); 
-    old_dw->get(o_q,        d_lb->p_qLabel,            delset);
-  }
-   
-
-  n = addset->begin();
-  for (o=delset->begin(); o != delset->end(); o++, n++) {
-    pdisp[*n]         = o_disp[*o];
-    position[*n]      = o_position[*o];
-    pvelocity[*n]     = o_velocity[*o];
-    pexternalforce[*n]= o_external_force[*o];
-    pmass[*n]         = o_mass[*o];
-    pvolume[*n]       = o_volume[*o];
-    ptemperature[*n]  = o_temperature[*o];
-    pparticleID[*n]   = o_particleID[*o];
-    psize[*n]         = o_size[*o];
-    ptempPrevious[*n] = o_tempPrevious[*o];  // for thermal stress
-    if (d_useLoadCurves){ 
-      pLoadCurveID[*n]= o_loadcurve[*o];
-    }
-    if (d_with_color){
-      pcolor[*n]      = o_color[*o];
-    }
-    if(d_artificial_viscosity){
-      p_q[*n]      = o_q[*o];
-    }
-  }
-
-  (*newState)[d_lb->pDispLabel]           =pdisp.clone();
-  (*newState)[d_lb->pXLabel]              =position.clone();
-  (*newState)[d_lb->pVelocityLabel]       =pvelocity.clone();
-  (*newState)[d_lb->pExternalForceLabel]  =pexternalforce.clone();
-  (*newState)[d_lb->pMassLabel]           =pmass.clone();
-  (*newState)[d_lb->pVolumeLabel]         =pvolume.clone();
-  (*newState)[d_lb->pTemperatureLabel]    =ptemperature.clone();
-  (*newState)[d_lb->pParticleIDLabel]     =pparticleID.clone();
-  (*newState)[d_lb->pSizeLabel]           =psize.clone();
-  (*newState)[d_lb->pTempPreviousLabel]   =ptempPrevious.clone(); // for thermal stress
-  
-  if (d_useLoadCurves){ 
-    (*newState)[d_lb->pLoadCurveIDLabel]=pLoadCurveID.clone();
-  }
-  if(d_with_color){
-    (*newState)[d_lb->pColorLabel]      =pcolor.clone();
-  }
-  if(d_artificial_viscosity){
-    (*newState)[d_lb->p_qLabel]         =p_q.clone();
-  }
-  d_lock.writeUnlock();
-}
-
 
 void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
 {
@@ -758,7 +615,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   geomvecs::key_type   forcekey(patch,obj);
   geomvecs::key_type   fiberkey(patch,obj);
   geomvecs::key_type   pvelocitykey(patch,obj);
-  geomMat3s::key_type   psizekey(patch,obj);
+  geomMat3s::key_type  psizekey(patch,obj);
   GeometryPieceP piece = obj->getPiece();
   Box b1 = piece->getBoundingBox();
   Box b2 = patch->getExtraBox();
@@ -779,6 +636,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
       Vector dxpp = patch->dCell()/obj->getInitialData_IntVector("res");    
       double dx   = Min(Min(dxpp.x(),dxpp.y()), dxpp.z());
       sgp->setParticleSpacing(dx);
+      sgp->setCellSize(patch->dCell());
       numPts = sgp->createPoints();
     }
     vector<Point>* points      = sgp->getPoints();
@@ -788,6 +646,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     vector<Vector>* pforces    = sgp->getForces();
     vector<Vector>* pfiberdirs = sgp->getFiberDirs();
     vector<Vector>* pvelocities= sgp->getVelocity();
+    vector<Matrix3>* psizes    = sgp->getSize();
     Point p;
     IntVector cell_idx;
     
@@ -816,6 +675,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
           if (!pvelocities->empty()) {
             Vector pvel = pvelocities->at(ii); 
             d_object_velocity[pvelocitykey].push_back(pvel);
+          }
+          if (!psizes->empty()) {
+            Matrix3 psz = psizes->at(ii); 
+            d_object_size[psizekey].push_back(psz);
           }
           if (!colors->empty()) {
             double color = colors->at(ii); 

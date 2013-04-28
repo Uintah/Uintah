@@ -64,6 +64,10 @@ if [ $uda_retval != "0" ]; then
     echo 
     echo "*** uda comparison tests failed ***"
     failed="1"
+    echo 
+    echo "Computing the Lnorms between the two udas "
+    echo "======================================"
+    $SUS_DIR/tools/compute_Lnorm_udas $TEST_UDADIR $COMPARE_UDADIR
 fi
 
 echo

@@ -220,12 +220,16 @@ evaluate()
       index = 0;
       for (int i=0; i<nEnv; i++) {
         for (int j =0 ; j<nEnv; j++) {
-          if (*abscissaeIterators[i] > *abscissaeIterators[j] ) {
-            m1 = lengthParam_ * *growthCoefIter / (*abscissaeIterators[i] * *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                                                   * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
+          if (*densityIter > 0.0 && *dissipationIter > 0.0 ) {
+            if (*abscissaeIterators[i] > *abscissaeIterators[j] ) {
+              m1 = lengthParam_ * *growthCoefIter / (*abscissaeIterators[i] * *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
+                                                     * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
+            } else {
+              m1 = lengthParam_ * *growthCoefIter / (*abscissaeIterators[j] * *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
+                                                     * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
+            }
           } else {
-            m1 = lengthParam_ * *growthCoefIter / (*abscissaeIterators[j] * *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                                                   * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
+            m1 = 0.0;
           }
           *resultsIter[index] = m1/(1.0+m1);
           index++;
@@ -248,12 +252,16 @@ evaluate()
       index = 0;
       for (int i=0; i<nEnv; i++) {
         for (int j =0 ; j<nEnv; j++) {
-          if (*abscissaeIterators[i] > *abscissaeIterators[j] ) {
-            m1 = lengthParam_ * *growthCoefIter * *abscissaeIterators[i] * *abscissaeIterators[i] / 
-                 ( *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j])  * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
+          if (*densityIter > 0.0 && *dissipationIter > 0.0 ) {
+            if (*abscissaeIterators[i] > *abscissaeIterators[j] ) {
+              m1 = lengthParam_ * *growthCoefIter / (*abscissaeIterators[i] * *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
+                                                     * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
+            } else {
+              m1 = lengthParam_ * *growthCoefIter / (*abscissaeIterators[j] * *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
+                                                     * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
+            }
           } else {
-            m1 = lengthParam_ * *growthCoefIter * *abscissaeIterators[j] * *abscissaeIterators[j] / 
-                 ( *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j])  * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
+            m1 = 0.0;
           }
           *resultsIter[index] = m1/(1.0+m1);
           index++;
@@ -276,7 +284,11 @@ evaluate()
     while ( sampleIterator!=sampleField->interior_end() ) {
       for (int i=0; i<nEnv; i++) {
         for (int j =0 ; j<nEnv; j++) {
-          m1 = lengthParam_ * *growthCoefIter  / ( *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j])  * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
+          if (*densityIter > 0.0 && *dissipationIter > 0.0 ) {
+            m1 = lengthParam_ * *growthCoefIter  / ( *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j])  * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
+          } else {
+            m1 = 0.0;
+          }
           *resultsIter[index] = m1/(1.0+m1);
           index++;
         }

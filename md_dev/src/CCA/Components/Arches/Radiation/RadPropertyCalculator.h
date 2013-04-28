@@ -1,4 +1,3 @@
-
 #ifndef Uintah_Component_Arches_RadPropertyCalculator_h
 #define Uintah_Component_Arches_RadPropertyCalculator_h
 
@@ -13,10 +12,13 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <sci_defs/uintah_defs.h>
+
 #ifdef HAVE_RADPROPS
-#include <radprops/AbsCoeffGas.h>
-#include <radprops/RadiativeSpecies.h>
+#  include <radprops/AbsCoeffGas.h>
+#  include <radprops/RadiativeSpecies.h>
+#  include <radprops/Particles.h>
 #endif
+
 namespace Uintah { 
 
   class RadPropertyCalculator{ 
@@ -73,9 +75,24 @@ namespace Uintah {
 
       };
 
+      void compute( const Patch* patch, RadCalcSpeciesList species, RadCalcSpeciesList size, RadCalcSpeciesList pT, 
+                    RadCalcSpeciesList weights, const int N, CCVariable<double>& abskg, CCVariable<double>& abskp ){
+
+        _calculator->computePropsWithParticles( patch, species, size, pT, weights, N, abskg, abskp ); 
+
+      };
+
       inline std::vector<std::string> get_participating_sp(){ 
+
         return _calculator->get_sp(); 
+
       }
+
+      const bool does_scattering(){ 
+
+        return _calculator->does_scattering(); 
+
+      } 
 
     private: 
 
@@ -86,8 +103,17 @@ namespace Uintah {
           virtual ~PropertyCalculatorBase(){};
 
           virtual bool problemSetup( const ProblemSpecP& db )=0; 
-          virtual void computeProps( const Patch* patch, RadCalcSpeciesList species, CCVariable<double>& abskg )=0;  // for now only assume abskg
-          virtual std::vector<std::string> get_sp()=0;
+          virtual void computeProps( const Patch* patch, RadCalcSpeciesList species, CCVariable<double>& abskg )=0; 
+          virtual void computePropsWithParticles( const Patch* patch,
+                                                  RadCalcSpeciesList species,
+                                                  RadCalcSpeciesList size,
+                                                  RadCalcSpeciesList pT,
+                                                  RadCalcSpeciesList weight,
+                                                  const int N,
+                                                  CCVariable<double>& abskg,
+                                                  CCVariable<double>& abskp ) = 0;
+          virtual std::vector<std::string> get_sp() = 0;
+          virtual const bool does_scattering() = 0;
       };
 #ifdef HAVE_RADPROPS
       //______________________________________________________________________
@@ -95,8 +121,22 @@ namespace Uintah {
       class RadPropsInterface : public PropertyCalculatorBase  { 
 
         public: 
-          RadPropsInterface() {};
-          ~RadPropsInterface() {};
+          RadPropsInterface() 
+          {
+            _gg_radprops   = 0;
+            _part_radprops = 0; 
+            _p_ros_abskp  = false; 
+            _p_planck_abskp = false; 
+          }
+          ~RadPropsInterface() {
+          
+            if ( _gg_radprops != 0 ) 
+              delete _gg_radprops; 
+
+            if ( _part_radprops != 0 ) 
+              delete _part_radprops; 
+
+          }
           
           //__________________________________
           //
@@ -118,7 +158,7 @@ namespace Uintah {
 
               // mixture molecular weight will always be the first entry 
               // Note that we will assume the table value is the inverse
-               _species.insert(_species.begin(), _mix_mol_weight_name);
+              _species.insert(_species.begin(), _mix_mol_weight_name);
 
               // NOTE: this requires that the table names match the RadProps name.  This is, in general, a pretty 
               // bad assumption.  Need to make this more robust later on...
@@ -138,6 +178,35 @@ namespace Uintah {
                 } else if ( which_species == "OH" ){
                   _sp_mw.push_back(17.0); 
                 } 
+              }
+
+              // For particles: 
+              _does_scattering = false; 
+              if ( db_gg->findBlock( "particles" ) ){ 
+
+                ProblemSpecP db_p = db_gg->findBlock( "particles" ); 
+
+                double real_part = 0; 
+                double imag_part = 0; 
+                db_p->require( "complex_ir_real", real_part ); 
+                db_p->require( "complex_ir_imag", imag_part ); 
+
+                std::string which_model = "none"; 
+                db_p->require( "model_type", which_model );
+                if ( which_model == "planck" ){ 
+                  _p_planck_abskp = true; 
+                } else if ( which_model == "rossland" ){ 
+                  _p_ros_abskp = true; 
+                } else { 
+                  throw InvalidValue( "Error: Particle model not recognized.",__FILE__,__LINE__);
+                }   
+
+                std::complex<double> complex_ir( real_part, imag_part ); 
+
+                _part_radprops = scinew ParticleRadCoeffs( complex_ir ); 
+
+                _does_scattering = true; 
+
               }
 
             } else { 
@@ -173,7 +242,9 @@ namespace Uintah {
                 double value = (species[i])[c] * _sp_mw[i-1] * (species[0])[c];
                 //              ^^species^^^^    ^^MW^^^^^^    ^^^MIX MW^^^^^^^
                 if ( value < 0 ){ 
-                  throw InvalidValue( "Error: For some reason I am getting negative mol fractions in the radiation property calculator.",__FILE__,__LINE__);
+                  if (value > -1e-5 ) value = 0;
+                  else throw InvalidValue( "Error: For some reason I am getting negative mol fractions in the radiation property calculator.",__FILE__,__LINE__);
+                       
                 } 
                 mol_frac.push_back(value); 
               } 
@@ -184,19 +255,78 @@ namespace Uintah {
 
             }
 
-          }; 
+          };
+
+          void computePropsWithParticles( const Patch* patch, RadCalcSpeciesList species, 
+                                          RadCalcSpeciesList size, RadCalcSpeciesList pT, RadCalcSpeciesList weights, 
+                                          const int Nqn, CCVariable<double>& abskg, CCVariable<double>& abskp ){
+            int N = species.size(); 
+
+            for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+              IntVector c = *iter; 
+
+              double plankCff = 0.0;
+              double rossCff  = 0.0; 
+              double effCff   = 0.0; 
+              std::vector<double> mol_frac; 
+              double T        = 298;
+
+              //convert mass frac to mol frac
+              for ( int i = 2; i < N; i++ ){ 
+                double value = (species[i])[c] * _sp_mw[i-1] * (species[1])[c];
+                //              ^^species^^^^    ^^MW^^^^^^    ^^^MIX MW^^^^^^^
+                if ( value < 0 ){ 
+                  throw InvalidValue( "Error: For some reason I am getting negative mol fractions in the radiation property calculator.",__FILE__,__LINE__);
+                } 
+                mol_frac.push_back(value); 
+              } 
+
+              _gg_radprops->mixture_coeffs( plankCff, rossCff, effCff, mol_frac, T );
+
+              abskg[c] = effCff; //need to generalize this to the other coefficients
+
+              //now compute the particle values: 
+              abskp[c] = 0.0; 
+              for ( int i = 0; i < Nqn; i++ ){ 
+
+                if ( _p_planck_abskp ){ 
+
+                  double abskp_i = _part_radprops->planck_abs_coeff( (size[i])[c], (pT[i])[c] );
+                  abskp[c] += abskp_i * (weights[i])[c]; 
+
+                } else if ( _p_ros_abskp ){ 
+
+                  double abskp_i =  _part_radprops->ross_abs_coeff( (size[i])[c], (pT[i])[c] );
+                  abskp[c] += abskp_i * (weights[i])[c]; 
+
+                } 
+
+              } 
+
+              abskg[c] += abskp[c]; 
+
+            }
+          };
 
           std::vector<std::string> get_sp(){
             return _species; 
           };
 
+
+          const bool does_scattering(){ return _does_scattering; }; 
+
         private: 
 
           GreyGas* _gg_radprops; 
+          ParticleRadCoeffs* _part_radprops; 
           std::vector<std::string> _species;               // to match the Arches varlabels
           std::vector<RadiativeSpecies> _radprops_species; // for rad props
           std::string _mix_mol_weight_name; 
           std::vector<double> _sp_mw; 
+          bool _does_scattering; 
+          bool _p_planck_abskp; 
+          bool _p_ros_abskp; 
 
       }; 
 #endif
@@ -226,10 +356,20 @@ namespace Uintah {
             abskg.initialize(_value); 
           }; 
 
+          void computePropsWithParticles( const Patch* patch, RadCalcSpeciesList species, 
+                                          RadCalcSpeciesList size, RadCalcSpeciesList pT, RadCalcSpeciesList weight, 
+                                          const int N, CCVariable<double>& abskg, CCVariable<double>& abskp ){
+
+            throw InvalidValue( "Error: No particle properties implemented for constant radiation properties.",__FILE__,__LINE__);
+
+          };
+
           std::vector<std::string> get_sp(){
             std::vector<std::string> void_vec; 
             return void_vec; 
           };
+
+          const bool does_scattering(){ return false; }; 
 
         private: 
           double _value; 
@@ -298,10 +438,19 @@ namespace Uintah {
             } 
           }; 
 
+          void computePropsWithParticles( const Patch* patch, RadCalcSpeciesList species, 
+                                          RadCalcSpeciesList size, RadCalcSpeciesList pT, RadCalcSpeciesList weight, 
+                                          const int N, CCVariable<double>& abskg, CCVariable<double>& abskp ){
+
+            throw InvalidValue( "Error: No particle properties implemented for Burns/Christon radiation properties.",__FILE__,__LINE__);
+          };
+
           std::vector<std::string> get_sp(){
             std::vector<std::string> void_vec; 
             return void_vec; 
           };
+
+          const bool does_scattering(){ return false; }; 
 
         private: 
           double _value;

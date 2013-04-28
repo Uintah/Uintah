@@ -1,7 +1,7 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Momentum Test with Taylor-Green Vortex MMS</title>
+    <title>Decay of Isotropic Turbulence - Constant Smagorinsky Model</title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>
@@ -50,7 +50,6 @@
     </BasicExpression>
 
     <Turbulence>
-      <KolmogorovScale>100000000000000</KolmogorovScale>
       <EddyViscosityConstant>0.2</EddyViscosityConstant>
       <TurbulenceModel> SMAGORINSKY </TurbulenceModel>
     </Turbulence>
@@ -139,9 +138,7 @@
     <initTime>0.0</initTime>
     <delt_min>1e-3</delt_min>
     <delt_max>1e-3</delt_max>
-<!-- 
-    <max_Timesteps>5</max_Timesteps>
- -->
+    <max_Timesteps>1000</max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 

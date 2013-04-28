@@ -111,7 +111,9 @@ WARNING
                                     
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched);
-
+                                      
+   virtual void scheduleRefine( const PatchSet* patches,
+                                SchedulerP& sched );
                                              
    virtual void scheduleTestConservation(SchedulerP&,
                                          const PatchSet* patches,
@@ -119,6 +121,12 @@ WARNING
 
 
   private:    
+  
+    bool isDoubleEqual(double a, double b);
+    
+    void problemSetup_BulletProofing(ProblemSpecP& ps);
+    
+    
     void computeBurnLogic(const ProcessorGroup*, 
                           const PatchSubset*,
                           const MaterialSubset*, 
@@ -148,14 +156,20 @@ WARNING
                              double delT, 
                              double solidMass);
     
-    double computeInductionAngle(IntVector *nodeIdx, 
+    double computeInductionAngle( IntVector *nodeIdx, 
                                   constNCVariable<double> &rctMass_NC, 
                                   constNCVariable<double> &NC_CCweight, 
                                   Vector &dx, 
                                   double& cos_theta, 
                                   double& theta,
                                   Point hotcellCord, 
-                                  Point cellCord);  
+                                  Point cellCord);
+
+    void refine( const ProcessorGroup*,
+                 const PatchSubset* patches,
+                 const MaterialSubset* /*matls*/,
+                 DataWarehouse* ,
+                 DataWarehouse* new_dw );
       
     DDT1(const DDT1&);
     DDT1& operator=(const DDT1&);
@@ -181,7 +195,10 @@ WARNING
     const VarLabel* inductionTimeLabel;
     const VarLabel* countTimeLabel;
     const VarLabel* BurningCriteriaLabel;
+    const VarLabel* adjOutIntervalsLabel;
+    
     enum typeofBurning{ NOTDEFINED, WARMINGUP, CONDUCTIVE, CONVECTIVE, ONSURFACE };
+    enum {ZERO, PRESSURE_EXCEEDED, DETONATION_DETECTED};
 
     const VarLabel* pCrackRadiusLabel;
     
@@ -287,7 +304,6 @@ WARNING
     // on either a pressure threshold exceeded or a detonation has been detected
     struct adj_IO{                  // pressure_switch
       bool onOff;                   // is this option on or off?
-      int nTimesSet;                // number of times the intervals have been adjusted
       double timestepsLeft;         // timesteps left until sus shuts down
       double pressThreshold;
       double output_interval;       // output interval in physical seconds

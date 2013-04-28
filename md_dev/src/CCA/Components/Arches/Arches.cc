@@ -444,7 +444,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   Uintah::ProblemSpecP turbulenceModelSpec = params->findBlock("Wasatch")->findBlock("Turbulence");
   // if turbulence is turned on
   if (turbulenceModelSpec) {
-    struct Wasatch::TurbulenceParameters turbParams = {1.0,0.1,0.1,Wasatch::NONE};    
+    struct Wasatch::TurbulenceParameters turbParams = {1.0,0.1,Wasatch::NONE};
     // parse the turbulence parameters
     Wasatch::parse_turbulence_input(turbulenceModelSpec, turbParams);
     // register relevant expressions
@@ -1078,7 +1078,10 @@ Arches::scheduleInitialize(const LevelP& level,
 void
 Arches::restartInitialize()
 {
+
   d_doingRestart = true;
+  d_lab->recompile_taskgraph = true; //always recompile on restart...
+
 # ifdef WASATCH_IN_ARCHES
   d_wasatch->restartInitialize();
   d_wasatch->set_wasatch_materials(d_sharedState->allArchesMaterials());  

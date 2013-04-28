@@ -50,7 +50,8 @@
 #include <fstream>
 #include <cstdio>
 
-
+#define ALL_LEVELS 99
+#define FINEST_LEVEL -1 
 using namespace Uintah;
 using namespace std;
 //__________________________________
@@ -96,9 +97,9 @@ MinMax::~MinMax()
   VarLabel::destroy(d_lb->fileVarsStructLabel);
   
   // delete min/max reduction variables
-  map<string, const VarLabel*>::iterator iter = d_lb->LabelMap.begin();
-  for (; iter != d_lb->LabelMap.end(); iter++) {
-    VarLabel::destroy( iter->second );
+  for ( unsigned int i =0 ; i < d_analyzeVars.size(); i++ ) {
+    VarLabel::destroy( d_analyzeVars[i].reductionMinLabel );
+    VarLabel::destroy( d_analyzeVars[i].reductionMaxLabel );
   }
   
   delete d_lb;
@@ -153,19 +154,23 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
   int defaultMatl = d_matl->getDWIndex();
   
   //__________________________________
-  //  Read in the optional material index from the variables that may be different
-  //  from the default index
   vector<int> m;
-  
   m.push_back(0);            // matl for FileInfo label
   m.push_back(defaultMatl);
   d_matl_set = scinew MaterialSet();
   map<string,string> attribute;
     
+  //__________________________________
+  //  Now loop over all the variables to be analyzed  
+    
   for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
                     var_spec = var_spec->findNextBlock("analyze")) {
     var_spec->getAttributes(attribute);
-   
+    
+    varProperties me;
+    
+    //  Read in the optional material index from the variables that may be different
+    //  from the default index and construct the material set
     int matl = defaultMatl;
     if (attribute["matl"].empty() == false){
       matl = atoi(attribute["matl"].c_str());
@@ -176,37 +181,17 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
       throw ProblemSetupException("MinMax: analyze: Invalid material index specified for a variable", __FILE__, __LINE__);
     }
     
-    d_varMatl.push_back(matl);
+    me.matl = matl;
     m.push_back(matl);
-  }
-  
-  // remove any duplicate entries
-  sort(m.begin(), m.end());
-  vector<int>::iterator it;
-  it = unique(m.begin(), m.end());
-  m.erase(it, m.end());
 
-  //Construct the matl_set
-  d_matl_set->addAll(m);
-  d_matl_set->addReference();
-
-  // for fileInfo variable
-  d_zero_matl = scinew MaterialSubset();
-  d_zero_matl->add(0);
-  d_zero_matl->addReference();
-  
-  // one patch
-  const Patch* p = grid->getPatchByID(0,0);
-  d_zeroPatch = scinew PatchSet();
-  d_zeroPatch->add(p);
-  d_zeroPatch->addReference();
-  
-  //__________________________________
-  //  Read in variables label names                
-  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
-                    var_spec = var_spec->findNextBlock("analyze")) {
-    var_spec->getAttributes(attribute);
+    // Read in the optional level index
+    int level = ALL_LEVELS;
+    if (attribute["level"].empty() == false){
+      level = atoi(attribute["level"].c_str());
+    }
+    me.level = level;
     
+    // Read in the variable name
     string labelName = attribute["label"];
     VarLabel* label = VarLabel::find(labelName);
     if(label == NULL){
@@ -263,7 +248,8 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
            << td->getName() << " ) has not been implemented" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__); 
     }
-    d_varLabels.push_back(label);
+    me.label = label;
+    
     
     //__________________________________
     //  Create the min and max VarLabels for the reduction variables
@@ -283,22 +269,45 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
       meMax = VarLabel::create( VLmax, maxvec_vartype::getTypeDescription() );
       meMin = VarLabel::create( VLmin, minvec_vartype::getTypeDescription() );
     }    
-    d_lb->LabelMap[VLmax] = meMax;
-    d_lb->LabelMap[VLmin] = meMin;
+    me.reductionMaxLabel = meMax;
+    me.reductionMinLabel = meMin;
+    
+    d_analyzeVars.push_back(me);
+    
   }
+  
+  //__________________________________
+  //
+  // remove any duplicate entries
+  sort(m.begin(), m.end());
+  vector<int>::iterator it;
+  it = unique(m.begin(), m.end());
+  m.erase(it, m.end());
+
+  //Construct the matl_set
+  d_matl_set->addAll(m);
+  d_matl_set->addReference();
+
+  // for fileInfo variable
+  d_zero_matl = scinew MaterialSubset();
+  d_zero_matl->add(0);
+  d_zero_matl->addReference();
+  
+  
+  
 }
 
 //______________________________________________________________________
 void MinMax::scheduleInitialize(SchedulerP& sched,
                                 const LevelP& level)
-{
+{  
   printSchedule(level,cout_doing,"minMax::scheduleInitialize");
   Task* t = scinew Task("MinMax::initialize", 
                   this, &MinMax::initialize);
   
-  t->computes(d_lb->lastCompTimeLabel);
+  t->computes(d_lb->lastCompTimeLabel );
   t->computes(d_lb->fileVarsStructLabel, d_zero_matl); 
-  sched->addTask(t, level->eachPatch(), d_matl_set);
+  sched->addTask(t, level->eachPatch(),  d_matl_set);
 }
 //______________________________________________________________________
 void MinMax::initialize(const ProcessorGroup*, 
@@ -306,14 +315,13 @@ void MinMax::initialize(const ProcessorGroup*,
                         const MaterialSubset*,
                         DataWarehouse*,
                         DataWarehouse* new_dw)
-{
-  cout_doing << "Doing MinMax:Initialize" << endl;
+{ 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing MinMax::initialize");
     
     double tminus = -1.0/d_writeFreq;
-    new_dw->put(max_vartype(tminus), d_lb->lastCompTimeLabel);
+    new_dw->put(max_vartype(tminus), d_lb->lastCompTimeLabel );
 
     //__________________________________
     //  initialize fileInfo struct
@@ -348,15 +356,15 @@ void MinMax::restartInitialize()
 void MinMax::scheduleDoAnalysis(SchedulerP& sched,
                                 const LevelP& level)
 {
-
-
   printSchedule(level,cout_doing,"MinMax::scheduleDoAnalysis");
+   
    
   // Tell the scheduler to not copy this variable to a new AMR grid and 
   // do not checkpoint it.
   sched->overrideVariableBehavior("FileInfo_minMax", false, false, false, true, true); 
-  
+   
   Ghost::GhostType gn = Ghost::None;
+  const int L_indx = level->getIndex();
   
   //__________________________________
   //  computeMinMax task;     
@@ -365,30 +373,33 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
                         
   t0->requires( Task::OldDW, d_lb->lastCompTimeLabel );
  
-  for ( unsigned int i =0 ; i < d_varLabels.size(); i++ ) {
-    // bulletproofing
-    if( d_varLabels[i] == NULL ){
-      string name = d_varLabels[i]->getName();
-      throw InternalError("MinMax: scheduleDoAnalysis label not found: " 
-                          + name , __FILE__, __LINE__);
+  for ( unsigned int i =0 ; i < d_analyzeVars.size(); i++ ) {
+    VarLabel* label   = d_analyzeVars[i].label;
+    const int myLevel = d_analyzeVars[i].level;
+    
+    // is this the right level for this variable?
+    if ( isRightLevel( myLevel, L_indx, level ) ){
+    
+      // bulletproofing
+      if( label == NULL ){
+        string name = label->getName();
+        throw InternalError("MinMax: scheduleDoAnalysis label not found: " 
+                           + name , __FILE__, __LINE__);
+      }
+
+      MaterialSubset* matSubSet = scinew MaterialSubset();
+      matSubSet->add( d_analyzeVars[i].matl );
+      matSubSet->addReference();
+
+      t0->requires( Task::NewDW, label, matSubSet, gn, 0 );
+     
+      t0->computes( d_analyzeVars[i].reductionMinLabel, level.get_rep() );
+      t0->computes( d_analyzeVars[i].reductionMaxLabel, level.get_rep() );
+
+      if(matSubSet && matSubSet->removeReference()){
+        delete matSubSet;
+      }
     }
-    
-    MaterialSubset* matSubSet = scinew MaterialSubset();
-    matSubSet->add( d_varMatl[i] );
-    matSubSet->addReference();
-    
-    t0->requires( Task::NewDW,d_varLabels[i], matSubSet, gn, 0 );
-    
-    if(matSubSet && matSubSet->removeReference()){
-      delete matSubSet;
-    }
-  }
-  
-  // schedule computing the reduction variables
-  map<string, const VarLabel*>::iterator iter = d_lb->LabelMap.begin();
-  for (; iter != d_lb->LabelMap.end(); iter++) {
-    const VarLabel* me =  iter->second ;
-    t0->computes( me, level.get_rep() );
   }
   
   sched->addTask( t0, level->eachPatch(), d_matl_set );
@@ -396,7 +407,7 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
  
   //__________________________________
   //  Write min/max to a  file
-  // Only write data on patch 0
+  // Only write data on patch 0 on each level
 
   Task* t1 = scinew Task( "MinMax::doAnalysis", 
                        this,&MinMax::doAnalysis );      
@@ -405,15 +416,25 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
   t1->requires( Task::OldDW, d_lb->fileVarsStructLabel, d_zero_matl, gn, 0 );
   
   // schedule the reduction variables
-  for (iter = d_lb->LabelMap.begin(); iter != d_lb->LabelMap.end(); iter++) {
-    const VarLabel* me =  iter->second ;
-    t1->requires( Task::NewDW, me, level.get_rep() );
+  for ( unsigned int i =0 ; i < d_analyzeVars.size(); i++ ) {
+  
+    int myLevel = d_analyzeVars[i].level;
+    if ( isRightLevel( myLevel, L_indx, level) ){
+      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMinLabel, level.get_rep() );
+      t1->requires( Task::NewDW, d_analyzeVars[i].reductionMaxLabel, level.get_rep() );
+    }
   }
     
   t1->computes( d_lb->lastCompTimeLabel );
   t1->computes( d_lb->fileVarsStructLabel, d_zero_matl );
   
-  sched->addTask( t1, d_zeroPatch, d_matl_set );
+  // first patch on this level
+  const Patch* p = level->getPatch(0);
+  PatchSet* zeroPatch = scinew PatchSet();
+  zeroPatch->add(p);
+  zeroPatch->addReference();
+  
+  sched->addTask( t1, zeroPatch , d_matl_set );
 }
 
 //______________________________________________________________________
@@ -431,31 +452,40 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
 
   double now = d_dataArchiver->getCurrentTime();
   double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
+  //__________________________________
+  // compute min/max if it's time to write
+  if( now >= nextWriteTime){
 
+    const LevelP level = getLevelP(patches);
+    const int L_indx = level->getIndex();
+    
+    /*  Loop over patches  */
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);    
 
-  /*  Loop over patches  */
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);    
+      /* Loop over variables */
+      for (unsigned int i =0 ; i < d_analyzeVars.size(); i++) {
+        VarLabel* label = d_analyzeVars[i].label;
+        string labelName = label->getName();
 
-    /* Loop over variables */
-    for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
-      string labelName = d_varLabels[i]->getName();
+        // bulletproofing
+        if( label == NULL ){
+          throw InternalError("MinMax: analyze label not found: " 
+                               + labelName , __FILE__, __LINE__);
+        }    
       
-      // bulletproofing
-      if(d_varLabels[i] == NULL){
-        throw InternalError("MinMax: analyze label not found: " 
-                             + labelName , __FILE__, __LINE__);
-      }    
-      //__________________________________
-      // compute min/max if it's time to write
-      if( now >= nextWriteTime){
+        // Are we on the right level for this level
+        const int myLevel = d_analyzeVars[i].level;
+        if ( !isRightLevel( myLevel, L_indx, level) ){
+          continue;
+        }
 
         printTask(patches, patch,cout_doing,"Doing MinMax::computeMinMax");
 
-        const TypeDescription* td = d_varLabels[i]->typeDescription();
+        const TypeDescription* td = label->typeDescription();
         const TypeDescription* subtype = td->getSubType();
 
-        int indx = d_varMatl[i];
+        int indx = d_analyzeVars[i].matl;
         
         switch(td->getType()){
           case TypeDescription::CCVariable:             // CC Variables
@@ -463,12 +493,12 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
             
             case TypeDescription::double_type:{         // CC double
               GridIterator iter=patch->getCellIterator();
-              findMinMax <constCCVariable<double>, double > ( new_dw, d_varLabels[i], indx, patch, iter );
+              findMinMax <constCCVariable<double>, double > ( new_dw, label, indx, patch, iter );
               break;
             }
             case TypeDescription::Vector: {             // CC Vector
               GridIterator iter=patch->getCellIterator();
-              findMinMax< constCCVariable<Vector>, Vector > ( new_dw, d_varLabels[i], indx, patch, iter );
+              findMinMax< constCCVariable<Vector>, Vector > ( new_dw, label, indx, patch, iter );
               break;
             }
             default:
@@ -481,12 +511,12 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
             
             case TypeDescription::double_type:{         // NC double
               GridIterator iter=patch->getNodeIterator();
-              findMinMax <constNCVariable<double>, double > ( new_dw, d_varLabels[i], indx, patch, iter );
+              findMinMax <constNCVariable<double>, double > ( new_dw, label, indx, patch, iter );
               break;
             }
             case TypeDescription::Vector: {             // NC Vector
               GridIterator iter=patch->getNodeIterator();
-              findMinMax< constNCVariable<Vector>, Vector > ( new_dw, d_varLabels[i], indx, patch, iter );
+              findMinMax< constNCVariable<Vector>, Vector > ( new_dw, label, indx, patch, iter );
               break; 
             }
             default:
@@ -495,29 +525,28 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
             break;            
           case TypeDescription::SFCXVariable: {         // SFCX double
             GridIterator iter=patch->getSFCXIterator();
-            findMinMax <constSFCXVariable<double>, double > ( new_dw, d_varLabels[i], indx, patch, iter );
+            findMinMax <constSFCXVariable<double>, double > ( new_dw, label, indx, patch, iter );
             break;
           }
           case TypeDescription::SFCYVariable: {         // SFCY double
             GridIterator iter=patch->getSFCYIterator();
-            findMinMax <constSFCYVariable<double>, double > ( new_dw, d_varLabels[i], indx, patch, iter );
+            findMinMax <constSFCYVariable<double>, double > ( new_dw, label, indx, patch, iter );
             break;
           }
           case TypeDescription::SFCZVariable: {         // SFCZ double
             GridIterator iter=patch->getSFCZIterator();
-            findMinMax <constSFCZVariable<double>, double > ( new_dw, d_varLabels[i], indx, patch, iter );
+            findMinMax <constSFCZVariable<double>, double > ( new_dw, label, indx, patch, iter );
             break;
           }
           default:
             ostringstream warn;
-            warn << "ERROR:AnalysisModule:MinMax: ("<<d_varLabels[i]->getName() << " " 
+            warn << "ERROR:AnalysisModule:MinMax: ("<< label->getName() << " " 
                  << td->getName() << " ) has not been implemented" << endl;
             throw InternalError(warn.str(), __FILE__, __LINE__);
         }
-      } // time to write data
-               
-    }  // VarLabel loop  
-  }  // patches
+      }  // VarLabel loop          
+    }  // patches
+  }  // time to write data
 }
 
 //______________________________________________________________________
@@ -532,6 +561,9 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
     
   const Level* level = getLevel(patches);
+  const LevelP levelP = getLevelP(patches);
+  int L_indx = level->getIndex();
+  
   max_vartype writeTime;
   old_dw->get( writeTime, d_lb->lastCompTimeLabel );
   double lastWriteTime = writeTime;
@@ -568,14 +600,26 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
 
       printTask(patches, patch,cout_doing,"Doing MinMax::doAnalysis");
 
-      for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
-        string labelName = d_varLabels[i]->getName();
+      for (unsigned int i =0 ; i < d_analyzeVars.size(); i++) {
+        VarLabel* label = d_analyzeVars[i].label;
+        string labelName = label->getName();
          
         // bulletproofing
-        if(d_varLabels[i] == NULL){
+        if(label == NULL){
           throw InternalError("MinMax: analyze label not found: " 
                           + labelName , __FILE__, __LINE__);
         }
+        
+        
+        // Are we on the right level for this variable?
+        const int myLevel = d_analyzeVars[i].level;
+        
+        if ( !isRightLevel( myLevel, L_indx, levelP ) ){
+          cout << " DDD HERE " << labelName << " myLevel " << myLevel << " L_indx: " << L_indx << endl;
+          continue;
+        }
+        
+        
 
         //__________________________________
         // create the directory structure
@@ -592,7 +636,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
         }
         
         ostringstream fname;
-        fname<< path << "/" << labelName <<"_"<<d_varMatl[i];
+        fname<< path << "/" << labelName <<"_"<<d_analyzeVars[i].matl;
         string filename = fname.str();
 
         //__________________________________
@@ -616,11 +660,11 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
         //  Now get the data from the DW and write it to the file
         string VLmax = labelName + "_max";
         string VLmin = labelName + "_min";
-        const VarLabel* meMin = d_lb->LabelMap[ VLmin ];
-        const VarLabel* meMax = d_lb->LabelMap[ VLmax ];
+        const VarLabel* meMin = d_analyzeVars[i].reductionMinLabel;
+        const VarLabel* meMax = d_analyzeVars[i].reductionMaxLabel;
         
         
-        const TypeDescription* td = d_varLabels[i]->typeDescription();
+        const TypeDescription* td = label->typeDescription();
         const TypeDescription* subtype = td->getSubType();
                 
         switch(subtype->getType()) {
@@ -664,7 +708,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     fileInfo.get().get_rep()->files = myFiles;
 
     new_dw->put(fileInfo,                   d_lb->fileVarsStructLabel, 0, patch);
-    new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel); 
+    new_dw->put(max_vartype(lastWriteTime), d_lb->lastCompTimeLabel ); 
   }  // patches
 }
 
@@ -718,8 +762,8 @@ void MinMax::findMinMax( DataWarehouse*  new_dw,
   const string labelName = varLabel->getName();
   string VLmax = labelName + "_max";
   string VLmin = labelName + "_min";
-  const VarLabel* meMin = d_lb->LabelMap[ VLmin ];
-  const VarLabel* meMax = d_lb->LabelMap[ VLmax ];
+  const VarLabel* meMin = VarLabel::find( VLmin );
+  const VarLabel* meMax = VarLabel::find( VLmax );
 
   new_dw->put(  ReductionVariable<Ttype, Reductions::Max<Ttype> >(maxQ), meMax,  level );
   new_dw->put(  ReductionVariable<Ttype, Reductions::Min<Ttype> >(minQ), meMin,  level );
@@ -753,5 +797,19 @@ MinMax::createDirectory(string& dirName, string& levelIndex)
     MKDIR( dirName.c_str(), 0777 );
   } else {
     closedir(check);
+  }
+}
+//______________________________________________________________________
+//
+bool MinMax::isRightLevel(const int myLevel, const int L_indx, const LevelP& level)
+{
+  if( myLevel == ALL_LEVELS || myLevel == L_indx )
+    return true;
+    
+  int numLevels = level->getGrid()->numLevels();
+  if( myLevel == FINEST_LEVEL && L_indx == numLevels -1 ){
+    return true;
+  }else{
+    return false;
   }
 }

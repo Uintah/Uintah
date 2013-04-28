@@ -39,6 +39,8 @@
  *
  *  \brief calculates the source term associated with Oswalt Ripening
  *  here \f$ \bar{S} = exp ( 2 \sigma \nu / RT / r) \f$
+ *  add in tolman length variation such that \f$ \nu = \nu_{bulk} * (1 - \delta_T / r) \f$
+ *  \f$ \delta_T \f$ is the tolman length, this is multiplied by the exponential coefficient in the code 
  *  Then with the quadrature approxiamtion \f$ \bar{S} \approx \sum_i w_i exp( 2 \sigma \nu / RT / r_i) \f$
  *  this term is then subtracted from the current supersaturation in the growth coefficient expressions if needed
  *  when \f$ r < r_{cutoff} \f$
@@ -52,6 +54,7 @@ class OstwaldRipening
   const Expr::TagList abscissaeTagList_; // these are the tags of all the known moments
   const Expr::Tag moment0Tag_;
   const double expCoef_;                 // exponential coefficient (r0 = 2 nu gamma/R T )
+  const double tolmanLength_;            // tolman length
   const double rCutOff_;                 // size to swap r correlation 1/r to r^2
 
   typedef std::vector<const FieldT*> FieldVec;
@@ -63,6 +66,7 @@ class OstwaldRipening
                    const Expr::TagList abscissaeTagList_,
                    const Expr::Tag& moment0Tag_,
                    const double expCoef,
+                   const double tolmanLength,
                    const double rCutOff);
 
 public:
@@ -74,18 +78,20 @@ public:
              const Expr::TagList& abscissaeTagList,
              const Expr::Tag& moment0Tag,
              const double expCoef,
+             const double tolmanLength,
              const double rCutOff )
     : ExpressionBuilder(result),
     weightstaglist_  (weightsTagList),
     abscissaetaglist_(abscissaeTagList),
     moment0t_        (moment0Tag),
     expcoef_         (expCoef),
+    tolmanlength_    (tolmanLength),
     rcutoff_         (rCutOff)
     {}
     ~Builder(){}
     Expr::ExpressionBase* build() const
     {
-      return new OstwaldRipening<FieldT>( weightstaglist_, abscissaetaglist_, moment0t_, expcoef_, rcutoff_ );
+      return new OstwaldRipening<FieldT>( weightstaglist_, abscissaetaglist_, moment0t_, expcoef_, tolmanlength_, rcutoff_ );
     }
 
   private:
@@ -93,6 +99,7 @@ public:
     const Expr::TagList abscissaetaglist_; // these are the tags of all the known absicase
     const Expr::Tag moment0t_;
     const double expcoef_;
+    const double tolmanlength_;
     const double rcutoff_;
   };
 
@@ -117,12 +124,14 @@ OstwaldRipening( const Expr::TagList weightsTagList,
                  const Expr::TagList abscissaeTagList,
                  const Expr::Tag& moment0Tag,
                  const double expCoef,
+                 const double tolmanLength,
                  const double rCutOff)
   : Expr::Expression<FieldT>(),
   weightsTagList_  (weightsTagList),
   abscissaeTagList_(abscissaeTagList),
   moment0Tag_      (moment0Tag),
   expCoef_         (expCoef),
+  tolmanLength_    (tolmanLength),
   rCutOff_         (rCutOff)
   {}
 
@@ -186,11 +195,13 @@ evaluate()
   FieldT& result = this->value();
 
   result <<= 0.0;
+  SpatFldPtr<FieldT> surfaceEnergyModification = SpatialFieldStore::get<FieldT>( result );
   typename FieldVec::const_iterator abscissaeIterator = abscissae_.begin();
   for( typename FieldVec::const_iterator weightsIterator=weights_.begin();
       weightsIterator!=weights_.end();
       ++weightsIterator, ++abscissaeIterator) {
-    result <<= result + cond(**abscissaeIterator > rCutOff_, (**weightsIterator) / *moment0_ * exp( expCoef_ / **abscissaeIterator ) )
+    *surfaceEnergyModification <<=  1.0 - tolmanLength_ / **abscissaeIterator ;
+    result <<= result + cond(**abscissaeIterator > rCutOff_, (**weightsIterator) / *moment0_ * exp( *surfaceEnergyModification *  expCoef_ / **abscissaeIterator ) )
                             ( 0.0 );
   }
 }

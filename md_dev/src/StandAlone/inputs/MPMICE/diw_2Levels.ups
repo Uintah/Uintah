@@ -17,7 +17,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-       <timestep_multiplier>0.8         </timestep_multiplier>
+       <timestep_multiplier>0.3         </timestep_multiplier>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -149,7 +149,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-      <cfl>0.5</cfl>
+      <cfl>0.25</cfl>
       <ICE>
         <advection type = "FirstOrder"/>
       </ICE>        
@@ -165,12 +165,13 @@
         <min_grid_level>-1</min_grid_level>
         <max_grid_level>-1</max_grid_level>
       </MPM>
-      <Regridder type="Hierarchical">
+      
+      <Regridder type="Tiled">
         <max_levels>2</max_levels>
-        <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
-        <lattice_refinement_ratio> [[9,5,1][2,2,1]]  </lattice_refinement_ratio>
+        <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
+        <min_patch_size>           [[4,4,1]]  </min_patch_size>
         <cell_stability_dilation>   [2,2,0]   </cell_stability_dilation>   
-        <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
+        <min_boundary_cells>        [1,1,0]   </min_boundary_cells>
       </Regridder>
       <useLockStep>       true  </useLockStep>
     </AMR>
@@ -203,7 +204,7 @@
                 <thermal_conductivity>  400.0           </thermal_conductivity>
                 <specific_heat>         716.0           </specific_heat>
                 <geom_object>
-                    <box label = "gpmpm">
+                    <box label = "D">
                         <min>           [1.0,0.0,1.125]   </min>
                         <max>           [1.5,1.5,1.375]   </max>
                     </box>
@@ -227,20 +228,17 @@
            <gamma>                      1.4             </gamma>           
            <geom_object>
               <difference>
-                <box label = "gpice">
-                    <min>           [-1.0,-1.0,-1.0]    </min>
-                    <max>           [5.0,4.0,4.0 ]      </max>
+                <box label = "wholeDomain">
+                    <min>           [-10,-10,-10]      </min>
+                    <max>           [ 10, 10, 10 ]     </max>
                 </box>
-              <box label = "gpicehole">
-                    <min>           [1.0,0.0,1.125]       </min>
-                    <max>           [1.5,1.5,1.375]       </max>
-                </box>
+              <box label = "D"/>
               </difference>
-               <res>                      [2,2,2]          </res>
+               <res>                      [2,2,2]      </res>
                <velocity>           [0.0,0.0,0.0]      </velocity>
-               <temperature>        400.0               </temperature>
-               <density>              0.88447102        </density>
-               <pressure>           101325.0             </pressure>
+               <temperature>        400.0              </temperature>
+               <density>              0.88447102       </density>
+               <pressure>           101325.0           </pressure>
            </geom_object>
          </material>
       </ICE>       

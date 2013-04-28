@@ -85,7 +85,7 @@ DDT1::DDT1(const ProcessorGroup* myworld,
   detonatingLabel = VarLabel::create("detonating",
                                       CCVariable<double>::getTypeDescription());
   //__________________________________
-  //  diagnostic labels Steady Burn    
+  //  diagnostic labels   
   d_saveConservedVars = scinew saveConservedVars();
   
   onSurfaceLabel   = VarLabel::create("onSurface",
@@ -117,7 +117,9 @@ DDT1::DDT1(const ProcessorGroup* myworld,
     
   totalHeatReleasedLabel= VarLabel::create( "totalHeatReleased",
                                              sum_vartype::getTypeDescription() );
-
+                                             
+  adjOutIntervalsLabel= VarLabel::create( "adjOutIntervals",
+                                           max_vartype::getTypeDescription() );
 }
 
 DDT1::~DDT1()
@@ -134,7 +136,7 @@ DDT1::~DDT1()
   VarLabel::destroy(delFLabel);
   VarLabel::destroy(detLocalToLabel);
   VarLabel::destroy(detonatingLabel);
-  // Simple Burn
+
   VarLabel::destroy(BurningCriteriaLabel);
   VarLabel::destroy(surfaceTempLabel);
   VarLabel::destroy(onSurfaceLabel);
@@ -145,12 +147,17 @@ DDT1::~DDT1()
   VarLabel::destroy(numPPCLabel);
   VarLabel::destroy(inductionTimeLabel);
   VarLabel::destroy(countTimeLabel);
+  VarLabel::destroy( adjOutIntervalsLabel );
   
   if(d_mymatls && d_mymatls->removeReference())
     delete d_mymatls;
     
   if (d_one_matl && d_one_matl->removeReference())
     delete d_one_matl;
+}
+
+bool DDT1::isDoubleEqual(double a, double b){
+  return ( fabs(a-b) < DBL_EPSILON);
 }
 
 void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
@@ -217,7 +224,6 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
     ProblemSpecP PS_ps = adj_ps->findBlockWithOutAttribute( "PressureSwitch" );
     if( PS_ps ){
       d_adj_IO_Press->onOff     = true;
-      d_adj_IO_Press->nTimesSet = 0;
       PS_ps->require("PressureThreshold",     d_adj_IO_Press->pressThreshold );
       PS_ps->require("newOutputInterval",     d_adj_IO_Press->output_interval );  
       PS_ps->require("newCheckPointInterval", d_adj_IO_Press->chkPt_interval );
@@ -226,7 +232,6 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
     ProblemSpecP DS_ps = adj_ps->findBlockWithOutAttribute( "DetonationDetected" );
     if( DS_ps ){
       d_adj_IO_Det->onOff     = true;
-      d_adj_IO_Det->nTimesSet = 0;
       DS_ps->require("remainingTimesteps",    d_adj_IO_Det->timestepsLeft );
       DS_ps->require("newOutputInterval",     d_adj_IO_Det->output_interval );  
       DS_ps->require("newCheckPointInterval", d_adj_IO_Det->chkPt_interval );
@@ -271,8 +276,32 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
       d_saveConservedVars->energy = true;
     }
   }
+  
+  problemSetup_BulletProofing( d_prob_spec );
 }
 
+//______________________________________________________________________
+//
+void DDT1::problemSetup_BulletProofing(ProblemSpecP& ps)
+{
+  ProblemSpecP root = ps->getRootNode();
+  ProblemSpecP amr_ps = root->findBlock("AMR"); 
+  if(amr_ps){     
+    ProblemSpecP reg_ps = amr_ps->findBlock("Regridder");
+    if (reg_ps) {
+
+      string regridder;
+      reg_ps->getAttribute( "type", regridder );
+
+      if (regridder != "Tiled") {
+        ostringstream msg;
+        msg << "\n ERROR:Model:DDT1: The (" << regridder << ") regridder will not work with this burn model. \n";
+        msg << "The only regridder that works with this burn model is the \"Tiled\" regridder\n"; 
+        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+      }
+    }
+  }
+}
 //______________________________________________________________________
 //
 void DDT1::outputProblemSpec(ProblemSpecP& ps)
@@ -354,6 +383,10 @@ void DDT1::scheduleInitialize(SchedulerP& sched,
   t->computes(BurningCriteriaLabel, react_matl);
   t->computes(inductionTimeLabel,   react_matl);
   t->computes(countTimeLabel,       react_matl);
+
+  if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
+    t->computes( adjOutIntervalsLabel );
+  }
   
   if(d_useCrackModel)
     t->computes(crackedEnoughLabel,   react_matl);
@@ -375,11 +408,11 @@ void DDT1::initialize(const ProcessorGroup*,
  
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing Initialize on patch " << patch->getID()<< "\t\t\t STEADY_BURN" << endl;
+    printTask(patches,patch,cout_doing,"Doing DDT1::initialize");
     
     // This section is needed for outputting F and burn on each timestep
     CCVariable<double> F, Ts, det, crack, inductionTime, countTime, inductionTimeOld, countTimeOld;
-    CCVariable<int> burningCell,  BurningCriteria, burningCellOld, BurningCriteriaOld;
+    CCVariable<int> burningCellOld, BurningCriteriaOld;
     new_dw->allocateAndPut(F,                  reactedFractionLabel, m0, patch);
     new_dw->allocateAndPut(burningCellOld,     burningLabel,         m0, patch);
     new_dw->allocateAndPut(Ts,                 surfaceTempLabel,     m0, patch);
@@ -393,6 +426,11 @@ void DDT1::initialize(const ProcessorGroup*,
       new_dw->allocateAndPut(crack,crackedEnoughLabel,   m0, patch);
       crack.initialize(0.0);
     } 
+    
+    if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
+      new_dw->put( max_vartype( ZERO ), adjOutIntervalsLabel );
+    }
+    
 
     F.initialize(0.0);
     burningCellOld.initialize(0);
@@ -506,16 +544,17 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   t1->computes(inductionTimeLabel,      react_matl);
   t1->computes(countTimeLabel,          react_matl);
    
-  // if detonation occurs change the output interval
-  t1->requires(Task::OldDW, d_sharedState->get_outputInterval_label() );
-  t1->requires(Task::OldDW, d_sharedState->get_checkpointInterval_label() );  
+  // if detonation occurs change the output interval  
+  if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
+    t1->requires( Task::OldDW, adjOutIntervalsLabel );
+    t1->computes( adjOutIntervalsLabel );
+    
+    t1->computes( d_sharedState->get_outputInterval_label() );
+    t1->computes( d_sharedState->get_checkpointInterval_label() );
+    d_sharedState->updateOutputInterval( true );
+    d_sharedState->updateCheckpointInterval( true ); 
+  } 
   
-  
-  t1->computes( d_sharedState->get_outputInterval_label() );
-  t1->computes( d_sharedState->get_checkpointInterval_label() );
-  d_sharedState->updateOutputInterval( true );
-  d_sharedState->updateCheckpointInterval( true ); 
-   
   sched->addTask(t1, level->eachPatch(), d_mymatls);    
     
     
@@ -651,7 +690,7 @@ void DDT1::computeNumPPC(const ProcessorGroup*,
 //
 void DDT1::computeBurnLogic(const ProcessorGroup*, 
                             const PatchSubset* patches,
-                            const MaterialSubset*,
+                            const MaterialSubset* matls,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
                             const ModelInfo* mi)
@@ -668,10 +707,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch   = patches->get(p);  
     ParticleSubset* pset = old_dw->getParticleSubset(m0, patch); 
-   
-    cout_doing << "Doing computeBurnLogic on patch "<< patch->getID()
-               <<"\t\t\t\t  DDT1" << endl;
-
+    printTask(patches,patch,cout_doing,"Doing DDT1::computeBurnLogic");
 
     // Burning related
     CCVariable<double> inductionTime, countTime;
@@ -750,12 +786,13 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
     detLocalTo.initialize(0.);
     BurningCriteria.initialize(0);
     inductionTime.initialize(0.);
+
     countTime.initialize(0.);
   
     IntVector nodeIdx[8];
     
     bool press_switch_adj_IO  = false;  // switch based on pressure to adjust the I/O intervals
-    bool det_switch_adj_IO    = false;  // switch based on detonation to adjust the I/O intervals
+    bool det_switch_adj_IO    = false;  // switch based on detonation to adjust the I/O intervals    
     
     //__________________________________
     //  Loop over cells
@@ -936,11 +973,10 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
                     if(calculateInductionTime){
                       A = min(A_HotSolidCell,A_HotGasCell);
 
-                      double l;
                       if(A  == A_HotGasCell){
-                       ignitedFrom = CONDUCTIVE;
-                       }else {
-                       ignitedFrom = ignitedFromHotSolidCell;
+                        ignitedFrom = CONDUCTIVE;
+                      }else {
+                        ignitedFrom = ignitedFromHotSolidCell;
                       }
                      
                     }  
@@ -1025,39 +1061,43 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
 
     //__________________________________
     // Update either the output and/or checkpoint intervals
-    min_vartype oldOUT, oldCKPT;
-    double newOUT, newCKPT;
-
-    old_dw->get( oldOUT,  d_sharedState->get_outputInterval_label() );
-    old_dw->get( oldCKPT, d_sharedState->get_checkpointInterval_label() );
-      
-    newOUT  = oldOUT;
-    newCKPT = oldCKPT; 
-      
     // pressure exceeding threshold detected
-    if ( press_switch_adj_IO && d_adj_IO_Press->onOff && d_adj_IO_Press->nTimesSet == 0){
+    if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
+    
+      max_vartype me;
+      old_dw->get( me,  adjOutIntervalsLabel );
+      double hasSwitched = me; 
+    
+      if ( press_switch_adj_IO && d_adj_IO_Press->onOff && isDoubleEqual( hasSwitched, ZERO) ){
 
-      newOUT  = d_adj_IO_Press->output_interval;
-      newCKPT = d_adj_IO_Press->chkPt_interval;
-      d_adj_IO_Press->nTimesSet = 1;
-      cout << "\n__________________________________pressure exceeding threshold detected " << endl;
-      cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<<  endl;
+        double newOUT  = d_adj_IO_Press->output_interval;
+        double newCKPT = d_adj_IO_Press->chkPt_interval;
+        hasSwitched = PRESSURE_EXCEEDED;
+        
+        cout << "\n__________________________________pressure exceeding threshold detected in a cell on patch: " << endl;
+        cout << *patch << endl;
+        cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<<  endl;
+
+        new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
+        new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
+      }
+
+      // detonation detected
+      if ( det_switch_adj_IO && d_adj_IO_Det->onOff && isDoubleEqual(hasSwitched, PRESSURE_EXCEEDED) ){
+
+        double newOUT  = d_adj_IO_Det->output_interval;
+        double newCKPT = d_adj_IO_Det->chkPt_interval;
+        hasSwitched = DETONATION_DETECTED;
+        
+        cout << "__________________________________ Detonation detected in a cell on patch:" << endl;
+        cout << *patch << endl;
+        cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<< endl;
+
+        new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
+        new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
+      }
+      new_dw->put( max_vartype(hasSwitched), adjOutIntervalsLabel );
     }
-    
-    // detonation detected
-    if ( det_switch_adj_IO && d_adj_IO_Det->onOff && d_adj_IO_Det->nTimesSet == 0){
-
-      newOUT  = d_adj_IO_Det->output_interval;
-      newCKPT = d_adj_IO_Det->chkPt_interval;
-      d_adj_IO_Det->nTimesSet = 1;
-      cout << "__________________________________ Detonation detected " << endl;
-      cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<< endl;
-    }
-    
-    new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
-    new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
-    
-
   }//End for{Patches}
 }//end Task
 
@@ -1084,9 +1124,8 @@ void DDT1::computeModelSources(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch   = patches->get(p);
-   
-    cout_doing << "Doing computeModelSources on patch "<< patch->getID()
-               <<"\t\t\t\t  DDT1" << endl;
+    printTask(patches,patch,cout_doing,"Doing DDT1::computeBurnLogic");
+    
 
     /* Variable to modify or compute */
     // Sources and Sinks
@@ -1400,33 +1439,55 @@ void DDT1::computeModelSources(const ProcessorGroup*,
 
 //______________________________________________________________________
 //
-void DDT1::scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                   const LevelP&,
-                                                   const MaterialSet*)
+void DDT1::scheduleRefine(const PatchSet* patches,
+                          SchedulerP& sched)
 {
-  // do nothing      
-}
-void DDT1::computeSpecificHeat(CCVariable<double>&,
-                               const Patch*,   
-                               DataWarehouse*, 
-                               const int)      
-{
-  //do nothing
-}
-//______________________________________________________________________
-//
-void DDT1::scheduleErrorEstimate(const LevelP&,
-                                 SchedulerP&)
-{
-  // Not implemented yet
+  const Level* level = getLevel(patches);
+  
+  if(level->hasFinerLevel() == false){  // only on finest level
+    printSchedule( patches ,cout_doing,"DDT1::scheduleRefine" );
+    
+    Task* t = scinew Task("DDT1::refine",this, &DDT1::refine);
+    
+    const MaterialSubset* react_matl = d_matl0->thisMaterial();
+    t->computes( burningLabel,       react_matl );
+    t->computes( countTimeLabel,     react_matl );
+    t->computes( inductionTimeLabel, react_matl );
+    
+    sched->addTask(t, patches, d_mymatls);
+  }
 }
 //__________________________________
-void DDT1::scheduleTestConservation(SchedulerP&,
-                                    const PatchSet*,                      
-                                    const ModelInfo*)                     
+// Initialize variables on the new fine level patches
+// This only works with the tiled regridder.  With the other regridders
+// it's possible to have a new patch that contains new cells and old cells.
+// We don't want to overwrite the old cell data!
+void DDT1::refine(const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset* /*matls*/,
+                  DataWarehouse* ,
+                  DataWarehouse* new_dw)
 {
-  // Not implemented yet
+  int m0 = d_matl0->getDWIndex();
+
+  for(int p=0;p<patches->size();p++) {
+    const Patch* patch = patches->get(p);
+    printTask( patches,patch,cout_doing,"Doing DDT1::refine" );
+    
+    CCVariable<int>    burningCell;
+    CCVariable<double> countTime;
+    CCVariable<double> inductionTime;
+    
+    new_dw->allocateAndPut( burningCell,    burningLabel,       m0, patch );
+    new_dw->allocateAndPut( countTime,      countTimeLabel,     m0, patch );
+    new_dw->allocateAndPut( inductionTime,  inductionTimeLabel, m0, patch );
+    
+    burningCell.initialize( -9 );
+    countTime.initialize( -9 );
+    inductionTime.initialize( -9 );
+  }
 }
+
     
 /****************************************************************************/
 /******************* Bisection Newton Solver ********************************/    
@@ -1598,4 +1659,35 @@ double DDT1::BisectionNewton(double Ts, IterationVariables *iterVar){
 
       Ts = (iterVar->IL+iterVar->IR)/2.0; //Bisection Step
   }
+}
+
+
+//______________________________________________________________________
+//
+void DDT1::scheduleModifyThermoTransportProperties(SchedulerP&,
+                                                   const LevelP&,
+                                                   const MaterialSet*)
+{
+  // do nothing      
+}
+void DDT1::computeSpecificHeat(CCVariable<double>&,
+                               const Patch*,   
+                               DataWarehouse*, 
+                               const int)      
+{
+  //do nothing
+}
+//______________________________________________________________________
+//
+void DDT1::scheduleErrorEstimate(const LevelP&,
+                                 SchedulerP&)
+{
+  // Not implemented yet
+}
+//__________________________________
+void DDT1::scheduleTestConservation(SchedulerP&,
+                                    const PatchSet*,                      
+                                    const ModelInfo*)                     
+{
+  // Not implemented yet
 }

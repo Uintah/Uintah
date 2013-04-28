@@ -141,15 +141,6 @@ public:
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
 
-  /** @brief Clip values of phi that are too high or too low (after RK time averaging). */
-  template<class phiType>
-  void clipPhi( const Patch* p, 
-                     phiType& phi );
-  template<class phiType>
-  void clipWeightedPhi( const Patch* p,
-                         phiType& phi,
-                         constCCVariable<double> weight);
-
   // --------------------------------------
   // Access functions:
 
@@ -175,24 +166,19 @@ public:
   inline bool weight(){
     return d_weight; };
 
-  /** @brief Get the low clipping value. */ 
-  inline double getLowClip(){
-    if(d_doClipping && d_doLowClip) return d_lowClip;
-    else return 0.0; };
-
-  inline double getHighClip(){
-    if(d_doClipping && d_doHighClip) return d_highClip;
-    else return 0.0; };
-
   /** @brief Get the small clipping value (for weights only). */
   inline double getSmallClip(){
-    if( d_doClipping && d_doLowClip ) {
-      if( weight() && d_lowClip < d_smallClip )
-        return d_smallClip;
-      else
-        return d_lowClip;
+
+    if( clip.activated && clip.do_low ) {
+
+      double small = clip.low + clip.tol; 
+      return small; 
+
     } else {
-      return 0.0; } }; 
+
+      return 0.0; 
+    } 
+  }; 
 
   /** @brief Set this equation as a weight.
    this seems a little dangerous.  Is there a better way? */

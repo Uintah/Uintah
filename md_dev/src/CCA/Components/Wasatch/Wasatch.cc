@@ -391,7 +391,7 @@ namespace Wasatch{
     // get the turbulence params, if any, and parse them.
     //
     Uintah::ProblemSpecP turbulenceModelParams = wasatchParams->findBlock("Turbulence");
-    struct TurbulenceParameters turbParams = {1.0,0.1,0.1,NONE};
+    struct TurbulenceParameters turbParams = {1.0,0.1,NONE};
     parse_turbulence_input(turbulenceModelParams, turbParams);
     
     //
