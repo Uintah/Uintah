@@ -52,27 +52,75 @@ Expr::Tag vreman_tensormagnitude_tag();
  a unified interface across these turbulence models.
  *
  */
-class StrainTensorSquare : public StrainTensorBase {
+class StrainTensorSquare : Expr::Expression<SVolField> {
   
-  StrainTensorSquare( const Expr::Tag& vel1tag,
-                      const Expr::Tag& vel2tag,
-                      const Expr::Tag& vel3tag);
+  StrainTensorSquare( const Expr::Tag& s11Tag,
+                      const Expr::Tag& s21Tag,
+                      const Expr::Tag& s31Tag,
+                      const Expr::Tag& s22Tag,
+                      const Expr::Tag& s32Tag,
+                      const Expr::Tag& s33Tag );
+
+  const Expr::Tag S11Tag_, S21Tag_, S31Tag_, S22Tag_, S32Tag_, S33Tag_;
+
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::XSurfXField, SVolField >::type XXInterpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::YSurfYField, SVolField >::type YYInterpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::ZSurfZField, SVolField >::type ZZInterpT;
+    
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::XSurfYField, SVolField >::type XYInterpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::XSurfZField, SVolField >::type XZInterpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::structured::YSurfZField, SVolField >::type YZInterpT;
+
+  // NOTATION: We follow the classical continuum mechanics notation for tensors:
+  // S_ij is the strain rate on the i-th face in the j-th direction.
+  // Although the tensor is symmetric at a point and there is no distinction between S_ij and S_ji,
+  // this distinction is important when dealing with staggered grids where S_ij cannot really be compared to S_ji
+  // because these quantities live on different grid locations.
+  // XVOL related strain rates
+  const SpatialOps::structured::XSurfXField* S11_; // strain on x face in x direction
+  const SpatialOps::structured::XSurfYField* S21_; // strain on y face in x direction
+  const SpatialOps::structured::XSurfZField* S31_; // strain on z face in x direction
+
+  // YVOL related strain rates
+//  const SpatialOps::structured::YSurfXField* S12_; // strain on x face in y direction
+  const SpatialOps::structured::YSurfYField* S22_; // strain on y face in y direction
+  const SpatialOps::structured::YSurfZField* S32_; // strain on z face in y direction
+  
+  // ZVOL related strain rates
+//  const SpatialOps::structured::ZSurfXField* S13_; // strain on x face in z direction
+//  const SpatialOps::structured::ZSurfYField* S23_; // strain on y face in z direction
+  const SpatialOps::structured::ZSurfZField* S33_; // strain on z face in z direction
+//  const SVolField* dil_;
+  const XXInterpT* xxInterpOp_;
+  const YYInterpT* yyInterpOp_;
+  const ZZInterpT* zzInterpOp_;
+  const XYInterpT* xyInterpOp_;
+  const XZInterpT* xzInterpOp_;
+  const YZInterpT* yzInterpOp_;
+
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
-    Builder( const Expr::Tag& result,
-             const Expr::Tag& vel1tag,
-             const Expr::Tag& vel2tag,
-             const Expr::Tag& vel3tag );
+    Builder(const Expr::Tag& result,
+            const Expr::Tag& s11Tag,
+            const Expr::Tag& s21Tag,
+            const Expr::Tag& s31Tag,
+            const Expr::Tag& s22Tag,
+            const Expr::Tag& s32Tag,
+            const Expr::Tag& s33Tag );
+
     ~Builder(){}
     Expr::ExpressionBase* build() const;
     
   private:
-    const Expr::Tag v1t_, v2t_, v3t_;
+    const Expr::Tag S11Tag_, S21Tag_, S31Tag_, S22Tag_, S32Tag_, S33Tag_;
   };
   
   ~StrainTensorSquare();
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB );  
   void evaluate();
 };
 
@@ -83,7 +131,7 @@ public:
  *  \ingroup Expressions
  *
  *  \brief This calculates the square velocity gradient tensor. 
-           This is used in the W.A.L.E. turbulent model. 
+           This is used in the W.A.L.E. turbulence model. 
            See:
            Nicoud and Ducros, 1999, Subgrid-Scale Stress Modelling Based on the
            Square of the Velocity Gradient Tensor

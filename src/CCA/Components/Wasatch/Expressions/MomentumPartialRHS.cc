@@ -34,6 +34,7 @@ MomRHSPart<FieldT>::
 MomRHSPart( const Expr::Tag& convFluxX,
             const Expr::Tag& convFluxY,
             const Expr::Tag& convFluxZ,
+            const Expr::Tag& viscTag,
             const Expr::Tag& tauX,
             const Expr::Tag& tauY,
             const Expr::Tag& tauZ,
@@ -45,6 +46,7 @@ MomRHSPart( const Expr::Tag& convFluxX,
     cfluxXt_   ( convFluxX    ),
     cfluxYt_   ( convFluxY    ),
     cfluxZt_   ( convFluxZ    ),
+    viscTag_   ( viscTag      ),
     tauXt_     ( tauX         ),
     tauYt_     ( tauY         ),
     tauZt_     ( tauZ         ),
@@ -76,6 +78,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
   if ( tauYt_   != emptyTag_ )  exprDeps.requires_expression( tauYt_   );
   if ( tauZt_   != emptyTag_ )  exprDeps.requires_expression( tauZt_   );
   exprDeps.requires_expression( densityt_);
+  exprDeps.requires_expression( viscTag_);
   if ( bodyForcet_ != emptyTag_ )  exprDeps.requires_expression( bodyForcet_);
   if ( srcTermt_   != emptyTag_ )  exprDeps.requires_expression( srcTermt_  );
   if ( volfract_   != emptyTag_ )  exprDeps.requires_expression( volfract_  );
@@ -101,7 +104,8 @@ bind_fields( const Expr::FieldManagerList& fml )
   if( tauZt_ != emptyTag_ )  tauZ_ = &zfm.field_ref(tauZt_);
 
   density_ = &fml.field_manager<SVolField>().field_ref( densityt_ );
-
+  visc_    = &fml.field_manager<SVolField>().field_ref( viscTag_ );
+  
   if( bodyForcet_ != emptyTag_ )  bodyForce_ = &fml.field_manager<FieldT>().field_ref( bodyForcet_ );
   if( srcTermt_ != emptyTag_   )  srcTerm_   = &fml.field_manager<FieldT>().field_ref( srcTermt_   );
   
@@ -118,7 +122,10 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
   if( cfluxXt_ != emptyTag_ || tauXt_ != emptyTag_ )  divXOp_ = opDB.retrieve_operator<DivX>();
   if( cfluxYt_ != emptyTag_ || tauYt_ != emptyTag_ )  divYOp_ = opDB.retrieve_operator<DivY>();
   if( cfluxZt_ != emptyTag_ || tauZt_ != emptyTag_ )  divZOp_ = opDB.retrieve_operator<DivZ>();
-  densityInterpOp_                                            = opDB.retrieve_operator<DensityInterpT>();  
+  densityInterpOp_                                            = opDB.retrieve_operator<DensityInterpT>();
+  if( tauXt_ != emptyTag_ ) sVol2XFluxInterpOp_ = opDB.retrieve_operator<SVol2XFluxInterpT>();
+  if( tauYt_ != emptyTag_ ) sVol2YFluxInterpOp_ = opDB.retrieve_operator<SVol2YFluxInterpT>();
+  if( tauZt_ != emptyTag_ ) sVol2ZFluxInterpOp_ = opDB.retrieve_operator<SVol2ZFluxInterpT>();
 }
 
 //--------------------------------------------------------------------
@@ -131,9 +138,6 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   result <<= 0.0;
-
-  //SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( result );
-  //*tmp <<= 0.0;
   
   if( cfluxXt_ != emptyTag_ ){
     result <<= result - (*divXOp_)(*cFluxX_);
@@ -148,55 +152,20 @@ evaluate()
   }
   
   if( tauXt_ != emptyTag_ ){
-    result <<= result - (*divXOp_)(*tauX_);
+    result <<= result + 2.0 * (*divXOp_)( (*sVol2XFluxInterpOp_)(*visc_) * *tauX_); // + 2*div(mu*S_xi)
   }
   
   if( tauYt_ != emptyTag_ ){
-    result <<= result - (*divYOp_)(*tauY_);
+      result <<= result + 2.0 * (*divYOp_)( (*sVol2YFluxInterpOp_)(*visc_) * *tauY_); // + 2*div(mu*S_yi)
   }
   
   if( tauZt_ != emptyTag_ ){
-    result <<= result - (*divZOp_)(*tauZ_);
+    result <<= result + 2.0 * (*divZOp_)( (*sVol2ZFluxInterpOp_)(*visc_) * *tauZ_); // + 2*div(mu*S_zi)
   }
   
   if( bodyForcet_ != emptyTag_ ){
     result <<= result + (*densityInterpOp_)(*density_) * *bodyForce_;
   }
-
-//  if( cfluxXt_ != emptyTag_ ){
-//    divXOp_->apply_to_field( *cFluxX_, *tmp );
-//    result <<= result - *tmp;
-//  }
-//
-//  if( cfluxYt_ != emptyTag_ ){
-//    divYOp_->apply_to_field( *cFluxY_, *tmp );
-//    result <<= result - *tmp;
-//  }
-//
-//  if( cfluxZt_ != emptyTag_ ){
-//    divZOp_->apply_to_field( *cFluxZ_, *tmp );
-//    result <<= result - *tmp;
-//  }
-//
-//  if( tauXt_ != emptyTag_ ){
-//    divXOp_->apply_to_field( *tauX_, *tmp );
-//    result <<= result - *tmp;
-//  }
-//
-//  if( tauYt_ != emptyTag_ ){
-//    divYOp_->apply_to_field( *tauY_, *tmp );
-//    result <<= result - *tmp;
-//  }
-//
-//  if( tauZt_ != emptyTag_ ){
-//    divZOp_->apply_to_field( *tauZ_, *tmp );
-//    result <<= result - *tmp;
-//  }
-//
-//  if( bodyForcet_ != emptyTag_ ){
-//    densityInterpOp_->apply_to_field( *density_, *tmp );
-//    result <<= result + *tmp * *bodyForce_;
-//  }
   
   if( srcTermt_ != emptyTag_ ){
     result <<= result + *srcTerm_;
@@ -215,6 +184,7 @@ Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& convFluxX,
                   const Expr::Tag& convFluxY,
                   const Expr::Tag& convFluxZ,
+                  const Expr::Tag& viscTag,
                   const Expr::Tag& tauX,
                   const Expr::Tag& tauY,
                   const Expr::Tag& tauZ,
@@ -226,6 +196,7 @@ Builder::Builder( const Expr::Tag& result,
     cfluxXt_   ( convFluxX    ),
     cfluxYt_   ( convFluxY    ),
     cfluxZt_   ( convFluxZ    ),
+    viscTag_   ( viscTag      ),
     tauXt_     ( tauX         ),
     tauYt_     ( tauY         ),
     tauZt_     ( tauZ         ),
@@ -242,7 +213,7 @@ Expr::ExpressionBase*
 MomRHSPart<FieldT>::Builder::build() const
 {
   return new MomRHSPart<FieldT>( cfluxXt_, cfluxYt_, cfluxZt_,
-                                 tauXt_, tauYt_, tauZt_,
+                                 viscTag_, tauXt_, tauYt_, tauZt_,
                                  densityt_, bodyForcet_, srcTermt_,
                                  volfract_ );
 }
