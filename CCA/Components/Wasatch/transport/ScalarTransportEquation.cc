@@ -26,6 +26,7 @@
 #include "ScalarTransportEquation.h"
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/transport/ParseEquation.h>
@@ -311,7 +312,7 @@ namespace Wasatch{
     Expr::Tag turbDiffTag = Expr::Tag();
     bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
     if (turbulenceParams.turbulenceModelName != NONE && enableTurbulenceModel ) { 
-      Expr::Tag turbViscTag = turbulent_viscosity_tag();//Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
+      Expr::Tag turbViscTag = TagNames::self().turbulentviscosity;//Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
       turbDiffTag = turbulent_diffusivity_tag();//Expr::Tag( "TurbulentDiffusivity", Expr::STATE_NONE );
       
       if( !factory.have_entry( turbDiffTag ) ){

@@ -30,13 +30,6 @@
 #include <expression/Expression.h>
 
 /**
- *  \brief obtain the tag for the strain tensor magnitude
- */
-Expr::Tag straintensormagnitude_tag();
-Expr::Tag wale_tensormagnitude_tag();
-Expr::Tag vreman_tensormagnitude_tag();
-
-/**
  *  \class   StrainTensorSquare
  *  \authors Amir Biglari, Tony Saad
  *  \date    Jan, 2012. (Originally created: June, 2012).

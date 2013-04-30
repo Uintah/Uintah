@@ -40,7 +40,7 @@
 #include <CCA/Components/Wasatch/Expressions/Turbulence/WallDistance.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
 
-#include <CCA/Components/Wasatch/StringNames.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 
 #include <CCA/Components/Wasatch/Expressions/PBE/BrownianAggregationCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/TurbulentAggregationCoefficient.h>
@@ -335,10 +335,9 @@ namespace Wasatch{
       oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, srcTag);
       
       Expr::Tag srcOldTag = Expr::Tag( srcTag.name() + "_old", Expr::STATE_NONE );
-      const StringNames& sName = StringNames::self();
-      const Expr::Tag timestepTag(sName.timestep,Expr::STATE_NONE);
+      const TagNames& tagNames = TagNames::self();
       typedef typename TimeDerivative<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, srcTag, srcOldTag, timestepTag );
+      builder = scinew Builder( tag, srcTag, srcOldTag, tagNames.timestep );
     }
 
     return builder;
@@ -352,8 +351,8 @@ namespace Wasatch{
   {
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
     
-    const StringNames& sName = StringNames::self();
-    
+    const TagNames& tagNames = TagNames::self();
+
     Expr::ExpressionBuilder* builder = NULL;
     
     //std::string exprType;
@@ -366,9 +365,8 @@ namespace Wasatch{
       valParams->getAttribute("viscosity",viscosity);
       const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
       const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
-      const Expr::Tag timeVarTag( sName.time, Expr::STATE_NONE );
       typedef typename VelocityX<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, timeVarTag, amplitude, viscosity );
+      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, tagNames.time, amplitude, viscosity );
     }
     
     else if( params->findBlock("VelocityY") ){
@@ -378,9 +376,8 @@ namespace Wasatch{
       valParams->getAttribute("viscosity",viscosity);
       const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
       const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
-      const Expr::Tag timeVarTag( sName.time, Expr::STATE_NONE );
       typedef typename VelocityY<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, timeVarTag, amplitude, viscosity );
+      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, tagNames.time, amplitude, viscosity );
     }
     
     else if( params->findBlock("GradPX") ){
@@ -390,9 +387,8 @@ namespace Wasatch{
       valParams->getAttribute("viscosity",viscosity);
       const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
       const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
-      const Expr::Tag timeVarTag( sName.time, Expr::STATE_NONE );
       typedef typename GradPX<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, timeVarTag, amplitude, viscosity );
+      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, tagNames.time, amplitude, viscosity );
     }
     
     else if( params->findBlock("GradPY") ){
@@ -402,9 +398,8 @@ namespace Wasatch{
       valParams->getAttribute("viscosity",viscosity);
       const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
       const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
-      const Expr::Tag timeVarTag( sName.time, Expr::STATE_NONE );
       typedef typename GradPY<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, timeVarTag, amplitude, viscosity );
+      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, tagNames.time, amplitude, viscosity );
     }
     
     else if( params->findBlock("TGVel3D") ){

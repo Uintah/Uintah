@@ -22,82 +22,83 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Wasatch_StringNames_h
-#define Wasatch_StringNames_h
+#ifndef Wasatch_TagNames_h
+#define Wasatch_TagNames_h
 
 #include <string>
+#include <expression/Expression.h>
 
 namespace Wasatch{
-
+  
   /**
    *  \ingroup WasatchFields
    *  \ingroup WasatchCore
    *
-   *  \class  StringNames
-   *  \author James C. Sutherland
+   *  \class  TagNames
+   *  \author James C. Sutherland, Tony Saad
    *  \date   June, 2010
    *
-   *  \brief Defines names for variables used in Wasatch.
+   *  \brief Defines tags for variables used in Wasatch.
    *
    *  Note: this class is implemented in a singleton.  Access it as follows:
-   *  <code>const StringNames& sName = StringNames::self();</code>
+   *  <code>const TagNames& tagName = TagNames::self();</code>
    */
-  class StringNames
+  class TagNames
   {
   public:
-
+    
     /**
-     *  Access the StringNames object.
+     *  Access the TagNames object.
      */
-    static const StringNames& self();
-
-    const std::string time, timestep;
-
-    const std::string
-      xsvolcoord,  ysvolcoord,  zsvolcoord,
-      xxvolcoord,  yxvolcoord,  zxvolcoord,
-      xyvolcoord,  yyvolcoord,  zyvolcoord,
-      xzvolcoord,  yzvolcoord,  zzvolcoord;
-
+    static const TagNames& self();
+    
+    const Expr::Tag time, timestep;
+    
+    const Expr::Tag
+    xsvolcoord,  ysvolcoord,  zsvolcoord,
+    xxvolcoord,  yxvolcoord,  zxvolcoord,
+    xyvolcoord,  yyvolcoord,  zyvolcoord,
+    xzvolcoord,  yzvolcoord,  zzvolcoord;
+    
     // energy related variables
-    const std::string
-      temperature,
-      e0, rhoE0,
-      enthalpy,
-      xHeatFlux, yHeatFlux, zHeatFlux;
-
+    const Expr::Tag
+    temperature,
+    e0, rhoE0,
+    enthalpy,
+    xHeatFlux, yHeatFlux, zHeatFlux;
+    
     // species related variables
-    const std::string
-      species,
-      rhoyi,
-      xSpeciesDiffFlux, ySpeciesDiffFlux, zSpeciesDiffFlux,
-      mixtureFraction;
-
+    const Expr::Tag
+    species,
+    rhoyi,
+    xSpeciesDiffFlux, ySpeciesDiffFlux, zSpeciesDiffFlux,
+    mixtureFraction;
+    
     // thermochemistry related variables
-    const std::string
-      heatCapacity,
-      thermalConductivity,
-      viscosity;
-
+    const Expr::Tag
+    heatCapacity,
+    thermalConductivity,
+    viscosity;
+    
     // momentum related variables
-    const std::string
-      xvel, yvel, zvel,
-      xmom, ymom, zmom,
-      pressure, dilatation,
-      tauxx, tauxy, tauxz,
-      tauyx, tauyy, tauyz,
-      tauzx, tauzy, tauzz;
+    const Expr::Tag
+    xvel, yvel, zvel,
+    xmom, ymom, zmom,
+    pressure, dilatation,
+    tauxx, tauxy, tauxz,
+    tauyx, tauyy, tauyz,
+    tauzx, tauzy, tauzz;
     
     // turbulence related variables
-    const std::string
-      turbulentviscosity,
-      straintensormag, vremantensormag,
-      waletensormag, dynamicsmagcoef;
-
+    const Expr::Tag
+    turbulentviscosity,
+    straintensormag, vremantensormag,
+    waletensormag, dynamicsmagcoef;
+    
   private:
-    StringNames();
+    TagNames();
   };
-
+  
 } // namespace Wasatch
 
-#endif // Wasatch_StringNames_h
+#endif // Wasatch_TagNames_h

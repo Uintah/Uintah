@@ -26,7 +26,7 @@
 #include "TimeStepper.h"
 #include "TaskInterface.h"
 #include "CoordHelper.h"
-#include "StringNames.h"
+#include "TagNames.h"
 #include <CCA/Components/Wasatch/Expressions/SetCurrentTime.h>
 
 //-- ExprLib includes --//
@@ -282,7 +282,7 @@ namespace Wasatch{
     Uintah::delt_vartype deltat;
     oldDW->get( deltat, sharedState_->get_delt_label() );
 
-    const Expr::Tag timeTag (StringNames::self().time,Expr::STATE_NONE);
+    const Expr::Tag timeTag = TagNames::self().time;
     //__________________
     // loop over patches
     for( int ip=0; ip<patches->size(); ++ip ){

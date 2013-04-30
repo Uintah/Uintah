@@ -24,29 +24,9 @@
 
 #include "StrainTensorMagnitude.h"
 
-//-- Wasatch includes --//
-#include <CCA/Components/Wasatch/StringNames.h>
-
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-
-//--------------------------------------------------------------------
-
-Expr::Tag straintensormagnitude_tag() {
-  const Wasatch::StringNames& sName = Wasatch::StringNames::self();
-  return Expr::Tag( sName.straintensormag, Expr::STATE_NONE );
-}
-
-Expr::Tag wale_tensormagnitude_tag() {
-  const Wasatch::StringNames& sName = Wasatch::StringNames::self();
-  return Expr::Tag( sName.waletensormag, Expr::STATE_NONE );
-}
-
-Expr::Tag vreman_tensormagnitude_tag() {
-  const Wasatch::StringNames& sName = Wasatch::StringNames::self();
-  return Expr::Tag( sName.vremantensormag, Expr::STATE_NONE );
-}
 
 //********************************************************************
 // STRAIN TENSOR SQUARE (used for Smagorinsky, Vreman, and WALE models)

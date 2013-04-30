@@ -61,7 +61,7 @@
 #include "WasatchMaterial.h"
 #include "CoordHelper.h"
 #include "FieldAdaptor.h"
-#include "StringNames.h"
+#include "TagNames.h"
 #include "TaskInterface.h"
 #include "TimeStepper.h"
 #include "Properties.h"
@@ -587,9 +587,9 @@ namespace Wasatch{
     //_______________________________________
     // set the time
     Expr::TagList timeTags;
-    timeTags.push_back( Expr::Tag( StringNames::self().time, Expr::STATE_NONE ) );
-    timeTags.push_back( Expr::Tag( StringNames::self().timestep, Expr::STATE_NONE ) );
-    const Expr::Tag timeTag( StringNames::self().time, Expr::STATE_NONE );
+    timeTags.push_back( TagNames::self().time     );
+    timeTags.push_back( TagNames::self().timestep );
+    const Expr::Tag timeTag = TagNames::self().time;
     exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
 
     //_____________________________________________
@@ -852,13 +852,13 @@ namespace Wasatch{
     //_____________________________________________________________
     // create an expression to set the current time as a field that
     // will be available to all expressions if needed.
-    const Expr::Tag timeTag (StringNames::self().time,Expr::STATE_NONE);
+    const Expr::Tag timeTag = TagNames::self().time;
     Expr::ExpressionID timeID;
     if( rkStage==1 ){
       Expr::TagList timeTags;
-      timeTags.push_back( Expr::Tag( StringNames::self().time, Expr::STATE_NONE ) );
-      timeTags.push_back( Expr::Tag( StringNames::self().timestep, Expr::STATE_NONE ) );
-      const Expr::Tag timeTag( StringNames::self().time, Expr::STATE_NONE );
+      timeTags.push_back( TagNames::self().time     );
+      timeTags.push_back( TagNames::self().timestep );
+      const Expr::Tag timeTag = TagNames::self().time;
       timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
     } else {
       timeID = exprFactory.get_id(timeTag);

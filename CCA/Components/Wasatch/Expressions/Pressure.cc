@@ -28,7 +28,7 @@
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/BCHelperTools.h>
-#include <CCA/Components/Wasatch/StringNames.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 
 //-- Uintah Includes --//
 #include <CCA/Ports/SolverInterface.h>
@@ -85,10 +85,10 @@ Pressure::Pressure( const std::string& pressureName,
     fzt_( fztag ),
 
     dilatationt_ ( dilatationtag ),
-    d2rhodt2t_( d2rhodt2tag ),
+    d2rhodt2t_   ( d2rhodt2tag ),
 
-    timestept_( timesteptag ),
-    currenttimet_(Expr::Tag(StringNames::self().time,Expr::STATE_NONE) ),
+    timestept_   ( timesteptag ),
+    currenttimet_(TagNames::self().time ),
 
     volfract_(volfractag),
 
@@ -223,9 +223,8 @@ Pressure::advertise_dependents( Expr::ExprDeps& exprDeps )
   exprDeps.requires_expression( dilatationt_ );
   exprDeps.requires_expression( timestept_ );
   
-  const StringNames& sName = StringNames::self();
-  const Expr::Tag simTimeTag(sName.time,Expr::STATE_NONE);
-  exprDeps.requires_expression( simTimeTag );
+  const TagNames& tagNames = TagNames::self();
+  exprDeps.requires_expression( tagNames.time );
 }
 
 //--------------------------------------------------------------------

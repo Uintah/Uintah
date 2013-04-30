@@ -35,10 +35,10 @@ SRCS    +=                              \
         $(SRCDIR)/FieldAdaptor.cc       \
         $(SRCDIR)/CoordHelper.cc        \
         $(SRCDIR)/GraphHelperTools.cc   \
-        $(SRCDIR)/OldVariable.cc		\
+        $(SRCDIR)/OldVariable.cc		    \
         $(SRCDIR)/ParseTools.cc         \
         $(SRCDIR)/Properties.cc         \
-        $(SRCDIR)/StringNames.cc        \
+        $(SRCDIR)/TagNames.cc           \
         $(SRCDIR)/TaskInterface.cc      \
         $(SRCDIR)/TimeStepper.cc        \
         $(SRCDIR)/Wasatch.cc            \

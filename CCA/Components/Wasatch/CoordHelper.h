@@ -49,7 +49,7 @@ namespace Expr{ class ExpressionFactory; }
 
 namespace Wasatch{
 
-  class StringNames;
+  class TagNames;
 
   /**
    *  \class CoordHelper
@@ -60,8 +60,7 @@ namespace Wasatch{
    */
   class CoordHelper
   {
-    const Expr::Context context_;
-    const StringNames& sName_;
+    const TagNames& tagNames_;
     const Expr::Tag xsvt_, ysvt_, zsvt_;
     const Expr::Tag xxvt_, yxvt_, zxvt_;
     const Expr::Tag xyvt_, yyvt_, zyvt_;
