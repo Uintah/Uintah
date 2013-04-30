@@ -25,10 +25,15 @@
 #ifndef UINTAH_MD_LABEL_H
 #define UINTAH_MD_LABEL_H
 
+#include <Core/Grid/Variables/Reductions.h>
+#include <Core/Grid/Variables/ReductionVariable.h>
+#include <Core/Disclosure/TypeUtils.h>
+
 namespace Uintah {
 
 class VarLabel;
 
+typedef ReductionVariable<Matrix3, Reductions::Sum<Matrix3> > matrix_sum;
 /**
  *  @class MDLabel
  *  @ingroup MD
@@ -78,6 +83,11 @@ class MDLabel {
     ///////////////////////////////////////////////////////////////////////////
     // Reduction Variables
     const VarLabel* vdwEnergyLabel;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Reduction Variables - Electrostatic
+    const VarLabel* spmeFourierEnergyLabel;
+    const VarLabel* spmeFourierStressLabel;
 
 };
 

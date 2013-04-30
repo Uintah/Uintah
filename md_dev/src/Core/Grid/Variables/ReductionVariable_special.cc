@@ -295,6 +295,60 @@ ReductionVariable<long long, Reductions::Sum<long long> >
 #  endif
 #endif
 
+
+
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+void
+ReductionVariable<Matrix3, Reductions::Sum<Matrix3> >
+::getMPIData(vector<char>& data, int& index)
+{
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-9*sizeof(double)));
+  double* ptr = reinterpret_cast<double*>(&data[index]);
+  *ptr++ = value(0,0);
+  *ptr++ = value(0,1);
+  *ptr++ = value(0,2);
+  *ptr++ = value(1,0);
+  *ptr++ = value(1,1);
+  *ptr++ = value(1,2);
+  *ptr++ = value(2,0);
+  *ptr++ = value(2,1);
+  *ptr++ = value(2,2);
+}
+
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+void
+ReductionVariable<Matrix3, Reductions::Sum<Matrix3> >
+::putMPIData(vector<char>& data, int& index)
+{
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-9*sizeof(double)));
+  double* ptr = reinterpret_cast<double*>(&data[index]);
+  value(0,0)=*ptr++;
+  value(0,1)=*ptr++;
+  value(0,2)=*ptr++;
+  value(1,0)=*ptr++;
+  value(1,1)=*ptr++;
+  value(1,2)=*ptr++;
+  value(2,0)=*ptr++;
+  value(2,1)=*ptr++;
+  value(2,2)=*ptr++;
+}
+
+#if !defined(__digital__) || defined(__GNUC__)
+template<>
+#endif
+ void
+ReductionVariable<Matrix3, Reductions::Sum<Matrix3> >
+::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
+{
+  datatype = MPI_DOUBLE;
+  count = 9;
+  op = MPI_SUM;
+}
+
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif

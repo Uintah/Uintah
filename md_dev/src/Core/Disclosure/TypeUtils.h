@@ -38,6 +38,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Math/Matrix3.h>
 
 namespace Uintah {
 
@@ -72,7 +73,7 @@ typedef std::complex<double> dblcomplex;
 // fun_getTypeDescription(Stencil7*) in Stencil7.h (where it probably
 // should be.)  Instead we have to put it here.  I believe this is
 // true for Matrix3 too.  However, both the fun_getTypeDescription of
-// Matrix3 and Stencil7 are inplemented in their respective .cc files.
+// Matrix3 and Stencil7 are implemented in their respective .cc files.
 
 // since these are defined in Math/Grid, and declared here, we need to export them correctly
  const TypeDescription* fun_getTypeDescription(Matrix3*);
@@ -99,6 +100,7 @@ typedef std::complex<double> dblcomplex;
  void fun_getZeroValue(bool*);
  void fun_getZeroValue(int64_t*);
  void fun_getZeroValue(Vector*);
+ void fun_getZeroValue(Matrix3*);
 
 // these functions should never get called - they just exist for
 // template completeness
@@ -108,7 +110,8 @@ typedef std::complex<double> dblcomplex;
  void fun_getSmallValue(long64*);
  void fun_getLargeValue(Vector*);
  void fun_getSmallValue(Vector*);
-
+ void fun_getLargeValue(Matrix3*);
+ void fun_getSmallValue(Matrix3*);
 } // End namespace Uintah
    
 #include <Core/Datatypes/TypeName.h>

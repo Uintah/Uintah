@@ -82,6 +82,13 @@ MDLabel::MDLabel()
   ///////////////////////////////////////////////////////////////////////////
   // Reduction Variables
   vdwEnergyLabel = VarLabel::create("vdwEnergy", sum_vartype::getTypeDescription());
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Reduction Variables - Electrostatic
+
+  spmeFourierEnergyLabel = VarLabel::create("spmeFourierEnergy", sum_vartype::getTypeDescription());
+  spmeFourierStressLabel = VarLabel::create("spmeFourierStress", matrix_sum::getTypeDescription());
+  //!FIXME --> Do we need to build a sum type for the Matrix3 type that spmeFourierStressLabel should store?
 }
 
 MDLabel::~MDLabel()
