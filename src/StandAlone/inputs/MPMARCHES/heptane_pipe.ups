@@ -11,7 +11,7 @@
   <Time>
     <maxTime>2.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.00001</delt_min>
+    <delt_min>1.e-8</delt_min>
     <delt_max>0.1</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>25</max_Timesteps>
@@ -346,7 +346,7 @@
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
         <PressureSolver>
           <Parameters>
-            <tolerance>     1.0e-9  </tolerance>
+            <tolerance>     1.0e-16  </tolerance>
             <solver>          cg    </solver>
             <preconditioner>  pfmg  </preconditioner>
             <maxiterations>   250   </maxiterations>
