@@ -349,7 +349,7 @@ SmoothCylGeomPiece::createEndCapPoints()
 int 
 SmoothCylGeomPiece::createCylPoints()
 {
-  cout << "Creating particles for the Cylinder" << endl;
+  //cout << "Creating particles for the Cylinder" << endl;
 
   // Find the vector along the axis of the cylinder
   Vector axis = d_top - d_bottom;
