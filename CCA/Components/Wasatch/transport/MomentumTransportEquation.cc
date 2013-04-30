@@ -33,7 +33,7 @@
 #include <CCA/Components/Wasatch/Expressions/TimeDerivative.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumPartialRHS.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumRHS.h>
-#include <CCA/Components/Wasatch/Expressions/Stress.h>
+#include <CCA/Components/Wasatch/Expressions/Strain.h>
 #include <CCA/Components/Wasatch/Expressions/Dilatation.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentViscosity.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorBase.h>
@@ -64,26 +64,42 @@ namespace Wasatch{
                                         const Expr::TagList& velTags,
                                         const Expr::Tag densTag) {
 
-    Expr::Tag strTsrMagTag  = Expr::Tag();
-    Expr::Tag waleTsrMagTag  = Expr::Tag();
-    Expr::Tag dynSmagCoefTag = Expr::Tag();
-    Expr::Tag vremanTsrMagTag  = Expr::Tag();    
+    Expr::Tag strTsrMagTag      = Expr::Tag();
+    Expr::Tag waleTsrMagTag     = Expr::Tag();
+    Expr::Tag dynSmagCoefTag    = Expr::Tag();
+    Expr::Tag vremanTsrMagTag   = Expr::Tag();
     const Expr::Tag turbViscTag = turbulent_viscosity_tag();
-    
-    // we got turbulence turned on. create an expression for the strain tensor magnitude. this is used by all eddy viscosity models
+
+    const StringNames& sName = StringNames::self();
+    const Expr::Tag tauxxTag(sName.tauxx,Expr::STATE_NONE);
+    const Expr::Tag tauyxTag(sName.tauyx,Expr::STATE_NONE);
+    const Expr::Tag tauzxTag(sName.tauzx,Expr::STATE_NONE);
+    const Expr::Tag tauyyTag(sName.tauyy,Expr::STATE_NONE);
+    const Expr::Tag tauzyTag(sName.tauzy,Expr::STATE_NONE);
+    const Expr::Tag tauzzTag(sName.tauzz,Expr::STATE_NONE);
+    // we have turbulence turned on. create an expression for the strain tensor magnitude. this is used by all eddy viscosity models
     
     switch (turbParams.turbulenceModelName) {
       case SMAGORINSKY: {
+        // Disallow using the smagorinsky model in 1 or 2 dimensions
+        if (!( velTags[0]!=Expr::Tag() && velTags[1]!=Expr::Tag() && velTags[2]!=Expr::Tag() )) {
+          std::ostringstream msg;
+          msg << "ERROR: You cannot use the Constant Smagorinsky Model in one or two dimensions. Please revise your input file and make sure that you specify all three velocity/momentum components." << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+
         strTsrMagTag = straintensormagnitude_tag();//( "StrainTensorMagnitude", Expr::STATE_NONE );
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
-          factory.register_expression( scinew StrTsrMagT(strTsrMagTag, velTags[0], velTags[1], velTags[2]) );
+          factory.register_expression( scinew StrTsrMagT(strTsrMagTag,
+                                                         tauxxTag,tauyxTag,tauzxTag,
+                                                         tauyyTag,tauzyTag,
+                                                         tauzzTag) );
         }
       }
         break;
         
       case VREMAN: {
-        // if WALE model is turned on, then create an expression for the square velocity gradient tensor
         vremanTsrMagTag = vreman_tensormagnitude_tag();
         if( !factory.have_entry( vremanTsrMagTag ) ){
           typedef VremanTensorMagnitude::Builder VremanTsrMagT;
@@ -93,11 +109,21 @@ namespace Wasatch{
         break;
         
       case WALE: {
-        
-        strTsrMagTag = straintensormagnitude_tag();//( "StrainTensorMagnitude", Expr::STATE_NONE );
+
+        // Disallow using the smagorinsky model in 1 or 2 dimensions
+        if (!( velTags[0]!=Expr::Tag() && velTags[1]!=Expr::Tag() && velTags[2]!=Expr::Tag() )) {
+          std::ostringstream msg;
+          msg << "ERROR: You cannot use the WALE Model in one or two dimensions. Please revise your input file and make sure that you specify all three velocity/momentum components." << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+
+        strTsrMagTag = straintensormagnitude_tag();
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
-          factory.register_expression( scinew StrTsrMagT(strTsrMagTag, velTags[0], velTags[1], velTags[2]) );
+          factory.register_expression( scinew StrTsrMagT(strTsrMagTag,
+                                                         tauxxTag,tauyxTag,tauzxTag,
+                                                         tauyyTag,tauzyTag,
+                                                         tauzzTag) );
         }
         
         // if WALE model is turned on, then create an expression for the square velocity gradient tensor
@@ -123,12 +149,7 @@ namespace Wasatch{
         dynamicSmagTagList.push_back( straintensormagnitude_tag() );
         dynamicSmagTagList.push_back( dynamic_smagorinsky_coefficient_tag());
 
-//        if( !factory.have_entry( strTsrMagTag ) ){
-//          typedef StrainTensorMagnitude::Builder StrTsrMagT;
-//          factory.register_expression( scinew StrTsrMagT(strTsrMagTag, velTags[0], velTags[1], velTags[2]) );
-//        }
-
-        // if DYNAMIC model is turned on, then create an expression for the dynamic smagorinsky expression
+        // if the DYNAMIC model is turned on, then create an expression for the dynamic smagorinsky coefficient
         dynSmagCoefTag = dynamic_smagorinsky_coefficient_tag();
         if( !factory.have_entry( dynSmagCoefTag )&&
             !factory.have_entry( strTsrMagTag )     ){
@@ -147,6 +168,14 @@ namespace Wasatch{
     }   
 
     if( !factory.have_entry( turbViscTag ) ){
+      // NOTE: You may need to cleave the turbulent viscosity from its parents
+      // in case you run into problems with your simulation. The default behavior
+      // of Wasatch is to extrapolate the turbulent viscosity at all patch boundaries.
+      // If this extrapolation leads to problems you should consider excluding
+      // the extrapolation and communicating the TurbulentViscosity instead.
+      // To get rid of extrapolation, go to the TurbulentViscosity.cc expression
+      // and comment out the "exOp_->apply_to_field(result)" line at the end
+      // of the evaluate method.
       typedef TurbulentViscosity::Builder TurbViscT;
       factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
     }
@@ -156,25 +185,25 @@ namespace Wasatch{
 
   // note that the ordering of Vel1T and Vel2T are very important, and
   // must be consistent with the order of the velocity tags passed
-  // into the stress constructor.
-  template< typename FaceT > struct StressHelper;
+  // into the Strain constructor.
+  template< typename FaceT > struct StrainHelper;
   // nomenclature: XSurfXField - first letter is volume type: S, X, Y, Z
   // then it is followed by the field type
-  template<> struct StressHelper<SpatialOps::structured::XSurfXField>
+  template<> struct StrainHelper<SpatialOps::structured::XSurfXField>
   {
     // XSurfXField - XVol-XSurf
     // tau_xx
     typedef XVolField Vel1T;
     typedef XVolField Vel2T;
   };
-  template<> struct StressHelper<SpatialOps::structured::XSurfYField>
+  template<> struct StrainHelper<SpatialOps::structured::XSurfYField>
   {
     // XSurfYField - XVol-YSurf
     // tau_yx (tau on a y face in the x direction)
     typedef XVolField Vel1T;
     typedef YVolField Vel2T;
   };
-  template<> struct StressHelper<SpatialOps::structured::XSurfZField>
+  template<> struct StrainHelper<SpatialOps::structured::XSurfZField>
   {
     // XSurfZField - XVol-ZSurf
     // tau_zx (tau on a z face in the x direction)
@@ -182,38 +211,38 @@ namespace Wasatch{
     typedef ZVolField Vel2T;
   };
 
-  template<> struct StressHelper<SpatialOps::structured::YSurfXField>
+  template<> struct StrainHelper<SpatialOps::structured::YSurfXField>
   {
     // tau_xy
     typedef YVolField Vel1T;
     typedef XVolField Vel2T;
   };
-  template<> struct StressHelper<SpatialOps::structured::YSurfYField>
+  template<> struct StrainHelper<SpatialOps::structured::YSurfYField>
   {
     // tau_yy
     typedef YVolField Vel1T;
     typedef YVolField Vel2T;
   };
-  template<> struct StressHelper<SpatialOps::structured::YSurfZField>
+  template<> struct StrainHelper<SpatialOps::structured::YSurfZField>
   {
     // tau_zy
     typedef YVolField Vel1T;
     typedef ZVolField Vel2T;
   };
 
-  template<> struct StressHelper<SpatialOps::structured::ZSurfXField>
+  template<> struct StrainHelper<SpatialOps::structured::ZSurfXField>
   {
     // tau_xz
     typedef ZVolField Vel1T;
     typedef XVolField Vel2T;
   };
-  template<> struct StressHelper<SpatialOps::structured::ZSurfYField>
+  template<> struct StrainHelper<SpatialOps::structured::ZSurfYField>
   {
     // tau_yz
     typedef ZVolField Vel1T;
     typedef YVolField Vel2T;
   };
-  template<> struct StressHelper<SpatialOps::structured::ZSurfZField>
+  template<> struct StrainHelper<SpatialOps::structured::ZSurfZField>
   {
     // tau_zz
     typedef ZVolField Vel1T;
@@ -265,24 +294,24 @@ namespace Wasatch{
   //==================================================================
 
   /**
-   *  \brief Register the stress expression for the given face field
+   *  \brief Register the Strain expression for the given face field
    */
   template< typename FaceFieldT >
   Expr::ExpressionID
-  setup_stress( const Expr::Tag& stressTag,
+  setup_strain( const Expr::Tag& strainTag,
                 const Expr::Tag& viscTag,
                 const Expr::Tag& vel1Tag,
                 const Expr::Tag& vel2Tag,
                 const Expr::Tag& dilTag,
                 Expr::ExpressionFactory& factory )
   {
-    typedef typename StressHelper<FaceFieldT>::Vel1T Vel1T;  // type of velocity component 1
-    typedef typename StressHelper<FaceFieldT>::Vel2T Vel2T;  // type of velocity component 2
+    typedef typename StrainHelper<FaceFieldT>::Vel1T Vel1T;  // type of velocity component 1
+    typedef typename StrainHelper<FaceFieldT>::Vel2T Vel2T;  // type of velocity component 2
     typedef SVolField                                ViscT;  // type of viscosity
 
-    typedef typename Stress< FaceFieldT, Vel1T, Vel2T, ViscT >::Builder StressT;
+    typedef typename Strain< FaceFieldT, Vel1T, Vel2T >::Builder StrainT;
 
-    return factory.register_expression( scinew StressT( stressTag, viscTag, vel1Tag, vel2Tag, dilTag ) );
+    return factory.register_expression( scinew StrainT( strainTag, vel1Tag, vel2Tag, dilTag ) );
   }
 
   //==================================================================
@@ -423,7 +452,7 @@ namespace Wasatch{
       isTurbulent_     ( turbulenceParams.turbulenceModelName != NONE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
       densityTag_      ( densTag                              ),
-      normalStressID_  ( Expr::ExpressionID::null_id()        ),
+      normalStrainID_  ( Expr::ExpressionID::null_id()        ),
       normalConvFluxID_( Expr::ExpressionID::null_id()        ),
       pressureID_      ( Expr::ExpressionID::null_id()        )
   {
@@ -485,7 +514,7 @@ namespace Wasatch{
     }
 
     //___________________________________
-    // diffusive flux (stress components)
+    // diffusive flux (strain components)
     Expr::TagList tauTags;
     const std::string thisMomDirName = this->dir_name();
     set_tau_tags<FieldT>( params, tauTags, thisMomDirName );
@@ -509,19 +538,19 @@ namespace Wasatch{
     if ( isviscous_ ) {
       //const Expr::Tag viscosityTag = isTurbulent_ ? turbViscTag : viscTag;
       if( doxmom ){
-        const Expr::ExpressionID stressID = setup_stress< XFace >( tauxt, viscTag, thisVelTag_, velTags_[0], dilTag, factory );
-        if( stagLoc_ == XDIR )  normalStressID_ = stressID;
+        const Expr::ExpressionID strainID = setup_strain< XFace >( tauxt, viscTag, thisVelTag_, velTags_[0], dilTag, factory );
+        if( stagLoc_ == XDIR )  normalStrainID_ = strainID;
       }
       if( doymom ){
-        const Expr::ExpressionID stressID = setup_stress< YFace >( tauyt, viscTag, thisVelTag_, velTags_[1], dilTag, factory );
-        if( stagLoc_ == YDIR )  normalStressID_ = stressID;
+        const Expr::ExpressionID strainID = setup_strain< YFace >( tauyt, viscTag, thisVelTag_, velTags_[1], dilTag, factory );
+        if( stagLoc_ == YDIR )  normalStrainID_ = strainID;
       }
       if( dozmom ){
-        const Expr::ExpressionID stressID = setup_stress< ZFace >( tauzt, viscTag, thisVelTag_, velTags_[2], dilTag, factory );
-        if( stagLoc_ == ZDIR )  normalStressID_ = stressID;
+        const Expr::ExpressionID strainID = setup_strain< ZFace >( tauzt, viscTag, thisVelTag_, velTags_[2], dilTag, factory );
+        if( stagLoc_ == ZDIR )  normalStrainID_ = strainID;
       }
-      factory.cleave_from_children( normalStressID_   );
-      factory.cleave_from_parents( normalStressID_   );
+      factory.cleave_from_children( normalStrainID_   );
+      factory.cleave_from_parents( normalStrainID_   );
     }
 
     //__________________
@@ -569,7 +598,7 @@ namespace Wasatch{
     }
     const Expr::ExpressionID momRHSPartID = factory.register_expression(
         new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( thisMomTag ),
-                                                  cfxt, cfyt, cfzt,
+                                                  cfxt, cfyt, cfzt, viscTag,
                                                   tauxt, tauyt, tauzt, densityTag_,
                                                   bodyForceTag, srcTermTag,
                                                   volTag) );
@@ -874,12 +903,12 @@ namespace Wasatch{
 //              patchInfoMap,
 //              materials);
 
-    // set bcs for normal stresses
+    // set bcs for normal strains
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     if(isviscous_) {
-      Expr::Tag normalStressTag = factory.get_label(normalStressID_);
-      process_boundary_conditions<NormalFace>( normalStressTag,
-                                  normalStressTag.name(),
+      Expr::Tag normalStrainTag = factory.get_label(normalStrainID_);
+      process_boundary_conditions<NormalFace>( normalStrainTag,
+                                  normalStrainTag.name(),
                 NODIR,
                 graphHelper,
                 localPatches,
