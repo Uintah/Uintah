@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 #
 # repair.sh [-quiet] <bad_include>
