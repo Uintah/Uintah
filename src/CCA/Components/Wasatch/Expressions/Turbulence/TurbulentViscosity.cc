@@ -24,22 +24,11 @@
 
 #include "TurbulentViscosity.h"
 
-//-- Wasatch Includes --//
-#include <CCA/Components/Wasatch/StringNames.h>
-
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
 #include <cmath>
-
-//====================================================================
-
-Expr::Tag turbulent_viscosity_tag()
-{
-  const Wasatch::StringNames& sName = Wasatch::StringNames::self();
-  return Expr::Tag( sName.turbulentviscosity, Expr::STATE_NONE );
-}
 
 //====================================================================
 

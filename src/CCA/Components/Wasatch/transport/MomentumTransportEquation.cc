@@ -28,7 +28,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 
 //-- Wasatch includes --//
-#include <CCA/Components/Wasatch/StringNames.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/Expressions/TimeDerivative.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumPartialRHS.h>
@@ -64,19 +64,14 @@ namespace Wasatch{
                                         const Expr::TagList& velTags,
                                         const Expr::Tag densTag) {
 
+    const TagNames& tagNames = TagNames::self();
+    
     Expr::Tag strTsrMagTag      = Expr::Tag();
     Expr::Tag waleTsrMagTag     = Expr::Tag();
     Expr::Tag dynSmagCoefTag    = Expr::Tag();
     Expr::Tag vremanTsrMagTag   = Expr::Tag();
-    const Expr::Tag turbViscTag = turbulent_viscosity_tag();
+    const Expr::Tag turbViscTag = tagNames.turbulentviscosity;
 
-    const StringNames& sName = StringNames::self();
-    const Expr::Tag tauxxTag(sName.tauxx,Expr::STATE_NONE);
-    const Expr::Tag tauyxTag(sName.tauyx,Expr::STATE_NONE);
-    const Expr::Tag tauzxTag(sName.tauzx,Expr::STATE_NONE);
-    const Expr::Tag tauyyTag(sName.tauyy,Expr::STATE_NONE);
-    const Expr::Tag tauzyTag(sName.tauzy,Expr::STATE_NONE);
-    const Expr::Tag tauzzTag(sName.tauzz,Expr::STATE_NONE);
     // we have turbulence turned on. create an expression for the strain tensor magnitude. this is used by all eddy viscosity models
     
     switch (turbParams.turbulenceModelName) {
@@ -88,19 +83,19 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
 
-        strTsrMagTag = straintensormagnitude_tag();//( "StrainTensorMagnitude", Expr::STATE_NONE );
+        strTsrMagTag = tagNames.straintensormag;//( "StrainTensorMagnitude", Expr::STATE_NONE );
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
           factory.register_expression( scinew StrTsrMagT(strTsrMagTag,
-                                                         tauxxTag,tauyxTag,tauzxTag,
-                                                         tauyyTag,tauzyTag,
-                                                         tauzzTag) );
+                                                         tagNames.tauxx,tagNames.tauyx,tagNames.tauzx,
+                                                         tagNames.tauyy,tagNames.tauzy,
+                                                         tagNames.tauzz) );
         }
       }
         break;
         
       case VREMAN: {
-        vremanTsrMagTag = vreman_tensormagnitude_tag();
+        vremanTsrMagTag = tagNames.vremantensormag;
         if( !factory.have_entry( vremanTsrMagTag ) ){
           typedef VremanTensorMagnitude::Builder VremanTsrMagT;
           factory.register_expression( scinew VremanTsrMagT(vremanTsrMagTag, velTags[0], velTags[1], velTags[2] ) );
@@ -117,17 +112,17 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
 
-        strTsrMagTag = straintensormagnitude_tag();
+        strTsrMagTag = tagNames.straintensormag;
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
           factory.register_expression( scinew StrTsrMagT(strTsrMagTag,
-                                                         tauxxTag,tauyxTag,tauzxTag,
-                                                         tauyyTag,tauzyTag,
-                                                         tauzzTag) );
+                                                         tagNames.tauxx,tagNames.tauyx,tagNames.tauzx,
+                                                         tagNames.tauyy,tagNames.tauzy,
+                                                         tagNames.tauzz) );
         }
         
         // if WALE model is turned on, then create an expression for the square velocity gradient tensor
-        waleTsrMagTag = wale_tensormagnitude_tag();
+        waleTsrMagTag = tagNames.waletensormag;
         if( !factory.have_entry( waleTsrMagTag ) ){
           typedef WaleTensorMagnitude::Builder waleStrTsrMagT;
           factory.register_expression( scinew waleStrTsrMagT(waleTsrMagTag, velTags[0], velTags[1], velTags[2] ) );
@@ -143,14 +138,15 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
 
-        strTsrMagTag = straintensormagnitude_tag();//( "StrainTensorMagnitude", Expr::STATE_NONE );
+        strTsrMagTag = tagNames.straintensormag;//( "StrainTensorMagnitude", Expr::STATE_NONE );
 
         Expr::TagList dynamicSmagTagList;
-        dynamicSmagTagList.push_back( straintensormagnitude_tag() );
-        dynamicSmagTagList.push_back( dynamic_smagorinsky_coefficient_tag());
+        dynamicSmagTagList.push_back( strTsrMagTag );
+        dynamicSmagTagList.push_back( tagNames.dynamicsmagcoef);
 
         // if the DYNAMIC model is turned on, then create an expression for the dynamic smagorinsky coefficient
-        dynSmagCoefTag = dynamic_smagorinsky_coefficient_tag();
+        dynSmagCoefTag = tagNames.dynamicsmagcoef;
+        
         if( !factory.have_entry( dynSmagCoefTag )&&
             !factory.have_entry( strTsrMagTag )     ){
           typedef DynamicSmagorinskyCoefficient::Builder dynSmagConstT;
@@ -490,9 +486,9 @@ namespace Wasatch{
     // One could also calculate this time derivative from rho, u and rho_old, u_old.
     // We may consider this option later.
     bool enabledudtInPRHS = !(params->findBlock("Disabledmomdt"));
-    const StringNames& sName = StringNames::self();
-    const Expr::Tag timestepTag(sName.timestep,Expr::STATE_NONE);
-    if (enabledudtInPRHS) {    
+    const TagNames& tagNames = TagNames::self();
+    
+    if (enabledudtInPRHS) {
       OldVariable& oldVar = OldVariable::self();
       Expr::Tag dthisMomdtTag = Expr::Tag( "d_" + thisMomName_ + "_dt" , Expr::STATE_NONE );
 //      Expr::Tag thisVelOldTag = Expr::Tag( thisVelTag_.name()  + "_old", Expr::STATE_NONE );
@@ -501,12 +497,12 @@ namespace Wasatch{
 //      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisVelTag_);
       oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomTag);
       oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomOldTag);
-      factory.register_expression( new typename TimeDerivative<FieldT>::Builder(dthisMomdtTag,thisMomOldTag,thisMomOldOldTag,timestepTag));
+      factory.register_expression( new typename TimeDerivative<FieldT>::Builder(dthisMomdtTag,thisMomOldTag,thisMomOldOldTag,tagNames.timestep));
     }
 
     //__________________
     // dilatation
-    const Expr::Tag dilTag(sName.dilatation,Expr::STATE_NONE);
+    const Expr::Tag dilTag = tagNames.dilatation;
     if( !factory.have_entry( dilTag ) ){
       typedef typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
       // if dilatation expression has not been registered, then register it
@@ -527,7 +523,7 @@ namespace Wasatch{
     // TURBULENCE
     // check if we have a turbulence model turned on
     bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
-    const Expr::Tag turbViscTag = turbulent_viscosity_tag();
+    const Expr::Tag turbViscTag = tagNames.turbulentviscosity;
     if ( isTurbulent_ && isviscous_ && enableTurbulenceModel ) {
       register_turbulence_expressions(turbulenceParams, factory, velTags_, densTag);      
       factory.attach_dependency_to_expression(turbViscTag, viscTag);
@@ -676,7 +672,7 @@ namespace Wasatch{
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
         const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dxmomdtt, dymomdtt, dzmomdtt,
                                                                                        dilTag,
-                                                                                       d2rhodt2t, timestepTag,volFracTag, hasMovingGeometry, usePressureRefPoint, refPressureValue, refPressureLocation, use3DLaplacian,
+                                                                                       d2rhodt2t, tagNames.timestep,volFracTag, hasMovingGeometry, usePressureRefPoint, refPressureValue, refPressureLocation, use3DLaplacian,
                                                                                        *solverParams_, linSolver);
         pressureID_ = factory.register_expression( pbuilder );
         factory.cleave_from_children( pressureID_ );

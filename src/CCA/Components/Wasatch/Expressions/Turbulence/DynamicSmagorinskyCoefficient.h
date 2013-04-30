@@ -7,11 +7,6 @@
 #include <expression/Expression.h>
 
 /**
- *  \brief obtain the tag for the dynamic smagorinsky coefficient
- */
-Expr::Tag dynamic_smagorinsky_coefficient_tag();
-
-/**
  *  \class  DynamicSmagorinskyCoefficient
  *  \author Tony Saad
  *  \date   April, 2013

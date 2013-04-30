@@ -24,19 +24,9 @@
 
 #include "DynamicSmagorinskyCoefficient.h"
 
-//-- Wasatch includes --//
-#include <CCA/Components/Wasatch/StringNames.h>
-
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-
-//--------------------------------------------------------------------
-
-Expr::Tag dynamic_smagorinsky_coefficient_tag() {
-  const Wasatch::StringNames& sName = Wasatch::StringNames::self();
-  return Expr::Tag( sName.dynamicsmagcoef, Expr::STATE_NONE );
-}
 
 //********************************************************************
 // DYNAMIC SMAGORINSKY COEFFICIENT
