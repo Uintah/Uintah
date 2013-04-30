@@ -48,7 +48,7 @@ MDSystem::MDSystem(ProblemSpecP& ps)
   mdsystem_ps->get("temperature", d_temperature);
   mdsystem_ps->get("orthorhombic", d_orthorhombic);
   mdsystem_ps->get("ghostcells", d_numGhostCells);
-  mdsystem_ps->get("maxiterations", d_maxIterations);
+  mdsystem_ps->get("maxiterations", d_maxPolarizableIterations);
   if (d_orthorhombic) {
     Vector InputBox;
     mdsystem_ps->get("boxSize", InputBox);

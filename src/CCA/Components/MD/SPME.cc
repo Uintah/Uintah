@@ -33,11 +33,11 @@
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
-
 #include <iostream>
 #include <iomanip>
 #include <complex>
@@ -146,11 +146,11 @@ void SPME::setup(const ProcessorGroup* pg,
           if (spme_dbg.active()) {
             cerrLock.unlock();
             // FIXME - some "nan" values interspersed in B and C
-            if (isnan(fBGrid(xidx, yidx, zidx))) {
+            if (std::isnan(fBGrid(xidx, yidx, zidx))) {
               std::cout << "B: " << xidx << " " << yidx << " " << zidx << std::endl;
               std::cin.get();
             }
-            if (isnan(fCGrid(xidx, yidx, zidx))) {
+            if (std::isnan(fCGrid(xidx, yidx, zidx))) {
               std::cout << "C: " << xidx << " " << yidx << " " << zidx << std::endl;
               std::cin.get();
             }
@@ -169,12 +169,163 @@ void SPME::setup(const ProcessorGroup* pg,
   }
 }
 
+bool SPME::checkConvergence() {
+  // Subroutine determines if polarizable component has converged
+  bool polarizable = getPolarizableCalculation();
+  if (!polarizable) { return true; }
+  else {
+    // Do nothing at the moment, but eventually will check convergence here.
+    std::cerr << "Error: Polarizable force field not yet implemented!";
+    return true;
+  }
+}
+
 void SPME::calculate(const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* materials,
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw)
 {
+
+  bool converged = false;
+  int  numIterations = 0;
+  int  maxIterations = d_system->getMaxPolarizableIterations();
+  while (!converged && (numIterations < maxIterations)) {
+
+    // Do calculation steps until the Real->Fourier space transform
+    calculatePreTransform(pg, patches, materials, old_dw, new_dw);
+
+    // !FIXME We need to force Q reduction here
+    // Reduce, forward transform, and redistribute charge grid
+    transformRealToFourier(pg, patches, materials, old_dw, new_dw);
+
+    // Do Fourier space calculations on transformed data
+    calculateInFourierSpace(pg, patches, materials, old_dw, new_dw);
+
+    // !FIXME We need to force Q reduction here
+    // Reduce, reverse transform, and redistribute
+    transformFourierToReal(pg, patches, materials, old_dw, new_dw);
+
+    converged = checkConvergence();
+    numIterations++;
+  }
+
+  // Do force spreading and clean up calculations -- or does this go in finalize?
+  SPME::calculatePostTransform(pg, patches, materials, old_dw, new_dw);
+  return;
+
+}
+
+void SPME::calculatePreTransform(const ProcessorGroup* pg,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* materials,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw) {
+
+  std::vector<SPMEPatch*>::iterator PatchIterator;
+  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); ++PatchIterator) {
+    SPMEPatch* spmePatch = *PatchIterator;
+
+    const Patch*    patch = spmePatch->getPatch();
+    ParticleSubset*  pset = old_dw->getParticleSubset(materials->get(0), patch);
+    constParticleVariable<Point>  px;
+    old_dw->get(px, d_lb->pXLabel, pset);
+
+    constParticleVariable<long64> pids;
+    old_dw->get(pids, d_lb->pParticleIDLabel, pset);
+
+    constParticleVariable<double> pcharge;
+    old_dw->get(pcharge, d_lb->pChargeLabel, pset);
+    // When we have a material iterator in here, we should store/get charge by material.
+    // Charge represents the static charge on a particle, which is set by particle type.
+    // No need to store one for each particle. -- JBH
+
+    // Generate the data that maps the charges in the patch onto the grid
+    std::vector<SPMEMapPoint> gridMap = generateChargeMap(pset, px, pids, d_interpolatingSpline);
+
+    SimpleGrid<complex<double> > Q = spmePatch->getQ();
+    Q.initialize(complex<double>(0.0, 0.0));
+    mapChargeToGrid(spmePatch, gridMap, pset, pcharge, d_interpolatingSpline.getHalfMaxSupport());  // Calculate Q(r)
+
+    // We have now set up the real-space Q grid.
+    // We need to store this patch's Q grid on the data warehouse (?) to pass through to the transform
+    spmePatch->setQ(Q); // ??? Or is Q just a pointer to spmePatch's Q? -- JBH --> !FIXME Need to put Q in for reduction
+  }
+  return;
+}
+
+void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* materials,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw) {
+  double localEnergy;
+  Matrix3 localStress;
+
+  std::vector<SPMEPatch*>::iterator PatchIterator;
+  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
+    SPMEPatch* spmePatch = *PatchIterator;
+    const Patch* patch = spmePatch->getPatch();
+    SimpleGrid<complex<double> > Q = spmePatch->getQ();
+    SimpleGrid<double> fTheta = spmePatch->getTheta();
+    SimpleGrid<Matrix3> stressPrefactor = spmePatch->getStressPrefactor();
+
+    // Multiply the transformed Q by B*C to get Theta
+    IntVector localExtents = spmePatch->getLocalExtents();
+    size_t xMax = localExtents.x();
+    size_t yMax = localExtents.y();
+    size_t zMax = localExtents.z();
+
+    double  spmeFourierEnergy = 0.0;
+    Matrix3 spmeFourierStress(0.0);
+
+    for (size_t kX = 0; kX < xMax; ++kX) {
+      for (size_t kY = 0; kY < yMax; ++kY) {
+        for (size_t kZ = 0; kZ < zMax; ++kZ) {
+          complex<double> gridValue = Q(kX,kY,kZ);
+          // Calculate (Q*Q^)*(B*C)
+          Q(kX, kY, kZ) *= conj(gridValue) * fTheta(kX, kY, kZ);
+          localEnergy += std::abs(Q(kX, kY, kZ));
+          localStress += std::abs(Q(kX, kY, kZ))*stressPrefactor(kX, kY, kZ);
+        }
+      }
+    }
+    // Ready to go back to real space now -->  Need to store modified Q as well as localEnergy/localStress (which should get accumulated)
+    spmePatch->setQ(Q);  // !FIXME Need to put Q in for reduction
+    new_dw->put(sum_vartype(spmeFourierEnergy),d_lb->spmeFourierEnergyLabel);
+    new_dw->put(matrix_sum(spmeFourierStress),d_lb->spmeFourierStressLabel);
+  }
+  return;
+}
+
+void SPME::transformRealToFourier(const ProcessorGroup* pg,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* materials,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw) {
+
+  return;
+}
+
+void SPME::transformFourierToReal(const ProcessorGroup* pg,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* materials,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw) {
+
+  return;
+}
+
+void SPME::calculatePostTransform(const ProcessorGroup* pg,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* materials,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw) {
+
+  return;
+}
+
+/*  Old code from monolithic SPME::Calculate()
   bool converged = false;
   int numIterations = 0;
   int maxIterations = d_system->getMaxIterations();
@@ -198,6 +349,7 @@ void SPME::calculate(const ProcessorGroup* pg,
       mapChargeToGrid(spmePatch, gridMap, pset, pcharge, d_interpolatingSpline.getHalfMaxSupport());  // Calculate Q(r)
 
       SimpleGrid<complex<double> > Q = spmePatch->getQ();
+      SimpleGrid<double> fTheta = spmePatch->getTheta();
       Q.initialize(complex<double>(0.0, 0.0));
       SimpleGrid<Matrix3> stressPrefactor = spmePatch->getStressPrefactor();
 
@@ -248,7 +400,7 @@ void SPME::calculate(const ProcessorGroup* pg,
 //    SPME::GlobalReduceEnergy();
 //    SPME::GlobalReduceStress();  //Uintah framework?
   }
-}
+} */
 
 void SPME::finalize(const ProcessorGroup* pg,
                     const PatchSubset* patches,
@@ -315,6 +467,7 @@ SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
   std::vector<double> mf2 = SPME::generateMFractionalVector(limit_Ky, d_interpolatingSpline);
   std::vector<double> mf3 = SPME::generateMFractionalVector(limit_Kz, d_interpolatingSpline);
 
+  /*  This debug was just for my internal logic, should be okay to take it out -- JBH !FIXME
   if (spme_dbg.active()) {
     cerrLock.unlock();
     std::cout << " DEBUG: " << std::endl;
@@ -333,6 +486,7 @@ SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
     std::cout << " END DEBUG: " << std::endl;
     cerrLock.unlock();
   }
+  */
 
   // localExtents is without ghost grid points
   std::vector<dblcomplex> b1 = generateBVector(mf1, globalOffset.x(), localExtents.x(), d_interpolatingSpline);
@@ -492,7 +646,7 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
     //                  to call MDSystem->IsOrthorhombic() and then branching the if statement appropriately.
 
     // This bit is tedious since we don't have any cross-pollination between type Vector and type IntVector.
-    // Should we put that in (requires modifying Uintah framework).
+    // Should we put that in (requires modifying Uintah framework)?
     SCIRun::Vector kReal, splineValues;
     IntVector particleGridOffset;
     for (size_t idx = 0; idx < 3; ++idx) {

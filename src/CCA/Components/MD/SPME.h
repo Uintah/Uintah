@@ -121,12 +121,12 @@ class SPME : public Electrostatics {
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw);
 
-    /**
-     * @brief
-     * @param None
-     * @return None
-     */
-    void finalize(const ProcessorGroup* pg,
+      /**
+       * @brief
+       * @param None
+       * @return None
+       */
+      void finalize(const ProcessorGroup* pg,
                   const PatchSubset* patches,
                   const MaterialSubset* materials,
                   DataWarehouse* old_dw,
@@ -249,7 +249,6 @@ class SPME : public Electrostatics {
      * @param spline - CenteredCardinalBSpline that determines the number of wrapping points necessary
      * @return Returns a vector<double> of (0..[m=K/2],[K/2-K]..-1);
      */
-// New Hotness
     inline vector<double> generateMPrimeVector(unsigned int kMax,
                                                const CenteredCardinalBSpline& spline) const
     {
@@ -262,18 +261,18 @@ class SPME : public Electrostatics {
       // Seed internal array (without wrapping)
       int TrueZeroIndex = halfSupport;  // The zero index of the unwrapped array embedded in the wrapped array
 
-      for (int Index = TrueZeroIndex; Index <= halfMax + TrueZeroIndex; ++Index) {
-        mPrime[Index] = static_cast<double>(Index - TrueZeroIndex);
+      for (int idx = TrueZeroIndex; idx <= halfMax + TrueZeroIndex; ++idx) {
+        mPrime[idx] = static_cast<double>(idx - TrueZeroIndex);
       }
       for (int Index = halfMax + TrueZeroIndex + 1; Index < TrueZeroIndex + kMax; ++Index) {
         mPrime[Index] = static_cast<double>(Index - TrueZeroIndex - static_cast<int>(kMax));
       }
 
       // Wrapped ends of the vector
-      for (int Index = 1; Index <= halfSupport; ++Index) {
+      for (int idx = 1; idx <= halfSupport; ++idx) {
         // Left wrapped end
-        mPrime[TrueZeroIndex - Index] = mPrime[TrueZeroIndex - Index + kMax];
-        mPrime[TrueZeroIndex + kMax + Index - 1] = mPrime[TrueZeroIndex + Index - 1];  //-1 offsets for 0 based array
+        mPrime[TrueZeroIndex - idx] = mPrime[TrueZeroIndex - idx + kMax];
+        mPrime[TrueZeroIndex + kMax + idx - 1] = mPrime[TrueZeroIndex + idx - 1];  //-1 offsets for 0 based array
       }
 
       return mPrime;
@@ -285,7 +284,6 @@ class SPME : public Electrostatics {
      * @param InterpolatingSpline - CenteredCardinalBSpline that determines the number of wrapping points necessary
      * @return Returns a vector<double> of the reduced coordinates for the local grid along the input lattice direction
      */
-    // New Hotness
     inline vector<double> generateMFractionalVector(size_t kMax,
                                                     const CenteredCardinalBSpline& interpolatingSpline) const
     {
@@ -296,19 +294,101 @@ class SPME : public Electrostatics {
       double kMaxInv = 1.0 / static_cast<double>(kMax);
 
       int TrueZeroIndex = halfSupport;  // Location of base array zero index
-      for (int Index = TrueZeroIndex; Index < TrueZeroIndex + kMax; ++Index) {
-        mFractional[Index] = static_cast<double>(Index - TrueZeroIndex) * kMaxInv;
+      for (int idx = TrueZeroIndex; idx < TrueZeroIndex + kMax; ++idx) {
+        mFractional[idx] = static_cast<double>(idx - TrueZeroIndex) * kMaxInv;
       }
 
       // Wrapped ends of the vector
-      for (size_t Index = 1; Index <= halfSupport; ++Index) {
+      for (size_t idx = 1; idx <= halfSupport; ++idx) {
         // Left wrapped end
-        mFractional[TrueZeroIndex - Index] = mFractional[TrueZeroIndex - Index + kMax];
-        mFractional[TrueZeroIndex + kMax + Index - 1] = mFractional[TrueZeroIndex + Index - 1];  //-1 offsets for 0 based array
+        mFractional[TrueZeroIndex - idx] = mFractional[TrueZeroIndex - idx + kMax];
+        mFractional[TrueZeroIndex + kMax + idx - 1] = mFractional[TrueZeroIndex + idx - 1];  //-1 offsets for 0 based array
       }
 
       return mFractional;
     }
+    /**
+     * @brief Perform all calculations preceding the FFT transform of the charge grid to Fourier space.
+     * @param const ProcessorGroup* pg -- All processors processing SPME patches
+     *        const PatchSubset* patches -- Patches to be processed by this thread
+     *        const MaterialSubset* materials -- Material subset belonging to this patch
+     *        DataWarehouse* old_dw -- Last time step's data warehouse
+     *        DataWarehouse* new_dw -- This time step's data warehouse
+     * @return None
+     */
+    void calculatePreTransform(const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* materials,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
+
+    /**
+      * @brief Perform all Fourier space calculations.
+      * @param const ProcessorGroup* pg -- All processors processing SPME patches
+      *        const PatchSubset* patches -- Patches to be processed by this thread
+      *        const MaterialSubset* materials -- Material subset belonging to this patch
+      *        DataWarehouse* old_dw -- Last time step's data warehouse
+      *        DataWarehouse* new_dw -- This time step's data warehouse
+      * @return None
+      */
+     void calculateInFourierSpace(const ProcessorGroup* pg,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* materials,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+
+    /**
+      * @brief Perform calculations proceeding the FFT transform from Fourier to real space.
+      * @param const ProcessorGroup* pg -- All processors processing SPME patches
+      *        const PatchSubset* patches -- Patches to be processed by this thread
+      *        const MaterialSubset* materials -- Material subset belonging to this patch
+      *        DataWarehouse* old_dw -- Last time step's data warehouse
+      *        DataWarehouse* new_dw -- This time step's data warehouse
+      * @return None
+      */
+     void calculatePostTransform(const ProcessorGroup* pg,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* materials,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
+    /**
+      * @brief Perform necessary operation to transform Q grid to fourier space
+      * @param const ProcessorGroup* pg -- All processors processing SPME patches
+      *        const PatchSubset* patches -- Patches to be processed by this thread
+      *        const MaterialSubset* materials -- Material subset belonging to this patch
+      *        DataWarehouse* old_dw -- Last time step's data warehouse
+      *        DataWarehouse* new_dw -- This time step's data warehouse
+      * @return None
+      *
+      */
+     void transformRealToFourier(const ProcessorGroup* pg,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* materials,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
+    /**
+      * @brief Perform necessary operation to transform Q grid to fourier space
+      * @param const ProcessorGroup* pg -- All processors processing SPME patches
+      *        const PatchSubset* patches -- Patches to be processed by this thread
+      *        const MaterialSubset* materials -- Material subset belonging to this patch
+      *        DataWarehouse* old_dw -- Last time step's data warehouse
+      *        DataWarehouse* new_dw -- This time step's data warehouse
+      * @return None
+      *
+      */
+     void transformFourierToReal(const ProcessorGroup*pg,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* materials,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
+
+     /**
+      * @brief Checks for convergence of polarizability calculation
+      * @param None
+      * @return Bool - true if converged, false if not
+      */
+     bool checkConvergence();
+     inline bool getPolarizableCalculation() { return d_polarizable; }
 
     // Values fixed on instantiation
     ElectrostaticsType d_electrostaticMethod;         //!< Implementation type for long range electrostatics
