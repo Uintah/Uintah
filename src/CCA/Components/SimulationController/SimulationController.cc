@@ -909,10 +909,10 @@ if(d_myworld->myrank() == 0){
   char walltime[96];
   if (d_n > 3) {
     //sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
-    sprintf(walltime, ", elap T = %.6lf, mean: %.6lf", d_wallTime, mean);
+    sprintf(walltime, ", elap T = %.2lf, mean: %.2lf", d_wallTime, mean);
   }
   else {
-    sprintf(walltime, ", elap T = %.6lf", d_wallTime);
+    sprintf(walltime, ", elap T = %.2lf", d_wallTime);
   }
   ostringstream message;
 
