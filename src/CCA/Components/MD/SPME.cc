@@ -467,27 +467,6 @@ SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
   std::vector<double> mf2 = SPME::generateMFractionalVector(limit_Ky, d_interpolatingSpline);
   std::vector<double> mf3 = SPME::generateMFractionalVector(limit_Kz, d_interpolatingSpline);
 
-  /*  This debug was just for my internal logic, should be okay to take it out -- JBH !FIXME
-  if (spme_dbg.active()) {
-    cerrLock.unlock();
-    std::cout << " DEBUG: " << std::endl;
-    std::cout << "Expect mf1 size: " << d_kLimits.x() << "  Actual mf1 size: " << mf1.size() << std::endl;
-    for (size_t idx = 0; idx < mf1.size(); ++idx) {
-      std::cout << "mf1(" << std::setw(3) << idx << "): " << mf1[idx] << std::endl;
-    }
-    std::cout << "Expect mf2 size: " << d_kLimits.y() << "  Actual mf2 size: " << mf2.size() << std::endl;
-    for (size_t idx = 0; idx < mf2.size(); ++idx) {
-      std::cout << "mf2(" << std::setw(3) << idx << "): " << mf2[idx] << std::endl;
-    }
-    std::cout << "Expect mf3 size: " << d_kLimits.x() << "  Actual mf3 size: " << mf3.size() << std::endl;
-    for (size_t idx = 0; idx < mf3.size(); ++idx) {
-      std::cout << "mf3(" << std::setw(3) << idx << "): " << mf3[idx] << std::endl;
-    }
-    std::cout << " END DEBUG: " << std::endl;
-    cerrLock.unlock();
-  }
-  */
-
   // localExtents is without ghost grid points
   std::vector<dblcomplex> b1 = generateBVector(mf1, globalOffset.x(), localExtents.x(), d_interpolatingSpline);
   std::vector<dblcomplex> b2 = generateBVector(mf2, globalOffset.y(), localExtents.y(), d_interpolatingSpline);
@@ -558,15 +537,10 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
       for (size_t kZ = 0; kZ < zExtents; ++kZ) {
         if (kX != 0 || kY != 0 || kZ != 0) {
           SCIRun::Vector m(mp1[kX + xOffset], mp2[kY + yOffset], mp3[kZ + zOffset]);
-
           m = m * d_inverseUnitCell;
-
           double M2 = m.length2();
           double factor = PI2 * M2 * invBeta2;
-          // FIXME  M2 always zero.... mp1[kX + xOffset], etc
-          // always accessing garbage memory outside of mp bounds
           CGrid(kX, kY, kZ) = invVolFactor * exp(-factor) / M2;
-          // CGrid(kX, kY, kZ) = invVolFactor * exp(-factor) / 1.0;
         }
       }
     }
@@ -712,7 +686,7 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
           int y_anchor = QAnchor.y() + ymask;
           int z_anchor = QAnchor.z() + zmask;
           // FIXME Q is being indexed negatively e.g. (-4, -4, -4)
-//          Q(x_anchor, y_anchor, z_anchor) += val;
+          Q(x_anchor, y_anchor, z_anchor) += val;
         }
       }
     }
