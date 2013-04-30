@@ -544,8 +544,315 @@ Starting with the NDF transport equation, the moment transform can be taken, yie
 \mathbf{Ax} = \mathbf{B}.
 \end{equation}
 
+\subsubsection{Build of Ax=B}\label{subsubsec:buildAX=B}
+There are $N_e(N+1)$ unknowns for $a_a$ and $b_{na}$, while there
+are just one linear equations for them. In order to build a complete
+linear system, $N_e(N+1)-1$ moments are needed. And DQMOM method
+is used to build this linear system. Using properties of delta functions,
+the $k^{th}$ moment for Eq.(\ref{eq:a-b-transport-eqns}) is derived
+as
+
+
+
+\begin{equation}
+\begin{split}
+\sum_{a=1}^{N_{e}}\left[\left(\prod_{n=1}^{N}\left<\xi_{n}^{k_n}\right>_{a}\right)-\sum_{m=1}^{N}k_m\left(\left<\xi_{m}^{k_m}\right>_{a}\right)\left(\prod_{n=1,n\neq m}^{N}\left<\xi_{n}^{k_n}\right>_\alpha\right)\right]a_{a}
+\\
++\sum_{a=1}^{Ne}\sum_{n=1}^{N}\left[k_n\left<\xi_{n}^{k_n-1}\right>_{a}\left(\prod_{m=1,m\neq n}^{N}\left<\xi_{m}^{k_m}\right>_{a}\right)\right]b_{a,n}=
+\\
+\sum_{a=1}^{Ne}\sum_{m=1}^{N}\left[k_m\left(k_m-1\right)\left<\xi_m^{k_m-2}\right>_a\times\left(\prod_{j \neq m,j=1}^{N_\xi}\left<\xi_j^{k_j}\right>_a\right)\right]{w}_a{C}_{mma}+
+\\ \sum_{a=1}^{Ne}\sum_{m=1}^{N}\sum_{n=1}^{N}\left[k_mk_n\left<\xi_{m}^{k_m-1}\right>_{a}\left<\xi_n^{k_n-1}\right>_a\times\left(\prod_{j=1,j \neq m}^{N}\left<\xi_{j}^{k_j}\right>_{a}\right)\right]w_{a}C_{mna}+\bar{S}_{k}+\bar{D}_{k}
+\end{split}
+\label{eq:kth_moment}
+\end{equation}
+
+and
+
+\begin{equation}
+\bar{S}_{k}=-\sum_{a=1}^{N_{e}}\sum_{n=1}^{n}\left[\left(\prod_{m=1,m\neq n}^{N}\left<\xi_{m}^{k_{m}}\right>\right)\left(k_{n}\left<\xi_{n}^{k_{n}-1}\right>_{a}\right)\left(w_{a}\left<G_{n}\right>_{a}\right)\right]
+\end{equation}
+
+
+\begin{equation}
+\bar{D}_{k}=\sum_{a=1}^{N_{e}}\sum_{n=1}^{n}\left(\prod_{m=1,m\neq n}^{N}\left<\xi_{m}^{k_{m}}\right>_{a}\right)\left(k_{n}\left(k_{n}-1\right)\left<\xi_{n}^{k_{n}-2}\right>\right)\left(w_{a}\Gamma_{\xi_{n},a}\right)\label{eq:Dk_bar}
+\end{equation}
+
+
+where $k_m$ represent the $k^{th}$ moment for the $m^{th}$ internal
+coordinates. With a reasonable selection of the moments for each internal
+coordinates, a linear system with a rank of $N_e\left(N+1\right)$
+can be constructed by
+
+\begin{equation} \label{eq:AXeqB1}
+[A_{1},A2]*[a_{a},b_{an}]^{\textrm{T}}=[C_{k}+\bar{S}_{k}+\bar{D}_{k}]^{\textrm{T}}
+\end{equation}
+
+\subsubsection{solution of DQMOM matrix} \label{subsubsec:solutionax=b}
+The detailed solution method can be find in Charles and Julien's Thesis \cite{Charles_DQMOM, Julien_thesis}. The typical LU solution will offten met singular problems, so Rodney provided a method to rebuild matrix A and B to avoid this problem\cite{RF_2009}. This method is named as "Optimize" in <DQMOM> block. However, the "Optimize" method is very time consuming.
+
+\subsubsection{Simplest method in DQMOM} \label{subsubsec:Simplest}
+In order to save CPU times for DQMOM method, some simplified method can be adopted to define the source term for \ref{eq:a-b-transport-eqns}, or $X$. For coal combustion case, when the following assumption was adopted
+\begin{itemize}
+\item Assuming that any scalars distribution of the coal particles can be
+perfectly represented by multi-delta functions, especially, the particle
+velocity distribution can be perfectly represented by $\left<v_{a}\right>$,
+so that there is no diffusion terms. In other words, the third term
+at the right side and $D_\xi$ in Eq.(\ref{eq:AXeqB1}),
+are omited. This is only correct for each single particle, so that
+integral of Eq.(\ref{eq:quadrature-approximated-moment-xport-eqn}) with a
+moment becomes the Langrangian particle equations as:
+\end{itemize}
+\begin{equation}
+\frac{d\xi^{m}}{dt}=S_{\xi^{m}}
+\end{equation}
+
+where $\xi^m$ is the moment that we are interested. As long as we
+consider a reprentative particles for a group of particles, such diffusion
+term will exists, which are hard to be modeled. A reasonable way to
+eliminate the effect of diffusion term is to increase the phase numbers.
+(but this will meet other chanllenges, for e.g., for the dense phase,
+the interactions between two phases need to be considered, the computation
+cost would be hudge).
+\begin{itemize}
+\item For pulverized coal combustion system, the particles are very dispersed,
+so that any particle-particle interactions is small enough (comparing
+partile-gas interactions) to be omited. With this assumption, the
+source term, $S_\xi$ can be easily represented by the single particle
+models, so that Langrangian style models can be used.
+\item There is no particle death or birth, so that the weights do not change
+with the internal coordinates $\xi$. In other words, $a_a$ in Eq.(\ref{eq:a-b-transport-eqns})
+equals to 0 and the rank of the linear system is reduced from $N_e(N+1)$
+to $N_eN$.
+\end{itemize}
+Taking these three assumptions, the linear system can be reduced further,
+since there is no diffusion terms, the right side of Eq.(ref\{eq:kth\_moment\})
+is reduced to $\bar{S}_k$. Then we just consider the first moments
+for $\xi_{n,a}$ and $0^{th}$ moments for other $\xi$(let $k_n=1, and k_(m\neq n)=0$
+for the $p^{th}$ phase. This makes the linear system, Eq.(\ref{AXeqB})
+reduces to
+
+\begin{equation}
+0+\ldots+\text{0+}b_{n,a}+0+\ldots0=w_{a}\left<G_{n}\right>_{a}=w_{a}\frac{d\xi_{n,a}}{dt}
+\end{equation}
+
+
+That means the linear system is already solved without any further
+calculations (no need of solving linear systems). and the transport
+equations of the weights and weighted abscissas finally are simplified
+to
+
+\begin{equation}
+\frac{\partial}{\partial t}\left(w_{a}\right)+\frac{\partial}{\partial x_{i}}\left(\left<v_{i}\right>_{a}w_{a}\right)=0\label{eq:ap_transport-simple}
+\end{equation}
+
+
+\begin{equation}
+\frac{\partial}{\partial t}\left(\zeta_{n,a}\right)+\frac{\partial}{\partial x_{i}}\left(\left<v_{i}\right>_{a}\zeta_{n,a}\right)=w_{a}\frac{d\xi_{n,a}}{dt}\label{eq:simplified_transport_equation}
+\end{equation}
+
+
+It should be noted these are instantaneous equations, and SGS model
+should be considered for LES simulation. If we know the diffusion
+models, and just with no birth/dirth of particles. There are also
+no need to solve the transport equations, if only the internal coordinates
+are independent, or if we can build the direct correlation among these
+dependent moments. For e.g., if we have to consider the particle surface
+and the particle diameter as well as the particle volume, these internal
+coordinates are correlated, and linear system is needed to be built
+for such dependent moments if the particle diameter, surface and volume
+change can't be decribed by three separate models. For the coal combustion
+systems we are considering, the internal coordinates are independent,
+so there is no need to solve the linear system. and the final transport
+equations are
+
+\begin{equation}
+\frac{\partial}{\partial t}\left(w_{a}\right)+\frac{\partial}{\partial x_{i}}\left(\left<v_{i}\right>_{a}w_{a}\right)+\frac{\partial}{\partial x_{i}}\left(D_{x,p}\frac{\partial}{\partial x_{i}}\left(w_{a}\right)\right)=0\label{eq:ap_transport-simp_diffusion}
+\end{equation}
+
+
+\begin{equation}
+\frac{\partial}{\partial t}\left(\zeta_{n,a}\right)+\frac{\partial}{\partial x_{i}}\left(\left<v_{i}\right>_{a}\zeta_{n,a}\right)+\frac{\partial}{\partial x_{i}}\left(D_{x,a}\frac{\partial}{\partial x_{i}}\left(\zeta_{n,a}\right)\right)=w_{a}\frac{d\xi_{n,a}}{dt}+D_{\xi_{n,a}}\label{eq:simplified_transport_equation_with diffusion}
+\end{equation}
+
+
+The chanllenge is that $D_{x,a}$ and $D_{\xi_{n,a}}$ almost can't
+be modeled (seems $D_{\xi_{n,a}}=0$ when multi-delta functions adopted, according to Eq.(\ref{eq:Dk_bar}).
+and we'd rather to consider more phases to elimate the diffusion terms. 
+
+
+
+Taking the assumptions mentioned above, the transport equations of
+PBE in form of PDF acutally degenerate to multi-phase Euler-Euler
+equations without consideration phase-phase interactions (except for
+gas-particle interactions). If the particle phase are enough so that
+each particle is represented by a phase, Eq(\ref{eq:ap_transport-simple})
+and Eq(\ref{eq:simplified_transport_equation_with diffusion}) are
+actually Lagrangian method. Or in other words, the simplest case we
+adopted with DQMOM method equvalent that we are using Lagrangian method
+to track infinitely large number of particles falling to only $Ne$
+categories (each categories of particle has the same values for all
+$N$ internal coordinates). 
+
+
+
+
 \subsubsection{Summary}\label{subsubsec:summary}
 In summary, the DQMOM solution procedure requires solving several transport equations, given by \ref{eq:a-b-transport-eqns}. These transport equations describe the changes in the quadrature weights and weighted abscissas used to approximate the NDF.  The source terms for these transport equations, $a_{\alpha}$ and $b_{n,\alpha}$, come from the solution to a linear system, $\mathbf{Ax}=\mathbf{B}$, in which the vector $\mathbf{x}$ contains the source terms.  This linear system comes from the quadrature-approximated moment trasport equation, equation \ref{eq:quadrature-approximated-moment-xport-eqn}, of which there are $\left(N_{\xi} + 1\right)N$.  It is because this set of equations is linear in the unknowns $a_{\alpha}$ and $b_{n,\alpha}$ that it can be re-cast in the form of a linear system.
+
+\subsection{Wall Heat Transfer Model in Arches} \label{subsec:WHT}
+\subsubsection{Basic assumptions and models for wall heat transfer}
+
+The basic assumptions are as follows:
+\begin{itemize}
+\item Wall is regarded as black body, the heat released by the wall is calculated
+by Stefan-Boltzmann law, this assumption is consistant to the assumption
+adopted in DO radiation method in ARCHES.
+\item There is no time derivation term for wall heat transfer, in other
+words, wall temperature comes to equilibrium state instantaneously
+at each time step. While a relaxation coefficient, $C_{rex}$, is
+adopted to smooth the wall temperature change, or $T_w=(1-C_{rex})T_{w0}+C_{rex}T_w$.
+\item When considering convection heat transfer, the gas temperature is
+represent by the Cell-Center gas temperature adjecent to the wall,
+Pr and Re is calculated based on the velocities and properties of
+the CC value adjecent to the wall. But up to now, no convection heat
+transfer is considered in ARCHES.
+\item thermal resistance from fluid to the tubes is small enough to be neglected,
+so that inside tube wall temperature is set to a constant value. (<tube\_side\_T>
+in arches.spec)
+\end{itemize}
+The wall heat transfer is calculated by
+
+\begin{equation}
+q_{net}=(T_{w}-T_{in})/R_{wc}\label{eq:wallht}
+\end{equation}
+
+
+\begin{equation}
+q_{net}=\epsilon_{w}(q_{in}-q_{rad\_w})+q_{conv}\label{eq:net}
+\end{equation}
+
+
+where $q_{net}$ is the heat flux absorbed by the wall. $q_{in}$
+is the incidental radiation heat flux from the ambient gas phase to
+the wall surface, which is provided by radiation solver in ARCHES,
+$q_{rad\_w}$ is the heat flux of the black-body wall emission, and
+can be calculated by
+
+$q_{rad\_w}=\sigma T_{w}^{4}$
+
+$q_{conv}$ is the heat flux absorbed by the wall through convection,
+$T_w$ and $T_{in}$ are the wall surface temperature (represented
+by 'temperature' in ARCHES simulation) and fluid temperature inside
+wall tubes (<tube\_side\_T>), and $R_{wc}$ is the wall thermal resistance,
+$R_{wc}=l/\lambda$, $l$ is the <wall\_thickness> in areches.spec,
+and $\lambda$ is <k> in arches.spec.
+
+
+\subsubsection{Algorithms of wall heat transfer solution in Arches\label{sec:Algorithms-of-wall}}
+
+Eq.\ref{eq:wallht} can be recasted by
+
+\begin{equation}
+T_{w}=T_{in}+q_{net}R_{wc}\label{eq:3}
+\end{equation}
+
+
+Based on Eq.\ref{eq:3}, an iterative algorithm was proposed to solve
+$T_w$:
+\begin{enumerate}
+\item Taking an initial $T_w$ and calculate $q_{net}$ by Eq.(\ref{eq:net}) 
+\item Calculate $T_w$ by Eq.\ref{eq:3}. And return back to Step.1
+\end{enumerate}
+Since $q_{net}$ is sensitive to $T_w$ due to Stefan-Boltzmann law,
+this iteration method is unstable and it's hard to get the final resolutions.
+So an relaxation coefficient was introduced to help converge. Then
+the final iteration method would be
+\begin{enumerate}
+\item calculate $q_{net}$ based on $T_{w0}$ by Eq.\ref{eq:wallht}
+\item Calculate $T_{w1}$ with Eq.\ref{eq:3}
+\item Calculate renewed $T_{w1}$ by $T_{w1}=(1-C_{relx})T_{w0}+c_{relx}T_w'$.
+Then go back to step1 with $T_{w1}$
+\end{enumerate}
+This Relaxation Iteration Method (RIM) can be used to get the final
+$T_w$ at each timestep. Although with small Relaxation Coefficient,
+RIM method may still be unstable if $R_{wc}$ is very large.
+
+$T_w$ can also be calculated by another iterations method such as
+Dichotomy Iteration Method (DIM)as follows:
+\begin{enumerate}
+\item To set a maximum wall temperatrue $T_{wmax}$ and a minimum wall temperature
+$T_{wmin}$.
+\item to calculate initial wall temperature $T_{w0}=(T_{wmax}+T_{wmin})/2$
+\item To calculate $T_{w1}$ with Eq\ref{eq:wallht}, Eq\ref{eq:net} and
+Eq\ref{eq:3}.
+\item if $T_{w1}>T_{w0}$, then $T_{wmin}=T_{w0}$; if $T_{w1}<T_{w0}$,
+then $T_{wmax}=T_{w0}$. Then go to step.2 to make iteration, till
+$T_{w1}-T_{w0}<error$
+\end{enumerate}
+The advantage of this method is that the iteration won't be oscilate
+and will always converge. Given a reasonable initial $T_{wmax}$ and
+$T_{wmin}$ (Which are <max\_TW> and <min\_TW> in arches.spec), the
+DIM will have very small cost. 
+
+\subsubsection{black body or grey body assumption?}
+
+Up to now, the wall emissivity $\epsilon_{w}$ in Eq.\ref{eq:net}
+is set to 1.0 in arches code, since that in DO model, the wall is
+assumed to be the black-body. If the grey body assumption has to be
+considered, we must make sure that radiation model (DO or RMCRT) also
+consider a greybody condition for the wall. Still, there is a trick
+to treat the wall as greybody in wall heat transfer model while keep
+adopting blackbody assumptions in Radiation model. The trick is as
+follows:
+\begin{enumerate}
+\item take an $\epsilon_{w}$ of less than one in Eq.\ref{eq:net}, and
+calculate the grey wall temperature $T_{w1}$ and $Q_{net}$ with
+the iteration method mentioned in Section\ref{sec:Algorithms-of-wall}.
+\item To modify the wall temperature from $T_{w1}$ to $T_w$,  so that
+the following equations are satisfied: $q_{net}=q_{in}-\sigma T_{w}^{4}$.
+Generally the difference between $T_w$ and $T_{w1}$ is no more than
+20K if $\epsilon_{w}=0.8$. So the emissivity won't change the wall
+temperature a lot. However, it will be better if the wall reflection
+can be considered in the radiation model.
+\end{enumerate}
+
+\subsubsection{numerical steadyness, especially for adiabatic wall BC or small thermal
+conductivities}
+
+In Section.\ref{sec:Algorithms-of-wall}, the calculation of $T_w$
+is proposed for each times step. During LES simulation, $q_{in}$
+will change with $T_w$ as well. The following conditions will cause
+the numerical simulation of $T_w$ unsteady
+\begin{itemize}
+\item A bad initial temperature assumption: a bad initial temperature assumption
+will casue a bad initial $q_{in}$, and thus a bad $T_w$, although
+$T_w$ is 'accurate' at this timestep, it's a fake wall temperature
+and may have negative effect on $q_{in}$ in next step.
+\item When simulation case is large and simulation domain is complex, the
+previous tests show that the simulation is sentitive to wall temperature.
+If $T_w$ changes frequently and changes in a large range, this may
+cause some numerical problems in Arches simulation. 
+\end{itemize}
+with these consideration, it's better to change $T_w$ smoothly when
+$q_{in}$ is sensitive to $T_w$. So at the beginning of simulation,
+a small relaxation coefficient can be adopted to control the change
+of $T_w$. When simulation comes to a steady state, RIM and DIM moethod
+can be directly adopted to get the final $T_w$. However, the strategy
+of $T_w$ calculation depends on the real physical problems. 
+
+For adiabatic wall boundary conditions, since the thermal resisitance
+($R_{wc}$) is infinitly large, numerical steady is a challenge when
+we use iterative method to calculate Eq.\ref{eq:3}, and DIM is a
+good way to solve this problem. In ARCHES, the DIM method is adopted
+and the adiabatic wall will be well solved. Still, a small relaxation
+coefficient, $C_{rex}$, is recommend to be adopted. For e.g., $C_{rex}=0.05$,
+which will help to acquire a smooth change of wall temperature with
+time.
+
+
+
+
+
 
 \subsection{Digital Filter Generator for Turbulent Inlet Conditions}\label{sec:DFG}
 The digital filter method generates a set of both spatially and temporally correlated random data in order to create a synthetic turbulent inlet.  In the Arches implementation, the data is generated a priori.
