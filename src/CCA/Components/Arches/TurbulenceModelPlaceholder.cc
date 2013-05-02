@@ -125,7 +125,7 @@ TurbulenceModelPlaceholder::sched_reComputeTurbSubmodel(SchedulerP& sched,
   //tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
   
 #ifdef WASATCH_IN_ARCHES
-  std::string wasatchViscName = turbulent_viscosity_tag().name();
+  std::string wasatchViscName = Wasatch::TagNames::self().turbulentviscosity.name();
   VarLabel* wasatchTurbViscLabel = VarLabel::find(wasatchViscName);
   if (wasatchTurbViscLabel != NULL) {
     tsk->requires(Task::NewDW, wasatchTurbViscLabel, gac, 1);
@@ -159,7 +159,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
 {
   //  double time = d_lab->d_sharedState->getElapsedTime();
 #ifdef WASATCH_IN_ARCHES
-  std::string wasatchViscName = turbulent_viscosity_tag().name();
+  std::string wasatchViscName = Wasatch::TagNames::self().turbulentviscosity.name();
   VarLabel* wasatchTurbViscLabel = VarLabel::find(wasatchViscName);
   bool exists_ = (wasatchTurbViscLabel != NULL);
 #endif  

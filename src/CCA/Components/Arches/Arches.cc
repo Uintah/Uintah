@@ -105,6 +105,7 @@
 #include <expression/ExpressionFactory.h>
 //
 #include <CCA/Components/Wasatch/Wasatch.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/transport/ParseEquation.h>
@@ -454,7 +455,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     velTags.push_back(zVelTagN);    
     Wasatch::register_turbulence_expressions(turbParams,*solngh->exprFactory,velTags,densityTag);
     Expr::TagList turbulenceExpressions;
-    turbulenceExpressions.push_back(turbulent_viscosity_tag());
+    turbulenceExpressions.push_back(Wasatch::TagNames::self().turbulentviscosity);
     force_expressions_on_graph(turbulenceExpressions, solngh);
   }  
 
