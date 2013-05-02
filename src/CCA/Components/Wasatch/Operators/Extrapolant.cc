@@ -87,10 +87,9 @@ apply_to_field(FieldT& src )
                              extent,
                              ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
       
-      SVolField d  ( wd,  &src[0], ExternalStorage);
-      SVolField s1 ( ws1, &src[0], ExternalStorage);
-      SVolField s2 ( ws2, &src[0], ExternalStorage);
-      
+      FieldT d  ( wd,  &src[0], ExternalStorage);
+      FieldT s1 ( ws1, &src[0], ExternalStorage);
+      FieldT s2 ( ws2, &src[0], ExternalStorage);
       d <<= 2.0 * s1 - s2;
     }
   }
