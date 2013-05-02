@@ -8,6 +8,7 @@
       <include href="MaterialData/DruckerStabilityCheck.xml"/>
       <include href="MaterialData/W_BU/JohnsonCookPlasticW_BU.xml"/>
       <include href="MaterialData/W_BU/MieGrunEOSW_BU.xml"/>
+      <check_TEPLA_failure_criterion>false </check_TEPLA_failure_criterion>
       <initial_material_temperature>  294.0 </initial_material_temperature>
     </constitutive_model>
 </Uintah_Include>
