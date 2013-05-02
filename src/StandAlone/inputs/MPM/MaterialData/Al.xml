@@ -9,6 +9,7 @@
       <include href="MaterialData/JCPlastic6061T6Al.xml"/>
       <include href="MaterialData/JCDamage6061T6Al.xml"/>
       <include href="MaterialData/MieGrunEOS6061T6Al.xml"/>
+      <check_TEPLA_failure_criterion>false </check_TEPLA_failure_criterion>
       <initial_material_temperature>  294.0 </initial_material_temperature>
     </constitutive_model>
 </Uintah_Include>
