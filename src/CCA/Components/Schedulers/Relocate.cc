@@ -24,6 +24,7 @@
 #include <CCA/Components/Schedulers/Relocate.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Containers/Array2.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
@@ -250,6 +251,9 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
       }
     }
   }
+  
+  
+  printSchedule(patches,coutdbg,"Relocate::relocateParticles");
   
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
@@ -787,6 +791,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
   int total_reloc[3] = {0,0,0};
   if (patches->size() != 0)
   {
+    printTask(patches, patches->get(0),coutdbg,"Relocate::relocateParticles");
     int me = pg->myrank();
 
     // First pass: For each of the patches we own, look for particles
