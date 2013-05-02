@@ -42,6 +42,7 @@
 
 #ifdef WASATCH_IN_ARCHES
   #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentViscosity.h>
+  #include <CCA/Components/Wasatch/TagNames.h>
 #endif
 
 namespace Uintah {
