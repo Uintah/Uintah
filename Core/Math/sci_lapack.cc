@@ -236,7 +236,7 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
   int lda, ldu, ldvt, lwork, info;
   double *a, *u, *vt, *work;
 
-  int minmn, maxmn;
+  int maxmn;
 
   jobu = 'A'; 
   /* Specifies options for computing U.
@@ -267,7 +267,7 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT)
   /* Since A is not a square matrix, we have to make some decisions
      based on which dimension is shorter. */
 
-  if (m >= n) { minmn = n; maxmn = m; } else { minmn = m; maxmn = n; }
+  if (m >= n) { maxmn = m; } else { maxmn = n; }
 
   ldu = m; // Left singular vector matrix
   u = new double[ldu*m];
