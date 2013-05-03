@@ -884,6 +884,40 @@ Arches::problemSetup(const ProblemSpecP& params,
     throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
   
+ 
+#ifdef WASATCH_IN_ARCHES
+  // This block of code will allow for any arches varlabel, or any used defined variable name to be used in wasatch.
+  // This should be used temporarily until a better way to share variables across the codes is made
+  Uintah::ProblemSpecP db_warchesVars;
+  if (db->findBlock("ExtraWarchesVariables") ) {
+    db_warchesVars=db->findBlock("ExtraWarchesVariables");
+    for ( ProblemSpecP var_db = db_warchesVars->findBlock("NameTag");
+         var_db != 0; var_db = var_db->findNextBlock("NameTag") ){
+      std::string varName, exprType;
+      var_db->getAttribute("name",varName);
+      var_db->getAttribute("state",exprType);
+      
+      proc0cout << "Creating Wasatch Expression for " << varName << " ... ";
+      Expr::Tag WasExprTag;
+      if ( exprType == "STATE_N" ) {
+        WasExprTag =  Expr::Tag( varName , Expr::STATE_N );
+      } else if ( exprType == "STATE_NONE" ) {
+        WasExprTag = Expr::Tag( varName , Expr::STATE_NONE );
+      } else {
+        ostringstream msg;
+        msg << "\n ERROR invalid state type for " << varName 
+            << "\n use STATE_N or STATE_NONE \n";
+        throw ProblemSetupException( msg.str(),__FILE__, __LINE__);
+      }
+
+      if( !(solngh->exprFactory->have_entry( WasExprTag )) ) {
+        typedef Expr::PlaceHolder<SVolField>  FieldExpr;
+        solngh->exprFactory->register_expression( new FieldExpr::Builder(WasExprTag));
+        proc0cout << " done" << endl;
+      }
+    }
+  }
+#endif
   
 
 }
