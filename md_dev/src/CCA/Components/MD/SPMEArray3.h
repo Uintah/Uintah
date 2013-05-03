@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,15 +22,15 @@
  * IN THE SOFTWARE.
  */
 
-/*
- *  Array3.h: Interface to dynamic 3D array class
+/**
+ *  @class MD
+ *  @ingroup MD
+ *  @author Alan Humphrey and Justin Hooper (after Steve Parker)
+ *  @date   May, 2013
  *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   March 1994
+ *  @brief Interface to streamlined dynamic 3D array class.
  *
+ *  @param
  */
 
 #ifndef UINTAH_MD_ELECTROSTATICS_SPME_ARRAY3_H
@@ -49,64 +49,39 @@ using namespace SCIRun;
 
 typedef std::complex<double> dblcomplex;
 
-//template<class T> class SPMEArray3;
-
-/**************************************
-
- CLASS
- Array3
-
- KEYWORDS
- Array3
-
- DESCRIPTION
- Array3.h: Interface to dynamic 3D array class
-
- Written by:
- Steven G. Parker
- Department of Computer Science
- University of Utah
- March 1994
-
- PATTERNS
-
- WARNING
-
- ****************************************/
-
 template<class T> class SPMEArray3 {
-    T* objs;
-    int dm1;
-    int dm2;
-    int dm3;
-    void allocate();
 
-    // The copy constructor and the assignment operator have been
-    // privatized on purpose -- no one should use these.  Instead,
-    // use the default constructor and the copy method.
-    //////////
-    //Copy Constructor
-    SPMEArray3(const SPMEArray3&);
-    //////////
-    //Assignment Operator
-    SPMEArray3<T>& operator=(const SPMEArray3&);
   public:
-    //////////
-    //Default Constructor
+
+    /**
+     * @brief Default constructor
+     * @param none
+     */
     SPMEArray3();
 
-    //////////
-    //Constructor
-    SPMEArray3(int,
-               int,
-               int);
+    /**
+     * @brief 3 argument constructor
+     * @param dim1 The first dimension of this SPMEArray3
+     * @param dim2 The second dimension of this SPMEArray3
+     * @param dim3 The third dimension of this SPMEArray3
+     */
+    SPMEArray3(int dim1,
+               int dim2,
+               int dim3);
 
-    //////////
-    //Class Destructor
-    virtual ~SPMEArray3();
+    /**
+     * @brief Destructor
+     * @param None
+     */
+    ~SPMEArray3();
 
-    //////////
-    //Access the nXnXn element of the array
+    /**
+     * @brief Access the nXnXn element of the linearized 3D array
+     * @param d1 The first coordinate dimension
+     * @param d2 The second coordinate dimension
+     * @param d3 The third coordinate dimension
+     * @return T& A reference to the nXnXn element
+     */
     inline T& operator()(int d1,
                          int d2,
                          int d3) const
@@ -118,48 +93,104 @@ template<class T> class SPMEArray3 {
       return objs[idx];
     }
 
-    //////////
-    //Array3 Copy Method
-    void copy(const SPMEArray3&);
+    /**
+     * @brief SPMEArray3 copy method
+     * @param copy The SPMEArray3 source object to copy from
+     * @return None
+     */
+    void copy(const SPMEArray3& copy);
 
-    //////////
-    //Returns the number of spaces in dim1
+    /**
+     * @brief Returns the number of elements in dimension 1
+     * @param None
+     * @return int The number of elements in dimension 1
+     */
     inline int dim1() const
     {
       return dm1;
     }
-    //////////
-    //Returns the number of spaces in dim2
+
+    /**
+     * @brief Returns the number of elements in dimension 2
+     * @param None
+     * @return int The number of elements in dimension 2
+     */
     inline int dim2() const
     {
       return dm2;
     }
-    //////////
-    //Returns the number of spaces in dim3
+
+    /**
+     * @brief Returns the number of elements in dimension 3
+     * @param None
+     * @return int The number of elements in dimension 3
+     */
     inline int dim3() const
     {
       return dm3;
     }
 
+    /**
+     * @brief Returns the size in bytes of this SPMEArray3
+     * @param None
+     * @return The size in bytes of this SPMEArray3
+     */
     inline long get_datasize() const
     {
       return dm1 * long(dm2 * dm3 * sizeof(T));
     }
 
-    //////////
-    //Re-size the Array
-    void resize(int,
-                int,
-                int);
+    /**
+     * @brief Resize the linearized 3D objects array
+     * @param dim1 The first dimension of the new SPMEArray3
+     * @param dim2 The second dimension of the new SPMEArray3
+     * @param dim3 The third dimension of the new SPMEArray3
+     */
+    void resize(int dim1,
+                int dim2,
+                int dim3);
 
-    //////////
-    //Initialize all elements to T
+    /**
+     * @brief Initialize all objects elements to T
+     * @param T The value to initialize all objects elements to
+     * @return None
+     */
     void initialize(const T&);
 
+    /**
+     * @brief Returns a pointer to the linearized 3D objects array
+     * @param None
+     * @return A pointer to the linearized 3D objects array
+     */
     inline T* get_dataptr()
     {
       return objs;
     }
+
+  private:
+
+    T* objs;
+    int dm1;
+    int dm2;
+    int dm3;
+    void allocate();
+
+    // The copy constructor and the assignment operator have been
+    // privatized on purpose -- no one should use these.  Instead,
+    // use the default constructor and the copy method.
+
+    /**
+     * @brief Copy Constructor
+     * @param copy The SPMEArray3 object to copy from
+     */
+    SPMEArray3(const SPMEArray3& copy);
+
+    /**
+     * @brief Assignment operator
+     * @param other The assignee of this assignment operation
+     * @return A reference to the new SPMEArray3 object after assignment
+     */
+    SPMEArray3<T>& operator=(const SPMEArray3& other);
 
 };
 

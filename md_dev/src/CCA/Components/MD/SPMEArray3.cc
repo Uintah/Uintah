@@ -42,6 +42,23 @@ SPMEArray3<T>::SPMEArray3()
 }
 
 template<class T>
+SPMEArray3<T>::SPMEArray3(int dm1,
+                          int dm2,
+                          int dm3) :
+    dm1(dm1), dm2(dm2), dm3(dm3)
+{
+  allocate();
+}
+
+template<class T>
+SPMEArray3<T>::~SPMEArray3()
+{
+  if (objs) {
+    delete objs;
+  }
+}
+
+template<class T>
 void SPMEArray3<T>::allocate()
 {
   if (dm1 && dm2 && dm3) {
@@ -66,23 +83,6 @@ void SPMEArray3<T>::resize(int d1,
     delete objs;
   }
   allocate();
-}
-
-template<class T>
-SPMEArray3<T>::SPMEArray3(int dm1,
-                          int dm2,
-                          int dm3) :
-    dm1(dm1), dm2(dm2), dm3(dm3)
-{
-  allocate();
-}
-
-template<class T>
-SPMEArray3<T>::~SPMEArray3()
-{
-  if (objs) {
-    delete objs;
-  }
 }
 
 template<class T>
