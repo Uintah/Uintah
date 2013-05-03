@@ -118,7 +118,7 @@ class SPMEPatch {
      * @param
      * @return
      */
-    inline SimpleGrid<double> getTheta() const
+    inline SimpleGrid<double>* getTheta() const
     {
       return d_theta;
     }
@@ -128,7 +128,7 @@ class SPMEPatch {
      * @param
      * @return
      */
-    inline void setTheta(SimpleGrid<double> theta)
+    inline void setTheta(SimpleGrid<double>* theta)
     {
       d_theta = theta;
     }
@@ -138,7 +138,7 @@ class SPMEPatch {
      * @param
      * @return
      */
-    inline SimpleGrid<Matrix3> getStressPrefactor()
+    inline SimpleGrid<Matrix3>* getStressPrefactor()
     {
       return d_stressPrefactor;
     }
@@ -148,7 +148,7 @@ class SPMEPatch {
      * @param
      * @return
      */
-    inline void setStressPrefactor(SimpleGrid<Matrix3> stressPrefactor)
+    inline void setStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor)
     {
       d_stressPrefactor = stressPrefactor;
     }
@@ -158,7 +158,7 @@ class SPMEPatch {
      * @param
      * @return
      */
-    inline SimpleGrid<complex<double> > getQ()
+    inline SimpleGrid<complex<double> >* getQ()
     {
       return Q;
     }
@@ -168,7 +168,7 @@ class SPMEPatch {
      * @param
      * @return
      */
-    inline void setQ(SimpleGrid<complex<double> > q)
+    inline void setQ(SimpleGrid<complex<double> >* q)
     {
       Q = q;
     }
@@ -196,9 +196,9 @@ class SPMEPatch {
     IntVector d_posGhostExtents;            //!< Number of ghost cells on positive boundary
     IntVector d_negGhostExtents;            //!< Number of ghost cells on negative boundary
 
-    SimpleGrid<double> d_theta;             //!<
-    SimpleGrid<Matrix3> d_stressPrefactor;  //!<
-    SimpleGrid<complex<double> > Q;         //!<
+    SimpleGrid<double>* d_theta;             //!<
+    SimpleGrid<Matrix3>* d_stressPrefactor;  //!<
+    SimpleGrid<complex<double> >* Q;         //!<
 
     const Patch* d_patch;                   //!<
 

@@ -121,12 +121,12 @@ class SPME : public Electrostatics {
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw);
 
-      /**
-       * @brief
-       * @param None
-       * @return None
-       */
-      void finalize(const ProcessorGroup* pg,
+    /**
+     * @brief
+     * @param None
+     * @return None
+     */
+    void finalize(const ProcessorGroup* pg,
                   const PatchSubset* patches,
                   const MaterialSubset* materials,
                   DataWarehouse* old_dw,
@@ -184,8 +184,8 @@ class SPME : public Electrostatics {
      * @return
      */
     void mapForceFromGrid(SPMEPatch* spmePatch,
+                          const std::vector<SPMEMapPoint>& gridMap,
                           ParticleSubset* pset,
-                          constParticleVariable<Vector> pforce,
                           ParticleVariable<Vector> pforcenew,
                           int halfSupport);
 
@@ -237,9 +237,9 @@ class SPME : public Electrostatics {
      * @param extents - The number of internal grid points on the current processor
      * @param offsets - The global mapping of the local (0,0,0) coordinate into the global grid index
      *
-     * @return A SimpleGrid<Matrix3>
+     * @return A SimpleGrid<Matrix3> pointer.
      */
-    SimpleGrid<Matrix3> calculateStressPrefactor(const IntVector& extents,
+    SimpleGrid<Matrix3>* calculateStressPrefactor(const IntVector& extents,
                                                   const IntVector& offset);
 
     /**
@@ -247,10 +247,10 @@ class SPME : public Electrostatics {
      *        Generates the vector of points from 0..K/2 in the first half of the array, followed by -K/2..-1
      * @param kMax - Maximum number of grid points for direction
      * @param spline - CenteredCardinalBSpline that determines the number of wrapping points necessary
-     * @return Returns a vector<double> of (0..[m=K/2],[K/2-K]..-1);
+     * @return std::vector<double> of (0..[m=K/2],[K/2-K]..-1);
      */
-    inline vector<double> generateMPrimeVector(unsigned int kMax,
-                                               const CenteredCardinalBSpline& spline) const
+    inline std::vector<double> generateMPrimeVector(unsigned int kMax,
+                                                    const CenteredCardinalBSpline& spline) const
     {
       int halfSupport = spline.getHalfMaxSupport();
       int numPoints = kMax + 2 * halfSupport;  // For simplicity, store the whole vector
@@ -278,14 +278,13 @@ class SPME : public Electrostatics {
       return mPrime;
     }
     /**
-     * @brief Generates reduced Fourier grid vector.
-     *        Generates the vector of values i/K_i for i = 0...K-1
+     * @brief Generates reduced Fourier grid vector. Generates the vector of values i/K_i for i = 0...K-1
      * @param KMax - Maximum number of grid points for direction
      * @param InterpolatingSpline - CenteredCardinalBSpline that determines the number of wrapping points necessary
-     * @return Returns a vector<double> of the reduced coordinates for the local grid along the input lattice direction
+     * @return std::vector<double> of the reduced coordinates for the local grid along the input lattice direction
      */
-    inline vector<double> generateMFractionalVector(size_t kMax,
-                                                    const CenteredCardinalBSpline& interpolatingSpline) const
+    inline std::vector<double> generateMFractionalVector(size_t kMax,
+                                                         const CenteredCardinalBSpline& interpolatingSpline) const
     {
       int halfSupport = interpolatingSpline.getHalfMaxSupport();
       int numPoints = kMax + 2 * halfSupport;  // For simplicity, store the whole vector
@@ -310,10 +309,10 @@ class SPME : public Electrostatics {
     /**
      * @brief Perform all calculations preceding the FFT transform of the charge grid to Fourier space.
      * @param const ProcessorGroup* pg -- All processors processing SPME patches
-     *        const PatchSubset* patches -- Patches to be processed by this thread
-     *        const MaterialSubset* materials -- Material subset belonging to this patch
-     *        DataWarehouse* old_dw -- Last time step's data warehouse
-     *        DataWarehouse* new_dw -- This time step's data warehouse
+     * @param const PatchSubset* patches -- Patches to be processed by this thread
+     * @param const MaterialSubset* materials -- Material subset belonging to this patch
+     * @param DataWarehouse* old_dw -- Last time step's data warehouse
+     * @param DataWarehouse* new_dw -- This time step's data warehouse
      * @return None
      */
     void calculatePreTransform(const ProcessorGroup* pg,
@@ -323,77 +322,86 @@ class SPME : public Electrostatics {
                                DataWarehouse* new_dw);
 
     /**
-      * @brief Perform all Fourier space calculations.
-      * @param const ProcessorGroup* pg -- All processors processing SPME patches
-      *        const PatchSubset* patches -- Patches to be processed by this thread
-      *        const MaterialSubset* materials -- Material subset belonging to this patch
-      *        DataWarehouse* old_dw -- Last time step's data warehouse
-      *        DataWarehouse* new_dw -- This time step's data warehouse
-      * @return None
-      */
-     void calculateInFourierSpace(const ProcessorGroup* pg,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* materials,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
-
-    /**
-      * @brief Perform calculations proceeding the FFT transform from Fourier to real space.
-      * @param const ProcessorGroup* pg -- All processors processing SPME patches
-      *        const PatchSubset* patches -- Patches to be processed by this thread
-      *        const MaterialSubset* materials -- Material subset belonging to this patch
-      *        DataWarehouse* old_dw -- Last time step's data warehouse
-      *        DataWarehouse* new_dw -- This time step's data warehouse
-      * @return None
-      */
-     void calculatePostTransform(const ProcessorGroup* pg,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* materials,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw);
-    /**
-      * @brief Perform necessary operation to transform Q grid to fourier space
-      * @param const ProcessorGroup* pg -- All processors processing SPME patches
-      *        const PatchSubset* patches -- Patches to be processed by this thread
-      *        const MaterialSubset* materials -- Material subset belonging to this patch
-      *        DataWarehouse* old_dw -- Last time step's data warehouse
-      *        DataWarehouse* new_dw -- This time step's data warehouse
-      * @return None
-      *
-      */
-     void transformRealToFourier(const ProcessorGroup* pg,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* materials,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw);
-    /**
-      * @brief Perform necessary operation to transform Q grid to fourier space
-      * @param const ProcessorGroup* pg -- All processors processing SPME patches
-      *        const PatchSubset* patches -- Patches to be processed by this thread
-      *        const MaterialSubset* materials -- Material subset belonging to this patch
-      *        DataWarehouse* old_dw -- Last time step's data warehouse
-      *        DataWarehouse* new_dw -- This time step's data warehouse
-      * @return None
-      *
-      */
-     void transformFourierToReal(const ProcessorGroup*pg,
+     * @brief Perform all Fourier space calculations.
+     * @param const ProcessorGroup* pg -- All processors processing SPME patches
+     * @param const PatchSubset* patches -- Patches to be processed by this thread
+     * @param const MaterialSubset* materials -- Material subset belonging to this patch
+     * @param DataWarehouse* old_dw -- Last time step's data warehouse
+     * @param DataWarehouse* new_dw -- This time step's data warehouse
+     * @return None
+     */
+    void calculateInFourierSpace(const ProcessorGroup* pg,
                                  const PatchSubset* patches,
                                  const MaterialSubset* materials,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
 
-     /**
-      * @brief Checks for convergence of polarizability calculation
-      * @param None
-      * @return Bool - true if converged, false if not
-      */
-     bool checkConvergence();
-     inline bool getPolarizableCalculation() { return d_polarizable; }
+    /**
+     * @brief Perform calculations proceeding the FFT transform from Fourier to real space.
+     * @param const ProcessorGroup* pg -- All processors processing SPME patches
+     * @param const PatchSubset* patches -- Patches to be processed by this thread
+     * @param const MaterialSubset* materials -- Material subset belonging to this patch
+     * @param DataWarehouse* old_dw -- Last time step's data warehouse
+     * @param DataWarehouse* new_dw -- This time step's data warehouse
+     * @return None
+     */
+    void calculatePostTransform(const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* materials,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+    /**
+     * @brief Perform necessary operation to transform Q grid to fourier space
+     * @param const ProcessorGroup* pg -- All processors processing SPME patches
+     * @param const PatchSubset* patches -- Patches to be processed by this thread
+     * @param const MaterialSubset* materials -- Material subset belonging to this patch
+     * @param DataWarehouse* old_dw -- Last time step's data warehouse
+     * @param DataWarehouse* new_dw -- This time step's data warehouse
+     * @return None
+     *
+     */
+    void transformRealToFourier(const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* materials,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+    /**
+     * @brief Perform necessary operation to transform Q grid to fourier space
+     * @param const ProcessorGroup* pg -- All processors processing SPME patches
+     * @param const PatchSubset* patches -- Patches to be processed by this thread
+     * @param const MaterialSubset* materials -- Material subset belonging to this patch
+     * @param DataWarehouse* old_dw -- Last time step's data warehouse
+     * @param DataWarehouse* new_dw -- This time step's data warehouse
+     * @return None
+     *
+     */
+    void transformFourierToReal(const ProcessorGroup*pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* materials,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+
+    /**
+     * @brief Checks for convergence of polarizability calculation
+     * @param None
+     * @return Bool - true if converged, false if not
+     */
+    bool checkConvergence();
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    inline bool getPolarizableCalculation() const
+    {
+      return d_polarizable;
+    }
 
     // Values fixed on instantiation
     ElectrostaticsType d_electrostaticMethod;         //!< Implementation type for long range electrostatics
     MDSystem* d_system;                               //!< A handle to the MD simulation system object
-    MDLabel* d_lb;                                    //!<
+    MDLabel* d_lb;                                    //!< A handle on the set of MD specific labels
     double d_ewaldBeta;						                    //!< The Ewald calculation damping coefficient
     bool d_polarizable;				                    	  //!< Use polarizable Ewald formulation
     double d_polarizationTolerance;                   //!< Tolerance threshold for polarizable system
@@ -407,8 +415,8 @@ class SPME : public Electrostatics {
     double d_systemVolume;        //!< Volume of the unit cell
 
     // FFT Related variables
-    fftw_complex d_forwardTransformPlan;    //!<
-    fftw_complex d_backwardTransformPlan;   //!<
+    fftw_plan d_forwardTransformPlan;    //!< FFTW plan for how the forward  3D transform will be executed
+    fftw_plan d_backwardTransformPlan;   //!< FFTW plan for how the backward 3D transform will be executed
 
 };
 
