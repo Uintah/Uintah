@@ -25,3 +25,86 @@ std::vector<Point> SPME::calcReducedCoords(const std::vector<Point>& localRealCo
   }
   return localReducedCoords;
 }
+
+---------------------------------------------------------------------------------------------------
+
+    //    friend std::ostream& operator<<(std::ostream& out,
+    //                                    const Uintah::SimpleGrid<T>& sg);
+    
+---------------------------------------------------------------------------------------------------
+
+// Old code from monolithic SPME::Calculate()
+bool converged = false;
+int numIterations = 0;
+int maxIterations = d_system->getMaxIterations();
+while (!converged && (numIterations < maxIterations)) {
+
+  std::vector<SPMEPatch*>::iterator iter;
+  for (iter = d_spmePatches.begin(); iter != d_spmePatches.end(); iter++) {
+    SPMEPatch* spmePatch = *iter;
+
+    const Patch* patch = spmePatch->getPatch();
+    ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
+
+    constParticleVariable<Point> px;
+    constParticleVariable<long64> pids;
+    constParticleVariable<double> pcharge;
+    old_dw->get(px, d_lb->pXLabel, pset);
+    old_dw->get(pids, d_lb->pParticleIDLabel, pset);
+    old_dw->get(pcharge, d_lb->pChargeLabel, pset);
+
+    std::vector<SPMEMapPoint> gridMap = generateChargeMap(pset, px, pids, d_interpolatingSpline);
+    mapChargeToGrid(spmePatch, gridMap, pset, pcharge, d_interpolatingSpline.getHalfMaxSupport());  // Calculate Q(r)
+
+    SimpleGrid<complex<double> > Q = spmePatch->getQ();
+    SimpleGrid<double> fTheta = spmePatch->getTheta();
+    Q.initialize(complex<double>(0.0, 0.0));
+    SimpleGrid<Matrix3> stressPrefactor = spmePatch->getStressPrefactor();
+
+    // Map the local patch's charge grid into the global grid and transform
+    //      SPME::GlobalMPIReduceChargeGrid(Ghost::AroundNodes);  //Ghost points should get transferred here
+    //      SPME::ForwardTransformGlobalChargeGrid();  // Q(r) -> Q*(k)
+
+    // Once reduced and transformed, we need the local grid re-populated with Q*(k)
+    //      SPME::MPIDistributeLocalChargeGrid(Ghost::None);
+
+    // Multiply the transformed Q out
+    IntVector localExtents = spmePatch->getLocalExtents();
+    size_t xExtent = localExtents.x();
+    size_t yExtent = localExtents.y();
+    size_t zExtent = localExtents.z();
+    double localEnergy = 0.0;//Maybe should be global?
+    Matrix3 localStress(0.0);//Maybe should be global?
+    for (size_t kX = 0; kX < xExtent; ++kX) {
+      for (size_t kY = 0; kY < yExtent; ++kY) {
+        for (size_t kZ = 0; kZ < zExtent; ++kZ) {
+          SimpleGrid<double> fTheta = spmePatch->getTheta();
+          complex<double> gridValue = Q(kX, kY, kZ);
+
+          // Calculate (Q*Q^)*(B*C)
+          Q(kX, kY, kZ) = gridValue * conj(gridValue) * fTheta(kX, kY, kZ);
+          localEnergy += std::abs(Q(kX, kY, kZ));
+          localStress += std::abs(Q(kX, kY, kZ)) * stressPrefactor(kX, kY, kZ);
+        }
+      }
+    }
+
+    // Transform back to real space
+    //      SPME::GlobalMPIReduceChargeGrid(Ghost::None);  //Ghost points should NOT get transferred here
+    //      SPME::ReverseTransformGlobalChargeGrid();
+    //      SPME::MPIDistributeLocalChargeGrid(Ghost::AroundNodes);
+
+    //  This may need to be before we transform the charge grid back to real space if we can calculate
+    //    polarizability from the fourier space component
+    converged = true;
+    if (d_polarizable) {
+      // calculate polarization here
+      // if (RMSPolarizationDifference > PolarizationTolerance) { ElectrostaticsConverged = false; }
+      std::cerr << "Error:  Polarization not currently implemented!";
+    }
+    // Sanity check - Limit maximum number of polarization iterations we try
+    ++numIterations;
+  }
+  //    SPME::GlobalReduceEnergy();
+  //    SPME::GlobalReduceStress();  //Uintah framework?
+}

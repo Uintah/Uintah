@@ -438,7 +438,7 @@ void MD::initialize(const ProcessorGroup* pg,
         pvelocity[i] = Vector(0.0, 0.0, 0.0);
         penergy[i] = 0.0;
         pmass[i] = 2.5;
-        pcharge[i] = 0.0;
+        pcharge[i] = 1.1;
         pids[i] = patch->getID() * d_numAtoms + i;
 
         // TODO update this with other VarLabels

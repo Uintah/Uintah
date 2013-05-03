@@ -52,13 +52,13 @@ SimpleGrid<T>::SimpleGrid(const IntVector& extents,
                           const int numGhostCells) :
     d_gridExtents(extents), d_gridOffset(offset), d_numGhostCells_(numGhostCells)
 {
-  d_charges.resize(extents.x(), extents.y(), extents.z());
+  d_values.resize(extents.x(), extents.y(), extents.z());
 }
 
 template<typename T>
 SimpleGrid<T>::SimpleGrid(const SimpleGrid& copy)
 {
-  d_charges.copy(copy.d_charges);  // SCIRun::Array3 assignment operator is private
+  d_values.copy(copy.d_values);  // SCIRun::Array3 assignment operator is private
   d_gridExtents = copy.d_gridExtents;
   d_gridOffset = copy.d_gridOffset;
   d_numGhostCells_ = copy.d_numGhostCells_;
@@ -78,26 +78,13 @@ bool SimpleGrid<T>::verifyRegistration(const SimpleGrid<T>& gridIn)
 }
 
 template<typename T>
-void SimpleGrid<T>::inPlaceFFT_RealToFourier()
-{
-
-}
-
-template<typename T>
-void SimpleGrid<T>::inPlaceFFT_FourierToReal()
-{
-
-}
-
-template<typename T>
 SimpleGrid<T> SimpleGrid<T>::operator+(const SimpleGrid<T>& gridIn)
 {
   if (this->verifyRegistration(gridIn)) {
     SimpleGrid<T> newGrid(*this);
     newGrid += gridIn;
     return newGrid;
-  }
-  else {
+  } else {
     ostringstream ostr;
     ostr << "SimpleGrid operator+ error:  Grids are not registered with one another.";
     throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
@@ -111,8 +98,7 @@ SimpleGrid<T> SimpleGrid<T>::operator-(const SimpleGrid<T>& gridIn)
     SimpleGrid<T> newGrid(*this);
     newGrid -= gridIn;
     return newGrid;
-  }
-  else {
+  } else {
     ostringstream ostr;
     ostr << "SimpleGrid operator- error:  Grids are not registered with one another.";
     throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
@@ -126,8 +112,7 @@ SimpleGrid<T> SimpleGrid<T>::operator*(const SimpleGrid<T>& gridIn)
     SimpleGrid<T> newGrid(*this);
     newGrid *= gridIn;
     return newGrid;
-  }
-  else {
+  } else {
     ostringstream ostr;
     ostr << "SimpleGrid operator* error:  Grids are not registered with one another.";
     throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);

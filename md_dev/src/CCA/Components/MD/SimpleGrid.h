@@ -25,8 +25,8 @@
 #ifndef UINTAH_MD_SIMPLEGRID_H
 #define UINTAH_MD_SIMPLEGRID_H
 
+#include <CCA/Components/MD/SPMEArray3.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Containers/Array3.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Util/Assert.h>
 
@@ -80,7 +80,7 @@ template<typename T> class SimpleGrid {
      */
     inline void initialize(const T val)
     {
-      d_charges.initialize(val);
+      d_values.initialize(val);
     }
 
     /**
@@ -110,6 +110,10 @@ template<typename T> class SimpleGrid {
     }
 
     /**
+     *
+     */
+
+    /**
      * @brief Returns prime (non-ghost only) extents of this SimpleGrid.
      * @param None
      * @return IntVector The prime (non-ghost only) extents of this SimpleGrid.
@@ -131,6 +135,16 @@ template<typename T> class SimpleGrid {
     }
 
     /**
+     * @brief Returns a pointer to the linearized, 1D array of values contained within this SimpleGrid.
+     * @param None
+     * @return T* A pointer to the linearized, 1D array of values contained within this SimpleGrid.
+     */
+    inline T* getDataPtr()
+    {
+      return d_values.get_dataptr();
+    }
+
+    /**
      * @brief Pass through indexing of Value array.
      * @param x The x component of the 3D cell index.
      * @param y The y component of the 3D cell index.
@@ -141,7 +155,7 @@ template<typename T> class SimpleGrid {
                          const int& y,
                          const int& z)
     {
-      return d_charges(x, y, z);
+      return d_values(x, y, z);
     }
 
     /**
@@ -155,7 +169,7 @@ template<typename T> class SimpleGrid {
                         const int& y,
                         const int& z) const
     {
-      return d_charges(x, y, z);
+      return d_values(x, y, z);
     }
 
     /**
@@ -165,7 +179,7 @@ template<typename T> class SimpleGrid {
      */
     inline T& operator()(const IntVector& idx)
     {
-      return d_charges(idx.x(), idx.y(), idx.z());
+      return d_values(idx.x(), idx.y(), idx.z());
     }
 
     /**
@@ -175,7 +189,7 @@ template<typename T> class SimpleGrid {
      */
     inline T operator()(const IntVector& idx) const
     {
-      return d_charges(idx.x(), idx.y(), idx.z());
+      return d_values(idx.x(), idx.y(), idx.z());
     }
 
     /**
@@ -186,20 +200,6 @@ template<typename T> class SimpleGrid {
      *              as the specified SimpleGrid, false otherwise.
      */
     bool verifyRegistration(const SimpleGrid<T>& other);
-
-    /**
-     * @brief Transforms 'Q' from real to fourier space
-     * @param
-     * @return
-     */
-    void inPlaceFFT_RealToFourier();
-
-    /**
-     * @brief Transforms 'Q' from fourier to real space
-     * @param
-     * @return
-     */
-    void inPlaceFFT_FourierToReal();
 
     /**
      * @brief Multiplication of grids; be sure to check for same.
@@ -232,7 +232,7 @@ template<typename T> class SimpleGrid {
       for (int x = 0; x < d_gridExtents.x(); ++x) {
         for (int y = 0; y < d_gridExtents.y(); ++y) {
           for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges(x, y, z) += gridIn.d_charges(x, y, z);
+            d_values(x, y, z) += gridIn.d_values(x, y, z);
           }
         }
       }
@@ -249,7 +249,7 @@ template<typename T> class SimpleGrid {
       for (int x = 0; x < d_gridExtents.x(); ++x) {
         for (int y = 0; y < d_gridExtents.y(); ++y) {
           for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges(x, y, z) -= gridIn.d_charges(x, y, z);
+            d_values(x, y, z) -= gridIn.d_values(x, y, z);
           }
         }
       }
@@ -266,7 +266,7 @@ template<typename T> class SimpleGrid {
       for (int x = 0; x < d_gridExtents.x(); ++x) {
         for (int y = 0; y < d_gridExtents.y(); ++y) {
           for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges(x, y, z) *= gridIn.d_charges(x, y, z);
+            d_values(x, y, z) *= gridIn.d_values(x, y, z);
           }
         }
       }
@@ -301,7 +301,7 @@ template<typename T> class SimpleGrid {
       for (int x = 0; x < d_gridExtents.x(); ++x) {
         for (int y = 0; y < d_gridExtents.y(); ++y) {
           for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges(x, y, z) += valueIn;
+            d_values(x, y, z) += valueIn;
           }
         }
       }
@@ -318,7 +318,7 @@ template<typename T> class SimpleGrid {
       for (int x = 0; x < d_gridExtents.x(); ++x) {
         for (int y = 0; y < d_gridExtents.y(); ++y) {
           for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges(x, y, z) -= valueIn;
+            d_values(x, y, z) -= valueIn;
           }
         }
       }
@@ -335,7 +335,7 @@ template<typename T> class SimpleGrid {
       for (int x = 0; x < d_gridExtents.x(); ++x) {
         for (int y = 0; y < d_gridExtents.y(); ++y) {
           for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges(x, y, z) *= value;
+            d_values(x, y, z) *= value;
           }
         }
       }
@@ -352,7 +352,7 @@ template<typename T> class SimpleGrid {
       for (int x = 0; x < d_gridExtents.x(); ++x) {
         for (int y = 0; y < d_gridExtents.y(); ++y) {
           for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_charges(x, y, z) /= value;
+            d_values(x, y, z) /= value;
           }
         }
       }
@@ -374,7 +374,7 @@ template<typename T> class SimpleGrid {
      */
     inline SimpleGrid<T>& operator=(const SimpleGrid<T>& copy)
     {
-      d_charges.copy(copy.d_charges);  // SCIRun::Array3 assignment operator is private
+      d_values.copy(copy.d_values);  // SCIRun::Array3 assignment operator is private
       d_gridExtents = copy.d_gridExtents;
       d_gridOffset = copy.d_gridOffset;
       d_numGhostCells_ = copy.d_numGhostCells_;
@@ -388,12 +388,9 @@ template<typename T> class SimpleGrid {
      */
     std::ostream& print(std::ostream& out) const;
 
-    //    friend std::ostream& operator<<(std::ostream& out,
-    //                                    const Uintah::SimpleGrid<T>& sg);
-
   private:
 
-    SCIRun::Array3<T> d_charges;  //!< Grid cell values
+    SPMEArray3<T> d_values;       //!< Grid cell values
     IntVector d_gridExtents;      //!< Stores the number of total grid points in this grid
     IntVector d_gridOffset;       //!< Stores the offset pointer for the first point in this grid in reference to the global grid
     int d_numGhostCells_;         //!< The number of ghost cells for the patch the associated points are on
