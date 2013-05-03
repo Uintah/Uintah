@@ -40,7 +40,6 @@
 #include <Core/Util/DebugStream.h>
 #include <iostream>
 #include <iomanip>
-#include <complex>
 
 #include <sci_values.h>
 #include <sci_defs/fftw_defs.h>
@@ -73,10 +72,10 @@ SPME::~SPME()
     delete spmePatch;
   }
 
-  // destroy FFTW DFT plans
+  // FFTW cleanup
   fftw_destroy_plan(d_forwardTransformPlan);
   fftw_destroy_plan(d_backwardTransformPlan);
-
+  fftw_cleanup();
 }
 
 SPME::SPME(MDSystem* system,
@@ -273,8 +272,8 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
-  double localEnergy;
-  Matrix3 localStress;
+  double localEnergy = 0.0;
+  Matrix3 localStress(0.0);
 
   std::vector<SPMEPatch*>::iterator PatchIterator;
   for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
@@ -317,7 +316,6 @@ void SPME::calculatePostTransform(const ProcessorGroup* pg,
                                   DataWarehouse* new_dw)
 {
 
-  return;
 }
 
 void SPME::transformRealToFourier(const ProcessorGroup* pg,
@@ -338,7 +336,7 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
 
     fftw_complex* array_fft = (fftw_complex*)Q->getDataPtr();
 
-    d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_ESTIMATE);
+    d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
     fftw_execute(d_forwardTransformPlan);
   }
 }
@@ -361,7 +359,7 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
 
     fftw_complex* array_fft = (fftw_complex*)Q->getDataPtr();
 
-    d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_ESTIMATE);
+    d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
     fftw_execute(d_backwardTransformPlan);
   }
 }

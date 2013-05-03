@@ -261,11 +261,11 @@ class SPME : public Electrostatics {
       // Seed internal array (without wrapping)
       int TrueZeroIndex = halfSupport;  // The zero index of the unwrapped array embedded in the wrapped array
 
-      for (int idx = TrueZeroIndex; idx <= halfMax + TrueZeroIndex; ++idx) {
+      for (size_t idx = TrueZeroIndex; idx <= halfMax + TrueZeroIndex; ++idx) {
         mPrime[idx] = static_cast<double>(idx - TrueZeroIndex);
       }
-      for (int Index = halfMax + TrueZeroIndex + 1; Index < TrueZeroIndex + kMax; ++Index) {
-        mPrime[Index] = static_cast<double>(Index - TrueZeroIndex - static_cast<int>(kMax));
+      for (size_t idx = halfMax + TrueZeroIndex + 1; idx < TrueZeroIndex + kMax; ++idx) {
+        mPrime[idx] = static_cast<double>(idx - TrueZeroIndex - static_cast<int>(kMax));
       }
 
       // Wrapped ends of the vector
@@ -286,22 +286,22 @@ class SPME : public Electrostatics {
     inline std::vector<double> generateMFractionalVector(size_t kMax,
                                                          const CenteredCardinalBSpline& interpolatingSpline) const
     {
-      int halfSupport = interpolatingSpline.getHalfMaxSupport();
+      size_t halfSupport = interpolatingSpline.getHalfMaxSupport();
       int numPoints = kMax + 2 * halfSupport;  // For simplicity, store the whole vector
       std::vector<double> mFractional(numPoints);
 
       double kMaxInv = 1.0 / static_cast<double>(kMax);
 
-      int TrueZeroIndex = halfSupport;  // Location of base array zero index
-      for (int idx = TrueZeroIndex; idx < TrueZeroIndex + kMax; ++idx) {
-        mFractional[idx] = static_cast<double>(idx - TrueZeroIndex) * kMaxInv;
+      int trueZeroIndex = halfSupport;  // Location of base array zero index
+      for (size_t idx = trueZeroIndex; idx < trueZeroIndex + kMax; ++idx) {
+        mFractional[idx] = static_cast<double>(idx - trueZeroIndex) * kMaxInv;
       }
 
       // Wrapped ends of the vector
       for (size_t idx = 1; idx <= halfSupport; ++idx) {
         // Left wrapped end
-        mFractional[TrueZeroIndex - idx] = mFractional[TrueZeroIndex - idx + kMax];
-        mFractional[TrueZeroIndex + kMax + idx - 1] = mFractional[TrueZeroIndex + idx - 1];  //-1 offsets for 0 based array
+        mFractional[trueZeroIndex - idx] = mFractional[trueZeroIndex - idx + kMax];
+        mFractional[trueZeroIndex + kMax + idx - 1] = mFractional[trueZeroIndex + idx - 1];  //-1 offsets for 0 based array
       }
 
       return mFractional;
