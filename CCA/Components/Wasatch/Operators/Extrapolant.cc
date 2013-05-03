@@ -69,8 +69,8 @@ apply_to_field(FieldT& src )
   
   for (int face=0; face<3; face++) {
     for (int direc=0; direc<2; direc++) {
-      IntVec extent = ws.extent() - ijkShift[face]*ws.glob_dim() + ijkShift[face];
-      IntVec baseOffset = ws.offset() + (ijkShift[face]*ws.glob_dim() - ijkShift[face] )* zo[direc];
+      const IntVec extent = ws.extent() - ijkShift[face]*ws.glob_dim() + ijkShift[face];
+      const IntVec baseOffset = ws.offset() + (ijkShift[face]*ws.glob_dim() - ijkShift[face] )* zo[direc];
       
       const MemoryWindow wd( ws.glob_dim(),
                             baseOffset,
