@@ -92,7 +92,7 @@ void SPMEArray3<T>::initialize(const T& t)
   for (int i = 0; i < dm1; i++) {
     for (int j = 0; j < dm2; j++) {
       for (int k = 0; k < dm3; k++) {
-        int idx = (i) + ((j) * dm1) + ((k) * dm2 * dm3);
+        int idx = (i) + ((j) * dm1) + ((k) * dm1 * dm2);
         objs[idx] = t;
       }
     }
@@ -106,7 +106,7 @@ void SPMEArray3<T>::copy(const SPMEArray3<T> &other)
   for (int i = 0; i < dm1; i++) {
     for (int j = 0; j < dm2; j++) {
       for (int k = 0; k < dm3; k++) {
-        int idx = (i) + ((j) * dm1) + ((k) * dm2 * dm3);
+        int idx = (i) + ((j) * dm1) + ((k) * dm1 * dm2);
         objs[idx] = other.objs[idx];
       }
     }
