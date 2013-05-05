@@ -42,117 +42,30 @@ FluxLimiterInterpolant( const std::vector<int>& dim,
 : hasPlusBoundary_ (false),
   hasMinusBoundary_(false)
 {
-  stride_ = calculate_stride(dim, hasPlusFace);
-  
-  faceCount_.resize(3);
-  volIncr_.resize(3);
-  faceIncr_.resize(3);
-  
-  bndFaceCount_.resize(3);
-  bndVolIncr_.resize(3);
-  bndFaceIncr_.resize(3);
-  
-  const int nGhost = 2*Wasatch::get_n_ghost<PhiVolT>();
-  for (int i=0;i<=2;i++) {
-    faceIncr_[i] = 0;
-    volIncr_[i] = 0;
-    faceCount_[i] = dim[i] + nGhost;
-    //
-    bndFaceCount_[i] = dim[i] + nGhost;
-    bndVolIncr_[i] = dim[i] + nGhost;
-    bndFaceIncr_[i] = dim[i] + nGhost;
-  }
   
   const size_t direction = PhiFaceT::Location::FaceDir::value;
+  
   switch (direction) {
-      
     case SpatialOps::XDIR::value:
-      faceIncr_[1] = 3;
-      faceIncr_[2] = 0;
-      volIncr_[1] = 3;
-      volIncr_[2] = 0;
-      if (hasPlusFace[0]) faceIncr_[1] += 1;    
-      faceCount_[0] = dim[0] - 1;
-      
-      // boundary counters
-      bndPlusStrideCoef_ = dim[0] + nGhost - 1;
-      
-      bndFaceCount_[0] = 1;
-      bndFaceCount_[1] = dim[1] + nGhost;
-      bndFaceCount_[2] = dim[2] + nGhost;
-      
-      bndVolIncr_[0] = 0;
-      bndVolIncr_[1] = dim[0] + nGhost;
-      bndVolIncr_[2] = 0;
-      
-      bndFaceIncr_[0] = 0;
-      bndFaceIncr_[1] = dim[0] + nGhost;
-      bndFaceIncr_[2] = 0;
-      
-      if (hasPlusFace[0]) bndFaceIncr_[1] += 1;
-      if (hasPlusFace[0]) hasPlusBoundary_ = true;
-      if (hasMinusBoundary[0]) hasMinusBoundary_ = true;
+      unitNormal_ = SpatialOps::structured::IntVec(1,0,0);
+      hasMinusBoundary_ = hasMinusBoundary[0];
+      hasPlusBoundary_ = hasPlusFace[0];
       break;
-      
     case SpatialOps::YDIR::value:
-      faceIncr_[1] = 0;
-      faceIncr_[2] = 3*stride_;
-      volIncr_[1] = 0;
-      volIncr_[2] = 3*stride_;
-      if (hasPlusFace[1]) faceIncr_[2] += stride_;
-      faceCount_[1] = dim[1] -1;
-      
-      // boundary counters
-      bndPlusStrideCoef_ = dim[1] + nGhost -1;
-      
-      bndFaceCount_[0] = dim[0] + nGhost;
-      bndFaceCount_[1] = 1;
-      bndFaceCount_[2] = dim[2] + nGhost;
-      
-      bndVolIncr_[0] = 1;
-      bndVolIncr_[1] = 0;
-      bndVolIncr_[2] = (dim[0]+nGhost)*(dim[1]+nGhost -1);
-      
-      bndFaceIncr_[0] = 1;
-      bndFaceIncr_[1] = 0;
-      bndFaceIncr_[2] = (dim[0]+nGhost)*(dim[1]+nGhost -1);
-      
-      if (hasPlusFace[1]) bndFaceIncr_[2] += stride_;
-      if (hasPlusFace[1]) hasPlusBoundary_ = true;
-      if (hasMinusBoundary[1]) hasMinusBoundary_ = true;
+      unitNormal_ = SpatialOps::structured::IntVec(0,1,0);
+      hasMinusBoundary_ = hasMinusBoundary[1];
+      hasPlusBoundary_ = hasPlusFace[1];
       break;
-      
     case SpatialOps::ZDIR::value:
-      // NOTE: for the z direction, xyzVolIncr & xyzFaceIncr are all zero.
-      // no need to set them here as they are initialized to zero previously.
-      faceIncr_[1] = 0;
-      faceIncr_[2] = 0;
-      volIncr_[1] = 0;
-      volIncr_[2] = 0;
-      //if (hasPlusFace[2]) faceIncr_[2] += stride_;
-      //faceCount_[0] = dim[0] + nGhost;
-      faceCount_[2] = dim[2] -1;
-      
-      // boundary counters
-      bndPlusStrideCoef_ = dim[2] + nGhost - 1;
-      
-      bndFaceCount_[0] = dim[0] + nGhost;
-      bndFaceCount_[1] = dim[1] + nGhost;
-      bndFaceCount_[2] = 1;
-      
-      bndVolIncr_[0] = 1;
-      bndVolIncr_[1] = 0;
-      bndVolIncr_[2] = 0;
-      
-      bndFaceIncr_[0] = 1;
-      bndFaceIncr_[1] = 0;
-      bndFaceIncr_[2] = 0;
-      
-      if (hasPlusFace[2]) hasPlusBoundary_ = true;
-      if (hasMinusBoundary[2]) hasMinusBoundary_ = true;
-      //if (hasPlusFace[2]) bndFaceIncr_[2] += stride_;
+      unitNormal_ = SpatialOps::structured::IntVec(0,0,1);
+      hasMinusBoundary_ = hasMinusBoundary[2];
+      hasPlusBoundary_ = hasPlusFace[2];
+      break;
+    default:
+      unitNormal_ = SpatialOps::structured::IntVec(0,0,0);
       break;
   }
+  
 }
 
 //--------------------------------------------------------------------
@@ -280,53 +193,59 @@ void
 FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
 apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
   
-  // Source field on the minus side of a face
-  typename PhiVolT::const_iterator vFracMinus = src.begin() + stride_;
-  typename PhiVolT::const_iterator vFracMinusMinus = src.begin();
-  // Source field on the plus side of a face
-  typename PhiVolT::const_iterator vFracPlus = src.begin() + 2 * stride_;
-  // Source field on the plus, plus side of a face
-  typename PhiVolT::const_iterator vFracPlusPlus = src.begin() + 3*stride_;
-  // here the destination field is the flux limiting function
-  typename PhiFaceT::iterator      destFld       = dest.begin() + 2*stride_;
-  typename PhiFaceT::const_iterator advVel       = advectiveVelocity_->begin() + 2*stride_;
+  using namespace SpatialOps;
+  using namespace SpatialOps::structured;
+  build_src_iterators(src);
+
+  // now do interior
+  const MemoryWindow& wdest = dest.window_with_ghost(); // used for velocity & interpolated phi
+  IntVec destExtent = wdest.extent() - unitNormal_*3 - unitNormal_ * (hasPlusBoundary_ ? 1 : 0);
+  IntVec destBaseOffset = wdest.offset() + unitNormal_*2;
+  // this is the destination field value - always on the boundary
+  const MemoryWindow wd( wdest.glob_dim(),
+                        destBaseOffset,
+                        destExtent,
+                        wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
   
-  for (size_t k=1; k<=faceCount_[2]; k++) { // count zCount times
-    
-    for (size_t j=1; j<=faceCount_[1]; j++) { // count yCount times
-      
-      for (size_t i=1; i<=faceCount_[0]; i++) { // count xCount times
-        
-        if ((*advVel) > 0.0) {
-          if ( *vFracMinusMinus == 0 ) *destFld = 0.0;
-        }
-        
-        else if ((*advVel) < 0.0) {
-          if ( *vFracPlusPlus == 0 ) *destFld = 0.0;
-        }
-        
-        ++vFracMinus;
-        ++vFracMinusMinus;
-        ++vFracPlus;
-        ++vFracPlusPlus;
-        ++destFld;
-        ++advVel;
-      }
-      
-      vFracMinus += volIncr_[1];
-      vFracMinusMinus += volIncr_[1];
-      vFracPlus  += volIncr_[1];
-      vFracPlusPlus += volIncr_[1];
-      destFld += faceIncr_[1];
-      advVel  += faceIncr_[1];
-    }
-    
-    vFracMinus += volIncr_[2];
-    vFracMinusMinus += volIncr_[2];
-    vFracPlus  += volIncr_[2];
-    vFracPlusPlus += volIncr_[2];
-    destFld += faceIncr_[2];
-    advVel  += faceIncr_[2];
+  PhiFaceT    d( wd, &dest[0], ExternalStorage  );
+  PhiFaceT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
+  
+  typename PhiFaceT::iterator      id   = d.begin();
+  typename PhiFaceT::iterator      ide  = d.end();
+  typename PhiFaceT::iterator      iav  = aVel.begin();
+  typename PhiVolT::const_iterator vfracmm = srcIters_[0];
+  typename PhiVolT::const_iterator vfracpp = srcIters_[3];
+  std::cout << "-------------------------------------------\n";
+  for (; id != ide; ++id, ++iav, ++vfracmm, ++vfracpp) {
+    if ( *iav > 0.0 && *vfracmm == 0.0 ) *id = 0.0;
+    else if( *iav < 0.0 && *vfracpp == 0.0 ) *id = 0.0;
+  }
+}
+
+//--------------------------------------------------------------------
+
+template< typename PhiVolT, typename PhiFaceT >
+void
+FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
+build_src_iterators( const PhiVolT& src ) const {
+  using namespace SpatialOps;
+  using namespace SpatialOps::structured;
+
+  srcIters_.clear();
+  const MemoryWindow& wsrc = src.window_with_ghost();
+  for (int i=0; i<4; i++) {
+    // i = 0: minus-minus
+    // i = 1: minus
+    // i = 2: plus
+    // i = 3: plus-plus
+    //  below is a depiction of the nomenclature, cells and faces...
+    //  | minus-minus |  minus  || plus  | plus-plus
+    const MemoryWindow srcwin( wsrc.glob_dim(),
+                               wsrc.offset() + unitNormal_*i,
+                               wsrc.extent() - unitNormal_*3,
+                               wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
+    PhiVolT field(srcwin,src);
+    srcIters_.push_back(field.begin());
   }
 }
 
@@ -345,191 +264,107 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   /* Algorithm: TSAAD - TODO - DESCRIBE ALGORITHM IN DETAIL
    * Loop over faces
    */
-  //
-  // Source field on the minus side of a face
-  typename PhiVolT::const_iterator srcFieldMinus = src.begin();
-  // Source field on the plus side of a face
-  typename PhiVolT::const_iterator srcFieldPlus = src.begin() + stride_;
-  // Source field on the plus, plus side of a face
-  typename PhiVolT::const_iterator srcFieldPlusPlus = src.begin() + stride_ + stride_;
-  // Destination field (face). Starts on the first face for that particular field
-  typename PhiFaceT::iterator destFld = dest.begin() + stride_;
-  // Whether it is x, y, or z face field. So its
-  // face index will start at zero, a face for which we cannot compute the flux.
-  // So we add stride to it. In x direction, it will be face 1.
-  // In y direction, it will be nx. In z direction, it will be nx*ny
-  typename PhiFaceT::const_iterator advVel = advectiveVelocity_->begin() + stride_;
-  
-  // first, treat boundary faces - start with minus side (i.e. x-, y-, z-).
-  for (size_t k=1; k<=bndFaceCount_[2]; k++) { // count zCount times
-    
-    for (size_t j=1; j<=bndFaceCount_[1]; j++) { // count yCount times
-      
-      for (size_t i =1; i<=bndFaceCount_[0]; i++) { // count xCount times
-        
-        if ((*advVel) > 0.0) {
-          // for a minus face, if there is a physical boundary present with an 
-          // inlet (u_n > 0), then use central (psi = 1). Otherwise, if it is
-          // a periodic boundary then use upwind (psi = 0.0).
-          *destFld = hasMinusBoundary_ ? 1.0 : 0.0;
-        }
-        
-        else if ((*advVel) < 0.0) {
-          // calculate the ratio of gradients between successive cells
-          const double r = (*srcFieldPlusPlus - *srcFieldPlus)/(*srcFieldPlus - *srcFieldMinus);
-          *destFld = calculate_flux_limiter_function(r, limiterType_);
-        }
-        
-        else *destFld = 1.0; // default to central when velocity = 0.0
-        
-        srcFieldMinus += bndVolIncr_[0];
-        srcFieldPlus += bndVolIncr_[0];
-        srcFieldPlusPlus += bndVolIncr_[0];
-        destFld += bndFaceIncr_[0];
-        advVel += bndFaceIncr_[0];
-      }
-      
-      srcFieldMinus += bndVolIncr_[1];
-      srcFieldPlus  += bndVolIncr_[1];
-      srcFieldPlusPlus += bndVolIncr_[1];
-      destFld += bndFaceIncr_[1];
-      advVel  += bndFaceIncr_[1];
-    }
-    
-    srcFieldMinus += bndVolIncr_[2];
-    srcFieldPlus  += bndVolIncr_[2];
-    srcFieldPlusPlus += bndVolIncr_[2];
-    destFld += bndFaceIncr_[2];
-    advVel  += bndFaceIncr_[2];
-  }
-  
-  //
-  // now for the plus side (i.e. x+, y+, z+).
-  destFld       = dest.begin() + bndPlusStrideCoef_*stride_;
-  srcFieldMinus = src.begin() + (bndPlusStrideCoef_-1)*stride_;
-  advVel  = advectiveVelocity_->begin() + bndPlusStrideCoef_*stride_;
-  // Source field on the minus, minus side of a face
-  typename PhiVolT::const_iterator srcFieldMinusMinus = src.begin() + (bndPlusStrideCoef_ - 2)*stride_;
-  srcFieldPlus = src.begin() + bndPlusStrideCoef_*stride_;
-  
-  for (size_t k=1; k<=bndFaceCount_[2]; k++) { // count zCount times
-    
-    for (size_t j=1; j<=bndFaceCount_[1]; j++) { // count yCount times
-      
-      for (size_t i =1; i<=bndFaceCount_[0]; i++) { // count xCount times
-        
-        if ((*advVel) < 0.0) {
-          // for a plus face, if there is a physical boundary present along with
-          // an inlet (u.n < 0), then use central (psi = 1.0). Otherwise,
-          // use upwind (psi = 0).
-          *destFld = hasPlusBoundary_ ? 1.0 : 0.0;
-        }
-        
-        else if ((*advVel) > 0.0) {
-          // calculate the gradient between successive cells
-          const double r = (*srcFieldMinus - *srcFieldMinusMinus)/(*srcFieldPlus - *srcFieldMinus);
-          *destFld = calculate_flux_limiter_function(r, limiterType_);          
-        }
-        
-        else *destFld = 1.0; // default to central when velocity = 0.0
-        
-        srcFieldMinus += bndVolIncr_[0];
-        srcFieldPlus += bndVolIncr_[0];
-        srcFieldMinusMinus += bndVolIncr_[0];
-        destFld += bndFaceIncr_[0];
-        advVel += bndFaceIncr_[0];
-      }
-      
-      srcFieldMinus += bndVolIncr_[1];
-      srcFieldPlus  += bndVolIncr_[1];
-      srcFieldMinusMinus += bndVolIncr_[1];
-      destFld += bndFaceIncr_[1];
-      advVel  += bndFaceIncr_[1];
-    }
-    
-    srcFieldMinus += bndVolIncr_[2];
-    srcFieldPlus  += bndVolIncr_[2];
-    srcFieldMinusMinus += bndVolIncr_[2];
-    destFld += bndFaceIncr_[2];
-    advVel  += bndFaceIncr_[2];
-  }
-  
-  //
-  // now for the internal faces
-  srcFieldMinus      = src.begin() + stride_;
-  srcFieldMinusMinus = src.begin();
-  srcFieldPlus       = src.begin() + stride_ + stride_;
-  srcFieldPlusPlus   = src.begin() + stride_ + stride_ + stride_;
-  destFld            = dest.begin() + stride_ + stride_;
-  advVel = advectiveVelocity_->begin() + stride_ + stride_;
-  for (size_t k=1; k<=faceCount_[2]; k++) { // count zCount times
-    
-    for (size_t j=1; j<=faceCount_[1]; j++) { // count yCount times
-      
-      for (size_t i=1; i<=faceCount_[0]; i++) { // count xCount times
-        
-        if ((*advVel) > 0.0) {
-          // calculate the ratio of gradient between successive cells
-          const double r = (*srcFieldMinus - *srcFieldMinusMinus)/(*srcFieldPlus - *srcFieldMinus);
-          *destFld = calculate_flux_limiter_function(r, limiterType_);
-        }
-        
-        else if ((*advVel) < 0.0) {
-          // calculate the ratio of gradients between successive cells
-          const double r = (*srcFieldPlusPlus - *srcFieldPlus)/(*srcFieldPlus - *srcFieldMinus);
-          *destFld = calculate_flux_limiter_function(r, limiterType_);
-        }
-        
-        else *destFld = 1.0; // default to central when velocity = 0.0
-        
-        ++srcFieldMinus;
-        ++srcFieldMinusMinus;
-        ++srcFieldPlus;
-        ++srcFieldPlusPlus;
-        ++destFld;
-        ++advVel;
-      }
-      
-      srcFieldMinus += volIncr_[1];
-      srcFieldMinusMinus += volIncr_[1];
-      srcFieldPlus  += volIncr_[1];
-      srcFieldPlusPlus += volIncr_[1];
-      destFld += faceIncr_[1];
-      advVel  += faceIncr_[1];
-    }
-    
-    srcFieldMinus += volIncr_[2];
-    srcFieldMinusMinus += volIncr_[2];
-    srcFieldPlus  += volIncr_[2];
-    srcFieldPlusPlus += volIncr_[2];
-    destFld += faceIncr_[2];
-    advVel  += faceIncr_[2];
-  }
-  
-}
+  using namespace SpatialOps;
+  using namespace SpatialOps::structured;
 
-//--------------------------------------------------------------------
+  const MemoryWindow& wsrc  = src.window_with_ghost();
+  const MemoryWindow& wdest = dest.window_with_ghost(); // used for velocity & interpolated phi
+  
+  int pm[2]={1,-1}; // plus or minus face
+  int zo[2]={0,1};  // zero and one
 
-template<typename PhiVolT, typename PhiFaceT>
-int
-FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
-calculate_stride(const std::vector<int>& dim,
-                 const std::vector<bool> hasPlusFace) const
-{
-  const size_t direction = PhiFaceT::Location::FaceDir::value;
-  int n = 0;
-  switch (direction) {
-    case SpatialOps::XDIR::value:
-      n=1;
-      break;
-    case SpatialOps::YDIR::value:
-      n = SpatialOps::structured::get_nx_with_ghost<PhiVolT>(dim[0],hasPlusFace[0]);
-      break;
-    case SpatialOps::ZDIR::value:
-      n = SpatialOps::structured::get_nx_with_ghost<PhiVolT>(dim[0],hasPlusFace[0]) * SpatialOps::structured::get_ny_with_ghost<PhiVolT>(dim[1],hasPlusFace[1]);
-      break;
+  IntVec extent = wsrc.extent() - unitNormal_*wsrc.glob_dim() + unitNormal_;
+  IntVec destExtent = wdest.extent() - unitNormal_*wdest.glob_dim() + unitNormal_;
+  IntVec baseOffset;
+  IntVec destBaseOffset;
+  for (int direc=0; direc<2; direc++) {
+    baseOffset = wsrc.offset() + (unitNormal_*wsrc.glob_dim() - unitNormal_ )* zo[direc];
+    destBaseOffset = wdest.offset() + (unitNormal_*wdest.glob_dim() - unitNormal_ )* zo[direc] + unitNormal_*(1-zo[direc]);
+    
+    // this is the destination field value - always on the boundary
+    const MemoryWindow wd( wdest.glob_dim(),
+                          destBaseOffset,
+                          destExtent,
+                          wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
+    
+    // ghost cell: on a minus face, this is src-minus. on a plus face, this is src-plus
+    const MemoryWindow ws1( wsrc.glob_dim(),
+                           baseOffset,
+                           extent,
+                           wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
+    
+    // first interior cell: on a minus face, this is src-plus. on a plus face this is src-minus
+    const MemoryWindow ws2( wsrc.glob_dim(),
+                           baseOffset + unitNormal_ * pm[direc],
+                           extent,
+                           wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
+        
+    // second interior cell: on a minus face, this is src-plus-plus. on a plus face, this is src-minus-minus
+    const MemoryWindow ws3( wsrc.glob_dim(),
+                           baseOffset  + unitNormal_ * pm[direc] * 2,
+                           extent,
+                           wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
+    
+    
+    
+    PhiFaceT    d( wd, &dest[0], ExternalStorage );
+    PhiFaceT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
+    PhiVolT    s1( ws1, &src[0], ExternalStorage );
+    PhiVolT    s2( ws2, &src[0], ExternalStorage );
+    PhiVolT    s3( ws3, &src[0], ExternalStorage );
+    
+    
+    typename PhiFaceT::iterator      id  = d .begin();
+    typename PhiFaceT::iterator      ide = d .end();
+    typename PhiFaceT::iterator      iav = aVel.begin();
+    typename PhiVolT::const_iterator is1 = s1.begin();
+    typename PhiVolT::const_iterator is2 = s2.begin();
+    typename PhiVolT::const_iterator is3 = s3.begin();
+    
+    for (; id != ide; ++id, ++iav, ++is1, ++is2, ++is3) {
+      const double flowDir = -pm[direc] * *iav;
+      if     ( flowDir > 0.0 ) { // flow is coming out of the patch. use limiter
+        // calculate flux limiter function value
+        const double r = (*is3 - *is2)/(*is2 - *is1);
+        *id = calculate_flux_limiter_function(r, limiterType_);
+      }
+      else if( flowDir < 0.0 ) *id = ( (hasMinusBoundary_ && direc==0) || (hasPlusBoundary_ && direc==1) ) ? 1.0 : 0.0; // flow is coming into the patch. use central differencing if we at a physical boundary.
+      else                     *id = 1.0;
+    }
   }
-  return n;
+
+  // now do interior
+  build_src_iterators(src);
+  destExtent = wdest.extent() - unitNormal_*3 - wdest.has_bc()*unitNormal_;
+  destBaseOffset = wdest.offset() + unitNormal_*2;
+  // this is the destination field value - always on the boundary
+  const MemoryWindow wd( wdest.glob_dim(),
+                        destBaseOffset,
+                        destExtent,
+                        wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
+
+  PhiFaceT    d( wd, &dest[0], ExternalStorage  );
+  PhiFaceT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
+  
+  typename PhiFaceT::iterator      id   = d.begin();
+  typename PhiFaceT::iterator      ide  = d.end();
+  typename PhiFaceT::iterator      iav  = aVel.begin();
+  typename PhiVolT::const_iterator ismm = srcIters_[0];
+  typename PhiVolT::const_iterator ism  = srcIters_[1];
+  typename PhiVolT::const_iterator isp  = srcIters_[2];
+  typename PhiVolT::const_iterator ispp = srcIters_[3];
+  
+  for (; id != ide; ++id, ++iav, ++ismm, ++ism, ++isp, ++ispp) {    
+    if     ( *iav > 0.0 ) {
+      const double r = (*ism - *ismm)/(*isp - *ism);
+      *id = calculate_flux_limiter_function(r, limiterType_);
+    }
+    else if( *iav < 0.0 ) {
+      const double r = (*ispp - *isp)/(*isp - *ism);
+      *id = calculate_flux_limiter_function(r, limiterType_);
+    }
+    else                     *id = 1.0;
+  }
 }
 
 //==================================================================
