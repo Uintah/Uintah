@@ -234,13 +234,15 @@ class SPME : public Electrostatics {
 
     /**
      * @brief
+     * @param stressPrefactor Pointer to the SimpleGrid of stress mat3
      * @param extents - The number of internal grid points on the current processor
      * @param offsets - The global mapping of the local (0,0,0) coordinate into the global grid index
      *
-     * @return A SimpleGrid<Matrix3> pointer.
+     * @return None.
      */
-    SimpleGrid<Matrix3>* calculateStressPrefactor(const IntVector& extents,
-                                                  const IntVector& offset);
+    void calculateStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor,
+                                  const IntVector& extents,
+                                  const IntVector& offset);
 
     /**
      * @brief Generates split grid vector.
