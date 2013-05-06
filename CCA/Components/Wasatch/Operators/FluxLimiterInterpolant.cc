@@ -215,7 +215,7 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
   typename PhiFaceT::iterator      iav  = aVel.begin();
   typename PhiVolT::const_iterator vfracmm = srcIters_[0];
   typename PhiVolT::const_iterator vfracpp = srcIters_[3];
-  std::cout << "-------------------------------------------\n";
+
   for (; id != ide; ++id, ++iav, ++vfracmm, ++vfracpp) {
     if ( *iav > 0.0 && *vfracmm == 0.0 ) *id = 0.0;
     else if( *iav < 0.0 && *vfracpp == 0.0 ) *id = 0.0;
