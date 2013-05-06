@@ -6171,10 +6171,6 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset Graphics
 	filename figures/pdf/wasatch_verification_cavity_y_velocity_Re100.pdf
 
@@ -6520,10 +6516,22 @@ Decay of Isotropic Turbulence
 \end_layout
 
 \begin_layout Standard
+This classic verification case provides a somewhat reasonable benchmark
+ to verify the sanity of our turbulence model implementations.
+ It consists of an initial isotropic velocity field in a periodic box that
+ is allowed to decay over time.
+ The initial condition is made to fit an experimentally-measured energy
+ spectrum.
+ The code is then allowed to calculate the decay of this initial field,
+ whose energy spectrum is measured at subsequent times and compared with
+ experimental measurements.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -6619,7 +6627,7 @@ Contours of velocity magnitude for the decay of isotropic turbulence in
 \begin_inset Float figure
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -6704,7 +6712,7 @@ Turbulent kinetic energy spectrum for the constant Smagorinsky model with
 \begin_inset Float figure
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -6788,7 +6796,7 @@ Turbulent kinetic energy spectrum for the WALE model with
 \begin_inset Float figure
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -6876,7 +6884,7 @@ Turbulent kinetic energy spectrum for the Vreman model with
 \begin_inset Float figure
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -7025,76 +7033,10 @@ prettyref{lst:wasatch-expr-algebra}
 \end_layout
 
 \begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-lstset{caption=Specification of an ExprAlgebra expression as the sum of
- three other expressions.,label=lst:wasatch-expr-algebra} 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-<BasicExpression type="SVOL">        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <TaskList>initialization</TaskList>        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <NameTag name="phi" state="STATE_N" />        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <ExprAlgebra algebraicOperation="SUM"> 	
-\end_layout
-
-\begin_layout Plain Layout
-
-      <!-- specify the list of tags of the source expressions -->	  
-\end_layout
-
-\begin_layout Plain Layout
-
-      <NameTag name="XSVOL" state="STATE_NONE"/> 
-\end_layout
-
-\begin_layout Plain Layout
-
-      <NameTag name="YSVOL" state="STATE_NONE"/> 
-\end_layout
-
-\begin_layout Plain Layout
-
-      <NameTag name="ZSVOL" state="STATE_NONE"/> 
-\end_layout
-
-\begin_layout Plain Layout
-
-  </ExprAlgebra>     
-\end_layout
-
-\begin_layout Plain Layout
-
-</BasicExpression>        
-\end_layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/ExprAlgebra-example.xml"
+lstparams "caption={Specification of an ExprAlgebra expression as the sum of three other expressions.},label={lst:wasatch-expr-algebra}"
 
 \end_inset
 
@@ -7208,68 +7150,10 @@ where
 \end_layout
 
 \begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-lstset{caption=Specification of a LinearFunction as an initialization for
- a scalar field $
-\backslash
-phi$.,label=lst:wasatch-linear-function} 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-<BasicExpression type="SVOL">        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <TaskList>initialization</TaskList>        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <NameTag name="phi" state="STATE_N" />        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <LinearFunction slope="0.1" intercept="1.25"> 	
-\end_layout
-
-\begin_layout Plain Layout
-
-      <!-- specify the tag of the independent variable -->	  
-\end_layout
-
-\begin_layout Plain Layout
-
-      <NameTag name="XSVOL" state="STATE_NONE"/> 
-\end_layout
-
-\begin_layout Plain Layout
-
-  </LinearFunction>     
-\end_layout
-
-\begin_layout Plain Layout
-
-</BasicExpression>        
-\end_layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/LinearFunction-example.xml"
+lstparams "caption={Specification of a LinearFunction as an initial condition for a scalar field $\\phi$.},label={lst:wasatch-linear-function}"
 
 \end_inset
 
@@ -7325,68 +7209,10 @@ ParabolicFunction
 \end_layout
 
 \begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-lstset{caption=Specification of a LinearFunction as an initialization for
- a scalar field $
-\backslash
-phi$.,label=lst:wasatch-linear-function} 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-<BasicExpression type="SVOL">        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <TaskList>initialization</TaskList>        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <NameTag name="phi" state="STATE_N" />        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <ParabolicFunction a="0.1" b="1.25" c="0.3"> 	
-\end_layout
-
-\begin_layout Plain Layout
-
-      <!-- specify the tag of the independent variable -->	  
-\end_layout
-
-\begin_layout Plain Layout
-
-      <NameTag name="XSVOL" state="STATE_NONE"/> 
-\end_layout
-
-\begin_layout Plain Layout
-
-  </ParabolicFunction>     
-\end_layout
-
-\begin_layout Plain Layout
-
-</BasicExpression>        
-\end_layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/LinearFunction-example.xml"
+lstparams "caption={Specification of a ParabolicFunction as an initial condition for a scalar field $\\phi$.},label={lst:wasatch-parabolic-function}"
 
 \end_inset
 
@@ -7493,16 +7319,13 @@ exponential-vortex-example.ups
 \end_inset
 
 .
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-lstset{caption=Specification of an exponential vortex as initial condition
- for axial momentum.,label=lst:wasatch-exponentialvortex-ymom} 
 \end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/ExponentialVortex-example-x.xml"
+lstparams "caption={Specification of an ExponentialVortex as an initial condition for axial momentum.},label={lst:wasatch-exponentialvortex-xmom}"
 
 \end_inset
 
@@ -7510,155 +7333,10 @@ lstset{caption=Specification of an exponential vortex as initial condition
 \end_layout
 
 \begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-<BasicExpression type="XVOL">        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <TaskList>initialization</TaskList>        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <NameTag name="x-mom" state="STATE_N" />        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <ExponentialVortex x0="0.5" y0="0.5" G="1e-3" R="0.1" U="1" V="0" velocityCompone
-nt="X1"> 		  
-\end_layout
-
-\begin_layout Plain Layout
-
-    <Coordinate1> 
-\end_layout
-
-\begin_layout Plain Layout
-
-      <NameTag name="XXVOL" state="STATE_NONE"/> 		   
-\end_layout
-
-\begin_layout Plain Layout
-
-    </Coordinate1> 		   
-\end_layout
-
-\begin_layout Plain Layout
-
-    <Coordinate2> 				
-\end_layout
-
-\begin_layout Plain Layout
-
-      <NameTag name="YXVOL" state="STATE_NONE"/> 		  
-\end_layout
-
-\begin_layout Plain Layout
-
-    </Coordinate2>		          
-\end_layout
-
-\begin_layout Plain Layout
-
-  </ExponentialVortex>     
-\end_layout
-
-\begin_layout Plain Layout
-
-</BasicExpression>        
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-lstset{caption=Specification of an exponential vortex as initial condition
- for transverse momentum.,label=lst:wasatch-exponentialvortex-ymom} 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-<BasicExpression type="YVOL">        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <TaskList>initialization</TaskList>        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <NameTag name="y-mom" state="STATE_N" />        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <ExponentialVortex x0="0.5" y0="0.5" G="1e-3" R="0.1" U="1" V="0" velocityCompone
-nt="X2"> 		  
-\end_layout
-
-\begin_layout Plain Layout
-
-    <Coordinate1> 
-\end_layout
-
-\begin_layout Plain Layout
-
-      <NameTag name="XYVOL" state="STATE_NONE"/> 		   
-\end_layout
-
-\begin_layout Plain Layout
-
-    </Coordinate1> 		   
-\end_layout
-
-\begin_layout Plain Layout
-
-    <Coordinate2> 				
-\end_layout
-
-\begin_layout Plain Layout
-
-      <NameTag name="YYVOL" state="STATE_NONE"/> 		  
-\end_layout
-
-\begin_layout Plain Layout
-
-    </Coordinate2>		          
-\end_layout
-
-\begin_layout Plain Layout
-
-  </ExponentialVortex>     
-\end_layout
-
-\begin_layout Plain Layout
-
-</BasicExpression>        
-\end_layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/ExponentialVortex-example-y.xml"
+lstparams "caption={Specification of an ExponentialVortex as an initial condition for transverse momentum.},label={lst:wasatch-exponentialvortex-ymom}"
 
 \end_inset
 
@@ -7671,6 +7349,7 @@ The resulting flow field generated by this initialization is shown below.
 
 \begin_layout Standard
 \begin_inset Float figure
+placement H
 wide false
 sideways false
 status open
@@ -8237,16 +7916,13 @@ dipole-vortex-example.ups
 \end_inset
 
 .
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-lstset{caption=Specification of an exponential vortex as initial condition
- for axial momentum.,label=lst:wasatch-exponentialvortex-ymom} 
 \end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/LambsDipole-example-x.xml"
+lstparams "caption={Specification of a LambsDipole expression as an initial condition for axial momentum.},label={lst:wasatch-lambsdipole-xmom}"
 
 \end_inset
 
@@ -8254,154 +7930,10 @@ lstset{caption=Specification of an exponential vortex as initial condition
 \end_layout
 
 \begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-<BasicExpression type="XVOL">        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <TaskList>initialization</TaskList>        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <NameTag name="x-mom" state="STATE_N" />        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <LambsDipole x0="0.0" y0="0.0" G="0.9" R="0.25" U="0.1" velocityComponent="X1">
-  		  
-\end_layout
-
-\begin_layout Plain Layout
-
-    <Coordinate1> 
-\end_layout
-
-\begin_layout Plain Layout
-
-      <NameTag name="XXVOL" state="STATE_NONE"/> 		   
-\end_layout
-
-\begin_layout Plain Layout
-
-    </Coordinate1> 		   
-\end_layout
-
-\begin_layout Plain Layout
-
-    <Coordinate2> 				
-\end_layout
-
-\begin_layout Plain Layout
-
-      <NameTag name="YXVOL" state="STATE_NONE"/> 		  
-\end_layout
-
-\begin_layout Plain Layout
-
-    </Coordinate2>		          
-\end_layout
-
-\begin_layout Plain Layout
-
-  </LambsDipole>     
-\end_layout
-
-\begin_layout Plain Layout
-
-</BasicExpression>        
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-lstset{caption=Specification of an exponential vortex as initial condition
- for transverse momentum.,label=lst:wasatch-exponentialvortex-ymom} 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-<BasicExpression type="YVOL">        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <TaskList>initialization</TaskList>        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <NameTag name="y-mom" state="STATE_N" />        
-\end_layout
-
-\begin_layout Plain Layout
-
-  <LambsDipole x0="0.0" y0="0.0" G="0.9" R="0.25" U="0.1" velocityComponent="X2">
-\end_layout
-
-\begin_layout Plain Layout
-
-    <Coordinate1> 
-\end_layout
-
-\begin_layout Plain Layout
-
-      <NameTag name="XYVOL" state="STATE_NONE"/> 		   
-\end_layout
-
-\begin_layout Plain Layout
-
-    </Coordinate1> 		   
-\end_layout
-
-\begin_layout Plain Layout
-
-    <Coordinate2> 				
-\end_layout
-
-\begin_layout Plain Layout
-
-      <NameTag name="YYVOL" state="STATE_NONE"/> 		  
-\end_layout
-
-\begin_layout Plain Layout
-
-    </Coordinate2>		          
-\end_layout
-
-\begin_layout Plain Layout
-
-  </ExponentialVortex>     
-\end_layout
-
-\begin_layout Plain Layout
-
-</BasicExpression>        
-\end_layout
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/LambsDipole-example-y.xml"
+lstparams "caption={Specification of a LambsDipole expression as an initial condition for transverse momentum.},label={lst:wasatch-lambsdipole-ymom}"
 
 \end_inset
 
@@ -8700,17 +8232,6 @@ status open
 \end_inset
 
  specification for the boundary conditions.
-\end_layout
-
-\begin_layout Standard
-\begin_inset CommandInset include
-LatexCommand lstinputlisting
-filename "listings/TurbulentInlet-example.xml"
-lstparams "caption={TurbulentInlet example}"
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Chapter

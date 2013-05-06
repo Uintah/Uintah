@@ -1,0 +1,8 @@
+<BasicExpression type="SVOL">        
+  <TaskList>initialization</TaskList>        
+  <NameTag name="phi" state="STATE_N" />        
+  <ParabolicFunction a="0.1" b="1.25" c="0.3"> 	
+      <!-- specify the tag of the independent variable -->	  
+      <NameTag name="XSVOL" state="STATE_NONE"/> 
+  </ParabolicFunction>     
+</BasicExpression>
