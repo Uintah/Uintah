@@ -77,12 +77,26 @@ class CenteredCardinalBSpline {
     std::vector<double> evaluate(const double x) const;
 
     /**
+     * @brief
+     * @param
+     * @return
+     */
+    std::vector<double> evaluateGridAligned(const double x) const;
+
+    /**
      * @brief Generate the derivative of the spline for the entire support range
      * @param x - double, Value of the point for which the spline derivative is calculated
      * @return std::vector<double> - Contains the spline derivatives on evenly spaced points with spacing 1.0
      *           over the entire support range of the spline.
      */
     std::vector<double> derivative(const double x) const;
+
+    /**
+     * @brief
+     * @param
+     * @return
+     */
+    std::vector<double> derivativeGridAligned(const double x) const;
 
     /*
      * @brief
@@ -153,6 +167,7 @@ class CenteredCardinalBSpline {
      */
     inline int getHalfMaxSupport() const
     {
+      //! FIXME; This won't return the right value for, say, Spline Order 5 if X = -1.0.
       return ceil(static_cast<double>(d_splineOrder + 1) * 0.5);
     }
 

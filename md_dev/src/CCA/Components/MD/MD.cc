@@ -93,7 +93,7 @@ void MD::problemSetup(const ProblemSpecP& params,
   md_ps->get("R6", R6);
 
   // create and populate the MD System object
-  d_system = scinew MDSystem(md_ps);
+  d_system = scinew MDSystem(md_ps, grid);
   d_system->setNewBox(true);
 
   Matrix3 unitCell = d_system->getUnitCell();
@@ -244,6 +244,8 @@ void MD::schedulePerformSPME(SchedulerP& sched,
 
   task->modifies(d_lb->pForceLabel_preReloc);
   task->computes(d_lb->pChargeLabel_preReloc);
+  task->computes(d_lb->spmeFourierEnergyLabel);
+  task->computes(d_lb->spmeFourierStressLabel);
 
   sched->addTask(task, patches, matls);
 }
@@ -330,7 +332,7 @@ void MD::extractCoordinates()
 void MD::generateNeighborList()
 {
   double r2;
-  Vector reducedCoordinates;
+  SCIRun::Vector reducedCoordinates;
   double cut_sq = d_cutoffRadius * d_cutoffRadius;
   for (unsigned int i = 0; i < d_numAtoms; i++) {
     for (unsigned int j = 0; j < d_numAtoms; j++) {

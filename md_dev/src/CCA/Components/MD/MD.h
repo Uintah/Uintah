@@ -308,12 +308,12 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     vector<const VarLabel*> d_particleState_preReloc;   //!<
 
     // fields specific to non-bonded interaction (LJ Potential)
-    string d_coordinateFile;  //!< file with coordinates of all atoms in this MD system
-    unsigned int d_numAtoms;  //!< Total number of atoms in this MD simulation
-    double d_cutoffRadius;    //!< The short ranged cut off distances (in Angstroms)
-    Vector d_box;             //!< The size of simulation
-    double R12;               //!< This is the v.d.w. repulsive parameter
-    double R6;                //!< This is the v.d.w. attractive parameter
+    string d_coordinateFile;       //!< file with coordinates of all atoms in this MD system
+    unsigned int d_numAtoms;       //!< Total number of atoms in this MD simulation
+    double d_cutoffRadius;         //!< The short ranged cut off distances (in Angstroms)
+    Vector d_box;                  //!< The size of simulation
+    double R12;                    //!< This is the v.d.w. repulsive parameter
+    double R6;                     //!< This is the v.d.w. attractive parameter
 
     // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
     std::vector<Point> d_atomList;             //!<
