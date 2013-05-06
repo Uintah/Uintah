@@ -320,7 +320,7 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
     typename PhiVolT::const_iterator is1 = s1.begin();
     typename PhiVolT::const_iterator is2 = s2.begin();
     typename PhiVolT::const_iterator is3 = s3.begin();
-    
+    const bool isBoundaryFace = (hasMinusBoundary_ && direc==0) || (hasPlusBoundary_ && direc==1);
     for (; id != ide; ++id, ++iav, ++is1, ++is2, ++is3) {
       const double flowDir = -pm[direc] * *iav;
       if     ( flowDir > 0.0 ) { // flow is coming out of the patch. use limiter
@@ -328,7 +328,7 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
         const double r = (*is3 - *is2)/(*is2 - *is1);
         *id = calculate_flux_limiter_function(r, limiterType_);
       }
-      else if( flowDir < 0.0 ) *id = ( (hasMinusBoundary_ && direc==0) || (hasPlusBoundary_ && direc==1) ) ? 1.0 : 0.0; // flow is coming into the patch. use central differencing if we at a physical boundary.
+      else if( flowDir < 0.0 ) *id = ( isBoundaryFace ) ? 1.0 : 0.0; // flow is coming into the patch. use central differencing if we are at a physical boundary.
       else                     *id = 1.0;
     }
   }
