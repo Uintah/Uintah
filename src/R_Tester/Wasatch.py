@@ -33,6 +33,7 @@ scalabilitytestperf_ups = modUPS( the_dir, \
                                   ["<max_Timesteps> 1000 </max_Timesteps>"])                                       
 
 turbulenceDir = the_dir + "/TurbulenceVerification"
+
 decayIsotropicTurbulenceCSmag32_ups = modUPS( turbulenceDir, \
                                        "decay-isotropic-turbulence-csmag_32.ups", \
                                        ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])
@@ -56,6 +57,14 @@ decayIsotropicTurbulenceWale32_ups = modUPS( turbulenceDir, \
 decayIsotropicTurbulenceWale64_ups = modUPS( turbulenceDir, \
                                        "decay-isotropic-turbulence-wale_64.ups", \
                                        ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])
+
+decayIsotropicTurbulenceDSmag32_ups = modUPS( turbulenceDir, \
+                                       "decay-isotropic-turbulence-dsmag_32.ups", \
+                                       ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])
+                                       
+decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
+                                       "decay-isotropic-turbulence-dsmag_64.ups", \
+                                       ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])                                       
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
@@ -84,6 +93,8 @@ decayIsotropicTurbulenceWale64_ups = modUPS( turbulenceDir, \
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
+  ("decay-isotropic-turbulence-dsmag32",       "TurbulenceVerification/"+decayIsotropicTurbulenceDSmag32_ups,  8,  "Linux",  ["exactComparison","no_restart"] ), \
+  ("decay-isotropic-turbulence-dsmag64",       "TurbulenceVerification/"+decayIsotropicTurbulenceDSmag64_ups,  8,  "Linux",  ["exactComparison","no_restart"] ), \
   ("decay-isotropic-turbulence-csmag32",       "TurbulenceVerification/"+decayIsotropicTurbulenceCSmag32_ups,  8,  "Linux",  ["exactComparison","no_restart"] ), \
   ("decay-isotropic-turbulence-csmag64",       "TurbulenceVerification/"+decayIsotropicTurbulenceCSmag64_ups,  8,  "Linux",  ["exactComparison","no_restart"] ), \
   ("decay-isotropic-turbulence-vreman32",      "TurbulenceVerification/"+decayIsotropicTurbulenceVreman32_ups, 8,  "Linux",  ["exactComparison","no_restart"] ), \
@@ -152,6 +163,8 @@ NIGHTLYTESTS = [
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
+  ("decay-isotropic-turbulence-dsmag32",       "TurbulenceVerification/"+decayIsotropicTurbulenceDSmag32_ups,  8,  "All",  ["exactComparison","no_restart"] ), 
+  ("decay-isotropic-turbulence-dsmag64",       "TurbulenceVerification/"+decayIsotropicTurbulenceDSmag64_ups,  8,  "All",  ["exactComparison","no_restart"] ), 
   ("decay-isotropic-turbulence-csmag32",       "TurbulenceVerification/"+decayIsotropicTurbulenceCSmag32_ups,  8,  "All",  ["exactComparison","no_restart"] ), 
   ("decay-isotropic-turbulence-csmag64",       "TurbulenceVerification/"+decayIsotropicTurbulenceCSmag64_ups,  8,  "All",  ["exactComparison","no_restart"] ), 
   ("decay-isotropic-turbulence-vreman32",      "TurbulenceVerification/"+decayIsotropicTurbulenceVreman32_ups, 8,  "All",  ["exactComparison","no_restart"] ), 
