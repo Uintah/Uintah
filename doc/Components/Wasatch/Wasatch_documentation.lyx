@@ -308,7 +308,7 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename figures/navier-stokes-graph.pdf
+	filename figures/pdf/wasatch_navier-stokes-graph.pdf
 	lyxscale 50
 	width 5in
 
@@ -873,6 +873,10 @@ stic mixing length of turbulent eddies.
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
 In Wasatch, we implement a variant of Smagorinsky's classic model.
  To allow users to fine-tune the turbulent viscosity based on physical input,
  we introduce a lengthscale to the calculation of the smagorinsky mixing
@@ -899,7 +903,7 @@ As the grid spacing drifts from the kolmogorov scale, the effect of mixing
 Ability to recover constant smagorinsky model when desirable.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 These features may be accomplished by setting
 \begin_inset Formula 
 \begin{equation}
@@ -997,7 +1001,7 @@ reference "fig:wasatch-modified-smagorinsky-model"
 .
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Float figure
 placement !t
 wide false
@@ -1021,6 +1025,11 @@ Behavior of the mixing length in the modified Smagorinsky model used in
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:wasatch-modified-smagorinsky-model"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
