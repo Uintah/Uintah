@@ -450,7 +450,8 @@ Thread::numProcessors()
   if (np == 0) {
 #ifdef __APPLE__
     size_t len = sizeof(np);
-    sysctl((int[2]) {CTL_HW, HW_NCPU}, 2, &np, &len, NULL, 0);
+    int mib[2] = {CTL_HW, HW_NCPU};
+    sysctl(mib, 2, &np, &len, NULL, 0);
 #else
     // Linux
     std::ifstream cpuinfo("/proc/cpuinfo");
