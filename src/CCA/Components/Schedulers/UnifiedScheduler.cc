@@ -57,6 +57,7 @@ extern map<string, double> exectimes;
 extern DebugStream waitout;
 extern DebugStream execout;
 extern DebugStream taskorder;
+extern DebugStream taskLevel_dbg;
 
 static double CurrentWaitTime = 0;
 
@@ -977,6 +978,7 @@ void UnifiedScheduler::runTasks(int t_id)
 #endif
       else {
         runTask(readyTask, currentIteration, t_id);
+        printTaskLevels(d_myworld, taskLevel_dbg, readyTask);
       }
     } else if (pendingMPIMsgs > 0) {
       processMPIRecvs(TEST);

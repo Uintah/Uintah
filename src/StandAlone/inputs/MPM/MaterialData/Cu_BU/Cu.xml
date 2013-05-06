@@ -9,6 +9,7 @@
       <include href="MaterialData/Cu_BU/JohnsonCookPlasticOFHCCopper.xml"/>
       <include href="MaterialData/Cu_BU/JohnsonCookDamageOFHCCopper.xml"/>
       <include href="MaterialData/Cu_BU/MieGruneisenEOSAnnCopper.xml"/>
+      <check_TEPLA_failure_criterion>false </check_TEPLA_failure_criterion>
       <initial_material_temperature>  294.0 </initial_material_temperature>
     </constitutive_model>
 </Uintah_Include>

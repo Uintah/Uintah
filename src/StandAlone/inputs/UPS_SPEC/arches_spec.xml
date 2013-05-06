@@ -1123,6 +1123,10 @@
 
       </DQMOM>
 
+      <!-- Use this block for wasatch-in-arches builds only to create placeholders for arbitrary variables -->
+      <ExtraWarchesVariables            spec="OPTIONAL NO_DATA">
+        <NameTag                        spec="MULTIPLE"/>
+      </ExtraWarchesVariables>
     </ARCHES>
   </CFD>
 

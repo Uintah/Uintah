@@ -2,14 +2,10 @@
 #define TurbulentViscosity_Expr_h
 
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
+#include <CCA/Components/Wasatch/Operators/Operators.h>
 #include "TurbulenceParameters.h"
 
 #include <expression/Expression.h>
-
-/**
- *  \brief obtain the tag for the turbulent viscosity
- */
-Expr::Tag turbulent_viscosity_tag();
 
 /**
  *  \class TurbulentViscosity
@@ -42,9 +38,12 @@ class TurbulentViscosity
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
   
+  typedef Wasatch::OpTypes<SVolField>::BoundaryExtrapolant ExOpT;
+  
   const GradXT*  gradXOp_;            ///< x-component of the gradient operator
   const GradYT*  gradYOp_;            ///< y-component of the gradient operator  
   const GradZT*  gradZOp_;            ///< z-component of the gradient operator
+  ExOpT*   exOp_;
 
   const SVolField *dynCoef_, *rho_, *strTsrSq_, *waleTsrMag_, *vremanTsrMag_;
 

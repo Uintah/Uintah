@@ -72,7 +72,7 @@ public:
      *  \param pressure the expression to compute the pressure as a scalar volume field
      *  \param partRHS the expression to compute the other terms in
      *         the momentum RHS (body force, divergence of convection
-     *         and stress)
+     *         and strain)
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& pressure,

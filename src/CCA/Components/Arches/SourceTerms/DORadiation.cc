@@ -106,7 +106,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "abskp_label", _abskp_label_name, "new_abskp" ); 
   db->getWithDefault( "soot_label",  _soot_label_name, "sootFVIN" ); 
   db->getWithDefault( "psize_label", _size_label_name, "length");
-  db->getWithDefault( "ptemperature_label", _pT_label_name, "temperature"); 
+  db->getWithDefault( "ptemperature_label", _pT_label_name, "heat_pT"); 
 
   //get the number of quadrature nodes and store it locally 
   _nQn_part = 0;
@@ -127,7 +127,8 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   _DO_model->problemSetup( db, true ); 
 
   _prop_calculator = scinew RadPropertyCalculator(); 
-  _using_prop_calculator = _prop_calculator->problemSetup( db ); 
+    ProblemSpecP db1 = db->findBlock("DORadiationModel");
+  _using_prop_calculator = _prop_calculator->problemSetup( db1 ); 
 
   _labels->add_species( _co2_label_name ); 
   _labels->add_species( _h2o_label_name ); 
@@ -208,14 +209,14 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
         }
 
         //--weight--
-        label_name = "w_qn"+i; 
+        label_name = "w_qn"+out.str(); 
         const VarLabel* wlabel = VarLabel::find( label_name ); 
         _w_varlabels.push_back( wlabel ); 
 
         if ( wlabel != 0 ){ 
           tsk->requires( Task::OldDW, wlabel, Ghost::None, 0 ); 
         } else { 
-          throw ProblemSetupException("Error: Could not find particle weight quadrature node: w_qn"+i , __FILE__, __LINE__);
+          throw ProblemSetupException("Error: Could not find particle weight quadrature node: w_qn"+out.str() , __FILE__, __LINE__);
         }
 
       } 

@@ -44,8 +44,8 @@ echo "?">>.meanTime  # mean time data isn't collect the first 4 timestps
 echo "?">>.meanTime
 echo "?">>.meanTime
 
-grep -b1 REGRIDDING .tmpClean | grep Time | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTimeRegrid
-grep -b1 REGRIDDING .tmpClean | grep Time | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTimeRegrid
+grep -B1 REGRIDDING .tmpClean | grep Time | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTimeRegrid
+grep -B1 REGRIDDING .tmpClean | grep Time | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTimeRegrid
 grep     REGRIDDING .tmpClean | tr -d "[:alpha:].:" >& .patches
 grep regridding .tmpClean | cut -d " " -f12 | tr ")" " " >& .scheduleCopy
 grep regridding .tmpClean | cut -d " " -f7 | tr "," " " >& .regridder
@@ -87,11 +87,13 @@ cat > .awk << +
 }
 +
 awk -f .awk .L-all > .L-sum
+sed -i '$d' .L-sum              # remove the last line that contains garbage
 
 #__________________________________
 # compute the total number of patches
 awk '{ sum = 0; for(i=2;i<=NF;i+=2) sum+=$i; print sum}' .patches >& .patchTmp
 paste -d " " .elapsedTimeRegrid .patchTmp >& .patchSum
+sed -i '$d'  .patchSum              # remove the last line that contains garbage
 
 # remove all the temporary files
 rm -f .elapsedTime .meanTime .physicalTime .elapsedTimeRegrid .scheduleCopy .regridder .regridTotal .TG_recompile

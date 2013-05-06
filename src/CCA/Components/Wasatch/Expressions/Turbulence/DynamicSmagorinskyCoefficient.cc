@@ -24,19 +24,9 @@
 
 #include "DynamicSmagorinskyCoefficient.h"
 
-//-- Wasatch includes --//
-#include <CCA/Components/Wasatch/StringNames.h>
-
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-
-//--------------------------------------------------------------------
-
-Expr::Tag dynamic_smagorinsky_coefficient_tag() {
-  const Wasatch::StringNames& sName = Wasatch::StringNames::self();
-  return Expr::Tag( sName.dynamicsmagcoef, Expr::STATE_NONE );
-}
 
 //********************************************************************
 // DYNAMIC SMAGORINSKY COEFFICIENT
@@ -92,6 +82,11 @@ DynamicSmagorinskyCoefficient::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   StrainTensorBase::bind_operators(opDB);
+  exOp_    = opDB.retrieve_operator<ExOpT>();
+  xexOp_    = opDB.retrieve_operator<XExOpT>();
+  yexOp_    = opDB.retrieve_operator<YExOpT>();
+  zexOp_    = opDB.retrieve_operator<ZExOpT>();
+  
   BoxFilterOp_    = opDB.retrieve_operator<BoxFilterT>();
   xBoxFilterOp_   = opDB.retrieve_operator<XBoxFilterT>();
   yBoxFilterOp_   = opDB.retrieve_operator<YBoxFilterT>();
@@ -117,42 +112,42 @@ evaluate()
   
   // NOTE: hats denote test filetered. u is grid filtered
   
-  // CALCULATE filtered staggered velocities/momentum
+  // CALCULATE test filtered staggered velocities/momentum
   SpatFldPtr<XVolField> uhat = SpatialFieldStore::get<XVolField>( DynSmagConst );
   SpatFldPtr<YVolField> vhat = SpatialFieldStore::get<YVolField>( DynSmagConst );
   SpatFldPtr<ZVolField> what = SpatialFieldStore::get<ZVolField>( DynSmagConst );  
-  *uhat <<= 0.0;
-  *vhat <<= 0.0;
-  *what <<= 0.0;
   xBoxFilterOp_->apply_to_field( *vel1_, *uhat );
   yBoxFilterOp_->apply_to_field( *vel2_, *vhat );
   zBoxFilterOp_->apply_to_field( *vel3_, *what );
-
+  // extrapolate filtered, staggered, velocities from the interior.
+  xexOp_->apply_to_field(*uhat);
+  yexOp_->apply_to_field(*vhat);
+  zexOp_->apply_to_field(*what);
+  
   // CALCULATE cell centered velocities
   SpatFldPtr<SVolField> ucc = SpatialFieldStore::get<SVolField>( DynSmagConst );
   SpatFldPtr<SVolField> vcc = SpatialFieldStore::get<SVolField>( DynSmagConst );
   SpatFldPtr<SVolField> wcc = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *ucc <<= 0.0;
-  *vcc <<= 0.0;
-  *wcc <<= 0.0;
   vel1InterpOp_->apply_to_field( *vel1_, *ucc );  // u cell centered
   vel2InterpOp_->apply_to_field( *vel2_, *vcc );  // v cell centered
   vel3InterpOp_->apply_to_field( *vel3_, *wcc );  // w cell centered
+  // extrapolate cell centered velocities to ghost cells
+  exOp_->apply_to_field(*ucc);
+  exOp_->apply_to_field(*vcc);
+  exOp_->apply_to_field(*wcc);
   
-  // INTERPOLATE test-filtered velocities to cell centers
+  // CALCULATE test-filtered velocities
+  // NOTE: since cell centered velocities have already been extrapolated to ghost cells
+  // we should have valid test-filtered data at the interior.
   SpatFldPtr<SVolField> ucchat = SpatialFieldStore::get<SVolField>( DynSmagConst );
   SpatFldPtr<SVolField> vcchat = SpatialFieldStore::get<SVolField>( DynSmagConst );
   SpatFldPtr<SVolField> wcchat = SpatialFieldStore::get<SVolField>( DynSmagConst );  
-  *ucchat <<= 0.0;
-  *vcchat <<= 0.0;
-  *wcchat <<= 0.0;
   BoxFilterOp_->apply_to_field( *ucc, *ucchat );
   BoxFilterOp_->apply_to_field( *vcc, *vcchat );
   BoxFilterOp_->apply_to_field( *wcc, *wcchat );
   
   // CALCULATE test-filtered velocity products - those will be used in the Leonard stress tensor
   SpatFldPtr<SVolField> tmp   = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *tmp <<= 0.0;
   SpatFldPtr<SVolField> uuhat = SpatialFieldStore::get<SVolField>( DynSmagConst );
   SpatFldPtr<SVolField> uvhat = SpatialFieldStore::get<SVolField>( DynSmagConst );
   SpatFldPtr<SVolField> uwhat = SpatialFieldStore::get<SVolField>( DynSmagConst );
@@ -218,7 +213,7 @@ evaluate()
   // NOTE: This should be done AFTER the test-filtered rate of strain because we
   // are saving the grid-filtered StrainTensorMagnitude as a computed field for
   // this expression BUT we're using the SAME field_ref (i.e. strTsrMag) for both
-  // quantities to save on memory usage.
+  // quantities to reduce memory usage.
   SpatFldPtr<SVolField> S11 = SpatialFieldStore::get<SVolField>( DynSmagConst );
   SpatFldPtr<SVolField> S12 = SpatialFieldStore::get<SVolField>( DynSmagConst );
   SpatFldPtr<SVolField> S13 = SpatialFieldStore::get<SVolField>( DynSmagConst );
@@ -226,14 +221,22 @@ evaluate()
   SpatFldPtr<SVolField> S23 = SpatialFieldStore::get<SVolField>( DynSmagConst );
   SpatFldPtr<SVolField> S33 = SpatialFieldStore::get<SVolField>( DynSmagConst );
   calculate_strain_tensor_components(strTsrMag,*vel1_,*vel2_,*vel3_,*S11,*S12,*S13,*S22,*S23,*S33);
+  exOp_->apply_to_field(strTsrMag);
+  exOp_->apply_to_field(*S11);
+  exOp_->apply_to_field(*S12);
+  exOp_->apply_to_field(*S13);
+  exOp_->apply_to_field(*S22);
+  exOp_->apply_to_field(*S23);
+  exOp_->apply_to_field(*S33);
+
   // !!!!!!!!!!!!! ATTENTION:
   // DO NOT MODIFY strTsrMag - at this point, strTsrMag stores
   // the magnitude of the grid-filtered strain tensor, strTsrMag = Sqrt(2 * S_ij * S_ij),
   // and this quantity will be used in calculating the Turbulent Viscosity.
   // !!!!!!!!!!!!! END ATTENATION
-  
+
   // now multiply \bar{S} by \bar{S_ij} and test filter them
-  *tmp <<= 0.0;
+//  *tmp <<= 0.0;
   
   *tmp <<= strTsrMag * *S11;
   BoxFilterOp_->apply_to_field(*tmp, *S11);
@@ -252,7 +255,6 @@ evaluate()
   
   *tmp <<= strTsrMag * *S33;
   BoxFilterOp_->apply_to_field(*tmp, *S33);
-  
   // note that we now have S_ij = \FILTER { |\bar{S}| \bar{S_ij} }
 
   //----------------------------------------------------------------------------
@@ -261,27 +263,27 @@ evaluate()
   const double filRatio = 9.0; // this quantity is hard-coded at the moment
   // because the dynamic model is allowed to work only in 3D
   SpatFldPtr<SVolField> M11 = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *M11 <<= 0.0;
+  //*M11 <<= 0.0;
   *M11 <<= *S11 - filRatio * *Shat11;
 
   SpatFldPtr<SVolField> M12 = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *M12 <<= 0.0;
+  //*M12 <<= 0.0;
   *M12 <<= *S12 - filRatio * *Shat12;
 
   SpatFldPtr<SVolField> M13 = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *M13 <<= 0.0;
+  //*M13 <<= 0.0;
   *M13 <<= *S13 - filRatio * *Shat13;
 
   SpatFldPtr<SVolField> M22 = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *M22 <<= 0.0;
+  //*M22 <<= 0.0;
   *M22 <<= *S22 - filRatio * *Shat22;
   
   SpatFldPtr<SVolField> M23 = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *M23 <<= 0.0;
+  //*M23 <<= 0.0;
   *M23 <<= *S23 - filRatio * *Shat23;
   
   SpatFldPtr<SVolField> M33 = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *M33 <<= 0.0;
+  //*M33 <<= 0.0;
   *M33 <<= *S33 - filRatio * *Shat33;
 
   
@@ -289,7 +291,7 @@ evaluate()
   // CALCULATE the dynamic constant!
   //----------------------------------------------------------------------------
   SpatFldPtr<SVolField> LM = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *LM <<= 0.0;
+  //*LM <<= 0.0;
   *LM <<= *L11 * *M11 + *L22 * *M22 + *L33 * *M33 + 2.0 * (*L12 * *M12 + *L13 * *M13  + *L23 * *M23);
   
   // filtering the numerator and denominator here requires an MPI communication
@@ -300,7 +302,7 @@ evaluate()
 //  *num <<= *tmp;
   
   SpatFldPtr<SVolField> MM = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  *MM <<= 0.0;
+  //*MM <<= 0.0;
   *MM <<= *M11 * *M11 + *M22 * *M22 + *M33 * *M33 + 2.0 * (*M12 * *M12 + *M13 * *M13 + *M23 * *M23);
 //  *tmp<<= 0.0;
 //  BoxFilterOp_->apply_to_field(*denom,*tmp);

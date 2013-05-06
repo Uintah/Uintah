@@ -125,8 +125,11 @@ Ray::~Ray()
 //---------------------------------------------------------------------------
 void
 Ray::problemSetup( const ProblemSpecP& prob_spec,
-                   const ProblemSpecP& rmcrtps) 
+                   const ProblemSpecP& rmcrtps,
+                   SimulationStateP&   sharedState) 
 {
+
+  d_sharedState = sharedState;
   ProblemSpecP rmcrt_ps = rmcrtps;
   rmcrt_ps->getWithDefault( "NoOfRays"  ,       _NoOfRays  ,      10 );
   rmcrt_ps->getWithDefault( "Threshold" ,       _Threshold ,      0.01 );       // When to terminate a ray
@@ -276,7 +279,7 @@ Ray::registerVarLabels(int   matlIndex,
                        const VarLabel* absorp,
                        const VarLabel* temperature,
                        const VarLabel* celltype, 
-                       const VarLabel* divQ)
+                       const VarLabel* divQ )
 {
   d_matl             = matlIndex;
   d_abskgLabel       = abskg;
@@ -414,10 +417,11 @@ void
 Ray::sched_sigmaT4( const LevelP& level, 
                     SchedulerP& sched,
                     Task::WhichDW temp_dw,
+                    const int radCalc_freq,
                     const bool includeEC )
 {
   std::string taskname = "Ray::sigmaT4";
-  Task* tsk= scinew Task( taskname, this, &Ray::sigmaT4, temp_dw, includeEC );
+  Task* tsk= scinew Task( taskname, this, &Ray::sigmaT4, temp_dw, radCalc_freq, includeEC );
 
   printSchedule(level,dbg,taskname);
   
@@ -436,9 +440,15 @@ Ray::sigmaT4( const ProcessorGroup*,
               DataWarehouse* , 
               DataWarehouse* new_dw,
               Task::WhichDW which_temp_dw,
+              const int radCalc_freq,
               const bool includeEC )               
 {
-
+  // Only run if it's time
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  if ( timestep%radCalc_freq != 0 ) {
+    return;
+  }
+  
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
@@ -476,7 +486,8 @@ Ray::sched_rayTrace( const LevelP& level,
                      Task::WhichDW abskg_dw,
                      Task::WhichDW sigma_dw,
                      Task::WhichDW celltype_dw,
-                     bool modifies_divQ )
+                     bool modifies_divQ,
+                     const int radCalc_freq )
 {
   std::string taskname = "Ray::rayTrace";
 #ifdef HAVE_CUDA
@@ -485,7 +496,7 @@ Ray::sched_rayTrace( const LevelP& level,
                            &Ray::rayTrace, modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
 #else
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace,
-                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw );
+                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
 #endif
 
   printSchedule(level,dbg,taskname);
@@ -529,8 +540,16 @@ Ray::rayTrace( const ProcessorGroup* pc,
                bool modifies_divQ,
                Task::WhichDW which_abskg_dw,
                Task::WhichDW which_sigmaT4_dw,
-               Task::WhichDW which_celltype_dw)
+               Task::WhichDW which_celltype_dw,
+               const int radCalc_freq )
 { 
+
+  // Only run if it's time
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  if ( timestep%radCalc_freq != 0 ) {
+    return;
+  }
+  
   const Level* level = getLevel(patches);
   MTRand _mTwister;
 
@@ -1023,8 +1042,16 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
                                SchedulerP& sched,
                                Task::WhichDW abskg_dw,
                                Task::WhichDW sigma_dw,
-                               bool modifies_divQ )
+                               bool modifies_divQ,
+                               const int radCalc_freq )
 {
+
+  // Only schedule below on radiation timestep
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  if ( timestep%radCalc_freq != 0 ) {
+    return;
+  } 
+  
   int maxLevels = level->getGrid()->numLevels() -1;
   int L_indx = level->getIndex();
   
@@ -1033,7 +1060,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   }
   std::string taskname = "Ray::rayTrace_dataOnion";
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace_dataOnion,
-                          modifies_divQ, abskg_dw, sigma_dw );
+                          modifies_divQ, abskg_dw, sigma_dw, radCalc_freq );
                           
   printSchedule(level,dbg,taskname);
 
@@ -1085,8 +1112,15 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
                          DataWarehouse* new_dw,
                          bool modifies_divQ,
                          Task::WhichDW which_abskg_dw,
-                         Task::WhichDW which_sigmaT4_dw )
+                         Task::WhichDW which_sigmaT4_dw,
+                         const int radCalc_freq )
 { 
+  // Only run if it's time
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  if ( timestep%radCalc_freq != 0 ) {
+    return;
+  } 
+  
   const Level* fineLevel = getLevel(finePatches);
   int maxLevels    = fineLevel->getGrid()->numLevels();
   int levelPatchID = fineLevel->getPatch(0)->getID();
@@ -1669,11 +1703,13 @@ void
 Ray::sched_setBoundaryConditions( const LevelP& level, 
                                   SchedulerP& sched,
                                   Task::WhichDW temp_dw,
+                                  const int radCalc_freq,
                                   const bool backoutTemp )
 {
 
   std::string taskname = "Ray::setBoundaryConditions";
-  Task* tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions, temp_dw, backoutTemp );
+  Task* tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions, 
+                          temp_dw, radCalc_freq, backoutTemp );
 
   printSchedule(level,dbg,taskname);
 
@@ -1695,9 +1731,15 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
                             DataWarehouse*,                
                             DataWarehouse* new_dw,
                             Task::WhichDW temp_dw,
+                            const int radCalc_freq,
                             const bool backoutTemp )               
 {
-
+  // Only run if it's time
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  if ( timestep%radCalc_freq != 0 ) {
+    return;
+  }
+  
   if ( _onOff_SetBCs == false )
     return;
 
@@ -2031,12 +2073,13 @@ void Ray::ROI_Extents ( const ProcessorGroup*,
 void Ray::sched_CoarsenAll( const LevelP& coarseLevel, 
                             SchedulerP& sched,
                             const bool modifies_abskg,
-                            const bool modifies_sigmaT4)
+                            const bool modifies_sigmaT4,
+                            const int radCalc_freq)
 {
   if(coarseLevel->hasFinerLevel()){
     printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,   d_abskgLabel);
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_sigmaT4, d_sigmaT4_label);
+    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,   d_abskgLabel,    radCalc_freq );
+    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_sigmaT4, d_sigmaT4_label, radCalc_freq );
   }
 }
 
@@ -2045,13 +2088,14 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
                             SchedulerP& sched,
                             Task::WhichDW this_dw,
                             const bool modifies,
-                            const VarLabel* variable)
+                            const VarLabel* variable,
+                            const int radCalc_freq)
 { 
   string taskname = "        Coarsen_Q_" + variable->getName();
   printSchedule(coarseLevel,dbg,taskname);
 
   Task* t = scinew Task( taskname, this, &Ray::coarsen_Q, 
-                         variable, modifies, this_dw );
+                         variable, modifies, this_dw, radCalc_freq );
   
   if(modifies){
     t->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
@@ -2071,8 +2115,16 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                       DataWarehouse* new_dw,
                       const VarLabel* variable,
                       const bool modifies,
-                      Task::WhichDW which_dw )
+                      Task::WhichDW which_dw,
+                      const int radCalc_freq )
 {
+
+  // Only run if it's time
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  if ( timestep%radCalc_freq != 0 ) {
+    return;
+  }
+  
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();  
 

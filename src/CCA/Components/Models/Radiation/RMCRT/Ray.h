@@ -99,7 +99,8 @@ namespace Uintah{
       //  TASKS
       /** @brief Interface to input file information */
       void  problemSetup( const ProblemSpecP& prob_spec,
-                          const ProblemSpecP& rmcrt_ps ); 
+                          const ProblemSpecP& rmcrt_ps,
+                          SimulationStateP& sharedState ); 
 
       /** @brief Algorithm for tracing rays through a single level*/ 
       void sched_rayTrace( const LevelP& level, 
@@ -107,20 +108,23 @@ namespace Uintah{
                            Task::WhichDW abskg_dw,
                            Task::WhichDW sigma_dw,
                            Task::WhichDW celltype_dw,
-                           bool modifies_divQ );
+                           bool modifies_divQ,
+                           const int radCalc_freq );
 
       /** @brief Algorithm for RMCRT using multilevel dataOnion approach*/ 
       void sched_rayTrace_dataOnion( const LevelP& level, 
                                      SchedulerP& sched,
                                      Task::WhichDW abskg_dw,
                                      Task::WhichDW sigma_dw,
-                                     bool modifies_divQ );
+                                     bool modifies_divQ,
+                                     const int radCalc_freq );
 
       /** @brief Schedule compute of blackbody intensity */ 
       void sched_sigmaT4( const LevelP& level, 
                           SchedulerP& sched,
                           Task::WhichDW temp_dw,
-                          const bool includeEC = true);
+                          const int radCalc_freq,
+                          const bool includeEC = true );
 
 
       /** @brief Schedule filtering of q and divQ */
@@ -139,6 +143,7 @@ namespace Uintah{
       void  sched_setBoundaryConditions( const LevelP& level, 
                                          SchedulerP& sched,
                                          Task::WhichDW temp_dw,
+                                         const int radCalc_freq,
                                          const bool backoutTemp = false);
                                          
       /** @brief Update the running total of the incident intensity */
@@ -182,7 +187,8 @@ namespace Uintah{
       void sched_CoarsenAll( const LevelP& coarseLevel, 
                              SchedulerP& sched,
                              const bool modifies_abskg,
-                             const bool modifies_sigmaT4 );
+                             const bool modifies_sigmaT4,
+                             const int radCalc_freq );
                              
 
       void sched_ROI_Extents ( const LevelP& level, 
@@ -257,6 +263,7 @@ namespace Uintah{
       Ghost::GhostType d_gn;
       Ghost::GhostType d_gac;
 
+      SimulationStateP d_sharedState;
       const VarLabel* d_sigmaT4_label; 
       const VarLabel* d_abskgLabel;
       const VarLabel* d_absorpLabel;
@@ -286,7 +293,8 @@ namespace Uintah{
                      bool modifies_divQ,
                      Task::WhichDW which_abskg_dw,
                      Task::WhichDW which_sigmaT4_dw,
-                     Task::WhichDW which_celltype_dw);
+                     Task::WhichDW which_celltype_dw,
+                     const int radCalc_freq );
 
 #ifdef HAVE_CUDA
 
@@ -315,7 +323,8 @@ namespace Uintah{
                                DataWarehouse* new_dw,
                                bool modifies_divQ,
                                Task::WhichDW which_abskg_dw,
-                               Task::WhichDW which_sigmaT4_dw );
+                               Task::WhichDW which_sigmaT4_dw,
+                               const int radCalc_freq );
  
      void computeExtents(LevelP level_0,
                         const Level* fineLevel,
@@ -341,6 +350,7 @@ namespace Uintah{
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw,
                     Task::WhichDW which_temp_dw,
+                    const int radCalc_freq,
                     const bool includeEC );
 
       //----------------------------------------
@@ -368,6 +378,7 @@ namespace Uintah{
                                   DataWarehouse*,
                                   DataWarehouse* new_dw,
                                   Task::WhichDW temp_dw,
+                                  const int radCalc_freq,
                                   const bool backoutTemp );
                                   
     int numFaceCells(const Patch* patch,
@@ -387,7 +398,8 @@ namespace Uintah{
                           SchedulerP& scheduler,
                           Task::WhichDW this_dw,
                           const bool modifies,
-                          const VarLabel* variable);
+                          const VarLabel* variable,
+                          const int radCalc_freq);
                   
     void coarsen_Q ( const ProcessorGroup*,
                      const PatchSubset* patches,
@@ -396,7 +408,8 @@ namespace Uintah{
                      DataWarehouse* new_dw,
                      const VarLabel* variable,
                      const bool modifies,
-                     Task::WhichDW this_dw);
+                     Task::WhichDW this_dw,
+                     const int radCalc_freq);
                      
     void ROI_Extents ( const ProcessorGroup*,
                        const PatchSubset* patches,

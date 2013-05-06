@@ -25,7 +25,6 @@
 //-- Wasatch Includes --//
 #include "ParseEquation.h"
 #include <CCA/Components/Wasatch/TimeStepper.h>
-#include <CCA/Components/Wasatch/StringNames.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 

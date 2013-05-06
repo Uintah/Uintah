@@ -27,6 +27,7 @@
 
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include "UpwindInterpolant.h"
+#include "Extrapolant.h"
 #include "FluxLimiterInterpolant.h"
 
 #include <spatialops/structured/FVStaggered.h>
@@ -77,6 +78,8 @@ namespace Wasatch{
    *    - \b InterpC2FYLimiter - upwind or limited interpolants in y-dir
    *    - \b InterpC2FZLimiter - upwind or limited interpolants in z-dir
    *
+   *    - \b BoundaryExtrapolant - Extrapolant for interior data to patch boundaries
+   *
    *  Example:
    *  \code
    *    typedef OpTypes< SVolField >  VolOps;
@@ -102,6 +105,8 @@ namespace Wasatch{
     typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::XFace >  InterpC2FXLimiter;
     typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::YFace >  InterpC2FYLimiter;
     typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::ZFace >  InterpC2FZLimiter;
+    
+    typedef Extrapolant<CellT> BoundaryExtrapolant;
   };
 }
 

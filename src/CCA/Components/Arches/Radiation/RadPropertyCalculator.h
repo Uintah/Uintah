@@ -180,11 +180,17 @@ namespace Uintah {
                 } 
               }
 
-              // For particles: 
-              _does_scattering = false; 
-              if ( db_gg->findBlock( "particles" ) ){ 
+            }else { 
 
-                ProblemSpecP db_p = db_gg->findBlock( "particles" ); 
+              throw InvalidValue( "Error: Only grey gas properties are available at this time.",__FILE__,__LINE__);
+
+            }
+
+            // For particles: 
+            _does_scattering = false; 
+            if ( db->findBlock( "particles" ) ){ 
+
+                ProblemSpecP db_p = db->findBlock( "particles" ); 
 
                 double real_part = 0; 
                 double imag_part = 0; 
@@ -208,13 +214,6 @@ namespace Uintah {
                 _does_scattering = true; 
 
               }
-
-            } else { 
-
-              throw InvalidValue( "Error: Only grey gas properties are available at this time.",__FILE__,__LINE__);
-
-            }
-
             //need smarter return? 
             //or no return at all? 
             return true; 

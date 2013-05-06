@@ -66,6 +66,7 @@ void
 UpwindInterpolant<SrcT,DestT>::
 apply_to_field( const SrcT& src, DestT& dest )
 {
+  using namespace SpatialOps;
   using namespace SpatialOps::structured;
   typedef s2detail::ExtentsAndOffsets<SrcT,DestT> Extents;
 
@@ -88,27 +89,23 @@ apply_to_field( const SrcT& src, DestT& dest )
                          wdest.extent() + Extents::DestExtent::int_vec() + wdest.has_bc()*Extents::DestExtentBC::int_vec(),
                          wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
 
-
 # ifndef NDEBUG
   assert( ws1.extent() == ws2.extent() && ws1.extent() == wd.extent() );
 # endif
 
   // build fields using these newly created windows to do the stencil operation.
-  DestT    d( wd, &dest[0], ExternalStorage );
-  DestT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
+  // PAY ATTENTION to how we windowed on the destination field. This is likely
+  // to work ONLY with SVol as source and X,Y,ZVol for destination fields.
+  // Although the destination field is of a "different" type, we create a window
+  // that is the "same size" as the source field to allow us to use a nebo assignment
+  SrcT    d( wd, &dest[0], ExternalStorage );
+  SrcT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
   SrcT    s1( ws1, &src[0], ExternalStorage );
   SrcT    s2( ws2, &src[0], ExternalStorage );
 
-  typename DestT::iterator      id  = d .begin();
-  typename DestT::iterator      ide = d .end();
-  typename DestT::iterator      iav = aVel.begin();
-  typename SrcT::const_iterator is1 = s1.begin();
-  typename SrcT::const_iterator is2 = s2.begin();
-  for( ; id!=ide; ++id, ++iav, ++is1, ++is2 ){
-    if     ( *iav > 0.0 ) *id = *is1;
-    else if( *iav < 0.0 ) *id = *is2;
-    else                  *id = 0.5*( *is1 + *is2 );
-  }
+  d <<= cond( aVel > 0.0, s1  )
+            ( aVel < 0.0, s2  )
+            ( 0.5 * (s1 + s2) );
 
   advectiveVelocity_ = NULL;
 }

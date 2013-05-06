@@ -349,7 +349,7 @@ SmoothCylGeomPiece::createEndCapPoints()
 int 
 SmoothCylGeomPiece::createCylPoints()
 {
-  cout << "Creating particles for the Cylinder" << endl;
+  //cout << "Creating particles for the Cylinder" << endl;
 
   // Find the vector along the axis of the cylinder
   Vector axis = d_top - d_bottom;
@@ -378,6 +378,9 @@ SmoothCylGeomPiece::createCylPoints()
   double innerRad = d_inner_radius;
   int numAngular = d_numAngular;
 
+  d_points.clear();
+  d_volume.clear();
+  d_size.clear();
   // Create particles for the hollow cylinder
   double currZ = 0.5*axisInc;
   for (int kk = 0; kk < d_numAxial; ++kk) {
@@ -393,7 +396,7 @@ SmoothCylGeomPiece::createCylPoints()
       }
       double angularInc = (d_angle - d_arcStart)/(double) numAngular;
       double area = 0.5*angularInc*(nextRadius*nextRadius-prevRadius*prevRadius);
-	
+
       for (int jj = 0; jj < numAngular; ++jj) {
 	double phi = d_arcStart + (jj+0.5)*angularInc; 
 	double cosphi = cos(phi);
@@ -406,7 +409,7 @@ SmoothCylGeomPiece::createCylPoints()
 	Matrix3 size((d_angle - d_arcStart)*y/(numAngular*d_DX.x()),  thickness*x/(d_numRadial*r*d_DX.y()), 0.0,
 		     -(d_angle - d_arcStart)*x/(numAngular*d_DX.x()), thickness*y/(d_numRadial*r*d_DX.y()), 0.0,
 		     0.0                                            , 0.0                                   , length/(d_numAxial*d_DX.z()));
-     
+
 	// Rotate points to correct orientation and
 	// Translate to correct position
 	Vector pp(x, y, z);
@@ -419,13 +422,13 @@ SmoothCylGeomPiece::createCylPoints()
 	d_points.push_back(p);
 	d_volume.push_back(axisInc*area);
 	d_size.push_back(size);
-	//cout << "Point["<<count<<"]="<<p<<endl;
+	//cout << "Size["<<count<<"] = "<<d_size[count]<<endl;
 	count++;
       }
     }
     currZ += axisInc;
   } 
 
-  
+
   return count;
 }
