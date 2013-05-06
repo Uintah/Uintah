@@ -24,7 +24,6 @@
 
 #include <CCA/Components/MD/MDLabel.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>

@@ -72,8 +72,8 @@ SPME::~SPME()
     SimpleGrid<double>* theta = spmePatch->getTheta();
     delete theta;
 
-    SimpleGrid<Matrix3>* stressPrefactor = spmePatch->getStressPrefactor();
-    delete stressPrefactor;
+//    SimpleGrid<Matrix3>* stressPrefactor = spmePatch->getStressPrefactor();
+//    delete stressPrefactor;
 
     delete spmePatch;
   }
@@ -273,14 +273,14 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
     // No need to store one for each particle. -- JBH
 
     // Generate the data that maps the charges in the patch onto the grid
-    std::vector<SPMEMapPoint> gridMap = generateChargeMap(pset, px, pids, d_interpolatingSpline);
+    d_gridMap = generateChargeMap(pset, px, pids, d_interpolatingSpline);
 
     // !FIXME Need to put Q in for reduction
     // We have now set up the real-space Q grid.
     // We need to store this patch's Q grid on the data warehouse (?) to pass through to the transform
     SimpleGrid<complex<double> >* Q = spmePatch->getQ();
 
-    mapChargeToGrid(spmePatch, gridMap, pset, pcharge, d_interpolatingSpline.getHalfMaxSupport());  // Calculate Q(r)
+    mapChargeToGrid(spmePatch, d_gridMap, pset, pcharge, d_interpolatingSpline.getHalfMaxSupport());  // Calculate Q(r)
 
     new_dw->deleteParticles(delset);
   }
@@ -397,15 +397,12 @@ void SPME::finalize(const ProcessorGroup* pg,
     const Patch* patch = spmePatch->getPatch();
     ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
 
-    ParticleVariable<Vector> pforcecurrent;
-    new_dw->getModifiable(pforcecurrent, d_lb->pForceLabel_preReloc, pset);
+    ParticleVariable<Vector> pforcenew;
+    new_dw->getModifiable(pforcenew, d_lb->pForceLabel_preReloc, pset);
 
     // Calculate electrostatic contribution to f_ij(r)
-//    SPME::mapForceFromGrid(spmePatch, pset, pforcecurrent);
+    mapForceFromGrid(spmePatch, d_gridMap, pset, pforcenew, d_interpolatingSpline.getHalfMaxSupport());
   }
-
-// Reduction for Energy, Pressure Tensor?
-// Something goes here, though I'm not sure what... output?
 }
 
 std::vector<SCIRun::dblcomplex> SPME::generateBVector(const std::vector<double>& mFractional,
@@ -578,8 +575,8 @@ void SPME::calculateStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor,
 }
 
 std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
-                                                  constParticleVariable<Point> particlePositions,
-                                                  constParticleVariable<long64> particleIDs,
+                                                  constParticleVariable<Point>& particlePositions,
+                                                  constParticleVariable<long64>& particleIDs,
                                                   CenteredCardinalBSpline& spline)
 {
   std::vector<SPMEMapPoint> chargeMap;
@@ -643,7 +640,7 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
 void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
                            const std::vector<SPMEMapPoint>& gridMap,
                            ParticleSubset* pset,
-                           constParticleVariable<double> charges,
+                           constParticleVariable<double>& charges,
                            int halfSupport)
 {
 
@@ -695,7 +692,7 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
 void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
                             const std::vector<SPMEMapPoint>& gridMap,
                             ParticleSubset* pset,
-                            ParticleVariable<Vector> pforcenew,
+                            ParticleVariable<Vector>& pforcenew,
                             int halfSupport)
 {
   SimpleGrid<complex<double> >* Q = spmePatch->getQ();
@@ -732,6 +729,7 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
             z_anchor -= d_kLimits.z();
 
           double QReal = real((*Q)(x_anchor, y_anchor, z_anchor));
+
 #ifdef DEBUG
           double QMag = abs((*Q)(x_anchor, y_anchor, z_anchor));
           ASSERTEQ(QMag,QReal);

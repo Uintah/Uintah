@@ -36,8 +36,6 @@
 #include <CCA/Components/MD/SPMEMapPoint.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 

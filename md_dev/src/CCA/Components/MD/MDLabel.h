@@ -34,6 +34,7 @@ namespace Uintah {
 class VarLabel;
 
 typedef ReductionVariable<Matrix3, Reductions::Sum<Matrix3> > matrix_sum;
+
 /**
  *  @class MDLabel
  *  @ingroup MD

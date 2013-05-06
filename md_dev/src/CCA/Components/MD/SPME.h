@@ -161,8 +161,8 @@ class SPME : public Electrostatics {
      * @return
      */
     std::vector<SPMEMapPoint> generateChargeMap(ParticleSubset* pset,
-                                                constParticleVariable<Point> particlePositions,
-                                                constParticleVariable<long64> particleIDs,
+                                                constParticleVariable<Point>& particlePositions,
+                                                constParticleVariable<long64>& particleIDs,
                                                 CenteredCardinalBSpline& spline);
 
     /**
@@ -175,7 +175,7 @@ class SPME : public Electrostatics {
     void mapChargeToGrid(SPMEPatch* spmePatch,
                          const std::vector<SPMEMapPoint>& gridMap,
                          ParticleSubset* pset,
-                         constParticleVariable<double> charges,
+                         constParticleVariable<double>& charges,
                          int halfSupport);
 
     /**
@@ -186,7 +186,7 @@ class SPME : public Electrostatics {
     void mapForceFromGrid(SPMEPatch* spmePatch,
                           const std::vector<SPMEMapPoint>& gridMap,
                           ParticleSubset* pset,
-                          ParticleVariable<Vector> pforcenew,
+                          ParticleVariable<Vector>& pforcenew,
                           int halfSupport);
 
     /**
@@ -410,6 +410,7 @@ class SPME : public Electrostatics {
     IntVector d_kLimits;                              //!< Number of grid divisions in each direction
     CenteredCardinalBSpline d_interpolatingSpline;    //!< Spline object to hold info for spline calculation
     std::vector<SPMEPatch*> d_spmePatches;            //!< Assuming multiple patches, these are the pieces of the SPME grid
+    std::vector<SPMEMapPoint> d_gridMap;              //!< The data that maps the charges in the patch to-and-from the grid
 
     // Variables we'll get from the MDSystem instance to make life easier
     Matrix3 d_unitCell;           //!< Unit cell lattice parameters
