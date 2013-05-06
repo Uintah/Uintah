@@ -135,7 +135,7 @@ namespace Wasatch{
     const bool isviscous_;
     const bool isTurbulent_;
     const Expr::Tag thisVelTag_, densityTag_;
-    Expr::ExpressionID normalStressID_, normalConvFluxID_, pressureID_;
+    Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_;
     std::string thisMomName_;
     Expr::TagList velTags_;  ///< TagList for the velocity expressions
 

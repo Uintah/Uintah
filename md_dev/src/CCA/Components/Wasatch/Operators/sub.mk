@@ -32,4 +32,5 @@ SRCDIR   := CCA/Components/Wasatch/Operators
 SRCS    +=				\
 	$(SRCDIR)/Operators.cc		\
 	$(SRCDIR)/UpwindInterpolant.cc \
+	$(SRCDIR)/Extrapolant.cc \
   $(SRCDIR)/FluxLimiterInterpolant.cc

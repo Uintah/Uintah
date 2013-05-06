@@ -132,4 +132,4 @@ public:
   void evaluate();
 };
 
-#endif // Stress_Expr_h
+#endif // Vorticity_Expr_h

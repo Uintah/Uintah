@@ -142,7 +142,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     
     db_clipping->getWithDefault("low", clip.low,  -1.e16);
     db_clipping->getWithDefault("high",clip.high, 1.e16);
-    db_clipping->getWithDefault("tolerance", clip.tol, 1e-10); 
+    db_clipping->getWithDefault("tol", clip.tol, 1e-15); 
 
     if ( db_clipping->findBlock("low") ) 
       clip.do_low = true; 
@@ -163,7 +163,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
       //By default, set the low value for this weight to 0 and run on low clipping
       clip.activated = true; 
       clip.low = 0.0; 
-      clip.tol = 1e-10; 
+      clip.tol = 1e-15; 
       clip.do_low = true; 
 
     } else { 
@@ -719,7 +719,13 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     double factor = d_timeIntegrator->time_factor[timeSubStep]; 
     curr_ssp_time = curr_time + factor * dt; 
 
-    d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high ); 
+    if(d_weight)
+        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high ); 
+    else{
+        constCCVariable<double> w;
+        new_dw->get(w, d_weightLabel, matlIndex, patch, gn, 0);
+        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high, w); 
+    }
 
     //----BOUNDARY CONDITIONS
     // For first time step, bc's have been set in dqmomInit

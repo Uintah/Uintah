@@ -37,7 +37,8 @@
 #include <vector>
 #include <string>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
-
+#include "spatialops/SpatialOpsDefs.h"
+#include "spatialops/structured/FVTools.h"
 /**
  *  \class     FluxLimiterInterpolant
  *  \author    Tony Saad
@@ -81,31 +82,15 @@ private:
   // holds the limiter type to be used, i.e. SUPERBEE, VANLEER, etc...
   Wasatch::ConvInterpMethods limiterType_;
   
-  // An integer denoting the offset for the face index owned by the control
-  // volume in question. For the x direction, theStride = 0.
-  // For the y direction, stride_ = nx. For the z direction, stride_=nx*ny.
-  size_t stride_;
+  SpatialOps::structured::IntVec unitNormal_;
   
-  // for the plus face, bndPlusStrideCoef is useful to define how many strides
-  // one will have to move
-  size_t bndPlusStrideCoef_;
-  
-  // some counters to help in the evaluate member function
-  std::vector<size_t> faceCount_;
-  std::vector<size_t> volIncr_;
-  std::vector<size_t> faceIncr_;
-  
-  // boundary counters
-  std::vector<size_t> bndFaceCount_; // counter for faces at the boundary
-  std::vector<size_t> bndVolIncr_;
-  std::vector<size_t> bndFaceIncr_;
+  mutable std::vector<PhiVolT> srcFields_;
+  mutable std::vector<typename PhiVolT::const_iterator> srcIters_;
   
   // boundary information
   bool hasPlusBoundary_, hasMinusBoundary_;
   
-  int calculate_stride(const std::vector<int>& dim,
-                       const std::vector<bool> hasPlusFace) const;
-  
+  void build_src_iterators(const PhiVolT& src) const;
   
 public:
   

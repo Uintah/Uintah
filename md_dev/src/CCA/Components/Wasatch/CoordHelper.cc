@@ -25,7 +25,7 @@
 //-- Wasatch includes --//
 #include "CoordHelper.h"
 #include "Expressions/Coordinate.h"
-#include "StringNames.h"
+#include "TagNames.h"
 
 //-- Uintah includes --//
 #include <Core/Grid/Variables/VarTypes.h>
@@ -34,8 +34,6 @@
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
-#include "StringNames.h"
-
 //-- ExprLib includes --//
 #include <expression/ExpressionFactory.h>
 
@@ -43,12 +41,11 @@
 namespace Wasatch{
 
   CoordHelper::CoordHelper( Expr::ExpressionFactory& exprFactory )
-    : context_( Expr::STATE_NONE ),
-      sName_( StringNames::self() ),
-      xsvt_( sName_.xsvolcoord, context_ ),  ysvt_( sName_.ysvolcoord, context_ ),  zsvt_( sName_.zsvolcoord, context_ ),
-      xxvt_( sName_.xxvolcoord, context_ ),  yxvt_( sName_.yxvolcoord, context_ ),  zxvt_( sName_.zxvolcoord, context_ ),
-      xyvt_( sName_.xyvolcoord, context_ ),  yyvt_( sName_.yyvolcoord, context_ ),  zyvt_( sName_.zyvolcoord, context_ ),
-      xzvt_( sName_.xzvolcoord, context_ ),  yzvt_( sName_.yzvolcoord, context_ ),  zzvt_( sName_.zzvolcoord, context_ )
+    : tagNames_(TagNames::self() ),
+      xsvt_( tagNames_.xsvolcoord ),  ysvt_( tagNames_.ysvolcoord ),  zsvt_( tagNames_.zsvolcoord ),
+      xxvt_( tagNames_.xxvolcoord ),  yxvt_( tagNames_.yxvolcoord ),  zxvt_( tagNames_.zxvolcoord ),
+      xyvt_( tagNames_.xyvolcoord),  yyvt_( tagNames_.yyvolcoord ),  zyvt_( tagNames_.zyvolcoord ),
+      xzvt_( tagNames_.xzvolcoord ),  yzvt_( tagNames_.yzvolcoord ),  zzvt_( tagNames_.zzvolcoord )
   {
     needCoords_ = false;
 

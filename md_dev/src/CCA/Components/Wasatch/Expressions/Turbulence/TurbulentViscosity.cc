@@ -24,22 +24,11 @@
 
 #include "TurbulentViscosity.h"
 
-//-- Wasatch Includes --//
-#include <CCA/Components/Wasatch/StringNames.h>
-
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
 #include <cmath>
-
-//====================================================================
-
-Expr::Tag turbulent_viscosity_tag()
-{
-  const Wasatch::StringNames& sName = Wasatch::StringNames::self();
-  return Expr::Tag( sName.turbulentviscosity, Expr::STATE_NONE );
-}
 
 //====================================================================
 
@@ -128,6 +117,7 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
   gradXOp_ = opDB.retrieve_operator< GradXT >();
   gradYOp_ = opDB.retrieve_operator< GradYT >();
   gradZOp_ = opDB.retrieve_operator< GradZT >();
+  exOp_    = opDB.retrieve_operator< ExOpT  >();
 }
 
 //--------------------------------------------------------------------
@@ -146,6 +136,7 @@ evaluate()
   const double avgVol = std::pow(dx*dy*dz, 1.0/3.0);
   double mixingLengthSq = turbulenceParameters_.eddyViscosityConstant * avgVol; //* (1.0 - avgVol/turbulenceParameters_.kolmogorovScale);
   mixingLengthSq = mixingLengthSq * mixingLengthSq; // (C_s * Delta)^2
+  const double eps = 2.0*std::numeric_limits<double>::epsilon();
   //const double deltaSquared  = pow(dx * dy * dz, 2.0/3.0);
   //const double eddyViscConstSq = turbulenceParameters_.eddyViscosityConstant * turbulenceParameters_.eddyViscosityConstant;
 
@@ -157,7 +148,7 @@ evaluate()
 
     case Wasatch::DYNAMIC:
 //      result <<= 0.0;
-      // tsaad.Note: When the dynamic model is used, the DynamicSmagorinskyCoefficient expression calculates both the coefficient and the StrainTensorMagnitude. Unlike the StrainTensorMagnitude.cc Expression, which calculates SijSij instead. That's why for the constant smagorinsky case, we have take the sqrt() of that quanitity. In the Dynamic model case, we don't.
+      // tsaad.Note: When the dynamic model is used, the DynamicSmagorinskyCoefficient expression calculates both the coefficient and the StrainTensorMagnitude = sqrt(2*Sij*Sij). Unlike the StrainTensorMagnitude.cc Expression, which calculates SijSij instead. That's why for the constant smagorinsky case, we have take the sqrt() of that quanitity. In the Dynamic model case, we don't.
       result <<= *rho_ * *dynCoef_ * *strTsrSq_;//*rho_ * *dynCoef_ * sqrt(2.0 * *strTsrSq_);
       break;
 
@@ -166,7 +157,7 @@ evaluate()
       SpatFldPtr<SVolField> denom = SpatialFieldStore::get<SVolField>( result );
       *denom <<= 0.0;
       *denom <<= pow(*strTsrSq_, 2.5) + pow(*waleTsrMag_, 1.25);
-      result <<= cond( *denom == 0.0, 0.0 )
+      result <<= cond( *denom <= eps, 0.0 )
                      ( *rho_ * mixingLengthSq * pow(*waleTsrMag_, 1.5) / *denom );
     }
       break;
@@ -182,4 +173,15 @@ evaluate()
       break;
       
   }
+
+  // extrapolate from interior cells to ptach boundaries (both process and physical boundaries):
+  // this is necessary to avoid problems when calculating the stress tensor where
+  // a viscosity interpolant is needed. If problems arise due to this extrapolation,
+  // you should consider performing an MPI communication on the turbulent viscosity
+  // (i.e. cleave the turbulent viscosity from its parents). This can be done
+  // in transport/MomentumTransportEquation.cc
+  // Based on data that I collected, an MPI communication costs about twice as
+  // much as the extrapolation in terms of speedup.
+  exOp_->apply_to_field(result);
+  
 }

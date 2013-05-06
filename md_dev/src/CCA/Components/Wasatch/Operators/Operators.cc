@@ -28,6 +28,7 @@
 //-- Wasatch includes --//
 #include "Operators.h"
 #include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/Extrapolant.h>
 #include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
 
 //-- Uintah includes --//
@@ -58,6 +59,12 @@ opDB.register_new_operator<OpY>( scinew OpY(dim,bcPlus,hasMinusBoundary) );     
 opDB.register_new_operator<OpZ>( scinew OpZ(dim,bcPlus,hasMinusBoundary) );          \
 }
   
+#define BUILD_EXTRAPOLANT( VOLT )                    \
+{                                                    \
+typedef Extrapolant<VOLT> OpVol;                     \
+opDB.register_new_operator<OpVol>( scinew OpVol() ); \
+}
+
   
   void build_operators( const Uintah::Patch& patch,
                        SpatialOps::OperatorDatabase& opDB )
@@ -103,6 +110,14 @@ opDB.register_new_operator<OpZ>( scinew OpZ(dim,bcPlus,hasMinusBoundary) );     
     BUILD_UPWIND_LIMITER( XVolField )
     BUILD_UPWIND_LIMITER( YVolField )
     BUILD_UPWIND_LIMITER( ZVolField )
+    
+    //--------------------------------------------------------
+    // Extrapolants
+    //--------------------------------------------------------
+    BUILD_EXTRAPOLANT( SVolField )
+    BUILD_EXTRAPOLANT( XVolField )
+    BUILD_EXTRAPOLANT( YVolField )
+    BUILD_EXTRAPOLANT( ZVolField )
   }
   
 } // namespace Wasatch

@@ -100,4 +100,4 @@ public:
   void evaluate();
 };
 
-#endif // Stress_Expr_h
+#endif // VelocityMagnitude_Expr_h

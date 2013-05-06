@@ -84,7 +84,7 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("coeff_thermal_expansion", d_initialData.alpha);
   d_initialData.Chi = 0.9;
   ps->get("taylor_quinney_coeff",d_initialData.Chi);
-  d_initialData.sigma_crit = 2.0e9; // default is Pa
+  d_initialData.sigma_crit = 2.0e99; // Make huge to do nothing by default
   ps->get("critical_stress", d_initialData.sigma_crit);
 
   d_tol = 1.0e-10;
@@ -1182,8 +1182,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
 
           // Check 2: Modified Tepla rule
           if (d_checkTeplaFailureCriterion) {
-            tepla = pow(pPorosity_new[idx]/d_porosity.fc,2.0) + 
-                    pow(pDamage_new[idx],2.0);
+            tepla = (pPorosity_new[idx]*pPorosity_new[idx])/
+                    (d_porosity.fc*d_porosity.fc);
             if (tepla > 1.0) isLocalized = true;
           } 
 
