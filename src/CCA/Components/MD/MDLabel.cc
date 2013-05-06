@@ -124,4 +124,6 @@ MDLabel::~MDLabel()
   ///////////////////////////////////////////////////////////////////////////
   // Reduction Variables
   VarLabel::destroy(vdwEnergyLabel);
+  VarLabel::destroy(spmeFourierEnergyLabel);
+  VarLabel::destroy(spmeFourierStressLabel);
 }

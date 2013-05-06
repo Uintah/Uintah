@@ -157,9 +157,9 @@ class MD : public UintahParallelComponent, public SimulationInterface {
      * @param
      * @return
      */
-    void schedulePerformSPME(SchedulerP& sched,
-                             const PatchSet* patched,
-                             const MaterialSet* matls);
+    void schedulePerformElectrostatics(SchedulerP& sched,
+                                       const PatchSet* patched,
+                                       const MaterialSet* matls);
 
     /**
      * @brief
@@ -226,11 +226,11 @@ class MD : public UintahParallelComponent, public SimulationInterface {
      * @param
      * @return
      */
-    void performSPME(const ProcessorGroup* pg,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
+    void performElectrostatics(const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
 
     /**
      * @brief

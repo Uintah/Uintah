@@ -237,16 +237,24 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
   std::vector<SPMEPatch*>::iterator PatchIterator;
   for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); ++PatchIterator) {
     SPMEPatch* spmePatch = *PatchIterator;
+
     const Patch* patch = spmePatch->getPatch();
     ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
-    constParticleVariable<SCIRun::Point> px;
-    old_dw->get(px, d_lb->pXLabel, pset);
+    ParticleSubset* delset = scinew ParticleSubset(0, materials->get(0), patch);
 
+    constParticleVariable<Point> px;
+    constParticleVariable<double> pcharge;
     constParticleVariable<long64> pids;
+    old_dw->get(px, d_lb->pXLabel, pset);
+    old_dw->get(pcharge, d_lb->pChargeLabel, pset);
     old_dw->get(pids, d_lb->pParticleIDLabel, pset);
 
-    constParticleVariable<double> pcharge;
-    old_dw->get(pcharge, d_lb->pChargeLabel, pset);
+    ParticleVariable<double> pchargenew;
+    new_dw->allocateAndPut(pchargenew, d_lb->pChargeLabel_preReloc, pset);
+
+    // carry these values over for now
+    pchargenew.copyData(pcharge);
+
     // When we have a material iterator in here, we should store/get charge by material.
     // Charge represents the static charge on a particle, which is set by particle type.
     // No need to store one for each particle. -- JBH
@@ -261,6 +269,8 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
     Q->initialize(complex<double>(0.0, 0.0));
 
     mapChargeToGrid(spmePatch, gridMap, pset, pcharge, d_interpolatingSpline.getHalfMaxSupport());  // Calculate Q(r)
+
+    new_dw->deleteParticles(delset);
   }
 }
 
