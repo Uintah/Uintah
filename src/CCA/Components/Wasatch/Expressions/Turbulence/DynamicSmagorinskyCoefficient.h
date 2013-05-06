@@ -2,6 +2,7 @@
 #define DynamicSmagorinskyCoefficient_h
 
 #include "StrainTensorBase.h"
+#include <CCA/Components/Wasatch/Operators/Operators.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include "StrainTensorMagnitude.h"
 #include <expression/Expression.h>
@@ -30,7 +31,7 @@ class DynamicSmagorinskyCoefficient
   
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type Vel1InterpT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Vel2InterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Vel3InterpT;  
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Vel3InterpT;
   
   const SVolField* rho_;
   
@@ -42,6 +43,17 @@ class DynamicSmagorinskyCoefficient
   const Vel1InterpT* vel1InterpOp_;
   const Vel2InterpT* vel2InterpOp_;
   const Vel3InterpT* vel3InterpOp_;  
+  
+  
+  typedef Wasatch::OpTypes<SVolField>::BoundaryExtrapolant ExOpT;
+  typedef Wasatch::OpTypes<XVolField>::BoundaryExtrapolant XExOpT;
+  typedef Wasatch::OpTypes<YVolField>::BoundaryExtrapolant YExOpT;
+  typedef Wasatch::OpTypes<ZVolField>::BoundaryExtrapolant ZExOpT;
+  
+  ExOpT*   exOp_;
+  XExOpT*   xexOp_;
+  YExOpT*   yexOp_;
+  ZExOpT*   zexOp_;
   
   DynamicSmagorinskyCoefficient( const Expr::Tag vel1Tag,
                                  const Expr::Tag vel2Tag,
