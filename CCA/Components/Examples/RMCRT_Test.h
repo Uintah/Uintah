@@ -138,6 +138,7 @@ WARNING
     
     double   d_initColor;
     double   d_initAbskg;
+    int      d_radCalc_freq;
     int      d_matl;
     int      d_wall_cell; 
     int      d_flow_cell;

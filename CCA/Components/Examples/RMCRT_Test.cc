@@ -121,6 +121,9 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
   sched->overrideVariableBehavior("color",false, false, true, false, false);
 
+   ProblemSpecP me = prob_spec;
+   me->getWithDefault( "calc_frequency",  d_radCalc_freq, 1 );
+
   //__________________________________
   //  RMCRT
   if (prob_spec->findBlock("RMCRT")){
@@ -141,7 +144,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     rmcrt_ps->require("Temperature",  d_initColor);
     rmcrt_ps->require("abskg",        d_initAbskg);
     
-    d_RMCRT->problemSetup( prob_spec, rmcrt_ps );
+    d_RMCRT->problemSetup( prob_spec, rmcrt_ps, d_sharedState );
     proc0cout << "__________________________________ Reading in RMCRT section of ups file" << endl;
     
       
@@ -323,9 +326,9 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     // modify Radiative properties on the finest level
     d_RMCRT->sched_initProperties( fineLevel, sched);
     
-    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, false );
+    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, d_radCalc_freq, false );
  
-    d_RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw );
+    d_RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw, d_radCalc_freq );
         
     // coarsen data to the coarser levels.  
     // do it in reverse order
@@ -336,8 +339,8 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       const LevelP& level = grid->getLevel(l);
       const bool modifies_abskg   = true;
       const bool modifies_sigmaT4 = false;
-      d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4);
-      d_RMCRT->sched_setBoundaryConditions( level, sched, notUsed, backoutTemp );
+      d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4, d_radCalc_freq );
+      d_RMCRT->sched_setBoundaryConditions( level, sched, notUsed, d_radCalc_freq, backoutTemp );
     }
     
     //__________________________________
@@ -348,7 +351,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     Task::WhichDW abskg_dw   = Task::NewDW;
     Task::WhichDW sigmaT4_dw = Task::NewDW;
     const bool modifies_divQ = false;
-    d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ);
+    d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ, d_radCalc_freq);
   }
   
   //______________________________________________________________________
@@ -362,14 +365,14 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     // modify Radiative properties on the finest level
     d_RMCRT->sched_initProperties( fineLevel, sched  );
     
-    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, false );
+    d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, d_radCalc_freq, false );
     
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const bool modifies_abskg   = true;
       const bool modifies_sigmaT4 = false;
       
-      d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4); 
+      d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4, d_radCalc_freq); 
     
       if(level->hasFinerLevel() || maxLevels == 1){
         Task::WhichDW abskg_dw    = Task::NewDW;
@@ -378,8 +381,8 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
         const bool modifies_divQ  = false;
         const bool backoutTemp    = true;
         
-        d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp );
-        d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
+        d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
+        d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq );
       }
     }
 

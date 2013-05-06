@@ -166,7 +166,7 @@ RMCRT_Radiation::extraSetup()
                             _src_label);
 
   ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
-  _RMCRT->problemSetup( _ps, rmcrt_ps );
+  _RMCRT->problemSetup( _ps, rmcrt_ps, _sharedState);
 }
 
 
@@ -201,13 +201,6 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       _RMCRT->sched_CarryForward (level, sched, _cellTypeLabel);
     }
   }
-  
-  // Only schedule below on radiation timestep
-  int timestep = _sharedState->getCurrentTopLevelTimeStep();
-  if ( timestep%_radiation_calc_freq != 0 ) {
-    return;
-  } 
-
 
   dbg << " ---------------timeSubStep: " << timeSubStep << endl;
   printSchedule(level,dbg,"RMCRT_Radiation::sched_computeSource");
@@ -233,9 +226,9 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     // compute Radiative properties and sigmaT4 on the finest level
     sched_radProperties( fineLevel, sched, timeSubStep );
     
-    _RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, includeExtraCells );
+    _RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, _radiation_calc_freq, includeExtraCells );
  
-    _RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw );
+    _RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw, _radiation_calc_freq );
         
     // coarsen data to the coarser levels.  
     // do it in reverse order
@@ -246,8 +239,8 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const LevelP& level = grid->getLevel(l);
       const bool modifies_abskg   = false;
       const bool modifies_sigmaT4 = false;
-      _RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4);
-      _RMCRT->sched_setBoundaryConditions( level, sched, notUsed, backoutTemp );
+      _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4, _radiation_calc_freq );
+      _RMCRT->sched_setBoundaryConditions( level, sched, notUsed, _radiation_calc_freq, backoutTemp );
     }
     
     //__________________________________
@@ -258,7 +251,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     Task::WhichDW abskg_dw     = Task::NewDW;
     Task::WhichDW sigmaT4_dw   = Task::NewDW;
     bool modifies_divQ       = false;
-    _RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ);
+    _RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ, _radiation_calc_freq);
   }
   
   //______________________________________________________________________
@@ -272,7 +265,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     // compute Radiative properties and sigmaT4 on the finest level
     sched_radProperties( fineLevel, sched, timeSubStep );
     
-    _RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, includeExtraCells );
+    _RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, _radiation_calc_freq, includeExtraCells );
     
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
@@ -280,15 +273,15 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const bool modifies_sigmaT4 = false;
       const bool backoutTemp      = true;
       
-      _RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4);
+      _RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4, _radiation_calc_freq);
       
       if(level->hasFinerLevel() || maxLevels == 1){
         Task::WhichDW abskg_dw    = Task::NewDW;
         Task::WhichDW sigmaT4_dw  = Task::NewDW;
         Task::WhichDW celltype_dw = Task::NewDW;
         
-        _RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, backoutTemp);
-        _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ);
+        _RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, _radiation_calc_freq, backoutTemp);
+        _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq );
       }
     }
 
