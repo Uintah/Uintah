@@ -89,7 +89,7 @@ template<class T> class SPMEArray3 {
       ASSERTL3(d1>=0 && d1<dm1);
       ASSERTL3(d2>=0 && d2<dm2);
       ASSERTL3(d3>=0 && d3<dm3);
-      int idx = (d1) + ((d2) * dm1) + ((d3) * dm2 * dm3);
+      int idx = (d1) + ((d2) * dm1) + ((d3) * dm1 * dm2);
       return objs[idx];
     }
 
