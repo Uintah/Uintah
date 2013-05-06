@@ -31,8 +31,6 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Box.h>
 #include <Core/Geometry/IntVector.h>
@@ -71,11 +69,11 @@ SPME::~SPME()
     SimpleGrid<complex<double> >* q = spmePatch->getQ();
     delete q;
 
-//    SimpleGrid<Matrix3>* stressPrefactor = spmePatch->getStressPrefactor();
-//    delete stressPrefactor;
-
     SimpleGrid<double>* theta = spmePatch->getTheta();
     delete theta;
+
+    SimpleGrid<Matrix3>* stressPrefactor = spmePatch->getStressPrefactor();
+    delete stressPrefactor;
 
     delete spmePatch;
   }
@@ -147,11 +145,21 @@ void SPME::setup(const ProcessorGroup* pg,
 
     SPMEPatch* spmePatch = new SPMEPatch(patchKGridExtents, patchKGridOffset, plusGhostExtents, minusGhostExtents, patch);
 
+    // Check to make sure plusGhostExtents+minusGhostExtents is right way to enter number of ghost cells (i.e. total, not per offset)
+    SimpleGrid<dblcomplex>* q = scinew SimpleGrid<dblcomplex>(patchKGridExtents, patchKGridOffset, 2 * splineHalfMaxSupport);
+    q->initialize(complex<double>(0.0, 0.0));
+
+    // No ghost cells; internal only
+    SimpleGrid<Matrix3>* stressPrefactor = scinew SimpleGrid<Matrix3>(patchKGridExtents, patchKGridOffset, 0);
+    calculateStressPrefactor(stressPrefactor, patchKGridExtents, patchKGridOffset);
+
+    // No ghost cells; internal only
+    SimpleGrid<double>* fTheta = scinew SimpleGrid<double>(patchKGridExtents, patchKGridOffset, 0);
+    fTheta->initialize(0.0);
+
     // Calculate B and C - we should only have to do this if KLimits or the inverse cell changes
     SimpleGrid<double> fBGrid = calculateBGrid(patchKGridExtents, patchKGridOffset);
     SimpleGrid<double> fCGrid = calculateCGrid(patchKGridExtents, patchKGridOffset);
-    SimpleGrid<double>* fTheta = scinew SimpleGrid<double>(patchKGridExtents, patchKGridOffset, 0);  // No ghost cells; internal only
-    fTheta->initialize(0.0);
 
     // Composite B and C into Theta
     size_t xExtent = patchKGridExtents.x();
@@ -180,9 +188,7 @@ void SPME::setup(const ProcessorGroup* pg,
       }
     }
     spmePatch->setTheta(fTheta);
-    SimpleGrid<Matrix3>* stressPrefactor = calculateStressPrefactor(patchKGridExtents, patchKGridOffset);
     spmePatch->setStressPrefactor(stressPrefactor);
-    SimpleGrid<dblcomplex>* q = scinew SimpleGrid<dblcomplex>(patchKGridExtents, patchKGridOffset, 2 * splineHalfMaxSupport);  // Check to make sure plusGhostExtents+minusGhostExtents is right way to enter number of ghost cells (i.e. total, not per offset)
     spmePatch->setQ(q);
     d_spmePatches.push_back(spmePatch);
   }
@@ -273,7 +279,6 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
     // We have now set up the real-space Q grid.
     // We need to store this patch's Q grid on the data warehouse (?) to pass through to the transform
     SimpleGrid<complex<double> >* Q = spmePatch->getQ();
-    Q->initialize(complex<double>(0.0, 0.0));
 
     mapChargeToGrid(spmePatch, gridMap, pset, pcharge, d_interpolatingSpline.getHalfMaxSupport());  // Calculate Q(r)
 
@@ -392,14 +397,11 @@ void SPME::finalize(const ProcessorGroup* pg,
     const Patch* patch = spmePatch->getPatch();
     ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
 
-    constParticleVariable<Vector> pforce;
-    new_dw->get(pforce, d_lb->pForceLabel_preReloc, pset);
-
-    ParticleVariable<Vector> pforcenew;
-    new_dw->getModifiable(pforcenew, d_lb->pForceLabel_preReloc, pset);
+    ParticleVariable<Vector> pforcecurrent;
+    new_dw->getModifiable(pforcecurrent, d_lb->pForceLabel_preReloc, pset);
 
     // Calculate electrostatic contribution to f_ij(r)
-//    SPME::mapForceFromGrid(spmePatch, pset, pforce, pforcenew);
+//    SPME::mapForceFromGrid(spmePatch, pset, pforcecurrent);
   }
 
 // Reduction for Energy, Pressure Tensor?
@@ -526,7 +528,8 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
   return CGrid;
 }
 
-SimpleGrid<Matrix3>* SPME::calculateStressPrefactor(const IntVector& extents,
+void SPME::calculateStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor,
+                                                    const IntVector& extents,
                                                     const IntVector& offset)
 {
   std::vector<double> mp1 = SPME::generateMPrimeVector(d_kLimits.x(), d_interpolatingSpline);
@@ -545,7 +548,6 @@ SimpleGrid<Matrix3>* SPME::calculateStressPrefactor(const IntVector& extents,
   double PI2 = PI * PI;
   double invBeta2 = 1.0 / (d_ewaldBeta * d_ewaldBeta);
 
-  SimpleGrid<Matrix3>* stressPre = scinew SimpleGrid<Matrix3>(extents, offset, 0);  // No ghost cells; internal only
   for (size_t kX = 0; kX < xExtents; ++kX) {
     for (size_t kY = 0; kY < yExtents; ++kY) {
       for (size_t kZ = 0; kZ < zExtents; ++kZ) {
@@ -567,13 +569,12 @@ SimpleGrid<Matrix3>* SPME::calculateStressPrefactor(const IntVector& extents,
             localStressContribution(delta, delta) += 1.0;
           }
 
-          (*stressPre)(kX, kY, kZ) = localStressContribution;
+          (*stressPrefactor)(kX, kY, kZ) = localStressContribution;
         }
       }
     }
   }
-  (*stressPre)(0, 0, 0) = Matrix3(0.0);
-  return stressPre;
+  (*stressPrefactor)(0, 0, 0) = Matrix3(0.0);
 }
 
 std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,

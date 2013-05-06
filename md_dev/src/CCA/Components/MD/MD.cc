@@ -28,11 +28,8 @@
 #include <CCA/Components/MD/MD.h>
 #include <CCA/Components/MD/ElectrostaticsFactory.h>
 #include <CCA/Components/MD/SPME.h>
+#include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
@@ -44,7 +41,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <CCA/Ports/Scheduler.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Mutex.h>
