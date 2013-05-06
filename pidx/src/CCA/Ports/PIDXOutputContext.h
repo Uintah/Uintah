@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <PIDX.h>
+#include <string>
 
 namespace Uintah {
    /**************************************
@@ -47,13 +48,15 @@ namespace Uintah {
     
 class PIDXOutputContext {
 public:
-  PIDXOutputContext(const char* filename, MPI_Comm comm);
+  PIDXOutputContext(std::string filename, unsigned int timeStep,
+                    int globalExtent[5] ,MPI_Comm comm);
   ~PIDXOutputContext();
 
-  const char* filename;
+  std::string filename;
+  unsigned int timestep;
   int total_dimension;
   int fd;
-  int* global_dimension;
+  int global_dimension[5];
   MPI_Comm comm;
   
   /* added from test_pidx_writer.c */

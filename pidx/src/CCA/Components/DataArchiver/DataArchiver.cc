@@ -1716,8 +1716,10 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
   else
     dir = d_checkpointsDir;
 
-  tname << "t" << setw(5) << setfill('0') << d_sharedState->getCurrentTopLevelTimeStep();
-  
+  unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
+
+  tname << "t" << setw(5) << setfill('0') << timeStep;
+
   Dir tdir = dir.getSubdir(tname.str());
   
   string xmlFilename;
@@ -1734,6 +1736,19 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     ASSERT(patches->size() != 0);
     ASSERT(patches->get(0) != 0);
     level = patches->get(0)->getLevel();
+    IntVector lowIndex,highIndex;
+    level->findIndexRange(lowIndex,highIndex);
+    cout << "IndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
+    level->findNodeIndexRange(lowIndex,highIndex);
+    cout << "NodeIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
+    level->findCellIndexRange(lowIndex,highIndex);
+    cout << "CellIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
+    level->findInteriorIndexRange(lowIndex,highIndex);
+    cout << "InteriorIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
+    level->findInteriorNodeIndexRange(lowIndex,highIndex);
+    cout << "InteriorNodeIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
+    level->findInteriorCellIndexRange(lowIndex,highIndex);
+    cout << "InteriorCellIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
 #if SCI_ASSERTION_LEVEL >= 1
     for(int i=0;i<patches->size();i++)
       ASSERT(patches->get(i)->getLevel() == level);
@@ -1806,11 +1821,12 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     // char* varXX;
     // varXX[0] = 0;
 #if HAVE_PIDX
-    char str[1024];
-    strcpy (str,filename);
-    strcat (str,"_X.idx");
-    std::cerr<<"Creating PIDXOutputContext..." << filename << "\n";
-    PIDXOutputContext pc(str, d_myworld->getComm());
+    string idxFilename(filename);
+    idxFilename = idxFilename + "_X.idx";
+    int globalExtents[5];
+    std::cerr<<"Creating PIDXOutputContext..." << idxFilename << endl;
+    PIDXOutputContext pc(idxFilename, timeStep,globalExtents,
+                         d_myworld->getComm());
 #endif
     int rank;
     MPI_Comm_rank(d_myworld->getComm(), &rank);
@@ -1931,7 +1947,8 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
           OutputContext oc(fd, filename, cur, pdElem, d_outputDoubleAsFloat && type != CHECKPOINT);
 #if HAVE_PIDX
           std::cerr<<"Creating PIDXOutputContext...\n";
-          PIDXOutputContext pc(filename, d_myworld->getComm());
+          //  This appears to be redundant
+          //  PIDXOutputContext pc(filename, d_myworld->getComm());
           new_dw->emit(oc, pc,  var, matlIndex, patch);
 #else
           new_dw->emit(oc, var, matlIndex, patch);
