@@ -24,6 +24,9 @@
 
 #include <CCA/Components/MD/MDSystem.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
 
 #include <iostream>
 
@@ -41,7 +44,8 @@ MDSystem::~MDSystem()
 
 }
 
-MDSystem::MDSystem(ProblemSpecP& ps)
+MDSystem::MDSystem(ProblemSpecP& ps,
+                   GridP& grid)
 {
   ProblemSpecP mdsystem_ps = ps->findBlock("MDSystem");
   mdsystem_ps->get("pressure", d_pressure);
@@ -65,6 +69,11 @@ MDSystem::MDSystem(ProblemSpecP& ps)
   }
   this->calcCellVolume();
   d_inverseCell = d_unitCell.Inverse();
+
+  // Determine the total number of cells in the system so we can map dimensions
+  IntVector lowIndex, highIndex;
+  grid->getLevel(0)->findCellIndexRange(lowIndex, highIndex);
+  d_totalCellExtent = highIndex - lowIndex;
 }
 
 void MDSystem::calcCellVolume()

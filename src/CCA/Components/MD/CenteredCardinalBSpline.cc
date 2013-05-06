@@ -28,6 +28,7 @@
 #include <cassert>
 #include <vector>
 #include <cmath>
+#include <Core/Util/FancyAssert.h>
 
 #ifdef DEBUG
 #include <string>
@@ -91,6 +92,97 @@ CenteredCardinalBSpline::CenteredCardinalBSpline(const int order) :
 #endif
 }
 
+std::vector<double> CenteredCardinalBSpline::evaluateGridAligned(const double x) const
+{
+  // Expect standardized input between -1.0 and 0.0 (inclusive)
+  ASSERTRANGE(x, -1.0, 1e-15);
+
+  // For uniformity we will embed the spline in a vector that extends to the maximum support for the entire domain.
+  int HalfMax = this->getHalfMaxSupport();
+
+  // To center the vector, we need to include support up to maximum HalfMax on each side
+  std::vector<double> paddedSpline(2 * HalfMax + 1, 0.0);
+
+  // First let's calculate the base spline values across the entire possible spline support by stripping off any shifts of the spline
+  int xShift = static_cast<int>(x);
+  double xBase = x - xShift;
+
+  // xBase should be between -1.0 and 1.0 now, however the spline is defined on the interval (-0.5,0.5).  Let's wrap xBase into that
+  if (xBase < -0.5) {
+    xBase += 1.0;
+    xShift -= 1;
+  };
+  if (xBase > 0.5) {
+    xBase -= 1.0;
+    xShift += 1;
+  };
+
+  /*
+   * Consider the following cases: Spline Order = 6 (Spline is defined from -3.5 to 3.5)
+   *   x = -1.75; xShift = int (-1.75) = -1; xBase = -1.75 - (-1) = -0.75
+   *   xBase < -0.5 ? xBase += 1.0 : xBase = 0.25; xShift -= 1 : xShift = -2
+   * Original support points          :  -2.75 <- -1.75 -> -0.75 -> 0.25 -> 1.25 -> 2.25 -> 3.25
+   * Original support array positions :    -1        0       1       2       3       4       5
+   *
+   * Unshifted support points         :  -2.75 <- -1.75 <- -0.75 <- 0.25 -> 1.25 -> 2.25 -> 3.25
+   * Unshifted support array positiosn:   -3       -2       -1       0       1       2       3
+   *
+   * Array is the same, but indices are shifted by -xShift
+   */
+  // subSpline is the spline of order d_splineOrder - 1
+  std::vector<double> subSpline;
+  if (d_splineOrder % 2 == 1) {
+    subSpline = evaluateInternal(xBase + 0.5, d_splineOrder - 1, d_basisShifts, d_prefactorMap, d_prefactorValues);
+  } else {
+    subSpline = evaluateInternal(xBase - 0.5, d_splineOrder - 1, d_basisShifts, d_prefactorMap, d_prefactorValues);
+  }
+  /*
+   *  S_p(x) = (1.0/p) [ {(p+1)/2 + x} * S_p-1(x+1/2) + {(p-1)/2 - x}*S_p-1(x-1/2) ]
+   *
+   *  With shifts ( x -> x + 0.5*q), q = ..., -6, -4, -2, 0, 2, 4, 6, ...
+   *    (We shift only unit intervals to coincide with grid points,
+   *       and use 0.5 * 2 * the shift to align with the p+/-1 term in the prefactor)
+   *
+   *  S_p( x + q/2) = (1.0/p) [ {(p+1)/2 + (x + q/2)} * S_p-1(x + q/2 + 1/2) + {(p+1)/2 - (x + q/2)} * S_p-1(x + q/2 - 1/2) ]
+   *                = (1.0/p) [ {(p+1+q)/2 + x } * S_p-1(x + q/2 + 1/2) + {(p+1-q)/2 + x } * S_p-1(x + q/2 + 1/2) ]
+   *   let l_p = (p+q+1)/2 + x
+   *       r_p = (p-q+1)/2 - x
+   */
+
+  /* Left support is how many values we have from zero to the left edge of the spline.
+   *   2 * number of integral shifts = q
+   */
+  int q = 2 * leftSupport(xBase, d_splineOrder);
+  double l_p = static_cast<double>(d_splineOrder + q + 1) / 2.0 + xBase;
+  double r_p = static_cast<double>(d_splineOrder - q + 1) / 2.0 + xBase;
+  double scale = 1.0 / (static_cast<double>(d_splineOrder));
+
+  // Calculate spline of p^th order
+  std::vector<double> splineCurrentOrder;
+  // subSpline[0] represents the left most part of the subSpline; if it is x+1/2 then x-1/2 must be zero, so the first point
+  //   in the total spline has only the S_p-1(x+1/2) term (i.e. the left term, paradoxically)
+  splineCurrentOrder.push_back(scale * (l_p * subSpline[0]));
+  // from here until we get to the last term, all terms of the p^th order spline have two sub-terms from the (p-1)^th order spline
+  size_t subTerms = subSpline.size();
+  for (size_t subIndex = 1; subIndex < subTerms; ++subIndex) {
+    r_p -= 1.0;
+    l_p += 1.0;
+    // At any Index, subSpline[Index] = S_(p-1)(x+1/2), subSpline[Index-1] = S_(p-1)(x-1/2)
+    splineCurrentOrder.push_back(scale * (l_p * subSpline[subIndex] + r_p * subSpline[subIndex - 1]));
+  }
+  // At the right end of the sub-spline, S_(p-1)(x+1/2) is zero.
+  r_p -= 1.0;
+  splineCurrentOrder.push_back(scale * (r_p * subSpline[subTerms - 1]));
+
+  // We now have the non-shifted spline, let's embed it in an appropriate zero-padded vector
+  int dataSize = splineCurrentOrder.size();
+  for (size_t baseIndex = 0; baseIndex < dataSize; ++baseIndex) {
+    ASSERTRANGE(baseIndex-xShift, 0, paddedSpline.size());
+    paddedSpline[baseIndex - xShift] = splineCurrentOrder[baseIndex];  //FIXME Not right
+  }
+  return paddedSpline;
+}
+
 std::vector<double> CenteredCardinalBSpline::evaluate(const double x) const
 {
   // Expect standardized input between -1.0 and 0.0 (inclusive)
@@ -127,10 +219,51 @@ std::vector<double> CenteredCardinalBSpline::evaluate(const double x) const
   return fullSpline;
 }
 
+std::vector<double> CenteredCardinalBSpline::derivativeGridAligned(const double x) const
+{
+  // Expect standardized input between -1.0 and 0.0 (inclusive)
+  ASSERTRANGE(x, -1.0, 1e-15);
+
+  int HalfMax = this->getHalfMaxSupport();
+  std::vector<double> paddedDeriv(2 * HalfMax + 1, 0.0);
+
+  int xShift = static_cast<int>(x);
+  double xBase = x - xShift;
+
+  if (xBase < -0.5) {
+    xBase += 1.0;
+    xShift -= 1;
+  };
+  if (xBase > 0.5) {
+    xBase -= 1.0;
+    xShift += 1;
+  };
+
+  std::vector<double> subSpline = evaluateInternal(x + 0.5, d_splineOrder - 1, d_basisShifts, d_prefactorMap, d_prefactorValues);
+  std::vector<double> splineDeriv;
+
+  splineDeriv.push_back(2.0 * subSpline[0]);
+
+  size_t subTerms = subSpline.size();
+  for (size_t subIndex = 1; subIndex < subTerms; ++subIndex) {
+    splineDeriv.push_back(2.0 * (subSpline[subIndex] - subSpline[subIndex - 1]));
+  }
+
+  splineDeriv.push_back(-2.0 * subSpline[subTerms - 1]);
+
+  int dataSize = splineDeriv.size();
+  for (size_t baseIndex = 0; baseIndex < dataSize; ++baseIndex) {
+    ASSERTRANGE(baseIndex-xShift, 0, paddedDeriv.size());
+    paddedDeriv[baseIndex - xShift] = splineDeriv[baseIndex];
+  }
+  return paddedDeriv;
+
+}
 std::vector<double> CenteredCardinalBSpline::derivative(const double x) const
 {
   // Expect standardized input between -1.0 and 0.0 (inclusive)
   assert(x >= -1.0 && x <= 0.0);
+
   std::vector<double> subSpline = evaluateInternal(x + 0.5, d_splineOrder - 1, d_basisShifts, d_prefactorMap, d_prefactorValues);
 
   std::vector<double> splineDeriv;
@@ -254,7 +387,7 @@ std::vector<double> CenteredCardinalBSpline::evaluateInternal(const double x,
 
   // Row - One complete spline array for a given term
   // Column - All terms comprising the subsplines used to make the current order
-  std::vector<std::vector<double> > valTemp2D;
+  std::vector < std::vector<double> > valTemp2D;
   for (size_t vtidx = 0; vtidx < numTerms; ++vtidx) {
     std::vector<double> vtRow(totalOffset, 0.0);
     valTemp2D.push_back(vtRow);

@@ -28,6 +28,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Math/Matrix3.h>
+#include <Core/Grid/GridP.h>
 
 namespace Uintah {
 
@@ -63,7 +64,8 @@ class MDSystem {
      * @brief
      * @param
      */
-    MDSystem(ProblemSpecP& ps);
+    MDSystem(ProblemSpecP& ps,
+             GridP& grid);
 
     /**
      * @brief
@@ -170,9 +172,14 @@ class MDSystem {
      * @param
      * @return
      */
-    double getCellVolume() const
+    inline double getCellVolume() const
     {
       return d_cellVolume;
+    }
+
+    inline IntVector getCellExtent() const
+    {
+      return d_totalCellExtent;
     }
 
   private:
@@ -188,6 +195,8 @@ class MDSystem {
     Matrix3 d_unitCell;         //!< MD system unit cell
     Matrix3 d_inverseCell;      //!< MD system inverse unit cell
     double d_cellVolume;       //!< Cell volume; calculate internally, return at request for efficiency
+
+    IntVector d_totalCellExtent;  //!< Number of sub-cells in the global unit cell
 
     MDSystem(const MDSystem& system);
     MDSystem& operator=(const MDSystem& system);

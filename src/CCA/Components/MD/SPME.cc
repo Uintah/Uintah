@@ -34,6 +34,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Box.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MiscMath.h>
@@ -118,22 +119,19 @@ void SPME::setup(const ProcessorGroup* pg,
   for (size_t p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
 
-//!FIXME -- These aren't extents/offsets/ghost extents in K grid, which they need to be.
-    /*    IntVector localExtents = patch->getCellHighIndex() - patch->getCellLowIndex();
-     IntVector globalOffset = localExtents - IntVector(0, 0, 0);
-     IntVector plusGhostExtents = patch->getExtraCellHighIndex(numGhostCells) - patch->getCellHighIndex();
-     IntVector minusGhostExtents = patch->getCellLowIndex() - patch->getExtraCellLowIndex(numGhostCells);
-     */
+    Vector totalCellExtent = (d_system->getCellExtent()).asVector();
 
-    Point patchPositionLow = patch->cellPosition(patch->getCellLowIndex());
-    Point patchPositionHigh = patch->cellPosition(patch->getCellHighIndex());
+    Vector patchLowIndex = (patch->getCellLowIndex()).asVector();
+    Vector patchHighIndex = (patch->getCellHighIndex()).asVector();
 
-    IntVector patchKLow, patchKHigh;
-    for (size_t idx = 0; idx < 3; ++idx) {  // Tedious stuff because operators aren't defined
-      patchKLow[idx] = ceil(d_kLimits(idx) * patchPositionLow(idx) / d_unitCell(idx, idx));
-      patchKHigh[idx] = floor(d_kLimits(idx) * patchPositionHigh(idx) / d_unitCell(idx, idx));
+    SCIRun::IntVector patchKLow, patchKHigh;
+    for (size_t idx = 0; idx < 3; ++idx) {
+      int KComponent = d_kLimits(idx);
+
+      patchKLow[idx] = ceil(static_cast<double>(KComponent) * (patchLowIndex[idx] / totalCellExtent[idx]));
+      patchKHigh[idx] = floor(static_cast<double>(KComponent) * (patchHighIndex[idx] / totalCellExtent[idx]));
     }
-    IntVector patchKGridExtents = (patchKHigh - patchKLow) + IntVector(1, 1, 1);  // +1 for inclusive limits
+    IntVector patchKGridExtents = (patchKHigh - patchKLow);
     IntVector patchKGridOffset = patchKLow;
 
     int splineHalfMaxSupport = d_interpolatingSpline.getHalfMaxSupport();
@@ -241,7 +239,7 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
     SPMEPatch* spmePatch = *PatchIterator;
     const Patch* patch = spmePatch->getPatch();
     ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
-    constParticleVariable<Point> px;
+    constParticleVariable<SCIRun::Point> px;
     old_dw->get(px, d_lb->pXLabel, pset);
 
     constParticleVariable<long64> pids;
@@ -272,8 +270,8 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
-  double localEnergy = 0.0;
-  Matrix3 localStress(0.0);
+  double localEnergy;
+  Matrix3 localStress;
 
   std::vector<SPMEPatch*>::iterator PatchIterator;
   for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
@@ -591,14 +589,18 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
       particleGridOffset[idx] = static_cast<int>(particleGridCoordinates[idx]);  // Reference grid point for particle
       splineValues[idx] = particleGridOffset[idx] - particleGridCoordinates[idx];  // spline offset for spline function
     }
-    vector<double> xSplineArray = spline.evaluate(splineValues[0]);
-    vector<double> ySplineArray = spline.evaluate(splineValues[1]);
-    vector<double> zSplineArray = spline.evaluate(splineValues[2]);
 
-    vector<double> xSplineDeriv = spline.derivative(splineValues[0]);
-    vector<double> ySplineDeriv = spline.derivative(splineValues[1]);
-    vector<double> zSplineDeriv = spline.derivative(splineValues[2]);
+    int TempStop = 0.0;
+    vector<double> xSplineArray = spline.evaluateGridAligned(splineValues[0]);
+    vector<double> ySplineArray = spline.evaluateGridAligned(splineValues[1]);
+    vector<double> zSplineArray = spline.evaluateGridAligned(splineValues[2]);
 
+    TempStop = 1.0;
+    vector<double> xSplineDeriv = spline.derivativeGridAligned(splineValues[0]);
+    vector<double> ySplineDeriv = spline.derivativeGridAligned(splineValues[1]);
+    vector<double> zSplineDeriv = spline.derivativeGridAligned(splineValues[2]);
+
+    TempStop = 2.0;
     IntVector extents(xSplineArray.size(), ySplineArray.size(), zSplineArray.size());
     SimpleGrid<double> chargeGrid(extents, particleGridOffset, 0);
 
@@ -647,16 +649,22 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
           dblcomplex val = charge * chargeMap(xmask + halfSupport, ymask + halfSupport, zmask + halfSupport);
 
           int x_anchor = QAnchor.x() + xmask;
-          x_anchor += (x_anchor < 0) ? d_kLimits.x() : 0;
-          x_anchor -= (x_anchor >= d_kLimits.x()) ? d_kLimits.x() : 0;
+          if (x_anchor < 0)
+            x_anchor += d_kLimits.x();
+          if (x_anchor >= d_kLimits.x())
+            x_anchor -= d_kLimits.x();
 
           int y_anchor = QAnchor.y() + ymask;
-          y_anchor += (y_anchor < 0) ? d_kLimits.y() : 0;
-          y_anchor -= (y_anchor >= d_kLimits.y()) ? d_kLimits.y() : 0;
+          if (y_anchor < 0)
+            y_anchor += d_kLimits.y();
+          if (y_anchor >= d_kLimits.y())
+            y_anchor -= d_kLimits.y();
 
           int z_anchor = QAnchor.z() + zmask;
-          z_anchor += (z_anchor < 0) ? d_kLimits.z() : 0;
-          z_anchor -= (z_anchor >= d_kLimits.z()) ? d_kLimits.z() : 0;
+          if (z_anchor < 0)
+            z_anchor += d_kLimits.z();
+          if (z_anchor >= d_kLimits.z())
+            z_anchor -= d_kLimits.z();
 
           // Wrapping done for single patch problem, solution will be totally different for multipatch problem!  !FIXME
           (*Q)(x_anchor, y_anchor, z_anchor) += val;
@@ -678,6 +686,7 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
     particleIndex pidx = *iter;
 
     SimpleGrid<SCIRun::Vector> forceMap = gridMap[pidx].getForceGrid();
+
     SCIRun::Vector newForce = Vector(0, 0, 0);
     IntVector QAnchor = forceMap.getOffset();  // Location of the 0,0,0 origin for the force map grid
     IntVector supportExtent = forceMap.getExtents();  // Extents of the force map grid
@@ -686,23 +695,27 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
       for (int ymask = -halfSupport; ymask <= halfSupport; ++ymask) {
         for (int zmask = -halfSupport; zmask <= halfSupport; ++zmask) {
           SCIRun::Vector currentForce;
-
           int x_anchor = QAnchor.x() + xmask;
-          x_anchor += (x_anchor < 0) ? d_kLimits.x() : 0;
-          x_anchor -= (x_anchor >= d_kLimits.x()) ? d_kLimits.x() : 0;
-
           int y_anchor = QAnchor.y() + ymask;
-          y_anchor += (y_anchor < 0) ? d_kLimits.y() : 0;
-          y_anchor -= (y_anchor >= d_kLimits.y()) ? d_kLimits.y() : 0;
-
           int z_anchor = QAnchor.z() + zmask;
-          z_anchor += (z_anchor < 0) ? d_kLimits.z() : 0;
-          z_anchor -= (z_anchor >= d_kLimits.z()) ? d_kLimits.z() : 0;
+
+          if (x_anchor < 0)
+            x_anchor += d_kLimits.x();
+          if (y_anchor < 0)
+            y_anchor += d_kLimits.y();
+          if (z_anchor < 0)
+            z_anchor += d_kLimits.z();
+
+          if (x_anchor >= d_kLimits.x())
+            x_anchor -= d_kLimits.x();
+          if (y_anchor >= d_kLimits.y())
+            y_anchor -= d_kLimits.y();
+          if (z_anchor >= d_kLimits.z())
+            z_anchor -= d_kLimits.z();
 
           double QReal = real((*Q)(x_anchor, y_anchor, z_anchor));
-
 #ifdef DEBUG
-          double QMag = abs(Q(x_anchor, y_anchor, z_anchor));
+          double QMag = abs((*Q)(x_anchor, y_anchor, z_anchor));
           ASSERTEQ(QMag,QReal);
 #endif
 
