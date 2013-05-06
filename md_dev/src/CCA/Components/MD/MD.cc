@@ -825,6 +825,8 @@ void MD::updatePosition(const ProcessorGroup* pg,
         pvelocitynew[idx] = pvelocity[idx] + paccel[idx] * delT;
         pxnew[idx] = px[idx] + pvelocity[idx] + pvelocitynew[idx] * 0.5 * delT;
 
+        pxnew[idx] = px[idx];
+
         if (md_dbg.active()) {
           cerrLock.lock();
           std::cout << "PatchID: " << std::setw(4) << patch->getID() << std::setw(6);
