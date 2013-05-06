@@ -27,10 +27,8 @@
 #include <CCA/Components/MD/MDSystem.h>
 #include <CCA/Components/MD/SPME.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/Parallel.h>
+#include <Core/Util/DebugStream.h>
 
 #include <iostream>
 

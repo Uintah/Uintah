@@ -23,12 +23,12 @@
  */
 
 #include <CCA/Components/MD/CenteredCardinalBSpline.h>
+#include <Core/Util/FancyAssert.h>
 
 #include <iostream>
 #include <cassert>
 #include <vector>
 #include <cmath>
-#include <Core/Util/FancyAssert.h>
 
 #ifdef DEBUG
 #include <string>
@@ -111,11 +111,11 @@ std::vector<double> CenteredCardinalBSpline::evaluateGridAligned(const double x)
   if (xBase < -0.5) {
     xBase += 1.0;
     xShift -= 1;
-  };
+  }
   if (xBase > 0.5) {
     xBase -= 1.0;
     xShift += 1;
-  };
+  }
 
   /*
    * Consider the following cases: Spline Order = 6 (Spline is defined from -3.5 to 3.5)
@@ -233,11 +233,11 @@ std::vector<double> CenteredCardinalBSpline::derivativeGridAligned(const double 
   if (xBase < -0.5) {
     xBase += 1.0;
     xShift -= 1;
-  };
+  }
   if (xBase > 0.5) {
     xBase -= 1.0;
     xShift += 1;
-  };
+  }
 
   std::vector<double> subSpline = evaluateInternal(x + 0.5, d_splineOrder - 1, d_basisShifts, d_prefactorMap, d_prefactorValues);
   std::vector<double> splineDeriv;
@@ -387,7 +387,7 @@ std::vector<double> CenteredCardinalBSpline::evaluateInternal(const double x,
 
   // Row - One complete spline array for a given term
   // Column - All terms comprising the subsplines used to make the current order
-  std::vector < std::vector<double> > valTemp2D;
+  std::vector<std::vector<double> > valTemp2D;
   for (size_t vtidx = 0; vtidx < numTerms; ++vtidx) {
     std::vector<double> vtRow(totalOffset, 0.0);
     valTemp2D.push_back(vtRow);

@@ -27,7 +27,6 @@
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/MD/Electrostatics.h>
-#include <CCA/Ports/Output.h>
 
 namespace Uintah {
 
