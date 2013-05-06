@@ -3,16 +3,17 @@
 
 namespace Uintah {
  
-PIDXOutputContext::PIDXOutputContext(const char* filename, MPI_Comm comm)
-  : filename(filename), comm(comm)
+  PIDXOutputContext::PIDXOutputContext(std::string filename, 
+                                       unsigned int timeStep,
+                                       int globalExtents[5], MPI_Comm comm)
+    : filename(filename), timestep(timeStep), comm(comm)
 {
-  int *gextent;
+  int gextent[5];
   int returnV;
-  gextent = (int*)malloc(3 * sizeof(int));
-	    
-  gextent[0] = 512;
-  gextent[1] = 512;
-  gextent[2] = 512;
+
+  for (int i = 0; i < 5; i++)
+    gextent[i] = globalExtents[i];
+
 	    
 // std::cout<<"Test C : Calling PIDX\n";
 // PIDX_create((char*)filename, comm, 15, 256, 3, gextent);
