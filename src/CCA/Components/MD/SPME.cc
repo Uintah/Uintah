@@ -39,12 +39,12 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
+
 #include <iostream>
 #include <iomanip>
 
 #include <sci_values.h>
 #include <sci_defs/fftw_defs.h>
-#define INDEX3D(dx,dy,i,j,k) ((i) + ((j)*dx) + ((k)*dx*dy))
 
 #ifdef DEBUG
 #include <Core/Util/FancyAssert.h>
@@ -67,9 +67,16 @@ SPME::~SPME()
   std::vector<SPMEPatch*>::iterator PatchIterator;
   for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); ++PatchIterator) {
     SPMEPatch* spmePatch = *PatchIterator;
-    delete spmePatch->getQ();
-    delete spmePatch->getStressPrefactor();
-    delete spmePatch->getTheta();
+
+    SimpleGrid<complex<double> >* q = spmePatch->getQ();
+    delete q;
+
+//    SimpleGrid<Matrix3>* stressPrefactor = spmePatch->getStressPrefactor();
+//    delete stressPrefactor;
+
+    SimpleGrid<double>* theta = spmePatch->getTheta();
+    delete theta;
+
     delete spmePatch;
   }
 
@@ -156,7 +163,7 @@ void SPME::setup(const ProcessorGroup* pg,
           (*fTheta)(xidx, yidx, zidx) = fBGrid(xidx, yidx, zidx) * fCGrid(xidx, yidx, zidx);
 
           if (spme_dbg.active()) {
-            cerrLock.unlock();
+            cerrLock.lock();
             // FIXME - some "nan" values interspersed in B and C
             if (std::isnan(fBGrid(xidx, yidx, zidx))) {
               std::cout << "B: " << xidx << " " << yidx << " " << zidx << std::endl;
@@ -470,7 +477,7 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
   std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z(), d_interpolatingSpline);
 
 //  if (spme_dbg.active()) {
-//    cerrLock.unlock();
+//    cerrLock.lock();
 //    std::cout << " DEBUG: " << std::endl;
 //    std::cout << "Expect mp1 size: " << d_kLimits.x() << "  Actual mp1 size: " << mp1.size() << std::endl;
 //    for (size_t idx = 0; idx < mp1.size(); ++idx) {
