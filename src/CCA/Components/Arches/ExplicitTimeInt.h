@@ -60,6 +60,18 @@ public:
                      const bool do_low_clip,  const double low_clip, 
                      const bool do_high_clip, const double high_clip );
 
+
+    /** @brief A template for time averaging using a Runge-kutta form for weighted abcissa*/  
+    template <class phiT, class constphiT>
+    void timeAvePhi( const Patch* patch, 
+                     phiT& phi, 
+                     constphiT& old_phi, 
+                     const int step, const double time, 
+                     const double clip_tol, 
+                     const bool do_low_clip,  const double low_clip, 
+                     const bool do_high_clip, const double high_clip, constCCVariable<double> weight);
+
+
     /** @brief A template for time averaging using a Runge-kutta form with density */ 
     template <class phiT, class constphiT>
     void timeAvePhi( const Patch* patch, 
@@ -312,6 +324,73 @@ private:
 #endif  
 
   }
+
+
+//---------------------------------------------------------------------------
+// Time averaging W/O density
+//---------------------------------------------------------------------------
+// ----RK AVERAGING
+//     to get the time averaged phi^{time averaged}
+//     See: Gottlieb et al., SIAM Review, vol 43, No 1, pp 89-112
+//          Strong Stability-Preserving High-Order Time Discretization Methods
+  template <class phiT, class constphiT>
+  void ExplicitTimeInt::timeAvePhi( const Patch* patch, 
+                                    phiT& phi, 
+                                    constphiT& old_phi, 
+                                    const int step, const double time,
+                                    const double clip_tol, 
+                                    const bool do_low_clip,  const double low_clip, 
+                                    const bool do_high_clip, const double high_clip, constCCVariable<double> weight)
+  {
+
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+      IntVector c = *iter; 
+
+      if ( do_low_clip && phi[c]/weight[c] < ( low_clip + clip_tol ) ){ 
+
+        phi[*iter] = weight[c]*low_clip; 
+
+      } else if ( do_high_clip && phi[c]/weight[c] > ( high_clip + clip_tol ) ){ 
+
+        phi[*iter] = high_clip*weight[c]; 
+
+      } else { 
+
+        phi[*iter] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];        
+
+      }
+
+    }
+
+#ifdef VERIFY_TIMEINT
+    // This computes the L_inf norm of the error for the integrator test. 
+    if (step == 0 && d_time_order == "first" || 
+        step == 1 && d_time_order == "second" || 
+        step == 2 && d_time_order == "third") {
+      d_LinfError = 0.0;
+      d_LinfSol   = 0.0; 
+    }  
+
+    double error = 0.0;
+    double pi = acos(-1.0); 
+    Vector dx = patch->dCell();
+    double exact = 1./(2.*pi)*sin(2.*pi*time);
+    d_LinfSol = max(d_LinfSol, exact); 
+    exact *= dx.x()*dx.y()*dx.z(); 
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter; 
+      d_LinfError = max(d_LinfError, abs(phi[c] - exact));
+    }
+    error = d_LinfError / d_LinfSol; //normalize
+
+    cout << "Error from time integration = " << error << endl;
+    cout << endl;
+    cout << "**********************************************************************" << endl;
+#endif  
+
+  }
+
 
 //---------------------------------------------------------------------------
 // Time averaging With Density
