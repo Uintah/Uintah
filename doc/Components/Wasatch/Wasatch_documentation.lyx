@@ -46,6 +46,24 @@
 } 
 \usepackage{amsthm,amsmath,amssymb}
 \usepackage[varg]{txfonts} % this should always be invoked AFTER ams packages
+
+
+\usepackage{scalerel}
+
+\newcommand\extrawidehat[1]{%
+\begin{array}{c}
+\stretchto{
+  \scaleto{
+    \scalerel*[\widthof{#1}]{\bigwedge}
+    {\rule[-\textheight/2]{2ex}{\textheight}} %WIDTH-LIMITED BIG WEDGE
+  }{1.25\textheight} % THIS STRETCHES THE WEDGE A LITTLE EXTRA WIDE
+}{0.5ex}\\           % THIS SQUEEZES THE WEDGE TO 0.5ex HEIGHT
+#1\\                 % THIS STACKS THE WEDGE ATOP THE ARGUMENT
+\rule{-1ex}{0ex}
+\end{array}
+}
+
+\newcommand\oline[1]{\overline{#1\mathstrut}}
 \end_preamble
 \use_default_options false
 \maintain_unincluded_children false
@@ -244,7 +262,7 @@ Here,
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\boldsymbol{\tau}_{ij}=-2\mu S_{ij}+\frac{2}{3}\mu\delta_{ij}S_{kk};\quad S_{ij}=\frac{1}{2}\left(\frac{\partial u_{i}}{\partial x_{j}}+\frac{\partial u_{j}}{\partial x_{i}}\right).
+\boldsymbol{\tau}_{ij}=-2\mu S_{ij};\quad S_{ij}\equiv\frac{1}{2}\left(\frac{\partial u_{i}}{\partial x_{j}}+\frac{\partial u_{j}}{\partial x_{i}}\right)-\frac{1}{3}\delta_{ij}\frac{\partial u_{k}}{\partial x_{k}}.
 \end{equation}
 
 \end_inset
@@ -401,7 +419,7 @@ Wasatch uses Favre filtering as the basis for its LES approach.
  It is given by the following operation
 \begin_inset Formula 
 \begin{equation}
-\overline{\rho\phi}=\overline{\rho}\widetilde{\phi},
+\overline{\rho\phi}=\overline{\rho}\,\widetilde{\phi},
 \end{equation}
 
 \end_inset
@@ -437,14 +455,14 @@ To make further headway, we apply the traditional filter to the governing
 \end_inset
 
 Then, one makes use of the Favre filtering operation by setting 
-\begin_inset Formula $\overline{\rho\mathbf{u}}=\overline{\rho}\widetilde{\mathbf{u}}$
+\begin_inset Formula $\overline{\rho\mathbf{u}}=\overline{\rho}\,\widetilde{\mathbf{u}}$
 \end_inset
 
 .
  At the outset, the Favre-filtered continuity equation is given by
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho}}{\partial t}+\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}=0.
+\frac{\partial\overline{\rho}}{\partial t}+\nabla\cdot\overline{\rho}\,\widetilde{\mathbf{u}}=0.
 \end{equation}
 
 \end_inset
@@ -478,7 +496,7 @@ It is best to transform to Favre-filtered terms one at a time.
 \uwave off
 \noun off
 \color none
-\begin_inset Formula $\frac{\partial\overline{\rho\mathbf{u}}}{\partial t}=\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}$
+\begin_inset Formula $\frac{\partial\overline{\rho\mathbf{u}}}{\partial t}=\frac{\partial\overline{\rho}\,\widetilde{\mathbf{u}}}{\partial t}$
 \end_inset
 
 
@@ -497,7 +515,7 @@ It is best to transform to Favre-filtered terms one at a time.
 \uwave off
 \noun off
 \color none
-\begin_inset Formula $\nabla\cdot\overline{\rho\mathbf{u}\mathbf{u}}=\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}\mathbf{u}}=\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}+\left(\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}\mathbf{u}}-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}\right)\equiv\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}+\nabla\cdot\boldsymbol{\tau}_{ij}^{R};\quad\boldsymbol{\tau}_{ij}^{R}\equiv\overline{\rho}\widetilde{\mathbf{u}\mathbf{u}}-\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}$
+\begin_inset Formula $\nabla\cdot\overline{\rho\mathbf{u}\mathbf{u}}=\nabla\cdot\overline{\rho}\,\widetilde{\mathbf{u}\mathbf{u}}=\nabla\cdot\overline{\rho}\,\widetilde{\mathbf{u}}\,\widetilde{\mathbf{u}}+\left(\nabla\cdot\overline{\rho}\,\widetilde{\mathbf{u}\mathbf{u}}-\nabla\cdot\overline{\rho}\,\widetilde{\mathbf{u}}\,\widetilde{\mathbf{u}}\right)\equiv\nabla\cdot\overline{\rho}\,\widetilde{\mathbf{u}}\,\widetilde{\mathbf{u}}+\nabla\cdot\boldsymbol{\tau}_{ij}^{R};\quad\boldsymbol{\tau}_{ij}^{R}\equiv\overline{\rho}\,\widetilde{\mathbf{u}\mathbf{u}}-\overline{\rho}\,\widetilde{\mathbf{u}}\,\widetilde{\mathbf{u}}$
 \end_inset
 
 
@@ -543,7 +561,7 @@ where
  At the outset, the filtered momentum equations may be written as
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{R}-\nabla\cdot\underbrace{\boldsymbol{\tau}_{ij}^{L}}_{\text{neglect}}+\overline{\rho\mathbf{g}}.\label{eq:wasatch-filtered-momentum-eq}
+\frac{\partial\overline{\rho}\,\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\,\widetilde{\mathbf{u}}\,\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{R}-\nabla\cdot\underbrace{\boldsymbol{\tau}_{ij}^{L}}_{\text{neglect}}+\overline{\rho\mathbf{g}}.\label{eq:wasatch-filtered-momentum-eq}
 \end{equation}
 
 \end_inset
@@ -587,7 +605,7 @@ key "geurts_les_1993,vreman_subgrid-modelling_1995"
  Hence, the resulting filtered momentum equations take the form
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{R}+\overline{\rho\mathbf{g}}.\label{eq:wasatch-filtered-momentum-eq-2}
+\frac{\partial\overline{\rho}\,\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\,\widetilde{\mathbf{u}}\,\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{R}+\overline{\rho\mathbf{g}}.\label{eq:wasatch-filtered-momentum-eq-2}
 \end{equation}
 
 \end_inset
@@ -603,7 +621,7 @@ The subgrid stress tensor
 
 \begin_layout Standard
 \begin_inset Note Note
-status open
+status collapsed
 
 \begin_layout Plain Layout
 OLD STUFF
@@ -640,7 +658,7 @@ And ~ shows the Favre averaged variables.
 
 \begin_layout Standard
 \begin_inset Note Note
-status open
+status collapsed
 
 \begin_layout Plain Layout
 THIS SECTION DOESN'T BELONG HERE ANYMORE.
@@ -726,7 +744,7 @@ The deviatoric subgrid-stress tensor
  is modeled as
 \begin_inset Formula 
 \begin{equation}
-\boldsymbol{\tau}_{ij}^{\mathrm{d}}=2\mu_{\mathrm{t}}\left(\widetilde{S}_{ij}-\tfrac{1}{3}\delta_{ij}\widetilde{S}_{kk}\right),
+\boldsymbol{\tau}_{ij}^{\mathrm{d}}=-2\mu_{\mathrm{t}}\widetilde{S}_{ij},
 \end{equation}
 
 \end_inset
@@ -807,7 +825,7 @@ reference "eq:wasatch-filtered-momentum-eq"
  one recovers
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{\mathrm{d}}+\overline{\rho}\mathbf{g}.\label{eq:wasatch-filtered-momentum-eq-1}
+\frac{\partial\overline{\rho}\,\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\,\widetilde{\mathbf{u}}\,\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{\mathrm{d}}+\overline{\rho}\mathbf{g}.\label{eq:wasatch-filtered-momentum-eq-1}
 \end{equation}
 
 \end_inset
@@ -840,9 +858,9 @@ key "smagorinsky_general_1963"
 .
  This form may be written as
 \begin_inset Formula 
-\[
-\mu_{\mathrm{t}}=\overline{\rho}\left(C_{\mathrm{s}}\Delta\right)^{2}|\widetilde{S}|=\overline{\rho}L_{s}^{2}|\widetilde{S}|,
-\]
+\begin{equation}
+\mu_{\mathrm{t}}=\overline{\rho}\left(C_{\mathrm{s}}\Delta\right)^{2}|\widetilde{S}|=\overline{\rho}L_{s}^{2}|\widetilde{S}|,\label{eq:wasatch-constant-smagorinsky-model}
+\end{equation}
 
 \end_inset
 
@@ -1051,6 +1069,484 @@ Dynamic Smagorinsky Model
 \end_layout
 
 \begin_layout Standard
+While the constant Smagorinsky-Lilly model provides a well-rounded simple
+ LES model, it fails to capture appropriate flow behaviour near walls or
+ under low-Reynolds-number conditions where the model coefficient 
+\begin_inset Formula $C_{\text{s}}$
+\end_inset
+
+ needs to be attenuated or set to zero.
+ The dynamic Smagorinsky models provides a means to allow for saptio-temporal
+ variation of 
+\begin_inset Formula $C_{\text{s}}$
+\end_inset
+
+.
+ The idea behind the dynamic model is simple: apply a test filter to the
+ grid-filtered velocity field and then use the difference between the test-filte
+red and grid-filtered stresses as a measure of how resolved the simulation
+ is and calibrate the Smagorinsky model coefficient appropriately.
+ In what follows, test-filtering is denoted by an over-hat 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Formula $\widehat{}$
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ while grid filtered fields are denoted by an overbar.
+ 
+\end_layout
+
+\begin_layout Subparagraph*
+Constant Density
+\end_layout
+
+\begin_layout Standard
+For a constant density flow, the test-filtered momentum equations are
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\widehat{\overline{\mathbf{u}}}}{\partial t}=-\nabla\cdot\widehat{\overline{\mathbf{u}\mathbf{u}}}-\nabla\cdot\widehat{\overline{\boldsymbol{\tau}_{ij}}}-\nabla\widehat{\overline{p}}.
+\end{equation}
+
+\end_inset
+
+where the overbar denotes grid-filtered quantities.
+ The test-filtered convective fluxes are unknown and require modeling.
+ We follow standard expansion and set
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\nabla\cdot\widehat{\overline{\mathbf{u}\mathbf{u}}}=\nabla\cdot\widehat{\overline{\mathbf{u}}}\,\widehat{\overline{\mathbf{u}}}+\left(\nabla\cdot\widehat{\overline{\mathbf{u}\mathbf{u}}}-\nabla\cdot\widehat{\overline{\mathbf{u}}}\,\widehat{\overline{\mathbf{u}}}\right)\equiv\nabla\cdot\widehat{\overline{\mathbf{u}}}\,\widehat{\overline{\mathbf{u}}}+\nabla\cdot\mathbf{T}_{ij}^{\text{R}};\quad\mathbf{T}_{ij}^{\text{R}}\equiv\widehat{\overline{\mathbf{u}\mathbf{u}}}-\widehat{\overline{\mathbf{u}}}\,\widehat{\overline{\mathbf{u}}}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\mathbf{T}_{ij}^{\text{R}}$
+\end_inset
+
+ is the test-filtered subgrid-scale stress tensors that results from applying
+ the test-filter to the grid-filtered convective terms.
+ In a manner similar to the grid-filtered residual stresses, the deviatoric
+ part of 
+\begin_inset Formula $\mathbf{T}_{ij}^{\text{R}}$
+\end_inset
+
+ may be modeled using an eddy-viscosity model
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathbf{T}_{ij}^{\text{R}}=\underbrace{\overbrace{\mathbf{T}_{ij}^{\text{R}}-\tfrac{1}{3}\delta_{ij}\mathbf{T}_{ij}^{\text{R}}}}_{\text{deviatoric}}^{\mathbf{T}_{ij}^{\mathrm{d}}}+\underbrace{\overbrace{\tfrac{1}{3}\delta_{ij}\mathbf{T}_{ij}^{\text{R}}}}_{\text{isotropic}}^{\mathbf{T}_{ij}^{\mathrm{s}}}.\label{eq:wasatch-sgs-tensor-decomposition-1}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Assuming that the test-filtered residual stresses have the same model coefficien
+t as the grid-filtered streses, we set
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathbf{T}_{ij}^{\mathrm{d}}=-2\mu_{\mathrm{t}}\widehat{\overline{S}}_{ij};\quad\mu_{\text{t}}\equiv C_{\text{d}}\widehat{\overline{\Delta}}^{2}\widehat{\overline{\mathcal{S}}},\label{eq:wasatch-test-filtered-stress-tensor}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\widehat{\overline{S}}_{ij}\equiv\tfrac{1}{2}\left(\frac{\partial\widehat{\overline{u_{i}}}}{\partial x_{j}}+\frac{\partial\widehat{\overline{u_{j}}}}{\partial x_{i}}\right)$
+\end_inset
+
+, 
+\begin_inset Formula $\widehat{\overline{\mathcal{S}}}=\sqrt{2\widehat{\overline{S}}_{ij}\widehat{\overline{S}}_{ij}}$
+\end_inset
+
+, and 
+\begin_inset Formula $C_{\text{d}}$
+\end_inset
+
+ is the dynamic Smagorinsky coefficient, akin to the one shown in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:wasatch-constant-smagorinsky-model"
+
+\end_inset
+
+.
+ Recall that the grid-filtered deviatoric residual stress tensor is modeled
+ as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{\tau}_{ij}^{\mathrm{d}}=-2\mu_{\mathrm{t}}\overline{S}_{ij};\quad\mu_{\text{t}}\equiv C_{\text{d}}\overline{\Delta}^{2}\overline{\mathcal{S}}.\label{eq:wasatch-grid-filtered-stress-tensor}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The purpose of the dynamic procedure to determine 
+\begin_inset Formula $C_{\text{d}}$
+\end_inset
+
+ based on local flow conditions.
+ If one could relate 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:wasatch-test-filtered-stress-tensor"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:wasatch-grid-filtered-stress-tensor"
+
+\end_inset
+
+, then an equation for 
+\begin_inset Formula $C_{\text{d}}$
+\end_inset
+
+ could be derived.
+ Germano constructed an identity that does that.
+ By taking the test-filter of 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}^{\text{R}}$
+\end_inset
+
+, and subtracting it from 
+\begin_inset Formula $\mathbf{T}_{ij}^{\text{R}}$
+\end_inset
+
+, one recovers
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathcal{L}_{ij}\equiv\mathbf{T}_{ij}^{\text{R}}-\widehat{\boldsymbol{\tau}_{ij}^{\mathrm{R}}}=\left(\widehat{\overline{\mathbf{u}\mathbf{u}}}-\widehat{\overline{\mathbf{u}}}\,\widehat{\overline{\mathbf{u}}}\right)-\left(\widehat{\overline{\mathbf{u}\mathbf{u}}}-\widehat{\overline{\mathbf{u}}\,\overline{\mathbf{u}}}\right)=\widehat{\overline{\mathbf{u}}\,\overline{\mathbf{u}}}-\widehat{\overline{\mathbf{u}}}\,\widehat{\overline{\mathbf{u}}}
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula $\mathcal{L}_{ij}$
+\end_inset
+
+ is a known quantity and will be used to calibrate the model's coefficient.
+ A model for 
+\begin_inset Formula $\mathcal{L}_{ij}$
+\end_inset
+
+ is
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathcal{L}_{ij}^{\text{d}}\equiv\mathbf{T}_{ij}^{\text{d}}-\widehat{\boldsymbol{\tau}_{ij}^{\mathrm{d}}}
+\end{equation}
+
+\end_inset
+
+or
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathcal{L}_{ij}^{\text{d}}=-2C_{\text{d}}\widehat{\overline{\Delta}}^{2}\widehat{\overline{\mathcal{S}}}\,\widehat{\overline{S}}_{ij}+2C_{\text{d}}\overline{\Delta}^{2}\widehat{\overline{\mathcal{S}}\,\overline{S}_{ij}}\equiv2C_{\text{d}}\mathbf{M}_{ij};\quad\mathbf{M}_{ij}\equiv\overline{\Delta}^{2}\widehat{\overline{\mathcal{S}}\,\overline{S}_{ij}}-\widehat{\overline{\Delta}}^{2}\widehat{\overline{\mathcal{S}}}\,\widehat{\overline{S}}_{ij}
+\end{equation}
+
+\end_inset
+
+Given that 
+\begin_inset Formula $\mathcal{L}_{ij}\approx\mathcal{L}_{ij}^{\text{d}}$
+\end_inset
+
+, then one can write (remember that 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $\mathcal{L}_{ij}$
+\end_inset
+
+ is a known quantity)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+2C_{\text{d}}\mathbf{M}_{ij}\approx\mathcal{L}_{ij}
+\end{equation}
+
+\end_inset
+
+Of course this is an overdetermined system of equations and 
+\begin_inset Formula $C_{\text{d}}$
+\end_inset
+
+ cannot be calculated from the above equation.
+ Instead, Germano suggested contracting the above equation with 
+\begin_inset Formula $\mathbf{M}_{ij}$
+\end_inset
+
+ to recover
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+C_{\text{d}}=\frac{1}{2}\frac{\mathcal{L}_{ij}\mathbf{M}_{ij}}{\mathbf{M}_{ij}\mathbf{M}_{ij}}
+\end{equation}
+
+\end_inset
+
+In fact, this apparently arbitrary contraction may be rigorously derived
+ by minimizing the mean-square error.
+ The error is defined as the difference between the subtest stress 
+\begin_inset Formula $\mathcal{L}_{ij}$
+\end_inset
+
+ and its model 
+\begin_inset Formula $\mathcal{L}_{ij}^{\text{d}}$
+\end_inset
+
+ as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\varepsilon_{ij}=\mathcal{L}_{ij}^{\text{d}}-\mathcal{L}_{ij}
+\end{equation}
+
+\end_inset
+
+The mean-square error is
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+E\equiv\varepsilon_{ij}\varepsilon_{ij}=\left(\mathcal{L}_{ij}^{\text{d}}-\mathcal{L}_{ij}\right)\left(\mathcal{L}_{ij}^{\text{d}}-\mathcal{L}_{ij}\right)
+\end{equation}
+
+\end_inset
+
+upon expansion, this leads to
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+E\equiv\left(2C_{\text{d}}\mathbf{M}_{ij}-\mathcal{L}_{ij}\right)^{2}
+\end{equation}
+
+\end_inset
+
+To find the extremum of the error with respect to 
+\begin_inset Formula $C_{\text{d}}$
+\end_inset
+
+, we take its derivative and set it to zero.
+ This returns
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial E}{\partial C_{\text{d}}}=2\times2\mathbf{M}_{ij}\times\left(2C_{\text{d}}\mathbf{M}_{ij}-\mathcal{L}_{ij}\right)=8C_{\text{d}}\mathbf{M}_{ij}\mathbf{M}_{ij}-4\mathcal{L}_{ij}\mathbf{M}_{ij}=0
+\end{equation}
+
+\end_inset
+
+or
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+C_{\text{d}}=\frac{1}{2}\frac{\mathcal{L}_{ij}\mathbf{M}_{ij}}{\mathbf{M}_{ij}\mathbf{M}_{ij}}\propto\frac{\mathcal{L}_{ij}\mathbf{M}_{ij}}{\mathbf{M}_{ij}\mathbf{M}_{ij}}\label{eq:wasatch-dynamic-coef-square-error-extremum}
+\end{equation}
+
+\end_inset
+
+This tells us that, when 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:wasatch-dynamic-coef-square-error-extremum"
+
+\end_inset
+
+ is true, then the mean-square error is at an extremum.
+ To identify the type of extremum, we look at the second derivative of 
+\begin_inset Formula $E$
+\end_inset
+
+, namely
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial^{2}E}{\partial C_{\text{d}}^{2}}=8\mathbf{M}_{ij}\mathbf{M}_{ij}\geq0
+\end{equation}
+
+\end_inset
+
+This result indicates that the curvature of 
+\begin_inset Formula $E$
+\end_inset
+
+ is concave up and that the extremum is a minimum.
+\end_layout
+
+\begin_layout Standard
+In practice, one calculates the product 
+\begin_inset Formula $C_{\text{s}}\overline{\Delta}^{2}$
+\end_inset
+
+ so that
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+C_{\text{d}}\overline{\Delta}^{2}=\frac{1}{2}\frac{\mathcal{L}_{ij}\mathbf{M}_{ij}}{\mathbf{M}_{ij}\mathbf{M}_{ij}};\quad\mathbf{M}_{ij}\equiv\widehat{\overline{\mathcal{S}}\,\overline{S}_{ij}}-\delta^{2}\widehat{\overline{\mathcal{S}}}\,\widehat{\overline{S}}_{ij},\quad\delta\equiv\frac{\widehat{\overline{\Delta}}}{\overline{\Delta}}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\delta$
+\end_inset
+
+ is the ratio of filter widths.
+ In Wasatch, we use an isotropic box filter with a width 
+\begin_inset Formula $\widehat{\overline{\Delta}}=3\overline{\Delta}$
+\end_inset
+
+ (i.e.
+ 
+\begin_inset Formula $\delta=3$
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Here, we assumed that 
+\begin_inset Formula $C_{\text{s}}$
+\end_inset
+
+ is 
+\begin_inset Quotes eld
+\end_inset
+
+constant
+\begin_inset Quotes erd
+\end_inset
+
+.
+ This is certainly a workaround to get something out of the model, but it
+ appears to work reasonably well for a wide range of flowfields.
+ To make further headway, we write
+\end_layout
+
+\begin_layout Plain Layout
+he filtered momentum equations may be written as
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{R}-\nabla\cdot\underbrace{\boldsymbol{\tau}_{ij}^{L}}_{\text{neglect}}+\overline{\rho\mathbf{g}}.\label{eq:wasatch-filtered-momentum-eq-3}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+It is evident from 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "eq:wasatch-filtered-momentum-eq-3"
+
+\end_inset
+
+ that both subgrid tensors 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}^{R}$
+\end_inset
+
+ and 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}^{L}$
+\end_inset
+
+ require closure.
+ However, it may be argued that the subgrid tensor 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}^{L}$
+\end_inset
+
+ resulting from the viscous terms is negligible compared to 
+\begin_inset Formula $\boldsymbol{\tau}_{ij}^{R}$
+\end_inset
+
+ that results from filtering of the convective terms 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "geurts_les_1993,vreman_subgrid-modelling_1995"
+
+\end_inset
+
+.
+ Hence, the resulting filtered momentum equations take the form
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\overline{\rho}\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\widetilde{\mathbf{u}}\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{R}+\overline{\rho\mathbf{g}}.\label{eq:wasatch-filtered-momentum-eq-2-1}
+\end{equation}
+
+\end_inset
+
+The subgrid stress tensor 
+\begin_inset Formula $\tau_{ij}^{R}$
+\end_inset
+
+ requires closure as it introduces unknown quantities.
+ The subject of closure is at the heart of the LES method and will be discussed
+ in the next subsection.
+\end_layout
+
+\begin_layout Plain Layout
 The most important difference between filtered and non-filtered momentum
  equation is in the diffusive term, 
 \begin_inset Formula $\tau_{kl}$
@@ -1097,7 +1593,7 @@ where
  is the grid size.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Formula $C$
 \end_inset
 
@@ -1133,6 +1629,11 @@ C & = & \frac{\left\langle [\widehat{\bar{\rho}\tilde{v}_{k}\tilde{v}_{l}}-(1/\h
 \end_inset
 
  and over hat means the test filter is applied.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Paragraph
