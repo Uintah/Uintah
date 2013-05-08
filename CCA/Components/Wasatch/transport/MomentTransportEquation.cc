@@ -472,10 +472,12 @@ namespace Wasatch {
   MomentTransportEquation<FieldT>::
   MomentTransportEquation( const std::string thisPhiName,
                           const Expr::ExpressionID rhsID,
+                          const bool isConstDensity,
                           const bool hasEmbeddedGeometry,
                           Uintah::ProblemSpecP params)
   : Wasatch::TransportEquation( thisPhiName, rhsID,
                                 get_staggered_location<FieldT>(),
+                                isConstDensity,
                                 hasEmbeddedGeometry,
                                 params)
   {}
