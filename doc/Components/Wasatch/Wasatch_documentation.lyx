@@ -46,9 +46,6 @@
 } 
 \usepackage{savesym}
 \usepackage{amsthm,amsmath,amssymb}
-\savesymbol{amalg}
-\usepackage{mathabx}
-\restoresymbol{TXF}{amalg}
 \usepackage[varg]{txfonts} % this should always be invoked AFTER ams packages
 \end_preamble
 \use_default_options false
@@ -811,7 +808,7 @@ reference "eq:wasatch-filtered-momentum-eq"
  one recovers
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\overline{\rho}\,\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\,\widetilde{\mathbf{u}}\,\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}_{ij}}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{\mathrm{d}}+\overline{\rho}\mathbf{g}.\label{eq:wasatch-filtered-momentum-eq-1}
+\frac{\partial\overline{\rho}\,\widetilde{\mathbf{u}}}{\partial t}=-\nabla\cdot\overline{\rho}\,\widetilde{\mathbf{u}}\,\widetilde{\mathbf{u}}-\nabla\cdot\widetilde{\boldsymbol{\tau}}_{ij}-\nabla\overline{p}-\nabla\cdot\boldsymbol{\tau}_{ij}^{\mathrm{d}}+\overline{\rho}\mathbf{g}.\label{eq:wasatch-filtered-momentum-eq-1}
 \end{equation}
 
 \end_inset
@@ -845,7 +842,7 @@ key "smagorinsky_general_1963"
  This form may be written as
 \begin_inset Formula 
 \begin{equation}
-\mu_{\mathrm{t}}=\overline{\rho}\left(C_{\mathrm{s}}\Delta\right)^{2}|\widetilde{S}|=\overline{\rho}L_{s}^{2}|\widetilde{S}|,\label{eq:wasatch-constant-smagorinsky-model}
+\mu_{\mathrm{t}}=\overline{\rho}\left(C_{\mathrm{s}}\Delta\right)^{2}\widetilde{\mathcal{S}}=\overline{\rho}L_{s}^{2}\widetilde{\mathcal{S}},\label{eq:wasatch-constant-smagorinsky-model}
 \end{equation}
 
 \end_inset
@@ -864,7 +861,7 @@ where
 \end_inset
 
 , and 
-\begin_inset Formula $|\widetilde{S}|=\sqrt{2\widetilde{S}_{ij}\widetilde{S}_{ij}}$
+\begin_inset Formula $\widetilde{\mathcal{S}}=\sqrt{2\widetilde{S}_{ij}\widetilde{S}_{ij}}$
 \end_inset
 
 .
@@ -1096,7 +1093,7 @@ Constant Density
 For a constant density flow, the test-filtered momentum equations are
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\widehat{\overline{\mathbf{u}}}}{\partial t}=-\nabla\cdot\widehat{\overline{\mathbf{u}\mathbf{u}}}-\nabla\cdot\widehat{\overline{\boldsymbol{\tau}_{ij}}}-\nabla\widehat{\overline{p}}.
+\frac{\partial\widehat{\overline{\mathbf{u}}}}{\partial t}=-\nabla\cdot\widehat{\overline{\mathbf{u}\mathbf{u}}}-\nabla\cdot\widehat{\overline{\boldsymbol{\tau}}}_{ij}-\nabla\widehat{\overline{p}}.
 \end{equation}
 
 \end_inset
@@ -1153,7 +1150,7 @@ t as the grid-filtered streses, we set
 \end_inset
 
 where 
-\begin_inset Formula $\widehat{\overline{S}}_{ij}\equiv\tfrac{1}{2}\left(\frac{\partial\widehat{\overline{u_{i}}}}{\partial x_{j}}+\frac{\partial\widehat{\overline{u_{j}}}}{\partial x_{i}}\right)$
+\begin_inset Formula $\widehat{\overline{S}}_{ij}\equiv\tfrac{1}{2}\left(\frac{\partial\widehat{\overline{u}}_{i}}{\partial x_{j}}+\frac{\partial\widehat{\overline{u}}_{j}}{\partial x_{i}}\right)$
 \end_inset
 
 , 
@@ -1227,7 +1224,7 @@ reference "eq:wasatch-grid-filtered-stress-tensor"
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\mathcal{L}_{ij}\equiv\mathbf{T}_{ij}^{\text{R}}-\widehat{\boldsymbol{\tau}_{ij}^{\mathrm{R}}}=\left(\widehat{\overline{\mathbf{u}\mathbf{u}}}-\widehat{\overline{\mathbf{u}}}\,\widehat{\overline{\mathbf{u}}}\right)-\left(\widehat{\overline{\mathbf{u}\mathbf{u}}}-\widehat{\overline{\mathbf{u}}\,\overline{\mathbf{u}}}\right)=\widehat{\overline{\mathbf{u}}\,\overline{\mathbf{u}}}-\widehat{\overline{\mathbf{u}}}\,\widehat{\overline{\mathbf{u}}}
+\mathcal{L}_{ij}\equiv\mathbf{T}_{ij}^{\text{R}}-\widehat{\boldsymbol{\tau}_{ij}^{\mathrm{R}}}=\left(\widehat{\overline{\mathbf{u}\mathbf{u}}}-\widehat{\overline{\mathbf{u}}}\,\widehat{\overline{\mathbf{u}}}\right)-\left(\widehat{\overline{\mathbf{u}\mathbf{u}}}-\widehat{\overline{\mathbf{u}}\,\overline{\mathbf{u}}}\right)=\widehat{\overline{\mathbf{u}}\,\overline{\mathbf{u}}}-\widehat{\overline{\mathbf{u}}}\,\widehat{\overline{\mathbf{u}}}=\widehat{\overline{u}_{i}\,\overline{u}_{j}}-\widehat{\overline{u}}_{i}\,\widehat{\overline{u}}_{j}
 \end{equation}
 
 \end_inset
@@ -1465,17 +1462,17 @@ For a variable density flow, things are slightly more complicated due to
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\widehat{\overline{\rho\phi}}=\widehat{\overline{\rho}\,\widetilde{\phi}}=\widehat{\overline{\rho}}\,\wideparen{\widetilde{\phi}}\label{eq:wasatch-favre-test-filtering}
+\widehat{\overline{\rho\phi}}=\widehat{\overline{\rho}\,\widetilde{\phi}}=\widehat{\overline{\rho}}\,\check{\widetilde{\phi}}\label{eq:wasatch-favre-test-filtering}
 \end{equation}
 
 \end_inset
 
-where the over-parenthese, 
+where the over-check, 
 \begin_inset Quotes eld
 \end_inset
 
 
-\begin_inset Formula $\wideparen{}$
+\begin_inset Formula $\check{}$
 \end_inset
 
 
@@ -1483,9 +1480,9 @@ where the over-parenthese,
 \end_inset
 
 , operation denotes a test-filtered quantity in the Favre sense.
- We will show below that there is no need to define the over-parenthese
- filtering and thus view it as a mere mathematical device that allows us
- to arrive at the final dynamic formulation.
+ We will show below that there is no need to define the over-check filtering
+ and thus view it as a mere mathematical device that allows us to arrive
+ at the final dynamic formulation.
 \end_layout
 
 \begin_layout Standard
@@ -1495,7 +1492,7 @@ We start with the test-filtered variable density equations, given by
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\frac{\partial\widehat{\overline{\rho\mathbf{u}}}}{\partial t}=-\nabla\cdot\widehat{\overline{\mathbf{\rho u}\mathbf{u}}}-\nabla\cdot\widehat{\overline{\boldsymbol{\tau}_{ij}}}-\nabla\widehat{\overline{p}}.
+\frac{\partial\widehat{\overline{\rho\mathbf{u}}}}{\partial t}=-\nabla\cdot\widehat{\overline{\mathbf{\rho u}\mathbf{u}}}-\nabla\cdot\widehat{\overline{\boldsymbol{\tau}}}_{ij}-\nabla\widehat{\overline{p}}.
 \end{equation}
 
 \end_inset
@@ -1509,7 +1506,7 @@ ing, we only need to focus on the convective fluxes, which are responsible
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\nabla\cdot\widehat{\overline{\rho\mathbf{u}\mathbf{u}}}=\nabla\cdot\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}\mathbf{u}}}=\nabla\cdot\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\wideparen{\widetilde{\mathbf{u}}}+\left(\nabla\cdot\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}\mathbf{u}}}-\nabla\cdot\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\wideparen{\widetilde{\mathbf{u}}}\right)\equiv\nabla\cdot\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\wideparen{\widetilde{\mathbf{u}}}+\nabla\cdot\mathbf{T}_{ij}^{\text{R}};\quad\mathbf{T}_{ij}^{\text{R}}\equiv\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}\mathbf{u}}}-\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\wideparen{\widetilde{\mathbf{u}}}
+\nabla\cdot\widehat{\overline{\rho\mathbf{u}\mathbf{u}}}=\nabla\cdot\widehat{\overline{\rho}}\,\check{\widetilde{\mathbf{u}\mathbf{u}}}=\nabla\cdot\widehat{\overline{\rho}}\,\check{\widetilde{\mathbf{u}}}\,\check{\widetilde{\mathbf{u}}}+\left(\nabla\cdot\widehat{\overline{\rho}}\,\check{\widetilde{\mathbf{u}\mathbf{u}}}-\nabla\cdot\widehat{\overline{\rho}}\,\check{\widetilde{\mathbf{u}}}\,\check{\widetilde{\mathbf{u}}}\right)\equiv\nabla\cdot\widehat{\overline{\rho}}\,\check{\widetilde{\mathbf{u}}}\,\check{\widetilde{\mathbf{u}}}+\nabla\cdot\mathbf{T}_{ij}^{\text{R}};\quad\mathbf{T}_{ij}^{\text{R}}\equiv\widehat{\overline{\rho}}\,\check{\widetilde{\mathbf{u}\mathbf{u}}}-\widehat{\overline{\rho}}\,\check{\widetilde{\mathbf{u}}}\,\check{\widetilde{\mathbf{u}}}
 \end{equation}
 
 \end_inset
@@ -1533,19 +1530,19 @@ reference "eq:wasatch-sgs-tensor-decomposition-1"
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\mathbf{T}_{ij}^{\mathrm{d}}=-2C_{\text{d}}\widehat{\overline{\rho}}\widehat{\Delta}^{2}\widehat{\widetilde{\mathcal{S}}}\widehat{\widetilde{S}}_{ij},\label{eq:wasatch-test-filtered-stress-tensor-1}
+\mathbf{T}_{ij}^{\mathrm{d}}=-2C_{\text{d}}\widehat{\overline{\rho}}\,\widehat{\Delta}^{2}\,\widehat{\widetilde{\mathcal{S}}}\,\widehat{\widetilde{S}}_{ij},\label{eq:wasatch-test-filtered-stress-tensor-1}
 \end{equation}
 
 \end_inset
 
 To make further headway, we now take the difference between the grid-filtered
- and test-filtered residual stresses
+ and test-filtered residual stresses 
 \end_layout
 
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\mathcal{L}_{ij}\equiv\mathbf{T}_{ij}^{\text{R}}-\widehat{\boldsymbol{\tau}_{ij}^{\mathrm{R}}}=\widehat{\overline{\rho}\,\widetilde{\mathbf{u}}\,\widetilde{\mathbf{u}}}-\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\wideparen{\widetilde{\mathbf{u}}}.
+\mathcal{L}_{ij}\equiv\mathbf{T}_{ij}^{\text{R}}-\widehat{\boldsymbol{\tau}_{ij}^{\mathrm{R}}}=\widehat{\overline{\rho}\,\widetilde{u}_{i}\,\widetilde{u}_{j}}-\widehat{\overline{\rho}}\,\check{\widetilde{u}}_{i}\,\check{\widetilde{u}}_{j}.
 \end{equation}
 
 \end_inset
@@ -1571,7 +1568,7 @@ reference "eq:wasatch-favre-test-filtering"
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\wideparen{\widetilde{\mathbf{u}}}=\frac{1}{\widehat{\overline{\rho}}}\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}=\frac{1}{\widehat{\overline{\rho}}}\widehat{\overline{\rho}\widetilde{\mathbf{u}}}\,\widehat{\overline{\rho}\widetilde{\mathbf{u}}}
+\widehat{\overline{\rho}}\,\check{\widetilde{u}}_{i}\,\check{\widetilde{u}}_{j}=\frac{1}{\widehat{\overline{\rho}}}\,\widehat{\overline{\rho}}\,\check{\widetilde{u}}_{i}\,\widehat{\overline{\rho}}\,\check{\widetilde{u}}_{j}=\frac{1}{\widehat{\overline{\rho}}}\,\widehat{\overline{\rho}\,\widetilde{u}_{i}}\,\widehat{\overline{\rho}\,\widetilde{u}_{j}}
 \end{equation}
 
 \end_inset
@@ -1583,7 +1580,7 @@ which is an easily calculated quantity.
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\mathcal{L}_{ij}\equiv\mathbf{T}_{ij}^{\text{R}}-\widehat{\boldsymbol{\tau}_{ij}^{\mathrm{R}}}=\widehat{\overline{\rho}\,\widetilde{\mathbf{u}}\,\widetilde{\mathbf{u}}}-\frac{1}{\widehat{\overline{\rho}}}\widehat{\overline{\rho}\widetilde{\mathbf{u}}}\,\widehat{\overline{\rho}\widetilde{\mathbf{u}}}
+\mathcal{L}_{ij}=\widehat{\overline{\rho}\,\widetilde{u}_{i}\,\widetilde{u}_{j}}-\frac{1}{\widehat{\overline{\rho}}}\,\widehat{\overline{\rho}\,\widetilde{u}_{i}}\,\widehat{\overline{\rho}\,\widetilde{u}_{j}}
 \end{equation}
 
 \end_inset
