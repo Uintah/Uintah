@@ -154,7 +154,7 @@ std::vector<double> CenteredCardinalBSpline::evaluateGridAligned(const double x)
    */
   int q = 2 * leftSupport(xBase, d_splineOrder);
   double l_p = static_cast<double>(d_splineOrder + q + 1) / 2.0 + xBase;
-  double r_p = static_cast<double>(d_splineOrder - q + 1) / 2.0 + xBase;
+  double r_p = static_cast<double>(d_splineOrder - q + 1) / 2.0 - xBase;
   double scale = 1.0 / (static_cast<double>(d_splineOrder));
 
   // Calculate spline of p^th order
