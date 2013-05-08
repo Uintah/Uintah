@@ -251,30 +251,19 @@ class SPME : public Electrostatics {
      * @param spline - CenteredCardinalBSpline that determines the number of wrapping points necessary
      * @return std::vector<double> of (0..[m=K/2],[K/2-K]..-1);
      */
-    inline std::vector<double> generateMPrimeVector(unsigned int kMax,
-                                                    const CenteredCardinalBSpline& spline) const
+    inline std::vector<double> generateMPrimeVector(unsigned int kMax) const
     {
-      int halfSupport = spline.getHalfMaxSupport();
-      int numPoints = kMax + 2 * halfSupport;  // For simplicity, store the whole vector
+      int numPoints = kMax;  // For simplicity, store the whole vector
       std::vector<double> mPrime(numPoints);
 
       size_t halfMax = kMax / 2;
 
-      // Seed internal array (without wrapping)
-      int TrueZeroIndex = halfSupport;  // The zero index of the unwrapped array embedded in the wrapped array
-
-      for (int idx = TrueZeroIndex; idx <= halfMax + TrueZeroIndex; ++idx) {
-        mPrime[idx] = static_cast<double>(idx - TrueZeroIndex);
-      }
-      for (int Index = halfMax + TrueZeroIndex + 1; Index < TrueZeroIndex + kMax; ++Index) {
-        mPrime[Index] = static_cast<double>(Index - TrueZeroIndex - static_cast<int>(kMax));
+      for (int idx = 0; idx <= halfMax; ++idx) {
+        mPrime[idx] = static_cast<double> (idx);
       }
 
-      // Wrapped ends of the vector
-      for (int idx = 1; idx <= halfSupport; ++idx) {
-        // Left wrapped end
-        mPrime[TrueZeroIndex - idx] = mPrime[TrueZeroIndex - idx + kMax];
-        mPrime[TrueZeroIndex + kMax + idx - 1] = mPrime[TrueZeroIndex + idx - 1];  //-1 offsets for 0 based array
+      for (int Index = halfMax + 1; Index < kMax; ++Index) {
+        mPrime[Index] = static_cast<double>(Index - static_cast<int>(kMax));
       }
 
       return mPrime;
@@ -285,26 +274,14 @@ class SPME : public Electrostatics {
      * @param InterpolatingSpline - CenteredCardinalBSpline that determines the number of wrapping points necessary
      * @return std::vector<double> of the reduced coordinates for the local grid along the input lattice direction
      */
-    inline std::vector<double> generateMFractionalVector(size_t kMax,
-                                                         const CenteredCardinalBSpline& interpolatingSpline) const
+    inline std::vector<double> generateMFractionalVector(size_t kMax) const
     {
-      int halfSupport = interpolatingSpline.getHalfMaxSupport();
-      int numPoints = kMax + 2 * halfSupport;  // For simplicity, store the whole vector
+      int numPoints = kMax;  // For simplicity, store the whole vector
       std::vector<double> mFractional(numPoints);
 
       double kMaxInv = 1.0 / static_cast<double>(kMax);
 
-      int TrueZeroIndex = halfSupport;  // Location of base array zero index
-      for (int idx = TrueZeroIndex; idx < TrueZeroIndex + kMax; ++idx) {
-        mFractional[idx] = static_cast<double>(idx - TrueZeroIndex) * kMaxInv;
-      }
-
-      // Wrapped ends of the vector
-      for (size_t idx = 1; idx <= halfSupport; ++idx) {
-        // Left wrapped end
-        mFractional[TrueZeroIndex - idx] = mFractional[TrueZeroIndex - idx + kMax];
-        mFractional[TrueZeroIndex + kMax + idx - 1] = mFractional[TrueZeroIndex + idx - 1];  //-1 offsets for 0 based array
-      }
+      for (int idx = 0; idx < kMax; ++idx) { mFractional[idx] = static_cast<double>(idx) * kMaxInv; }
 
       return mFractional;
     }
