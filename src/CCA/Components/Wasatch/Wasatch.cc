@@ -475,10 +475,15 @@ namespace Wasatch{
       if (hasEmbeddedGeometry) hasMovingBoundaries = wasatchParams->findBlock("EmbeddedGeometry")->findBlock("MovingGeometry") ;
       // note - parse_momentum_equations returns a vector of equation adaptors
       try{
-          const EquationAdaptors adaptors =
-              parse_momentum_equations( momEqnParams, turbParams,
-                  hasEmbeddedGeometry,hasMovingBoundaries, densityTag,
-                  graphCategories_, *linSolver_, sharedState );
+          const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
+                                                                      turbParams,
+                                                                      isConstDensity,
+                                                                      hasEmbeddedGeometry,
+                                                                      hasMovingBoundaries,
+                                                                      densityTag,
+                                                                      graphCategories_,
+                                                                      *linSolver_,
+                                                                      sharedState );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -501,8 +506,8 @@ namespace Wasatch{
       try{
         //For the Multi-Environment mixing model, the entire Wasatch Block must be passed to find values for initial moments
         const EquationAdaptors adaptors =
-            parse_moment_transport_equations( momEqnParams, wasatchParams,
-                hasEmbeddedGeometry, graphCategories_ );
+            parse_moment_transport_equations( momEqnParams, wasatchParams, isConstDensity,
+                                              hasEmbeddedGeometry, graphCategories_ );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){

@@ -65,9 +65,9 @@ namespace Wasatch{
                            const Expr::ExpressionID rhsID )
     : Wasatch::TransportEquation( solnVarName, rhsID,
                                   get_staggered_location<FieldT>(),
+                                  isConstDensity,
                                   hasEmbeddedGeometry,
                                   params),
-      isConstDensity_( isConstDensity ),
       densityTag_( densityTag )
   {
 
@@ -78,7 +78,7 @@ namespace Wasatch{
 
     const bool existPrimVar = params->findBlock("PrimitiveVariable");
 
-    if (isConstDensity_) {
+    if (is_constant_density()) {
       solnVarTag_ = Expr::Tag::Tag( solnVarName, Expr::STATE_N );
       primVarTag_ = solnVarTag_;
 
@@ -218,7 +218,7 @@ namespace Wasatch{
   ScalarTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
-    if (isStrong_ && !isConstDensity_) {
+    if (isStrong_ && !is_constant_density()) {
       // register expression to calculate the initial condition of the solution variable from the initial
       // conditions on primitive variable and density in the cases that we are solving for e.g. rho*phi
       typedef ExprAlgebra<SVolField> ExprAlgbr;

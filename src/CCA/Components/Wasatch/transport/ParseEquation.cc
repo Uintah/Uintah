@@ -275,6 +275,7 @@ namespace Wasatch{
   
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
                                                                  TurbulenceParameters turbParams,
+                                                                 const bool isConstDensity,
                                                                  const bool hasEmbeddedGeometry,
                                                                  const bool hasMovingGeometry,
                                                                  const Expr::Tag densityTag,
@@ -349,6 +350,7 @@ namespace Wasatch{
                                       *solnGraphHelper->exprFactory,
                                       params,
                                       turbParams,
+                                      isConstDensity,
                                       hasEmbeddedGeometry,
                                       hasMovingGeometry,
                                       rhsID,
@@ -371,6 +373,7 @@ namespace Wasatch{
                                      *solnGraphHelper->exprFactory,
                                      params,
                                      turbParams,
+                                     isConstDensity,
                                      hasEmbeddedGeometry,
                                      hasMovingGeometry,
                                      rhsID,
@@ -393,6 +396,7 @@ namespace Wasatch{
                                      *solnGraphHelper->exprFactory,
                                      params,
                                      turbParams,
+                                     isConstDensity,
                                      hasEmbeddedGeometry,
                                      hasMovingGeometry,
                                      rhsID,
@@ -503,6 +507,7 @@ namespace Wasatch{
   std::vector<EqnTimestepAdaptorBase*>
   parse_moment_transport_equations( Uintah::ProblemSpecP params,
                                     Uintah::ProblemSpecP wasatchParams,
+                                    const bool isConstDensity,
                                     const bool hasEmbeddedGeometry,
                                     GraphCategories& gc )
   {
@@ -557,7 +562,7 @@ namespace Wasatch{
       const Expr::ExpressionID rhsID = MomTransEq::get_moment_rhs_id( *solnGraphHelper->exprFactory,
                                                                       params, hasEmbeddedGeometry, weightsTags, abscissaeTags,
                                                                       momentID, initialMoments[iMom]);
-      momtranseq = scinew MomTransEq( thisPhiName, rhsID, hasEmbeddedGeometry, params);
+      momtranseq = scinew MomTransEq( thisPhiName, rhsID, isConstDensity, hasEmbeddedGeometry, params);
       adaptor = scinew EqnTimestepAdaptor< SVolField >( momtranseq );
       adaptors.push_back(adaptor);
       // tsaad: MUST INSERT ROOT IDS INTO THE SOLUTION GRAPH HELPER. WE NEVER DO

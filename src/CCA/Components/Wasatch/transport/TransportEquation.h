@@ -69,7 +69,9 @@ namespace Wasatch{
                        const Expr::ExpressionID rhsExprID )
       : solnVarName_( solutionVarName ),
         rhsExprID_( rhsExprID ),
-        stagLoc_( NODIR )
+        stagLoc_( NODIR ),
+        isConstDensity_( true ),
+        hasEmbeddedGeometry_ (true)
     {}
 
     /**
@@ -85,11 +87,13 @@ namespace Wasatch{
     TransportEquation( const std::string solutionVarName,
                        const Expr::ExpressionID rhsExprID,
                        const Direction stagLoc,
+                       const bool isConstDensity=true,
                        const bool hasEmbeddedGeometry = false,
                        Uintah::ProblemSpecP eqnParams=NULL)
       : solnVarName_        ( solutionVarName ),
         rhsExprID_          ( rhsExprID ),
         stagLoc_            ( stagLoc ),
+        isConstDensity_     ( isConstDensity),
         hasEmbeddedGeometry_(hasEmbeddedGeometry)
     {}
 
@@ -170,11 +174,13 @@ namespace Wasatch{
     virtual Expr::ExpressionID initial_condition( Expr::ExpressionFactory& exprFactory ) = 0;
 
     bool has_embedded_geometry() { return hasEmbeddedGeometry_;}
+    bool is_constant_density()   { return isConstDensity_;}
+    
   protected:
     const std::string  solnVarName_;      ///< Name of the solution variable for this TransportEquation.
     const Expr::ExpressionID rhsExprID_;  ///< The label for the rhs expression for this TransportEquation.
     const Direction stagLoc_;             ///< staggered direction for this equation
-    bool hasEmbeddedGeometry_;
+    const bool isConstDensity_, hasEmbeddedGeometry_;
   };
 
 } // namespace Wasatch
