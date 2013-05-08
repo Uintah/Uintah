@@ -44,26 +44,12 @@
   breaklines=true,
  showstringspaces=false
 } 
+\usepackage{savesym}
 \usepackage{amsthm,amsmath,amssymb}
+\savesymbol{amalg}
+\usepackage{mathabx}
+\restoresymbol{TXF}{amalg}
 \usepackage[varg]{txfonts} % this should always be invoked AFTER ams packages
-
-
-\usepackage{scalerel}
-
-\newcommand\extrawidehat[1]{%
-\begin{array}{c}
-\stretchto{
-  \scaleto{
-    \scalerel*[\widthof{#1}]{\bigwedge}
-    {\rule[-\textheight/2]{2ex}{\textheight}} %WIDTH-LIMITED BIG WEDGE
-  }{1.25\textheight} % THIS STRETCHES THE WEDGE A LITTLE EXTRA WIDE
-}{0.5ex}\\           % THIS SQUEEZES THE WEDGE TO 0.5ex HEIGHT
-#1\\                 % THIS STACKS THE WEDGE ATOP THE ARGUMENT
-\rule{-1ex}{0ex}
-\end{array}
-}
-
-\newcommand\oline[1]{\overline{#1\mathstrut}}
 \end_preamble
 \use_default_options false
 \maintain_unincluded_children false
@@ -1430,7 +1416,7 @@ This result indicates that the curvature of
 
 \begin_layout Standard
 In practice, one calculates the product 
-\begin_inset Formula $C_{\text{s}}\overline{\Delta}^{2}$
+\begin_inset Formula $C_{\text{d}}\overline{\Delta}^{2}$
 \end_inset
 
  so that
@@ -1459,6 +1445,207 @@ where
 \end_inset
 
 ).
+\end_layout
+
+\begin_layout Subparagraph*
+Variable Density
+\end_layout
+
+\begin_layout Standard
+For a variable density flow, things are slightly more complicated due to
+ Favre filtering.
+ Recall that Favre filtering is defined as 
+\begin_inset Formula $\overline{\rho\phi}\equiv\overline{\rho}\,\widetilde{\phi}$
+\end_inset
+
+.
+ When test filtered, we make the following modification
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\widehat{\overline{\rho\phi}}=\widehat{\overline{\rho}\,\widetilde{\phi}}=\widehat{\overline{\rho}}\,\wideparen{\widetilde{\phi}}\label{eq:wasatch-favre-test-filtering}
+\end{equation}
+
+\end_inset
+
+where the over-parenthese, 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Formula $\wideparen{}$
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+, operation denotes a test-filtered quantity in the Favre sense.
+ We will show below that there is no need to define the over-parenthese
+ filtering and thus view it as a mere mathematical device that allows us
+ to arrive at the final dynamic formulation.
+\end_layout
+
+\begin_layout Standard
+We start with the test-filtered variable density equations, given by
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\widehat{\overline{\rho\mathbf{u}}}}{\partial t}=-\nabla\cdot\widehat{\overline{\mathbf{\rho u}\mathbf{u}}}-\nabla\cdot\widehat{\overline{\boldsymbol{\tau}_{ij}}}-\nabla\widehat{\overline{p}}.
+\end{equation}
+
+\end_inset
+
+Because we are only interested in the residual stresses arising from test-filter
+ing, we only need to focus on the convective fluxes, which are responsible
+ for generating the residual dissipation.
+ We therefore set
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\nabla\cdot\widehat{\overline{\rho\mathbf{u}\mathbf{u}}}=\nabla\cdot\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}\mathbf{u}}}=\nabla\cdot\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\wideparen{\widetilde{\mathbf{u}}}+\left(\nabla\cdot\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}\mathbf{u}}}-\nabla\cdot\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\wideparen{\widetilde{\mathbf{u}}}\right)\equiv\nabla\cdot\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\wideparen{\widetilde{\mathbf{u}}}+\nabla\cdot\mathbf{T}_{ij}^{\text{R}};\quad\mathbf{T}_{ij}^{\text{R}}\equiv\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}\mathbf{u}}}-\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\wideparen{\widetilde{\mathbf{u}}}
+\end{equation}
+
+\end_inset
+
+As usual, 
+\begin_inset Formula $\mathbf{T}_{ij}^{\text{R}}$
+\end_inset
+
+ is decomposed into a deviatoric and isotropic components as shown in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:wasatch-sgs-tensor-decomposition-1"
+
+\end_inset
+
+.
+ We neglect the isotropic part and model the deviatoric stress using the
+ standard Smagorinsky model as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathbf{T}_{ij}^{\mathrm{d}}=-2C_{\text{d}}\widehat{\overline{\rho}}\widehat{\Delta}^{2}\widehat{\widetilde{\mathcal{S}}}\widehat{\widetilde{S}}_{ij},\label{eq:wasatch-test-filtered-stress-tensor-1}
+\end{equation}
+
+\end_inset
+
+To make further headway, we now take the difference between the grid-filtered
+ and test-filtered residual stresses
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathcal{L}_{ij}\equiv\mathbf{T}_{ij}^{\text{R}}-\widehat{\boldsymbol{\tau}_{ij}^{\mathrm{R}}}=\widehat{\overline{\rho}\,\widetilde{\mathbf{u}}\,\widetilde{\mathbf{u}}}-\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\wideparen{\widetilde{\mathbf{u}}}.
+\end{equation}
+
+\end_inset
+
+At this point, the over-parenthese operation is still undefined which makes
+ 
+\begin_inset Formula $\mathcal{L}_{ij}$
+\end_inset
+
+ useless unless we can rewrite the undefined quantities in terms of known
+ ones.
+ This is easily accomplished by using 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:wasatch-favre-test-filtering"
+
+\end_inset
+
+.
+ This allows us to write
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\wideparen{\widetilde{\mathbf{u}}}=\frac{1}{\widehat{\overline{\rho}}}\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}\,\widehat{\overline{\rho}}\,\wideparen{\widetilde{\mathbf{u}}}=\frac{1}{\widehat{\overline{\rho}}}\widehat{\overline{\rho}\widetilde{\mathbf{u}}}\,\widehat{\overline{\rho}\widetilde{\mathbf{u}}}
+\end{equation}
+
+\end_inset
+
+which is an easily calculated quantity.
+ Then
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathcal{L}_{ij}\equiv\mathbf{T}_{ij}^{\text{R}}-\widehat{\boldsymbol{\tau}_{ij}^{\mathrm{R}}}=\widehat{\overline{\rho}\,\widetilde{\mathbf{u}}\,\widetilde{\mathbf{u}}}-\frac{1}{\widehat{\overline{\rho}}}\widehat{\overline{\rho}\widetilde{\mathbf{u}}}\,\widehat{\overline{\rho}\widetilde{\mathbf{u}}}
+\end{equation}
+
+\end_inset
+
+making 
+\begin_inset Formula $\mathcal{L}_{ij}$
+\end_inset
+
+ a computable tensor.
+ The final step in the dynamic model is to select a model for 
+\begin_inset Formula $\mathcal{L}_{ij}$
+\end_inset
+
+, more specifically, for its deviatoric part.
+ For this we use 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathcal{L}_{ij}^{\text{d}}=\mathbf{T}_{ij}^{\text{d}}-\widehat{\boldsymbol{\tau}_{ij}^{\mathrm{d}}}=2C_{\text{d}}\underbrace{\left(\overline{\Delta}^{2}\widehat{\overline{\rho}\,\widetilde{\mathcal{S}}\,\widetilde{S}_{ij}}-\widehat{\Delta}^{2}\widehat{\overline{\rho}}\,\widehat{\widetilde{\mathcal{S}}}\,\widehat{\widetilde{S}}_{ij}\right)}_{\mathbf{M}_{ij}}\equiv2C_{\text{d}}\mathbf{M}_{ij}
+\end{equation}
+
+\end_inset
+
+finally, we set 
+\begin_inset Formula $\mathcal{L}_{ij}=\mathcal{L}_{ij}^{\text{d}}$
+\end_inset
+
+ and contract with 
+\begin_inset Formula $\mathbf{M}_{ij}$
+\end_inset
+
+ to recover
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+C_{\text{d}}=\frac{1}{2}\frac{\mathcal{L}_{ij}\mathbf{M}_{ij}}{\mathbf{M}_{ij}\mathbf{M}_{ij}}
+\end{equation}
+
+\end_inset
+
+Again, it is more customary to calculate the product 
+\begin_inset Formula $C_{\text{d}}\overline{\Delta}^{2}$
+\end_inset
+
+ so that
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+C_{\text{d}}\overline{\Delta}^{2}=\frac{1}{2}\frac{\mathcal{L}_{ij}\mathbf{M}_{ij}}{\mathbf{M}_{ij}\mathbf{M}_{ij}};\quad\mathbf{M}_{ij}\equiv\widehat{\overline{\rho}\,\widetilde{\mathcal{S}}\,\widetilde{S}_{ij}}-\delta^{2}\widehat{\overline{\rho}}\,\widehat{\overline{\mathcal{S}}}\,\widehat{\overline{S}}_{ij},\quad\delta\equiv\frac{\widehat{\Delta}}{\overline{\Delta}}
+\end{equation}
+
+\end_inset
+
+An important feature of our formulation is that one recovers the constant
+ density version of the dynaimc model, a desirable feature in our code to
+ avoid unecessary branch and promote polymorphism.
 \end_layout
 
 \begin_layout Standard
