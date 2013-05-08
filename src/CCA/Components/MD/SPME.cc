@@ -352,6 +352,8 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
           }
           localEnergy += std::abs((*Q)(kX, kY, kZ));
           localStress += std::abs((*Q)(kX, kY, kZ)) * (*stressPrefactor)(kX, kY, kZ);
+          spmeFourierEnergy = localEnergy;
+          spmeFourierStress = localStress;
         }
       }
     }
@@ -428,7 +430,7 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
           for (k = 0; k < zdim; k++) {
             int idx = ((i) + ((j) * xdim) + ((k) * xdim * ydim));
             if (std::abs(array_fft[idx][0]) > tolerance || std::abs(array_fft[idx][1]) > tolerance) {
-              std::cout << "Q[" << i << "][" << j << "][" << k << "]\t= " << "(" << array_fft[idx][0] << "\t" << array_fft[idx][1]
+              std::cout << "Q^[" << i << "][" << j << "][" << k << "]\t= " << "(" << array_fft[idx][0] << "\t" << array_fft[idx][1]
                         << ")" << std::endl;
               numABoveTolerance++;
             }
@@ -526,22 +528,30 @@ std::vector<SCIRun::dblcomplex> SPME::generateBVector(const std::vector<double>&
 {
   double PI = acos(-1.0);
   double twoPI = 2.0 * PI;
-  double orderM12PI = twoPI * (interpolatingSpline.getOrder() - 1);
-
+  double splineOrder = interpolatingSpline.getOrder();
   int halfSupport = interpolatingSpline.getHalfMaxSupport();
-  std::vector<dblcomplex> B(localGridExtent);
-  std::vector<double> zeroAlignedSpline = interpolatingSpline.evaluate(0);
 
-  const double* localMFractional = &(mFractional[initialIndex]);  // Reset MFractional zero so we can index into it negatively
-  for (int idx = 0; idx < localGridExtent; ++idx) {
-    double internal = twoPI * localMFractional[idx];
-    // Formula looks significantly different from given SPME for offset splines.
-    //   See Essmann et. al., J. Chem. Phys. 103 8577 (1995). for conversion, particularly formula C3 pt. 2 (paper uses pt. 4)
-    dblcomplex phi_N = 0.0;
+  std::vector<dblcomplex> B(localGridExtent);
+  std::vector<double> zeroAlignedSpline = interpolatingSpline.evaluateGridAligned(0);
+
+  size_t endingIndex = initialIndex + localGridExtent;
+
+// Formula looks significantly different from given SPME for offset splines.
+//   See Essmann et. al., J. Chem. Phys. 103 8577 (1995). for conversion, particularly formula C3 pt. 2 (paper uses pt. 3)
+// Note:  twoPi_m_over_K is almost a stand-in for z in the paper's language, however we defer the complex exponentiation
+  for (size_t BIndex = initialIndex; BIndex < endingIndex; ++BIndex) {
+
+/*    int AdjustedIndex = BIndex - SplineZeroIndex;
+    if (AdjustedIndex < 0) AdjustedIndex += KMax;
+    if (AdjustedIndex >= KMax) AdjustedIndex -= KMax;
+*/
+    double twoPi_m_over_K = twoPI * mFractional[BIndex];
+    dblcomplex phi_N = dblcomplex(0,0);
     for (int denomIndex = -halfSupport; denomIndex <= halfSupport; ++denomIndex) {
-      phi_N += dblcomplex(cos(internal * denomIndex), sin(internal * denomIndex));
+      double j = static_cast<double> (denomIndex - splineOrder);
+      phi_N += zeroAlignedSpline[denomIndex + halfSupport]*dblcomplex(cos(j*twoPi_m_over_K),sin(j*twoPi_m_over_K));
     }
-    B[idx] = 1.0 / phi_N;
+    B[BIndex] = 1.0/phi_N;
   }
   return B;
 }
@@ -553,9 +563,9 @@ SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
   size_t limit_Ky = d_kLimits.y();
   size_t limit_Kz = d_kLimits.z();
 
-  std::vector<double> mf1 = SPME::generateMFractionalVector(limit_Kx, d_interpolatingSpline);
-  std::vector<double> mf2 = SPME::generateMFractionalVector(limit_Ky, d_interpolatingSpline);
-  std::vector<double> mf3 = SPME::generateMFractionalVector(limit_Kz, d_interpolatingSpline);
+  std::vector<double> mf1 = SPME::generateMFractionalVector(limit_Kx);
+  std::vector<double> mf2 = SPME::generateMFractionalVector(limit_Ky);
+  std::vector<double> mf3 = SPME::generateMFractionalVector(limit_Kz);
 
 // localExtents is without ghost grid points
   std::vector<dblcomplex> b1 = generateBVector(mf1, globalOffset.x(), localExtents.x(), d_interpolatingSpline);
@@ -585,9 +595,9 @@ SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
 SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
                                         const IntVector& offset) const
 {
-  std::vector<double> mp1 = SPME::generateMPrimeVector(d_kLimits.x(), d_interpolatingSpline);
-  std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y(), d_interpolatingSpline);
-  std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z(), d_interpolatingSpline);
+  std::vector<double> mp1 = SPME::generateMPrimeVector(d_kLimits.x());
+  std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y());
+  std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z());
 
 //  if (spme_dbg.active()) {
 //    cerrLock.lock();
@@ -643,9 +653,9 @@ void SPME::calculateStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor,
                                     const IntVector& extents,
                                     const IntVector& offset)
 {
-  std::vector<double> mp1 = SPME::generateMPrimeVector(d_kLimits.x(), d_interpolatingSpline);
-  std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y(), d_interpolatingSpline);
-  std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z(), d_interpolatingSpline);
+  std::vector<double> mp1 = SPME::generateMPrimeVector(d_kLimits.x());
+  std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y());
+  std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z());
 
   size_t xExtents = extents.x();
   size_t yExtents = extents.y();
@@ -745,9 +755,11 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
     size_t YExtent = ySplineArray.size();
     size_t ZExtent = zSplineArray.size();
     for (size_t xidx = 0; xidx < XExtent; ++xidx) {
+      double dampX = xSplineArray[xidx];
       for (size_t yidx = 0; yidx < YExtent; ++yidx) {
+        double dampXY = dampX * ySplineArray[yidx];
         for (size_t zidx = 0; zidx < ZExtent; ++zidx) {
-          chargeGrid(xidx, yidx, zidx) = xSplineArray[xidx] * ySplineArray[yidx] * zSplineArray[zidx];
+          chargeGrid(xidx, yidx, zidx) = dampXY * zSplineArray[zidx];
           forceGrid(xidx, yidx, zidx) = SCIRun::Vector(xSplineDeriv[xidx], ySplineDeriv[yidx], zSplineDeriv[zidx]);
 
 //          if (spme_dbg.active()) {
@@ -800,22 +812,16 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
           dblcomplex val = charge * chargeMap(xmask + halfSupport, ymask + halfSupport, zmask + halfSupport);
 
           int x_anchor = QAnchor.x() + xmask;
-          if (x_anchor < 0)
-            x_anchor += d_kLimits.x();
-          if (x_anchor >= d_kLimits.x())
-            x_anchor -= d_kLimits.x();
+          if (x_anchor < 0)              x_anchor += d_kLimits.x();
+          if (x_anchor >= d_kLimits.x()) x_anchor -= d_kLimits.x();
 
           int y_anchor = QAnchor.y() + ymask;
-          if (y_anchor < 0)
-            y_anchor += d_kLimits.y();
-          if (y_anchor >= d_kLimits.y())
-            y_anchor -= d_kLimits.y();
+          if (y_anchor < 0) y_anchor += d_kLimits.y();
+          if (y_anchor >= d_kLimits.y()) y_anchor -= d_kLimits.y();
 
           int z_anchor = QAnchor.z() + zmask;
-          if (z_anchor < 0)
-            z_anchor += d_kLimits.z();
-          if (z_anchor >= d_kLimits.z())
-            z_anchor -= d_kLimits.z();
+          if (z_anchor < 0) z_anchor += d_kLimits.z();
+          if (z_anchor >= d_kLimits.z()) z_anchor -= d_kLimits.z();
 
           // Wrapping done for single patch problem, solution will be totally different for multipatch problem!  !FIXME
           (*Q)(x_anchor, y_anchor, z_anchor) += val;
