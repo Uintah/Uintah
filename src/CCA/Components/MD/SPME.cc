@@ -219,7 +219,7 @@ void SPME::calculate(const ProcessorGroup* pg,
   bool converged = false;
   int numIterations = 0;
   int maxIterations = d_system->getMaxPolarizableIterations();
-  while (!converged) {  //&& (numIterations < maxIterations)) {
+  while (!converged && (numIterations < maxIterations)) {
 
     // Do calculation steps until the Real->Fourier space transform
     calculatePreTransform(pg, patches, materials, old_dw, new_dw);
@@ -235,7 +235,7 @@ void SPME::calculate(const ProcessorGroup* pg,
     // Reduce, reverse transform, and redistribute
     transformFourierToReal(pg, patches, materials, old_dw, new_dw);
 
-    converged = true;  //checkConvergence();
+    checkConvergence();
     numIterations++;
   }
 
