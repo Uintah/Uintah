@@ -175,7 +175,7 @@ std::vector<double> CenteredCardinalBSpline::evaluateGridAligned(const double x)
   splineCurrentOrder.push_back(scale * (r_p * subSpline[subTerms - 1]));
 
   // We now have the non-shifted spline, let's embed it in an appropriate zero-padded vector
-  int dataSize = splineCurrentOrder.size();
+  size_t dataSize = splineCurrentOrder.size();
   for (size_t baseIndex = 0; baseIndex < dataSize; ++baseIndex) {
     ASSERTRANGE(baseIndex-xShift, 0, paddedSpline.size());
     paddedSpline[baseIndex - xShift] = splineCurrentOrder[baseIndex];  //FIXME Not right
@@ -251,7 +251,7 @@ std::vector<double> CenteredCardinalBSpline::derivativeGridAligned(const double 
 
   splineDeriv.push_back(-2.0 * subSpline[subTerms - 1]);
 
-  int dataSize = splineDeriv.size();
+  size_t dataSize = splineDeriv.size();
   for (size_t baseIndex = 0; baseIndex < dataSize; ++baseIndex) {
     ASSERTRANGE(baseIndex-xShift, 0, paddedDeriv.size());
     paddedDeriv[baseIndex - xShift] = splineDeriv[baseIndex];
@@ -420,8 +420,18 @@ std::vector<double> CenteredCardinalBSpline::evaluateInternal(const double x,
     numTerms = numTerms >> 1;
   }
   std::vector<double> results = valTemp2D[0];
+
+#ifdef DEBUG
+  double total = 0.0;
+#endif
   for (size_t Idx = 0; Idx < results.size(); ++Idx) {
     results[Idx] /= scale;
+#ifdef DEBUG
+    total += results[Idx];
+#endif
   }
+#ifdef DEBUG
+  ASSERTEQ(total, 1.0);
+#endif
   return results;
 }
