@@ -36,7 +36,7 @@ class DynamicSmagorinskyCoefficient
   
   const SVolField* rho_;
   
-  const BoxFilterT*  BoxFilterOp_;
+  const BoxFilterT*  boxFilterOp_;
   const XBoxFilterT* xBoxFilterOp_;
   const YBoxFilterT* yBoxFilterOp_;
   const ZBoxFilterT* zBoxFilterOp_;
@@ -52,9 +52,9 @@ class DynamicSmagorinskyCoefficient
   typedef Wasatch::OpTypes<ZVolField>::BoundaryExtrapolant ZExOpT;
   
   ExOpT*   exOp_;
-  XExOpT*   xexOp_;
-  YExOpT*   yexOp_;
-  ZExOpT*   zexOp_;
+  XExOpT*  xexOp_;
+  YExOpT*  yexOp_;
+  ZExOpT*  zexOp_;
   
   DynamicSmagorinskyCoefficient( const Expr::Tag& vel1Tag,
                                  const Expr::Tag& vel2Tag,
@@ -68,16 +68,16 @@ public:
   {
   public:
     Builder( const Expr::TagList& results,
-            const Expr::Tag& vel1Tag,
-            const Expr::Tag& vel2Tag,
-            const Expr::Tag& vel3Tag,
-            const Expr::Tag& rhoTag,
-            const bool isConstDensity)
+             const Expr::Tag& vel1Tag,
+             const Expr::Tag& vel2Tag,
+             const Expr::Tag& vel3Tag,
+             const Expr::Tag& rhoTag,
+             const bool isConstDensity )
     : ExpressionBuilder( results ),
-      vel1t_     ( vel1Tag       ),
-      vel2t_     ( vel2Tag       ),
-      vel3t_     ( vel3Tag       ),
-      rhot_      ( rhoTag        ),
+      vel1t_( vel1Tag ),
+      vel2t_( vel2Tag ),
+      vel3t_( vel3Tag ),
+      rhot_ ( rhoTag  ),
       isConstDensity_(isConstDensity)
     {}
     

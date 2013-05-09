@@ -33,7 +33,7 @@
   int jmin=0; \
   for (int i=0; i<3; i++) { \
     for (int j=jmin; j<3; j++) { \
-      T[i].push_back(SpatialFieldStore::get<SVolField>( DynSmagConst )); \
+      T[i].push_back(SpatialFieldStore::get<SVolField>( dynSmagConst )); \
     } \
     jmin++;\
   }\
@@ -42,7 +42,7 @@
 #define ALLOCATE_VECTOR_FIELD(T) \
 {\
   for (int i=0; i<3; i++) { \
-    T.push_back(SpatialFieldStore::get<SVolField>( DynSmagConst )); \
+    T.push_back(SpatialFieldStore::get<SVolField>( dynSmagConst )); \
   } \
 }
 
@@ -58,10 +58,10 @@ DynamicSmagorinskyCoefficient( const Expr::Tag& vel1Tag,
                                const Expr::Tag& rhoTag,
                                const bool isConstDensity )
 : StrainTensorBase(vel1Tag,vel2Tag,vel3Tag),
-  rhot_       ( rhoTag       ),
+  rhot_          ( rhoTag       ),
   isConstDensity_(isConstDensity)
 {
-  std::cout << "is constant density ? = " << isConstDensity << std::endl;
+//  std::cout << "is constant density ? = " << isConstDensity << std::endl;
   // Disallow using the dynamic model in 1 or 2 dimensions
   if (!(doX_ && doY_ && doZ_)) {
     std::ostringstream msg;
@@ -85,7 +85,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   StrainTensorBase::advertise_dependents(exprDeps);
   if(!isConstDensity_)
-    exprDeps.requires_expression( rhot_       );
+    exprDeps.requires_expression( rhot_ );
 }
 
 //--------------------------------------------------------------------
@@ -96,7 +96,7 @@ bind_fields( const Expr::FieldManagerList& fml )
 {
   StrainTensorBase::bind_fields(fml);
   if(!isConstDensity_)
-    rho_  =  &fml.field_manager<SVolField>().field_ref(rhot_);
+    rho_ = &fml.field_manager<SVolField>().field_ref(rhot_);
 }
 
 //--------------------------------------------------------------------
@@ -106,18 +106,18 @@ DynamicSmagorinskyCoefficient::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   StrainTensorBase::bind_operators(opDB);
-  exOp_    = opDB.retrieve_operator<ExOpT>();
-  xexOp_    = opDB.retrieve_operator<XExOpT>();
-  yexOp_    = opDB.retrieve_operator<YExOpT>();
-  zexOp_    = opDB.retrieve_operator<ZExOpT>();
+  exOp_  = opDB.retrieve_operator<ExOpT>();
+  xexOp_ = opDB.retrieve_operator<XExOpT>();
+  yexOp_ = opDB.retrieve_operator<YExOpT>();
+  zexOp_ = opDB.retrieve_operator<ZExOpT>();
   
-  BoxFilterOp_    = opDB.retrieve_operator<BoxFilterT>();
-  xBoxFilterOp_   = opDB.retrieve_operator<XBoxFilterT>();
-  yBoxFilterOp_   = opDB.retrieve_operator<YBoxFilterT>();
-  zBoxFilterOp_   = opDB.retrieve_operator<ZBoxFilterT>();
-  vel1InterpOp_   = opDB.retrieve_operator<Vel1InterpT>();
-  vel2InterpOp_   = opDB.retrieve_operator<Vel2InterpT>();
-  vel3InterpOp_   = opDB.retrieve_operator<Vel3InterpT>();
+  boxFilterOp_  = opDB.retrieve_operator<BoxFilterT>();
+  xBoxFilterOp_ = opDB.retrieve_operator<XBoxFilterT>();
+  yBoxFilterOp_ = opDB.retrieve_operator<YBoxFilterT>();
+  zBoxFilterOp_ = opDB.retrieve_operator<ZBoxFilterT>();
+  vel1InterpOp_ = opDB.retrieve_operator<Vel1InterpT>();
+  vel2InterpOp_ = opDB.retrieve_operator<Vel2InterpT>();
+  vel3InterpOp_ = opDB.retrieve_operator<Vel3InterpT>();
 }
 
 //--------------------------------------------------------------------
@@ -131,19 +131,19 @@ evaluate()
   typedef std::vector<SVolField*> SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
   SVolField& strTsrMag = *results[0];
-  SVolField& DynSmagConst = *results[1];
+  SVolField& dynSmagConst = *results[1];
   // strTsrMag <<= 0.0; // No need to initialize this. There is a function call downstream that will initialize it
-  DynSmagConst <<= 0.0;
+  dynSmagConst <<= 0.0;
   
   // NOTE: hats denote test filetered. u is grid filtered
   
   //----------------------------------------------------------------------------
   // CALCULATE the filtered density, if needed. Filter(rho)
   //----------------------------------------------------------------------------
-  SpatFldPtr<SVolField> rhoHat = SpatialFieldStore::get<SVolField>( DynSmagConst );
-  SpatFldPtr<SVolField> invRhoHat = SpatialFieldStore::get<SVolField>( DynSmagConst );
+  SpatFldPtr<SVolField> rhoHat = SpatialFieldStore::get<SVolField>( dynSmagConst );
+  SpatFldPtr<SVolField> invRhoHat = SpatialFieldStore::get<SVolField>( dynSmagConst );
   if (!isConstDensity_) {
-    BoxFilterOp_->apply_to_field( *rho_, *rhoHat );
+    boxFilterOp_->apply_to_field( *rho_, *rhoHat );
     exOp_->apply_to_field(*rhoHat);
     *invRhoHat <<= 1.0/ *rhoHat;
   }
@@ -151,9 +151,9 @@ evaluate()
   //----------------------------------------------------------------------------
   // CALCULATE test filtered staggered velocities. Filter(ui)
   //----------------------------------------------------------------------------
-  SpatFldPtr<XVolField> uhat = SpatialFieldStore::get<XVolField>( DynSmagConst );
-  SpatFldPtr<YVolField> vhat = SpatialFieldStore::get<YVolField>( DynSmagConst );
-  SpatFldPtr<ZVolField> what = SpatialFieldStore::get<ZVolField>( DynSmagConst );  
+  SpatFldPtr<XVolField> uhat = SpatialFieldStore::get<XVolField>( dynSmagConst );
+  SpatFldPtr<YVolField> vhat = SpatialFieldStore::get<YVolField>( dynSmagConst );
+  SpatFldPtr<ZVolField> what = SpatialFieldStore::get<ZVolField>( dynSmagConst );
   xBoxFilterOp_->apply_to_field( *vel1_, *uhat );
   yBoxFilterOp_->apply_to_field( *vel2_, *vhat );
   zBoxFilterOp_->apply_to_field( *vel3_, *what );
@@ -192,8 +192,8 @@ evaluate()
   std::vector< SpatFldPtr<SVolField> > velcchat;
   ALLOCATE_VECTOR_FIELD(velcchat);
   for (int i=0; i<3; i++) {
-    velcchat.push_back(SpatialFieldStore::get<SVolField>( DynSmagConst )); // allocate spatial field pointer
-    BoxFilterOp_->apply_to_field( *velcc[i], *velcchat[i] );
+    velcchat.push_back(SpatialFieldStore::get<SVolField>( dynSmagConst )); // allocate spatial field pointer
+    boxFilterOp_->apply_to_field( *velcc[i], *velcchat[i] );
   }
 
   //----------------------------------------------------------------------------
@@ -206,7 +206,7 @@ evaluate()
   // uu = uiujhat[0][0], uv = uiujhat[0][1], uw = uiujhat[0][2]
   // vv = uiujhat[1][0], vw = uiujhat[1][1]
   // ww = uiujhat[2][0]  
-  SpatFldPtr<SVolField> tmph   = SpatialFieldStore::get<SVolField>( DynSmagConst );
+  SpatFldPtr<SVolField> tmph   = SpatialFieldStore::get<SVolField>( dynSmagConst );
   int jmin=0;
   for (int i=0; i<3; i++) {
     for (int j=jmin; j<3; j++) {
@@ -215,7 +215,7 @@ evaluate()
       } else {
         *tmph <<= *rho_ * *velcc[i] * *velcc[j];
       }
-      BoxFilterOp_->apply_to_field(*tmph, *uiujhat[i][j - jmin]);
+      boxFilterOp_->apply_to_field(*tmph, *uiujhat[i][j - jmin]);
     }
     jmin++;
   }
@@ -280,7 +280,7 @@ evaluate()
       // now multiply \bar{S} by \bar{S_ij} and test filter them
       *tmph <<= strTsrMag * *Sij[i][j-jmin];
       if (!isConstDensity_) *tmph <<= *rho_ * *tmph;
-      BoxFilterOp_->apply_to_field(*tmph, *Sij[i][j-jmin]);
+      boxFilterOp_->apply_to_field(*tmph, *Sij[i][j-jmin]);
     }
     jmin++;
   }
@@ -314,7 +314,7 @@ evaluate()
   //----------------------------------------------------------------------------
   // CALCULATE the dynamic constant!
   //----------------------------------------------------------------------------
-  SpatFldPtr<SVolField> LM = SpatialFieldStore::get<SVolField>( DynSmagConst );
+  SpatFldPtr<SVolField> LM = SpatialFieldStore::get<SVolField>( dynSmagConst );
 //  *LM <<= 0.0;
 //  *LM <<= *L11 * *M11 + *L22 * *M22 + *L33 * *M33 + 2.0 * (*L12 * *M12 + *L13 * *M13  + *L23 * *M23);
   *LM <<=   *Lij[0][0] * *Mij[0][0] // L11 * M11
@@ -332,7 +332,7 @@ evaluate()
 //  BoxFilterOp_->apply_to_field(*num,*tmp);
 //  *num <<= *tmp;
   
-  SpatFldPtr<SVolField> MM = SpatialFieldStore::get<SVolField>( DynSmagConst );
+  SpatFldPtr<SVolField> MM = SpatialFieldStore::get<SVolField>( dynSmagConst );
 //  *MM <<= 0.0;
 //  *MM <<= *M11 * *M11 + *M22 * *M22 + *M33 * *M33 + 2.0 * (*M12 * *M12 + *M13 * *M13 + *M23 * *M23);
   *MM <<=   *Mij[0][0] * *Mij[0][0] // M11 * M11
@@ -353,6 +353,6 @@ evaluate()
   // to zero since this means that our test and grid filtered fields are equally
   // resolved (within the gradient diffusion modeling assumption).
   const double eps = std::numeric_limits<double>::epsilon();
-  DynSmagConst <<= cond( *LM < 0.0 || *MM <= 2.0*eps , 0.0 )
+  dynSmagConst <<= cond( *LM < 0.0 || *MM <= 2.0*eps , 0.0 )
                        ( 0.5 * *LM / *MM );
 }
