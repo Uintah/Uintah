@@ -52,7 +52,7 @@ using namespace Uintah;
 
 extern SCIRun::Mutex cerrLock;
 
-static DebugStream spme_dbg("SPMEDBG", true);
+static DebugStream spme_dbg("SPMEDBG", false);
 
 SPME::SPME()
 {
@@ -117,7 +117,6 @@ void SPME::setup(const ProcessorGroup* pg,
                  DataWarehouse* old_dw,
                  DataWarehouse* new_dw)
 {
-  int numGhostCells = d_system->getNumGhostCells();
   size_t numPatches = patches->size();
   d_spmePatches.reserve(numPatches);
 
@@ -125,20 +124,18 @@ void SPME::setup(const ProcessorGroup* pg,
     const Patch* patch = patches->get(p);
 
     Vector totalCellExtent = (d_system->getCellExtent()).asVector();
-
     Vector patchLowIndex = (patch->getCellLowIndex()).asVector();
     Vector patchHighIndex = (patch->getCellHighIndex()).asVector();
 
     SCIRun::IntVector patchKLow, patchKHigh;
     for (size_t idx = 0; idx < 3; ++idx) {
       int KComponent = d_kLimits(idx);
-
       patchKLow[idx] = ceil(static_cast<double>(KComponent) * (patchLowIndex[idx] / totalCellExtent[idx]));
       patchKHigh[idx] = floor(static_cast<double>(KComponent) * (patchHighIndex[idx] / totalCellExtent[idx]));
     }
+
     IntVector patchKGridExtents = (patchKHigh - patchKLow);
     IntVector patchKGridOffset = patchKLow;
-
     int splineHalfMaxSupport = d_interpolatingSpline.getHalfMaxSupport();
     IntVector plusGhostExtents = IntVector(splineHalfMaxSupport, splineHalfMaxSupport, splineHalfMaxSupport);
     IntVector minusGhostExtents = plusGhostExtents;  // ensure symmetry
@@ -174,9 +171,7 @@ void SPME::setup(const ProcessorGroup* pg,
 
           if (spme_dbg.active()) {
             cerrLock.lock();
-            std::cout << "fTheta[" << xidx << "][" << yidx << "][" << zidx << "]\t= " << (*fTheta)(xidx, yidx, zidx) << std::endl;
-
-            // FIXME - some "nan" values interspersed in B and C
+            // looking for "nan" values interspersed in B and C
             if (std::isnan(fBGrid(xidx, yidx, zidx))) {
               std::cout << "B: " << xidx << " " << yidx << " " << zidx << std::endl;
               std::cin.get();
@@ -249,7 +244,6 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
 {
-
   std::vector<SPMEPatch*>::iterator PatchIterator;
   for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); ++PatchIterator) {
     SPMEPatch* spmePatch = *PatchIterator;
@@ -263,12 +257,6 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
     old_dw->get(px, d_lb->pXLabel, pset);
     old_dw->get(pcharge, d_lb->pChargeLabel, pset);
     old_dw->get(pids, d_lb->pParticleIDLabel, pset);
-
-    ParticleVariable<double> pchargenew;
-    new_dw->allocateAndPut(pchargenew, d_lb->pChargeLabel_preReloc, pset);
-
-    // carry these values over for now
-    pchargenew.copyData(pcharge);
 
     // When we have a material iterator in here, we should store/get charge by material.
     // Charge represents the static charge on a particle, which is set by particle type.
@@ -293,14 +281,6 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
-  if (spme_dbg.active()) {
-    std::cout << std::endl << "calculateInFourierSpace" << std::endl;
-    std::cin.get();
-  }
-
-  double localEnergy;
-  Matrix3 localStress;
-
   std::vector<SPMEPatch*>::iterator PatchIterator;
   for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
     SPMEPatch* spmePatch = *PatchIterator;
@@ -314,19 +294,8 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
     size_t yMax = localExtents.y();
     size_t zMax = localExtents.z();
 
-    if (spme_dbg.active()) {
-      cerrLock.lock();
-      std::cout << std::endl << "checking Q" << std::endl;
-      std::cin.get();
-      std::cout << "Q[31][24][24]\t= " << (*Q)(31, 24, 24) << std::endl;
-      cerrLock.unlock();
-    }
-
     double spmeFourierEnergy = 0.0;
     Matrix3 spmeFourierStress(0.0);
-
-    double tolerance = 1E-6;
-    int numABoveTolerance = 0;
 
     if (spme_dbg.active()) {
       cerrLock.lock();
@@ -339,36 +308,19 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
       for (size_t kY = 0; kY < yMax; ++kY) {
         for (size_t kZ = 0; kZ < zMax; ++kZ) {
           complex<double> gridValue = (*Q)(kX, kY, kZ);
+
           // Calculate (Q*Q^)*(B*C)
           (*Q)(kX, kY, kZ) *= conj(gridValue) * (*fTheta)(kX, kY, kZ);
-
-          if (spme_dbg.active()) {
-            cerrLock.lock();
-            if (std::abs((*Q)(kX, kY, kZ)) > tolerance) {
-              std::cout << "Q[" << kX << "][" << kY << "][" << kZ << "]\t= " << (*Q)(kX, kY, kZ) << std::endl;
-              numABoveTolerance++;
-            }
-            cerrLock.unlock();
-          }
-          localEnergy += std::abs((*Q)(kX, kY, kZ));
-          localStress += std::abs((*Q)(kX, kY, kZ)) * (*stressPrefactor)(kX, kY, kZ);
-          spmeFourierEnergy = localEnergy;
-          spmeFourierStress = localStress;
+          spmeFourierEnergy += std::abs((*Q)(kX, kY, kZ));
+          spmeFourierStress += std::abs((*Q)(kX, kY, kZ)) * (*stressPrefactor)(kX, kY, kZ);
         }
       }
     }
 
-    if (spme_dbg.active()) {
-      cerrLock.lock();
-      std::cout << std::endl << "Number of elements greater than " << tolerance << " = " << numABoveTolerance << std::endl;
-      std::cin.get();
-      cerrLock.unlock();
-    }
-
     // !FIXME Need to put Q in for reduction
     // Ready to go back to real space now -->  Need to store modified Q as well as localEnergy/localStress (which should get accumulated)
-    new_dw->put(sum_vartype(spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
-    new_dw->put(matrix_sum(spmeFourierStress), d_lb->spmeFourierStressLabel);
+    new_dw->put(sum_vartype(0.5*spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
+    new_dw->put(matrix_sum(0.5*spmeFourierStress), d_lb->spmeFourierStressLabel);
   }
 }
 
@@ -378,7 +330,28 @@ void SPME::calculatePostTransform(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
+  std::vector<SPMEPatch*>::iterator PatchIterator;
+  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); ++PatchIterator) {
+    SPMEPatch* spmePatch = *PatchIterator;
 
+    const Patch* patch = spmePatch->getPatch();
+
+    ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
+
+    constParticleVariable<double> pcharge;
+    old_dw->get(pcharge, d_lb->pChargeLabel, pset);
+
+    ParticleVariable<Vector> pforcenew;
+    new_dw->getModifiable(pforcenew, d_lb->pForceLabel_preReloc, pset);
+
+    // Calculate electrostatic contribution to f_ij(r)
+    mapForceFromGrid(spmePatch, d_gridMap, pset, pcharge, pforcenew, d_interpolatingSpline.getHalfMaxSupport());
+
+    ParticleVariable<double> pchargenew;
+    new_dw->allocateAndPut(pchargenew, d_lb->pChargeLabel_preReloc, pset);
+    // carry these values over for now
+    pchargenew.copyData(pcharge);
+  }
 }
 
 void SPME::transformRealToFourier(const ProcessorGroup* pg,
@@ -397,50 +370,9 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
     int ydim = extents[1];
     int zdim = extents[2];
 
-    if (spme_dbg.active()) {
-      cerrLock.lock();
-      int i, j, k;
-      std::cout << std::endl << "Before Forward FFT" << std::endl;
-      std::cin.get();
-      for (i = 0; i < xdim; i++) {
-        for (j = 0; j < ydim; j++) {
-          for (k = 0; k < zdim; k++) {
-            std::cout << "Q[" << i << "][" << j << "][" << k << "]\t= " << (*Q)(i, j, k) << std::endl;
-          }
-        }
-      }
-      cerrLock.unlock();
-    }
-
     fftw_complex* array_fft = (fftw_complex*)Q->getDataPtr();
     d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_ESTIMATE);
     fftw_execute(d_forwardTransformPlan);
-
-    if (spme_dbg.active()) {
-      cerrLock.lock();
-      double tolerance = 1E-6;
-      int numABoveTolerance = 0;
-      int i, j, k;
-
-      std::cout << std::endl << "After Forward FFT" << std::endl;
-      std::cin.get();
-
-      for (i = 0; i < xdim; i++) {
-        for (j = 0; j < ydim; j++) {
-          for (k = 0; k < zdim; k++) {
-            int idx = ((i) + ((j) * xdim) + ((k) * xdim * ydim));
-            if (std::abs(array_fft[idx][0]) > tolerance || std::abs(array_fft[idx][1]) > tolerance) {
-              std::cout << "Q^[" << i << "][" << j << "][" << k << "]\t= " << "(" << array_fft[idx][0] << "\t" << array_fft[idx][1]
-                        << ")" << std::endl;
-              numABoveTolerance++;
-            }
-          }
-        }
-      }
-      cerrLock.unlock();
-      std::cout << std::endl << "Number of elements greater than " << tolerance << " = " << numABoveTolerance << std::endl;
-      std::cin.get();
-    }
   }
 }
 
@@ -460,43 +392,9 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
     int ydim = extents[1];
     int zdim = extents[2];
 
-    if (spme_dbg.active()) {
-      cerrLock.lock();
-      int i, j, k;
-      std::cout << std::endl << "Before Backward FFT" << std::endl;
-      std::cin.get();
-      for (i = 0; i < xdim; i++) {
-        for (j = 0; j < ydim; j++) {
-          for (k = 0; k < zdim; k++) {
-            if (std::abs((*Q)(i, j, k)) > 1E-11) {
-              std::cout << "Q[" << i << "][" << j << "][" << k << "]\t= " << (*Q)(i, j, k) << std::endl;
-            }
-          }
-        }
-      }
-      cerrLock.unlock();
-    }
-
     fftw_complex* array_fft = (fftw_complex*)Q->getDataPtr();
     d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_ESTIMATE);
     fftw_execute(d_backwardTransformPlan);
-
-    if (spme_dbg.active()) {
-      cerrLock.lock();
-      int i, j, k;
-      std::cout << std::endl << "After Backward FFT" << std::endl;
-      std::cin.get();
-      for (i = 0; i < xdim; i++) {
-        for (j = 0; j < ydim; j++) {
-          for (k = 0; k < zdim; k++) {
-            int idx = ((i) + ((j) * xdim) + ((k) * xdim * ydim));
-            std::cout << "Q[" << i << "][" << j << "][" << k << "]\t= " << "(" << array_fft[idx][0] << "\t" << array_fft[idx][1]
-                      << ")" << std::endl;
-          }
-        }
-      }
-      cerrLock.unlock();
-    }
   }
 }
 
@@ -506,19 +404,7 @@ void SPME::finalize(const ProcessorGroup* pg,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw)
 {
-  std::vector<SPMEPatch*>::iterator iter;
-  for (iter = d_spmePatches.begin(); iter != d_spmePatches.end(); iter++) {
-    SPMEPatch* spmePatch = *iter;
-
-    const Patch* patch = spmePatch->getPatch();
-    ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
-
-    ParticleVariable<Vector> pforcenew;
-    new_dw->getModifiable(pforcenew, d_lb->pForceLabel_preReloc, pset);
-
-    // Calculate electrostatic contribution to f_ij(r)
-    mapForceFromGrid(spmePatch, d_gridMap, pset, pforcenew, d_interpolatingSpline.getHalfMaxSupport());
-  }
+  // Do cleanup here
 }
 
 std::vector<SCIRun::dblcomplex> SPME::generateBVector(const std::vector<double>& mFractional,
@@ -567,7 +453,7 @@ SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
   std::vector<double> mf2 = SPME::generateMFractionalVector(limit_Ky);
   std::vector<double> mf3 = SPME::generateMFractionalVector(limit_Kz);
 
-// localExtents is without ghost grid points
+  // localExtents is without ghost grid points
   std::vector<dblcomplex> b1 = generateBVector(mf1, globalOffset.x(), localExtents.x(), d_interpolatingSpline);
   std::vector<dblcomplex> b2 = generateBVector(mf2, globalOffset.y(), localExtents.y(), d_interpolatingSpline);
   std::vector<dblcomplex> b3 = generateBVector(mf3, globalOffset.z(), localExtents.z(), d_interpolatingSpline);
@@ -625,11 +511,13 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
   int xOffset = offset.x();
   int yOffset = offset.y();
   int zOffset = offset.z();
-
   double PI = acos(-1.0);
   double PI2 = PI * PI;
   double invBeta2 = 1.0 / (d_ewaldBeta * d_ewaldBeta);
   double invVolFactor = 1.0 / (d_systemVolume * PI);
+
+  std::cerr << "System Volume: " << d_systemVolume << endl;
+  std::cin.get();
 
   SimpleGrid<double> CGrid(extents, offset, 0);  // No ghost cells; internal only
   for (size_t kX = 0; kX < xExtents; ++kX) {
@@ -691,13 +579,6 @@ void SPME::calculateStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor,
           }
 
           (*stressPrefactor)(kX, kY, kZ) = localStressContribution;
-
-          if (spme_dbg.active()) {
-            cerrLock.lock();
-            std::cout << "stressPrefactor[" << kX << "][" << kY << "][" << kZ << "]\t= " << (*stressPrefactor)(kX, kY, kZ)
-                      << std::endl;
-            cerrLock.unlock();
-          }
         }
       }
     }
@@ -736,17 +617,14 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
       splineValues[idx] = particleGridOffset[idx] - particleGridCoordinates[idx];  // spline offset for spline function
     }
 
-    int TempStop = 0.0;
     vector<double> xSplineArray = spline.evaluateGridAligned(splineValues[0]);
     vector<double> ySplineArray = spline.evaluateGridAligned(splineValues[1]);
     vector<double> zSplineArray = spline.evaluateGridAligned(splineValues[2]);
 
-    TempStop = 1.0;
     vector<double> xSplineDeriv = spline.derivativeGridAligned(splineValues[0]);
     vector<double> ySplineDeriv = spline.derivativeGridAligned(splineValues[1]);
     vector<double> zSplineDeriv = spline.derivativeGridAligned(splineValues[2]);
 
-    TempStop = 2.0;
     IntVector extents(xSplineArray.size(), ySplineArray.size(), zSplineArray.size());
     SimpleGrid<double> chargeGrid(extents, particleGridOffset, 0);
 
@@ -757,19 +635,15 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
     for (size_t xidx = 0; xidx < XExtent; ++xidx) {
       double dampX = xSplineArray[xidx];
       for (size_t yidx = 0; yidx < YExtent; ++yidx) {
-        double dampXY = dampX * ySplineArray[yidx];
+        double dampY = ySplineArray[yidx];
+        double dampXY = dampX * dampY;
         for (size_t zidx = 0; zidx < ZExtent; ++zidx) {
-          chargeGrid(xidx, yidx, zidx) = dampXY * zSplineArray[zidx];
-          forceGrid(xidx, yidx, zidx) = SCIRun::Vector(xSplineDeriv[xidx], ySplineDeriv[yidx], zSplineDeriv[zidx]);
+          double dampZ = zSplineArray[zidx];
+          double dampYZ = dampY*dampZ;
+          double dampXZ = dampX*dampZ;
 
-//          if (spme_dbg.active()) {
-//            cerrLock.lock();
-//            std::cout << "chargeGrid[" << xidx << "][" << yidx << "][" << zidx << "]\t= " << chargeGrid(xidx, yidx, zidx)
-//                      << std::endl;
-//            std::cout << "forceGrid[" << xidx << "][" << yidx << "][" << zidx << "]\t= " << forceGrid(xidx, yidx, zidx)
-//                      << std::endl;
-//            cerrLock.unlock();
-//          }
+          chargeGrid(xidx, yidx, zidx) = dampXY * dampZ;
+          forceGrid(xidx, yidx, zidx) = SCIRun::Vector(dampYZ*xSplineDeriv[xidx], dampXZ*ySplineDeriv[yidx], dampXY*zSplineDeriv[zidx]);
 
         }
       }
@@ -786,13 +660,7 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
                            constParticleVariable<double>& charges,
                            int halfSupport)
 {
-
-  if (spme_dbg.active()) {
-    std::cout << std::endl << "mapChargeToGrid" << std::endl;
-    std::cin.get();
-  }
-
-// Reset charges before we start adding onto them.
+  // Reset charges before we start adding onto them.
   SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
   Q->initialize(0.0);
 
@@ -825,12 +693,6 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
 
           // Wrapping done for single patch problem, solution will be totally different for multipatch problem!  !FIXME
           (*Q)(x_anchor, y_anchor, z_anchor) += val;
-
-//          if (spme_dbg.active()) {
-//            cerrLock.lock();
-//            std::cout << "Q[" << x_anchor << "][" << y_anchor << "][" << z_anchor << "]\t= " << (*Q)(x_anchor, y_anchor, z_anchor) << std::endl;
-//            cerrLock.unlock();
-//          }
         }
       }
     }
@@ -840,6 +702,7 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
 void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
                             const std::vector<SPMEMapPoint>& gridMap,
                             ParticleSubset* pset,
+                            constParticleVariable<double>& charges,
                             ParticleVariable<Vector>& pforcenew,
                             int halfSupport)
 {
@@ -849,12 +712,15 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
     particleIndex pidx = *iter;
 
     SimpleGrid<SCIRun::Vector> forceMap = gridMap[pidx].getForceGrid();
+    double charge = charges[pidx];
 
+    double DimensionalCorrection = 1.0/static_cast<double> (d_kLimits.x()*d_kLimits.y()*d_kLimits.z());
     SCIRun::Vector newForce = Vector(0, 0, 0);
     IntVector QAnchor = forceMap.getOffset();  // Location of the 0,0,0 origin for the force map grid
     IntVector supportExtent = forceMap.getExtents();  // Extents of the force map grid
 
     for (int xmask = -halfSupport; xmask <= halfSupport; ++xmask) {
+
       for (int ymask = -halfSupport; ymask <= halfSupport; ++ymask) {
         for (int zmask = -halfSupport; zmask <= halfSupport; ++zmask) {
           SCIRun::Vector currentForce;
@@ -862,33 +728,40 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
           int y_anchor = QAnchor.y() + ymask;
           int z_anchor = QAnchor.z() + zmask;
 
-          if (x_anchor < 0)
-            x_anchor += d_kLimits.x();
-          if (y_anchor < 0)
-            y_anchor += d_kLimits.y();
-          if (z_anchor < 0)
-            z_anchor += d_kLimits.z();
+          if (x_anchor < 0) x_anchor += d_kLimits.x();
+          if (y_anchor < 0) y_anchor += d_kLimits.y();
+          if (z_anchor < 0) z_anchor += d_kLimits.z();
 
-          if (x_anchor >= d_kLimits.x())
-            x_anchor -= d_kLimits.x();
-          if (y_anchor >= d_kLimits.y())
-            y_anchor -= d_kLimits.y();
-          if (z_anchor >= d_kLimits.z())
-            z_anchor -= d_kLimits.z();
+          if (x_anchor >= d_kLimits.x()) x_anchor -= d_kLimits.x();
+          if (y_anchor >= d_kLimits.y()) y_anchor -= d_kLimits.y();
+          if (z_anchor >= d_kLimits.z()) z_anchor -= d_kLimits.z();
 
           double QReal = real((*Q)(x_anchor, y_anchor, z_anchor));
-
-#ifdef DEBUG
           double QMag = std::abs((*Q)(x_anchor, y_anchor, z_anchor));
-          ASSERTEQ(QMag,QReal);
-#endif
+//          ASSERTRANGE(imag((*Q)(x_anchor, y_anchor, z_anchor)),-1e-18,1e-18);
 
-          currentForce = forceMap(xmask + halfSupport, ymask + halfSupport, zmask + halfSupport) * QReal;
+          currentForce = forceMap(xmask + halfSupport, ymask + halfSupport, zmask + halfSupport) * QReal * charge;
           newForce += currentForce;
         }
       }
     }
-    pforcenew[pidx] = newForce;
+    newForce *= DimensionalCorrection;
+      //49227.43325439056
+/*
+ *  f1=  -2.8440279063396052        2.6027710155811845       0.99069892785288971
+ f2=  -1.2959262337781086       -2.2140864761359698        2.5686305300200476
+ f3=   4.2899558647618461       -2.2060911777299874       -3.0672208465506792
+ f4=   3.1706091601611490        2.0423127670957384       -4.2814464749644880
+ f5=  -2.8145420677778201        2.3389711802598274        1.3094128311605495
+ */
+
+    if (pidx < 5) {
+      std::cerr << "DimensionalCorrection: " << DimensionalCorrection << endl;
+      double twoPI = 2.0 * acos(-1.0);
+      std::cerr << " Force Check (" << pidx << "): " << newForce/twoPI << endl;
+      pforcenew[pidx] = newForce;
+    }
+
   }
 }
 

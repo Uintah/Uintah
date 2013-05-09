@@ -52,8 +52,7 @@ CenteredCardinalBSpline::~CenteredCardinalBSpline()
 CenteredCardinalBSpline::CenteredCardinalBSpline(const int order) :
     d_splineOrder(order)
 {
-  // For ease of use, we actually generate quantities to calculate the spline
-  //   of order SplineOrder - 1
+  // For ease of use, we actually generate quantities to calculate the spline of order SplineOrder - 1
   d_basisShifts = generateBasisShifts(order - 1);
   d_prefactorValues = generatePrefactorValues(order - 1);
   d_prefactorMap = generatePrefactorMap(order - 1, d_basisShifts);
@@ -262,7 +261,7 @@ std::vector<double> CenteredCardinalBSpline::derivativeGridAligned(const double 
 std::vector<double> CenteredCardinalBSpline::derivative(const double x) const
 {
   // Expect standardized input between -1.0 and 0.0 (inclusive)
-  assert(x >= -1.0 && x <= 0.0);
+  assert(x >= -1.0 && x <= 0.0); //FIXME
 
   std::vector<double> subSpline = evaluateInternal(x + 0.5, d_splineOrder - 1, d_basisShifts, d_prefactorMap, d_prefactorValues);
 

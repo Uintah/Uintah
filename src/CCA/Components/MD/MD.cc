@@ -49,8 +49,6 @@
 #include <iomanip>
 #include <fstream>
 
-#include <sci_defs/fftw_defs.h>
-
 using namespace Uintah;
 
 extern SCIRun::Mutex cerrLock;
@@ -340,7 +338,19 @@ void MD::extractCoordinates()
       string message = "\tMalformed input file. Should have [x,y,z] coordinates per line: ";
       throw ProblemSetupException(message, __FILE__, __LINE__);
     }
+
+    //FIXME This is hacky!! Fix for generic case of wrapping arbitrary coordinates into arbitrary unit cells using
+    //  reduced coordinate transformation!  -- JBH 5/9/13
+    if (x < 0) x += d_box.x();
+    if (y < 0) y += d_box.y();
+    if (z < 0) z += d_box.z();
+
+    if (x >= d_box.x()) x -= d_box.x();
+    if (y >= d_box.y()) y -= d_box.y();
+    if (z >= d_box.z()) z -= d_box.z();
+
     Point pnt(x, y, z);
+
     d_atomList.push_back(pnt);
   }
   inputFile.close();

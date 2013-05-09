@@ -36,19 +36,16 @@
 #include <CCA/Components/MD/SPMEMapPoint.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Point.h>
 
-#include <cstdio>
-#include <cstring>
 #include <vector>
-#include <complex>
 
 namespace Uintah {
 
 typedef int particleIndex;
 typedef int particleId;
 
+class Point;
+class Vector;
 class SimpleMaterial;
 class SPME;
 
@@ -300,7 +297,7 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     SimulationStateP d_sharedState;    //!<
     SimpleMaterial* d_material;        //!<
     IntegratorType d_integrator;       //!<
-    double delt;                     //!<
+    double delt;                       //!<
 
     vector<const VarLabel*> d_particleState;            //!<
     vector<const VarLabel*> d_particleState_preReloc;   //!<
@@ -324,6 +321,7 @@ class MD : public UintahParallelComponent, public SimulationInterface {
     MD(const MD&);                           //!<
     MD& operator=(const MD&);                //!<
 };
+
 }
 
 #endif

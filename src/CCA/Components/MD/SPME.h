@@ -186,6 +186,7 @@ class SPME : public Electrostatics {
     void mapForceFromGrid(SPMEPatch* spmePatch,
                           const std::vector<SPMEMapPoint>& gridMap,
                           ParticleSubset* pset,
+                          constParticleVariable<double>& charges,
                           ParticleVariable<Vector>& pforcenew,
                           int halfSupport);
 
@@ -258,16 +259,17 @@ class SPME : public Electrostatics {
 
       size_t halfMax = kMax / 2;
 
-      for (int idx = 0; idx <= halfMax; ++idx) {
-        mPrime[idx] = static_cast<double> (idx);
+      for (size_t idx = 0; idx <= halfMax; ++idx) {
+        mPrime[idx] = static_cast<double>(idx);
       }
 
-      for (int Index = halfMax + 1; Index < kMax; ++Index) {
-        mPrime[Index] = static_cast<double>(Index - static_cast<int>(kMax));
+      for (size_t Index = halfMax + 1; Index < kMax; ++Index) {
+        mPrime[Index] = static_cast<double>(static_cast<double>(Index) - static_cast<int>(kMax));
       }
 
       return mPrime;
     }
+
     /**
      * @brief Generates reduced Fourier grid vector. Generates the vector of values i/K_i for i = 0...K-1
      * @param KMax - Maximum number of grid points for direction
@@ -281,10 +283,11 @@ class SPME : public Electrostatics {
 
       double kMaxInv = 1.0 / static_cast<double>(kMax);
 
-      for (int idx = 0; idx < kMax; ++idx) { mFractional[idx] = static_cast<double>(idx) * kMaxInv; }
+      for (size_t idx = 0; idx < kMax; ++idx) { mFractional[idx] = static_cast<double>(idx) * kMaxInv; }
 
       return mFractional;
     }
+
     /**
      * @brief Perform all calculations preceding the FFT transform of the charge grid to Fourier space.
      * @param const ProcessorGroup* pg -- All processors processing SPME patches

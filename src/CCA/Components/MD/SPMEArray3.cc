@@ -28,7 +28,8 @@
 #include <Core/Util/Assert.h>
 
 #include <sci_values.h>
-#include <sci_defs/fftw_defs.h>
+
+#include <complex>
 
 using namespace SCIRun;
 
@@ -113,8 +114,8 @@ void SPMEArray3<T>::copy(const SPMEArray3<T> &other)
   }
 }
 
-//// Explicit template instantiations:
-template class SPMEArray3<dblcomplex> ;
+// Explicit template instantiations:
+template class SPMEArray3<std::complex<double> > ;
 template class SPMEArray3<Uintah::Matrix3> ;
 template class SPMEArray3<double> ;
 template class SPMEArray3<SCIRun::Vector> ;

@@ -188,19 +188,19 @@ class SPMEPatch {
   private:
 
     // Patch dependent quantities
-    IntVector d_localExtents;               //!< Number of grid points in each direction for this patch
-    IntVector d_globalOffset;               //!< Grid point index of local 0,0,0 origin in global coordinates
+    IntVector d_localExtents;                //!< Number of grid points in each direction for this patch
+    IntVector d_globalOffset;                //!< Grid point index of local 0,0,0 origin in global coordinates
 
     // Store the number of ghost cells  along each of the min/max boundaries
     // This lets us differentiate should we need to for centered and  left/right shifted splines
-    IntVector d_posGhostExtents;            //!< Number of ghost cells on positive boundary
-    IntVector d_negGhostExtents;            //!< Number of ghost cells on negative boundary
+    IntVector d_posGhostExtents;             //!< Number of ghost cells on positive boundary
+    IntVector d_negGhostExtents;             //!< Number of ghost cells on negative boundary
 
     SimpleGrid<double>* d_theta;             //!<
     SimpleGrid<Matrix3>* d_stressPrefactor;  //!<
     SimpleGrid<complex<double> >* Q;         //!<
 
-    const Patch* d_patch;                   //!<
+    const Patch* d_patch;                    //!<
 
     SPMEPatch(const SPMEPatch& patch);
     SPMEPatch& operator=(const SPMEPatch& patch);
