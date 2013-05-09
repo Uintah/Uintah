@@ -33,7 +33,7 @@ sim_cel = 0.0d0;
  enddo
  close(10)
  xx=xxx;yy=yyy;zz=zzz
- all_p_charges = all_p_charges / dsqrt(Red_Vacuum_EL_permitivity_4_Pi)
+ !all_p_charges = all_p_charges / dsqrt(Red_Vacuum_EL_permitivity_4_Pi)
  all_g_charges=0.0d0; all_charges = all_p_charges; 
  call periodic_images(xx,yy,zz)
 end subroutine read_config

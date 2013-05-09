@@ -16,7 +16,7 @@ character(250) nf_config
 iseed = -89675
 i_boundary_CTRL = 2 ! 3D periodic boundaries
 nf_config = 'config.small' ! or 'config.large'
-N_trials = 1 ! when do tinming change N_trials to larger number (say 100) for longer running times and better stats on running times.
+N_trials = 10 ! when do tinming change N_trials to larger number (say 100) for longer running times and better stats on running times.
 ! </local_initializations>
 
 call read_parameters('in.in')
@@ -36,12 +36,14 @@ endif
 enddo
 print*, 'smpe Ewald en = ',En_Q_cmplx  ! lets print oout the energy 
 print*,'f1=', fxx(1),fyy(1),fzz(1)     ! and lets print out the force on first atom
+print*,'f2=', fxx(2),fyy(2),fzz(2)
 
 contains 
  subroutine local_init
  use random_generator_module, only : randomize_config
    call cel_properties(.true.)
    call randomize_config(0.25d0,iseed,xxx,yyy,zzz) ! if I dont randomize it then fft fart coukd be zero due to crystal symmetry
+   write(15,'(3F12.6)'),xxx,yyy,zzz
    xx=xxx;yy=yyy;zz=zzz;
    call periodic_images(xx,yy,zz)
    call get_reciprocal_cut
@@ -49,5 +51,6 @@ contains
    fxx=0.0d0;fyy=0.0d0;fzz=0.0d0 ! set forces to zero before computing
    dfftx=nfftx;dffty=nffty;dfftz=nfftz
  end subroutine local_init
+
 end program main
 

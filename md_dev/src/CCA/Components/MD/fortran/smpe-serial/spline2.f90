@@ -125,7 +125,6 @@ contains
   enddo
 
   spline(0) = idi * (1.0d0-x) * spline(0)
-
  end subroutine real_spline2_and_deriv 
 
  subroutine real_spline2_pp(order,x,spline) ! only the spline; no deriv
