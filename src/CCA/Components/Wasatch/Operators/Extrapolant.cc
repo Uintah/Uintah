@@ -58,12 +58,16 @@ Extrapolant<FieldT>::
 template< typename FieldT >
 void
 Extrapolant<FieldT>::
-apply_to_field( FieldT& src, const bool skipBCs )
+apply_to_field( FieldT& src,
+               const double min,
+               const double max,
+               const bool skipBCs )
 {
   // extrapolate from interior cells:
   using namespace SpatialOps;
   using namespace SpatialOps::structured;
-  
+
+  bool doMinMaxCheck = (min > DBLMIN || max < DBLMAX);
   const MemoryWindow& ws = src.window_with_ghost();
     
   int pm[2]={1,-1}; // plus or minus face
@@ -95,6 +99,14 @@ apply_to_field( FieldT& src, const bool skipBCs )
       FieldT s1 ( ws1, &src[0], ExternalStorage);
       FieldT s2 ( ws2, &src[0], ExternalStorage);
       d <<= 2.0 * s1 - s2;
+      
+      if (doMinMaxCheck) {
+        std::cout << "doing min max check \n";
+        d <<= cond( d < min, min )
+                  ( d > max, max )
+                  ( d );
+      }
+      
     }
   }
 }
