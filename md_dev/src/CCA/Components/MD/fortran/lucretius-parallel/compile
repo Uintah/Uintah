@@ -1,0 +1,225 @@
+#!/bin/bash
+PROGRAM_VERSION="0.58.2"
+declare -a once
+declare -a starter
+opt=([0]="--exe" [1]="--fopt" [2]="--copt" [3]="--fpath" [4]="--cpath" [5]="--fc" [6]="--cc" [7]="--h")
+default=([0]="a.out" [1]="-O3 -xW" [2]="" [3]="" [4]="" [5]="ifort" [6]="gcc" [7]="")
+len_speed_options=0
+Nopt=${#opt[*]}
+
+len_string()
+{
+len=`echo "$1" | wc -c`
+len=`expr $len - 1`
+printf $len
+}
+
+quick_help()
+{
+local s i j
+echo "compile script version:" $PROGRAM_VERSION
+s=""
+for (( i=0; i<$Nopt; i++))
+do
+s=`echo "$s" "${opt[$i]}"` 
+done
+echo "Options : " $s
+}
+
+helper()
+{
+local s i s1 i1 s11
+quick_help
+s="";s1="";s11=""
+for (( i=0; i<$Nopt; i++))
+do
+ i1=0
+ for j in ${default[$i]}
+ do
+ ((i1++))
+ done
+ if [ "$i1" == "0" ]; then
+   s=`echo "$s" "${opt[$i]}" "${default[$i]}"`
+ else
+ if [ "$i1" == "1" ]; then
+   s1=`echo "$s1" "${opt[$i]}" "${default[$i]}"`
+   s=`echo "$s" "${opt[$i]}" "${default[$i]}"`
+ else
+ if [ $i1 -ge 2 ]; then
+   s1=`echo "$s1" "${opt[$i]}" "'${default[$i]}'"`
+   s=`echo "$s" "${opt[$i]}" "'${default[$i]}'"`
+ fi
+ fi
+ fi
+done
+echo "Example ussage: "
+echo "./compile " $s
+echo "which is redundant to: "
+echo "./compile " $s1
+echo "default options:" $s1 
+echo ${opt[0]}": name of executable to be generated"
+echo ${opt[1]}": fortran [speed] options "
+echo ${opt[2]}": c options "
+echo ${opt[3]}": the path where fortran compiler is installed"
+echo ${opt[4]}": the path where C compiler is installed"
+echo ${opt[5]}": the name of fortran compiler"
+echo ${opt[6]}": the name of C compiler"
+echo ${opt[7]}": Help "
+echo " If more than just one parameter are required as input then use them as whithin commas ''"
+echo "example: --fc  -CB -g is incorect ussage while"
+echo "         --fc '-CB -g' is coorrect ussage"
+echo "Use an option only once"
+echo "Example ./compile --exe a.out --exe a.out is incorect because --exe appear twice"
+echo "The options can come in any order."
+echo "If no option is provided (i.e. the compile is run as: './compile') then the default options (listed above) will be used"
+}
+
+echo "Current working directory:" `pwd`
+
+update_config=1
+cfgs=$(find ./runs -maxdepth 1 -type f )
+echo $cfgs
+for i in $cfgs
+do
+if [ "$i" == "./runs/config" ] ; then
+update_config=0
+fi
+done
+
+
+args=("$@")
+Nin=$#
+string_in=`echo $@`
+for (( j=0; j<$Nopt; j++))
+do
+  once[$j]=0
+done
+for (( j=0; j<$Nin; j++))
+do
+  starter[$j]=-999
+done
+
+echo Nin Nopt $Nin $Nopt
+for (( i=0; i<$Nin; i++))
+do
+  for (( j=0; j<$Nopt; j++))
+  do
+    if [ "${args[$i]}" == "${opt[$j]}" ]; then
+       let once[$j]=`expr ${once[$j]}+1`
+#echo $j ${once[$j]} "${args[$i]}" "${opt[$j]}"
+       let starter[$i]=$i+1
+       ivj[$i]=$j
+       if [ ${once[$j]} -ge 2 ]; then
+        echo "Error ; each option must appear only once; and not more that once"
+        echo "The option " "${args[$i]}"  appear twice in input string:
+        echo 'string in=',$string_in 
+        helper
+        exit 0
+       fi
+   fi 
+  done
+done
+
+if [[ $Nin -eq 1 && ${once[`expr $Nopt-1`]} -eq 1 ]]
+then
+helper
+exit 0
+fi
+
+if [[ ${once[`expr $Nopt-1`]} -eq 1 && $Nin -ne 1 ]]; then
+helper
+fi
+
+for (( i=0; i<$Nin; i++))
+do
+let i1=`expr ${starter[$i]}+0`
+if [ $i1 -ge 0 ]; then
+iv=ivj[$i]
+echo $i $i1
+oni=${once[$iv]}
+if [ $i1 -ge $Nin ]; then
+  once[$iv]=0
+#echo GOT RID OF LAST ${once[${ivj[$i]}]}  $oni
+else
+#echo " ELSE"
+  for (( j=0; j<$Nopt; j++))
+  do
+#echo $j $oni inside
+  if [ $oni -eq 1 ]; then
+#echo "${args[$i1]}"  "${opt[$j]}"
+    if [ "${args[$i1]}" == "${opt[$j]}" ]; then
+      once[$iv]=0
+#echo XXXXXXXXX   $oni ${once[$iv]}
+    fi
+  fi
+  done
+fi
+fi
+done
+
+for (( i=0; i<$Nopt; i++))
+do
+in_option[$i]=${default[$i]}
+done
+
+for (( i=0; i<$Nin; i++))
+do
+ let i1=`expr ${starter[$i]}+0`
+ if [ $i1 -ge 0 ]; then
+  iv=ivj[$i]
+  oni=${once[$iv]}
+  if [ $oni -eq 1 ]; then
+    in_option[$iv]=${args[$i1]}
+#echo $i nondefault ${args[$i1]}
+  fi
+ fi
+done
+
+
+exe_file="${in_option[0]}"
+
+string_compile=""
+for (( i=1; i<$Nopt-1; i++))
+do
+  len=$(len_string "${in_option[$i]}")
+  if [ $len -ge 1 ]; then
+  s0="${in_option[$i]}"
+    case $i in
+      1) s=`echo "speed_options=""$s0"`; speed_options=`echo $s`; s=""; \
+               len_speed_options=$(len_string "$speed_options");;
+      2) s=`echo "c_options=""$s0"`;;
+      3) s=`echo "path_F90_Compiler=""$s0"`;;
+      4) s=`echo "path_Cpp_Compiler=""$s0"`;;
+      5) s=`echo "name_f90=""$s0"`;;
+      6) s=`echo "name_cc=""$s0"`;;
+      *) echo "Inconsistent loop in script when get the compiler option string"; exit 0;;
+    esac
+  string_compile=`echo "$string_compile" "$s"`
+#  echo $i "s=" $s "string_compile=" $string_compile
+  fi 
+done
+echo $len_speed_options
+
+echo "------"
+  if [ -d ./source ]; then
+   echo "./source dir exists"
+  else
+   echo "Compilation failed; The directory with the source files ./source does not even exists"
+   exit 0
+  fi
+  cd ./source
+  make again
+  if [ $len_speed_options -eq 0 ]; then
+  make a.out $string_compile
+  else
+  make a.out "$speed_options" $string_compile
+  fi; 
+  make clean
+  cd ../
+  if [ -f ./source/a.out ]; then  
+   mv  ./source/a.out ./$exe_file
+   echo "Compilation succesfull SUCCESFULL  :) "
+  else
+   echo "Compilation failed; :( "
+  fi ;
+echo "EXIT COMPILE SCRIPT VER:" $PROGRAM_VERSION

@@ -1,0 +1,13 @@
+#!/bin/bash
+make clean
+rm briefcase.move.tar
+cp ff.dat ff.dat.old
+cp in.in in.in.old
+cp ./runs/config ./config.old
+tar -cvf briefcase.move.tar *.f90 *.frg *.c iar Makefile briefcase ff.dat.old in.in.old tree.sh config.old clr compile
+
+rm config.old
+rm ff.dat.old
+rm in.in.old
+
+
