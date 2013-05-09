@@ -62,7 +62,8 @@ namespace Wasatch{
   void register_turbulence_expressions (const TurbulenceParameters& turbParams,
                                         Expr::ExpressionFactory& factory,
                                         const Expr::TagList& velTags,
-                                        const Expr::Tag densTag) {
+                                        const Expr::Tag densTag,
+                                        const bool isConstDensity) {
 
     const TagNames& tagNames = TagNames::self();
     
@@ -154,7 +155,8 @@ namespace Wasatch{
                                                             velTags[0],
                                                             velTags[1],
                                                             velTags[2],
-                                                            densTag ) );
+                                                            densTag,
+                                                            isConstDensity) );
         }
         
       }
@@ -527,7 +529,7 @@ namespace Wasatch{
     bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
     const Expr::Tag turbViscTag = tagNames.turbulentviscosity;
     if ( isTurbulent_ && isviscous_ && enableTurbulenceModel ) {
-      register_turbulence_expressions(turbulenceParams, factory, velTags_, densTag);      
+      register_turbulence_expressions(turbulenceParams, factory, velTags_, densTag, is_constant_density() );
       factory.attach_dependency_to_expression(turbViscTag, viscTag);
     }
     // END TURBULENCE
