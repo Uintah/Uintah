@@ -22,6 +22,7 @@ class DynamicSmagorinskyCoefficient
 : public StrainTensorBase
 {
   const Expr::Tag rhot_;
+  const bool isConstDensity_;
   
   typedef  SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Filter, SVolField, SVolField >::type BoxFilterT;
   typedef  SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Filter, XVolField, XVolField >::type XBoxFilterT;
@@ -55,10 +56,11 @@ class DynamicSmagorinskyCoefficient
   YExOpT*   yexOp_;
   ZExOpT*   zexOp_;
   
-  DynamicSmagorinskyCoefficient( const Expr::Tag vel1Tag,
-                                 const Expr::Tag vel2Tag,
-                                 const Expr::Tag vel3Tag,
-                                 const Expr::Tag rhoTag );
+  DynamicSmagorinskyCoefficient( const Expr::Tag& vel1Tag,
+                                 const Expr::Tag& vel2Tag,
+                                 const Expr::Tag& vel3Tag,
+                                 const Expr::Tag& rhoTag,
+                                 const bool isConstDensity);
   
 
 public:
@@ -66,23 +68,26 @@ public:
   {
   public:
     Builder( const Expr::TagList& results,
-            const Expr::Tag vel1Tag,
-            const Expr::Tag vel2Tag,
-            const Expr::Tag vel3Tag,
-            const Expr::Tag rhoTag )
-    : ExpressionBuilder(results),
-    vel1t_     ( vel1Tag      ),
-    vel2t_     ( vel2Tag      ),
-    vel3t_     ( vel3Tag      ),
-    rhot_      ( rhoTag       )
+            const Expr::Tag& vel1Tag,
+            const Expr::Tag& vel2Tag,
+            const Expr::Tag& vel3Tag,
+            const Expr::Tag& rhoTag,
+            const bool isConstDensity)
+    : ExpressionBuilder( results ),
+      vel1t_     ( vel1Tag       ),
+      vel2t_     ( vel2Tag       ),
+      vel3t_     ( vel3Tag       ),
+      rhot_      ( rhoTag        ),
+      isConstDensity_(isConstDensity)
     {}
     
     Expr::ExpressionBase* build() const
     {
-      return new DynamicSmagorinskyCoefficient( vel1t_, vel2t_, vel3t_, rhot_ );
+      return new DynamicSmagorinskyCoefficient( vel1t_, vel2t_, vel3t_, rhot_, isConstDensity_ );
     }
   private:
     const Expr::Tag vel1t_, vel2t_, vel3t_, rhot_;
+    const bool isConstDensity_;
   };
   
   ~DynamicSmagorinskyCoefficient();

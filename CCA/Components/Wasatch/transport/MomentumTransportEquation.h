@@ -44,7 +44,8 @@ namespace Wasatch{
   void register_turbulence_expressions (const TurbulenceParameters& turbParams,
                                         Expr::ExpressionFactory& factory,
                                         const Expr::TagList& velTags,
-                                        const Expr::Tag densTag);    
+                                        const Expr::Tag densTag,
+                                        const bool isConstDensity);
   /**
    *  \ingroup WasatchCore
    *  \class MomentumTransportEquation
