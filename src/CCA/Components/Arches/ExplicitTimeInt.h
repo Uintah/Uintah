@@ -61,7 +61,7 @@ public:
                      const bool do_high_clip, const double high_clip );
 
 
-    /** @brief A template for time averaging using a Runge-kutta form for weighted abcissa*/  
+    /** @brief A template for time averaging using a Runge-kutta form for weighted abscissa*/  
     template <class phiT, class constphiT>
     void timeAvePhi( const Patch* patch, 
                      phiT& phi, 
@@ -330,7 +330,7 @@ private:
 // Time averaging W/O density
 //---------------------------------------------------------------------------
 // ----RK AVERAGING
-//     to get the time averaged phi^{time averaged}
+//     to get the time averaged weighted phi^{time averaged}
 //     See: Gottlieb et al., SIAM Review, vol 43, No 1, pp 89-112
 //          Strong Stability-Preserving High-Order Time Discretization Methods
   template <class phiT, class constphiT>
@@ -347,11 +347,13 @@ private:
 
       IntVector c = *iter; 
 
-      if ( do_low_clip && phi[c]/weight[c] < ( low_clip + clip_tol ) ){ 
+      if (weight[c] == 0)
+          phi[*iter] = 0.0;
+      else if ( do_low_clip && phi[c]/weight[c] < ( low_clip + clip_tol ) ){ 
 
         phi[*iter] = weight[c]*low_clip; 
 
-      } else if ( do_high_clip && phi[c]/weight[c] > ( high_clip + clip_tol ) ){ 
+      } else if ( do_high_clip && phi[c]/weight[c] > ( high_clip - clip_tol ) ){ 
 
         phi[*iter] = high_clip*weight[c]; 
 

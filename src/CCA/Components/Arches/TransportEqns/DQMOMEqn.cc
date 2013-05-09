@@ -142,7 +142,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     
     db_clipping->getWithDefault("low", clip.low,  -1.e16);
     db_clipping->getWithDefault("high",clip.high, 1.e16);
-    db_clipping->getWithDefault("tol", clip.tol, 1e-15); 
+    db_clipping->getWithDefault("tol", clip.tol, 1e-10); 
 
     if ( db_clipping->findBlock("low") ) 
       clip.do_low = true; 
@@ -163,7 +163,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
       //By default, set the low value for this weight to 0 and run on low clipping
       clip.activated = true; 
       clip.low = 0.0; 
-      clip.tol = 1e-15; 
+      clip.tol = 1e-10; 
       clip.do_low = true; 
 
     } else { 
