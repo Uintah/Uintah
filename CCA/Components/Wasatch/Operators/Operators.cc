@@ -41,28 +41,28 @@ namespace Wasatch{
   
 #define BUILD_UPWIND( VOLT )                                            \
 {                                                                     \
-typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;         \
-typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;         \
-typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;         \
-opDB.register_new_operator<OpX>( scinew OpX() );                    \
-opDB.register_new_operator<OpY>( scinew OpY() );                    \
-opDB.register_new_operator<OpZ>( scinew OpZ() );                    \
+  typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;         \
+  typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;         \
+  typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;         \
+  opDB.register_new_operator<OpX>( scinew OpX() );                    \
+  opDB.register_new_operator<OpY>( scinew OpY() );                    \
+  opDB.register_new_operator<OpZ>( scinew OpZ() );                    \
 }
   
 #define BUILD_UPWIND_LIMITER( VOLT )                                    \
 {                                                                     \
-typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;    \
-typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;    \
-typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;    \
-opDB.register_new_operator<OpX>( scinew OpX(dim,bcPlus,hasMinusBoundary) );          \
-opDB.register_new_operator<OpY>( scinew OpY(dim,bcPlus,hasMinusBoundary) );          \
-opDB.register_new_operator<OpZ>( scinew OpZ(dim,bcPlus,hasMinusBoundary) );          \
+  typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;    \
+  typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;    \
+  typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;    \
+  opDB.register_new_operator<OpX>( scinew OpX(dim,bcPlus,bcMinus) );          \
+  opDB.register_new_operator<OpY>( scinew OpY(dim,bcPlus,bcMinus) );          \
+  opDB.register_new_operator<OpZ>( scinew OpZ(dim,bcPlus,bcMinus) );          \
 }
   
 #define BUILD_EXTRAPOLANT( VOLT )                    \
 {                                                    \
-typedef Extrapolant<VOLT> OpVol;                     \
-opDB.register_new_operator<OpVol>( scinew OpVol() ); \
+  typedef Extrapolant<VOLT> OpVol;                     \
+  opDB.register_new_operator<OpVol>( scinew OpVol(bcMinus, bcPlus) ); \
 }
 
   
@@ -85,10 +85,10 @@ opDB.register_new_operator<OpVol>( scinew OpVol() ); \
     bcPlus[2] = patch.getBCType(Uintah::Patch::zplus) != Uintah::Patch::Neighbor;
     
     // check if there are any physical boundaries present on the minus side of the patch
-    std::vector<bool> hasMinusBoundary(3,false);
-    hasMinusBoundary[0] = patch.getBCType(Uintah::Patch::xminus) != Uintah::Patch::Neighbor;
-    hasMinusBoundary[1] = patch.getBCType(Uintah::Patch::yminus) != Uintah::Patch::Neighbor;
-    hasMinusBoundary[2] = patch.getBCType(Uintah::Patch::zminus) != Uintah::Patch::Neighbor;
+    std::vector<bool> bcMinus(3,false);
+    bcMinus[0] = patch.getBCType(Uintah::Patch::xminus) != Uintah::Patch::Neighbor;
+    bcMinus[1] = patch.getBCType(Uintah::Patch::yminus) != Uintah::Patch::Neighbor;
+    bcMinus[2] = patch.getBCType(Uintah::Patch::zminus) != Uintah::Patch::Neighbor;
     
     // build all of the stencils defined in SpatialOps
     SpatialOps::structured::build_stencils( udim[0], udim[1], udim[2],

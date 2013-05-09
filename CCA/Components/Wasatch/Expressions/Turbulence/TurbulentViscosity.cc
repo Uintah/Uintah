@@ -147,7 +147,6 @@ evaluate()
       break;
 
     case Wasatch::DYNAMIC:
-//      result <<= 0.0;
       // tsaad.Note: When the dynamic model is used, the DynamicSmagorinskyCoefficient expression calculates both the coefficient and the StrainTensorMagnitude = sqrt(2*Sij*Sij). Unlike the StrainTensorMagnitude.cc Expression, which calculates SijSij instead. That's why for the constant smagorinsky case, we have take the sqrt() of that quanitity. In the Dynamic model case, we don't.
       result <<= *rho_ * *dynCoef_ * *strTsrSq_;//*rho_ * *dynCoef_ * sqrt(2.0 * *strTsrSq_);
       break;
@@ -174,7 +173,7 @@ evaluate()
       
   }
 
-  // extrapolate from interior cells to ptach boundaries (both process and physical boundaries):
+  // extrapolate from interior cells to ptach boundaries (both process and physical boundaries. the latter is optional):
   // this is necessary to avoid problems when calculating the stress tensor where
   // a viscosity interpolant is needed. If problems arise due to this extrapolation,
   // you should consider performing an MPI communication on the turbulent viscosity
@@ -183,5 +182,4 @@ evaluate()
   // Based on data that I collected, an MPI communication costs about twice as
   // much as the extrapolation in terms of speedup.
   exOp_->apply_to_field(result);
-  
 }
