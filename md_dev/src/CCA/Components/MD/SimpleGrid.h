@@ -30,7 +30,7 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Util/Assert.h>
 
-#include <sci_defs/fftw_defs.h>
+#include <complex>
 
 namespace Uintah {
 
@@ -108,10 +108,6 @@ template<typename T> class SimpleGrid {
     {
       return d_gridOffset;
     }
-
-    /**
-     *
-     */
 
     /**
      * @brief Returns prime (non-ghost only) extents of this SimpleGrid.
@@ -283,8 +279,8 @@ template<typename T> class SimpleGrid {
       for (int x = 0; x < d_gridExtents.x(); ++x) {
         for (int y = 0; y < d_gridExtents.y(); ++y) {
           for (int z = 0; z < d_gridExtents.z(); ++z) {
-            // FIXME / is not well defined for vector/vector
-//            d_charges(x, y, z) /= gridIn.d_charges(x, y, z);
+//            // FIXME / is not well defined for vector/vector
+//            d_values(x, y, z) /= gridIn.d_values(x, y, z);
           }
         }
       }

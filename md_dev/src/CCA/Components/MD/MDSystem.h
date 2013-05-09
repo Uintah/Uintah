@@ -177,6 +177,11 @@ class MDSystem {
       return d_cellVolume;
     }
 
+    /**
+     * @brief
+     * @param
+     * @return
+     */
     inline IntVector getCellExtent() const
     {
       return d_totalCellExtent;
@@ -184,19 +189,19 @@ class MDSystem {
 
   private:
 
-    double d_volume;            //!< Total MD system unit cell volume
-    Vector d_pressure;          //!< Total MD system pressure
-    double d_temperature;       //!< Total MD system temperature
-    int d_numGhostCells;        //!< Number of ghost cells used, a function of cutoffRadius and cell size
-    int d_maxPolarizableIterations;        //!<
-    bool d_orthorhombic;        //!< Whether or not the MD system is using orthorhombic coordinates
-    bool d_newBox;           //!< Whether or not the system size has changed... create a new box
+    double d_volume;                  //!< Total MD system unit cell volume
+    Vector d_pressure;                //!< Total MD system pressure
+    double d_temperature;             //!< Total MD system temperature
+    int d_numGhostCells;              //!< Number of ghost cells used, a function of cutoffRadius and cell size
+    int d_maxPolarizableIterations;   //!<
+    bool d_orthorhombic;              //!< Whether or not the MD system is using orthorhombic coordinates
+    bool d_newBox;                    //!< Whether or not the system size has changed... create a new box
 
-    Matrix3 d_unitCell;         //!< MD system unit cell
-    Matrix3 d_inverseCell;      //!< MD system inverse unit cell
-    double d_cellVolume;       //!< Cell volume; calculate internally, return at request for efficiency
+    Matrix3 d_unitCell;               //!< MD system unit cell
+    Matrix3 d_inverseCell;            //!< MD system inverse unit cell
+    double d_cellVolume;              //!< Cell volume; calculate internally, return at request for efficiency
 
-    IntVector d_totalCellExtent;  //!< Number of sub-cells in the global unit cell
+    IntVector d_totalCellExtent;      //!< Number of sub-cells in the global unit cell
 
     MDSystem(const MDSystem& system);
     MDSystem& operator=(const MDSystem& system);

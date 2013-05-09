@@ -27,11 +27,6 @@
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Variables/SoleVariable.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <complex>
 
 using namespace Uintah;
 
@@ -84,10 +79,8 @@ MDLabel::MDLabel()
 
   ///////////////////////////////////////////////////////////////////////////
   // Reduction Variables - Electrostatic
-
   spmeFourierEnergyLabel = VarLabel::create("spmeFourierEnergy", sum_vartype::getTypeDescription());
   spmeFourierStressLabel = VarLabel::create("spmeFourierStress", matrix_sum::getTypeDescription());
-  //!FIXME --> Do we need to build a sum type for the Matrix3 type that spmeFourierStressLabel should store?
 }
 
 MDLabel::~MDLabel()

@@ -27,9 +27,8 @@
 #include <Core/Geometry/Vector.h>
 
 #include <sci_values.h>
-#include <sci_defs/fftw_defs.h>
 
-using namespace SCIRun;
+#include <complex>
 
 namespace Uintah {
 
@@ -133,6 +132,28 @@ std::ostream& operator<<(std::ostream& out,
 {
   return sg.print(out);
 }
+
+
+//MPI_Datatype makeMPI_Matrix3()
+//{
+//  ASSERTEQ(sizeof(Matrix3), sizeof(double) * 9);
+//
+//  MPI_Datatype mpitype;
+//  MPI_Type_vector(1, 9, 9, MPI_DOUBLE, &mpitype);
+//  MPI_Type_commit(&mpitype);
+//
+//  return mpitype;
+//}
+//
+//const TypeDescription* fun_getTypeDescription(SimpleGrid<std::complex<double> >*)
+//{
+//  static TypeDescription* td = 0;
+//  if (!td) {
+//    td = scinew TypeDescription(TypeDescription::Matrix3, "Matrix3", true, &makeMPI_Matrix3);
+//  }
+//  return td;
+//}
+
 
 // Explicit template instantiations:
 template class SimpleGrid<dblcomplex> ;

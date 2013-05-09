@@ -40,14 +40,11 @@
 
 #include <iostream>
 #include <stdio.h>
-
-#include <sci_defs/fftw_defs.h>
+#include <complex>
 
 namespace Uintah {
 
 using namespace SCIRun;
-
-typedef std::complex<double> dblcomplex;
 
 template<class T> class SPMEArray3 {
 
