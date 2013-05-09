@@ -29,15 +29,22 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <spatialops/SpatialOpsDefs.h>
 #include <spatialops/structured/stencil/Stencil2.h>
 
 //--------------------------------------------------------------------
 
 template< typename FieldT >
 Extrapolant<FieldT>::
-Extrapolant()
-{}
+Extrapolant(const std::vector<bool>& bcMinus,
+            const std::vector<bool>& bcPlus) :
+bcMinus_ (bcMinus),
+bcPlus_  (bcPlus )
+{
+  using namespace SpatialOps::structured;
+  unitNormal_.push_back(IntVec(1,0,0));
+  unitNormal_.push_back(IntVec(0,1,0));
+  unitNormal_.push_back(IntVec(0,0,1));
+}
 
 //--------------------------------------------------------------------
 
@@ -51,26 +58,23 @@ Extrapolant<FieldT>::
 template< typename FieldT >
 void
 Extrapolant<FieldT>::
-apply_to_field(FieldT& src )
+apply_to_field( FieldT& src, const bool skipBCs )
 {
   // extrapolate from interior cells:
   using namespace SpatialOps;
   using namespace SpatialOps::structured;
   
   const MemoryWindow& ws = src.window_with_ghost();
-  
-  std::vector<IntVec> ijkShift;
-  ijkShift.push_back(IntVec(1,0,0));
-  ijkShift.push_back(IntVec(0,1,0));
-  ijkShift.push_back(IntVec(0,0,1));
-  
+    
   int pm[2]={1,-1}; // plus or minus face
   int zo[2]={0,1};  // zero and one
-  
-  for (int face=0; face<3; face++) {
-    for (int direc=0; direc<2; direc++) {
-      const IntVec extent = ws.extent() - ijkShift[face]*ws.glob_dim() + ijkShift[face];
-      const IntVec baseOffset = ws.offset() + (ijkShift[face]*ws.glob_dim() - ijkShift[face] )* zo[direc];
+  bool skipBCFace;
+  for (int face=0; face<3; face++) { // x, y, z faces
+    for (int direc=0; direc<2; direc++) { // minus, plus direction
+      skipBCFace = (direc == 0) ? bcMinus_[face] : bcPlus_[face]; // is the current face a physical boundary?
+      if (skipBCFace && skipBCs) continue;
+      const IntVec extent = ws.extent() - unitNormal_[face]*ws.glob_dim() + unitNormal_[face];
+      const IntVec baseOffset = ws.offset() + (unitNormal_[face]*ws.glob_dim() - unitNormal_[face] )* zo[direc];
       
       const MemoryWindow wd( ws.glob_dim(),
                             baseOffset,
@@ -78,12 +82,12 @@ apply_to_field(FieldT& src )
                             ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
       
       const MemoryWindow ws1( ws.glob_dim(),
-                             baseOffset + ijkShift[face] * pm[direc],
+                             baseOffset + unitNormal_[face] * pm[direc],
                              extent,
                              ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
       
       const MemoryWindow ws2( ws.glob_dim(),
-                             baseOffset  + ijkShift[face] * pm[direc] * 2,
+                             baseOffset  + unitNormal_[face] * pm[direc] * 2,
                              extent,
                              ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
       

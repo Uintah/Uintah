@@ -36,6 +36,8 @@
  --------------------------------------------------------------------------------------------------------------*/
 
 #include <vector>
+#include <spatialops/SpatialOpsDefs.h>
+#include <spatialops/structured/stencil/Stencil2.h>
 
 /**
  *  \class     Extrapolant
@@ -50,13 +52,17 @@
 
 template < typename FieldT >
 class Extrapolant {
+  const std::vector<bool> bcMinus_;
+  const std::vector<bool> bcPlus_;
+  std::vector<SpatialOps::structured::IntVec> unitNormal_;
 
 public:
 
   /**
    *  \brief Constructor for Extrapolant.
    */
-  Extrapolant();
+  Extrapolant( const std::vector<bool>& bcMinus,
+               const std::vector<bool>& bcPlus );
 
   /**
    *  \brief Destructor for Extrapolant.
@@ -69,9 +75,12 @@ public:
    *  \param src: A reference to the field on which extrapolation is needed.
    Extrapolated data is stored back in the field itself - no need for source
    and destination fields.
+   *  \param skipBCs: A boolean flag that allows one to skip extrapolation at 
+   physical boundaries.
    *
    */
-  void apply_to_field(FieldT& src );
+  void apply_to_field( FieldT& src,
+                       const bool skipBCs=false);
 
 };
 
