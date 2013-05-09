@@ -49,7 +49,7 @@
    use spline2
 
    implicit none
-   real(8) x,y,z
+   real(8) x,y,z,total
    integer ox,oy,oz
    integer i
       ox = order_spline_xx ; oy = order_spline_yy ; oz = order_spline_zz
@@ -72,6 +72,8 @@
         call real_spline2_and_deriv(oz,z,spline2_REAL_pp_z(i,1:oz),spline2_REAL_dd_z(i,1:oz))
       enddo
       endif
+
+
    end subroutine get_ALL_spline2_coef_REAL
 
    subroutine get_pp_spline2_coef_REAL ! does it with respect to zzz as real coordinate rather than ....
@@ -208,6 +210,7 @@
               i_d2 = 1.0d0/d2
               exp_fct = dexp(expfct*d2) * i_d2
 !              qre = real(qqq1(i_index),kind=8) ;    qim=dimag(qqq1(i_index))
+              !spline2_CMPLX are B, C products
               spline_product = spline2_CMPLX_xx(jx)*spline2_CMPLX_yy(jy)*spline2_CMPLX_zz(jz)
               vterm =  exp_fct / (Volume*spline_product) * Pi2
               En = vterm*real(qqq1(i_index)*conjg(qqq1(i_index)),kind=8)  !*(qre*qre+qim*qim)
@@ -432,6 +435,7 @@
     real(8), save :: eta
     logical l_i
     integer kx1,ky1,kz1
+    real(8) ChargeTot
 
     real(8) rec_xx,rec_xy,rec_yx,rec_yy,rec_zz,d2,kkx,kky,kkz,tmp
 
@@ -441,19 +445,22 @@
 
     do i = 1,Natoms
       ci = all_charges(i)
-      cox(1:order_spline_xx) = spline2_REAL_pp_x(i,1:order_spline_xx)
-      coy(1:order_spline_yy) = spline2_REAL_pp_y(i,1:order_spline_yy)
-      coz(1:order_spline_zz) = spline2_REAL_pp_z(i,1:order_spline_zz)
+      write(17,'(I5,3X,F10.5)') i,ci
+      cox(1:order_spline_xx) = spline2_REAL_pp_x(i,1:order_spline_xx) !x spline coefficient
+      coy(1:order_spline_yy) = spline2_REAL_pp_y(i,1:order_spline_yy) !y spline coefficient
+      coz(1:order_spline_zz) = spline2_REAL_pp_z(i,1:order_spline_zz) !z spline coefficient
 
+      ! get K grid location of atom (?)
+      ! te(j) is the e component nearest grid location in the Ke grid for the jth particle
       nx = int(tx(i)) - order_spline_xx
       ny = int(ty(i)) - order_spline_yy
       nz = int(tz(i)) - order_spline_zz
 !print*, i,' t=',tx(i),ty(i),tz(i)
 !read(*,*)
       iz = nz
-      do jz = 0, order_spline_zz-1
+      do jz = 0, order_spline_zz-1  !iterate through z direction spline
       iz = iz + 1
-      if (iz < 0) then
+      if (iz < 0) then  ! wrapping across boundary conditions
          kz = iz + nfftz
       else
          kz = iz
@@ -461,11 +468,11 @@
 !ii_zz=int(tz(i))-jz+2 -1
 !if(ii_zz.gt.nfftz) ii_zz=ii_zz-nfftz  ;  if(ii_zz.lt.1)ii_zz=ii_zz+nfftz
 !kz = ii_zz-1
-      tmpqz = coz(jz+1)*ci
+      tmpqz = coz(jz+1)*ci !z multiplied charge component
       iy = ny
-      do jy = 0, order_spline_yy-1
+      do jy = 0, order_spline_yy-1 !iterate through y direction
         iy = iy + 1
-        if (iy < 0) then
+        if (iy < 0) then ! wrapping across boundary conditions
           ky = iy + nffty
         else
           ky = iy
@@ -473,11 +480,11 @@
 !ii_yy=int(ty(i))-jy+2 -1
 !if(ii_yy.gt.nffty) ii_yy=ii_yy-nffty   ;  if(ii_yy.lt.1)ii_yy=ii_yy+nffty
 !ky = ii_yy-1
-        tmpqyz = tmpqz * coy(jy+1)
+        tmpqyz = tmpqz * coy(jy+1) !yz multiplied charge component
         ix = nx
-        do jx = 0, order_spline_xx-1
+        do jx = 0, order_spline_xx-1 !iterate through x direction
           ix = ix + 1
-          if (ix < 0) then
+          if (ix < 0) then  !wrapping across boundary conditions
              kx = ix + nfftx
           else
              kx = ix
@@ -492,7 +499,17 @@
         enddo ! jy
       enddo ! jz
     enddo ! i
-
+    ChargeTot=0.0d0
+    do kx=0,nfftx-1
+      do ky=0,nffty-1
+        do kz=0,nfftz-1
+          i_adress = (ky+kz*nffty)*nfftx + kx + 1
+          write(16,'(A3,I3,A2,I3,A2,I3,A3,F10.6)') "Q ( ",kx,", ",ky,", ",kz,"): ",qqq1_Re(i_adress)
+          ChargeTot = ChargeTot + qqq1_Re(i_adress)
+        enddo
+      enddo
+    enddo
+    write(16,*) 'Total charge seen: ', ChargeTot
     qqq1 = cmplx(qqq1_Re,0.0d0,kind=8)
 
     

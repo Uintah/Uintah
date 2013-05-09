@@ -135,7 +135,7 @@ module Ewald_data
    integer :: n_grid_zz_k0 = 50
    real(8) h_step_ewald2D 
    real(8) :: h_cut_off2D = 15.0d0 ! for slow 2D Ewald. It is in units of (2Pi/box_zz)
-   real(8) :: ewald_alpha = 0.25d0 ! default value
+   real(8) :: ewald_alpha = 0.25d0 ! default value - Ewaald splitting parameter
    real(8),allocatable :: ewald_beta(:), ewald_gamma(:,:), ewald_eta(:,:)
    real(8)  q_distrib_eta  ! for distributed charges
    real(8) ewald_error
