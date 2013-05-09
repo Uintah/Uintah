@@ -36,8 +36,18 @@
  --------------------------------------------------------------------------------------------------------------*/
 
 #include <vector>
+#include <limits>
+
 #include <spatialops/SpatialOpsDefs.h>
 #include <spatialops/structured/stencil/Stencil2.h>
+
+#ifndef DBLMAX
+#define DBLMAX std::numeric_limits<double>::max()
+#endif
+
+#ifndef DBLMIN
+#define DBLMIN -std::numeric_limits<double>::min()
+#endif
 
 /**
  *  \class     Extrapolant
@@ -80,6 +90,8 @@ public:
    *
    */
   void apply_to_field( FieldT& src,
+                       const double min=DBLMIN,
+                       const double max=DBLMAX,
                        const bool skipBCs=false);
 
 };

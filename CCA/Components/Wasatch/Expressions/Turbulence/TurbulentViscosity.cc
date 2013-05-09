@@ -181,5 +181,11 @@ evaluate()
   // in transport/MomentumTransportEquation.cc
   // Based on data that I collected, an MPI communication costs about twice as
   // much as the extrapolation in terms of speedup.
+  // You may also need to skip extrapolation at physical boundaries. This is the
+  // case when using Warches. With regular extrapolation, you may end up with
+  // a negative value for the turbulent viscosity in the extra cell if the
+  // first interior cell value is zero. To avoid this, you can turn on the "skipBCs" flag
+  // when using apply_to_field, or specify a min value for the extraplated cells.
   exOp_->apply_to_field(result);
+//  exOp_->apply_to_field(result,0.0);
 }
