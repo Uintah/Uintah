@@ -101,7 +101,6 @@ apply_to_field( FieldT& src,
       d <<= 2.0 * s1 - s2;
       
       if (doMinMaxCheck) {
-        std::cout << "doing min max check \n";
         d <<= cond( d < min, min )
                   ( d > max, max )
                   ( d );
