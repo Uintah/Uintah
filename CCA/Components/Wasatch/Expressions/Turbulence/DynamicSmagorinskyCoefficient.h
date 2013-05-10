@@ -23,6 +23,7 @@ class DynamicSmagorinskyCoefficient
 {
   const Expr::Tag rhot_;
   const bool isConstDensity_;
+  const bool doExtraFiltering_; // experimental
   
   typedef  SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Filter, SVolField, SVolField >::type BoxFilterT;
   typedef  SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Filter, XVolField, XVolField >::type XBoxFilterT;

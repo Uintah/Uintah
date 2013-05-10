@@ -30,7 +30,7 @@ for grid in ${res[@]}
 				sed 's@inputs/Wasatch/TurbulenceVerification/@@g' $var > $modvar
         echo -------------------------------------------				
 				echo 'running' $modvar
-				mpirun -np 8 $sus $modvar > $modvar.log
+				time mpirun -np 8 $sus $modvar > $modvar.log
 				rm $modvar
 				echo 'Extracting Data for' $var
 				extractDataScript='lineextract-wasatch-'$modRes.sh
