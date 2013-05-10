@@ -98,10 +98,11 @@ apply_to_field( const SrcT& src, DestT& dest )
   // to work ONLY with SVol as source and X,Y,ZVol for destination fields.
   // Although the destination field is of a "different" type, we create a window
   // that is the "same size" as the source field to allow us to use a nebo assignment
-  SrcT    d( wd, &dest[0], ExternalStorage );
-  SrcT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
-  SrcT    s1( ws1, &src[0], ExternalStorage );
-  SrcT    s2( ws2, &src[0], ExternalStorage );
+  SrcT     d( wd,  dest.field_values(), ExternalStorage ); // NOTE here how we are crating a SrcT field from a DesT one.
+  //This is a trick because we know that the fields in this case are of the same size
+  SrcT  aVel( wd,  const_cast<DestT*>(advectiveVelocity_)->field_values(), ExternalStorage );
+  SrcT    s1( ws1, const_cast<SrcT&>(src).field_values(), ExternalStorage );
+  SrcT    s2( ws2, const_cast<SrcT&>(src).field_values(), ExternalStorage );
 
   d <<= cond( aVel > 0.0, s1  )
             ( aVel < 0.0, s2  )
