@@ -59,7 +59,8 @@ DynamicSmagorinskyCoefficient( const Expr::Tag& vel1Tag,
                                const bool isConstDensity )
 : StrainTensorBase(vel1Tag,vel2Tag,vel3Tag),
   rhot_          ( rhoTag       ),
-  isConstDensity_(isConstDensity)
+  isConstDensity_(isConstDensity),
+  doExtraFiltering_(false)
 {
 //  std::cout << "is constant density ? = " << isConstDensity << std::endl;
   // Disallow using the dynamic model in 1 or 2 dimensions
@@ -135,6 +136,8 @@ evaluate()
   // strTsrMag <<= 0.0; // No need to initialize this. There is a function call downstream that will initialize it
   dynSmagConst <<= 0.0;
   
+  const double eps = std::numeric_limits<double>::epsilon();
+  
   // NOTE: hats denote test filetered. u is grid filtered
   
   //----------------------------------------------------------------------------
@@ -144,8 +147,10 @@ evaluate()
   SpatFldPtr<SVolField> invRhoHat = SpatialFieldStore::get<SVolField>( dynSmagConst );
   if (!isConstDensity_) {
     boxFilterOp_->apply_to_field( *rho_, *rhoHat );
-    exOp_->apply_to_field(*rhoHat);
-    *invRhoHat <<= 1.0/ *rhoHat;
+    // pay attention to this. may require fine tuning.
+    exOp_->apply_to_field(*rhoHat, 0.0);
+    *invRhoHat <<= cond( *rhoHat<=2*eps, 1.0/ *rho_ )
+                       ( 1.0/ *rhoHat );
   }
   
   //----------------------------------------------------------------------------
@@ -206,16 +211,13 @@ evaluate()
   // uu = uiujhat[0][0], uv = uiujhat[0][1], uw = uiujhat[0][2]
   // vv = uiujhat[1][0], vw = uiujhat[1][1]
   // ww = uiujhat[2][0]  
-  SpatFldPtr<SVolField> tmph   = SpatialFieldStore::get<SVolField>( dynSmagConst );
+  SpatFldPtr<SVolField> tmp   = SpatialFieldStore::get<SVolField>( dynSmagConst );
   int jmin=0;
   for (int i=0; i<3; i++) {
     for (int j=jmin; j<3; j++) {
-      if (isConstDensity_) {
-        *tmph <<= *velcc[i] * *velcc[j];
-      } else {
-        *tmph <<= *rho_ * *velcc[i] * *velcc[j];
-      }
-      boxFilterOp_->apply_to_field(*tmph, *uiujhat[i][j - jmin]);
+      *tmp <<= *velcc[i] * *velcc[j];
+      //exOp_->apply_to_field(*tmp); // we may need this...
+      boxFilterOp_->apply_to_field(*tmp, *uiujhat[i][j - jmin]);
     }
     jmin++;
   }
@@ -247,21 +249,21 @@ evaluate()
   // Shat33 = Shatij[2][0]
   calculate_strain_tensor_components(strTsrMag,*uhat,*vhat,*what,*Shatij[0][0],*Shatij[0][1],*Shatij[0][2],*Shatij[1][0],*Shatij[1][1],*Shatij[2][0]);
   
+  if(!isConstDensity_) strTsrMag <<= *rhoHat * strTsrMag;
   jmin=0;
   for (int i=0; i<3; i++) {
     for (int j=jmin; j<3; j++) {
       // now multiply S by Filter{S_ij}
       *Shatij[i][j-jmin] <<= strTsrMag * *Shatij[i][j-jmin];
-      if(!isConstDensity_) *Shatij[i][j-jmin] <<= *rhoHat * *Shatij[i][j-jmin];
     }
     jmin++;
   }
-  // we now have: Shatij = S * Filter(Sij). This is the second term in the Mij tensor
+  // we now have: Shatij = Filter(rho) * Filter(S) * Filter(Sij). This is the second term in the Mij tensor
   
   //----------------------------------------------------------------------------
   // CALCULATE grid-filtered strain tensor
   //----------------------------------------------------------------------------
-  // NOTE: This should be done AFTER the test-filtered rate of strain because we
+  // NOTE: This STEP should be done AFTER the test-filtered rate of strain because we
   // are saving the grid-filtered StrainTensorMagnitude as a computed field for
   // this expression BUT we're using the SAME field_ref (i.e. strTsrMag) for both
   // quantities to reduce memory usage.
@@ -272,15 +274,16 @@ evaluate()
   // S33 = Sij[2][0]
   ALLOCATE_TENSOR_FIELD(Sij);
   calculate_strain_tensor_components(strTsrMag,*vel1_,*vel2_,*vel3_,*Sij[0][0],*Sij[0][1],*Sij[0][2],*Sij[1][0],*Sij[1][1],*Sij[2][0]);
-  exOp_->apply_to_field(strTsrMag);
+  exOp_->apply_to_field(strTsrMag, 0.0);
+  
   jmin=0;
   for (int i=0; i<3; i++) {
     for (int j=jmin; j<3; j++) {      
       exOp_->apply_to_field(*Sij[i][j-jmin]);
       // now multiply \bar{S} by \bar{S_ij} and test filter them
-      *tmph <<= strTsrMag * *Sij[i][j-jmin];
-      if (!isConstDensity_) *tmph <<= *rho_ * *tmph;
-      boxFilterOp_->apply_to_field(*tmph, *Sij[i][j-jmin]);
+      *tmp <<= strTsrMag * *Sij[i][j-jmin];
+      if (!isConstDensity_) *tmp <<= *rho_ * *tmp;
+      boxFilterOp_->apply_to_field(*tmp, *Sij[i][j-jmin]);
     }
     jmin++;
   }
@@ -315,8 +318,8 @@ evaluate()
   // CALCULATE the dynamic constant!
   //----------------------------------------------------------------------------
   SpatFldPtr<SVolField> LM = SpatialFieldStore::get<SVolField>( dynSmagConst );
-//  *LM <<= 0.0;
-//  *LM <<= *L11 * *M11 + *L22 * *M22 + *L33 * *M33 + 2.0 * (*L12 * *M12 + *L13 * *M13  + *L23 * *M23);
+  //  *LM <<= 0.0;
+  //  *LM = *L11 * *M11 + *L22 * *M22 + *L33 * *M33 + 2.0 * (*L12 * *M12 + *L13 * *M13  + *L23 * *M23);
   *LM <<=   *Lij[0][0] * *Mij[0][0] // L11 * M11
           + *Lij[1][0] * *Mij[1][0] // L22 * M22
           + *Lij[2][0] * *Mij[2][0] // L33 * M33
@@ -328,13 +331,15 @@ evaluate()
   // filtering the numerator and denominator here requires an MPI communication
   // at patch boundaries for it to work. We could potentially split this expression
   // and cleave things... but I don't think this is worth the effort at all...
-//  *tmp<<= 0.0;
-//  BoxFilterOp_->apply_to_field(*num,*tmp);
-//  *num <<= *tmp;
+  if (doExtraFiltering_) {
+    exOp_->apply_to_field(*LM, 0.0);
+    boxFilterOp_->apply_to_field(*LM,*tmp);
+    *LM <<= *tmp;
+  }
   
   SpatFldPtr<SVolField> MM = SpatialFieldStore::get<SVolField>( dynSmagConst );
-//  *MM <<= 0.0;
-//  *MM <<= *M11 * *M11 + *M22 * *M22 + *M33 * *M33 + 2.0 * (*M12 * *M12 + *M13 * *M13 + *M23 * *M23);
+  //  *MM <<= 0.0;
+  //  *MM = *M11 * *M11 + *M22 * *M22 + *M33 * *M33 + 2.0 * (*M12 * *M12 + *M13 * *M13 + *M23 * *M23);
   *MM <<=   *Mij[0][0] * *Mij[0][0] // M11 * M11
           + *Mij[1][0] * *Mij[1][0] // M22 * M22
           + *Mij[2][0] * *Mij[2][0] // M33 * M33
@@ -342,17 +347,18 @@ evaluate()
                    + *Mij[0][2] * *Mij[0][2] // M13 * M13
                    + *Mij[1][1] * *Mij[1][1] // M23 * M23
                    );
-  
-//  *tmp<<= 0.0;
-//  BoxFilterOp_->apply_to_field(*denom,*tmp);
-//  *denom <<= *tmp;
+
+  if (doExtraFiltering_) {
+    exOp_->apply_to_field(*MM, 0.0);
+    boxFilterOp_->apply_to_field(*MM,*tmp);
+    *MM <<= *tmp;
+  }
   
   // PREVENT BACKSCATTER, i.e. c_smag >= 0.0  : given that MM (denominator) is positive,
   // we only need to check when LM < 0.0. If LM < 0, then set the dynamic coefficient to 0
   // PREVENT NANs: in the event that MM = 0, we can safely set the dynamic constant
   // to zero since this means that our test and grid filtered fields are equally
   // resolved (within the gradient diffusion modeling assumption).
-  const double eps = std::numeric_limits<double>::epsilon();
   dynSmagConst <<= cond( *LM < 0.0 || *MM <= 2.0*eps , 0.0 )
                        ( 0.5 * *LM / *MM );
 }

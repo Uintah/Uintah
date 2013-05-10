@@ -186,6 +186,5 @@ evaluate()
   // a negative value for the turbulent viscosity in the extra cell if the
   // first interior cell value is zero. To avoid this, you can turn on the "skipBCs" flag
   // when using apply_to_field, or specify a min value for the extraplated cells.
-  exOp_->apply_to_field(result);
-//  exOp_->apply_to_field(result,0.0);
+  exOp_->apply_to_field(result,0.0);
 }

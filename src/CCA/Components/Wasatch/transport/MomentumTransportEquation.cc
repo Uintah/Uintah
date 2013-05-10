@@ -176,6 +176,8 @@ namespace Wasatch{
       // of the evaluate method.
       typedef TurbulentViscosity::Builder TurbViscT;
       factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
+      //const Expr::ExpressionID turbViscID = factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
+      //factory.cleave_from_parents(turbViscID);
     }
   }
   
