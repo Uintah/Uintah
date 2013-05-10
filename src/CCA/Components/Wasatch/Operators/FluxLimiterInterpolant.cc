@@ -207,9 +207,9 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
                         destExtent,
                         wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
   
-  PhiFaceT    d( wd, &dest[0], ExternalStorage  );
-  PhiFaceT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
-  
+  PhiFaceT    d( wd, dest.field_values(), ExternalStorage );
+  PhiFaceT aVel( wd,  const_cast<PhiFaceT*>(advectiveVelocity_)->field_values(), ExternalStorage );
+
   typename PhiFaceT::iterator      id   = d.begin();
   typename PhiFaceT::iterator      ide  = d.end();
   typename PhiFaceT::iterator      iav  = aVel.begin();
@@ -244,7 +244,9 @@ build_src_iterators( const PhiVolT& src ) const {
                                wsrc.offset() + unitNormal_*i,
                                wsrc.extent() - unitNormal_*3,
                                wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
-    PhiVolT field(srcwin,src);
+
+    PhiVolT field(srcwin,const_cast<PhiVolT&>(src).field_values(), ExternalStorage);
+
     srcIters_.push_back(field.begin());
   }
 }
@@ -305,14 +307,11 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
                            extent,
                            wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
     
-    
-    
-    PhiFaceT    d( wd, &dest[0], ExternalStorage );
-    PhiFaceT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
-    PhiVolT    s1( ws1, &src[0], ExternalStorage );
-    PhiVolT    s2( ws2, &src[0], ExternalStorage );
-    PhiVolT    s3( ws3, &src[0], ExternalStorage );
-    
+    PhiFaceT    d( wd, dest.field_values(), ExternalStorage );
+    PhiFaceT aVel( wd,  const_cast<PhiFaceT*>(advectiveVelocity_)->field_values(), ExternalStorage );
+    PhiVolT    s1( ws1, const_cast<PhiVolT&>(src).field_values(), ExternalStorage );
+    PhiVolT    s2( ws2, const_cast<PhiVolT&>(src).field_values(), ExternalStorage );
+    PhiVolT    s3( ws3, const_cast<PhiVolT&>(src).field_values(), ExternalStorage );
     
     typename PhiFaceT::iterator      id  = d .begin();
     typename PhiFaceT::iterator      ide = d .end();
@@ -343,9 +342,9 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
                         destExtent,
                         wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
 
-  PhiFaceT    d( wd, &dest[0], ExternalStorage  );
-  PhiFaceT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
-  
+  PhiFaceT    d( wd, dest.field_values(), ExternalStorage );
+  PhiFaceT aVel( wd,  const_cast<PhiFaceT*>(advectiveVelocity_)->field_values(), ExternalStorage );
+
   typename PhiFaceT::iterator      id   = d.begin();
   typename PhiFaceT::iterator      ide  = d.end();
   typename PhiFaceT::iterator      iav  = aVel.begin();
