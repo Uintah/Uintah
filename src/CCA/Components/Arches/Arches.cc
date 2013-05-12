@@ -433,7 +433,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   Expr::Tag densityTag = Expr::Tag();
   
   typedef Expr::PlaceHolder<SVolField>  DensityT;
-  Expr::Tag densityTag = Wasatch::parse_nametag( densityParams->findBlock("NameTag") );
+  densityTag = Wasatch::parse_nametag( densityParams->findBlock("NameTag") );
     
   if( !(solngh->exprFactory->have_entry( densityTag )) ) {
     // register placeholder expressions for density field
