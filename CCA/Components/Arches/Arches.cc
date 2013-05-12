@@ -105,6 +105,7 @@
 #include <expression/ExpressionFactory.h>
 //
 #include <CCA/Components/Wasatch/Wasatch.h>
+#include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/transport/TransportEquation.h>
@@ -423,18 +424,23 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   //____________________________________________________________________________
-  // Register dependent (tabular sense) variables
+  // Register density - Wasatch MUST specify the name of the density that ARCHES is
+  // pulling out from tables
   //
-  std::string densityName = "densityCP"; //***HACK***
+  Uintah::ProblemSpecP densityParams = params->findBlock("Wasatch")->findBlock("Density");
+  bool isConstDensity = false;
+  densityParams->get("IsConstant",isConstDensity);
+  Expr::Tag densityTag = Expr::Tag();
+  
   typedef Expr::PlaceHolder<SVolField>  DensityT;
-  const Expr::Tag densityTag( densityName, Expr::STATE_NONE );
+  Expr::Tag densityTag = Wasatch::parse_nametag( densityParams->findBlock("NameTag") );
+    
   if( !(solngh->exprFactory->have_entry( densityTag )) ) {
-    // register placeholder expressions for density field: "density"
+    // register placeholder expressions for density field
     solngh->exprFactory->register_expression( new DensityT::Builder(densityTag) );
   }
   
   if( !(initgh->exprFactory->have_entry( densityTag )) ) {
-    // register placeholder expressions for density field: "density"
     initgh->exprFactory->register_expression( new DensityT::Builder(densityTag) );
   }
   
@@ -453,7 +459,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     velTags.push_back(xVelTagN);
     velTags.push_back(yVelTagN);
     velTags.push_back(zVelTagN);    
-    Wasatch::register_turbulence_expressions(turbParams,*solngh->exprFactory,velTags,densityTag);
+    Wasatch::register_turbulence_expressions(turbParams,*solngh->exprFactory,velTags,densityTag, isConstDensity);
     Expr::TagList turbulenceExpressions;
     turbulenceExpressions.push_back(Wasatch::TagNames::self().turbulentviscosity);
     force_expressions_on_graph(turbulenceExpressions, solngh);
