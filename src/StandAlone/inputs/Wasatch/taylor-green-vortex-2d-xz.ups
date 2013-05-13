@@ -1,7 +1,7 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Momentum Test with Taylor-Green Vortex MMS</title>
+    <title>2D Taylor-Green Vortex in the (x,z) Plane</title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>
@@ -17,36 +17,20 @@
     <TaylorVortexMMS type="XVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="x-mom" state="STATE_N" />
-      <TGVel3D angle="1.570796326794897">
-        <VelComponent>X</VelComponent>
+      <VelocityX amplitude="1.0" viscosity="0.0">
         <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
-        <YCoordinate> <NameTag name="YXVOL" state="STATE_NONE"/> </YCoordinate>
-        <ZCoordinate> <NameTag name="ZXVOL" state="STATE_NONE"/> </ZCoordinate>        
-      </TGVel3D>
+        <YCoordinate> <NameTag name="ZXVOL" state="STATE_NONE"/> </YCoordinate>
+      </VelocityX>
     </TaylorVortexMMS>
 
     <!-- Set the initial condition for y-momentum -->
-    <TaylorVortexMMS type="YVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="y-mom" state="STATE_N" />
-      <TGVel3D angle="1.570796326794897">
-        <VelComponent>Y</VelComponent>      
-        <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
-        <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
-        <ZCoordinate> <NameTag name="ZYVOL" state="STATE_NONE"/> </ZCoordinate>        
-      </TGVel3D>
-    </TaylorVortexMMS>
-
-    <!-- Set the initial condition for z-momentum -->
     <TaylorVortexMMS type="ZVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="z-mom" state="STATE_N" />
-      <TGVel3D angle="1.570796326794897">
-        <VelComponent>Z</VelComponent>      
+      <VelocityY amplitude="1.0" viscosity="0.0" >
         <XCoordinate> <NameTag name="XZVOL" state="STATE_NONE"/> </XCoordinate>
-        <YCoordinate> <NameTag name="YZVOL" state="STATE_NONE"/> </YCoordinate>
-        <ZCoordinate> <NameTag name="ZZVOL" state="STATE_NONE"/> </ZCoordinate>        
-      </TGVel3D>
+        <YCoordinate> <NameTag name="ZZVOL" state="STATE_NONE"/> </YCoordinate>
+      </VelocityY>
     </TaylorVortexMMS>
                 
     <BasicExpression type="SVOL">
@@ -66,10 +50,8 @@
  	 <Disabledmomdt/>
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
-      <Y-Velocity>v</Y-Velocity>
-      <Y-Momentum>y-mom</Y-Momentum>
       <Z-Velocity>w</Z-Velocity>
-      <Z-Momentum>z-mom</Z-Momentum>      
+      <Z-Momentum>z-mom</Z-Momentum>
       <Viscosity>
         <NameTag name="viscosity" state="STATE_NONE" />
       </Viscosity>
@@ -78,7 +60,7 @@
         <!-- ReferencePressure value="0.0">
               <ReferenceCell>[0,0,0]</ReferenceCell>
         </ReferencePressure -->
-        <Use3DLaplacian> true</Use3DLaplacian>
+        <Use3DLaplacian>    false</Use3DLaplacian>
         <Parameters>
 
             <!-- CGSolver options -->
@@ -91,7 +73,6 @@
             <tolerance>      1.e-13  </tolerance>
             <maxiterations>  1000    </maxiterations>
             <relax_type> 2 </relax_type>
-            <jump>           0       </jump>
            </Parameters>
 
       </Pressure>
@@ -112,44 +93,31 @@
 
 
   <DataArchiver>
-    <filebase>momentum-test-mms-3d.uda</filebase>
+    <filebase>taylor-green-vortex-2d-xz.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.001"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
-    <save label="y-mom"/>
-    <save label="z-mom"/>    
+    <save label="z-mom"/>
     <save label="u"/>
-    <save label="v"/>
-    <save label="w"/>    
+    <save label="w"/>
     <save label="pressure"/>
     <save label="x-mom_convFlux_x"/>
-    <save label="x-mom_convFlux_y"/>
     <save label="x-mom_convFlux_z"/>
-    <save label="y-mom_convFlux_x"/>
-    <save label="y-mom_convFlux_y"/>
-    <save label="y-mom_convFlux_z"/>
     <save label="z-mom_convFlux_x"/>
-    <save label="z-mom_convFlux_y"/>
     <save label="z-mom_convFlux_z"/>
     <save label="dilatation"/>
     <save label="density"/>
     <save label="tau_xx"/>
-    <save label="tau_xy"/>
     <save label="tau_xz"/>
-    <save label="tau_yy"/>
-    <save label="tau_yx"/>
-    <save label="tau_yz"/>
     <save label="tau_zz"/>
     <save label="tau_zx"/>
-    <save label="tau_zy"/>
     <save label="x-mom_rhs_partial"/>
-    <save label="y-mom_rhs_partial"/>
     <save label="z-mom_rhs_partial"/>
     <save label="x-mom_rhs_full"/>
-    <save label="y-mom_rhs_full"/>
     <save label="z-mom_rhs_full"/>
+
   </DataArchiver> 
 
   <Grid>
@@ -157,8 +125,8 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
-        <resolution>[32,32,32]</resolution>
-        <patches>[2,2,2]</patches>
+        <resolution>[64,2,64]</resolution>
+        <patches>[2,1,2]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
