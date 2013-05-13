@@ -205,8 +205,8 @@ evaluate()
   // CALCULATE test-filtered velocity products - those will be used in the Leonard stress tensor
   // that is: Filter(rho ui uj)
   //----------------------------------------------------------------------------  
-  typedef std::vector< SpatFldPtr<SVolField> > vecSvol;
-  std::vector< vecSvol > uiujhat(3);
+  typedef std::vector< SpatFldPtr<SVolField> > VecSvol;
+  std::vector< VecSvol > uiujhat(3);
   ALLOCATE_TENSOR_FIELD(uiujhat);
   // uu = uiujhat[0][0], uv = uiujhat[0][1], uw = uiujhat[0][2]
   // vv = uiujhat[1][0], vw = uiujhat[1][1]
@@ -225,7 +225,7 @@ evaluate()
   //----------------------------------------------------------------------------
   // CALCULATE the Leonard stress tensor, Lij = Filter(rho ui uj) - 1/Filter(rho) * Filter(rho ui) * Filter(rho uj)
   //----------------------------------------------------------------------------  
-  std::vector< vecSvol > Lij(3);
+  std::vector< VecSvol > Lij(3);
   ALLOCATE_TENSOR_FIELD(Lij);
   // L11 = Lij[0][0], L12 = Lij[0][1], L13 = Lij[0][2]
   // L22 = Lij[1][0], L23 = Lij[1][1]
@@ -242,7 +242,7 @@ evaluate()
   //----------------------------------------------------------------------------
   // CALCULATE test-filtered strain tensor.Filter(rho)*Filter(S)*Filter(Sij) (second term in the Mij Tensor. See Wasatch documentation.
   //----------------------------------------------------------------------------
-  std::vector< vecSvol > Shatij(3);
+  std::vector< VecSvol > Shatij(3);
   ALLOCATE_TENSOR_FIELD(Shatij);
   // Shat11 = Shatij[0][0], Shat12 = Shatij[0][1], S13 = Shatij[0][2]
   // Shat22 = Shatij[1][0], Shat23 = Shatij[1][1]
@@ -268,7 +268,7 @@ evaluate()
   // this expression BUT we're using the SAME field_ref (i.e. strTsrMag) for both
   // quantities to reduce memory usage.
   
-  std::vector< vecSvol > Sij(3);
+  std::vector< VecSvol > Sij(3);
   // S11 = Sij[0][0], S12 = Sij[0][1], S13 = Sij[0][2]
   // S22 = Sij[1][0], S23 = Sij[1][1]
   // S33 = Sij[2][0]
@@ -300,7 +300,7 @@ evaluate()
   //----------------------------------------------------------------------------
   const double filRatio = 9.0; // this quantity is hard-coded at the moment
   // because the dynamic model is allowed to work only in 3D
-  std::vector< vecSvol > Mij(3);
+  std::vector< VecSvol > Mij(3);
   // M11 = Mij[0][0], M12 = Mij[0][1], M13 = Mij[0][2]
   // M22 = Mij[1][0], M23 = Mij[1][1]
   // M33 = Mij[2][0]
