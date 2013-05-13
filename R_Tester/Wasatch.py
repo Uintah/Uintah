@@ -114,7 +114,7 @@ NIGHTLYTESTS = [
   ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "Linux",  ["exactComparison","no_restart"] ),\
   ("turb-lid-driven-cavity-3D-VREMAN",   "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), \
-  ("momentum-test-TGVortex-pressure-src",      "momentum-test-TGVortex-pressure-src.ups",   4,  "Linux",   ["exactComparison","no_restart"] ),                 \
+  ("taylor-green-vortex-mms-pressure-src",      "taylor-green-vortex-mms-pressure-src.ups",   4,  "Linux",   ["exactComparison","no_restart"] ),                 \
   ("rk3-verification-ode",                     "rk3-verification-ode.ups",   1,  "Linux",   ["exactComparison","no_restart"] ),                                \
   ("rk3-verification-timedep-source",          "rk3-verification-timedep-source.ups",   1,  "Linux",   ["exactComparison","no_restart"] ),                     \
   ("bc-modifier-expression-test-multiple",   "bc-modifier-expression-test-multiple.ups",   8,  "Linux",   ["exactComparison","no_restart"] ),                  \
@@ -140,11 +140,11 @@ NIGHTLYTESTS = [
   ("TabPropsInterface",             "TabPropsInterface.ups",             1,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ), \
   ("bc-test-mixed",                 "bc-test-mixed.ups",                 4,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("ScalarTransportEquation",       "ScalarTransportEquation.ups",       1,  "Linux",  ["exactComparison","no_restart"] ),                 \
-  ("momentum-test-mms-xy",          "momentum-test-mms-xy.ups",          4,  "Linux",  ["exactComparison","no_restart"] ),                 \
-  ("momentum-test-mms-xz",          "momentum-test-mms-xz.ups",          4,  "Linux",  ["exactComparison","no_restart"] ),                 \
-  ("momentum-test-mms-yz",          "momentum-test-mms-yz.ups",          4,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("taylor-green-vortex-2d-xy",          "taylor-green-vortex-2d-xy.ups",          4,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("taylor-green-vortex-2d-xz",          "taylor-green-vortex-2d-xz.ups",          4,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("taylor-green-vortex-2d-yz",          "taylor-green-vortex-2d-yz.ups",          4,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("scalability-test",              "scalability-test.ups",              1,  "Linux",  ["exactComparison","no_restart"] ),                 \
-  ("momentum-test-mms-3D",          "momentum-test-mms-3D.ups",          8,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("taylor-green-vortex-3D",          "taylor-green-vortex-3D.ups",          8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
@@ -180,7 +180,7 @@ LOCALTESTS = [
   ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ), 
   ("turb-lid-driven-cavity-3D-VREMAN",         "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "All",  ["exactComparison","no_restart"] ),                         
   ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), 
-  ("momentum-test-TGVortex-pressure-src",      "momentum-test-TGVortex-pressure-src.ups",   4,  "All",   ["exactComparison","no_restart"] ),                 
+  ("taylor-green-vortex-mms-pressure-src",      "taylor-green-vortex-mms-pressure-src.ups",   4,  "All",   ["exactComparison","no_restart"] ),                 
   ("rk3-verification-ode",                     "rk3-verification-ode.ups",   1,  "All",   ["exactComparison","no_restart"] ),                                
   ("rk3-verification-timedep-source",          "rk3-verification-timedep-source.ups",   1,  "All",   ["exactComparison","no_restart"] ),                     
   ("bc-modifier-expression-test-multiple",     "bc-modifier-expression-test-multiple.ups",   8,  "All",   ["exactComparison","no_restart"] ),                
@@ -206,11 +206,11 @@ LOCALTESTS = [
   ("TabPropsInterface",             "TabPropsInterface.ups",             1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("bc-test-mixed",                 "bc-test-mixed.ups",                 4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("ScalarTransportEquation",       "ScalarTransportEquation.ups",       1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("momentum-test-mms-xy",          "momentum-test-mms-xy.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("momentum-test-mms-xz",          "momentum-test-mms-xz.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("momentum-test-mms-yz",          "momentum-test-mms-yz.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("taylor-green-vortex-2d-xy",          "taylor-green-vortex-2d-xy.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("taylor-green-vortex-2d-xz",          "taylor-green-vortex-2d-xz.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("taylor-green-vortex-2d-yz",          "taylor-green-vortex-2d-yz.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("scalability-test",              "scalability-test.ups",              1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("momentum-test-mms-3D",          "momentum-test-mms-3D.ups",          8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("taylor-green-vortex-3D",          "taylor-green-vortex-3D.ups",          8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   

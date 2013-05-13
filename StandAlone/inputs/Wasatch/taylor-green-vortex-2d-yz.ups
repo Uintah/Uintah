@@ -1,7 +1,7 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Momentum Test with Taylor-Green Vortex MMS</title>
+    <title>2D Taylor-Green Vortex in the (y,z) Plane</title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>
@@ -93,7 +93,7 @@
 
 
   <DataArchiver>
-    <filebase>momentum-test-mms-yz.uda</filebase>
+    <filebase>taylor-green-vortex-2d-yz.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.001"/>
