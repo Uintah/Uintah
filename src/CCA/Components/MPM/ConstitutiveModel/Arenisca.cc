@@ -339,18 +339,18 @@ void Arenisca::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(),patch);
 
   Matrix3 Identity; Identity.Identity();
-  
- 
+
+
 #ifdef CSM_PORE_PRESSURE_INITIAL
   ParticleVariable<double>  pdTdt;
   constParticleVariable<Matrix3> pDefGrad;
   ParticleVariable<Matrix3> //pDefGrad,
                             pStress;
-  
+
   new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
   //new_dw->get(pDefGrad,    lb->pDeformationMeasureLabel, pset);
   new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
-  
+
   // To fix : For a material that is initially stressed we need to
   // modify the stress tensors to comply with the initial stress state
   ParticleSubset::iterator iter = pset->begin();
@@ -365,7 +365,7 @@ void Arenisca::initializeCMData(const Patch* patch,
   // Allocate particle variables
   ParticleVariable<int>     pLocalized,
                             pAreniscaFlag;
-           
+
   ParticleVariable<double>  pScratchDouble1, // Developer tool
                             pScratchDouble2, // Developer tool
                             pPorePressure,   // Plottable fluid pressure
@@ -399,7 +399,7 @@ void Arenisca::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pIotaQS,         pIotaQSLabel,         pset);
   new_dw->allocateAndPut(pStressQS,       pStressQSLabel,  pset);
   new_dw->allocateAndPut(pScratchMatrix,  pScratchMatrixLabel,  pset);
-  
+
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end();iter++){
     pLocalized[*iter] = 0;
@@ -411,7 +411,7 @@ void Arenisca::initializeCMData(const Patch* patch,
     peve[*iter] = 0.0;
     pCapX[*iter] = computeX(0.0);
     pCapXQS[*iter] = computeX(0.0);
-    pKappa[*iter] = computeKappa(pCapX[*iter]);
+    pKappa[*iter] = 0;//remove
     pZeta[*iter] = -3.0 * d_cm.fluid_pressure_initial;   //MH: Also need to initialize I1 to equal zeta
     pZetaQS[*iter] = -3.0 * d_cm.fluid_pressure_initial; //MH: Also need to initialize I1 to equal zeta
     pIota[*iter] = 0.0;
@@ -580,7 +580,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                B0 = d_cm.B0,
                //XXB1 = d_cm.p4_fluid_effect,
                G0 = d_cm.G0;
-  
+
   // Compute kinematics variables (pDefGrad_new, pvolume, pLocalized_new, pVelGrad_new)
   // computeKinematics(patches, matl, old_dw, new_dw);
 
@@ -649,7 +649,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pStressQS_old,   pStressQSLabel,             pset); //initializeCMData()
 
     // Get the particle variables from interpolateToParticlesAndUpdate() in SerialMPM
-    
+
     constParticleVariable<double>  pvolume;
     constParticleVariable<Matrix3> pVelGrad_new,
                                    pDefGrad_new;
@@ -658,15 +658,15 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     new_dw->get(pVelGrad_new,   lb->pVelGradLabel_preReloc, pset);
     new_dw->get(pDefGrad_new,
                 lb->pDeformationMeasureLabel_preReloc,      pset);
-    
+
     // Get the particle variables from compute kinematics
 
     ParticleVariable<int>     pLocalized_new,
                               pAreniscaFlag_new;
-       
+
     new_dw->allocateAndPut(pLocalized_new, pLocalizedLabel_preReloc,   pset);
     new_dw->allocateAndPut(pAreniscaFlag_new,   pAreniscaFlagLabel_preReloc,    pset);
-    
+
     // Allocate particle variables used in ComputeStressTensor
     ParticleVariable<double>  p_q,
                               pdTdt,
@@ -706,7 +706,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double>       f_trial_step,
                                    rho_cur; //used for calc. of stable timestep
     ParticleVariable<Matrix3>      rotation;
-    
+
     new_dw->allocateTemporary(f_trial_step, pset);
     new_dw->allocateTemporary(rho_cur,      pset);
     new_dw->allocateTemporary(rotation,     pset);
@@ -767,11 +767,20 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         //    strain at the beginning of the step will not be available within the
         //    substep.
 
-        double bulk  = computeBulkModulus( peve[idx] + pevp[idx] ),
+        // Hack: Need to modify Arenisca to call step with strain rate and dt, allowing for
+        // different bulk modulus for each step.  Also need to modify this to use low
+        // pressure bulk modulus in tension, and to use some mid range value between low
+        // and high in compression.
+
+        double bulk = B0,
                shear = G0;
-
-        bulk=B0;//Hack
-
+/*
+        if (d_cm.fluid_B0 != 0.)
+        {
+          double ev0  = computeev0();                // strain at zero pore pressure
+          bulk  = computeBulkModulus( ev0 - 1 );     // Compute bulk modulus with fluid effects
+        }
+*/
         // Compute the lame constant using the bulk and shear moduli
         double lame       = bulk - two_third*shear,
                threeKby2G = (3.0 * bulk) / (2.0 * shear);
@@ -1062,7 +1071,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         pStressQS_new[idx] = pStress_new[idx];
         //d_cm.T1_rate_dependence
         //d_cm.T2_rate_dependence
-        
+
         // Compute the total strain energy and the stable timestep based on both
         // the particle velocities and wave speed.
 
@@ -1190,6 +1199,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
   }
 } // -----------------------------------END OF COMPUTE STRESS TENSOR FUNCTION
 
+//
 int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stress tensor
                                       Matrix3& sigma_new,         // stress tensor
                                       Matrix3& ep_new,            // plastic strain tensor
@@ -1287,15 +1297,15 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
 
     // Initialize variables needed for plastic solution
     double  gfcn,          // value of the flow function
-            r_new0,        // transformed r for non-hardening return
-            z_new0,        // transformed, shifted z for non hardening return
-            r_new,         // transformed r for hardening return
-            z_new,         // transformed, shifted z for hardening return
+            r_new0 = r_trial,        // transformed r for non-hardening return
+            z_new0 = z_trial,        // transformed, shifted z for non hardening return
+            r_new = r_trial,         // transformed r for hardening return
+            z_new = z_trial,         // transformed, shifted z for hardening return
             eta_out = 1.0, // inner bound for plastic scaler
             eta_in  = 0.0, // outer bound for plastic scaler
             eta_mid,       // solution for plastic scaler
             eps_eta = 1.0, // convergence measure: eta_out-eta_in
-            TOL = 1.0e-9;  // convergence tolerance on eps_eta
+            TOL = 1.0e-11;  // convergence tolerance on eps_eta
 
     Matrix3 sigma_new0,   // non-hardening return stress
             d_sigma0,     // non-hardening increment stress over step
@@ -1308,9 +1318,14 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
             d_ep;         // hardening increment in plastic strain
 
     // Non-hardening Closest Point Return in Transformed Space
+    /*
     gfcn   = TransformedFlowFunction(r_trial,z_trial,X_old,Beta);
     r_new0 = r_trial - gfcn * dgdr(r_trial,z_trial,X_old,Beta);
     z_new0 = z_trial - gfcn * dgdz(r_trial,z_trial,X_old,Beta);
+    */
+
+    // Compute non-hardening return, (overwriting r_new0, and z_new0)
+    gfcn = ComputeNonHardeningReturn(r_trial, z_trial, X_old, Beta, r_new0, z_new0);
 
     // Update unshifted untransformed stress
     sigma_new0 = one_third*(sqrt_three*z_new0+Zeta_old)*Identity;
@@ -1320,7 +1335,6 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
     // Stress increment for non-hardening return
     d_sigma0 = sigma_new0 - sigma_old;
 
-    //
     // Increment in total strain from sigma_old to sigma_trial
     d_e = oneby2G*d_sigmaT + oneby9k_1by6G*d_sigmaT.Trace()*Identity;
 
@@ -1364,11 +1378,17 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
       z_trial = (I1_trial - Zeta_new) * one_sqrt_three;
 
       // Check if updated yield surface encloses the yield surface, or if the
-      // z-component of the return direction to the updated yield surface has
+      // z-component d_min_subcycles_for_Fof the return direction to the updated yield surface has
       // changed sign.  If either of these has occured the increment in plastic
       // strain was too large, so we scale back the multiplier eta.
+
+      // Compute non-hardening return, (overwriting r_new, and z_new)
+      gfcn = ComputeNonHardeningReturn(r_trial, z_trial, X_new, Beta, r_new, z_new);
+
       if( TransformedYieldFunction( r_trial,z_trial,X_new,Beta ) <= 0.0 ||
-          Sign(dgdz(r_trial,z_trial,X_old,Beta)) != Sign(dgdz(r_trial,z_trial,X_new,Beta)) )
+          //Sign(dgdz(r_trial,z_trial,X_old,Beta)) != Sign(dgdz(r_trial,z_trial,X_new,Beta))
+          Sign(z_trial-z_new0) != Sign(z_trial-z_new)
+        )
       {
         /*
         cout << "BAD step, n = " << n
@@ -1396,9 +1416,11 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
         // hardening return, and adjust the scale parameter, eta, accordingly.
 
         // Hardening Closest Point Return in Transformed Space
-        gfcn  = TransformedFlowFunction(r_trial,z_trial,X_new,Beta);
-        r_new = r_trial - gfcn * dgdr(r_trial,z_trial,X_new,Beta);
-        z_new = z_trial - gfcn * dgdz(r_trial,z_trial,X_new,Beta);
+        /* already computed before the last test
+          gfcn  = TransformedFlowFunction(r_trial,z_trial,X_new,Beta);
+          r_new = r_trial - gfcn * dgdr(r_trial,z_trial,X_new,Beta);
+          z_new = z_trial - gfcn * dgdz(r_trial,z_trial,X_new,Beta);
+        */
 
         // Update unshifted untransformed stress
         sigma_new = one_third*(sqrt_three*z_new+Zeta_new)*Identity;
@@ -1554,518 +1576,207 @@ double Arenisca::YieldFunction(const double& I1,   // Unshifted
   return f;
 }
 
-// Compute the old yield function (Not Used)
-/*
-double Arenisca::YieldFunction(const double& I1, const double& J2, const double& X,
-                               const double& Kappa, const double& Zeta)
+// MH! START Compute Non Hardening Return (Elliptical Cap)
+double Arenisca::ComputeNonHardeningReturn(const double& R,   // Transformed Trial Stress
+                                             const double& Z,   // Shifted Trial Stress
+                                             const double& CapX,
+                                             const double& Beta,
+                                             double& r_new,
+                                             double& z_new)
 {
-  // See "fig:AreniscaYieldSurface" in the Arenisca manual.
-
-  //define and initialize some varialbes
-  double FSLOPE = d_cm.FSLOPE,
-         PEAKI1 = d_cm.PEAKI1,
-         f;
-
-  if(I1 - Zeta >= Kappa)
-    f = J2 - Pow(FSLOPE,2)*Pow(-I1 + PEAKI1 + Zeta,2);
-
-  else // I1 - Zeta < Kappa
-    f =  J2 - (1-Pow((I1-Zeta-Kappa)/(X-Kappa),2))
-              *Pow(FSLOPE,2)*Pow(-I1 + PEAKI1 + Zeta,2);
-
-  return f;
-}
-*/
-
-// Compute the Yield Test Function
-double Arenisca::TransformedYieldFunction(const double& R,
-                                          const double& Z,
-                                          const double& X,
-                                          const double& Beta)
-{
-  // This function is defined in a transformed and shifted stress space:
+  // ===========================================================================
+  // MH! START Compute Non Hardening Return (Elliptical Cap)
+  // ===========================================================================
+  // Computes return to a stationary yield surface.
   //
-  //       R = (3K/2G)*sqrt(2*J2)           Z = (I1-Zeta)/sqrt(3)
+  // This function overwrites new values for r_new and z_new, and also returns
+  // a value for the distance in the transformed space from the trial stress to
+  // the closest point on the yield surface.
   //
-  // This function is used ONLY to compute whether a trial stress state is elastic or
-  // plastic, and is not used to compute the plastic flow.  Thus only the sign of the
-  // returned value for f is important.
-
-  //define and initialize some varialbes
-  double Beta2 = Beta*Beta,
-         ZVertex = one_sqrt_three*d_cm.PEAKI1,
-         ZCapX   = one_sqrt_three*X,
-         //XXRKappa,
-         ZKappa,
-         ZApex,
-         f;
-
-  // Transformed R component of the branchpoint:
-  //XXRKappa = (Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*(-ZCapX + ZVertex))/(1 + Beta2);
-
-  // Shifted Z component of the branchpoint:
-  ZKappa = (ZCapX + Beta2*ZCapX + Beta*sqrt(1 + Beta2)*(-ZCapX + ZVertex))/(1 + Beta2);
-
-  // Shifted Z component of the apex:
-  ZApex = ((1 + Beta2)*(-Beta + sqrt(1 + Beta2))*ZCapX +
-     Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*ZVertex)/sqrt(1 + Beta2);
-
-  //cout << " TransYieldFxn:Beta="<<Beta<<", ZCapX="<<ZCapX
-  //     << ", ZVertex="<<ZVertex<<", RKappa="<<RKappa<<",ZKappa="<<ZKappa<<", ZApex="<<ZApex<< endl;
-
-  // Region I - closest point return to vertex
-  if( (Z <= ZCapX) || (Z >= ZVertex) )
-    f = 1;
-  else
-  {
-    if(Z >= ZKappa)
-    { // Region II - Linear Drucker Prager
-      if(R <= Beta*(ZVertex-Z))
-        f = -1.0;
-      else
-        f = 1.0;
-    }
-    else
-    { // Region III - Circular Cap
-      if (R*R <= Pow(ZApex-ZCapX,2) - Pow(Z-ZApex,2))
-        f = -1.0;
-      else
-        f = 1.0;
-    }
-  }
-  return f;
-}
-
-// Compute the Flow Function.
-double Arenisca::TransformedFlowFunction(const double& R,
-                                         const double& Z,
-                                         const double& X,
-                                         const double& Beta)
-{
-  // This function is defined in a transformed and shifted stress space:
-  //
-  //       R = (3K/2G)*sqrt(2*J2)           Z = (I1-Zeta)/sqrt(3)
-
-  //define and initialize some varialbes
-  double Beta2   = Beta*Beta,
-         ZVertex = d_cm.PEAKI1/sqrt(3),
-         ZCapX   = X/sqrt(3),
-         //XXRKappa,
-         //XXZKappa,
-         ZApex,
-         g;
-
-  // Transformed R component of the branchpoint:
-  //XXRKappa = (Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*(-ZCapX + ZVertex))/(1 + Beta2);
-
-  // Shifted Z component of the branchpoint:
-  //XXZKappa = (ZCapX + Beta2*ZCapX + Beta*sqrt(1 + Beta2)*(-ZCapX + ZVertex))/(1 + Beta2);
-
-  // Shifted Z component of the apex:
-  ZApex = ((1 + Beta2)*(-Beta + sqrt(1 + Beta2))*ZCapX +
-          Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*ZVertex)/sqrt(1 + Beta2);
-
-  // Region I - closest point return to vertex
-  if(R <= (Z - ZVertex) / Beta)
-    g = sqrt(Pow(R,2) + Pow(Z - ZVertex,2));
-
-  // Region II - closest point return to the linear Drucker-Prager surface
-  else if(R <= (Z - ZApex)/Beta)
-    g = (R + Beta*(Z - ZVertex))/sqrt(1 + Beta2);
-
-  // Region III - closest point return to a circular cap
-  else
-    g = sqrt( R*R + Pow(Z - ZApex,2)) - ZApex + ZCapX;
-
-  return g;
-}
-
-// Compute the R-component of the Gradient of the Transformed Flow Function.
-
-double Arenisca::dgdr(const double& R,
-                      const double& Z,
-                      const double& X,
-                      const double& Beta)
-{
-  // This function is defined in a transformed and shifted stress space:
-  //
-  //       R = (3K/2G)*sqrt(2*J2)           Z = (I1-Zeta)/sqrt(3)
-
-  //define and initialize some varialbes
-  double Beta2   = Beta*Beta,
-         ZVertex = d_cm.PEAKI1/sqrt(3),
-         ZCapX   = X/sqrt(3),
-         //XXRKappa,
-         //XXZKappa,
-         ZApex,
-         dgdr;
-
-  // Transformed R component of the branchpoint:
-  //XXRKappa = (Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*(-ZCapX + ZVertex))/(1 + Beta2);
-
-  // Shifted Z component of the branchpoint:
-  //XXZKappa = (ZCapX + Beta2*ZCapX + Beta*sqrt(1 + Beta2)*(-ZCapX + ZVertex))/(1 + Beta2);
-
-  // Shifted Z component of the apex:
-  ZApex = ((1 + Beta2)*(-Beta + sqrt(1 + Beta2))*ZCapX +
-     Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*ZVertex)/sqrt(1 + Beta2);
-
-  // Region I - closest point return to vertex
-  if(R <= (Z - ZVertex)/Beta)
-    dgdr = R/sqrt(Pow(R,2) + Pow(Z - ZVertex,2));
-
-  // Region II - closest point return to the linear Drucker-Prager surface
-  else if(R <= (Z - ZApex)/Beta)
-    dgdr = 1/sqrt(1 + Beta2);
-
-  // Region III - closest point return to a circular cap
-  else
-    dgdr = R/sqrt(Pow(R,2) + Pow(Z - ZApex,2));
-
-  return dgdr;
-}
-
-// Compute the Z-component of the Gradient of the Transformed Flow Function.
-double Arenisca::dgdz(const double& R,
-                      const double& Z,
-                      const double& X,
-                      const double& Beta)
-{
   // This function is defined in a transformed and shifted stress space:
   //
   //       r = (3K/2G)*sqrt(2*J2)           z = (I1-Zeta)/sqrt(3)
-
+  //
   //define and initialize some varialbes
   double Beta2   = Beta*Beta,
+         CapR    =  d_cm.CR,
          ZVertex = d_cm.PEAKI1/sqrt(3),
-         ZCapX   = X/sqrt(3),
-         //XXRKappa,
-         //XXZKappa,
+         ZCapX   = CapX/sqrt(3),
+         ZKappa,
+         RKappa,
          ZApex,
-         dgdz;
+         dgdr,
+         dgdz,
+         g;
 
-  // Transformed R component of the branchpoint:
-  //XXRKappa = (Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*(-ZCapX + ZVertex))/(1 + Beta2);
+  double CapR2 = CapR*CapR,
+         R2 = R*R;
 
-  // Shifted Z component of the branchpoint:
-  //XXZKappa = (ZCapX + Beta2*ZCapX + Beta*sqrt(1 + Beta2)*(-ZCapX + ZVertex))/(1 + Beta2);
-
-  // Shifted Z component of the apex:
-  ZApex = ((1 + Beta2)*(-Beta + sqrt(1 + Beta2))*ZCapX +
-     Beta*(1 + Beta2 - Beta*sqrt(1 + Beta2))*ZVertex)/sqrt(1 + Beta2);
+  // Shifted Z component of the branch point:
+  ZKappa = ZCapX - (Beta*ZCapX)/Sqrt(Beta2 + CapR2) + (Beta*ZVertex) / Sqrt(Beta2 + CapR2);
+    // Transformed R Component of the branch point
+  RKappa = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / Sqrt(Beta2 + CapR2);
+    // Shifted Z component of the apex:
+  ZApex = (CapR2*ZCapX + Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2;
 
   // Region I - closest point return to vertex
   if(R <= (Z - ZVertex)/Beta)
-    dgdz = (Z - ZVertex)/sqrt(Pow(R,2) + Pow(Z - ZVertex,2));
+  {
+    g = Sqrt(R2 + Pow(Z - ZVertex,2));
+    dgdr = R/Sqrt(R2 + Pow(Z - ZVertex,2));
+    dgdz = (Z - ZVertex)/Sqrt(R2 + Pow(Z - ZVertex,2));
+
+    r_new = R - g*dgdr;
+    z_new = Z - g*dgdz;
+
+  }
+  // Region II - closest point return to the linear Drucker-Prager surface
+  else if( (Z>ZKappa) && (R - RKappa <= ( Z - ZKappa ) / Beta) )
+  {
+    g = (R + Beta*Z - Beta*ZVertex)/Sqrt(1 + Beta2);
+    dgdr = 1/Sqrt(1 + Beta2);
+    dgdz = Beta/Sqrt(1 + Beta2);
+
+    r_new = R - g*dgdr;
+    z_new = Z - g*dgdz;
+  }
+  // Region III - closest point return to an elliptical cap
+  else
+  {
+   //An iterative bisection method is used to compute the return to the elliptical cap.
+   // Solution is found in the first quadrant then remapped to the correct region.
+
+   double X = Abs(Z-ZApex), // Relative x-position
+          Y = Abs(R), //Relative y-position
+          a = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2,
+          b = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR,
+          Theta = 0.0,
+          Theta_in = 0.0,
+          Theta_out = 1.570796326794897,
+          TOL = 1.0e-11;
+
+   //while (Abs( Sqrt( Pow(X-a*cos(Theta_out),2) + Pow(Y-b*sin(Theta_out),2) ) -
+   //            Sqrt( Pow(X-a*cos(Theta_in),2) + Pow(Y-b*sin(Theta_in),2) ) ) > TOL)
+   while(Abs(Theta_out-Theta_in)>TOL)
+   {
+     Theta = (Theta_out+Theta_in)/2;
+     if ((2*a*(X-a*cos(Theta))*sin(Theta)-2*b*cos(Theta)*(Y-b*sin(Theta)))
+                          /(2*Sqrt(Pow(X-a*cos(Theta),2)+Pow(Y-b*sin(Theta),2))) > 0)
+       Theta_out = Theta;
+     else
+       Theta_in = Theta;
+   }
+
+   g = Sqrt( Pow(X-a*cos(Theta),2) + Pow(Y-b*sin(Theta),2) );
+   r_new = b*sin(Theta);
+   z_new = Sign(Z-ZApex)*a*cos(Theta) + ZApex;
+  }
+
+  // Return the value of the flow function, which equals the distance from the trial
+  // stress to the closest point on the yield surface in the transformed space.
+  return g;
+
+  // ===========================================================================
+  // MH! END Compute Non Hardening Return
+  // ===========================================================================
+}
+
+//START Compute Tranformed Yield Function
+double Arenisca::TransformedYieldFunction(const double& R,   // Transformed Trial Stress
+                                                   const double& Z,   // Shifted Trial Stress
+                                                   const double& CapX,
+                                                   const double& Beta)
+{
+  // ===========================================================================
+  // MH! START Compute Tranformed Yield Function
+  // ===========================================================================
+  // Computes The sign of the transformed yield function, which will be +1 in the plastic
+  // region and 0 on the boundary of the yield function.
+  //
+  // This function is defined in a transformed and shifted stress space:
+  //
+  //       r = (3K/2G)*sqrt(2*J2)           z = (I1-Zeta)/sqrt(3)
+  //
+  // define and initialize some variables:
+
+  double Beta2   = Beta*Beta,
+         CapR    = d_cm.CR,
+         ZVertex = d_cm.PEAKI1/sqrt(3),
+         ZCapX   = CapX/sqrt(3),
+         ZKappa,
+         RKappa,
+         ZApex,
+         f = 0.0; // sign of the yield function
+
+  double CapR2 = CapR*CapR;
+
+  // Shifted Z component of the branch point:
+  ZKappa = ZCapX - (Beta*ZCapX)/Sqrt(Beta2 + CapR2) + (Beta*ZVertex) / Sqrt(Beta2 + CapR2);
+    // Transformed R Component of the branch point
+  RKappa = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / Sqrt(Beta2 + CapR2);
+    // Shifted Z component of the apex:
+  ZApex = (CapR2*ZCapX + Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2;
+
+  // Region I - closest point return to vertex
+  if(R <= (Z - ZVertex)/Beta)
+  {
+    if( (R != 0.0) || (Z != ZVertex) )
+      f = 1.0;
+  }
 
   // Region II - closest point return to the linear Drucker-Prager surface
-  else if(R <= (Z - ZApex)/Beta)
-    dgdz = Beta/sqrt(1 + Beta2);
+  else if( (Z>ZKappa)&&(R - RKappa <= ( Z - ZKappa ) / Beta) )
+  {
+    if( R > Beta*(ZVertex-Z) )
+      f = 1.0;
+    else if ( R < Beta*(ZVertex-Z) )
+      f = -1.0;
+  }
 
-  // Region III - closest point return to a circular cap
+  // Region III - closest point return to an elliptical cap
   else
-    dgdz = (Z - ZApex)/sqrt(Pow(R,2) + Pow(Z - ZApex,2));
+  {
+   //An iterative bisection method is used to compute the return to the elliptical cap.
+   // Solution is found in the first quadrant then remapped to the correct region.
 
-  return dgdz;
-}
+    double X = Abs(Z-ZApex), // Relative x-position
+           Y = Abs(R), //Relative y-position
+           a = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2,
+           b = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR;
 
-// Old Yield Function Gradient (Not Used)
-Matrix3 Arenisca::YieldFunctionGradient(const Matrix3& S,
-                             const double& I1,
-                             const double& J2,
-                             const Matrix3& S_trial,
-                             const double& I1_trial,
-                             const double& J2_trial,
-                             const double& X,
-                             const double& Kappa,
-                             const double& Zeta)
-{
-  //define and initialize some varialbes
-  double FSLOPE = d_cm.FSLOPE,
-         PEAKI1 = d_cm.PEAKI1;
-  Matrix3 Identity,
-          G;
-  Identity.Identity();
-
-  if(I1-Zeta != PEAKI1 || J2 != 0){ //not at vertex
-    if(I1 - Zeta > PEAKI1)
-      G=-2*Pow(FSLOPE,2)*(I1 - PEAKI1 - Zeta);
-    else if(I1 - Zeta >= Kappa && I1 - Zeta <= PEAKI1)
-      G=2*Pow(FSLOPE,2)*(I1 - PEAKI1 - Zeta);
-    else //if(I1 - Zeta < Kappa
-      G=2*Pow(FSLOPE,2)*(1 - Pow(I1 - Kappa - Zeta,2)/Pow(-Kappa + X,2))*(I1 - PEAKI1 - Zeta) -
-        (2*Pow(FSLOPE,2)*(I1 - Kappa - Zeta)*Pow(I1 - PEAKI1 - Zeta,2))/Pow(-Kappa + X,2);
-  }
-  else{ //at vertex
-    if(I1_trial-Zeta != PEAKI1)
-      G = YieldFunction(I1_trial, J2_trial, X, Kappa, Zeta)
-          / (I1_trial - Zeta - PEAKI1) * Identity;
-    else
-      G = Identity;
-  }
-  //if(I1 - Zeta >= Kappa)
-  //  G = S + 2*Pow(FSLOPE,2)*Identity*(-I1 + PEAKI1 + Zeta);
-  //else // I1 - Zeta < Kappa
-  //  G =  S + (2*Pow(FSLOPE,2)*Identity*(I1 - PEAKI1 - Zeta)*
-  //          (2*Pow(I1,2) - Pow(X,2) + PEAKI1*Zeta + 2*X*Zeta +
-  //           Pow(Zeta,2) + Kappa*(PEAKI1 + 2*X + Zeta) -
-  //           I1*(3*Kappa + PEAKI1 + 4*Zeta)))/Pow(Kappa - X + Zeta,2);
-
-  return G;
-}
-
-// Old Yield Function (Not Used)
-Matrix3 Arenisca::YieldFunctionBisection(const Matrix3& sigma_in,
-                               const Matrix3& sigma_out,
-                               const double& X,
-                               const double& Kappa,
-                               const double& Zeta,
-                               long64 ParticleID)
-{
-  int    counter_midpt=0,
-         counter_midpt_max;
-  double FSLOPE = d_cm.FSLOPE,
-         PEAKI1 = d_cm.PEAKI1,
-         I1_in,
-         J2_in,
-         I1_out,
-         J2_out,
-         I1_diff,
-         J2_diff,
-         r_in=0,
-         r_mid,
-         r_out,
-         r_out_initial,
-         r_max,
-         n_I1,
-         n_sqrtJ2,
-         f_mid;
-  Matrix3 S_in,
-          S_out,
-          S_diff,
-          Identity,
-          sigma_return;
-  Identity.Identity();
-
-  //compute invariants
-  computeInvariants(sigma_in,S_in,I1_in,J2_in);
-  computeInvariants(sigma_out,S_out,I1_out,J2_out);
-
-  #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-  #ifdef CSM_DEBUG_BISECTION
-  if(ParticleID==JC_DEBUG_PARTICLE)
-    cout << ", I1_out=" << I1_out << ", J2_out=" << J2_out
-         << ", X=" << X << ", Kappa=" << Kappa << ", Zeta=" << Zeta;
-  #endif
-  #endif
-
-  if(I1_in == I1_out && J2_in == J2_out)
-    sigma_return = sigma_out;
-  else{
-    I1_diff = I1_out - I1_in;
-    J2_diff = J2_out - J2_in;
-    S_diff = S_out - S_in;
-
-    r_out = sqrt(I1_diff * I1_diff + J2_diff);
-    n_I1 = I1_diff/r_out;
-    n_sqrtJ2 = sqrt(J2_diff)/r_out;
-
-    r_out_initial = r_out;
-    r_max = sqrt(Pow(PEAKI1 - X, 2) + Pow(FSLOPE * (PEAKI1 - X), 2));
-
-    if(r_out > r_max){
-      r_out = r_max;
-      cout << endl << "WARNING: r_out > r_max in bisection" << endl;
-    }
-
-    counter_midpt_max=Floor(5*log10(r_out)+1);
-
-    #ifdef JC_DEBUG_PARTICLE
-    #ifdef CSM_DEBUG_BISECTION
-    if(ParticleID==JC_DEBUG_PARTICLE && 0)
-      cout << endl << "    FAST RETURN";
-    #endif
-    #endif
-
-    while(r_out-r_in > 1.0e-6 * r_out_initial &&
-      counter_midpt < counter_midpt_max){
-
-      counter_midpt++;
-
-      r_mid = 0.5*(r_out+r_in);
-      f_mid = YieldFunction(r_mid*n_I1 + I1_in,
-                            Pow(r_mid*n_sqrtJ2,2) + J2_in,X,Kappa,Zeta);
-
-      #ifdef JC_DEBUG_PARTICLE
-      #ifdef CSM_DEBUG_BISECTION
-      if(ParticleID==JC_DEBUG_PARTICLE)
-        cout<< endl << "    nFR=" << counter_midpt << "/" << counter_midpt_max
-        << ", r_in=" << r_in << ", r_out=" << r_out
-        << ", r_diff=" << r_out-r_in << ", f_mid="<<f_mid;
-        //<< ", I1_out=" << r_out*n_I1+I1_in
-        //<< ", J2_out=" << Pow(r_out*n_sqrtJ2,2)+J2_in
-        //<<", f_out="<<YieldFunction(r_out*n_I1+I1_in,Pow(r_out*n_sqrtJ2,2)+J2_in,X,Kappa,Zeta)
-        //<<", f_in="<<YieldFunction(r_in*n_I1+I1_in,Pow(r_in*n_sqrtJ2,2)+J2_in,X,Kappa,Zeta);
-      #endif
-      #endif
-
-      if(f_mid > 0)
-        r_out = r_mid;
-      else
-        r_in = r_mid;
-    }
-    //f_out = YieldFunction(r_out*n_I1+Zeta+Kappa,Pow(r_out*n_sqrtJ2,2),X,Kappa,Zeta);
-    sigma_return = sigma_in + (1/3.0) * r_out * n_I1 * Identity;
-    if(J2_diff != 0)
-      sigma_return += r_out * n_sqrtJ2 / sqrt(J2_diff) * S_diff;
-  }
-  return sigma_return;
-}
-
-// Old Yield Function Bisect (Not Used)
-Matrix3 Arenisca::YieldFunctionFastRet(const Matrix3& S,
-                                       const double& I1,
-                                       const double& J2,
-                                       const double& X,
-                                       const double& Kappa,
-                                       const double& Zeta,
-                                       long64 ParticleID)
-{
-  //define and initialize some variables
-  double FSLOPE = d_cm.FSLOPE,
-         PEAKI1 = d_cm.PEAKI1;
-  Matrix3 Identity,
-          sigmaF;
-  Identity.Identity();
-
-  #ifdef JC_DEBUG_PARTICLE
-  #ifdef CSM_DEBUG_FAST_RET
-  if(ParticleID==JC_DEBUG_PARTICLE)
-    cout << endl << "    FR: I1=" << I1  << ", J2=" << J2 << ", X=" << X
-         << ", Kappa=" << Kappa << ", Zeta=" << Zeta;
-  #endif
-  #endif
-
-  //HACK
-  if(YieldFunction(I1, J2, X, Kappa, Zeta) < 0)  //elastic
-    sigmaF = one_third * I1 * Identity + S;
-  else{
-    double apexI1=(3*Kappa + PEAKI1 - sqrt(9*Pow(Kappa,2) - 2*Kappa*PEAKI1 + Pow(PEAKI1,2)
-                                     - 16*Kappa*X + 8*Pow(X,2)) + 4*Zeta)/4;
-    #ifdef JC_DEBUG_PARTICLE
-    #ifdef CSM_DEBUG_FAST_RET
-    cout<<",apexI1="<<apexI1<<",X="<<X<<",Kappa="<<Kappa;
-    #endif
-    #endif
-    //     -----------------------------------
-    //     FASTRET Region III - Cap Region
-    //     -----------------------------------
-    //     This portion of the code could be replaced with a radial return to the point {kappa,0}
-    //     with an initial return to the radius equal to r = ||{X-kappa,Ff(X)}||
-    //
-    //     Algorithm:
-    //       1. calculate normalized unit vectors for radial line
-    //       2. calculate rmax
-    //       3. setup midpoint rules
-    if(sqrt(J2) > 1/FSLOPE * (I1 - apexI1)) {
-
-      #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-      #ifdef CSM_DEBUG_FAST_RET
-      if(ParticleID==JC_DEBUG_PARTICLE)
-        cout << ",FastRet Region III";
-      #endif
-      #endif
-
-      sigmaF=YieldFunctionBisection(one_third * apexI1 * Identity,
-                                    one_third * I1 * Identity
-                                    + S, X, Kappa, Zeta, ParticleID);
-
-#ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-#ifdef CSM_DEBUG_FAST_RET
-      //if(ParticleID==JC_DEBUG_PARTICLE)
-      //  cout << ", sigma_out="<<sigma_out<<", I1=" << I1 << ", J2=" << J2;
-#endif
-#endif
-      if (isnan(sigmaF.Trace())) {  //Check stress_iteration for nan
-        cerr << "ParticleID = " << ParticleID << " sigmaF = " << sigmaF << endl;
-        throw InvalidValue("**ERROR**: Nan in sigmaF value", __FILE__, __LINE__);
-      }
-    }
-
-    //     -----------------------------------
-    //     FASTRET Region II - Linear DP
-    //     -----------------------------------
-    //     Compute a radial return in the octahedral profile to the linear drucker-prager
-    //     surface.  If (PEAKI1>I1Trial>Kappa), sigmaF = {I1Trial, (PeakI1-I1Trial)*FSLOPE}
-    //     Note FSLOPE is the slope of rootJ2 vs. I1
-    else if(sqrt(J2) > 1/FSLOPE * (I1 - Zeta - PEAKI1)){  //above normal drucker-p
-      #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-      #ifdef CSM_DEBUG_FAST_RET
-      if(ParticleID==JC_DEBUG_PARTICLE)
-        cout << ",FastRet Region II";
-      #endif
-      #endif
-
-      // Fast return algorithm in other cases (see "fig:AreniscaYieldSurface"
-      // in the Arenisca manual). In this case, the radial fast returning is used.
-      sigmaF=YieldFunctionBisection(one_third * Identity  * (I1 - FSLOPE * sqrt(J2)),
-                                    one_third * I1 * Identity + S,
-                                    X, Kappa, Zeta, ParticleID);
-
-      //cout << ", I1="<<I1<<",Zeta="<<Zeta<<",J2="<<J2
-      //<<",S="<<S;
-      if (isnan(sigmaF.Trace())) {  //Check stress_iteration for nan
-        cerr << "ParticleID = " << ParticleID << " sigmaF = " << sigmaF << endl;
-        throw InvalidValue("**ERROR**: Nan in sigmaF value", __FILE__, __LINE__);
-      }
-    }
-
-    //     -----------------------------------
-    //     FASTRET Region I - Return to vertex
-    //     -----------------------------------
-    else{  //sqrt(J2) <= 1/FSLOPE * (I1_sigmaP - ZetaP - PEAKI1)
-      #ifdef JC_DEBUG_PARTICLE // Print shifted trial stress for current subcycle
-      #ifdef CSM_DEBUG_FAST_RET
-      if(ParticleID==JC_DEBUG_PARTICLE)
-        cout << ",FastRet Region I";
-      #endif
-      #endif
-
-      // Fast return algorithm in the case of I1>PEAKI1 (see "fig:AreniscaYieldSurface"
-      // in the Arenisca manual). In this case, the fast returned position is the vertex.
-      sigmaF = one_third * Identity * (PEAKI1+Zeta);
-    }
+    if( (Z-ZApex)*(Z-ZApex)/(a*a)+R*R/(b*b) - 1 < 0 )
+        f = -1.0;
+    else if ( (X*X)/(a*a)+(Y*Y)/(b*b) - 1 > 0 )
+        f = 1.0;
   }
 
-  // Compute the invariants of the fast returned stress in the loop
-  //computeInvariants(sigmaF, S_sigmaF, I1_sigmaF, J2_sigmaF);
-
-  // Calculate value of yield function at fast return
-  //f_new=YieldFunction(I1_sigmaF,J2_sigmaF,XP,KappaP,ZetaP);
-
-  return sigmaF;
+  // Return the sign of the yield function
+  return f;
+  // ===========================================================================
+  // MH! END Compute Tranformed Yield Function
+  // ===========================================================================
 }
+
 void Arenisca::addRequiresDamageParameter(Task* task,
-                                     const MPMMaterial* matl,
-                                     const PatchSet* ) const
+    const MPMMaterial* matl,
+    const PatchSet* ) const
 {
   // Require the damage parameter
   const MaterialSubset* matlset = matl->thisMaterial();//T2D; what is this?
   task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
 }
 
-
 void Arenisca::getDamageParameter(const Patch* patch,
-                             ParticleVariable<int>& damage,
-                             int dwi,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+                                  ParticleVariable<int>& damage,
+                                  int dwi,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw)
 {
   // Get the damage parameter
   ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
   constParticleVariable<int> pLocalized;
   new_dw->get(pLocalized, pLocalizedLabel_preReloc, pset);
-    
+
   ParticleSubset::iterator iter;
   // Loop over the particle in the current patch.
   for (iter = pset->begin(); iter != pset->end(); iter++) {
@@ -2097,7 +1808,6 @@ void Arenisca::carryForward(const PatchSubset* patches,
       new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
     }
   }
-
 }
 
 //When a particle is pushed from patch to patch, carry information needed for the particle
@@ -2123,7 +1833,6 @@ void Arenisca::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pIotaQSLabel);
   from.push_back(pStressQSLabel);
   from.push_back(pScratchMatrixLabel);
-  //Xfrom.push_back(pVelGradLabel); //needed?
   to.push_back(  pLocalizedLabel_preReloc);
   to.push_back(  pAreniscaFlagLabel_preReloc);
   to.push_back(  pScratchDouble1Label_preReloc);
@@ -2141,7 +1850,6 @@ void Arenisca::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(  pIotaQSLabel_preReloc);
   to.push_back(  pStressQSLabel_preReloc);
   to.push_back(  pScratchMatrixLabel_preReloc);
-  //Xto.push_back(  pVelGradLabel_preReloc); //needed?
 }
 
 //T2D: move up
@@ -2172,7 +1880,6 @@ void Arenisca::addInitialComputesAndRequires(Task* task,
   task->computes(pIotaQSLabel,         matlset);
   task->computes(pStressQSLabel,       matlset);
   task->computes(pScratchMatrixLabel,  matlset);
-  //Xtask->computes(pVelGradLabel,        matlset);
 }
 
 void Arenisca::addComputesAndRequires(Task* task,
@@ -2201,7 +1908,6 @@ void Arenisca::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pIotaQSLabel,         matlset, Ghost::None);
   task->requires(Task::OldDW, pStressQSLabel,       matlset, Ghost::None);
   task->requires(Task::OldDW, pScratchMatrixLabel,  matlset, Ghost::None);
-  //Xtask->requires(Task::OldDW, pVelGradLabel,        matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pParticleIDLabel, matlset, Ghost::None);
   task->computes(pLocalizedLabel_preReloc,      matlset);
   task->computes(pAreniscaFlagLabel_preReloc,   matlset);
@@ -2220,7 +1926,6 @@ void Arenisca::addComputesAndRequires(Task* task,
   task->computes(pIotaQSLabel_preReloc,         matlset);
   task->computes(pStressQSLabel_preReloc,       matlset);
   task->computes(pScratchMatrixLabel_preReloc,  matlset);
-  //Xtask->computes(pVelGradLabel_preReloc,        matlset);
 }
 
 //T2D: Throw exception that this is not supported
@@ -2371,246 +2076,6 @@ void Arenisca::initializeLocalMPMLabels()
     ParticleVariable<Matrix3>::getTypeDescription());
   pScratchMatrixLabel_preReloc = VarLabel::create("p.ScratchMatrix+",
     ParticleVariable<Matrix3>::getTypeDescription());
-  //pVelGrad
-  //XpVelGradLabel = VarLabel::create("p.velGrad",
-  //X  ParticleVariable<Matrix3>::getTypeDescription());
-  //XpVelGradLabel_preReloc = VarLabel::create("p.velGrad+",
-  //X  ParticleVariable<Matrix3>::getTypeDescription());
-}
-
-//Compute Kinematics variables (Deformation Gradient, Velocity Gradient,
-// Volume, Density) for the particles in a patch
-// NO LONGER USED SINCE KINEMATICS MOVED TO SERIALMPM.cc
-void Arenisca::computeKinematics(const PatchSubset* patches,
-                                 const MPMMaterial* matl,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw)
-{
-  // Define some constants
-  Ghost::GhostType  gac   = Ghost::AroundCells;
-  Matrix3 Identity,tensorL(0.0);//T2D: is Identity used?
-  Identity.Identity();
-  double J;
-
-  // Get the initial density
-  double rho_orig = matl->getInitialDensity();
-
-  // Global loop over each patch
-  for(int p=0;p<patches->size();p++){
-
-    // Declare and initial value assignment for some variables
-    const Patch* patch = patches->get(p);
-
-    // Initialize for this patch
-    Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-
-    // Declare the interpolator variables (CPDI, GIMP, linear, etc)
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());  ///< nodes affected by particle
-    vector<Vector> d_S(interpolator->size());    ///< gradient of grid shape fxn
-    vector<double> S(interpolator->size());      ///< grid shape fxn (T2D: needed?)
-
-    // Get particle subset for the current patch
-    int dwi = matl->getDWIndex();
-    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-    // Get the particle variables
-    delt_vartype                   delT;
-    constParticleVariable<int>     pLocalized,
-                                   pAreniscaFlag;
-    constParticleVariable<double>  pmass;
-    constParticleVariable<long64>  pParticleID;
-    constParticleVariable<Point>   px;
-    constParticleVariable<Vector>  pvelocity;
-    constParticleVariable<Matrix3> psize,
-                                   pVelGrad,
-                                   pDefGrad;
-
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
-    old_dw->get(pLocalized,          pLocalizedLabel,              pset);
-    old_dw->get(pAreniscaFlag,            pAreniscaFlagLabel,                pset);
-    old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(pParticleID,         lb->pParticleIDLabel,         pset);
-    old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(psize,               lb->pSizeLabel,               pset);
-    old_dw->get(pVelGrad,            lb->pVelGradLabel,                pset);
-    old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
-
-    // Allocate the particle variables
-    ParticleVariable<int>          pLocalized_new,
-                                   pAreniscaFlag_new;
-    ParticleVariable<double>       pvolume;
-    ParticleVariable<Matrix3>      pVelGrad_new;
-    ParticleVariable<Matrix3>      pDefGrad_new;
-    new_dw->allocateAndPut(pLocalized_new,        pLocalizedLabel_preReloc,              pset);
-    new_dw->allocateAndPut(pAreniscaFlag_new,          pAreniscaFlagLabel_preReloc,                pset);
-    new_dw->allocateAndPut(pvolume,               lb->pVolumeLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pVelGrad_new,          lb->pVelGradLabel_preReloc,                pset);
-    new_dw->allocateAndPut(pDefGrad_new,          lb->pDeformationMeasureLabel_preReloc, pset);
-
-    // Allocate some temporary particle variables
-    ParticleVariable<double>  rho_cur;
-    new_dw->allocateTemporary(rho_cur, pset);
-
-    // Get the grid variables
-    constNCVariable<Vector> gvelocity;  //NCV=Node Centered Variable
-    new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
-
-    // loop over the particles
-    for(ParticleSubset::iterator iter = pset->begin();
-    iter != pset->end(); iter++){
-      particleIndex idx = *iter;
-
-      //re-zero the velocity gradient:
-      pLocalized_new[idx]=pLocalized[idx];
-
-      // pAreniscaFlag is a flag indicating if the particle has met any of the
-      // limit values on evp (pPlasticStrainVol) based on CM parameter p3,
-      // the maximum achieveable volumetric plastic strain in compression.
-      pAreniscaFlag_new[idx]=0.0;
-
-      tensorL.set(0.0);
-      if(!flag->d_axisymmetric){
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-            pDefGrad[idx]);
-        computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity);
-      } else {  // axi-symmetric kinematics
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-            psize[idx],pDefGrad[idx]);
-        // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity,px[idx]);
-      }
-      //pVelGrad=pVelGrad_new[idx];
-      pVelGrad_new[idx]=tensorL;
-
-      int num_scs = 4;
-      Matrix3 one; one.Identity();
-  #ifdef JC_USE_BB_DEFGRAD_UPDATE
-      // Improve upon first order estimate of deformation gradient
-      Matrix3 Amat = (pVelGrad[idx] + pVelGrad_new[idx])*(0.5*delT);
-      //Matrix3 Amat = ( pVelGrad_new[idx])*(0.5*delT);//HACK BUG
-      Matrix3 Finc = Amat.Exponential(JC_USE_BB_DEFGRAD_UPDATE);
-      Matrix3 Fnew = Finc*pDefGrad[idx];
-      pDefGrad_new[idx] = Fnew;
-  #else
-      // Update the deformation gradient in a new way using subcycling
-      Matrix3 F=pDefGrad[idx];
-      double Lnorm_dt = tensorL.Norm()*delT;
-      num_scs = max(4,2*((int) Lnorm_dt));
-      if(num_scs > 1000){
-        cout << "NUM_SCS = " << num_scs << endl;
-      }
-      double dtsc = delT/(double (num_scs));
-      Matrix3 OP_tensorL_DT = one + tensorL*dtsc;
-      for(int n=0;n<num_scs;n++){
-        F=OP_tensorL_DT*F;
-      }
-      pDefGrad_new[idx]=F;
-      // Update the deformation gradient, Old First Order Way
-      // pDefGrad_new[idx]=(tensorL*delT+Identity)*pDefGrad[idx];
-  #endif
-
-      // Compute the Jacobian and delete the particle in the case of negative Jacobian
-      J = pDefGrad_new[idx].Determinant();
-      if (J<=0 || J>10){
-        cout<<"ERROR, negative J! "<<endl;
-        cout<<"pParticleID="<<pParticleID[idx]<<endl;
-        cout<<"pDefGrad= "<<pDefGrad_new[idx]<<endl;
-        cout<<"pDefGrad_new="<<pDefGrad_new[idx]<<endl<<endl;
-        cout<<"J= "<<J<<endl;
-        cout<<"L= "<<tensorL<<endl;
-        cout<<"num_scs= "<<num_scs<<endl;
-        pLocalized_new[idx] = -999;
-        cout<<"DELETING Arenisca particle " << endl;
-        J=1;
-        pDefGrad_new[idx] = one;
-        //throw InvalidValue("**ERROR**:Negative Jacobian", __FILE__, __LINE__);
-      }
-  #ifdef JC_FREEZE_PARTICLE
-      if (J>4000){
-        cout << "WARNING, massive $J! " << "J=" << J
-        //     <<", DELETING particleID=" <<pParticleID[idx]<< endl;
-        //pLocalized_new[idx] = -999;
-        <<",FREEZING particleID="<<pParticleID[idx]<<endl;
-        J =pDefGrad[idx].Determinant();
-        pDefGrad_new[idx] = pDefGrad[idx];
-      }
-  #endif
-
-      // Update particle volume and density
-      pvolume[idx]=(pmass[idx]/rho_orig)*J;
-      //rho_cur[idx] = rho_orig/J;
-    }
-
-#ifdef CSM_PRESSURE_STABILIZATION
-    // The following is used only for pressure stabilization
-    CCVariable<double> J_CC;
-    new_dw->allocateTemporary(J_CC,       patch);
-    J_CC.initialize(0.);
-
-    CCVariable<double> vol_0_CC;
-    CCVariable<double> vol_CC;
-    new_dw->allocateTemporary(vol_0_CC, patch);
-    new_dw->allocateTemporary(vol_CC,   patch);
-
-    vol_0_CC.initialize(0.);
-    vol_CC.initialize(0.);
-    for(ParticleSubset::iterator iter = pset->begin();
-        iter != pset->end(); iter++){
-      particleIndex idx = *iter;
-
-      // get the volumetric part of the deformation
-      double J = pDefGrad_new[idx].Determinant();
-
-      // Get the deformed volume
-      double rho_cur = rho_orig/J;
-      pvolume[idx] = pmass[idx]/rho_cur;
-
-      IntVector cell_index;
-      patch->findCell(px[idx],cell_index);
-
-      vol_CC[cell_index]  +=pvolume[idx];
-      vol_0_CC[cell_index]+=pmass[idx]/rho_orig;
-    }
-
-    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
-      IntVector c = *iter;
-      J_CC[c]=vol_CC[c]/vol_0_CC[c];
-    }
-    //end of pressureStabilization loop  at the patch level
-
-    for(ParticleSubset::iterator iter = pset->begin();
-        iter != pset->end(); iter++){
-      particleIndex idx = *iter;
-
-      double J = pDefGrad_new[idx].Determinant();
-
-      IntVector cell_index;
-      patch->findCell(px[idx],cell_index);
-
-      // Change F such that the determinant is equal to the average for
-      // the cell
-      pDefGrad_new[idx]*=cbrt(J_CC[cell_index]/J);
-      J=J_CC[cell_index];
-
-      if (J<=0.0) {
-        double Jold = pDefGrad[idx].Determinant();
-        cout<<"negative J in ProgramBurn, J="<<J<<", Jold = " << Jold << endl;
-        cout << "pos = " << px[idx] << endl;
-        pLocalized_new[idx]=-999;
-        cout<< "localizing (deleting) particle "<<pParticleID[idx]<<endl;
-        cout<< "material = " << dwi << endl << "Momentum deleted = "
-            << pvelocity[idx]*pmass[idx] <<endl;
-        J=1;
-      }
-    }
-#endif
-
-  }
 }
 
 // Compute the strain at zero pore pressure from initial pore pressure (Pf0)
@@ -2623,7 +2088,7 @@ double Arenisca::computeev0()
   //define and initialize some variables
   double p3  = d_cm.p3_crush_curve, // max vol. plastic strain
          Kf  = d_cm.fluid_B0,       // fluid bulk modulus
-         Pf0 = d_cm.fluid_pressure_initial,            // initial pore pressure
+         Pf0 = 3*d_cm.fluid_pressure_initial,            // initial pore pressure (-I1)
          ev0;                       // strain at zero pore pressure
 
    if(Pf0==0) // No initial pore pressure
@@ -2792,7 +2257,11 @@ double Arenisca::computeX(double evp)
       // coupling in the plasticity solution.
       if(evp <= 0)
       { // pore collapse
-        Kfit = B0 + B1;                     // drained bulk modulus function
+        // Hack: for now we use a constant bulk modulus until we revise Arenisca to call
+        // step with a strain rate so the bulk modulus can be adjusted with deformation.
+        //
+        //Kfit = B0 + B1;                     // drained bulk modulus function
+        Kfit = B0;                     // drained bulk modulus function
         Xfit = (p0*p1+log((evp+p3)/p3))/p1; // drained crush curve function
       }
       else
@@ -2804,7 +2273,13 @@ double Arenisca::computeX(double evp)
       // Now we use our linear engineering model for the bulk modulus of the
       // saturated material to compute the stress at our elastic strain to yield.
       ev0  = computeev0();                // strain at zero pore pressure
-      Keng = computeBulkModulus(ev0-1);   // Saturated bulk modulus
+
+      // Hack: for now we use a constant bulk modulus until we revise Arenisca to call
+      // step with a strain rate so the bulk modulus can be adjusted with deformation.
+      //
+      //Keng = computeBulkModulus(ev0-1);   // Saturated bulk modulus
+      Keng = B0;
+
       eveX = one_third*Xfit/Kfit;         // Elastic vol. strain to compressive yield
 
       // There are three regions depending on whether the elastic loading to yield
@@ -2812,82 +2287,17 @@ double Arenisca::computeX(double evp)
       if(evp <= ev0)                            // Fluid Effects
         X = 3*Keng*eveX;
       else if(evp > ev0 && evp+eveX < ev0)      // Transition
-        X = 3*B0*(evp-ev0) + 3*Keng*(evp+eveX-ev0);
+        // Hack: for now we use a constant bulk modulus until we revise Arenisca to call
+        // step with a strain rate so the bulk modulus can be adjusted with deformation.
+        // Also, check this, it might be wrong
+        //
+        //X = 3*B0*(evp-ev0) + 3*Keng*(evp+eveX-ev0);
+        X = 3*B0*eveX;
       else                                      // No Fluid Effects
         X = 3*B0*eveX;
     } //end fluid effects
   } // end good/bad plastic strain
   return X;
-}
-
-// Compute state variable rate dXdevp (used in cap evolution)
-double Arenisca::computedXdevp(double evp)
-{
-  //define and initialize some varialbes
-  double p0  = d_cm.p0_crush_curve,
-         p1  = d_cm.p1_crush_curve,
-         p3  = d_cm.p3_crush_curve,
-         B0  = d_cm.B0,             // low pressure bulk modulus
-         B1  = d_cm.p4_fluid_effect,             // additional high pressure bulk modulus
-         Kf  = d_cm.fluid_B0,       // fluid bulk modulus
-         //XXPf0 = d_cm.fluid_pressure_initial,
-         Kfit,
-         Xfit,
-         ev0,
-         deveXdevp,
-         Keng,
-         eveX,
-         pdXdevp;
-
-  if(Kf==0){ // No Fluid Effects -------------------------------------
-   if(evp <= 0)                        // pore collapse
-    pdXdevp = 1/(p1*(evp + p3));
-   else                                // pore expansion
-    pdXdevp = Pow(1 + evp,-1 + 1/(p0*p1*p3))/(p1*p3);
-  }
-
-  else{      //Fluid Effects -----------------------------------------
-
-  // First we evaluate the elastic volumetric strain to yield from the
-  // empirical crush curve (Xfit) and bulk modulus (Kfit) formula for
-  // the drained material.  These functions could be modified to use
-  // the full non-linear and elastic-plastic coupled input paramters
-  // without introducing the additional complexity of elastic-plastic
-  // coupling in the plasticity solution.
-  //
-
-  if(evp <= 0){                      // pore collapse
-    Kfit = B0 + B1;                     // drained bulk modulus function
-    Xfit = (p0*p1+log((evp+p3)/p3))/p1; // drained crush curve function
-    deveXdevp = 2/(3*(2*B0 + B1)*p1*(evp + p3));
-  }
-  else{                              // pore expansion
-    Kfit = B0;                                 // drained bulk modulus function
-    Xfit = Pow(1+evp , 1/(B0*p1*p3))*p0;       // drained crush curve function
-    deveXdevp = Pow( 1+evp , -1 + 1/(p0*p1*p3) ) / (3*B0*p1*p3);
-  }
-
-   // Now we use our linear engineering model for the bulk modulus of the
-   // saturated material to compute the stress at our elastic strain to yield.
-   // Now we use our linear engineering model for the bulk modulus of the
-   // saturated material to compute the stress at our elastic strain to yield.
-   ev0  = computeev0();                // vol. strain at zero fluid pressure
-   Keng = computeBulkModulus(ev0-1);   // Saturated bulk modulus
-   eveX = one_third*Xfit/Kfit;         // Elastic vol. strain to compressive yield
-
-   // There are three regions depending on whether the elastic loading to yield
-   // occurs within the domain of fluid effects (ev < ev0)
-   if(evp <= ev0)                            // Fluid Effects
-    pdXdevp = 3*Keng*deveXdevp;              // X(evp) = 3*Keng*eveX
-
-   else if(evp > ev0 && evp+eveX < ev0)      // Transition
-    pdXdevp = 3*B0 + 3*Keng*(1 + deveXdevp); // X(evp) = 3*b0*(evp - ev0)
-                                             //        + 3*Keng*(evp + eveX - ev0)
-   else                                      // No Fluid Effects
-    pdXdevp = 3*B0*deveXdevp;                // X(evp) = 3*b0*eveX
-  } //end fluid effects
-
-  return pdXdevp;
 }
 
 // Compute (dZeta/devp) Zeta and vol. plastic strain
@@ -2923,66 +2333,6 @@ double Arenisca::computedZetadevp(double Zeta, double evp)
   return dZetadevp;
 }
 
-// Compute (dKappa/devp) from vol. plastic strain
-double Arenisca::computedKappadevp(double evp)
-{
-  // The value of the partial derivative of the branch point
-  // (Kappa) with respect to volumetric plastic strain (evp)
-  // is computed using the chaing rule:
-  //
-  // dKappa    dKappa      dX
-  // ------ = -------- * ------
-  //  devp       dX       devp
-  //
-  //define and initialize some variables
-  double CR     = d_cm.CR,
-         FSLOPE = d_cm.FSLOPE,
-         dKappadevp;
-
-  dKappadevp= 1/(1+FSLOPE * CR) * computedXdevp(evp);
-
-  return dKappadevp;
-}
-
-// Compute branch point, kappa exactly from cap intercept X
-double Arenisca::computeKappa(double X)
-{
-  // The ratio of the branch point (Kappa) to the hydrostatic
-  // compressive strength, (X) is defined by the input parameter
-  // CR, defined such that:
-  //
-  //       FSLOPE*(PEAKI1-Kappa)
-  // CR = -----------------------
-  //           (Kappa - X)
-  //
-  //define and initialize some variables
-  double FSLOPE = d_cm.FSLOPE,
-         CR     = d_cm.CR,
-         PEAKI1 = d_cm.PEAKI1,
-         Kappa;
-
-  Kappa = (FSLOPE * PEAKI1 * CR + X)
-          /(1 + FSLOPE * CR);
-
-  return Kappa;
-}
-
-// Compute unique projection direction P = C:M +Z
-Matrix3 Arenisca::computeP(double lame,
-                 Matrix3 M,
-                 Matrix3 Z)
-{
-  //define and initialize some variables
-  double  shear = d_cm.G0;
-  Matrix3 Identity,
-          P;
-  Identity.Identity();
-
-  //P=C:M+Z
-  P = (Identity*lame*(M.Trace()) + M * 2.0*shear) + Z;
-
-  return P;
-}
 #ifdef JC_DEBUG_PARTICLE // Undefine
 #undef JC_DEBUG_PARTICLE
 #endif
