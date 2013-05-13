@@ -104,13 +104,7 @@ namespace Uintah {
     const VarLabel* pStressQSLabel_preReloc;
     const VarLabel* pScratchMatrixLabel;
     const VarLabel* pScratchMatrixLabel_preReloc;
-    //Xconst VarLabel* pVelGradLabel;
-    //Xconst VarLabel* pVelGradLabel_preReloc;
-    
-    //T2D: add more class variables
-    //double temp;
-    //Matrix3 Identity
-    
+
   private:
     double one_third,
            two_third,
@@ -153,6 +147,7 @@ namespace Uintah {
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
+  private: //non-uintah mpm constitutive specific functions
     int computeStressTensorStep(const Matrix3& trial_stress,
                                 Matrix3& sigma_new,
                                 Matrix3& ep_new,
@@ -163,7 +158,7 @@ namespace Uintah {
                                 double& Zeta_new,
                                 double& bulk,
                                 long64 ParticleID);
-    
+
     void computeInvariants(const Matrix3& stress,
                            Matrix3& S,
                            double& I1,
@@ -175,52 +170,20 @@ namespace Uintah {
                          const double& X,
                          const double& Zeta,
                          const double& threeKby2G);
-    
+
+    double ComputeNonHardeningReturn(const double& R,
+                                     const double& Z,
+                                     const double& CapX,
+                                     const double& Beta,
+                                     double& r_new,
+                                     double& z_new);
+
     double TransformedYieldFunction(const double& R,
                                     const double& Z,
                                     const double& X,
                                     const double& Beta);
-    
-    double TransformedFlowFunction(const double& R,
-                                   const double& Z,
-                                   const double& X,
-                                   const double& Beta);
-    
-    double dgdr(const double& R,
-                const double& Z,
-                const double& X,
-                const double& Beta);
-    
-    double dgdz(const double& R,
-                const double& Z,
-                const double& X,
-                const double& Beta);
-    
-    Matrix3 YieldFunctionGradient(const Matrix3& S,
-                                 const double& I1,
-                                 const double& J2,
-                                 const Matrix3& S_trial,
-                                 const double& I1_trial,
-                                 const double& J2_trial,
-                                 const double& X,
-                                 const double& Kappa,
-                                 const double& Zeta);
-    
-    Matrix3 YieldFunctionBisection(const Matrix3& sigma_in,
-                                   const Matrix3& sigma_out,
-                                   const double& X,
-                                   const double& Kappa,
-                                   const double& Zeta,
-                                   long64 ParticleID);
 
-    Matrix3 YieldFunctionFastRet(const Matrix3& S,
-                                 const double& I1,
-                                 const double& J2,
-                                 const double& X,
-                                 const double& Kappa,
-                                 const double& Zeta,
-                                 long64 ParticleID);
-    
+  public: //Uintah MPM constitutive model specific functions
     ////////////////////////////////////////////////////////////////////////
     /* Make the value for pLocalized computed locally available outside of the model. */
     ////////////////////////////////////////////////////////////////////////
@@ -250,7 +213,7 @@ namespace Uintah {
                                   const MPMMaterial* matl,
                                   DataWarehouse* new_dw);
 
-    
+
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
@@ -288,40 +251,25 @@ namespace Uintah {
 
     virtual double getCompressibility();
 
-  private: //New functions for modularity by Colovos & Homel
-    void computeKinematics(const PatchSubset* patches,
-                           const MPMMaterial* matl,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw);
-    
+  private:  //Non-Uintah MPM constitutive model class functions
     double computeev0();
-    
+
     double computedfdKappa(double I1,
                            double X,
                            double Kappa,
                            double Zeta);
-    
+
     double computedfdZeta(double I1,
                           double X,
                           double Kappa,
                           double Zeta);
-    
+
     double computeBulkModulus(double ev);
-        
+
     double computeX(double evp);
-    
-    double computedXdevp(double evp);
-    
+
     double computedZetadevp(double Zeta,
                             double evp);
-    
-    double computedKappadevp(double evp);
-    
-    double computeKappa(double X);
-        
-    Matrix3 computeP(double lame,
-                     Matrix3 M,
-                     Matrix3 Z);
   };
 } // End namespace Uintah
 
