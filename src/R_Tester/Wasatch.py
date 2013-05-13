@@ -144,7 +144,7 @@ NIGHTLYTESTS = [
   ("taylor-green-vortex-2d-xz",          "taylor-green-vortex-2d-xz.ups",          4,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("taylor-green-vortex-2d-yz",          "taylor-green-vortex-2d-yz.ups",          4,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("scalability-test",              "scalability-test.ups",              1,  "Linux",  ["exactComparison","no_restart"] ),                 \
-  ("taylor-green-vortex-3D",          "taylor-green-vortex-3D.ups",          8,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("taylor-green-vortex-3d",          "taylor-green-vortex-3d.ups",          8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
@@ -210,7 +210,7 @@ LOCALTESTS = [
   ("taylor-green-vortex-2d-xz",          "taylor-green-vortex-2d-xz.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("taylor-green-vortex-2d-yz",          "taylor-green-vortex-2d-yz.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("scalability-test",              "scalability-test.ups",              1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("taylor-green-vortex-3D",          "taylor-green-vortex-3D.ups",          8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("taylor-green-vortex-3d",          "taylor-green-vortex-3d.ups",          8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
