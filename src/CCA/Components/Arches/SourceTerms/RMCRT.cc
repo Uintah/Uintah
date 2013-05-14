@@ -198,7 +198,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   for (int L = 0; L < maxLevels; L++) {
     if( L != archesLevelIndex ){
       const LevelP& level = grid->getLevel(L);
-      _RMCRT->sched_CarryForward (level, sched, _cellTypeLabel);
+      _RMCRT->sched_CarryForward ( level, sched, _cellTypeLabel );
     }
   }
 
@@ -289,7 +289,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const PatchSet* patches = level->eachPatch();
-      _RMCRT->sched_Refine_Q (sched,  patches, _matlSet);
+      _RMCRT->sched_Refine_Q (sched,  patches, _matlSet, _radiation_calc_freq);
     }
   }
 }

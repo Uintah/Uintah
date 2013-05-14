@@ -137,7 +137,8 @@ namespace Uintah{
 
       /** @brief Initializes properties for the algorithm */ 
       void sched_initProperties( const LevelP&, 
-                                 SchedulerP& sched );
+                                 SchedulerP& sched,
+                                 const int radCalc_freq );
                                  
       /** @brief Set boundary conditions and compute sigmaT4 */
       void  sched_setBoundaryConditions( const LevelP& level, 
@@ -145,6 +146,8 @@ namespace Uintah{
                                          Task::WhichDW temp_dw,
                                          const int radCalc_freq,
                                          const bool backoutTemp = false);
+ 
+ 
                                          
       /** @brief Update the running total of the incident intensity */
       void  updateSumI ( Vector& inv_direction_vector, // can change if scattering occurs
@@ -182,7 +185,8 @@ namespace Uintah{
       //  Multilevel tasks
       void sched_Refine_Q(SchedulerP& sched,
                           const PatchSet* patches,
-                          const MaterialSet* matls);
+                          const MaterialSet* matls,
+                          const int radCalc_freq);
                       
       void sched_CoarsenAll( const LevelP& coarseLevel, 
                              SchedulerP& sched,
@@ -193,7 +197,8 @@ namespace Uintah{
 
       void sched_ROI_Extents ( const LevelP& level, 
                                SchedulerP& scheduler );
-                                 
+           
+      /* transfer a variable from old_dw -> new_dw for convience */   
       void sched_CarryForward ( const LevelP& level,
                                 SchedulerP& scheduler,
                                 const VarLabel* variable );
@@ -341,7 +346,8 @@ namespace Uintah{
                            const PatchSubset* patches, 
                            const MaterialSubset* matls, 
                            DataWarehouse* old_dw, 
-                           DataWarehouse* new_dw ); 
+                           DataWarehouse* new_dw,
+                           const int radCalc_freq ); 
 
       //----------------------------------------
       void sigmaT4( const ProcessorGroup* pc,
@@ -391,7 +397,8 @@ namespace Uintah{
                   const PatchSubset* patches,
                   const MaterialSubset* matls,
                   DataWarehouse*,
-                  DataWarehouse* new_dw);
+                  DataWarehouse* new_dw,
+                  const int radCalc_freq);
                           
     // coarsen a single variable
     void sched_Coarsen_Q( const LevelP& coarseLevel,
