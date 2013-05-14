@@ -253,7 +253,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   }
   
   
-  printSchedule(patches,coutdbg,"Relocate::relocateParticles");
+  printSchedule(patches,coutdbg,"Relocate::scheduleRelocateParticles");
   
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
