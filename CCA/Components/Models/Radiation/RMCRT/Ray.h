@@ -316,7 +316,8 @@ namespace Uintah{
                         bool modifies_divQ,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW which_sigmaT4_dw,
-                        Task::WhichDW which_celltype_dw);
+                        Task::WhichDW which_celltype_dw,
+                        const int radCalc_freq);
 
 #endif
 

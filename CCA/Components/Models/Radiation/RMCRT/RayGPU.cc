@@ -45,7 +45,8 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
                       bool modifies_divQ,
                       Task::WhichDW which_abskg_dw,
                       Task::WhichDW which_sigmaT4_dw,
-                      Task::WhichDW which_celltype_dw)
+                      Task::WhichDW which_celltype_dw,
+                      const int radCalc_freq)
 {
   // set the CUDA device and context
   CUDA_RT_SAFE_CALL( cudaSetDevice(device) );
