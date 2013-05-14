@@ -311,9 +311,9 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   // move data to the new_dw for simplicity
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
-    d_RMCRT->sched_CarryForward (level, sched, d_cellTypeLabel);
-    d_RMCRT->sched_CarryForward (level, sched, d_colorLabel);
-    d_RMCRT->sched_CarryForward (level, sched, d_abskgLabel);
+    d_RMCRT->sched_CarryForward( level, sched, d_cellTypeLabel );
+    d_RMCRT->sched_CarryForward( level, sched, d_colorLabel );
+    d_RMCRT->sched_CarryForward( level, sched, d_abskgLabel );
   }
   
   
@@ -324,7 +324,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     Task::WhichDW temp_dw = Task::NewDW;
     
     // modify Radiative properties on the finest level
-    d_RMCRT->sched_initProperties( fineLevel, sched);
+    d_RMCRT->sched_initProperties( fineLevel, sched, d_radCalc_freq);
     
     d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, d_radCalc_freq, false );
  
@@ -352,6 +352,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     Task::WhichDW sigmaT4_dw = Task::NewDW;
     const bool modifies_divQ = false;
     d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ, d_radCalc_freq);
+
   }
   
   //______________________________________________________________________
@@ -363,7 +364,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     Task::WhichDW temp_dw = Task::NewDW;
    
     // modify Radiative properties on the finest level
-    d_RMCRT->sched_initProperties( fineLevel, sched  );
+    d_RMCRT->sched_initProperties( fineLevel, sched, d_radCalc_freq );
     
     d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, d_radCalc_freq, false );
     
@@ -377,7 +378,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       if(level->hasFinerLevel() || maxLevels == 1){
         Task::WhichDW abskg_dw    = Task::NewDW;
         Task::WhichDW sigmaT4_dw  = Task::NewDW;
-        Task::WhichDW celltype_dw  = Task::NewDW;
+        Task::WhichDW celltype_dw = Task::NewDW;
         const bool modifies_divQ  = false;
         const bool backoutTemp    = true;
         
@@ -386,11 +387,12 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       }
     }
 
+    //__________________________________
     // push divQ  to the coarser levels 
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const PatchSet* patches = level->eachPatch();
-      d_RMCRT->sched_Refine_Q (sched,  patches, matls);
+      d_RMCRT->sched_Refine_Q (sched,  patches, matls, d_radCalc_freq);
     }
   }
 }

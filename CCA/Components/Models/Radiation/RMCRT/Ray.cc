@@ -109,15 +109,23 @@ Ray::~Ray()
   VarLabel::destroy( d_flaggedCellsLabel );
   VarLabel::destroy( d_ROI_LoCellLabel );
   VarLabel::destroy( d_ROI_HiCellLabel );
-  VarLabel::destroy( d_VRFluxLabel);
-  VarLabel::destroy( d_boundFluxLabel);
-  VarLabel::destroy( d_divQFiltLabel);
-  VarLabel::destroy( d_boundFluxFiltLabel);
-  VarLabel::destroy( d_cellTypeLabel);
+  VarLabel::destroy( d_VRFluxLabel );
+  VarLabel::destroy( d_boundFluxLabel );
+  VarLabel::destroy( d_divQFiltLabel );
+  VarLabel::destroy( d_boundFluxFiltLabel );
+  VarLabel::destroy( d_cellTypeLabel );
 
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
   }
+}
+
+//______________________________________________________________________
+//  Logic for determing when to carry forward
+bool doCarryForward( const int timestep,
+                     const int radCalc_freq){
+  bool test = (timestep%radCalc_freq != 0 && timestep != 1);
+  return test;
 }
 
 //---------------------------------------------------------------------------
@@ -144,13 +152,13 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "VRLocationsMin" ,  _VRLocationsMin,  IntVector(0,0,0) );  // minimum extent of the string or block of virtual radiometers
   rmcrt_ps->getWithDefault( "VRLocationsMax" ,  _VRLocationsMax,  IntVector(0,0,0) );  // maximum extent of the string or block or virtual radiometers
   rmcrt_ps->getWithDefault( "nRadRays"  ,      _nRadRays  ,      1000 );
-  rmcrt_ps->getWithDefault( "nFluxRays" ,    _nFluxRays,     500 );             // number of rays per cell for computation of boundary fluxes
+  rmcrt_ps->getWithDefault( "nFluxRays" ,       _nFluxRays,     500 );                 // number of rays per cell for computation of boundary fluxes
   rmcrt_ps->getWithDefault( "sigmaScat"  ,      _sigmaScat  ,      0 );                // scattering coefficient
   rmcrt_ps->getWithDefault( "abskgBench4"  ,    _abskgBench4,      1 );                // absorption coefficient specific to Bench4
-  rmcrt_ps->get(              "shouldSetBCs" ,  _onOff_SetBCs );                       // ignore applying boundary conditions
+  rmcrt_ps->get(             "shouldSetBCs" ,   _onOff_SetBCs );                       // ignore applying boundary conditions
   rmcrt_ps->getWithDefault( "allowReflect"   ,  _allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
   rmcrt_ps->getWithDefault( "solveDivQ"      ,  _solveDivQ,        true );             // Allow for solving of divQ for flow cells.
-  rmcrt_ps->getWithDefault( "applyFilter"    ,  _applyFilter,      false );             // Allow filtering of boundFlux and divQ.
+  rmcrt_ps->getWithDefault( "applyFilter"    ,  _applyFilter,      false );            // Allow filtering of boundFlux and divQ.
 
 
 
@@ -299,11 +307,15 @@ Ray::registerVarLabels(int   matlIndex,
 //---------------------------------------------------------------------------
 //
 void 
-Ray::sched_initProperties( const LevelP& level, SchedulerP& sched )
+Ray::sched_initProperties( const LevelP& level, 
+                           SchedulerP& sched,
+                           const int radCalc_freq )
 {
 
   if(_benchmark != 0){
-    Task* tsk = scinew Task( "Ray::initProperties", this, &Ray::initProperties); 
+    Task* tsk = scinew Task( "Ray::initProperties", this, 
+                             &Ray::initProperties, radCalc_freq);
+                              
     printSchedule(level,dbg,"Ray::initProperties");
 
     tsk->modifies( d_temperatureLabel );
@@ -321,8 +333,16 @@ Ray::initProperties( const ProcessorGroup* pc,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
-                     DataWarehouse* new_dw )
+                     DataWarehouse* new_dw,
+                     const int radCalc_freq )
 {
+
+  // Only run if it's time
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  if ( doCarryForward( timestep, radCalc_freq) ) {
+    return;
+  }
+  
   const Level* level = getLevel(patches);
 
   for (int p=0; p < patches->size(); p++){
@@ -406,7 +426,6 @@ Ray::initProperties( const ProcessorGroup* pc,
         _sigmaScat = 8;
       }
     }
-
   }
 }
 
@@ -425,7 +444,8 @@ Ray::sched_sigmaT4( const LevelP& level,
 
   printSchedule(level,dbg,taskname);
   
-  tsk->requires( temp_dw, d_temperatureLabel, Ghost::None, 0 ); 
+  tsk->requires( temp_dw, d_temperatureLabel,  d_gn, 0 );
+  tsk->requires( Task::OldDW, d_sigmaT4_label, d_gn, 0 ); 
   tsk->computes(d_sigmaT4_label); 
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
@@ -436,19 +456,25 @@ Ray::sched_sigmaT4( const LevelP& level,
 void
 Ray::sigmaT4( const ProcessorGroup*,
               const PatchSubset* patches,           
-              const MaterialSubset*,                
-              DataWarehouse* , 
+              const MaterialSubset* matls,                
+              DataWarehouse* old_dw, 
               DataWarehouse* new_dw,
               Task::WhichDW which_temp_dw,
               const int radCalc_freq,
               const bool includeEC )               
 {
-  // Only run if it's time
+  //__________________________________
+  //  Carry Forward
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( timestep%radCalc_freq != 0 ) {
+  if ( doCarryForward( timestep, radCalc_freq) ) {
+    printTask( patches, patches->get(0), dbg, "Doing Ray::sigmaT4 carryForward (sigmaT4)" );
+    
+    new_dw->transferFrom( old_dw, d_sigmaT4_label, patches, matls );
     return;
   }
   
+  //__________________________________
+  //  do the work
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
@@ -505,6 +531,12 @@ Ray::sched_rayTrace( const LevelP& level,
   Ghost::GhostType  gac  = Ghost::AroundCells;
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
+  
+  // when carryforward is needed
+  tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
+  tsk->requires( Task::OldDW, d_VRFluxLabel,         d_gn, 0 );
+  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 ); 
+  
   if (!tsk->usesDevice()) {
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
   }
@@ -513,19 +545,16 @@ Ray::sched_rayTrace( const LevelP& level,
     if (!tsk->usesDevice()) {
       tsk->modifies( d_VRFluxLabel );
       tsk->modifies( d_boundFluxLabel );
-      tsk->modifies( d_divQFiltLabel );
-      tsk->modifies( d_boundFluxFiltLabel );
     }
   } else {
     tsk->computes( d_divQLabel );
     if (!tsk->usesDevice()) {
       tsk->computes( d_VRFluxLabel );
       tsk->computes( d_boundFluxLabel );
-      tsk->computes( d_divQFiltLabel );
-      tsk->computes( d_boundFluxFiltLabel );
     }
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  
 }
 
 //---------------------------------------------------------------------------
@@ -544,15 +573,24 @@ Ray::rayTrace( const ProcessorGroup* pc,
                const int radCalc_freq )
 { 
 
-  // Only run if it's time
+
+  const Level* level = getLevel(patches);
+   //__________________________________
+  //  Carry Forward (old_dw -> new_dw)
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( timestep%radCalc_freq != 0 ) {
+  if ( doCarryForward( timestep, radCalc_freq) ) {
+    printTask( level->getPatch(0), dbg, "Doing Ray::rayTrace carryForward (divQ, VRFlux, boundFlux )" );
+    
+    new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls );
+    new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls );
+    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );
     return;
   }
   
-  const Level* level = getLevel(patches);
+  //__________________________________
+  //
   MTRand _mTwister;
-
+  
   // Determine the size of the domain.
   IntVector domainLo, domainHi;
   IntVector domainLo_EC, domainHi_EC;
@@ -595,6 +633,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
       new_dw->allocateAndPut( VRFlux,    d_VRFluxLabel,    d_matl, patch );
       VRFlux.initialize( 0.0 );
       new_dw->allocateAndPut( boundFlux,    d_boundFluxLabel, d_matl, patch );
+      
       for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
 
@@ -1044,14 +1083,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
                                Task::WhichDW sigma_dw,
                                bool modifies_divQ,
                                const int radCalc_freq )
-{
-
-  // Only schedule below on radiation timestep
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( timestep%radCalc_freq != 0 ) {
-    return;
-  } 
-  
+{  
   int maxLevels = level->getGrid()->numLevels() -1;
   int L_indx = level->getIndex();
   
@@ -1063,6 +1095,9 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
                           modifies_divQ, abskg_dw, sigma_dw, radCalc_freq );
                           
   printSchedule(level,dbg,taskname);
+
+  // used when carryforward is needed
+  tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
 
   Task::MaterialDomainSpec  ND  = Task::NormalDomain;
   #define allPatches 0
@@ -1115,19 +1150,24 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
                          Task::WhichDW which_sigmaT4_dw,
                          const int radCalc_freq )
 { 
-  // Only run if it's time
+
+  const Level* fineLevel = getLevel(finePatches);
+   //__________________________________
+  //  Carry Forward (old_dw -> new_dw)
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( timestep%radCalc_freq != 0 ) {
+  if ( doCarryForward( timestep, radCalc_freq) ) {
+    printTask( fineLevel->getPatch(0), dbg, "Coing Ray::rayTrace_dataOnion carryForward ( divQ )" );
+    
+    new_dw->transferFrom( old_dw, d_divQLabel,      finePatches, matls );    
     return;
   } 
   
-  const Level* fineLevel = getLevel(finePatches);
+  //__________________________________
+  //
   int maxLevels    = fineLevel->getGrid()->numLevels();
   int levelPatchID = fineLevel->getPatch(0)->getID();
   LevelP level_0 = new_dw->getGrid()->getLevel(0);
   MTRand _mTwister;
-
-
 
   //__________________________________
   //retrieve the coarse level data
@@ -1736,7 +1776,7 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
 {
   // Only run if it's time
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( timestep%radCalc_freq != 0 ) {
+  if ( doCarryForward( timestep, radCalc_freq) ) {
     return;
   }
   
@@ -1907,7 +1947,8 @@ void Ray::setBC(CCVariable<T>& Q_CC,
 //
 void Ray::sched_Refine_Q(SchedulerP& sched,
                          const PatchSet* patches,
-                         const MaterialSet* matls)
+                         const MaterialSet* matls,
+                         const int radCalc_freq)
 {
   const Level* fineLevel = getLevel(patches);
   int L_indx = fineLevel->getIndex();
@@ -1916,12 +1957,15 @@ void Ray::sched_Refine_Q(SchedulerP& sched,
      printSchedule(patches,dbg,"Ray::scheduleRefine_Q (divQ)");
 
     Task* task = scinew Task("Ray::refine_Q",this, 
-                             &Ray::refine_Q);
+                             &Ray::refine_Q,  radCalc_freq);
     
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
     task->requires(Task::NewDW, d_divQLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gn,0);
+     
+    // when carryforward is needed
+    task->requires( Task::OldDW, d_divQLabel, d_gn, 0 );
      
     task->computes(d_divQLabel);
     sched->addTask(task, patches, matls);
@@ -1931,14 +1975,28 @@ void Ray::sched_Refine_Q(SchedulerP& sched,
 //______________________________________________________________________
 //
 void Ray::refine_Q(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse*,
-                          DataWarehouse* new_dw)
+                   const PatchSubset* patches,        
+                   const MaterialSubset* matls,       
+                   DataWarehouse* old_dw,             
+                   DataWarehouse* new_dw,             
+                   const int radCalc_freq)            
 {
+
   const Level* fineLevel = getLevel(patches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
   
+  //__________________________________
+  //  Carry Forward (old_dw -> new_dw)
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  if ( doCarryForward( timestep, radCalc_freq) ) {
+    printTask( fineLevel->getPatch(0), dbg, "Doing Ray::refine_Q carryForward ( divQ )" );
+    
+    new_dw->transferFrom( old_dw, d_divQLabel, patches, matls );
+    return;
+  }
+
+  //__________________________________
+  //
   for(int p=0;p<patches->size();p++){  
     const Patch* finePatch = patches->get(p);
     printTask(patches, finePatch,dbg,"Doing refineQ");
@@ -1946,9 +2004,9 @@ void Ray::refine_Q(const ProcessorGroup*,
     Level::selectType coarsePatches;
     finePatch->getCoarseLevelPatches(coarsePatches);
 
-    CCVariable<double> sumColorDiff_fine;
-    new_dw->allocateAndPut(sumColorDiff_fine, d_divQLabel, d_matl, finePatch);
-    sumColorDiff_fine.initialize(0);
+    CCVariable<double> divQ_fine;
+    new_dw->allocateAndPut(divQ_fine, d_divQLabel, d_matl, finePatch);
+    divQ_fine.initialize(0);
     
     IntVector refineRatio = fineLevel->getRefinementRatio();
 
@@ -1965,11 +2023,11 @@ void Ray::refine_Q(const ProcessorGroup*,
         <<" finePatch  "<< finePatch->getID() << " fl " << fl << " fh " << fh
         <<" coarseRegion " << cl << " " << ch <<endl;
 
-    constCCVariable<double> sumColorDiff_coarse;
-    new_dw->getRegion(sumColorDiff_coarse, d_divQLabel, d_matl, coarseLevel, cl, ch);
+    constCCVariable<double> divQ_coarse;
+    new_dw->getRegion( divQ_coarse, d_divQLabel, d_matl, coarseLevel, cl, ch );
 
-    selectInterpolator(sumColorDiff_coarse, d_orderOfInterpolation, coarseLevel, fineLevel,
-                       refineRatio, fl, fh,sumColorDiff_fine);
+    selectInterpolator(divQ_coarse, d_orderOfInterpolation, coarseLevel, fineLevel,
+                       refineRatio, fl, fh, divQ_fine);
 
   }  // fine patch loop 
 }
@@ -2104,6 +2162,7 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
     t->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
     t->computes(variable);
   }
+  
   sched->addTask( t, coarseLevel->eachPatch(), d_matlSet );
 }
 
@@ -2119,15 +2178,11 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                       const int radCalc_freq )
 {
 
-  // Only run if it's time
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( timestep%radCalc_freq != 0 ) {
-    return;
-  }
-  
   const Level* coarseLevel = getLevel(patches);
-  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();  
-
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  
+  //__________________________________
+  //
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
 
@@ -2185,7 +2240,6 @@ void Ray::carryForward ( const ProcessorGroup*,
 {
   new_dw->transferFrom(old_dw, variable, patches, matls);
 }
-
 
 //______________________________________________________________________
 void Ray::updateSumI ( Vector& inv_direction_vector,
@@ -2422,8 +2476,8 @@ Ray::sched_filter( const LevelP& level,
 
   printSchedule(level,dbg,taskname);
 
-  tsk->requires( which_divQ_dw, d_divQLabel,      Ghost::None, 0 );
-  tsk->requires( which_divQ_dw, d_boundFluxLabel, Ghost::None, 0 );
+  tsk->requires( which_divQ_dw, d_divQLabel,      d_gn, 0 );
+  tsk->requires( which_divQ_dw, d_boundFluxLabel, d_gn, 0 );
   tsk->computes(                d_divQFiltLabel);
   tsk->computes(                d_boundFluxFiltLabel);
 
@@ -2456,10 +2510,11 @@ Ray::filter( const ProcessorGroup*,
     constCCVariable<Stencil7> boundFluxFilt;
 
     DataWarehouse* divQ_dw = new_dw->getOtherDataWarehouse(which_divQ_dw);
-    divQ_dw->get(divQ,               d_divQLabel,        d_matl, patch, Ghost::None, 0);
-    new_dw->allocateAndPut(divQFilt, d_divQLabel,        d_matl, patch);
-    divQ_dw->get(boundFlux,          d_boundFluxLabel,   d_matl, patch, Ghost::None, 0);
+    divQ_dw->get(divQ,               d_divQLabel,        d_matl, patch, d_gn, 0);
+    divQ_dw->get(boundFlux,          d_boundFluxLabel,   d_matl, patch, d_gn, 0);
+    
     new_dw->allocateAndPut(divQFilt, d_boundFluxLabel,   d_matl, patch);
+    new_dw->allocateAndPut(divQFilt, d_divQLabel,        d_matl, patch);
 
     if( modifies_divQFilt ){
        old_dw->getModifiable(  divQFilt,  d_divQFiltLabel,  d_matl, patch );
@@ -2504,6 +2559,11 @@ Ray::filter( const ProcessorGroup*,
     }
   }
 }
+
+
+
+
+
 
 
 //______________________________________________________________________
