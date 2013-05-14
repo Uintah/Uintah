@@ -21,15 +21,13 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 #  IN THE SOFTWARE.
 # 
-# 
-# 
-# 
-# 
-# Makefile fragment for this subdirectory
+###################################################################
+#
+#  Makefile fragment for this subdirectory
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Core/Util
+SRCDIR := Core/Util
 
 SRCS += \
         $(SRCDIR)/DebugStream.cc        \
@@ -47,7 +45,7 @@ SRCS += \
         $(SRCDIR)/Timer.cc              \
         $(SRCDIR)/TypeDescription.cc    \
         $(SRCDIR)/ProgressiveWarning.cc \
-				$(SRCDIR)/Util.cc 
+        $(SRCDIR)/Util.cc 
 
 SRCS += $(REFCOUNT_IMPL)
 
