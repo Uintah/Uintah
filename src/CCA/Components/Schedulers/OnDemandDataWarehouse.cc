@@ -409,7 +409,7 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
         if(!d_varDB.exists(label, matlIndex, patch)) {
           cout << d_myworld->myrank() << "  Needed by " << *dep << " on task " << *dep->toTasks.front() << endl;
           SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex,
-                "in sendMPI", __FILE__, __LINE__));
+                "in Task OnDemandDataWarehouse::sendMPI", __FILE__, __LINE__));
         }
         GridVariableBase* var;
         var = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, patch));
