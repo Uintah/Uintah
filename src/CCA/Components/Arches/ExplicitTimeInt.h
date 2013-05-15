@@ -347,9 +347,11 @@ private:
 
       IntVector c = *iter; 
 
-      if (weight[c] == 0)
-          phi[*iter] = 0.0;
-      else if ( do_low_clip && phi[c]/weight[c] < ( low_clip + clip_tol ) ){ 
+      if (weight[c] == 0) { 
+
+        phi[*iter] = 0.0;
+
+      } else if ( do_low_clip && phi[c]/weight[c] < ( low_clip + clip_tol ) ){ 
 
         phi[*iter] = weight[c]*low_clip; 
 
