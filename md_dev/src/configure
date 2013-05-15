@@ -40231,7 +40231,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## arg 2 : FFTW libraries and headers
 ## arg 3 : fftw3.h
 ## arg 4 : $_sci_inc
-## arg 5 : fftw3 fftw3_threads
+## arg 5 : fftw3 fftw3_mpi fftw3_threads
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -40308,10 +40308,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "fftw3 fftw3_threads"; then
+if test -n "fftw3 fftw3_mpi fftw3_threads"; then
 
    found_framework=no
-   for lib in fftw3 fftw3_threads; do
+   for lib in fftw3 fftw3_mpi fftw3_threads; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -40610,7 +40610,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" fftw3 fftw3_threads; do
+  for i in "" fftw3 fftw3_mpi fftw3_threads; do
     if test -z "$i"; then
        continue
     fi
