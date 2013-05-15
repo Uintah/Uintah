@@ -966,7 +966,7 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : cellType
 
   if ( d_boundaryCondition->isUsingNewBC() ) {
-    d_boundaryCondition->sched_cellTypeInit__NEW( sched, patches, matls );
+    d_boundaryCondition->sched_cellTypeInit__NEW( sched, level, patches, matls );
   } else {
     d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
   }

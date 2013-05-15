@@ -185,14 +185,16 @@ namespace Uintah {
       };
 
      void sched_cellTypeInit__NEW(SchedulerP& sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls);
+                                  const LevelP& level, 
+                                  const PatchSet* patches,
+                                  const MaterialSet* matls);
 
      void cellTypeInit__NEW(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset*,
-                                DataWarehouse*,
-                                DataWarehouse* new_dw);
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse*,
+                            DataWarehouse* new_dw, 
+                            IntVector lo, IntVector hi);
 
      void sched_computeBCArea__NEW(SchedulerP& sched,
                                       const LevelP& level, 
@@ -327,6 +329,11 @@ namespace Uintah {
                                 const MaterialSubset*,
                                 DataWarehouse*,
                                 DataWarehouse* new_dw);
+
+      void wallStress( const Patch* patch, 
+                       ArchesVariables* vars, 
+                       ArchesConstVariables* const_vars,
+                       constCCVariable<double>& volFraction ); 
 
       ////////////////////////////////////////////////////////////////////////
       // BoundaryCondition constructor used in  PSE
@@ -1228,6 +1235,7 @@ namespace Uintah {
 
       double d_turbPrNo;
       bool d_doMMS;
+      bool d_laminar_wall_shear; 
 
       struct d_extraScalarBC {
         string d_scalar_name;

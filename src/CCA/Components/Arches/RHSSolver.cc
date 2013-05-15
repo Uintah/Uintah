@@ -325,7 +325,7 @@ RHSSolver::explicitUpdate_stencilMatrix(CellIterator iter,
     int k = c.z();                                                 
     double vol = sew[i]*sns[j]*stb[k];    
     double apo = 0.5 * (density[c] + density[adj])*vol/delta_t;
-                                                   
+
     double rhs = A[Arches::AE][c] * old_phi[c + IntVector(1,0,0)] +                             
                  A[Arches::AW][c] * old_phi[c - IntVector(1,0,0)] +                             
                  A[Arches::AN][c] * old_phi[c + IntVector(0,1,0)] +                             
