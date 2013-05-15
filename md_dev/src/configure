@@ -26909,9 +26909,10 @@ if test "$with_mkl"; then
        as_fn_error $? "We recommend that you don't use MKL on a Mac... use the default vecLib instead." "$LINENO" 5
        ;;
      *)
-       test_libs[0]="mkl mkl_core mkl_intel_lp64 guide" # Older version of MKL requires libguide...
-       test_libs[1]="mkl mkl_core mkl_intel_lp64"
-       test_libs[2]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
+       test_libs[1]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
+       test_libs[2]="mkl mkl_core mkl_intel_lp64"
+       test_libs[3]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
+       test_libs[4]="mkl_core mkl_intel_lp64 mkl_intel_thread" # works on Navy DSRC Haise/Killrain
 
        num_libs=${#test_libs[*]}
 
@@ -40230,7 +40231,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## arg 2 : FFTW libraries and headers
 ## arg 3 : fftw3.h
 ## arg 4 : $_sci_inc
-## arg 5 : fftw3 fftw3_mpi fftw3_threads
+## arg 5 : fftw3 fftw3_threads
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -40307,10 +40308,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "fftw3 fftw3_mpi fftw3_threads"; then
+if test -n "fftw3 fftw3_threads"; then
 
    found_framework=no
-   for lib in fftw3 fftw3_mpi fftw3_threads; do
+   for lib in fftw3 fftw3_threads; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -40609,7 +40610,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" fftw3 fftw3_mpi fftw3_threads; do
+  for i in "" fftw3 fftw3_threads; do
     if test -z "$i"; then
        continue
     fi
