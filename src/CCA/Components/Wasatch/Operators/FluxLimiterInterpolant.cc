@@ -195,7 +195,13 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
   
   using namespace SpatialOps;
   using namespace SpatialOps::structured;
-  build_src_iterators(src);
+  
+  const MemoryType dMemType = dest.memory_device_type();  // destination memory type
+  const unsigned short int dDevIdx = dest.device_index(); // destination device index
+  typename PhiFaceT::value_type* destVals = dest.field_values(dMemType, dDevIdx);
+  typename PhiFaceT::value_type* velVals  = const_cast<PhiFaceT*>(advectiveVelocity_)->field_values(dMemType, dDevIdx);
+  
+  build_src_iterators(src, dMemType, dDevIdx);
 
   // now do interior
   const MemoryWindow& wdest = dest.window_with_ghost(); // used for velocity & interpolated phi
@@ -207,8 +213,8 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
                         destExtent,
                         wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
   
-  PhiFaceT    d( wd, dest.field_values(), ExternalStorage );
-  PhiFaceT aVel( wd,  const_cast<PhiFaceT*>(advectiveVelocity_)->field_values(), ExternalStorage );
+  PhiFaceT    d( wd, destVals, ExternalStorage, dMemType, dDevIdx );
+  PhiFaceT aVel( wd, velVals,  ExternalStorage, dMemType, dDevIdx );
 
   typename PhiFaceT::iterator      id   = d.begin();
   typename PhiFaceT::iterator      ide  = d.end();
@@ -227,9 +233,12 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
 template< typename PhiVolT, typename PhiFaceT >
 void
 FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
-build_src_iterators( const PhiVolT& src ) const {
+build_src_iterators( const PhiVolT& src,
+                     const SpatialOps::MemoryType memType,
+                     const unsigned short int devIdx ) const {
   using namespace SpatialOps;
   using namespace SpatialOps::structured;
+  typename PhiVolT::value_type* srcvals = const_cast<PhiVolT&>(src).field_values(memType, devIdx);
 
   srcIters_.clear();
   const MemoryWindow& wsrc = src.window_with_ghost();
@@ -245,7 +254,7 @@ build_src_iterators( const PhiVolT& src ) const {
                                wsrc.extent() - unitNormal_*3,
                                wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
 
-    PhiVolT field(srcwin,const_cast<PhiVolT&>(src).field_values(), ExternalStorage);
+    PhiVolT field(srcwin, srcvals, ExternalStorage, memType, devIdx);
 
     srcIters_.push_back(field.begin());
   }
@@ -271,6 +280,13 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
 
   const MemoryWindow& wsrc  = src.window_with_ghost();
   const MemoryWindow& wdest = dest.window_with_ghost(); // used for velocity & interpolated phi
+  
+  const MemoryType dMemType = dest.memory_device_type();  // destination memory type
+  const unsigned short int dDevIdx = dest.device_index(); // destination device index
+
+  typename PhiFaceT::value_type* destVals = dest.field_values(dMemType, dDevIdx);
+  typename PhiFaceT::value_type* velVals  = const_cast<PhiFaceT*>(advectiveVelocity_)->field_values(dMemType, dDevIdx);
+  typename PhiVolT::value_type*  srcVals  = const_cast<PhiVolT&>(src).field_values(dMemType, dDevIdx);
   
   int pm[2]={1,-1}; // plus or minus face
   int zo[2]={0,1};  // zero and one
@@ -309,11 +325,11 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
                            extent,
                            wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
     
-    PhiFaceT    d( wd,  dest.field_values(), ExternalStorage );
-    PhiFaceT aVel( wd,  const_cast<PhiFaceT*>(advectiveVelocity_)->field_values(), ExternalStorage );
-    PhiVolT    s1( ws1, const_cast<PhiVolT&>(src).field_values(), ExternalStorage );
-    PhiVolT    s2( ws2, const_cast<PhiVolT&>(src).field_values(), ExternalStorage );
-    PhiVolT    s3( ws3, const_cast<PhiVolT&>(src).field_values(), ExternalStorage );
+    PhiFaceT    d( wd, destVals, ExternalStorage, dMemType, dDevIdx );
+    PhiFaceT aVel( wd, velVals,  ExternalStorage, dMemType, dDevIdx );
+    PhiVolT    s1( ws1, srcVals, ExternalStorage, dMemType, dDevIdx );
+    PhiVolT    s2( ws2, srcVals, ExternalStorage, dMemType, dDevIdx );
+    PhiVolT    s3( ws3, srcVals, ExternalStorage, dMemType, dDevIdx );
     
     typename PhiFaceT::iterator      id  = d .begin();
     typename PhiFaceT::iterator      ide = d .end();
@@ -335,7 +351,7 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   }
 
   // now do interior
-  build_src_iterators(src);
+  build_src_iterators(src, dMemType, dDevIdx);
   destExtent = wdest.extent() - unitNormal_*3 - wdest.has_bc()*unitNormal_;
   destBaseOffset = wdest.offset() + unitNormal_*2;
   const MemoryWindow wd( wdest.glob_dim(),
@@ -343,8 +359,8 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
                         destExtent,
                         wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
 
-  PhiFaceT    d( wd, dest.field_values(), ExternalStorage );
-  PhiFaceT aVel( wd,  const_cast<PhiFaceT*>(advectiveVelocity_)->field_values(), ExternalStorage );
+  PhiFaceT    d( wd, destVals, ExternalStorage, dMemType, dDevIdx );
+  PhiFaceT aVel( wd, velVals,  ExternalStorage, dMemType, dDevIdx );
 
   typename PhiFaceT::iterator      id   = d.begin();
   typename PhiFaceT::iterator      ide  = d.end();

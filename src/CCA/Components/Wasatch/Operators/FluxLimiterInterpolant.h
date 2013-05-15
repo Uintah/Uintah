@@ -38,6 +38,7 @@
 #include <string>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include "spatialops/SpatialOpsDefs.h"
+#include "spatialops/structured/MemoryTypes.h"
 #include "spatialops/structured/FVTools.h"
 /**
  *  \class     FluxLimiterInterpolant
@@ -90,7 +91,9 @@ private:
   // boundary information
   bool hasPlusBoundary_, hasMinusBoundary_;
   
-  void build_src_iterators(const PhiVolT& src) const;
+  void build_src_iterators(const PhiVolT& src,
+                           const SpatialOps::MemoryType consumerMemoryType = SpatialOps::LOCAL_RAM,
+                           const unsigned short int devIdx = 0) const;
   
 public:
   
