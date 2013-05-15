@@ -279,9 +279,11 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   IntVec destExtent = wdest.extent() - unitNormal_*wdest.glob_dim() + unitNormal_;
   IntVec baseOffset;
   IntVec destBaseOffset;
+  
+  // start with patch boundaries
   for (int direc=0; direc<2; direc++) {
-    baseOffset = wsrc.offset() + (unitNormal_*wsrc.glob_dim() - unitNormal_ )* zo[direc];
-    destBaseOffset = wdest.offset() + (unitNormal_*wdest.glob_dim() - unitNormal_ )* zo[direc] + unitNormal_*(1-zo[direc]);
+    baseOffset = wsrc.offset() + (unitNormal_*wsrc.glob_dim() - unitNormal_ )* zo[direc]; // src base offset
+    destBaseOffset = wdest.offset() + (unitNormal_*wdest.glob_dim() - unitNormal_ - unitNormal_*hasPlusBoundary_ )* zo[direc] + unitNormal_*(1-zo[direc]); // destination base offset - depends on presence of plus boundary
     
     // this is the destination field value - always on the boundary
     const MemoryWindow wd( wdest.glob_dim(),
@@ -307,7 +309,7 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
                            extent,
                            wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
     
-    PhiFaceT    d( wd, dest.field_values(), ExternalStorage );
+    PhiFaceT    d( wd,  dest.field_values(), ExternalStorage );
     PhiFaceT aVel( wd,  const_cast<PhiFaceT*>(advectiveVelocity_)->field_values(), ExternalStorage );
     PhiVolT    s1( ws1, const_cast<PhiVolT&>(src).field_values(), ExternalStorage );
     PhiVolT    s2( ws2, const_cast<PhiVolT&>(src).field_values(), ExternalStorage );
@@ -327,7 +329,7 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
         const double r = (*is3 - *is2)/(*is2 - *is1);
         *id = calculate_flux_limiter_function(r, limiterType_);
       }
-      else if( flowDir < 0.0 ) *id = ( isBoundaryFace ) ? 1.0 : 0.0; // flow is coming into the patch. use central differencing if we are at a physical boundary.
+      else if( flowDir < 0.0 ) *id = ( isBoundaryFace ) ? 1.0 : 0.0; // flow is coming into the patch. use central differencing if we are at a physical boundary. Otherwise, upwind (psi = 0.0)
       else                     *id = 1.0;
     }
   }
@@ -336,7 +338,6 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   build_src_iterators(src);
   destExtent = wdest.extent() - unitNormal_*3 - wdest.has_bc()*unitNormal_;
   destBaseOffset = wdest.offset() + unitNormal_*2;
-  // this is the destination field value - always on the boundary
   const MemoryWindow wd( wdest.glob_dim(),
                         destBaseOffset,
                         destExtent,
