@@ -2831,10 +2831,10 @@ if test "$with_mkl"; then
        AC_MSG_ERROR(We recommend that you don't use MKL on a Mac... use the default vecLib instead.)
        ;;
      *)
-       test_libs[[1]]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
-       test_libs[[2]]="mkl mkl_core mkl_intel_lp64"
-       test_libs[[3]]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
-       test_libs[[4]]="mkl_core mkl_intel_lp64 mkl_intel_thread" # works on Navy DSRC Haise/Killrain
+       test_libs[[0]]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
+       test_libs[[1]]="mkl mkl_core mkl_intel_lp64"
+       test_libs[[2]]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
+       test_libs[[3]]="mkl_core mkl_intel_lp64 mkl_intel_thread iomp5" # works on Navy DSRC Haise/Killrain (IBM iDataPlex)
 
        num_libs=${#test_libs[*]}
 
