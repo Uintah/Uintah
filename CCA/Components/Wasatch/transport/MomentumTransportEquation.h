@@ -76,14 +76,14 @@ namespace Wasatch{
     MomentumTransportEquation( const std::string velName,
                                const std::string momName,
                                const Expr::Tag densTag,
-                               const Expr::Tag bodyForceTag,
+                               const bool isConstDensity,
+                               const Expr::Tag bodyForceTag,                              
                                const Expr::Tag srcTermTag,
                                Expr::ExpressionFactory& factory,
                                Uintah::ProblemSpecP params,
                                TurbulenceParameters turbulenceParams,
                                const bool hasEmbeddedGeometry,
                                const bool hasMovingGeometry,
-                               const bool isConstDensity,
                                const Expr::ExpressionID rhsID,
                                Uintah::SolverInterface& linSolver,
                                Uintah::SimulationStateP sharedState);
@@ -133,13 +133,15 @@ namespace Wasatch{
 
   private:
 
+    const bool isviscous_, isConstDensity_;
     Uintah::SolverParameters* solverParams_;
-    const bool isviscous_;
+    
     const bool isTurbulent_;
     const Expr::Tag thisVelTag_, densityTag_;
     Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_;
     std::string thisMomName_;
     Expr::TagList velTags_;  ///< TagList for the velocity expressions
+    Expr::TagList momTags_; ///< TagList for the momentum expressions
 
   };
 

@@ -68,6 +68,9 @@
 #include "BoundaryConditions/PowerLawBC.h"
 #include "BoundaryConditions/TurbulentInletBC.h"
 #include "BoundaryConditions/BoundaryConditionBase.h"
+#include "BoundaryConditions/VarDensMMSVelocity.h"
+#include "BoundaryConditions/VarDensMMSMomentum.h"
+#include "BoundaryConditions/VarDensMMSSolnVar.h"
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -90,6 +93,8 @@ namespace Wasatch{
   {
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
     
+    const TagNames& tagNames = TagNames::self();
+
     Expr::ExpressionBuilder* builder = NULL;
     
     //    std::string exprType;
@@ -255,6 +260,17 @@ namespace Wasatch{
       const Expr::Tag yTag = parse_nametag( valParams->findBlock("Coordinate2")->findBlock("NameTag") );
       typedef typename PlusProfile<FieldT>::Builder Builder;
       builder = scinew Builder( tag, xTag, yTag, xStart, yStart, xWidth, yWidth, lowValue, highValue );
+    }
+
+    else if ( params->findBlock("VarDensMMSSourceTerm") ) {
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSSourceTerm");
+      double D, rho0, rho1;
+      valParams->getAttribute("D",    D);
+      valParams->getAttribute("rho0", rho0);
+      valParams->getAttribute("rho1", rho1);
+      const Expr::Tag xTag = parse_nametag( valParams->findBlock("Coordinate")->findBlock("NameTag") );
+      typedef typename VarDensMMSSourceTerm<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, xTag, tagNames.time, D, rho0, rho1 );
     }
     
     else if ( params->findBlock("ExponentialVortex") ) {
@@ -821,6 +837,8 @@ namespace Wasatch{
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
     
     Expr::ExpressionBuilder* builder = NULL;
+
+    const TagNames& tagNames = TagNames::self();
     
     std::string exprType;
     Uintah::ProblemSpecP valParams = params->get("value",exprType);
@@ -878,6 +896,50 @@ namespace Wasatch{
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename PowerLawBC<FieldT>::Builder Builder;
       builder = scinew Builder( tag, indepVarTag,x0, phic, R, n);
+    }
+    
+    else if ( params->findBlock("VarDensMMSVelocity") ){
+      std::string side;
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSVelocity");
+      valParams->getAttribute("side",side);
+      
+      typedef VarDensMMSVelocity<FieldT> VarDensMMSVExpr;
+      typename VarDensMMSVExpr::BCSide bcSide;
+      if      (side == "right" ) bcSide = VarDensMMSVExpr::RIGHT;
+      else if (side == "left"  ) bcSide = VarDensMMSVExpr::LEFT;
+      else {
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+        << "ERROR: The boundary side " << side
+        << " is not supported in VarDensMMSVelocity expression." << std::endl;
+        throw std::invalid_argument( msg.str() );
+      }
+      builder = scinew typename VarDensMMSVExpr::Builder( tag, tagNames.time, bcSide );
+    }
+
+    else if ( params->findBlock("VarDensMMSMomentum") ){
+      std::string side;
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSMomentum");
+      valParams->getAttribute("side",side);
+      
+      typedef VarDensMMSMomentum<FieldT> VarDensMMSMomExpr;
+      typename VarDensMMSMomExpr::BCSide bcSide;
+      if      (side == "right" ) bcSide = VarDensMMSMomExpr::RIGHT;
+      else if (side == "left"  ) bcSide = VarDensMMSMomExpr::LEFT;
+      else {
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+        << "ERROR: The boundary side " << side
+        << " is not supported in VarDensMMSMomentum expression." << std::endl;
+        throw std::invalid_argument( msg.str() );
+      }
+      builder = scinew typename VarDensMMSMomExpr::Builder( tag, tagNames.time, bcSide );
+    }
+
+    else if ( params->findBlock("VarDensMMSSolnVar") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSSolnVar");      
+      typedef VarDensMMSSolnVar<FieldT> VarDensMMSSolnVarExpr;
+      builder = scinew typename VarDensMMSSolnVarExpr::Builder( tag, tagNames.time );
     }
     
     else if ( params->findBlock("TurbulentInlet") ) {

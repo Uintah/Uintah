@@ -66,7 +66,11 @@ namespace Wasatch{
   straintensormag   ( "StrainTensorMagnitude", Expr::STATE_NONE         ),
   vremantensormag   ( "VremanTensorMagnitude", Expr::STATE_NONE         ),
   waletensormag     ( "WaleTensorMagnitude", Expr::STATE_NONE           ),
-  dynamicsmagcoef   ( "DynamicSmagorinskyCoefficient", Expr::STATE_NONE )
+  dynamicsmagcoef   ( "DynamicSmagorinskyCoefficient", Expr::STATE_NONE ),
+  
+  // predictor related variables
+  star("_*"), 
+  doubleStar("_**")
   
   {}
   
