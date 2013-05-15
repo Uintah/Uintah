@@ -174,6 +174,7 @@ namespace Wasatch{
                                                 Expr::Tag(), // volume fraction
                                                 CENTRAL,
                                                 parse_nametag( params->findBlock("X-Velocity" )->findBlock( "NameTag" ) ),
+                                                "",
                                                 factory,
                                                 info );
       setup_convective_flux_expression<FieldT>( "Y",
@@ -182,6 +183,7 @@ namespace Wasatch{
                                                 Expr::Tag(), // volume fraction
                                                 CENTRAL,
                                                 parse_nametag( params->findBlock("Y-Velocity" )->findBlock( "NameTag" ) ),
+                                                "",
                                                 factory,
                                                 info );
       setup_convective_flux_expression<FieldT>( "Z",
@@ -190,6 +192,7 @@ namespace Wasatch{
                                                 Expr::Tag(), // volume fraction
                                                 CENTRAL,
                                                 parse_nametag( params->findBlock("Z-Velocity" )->findBlock( "NameTag" ) ),
+                                                "",
                                                 factory,
                                                 info );
     }

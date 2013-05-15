@@ -449,7 +449,7 @@ namespace Wasatch {
     for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
         convFluxParams != 0;
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
-      setup_convective_flux_expression<FieldT>( convFluxParams, thisPhiTag, volFracTag, factory, info );
+      setup_convective_flux_expression<FieldT>( convFluxParams, thisPhiTag, volFracTag, "", factory, info );
     }
 
     //

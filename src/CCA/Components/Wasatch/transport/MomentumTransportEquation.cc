@@ -40,13 +40,20 @@
 #include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/DynamicSmagorinskyCoefficient.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
+#include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BCCopier.h>
+
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
+#include <CCA/Components/Wasatch/Expressions/PressureSource.h>
+#include <CCA/Components/Wasatch/Expressions/VelEst.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
+#include <CCA/Components/Wasatch/OldVariable.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 
@@ -331,6 +338,20 @@ namespace Wasatch{
 
   //==================================================================
 
+  void set_vel_star_tags( Expr::TagList velTags,
+                          Expr::TagList& velStarTags )
+  {
+    const TagNames& tagNames = TagNames::self();
+    if( velTags[0] != Expr::Tag() ) velStarTags.push_back( Expr::Tag(velTags[0].name() + tagNames.star, Expr::STATE_NONE) );
+    else         velStarTags.push_back( Expr::Tag() );
+    if( velTags[1] != Expr::Tag() ) velStarTags.push_back( Expr::Tag(velTags[1].name() + tagNames.star, Expr::STATE_NONE) );
+    else         velStarTags.push_back( Expr::Tag() );
+    if( velTags[2] != Expr::Tag() ) velStarTags.push_back( Expr::Tag(velTags[2].name() + tagNames.star, Expr::STATE_NONE) );
+    else         velStarTags.push_back( Expr::Tag() );
+  }
+
+  //==================================================================
+  
   void set_vel_tags( Uintah::ProblemSpecP params,
                      Expr::TagList& velTags )
   {
@@ -347,6 +368,24 @@ namespace Wasatch{
     else         velTags.push_back( Expr::Tag() );
   }
 
+  //==================================================================
+ 
+  void set_mom_tags( Uintah::ProblemSpecP params,
+                     Expr::TagList& momTags )
+  {
+    std::string xmomname, ymomname, zmomname;
+    Uintah::ProblemSpecP doxmom,doymom,dozmom;
+    doxmom = params->get( "X-Momentum", xmomname );
+    doymom = params->get( "Y-Momentum", ymomname );
+    dozmom = params->get( "Z-Momentum", zmomname );
+    if( doxmom ) momTags.push_back( Expr::Tag(xmomname, Expr::STATE_N) );
+    else         momTags.push_back( Expr::Tag() );
+    if( doymom ) momTags.push_back( Expr::Tag(ymomname, Expr::STATE_N) );
+    else         momTags.push_back( Expr::Tag() );
+    if( dozmom ) momTags.push_back( Expr::Tag(zmomname, Expr::STATE_N) );
+    else         momTags.push_back( Expr::Tag() );
+  }
+  
   //==================================================================
 
   template< typename FieldT >
@@ -433,12 +472,12 @@ namespace Wasatch{
   MomentumTransportEquation( const std::string velName,
                              const std::string momName,
                              const Expr::Tag densTag,
+                             const bool isConstDensity,
                              const Expr::Tag bodyForceTag,
                              const Expr::Tag srcTermTag,
                              Expr::ExpressionFactory& factory,
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
-                             const bool isConstDensity,
                              const bool hasEmbeddedGeometry,
                              const bool hasMovingGeometry,
                              const Expr::ExpressionID rhsID,
@@ -451,6 +490,7 @@ namespace Wasatch{
                          hasEmbeddedGeometry,
                          params ),
       isviscous_       ( params->findBlock("Viscosity") ? true : false ),
+      isConstDensity_  ( isConstDensity                       ),
       isTurbulent_     ( turbulenceParams.turbulenceModelName != NONE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
       densityTag_      ( densTag                              ),
@@ -606,14 +646,35 @@ namespace Wasatch{
                                                   volTag) );
     factory.cleave_from_parents ( momRHSPartID );
     //__________________
-
-    // Here we should register an expression to get \nabla.(\rho*v)
-    // I.C for \nabla.(\rho*v)???...
-
+    // Pressure source term
+    if (!isConstDensity) {
+      // calculating velocity at the next time step    
+      Expr::Tag thisVelStarTag = Expr::Tag( thisVelTag_.name() + tagNames.star, Expr::STATE_NONE);
+      if( !factory.have_entry( thisVelStarTag ) ){
+        OldVariable& oldPressure = OldVariable::self();
+        oldPressure.add_variable<SVolField>( ADVANCE_SOLUTION, pressure_tag() );
+        const Expr::Tag oldPressureTag = Expr::Tag (pressure_tag().name() + "_old", Expr::STATE_NONE);
+        
+        const Expr::ExpressionID velStarID = factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, velTags_, tauTags, densTag, viscTag, oldPressureTag, tagNames.timestep ));        
+      }
+    } 
+    
+    Expr::Tag pSourceTag = Expr::Tag( "pressure-source-term", Expr::STATE_NONE);
+    if( !factory.have_entry( pSourceTag ) ){
+      Expr::Tag densStarTag = Expr::Tag(densTag.name() + tagNames.star, Expr::CARRY_FORWARD);
+      Expr::Tag dens2StarTag = Expr::Tag(densTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD);
+      Expr::TagList velStarTags = Expr::TagList();
+      
+      set_vel_star_tags( velTags_, velStarTags );
+      set_mom_tags( params, momTags_ );
+      
+      // registering the expressiong for pressure source term
+      factory.register_expression( new typename PressureSource::Builder( pSourceTag, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag, dilTag, tagNames.timestep));
+    }
+    
+    
     //__________________
-    // density time derivative
-    const Expr::Tag d2rhodt2t; //( "density-acceleration", Expr::STATE_NONE); // for now this is empty
-
+    // calculating velocity at the current time step    
     factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( thisVelTag_, thisMomTag, densityTag_, volTag ));
 
 //    if(has_embedded_geometry()) {
@@ -677,9 +738,10 @@ namespace Wasatch{
         ptags.push_back( pressure_tag() );
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
         const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dxmomdtt, dymomdtt, dzmomdtt,
-                                                                                       dilTag,
-                                                                                       d2rhodt2t, tagNames.timestep,volFracTag, hasMovingGeometry, usePressureRefPoint, refPressureValue, refPressureLocation, use3DLaplacian,
-                                                                                       *solverParams_, linSolver);
+                                                                                        pSourceTag, tagNames.timestep, volFracTag, 
+                                                                                        hasMovingGeometry, usePressureRefPoint, refPressureValue, 
+                                                                                        refPressureLocation, use3DLaplacian,
+                                                                                        *solverParams_, linSolver);
         pressureID_ = factory.register_expression( pbuilder );
         factory.cleave_from_children( pressureID_ );
         factory.cleave_from_parents ( pressureID_ );
@@ -815,7 +877,48 @@ namespace Wasatch{
                                            patchInfoMap,
                                            materials, bcFunctorMap );
     }
-}
+    
+    if (!isConstDensity_) {
+/*      // set bcs for density
+      const Expr::Tag densTag( densityTag_.name(), Expr::STATE_NONE );
+      process_boundary_conditions<SVolField>( densTag,
+                                              densTag.name(),
+                                              NODIR,
+                                              graphHelper,
+                                              localPatches,
+                                              patchInfoMap,
+                                              materials, bcFunctorMap );
+
+      // set bcs for density_*
+      const TagNames& tagNames = TagNames::self();
+      const Expr::Tag densStarTag( densityTag_.name()+tagNames.star, Expr::STATE_NONE );
+      process_boundary_conditions<SVolField>( densStarTag,
+                                              densStarTag.name(),
+                                              NODIR,
+                                              graphHelper,
+                                              localPatches,
+                                              patchInfoMap,
+                                              materials, bcFunctorMap );
+*/      
+      // set bcs for velocity - cos we don't have a mechanism now to set them
+      // on interpolated density field
+      Expr::Tag velTag;
+      switch (this->staggered_location()) {
+        case XDIR:  velTag=velTags_[0];  break;
+        case YDIR:  velTag=velTags_[1];  break;
+        case ZDIR:  velTag=velTags_[2];  break;
+        default:                         break;
+      }
+      process_boundary_conditions<FieldT>( velTag,
+                                          velTag.name(),
+                                           this->staggered_location(),
+                                           graphHelper,
+                                           localPatches,
+                                           patchInfoMap,
+                                           materials, bcFunctorMap );
+    
+    }
+  }
 
   //------------------------------------------------------------------
 
@@ -884,26 +987,6 @@ namespace Wasatch{
                                         localPatches,
                                         patchInfoMap,
                                         materials,bcFunctorMap );
-
-
-//    // set bcs for density
-//    const Expr::Tag densTag( "density", Expr::STATE_NONE );
-//    process_boundary_conditions<SVolField>( densTag,
-//                                           "density",
-//                                           NODIR,
-//                                           graphHelper,
-//                                           localPatches,
-//                                           patchInfoMap,
-//                                           materials );
-//    // set bcs for viscosity
-//    const Expr::Tag viscTag( "viscosity", Expr::STATE_N );
-//    const Direction viscDir = NODIR;
-//    build_bcs( viscTag,
-//              viscDir,
-//              graphHelper,
-//              localPatches,
-//              patchInfoMap,
-//              materials);
 
     // set bcs for normal strains
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;

@@ -337,6 +337,24 @@ namespace Wasatch{
         }
       }
     }
+    Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
+    if (!wasatchParams) return;
+    
+    // Here we add the functors name of the "*" stage variables BC to the functormap
+    if (wasatchParams->findBlock("MomentumEquations") && wasatchParams->findBlock("Density") && wasatchParams->findBlock("TransportEquation")) {
+
+      for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("TransportEquation");
+          transEqnParams != 0;
+          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
+        std::string solnVarName;
+        transEqnParams->get("SolutionVariable",solnVarName);
+        std::set<std::string> functorSet;
+        std::string functorName = solnVarName+TagNames::self().star+"_bc";
+        std::string phiName     = solnVarName+TagNames::self().star;
+        functorSet.insert(functorName);
+        bcFunctorMap_.insert(std::pair< std::string, std::set<std::string> >(phiName,functorSet) );        
+      }
+    }
 
     // PARSE IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
@@ -347,9 +365,6 @@ namespace Wasatch{
       saveLabelParams->getAttribute("label",saveTheLabel);
       lockedFields_.insert(saveTheLabel);
     }
-
-    Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
-    if (!wasatchParams) return;
 
     //
     // Material
@@ -558,6 +573,14 @@ namespace Wasatch{
 
     parse_cleave_requests    ( wasatchParams, graphCategories_ );
     parse_attach_dependencies( wasatchParams, graphCategories_ );
+    //
+    // get the variable density params, if any, and parse them.
+    //
+    Uintah::ProblemSpecP VarDensMMSParams = wasatchParams->findBlock("VariableDensityMMS");
+    if (VarDensMMSParams) {
+      parse_var_dens_mms(VarDensMMSParams, graphCategories_);
+    }
+    
   }
 
   //--------------------------------------------------------------------

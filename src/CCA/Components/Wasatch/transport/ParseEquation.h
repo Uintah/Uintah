@@ -136,6 +136,18 @@ namespace Wasatch{
                                GraphCategories& gc,
                                Uintah::SolverInterface& linSolver,
                                Uintah::SimulationStateP& sharedState);
+
+
+  /**
+   *  \brief Build moment transport equations specified by "params"
+   *
+   *  \param varDensMMSParams The XML block from the input file specifying the
+   *         parameters of the MMS. This will be <VariableDensityMMS>.
+   *
+   *  \param gc The GraphCategories.
+   */
+  void parse_var_dens_mms( Uintah::ProblemSpecP varDensMMSParams,
+                          GraphCategories& gc);
   
   /**
    *  \brief Build moment transport equations specified by "params"
@@ -165,6 +177,8 @@ namespace Wasatch{
    * \param convFluxParams Parser block "DiffusiveFluxExpression"
    * \param solnVarTag the solution variable to be advected (\f$ \phi \f$).
    * \param volFracTag volume fraction tag - okay if empty for no volume fraction specification
+   * \param suffix a string containing the "_*" suffix or not, according to wether we 
+   *        want to calculate the convection term at time step "n+1" or the current time step 
    * \param factory the factory to register the resulting expression on
    * \param info the FieldTagInfo object that will be populated with the appropriate convective flux entry.
    */
@@ -173,7 +187,8 @@ namespace Wasatch{
                                         const Expr::Tag densityTag,
                                         const Expr::Tag primVarTag,
                                         const bool isStrong,
-                                        const Expr::Tag turbDiffTag,  
+                                        const Expr::Tag turbDiffTag, 
+                                        const std::string suffix,
                                         Expr::ExpressionFactory& factory,
                                         FieldTagInfo& info );
   template< typename FieldT>
@@ -192,6 +207,8 @@ namespace Wasatch{
    * \param volFracTag the volume fraction (optional, can leave empty)
    * \param convMethod the upwind method to use
    * \param advVelocityTag the advecting velocity, which lives at staggered cell centers
+   * \param suffix a string containing the "_*" suffix or not, according to wether we 
+   *        want to calculate the convection term at time step "n+1" or the current time step 
    * \param factory the factory to associate the convective flux expression with
    * \param info this will be populated for use in the ScalarRHS expression if needed.
    */
@@ -202,6 +219,7 @@ namespace Wasatch{
                                          const Expr::Tag volFracTag,
                                          const ConvInterpMethods convMethod,
                                          const Expr::Tag advVelocityTag,
+                                         const std::string suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info );
 
@@ -210,6 +228,8 @@ namespace Wasatch{
    * \param convFluxParams Parser block "ConvectiveFluxExpression"
    * \param solnVarTag the solution variable to be advected
    * \param volFracTag volume fraction tag - okay if empty for no volume fraction specification
+   * \param suffix a string containing the "_*" suffix or not, according to wether we 
+   *        want to calculate the convection term at time step "n+1" or the current time step 
    * \param factory the factory to register the resulting expression on
    * \param info the FieldTagInfo object that will be populated with the appropriate convective flux entry.
    */
@@ -217,6 +237,7 @@ namespace Wasatch{
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
                                          const Expr::Tag solnVarTag,
                                          const Expr::Tag volFracTag,
+                                         const std::string suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info );
 

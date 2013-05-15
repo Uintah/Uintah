@@ -25,6 +25,7 @@
 //-- Wasatch Includes --//
 #include "ParseEquation.h"
 #include <CCA/Components/Wasatch/TimeStepper.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
@@ -43,6 +44,7 @@
 #include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
+#include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 
 //-- Uintah includes --//
 #include <Core/Exceptions/InvalidValue.h>
@@ -273,6 +275,36 @@ namespace Wasatch{
 
   //==================================================================
   
+  void parse_var_dens_mms( Uintah::ProblemSpecP varDensMMSParams,
+                           GraphCategories& gc) {
+    std::string solnVarName;
+    double rho0=1.29985, rho1=0.081889, D=0.0658;
+    varDensMMSParams->get("scalar",solnVarName);
+    varDensMMSParams->get("rho1",rho1);
+    varDensMMSParams->get("rho0",rho0);
+    varDensMMSParams->get("D",D);
+    const TagNames& tagNames = TagNames::self();
+
+    const Expr::Tag solnVarRHSTag = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
+    const Expr::Tag solnVarRHSStarTag = Expr::Tag(solnVarName+"_rhs"+tagNames.star,Expr::STATE_NONE);
+    const Expr::Tag MMSSourceTag = Expr::Tag("VarDensMMSSource",Expr::STATE_NONE);
+        
+    GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];    
+    slngraphHelper->exprFactory->register_expression( new VarDensMMSSourceTerm<SVolField>::Builder(MMSSourceTag,tagNames.xsvolcoord, tagNames.time, D, rho0, rho1));
+    
+    slngraphHelper->exprFactory->attach_dependency_to_expression(MMSSourceTag, solnVarRHSTag);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(MMSSourceTag, solnVarRHSStarTag);
+    
+    const Expr::Tag varDensMMSContSrc = Expr::Tag( "continuity_src", Expr::STATE_NONE);
+    const Expr::Tag pSourceTag = Expr::Tag( "pressure-source-term", Expr::STATE_NONE);
+   
+    slngraphHelper->exprFactory->register_expression( new VarDensMMSContinuitySrc<SVolField>::Builder( varDensMMSContSrc, rho0, rho1, tagNames.xsvolcoord, tagNames.time, tagNames.timestep));
+    
+    slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSContSrc, pSourceTag);
+  }
+    
+  //==================================================================
+  
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
                                                                  TurbulenceParameters turbParams,
                                                                  const bool isConstDensity,
@@ -345,12 +377,12 @@ namespace Wasatch{
       momtranseq = scinew MomTransEq( xvelname,
                                       xmomname,
                                       densityTag,
+                                      isConstDensity,
                                       xBodyForceTag,
                                       xSrcTermTag,
                                       *solnGraphHelper->exprFactory,
                                       params,
                                       turbParams,
-                                      isConstDensity,
                                       hasEmbeddedGeometry,
                                       hasMovingGeometry,
                                       rhsID,
@@ -366,18 +398,18 @@ namespace Wasatch{
       typedef MomentumTransportEquation< YVolField > MomTransEq;
       const Expr::ExpressionID rhsID = MomTransEq::get_mom_rhs_id( *solnGraphHelper->exprFactory, yvelname, ymomname, params, hasEmbeddedGeometry, linSolver );
       momtranseq = scinew MomTransEq( yvelname,
-                                     ymomname,
-                                     densityTag,
-                                     yBodyForceTag,
-                                     ySrcTermTag,
-                                     *solnGraphHelper->exprFactory,
-                                     params,
-                                     turbParams,
-                                     isConstDensity,
-                                     hasEmbeddedGeometry,
-                                     hasMovingGeometry,
-                                     rhsID,
-                                     linSolver,sharedState );
+                                      ymomname,
+                                      densityTag,
+                                      isConstDensity,
+                                      yBodyForceTag,
+                                      ySrcTermTag,
+                                      *solnGraphHelper->exprFactory,
+                                      params,
+                                      turbParams,
+                                      hasEmbeddedGeometry,
+                                      hasMovingGeometry,
+                                      rhsID,
+                                      linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);
 
       adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq );
@@ -389,18 +421,18 @@ namespace Wasatch{
       typedef MomentumTransportEquation< ZVolField > MomTransEq;
       const Expr::ExpressionID rhsID = MomTransEq::get_mom_rhs_id( *solnGraphHelper->exprFactory, zvelname, zmomname, params, hasEmbeddedGeometry, linSolver );
       momtranseq = scinew MomTransEq( zvelname,
-                                     zmomname,
-                                     densityTag,
-                                     zBodyForceTag,
-                                     zSrcTermTag,
-                                     *solnGraphHelper->exprFactory,
-                                     params,
-                                     turbParams,
-                                     isConstDensity,
-                                     hasEmbeddedGeometry,
-                                     hasMovingGeometry,
-                                     rhsID,
-                                     linSolver,sharedState );
+                                      zmomname,
+                                      densityTag,
+                                      isConstDensity,
+                                      zBodyForceTag,
+                                      zSrcTermTag,
+                                      *solnGraphHelper->exprFactory,
+                                      params,
+                                      turbParams,
+                                      hasEmbeddedGeometry,
+                                      hasMovingGeometry,
+                                      rhsID,
+                                      linSolver,sharedState );
       solnGraphHelper->rootIDs.insert(rhsID);
 
       adaptor = scinew EqnTimestepAdaptor< ZVolField >( momtranseq );
@@ -609,6 +641,7 @@ namespace Wasatch{
                                          const Expr::Tag volFracTag,
                                          const ConvInterpMethods convMethod,
                                          const Expr::Tag advVelocityTag,
+                                         const std::string suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info )
   {
@@ -623,8 +656,15 @@ namespace Wasatch{
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
 
+    Expr::Tag solnVarCorrectedTag;
     if( convFluxTag == Expr::Tag() ){
-      convFluxTag = Expr::Tag( solnVarTag.name() + "_convective_flux_" + dir, Expr::STATE_NONE );
+      convFluxTag = Expr::Tag( solnVarTag.name() + "_convective_flux_" + dir + suffix, Expr::STATE_NONE );
+      // make new Tag for solnVar by adding the appropriate suffix ( "_*" or nothing ). This
+      // is because we need the ScalarRHS at time step n+1 for our pressure projection method
+      if (suffix=="")
+        solnVarCorrectedTag = Expr::Tag(solnVarTag.name(), Expr::STATE_N);
+      else
+        solnVarCorrectedTag = Expr::Tag(solnVarTag.name() + suffix, Expr::STATE_NONE);
 
       Expr::ExpressionBuilder* builder = NULL;
 
@@ -637,7 +677,7 @@ namespace Wasatch{
             typename OperatorTypeBuilder<Interpolant,FieldT,   XFace>::type, // scalar interp type
             typename OperatorTypeBuilder<Interpolant,XVolField,XFace>::type  // velocity interp type
             >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, volFracTag );
+        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, volFracTag );
       }
       else if( dir=="Y" ){
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION USING " << interpMethod << std::endl;
@@ -647,7 +687,7 @@ namespace Wasatch{
             typename OperatorTypeBuilder<Interpolant,FieldT,   YFace>::type, // scalar interp type
             typename OperatorTypeBuilder<Interpolant,YVolField,YFace>::type  // velocity interp type
             >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, volFracTag );
+        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, volFracTag );
       }
       else if( dir=="Z") {
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION USING " << interpMethod << std::endl;
@@ -657,7 +697,7 @@ namespace Wasatch{
             typename OperatorTypeBuilder<Interpolant,FieldT,   ZFace>::type, // scalar interp type
             typename OperatorTypeBuilder<Interpolant,ZVolField,ZFace>::type  // velocity interp type
             >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, volFracTag );
+        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, volFracTag );
       }
 
       if( builder == NULL ){
@@ -685,11 +725,12 @@ namespace Wasatch{
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
                                          const Expr::Tag solnVarTag,
                                          const Expr::Tag volFracTag,
+                                         const std::string suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info )
   {
     typedef OpTypes<FieldT> Ops;
-    Expr::Tag convFluxTag, advVelocityTag;
+    Expr::Tag convFluxTag, advVelocityTag, advVelocityCorrectedTag;
 
     std::string dir, interpMethod;
     convFluxParams->get("Direction",dir);
@@ -699,6 +740,9 @@ namespace Wasatch{
     Uintah::ProblemSpecP advVelocityTagParam = convFluxParams->findBlock( "AdvectiveVelocity" );
     if( advVelocityTagParam ){
       advVelocityTag = parse_nametag( advVelocityTagParam->findBlock( "NameTag" ) );
+      // make new Tag for advective velocity by adding the appropriate suffix ( "_*" or nothing ). This
+      // is because we need the ScalarRHS at time step n+1 for our pressure projection method
+      advVelocityCorrectedTag = Expr::Tag(advVelocityTag.name() + suffix, advVelocityTag.context());
     }
 
     // see if we have an expression set for the advective flux.
@@ -708,7 +752,8 @@ namespace Wasatch{
     setup_convective_flux_expression<FieldT>( dir,
                                               solnVarTag, convFluxTag, volFracTag,
                                               Wasatch::get_conv_interp_method(interpMethod),
-                                              advVelocityTag,
+                                              advVelocityCorrectedTag,
+                                              suffix,
                                               factory,
                                               info );
   }
@@ -757,6 +802,7 @@ namespace Wasatch{
                                         const Expr::Tag primVarTag,
                                         const bool isStrong,
                                         const Expr::Tag turbDiffTag,  
+                                        const std::string suffix,
                                         Expr::ExpressionFactory& factory,
                                         FieldTagInfo& info )
   {
@@ -774,12 +820,16 @@ namespace Wasatch{
     }
     else{ // build an expression for the diffusive flux.
 
-      diffFluxTag = Expr::Tag( primVarName+"_diffFlux_"+dir, Expr::STATE_NONE );
+      diffFluxTag = Expr::Tag( primVarName+"_diffFlux_"+dir+suffix, Expr::STATE_NONE );
+      // make new Tags for density and primVar by adding the appropriate suffix ( "_*" or nothing ). This
+      // is because we need the ScalarRHS at time step n+1 for our pressure projection method
+      const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + suffix, Expr::CARRY_FORWARD);
+      const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + suffix, Expr::STATE_NONE);
 
       Expr::ExpressionBuilder* builder = NULL;
-      if( dir=="X" )      builder = build_diff_flux_expr<typename MyOpTypes::GradX>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
-      else if( dir=="Y" ) builder = build_diff_flux_expr<typename MyOpTypes::GradY>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
-      else if( dir=="Z")  builder = build_diff_flux_expr<typename MyOpTypes::GradZ>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
+      if( dir=="X" )      builder = build_diff_flux_expr<typename MyOpTypes::GradX>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+      else if( dir=="Y" ) builder = build_diff_flux_expr<typename MyOpTypes::GradY>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+      else if( dir=="Z")  builder = build_diff_flux_expr<typename MyOpTypes::GradZ>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
 
       if( builder == NULL ){
         std::ostringstream msg;
@@ -896,6 +946,7 @@ namespace Wasatch{
        const Expr::Tag primVarTag,                              \
        const bool isStrong,                                     \
        const Expr::Tag turbDiffTag,                             \
+       const std::string suffix,                                \
        Expr::ExpressionFactory& factory,                        \
        FieldTagInfo& info );                                    \
                                                                 \
@@ -914,6 +965,7 @@ namespace Wasatch{
         const Expr::Tag volFracTag,                             \
         const ConvInterpMethods convMethod,                     \
         const Expr::Tag advVelocityTag,                         \
+        const std::string suffix,                                \
         Expr::ExpressionFactory& factory,                       \
         FieldTagInfo& info );                                   \
                                                                 \
@@ -921,6 +973,7 @@ namespace Wasatch{
         Uintah::ProblemSpecP convFluxParams,                    \
         const Expr::Tag solnVarName,                            \
         const Expr::Tag volFracTag,                             \
+        const std::string suffix,                                \
         Expr::ExpressionFactory& factory,                       \
         FieldTagInfo& info );
 
