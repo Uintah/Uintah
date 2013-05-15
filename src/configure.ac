@@ -3597,7 +3597,7 @@ if test "$sci_required_fftw" = "yes"; then
   SCI_TRY_LINK(FFTW, FFTW libraries and headers,
                fftw3.h,
                $_sci_inc,
-               fftw3 fftw3_threads,
+               fftw3 fftw3_mpi fftw3_threads,
                $_sci_lib,
                ,
                [fftw_complex* in;
