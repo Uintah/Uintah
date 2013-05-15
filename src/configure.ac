@@ -2834,6 +2834,7 @@ if test "$with_mkl"; then
        test_libs[[1]]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
        test_libs[[2]]="mkl mkl_core mkl_intel_lp64"
        test_libs[[3]]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
+       test_libs[[4]]="mkl_core mkl_intel_lp64 mkl_intel_thread" # works on Navy DSRC Haise/Killrain
 
        num_libs=${#test_libs[*]}
 
@@ -3596,7 +3597,7 @@ if test "$sci_required_fftw" = "yes"; then
   SCI_TRY_LINK(FFTW, FFTW libraries and headers,
                fftw3.h,
                $_sci_inc,
-               fftw3 fftw3_mpi fftw3_threads,
+               fftw3 fftw3_threads,
                $_sci_lib,
                ,
                [fftw_complex* in;

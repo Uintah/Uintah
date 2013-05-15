@@ -32,7 +32,6 @@
 // defined to be the native complex type
 #  include <complex>
 #  include <fftw3.h>
-#  include <fftw3-mpi.h>
 #endif
 
 #endif
