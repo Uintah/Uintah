@@ -406,7 +406,8 @@
          </intrusion>
         </intrusions>
 
-        <use_new_bcs                    spec="OPTIONAL NO_DATA"/>
+        <use_new_bcs                    spec="OPTIONAL NO_DATA"/> <!-- use the new boundary conditions as specified in the <Grid><BoundaryCondition> section --> 
+        <laminar_wall_shear             spec="OPTIONAL NO_DATA"/> <!-- Don't use a wall model for the shear term.  The default uses a classical mixing length wall model. --> 
         
         <TurbulentInlet                 spec="OPTIONAL NO_DATA" >
           <cell_low                     spec="REQUIRED INTEGER"/>

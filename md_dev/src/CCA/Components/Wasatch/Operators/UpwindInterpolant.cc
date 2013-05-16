@@ -69,7 +69,13 @@ apply_to_field( const SrcT& src, DestT& dest )
   using namespace SpatialOps;
   using namespace SpatialOps::structured;
   typedef s2detail::ExtentsAndOffsets<SrcT,DestT> Extents;
-
+  
+  const MemoryType dMemType = dest.memory_device_type();  // destination memory type
+  const unsigned short int dDevIdx = dest.device_index(); // destination device index
+  typename DestT::value_type* destVals = dest.field_values(dMemType, dDevIdx);
+  typename DestT::value_type* velVals  = const_cast<DestT*>(advectiveVelocity_)->field_values(dMemType, dDevIdx);
+  typename SrcT::value_type*  srcVals  = const_cast<SrcT&>(src).field_values(dMemType, dDevIdx);
+  
   const MemoryWindow& ws = src.window_with_ghost();
 
   const MemoryWindow ws1( ws.glob_dim(),
@@ -98,10 +104,11 @@ apply_to_field( const SrcT& src, DestT& dest )
   // to work ONLY with SVol as source and X,Y,ZVol for destination fields.
   // Although the destination field is of a "different" type, we create a window
   // that is the "same size" as the source field to allow us to use a nebo assignment
-  SrcT    d( wd, &dest[0], ExternalStorage );
-  SrcT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
-  SrcT    s1( ws1, &src[0], ExternalStorage );
-  SrcT    s2( ws2, &src[0], ExternalStorage );
+  SrcT     d( wd,  destVals, ExternalStorage ); // NOTE here how we are crating a SrcT field from a DesT one.
+  //This is a trick because we know that the fields in this case are of the same size
+  SrcT  aVel( wd,  velVals, ExternalStorage, dMemType, dDevIdx );
+  SrcT    s1( ws1, srcVals, ExternalStorage, dMemType, dDevIdx );
+  SrcT    s2( ws2, srcVals, ExternalStorage, dMemType, dDevIdx );
 
   d <<= cond( aVel > 0.0, s1  )
             ( aVel < 0.0, s2  )

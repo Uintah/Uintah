@@ -73,27 +73,18 @@ WARNING
      
      virtual ~UdaReducer();
      
-     //////////
-     // Insert Documentation Here:
      virtual void problemSetup(const ProblemSpecP& params, 
                                const ProblemSpecP& restart_prob_spec, 
                                GridP& grid, SimulationStateP& state);
      
-     //////////
-     // Insert Documentation Here:
      virtual void scheduleInitialize(const LevelP& level,
 				     SchedulerP&);
-      //////////
-     // Insert Documentation Here:
+
      virtual void restartInitialize() {}
      
-     //////////
-     // Insert Documentation Here:
      virtual void scheduleComputeStableTimestep(const LevelP&,
 						SchedulerP&) {}
      
-     //////////
-     // Insert Documentation Here:
      virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP&);
      
 
@@ -112,7 +103,7 @@ WARNING
 			 DataWarehouse* /*old_dw*/,
 			 DataWarehouse* new_dw);
        
-     void readAndSetDelT(const ProcessorGroup*,
+     void computeDelT(const ProcessorGroup*,
 			 const PatchSubset* patches,
 			 const MaterialSubset* matls,
 			 DataWarehouse* /*old_dw*/,

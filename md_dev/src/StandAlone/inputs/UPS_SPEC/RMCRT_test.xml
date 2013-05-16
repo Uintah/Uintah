@@ -1,12 +1,14 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include>   
   <include href="Models.xml"  section="Models/RMCRT" />
-
-  <Intrusion                    spec="OPTIONAL NO_DATA">
+  
+  <calc_frequency           spec="OPTIONAL INTEGER 'positive'"/>
+  
+  <Intrusion                spec="OPTIONAL NO_DATA">
     <geom_object/>
   </Intrusion>
   
-  <initalizeUsingUda       spec="OPTIONAL NO_DATA">
+  <initalizeUsingUda        spec="OPTIONAL NO_DATA">
     <uda_name               spec="REQUIRED STRING"/>
     <abskg_varName          spec="REQUIRED STRING"/>
     <temperature_varName    spec="REQUIRED STRING"/>

@@ -111,6 +111,7 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   d_outletBC = 0;
   _using_new_intrusion  = false; 
   d_calcEnergyExchange  = false;
+  d_laminar_wall_shear = false; 
 
   // x-direction
   index_map[0][0] = 0;
@@ -202,6 +203,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
      if ( d_use_new_bcs ) { 
        setupBCs( db_params );
      }
+
+     if ( db->findBlock( "laminar_wall_shear" ) ){ 
+       d_laminar_wall_shear = true; 
+     } 
 
     if ( d_use_new_bcs ) { 
 
@@ -3477,6 +3482,7 @@ BoundaryCondition::addPresGradVelocityOutletPressureBC(const Patch* patch,
                                 (cellinfo->dxpw[colX+1] * avden);
 
            vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
+
         }
       }
     }
@@ -5502,12 +5508,16 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 //
 void 
 BoundaryCondition::sched_cellTypeInit__NEW(SchedulerP& sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls)
+                                           const LevelP& level, 
+                                           const PatchSet* patches,
+                                           const MaterialSet* matls)
 {
+  IntVector lo, hi;
+  level->findInteriorCellIndexRange(lo,hi);
+
   // cell type initialization
   Task* tsk = scinew Task("BoundaryCondition::cellTypeInit__NEW",
-                          this, &BoundaryCondition::cellTypeInit__NEW);
+                          this, &BoundaryCondition::cellTypeInit__NEW, lo, hi);
 
   tsk->computes(d_lab->d_cellTypeLabel);
 
@@ -5516,10 +5526,11 @@ BoundaryCondition::sched_cellTypeInit__NEW(SchedulerP& sched,
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void 
 BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset*,
-                                DataWarehouse*,
-                                DataWarehouse* new_dw)
+                                     const PatchSubset* patches,
+                                     const MaterialSubset*,
+                                     DataWarehouse*,
+                                     DataWarehouse* new_dw, 
+                                     IntVector lo, IntVector hi)
 {
 
   for (int p = 0; p < patches->size(); p++) {
@@ -5574,9 +5585,60 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
 
           if ( foundIterator ) {
 
+            IntVector shift; 
+            shift = IntVector(0,0,0);
+
+            switch (face) {
+              case Patch::xminus:
+                shift = IntVector( 1, 0, 0);
+                break;
+              case Patch::xplus:
+                shift = IntVector( 1, 0, 0);
+                break;
+              case Patch::yminus:
+                shift = IntVector( 0, 1, 0);
+                break;
+              case Patch::yplus:
+                shift = IntVector( 0, 1, 0);
+                break;
+              case Patch::zminus: 
+                shift = IntVector( 0, 0, 1);
+                break;
+              case Patch::zplus:
+                shift = IntVector( 0, 0, 1);
+                break;
+              default:
+                break;
+            }
+
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
 
-              cellType[*bound_ptr] = bc_iter->second.type;
+              IntVector c = *bound_ptr; 
+              BC_TYPE my_type = bc_iter->second.type; 
+
+              if ( my_type == OUTLET || my_type == TURBULENT_INLET || my_type == VELOCITY_INLET 
+                  || my_type == MASSFLOW_INLET ){ 
+
+                if ( c.z() == 10 ){ 
+                  cout << " hi" << endl;
+                } 
+
+                // "if" needed to ensure that extra cell contributions aren't added
+                if ( c.x() >= lo.x() - shift.x() && c.x() < hi.x() + shift.x() ){ 
+                  if ( c.y() >= lo.y() - shift.y() && c.y() < hi.y() + shift.y() ){ 
+                    if ( c.z() >= lo.z() - shift.z() && c.z() < hi.z() + shift.z() ){ 
+
+                      cellType[c] = my_type;
+
+                    }
+                  }
+                }
+
+              } else { 
+
+                cellType[c] = my_type;
+
+              }
 
             }
           }
@@ -5825,40 +5887,43 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
             // Notice: 
             // In the case of mass flow inlets, we are going to assume the density is constant across the inlet
             // so as to compute the average velocity.  As a result, we will just use the first iterator: 
-            bound_ptr.reset(); 
-            if ( (bc_iter->second).type == MASSFLOW_INLET ) {
-              (bc_iter->second).mass_flow_rate = bc_value; 
-              (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
-                                               ( area * density[*bound_ptr] );
-            } else if ( (bc_iter->second).type == SWIRL ) { 
-                (bc_iter->second).mass_flow_rate = bc_value; 
-                (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
-                                                 ( area * density[*bound_ptr] ); 
-            } 
+            for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-            switch ( bc_iter->second.type ) {
+              if ( density[*bound_ptr] > 1e-10 ){ 
+                if ( (bc_iter->second).type == MASSFLOW_INLET ) {
+                  (bc_iter->second).mass_flow_rate = bc_value; 
+                  (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
+                                                   ( area * density[*bound_ptr] );
+                } else if ( (bc_iter->second).type == SWIRL ) { 
+                    (bc_iter->second).mass_flow_rate = bc_value; 
+                    (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
+                                                     ( area * density[*bound_ptr] ); 
+                } 
 
-              case ( VELOCITY_INLET ): 
-                bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
-                break;
-              case (TURBULENT_INLET):
-                bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
-                break;
-              case ( MASSFLOW_INLET ): 
-                bc_iter->second.mass_flow_rate = bc_value; 
-                bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
-                                                 ( area * density[*bound_ptr] );
-                break;
-              case ( SWIRL ):
-                bc_iter->second.mass_flow_rate = bc_value; 
-                bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
-                                                 ( area * density[*bound_ptr] ); 
-                break; 
+                switch ( bc_iter->second.type ) {
 
-              default: 
-                break; 
+                  case ( VELOCITY_INLET ): 
+                    bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
+                    break;
+                  case (TURBULENT_INLET):
+                    bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
+                    break;
+                  case ( MASSFLOW_INLET ): 
+                    bc_iter->second.mass_flow_rate = bc_value; 
+                    bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
+                                                     ( area * density[*bound_ptr] );
+                    break;
+                  case ( SWIRL ):
+                    bc_iter->second.mass_flow_rate = bc_value; 
+                    bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
+                                                     ( area * density[*bound_ptr] ); 
+                    break; 
+
+                  default: 
+                    break; 
+                }
+              }
             }
-
           }
         }
       }
@@ -7038,3 +7103,166 @@ BoundaryCondition::setIntrusionDensity( const ProcessorGroup*,
     }
   }
 }
+
+void 
+BoundaryCondition::wallStress( const Patch* p, 
+                               ArchesVariables* vars, 
+                               ArchesConstVariables* const_vars, 
+                               constCCVariable<double>& eps )
+{ 
+
+  double small = 1e-10; 
+  Vector Dx = p->dCell(); 
+
+  for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++){
+   
+    IntVector c = *iter;
+    IntVector xm = *iter - IntVector(1,0,0);
+    IntVector xp = *iter + IntVector(1,0,0);
+    IntVector ym = *iter - IntVector(0,1,0);
+    IntVector yp = *iter + IntVector(0,1,0);
+    IntVector zm = *iter - IntVector(0,1,0);
+    IntVector zp = *iter + IntVector(0,1,0);
+
+    //WARNINGS: 
+    // This isn't that stylish but it should accomplish what the MPMArches code was doing
+    //1) assumed flow cell = -1
+    //2) assumed that wall velocity = 0
+    //3) assumed a csmag = 0.17 (ala kumar) 
+    
+    int flow = -1; 
+    double csmag;
+
+    if ( d_laminar_wall_shear ){ 
+      csmag = 0.0; 
+    } else { 
+      csmag = 0.17; 
+    } 
+
+    // curr cell is a flow cell 
+    if ( const_vars->cellType[c] == flow ){ 
+
+      if ( const_vars->cellType[xm] == WALL || const_vars->cellType[xm] == INTRUSION ){ 
+
+        //y-dir
+        if ( const_vars->cellType[ym] == flow ){ 
+
+          double mu_t = pow( csmag*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
+
+          //apply v-mom bc -
+          vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x(); 
+
+        } 
+        if ( const_vars->cellType[zm] == flow ){ 
+
+          double mu_t = pow( csmag*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
+
+          //apply w-mom bc -
+          vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x(); 
+        } 
+
+      } 
+
+      if ( const_vars->cellType[xp] == WALL || const_vars->cellType[xp] == INTRUSION){ 
+        
+        //y-dir
+        if ( const_vars->cellType[ym] == flow ){ 
+
+          double mu_t = pow( csmag*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
+
+          //apply v-mom bc -
+          vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x(); 
+        } 
+        if ( const_vars->cellType[zm] == flow ){ 
+
+          double mu_t = pow( csmag*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
+
+          //apply w-mom bc -
+          vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x(); 
+        } 
+
+      } 
+
+      if ( const_vars->cellType[ym] == WALL || const_vars->cellType[ym] == INTRUSION){ 
+        
+        //x-dir
+        if ( const_vars->cellType[xm] == flow ){ 
+
+          double mu_t = pow( csmag*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
+
+          //apply u-mom bc -
+          vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y(); 
+        } 
+        if ( const_vars->cellType[zm] == flow ){ 
+
+          double mu_t = pow( csmag*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
+
+          //apply w-mom bc -
+          vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y(); 
+        } 
+
+      } 
+
+      if ( const_vars->cellType[yp] == WALL || const_vars->cellType[yp] == INTRUSION){ 
+        
+        //x-dir
+        if ( const_vars->cellType[xm] == flow ){ 
+
+          double mu_t = pow( csmag*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
+
+          //apply u-mom bc -
+          vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y(); 
+        } 
+        if ( const_vars->cellType[zm] == flow ){ 
+
+          double mu_t = pow( csmag*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
+
+          //apply w-mom bc -
+          vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y(); 
+        } 
+
+      } 
+
+      if ( const_vars->cellType[zm] == WALL || const_vars->cellType[zm] == INTRUSION){ 
+        
+        //x-dir
+        if ( const_vars->cellType[xm] == flow ){ 
+
+          double mu_t = pow( csmag*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
+
+          //apply u-mom bc -
+          vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t +  const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z(); 
+        } 
+        if ( const_vars->cellType[ym] == flow ){ 
+
+          double mu_t = pow( csmag*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
+
+          //apply v-mom bc -
+          vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z(); 
+        } 
+
+      } 
+
+      if ( const_vars->cellType[zp] == WALL || const_vars->cellType[zp] == INTRUSION){ 
+        
+        //x-dir
+        if ( const_vars->cellType[xm] == flow ){ 
+
+          double mu_t = pow( csmag*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
+
+          //apply u-mom bc -
+          vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z(); 
+        } 
+        if ( const_vars->cellType[ym] == flow ){ 
+
+          double mu_t = pow( csmag*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
+
+          //apply v-mom bc -
+          vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z(); 
+        } 
+
+      } 
+
+    }
+  }
+} 
