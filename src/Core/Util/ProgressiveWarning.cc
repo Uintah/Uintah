@@ -29,23 +29,26 @@
 
 namespace SCIRun {
 
+using namespace std;
+
 static DebugStream dbg("ProgressiveWarning", true);
 
-ProgressiveWarning::ProgressiveWarning(std::string message, int multiplier /* =-1 */, 
-                                       std::ostream& stream /* =cerr */)
+ProgressiveWarning::ProgressiveWarning( const string & message,
+                                        int multiplier /* = -1 */, 
+                                        ostream & stream /* = cerr */)
 {
   d_message = message;
   d_multiplier = multiplier;
 
   if( d_multiplier == 1 ) {
-    std::cout << "Warning: ProgressiveWarning multiplier may not be set to 1... changing to 2.\n";
+    cout << "Warning: ProgressiveWarning multiplier may not be set to 1... changing to 2.\n";
     d_multiplier = 2;
   }
 
-  if (stream == std::cerr)
-    out = &dbg;
+  if (stream == cerr)
+    d_out = &dbg;
   else
-    out = &stream;
+    d_out = &stream;
   
   d_numOccurences = 0;
   d_nextOccurence = 1;
@@ -53,37 +56,39 @@ ProgressiveWarning::ProgressiveWarning(std::string message, int multiplier /* =-
   
 }
 
-bool ProgressiveWarning::invoke(int numTimes /* =-1*/)
+bool
+ProgressiveWarning::invoke( int numTimes /* = -1 */ )
 {
-  bool warning_printed = false;
   d_numOccurences += numTimes;
   if (d_numOccurences >= d_nextOccurence && (!d_warned || d_multiplier != -1)) {
     d_warned = true;
 
     if (d_multiplier != -1) {
       showWarning();
-      warning_printed = true;
-      while (d_nextOccurence <= d_numOccurences)
+      while (d_nextOccurence <= d_numOccurences) {
         d_nextOccurence *= d_multiplier;
+      }
     }
     else {
-      (*out) << d_message << std::endl;
-      (*out) << "  This message will only occur once\n";
+      (*d_out) << d_message << "\n";
+      (*d_out) << "  This message will only occur once\n";
     }
     return true;
   }
   return false;
 }
 
-void ProgressiveWarning::changeMessage(std::string message)
+void
+ProgressiveWarning::changeMessage( const string & message )
 {
   d_message = message;
 }
 
-void ProgressiveWarning::showWarning()
+void
+ProgressiveWarning::showWarning()
 {
-  (*out) << d_message << std::endl;
-  (*out) << "  This warning has occurred " << d_numOccurences << " times\n";
+  (*d_out) << d_message << "\n";
+  (*d_out) << "  This warning has occurred " << d_numOccurences << " times.\n";
 }
 
 } // end namespace SCIRun
