@@ -173,22 +173,6 @@ evaluate()
 {
   using namespace SpatialOps;
   SVolField& waleTsrMag = this->value();
-  waleTsrMag <<= 0.0;
-
-  SpatFldPtr<structured::XSurfYField> xyfield = SpatialFieldStore::get<structured::XSurfYField>( waleTsrMag );
-  SpatFldPtr<structured::YSurfXField> yxfield = SpatialFieldStore::get<structured::YSurfXField>( waleTsrMag );
-  *xyfield <<= 0.0;
-  *yxfield <<= 0.0;
-
-  SpatFldPtr<structured::XSurfZField> xzfield = SpatialFieldStore::get<structured::XSurfZField>( waleTsrMag );
-  SpatFldPtr<structured::ZSurfXField> zxfield = SpatialFieldStore::get<structured::ZSurfXField>( waleTsrMag );
-  *xzfield <<= 0.0;
-  *zxfield <<= 0.0;
-
-  SpatFldPtr<structured::YSurfZField> yzfield = SpatialFieldStore::get<structured::YSurfZField>( waleTsrMag );
-  SpatFldPtr<structured::ZSurfYField> zyfield = SpatialFieldStore::get<structured::ZSurfYField>( waleTsrMag );
-  *zyfield <<= 0.0;
-  *yzfield <<= 0.0;
 
   SpatFldPtr<SVolField> g11 = SpatialFieldStore::get<SVolField>( waleTsrMag );
   SpatFldPtr<SVolField> g12 = SpatialFieldStore::get<SVolField>( waleTsrMag );
@@ -200,60 +184,20 @@ evaluate()
   SpatFldPtr<SVolField> g32 = SpatialFieldStore::get<SVolField>( waleTsrMag );
   SpatFldPtr<SVolField> g33 = SpatialFieldStore::get<SVolField>( waleTsrMag );
 
+  // dui/dxi fields
+  *g11 <<= (*dudxOp_)(*vel1_); // dudx
+  *g22 <<= (*dvdyOp_)(*vel2_); // dvdy
+  *g33 <<= (*dwdzOp_)(*vel3_); // dwdz
 
-  //  if (!doX_) {
-  *g11 <<= 0.0;
-  *g12 <<= 0.0;
-  *g13 <<= 0.0;
-  *g21 <<= 0.0;
-  *g31 <<= 0.0;
-  //  }
-
-  //  if (!doY_) {
-  *g21 <<= 0.0;
-  *g22 <<= 0.0;
-  *g23 <<= 0.0;
-  *g12 <<= 0.0;
-  *g32 <<= 0.0;
-  //  }
-
-  //  if (!doZ_) {
-  *g31 <<= 0.0;
-  *g32 <<= 0.0;
-  *g33 <<= 0.0;
-  *g23 <<= 0.0;
-  *g13 <<= 0.0;
-  //  }
-
-
-  // du fields
-  if (doX_) dudxOp_->apply_to_field( *vel1_, *g11 );
-  if (doY_) dvdyOp_->apply_to_field( *vel2_, *g22 );
-  if (doZ_) dwdzOp_->apply_to_field( *vel3_, *g33 );
-
-  if (doX_ && doY_) {
-    dudyOp_->apply_to_field( *vel1_, *xyfield );   // du/dy
-    xyInterpOp_->apply_to_field( *xyfield, *g12);  // interpolate to scalar cells
-
-    dvdxOp_->apply_to_field( *vel2_, *yxfield );   // dv/dx
-    yxInterpOp_->apply_to_field( *yxfield, *g21);  // interpolate to scalar cells
-  }
-
-  if (doX_ && doZ_) {
-    dudzOp_->apply_to_field( *vel1_, *xzfield );   // du/dz
-    xzInterpOp_->apply_to_field( *xzfield, *g13);
-
-    dwdxOp_->apply_to_field( *vel3_, *zxfield );   // dw/dx
-    zxInterpOp_->apply_to_field( *zxfield, *g31);
-  }
-
-  if (doY_ && doZ_) {
-    dvdzOp_->apply_to_field( *vel2_, *yzfield );   // dv/dz
-    yzInterpOp_->apply_to_field( *yzfield, *g23);
-
-    dwdyOp_->apply_to_field( *vel3_, *zyfield );   // dw/dy
-    zyInterpOp_->apply_to_field( *zyfield, *g32);
-  }
+  // cell centered dui/dxj fields
+  *g21 <<= (*xyInterpOp_)( (*dudyOp_)(*vel1_) ); // cell centered dudy
+  *g12 <<= (*yxInterpOp_)( (*dvdxOp_)(*vel2_) ); // cell centered dvdx
+  
+  *g31 <<= (*xzInterpOp_)( (*dudzOp_)(*vel1_) ); // cell centered dudz
+  *g13 <<= (*zxInterpOp_)( (*dwdxOp_)(*vel3_) ); // cell centered dwdx
+  
+  *g32 <<= (*yzInterpOp_)( (*dvdzOp_)(*vel2_) ); // cell centered dvdz
+  *g23 <<= (*zyInterpOp_)( (*dwdyOp_)(*vel3_) ); // cell centered dwdy
 
   // NOTE: the gd_ij tensor corresponds to the \bar(g^2)_ij tensor in the 
   // Nicoud and Ducros original paper.
@@ -266,30 +210,6 @@ evaluate()
   SpatFldPtr<SVolField> gd31 = SpatialFieldStore::get<SVolField>( waleTsrMag );
   SpatFldPtr<SVolField> gd32 = SpatialFieldStore::get<SVolField>( waleTsrMag );
   SpatFldPtr<SVolField> gd33 = SpatialFieldStore::get<SVolField>( waleTsrMag );
-
-  //  if (!doX_) {
-  *gd11 <<= 0.0;
-  *gd12 <<= 0.0;
-  *gd13 <<= 0.0;
-  *gd21 <<= 0.0;
-  *gd31 <<= 0.0;
-  //  }
-
-  //  if (!doY_) {
-  *gd21 <<= 0.0;
-  *gd22 <<= 0.0;
-  *gd23 <<= 0.0;
-  *gd12 <<= 0.0;
-  *gd32 <<= 0.0;
-  //  }
-
-  //  if (!doZ_) {
-  *gd31 <<= 0.0;
-  *gd32 <<= 0.0;
-  *gd33 <<= 0.0;
-  *gd23 <<= 0.0;
-  *gd13 <<= 0.0;
-  //  }
 
   *gd11 <<= *g11 * *g11 + *g12 * *g21 + *g13 * *g31;
   *gd12 <<= *g11 * *g12 + *g12 * *g22 + *g13 * *g32;
@@ -304,7 +224,7 @@ evaluate()
   *gd33 <<= *g31 * *g13 + *g32 * *g23 + *g33 * *g33;
 
   SpatFldPtr<SVolField> dilsq = SpatialFieldStore::get<SVolField>( waleTsrMag );
-  *dilsq<<=0.0; // gd_kk
+  *dilsq<<= 0.0; // gd_kk
   *dilsq<<= (1.0/3.0)*(*gd11 + *gd22 + *gd33);
 
   waleTsrMag <<=  (*gd11 - *dilsq) * (*gd11 - *dilsq)       // Sd_11 * Sd_11
@@ -361,22 +281,6 @@ evaluate()
 {
   using namespace SpatialOps;
   SVolField& vremanTsrMag = this->value();
-  vremanTsrMag <<= 0.0;
-  
-  SpatFldPtr<structured::XSurfYField> xyfield = SpatialFieldStore::get<structured::XSurfYField>( vremanTsrMag );
-  SpatFldPtr<structured::YSurfXField> yxfield = SpatialFieldStore::get<structured::YSurfXField>( vremanTsrMag );
-  *xyfield <<= 0.0;
-  *yxfield <<= 0.0;
-  
-  SpatFldPtr<structured::XSurfZField> xzfield = SpatialFieldStore::get<structured::XSurfZField>( vremanTsrMag );
-  SpatFldPtr<structured::ZSurfXField> zxfield = SpatialFieldStore::get<structured::ZSurfXField>( vremanTsrMag );
-  *xzfield <<= 0.0;
-  *zxfield <<= 0.0;
-  
-  SpatFldPtr<structured::YSurfZField> yzfield = SpatialFieldStore::get<structured::YSurfZField>( vremanTsrMag );
-  SpatFldPtr<structured::ZSurfYField> zyfield = SpatialFieldStore::get<structured::ZSurfYField>( vremanTsrMag );
-  *zyfield <<= 0.0;
-  *yzfield <<= 0.0;
   
   SpatFldPtr<SVolField> a11 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   SpatFldPtr<SVolField> a12 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
@@ -388,54 +292,20 @@ evaluate()
   SpatFldPtr<SVolField> a32 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   SpatFldPtr<SVolField> a33 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   
+  // dui/dxi fields
+  *a11 <<= (*dudxOp_)(*vel1_); // dudx
+  *a22 <<= (*dvdyOp_)(*vel2_); // dvdy
+  *a33 <<= (*dwdzOp_)(*vel3_); // dwdz
   
-  *a11 <<= 0.0;
-  *a12 <<= 0.0;
-  *a13 <<= 0.0;
-  *a21 <<= 0.0;
-  *a31 <<= 0.0;
+  // cell centered dui/dxj fields
+  *a21 <<= (*xyInterpOp_)( (*dudyOp_)(*vel1_) ); // cell centered dudy
+  *a12 <<= (*yxInterpOp_)( (*dvdxOp_)(*vel2_) ); // cell centered dvdx
+  
+  *a31 <<= (*xzInterpOp_)( (*dudzOp_)(*vel1_) ); // cell centered dudz
+  *a13 <<= (*zxInterpOp_)( (*dwdxOp_)(*vel3_) ); // cell centered dwdx
 
-  *a21 <<= 0.0;
-  *a22 <<= 0.0;
-  *a23 <<= 0.0;
-  *a12 <<= 0.0;
-  *a32 <<= 0.0;
-
-  *a31 <<= 0.0;
-  *a32 <<= 0.0;
-  *a33 <<= 0.0;
-  *a23 <<= 0.0;
-  *a13 <<= 0.0;
-  
-  
-  // du fields
-  if (doX_) dudxOp_->apply_to_field( *vel1_, *a11 ); // dudx
-  if (doY_) dvdyOp_->apply_to_field( *vel2_, *a22 ); // dvdy
-  if (doZ_) dwdzOp_->apply_to_field( *vel3_, *a33 ); // dwdz
-  
-  if (doX_ && doY_) {
-    dudyOp_->apply_to_field( *vel1_, *xyfield );   // du/dy
-    xyInterpOp_->apply_to_field( *xyfield, *a21);  // interpolate to scalar cells
-    
-    dvdxOp_->apply_to_field( *vel2_, *yxfield );   // dv/dx
-    yxInterpOp_->apply_to_field( *yxfield, *a12);  // interpolate to scalar cells
-  }
-  
-  if (doX_ && doZ_) {
-    dudzOp_->apply_to_field( *vel1_, *xzfield );   // du/dz
-    xzInterpOp_->apply_to_field( *xzfield, *a31);  // interpolate to scalar cells
-    
-    dwdxOp_->apply_to_field( *vel3_, *zxfield );   // dw/dx
-    zxInterpOp_->apply_to_field( *zxfield, *a13);  // interpolate to scalar cells
-  }
-  
-  if (doY_ && doZ_) {
-    dvdzOp_->apply_to_field( *vel2_, *yzfield );   // dv/dz
-    yzInterpOp_->apply_to_field( *yzfield, *a32);  // interpolate to scalar cells
-    
-    dwdyOp_->apply_to_field( *vel3_, *zyfield );   // dw/dy
-    zyInterpOp_->apply_to_field( *zyfield, *a23);  // interpolate to scalar cells
-  }
+  *a32 <<= (*yzInterpOp_)( (*dvdzOp_)(*vel2_) ); // cell centered dvdz
+  *a23 <<= (*zyInterpOp_)( (*dwdyOp_)(*vel3_) ); // cell centered dwdy
   
   SpatFldPtr<SVolField> b11 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   SpatFldPtr<SVolField> b12 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
@@ -445,26 +315,7 @@ evaluate()
   SpatFldPtr<SVolField> b23 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   SpatFldPtr<SVolField> b31 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   SpatFldPtr<SVolField> b32 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
-  SpatFldPtr<SVolField> b33 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
-  
-
-  *b11 <<= 0.0;
-  *b12 <<= 0.0;
-  *b13 <<= 0.0;
-  *b21 <<= 0.0;
-  *b31 <<= 0.0;
-
-  *b21 <<= 0.0;
-  *b22 <<= 0.0;
-  *b23 <<= 0.0;
-  *b12 <<= 0.0;
-  *b32 <<= 0.0;
-
-  *b31 <<= 0.0;
-  *b32 <<= 0.0;
-  *b33 <<= 0.0;
-  *b23 <<= 0.0;
-  *b13 <<= 0.0;
+  SpatFldPtr<SVolField> b33 = SpatialFieldStore::get<SVolField>( vremanTsrMag );  
   
   *b11 <<= *a11 * *a11 + *a21 * *a21 + *a31 * *a31;
   *b12 <<= *a11 * *a12 + *a21 * *a22 + *a31 * *a32;
@@ -479,13 +330,12 @@ evaluate()
   *b33 <<= *a13 * *a13 + *a23 * *a23 + *a33 * *a33;
 
   SpatFldPtr<SVolField> abeta = SpatialFieldStore::get<SVolField>( vremanTsrMag );
-  *abeta <<= 0.0; // abeta = aij * aij
+  // abeta = aij * aij
   *abeta <<=  *a11 * *a11 + *a12 * *a12 + *a13 * *a13
             + *a21 * *a21 + *a22 * *a22 + *a32 * *a32
             + *a31 * *a31 + *a32 * *a32 + *a33 * *a33;
 
   SpatFldPtr<SVolField> bbeta = SpatialFieldStore::get<SVolField>( vremanTsrMag );
-  *bbeta<<=0.0;
   *bbeta <<= *b11 * *b22 - *b12 * *b12 + *b11 * *b33 - *b13 * *b13 + *b22 * *b33 - *b23 * *b23;
 
   // TSAAD: The reason that we are using conditionals over here has to do with
