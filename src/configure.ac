@@ -2811,7 +2811,18 @@ if test "$with_mkl"; then
   elif test "$with_mkl"; then
     _sci_lib="$with_mkl/lib"
     _sci_inc="$with_mkl/include"
+    
     # _sci_optional=specific TESTING FOR SPECIFIC NOT IMPLEMENTED!!!
+    
+    ## check for lib/intel64 or lib/ia32 on IBM systems (this is the case for MKL, etc)
+    if test "$enable_64bit" = "yes"; then
+      if test -d $with_mkl/lib/intel64; then
+        _sci_lib=$_sci_lib/intel64
+      fi
+    elif test -d $with_mkl/lib/ia32; then
+      _sci_lib=$_sci_lib/ia32
+    fi
+    
   fi
 
   case $host in
@@ -2819,9 +2830,10 @@ if test "$with_mkl"; then
        AC_MSG_ERROR(We recommend that you don't use MKL on a Mac... use the default vecLib instead.)
        ;;
      *)
-       test_libs[[1]]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
-       test_libs[[2]]="mkl mkl_core mkl_intel_lp64"
-       test_libs[[3]]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
+       test_libs[[0]]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
+       test_libs[[1]]="mkl mkl_core mkl_intel_lp64"
+       test_libs[[2]]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
+       test_libs[[3]]="mkl_core mkl_intel_lp64 mkl_intel_thread iomp5" # works on Navy DSRC Haise/Kilrain (IBM iDataPlex)
 
        num_libs=${#test_libs[*]}
 
