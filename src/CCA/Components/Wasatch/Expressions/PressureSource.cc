@@ -14,23 +14,22 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
                                 const Expr::Tag dilTag,
                                 const Expr::Tag timestepTag )
 : Expr::Expression<SVolField>(),
-xMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[0]     ),
-yMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[1]     ),
-zMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[2]     ),
-haveX_      ( momTags[0]==Expr::Tag() ? false : true                  ),
-haveY_      ( momTags[1]==Expr::Tag() ? false : true                  ),
-haveZ_      ( momTags[2]==Expr::Tag() ? false : true                  ),
-xVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[0] ),
-yVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[1] ),
-zVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[2] ),
-densStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : densStarTag    ),
-dens2Start_ ( densStarTag==Expr::Tag() ? Expr::Tag() : dens2StarTag   ),
-timestept_  ( timestepTag ),
-denst_         ( densTag  ),
-dilt_          ( isConstDensity ? dilTag  : Expr::Tag() ),
-isConstDensity_( isConstDensity )
-{
-}
+  isConstDensity_( isConstDensity ),
+  haveX_      ( momTags[0]!=Expr::Tag() ),
+  haveY_      ( momTags[1]!=Expr::Tag() ),
+  haveZ_      ( momTags[2]!=Expr::Tag() ),
+  xMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[0]     ),
+  yMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[1]     ),
+  zMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[2]     ),
+  xVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[0] ),
+  yVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[1] ),
+  zVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[2] ),
+  denst_      ( densTag  ),
+  densStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : densStarTag    ),
+  dens2Start_ ( densStarTag==Expr::Tag() ? Expr::Tag() : dens2StarTag   ),
+  dilt_       ( isConstDensity ? dilTag  : Expr::Tag() ),
+  timestept_  ( timestepTag )
+{}
 
 //------------------------------------------------------------------
 

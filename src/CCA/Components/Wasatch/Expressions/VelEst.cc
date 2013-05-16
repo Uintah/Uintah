@@ -19,15 +19,14 @@ VelEst<FieldT>::VelEst( const Expr::Tag velTag,
     velxt_   ( velTags[0]  ),
     velyt_   ( velTags[1]  ),
     velzt_   ( velTags[2]  ),
+    densityt_( densityTag  ),
+    visct_   ( viscTag     ),
     tauxit_  ( tauTags[0]  ),
     tauyit_  ( tauTags[1]  ),
     tauzit_  ( tauTags[2]  ),
-    densityt_( densityTag  ),
-    visct_   ( viscTag     ),
     pressuret_(pressureTag ),
     tStept_  ( timeStepTag )
-{
-}
+{}
 
 //------------------------------------------------------------------
 
@@ -229,9 +228,9 @@ VelEst<FieldT>::Builder::Builder( const Expr::Tag& result,
                                   const Expr::Tag pressureTag,
                                   const Expr::Tag timeStepTag )
     : ExpressionBuilder(result),
-      velt_    ( velTag      ),
       velts_   ( velTags     ),
       tauts_   ( tauTags     ),
+      velt_    ( velTag      ),
       densityt_( densityTag  ),
       visct_   ( viscTag     ),
       pt_      ( pressureTag ),

@@ -537,10 +537,8 @@ namespace Wasatch{
     if (enabledudtInPRHS) {
       OldVariable& oldVar = OldVariable::self();
       Expr::Tag dthisMomdtTag = Expr::Tag( "d_" + thisMomName_ + "_dt" , Expr::STATE_NONE );
-//      Expr::Tag thisVelOldTag = Expr::Tag( thisVelTag_.name()  + "_old", Expr::STATE_NONE );
       Expr::Tag thisMomOldTag = Expr::Tag( thisMomName_  + "_old", Expr::STATE_NONE );
       Expr::Tag thisMomOldOldTag = Expr::Tag( thisMomName_  + "_old_old", Expr::STATE_NONE );
-//      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisVelTag_);
       oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomTag);
       oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomOldTag);
       factory.register_expression( new typename TimeDerivative<FieldT>::Builder(dthisMomdtTag,thisMomOldTag,thisMomOldOldTag,tagNames.timestep));
@@ -654,8 +652,7 @@ namespace Wasatch{
         OldVariable& oldPressure = OldVariable::self();
         oldPressure.add_variable<SVolField>( ADVANCE_SOLUTION, pressure_tag() );
         const Expr::Tag oldPressureTag = Expr::Tag (pressure_tag().name() + "_old", Expr::STATE_NONE);
-        
-        const Expr::ExpressionID velStarID = factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, velTags_, tauTags, densTag, viscTag, oldPressureTag, tagNames.timestep ));        
+        factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, velTags_, tauTags, densTag, viscTag, oldPressureTag, tagNames.timestep ));
       }
     } 
     

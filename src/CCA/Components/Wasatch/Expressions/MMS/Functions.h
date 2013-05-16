@@ -1482,7 +1482,7 @@ private:
   const double rho0_, rho1_;
   const Expr::Tag xTag_, tTag_, timestepTag_;
   const FieldT* x_;
-  const double* t_, *timestep_;
+  const double *t_, *timestep_;
 };
 
 //--------------------------------------------------------------------
@@ -1495,11 +1495,11 @@ VarDensMMSContinuitySrc( const double rho0,
                          const Expr::Tag& tTag,
                          const Expr::Tag& timestepTag)
 : Expr::Expression<FieldT>(),
-rho0_( rho0 ), 
-rho1_( rho1 ), 
-timestepTag_( timestepTag ),
-xTag_( xTag ), 
-tTag_( tTag )
+  rho0_( rho0 ),
+  rho1_( rho1 ),
+  xTag_( xTag ),
+  tTag_( tTag ),
+  timestepTag_( timestepTag )
 {}
 
 //--------------------------------------------------------------------
@@ -1557,11 +1557,11 @@ Builder( const Expr::Tag& result,
          const Expr::Tag& tTag,
          const Expr::Tag& timestepTag )
 : ExpressionBuilder(result),
-rho0_( rho0 ), 
-rho1_( rho1 ),
-timestepTag_( timestepTag ),
-xTag_( xTag ), 
-tTag_( tTag )
+  rho0_( rho0 ),
+  rho1_( rho1 ),
+  xTag_( xTag ),
+  tTag_( tTag ),
+  timestepTag_( timestepTag )
 {}
 
 //--------------------------------------------------------------------
