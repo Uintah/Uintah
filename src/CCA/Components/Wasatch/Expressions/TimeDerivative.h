@@ -110,7 +110,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   const typename Expr::FieldMgrSelector<ValT>::type& valtfm = fml.template field_manager<ValT>();
   newvar_ = &valtfm.field_ref( newvartag_ );
   oldvar_ = &valtfm.field_ref( oldvartag_ );
-  dt_     = &fml.template field_manager<double>().field_ref( timesteptag_ );
+  dt_     = &fml.template field_ref<double>( timesteptag_ );
 }
 
 //--------------------------------------------------------------------

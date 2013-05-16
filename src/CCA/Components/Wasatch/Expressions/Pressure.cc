@@ -232,22 +232,22 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
   const Expr::FieldMgrSelector<YVolField>::type& yvfm = fml.field_manager<YVolField>();
   const Expr::FieldMgrSelector<ZVolField>::type& zvfm = fml.field_manager<ZVolField>();
 
-  if( doX_    )  fx_      = &xvfm.field_ref( fxt_       );
-  if( doY_    )  fy_      = &yvfm.field_ref( fyt_       );
-  if( doZ_    )  fz_      = &zvfm.field_ref( fzt_       );
+  if( doX_ )  fx_ = &xvfm.field_ref( fxt_ );
+  if( doY_ )  fy_ = &yvfm.field_ref( fyt_ );
+  if( doZ_ )  fz_ = &zvfm.field_ref( fzt_ );
   pSource_ = &svfm.field_ref( pSourcet_  );
 
   dxmomdt_ = NULL;
   dymomdt_ = NULL;
   dzmomdt_ = NULL;
-  if( doX_  && dudtt_ != Expr::Tag()  )  dxmomdt_  = &xvfm.field_ref( dudtt_       );
-  if( doY_  && dvdtt_ != Expr::Tag()  )  dymomdt_  = &yvfm.field_ref( dvdtt_       );
-  if( doZ_  && dwdtt_ != Expr::Tag()  )  dzmomdt_  = &zvfm.field_ref( dwdtt_       );
+  if( doX_ && dudtt_ != Expr::Tag() )  dxmomdt_ = &xvfm.field_ref( dudtt_ );
+  if( doY_ && dvdtt_ != Expr::Tag() )  dymomdt_ = &yvfm.field_ref( dvdtt_ );
+  if( doZ_ && dwdtt_ != Expr::Tag() )  dzmomdt_ = &zvfm.field_ref( dwdtt_ );
 
   if( volfract_ != Expr::Tag() ) volfrac_ = &svfm.field_ref( volfract_ );
 
   const Expr::FieldMgrSelector<double>::type& doublefm = fml.field_manager<double>();
-  timestep_ = &doublefm.field_ref( timestept_ );
+  timestep_    = &doublefm.field_ref( timestept_    );
   currenttime_ = &doublefm.field_ref( currenttimet_ );
 }
 
@@ -263,7 +263,6 @@ Pressure::bind_operators( const SpatialOps::OperatorDatabase& opDB )
   divXOp_ = opDB.retrieve_operator<DivX>();
   divYOp_ = opDB.retrieve_operator<DivY>();
   divZOp_ = opDB.retrieve_operator<DivZ>();
-
 }
 
 //--------------------------------------------------------------------

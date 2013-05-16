@@ -60,9 +60,9 @@ void
 StrainTensorBase::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  if ( doX_ ) vel1_ = &fml.field_manager<XVolField>().field_ref( vel1t_ );
-  if ( doY_ ) vel2_ = &fml.field_manager<YVolField>().field_ref( vel2t_ );
-  if ( doZ_ ) vel3_ = &fml.field_manager<ZVolField>().field_ref( vel3t_ );
+  if ( doX_ ) vel1_ = &fml.field_ref<XVolField>( vel1t_ );
+  if ( doY_ ) vel2_ = &fml.field_ref<YVolField>( vel2t_ );
+  if ( doZ_ ) vel3_ = &fml.field_ref<ZVolField>( vel3t_ );
 }
 
 //--------------------------------------------------------------------

@@ -170,9 +170,11 @@ TurbulentInletBC<FieldT>::advertise_dependents(Expr::ExprDeps& exprDeps){
 
 template< typename FieldT >
 void
-TurbulentInletBC<FieldT>::bind_fields(const Expr::FieldManagerList& fml){
-  t_  = &fml.template field_manager<double>().field_ref( timeTag_ );
-  dt_ = &fml.template field_manager<double>().field_ref( timestepTag_ );
+TurbulentInletBC<FieldT>::bind_fields(const Expr::FieldManagerList& fml)
+{
+  const typename Expr::FieldMgrSelector<double>::type& fm = fml.template field_manager<double>();
+  t_  = &fm.field_ref( timeTag_ );
+  dt_ = &fm.field_ref( timestepTag_ );
 }
 
 //--------------------------------------------------------------------

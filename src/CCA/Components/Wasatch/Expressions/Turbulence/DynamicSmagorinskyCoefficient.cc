@@ -97,7 +97,7 @@ bind_fields( const Expr::FieldManagerList& fml )
 {
   StrainTensorBase::bind_fields(fml);
   if(!isConstDensity_)
-    rho_ = &fml.field_manager<SVolField>().field_ref(rhot_);
+    rho_ = &fml.field_ref<SVolField>(rhot_);
 }
 
 //--------------------------------------------------------------------

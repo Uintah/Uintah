@@ -85,12 +85,9 @@ void
 DiffusiveVelocity<GradT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldMgrSelector<VelT   >::type& velFM    = fml.template field_manager<VelT   >();
-  const typename Expr::FieldMgrSelector<ScalarT>::type& scalarFM = fml.template field_manager<ScalarT>();
-
-  phi_ = &scalarFM.field_ref( phiTag_ );
-  if( isTurbulent_  ) turbDiff_ = &fml.template field_manager<SVolField>().field_ref( turbDiffTag_ );
-  if( !isConstCoef_ ) coef_ = &velFM.field_ref( coefTag_ );
+  phi_ = &fml.template field_ref<ScalarT>( phiTag_ );
+  if( isTurbulent_  ) turbDiff_ = &fml.template field_ref<SVolField>( turbDiffTag_ );
+  if( !isConstCoef_ ) coef_     = &fml.template field_ref<VelT     >( coefTag_     );
 }
 
 //--------------------------------------------------------------------
@@ -186,7 +183,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   const typename Expr::FieldMgrSelector<ScalarT>::type& scalarFM = fml.template field_manager<ScalarT>();
   phi_  = &scalarFM.field_ref( phiTag_  );
   coef_ = &scalarFM.field_ref( coefTag_ );
-  if (isTurbulent_) turbDiff_  = &fml.template field_manager<SVolField>().field_ref( turbDiffTag_  );
+  if (isTurbulent_) turbDiff_ = &fml.template field_ref<SVolField>( turbDiffTag_ );
 
 }
 

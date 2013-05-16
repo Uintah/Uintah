@@ -180,7 +180,7 @@ namespace Wasatch {
   PoissonExpression::bind_fields( const Expr::FieldManagerList& fml )
   {
     if( phirhst_ != Expr::Tag() ){
-      phirhs_ = &fml.field_manager<SVolField>().field_ref( phirhst_ );
+      phirhs_ = &fml.field_ref<SVolField>( phirhst_ );
     }
   }
 

@@ -90,10 +90,10 @@ void
 DiffusiveFlux<ScalarT, FluxT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  phi_ = &fml.template field_manager<ScalarT  >().field_ref( phiTag_ );
-  rho_ = &fml.template field_manager<SVolField>().field_ref( rhoTag_ );
-  if( isTurbulent_  ) turbDiff_ = &fml.template field_manager<SVolField>().field_ref( turbDiffTag_ );
-  if( !isConstCoef_ ) coef_     = &fml.template field_manager<FluxT>().field_ref  ( coefTag_  );
+  phi_ = &fml.template field_ref<ScalarT  >( phiTag_ );
+  rho_ = &fml.template field_ref<SVolField>( rhoTag_ );
+  if( isTurbulent_  ) turbDiff_ = &fml.template field_ref<SVolField>( turbDiffTag_ );
+  if( !isConstCoef_ ) coef_     = &fml.template field_ref<FluxT    >( coefTag_     );
 }
 
 //--------------------------------------------------------------------
@@ -198,11 +198,12 @@ void
 DiffusiveFlux2<ScalarT, FluxT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldMgrSelector<ScalarT>::type& scalarFM = fml.template field_manager<ScalarT>();
+  const typename Expr::FieldMgrSelector<ScalarT  >::type& scalarFM = fml.template field_manager<ScalarT  >();
+  const typename Expr::FieldMgrSelector<SVolField>::type& svolFM   = fml.template field_manager<SVolField>();
   phi_  = &scalarFM.field_ref( phiTag_  );
   coef_ = &scalarFM.field_ref( coefTag_ );
-  rho_ = &fml.template field_manager<SVolField>().field_ref( rhoTag_ );
-  if (isTurbulent_) turbDiff_  = &fml.template field_manager<SVolField>().field_ref( turbDiffTag_  );
+  rho_ = &svolFM.field_ref( rhoTag_ );
+  if (isTurbulent_) turbDiff_ = &svolFM.field_ref( turbDiffTag_ );
 }
 
 //--------------------------------------------------------------------

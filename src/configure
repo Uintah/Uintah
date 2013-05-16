@@ -34186,6 +34186,7 @@ main ()
   return 0;
 }
 _ACEOF
+cp conftest.c dav.c
 if ac_fn_c_try_link "$LINENO"; then :
 
 

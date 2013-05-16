@@ -139,6 +139,7 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
   const typename Expr::FieldMgrSelector<XVolField>::type& xVolFM   = fml.field_manager<XVolField>();
   const typename Expr::FieldMgrSelector<YVolField>::type& yVolFM   = fml.field_manager<YVolField>();
   const typename Expr::FieldMgrSelector<ZVolField>::type& zVolFM   = fml.field_manager<ZVolField>();
+  const typename Expr::FieldMgrSelector<SVolField>::type& sVolFM   = fml.field_manager<SVolField>();
 
   if( haveConvection_ ){
     if( doXDir_ )  xConvFlux_ = &xFluxFM.field_ref( convTagX_ );
@@ -153,7 +154,7 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
   }
 
   if ( haveVolFrac_ ) {
-    volfrac_ = &fml.template field_manager<SVolField>().field_ref( volFracTag_ );
+    volfrac_ = &sVolFM.field_ref( volFracTag_ );
   }
 
   if ( doXDir_ && haveXAreaFrac_ ) xareafrac_ = &xVolFM.field_ref( xAreaFracTag_ );
@@ -165,7 +166,7 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
     if( isrc->context() != Expr::INVALID_CONTEXT ) {
       srcTerm_.push_back( &scalarFM.field_ref( *isrc ) );
       if (isConstDensity_){
-        rho_ = &fml.template field_manager<SVolField>().field_ref( densityTag_ );
+        rho_ = &sVolFM.field_ref( densityTag_ );
       }
     }
   }
