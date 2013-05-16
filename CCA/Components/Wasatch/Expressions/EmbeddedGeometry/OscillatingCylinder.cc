@@ -80,7 +80,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   field2_ = &fm.field_ref( tag2_ );
   
   // get the time tag
-  t_ = &fml.field_manager<double>().field_ref( timet_ );
+  t_ = &fml.field_ref<double>( timet_ );
 }
 
 //--------------------------------------------------------------------

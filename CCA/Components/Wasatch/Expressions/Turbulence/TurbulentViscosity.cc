@@ -89,23 +89,26 @@ bind_fields( const Expr::FieldManagerList& fml )
 {
   const Expr::FieldMgrSelector<SVolField>::type& scalarfm = fml.field_manager<SVolField>();
 
-  rho_       = &scalarfm.field_ref( rhoTag_       );
+  rho_ = &scalarfm.field_ref( rhoTag_ );
   
-  if ( turbulenceParameters_.turbulenceModelName == Wasatch::SMAGORINSKY )
-      strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
-  
-  else if ( turbulenceParameters_.turbulenceModelName == Wasatch::WALE ) {
+  switch( turbulenceParameters_.turbulenceModelName ){
+  case Wasatch::SMAGORINSKY :
     strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
-    waleTsrMag_ = &scalarfm.field_ref( waleTsrMagTag_ );    
-  }
-  
-  else if( turbulenceParameters_.turbulenceModelName == Wasatch::DYNAMIC ) {
+    break;
+  case Wasatch::WALE :
+    strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
+    waleTsrMag_ = &scalarfm.field_ref( waleTsrMagTag_ );
+    break;
+  case Wasatch::DYNAMIC :
     strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
     dynCoef_ = &scalarfm.field_ref ( dynCoefTag_ );
+    break;
+  case Wasatch::VREMAN :
+    vremanTsrMag_ = &scalarfm.field_ref( vremanTsrMagTag_ );
+    break;
+  case Wasatch::NONE :
+    assert(false);
   }
-  
-  else if( turbulenceParameters_.turbulenceModelName == Wasatch::VREMAN )
-    vremanTsrMag_ = &scalarfm.field_ref( vremanTsrMagTag_ );    
 }
 
 //--------------------------------------------------------------------
@@ -186,5 +189,5 @@ evaluate()
   // a negative value for the turbulent viscosity in the extra cell if the
   // first interior cell value is zero. To avoid this, you can turn on the "skipBCs" flag
   // when using apply_to_field, or specify a min value for the extraplated cells.
-  exOp_->apply_to_field(result,0.0);
+  exOp_->apply_to_field( result, 0.0 );
 }

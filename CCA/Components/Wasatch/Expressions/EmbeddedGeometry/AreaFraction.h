@@ -63,7 +63,7 @@ class AreaFraction
   
   const SVolField* src_;
   
-  const InpterpSrcT2DestT* InpterpSrcT2DestTOp_;
+  const InpterpSrcT2DestT* inpterpSrcT2DestTOp_;
   
   AreaFraction( const Expr::Tag& srctag );
   
@@ -125,7 +125,7 @@ void
 AreaFraction<DestT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  if( srct_ != Expr::Tag() )  src_ = &fml.template field_manager<SVolField>().field_ref( srct_ );
+  if( srct_ != Expr::Tag() )  src_ = &fml.template field_ref<SVolField>( srct_ );
 }
 
 //--------------------------------------------------------------------
@@ -136,7 +136,7 @@ AreaFraction<DestT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   if( srct_ != Expr::Tag() )
-    InpterpSrcT2DestTOp_ = opDB.retrieve_operator<InpterpSrcT2DestT>();
+    inpterpSrcT2DestTOp_ = opDB.retrieve_operator<InpterpSrcT2DestT>();
 }
 
 //--------------------------------------------------------------------
@@ -150,7 +150,7 @@ evaluate()
   using SpatialOps::operator<<=;
   DestT& destResult = this->value();
   destResult <<= 1.0; // this will make sure that the boundaries have an area fraction of 1.0. Wall BCs are NOT handled by volume fractions rather by the BCHelperTools.
-  InpterpSrcT2DestTOp_->apply_to_field(*src_, destResult); // interpolate cell centered volume fraction to faces
+  inpterpSrcT2DestTOp_->apply_to_field(*src_, destResult); // interpolate cell centered volume fraction to faces
   destResult <<= cond( destResult < 1.0, 0.0 ) // replace 0.5 values by 0.0
                      ( 1.0 );
   

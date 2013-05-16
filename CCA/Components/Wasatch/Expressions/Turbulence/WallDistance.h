@@ -149,8 +149,7 @@ void
 WallDistance::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldMgrSelector<SVolField>::type& scalarfm = fml.field_manager<SVolField>();
-  phi_ = &scalarfm.field_ref( phit_ );
+  phi_ = &fml.field_ref<SVolField>( phit_ );
 }
 
 //--------------------------------------------------------------------
@@ -159,7 +158,6 @@ void
 WallDistance::
 evaluate()
 {
-  std::cout <<"evaluating wall distance\n";
   using namespace SpatialOps;
   SVolField& walld = this->value();
   walld <<= 0.0;

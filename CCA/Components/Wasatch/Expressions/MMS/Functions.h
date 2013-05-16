@@ -115,7 +115,7 @@ void
 SineTime<ValT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
+  t_ = &fml.template field_ref<double>( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -1522,8 +1522,10 @@ VarDensMMSContinuitySrc<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   x_ = &fml.template field_manager<FieldT>().field_ref( xTag_ );
-  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
-  timestep_ = &fml.template field_manager<double>().field_ref( timestepTag_ );
+
+  const typename Expr::FieldMgrSelector<double>::type& dfm = fml.field_manager<double>();
+  t_        = &dfm.field_ref( tTag_        );
+  timestep_ = &dfm.field_ref( timestepTag_ );
 }
 
 //--------------------------------------------------------------------
