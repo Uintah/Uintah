@@ -43,16 +43,17 @@ hotBlob_AMR_3L_ups = modUPS( the_dir,                       \
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
-NIGHTLYTESTS = [   ("advect",           "advect.ups",            1, "Linux", ["exactComparison"]),      \
-                   ("riemann_sm",       "riemann_sm.ups",        1, "Linux", ["exactComparison"]),      \
-                   ("hotBlob2mat",      "hotBlob2mat.ups",       1, "Linux", ["exactComparison"]),      \
-                   ("hotBlob2mat_sym",  "hotBlob2mat_sym.ups",   1, "Linux", ["exactComparison"]),      \
-                   ("impHotBlob",       "impHotBlob.ups",        1, "Linux", ["exactComparison"]),      \
-                   ("hotBlob2mat8patch","hotBlob2mat8patch.ups", 8, "Linux",["exactComparison"]),       \
-                   ("advect2matAMR",    "advect2matAMR.ups",     1, "Linux", ["exactComparison"]),      \
-                   ("hotBlob_AMR",      "hotBlob_AMR.ups",       4, "Linux", ["exactComparison"]),      \
-                   ("hotBlob_AMR_3L",    hotBlob_AMR_3L_ups,     4, "Linux", ["exactComparison"]),      \
-                   ("impAdvectAMR",     "impAdvectAMR.ups",    1.1, "Linux", ["exactComparison"])
+NIGHTLYTESTS = [   ("advect",           "advect.ups",              1, "Linux", ["exactComparison"]),    \
+                   ("riemann_sm",       "riemann_sm.ups",          1, "Linux", ["exactComparison"]),
+                   ("CouettePoiseuille","CouettePoiseuille.ups", 1.1, "Linux", ["exactComparison"]),    \
+                   ("hotBlob2mat",      "hotBlob2mat.ups",         1, "Linux", ["exactComparison"]),    \
+                   ("hotBlob2mat_sym",  "hotBlob2mat_sym.ups",     1, "Linux", ["exactComparison"]),    \
+                   ("impHotBlob",       "impHotBlob.ups",          1, "Linux", ["exactComparison"]),    \
+                   ("hotBlob2mat8patch","hotBlob2mat8patch.ups",   8, "Linux", ["exactComparison"]),     \
+                   ("advect2matAMR",    "advect2matAMR.ups",       1, "Linux", ["exactComparison"]),    \
+                   ("hotBlob_AMR",      "hotBlob_AMR.ups",         4, "Linux", ["exactComparison"]),    \
+                   ("hotBlob_AMR_3L",    hotBlob_AMR_3L_ups,       4, "Linux", ["exactComparison"]),    \
+                   ("impAdvectAMR",     "impAdvectAMR.ups",      1.1, "Linux", ["exactComparison"])
               ]
 
 
