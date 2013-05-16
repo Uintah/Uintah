@@ -25,7 +25,7 @@
 #ifndef PrimVar_h
 #define PrimVar_h
 
-#include "PrimVar.h"
+#include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>

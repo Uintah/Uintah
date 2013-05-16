@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "DiffusiveVelocity.h"
+#include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>

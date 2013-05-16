@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "Dilatation.h"
+#include <CCA/Components/Wasatch/Expressions/Dilatation.h>
 
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>

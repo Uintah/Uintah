@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "DiffusiveFlux.h"
+#include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>

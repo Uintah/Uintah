@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "Pressure.h"
+#include <CCA/Components/Wasatch/Expressions/Pressure.h>
 
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldAdaptor.h>

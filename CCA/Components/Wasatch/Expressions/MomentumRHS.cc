@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "MomentumRHS.h"
+#include <CCA/Components/Wasatch/Expressions/MomentumRHS.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>

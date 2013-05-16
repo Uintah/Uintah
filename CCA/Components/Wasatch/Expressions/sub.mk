@@ -27,29 +27,61 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/Wasatch/Expressions
+SRCDIR := CCA/Components/Wasatch/Expressions
 
-SRCS     +=                         \
-	$(SRCDIR)/BasicExprBuilder.cc		\
-	$(SRCDIR)/ConvectiveFlux.cc	    	\
-	$(SRCDIR)/DiffusiveFlux.cc	    	\
-	$(SRCDIR)/DiffusiveVelocity.cc		\
-	$(SRCDIR)/Dilatation.cc			\
-	$(SRCDIR)/MomentumPartialRHS.cc 	\
-	$(SRCDIR)/MomentumRHS.cc 		\
-	$(SRCDIR)/MonolithicRHS.cc		\
-	$(SRCDIR)/PrimVar.cc			\
-	$(SRCDIR)/ScalarRHS.cc			\
-	$(SRCDIR)/ScalabilityTestSrc.cc		\
-	$(SRCDIR)/SetCurrentTime.cc		\
-	$(SRCDIR)/Strain.cc 			\
-	$(SRCDIR)/VelocityMagnitude.cc 		\
-	$(SRCDIR)/PressureSource.cc 		\
-	$(SRCDIR)/SolnVarEst.cc			\
-	$(SRCDIR)/VelEst.cc			\
-	$(SRCDIR)/Vorticity.cc 			\
-	$(SRCDIR)/Pressure.cc     \
- $(SRCDIR)/PoissonExpression.cc
+#
+# These are files that if CUDA is enabled (via configure), must be
+# compiled using the nvcc compiler.
+#
+# WARNING: If you add a file to the list of CUDA_SRCS, you must add a
+# corresponding rule at the end of this file!
+#
+CUDA_ENABLED_SRCS = \
+     BasicExprBuilder     \
+     ConvectiveFlux       \
+     DiffusiveFlux        \
+     DiffusiveVelocity    \
+     Dilatation           \
+     MomentumPartialRHS   \
+     MomentumRHS          \
+     PoissonExpression    \
+     Pressure             \
+     PressureSource       \
+     PrimVar              \
+     ScalarRHS            \
+     SolnVarEst           \
+     Strain               \
+     VelEst               \
+     Vorticity                  
+
+ifeq ($(HAVE_CUDA),yes)
+
+   # CUDA enabled files, listed here (and with a rule at the end of
+   # this sub.mk) are copied to the binary side and renamed with a .cu
+   # extension (.cc replaced with .cu) so that they can be compiled
+   # using the nvcc compiler.
+
+   SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(OBJTOP_ABS)/$(SRCDIR)/$(var).cu)
+
+else
+
+   SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).cc)
+
+endif
+
+#
+# Non-CUDA Dependent src files... can be specified the old fashioned
+# way:
+#
+SRCS += \
+        $(SRCDIR)/MonolithicRHS.cc        \
+        $(SRCDIR)/ScalabilityTestSrc.cc   \
+        $(SRCDIR)/SetCurrentTime.cc       \
+        $(SRCDIR)/VelocityMagnitude.cc    
+
+#
+# Subdirectories to build...
+#
 
 SUBDIRS := \
         $(SRCDIR)/MMS \
@@ -59,3 +91,59 @@ SUBDIRS := \
         $(SRCDIR)/EmbeddedGeometry
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
+
+########################################################################
+#
+# Rules to copy CUDA enabled source (.cc) files to the binary build tree
+# and rename with a .cu extension.
+#
+
+ifeq ($(HAVE_CUDA),yes)
+  # If Copy the 'original' .cc files into the binary tree and rename as .cu
+
+  $(OBJTOP_ABS)/$(SRCDIR)/BasicExprBuilder.cu : $(SRCTOP_ABS)/$(SRCDIR)/BasicExprBuilder.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/ConvectiveFlux.cu : $(SRCTOP_ABS)/$(SRCDIR)/ConvectiveFlux.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/DiffusiveFlux.cu : $(SRCTOP_ABS)/$(SRCDIR)/DiffusiveFlux.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/DiffusiveVelocity.cu : $(SRCTOP_ABS)/$(SRCDIR)/DiffusiveVelocity.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/Dilatation.cu : $(SRCTOP_ABS)/$(SRCDIR)/Dilatation.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/MomentumPartialRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentumPartialRHS.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/MomentumRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentumRHS.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/PoissonExpression.cu : $(SRCTOP_ABS)/$(SRCDIR)/PoissonExpression.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/Pressure.cu : $(SRCTOP_ABS)/$(SRCDIR)/Pressure.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/PressureSource.cu : $(SRCTOP_ABS)/$(SRCDIR)/PressureSource.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/PrimVar.cu : $(SRCTOP_ABS)/$(SRCDIR)/PrimVar.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/ScalarRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalarRHS.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/Strain.cu : $(SRCTOP_ABS)/$(SRCDIR)/Strain.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/VelEst.cu : $(SRCTOP_ABS)/$(SRCDIR)/VelEst.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/Vorticity.cu : $(SRCTOP_ABS)/$(SRCDIR)/Vorticity.cc
+	cp $< $@
+
+endif
