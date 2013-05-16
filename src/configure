@@ -15237,12 +15237,19 @@ if ac_fn_cxx_try_compile "$LINENO"; then :
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
-# gcc-4.3 has depricated <ext/hash_map> so check for <backward/hash_map> first
-if test "$DEF_HASHMAP" = "None" && test "$IS_OSX" != "yes"; then
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+
+############################################################
+#
+# If CUDA is being used, then we can't use TR1... it causes
+# compilation errors when using the nvcc compiler.
+#
+if test "$sci_required_cuda" != "yes"; then
+  if test "$DEF_HASHMAP" = "None" && test "$IS_OSX" != "yes"; then
+    # gcc-4.3 has depricated <ext/hash_map> so check for <backward/hash_map> first
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <tr1/unordered_map>
-                 std::tr1::unordered_map<int, int> xx;
+                   std::tr1::unordered_map<int, int> xx;
 int
 main ()
 {
@@ -15255,7 +15262,10 @@ if ac_fn_cxx_try_compile "$LINENO"; then :
   DEF_HASHMAP=HAVE_TR1_HASHMAP
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  fi
 fi
+############################################################
+
 if test "$DEF_HASHMAP" = "None"; then
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
@@ -44198,7 +44208,16 @@ $as_echo "yes" >&6; }
   DEF_SPATIALOPS="#define HAVE_SPATIALOPS 1"
   INC_SPATIALOPS_H="-I$with_spatialops/include"
   SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
-  SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil"
+
+  if test "$sci_required_cuda" = "yes"; then
+    # The spatialops-structured lib is part of the new Nebo version of SpatialOps...
+    # once the Nebo version is merged into the main SpatialOps, then this if (more
+    # specifically the else part) can be removed.
+    SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil -lspatialops-structured"
+  else
+    SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil"
+  fi
+
   HAVE_SPATIALOPS="yes"
 fi
 

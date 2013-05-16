@@ -27,7 +27,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "MonolithicRHS.h"
+#include <CCA/Components/Wasatch/Expressions/MonolithicRHS.h>
 
 #include <spatialops/structured/FVStaggered.h>
 

@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "ConvectiveFlux.h"
+#include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>

@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "MomentumPartialRHS.h"
+#include <CCA/Components/Wasatch/Expressions/MomentumPartialRHS.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 
 //-- SpatialOps Includes --//

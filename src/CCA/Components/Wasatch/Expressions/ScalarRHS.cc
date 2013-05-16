@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "ScalarRHS.h"
+#include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>

@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "PoissonExpression.h"
+#include <CCA/Components/Wasatch/Expressions/PoissonExpression.h>
 
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
