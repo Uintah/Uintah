@@ -340,13 +340,13 @@ namespace Wasatch{
     // Turbulence
     Expr::Tag turbDiffTag = Expr::Tag();
     bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
-    if (turbulenceParams.turbulenceModelName != NONE && enableTurbulenceModel ) { 
+    if (turbulenceParams.turbModelName != NONE && enableTurbulenceModel ) {
       Expr::Tag turbViscTag = TagNames::self().turbulentviscosity;//Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
       turbDiffTag = turbulent_diffusivity_tag();//Expr::Tag( "TurbulentDiffusivity", Expr::STATE_NONE );
       
       if( !factory.have_entry( turbDiffTag ) ){
         typedef typename TurbulentDiffusivity::Builder TurbDiffT;
-        factory.register_expression( scinew TurbDiffT(turbDiffTag, densityTag, turbulenceParams.turbulentSchmidt, turbViscTag ) );
+        factory.register_expression( scinew TurbDiffT(turbDiffTag, densityTag, turbulenceParams.turbSchmidt, turbViscTag ) );
       }      
     }
     

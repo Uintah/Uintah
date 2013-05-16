@@ -33,27 +33,25 @@ namespace Wasatch {
     
     // get the name of the turbulence model
     std::string turbulenceModelName;
-    turbulenceInputParams->get("TurbulenceModel",turbulenceModelName);    
+    turbulenceInputParams->get("TurbulenceModel",turbulenceModelName);
+    
     if ( turbulenceModelName.compare("SMAGORINSKY") == 0   ) {
-      turbParams.turbulenceModelName = SMAGORINSKY;
+      turbParams.turbModelName = SMAGORINSKY;
     } else if ( turbulenceModelName.compare("DYNAMIC") ==0 ) {    
-      turbParams.turbulenceModelName = DYNAMIC;  
+      turbParams.turbModelName = DYNAMIC;  
     } else if ( turbulenceModelName.compare("WALE")==0     ) {    
-      turbParams.turbulenceModelName = WALE;
+      turbParams.turbModelName = WALE;
     } else if ( turbulenceModelName.compare("VREMAN") == 0 ) {
-      turbParams.turbulenceModelName = VREMAN;
+      turbParams.turbModelName = VREMAN;
     } else {
-      turbParams.turbulenceModelName = NONE;
+      turbParams.turbModelName = NONE;
     }
     
     // get the eddy viscosity constant
-    turbulenceInputParams->getWithDefault("EddyViscosityConstant",turbParams.eddyViscosityConstant, 0.1);
-    
-    // get the kolmogorov scale
-//    turbulenceInputParams->getWithDefault("KolmogorovScale",turbParams.kolmogorovScale, 1e100);    
+    turbulenceInputParams->getWithDefault("EddyViscosityConstant",turbParams.eddyViscCoef, 0.1);
 
     // get the turbulent Schmidt Number
-    turbulenceInputParams->getWithDefault("TurbulentSchmidt",turbParams.turbulentSchmidt, 1.0);      
+    turbulenceInputParams->getWithDefault("TurbulentSchmidt",turbParams.turbSchmidt, 1.0);
   }
   
 }

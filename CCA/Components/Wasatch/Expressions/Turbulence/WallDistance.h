@@ -162,30 +162,12 @@ evaluate()
   SVolField& walld = this->value();
   walld <<= 0.0;
   
-  SpatialOps::SpatFldPtr<SVolField> tmp1 = SpatialOps::SpatialFieldStore::get<SVolField>( walld );
-  *tmp1 <<= 0.0;
-  SpatialOps::SpatFldPtr<SVolField> tmp2 = SpatialOps::SpatialFieldStore::get<SVolField>( walld );
-  *tmp2 <<= 0.0;
-
-  SpatialOps::SpatFldPtr<XVolField> xfield = SpatialOps::SpatialFieldStore::get<XVolField>( walld );
-  SpatialOps::SpatFldPtr<YVolField> yfield = SpatialOps::SpatialFieldStore::get<YVolField>( walld );
-  SpatialOps::SpatFldPtr<ZVolField> zfield = SpatialOps::SpatialFieldStore::get<ZVolField>( walld );
+  SpatialOps::SpatFldPtr<SVolField> gradPhiSq = SpatialOps::SpatialFieldStore::get<SVolField>( walld );
+  *gradPhiSq <<=   (*xToSInterpOp_)((*gradXOp_)(*phi_)) * (*xToSInterpOp_)((*gradXOp_)(*phi_))
+                 + (*yToSInterpOp_)((*gradYOp_)(*phi_)) * (*yToSInterpOp_)((*gradYOp_)(*phi_))
+                 + (*zToSInterpOp_)((*gradZOp_)(*phi_)) * (*zToSInterpOp_)((*gradZOp_)(*phi_));
   
-  gradXOp_->apply_to_field( *phi_, *xfield);
-  *xfield <<= *xfield * *xfield;
-  gradYOp_->apply_to_field( *phi_, *yfield);
-  *yfield <<= *yfield * *yfield;
-  gradZOp_->apply_to_field( *phi_, *zfield);
-  *zfield <<= *zfield * *zfield;
-  
-  xToSInterpOp_->apply_to_field(*xfield,*tmp1);
-  *tmp2 <<= *tmp2 + *tmp1;
-  yToSInterpOp_->apply_to_field(*yfield,*tmp1);
-  *tmp2 <<= *tmp2 + *tmp1;  
-  zToSInterpOp_->apply_to_field(*zfield,*tmp1);
-  *tmp2 <<= *tmp2 + *tmp1;  
-  
-  walld <<= sqrt(*tmp2 + 2.0 * *phi_)  - sqrt(*tmp2); 
+  walld <<= sqrt( *gradPhiSq + 2.0 * *phi_ ) - sqrt(*gradPhiSq);
 }
 
 //--------------------------------------------------------------------
