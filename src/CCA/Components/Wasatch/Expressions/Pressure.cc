@@ -67,8 +67,7 @@ Pressure::Pressure( const std::string& pressureName,
                     const Expr::Tag& dudttag,
                     const Expr::Tag& dvdttag,
                     const Expr::Tag& dwdttag,
-                    const Expr::Tag& dilatationtag,
-                    const Expr::Tag& d2rhodt2tag,
+                    const Expr::Tag& pSourceTag,
                     const Expr::Tag& timesteptag,
                     const Expr::Tag& volfractag,
                     const bool hasMovingGeometry,
@@ -84,8 +83,7 @@ Pressure::Pressure( const std::string& pressureName,
     fyt_( fytag ),
     fzt_( fztag ),
 
-    dilatationt_ ( dilatationtag ),
-    d2rhodt2t_   ( d2rhodt2tag ),
+    pSourcet_( pSourceTag ),
 
     timestept_   ( timesteptag ),
     currenttimet_(TagNames::self().time ),
@@ -99,8 +97,6 @@ Pressure::Pressure( const std::string& pressureName,
     doX_( fxtag != Expr::Tag() ),
     doY_( fytag != Expr::Tag() ),
     doZ_( fztag != Expr::Tag() ),
-
-    doDens_( d2rhodt2tag != Expr::Tag() ),
 
     didAllocateMatrix_(false),
     didMatrixUpdate_(false),
@@ -213,14 +209,13 @@ Pressure::advertise_dependents( Expr::ExprDeps& exprDeps )
   if( doX_    )  exprDeps.requires_expression( fxt_ );
   if( doY_    )  exprDeps.requires_expression( fyt_ );
   if( doZ_    )  exprDeps.requires_expression( fzt_ );
-  if( doDens_ )  exprDeps.requires_expression( d2rhodt2t_ );
+  exprDeps.requires_expression( pSourcet_ );
   if(volfract_ != Expr::Tag() ) exprDeps.requires_expression( volfract_ );
   
   if(dudtt_ != Expr::Tag() ) exprDeps.requires_expression( dudtt_ );
   if(dvdtt_ != Expr::Tag() ) exprDeps.requires_expression( dvdtt_ );
   if(dwdtt_ != Expr::Tag() ) exprDeps.requires_expression( dwdtt_ );
 
-  exprDeps.requires_expression( dilatationt_ );
   exprDeps.requires_expression( timestept_ );
   
   const TagNames& tagNames = TagNames::self();
@@ -237,9 +232,10 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
   const Expr::FieldMgrSelector<YVolField>::type& yvfm = fml.field_manager<YVolField>();
   const Expr::FieldMgrSelector<ZVolField>::type& zvfm = fml.field_manager<ZVolField>();
 
-  if( doX_    )  fx_       = &xvfm.field_ref( fxt_       );
-  if( doY_    )  fy_       = &yvfm.field_ref( fyt_       );
-  if( doZ_    )  fz_       = &zvfm.field_ref( fzt_       );
+  if( doX_    )  fx_      = &xvfm.field_ref( fxt_       );
+  if( doY_    )  fy_      = &yvfm.field_ref( fyt_       );
+  if( doZ_    )  fz_      = &zvfm.field_ref( fzt_       );
+  pSource_ = &svfm.field_ref( pSourcet_  );
 
   dxmomdt_ = NULL;
   dymomdt_ = NULL;
@@ -248,9 +244,7 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
   if( doY_  && dvdtt_ != Expr::Tag()  )  dymomdt_  = &yvfm.field_ref( dvdtt_       );
   if( doZ_  && dwdtt_ != Expr::Tag()  )  dzmomdt_  = &zvfm.field_ref( dwdtt_       );
 
-  if( doDens_ )  d2rhodt2_ = &svfm.field_ref( d2rhodt2t_ );
   if( volfract_ != Expr::Tag() ) volfrac_ = &svfm.field_ref( volfract_ );
-  dilatation_ = &svfm.field_ref( dilatationt_ );
 
   const Expr::FieldMgrSelector<double>::type& doublefm = fml.field_manager<double>();
   timestep_ = &doublefm.field_ref( timestept_ );
@@ -351,9 +345,10 @@ Pressure::evaluate()
   strs << "_t_"<< *currenttime_ << "s_rkstage_"<< rkStage_ << "_patch";
 
   solverParams_.setOutputFileName( "_WASATCH" + strs.str() );
-  // start by subtracting the dilatation from the previous timestep or integrator
-  // stage. This is needed to account for any non-divergence free initial conditions
-  rhs <<= - *dilatation_/ *timestep_;
+
+// NOTE THE NEGATIVE SIGN! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
+  // - Laplacian(p) = - p_rhs
+  rhs <<= - *pSource_;
 
   SpatFldPtr<SVolField> tmp = SpatialFieldStore::get<SVolField>( rhs );
   *tmp <<= 0.0;
@@ -366,31 +361,16 @@ Pressure::evaluate()
   // - Laplacian(p) = - p_rhs
   if( doX_ ){
     rhs <<= rhs - (*divXOp_)((*interpX_)(*fx_));
-//    SpatFldPtr<SS::SSurfXField> tmpx = SpatialFieldStore::get<SS::SSurfXField>( *fx_ );
-//    interpX_->apply_to_field( *fx_, *tmpx );
-//    divXOp_ ->apply_to_field( *tmpx, *tmp );
-//    rhs <<= rhs - *tmp;
   }
 
   if( doY_ ){
     rhs <<= rhs - (*divYOp_)((*interpY_)(*fy_));
-//    SpatFldPtr<SS::SSurfYField> tmpy = SpatialFieldStore::get<SS::SSurfYField>( *fy_ );
-//    interpY_->apply_to_field( *fy_, *tmpy );
-//    divYOp_ ->apply_to_field( *tmpy, *tmp );
-//    rhs <<= rhs - *tmp;
   }
 
   if( doZ_ ){
     rhs <<= rhs - (*divZOp_)((*interpZ_)(*fz_));
-//    SpatFldPtr<SS::SSurfZField> tmpz = SpatialFieldStore::get<SS::SSurfZField>( *fz_ );
-//    interpZ_->apply_to_field( *fz_, *tmpz );
-//    divZOp_ ->apply_to_field( *tmpz, *tmp );
-//    rhs <<= rhs - *tmp;
   }
 
-  if( doDens_ ){
-    rhs <<= rhs - *d2rhodt2_;
-  }
   
   if (volfract_ != Expr::Tag() ) {
     rhs <<= rhs* *volfrac_;
@@ -581,8 +561,7 @@ Pressure::Builder::Builder( const Expr::TagList& result,
                             const Expr::Tag& dudttag,
                             const Expr::Tag& dvdttag,
                             const Expr::Tag& dwdttag,
-                            const Expr::Tag& dilatationtag,
-                            const Expr::Tag& d2rhodt2tag,
+                            const Expr::Tag& pSourceTag,
                             const Expr::Tag& timesteptag,
                             const Expr::Tag& volfractag,
                             const bool hasMovingGeometry,
@@ -596,8 +575,7 @@ Pressure::Builder::Builder( const Expr::TagList& result,
    fxt_( fxtag ),
    fyt_( fytag ),
    fzt_( fztag ),
-   dilatationt_ ( dilatationtag ),
-   d2rhodt2t_( d2rhodt2tag ),
+   psrct_( pSourceTag ),
    timestept_( timesteptag ),
    volfract_ ( volfractag  ),
    dudtt_(dudttag),
@@ -620,7 +598,7 @@ Pressure::Builder::build() const
   const Expr::TagList& ptags = get_computed_field_tags();
   return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_,
                        dudtt_, dvdtt_, dwdtt_,
-                       dilatationt_, d2rhodt2t_, timestept_,volfract_,hasMovingGeometry_, userefpressure_,
+                       psrct_, timestept_,volfract_,hasMovingGeometry_, userefpressure_,
                        refpressurevalue_, refpressurelocation_, use3dlaplacian_,
                        sparams_, solver_ );
 }

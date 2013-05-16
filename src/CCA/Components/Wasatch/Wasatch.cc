@@ -337,6 +337,24 @@ namespace Wasatch{
         }
       }
     }
+    Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
+    if (!wasatchParams) return;
+    
+    // Here we add the functors name of the "*" stage variables BC to the functormap
+    if (wasatchParams->findBlock("MomentumEquations") && wasatchParams->findBlock("Density") && wasatchParams->findBlock("TransportEquation")) {
+
+      for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("TransportEquation");
+          transEqnParams != 0;
+          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
+        std::string solnVarName;
+        transEqnParams->get("SolutionVariable",solnVarName);
+        std::set<std::string> functorSet;
+        std::string functorName = solnVarName+TagNames::self().star+"_bc";
+        std::string phiName     = solnVarName+TagNames::self().star;
+        functorSet.insert(functorName);
+        bcFunctorMap_.insert(std::pair< std::string, std::set<std::string> >(phiName,functorSet) );        
+      }
+    }
 
     // PARSE IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
@@ -347,9 +365,6 @@ namespace Wasatch{
       saveLabelParams->getAttribute("label",saveTheLabel);
       lockedFields_.insert(saveTheLabel);
     }
-
-    Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
-    if (!wasatchParams) return;
 
     //
     // Material
@@ -475,10 +490,15 @@ namespace Wasatch{
       if (hasEmbeddedGeometry) hasMovingBoundaries = wasatchParams->findBlock("EmbeddedGeometry")->findBlock("MovingGeometry") ;
       // note - parse_momentum_equations returns a vector of equation adaptors
       try{
-          const EquationAdaptors adaptors =
-              parse_momentum_equations( momEqnParams, turbParams,
-                  hasEmbeddedGeometry,hasMovingBoundaries, densityTag,
-                  graphCategories_, *linSolver_, sharedState );
+          const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
+                                                                      turbParams,
+                                                                      isConstDensity,
+                                                                      hasEmbeddedGeometry,
+                                                                      hasMovingBoundaries,
+                                                                      densityTag,
+                                                                      graphCategories_,
+                                                                      *linSolver_,
+                                                                      sharedState );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -501,8 +521,8 @@ namespace Wasatch{
       try{
         //For the Multi-Environment mixing model, the entire Wasatch Block must be passed to find values for initial moments
         const EquationAdaptors adaptors =
-            parse_moment_transport_equations( momEqnParams, wasatchParams,
-                hasEmbeddedGeometry, graphCategories_ );
+            parse_moment_transport_equations( momEqnParams, wasatchParams, isConstDensity,
+                                              hasEmbeddedGeometry, graphCategories_ );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -553,6 +573,14 @@ namespace Wasatch{
 
     parse_cleave_requests    ( wasatchParams, graphCategories_ );
     parse_attach_dependencies( wasatchParams, graphCategories_ );
+    //
+    // get the variable density params, if any, and parse them.
+    //
+    Uintah::ProblemSpecP VarDensMMSParams = wasatchParams->findBlock("VariableDensityMMS");
+    if (VarDensMMSParams) {
+      parse_var_dens_mms(VarDensMMSParams, graphCategories_);
+    }
+    
   }
 
   //--------------------------------------------------------------------

@@ -725,6 +725,17 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                       cellinfo, &velocityVars,
                                       &constVelocityVars);
 
+    //----------------------------------
+    // If not doing MPMArches, then need to 
+    // take of the wall shear stress
+    // This adds the contribution to the nonLinearSrc of each 
+    // direction depending on the boundary conditions. 
+    if ( !d_MAlab ){ 
+
+      d_boundaryCondition->wallStress( patch, &velocityVars, &constVelocityVars, volFraction ); 
+
+    } 
+
     //__________________________________
     // ---- This needs to get moved somewhere else ----
     // for scalesimilarity model add stress tensor to the source of velocity eqn.
@@ -917,12 +928,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       }
     }
 
-    // Calculate the Velocity BCS
-    //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
-    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-    //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM, 
-    //           [u,v,w]VelNonLinSrcPBLM
-
+    // sets the velocity to the solid velocity on the faces
+    // note that solid velocity is assumed zero here. 
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
 
       if (!d_doMMS) {
@@ -942,23 +949,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       }
     }
 
-    // apply multimaterial velocity bc
-    // treats multimaterial wall as intrusion
+    // sets coefs in the direction of the wall to zero 
     d_boundaryCondition->mmvelocityBC(patch, cellinfo,
                                       &velocityVars, &constVelocityVars);
 
-    // Modify Velocity Mass Source
-    //  inputs : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM, 
-    //           [u,v,w]VelConvCoefPBLM, [u,v,w]VelLinSrcPBLM, 
-    //           [u,v,w]VelNonLinSrcPBLM
-    //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-
     d_source->modifyVelMassSource(patch,
                                   &velocityVars, &constVelocityVars);
-
-    // Calculate Velocity diagonal
-    //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
-    //  outputs: [u,v,w]VelCoefPBLM
 
     d_discretize->calculateVelDiagonal(patch,&velocityVars);
 

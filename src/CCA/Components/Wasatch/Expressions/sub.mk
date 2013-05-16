@@ -44,6 +44,9 @@ SRCS     +=                         \
 	$(SRCDIR)/SetCurrentTime.cc		\
 	$(SRCDIR)/Strain.cc 			\
 	$(SRCDIR)/VelocityMagnitude.cc 		\
+	$(SRCDIR)/PressureSource.cc 		\
+	$(SRCDIR)/SolnVarEst.cc			\
+	$(SRCDIR)/VelEst.cc			\
 	$(SRCDIR)/Vorticity.cc 			\
 	$(SRCDIR)/Pressure.cc     \
  $(SRCDIR)/PoissonExpression.cc

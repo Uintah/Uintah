@@ -55,7 +55,7 @@ Expr::Tag pressure_tag();
  *  \class 	  Pressure
  *  \ingroup 	Expressions
  *  \ingroup	 WasatchCore
- *  \authors 	James C. Sutherland, Tony Saad
+ *  \authors 	James C. Sutherland, Tony Saad, Amir Biglari
  *  \date 	   January, 2011
  *
  *  \brief Expression to form and solve the poisson system for pressure.
@@ -76,10 +76,10 @@ Expr::Tag pressure_tag();
 class Pressure
  : public Expr::Expression<SVolField>
 {
-  const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, currenttimet_, volfract_;
+  const Expr::Tag fxt_, fyt_, fzt_, pSourcet_, timestept_, currenttimet_, volfract_;
   const Expr::Tag dudtt_, dvdtt_, dwdtt_;
 
-  const bool doX_, doY_, doZ_, doDens_;
+  const bool doX_, doY_, doZ_;
   bool didAllocateMatrix_;
   bool didMatrixUpdate_;
   bool hasMovingGeometry_;
@@ -96,11 +96,10 @@ class Pressure
   const Uintah::VarLabel* pressureLabel_;
   const Uintah::VarLabel* prhsLabel_;
   
+  const SVolField* pSource_;
   const double* timestep_;
   const double* currenttime_;
 
-  const SVolField* dilatation_;
-  const SVolField* d2rhodt2_;
   const SVolField* volfrac_;
   
   const XVolField* fx_;
@@ -139,8 +138,7 @@ class Pressure
             const Expr::Tag& dudttag,
             const Expr::Tag& dvdttag,
             const Expr::Tag& dwdttag,
-            const Expr::Tag& diltationtag,
-            const Expr::Tag& d2rhodt2tag,
+            const Expr::Tag& pSourceTag,
             const Expr::Tag& timesteptag,
             const Expr::Tag& volfractag,
             const bool hasMovingGeometry,
@@ -154,7 +152,7 @@ class Pressure
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, volfract_;
+    const Expr::Tag fxt_, fyt_, fzt_, psrct_, timestept_, volfract_;
     const Expr::Tag dudtt_, dvdtt_, dwdtt_;
     
     const bool hasMovingGeometry_;
@@ -172,8 +170,7 @@ public:
              const Expr::Tag& dudttag,
              const Expr::Tag& dvdttag,
              const Expr::Tag& dwdttag,
-             const Expr::Tag& diltationtag,
-             const Expr::Tag& d2rhodt2tag,
+             const Expr::Tag& pSourceTag,
              const Expr::Tag& timesteptag,
              const Expr::Tag& volfractag,
              const bool hasMovingGeometry,

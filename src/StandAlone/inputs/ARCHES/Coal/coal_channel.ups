@@ -1047,7 +1047,7 @@
           <scaling_const>1e7</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <Clipping>
-            <low>-1.0</low>
+            <low>0.0</low>
             <high>10.0</high>
             <tol>1e-9</tol>
           </Clipping>

@@ -46,8 +46,8 @@ usage()
   echo ""
   echo "If the error is something like:"
   echo ""
-  echo "    No rule to make target `../src/Dataflow/Modules/Render/SCIBaWGL.h',"
-  echo "       needed by `Dataflow/Modules/Render/OpenGL.o'.  Stop."
+  echo "    No rule to make target '../src/Dataflow/Modules/Render/SCIBaWGL.h',"
+  echo "       needed by 'Dataflow/Modules/Render/OpenGL.o'.  Stop."
   echo ""
   echo "Then you would use:"
   echo ""
@@ -80,7 +80,7 @@ fi
 bad_inc=$1
 
 extension=d
-if test `uname` == "AIX"; then
+if test `uname` = "AIX"; then
   extension=u
 fi
 

@@ -73,7 +73,7 @@ class DensityCalculator
 
   // Linear solver function variables
   std::vector<double> J;           ///< A vector for the jacobian matrix
-  std::vector<double> g;           ///< A vector for the functions
+  std::vector<double> g;           ///< A vector for the rhs functions in non-linear solver
   std::vector<double> orderedEta;  ///< A vector to store all eta values in the same order as the table
 
 
@@ -324,24 +324,27 @@ DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& ReIeta,
                                              const InterpT& eval,
                                              const double rtol )
 {
+  using namespace std;
   const size_t neq = rhoEta.size();
   unsigned int itCounter = 0;
-  const unsigned int maxIter = 100;
-//  double rlxFac = 1.0;      // jcs note that if you apply relaxation you need to update your guess for rho...
-
+  const unsigned int maxIter = 70;    // the lowest iteration number seen in the tests is 5 which makes maxIter=6, however we use this number for saftiy.
+  
   if( neq==0 ){
     orderedEta.clear();
     orderedEta=ReEeta;
     rho = eval.value(orderedEta);
   }
   else{
-
-    J.resize(neq*neq);                // A vector for the jacobian matrix
-    g.resize(neq);                     // A vector for the functions
+    J.resize(neq*neq);                 // A vector for the jacobian matrix
+    g.resize(neq);                     // A vector for the rhs functions in non-linear solver
     std::vector<int> ipiv(neq);        // work array for linear solver
 
     PointValues ReIetaTmp(ReIeta);
-    double relErr=rtol+1;
+    double relErr;
+
+    std::vector<double> deleta(neq); 
+    for (size_t i=0; i<neq; ++i) 
+      deleta[i] = 1e-6 * ReIeta[i] + 1e-11;
 
     do{
       ++itCounter;
@@ -352,19 +355,18 @@ DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& ReIeta,
         orderedEta.insert(orderedEta.begin()+ReIindex[i],ReIeta[i]);
       }
 
-      const double rhotmp = eval.value( orderedEta );
-      const double shiftFactor = 0.001;  // multiplier for finite difference approximation in jacobian
+      double rhotmp = eval.value( orderedEta );
 
       // Loop over different etas
       for( size_t k=0; k<neq; ++k ){
         for( size_t i=0; i<neq; ++i ) {
           if( k==i )
-            ReIetaTmp[i]=ReIeta[k] + (std::abs(ReIeta[k])+rtol) * shiftFactor;
+            ReIetaTmp[i]=ReIeta[k] + deleta[k];
           else
             ReIetaTmp[i] = ReIeta[i];
         }
 
-        // Recreate the ordered eta vector
+        // Recreate the ordered eta vector with the modified eta vector
         orderedEta.clear();
         orderedEta=ReEeta;
         for( size_t i=0; i<ReIindex.size(); i++ ) {
@@ -373,14 +375,13 @@ DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& ReIeta,
 
         const double rhoplus = eval.value(&orderedEta[0]);
 
-        // Calculating the function members
+        // Calculating the rhs vextor components
         g[k] = -( ReIeta[k] - (rhoEta[k] / rhotmp));
-
         for( size_t i=0; i<neq; ++i ) {
-          J[i + k*neq] = (( ReIetaTmp[i] - rhoEta[i]/rhoplus ) - ( ReIeta[i] - rhoEta[i]/rhotmp )) / ((std::abs(ReIeta[k])+ rtol) * shiftFactor );
+          J[i + k*neq] = (( ReIetaTmp[i] - rhoEta[i]/rhoplus ) - ( ReIeta[i] - rhoEta[i]/rhotmp )) / deleta[k];
         }
       }
-
+      
       // Solve the linear system
       const char mode = 'n';
       int one=1, info;
@@ -395,23 +396,23 @@ DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& ReIeta,
       dgetrs_(&mode, &numEqns, &one, &J[0], &numEqns, &ipiv[0], &g[0], &numEqns, &info);
       assert(info==0);
 
+      // relative error calculations
       relErr = 0.0;
       for( size_t i=0; i<neq; ++i ){
-        // jcs note that if you apply relaxation you need to update your guess for rho...
-        ReIeta[i] += g[i]; //*rlxFac;
+        ReIeta[i] += g[i];
         relErr += std::abs( g[i]/(std::abs(ReIeta[i])+rtol) );
       }
 
-      rho = rhotmp;  // Update rho
-
-    } while ( relErr>rtol && itCounter<maxIter );
-
+      rho = rhotmp;  // Updating rho
+    } while (relErr>rtol && itCounter<maxIter);
     if( itCounter >= maxIter ){
-//      std::cout << itCounter << " problems!  " << rho << " , " << relErr << ", " << g[0] << ", " << ReIeta[0] << std::endl;
+//      std::cout << itCounter << setprecision(15) << " problems!  " << rho << " , " << relErr << ", " << g[0] << ", " << ReIeta[0] <<", "<<rhoEta[0]<< ", " << testrho << ", " << ReEeta[0] << std::endl;
       return false;
     }
-//    std::cout << "converged in " << itCounter << " iterations.  eta=" << ReIeta[0] << ", rhoeta=" << rho*ReIeta[0] << ", rho=" << rho << std::endl;
-  }
+//    std::cout << "converged in " << itCounter << " iterations.  eta=" << ReIeta[0] << ", rhoeta=" << rho*ReIeta[0] << ", rho=" << rho << std::endl;  
+
+  } 
+
   return true;
 }
 

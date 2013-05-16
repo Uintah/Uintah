@@ -195,7 +195,13 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
   
   using namespace SpatialOps;
   using namespace SpatialOps::structured;
-  build_src_iterators(src);
+  
+  const MemoryType dMemType = dest.memory_device_type();  // destination memory type
+  const unsigned short int dDevIdx = dest.device_index(); // destination device index
+  typename PhiFaceT::value_type* destVals = dest.field_values(dMemType, dDevIdx);
+  typename PhiFaceT::value_type* velVals  = const_cast<PhiFaceT*>(advectiveVelocity_)->field_values(dMemType, dDevIdx);
+  
+  build_src_iterators(src, dMemType, dDevIdx);
 
   // now do interior
   const MemoryWindow& wdest = dest.window_with_ghost(); // used for velocity & interpolated phi
@@ -207,9 +213,9 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
                         destExtent,
                         wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
   
-  PhiFaceT    d( wd, &dest[0], ExternalStorage  );
-  PhiFaceT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
-  
+  PhiFaceT    d( wd, destVals, ExternalStorage, dMemType, dDevIdx );
+  PhiFaceT aVel( wd, velVals,  ExternalStorage, dMemType, dDevIdx );
+
   typename PhiFaceT::iterator      id   = d.begin();
   typename PhiFaceT::iterator      ide  = d.end();
   typename PhiFaceT::iterator      iav  = aVel.begin();
@@ -227,9 +233,12 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
 template< typename PhiVolT, typename PhiFaceT >
 void
 FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
-build_src_iterators( const PhiVolT& src ) const {
+build_src_iterators( const PhiVolT& src,
+                     const SpatialOps::MemoryType memType,
+                     const unsigned short int devIdx ) const {
   using namespace SpatialOps;
   using namespace SpatialOps::structured;
+  typename PhiVolT::value_type* srcvals = const_cast<PhiVolT&>(src).field_values(memType, devIdx);
 
   srcIters_.clear();
   const MemoryWindow& wsrc = src.window_with_ghost();
@@ -244,7 +253,9 @@ build_src_iterators( const PhiVolT& src ) const {
                                wsrc.offset() + unitNormal_*i,
                                wsrc.extent() - unitNormal_*3,
                                wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
-    PhiVolT field(srcwin,src);
+
+    PhiVolT field(srcwin, srcvals, ExternalStorage, memType, devIdx);
+
     srcIters_.push_back(field.begin());
   }
 }
@@ -270,6 +281,13 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   const MemoryWindow& wsrc  = src.window_with_ghost();
   const MemoryWindow& wdest = dest.window_with_ghost(); // used for velocity & interpolated phi
   
+  const MemoryType dMemType = dest.memory_device_type();  // destination memory type
+  const unsigned short int dDevIdx = dest.device_index(); // destination device index
+
+  typename PhiFaceT::value_type* destVals = dest.field_values(dMemType, dDevIdx);
+  typename PhiFaceT::value_type* velVals  = const_cast<PhiFaceT*>(advectiveVelocity_)->field_values(dMemType, dDevIdx);
+  typename PhiVolT::value_type*  srcVals  = const_cast<PhiVolT&>(src).field_values(dMemType, dDevIdx);
+  
   int pm[2]={1,-1}; // plus or minus face
   int zo[2]={0,1};  // zero and one
 
@@ -277,9 +295,11 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   IntVec destExtent = wdest.extent() - unitNormal_*wdest.glob_dim() + unitNormal_;
   IntVec baseOffset;
   IntVec destBaseOffset;
+  
+  // start with patch boundaries
   for (int direc=0; direc<2; direc++) {
-    baseOffset = wsrc.offset() + (unitNormal_*wsrc.glob_dim() - unitNormal_ )* zo[direc];
-    destBaseOffset = wdest.offset() + (unitNormal_*wdest.glob_dim() - unitNormal_ )* zo[direc] + unitNormal_*(1-zo[direc]);
+    baseOffset = wsrc.offset() + (unitNormal_*wsrc.glob_dim() - unitNormal_ )* zo[direc]; // src base offset
+    destBaseOffset = wdest.offset() + (unitNormal_*wdest.glob_dim() - unitNormal_ - unitNormal_*hasPlusBoundary_ )* zo[direc] + unitNormal_*(1-zo[direc]); // destination base offset - depends on presence of plus boundary
     
     // this is the destination field value - always on the boundary
     const MemoryWindow wd( wdest.glob_dim(),
@@ -305,14 +325,11 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
                            extent,
                            wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
     
-    
-    
-    PhiFaceT    d( wd, &dest[0], ExternalStorage );
-    PhiFaceT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
-    PhiVolT    s1( ws1, &src[0], ExternalStorage );
-    PhiVolT    s2( ws2, &src[0], ExternalStorage );
-    PhiVolT    s3( ws3, &src[0], ExternalStorage );
-    
+    PhiFaceT    d( wd, destVals, ExternalStorage, dMemType, dDevIdx );
+    PhiFaceT aVel( wd, velVals,  ExternalStorage, dMemType, dDevIdx );
+    PhiVolT    s1( ws1, srcVals, ExternalStorage, dMemType, dDevIdx );
+    PhiVolT    s2( ws2, srcVals, ExternalStorage, dMemType, dDevIdx );
+    PhiVolT    s3( ws3, srcVals, ExternalStorage, dMemType, dDevIdx );
     
     typename PhiFaceT::iterator      id  = d .begin();
     typename PhiFaceT::iterator      ide = d .end();
@@ -328,24 +345,23 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
         const double r = (*is3 - *is2)/(*is2 - *is1);
         *id = calculate_flux_limiter_function(r, limiterType_);
       }
-      else if( flowDir < 0.0 ) *id = ( isBoundaryFace ) ? 1.0 : 0.0; // flow is coming into the patch. use central differencing if we are at a physical boundary.
+      else if( flowDir < 0.0 ) *id = ( isBoundaryFace ) ? 1.0 : 0.0; // flow is coming into the patch. use central differencing if we are at a physical boundary. Otherwise, upwind (psi = 0.0)
       else                     *id = 1.0;
     }
   }
 
   // now do interior
-  build_src_iterators(src);
+  build_src_iterators(src, dMemType, dDevIdx);
   destExtent = wdest.extent() - unitNormal_*3 - wdest.has_bc()*unitNormal_;
   destBaseOffset = wdest.offset() + unitNormal_*2;
-  // this is the destination field value - always on the boundary
   const MemoryWindow wd( wdest.glob_dim(),
                         destBaseOffset,
                         destExtent,
                         wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
 
-  PhiFaceT    d( wd, &dest[0], ExternalStorage  );
-  PhiFaceT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
-  
+  PhiFaceT    d( wd, destVals, ExternalStorage, dMemType, dDevIdx );
+  PhiFaceT aVel( wd, velVals,  ExternalStorage, dMemType, dDevIdx );
+
   typename PhiFaceT::iterator      id   = d.begin();
   typename PhiFaceT::iterator      ide  = d.end();
   typename PhiFaceT::iterator      iav  = aVel.begin();

@@ -151,7 +151,7 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
     
     db_clipping->getWithDefault("low", clip.low,  -1.e16);
     db_clipping->getWithDefault("high",clip.high, 1.e16);
-    db_clipping->getWithDefault("tol", clip.tol, 1e-15); 
+    db_clipping->getWithDefault("tol", clip.tol, 1e-10); 
 
     if ( db_clipping->findBlock("low") ) 
       clip.do_low = true; 

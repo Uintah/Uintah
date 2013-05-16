@@ -95,6 +95,10 @@ namespace Wasatch{
     straintensormag, vremantensormag,
     waletensormag, dynamicsmagcoef;
     
+    // predictor related variables suffix strings
+    const std::string
+    star, doubleStar;
+
   private:
     TagNames();
   };
