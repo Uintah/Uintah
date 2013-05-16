@@ -23,7 +23,7 @@
  */
 
 
-#include <CCA/Components/ICE/Turbulence.h>
+#include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Material.h>
