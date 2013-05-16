@@ -82,7 +82,7 @@ namespace Wasatch{
 
     // we have turbulence turned on. create an expression for the strain tensor magnitude. this is used by all eddy viscosity models
     
-    switch (turbParams.turbulenceModelName) {
+    switch (turbParams.turbModelName) {
       case SMAGORINSKY: {
         // Disallow using the smagorinsky model in 1 or 2 dimensions
         if (!( velTags[0]!=Expr::Tag() && velTags[1]!=Expr::Tag() && velTags[2]!=Expr::Tag() )) {
@@ -491,7 +491,7 @@ namespace Wasatch{
                          params ),
       isviscous_       ( params->findBlock("Viscosity") ? true : false ),
       isConstDensity_  ( isConstDensity                       ),
-      isTurbulent_     ( turbulenceParams.turbulenceModelName != NONE ),
+      isTurbulent_     ( turbulenceParams.turbModelName != NONE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
       densityTag_      ( densTag                              ),
       normalStrainID_  ( Expr::ExpressionID::null_id()        ),
@@ -673,22 +673,6 @@ namespace Wasatch{
     //__________________
     // calculating velocity at the current time step    
     factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( thisVelTag_, thisMomTag, densityTag_, volTag ));
-
-//    if(has_embedded_geometry()) {
-//      std::cout << "attaching modifier expression to primvar \n";
-//      //create modifier expression
-//      typedef ExprAlgebra<FieldT> ExprAlgbr;
-//      Expr::TagList theTagList;
-//      theTagList.push_back(volTag);
-//      //theTagList.push_back(mom_tag(thisMomName_));
-//      
-//      Expr::Tag modifierTag = Expr::Tag( thisVelTag_.name() + "_modifier", Expr::STATE_NONE);
-//      factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
-//                                                                     theTagList,
-//                                                                     ExprAlgbr::PRODUCT, true ) );
-//      // attach the modifier expression to the target expression
-//      factory.attach_modifier_expression( modifierTag, thisVelTag_);
-//    }
     
     //__________________
     // pressure

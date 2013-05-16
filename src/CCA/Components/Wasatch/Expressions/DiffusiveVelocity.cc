@@ -110,31 +110,11 @@ evaluate()
 {
   using namespace SpatialOps;
   VelT& result = this->value();
-//
-//  gradOp_->apply_to_field( *phi_, result );  // V = grad(phi)
-//  
-//  SpatFldPtr<VelT> tmp = SpatialFieldStore::get<VelT>( result );
-//  *tmp <<= 0.0;
-//  
-//  if (isTurbulent_) {
-//    sVolInterpOp_->apply_to_field( *turbDiff_, *tmp );
-//  }
-//  
-//  if( isConstCoef_ ){
-//    *tmp <<= *tmp + coefVal_;     // gamma_mix = gamma + gamma_T
-//  }
-//  else{
-//    *tmp <<= *tmp + *coef_;       // gamma_mix = gamma + gamma_T
-//  }
-//  
-//  result <<= -result * *tmp;      // J =  - gamma * grad(phi)
-  
   if (isTurbulent_) {
     result <<= - (coefVal_ + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
   } else {
     result <<= - coefVal_ * (*gradOp_)(*phi_);
   }
-
 }
 
 

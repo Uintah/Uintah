@@ -115,42 +115,12 @@ DiffusiveFlux<ScalarT, FluxT>::
 evaluate()
 {
   using namespace SpatialOps;
-  FluxT& result = this->value();
-
-//  
-//  
-////  gradOp_->apply_to_field( *phi_, result );  // J = grad(phi)
-//
-//  SpatFldPtr<FluxT> gammaTotal = SpatialFieldStore::get<FluxT>( result );
-//  *gammaTotal <<= 0.0;
-//  
-//  if (isTurbulent_) {
-//    sVolInterpOp_->apply_to_field( *turbDiff_, *gammaTotal );
-//  }
-//  
-//  *gammaTotal <<= *gammaTotal + coefVal_;
-////  if( isConstCoef_ ){
-////    *gammaTotal <<= *gammaTotal + coefVal_;     // gamma_mix = gamma + gamma_T
-////  }
-////  else{
-////    *gammaTotal <<= *gammaTotal + *coef_;       // gamma_mix = gamma + gamma_T
-////  }
-//  
-//  result <<= - *gammaTotal * (*sVolInterpOp_)(*rho_) * (*gradOp_)(*phi_);
-//  
-//  
-////  result <<= -result * *tmp;      // J =  - gamma * grad(phi)
-////  
-////  SpatFldPtr<FluxT> interpRho = SpatialFieldStore::get<FluxT>(result);
-////  sVolInterpOp_->apply_to_field( *rho_, *interpRho );
-////  result <<= result * *interpRho;               // J = - rho * gamma * grad(phi)
-
+  FluxT& result = this->value();  
   if (isTurbulent_) {
     result <<= - (*sVolInterpOp_)(*rho_) * (coefVal_ + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
   } else {
     result <<= - (*sVolInterpOp_)(*rho_) * coefVal_ * (*gradOp_)(*phi_);
   }
-
 }
 
 
@@ -227,25 +197,6 @@ evaluate()
 {
   using namespace SpatialOps;
   FluxT& result = this->value();
-
-//  SpatFldPtr<FluxT> fluxTmp = SpatialFieldStore::get<FluxT>( result );
-//
-//  gradOp_  ->apply_to_field( *phi_, result );  // J = grad(phi)  
-//  interpOp_->apply_to_field( *coef_, *fluxTmp  );
-//  
-//  SpatFldPtr<FluxT> tmp = SpatialFieldStore::get<FluxT>( result );
-//  *tmp <<= 0.0;
-//  if (isTurbulent_) {
-//    sVolInterpOp_->apply_to_field( *turbDiff_, *tmp );
-//    *fluxTmp <<= *fluxTmp + *tmp;                // gamma_mix = gamma + gamma_T
-//  }
-//  
-//  result <<= -result * *fluxTmp;                 // J = - gamma * grad(phi)
-//
-//  sVolInterpOp_->apply_to_field( *rho_, *fluxTmp );
-//  result <<= result * *fluxTmp;               // J = - rho * gamma * grad(phi)
-//  
-//  
   if (isTurbulent_) {
     result <<= - (*sVolInterpOp_)(*rho_) * ((*interpOp_)(*coef_) + (*interpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
   } else {

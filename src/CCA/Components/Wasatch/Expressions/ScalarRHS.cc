@@ -85,30 +85,6 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
 {
   srcTags_.push_back( ScalarRHS<FieldT>::resolve_field_tag( SOURCE_TERM, fieldTags ) );
   nullify_fields();
-
-//  if( doXDir_ && haveXAreaFrac_ ){
-//    std::ostringstream msg;
-//    msg << "ERROR from " __FILE__ << std::endl
-//        << "      xAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
-//        << std::endl;
-//    throw std::invalid_argument( msg.str() );
-//  }
-//
-//  if( doYDir_ && haveYAreaFrac_ ){
-//    std::ostringstream msg;
-//    msg << "ERROR from " __FILE__ << std::endl
-//        << "      yAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
-//        << std::endl;
-//    throw std::invalid_argument( msg.str() );
-//  }
-//
-//  if( doZDir_ && haveZAreaFrac_ ){
-//    std::ostringstream msg;
-//    msg << "ERROR from " __FILE__ << std::endl
-//        << "      zAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
-//        << std::endl;
-//    throw std::invalid_argument( msg.str() );
-//  }
 }
 
 //------------------------------------------------------------------
