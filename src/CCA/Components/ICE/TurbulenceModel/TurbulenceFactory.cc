@@ -23,9 +23,9 @@
  */
 
 
-#include <CCA/Components/ICE/TurbulenceFactory.h>
-#include <CCA/Components/ICE/SmagorinskyModel.h>
-#include <CCA/Components/ICE/DynamicModel.h>
+#include <CCA/Components/ICE/TurbulenceModel/TurbulenceFactory.h>
+#include <CCA/Components/ICE/TurbulenceModel/SmagorinskyModel.h>
+#include <CCA/Components/ICE/TurbulenceModel/DynamicModel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
