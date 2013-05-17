@@ -134,73 +134,29 @@ calculate_strain_tensor_components(SVolField& strTsrMag,
                                    SVolField& S33)
 {
   using namespace SpatialOps;
-  strTsrMag <<= 0.0;
-  //
-  SpatFldPtr<SVolField> tmp1 = SpatialFieldStore::get<SVolField>( strTsrMag );
-  SpatFldPtr<SVolField> tmp2 = SpatialFieldStore::get<SVolField>( strTsrMag );
-  *tmp1 <<= 0.0;
-  *tmp2 <<= 0.0;
+
+  S11 <<= (*dudxOp_)(u);               // S_11 = 0.5 * (du/dx + du/dx) = du/dx
+  strTsrMag <<= S11 * S11; // S_11 * S_11
   
-  SpatFldPtr<structured::XSurfYField> xyfield = SpatialFieldStore::get<structured::XSurfYField>( strTsrMag );
-  SpatFldPtr<structured::YSurfXField> yxfield = SpatialFieldStore::get<structured::YSurfXField>( strTsrMag );
-  *xyfield <<= 0.0;
-  *yxfield <<= 0.0;
+  S22 <<= (*dvdyOp_)(v);               // S_22 = 0.5 * (dv/dy + dv/dy) = dv/dy
+  strTsrMag <<= strTsrMag + S22 * S22; // S_22 * S_22
   
-  SpatFldPtr<structured::XSurfZField> xzfield = SpatialFieldStore::get<structured::XSurfZField>( strTsrMag );
-  SpatFldPtr<structured::ZSurfXField> zxfield = SpatialFieldStore::get<structured::ZSurfXField>( strTsrMag );
-  *xzfield <<= 0.0;
-  *zxfield <<= 0.0;
-  
-  SpatFldPtr<structured::YSurfZField> yzfield = SpatialFieldStore::get<structured::YSurfZField>( strTsrMag );
-  SpatFldPtr<structured::ZSurfYField> zyfield = SpatialFieldStore::get<structured::ZSurfYField>( strTsrMag );
-  *yzfield <<= 0.0;
-  *zyfield <<= 0.0;
-  //
-  //-------------------------
-  S11 <<= 0.0;
-  dudxOp_->apply_to_field( u, S11 );     // S_11 = 0.5 * (du/dx + du/dx) = du/dx
-  strTsrMag <<= strTsrMag + S11 * S11;     // S_11 * S_11
-  
-  S22 <<= 0.0;
-  dvdyOp_->apply_to_field( v, S22 );     // S_22 = 0.5 * (dv/dy + dv/dy) = dv/dy
-  strTsrMag <<= strTsrMag + S22 * S22;     // S_22 * S_22
-  
-  S33 <<= 0.0;
-  dwdzOp_->apply_to_field( w, S33 );     // S_33 = 0.5 * (dw/dz + dw/dz) = dwdz
-  strTsrMag <<= strTsrMag + S33 * S33;   // S_33 * S_33
+  S33 <<= (*dwdzOp_)(w);               // S_33 = 0.5 * (dw/dz + dw/dz) = dwdz
+  strTsrMag <<= strTsrMag + S33 * S33; // S_33 * S_33
   
   //-------------------------
-  S12 <<= 0.0;
-  dudyOp_->apply_to_field( u, *xyfield );    // du/dy
-  xyInterpOp_->apply_to_field( *xyfield, *tmp1);  // interpolate to scalar cells
-  
-  dvdxOp_->apply_to_field( v, *yxfield );    // dv/dx
-  yxInterpOp_->apply_to_field( *yxfield, *tmp2);  // interpolate to scalar cells
-  
-  S12 <<= 0.5 * (*tmp1 + *tmp2);                         // S_12 = S_21 = 0.5 * (du/dy + dv/dx)
-  strTsrMag <<= strTsrMag + 2.0 * S12 * S12; // 2*S_12 * S_12 + 2*S_21 * S_21 = 4*S_12*S_12
+  S12 <<= 0.5 * ( (*xyInterpOp_)( (*dudyOp_)(u) ) + (*yxInterpOp_)( (*dvdxOp_)(v) )); // S_12 = S_21 = 0.5 * (du/dy + dv/dx)
+  strTsrMag <<= strTsrMag + 2.0 * S12 * S12; // S_12 * S_12 + S_21 * S_21 = 2*S_12*S_12
   
   //-------------------------
-  S13 <<= 0.0;
-  dudzOp_->apply_to_field( u, *xzfield );    // du/dz
-  xzInterpOp_->apply_to_field( *xzfield, *tmp1);
-  
-  dwdxOp_->apply_to_field( w, *zxfield );    // dw/dx
-  zxInterpOp_->apply_to_field( *zxfield, *tmp2);
-  
-  S13 <<= 0.5 * (*tmp1 + *tmp2);                  // S_13 = S_31 =0.5 (du/dz + dw/dx)
-  strTsrMag <<= strTsrMag + 2.0 * S13 * S13;   //    |S|^2 = 2.0 * S_ij * S_ij (we take account for S_ij and Sji at the same time)
+  S13 <<= 0.5 * ( (*xzInterpOp_)( (*dudzOp_)(u) ) + (*zxInterpOp_)( (*dwdxOp_)(w) )); // S_13 = S_31 =0.5 (du/dz + dw/dx)
+  strTsrMag <<= strTsrMag + 2.0 * S13 * S13;   // S13*S13 + S31*S31 = 2*S13*S13
   
   //-------------------------
-  S23 <<= 0.0;
-  dvdzOp_->apply_to_field( v, *yzfield );    // dv/dz
-  yzInterpOp_->apply_to_field( *yzfield, *tmp1);
-  
-  dwdyOp_->apply_to_field( w, *zyfield );    // dw/dy
-  zyInterpOp_->apply_to_field( *zyfield, *tmp2);
-  
-  S23 <<= 0.5*(*tmp1 + *tmp2);                         // S_23 = S_32 = 0.5 *(dv/dz + dw/dy)
-  strTsrMag <<= strTsrMag + 2.0 * S23 * S23;   // |S|^2 / 2 = S_ij * S_ij (we take account for S_ij and Sji at the same time)
+  S23 <<= 0.5 * ( (*yzInterpOp_)( (*dvdzOp_)(v) ) + (*zyInterpOp_)( (*dwdyOp_)(w) )); // S_23 = S_32 = 0.5 *(dv/dz + dw/dy)
+  strTsrMag <<= strTsrMag + 2.0 * S23 * S23;   // S23*S23 + S32*S32 = 2*S23*S23
+
+  //-------------------------
   strTsrMag <<= sqrt(2.0 * strTsrMag);
 }
 
