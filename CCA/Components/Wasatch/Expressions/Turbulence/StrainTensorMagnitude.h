@@ -132,9 +132,7 @@ public:
  */
 class WaleTensorMagnitude : public StrainTensorBase {
 
-  WaleTensorMagnitude( const Expr::Tag& vel1tag,
-                       const Expr::Tag& vel2tag,
-                       const Expr::Tag& vel3tag);  
+  WaleTensorMagnitude( const Expr::TagList& velTags );  
   public:
     class Builder : public Expr::ExpressionBuilder
     {
@@ -146,14 +144,12 @@ class WaleTensorMagnitude : public StrainTensorBase {
        *  \param vel3tag the third component of the velocity 
        */
       Builder( const Expr::Tag& result,
-               const Expr::Tag& vel1tag,
-               const Expr::Tag& vel2tag,
-               const Expr::Tag& vel3tag );
+               const Expr::TagList& velTags );
       ~Builder(){}
       Expr::ExpressionBase* build() const;
       
     private:
-      const Expr::Tag v1t_, v2t_, v3t_;
+      const Expr::TagList velTags_;
     };
   
   ~WaleTensorMagnitude();
@@ -175,9 +171,7 @@ class WaleTensorMagnitude : public StrainTensorBase {
  */
 class VremanTensorMagnitude : public StrainTensorBase {
   
-  VremanTensorMagnitude( const Expr::Tag& vel1tag,
-                         const Expr::Tag& vel2tag,
-                         const Expr::Tag& vel3tag);  
+  VremanTensorMagnitude( const Expr::TagList& velTags );  
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -189,14 +183,12 @@ public:
      *  \param vel3tag the third component of the velocity 
      */
     Builder( const Expr::Tag& result,
-             const Expr::Tag& vel1tag,
-             const Expr::Tag& vel2tag,
-             const Expr::Tag& vel3tag );
+             const Expr::TagList& velTags );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
     
   private:
-    const Expr::Tag v1t_, v2t_, v3t_;
+    const Expr::TagList velTags_;
   };
   
   ~VremanTensorMagnitude();

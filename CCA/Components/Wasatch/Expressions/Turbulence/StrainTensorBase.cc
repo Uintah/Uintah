@@ -25,17 +25,20 @@
 #include "StrainTensorBase.h"
 
 StrainTensorBase::
-StrainTensorBase( const Expr::Tag& vel1tag,
-                 const Expr::Tag& vel2tag,
-                 const Expr::Tag& vel3tag )
+StrainTensorBase( const Expr::TagList& velTags )
 : Expr::Expression<SVolField>(),
-  vel1t_( vel1tag ),
-  vel2t_( vel2tag ),
-  vel3t_( vel3tag ),
-  doX_  ( vel1t_ != Expr::Tag() ),
-  doY_  ( vel2t_ != Expr::Tag() ),
-  doZ_  ( vel3t_ != Expr::Tag() )
-{}
+  velTags_( velTags ),
+  doX_  ( velTags[0] != Expr::Tag() ),
+  doY_  ( velTags[1] != Expr::Tag() ),
+  doZ_  ( velTags[2] != Expr::Tag() )
+{
+  if (!(doX_ && doY_ && doZ_)) {
+    std::ostringstream msg;
+    msg << "WARNING: You cannot use the Dynamic Smagorinsky Model in one or two dimensions. Please revise your input file and make sure that you specify all three velocity/momentum components." << std::endl;
+    std::cout << msg.str() << std::endl;
+    throw std::runtime_error(msg.str());
+  }
+}
 
 //--------------------------------------------------------------------
 
@@ -49,9 +52,7 @@ void
 StrainTensorBase::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  if( doX_ ) exprDeps.requires_expression( vel1t_ );
-  if( doY_ ) exprDeps.requires_expression( vel2t_ );
-  if( doZ_ ) exprDeps.requires_expression( vel3t_ );
+  exprDeps.requires_expression( velTags_ );
 }
 
 //--------------------------------------------------------------------
@@ -60,9 +61,9 @@ void
 StrainTensorBase::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  if ( doX_ ) vel1_ = &fml.field_ref<XVolField>( vel1t_ );
-  if ( doY_ ) vel2_ = &fml.field_ref<YVolField>( vel2t_ );
-  if ( doZ_ ) vel3_ = &fml.field_ref<ZVolField>( vel3t_ );
+  vel1_ = &fml.field_ref<XVolField>( velTags_[0] );
+  vel2_ = &fml.field_ref<YVolField>( velTags_[1] );
+  vel3_ = &fml.field_ref<ZVolField>( velTags_[2] );
 }
 
 //--------------------------------------------------------------------
@@ -104,13 +105,9 @@ evaluate()
 
 StrainTensorBase::
 Builder::Builder( const Expr::Tag& result,
-                 const Expr::Tag& vel1tag,
-                 const Expr::Tag& vel2tag,
-                 const Expr::Tag& vel3tag )
+                  const Expr::TagList& velTags )
 : ExpressionBuilder(result),
-  v1t_( vel1tag ),
-  v2t_( vel2tag ),
-  v3t_( vel3tag )
+  velTags_(velTags)
 {}
 
 //--------------------------------------------------------------------
@@ -118,7 +115,7 @@ Builder::Builder( const Expr::Tag& result,
 Expr::ExpressionBase*
 StrainTensorBase::Builder::build() const
 {
-  return new StrainTensorBase( v1t_, v2t_, v3t_ );
+  return new StrainTensorBase( velTags_ );
 }
 
 //--------------------------------------------------------------------

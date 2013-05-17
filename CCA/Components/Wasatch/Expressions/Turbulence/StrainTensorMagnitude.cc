@@ -153,10 +153,8 @@ StrainTensorSquare::Builder::build() const
 //********************************************************************
 
 WaleTensorMagnitude::
-WaleTensorMagnitude( const Expr::Tag& vel1tag,
-                     const Expr::Tag& vel2tag,
-                     const Expr::Tag& vel3tag )
-: StrainTensorBase( vel1tag, vel2tag, vel3tag )
+WaleTensorMagnitude( const Expr::TagList& velTags )
+: StrainTensorBase( velTags )
 {}
 
 //--------------------------------------------------------------------
@@ -240,13 +238,9 @@ evaluate()
 
 WaleTensorMagnitude::
 Builder::Builder( const Expr::Tag& result,
-                 const Expr::Tag& vel1tag,
-                 const Expr::Tag& vel2tag,
-                 const Expr::Tag& vel3tag )
+                  const Expr::TagList& velTags )
 : ExpressionBuilder(result),
-v1t_( vel1tag ),
-v2t_( vel2tag ),
-v3t_( vel3tag )
+  velTags_( velTags )
 {}
 
 //--------------------------------------------------------------------
@@ -254,7 +248,7 @@ v3t_( vel3tag )
 Expr::ExpressionBase*
 WaleTensorMagnitude::Builder::build() const
 {
-  return new WaleTensorMagnitude( v1t_, v2t_, v3t_ );
+  return new WaleTensorMagnitude( velTags_ );
 }
 
 //********************************************************************
@@ -262,10 +256,8 @@ WaleTensorMagnitude::Builder::build() const
 //********************************************************************
 
 VremanTensorMagnitude::
-VremanTensorMagnitude( const Expr::Tag& vel1tag,
-                       const Expr::Tag& vel2tag,
-                       const Expr::Tag& vel3tag )
-: StrainTensorBase( vel1tag, vel2tag, vel3tag )
+VremanTensorMagnitude( const Expr::TagList& velTags )
+: StrainTensorBase( velTags )
 {}
 
 //--------------------------------------------------------------------
@@ -358,13 +350,9 @@ evaluate()
 
 VremanTensorMagnitude::
 Builder::Builder( const Expr::Tag& result,
-                 const Expr::Tag& vel1tag,
-                 const Expr::Tag& vel2tag,
-                 const Expr::Tag& vel3tag )
+                  const Expr::TagList& velTags )
 : ExpressionBuilder(result),
-v1t_( vel1tag ),
-v2t_( vel2tag ),
-v3t_( vel3tag )
+  velTags_( velTags )
 {}
 
 //--------------------------------------------------------------------
@@ -372,7 +360,7 @@ v3t_( vel3tag )
 Expr::ExpressionBase*
 VremanTensorMagnitude::Builder::build() const
 {
-  return new VremanTensorMagnitude( v1t_, v2t_, v3t_ );
+  return new VremanTensorMagnitude( velTags_ );
 }
 
 //--------------------------------------------------------------------

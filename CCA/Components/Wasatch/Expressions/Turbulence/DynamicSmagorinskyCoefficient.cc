@@ -52,25 +52,14 @@
 //********************************************************************
 
 DynamicSmagorinskyCoefficient::
-DynamicSmagorinskyCoefficient( const Expr::Tag& vel1Tag,
-                               const Expr::Tag& vel2Tag,
-                               const Expr::Tag& vel3Tag,
+DynamicSmagorinskyCoefficient( const Expr::TagList& velTags,
                                const Expr::Tag& rhoTag,
                                const bool isConstDensity )
-: StrainTensorBase(vel1Tag,vel2Tag,vel3Tag),
-  rhot_          ( rhoTag       ),
-  isConstDensity_(isConstDensity),
+: StrainTensorBase( velTags     ),
+  rhot_           ( rhoTag      ),
+  isConstDensity_ (isConstDensity),
   doExtraFiltering_(false)
-{
-//  std::cout << "is constant density ? = " << isConstDensity << std::endl;
-  // Disallow using the dynamic model in 1 or 2 dimensions
-  if (!(doX_ && doY_ && doZ_)) {
-    std::ostringstream msg;
-    msg << "WARNING: You cannot use the Dynamic Smagorinsky Model in one or two dimensions. Please revise your input file and make sure that you specify all three velocity/momentum components." << std::endl;
-    std::cout << msg.str() << std::endl;
-    throw std::runtime_error(msg.str());
-  }
-}
+{}
 
 //--------------------------------------------------------------------
 
