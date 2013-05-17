@@ -123,8 +123,8 @@ NIGHTLYTESTS = [
   ("turb-lid-driven-cavity-3D-WALE",   "turb-lid-driven-cavity-3D-WALE.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("turb-lid-driven-cavity-3D-SMAGORINSKY",   "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("turb-lid-driven-cavity-3D-scalar",   "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),               \
-  ("pressure-projection-mms",   "PP_MMS_init_vel_0.ups",   3,  "Linux",  ["exactComparison","no_restart"] ),               \
-  ("pressure-projection-fully-convective",   "PP_advect_only.ups",   1.1,  "Linux",  ["exactComparison","no_restart"] ),               \
+  ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "Linux",  ["exactComparison","no_restart"] ), \
+  ("varden-projection-advection",              "varden-projection-advection.ups",   1.1,  "Linux",  ["exactComparison","no_restart"] ), \
   ("channel-flow-xy-xminus-pressure-outlet",   "channel-flow-xy-xminus-pressure-outlet.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-xy-xplus-pressure-outlet",    "channel-flow-xy-xplus-pressure-outlet.ups",    6,  "Linux",  ["exactComparison","no_restart"] ),               \
   ("channel-flow-xz-zminus-pressure-outlet",   "channel-flow-xz-zminus-pressure-outlet.ups",   6,  "Linux",  ["exactComparison","no_restart"] ),               \
@@ -191,8 +191,8 @@ LOCALTESTS = [
   ("turb-lid-driven-cavity-3D-WALE",           "turb-lid-driven-cavity-3D-WALE.ups",   8,  "All",  ["exactComparison","no_restart"] ),                       
   ("turb-lid-driven-cavity-3D-SMAGORINSKY",    "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "All",  ["exactComparison","no_restart"] ),                
   ("turb-lid-driven-cavity-3D-scalar",         "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "All",  ["exactComparison","no_restart"] ),         
-  ("pressure-projection-mms",         "PP_MMS_init_vel_0.ups",   3,  "All",  ["exactComparison","no_restart"] ),         
-  ("pressure-projection-fully-convective",         "PP_advect_only.ups",   1.1,  "All",  ["exactComparison","no_restart"] ),         
+  ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "All",  ["exactComparison","no_restart"] ),         
+  ("varden-projection-advection",              "varden-projection-advection.ups",   1.1,  "All",  ["exactComparison","no_restart"] ),         
   ("channel-flow-xy-xminus-pressure-outlet",   "channel-flow-xy-xminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               
   ("channel-flow-xy-xplus-pressure-outlet",    "channel-flow-xy-xplus-pressure-outlet.ups",    6,  "All",  ["exactComparison","no_restart"] ),               
   ("channel-flow-xz-zminus-pressure-outlet",   "channel-flow-xz-zminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               
