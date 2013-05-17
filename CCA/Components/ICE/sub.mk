@@ -46,6 +46,7 @@ SUBDIRS := $(SRCDIR)/EOS \
        $(SRCDIR)/Advection \
        $(SRCDIR)/CustomBCs \
        $(SRCDIR)/SpecificHeatModel \
+       $(SRCDIR)/WallShearStressModel \
        $(SRCDIR)/TurbulenceModel
 
 include $(SCIRUN_SCRIPTS)/recurse.mk          
