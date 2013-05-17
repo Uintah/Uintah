@@ -207,7 +207,7 @@ void ScalarRHS<FieldT>::evaluate()
   using namespace SpatialOps;
 
   FieldT& rhs = this->value();
-  rhs <<= 0.0;
+  if (!doXDir_) rhs <<= 0.0;
 
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( rhs );
 
@@ -216,12 +216,8 @@ void ScalarRHS<FieldT>::evaluate()
     if( haveConvection_ ) *tmpx <<= - *xConvFlux_;
     else                  *tmpx <<= 0.0;
     if( haveDiffusion_ )  *tmpx <<= *tmpx - *xDiffFlux_;
-    if( haveXAreaFrac_ ){
-      SpatialOps::SpatFldPtr<XFluxT> xAreaFracInterp = SpatialOps::SpatialFieldStore::get<XFluxT>(rhs);
-      xAreaFracInterpOp_->apply_to_field( *xareafrac_, *xAreaFracInterp );
-      *tmpx <<= *tmpx * *xAreaFracInterp;
-    }
-    divOpX_->apply_to_field( *tmpx, rhs );
+    if( haveXAreaFrac_ )  *tmpx <<= *tmpx * (*xAreaFracInterpOp_)(*xareafrac_);
+    rhs <<= (*divOpX_)(*tmpx);
   }
 
   if( doYDir_ ){
@@ -229,13 +225,8 @@ void ScalarRHS<FieldT>::evaluate()
     if( haveConvection_ ) *tmpy <<= *yConvFlux_;
     else                  *tmpy <<= 0.0;
     if( haveDiffusion_ )  *tmpy <<= *tmpy + *yDiffFlux_;
-    if( haveYAreaFrac_ ){
-      SpatialOps::SpatFldPtr<YFluxT> yAreaFracInterp = SpatialOps::SpatialFieldStore::get<YFluxT>(rhs);
-      yAreaFracInterpOp_->apply_to_field( *yareafrac_, *yAreaFracInterp );
-      *tmpy <<= *tmpy * *yAreaFracInterp;
-    }
-    divOpY_->apply_to_field( *tmpy, *tmp );
-    rhs <<= rhs - *tmp;
+    if( haveYAreaFrac_ )  *tmpy <<= *tmpy * (*yAreaFracInterpOp_)(*yareafrac_);
+    rhs <<= rhs - (*divOpY_)(*tmpy);
   }
 
   if( doZDir_ ){
@@ -243,26 +234,19 @@ void ScalarRHS<FieldT>::evaluate()
     if( haveConvection_ ) *tmpz <<= *zConvFlux_;
     else                  *tmpz <<= 0.0;
     if( haveDiffusion_ )  *tmpz <<= *tmpz + *zDiffFlux_;
-    if( haveZAreaFrac_ ){
-      SpatialOps::SpatFldPtr<ZFluxT> zAreaFracInterp = SpatialOps::SpatialFieldStore::get<ZFluxT>(rhs);
-      zAreaFracInterpOp_->apply_to_field( *zareafrac_, *zAreaFracInterp );
-      *tmpz <<= *tmpz * *zAreaFracInterp;
-    }
-    divOpZ_->apply_to_field( *tmpz, *tmp );
-    rhs <<= rhs - *tmp;
+    if( haveZAreaFrac_ )  *tmpz <<= *tmpz * (*zAreaFracInterpOp_)(*zareafrac_);
+    rhs <<= rhs - (*divOpZ_)(*tmpz);
   }
-
-  if( haveVolFrac_ ) volFracInterpOp_->apply_to_field( *volfrac_, *tmp );
 
   typename SrcVec::const_iterator isrc;
   for( isrc=srcTerm_.begin(); isrc!=srcTerm_.end(); ++isrc ) {
     if (isConstDensity_) {
       const double densVal = (*rho_)[0];
-      if (haveVolFrac_) rhs <<= rhs + (**isrc / densVal ) * *tmp;
+      if (haveVolFrac_) rhs <<= rhs + (**isrc / densVal ) * (*volFracInterpOp_)(*volfrac_);
       else              rhs <<= rhs + (**isrc / densVal );
     }
     else {
-      if ( haveVolFrac_ )  rhs <<= rhs + **isrc * *tmp;
+      if ( haveVolFrac_ )  rhs <<= rhs + **isrc * (*volFracInterpOp_)(*volfrac_);
       else                 rhs <<= rhs + **isrc;
     }
   }
