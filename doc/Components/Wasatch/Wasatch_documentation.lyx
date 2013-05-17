@@ -1921,7 +1921,7 @@ C_{\mathrm{v}}\approx2.5C_{\mathrm{s}}^{2},
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-\alpha_{ij}=\frac{\partial\widetilde{u_{j}}}{x_{i}},
+\alpha_{ij}=\frac{\partial\widetilde{u_{j}}}{\partial x_{i}},
 \end{equation}
 
 \end_inset
