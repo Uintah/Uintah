@@ -52,6 +52,8 @@ protected:
   const Expr::TagList velTags_;
   
   //A_SURF_B_Field = A vol, B surface
+  typedef std::vector< SpatialOps::SpatFldPtr<SVolField> > SVolVecT;
+  typedef std::vector< SVolVecT > SVolTensorT;
   
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SpatialOps::structured::XSurfYField >::type dudyT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SpatialOps::structured::YSurfXField >::type dvdxT;

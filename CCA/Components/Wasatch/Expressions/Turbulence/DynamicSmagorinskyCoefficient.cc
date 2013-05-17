@@ -122,8 +122,8 @@ evaluate()
   SVolFieldVec& results = this->get_value_vec();
   SVolField& strTsrMag = *results[0];
   SVolField& dynSmagConst = *results[1];
-  // strTsrMag <<= 0.0; // No need to initialize this. There is a function call downstream that will fill in the values appropriately
-  dynSmagConst <<= 0.0;
+  // No need to initialize strTsrMag or dynSmagConst. These will be filled in
+  // with values further downstream
   
   const double eps = std::numeric_limits<double>::epsilon();
   
@@ -160,7 +160,7 @@ evaluate()
   //----------------------------------------------------------------------------
   // CALCULATE cell centered velocities
   //----------------------------------------------------------------------------
-  std::vector< SpatFldPtr<SVolField> > velcc;
+  SVolVecT velcc;
   ALLOCATE_VECTOR_FIELD(velcc); // allocate cell centered velocity field
   
   vel1InterpOp_->apply_to_field( *vel1_, *velcc[0] );  // u cell centered
@@ -183,7 +183,7 @@ evaluate()
   //----------------------------------------------------------------------------
   // NOTE: since cell centered velocities have already been extrapolated to ghost cells
   // we should have valid test-filtered data at the interior.
-  std::vector< SpatFldPtr<SVolField> > velcchat;
+  SVolVecT velcchat;
   ALLOCATE_VECTOR_FIELD(velcchat);
   for (int i=0; i<3; i++) {
     velcchat.push_back(SpatialFieldStore::get<SVolField>( dynSmagConst )); // allocate spatial field pointer
@@ -193,9 +193,8 @@ evaluate()
   //----------------------------------------------------------------------------
   // CALCULATE test-filtered velocity products - those will be used in the Leonard stress tensor
   // that is: Filter(rho ui uj)
-  //----------------------------------------------------------------------------  
-  typedef std::vector< SpatFldPtr<SVolField> > VecSvol;
-  std::vector< VecSvol > uiujhat(3);
+  //----------------------------------------------------------------------------
+  SVolTensorT uiujhat(3);
   ALLOCATE_TENSOR_FIELD(uiujhat);
   // uu = uiujhat[0][0], uv = uiujhat[0][1], uw = uiujhat[0][2]
   // vv = uiujhat[1][0], vw = uiujhat[1][1]
@@ -214,7 +213,7 @@ evaluate()
   //----------------------------------------------------------------------------
   // CALCULATE the Leonard stress tensor, Lij = Filter(rho ui uj) - 1/Filter(rho) * Filter(rho ui) * Filter(rho uj)
   //----------------------------------------------------------------------------  
-  std::vector< VecSvol > Lij(3);
+  SVolTensorT Lij(3);
   ALLOCATE_TENSOR_FIELD(Lij);
   // L11 = Lij[0][0], L12 = Lij[0][1], L13 = Lij[0][2]
   // L22 = Lij[1][0], L23 = Lij[1][1]
@@ -231,7 +230,7 @@ evaluate()
   //----------------------------------------------------------------------------
   // CALCULATE test-filtered strain tensor.Filter(rho)*Filter(S)*Filter(Sij) (second term in the Mij Tensor. See Wasatch documentation.
   //----------------------------------------------------------------------------
-  std::vector< VecSvol > Shatij(3);
+  SVolTensorT Shatij(3);
   ALLOCATE_TENSOR_FIELD(Shatij);
   // Shat11 = Shatij[0][0], Shat12 = Shatij[0][1], S13 = Shatij[0][2]
   // Shat22 = Shatij[1][0], Shat23 = Shatij[1][1]
@@ -257,7 +256,7 @@ evaluate()
   // this expression BUT we're using the SAME field_ref (i.e. strTsrMag) for both
   // quantities to reduce memory usage.
   
-  std::vector< VecSvol > Sij(3);
+  SVolTensorT Sij(3);
   // S11 = Sij[0][0], S12 = Sij[0][1], S13 = Sij[0][2]
   // S22 = Sij[1][0], S23 = Sij[1][1]
   // S33 = Sij[2][0]
@@ -289,7 +288,7 @@ evaluate()
   //----------------------------------------------------------------------------
   const double filRatio = 9.0; // this quantity is hard-coded at the moment
   // because the dynamic model is allowed to work only in 3D
-  std::vector< VecSvol > Mij(3);
+  SVolTensorT Mij(3);
   // M11 = Mij[0][0], M12 = Mij[0][1], M13 = Mij[0][2]
   // M22 = Mij[1][0], M23 = Mij[1][1]
   // M33 = Mij[2][0]

@@ -136,28 +136,18 @@ calculate_strain_tensor_components(SVolField& strTsrMag,
   using namespace SpatialOps;
 
   S11 <<= (*dudxOp_)(u);               // S_11 = 0.5 * (du/dx + du/dx) = du/dx
-  strTsrMag <<= S11 * S11; // S_11 * S_11
-  
   S22 <<= (*dvdyOp_)(v);               // S_22 = 0.5 * (dv/dy + dv/dy) = dv/dy
-  strTsrMag <<= strTsrMag + S22 * S22; // S_22 * S_22
-  
   S33 <<= (*dwdzOp_)(w);               // S_33 = 0.5 * (dw/dz + dw/dz) = dwdz
-  strTsrMag <<= strTsrMag + S33 * S33; // S_33 * S_33
-  
-  //-------------------------
+
   S12 <<= 0.5 * ( (*xyInterpOp_)( (*dudyOp_)(u) ) + (*yxInterpOp_)( (*dvdxOp_)(v) )); // S_12 = S_21 = 0.5 * (du/dy + dv/dx)
-  strTsrMag <<= strTsrMag + 2.0 * S12 * S12; // S_12 * S_12 + S_21 * S_21 = 2*S_12*S_12
-  
-  //-------------------------
   S13 <<= 0.5 * ( (*xzInterpOp_)( (*dudzOp_)(u) ) + (*zxInterpOp_)( (*dwdxOp_)(w) )); // S_13 = S_31 =0.5 (du/dz + dw/dx)
-  strTsrMag <<= strTsrMag + 2.0 * S13 * S13;   // S13*S13 + S31*S31 = 2*S13*S13
-  
-  //-------------------------
   S23 <<= 0.5 * ( (*yzInterpOp_)( (*dvdzOp_)(v) ) + (*zyInterpOp_)( (*dwdyOp_)(w) )); // S_23 = S_32 = 0.5 *(dv/dz + dw/dy)
-  strTsrMag <<= strTsrMag + 2.0 * S23 * S23;   // S23*S23 + S32*S32 = 2*S23*S23
 
   //-------------------------
-  strTsrMag <<= sqrt(2.0 * strTsrMag);
+  strTsrMag <<= sqrt(2.0 * (S11 * S11 + S22 * S22 + S33 * S33
+                            + 2.0 * S12 * S12
+                            + 2.0 * S13 * S13
+                            + 2.0 * S23 * S23 ) );
 }
 
 //------------------------------------------------------
