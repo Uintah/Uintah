@@ -596,6 +596,52 @@ Berghout et al. \cite{ref:Berghout2002}  The parameters are presented in the fol
 
 
 \newpage
+\subsection{Dynamic Output Intervals} \label {Sec:DDT1}
+The dynamic output intervals section is used to change how frequently the output interval and check point interval are saved. The intervals can be changed when the pressure is a cell with reactant is greater than the set pressure threshold and/or when detonation is detected. This only works when using the DDT1 reaction model.
+
+
+\begin{center}
+\begin{tabular}{| l | c | p{7cm} |}
+\hline
+  \multicolumn{3}{|c|}{\textbf{Dynamic Output Intervals Input Parameters}} \\
+\hline
+\hline
+  \textbf{Tag} & \textbf{Type} & \textbf{Description}\\
+\hline
+  $<$PressureThreshold$>$ & double & Pressure threshold to switch output interval (Pa)\\
+\hline
+  $<$newOutputInterval$>$ & double & Output interval after switch is reached\\
+\hline
+  $<$newCheckPointInterval$>$ & double & Check point interval after switch is reached\\
+\hline
+  $<$remainingTimesteps$>$ & double & Number of timesteps after detonation when the simulation will shut down\\
+\hline
+\end{tabular}
+\end{center}
+
+
+The input file specification is as follows:
+\begin{verbatim}
+<Models>
+....
+<adjust_IO_intervals>
+<PressureSwitch>
+<PressureThreshold> 4.0e9 </PressureThreshold>
+<newOutputInterval> 1e-7 </newOutputInterval>
+<newCheckPointInterval> 1e-7 </newCheckPointInterval>
+</PressureSwitch>
+
+<DetonationDetected>
+<remainingTimesteps> 20 </remainingTimesteps>
+<newOutputInterval> 1e-6</newOutputInterval>
+<newCheckPointInterval> 1e-6 </newCheckPointInterval>
+</DetonationDetected>
+</adjust_IO_intervals>
+....
+</Models> 
+\end{verbatim}
+
+\newpage
 
 \section{Examples} \label {Sec:MPMICE_EXAMPLES}
 
