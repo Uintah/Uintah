@@ -338,19 +338,15 @@ Pressure::evaluate()
   if (rkStage_ == 1) pressure <<= 0.0;
 
   SVolField& rhs = *results[1];
-  rhs <<= 0.0;
 
   std::ostringstream strs;
   strs << "_t_"<< *currenttime_ << "s_rkstage_"<< rkStage_ << "_patch";
 
   solverParams_.setOutputFileName( "_WASATCH" + strs.str() );
 
-// NOTE THE NEGATIVE SIGN! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
+  // NOTE THE NEGATIVE SIGN! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
   // - Laplacian(p) = - p_rhs
   rhs <<= - *pSource_;
-
-  SpatFldPtr<SVolField> tmp = SpatialFieldStore::get<SVolField>( rhs );
-  *tmp <<= 0.0;
 
   //___________________________________________________
   // calculate the RHS field for the poisson solve.
@@ -358,25 +354,14 @@ Pressure::evaluate()
   // the solver in the "schedule_solver" method.
   // NOTE THE NEGATIVE SIGNS! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
   // - Laplacian(p) = - p_rhs
-  if( doX_ ){
-    rhs <<= rhs - (*divXOp_)((*interpX_)(*fx_));
-  }
-
-  if( doY_ ){
-    rhs <<= rhs - (*divYOp_)((*interpY_)(*fy_));
-  }
-
-  if( doZ_ ){
-    rhs <<= rhs - (*divZOp_)((*interpZ_)(*fz_));
-  }
-
-  
-  if (volfract_ != Expr::Tag() ) {
-    rhs <<= rhs* *volfrac_;
-  }
+  if( doX_ ) rhs <<= rhs - (*divXOp_)((*interpX_)(*fx_));
+  if( doY_ ) rhs <<= rhs - (*divYOp_)((*interpY_)(*fy_));
+  if( doZ_ ) rhs <<= rhs - (*divZOp_)((*interpZ_)(*fz_));
+  if (volfract_ != Expr::Tag() ) rhs <<= rhs* *volfrac_;
 
   // update pressure rhs for reference pressure
-  if (useRefPressure_) set_ref_poisson_rhs( rhs, patch_, refPressureValue_, refPressureLocation_ );
+  if (useRefPressure_)
+    set_ref_poisson_rhs( rhs, patch_, refPressureValue_, refPressureLocation_ );
 
   // update pressure rhs for any BCs
   if(patch_->hasBoundaryFaces())
