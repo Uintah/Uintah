@@ -174,6 +174,7 @@ evaluate()
   using namespace SpatialOps;
   SVolField& waleTsrMag = this->value();
 
+  // gij = dui/dxj is the velocity gradient tensor
   SpatFldPtr<SVolField> g11 = SpatialFieldStore::get<SVolField>( waleTsrMag );
   SpatFldPtr<SVolField> g12 = SpatialFieldStore::get<SVolField>( waleTsrMag );
   SpatFldPtr<SVolField> g13 = SpatialFieldStore::get<SVolField>( waleTsrMag );
@@ -190,14 +191,14 @@ evaluate()
   *g33 <<= (*dwdzOp_)(*vel3_); // dwdz
 
   // cell centered dui/dxj fields
-  *g21 <<= (*xyInterpOp_)( (*dudyOp_)(*vel1_) ); // cell centered dudy
-  *g12 <<= (*yxInterpOp_)( (*dvdxOp_)(*vel2_) ); // cell centered dvdx
+  *g12 <<= (*xyInterpOp_)( (*dudyOp_)(*vel1_) ); // cell centered dudy
+  *g21 <<= (*yxInterpOp_)( (*dvdxOp_)(*vel2_) ); // cell centered dvdx
   
-  *g31 <<= (*xzInterpOp_)( (*dudzOp_)(*vel1_) ); // cell centered dudz
-  *g13 <<= (*zxInterpOp_)( (*dwdxOp_)(*vel3_) ); // cell centered dwdx
+  *g13 <<= (*xzInterpOp_)( (*dudzOp_)(*vel1_) ); // cell centered dudz
+  *g31 <<= (*zxInterpOp_)( (*dwdxOp_)(*vel3_) ); // cell centered dwdx
   
-  *g32 <<= (*yzInterpOp_)( (*dvdzOp_)(*vel2_) ); // cell centered dvdz
-  *g23 <<= (*zyInterpOp_)( (*dwdyOp_)(*vel3_) ); // cell centered dwdy
+  *g23 <<= (*yzInterpOp_)( (*dvdzOp_)(*vel2_) ); // cell centered dvdz
+  *g32 <<= (*zyInterpOp_)( (*dwdyOp_)(*vel3_) ); // cell centered dwdy
 
   // NOTE: the gd_ij tensor corresponds to the \bar(g^2)_ij tensor in the 
   // Nicoud and Ducros original paper.
@@ -282,6 +283,7 @@ evaluate()
   using namespace SpatialOps;
   SVolField& vremanTsrMag = this->value();
   
+  // aij corresponds to alpha_ij in the Vreman paper (eq. 6)
   SpatFldPtr<SVolField> a11 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   SpatFldPtr<SVolField> a12 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   SpatFldPtr<SVolField> a13 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
@@ -297,7 +299,7 @@ evaluate()
   *a22 <<= (*dvdyOp_)(*vel2_); // dvdy
   *a33 <<= (*dwdzOp_)(*vel3_); // dwdz
   
-  // cell centered dui/dxj fields
+  // cell centered duj/dxi fields
   *a21 <<= (*xyInterpOp_)( (*dudyOp_)(*vel1_) ); // cell centered dudy
   *a12 <<= (*yxInterpOp_)( (*dvdxOp_)(*vel2_) ); // cell centered dvdx
   
@@ -307,6 +309,7 @@ evaluate()
   *a32 <<= (*yzInterpOp_)( (*dvdzOp_)(*vel2_) ); // cell centered dvdz
   *a23 <<= (*zyInterpOp_)( (*dwdyOp_)(*vel3_) ); // cell centered dwdy
   
+  // bij corresponds to beta_ij in the Vreman paper (eq. 7)
   SpatFldPtr<SVolField> b11 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   SpatFldPtr<SVolField> b12 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   SpatFldPtr<SVolField> b13 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
@@ -329,12 +332,13 @@ evaluate()
   *b32 <<= *a13 * *a12 + *a23 * *a22 + *a33 * *a32;
   *b33 <<= *a13 * *a13 + *a23 * *a23 + *a33 * *a33;
 
-  SpatFldPtr<SVolField> abeta = SpatialFieldStore::get<SVolField>( vremanTsrMag );
-  // abeta = aij * aij
-  *abeta <<=  *a11 * *a11 + *a12 * *a12 + *a13 * *a13
+  // aa = aij * aij - corresponds to alpha_ij * alpha_ij (Vreman paper, eq. 5, denominator)
+  SpatFldPtr<SVolField> aa = SpatialFieldStore::get<SVolField>( vremanTsrMag );
+  *aa <<=  *a11 * *a11 + *a12 * *a12 + *a13 * *a13
             + *a21 * *a21 + *a22 * *a22 + *a32 * *a32
             + *a31 * *a31 + *a32 * *a32 + *a33 * *a33;
 
+  // bbeta corresponds to B_\beta in the Vreman paper (eq. 8)
   SpatFldPtr<SVolField> bbeta = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   *bbeta <<= *b11 * *b22 - *b12 * *b12 + *b11 * *b33 - *b13 * *b13 + *b22 * *b33 - *b23 * *b23;
 
@@ -344,10 +348,10 @@ evaluate()
   // This can be easily avoided by multiplying abeta and bbeta by the volume
   // fraction. It seems, however, that some cells still exhibit undesirable behavior.
   // It seems that the most conveninent and compact way of dealing with this is
-  // to check if either abeta or beta are negative * less than numeric_limits::epsilone *.
+  // to check if either abeta or beta are negative * less than numeric_limits::epsilon *.
   const double eps = std::numeric_limits<double>::epsilon();
-  vremanTsrMag <<= cond ( *abeta <= eps || *bbeta <= eps, 0.0    )
-                        ( sqrt(*bbeta / *abeta) );
+  vremanTsrMag <<= cond ( *aa <= eps || *bbeta <= eps, 0.0    )
+                        ( sqrt(*bbeta / *aa) ); // Vreman eq. 5
 }
 
 //--------------------------------------------------------------------
