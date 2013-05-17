@@ -99,17 +99,17 @@ namespace Wasatch{
     // UPWIND interpolants - phi volume to phi surface
     //--------------------------------------------------------
     BUILD_UPWIND( SVolField )
-    BUILD_UPWIND( XVolField )
-    BUILD_UPWIND( YVolField )
-    BUILD_UPWIND( ZVolField )
+//    BUILD_UPWIND( XVolField )
+//    BUILD_UPWIND( YVolField )
+//    BUILD_UPWIND( ZVolField )
     
     //--------------------------------------------------------
     // FLUX LIMITER interpolants - phi volume to phi surface
     //--------------------------------------------------------
     BUILD_UPWIND_LIMITER( SVolField )
-    BUILD_UPWIND_LIMITER( XVolField )
-    BUILD_UPWIND_LIMITER( YVolField )
-    BUILD_UPWIND_LIMITER( ZVolField )
+//    BUILD_UPWIND_LIMITER( XVolField )
+//    BUILD_UPWIND_LIMITER( YVolField )
+//    BUILD_UPWIND_LIMITER( ZVolField )
     
     //--------------------------------------------------------
     // Extrapolants
