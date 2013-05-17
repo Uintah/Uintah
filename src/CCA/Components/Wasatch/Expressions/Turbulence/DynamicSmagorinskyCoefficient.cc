@@ -122,7 +122,7 @@ evaluate()
   SVolFieldVec& results = this->get_value_vec();
   SVolField& strTsrMag = *results[0];
   SVolField& dynSmagConst = *results[1];
-  // strTsrMag <<= 0.0; // No need to initialize this. There is a function call downstream that will initialize it
+  // strTsrMag <<= 0.0; // No need to initialize this. There is a function call downstream that will fill in the values appropriately
   dynSmagConst <<= 0.0;
   
   const double eps = std::numeric_limits<double>::epsilon();
