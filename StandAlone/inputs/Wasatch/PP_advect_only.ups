@@ -26,7 +26,7 @@
     
     <!-- Set up a tabular property evaluation to extract density for initialization-->
     <TabProps>
-      <FileNamePrefix>inputs/Wasatch/NonReacting</FileNamePrefix>
+      <FileNamePrefix>inputs/Wasatch/NonReacting_PP_MMS</FileNamePrefix>
       <TaskList>initialization</TaskList>
       
       <IndependentVariable>
@@ -43,7 +43,7 @@
     
     <!-- Set up a tabular property evaluation to extract density within the advance_solution-->
     <TabProps>
-      <FileNamePrefix>inputs/Wasatch/NonReacting</FileNamePrefix>
+      <FileNamePrefix>inputs/Wasatch/NonReacting_PP_MMS</FileNamePrefix>
       <TaskList>advance_solution</TaskList>
       
       <IndependentVariable>
