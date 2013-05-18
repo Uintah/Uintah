@@ -28,14 +28,12 @@
 // Do not EVER put a #include for anything in CCA/Components in here.
 // Ask steve for a better way
 
+#include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <CCA/Ports/DataWarehouseP.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
-#include <Core/Geometry/Vector.h>
-
-#include <vector>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
   using namespace SCIRun;
@@ -79,39 +77,38 @@ WARNING
 
    virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
    
-   //////////
-   // Return correct EOS model pointer for this material
+   
    EquationOfState* getEOS() const;
 
    // Get the associated specific heat model.  
    // If there is none specified, this will return a null (0) pointer
    SpecificHeat* getSpecificHeatModel() const;
    
-   //for HeatConductionModel
    double getGamma() const;
    double getViscosity() const;
    double getSpeedOfSound() const;
    bool   isSurroundingMatl() const;
-   bool getIncludeFlowWork() const;
+   bool   getIncludeFlowWork() const;
    double getSpecificHeat() const;
    double getThermalConductivity() const;
    double getInitialDensity() const;
    double getTinyRho() const;
 
    void initializeCells(CCVariable<double>& rhom,
-                     CCVariable<double>& rhC,
-                     CCVariable<double>& temp, 
-                     CCVariable<double>& ss,
-                     CCVariable<double>& volf,  CCVariable<Vector>& vCC,
-                     CCVariable<double>& press,
-                     int numMatls,
-                     const Patch* patch, DataWarehouse* new_dw);
+                        CCVariable<double>& rhC,
+                        CCVariable<double>& temp, 
+                        CCVariable<double>& ss,
+                        CCVariable<double>& volf,  
+                        CCVariable<Vector>& vCC,
+                        CCVariable<double>& press,
+                        int numMatls,
+                        const Patch* patch, 
+                        DataWarehouse* new_dw);
    
  private:
-   
-   // Specific constitutive model associated with this material
    EquationOfState *d_eos;
-   SpecificHeat    *d_cv;  // Specific heat model
+   SpecificHeat    *d_cv;   // Specific heat model
+
    double d_viscosity;
    double d_gamma;
    bool d_isSurroundingMatl; // defines which matl is the background matl.
