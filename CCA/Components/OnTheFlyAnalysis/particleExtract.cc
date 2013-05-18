@@ -568,7 +568,7 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
           //  particle relocation to move file pointers between
           //  patches.
           fclose(fp);
-          myFiles[idx] == NULL;
+          myFiles[idx] = NULL;
         }
       }  // loop over particles
       lastWriteTime = now;     
