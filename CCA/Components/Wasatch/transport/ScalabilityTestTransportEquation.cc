@@ -228,9 +228,9 @@ namespace Wasatch{
           scinew typename MonolithicRHS<FieldT>::
           Builder( Expr::Tag(thisPhiName+"_rhs", Expr::STATE_NONE),
                    dcoefTag,
-//                   info[CONVECTIVE_FLUX_X],
-//                   info[CONVECTIVE_FLUX_Y],
-//                   info[CONVECTIVE_FLUX_Z],
+                   info[CONVECTIVE_FLUX_X],
+                   info[CONVECTIVE_FLUX_Y],
+                   info[CONVECTIVE_FLUX_Z],
                    Expr::Tag( thisPhiName, Expr::STATE_N ),
                    info[SOURCE_TERM] ) );
     }
