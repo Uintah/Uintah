@@ -230,6 +230,14 @@ namespace Uintah {
                               DataWarehouse*,
                               DataWarehouse* new_dw);
 
+     void sched_checkMomBCs( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls ); 
+
+     void checkMomBCs( const ProcessorGroup* pc, 
+                       const PatchSubset* patches, 
+                       const MaterialSubset* matls, 
+                       DataWarehouse* old_dw, 
+                       DataWarehouse* new_dw );
+
       void setVelFromExtraValue__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
         constCCVariable<double>& density, 
@@ -305,9 +313,6 @@ namespace Uintah {
                         const int  matl_index, 
                         varType& phi, 
                         std::vector<BC_TYPE>& types );
-
-      std::map<IntVector, double>
-      readInputFile__NEW( std::string );
 
       void sched_setupNewIntrusions(SchedulerP&, 
           const PatchSet* patches,
@@ -1175,11 +1180,19 @@ namespace Uintah {
 
       // input information
       typedef std::map<IntVector, double> CellToValue; 
-      typedef std::map<std::string, CellToValue> FaceToInput;  
+      struct FFInfo{ 
+        CellToValue values;
+        Vector relative_xyz;
+        IntVector relative_ijk;
+      }; 
+      typedef std::map<std::string, FFInfo> FaceToInput;  
 
       FaceToInput _u_input; 
       FaceToInput _v_input; 
       FaceToInput _w_input; 
+
+      void readInputFile__NEW( std::string, BoundaryCondition::FFInfo& info, const int index );
+      std::vector<std::string> d_all_v_inlet_names; 
 
       // const VarLabel* inputs
       const ArchesLabel* d_lab;

@@ -322,6 +322,16 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
   } 
 }
 
+void 
+ExplicitSolver::checkMomBCs( SchedulerP& sched,
+                             const PatchSet* patches,
+                             const MaterialSet* matls)
+{
+
+  d_boundaryCondition->sched_checkMomBCs( sched, patches, matls ); 
+
+}
+
 // ****************************************************************************
 // Schedule non linear solve and carry out some actual operations
 // ****************************************************************************

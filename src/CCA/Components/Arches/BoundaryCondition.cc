@@ -432,6 +432,11 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
         if ( type == "VelocityFileInput" ){ 
 
+          if ( std::find( d_all_v_inlet_names.begin(), d_all_v_inlet_names.end(), name ) != d_all_v_inlet_names.end() )  
+            throw ProblemSetupException("Error: You have two VelocityFileInput specs with the same label", __FILE__, __LINE__);
+          else 
+            d_all_v_inlet_names.push_back(name);
+
           if ( face_name == "NA" ){ 
             //require that the face be named: 
             throw ProblemSetupException("Error: For BCType VelocityFileInput, the <Face> must have a name attribute.", __FILE__, __LINE__);
@@ -440,72 +445,35 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           std::string file_name;
           db_BCType->require("inputfile", file_name); 
 
-          gzFile file = gzopen( file_name.c_str(), "r" ); 
-          int total_variables;
-          // name of variable, filename to open
-          std::map<std::string, std::string> input_files;
-
-          if ( file == NULL ) { 
-            proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
-            throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
-          }
-
-          total_variables = getInt( file ); 
-          for ( int i = 0; i < total_variables; i++ ){
-            std::string varname  = getString( file );
-            std::string which_file  = getString( file ); 
-            input_files.insert( make_pair( varname, which_file)); 
-          }
-          gzclose( file ); 
-
-          if ( total_variables == 0 ){ 
-            throw ProblemSetupException("Error: Number of variables in reference file is zero! See file: " + file_name, __FILE__, __LINE__);
-          } 
-
-          CellToValue velocity_comp; 
-
-          std::map<string, string>::iterator vel_iter = input_files.find( "uvel" ); 
-          if ( vel_iter == input_files.end() ){ 
-            throw ProblemSetupException("Error: Could not find a velocity file for the u-component (should be named uvel in reference file).", __FILE__, __LINE__);
-          }
-          velocity_comp = readInputFile__NEW( vel_iter->second ); 
+          BoundaryCondition::FFInfo u_info; 
+          readInputFile__NEW( file_name, u_info, 0 ); 
 
           FaceToInput::iterator check_iter = _u_input.find(face_name); 
 
           if ( check_iter == _u_input.end() ){ 
-            _u_input.insert(make_pair(face_name,velocity_comp)); 
+            _u_input.insert(make_pair(face_name,u_info)); 
           } else { 
             throw ProblemSetupException("Error: Two <Face> speficiations in the input file have the same name attribute. This is not allowed.", __FILE__, __LINE__);
           } 
 
-          velocity_comp.clear(); 
-
-          vel_iter = input_files.find( "vvel" ); 
-          if ( vel_iter == input_files.end() ){ 
-            throw ProblemSetupException("Error: Could not find a velocity file for the v-component (should be named vvel in reference file).", __FILE__, __LINE__);
-          }
-          velocity_comp = readInputFile__NEW( vel_iter->second ); 
+          BoundaryCondition::FFInfo v_info; 
+          readInputFile__NEW( file_name, v_info, 1 ); 
 
           check_iter = _v_input.find(face_name); 
 
           if ( check_iter == _v_input.end() ){ 
-            _v_input.insert(make_pair(face_name,velocity_comp)); 
+            _v_input.insert(make_pair(face_name,v_info)); 
           } else { 
             throw ProblemSetupException("Error: Two <Face> speficiations in the input file have the same name attribute. This is not allowed.", __FILE__, __LINE__);
           } 
 
-          velocity_comp.clear(); 
-
-          vel_iter = input_files.find( "wvel" ); 
-          if ( vel_iter == input_files.end() ){ 
-            throw ProblemSetupException("Error: Could not find a velocity file for the w-component (should be named wvel in reference file).", __FILE__, __LINE__);
-          }
-          velocity_comp = readInputFile__NEW( vel_iter->second ); 
+          BoundaryCondition::FFInfo w_info; 
+          readInputFile__NEW( file_name, w_info, 2 ); 
 
           check_iter = _w_input.find(face_name); 
 
           if ( check_iter == _w_input.end() ){ 
-            _w_input.insert(make_pair(face_name,velocity_comp)); 
+            _w_input.insert(make_pair(face_name,w_info)); 
           } else { 
             throw ProblemSetupException("Error: Two <Face> speficiations in the input file have the same name attribute. This is not allowed.", __FILE__, __LINE__);
           } 
@@ -5619,10 +5587,6 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
               if ( my_type == OUTLET || my_type == TURBULENT_INLET || my_type == VELOCITY_INLET 
                   || my_type == MASSFLOW_INLET ){ 
 
-                if ( c.z() == 10 ){ 
-                  cout << " hi" << endl;
-                } 
-
                 // "if" needed to ensure that extra cell contributions aren't added
                 if ( c.x() >= lo.x() - shift.x() && c.x() < hi.x() + shift.x() ){ 
                   if ( c.y() >= lo.y() - shift.y() && c.y() < hi.y() + shift.y() ){ 
@@ -6553,19 +6517,20 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
    case Patch::xminus:
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
-        
-       CellToValue::iterator u_iter = fu_iter->second.find( *bound_ptr ); 
-       CellToValue::iterator v_iter = fv_iter->second.find( *bound_ptr ); 
-       CellToValue::iterator w_iter = fw_iter->second.find( *bound_ptr ); 
+       
+       IntVector rel_ijk = *bound_ptr - fu_iter->second.relative_ijk; 
+       CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
+       CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
+       CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
 
-       if ( u_iter != fu_iter->second.end() ){ 
+       if ( u_iter != fu_iter->second.values.end() ){ 
         uVel[ *bound_ptr ] = u_iter->second; 
         uVel[ *bound_ptr - insideCellDir ] = u_iter->second; 
        }
 
-       if ( v_iter != fv_iter->second.end() ) 
+       if ( v_iter != fv_iter->second.values.end() ) 
         vVel[ *bound_ptr ] = v_iter->second; 
-       if ( w_iter != fw_iter->second.end() )
+       if ( w_iter != fw_iter->second.values.end() )
         wVel[ *bound_ptr ] = w_iter->second; 
 
      }
@@ -6575,18 +6540,19 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       CellToValue::iterator u_iter = fu_iter->second.find( *bound_ptr ); 
-       CellToValue::iterator v_iter = fv_iter->second.find( *bound_ptr ); 
-       CellToValue::iterator w_iter = fw_iter->second.find( *bound_ptr ); 
+       IntVector rel_ijk = *bound_ptr - fu_iter->second.relative_ijk; 
+       CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
+       CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
+       CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
 
-       if ( u_iter != fu_iter->second.end() ){ 
+       if ( u_iter != fu_iter->second.values.end() ){ 
         uVel[ *bound_ptr ] = u_iter->second; 
         uVel[ *bound_ptr - insideCellDir ] = u_iter->second; 
        }
 
-       if ( v_iter != fv_iter->second.end() ) 
+       if ( v_iter != fv_iter->second.values.end() ) 
         vVel[ *bound_ptr ] = v_iter->second; 
-       if ( w_iter != fw_iter->second.end() )
+       if ( w_iter != fw_iter->second.values.end() )
         wVel[ *bound_ptr ] = w_iter->second; 
 
      }
@@ -6595,18 +6561,19 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       CellToValue::iterator u_iter = fu_iter->second.find( *bound_ptr ); 
-       CellToValue::iterator v_iter = fv_iter->second.find( *bound_ptr ); 
-       CellToValue::iterator w_iter = fw_iter->second.find( *bound_ptr ); 
+       IntVector rel_ijk = *bound_ptr - fv_iter->second.relative_ijk; 
+       CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
+       CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
+       CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
 
-       if ( v_iter != fv_iter->second.end()) { 
+       if ( v_iter != fv_iter->second.values.end()) { 
        vVel[ *bound_ptr ] = v_iter->second; 
        vVel[ *bound_ptr - insideCellDir ] = v_iter->second; 
        }
 
-       if ( u_iter != fu_iter->second.end() ) 
+       if ( u_iter != fu_iter->second.values.end() ) 
        uVel[ *bound_ptr ] = u_iter->second;
-       if ( w_iter != fw_iter->second.end() ) 
+       if ( w_iter != fw_iter->second.values.end() ) 
        wVel[ *bound_ptr ] = w_iter->second; 
 
      }
@@ -6615,18 +6582,19 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       CellToValue::iterator u_iter = fu_iter->second.find( *bound_ptr ); 
-       CellToValue::iterator v_iter = fv_iter->second.find( *bound_ptr ); 
-       CellToValue::iterator w_iter = fw_iter->second.find( *bound_ptr ); 
+       IntVector rel_ijk = *bound_ptr - fv_iter->second.relative_ijk; 
+       CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
+       CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
+       CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
 
-       if ( v_iter != fv_iter->second.end()) { 
+       if ( v_iter != fv_iter->second.values.end()) { 
        vVel[ *bound_ptr ] = v_iter->second; 
        vVel[ *bound_ptr - insideCellDir ] = v_iter->second; 
        }
 
-       if ( u_iter != fu_iter->second.end() ) 
+       if ( u_iter != fu_iter->second.values.end() ) 
        uVel[ *bound_ptr ] = u_iter->second;
-       if ( w_iter != fw_iter->second.end() ) 
+       if ( w_iter != fw_iter->second.values.end() ) 
        wVel[ *bound_ptr ] = w_iter->second; 
 
      }
@@ -6635,18 +6603,19 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       CellToValue::iterator u_iter = fu_iter->second.find( *bound_ptr ); 
-       CellToValue::iterator v_iter = fv_iter->second.find( *bound_ptr ); 
-       CellToValue::iterator w_iter = fw_iter->second.find( *bound_ptr ); 
+       IntVector rel_ijk = *bound_ptr - fw_iter->second.relative_ijk; 
+       CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
+       CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
+       CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
 
-       if ( w_iter != fw_iter->second.end() ) { 
+       if ( w_iter != fw_iter->second.values.end() ) { 
        wVel[ *bound_ptr ] = w_iter->second; 
        wVel[ *bound_ptr - insideCellDir ] = w_iter->second;
        }
 
-       if ( u_iter != fu_iter->second.end() ) 
+       if ( u_iter != fu_iter->second.values.end() ) 
        uVel[ *bound_ptr ] = u_iter->second;
-       if ( v_iter != fv_iter->second.end() ) 
+       if ( v_iter != fv_iter->second.values.end() ) 
        vVel[ *bound_ptr ] = v_iter->second; 
 
      }
@@ -6655,18 +6624,19 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       CellToValue::iterator u_iter = fu_iter->second.find( *bound_ptr ); 
-       CellToValue::iterator v_iter = fv_iter->second.find( *bound_ptr ); 
-       CellToValue::iterator w_iter = fw_iter->second.find( *bound_ptr ); 
+       IntVector rel_ijk = *bound_ptr - fw_iter->second.relative_ijk; 
+       CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
+       CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
+       CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
 
-       if ( w_iter != fw_iter->second.end() ) { 
+       if ( w_iter != fw_iter->second.values.end() ) { 
        wVel[ *bound_ptr ] = w_iter->second; 
        wVel[ *bound_ptr - insideCellDir ] = w_iter->second;
        }
 
-       if ( u_iter != fu_iter->second.end() ) 
+       if ( u_iter != fu_iter->second.values.end() ) 
        uVel[ *bound_ptr ] = u_iter->second;
-       if ( v_iter != fv_iter->second.end() ) 
+       if ( v_iter != fv_iter->second.values.end() ) 
        vVel[ *bound_ptr ] = v_iter->second; 
      }
      break; 
@@ -6677,8 +6647,8 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
  }
 }
 
-std::map<IntVector, double>
-BoundaryCondition::readInputFile__NEW( std::string file_name )
+void 
+BoundaryCondition::readInputFile__NEW( std::string file_name, BoundaryCondition::FFInfo& struct_result, const int index )
 {
 
   gzFile file = gzopen( file_name.c_str(), "r" ); 
@@ -6689,22 +6659,33 @@ BoundaryCondition::readInputFile__NEW( std::string file_name )
 
   std::string variable = getString( file ); 
   int         num_points = getInt( file ); 
-  std::map<IntVector, double> result; 
+  Vector xyz; 
+  xyz[0] = getDouble( file ); 
+  xyz[1] = getDouble( file ); 
+  xyz[2] = getDouble( file ); 
+
+  std::map<IntVector, double> values; 
 
   for ( int i = 0; i < num_points; i++ ) {
     int I = getInt( file ); 
     int J = getInt( file ); 
     int K = getInt( file ); 
-    double v = getDouble( file ); 
+    Vector v;
+    v[0] = getDouble( file ); 
+    v[1] = getDouble( file ); 
+    v[2] = getDouble( file ); 
 
     IntVector C(I,J,K);
 
-    result.insert( make_pair( C, v )); 
+    values.insert( make_pair( C, v[index] )); 
 
   }
 
+  struct_result.values = values; 
+  struct_result.relative_xyz = xyz; 
+
   gzclose( file ); 
-  return result; 
+
 }
 
 void 
@@ -7266,3 +7247,198 @@ BoundaryCondition::wallStress( const Patch* p,
     }
   }
 } 
+void 
+BoundaryCondition::sched_checkMomBCs( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
+{
+  string taskname = "BoundaryCondition::checkMomBCs"; 
+  Task* tsk = scinew Task(taskname, this, &BoundaryCondition::checkMomBCs); 
+
+  sched->addTask( tsk, patches, matls ); 
+}
+
+void 
+BoundaryCondition::checkMomBCs( const ProcessorGroup* pc, 
+                                const PatchSubset* patches, 
+                                const MaterialSubset* matls, 
+                                DataWarehouse* old_dw, 
+                                DataWarehouse* new_dw )
+{
+
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    vector<Patch::FaceType> bf;
+    vector<Patch::FaceType>::const_iterator bf_iter;
+    patch->getBoundaryFaces(bf);
+    // Loop over all boundary faces on this patch
+    for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+      Patch::FaceType face = *bf_iter; 
+
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(matlIndex);
+      for (int child = 0; child < numChildren; child++){
+
+        for ( std::vector<std::string>::iterator iname = d_all_v_inlet_names.begin(); iname != d_all_v_inlet_names.end(); iname++ ){  
+
+          double bc_value = -9; 
+          Vector bc_v_value(0,0,0); 
+          std::string bc_s_value = "NA";
+
+          Iterator bound_ptr;
+          string bc_kind = "NotSet"; 
+          string face_name; 
+
+          getBCKind( patch, face, child, *iname, matlIndex, bc_kind, face_name ); 
+
+          string whichface; 
+          int index; 
+          double di; 
+          Vector Dx = patch->dCell(); 
+
+          if (face == 0){
+            whichface = "x-";
+            index = 0;
+          } else if (face == 1) {
+            whichface = "x+"; 
+            index = 0;
+          } else if (face == 2) { 
+            whichface = "y-";
+            index = 1;
+          } else if (face == 3) {
+            whichface = "y+";
+            index = 1;
+          } else if (face == 4) {
+            whichface = "z-";
+            index = 2;
+          } else if (face == 5) {
+            whichface = "z+";
+            index = 2;
+          }
+
+          // need to map x,y,z -> i,j,k for the FromFile option
+          bool foundIterator = false; 
+          if ( bc_kind == "VelocityFileInput" ){ 
+            foundIterator = 
+              getIteratorBCValue<double>( patch, face, child, *iname, matlIndex, bc_value, bound_ptr ); 
+          } 
+
+          if (foundIterator) {
+
+            //if we are here, then we are of type "FromFile" 
+            BoundaryCondition::FaceToInput::iterator i_uvel_bc_storage = _u_input.find( face_name ); 
+            BoundaryCondition::FaceToInput::iterator i_vvel_bc_storage = _v_input.find( face_name ); 
+            BoundaryCondition::FaceToInput::iterator i_wvel_bc_storage = _w_input.find( face_name ); 
+
+            bound_ptr.reset(); 
+            IntVector bound_ijk = bound_ptr.begin(); 
+            Point bound_xyz = patch->getCellPosition( bound_ijk ); 
+
+            //this should assign the correct normal direction xyz value without forcing the user to have 
+            //to know what it is. 
+            Vector ref_point; 
+            IntVector ijk; 
+            if ( index == 0 ) { 
+              i_uvel_bc_storage->second.relative_xyz[index] = bound_xyz.x();
+              i_vvel_bc_storage->second.relative_xyz[index] = bound_xyz.x();
+              i_wvel_bc_storage->second.relative_xyz[index] = bound_xyz.x();
+              ref_point = i_uvel_bc_storage->second.relative_xyz;
+            } else if ( index == 1 ) { 
+              i_uvel_bc_storage->second.relative_xyz[index] = bound_xyz.y();
+              i_vvel_bc_storage->second.relative_xyz[index] = bound_xyz.y();
+              i_wvel_bc_storage->second.relative_xyz[index] = bound_xyz.y();
+              ref_point = i_vvel_bc_storage->second.relative_xyz;
+            } else if ( index == 2 ) { 
+              i_uvel_bc_storage->second.relative_xyz[index] = bound_xyz.z();
+              i_vvel_bc_storage->second.relative_xyz[index] = bound_xyz.z();
+              i_wvel_bc_storage->second.relative_xyz[index] = bound_xyz.z();
+              ref_point = i_wvel_bc_storage->second.relative_xyz;
+            } 
+            Point xyz(ref_point[0],ref_point[1],ref_point[2]);
+
+            bool found_cell = patch->findCell( xyz, ijk );
+
+            if ( found_cell ){ 
+              i_uvel_bc_storage->second.relative_ijk = ijk; 
+              i_vvel_bc_storage->second.relative_ijk = ijk; 
+              i_wvel_bc_storage->second.relative_ijk = ijk; 
+              i_uvel_bc_storage->second.relative_ijk[index] = 0; 
+              i_vvel_bc_storage->second.relative_ijk[index] = 0; 
+              i_wvel_bc_storage->second.relative_ijk[index] = 0; 
+            } 
+
+            //now check to make sure that there is a bc set for each iterator: 
+            for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 
+              if ( index == 0 ){ 
+                //is this cell contained in list?
+                CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.find(*bound_ptr); 
+                if ( check_iter == i_uvel_bc_storage->second.values.end() ){ 
+                  cout << "Vel BC: " << *iname << " - While checking the UINTAH boundary ptr, could not find cell " << *bound_ptr << " in the handoff file, which means your geometry object is too big for the handoff file." << endl;
+                } 
+              } else if ( index == 1 ){ 
+                //is this cell contained in list?
+                CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.find(*bound_ptr); 
+                if ( check_iter == i_uvel_bc_storage->second.values.end() ){ 
+                  cout << "Vel BC: " << *iname << " - While checking the UINTAH boundary ptr, could not find cell " << *bound_ptr << " in the handoff file, which means your geometry object is too big for the handoff file." << endl;
+                } 
+              } else if ( index == 2 ){ 
+                //is this cell contained in list?
+                CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.find(*bound_ptr); 
+                if ( check_iter == i_wvel_bc_storage->second.values.end() ){ 
+                  cout << "Vel BC: " << *iname << " - While checking the UINTAH boundary ptr, could not find cell " << *bound_ptr << " in the handoff file, which means your geometry object is too big for the handoff file." << endl;
+                } 
+              }
+            } 
+
+            //now check the reverse -- does the handoff file have an associated boundary ptr
+            if ( index == 0 ){ 
+              for ( CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.begin(); check_iter != 
+                  i_uvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                bool found_it = false; 
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 
+                  if ( *bound_ptr == (check_iter->first + i_uvel_bc_storage->second.relative_ijk) )
+                    found_it = true; 
+                }
+                if ( !found_it ){ 
+                  cout << "Vel BC: " << *iname << " - While checking the HANDOFF boundary pointer, could not find cell " << check_iter->first << " in the Uintah geometry object, which means that your geometry object is too small for the handoff file." << endl;
+                } 
+
+              } 
+            } else if ( index == 1 ) { 
+              for ( CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.begin(); check_iter != 
+                  i_vvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                bool found_it = false; 
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 
+                  if ( *bound_ptr == (check_iter->first + i_vvel_bc_storage->second.relative_ijk) )
+                    found_it = true; 
+                }
+                if ( !found_it ){ 
+                  cout << "Vel BC: " << *iname << " - While checking the HANDOFF boundary pointer, could not find cell " << check_iter->first << " in the Uintah geometry object, which means that your geometry object is too small for the handoff file." << endl;
+                } 
+
+              } 
+            } else if ( index == 2 ) { 
+              for ( CellToValue::iterator check_iter = i_wvel_bc_storage->second.values.begin(); check_iter != 
+                  i_wvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                bool found_it = false; 
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 
+                  if ( *bound_ptr == (check_iter->first + i_wvel_bc_storage->second.relative_ijk) )
+                    found_it = true; 
+                }
+                if ( !found_it ){ 
+                  cout << "Vel BC: " << *iname << " - While checking the HANDOFF boundary pointer, could not find cell " << check_iter->first << " in the Uintah geometry object, which means that your geometry object is too small for the handoff file." << endl;
+                } 
+
+              } 
+            } 
+          }
+        }
+      }
+    }
+  }
+}

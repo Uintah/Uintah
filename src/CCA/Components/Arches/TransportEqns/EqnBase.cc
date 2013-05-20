@@ -6,6 +6,8 @@
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
+#include <Core/Grid/BoundaryConditions/BCUtils.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
 
 using namespace std;
 using namespace Uintah;
@@ -69,38 +71,42 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(matlIndex);
       for (int child = 0; child < numChildren; child++){
 
-        string bc_kind = "NotSet"; 
-        Iterator bound_ptr; 
-        Iterator nu; //not used...who knows why?
-        const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex, 
-                                                           d_eqnName, bound_ptr, 
-                                                           nu, child ); 
-        const BoundCond<double> *new_bcs_d = dynamic_cast<const BoundCond<double> *>(bc); 
-        const BoundCond<std::string> *new_bcs_st = dynamic_cast<const BoundCond<std::string> *>(bc);
-        bool failed = false; 
+        double bc_value = -9; 
+        Vector bc_v_value(0,0,0); 
+        std::string bc_s_value = "NA";
 
-        if ( new_bcs_d == 0 ){ 
-          failed = true; 
-          //check string type
-          if ( new_bcs_st != 0 ){ 
-            failed = false; 
-          }
+        Iterator bound_ptr;
+        string bc_kind = "NotSet"; 
+        string face_name; 
+        getBCKind( patch, face, child, d_eqnName, matlIndex, bc_kind, face_name ); 
+
+        string whichface; 
+        int index; 
+        double di; 
+        Vector Dx = patch->dCell(); 
+
+        if (face == 0){
+          whichface = "x-";
+          index = 0;
+        } else if (face == 1) {
+          whichface = "x+"; 
+          index = 0;
+        } else if (face == 2) { 
+          whichface = "y-";
+          index = 1;
+        } else if (face == 3) {
+          whichface = "y+";
+          index = 1;
+        } else if (face == 4) {
+          whichface = "z-";
+          index = 2;
+        } else if (face == 5) {
+          whichface = "z+";
+          index = 2;
         }
 
-        if (failed){ 
-          string whichface; 
-          if (face == 0)
-            whichface = "x-";
-          else if (face == 1)
-            whichface = "x+"; 
-          else if (face == 2) 
-            whichface = "y-";
-          else if (face == 3)
-            whichface = "y+";
-          else if (face == 4)
-            whichface = "z-";
-          else if (face == 5)
-            whichface = "z+";
+        if ( bc_kind == "NotSet" ){ 
+
 
           cout << "ERROR!:  Missing boundary condition specification!" << endl;
           cout << "Here are the details:" << endl;
@@ -111,8 +117,67 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
           throw ProblemSetupException("Please correct your <BoundaryCondition> section in your input file for this variable", __FILE__,__LINE__); 
         }
 
-        delete bc; 
+        // need to map x,y,z -> i,j,k for the FromFile option
+        bool foundIterator = false; 
+        if ( bc_kind == "FromFile" ){ 
+          foundIterator = 
+            getIteratorBCValue<double>( patch, face, child, d_eqnName, matlIndex, bc_value, bound_ptr ); 
+        } 
 
+        if (foundIterator) {
+
+          //if we are here, then we are of type "FromFile" 
+          BoundaryCondition_new::ScalarToBCValueMap& scalar_bc_info = d_boundaryCond->get_FromFileInfo(); 
+          BoundaryCondition_new::ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_info.find( face_name ); 
+
+          bound_ptr.reset(); 
+          IntVector bound_ijk = bound_ptr.begin(); 
+          Point bound_xyz = patch->getCellPosition( bound_ijk ); 
+
+          //this should assign the correct normal direction xyz value without forcing the user to have 
+          //to know what it is. 
+          if ( index == 0 ) { 
+            i_scalar_bc_storage->second.relative_xyz[index] = bound_xyz.x();
+          } else if ( index == 1 ) { 
+            i_scalar_bc_storage->second.relative_xyz[index] = bound_xyz.y();
+          } else if ( index == 2 ) { 
+            i_scalar_bc_storage->second.relative_xyz[index] = bound_xyz.z();
+          } 
+          Vector ref_point = i_scalar_bc_storage->second.relative_xyz;
+          IntVector ijk; 
+          Point xyz(ref_point[0],ref_point[1],ref_point[2]);
+
+          bool found_cell = patch->findCell( xyz, ijk );
+
+          if ( found_cell ){ 
+            i_scalar_bc_storage->second.relative_ijk = ijk;
+            i_scalar_bc_storage->second.relative_ijk[index] = 0;  //don't allow the normal index to shift
+          } 
+
+          //now check to make sure that there is a bc set for each iterator: 
+          for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 
+
+            BoundaryCondition_new::CellToValueMap::iterator check_iter = i_scalar_bc_storage->second.values.find(*bound_ptr);
+            if ( check_iter == i_scalar_bc_storage->second.values.end() ){ 
+              cout << "Scalar BC: " << d_eqnName << " - While checking the UINTAH boundary ptr, could not find cell " << *bound_ptr << " in the handoff file, which means your geometry object is too big for the handoff file." << endl;
+            } 
+          } 
+
+          //now check the reverse -- does the handoff file have an associated boundary ptr
+          for ( BoundaryCondition_new::CellToValueMap::iterator check_iter = i_scalar_bc_storage->second.values.begin(); check_iter != 
+              i_scalar_bc_storage->second.values.end(); check_iter++ ){ 
+
+            bool found_it = false; 
+            for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 
+              if ( *bound_ptr == (check_iter->first + i_scalar_bc_storage->second.relative_ijk) )
+                found_it = true; 
+            }
+            if ( !found_it ){ 
+              cout << "Scalar BC: " << d_eqnName << " - While checking the HANDOFF boundary pointer, could not find cell " << check_iter->first << " in the Uintah geometry object, which means that your geometry object is too small for the handoff file." << endl;
+            } 
+          } 
+
+        }
       }
     }
   }
