@@ -283,15 +283,15 @@ private:
 
       if ( do_low_clip && phi[c] < ( low_clip + clip_tol ) ){ 
 
-        phi[*iter] = low_clip; 
+        phi[c] = low_clip; 
 
       } else if ( do_high_clip && phi[c] > ( high_clip + clip_tol ) ){ 
 
-        phi[*iter] = high_clip; 
+        phi[c] = high_clip; 
 
       } else { 
 
-        phi[*iter] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];        
+        phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];        
 
       }
 
@@ -349,19 +349,19 @@ private:
 
       if (weight[c] == 0) { 
 
-        phi[*iter] = 0.0;
+        phi[c] = 0.0;
 
       } else if ( do_low_clip && phi[c]/weight[c] < ( low_clip + clip_tol ) ){ 
 
-        phi[*iter] = weight[c]*low_clip; 
+        phi[c] = weight[c]*low_clip; 
 
       } else if ( do_high_clip && phi[c]/weight[c] > ( high_clip - clip_tol ) ){ 
 
-        phi[*iter] = high_clip*weight[c]; 
+        phi[c] = high_clip*weight[c]; 
 
       } else { 
 
-        phi[*iter] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];        
+        phi[c] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];        
 
       }
 
@@ -425,15 +425,15 @@ private:
 
         if ( do_high_clip && phi[c] > ( high_clip - clip_tol) ){  
 
-          phi[*iter] = high_clip;
+          phi[c] = high_clip;
 
         } else if ( do_low_clip && phi[c] < ( low_clip + clip_tol) ){ 
 
-          phi[*iter] = low_clip; 
+          phi[c] = low_clip; 
 
         } else { 
 
-          phi[*iter] = ( ssp_alpha[step] * (old_den[c] * old_phi[c])
+          phi[c] = ( ssp_alpha[step] * (old_den[c] * old_phi[c])
                        + ssp_beta[step]  * (new_den[c] * phi[c]) ) / pred_density;        
 
         }
