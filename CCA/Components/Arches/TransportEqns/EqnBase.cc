@@ -121,7 +121,7 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
         bool foundIterator = false; 
         if ( bc_kind == "FromFile" ){ 
           foundIterator = 
-            getIteratorBCValue<double>( patch, face, child, d_eqnName, matlIndex, bc_value, bound_ptr ); 
+            getIteratorBCValue<std::string>( patch, face, child, d_eqnName, matlIndex, bc_s_value, bound_ptr ); 
         } 
 
         if (foundIterator) {
