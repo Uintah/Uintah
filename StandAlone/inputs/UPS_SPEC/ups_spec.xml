@@ -566,7 +566,7 @@
           <period           spec="OPTIONAL INTEGER 'positive'" need_applies_to="var TurbulentInlet"/>
           <timeperiod       spec="OPTIONAL DOUBLE  'positive'" need_applies_to="var TurbulentInlet"/>
 
-          <relative_xyz     spec="OPTIONAL VECTOR" need_applies_to="var VelocityFileInput FromFile"/>
+          <relative_xyz     spec="REQUIRED VECTOR" need_applies_to="var VelocityFileInput FromFile"/>
           
           <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl"/>
           <swirl_centroid   spec="REQUIRED VECTOR"  need_applies_to="var Swirl"/>
