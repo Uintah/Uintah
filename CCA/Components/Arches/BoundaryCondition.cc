@@ -7272,7 +7272,8 @@ BoundaryCondition::sched_checkMomBCs( SchedulerP& sched, const PatchSet* patches
   string taskname = "BoundaryCondition::checkMomBCs"; 
   Task* tsk = scinew Task(taskname, this, &BoundaryCondition::checkMomBCs); 
 
-  sched->addTask( tsk, patches, matls ); 
+  if ( d_use_new_bcs )
+    sched->addTask( tsk, patches, matls ); 
 }
 
 void 
