@@ -561,10 +561,12 @@
           <!-- functor_name: name of a functor to be applied on this boundary. Developer must handle parsing and pointing to proper functor in the code -->                                                          
           <functor_name     spec="OPTIONAL STRING"  need_applies_to="var Neumann Dirichlet" />                                                                     
 
-          <inputfile        spec="REQUIRED STRING"  need_applies_to="var VelocityFileInput, FromFile, TurbulentInlet" />
+          <inputfile        spec="REQUIRED STRING"  need_applies_to="var TurbulentInlet" />
           
           <period           spec="OPTIONAL INTEGER 'positive'" need_applies_to="var TurbulentInlet"/>
           <timeperiod       spec="OPTIONAL DOUBLE  'positive'" need_applies_to="var TurbulentInlet"/>
+
+          <relative_xyz     spec="OPTIONAL VECTOR" need_applies_to="var VelocityFileInput FromFile"/>
           
           <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl"/>
           <swirl_centroid   spec="REQUIRED VECTOR"  need_applies_to="var Swirl"/>

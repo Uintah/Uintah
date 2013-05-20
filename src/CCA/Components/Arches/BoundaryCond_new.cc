@@ -62,10 +62,14 @@ void BoundaryCondition_new::problemSetup( ProblemSpecP& db, std::string eqn_name
 
             //Check reference file for this scalar
             std::string file_name;
-            db_BCType->require("inputfile", file_name); 
+            db_BCType->require("value", file_name); 
 
             FFInfo bc_values; 
             readInputFile( file_name, bc_values ); 
+
+            Vector rel_xyz;
+            db_BCType->require("relative_xyz", rel_xyz);
+            bc_values.relative_xyz = rel_xyz; 
 
             scalar_bc_from_file.insert(make_pair(face_name, bc_values)); 
 
@@ -231,10 +235,6 @@ BoundaryCondition_new::readInputFile( std::string file_name, BoundaryCondition_n
 
   std::string variable = getString( file ); 
   int num_points = getInt( file );
-  Vector xyz; 
-  xyz[0] = getDouble( file ); 
-  xyz[1] = getDouble( file ); 
-  xyz[2] = getDouble( file ); 
 
   std::map<IntVector, double> values; 
 
@@ -251,7 +251,6 @@ BoundaryCondition_new::readInputFile( std::string file_name, BoundaryCondition_n
   }
 
   struct_result.values = values; 
-  struct_result.relative_xyz = xyz; 
 
   gzclose( file ); 
 
@@ -291,7 +290,7 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
       getBCKind( patch, face, child, varname, d_matl_id, bc_kind, face_name ); 
 
       bool foundIterator = "false"; 
-      if ( bc_kind == "Tabulated" ){ 
+      if ( bc_kind == "Tabulated" || bc_kind == "FromFile" ){ 
         foundIterator = 
           getIteratorBCValue<std::string>( patch, face, child, varname, d_matl_id, bc_s_value, bound_ptr ); 
       } else {

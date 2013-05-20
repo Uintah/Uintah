@@ -443,10 +443,13 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           } 
 
           std::string file_name;
-          db_BCType->require("inputfile", file_name); 
+          db_BCType->require("value", file_name); 
+          Vector rel_xyz;
+          db_BCType->require("relative_xyz", rel_xyz);
 
           BoundaryCondition::FFInfo u_info; 
           readInputFile__NEW( file_name, u_info, 0 ); 
+          u_info.relative_xyz = rel_xyz;
 
           FaceToInput::iterator check_iter = _u_input.find(face_name); 
 
@@ -458,6 +461,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
           BoundaryCondition::FFInfo v_info; 
           readInputFile__NEW( file_name, v_info, 1 ); 
+          v_info.relative_xyz = rel_xyz;
 
           check_iter = _v_input.find(face_name); 
 
@@ -469,6 +473,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
           BoundaryCondition::FFInfo w_info; 
           readInputFile__NEW( file_name, w_info, 2 ); 
+          w_info.relative_xyz = rel_xyz;
 
           check_iter = _w_input.find(face_name); 
 
@@ -477,7 +482,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           } else { 
             throw ProblemSetupException("Error: Two <Face> speficiations in the input file have the same name attribute. This is not allowed.", __FILE__, __LINE__);
           } 
-
         } 
       }
     }
@@ -2724,6 +2728,7 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
           double bc_value = 0;
           Vector bc_v_value(0,0,0); 
+          std::string bc_s_value = "NA";
           string bc_kind = "NotSet";
           Iterator bound_ptr;
           bool foundIterator = false;
@@ -2731,6 +2736,9 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
           if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
+          } else if ( bc_iter->second.type == VELOCITY_FILE ) { 
+            foundIterator = 
+              getIteratorBCValue<std::string>( patch, face, child, bc_iter->second.name, matl_index, bc_s_value, bound_ptr); 
           } else { 
             foundIterator = 
               getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
@@ -5410,7 +5418,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
           my_info.type = VELOCITY_FILE; 
           my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
-          db_BCType->require("inputfile", my_info.filename); 
+          db_BCType->require("value", my_info.filename); 
           my_info.velocity = Vector(0,0,0); 
           found_bc = true; 
 
@@ -5538,6 +5546,7 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
 
           double bc_value = 0;
           Vector bc_v_value(0,0,0); 
+          std::string bc_s_value = "NA";
           
           string bc_kind = "NotSet";
           Iterator bound_ptr;
@@ -5546,6 +5555,9 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
           if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
+          } else if ( bc_iter->second.type == VELOCITY_FILE ) { 
+            foundIterator = 
+              getIteratorBCValue<std::string>( patch, face, child, bc_iter->second.name, matl_index, bc_s_value, bound_ptr); 
           } else { 
             foundIterator = 
               getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
@@ -5677,6 +5689,7 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
 
           double bc_value = 0;
           Vector bc_v_value(0,0,0); 
+          std::string bc_s_value = "NA";
           
           string bc_kind = "NotSet";
           Iterator bound_ptr;
@@ -5685,6 +5698,9 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
           if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
+          } else if ( bc_iter->second.type == VELOCITY_FILE ) { 
+            foundIterator = 
+              getIteratorBCValue<std::string>( patch, face, child, bc_iter->second.name, matl_index, bc_s_value, bound_ptr); 
           } else { 
             foundIterator = 
               getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
@@ -5832,6 +5848,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
 
           double bc_value = 0;
           Vector bc_v_value(0,0,0); 
+          std::string bc_s_value = "NA";
           int norm = getNormal( face ); 
           
           string bc_kind = "NotSet";
@@ -5841,6 +5858,9 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
           if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
+          } else if ( bc_iter->second.type == VELOCITY_FILE ) { 
+            foundIterator = 
+              getIteratorBCValue<std::string>( patch, face, child, bc_iter->second.name, matl_index, bc_s_value, bound_ptr); 
           } else { 
             foundIterator = 
               getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
@@ -6009,6 +6029,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
 
           double bc_value = 0;
           Vector bc_v_value(0,0,0); 
+          std::string bc_s_value = "NA";
           
           string bc_kind = "NotSet";
           Iterator bound_ptr;
@@ -6019,6 +6040,9 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
           if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
+          } else if ( bc_iter->second.type == VELOCITY_FILE ) { 
+            foundIterator = 
+              getIteratorBCValue<std::string>( patch, face, child, bc_iter->second.name, matl_index, bc_s_value, bound_ptr); 
           } else { 
             foundIterator = 
               getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
@@ -6659,10 +6683,6 @@ BoundaryCondition::readInputFile__NEW( std::string file_name, BoundaryCondition:
 
   std::string variable = getString( file ); 
   int         num_points = getInt( file ); 
-  Vector xyz; 
-  xyz[0] = getDouble( file ); 
-  xyz[1] = getDouble( file ); 
-  xyz[2] = getDouble( file ); 
 
   std::map<IntVector, double> values; 
 
@@ -6682,7 +6702,6 @@ BoundaryCondition::readInputFile__NEW( std::string file_name, BoundaryCondition:
   }
 
   struct_result.values = values; 
-  struct_result.relative_xyz = xyz; 
 
   gzclose( file ); 
 
@@ -7283,8 +7302,6 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
 
         for ( std::vector<std::string>::iterator iname = d_all_v_inlet_names.begin(); iname != d_all_v_inlet_names.end(); iname++ ){  
 
-          double bc_value = -9; 
-          Vector bc_v_value(0,0,0); 
           std::string bc_s_value = "NA";
 
           Iterator bound_ptr;
@@ -7322,7 +7339,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
           bool foundIterator = false; 
           if ( bc_kind == "VelocityFileInput" ){ 
             foundIterator = 
-              getIteratorBCValue<double>( patch, face, child, *iname, matlIndex, bc_value, bound_ptr ); 
+              getIteratorBCValue<std::string>( patch, face, child, *iname, matlIndex, bc_s_value, bound_ptr); 
           } 
 
           if (foundIterator) {
