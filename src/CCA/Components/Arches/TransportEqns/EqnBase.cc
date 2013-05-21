@@ -64,6 +64,9 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
     vector<Patch::FaceType> bf;
     vector<Patch::FaceType>::const_iterator bf_iter;
     patch->getBoundaryFaces(bf);
+    Vector Dx = patch->dCell(); 
+    double dx; 
+    double dy; 
     // Loop over all boundary faces on this patch
     for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
       Patch::FaceType face = *bf_iter; 
@@ -88,25 +91,36 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
         if (face == 0){
           whichface = "x-";
           index = 0;
+          dx = Dx[1];
+          dy = Dx[2];
         } else if (face == 1) {
           whichface = "x+"; 
           index = 0;
+          dx = Dx[1];
+          dy = Dx[2];
         } else if (face == 2) { 
           whichface = "y-";
           index = 1;
+          dx = Dx[2];
+          dy = Dx[0];
         } else if (face == 3) {
           whichface = "y+";
           index = 1;
+          dx = Dx[2];
+          dy = Dx[0];
         } else if (face == 4) {
           whichface = "z-";
           index = 2;
+          dx = Dx[0];
+          dy = Dx[1];
         } else if (face == 5) {
           whichface = "z+";
           index = 2;
+          dx = Dx[0];
+          dy = Dx[1];
         }
 
         if ( bc_kind == "NotSet" ){ 
-
 
           cout << "ERROR!:  Missing boundary condition specification!" << endl;
           cout << "Here are the details:" << endl;
@@ -133,6 +147,12 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
           bound_ptr.reset(); 
           IntVector bound_ijk = bound_ptr.begin(); 
           Point bound_xyz = patch->getCellPosition( bound_ijk ); 
+
+          //check the grid spacing: 
+          proc0cout <<  endl << "For scalar handoff file named: " << i_scalar_bc_storage->second.name << endl;
+          proc0cout <<          "  Grid and handoff spacing relative differences are: [" 
+            << std::abs(i_scalar_bc_storage->second.dx - dx)/dx << ", " 
+            << std::abs(i_scalar_bc_storage->second.dy - dy)/dy << "]" << endl << endl;
 
           //this should assign the correct normal direction xyz value without forcing the user to have 
           //to know what it is. 

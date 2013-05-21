@@ -442,6 +442,11 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             throw ProblemSetupException("Error: For BCType VelocityFileInput, the <Face> must have a name attribute.", __FILE__, __LINE__);
           } 
 
+          std::string default_type; 
+          double default_value; 
+          db_BCType->findBlock("default")->getAttribute("type",default_type);
+          db_BCType->findBlock("default")->getAttribute("value",default_value);
+
           std::string file_name;
           db_BCType->require("value", file_name); 
           Vector rel_xyz;
@@ -450,6 +455,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           BoundaryCondition::FFInfo u_info; 
           readInputFile__NEW( file_name, u_info, 0 ); 
           u_info.relative_xyz = rel_xyz;
+          u_info.default_type = default_type;
+          u_info.default_value = default_value;
 
           FaceToInput::iterator check_iter = _u_input.find(face_name); 
 
@@ -462,6 +469,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           BoundaryCondition::FFInfo v_info; 
           readInputFile__NEW( file_name, v_info, 1 ); 
           v_info.relative_xyz = rel_xyz;
+          v_info.default_type = default_type;
+          v_info.default_value = default_value;
 
           check_iter = _v_input.find(face_name); 
 
@@ -474,6 +483,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           BoundaryCondition::FFInfo w_info; 
           readInputFile__NEW( file_name, w_info, 2 ); 
           w_info.relative_xyz = rel_xyz;
+          w_info.default_type = default_type;
+          w_info.default_value = default_value;
 
           check_iter = _w_input.find(face_name); 
 
@@ -6530,145 +6541,94 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
                                               Iterator bound_ptr, std::string file_name )
 {
 
- //get the face direction
- IntVector insideCellDir = patch->faceDirection(face);
- FaceToInput::iterator fu_iter = _u_input.find( face_name ); 
- FaceToInput::iterator fv_iter = _v_input.find( face_name ); 
- FaceToInput::iterator fw_iter = _w_input.find( face_name ); 
+  //get the face direction
+  IntVector insideCellDir = patch->faceDirection(face);
+  FaceToInput::iterator fu_iter = _u_input.find( face_name ); 
+  FaceToInput::iterator fv_iter = _v_input.find( face_name ); 
+  FaceToInput::iterator fw_iter = _w_input.find( face_name ); 
 
- switch ( face ) {
+  if ( face == Patch::xminus || face == Patch::xplus ){ 
 
-   case Patch::xminus:
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+     
+      IntVector rel_ijk = *bound_ptr - fu_iter->second.relative_ijk; 
+      CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
+      CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
+      CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
 
-     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
-       
-       IntVector rel_ijk = *bound_ptr - fu_iter->second.relative_ijk; 
-       CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
-       CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
-       CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
-
-       if ( u_iter != fu_iter->second.values.end() ){ 
+      if ( u_iter != fu_iter->second.values.end() ){ 
         uVel[ *bound_ptr ] = u_iter->second; 
         uVel[ *bound_ptr - insideCellDir ] = u_iter->second; 
-       }
-
-       if ( v_iter != fv_iter->second.values.end() ) 
         vVel[ *bound_ptr ] = v_iter->second; 
-       if ( w_iter != fw_iter->second.values.end() )
         wVel[ *bound_ptr ] = w_iter->second; 
+      } else if ( fu_iter->second.default_type == "Neumann" ){ 
+        uVel[ *bound_ptr ] = uVel[*bound_ptr + insideCellDir]; 
+        uVel[ *bound_ptr - insideCellDir ] = uVel[*bound_ptr]; 
+        vVel[ *bound_ptr ] = vVel[*bound_ptr + insideCellDir]; 
+        wVel[ *bound_ptr ] = wVel[*bound_ptr + insideCellDir]; 
+      } else if ( fu_iter->second.default_type == "Dirichlet" ){ 
+        uVel[ *bound_ptr ] = fu_iter->second.default_value; 
+        uVel[ *bound_ptr - insideCellDir ] = fu_iter->second.default_value;
+        vVel[ *bound_ptr ] = fv_iter->second.default_value;
+        wVel[ *bound_ptr ] = fw_iter->second.default_value;
+      }  
+    }
+    
+  } else if ( face == Patch::yminus || face == Patch::yplus ){ 
 
-     }
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-     break; 
-   case Patch::xplus: 
+      IntVector rel_ijk = *bound_ptr - fv_iter->second.relative_ijk; 
+      CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
+      CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
+      CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
 
-     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
-
-       IntVector rel_ijk = *bound_ptr - fu_iter->second.relative_ijk; 
-       CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
-       CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
-       CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
-
-       if ( u_iter != fu_iter->second.values.end() ){ 
+      if ( v_iter != fv_iter->second.values.end() ){ 
+        vVel[ *bound_ptr ] = v_iter->second; 
+        vVel[ *bound_ptr - insideCellDir ] = v_iter->second; 
+        wVel[ *bound_ptr ] = w_iter->second; 
         uVel[ *bound_ptr ] = u_iter->second; 
-        uVel[ *bound_ptr - insideCellDir ] = u_iter->second; 
-       }
+      } else if ( fv_iter->second.default_type == "Neumann" ){ 
+        vVel[ *bound_ptr ] = vVel[*bound_ptr + insideCellDir]; 
+        vVel[ *bound_ptr - insideCellDir ] = vVel[*bound_ptr]; 
+        wVel[ *bound_ptr ] = wVel[*bound_ptr + insideCellDir]; 
+        uVel[ *bound_ptr ] = uVel[*bound_ptr + insideCellDir]; 
+      } else if ( fv_iter->second.default_type == "Dirichlet" ){ 
+        vVel[ *bound_ptr ] = fv_iter->second.default_value; 
+        vVel[ *bound_ptr - insideCellDir ] = fv_iter->second.default_value;
+        wVel[ *bound_ptr ] = fw_iter->second.default_value;
+        uVel[ *bound_ptr ] = fu_iter->second.default_value;
+      } 
+    }
 
-       if ( v_iter != fv_iter->second.values.end() ) 
-        vVel[ *bound_ptr ] = v_iter->second; 
-       if ( w_iter != fw_iter->second.values.end() )
+  } else if ( face == Patch::zminus || face == Patch::zplus ){ 
+
+    for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+      IntVector rel_ijk = *bound_ptr - fw_iter->second.relative_ijk; 
+      CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
+      CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
+      CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
+
+      if ( w_iter != fw_iter->second.values.end() ){ 
         wVel[ *bound_ptr ] = w_iter->second; 
+        wVel[ *bound_ptr - insideCellDir ] = w_iter->second; 
+        uVel[ *bound_ptr ] = u_iter->second; 
+        vVel[ *bound_ptr ] = v_iter->second; 
+      } else if ( fw_iter->second.default_type == "Neumann" ){ 
+        wVel[ *bound_ptr ] = wVel[*bound_ptr + insideCellDir]; 
+        wVel[ *bound_ptr - insideCellDir ] = wVel[*bound_ptr]; 
+        uVel[ *bound_ptr ] = uVel[*bound_ptr + insideCellDir]; 
+        vVel[ *bound_ptr ] = vVel[*bound_ptr + insideCellDir]; 
+      } else if ( fw_iter->second.default_type == "Dirichlet" ){ 
+        wVel[ *bound_ptr ] = fw_iter->second.default_value; 
+        wVel[ *bound_ptr - insideCellDir ] = fw_iter->second.default_value;
+        uVel[ *bound_ptr ] = fu_iter->second.default_value;
+        vVel[ *bound_ptr ] = fv_iter->second.default_value;
+      } 
+    }
 
-     }
-     break; 
-   case Patch::yminus: 
-
-     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
-
-       IntVector rel_ijk = *bound_ptr - fv_iter->second.relative_ijk; 
-       CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
-       CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
-       CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
-
-       if ( v_iter != fv_iter->second.values.end()) { 
-       vVel[ *bound_ptr ] = v_iter->second; 
-       vVel[ *bound_ptr - insideCellDir ] = v_iter->second; 
-       }
-
-       if ( u_iter != fu_iter->second.values.end() ) 
-       uVel[ *bound_ptr ] = u_iter->second;
-       if ( w_iter != fw_iter->second.values.end() ) 
-       wVel[ *bound_ptr ] = w_iter->second; 
-
-     }
-     break; 
-   case Patch::yplus: 
-
-     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
-
-       IntVector rel_ijk = *bound_ptr - fv_iter->second.relative_ijk; 
-       CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
-       CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
-       CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
-
-       if ( v_iter != fv_iter->second.values.end()) { 
-       vVel[ *bound_ptr ] = v_iter->second; 
-       vVel[ *bound_ptr - insideCellDir ] = v_iter->second; 
-       }
-
-       if ( u_iter != fu_iter->second.values.end() ) 
-       uVel[ *bound_ptr ] = u_iter->second;
-       if ( w_iter != fw_iter->second.values.end() ) 
-       wVel[ *bound_ptr ] = w_iter->second; 
-
-     }
-     break; 
-   case Patch::zminus: 
-
-     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
-
-       IntVector rel_ijk = *bound_ptr - fw_iter->second.relative_ijk; 
-       CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
-       CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
-       CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
-
-       if ( w_iter != fw_iter->second.values.end() ) { 
-       wVel[ *bound_ptr ] = w_iter->second; 
-       wVel[ *bound_ptr - insideCellDir ] = w_iter->second;
-       }
-
-       if ( u_iter != fu_iter->second.values.end() ) 
-       uVel[ *bound_ptr ] = u_iter->second;
-       if ( v_iter != fv_iter->second.values.end() ) 
-       vVel[ *bound_ptr ] = v_iter->second; 
-
-     }
-     break; 
-   case Patch::zplus: 
-
-     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
-
-       IntVector rel_ijk = *bound_ptr - fw_iter->second.relative_ijk; 
-       CellToValue::iterator u_iter = fu_iter->second.values.find( rel_ijk ); 
-       CellToValue::iterator v_iter = fv_iter->second.values.find( rel_ijk ); 
-       CellToValue::iterator w_iter = fw_iter->second.values.find( rel_ijk ); 
-
-       if ( w_iter != fw_iter->second.values.end() ) { 
-       wVel[ *bound_ptr ] = w_iter->second; 
-       wVel[ *bound_ptr - insideCellDir ] = w_iter->second;
-       }
-
-       if ( u_iter != fu_iter->second.values.end() ) 
-       uVel[ *bound_ptr ] = u_iter->second;
-       if ( v_iter != fv_iter->second.values.end() ) 
-       vVel[ *bound_ptr ] = v_iter->second; 
-     }
-     break; 
-   default:
-
-     break;
-
- }
+  } 
 }
 
 void 
@@ -6681,7 +6641,11 @@ BoundaryCondition::readInputFile__NEW( std::string file_name, BoundaryCondition:
     throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
   }
 
-  std::string variable = getString( file ); 
+  struct_result.name = getString( file ); 
+
+  struct_result.dx = getDouble( file ); 
+  struct_result.dy = getDouble( file ); 
+
   int         num_points = getInt( file ); 
 
   std::map<IntVector, double> values; 
@@ -7291,6 +7255,8 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    Vector Dx = patch->dCell(); 
+    double dx, dy; 
 
     vector<Patch::FaceType> bf;
     vector<Patch::FaceType>::const_iterator bf_iter;
@@ -7320,21 +7286,33 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
           if (face == 0){
             whichface = "x-";
             index = 0;
+            dx = Dx[1];
+            dy = Dx[2];
           } else if (face == 1) {
             whichface = "x+"; 
             index = 0;
+            dx = Dx[1];
+            dy = Dx[2];
           } else if (face == 2) { 
             whichface = "y-";
             index = 1;
+            dx = Dx[2];
+            dy = Dx[0];
           } else if (face == 3) {
             whichface = "y+";
             index = 1;
+            dx = Dx[2];
+            dy = Dx[0];
           } else if (face == 4) {
             whichface = "z-";
             index = 2;
+            dx = Dx[0];
+            dy = Dx[1];
           } else if (face == 5) {
             whichface = "z+";
             index = 2;
+            dx = Dx[0];
+            dy = Dx[1];
           }
 
           // need to map x,y,z -> i,j,k for the FromFile option
@@ -7350,6 +7328,12 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
             BoundaryCondition::FaceToInput::iterator i_uvel_bc_storage = _u_input.find( face_name ); 
             BoundaryCondition::FaceToInput::iterator i_vvel_bc_storage = _v_input.find( face_name ); 
             BoundaryCondition::FaceToInput::iterator i_wvel_bc_storage = _w_input.find( face_name ); 
+
+            //check the grid spacing: 
+            proc0cout <<  endl << "For momentum handoff file named: " << i_uvel_bc_storage->second.name << endl;
+            proc0cout <<          "  Grid and handoff spacing relative differences are: [" 
+              << std::abs(i_uvel_bc_storage->second.dx - dx)/dx << ", " 
+              << std::abs(i_uvel_bc_storage->second.dy - dy)/dy << "]" << endl << endl;
 
             bound_ptr.reset(); 
             IntVector bound_ijk = bound_ptr.begin(); 

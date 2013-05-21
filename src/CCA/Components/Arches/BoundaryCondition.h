@@ -1183,7 +1183,12 @@ namespace Uintah {
       struct FFInfo{ 
         CellToValue values;
         Vector relative_xyz;
+        double dx;
+        double dy; 
         IntVector relative_ijk;
+        std::string default_type; 
+        std::string name; 
+        double default_value; 
       }; 
       typedef std::map<std::string, FFInfo> FaceToInput;  
 
