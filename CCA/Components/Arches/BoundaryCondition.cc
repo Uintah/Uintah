@@ -7269,11 +7269,12 @@ BoundaryCondition::wallStress( const Patch* p,
 void 
 BoundaryCondition::sched_checkMomBCs( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
 {
-  string taskname = "BoundaryCondition::checkMomBCs"; 
-  Task* tsk = scinew Task(taskname, this, &BoundaryCondition::checkMomBCs); 
+  if ( d_use_new_bcs ) {
+    string taskname = "BoundaryCondition::checkMomBCs"; 
+    Task* tsk = scinew Task(taskname, this, &BoundaryCondition::checkMomBCs); 
 
-  if ( d_use_new_bcs )
     sched->addTask( tsk, patches, matls ); 
+  }
 }
 
 void 
