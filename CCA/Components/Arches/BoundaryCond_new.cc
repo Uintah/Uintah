@@ -71,6 +71,9 @@ void BoundaryCondition_new::problemSetup( ProblemSpecP& db, std::string eqn_name
             db_BCType->require("relative_xyz", rel_xyz);
             bc_values.relative_xyz = rel_xyz; 
 
+            db_BCType->findBlock("default")->getAttribute("type",bc_values.default_type);
+            db_BCType->findBlock("default")->getAttribute("value",bc_values.default_value);
+
             scalar_bc_from_file.insert(make_pair(face_name, bc_values)); 
 
           } else if ( type == "Tabulated" ){ 
@@ -233,7 +236,11 @@ BoundaryCondition_new::readInputFile( std::string file_name, BoundaryCondition_n
     throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
   }
 
-  std::string variable = getString( file ); 
+  struct_result.name = getString( file ); 
+
+  struct_result.dx = getDouble( file ); 
+  struct_result.dy = getDouble( file ); 
+
   int num_points = getInt( file );
 
   std::map<IntVector, double> values; 
@@ -333,11 +340,20 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
               IntVector bp1(*bound_ptr - insideCellDir);
               scalar[*bound_ptr] = 2.0 * file_bc_value - scalar[bp1]; 
 
-            } else { 
-              // THIS NEED TO BE FIXED: 
-              //cout << " For cell: " << *bound_ptr << endl;
-              //throw InvalidValue("Error: Cell not found in BC input file for scalar: "+ varname,__FILE__,__LINE__); 
-              scalar[*bound_ptr] = 0;
+            } else if ( i_scalar_bc_storage->second.default_type == "Neumann" ){  
+        
+              IntVector axes = patch->getFaceAxes(face);
+              int P_dir = axes[0];  // principal direction
+              double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+              double dx = Dx[P_dir];
+              IntVector bp1(*bound_ptr - insideCellDir); 
+              scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * bc_value;
+
+            } else if ( i_scalar_bc_storage->second.default_type == "Dirichlet" ){ 
+
+              IntVector bp1(*bound_ptr - insideCellDir); 
+              scalar[*bound_ptr] = 2.0*i_scalar_bc_storage->second.default_value - scalar[bp1];
+
             } 
           }
         } else if ( bc_kind == "Tabulated") {

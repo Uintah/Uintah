@@ -556,7 +556,7 @@
                               attribute4="type      OPTIONAL STRING 'int'" >
                                                                 
           <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom 
-                                                                     MassFlowInlet Swirl VelocityInlet, TurbulentInlet, Tabulated" />
+                                                                     MassFlowInlet Swirl VelocityInlet, TurbulentInlet, Tabulated, FromFile, VelocityFileInput" />
 
           <!-- functor_name: name of a functor to be applied on this boundary. Developer must handle parsing and pointing to proper functor in the code -->                                                          
           <functor_name     spec="OPTIONAL STRING"  need_applies_to="var Neumann Dirichlet" />                                                                     
@@ -567,6 +567,11 @@
           <timeperiod       spec="OPTIONAL DOUBLE  'positive'" need_applies_to="var TurbulentInlet"/>
 
           <relative_xyz     spec="REQUIRED VECTOR" need_applies_to="var VelocityFileInput FromFile"/>
+
+          <!-- When using the FromFile or VelocityFileInput interface, one must supply a default in the 
+          event that the handoff file does not contain an iterator for the specified geometry --> 
+          <default          spec="REQUIRED NO_DATA" attribute1="type REQUIRED STRING 'Neumann, Dirichlet" 
+                            attribute2="value REQUIRED DOUBLE" need_applies_to="var VelocityFileInput FromFile"/> 
           
           <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl"/>
           <swirl_centroid   spec="REQUIRED VECTOR"  need_applies_to="var Swirl"/>
