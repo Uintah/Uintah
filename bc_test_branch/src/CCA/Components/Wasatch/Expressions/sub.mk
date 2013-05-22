@@ -42,7 +42,7 @@ SRCS     +=                         \
 	$(SRCDIR)/ScalarRHS.cc			\
 	$(SRCDIR)/ScalabilityTestSrc.cc		\
 	$(SRCDIR)/SetCurrentTime.cc		\
-	$(SRCDIR)/Stress.cc 			\
+	$(SRCDIR)/Strain.cc 			\
 	$(SRCDIR)/VelocityMagnitude.cc 		\
 	$(SRCDIR)/Vorticity.cc 			\
 	$(SRCDIR)/Pressure.cc     \

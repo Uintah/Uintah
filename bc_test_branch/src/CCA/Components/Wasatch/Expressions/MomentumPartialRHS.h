@@ -47,7 +47,7 @@
  *         - \rho g_i
  *  \f]
  *
- *  where \f$\tau_{*i}\f$ is row of the stress tensor corresponding to
+ *  where \f$\tau_{*i}\f$ is row of the Strain tensor corresponding to
  *  the component of momentum this equation is describing.  We define
  *
  *  \f[
@@ -78,27 +78,38 @@ class MomRHSPart
   // interpolant for density: svol to fieldT
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  DensityInterpT;
 
-  const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, tauXt_, tauYt_, tauZt_, densityt_, bodyForcet_, srcTermt_, emptyTag_;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,XFluxT>::type  SVol2XFluxInterpT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,YFluxT>::type  SVol2YFluxInterpT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,ZFluxT>::type  SVol2ZFluxInterpT;
+
+  const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, viscTag_, tauXt_, tauYt_, tauZt_, densityt_, bodyForcet_, srcTermt_, emptyTag_;
   const Expr::Tag volfract_;
 
   const XFluxT    *cFluxX_, *tauX_;
   const YFluxT    *cFluxY_, *tauY_;
   const ZFluxT    *cFluxZ_, *tauZ_;
-  const SVolField *density_;
+  const SVolField *density_, *visc_;
   const FieldT    *bodyForce_;
   const FieldT    *srcTerm_;
 
   const FieldT* volfrac_;
 
+//  const SVolField* dil_;
+  
   const DivX* divXOp_;
   const DivY* divYOp_;
   const DivZ* divZOp_;
 
+  const SVol2XFluxInterpT* sVol2XFluxInterpOp_;
+  const SVol2YFluxInterpT* sVol2YFluxInterpOp_;
+  const SVol2ZFluxInterpT* sVol2ZFluxInterpOp_;
+  
   const DensityInterpT* densityInterpOp_;
   
   MomRHSPart( const Expr::Tag& convFluxX,
               const Expr::Tag& convFluxY,
               const Expr::Tag& convFluxZ,
+              const Expr::Tag& viscTag,
               const Expr::Tag& tauX,
               const Expr::Tag& tauY,
               const Expr::Tag& tauZ,
@@ -110,7 +121,7 @@ class MomRHSPart
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, tauXt_, tauYt_, tauZt_, densityt_, bodyForcet_, srcTermt_;
+    const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, viscTag_, tauXt_, tauYt_, tauZt_, densityt_, bodyForcet_, srcTermt_;
     const Expr::Tag volfract_;
     
   public:
@@ -118,6 +129,7 @@ public:
              const Expr::Tag& convFluxX,
              const Expr::Tag& convFluxY,
              const Expr::Tag& convFluxZ,
+             const Expr::Tag& viscTag,
              const Expr::Tag& tauX,
              const Expr::Tag& tauY,
              const Expr::Tag& tauZ,

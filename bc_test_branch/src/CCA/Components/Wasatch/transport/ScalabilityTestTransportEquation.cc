@@ -167,7 +167,7 @@ namespace Wasatch{
     bool doConvection = true;
     params->get( "DoConvection", doConvection);
     if (doConvection) {
-      throw Uintah::ProblemSetupException( "convection is disabled for the scalability test", __FILE__, __LINE__ );
+      // throw Uintah::ProblemSetupException( "convection is disabled for the scalability test", __FILE__, __LINE__ );
       setup_convective_flux_expression<FieldT>( "X",
                                                 Expr::Tag(thisPhiName,Expr::STATE_N),
                                                 Expr::Tag(), // convective flux (empty to build it)

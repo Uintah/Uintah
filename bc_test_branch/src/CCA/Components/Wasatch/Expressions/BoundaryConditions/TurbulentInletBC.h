@@ -29,7 +29,7 @@
 #include <Core/IO/UintahZlibUtil.h>
 #include <Core/IO/UintahIFStreamUtil.h>
 #include <istream>
-#include <CCA/Components/Wasatch/StringNames.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 
 template< typename FieldT >
 class TurbulentInletBC
@@ -102,11 +102,11 @@ TurbulentInletBC( const std::string inputFileName,
                  const std::string velDir,
                  const int period,
                  const double timePeriod) :
-timeTag_ ( Expr::Tag(Wasatch::StringNames::self().time,Expr::STATE_NONE) ),
-timestepTag_ ( Expr::Tag(Wasatch::StringNames::self().timestep,Expr::STATE_NONE) ),
-velDir_(velDir),
-period_(period),
-timePeriod_(timePeriod)
+  timeTag_    ( Wasatch::TagNames::self().time ),
+  timestepTag_( Wasatch::TagNames::self().timestep ),
+  velDir_(velDir),
+  period_(period),
+  timePeriod_(timePeriod)
 {
   using namespace std;
   using namespace Uintah;

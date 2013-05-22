@@ -55,7 +55,7 @@ namespace Wasatch{
   struct TurbulenceParameters {
     double turbulentSchmidt;
     double eddyViscosityConstant;
-    double kolmogorovScale;
+//    double kolmogorovScale;
     TurbulenceModelsNames turbulenceModelName;
   };
   

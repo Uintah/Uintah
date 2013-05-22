@@ -24,198 +24,139 @@
 
 #include "StrainTensorMagnitude.h"
 
+//-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-Expr::Tag straintensormagnitude_tag() {
-  return Expr::Tag( "StrainTensorMagnitude", Expr::STATE_NONE );
-}
 
-Expr::Tag wale_tensormagnitude_tag() {
-  return Expr::Tag( "WaleTensorMagnitude", Expr::STATE_NONE );
-}
+//********************************************************************
+// STRAIN TENSOR SQUARE (used for Smagorinsky, Vreman, and WALE models)
+//********************************************************************
 
-Expr::Tag vreman_tensormagnitude_tag() {
-  return Expr::Tag( "VremanTensorMagnitude", Expr::STATE_NONE );
-}
-
-StrainTensorMagnitude::
-StrainTensorMagnitude( const Expr::Tag& vel1tag,
-                       const Expr::Tag& vel2tag,
-                       const Expr::Tag& vel3tag )
+StrainTensorSquare::
+StrainTensorSquare( const Expr::Tag& s11Tag,
+                    const Expr::Tag& s21Tag,
+                    const Expr::Tag& s31Tag,
+                    const Expr::Tag& s22Tag,
+                    const Expr::Tag& s32Tag,
+                    const Expr::Tag& s33Tag )
   : Expr::Expression<SVolField>(),
-    vel1t_( vel1tag ),
-    vel2t_( vel2tag ),
-    vel3t_( vel3tag ),
-    doX_  ( vel1t_ != Expr::Tag() ),
-    doY_  ( vel2t_ != Expr::Tag() ),
-    doZ_  ( vel3t_ != Expr::Tag() )
+    S11Tag_(s11Tag),
+    S21Tag_(s21Tag),
+    S31Tag_(s31Tag),
+    S22Tag_(s22Tag),
+    S32Tag_(s32Tag),
+    S33Tag_(s33Tag)
 {}
 
 //--------------------------------------------------------------------
 
-StrainTensorMagnitude::
-~StrainTensorMagnitude()
+StrainTensorSquare::
+~StrainTensorSquare()
 {}
 
 //--------------------------------------------------------------------
 
 void
-StrainTensorMagnitude::
+StrainTensorSquare::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  if( doX_ ) exprDeps.requires_expression( vel1t_ );
-  if( doY_ ) exprDeps.requires_expression( vel2t_ );
-  if( doZ_ ) exprDeps.requires_expression( vel3t_ );
+  exprDeps.requires_expression( S11Tag_   );
+  exprDeps.requires_expression( S21Tag_   );
+  exprDeps.requires_expression( S31Tag_   );
+
+  exprDeps.requires_expression( S22Tag_   );
+  exprDeps.requires_expression( S32Tag_   );
+
+  exprDeps.requires_expression( S33Tag_   );
 }
 
 //--------------------------------------------------------------------
 
 void
-StrainTensorMagnitude::
+StrainTensorSquare::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  if ( doX_ ) vel1_ = &fml.field_manager<XVolField>().field_ref( vel1t_ );
-  if ( doY_ ) vel2_ = &fml.field_manager<YVolField>().field_ref( vel2t_ );
-  if ( doZ_ ) vel3_ = &fml.field_manager<ZVolField>().field_ref( vel3t_ );
+  namespace SS = SpatialOps::structured;
+  
+  S11_ = &fml.field_manager<SS::XSurfXField>().field_ref(S11Tag_);
+  S21_ = &fml.field_manager<SS::XSurfYField>().field_ref(S21Tag_);
+  S31_ = &fml.field_manager<SS::XSurfZField>().field_ref(S31Tag_);
+  
+  S22_ = &fml.field_manager<SS::YSurfYField>().field_ref(S22Tag_);
+  S32_ = &fml.field_manager<SS::YSurfZField>().field_ref(S32Tag_);
+
+  S33_ = &fml.field_manager<SS::ZSurfZField>().field_ref(S33Tag_);
 }
 
 //--------------------------------------------------------------------
 
 void
-StrainTensorMagnitude::
+StrainTensorSquare::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  dudxOp_ = opDB.retrieve_operator<dudxT>();
-  dudyOp_ = opDB.retrieve_operator<dudyT>();
-  dudzOp_ = opDB.retrieve_operator<dudzT>();
-
-  dvdxOp_ = opDB.retrieve_operator<dvdxT>();
-  dvdyOp_ = opDB.retrieve_operator<dvdyT>();
-  dvdzOp_ = opDB.retrieve_operator<dvdzT>();
-
-  dwdxOp_ = opDB.retrieve_operator<dwdxT>();
-  dwdyOp_ = opDB.retrieve_operator<dwdyT>();
-  dwdzOp_ = opDB.retrieve_operator<dwdzT>();
-
+  xxInterpOp_ = opDB.retrieve_operator<XXInterpT>();
+  yyInterpOp_ = opDB.retrieve_operator<YYInterpT>();
+  zzInterpOp_ = opDB.retrieve_operator<ZZInterpT>();
   xyInterpOp_ = opDB.retrieve_operator<XYInterpT>();
-  yxInterpOp_ = opDB.retrieve_operator<YXInterpT>();
-
   xzInterpOp_ = opDB.retrieve_operator<XZInterpT>();
-  zxInterpOp_ = opDB.retrieve_operator<ZXInterpT>();
-
-  yzInterpOp_ = opDB.retrieve_operator<YZInterpT>();
-  zyInterpOp_ = opDB.retrieve_operator<ZYInterpT>();
+  yzInterpOp_ = opDB.retrieve_operator<YZInterpT>();  
 }
 
 //--------------------------------------------------------------------
 
 void
-StrainTensorMagnitude::
+StrainTensorSquare::
 evaluate()
 {
   using namespace SpatialOps;
   SVolField& StrTsrMag = this->value();
   StrTsrMag <<= 0.0;
-
-  SpatFldPtr<SVolField> tmp1 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  SpatFldPtr<SVolField> tmp2 = SpatialFieldStore::get<SVolField>( StrTsrMag );
-  *tmp1 <<= 0.0;
-  *tmp2 <<= 0.0;
-
-  SpatFldPtr<structured::XSurfYField> xyfield = SpatialFieldStore::get<structured::XSurfYField>( StrTsrMag );
-  SpatFldPtr<structured::YSurfXField> yxfield = SpatialFieldStore::get<structured::YSurfXField>( StrTsrMag );
-  *xyfield <<= 0.0;
-  *yxfield <<= 0.0;
-
-  SpatFldPtr<structured::XSurfZField> xzfield = SpatialFieldStore::get<structured::XSurfZField>( StrTsrMag );
-  SpatFldPtr<structured::ZSurfXField> zxfield = SpatialFieldStore::get<structured::ZSurfXField>( StrTsrMag );
-  *xzfield <<= 0.0;
-  *zxfield <<= 0.0;
-
-  SpatFldPtr<structured::YSurfZField> yzfield = SpatialFieldStore::get<structured::YSurfZField>( StrTsrMag );
-  SpatFldPtr<structured::ZSurfYField> zyfield = SpatialFieldStore::get<structured::ZSurfYField>( StrTsrMag );
-  *yzfield <<= 0.0;
-  *zyfield <<= 0.0;
-
-  if ( doX_ ) {
-    dudxOp_->apply_to_field( *vel1_, *tmp1 );      // S_11 = 0.5 * (du/dx + du/dx)
-    StrTsrMag <<= StrTsrMag + *tmp1 * *tmp1;       // S_11 * S_11
-  }
-
-  if ( doY_ ) {
-    dvdyOp_->apply_to_field( *vel2_, *tmp1 );        // S_22 = 0.5 * (dv/dy + dv/dy)
-    StrTsrMag <<= StrTsrMag + *tmp1 * *tmp1;         // S_22 * S_22
-  }
-
-  if ( doZ_ ) {
-    dwdzOp_->apply_to_field( *vel3_, *tmp1 );        // S_33 = 0.5 * (dw/dz + dw/dz)
-    StrTsrMag <<= StrTsrMag + *tmp1 * *tmp1;         // S_33 * S_33
-  }
-
-  if ( doX_ && doY_ ) {
-    dudyOp_->apply_to_field( *vel1_, *xyfield );    // du/dy
-    xyInterpOp_->apply_to_field( *xyfield, *tmp1);  // interpolate to scalar cells
-
-    dvdxOp_->apply_to_field( *vel2_, *yxfield );    // dv/dx
-    yxInterpOp_->apply_to_field( *yxfield, *tmp2);  // interpolate to scalar cells
-
-    *tmp1 <<= *tmp1 + *tmp2;                         // S_12 = S_21 = 0.5 * (du/dy + dv/dx)
-    StrTsrMag <<= StrTsrMag + 0.5 * *tmp1 * *tmp1;   // S_12 * S_12 + S_21 * S_21 = 2*S_12*S_12
-  }
-
-  if ( doX_ && doZ_ ) {
-    dudzOp_->apply_to_field( *vel1_, *xzfield );    // du/dz
-    xzInterpOp_->apply_to_field( *xzfield, *tmp1);
-
-    dwdxOp_->apply_to_field( *vel3_, *zxfield );    // dw/dx
-    zxInterpOp_->apply_to_field( *zxfield, *tmp2);
-
-    *tmp1 <<= *tmp1 + *tmp2;                         // 2*S_13 = 2*S_31 = du/dz + dw/dx
-    StrTsrMag <<= StrTsrMag + *tmp1 * *tmp1 * 0.5;   // |S|^2 / 2 = S_ij * S_ij (we take account for S_ij and Sji at the same time)
-  }
-
-  if ( doY_ && doZ_ ) {
-    dvdzOp_->apply_to_field( *vel2_, *yzfield );    // dv/dz
-    yzInterpOp_->apply_to_field( *yzfield, *tmp1);
-
-    dwdyOp_->apply_to_field( *vel3_, *zyfield );    // dw/dy
-    zyInterpOp_->apply_to_field( *zyfield, *tmp2);
-
-    *tmp1 <<= *tmp1 + *tmp2;                         // 2*S_23 = 2*S_32 = dv/dz + dw/dy
-    StrTsrMag <<= StrTsrMag + *tmp1 * *tmp1 * 0.5;   // |S|^2 / 2 = S_ij * S_ij (we take account for S_ij and Sji at the same time)
-  }
+  StrTsrMag <<=   (*xxInterpOp_)(*S11_) * (*xxInterpOp_)(*S11_) // S11*S11
+              + (*yyInterpOp_)(*S22_) * (*yyInterpOp_)(*S22_) // S22*S22
+              + (*zzInterpOp_)(*S33_) * (*zzInterpOp_)(*S33_) // S33*S33
+              + 2.0 * (*xyInterpOp_)(*S21_) * (*xyInterpOp_)(*S21_) // S12*S12 + S21*S21 = 2.0*S21*S21
+              + 2.0 * (*xzInterpOp_)(*S31_) * (*xzInterpOp_)(*S31_) // S13*S13 + S31*S31 = 2.0*S31*S31
+              + 2.0 * (*yzInterpOp_)(*S32_) * (*yzInterpOp_)(*S32_);// S23*S23 + S32*S32 = 2.0*S32*S32 */
 }
 
 //--------------------------------------------------------------------
 
-StrainTensorMagnitude::
+StrainTensorSquare::
 Builder::Builder( const Expr::Tag& result,
-                  const Expr::Tag& vel1tag,
-                  const Expr::Tag& vel2tag,
-                  const Expr::Tag& vel3tag )
+                 const Expr::Tag& s11Tag,
+                 const Expr::Tag& s21Tag,
+                 const Expr::Tag& s31Tag,
+                 const Expr::Tag& s22Tag,
+                 const Expr::Tag& s32Tag,
+                 const Expr::Tag& s33Tag)
   : ExpressionBuilder(result),
-    v1t_( vel1tag ),
-    v2t_( vel2tag ),
-    v3t_( vel3tag )
+    S11Tag_(s11Tag),
+    S21Tag_(s21Tag),
+    S31Tag_(s31Tag),
+    S22Tag_(s22Tag),
+    S32Tag_(s32Tag),
+    S33Tag_(s33Tag)
 {}
 
 //--------------------------------------------------------------------
 
 Expr::ExpressionBase*
-StrainTensorMagnitude::Builder::build() const
+StrainTensorSquare::Builder::build() const
 {
-  return new StrainTensorMagnitude( v1t_, v2t_, v3t_ );
+  return new StrainTensorSquare(S11Tag_, S21Tag_, S31Tag_,
+                                S22Tag_, S32Tag_,
+                                S33Tag_);
 }
 
-//--------------------------------------------------------------------
-//====================================================================
-//--------------------------------------------------------------------
+//********************************************************************
+// WALE MODEL
+//********************************************************************
 
 WaleTensorMagnitude::
 WaleTensorMagnitude( const Expr::Tag& vel1tag,
                       const Expr::Tag& vel2tag,
                       const Expr::Tag& vel3tag )
-: StrainTensorMagnitude( vel1tag, vel2tag, vel3tag )
+: StrainTensorBase( vel1tag, vel2tag, vel3tag )
 {}
 
 //--------------------------------------------------------------------
@@ -395,15 +336,15 @@ WaleTensorMagnitude::Builder::build() const
   return new WaleTensorMagnitude( v1t_, v2t_, v3t_ );
 }
 
-//--------------------------------------------------------------------
-//====================================================================
-//--------------------------------------------------------------------
+//********************************************************************
+// VREMAN MODEL
+//********************************************************************
 
 VremanTensorMagnitude::
 VremanTensorMagnitude( const Expr::Tag& vel1tag,
                             const Expr::Tag& vel2tag,
                             const Expr::Tag& vel3tag )
-: StrainTensorMagnitude( vel1tag, vel2tag, vel3tag )
+: StrainTensorBase( vel1tag, vel2tag, vel3tag )
 {}
 
 //--------------------------------------------------------------------
@@ -549,7 +490,7 @@ evaluate()
 
   // TSAAD: The reason that we are using conditionals over here has to do with
   // embedded boundaries. When embedded boundaries are present, and when taking
-  // the velocity field from Arches, it seems that bbeta/abeta are negative.
+  // the velocity field from Arches, bbeta/abeta are negative.
   // This can be easily avoided by multiplying abeta and bbeta by the volume
   // fraction. It seems, however, that some cells still exhibit undesirable behavior.
   // It seems that the most conveninent and compact way of dealing with this is

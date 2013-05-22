@@ -32,27 +32,21 @@
 
 //====================================================================
 
-Expr::Tag turbulent_viscosity_tag()
-{
-  return Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
-}
-
-//====================================================================
-
 TurbulentViscosity::
 TurbulentViscosity( const Expr::Tag rhoTag,
-                    const Expr::Tag strTsrMagTag,
-                    const Expr::Tag sqStrTsrMagTag,
-                    const Expr::Tag vremanTsrMagTag,                   
+                    const Expr::Tag strTsrSqTag,
+                    const Expr::Tag waleTsrMagTag,
+                    const Expr::Tag vremanTsrMagTag,
+                    const Expr::Tag dynamicSmagCoefTag,
                     const Wasatch::TurbulenceParameters turbParams )
 : Expr::Expression<SVolField>(),
   isConstSmag_(turbulenceParameters_.turbulenceModelName != Wasatch::DYNAMIC),
-  turbulenceParameters_ ( turbParams ),
-  strTsrMagTag_  ( strTsrMagTag      ),
-  sqStrTsrMagTag_( sqStrTsrMagTag    ),
-  vremanTsrMagTag_( vremanTsrMagTag  ),
-  smagTag_       ( Expr::Tag()       ),
-  rhoTag_        ( rhoTag            )
+  turbulenceParameters_ ( turbParams          ),
+  strTsrSqTag_          ( strTsrSqTag        ),
+  waleTsrMagTag_        ( waleTsrMagTag      ),
+  vremanTsrMagTag_      ( vremanTsrMagTag     ),
+  dynCoefTag_           ( dynamicSmagCoefTag ),
+  rhoTag_               ( rhoTag              )
 {}
 
 //--------------------------------------------------------------------
@@ -68,19 +62,23 @@ TurbulentViscosity::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( rhoTag_ );
+  
   if (turbulenceParameters_.turbulenceModelName == Wasatch::SMAGORINSKY)
-    exprDeps.requires_expression( strTsrMagTag_ );  
+    exprDeps.requires_expression( strTsrSqTag_ );  
   
   else if (turbulenceParameters_.turbulenceModelName == Wasatch::VREMAN)
     exprDeps.requires_expression( vremanTsrMagTag_ );  
   
   else if (turbulenceParameters_.turbulenceModelName == Wasatch::WALE) {
-    exprDeps.requires_expression( strTsrMagTag_ );    
-    exprDeps.requires_expression( sqStrTsrMagTag_ );
+    exprDeps.requires_expression( strTsrSqTag_ );
+    exprDeps.requires_expression( waleTsrMagTag_ );
   }
   
-  else if( turbulenceParameters_.turbulenceModelName == Wasatch::DYNAMIC )
-    exprDeps.requires_expression( smagTag_ );
+  else if( turbulenceParameters_.turbulenceModelName == Wasatch::DYNAMIC ) {
+    exprDeps.requires_expression( strTsrSqTag_ );
+    exprDeps.requires_expression( dynCoefTag_ );
+  }
+  
 }
 
 //--------------------------------------------------------------------
@@ -92,16 +90,19 @@ bind_fields( const Expr::FieldManagerList& fml )
   const Expr::FieldMgrSelector<SVolField>::type& scalarfm = fml.field_manager<SVolField>();
 
   rho_       = &scalarfm.field_ref( rhoTag_       );
+  
   if ( turbulenceParameters_.turbulenceModelName == Wasatch::SMAGORINSKY )
-      strTsrMag_ = &scalarfm.field_ref( strTsrMagTag_ );
+      strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
   
   else if ( turbulenceParameters_.turbulenceModelName == Wasatch::WALE ) {
-    strTsrMag_ = &scalarfm.field_ref( strTsrMagTag_ );
-    sqStrTsrMag_ = &scalarfm.field_ref( sqStrTsrMagTag_ );    
+    strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
+    waleTsrMag_ = &scalarfm.field_ref( waleTsrMagTag_ );    
   }
   
-  else if( turbulenceParameters_.turbulenceModelName == Wasatch::DYNAMIC )
-    smag_ = &scalarfm.field_ref ( smagTag_ );
+  else if( turbulenceParameters_.turbulenceModelName == Wasatch::DYNAMIC ) {
+    strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
+    dynCoef_ = &scalarfm.field_ref ( dynCoefTag_ );
+  }
   
   else if( turbulenceParameters_.turbulenceModelName == Wasatch::VREMAN )
     vremanTsrMag_ = &scalarfm.field_ref( vremanTsrMagTag_ );    
@@ -116,6 +117,7 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
   gradXOp_ = opDB.retrieve_operator< GradXT >();
   gradYOp_ = opDB.retrieve_operator< GradYT >();
   gradZOp_ = opDB.retrieve_operator< GradZT >();
+  exOp_    = opDB.retrieve_operator< ExOpT  >();
 }
 
 //--------------------------------------------------------------------
@@ -132,37 +134,37 @@ evaluate()
   const double dy = 1.0 / std::abs( gradYOp_->get_plus_coef() );
   const double dz = 1.0 / std::abs( gradZOp_->get_plus_coef() );
   const double avgVol = std::pow(dx*dy*dz, 1.0/3.0);
-  double mixingLengthSq = turbulenceParameters_.eddyViscosityConstant * avgVol * (1.0 - avgVol/turbulenceParameters_.kolmogorovScale);
-  mixingLengthSq = mixingLengthSq * mixingLengthSq;
+  double mixingLengthSq = turbulenceParameters_.eddyViscosityConstant * avgVol; //* (1.0 - avgVol/turbulenceParameters_.kolmogorovScale);
+  mixingLengthSq = mixingLengthSq * mixingLengthSq; // (C_s * Delta)^2
+  const double eps = 2.0*std::numeric_limits<double>::epsilon();
   //const double deltaSquared  = pow(dx * dy * dz, 2.0/3.0);
   //const double eddyViscConstSq = turbulenceParameters_.eddyViscosityConstant * turbulenceParameters_.eddyViscosityConstant;
 
   switch ( turbulenceParameters_.turbulenceModelName ) {
 
     case Wasatch::SMAGORINSKY:
-      result <<= *rho_ * mixingLengthSq  * sqrt(2.0 * *strTsrMag_) ; // rho * (Cs * delta)^2 * |S|, Cs is the Smagorinsky constant
+      result <<= *rho_ * mixingLengthSq  * sqrt(2.0 * *strTsrSq_) ; // rho * (Cs * delta)^2 * |S|, Cs is the Smagorinsky constant
       break;
 
     case Wasatch::DYNAMIC:
-      std::cout << "WARNING: Dynamic smagorinsky model not implemented yet.\n";
-      std::cout << "returning 0.0 for turbulent viscosity.\n";
-      result <<= 0.0;
+      // tsaad.Note: When the dynamic model is used, the DynamicSmagorinskyCoefficient expression calculates both the coefficient and the StrainTensorMagnitude = sqrt(2*Sij*Sij). Unlike the StrainTensorMagnitude.cc Expression, which calculates SijSij instead. That's why for the constant smagorinsky case, we have take the sqrt() of that quanitity. In the Dynamic model case, we don't.
+      result <<= *rho_ * *dynCoef_ * *strTsrSq_;//*rho_ * *dynCoef_ * sqrt(2.0 * *strTsrSq_);
       break;
 
     case Wasatch::WALE:
     {
       SpatFldPtr<SVolField> denom = SpatialFieldStore::get<SVolField>( result );
       *denom <<= 0.0;
-      *denom <<= pow(*strTsrMag_, 2.5) + pow(*sqStrTsrMag_, 1.25);
-      result <<= cond( *denom == 0.0, 0.0 )
-                     ( *rho_ * mixingLengthSq * pow(*sqStrTsrMag_, 1.5) / *denom );
+      *denom <<= pow(*strTsrSq_, 2.5) + pow(*waleTsrMag_, 1.25);
+      result <<= cond( *denom <= eps, 0.0 )
+                     ( *rho_ * mixingLengthSq * pow(*waleTsrMag_, 1.5) / *denom );
     }
       break;
 
     case Wasatch::VREMAN:
       // NOTE: the constant used in the Vreman model input corresponds to the
       // best Smagorinsky constant when using the constant Smagorinsky model
-      // for this problem. The Vreman constant is estimated at Cv ~ 2.5 Cs
+      // for the problem being simulated. The Vreman constant is estimated at Cv ~ 2.5 Cs
       result <<= *rho_ * 2.5 * mixingLengthSq  * *vremanTsrMag_ ; // rho * 2.5 * (Cs * delta)^2 * |V|, Cs is the Smagorinsky constant
       break;
       
@@ -170,4 +172,19 @@ evaluate()
       break;
       
   }
+
+  // extrapolate from interior cells to ptach boundaries (both process and physical boundaries. the latter is optional):
+  // this is necessary to avoid problems when calculating the stress tensor where
+  // a viscosity interpolant is needed. If problems arise due to this extrapolation,
+  // you should consider performing an MPI communication on the turbulent viscosity
+  // (i.e. cleave the turbulent viscosity from its parents). This can be done
+  // in transport/MomentumTransportEquation.cc
+  // Based on data that I collected, an MPI communication costs about twice as
+  // much as the extrapolation in terms of speedup.
+  // You may also need to skip extrapolation at physical boundaries. This is the
+  // case when using Warches. With regular extrapolation, you may end up with
+  // a negative value for the turbulent viscosity in the extra cell if the
+  // first interior cell value is zero. To avoid this, you can turn on the "skipBCs" flag
+  // when using apply_to_field, or specify a min value for the extraplated cells.
+  exOp_->apply_to_field(result,0.0);
 }
