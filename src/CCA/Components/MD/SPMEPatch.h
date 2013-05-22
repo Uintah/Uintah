@@ -158,7 +158,7 @@ class SPMEPatch {
      * @param
      * @return
      */
-    inline SimpleGrid<complex<double> >* getQ()
+    inline SimpleGrid<std::complex<double> >* getQ()
     {
       return Q;
     }
@@ -168,7 +168,7 @@ class SPMEPatch {
      * @param
      * @return
      */
-    inline void setQ(SimpleGrid<complex<double> >* q)
+    inline void setQ(SimpleGrid<std::complex<double> >* q)
     {
       Q = q;
     }
@@ -198,7 +198,7 @@ class SPMEPatch {
 
     SimpleGrid<double>* d_theta;             //!<
     SimpleGrid<Matrix3>* d_stressPrefactor;  //!<
-    SimpleGrid<complex<double> >* Q;         //!<
+    SimpleGrid<std::complex<double> >* Q;         //!<
 
     const Patch* d_patch;                    //!<
 

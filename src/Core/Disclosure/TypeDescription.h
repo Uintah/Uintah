@@ -80,7 +80,7 @@ public:
     ReductionVariable,
     SoleVariable,
     double_type,
-    double_complex_type,
+    C_double_complex_type,
     float_type,
     bool_type,
     int_type,
@@ -90,6 +90,7 @@ public:
     Short27,   // for Fracture
     Stencil4,
     Stencil7,
+    SPMEArray3,
     Unknown,
     Other
   };

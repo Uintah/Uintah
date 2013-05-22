@@ -44,7 +44,6 @@ namespace Uintah {
 
 using SCIRun::Point;
 using SCIRun::Vector;
-using std::complex;
 
 class Matrix3;
 class Stencil7;
