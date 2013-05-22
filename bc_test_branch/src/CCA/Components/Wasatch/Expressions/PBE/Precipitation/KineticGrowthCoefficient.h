@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef PrecipitationBulkDiffusionCoefficient_Expr_h
-#define PrecipitationBulkDiffusionCoefficient_Expr_h
+#ifndef KineticGrowthCoefficient_Expr_h
+#define KineticGrowthCoefficient_Expr_h
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
@@ -31,70 +31,64 @@
 
 /**
  *  \ingroup WasatchExpressions
- *  \class PrecipitationBulkDiffusionCoefficient
+ *  \class KineticGrowthCoefficient
  *  \author Alex Abboud
- *  \date January 2012
+ *  \date February 2013
  *
  *  \tparam FieldT the type of field.
  *
  *  \brief calculates the expression containing the coefficient used in a
- *  precipitation reaction with bulk diffusion growth
- *  \f$ g_0 = \nu D C_{eq} (S-1) \f$ or \f$ (S - \bar{S}) \f$
- *  \f$ g(r) = 1/r \f$
+ *  precipitation reaction with kinetic limited growth at small supersaturations
+ *  \f$ g_0 = K_A (S - 1) \f$ or \f$ (S - \bar{S} ) \f$ here \f$ K_A \f$ is a fitted coefficient
+ *  \f$ g(r) = 1 \f$
  *
  */
 template< typename FieldT >
-class PrecipitationBulkDiffusionCoefficient
+class KineticGrowthCoefficient
 : public Expr::Expression<FieldT>
 {
-  const Expr::Tag superSatTag_, eqConcTag_, sBarTag_;
+  const Expr::Tag superSatTag_, sBarTag_;
   const double growthCoefVal_;
   const FieldT* superSat_; //field from table of supersaturation
-  const FieldT* eqConc_;   //field form table of equilibrium concentration
-  const FieldT* sBar_;     //S Bar term for ostwald ripening
-
-  PrecipitationBulkDiffusionCoefficient( const Expr::Tag& superSatTag,
-                                         const Expr::Tag& eqConcTag,
-                                         const Expr::Tag& sBarTag,
-                                         const double growthCoefVal );
-
+  const FieldT* sBar_;     //S bar calculatino for ostwald ripening
+  
+  KineticGrowthCoefficient( const Expr::Tag& superSatTag,
+                            const Expr::Tag& sBarTag,
+                            const double growthCoefVal );
+  
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::Tag& result,
-            const Expr::Tag& superSatTag,
-            const Expr::Tag& eqConcTag,
-            const Expr::Tag& sBarTag,
-            const double growthCoefVal)
+             const Expr::Tag& superSatTag,
+             const Expr::Tag& sBarTag,
+             const double growthCoefVal )
     : ExpressionBuilder(result),
-    supersatt_(superSatTag),
-    eqconct_(eqConcTag),
-    sbart_(sBarTag),
+    supersatt_    (superSatTag),
+    sbart_        (sBarTag),
     growthcoefval_(growthCoefVal)
     {}
-
+    
     ~Builder(){}
-
+    
     Expr::ExpressionBase* build() const
     {
-      return new PrecipitationBulkDiffusionCoefficient<FieldT>( supersatt_, eqconct_, sbart_, growthcoefval_ );
+      return new KineticGrowthCoefficient<FieldT>( supersatt_, sbart_, growthcoefval_ );
     }
-
+    
   private:
-    const Expr::Tag supersatt_, eqconct_, sbart_;
+    const Expr::Tag supersatt_, sbart_;
     const double growthcoefval_;
   };
-
-  ~PrecipitationBulkDiffusionCoefficient();
-
+  
+  ~KineticGrowthCoefficient();
+  
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
-
 };
-
 
 
 // ###################################################################
@@ -104,36 +98,32 @@ public:
 // ###################################################################
 
 
-
 template< typename FieldT >
-PrecipitationBulkDiffusionCoefficient<FieldT>::
-PrecipitationBulkDiffusionCoefficient( const Expr::Tag& superSatTag,
-                                       const Expr::Tag& eqConcTag,
-                                       const Expr::Tag& sBarTag,
-                                       const double growthCoefVal )
+KineticGrowthCoefficient<FieldT>::
+KineticGrowthCoefficient( const Expr::Tag& superSatTag,
+                          const Expr::Tag& sBarTag,
+                          const double growthCoefVal )
 : Expr::Expression<FieldT>(),
-superSatTag_(superSatTag),
-eqConcTag_(eqConcTag),
-sBarTag_(sBarTag),
+superSatTag_  (superSatTag),
+sBarTag_      (sBarTag),
 growthCoefVal_(growthCoefVal)
 {}
 
 //--------------------------------------------------------------------
 
 template< typename FieldT >
-PrecipitationBulkDiffusionCoefficient<FieldT>::
-~PrecipitationBulkDiffusionCoefficient()
+KineticGrowthCoefficient<FieldT>::
+~KineticGrowthCoefficient()
 {}
 
 //--------------------------------------------------------------------
 
 template< typename FieldT >
 void
-PrecipitationBulkDiffusionCoefficient<FieldT>::
+KineticGrowthCoefficient<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( superSatTag_ );
-  exprDeps.requires_expression( eqConcTag_ );
   if ( sBarTag_ != Expr::Tag() )
     exprDeps.requires_expression( sBarTag_ );
 }
@@ -142,12 +132,11 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 
 template< typename FieldT >
 void
-PrecipitationBulkDiffusionCoefficient<FieldT>::
+KineticGrowthCoefficient<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
   superSat_ = &fm.field_ref( superSatTag_ );
-  eqConc_   = &fm.field_ref( eqConcTag_   );
   if ( sBarTag_ != Expr::Tag() )
     sBar_ = &fm.field_ref( sBarTag_ );
 }
@@ -156,7 +145,7 @@ bind_fields( const Expr::FieldManagerList& fml )
 
 template< typename FieldT >
 void
-PrecipitationBulkDiffusionCoefficient<FieldT>::
+KineticGrowthCoefficient<FieldT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {}
 
@@ -164,18 +153,18 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 template< typename FieldT >
 void
-PrecipitationBulkDiffusionCoefficient<FieldT>::
+KineticGrowthCoefficient<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
   if ( sBarTag_ != Expr::Tag() ) {
-    result <<= growthCoefVal_ * *eqConc_ * ( *superSat_ - 1.0 );  // this is g0
+    result <<= growthCoefVal_  * ( *superSat_ - *sBar_ );  
   } else {
-    result <<= growthCoefVal_ * *eqConc_ * ( *superSat_ - *sBar_);  
+    result <<= growthCoefVal_ * ( *superSat_ - 1.0);  
   }
 }
 
 //--------------------------------------------------------------------
 
-#endif // PrecipitationBulkDiffusionCoefficient_Expr_h
+#endif // KineticGrowthCoefficient_Expr_h

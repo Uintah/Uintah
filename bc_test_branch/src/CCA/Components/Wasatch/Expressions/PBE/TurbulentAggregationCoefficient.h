@@ -158,7 +158,8 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= coefVal_ * sqrt( *dissipation_ / *kinVisc_ );
+  result <<= cond( *kinVisc_ > 0.0, coefVal_ * sqrt( *dissipation_ / *kinVisc_ ) )
+                 (0.0);
 }
 
 //--------------------------------------------------------------------

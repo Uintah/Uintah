@@ -53,10 +53,15 @@ public:
   void set_ghost_points( const std::vector<int> flatGhostPoints ){
     flatGhostPoints_.insert( flatGhostPoints_.end(), flatGhostPoints.begin(), flatGhostPoints.end() );
   }
+  void set_patch_cell_offset( const SpatialOps::structured::IntVec& patchCellOffset ){
+    patchCellOffset_ = patchCellOffset;
+  }
+
 protected:
   double ci_, cg_;
   std::vector<int> flatInteriorPoints_;  
   std::vector<int> flatGhostPoints_;
+  SpatialOps::structured::IntVec patchCellOffset_;
   //~BoundaryConditionBase(){}
 };
 

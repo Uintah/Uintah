@@ -77,6 +77,7 @@ class Pressure
  : public Expr::Expression<SVolField>
 {
   const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, currenttimet_, volfract_;
+  const Expr::Tag dudtt_, dvdtt_, dwdtt_;
 
   const bool doX_, doY_, doZ_, doDens_;
   bool didAllocateMatrix_;
@@ -106,6 +107,10 @@ class Pressure
   const YVolField* fy_;
   const ZVolField* fz_;
 
+  const XVolField* dxmomdt_;
+  const YVolField* dymomdt_;
+  const ZVolField* dzmomdt_;
+
   // build interpolant operators
   typedef OperatorTypeBuilder< Interpolant, XVolField, SpatialOps::structured::SSurfXField >::type  FxInterp;
   typedef OperatorTypeBuilder< Interpolant, YVolField, SpatialOps::structured::SSurfYField >::type  FyInterp;
@@ -131,6 +136,9 @@ class Pressure
             const Expr::Tag& fxtag,
             const Expr::Tag& fytag,
             const Expr::Tag& fztag,
+            const Expr::Tag& dudttag,
+            const Expr::Tag& dvdttag,
+            const Expr::Tag& dwdttag,
             const Expr::Tag& diltationtag,
             const Expr::Tag& d2rhodt2tag,
             const Expr::Tag& timesteptag,
@@ -146,7 +154,9 @@ class Pressure
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_,volfract_;
+    const Expr::Tag fxt_, fyt_, fzt_, dilatationt_, d2rhodt2t_, timestept_, volfract_;
+    const Expr::Tag dudtt_, dvdtt_, dwdtt_;
+    
     const bool hasMovingGeometry_;
     const bool userefpressure_;
     const double refpressurevalue_;
@@ -159,7 +169,10 @@ public:
              const Expr::Tag& fxtag,
              const Expr::Tag& fytag,
              const Expr::Tag& fztag,
-             const Expr::Tag& diltationtag,            
+             const Expr::Tag& dudttag,
+             const Expr::Tag& dvdttag,
+             const Expr::Tag& dwdttag,
+             const Expr::Tag& diltationtag,
              const Expr::Tag& d2rhodt2tag,
              const Expr::Tag& timesteptag,
              const Expr::Tag& volfractag,
