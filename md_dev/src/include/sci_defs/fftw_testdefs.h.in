@@ -28,9 +28,18 @@
 @DEF_FFTW@
 
 #ifdef HAVE_FFTW
-// When <complex.h> is included before <fftw3.h>, then fftw_complex is
+// When <complex.h> or <complex> is included before <fftw3.h>, then fftw_complex is
 // defined to be the native complex type
+
+// From: http://www.fftw.org/doc/Complex-numbers.html
+//  C++ has its own complex<T> template class, defined in the standard <complex> header file. 
+//  Reportedly, the C++ standards committee has recently agreed to mandate that the storage
+//  format used for this type be binary-compatible with the C99 type, i.e. an array T[2] with
+//  consecutive real [0] and imaginary [1] parts. If you have a variable std::complex<double> *x,
+//  you can pass it directly to FFTW via reinterpret_cast<fftw_complex*>(x).
+
 #  include <complex>
+
 #  include <fftw3.h>
 #  include <fftw3-mpi.h>
 #endif

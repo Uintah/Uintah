@@ -66,7 +66,7 @@ SPME::~SPME()
   for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); ++PatchIterator) {
     SPMEPatch* spmePatch = *PatchIterator;
 
-    SimpleGrid<complex<double> >* q = spmePatch->getQ();
+    SimpleGrid<std::complex<double> >* q = spmePatch->getQ();
     delete q;
 
     SimpleGrid<double>* theta = spmePatch->getTheta();
@@ -144,7 +144,7 @@ void SPME::setup(const ProcessorGroup* pg,
 
     // Check to make sure plusGhostExtents+minusGhostExtents is right way to enter number of ghost cells (i.e. total, not per offset)
     SimpleGrid<dblcomplex>* q = scinew SimpleGrid<dblcomplex>(patchKGridExtents, patchKGridOffset, 2 * splineHalfMaxSupport);
-    q->initialize(complex<double>(0.0, 0.0));
+    q->initialize(std::complex<double>(0.0, 0.0));
 
     // No ghost cells; internal only
     SimpleGrid<Matrix3>* stressPrefactor = scinew SimpleGrid<Matrix3>(patchKGridExtents, patchKGridOffset, 0);
@@ -268,7 +268,7 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
     // !FIXME Need to put Q in for reduction
     // We have now set up the real-space Q grid.
     // We need to store this patch's Q grid on the data warehouse (?) to pass through to the transform
-    SimpleGrid<complex<double> >* Q = spmePatch->getQ();
+    SimpleGrid<std::complex<double> >* Q = spmePatch->getQ();
 
     // Calculate Q(r)
     mapChargeToGrid(spmePatch, d_gridMap, pset, pcharge, d_interpolatingSpline.getHalfMaxSupport());
@@ -284,7 +284,7 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
   std::vector<SPMEPatch*>::iterator PatchIterator;
   for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
     SPMEPatch* spmePatch = *PatchIterator;
-    SimpleGrid<complex<double> >* Q = spmePatch->getQ();
+    SimpleGrid<std::complex<double> >* Q = spmePatch->getQ();
     SimpleGrid<double>* fTheta = spmePatch->getTheta();
     SimpleGrid<Matrix3>* stressPrefactor = spmePatch->getStressPrefactor();
 
@@ -307,10 +307,10 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
     for (size_t kX = 0; kX < xMax; ++kX) {
       for (size_t kY = 0; kY < yMax; ++kY) {
         for (size_t kZ = 0; kZ < zMax; ++kZ) {
-          complex<double> gridValue = (*Q)(kX, kY, kZ);
+          std::complex<double> gridValue = (*Q)(kX, kY, kZ);
 
           // Calculate (Q*Q^)*(B*C)
-          (*Q)(kX, kY, kZ) *= conj(gridValue) * (*fTheta)(kX, kY, kZ);
+          (*Q)(kX, kY, kZ) *= std::conj(gridValue) * (*fTheta)(kX, kY, kZ);
           spmeFourierEnergy += std::abs((*Q)(kX, kY, kZ));
           spmeFourierStress += std::abs((*Q)(kX, kY, kZ)) * (*stressPrefactor)(kX, kY, kZ);
         }
@@ -370,7 +370,7 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
     int ydim = extents[1];
     int zdim = extents[2];
 
-    fftw_complex* array_fft = (fftw_complex*)Q->getDataPtr();
+    fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
     d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_ESTIMATE);
     fftw_execute(d_forwardTransformPlan);
   }
@@ -392,7 +392,7 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
     int ydim = extents[1];
     int zdim = extents[2];
 
-    fftw_complex* array_fft = (fftw_complex*)Q->getDataPtr();
+    fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
     d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_ESTIMATE);
     fftw_execute(d_backwardTransformPlan);
   }
@@ -706,7 +706,7 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
                             ParticleVariable<Vector>& pforcenew,
                             int halfSupport)
 {
-  SimpleGrid<complex<double> >* Q = spmePatch->getQ();
+  SimpleGrid<std::complex<double> >* Q = spmePatch->getQ();
 
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
     particleIndex pidx = *iter;
