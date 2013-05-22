@@ -50,7 +50,7 @@ namespace Wasatch {
     turbulenceInputParams->getWithDefault("EddyViscosityConstant",turbParams.eddyViscosityConstant, 0.1);
     
     // get the kolmogorov scale
-    turbulenceInputParams->getWithDefault("KolmogorovScale",turbParams.kolmogorovScale, 1e100);    
+//    turbulenceInputParams->getWithDefault("KolmogorovScale",turbParams.kolmogorovScale, 1e100);    
 
     // get the turbulent Schmidt Number
     turbulenceInputParams->getWithDefault("TurbulentSchmidt",turbParams.turbulentSchmidt, 1.0);      

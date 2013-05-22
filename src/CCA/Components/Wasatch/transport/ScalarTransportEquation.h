@@ -239,11 +239,9 @@ namespace Wasatch{
     static std::string get_primvar_name( Uintah::ProblemSpecP params );
 
   private:
-    const bool isConstDensity_;
     const Expr::Tag densityTag_;
     Expr::Tag primVarTag_, solnVarTag_;
     bool isStrong_;
-
   };
 
 } // namespace Wasatch

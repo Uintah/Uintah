@@ -43,10 +43,11 @@ template< typename FieldT >
 class ConstantBC
 : public BoundaryConditionBase<FieldT>
 {
+public:
   ConstantBC( const double bcValue) :
   bcValue_(bcValue)
   {}
-public:
+
   class Builder : public Expr::ExpressionBuilder
   {
   public:
@@ -92,11 +93,27 @@ evaluate()
   FieldT& f = this->value();
   const double ci = this->ci_;
   const double cg = this->cg_;
-  
   std::vector<int>::const_iterator ig = (this->flatGhostPoints_).begin();    // ig is the ghost flat index
   std::vector<int>::const_iterator ii = (this->flatInteriorPoints_).begin(); // ii is the interior flat index
-  for( ; ig != (this->flatGhostPoints_).end(); ++ig, ++ii ){
-    f[*ig] = ( bcValue_- ci * f[*ii] ) / cg;
+//  if (this->isStaggered_) {
+//    std::cout << "--------------------------------------------------- \n";
+//    std::cout << "setting bc on " << this->name().name() << std::endl;
+//  }
+//  for( ; ig != (this->flatGhostPoints_).end(); ++ig, ++ii ){
+//    f[*ig] = ( bcValue_- ci * f[*ii] ) / cg;
+//    if (this->isStaggered_) {
+//      std::cout << "ci = " << ci << " cg = " << cg  << " fi = " << f[*ii] << std::endl;
+//      std::cout <<" bcvalue = " << bcValue_  <<" actual value = " << f[*ig] << std::endl;
+//    }
+//  }
+  if(this->isStaggered_) {
+    for( ; ig != (this->flatGhostPoints_).end(); ++ig, ++ii ){
+      f[*ig] = bcValue_;
+    }
+  } else {
+    for( ; ig != (this->flatGhostPoints_).end(); ++ig, ++ii ){
+      f[*ig] = ( bcValue_- ci * f[*ii] ) / cg;
+    }
   }
 }
 

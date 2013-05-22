@@ -43,8 +43,9 @@ template< typename FieldT >
 class BoundaryConditionBase
 : public Expr::Expression<FieldT>
 {
-  //BoundaryConditionBase(){}
 public:
+//  BoundaryConditionBase(){isStaggered_ = false;}
+  void set_staggered(bool staggered) { isStaggered_ = staggered; }
   void set_interior_coef( const double coef) { ci_ = coef;}
   void set_ghost_coef( const double coef) { cg_ = coef;}
   void set_interior_points( const std::vector<int> flatInteriorPoints ) {
@@ -58,6 +59,7 @@ public:
   }
 
 protected:
+  bool isStaggered_;
   double ci_, cg_;
   std::vector<int> flatInteriorPoints_;  
   std::vector<int> flatGhostPoints_;

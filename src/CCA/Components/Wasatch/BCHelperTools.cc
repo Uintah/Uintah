@@ -244,7 +244,9 @@ namespace Wasatch {
     // construct flat indices for staggered fields
     // NOTE ON STAGGERED FIELDS: To avoid random values in the ghost (extra) cell
     // layer, we also set the SAME BC on those faces if we have Dirichlet conditions.
-    if (isStaggered && bc_kind.compare("Dirichlet")==0) {
+    const bool normalAndStaggered = (isStaggered && bc_kind.compare("Dirichlet")==0);
+    if (normalAndStaggered) {
+      std::cout << "setting BC on " << fieldName << std::endl;
       for( std::vector<IntVec>::const_iterator interiorIJKIter = bcPointsIJK.begin(),
           ghostIJKIter = ghostPointsIJK.begin();
           interiorIJKIter != bcPointsIJK.end() && ghostIJKIter != ghostPointsIJK.end();
@@ -293,7 +295,14 @@ namespace Wasatch {
     BoundaryConditionBase<FieldT>& modExpr =
       dynamic_cast<BoundaryConditionBase<FieldT>&>( factory.retrieve_modifier_expression( modTag, patch->getID(), false ) );
 
+    
+    // this is needed for bc expressions that require global uintah indexing, e.g. TurbulentInletBC
+    const SCIRun::IntVector sciPatchCellOffset = patch->getCellLowIndex(0);
+    SpatialOps::structured::IntVec patchCellOffset(sciPatchCellOffset.x(), sciPatchCellOffset.y(), sciPatchCellOffset.z());
+    modExpr.set_patch_cell_offset(patchCellOffset);
+    
     // set the ghost and interior points as well as coefficients
+    modExpr.set_staggered( normalAndStaggered );
     modExpr.set_ghost_coef(cg);
     modExpr.set_ghost_points(flatGhostPoints);
     modExpr.set_interior_coef(ci);
@@ -412,7 +421,7 @@ namespace Wasatch {
     bc_functor_name="none";
     if (new_bcs != 0) {      // non-symmetric
       bc_value = new_bcs->getValue();
-      bc_kind =  new_bcs->getBCType();
+      bc_kind =  new_bcs->getBCType__NEW();
       bc_face_name = new_bcs->getBCFaceName();
       bc_functor_name = new_bcs->getFunctorName();
     }
@@ -807,7 +816,11 @@ namespace Wasatch {
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
                                     const Uintah::MaterialSubset* const materials,
-                                    const std::map<std::string, std::set<std::string> >& bcFunctorMap)
+                                    const std::map<std::string, std::set<std::string> >& bcFunctorMap,
+                                    std::string useFieldForBCIterator,
+                                    double useBCValue,
+                                    std::string useBCKind,
+                                    std::string useBCFunctorName)
   {
 
     /*
@@ -824,6 +837,13 @@ namespace Wasatch {
     namespace SS = SpatialOps::structured;
     typedef SS::ConstValEval BCEvaluator; // basic functor for constant functions.
     const std::string phiName = phiTag.name();
+    
+    bool useOtherField = useFieldForBCIterator.empty() ? false : true;
+    
+    if (useFieldForBCIterator.empty()) {
+      useFieldForBCIterator = fieldName;
+    }
+    
     // loop over local patches
     for( int ip=0; ip<localPatches->size(); ++ip ){
 
@@ -864,8 +884,8 @@ namespace Wasatch {
               // get the functor set associated with this field
               std::set<std::string>::iterator functorIter = (*iter).second.begin();
               while (functorIter != (*iter).second.end() ) {
-                std::string functorName = *functorIter;
-                Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
+                const std::string& functorName = *functorIter;
+                const Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
                 factory.attach_modifier_expression( modTag, phiTag, patch->getID(), true );
                 ++functorIter;
               }
@@ -881,11 +901,7 @@ namespace Wasatch {
 
           // loop over the boundary faces
           for( ; faceIterator!=bndFaces.end(); ++faceIterator ){
-            Uintah::Patch::FaceType face = *faceIterator;
-
-            //get the face direction
-            SCIRun::IntVector insideCellDir = patch->faceDirection(face);
-            //std::cout << "Inside Cell Dir: \n" << insideCellDir << std::endl;
+            const Uintah::Patch::FaceType face = *faceIterator;
 
             // get the number of children
             // jcs note that we need to do some error checking here.
@@ -908,7 +924,12 @@ namespace Wasatch {
               // ALSO NOTE: that even with staggered scalar Wasatch fields, there is NO additional ghost cell on the x+ face. So
               // nx_staggered = nx_scalar
               //
-              bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, fieldName, materialID, bc_value, bound_ptr, bc_kind, bc_name, bc_functor_name);
+              bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, useFieldForBCIterator, materialID, bc_value, bound_ptr, bc_kind, bc_name, bc_functor_name);
+              if (useOtherField) {
+                bc_value = useBCValue;
+                bc_kind = useBCKind;
+                bc_functor_name = useBCFunctorName;
+              }
               SS::IntVec faceOffset(0,0,0);
               if (foundIterator) {
                 process_bcs_on_face<FieldT> (bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, bc_name, bc_functor_name);
@@ -934,7 +955,10 @@ namespace Wasatch {
                             SVolField& poissonField,
                             SVolField& poissonRHS,
                             const Uintah::Patch* patch,
-                            const int material)
+                            const int material,
+                            const XVolField* dudt,
+                            const YVolField* dvdt,
+                            const ZVolField* dwdt)
   {
     /*
      ALGORITHM:
@@ -984,27 +1008,28 @@ namespace Wasatch {
         SCIRun::Iterator bound_ptr;
         const bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind,bc_name,bc_functor_name);
 
-        if (foundIterator) {
-
-          SCIRun::IntVector insideCellDir = patch->faceDirection(face);
-          const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
-
-          SS::IntVec bcPointGhostOffset(0,0,0);
-          double denom   = 1.0;
-          double spacing = 1.0;
+        SCIRun::IntVector insideCellDir = patch->faceDirection(face);
+        const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
         
-          switch( face ){
-            case Uintah::Patch::xminus:  bcPointGhostOffset[0] = hasExtraCells?  1 : -1;  spacing = dx; denom = dx2;  break;
-            case Uintah::Patch::xplus :  bcPointGhostOffset[0] = hasExtraCells? -1 :  1;  spacing = dx; denom = dx2;  break;
-            case Uintah::Patch::yminus:  bcPointGhostOffset[1] = hasExtraCells?  1 : -1;  spacing = dy; denom = dy2;  break;
-            case Uintah::Patch::yplus :  bcPointGhostOffset[1] = hasExtraCells? -1 :  1;  spacing = dy; denom = dy2;  break;
-            case Uintah::Patch::zminus:  bcPointGhostOffset[2] = hasExtraCells?  1 : -1;  spacing = dz; denom = dz2;  break;
-            case Uintah::Patch::zplus :  bcPointGhostOffset[2] = hasExtraCells? -1 :  1;  spacing = dz; denom = dz2;  break;
-            default:                                                                                                  break;
-          } // switch
+        SS::IntVec bcPointGhostOffset(0,0,0);
+        double denom   = 1.0;
+        double spacing = 1.0;
+        
+        switch( face ){
+          case Uintah::Patch::xminus:  bcPointGhostOffset[0] = hasExtraCells?  1 : -1;  spacing = dx; denom = dx2;  break;
+          case Uintah::Patch::xplus :  bcPointGhostOffset[0] = hasExtraCells? -1 :  1;  spacing = dx; denom = dx2;  break;
+          case Uintah::Patch::yminus:  bcPointGhostOffset[1] = hasExtraCells?  1 : -1;  spacing = dy; denom = dy2;  break;
+          case Uintah::Patch::yplus :  bcPointGhostOffset[1] = hasExtraCells? -1 :  1;  spacing = dy; denom = dy2;  break;
+          case Uintah::Patch::zminus:  bcPointGhostOffset[2] = hasExtraCells?  1 : -1;  spacing = dz; denom = dz2;  break;
+          case Uintah::Patch::zplus :  bcPointGhostOffset[2] = hasExtraCells? -1 :  1;  spacing = dz; denom = dz2;  break;
+          default:                                                                                                  break;
+        } // switch
+        
+        // cell offset used to calculate local cell index with respect to patch.
+        const SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
 
-          // cell offset used to calculate local cell index with respect to patch.
-          const SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
+
+        if (foundIterator) {
 
           if (bc_kind=="Dirichlet") {
             for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
@@ -1013,13 +1038,13 @@ namespace Wasatch {
               bc_point_indices = bc_point_indices - patchCellOffset;
               
               const SS::IntVec   intCellIJK( bc_point_indices[0],
-                                            bc_point_indices[1],
-                                            bc_point_indices[2] );
+                                             bc_point_indices[1],
+                                             bc_point_indices[2] );
               const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
-                                            bc_point_indices[1]+bcPointGhostOffset[1],
-                                            bc_point_indices[2]+bcPointGhostOffset[2] );
+                                             bc_point_indices[1]+bcPointGhostOffset[1],
+                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
-              const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+              const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells ? ghostCellIJK : intCellIJK  );
 //            const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
 //            const double ghostValue = 2.0*bc_value - poissonField[iInterior];
 //            poissonRHS[iInterior] += bc_value/denom;
@@ -1032,11 +1057,12 @@ namespace Wasatch {
               bc_point_indices = bc_point_indices - patchCellOffset;
                             
               const SS::IntVec   intCellIJK( bc_point_indices[0],
-                                            bc_point_indices[1],
-                                            bc_point_indices[2] );
+                                             bc_point_indices[1],
+                                             bc_point_indices[2] );
+              
               const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
-                                            bc_point_indices[1]+bcPointGhostOffset[1],
-                                            bc_point_indices[2]+bcPointGhostOffset[2] );
+                                             bc_point_indices[1]+bcPointGhostOffset[1],
+                                             bc_point_indices[2]+bcPointGhostOffset[2] );
               
               const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
 //            const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);
@@ -1046,6 +1072,63 @@ namespace Wasatch {
             }
           } else {
             return;
+          }
+        } else if (dudt || dvdt || dwdt) {
+          // if no bc was specified for the pressure, this implies that we have an inlet/wall
+          for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+            SCIRun::IntVector bc_point_indices(*bound_ptr);
+            
+            bc_point_indices = bc_point_indices - patchCellOffset;
+            
+            const SS::IntVec   intCellIJK( bc_point_indices[0],
+                                          bc_point_indices[1],
+                                          bc_point_indices[2] );
+            
+            const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
+                                           bc_point_indices[1]+bcPointGhostOffset[1],
+                                           bc_point_indices[2]+bcPointGhostOffset[2] );
+            
+            const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells ? ghostCellIJK : intCellIJK  );
+            
+            switch(face){
+              case Uintah::Patch::xminus:
+              {
+                const int ixInterior = dudt->window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK );
+                poissonRHS[iInterior]  += (*dudt)[ixInterior]/dx;
+              }
+                break;                
+              case Uintah::Patch::xplus:
+              {
+                const int ixInterior = dudt->window_without_ghost().flat_index( hasExtraCells? intCellIJK : ghostCellIJK  );
+                poissonRHS[iInterior]  -= (*dudt)[ixInterior]/dx;
+              }
+                break;
+                case Uintah::Patch::yminus:
+              {
+                const int iyInterior = dvdt->window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+                poissonRHS[iInterior]  += (*dvdt)[iyInterior]/dy;
+              }                
+                case Uintah::Patch::yplus:
+              {
+                const int iyInterior = dvdt->window_without_ghost().flat_index( hasExtraCells? intCellIJK : ghostCellIJK  );
+                poissonRHS[iInterior]  -= (*dvdt)[iyInterior]/dy;
+              }
+                break;
+                case Uintah::Patch::zminus:
+              {
+                const int izInterior = dwdt->window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+                poissonRHS[iInterior]  += (*dwdt)[izInterior]/dz;
+              }
+                break;                
+                case Uintah::Patch::zplus:
+              {
+                const int izInterior = dwdt->window_without_ghost().flat_index( hasExtraCells? intCellIJK : ghostCellIJK  );
+                poissonRHS[iInterior]  -= (*dwdt)[izInterior]/dz;
+              }
+                break;
+              default:
+                break;
+            }
           }
         }
       } // child loop
@@ -1144,7 +1227,7 @@ namespace Wasatch {
               default:                                                      break;
             }
           }
-        } else { // when no pressure BC is specified, it implies that we have wall. 
+        } else { // when no pressure BC is specified, it implies that we have a wall/inlet.
                  // note that when the face is periodic, then bound_ptr is empty
           for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
             SCIRun::IntVector bc_point_indices(*bound_ptr);
@@ -1405,7 +1488,12 @@ namespace Wasatch {
                                                        const Uintah::PatchSet* const localPatches,    \
                                                        const PatchInfoMap& patchInfoMap,              \
                                                        const Uintah::MaterialSubset* const materials, \
-                                                       const std::map<std::string, std::set<std::string> >& bcFunctorMap);
+                                                       const std::map<std::string, std::set<std::string> >& bcFunctorMap, \
+                                                       std::string useFieldForBCIterator,              \
+                                                       double useBCValue,                              \
+                                                       std::string useBCKind,                          \
+                                                       std::string useBCFunctorName);                 
+
 
   INSTANTIATE_PROCESS_BOUNDARY_CONDITIONS(SVolField);
   INSTANTIATE_PROCESS_BOUNDARY_CONDITIONS(XVolField);

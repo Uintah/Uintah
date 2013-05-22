@@ -84,7 +84,11 @@ namespace Wasatch {
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
                                     const Uintah::MaterialSubset* const materials,
-                                    const std::map<std::string, std::set<std::string> >& bcFunctorMap);
+                                    const std::map<std::string, std::set<std::string> >& bcFunctorMap,
+                                    std::string useFieldForBCIterator="",
+                                    double useBCValue=0,
+                                    std::string useBCKind="",
+                                    std::string useBCFunctorName="");
   /**
    *  \ingroup WasatchCore
    *
@@ -112,7 +116,10 @@ namespace Wasatch {
                             SVolField& poissonField,
                             SVolField& poissonRHS,
                             const Uintah::Patch* patch,
-                            const int material);
+                            const int material,
+                            const XVolField* dudt=NULL,
+                            const YVolField* dvdt=NULL,
+                            const ZVolField* dwdt=NULL);
 
   /**
    *  \ingroup WasatchCore

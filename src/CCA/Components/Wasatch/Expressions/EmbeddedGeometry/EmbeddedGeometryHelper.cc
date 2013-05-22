@@ -32,7 +32,6 @@
 #include "EmbeddedGeometryHelper.h"
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/StringNames.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/OscillatingCylinder.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/GeometryPieceWrapper.h>

@@ -44,7 +44,8 @@ namespace Wasatch{
   void register_turbulence_expressions (const TurbulenceParameters& turbParams,
                                         Expr::ExpressionFactory& factory,
                                         const Expr::TagList& velTags,
-                                        const Expr::Tag densTag);    
+                                        const Expr::Tag densTag,
+                                        const bool isConstDensity);
   /**
    *  \ingroup WasatchCore
    *  \class MomentumTransportEquation
@@ -82,6 +83,7 @@ namespace Wasatch{
                                TurbulenceParameters turbulenceParams,
                                const bool hasEmbeddedGeometry,
                                const bool hasMovingGeometry,
+                               const bool isConstDensity,
                                const Expr::ExpressionID rhsID,
                                Uintah::SolverInterface& linSolver,
                                Uintah::SimulationStateP sharedState);
@@ -135,7 +137,7 @@ namespace Wasatch{
     const bool isviscous_;
     const bool isTurbulent_;
     const Expr::Tag thisVelTag_, densityTag_;
-    Expr::ExpressionID normalStressID_, normalConvFluxID_, pressureID_;
+    Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_;
     std::string thisMomName_;
     Expr::TagList velTags_;  ///< TagList for the velocity expressions
 

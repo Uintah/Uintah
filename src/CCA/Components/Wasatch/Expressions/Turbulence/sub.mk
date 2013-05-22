@@ -27,10 +27,12 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR   := CCA/Components/Wasatch/Expressions/Turbulence
+SRCDIR := CCA/Components/Wasatch/Expressions/Turbulence
 
-SRCS     +=                         \
-	$(SRCDIR)/TurbulentViscosity.cc		\
-	$(SRCDIR)/TurbulentDiffusivity.cc	\
-	$(SRCDIR)/StrainTensorMagnitude.cc 	\
- $(SRCDIR)/TurbulenceParameters.cc
+SRCS += \
+        $(SRCDIR)/TurbulentViscosity.cc             \
+        $(SRCDIR)/TurbulentDiffusivity.cc           \
+        $(SRCDIR)/StrainTensorBase.cc               \
+        $(SRCDIR)/StrainTensorMagnitude.cc          \
+        $(SRCDIR)/DynamicSmagorinskyCoefficient.cc  \
+        $(SRCDIR)/TurbulenceParameters.cc

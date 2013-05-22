@@ -96,20 +96,30 @@ evaluate()
   FieldT& dil = this->value();
   dil <<= 0.0;
   if( vel1t_ != Expr::Tag() ){
-    vel1GradOp_->apply_to_field( *vel1_, dil );
+    dil <<= (*vel1GradOp_)(*vel1_);
   }
   if( vel2t_ != Expr::Tag() ){
-    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( dil );
-    *tmp <<= 0.0;
-    vel2GradOp_->apply_to_field( *vel2_, *tmp );
-    dil <<= dil + *tmp;
+    dil <<= dil + (*vel2GradOp_)(*vel2_);
   }
   if( vel3t_ != Expr::Tag() ){
-    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( dil );
-    *tmp <<= 0.0;
-    vel3GradOp_->apply_to_field( *vel3_, *tmp );
-    dil <<= dil + *tmp;
+    dil <<= dil + (*vel3GradOp_)(*vel3_);
   }
+  
+//  if( vel1t_ != Expr::Tag() ){
+//    vel1GradOp_->apply_to_field( *vel1_, dil );
+//  }
+//  if( vel2t_ != Expr::Tag() ){
+//    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( dil );
+//    *tmp <<= 0.0;
+//    vel2GradOp_->apply_to_field( *vel2_, *tmp );
+//    dil <<= dil + *tmp;
+//  }
+//  if( vel3t_ != Expr::Tag() ){
+//    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( dil );
+//    *tmp <<= 0.0;
+//    vel3GradOp_->apply_to_field( *vel3_, *tmp );
+//    dil <<= dil + *tmp;
+//  }
 }
 
 //--------------------------------------------------------------------
