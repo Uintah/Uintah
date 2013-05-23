@@ -39,7 +39,6 @@
 #include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorBase.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/DynamicSmagorinskyCoefficient.h>
-#include <CCA/Components/Wasatch/OldVariable.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BCCopier.h>

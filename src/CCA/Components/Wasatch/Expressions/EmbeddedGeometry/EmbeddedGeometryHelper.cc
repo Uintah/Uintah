@@ -37,6 +37,7 @@
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/GeometryPieceWrapper.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/AreaFraction.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <CCA/Components/Wasatch/OldVariable.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -78,6 +79,8 @@ namespace Wasatch{
 
       // we only allow the ENTIRE geometry to be inverted, not per intrusion
       bool inverted = geomParams->findBlock("Inverted");
+      
+      bool movingGeom = geomParams->findBlock("MovingGeometry");
 
       // check if we have external volume fractions
       if ( geomParams->findBlock("External") ) {
@@ -116,8 +119,8 @@ namespace Wasatch{
           std::string axis;
           valParams->get("Axis",axis);
           typedef OscillatingCylinder::Builder Builder;
-          volFracBuilder = scinew Builder( vNames.svol_frac_tag(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
           volFracBuilderInit = scinew Builder( vNames.svol_frac_tag(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
+          if (movingGeom) volFracBuilder = scinew Builder( vNames.svol_frac_tag(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
         }
         
       } else {
@@ -131,12 +134,12 @@ namespace Wasatch{
         }
         typedef GeometryPieceWrapper::Builder svolfracBuilder;        
         volFracBuilderInit = scinew svolfracBuilder( vNames.svol_frac_tag(), geomObjects, inverted );
-        volFracBuilder = scinew svolfracBuilder( vNames.svol_frac_tag(), geomObjects, inverted );
+        if (movingGeom) volFracBuilder = scinew svolfracBuilder( vNames.svol_frac_tag(), geomObjects, inverted );
       }
       
       // register the volume fractions
       initgh->exprFactory->register_expression( volFracBuilderInit );
-      solngh->exprFactory->register_expression( volFracBuilder );
+      if (movingGeom) solngh->exprFactory->register_expression( volFracBuilder );
       
       // register the area fractions
       typedef AreaFraction<XVolField>::Builder xvolfracBuilder;
@@ -146,16 +149,24 @@ namespace Wasatch{
       initgh->exprFactory->register_expression( scinew xvolfracBuilder( vNames.xvol_frac_tag(), vNames.svol_frac_tag() ) );
       initgh->exprFactory->register_expression( scinew yvolfracBuilder( vNames.yvol_frac_tag(), vNames.svol_frac_tag() ) );
       initgh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.zvol_frac_tag(), vNames.svol_frac_tag() ) );
-      
-      solngh->exprFactory->register_expression( scinew xvolfracBuilder( vNames.xvol_frac_tag(), vNames.svol_frac_tag() ) );
-      solngh->exprFactory->register_expression( scinew yvolfracBuilder( vNames.yvol_frac_tag(), vNames.svol_frac_tag() ) );
-      solngh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.zvol_frac_tag(), vNames.svol_frac_tag() ) );
+
+      if (movingGeom) {
+        solngh->exprFactory->register_expression( scinew xvolfracBuilder( vNames.xvol_frac_tag(), vNames.svol_frac_tag() ) );
+        solngh->exprFactory->register_expression( scinew yvolfracBuilder( vNames.yvol_frac_tag(), vNames.svol_frac_tag() ) );
+        solngh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.zvol_frac_tag(), vNames.svol_frac_tag() ) );
+      } else {
+        OldVariable& oldVar = OldVariable::self();
+        oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, vNames.svol_frac_tag(), true);
+        oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, vNames.xvol_frac_tag(), true);
+        oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, vNames.yvol_frac_tag(), true);
+        oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, vNames.zvol_frac_tag(), true);
+      }
       
       // force on graph
-      //initgh->rootIDs.insert( initgh->exprFactory->get_id( svol_frac_tagN() ) );
       initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.xvol_frac_tag() ) );
       initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.yvol_frac_tag() ) );
       initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.zvol_frac_tag() ) );
+      
     }
   }
   
