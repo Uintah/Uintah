@@ -8917,6 +8917,36 @@ status open
 \end_inset
 
  specification for the boundary conditions.
+ The 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+period
+\end_layout
+
+\end_inset
+
+ specifies the number of timesteps at which the next turbulent data is loaded
+ into the turbulent inlet while the 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+timeperiod
+\end_layout
+
+\end_inset
+
+ specifies after how many seconds the next turbulent data is loaded.
+ Both of these are optional and if omitted, the data is loaded at every
+ timestep.
+ When the turbulent data file is parsed entirely, the data is repeated from
+ the begining.
 \end_layout
 
 \begin_layout Chapter
