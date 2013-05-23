@@ -695,6 +695,13 @@ case $host in
     NUM_CPUS=2
     IS_OSX="yes"
     DEF_OSX="#define IS_OSX 1"
+
+    # New Mac Clang comiler does not support the -faltivec flag...
+    altivec="-faltivec"
+    $CC --version | grep -q -i clang > /dev/null 2>&1
+    if test $? = 0; then
+      altivec="" 
+    fi
     ;;
   *-aix*)
     NUM_CPUS=4
@@ -2903,7 +2910,7 @@ if test ! "$HAVE_BLAS"; then
          AC_MSG_ERROR(Don't specify a path for atlas when on a Mac (we use vecLib by default.))
        fi
        SCI_TRY_LINK(BLAS,atlas version of libraries and headers (OSX),vecLib/cblas.h,
-                    -faltivec,,,-framework vecLib,[
+                    $altivec,,,-framework vecLib,[
                                                    float x[]={0.7f};
                                                    float y[]={0.8f};
                                                    float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
@@ -3049,9 +3056,9 @@ if test "$HAVE_LAPACK" != "yes"; then
   case $host in
     *-darwin*)
        SCI_TRY_LINK(LAPACK,lapack version oflibraries and headers,
-                    vecLib/clapack.h,,,,-faltivec -framework vecLib,,optional)
+                    vecLib/clapack.h,,,,$altivec -framework vecLib,,optional)
        if test "$HAVE_LAPACK" = yes ; then
-          LAPACK_LIB_FLAG="-faltivec -framework vecLib"
+          LAPACK_LIB_FLAG="$altivec -framework vecLib"
        fi
        ;;
      *)
