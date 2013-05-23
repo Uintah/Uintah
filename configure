@@ -4126,6 +4126,13 @@ $as_echo "no ($_SCI_REPORT_)" >&6; }
     NUM_CPUS=2
     IS_OSX="yes"
     DEF_OSX="#define IS_OSX 1"
+
+    # New Mac Clang comiler does not support the -faltivec flag...
+    altivec="-faltivec"
+    $CC --version | grep -q -i clang > /dev/null 2>&1
+    if test $? = 0; then
+      altivec=""
+    fi
     ;;
   *-aix*)
     NUM_CPUS=4
@@ -27432,7 +27439,7 @@ if test ! "$HAVE_BLAS"; then
 ## arg 1 : BLAS
 ## arg 2 : atlas version of libraries and headers (OSX)
 ## arg 3 : vecLib/cblas.h
-## arg 4 : -faltivec
+## arg 4 : $altivec
 ## arg 5 :
 ## arg 6 :
 ## arg 7 : -framework vecLib
@@ -27468,9 +27475,9 @@ if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_s
      as_fn_error $? "Last parameter of SCI-TRY-LINK for atlas version of libraries and headers (OSX) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
-# If -faltivec (the -I paths) is blank, do nothing, else do the for statement.
+# If $altivec (the -I paths) is blank, do nothing, else do the for statement.
 
-for inc in -faltivec; do
+for inc in $altivec; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
@@ -27488,8 +27495,8 @@ for inc in -faltivec; do
         # Has some other -?.
         if test "$debugging" = "yes"; then
           echo
-          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -I options are allowed in arg 4 (-faltivec) of BLAS check.  Skipping $inc." >&5
-$as_echo "$as_me: WARNING: Only -I options are allowed in arg 4 (-faltivec) of BLAS check.  Skipping $inc." >&2;}
+          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Only -I options are allowed in arg 4 ($altivec) of BLAS check.  Skipping $inc." >&5
+$as_echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($altivec) of BLAS check.  Skipping $inc." >&2;}
         fi
         continue
      fi
@@ -27620,10 +27627,10 @@ if test "$_sci_optional" = "specific"; then
        as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
-  ### Determine if there is only one item in -faltivec
+  ### Determine if there is only one item in $altivec
   __sci_pass=false
   __sci_first_time=true
-  for value in "" -faltivec; do
+  for value in "" $altivec; do
     if test "$value" = ""; then
       continue
     fi
@@ -27634,8 +27641,8 @@ if test "$_sci_optional" = "specific"; then
       __sci_pass=false
     fi
   done
-  if test -n "-faltivec" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: -faltivec).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+  if test -n "$altivec" && test $__sci_pass != "true"; then
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $altivec).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -27803,9 +27810,9 @@ if test "$_sci_optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
   for i in "" vecLib/cblas.h; do
-    #echo looking for -faltivec/$i
-    if test ! -e -faltivec/$i; then
-     as_fn_error $? "Specifically requested BLAS include file '-faltivec/$i' was not found" "$LINENO" 5
+    #echo looking for $altivec/$i
+    if test ! -e $altivec/$i; then
+     as_fn_error $? "Specifically requested BLAS include file '$altivec/$i' was not found" "$LINENO" 5
     fi
   done
   # Make sure the exact libraries were found
@@ -31753,7 +31760,7 @@ if test "$HAVE_LAPACK" != "yes"; then
 ## arg 4 :
 ## arg 5 :
 ## arg 6 :
-## arg 7 : -faltivec -framework vecLib
+## arg 7 : $altivec -framework vecLib
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -31933,7 +31940,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs -faltivec -framework vecLib $LIBS"
+LIBS="$_sci_libs $altivec -framework vecLib $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -32115,7 +32122,7 @@ _sci_includes=''
 
 
        if test "$HAVE_LAPACK" = yes ; then
-          LAPACK_LIB_FLAG="-faltivec -framework vecLib"
+          LAPACK_LIB_FLAG="$altivec -framework vecLib"
        fi
        ;;
      *)
