@@ -22,31 +22,39 @@
  * IN THE SOFTWARE.
  */
 
-/**
- *  @class MD
- *  @ingroup MD
- *  @author Alan Humphrey and Justin Hooper (after Steve Parker)
- *  @date   May, 2013
- *
- *  @brief Interface to streamlined dynamic 3D array class.
- *
- *  @param
- */
-
-#ifndef UINTAH_MD_ELECTROSTATICS_SPME_ARRAY3_H
-#define UINTAH_MD_ELECTROSTATICS_SPME_ARRAY3_H
+#ifndef SCI_CONTAINERS_LINEARARRAY3_h
+#define SCI_CONTAINERS_LINEARARRAY3_h
 
 #include <Core/Util/Assert.h>
-
-#include <iostream>
-#include <stdio.h>
-#include <complex>
 
 namespace Uintah {
 
 using namespace SCIRun;
 
-template<class T> class SPMEArray3 {
+/**************************************
+
+ CLASS
+ LinearArray3
+
+ GENERAL INFORMATION
+
+ LinearArray3.h
+
+ Alan Humphrey, after Steven G. Parker
+ Department of Computer Science
+ University of Utah
+
+ KEYWORDS
+ LInearArray3
+
+ DESCRIPTION
+ Interface to streamlined dynamic linearized 3D array class.
+
+ WARNING
+
+ ****************************************/
+
+template<class T> class LinearArray3 {
 
   public:
 
@@ -54,23 +62,29 @@ template<class T> class SPMEArray3 {
      * @brief Default constructor
      * @param none
      */
-    SPMEArray3();
+    LinearArray3();
 
     /**
      * @brief 3 argument constructor
-     * @param dim1 The first dimension of this SPMEArray3
-     * @param dim2 The second dimension of this SPMEArray3
-     * @param dim3 The third dimension of this SPMEArray3
+     * @param dim1 The first dimension of this LinearArray3
+     * @param dim2 The second dimension of this LinearArray3
+     * @param dim3 The third dimension of this LinearArray3
      */
-    SPMEArray3(int dim1,
-               int dim2,
-               int dim3);
+    LinearArray3(int dim1,
+                 int dim2,
+                 int dim3);
+
+    /**
+     * @brief Copy constructor
+     * @param copy The LinearArray3 object to copy from
+     */
+    LinearArray3(const LinearArray3& copy);
 
     /**
      * @brief Destructor
      * @param None
      */
-    ~SPMEArray3();
+    ~LinearArray3();
 
     /**
      * @brief Access the nXnXn element of the linearized 3D array
@@ -83,19 +97,10 @@ template<class T> class SPMEArray3 {
                          int d2,
                          int d3) const
     {
-      ASSERTL3(d1>=0 && d1<dm1);
-      ASSERTL3(d2>=0 && d2<dm2);
-      ASSERTL3(d3>=0 && d3<dm3);
+      ASSERTL3(d1>=0 && d1<dm1); ASSERTL3(d2>=0 && d2<dm2); ASSERTL3(d3>=0 && d3<dm3);
       int idx = (d1) + ((d2) * dm1) + ((d3) * dm1 * dm2);
       return objs[idx];
     }
-
-    /**
-     * @brief SPMEArray3 copy method
-     * @param copy The SPMEArray3 source object to copy from
-     * @return None
-     */
-    void copy(const SPMEArray3& copy);
 
     /**
      * @brief Returns the number of elements in dimension 1
@@ -128,9 +133,9 @@ template<class T> class SPMEArray3 {
     }
 
     /**
-     * @brief Returns the size in bytes of this SPMEArray3
+     * @brief Returns the size in bytes of this LinearArray3
      * @param None
-     * @return The size in bytes of this SPMEArray3
+     * @return The size in bytes of this LinearArray3
      */
     inline long get_datasize() const
     {
@@ -139,9 +144,9 @@ template<class T> class SPMEArray3 {
 
     /**
      * @brief Resize the linearized 3D objects array
-     * @param dim1 The first dimension of the new SPMEArray3
-     * @param dim2 The second dimension of the new SPMEArray3
-     * @param dim3 The third dimension of the new SPMEArray3
+     * @param dim1 The first dimension of the new LinearArray3
+     * @param dim2 The second dimension of the new LinearArray3
+     * @param dim3 The third dimension of the new LinearArray3
      */
     void resize(int dim1,
                 int dim2,
@@ -164,30 +169,33 @@ template<class T> class SPMEArray3 {
       return objs;
     }
 
+    /**
+     * @brief Assignment operator
+     * @param other The assignee of this assignment operation
+     * @return A reference to the new LinearArray3 object after assignment
+     */
+    inline LinearArray3<T>& operator=(const LinearArray3& other)
+    {
+      resize(other.dim1(), other.dim2(), other.dim3());
+      for (int i = 0; i < dm1; i++) {
+        for (int j = 0; j < dm2; j++) {
+          for (int k = 0; k < dm3; k++) {
+            int idx = (i) + ((j) * dm1) + ((k) * dm1 * dm2);
+            objs[idx] = other.objs[idx];
+          }
+        }
+      }
+      return *this;
+    }
+
   private:
 
     T* objs;
     int dm1;
     int dm2;
     int dm3;
+
     void allocate();
-
-    // The copy constructor and the assignment operator have been
-    // privatized on purpose -- no one should use these.  Instead,
-    // use the default constructor and the copy method.
-
-    /**
-     * @brief Copy Constructor
-     * @param copy The SPMEArray3 object to copy from
-     */
-    SPMEArray3(const SPMEArray3& copy);
-
-    /**
-     * @brief Assignment operator
-     * @param other The assignee of this assignment operation
-     * @return A reference to the new SPMEArray3 object after assignment
-     */
-    SPMEArray3<T>& operator=(const SPMEArray3& other);
 
 };
 

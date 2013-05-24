@@ -25,7 +25,7 @@
 #ifndef UINTAH_MD_SIMPLEGRID_H
 #define UINTAH_MD_SIMPLEGRID_H
 
-#include <CCA/Components/MD/SPMEArray3.h>
+#include <Core/Containers/LinearArray3.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Util/Assert.h>
@@ -370,7 +370,7 @@ template<typename T> class SimpleGrid {
      */
     inline SimpleGrid<T>& operator=(const SimpleGrid<T>& copy)
     {
-      d_values.copy(copy.d_values);  // SCIRun::Array3 assignment operator is private
+      d_values = copy.d_values;
       d_gridExtents = copy.d_gridExtents;
       d_gridOffset = copy.d_gridOffset;
       d_numGhostCells_ = copy.d_numGhostCells_;
@@ -386,7 +386,7 @@ template<typename T> class SimpleGrid {
 
   private:
 
-    SPMEArray3<T> d_values;       //!< Grid cell values
+    LinearArray3<T> d_values;     //!< Grid cell values
     IntVector d_gridExtents;      //!< Stores the number of total grid points in this grid
     IntVector d_gridOffset;       //!< Stores the offset pointer for the first point in this grid in reference to the global grid
     int d_numGhostCells_;         //!< The number of ghost cells for the patch the associated points are on
