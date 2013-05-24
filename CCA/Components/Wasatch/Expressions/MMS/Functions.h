@@ -433,7 +433,7 @@ evaluate()
   // to take care of comparing doubles, use a tolerance value for min & max (see below)
   const double eps = 2.0*std::numeric_limits<double>::epsilon();
 //  int size = 0;
-  while ( gzeof(inputFile) == 0 ) { // check for end of file
+  while ( !gzeof( inputFile ) ) { // check for end of file
     x   = Uintah::getDouble(inputFile);
     y   = Uintah::getDouble(inputFile);
     z   = Uintah::getDouble(inputFile);
@@ -444,7 +444,7 @@ evaluate()
       ++phiiter;
 //      size++;
     }        
-  }  
+  }
 //  const int pid =  Uintah::Parallel::getMPIRank();
 //  std::cout << "Processor: " << pid << " collected total cells: "<< size << std::endl;
   gzclose( inputFile );     
