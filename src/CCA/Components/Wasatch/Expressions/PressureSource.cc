@@ -15,9 +15,9 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
                                 const Expr::Tag timestepTag )
 : Expr::Expression<SVolField>(),
   isConstDensity_( isConstDensity ),
-  haveX_      ( momTags[0]!=Expr::Tag() ),
-  haveY_      ( momTags[1]!=Expr::Tag() ),
-  haveZ_      ( momTags[2]!=Expr::Tag() ),
+  doX_      ( momTags[0]!=Expr::Tag() ),
+  doY_      ( momTags[1]!=Expr::Tag() ),
+  doZ_      ( momTags[2]!=Expr::Tag() ),
   xMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[0]     ),
   yMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[1]     ),
   zMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[2]     ),
@@ -41,17 +41,17 @@ PressureSource::~PressureSource()
 void PressureSource::advertise_dependents( Expr::ExprDeps& exprDeps )
 {  
   if (!isConstDensity_) {
-    if( haveX_ )  
+    if( doX_ )  
     {
       exprDeps.requires_expression( xMomt_ );
       exprDeps.requires_expression( xVelStart_ );
     }
-    if( haveY_ )
+    if( doY_ )
     {
       exprDeps.requires_expression( yMomt_ );
       exprDeps.requires_expression( yVelStart_ );
     }  
-    if( haveZ_ )
+    if( doZ_ )
     {
       exprDeps.requires_expression( zMomt_ );
       exprDeps.requires_expression( zVelStart_ );
@@ -81,20 +81,20 @@ void PressureSource::bind_fields( const Expr::FieldManagerList& fml )
     const Expr::FieldMgrSelector<YVolField>::type& yVolFM  = fml.field_manager<YVolField>();
     const Expr::FieldMgrSelector<ZVolField>::type& zVolFM  = fml.field_manager<ZVolField>(); 
     
-    if( haveX_ )  
+    if( doX_ )  
     {
       xMom_  = &xVolFM.field_ref( xMomt_ );
-      xVelStar_  = &xVolFM.field_ref( xVelStart_ );    
+      uStar_  = &xVolFM.field_ref( xVelStart_ );
     }
-    if( haveY_ )    
+    if( doY_ )    
     {
       yMom_ = &yVolFM.field_ref( yMomt_ );
-      yVelStar_ = &yVolFM.field_ref( yVelStart_ );    
+      vStar_ = &yVolFM.field_ref( yVelStart_ );
     }
-    if( haveZ_ )   
+    if( doZ_ )   
     {
       zMom_ = &zVolFM.field_ref( zMomt_ );
-      zVelStar_ = &zVolFM.field_ref( zVelStart_ );    
+      wStar_ = &zVolFM.field_ref( zVelStart_ );
     }
     
     densStar_ = &scalarFM.field_ref( densStart_ );
@@ -114,20 +114,20 @@ void PressureSource::bind_fields( const Expr::FieldManagerList& fml )
 void PressureSource::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   if (!isConstDensity_) {
-    if( haveX_ ) {
+    if( doX_ ) {
       divXOp_         = opDB.retrieve_operator<DivXT>();
-      xFaceInterpOp_  = opDB.retrieve_operator<XFaceInterpT>();
-      scalar2XFInterpOp_ = opDB.retrieve_operator<Scalar2XFInterpT>();
+      xFInterpOp_  = opDB.retrieve_operator<XFaceInterpT>();
+      s2XFInterpOp_ = opDB.retrieve_operator<Scalar2XFInterpT>();
     }
-    if( haveY_ ) {
+    if( doY_ ) {
       divYOp_          = opDB.retrieve_operator<DivYT>();
-      yFaceInterpOp_   = opDB.retrieve_operator<YFaceInterpT>();
-      scalar2YFInterpOp_ = opDB.retrieve_operator<Scalar2YFInterpT>();
+      yFInterpOp_   = opDB.retrieve_operator<YFaceInterpT>();
+      s2YFInterpOp_ = opDB.retrieve_operator<Scalar2YFInterpT>();
     }
-    if( haveZ_ ) {
+    if( doZ_ ) {
       divZOp_          = opDB.retrieve_operator<DivZT>();
-      zFaceInterpOp_   = opDB.retrieve_operator<ZFaceInterpT>();
-      scalar2ZFInterpOp_ = opDB.retrieve_operator<Scalar2ZFInterpT>();
+      zFInterpOp_   = opDB.retrieve_operator<ZFaceInterpT>();
+      s2ZFInterpOp_ = opDB.retrieve_operator<Scalar2ZFInterpT>();
     }
   }
 }
@@ -138,76 +138,25 @@ void PressureSource::evaluate()
 {
   using namespace SpatialOps;
   SVolField& result = this->value();
-  result <<= 0.0;
+  if (!doX_)  result <<= 0.0;
   
   if (!isConstDensity_) {
-    SpatialOps::SpatFldPtr<SVolField> tmp  = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-    SpatialOps::SpatFldPtr<SVolField> tmp1 = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-    SpatialOps::SpatFldPtr<SVolField> tmp2 = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-    SpatialOps::SpatFldPtr<SVolField> tmp3 = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-    SpatialOps::SpatFldPtr<SVolField> tmp4 = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-    SpatialOps::SpatFldPtr<SVolField> tmp5 = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-    SpatialOps::SpatFldPtr<XFace> xftmp  = SpatialOps::SpatialFieldStore::get<XFace>( result );
-    SpatialOps::SpatFldPtr<XFace> xftmp1 = SpatialOps::SpatialFieldStore::get<XFace>( result );
-    SpatialOps::SpatFldPtr<XFace> xftmp2 = SpatialOps::SpatialFieldStore::get<XFace>( result );
-    SpatialOps::SpatFldPtr<YFace> yftmp  = SpatialOps::SpatialFieldStore::get<YFace>( result );
-    SpatialOps::SpatFldPtr<YFace> yftmp1 = SpatialOps::SpatialFieldStore::get<YFace>( result );
-    SpatialOps::SpatFldPtr<YFace> yftmp2 = SpatialOps::SpatialFieldStore::get<YFace>( result );
-    SpatialOps::SpatFldPtr<ZFace> zftmp  = SpatialOps::SpatialFieldStore::get<ZFace>( result );
-    SpatialOps::SpatFldPtr<ZFace> zftmp1 = SpatialOps::SpatialFieldStore::get<ZFace>( result );
-    SpatialOps::SpatFldPtr<ZFace> zftmp2 = SpatialOps::SpatialFieldStore::get<ZFace>( result );
 
-    double alpha = 0.1;   // the continuity equation weighting factor 
+    const double alpha = 0.1;   // the continuity equation weighting factor
 
-    if( haveX_ ){
-      *xftmp <<= 0.0;
-      *tmp <<= 0.0;
-      *xftmp1 <<= 0.0;
-      *xftmp2 <<= 0.0;
-      *tmp1 <<=0.0;
-      xFaceInterpOp_->apply_to_field( *xMom_, *xftmp );
-      divXOp_->apply_to_field( *xftmp, *tmp );
-      result <<= result + *tmp;                 // P_src = nabla.(rho*u)^n
-      
-      scalar2XFInterpOp_->apply_to_field( *densStar_, *xftmp2 );
-      xFaceInterpOp_->apply_to_field( *xVelStar_, *xftmp1 );
-      *xftmp1 <<= *xftmp1 * *xftmp2;
-      divXOp_->apply_to_field( *xftmp1, *tmp1 );
-      result <<= result - (1-alpha) * *tmp1;    // P_src = nabla.(rho*u)^n - (1-alpha) * nabla.(rho*u)^(n+1)
+    if( doX_ ){
+      // P_src = nabla.(rho*u)^n - (1-alpha) * nabla.(rho*u)^(n+1)
+      result <<= (*divXOp_)( (*xFInterpOp_)(*xMom_) ) - (1.0 - alpha) * (*divXOp_) ( (*s2XFInterpOp_)(*densStar_) * (*xFInterpOp_)(*uStar_) );
     }
     
-    if( haveY_ ){
-      *yftmp <<= 0.0;
-      *tmp2 <<= 0.0;
-      *yftmp1 <<= 0.0;
-      *yftmp2 <<= 0.0;
-      *tmp3 <<= 0.0;
-      yFaceInterpOp_->apply_to_field( *yMom_, *yftmp );
-      divYOp_->apply_to_field( *yftmp, *tmp2 );
-      result <<= result + *tmp2;                // P_src = P_src + nabla.(rho*v)^n
-      
-      scalar2YFInterpOp_->apply_to_field( *densStar_, *yftmp2 );
-      yFaceInterpOp_->apply_to_field( *yVelStar_, *yftmp1 );
-      *yftmp1 <<= *yftmp1 * *yftmp2;
-      divYOp_->apply_to_field( *yftmp1, *tmp3 );
-      result <<= result - (1-alpha) * *tmp3;    // P_src = P_src + nabla.(rho*v)^n - (1-alpha) * nabla.(rho*v)^(n+1)
+    if( doY_ ){
+      // P_src = P_src + nabla.(rho*v)^n - (1-alpha) * nabla.(rho*v)^(n+1)
+      result <<= result - (*divYOp_)( (*yFInterpOp_)(*yMom_) ) - (1.0 - alpha) * (*divYOp_) ( (*s2YFInterpOp_)(*densStar_) * (*yFInterpOp_)(*vStar_) );
     }
     
-    if( haveZ_ ){
-      *zftmp <<= 0.0;
-      *tmp4 <<= 0.0;
-      *zftmp1 <<= 0.0;
-      *zftmp2 <<= 0.0;
-      *tmp5 <<= 0.0;
-      zFaceInterpOp_->apply_to_field( *zMom_, *zftmp );
-      divZOp_->apply_to_field( *zftmp, *tmp4 );
-      result <<= result + *tmp4;                // P_src = P_src + nabla.(rho*w)^n
-      
-      scalar2ZFInterpOp_->apply_to_field( *densStar_, *zftmp2 );
-      zFaceInterpOp_->apply_to_field( *zVelStar_, *zftmp1 );
-      *zftmp1 <<= *zftmp1 * *zftmp2;
-      divZOp_->apply_to_field( *zftmp1, *tmp5 );
-      result <<= result - (1-alpha) * *tmp5;    // P_src = P_src + nabla.(rho*w)^n - (1-alpha) * nabla.(rho*w)^(n+1)
+    if( doZ_ ){
+      // P_src = P_src + nabla.(rho*w)^n - (1-alpha) * nabla.(rho*w)^(n+1)      
+      result <<= result - (*divZOp_)( (*zFInterpOp_)(*zMom_) ) - (1.0 - alpha) * (*divZOp_) ( (*s2ZFInterpOp_)(*densStar_) * (*zFInterpOp_)(*wStar_) );
     }
     
     result <<= result + alpha * ((*dens2Star_ - *dens_)/(2 * *timestep_));  // P_src = P_src + alpha * (drho/dt)^(n+1)
@@ -215,6 +164,7 @@ void PressureSource::evaluate()
   else {
     result <<= *dens_ * *dil_;
   }
+  
   result <<= result / *timestep_ ;
   
 }
