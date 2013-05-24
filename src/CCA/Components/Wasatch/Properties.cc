@@ -251,7 +251,6 @@ namespace Wasatch{
       if (doDenstPlus && cat==ADVANCE_SOLUTION) {    
         // Here the soln variables in density weighted form will be separated to generate rhoEta at the "*" stage
         const TagNames& tagNames = TagNames::self();
-        bool found;
         for ( Expr::TagList::const_iterator i=rhoEtaTags.begin(); i!=rhoEtaTags.end(); ++i ){
           const Expr::Tag rhoEtaStarTag = Expr::Tag(i->name() + tagNames.star, Expr::STATE_NONE);
           rhoEtaStarTags.push_back(rhoEtaStarTag);                      
@@ -265,31 +264,6 @@ namespace Wasatch{
           reiEtaStarTags.push_back(reiEtaStarTag);                      
         }
         
-        /* for( Expr::TagList::const_iterator i=solnVarStarTags.begin(); i!=solnVarStarTags.end(); ++i ){
-          found = false;
-          for( Expr::TagList::const_iterator j=ivarNames.begin(); j!=ivarNames.end(); ++j )
-            if (i->name().substr(0,i->name().length()- tagNames.star.length()) == j->name()) {
-              found = true;
-              break;
-            }
-          if (!found)
-            rhoEtaStarTags.push_back(*i);            
-        }
-        // Here the solnvariables in non density weighted form will be separated to form independant variables at RK stage with the other ReIetas at this stage
-        for( Expr::TagList::const_iterator j=ivarNames.begin(); j!=ivarNames.end(); ++j ) {
-          ivarStarTags.push_back( Expr::Tag(j->name() + tagNames.star, Expr::STATE_NONE) );
-          found = false;
-          for( Expr::TagList::const_iterator i=solnVarStarTags.begin(); i!=solnVarStarTags.end(); ++i )
-            if (i->name().substr(0,i->name().length()- tagNames.star.length()) == j->name()) {
-              found = true;
-              break;
-            }
-          if (!found){
-            Expr::Tag reiEtaStar = Expr::Tag(j->name() + tagNames.star, Expr::STATE_NONE);
-            reiEtaStarTags.push_back(reiEtaStar);
-          }
-        }
-         */
         // register the expression for density at RK time stage
         densityStarTag = Expr::Tag(densityTag.name() + tagNames.star, Expr::CARRY_FORWARD);
         const Expr::ExpressionID densStar = gh.exprFactory->register_expression( scinew DensCalc( densityStarTag, interp->clone(), rhoEtaStarTags, reiEtaStarTags, ivarStarTags ) );
@@ -311,40 +285,15 @@ namespace Wasatch{
           const Expr::Tag reiEta2StarTag = Expr::Tag(i->name() + tagNames.doubleStar, Expr::STATE_NONE);
           reiEta2StarTags.push_back(reiEta2StarTag);                      
         }
-        
-        /* for( Expr::TagList::const_iterator i=solnVar2StarTags.begin(); i!=solnVar2StarTags.end(); ++i ){
-          found = false;
-          for( Expr::TagList::const_iterator j=ivarNames.begin(); j!=ivarNames.end(); ++j )
-            if (i->name().substr(0,i->name().length()-tagNames.doubleStar.length()) == j->name()) {
-              found = true;
-              break;
-            }
-          if (!found)
-            rhoEta2StarTags.push_back(*i);            
-        }
-        // Here the solnvariables in non density weighted form will be separated to form independant variables at RK stage with the other ReIetas at this stage
-        for( Expr::TagList::const_iterator j=ivarNames.begin(); j!=ivarNames.end(); ++j ) {
-          ivar2StarTags.push_back( Expr::Tag(j->name() + tagNames.doubleStar, Expr::STATE_NONE) );
-          found = false;
-          for( Expr::TagList::const_iterator i=solnVar2StarTags.begin(); i!=solnVar2StarTags.end(); ++i )
-            if (i->name().substr(0,i->name().length()-tagNames.doubleStar.length()) == j->name()) {
-              found = true;
-              break;
-            }
-          if (!found){
-            Expr::Tag reiEta2Star = Expr::Tag(j->name() + tagNames.doubleStar, Expr::STATE_NONE);
-            reiEta2StarTags.push_back(reiEta2Star);
-          }
-        }
-         */        
+
         // register the expression for density at RK time stage
         density2StarTag = Expr::Tag(densityTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD);
         const Expr::ExpressionID dens2Star = gh.exprFactory->register_expression( scinew DensCalc( density2StarTag, interp->clone(), rhoEta2StarTags, reiEta2StarTags, ivar2StarTags ) );
         gh.exprFactory->cleave_from_children ( dens2Star );
         
-      }
+      } // density predictor
 
-    }
+    } // density loop
 
   }
   //====================================================================
