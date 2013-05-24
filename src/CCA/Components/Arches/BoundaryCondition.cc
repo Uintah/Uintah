@@ -6719,7 +6719,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                   if ( *bound_ptr == (check_iter->first + i_uvel_bc_storage->second.relative_ijk) )
                     found_it = true; 
                 }
-                if ( !found_it ){ 
+                if ( !found_it && patch->containsCell(check_iter->first + i_uvel_bc_storage->second.relative_ijk) ){ 
                   cout << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
                 } 
 
@@ -6750,7 +6750,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                   if ( *bound_ptr == (check_iter->first + i_vvel_bc_storage->second.relative_ijk) )
                     found_it = true; 
                 }
-                if ( !found_it ){ 
+                if ( !found_it && patch->containsCell(check_iter->first + i_vvel_bc_storage->second.relative_ijk) ){ 
                   cout << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
                 } 
 
@@ -6781,7 +6781,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                   if ( *bound_ptr == (check_iter->first + i_wvel_bc_storage->second.relative_ijk) )
                     found_it = true; 
                 }
-                if ( !found_it ){ 
+                if ( !found_it && patch->containsCell(check_iter->first + i_wvel_bc_storage->second.relative_ijk) ){ 
                   cout << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
                 } 
 
