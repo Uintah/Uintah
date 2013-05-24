@@ -145,8 +145,6 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
           BoundaryCondition_new::ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_info.find( face_name ); 
 
           bound_ptr.reset(); 
-          IntVector bound_ijk = bound_ptr.begin(); 
-          Point bound_xyz = patch->getCellPosition( bound_ijk ); 
 
           //check the grid spacing: 
           proc0cout <<  endl << "For scalar handoff file named: " << i_scalar_bc_storage->second.name << endl;
@@ -157,33 +155,52 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
           //this should assign the correct normal direction xyz value without forcing the user to have 
           //to know what it is. 
           if ( index == 0 ) { 
-            i_scalar_bc_storage->second.relative_xyz[index] = bound_xyz.x();
+            i_scalar_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
           } else if ( index == 1 ) { 
-            i_scalar_bc_storage->second.relative_xyz[index] = bound_xyz.y();
+            i_scalar_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
           } else if ( index == 2 ) { 
-            i_scalar_bc_storage->second.relative_xyz[index] = bound_xyz.z();
+            i_scalar_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
           } 
           Vector ref_point = i_scalar_bc_storage->second.relative_xyz;
-          IntVector ijk; 
           Point xyz(ref_point[0],ref_point[1],ref_point[2]);
 
-          bool found_cell = patch->findCell( xyz, ijk );
+          IntVector ijk = patch->getLevel()->getCellIndex( xyz ); 
 
-          if ( found_cell ){ 
-            i_scalar_bc_storage->second.relative_ijk = ijk;
-            i_scalar_bc_storage->second.relative_ijk[index] = 0;  //don't allow the normal index to shift
-          } 
+          i_scalar_bc_storage->second.relative_ijk = ijk;
+          i_scalar_bc_storage->second.relative_ijk[index] = 0;  //don't allow the normal index to shift
+
+          int face_index_value;
 
           //now check to make sure that there is a bc set for each iterator: 
           for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 
-
-            BoundaryCondition_new::CellToValueMap::iterator check_iter = i_scalar_bc_storage->second.values.find(*bound_ptr);
+            //The next three lines are needed because we are ignoring the user input 
+            //for the normal index but still loading it into memory
+            IntVector mod_bound_ptr = (*bound_ptr);
+            face_index_value = mod_bound_ptr[index]; 
+            mod_bound_ptr[index] = (i_scalar_bc_storage->second.values.begin()->first)[index];
+            BoundaryCondition_new::CellToValueMap::iterator check_iter = i_scalar_bc_storage->second.values.find(mod_bound_ptr - i_scalar_bc_storage->second.relative_ijk);
             if ( check_iter == i_scalar_bc_storage->second.values.end() ){ 
-              cout << "Scalar BC: " << d_eqnName << " - While checking the UINTAH boundary ptr, could not find cell " << *bound_ptr << " in the handoff file, which means your geometry object is too big for the handoff file." << endl;
+              cout << "Scalar BC: " << d_eqnName << " - No UINTAH boundary cell " << *bound_ptr - i_scalar_bc_storage->second.relative_ijk << " in the handoff file." << endl;
             } 
           } 
 
           //now check the reverse -- does the handoff file have an associated boundary ptr
+          BoundaryCondition_new::CellToValueMap temp_map; 
+          for ( BoundaryCondition_new::CellToValueMap::iterator check_iter = i_scalar_bc_storage->second.values.begin(); check_iter != 
+              i_scalar_bc_storage->second.values.end(); check_iter++ ){ 
+
+            //need to reset the values to get the right [index] int value for the face
+            double value = check_iter->second; 
+            IntVector location = check_iter->first;
+            location[index] = face_index_value; 
+
+            temp_map.insert(make_pair(location, value)); 
+
+          }
+
+          //reassign the values now with the correct index for the face direction
+          i_scalar_bc_storage->second.values = temp_map; 
+
           for ( BoundaryCondition_new::CellToValueMap::iterator check_iter = i_scalar_bc_storage->second.values.begin(); check_iter != 
               i_scalar_bc_storage->second.values.end(); check_iter++ ){ 
 
@@ -193,7 +210,7 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
                 found_it = true; 
             }
             if ( !found_it ){ 
-              cout << "Scalar BC: " << d_eqnName << " - While checking the HANDOFF boundary pointer, could not find cell " << check_iter->first << " in the Uintah geometry object, which means that your geometry object is too small for the handoff file." << endl;
+              cout << "Scalar BC: " << d_eqnName << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
             } 
           } 
 
