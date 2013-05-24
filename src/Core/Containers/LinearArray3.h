@@ -22,15 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef SCI_CONTAINERS_LINEARARRAY3_h
-#define SCI_CONTAINERS_LINEARARRAY3_h
-
-#include <Core/Util/Assert.h>
-
-namespace Uintah {
-
-using namespace SCIRun;
-
 /**************************************
 
  CLASS
@@ -53,6 +44,19 @@ using namespace SCIRun;
  WARNING
 
  ****************************************/
+
+#ifndef SCI_CONTAINERS_LINEARARRAY3_h
+#define SCI_CONTAINERS_LINEARARRAY3_h
+
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Util/Assert.h>
+
+#include <complex>
+#include <string>
+
+namespace SCIRun {
+
+using namespace Uintah;
 
 template<class T> class LinearArray3 {
 
@@ -97,7 +101,7 @@ template<class T> class LinearArray3 {
                          int d2,
                          int d3) const
     {
-      ASSERTL3(d1>=0 && d1<dm1); ASSERTL3(d2>=0 && d2<dm2); ASSERTL3(d3>=0 && d3<dm3);
+      ASSERTL3(d1>=0 && d1<dm1);ASSERTL3(d2>=0 && d2<dm2);ASSERTL3(d3>=0 && d3<dm3);
       int idx = (d1) + ((d2) * dm1) + ((d3) * dm1 * dm2);
       return objs[idx];
     }
@@ -188,6 +192,11 @@ template<class T> class LinearArray3 {
       return *this;
     }
 
+    //! support dynamic compilation
+    static const string& get_h_file_path();
+
+    SCISHARE const TypeDescription* get_type_description(LinearArray3<T>*);
+
   private:
 
     T* objs;
@@ -199,7 +208,7 @@ template<class T> class LinearArray3 {
 
 };
 
-}  // End namespace Uintah
+}  // End namespace SCIRun
 
 #endif
 

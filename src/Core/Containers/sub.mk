@@ -39,8 +39,10 @@ SRCS     += $(SRCDIR)/ConsecutiveRangeSet.cc \
 	          $(SRCDIR)/TrivialAllocator.cc \
 	          $(SRCDIR)/templates.cc
 
-PSELIBS := Core/Exceptions Core/Thread
-LIBS :=
+PSELIBS := Core/Exceptions  \
+           Core/Thread
+           
+LIBS := $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

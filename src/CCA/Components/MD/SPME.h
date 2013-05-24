@@ -152,6 +152,11 @@ class SPME : public Electrostatics {
       d_lb = lb;
     }
 
+    static IntVector numKElements()
+    {
+      return SPME::d_numKElements;
+    }
+
   private:
 
     /**
@@ -388,6 +393,7 @@ class SPME : public Electrostatics {
     bool d_polarizable;				                    	  //!< Use polarizable Ewald formulation
     double d_polarizationTolerance;                   //!< Tolerance threshold for polarizable system
     IntVector d_kLimits;                              //!< Number of grid divisions in each direction
+    static IntVector d_numKElements;                  //!<
     CenteredCardinalBSpline d_interpolatingSpline;    //!< Spline object to hold info for spline calculation
     std::vector<SPMEPatch*> d_spmePatches;            //!< Assuming multiple patches, these are the pieces of the SPME grid
     std::vector<SPMEMapPoint> d_gridMap;              //!< The data that maps the charges in the patch to-and-from the grid

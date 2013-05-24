@@ -25,17 +25,17 @@
 #include <Core/Containers/LinearArray3.h>
 #include <CCA/Components/MD/SPME.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Util/TypeDescription.h>
+#include <Core/Disclosure/TypeUtils.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/Endian.h> // for other swapbytes() functions.
 
 #include <complex>
+#include <string>
 
-using namespace SCIRun;
-
-namespace Uintah {
+using namespace Uintah;
 
 template<class T>
 LinearArray3<T>::LinearArray3()
@@ -116,45 +116,76 @@ void LinearArray3<T>::initialize(const T& t)
   }
 }
 
-///*
-// * This is used by the MD component to reduce Q* before and after 3D FFT.
-// */
-//MPI_Datatype makeMPI_LinearArray3()
-//{
-//  IntVector elements(0,0,0);// = SPME::numKElements();
-//
-//  int x = elements.x();
-//  int y = elements.y();
-//  int z = elements.z();
-//
-//  int count = y * z;      // number of blocks
-//  int blockLength = x;    // number of elements in each block
-//  int stride = x;         // number of elements between start of each block
-//
-//  ASSERTEQ(sizeof(LinearArray3<std::complex<double> >), sizeof(std::complex<double>) * (x*y*z));
-//
-//  //Create our derived type
-//  MPI_Datatype mpitype;
-//  MPI_Type_vector(count, blockLength, stride, MPI_C_DOUBLE_COMPLEX, &mpitype);
-//  MPI_Type_commit(&mpitype);
-//
-//  return mpitype;
-//}
-//
-//const TypeDescription* fun_getTypeDescription(LinearArray3<std::complex<double> >*)
-//{
-//  static TypeDescription* td = 0;
-//  if (!td) {
-//    td = scinew TypeDescription(TypeDescription::LinearArray3, "LinearArray3<std::complex<double> >", true, &makeMPI_LinearArray3);
-//  }
-//  return td;
-//}
+template<class T>
+const std::string& LinearArray3<T>::get_h_file_path()
+{
+  static const std::string path(TypeDescription::cc_to_h(__FILE__));
+  return path;
+}
+
+namespace Uintah {
+
+template<class T>
+MPI_Datatype makeMPI_LinearArray3()
+{
+  IntVector elements = SPME::numKElements();
+
+  int x = elements.x();
+  int y = elements.y();
+  int z = elements.z();
+
+  int count = y * z;      // number of blocks
+  int blockLength = x;    // number of elements in each block
+  int stride = x;         // number of elements between start of each block
+
+  ASSERTEQ(sizeof(LinearArray3<T>), sizeof(T) * (x*y*z));
+  const TypeDescription* td = fun_getTypeDescription((T*)0);
+  MPI_Datatype mpitype;
+  MPI_Type_vector(count, blockLength, stride, td->getMPIType(), &mpitype);
+  MPI_Type_commit(&mpitype);
+
+  return mpitype;
+}
+
+template<class T>
+const TypeDescription* fun_getTypeDescription(LinearArray3<T>*)
+{
+  static TypeDescription* td = 0;
+  if (!td) {
+    //some compilers don't like passing templated function pointers directly across function calls
+    MPI_Datatype (*func)() = makeMPI_LinearArray3<T>;
+    td = scinew TypeDescription(TypeDescription::LinearArray3, "LinearArray3", true, func);
+  }
+  return td;
+}
+
+}  // namespace Uintah
+
+namespace SCIRun {
+
+template<class T>
+const TypeDescription* get_type_description(LinearArray3<T>*)
+{
+  static TypeDescription* td = 0;
+  if (!td) {
+    td = scinew TypeDescription("LinearArray3", Point::get_h_file_path(), "SCIRun", TypeDescription::DATA_E);
+  }
+  return td;
+}
+
+template<class T>
+void swapbytes(LinearArray3<T>& array)
+{
+  long int size = array.get_datasize();
+  for (int i = 0; i < size; i++) {
+    swapbytes(array.objs(i));
+  }
+}
+}  // namespace SCIRun
 
 // Explicit template instantiations:
 template class LinearArray3<std::complex<double> > ;
 template class LinearArray3<Uintah::Matrix3> ;
 template class LinearArray3<double> ;
 template class LinearArray3<SCIRun::Vector> ;
-
-}  // End namespace Uintah
 

@@ -39,7 +39,6 @@ SRCS += $(SRCDIR)/MD.cc                         \
         $(SRCDIR)/SPME.cc                       \
         $(SRCDIR)/SPMEMapPoint.cc               \
         $(SRCDIR)/SPMEPatch.cc                  \
-        $(SRCDIR)/SPMEArray3.cc                 \
         $(SRCDIR)/SimpleGrid.cc                 \
         $(SRCDIR)/CenteredCardinalBSpline.cc    \
         $(SRCDIR)/ElectrostaticsFactory.cc

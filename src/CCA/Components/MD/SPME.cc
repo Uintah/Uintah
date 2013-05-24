@@ -54,6 +54,8 @@ extern SCIRun::Mutex cerrLock;
 
 static DebugStream spme_dbg("SPMEDBG", false);
 
+IntVector SPME::d_numKElements;
+
 SPME::SPME()
 {
 
