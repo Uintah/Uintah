@@ -75,9 +75,9 @@
             <FSLOPE> 0.057735026919 </FSLOPE>
             <FSLOPE_p> 0.057735026919 </FSLOPE_p>
             <PEAKI1> 6.123724356953976e2 </PEAKI1>
-            <CR> 17.319874003173968 </CR>
-            <T1_rate_dependence> 1 </T1_rate_dependence>
-            <T2_rate_dependence> 2 </T2_rate_dependence>
+            <CR> 1.0 </CR>
+            <T1_rate_dependence> 0.0 </T1_rate_dependence>
+            <T2_rate_dependence> 0.0 </T2_rate_dependence>
             <p0_crush_curve> -1837.0724 </p0_crush_curve>
             <p1_crush_curve> -1e99 </p1_crush_curve>
             <p3_crush_curve> 0.5 </p3_crush_curve>
