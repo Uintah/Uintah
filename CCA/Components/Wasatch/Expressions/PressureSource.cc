@@ -231,14 +231,14 @@ PressureSource::Builder::Builder( const Expr::Tag& result,
                                   const Expr::Tag dilTag,
                                   const Expr::Tag timestepTag )
 : ExpressionBuilder(result),
-momTs_      ( densStarTag==Expr::Tag() ? Expr::TagList() : momTags     ),
-velStarTs_  ( densStarTag==Expr::Tag() ? Expr::TagList() : velStarTags ),
-isConstDens_( isConstDensity ),
-densStart_  ( densStarTag    ),
-dens2Start_ ( dens2StarTag   ),
-tstpt_    ( timestepTag ),
-denst_    ( densTag     ),
-dilt_     ( isConstDensity ? dilTag  : Expr::Tag() )
+  isConstDens_( isConstDensity ),
+  momTs_      ( densStarTag==Expr::Tag() ? Expr::TagList() : momTags     ),
+  velStarTs_  ( densStarTag==Expr::Tag() ? Expr::TagList() : velStarTags ),
+  denst_     ( densTag      ),
+  densStart_ ( densStarTag  ),
+  dens2Start_( dens2StarTag ),
+  dilt_( isConstDensity ? dilTag  : Expr::Tag() ),
+  tstpt_( timestepTag )
 {}
 
 //------------------------------------------------------------------
