@@ -53,6 +53,7 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
 {     
   vector<int> index;
   vector<double> times;
+  string faceName[] = { "x-", "x+", "y-", "y+", "z-", "z+"};
   
   da->queryTimesteps(index, times);
   
@@ -295,7 +296,7 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
                    << " total: " << ICE_TotalIntEng + MPM_TotalIntEng << " total_flux " << total_flux <<endl;
       
       for (int f = 0; f<Patch::numFaces; f++){
-        cout << "    face: " << f << " faceFlux: " << faceFlux[f] << "\t sumKE: " << sumKE_map[f] << "\t sumH: " << sumH_map[f] << "\t sumMdos; " << sumMdot_map[f] <<"\n"<< endl;
+        cout << "    face: " << faceName[f] << " faceFlux: " << faceFlux[f] << "\t sumKE: " << sumKE_map[f] << "\t sumH: " << sumH_map[f] << "\t sumMdot; " << sumMdot_map[f] <<"\n"<< endl;
       }
       
       //__________________________________
