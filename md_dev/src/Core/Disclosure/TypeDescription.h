@@ -90,7 +90,7 @@ public:
     Short27,   // for Fracture
     Stencil4,
     Stencil7,
-    SPMEArray3,
+    LinearArray3,
     Unknown,
     Other
   };
