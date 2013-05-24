@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 from matplotlib import ticker 
 
 SHOW_ON_MAKE = False
-BIG_FIGURE = False
+BIG_FIGURE = True
+DEFAULT_FORMAT = 'pdf'
 
 #Useful constants
 sqrtTwo = np.sqrt(2.0)
@@ -62,7 +63,7 @@ rc('font', **font)
 rc('text', usetex=True)
  
 
-def saveIMG(name,size='1920x1080',FORMAT='pdf'):
+def saveIMG(name,size='1920x1080',FORMAT=DEFAULT_FORMAT):
   res = float(plt.rcParams['figure.dpi'])
   #Add Check for file already existing as name.png
   if size == '640x480':
@@ -80,10 +81,9 @@ def saveIMG(name,size='1920x1080',FORMAT='pdf'):
   #set the figure size for saving
   plt.gcf().set_size_inches(size[0],size[1])
   #save at speciified resolution
-  FORMAT = 'pdf'
   plt.savefig(name+'.'+FORMAT, bbox_inches=0, dpi=plt.rcParams['figure.dpi'],format=FORMAT)
-  FORMAT = 'png'
-  plt.savefig(name+'.'+FORMAT, bbox_inches=0, dpi=plt.rcParams['figure.dpi'],format=FORMAT)
+  #FORMAT = 'png'
+  #plt.savefig(name+'.'+FORMAT, bbox_inches=0, dpi=plt.rcParams['figure.dpi'],format=FORMAT)
 
 def str_to_mathbf(string):
   #Only works with single spaces no leading space
@@ -1235,6 +1235,16 @@ def test08_postProc(uda_path,save_path,**kwargs):
   ax3.yaxis.set_major_formatter(formatter_int)
   ax3.tick_params(axis='both',labelsize='small')
   plt.legend(loc=2)
+  
+  if False:
+    plt.annotate('1',(0,0.39),(0,0.39))
+    plt.annotate('2',(-2100,0.39),(-2100,0.39))
+    plt.annotate('3',(-2800,0.26),(-2800,0.26))
+    plt.annotate('4',(max(I1s),0.235),(max(I1s),0.235))
+    plt.annotate('5',(max(I1s),0.725),(max(I1s),0.725))
+    plt.annotate('6',(-950,0.725),(-950,0.725))
+    plt.annotate('7',(min(I1s),0.06),(min(I1s),0.06))
+  
   if BIG_FIGURE:
     plt.title('AreniscaTest 08:\nLoading/Unloading (plot c)')
     saveIMG(save_path+'/Test08_verificationPlot_c','1280x960')
