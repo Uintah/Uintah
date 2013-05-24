@@ -956,15 +956,6 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
       int curLevelIndex     = curLevel->getIndex();
       bool findFiner   = curLevel->hasFinerLevel();
       bool findCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > coarsestLevelwithParticles->getIndex();
-      Level* fineLevel=0;
-      Level* coarseLevel=0;
-
-      if(findFiner){
-        fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
-      }
-      if(findCoarser){
-        coarseLevel = (Level*) curLevel->getCoarserLevel().get_rep();
-      }
       
       Patch::selectType neighborPatches;
       findNeighboringPatches(toPatch, level, findFiner, findCoarser, neighborPatches);
