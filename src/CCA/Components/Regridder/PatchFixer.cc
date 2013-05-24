@@ -124,7 +124,7 @@ PatchFixer::FixUp(vector<Region> &patches)
   //search lattice
   int size=patches.size()/d_myworld->size();
   int rem=patches.size()%d_myworld->size();
-  int mystart=0,myend;
+  int mystart=0;
   int mysize=size;
         
   if(d_myworld->myrank()<rem)
@@ -145,7 +145,6 @@ PatchFixer::FixUp(vector<Region> &patches)
           else
             mystart+=size;
         }
-      myend=mystart+size;
 
       //move my patches to the front
       for(int p=0;p<mysize;p++)
