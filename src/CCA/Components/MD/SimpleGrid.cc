@@ -56,7 +56,7 @@ SimpleGrid<T>::SimpleGrid(const IntVector& extents,
 template<typename T>
 SimpleGrid<T>::SimpleGrid(const SimpleGrid& copy)
 {
-  d_values.copy(copy.d_values);  // SCIRun::Array3 assignment operator is private
+  d_values = copy.d_values;
   d_gridExtents = copy.d_gridExtents;
   d_gridOffset = copy.d_gridOffset;
   d_numGhostCells_ = copy.d_numGhostCells_;
