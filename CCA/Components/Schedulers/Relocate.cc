@@ -316,12 +316,10 @@ ScatterRecord* MPIScatterRecords::findOrInsertRecord(const Patch* fromPatch,
   //__________________________________
   //  Create a new record and insert it into
   //  all records
-  if(pr.first == pr.second){
-    ScatterRecord* rec = scinew ScatterRecord(fromPatch, toPatch, matl, curLevelIndex);
-    rec->send_pset = scinew ParticleSubset(0, -1, 0);
-    records.insert(maptype::value_type(make_pair(realToPatch, matl), rec));
-    return rec;
-  }
+  ScatterRecord* rec = scinew ScatterRecord(fromPatch, toPatch, matl, curLevelIndex);
+  rec->send_pset = scinew ParticleSubset(0, -1, 0);
+  records.insert(maptype::value_type(make_pair(realToPatch, matl), rec));
+  return rec;
 }
 //______________________________________________________________________
 //
@@ -351,9 +349,7 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* fromPatch,
     }
   }
   
-  if(pr.first == pr.second){
-    return 0;
-  }
+  return 0;
 }
 //______________________________________________________________________
 //
