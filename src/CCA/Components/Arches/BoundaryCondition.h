@@ -731,16 +731,6 @@ namespace Uintah {
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
-      void sched_getFlowINOUT(SchedulerP& sched,
-          const PatchSet* patches,
-          const MaterialSet* matls,
-          const TimeIntegratorLabel* timelabels);
-
-      void sched_correctVelocityOutletBC(SchedulerP& sched,
-          const PatchSet* patches,
-          const MaterialSet* matls,
-          const TimeIntegratorLabel* timelabels);
-
       void sched_getScalarFlowRate(SchedulerP& sched,
           const PatchSet* patches,
           const MaterialSet* matls);
@@ -933,22 +923,6 @@ namespace Uintah {
           const MaterialSubset* matls,
           DataWarehouse* old_dw,
           DataWarehouse* new_dw);
-
-      // New boundary conditions
-
-      void getFlowINOUT(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw,
-          const TimeIntegratorLabel* timelabels);
-
-      void correctVelocityOutletBC(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw,
-          const TimeIntegratorLabel* timelabels);
 
       void getScalarFlowRate(const ProcessorGroup*,
           const PatchSubset* patches,
