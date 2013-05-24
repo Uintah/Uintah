@@ -60,27 +60,35 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-
-      <Turbulence model="smagorinsky">
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-        <cf>0.0</cf>
-        <fac_mesh>1.0</fac_mesh>
-        <filterl>0.000001</filterl>
-        <var_const>0.1</var_const>
-      </Turbulence>
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type = "CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <determines_properties/> 
+          <conv_scheme>upwind</conv_scheme>
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+      </TransportEqns>
 
       <Properties>
         <use_mixing_model>false</use_mixing_model>
-        <ColdFlowMixingModel>
-          <Stream>
-            <density>1.00</density>
+        <ColdFlow>
+          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
+          <Stream_1>
+            <density>1.0</density>
             <temperature>298</temperature>
-          </Stream>
-          <Stream>
-            <density>1.00</density>
+          </Stream_1>
+          <Stream_2>
+            <density>1.0</density>
             <temperature>298</temperature>
-          </Stream>
-        </ColdFlowMixingModel>
+          </Stream_2>
+        </ColdFlow>
       </Properties>
 
       <ExplicitSolver>
