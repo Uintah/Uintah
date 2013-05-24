@@ -1191,7 +1191,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex,
       IntVector newHigh; 
 
       if (level->getIndex() == 0) {
-        newLow = Max(lowIndex, neighbor->getExtraCellLowIndex());
+        newLow  = Max(lowIndex, neighbor->getExtraCellLowIndex());
         newHigh = Min(highIndex, neighbor->getExtraCellHighIndex());
       }
       else {
@@ -1203,9 +1203,8 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex,
       if (neighbor->isVirtual()) {
         // rather than offsetting each point of pos_var's data,
         // just adjust the box to compare it with.
-        Vector offset = neighbor->getVirtualOffsetVector();
         IntVector cellOffset = neighbor->getVirtualOffset();
-        newLow -= cellOffset;
+        newLow  -= cellOffset;
         newHigh -= cellOffset;
       }
       ParticleSubset* pset;

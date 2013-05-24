@@ -88,7 +88,7 @@ namespace Uintah {
    convenience and in case a user wishes to skip a value and not have to store it
    in a local variable.
    */
-  const std::string getString( std::ifstream &inputFStream );
+  std::string getString( std::ifstream &inputFStream );
 
   /**
    *  \brief Function that parses the current location of an ifstream input file
@@ -112,6 +112,6 @@ namespace Uintah {
    line is returned. Optionally, if skipComments is set to false, the commented
    line is returned.
    */
-  const std::string getLine( std::ifstream &inputFStream, bool skipComments=true );
+  std::string getLine( std::ifstream &inputFStream, bool skipComments=true );
   
 } // end namespace Uintah
