@@ -76,7 +76,7 @@
             <FSLOPE> 1e-10 </FSLOPE>
             <FSLOPE_p> 1e-10 </FSLOPE_p>
             <PEAKI1> 35.355339059327378e10 </PEAKI1>
-            <CR> 14.8 </CR>
+            <CR> 1.0 </CR>
             <T1_rate_dependence> 1 </T1_rate_dependence>
             <T2_rate_dependence> 2 </T2_rate_dependence>
             <p0_crush_curve> -1e99 </p0_crush_curve>
