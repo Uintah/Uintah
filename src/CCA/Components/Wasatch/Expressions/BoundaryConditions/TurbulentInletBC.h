@@ -184,7 +184,7 @@ template< typename FieldT >
 int
 TurbulentInletBC<FieldT>::calculate_time_index() {
   
-  //int n = *t_/dx_; // floor - get the number of dxs into the data
+  // floor - get the number of dxs into the data
   int tindex =(int) std::floor(*t_/dx_);
   
   while (tindex >= NT_- 1) {
@@ -193,31 +193,11 @@ TurbulentInletBC<FieldT>::calculate_time_index() {
 
   // coordinate relative to the current turbulent data interval
   coord_ = *t_ - tindex*dx_;
-  
-//  if (coord_ < *dt_) coord_ = 0.0; // OPTIONAL: make sure we match the data point at the begining of new turbulent data
+
+  // OPTIONAL: make sure we match the data point at the begining of new turbulent data
+  //if (coord_ < *dt_) coord_ = 0.0;
   
   return tindex;
-//  //make sure if end of table is reached, it is repeated
-//  //work for either a specified time period, or a number of steps
-//  int t_index;
-//  int timestep = (*dt_ == 0)? 0 : *t_/ *dt_;
-//  double elapTime = *t_;
-//  if (period_ != 0) { // give priority to period
-//    while (timestep >= NT_*period_) {
-//      timestep -= NT_*period_;
-//    }
-//    t_index = timestep/period_;
-//    
-//  } else {
-//    while (elapTime >= NT_*timePeriod_) {
-//      elapTime -= NT_*timePeriod_;
-//    }
-//    t_index = (int)(elapTime/timePeriod_);
-//  }
-//
-//  if (t_index == NT_) t_index = 0;
-//  
-//  return t_index;
 }
 
 //--------------------------------------------------------------------

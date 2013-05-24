@@ -54,8 +54,6 @@ public:
   {
     using namespace SpatialOps;
     FieldT& f = this->value();
-    const double ci = this->ci_;
-    const double cg = this->cg_;
     std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
     std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
     for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib )
