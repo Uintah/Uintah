@@ -673,7 +673,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     if ( d_timeIntegratorLabels[curr_level]->integrator_last_step) { 
       // this is the new efficiency calculator
-      d_eff_calculator->sched_computeEfficiencies( level, sched ); 
+      d_eff_calculator->sched_computeAllScalarEfficiencies( level, sched ); 
     }
 
 
