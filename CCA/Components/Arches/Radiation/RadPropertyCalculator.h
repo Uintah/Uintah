@@ -162,9 +162,9 @@ namespace Uintah {
 
               // NOTE: this requires that the table names match the RadProps name.  This is, in general, a pretty 
               // bad assumption.  Need to make this more robust later on...
-              //
-              for ( std::vector<RadiativeSpecies>::iterator iter = _radprops_species.begin(); iter != _radprops_species.end(); iter++){
-                std::string which_species = species_name( *iter ); 
+              int total_sp = _radprops_species.size(); 
+              for ( int i = 0; i < total_sp; i++ ){ 
+                std::string which_species = species_name( _radprops_species[i] ); 
                 _species.push_back( which_species ); 
 
                 //entering the inverse here for convenience 
@@ -179,7 +179,7 @@ namespace Uintah {
                 } else if ( which_species == "OH" ){
                   _sp_mw.push_back(1.0/17.0); 
                 } 
-              }
+              } 
 
             }else { 
 
