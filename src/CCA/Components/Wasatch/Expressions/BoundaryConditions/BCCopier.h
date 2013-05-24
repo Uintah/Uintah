@@ -31,17 +31,15 @@ template< typename FieldT >
 class BCCopier
 : public BoundaryConditionBase<FieldT>
 {
-  BCCopier( const Expr::Tag& srcTag ) :
-  srcTag_ (srcTag)
-  {}
+  BCCopier( const Expr::Tag& srcTag ) : srcTag_(srcTag){}
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& srcTag) :
-    ExpressionBuilder(resultTag),
-    srcTag_ (srcTag)
+             const Expr::Tag& srcTag )
+    : ExpressionBuilder(resultTag),
+      srcTag_ (srcTag)
     {}
     Expr::ExpressionBase* build() const{ return new BCCopier(srcTag_); }
   private:
@@ -49,39 +47,23 @@ public:
   };
   
   ~BCCopier(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){  exprDeps.requires_expression( srcTag_ );}
-  void bind_fields( const Expr::FieldManagerList& fml ){
-    const typename Expr::FieldMgrSelector<FieldT>::type& phifm = fml.template field_manager<FieldT>();
-    src_    = &phifm.field_ref( srcTag_    );
+  void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( srcTag_ ); }
+  void bind_fields( const Expr::FieldManagerList& fml ){ src_ = &fml.template field_ref<FieldT>(srcTag_); }
+
+  void evaluate()
+  {
+    using namespace SpatialOps;
+    FieldT& f = this->value();
+    const double ci = this->ci_;
+    const double cg = this->cg_;
+    std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
+    std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
+    for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib )
+      f[*ia] = (*src_)[*ia];
   }
-  void evaluate();
 private:
   const FieldT* src_;
   const Expr::Tag srcTag_;
 };
-
-// ###################################################################
-//
-//                          Implementation
-//
-// ###################################################################
-
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-BCCopier<FieldT>::
-evaluate()
-{
-  using namespace SpatialOps;
-  FieldT& f = this->value();
-  const double ci = this->ci_;
-  const double cg = this->cg_;
-  std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
-  std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
-  for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib )
-    f[*ia] = (*src_)[*ia];
-}
 
 #endif // BCCopier_Expr_h

@@ -78,15 +78,12 @@ public:
   
   ~VarDensMMSMomentum(){}
   void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( indepVarTag_ ); }
-  void bind_fields( const Expr::FieldManagerList& fml ){
-    t_    = &fml.template field_manager<double>().field_ref( indepVarTag_ );
-  }
+  void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<double>( indepVarTag_ ); }
   void evaluate();
 private:
-  VarDensMMSMomentum( const Expr::Tag& indepVarTag,
-               const BCSide side ) :
-  indepVarTag_ (indepVarTag),
-  side_ (side)
+  VarDensMMSMomentum( const Expr::Tag& indepVarTag, const BCSide side )
+   : indepVarTag_( indepVarTag ),
+     side_( side )
   {}  
   const double* t_;
   const Expr::Tag indepVarTag_;
