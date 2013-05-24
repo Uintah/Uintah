@@ -433,7 +433,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
         if ( type == "VelocityFileInput" ){ 
 
           if ( std::find( d_all_v_inlet_names.begin(), d_all_v_inlet_names.end(), name ) != d_all_v_inlet_names.end() )  
-            throw ProblemSetupException("Error: You have two VelocityFileInput specs with the same label", __FILE__, __LINE__);
+            throw ProblemSetupException("Error: You have two VelocityFileInput specs with the same label: "+name, __FILE__, __LINE__);
           else 
             d_all_v_inlet_names.push_back(name);
 
@@ -7234,8 +7234,9 @@ void
 BoundaryCondition::sched_checkMomBCs( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
 {
   if ( d_use_new_bcs ) {
+
     string taskname = "BoundaryCondition::checkMomBCs"; 
-    Task* tsk = scinew Task(taskname, this, &BoundaryCondition::checkMomBCs); 
+    Task* tsk = scinew Task(taskname, this, &BoundaryCondition::checkMomBCs ); 
 
     sched->addTask( tsk, patches, matls ); 
   }
@@ -7246,7 +7247,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                                 const PatchSubset* patches, 
                                 const MaterialSubset* matls, 
                                 DataWarehouse* old_dw, 
-                                DataWarehouse* new_dw )
+                                DataWarehouse* new_dw ) 
 {
 
   //patch loop
@@ -7336,67 +7337,97 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
               << std::abs(i_uvel_bc_storage->second.dy - dy)/dy << "]" << endl << endl;
 
             bound_ptr.reset(); 
-            IntVector bound_ijk = bound_ptr.begin(); 
-            Point bound_xyz = patch->getCellPosition( bound_ijk ); 
 
             //this should assign the correct normal direction xyz value without forcing the user to have 
             //to know what it is. 
             Vector ref_point; 
-            IntVector ijk; 
             if ( index == 0 ) { 
-              i_uvel_bc_storage->second.relative_xyz[index] = bound_xyz.x();
-              i_vvel_bc_storage->second.relative_xyz[index] = bound_xyz.x();
-              i_wvel_bc_storage->second.relative_xyz[index] = bound_xyz.x();
+              i_uvel_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
+              i_vvel_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
+              i_wvel_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
               ref_point = i_uvel_bc_storage->second.relative_xyz;
             } else if ( index == 1 ) { 
-              i_uvel_bc_storage->second.relative_xyz[index] = bound_xyz.y();
-              i_vvel_bc_storage->second.relative_xyz[index] = bound_xyz.y();
-              i_wvel_bc_storage->second.relative_xyz[index] = bound_xyz.y();
+              i_uvel_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
+              i_vvel_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
+              i_wvel_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
               ref_point = i_vvel_bc_storage->second.relative_xyz;
             } else if ( index == 2 ) { 
-              i_uvel_bc_storage->second.relative_xyz[index] = bound_xyz.z();
-              i_vvel_bc_storage->second.relative_xyz[index] = bound_xyz.z();
-              i_wvel_bc_storage->second.relative_xyz[index] = bound_xyz.z();
+              i_uvel_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
+              i_vvel_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
+              i_wvel_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
               ref_point = i_wvel_bc_storage->second.relative_xyz;
             } 
+
             Point xyz(ref_point[0],ref_point[1],ref_point[2]);
 
-            bool found_cell = patch->findCell( xyz, ijk );
+            IntVector ijk = patch->getLevel()->getCellIndex( xyz ); 
 
-            if ( found_cell ){ 
-              i_uvel_bc_storage->second.relative_ijk = ijk; 
-              i_vvel_bc_storage->second.relative_ijk = ijk; 
-              i_wvel_bc_storage->second.relative_ijk = ijk; 
-              i_uvel_bc_storage->second.relative_ijk[index] = 0; 
-              i_vvel_bc_storage->second.relative_ijk[index] = 0; 
-              i_wvel_bc_storage->second.relative_ijk[index] = 0; 
-            } 
+            i_uvel_bc_storage->second.relative_ijk = ijk; 
+            i_vvel_bc_storage->second.relative_ijk = ijk; 
+            i_wvel_bc_storage->second.relative_ijk = ijk; 
+            i_uvel_bc_storage->second.relative_ijk[index] = 0; 
+            i_vvel_bc_storage->second.relative_ijk[index] = 0; 
+            i_wvel_bc_storage->second.relative_ijk[index] = 0; 
+
+            int face_index_value; 
 
             //now check to make sure that there is a bc set for each iterator: 
             for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 
               if ( index == 0 ){ 
                 //is this cell contained in list?
-                CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.find(*bound_ptr); 
+                //The next three lines are needed because we are ignoring the user input 
+                //for the normal index but still loading it into memory
+                IntVector mod_bound_ptr = (*bound_ptr);
+                face_index_value = mod_bound_ptr[index]; 
+                mod_bound_ptr[index] = (i_uvel_bc_storage->second.values.begin()->first)[index];
+                CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.find( mod_bound_ptr - i_uvel_bc_storage->second.relative_ijk ); 
                 if ( check_iter == i_uvel_bc_storage->second.values.end() ){ 
-                  cout << "Vel BC: " << *iname << " - While checking the UINTAH boundary ptr, could not find cell " << *bound_ptr << " in the handoff file, which means your geometry object is too big for the handoff file." << endl;
+                  cout << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_uvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
                 } 
               } else if ( index == 1 ){ 
                 //is this cell contained in list?
-                CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.find(*bound_ptr); 
+                //The next three lines are needed because we are ignoring the user input 
+                //for the normal index but still loading it into memory
+                IntVector mod_bound_ptr = (*bound_ptr);
+                face_index_value = mod_bound_ptr[index]; 
+                mod_bound_ptr[index] = (i_uvel_bc_storage->second.values.begin()->first)[index];
+                CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.find( mod_bound_ptr - i_vvel_bc_storage->second.relative_ijk ); 
                 if ( check_iter == i_uvel_bc_storage->second.values.end() ){ 
-                  cout << "Vel BC: " << *iname << " - While checking the UINTAH boundary ptr, could not find cell " << *bound_ptr << " in the handoff file, which means your geometry object is too big for the handoff file." << endl;
+                  cout << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_vvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
                 } 
               } else if ( index == 2 ){ 
                 //is this cell contained in list?
-                CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.find(*bound_ptr); 
+                //The next three lines are needed because we are ignoring the user input 
+                //for the normal index but still loading it into memory
+                IntVector mod_bound_ptr = (*bound_ptr);
+                face_index_value = mod_bound_ptr[index]; 
+                mod_bound_ptr[index] = (i_uvel_bc_storage->second.values.begin()->first)[index];
+                CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.find( mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk ); 
                 if ( check_iter == i_wvel_bc_storage->second.values.end() ){ 
-                  cout << "Vel BC: " << *iname << " - While checking the UINTAH boundary ptr, could not find cell " << *bound_ptr << " in the handoff file, which means your geometry object is too big for the handoff file." << endl;
+                  cout << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
                 } 
               }
             } 
 
             //now check the reverse -- does the handoff file have an associated boundary ptr
             if ( index == 0 ){ 
+
+              CellToValue temp_map; 
+              for ( CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.begin(); check_iter != 
+                  i_uvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign the values now with the correct index for the face direction
+              i_uvel_bc_storage->second.values = temp_map; 
+
               for ( CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.begin(); check_iter != 
                   i_uvel_bc_storage->second.values.end(); check_iter++ ){ 
 
@@ -7406,11 +7437,28 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                     found_it = true; 
                 }
                 if ( !found_it ){ 
-                  cout << "Vel BC: " << *iname << " - While checking the HANDOFF boundary pointer, could not find cell " << check_iter->first << " in the Uintah geometry object, which means that your geometry object is too small for the handoff file." << endl;
+                  cout << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
                 } 
 
               } 
             } else if ( index == 1 ) { 
+
+              CellToValue temp_map; 
+              for ( CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.begin(); check_iter != 
+                  i_vvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign the values now with the correct index for the face direction
+              i_vvel_bc_storage->second.values = temp_map; 
+
               for ( CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.begin(); check_iter != 
                   i_vvel_bc_storage->second.values.end(); check_iter++ ){ 
 
@@ -7420,11 +7468,28 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                     found_it = true; 
                 }
                 if ( !found_it ){ 
-                  cout << "Vel BC: " << *iname << " - While checking the HANDOFF boundary pointer, could not find cell " << check_iter->first << " in the Uintah geometry object, which means that your geometry object is too small for the handoff file." << endl;
+                  cout << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
                 } 
 
               } 
             } else if ( index == 2 ) { 
+
+              CellToValue temp_map; 
+              for ( CellToValue::iterator check_iter = i_wvel_bc_storage->second.values.begin(); check_iter != 
+                  i_wvel_bc_storage->second.values.end(); check_iter++ ){ 
+
+                //need to reset the values to get the right [index] int value for the face
+                double value = check_iter->second; 
+                IntVector location = check_iter->first;
+                location[index] = face_index_value; 
+
+                temp_map.insert(make_pair(location, value)); 
+
+              }
+
+              //reassign the values now with the correct index for the face direction
+              i_wvel_bc_storage->second.values = temp_map; 
+
               for ( CellToValue::iterator check_iter = i_wvel_bc_storage->second.values.begin(); check_iter != 
                   i_wvel_bc_storage->second.values.end(); check_iter++ ){ 
 
@@ -7434,7 +7499,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                     found_it = true; 
                 }
                 if ( !found_it ){ 
-                  cout << "Vel BC: " << *iname << " - While checking the HANDOFF boundary pointer, could not find cell " << check_iter->first << " in the Uintah geometry object, which means that your geometry object is too small for the handoff file." << endl;
+                  cout << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
                 } 
 
               } 
