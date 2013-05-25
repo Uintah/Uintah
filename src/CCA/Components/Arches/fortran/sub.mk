@@ -37,7 +37,6 @@ SRCS += \
         $(SRCDIR)/apcal_all.F \
         $(SRCDIR)/areain.F \
         $(SRCDIR)/arrass.F \
-        $(SRCDIR)/inlpresbcinout.F \
         $(SRCDIR)/bcscalar.F \
         $(SRCDIR)/bcuvel.F \
         $(SRCDIR)/bcvvel.F \
@@ -85,7 +84,6 @@ $(SRCDIR)/add_mm_enth_src.$(OBJEXT): $(SRCDIR)/add_mm_enth_src_fort.h
 $(SRCDIR)/apcal_all.$(OBJEXT): $(SRCDIR)/apcal_all_fort.h
 $(SRCDIR)/areain.$(OBJEXT): $(SRCDIR)/areain_fort.h
 $(SRCDIR)/arrass.$(OBJEXT): $(SRCDIR)/arrass_fort.h
-$(SRCDIR)/inlpresbcinout.$(OBJEXT): $(SRCDIR)/inlpresbcinout_fort.h
 $(SRCDIR)/bcpress.$(OBJEXT): $(SRCDIR)/bcpress_fort.h
 $(SRCDIR)/bcscalar.$(OBJEXT): $(SRCDIR)/bcscalar_fort.h
 $(SRCDIR)/bcuvel.$(OBJEXT): $(SRCDIR)/bcuvel_fort.h

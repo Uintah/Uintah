@@ -55,13 +55,13 @@ class PressureSource : public Expr::Expression<SVolField>
   typedef OpTypes::DivY DivYT; ///< Divergence operator (surface integral) in the y-direction
   typedef OpTypes::DivZ DivZT; ///< Divergence operator (surface integral) in the z-direction
   
-  const XVolField *xMom_, *xVelStar_;
-  const YVolField *yMom_, *yVelStar_;
-  const ZVolField *zMom_, *zVelStar_;
+  const XVolField *xMom_, *uStar_;
+  const YVolField *yMom_, *vStar_;
+  const ZVolField *zMom_, *wStar_;
   const SVolField *dens_, *densStar_, *dens2Star_;
   const SVolField *dil_;
   
-  const bool isConstDensity_, haveX_, haveY_, haveZ_;
+  const bool isConstDensity_, doX_, doY_, doZ_;
   const double* timestep_;
   
   const Expr::Tag xMomt_, yMomt_, zMomt_;
@@ -70,12 +70,12 @@ class PressureSource : public Expr::Expression<SVolField>
   const DivXT* divXOp_;
   const DivYT* divYOp_;
   const DivZT* divZOp_;
-  const XFaceInterpT* xFaceInterpOp_;
-  const YFaceInterpT* yFaceInterpOp_;
-  const ZFaceInterpT* zFaceInterpOp_;
-  const Scalar2XFInterpT* scalar2XFInterpOp_;
-  const Scalar2YFInterpT* scalar2YFInterpOp_;
-  const Scalar2ZFInterpT* scalar2ZFInterpOp_;
+  const XFaceInterpT* xFInterpOp_;
+  const YFaceInterpT* yFInterpOp_;
+  const ZFaceInterpT* zFInterpOp_;
+  const Scalar2XFInterpT* s2XFInterpOp_;
+  const Scalar2YFInterpT* s2YFInterpOp_;
+  const Scalar2ZFInterpT* s2ZFInterpOp_;
   
   
   PressureSource( const Expr::TagList& momTags,

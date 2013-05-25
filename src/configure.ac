@@ -702,6 +702,13 @@ case $host in
     NUM_CPUS=2
     IS_OSX="yes"
     DEF_OSX="#define IS_OSX 1"
+
+    # New Mac Clang comiler does not support the -faltivec flag...
+    altivec="-faltivec"
+    $CC --version | grep -q -i clang > /dev/null 2>&1
+    if test $? = 0; then
+      altivec="" 
+    fi
     ;;
   *-aix*)
     NUM_CPUS=4
@@ -2219,12 +2226,22 @@ if test "$DEF_HASHMAP" = "None"; then
                  stdext::hash_map<int, int> xx;], ,
 		 [DEF_HASHMAP=HAVE_STDEXT_HASHMAP])
 fi
-# gcc-4.3 has depricated <ext/hash_map> so check for <backward/hash_map> first
-if test "$DEF_HASHMAP" = "None" && test "$IS_OSX" != "yes"; then
-  AC_TRY_COMPILE([#include <tr1/unordered_map>
-                 std::tr1::unordered_map<int, int> xx;], ,
-		 [DEF_HASHMAP=HAVE_TR1_HASHMAP])
+
+############################################################
+#
+# If CUDA is being used, then we can't use TR1... it causes
+# compilation errors when using the nvcc compiler.
+#
+if test "$sci_required_cuda" != "yes"; then
+  if test "$DEF_HASHMAP" = "None" && test "$IS_OSX" != "yes"; then
+    # gcc-4.3 has depricated <ext/hash_map> so check for <backward/hash_map> first
+    AC_TRY_COMPILE([#include <tr1/unordered_map>
+                   std::tr1::unordered_map<int, int> xx;], ,
+                   [DEF_HASHMAP=HAVE_TR1_HASHMAP])
+  fi
 fi
+############################################################
+
 if test "$DEF_HASHMAP" = "None"; then
   AC_TRY_COMPILE([#include <ext/hash_map>
                  __gnu_cxx::hash_map<int, int> xx;], ,
@@ -2905,7 +2922,7 @@ if test ! "$HAVE_BLAS"; then
          AC_MSG_ERROR(Don't specify a path for atlas when on a Mac (we use vecLib by default.))
        fi
        SCI_TRY_LINK(BLAS,atlas version of libraries and headers (OSX),vecLib/cblas.h,
-                    -faltivec,,,-framework vecLib,[
+                    $altivec,,,-framework vecLib,[
                                                    float x[]={0.7f};
                                                    float y[]={0.8f};
                                                    float test=cblas_sdsdot(1,0.0,x,1,y,-1); 
@@ -3051,9 +3068,9 @@ if test "$HAVE_LAPACK" != "yes"; then
   case $host in
     *-darwin*)
        SCI_TRY_LINK(LAPACK,lapack version oflibraries and headers,
-                    vecLib/clapack.h,,,,-faltivec -framework vecLib,,optional)
+                    vecLib/clapack.h,,,,$altivec -framework vecLib,,optional)
        if test "$HAVE_LAPACK" = yes ; then
-          LAPACK_LIB_FLAG="-faltivec -framework vecLib"
+          LAPACK_LIB_FLAG="$altivec -framework vecLib"
        fi
        ;;
      *)
@@ -4169,7 +4186,16 @@ if test "$with_spatialops"; then
   DEF_SPATIALOPS="#define HAVE_SPATIALOPS 1"
   INC_SPATIALOPS_H="-I$with_spatialops/include"
   SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
-  SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil"
+
+  if test "$sci_required_cuda" = "yes"; then
+    # The spatialops-structured lib is part of the new Nebo version of SpatialOps...
+    # once the Nebo version is merged into the main SpatialOps, then this if (more
+    # specifically the else part) can be removed.
+    SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil -lspatialops-structured"
+  else
+    SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil"
+  fi
+
   HAVE_SPATIALOPS="yes"
 fi
 AC_SUBST(HAVE_SPATIALOPS)

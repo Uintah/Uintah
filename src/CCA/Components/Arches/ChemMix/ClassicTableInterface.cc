@@ -528,8 +528,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         Iterator nu;
         Iterator bound_ptr; 
 
-        std::vector<double> bc_values;
-
         // look to make sure every variable has a BC set:
         // stuff the bc values into a container for use later
         for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
@@ -537,15 +535,20 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           std::string variable_name = d_allIndepVarNames[i]; 
           string bc_kind="NotSet"; 
           double bc_value = 0.0; 
+          std::string bc_s_value = "NA";
           bool foundIterator = "false"; 
+          std::string face_name; 
 
-          // The template parameter needs to be generalized here to handle strings, etc...
-          foundIterator = 
-            getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr ); 
+          getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name ); 
 
-          if ( foundIterator ) { 
-            bc_values.push_back( bc_value ); 
+          if ( bc_kind == "FromFile" ){ 
+            foundIterator = 
+              getIteratorBCValue<std::string>( patch, face, child, variable_name, matlIndex, bc_s_value, bound_ptr ); 
+          } else {
+            foundIterator = 
+              getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr ); 
           } 
+
         }
 
         // now use the last bound_ptr to loop over all boundary cells: 
@@ -628,7 +631,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           }
           iv.resize(0);
         }
-        bc_values.resize(0);
           
         //_______________________________________
         //correct for solid wall temperatures
@@ -643,9 +645,9 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         if ( bc_kind == "Dirichlet" || bc_kind == "Neumann" ) { 
           foundIterator = 
             getIteratorBCValue<double>( patch, face, child, T_name, matlIndex, bc_value, bound_ptr ); 
-          //it is possible that this wasn't even set for a face, thus we can't really do 
-          // any error checking here. 
-        }
+        } else if ( bc_kind == "Tabulated" || bc_kind == "FromFile" ){ 
+          throw InternalError("Error: Sorry, I cannot do a Tabulated or FromFile boundary condition for temperature on a solid wall. Please choose Neumann or Dirichlet or use a wall model.",__FILE__,__LINE__);
+        } 
 
         const DepVarMap::iterator iter = depend_storage.find(_temperature_label_name); 
 

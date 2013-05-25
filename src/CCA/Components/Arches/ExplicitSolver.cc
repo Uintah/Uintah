@@ -322,6 +322,16 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
   } 
 }
 
+void 
+ExplicitSolver::checkMomBCs( SchedulerP& sched,
+                             const PatchSet* patches,
+                             const MaterialSet* matls)
+{
+
+  d_boundaryCondition->sched_checkMomBCs( sched, patches, matls ); 
+
+}
+
 // ****************************************************************************
 // Schedule non linear solve and carry out some actual operations
 // ****************************************************************************
@@ -646,24 +656,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                        d_extraProjection);
     }
 
-    //if (curr_level == numTimeIntegratorLevels - 1) {
-//    if (d_boundaryCondition->anyArchesPhysicalBC()) {
-//
-//      d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
-//                                            d_timeIntegratorLabels[curr_level]);
-//      d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
-//                                            d_timeIntegratorLabels[curr_level]);
-//    }
-//    //}
-//    if ((d_boundaryCondition->anyArchesPhysicalBC())&&
-//        (d_timeIntegratorLabels[curr_level]->integrator_last_step)) {
-//      d_boundaryCondition->sched_getScalarFlowRate(sched, patches, matls);
-//      d_boundaryCondition->sched_getScalarEfficiency(sched, patches, matls);
-//    }
-
     if ( d_timeIntegratorLabels[curr_level]->integrator_last_step) { 
       // this is the new efficiency calculator
-      d_eff_calculator->sched_computeEfficiencies( level, sched ); 
+      d_eff_calculator->sched_computeAllScalarEfficiencies( level, sched ); 
     }
 
 

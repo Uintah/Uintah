@@ -982,9 +982,6 @@ namespace Wasatch{
 
   // convective fluxes are supported for momentum as well.
   INSTANTIATE_CONVECTION( SVolField )
-  INSTANTIATE_CONVECTION( XVolField )
-  INSTANTIATE_CONVECTION( YVolField )
-  INSTANTIATE_CONVECTION( ZVolField )
 
   //-----------------------------------------------------------------
 

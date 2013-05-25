@@ -115,7 +115,7 @@ void
 SineTime<ValT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
+  t_ = &fml.template field_ref<double>( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -433,7 +433,7 @@ evaluate()
   // to take care of comparing doubles, use a tolerance value for min & max (see below)
   const double eps = 2.0*std::numeric_limits<double>::epsilon();
 //  int size = 0;
-  while ( gzeof(inputFile) == 0 ) { // check for end of file
+  while ( !gzeof( inputFile ) ) { // check for end of file
     x   = Uintah::getDouble(inputFile);
     y   = Uintah::getDouble(inputFile);
     z   = Uintah::getDouble(inputFile);
@@ -444,7 +444,7 @@ evaluate()
       ++phiiter;
 //      size++;
     }        
-  }  
+  }
 //  const int pid =  Uintah::Parallel::getMPIRank();
 //  std::cout << "Processor: " << pid << " collected total cells: "<< size << std::endl;
   gzclose( inputFile );     
@@ -1482,7 +1482,7 @@ private:
   const double rho0_, rho1_;
   const Expr::Tag xTag_, tTag_, timestepTag_;
   const FieldT* x_;
-  const double* t_, *timestep_;
+  const double *t_, *timestep_;
 };
 
 //--------------------------------------------------------------------
@@ -1495,11 +1495,11 @@ VarDensMMSContinuitySrc( const double rho0,
                          const Expr::Tag& tTag,
                          const Expr::Tag& timestepTag)
 : Expr::Expression<FieldT>(),
-rho0_( rho0 ), 
-rho1_( rho1 ), 
-timestepTag_( timestepTag ),
-xTag_( xTag ), 
-tTag_( tTag )
+  rho0_( rho0 ),
+  rho1_( rho1 ),
+  xTag_( xTag ),
+  tTag_( tTag ),
+  timestepTag_( timestepTag )
 {}
 
 //--------------------------------------------------------------------
@@ -1522,8 +1522,10 @@ VarDensMMSContinuitySrc<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   x_ = &fml.template field_manager<FieldT>().field_ref( xTag_ );
-  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
-  timestep_ = &fml.template field_manager<double>().field_ref( timestepTag_ );
+
+  const typename Expr::FieldMgrSelector<double>::type& dfm = fml.field_manager<double>();
+  t_        = &dfm.field_ref( tTag_        );
+  timestep_ = &dfm.field_ref( timestepTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -1555,11 +1557,11 @@ Builder( const Expr::Tag& result,
          const Expr::Tag& tTag,
          const Expr::Tag& timestepTag )
 : ExpressionBuilder(result),
-rho0_( rho0 ), 
-rho1_( rho1 ),
-timestepTag_( timestepTag ),
-xTag_( xTag ), 
-tTag_( tTag )
+  rho0_( rho0 ),
+  rho1_( rho1 ),
+  xTag_( xTag ),
+  tTag_( tTag ),
+  timestepTag_( timestepTag )
 {}
 
 //--------------------------------------------------------------------

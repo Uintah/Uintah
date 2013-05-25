@@ -38,8 +38,8 @@ namespace Uintah {
 // considered comments and are skipped.
 //
 static
-const string
-getToken( gzFile gzFp )
+string
+getToken( gzFile & gzFp )
 {
   string token;
 
@@ -70,32 +70,32 @@ getToken( gzFile gzFp )
   return token;
 }
 
-const string
-getString( gzFile gzFp )
+string
+getString( gzFile & gzFp )
 {
   return getToken( gzFp );
 }
 
 double
-getDouble( gzFile gzFp )
+getDouble( gzFile & gzFp )
 {
   double out;
-  const string result = getToken( gzFp );
+  string result = getToken( gzFp );
   sscanf( result.c_str(), "%lf", &out );
   return out;
 }
 
 int
-getInt( gzFile gzFp )
+getInt( gzFile & gzFp )
 {
   int out;
-  const string result = getToken( gzFp );
+  string result = getToken( gzFp );
   sscanf( result.c_str(), "%d", &out );
   return out;
 }
 
-const string
-getLine( gzFile gzFp )
+string
+getLine( gzFile & gzFp )
 {
   string line;
 

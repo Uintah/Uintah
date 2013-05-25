@@ -23,7 +23,7 @@
  */
 
 
-#include <CCA/Components/ICE/SmagorinskyModel.h>
+#include <CCA/Components/ICE/TurbulenceModel/SmagorinskyModel.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>

@@ -23,44 +23,47 @@
  */
 
 
-#include <CCA/Components/ICE/TurbulenceFactory.h>
-#include <CCA/Components/ICE/SmagorinskyModel.h>
-#include <CCA/Components/ICE/DynamicModel.h>
+#include <CCA/Components/ICE/WallShearStressModel/WallShearStressFactory.h>
+#include <CCA/Components/ICE/WallShearStressModel/NewtonianModel.h>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 
-TurbulenceFactory::TurbulenceFactory()
+WallShearStressFactory::WallShearStressFactory()
 {
 }
 
-TurbulenceFactory::~TurbulenceFactory()
+WallShearStressFactory::~WallShearStressFactory()
 {
 }
-
-Turbulence* TurbulenceFactory::create(ProblemSpecP& ps, SimulationStateP& sharedState)
+//______________________________________________________________________
+//
+WallShearStress* WallShearStressFactory::create( ProblemSpecP& ps, 
+                                                 SimulationStateP& sharedState )
 {
-  ProblemSpecP turb_ps = ps->findBlock("turbulence");
+  ProblemSpecP wss_ps = ps->findBlock("WallShearStressModel");
   
-  if(turb_ps){
-    std::string turbulence_model;
-    if(!turb_ps->getAttribute("model",turbulence_model)){
-      throw ProblemSetupException("No model for turbulence", __FILE__, __LINE__); 
+  if(wss_ps){
+    std::string WSS_model;
+    
+    if(!wss_ps->getAttribute("model",WSS_model)){
+      throw ProblemSetupException("No model specified for WallShearStress", __FILE__, __LINE__); 
     }
-    if (turbulence_model == "Smagorinsky"){
-      return(scinew Smagorinsky_Model(turb_ps, sharedState));
-    }else if (turbulence_model == "Germano"){ 
-      return(scinew DynamicModel(turb_ps, sharedState));
+    
+    if (WSS_model == "Newtonian"){
+      return( scinew NewtonianModel( wss_ps, sharedState ) );
     }else{
       ostringstream warn;
-      warn << "ERROR ICE: Unknown turbulence model ("<< turbulence_model << " )\n"
+      warn << "ERROR ICE: Unknown WallShearStress model ("<< WSS_model << " )\n"
          << "Valid models are:\n" 
-         << "Smagorinsky\n"
-         << "Germano\n" << endl;
+         << "Newtonian\n"<< endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
+  } else {          // Default model
+    scinew NewtonianModel(wss_ps, sharedState );
   }
   return 0;
 }

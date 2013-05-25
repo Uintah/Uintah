@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "MomentumPartialRHS.h"
+#include <CCA/Components/Wasatch/Expressions/MomentumPartialRHS.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 
 //-- SpatialOps Includes --//
@@ -103,13 +103,14 @@ bind_fields( const Expr::FieldManagerList& fml )
   if( tauYt_ != emptyTag_ )  tauY_ = &yfm.field_ref(tauYt_);
   if( tauZt_ != emptyTag_ )  tauZ_ = &zfm.field_ref(tauZt_);
 
-  density_ = &fml.field_manager<SVolField>().field_ref( densityt_ );
-  visc_    = &fml.field_manager<SVolField>().field_ref( viscTag_ );
+  const typename Expr::FieldMgrSelector<SVolField>::type& svfm= fml.template field_manager<SVolField>();
+  density_ = &svfm.field_ref( densityt_ );
+  visc_    = &svfm.field_ref( viscTag_ );
   
-  if( bodyForcet_ != emptyTag_ )  bodyForce_ = &fml.field_manager<FieldT>().field_ref( bodyForcet_ );
-  if( srcTermt_ != emptyTag_   )  srcTerm_   = &fml.field_manager<FieldT>().field_ref( srcTermt_   );
-  
-  if( volfract_ != emptyTag_   )  volfrac_  = &fml.field_manager<FieldT>().field_ref( volfract_    );
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  if( bodyForcet_ != emptyTag_ )  bodyForce_ = &fm.field_ref( bodyForcet_ );
+  if( srcTermt_   != emptyTag_ )  srcTerm_   = &fm.field_ref( srcTermt_   );
+  if( volfract_   != emptyTag_ )  volfrac_   = &fm.field_ref( volfract_   );
 }
 
 //--------------------------------------------------------------------

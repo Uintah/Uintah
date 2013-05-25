@@ -314,6 +314,9 @@ Vector Tensor::operator*(const Vector v) const
 void Tensor::build_eigens_from_mat()
 {
   if (have_eigens_) return;
+  float eval[3];
+  float evec[9];
+#ifdef HAVE_TEEM
   float ten[7];
   ten[0] = 1.0;
   ten[1] = mat_[0][0];
@@ -322,9 +325,6 @@ void Tensor::build_eigens_from_mat()
   ten[4] = mat_[1][1];
   ten[5] = mat_[1][2];
   ten[6] = mat_[2][2];
-  float eval[3];
-  float evec[9];
-#ifdef HAVE_TEEM
   tenEigensolve_f(eval, evec, ten);
 #else
   throw InternalError("Trying to eigensolve without Teem", __FILE__, __LINE__);

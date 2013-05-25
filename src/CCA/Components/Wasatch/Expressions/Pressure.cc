@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "Pressure.h"
+#include <CCA/Components/Wasatch/Expressions/Pressure.h>
 
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
@@ -232,22 +232,22 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
   const Expr::FieldMgrSelector<YVolField>::type& yvfm = fml.field_manager<YVolField>();
   const Expr::FieldMgrSelector<ZVolField>::type& zvfm = fml.field_manager<ZVolField>();
 
-  if( doX_    )  fx_      = &xvfm.field_ref( fxt_       );
-  if( doY_    )  fy_      = &yvfm.field_ref( fyt_       );
-  if( doZ_    )  fz_      = &zvfm.field_ref( fzt_       );
+  if( doX_ )  fx_ = &xvfm.field_ref( fxt_ );
+  if( doY_ )  fy_ = &yvfm.field_ref( fyt_ );
+  if( doZ_ )  fz_ = &zvfm.field_ref( fzt_ );
   pSource_ = &svfm.field_ref( pSourcet_  );
 
   dxmomdt_ = NULL;
   dymomdt_ = NULL;
   dzmomdt_ = NULL;
-  if( doX_  && dudtt_ != Expr::Tag()  )  dxmomdt_  = &xvfm.field_ref( dudtt_       );
-  if( doY_  && dvdtt_ != Expr::Tag()  )  dymomdt_  = &yvfm.field_ref( dvdtt_       );
-  if( doZ_  && dwdtt_ != Expr::Tag()  )  dzmomdt_  = &zvfm.field_ref( dwdtt_       );
+  if( doX_ && dudtt_ != Expr::Tag() )  dxmomdt_ = &xvfm.field_ref( dudtt_ );
+  if( doY_ && dvdtt_ != Expr::Tag() )  dymomdt_ = &yvfm.field_ref( dvdtt_ );
+  if( doZ_ && dwdtt_ != Expr::Tag() )  dzmomdt_ = &zvfm.field_ref( dwdtt_ );
 
   if( volfract_ != Expr::Tag() ) volfrac_ = &svfm.field_ref( volfract_ );
 
   const Expr::FieldMgrSelector<double>::type& doublefm = fml.field_manager<double>();
-  timestep_ = &doublefm.field_ref( timestept_ );
+  timestep_    = &doublefm.field_ref( timestept_    );
   currenttime_ = &doublefm.field_ref( currenttimet_ );
 }
 
@@ -263,7 +263,6 @@ Pressure::bind_operators( const SpatialOps::OperatorDatabase& opDB )
   divXOp_ = opDB.retrieve_operator<DivX>();
   divYOp_ = opDB.retrieve_operator<DivY>();
   divZOp_ = opDB.retrieve_operator<DivZ>();
-
 }
 
 //--------------------------------------------------------------------
@@ -339,19 +338,15 @@ Pressure::evaluate()
   if (rkStage_ == 1) pressure <<= 0.0;
 
   SVolField& rhs = *results[1];
-  rhs <<= 0.0;
 
   std::ostringstream strs;
   strs << "_t_"<< *currenttime_ << "s_rkstage_"<< rkStage_ << "_patch";
 
   solverParams_.setOutputFileName( "_WASATCH" + strs.str() );
 
-// NOTE THE NEGATIVE SIGN! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
+  // NOTE THE NEGATIVE SIGN! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
   // - Laplacian(p) = - p_rhs
   rhs <<= - *pSource_;
-
-  SpatFldPtr<SVolField> tmp = SpatialFieldStore::get<SVolField>( rhs );
-  *tmp <<= 0.0;
 
   //___________________________________________________
   // calculate the RHS field for the poisson solve.
@@ -359,25 +354,14 @@ Pressure::evaluate()
   // the solver in the "schedule_solver" method.
   // NOTE THE NEGATIVE SIGNS! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
   // - Laplacian(p) = - p_rhs
-  if( doX_ ){
-    rhs <<= rhs - (*divXOp_)((*interpX_)(*fx_));
-  }
-
-  if( doY_ ){
-    rhs <<= rhs - (*divYOp_)((*interpY_)(*fy_));
-  }
-
-  if( doZ_ ){
-    rhs <<= rhs - (*divZOp_)((*interpZ_)(*fz_));
-  }
-
-  
-  if (volfract_ != Expr::Tag() ) {
-    rhs <<= rhs* *volfrac_;
-  }
+  if( doX_ ) rhs <<= rhs - (*divXOp_)((*interpX_)(*fx_));
+  if( doY_ ) rhs <<= rhs - (*divYOp_)((*interpY_)(*fy_));
+  if( doZ_ ) rhs <<= rhs - (*divZOp_)((*interpZ_)(*fz_));
+  if (volfract_ != Expr::Tag() ) rhs <<= rhs* *volfrac_;
 
   // update pressure rhs for reference pressure
-  if (useRefPressure_) set_ref_poisson_rhs( rhs, patch_, refPressureValue_, refPressureLocation_ );
+  if (useRefPressure_)
+    set_ref_poisson_rhs( rhs, patch_, refPressureValue_, refPressureLocation_ );
 
   // update pressure rhs for any BCs
   if(patch_->hasBoundaryFaces())

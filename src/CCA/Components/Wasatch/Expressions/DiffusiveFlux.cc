@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "DiffusiveFlux.h"
+#include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -90,10 +90,10 @@ void
 DiffusiveFlux<ScalarT, FluxT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  phi_ = &fml.template field_manager<ScalarT  >().field_ref( phiTag_ );
-  rho_ = &fml.template field_manager<SVolField>().field_ref( rhoTag_ );
-  if( isTurbulent_  ) turbDiff_ = &fml.template field_manager<SVolField>().field_ref( turbDiffTag_ );
-  if( !isConstCoef_ ) coef_     = &fml.template field_manager<FluxT>().field_ref  ( coefTag_  );
+  phi_ = &fml.template field_ref<ScalarT  >( phiTag_ );
+  rho_ = &fml.template field_ref<SVolField>( rhoTag_ );
+  if( isTurbulent_  ) turbDiff_ = &fml.template field_ref<SVolField>( turbDiffTag_ );
+  if( !isConstCoef_ ) coef_     = &fml.template field_ref<FluxT    >( coefTag_     );
 }
 
 //--------------------------------------------------------------------
@@ -115,42 +115,12 @@ DiffusiveFlux<ScalarT, FluxT>::
 evaluate()
 {
   using namespace SpatialOps;
-  FluxT& result = this->value();
-
-//  
-//  
-////  gradOp_->apply_to_field( *phi_, result );  // J = grad(phi)
-//
-//  SpatFldPtr<FluxT> gammaTotal = SpatialFieldStore::get<FluxT>( result );
-//  *gammaTotal <<= 0.0;
-//  
-//  if (isTurbulent_) {
-//    sVolInterpOp_->apply_to_field( *turbDiff_, *gammaTotal );
-//  }
-//  
-//  *gammaTotal <<= *gammaTotal + coefVal_;
-////  if( isConstCoef_ ){
-////    *gammaTotal <<= *gammaTotal + coefVal_;     // gamma_mix = gamma + gamma_T
-////  }
-////  else{
-////    *gammaTotal <<= *gammaTotal + *coef_;       // gamma_mix = gamma + gamma_T
-////  }
-//  
-//  result <<= - *gammaTotal * (*sVolInterpOp_)(*rho_) * (*gradOp_)(*phi_);
-//  
-//  
-////  result <<= -result * *tmp;      // J =  - gamma * grad(phi)
-////  
-////  SpatFldPtr<FluxT> interpRho = SpatialFieldStore::get<FluxT>(result);
-////  sVolInterpOp_->apply_to_field( *rho_, *interpRho );
-////  result <<= result * *interpRho;               // J = - rho * gamma * grad(phi)
-
+  FluxT& result = this->value();  
   if (isTurbulent_) {
     result <<= - (*sVolInterpOp_)(*rho_) * (coefVal_ + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
   } else {
     result <<= - (*sVolInterpOp_)(*rho_) * coefVal_ * (*gradOp_)(*phi_);
   }
-
 }
 
 
@@ -198,11 +168,12 @@ void
 DiffusiveFlux2<ScalarT, FluxT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldMgrSelector<ScalarT>::type& scalarFM = fml.template field_manager<ScalarT>();
+  const typename Expr::FieldMgrSelector<ScalarT  >::type& scalarFM = fml.template field_manager<ScalarT  >();
+  const typename Expr::FieldMgrSelector<SVolField>::type& svolFM   = fml.template field_manager<SVolField>();
   phi_  = &scalarFM.field_ref( phiTag_  );
   coef_ = &scalarFM.field_ref( coefTag_ );
-  rho_ = &fml.template field_manager<SVolField>().field_ref( rhoTag_ );
-  if (isTurbulent_) turbDiff_  = &fml.template field_manager<SVolField>().field_ref( turbDiffTag_  );
+  rho_ = &svolFM.field_ref( rhoTag_ );
+  if (isTurbulent_) turbDiff_ = &svolFM.field_ref( turbDiffTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -226,25 +197,6 @@ evaluate()
 {
   using namespace SpatialOps;
   FluxT& result = this->value();
-
-//  SpatFldPtr<FluxT> fluxTmp = SpatialFieldStore::get<FluxT>( result );
-//
-//  gradOp_  ->apply_to_field( *phi_, result );  // J = grad(phi)  
-//  interpOp_->apply_to_field( *coef_, *fluxTmp  );
-//  
-//  SpatFldPtr<FluxT> tmp = SpatialFieldStore::get<FluxT>( result );
-//  *tmp <<= 0.0;
-//  if (isTurbulent_) {
-//    sVolInterpOp_->apply_to_field( *turbDiff_, *tmp );
-//    *fluxTmp <<= *fluxTmp + *tmp;                // gamma_mix = gamma + gamma_T
-//  }
-//  
-//  result <<= -result * *fluxTmp;                 // J = - gamma * grad(phi)
-//
-//  sVolInterpOp_->apply_to_field( *rho_, *fluxTmp );
-//  result <<= result * *fluxTmp;               // J = - rho * gamma * grad(phi)
-//  
-//  
   if (isTurbulent_) {
     result <<= - (*sVolInterpOp_)(*rho_) * ((*interpOp_)(*coef_) + (*interpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
   } else {

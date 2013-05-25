@@ -25,17 +25,20 @@
 #include "StrainTensorBase.h"
 
 StrainTensorBase::
-StrainTensorBase( const Expr::Tag& vel1tag,
-                 const Expr::Tag& vel2tag,
-                 const Expr::Tag& vel3tag )
+StrainTensorBase( const Expr::TagList& velTags )
 : Expr::Expression<SVolField>(),
-  vel1t_( vel1tag ),
-  vel2t_( vel2tag ),
-  vel3t_( vel3tag ),
-  doX_  ( vel1t_ != Expr::Tag() ),
-  doY_  ( vel2t_ != Expr::Tag() ),
-  doZ_  ( vel3t_ != Expr::Tag() )
-{}
+  velTags_( velTags ),
+  doX_  ( velTags[0] != Expr::Tag() ),
+  doY_  ( velTags[1] != Expr::Tag() ),
+  doZ_  ( velTags[2] != Expr::Tag() )
+{
+  if (!(doX_ && doY_ && doZ_)) {
+    std::ostringstream msg;
+    msg << "WARNING: You cannot use the Dynamic Smagorinsky Model in one or two dimensions. Please revise your input file and make sure that you specify all three velocity/momentum components." << std::endl;
+    std::cout << msg.str() << std::endl;
+    throw std::runtime_error(msg.str());
+  }
+}
 
 //--------------------------------------------------------------------
 
@@ -49,9 +52,7 @@ void
 StrainTensorBase::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  if( doX_ ) exprDeps.requires_expression( vel1t_ );
-  if( doY_ ) exprDeps.requires_expression( vel2t_ );
-  if( doZ_ ) exprDeps.requires_expression( vel3t_ );
+  exprDeps.requires_expression( velTags_ );
 }
 
 //--------------------------------------------------------------------
@@ -60,9 +61,9 @@ void
 StrainTensorBase::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  if ( doX_ ) vel1_ = &fml.field_manager<XVolField>().field_ref( vel1t_ );
-  if ( doY_ ) vel2_ = &fml.field_manager<YVolField>().field_ref( vel2t_ );
-  if ( doZ_ ) vel3_ = &fml.field_manager<ZVolField>().field_ref( vel3t_ );
+  vel1_ = &fml.field_ref<XVolField>( velTags_[0] );
+  vel2_ = &fml.field_ref<YVolField>( velTags_[1] );
+  vel3_ = &fml.field_ref<ZVolField>( velTags_[2] );
 }
 
 //--------------------------------------------------------------------
@@ -104,13 +105,9 @@ evaluate()
 
 StrainTensorBase::
 Builder::Builder( const Expr::Tag& result,
-                 const Expr::Tag& vel1tag,
-                 const Expr::Tag& vel2tag,
-                 const Expr::Tag& vel3tag )
+                  const Expr::TagList& velTags )
 : ExpressionBuilder(result),
-  v1t_( vel1tag ),
-  v2t_( vel2tag ),
-  v3t_( vel3tag )
+  velTags_(velTags)
 {}
 
 //--------------------------------------------------------------------
@@ -118,7 +115,7 @@ Builder::Builder( const Expr::Tag& result,
 Expr::ExpressionBase*
 StrainTensorBase::Builder::build() const
 {
-  return new StrainTensorBase( v1t_, v2t_, v3t_ );
+  return new StrainTensorBase( velTags_ );
 }
 
 //--------------------------------------------------------------------
@@ -137,74 +134,20 @@ calculate_strain_tensor_components(SVolField& strTsrMag,
                                    SVolField& S33)
 {
   using namespace SpatialOps;
-  strTsrMag <<= 0.0;
-  //
-  SpatFldPtr<SVolField> tmp1 = SpatialFieldStore::get<SVolField>( strTsrMag );
-  SpatFldPtr<SVolField> tmp2 = SpatialFieldStore::get<SVolField>( strTsrMag );
-  *tmp1 <<= 0.0;
-  *tmp2 <<= 0.0;
-  
-  SpatFldPtr<structured::XSurfYField> xyfield = SpatialFieldStore::get<structured::XSurfYField>( strTsrMag );
-  SpatFldPtr<structured::YSurfXField> yxfield = SpatialFieldStore::get<structured::YSurfXField>( strTsrMag );
-  *xyfield <<= 0.0;
-  *yxfield <<= 0.0;
-  
-  SpatFldPtr<structured::XSurfZField> xzfield = SpatialFieldStore::get<structured::XSurfZField>( strTsrMag );
-  SpatFldPtr<structured::ZSurfXField> zxfield = SpatialFieldStore::get<structured::ZSurfXField>( strTsrMag );
-  *xzfield <<= 0.0;
-  *zxfield <<= 0.0;
-  
-  SpatFldPtr<structured::YSurfZField> yzfield = SpatialFieldStore::get<structured::YSurfZField>( strTsrMag );
-  SpatFldPtr<structured::ZSurfYField> zyfield = SpatialFieldStore::get<structured::ZSurfYField>( strTsrMag );
-  *yzfield <<= 0.0;
-  *zyfield <<= 0.0;
-  //
+
+  S11 <<= (*dudxOp_)(u);               // S_11 = 0.5 * (du/dx + du/dx) = du/dx
+  S22 <<= (*dvdyOp_)(v);               // S_22 = 0.5 * (dv/dy + dv/dy) = dv/dy
+  S33 <<= (*dwdzOp_)(w);               // S_33 = 0.5 * (dw/dz + dw/dz) = dwdz
+
+  S12 <<= 0.5 * ( (*xyInterpOp_)( (*dudyOp_)(u) ) + (*yxInterpOp_)( (*dvdxOp_)(v) )); // S_12 = S_21 = 0.5 * (du/dy + dv/dx)
+  S13 <<= 0.5 * ( (*xzInterpOp_)( (*dudzOp_)(u) ) + (*zxInterpOp_)( (*dwdxOp_)(w) )); // S_13 = S_31 =0.5 (du/dz + dw/dx)
+  S23 <<= 0.5 * ( (*yzInterpOp_)( (*dvdzOp_)(v) ) + (*zyInterpOp_)( (*dwdyOp_)(w) )); // S_23 = S_32 = 0.5 *(dv/dz + dw/dy)
+
   //-------------------------
-  S11 <<= 0.0;
-  dudxOp_->apply_to_field( u, S11 );     // S_11 = 0.5 * (du/dx + du/dx) = du/dx
-  strTsrMag <<= strTsrMag + S11 * S11;     // S_11 * S_11
-  
-  S22 <<= 0.0;
-  dvdyOp_->apply_to_field( v, S22 );     // S_22 = 0.5 * (dv/dy + dv/dy) = dv/dy
-  strTsrMag <<= strTsrMag + S22 * S22;     // S_22 * S_22
-  
-  S33 <<= 0.0;
-  dwdzOp_->apply_to_field( w, S33 );     // S_33 = 0.5 * (dw/dz + dw/dz) = dwdz
-  strTsrMag <<= strTsrMag + S33 * S33;   // S_33 * S_33
-  
-  //-------------------------
-  S12 <<= 0.0;
-  dudyOp_->apply_to_field( u, *xyfield );    // du/dy
-  xyInterpOp_->apply_to_field( *xyfield, *tmp1);  // interpolate to scalar cells
-  
-  dvdxOp_->apply_to_field( v, *yxfield );    // dv/dx
-  yxInterpOp_->apply_to_field( *yxfield, *tmp2);  // interpolate to scalar cells
-  
-  S12 <<= 0.5 * (*tmp1 + *tmp2);                         // S_12 = S_21 = 0.5 * (du/dy + dv/dx)
-  strTsrMag <<= strTsrMag + 2.0 * S12 * S12; // 2*S_12 * S_12 + 2*S_21 * S_21 = 4*S_12*S_12
-  
-  //-------------------------
-  S13 <<= 0.0;
-  dudzOp_->apply_to_field( u, *xzfield );    // du/dz
-  xzInterpOp_->apply_to_field( *xzfield, *tmp1);
-  
-  dwdxOp_->apply_to_field( w, *zxfield );    // dw/dx
-  zxInterpOp_->apply_to_field( *zxfield, *tmp2);
-  
-  S13 <<= 0.5 * (*tmp1 + *tmp2);                  // S_13 = S_31 =0.5 (du/dz + dw/dx)
-  strTsrMag <<= strTsrMag + 2.0 * S13 * S13;   //    |S|^2 = 2.0 * S_ij * S_ij (we take account for S_ij and Sji at the same time)
-  
-  //-------------------------
-  S23 <<= 0.0;
-  dvdzOp_->apply_to_field( v, *yzfield );    // dv/dz
-  yzInterpOp_->apply_to_field( *yzfield, *tmp1);
-  
-  dwdyOp_->apply_to_field( w, *zyfield );    // dw/dy
-  zyInterpOp_->apply_to_field( *zyfield, *tmp2);
-  
-  S23 <<= 0.5*(*tmp1 + *tmp2);                         // S_23 = S_32 = 0.5 *(dv/dz + dw/dy)
-  strTsrMag <<= strTsrMag + 2.0 * S23 * S23;   // |S|^2 / 2 = S_ij * S_ij (we take account for S_ij and Sji at the same time)
-  strTsrMag <<= sqrt(2.0 * strTsrMag);
+  strTsrMag <<= sqrt(2.0 * (S11 * S11 + S22 * S22 + S33 * S33
+                            + 2.0 * S12 * S12
+                            + 2.0 * S13 * S13
+                            + 2.0 * S23 * S23 ) );
 }
 
 //------------------------------------------------------

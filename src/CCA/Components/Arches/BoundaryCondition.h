@@ -230,6 +230,14 @@ namespace Uintah {
                               DataWarehouse*,
                               DataWarehouse* new_dw);
 
+     void sched_checkMomBCs( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls ); 
+
+     void checkMomBCs( const ProcessorGroup* pc, 
+                       const PatchSubset* patches, 
+                       const MaterialSubset* matls, 
+                       DataWarehouse* old_dw, 
+                       DataWarehouse* new_dw );
+
       void setVelFromExtraValue__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
         constCCVariable<double>& density, 
@@ -305,9 +313,6 @@ namespace Uintah {
                         const int  matl_index, 
                         varType& phi, 
                         std::vector<BC_TYPE>& types );
-
-      std::map<IntVector, double>
-      readInputFile__NEW( std::string );
 
       void sched_setupNewIntrusions(SchedulerP&, 
           const PatchSet* patches,
@@ -726,24 +731,6 @@ namespace Uintah {
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
-      void sched_getFlowINOUT(SchedulerP& sched,
-          const PatchSet* patches,
-          const MaterialSet* matls,
-          const TimeIntegratorLabel* timelabels);
-
-      void sched_correctVelocityOutletBC(SchedulerP& sched,
-          const PatchSet* patches,
-          const MaterialSet* matls,
-          const TimeIntegratorLabel* timelabels);
-
-      void sched_getScalarFlowRate(SchedulerP& sched,
-          const PatchSet* patches,
-          const MaterialSet* matls);
-
-      void sched_getScalarEfficiency(SchedulerP& sched,
-          const PatchSet* patches,
-          const MaterialSet* matls);
-
       void sched_setInletFlowRates(SchedulerP& sched,
           const PatchSet* patches,
           const MaterialSet* matls);
@@ -785,10 +772,6 @@ namespace Uintah {
           const PatchSet* patches,
           const MaterialSet* matls);
 
-
-      void sched_bcdummySolve( SchedulerP& sched, 
-          const PatchSet* patches, 
-          const MaterialSet* matls );
 
       void sched_setAreaFraction(SchedulerP& sched, 
           const PatchSet* patches, 
@@ -929,51 +912,9 @@ namespace Uintah {
           DataWarehouse* old_dw,
           DataWarehouse* new_dw);
 
-      // New boundary conditions
-
-      void getFlowINOUT(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw,
-          const TimeIntegratorLabel* timelabels);
-
-      void correctVelocityOutletBC(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw,
-          const TimeIntegratorLabel* timelabels);
-
-      void getScalarFlowRate(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw);
-
-      void getScalarEfficiency(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw);
-
-      void getVariableFlowRate(const Patch* patch,
-          CellInformation* cellinfo,
-          ArchesConstVariables* constvars,
-          constCCVariable<double> balance_var,
-          double* varIN, 
-          double* varOUT); 
-
       void setInletFlowRates(const ProcessorGroup*,
           const PatchSubset* patches,
           const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw);
-
-
-      void bcdummySolve( const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset*,
           DataWarehouse* old_dw,
           DataWarehouse* new_dw);
 
@@ -1154,32 +1095,28 @@ namespace Uintah {
           DataWarehouse* new_dw);
 
 
-      // Efficiency Variables
-      struct EfficiencyInfo {
-        const VarLabel* label; //efficiency label
-        vector<std::string> species; 
-        double fuel_ratio; 
-        double air_ratio; 
-        std::vector<string> which_inlets; //inlets needed for this calculation
-      };
-
-      struct SpeciesEfficiencyInfo {
-        const VarLabel* flowRateLabel;
-        double molWeightRatio; 
-      };
-
-      void insertIntoEffMap( std::string name, double fuel_ratio, double air_ratio, vector<std::string> species, vector<std::string> which_inlets ); 
-
-      void insertIntoSpeciesMap ( std::string name, double mol_ratio );
     private:
 
       // input information
       typedef std::map<IntVector, double> CellToValue; 
-      typedef std::map<std::string, CellToValue> FaceToInput;  
+      struct FFInfo{ 
+        CellToValue values;
+        Vector relative_xyz;
+        double dx;
+        double dy; 
+        IntVector relative_ijk;
+        std::string default_type; 
+        std::string name; 
+        double default_value; 
+      }; 
+      typedef std::map<std::string, FFInfo> FaceToInput;  
 
       FaceToInput _u_input; 
       FaceToInput _v_input; 
       FaceToInput _w_input; 
+
+      void readInputFile__NEW( std::string, BoundaryCondition::FFInfo& info, const int index );
+      std::vector<std::string> d_all_v_inlet_names; 
 
       // const VarLabel* inputs
       const ArchesLabel* d_lab;
@@ -1243,12 +1180,6 @@ namespace Uintah {
         int d_BC_ID; 
       };
       vector<d_extraScalarBC*> d_extraScalarBCs; 
-
-      typedef std::map<std::string, struct EfficiencyInfo> EfficiencyMap;
-      EfficiencyMap d_effVars;
-
-      typedef std::map<std::string, struct SpeciesEfficiencyInfo> SpeciesEffMap; // label string, molecular weight ratio 
-      SpeciesEffMap d_speciesEffInfo;
 
       BoundaryCondition_new* d_newBC; 
 

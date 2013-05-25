@@ -56,40 +56,24 @@ public:
   };
   
   ~LinearBC(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){  exprDeps.requires_expression( indepVarTag_ );}
-  void bind_fields( const Expr::FieldManagerList& fml ){
-    const typename Expr::FieldMgrSelector<FieldT>::type& phifm = fml.template field_manager<FieldT>();
-    x_    = &phifm.field_ref( indepVarTag_    );
+  void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( indepVarTag_ );}
+  void bind_fields( const Expr::FieldManagerList& fml ){ x_ = &fml.template field_ref<FieldT>( indepVarTag_ );}
+
+  void evaluate()
+  {
+    using namespace SpatialOps;
+    FieldT& f = this->value();
+    const double ci = this->ci_;
+    const double cg = this->cg_;
+    std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
+    std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
+    for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib )
+      f[*ia] = ( ( a_ * (*x_)[*ia] + b_) - ci*f[*ib] ) / cg;
   }
-  void evaluate();
 private:
   const FieldT* x_;
   const Expr::Tag indepVarTag_;
   const double a_, b_;
 };
-
-// ###################################################################
-//
-//                          Implementation
-//
-// ###################################################################
-
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-LinearBC<FieldT>::
-evaluate()
-{
-  using namespace SpatialOps;
-  FieldT& f = this->value();
-  const double ci = this->ci_;
-  const double cg = this->cg_;
-  std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
-  std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
-  for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib )
-    f[*ia] = ( ( a_ * (*x_)[*ia] + b_) - ci*f[*ib] ) / cg;
-}
 
 #endif // LinearBC_Expr_h

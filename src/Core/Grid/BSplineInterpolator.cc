@@ -265,7 +265,6 @@ void BSplineInterpolator::findCellAndShapeDerivatives(const Point& pos,
 {
   IntVector low,hi;
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
-  Vector dx = d_patch->dCell();
   d_patch->getLevel()->findInteriorNodeIndexRange(low,hi);
   int ix = Floor(cellpos.x());
   int iy = Floor(cellpos.y());
@@ -319,7 +318,6 @@ BSplineInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
 {
   IntVector low,hi;
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
-  Vector dx = d_patch->dCell();
   d_patch->getLevel()->findInteriorNodeIndexRange(low,hi);
   int ix = Floor(cellpos.x());
   int iy = Floor(cellpos.y());

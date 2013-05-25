@@ -40,13 +40,13 @@ TurbulentViscosity( const Expr::Tag rhoTag,
                     const Expr::Tag dynamicSmagCoefTag,
                     const Wasatch::TurbulenceParameters turbParams )
 : Expr::Expression<SVolField>(),
-  isConstSmag_(turbulenceParameters_.turbulenceModelName != Wasatch::DYNAMIC),
-  turbulenceParameters_ ( turbParams          ),
-  strTsrSqTag_          ( strTsrSqTag        ),
-  waleTsrMagTag_        ( waleTsrMagTag      ),
-  vremanTsrMagTag_      ( vremanTsrMagTag     ),
-  dynCoefTag_           ( dynamicSmagCoefTag ),
-  rhoTag_               ( rhoTag              )
+  isConstSmag_(turbParams_.turbModelName != Wasatch::DYNAMIC),
+  turbParams_      ( turbParams         ),
+  strTsrSqTag_     ( strTsrSqTag        ),
+  waleTsrMagTag_   ( waleTsrMagTag      ),
+  vremanTsrMagTag_ ( vremanTsrMagTag    ),
+  dynCoefTag_      ( dynamicSmagCoefTag ),
+  rhoTag_          ( rhoTag             )
 {}
 
 //--------------------------------------------------------------------
@@ -63,18 +63,18 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( rhoTag_ );
   
-  if (turbulenceParameters_.turbulenceModelName == Wasatch::SMAGORINSKY)
+  if (turbParams_.turbModelName == Wasatch::SMAGORINSKY)
     exprDeps.requires_expression( strTsrSqTag_ );  
   
-  else if (turbulenceParameters_.turbulenceModelName == Wasatch::VREMAN)
+  else if (turbParams_.turbModelName == Wasatch::VREMAN)
     exprDeps.requires_expression( vremanTsrMagTag_ );  
   
-  else if (turbulenceParameters_.turbulenceModelName == Wasatch::WALE) {
+  else if (turbParams_.turbModelName == Wasatch::WALE) {
     exprDeps.requires_expression( strTsrSqTag_ );
     exprDeps.requires_expression( waleTsrMagTag_ );
   }
   
-  else if( turbulenceParameters_.turbulenceModelName == Wasatch::DYNAMIC ) {
+  else if( turbParams_.turbModelName == Wasatch::DYNAMIC ) {
     exprDeps.requires_expression( strTsrSqTag_ );
     exprDeps.requires_expression( dynCoefTag_ );
   }
@@ -89,23 +89,26 @@ bind_fields( const Expr::FieldManagerList& fml )
 {
   const Expr::FieldMgrSelector<SVolField>::type& scalarfm = fml.field_manager<SVolField>();
 
-  rho_       = &scalarfm.field_ref( rhoTag_       );
+  rho_ = &scalarfm.field_ref( rhoTag_ );
   
-  if ( turbulenceParameters_.turbulenceModelName == Wasatch::SMAGORINSKY )
-      strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
-  
-  else if ( turbulenceParameters_.turbulenceModelName == Wasatch::WALE ) {
+  switch( turbParams_.turbModelName ){
+  case Wasatch::SMAGORINSKY :
     strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
-    waleTsrMag_ = &scalarfm.field_ref( waleTsrMagTag_ );    
-  }
-  
-  else if( turbulenceParameters_.turbulenceModelName == Wasatch::DYNAMIC ) {
+    break;
+  case Wasatch::WALE :
+    strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
+    waleTsrMag_ = &scalarfm.field_ref( waleTsrMagTag_ );
+    break;
+  case Wasatch::DYNAMIC :
     strTsrSq_ = &scalarfm.field_ref( strTsrSqTag_ );
     dynCoef_ = &scalarfm.field_ref ( dynCoefTag_ );
+    break;
+  case Wasatch::VREMAN :
+    vremanTsrMag_ = &scalarfm.field_ref( vremanTsrMagTag_ );
+    break;
+  case Wasatch::NONE :
+    assert(false);
   }
-  
-  else if( turbulenceParameters_.turbulenceModelName == Wasatch::VREMAN )
-    vremanTsrMag_ = &scalarfm.field_ref( vremanTsrMagTag_ );    
 }
 
 //--------------------------------------------------------------------
@@ -128,19 +131,18 @@ evaluate()
 {
   using namespace SpatialOps;
   SVolField& result = this->value();
-  result <<= 0.0;
 
   const double dx = 1.0 / std::abs( gradXOp_->get_plus_coef() );
   const double dy = 1.0 / std::abs( gradYOp_->get_plus_coef() );
   const double dz = 1.0 / std::abs( gradZOp_->get_plus_coef() );
   const double avgVol = std::pow(dx*dy*dz, 1.0/3.0);
-  double mixingLengthSq = turbulenceParameters_.eddyViscosityConstant * avgVol; //* (1.0 - avgVol/turbulenceParameters_.kolmogorovScale);
+  
+  double mixingLengthSq = turbParams_.eddyViscCoef * avgVol;
   mixingLengthSq = mixingLengthSq * mixingLengthSq; // (C_s * Delta)^2
+  
   const double eps = 2.0*std::numeric_limits<double>::epsilon();
-  //const double deltaSquared  = pow(dx * dy * dz, 2.0/3.0);
-  //const double eddyViscConstSq = turbulenceParameters_.eddyViscosityConstant * turbulenceParameters_.eddyViscosityConstant;
-
-  switch ( turbulenceParameters_.turbulenceModelName ) {
+  
+  switch ( turbParams_.turbModelName ) {
 
     case Wasatch::SMAGORINSKY:
       result <<= *rho_ * mixingLengthSq  * sqrt(2.0 * *strTsrSq_) ; // rho * (Cs * delta)^2 * |S|, Cs is the Smagorinsky constant
@@ -154,7 +156,6 @@ evaluate()
     case Wasatch::WALE:
     {
       SpatFldPtr<SVolField> denom = SpatialFieldStore::get<SVolField>( result );
-      *denom <<= 0.0;
       *denom <<= pow(*strTsrSq_, 2.5) + pow(*waleTsrMag_, 1.25);
       result <<= cond( *denom <= eps, 0.0 )
                      ( *rho_ * mixingLengthSq * pow(*waleTsrMag_, 1.5) / *denom );
@@ -186,5 +187,5 @@ evaluate()
   // a negative value for the turbulent viscosity in the extra cell if the
   // first interior cell value is zero. To avoid this, you can turn on the "skipBCs" flag
   // when using apply_to_field, or specify a min value for the extraplated cells.
-  exOp_->apply_to_field(result,0.0);
+  exOp_->apply_to_field( result, 0.0 );
 }

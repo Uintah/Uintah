@@ -58,46 +58,29 @@ public:
   };
   
   ~PowerLawBC(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){  exprDeps.requires_expression( indepVarTag_ );}
-  void bind_fields( const Expr::FieldManagerList& fml ){
-    const typename Expr::FieldMgrSelector<FieldT>::type& phifm = fml.template field_manager<FieldT>();
-    x_    = &phifm.field_ref( indepVarTag_    );
-  }
+  void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( indepVarTag_ );}
+  void bind_fields( const Expr::FieldManagerList& fml ){ x_ = &fml.template field_ref<FieldT>( indepVarTag_ );}
 
-  void evaluate();
+  void evaluate()
+  {
+    using namespace SpatialOps;
+    FieldT& f = this->value();
+    const double ci = this->ci_;
+    const double cg = this->cg_;
+    std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
+    std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
+    double value;
+    for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib ){
+      //value = phic_ * (1.0 - std::pow( std::fabs( (*x_)[*ia] - x0_ ) / R_ , n_ )); // this is another type of powerlaw that provides a flatter profile.
+      value = phic_ * std::pow( 1.0 - std::fabs( (*x_)[*ia] - x0_ ) / R_ , 1.0/n_ );
+      f[*ia] = ( value - ci*f[*ib] ) / cg;
+    }
+  }
 
 private:
   const FieldT*   x_;
   const Expr::Tag indepVarTag_;
   const double    x0_, phic_, R_, n_;
 };
-
-// ###################################################################
-//
-//                          Implementation
-//
-// ###################################################################
-
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PowerLawBC<FieldT>::
-evaluate()
-{
-  using namespace SpatialOps;
-  FieldT& f = this->value();
-  const double ci = this->ci_;
-  const double cg = this->cg_;
-  std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
-  std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
-  double value;
-  for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib ){
-    //value = phic_ * (1.0 - std::pow( std::fabs( (*x_)[*ia] - x0_ ) / R_ , n_ )); // this is another type of powerlaw that provides a flatter profile.
-    value = phic_ * std::pow( 1.0 - std::fabs( (*x_)[*ia] - x0_ ) / R_ , 1.0/n_ );
-    f[*ia] = ( value - ci*f[*ib] ) / cg;
-  }
-}
 
 #endif // ParabolicBC_Expr_h

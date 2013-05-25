@@ -234,15 +234,16 @@ void computeTauX( const Patch* patch,
   hi[0] += patch->getBCType(patch->xplus) ==Patch::Neighbor?1:0; 
   CellIterator iterLimits(low,hi); 
   
+  double invDX = 1.0/dx.x();
+  double invDY = 1.0/dx.y();
+  double invDZ = 1.0/dx.z();
+  
   for(CellIterator iter = iterLimits;!iter.done();iter++){ 
     IntVector c = *iter;
     int i = c.x();
     int j = c.y();
     int k = c.z();
-
-    double delX = dx.x();
-    double delY = dx.y();
-    double delZ = dx.z();
+    
     IntVector left(i-1, j, k); 
 
     term1 =  viscosity[left] * vol_frac_CC[left];
@@ -252,50 +253,50 @@ void computeTauX( const Patch* patch,
     //__________________________________
     // - find indices of surrounding cells
     // - compute velocities at cell face edges see note above.
-    double uvel_EC_top    = (vel_CC[IntVector(i-1,j+1,k  )].x()   + 
-                             vel_CC[IntVector(i  ,j+1,k  )].x()   +
-                             vel_CC[IntVector(i,  j  ,k  )].x()   +
-                             vel_CC[IntVector(i-1,j  ,k  )].x() )/4.0; 
+    double uvel_EC_top    = 0.25 * (vel_CC[IntVector(i-1,j+1,k  )].x()   + 
+                                    vel_CC[IntVector(i  ,j+1,k  )].x()   +
+                                    vel_CC[IntVector(i,  j  ,k  )].x()   +
+                                    vel_CC[IntVector(i-1,j  ,k  )].x() ); 
                                 
-    double uvel_EC_bottom = (vel_CC[IntVector(i-1,j-1,k  )].x()   + 
-                             vel_CC[IntVector(i  ,j-1,k  )].x()   +      
-                             vel_CC[IntVector(i,  j  ,k  )].x()   +
-                             vel_CC[IntVector(i-1,j  ,k  )].x() )/4.0; 
+    double uvel_EC_bottom = 0.25 * (vel_CC[IntVector(i-1,j-1,k  )].x()   + 
+                                    vel_CC[IntVector(i  ,j-1,k  )].x()   +      
+                                    vel_CC[IntVector(i,  j  ,k  )].x()   +
+                                    vel_CC[IntVector(i-1,j  ,k  )].x() ); 
                               
-    double uvel_EC_front  = (vel_CC[IntVector(i-1,j  ,k+1)].x()   + 
-                             vel_CC[IntVector(i  ,j  ,k+1)].x()   +
-                             vel_CC[IntVector(i  ,j  ,k  )].x()   +
-                             vel_CC[IntVector(i-1,j  ,k  )].x() )/4.0;
+    double uvel_EC_front  = 0.25 * (vel_CC[IntVector(i-1,j  ,k+1)].x()   + 
+                                    vel_CC[IntVector(i  ,j  ,k+1)].x()   +
+                                    vel_CC[IntVector(i  ,j  ,k  )].x()   +
+                                    vel_CC[IntVector(i-1,j  ,k  )].x() );
                              
-    double uvel_EC_back   = (vel_CC[IntVector(i-1,j  ,k-1)].x()   + 
-                             vel_CC[IntVector(i  ,j  ,k-1)].x()   +
-                             vel_CC[IntVector(i  ,j  ,k  )].x()   +
-                             vel_CC[IntVector(i-1,j  ,k  )].x())/4.0;
+    double uvel_EC_back   = 0.25 * (vel_CC[IntVector(i-1,j  ,k-1)].x()   + 
+                                    vel_CC[IntVector(i  ,j  ,k-1)].x()   +
+                                    vel_CC[IntVector(i  ,j  ,k  )].x()   +
+                                    vel_CC[IntVector(i-1,j  ,k  )].x());
                              
-    double vvel_EC_top    = (vel_CC[IntVector(i-1,j+1,k  )].y()   + 
-                             vel_CC[IntVector(i  ,j+1,k  )].y()   +
-                             vel_CC[IntVector(i  ,j  ,k  )].y()   +
-                             vel_CC[IntVector(i-1,j  ,k  )].y())/4.0;
+    double vvel_EC_top    = 0.25 * (vel_CC[IntVector(i-1,j+1,k  )].y()   + 
+                                    vel_CC[IntVector(i  ,j+1,k  )].y()   +
+                                    vel_CC[IntVector(i  ,j  ,k  )].y()   +
+                                    vel_CC[IntVector(i-1,j  ,k  )].y());
                              
-    double vvel_EC_bottom = (vel_CC[IntVector(i-1,j-1,k  )].y()   + 
-                             vel_CC[IntVector(i  ,j-1,k  )].y()   +
-                             vel_CC[IntVector(i  ,j  ,k  )].y()   +
-                             vel_CC[IntVector(i-1,j  ,k  )].y())/4.0;
+    double vvel_EC_bottom = 0.25 * (vel_CC[IntVector(i-1,j-1,k  )].y()   + 
+                                    vel_CC[IntVector(i  ,j-1,k  )].y()   +
+                                    vel_CC[IntVector(i  ,j  ,k  )].y()   +
+                                    vel_CC[IntVector(i-1,j  ,k  )].y());
                              
-    double wvel_EC_front  = (vel_CC[IntVector(i-1,j  ,k+1)].z()   + 
-                             vel_CC[IntVector(i  ,j  ,k+1)].z()   +
-                             vel_CC[IntVector(i  ,j  ,k  )].z()   +
-                             vel_CC[IntVector(i-1,j  ,k  )].z())/4.0;
+    double wvel_EC_front  = 0.25 * (vel_CC[IntVector(i-1,j  ,k+1)].z()   + 
+                                    vel_CC[IntVector(i  ,j  ,k+1)].z()   +
+                                    vel_CC[IntVector(i  ,j  ,k  )].z()   +
+                                    vel_CC[IntVector(i-1,j  ,k  )].z());
                              
-    double wvel_EC_back   = (vel_CC[IntVector(i-1,j  ,k-1)].z()   + 
-                             vel_CC[IntVector(i  ,j  ,k-1)].z()   +
-                             vel_CC[IntVector(i  ,j  ,k  )].z()   +
-                             vel_CC[IntVector(i-1,j  ,k  )].z())/4.0;
+    double wvel_EC_back   = 0.25 * (vel_CC[IntVector(i-1,j  ,k-1)].z()   + 
+                                    vel_CC[IntVector(i  ,j  ,k-1)].z()   +
+                                    vel_CC[IntVector(i  ,j  ,k  )].z()   +
+                                    vel_CC[IntVector(i-1,j  ,k  )].z());
     //__________________________________
     //  tau_XX
-    grad_uvel = (vel_CC[c].x() - vel_CC[left].x())/delX;
-    grad_vvel = (vvel_EC_top   - vvel_EC_bottom)  /delY;
-    grad_wvel = (wvel_EC_front - wvel_EC_back )   /delZ;
+    grad_uvel = ( vel_CC[c].x() - vel_CC[left].x() )* invDX;
+    grad_vvel = ( vvel_EC_top   - vvel_EC_bottom )  * invDY;
+    grad_wvel = ( wvel_EC_front - wvel_EC_back )    * invDZ;
 
     term1 = 2.0 * vis_FC * grad_uvel;
     term2 = (2.0/3.0) * vis_FC * (grad_uvel + grad_vvel + grad_wvel);
@@ -303,14 +304,14 @@ void computeTauX( const Patch* patch,
 
     //__________________________________
     //  tau_XY
-    grad_1 = (uvel_EC_top   - uvel_EC_bottom)  /delY;
-    grad_2 = (vel_CC[c].y() - vel_CC[left].y())/delX;
+    grad_1 = ( uvel_EC_top   - uvel_EC_bottom )   * invDY;
+    grad_2 = ( vel_CC[c].y() - vel_CC[left].y() ) * invDX;
     tau_X_FC[c].y(vis_FC * (grad_1 + grad_2)); 
 
     //__________________________________
     //  tau_XZ
-    grad_1 = (uvel_EC_front - uvel_EC_back)    /delZ;
-    grad_2 = (vel_CC[c].z() - vel_CC[left].z())/delX;
+    grad_1 = ( uvel_EC_front - uvel_EC_back )     * invDZ;
+    grad_2 = ( vel_CC[c].z() - vel_CC[left].z() ) * invDX;
     tau_X_FC[c].z(vis_FC * (grad_1 + grad_2)); 
 
     #if 0
@@ -364,14 +365,16 @@ void computeTauY( const Patch* patch,
   hi[1] += patch->getBCType(patch->yplus) ==Patch::Neighbor?1:0; 
   CellIterator iterLimits(low,hi); 
   
+  double invDX = 1.0/dx.x();
+  double invDY = 1.0/dx.y();
+  double invDZ = 1.0/dx.z();
+  
   for(CellIterator iter = iterLimits;!iter.done();iter++){ 
     IntVector c = *iter;
     int i = c.x();
     int j = c.y();
     int k = c.z();
-    double delX = dx.x();
-    double delY = dx.y();
-    double delZ = dx.z();
+
     IntVector bottom(i,j-1,k);
     
     term1 =  viscosity[bottom] * vol_frac_CC[bottom];
@@ -381,51 +384,51 @@ void computeTauY( const Patch* patch,
     //__________________________________
     // - find indices of surrounding cells
     // - compute velocities at cell face edges see note above.
-    double uvel_EC_right = (vel_CC[IntVector(i+1,j,  k  )].x()  + 
-                            vel_CC[IntVector(i+1,j-1,k  )].x()  +
-                            vel_CC[IntVector(i  ,j-1,k  )].x()  +
-                            vel_CC[IntVector(i  ,j  ,k  )].x())/4.0;
+    double uvel_EC_right = 0.25 * (vel_CC[IntVector(i+1,j,  k  )].x()  + 
+                                   vel_CC[IntVector(i+1,j-1,k  )].x()  +
+                                   vel_CC[IntVector(i  ,j-1,k  )].x()  +
+                                   vel_CC[IntVector(i  ,j  ,k  )].x());
                              
-    double uvel_EC_left  = (vel_CC[IntVector(i-1,j,  k  )].x()  +
-                            vel_CC[IntVector(i-1,j-1,k  )].x()  +
-                            vel_CC[IntVector(i  ,j-1,k  )].x()  +
-                            vel_CC[IntVector(i  ,j  ,k  )].x())/4.0;
+    double uvel_EC_left  = 0.25 * (vel_CC[IntVector(i-1,j,  k  )].x()  +
+                                   vel_CC[IntVector(i-1,j-1,k  )].x()  +
+                                   vel_CC[IntVector(i  ,j-1,k  )].x()  +
+                                   vel_CC[IntVector(i  ,j  ,k  )].x());
                             
-    double vvel_EC_right = (vel_CC[IntVector(i+1,j  ,k  )].y()  + 
-                            vel_CC[IntVector(i+1,j-1,k  )].y()  +
-                            vel_CC[IntVector(i  ,j-1,k  )].y()  +
-                            vel_CC[IntVector(i  ,j  ,k  )].y())/4.0;
+    double vvel_EC_right = 0.25 * (vel_CC[IntVector(i+1,j  ,k  )].y()  + 
+                                   vel_CC[IntVector(i+1,j-1,k  )].y()  +
+                                   vel_CC[IntVector(i  ,j-1,k  )].y()  +
+                                   vel_CC[IntVector(i  ,j  ,k  )].y());
                             
-    double vvel_EC_left  = (vel_CC[IntVector(i-1,j  ,k  )].y()  + 
-                            vel_CC[IntVector(i-1,j-1,k  )].y()  +
-                            vel_CC[IntVector(i  ,j-1,k  )].y()  +
-                            vel_CC[IntVector(i  ,j  ,k  )].y())/4.0; 
+    double vvel_EC_left  = 0.25 * (vel_CC[IntVector(i-1,j  ,k  )].y()  + 
+                                   vel_CC[IntVector(i-1,j-1,k  )].y()  +
+                                   vel_CC[IntVector(i  ,j-1,k  )].y()  +
+                                   vel_CC[IntVector(i  ,j  ,k  )].y()); 
                             
-    double vvel_EC_front = (vel_CC[IntVector(i  ,j  ,k+1)].y()  +
-                            vel_CC[IntVector(i  ,j-1,k+1)].y()  +
-                            vel_CC[IntVector(i  ,j-1,k  )].y()  +
-                            vel_CC[IntVector(i  ,j  ,k  )].y())/4.0;
+    double vvel_EC_front = 0.25 * (vel_CC[IntVector(i  ,j  ,k+1)].y()  +
+                                   vel_CC[IntVector(i  ,j-1,k+1)].y()  +
+                                   vel_CC[IntVector(i  ,j-1,k  )].y()  +
+                                   vel_CC[IntVector(i  ,j  ,k  )].y());
                             
-    double vvel_EC_back  = (vel_CC[IntVector(i  ,j  ,k-1)].y()  +
-                            vel_CC[IntVector(i  ,j-1,k-1)].y()  +
-                            vel_CC[IntVector(i  ,j-1,k  )].y()  +
-                            vel_CC[IntVector(i  ,j  ,k  )].y())/4.0;
+    double vvel_EC_back  = 0.25 * (vel_CC[IntVector(i  ,j  ,k-1)].y()  +
+                                   vel_CC[IntVector(i  ,j-1,k-1)].y()  +
+                                   vel_CC[IntVector(i  ,j-1,k  )].y()  +
+                                   vel_CC[IntVector(i  ,j  ,k  )].y());
                             
-    double wvel_EC_front = (vel_CC[IntVector(i  ,j  ,k+1)].z()  +
-                            vel_CC[IntVector(i  ,j-1,k+1)].z()  +
-                            vel_CC[IntVector(i  ,j-1,k  )].z()  +
-                            vel_CC[IntVector(i  ,j  ,k  )].z())/4.0;
+    double wvel_EC_front = 0.25 * (vel_CC[IntVector(i  ,j  ,k+1)].z()  +
+                                   vel_CC[IntVector(i  ,j-1,k+1)].z()  +
+                                   vel_CC[IntVector(i  ,j-1,k  )].z()  +
+                                   vel_CC[IntVector(i  ,j  ,k  )].z());
                             
-    double wvel_EC_back  = (vel_CC[IntVector(i  ,j  ,k-1)].z()  +
-                            vel_CC[IntVector(i  ,j-1,k-1)].z()  +
-                            vel_CC[IntVector(i  ,j-1,k  )].z()  +
-                            vel_CC[IntVector(i  ,j  ,k  )].z())/4.0;
+    double wvel_EC_back  = 0.25 * (vel_CC[IntVector(i  ,j  ,k-1)].z()  +
+                                   vel_CC[IntVector(i  ,j-1,k-1)].z()  +
+                                   vel_CC[IntVector(i  ,j-1,k  )].z()  +
+                                   vel_CC[IntVector(i  ,j  ,k  )].z());
                             
     //__________________________________
     //  tau_YY
-    grad_uvel = (uvel_EC_right - uvel_EC_left)      /delX;
-    grad_vvel = (vel_CC[c].y() - vel_CC[bottom].y())/delY;
-    grad_wvel = (wvel_EC_front - wvel_EC_back )     /delZ;
+    grad_uvel = ( uvel_EC_right - uvel_EC_left )      * invDX;
+    grad_vvel = ( vel_CC[c].y() - vel_CC[bottom].y() )* invDY;
+    grad_wvel = ( wvel_EC_front - wvel_EC_back )     * invDZ;
 
     term1 = 2.0 * vis_FC * grad_vvel;
     term2 = (2.0/3.0) * vis_FC * (grad_uvel + grad_vvel + grad_wvel);
@@ -433,23 +436,23 @@ void computeTauY( const Patch* patch,
     
     //__________________________________
     //  tau_YX
-    grad_1 = (vel_CC[c].x() - vel_CC[bottom].x())/delY;
-    grad_2 = (vvel_EC_right - vvel_EC_left)      /delX;
+    grad_1 = ( vel_CC[c].x() - vel_CC[bottom].x() )* invDY;
+    grad_2 = ( vvel_EC_right - vvel_EC_left )      * invDX;
     tau_Y_FC[c].x( vis_FC * (grad_1 + grad_2) ); 
 
 
     //__________________________________
     //  tau_YZ
-    grad_1 = (vvel_EC_front - vvel_EC_back)      /delZ;
-    grad_2 = (vel_CC[c].z() - vel_CC[bottom].z())/delY;
-    tau_Y_FC[c].z( vis_FC * (grad_1 + grad_2)); 
+    grad_1 = ( vvel_EC_front - vvel_EC_back )      * invDZ;
+    grad_2 = ( vel_CC[c].z() - vel_CC[bottom].z() )* invDY;
+    tau_Y_FC[c].z( vis_FC * (grad_1 + grad_2) ); 
     
     #if 0
      if (c == IntVector(0,51,0) || c == IntVector(50,51,0)){    
        cout<< c<< " tau_YX: "<<tau_Y_FC[c].x()<<
-       " tau_YY: "<<tau_Y_FC[c].y()<<
-       " tau_YZ: "<<tau_Y_FC[c].z()<<
-       " patch: "<<patch->getID()<<endl;
+                  " tau_YY: "<<tau_Y_FC[c].y()<<
+                  " tau_YZ: "<<tau_Y_FC[c].z()<<
+                  " patch: "<<patch->getID()<<endl;
      }
     #endif
   }
@@ -493,15 +496,17 @@ void computeTauZ( const Patch* patch,
   hi  = hi_lo.end();
   hi[2] += patch->getBCType(patch->zplus) ==Patch::Neighbor?1:0; 
   CellIterator iterLimits(low,hi); 
+  
+  double invDX = 1.0/dx.x();
+  double invDY = 1.0/dx.y();
+  double invDZ = 1.0/dx.z();
 
   for(CellIterator iter = iterLimits;!iter.done();iter++){ 
     IntVector c = *iter; 
     int i = c.x();
     int j = c.y();
     int k = c.z();
-    double delX = dx.x();
-    double delY = dx.y();
-    double delZ = dx.z();
+
     IntVector back(i, j, k-1); 
     
     term1 =  viscosity[back] * vol_frac_CC[back];
@@ -511,62 +516,62 @@ void computeTauZ( const Patch* patch,
     //__________________________________
     // - find indices of surrounding cells
     // - compute velocities at cell face edges see note above.
-    double uvel_EC_right  = (vel_CC[IntVector(i+1,j,  k  )].x()  + 
-                             vel_CC[IntVector(i+1,j,  k-1)].x()  +
-                             vel_CC[IntVector(i  ,j  ,k-1)].x()  +
-                             vel_CC[IntVector(i  ,j  ,k  )].x())/4.0;
+    double uvel_EC_right  = 0.25 * (vel_CC[IntVector(i+1,j,  k  )].x()  + 
+                                    vel_CC[IntVector(i+1,j,  k-1)].x()  +
+                                    vel_CC[IntVector(i  ,j  ,k-1)].x()  +
+                                    vel_CC[IntVector(i  ,j  ,k  )].x());
                              
-    double uvel_EC_left   = (vel_CC[IntVector(i-1,j,  k  )].x()  +
-                             vel_CC[IntVector(i-1,j  ,k-1)].x()  +
-                             vel_CC[IntVector(i  ,j  ,k-1)].x()  +
-                             vel_CC[IntVector(i  ,j  ,k  )].x())/4.0;
+    double uvel_EC_left   = 0.25 * (vel_CC[IntVector(i-1,j,  k  )].x()  +
+                                    vel_CC[IntVector(i-1,j  ,k-1)].x()  +
+                                    vel_CC[IntVector(i  ,j  ,k-1)].x()  +
+                                    vel_CC[IntVector(i  ,j  ,k  )].x());
                              
-    double vvel_EC_top    = (vel_CC[IntVector(i  ,j+1,k  )].y()  + 
-                             vel_CC[IntVector(i  ,j+1,k-1)].y()  +
-                             vel_CC[IntVector(i  ,j  ,k-1)].y()  +
-                             vel_CC[IntVector(i  ,j  ,k  )].y())/4.0;
+    double vvel_EC_top    = 0.25 * (vel_CC[IntVector(i  ,j+1,k  )].y()  + 
+                                    vel_CC[IntVector(i  ,j+1,k-1)].y()  +
+                                    vel_CC[IntVector(i  ,j  ,k-1)].y()  +
+                                    vel_CC[IntVector(i  ,j  ,k  )].y());
                              
-    double vvel_EC_bottom = (vel_CC[IntVector(i  ,j-1,k  )].y()  + 
-                             vel_CC[IntVector(i  ,j-1,k-1)].y()  +
-                             vel_CC[IntVector(i  ,j  ,k-1)].y()  +
-                             vel_CC[IntVector(i  ,j  ,k  )].y())/4.0;
+    double vvel_EC_bottom = 0.25 * (vel_CC[IntVector(i  ,j-1,k  )].y()  + 
+                                    vel_CC[IntVector(i  ,j-1,k-1)].y()  +
+                                    vel_CC[IntVector(i  ,j  ,k-1)].y()  +
+                                    vel_CC[IntVector(i  ,j  ,k  )].y());
                              
-    double wvel_EC_right  = (vel_CC[IntVector(i+1,j,  k  )].z()  + 
-                             vel_CC[IntVector(i+1,j  ,k-1)].z()  +
-                             vel_CC[IntVector(i  ,j  ,k-1)].z()  +
-                             vel_CC[IntVector(i  ,j  ,k  )].z())/4.0;
+    double wvel_EC_right  = 0.25 * (vel_CC[IntVector(i+1,j,  k  )].z()  + 
+                                    vel_CC[IntVector(i+1,j  ,k-1)].z()  +
+                                    vel_CC[IntVector(i  ,j  ,k-1)].z()  +
+                                    vel_CC[IntVector(i  ,j  ,k  )].z());
                              
-    double wvel_EC_left   = (vel_CC[IntVector(i-1,j,  k  )].z()  +
-                             vel_CC[IntVector(i-1,j  ,k-1)].z()  +
-                             vel_CC[IntVector(i  ,j  ,k-1)].z()  +
-                             vel_CC[IntVector(i  ,j  ,k  )].z())/4.0;
+    double wvel_EC_left   = 0.25 * (vel_CC[IntVector(i-1,j,  k  )].z()  +
+                                    vel_CC[IntVector(i-1,j  ,k-1)].z()  +
+                                    vel_CC[IntVector(i  ,j  ,k-1)].z()  +
+                                    vel_CC[IntVector(i  ,j  ,k  )].z());
                              
-    double wvel_EC_top    = (vel_CC[IntVector(i  ,j+1,k  )].z()  + 
-                             vel_CC[IntVector(i  ,j+1,k-1)].z()  +
-                             vel_CC[IntVector(i  ,j  ,k-1)].z()  +
-                             vel_CC[IntVector(i  ,j  ,k  )].z())/4.0;
+    double wvel_EC_top    = 0.25 * (vel_CC[IntVector(i  ,j+1,k  )].z()  + 
+                                    vel_CC[IntVector(i  ,j+1,k-1)].z()  +
+                                    vel_CC[IntVector(i  ,j  ,k-1)].z()  +
+                                    vel_CC[IntVector(i  ,j  ,k  )].z());
                              
-    double wvel_EC_bottom = (vel_CC[IntVector(i  ,j-1,k  )].z()  + 
-                             vel_CC[IntVector(i  ,j-1,k-1)].z()  +
-                             vel_CC[IntVector(i  ,j  ,k-1)].z()  +
-                             vel_CC[IntVector(i  ,j  ,k  )].z())/4.0;
+    double wvel_EC_bottom = 0.25 * (vel_CC[IntVector(i  ,j-1,k  )].z()  + 
+                                    vel_CC[IntVector(i  ,j-1,k-1)].z()  +
+                                    vel_CC[IntVector(i  ,j  ,k-1)].z()  +
+                                    vel_CC[IntVector(i  ,j  ,k  )].z());
     //__________________________________
     //  tau_ZX
-    grad_1 = (vel_CC[c].x() - vel_CC[back].x()) /delZ;
-    grad_2 = (wvel_EC_right - wvel_EC_left)     /delX;
+    grad_1 = (vel_CC[c].x() - vel_CC[back].x()) * invDZ;
+    grad_2 = (wvel_EC_right - wvel_EC_left)     * invDX;
     tau_Z_FC[c].x(vis_FC * (grad_1 + grad_2)); 
 
     //__________________________________
     //  tau_ZY
-    grad_1 = (vel_CC[c].y() - vel_CC[back].y()) /delZ;
-    grad_2 = (wvel_EC_top   - wvel_EC_bottom)   /delY;
+    grad_1 = (vel_CC[c].y() - vel_CC[back].y()) * invDZ;
+    grad_2 = (wvel_EC_top   - wvel_EC_bottom)   * invDY;
     tau_Z_FC[c].y( vis_FC * (grad_1 + grad_2) ); 
 
     //__________________________________
     //  tau_ZZ
-    grad_uvel = (uvel_EC_right - uvel_EC_left)    /delX;
-    grad_vvel = (vvel_EC_top   - vvel_EC_bottom)  /delY;
-    grad_wvel = (vel_CC[c].z() - vel_CC[back].z())/delZ;
+    grad_uvel = (uvel_EC_right - uvel_EC_left)    * invDX;
+    grad_vvel = (vvel_EC_top   - vvel_EC_bottom)  * invDY;
+    grad_wvel = (vel_CC[c].z() - vel_CC[back].z())* invDZ;
 
     term1 = 2.0 * vis_FC * grad_wvel;
     term2 = (2.0/3.0) * vis_FC * (grad_uvel + grad_vvel + grad_wvel);

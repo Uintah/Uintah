@@ -95,17 +95,6 @@ evaluate()
   const double cg = this->cg_;
   std::vector<int>::const_iterator ig = (this->flatGhostPoints_).begin();    // ig is the ghost flat index
   std::vector<int>::const_iterator ii = (this->flatInteriorPoints_).begin(); // ii is the interior flat index
-//  if (this->isStaggered_) {
-//    std::cout << "--------------------------------------------------- \n";
-//    std::cout << "setting bc on " << this->name().name() << std::endl;
-//  }
-//  for( ; ig != (this->flatGhostPoints_).end(); ++ig, ++ii ){
-//    f[*ig] = ( bcValue_- ci * f[*ii] ) / cg;
-//    if (this->isStaggered_) {
-//      std::cout << "ci = " << ci << " cg = " << cg  << " fi = " << f[*ii] << std::endl;
-//      std::cout <<" bcvalue = " << bcValue_  <<" actual value = " << f[*ig] << std::endl;
-//    }
-//  }
   if(this->isStaggered_) {
     for( ; ig != (this->flatGhostPoints_).end(); ++ig, ++ii ){
       f[*ig] = bcValue_;

@@ -160,7 +160,6 @@ void Patch::findCellNodes(const Point& pos, IntVector ni[8]) const
  */
 void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
 {
-
   cerr << "findCellNodes27 appears to be incorrect.  You are using it at your own risk" << endl;
   Point cellpos = getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
@@ -188,6 +187,17 @@ void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
   ni[13] = IntVector(ix+1,  iy+1,    iz+1);
   ni[14] = IntVector(ix+nnx,iy+1,    iz+1);
   ni[15] = IntVector(ix,    iy+nny,  iz+1);
+  ni[16] = IntVector(ix+1,  iy+nny,  iz+1);
+  ni[17] = IntVector(ix+nnx,iy+nny,  iz+1);
+  ni[18] = IntVector(ix,    iy,      iz+nnz);
+  ni[19] = IntVector(ix+1,  iy,      iz+nnz);
+  ni[20] = IntVector(ix+nnx,iy,      iz+nnz);
+  ni[21] = IntVector(ix,    iy+1,    iz+nnz);
+  ni[22] = IntVector(ix+1,  iy+1,    iz+nnz);
+  ni[23] = IntVector(ix+nnx,iy+1,    iz+nnz);
+  ni[24] = IntVector(ix,    iy+nny,  iz+nnz);
+  ni[25] = IntVector(ix+1,  iy+nny,  iz+nnz);
+  ni[26] = IntVector(ix+nnx,iy+nny,  iz+nnz);
 }
 
 

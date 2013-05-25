@@ -77,10 +77,8 @@ public:
   };
   
   ~VarDensMMSVelocity(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){  exprDeps.requires_expression( indepVarTag_ );}
-  void bind_fields( const Expr::FieldManagerList& fml ){
-    t_    = &fml.template field_manager<double>().field_ref( indepVarTag_ );
-  }
+  void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( indepVarTag_ );}
+  void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<double>( indepVarTag_ );}
   void evaluate();
 private:
   VarDensMMSVelocity( const Expr::Tag& indepVarTag,

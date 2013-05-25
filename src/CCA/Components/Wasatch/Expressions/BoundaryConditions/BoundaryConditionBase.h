@@ -44,7 +44,6 @@ class BoundaryConditionBase
 : public Expr::Expression<FieldT>
 {
 public:
-//  BoundaryConditionBase(){isStaggered_ = false;}
   void set_staggered(bool staggered) { isStaggered_ = staggered; }
   void set_interior_coef( const double coef) { ci_ = coef;}
   void set_ghost_coef( const double coef) { cg_ = coef;}
@@ -58,13 +57,14 @@ public:
     patchCellOffset_ = patchCellOffset;
   }
 
+  virtual ~BoundaryConditionBase(){}
+
 protected:
   bool isStaggered_;
   double ci_, cg_;
   std::vector<int> flatInteriorPoints_;  
   std::vector<int> flatGhostPoints_;
   SpatialOps::structured::IntVec patchCellOffset_;
-  //~BoundaryConditionBase(){}
 };
 
 #endif // BoundaryConditionBase_Expr_h
