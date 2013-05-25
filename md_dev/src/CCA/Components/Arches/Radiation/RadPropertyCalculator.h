@@ -162,23 +162,24 @@ namespace Uintah {
 
               // NOTE: this requires that the table names match the RadProps name.  This is, in general, a pretty 
               // bad assumption.  Need to make this more robust later on...
-              //
-              for ( std::vector<RadiativeSpecies>::iterator iter = _radprops_species.begin(); iter != _radprops_species.end(); iter++){
-                std::string which_species = species_name( *iter ); 
+              int total_sp = _radprops_species.size(); 
+              for ( int i = 0; i < total_sp; i++ ){ 
+                std::string which_species = species_name( _radprops_species[i] ); 
                 _species.push_back( which_species ); 
 
+                //entering the inverse here for convenience 
                 if ( which_species == "CO2" ){ 
-                  _sp_mw.push_back(44.0);
+                  _sp_mw.push_back(1.0/44.0);
                 } else if ( which_species == "H2O" ){ 
-                  _sp_mw.push_back(18.0); 
+                  _sp_mw.push_back(1.0/18.0); 
                 } else if ( which_species == "CO" ){ 
-                  _sp_mw.push_back(28.0); 
+                  _sp_mw.push_back(1.0/28.0); 
                 } else if ( which_species == "NO" ){
-                  _sp_mw.push_back(30.0); 
+                  _sp_mw.push_back(1.0/30.0); 
                 } else if ( which_species == "OH" ){
-                  _sp_mw.push_back(17.0); 
+                  _sp_mw.push_back(1.0/17.0); 
                 } 
-              }
+              } 
 
             }else { 
 
@@ -238,7 +239,11 @@ namespace Uintah {
 
               //convert mass frac to mol frac
               for ( int i = 1; i < N; i++ ){ 
-                double value = (species[i])[c] * _sp_mw[i-1] * (species[0])[c];
+                // Note that the species molecular weights are actually the inverse 
+                // as set in the problemsetup function.
+                // Also note that the mixture molecular weight arriving from the table
+                // is assumed to be the inverse mixture molecular weight
+                double value = (species[i])[c] * _sp_mw[i-1] * 1.0 / (species[0])[c];
                 //              ^^species^^^^    ^^MW^^^^^^    ^^^MIX MW^^^^^^^
                 if ( value < 0 ){ 
                   if (value > -1e-5 ) value = 0;

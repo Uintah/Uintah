@@ -22,28 +22,32 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_SMAGORINSKYMODEL_H
-#define UINTAH_SMAGORINSKYMODEL_H
+#ifndef _WALLSHEARSTRESS_H
+#define _WALLSHEARSTRESS_H
 
-#include <CCA/Components/ICE/Turbulence.h>
-#include <Core/Containers/StaticArray.h>
-#include <cmath>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Geometry/Vector.h>
 
 namespace Uintah {
 
-  class Smagorinsky_Model : public Turbulence {
+  class DataWarehouse;
+  class ICELabel;
+  class Material;
+  class Patch;
+  
+
+  class WallShearStress {
 
   public:
-    //----- constructors
-    Smagorinsky_Model(ProblemSpecP& ps, SimulationStateP& sharedState);
-    Smagorinsky_Model();
-    
-    //----- destructor
-    virtual ~Smagorinsky_Model();
-    
-    friend class DynamicModel;
-    
-    virtual void computeTurbViscosity(DataWarehouse* new_dw,
+    WallShearStress();
+    WallShearStress( ProblemSpecP& ps, SimulationStateP& sharedState);
+    virtual ~WallShearStress(); 
+
+    virtual void computeWallShearStresses(DataWarehouse* new_dw,
                                       const Patch* patch,
                                       const CCVariable<Vector>& vel_CC,
                                       const SFCXVariable<double>& uvel_FC,
@@ -52,34 +56,11 @@ namespace Uintah {
                                       const CCVariable<double>& rho_CC,
                                       const int indx,
                                       SimulationStateP&  d_sharedState,
-                                      CCVariable<double>& turb_viscosity);    
-                                         
-    virtual void scheduleComputeVariance(SchedulerP& sched, 
-                                         const PatchSet* patches,
-                                         const MaterialSet* matls);
+                                      CCVariable<double>& turb_viscosity) = 0;
+  protected:
     
-
-  private:
-    double filter_width;
-    double d_model_constant;
-//    double d_turbPr; // turbulent prandtl number
-
-    void computeStrainRate(const Patch* patch,
-                           const SFCXVariable<double>& uvel_FC,
-                           const SFCYVariable<double>& vvel_FC,
-                           const SFCZVariable<double>& wvel_FC,
-                           const int indx,
-                           SimulationStateP&  d_sharedState,
-                           DataWarehouse* new_dw,
-                           SCIRun::StaticArray<CCVariable<double> >& SIJ);
-    void computeVariance(const ProcessorGroup*, 
-                         const PatchSubset* patch,  
-                         const MaterialSubset* matls,
-                         DataWarehouse*, 
-                         DataWarehouse*,
-                         FilterScalar*);
-    
-    };// End class
+  };// End class WallShearStress
 
 }// End namespace Uintah
+
 #endif

@@ -35,8 +35,7 @@
 #include <CCA/Components/ICE/Diffusion.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/ICE/Advection/AdvectionFactory.h>
-#include <CCA/Components/ICE/TurbulenceFactory.h>
-#include <CCA/Components/ICE/Turbulence.h>
+#include <CCA/Components/ICE/TurbulenceModel/TurbulenceFactory.h>
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>

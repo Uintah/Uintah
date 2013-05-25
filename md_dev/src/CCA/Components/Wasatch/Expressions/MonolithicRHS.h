@@ -69,15 +69,17 @@ public:
      *  @brief Build a MonolithicRHS expression
      *  @param resultTag the Expr::Tag for the value that this expression computes
      *  @param dCoefTag the Expr::Tag for the diffusion coefficient
-     *  @param convFluxTag the Expr::Tag for the convective flux of \f$\rho*\phi\f$
+     *  @param xconvFluxTag the Expr::Tag for the convective flux of \f$\rho*\phi\f$
+     *  @param yconvFluxTag the Expr::Tag for the convective flux of \f$\rho*\phi\f$
+     *  @param zconvFluxTag the Expr::Tag for the convective flux of \f$\rho*\phi\f$
      *  @param phiTag the Expr::Tag for the primitive variable
      *  @param srcTag the Expr::Tag for the source term
      */
     Builder( const Expr::Tag& resultTag,
              const Expr::Tag& dCoefTag,
-//             const Expr::Tag& xconvFluxTag,
-//             const Expr::Tag& yconvFluxTag,
-//             const Expr::Tag& zconvFluxTag,
+             const Expr::Tag& xconvFluxTag,
+             const Expr::Tag& yconvFluxTag,
+             const Expr::Tag& zconvFluxTag,
              const Expr::Tag& phiTag,
              const Expr::Tag& srcTag );
 

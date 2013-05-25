@@ -331,7 +331,7 @@
           <initialization type="tabulated">
             <depend_varname>adiabaticenthalpy</depend_varname>
           </initialization>
-          <src label="divQ"/>
+          <src label="divQ" ><weight>-1 </weight> </src>        
         </Eqn>
     <!--
         <Sources>

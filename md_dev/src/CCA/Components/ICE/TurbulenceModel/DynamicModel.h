@@ -25,8 +25,8 @@
 #ifndef UINTAH_DYNAMICMODEL_H
 #define UINTAH_DYNAMICMODEL_H
 
-#include <CCA/Components/ICE/Turbulence.h>
-#include <CCA/Components/ICE/SmagorinskyModel.h>
+#include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
+#include <CCA/Components/ICE/TurbulenceModel/SmagorinskyModel.h>
 #include <Core/Containers/StaticArray.h>
 #include <cmath>
 

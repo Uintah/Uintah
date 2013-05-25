@@ -48,9 +48,12 @@ Furthermore, all operators defined here will be used in the Dynamic Smagorinsky 
 class StrainTensorBase : public Expr::Expression<SVolField>
 {
 protected:
-  const Expr::Tag vel1t_, vel2t_, vel3t_;
+  
+  const Expr::TagList velTags_;
   
   //A_SURF_B_Field = A vol, B surface
+  typedef std::vector< SpatialOps::SpatFldPtr<SVolField> > SVolVecT;
+  typedef std::vector< SVolVecT > SVolTensorT;
   
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SpatialOps::structured::XSurfYField >::type dudyT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SpatialOps::structured::YSurfXField >::type dvdxT;
@@ -99,9 +102,7 @@ protected:
   const YZInterpT* yzInterpOp_;
   const ZYInterpT* zyInterpOp_;
   
-  StrainTensorBase( const Expr::Tag& vel1tag,
-                   const Expr::Tag& vel2tag,
-                   const Expr::Tag& vel3tag );
+  StrainTensorBase( const Expr::TagList& velTags );
   
   void calculate_strain_tensor_components(SVolField& strTsrMag,
                                           const XVolField& u,
@@ -125,14 +126,12 @@ public:
      *  \param vel3tag the third component of the velocity
      */
     Builder( const Expr::Tag& result,
-            const Expr::Tag& vel1tag,
-            const Expr::Tag& vel2tag,
-            const Expr::Tag& vel3tag );
+             const Expr::TagList& velTags );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
     
   private:
-    const Expr::Tag v1t_, v2t_, v3t_;
+    const Expr::TagList velTags_;
   };
   
   ~StrainTensorBase();

@@ -145,6 +145,10 @@ public:
                                      SFCYVariable<double>& vvel, 
                                      SFCZVariable<double>& wvel ) = 0;
 
+  virtual void checkMomBCs( SchedulerP& sched,
+                             const PatchSet* patches,
+                             const MaterialSet* matls) = 0; 
+
 protected:
    const ProcessorGroup* d_myworld;
    string d_timeIntegratorType;

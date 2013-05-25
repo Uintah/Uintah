@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "MomentumRHS.h"
+#include <CCA/Components/Wasatch/Expressions/MomentumRHS.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
@@ -68,9 +68,10 @@ void
 MomRHS<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  rhsPart_ = &fml.field_manager<FieldT>().field_ref( rhspartt_ );
-  if( pressuret_ != emptyTag_ )  pressure_ = &fml.field_manager<PFieldT>().field_ref( pressuret_ );
-  if( volfract_  != emptyTag_ )  volfrac_  = &fml.field_manager<FieldT>().field_ref( volfract_ );
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
+  rhsPart_ = &fm.field_ref( rhspartt_ );
+  if( volfract_  != emptyTag_ )  volfrac_  = &fm.field_ref( volfract_ );
+  if( pressuret_ != emptyTag_ )  pressure_ = &fml.field_ref<PFieldT>( pressuret_ );
 }
 
 //--------------------------------------------------------------------
@@ -100,16 +101,6 @@ evaluate()
   
   if ( volfract_ != emptyTag_ )
     result <<= result * *volfrac_;
-  
-//  result <<= 0.0;
-//  if ( pressuret_ != emptyTag_ ){
-//    gradOp_->apply_to_field( *pressure_, result );
-//    result <<= -result;
-//  }
-//  result <<= result + *rhsPart_;
-//  
-//  if ( volfract_ != emptyTag_ )
-//    result <<= result * *volfrac_;
 }
 
 //--------------------------------------------------------------------

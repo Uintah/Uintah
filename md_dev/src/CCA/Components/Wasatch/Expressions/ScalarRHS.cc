@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "ScalarRHS.h"
+#include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
@@ -85,30 +85,6 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
 {
   srcTags_.push_back( ScalarRHS<FieldT>::resolve_field_tag( SOURCE_TERM, fieldTags ) );
   nullify_fields();
-
-//  if( doXDir_ && haveXAreaFrac_ ){
-//    std::ostringstream msg;
-//    msg << "ERROR from " __FILE__ << std::endl
-//        << "      xAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
-//        << std::endl;
-//    throw std::invalid_argument( msg.str() );
-//  }
-//
-//  if( doYDir_ && haveYAreaFrac_ ){
-//    std::ostringstream msg;
-//    msg << "ERROR from " __FILE__ << std::endl
-//        << "      yAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
-//        << std::endl;
-//    throw std::invalid_argument( msg.str() );
-//  }
-//
-//  if( doZDir_ && haveZAreaFrac_ ){
-//    std::ostringstream msg;
-//    msg << "ERROR from " __FILE__ << std::endl
-//        << "      zAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file."
-//        << std::endl;
-//    throw std::invalid_argument( msg.str() );
-//  }
 }
 
 //------------------------------------------------------------------
@@ -139,6 +115,7 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
   const typename Expr::FieldMgrSelector<XVolField>::type& xVolFM   = fml.field_manager<XVolField>();
   const typename Expr::FieldMgrSelector<YVolField>::type& yVolFM   = fml.field_manager<YVolField>();
   const typename Expr::FieldMgrSelector<ZVolField>::type& zVolFM   = fml.field_manager<ZVolField>();
+  const typename Expr::FieldMgrSelector<SVolField>::type& sVolFM   = fml.field_manager<SVolField>();
 
   if( haveConvection_ ){
     if( doXDir_ )  xConvFlux_ = &xFluxFM.field_ref( convTagX_ );
@@ -153,7 +130,7 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
   }
 
   if ( haveVolFrac_ ) {
-    volfrac_ = &fml.template field_manager<SVolField>().field_ref( volFracTag_ );
+    volfrac_ = &sVolFM.field_ref( volFracTag_ );
   }
 
   if ( doXDir_ && haveXAreaFrac_ ) xareafrac_ = &xVolFM.field_ref( xAreaFracTag_ );
@@ -165,7 +142,7 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
     if( isrc->context() != Expr::INVALID_CONTEXT ) {
       srcTerm_.push_back( &scalarFM.field_ref( *isrc ) );
       if (isConstDensity_){
-        rho_ = &fml.template field_manager<SVolField>().field_ref( densityTag_ );
+        rho_ = &sVolFM.field_ref( densityTag_ );
       }
     }
   }
@@ -230,7 +207,7 @@ void ScalarRHS<FieldT>::evaluate()
   using namespace SpatialOps;
 
   FieldT& rhs = this->value();
-  rhs <<= 0.0;
+  if (!doXDir_) rhs <<= 0.0;
 
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( rhs );
 
@@ -239,12 +216,8 @@ void ScalarRHS<FieldT>::evaluate()
     if( haveConvection_ ) *tmpx <<= - *xConvFlux_;
     else                  *tmpx <<= 0.0;
     if( haveDiffusion_ )  *tmpx <<= *tmpx - *xDiffFlux_;
-    if( haveXAreaFrac_ ){
-      SpatialOps::SpatFldPtr<XFluxT> xAreaFracInterp = SpatialOps::SpatialFieldStore::get<XFluxT>(rhs);
-      xAreaFracInterpOp_->apply_to_field( *xareafrac_, *xAreaFracInterp );
-      *tmpx <<= *tmpx * *xAreaFracInterp;
-    }
-    divOpX_->apply_to_field( *tmpx, rhs );
+    if( haveXAreaFrac_ )  *tmpx <<= *tmpx * (*xAreaFracInterpOp_)(*xareafrac_);
+    rhs <<= (*divOpX_)(*tmpx);
   }
 
   if( doYDir_ ){
@@ -252,13 +225,8 @@ void ScalarRHS<FieldT>::evaluate()
     if( haveConvection_ ) *tmpy <<= *yConvFlux_;
     else                  *tmpy <<= 0.0;
     if( haveDiffusion_ )  *tmpy <<= *tmpy + *yDiffFlux_;
-    if( haveYAreaFrac_ ){
-      SpatialOps::SpatFldPtr<YFluxT> yAreaFracInterp = SpatialOps::SpatialFieldStore::get<YFluxT>(rhs);
-      yAreaFracInterpOp_->apply_to_field( *yareafrac_, *yAreaFracInterp );
-      *tmpy <<= *tmpy * *yAreaFracInterp;
-    }
-    divOpY_->apply_to_field( *tmpy, *tmp );
-    rhs <<= rhs - *tmp;
+    if( haveYAreaFrac_ )  *tmpy <<= *tmpy * (*yAreaFracInterpOp_)(*yareafrac_);
+    rhs <<= rhs - (*divOpY_)(*tmpy);
   }
 
   if( doZDir_ ){
@@ -266,26 +234,19 @@ void ScalarRHS<FieldT>::evaluate()
     if( haveConvection_ ) *tmpz <<= *zConvFlux_;
     else                  *tmpz <<= 0.0;
     if( haveDiffusion_ )  *tmpz <<= *tmpz + *zDiffFlux_;
-    if( haveZAreaFrac_ ){
-      SpatialOps::SpatFldPtr<ZFluxT> zAreaFracInterp = SpatialOps::SpatialFieldStore::get<ZFluxT>(rhs);
-      zAreaFracInterpOp_->apply_to_field( *zareafrac_, *zAreaFracInterp );
-      *tmpz <<= *tmpz * *zAreaFracInterp;
-    }
-    divOpZ_->apply_to_field( *tmpz, *tmp );
-    rhs <<= rhs - *tmp;
+    if( haveZAreaFrac_ )  *tmpz <<= *tmpz * (*zAreaFracInterpOp_)(*zareafrac_);
+    rhs <<= rhs - (*divOpZ_)(*tmpz);
   }
-
-  if( haveVolFrac_ ) volFracInterpOp_->apply_to_field( *volfrac_, *tmp );
 
   typename SrcVec::const_iterator isrc;
   for( isrc=srcTerm_.begin(); isrc!=srcTerm_.end(); ++isrc ) {
     if (isConstDensity_) {
       const double densVal = (*rho_)[0];
-      if (haveVolFrac_) rhs <<= rhs + (**isrc / densVal ) * *tmp;
+      if (haveVolFrac_) rhs <<= rhs + (**isrc / densVal ) * (*volFracInterpOp_)(*volfrac_);
       else              rhs <<= rhs + (**isrc / densVal );
     }
     else {
-      if ( haveVolFrac_ )  rhs <<= rhs + **isrc * *tmp;
+      if ( haveVolFrac_ )  rhs <<= rhs + **isrc * (*volFracInterpOp_)(*volfrac_);
       else                 rhs <<= rhs + **isrc;
     }
   }

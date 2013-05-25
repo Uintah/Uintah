@@ -6,6 +6,8 @@
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
+#include <Core/Grid/BoundaryConditions/BCUtils.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
 
 using namespace std;
 using namespace Uintah;
@@ -62,6 +64,9 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
     vector<Patch::FaceType> bf;
     vector<Patch::FaceType>::const_iterator bf_iter;
     patch->getBoundaryFaces(bf);
+    Vector Dx = patch->dCell(); 
+    double dx; 
+    double dy; 
     // Loop over all boundary faces on this patch
     for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
       Patch::FaceType face = *bf_iter; 
@@ -69,38 +74,53 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(matlIndex);
       for (int child = 0; child < numChildren; child++){
 
-        string bc_kind = "NotSet"; 
-        Iterator bound_ptr; 
-        Iterator nu; //not used...who knows why?
-        const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex, 
-                                                           d_eqnName, bound_ptr, 
-                                                           nu, child ); 
-        const BoundCond<double> *new_bcs_d = dynamic_cast<const BoundCond<double> *>(bc); 
-        const BoundCond<std::string> *new_bcs_st = dynamic_cast<const BoundCond<std::string> *>(bc);
-        bool failed = false; 
+        double bc_value = -9; 
+        Vector bc_v_value(0,0,0); 
+        std::string bc_s_value = "NA";
 
-        if ( new_bcs_d == 0 ){ 
-          failed = true; 
-          //check string type
-          if ( new_bcs_st != 0 ){ 
-            failed = false; 
-          }
+        Iterator bound_ptr;
+        string bc_kind = "NotSet"; 
+        string face_name; 
+        getBCKind( patch, face, child, d_eqnName, matlIndex, bc_kind, face_name ); 
+
+        string whichface; 
+        int index; 
+        double di; 
+        Vector Dx = patch->dCell(); 
+
+        if (face == 0){
+          whichface = "x-";
+          index = 0;
+          dx = Dx[1];
+          dy = Dx[2];
+        } else if (face == 1) {
+          whichface = "x+"; 
+          index = 0;
+          dx = Dx[1];
+          dy = Dx[2];
+        } else if (face == 2) { 
+          whichface = "y-";
+          index = 1;
+          dx = Dx[2];
+          dy = Dx[0];
+        } else if (face == 3) {
+          whichface = "y+";
+          index = 1;
+          dx = Dx[2];
+          dy = Dx[0];
+        } else if (face == 4) {
+          whichface = "z-";
+          index = 2;
+          dx = Dx[0];
+          dy = Dx[1];
+        } else if (face == 5) {
+          whichface = "z+";
+          index = 2;
+          dx = Dx[0];
+          dy = Dx[1];
         }
 
-        if (failed){ 
-          string whichface; 
-          if (face == 0)
-            whichface = "x-";
-          else if (face == 1)
-            whichface = "x+"; 
-          else if (face == 2) 
-            whichface = "y-";
-          else if (face == 3)
-            whichface = "y+";
-          else if (face == 4)
-            whichface = "z-";
-          else if (face == 5)
-            whichface = "z+";
+        if ( bc_kind == "NotSet" ){ 
 
           cout << "ERROR!:  Missing boundary condition specification!" << endl;
           cout << "Here are the details:" << endl;
@@ -111,8 +131,90 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
           throw ProblemSetupException("Please correct your <BoundaryCondition> section in your input file for this variable", __FILE__,__LINE__); 
         }
 
-        delete bc; 
+        // need to map x,y,z -> i,j,k for the FromFile option
+        bool foundIterator = false; 
+        if ( bc_kind == "FromFile" ){ 
+          foundIterator = 
+            getIteratorBCValue<std::string>( patch, face, child, d_eqnName, matlIndex, bc_s_value, bound_ptr ); 
+        } 
 
+        if (foundIterator) {
+
+          //if we are here, then we are of type "FromFile" 
+          BoundaryCondition_new::ScalarToBCValueMap& scalar_bc_info = d_boundaryCond->get_FromFileInfo(); 
+          BoundaryCondition_new::ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_info.find( face_name ); 
+
+          bound_ptr.reset(); 
+
+          //check the grid spacing: 
+          proc0cout <<  endl << "For scalar handoff file named: " << i_scalar_bc_storage->second.name << endl;
+          proc0cout <<          "  Grid and handoff spacing relative differences are: [" 
+            << std::abs(i_scalar_bc_storage->second.dx - dx)/dx << ", " 
+            << std::abs(i_scalar_bc_storage->second.dy - dy)/dy << "]" << endl << endl;
+
+          //this should assign the correct normal direction xyz value without forcing the user to have 
+          //to know what it is. 
+          if ( index == 0 ) { 
+            i_scalar_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
+          } else if ( index == 1 ) { 
+            i_scalar_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
+          } else if ( index == 2 ) { 
+            i_scalar_bc_storage->second.relative_xyz[index] = Dx[index]/2.0;
+          } 
+          Vector ref_point = i_scalar_bc_storage->second.relative_xyz;
+          Point xyz(ref_point[0],ref_point[1],ref_point[2]);
+
+          IntVector ijk = patch->getLevel()->getCellIndex( xyz ); 
+
+          i_scalar_bc_storage->second.relative_ijk = ijk;
+          i_scalar_bc_storage->second.relative_ijk[index] = 0;  //don't allow the normal index to shift
+
+          int face_index_value;
+
+          //now check to make sure that there is a bc set for each iterator: 
+          for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 
+            //The next three lines are needed because we are ignoring the user input 
+            //for the normal index but still loading it into memory
+            IntVector mod_bound_ptr = (*bound_ptr);
+            face_index_value = mod_bound_ptr[index]; 
+            mod_bound_ptr[index] = (i_scalar_bc_storage->second.values.begin()->first)[index];
+            BoundaryCondition_new::CellToValueMap::iterator check_iter = i_scalar_bc_storage->second.values.find(mod_bound_ptr - i_scalar_bc_storage->second.relative_ijk);
+            if ( check_iter == i_scalar_bc_storage->second.values.end() ){ 
+              cout << "Scalar BC: " << d_eqnName << " - No UINTAH boundary cell " << *bound_ptr - i_scalar_bc_storage->second.relative_ijk << " in the handoff file." << endl;
+            } 
+          } 
+
+          //now check the reverse -- does the handoff file have an associated boundary ptr
+          BoundaryCondition_new::CellToValueMap temp_map; 
+          for ( BoundaryCondition_new::CellToValueMap::iterator check_iter = i_scalar_bc_storage->second.values.begin(); check_iter != 
+              i_scalar_bc_storage->second.values.end(); check_iter++ ){ 
+
+            //need to reset the values to get the right [index] int value for the face
+            double value = check_iter->second; 
+            IntVector location = check_iter->first;
+            location[index] = face_index_value; 
+
+            temp_map.insert(make_pair(location, value)); 
+
+          }
+
+          //reassign the values now with the correct index for the face direction
+          i_scalar_bc_storage->second.values = temp_map; 
+
+          for ( BoundaryCondition_new::CellToValueMap::iterator check_iter = i_scalar_bc_storage->second.values.begin(); check_iter != 
+              i_scalar_bc_storage->second.values.end(); check_iter++ ){ 
+
+            bool found_it = false; 
+            for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 
+              if ( *bound_ptr == (check_iter->first + i_scalar_bc_storage->second.relative_ijk) )
+                found_it = true; 
+            }
+            if ( !found_it ){ 
+              cout << "Scalar BC: " << d_eqnName << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+            } 
+          } 
+
+        }
       }
     }
   }

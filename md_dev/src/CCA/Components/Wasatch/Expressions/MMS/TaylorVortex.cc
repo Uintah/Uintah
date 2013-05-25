@@ -65,7 +65,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
 
-  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
+  t_ = &fml.template field_ref<double>( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -148,7 +148,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
 
-  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
+  t_ = &fml.template field_ref<double>( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -231,7 +231,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
 
-  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
+  t_ = &fml.template field_ref<double>( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -314,7 +314,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
 
-  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
+  t_ = &fml.template field_ref<double>( tTag_ );
 }
 
 //--------------------------------------------------------------------

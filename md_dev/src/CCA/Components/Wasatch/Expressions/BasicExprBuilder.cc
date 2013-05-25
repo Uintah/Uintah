@@ -62,12 +62,12 @@
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 
 // BC Expressions Includes
-#include "BoundaryConditions/ConstantBC.h"
-#include "BoundaryConditions/LinearBC.h"
-#include "BoundaryConditions/ParabolicBC.h"
-#include "BoundaryConditions/PowerLawBC.h"
-#include "BoundaryConditions/TurbulentInletBC.h"
-#include "BoundaryConditions/BoundaryConditionBase.h"
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/ConstantBC.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/LinearBC.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/ParabolicBC.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/PowerLawBC.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/TurbulentInletBC.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 #include "BoundaryConditions/VarDensMMSVelocity.h"
 #include "BoundaryConditions/VarDensMMSMomentum.h"
 #include "BoundaryConditions/VarDensMMSSolnVar.h"
@@ -78,7 +78,7 @@
 
 #include <string>
 #ifndef PI
-#define PI 3.1415926535897932384626433832795
+#  define PI 3.1415926535897932384626433832795
 #endif
 
 using std::endl;

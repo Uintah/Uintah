@@ -28,16 +28,16 @@
 # Epilogue fragment for subdirectories.  This is included from
 # either smallso_epilogue.mk or largeso_epilogue.mk
 
-OBJS := $(patsubst %.c,%.$(OBJEXT),$(filter %.c,$(SRCS))) \
-	   $(patsubst %.cc,%.$(OBJEXT),$(filter %.cc,$(SRCS))) \
-	   $(patsubst %.cxx,%.$(OBJEXT),$(filter %.cxx,$(SRCS))) \
-	   $(patsubst %.cu,%.$(OBJEXT),$(filter %.cu,$(SRCS))) \
-	   $(patsubst %.s,%.$(OBJEXT),$(filter %.s,$(SRCS))) \
-	   $(patsubst %.F,%.$(OBJEXT),$(filter %.F,$(SRCS))) \
-	   $(patsubst %.f,%.$(OBJEXT),$(filter %.f,$(SRCS))) \
-	   $(patsubst %.fif,%.$(OBJEXT),$(filter %.fif,$(SRCS))) \
-	   $(patsubst %.y,%.$(OBJEXT),$(filter %.y,$(SRCS))) \
-	   $(patsubst %.l,%.$(OBJEXT),$(filter %.l,$(SRCS)))
+OBJS := $(patsubst %.c,%.$(OBJEXT),$(filter %.c,$(SRCS)))     \
+        $(patsubst %.cc,%.$(OBJEXT),$(filter %.cc,$(SRCS)))   \
+        $(patsubst %.cxx,%.$(OBJEXT),$(filter %.cxx,$(SRCS))) \
+        $(patsubst %.cu,%.$(OBJEXT),$(filter %.cu,$(SRCS)))   \
+        $(patsubst %.s,%.$(OBJEXT),$(filter %.s,$(SRCS)))     \
+        $(patsubst %.F,%.$(OBJEXT),$(filter %.F,$(SRCS)))     \
+        $(patsubst %.f,%.$(OBJEXT),$(filter %.f,$(SRCS)))     \
+        $(patsubst %.fif,%.$(OBJEXT),$(filter %.fif,$(SRCS))) \
+        $(patsubst %.y,%.$(OBJEXT),$(filter %.y,$(SRCS)))     \
+        $(patsubst %.l,%.$(OBJEXT),$(filter %.l,$(SRCS)))
 
 LIBNAME := $(LIBDIR)/lib$(subst /,_,$(SRCDIR)).$(SO_OR_A_FILE)
 

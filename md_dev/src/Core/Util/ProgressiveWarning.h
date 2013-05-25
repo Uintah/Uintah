@@ -68,30 +68,36 @@ DESCRIPTION
   
 ****************************************/
 
-  class SCISHARE ProgressiveWarning {
-  public:
-    //! Pass the message to output as a warning.  The multiplier is the amount to multiply the
-    //! next occurence by when we output the warning.  -1 will mean to only output once.
-    //! Output to stream.  'Multiplier' should not be set to '1'... and will be updated to '2' if
-    //! '1' is specified.
-    ProgressiveWarning(std::string message, int multiplier = -1, std::ostream& stream = std::cerr);
+class SCISHARE ProgressiveWarning {
 
-    //! Invoke the warning numTimes times.  If we've hit this enough times, output the warning message.
-    //! Return true if we output the message.
-    bool invoke(int numTimes = 1);
-    void changeMessage(std::string message);
-    void showWarning();
-  private:
-    void doMessage();
-    std::string d_message;
-    int d_numOccurences;
-    int d_multiplier;
-    int d_nextOccurence;
+ public:
+   //! Pass the message to output as a warning.  The multiplier is the amount to multiply the
+   //! next occurence by when we output the warning.  -1 will mean to only output once.
+   //! Output to stream.  'Multiplier' should not be set to '1'... and will be updated to '2' if
+   //! '1' is specified.
 
-    bool d_warned;
+   ProgressiveWarning( const std::string & message, int multiplier = -1, std::ostream & stream = std::cerr );
 
-    std::ostream* out;
-  };
+   //! Invoke the warning numTimes times.  If we've hit this enough times, output the warning message.
+   //! Return true if we output the message.
+
+   bool invoke( int numTimes = 1 );
+   void changeMessage( const std::string & message );
+   void showWarning();
+
+ private:
+
+   void doMessage();
+
+   std::string    d_message;
+   int            d_numOccurences;
+   int            d_multiplier;
+   int            d_nextOccurence;
+
+   bool           d_warned;
+
+   std::ostream * d_out;
+};
 
 } // ends namespace SCIRun
 

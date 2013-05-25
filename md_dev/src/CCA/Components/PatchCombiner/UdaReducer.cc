@@ -112,10 +112,9 @@ void UdaReducer::scheduleInitialize(const LevelP& level,
   
   const MaterialSubset* minusOne_MS = globalMatlSet->getUnion();
   
-  const MaterialSet* all_matls = d_sharedState->allMaterials();
-  const MaterialSubset* all_matls_MS = all_matls->getUnion();
-  
-  
+//  const MaterialSet* all_matls = d_sharedState->allMaterials();
+//  const MaterialSubset* all_matls_MS = all_matls->getUnion();
+
   t->computes(delt_label, minusOne_MS);
   sched->addTask(t, level->eachPatch(), globalMatlSet);
 }

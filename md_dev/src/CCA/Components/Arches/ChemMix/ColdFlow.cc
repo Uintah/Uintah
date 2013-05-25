@@ -33,6 +33,7 @@
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 
 // includes for Uintah
+#include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationState.h>
@@ -448,26 +449,28 @@ ColdFlow::getState( const ProcessorGroup* pc,
         std::vector<double> iv; 
         Iterator nu;
         Iterator bound_ptr; 
+        string bc_kind = "NotSet"; 
+        string face_name; 
 
         std::vector<ColdFlow::BoundaryType> which_bc;
-        std::vector<double> bc_values;
+        double bc_value = 0.0; 
+        std::string bc_s_value = "NA"; 
 
         // look to make sure every variable has a BC set:
         for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
+
           std::string variable_name = d_allIndepVarNames[i]; 
 
-          const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex,
-              variable_name, bound_ptr,
-              nu, child );
+          getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name ); 
 
-          const BoundCond<double> *new_bcs =  dynamic_cast<const BoundCond<double> *>(bc);
-          if ( new_bcs == 0 ) {
-            cout << "Error: For variable named " << variable_name << endl;
-            throw InvalidValue( "Error: When trying to compute properties at a boundary, found boundary specification missing in the <Grid> section of the input file.", __FILE__, __LINE__); 
-          }
-
-          double bc_value     = new_bcs->getValue(); 
-          std::string bc_kind = new_bcs->getBCType__NEW(); 
+          bool foundIterator = "false"; 
+          if ( bc_kind == "FromFile" ){ 
+            foundIterator = 
+              getIteratorBCValue<std::string>( patch, face, child, variable_name, matlIndex, bc_s_value, bound_ptr ); 
+          } else {
+            foundIterator = 
+              getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr ); 
+          } 
 
           if ( bc_kind == "Dirichlet" ) {
             which_bc.push_back(ColdFlow::DIRICHLET); 
@@ -477,11 +480,6 @@ ColdFlow::getState( const ProcessorGroup* pc,
             which_bc.push_back(ColdFlow::FROMFILE);
           } else
             throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
-
-          // currently assuming a constant value across the mesh. 
-          bc_values.push_back( bc_value ); 
-
-          delete bc; 
 
         }
 
@@ -494,23 +492,8 @@ ColdFlow::getState( const ProcessorGroup* pc,
           // again loop over iv's and fill iv vector
           for ( int i = 0; i < (int)d_allIndepVarNames.size(); i++ ){
 
-            switch (which_bc[i]) { 
+            iv.push_back( 0.5 * ( indep_storage[i][c] + indep_storage[i][cp1]));
 
-              case ColdFlow::DIRICHLET:
-                iv.push_back( bc_values[i] ); 
-                break; 
-
-              case ColdFlow::NEUMANN:
-                iv.push_back(0.5*(indep_storage[i][c] + indep_storage[i][cp1]));  
-                break; 
-
-              case ColdFlow::FROMFILE:
-                iv.push_back(0.5*(indep_storage[i][c] + indep_storage[i][cp1]));  
-                break;
-
-              default: 
-                throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
-            }
           }
 
           // now get state for boundary cell: 
@@ -572,7 +555,6 @@ ColdFlow::getState( const ProcessorGroup* pc,
           }
           iv.resize(0);  
         }
-        bc_values.resize(0); 
       }
     }
 

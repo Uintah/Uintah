@@ -70,8 +70,7 @@ namespace Uintah {
   }
 
 //------------------------------------------------------------------------------
-  static
-  const std::string
+  std::string
   getToken( std::ifstream &inputFStream )
   {
     std::string token;
@@ -81,7 +80,7 @@ namespace Uintah {
   }
 
 //------------------------------------------------------------------------------  
-  const std::string
+  std::string
   getString( std::ifstream &inputFStream )
   {
     std::string token;
@@ -118,7 +117,7 @@ namespace Uintah {
   }
 
 //------------------------------------------------------------------------------
-  const std::string
+  std::string
   getLine( std::ifstream &inputFStream, bool skipComments )
   {
     std::string line;

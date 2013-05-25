@@ -37,16 +37,17 @@ SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/ICEMaterial.cc \
        $(SRCDIR)/Diffusion.cc \
        $(SRCDIR)/BoundaryCond.cc \
-       $(SRCDIR)/Turbulence.cc \
-       $(SRCDIR)/SmagorinskyModel.cc \
-       $(SRCDIR)/DynamicModel.cc \
-       $(SRCDIR)/TurbulenceFactory.cc \
        $(SRCDIR)/impICE.cc \
        $(SRCDIR)/impAMRICE.cc \
        $(SRCDIR)/customInitialize.cc   \
        $(SRCDIR)/ExchangeCoefficients.cc   	
        
-SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs $(SRCDIR)/SpecificHeatModel
+SUBDIRS := $(SRCDIR)/EOS \
+       $(SRCDIR)/Advection \
+       $(SRCDIR)/CustomBCs \
+       $(SRCDIR)/SpecificHeatModel \
+       $(SRCDIR)/WallShearStressModel \
+       $(SRCDIR)/TurbulenceModel
 
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 

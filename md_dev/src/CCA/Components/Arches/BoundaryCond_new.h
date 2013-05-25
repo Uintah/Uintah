@@ -26,11 +26,20 @@ public:
 
   typedef std::map<IntVector, double> CellToValueMap; 
   typedef std::map<Patch*, vector<CellToValueMap> > PatchToBCValueMap; 
-  typedef std::map<std::string, CellToValueMap> ScalarToBCValueMap; 
   typedef std::map< std::string, const VarLabel* > LabelMap; 
   typedef std::map< std::string, double  > DoubleMap; 
   typedef std::map< std::string, DoubleMap > MapDoubleMap;
-
+  struct FFInfo{ 
+    CellToValueMap values;
+    Vector relative_xyz;
+    double dx; 
+    double dy;
+    IntVector relative_ijk;
+    std::string default_type;
+    std::string name; 
+    double default_value;
+  }; 
+  typedef std::map<std::string, FFInfo> ScalarToBCValueMap; 
 
   BoundaryCondition_new(const int matl_id);
 
@@ -84,7 +93,7 @@ public:
                            const std::string eqnName );
 
   /** @brief Read in a file for boundary conditions **/ 
-  std::map<IntVector, double> readInputFile( std::string file_name ); 
+  void readInputFile( std::string file_name, FFInfo& info ); 
 
   //new stuff--------------------
   class BCFunctionBase{ 
@@ -100,6 +109,8 @@ public:
     protected: 
     
   };
+
+  ScalarToBCValueMap& get_FromFileInfo(){ return scalar_bc_from_file; }; 
 
 private: 
 

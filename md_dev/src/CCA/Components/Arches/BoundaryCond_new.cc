@@ -62,39 +62,17 @@ void BoundaryCondition_new::problemSetup( ProblemSpecP& db, std::string eqn_name
 
             //Check reference file for this scalar
             std::string file_name;
-            db_BCType->require("inputfile", file_name); 
+            db_BCType->require("value", file_name); 
 
-            gzFile file = gzopen( file_name.c_str(), "r" ); 
-            int total_variables;
+            FFInfo bc_values; 
+            readInputFile( file_name, bc_values ); 
 
-            if ( file == NULL ) { 
-              proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
-              throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
-            }
+            Vector rel_xyz;
+            db_BCType->require("relative_xyz", rel_xyz);
+            bc_values.relative_xyz = rel_xyz; 
 
-            total_variables = getInt( file ); 
-            std::string eqn_input_file; 
-            bool found_file = false; 
-            for ( int i = 0; i < total_variables; i++ ){
-              std::string varname  = getString( file );
-              eqn_input_file  = getString( file ); 
-
-              if ( varname == eqn_name ){ 
-                found_file = true; 
-                break; 
-              } 
-            }
-            gzclose( file ); 
-
-            if ( !found_file ){ 
-              stringstream err_msg; 
-              err_msg << "Error: Unable to find BC input file for scalar: " << eqn_name << " Check this file for errors: \n" << file_name << endl;
-              throw ProblemSetupException( err_msg.str(), __FILE__, __LINE__);
-            } 
-
-            //If file is found, now create a map from index to value
-            CellToValueMap bc_values;  
-            bc_values = readInputFile( eqn_input_file ); 
+            db_BCType->findBlock("default")->getAttribute("type",bc_values.default_type);
+            db_BCType->findBlock("default")->getAttribute("value",bc_values.default_value);
 
             scalar_bc_from_file.insert(make_pair(face_name, bc_values)); 
 
@@ -248,8 +226,8 @@ BoundaryCondition_new::setupTabulatedBC( ProblemSpecP& db, std::string eqn_name,
   }
 }
 
-std::map<IntVector, double>
-BoundaryCondition_new::readInputFile( std::string file_name )
+void
+BoundaryCondition_new::readInputFile( std::string file_name, BoundaryCondition_new::FFInfo& struct_result )
 {
 
   gzFile file = gzopen( file_name.c_str(), "r" ); 
@@ -258,9 +236,14 @@ BoundaryCondition_new::readInputFile( std::string file_name )
     throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
   }
 
-  std::string variable = getString( file ); 
-  int num_points = getInt( file ); 
-  std::map<IntVector, double> result; 
+  struct_result.name = getString( file ); 
+
+  struct_result.dx = getDouble( file ); 
+  struct_result.dy = getDouble( file ); 
+
+  int num_points = getInt( file );
+
+  std::map<IntVector, double> values; 
 
   for ( int i = 0; i < num_points; i++ ) {
     int I = getInt( file ); 
@@ -270,12 +253,14 @@ BoundaryCondition_new::readInputFile( std::string file_name )
 
     IntVector C(I,J,K);
 
-    result.insert( make_pair( C, v ));
+    values.insert( make_pair( C, v ));
 
   }
 
+  struct_result.values = values; 
+
   gzclose( file ); 
-  return result; 
+
 }
 //---------------------------------------------------------------------------
 // Method: Set Scalar BC values 
@@ -312,7 +297,7 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
       getBCKind( patch, face, child, varname, d_matl_id, bc_kind, face_name ); 
 
       bool foundIterator = "false"; 
-      if ( bc_kind == "Tabulated" ){ 
+      if ( bc_kind == "Tabulated" || bc_kind == "FromFile" ){ 
         foundIterator = 
           getIteratorBCValue<std::string>( patch, face, child, varname, d_matl_id, bc_s_value, bound_ptr ); 
       } else {
@@ -347,18 +332,28 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
 
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
 
-            CellToValueMap::iterator iter = i_scalar_bc_storage->second.find( *bound_ptr ); //<----WARNING ... May be slow here
-            if ( iter != i_scalar_bc_storage->second.end() ){ 
+            IntVector rel_bc = *bound_ptr - i_scalar_bc_storage->second.relative_ijk; 
+            CellToValueMap::iterator iter = i_scalar_bc_storage->second.values.find( rel_bc ); //<----WARNING ... May be slow here
+            if ( iter != i_scalar_bc_storage->second.values.end() ){ 
 
               double file_bc_value = iter->second; 
               IntVector bp1(*bound_ptr - insideCellDir);
               scalar[*bound_ptr] = 2.0 * file_bc_value - scalar[bp1]; 
 
-            } else { 
-              // THIS NEED TO BE FIXED: 
-              //cout << " For cell: " << *bound_ptr << endl;
-              //throw InvalidValue("Error: Cell not found in BC input file for scalar: "+ varname,__FILE__,__LINE__); 
-              scalar[*bound_ptr] = 0;
+            } else if ( i_scalar_bc_storage->second.default_type == "Neumann" ){  
+        
+              IntVector axes = patch->getFaceAxes(face);
+              int P_dir = axes[0];  // principal direction
+              double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+              double dx = Dx[P_dir];
+              IntVector bp1(*bound_ptr - insideCellDir); 
+              scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * bc_value;
+
+            } else if ( i_scalar_bc_storage->second.default_type == "Dirichlet" ){ 
+
+              IntVector bp1(*bound_ptr - insideCellDir); 
+              scalar[*bound_ptr] = 2.0*i_scalar_bc_storage->second.default_value - scalar[bp1];
+
             } 
           }
         } else if ( bc_kind == "Tabulated") {
@@ -762,7 +757,7 @@ void BoundaryCondition_new::FromFile::setupBC( ProblemSpecP& db, const std::stri
       } 
 
       //If file is found, now create a map from index to value
-      CellToValueMap bc_values;  
+      CellToValueMap bc_values;
       bc_values = readInputFile( eqn_input_file ); 
 
       //scalar_bc_from_file.insert(make_pair(eqn_name, bc_values)); 

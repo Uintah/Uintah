@@ -109,8 +109,9 @@ namespace Uintah {
       }; 
 
       /** @brief Scheduler for computing the various efficiencies */
-      void sched_computeEfficiencies( const LevelP& level, 
-                                      SchedulerP& sched ) { 
+      void sched_computeAllScalarEfficiencies( const LevelP& level, 
+                                               SchedulerP& sched ) 
+      { 
 
         // loop through all calculators
         for ( LOC::iterator i = _my_calculators.begin(); i != _my_calculators.end(); i++ ){ 

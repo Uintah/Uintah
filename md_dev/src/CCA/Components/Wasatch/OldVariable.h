@@ -53,7 +53,8 @@ namespace Wasatch {
   /**
    *  \class OldVariable
    *  \author James C. Sutherland
-   *  \brief  This class provides support for carrying old variables around.
+   *  \brief  This class provides support for carrying old variables around. It
+   can also be used to copy variables from the old datawarehouse.
    *
    *  Example usage:
    *  \code
@@ -70,6 +71,13 @@ namespace Wasatch {
    *   -# Create a PlaceHolder expression for the "old" variable on
    *      the given ExpressionFactory.
    *   -# Create a task that will move all of the variables forward.
+   *
+   *  Note that when you want to only copy variables, you should use:
+   *  \code
+   *   OldVariable& oldVar = OldVariable::self();
+   *   oldVar.add_variable<SVolField  >( graph_category, varTag1, true );
+   *  \endcode
+   *  This will basically retain the same varlabel name in the newDW.
    *
    *  \todo Need to prevent the Expression graph from marking these fields as temporary.
    */
@@ -100,6 +108,9 @@ namespace Wasatch {
      *  "old" copies retained.
      * @param category indicates which task category this should be active on
      * @param var the variable that we want an "old" copy for
+     * @param retainName indicates whether to retain the same varlabel for the
+     *        the old variable. Set this to true when you want to copy a variable
+     *        from the old DW to keep it floating around and avoid recalculating it.
      *
      * When a variable is added, an "old" counterpart is created and a
      * PlaceHolder expression is registered with the factory associated
@@ -109,7 +120,8 @@ namespace Wasatch {
      */
     template< typename T >
     void add_variable( const Category category,
-                       const Expr::Tag& var );
+                       const Expr::Tag& var,
+                       const bool retainName=false);
 
     class VarHelperBase;  // forward
 

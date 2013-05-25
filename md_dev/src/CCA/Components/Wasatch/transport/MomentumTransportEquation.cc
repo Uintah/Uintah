@@ -39,7 +39,6 @@
 #include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorBase.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/DynamicSmagorinskyCoefficient.h>
-#include <CCA/Components/Wasatch/OldVariable.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BCCopier.h>
@@ -80,17 +79,18 @@ namespace Wasatch{
     Expr::Tag vremanTsrMagTag   = Expr::Tag();
     const Expr::Tag turbViscTag = tagNames.turbulentviscosity;
 
-    // we have turbulence turned on. create an expression for the strain tensor magnitude. this is used by all eddy viscosity models
-    
-    switch (turbParams.turbulenceModelName) {
-      case SMAGORINSKY: {
-        // Disallow using the smagorinsky model in 1 or 2 dimensions
-        if (!( velTags[0]!=Expr::Tag() && velTags[1]!=Expr::Tag() && velTags[2]!=Expr::Tag() )) {
-          std::ostringstream msg;
-          msg << "ERROR: You cannot use the Constant Smagorinsky Model in one or two dimensions. Please revise your input file and make sure that you specify all three velocity/momentum components." << std::endl;
-          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-        }
+    // Disallow users from using turbulence models in 1 or 2 dimensions
+    if (!( velTags[0]!=Expr::Tag() && velTags[1]!=Expr::Tag() && velTags[2]!=Expr::Tag() )) {
+      std::ostringstream msg;
+      msg << "ERROR: You cannot use a turbulence model in one or two dimensions. Please revise your input file and make sure that you specify all three velocity/momentum components." << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
 
+    // we have turbulence turned on. create an expression for the strain tensor magnitude. this is used by all eddy viscosity models
+    switch (turbParams.turbModelName) {
+        
+        // ---------------------------------------------------------------------
+      case SMAGORINSKY: {
         strTsrMagTag = tagNames.straintensormag;//( "StrainTensorMagnitude", Expr::STATE_NONE );
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
@@ -101,25 +101,19 @@ namespace Wasatch{
         }
       }
         break;
-        
+
+        // ---------------------------------------------------------------------
       case VREMAN: {
         vremanTsrMagTag = tagNames.vremantensormag;
         if( !factory.have_entry( vremanTsrMagTag ) ){
           typedef VremanTensorMagnitude::Builder VremanTsrMagT;
-          factory.register_expression( scinew VremanTsrMagT(vremanTsrMagTag, velTags[0], velTags[1], velTags[2] ) );
+          factory.register_expression( scinew VremanTsrMagT(vremanTsrMagTag, velTags ) );
         }
       }
         break;
         
+        // ---------------------------------------------------------------------
       case WALE: {
-
-        // Disallow using the smagorinsky model in 1 or 2 dimensions
-        if (!( velTags[0]!=Expr::Tag() && velTags[1]!=Expr::Tag() && velTags[2]!=Expr::Tag() )) {
-          std::ostringstream msg;
-          msg << "ERROR: You cannot use the WALE Model in one or two dimensions. Please revise your input file and make sure that you specify all three velocity/momentum components." << std::endl;
-          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-        }
-
         strTsrMagTag = tagNames.straintensormag;
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
@@ -133,19 +127,13 @@ namespace Wasatch{
         waleTsrMagTag = tagNames.waletensormag;
         if( !factory.have_entry( waleTsrMagTag ) ){
           typedef WaleTensorMagnitude::Builder waleStrTsrMagT;
-          factory.register_expression( scinew waleStrTsrMagT(waleTsrMagTag, velTags[0], velTags[1], velTags[2] ) );
+          factory.register_expression( scinew waleStrTsrMagT(waleTsrMagTag, velTags ) );
         }
       }
         break;
+        
+        // ---------------------------------------------------------------------
       case DYNAMIC: {
-
-        // Disallow using the dynamic model in 1 or 2 dimensions
-        if (!( velTags[0]!=Expr::Tag() && velTags[1]!=Expr::Tag() && velTags[2]!=Expr::Tag() )) {
-          std::ostringstream msg;
-          msg << "ERROR: You cannot use the Dynamic Smagorinsky Model in one or two dimensions. Please revise your input file and make sure that you specify all three velocity/momentum components." << std::endl;
-          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-        }
-
         strTsrMagTag = tagNames.straintensormag;//( "StrainTensorMagnitude", Expr::STATE_NONE );
 
         Expr::TagList dynamicSmagTagList;
@@ -159,18 +147,18 @@ namespace Wasatch{
             !factory.have_entry( strTsrMagTag )     ){
           typedef DynamicSmagorinskyCoefficient::Builder dynSmagConstT;
           factory.register_expression( scinew dynSmagConstT(dynamicSmagTagList,
-                                                            velTags[0],
-                                                            velTags[1],
-                                                            velTags[2],
+                                                            velTags,
                                                             densTag,
                                                             isConstDensity) );
         }
         
       }
         break;
+
+        // ---------------------------------------------------------------------
       default:
         break;
-    }   
+    }
 
     if( !factory.have_entry( turbViscTag ) ){
       // NOTE: You may need to cleave the turbulent viscosity from its parents
@@ -491,7 +479,7 @@ namespace Wasatch{
                          params ),
       isviscous_       ( params->findBlock("Viscosity") ? true : false ),
       isConstDensity_  ( isConstDensity                       ),
-      isTurbulent_     ( turbulenceParams.turbulenceModelName != NONE ),
+      isTurbulent_     ( turbulenceParams.turbModelName != NONE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
       densityTag_      ( densTag                              ),
       normalStrainID_  ( Expr::ExpressionID::null_id()        ),
@@ -537,10 +525,8 @@ namespace Wasatch{
     if (enabledudtInPRHS) {
       OldVariable& oldVar = OldVariable::self();
       Expr::Tag dthisMomdtTag = Expr::Tag( "d_" + thisMomName_ + "_dt" , Expr::STATE_NONE );
-//      Expr::Tag thisVelOldTag = Expr::Tag( thisVelTag_.name()  + "_old", Expr::STATE_NONE );
       Expr::Tag thisMomOldTag = Expr::Tag( thisMomName_  + "_old", Expr::STATE_NONE );
       Expr::Tag thisMomOldOldTag = Expr::Tag( thisMomName_  + "_old_old", Expr::STATE_NONE );
-//      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisVelTag_);
       oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomTag);
       oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomOldTag);
       factory.register_expression( new typename TimeDerivative<FieldT>::Builder(dthisMomdtTag,thisMomOldTag,thisMomOldOldTag,tagNames.timestep));
@@ -654,8 +640,7 @@ namespace Wasatch{
         OldVariable& oldPressure = OldVariable::self();
         oldPressure.add_variable<SVolField>( ADVANCE_SOLUTION, pressure_tag() );
         const Expr::Tag oldPressureTag = Expr::Tag (pressure_tag().name() + "_old", Expr::STATE_NONE);
-        
-        const Expr::ExpressionID velStarID = factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, velTags_, tauTags, densTag, viscTag, oldPressureTag, tagNames.timestep ));        
+        factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, velTags_, tauTags, densTag, viscTag, oldPressureTag, tagNames.timestep ));
       }
     } 
     
@@ -676,22 +661,6 @@ namespace Wasatch{
     //__________________
     // calculating velocity at the current time step    
     factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( thisVelTag_, thisMomTag, densityTag_, volTag ));
-
-//    if(has_embedded_geometry()) {
-//      std::cout << "attaching modifier expression to primvar \n";
-//      //create modifier expression
-//      typedef ExprAlgebra<FieldT> ExprAlgbr;
-//      Expr::TagList theTagList;
-//      theTagList.push_back(volTag);
-//      //theTagList.push_back(mom_tag(thisMomName_));
-//      
-//      Expr::Tag modifierTag = Expr::Tag( thisVelTag_.name() + "_modifier", Expr::STATE_NONE);
-//      factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
-//                                                                     theTagList,
-//                                                                     ExprAlgbr::PRODUCT, true ) );
-//      // attach the modifier expression to the target expression
-//      factory.attach_modifier_expression( modifierTag, thisVelTag_);
-//    }
     
     //__________________
     // pressure

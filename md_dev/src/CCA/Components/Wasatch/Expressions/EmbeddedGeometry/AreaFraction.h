@@ -45,13 +45,11 @@
  as staggered volume fractions, i.e. xvolFraction, yvolFraction, and zvolFraction.
  The process of calculating the area fractions uses a clean algebraic operation
  on the svolFraction field. The procedure is as follows. Given \f$\phi\f$ as
- the cell centered volume fraction such that \f$\phi = 0\f$ inside a solid and
- \f$\phi = 1\f$ outside the solid, we first calculate an intermediate cell centered
- field \f$\tilde\phi = 1 - \phi\f$. Then we interpolate \f$\tilde\phi\f$ to the
- corresponding staggered direction. This will result in values of 0.5 at the interface
- of the solid and the fluid. Because we only deal with sharp interfaces in Wasatch,
- we set all those values to 1. Finally, the staggered volume fraction is recovered
- by taking the complement of \f$\tilde\phi\f$, e.g. \f$1 - \tilde\phi\f$
+ the cell centered fluid volume fraction such that \f$\phi = 0\f$ inside a solid and
+ \f$\phi = 1\f$ outside the solid, our objective is to calculate the x,y,z aera fractions.
+ we first interpolate \f$\phi\f$ to the corresponding staggered direction. 
+ This will result in values of 0.5 at the fluid-solid interface. Because we only 
+ deal with sharp interfaces in Wasatch, we set all those values (i.e. 0.5) to 0.
  */
 template< typename DestT >
 class AreaFraction
@@ -63,7 +61,7 @@ class AreaFraction
   
   const SVolField* src_;
   
-  const InpterpSrcT2DestT* InpterpSrcT2DestTOp_;
+  const InpterpSrcT2DestT* interpSrcT2DestTOp_;
   
   AreaFraction( const Expr::Tag& srctag );
   
@@ -125,7 +123,7 @@ void
 AreaFraction<DestT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  if( srct_ != Expr::Tag() )  src_ = &fml.template field_manager<SVolField>().field_ref( srct_ );
+  if( srct_ != Expr::Tag() )  src_ = &fml.template field_ref<SVolField>( srct_ );
 }
 
 //--------------------------------------------------------------------
@@ -136,7 +134,7 @@ AreaFraction<DestT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   if( srct_ != Expr::Tag() )
-    InpterpSrcT2DestTOp_ = opDB.retrieve_operator<InpterpSrcT2DestT>();
+    interpSrcT2DestTOp_ = opDB.retrieve_operator<InpterpSrcT2DestT>();
 }
 
 //--------------------------------------------------------------------
@@ -149,18 +147,10 @@ evaluate()
   using namespace SpatialOps;
   using SpatialOps::operator<<=;
   DestT& destResult = this->value();
-  destResult <<= 1.0; // this will make sure that the boundaries have an area fraction of 1.0. Wall BCs are NOT handled by volume fractions rather by the BCHelperTools.
-  InpterpSrcT2DestTOp_->apply_to_field(*src_, destResult); // interpolate cell centered volume fraction to faces
-  destResult <<= cond( destResult < 1.0, 0.0 ) // replace 0.5 values by 0.0
-                     ( 1.0 );
+  destResult <<= 1.0; // this will ensure that the boundaries have an area fraction of 1.0. Wall BCs are NOT handled by volume fractions rather by the BCHelperTools.
+  destResult <<= cond ( (*interpSrcT2DestTOp_)(*src_) < 1.0, 0.0 )
+                      ( 1.0 );
   
-//  SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore::get<SVolField>(destResult);
-//  *tmp <<= 1.0 - *src_; // 1 - SVOLFraction
-//  
-//  InpterpSrcT2DestTOp_->apply_to_field(*tmp, destResult); // interpolate
-//  
-//  destResult <<= 1.0 - cond( destResult > 0.0, 1.0 ) // replace 0.5 values by 1.0 and take (1 - result) to get the areafraction
-//                           ( 0.0 );
 }
 
 //--------------------------------------------------------------------

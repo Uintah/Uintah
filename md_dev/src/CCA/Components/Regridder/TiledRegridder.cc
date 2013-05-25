@@ -617,7 +617,7 @@ struct CompressedIntVector
         return y;
       case 2:
         return z;
-      case 3:
+      default:
         throw InternalError("CompressedIntVector invalid index",__FILE__,__LINE__);
     }
   }

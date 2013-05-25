@@ -69,20 +69,22 @@
         <specific_heat>134.0e-8</specific_heat>
 
         <constitutive_model type="Arenisca">
-            <B0>10000</B0>
+            <B0>8000</B0>
             <G0>3750</G0>
             <hardening_modulus>0.0</hardening_modulus>
             <FSLOPE> 0.057735026919 </FSLOPE>
             <FSLOPE_p> 0.057735026919 </FSLOPE_p>
             <PEAKI1> 6.123724356953976e2 </PEAKI1>
-            <CR> 14.8 </CR>
-            <T1_rate_dependence> 1 </T1_rate_dependence>
-            <T2_rate_dependence> 2 </T2_rate_dependence>
+            <CR> 1 </CR>
+            <T1_rate_dependence> 0.0 </T1_rate_dependence>
+            <T2_rate_dependence> 0.0 </T2_rate_dependence>
             <p0_crush_curve> -1837.0724 </p0_crush_curve>
             <p1_crush_curve> 6.6666666666666666e-4 </p1_crush_curve>
             <p3_crush_curve> 0.5 </p3_crush_curve>
-            <p4_fluid_effect> 1.0 </p4_fluid_effect>
+            <p4_fluid_effect> 0 </p4_fluid_effect>
+<!--            <fluid_B0> 2200.0 </fluid_B0>-->
             <fluid_B0> 0.0 </fluid_B0>
+<!--            <fluid_pressure_initial> 500.0 </fluid_pressure_initial>-->
             <fluid_pressure_initial> 0.0 </fluid_pressure_initial>
             <gruneisen_parameter>    0.1          </gruneisen_parameter>
             <subcycling_characteristic_number> 100 </subcycling_characteristic_number>

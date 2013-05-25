@@ -1305,7 +1305,7 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
             eta_in  = 0.0, // outer bound for plastic scaler
             eta_mid,       // solution for plastic scaler
             eps_eta = 1.0, // convergence measure: eta_out-eta_in
-            TOL = 1.0e-11;  // convergence tolerance on eps_eta
+            TOL = 1.0e-9;  // convergence tolerance on eps_eta
 
     Matrix3 sigma_new0,   // non-hardening return stress
             d_sigma0,     // non-hardening increment stress over step
@@ -1653,7 +1653,7 @@ double Arenisca::ComputeNonHardeningReturn(const double& R,   // Transformed Tri
           Theta = 0.0,
           Theta_in = 0.0,
           Theta_out = 1.570796326794897,
-          TOL = 1.0e-11;
+          TOL = 1.0e-9;
 
    //while (Abs( Sqrt( Pow(X-a*cos(Theta_out),2) + Pow(Y-b*sin(Theta_out),2) ) -
    //            Sqrt( Pow(X-a*cos(Theta_in),2) + Pow(Y-b*sin(Theta_in),2) ) ) > TOL)

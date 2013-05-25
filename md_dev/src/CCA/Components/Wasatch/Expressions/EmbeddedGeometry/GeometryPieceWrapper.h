@@ -115,22 +115,22 @@ evaluate()
   using namespace SpatialOps;
   SVolField& result = this->value();
   result <<= 1.0;
-  SVolField::interior_iterator resultIter = result.interior_begin();
+  SVolField::iterator resultIter = result.begin();
   std::vector<Uintah::GeometryPieceP>::iterator geomIter = geomObjects_.begin();
   int i = 0;
   int ix,iy,iz;
   double x,y,z;
   bool isInside = false;
   SpatialOps::structured::IntVec localCellIJK;
-
-  while ( resultIter != result.interior_end() ) {
-    i = resultIter - result.interior_begin();
-    localCellIJK  = result.window_without_ghost().ijk_index_from_local(i);
-    ix = x_->window_without_ghost().flat_index(localCellIJK);
+  
+  while ( resultIter != result.end() ) {
+    i = resultIter - result.begin();
+    localCellIJK  = result.window_with_ghost().ijk_index_from_local(i);
+    ix = x_->window_with_ghost().flat_index(localCellIJK);
     x = (*x_)[ix];
-    iy = y_->window_without_ghost().flat_index(localCellIJK);
+    iy = y_->window_with_ghost().flat_index(localCellIJK);
     y = (*y_)[iy];
-    iz = z_->window_without_ghost().flat_index(localCellIJK);
+    iz = z_->window_with_ghost().flat_index(localCellIJK);
     z = (*z_)[iz];
     Uintah::Point p(x,y,z);
 

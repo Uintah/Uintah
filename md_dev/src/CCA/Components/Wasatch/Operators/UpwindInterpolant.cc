@@ -127,15 +127,4 @@ template class UpwindInterpolant< SS::SVolField, SS::SSurfXField >;
 template class UpwindInterpolant< SS::SVolField, SS::SSurfYField >;
 template class UpwindInterpolant< SS::SVolField, SS::SSurfZField >;
 
-template class UpwindInterpolant< SS::XVolField, SS::XSurfXField >;
-template class UpwindInterpolant< SS::XVolField, SS::XSurfYField >;
-template class UpwindInterpolant< SS::XVolField, SS::XSurfZField >;
-
-template class UpwindInterpolant< SS::YVolField, SS::YSurfXField >;
-template class UpwindInterpolant< SS::YVolField, SS::YSurfYField >;
-template class UpwindInterpolant< SS::YVolField, SS::YSurfZField >;
-
-template class UpwindInterpolant< SS::ZVolField, SS::ZSurfXField >;
-template class UpwindInterpolant< SS::ZVolField, SS::ZSurfYField >;
-template class UpwindInterpolant< SS::ZVolField, SS::ZSurfZField >;
 //==================================================================

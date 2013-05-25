@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/DynamicModel.h>
+#include <CCA/Components/ICE/TurbulenceModel/DynamicModel.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CellIterator.h>

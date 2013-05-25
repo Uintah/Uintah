@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "PoissonExpression.h"
+#include <CCA/Components/Wasatch/Expressions/PoissonExpression.h>
 
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
@@ -180,7 +180,7 @@ namespace Wasatch {
   PoissonExpression::bind_fields( const Expr::FieldManagerList& fml )
   {
     if( phirhst_ != Expr::Tag() ){
-      phirhs_ = &fml.field_manager<SVolField>().field_ref( phirhst_ );
+      phirhs_ = &fml.field_ref<SVolField>( phirhst_ );
     }
   }
 

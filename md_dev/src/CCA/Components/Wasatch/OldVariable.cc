@@ -63,11 +63,12 @@ namespace Wasatch {
   public:
 
     VarHelperBase( const Expr::Tag& var,
+                   const bool retainName,
                    const Uintah::TypeDescription* typeDesc,
                    const Uintah::IntVector ghostDesc,
                    Uintah::Ghost::GhostType ghostType)
     : name_( var ),
-      oldName_( var.name() + "_old", Expr::STATE_NONE ),
+      oldName_( var.name() + ( (retainName) ? "" : "_old" ), Expr::STATE_NONE ),
       needsNewVarLabel_ ( Uintah::VarLabel::find( name_.name() ) == NULL ),
       oldVarLabel_( Uintah::VarLabel::create( oldName_.name(), typeDesc, ghostDesc ) ),
       varLabel_   ( needsNewVarLabel_ ? Uintah::VarLabel::create( name_.name(), typeDesc, ghostDesc ) : Uintah::VarLabel::find( name_.name() ) ),
@@ -100,8 +101,10 @@ namespace Wasatch {
   {
   public:
 
-    VarHelper( const Expr::Tag& var )
+    VarHelper( const Expr::Tag& var,
+               const bool retainName )
     : VarHelperBase( var,
+                     retainName,
                      get_uintah_field_type_descriptor<T>(),
                      get_uintah_ghost_descriptor<T>(),
                      get_uintah_ghost_type<T>())
@@ -171,7 +174,8 @@ namespace Wasatch {
   template< typename T >
   void
   OldVariable::add_variable( const Category category,
-                             const Expr::Tag& var )
+                             const Expr::Tag& var,
+                             const bool retainName)
   {
     if( hasDoneSetup_ ){
       std::ostringstream msg;
@@ -183,7 +187,7 @@ namespace Wasatch {
       msg << "OldVariable error: must call sync_with_wasatch() prior to adding variables!" << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
-    VarHelperBase* const vh = new VarHelper<T>(var);
+    VarHelperBase* const vh = new VarHelper<T>(var, retainName);
     typedef typename Expr::PlaceHolder<T>::Builder PlaceHolder;
 
     Expr::ExpressionFactory& factory = *(wasatch_->graph_categories()[category]->exprFactory);
@@ -264,7 +268,7 @@ namespace Wasatch {
 
 #define INSTANTIATE( T )                 \
   template class Wasatch::VarHelper<T>;  \
-  template void Wasatch::OldVariable::add_variable<T>(const Category, const Expr::Tag&);
+  template void Wasatch::OldVariable::add_variable<T>(const Category, const Expr::Tag&, const bool retainName);
 
 #define INSTANTIATE_VARIANTS( VOL )                            \
   INSTANTIATE( VOL )                                           \

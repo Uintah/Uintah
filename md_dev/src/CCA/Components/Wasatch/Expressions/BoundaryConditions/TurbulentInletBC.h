@@ -99,14 +99,14 @@ private:
 template< typename FieldT >
 TurbulentInletBC<FieldT>::
 TurbulentInletBC( const std::string inputFileName,
-                 const std::string velDir,
-                 const int period,
-                 const double timePeriod) :
-  timeTag_    ( Wasatch::TagNames::self().time ),
-  timestepTag_( Wasatch::TagNames::self().timestep ),
-  velDir_(velDir),
-  period_(period),
-  timePeriod_(timePeriod)
+                  const std::string velDir,
+                  const int period,
+                  const double timePeriod )
+  : timeTag_    ( Wasatch::TagNames::self().time ),
+    timestepTag_( Wasatch::TagNames::self().timestep ),
+    velDir_(velDir),
+    period_(period),
+    timePeriod_(timePeriod)
 {
   using namespace std;
   using namespace Uintah;
@@ -161,8 +161,9 @@ TurbulentInletBC( const std::string inputFileName,
 
 template< typename FieldT >
 void
-TurbulentInletBC<FieldT>::advertise_dependents(Expr::ExprDeps& exprDeps){
-  exprDeps.requires_expression( timeTag_ );
+TurbulentInletBC<FieldT>::advertise_dependents(Expr::ExprDeps& exprDeps)
+{
+  exprDeps.requires_expression( timeTag_     );
   exprDeps.requires_expression( timestepTag_ );
 }
 
@@ -170,9 +171,11 @@ TurbulentInletBC<FieldT>::advertise_dependents(Expr::ExprDeps& exprDeps){
 
 template< typename FieldT >
 void
-TurbulentInletBC<FieldT>::bind_fields(const Expr::FieldManagerList& fml){
-  t_  = &fml.template field_manager<double>().field_ref( timeTag_ );
-  dt_ = &fml.template field_manager<double>().field_ref( timestepTag_ );
+TurbulentInletBC<FieldT>::bind_fields(const Expr::FieldManagerList& fml)
+{
+  const typename Expr::FieldMgrSelector<double>::type& fm = fml.template field_manager<double>();
+  t_  = &fm.field_ref( timeTag_     );
+  dt_ = &fm.field_ref( timestepTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -181,7 +184,7 @@ template< typename FieldT >
 int
 TurbulentInletBC<FieldT>::calculate_time_index() {
   
-  //int n = *t_/dx_; // floor - get the number of dxs into the data
+  // floor - get the number of dxs into the data
   int tindex =(int) std::floor(*t_/dx_);
   
   while (tindex >= NT_- 1) {
@@ -190,31 +193,11 @@ TurbulentInletBC<FieldT>::calculate_time_index() {
 
   // coordinate relative to the current turbulent data interval
   coord_ = *t_ - tindex*dx_;
-  
-//  if (coord_ < *dt_) coord_ = 0.0; // OPTIONAL: make sure we match the data point at the begining of new turbulent data
+
+  // OPTIONAL: make sure we match the data point at the begining of new turbulent data
+  //if (coord_ < *dt_) coord_ = 0.0;
   
   return tindex;
-//  //make sure if end of table is reached, it is repeated
-//  //work for either a specified time period, or a number of steps
-//  int t_index;
-//  int timestep = (*dt_ == 0)? 0 : *t_/ *dt_;
-//  double elapTime = *t_;
-//  if (period_ != 0) { // give priority to period
-//    while (timestep >= NT_*period_) {
-//      timestep -= NT_*period_;
-//    }
-//    t_index = timestep/period_;
-//    
-//  } else {
-//    while (elapTime >= NT_*timePeriod_) {
-//      elapTime -= NT_*timePeriod_;
-//    }
-//    t_index = (int)(elapTime/timePeriod_);
-//  }
-//
-//  if (t_index == NT_) t_index = 0;
-//  
-//  return t_index;
 }
 
 //--------------------------------------------------------------------
@@ -237,20 +220,19 @@ evaluate()
   std::vector<int>::const_iterator ig = (this->flatGhostPoints_).begin();    // ig is the ghost flat index
   std::vector<int>::const_iterator ii = (this->flatInteriorPoints_).begin(); // ii is the interior flat index
 
-  double bcValue_ = 0.0;
   for( ; ig != (this->flatGhostPoints_).end(); ++ig, ++ii ){
     // get i,j,k index from flat index
     localCellIJK  = f.window_with_ghost().ijk_index_from_local(*ig);
     globalCellIJK = localCellIJK - SpatialOps::structured::IntVec(1,1,1) - minC_ + this->patchCellOffset_;
 
     // linear interpolation between the turbulent-data points
-    double y0 = fluct_[tIndex][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
-    double y1 = fluct_[tIndex + 1][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
-    double a = (y1-y0)/dx_;
-    bcValue_ = a*coord_ + y0;
+    const double y0 = fluct_[tIndex][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
+    const double y1 = fluct_[tIndex + 1][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
+    const double a = (y1-y0)/dx_;
+    const double bcValue = a*coord_ + y0;
     
     //double bcValue_ = fluct_[tIndex][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
-    f[*ig] = ( bcValue_ - ci * f[*ii] ) / cg;
+    f[*ig] = ( bcValue - ci * f[*ii] ) / cg;
   }
 }
 

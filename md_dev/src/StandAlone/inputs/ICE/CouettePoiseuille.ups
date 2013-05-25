@@ -10,12 +10,12 @@
    </Meta>
 
    <SimulationComponent type="ice" />
-   
+   <Solver type="hypre"/>
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            15.0        </maxTime>
+       <maxTime>            5.0        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -131,6 +131,7 @@
       <save label="delP_Dilatate"/>
       <save label="rho_CC"/>
       <save label="temp_CC"/>
+      <checkpoint interval="0.75" cycle="2"/>
    </DataArchiver>
 
     

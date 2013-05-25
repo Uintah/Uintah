@@ -947,6 +947,8 @@ Arches::scheduleInitialize(const LevelP& level,
   //           viscosityIN
   sched_paramInit(level, sched);
 
+  d_nlSolver->checkMomBCs( sched, patches, matls ); 
+
   if (d_set_initial_condition) {
     sched_readCCInitialCondition(level, sched);
     sched_interpInitialConditionToStaggeredGrid(level, sched);
