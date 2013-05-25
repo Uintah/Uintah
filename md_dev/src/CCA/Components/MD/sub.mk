@@ -52,6 +52,7 @@ PSELIBS := \
 	CCA/Ports           \
 	Core/Disclosure     \
 	Core/Exceptions     \
+	Core/Containers     \
 	Core/Geometry       \
 	Core/GeometryPiece  \
 	Core/Grid           \
