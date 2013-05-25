@@ -81,6 +81,7 @@ MDLabel::MDLabel()
   // Reduction Variables - Electrostatic
   spmeFourierEnergyLabel = VarLabel::create("spmeFourierEnergy", sum_vartype::getTypeDescription());
   spmeFourierStressLabel = VarLabel::create("spmeFourierStress", matrix_sum::getTypeDescription());
+  QLabel = VarLabel::create("qKgrid", q_kgrid_sum::getTypeDescription());
 }
 
 MDLabel::~MDLabel()
@@ -118,4 +119,5 @@ MDLabel::~MDLabel()
   VarLabel::destroy(vdwEnergyLabel);
   VarLabel::destroy(spmeFourierEnergyLabel);
   VarLabel::destroy(spmeFourierStressLabel);
+  VarLabel::destroy(QLabel);
 }

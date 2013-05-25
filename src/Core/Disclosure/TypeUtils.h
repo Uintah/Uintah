@@ -25,6 +25,11 @@
 #ifndef UINTAH_HOMEBREW_TypeUtils_H
 #define UINTAH_HOMEBREW_TypeUtils_H
 
+#include <Core/Containers/LinearArray3.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/Matrix3.h>
+
 #include <sci_defs/compile_defs.h> // for STATIC_BUILD
 
 #ifndef _WIN32
@@ -36,11 +41,9 @@
 #include <cfloat>
 #include <complex>
 
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Math/Matrix3.h>
-
 namespace Uintah {
+
+using namespace SCIRun;
 
 using SCIRun::Point;
 using SCIRun::Vector;
@@ -87,7 +90,8 @@ typedef std::complex<double> dblcomplex;
 // appears in ICELabel.cc.
  const TypeDescription* fun_getTypeDescription(ConnectionList*);
 
-
+// template <class T>
+// const TypeDescription* fun_getTypeDescription(LinearArray3<T>*);
 
 
 // these functions are for getting safe values of types
@@ -100,6 +104,7 @@ typedef std::complex<double> dblcomplex;
  void fun_getZeroValue(int64_t*);
  void fun_getZeroValue(Vector*);
  void fun_getZeroValue(Matrix3*);
+ void fun_getZeroValue(LinearArray3<dblcomplex>*);
 
 // these functions should never get called - they just exist for
 // template completeness
@@ -111,6 +116,7 @@ typedef std::complex<double> dblcomplex;
  void fun_getSmallValue(Vector*);
  void fun_getLargeValue(Matrix3*);
  void fun_getSmallValue(Matrix3*);
+
 } // End namespace Uintah
    
 #include <Core/Datatypes/TypeName.h>

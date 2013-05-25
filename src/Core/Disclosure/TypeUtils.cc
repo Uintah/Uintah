@@ -25,8 +25,8 @@
 
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Disclosure/TypeDescription.h>
-
 #include <Core/Util/FancyAssert.h>
+#include <Core/Containers/LinearArray3.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Malloc/Allocator.h>
@@ -243,6 +243,7 @@ void fun_getZeroValue(  bool    * val ) { *val = false; }
 void fun_getZeroValue(  long64  * val ) { *val = 0; }
 void fun_getZeroValue(  Vector  * val ) { *val = Vector(0,0,0); }
 void fun_getZeroValue(  Matrix3 * val ) { *val = Matrix3(0); }
+void fun_getZeroValue(  LinearArray3<dblcomplex>* val ) { *val = LinearArray3<dblcomplex>(0,0,0); }
 
 void fun_getLargeValue( long64  * val ) { *val = LONG_MAX; }
 void fun_getLargeValue( Vector  * val ) { *val = Vector(DBL_MAX,DBL_MAX,DBL_MAX); }

@@ -25,72 +25,80 @@
 #ifndef UINTAH_MD_LABEL_H
 #define UINTAH_MD_LABEL_H
 
+#include <Core/Containers/LinearArray3.h>
 #include <Core/Grid/Variables/Reductions.h>
 #include <Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Disclosure/TypeUtils.h>
 
+#include <complex>
+
 namespace Uintah {
 
-class VarLabel;
+  using namespace SCIRun;
 
-typedef ReductionVariable<Matrix3, Reductions::Sum<Matrix3> > matrix_sum;
+  class VarLabel;
 
-/**
- *  @class MDLabel
- *  @ingroup MD
- *  @author Alan Humphrey and Justin Hooper
- *  @date   December, 2012
- *
- *  @brief
- *
- *  @param
- */
-class MDLabel {
+  typedef std::complex<double> dblcomplex;
+  typedef ReductionVariable<Matrix3, Reductions::Sum<Matrix3> > matrix_sum;
+  typedef ReductionVariable<LinearArray3<dblcomplex>, Reductions::Sum<LinearArray3<dblcomplex> > > q_kgrid_sum;
 
-  public:
+  /**
+   *  @class MDLabel
+   *  @ingroup MD
+   *  @author Alan Humphrey and Justin Hooper
+   *  @date   December, 2012
+   *
+   *  @brief
+   *
+   *  @param
+   */
+  class MDLabel {
 
-    MDLabel();
+    public:
 
-    ~MDLabel();
+      MDLabel();
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Particle Variables
-    const VarLabel* pXLabel;
-    const VarLabel* pXLabel_preReloc;
-    const VarLabel* pForceLabel;
-    const VarLabel* pForceLabel_preReloc;
-    const VarLabel* pAccelLabel;
-    const VarLabel* pAccelLabel_preReloc;
-    const VarLabel* pVelocityLabel;
-    const VarLabel* pVelocityLabel_preReloc;
-    const VarLabel* pEnergyLabel;
-    const VarLabel* pEnergyLabel_preReloc;
-    const VarLabel* pMassLabel;
-    const VarLabel* pMassLabel_preReloc;
-    const VarLabel* pChargeLabel;
-    const VarLabel* pChargeLabel_preReloc;
-    const VarLabel* pParticleIDLabel;
-    const VarLabel* pParticleIDLabel_preReloc;
+      ~MDLabel();
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Grid Variables
-    const VarLabel* gForceLabel;
-    const VarLabel* gAccelLabel;
-    const VarLabel* gVelocityLabel;
-    const VarLabel* gEnergyLabel;
-    const VarLabel* gMassLabel;
-    const VarLabel* gChargeLabel;
+      ///////////////////////////////////////////////////////////////////////////
+      // Particle Variables
+      const VarLabel* pXLabel;
+      const VarLabel* pXLabel_preReloc;
+      const VarLabel* pForceLabel;
+      const VarLabel* pForceLabel_preReloc;
+      const VarLabel* pAccelLabel;
+      const VarLabel* pAccelLabel_preReloc;
+      const VarLabel* pVelocityLabel;
+      const VarLabel* pVelocityLabel_preReloc;
+      const VarLabel* pEnergyLabel;
+      const VarLabel* pEnergyLabel_preReloc;
+      const VarLabel* pMassLabel;
+      const VarLabel* pMassLabel_preReloc;
+      const VarLabel* pChargeLabel;
+      const VarLabel* pChargeLabel_preReloc;
+      const VarLabel* pParticleIDLabel;
+      const VarLabel* pParticleIDLabel_preReloc;
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Reduction Variables
-    const VarLabel* vdwEnergyLabel;
+      ///////////////////////////////////////////////////////////////////////////
+      // Grid Variables - For interpolation to Uintah grid
+      const VarLabel* gForceLabel;
+      const VarLabel* gAccelLabel;
+      const VarLabel* gVelocityLabel;
+      const VarLabel* gEnergyLabel;
+      const VarLabel* gMassLabel;
+      const VarLabel* gChargeLabel;
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Reduction Variables - Electrostatic
-    const VarLabel* spmeFourierEnergyLabel;
-    const VarLabel* spmeFourierStressLabel;
+      ///////////////////////////////////////////////////////////////////////////
+      // Reduction Variables - General
+      const VarLabel* vdwEnergyLabel;
 
-};
+      ///////////////////////////////////////////////////////////////////////////
+      // Reduction Variables - Electrostatics
+      const VarLabel* spmeFourierEnergyLabel;
+      const VarLabel* spmeFourierStressLabel;
+      const VarLabel* QLabel;
+
+  };
 
 }  // End namespace Uintah
 

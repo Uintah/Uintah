@@ -23,453 +23,495 @@
  */
 
 #include <Core/Grid/Variables/ReductionVariable.h>
-
+#include <Core/Disclosure/TypeUtils.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/FancyAssert.h>
 
 #include <sci_defs/bits_defs.h> // for SCI_32BITS
 #include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD_OR_LATER
-
-#include <Core/Disclosure/TypeUtils.h>
-
 using namespace Uintah;
 using namespace SCIRun;
 
-namespace Uintah { // <- This is necessary for IBM SP AIX xlC Compiler
+typedef std::complex<double> dblcomplex;
+
+namespace Uintah {  // <- This is necessary for IBM SP AIX xlC Compiler
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<double, Reductions::Min<double> >
-::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
-{
-   datatype = MPI_DOUBLE;
-   count = 1;
-   op = MPI_MIN;
-}
+  void ReductionVariable<double, Reductions::Min<double> >::getMPIInfo(int& count,
+                                                                       MPI_Datatype& datatype,
+                                                                       MPI_Op& op)
+  {
+    datatype = MPI_DOUBLE;
+    count = 1;
+    op = MPI_MIN;
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<double, Reductions::Min<double> >
-::getMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  *ptr = value;
-  index += sizeof(double);
-}
+  void ReductionVariable<double, Reductions::Min<double> >::getMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    *ptr = value;
+    index += sizeof(double);
+  }
 
 #if !defined( SCI_32BITS )
 #  if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #  endif
- void
-ReductionVariable<long long, Reductions::Min<long long> >
-::getMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long long)));
-  long long* ptr = reinterpret_cast<long long*>(&data[index]);
-  *ptr = value;
-  index += sizeof(long long);
-}
+  void ReductionVariable<long long, Reductions::Min<long long> >::getMPIData(vector<char>& data,
+                                                                             int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long long)));
+    long long* ptr = reinterpret_cast<long long*>(&data[index]);
+    *ptr = value;
+    index += sizeof(long long);
+  }
 
 #  if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #  endif
- void
-ReductionVariable<long long, Reductions::Sum<long long> >
-::getMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long long)));
-  long long* ptr = reinterpret_cast<long long*>(&data[index]);
-  *ptr = value;
-  index += sizeof(long long);
-}
+  void ReductionVariable<long long, Reductions::Sum<long long> >::getMPIData(vector<char>& data,
+                                                                             int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long long)));
+    long long* ptr = reinterpret_cast<long long*>(&data[index]);
+    *ptr = value;
+    index += sizeof(long long);
+  }
 #endif
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<double, Reductions::Min<double> >
-::putMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  value = *ptr;
-  index += sizeof(double);
-}
+  void ReductionVariable<double, Reductions::Min<double> >::putMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    value = *ptr;
+    index += sizeof(double);
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
 
- void
-ReductionVariable<double, Reductions::Max<double> >
-   ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
-{
-   datatype = MPI_DOUBLE;
-   count = 1;
-   op = MPI_MAX;
-}
+  void ReductionVariable<double, Reductions::Max<double> >::getMPIInfo(int& count,
+                                                                       MPI_Datatype& datatype,
+                                                                       MPI_Op& op)
+  {
+    datatype = MPI_DOUBLE;
+    count = 1;
+    op = MPI_MAX;
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
 
- void
-ReductionVariable<double, Reductions::Max<double> >
-   ::getMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  *ptr = value;
-  index += sizeof(double);
-}
-
-#if !defined(__digital__) || defined(__GNUC__)
-template<>
-#endif
- void
-ReductionVariable<double, Reductions::Max<double> >
-::putMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  value = *ptr;
-  index += sizeof(double);
-}
+  void ReductionVariable<double, Reductions::Max<double> >::getMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    *ptr = value;
+    index += sizeof(double);
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<double, Reductions::Sum<double> >
-::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
-{
-   datatype = MPI_DOUBLE;
-   count = 1;
-   op = MPI_SUM;
-}
+  void ReductionVariable<double, Reductions::Max<double> >::putMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    value = *ptr;
+    index += sizeof(double);
+  }
+
+#if !defined(__digital__) || defined(__GNUC__)
+  template<>
+#endif
+  void ReductionVariable<double, Reductions::Sum<double> >::getMPIInfo(int& count,
+                                                                       MPI_Datatype& datatype,
+                                                                       MPI_Op& op)
+  {
+    datatype = MPI_DOUBLE;
+    count = 1;
+    op = MPI_SUM;
+  }
 
 #if !defined( SCI_32BITS )
 #  if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #  endif
- void
-ReductionVariable<long long, Reductions::Sum<long long> >
-::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
-{
-   datatype = MPI_LONG_LONG;
-   count = 1;
-   op = MPI_SUM;
-}
+  void ReductionVariable<long long, Reductions::Sum<long long> >::getMPIInfo(int& count,
+                                                                             MPI_Datatype& datatype,
+                                                                             MPI_Op& op)
+  {
+    datatype = MPI_LONG_LONG;
+    count = 1;
+    op = MPI_SUM;
+  }
 #endif
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<double, Reductions::Sum<double> >
-::getMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  *ptr = value;
-  index += sizeof(double);
-}
+  void ReductionVariable<double, Reductions::Sum<double> >::getMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    *ptr = value;
+    index += sizeof(double);
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
 
- void
-ReductionVariable<double, Reductions::Sum<double> >
-   ::putMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  value = *ptr;
-  index += sizeof(double);
-}
+  void ReductionVariable<double, Reductions::Sum<double> >::putMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    value = *ptr;
+    index += sizeof(double);
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
 
- void
-ReductionVariable<bool, Reductions::And<bool> >
-   ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
-{
-   datatype = MPI_CHAR;
-   count = 1;
-   op = MPI_LAND;
-}
+  void ReductionVariable<bool, Reductions::And<bool> >::getMPIInfo(int& count,
+                                                                   MPI_Datatype& datatype,
+                                                                   MPI_Op& op)
+  {
+    datatype = MPI_CHAR;
+    count = 1;
+    op = MPI_LAND;
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
 
- void
-ReductionVariable<bool, Reductions::And<bool> >
-   ::getMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
-  char* ptr = reinterpret_cast<char*>(&data[index]);
-  *ptr = value;
-  index += sizeof(char);
-}
+  void ReductionVariable<bool, Reductions::And<bool> >::getMPIData(vector<char>& data,
+                                                                   int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
+    char* ptr = reinterpret_cast<char*>(&data[index]);
+    *ptr = value;
+    index += sizeof(char);
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<bool, Reductions::And<bool> >
-::putMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
-  char* ptr = reinterpret_cast<char*>(&data[index]);
-  value = *ptr;
-  index += sizeof(char);
-}
+  void ReductionVariable<bool, Reductions::And<bool> >::putMPIData(vector<char>& data,
+                                                                   int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
+    char* ptr = reinterpret_cast<char*>(&data[index]);
+    value = *ptr;
+    index += sizeof(char);
+  }
 
 #if ( defined( REDSTORM ) || !defined( __PGI ) ) && !defined( OSX_SNOW_LEOPARD_OR_LATER )
 // We reduce a "long", not a long64 because on 2/24/03, LAM-MPI did not
 // support MPI_Reduce for LONG_LONG_INT.  We could use MPI_Create_op instead?
-  #if !defined(__digital__) || defined(__GNUC__)
-template<>
-  #endif
- void
-ReductionVariable<long64, Reductions::Sum<long64> >
-::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
-{
-   datatype = MPI_LONG;
-   count = 1;
-   op = MPI_SUM;
-}
+#if !defined(__digital__) || defined(__GNUC__)
+  template<>
+#endif
+  void ReductionVariable<long64, Reductions::Sum<long64> >::getMPIInfo(int& count,
+                                                                       MPI_Datatype& datatype,
+                                                                       MPI_Op& op)
+  {
+    datatype = MPI_LONG;
+    count = 1;
+    op = MPI_SUM;
+  }
 
 #  if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #  endif
- void
-ReductionVariable<long64, Reductions::Sum<long64> >
-::getMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long)));
-  long* ptr = reinterpret_cast<long*>(&data[index]);
-  *ptr = value;
-  index += sizeof(long);
-}
+  void ReductionVariable<long64, Reductions::Sum<long64> >::getMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long)));
+    long* ptr = reinterpret_cast<long*>(&data[index]);
+    *ptr = value;
+    index += sizeof(long);
+  }
 #endif
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<long64, Reductions::Sum<long64> >
-::putMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long)));
-  long* ptr = reinterpret_cast<long*>(&data[index]);
-  value = *ptr;
-  index += sizeof(long);
-}
+  void ReductionVariable<long64, Reductions::Sum<long64> >::putMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long)));
+    long* ptr = reinterpret_cast<long*>(&data[index]);
+    value = *ptr;
+    index += sizeof(long);
+  }
 
 #if !defined( OSX_SNOW_LEOPARD_OR_LATER ) && (defined( REDSTORM ) || !defined( __PGI ))
 #  if !defined( SCI_32BITS )
 #    if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #    endif
- void
-ReductionVariable<long long, Reductions::Sum<long long> >
-::putMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long long)));
-  long long* ptr = reinterpret_cast<long long*>(&data[index]);
-  value = *ptr;
-  index += sizeof(long long);
-}
+  void ReductionVariable<long long, Reductions::Sum<long long> >::putMPIData(vector<char>& data,
+                                                                             int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long long)));
+    long long* ptr = reinterpret_cast<long long*>(&data[index]);
+    value = *ptr;
+    index += sizeof(long long);
+  }
 #  endif
 #endif
 
-
+#if !defined(__digital__) || defined(__GNUC__)
+  template<>
+#endif
+  void ReductionVariable<Matrix3, Reductions::Sum<Matrix3> >::getMPIData(vector<char>& data,
+                                                                         int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-9*sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    *ptr++ = value(0, 0);
+    *ptr++ = value(0, 1);
+    *ptr++ = value(0, 2);
+    *ptr++ = value(1, 0);
+    *ptr++ = value(1, 1);
+    *ptr++ = value(1, 2);
+    *ptr++ = value(2, 0);
+    *ptr++ = value(2, 1);
+    *ptr++ = value(2, 2);
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
-void
-ReductionVariable<Matrix3, Reductions::Sum<Matrix3> >
-::getMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-9*sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  *ptr++ = value(0,0);
-  *ptr++ = value(0,1);
-  *ptr++ = value(0,2);
-  *ptr++ = value(1,0);
-  *ptr++ = value(1,1);
-  *ptr++ = value(1,2);
-  *ptr++ = value(2,0);
-  *ptr++ = value(2,1);
-  *ptr++ = value(2,2);
-}
+  void ReductionVariable<Matrix3, Reductions::Sum<Matrix3> >::putMPIData(vector<char>& data,
+                                                                         int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-9*sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    value(0, 0) = *ptr++;
+    value(0, 1) = *ptr++;
+    value(0, 2) = *ptr++;
+    value(1, 0) = *ptr++;
+    value(1, 1) = *ptr++;
+    value(1, 2) = *ptr++;
+    value(2, 0) = *ptr++;
+    value(2, 1) = *ptr++;
+    value(2, 2) = *ptr++;
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
-void
-ReductionVariable<Matrix3, Reductions::Sum<Matrix3> >
-::putMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-9*sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  value(0,0)=*ptr++;
-  value(0,1)=*ptr++;
-  value(0,2)=*ptr++;
-  value(1,0)=*ptr++;
-  value(1,1)=*ptr++;
-  value(1,2)=*ptr++;
-  value(2,0)=*ptr++;
-  value(2,1)=*ptr++;
-  value(2,2)=*ptr++;
-}
+  void ReductionVariable<Matrix3, Reductions::Sum<Matrix3> >::getMPIInfo(int& count,
+                                                                         MPI_Datatype& datatype,
+                                                                         MPI_Op& op)
+  {
+    datatype = MPI_DOUBLE;
+    count = 9;
+    op = MPI_SUM;
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<Matrix3, Reductions::Sum<Matrix3> >
-::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
-{
-  datatype = MPI_DOUBLE;
-  count = 9;
-  op = MPI_SUM;
-}
+  void ReductionVariable<LinearArray3<dblcomplex>, Reductions::Sum<LinearArray3<dblcomplex> > >::getMPIData(vector<char>& data,
+                                                                                                            int& index)
+  {
+    int x = 32;
+    int y = 32;
+    int z = 32;
+    int count = y * z;      // number of blocks
+    int blockLength = x;    // number of elements in each block
+    int stride = x;         // number of elements between start of each block
+
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1 - x*sizeof(std::complex<double>)));
+    std::complex<double>* ptr = reinterpret_cast<dblcomplex*>(&data[index]);
+
+//  *ptr++ = value(0,0);
+//  *ptr++ = value(0,1);
+//  *ptr++ = value(0,2);
+//  *ptr++ = value(1,0);
+//  *ptr++ = value(1,1);
+//  *ptr++ = value(1,2);
+//  *ptr++ = value(2,0);
+//  *ptr++ = value(2,1);
+//  *ptr++ = value(2,2);
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<Vector, Reductions::Sum<Vector> >
-::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
-{
-   datatype = MPI_DOUBLE;
-   count = 3;
-   op = MPI_SUM;
-}
+  void ReductionVariable<LinearArray3<dblcomplex>, Reductions::Sum<LinearArray3<dblcomplex> > >::putMPIData(vector<char>& data,
+                                                                                                            int& index)
+  {
+    int x = 32;
+    int y = 32;
+    int z = 32;
+    int count = y * z;      // number of blocks
+    int blockLength = x;    // number of elements in each block
+    int stride = x;         // number of elements between start of each block
+
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1 - x*sizeof(std::complex<double>)));
+    std::complex<double>* ptr = reinterpret_cast<dblcomplex*>(&data[index]);
+
+//  value(0,0)=*ptr++;
+//  value(0,1)=*ptr++;
+//  value(0,2)=*ptr++;
+//  value(1,0)=*ptr++;
+//  value(1,1)=*ptr++;
+//  value(1,2)=*ptr++;
+//  value(2,0)=*ptr++;
+//  value(2,1)=*ptr++;
+//  value(2,2)=*ptr++;
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<Vector, Reductions::Sum<Vector> >
-::getMPIData(vector<char>& data, int& index)
-{       
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  *ptr++ = value.x();
-  *ptr++ = value.y();
-  *ptr++ = value.z();
-}
+  void ReductionVariable<LinearArray3<dblcomplex>, Reductions::Sum<LinearArray3<dblcomplex> > >::getMPIInfo(int& count,
+                                                                                                            MPI_Datatype& datatype,
+                                                                                                            MPI_Op& op)
+  {
+    datatype = MPI_C_DOUBLE_COMPLEX;
+    count = 32;
+    op = MPI_SUM;
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
-
- void
-ReductionVariable<Vector, Reductions::Sum<Vector> >
-   ::putMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  value.x(*ptr++);
-  value.y(*ptr++);
-  value.z(*ptr++);
-}
+  void ReductionVariable<Vector, Reductions::Sum<Vector> >::getMPIInfo(int& count,
+                                                                       MPI_Datatype& datatype,
+                                                                       MPI_Op& op)
+  {
+    datatype = MPI_DOUBLE;
+    count = 3;
+    op = MPI_SUM;
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<Vector, Reductions::Min<Vector> >
-::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
-{
-   datatype = MPI_DOUBLE;
-   count = 3;
-   op = MPI_MIN;
-}
+  void ReductionVariable<Vector, Reductions::Sum<Vector> >::getMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    *ptr++ = value.x();
+    *ptr++ = value.y();
+    *ptr++ = value.z();
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<Vector, Reductions::Min<Vector> >
-::getMPIData(vector<char>& data, int& index)
-{       
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  *ptr++ = value.x();
-  *ptr++ = value.y();
-  *ptr++ = value.z();
-}
+
+  void ReductionVariable<Vector, Reductions::Sum<Vector> >::putMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    value.x(*ptr++);
+    value.y(*ptr++);
+    value.z(*ptr++);
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
-
- void
-ReductionVariable<Vector, Reductions::Min<Vector> >
-   ::putMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  value.x(*ptr++);
-  value.y(*ptr++);
-  value.z(*ptr++);
-}
+  void ReductionVariable<Vector, Reductions::Min<Vector> >::getMPIInfo(int& count,
+                                                                       MPI_Datatype& datatype,
+                                                                       MPI_Op& op)
+  {
+    datatype = MPI_DOUBLE;
+    count = 3;
+    op = MPI_MIN;
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<Vector, Reductions::Max<Vector> >
-::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
-{
-   datatype = MPI_DOUBLE;
-   count = 3;
-   op = MPI_MAX;
-}
+  void ReductionVariable<Vector, Reductions::Min<Vector> >::getMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    *ptr++ = value.x();
+    *ptr++ = value.y();
+    *ptr++ = value.z();
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
 #endif
- void
-ReductionVariable<Vector, Reductions::Max<Vector> >
-::getMPIData(vector<char>& data, int& index)
-{       
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  *ptr++ = value.x();
-  *ptr++ = value.y();
-  *ptr++ = value.z();
-}
+
+  void ReductionVariable<Vector, Reductions::Min<Vector> >::putMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    value.x(*ptr++);
+    value.y(*ptr++);
+    value.z(*ptr++);
+  }
 
 #if !defined(__digital__) || defined(__GNUC__)
-template<>
+  template<>
+#endif
+  void ReductionVariable<Vector, Reductions::Max<Vector> >::getMPIInfo(int& count,
+                                                                       MPI_Datatype& datatype,
+                                                                       MPI_Op& op)
+  {
+    datatype = MPI_DOUBLE;
+    count = 3;
+    op = MPI_MAX;
+  }
+
+#if !defined(__digital__) || defined(__GNUC__)
+  template<>
+#endif
+  void ReductionVariable<Vector, Reductions::Max<Vector> >::getMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    *ptr++ = value.x();
+    *ptr++ = value.y();
+    *ptr++ = value.z();
+  }
+
+#if !defined(__digital__) || defined(__GNUC__)
+  template<>
 #endif
 
- void
-ReductionVariable<Vector, Reductions::Max<Vector> >
-   ::putMPIData(vector<char>& data, int& index)
-{
-  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
-  double* ptr = reinterpret_cast<double*>(&data[index]);
-  value.x(*ptr++);
-  value.y(*ptr++);
-  value.z(*ptr++);
-}
+  void ReductionVariable<Vector, Reductions::Max<Vector> >::putMPIData(vector<char>& data,
+                                                                       int& index)
+  {
+    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
+    double* ptr = reinterpret_cast<double*>(&data[index]);
+    value.x(*ptr++);
+    value.y(*ptr++);
+    value.z(*ptr++);
+  }
 
-} // end namespace Uintah
+}  // end namespace Uintah
