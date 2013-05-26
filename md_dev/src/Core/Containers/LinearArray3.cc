@@ -54,6 +54,20 @@ LinearArray3<T>::LinearArray3(int dm1,
 }
 
 template<class T>
+LinearArray3<T>::LinearArray3(int dim1,
+                              int dim2,
+                              int dim3,
+                              T value) :
+    dm1(dim1), dm2(dim2), dm3(dim3)
+{
+  allocate();
+  long int size = getDataSize();
+  for (long int idx = 0; idx < size; idx++) {
+    objs[idx] = value;
+  }
+}
+
+template<class T>
 LinearArray3<T>::LinearArray3(const LinearArray3& copy)
 {
   resize(copy.dim1(), copy.dim2(), copy.dim3());
@@ -105,83 +119,107 @@ void LinearArray3<T>::resize(int d1,
 template<class T>
 void LinearArray3<T>::initialize(const T& t)
 {
-  long int size = get_datasize();
+  long int size = getDataSize();
   for (long int idx = 0; idx < size; idx++) {
     objs[idx] = t;
   }
 }
 
+template<class T>
+const string& LinearArray3<T>::get_h_file_path()
+{
+  static const string path(SCIRun::TypeDescription::cc_to_h(__FILE__));
+  return path;
+}
+
 namespace Uintah {
 
-  MPI_Datatype makeMPI_LinearArray3()
-  {
+MPI_Datatype makeMPI_LinearArray3()
+{
 
-    int x = 32;
-    int y = 32;
-    int z = 32;
-    int count = y * z;      // number of blocks
-    int blockLength = x;    // number of elements in each block
-    int stride = x;         // number of elements between start of each block
+  int x = 32;
+  int y = 32;
+  int z = 32;
+  int count = y * z;      // number of blocks
+  int blockLength = x;    // number of elements in each block
+  int stride = x;         // number of elements between start of each block
 
-    ASSERTEQ(sizeof(LinearArray3<dblcomplex>), sizeof(dblcomplex) * (x*y*z));
+  ASSERTEQ(sizeof(LinearArray3<dblcomplex>), sizeof(dblcomplex) * (x*y*z));
 
-    MPI_Datatype mpitype;
-    MPI_Type_vector(count, blockLength, stride, MPI_C_DOUBLE_COMPLEX, &mpitype);
-    MPI_Type_commit(&mpitype);
+  MPI_Datatype mpitype;
+  MPI_Type_vector(count, blockLength, stride, MPI_C_DOUBLE_COMPLEX, &mpitype);
+  MPI_Type_commit(&mpitype);
 
-    return mpitype;
+  return mpitype;
+}
+
+const TypeDescription* fun_getTypeDescription(LinearArray3<std::complex<double> >*)
+{
+  static TypeDescription* td = 0;
+  if (!td) {
+    td = scinew TypeDescription(TypeDescription::LinearArray3, "LinearArray3", true, &makeMPI_LinearArray3);
   }
-
-  const TypeDescription* fun_getTypeDescription(LinearArray3<std::complex<double> >*)
-  {
-    static TypeDescription* td = 0;
-    if (!td) {
-      td = scinew TypeDescription(TypeDescription::LinearArray3, "LinearArray3", true, &makeMPI_LinearArray3);
-    }
-    return td;
-  }
+  return td;
+}
 
 }  // namespace Uintah
 
 namespace SCIRun {
 
-  void swapbytes(LinearArray3<std::complex<double> >& la3)
-  {
-    int dm1 = la3.dim1();
-    int dm2 = la3.dim2();
-    int dm3 = la3.dim3();
+using std::string;
 
-    for (int i = 0; i < dm1; i++) {
-      for (int j = 0; j < dm2; j++) {
-        for (int k = 0; k < dm3; k++) {
-          swapbytes(la3(i, j, k));
-        }
+template<> const string find_type_name(LinearArray3<std::complex<double> >*)
+{
+  static const string name = "LinearArray3<std::complex<double> >";
+  return name;
+}
+
+const TypeDescription* get_type_description(LinearArray3<std::complex<double> >*)
+{
+  static TypeDescription* td = 0;
+  if (!td) {
+    td = scinew TypeDescription("LinearArray3<std::complex<double> >", LinearArray3<std::complex<double> >::get_h_file_path(),
+                                "Uintah");
+  }
+  return td;
+}
+
+void swapbytes(LinearArray3<std::complex<double> >& la3)
+{
+  int dm1 = la3.dim1();
+  int dm2 = la3.dim2();
+  int dm3 = la3.dim3();
+  for (int i = 0; i < dm1; i++) {
+    for (int j = 0; j < dm2; j++) {
+      for (int k = 0; k < dm3; k++) {
+        swapbytes(la3(i, j, k));
       }
     }
   }
+}
 
-  std::ostream& operator<<(ostream& out_file,
-                           const LinearArray3<std::complex<double> > &la3)
-  {
-    // Overload the output stream << operator
-    int dm1 = la3.dim1();
-    int dm2 = la3.dim2();
-    int dm3 = la3.dim3();
-    for (int i = 0; i < dm1; i++) {
-      for (int j = 0; j < dm2; j++) {
-        for (int k = 0; k < dm3; k++) {
-          out_file << "objs[" << i << "][" << j << "][" << k << " =\t" << la3(i, j, k) << ' ' << std::endl;
-        }
+std::ostream& operator<<(ostream& out_file,
+                         const LinearArray3<std::complex<double> > &la3)
+{
+  // Overload the output stream << operator
+  int dm1 = la3.dim1();
+  int dm2 = la3.dim2();
+  int dm3 = la3.dim3();
+  for (int i = 0; i < dm1; i++) {
+    for (int j = 0; j < dm2; j++) {
+      for (int k = 0; k < dm3; k++) {
+        out_file << "objs[" << i << "][" << j << "][" << k << " =\t" << la3(i, j, k) << ' ' << std::endl;
       }
     }
-    return out_file;
   }
+  return out_file;
+}
 
 }  // namespace SCIRun
 
 // Explicit template instantiations:
-template class LinearArray3<std::complex<double> >;
-template class LinearArray3<Uintah::Matrix3>;
-template class LinearArray3<double>;
-template class LinearArray3<SCIRun::Vector>;
+template class LinearArray3<std::complex<double> > ;
+template class LinearArray3<Uintah::Matrix3> ;
+template class LinearArray3<double> ;
+template class LinearArray3<SCIRun::Vector> ;
 

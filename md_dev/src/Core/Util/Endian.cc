@@ -47,7 +47,7 @@ void swapbytes( uint64_t& i ) { SWAP_8(i); }
 void swapbytes( float& i )    { SWAP_4(i); }
 void swapbytes( double& i )   { SWAP_8(i); }
 void swapbytes(dblcomplex& i) { // probably dangerous, but effective
-                              double* p = (double *)(&i);
+                              double* p = (double*)(&i);
                               SWAP_8(*p); SWAP_8(*++p); }
 void swapbytes( Point &i )    { // probably dangerous, but effective
                               double* p = (double *)(&i);
