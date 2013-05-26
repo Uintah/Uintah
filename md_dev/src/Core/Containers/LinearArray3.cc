@@ -61,7 +61,7 @@ LinearArray3<T>::LinearArray3(int dim1,
     dm1(dim1), dm2(dim2), dm3(dim3)
 {
   allocate();
-  long int size = getDataSize();
+  long int size = getSize();
   for (long int idx = 0; idx < size; idx++) {
     objs[idx] = value;
   }
@@ -104,15 +104,12 @@ void LinearArray3<T>::resize(int d1,
                              int d2,
                              int d3)
 {
-  if (objs && dm1 == d1 && dm2 == d2 && dm3 == d3) {
+  if ( objs && (dm1 == d1) && (dm2 == d2) && (dm3 == d3) ) {
     return;
   }
   dm1 = d1;
   dm2 = d2;
   dm3 = d3;
-  if (objs) {
-    delete objs;
-  }
   allocate();
 }
 

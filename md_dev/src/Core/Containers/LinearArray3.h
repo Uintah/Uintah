@@ -172,7 +172,7 @@ template<class T> class LinearArray3 {
      */
     inline long getSize() const
     {
-      return dm1 * long(dm2 * dm3 * sizeof(T));
+      return long(dm1 * dm2 * dm3 );
     }
 
     /**
