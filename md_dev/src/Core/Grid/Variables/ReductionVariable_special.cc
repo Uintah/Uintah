@@ -337,25 +337,14 @@ namespace Uintah {  // <- This is necessary for IBM SP AIX xlC Compiler
   void ReductionVariable<LinearArray3<dblcomplex>, Reductions::Sum<LinearArray3<dblcomplex> > >::getMPIData(vector<char>& data,
                                                                                                             int& index)
   {
-    int x = 32;
-    int y = 32;
-    int z = 32;
-    int count = y * z;      // number of blocks
-    int blockLength = x;    // number of elements in each block
-    int stride = x;         // number of elements between start of each block
+    int count = value.dim1() * value.dim2() * value.dim3();
+    ASSERTRANGE(index, 0, static_cast<int>( (data.size() + 1) - (count * sizeof(std::complex<double>)) ));
 
-    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1 - x*sizeof(std::complex<double>)));
     std::complex<double>* ptr = reinterpret_cast<dblcomplex*>(&data[index]);
-
-//  *ptr++ = value(0,0);
-//  *ptr++ = value(0,1);
-//  *ptr++ = value(0,2);
-//  *ptr++ = value(1,0);
-//  *ptr++ = value(1,1);
-//  *ptr++ = value(1,2);
-//  *ptr++ = value(2,0);
-//  *ptr++ = value(2,1);
-//  *ptr++ = value(2,2);
+    long int size = value.getSize();
+    for (int idx = 0; idx < size; ++idx) {
+      *ptr++ = value.get_dataptr()[idx];
+    }
   }
 
 #if !defined(__digital__) || defined(__GNUC__)
@@ -364,25 +353,14 @@ namespace Uintah {  // <- This is necessary for IBM SP AIX xlC Compiler
   void ReductionVariable<LinearArray3<dblcomplex>, Reductions::Sum<LinearArray3<dblcomplex> > >::putMPIData(vector<char>& data,
                                                                                                             int& index)
   {
-    int x = 32;
-    int y = 32;
-    int z = 32;
-    int count = y * z;      // number of blocks
-    int blockLength = x;    // number of elements in each block
-    int stride = x;         // number of elements between start of each block
+    int count = value.dim1() * value.dim2() * value.dim3();
+    ASSERTRANGE(index, 0, static_cast<int>( (data.size() + 1) - (count * sizeof(std::complex<double>)) ));
 
-    ASSERTRANGE(index, 0, static_cast<int>(data.size()+1 - x*sizeof(std::complex<double>)));
     std::complex<double>* ptr = reinterpret_cast<dblcomplex*>(&data[index]);
-
-//  value(0,0)=*ptr++;
-//  value(0,1)=*ptr++;
-//  value(0,2)=*ptr++;
-//  value(1,0)=*ptr++;
-//  value(1,1)=*ptr++;
-//  value(1,2)=*ptr++;
-//  value(2,0)=*ptr++;
-//  value(2,1)=*ptr++;
-//  value(2,2)=*ptr++;
+    long size = value.getSize();
+    for (int idx = 0; idx < size; ++idx) {
+      value.get_dataptr()[idx] = *ptr++;
+    }
   }
 
 #if !defined(__digital__) || defined(__GNUC__)
@@ -393,7 +371,7 @@ namespace Uintah {  // <- This is necessary for IBM SP AIX xlC Compiler
                                                                                                             MPI_Op& op)
   {
     datatype = MPI_C_DOUBLE_COMPLEX;
-    count = 32;
+    count = value.getSize();
     op = MPI_SUM;
   }
 
