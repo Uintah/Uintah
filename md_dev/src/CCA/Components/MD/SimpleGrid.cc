@@ -50,7 +50,7 @@ namespace Uintah {
                             const int numGhostCells) :
       d_gridExtents(extents), d_gridOffset(offset), d_numGhostCells_(numGhostCells)
   {
-    d_values = LinearArray3<T>(extents.x(), extents.y(), extents.z());
+    d_values.resize(extents.x(), extents.y(), extents.z());
   }
 
   template<typename T>
@@ -68,7 +68,7 @@ namespace Uintah {
     if ((d_gridExtents != gridIn.d_gridExtents) || (d_gridOffset != gridIn.d_gridOffset)
         || (d_numGhostCells_ != gridIn.d_numGhostCells_)) {
       ostringstream ostr;
-      ostr << "MD SimpleGrids differ in extent, offset or number of ghost cells.";
+      ostr << "Uintah::MD SimpleGrids differ in extent, offset or number of ghost cells.";
       throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
     } else {
       return true;
@@ -132,26 +132,6 @@ namespace Uintah {
   {
     return sg.print(out);
   }
-
-//MPI_Datatype makeMPI_Matrix3()
-//{
-//  ASSERTEQ(sizeof(Matrix3), sizeof(double) * 9);
-//
-//  MPI_Datatype mpitype;
-//  MPI_Type_vector(1, 9, 9, MPI_DOUBLE, &mpitype);
-//  MPI_Type_commit(&mpitype);
-//
-//  return mpitype;
-//}
-//
-//const TypeDescription* fun_getTypeDescription(SimpleGrid<std::complex<double> >*)
-//{
-//  static TypeDescription* td = 0;
-//  if (!td) {
-//    td = scinew TypeDescription(TypeDescription::Matrix3, "Matrix3", true, &makeMPI_Matrix3);
-//  }
-//  return td;
-//}
 
 // Explicit template instantiations:
   template class SimpleGrid<dblcomplex> ;

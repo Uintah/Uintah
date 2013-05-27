@@ -210,7 +210,7 @@ template<class T> class LinearArray3 {
     inline LinearArray3<T>& operator=(const LinearArray3& other)
     {
       resize(other.dim1(), other.dim2(), other.dim3());
-      long int size = getSize();
+      long int size = other.getSize();
       for (long int idx = 0; idx < size; idx++) {
         objs[idx] = other.objs[idx];
       }
@@ -224,16 +224,14 @@ template<class T> class LinearArray3 {
      */
     inline LinearArray3<T> operator+(const LinearArray3<T> &addend) const
     {
-      // TODO undo hacks here!
       // Add a LinearArray3 to a LinearArray3
-//      long int size = getSize();
-//      ASSERTEQ(size, addend.getSize());ASSERTL3(dm1==addend.dm1 && dm2==addend.dm2 && dm3==addend.dm3);
+      long int size = getSize();
+      ASSERTEQ(size, addend.getSize());ASSERTL3(dm1==addend.dm1 && dm2==addend.dm2 && dm3==addend.dm3);
       LinearArray3<T> la3(dm1, dm2, dm3);
-//      for (long int idx = 0; idx < size; idx++) {
-//        la3.objs[idx] = objs[idx] + addend.objs[idx];
-//      }
-//      return la3;
-      return *this;
+      for (long int idx = 0; idx < size; idx++) {
+        la3.objs[idx] = objs[idx] + addend.objs[idx];
+      }
+      return la3;
     }
 
     /**
