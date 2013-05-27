@@ -30,32 +30,32 @@
 
 namespace Uintah {
 
-class ProcessorGroup;
-class MDSystem;
+  class ProcessorGroup;
+  class MDSystem;
 
-/**
- *  @class ElectrostaticsFactory
- *  @ingroup MD
- *  @author Alan Humphrey and Justin Hooper
- *  @date   February, 2013
- *
- *  @brief
- *
- *  @param
- */
-class ElectrostaticsFactory {
+  /**
+   *  @class ElectrostaticsFactory
+   *  @ingroup MD
+   *  @author Alan Humphrey and Justin Hooper
+   *  @date   February, 2013
+   *
+   *  @brief
+   *
+   *  @param
+   */
+  class ElectrostaticsFactory {
 
-  public:
+    public:
 
-    /**
-     * @brief Simply create the appropriate Electrostatics object.
-     *         This method has a switch for all known Electrostatics types.
-     * @param
-     * @param
-     */
-    static Electrostatics* create(const ProblemSpecP& ps,
-                                  MDSystem* system);
-};
+      /**
+       * @brief Simply create the appropriate Electrostatics object.
+       *         This method has a switch for all known Electrostatics types.
+       * @param
+       * @param
+       */
+      static Electrostatics* create(const ProblemSpecP& ps,
+                                    MDSystem* system);
+  };
 }  // End namespace Uintah
 
 #endif

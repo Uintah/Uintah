@@ -84,9 +84,9 @@ LinearArray3<T>::LinearArray3(const LinearArray3& copy)
 template<class T>
 LinearArray3<T>::~LinearArray3()
 {
-  if (objs) {
-    delete objs;
-  }
+//  if (objs) {
+//    delete objs;
+//  }
 }
 
 template<class T>
@@ -110,6 +110,9 @@ void LinearArray3<T>::resize(int d1,
   dm1 = d1;
   dm2 = d2;
   dm3 = d3;
+//  if (objs) {
+//    delete objs;
+//  }
   allocate();
 }
 
@@ -205,7 +208,7 @@ std::ostream& operator<<(ostream& out_file,
   for (int i = 0; i < dm1; i++) {
     for (int j = 0; j < dm2; j++) {
       for (int k = 0; k < dm3; k++) {
-        out_file << "objs[" << i << "][" << j << "][" << k << " =\t" << la3(i, j, k) << ' ' << std::endl;
+        out_file << "objs[" << i << "][" << j << "][" << k << "] =\t" << la3(i, j, k) << ' ' << std::endl;
       }
     }
   }

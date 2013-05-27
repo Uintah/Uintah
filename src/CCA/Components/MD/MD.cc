@@ -139,6 +139,7 @@ void MD::scheduleInitialize(const LevelP& level,
   task->computes(d_lb->vdwEnergyLabel);
   task->computes(d_lb->spmeFourierEnergyLabel);
   task->computes(d_lb->spmeFourierStressLabel);
+  task->computes(d_lb->QLabel);
 
   sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
 }
@@ -153,6 +154,7 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
   task->requires(Task::NewDW, d_lb->vdwEnergyLabel);
   task->requires(Task::NewDW, d_lb->spmeFourierEnergyLabel);
   task->requires(Task::NewDW, d_lb->spmeFourierStressLabel);
+  task->requires(Task::NewDW, d_lb->QLabel);
 
   task->computes(d_sharedState->get_delt_label(), level.get_rep());
 
@@ -167,7 +169,7 @@ void MD::scheduleTimeAdvance(const LevelP& level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMaterials();
 
-  scheduleCalculateNonBondedForces(sched, patches, matls);
+//  scheduleCalculateNonBondedForces(sched, patches, matls);
 
 //  scheduleInterpolateParticlesToGrid(sched, patches, matls);
 
@@ -193,10 +195,12 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
     sum_vartype vdwEnergy;
     sum_vartype spmeFourierEnergy;
     matrix_sum spmeFourierStress;
+    q_kgrid_sum q;
 
     new_dw->get(vdwEnergy, d_lb->vdwEnergyLabel);
     new_dw->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
     new_dw->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
+    new_dw->get(q, d_lb->QLabel);
 
     std::cout << std::endl;
     std::cout << "-----------------------------------------------------" << std::endl;
@@ -205,6 +209,8 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
     std::cout << "Fourier Energy = " << std::setprecision(16) << spmeFourierEnergy << std::endl;
     std::cout << "-----------------------------------------------------" << std::endl;
     std::cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
+    std::cout << "-----------------------------------------------------" << std::endl;
+    std::cout << "Q Total        = " << std::setprecision(16) << q << std::endl;
     std::cout << "-----------------------------------------------------" << std::endl;
     std::cout << std::endl;
   }
@@ -252,16 +258,23 @@ void MD::schedulePerformElectrostatics(SchedulerP& sched,
   Task* task = scinew Task("performElectrostatics", this, &MD::performElectrostatics);
 
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::NewDW, d_lb->pForceLabel_preReloc, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
+//  task->requires(Task::NewDW, d_lb->pForceLabel_preReloc, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pEnergyLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
 
-  task->modifies(d_lb->pForceLabel_preReloc);
+  task->computes(d_lb->pForceLabel_preReloc);
+  task->computes(d_lb->pEnergyLabel_preReloc);
   task->computes(d_lb->pChargeLabel_preReloc);
 
   // reduction variables
+  task->requires(Task::OldDW, d_lb->QLabel);
+
+  task->computes(d_lb->vdwEnergyLabel);
   task->computes(d_lb->spmeFourierEnergyLabel);
   task->computes(d_lb->spmeFourierStressLabel);
+  task->computes(d_lb->QLabel);
 
   sched->addTask(task, patches, matls);
 }
@@ -341,13 +354,19 @@ void MD::extractCoordinates()
 
     //FIXME This is hacky!! Fix for generic case of wrapping arbitrary coordinates into arbitrary unit cells using
     //  reduced coordinate transformation!  -- JBH 5/9/13
-    if (x < 0) x += d_box.x();
-    if (y < 0) y += d_box.y();
-    if (z < 0) z += d_box.z();
+    if (x < 0)
+      x += d_box.x();
+    if (y < 0)
+      y += d_box.y();
+    if (z < 0)
+      z += d_box.z();
 
-    if (x >= d_box.x()) x -= d_box.x();
-    if (y >= d_box.y()) y -= d_box.y();
-    if (z >= d_box.z()) z -= d_box.z();
+    if (x >= d_box.x())
+      x -= d_box.x();
+    if (y >= d_box.y())
+      y -= d_box.y();
+    if (z >= d_box.z())
+      z -= d_box.z();
 
     Point pnt(x, y, z);
 
@@ -476,7 +495,7 @@ void MD::initialize(const ProcessorGroup* pg,
           std::cout.setf(std::ios_base::showpoint);  // print decimal and trailing zeros
           std::cout.setf(std::ios_base::left);  // pad after the value
           std::cout.setf(std::ios_base::uppercase);  // use upper-case scientific notation
-          std::cout << std::setw(10) << "Patch_ID: " << std::setw(4) << patch->getID();
+          std::cout << std::setw(10) << " Patch_ID: " << std::setw(4) << patch->getID();
           std::cout << std::setw(14) << " Particle_ID: " << std::setw(4) << pids[i];
           std::cout << std::setw(12) << " Position: " << pos;
           std::cout << std::endl;
@@ -484,16 +503,14 @@ void MD::initialize(const ProcessorGroup* pg,
         }
       }
     }
-
     // reduction variables
     new_dw->put(sum_vartype(0.0), d_lb->vdwEnergyLabel);
     new_dw->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
     new_dw->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
-
   }
 
-  // initialize electrostatics object
-  d_electrostatics->initialize();
+// initialize electrostatics object
+  d_electrostatics->initialize(pg, patches, matls, old_dw, new_dw);
 }
 
 void MD::registerPermanentParticleState(SimpleMaterial* matl)

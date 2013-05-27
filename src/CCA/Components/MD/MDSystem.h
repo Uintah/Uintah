@@ -32,182 +32,182 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
+  using namespace SCIRun;
 
-/**
- *  @class MDSystem
- *  @ingroup MD
- *  @author Alan Humphrey and Justin Hooper
- *  @date   December, 2012
- *
- *  @brief
- *
- *  @param
- */
-class MDSystem {
+  /**
+   *  @class MDSystem
+   *  @ingroup MD
+   *  @author Alan Humphrey and Justin Hooper
+   *  @date   December, 2012
+   *
+   *  @brief
+   *
+   *  @param
+   */
+  class MDSystem {
 
-  public:
+    public:
 
-    /**
-     * @brief Default constructor
-     * @param
-     */
-    MDSystem();
+      /**
+       * @brief Default constructor
+       * @param
+       */
+      MDSystem();
 
-    /**
-     * @brief Default destructor
-     * @param
-     */
-    ~MDSystem();
+      /**
+       * @brief Default destructor
+       * @param
+       */
+      ~MDSystem();
 
-    /**
-     * @brief
-     * @param
-     */
-    MDSystem(ProblemSpecP& ps,
-             GridP& grid);
+      /**
+       * @brief
+       * @param
+       */
+      MDSystem(ProblemSpecP& ps,
+               GridP& grid);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline double getVolume() const
-    {
-      return d_volume;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline double getVolume() const
+      {
+        return d_volume;
+      }
 
-    /**
-     * @brief
-     * @param  None
-     * @return
-     */
-    inline Vector getPressure() const
-    {
-      return d_pressure;
-    }
+      /**
+       * @brief
+       * @param  None
+       * @return
+       */
+      inline Vector getPressure() const
+      {
+        return d_pressure;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline double getTemperature() const
-    {
-      return d_temperature;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline double getTemperature() const
+      {
+        return d_temperature;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline int getNumGhostCells() const
-    {
-      return d_numGhostCells;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline int getNumGhostCells() const
+      {
+        return d_numGhostCells;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline int getMaxPolarizableIterations() const
-    {
-      return d_maxPolarizableIterations;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline int getMaxPolarizableIterations() const
+      {
+        return d_maxPolarizableIterations;
+      }
 
-    /**
-     * @brief
-     * @param None
-     * @return
-     */
-    inline bool isOrthorhombic() const
-    {
-      return d_orthorhombic;
-    }
+      /**
+       * @brief
+       * @param None
+       * @return
+       */
+      inline bool isOrthorhombic() const
+      {
+        return d_orthorhombic;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline bool newBox() const
-    {
-      return d_newBox;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline bool newBox() const
+      {
+        return d_newBox;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline void setNewBox(bool value)
-    {
-      d_newBox = value;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline void setNewBox(bool value)
+      {
+        d_newBox = value;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline Matrix3 getUnitCell() const
-    {
-      return d_unitCell;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline Matrix3 getUnitCell() const
+      {
+        return d_unitCell;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline Matrix3 getInverseCell() const
-    {
-      return d_inverseCell;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline Matrix3 getInverseCell() const
+      {
+        return d_inverseCell;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline double getCellVolume() const
-    {
-      return d_cellVolume;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline double getCellVolume() const
+      {
+        return d_cellVolume;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline IntVector getCellExtent() const
-    {
-      return d_totalCellExtent;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline IntVector getCellExtent() const
+      {
+        return d_totalCellExtent;
+      }
 
-  private:
+    private:
 
-    double d_volume;                  //!< Total MD system unit cell volume
-    Vector d_pressure;                //!< Total MD system pressure
-    double d_temperature;             //!< Total MD system temperature
-    int d_numGhostCells;              //!< Number of ghost cells used, a function of cutoffRadius and cell size
-    int d_maxPolarizableIterations;   //!<
-    bool d_orthorhombic;              //!< Whether or not the MD system is using orthorhombic coordinates
-    bool d_newBox;                    //!< Whether or not the system size has changed... create a new box
+      double d_volume;                  //!< Total MD system unit cell volume
+      Vector d_pressure;                //!< Total MD system pressure
+      double d_temperature;             //!< Total MD system temperature
+      int d_numGhostCells;              //!< Number of ghost cells used, a function of cutoffRadius and cell size
+      int d_maxPolarizableIterations;   //!<
+      bool d_orthorhombic;              //!< Whether or not the MD system is using orthorhombic coordinates
+      bool d_newBox;                    //!< Whether or not the system size has changed... create a new box
 
-    Matrix3 d_unitCell;               //!< MD system unit cell
-    Matrix3 d_inverseCell;            //!< MD system inverse unit cell
-    double d_cellVolume;              //!< Cell volume; calculate internally, return at request for efficiency
+      Matrix3 d_unitCell;               //!< MD system unit cell
+      Matrix3 d_inverseCell;            //!< MD system inverse unit cell
+      double d_cellVolume;              //!< Cell volume; calculate internally, return at request for efficiency
 
-    IntVector d_totalCellExtent;      //!< Number of sub-cells in the global unit cell
+      IntVector d_totalCellExtent;      //!< Number of sub-cells in the global unit cell
 
-    MDSystem(const MDSystem& system);
-    MDSystem& operator=(const MDSystem& system);
+      MDSystem(const MDSystem& system);
+      MDSystem& operator=(const MDSystem& system);
 
-    void calcCellVolume();
-};
+      void calcCellVolume();
+  };
 
 }  // End namespace Uintah
 

@@ -67,15 +67,25 @@ SPME::~SPME()
     SPMEPatch* spmePatch = *PatchIterator;
 
     SimpleGrid<std::complex<double> >* q = spmePatch->getQ();
-    delete q;
+    if (q) {
+      delete q;
+    }
 
     SimpleGrid<double>* theta = spmePatch->getTheta();
-    delete theta;
+    if (theta) {
+      delete theta;
+    }
 
-//    SimpleGrid<Matrix3>* stressPrefactor = spmePatch->getStressPrefactor();
-//    delete stressPrefactor;
+    SimpleGrid<Matrix3>* stressPrefactor = spmePatch->getStressPrefactor();
+    if (stressPrefactor) {
+      delete stressPrefactor;
+    }
 
     delete spmePatch;
+  }
+
+  if (d_Q) {
+    delete d_Q;
   }
 
   // FFTW cleanup
@@ -98,15 +108,52 @@ SPME::SPME(MDSystem* system,
 
 //-----------------------------------------------------------------------------
 // Interface implementations
-void SPME::initialize()
+void SPME::initialize(const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* materials,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw)
 {
   // We call SPME::initialize from MD::initialize, or if we've somehow maintained our object across a system change
+
+  const Patch* patch = patches->get(0);
+  Vector totalCellExtent = (d_system->getCellExtent()).asVector();
+  Vector patchLowIndex = (patch->getCellLowIndex()).asVector();
+  Vector patchHighIndex = (patch->getCellHighIndex()).asVector();
+
+  SCIRun::IntVector patchKLow, patchKHigh;
+  for (size_t idx = 0; idx < 3; ++idx) {
+    int KComponent = d_kLimits(idx);
+    patchKLow[idx] = ceil(static_cast<double>(KComponent) * (patchLowIndex[idx] / totalCellExtent[idx]));
+    patchKHigh[idx] = floor(static_cast<double>(KComponent) * (patchHighIndex[idx] / totalCellExtent[idx]));
+  }
+
+  IntVector patchKGridExtents = (patchKHigh - patchKLow);
+  IntVector patchKGridOffset = patchKLow;
+  int splineHalfMaxSupport = d_interpolatingSpline.getHalfMaxSupport();
+  IntVector plusGhostExtents = IntVector(splineHalfMaxSupport, splineHalfMaxSupport, splineHalfMaxSupport);
+  IntVector minusGhostExtents = plusGhostExtents;  // ensure symmetry
+
+  // Check to make sure plusGhostExtents+minusGhostExtents is right way to enter number of ghost cells (i.e. total, not per offset)
+  d_Q = scinew SimpleGrid<dblcomplex>(patchKGridExtents, patchKGridOffset, 2 * splineHalfMaxSupport);
+  d_Q->initialize(dblcomplex(0.0, 0.0));
+
+  IntVector extents = d_Q->getExtents();
+  int xdim = extents[0];
+  int ydim = extents[1];
+  int zdim = extents[2];
+
+  fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q->getDataPtr());
+
+  d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_ESTIMATE);
+  d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_ESTIMATE);
+
+  new_dw->put(q_kgrid_sum(*(LinearArray3<dblcomplex>*)d_Q->getDataPtr()), d_lb->QLabel);
 
   // Get useful information from global system descriptor to work with locally.
   d_unitCell = d_system->getUnitCell();
   d_inverseUnitCell = d_system->getInverseCell();
   d_systemVolume = d_system->getCellVolume();
-  return;
 }
 
 // Note:  Must run SPME->setup() each time there is a new box/K grid mapping (e.g. every step for NPT)
@@ -251,6 +298,16 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
     const Patch* patch = spmePatch->getPatch();
     ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
 
+    //------------------------------------------------------------------
+    // Carry over what was calculated in non-bonded.
+    constParticleVariable<double> penergy;
+    ParticleVariable<double> penergynew;
+    old_dw->get(penergy, d_lb->pEnergyLabel, pset);
+    new_dw->allocateAndPut(penergynew, d_lb->pEnergyLabel_preReloc, pset);
+    penergynew.copyData(penergy);
+    new_dw->put(sum_vartype(0.0), d_lb->vdwEnergyLabel);
+    //------------------------------------------------------------------
+
     constParticleVariable<Point> px;
     constParticleVariable<double> pcharge;
     constParticleVariable<long64> pids;
@@ -269,6 +326,9 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
     // We have now set up the real-space Q grid.
     // We need to store this patch's Q grid on the data warehouse (?) to pass through to the transform
     SimpleGrid<std::complex<double> >* Q = spmePatch->getQ();
+//    LinearArray3<std::complex<double> > q;
+//    q.initialize(std::complex<double>(0.0, 0.0));
+//    new_dw->put(q_kgrid_sum(q), d_lb->QLabel);
 
     // Calculate Q(r)
     mapChargeToGrid(spmePatch, d_gridMap, pset, pcharge, d_interpolatingSpline.getHalfMaxSupport());
@@ -319,8 +379,8 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
 
     // !FIXME Need to put Q in for reduction
     // Ready to go back to real space now -->  Need to store modified Q as well as localEnergy/localStress (which should get accumulated)
-    new_dw->put(sum_vartype(0.5*spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
-    new_dw->put(matrix_sum(0.5*spmeFourierStress), d_lb->spmeFourierStressLabel);
+    new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
+    new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->spmeFourierStressLabel);
   }
 }
 
@@ -342,7 +402,7 @@ void SPME::calculatePostTransform(const ProcessorGroup* pg,
     old_dw->get(pcharge, d_lb->pChargeLabel, pset);
 
     ParticleVariable<Vector> pforcenew;
-    new_dw->getModifiable(pforcenew, d_lb->pForceLabel_preReloc, pset);
+    new_dw->allocateAndPut(pforcenew, d_lb->pForceLabel_preReloc, pset);
 
     // Calculate electrostatic contribution to f_ij(r)
     mapForceFromGrid(spmePatch, d_gridMap, pset, pcharge, pforcenew, d_interpolatingSpline.getHalfMaxSupport());
@@ -360,20 +420,14 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  std::vector<SPMEPatch*>::iterator PatchIterator;
-  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
-    SPMEPatch* spmePatch = *PatchIterator;
-    SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
-
-    IntVector extents = Q->getExtents();
-    int xdim = extents[0];
-    int ydim = extents[1];
-    int zdim = extents[2];
-
-    fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
-    d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_ESTIMATE);
-    fftw_execute(d_forwardTransformPlan);
-  }
+//  std::vector<SPMEPatch*>::iterator PatchIterator;
+//  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
+//    SPMEPatch* spmePatch = *PatchIterator;
+//    SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
+//
+//
+//  }
+  fftw_execute(d_forwardTransformPlan);
 }
 
 void SPME::transformFourierToReal(const ProcessorGroup* pg,
@@ -382,20 +436,14 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  std::vector<SPMEPatch*>::iterator PatchIterator;
-  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
-    SPMEPatch* spmePatch = *PatchIterator;
-    SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
-
-    IntVector extents = Q->getExtents();
-    int xdim = extents[0];
-    int ydim = extents[1];
-    int zdim = extents[2];
-
-    fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
-    d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_ESTIMATE);
-    fftw_execute(d_backwardTransformPlan);
-  }
+//  std::vector<SPMEPatch*>::iterator PatchIterator;
+//  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
+//    SPMEPatch* spmePatch = *PatchIterator;
+//    SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
+//
+//
+//  }
+  fftw_execute(d_backwardTransformPlan);
 }
 
 void SPME::finalize(const ProcessorGroup* pg,
@@ -405,6 +453,7 @@ void SPME::finalize(const ProcessorGroup* pg,
                     DataWarehouse* new_dw)
 {
   // Do cleanup here
+  new_dw->put(q_kgrid_sum(*(LinearArray3<dblcomplex>*)d_Q->getDataPtr()), d_lb->QLabel);
 }
 
 std::vector<SCIRun::dblcomplex> SPME::generateBVector(const std::vector<double>& mFractional,
@@ -427,17 +476,17 @@ std::vector<SCIRun::dblcomplex> SPME::generateBVector(const std::vector<double>&
 // Note:  twoPi_m_over_K is almost a stand-in for z in the paper's language, however we defer the complex exponentiation
   for (size_t BIndex = initialIndex; BIndex < endingIndex; ++BIndex) {
 
-/*    int AdjustedIndex = BIndex - SplineZeroIndex;
-    if (AdjustedIndex < 0) AdjustedIndex += KMax;
-    if (AdjustedIndex >= KMax) AdjustedIndex -= KMax;
-*/
+    /*    int AdjustedIndex = BIndex - SplineZeroIndex;
+     if (AdjustedIndex < 0) AdjustedIndex += KMax;
+     if (AdjustedIndex >= KMax) AdjustedIndex -= KMax;
+     */
     double twoPi_m_over_K = twoPI * mFractional[BIndex];
-    dblcomplex phi_N = dblcomplex(0,0);
+    dblcomplex phi_N = dblcomplex(0, 0);
     for (int denomIndex = -halfSupport; denomIndex <= halfSupport; ++denomIndex) {
-      double j = static_cast<double> (denomIndex - splineOrder);
-      phi_N += zeroAlignedSpline[denomIndex + halfSupport]*dblcomplex(cos(j*twoPi_m_over_K),sin(j*twoPi_m_over_K));
+      double j = static_cast<double>(denomIndex - splineOrder);
+      phi_N += zeroAlignedSpline[denomIndex + halfSupport] * dblcomplex(cos(j * twoPi_m_over_K), sin(j * twoPi_m_over_K));
     }
-    B[BIndex] = 1.0/phi_N;
+    B[BIndex] = 1.0 / phi_N;
   }
   return B;
 }
@@ -517,7 +566,7 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
   double invVolFactor = 1.0 / (d_systemVolume * PI);
 
   std::cerr << "System Volume: " << d_systemVolume << endl;
-  std::cin.get();
+//  std::cin.get();
 
   SimpleGrid<double> CGrid(extents, offset, 0);  // No ghost cells; internal only
   for (size_t kX = 0; kX < xExtents; ++kX) {
@@ -639,11 +688,12 @@ std::vector<SPMEMapPoint> SPME::generateChargeMap(ParticleSubset* pset,
         double dampXY = dampX * dampY;
         for (size_t zidx = 0; zidx < ZExtent; ++zidx) {
           double dampZ = zSplineArray[zidx];
-          double dampYZ = dampY*dampZ;
-          double dampXZ = dampX*dampZ;
+          double dampYZ = dampY * dampZ;
+          double dampXZ = dampX * dampZ;
 
           chargeGrid(xidx, yidx, zidx) = dampXY * dampZ;
-          forceGrid(xidx, yidx, zidx) = SCIRun::Vector(dampYZ*xSplineDeriv[xidx], dampXZ*ySplineDeriv[yidx], dampXY*zSplineDeriv[zidx]);
+          forceGrid(xidx, yidx, zidx) = SCIRun::Vector(dampYZ * xSplineDeriv[xidx], dampXZ * ySplineDeriv[yidx],
+                                                       dampXY * zSplineDeriv[zidx]);
 
         }
       }
@@ -680,16 +730,22 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
           dblcomplex val = charge * chargeMap(xmask + halfSupport, ymask + halfSupport, zmask + halfSupport);
 
           int x_anchor = QAnchor.x() + xmask;
-          if (x_anchor < 0)              x_anchor += d_kLimits.x();
-          if (x_anchor >= d_kLimits.x()) x_anchor -= d_kLimits.x();
+          if (x_anchor < 0)
+            x_anchor += d_kLimits.x();
+          if (x_anchor >= d_kLimits.x())
+            x_anchor -= d_kLimits.x();
 
           int y_anchor = QAnchor.y() + ymask;
-          if (y_anchor < 0) y_anchor += d_kLimits.y();
-          if (y_anchor >= d_kLimits.y()) y_anchor -= d_kLimits.y();
+          if (y_anchor < 0)
+            y_anchor += d_kLimits.y();
+          if (y_anchor >= d_kLimits.y())
+            y_anchor -= d_kLimits.y();
 
           int z_anchor = QAnchor.z() + zmask;
-          if (z_anchor < 0) z_anchor += d_kLimits.z();
-          if (z_anchor >= d_kLimits.z()) z_anchor -= d_kLimits.z();
+          if (z_anchor < 0)
+            z_anchor += d_kLimits.z();
+          if (z_anchor >= d_kLimits.z())
+            z_anchor -= d_kLimits.z();
 
           // Wrapping done for single patch problem, solution will be totally different for multipatch problem!  !FIXME
           (*Q)(x_anchor, y_anchor, z_anchor) += val;
@@ -714,7 +770,7 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
     SimpleGrid<SCIRun::Vector> forceMap = gridMap[pidx].getForceGrid();
     double charge = charges[pidx];
 
-    double DimensionalCorrection = 1.0/static_cast<double> (d_kLimits.x()*d_kLimits.y()*d_kLimits.z());
+    double DimensionalCorrection = 1.0 / static_cast<double>(d_kLimits.x() * d_kLimits.y() * d_kLimits.z());
     SCIRun::Vector newForce = Vector(0, 0, 0);
     IntVector QAnchor = forceMap.getOffset();  // Location of the 0,0,0 origin for the force map grid
     IntVector supportExtent = forceMap.getExtents();  // Extents of the force map grid
@@ -728,13 +784,19 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
           int y_anchor = QAnchor.y() + ymask;
           int z_anchor = QAnchor.z() + zmask;
 
-          if (x_anchor < 0) x_anchor += d_kLimits.x();
-          if (y_anchor < 0) y_anchor += d_kLimits.y();
-          if (z_anchor < 0) z_anchor += d_kLimits.z();
+          if (x_anchor < 0)
+            x_anchor += d_kLimits.x();
+          if (y_anchor < 0)
+            y_anchor += d_kLimits.y();
+          if (z_anchor < 0)
+            z_anchor += d_kLimits.z();
 
-          if (x_anchor >= d_kLimits.x()) x_anchor -= d_kLimits.x();
-          if (y_anchor >= d_kLimits.y()) y_anchor -= d_kLimits.y();
-          if (z_anchor >= d_kLimits.z()) z_anchor -= d_kLimits.z();
+          if (x_anchor >= d_kLimits.x())
+            x_anchor -= d_kLimits.x();
+          if (y_anchor >= d_kLimits.y())
+            y_anchor -= d_kLimits.y();
+          if (z_anchor >= d_kLimits.z())
+            z_anchor -= d_kLimits.z();
 
           double QReal = real((*Q)(x_anchor, y_anchor, z_anchor));
           double QMag = std::abs((*Q)(x_anchor, y_anchor, z_anchor));
@@ -746,19 +808,19 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
       }
     }
     newForce *= DimensionalCorrection;
-      //49227.43325439056
-/*
- *  f1=  -2.8440279063396052        2.6027710155811845       0.99069892785288971
- f2=  -1.2959262337781086       -2.2140864761359698        2.5686305300200476
- f3=   4.2899558647618461       -2.2060911777299874       -3.0672208465506792
- f4=   3.1706091601611490        2.0423127670957384       -4.2814464749644880
- f5=  -2.8145420677778201        2.3389711802598274        1.3094128311605495
- */
+    //49227.43325439056
+    /*
+     *  f1=  -2.8440279063396052        2.6027710155811845       0.99069892785288971
+     f2=  -1.2959262337781086       -2.2140864761359698        2.5686305300200476
+     f3=   4.2899558647618461       -2.2060911777299874       -3.0672208465506792
+     f4=   3.1706091601611490        2.0423127670957384       -4.2814464749644880
+     f5=  -2.8145420677778201        2.3389711802598274        1.3094128311605495
+     */
 
     if (pidx < 5) {
       std::cerr << "DimensionalCorrection: " << DimensionalCorrection << endl;
       double twoPI = 2.0 * acos(-1.0);
-      std::cerr << " Force Check (" << pidx << "): " << newForce/twoPI << endl;
+      std::cerr << " Force Check (" << pidx << "): " << newForce / twoPI << endl;
       pforcenew[pidx] = newForce;
     }
 

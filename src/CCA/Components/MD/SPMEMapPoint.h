@@ -32,99 +32,99 @@
 
 namespace Uintah {
 
-typedef int particleIndex;
-typedef int particleId;
+  typedef int particleIndex;
+  typedef int particleId;
 
-class Point;
-class Vector;
-class ParticleSubset;
+  class Point;
+  class Vector;
+  class ParticleSubset;
 
-/**
- *  @class SPMEMapPoint
- *  @ingroup MD
- *  @author Alan Humphrey and Justin Hooper
- *  @date   February, 2013
- *
- *  @brief
- *
- *  @param
- */
-class SPMEMapPoint {
+  /**
+   *  @class SPMEMapPoint
+   *  @ingroup MD
+   *  @author Alan Humphrey and Justin Hooper
+   *  @date   February, 2013
+   *
+   *  @brief
+   *
+   *  @param
+   */
+  class SPMEMapPoint {
 
-  public:
+    public:
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    SPMEMapPoint();
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      SPMEMapPoint();
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    ~SPMEMapPoint();
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      ~SPMEMapPoint();
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    SPMEMapPoint(particleIndex particleID,
-                 IntVector gridOffset,
-                 SimpleGrid<double> chargeGrid,
-                 SimpleGrid<SCIRun::Vector> forceGrid);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      SPMEMapPoint(particleIndex particleID,
+                   IntVector gridOffset,
+                   SimpleGrid<double> chargeGrid,
+                   SimpleGrid<SCIRun::Vector> forceGrid);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline const particleIndex getParticleID() const
-    {
-      return d_particleID;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline const particleIndex getParticleID() const
+      {
+        return d_particleID;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline const IntVector getGridOffset() const
-    {
-      return d_gridOffset;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline const IntVector getGridOffset() const
+      {
+        return d_gridOffset;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline const SimpleGrid<double>& getChargeGrid() const
-    {
-      return d_chargeGrid;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline const SimpleGrid<double>& getChargeGrid() const
+      {
+        return d_chargeGrid;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline const SimpleGrid<SCIRun::Vector>& getForceGrid() const
-    {
-      return d_forceGrid;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline const SimpleGrid<SCIRun::Vector>& getForceGrid() const
+      {
+        return d_forceGrid;
+      }
 
-  private:
+    private:
 
-    particleIndex d_particleID;
-    IntVector d_gridOffset;
-    SimpleGrid<double> d_chargeGrid;
-    SimpleGrid<SCIRun::Vector> d_forceGrid;
+      particleIndex d_particleID;
+      IntVector d_gridOffset;
+      SimpleGrid<double> d_chargeGrid;
+      SimpleGrid<SCIRun::Vector> d_forceGrid;
 
-};
+  };
 
 }  // End namespace Uintah
 

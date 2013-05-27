@@ -31,99 +31,103 @@
 
 namespace Uintah {
 
-/**
- *  @class Electrostatics
- *  @ingroup MD
- *  @author Alan Humphrey and Justin Hooper
- *  @date   January, 2013
- *
- *  @brief Interface for Electrostatics calculation types
- *
- *  @param
- */
-class Electrostatics {
+  /**
+   *  @class Electrostatics
+   *  @ingroup MD
+   *  @author Alan Humphrey and Justin Hooper
+   *  @date   January, 2013
+   *
+   *  @brief Interface for Electrostatics calculation types
+   *
+   *  @param
+   */
+  class Electrostatics {
 
-  public:
+    public:
 
-    /**
-     * @brief Enumeration of all supported ElectroStatics types.
-     */
-    enum ElectrostaticsType {
-      EWALD, SPME, FMM, NONE
-    };
+      /**
+       * @brief Enumeration of all supported ElectroStatics types.
+       */
+      enum ElectrostaticsType {
+        EWALD, SPME, FMM, NONE
+      };
 
-    /**
-     * @brief
-     * @param
-     */
-    Electrostatics();
+      /**
+       * @brief
+       * @param
+       */
+      Electrostatics();
 
-    /**
-     * @brief
-     * @param
-     */
-    virtual ~Electrostatics();
+      /**
+       * @brief
+       * @param
+       */
+      virtual ~Electrostatics();
 
-    /**
-     * @brief
-     * @param
-     */
-    virtual void initialize() = 0;
+      /**
+       * @brief
+       * @param
+       */
+      virtual void initialize(const ProcessorGroup* pg,
+                              const PatchSubset* patches,
+                              const MaterialSubset* materials,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw) = 0;
 
-    /**
-     * @brief
-     * @param
-     */
-    virtual void setup(const ProcessorGroup* pg,
-                       const PatchSubset* patches,
-                       const MaterialSubset* materials,
-                       DataWarehouse* old_dw,
-                       DataWarehouse* new_dw) = 0;
+      /**
+       * @brief
+       * @param
+       */
+      virtual void setup(const ProcessorGroup* pg,
+                         const PatchSubset* patches,
+                         const MaterialSubset* materials,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw) = 0;
 
-    /**
-     * @brief
-     * @param
-     */
-    virtual void calculate(const ProcessorGroup* pg,
-                           const PatchSubset* patches,
-                           const MaterialSubset* materials,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw) = 0;
+      /**
+       * @brief
+       * @param
+       */
+      virtual void calculate(const ProcessorGroup* pg,
+                             const PatchSubset* patches,
+                             const MaterialSubset* materials,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw) = 0;
 
-    /**
-     * @brief
-     * @param
-     */
-    virtual void finalize(const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* materials,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw) = 0;
+      /**
+       * @brief
+       * @param
+       */
+      virtual void finalize(const ProcessorGroup* pg,
+                            const PatchSubset* patches,
+                            const MaterialSubset* materials,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw) = 0;
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    virtual ElectrostaticsType getType() const = 0;
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      virtual ElectrostaticsType getType() const = 0;
 
-  private:
+    private:
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    Electrostatics(const Electrostatics&);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      Electrostatics(const Electrostatics&);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    Electrostatics& operator=(const Electrostatics&);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      Electrostatics& operator=(const Electrostatics&);
 
-};
+  };
 
 }  // End namespace Uintah
 

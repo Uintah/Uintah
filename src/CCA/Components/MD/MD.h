@@ -41,286 +41,287 @@
 
 namespace Uintah {
 
-typedef int particleIndex;
-typedef int particleId;
+  typedef std::complex<double> dblcomplex;
+  typedef int particleIndex;
+  typedef int particleId;
 
-class Point;
-class Vector;
-class SimpleMaterial;
-class SPME;
+  class Point;
+  class Vector;
+  class SimpleMaterial;
+  class SPME;
 
-/**
- *  @class MD
- *  @ingroup MD
- *  @author Alan Humphrey and Justin Hooper
- *  @date   December, 2012
- *
- *  @brief
- *
- *  @param
- */
-class MD : public UintahParallelComponent, public SimulationInterface {
+  /**
+   *  @class MD
+   *  @ingroup MD
+   *  @author Alan Humphrey and Justin Hooper
+   *  @date   December, 2012
+   *
+   *  @brief
+   *
+   *  @param
+   */
+  class MD : public UintahParallelComponent, public SimulationInterface {
 
-  public:
+    public:
 
-    /**
-     * @brief
-     * @param
-     */
-    MD(const ProcessorGroup* myworld);
+      /**
+       * @brief
+       * @param
+       */
+      MD(const ProcessorGroup* myworld);
 
-    /**
-     * @brief
-     * @param
-     */
-    virtual ~MD();
+      /**
+       * @brief
+       * @param
+       */
+      virtual ~MD();
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    virtual void problemSetup(const ProblemSpecP& params,
-                              const ProblemSpecP& restart_prob_spec,
-                              GridP& grid,
-                              SimulationStateP&);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      virtual void problemSetup(const ProblemSpecP& params,
+                                const ProblemSpecP& restart_prob_spec,
+                                GridP& grid,
+                                SimulationStateP&);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    virtual void scheduleInitialize(const LevelP& level,
-                                    SchedulerP& sched);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      virtual void scheduleInitialize(const LevelP& level,
+                                      SchedulerP& sched);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    virtual void scheduleComputeStableTimestep(const LevelP& level,
-                                               SchedulerP&);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      virtual void scheduleComputeStableTimestep(const LevelP& level,
+                                                 SchedulerP&);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    virtual void scheduleTimeAdvance(const LevelP& level,
-                                     SchedulerP&);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      virtual void scheduleTimeAdvance(const LevelP& level,
+                                       SchedulerP&);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    enum IntegratorType {
-      Explicit, Implicit,
-    };
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      enum IntegratorType {
+        Explicit, Implicit,
+      };
 
-  protected:
+    protected:
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void scheduleSetGridBoundaryConditions(SchedulerP&,
-                                           const PatchSet*,
-                                           const MaterialSet* matls);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleSetGridBoundaryConditions(SchedulerP&,
+                                             const PatchSet*,
+                                             const MaterialSet* matls);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void scheduleCalculateNonBondedForces(SchedulerP& sched,
-                                          const PatchSet* patches,
-                                          const MaterialSet* matls);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleCalculateNonBondedForces(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void scheduleInterpolateParticlesToGrid(SchedulerP&,
-                                            const PatchSet*,
-                                            const MaterialSet*);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleInterpolateParticlesToGrid(SchedulerP&,
+                                              const PatchSet*,
+                                              const MaterialSet*);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void schedulePerformElectrostatics(SchedulerP& sched,
-                                       const PatchSet* patched,
-                                       const MaterialSet* matls);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void schedulePerformElectrostatics(SchedulerP& sched,
+                                         const PatchSet* patched,
+                                         const MaterialSet* matls);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
-                                                 const PatchSet* patches,
-                                                 const MaterialSet* matls);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
+                                                   const PatchSet* patches,
+                                                   const MaterialSet* matls);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void scheduleUpdatePosition(SchedulerP& sched,
-                                const PatchSet* patches,
-                                const MaterialSet* matls);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleUpdatePosition(SchedulerP& sched,
+                                  const PatchSet* patches,
+                                  const MaterialSet* matls);
 
-  private:
+    private:
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void initialize(const ProcessorGroup* pg,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void initialize(const ProcessorGroup* pg,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void registerPermanentParticleState(SimpleMaterial* matl);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void registerPermanentParticleState(SimpleMaterial* matl);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void computeStableTimestep(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void computeStableTimestep(const ProcessorGroup* pg,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void interpolateParticlesToGrid(const ProcessorGroup*,
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void interpolateParticlesToGrid(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void performElectrostatics(const ProcessorGroup* pg,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void calculateNonBondedForces(const ProcessorGroup* pg,
                                     const PatchSubset* patches,
                                     const MaterialSubset* matls,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void performElectrostatics(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void updatePosition(const ProcessorGroup* pg,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void calculateNonBondedForces(const ProcessorGroup* pg,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline bool containsAtom(const IntVector& l,
+                               const IntVector& h,
+                               const Point& p) const
+      {
+        return ((p.x() >= l.x() && p.x() < h.x()) && (p.y() >= l.y() && p.y() < h.y()) && (p.z() >= l.z() && p.z() < h.z()));
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw);
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void updatePosition(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void generateNeighborList();
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline bool containsAtom(const IntVector& l,
-                             const IntVector& h,
-                             const Point& p) const
-    {
-      return ((p.x() >= l.x() && p.x() < h.x()) && (p.y() >= l.y() && p.y() < h.y()) && (p.z() >= l.z() && p.z() < h.z()));
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void extractCoordinates();
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void generateNeighborList();
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      bool isNeighbor(const Point* atom1,
+                      const Point* atom2);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    void extractCoordinates();
+      MDLabel* d_lb;                     //!<
+      SimulationStateP d_sharedState;    //!<
+      SimpleMaterial* d_material;        //!<
+      IntegratorType d_integrator;       //!<
+      double delt;                       //!<
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    bool isNeighbor(const Point* atom1,
-                    const Point* atom2);
+      vector<const VarLabel*> d_particleState;            //!<
+      vector<const VarLabel*> d_particleState_preReloc;   //!<
 
-    MDLabel* d_lb;                     //!<
-    SimulationStateP d_sharedState;    //!<
-    SimpleMaterial* d_material;        //!<
-    IntegratorType d_integrator;       //!<
-    double delt;                       //!<
+      // fields specific to non-bonded interaction (LJ Potential)
+      string d_coordinateFile;       //!< file with coordinates of all atoms in this MD system
+      unsigned int d_numAtoms;       //!< Total number of atoms in this MD simulation
+      double d_cutoffRadius;         //!< The short ranged cut off distances (in Angstroms)
+      Vector d_box;                  //!< The size of simulation
+      double R12;                    //!< This is the v.d.w. repulsive parameter
+      double R6;                     //!< This is the v.d.w. attractive parameter
 
-    vector<const VarLabel*> d_particleState;            //!<
-    vector<const VarLabel*> d_particleState_preReloc;   //!<
+      // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
+      std::vector<Point> d_atomList;             //!<
+      std::vector<vector<int> > d_neighborList;  //!<
 
-    // fields specific to non-bonded interaction (LJ Potential)
-    string d_coordinateFile;       //!< file with coordinates of all atoms in this MD system
-    unsigned int d_numAtoms;       //!< Total number of atoms in this MD simulation
-    double d_cutoffRadius;         //!< The short ranged cut off distances (in Angstroms)
-    Vector d_box;                  //!< The size of simulation
-    double R12;                    //!< This is the v.d.w. repulsive parameter
-    double R6;                     //!< This is the v.d.w. attractive parameter
+      Electrostatics* d_electrostatics;          //!<
+      MDSystem* d_system;                        //!<
 
-    // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
-    std::vector<Point> d_atomList;             //!<
-    std::vector<vector<int> > d_neighborList;  //!<
-
-    Electrostatics* d_electrostatics;          //!<
-    MDSystem* d_system;                        //!<
-
-    // copy constructor and operator=
-    MD(const MD&);                           //!<
-    MD& operator=(const MD&);                //!<
-};
+      // copy constructor and operator=
+      MD(const MD&);                           //!<
+      MD& operator=(const MD&);                //!<
+  };
 
 }
 
