@@ -33,179 +33,179 @@
 
 namespace Uintah {
 
-class IntVector;
+  class IntVector;
 
-/**
- *  @class SPMEPatch
- *  @ingroup MD
- *  @author Alan Humphrey and Justin Hooper
- *  @date   February, 2013
- *
- *  @brief
- *
- *  @param
- */
-class SPMEPatch {
+  /**
+   *  @class SPMEPatch
+   *  @ingroup MD
+   *  @author Alan Humphrey and Justin Hooper
+   *  @date   February, 2013
+   *
+   *  @brief
+   *
+   *  @param
+   */
+  class SPMEPatch {
 
-  public:
+    public:
 
-    /**
-     * @brief Default constructor
-     * @param
-     */
-    SPMEPatch();
+      /**
+       * @brief Default constructor
+       * @param
+       */
+      SPMEPatch();
 
-    /**
-     * @brief Default destructor
-     * @param
-     */
-    ~SPMEPatch();
+      /**
+       * @brief Default destructor
+       * @param
+       */
+      ~SPMEPatch();
 
-    /**
-     * @brief
-     * @param
-     * @param
-     * @param
-     */
-    SPMEPatch(IntVector extents,
-              IntVector offset,
-              IntVector plusGhostExtents,
-              IntVector minusGhostExtents,
-              const Patch* patch);
+      /**
+       * @brief
+       * @param
+       * @param
+       * @param
+       */
+      SPMEPatch(IntVector extents,
+                IntVector offset,
+                IntVector plusGhostExtents,
+                IntVector minusGhostExtents,
+                const Patch* patch);
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline IntVector getLocalExtents() const
-    {
-      return d_localExtents;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline IntVector getLocalExtents() const
+      {
+        return d_localExtents;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline IntVector getGlobalOffset() const
-    {
-      return d_globalOffset;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline IntVector getGlobalOffset() const
+      {
+        return d_globalOffset;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline IntVector getPosGhostExtents() const
-    {
-      return d_posGhostExtents;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline IntVector getPosGhostExtents() const
+      {
+        return d_posGhostExtents;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline IntVector getNegGhostExtents() const
-    {
-      return d_negGhostExtents;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline IntVector getNegGhostExtents() const
+      {
+        return d_negGhostExtents;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline SimpleGrid<double>* getTheta() const
-    {
-      return d_theta;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline SimpleGrid<double>* getTheta() const
+      {
+        return d_theta;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline void setTheta(SimpleGrid<double>* theta)
-    {
-      d_theta = theta;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline void setTheta(SimpleGrid<double>* theta)
+      {
+        d_theta = theta;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline SimpleGrid<Matrix3>* getStressPrefactor()
-    {
-      return d_stressPrefactor;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline SimpleGrid<Matrix3>* getStressPrefactor()
+      {
+        return d_stressPrefactor;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline void setStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor)
-    {
-      d_stressPrefactor = stressPrefactor;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline void setStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor)
+      {
+        d_stressPrefactor = stressPrefactor;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline SimpleGrid<std::complex<double> >* getQ()
-    {
-      return Q;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline SimpleGrid<std::complex<double> >* getQ()
+      {
+        return Q;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline void setQ(SimpleGrid<std::complex<double> >* q)
-    {
-      Q = q;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline void setQ(SimpleGrid<std::complex<double> >* q)
+      {
+        Q = q;
+      }
 
-    /**
-     * @brief
-     * @param
-     * @return
-     */
-    inline const Patch* getPatch() const
-    {
-      return d_patch;
-    }
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline const Patch* getPatch() const
+      {
+        return d_patch;
+      }
 
-    friend class SPME;
+      friend class SPME;
 
-  private:
+    private:
 
-    // Patch dependent quantities
-    IntVector d_localExtents;                //!< Number of grid points in each direction for this patch
-    IntVector d_globalOffset;                //!< Grid point index of local 0,0,0 origin in global coordinates
+      // Patch dependent quantities
+      IntVector d_localExtents;                //!< Number of grid points in each direction for this patch
+      IntVector d_globalOffset;                //!< Grid point index of local 0,0,0 origin in global coordinates
 
-    // Store the number of ghost cells  along each of the min/max boundaries
-    // This lets us differentiate should we need to for centered and  left/right shifted splines
-    IntVector d_posGhostExtents;             //!< Number of ghost cells on positive boundary
-    IntVector d_negGhostExtents;             //!< Number of ghost cells on negative boundary
+      // Store the number of ghost cells  along each of the min/max boundaries
+      // This lets us differentiate should we need to for centered and  left/right shifted splines
+      IntVector d_posGhostExtents;             //!< Number of ghost cells on positive boundary
+      IntVector d_negGhostExtents;             //!< Number of ghost cells on negative boundary
 
-    SimpleGrid<double>* d_theta;             //!<
-    SimpleGrid<Matrix3>* d_stressPrefactor;  //!<
-    SimpleGrid<std::complex<double> >* Q;         //!<
+      SimpleGrid<double>* d_theta;             //!<
+      SimpleGrid<Matrix3>* d_stressPrefactor;  //!<
+      SimpleGrid<std::complex<double> >* Q;         //!<
 
-    const Patch* d_patch;                    //!<
+      const Patch* d_patch;                    //!<
 
-    SPMEPatch(const SPMEPatch& patch);
-    SPMEPatch& operator=(const SPMEPatch& patch);
+      SPMEPatch(const SPMEPatch& patch);
+      SPMEPatch& operator=(const SPMEPatch& patch);
 
-};
+  };
 
 }  // End namespace Uintah
 

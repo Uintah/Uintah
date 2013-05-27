@@ -34,364 +34,364 @@
 
 namespace Uintah {
 
-typedef std::complex<double> dblcomplex;
+  typedef std::complex<double> dblcomplex;
 
-using namespace SCIRun;
+  using namespace SCIRun;
 
-class Patch;
+  class Patch;
 
-/**
- *  @class SimpleGrid
- *  @ingroup MD
- *  @author Alan Humphrey and Justin Hooper
- *  @date   December, 2012
- *
- *  @brief A lightweight representation of the local grid and supporting operations involved in the SPME routine.
- *
- *  @param T The data type for this SimpleGrid. Should be double, std::complex<double>> or a std::vector of these
- */
-template<typename T> class SimpleGrid {
+  /**
+   *  @class SimpleGrid
+   *  @ingroup MD
+   *  @author Alan Humphrey and Justin Hooper
+   *  @date   December, 2012
+   *
+   *  @brief A lightweight representation of the local grid and supporting operations involved in the SPME routine.
+   *
+   *  @param T The data type for this SimpleGrid. Should be double, std::complex<double>> or a std::vector of these
+   */
+  template<typename T> class SimpleGrid {
 
-  public:
+    public:
 
-    /**
-     * @brief Default Constructor.
-     */
-    SimpleGrid();
+      /**
+       * @brief Default Constructor.
+       */
+      SimpleGrid();
 
-    /**
-     * @brief Destructor
-     */
-    ~SimpleGrid();
+      /**
+       * @brief Destructor
+       */
+      ~SimpleGrid();
 
-    /**
-     * @brief 3 argument constructor.
-     * @param extents The extents, or total number of cells this SimpleGrid will contain.
-     * @param offset The offset for the first point in the patch in reference to the global grid.
-     * @param numGhostCells The number of ghost cells this SimpleGrid has.
-     */
-    SimpleGrid(const IntVector& extents,
-               const IntVector& offset,
-               const int numGhostCells);
+      /**
+       * @brief 3 argument constructor.
+       * @param extents The extents, or total number of cells this SimpleGrid will contain.
+       * @param offset The offset for the first point in the patch in reference to the global grid.
+       * @param numGhostCells The number of ghost cells this SimpleGrid has.
+       */
+      SimpleGrid(const IntVector& extents,
+                 const IntVector& offset,
+                 const int numGhostCells);
 
-    /**
-     * @brief
-     * @param
-     */
-    inline void initialize(const T val)
-    {
-      d_values.initialize(val);
-    }
+      /**
+       * @brief
+       * @param
+       */
+      inline void initialize(const T val)
+      {
+        d_values.initialize(val);
+      }
 
-    /**
-     * @brief Copy constructor.
-     * @param copy A reference to the SimpleGrid to copy.
-     */
-    SimpleGrid(const SimpleGrid& copy);
+      /**
+       * @brief Copy constructor.
+       * @param copy A reference to the SimpleGrid to copy.
+       */
+      SimpleGrid(const SimpleGrid& copy);
 
-    /**
-     * @brief Returns the extents of this SimpleGrid.
-     * @param None
-     * @return IntVector The extents, or total number of cells in this SimpleGrid.
-     */
-    inline IntVector getExtents() const
-    {
-      return d_gridExtents;
-    }
+      /**
+       * @brief Returns the extents of this SimpleGrid.
+       * @param None
+       * @return IntVector The extents, or total number of cells in this SimpleGrid.
+       */
+      inline IntVector getExtents() const
+      {
+        return d_gridExtents;
+      }
 
-    /**
-     * @brief Returns the offset for the first point in this SimpleGrid in reference to the global grid.
-     * @param None
-     * @return The offset of this SimpleGrid.
-     */
-    inline IntVector getOffset() const
-    {
-      return d_gridOffset;
-    }
+      /**
+       * @brief Returns the offset for the first point in this SimpleGrid in reference to the global grid.
+       * @param None
+       * @return The offset of this SimpleGrid.
+       */
+      inline IntVector getOffset() const
+      {
+        return d_gridOffset;
+      }
 
-    /**
-     * @brief Returns prime (non-ghost only) extents of this SimpleGrid.
-     * @param None
-     * @return IntVector The prime (non-ghost only) extents of this SimpleGrid.
-     */
-    inline IntVector getNonGhostExtent() const
-    {
-      return d_gridExtents - IntVector(d_numGhostCells_, d_numGhostCells_, d_numGhostCells_);
-    }
+      /**
+       * @brief Returns prime (non-ghost only) extents of this SimpleGrid.
+       * @param None
+       * @return IntVector The prime (non-ghost only) extents of this SimpleGrid.
+       */
+      inline IntVector getNonGhostExtent() const
+      {
+        return d_gridExtents - IntVector(d_numGhostCells_, d_numGhostCells_, d_numGhostCells_);
+      }
 
-    /**The offset
-     * @brief Returns prime (non-ghost only) offset for the first point in this
-     *        SimpleGrid in reference to the global grid.
-     * @param None
-     * @return IntVector The prime (non-ghost only) offset of this SImpleGrid.
-     */
-    inline IntVector getNonGhostOffset() const
-    {
-      return d_gridOffset - IntVector(d_numGhostCells_, d_numGhostCells_, d_numGhostCells_);
-    }
+      /**The offset
+       * @brief Returns prime (non-ghost only) offset for the first point in this
+       *        SimpleGrid in reference to the global grid.
+       * @param None
+       * @return IntVector The prime (non-ghost only) offset of this SImpleGrid.
+       */
+      inline IntVector getNonGhostOffset() const
+      {
+        return d_gridOffset - IntVector(d_numGhostCells_, d_numGhostCells_, d_numGhostCells_);
+      }
 
-    /**
-     * @brief Returns a pointer to the linearized, 1D array of values contained within this SimpleGrid.
-     * @param None
-     * @return T* A pointer to the linearized, 1D array of values contained within this SimpleGrid.
-     */
-    inline T* getDataPtr()
-    {
-      return d_values.get_dataptr();
-    }
+      /**
+       * @brief Returns a pointer to the linearized, 1D array of values contained within this SimpleGrid.
+       * @param None
+       * @return T* A pointer to the linearized, 1D array of values contained within this SimpleGrid.
+       */
+      inline T* getDataPtr()
+      {
+        return d_values.get_dataptr();
+      }
 
-    /**
-     * @brief Pass through indexing of Value array.
-     * @param x The x component of the 3D cell index.
-     * @param y The y component of the 3D cell index.
-     * @param z The z component of the 3D cell index.
-     * @return T& A reference to the value at index [x,y,z] in this SimpleGrid.
-     */
-    inline T& operator()(const int& x,
-                         const int& y,
-                         const int& z)
-    {
-      return d_values(x, y, z);
-    }
+      /**
+       * @brief Pass through indexing of Value array.
+       * @param x The x component of the 3D cell index.
+       * @param y The y component of the 3D cell index.
+       * @param z The z component of the 3D cell index.
+       * @return T& A reference to the value at index [x,y,z] in this SimpleGrid.
+       */
+      inline T& operator()(const int& x,
+                           const int& y,
+                           const int& z)
+      {
+        return d_values(x, y, z);
+      }
 
-    /**
-     * @brief Pass through indexing of Value array.
-     * @param x The x component of the 3D cell index.
-     * @param y The y component of the 3D cell index.
-     * @param z The z component of the 3D cell index.
-     * @return T The value at index [x,y,z] in this SimpleGrid.
-     */
-    inline T operator()(const int& x,
-                        const int& y,
-                        const int& z) const
-    {
-      return d_values(x, y, z);
-    }
+      /**
+       * @brief Pass through indexing of Value array.
+       * @param x The x component of the 3D cell index.
+       * @param y The y component of the 3D cell index.
+       * @param z The z component of the 3D cell index.
+       * @return T The value at index [x,y,z] in this SimpleGrid.
+       */
+      inline T operator()(const int& x,
+                          const int& y,
+                          const int& z) const
+      {
+        return d_values(x, y, z);
+      }
 
-    /**
-     * @brief Index a cell value by IntVector.
-     * @param idx The 3-component index vector.
-     * @return T& A reference to the value at index idx.
-     */
-    inline T& operator()(const IntVector& idx)
-    {
-      return d_values(idx.x(), idx.y(), idx.z());
-    }
+      /**
+       * @brief Index a cell value by IntVector.
+       * @param idx The 3-component index vector.
+       * @return T& A reference to the value at index idx.
+       */
+      inline T& operator()(const IntVector& idx)
+      {
+        return d_values(idx.x(), idx.y(), idx.z());
+      }
 
-    /**
-     * @brief Index a cell value by IntVector.
-     * @param idx The 3-component index vector.
-     * @return T The value at index idx.
-     */
-    inline T operator()(const IntVector& idx) const
-    {
-      return d_values(idx.x(), idx.y(), idx.z());
-    }
+      /**
+       * @brief Index a cell value by IntVector.
+       * @param idx The 3-component index vector.
+       * @return T The value at index idx.
+       */
+      inline T operator()(const IntVector& idx) const
+      {
+        return d_values(idx.x(), idx.y(), idx.z());
+      }
 
-    /**
-     * @brief Checks to make sure grid1 and grid2 have same Extent/Offset/Ghost Regions.
-     *        Note that in general, gridIn doesn't have to have the same data type as (this) object does.
-     * @param other A reference to the SimpleGrid to compare against this SimpleGrid.
-     * @return bool Returns true if this SimpleGrid has the same extents, offset and number of ghost cells as
-     *              as the specified SimpleGrid, false otherwise.
-     */
-    bool verifyRegistration(const SimpleGrid<T>& other);
+      /**
+       * @brief Checks to make sure grid1 and grid2 have same Extent/Offset/Ghost Regions.
+       *        Note that in general, gridIn doesn't have to have the same data type as (this) object does.
+       * @param other A reference to the SimpleGrid to compare against this SimpleGrid.
+       * @return bool Returns true if this SimpleGrid has the same extents, offset and number of ghost cells as
+       *              as the specified SimpleGrid, false otherwise.
+       */
+      bool verifyRegistration(const SimpleGrid<T>& other);
 
-    /**
-     * @brief Multiplication of grids; be sure to check for same.
-     * @param gridIn The multiplicand.
-     * @return SimpleGrid<T> The result of the multiplication.
-     */
-    SimpleGrid<T> operator*(const SimpleGrid<T>& gridIn);
+      /**
+       * @brief Multiplication of grids; be sure to check for same.
+       * @param gridIn The multiplicand.
+       * @return SimpleGrid<T> The result of the multiplication.
+       */
+      SimpleGrid<T> operator*(const SimpleGrid<T>& gridIn);
 
-    /**
-     * @brief Addition of grids; check extent/offset registration.
-     * @param gridIn The addend.
-     * @return SimpleGrid<T> The result of the addition.
-     */
-    SimpleGrid<T> operator+(const SimpleGrid<T>& gridIn);
+      /**
+       * @brief Addition of grids; check extent/offset registration.
+       * @param gridIn The addend.
+       * @return SimpleGrid<T> The result of the addition.
+       */
+      SimpleGrid<T> operator+(const SimpleGrid<T>& gridIn);
 
-    /**
-     * @brief Subtraction of grids; check extent/offset registration.
-     * @param gridIn The subtrahend.
-     * @return SimpleGrid<T> The result of the subtraction.
-     */
-    SimpleGrid<T> operator-(const SimpleGrid<T>& gridIn);
+      /**
+       * @brief Subtraction of grids; check extent/offset registration.
+       * @param gridIn The subtrahend.
+       * @return SimpleGrid<T> The result of the subtraction.
+       */
+      SimpleGrid<T> operator-(const SimpleGrid<T>& gridIn);
 
-    /**
-     * @brief In place grid point by point accumulation.
-     * @param gridIn The addend.
-     * @return SimpleGrid<T>& The result of the addition on this SimpleGrid.
-     */
-    inline SimpleGrid<T>& operator+=(const SimpleGrid<T>& gridIn)
-    {
-      for (int x = 0; x < d_gridExtents.x(); ++x) {
-        for (int y = 0; y < d_gridExtents.y(); ++y) {
-          for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_values(x, y, z) += gridIn.d_values(x, y, z);
+      /**
+       * @brief In place grid point by point accumulation.
+       * @param gridIn The addend.
+       * @return SimpleGrid<T>& The result of the addition on this SimpleGrid.
+       */
+      inline SimpleGrid<T>& operator+=(const SimpleGrid<T>& gridIn)
+      {
+        for (int x = 0; x < d_gridExtents.x(); ++x) {
+          for (int y = 0; y < d_gridExtents.y(); ++y) {
+            for (int z = 0; z < d_gridExtents.z(); ++z) {
+              d_values(x, y, z) += gridIn.d_values(x, y, z);
+            }
           }
         }
+        return *this;
       }
-      return *this;
-    }
 
-    /**
-     * @brief In place grid point by point subtraction.
-     * @param gridIn The subtrahend.
-     * @return SimpleGrid<T>& The result of the subtraction on this SimpleGrid.
-     */
-    inline SimpleGrid<T>& operator-=(const SimpleGrid<T>& gridIn)
-    {
-      for (int x = 0; x < d_gridExtents.x(); ++x) {
-        for (int y = 0; y < d_gridExtents.y(); ++y) {
-          for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_values(x, y, z) -= gridIn.d_values(x, y, z);
+      /**
+       * @brief In place grid point by point subtraction.
+       * @param gridIn The subtrahend.
+       * @return SimpleGrid<T>& The result of the subtraction on this SimpleGrid.
+       */
+      inline SimpleGrid<T>& operator-=(const SimpleGrid<T>& gridIn)
+      {
+        for (int x = 0; x < d_gridExtents.x(); ++x) {
+          for (int y = 0; y < d_gridExtents.y(); ++y) {
+            for (int z = 0; z < d_gridExtents.z(); ++z) {
+              d_values(x, y, z) -= gridIn.d_values(x, y, z);
+            }
           }
         }
+        return *this;
       }
-      return *this;
-    }
 
-    /**
-     * @brief In place grid point by point multiplication.
-     * @param gridIn The multiplicand.
-     * @return SimpleGrid<T>& The result of the multiplication on this SimpleGrid.
-     */
-    inline SimpleGrid<T>& operator*=(const SimpleGrid<T>& gridIn)
-    {
-      for (int x = 0; x < d_gridExtents.x(); ++x) {
-        for (int y = 0; y < d_gridExtents.y(); ++y) {
-          for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_values(x, y, z) *= gridIn.d_values(x, y, z);
+      /**
+       * @brief In place grid point by point multiplication.
+       * @param gridIn The multiplicand.
+       * @return SimpleGrid<T>& The result of the multiplication on this SimpleGrid.
+       */
+      inline SimpleGrid<T>& operator*=(const SimpleGrid<T>& gridIn)
+      {
+        for (int x = 0; x < d_gridExtents.x(); ++x) {
+          for (int y = 0; y < d_gridExtents.y(); ++y) {
+            for (int z = 0; z < d_gridExtents.z(); ++z) {
+              d_values(x, y, z) *= gridIn.d_values(x, y, z);
+            }
           }
         }
+        return *this;
       }
-      return *this;
-    }
 
-    /**
-     * @brief In place grid point by point division.
-     * @param gridIn The divisor.
-     * @return SimpleGrid<T>& The result of the division on this SimpleGrid.
-     */
-    inline SimpleGrid<T>& operator/=(const SimpleGrid<T>& gridIn)
-    {
-      for (int x = 0; x < d_gridExtents.x(); ++x) {
-        for (int y = 0; y < d_gridExtents.y(); ++y) {
-          for (int z = 0; z < d_gridExtents.z(); ++z) {
+      /**
+       * @brief In place grid point by point division.
+       * @param gridIn The divisor.
+       * @return SimpleGrid<T>& The result of the division on this SimpleGrid.
+       */
+      inline SimpleGrid<T>& operator/=(const SimpleGrid<T>& gridIn)
+      {
+        for (int x = 0; x < d_gridExtents.x(); ++x) {
+          for (int y = 0; y < d_gridExtents.y(); ++y) {
+            for (int z = 0; z < d_gridExtents.z(); ++z) {
 //            // FIXME / is not well defined for vector/vector
 //            d_values(x, y, z) /= gridIn.d_values(x, y, z);
+            }
           }
         }
+        return *this;
       }
-      return *this;
-    }
 
-    /**
-     * @brief In place value addition.
-     * @param gridIn The addend.
-     * @return SimpleGrid<T>& The result of the addition on this SimpleGrid.
-     */
-    inline SimpleGrid<T>& operator+=(const T& valueIn)
-    {
-      for (int x = 0; x < d_gridExtents.x(); ++x) {
-        for (int y = 0; y < d_gridExtents.y(); ++y) {
-          for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_values(x, y, z) += valueIn;
+      /**
+       * @brief In place value addition.
+       * @param gridIn The addend.
+       * @return SimpleGrid<T>& The result of the addition on this SimpleGrid.
+       */
+      inline SimpleGrid<T>& operator+=(const T& valueIn)
+      {
+        for (int x = 0; x < d_gridExtents.x(); ++x) {
+          for (int y = 0; y < d_gridExtents.y(); ++y) {
+            for (int z = 0; z < d_gridExtents.z(); ++z) {
+              d_values(x, y, z) += valueIn;
+            }
           }
         }
+        return *this;
       }
-      return *this;
-    }
 
-    /**
-     * @brief In place value subtraction.
-     * @param gridIn The subtrahend.
-     * @return SimpleGrid<T>& The result of the subtraction on this SimpleGrid.
-     */
-    inline SimpleGrid<T>& operator-=(const T& valueIn)
-    {
-      for (int x = 0; x < d_gridExtents.x(); ++x) {
-        for (int y = 0; y < d_gridExtents.y(); ++y) {
-          for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_values(x, y, z) -= valueIn;
+      /**
+       * @brief In place value subtraction.
+       * @param gridIn The subtrahend.
+       * @return SimpleGrid<T>& The result of the subtraction on this SimpleGrid.
+       */
+      inline SimpleGrid<T>& operator-=(const T& valueIn)
+      {
+        for (int x = 0; x < d_gridExtents.x(); ++x) {
+          for (int y = 0; y < d_gridExtents.y(); ++y) {
+            for (int z = 0; z < d_gridExtents.z(); ++z) {
+              d_values(x, y, z) -= valueIn;
+            }
           }
         }
+        return *this;
       }
-      return *this;
-    }
 
-    /**
-     * @brief In place value multiplication.
-     * @param value The value multiplier.
-     * @return SimpleGrid<T>& The result of the multiplication on this SimpleGrid with the specified value.
-     */
-    inline SimpleGrid<T>& operator*=(const double value)
-    {
-      for (int x = 0; x < d_gridExtents.x(); ++x) {
-        for (int y = 0; y < d_gridExtents.y(); ++y) {
-          for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_values(x, y, z) *= value;
+      /**
+       * @brief In place value multiplication.
+       * @param value The value multiplier.
+       * @return SimpleGrid<T>& The result of the multiplication on this SimpleGrid with the specified value.
+       */
+      inline SimpleGrid<T>& operator*=(const double value)
+      {
+        for (int x = 0; x < d_gridExtents.x(); ++x) {
+          for (int y = 0; y < d_gridExtents.y(); ++y) {
+            for (int z = 0; z < d_gridExtents.z(); ++z) {
+              d_values(x, y, z) *= value;
+            }
           }
         }
+        return *this;
       }
-      return *this;
-    }
 
-    /**
-     * @brief In place value division.
-     * @param value The value multiplier.
-     * @return SimpleGrid<T>& The result of the division on this SimpleGrid by the specified value.
-     */
-    inline SimpleGrid<T>& operator/=(const double value)
-    {
-      for (int x = 0; x < d_gridExtents.x(); ++x) {
-        for (int y = 0; y < d_gridExtents.y(); ++y) {
-          for (int z = 0; z < d_gridExtents.z(); ++z) {
-            d_values(x, y, z) /= value;
+      /**
+       * @brief In place value division.
+       * @param value The value multiplier.
+       * @return SimpleGrid<T>& The result of the division on this SimpleGrid by the specified value.
+       */
+      inline SimpleGrid<T>& operator/=(const double value)
+      {
+        for (int x = 0; x < d_gridExtents.x(); ++x) {
+          for (int y = 0; y < d_gridExtents.y(); ++y) {
+            for (int z = 0; z < d_gridExtents.z(); ++z) {
+              d_values(x, y, z) /= value;
+            }
           }
         }
+        return *this;
       }
-      return *this;
-    }
 
-    /**
-     * @brief Unitary negation. For operators we should make sure the sub-operators are defined for the data types.
-     *        What would a SimpleGrid<char> do with unitary negation?
-     * @param None
-     * @return SimpleGrid<T>& The result of the unitary negation of this SimpleGrid.
-     */
-    SimpleGrid<T>& operator-();
+      /**
+       * @brief Unitary negation. For operators we should make sure the sub-operators are defined for the data types.
+       *        What would a SimpleGrid<char> do with unitary negation?
+       * @param None
+       * @return SimpleGrid<T>& The result of the unitary negation of this SimpleGrid.
+       */
+      SimpleGrid<T>& operator-();
 
-    /**
-     * @brief Assignment operator. Gracefully handles self assignment.
-     * @param copy The assignee.
-     * @return SimpleGrid<T>& The result of the assignment.
-     */
-    inline SimpleGrid<T>& operator=(const SimpleGrid<T>& copy)
-    {
-      d_values = copy.d_values;
-      d_gridExtents = copy.d_gridExtents;
-      d_gridOffset = copy.d_gridOffset;
-      d_numGhostCells_ = copy.d_numGhostCells_;
-      return *this;
-    }
+      /**
+       * @brief Assignment operator. Gracefully handles self assignment.
+       * @param copy The assignee.
+       * @return SimpleGrid<T>& The result of the assignment.
+       */
+      inline SimpleGrid<T>& operator=(const SimpleGrid<T>& copy)
+      {
+        d_values = copy.d_values;
+        d_gridExtents = copy.d_gridExtents;
+        d_gridOffset = copy.d_gridOffset;
+        d_numGhostCells_ = copy.d_numGhostCells_;
+        return *this;
+      }
 
-    /**
-     * @brief A way to print this SimpleGrid. Avoids friending std::ostream.
-     * @param out The std::ostream to output to.
-     * @return std::ostream& A reference to the populated std::ostream.
-     */
-    std::ostream& print(std::ostream& out) const;
+      /**
+       * @brief A way to print this SimpleGrid. Avoids friending std::ostream.
+       * @param out The std::ostream to output to.
+       * @return std::ostream& A reference to the populated std::ostream.
+       */
+      std::ostream& print(std::ostream& out) const;
 
-  private:
+    private:
 
-    LinearArray3<T> d_values;     //!< Grid cell values
-    IntVector d_gridExtents;      //!< Stores the number of total grid points in this grid
-    IntVector d_gridOffset;       //!< Stores the offset pointer for the first point in this grid in reference to the global grid
-    int d_numGhostCells_;         //!< The number of ghost cells for the patch the associated points are on
+      LinearArray3<T> d_values;     //!< Grid cell values
+      IntVector d_gridExtents;      //!< Stores the number of total grid points in this grid
+      IntVector d_gridOffset;       //!< Stores the offset pointer for the first point in this grid in reference to the global grid
+      int d_numGhostCells_;         //!< The number of ghost cells for the patch the associated points are on
 
-};
+  };
 
 }  // End namespace Uintah
 

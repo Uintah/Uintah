@@ -261,7 +261,8 @@ std::vector<double> CenteredCardinalBSpline::derivativeGridAligned(const double 
 std::vector<double> CenteredCardinalBSpline::derivative(const double x) const
 {
   // Expect standardized input between -1.0 and 0.0 (inclusive)
-  assert(x >= -1.0 && x <= 0.0); //FIXME
+  assert(x >= -1.0 && x <= 0.0);
+  //FIXME
 
   std::vector<double> subSpline = evaluateInternal(x + 0.5, d_splineOrder - 1, d_basisShifts, d_prefactorMap, d_prefactorValues);
 

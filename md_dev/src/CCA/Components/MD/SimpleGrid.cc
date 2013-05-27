@@ -32,107 +32,106 @@
 
 namespace Uintah {
 
-template<typename T>
-SimpleGrid<T>::SimpleGrid()
-{
+  template<typename T>
+  SimpleGrid<T>::SimpleGrid()
+  {
 
-}
-
-template<typename T>
-SimpleGrid<T>::~SimpleGrid()
-{
-
-}
-
-template<typename T>
-SimpleGrid<T>::SimpleGrid(const IntVector& extents,
-                          const IntVector& offset,
-                          const int numGhostCells) :
-    d_gridExtents(extents), d_gridOffset(offset), d_numGhostCells_(numGhostCells)
-{
-  d_values.resize(extents.x(), extents.y(), extents.z());
-}
-
-template<typename T>
-SimpleGrid<T>::SimpleGrid(const SimpleGrid& copy)
-{
-  d_values = copy.d_values;
-  d_gridExtents = copy.d_gridExtents;
-  d_gridOffset = copy.d_gridOffset;
-  d_numGhostCells_ = copy.d_numGhostCells_;
-}
-
-template<typename T>
-bool SimpleGrid<T>::verifyRegistration(const SimpleGrid<T>& gridIn)
-{
-  if ((d_gridExtents != gridIn.d_gridExtents) || (d_gridOffset != gridIn.d_gridOffset)
-      || (d_numGhostCells_ != gridIn.d_numGhostCells_)) {
-    ostringstream ostr;
-    ostr << "MD SimpleGrids differ in extent, offset or number of ghost cells.";
-    throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
-  } else {
-    return true;
   }
-}
 
-template<typename T>
-SimpleGrid<T> SimpleGrid<T>::operator+(const SimpleGrid<T>& gridIn)
-{
-  if (this->verifyRegistration(gridIn)) {
-    SimpleGrid<T> newGrid(*this);
-    newGrid += gridIn;
-    return newGrid;
-  } else {
-    ostringstream ostr;
-    ostr << "SimpleGrid operator+ error:  Grids are not registered with one another.";
-    throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+  template<typename T>
+  SimpleGrid<T>::~SimpleGrid()
+  {
+
   }
-}
 
-template<typename T>
-SimpleGrid<T> SimpleGrid<T>::operator-(const SimpleGrid<T>& gridIn)
-{
-  if (this->verifyRegistration(gridIn)) {
-    SimpleGrid<T> newGrid(*this);
-    newGrid -= gridIn;
-    return newGrid;
-  } else {
-    ostringstream ostr;
-    ostr << "SimpleGrid operator- error:  Grids are not registered with one another.";
-    throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+  template<typename T>
+  SimpleGrid<T>::SimpleGrid(const IntVector& extents,
+                            const IntVector& offset,
+                            const int numGhostCells) :
+      d_gridExtents(extents), d_gridOffset(offset), d_numGhostCells_(numGhostCells)
+  {
+    d_values = LinearArray3<T>(extents.x(), extents.y(), extents.z());
   }
-}
 
-template<typename T>
-SimpleGrid<T> SimpleGrid<T>::operator*(const SimpleGrid<T>& gridIn)
-{
-  if (this->verifyRegistration(gridIn)) {
-    SimpleGrid<T> newGrid(*this);
-    newGrid *= gridIn;
-    return newGrid;
-  } else {
-    ostringstream ostr;
-    ostr << "SimpleGrid operator* error:  Grids are not registered with one another.";
-    throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+  template<typename T>
+  SimpleGrid<T>::SimpleGrid(const SimpleGrid& copy)
+  {
+    d_values = copy.d_values;
+    d_gridExtents = copy.d_gridExtents;
+    d_gridOffset = copy.d_gridOffset;
+    d_numGhostCells_ = copy.d_numGhostCells_;
   }
-}
 
-template<typename T>
-std::ostream& SimpleGrid<T>::print(std::ostream& out) const
-{
-  out << "Extent, [x,y,z]: " << d_gridExtents;
-  out << "Offset, [x,y,z]: " << d_gridOffset;
-  out << "GhostCells, [x,y,z]: " << d_gridExtents;
-  return out;
-}
+  template<typename T>
+  bool SimpleGrid<T>::verifyRegistration(const SimpleGrid<T>& gridIn)
+  {
+    if ((d_gridExtents != gridIn.d_gridExtents) || (d_gridOffset != gridIn.d_gridOffset)
+        || (d_numGhostCells_ != gridIn.d_numGhostCells_)) {
+      ostringstream ostr;
+      ostr << "MD SimpleGrids differ in extent, offset or number of ghost cells.";
+      throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+    } else {
+      return true;
+    }
+  }
 
-template<typename T>
-std::ostream& operator<<(std::ostream& out,
-                         const Uintah::SimpleGrid<T>& sg)
-{
-  return sg.print(out);
-}
+  template<typename T>
+  SimpleGrid<T> SimpleGrid<T>::operator+(const SimpleGrid<T>& gridIn)
+  {
+    if (this->verifyRegistration(gridIn)) {
+      SimpleGrid<T> newGrid(*this);
+      newGrid += gridIn;
+      return newGrid;
+    } else {
+      ostringstream ostr;
+      ostr << "SimpleGrid operator+ error:  Grids are not registered with one another.";
+      throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+    }
+  }
 
+  template<typename T>
+  SimpleGrid<T> SimpleGrid<T>::operator-(const SimpleGrid<T>& gridIn)
+  {
+    if (this->verifyRegistration(gridIn)) {
+      SimpleGrid<T> newGrid(*this);
+      newGrid -= gridIn;
+      return newGrid;
+    } else {
+      ostringstream ostr;
+      ostr << "SimpleGrid operator- error:  Grids are not registered with one another.";
+      throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+    }
+  }
+
+  template<typename T>
+  SimpleGrid<T> SimpleGrid<T>::operator*(const SimpleGrid<T>& gridIn)
+  {
+    if (this->verifyRegistration(gridIn)) {
+      SimpleGrid<T> newGrid(*this);
+      newGrid *= gridIn;
+      return newGrid;
+    } else {
+      ostringstream ostr;
+      ostr << "SimpleGrid operator* error:  Grids are not registered with one another.";
+      throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+    }
+  }
+
+  template<typename T>
+  std::ostream& SimpleGrid<T>::print(std::ostream& out) const
+  {
+    out << "Extent, [x,y,z]: " << d_gridExtents;
+    out << "Offset, [x,y,z]: " << d_gridOffset;
+    out << "GhostCells, [x,y,z]: " << d_gridExtents;
+    return out;
+  }
+
+  template<typename T>
+  std::ostream& operator<<(std::ostream& out,
+                           const Uintah::SimpleGrid<T>& sg)
+  {
+    return sg.print(out);
+  }
 
 //MPI_Datatype makeMPI_Matrix3()
 //{
@@ -154,11 +153,10 @@ std::ostream& operator<<(std::ostream& out,
 //  return td;
 //}
 
-
 // Explicit template instantiations:
-template class SimpleGrid<dblcomplex> ;
-template class SimpleGrid<Uintah::Matrix3> ;
-template class SimpleGrid<double> ;
-template class SimpleGrid<SCIRun::Vector> ;
+  template class SimpleGrid<dblcomplex> ;
+  template class SimpleGrid<Uintah::Matrix3> ;
+  template class SimpleGrid<double> ;
+  template class SimpleGrid<SCIRun::Vector> ;
 
 }  // end namespace Uintah
