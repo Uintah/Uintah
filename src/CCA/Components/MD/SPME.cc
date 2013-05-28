@@ -409,7 +409,22 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  fftw_execute(d_forwardTransformPlan);
+
+  std::vector<SPMEPatch*>::iterator PatchIterator;
+  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
+    SPMEPatch* spmePatch = *PatchIterator;
+    SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
+
+    IntVector extents = Q->getExtents();
+    int xdim = extents[0];
+    int ydim = extents[1];
+    int zdim = extents[2];
+
+    fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
+    d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_ESTIMATE);
+    fftw_execute(d_forwardTransformPlan);
+  }
+//  fftw_execute(d_forwardTransformPlan);
 }
 
 void SPME::transformFourierToReal(const ProcessorGroup* pg,
@@ -418,7 +433,22 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  fftw_execute(d_backwardTransformPlan);
+
+  std::vector<SPMEPatch*>::iterator PatchIterator;
+  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
+    SPMEPatch* spmePatch = *PatchIterator;
+    SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
+
+    IntVector extents = Q->getExtents();
+    int xdim = extents[0];
+    int ydim = extents[1];
+    int zdim = extents[2];
+
+    fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
+    d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_ESTIMATE);
+    fftw_execute(d_backwardTransformPlan);
+  }
+//  fftw_execute(d_backwardTransformPlan);
 }
 
 void SPME::reduceLocalQGrids()
