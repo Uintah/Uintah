@@ -296,17 +296,6 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
     const Patch* patch = spmePatch->getPatch();
     ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
 
-    //------------------------------------------------------------------
-    // Carry over what was previously calculated in non-bonded task.
-    //------------------------------------------------------------------
-    constParticleVariable<double> penergy;
-    ParticleVariable<double> penergynew;
-    old_dw->get(penergy, d_lb->pEnergyLabel, pset);
-    new_dw->allocateAndPut(penergynew, d_lb->pEnergyLabel_preReloc, pset);
-    penergynew.copyData(penergy);
-    new_dw->put(sum_vartype(0.0), d_lb->vdwEnergyLabel);
-    //------------------------------------------------------------------
-
     constParticleVariable<Point> px;
     constParticleVariable<double> pcharge;
     constParticleVariable<long64> pids;
@@ -401,13 +390,14 @@ void SPME::calculatePostTransform(const ProcessorGroup* pg,
     old_dw->get(pcharge, d_lb->pChargeLabel, pset);
 
     ParticleVariable<Vector> pforcenew;
-    new_dw->allocateAndPut(pforcenew, d_lb->pForceLabel_preReloc, pset);
+    new_dw->getModifiable(pforcenew, d_lb->pForceLabel_preReloc, pset);
 
     // Calculate electrostatic contribution to f_ij(r)
     mapForceFromGrid(spmePatch, d_gridMap, pset, pcharge, pforcenew, d_interpolatingSpline.getHalfMaxSupport());
 
     ParticleVariable<double> pchargenew;
     new_dw->allocateAndPut(pchargenew, d_lb->pChargeLabel_preReloc, pset);
+
     // carry these values over for now
     pchargenew.copyData(pcharge);
   }

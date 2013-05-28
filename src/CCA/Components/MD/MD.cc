@@ -111,13 +111,13 @@ void MD::problemSetup(const ProblemSpecP& params,
   // do file I/O to get atom coordinates and simulation cell size
   extractCoordinates();
 
-//  // for neighbor indices; one list for each atom
-//  for (unsigned int i = 0; i < d_numAtoms; i++) {
-//    d_neighborList.push_back(vector<int>(0));
-//  }
+  // for neighbor indices; one list for each atom
+  for (unsigned int i = 0; i < d_numAtoms; i++) {
+    d_neighborList.push_back(vector<int>(0));
+  }
 
-//  // create neighbor list for each atom in the system
-//  generateNeighborList();
+  // create neighbor list for each atom in the system
+  generateNeighborList();
 }
 
 void MD::scheduleInitialize(const LevelP& level,
@@ -169,7 +169,7 @@ void MD::scheduleTimeAdvance(const LevelP& level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMaterials();
 
-//  scheduleCalculateNonBondedForces(sched, patches, matls);
+  scheduleCalculateNonBondedForces(sched, patches, matls);
 
 //  scheduleInterpolateParticlesToGrid(sched, patches, matls);
 
@@ -210,8 +210,8 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
     std::cout << "-----------------------------------------------------" << std::endl;
     std::cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
     std::cout << "-----------------------------------------------------" << std::endl;
-    std::cout << "Q Total        = " << std::setprecision(16) << q << std::endl;
-    std::cout << "-----------------------------------------------------" << std::endl;
+//    std::cout << "Q Total        = " << std::setprecision(16) << q << std::endl;
+//    std::cout << "-----------------------------------------------------" << std::endl;
     std::cout << std::endl;
   }
   new_dw->put(delt_vartype(1), d_sharedState->get_delt_label(), getLevel(patches));
@@ -257,21 +257,20 @@ void MD::schedulePerformElectrostatics(SchedulerP& sched,
 
   Task* task = scinew Task("performElectrostatics", this, &MD::performElectrostatics);
 
+  // particle variables
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pForceLabel, Ghost::AroundNodes, SHRT_MAX);
-//  task->requires(Task::NewDW, d_lb->pForceLabel_preReloc, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pEnergyLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::NewDW, d_lb->pForceLabel_preReloc, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
 
-  task->computes(d_lb->pForceLabel_preReloc);
-  task->computes(d_lb->pEnergyLabel_preReloc);
+  task->modifies(d_lb->pForceLabel_preReloc);
   task->computes(d_lb->pChargeLabel_preReloc);
+
+  //---------------------------------------------------------------------------
 
   // reduction variables
   task->requires(Task::OldDW, d_lb->QLabel);
 
-  task->computes(d_lb->vdwEnergyLabel);
   task->computes(d_lb->spmeFourierEnergyLabel);
   task->computes(d_lb->spmeFourierStressLabel);
   task->computes(d_lb->QLabel);
