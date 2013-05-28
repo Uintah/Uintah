@@ -104,10 +104,20 @@ void LinearArray3<T>::resize(int d1,
   dm1 = d1;
   dm2 = d2;
   dm3 = d3;
-  if (objs) {
-    delete objs;
-  }
+//  if (objs) {
+//    delete objs;
+//  }
   allocate();
+}
+
+template<class T>
+void LinearArray3<T>::copyData(const LinearArray3<T>& copy)
+{
+  long int size = getSize();
+  ASSERTEQ(size, copy.getSize());ASSERTL3(dm1==copy.dm1 && dm2==copy.dm2 && dm3==copy.dm3);
+  for (long int idx = 0; idx < size; idx++) {
+    objs[idx] = copy.objs[idx];
+  }
 }
 
 template<class T>

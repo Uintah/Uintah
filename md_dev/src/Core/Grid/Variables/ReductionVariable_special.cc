@@ -342,7 +342,7 @@ namespace Uintah {  // <- This is necessary for IBM SP AIX xlC Compiler
 
     std::complex<double>* ptr = reinterpret_cast<dblcomplex*>(&data[index]);
     long int size = value.getSize();
-    for (int idx = 0; idx < size; ++idx) {
+    for (long idx = 0; idx < size; ++idx) {
       *ptr++ = value.get_dataptr()[idx];
     }
   }
@@ -358,7 +358,7 @@ namespace Uintah {  // <- This is necessary for IBM SP AIX xlC Compiler
 
     std::complex<double>* ptr = reinterpret_cast<dblcomplex*>(&data[index]);
     long size = value.getSize();
-    for (int idx = 0; idx < size; ++idx) {
+    for (long idx = 0; idx < size; ++idx) {
       value.get_dataptr()[idx] = *ptr++;
     }
   }

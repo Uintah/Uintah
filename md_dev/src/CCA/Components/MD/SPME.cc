@@ -76,10 +76,10 @@ SPME::~SPME()
       delete theta;
     }
 
-    SimpleGrid<Matrix3>* stressPrefactor = spmePatch->getStressPrefactor();
-    if (stressPrefactor) {
-      delete stressPrefactor;
-    }
+//    SimpleGrid<Matrix3>* stressPrefactor = spmePatch->getStressPrefactor();
+//    if (stressPrefactor) {
+//      delete stressPrefactor;
+//    }
 
     delete spmePatch;
   }
@@ -88,7 +88,7 @@ SPME::~SPME()
     delete d_Q;
   }
 
-  // FFTW cleanup
+// FFTW cleanup
   fftw_destroy_plan(d_forwardTransformPlan);
   fftw_destroy_plan(d_backwardTransformPlan);
   fftw_cleanup();
@@ -122,11 +122,12 @@ void SPME::initialize(const ProcessorGroup* pg,
   Vector patchHighIndex = (patch->getCellHighIndex()).asVector();
 
   SCIRun::IntVector patchKLow, patchKHigh;
-  for (size_t idx = 0; idx < 3; ++idx) {
-    int KComponent = d_kLimits(idx);
-    patchKLow[idx] = ceil(static_cast<double>(KComponent) * (patchLowIndex[idx] / totalCellExtent[idx]));
-    patchKHigh[idx] = floor(static_cast<double>(KComponent) * (patchHighIndex[idx] / totalCellExtent[idx]));
-  }
+  patchKLow[0] = ceil(static_cast<double>(d_kLimits(0)) * (patchLowIndex[0] / totalCellExtent[0]));
+  patchKHigh[0] = floor(static_cast<double>(d_kLimits(0)) * (patchHighIndex[0] / totalCellExtent[0]));
+  patchKLow[1] = ceil(static_cast<double>(d_kLimits(1)) * (patchLowIndex[1] / totalCellExtent[1]));
+  patchKHigh[1] = floor(static_cast<double>(d_kLimits(1)) * (patchHighIndex[1] / totalCellExtent[1]));
+  patchKLow[2] = ceil(static_cast<double>(d_kLimits(2)) * (patchLowIndex[2] / totalCellExtent[2]));
+  patchKHigh[2] = floor(static_cast<double>(d_kLimits(2)) * (patchHighIndex[2] / totalCellExtent[2]));
 
   IntVector patchKGridExtents = (patchKHigh - patchKLow);
   IntVector patchKGridOffset = patchKLow;
@@ -148,7 +149,10 @@ void SPME::initialize(const ProcessorGroup* pg,
   d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_ESTIMATE);
   d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_ESTIMATE);
 
-  new_dw->put(q_kgrid_sum(*(LinearArray3<dblcomplex>*)d_Q->getDataPtr()), d_lb->QLabel);
+  // Initially register our three reduction variables in the DW
+  new_dw->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
+  new_dw->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
+  new_dw->put(q_kgrid_sum(*(d_Q->getDataArray())), d_lb->QLabel);
 
   // Get useful information from global system descriptor to work with locally.
   d_unitCell = d_system->getUnitCell();
@@ -239,19 +243,6 @@ void SPME::setup(const ProcessorGroup* pg,
   }
 }
 
-bool SPME::checkConvergence()
-{
-  // Subroutine determines if polarizable component has converged
-  bool polarizable = getPolarizableCalculation();
-  if (!polarizable) {
-    return true;
-  } else {
-    // Do nothing at the moment, but eventually will check convergence here.
-    std::cerr << "Error: Polarizable force field not yet implemented!";
-    return false;
-  }
-}
-
 void SPME::calculate(const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* materials,
@@ -266,15 +257,13 @@ void SPME::calculate(const ProcessorGroup* pg,
     // Do calculation steps until the Real->Fourier space transform
     calculatePreTransform(pg, patches, materials, old_dw, new_dw);
 
-    // !FIXME We need to force Q reduction here
-    // Reduce, forward transform, and redistribute charge grid
+    // Reduce Q, forward transform, and redistribute charge grid
     transformRealToFourier(pg, patches, materials, old_dw, new_dw);
 
     // Do Fourier space calculations on transformed data
     calculateInFourierSpace(pg, patches, materials, old_dw, new_dw);
 
-    // !FIXME We need to force Q reduction here
-    // Reduce, reverse transform, and redistribute
+    // Reduce Q, reverse transform, and redistribute
     transformFourierToReal(pg, patches, materials, old_dw, new_dw);
 
     checkConvergence();
@@ -283,6 +272,15 @@ void SPME::calculate(const ProcessorGroup* pg,
 
   // Do force spreading and clean up calculations -- or does this go in finalize?
   SPME::calculatePostTransform(pg, patches, materials, old_dw, new_dw);
+}
+
+void SPME::finalize(const ProcessorGroup* pg,
+                    const PatchSubset* patches,
+                    const MaterialSubset* materials,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw)
+{
+  // Do cleanup here
 }
 
 void SPME::calculatePreTransform(const ProcessorGroup* pg,
@@ -299,7 +297,8 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
     ParticleSubset* pset = old_dw->getParticleSubset(materials->get(0), patch);
 
     //------------------------------------------------------------------
-    // Carry over what was calculated in non-bonded.
+    // Carry over what was previously calculated in non-bonded task.
+    //------------------------------------------------------------------
     constParticleVariable<double> penergy;
     ParticleVariable<double> penergynew;
     old_dw->get(penergy, d_lb->pEnergyLabel, pset);
@@ -322,17 +321,15 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
     // Generate the data that maps the charges in the patch onto the grid
     d_gridMap = generateChargeMap(pset, px, pids, d_interpolatingSpline);
 
-    // !FIXME Need to put Q in for reduction
-    // We have now set up the real-space Q grid.
-    // We need to store this patch's Q grid on the data warehouse (?) to pass through to the transform
-    SimpleGrid<std::complex<double> >* Q = spmePatch->getQ();
-//    LinearArray3<std::complex<double> > q;
-//    q.initialize(std::complex<double>(0.0, 0.0));
-//    new_dw->put(q_kgrid_sum(q), d_lb->QLabel);
-
-    // Calculate Q(r)
+    // Calculate Q(r) for each local patch (if more than one per proc)
     mapChargeToGrid(spmePatch, d_gridMap, pset, pcharge, d_interpolatingSpline.getHalfMaxSupport());
   }
+
+  // local reduction for Q grids belonging to SPMEPatches (if more than one patch per proc)
+  reduceLocalQGrids();
+
+  // put local Q grid in for reduction via infrastructure
+  new_dw->put(q_kgrid_sum(*(d_Q->getDataArray())), d_lb->QLabel);
 }
 
 void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
@@ -341,6 +338,9 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
+  double spmeFourierEnergy = 0.0;
+  Matrix3 spmeFourierStress(0.0);
+
   std::vector<SPMEPatch*>::iterator PatchIterator;
   for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
     SPMEPatch* spmePatch = *PatchIterator;
@@ -353,9 +353,6 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
     size_t xMax = localExtents.x();
     size_t yMax = localExtents.y();
     size_t zMax = localExtents.z();
-
-    double spmeFourierEnergy = 0.0;
-    Matrix3 spmeFourierStress(0.0);
 
     if (spme_dbg.active()) {
       cerrLock.lock();
@@ -376,12 +373,14 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
         }
       }
     }
-
-    // !FIXME Need to put Q in for reduction
-    // Ready to go back to real space now -->  Need to store modified Q as well as localEnergy/localStress (which should get accumulated)
-    new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
-    new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->spmeFourierStressLabel);
   }
+  // local reduction for Q grids belonging to SPMEPatches (if more than one patch per proc)
+  reduceLocalQGrids();
+
+  // put local Q grid in for reduction as well as localEnergy/localStress (which should get accumulated)
+  new_dw->put(q_kgrid_sum(*(d_Q->getDataArray())), d_lb->QLabel);
+  new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
+  new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->spmeFourierStressLabel);
 }
 
 void SPME::calculatePostTransform(const ProcessorGroup* pg,
@@ -420,13 +419,6 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-//  std::vector<SPMEPatch*>::iterator PatchIterator;
-//  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
-//    SPMEPatch* spmePatch = *PatchIterator;
-//    SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
-//
-//
-//  }
   fftw_execute(d_forwardTransformPlan);
 }
 
@@ -436,24 +428,38 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-//  std::vector<SPMEPatch*>::iterator PatchIterator;
-//  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
-//    SPMEPatch* spmePatch = *PatchIterator;
-//    SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
-//
-//
-//  }
   fftw_execute(d_backwardTransformPlan);
 }
 
-void SPME::finalize(const ProcessorGroup* pg,
-                    const PatchSubset* patches,
-                    const MaterialSubset* materials,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw)
+void SPME::reduceLocalQGrids()
 {
-  // Do cleanup here
-  new_dw->put(q_kgrid_sum(*(LinearArray3<dblcomplex>*)d_Q->getDataPtr()), d_lb->QLabel);
+  LinearArray3<dblcomplex>* localQ = d_Q->getDataArray();
+  // If there's only one patch per proc
+  if (d_spmePatches.size() == 1) {
+    localQ->copyData(*(d_spmePatches[0]->getQ()->getDataArray()));
+    return;
+  }
+
+  // >1 patch per proc; do the local Q reduction
+  std::vector<SPMEPatch*>::iterator PatchIterator;
+  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); ++PatchIterator) {
+    SPMEPatch* spmePatch = *PatchIterator;
+    *localQ += *(spmePatch->getQ()->getDataArray());
+  }
+  d_Q->getDataArray()->copyData(*localQ);
+}
+
+bool SPME::checkConvergence()
+{
+  // Subroutine determines if polarizable component has converged
+  bool polarizable = getPolarizableCalculation();
+  if (!polarizable) {
+    return true;
+  } else {
+    // Do nothing at the moment, but eventually will check convergence here.
+    std::cerr << "Error: Polarizable force field not yet implemented!";
+    return false;
+  }
 }
 
 std::vector<SCIRun::dblcomplex> SPME::generateBVector(const std::vector<double>& mFractional,

@@ -294,17 +294,17 @@ namespace Uintah {
       bool isNeighbor(const Point* atom1,
                       const Point* atom2);
 
-      MDLabel* d_lb;                     //!<
-      SimulationStateP d_sharedState;    //!<
-      SimpleMaterial* d_material;        //!<
-      IntegratorType d_integrator;       //!<
-      double delt;                       //!<
+      MDLabel* d_lb;                     //!< Uuintah VarLabels specific to Uintah::MD
+      SimulationStateP d_sharedState;    //!< Shared simulation state (global)
+      SimpleMaterial* d_material;        //!< For no, this is a single material
+      IntegratorType d_integrator;       //!< Integrator to use in position update of atoms
+      double delt;                       //!< Simulation delta T
 
-      vector<const VarLabel*> d_particleState;            //!<
-      vector<const VarLabel*> d_particleState_preReloc;   //!<
+      vector<const VarLabel*> d_particleState;            //!< Atom (particle) state prior to relocation
+      vector<const VarLabel*> d_particleState_preReloc;   //!< For atom (particle) relocation
 
       // fields specific to non-bonded interaction (LJ Potential)
-      string d_coordinateFile;       //!< file with coordinates of all atoms in this MD system
+      string d_coordinateFile;       //!< File with coordinates of all atoms in this MD system
       unsigned int d_numAtoms;       //!< Total number of atoms in this MD simulation
       double d_cutoffRadius;         //!< The short ranged cut off distances (in Angstroms)
       Vector d_box;                  //!< The size of simulation
@@ -312,15 +312,15 @@ namespace Uintah {
       double R6;                     //!< This is the v.d.w. attractive parameter
 
       // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
-      std::vector<Point> d_atomList;             //!<
-      std::vector<vector<int> > d_neighborList;  //!<
+      std::vector<Point> d_atomList;             //!< Individual atom neighbor list
+      std::vector<vector<int> > d_neighborList;  //!< List of all atom neighbor indices
 
-      Electrostatics* d_electrostatics;          //!<
-      MDSystem* d_system;                        //!<
+      Electrostatics* d_electrostatics;          //!< The simulation Electrostatics instance
+      MDSystem* d_system;                        //!< The global MD system
 
-      // copy constructor and operator=
-      MD(const MD&);                           //!<
-      MD& operator=(const MD&);                //!<
+      // copy constructor and assignment operator (privatized on purpose)
+      MD(const MD&);
+      MD& operator=(const MD&);
   };
 
 }
