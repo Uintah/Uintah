@@ -239,12 +239,13 @@ namespace Uintah {
 
               //convert mass frac to mol frac
               for ( int i = 1; i < N; i++ ){ 
-                // Note that the species molecular weights are actually the inverse 
+                // Note that the species molecular weights and mixture molecular weights 
+                // are actually the inverse 
                 // as set in the problemsetup function.
                 // Also note that the mixture molecular weight arriving from the table
                 // is assumed to be the inverse mixture molecular weight
                 double value = (species[i])[c] * _sp_mw[i-1] * 1.0 / (species[0])[c];
-                //              ^^species^^^^    ^^MW^^^^^^    ^^^MIX MW^^^^^^^
+                //              ^^species^^^^    ^^1/MW^^^^^  ^^^^^MIX MW^^^^^^^^^^
                 if ( value < 0 ){ 
                   if (value > -1e-5 ) value = 0;
                   else throw InvalidValue( "Error: For some reason I am getting negative mol fractions in the radiation property calculator.",__FILE__,__LINE__);
