@@ -120,7 +120,9 @@ template<class T> class LinearArray3 {
                          int d2,
                          int d3) const
     {
-      ASSERTL3(d1>=0 && d1<dm1);ASSERTL3(d2>=0 && d2<dm2);ASSERTL3(d3>=0 && d3<dm3);
+      ASSERTL3(d1>=0 && d1<dm1);
+      ASSERTL3(d2>=0 && d2<dm2);
+      ASSERTL3(d3>=0 && d3<dm3);
       int idx = (d1) + ((d2) * dm1) + ((d3) * dm1 * dm2);
       return objs[idx];
     }
@@ -185,6 +187,8 @@ template<class T> class LinearArray3 {
                 int dim2,
                 int dim3);
 
+    void copyData(const LinearArray3<T>& copy);
+
     /**
      * @brief Initialize all objects elements to T.
      * @param T The value to initialize all objects elements to.
@@ -232,6 +236,20 @@ template<class T> class LinearArray3 {
         la3.objs[idx] = objs[idx] + addend.objs[idx];
       }
       return la3;
+    }
+
+    /**
+     * @brief In place LinearArray3 element by element accumulation.
+     * @param arrayIn The addend.
+     * @return LinearArray3<T>& The result of the addition on this LinearArray3.
+     */
+    inline LinearArray3<T>& operator+=(const LinearArray3<T>& arrayIn)
+    {
+      long int size = getSize();
+      for (long int idx = 0; idx < size; idx++) {
+        objs[idx] += arrayIn.objs[idx];
+      }
+      return *this;
     }
 
     /**

@@ -370,6 +370,13 @@ namespace Uintah {
                                   DataWarehouse* new_dw);
 
       /**
+       * @brief Reduce local set of Q grids
+       * @param None
+       * @return None
+       */
+      void reduceLocalQGrids();
+
+      /**
        * @brief Checks for convergence of polarizability calculation
        * @param None
        * @return Bool - true if converged, false if not

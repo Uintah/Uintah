@@ -140,6 +140,11 @@ namespace Uintah {
         return d_values.get_dataptr();
       }
 
+      inline LinearArray3<T>* getDataArray()
+      {
+        return &d_values;
+      }
+
       /**
        * @brief Pass through indexing of Value array.
        * @param x The x component of the 3D cell index.
@@ -289,7 +294,7 @@ namespace Uintah {
 
       /**
        * @brief In place value addition.
-       * @param gridIn The addend.
+       * @param valueIn The addend.
        * @return SimpleGrid<T>& The result of the addition on this SimpleGrid.
        */
       inline SimpleGrid<T>& operator+=(const T& valueIn)

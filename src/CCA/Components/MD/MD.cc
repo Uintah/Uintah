@@ -111,13 +111,13 @@ void MD::problemSetup(const ProblemSpecP& params,
   // do file I/O to get atom coordinates and simulation cell size
   extractCoordinates();
 
-  // for neighbor indices; one list for each atom
-  for (unsigned int i = 0; i < d_numAtoms; i++) {
-    d_neighborList.push_back(vector<int>(0));
-  }
+//  // for neighbor indices; one list for each atom
+//  for (unsigned int i = 0; i < d_numAtoms; i++) {
+//    d_neighborList.push_back(vector<int>(0));
+//  }
 
-  // create neighbor list for each atom in the system
-  generateNeighborList();
+//  // create neighbor list for each atom in the system
+//  generateNeighborList();
 }
 
 void MD::scheduleInitialize(const LevelP& level,
@@ -505,8 +505,6 @@ void MD::initialize(const ProcessorGroup* pg,
     }
     // reduction variables
     new_dw->put(sum_vartype(0.0), d_lb->vdwEnergyLabel);
-    new_dw->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
-    new_dw->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
   }
 
 // initialize electrostatics object
@@ -663,7 +661,7 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
 
     }  // end materials loop
 
-    // global reduction on
+    // global reduction on vdwEnergyLabel
     new_dw->put(sum_vartype(vdwEnergy), d_lb->vdwEnergyLabel);
 
   }  // end patch loop
