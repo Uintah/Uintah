@@ -19,6 +19,18 @@
       <Constant> 0.1 </Constant>
     </BasicExpression> 
 
+    <BasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="density" state="STATE_N" />
+      <Constant> 1.0 </Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL"> 
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="growthCoef" state="STATE_N" />
+      <Constant> 1500.0 </Constant>
+    </BasicExpression> 
+
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
       <NameTag name ="Turb_agg" state="STATE_NONE" />
@@ -60,8 +72,44 @@
             <NameTag name="Turb_agg" state="STATE_NONE"/>
           </AggregationCoefficientExpression>
           <AggregationModel> HYDRODYNAMIC </AggregationModel>
+
+          <SizeDependentEfficiency>
+            <GrowthModel> BULK_DIFFUSION </GrowthModel>
+            <LengthParam> 1.5 </LengthParam>
+            <Density>
+              <NameTag name="density" state="STATE_N" />
+            </Density>
+            <EnergyDissipation>
+              <NameTag name="dissipation" state="STATE_N" />
+            </EnergyDissipation>
+            <GrowthCoefficientExpression>
+              <NameTag name="growthCoef" state="STATE_N"/>
+            </GrowthCoefficientExpression>      
+          </SizeDependentEfficiency>
+
+
         </AggregationExpression>
 
+        <AggregationExpression>
+          <AggregationCoefficientExpression>
+            <NameTag name="Turb_agg" state="STATE_NONE"/>
+          </AggregationCoefficientExpression>
+          <AggregationModel> BROWNIAN </AggregationModel>
+<!--SizeDependentEfficiency>
+            <GrowthModel> BULK_DIFFUSION </GrowthModel>
+            <LengthParam> 1.5 </LengthParam>
+            <Density>
+              <NameTag name="density" state="STATE_N" />
+            </Density>
+            <EnergyDissipation>
+              <NameTag name="dissipation" state="STATE_N" />
+            </EnergyDissipation>
+            <GrowthCoefficientExpression>
+              <NameTag name="growthCoef" state="STATE_N"/>
+            </GrowthCoefficientExpression>
+          </SizeDependentEfficiency-->
+
+        </AggregationExpression>
     </MomentTransportEquation>
   </Wasatch>
 
@@ -70,12 +118,12 @@
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>0.00001</delt_max>
-    <max_Timesteps> 100 </max_Timesteps>            
+    <max_Timesteps> 5 </max_Timesteps>            
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
   <DataArchiver>
-    <filebase>qmom-test.uda</filebase>
+    <filebase>qmom-aggregation-test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.00001"/>
