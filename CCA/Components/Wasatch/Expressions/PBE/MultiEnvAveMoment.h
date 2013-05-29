@@ -160,32 +160,9 @@ void
 MultiEnvAveMoment<FieldT>::
 evaluate()
 {
-  using SpatialOps::operator<<=;
+  using namespace SpatialOps;
   FieldT& result = this->value();
-
-  const int wdSize = 6;
-  const FieldT* sampleField = weightsAndDerivs_[0];
-  typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
-  typename FieldT::const_interior_iterator phiIter = phi_->interior_begin();
-  typename FieldT::interior_iterator resultsIter = result.interior_begin();
-
-  std::vector<typename FieldT::const_interior_iterator> weightsAndDerivsIters;
-  for (int i = 0; i<wdSize; i++) {
-    typename FieldT::const_interior_iterator thisIterator = weightsAndDerivs_[i]->interior_begin();
-    weightsAndDerivsIters.push_back(thisIterator);
-  }
-
-  while (sampleIterator!=sampleField->interior_end() ) {
-    *resultsIter = ( *weightsAndDerivsIters[0] + *weightsAndDerivsIters[4] ) * initialMoment_ + *weightsAndDerivsIters[2] * *phiIter;
-    //increment iterators
-    for (int i = 0; i< wdSize; i++) {
-      weightsAndDerivsIters[i] += 1;
-    }
-    ++phiIter;
-    ++resultsIter;
-    ++sampleIterator;
-  }
-
+  result <<= ( *weightsAndDerivs_[0] + *weightsAndDerivs_[4] ) * initialMoment_ + *weightsAndDerivs_[2] * *phi_;
 }
 
 #endif
