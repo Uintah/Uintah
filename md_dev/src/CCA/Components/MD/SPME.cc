@@ -146,13 +146,12 @@ void SPME::initialize(const ProcessorGroup* pg,
 
   fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q->getDataPtr());
 
-  d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_ESTIMATE);
-  d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_ESTIMATE);
+  d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
+  d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
 
   // Initially register our three reduction variables in the DW
   new_dw->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
   new_dw->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
-  new_dw->put(q_kgrid_sum(*(d_Q->getDataArray())), d_lb->QLabel);
 
   // Get useful information from global system descriptor to work with locally.
   d_unitCell = d_system->getUnitCell();
@@ -263,7 +262,7 @@ void SPME::calculate(const ProcessorGroup* pg,
     // Do Fourier space calculations on transformed data
     calculateInFourierSpace(pg, patches, materials, old_dw, new_dw);
 
-    // Reduce Q, reverse transform, and redistribute
+    // Reduce Q, reverse transform, and redistribute force grid
     transformFourierToReal(pg, patches, materials, old_dw, new_dw);
 
     checkConvergence();
@@ -318,7 +317,7 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
   reduceLocalQGrids();
 
   // put local Q grid in for reduction via infrastructure
-  new_dw->put(q_kgrid_sum(*(d_Q->getDataArray())), d_lb->QLabel);
+//  new_dw->put(q_kgrid_sum(*(d_Q->getDataArray())), d_lb->QLabel);
 }
 
 void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
@@ -356,9 +355,9 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
           std::complex<double> gridValue = (*Q)(kX, kY, kZ);
 
           // Calculate (Q*Q^)*(B*C)
-          (*Q)(kX, kY, kZ) *= std::conj(gridValue) * (*fTheta)(kX, kY, kZ);
-          spmeFourierEnergy += std::abs((*Q)(kX, kY, kZ));
-          spmeFourierStress += std::abs((*Q)(kX, kY, kZ)) * (*stressPrefactor)(kX, kY, kZ);
+          (*Q)(kX, kY, kZ) *= (*fTheta)(kX, kY, kZ);
+          spmeFourierEnergy += std::abs((*Q)(kX, kY, kZ) * conj(gridValue));
+          spmeFourierStress += std::abs((*Q)(kX, kY, kZ) * conj(gridValue)) * (*stressPrefactor)(kX, kY, kZ);
         }
       }
     }
@@ -367,7 +366,7 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
   reduceLocalQGrids();
 
   // put local Q grid in for reduction as well as localEnergy/localStress (which should get accumulated)
-  new_dw->put(q_kgrid_sum(*(d_Q->getDataArray())), d_lb->QLabel);
+//  new_dw->put(q_kgrid_sum(*(d_Q->getDataArray())), d_lb->QLabel);
   new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
   new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->spmeFourierStressLabel);
 }
@@ -421,10 +420,12 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
     int zdim = extents[2];
 
     fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
-    d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_ESTIMATE);
+    d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
     fftw_execute(d_forwardTransformPlan);
   }
+
 //  fftw_execute(d_forwardTransformPlan);
+
 }
 
 void SPME::transformFourierToReal(const ProcessorGroup* pg,
@@ -445,10 +446,12 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
     int zdim = extents[2];
 
     fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
-    d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_ESTIMATE);
+    d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
     fftw_execute(d_backwardTransformPlan);
   }
+
 //  fftw_execute(d_backwardTransformPlan);
+
 }
 
 void SPME::reduceLocalQGrids()
@@ -796,7 +799,6 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
     SimpleGrid<SCIRun::Vector> forceMap = gridMap[pidx].getForceGrid();
     double charge = charges[pidx];
 
-    double DimensionalCorrection = 1.0 / static_cast<double>(d_kLimits.x() * d_kLimits.y() * d_kLimits.z());
     SCIRun::Vector newForce = Vector(0, 0, 0);
     IntVector QAnchor = forceMap.getOffset();  // Location of the 0,0,0 origin for the force map grid
     IntVector supportExtent = forceMap.getExtents();  // Extents of the force map grid
@@ -833,7 +835,6 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
         }
       }
     }
-    newForce *= DimensionalCorrection;
     //49227.43325439056
     /*
      *  f1=  -2.8440279063396052        2.6027710155811845       0.99069892785288971
@@ -844,7 +845,6 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
      */
 
     if (pidx < 5) {
-      std::cerr << "DimensionalCorrection: " << DimensionalCorrection << endl;
       double twoPI = 2.0 * acos(-1.0);
       std::cerr << " Force Check (" << pidx << "): " << newForce / twoPI << endl;
       pforcenew[pidx] = newForce;

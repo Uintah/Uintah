@@ -334,50 +334,6 @@ namespace Uintah {  // <- This is necessary for IBM SP AIX xlC Compiler
 #if !defined(__digital__) || defined(__GNUC__)
   template<>
 #endif
-  void ReductionVariable<LinearArray3<dblcomplex>, Reductions::Sum<LinearArray3<dblcomplex> > >::getMPIData(vector<char>& data,
-                                                                                                            int& index)
-  {
-    int count = value.dim1() * value.dim2() * value.dim3();
-    ASSERTRANGE(index, 0, static_cast<int>( (data.size() + 1) - (count * sizeof(std::complex<double>)) ));
-
-    std::complex<double>* ptr = reinterpret_cast<dblcomplex*>(&data[index]);
-    long int size = value.getSize();
-    for (long idx = 0; idx < size; ++idx) {
-      *ptr++ = value.get_dataptr()[idx];
-    }
-  }
-
-#if !defined(__digital__) || defined(__GNUC__)
-  template<>
-#endif
-  void ReductionVariable<LinearArray3<dblcomplex>, Reductions::Sum<LinearArray3<dblcomplex> > >::putMPIData(vector<char>& data,
-                                                                                                            int& index)
-  {
-    int count = value.dim1() * value.dim2() * value.dim3();
-    ASSERTRANGE(index, 0, static_cast<int>( (data.size() + 1) - (count * sizeof(std::complex<double>)) ));
-
-    std::complex<double>* ptr = reinterpret_cast<dblcomplex*>(&data[index]);
-    long size = value.getSize();
-    for (long idx = 0; idx < size; ++idx) {
-      value.get_dataptr()[idx] = *ptr++;
-    }
-  }
-
-#if !defined(__digital__) || defined(__GNUC__)
-  template<>
-#endif
-  void ReductionVariable<LinearArray3<dblcomplex>, Reductions::Sum<LinearArray3<dblcomplex> > >::getMPIInfo(int& count,
-                                                                                                            MPI_Datatype& datatype,
-                                                                                                            MPI_Op& op)
-  {
-    datatype = MPI_C_DOUBLE_COMPLEX;
-    count = value.getSize();
-    op = MPI_SUM;
-  }
-
-#if !defined(__digital__) || defined(__GNUC__)
-  template<>
-#endif
   void ReductionVariable<Vector, Reductions::Sum<Vector> >::getMPIInfo(int& count,
                                                                        MPI_Datatype& datatype,
                                                                        MPI_Op& op)

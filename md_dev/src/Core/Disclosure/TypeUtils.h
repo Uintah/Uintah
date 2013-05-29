@@ -25,7 +25,6 @@
 #ifndef UINTAH_HOMEBREW_TypeUtils_H
 #define UINTAH_HOMEBREW_TypeUtils_H
 
-#include <Core/Containers/LinearArray3.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/Matrix3.h>
@@ -90,9 +89,6 @@ typedef std::complex<double> dblcomplex;
 // appears in ICELabel.cc.
  const TypeDescription* fun_getTypeDescription(ConnectionList*);
 
-// template <class T>
-// const TypeDescription* fun_getTypeDescription(LinearArray3<T>*);
-
 
 // these functions are for getting safe values of types
 // return back the value in the argument (so we don't have to include
@@ -104,7 +100,6 @@ typedef std::complex<double> dblcomplex;
  void fun_getZeroValue(int64_t*);
  void fun_getZeroValue(Vector*);
  void fun_getZeroValue(Matrix3*);
- void fun_getZeroValue(LinearArray3<dblcomplex>*);
 
 // these functions should never get called - they just exist for
 // template completeness

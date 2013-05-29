@@ -139,7 +139,6 @@ void MD::scheduleInitialize(const LevelP& level,
   task->computes(d_lb->vdwEnergyLabel);
   task->computes(d_lb->spmeFourierEnergyLabel);
   task->computes(d_lb->spmeFourierStressLabel);
-  task->computes(d_lb->QLabel);
 
   sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
 }
@@ -154,7 +153,6 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
   task->requires(Task::NewDW, d_lb->vdwEnergyLabel);
   task->requires(Task::NewDW, d_lb->spmeFourierEnergyLabel);
   task->requires(Task::NewDW, d_lb->spmeFourierStressLabel);
-  task->requires(Task::NewDW, d_lb->QLabel);
 
   task->computes(d_sharedState->get_delt_label(), level.get_rep());
 
@@ -169,15 +167,15 @@ void MD::scheduleTimeAdvance(const LevelP& level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMaterials();
 
-  scheduleCalculateNonBondedForces(sched, patches, matls);
+  scheduleCalculateNonBondedForces(sched, patches, matls, level);
 
 //  scheduleInterpolateParticlesToGrid(sched, patches, matls);
 
-  schedulePerformElectrostatics(sched, patches, matls);
+  schedulePerformElectrostatics(sched, patches, matls, level);
 
 //  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
-  scheduleUpdatePosition(sched, patches, matls);
+  scheduleUpdatePosition(sched, patches, matls, level);
 
   sched->scheduleParticleRelocation(level, d_lb->pXLabel_preReloc, d_sharedState->d_particleState_preReloc, d_lb->pXLabel,
                                     d_sharedState->d_particleState, d_lb->pParticleIDLabel, matls, 1);
@@ -195,12 +193,10 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
     sum_vartype vdwEnergy;
     sum_vartype spmeFourierEnergy;
     matrix_sum spmeFourierStress;
-    q_kgrid_sum q;
 
     new_dw->get(vdwEnergy, d_lb->vdwEnergyLabel);
     new_dw->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
     new_dw->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
-    new_dw->get(q, d_lb->QLabel);
 
     std::cout << std::endl;
     std::cout << "-----------------------------------------------------" << std::endl;
@@ -210,8 +206,6 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
     std::cout << "-----------------------------------------------------" << std::endl;
     std::cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
     std::cout << "-----------------------------------------------------" << std::endl;
-//    std::cout << "Q Total        = " << std::setprecision(16) << q << std::endl;
-//    std::cout << "-----------------------------------------------------" << std::endl;
     std::cout << std::endl;
   }
   new_dw->put(delt_vartype(1), d_sharedState->get_delt_label(), getLevel(patches));
@@ -219,7 +213,8 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
 
 void MD::scheduleCalculateNonBondedForces(SchedulerP& sched,
                                           const PatchSet* patches,
-                                          const MaterialSet* matls)
+                                          const MaterialSet* matls,
+                                          const LevelP& level)
 {
   printSchedule(patches, md_cout, "MD::scheduleCalculateNonBondedForces");
 
@@ -251,7 +246,8 @@ void MD::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 
 void MD::schedulePerformElectrostatics(SchedulerP& sched,
                                        const PatchSet* patches,
-                                       const MaterialSet* matls)
+                                       const MaterialSet* matls,
+                                       const LevelP& level)
 {
   printSchedule(patches, md_cout, "MD::schedulePerformElectrostatics");
 
@@ -269,11 +265,8 @@ void MD::schedulePerformElectrostatics(SchedulerP& sched,
   //---------------------------------------------------------------------------
 
   // reduction variables
-  task->requires(Task::OldDW, d_lb->QLabel);
-
   task->computes(d_lb->spmeFourierEnergyLabel);
   task->computes(d_lb->spmeFourierStressLabel);
-  task->computes(d_lb->QLabel);
 
   sched->addTask(task, patches, matls);
 }
@@ -307,7 +300,8 @@ void MD::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
 void MD::scheduleUpdatePosition(SchedulerP& sched,
                                 const PatchSet* patches,
-                                const MaterialSet* matls)
+                                const MaterialSet* matls,
+                                const LevelP& level)
 {
   Task* task = scinew Task("updatePosition", this, &MD::updatePosition);
 
@@ -488,7 +482,6 @@ void MD::initialize(const ProcessorGroup* pg,
         pcharge[i] = 1.0;
         pids[i] = patch->getID() * d_numAtoms + i;
 
-        // TODO update this with other VarLabels
         if (md_dbg.active()) {
           cerrLock.lock();
           std::cout.setf(std::ios_base::showpoint);  // print decimal and trailing zeros
@@ -502,11 +495,10 @@ void MD::initialize(const ProcessorGroup* pg,
         }
       }
     }
-    // reduction variables
+    // Initially register our three reduction variables in the DW
     new_dw->put(sum_vartype(0.0), d_lb->vdwEnergyLabel);
   }
-
-// initialize electrostatics object
+  //   initialize electrostatics object
   d_electrostatics->initialize(pg, patches, matls, old_dw, new_dw);
 }
 
@@ -660,7 +652,7 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
 
     }  // end materials loop
 
-    // global reduction on vdwEnergyLabel
+    // global reduction on vdwEnergy
     new_dw->put(sum_vartype(vdwEnergy), d_lb->vdwEnergyLabel);
 
   }  // end patch loop
