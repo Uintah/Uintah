@@ -32,11 +32,12 @@
 /**
  *  \ingroup WasatchExpressions
  *  \class MultiEnvMixingModel
- *  \author Alex Abboud
+ *  \author Alex Abboud, Tony Saad
  *  \date June 2012
  *  \tparam FieldT the type of field.
- *  \brief Implements a basic three absciassae multi environment mixing model
- *  fixes \f$w_1\f$ at mixfrac = 0 & \f$w_3\f$ at mixfrac = 1
+ *  \brief Implements a basic three absciassae multi-environment mixing model.
+ *  This expression sets \f$w_1\f$ at \f$\eta = 0\f$ and \f$w_3\f$ at \f$\eta = 1\f$
+ *  where \f$\eta\f$ is the average mixture fraction.
  *  closure of this is that \f$w_2 = <Z>\f$
  *  for precipitation, reaction only occurs at w_2
  *  this returns a vector of weights
@@ -155,64 +156,36 @@ void
 MultiEnvMixingModel<FieldT>::
 evaluate()
 {
-  using SpatialOps::operator<<=;
-
+  using namespace SpatialOps;
   typedef std::vector<FieldT*> ResultsVec;
 
   ResultsVec& results = this->get_value_vec();
 
-  const int nEnv = 3;
-  const int wSize = 2*nEnv;
+  // w1
+  *results[0] <<= cond( *mixFrac_ == 0.0, 1.0  )
+                      ( *mixFrac_ == 1.0, 0.0  )
+                      ( *scalarVar_/ *mixFrac_ );
+  
+  // dw1/dt
+  *results[1] <<= cond( *mixFrac_ == 0.0 || *mixFrac_ == 1.0, 0.0 )
+                      (- *scalarDiss_/ *mixFrac_ );
+  
+  // w2
+  *results[2] <<= cond( *mixFrac_ == 0.0 || *mixFrac_ == 1.0, 0.0 )
+                      ( -1.0 + *scalarVar_ / (*mixFrac_ * *mixFrac_ - *mixFrac_) );
 
-  const FieldT* sampleField = scalarVar_;  //dummy iterator field
-  typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
+  // dw2/dt
+  *results[3] <<= cond( *mixFrac_ == 0.0 || *mixFrac_ == 1.0, 0.0 )
+                      ( *scalarDiss_ / (*mixFrac_ - *mixFrac_ * *mixFrac_) );
+  
+  // w3
+  *results[4] <<= cond( *mixFrac_ == 0.0, 0.0 )
+                      ( *mixFrac_ == 1.0, 1.0 )
+                      ( - *scalarVar_ / ( *mixFrac_ - 1.0 ) );
 
-  typename FieldT::const_interior_iterator mixfracIter = mixFrac_->interior_begin();
-  typename FieldT::const_interior_iterator scalarvarIter = scalarVar_->interior_begin();
-  typename FieldT::const_interior_iterator scalardissIter = scalarDiss_->interior_begin();
-  //loop to set results iterators
-  std::vector<typename FieldT::interior_iterator> resultsIterators;
-  for ( int i = 0; i < wSize; i++ ) {
-    typename FieldT::interior_iterator thisResultsIterator = results[i]->interior_begin();
-    resultsIterators.push_back(thisResultsIterator);
-  }
-
-  while (sampleIterator != sampleField->interior_end() ) {
-
-    if ( *mixfracIter != 1.0 && *mixfracIter != 0.0 ) {
-      *resultsIterators[0] = *scalarvarIter / *mixfracIter;
-      *resultsIterators[1] = - *scalardissIter / *mixfracIter;
-      *resultsIterators[2] = ( *scalarvarIter - *mixfracIter + *mixfracIter * *mixfracIter ) / ( *mixfracIter * *mixfracIter - *mixfracIter );
-      *resultsIterators[3] = *scalardissIter / ( *mixfracIter - *mixfracIter * *mixfracIter );
-      *resultsIterators[4] = - *scalarvarIter / ( *mixfracIter - 1.0 );
-      *resultsIterators[5] = - *scalardissIter / ( 1.0 - *mixfracIter );
-
-    } else if ( *mixfracIter == 1.0 ) {
-      *resultsIterators[0] = 0.0;
-      *resultsIterators[1] = 0.0;
-      *resultsIterators[2] = 0.0;
-      *resultsIterators[3] = 0.0;
-      *resultsIterators[4] = 1.0;
-      *resultsIterators[5] = 0.0;
-
-    } else if ( *mixfracIter == 0.0 ) {
-      *resultsIterators[0] = 1.0;
-      *resultsIterators[1] = 0.0;
-      *resultsIterators[2] = 0.0;
-      *resultsIterators[3] = 0.0;
-      *resultsIterators[4] = 0.0;
-      *resultsIterators[5] = 0.0;
-    }
-
-    //increment iterators
-    ++sampleIterator;
-    ++mixfracIter;
-    ++scalarvarIter;
-    ++scalardissIter;
-    for ( int i = 0; i < wSize; i++ ) {
-      resultsIterators[i] += 1;
-    }
-  }
+  // dw3/dt
+  *results[5] <<= cond( *mixFrac_ == 0.0 || *mixFrac_ == 1.0, 0.0 )
+                      ( - *scalarDiss_ / (1.0 - *mixFrac_) );
 }
 
 #endif

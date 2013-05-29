@@ -32,7 +32,7 @@
 /**
  *  \ingroup WasatchExpressions
  *  \class MultiEnvAveMoment
- *  \author Alex Abboud
+ *  \author Alex Abboud, Tony Saad
  *  \date June 2012
  *  \brief Calculates the averaged moment at each grid point
  *  \f$ \left<\phi_\alpha\right> = \sum_i^3 w_i \phi_{\alpha,i} \f$
