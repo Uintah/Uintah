@@ -40,7 +40,6 @@ namespace Uintah {
 
   typedef std::complex<double> dblcomplex;
   typedef ReductionVariable<Matrix3, Reductions::Sum<Matrix3> > matrix_sum;
-  typedef ReductionVariable<LinearArray3<dblcomplex>, Reductions::Sum<LinearArray3<dblcomplex> > > q_kgrid_sum;
 
   /**
    *  @class MDLabel
@@ -96,7 +95,6 @@ namespace Uintah {
       // Reduction Variables - Electrostatics
       const VarLabel* spmeFourierEnergyLabel;
       const VarLabel* spmeFourierStressLabel;
-      const VarLabel* QLabel;
 
   };
 

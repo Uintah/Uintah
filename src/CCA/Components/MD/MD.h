@@ -137,7 +137,8 @@ namespace Uintah {
        */
       void scheduleCalculateNonBondedForces(SchedulerP& sched,
                                             const PatchSet* patches,
-                                            const MaterialSet* matls);
+                                            const MaterialSet* matls,
+                                            const LevelP& level);
 
       /**
        * @brief
@@ -155,7 +156,8 @@ namespace Uintah {
        */
       void schedulePerformElectrostatics(SchedulerP& sched,
                                          const PatchSet* patched,
-                                         const MaterialSet* matls);
+                                         const MaterialSet* matls,
+                                         const LevelP& level);
 
       /**
        * @brief
@@ -173,7 +175,8 @@ namespace Uintah {
        */
       void scheduleUpdatePosition(SchedulerP& sched,
                                   const PatchSet* patches,
-                                  const MaterialSet* matls);
+                                  const MaterialSet* matls,
+                                  const LevelP& level);
 
     private:
 
@@ -296,7 +299,7 @@ namespace Uintah {
 
       MDLabel* d_lb;                     //!< Uuintah VarLabels specific to Uintah::MD
       SimulationStateP d_sharedState;    //!< Shared simulation state (global)
-      SimpleMaterial* d_material;        //!< For no, this is a single material
+      SimpleMaterial* d_material;        //!< For now, this is a single material
       IntegratorType d_integrator;       //!< Integrator to use in position update of atoms
       double delt;                       //!< Simulation delta T
 
