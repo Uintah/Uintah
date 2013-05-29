@@ -32,7 +32,7 @@
 /**
  *  \ingroup WasatchExpressions
  *  \class MultiEnvSource
- *  \author Alex Abboud
+ *  \authors Alex Abboud, Tony Saad
  *  \date June 2012
  *  \brief Calculates teh source term for each moment equation that is due to the subgrid scale environments
  *  \f$ S_{mix} = -\frac{dw_1/dt}{w2} (\phi_1 - \phi_2 ) - \frac{dw_3/dt}{w_2} ( \phi_3 - \phi_2 )  \f$
@@ -159,36 +159,10 @@ void
 MultiEnvSource<FieldT>::
 evaluate()
 {
+  using namespace SpatialOps;
   FieldT& result = this->value();
-
-  const int wdSize = 6;
-  const FieldT* sampleField = weightsAndDerivs_[0];
-  typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
-  typename FieldT::const_interior_iterator phiIter = phi_->interior_begin();
-  typename FieldT::interior_iterator resultsIter = result.interior_begin();
-
-  std::vector<typename FieldT::const_interior_iterator> weightsAndDerivsIters;
-  for (int i = 0; i<wdSize; i++) {
-    typename FieldT::const_interior_iterator thisIterator = weightsAndDerivs_[i]->interior_begin();
-    weightsAndDerivsIters.push_back(thisIterator);
-  }
-
-  while (sampleIterator!=sampleField->interior_end() ) {
-    if (*weightsAndDerivsIters[2] != 0.0) {
-      *resultsIter = - *weightsAndDerivsIters[1] / *weightsAndDerivsIters[2] * ( initialMoment_ - *phiIter ) - *weightsAndDerivsIters[5] / *weightsAndDerivsIters[2] * ( initialMoment_ - *phiIter );
-    } else {
-      *resultsIter = 0.0;
-    }
-    
-    //increment iterators
-    for (int i = 0; i< wdSize; i++) {
-      weightsAndDerivsIters[i] += 1;
-    }
-    ++phiIter;
-    ++resultsIter;
-    ++sampleIterator;
-  }
-
+  result <<= cond( *weightsAndDerivs_[0] != 0.0 , - (*weightsAndDerivs_[1] + *weightsAndDerivs_[5]) / *weightsAndDerivs_[2] * (initialMoment_ - *phi_) )
+                 ( 0.0 );  
 }
 
 #endif
