@@ -27,10 +27,9 @@
 
 #include <expression/Expression.h>
 
-
 /**
  *  \class AggregationEfficiency
- *  \author Alex Abboud
+ *  \authors Alex Abboud, Tony Saad
  *  \date March 2013
  *
  *  \brief Implementation of the aggregation effciency term in liquid-particulate system
@@ -49,21 +48,21 @@ class AggregationEfficiency
   const Expr::Tag dissipationTag_;        //energy dissipation tag
   const Expr::Tag densityTag_;            //fluid density tag
 
-  const double lengthParam_;              //parameter for scaling the efficiency model and matching units 
+  const double l_;              //parameter for scaling the efficiency model and matching units
   const std::string growthModel_;         //string with type of growth rate model to use 
   
   typedef std::vector<const FieldT*> FieldVec;
   FieldVec abscissae_;
-  const FieldT* growthCoef_;
-  const FieldT* dissipation_;
-  const FieldT* density_;
+  const FieldT* g0_;
+  const FieldT* eps_;
+  const FieldT* rho_;
   
   AggregationEfficiency(const Expr::TagList& abscissaeTagList,
-                        const Expr::Tag& growthCoefTag_,
-                        const Expr::Tag& dissipationTag_,
-                        const Expr::Tag& densityTag_,
-                        const double lengthParam_,
-                        const std::string growthModel_);
+                        const Expr::Tag& growthCoefTag,
+                        const Expr::Tag& dissipationTag,
+                        const Expr::Tag& densityTag,
+                        const double lengthParam,
+                        const std::string growthModel);
   
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -81,13 +80,13 @@ public:
     growthcoeft_(growthCoefTag),
     dissipationt_(dissipationTag),
     densityt_(densityTag),
-    lengthparam_(lengthParam),
+    l_(lengthParam),
     growthmodel_(growthModel)
     {}
     ~Builder(){}
     Expr::ExpressionBase* build() const
     {
-      return new AggregationEfficiency<FieldT>(abscissaetaglist_, growthcoeft_, dissipationt_, densityt_,  lengthparam_, growthmodel_ );
+      return new AggregationEfficiency<FieldT>(abscissaetaglist_, growthcoeft_, dissipationt_, densityt_,  l_, growthmodel_ );
     }
     
   private:
@@ -95,7 +94,7 @@ public:
     const Expr::Tag growthcoeft_;
     const Expr::Tag dissipationt_;
     const Expr::Tag densityt_;
-    const double lengthparam_;
+    const double l_;
     const std::string growthmodel_;
   };
   
@@ -131,7 +130,7 @@ abscissaeTagList_(abscissaeTagList),
 growthCoefTag_(growthCoefTag),
 dissipationTag_(dissipationTag),
 densityTag_(densityTag),
-lengthParam_(lengthParam),
+l_(lengthParam),
 growthModel_(growthModel)
 {}
 
@@ -167,9 +166,9 @@ bind_fields( const Expr::FieldManagerList& fml )
   for (Expr::TagList::const_iterator iabscissa=abscissaeTagList_.begin(); iabscissa!=abscissaeTagList_.end(); iabscissa++) {
     abscissae_.push_back(&volfm.field_ref(*iabscissa));
   }
-  growthCoef_ = &volfm.field_ref( growthCoefTag_) ;
-  dissipation_ = &volfm.field_ref( dissipationTag_ );
-  density_ = &volfm.field_ref( densityTag_ );
+  g0_ = &volfm.field_ref( growthCoefTag_) ;
+  eps_ = &volfm.field_ref( dissipationTag_ );
+  rho_ = &volfm.field_ref( densityTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -189,121 +188,51 @@ evaluate()
 {
   using namespace SpatialOps;
   typedef std::vector<FieldT*> ResultsVec;
-  ResultsVec& result = this->get_value_vec();
+  ResultsVec& results = this->get_value_vec();
   
-  int nEnv = abscissae_.size();
-  int nEff = nEnv*nEnv;
-  
-  std::vector<typename FieldT::interior_iterator> resultsIter;
-  for ( int i =0; i<nEff; ++i) {
-    typename FieldT::interior_iterator thisResultsIterator = result[i]->interior_begin();
-    resultsIter.push_back(thisResultsIterator);
-  }
-  
-  const FieldT* sampleField = abscissae_[0];
-  typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
-  
-  std::vector<typename FieldT::const_interior_iterator> abscissaeIterators;
-  for (int i=0; i<nEnv; ++i) {
-    typename FieldT::const_interior_iterator thisIterator = abscissae_[i]->interior_begin();
-    abscissaeIterators.push_back(thisIterator);
-  }
+  SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( *results[0] );
 
-  typename FieldT::const_interior_iterator growthCoefIter = growthCoef_->interior_begin();
-  typename FieldT::const_interior_iterator densityIter = density_->interior_begin();
-  typename FieldT::const_interior_iterator dissipationIter = dissipation_->interior_begin();
-  
-  double m1;
-  int index;
+  int nEnv = abscissae_.size();
+
+  int idx = 0;
+
+#define ri *abscissae_[i]
+#define rj *abscissae_[j]
+
   if (growthModel_ == "BULK_DIFFUSION") {
-    while ( sampleIterator!=sampleField->interior_end() ) {
-      index = 0;
-      for (int i=0; i<nEnv; i++) {
-        for (int j =0 ; j<nEnv; j++) {
-          if (*densityIter > 0.0 && *dissipationIter > 0.0 ) {
-            if (*abscissaeIterators[i] > *abscissaeIterators[j] ) {
-              m1 = lengthParam_ * *growthCoefIter / (*abscissaeIterators[i] * *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                                                     * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
-            } else {
-              m1 = lengthParam_ * *growthCoefIter / (*abscissaeIterators[j] * *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                                                     * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
-            }
-          } else {
-            m1 = 0.0;
-          }
-          *resultsIter[index] = m1/(1.0+m1);
-          index++;
-        }
-      }
-      ++sampleIterator;
-      ++growthCoefIter;
-      ++dissipationIter;
-      ++densityIter;
-      for (int i=0; i<nEnv; i++ ) {
-        abscissaeIterators[i] += 1;
-      }
-      for (int i=0; i<nEff; i++) {
-        resultsIter[i] += 1;
-      }
-    }  
     
-  } else if (growthModel_ == "MONOSURFACE") {
-    while ( sampleIterator!=sampleField->interior_end() ) {
-      index = 0;
-      for (int i=0; i<nEnv; i++) {
-        for (int j =0 ; j<nEnv; j++) {
-          if (*densityIter > 0.0 && *dissipationIter > 0.0 ) {
-            if (*abscissaeIterators[i] > *abscissaeIterators[j] ) {
-              m1 = lengthParam_ * *growthCoefIter / (*abscissaeIterators[i] * *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                                                     * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
-            } else {
-              m1 = lengthParam_ * *growthCoefIter / (*abscissaeIterators[j] * *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                                                     * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
-            }
-          } else {
-            m1 = 0.0;
-          }
-          *resultsIter[index] = m1/(1.0+m1);
-          index++;
-        }
-      }
-      ++sampleIterator;
-      ++growthCoefIter;
-      ++dissipationIter;
-      ++densityIter;
-      for (int i=0; i<nEnv; i++ ) {
-        abscissaeIterators[i] += 1;
-      }
-      for (int i=0; i<nEff; i++) {
-        resultsIter[i] += 1;
-      }
-    } 
-    
-  } else if (growthModel_ == "CONSTANT" || growthModel_ == "KINETIC") {
-    index = 0;
-    while ( sampleIterator!=sampleField->interior_end() ) {
-      for (int i=0; i<nEnv; i++) {
-        for (int j =0 ; j<nEnv; j++) {
-          if (*densityIter > 0.0 && *dissipationIter > 0.0 ) {
-            m1 = lengthParam_ * *growthCoefIter  / ( *densityIter * (*abscissaeIterators[i] + *abscissaeIterators[j])  * (*abscissaeIterators[i] + *abscissaeIterators[j]) * *dissipationIter);
-          } else {
-            m1 = 0.0;
-          }
-          *resultsIter[index] = m1/(1.0+m1);
-          index++;
-        }
-      }
-      ++sampleIterator;
-      ++growthCoefIter;
-      ++dissipationIter;
-      ++densityIter;
-      for (int i=0; i<nEnv; i++ ) {
-        abscissaeIterators[i] += 1;
-      }
-      for (int i=0; i<nEff; i++) {
-        resultsIter[i] += 1;
+    for (int i=0; i<nEnv; i++) {
+      for (int j =0 ; j<nEnv; j++) {
+        *tmp <<= cond( *rho_ > 0.0 && *eps_ > 0.0,
+                       cond ( ri > rj, l_ * *g0_ / (ri * *rho_ * (ri + rj) * (ri + rj) * *eps_) )
+                            ( l_ * *g0_ / (rj * *rho_ * (ri + rj) * (ri + rj) * *eps_) ) )
+                     ( 0.0 );
+        *results[idx++] <<= *tmp/(1.0 + *tmp);
       }
     }
+    
+  } else if (growthModel_ == "MONOSURFACE") {
+    
+    for (int i=0; i<nEnv; i++) {
+      for (int j =0 ; j<nEnv; j++) {
+        *tmp <<= cond( *rho_ > 0.0 && *eps_ > 0.0,
+                       cond ( ri > rj, l_ * *g0_ / (ri * *rho_ * (ri + rj) * (ri + rj) * *eps_) )
+                            ( l_ * *g0_ / (rj * *rho_ * (ri + rj) * (ri + rj) * *eps_) ) )
+                     ( 0.0 );
+        *results[idx++] <<= *tmp/(1.0 + *tmp);
+      }
+    }         
+    
+  } else if (growthModel_ == "CONSTANT" || growthModel_ == "KINETIC") {
+    
+    for (int i=0; i<nEnv; i++) {
+      for (int j =0 ; j<nEnv; j++) {
+        *tmp <<= cond( *rho_ > 0.0 && *eps_ > 0.0, l_ * *g0_  / ( *rho_ * (ri + rj)  * (ri + rj) * *eps_) )
+                     ( 0.0 );
+        *results[idx++] <<= *tmp/(1.0 + *tmp);
+      }
+    }
+    
   }
 }
 
