@@ -34,7 +34,7 @@
 
 /**
  *  \class Aggregation
- *  \author Alex Abboud
+ *  \authors Alex Abboud, Tony Saad
  *  \date June 2012
  *
  *  \brief Implementation of the aggregation term in particulate system

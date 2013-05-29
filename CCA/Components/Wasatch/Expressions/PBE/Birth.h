@@ -32,7 +32,7 @@
 /**
  *  \ingroup WasatchExpressions
  *  \class Birth
- *  \author Alex Abboud
+ *  \authors Alex Abboud, Tony Saad
  *  \date January 2012
  *
  *  \tparam FieldT the type of field.
