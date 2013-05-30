@@ -59,9 +59,9 @@ PSELIBS :=                        \
 	Core/ProblemSpec          \
 	Core/Util                 
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)        \
-        $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)           \
-        $(TABPROPS_LIBRARY) $(HDF5_LIBRARY)                \
+LIBS := $(Z_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)   \
+        $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                   \
+        $(TABPROPS_LIBRARY) $(HDF5_LIBRARY)                        \
         $(BOOST_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) 
 
 INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE) \
