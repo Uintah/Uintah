@@ -195,7 +195,8 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
       //currently nothing to do here. 
     } else if (d_initFunction == "geometry_fill") {
 
-      db_initialValue->require("constant", d_constant_init); // going to full with this constant 
+      db_initialValue->require("constant_inside", d_constant_in_init);              //fill inside geometry
+      db_initialValue->getWithDefault( "constant_outside",d_constant_out_init,0.0); //fill outside geometry 
 
       ProblemSpecP the_geometry = db_initialValue->findBlock("geom_object"); 
       if (the_geometry) {

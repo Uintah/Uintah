@@ -244,6 +244,8 @@ protected:
 
   // constant initialization function:
   double d_constant_init;           ///< constant value for initialization
+  double d_constant_in_init;        ///< constant value inside geometry for initialization
+  double d_constant_out_init;       ///< constant value outside geometry for initialization
 
   // Vector of geometry pieces for initialization 
   std::vector<GeometryPieceP> d_initGeom; 
@@ -522,12 +524,12 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
           Point P = patch->cellPosition(*iter); 
 
           if ( g_piece->inside(P) )
-            phi[c] = d_constant_init; 
+            phi[c] = d_constant_in_init;  
           else 
-            phi[c] = 0.0;
+            phi[c] = d_constant_out_init;
 
         } else {
-          phi[c] = 0.0;
+          phi[c] = d_constant_out_init;
         }
       }
 

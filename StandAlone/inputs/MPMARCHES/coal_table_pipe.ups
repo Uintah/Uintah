@@ -259,7 +259,7 @@
             <geom_object>
               <cylinder label="inner cylinder"/>
             </geom_object>
-            <constant>1.0</constant>
+            <constant_inside>1.0</constant_inside>
           </initialization>
           <Clipping>
             <low>0.0</low>
@@ -276,7 +276,7 @@
             <geom_object>
               <cylinder label="inner cylinder"/>
             </geom_object>
-            <constant>0.5</constant>
+            <constant_inside>1.0</constant_inside>
           </initialization>
           <Clipping>
             <low>0.0</low>
