@@ -51,6 +51,7 @@ CUDA_ENABLED_SRCS = \
      ScalarRHS            \
      SolnVarEst           \
      Strain               \
+     WeakConvectiveTerm   \
      VelEst               \
      Vorticity                  
 
@@ -138,6 +139,9 @@ ifeq ($(HAVE_CUDA),yes)
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/Strain.cu : $(SRCTOP_ABS)/$(SRCDIR)/Strain.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/WeakConvectiveTerm.cu : $(SRCTOP_ABS)/$(SRCDIR)/WeakConvectiveTerm.cc
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/VelEst.cu : $(SRCTOP_ABS)/$(SRCDIR)/VelEst.cc
