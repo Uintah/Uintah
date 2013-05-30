@@ -661,6 +661,9 @@
             <constant                   spec="OPTIONAL DOUBLE"/>
             <!-- constant within a geometry piece (geometry_fill) -->
             <geom_object                spec="OPTIONAL"/>
+            <constant_inside            spec="REQUIRED DOUBLE" need_applies_to="type geometry_fill"/> <!-- fills this value inside the geometry --> 
+            <constant_outside           spec="OPTIONAL DOUBLE" need_applies_to="type geometry_fill"/> <!-- fills this value outside the geometry. default = 0.0 --> 
+
             <!-- step function initialization --> 
             <step_direction             spec="OPTIONAL STRING 'x,y,z'"/> <!-- direction in which the step occurs -->
             <step_value                 spec="OPTIONAL DOUBLE"/>         <!-- step from 0 to (value) - VALUE IS UNSCALED!!! -->

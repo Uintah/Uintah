@@ -78,7 +78,7 @@
                 <radius>.2</radius>
               </sphere>
             </geom_object>
-            <constant>1.0</constant>
+            <constant_inside>1.0</constant_inside>
           </initialization>
           <Clipping>
             <low>0.0</low>
