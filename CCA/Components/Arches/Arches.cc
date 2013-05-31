@@ -1773,6 +1773,15 @@ Arches::scheduleTimeAdvance( const LevelP& level,
       d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
     }
 
+    EqnFactory& eqnFactory = EqnFactory::self();
+    EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
+    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
+      EqnBase* eqn = ieqn->second;
+      eqn->sched_checkBCs( level, sched );
+    }
+
+    d_nlSolver->checkMomBCs( sched, patches, matls ); 
+
   }
   
 #ifdef WASATCH_IN_ARCHES
