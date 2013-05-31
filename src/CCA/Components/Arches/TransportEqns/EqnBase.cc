@@ -209,7 +209,7 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
               if ( *bound_ptr == (check_iter->first + i_scalar_bc_storage->second.relative_ijk) )
                 found_it = true; 
             }
-            if ( !found_it ){ 
+            if ( !found_it && patch->containsCell(check_iter->first + i_scalar_bc_storage->second.relative_ijk) ){ 
               cout << "Scalar BC: " << d_eqnName << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
             } 
           } 
