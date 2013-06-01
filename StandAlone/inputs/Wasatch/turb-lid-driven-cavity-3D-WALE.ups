@@ -90,7 +90,8 @@
         <Use3DLaplacian>    true</Use3DLaplacian>
 
         <Parameters>
-            <!-- Hypre options -->
+ 	 	 	 	 	 	 <setupFrequency>0</setupFrequency>
+ 	 	 	 	 	 	 <skip>1</skip>
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
             <tolerance>      1e-13  </tolerance>

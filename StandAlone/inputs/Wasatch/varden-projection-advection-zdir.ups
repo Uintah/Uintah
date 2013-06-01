@@ -118,6 +118,7 @@
         <Use3DLaplacian>   false</Use3DLaplacian>
 
         <Parameters>
+ 	 	 	 	 	 	 <setupFrequency>0</setupFrequency>
 
             <!-- Hypre options -->
             <solver>         cg      </solver>
