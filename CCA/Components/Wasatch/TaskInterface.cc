@@ -274,6 +274,9 @@ namespace Wasatch{
 
         // see if this field is required by the given tree
         if( !tree.has_field(fieldTag) ){
+#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+          proc0cout << "  - not required by this tree" << std::endl;
+#         endif
           continue;
         }
 
@@ -304,8 +307,10 @@ namespace Wasatch{
         if( tree.computes_field( fieldTag ) ){
 
           // if the field uses dynamic allocation, then the uintah task should not be aware of this field
-          // jcs the const_cast is a hack because of the lack of const on the is_persistent method...
           if( ! tree.is_persistent(fieldTag) ){
+#           ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+            proc0cout << " - field is not persistent -> hiding from Uintah." << std::endl;
+#           endif
             continue;
           }
 
