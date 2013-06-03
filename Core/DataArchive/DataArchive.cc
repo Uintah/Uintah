@@ -814,9 +814,9 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
 //          << "However, it is possible that this may cause problems down the road...\n";
       //***** THIS ASSUMES A SINGLE GHOST CELL ***** BE CAREFUL ********
       // check if we have extracells specified. This affects Wasatch only and should have no impact on other components.
-      const bool hasExtraCells = (grid->getPatchByID(0,0)->getExtraCells() != SCIRun::IntVector(0,0,0));
+      //const bool hasExtraCells = (grid->getPatchByID(0,0)->getExtraCells() != SCIRun::IntVector(0,0,0));
       // if extracells are specified, then create varlabels that are consistent with Wasatch varlabels.
-      vl = VarLabel::create( names[i], typeDescriptions[i], hasExtraCells? IntVector(0,0,0) : IntVector(1,1,1) );
+      vl = VarLabel::create( names[i], typeDescriptions[i], IntVector(0,0,0) );
     }
     varMap[names[i]] = vl;
   }
