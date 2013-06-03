@@ -18,6 +18,9 @@ HeatLoss::HeatLoss( std::string prop_name, SimulationStateP& shared_state ) : Pr
 
   _boundary_condition = scinew BoundaryCondition_new( shared_state->getArchesMaterial(0)->getDWIndex() ); 
 
+  _low_hl  = -1; 
+  _high_hl =  1;
+
 }
 
 //---------------------------------------------------------------------------
@@ -55,8 +58,6 @@ HeatLoss::problemSetup( const ProblemSpecP& inputdb )
   db->getWithDefault( "adiabatic_enthalpy_label" , _adiab_h_label_name , "adiabaticenthalpy" );
   db->getWithDefault( "sensible_enthalpy_label"  , _sen_h_label_name   , "sensibleenthalpy" );
 
-  _low_hl  = -1; 
-  _high_hl =  1;
   if ( db->findBlock( "hl_bounds" ) ) { 
     db->findBlock( "hl_bounds" )->getAttribute("low"  , _low_hl );
     db->findBlock( "hl_bounds" )->getAttribute("high" , _high_hl);
@@ -66,6 +67,8 @@ HeatLoss::problemSetup( const ProblemSpecP& inputdb )
   if ( db->findBlock( "noisy_hl_warning" ) ){ 
     _noisy_heat_loss = true;
   } 
+
+  _prop_type = "heat_loss";
 
   commonProblemSetup( inputdb ); 
 }
@@ -145,7 +148,6 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
-
     CellIterator iter = patch->getCellIterator(); 
 
 		bool oob_up = false; 
@@ -186,11 +188,11 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
       double hl = ( numerator ) / ( h_sen[c] + small ); 
 
 			if ( hl < _low_hl ){ 
-				hl     = -1;
+				hl     = _low_hl;
 				oob_dn = true;
 			} 
 			if ( hl > _high_hl ){ 
-				hl     = 1;
+				hl     = _high_hl;
 				oob_up = true;
 			} 
 

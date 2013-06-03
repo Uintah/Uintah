@@ -59,6 +59,12 @@ public:
                    DataWarehouse        * old_dw, 
                    DataWarehouse        * new_dw );
 
+  /** @brief get the bounds on heat loss from another source (table) **/ 
+  void set_hl_bounds( vector<double> bounds ){ 
+    _low_hl  = bounds[0];
+    _high_hl = bounds[1]; 
+  }; 
+
   class Builder : public PropertyModelBase::Builder { 
 
   public: 

@@ -47,6 +47,7 @@
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/PressureSource.h>
 #include <CCA/Components/Wasatch/Expressions/VelEst.h>
+#include <CCA/Components/Wasatch/Expressions/WeakConvectiveTerm.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
@@ -636,11 +637,15 @@ namespace Wasatch{
     if (!isConstDensity) {
       // calculating velocity at the next time step    
       Expr::Tag thisVelStarTag = Expr::Tag( thisVelTag_.name() + tagNames.star, Expr::STATE_NONE);
+      Expr::Tag convTermWeak   = Expr::Tag( thisVelTag_.name() + "_weak_convective_term", Expr::STATE_NONE);
       if( !factory.have_entry( thisVelStarTag ) ){
         OldVariable& oldPressure = OldVariable::self();
         oldPressure.add_variable<SVolField>( ADVANCE_SOLUTION, pressure_tag() );
         const Expr::Tag oldPressureTag = Expr::Tag (pressure_tag().name() + "_old", Expr::STATE_NONE);
-        factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, velTags_, tauTags, densTag, viscTag, oldPressureTag, tagNames.timestep ));
+        convTermWeakID_ = factory.register_expression( new typename WeakConvectiveTerm<FieldT>::Builder( convTermWeak, thisVelTag_, velTags_));
+//        factory.cleave_from_children( convTermWeakID_ );
+        factory.cleave_from_parents ( convTermWeakID_ );
+        factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, convTermWeak, tauTags, densTag, viscTag, oldPressureTag, tagNames.timestep ));
       }
     } 
     
