@@ -139,10 +139,9 @@ void SPME::initialize(const ProcessorGroup* pg,
   d_Q = scinew SimpleGrid<dblcomplex>(patchKGridExtents, patchKGridOffset, 2 * splineHalfMaxSupport);
   d_Q->initialize(dblcomplex(0.0, 0.0));
 
-  IntVector extents = d_Q->getExtents();
-  int xdim = extents[0];
-  int ydim = extents[1];
-  int zdim = extents[2];
+  int xdim = d_kLimits(0);
+  int ydim = d_kLimits(1);
+  int zdim = d_kLimits(2);
 
   fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q->getDataPtr());
 
@@ -152,6 +151,7 @@ void SPME::initialize(const ProcessorGroup* pg,
   // Initially register our three reduction variables in the DW
   new_dw->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
   new_dw->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
+//  new_dw->put(q_kgrid_sum(*(d_Q->getDataArray())), d_lb->QLabel);
 
   // Get useful information from global system descriptor to work with locally.
   d_unitCell = d_system->getUnitCell();
