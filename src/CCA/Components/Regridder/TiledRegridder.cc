@@ -85,9 +85,18 @@ void TiledRegridder::ComputeTiles(vector<IntVector> &tiles, const LevelP level, 
     //compute possible tile index's
     IntVector tileLow =computeTileIndex(patchLow, d_numCells[newLevelIndex],tile_size);
     IntVector tileHigh=computeTileIndex(patchHigh,d_numCells[newLevelIndex],tile_size);
+    tileHigh += IntVector(1,1,1);   // **** We must use inclusive loops when looping over the tiles ***
+    
+    // Bulletproofing:
+#if SCI_ASSERTION_LEVEL > 0    
+    CCVariable<int> beenSearched;
+    dw->allocateTemporary( beenSearched, patch);
+    beenSearched.initialize(-9);
+#endif   
+       
 
-    for (CellIterator ti(tileLow,tileHigh); !ti.done(); ti++)
-    {
+    for (CellIterator ti(tileLow,tileHigh); !ti.done(); ti++){
+    
       //compute tile extents
       IntVector cellLow =computeCellLowIndex( *ti,d_numCells[newLevelIndex],tile_size);
       IntVector cellHigh=computeCellHighIndex(*ti,d_numCells[newLevelIndex],tile_size);
@@ -96,9 +105,9 @@ void TiledRegridder::ComputeTiles(vector<IntVector> &tiles, const LevelP level, 
       IntVector searchLow =Max(cellLow, patchLow)/cellRefinementRatio;
       IntVector searchHigh=Min(cellHigh,patchHigh)/cellRefinementRatio;
 
-
 #if 0
-      if(patch->containsCell(target) ){
+    //  if(patch->containsCell(target) ){
+      if(patch->getID() == 222082){
           cout << "   Patch_ID  " << patch->getID() << endl;
           cout << "   coarsePatch : "<< patch->getCellLowIndex() << " patchHigh: " << patch->getCellHighIndex() << endl;
           cout << "   finePatch   : " << patchLow << " finePatchHigh: " << patchHigh << endl;
@@ -107,18 +116,44 @@ void TiledRegridder::ComputeTiles(vector<IntVector> &tiles, const LevelP level, 
       } 
 #endif
 
-
+      
       //search the tile for a refinement flag
       for(CellIterator ci(searchLow,searchHigh); !ci.done(); ci++){
-               
-        if(flags[*ci])
-        {
-          //cout << "Flag found on level " << newLevelIndex-1 << " at: " << *ci << " adding tile: " << *ti << endl;
+
+#if SCI_ASSERTION_LEVEL == 0               
+        if(flags[*ci]){
           tiles.push_back(*ti);
           break;
         }
+#else                               // bulletproofing:  set the beenSearched flag
+        if(flags[*ci]){
+          tiles.push_back(*ti);
+        }
+        beenSearched[*ci] = 1;
+#endif
       }
     }  // tile loop
+    
+#if SCI_ASSERTION_LEVEL > 0 
+    //__________________________________
+    //  BULLET PROOFING If all the cells on the coarse level
+    // haven't been searched then throw an exception
+    int count = 0;
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+      IntVector c = *iter;
+      if(beenSearched[c] == -9){
+        count +=1;
+      }
+    } 
+    if(count != 0){
+      std::ostringstream msg;
+      msg << " ERROR:  TiledRegridder:  Did not search this patch "
+          << *patch << " entirely for refinement flags.  Number of cells not searched: " << count << endl;
+
+      throw InternalError(msg.str(),__FILE__,__LINE__);
+    }
+#endif    
+    
   }  // patch loop
 }
 double rtimes[20]={0};
