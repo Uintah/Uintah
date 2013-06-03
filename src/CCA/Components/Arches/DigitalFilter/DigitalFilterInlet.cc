@@ -108,7 +108,7 @@ void DigitalFilterInlet::problemSetup( const ProblemSpecP& params )
   int nPts;
   nPts = getInt(gzFp);
   proc0cout << "npts: " << nPts << endl;
-  // please do NOT comment this line even if it throws an unused variable warning. This is needed
+  // please do NOT comment the line that follows even if it throws an unused variable warning. This is needed
   // to properly parse the digitalFilter input and not skip/assign wrong lines
   double spacing = getDouble(gzFp);
   
