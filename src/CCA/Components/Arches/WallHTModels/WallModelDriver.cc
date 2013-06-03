@@ -185,8 +185,6 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 
     int timestep = _shared_state->getCurrentTopLevelTimeStep(); 
 
-    const Level* level = getLevel(patches);
-    
     const Patch* patch = patches->get(p);
     HTVariables vars;
 
