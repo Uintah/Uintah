@@ -145,6 +145,13 @@ public:
     int index; 
 
   }; 
+
+  /** @brief returns the heat loss bounds from the table **/
+  inline std::vector<double> get_hl_bounds(){ 
+    std::vector<double> bounds;
+    bounds.push_back(d_hl_lower_bound); 
+    bounds.push_back(d_hl_upper_bound); 
+    return bounds; };
 	
 
 	/*********interp derived classes*****************************************/

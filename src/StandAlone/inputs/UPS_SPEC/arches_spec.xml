@@ -125,7 +125,10 @@
           <hl_bounds                    spec="OPTIONAL NO_DATA" 
                                         attribute1="low REQUIRED DOUBLE"
                                         attribute2="high REQUIRED DOUBLE"
-                                        need_applies_to="type heat_loss"/>  <!-- bounds on heat loss.  default = [-1,1] --> 
+                                        need_applies_to="type heat_loss"/>  <!-- bounds on heat loss.  default = [-1,1]. NOTE: when using ClassicTable, the bounds are 
+                                                                                 automatically set from the table itself so there is no need to use this option unless
+                                                                                 you are interested in overriding the table bounds. Note that the table doesn't do well 
+                                                                                 when extrapolating outside the limits of any IV. --> 
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"
                                         need_applies_to="type heat_loss"/>  <!-- warn when heat loss is exceeded --> 
           <constant_heat_loss           spec="OPTIONAL NO_DATA"

@@ -10,6 +10,7 @@ PropertyModelBase::PropertyModelBase( std::string prop_name, SimulationStateP& s
 {
   _init_type = "constant"; //Can be overwritten in derived class
   _const_init = 0.0;
+  _prop_type = "not_set"; 
 }
 
 PropertyModelBase::~PropertyModelBase()
