@@ -540,7 +540,7 @@ void impAMRICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     }
     if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
       if(pg->myrank() == 0)
-        cout << "\nWARNING: outer interation is diverging now "
+        cout << "\nWARNING: outer iteration is diverging now "
              << "restarting the timestep"
              << " Max_RHS " << max_RHS 
              << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;

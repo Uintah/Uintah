@@ -1160,7 +1160,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       smallest_max_RHS_sofar = max_RHS;
     }
     if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
-      proc0cout << "\nWARNING: outer interation is diverging now "
+      proc0cout << "\nWARNING: outer iteration is diverging now "
                 << "restarting the timestep"
                 << " Max_RHS " << max_RHS 
                 << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;
