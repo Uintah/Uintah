@@ -32,7 +32,7 @@
 /**
  *  \ingroup WasatchExpressions
  *  \class Birth
- *  \author Alex Abboud
+ *  \authors Alex Abboud, Tony Saad
  *  \date January 2012
  *
  *  \tparam FieldT the type of field.
@@ -72,6 +72,8 @@ class Birth
          const std::string birthModel,
          const double constRStar,
          const double stdDev);
+  
+  double integrate_birth_kernel( const double rStar );
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -156,6 +158,31 @@ Birth<FieldT>::
 //--------------------------------------------------------------------
 
 template< typename FieldT >
+inline double
+Birth<FieldT>::integrate_birth_kernel( const double rStar ) {
+  // trapezoidal integration
+  const int npts = 10;
+  double x[npts];
+  const double dx = (6.0*stdDev_)/npts;
+  
+  x[0] = rStar - 3.0*stdDev_;
+  for(int i =1; i<npts; i++)
+    x[i] = x[i-1] + dx;
+  
+  double intVal = 0.0;
+  for(int i =0; i < npts-1; i++) {
+    const double xa = x[i]   - rStar;
+    const double xb = x[i+1] - rStar;
+    //.399 ~ 1/sqrt(2pi)
+    intVal += dx/2.0/0.399*(   pow(x[i]  ,momentOrder_) * exp(-stdDev_/2.0 * xa*xa)
+                            + pow(x[i+1],momentOrder_) * exp(-stdDev_/2.0 * xb*xb) );
+  }
+  return intVal;
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
 void
 Birth<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
@@ -209,24 +236,9 @@ evaluate()
         typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
         typename FieldT::const_interior_iterator birthCoefIter = birthCoef_->interior_begin();
         typename FieldT::interior_iterator resultsIter = result.interior_begin();
-        double IntVal;
-        double dx;
-        int npts = 10;
         while (rStarIter!=rStar_->interior_end() ) {
-          std::vector <double> x;
-          x = std::vector<double>(npts);
-          dx = (6*stdDev_)/npts;
-          x[0] = *rStarIter - 3*stdDev_;
-          for(int i =1; i<npts; i++) {
-            x[i] = x[i-1] + dx;
-          }
-          IntVal = 0.0;
-          for(int i =0; i < npts-1; i++) { //trap integration, use external package in future?
-            //.399 ~ 1/sqrt(2pi)
-            IntVal = IntVal + dx/2/.399*( pow(x[i],momentOrder_)* exp(-stdDev_/2 * (x[i] - *rStarIter) * (x[i] - *rStarIter)) +
-                                         pow(x[i+1],momentOrder_) * exp(-stdDev_/2 * (x[i+1] - *rStarIter) * (x[i+1] - *rStarIter)) );
-          }
-          *resultsIter = constCoef_ * *birthCoefIter * IntVal;
+          const double intVal = integrate_birth_kernel(*rStarIter);
+          *resultsIter = constCoef_ * *birthCoefIter * intVal;
           ++resultsIter;
           ++rStarIter;
           ++birthCoefIter;
@@ -240,26 +252,12 @@ evaluate()
         result <<= constCoef_ * *birthCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
                                                 pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
       } else { //if (birthModel_ == "NORMAL" {
-        std::vector <double> x;
-        double dx;
-        int npts = 10;
-        x = std::vector<double>(npts);
-        dx = (6*stdDev_)/npts;
-        x[0] = constRStar_ - 3*stdDev_;
-        for(int i =1; i < npts; i++) {
-          x[i] = x[i-1] + dx;
-        }
-        double IntVal = 0.0;
-        for(int i =0; i < npts-1; i++) { //trap integration, use external package in future?
-          //.399 ~ 1/sqrt(2pi)
-          IntVal = IntVal + dx/2/.399*( pow(x[i],momentOrder_)* exp(-stdDev_/2 * (x[i] - constRStar_) * (x[i] - constRStar_) ) +
-                                        pow(x[i+1],momentOrder_) * exp(-stdDev_/2 * (x[i+1] - constRStar_) * (x[i+1] - constRStar_) ) );
-        }
-        result <<= constCoef_ * *birthCoef_ * IntVal;
+        const double intVal = integrate_birth_kernel(constRStar_);        
+        result <<= constCoef_ * *birthCoef_ * intVal;
       }
     }
 
-  } else { //const coeff
+  } else { //const birth coefficient
     if ( rStarTag_ != Expr::Tag () ) {
       if (birthModel_ == "POINT" ) {
         result <<= constCoef_ * pow(*rStar_, momentOrder_);
@@ -269,24 +267,9 @@ evaluate()
       } else { //if (birthModel_ == "NORMAL" {
         typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
         typename FieldT::interior_iterator resultsIter = result.interior_begin();
-        double IntVal;
-        double dx;
-        int npts = 10;
         while (rStarIter!=rStar_->interior_end() ) {
-          std::vector <double> x;
-          x = std::vector<double>(npts);
-          dx = (6*stdDev_)/npts;
-          x[0] = *rStarIter - 3*stdDev_;
-          for(int i =1; i<npts; i++) {
-            x[i] = x[i-1] + dx;
-          }
-          IntVal = 0.0;
-          for(int i =0; i < npts-1; i++) { //trap integration, use external package in future?
-            //.399 ~ 1/sqrt(2pi)
-            IntVal = IntVal + dx/2/.399*( pow(x[i],momentOrder_)* exp(-stdDev_/2 * (x[i] - *rStarIter) * (x[i] - *rStarIter)) +
-                                         pow(x[i+1],momentOrder_) * exp(-stdDev_/2 * (x[i+1] - *rStarIter) * (x[i+1] - *rStarIter)) );
-          }
-          *resultsIter = constCoef_ * IntVal;
+          const double intVal = integrate_birth_kernel(*rStarIter);          
+          *resultsIter = constCoef_ * intVal;
           ++resultsIter;
           ++rStarIter;
         }
@@ -299,22 +282,8 @@ evaluate()
         result <<= constCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
                                   pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
       } else { //if (birthModel_ == "NORMAL" {
-        std::vector <double> x;
-        double dx;
-        int npts = 10;
-        x = std::vector<double>(npts);
-        dx = (6*stdDev_)/npts;
-        x[0] = constRStar_ - 3*stdDev_;
-        for(int i =1; i<npts; i++) {
-          x[i] = x[i-1] + dx;
-        }
-        double IntVal = 0.0;
-        for(int i =0; i < npts-1; i++) { //trap integration use external package in future?
-          //.399 ~ 1/sqrt(2pi)
-          IntVal = IntVal + dx/2/.399*( pow(x[i],momentOrder_)* exp(-stdDev_/2 * (x[i] - constRStar_) * (x[i] - constRStar_)) +
-                                        pow(x[i+1],momentOrder_) * exp(-stdDev_/2 * (x[i+1] - constRStar_) * (x[i+1] - constRStar_)) );
-        }
-        result <<= constCoef_ * IntVal;
+        const double intVal = integrate_birth_kernel(constRStar_);
+        result <<= constCoef_ * intVal;
       }
     }
   }

@@ -74,6 +74,7 @@
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
+#  include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 
 #include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
 
@@ -568,6 +569,28 @@ Arches::problemSetup(const ProblemSpecP& params,
                               d_calcEnthalpy, d_calcVariance, d_myworld);
 
   d_props->problemSetup(db);
+
+  //need to set bounds on heat loss as the values in the table itself
+  PropertyModelFactory& propFactory = PropertyModelFactory::self();
+  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+      iprop != all_prop_models.end(); iprop++){
+
+    PropertyModelBase* prop_model = iprop->second;
+    if ( prop_model->getPropType() == "heat_loss" ){ 
+      MixingRxnModel* mixing_table = d_props->getMixRxnModel();
+      if (d_props->getMixingModelType() == "ClassicTable" ) {
+
+        ClassicTableInterface* classic_table = dynamic_cast<ClassicTableInterface*>(mixing_table); 
+        std::vector<double> hl_bounds;
+        hl_bounds = classic_table->get_hl_bounds(); 
+
+        HeatLoss* hl_prop_model = dynamic_cast<HeatLoss*>(prop_model); 
+        hl_prop_model->set_hl_bounds(hl_bounds); 
+
+      }
+    } 
+  }
 
 #ifdef WASATCH_IN_ARCHES
   //create expressions to export dependent table vals into wasatch
@@ -1772,6 +1795,15 @@ Arches::scheduleTimeAdvance( const LevelP& level,
       d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
       d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
     }
+
+    EqnFactory& eqnFactory = EqnFactory::self();
+    EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
+    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
+      EqnBase* eqn = ieqn->second;
+      eqn->sched_checkBCs( level, sched );
+    }
+
+    d_nlSolver->checkMomBCs( sched, patches, matls ); 
 
   }
   

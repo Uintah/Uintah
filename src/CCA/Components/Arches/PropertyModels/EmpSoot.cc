@@ -88,6 +88,21 @@ void EmpSoot::sched_computeProp( const LevelP& level, SchedulerP& sched, int tim
   std::string taskname = "EmpSoot::computeProp"; 
   Task* tsk = scinew Task( taskname, this, &EmpSoot::computeProp, time_substep ); 
   Ghost::GhostType  gn  = Ghost::None;
+
+  _den_label    = VarLabel::find( _den_label_name );
+  _T_label      = VarLabel::find( _T_label_name );
+  _absorp_label = VarLabel::find( _absorp_label_name );
+  _f_label      = VarLabel::find( _f_label_name ); 
+
+  if ( _absorp_label == 0 ){ 
+    throw InvalidValue("Error: Cannot find absorp label in the emperical soot function with name: "+_absorp_label_name,__FILE__,__LINE__);
+  } else if ( _T_label == 0 ){ 
+    throw InvalidValue("Error: Cannot find bsorp label in the emperical soot function with name: "+_absorp_label_name,__FILE__,__LINE__);
+  } else if ( _den_label == 0 ){ 
+    throw InvalidValue("Error: Cannot find absorp label in the emperical soot function with name: "+_absorp_label_name,__FILE__,__LINE__);
+  } else if ( _f_label == 0 ){ 
+    throw InvalidValue("Error: Cannot find absorp label in the emperical soot function with name: "+_absorp_label_name,__FILE__,__LINE__);
+  }
   
   if ( !(_has_been_computed) ) {
 
@@ -259,6 +274,16 @@ void EmpSoot::sched_initialize( const LevelP& level, SchedulerP& sched )
   _T_label      = VarLabel::find( _T_label_name );
   _absorp_label = VarLabel::find( _absorp_label_name );
   _f_label      = VarLabel::find( _f_label_name ); 
+
+  if ( _absorp_label == 0 ){ 
+    throw InvalidValue("Error: Cannot find absorp label in the emperical soot function with name: "+_absorp_label_name,__FILE__,__LINE__);
+  } else if ( _T_label == 0 ){ 
+    throw InvalidValue("Error: Cannot find bsorp label in the emperical soot function with name: "+_absorp_label_name,__FILE__,__LINE__);
+  } else if ( _den_label == 0 ){ 
+    throw InvalidValue("Error: Cannot find absorp label in the emperical soot function with name: "+_absorp_label_name,__FILE__,__LINE__);
+  } else if ( _f_label == 0 ){ 
+    throw InvalidValue("Error: Cannot find absorp label in the emperical soot function with name: "+_absorp_label_name,__FILE__,__LINE__);
+  }
 
   Task* tsk = scinew Task(taskname, this, &EmpSoot::initialize);
   tsk->computes(_prop_label); 

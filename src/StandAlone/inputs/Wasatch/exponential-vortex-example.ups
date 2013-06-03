@@ -122,12 +122,13 @@
         </ReferencePressure -->
         <Use3DLaplacian>    false</Use3DLaplacian>
         <Parameters>
+ 	 	 	 	 	 	 <setupFrequency>0</setupFrequency>
+ 	 	 	 	 	 	 <skip>1</skip>
 
             <!-- CGSolver options -->
               <norm>     LInfinity  </norm>
               <criteria> Absolute   </criteria>
 
-            <!-- Hypre options -->
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
             <tolerance>      1.e-13  </tolerance>

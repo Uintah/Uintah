@@ -84,7 +84,7 @@ double PolynomialCv::getSpecificHeat(double T)
   }
 
   // do the final divide
-  return sum/x;
+  return x/sum;
 }
 
 double PolynomialCv::getGamma(double T)

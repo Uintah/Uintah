@@ -52,6 +52,10 @@ public:
   inline const VarLabel* getPropLabel(){
     return _prop_label; };
 
+  /** @brief Returns the property type as set in the derived class */
+  inline const std::string getPropType(){
+    return _prop_type; }; 
+
   /** @brief Returns a vector of extra labels stored for this specific property */ 
   inline const vector<const VarLabel*> getExtraLocalLabels(){
     return _extra_local_labels; }; 
@@ -82,6 +86,7 @@ protected:
   std::string _prop_name;                             ///< User assigned property name
   std::vector<const VarLabel*> _extra_local_labels;   ///< Vector of extra local labels
   std::string _init_type;                             ///< Initialization type
+  std::string _prop_type;                             ///< The actual type of property (heat_loss, soot, etc...)
   
   const VarLabel* _prop_label;                        ///< Property varlabel
 

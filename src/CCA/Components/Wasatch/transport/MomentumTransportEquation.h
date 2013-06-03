@@ -138,7 +138,7 @@ namespace Wasatch{
     
     const bool isTurbulent_;
     const Expr::Tag thisVelTag_, densityTag_;
-    Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_;
+    Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_, convTermWeakID_;
     std::string thisMomName_;
     Expr::TagList velTags_;  ///< TagList for the velocity expressions
     Expr::TagList momTags_; ///< TagList for the momentum expressions

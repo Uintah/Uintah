@@ -27,9 +27,14 @@
 
 #include <expression/Expression.h>
 
+#define ri *abscissae_[i]
+#define rj *abscissae_[j]
+#define wi *weights_[i]
+#define wj *weights_[j]
+
 /**
  *  \class Aggregation
- *  \author Alex Abboud
+ *  \authors Alex Abboud, Tony Saad
  *  \date June 2012
  *
  *  \brief Implementation of the aggregation term in particulate system
@@ -214,192 +219,41 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   result <<= 0.0;
-  
-  typename FieldT::interior_iterator resultsIter = result.interior_begin();
-  int nEnv = weights_.size();
 
-  const FieldT* sampleField = weights_[0];
-  typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
+  SpatFldPtr<FieldT> tmp = SpatialFieldStore::get<FieldT>( result );
+  //*tmp <<= 0.0;
+
+  int nEnv = weights_.size();
   
-  std::vector<typename FieldT::const_interior_iterator> weightIterators;
-  std::vector<typename FieldT::const_interior_iterator> abscissaeIterators;
-  for (int i=0; i<nEnv; ++i) {
-    typename FieldT::const_interior_iterator thisIterator = weights_[i]->interior_begin();
-    weightIterators.push_back(thisIterator);
-    
-    typename FieldT::const_interior_iterator otherIterator = abscissae_[i]->interior_begin();
-    abscissaeIterators.push_back(otherIterator);
+  if (aggModel_ == "CONSTANT") {  // \beta_{ij} = 1
+    for (int i=0; i<nEnv; i++) {
+      for (int j =0 ; j<nEnv; j++) {
+        *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 ) - pow( ri , momentOrder_ ) * wi*wj;
+        if (useEffTags_) *tmp <<= *efficiency_[i*nEnv  + j] * *tmp;
+        result <<= result + *tmp;
+      }
+    }
+  } else if (aggModel_ == "BROWNIAN") {  // \beta_{ij} = (r_i + r_j)^2 / r_i / r_j
+    for (int i=0; i<nEnv; i++) {
+      for (int j =0 ; j<nEnv; j++) {
+        *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj) / ri / rj - pow( ri , momentOrder_ ) * wi*wj * (ri+rj) * (ri+rj) /ri / rj;
+        if (useEffTags_) *tmp <<= *efficiency_[i*nEnv  + j] * *tmp;
+        result <<= result + *tmp;
+      }
+    }
+  } else if (aggModel_ == "HYDRODYNAMIC" ) { // \beta_{ij} = (r_i + r_j)^3
+    for (int i=0; i<nEnv; i++) {
+      for (int j =0 ; j<nEnv; j++) {
+        *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj)* (ri+rj) - pow( ri , momentOrder_ ) * wi*wj* (ri+rj) * (ri+rj)* (ri+rj);
+        if (useEffTags_) *tmp <<= *efficiency_[i*nEnv  + j] * *tmp;
+        result <<= result + *tmp;
+      }
+    }
   }
-  double Sum;
-  if (useEffTags_) {
-    int nEff = efficiency_.size();
-    int index;
-    std::vector<typename FieldT::const_interior_iterator> efficiencyIterators;
-    for (int i = 0; i<nEff; ++i) {
-      typename FieldT::const_interior_iterator thisIterator = efficiency_[i]->interior_begin();  
-      efficiencyIterators.push_back(thisIterator);
-    }
-    
-    if (aggModel_ == "CONSTANT") {  // \beta_{ij} = 1
-      while ( sampleIterator!=sampleField->interior_end() ) {
-        Sum = 0.0;
-        index = 0;
-        for (int i=0; i<nEnv; i++) {
-          for (int j =0 ; j<nEnv; j++) {
-            Sum = Sum + *efficiencyIterators[index]* 0.5 * *weightIterators[i] * *weightIterators[j] * 
-                        pow( *abscissaeIterators[i] * *abscissaeIterators[i] * *abscissaeIterators[i] +
-                        *abscissaeIterators[j] * *abscissaeIterators[j] * *abscissaeIterators[j], momentOrder_/3.0); //birth term
-            Sum = Sum - *efficiencyIterators[index]* pow( *abscissaeIterators[i] , momentOrder_ ) * *weightIterators[i] * *weightIterators[j]; //death term
-            index++;
-          }
-        }
-        *resultsIter = effCoef_ * Sum;
-        
-        ++sampleIterator;
-        ++resultsIter;
-        for (int i=0; i<nEnv; i++ ) {
-          weightIterators[i] += 1;
-          abscissaeIterators[i] += 1;
-        }
-        for (int i = 0; i<nEff; i++) {
-          efficiencyIterators[i] +=1; 
-        }
-      }  
-    } else if (aggModel_ == "BROWNIAN") {  // \beta_{ij} = (r_i + r_j)^2 / r_i / r_j
-      while ( sampleIterator!=sampleField->interior_end() ) {
-        Sum = 0.0;
-        index = 0;
-        for (int i=0; i<nEnv; i++) {
-          for (int j =0 ; j<nEnv; j++) {
-            Sum = Sum + *efficiencyIterators[index]* 0.5 * *weightIterators[i] * *weightIterators[j] * 
-                        pow( *abscissaeIterators[i] * *abscissaeIterators[i] * *abscissaeIterators[i] +
-                        *abscissaeIterators[j] * *abscissaeIterators[j] * *abscissaeIterators[j], momentOrder_/3.0) *
-                        (*abscissaeIterators[i] + *abscissaeIterators[j]) * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                        / *abscissaeIterators[i] / *abscissaeIterators[j]; //birth term
-            Sum = Sum - *efficiencyIterators[index]* pow( *abscissaeIterators[i] , momentOrder_ ) * *weightIterators[i] * *weightIterators[j] *
-                        (*abscissaeIterators[i] + *abscissaeIterators[j]) * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                        / *abscissaeIterators[i] / *abscissaeIterators[j]; //death term
-            index++;
-          }
-        }
-        *resultsIter = effCoef_ * Sum;
-        
-        ++sampleIterator;
-        ++resultsIter;
-        for (int i=0; i<nEnv; i++ ) {
-          weightIterators[i] += 1;
-          abscissaeIterators[i] += 1;
-        }
-        for (int i = 0; i<nEff; i++) {
-          efficiencyIterators[i] +=1; 
-        }
-      }
-    } else if (aggModel_ == "HYDRODYNAMIC" ) { // \beta_{ij} = (r_i + r_j)^3
-      while ( sampleIterator!=sampleField->interior_end() ) {
-        Sum = 0.0;
-        index = 0;
-        for (int i=0; i<nEnv; i++) {
-          for (int j =0 ; j<nEnv; j++) {
-            Sum = Sum + *efficiencyIterators[index]* 0.5 * *weightIterators[i] * *weightIterators[j] * 
-                        pow( *abscissaeIterators[i] * *abscissaeIterators[i] * *abscissaeIterators[i] +
-                        *abscissaeIterators[j] * *abscissaeIterators[j] * *abscissaeIterators[j], momentOrder_/3.0) *
-                        (*abscissaeIterators[i] + *abscissaeIterators[j]) * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                        * ( *abscissaeIterators[i] + *abscissaeIterators[j]); //birth term
-            Sum = Sum - *efficiencyIterators[index]* pow( *abscissaeIterators[i] , momentOrder_ ) * *weightIterators[i] * *weightIterators[j] *
-                        (*abscissaeIterators[i] + *abscissaeIterators[j]) * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                        * ( *abscissaeIterators[i] + *abscissaeIterators[j]); //death term
-            index++;
-          }
-        }
-        *resultsIter = effCoef_ * Sum;
-        
-        ++sampleIterator;
-        ++resultsIter;
-        for (int i=0; i<nEnv; ++i ) {
-          weightIterators[i] += 1;
-          abscissaeIterators[i] += 1;
-        }
-        for (int i = 0; i<nEff; i++) {
-          efficiencyIterators[i] +=1; 
-        }
-      }
-    }
-    
-  } else {
-    if (aggModel_ == "CONSTANT") {  // \beta_{ij} = 1
-      while ( sampleIterator!=sampleField->interior_end() ) {
-        Sum = 0.0;
-      
-        for (int i=0; i<nEnv; i++) {
-          for (int j =0 ; j<nEnv; j++) {
-            Sum = Sum + 0.5 * *weightIterators[i] * *weightIterators[j] * 
-                              pow( *abscissaeIterators[i] * *abscissaeIterators[i] * *abscissaeIterators[i] +
-                              *abscissaeIterators[j] * *abscissaeIterators[j] * *abscissaeIterators[j], momentOrder_/3.0); //birth term
-            Sum = Sum - pow( *abscissaeIterators[i] , momentOrder_ ) * *weightIterators[i] * *weightIterators[j]; //death term
-          }
-        }
-        *resultsIter = effCoef_ * Sum;
-      
-        ++sampleIterator;
-        ++resultsIter;
-        for (int i=0; i<nEnv; i++ ) {
-          weightIterators[i] += 1;
-          abscissaeIterators[i] += 1;
-        }
-      }  
-    } else if (aggModel_ == "BROWNIAN") {  // \beta_{ij} = (r_i + r_j)^2 / r_i / r_j
-      while ( sampleIterator!=sampleField->interior_end() ) {
-        Sum = 0.0;
-       
-        for (int i=0; i<nEnv; i++) {
-          for (int j =0 ; j<nEnv; j++) {
-            Sum = Sum + 0.5 * *weightIterators[i] * *weightIterators[j] * 
-                  pow( *abscissaeIterators[i] * *abscissaeIterators[i] * *abscissaeIterators[i] +
-                  *abscissaeIterators[j] * *abscissaeIterators[j] * *abscissaeIterators[j], momentOrder_/3.0) *
-                  (*abscissaeIterators[i] + *abscissaeIterators[j]) * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                   / *abscissaeIterators[i] / *abscissaeIterators[j]; //birth term
-            Sum = Sum - pow( *abscissaeIterators[i] , momentOrder_ ) * *weightIterators[i] * *weightIterators[j] *
-                  (*abscissaeIterators[i] + *abscissaeIterators[j]) * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                  / *abscissaeIterators[i] / *abscissaeIterators[j]; //death term
-          }
-        }
-        *resultsIter = effCoef_ * Sum;
-      
-        ++sampleIterator;
-        ++resultsIter;
-        for (int i=0; i<nEnv; i++ ) {
-          weightIterators[i] += 1;
-          abscissaeIterators[i] += 1;
-        }
-      }
-    } else if (aggModel_ == "HYDRODYNAMIC" ) { // \beta_{ij} = (r_i + r_j)^3
-      while ( sampleIterator!=sampleField->interior_end() ) {
-        Sum = 0.0;
-        for (int i=0; i<nEnv; i++) {
-          for (int j =0 ; j<nEnv; j++) {
-            Sum = Sum + 0.5 * *weightIterators[i] * *weightIterators[j] * 
-                  pow( *abscissaeIterators[i] * *abscissaeIterators[i] * *abscissaeIterators[i] +
-                  *abscissaeIterators[j] * *abscissaeIterators[j] * *abscissaeIterators[j], momentOrder_/3.0) *
-                  (*abscissaeIterators[i] + *abscissaeIterators[j]) * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                  * ( *abscissaeIterators[i] + *abscissaeIterators[j]); //birth term
-            Sum = Sum - pow( *abscissaeIterators[i] , momentOrder_ ) * *weightIterators[i] * *weightIterators[j] *
-                  (*abscissaeIterators[i] + *abscissaeIterators[j]) * (*abscissaeIterators[i] + *abscissaeIterators[j]) 
-                  * ( *abscissaeIterators[i] + *abscissaeIterators[j]); //death term
-          }
-        }
-        *resultsIter = effCoef_ * Sum;
-      
-        ++sampleIterator;
-        ++resultsIter;
-        for (int i=0; i<nEnv; ++i ) {
-          weightIterators[i] += 1;
-          abscissaeIterators[i] += 1;
-        }
-      }
-    }
-  }  
-  
-  if ( aggCoefTag_ != Expr::Tag () ) 
+
+  result <<= effCoef_ * result;
+
+  if ( aggCoefTag_ != Expr::Tag () )
     result <<= result * *aggCoef_;  
 }
 

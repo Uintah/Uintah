@@ -6358,7 +6358,6 @@ BoundaryCondition::wallStress( const Patch* p,
                                constCCVariable<double>& eps )
 { 
 
-  double small = 1e-10; 
   Vector Dx = p->dCell(); 
 
   for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++){
@@ -6540,7 +6539,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     Vector Dx = patch->dCell(); 
-    double dx, dy; 
+    double dx=0, dy=0; 
 
     vector<Patch::FaceType> bf;
     vector<Patch::FaceType>::const_iterator bf_iter;
@@ -6563,8 +6562,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
           getBCKind( patch, face, child, *iname, matlIndex, bc_kind, face_name ); 
 
           string whichface; 
-          int index; 
-          double di; 
+          int index=0; 
           Vector Dx = patch->dCell(); 
 
           if (face == 0){
@@ -6652,7 +6650,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
             i_vvel_bc_storage->second.relative_ijk[index] = 0; 
             i_wvel_bc_storage->second.relative_ijk[index] = 0; 
 
-            int face_index_value; 
+            int face_index_value=10; 
 
             //now check to make sure that there is a bc set for each iterator: 
             for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 

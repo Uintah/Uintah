@@ -17,9 +17,10 @@
  *  \brief Estimates the value of one of the velocity components in the next time step
  *         using a simple forward euler method and the partial rhs of the weak momentum equation. 
  *
- *  Note that this requires the current velocity value, \f$u\f$, density, \f$\rho\f$, stress
- *       terms related to this component of velocity, \f$\tau_{iu}\f$, and the time step at the 
- *       current RK stage. 
+ *  Note that this requires the current velocity value, \f$u\f$, convective term of the weak from 
+ *       momentum equation, \f$\textbf{\overrightarrow{u}} \cdot \nabla u \f$, density,   
+ *       \f$\rho\f$, stress terms related to this component of velocity, \f$\tau_{iu}\f$, and the 
+ *       time step at the current RK stage.
  */
 template< typename FieldT >
 class VelEst
@@ -35,16 +36,6 @@ class VelEst
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XFace >::type  S2XFInterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YFace >::type  S2YFInterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZFace >::type  S2ZFInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, FieldT >::type  XInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, FieldT >::type  YInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, FieldT >::type  ZInterpT;  
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XFace, FieldT >::type  XFaceInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YFace, FieldT >::type  YFaceInterpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZFace, FieldT >::type  ZFaceInterpT;  
-  
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, FieldT, XFace >::type  GradXT; 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, FieldT, YFace >::type  GradYT; 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, FieldT, ZFace >::type  GradZT; 
 
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, SVolField, FieldT >::type  GradPT; 
   
@@ -58,18 +49,8 @@ class VelEst
   const S2XFInterpT* s2XFInterpOp_;
   const S2YFInterpT* s2YFInterpOp_;
   const S2ZFInterpT* s2ZFInterpOp_;
-  const XInterpT* xInterpOp_;
-  const YInterpT* yInterpOp_;
-  const ZInterpT* zInterpOp_;
-  const XFaceInterpT* xFaceInterpOp_;
-  const YFaceInterpT* yFaceInterpOp_;
-  const ZFaceInterpT* zFaceInterpOp_;
 
   // gradient operators
-  const GradXT* gradXOp_;
-  const GradYT* gradYOp_;
-  const GradZT* gradZOp_;
-
   const GradPT* gradPOp_;
   
   // divergence operators
@@ -80,17 +61,14 @@ class VelEst
   const XFace *tauxi_;
   const YFace *tauyi_;
   const ZFace *tauzi_;
-  const XVolField *velx_;
-  const YVolField *vely_;
-  const ZVolField *velz_;  
-  const FieldT *vel_;
+  const FieldT *vel_, *convTerm_;
   const SVolField *density_, *pressure_, *visc_;
   const double *tStep_; 
 
-  const Expr::Tag velt_, velxt_, velyt_, velzt_, densityt_, visct_, tauxit_, tauyit_, tauzit_, pressuret_, tStept_;
+  const Expr::Tag velt_, convTermt_, densityt_, visct_, tauxit_, tauyit_, tauzit_, pressuret_, tStept_;
   
   VelEst( const Expr::Tag velTag,
-          const Expr::TagList velTags,
+          const Expr::Tag convTermTag,
           const Expr::TagList tauTags,
           const Expr::Tag densityTag,
           const Expr::Tag viscTag,
@@ -110,8 +88,6 @@ public:
      *
      *  \param the velTag a tag for the component of the velocity that we are advancing
      *
-     *  \param the velTags a tag list holding velocity components
-     *
      *  \param the tauTags a tag list holding stress tensor components related to the 
      *         component of the velocity which exists in velTag.
      *
@@ -124,7 +100,7 @@ public:
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag velTag,
-             const Expr::TagList velTags,
+             const Expr::Tag convTermTag,
              const Expr::TagList tauTags,
              const Expr::Tag densityTag,
              const Expr::Tag viscTag,
@@ -136,8 +112,8 @@ public:
     Expr::ExpressionBase* build() const;
     
   private:
-    const Expr::TagList velts_, tauts_;
-    const Expr::Tag velt_, densityt_, visct_, pt_;
+    const Expr::TagList tauts_;
+    const Expr::Tag velt_, convTermt_, densityt_, visct_, pt_;
     const Expr::Tag tstpt_;
 
   };
