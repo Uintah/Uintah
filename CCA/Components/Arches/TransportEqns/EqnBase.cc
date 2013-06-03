@@ -65,8 +65,8 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
     vector<Patch::FaceType>::const_iterator bf_iter;
     patch->getBoundaryFaces(bf);
     Vector Dx = patch->dCell(); 
-    double dx; 
-    double dy; 
+    double dx=0; 
+    double dy=0; 
     // Loop over all boundary faces on this patch
     for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
       Patch::FaceType face = *bf_iter; 
@@ -84,7 +84,7 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
         getBCKind( patch, face, child, d_eqnName, matlIndex, bc_kind, face_name ); 
 
         string whichface; 
-        int index; 
+        int index=0; 
         double di; 
         Vector Dx = patch->dCell(); 
 
@@ -169,7 +169,7 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
           i_scalar_bc_storage->second.relative_ijk = ijk;
           i_scalar_bc_storage->second.relative_ijk[index] = 0;  //don't allow the normal index to shift
 
-          int face_index_value;
+          int face_index_value=10;
 
           //now check to make sure that there is a bc set for each iterator: 
           for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 

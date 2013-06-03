@@ -807,10 +807,6 @@ IntrusionBC::gatherReductionInformation( const ProcessorGroup*,
 
 
     const Patch* patch = patches->get(p); 
-    const int patchID = patch->getID(); 
-    int archIndex = 0; 
-    int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
-
     Vector Dx = patch->dCell(); 
 
     std::vector<double> area; 
@@ -900,9 +896,6 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
   for ( int p = 0; p < patches->size(); p++ ){ 
 
     const Patch* patch = patches->get(p); 
-    const int patchID = patch->getID(); 
-    int archIndex = 0; 
-    int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
 
     proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
 
