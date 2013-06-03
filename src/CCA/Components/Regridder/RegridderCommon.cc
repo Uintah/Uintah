@@ -87,7 +87,8 @@ RegridderCommon::~RegridderCommon()
   }
   filters.clear();
 }
-
+//______________________________________________________________________
+//
 bool
 RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*grid*/)
 {
@@ -159,7 +160,8 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
   return retval;
 }
 
-
+//______________________________________________________________________
+//
 bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
 {
   TAU_PROFILE("RegridderCommon::needsToReGrid()", " ", TAU_USER);
@@ -243,7 +245,8 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
   rdbg << "RegridderCommon::needsToReGrid( " << retval << " ) END" << endl;
   return retval;
 }
-
+//______________________________________________________________________
+//
 bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
 {
   rdbg << "RegridderCommon::flaggedCellsOnFinestLevel() BGN" << endl;
@@ -277,7 +280,7 @@ bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
       newDW->get(flaggedPatchCells, d_sharedState->get_refinePatchFlag_label(), 0, *iter);
       rdbg << "  finest level, patch " << (*iter)->getID() << flaggedPatchCells.get() << endl;
       if (flaggedPatchCells.get().get_rep()->flag) {
-	rdbg << "RegridderCommon::flaggedCellsOnFinestLevel( true ) END" << endl;
+        rdbg << "RegridderCommon::flaggedCellsOnFinestLevel( true ) END" << endl;
         return true;
       }
     }
@@ -287,7 +290,8 @@ bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
   }
   
 }
-
+//______________________________________________________________________
+//
 void RegridderCommon::switchInitialize(const ProblemSpecP& params)
 {
   // on a switch, for right now, only change adaptivity.  Maybe
@@ -309,10 +313,11 @@ void RegridderCommon::switchInitialize(const ProblemSpecP& params)
   }
 }
 
-
+//______________________________________________________________________
+//
 void RegridderCommon::problemSetup(const ProblemSpecP& params, 
                                    const GridP& oldGrid,
-				   const SimulationStateP& state)
+                                   const SimulationStateP& state)
 
 {
   rdbg << "RegridderCommon::problemSetup() BGN" << endl;
@@ -495,7 +500,8 @@ IntVector RegridderCommon::Ceil    (const Vector& a)
 {
   return IntVector(static_cast<int>(ceil(a.x())), static_cast<int>(ceil(a.y())), static_cast<int>(ceil(a.z())));
 }
-
+//______________________________________________________________________
+// d
 void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, DataWarehouse* dw )
 {
   rdbg << "RegridderCommon::GetFlaggedCells() BGN" << endl;
@@ -545,13 +551,14 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
     for(CellIterator iter(l, h); !iter.done(); iter++){
       IntVector idx(*iter);
       if (refineFlag[idx])
-	(*d_flaggedCells[levelIdx])[idx] = true;
+        (*d_flaggedCells[levelIdx])[idx] = true;
     }
   }
 
   rdbg << "RegridderCommon::GetFlaggedCells() END" << endl;
 }
-
+//______________________________________________________________________
+//
 void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVector& depth)
 {
   if ((depth.x() < 0) || (depth.y() < 0) || (depth.z() < 0))  throw InternalError("Regridder given a bad dilation depth!", __FILE__, __LINE__);
@@ -565,15 +572,15 @@ void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVect
 
     case FILTER_STAR: {
       for (int x = 0; x < 2*depth.x()+1; x++) {
-	      for (int y = 0; y < 2*depth.y()+1; y++) {
-	        for (int z = 0; z < 2*depth.z()+1; z++) {
-	          if ((fabs(static_cast<float>(x - depth.x()))/(depth.x()+1e-16) +
-		             fabs(static_cast<float>(y - depth.y()))/(depth.y()+1e-16) +
-		             fabs(static_cast<float>(z - depth.z()))/(depth.z()+1e-16)) <= 1.0) {
-	            filter[IntVector(x,y,z)] = 1;
-	          }
-	        }
-	      }
+        for (int y = 0; y < 2*depth.y()+1; y++) {
+          for (int z = 0; z < 2*depth.z()+1; z++) {
+            if ((fabs(static_cast<float>(x - depth.x()))/(depth.x()+1e-16) +
+                       fabs(static_cast<float>(y - depth.y()))/(depth.y()+1e-16) +
+                       fabs(static_cast<float>(z - depth.z()))/(depth.z()+1e-16)) <= 1.0) {
+              filter[IntVector(x,y,z)] = 1;
+            }
+          }
+        }
       }
       break;
     }
@@ -593,7 +600,7 @@ void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVect
     for (int z = 0; z < 2*depth.z()+1; z++) {
       for (int y = 0; y < 2*depth.y()+1; y++) {
         for (int x = 0; x < 2*depth.x()+1; x++) {
-	  dilate_dbg << filter[IntVector(x,y,z)] << " ";
+          dilate_dbg << filter[IntVector(x,y,z)] << " ";
         }
         dilate_dbg << endl;
       }
@@ -602,7 +609,8 @@ void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVect
   }
 }
 
-
+//______________________________________________________________________
+//
 void RegridderCommon::scheduleDilation(const LevelP& level)
 {
 
@@ -612,7 +620,7 @@ void RegridderCommon::scheduleDilation(const LevelP& level)
     return;
 
   IntVector stability_depth=d_cellStabilityDilation;
-  IntVector regrid_depth=d_cellRegridDilation;
+  IntVector regrid_depth   =d_cellRegridDilation;
   //IntVector delete_depth=d_cellDeletionDilation;
 
 #if 1
@@ -632,12 +640,15 @@ void RegridderCommon::scheduleDilation(const LevelP& level)
   }
 #endif  
   regrid_depth=regrid_depth+stability_depth;
+  
+  
   //create filters if needed
   if(filters.find(stability_depth)==filters.end())
   {
     filters[stability_depth]=scinew CCVariable<int>;
     initFilter(*filters[stability_depth], d_filterType, stability_depth);
   }
+  
   if(filters.find(regrid_depth)==filters.end())
   {
     filters[regrid_depth]=scinew CCVariable<int>;
@@ -651,13 +662,16 @@ void RegridderCommon::scheduleDilation(const LevelP& level)
   }
   */
 
+  const VarLabel* refineFlagLabel        = d_sharedState->get_refineFlag_label();
+  const MaterialSubset* refineFlag_matls = d_sharedState->refineFlagMaterials();
+  const MaterialSet* all_matls           = d_sharedState->allMaterials();
 
   // dilate flagged cells on this level
   Task* dilate_stability_task = scinew Task("RegridderCommon::Dilate Stability", this,
-				  &RegridderCommon::Dilate, d_dilatedCellsStabilityLabel, filters[stability_depth], stability_depth);
+                                  &RegridderCommon::Dilate, d_dilatedCellsStabilityLabel, filters[stability_depth], stability_depth);
   
   Task* dilate_regrid_task = scinew Task("RegridderCommon::Dilate Regrid", this,
-				  &RegridderCommon::Dilate, d_dilatedCellsRegridLabel, filters[regrid_depth], regrid_depth);
+                                  &RegridderCommon::Dilate, d_dilatedCellsRegridLabel, filters[regrid_depth], regrid_depth);
 
   int ngc_stability = Max(stability_depth.x(), stability_depth.y());
   ngc_stability = Max(ngc_stability, stability_depth.z());
@@ -665,10 +679,8 @@ void RegridderCommon::scheduleDilation(const LevelP& level)
   int ngc_regrid = Max(regrid_depth.x(), regrid_depth.y());
   ngc_regrid = Max(ngc_regrid, regrid_depth.z());
   
-  dilate_stability_task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials(),
-			Ghost::AroundCells, ngc_stability);
-  dilate_regrid_task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials(),
-			Ghost::AroundCells, ngc_regrid);
+  dilate_stability_task->requires(Task::NewDW, refineFlagLabel, refineFlag_matls, Ghost::AroundCells, ngc_stability);
+  dilate_regrid_task->requires(   Task::NewDW, refineFlagLabel, refineFlag_matls, Ghost::AroundCells, ngc_regrid);
 
   // we need this task on the init task, but will get bad if you require from old on the init task :)
 #if 0
@@ -676,39 +688,41 @@ void RegridderCommon::scheduleDilation(const LevelP& level)
     dilate_task->requires(Task::OldDW, d_dilatedCellsStabilityLabel, Ghost::None, 0);
   dilate_task->computes(d_dilatedCellsStabilityOldLabel);
 #endif
-  dilate_stability_task->computes(d_dilatedCellsStabilityLabel, d_sharedState->refineFlagMaterials());
-  sched_->addTask(dilate_stability_task, level->eachPatch(), d_sharedState->allMaterials());
+
+  dilate_stability_task->computes(d_dilatedCellsStabilityLabel, refineFlag_matls);
+  sched_->addTask(dilate_stability_task, level->eachPatch(), all_matls);
   
-  dilate_regrid_task->computes(d_dilatedCellsRegridLabel, d_sharedState->refineFlagMaterials());
-  sched_->addTask(dilate_regrid_task, level->eachPatch(), d_sharedState->allMaterials());
+  dilate_regrid_task->computes(d_dilatedCellsRegridLabel, refineFlag_matls);
+  sched_->addTask(dilate_regrid_task, level->eachPatch(), all_matls);
+
 #if 0
   if (stability_depth != delete_depth) {
     // dilate flagged cells (for deletion) on this level)
     Task* dilate_delete_task = scinew Task("RegridderCommon::Dilate Deletion",
-	  		   dynamic_cast<RegridderCommon*>(this),
-	  		   &RegridderCommon::Dilate, d_dilatedCellsDeletionLabel, filters[delete_depth],
-           delete_depth);
+                           dynamic_cast<RegridderCommon*>(this),
+                           &RegridderCommon::Dilate, d_dilatedCellsDeletionLabel, filters[delete_depth], delete_depth);
     
     ngc = Max(delete_depth.x(), delete_depth.y());
     ngc = Max(ngc, delete_depth.z());
    
-    dilate_delete_task->requires(Task::OldDW, d_sharedState->get_refineFlag_label(), 
-		       d_sharedState->refineFlagMaterials(), Ghost::AroundCells, ngc);
+    dilate_delete_task->requires(Task::OldDW, refineFlagLabel, refineFlag_matls, Ghost::AroundCells, ngc);
+                       
     dilate_delete_task->computes(d_dilatedCellsDeletionLabel);
-    tempsched->addTask(dilate_delete_task, oldGrid->getLevel(levelIndex)->eachPatch(), 
-		       d_sharedState->allMaterials());
+    tempsched->addTask(dilate_delete_task, oldGrid->getLevel(levelIndex)->eachPatch(), all_matls);
   }
 #endif
 }
 
+//______________________________________________________________________
+//
 void RegridderCommon::Dilate(const ProcessorGroup*,
-			     const PatchSubset* patches,
-			     const MaterialSubset* ,
-			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw, 
-           const VarLabel* to_put,
-           CCVariable<int>* filter,
-           IntVector depth)
+                             const PatchSubset* patches,
+                             const MaterialSubset* ,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw, 
+                             const VarLabel* to_put,
+                             CCVariable<int>* filter,
+                             IntVector depth)
  
 {
   rdbg << "RegridderCommon::Dilate() BGN" << endl;
@@ -744,43 +758,53 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
     new_dw->get(flaggedCells, to_get, 0, patch, Ghost::AroundCells, ngc);
     new_dw->allocateAndPut(dilatedFlaggedCells, to_put, 0, patch);
 
-    IntVector flagLow = patch->getExtraCellLowIndex();
+    IntVector flagLow  = patch->getExtraCellLowIndex();
     IntVector flagHigh = patch->getExtraCellHighIndex();
 
     if (patch->getLevel()->getIndex() > 0 && ((d_filterType == FILTER_STAR && ngc > 2) || ngc > 1)) {
       // if we go diagonally along a patch corner where there is no patch, we will need to initialize those cells
       // (see OnDemandDataWarehouse comment about dead cells)
       vector<Region> b1, b2, difference;
-      IntVector low = flaggedCells.getLowIndex(), high = flaggedCells.getHighIndex();
+      IntVector low  = flaggedCells.getLowIndex();
+      IntVector high = flaggedCells.getHighIndex();
+      
       b1.push_back(Region(low,high));
       Level::selectType n;
       patch->getLevel()->selectPatches(low, high, n);
+      
       for (int i = 0; i < n.size(); i++) {
         const Patch* p = n[i];
-        IntVector low = p->getExtraLowIndex(Patch::CellBased, IntVector(0,0,0));
+        IntVector low  = p->getExtraLowIndex( Patch::CellBased, IntVector(0,0,0));
         IntVector high = p->getExtraHighIndex(Patch::CellBased, IntVector(0,0,0));
         b2.push_back(Region(low,high));
       }
+      
       difference = Region::difference(b1, b2);
       for (unsigned i = 0; i < difference.size(); i++) {
         Region b = difference[i];
-        IntVector low=b.getLow();
+        IntVector low =b.getLow();
         IntVector high=b.getHigh();
-        for (CellIterator iter(low, high); !iter.done(); iter++)
+        
+        for (CellIterator iter(low, high); !iter.done(); iter++){
           flaggedCells.castOffConst()[*iter] = 0;
+        }
       }
     }
-
+   
+   //__________________________________
+   //
     IntVector low, high;
     for(CellIterator iter(flagLow, flagHigh); !iter.done(); iter++) {
       IntVector idx(*iter);
 
-      low = Max(idx - depth, flaggedCells.getLowIndex());
+      low  = Max(idx - depth, flaggedCells.getLowIndex());
       high = Min(idx + depth, flaggedCells.getHighIndex() - IntVector(1,1,1));
       int flag=0;
+      
       for(CellIterator local_iter(low, high + IntVector(1,1,1)); !local_iter.done(); local_iter++) {
         IntVector local_idx(*local_iter);
-        if(flaggedCells[local_idx]*(*filter)[local_idx-idx+depth])
+      
+        if( flaggedCells[local_idx]*(*filter)[local_idx-idx+depth] )
         {
           flag=1;
           break;
@@ -824,10 +848,11 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
   }
   rdbg << "RegridderCommon::Dilate() END" << endl;
 }
-
+//______________________________________________________________________
+//
 void RegridderCommon::scheduleInitializeErrorEstimate(const LevelP& level)
 {
-  Task* task = scinew Task("initializeErrorEstimate", this,
+  Task* task = scinew Task("RegridderCommon::initializeErrorEstimate", this,
                            &RegridderCommon::initializeErrorEstimate);
  
   task->computes(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
@@ -836,7 +861,8 @@ void RegridderCommon::scheduleInitializeErrorEstimate(const LevelP& level)
   sched_->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
   
 }
-
+//______________________________________________________________________
+//
 void RegridderCommon::initializeErrorEstimate(const ProcessorGroup*,
                                               const PatchSubset* patches,
                                               const MaterialSubset* /*matls*/,
