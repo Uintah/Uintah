@@ -119,25 +119,6 @@ void SPME::initialize(const ProcessorGroup* pg,
 {
   // We call SPME::initialize from MD::initialize, or if we've somehow maintained our object across a system change
 
-  const Patch* patch = patches->get(0);
-  Vector totalCellExtent = (d_system->getCellExtent()).asVector();
-  Vector patchLowIndex = (patch->getCellLowIndex()).asVector();
-  Vector patchHighIndex = (patch->getCellHighIndex()).asVector();
-
-  SCIRun::IntVector patchKLow, patchKHigh;
-  patchKLow[0] = ceil(static_cast<double>(d_kLimits(0)) * (patchLowIndex[0] / totalCellExtent[0]));
-  patchKHigh[0] = floor(static_cast<double>(d_kLimits(0)) * (patchHighIndex[0] / totalCellExtent[0]));
-  patchKLow[1] = ceil(static_cast<double>(d_kLimits(1)) * (patchLowIndex[1] / totalCellExtent[1]));
-  patchKHigh[1] = floor(static_cast<double>(d_kLimits(1)) * (patchHighIndex[1] / totalCellExtent[1]));
-  patchKLow[2] = ceil(static_cast<double>(d_kLimits(2)) * (patchLowIndex[2] / totalCellExtent[2]));
-  patchKHigh[2] = floor(static_cast<double>(d_kLimits(2)) * (patchHighIndex[2] / totalCellExtent[2]));
-
-  IntVector patchKGridExtents = (patchKHigh - patchKLow);
-  IntVector patchKGridOffset = patchKLow;
-  int splineHalfMaxSupport = d_interpolatingSpline.getHalfMaxSupport();
-  IntVector plusGhostExtents = IntVector(splineHalfMaxSupport, splineHalfMaxSupport, splineHalfMaxSupport);
-  IntVector minusGhostExtents = plusGhostExtents;  // ensure symmetry
-
   // Check to make sure plusGhostExtents+minusGhostExtents is right way to enter number of ghost cells (i.e. total, not per offset)
   IntVector klimits(d_kLimits(0), d_kLimits(1), d_kLimits(2));
   IntVector zero(0, 0, 0);
@@ -156,7 +137,6 @@ void SPME::initialize(const ProcessorGroup* pg,
   // Initially register our three reduction variables in the DW
   new_dw->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
   new_dw->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
-//  new_dw->put(q_kgrid_sum(*(d_Q->getDataArray())), d_lb->QLabel);
 
   // Get useful information from global system descriptor to work with locally.
   d_unitCell = d_system->getUnitCell();

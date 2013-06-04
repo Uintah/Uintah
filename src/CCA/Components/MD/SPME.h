@@ -413,7 +413,7 @@ namespace Uintah {
       double d_systemVolume;        //!< Volume of the unit cell
 
       // FFT Related variables
-      SimpleGrid<dblcomplex>* d_Q;         //!< The Q used for local and global reductions; handed of to FFT routines
+      SimpleGrid<dblcomplex>* d_Q;         //!< The Q used for local and global reductions; handed off to FFT routines
       fftw_plan d_forwardTransformPlan;    //!< FFTW plan for how the forward  3D transform will be executed
       fftw_plan d_backwardTransformPlan;   //!< FFTW plan for how the backward 3D transform will be executed
 
