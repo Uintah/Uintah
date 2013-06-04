@@ -25,7 +25,7 @@
 #include <CCA/Components/MD/NonBondedFactory.h>
 #include <CCA/Components/MD/NonBonded.h>
 #include <CCA/Components/MD/MDSystem.h>
-#include <CCA/Components/MD/LJTwelveSix.h>
+#include <CCA/Components/MD/AnalyticNonBonded.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
@@ -35,7 +35,7 @@
 using namespace std;
 using namespace Uintah;
 
-static DebugStream lj12_6("LJ12_6", false);
+static DebugStream analytic_lj12_6("LJ12_6", false);
 
 NonBonded* NonBondedFactory::create(const ProblemSpecP& ps,
                                     MDSystem* system)
@@ -50,7 +50,7 @@ NonBonded* NonBondedFactory::create(const ProblemSpecP& ps,
 
   // Default settings
   if (type == "") {
-    if (lj12_6.active()) {
+    if (analytic_lj12_6.active()) {
       type = "LJ12_6";
     } else {
       throw ProblemSetupException("Must specify Non-bonded type in input file ", __FILE__, __LINE__);
@@ -68,7 +68,7 @@ NonBonded* NonBondedFactory::create(const ProblemSpecP& ps,
     lj12_6_ps->require("r6", r6);
     lj12_6_ps->require("cutoffRadius", cutoffRadius);
 
-    nonbonded = scinew LJTwelveSix(system, r12, r6, cutoffRadius);
+    nonbonded = scinew AnalyticNonBonded(system, r12, r6, cutoffRadius);
   } else {
     throw ProblemSetupException("Unknown NonBonded type", __FILE__, __LINE__);
   }

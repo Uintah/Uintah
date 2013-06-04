@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/LJTwelveSix.h>
+#include <CCA/Components/MD/AnalyticNonBonded.h>
 #include <CCA/Components/MD/MDSystem.h>
 #include <CCA/Components/MD/MDLabel.h>
 #include <Core/Grid/Patch.h>
@@ -49,17 +49,17 @@ extern SCIRun::Mutex cerrLock;
 static DebugStream lj12_6_dbg("LJ12_6", false);
 static DebugStream lj12_6_cout("LJ12_6Cout", false);
 
-LJTwelveSix::LJTwelveSix()
+AnalyticNonBonded::AnalyticNonBonded()
 {
 
 }
 
-LJTwelveSix::~LJTwelveSix()
+AnalyticNonBonded::~AnalyticNonBonded()
 {
 
 }
 
-LJTwelveSix::LJTwelveSix(MDSystem* system,
+AnalyticNonBonded::AnalyticNonBonded(MDSystem* system,
                          const double r12,
                          const double r6,
                          const double cutoffRadius) :
@@ -70,7 +70,7 @@ LJTwelveSix::LJTwelveSix(MDSystem* system,
 
 //-----------------------------------------------------------------------------
 // Interface implementations
-void LJTwelveSix::initialize(const ProcessorGroup* pg,
+void AnalyticNonBonded::initialize(const ProcessorGroup* pg,
                              const PatchSubset* patches,
                              const MaterialSubset* materials,
                              DataWarehouse* old_dw,
@@ -83,7 +83,7 @@ void LJTwelveSix::initialize(const ProcessorGroup* pg,
   }
 }
 
-void LJTwelveSix::setup(const ProcessorGroup* pg,
+void AnalyticNonBonded::setup(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* materials,
                         DataWarehouse* old_dw,
@@ -93,7 +93,7 @@ void LJTwelveSix::setup(const ProcessorGroup* pg,
   generateNeighborList();
 }
 
-void LJTwelveSix::calculate(const ProcessorGroup* pg,
+void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
                             const PatchSubset* patches,
                             const MaterialSubset* materials,
                             DataWarehouse* old_dw,
@@ -219,7 +219,7 @@ void LJTwelveSix::calculate(const ProcessorGroup* pg,
   }  // end patch loop
 }
 
-void LJTwelveSix::finalize(const ProcessorGroup* pg,
+void AnalyticNonBonded::finalize(const ProcessorGroup* pg,
                            const PatchSubset* patches,
                            const MaterialSubset* materials,
                            DataWarehouse* old_dw,
@@ -228,7 +228,7 @@ void LJTwelveSix::finalize(const ProcessorGroup* pg,
 
 }
 
-void LJTwelveSix::generateNeighborList()
+void AnalyticNonBonded::generateNeighborList()
 {
   double r2;
   Vector box = d_system->getBox();
@@ -263,7 +263,7 @@ void LJTwelveSix::generateNeighborList()
   }
 }
 
-bool LJTwelveSix::isNeighbor(const Point* atom1,
+bool AnalyticNonBonded::isNeighbor(const Point* atom1,
                              const Point* atom2)
 {
   // get the simulation box size

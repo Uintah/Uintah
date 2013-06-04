@@ -40,7 +40,7 @@ SRCS += $(SRCDIR)/MD.cc                         \
         $(SRCDIR)/SPME.cc                       \
         $(SRCDIR)/NonBondedFactory.cc           \
         $(SRCDIR)/NonBonded.cc                  \
-        $(SRCDIR)/LJTwelveSix.cc                \
+        $(SRCDIR)/AnalyticNonBonded.cc          \
         $(SRCDIR)/SPMEMapPoint.cc               \
         $(SRCDIR)/SPMEPatch.cc                  \
         $(SRCDIR)/SimpleGrid.cc                 \

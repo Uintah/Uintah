@@ -34,7 +34,7 @@
 #include <CCA/Components/MD/Electrostatics.h>
 #include <CCA/Components/MD/SPME.h>
 #include <CCA/Components/MD/NonBonded.h>
-#include <CCA/Components/MD/LJTwelveSix.h>
+#include <CCA/Components/MD/AnalyticNonBonded.h>
 #include <CCA/Components/MD/SPMEMapPoint.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>

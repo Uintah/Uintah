@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_NONBONDED_LJTWELVESIX_H
-#define UINTAH_MD_NONBONDED_LJTWELVESIX_H
+#ifndef UINTAH_MD_NONBONDED_ANALYTIC_H
+#define UINTAH_MD_NONBONDED_ANALYTIC_H
 
 #include <CCA/Components/MD/NonBonded.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
@@ -63,7 +63,7 @@ namespace Uintah {
    *
    *  @param
    */
-  class LJTwelveSix : public NonBonded {
+  class AnalyticNonBonded : public NonBonded {
 
     public:
 
@@ -71,13 +71,13 @@ namespace Uintah {
        * @brief
        * @param
        */
-      LJTwelveSix();
+      AnalyticNonBonded();
 
       /**
        * @brief
        * @param
        */
-      ~LJTwelveSix();
+      ~AnalyticNonBonded();
 
       /**
        * @brief
@@ -86,7 +86,7 @@ namespace Uintah {
        * @param
        * @param
        */
-      LJTwelveSix(MDSystem* system,
+      AnalyticNonBonded(MDSystem* system,
                   const double r12,
                   const double r6,
                   const double cutoffRadius);
