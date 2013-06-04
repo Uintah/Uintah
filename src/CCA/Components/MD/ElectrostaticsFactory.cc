@@ -65,14 +65,17 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
     double polTolerance;
     IntVector kLimits;
     int splineOrder;
+    int maxPolarizableIterations;
 
     spme_ps->require("ewaldBeta", ewaldBeta);
     spme_ps->require("polarizable", polarizable);
     spme_ps->require("polarizationTolerance", polTolerance);
     spme_ps->require("kLimits", kLimits);
     spme_ps->require("splineOrder", splineOrder);
+    spme_ps->require("maxiterations", maxPolarizableIterations);
 
-    electrostatics = scinew SPME(system, ewaldBeta, polarizable, polTolerance, kLimits, splineOrder);
+    electrostatics = scinew SPME(system, ewaldBeta, polarizable, polTolerance, kLimits, splineOrder, maxPolarizableIterations);
+
   } else {
     throw ProblemSetupException("Unknown Electrostatics type", __FILE__, __LINE__);
   }

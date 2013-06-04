@@ -121,11 +121,6 @@ namespace Uintah {
         Explicit, Implicit,
       };
 
-      inline const std::vector<Atom> getAtomList() const
-      {
-        return d_atomList;
-      }
-
     protected:
 
       /**
@@ -290,6 +285,16 @@ namespace Uintah {
       }
 
     private:
+
+      struct Atom {
+          Atom(Point pnt,
+               double charge) :
+              coords(pnt), charge(charge)
+          {
+          }
+          Point coords;
+          double charge;
+      };
 
       MDLabel* d_lb;                       //!< Uintah VarLabels specific to Uintah::MD
       SimulationStateP d_sharedState;      //!< Shared simulation state (global)

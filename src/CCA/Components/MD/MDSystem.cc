@@ -53,7 +53,7 @@ MDSystem::MDSystem(ProblemSpecP& ps,
   mdsystem_ps->get("temperature", d_temperature);
   mdsystem_ps->get("orthorhombic", d_orthorhombic);
   mdsystem_ps->get("ghostcells", d_numGhostCells);
-  mdsystem_ps->get("maxiterations", d_maxPolarizableIterations);
+
   if (d_orthorhombic) {
     mdsystem_ps->get("boxSize", d_box);
     for (size_t row = 0; row < 3; ++row) {

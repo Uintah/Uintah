@@ -109,16 +109,6 @@ namespace Uintah {
 
       /**
        * @brief
-       * @param
-       * @return
-       */
-      inline int getMaxPolarizableIterations() const
-      {
-        return d_maxPolarizableIterations;
-      }
-
-      /**
-       * @brief
        * @param None
        * @return
        */
@@ -214,7 +204,6 @@ namespace Uintah {
       Vector d_pressure;                //!< Total MD system pressure
       double d_temperature;             //!< Total MD system temperature
       int d_numGhostCells;              //!< Number of ghost cells used, a function of cutoffRadius and cell size
-      int d_maxPolarizableIterations;   //!<
       bool d_orthorhombic;              //!< Whether or not the MD system is using orthorhombic coordinates
       bool d_newBox;                    //!< Whether or not the system size has changed... create a new box
 

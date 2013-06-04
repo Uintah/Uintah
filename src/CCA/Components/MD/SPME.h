@@ -88,7 +88,8 @@ namespace Uintah {
            const bool polarizable,
            const double polarizationTolerance,
            const IntVector& kLimits,
-           const int splineOrder);
+           const int splineOrder,
+           const int maxPolarizableIterations = 0);
 
       /**
        * @brief
@@ -401,6 +402,7 @@ namespace Uintah {
       bool d_polarizable;				                    	  //!< Use polarizable Ewald formulation
       double d_polarizationTolerance;                   //!< Tolerance threshold for polarizable system
       IntVector d_kLimits;                              //!< Number of grid divisions in each direction
+      int d_maxPolarizableIterations;                   //!< Max number of polarization iterations to do
       CenteredCardinalBSpline d_interpolatingSpline;    //!< Spline object to hold info for spline calculation
       std::vector<SPMEPatch*> d_spmePatches;            //!< Assuming multiple patches, these are the pieces of the SPME grid
       std::vector<SPMEMapPoint> d_gridMap;              //!< The data that maps the charges in the patch to-and-from the grid

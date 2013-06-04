@@ -12,7 +12,6 @@
       <orthorhombic             spec="REQUIRED BOOLEAN"/>
       <boxSize                  spec="REQUIRED VECTOR" />
       <ghostcells               spec="REQUIRED INTEGER"/>
-      <maxiterations            spec="REQUIRED INTEGER 'positive'"/>
     </MDSystem>
     
     <Nonbonded                  spec="REQUIRED NO_DATA"
@@ -30,6 +29,7 @@
       <polarizationTolerance    spec="REQUIRED DOUBLE 'positive'"/>
       <kLimits                  spec="OPTIONAL VECTOR 'positive'"/>
       <splineOrder              spec="REQUIRED INTEGER"/>
+      <maxiterations            spec="OPTIONAL INTEGER 'positive'"/>
     </Electrostatics>
     
   </MD>
