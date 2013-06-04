@@ -35,13 +35,16 @@ SRCDIR	:= CCA/Components/MD
 SRCS += $(SRCDIR)/MD.cc                         \
         $(SRCDIR)/MDLabel.cc                    \
         $(SRCDIR)/MDSystem.cc                   \
+        $(SRCDIR)/ElectrostaticsFactory.cc      \
         $(SRCDIR)/Electrostatics.cc             \
         $(SRCDIR)/SPME.cc                       \
+        $(SRCDIR)/NonBondedFactory.cc           \
+        $(SRCDIR)/NonBonded.cc                  \
+        $(SRCDIR)/LJTwelveSix.cc                \
         $(SRCDIR)/SPMEMapPoint.cc               \
         $(SRCDIR)/SPMEPatch.cc                  \
         $(SRCDIR)/SimpleGrid.cc                 \
-        $(SRCDIR)/CenteredCardinalBSpline.cc    \
-        $(SRCDIR)/ElectrostaticsFactory.cc
+        $(SRCDIR)/CenteredCardinalBSpline.cc
 
 SUBDIRS := \
 

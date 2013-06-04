@@ -3,13 +3,10 @@
 
   <MD                           spec="OPTIONAL NO_DATA" >
     <coordinateFile             spec="REQUIRED STRING" />
-    <numAtoms                   spec="REQUIRED INTEGER"/>
-    <cutoffRadius               spec="REQUIRED DOUBLE" />
-    <R12                        spec="REQUIRED DOUBLE" />
-    <R6                         spec="REQUIRED DOUBLE" />
     
     
     <MDSystem                   spec="OPTIONAL NO_DATA">
+      <numAtoms                 spec="REQUIRED INTEGER"/>
       <pressure                 spec="REQUIRED VECTOR"/>
       <temperature              spec="REQUIRED DOUBLE"/>
       <orthorhombic             spec="REQUIRED BOOLEAN"/>
@@ -17,6 +14,13 @@
       <ghostcells               spec="REQUIRED INTEGER"/>
       <maxiterations            spec="REQUIRED INTEGER 'positive'"/>
     </MDSystem>
+    
+    <Nonbonded                  spec="REQUIRED NO_DATA"
+                                  attribute1="type REQUIRED STRING 'none LJ12_6'">
+      <r12                      spec="REQUIRED DOUBLE" />
+      <r6                       spec="REQUIRED DOUBLE" />
+      <cutoffRadius             spec="REQUIRED DOUBLE" />
+    </Nonbonded>
     
     
     <Electrostatics             spec="REQUIRED NO_DATA"

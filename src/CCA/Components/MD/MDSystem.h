@@ -187,8 +187,29 @@ namespace Uintah {
         return d_totalCellExtent;
       }
 
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline unsigned int getNumAtoms() const
+      {
+        return d_numAtoms;
+      }
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      inline Vector getBox() const
+      {
+        return d_box;
+      }
+
     private:
 
+      unsigned int d_numAtoms;          //!< Total number of atoms in the simulation
       double d_volume;                  //!< Total MD system unit cell volume
       Vector d_pressure;                //!< Total MD system pressure
       double d_temperature;             //!< Total MD system temperature
@@ -200,6 +221,7 @@ namespace Uintah {
       Matrix3 d_unitCell;               //!< MD system unit cell
       Matrix3 d_inverseCell;            //!< MD system inverse unit cell
       double d_cellVolume;              //!< Cell volume; calculate internally, return at request for efficiency
+      Vector d_box;                     //!< The MD system input box size
 
       IntVector d_totalCellExtent;      //!< Number of sub-cells in the global unit cell
 

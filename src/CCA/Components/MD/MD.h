@@ -33,6 +33,8 @@
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/Electrostatics.h>
 #include <CCA/Components/MD/SPME.h>
+#include <CCA/Components/MD/NonBonded.h>
+#include <CCA/Components/MD/LJTwelveSix.h>
 #include <CCA/Components/MD/SPMEMapPoint.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -118,6 +120,11 @@ namespace Uintah {
       enum IntegratorType {
         Explicit, Implicit,
       };
+
+      inline const std::vector<Atom> getAtomList() const
+      {
+        return d_atomList;
+      }
 
     protected:
 
@@ -214,17 +221,6 @@ namespace Uintah {
        * @param
        * @return
        */
-      void interpolateParticlesToGrid(const ProcessorGroup*,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset* matls,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
       void performElectrostatics(const ProcessorGroup* pg,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
@@ -241,6 +237,17 @@ namespace Uintah {
                                     const MaterialSubset* matls,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void interpolateParticlesToGrid(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw);
 
       /**
        * @brief
@@ -268,25 +275,6 @@ namespace Uintah {
        * @param
        * @return
        */
-      inline bool containsAtom(const IntVector& l,
-                               const IntVector& h,
-                               const Point& p) const
-      {
-        return ((p.x() >= l.x() && p.x() < h.x()) && (p.y() >= l.y() && p.y() < h.y()) && (p.z() >= l.z() && p.z() < h.z()));
-      }
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void generateNeighborList();
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
       void extractCoordinates();
 
       /**
@@ -294,32 +282,30 @@ namespace Uintah {
        * @param
        * @return
        */
-      bool isNeighbor(const Point* atom1,
-                      const Point* atom2);
+      inline bool containsAtom(const IntVector& l,
+                               const IntVector& h,
+                               const Point& p) const
+      {
+        return ((p.x() >= l.x() && p.x() < h.x()) && (p.y() >= l.y() && p.y() < h.y()) && (p.z() >= l.z() && p.z() < h.z()));
+      }
 
-      MDLabel* d_lb;                     //!< Uuintah VarLabels specific to Uintah::MD
-      SimulationStateP d_sharedState;    //!< Shared simulation state (global)
-      SimpleMaterial* d_material;        //!< For now, this is a single material
-      IntegratorType d_integrator;       //!< Integrator to use in position update of atoms
-      double delt;                       //!< Simulation delta T
+    private:
+
+      MDLabel* d_lb;                       //!< Uintah VarLabels specific to Uintah::MD
+      SimulationStateP d_sharedState;      //!< Shared simulation state (global)
+      SimpleMaterial* d_material;          //!< For now, this is a single material
+      IntegratorType d_integrator;         //!< Integrator to use in position update of atoms
+      double delt;                         //!< Simulation delta T
+
+      string d_coordinateFile;             //!< Name of file with coordinates and charges of all atoms
+      std::vector<Atom> d_atomList;        //!< Individual atom neighbor list
+
+      Electrostatics* d_electrostatics;    //!< The simulation Electrostatics instance
+      NonBonded* d_nonbonded;              //!< The simulation NonBonded instance
+      MDSystem* d_system;                  //!< The global MD system
 
       vector<const VarLabel*> d_particleState;            //!< Atom (particle) state prior to relocation
       vector<const VarLabel*> d_particleState_preReloc;   //!< For atom (particle) relocation
-
-      // fields specific to non-bonded interaction (LJ Potential)
-      string d_coordinateFile;       //!< File with coordinates of all atoms in this MD system
-      unsigned int d_numAtoms;       //!< Total number of atoms in this MD simulation
-      double d_cutoffRadius;         //!< The short ranged cut off distances (in Angstroms)
-      Vector d_box;                  //!< The size of simulation
-      double R12;                    //!< This is the v.d.w. repulsive parameter
-      double R6;                     //!< This is the v.d.w. attractive parameter
-
-      // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
-      std::vector<Point> d_atomList;             //!< Individual atom neighbor list
-      std::vector<vector<int> > d_neighborList;  //!< List of all atom neighbor indices
-
-      Electrostatics* d_electrostatics;          //!< The simulation Electrostatics instance
-      MDSystem* d_system;                        //!< The global MD system
 
       // copy constructor and assignment operator (privatized on purpose)
       MD(const MD&);

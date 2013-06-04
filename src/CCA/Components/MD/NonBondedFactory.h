@@ -22,11 +22,11 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_ELECTROSTATICSFACTORY_h
-#define UINTAH_MD_ELECTROSTATICSFACTORY_h
+#ifndef UINTAH_MD_NONBONDEDFACTORY_h
+#define UINTAH_MD_NONBONDEDFACTORY_h
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Components/MD/Electrostatics.h>
+#include <CCA/Components/MD/NonBonded.h>
 
 namespace Uintah {
 
@@ -34,27 +34,27 @@ namespace Uintah {
   class MDSystem;
 
   /**
-   *  @class ElectrostaticsFactory
+   *  @class NonBondedFactory
    *  @ingroup MD
    *  @author Alan Humphrey and Justin Hooper
-   *  @date   February, 2013
+   *  @date   June, 2013
    *
    *  @brief
    *
    *  @param
    */
-  class ElectrostaticsFactory {
+  class NonBondedFactory {
 
     public:
 
       /**
-       * @brief Simply create the appropriate Electrostatics object.
-       *         This method has a switch for all known Electrostatics types.
-       * @param ps The ProblemSpec handle with which to get electrostatics properties from the input file.
-       * @param system The MD system handle to pass off to the appropriate Electrostatics constructor.
+       * @brief Simply create the appropriate NonBonded object.
+       *         This method has a switch for all known Non-bonded types.
+       * @param ps The ProblemSpec handle with which to get non-bonded properties from the input file.
+       * @param system The MD system handle to pass off to the appropriate NonBonded constructor.
        */
-      static Electrostatics* create(const ProblemSpecP& ps,
-                                    MDSystem* system);
+      static NonBonded* create(const ProblemSpecP& ps,
+                               MDSystem* system);
   };
 }  // End namespace Uintah
 

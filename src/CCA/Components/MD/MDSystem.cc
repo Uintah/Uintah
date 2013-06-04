@@ -48,22 +48,22 @@ MDSystem::MDSystem(ProblemSpecP& ps,
                    GridP& grid)
 {
   ProblemSpecP mdsystem_ps = ps->findBlock("MDSystem");
+  mdsystem_ps->get("numAtoms", d_numAtoms);
   mdsystem_ps->get("pressure", d_pressure);
   mdsystem_ps->get("temperature", d_temperature);
   mdsystem_ps->get("orthorhombic", d_orthorhombic);
   mdsystem_ps->get("ghostcells", d_numGhostCells);
   mdsystem_ps->get("maxiterations", d_maxPolarizableIterations);
   if (d_orthorhombic) {
-    Vector InputBox;
-    mdsystem_ps->get("boxSize", InputBox);
+    mdsystem_ps->get("boxSize", d_box);
     for (size_t row = 0; row < 3; ++row) {
       for (size_t col = 0; col < 3; ++col) {
         d_unitCell(row, col) = 0.0;
       }
     }
-    d_unitCell(0, 0) = InputBox[0];
-    d_unitCell(1, 1) = InputBox[1];
-    d_unitCell(2, 2) = InputBox[2];
+    d_unitCell(0, 0) = d_box[0];
+    d_unitCell(1, 1) = d_box[1];
+    d_unitCell(2, 2) = d_box[2];
   } else {
     // Read in non orthorhombic unit cell
   }
