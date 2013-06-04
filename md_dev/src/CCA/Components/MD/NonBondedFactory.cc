@@ -22,10 +22,10 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/ElectrostaticsFactory.h>
-#include <CCA/Components/MD/Electrostatics.h>
+#include <CCA/Components/MD/NonBondedFactory.h>
+#include <CCA/Components/MD/NonBonded.h>
 #include <CCA/Components/MD/MDSystem.h>
-#include <CCA/Components/MD/SPME.h>
+#include <CCA/Components/MD/LJTwelveSix.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
@@ -35,54 +35,50 @@
 using namespace std;
 using namespace Uintah;
 
-static DebugStream spme("SPME", false);
+static DebugStream lj12_6("LJ12_6", false);
 
-Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
-                                              MDSystem* system)
+NonBonded* NonBondedFactory::create(const ProblemSpecP& ps,
+                                    MDSystem* system)
 {
-  Electrostatics* electrostatics = 0;
+  NonBonded* nonbonded = 0;
   string type = "";
 
-  ProblemSpecP electrostatics_ps = ps->findBlock("MD")->findBlock("Electrostatics");
+  ProblemSpecP electrostatics_ps = ps->findBlock("MD")->findBlock("Nonbonded");
   if (electrostatics_ps) {
     electrostatics_ps->getAttribute("type", type);
   }
 
   // Default settings
   if (type == "") {
-    if (spme.active()) {
-      type = "SPME";
+    if (lj12_6.active()) {
+      type = "LJ12_6";
     } else {
-      throw ProblemSetupException("Must specify Electrostatics type in input file ", __FILE__, __LINE__);
+      throw ProblemSetupException("Must specify Non-bonded type in input file ", __FILE__, __LINE__);
     }
   }
 
-  // Check for specific electrostatics request
-  if (type == "SPME" || type == "spme") {
-    ProblemSpecP spme_ps = ps->findBlock("MD")->findBlock("Electrostatics");
-    double ewaldBeta;
-    bool polarizable;
-    double polTolerance;
-    IntVector kLimits;
-    int splineOrder;
+  // Check for specific non-bonded interaction request
+  if (type == "LJ12_6" || type == "lj12_6") {
+    ProblemSpecP lj12_6_ps = ps->findBlock("MD")->findBlock("Nonbonded");
+    double r12;
+    double r6;
+    double cutoffRadius;
 
-    spme_ps->require("ewaldBeta", ewaldBeta);
-    spme_ps->require("polarizable", polarizable);
-    spme_ps->require("polarizationTolerance", polTolerance);
-    spme_ps->require("kLimits", kLimits);
-    spme_ps->require("splineOrder", splineOrder);
+    lj12_6_ps->require("r12", r12);
+    lj12_6_ps->require("r6", r6);
+    lj12_6_ps->require("cutoffRadius", cutoffRadius);
 
-    electrostatics = scinew SPME(system, ewaldBeta, polarizable, polTolerance, kLimits, splineOrder);
+    nonbonded = scinew LJTwelveSix(system, r12, r6, cutoffRadius);
   } else {
-    throw ProblemSetupException("Unknown Electrostatics type", __FILE__, __LINE__);
+    throw ProblemSetupException("Unknown NonBonded type", __FILE__, __LINE__);
   }
 
-  // Output which electrostatics type that will be used
+  // Output which non-bonded interactions will be used
   const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
   if (world->myrank() == 0) {
-    cout << "Electrostatics Method: \t\t" << type << endl;
+    cout << "Non-bonded Interactions: \t" << type << endl;
   }
 
-  return electrostatics;
+  return nonbonded;
 
 }

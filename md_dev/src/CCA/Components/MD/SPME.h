@@ -148,7 +148,7 @@ namespace Uintah {
 
       /**
        * @brief
-       * @param None
+       * @param
        * @return
        */
       inline void setMDLabel(MDLabel* lb)

@@ -28,6 +28,8 @@
 #include <CCA/Components/MD/MD.h>
 #include <CCA/Components/MD/ElectrostaticsFactory.h>
 #include <CCA/Components/MD/SPME.h>
+#include <CCA/Components/MD/NonBondedFactory.h>
+#include <CCA/Components/MD/LJTwelveSix.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationState.h>
@@ -66,6 +68,7 @@ MD::~MD()
 {
   delete d_lb;
   delete d_system;
+  delete d_nonbonded;
   delete d_electrostatics;
 }
 
@@ -81,19 +84,16 @@ void MD::problemSetup(const ProblemSpecP& params,
   ProblemSpecP md_ps = params->findBlock("MD");
 
   md_ps->get("coordinateFile", d_coordinateFile);
-  md_ps->get("numAtoms", d_numAtoms);
-  md_ps->get("cutoffRadius", d_cutoffRadius);
-  md_ps->get("R12", R12);
-  md_ps->get("R6", R6);
 
   // create and populate the MD System object
   d_system = scinew MDSystem(md_ps, grid);
   d_system->setNewBox(true);
 
-  Matrix3 unitCell = d_system->getUnitCell();
-  d_box[0] = unitCell(0, 0);
-  d_box[1] = unitCell(1, 1);
-  d_box[2] = unitCell(2, 2);
+  // create the NonBonded object via factory method
+  d_nonbonded = NonBondedFactory::create(params, d_system);
+  if (d_nonbonded->getType() == NonBonded::LJ12_6) {
+    dynamic_cast<LJTwelveSix*>(d_nonbonded)->setMDLabel(d_lb);
+  }
 
   // create the Electrostatics object via factory method
   d_electrostatics = ElectrostaticsFactory::create(params, d_system);
@@ -110,14 +110,6 @@ void MD::problemSetup(const ProblemSpecP& params,
 
   // do file I/O to get atom coordinates and simulation cell size
   extractCoordinates();
-
-  // for neighbor indices; one list for each atom
-  for (unsigned int i = 0; i < d_numAtoms; i++) {
-    d_neighborList.push_back(vector<int>(0));
-  }
-
-  // create neighbor list for each atom in the system
-  generateNeighborList();
 }
 
 void MD::scheduleInitialize(const LevelP& level,
@@ -169,11 +161,7 @@ void MD::scheduleTimeAdvance(const LevelP& level,
 
   scheduleCalculateNonBondedForces(sched, patches, matls, level);
 
-//  scheduleInterpolateParticlesToGrid(sched, patches, matls);
-
   schedulePerformElectrostatics(sched, patches, matls, level);
-
-//  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
   scheduleUpdatePosition(sched, patches, matls, level);
 
@@ -253,7 +241,6 @@ void MD::schedulePerformElectrostatics(SchedulerP& sched,
 
   Task* task = scinew Task("performElectrostatics", this, &MD::performElectrostatics);
 
-  // particle variables
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::NewDW, d_lb->pForceLabel_preReloc, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
@@ -332,93 +319,43 @@ void MD::extractCoordinates()
     throw ProblemSetupException(message, __FILE__, __LINE__);
   }
 
-  // do file IO to extract atom coordinates
+  // do file IO to extract atom coordinates and charge
   string line;
   unsigned int numRead;
-  for (unsigned int i = 0; i < d_numAtoms; i++) {
+  unsigned int numAtoms = d_system->getNumAtoms();
+  for (unsigned int i = 0; i < numAtoms; i++) {
     // get the atom coordinates
     getline(inputFile, line);
     double x, y, z;
-    numRead = sscanf(line.c_str(), "%lf %lf %lf", &x, &y, &z);
-    if (numRead != 3) {
-      string message = "\tMalformed input file. Should have [x,y,z] coordinates per line: ";
+    double charge;
+    numRead = sscanf(line.c_str(), "%lf %lf %lf %lf", &x, &y, &z, &charge);
+    if (numRead != 4) {
+      string message = "\tMalformed input file. Should have [x,y,z] coordinates and [charge] per line: ";
       throw ProblemSetupException(message, __FILE__, __LINE__);
     }
 
     //FIXME This is hacky!! Fix for generic case of wrapping arbitrary coordinates into arbitrary unit cells using
     //  reduced coordinate transformation!  -- JBH 5/9/13
+    Vector box = d_system->getBox();
     if (x < 0)
-      x += d_box.x();
+      x += box.x();
     if (y < 0)
-      y += d_box.y();
+      y += box.y();
     if (z < 0)
-      z += d_box.z();
+      z += box.z();
 
-    if (x >= d_box.x())
-      x -= d_box.x();
-    if (y >= d_box.y())
-      y -= d_box.y();
-    if (z >= d_box.z())
-      z -= d_box.z();
+    if (x >= box.x())
+      x -= box.x();
+    if (y >= box.y())
+      y -= box.y();
+    if (z >= box.z())
+      z -= box.z();
 
-    Point pnt(x, y, z);
+    Atom atom(Point(x, y, z), charge);
 
-    d_atomList.push_back(pnt);
+    d_atomList.push_back(atom);
   }
   inputFile.close();
-}
-
-void MD::generateNeighborList()
-{
-  double r2;
-  SCIRun::Vector reducedCoordinates;
-  double cut_sq = d_cutoffRadius * d_cutoffRadius;
-  for (unsigned int i = 0; i < d_numAtoms; i++) {
-    for (unsigned int j = 0; j < d_numAtoms; j++) {
-      if (i != j) {
-        // the vector distance between atom i and j
-        reducedCoordinates = d_atomList[i] - d_atomList[j];
-
-        // this is required for periodic boundary conditions
-        reducedCoordinates -= (reducedCoordinates / d_box).vec_rint() * d_box;
-
-        // eliminate atoms outside of cutoff radius, add those within as neighbors
-        if ((fabs(reducedCoordinates[0]) < d_cutoffRadius) && (fabs(reducedCoordinates[1]) < d_cutoffRadius)
-            && (fabs(reducedCoordinates[2]) < d_cutoffRadius)) {
-          double reducedX = reducedCoordinates[0] * reducedCoordinates[0];
-          double reducedY = reducedCoordinates[1] * reducedCoordinates[1];
-          double reducedZ = reducedCoordinates[2] * reducedCoordinates[2];
-          r2 = sqrt(reducedX + reducedY + reducedZ);
-          // only add neighbor atoms within spherical cut-off around atom "i"
-          if (r2 < cut_sq) {
-            d_neighborList[i].push_back(j);
-          }
-        }
-      }
-    }
-  }
-}
-
-bool MD::isNeighbor(const Point* atom1,
-                    const Point* atom2)
-{
-  double r2;
-  Vector reducedCoordinates;
-  double cut_sq = d_cutoffRadius * d_cutoffRadius;
-
-  // the vector distance between atom 1 and 2
-  reducedCoordinates = *atom1 - *atom2;
-
-  // this is required for periodic boundary conditions
-  reducedCoordinates -= (reducedCoordinates / d_box).vec_rint() * d_box;
-
-  // check if outside of cutoff radius
-  if ((fabs(reducedCoordinates[0]) < d_cutoffRadius) && (fabs(reducedCoordinates[1]) < d_cutoffRadius)
-      && (fabs(reducedCoordinates[2]) < d_cutoffRadius)) {
-    r2 = sqrt(pow(reducedCoordinates[0], 2.0) + pow(reducedCoordinates[1], 2.0) + pow(reducedCoordinates[2], 2.0));
-    return r2 < cut_sq;
-  }
-  return false;
 }
 
 void MD::initialize(const ProcessorGroup* pg,
@@ -430,6 +367,7 @@ void MD::initialize(const ProcessorGroup* pg,
   printTask(patches, md_cout, "MD::initialize");
 
   // loop through all patches
+  unsigned int numAtoms = d_system->getNumAtoms();
   unsigned int numPatches = patches->size();
   for (unsigned int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
@@ -453,9 +391,9 @@ void MD::initialize(const ProcessorGroup* pg,
       ParticleVariable<long64> pids;
 
       // eventually we'll need to use PFS for this
-      vector<Point> localAtoms;
-      for (unsigned int i = 0; i < d_numAtoms; i++) {
-        if (containsAtom(low, high, d_atomList[i])) {
+      vector<Atom> localAtoms;
+      for (unsigned int i = 0; i < numAtoms; i++) {
+        if (containsAtom(low, high, d_atomList[i].coords)) {
           localAtoms.push_back(d_atomList[i]);
         }
       }
@@ -472,15 +410,15 @@ void MD::initialize(const ProcessorGroup* pg,
 
       int numParticles = pset->numParticles();
       for (int i = 0; i < numParticles; i++) {
-        Point pos = localAtoms[i];
+        Point pos = localAtoms[i].coords;
         px[i] = pos;
         pforce[i] = Vector(0.0, 0.0, 0.0);
         paccel[i] = Vector(0.0, 0.0, 0.0);
         pvelocity[i] = Vector(0.0, 0.0, 0.0);
         penergy[i] = 1.1;
         pmass[i] = 2.5;
-        pcharge[i] = 1.0;
-        pids[i] = patch->getID() * d_numAtoms + i;
+        pcharge[i] = localAtoms[i].charge;
+        pids[i] = patch->getID() * numAtoms + i;
 
         if (md_dbg.active()) {
           cerrLock.lock();
@@ -537,135 +475,10 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  printTask(patches, md_cout, "MD::calculateNonBondedForces");
-
-  // loop through all patches
-  unsigned int numPatches = patches->size();
-  for (unsigned int p = 0; p < numPatches; p++) {
-    const Patch* patch = patches->get(p);
-
-    // do this for each material; curretnly only using material "0"
-    unsigned int numMatls = matls->size();
-    double vdwEnergy = 0;
-    for (unsigned int m = 0; m < numMatls; m++) {
-      int matl = matls->get(m);
-
-      ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
-      ParticleSubset* delset = scinew ParticleSubset(0, matl, patch);
-
-      // requires variables
-      constParticleVariable<Point> px;
-      constParticleVariable<Vector> pforce;
-      constParticleVariable<double> penergy;
-      old_dw->get(px, d_lb->pXLabel, pset);
-      old_dw->get(penergy, d_lb->pEnergyLabel, pset);
-      old_dw->get(pforce, d_lb->pForceLabel, pset);
-
-      // computes variables
-      ParticleVariable<Vector> pforcenew;
-      ParticleVariable<double> penergynew;
-      new_dw->allocateAndPut(pforcenew, d_lb->pForceLabel_preReloc, pset);
-      new_dw->allocateAndPut(penergynew, d_lb->pEnergyLabel_preReloc, pset);
-
-      unsigned int numParticles = pset->numParticles();
-      for (unsigned int i = 0; i < numParticles; i++) {
-        pforcenew[i] = pforce[i];
-        penergynew[i] = penergy[i];
-      }
-
-      // loop over all atoms in system, calculate the forces
-      double r2, ir2, ir6, ir12, T6, T12;
-      double forceTerm;
-      Vector totalForce, atomForce;
-      Vector reducedCoordinates;
-      unsigned int totalAtoms = pset->numParticles();
-      for (unsigned int i = 0; i < totalAtoms; i++) {
-        atomForce = Vector(0.0, 0.0, 0.0);
-
-        // loop over the neighbors of atom "i"
-        unsigned int idx;
-        unsigned int numNeighbors = d_neighborList[i].size();
-        for (unsigned int j = 0; j < numNeighbors; j++) {
-          idx = d_neighborList[i][j];
-
-          // the vector distance between atom i and j
-          reducedCoordinates = px[i] - px[idx];
-
-          // this is required for periodic boundary conditions
-          reducedCoordinates -= (reducedCoordinates / d_box).vec_rint() * d_box;
-          double reducedX = reducedCoordinates[0] * reducedCoordinates[0];
-          double reducedY = reducedCoordinates[1] * reducedCoordinates[1];
-          double reducedZ = reducedCoordinates[2] * reducedCoordinates[2];
-          r2 = reducedX + reducedY + reducedZ;
-          ir2 = 1.0 / r2;  // 1/r^2
-          ir6 = ir2 * ir2 * ir2;  // 1/r^6
-          ir12 = ir6 * ir6;  // 1/r^12
-          T12 = R12 * ir12;
-          T6 = R6 * ir6;
-          penergynew[idx] = T12 - T6;  // energy
-          vdwEnergy += penergynew[idx];  // count the energy
-          forceTerm = (12.0 * T12 - 6.0 * T6) * ir2;  // the force term
-          totalForce = forceTerm * reducedCoordinates;
-
-          // the contribution of force on atom i
-          atomForce += totalForce;
-        }  // end neighbor loop for atom "i"
-
-        // sum up contributions to force for atom i
-        pforcenew[i] += atomForce;
-
-        if (md_dbg.active()) {
-          cerrLock.lock();
-          std::cout << "PatchID: " << std::setw(4) << patch->getID() << std::setw(6);
-          std::cout << "Energy: ";
-          std::cout << std::setw(14) << std::setprecision(6) << penergynew[i];
-          std::cout << "Force: [";
-          std::cout << std::setw(14) << std::setprecision(6) << pforcenew[i].x();
-          std::cout << std::setw(14) << std::setprecision(6) << pforcenew[i].y();
-          std::cout << std::setprecision(6) << pforcenew[i].z() << std::setw(4) << "]";
-          std::cout << std::endl;
-          cerrLock.unlock();
-        }
-      }  // end atom loop
-
-      // this accounts for double energy with Aij and Aji
-      vdwEnergy *= 0.50;
-
-      if (md_dbg.active()) {
-        cerrLock.lock();
-        Vector forces(0.0, 0.0, 0.0);
-        for (unsigned int i = 0; i < numParticles; i++) {
-          forces += pforcenew[i];
-        }
-        std::cout.setf(std::ios_base::scientific);
-        std::cout << "Total Local Energy: " << std::setprecision(16) << vdwEnergy << std::endl;
-        std::cout << "Local Force: [";
-        std::cout << std::setw(16) << std::setprecision(8) << forces.x();
-        std::cout << std::setw(16) << std::setprecision(8) << forces.y();
-        std::cout << std::setprecision(8) << forces.z() << std::setw(4) << "]";
-        std::cout << std::endl;
-        std::cout.unsetf(std::ios_base::scientific);
-        cerrLock.unlock();
-      }
-
-      new_dw->deleteParticles(delset);
-
-    }  // end materials loop
-
-    // global reduction on vdwEnergy
-    new_dw->put(sum_vartype(vdwEnergy), d_lb->vdwEnergyLabel);
-
-  }  // end patch loop
-
-}
-
-void MD::interpolateParticlesToGrid(const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw)
-{
-  printTask(patches, md_cout, "MD::interpolateChargesToGrid");
+  d_nonbonded->initialize(pg, patches, matls, old_dw, new_dw);
+  d_nonbonded->setup(pg, patches, matls, old_dw, new_dw);
+  d_nonbonded->calculate(pg, patches, matls, old_dw, new_dw);
+  d_nonbonded->finalize(pg, patches, matls, old_dw, new_dw);
 }
 
 void MD::performElectrostatics(const ProcessorGroup* pg,
@@ -684,6 +497,15 @@ void MD::performElectrostatics(const ProcessorGroup* pg,
   d_electrostatics->calculate(pg, patches, matls, old_dw, new_dw);
 
   d_electrostatics->finalize(pg, patches, matls, old_dw, new_dw);
+}
+
+void MD::interpolateParticlesToGrid(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw)
+{
+  printTask(patches, md_cout, "MD::interpolateChargesToGrid");
 }
 
 void MD::interpolateToParticlesAndUpdate(const ProcessorGroup* pg,

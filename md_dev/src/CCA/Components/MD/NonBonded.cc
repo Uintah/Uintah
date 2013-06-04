@@ -22,40 +22,17 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_ELECTROSTATICSFACTORY_h
-#define UINTAH_MD_ELECTROSTATICSFACTORY_h
+#include <CCA/Components/MD/NonBonded.h>
 
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Components/MD/Electrostatics.h>
+using namespace Uintah;
 
-namespace Uintah {
+NonBonded::NonBonded()
+{
 
-  class ProcessorGroup;
-  class MDSystem;
+}
 
-  /**
-   *  @class ElectrostaticsFactory
-   *  @ingroup MD
-   *  @author Alan Humphrey and Justin Hooper
-   *  @date   February, 2013
-   *
-   *  @brief
-   *
-   *  @param
-   */
-  class ElectrostaticsFactory {
+NonBonded::~NonBonded()
+{
 
-    public:
+}
 
-      /**
-       * @brief Simply create the appropriate Electrostatics object.
-       *         This method has a switch for all known Electrostatics types.
-       * @param ps The ProblemSpec handle with which to get electrostatics properties from the input file.
-       * @param system The MD system handle to pass off to the appropriate Electrostatics constructor.
-       */
-      static Electrostatics* create(const ProblemSpecP& ps,
-                                    MDSystem* system);
-  };
-}  // End namespace Uintah
-
-#endif
