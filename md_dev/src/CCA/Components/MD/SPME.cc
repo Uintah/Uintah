@@ -99,8 +99,11 @@ SPME::SPME(MDSystem* system,
            const bool isPolarizable,
            const double tolerance,
            const IntVector& kLimits,
-           const int splineOrder) :
-    d_system(system), d_ewaldBeta(ewaldBeta), d_polarizable(isPolarizable), d_polarizationTolerance(tolerance), d_kLimits(kLimits)
+           const int splineOrder,
+           const int maxPolarizableIterations) :
+      d_system(system), d_ewaldBeta(ewaldBeta), d_polarizable(isPolarizable),
+      d_polarizationTolerance(tolerance), d_kLimits(kLimits),
+      d_maxPolarizableIterations(maxPolarizableIterations)
 {
   d_interpolatingSpline = CenteredCardinalBSpline(splineOrder);
   d_electrostaticMethod = Electrostatics::SPME;
@@ -136,7 +139,9 @@ void SPME::initialize(const ProcessorGroup* pg,
   IntVector minusGhostExtents = plusGhostExtents;  // ensure symmetry
 
   // Check to make sure plusGhostExtents+minusGhostExtents is right way to enter number of ghost cells (i.e. total, not per offset)
-  d_Q = scinew SimpleGrid<dblcomplex>(patchKGridExtents, patchKGridOffset, 2 * splineHalfMaxSupport);
+  IntVector klimits(d_kLimits(0), d_kLimits(1), d_kLimits(2));
+  IntVector zero(0, 0, 0);
+  d_Q = scinew SimpleGrid<dblcomplex>(klimits, zero, 0);
   d_Q->initialize(dblcomplex(0.0, 0.0));
 
   int xdim = d_kLimits(0);
@@ -250,8 +255,7 @@ void SPME::calculate(const ProcessorGroup* pg,
 {
   bool converged = false;
   int numIterations = 0;
-  int maxIterations = d_system->getMaxPolarizableIterations();
-  while (!converged && (numIterations < maxIterations)) {
+  while (!converged && (numIterations < d_maxPolarizableIterations)) {
 
     // Do calculation steps until the Real->Fourier space transform
     calculatePreTransform(pg, patches, materials, old_dw, new_dw);
@@ -412,13 +416,12 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
   std::vector<SPMEPatch*>::iterator PatchIterator;
   for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
     SPMEPatch* spmePatch = *PatchIterator;
+
+    int xdim = d_kLimits(0);
+    int ydim = d_kLimits(0);
+    int zdim = d_kLimits(0);
+
     SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
-
-    IntVector extents = Q->getExtents();
-    int xdim = extents[0];
-    int ydim = extents[1];
-    int zdim = extents[2];
-
     fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
     d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
     fftw_execute(d_forwardTransformPlan);
@@ -438,13 +441,12 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
   std::vector<SPMEPatch*>::iterator PatchIterator;
   for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
     SPMEPatch* spmePatch = *PatchIterator;
+
+    int xdim = d_kLimits(0);
+    int ydim = d_kLimits(0);
+    int zdim = d_kLimits(0);
+
     SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
-
-    IntVector extents = Q->getExtents();
-    int xdim = extents[0];
-    int ydim = extents[1];
-    int zdim = extents[2];
-
     fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
     d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
     fftw_execute(d_backwardTransformPlan);

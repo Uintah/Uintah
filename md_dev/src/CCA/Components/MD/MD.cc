@@ -373,8 +373,8 @@ void MD::initialize(const ProcessorGroup* pg,
     const Patch* patch = patches->get(p);
 
     // get bounds of current patch to correctly initialize particles (atoms)
-    IntVector low = patch->getExtraCellLowIndex();
-    IntVector high = patch->getExtraCellHighIndex();
+    IntVector low = patch->getCellLowIndex();
+    IntVector high = patch->getCellHighIndex();
 
     // do this for each material
     unsigned int numMatls = matls->size();

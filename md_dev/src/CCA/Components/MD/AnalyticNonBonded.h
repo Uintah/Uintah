@@ -34,16 +34,6 @@
 
 namespace Uintah {
 
-  struct Atom {
-      Atom(Point pnt,
-           double charge) :
-          coords(pnt), charge(charge)
-      {
-      }
-      Point coords;
-      double charge;
-  };
-
   using namespace SCIRun;
 
   typedef int particleIndex;
@@ -87,9 +77,9 @@ namespace Uintah {
        * @param
        */
       AnalyticNonBonded(MDSystem* system,
-                  const double r12,
-                  const double r6,
-                  const double cutoffRadius);
+                        const double r12,
+                        const double r6,
+                        const double cutoffRadius);
 
       /**
        * @brief
@@ -164,7 +154,10 @@ namespace Uintah {
        * @param None
        * @return
        */
-      void generateNeighborList();
+      void generateNeighborList(ParticleSubset* local_pset,
+                                ParticleSubset* neighbor_pset,
+                                constParticleVariable<Point> px_local,
+                                constParticleVariable<Point> px_neighbors);
 
       /**
        * @brief
@@ -182,7 +175,6 @@ namespace Uintah {
       double d_cutoffRadius;                     //!< The short-range cut, in Angstroms
 
       // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
-      std::vector<Atom>* d_atomList;             //!< Individual atom neighbor list
       std::vector<vector<int> > d_neighborList;  //!< List of all atom neighbor indices
   };
 
