@@ -29,7 +29,7 @@
 #include <CCA/Components/MD/ElectrostaticsFactory.h>
 #include <CCA/Components/MD/SPME.h>
 #include <CCA/Components/MD/NonBondedFactory.h>
-#include <CCA/Components/MD/LJTwelveSix.h>
+#include <CCA/Components/MD/AnalyticNonBonded.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationState.h>
@@ -92,7 +92,7 @@ void MD::problemSetup(const ProblemSpecP& params,
   // create the NonBonded object via factory method
   d_nonbonded = NonBondedFactory::create(params, d_system);
   if (d_nonbonded->getType() == NonBonded::LJ12_6) {
-    dynamic_cast<LJTwelveSix*>(d_nonbonded)->setMDLabel(d_lb);
+    dynamic_cast<AnalyticNonBonded*>(d_nonbonded)->setMDLabel(d_lb);
   }
 
   // create the Electrostatics object via factory method
