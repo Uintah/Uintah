@@ -2259,6 +2259,47 @@ in Fig. \ref{fig:p2tiff}.  In this simulation two similar disks collided at the 
 \end{figure}
 
 
+%__________________________________
+\section{On the fly analysis} 
+On the fly analysis is used to determine the minimum and maximum of specified variables while the simulation is running.  Parameters are included in the input file to specify at what frequency the data is analyzed and which variables to look at. A new directory will be made in the uda directory for each level (e.g. L-0). Within the new directory the max and min of each variable for the specified material is determined as a function of time at the given sampling frequency. 
+
+\begin{center}
+\begin{tabular}{| l | c | p{7cm} |}
+\hline
+  \multicolumn{3}{|c|}{\textbf{Dynamic Output Intervals Input Parameters}} \\
+\hline
+\hline
+  \textbf{Tag} & \textbf{Type} & \textbf{Description}\\
+\hline
+  $<$samplingFrequency$>$ & double & Sampling frequency in times per simulated second\\
+\hline
+  $<$timeStart$>$ & double & Simulation time when sampling begins (sec)\\
+\hline
+  $<$timeEnd$>$ & double & Simulation time when sampling ends (sec)\\
+\hline
+  $<$Variables$>$ & String & Variables to be analyzed including a specification for which material\\
+\hline
+\end{tabular}
+\end{center}
+
+
+The input file specification is as follows:
+\begin{verbatim}
+<DataAnalysis>
+  <Module name = "minMax">
+    <samplingFrequency> 1e8 </samplingFrequency>
+    <timeStart> 0 </timeStart>
+    <timeEnd> 1000 </timeEnd>
+    <Variables>
+      <analyze label="press_CC" matl="0"/>
+      <analyze label="vel_CC" matl="1"/>
+      <analyze label="rho_CC" matl="0"/>
+    </Variables>
+  </Module>
+</DataAnalysis>
+\end{verbatim}
+
+
 %\section{compare\_uda}
 
 %__________________________________

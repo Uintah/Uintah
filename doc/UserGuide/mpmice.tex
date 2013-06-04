@@ -596,7 +596,7 @@ Berghout et al. \cite{ref:Berghout2002}  The parameters are presented in the fol
 
 
 \newpage
-\subsection{Dynamic Output Intervals} \label {Sec:DDT1}
+\subsubsection{Dynamic Output Intervals} \label {Sec:DDT1}
 The dynamic output intervals section is used to change how frequently the output interval and check point interval are saved. The intervals can be changed when the pressure is a cell with reactant is greater than the set pressure threshold and/or when detonation is detected. This only works when using the DDT1 reaction model.
 
 
@@ -640,6 +640,58 @@ The input file specification is as follows:
 ....
 </Models> 
 \end{verbatim}
+
+\newpage
+\subsubsection{Induction Time} \label {Sec:Induction Time }
+To accurately represent the propagation of deflagration an "induction" period, or wait time was introduced. This induction period is the time a cell must wait before reactant mass would be converted to product gas using the WSB burn model \cite{ref:wardsonbrewster}.   The induction time is dependent on the surrounding pressure and the size of the cell. The induction time model is based off experimentally determined flame propagation on a surface as seen in equation \ref{FlameSpread} \cite{flameProp}, where P is the dimensionless pressure (p/p$_0$) and S$_f$ is the flame propagation in $cm/s$. Equation \ref{FlameSpread} is used in determining the induction time as seen by equation \ref{inducTime} where x is the size of the cell and A is a constant used to speed up or slow down the propagation of convective deflagration. A varies depending on the length of the cell but should be used to give the correct propagation of convective deflagration only. The model determines which direction the flame is coming from in turn adjusting A according to the angle of penetration.
+For instance if the flame is propagating along a surface but not into the solid A = 1 but if the flame is propagating directly into the surface A equals the value set in the input file.
+
+\begin{equation}
+S_f = 0.259{\displaystyle P^{0.538}}
+\label{FlameSpread}
+\end{equation}
+\begin{equation}
+\tau = \frac{\Delta x A}{S_f} 
+\label{inducTime}
+\end{equation}
+
+\begin{center}
+\begin{tabular}{| l | c | p{7cm} |}
+\hline
+  \multicolumn{3}{|c|}{\textbf{Dynamic Output Intervals Input Parameters}} \\
+\hline
+\hline
+  \textbf{Tag} & \textbf{Type} & \textbf{Description}\\
+\hline
+  $<$useIndcutionTime$>$ & boolean & (Optional; default false) Switch that slows down deflagration propagation\\
+\hline
+  $<$IgnitionConst$>$ & double & Constant used to speed up or slow down the convective deflagration propagation\\
+\hline
+  $<$PressureShift$>$ & double & Pressure used to make dimensionless pressure (p$_0$)\\
+\hline
+  $<$ExponentialConst$>$ & double & Exponential constant used in flame propagation equation\\
+\hline
+  $<$PreexopConst$>$ & double & Pre-exponential constant used in flame propagation equation\\
+\hline
+\end{tabular}
+\end{center}
+
+
+The input file specification is as follows:
+\begin{verbatim}
+<Models>
+....
+  <useInductionTime>  true </useInductionTime>
+  <IgnitionConst> 0.00009 </IgnitionConst>
+  <PressureShift> 1.0e5 </PressureShift>
+  <ExponentialConst> 0.538 </ExponentialConst>
+  <PreexpoConst> 0.00259 </PreexpoConst>
+....
+</Models> 
+\end{verbatim}
+
+The pressure shift, exponential and pre-exponential constants presented above are given by Son et al. \cite{flameProp} for experimentally determined values for the explosive PBX9501.
+
 
 \newpage
 
