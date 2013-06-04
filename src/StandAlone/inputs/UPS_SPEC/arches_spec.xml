@@ -420,10 +420,6 @@
         </TurbulentInlet>
 
         <ramping_inlet_flowrate         spec="OPTIONAL BOOLEAN" />
-        <Prefill                        spec="OPTIONAL NO_DATA"
-                                        attribute1="bc REQUIRED STRING">
-          <geom_object/>
-        </Prefill>
         <FlowInlet                      spec="MULTIPLE NO_DATA" >
           <velocity_type                spec="OPTIONAL STRING 'flat, function, vector, file, geometry'"/>
           <scalar_type                  spec="OPTIONAL STRING 'flat, function, file, geometry'"/>
@@ -442,10 +438,6 @@
           <mixture_fraction             spec="REQUIRED DOUBLE" />
           <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
           <heat_loss                    spec="OPTIONAL DOUBLE" />
-          <Prefill                      spec="OPTIONAL NO_DATA"
-                                          attribute1="direction REQUIRED STRING 'X, Y, Z'" >
-            <geom_object />
-          </Prefill>
           <geom_object />
         </FlowInlet>
 

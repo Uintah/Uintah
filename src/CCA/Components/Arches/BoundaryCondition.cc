@@ -200,31 +200,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
        d_laminar_wall_shear = true; 
      } 
 
-    if ( d_use_new_bcs ) { 
-
-      for (ProblemSpecP prefill_db = db->findBlock("Prefill"); prefill_db != 0; 
-            prefill_db = prefill_db->findNextBlock("Prefill") ) { 
-
-        std::string which_boundary = "null"; 
-        prefill_db->getAttribute( "bc", which_boundary ); 
-
-        if ( which_boundary == "null" ) { 
-          throw ProblemSetupException("Error: Must specify an associated boundary for the prefill attribute.",__FILE__,__LINE__); 
-        } 
-
-        ProblemSpecP geometry_db = prefill_db->findBlock("geom_object"); 
-        std::vector<GeometryPieceP> geometry; 
-        if ( geometry_db ) { 
-          GeometryPieceFactory::create( geometry_db, geometry ); 
-        } else { 
-          throw ProblemSetupException("Error: Must specify a geom_object in <Prefill> block.",__FILE__,__LINE__); 
-        } 
-
-        d_prefill_map.insert(make_pair(which_boundary, geometry));
-
-      } 
-    }
-
     if ( db->findBlock("intrusions") ){ 
 
       _intrusionBC = scinew IntrusionBC( d_lab, d_MAlab, d_props, BoundaryCondition::INTRUSION ); 
@@ -2017,9 +1992,7 @@ BoundaryCondition::FlowInlet::FlowInlet(int cellID,
   inletVel = 0.0;
   fcr = 0.0;
   fsr = 0.0;
-  d_prefill_index = 0;
   d_ramping_inlet_flowrate = false;
-  d_prefill = false;
   // add cellId to distinguish different inlets
   std::stringstream stream_cellID;
   stream_cellID << d_cellTypeID;
@@ -2037,9 +2010,7 @@ BoundaryCondition::FlowInlet::FlowInlet():
   inletVel = 0.0;
   fcr = 0.0;
   fsr = 0.0;
-  d_prefill_index = 0;
   d_ramping_inlet_flowrate = false;
-  d_prefill = false;
 }
 
 BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
@@ -2050,7 +2021,6 @@ BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
   inletVel(copy.inletVel),
   fcr(copy.fcr),
   fsr(copy.fsr),
-  d_prefill_index(copy.d_prefill_index),
   d_ramping_inlet_flowrate(copy.d_ramping_inlet_flowrate),
   streamMixturefraction(copy.streamMixturefraction),
   calcStream(copy.calcStream),
@@ -2062,11 +2032,6 @@ BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
        it != copy.d_geomPiece.end(); ++it)
     d_geomPiece.push_back((*it)->clone());
   
-  if (d_prefill)
-    for (vector<GeometryPieceP>::const_iterator it = copy.d_prefillGeomPiece.begin();
-       it != copy.d_prefillGeomPiece.end(); ++it)
-      d_prefillGeomPiece.push_back((*it)->clone());
-
   d_area_label->addReference();
   d_flowRate_label->addReference();
 }
@@ -2088,13 +2053,10 @@ BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const Flow
   inletVel = copy.inletVel;
   fcr = copy.fcr;
   fsr = copy.fsr;
-  d_prefill_index = copy.d_prefill_index;
   d_ramping_inlet_flowrate = copy.d_ramping_inlet_flowrate;
   streamMixturefraction = copy.streamMixturefraction;
   calcStream = copy.calcStream;
   d_geomPiece = copy.d_geomPiece;
-  if (d_prefill)
-    d_prefillGeomPiece = copy.d_prefillGeomPiece;
 
   return *this;
 }
@@ -2221,37 +2183,6 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
     streamMixturefraction.d_mixVarVariance.push_back(0.0);
   }
  
-  //Prefill a geometry object with the flow inlet condition 
-  d_prefill = params->findBlock("Prefill"); 
-  if (params->findBlock("Prefill") ){
-
-    ProblemSpecP db_prefill = params->findBlock("Prefill");
-    std::string prefill_direction = "null"; 
-    db_prefill->getAttribute("direction",prefill_direction); 
-    //get the direction
-    if (prefill_direction == "X") {
-      d_prefill_index = 1;
-    }
-    else if (prefill_direction == "Y") {
-      d_prefill_index = 2;
-    }
-    else if (prefill_direction == "Z") {
-      d_prefill_index = 3;
-    }
-    else {
-      throw InvalidValue("Wrong prefill direction. Please add the direction attribute to the <Prefill> tag.", __FILE__, __LINE__);
-    }
-    //get the object
-    ProblemSpecP prefillGeomObjPS = db_prefill->findBlock("geom_object");
-    if (prefillGeomObjPS)
-    {
-      GeometryPieceFactory::create(prefillGeomObjPS, d_prefillGeomPiece); 
-    } 
-    else 
-    { 
-      throw ProblemSetupException("Error! Must specify a geom_object in <Prefill> block.",__FILE__,__LINE__); 
-    }
-  }
 }
 
 
@@ -4396,166 +4327,6 @@ BoundaryCondition::mmsscalarBC(const Patch* patch,
   }
 }
 
-//****************************************************************************
-// Schedule  prefill
-//****************************************************************************
-void 
-BoundaryCondition::sched_Prefill(SchedulerP& sched, 
-                                 const PatchSet* patches,
-                                 const MaterialSet* matls)
-{
-  Task* tsk = scinew Task("BoundaryCondition::Prefill",this,
-                          &BoundaryCondition::Prefill);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,Ghost::None, 0);
-  
-  for (int ii = 0; ii < d_numInlets; ii++) {
-    tsk->requires(Task::NewDW, d_flowInlets[ii]->d_area_label);
-    tsk->requires(Task::NewDW, d_flowInlets[ii]->d_flowRate_label);
-  }
-
-  if (d_enthalpySolve) {
-    tsk->modifies(d_lab->d_enthalpySPLabel);
-  }
-  if (d_reactingScalarSolve) {
-    tsk->modifies(d_lab->d_reactscalarSPLabel);
-  }
-    
-  // This task computes new density, uVelocity, vVelocity and wVelocity, scalars
-  tsk->modifies(d_lab->d_densityCPLabel);
-  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_uVelRhoHatLabel);
-  tsk->modifies(d_lab->d_vVelRhoHatLabel);
-  tsk->modifies(d_lab->d_wVelRhoHatLabel);
-  //tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
-
-  tsk->modifies(d_lab->d_scalarSPLabel);
-
-  sched->addTask(tsk, patches, matls);
-}
-
-//****************************************************************************
-// Actually set flat profile at flow inlet boundary
-//****************************************************************************
-void 
-BoundaryCondition::Prefill(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    CCVariable<double> density;
-    SFCXVariable<double> uVelocity;
-    SFCYVariable<double> vVelocity;
-    SFCZVariable<double> wVelocity;
-    SFCXVariable<double> uVelRhoHat;
-    SFCYVariable<double> vVelRhoHat;
-    SFCZVariable<double> wVelRhoHat;
-    CCVariable<double> scalar;
-    CCVariable<double> reactscalar;
-    CCVariable<double> enthalpy;
-    constCCVariable<int> cellType;
-
-    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, indx, patch);
-    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, indx, patch);
-    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, indx, patch);
-    
-    new_dw->getModifiable(density, d_lab->d_densityCPLabel, indx, patch);
-    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
-    if (d_reactingScalarSolve)
-      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, indx, patch);
-    
-    if (d_enthalpySolve){ 
-      new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
-    }
-    
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None, 0);
-
-    // loop thru the flow inlets to set all the components of velocity and density
-    if (d_inletBoundary) {
-
-      double time = 0.0;
-      double ramping_factor;
-      Vector dx = patch->dCell();
-      Box patchInteriorBox = patch->getBox();
-
-      for (int indx = 0; indx < d_numInlets; indx++) {
-
-        sum_vartype area_var;
-        new_dw->get(area_var, d_flowInlets[indx]->d_area_label);
-        double area = area_var;
-        delt_vartype flow_r;
-        new_dw->get(flow_r, d_flowInlets[indx]->d_flowRate_label);
-        double flow_rate = flow_r;
-        FlowInlet* fi = d_flowInlets[indx];
-        // This call does something magical behind the scenes. 
-        fort_get_ramping_factor(fi->d_ramping_inlet_flowrate,
-                                time, ramping_factor);
-
-        if (fi->d_prefill) {
-
-          int nofGeomPieces = (int)fi->d_prefillGeomPiece.size();
-
-          for (int ii = 0; ii < nofGeomPieces; ii++) {
-
-            GeometryPieceP  piece = fi->d_prefillGeomPiece[ii];
-            Box geomBox = piece->getBoundingBox();
-            Box b = geomBox.intersect(patchInteriorBox);
-
-            if (!(b.degenerate())) {
-
-              for (CellIterator iter = patch->getCellCenterIterator(b); !iter.done(); iter++) {
-
-                Point p = patch->cellPosition(*iter);
-                // Do Velocities
-                if (piece->inside(p) && cellType[*iter] == d_flowfieldCellTypeVal) {
-                  if (fi->d_prefill_index == 1) {
-                    Point p_fx(p.x()-dx.x()/2.,p.y(),p.z()); // minus x-face
-                    if (piece->inside(p_fx))
-                      uVelocity[*iter] = flow_rate / (fi->calcStream.d_density * area);
-                  }
-                  if (fi->d_prefill_index == 2) {
-                    Point p_fy(p.x(),p.y()-dx.y()/2.,p.z()); // minus y-face
-                    if (piece->inside(p_fy))
-                      vVelocity[*iter] = flow_rate / (fi->calcStream.d_density * area);
-                  }
-                  if (fi->d_prefill_index == 3) {
-                    Point p_fz(p.x(),p.y(),p.z()-dx.z()/2.); // minus z-face
-                    if (piece->inside(p_fz))
-                      wVelocity[*iter] = flow_rate / (fi->calcStream.d_density * area);
-                  }
-
-                  // Now do scalars
-                  density[*iter] = fi->calcStream.d_density;
-                  scalar[*iter] = fi->streamMixturefraction.d_mixVars[0];
-                  if (d_enthalpySolve)
-                    enthalpy[*iter] = fi->calcStream.d_enthalpy;
-                  if (d_reactingScalarSolve)
-                    reactscalar[*iter] = fi->streamMixturefraction.d_rxnVars[0];
-                
-                } // Cell Iter loop 
-  
-              } // cell iterator loop
-            }
-          }  // geom iter
-        }  // prefill
-      }  // inlets loop
-    }
-    uVelRhoHat.copyData(uVelocity); 
-    vVelRhoHat.copyData(vVelocity); 
-    wVelRhoHat.copyData(wVelocity); 
-
-  }
-}
 
 void BoundaryCondition::sched_setAreaFraction(SchedulerP& sched, 
                                      const PatchSet* patches, 
@@ -6194,97 +5965,6 @@ BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
   }
 }
 
-// Bandaid until the face-centered scalar eqn is implemented 
-void 
-BoundaryCondition::sched_setPrefill__NEW( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
-{ 
-  Task* tsk = scinew Task("BoundaryCondition::setPrefill__NEW", this, &BoundaryCondition::setPrefill__NEW); 
-
-  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-
-  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None, 0 ); 
-
-  sched->addTask(tsk, patches, matls);
-
-} 
-
-void BoundaryCondition::setPrefill__NEW( const ProcessorGroup*,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse*,
-                                         DataWarehouse* new_dw )
-{
-  for (int p = 0; p < patches->size(); p++) {
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    Box patchInteriorBox = patch->getBox();
-
-    SFCXVariable<double> uVelocity; 
-    SFCYVariable<double> vVelocity; 
-    SFCZVariable<double> wVelocity; 
-    constCCVariable<int> cellType; 
-
-    new_dw->getModifiable( uVelocity, d_lab->d_uVelocitySPBCLabel, matl_index, patch ); 
-    new_dw->getModifiable( vVelocity, d_lab->d_vVelocitySPBCLabel, matl_index, patch ); 
-    new_dw->getModifiable( wVelocity, d_lab->d_wVelocitySPBCLabel, matl_index, patch ); 
-    new_dw->get( cellType, d_lab->d_cellTypeLabel, matl_index, patch, Ghost::None, 0 ); 
-
-    for ( std::map<std::string, std::vector<GeometryPieceP> >::iterator iter = d_prefill_map.begin(); 
-          iter != d_prefill_map.end(); iter++ ) { 
-
-      BCInfoMap::iterator ifound_bc = d_bc_information.end(); 
-      BCInfoMap::iterator ibc_info; 
-
-      // search for the boundary condition to match this prefill instruction 
-      for ( ibc_info = d_bc_information.begin(); ibc_info != d_bc_information.end(); ibc_info++ ){ 
-
-        if ( ibc_info->second.name == iter->first ){ 
-
-          ifound_bc = ibc_info; 
-
-        } 
-      } 
-
-      if ( ifound_bc == d_bc_information.end() ) { 
-
-        throw InvalidValue("Error: Unable to match prefill bc name with actual boundary condition. ", __FILE__, __LINE__); 
-
-      } else { 
-
-        // Prefill matched with boundary condition.  Now set all cells inside the 
-        // geometry piece with the velocity as specified by the matching boundary. 
-        int nofGeomPieces = (int)iter->second.size(); 
-
-        for (int i = 0; i < nofGeomPieces; i++) {
-
-          GeometryPieceP piece = iter->second[i]; 
-          Box geomBox = piece->getBoundingBox(); 
-          Box box = geomBox.intersect( patchInteriorBox ); 
-          Vector velocity = ifound_bc->second.velocity; 
-
-          if ( !(box.degenerate()) ){ 
-
-            for ( CellIterator icell = patch->getCellCenterIterator(box); !icell.done(); icell++ ) { 
-
-              Point p = patch->cellPosition( *icell ); 
-              if ( piece->inside( p ) && cellType[*icell] == -1 ) { 
-
-                uVelocity[*icell] = velocity[0];
-                vVelocity[*icell] = velocity[1]; 
-                wVelocity[*icell] = velocity[2]; 
-
-              } 
-            } 
-          } 
-        }
-      } 
-    } 
-  }
-}
 void 
 BoundaryCondition::setHattedIntrusionVelocity( const Patch* p, 
                                                SFCXVariable<double>& u, 

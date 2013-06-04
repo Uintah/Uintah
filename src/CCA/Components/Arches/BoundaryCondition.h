@@ -290,17 +290,6 @@ namespace Uintah {
                                        constCCVariable<double>& P,
                                        constCCVariable<double>& density );
 
-      void sched_setPrefill__NEW( SchedulerP& sched,
-                                  const PatchSet* patches,
-                                  const MaterialSet* matls);
-
-      void setPrefill__NEW( const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset*,
-                            DataWarehouse*,
-                            DataWarehouse* new_dw );
-
-
       template <class stencilType> 
       void zeroStencilDirection( const Patch* patch, 
                                  const int  matl_index, 
@@ -501,10 +490,6 @@ namespace Uintah {
       // Also sets flat profiles for density
       // ** WARNING ** Properties profile not done yet
       void sched_setProfile(SchedulerP&, 
-          const PatchSet* patches,
-          const MaterialSet* matls);
-
-      void sched_Prefill(SchedulerP&, 
           const PatchSet* patches,
           const MaterialSet* matls);
 
@@ -845,7 +830,6 @@ namespace Uintah {
 
       BCNameMap d_bc_type_to_string;                        ///< Matches the BC integer ID with the string name
       bool d_use_new_bcs;                                   ///< Turn on/off the new BC mech. 
-      std::map<std::string, std::vector<GeometryPieceP> > d_prefill_map;  ///< Contains inlet name/geometry piece pairing
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute u velocity BC terms
@@ -898,13 +882,6 @@ namespace Uintah {
           const MaterialSubset* matls,
           DataWarehouse* old_dw,
           DataWarehouse* new_dw);
-
-      void Prefill(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw);
-
 
       void initInletBC(const ProcessorGroup*,
           const PatchSubset* patches,
@@ -1019,15 +996,12 @@ namespace Uintah {
           Vector d_velocity_vector; 
           double fcr;
           double fsr;
-          int d_prefill_index;
           bool d_ramping_inlet_flowrate;
-          bool d_prefill;
           InletStream streamMixturefraction;
           // calculated values
           Stream calcStream;
           // stores the geometry information, read from problem specs
           std::vector<GeometryPieceP> d_geomPiece;
-          std::vector<GeometryPieceP> d_prefillGeomPiece;
           void problemSetup(ProblemSpecP& params);
           // reduction variable label to get area
           VarLabel* d_area_label;
