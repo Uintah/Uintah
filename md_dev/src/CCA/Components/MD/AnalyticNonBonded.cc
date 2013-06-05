@@ -46,8 +46,7 @@ using namespace Uintah;
 
 extern SCIRun::Mutex cerrLock;
 
-static DebugStream lj12_6_dbg("LJ12_6", false);
-static DebugStream analytic_dbg("LJ12_6Cout", false);
+static DebugStream analytic_dbg("AnalyticNonbondedDbg", false);
 
 AnalyticNonBonded::AnalyticNonBonded()
 {
@@ -76,24 +75,30 @@ void AnalyticNonBonded::initialize(const ProcessorGroup* pg,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
-  unsigned int numPatches = patches->size();
-  for (unsigned int p = 0; p < numPatches; p++) {
+  int numPatches = patches->size();
+  // need a neighbor list for each patch
+  d_neighborList.reserve(numPatches);
+  for (int i = 0; i < numPatches; i++) {
+    d_neighborList.push_back(vector<vector<int> >());
+  }
+
+  for (int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
 
     // do this for each material; currently only using material "0"
-    unsigned int numMatls = materials->size();
-    for (unsigned int m = 0; m < numMatls; m++) {
+    int numMatls = materials->size();
+    for (int m = 0; m < numMatls; m++) {
       int matl = materials->get(m);
 
       // get interior (purely local) bounds of current patch to correctly initialize particles (atoms)
       IntVector lowInterior = patch->getCellLowIndex();
       IntVector highInterior = patch->getCellHighIndex();
-      ParticleSubset* localpset = old_dw->getParticleSubset(matl, patch, lowInterior, highInterior);
+      ParticleSubset* localpset = new_dw->getParticleSubset(matl, patch, lowInterior, highInterior);
 
       // for neighbor indices; one list for each atom
-      unsigned int numAtoms = localpset->numParticles();
-      for (unsigned int i = 0; i < numAtoms; i++) {
-        d_neighborList.push_back(vector<int>());
+      int numAtoms = localpset->numParticles();
+      for (int i = 0; i < numAtoms; i++) {
+        d_neighborList[p].push_back(vector<int>());
       }
     }
   }
@@ -124,7 +129,7 @@ void AnalyticNonBonded::setup(const ProcessorGroup* pg,
       old_dw->get(px_local, d_lb->pXLabel, local_pset);
       old_dw->get(px_neighbors, d_lb->pXLabel, neighbor_pset);
 
-      generateNeighborList(local_pset, neighbor_pset, px_local, px_neighbors);
+      generateNeighborList(local_pset, neighbor_pset, px_local, px_neighbors, p);
     }
   }
 }
@@ -136,14 +141,12 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
                                   DataWarehouse* new_dw)
 {
   Vector box = d_system->getBox();
+  double vdwEnergy = 0;
 
   // loop through all patches
   unsigned int numPatches = patches->size();
   for (unsigned int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
-
-    double vdwEnergy = 0;
-
     unsigned int numMatls = materials->size();
     for (unsigned int m = 0; m < numMatls; m++) {
       int matl = materials->get(m);
@@ -167,26 +170,21 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
       new_dw->allocateAndPut(pforcenew, d_lb->pForceLabel_preReloc, local_pset);
       new_dw->allocateAndPut(penergynew, d_lb->pEnergyLabel_preReloc, local_pset);
 
-      unsigned int numParticles = local_pset->numParticles();
-      for (unsigned int i = 0; i < numParticles; i++) {
-        pforcenew[i] = pforce[i];
-        penergynew[i] = penergy[i];
-      }
-
       // loop over all atoms in system, calculate the forces
       double r2, ir2, ir6, ir12, T6, T12;
       double forceTerm;
       Vector totalForce, atomForce;
       Vector reducedCoordinates;
       unsigned int localAtoms = local_pset->numParticles();
+
       for (unsigned int i = 0; i < localAtoms; i++) {
         atomForce = Vector(0.0, 0.0, 0.0);
 
         // loop over the neighbors of atom "i"
         unsigned int idx;
-        unsigned int numNeighbors = d_neighborList[i].size();
+        unsigned int numNeighbors = d_neighborList[p][i].size();
         for (unsigned int j = 0; j < numNeighbors; j++) {
-          idx = d_neighborList[i][j];
+          idx = d_neighborList[p][i][j];
 
           // the vector distance between atom i and j
           reducedCoordinates = px[i] - px[idx];
@@ -196,10 +194,11 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
           double reducedX = reducedCoordinates[0] * reducedCoordinates[0];
           double reducedY = reducedCoordinates[1] * reducedCoordinates[1];
           double reducedZ = reducedCoordinates[2] * reducedCoordinates[2];
+
           r2 = reducedX + reducedY + reducedZ;
-          ir2 = 1.0 / r2;  // 1/r^2
+          ir2 = 1.0 / r2;         // 1/r^2
           ir6 = ir2 * ir2 * ir2;  // 1/r^6
-          ir12 = ir6 * ir6;  // 1/r^12
+          ir12 = ir6 * ir6;       // 1/r^12
           T12 = d_r12 * ir12;
           T6 = d_r6 * ir6;
           penergynew[idx] = T12 - T6;  // energy
@@ -213,27 +212,15 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
 
         // sum up contributions to force for atom i
         pforcenew[i] += atomForce;
-
-        if (lj12_6_dbg.active()) {
-          cerrLock.lock();
-          std::cout << "PatchID: " << std::setw(4) << patch->getID() << std::setw(6);
-          std::cout << "Energy: ";
-          std::cout << std::setw(14) << std::setprecision(6) << penergynew[i];
-          std::cout << "Force: [";
-          std::cout << std::setw(14) << std::setprecision(6) << pforcenew[i].x();
-          std::cout << std::setw(14) << std::setprecision(6) << pforcenew[i].y();
-          std::cout << std::setprecision(6) << pforcenew[i].z() << std::setw(4) << "]";
-          std::cout << std::endl;
-          cerrLock.unlock();
-        }
       }  // end atom loop
 
       // this accounts for double energy from Aij <--> Aji
       vdwEnergy *= 0.50;
 
-      if (lj12_6_dbg.active()) {
+      if (analytic_dbg.active()) {
         cerrLock.lock();
         Vector forces(0.0, 0.0, 0.0);
+        unsigned int numParticles = local_pset->numParticles();
         for (unsigned int i = 0; i < numParticles; i++) {
           forces += pforcenew[i];
         }
@@ -268,7 +255,8 @@ void AnalyticNonBonded::finalize(const ProcessorGroup* pg,
 void AnalyticNonBonded::generateNeighborList(ParticleSubset* local_pset,
                                              ParticleSubset* neighbor_pset,
                                              constParticleVariable<Point> px_local,
-                                             constParticleVariable<Point> px_neighbors)
+                                             constParticleVariable<Point> px_neighbors,
+                                             int patchID)
 {
   // loop over all local atoms, determine neighbors from the particle set with ghost cells
   unsigned int localAtoms = local_pset->numParticles();
@@ -297,7 +285,7 @@ void AnalyticNonBonded::generateNeighborList(ParticleSubset* local_pset,
           r2 = sqrt(reducedX + reducedY + reducedZ);
           // only add neighbor atoms within spherical cut-off around atom "i"
           if (r2 < cut_sq) {
-            d_neighborList[i].push_back(j);
+            d_neighborList[patchID][i].push_back(j);
           }
         }
       }
