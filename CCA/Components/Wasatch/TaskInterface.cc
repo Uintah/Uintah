@@ -409,9 +409,12 @@ namespace Wasatch{
 
     Uintah::Task* const task = iptm->second.task;
     TreePtr tree = iptm->second.tree;
+    const int patchID = iptm->first;
 
     const Uintah::MaterialSubset* const mss = materials_->getUnion();
     const Uintah::PatchSubset* const pss = patches_->getUnion();
+
+    Expr::ExpressionFactory& factory = tree->get_expression_factory();
 
     // augment newDWFields to include any fields that are a result of tree cleaving
     {
@@ -420,7 +423,7 @@ namespace Wasatch{
         for( Expr::FieldDeps::FldHelpers::const_iterator ifld=fh.begin(); ifld!=fh.end(); ++ifld ){
           const Expr::FieldDeps::FieldHelperBase& fhb = **ifld;
           const Expr::Tag& tag = fhb.tag();
-          if( tree->get_expression( tag ).is_placeholder() ) continue;
+          if( factory.retrieve_expression( tag, patchID, true ).is_placeholder() ) continue;
           newDWFields.insert( tag );
         }
       }
@@ -432,7 +435,7 @@ namespace Wasatch{
     scheduler_->addTask( task, patches_, materials_ );
 
     if( hasPressureExpression_ ){
-      Pressure& pexpr = dynamic_cast<Pressure&>( tree->get_expression( pressure_tag() ) );
+      Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
       pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
       pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
       pexpr.schedule_set_pressure_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );            
@@ -443,7 +446,7 @@ namespace Wasatch{
         ptag!=PoissonExpression::poissonTagList.end();
         ++ptag ){
       if (tree->computes_field( *ptag )) {
-        PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( tree->get_expression( *ptag ) );
+        PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression(*ptag,patchID,true) );
         pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage, tree->name()=="initialization" );
         pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
         pexpr.schedule_set_poisson_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );                      
@@ -478,6 +481,7 @@ namespace Wasatch{
       PatchTreeTaskMap::iterator iptm = patchTreeMap_.find(patchID);
       ASSERT( iptm != patchTreeMap_.end() );
       const TreePtr tree = iptm->second.tree;
+      Expr::ExpressionFactory& factory = tree->get_expression_factory();
       const SpatialOps::OperatorDatabase& opdb = *iptm->second.operators;
 
       for( int im=0; im<materials->size(); ++im ){
@@ -497,7 +501,7 @@ namespace Wasatch{
           fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
 
           if( hasPressureExpression_ ){
-            Pressure& pexpr = dynamic_cast<Pressure&>( tree->get_expression( pressure_tag() ) );
+            Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
             pexpr.set_patch(patches->get(ip));
             pexpr.set_RKStage(rkStage);
             pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
@@ -508,7 +512,7 @@ namespace Wasatch{
               ptag!=PoissonExpression::poissonTagList.end();
               ++ptag ){
             if (tree->computes_field( *ptag )) {
-              PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( tree->get_expression( *ptag ) );
+              PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( *ptag, patchID, true ) );
               pexpr.set_patch(patches->get(ip));
               pexpr.set_RKStage(rkStage);
               pexpr.bind_uintah_vars( newDW, patch, material, rkStage );          
