@@ -9,9 +9,8 @@
   <Wasatch>
       <TimeIntegrator> FE </TimeIntegrator>
 
-    <Turbulence>
-      <EddyViscosityConstant>0.1</EddyViscosityConstant>
-      <TurbulenceModel> SMAGORINSKY </TurbulenceModel>
+    <Turbulence model="SMAGORINSKY">
+      <EddyViscosityCoefficient>0.1</EddyViscosityCoefficient>
     </Turbulence>
 
     <PostProcessingExpression type="SVOL">

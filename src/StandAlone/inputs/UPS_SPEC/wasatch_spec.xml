@@ -685,11 +685,10 @@
     <!-- Here we can specify wether we want to use the constant Smagorinsky model -->
     <!-- or the dynamic Smagorinsky model in order to obtain turbulent viscosity  -->
     <!-- ======================================================================== -->       
-    <Turbulence              spec="OPTIONAL NO_DATA">
+    <Turbulence              spec="OPTIONAL NO_DATA" 
+                             attribute1="model  REQUIRED STRING 'SMAGORINSKY, WALE, VREMAN, DYNAMIC'">
       <TurbulentSchmidt        spec="OPTIONAL DOUBLE"/>                                   
-      <EddyViscosityConstant   spec="OPTIONAL DOUBLE"/>                               
-      <TurbulenceModel         spec="REQUIRED STRING 'SMAGORINSKY,DYNAMIC,WALE,VREMAN'">
-      </TurbulenceModel>
+      <EddyViscosityCoefficient   spec="OPTIONAL DOUBLE" need_applies_to="model SMAGORINSKY WALE VREMAN"/>                               
     </Turbulence>
 
     <VariableDensityMMS  spec="OPTIONAL NO_DATA">
