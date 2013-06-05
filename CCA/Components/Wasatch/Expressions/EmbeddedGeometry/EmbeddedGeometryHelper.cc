@@ -64,7 +64,8 @@ namespace Wasatch{
 
   void
   parse_embedded_geometry( Uintah::ProblemSpecP parser,
-                                GraphCategories& gc )
+                           GraphCategories& gc,
+                           std::set<std::string>& lockedFields )
   {
     if (parser->findBlock("EmbeddedGeometry")) {
       
@@ -151,22 +152,28 @@ namespace Wasatch{
       initgh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.zvol_frac_tag(), vNames.svol_frac_tag() ) );
 
       if (movingGeom) {
+        // when the geometry is moving, then recalculate volume fractions at every timestep
         solngh->exprFactory->register_expression( scinew xvolfracBuilder( vNames.xvol_frac_tag(), vNames.svol_frac_tag() ) );
         solngh->exprFactory->register_expression( scinew yvolfracBuilder( vNames.yvol_frac_tag(), vNames.svol_frac_tag() ) );
         solngh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.zvol_frac_tag(), vNames.svol_frac_tag() ) );
       } else {
+        // when the geometry is not moving, copy the volume fractions from the previous timestep
         OldVariable& oldVar = OldVariable::self();
         oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, vNames.svol_frac_tag(), true);
         oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, vNames.xvol_frac_tag(), true);
         oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, vNames.yvol_frac_tag(), true);
         oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, vNames.zvol_frac_tag(), true);
+        // we must lock the fields on the initial condition
+        lockedFields.insert( vNames.svol_frac_tag().name() );
+        lockedFields.insert( vNames.xvol_frac_tag().name() );
+        lockedFields.insert( vNames.yvol_frac_tag().name() );
+        lockedFields.insert( vNames.zvol_frac_tag().name() );
       }
       
-      // force on graph
+      // force on initial conditions graph
       initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.xvol_frac_tag() ) );
       initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.yvol_frac_tag() ) );
       initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.zvol_frac_tag() ) );
-      
     }
   }
   
