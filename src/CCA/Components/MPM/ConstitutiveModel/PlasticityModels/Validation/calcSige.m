@@ -1,6 +1,5 @@
 function calcSige
 
-
   %
   % Plot the tangent modulus vs sigma_e to find sigma_es
   %
