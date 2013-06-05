@@ -438,6 +438,7 @@ void MD::initialize(const ProcessorGroup* pg,
   }
   //   initialize electrostatics object
   d_electrostatics->initialize(pg, patches, matls, old_dw, new_dw);
+
 }
 
 void MD::registerPermanentParticleState(SimpleMaterial* matl)
@@ -475,8 +476,10 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  d_nonbonded->initialize(pg, patches, matls, old_dw, new_dw);
-  d_nonbonded->setup(pg, patches, matls, old_dw, new_dw);
+  if (d_system->newBox()) {
+    d_nonbonded->initialize(pg, patches, matls, old_dw, new_dw);
+    d_nonbonded->setup(pg, patches, matls, old_dw, new_dw);
+  }
   d_nonbonded->calculate(pg, patches, matls, old_dw, new_dw);
   d_nonbonded->finalize(pg, patches, matls, old_dw, new_dw);
 }
