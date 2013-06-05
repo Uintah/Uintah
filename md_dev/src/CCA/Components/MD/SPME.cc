@@ -101,8 +101,11 @@ SPME::SPME(MDSystem* system,
            const IntVector& kLimits,
            const int splineOrder,
            const int maxPolarizableIterations) :
-      d_system(system), d_ewaldBeta(ewaldBeta), d_polarizable(isPolarizable),
-      d_polarizationTolerance(tolerance), d_kLimits(kLimits),
+    d_system(system),
+      d_ewaldBeta(ewaldBeta),
+      d_polarizable(isPolarizable),
+      d_polarizationTolerance(tolerance),
+      d_kLimits(kLimits),
       d_maxPolarizableIterations(maxPolarizableIterations)
 {
   d_interpolatingSpline = CenteredCardinalBSpline(splineOrder);
@@ -326,13 +329,6 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
     size_t yMax = localExtents.y();
     size_t zMax = localExtents.z();
 
-    if (spme_dbg.active()) {
-      cerrLock.lock();
-      std::cout << std::endl << "Calculate (Q*Q^)*(B*C)" << std::endl;
-      std::cin.get();
-      cerrLock.unlock();
-    }
-
     for (size_t kX = 0; kX < xMax; ++kX) {
       for (size_t kY = 0; kY < yMax; ++kY) {
         for (size_t kZ = 0; kZ < zMax; ++kZ) {
@@ -346,11 +342,8 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
       }
     }
   }
-  // local reduction for Q grids belonging to SPMEPatches (if more than one patch per proc)
   reduceLocalQGrids();
 
-  // put local Q grid in for reduction as well as localEnergy/localStress (which should get accumulated)
-//  new_dw->put(q_kgrid_sum(*(d_Q->getDataArray())), d_lb->QLabel);
   new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
   new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->spmeFourierStressLabel);
 }
@@ -392,7 +385,6 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-
   std::vector<SPMEPatch*>::iterator PatchIterator;
   for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
     SPMEPatch* spmePatch = *PatchIterator;
@@ -406,9 +398,6 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
     d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
     fftw_execute(d_forwardTransformPlan);
   }
-
-//  fftw_execute(d_forwardTransformPlan);
-
 }
 
 void SPME::transformFourierToReal(const ProcessorGroup* pg,
@@ -417,7 +406,6 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-
   std::vector<SPMEPatch*>::iterator PatchIterator;
   for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
     SPMEPatch* spmePatch = *PatchIterator;
@@ -431,14 +419,12 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
     d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
     fftw_execute(d_backwardTransformPlan);
   }
-
-//  fftw_execute(d_backwardTransformPlan);
-
 }
 
 void SPME::reduceLocalQGrids()
 {
   LinearArray3<dblcomplex>* localQ = d_Q->getDataArray();
+
   // If there's only one patch per proc
   if (d_spmePatches.size() == 1) {
     localQ->copyData(*(d_spmePatches[0]->getQ()->getDataArray()));
@@ -545,24 +531,24 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
   std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y());
   std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z());
 
-//  if (spme_dbg.active()) {
-//    cerrLock.lock();
-//    std::cout << " DEBUG: " << std::endl;
-//    std::cout << "Expect mp1 size: " << d_kLimits.x() << "  Actual mp1 size: " << mp1.size() << std::endl;
-//    for (size_t idx = 0; idx < mp1.size(); ++idx) {
-//      std::cout << "mp1(" << std::setw(3) << idx << "): " << mp1[idx] << std::endl;
-//    }
-//    std::cout << "Expect mp2 size: " << d_kLimits.y() << "  Actual mp2 size: " << mp2.size() << std::endl;
-//    for (size_t idx = 0; idx < mp2.size(); ++idx) {
-//      std::cout << "mp2(" << std::setw(3) << idx << "): " << mp2[idx] << std::endl;
-//    }
-//    std::cout << "Expect mp3 size: " << d_kLimits.x() << "  Actual mp3 size: " << mp3.size() << std::endl;
-//    for (size_t idx = 0; idx < mp3.size(); ++idx) {
-//      std::cout << "mp3(" << std::setw(3) << idx << "): " << mp3[idx] << std::endl;
-//    }
-//    std::cout << " END DEBUG: " << std::endl;
-//    cerrLock.unlock();
-//  }
+  if (spme_dbg.active()) {
+    cerrLock.lock();
+    std::cout << " DEBUG: " << std::endl;
+    std::cout << "Expect mp1 size: " << d_kLimits.x() << "  Actual mp1 size: " << mp1.size() << std::endl;
+    for (size_t idx = 0; idx < mp1.size(); ++idx) {
+      std::cout << "mp1(" << std::setw(3) << idx << "): " << mp1[idx] << std::endl;
+    }
+    std::cout << "Expect mp2 size: " << d_kLimits.y() << "  Actual mp2 size: " << mp2.size() << std::endl;
+    for (size_t idx = 0; idx < mp2.size(); ++idx) {
+      std::cout << "mp2(" << std::setw(3) << idx << "): " << mp2[idx] << std::endl;
+    }
+    std::cout << "Expect mp3 size: " << d_kLimits.x() << "  Actual mp3 size: " << mp3.size() << std::endl;
+    for (size_t idx = 0; idx < mp3.size(); ++idx) {
+      std::cout << "mp3(" << std::setw(3) << idx << "): " << mp3[idx] << std::endl;
+    }
+    std::cout << " END DEBUG: " << std::endl;
+    cerrLock.unlock();
+  }
 
   size_t xExtents = extents.x();
   size_t yExtents = extents.y();
