@@ -36,6 +36,7 @@ namespace Uintah {
 
   using namespace SCIRun;
 
+  typedef std::vector<vector<int> > neighborlist;
   typedef int particleIndex;
   typedef int particleId;
 
@@ -157,7 +158,8 @@ namespace Uintah {
       void generateNeighborList(ParticleSubset* local_pset,
                                 ParticleSubset* neighbor_pset,
                                 constParticleVariable<Point> px_local,
-                                constParticleVariable<Point> px_neighbors);
+                                constParticleVariable<Point> px_neighbors,
+                                int patchID);
 
       /**
        * @brief
@@ -175,7 +177,7 @@ namespace Uintah {
       double d_cutoffRadius;                     //!< The short-range cut, in Angstroms
 
       // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
-      std::vector<vector<int> > d_neighborList;  //!< List of all atom neighbor indices
+      std::vector<neighborlist> d_neighborList;  //!< List of all atom neighbor indices
   };
 
 }  // End namespace Uintah

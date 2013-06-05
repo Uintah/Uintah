@@ -132,7 +132,12 @@ void MD::scheduleInitialize(const LevelP& level,
   task->computes(d_lb->spmeFourierEnergyLabel);
   task->computes(d_lb->spmeFourierStressLabel);
 
-  sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
+  task->setType(Task::OncePerProc);
+  LoadBalancer* loadBal = sched->getLoadBalancer();
+  GridP grid = level->getGrid();
+  const PatchSet* perprocPatches = loadBal->getPerProcessorPatchSet(grid);
+  sched->addTask(task, perprocPatches, d_sharedState->allMaterials());
+//  sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
 }
 
 void MD::scheduleComputeStableTimestep(const LevelP& level,
@@ -436,8 +441,10 @@ void MD::initialize(const ProcessorGroup* pg,
     // Initially register our three reduction variables in the DW
     new_dw->put(sum_vartype(0.0), d_lb->vdwEnergyLabel);
   }
+
   //   initialize electrostatics object
   d_electrostatics->initialize(pg, patches, matls, old_dw, new_dw);
+  d_nonbonded->initialize(pg, patches, matls, old_dw, new_dw);
 
 }
 
@@ -477,10 +484,11 @@ void MD::calculateNonBondedForces(const ProcessorGroup* pg,
                                   DataWarehouse* new_dw)
 {
   if (d_system->newBox()) {
-    d_nonbonded->initialize(pg, patches, matls, old_dw, new_dw);
     d_nonbonded->setup(pg, patches, matls, old_dw, new_dw);
   }
+
   d_nonbonded->calculate(pg, patches, matls, old_dw, new_dw);
+
   d_nonbonded->finalize(pg, patches, matls, old_dw, new_dw);
 }
 

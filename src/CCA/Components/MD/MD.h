@@ -137,6 +137,16 @@ namespace Uintah {
        * @param
        * @return
        */
+      void scheduleMDInitialize(SchedulerP& sched,
+                                const PatchSet* patches,
+                                const MaterialSet* matls,
+                                const LevelP& level);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
       void scheduleCalculateNonBondedForces(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls,
