@@ -1123,18 +1123,6 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
         warn << "speedSound = " << speedSound[neg_cell] << " sp_vol_CC = " << sp_vol_CC[neg_cell]
              << " rho_micro = " << rho_micro[neg_cell] << " Temp_CC = " << Temp_CC[neg_cell] << endl;
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
-      }
-
-      //---- P R I N T   D A T A ------        
-      if (d_ice->switchDebug_Initialize){      
-        ostringstream desc;
-        desc << "MPMICE_Initialization_Mat_" << indx << "_patch_"
-             << patch->getID();
-        d_ice->printData(indx, patch,  1, desc.str(), "rho_CC",      rho_CC);
-        d_ice->printData(indx, patch,  1, desc.str(), "rho_micro_CC",rho_micro);
-        d_ice->printData(indx, patch,  1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-        d_ice->printData(indx, patch,  1, desc.str(), "Temp_CC",     Temp_CC);
-        d_ice->printVector(indx, patch,1, desc.str(), "vel_CC", 0,   vel_CC);
       }             
     }  // num_MPM_matls loop 
 
@@ -1316,19 +1304,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       IntVector nodeIdx[8];
 
 //      double sp_vol_orig = 1.0/(mpm_matl->getInitialDensity());
-      
-      //---- P R I N T   D A T A ------ 
-#if 0
-      if(switchDebug_InterpolateNCToCC_0) {
-        ostringstream desc;
-        desc<< "TOP_MPMICE::interpolateNCToCC_0_mat_"<<indx<<"_patch_"
-            <<  patch->getID();
-        printData(     indx, patch, 1,desc.str(), "gmass",       gmass);
-        printData(     indx, patch, 1,desc.str(), "gvolume",     gvolume);
-        printData(     indx, patch, 1,desc.str(), "gtemperatue", gtemperature);
-        printNCVector( indx, patch, 1,desc.str(), "gvelocity", 0, gvelocity);
-      }
-#endif 
+       
       //__________________________________
       //  compute CC Variables
       for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
@@ -1377,17 +1353,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       setBC(cmass,    "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
       setBC(sp_vol_CC,"set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
 
-      //---- P R I N T   D A T A ------
-      if(switchDebug_InterpolateNCToCC_0) {
-        ostringstream desc;
-        desc<< "BOT_MPMICE::interpolateNCToCC_0_Mat_"<< indx <<"_patch_"
-            <<  patch->getID();
-        d_ice->printData(   indx, patch, 1,desc.str(), "sp_vol",    sp_vol_CC); 
-        d_ice->printData(   indx, patch, 1,desc.str(), "cmass",     cmass);
-        d_ice->printData(   indx, patch, 1,desc.str(), "Temp_CC",   Temp_CC);
-        d_ice->printData(   indx, patch, 1,desc.str(), "rho_CC",    rho_CC);
-        d_ice->printVector( indx, patch, 1,desc.str(), "vel_CC", 0, vel_CC);
-      }
       //---- B U L L E T   P R O O F I N G------
       // ignore BP if timestep restart has already been requested
       IntVector neg_cell;
@@ -1469,18 +1434,6 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       double cv = mpm_matl->getSpecificHeat();
 
       IntVector nodeIdx[8];
-
-      //---- P R I N T   D A T A ------ 
-      if(d_ice->switchDebug_LagrangianValues) {
-        ostringstream desc;
-        desc <<"TOP_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
-             <<  indx<<patch->getID();
-        d_ice->printData(indx, patch,1,desc.str(), "cmass",    cmass);
-        printData(     indx, patch,  1,desc.str(), "gmass",    gmass);
-        printData(     indx, patch,  1,desc.str(), "gtemStar", gtempstar);
-        //printNCVector( indx, patch,  1,desc.str(), "gvelocityStar", 0,
-        //                                                       gvelocity);
-      }
  
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
                                                           iter++){ 
@@ -1571,16 +1524,6 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
        //  Set Boundary conditions
        setBC(cmomentum, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
        setBC(int_eng_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
-
-      //---- P R I N T   D A T A ------ 
-      if(d_ice->switchDebug_LagrangianValues) {
-        ostringstream desc;
-        desc<<"BOT_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
-            <<  patch->getID();
-        d_ice->printData(  indx,patch, 1,desc.str(), "mass_L",       mass_L);
-        d_ice->printData(  indx,patch, 1,desc.str(), "int_eng_L_CC", int_eng_L);
-        d_ice->printVector(indx,patch, 1,desc.str(), "mom_L_CC", 0,  cmomentum);
-      }
       
       //---- B U L L E T   P R O O F I N G------
       // ignore BP if timestep restart has already been requested
@@ -1888,23 +1831,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         rho_CC_new[m][c] = vol_frac[m][c]*rho_micro[m][c];
       }
     }  // cell iterator
-    //---- P R I N T   D A T A ------
-    if(d_ice -> switchDebug_equil_press)  {
-      ostringstream desc1;
-      desc1<< "TOP_equilibration_patch_"<< patch->getID();
-      d_ice->printData( 0, patch, 1, desc1.str(), "Press_CC_top", press); 
 
-      for (int m = 0; m < numALLMatls; m++)  {
-        Material* matl = d_sharedState->getMaterial( m );
-        int indx = matl->getDWIndex();
-        ostringstream desc;
-        desc<<"TOP_equilibration_Mat_"<< indx<<"_patch_"<<patch->getID();
-        d_ice->printData( indx,patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);
-        d_ice->printData( indx,patch,1,desc.str(),"rho_micro", rho_micro[m]);
-        d_ice->printData( indx,patch,1,desc.str(),"Temp_CC",   Temp[m]);     
-        d_ice->printData( indx,patch,1,desc.str(),"vol_frac_CC",vol_frac[m]);
-      }
-    }
     //______________________________________________________________________
     // Done with preliminary calcs, now loop over every cell
     int count, test_max_iter = 0;
@@ -2216,23 +2143,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
 #endif
     
-  //---- P R I N T   D A T A ------
-    if(d_ice -> switchDebug_equil_press)  { 
-      ostringstream desc1;
-      desc1<< "BOT_equilibration_patch_"<<patch->getID();
-
-      d_ice->printData( 0, patch, 1, desc1.str(),"Press_CC_equil",press_new);
-      d_ice->printData( 0, patch, 1, desc1.str(),"delPress",      delPress_tmp);
-      for (int m = 0; m < numALLMatls; m++)  {
-         Material* matl = d_sharedState->getMaterial( m );
-         int indx = matl->getDWIndex();
-         ostringstream desc; 
-         desc<< "BOT_equilibration_Mat_"<<indx<<"_patch_"<< patch->getID();
-         d_ice->printData(indx,patch,1,desc.str(),"rho_CC",      rho_CC_new[m]);
-         d_ice->printData(indx,patch,1,desc.str(),"rho_micro_CC",rho_micro[m]);
-         d_ice->printData(indx,patch,1,desc.str(),"vol_frac_CC", vol_frac[m]);
-      }
-    }
   }  //patches
 }
 

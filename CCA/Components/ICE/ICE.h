@@ -811,32 +811,6 @@ namespace Uintah {
       Vector getGravity() const {
         return d_gravity;
       }
-                                 
-      // Debugging switches
-      bool switchDebug_Initialize;
-      bool switchDebug_equil_press;
-      bool switchDebug_vel_FC;
-      bool switchDebug_Temp_FC;
-      bool switchDebug_PressDiffRF;
-      bool switchDebug_Exchange_FC;
-      bool switchDebug_explicit_press;
-      bool switchDebug_setupMatrix;
-      bool switchDebug_setupRHS;
-      bool switchDebug_updatePressure;
-      bool switchDebug_computeDelP;
-      bool switchDebug_PressFC;
-      bool switchDebug_LagrangianValues;
-      bool switchDebug_LagrangianSpecificVol;
-      bool switchDebug_LagrangianTransportedVars;
-      bool switchDebug_MomentumExchange_CC;
-      bool switchDebug_Source_Sink;
-      bool switchDebug_advance_advect;
-      bool switchDebug_conserved_primitive;
-      bool switchDebug_AMR_refine;
-      bool switchDebug_AMR_refineInterface;
-      bool switchDebug_AMR_coarsen;
-      bool switchDebug_AMR_reflux;
-      
       
       // debugging variables
       int d_dbgVar1;

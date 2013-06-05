@@ -267,10 +267,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   //__________________________________
-  // read in all the printData switches
-  printData_problemSetup( prob_spec);
-
-  //__________________________________
   // Pull out from CFD-ICE section
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
 
@@ -2315,25 +2311,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
         }
       }
     }
-      
-
-    if (switchDebug_Initialize){     
-      ostringstream desc1;
-      desc1 << "Initialization_patch_"<< patch->getID();
-      printData(0, patch, 1, desc1.str(), "press_CC", press_CC);         
-      for (int m = 0; m < numMatls; m++ ) { 
-        ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-        int indx = ice_matl->getDWIndex();
-        ostringstream desc;      
-        desc << "Initialization_Mat_" << indx << "_patch_"<< patch->getID();
-        printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC[indx]);
-        printData(indx, patch,   1, desc.str(), "rho_micro_CC",rho_micro[indx]);
-        printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC[indx]);
-        printData(indx, patch,   1, desc.str(), "Temp_CC",     Temp_CC[indx]);
-        printData(indx, patch,   1, desc.str(), "vol_frac_CC", vol_frac_CC[indx]);
-        printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC[indx]);;
-      }   
-    }
   }  // patch loop 
 }
 /* _____________________________________________________________________
@@ -2383,21 +2360,6 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
       ice_matl->getEOS()->computeTempCC( patch, "WholeDomain",
                                          press_CC, gamma, cv,
                                          rho_micro, Temp, dummy );
-
-      //__________________________________
-      //  Print Data
-      if (switchDebug_Initialize){     
-        ostringstream desc, desc1;
-        desc << "hydroStaticAdj_patch_"<< patch->getID();
-        printData(0, patch, 1, desc.str(), "press_CC", press_CC);         
-        for (int m = 0; m < numMatls; m++ ) { 
-          ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-          int indx = ice_matl->getDWIndex();      
-          desc1 << "hydroStaticAdj_Mat_" << indx << "_patch_"<< patch->getID();
-          printData(indx, patch,   1, desc.str(), "rho_micro_CC",rho_micro);
-          printData(indx, patch,   1, desc.str(), "Temp_CC",     Temp);
-        }   
-      }
     }
   }
 } 
@@ -2453,24 +2415,6 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
       }
     }
 
-    
-
-    //__________________________________
-    // Is it time to dump printData ?
-    // You need to do this in the first task
-    // and only on the first patch
-    if (levelIndex == 0 && patch->getGridIndex() == 0) {
-      d_dbgTime_to_printData = false;
-      double time= dataArchiver->getCurrentTime() + d_SMALL_NUM;
-      if (time >= d_dbgStartTime && 
-          time <= d_dbgStopTime  &&
-          time >= d_dbgNextDumpTime) {
-        d_dbgTime_to_printData  = true;
-
-        d_dbgNextDumpTime = d_dbgOutputInterval 
-                          * ceil(time/d_dbgOutputInterval + d_SMALL_NUM); 
-      }
-    }
   }
 }
 /* _____________________________________________________________________ 
@@ -2575,26 +2519,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         IntVector c = *iter;
         rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
         vol_frac[m][c] = rho_CC[m][c] * sp_vol_CC[m][c];
-      }
-    }
-
-   //---- P R I N T   D A T A ------  
-    if (switchDebug_equil_press) {
-    
-      new_dw->allocateTemporary(n_iters_equil_press,  patch);
-      ostringstream desc1;
-      desc1 << "TOP_equilibration_patch_" << patch->getID();
-      printData( 0, patch, 1, desc1.str(), "Press_CC_top", press);
-     for (int m = 0; m < numMatls; m++)  {
-       ICEMaterial* matl = d_sharedState->getICEMaterial( m );
-       int indx = matl->getDWIndex(); 
-       ostringstream desc;
-       desc << "TOP_equilibration_Mat_" << indx << "_patch_"<<patch->getID();
-       printData(indx, patch, 1, desc.str(), "rho_CC",       rho_CC[m]);    
-       printData(indx, patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);  
-       printData(indx, patch, 1, desc.str(), "speedSound",   speedSound_new[m]);
-       printData(indx, patch, 1, desc.str(), "Temp_CC",      Temp[m]);       
-       printData(indx, patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);   
       }
     }
 
@@ -2767,11 +2691,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         }
         throw InvalidValue(warn.str(), __FILE__, __LINE__); 
       }
-
-      if (switchDebug_equil_press) {
-        n_iters_equil_press[c] = count;
-      }
-      
     } // end of cell interator
 
     cout_norm << "max. iterations in any cell " << test_max_iter << 
@@ -2826,25 +2745,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         f_theta[m][c] = vol_frac[m][c]*kappa[m][c]/sumKappa[c];
       }
     }
-
-   //---- P R I N T   D A T A ------   
-    if (switchDebug_equil_press) {
-      ostringstream desc;
-      desc << "BOT_equilibration_patch_" << patch->getID();
-      printData( 0, patch, 1, desc.str(), "Press_CC_equil", press_new);
-
-     for (int m = 0; m < numMatls; m++)  {
-       ICEMaterial* matl = d_sharedState->getICEMaterial( m );
-       int indx = matl->getDWIndex(); 
-       ostringstream desc;
-       desc << "BOT_equilibration_Mat_"<< indx << "_patch_"<< patch->getID();
-       printData( indx, patch, 1, desc.str(), "rho_CC",       rho_CC[m]);
-       printData( indx, patch, 1, desc.str(), "sp_vol_CC",    sp_vol_new[m]); 
-       printData( indx, patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);
-       printData( indx, patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);
-       
-     }
-    }
   }  // patch loop
 }
  
@@ -2897,16 +2797,6 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
 
     new_dw->allocateAndPut(rho_CC_new,   lb->rho_CCLabel,        indx,patch);
 
-    //---- P R I N T   D A T A ------   
-    if (switchDebug_equil_press) {
-      ostringstream desc;
-      desc << "TOP_equilibration_patch_" << patch->getID();
-      printData( indx, patch, 1, desc.str(), "temp",      Temp);
-      printData( indx, patch, 1, desc.str(), "sp_vol_CC", sp_vol_CC);
-      printData( indx, patch, 1, desc.str(), "cv",        cv);
-      printData( indx, patch, 1, desc.str(), "gamma",     gamma);
-    }
-
     //______________________________________________________________________
     //  Main loop
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
@@ -2941,12 +2831,6 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
           
     delete_CustomBCs(d_customBC_var_basket);      
 
-    //---- P R I N T   D A T A ------   
-    if (switchDebug_equil_press) {
-      ostringstream desc;
-      desc << "BOT_equilibration_patch_" << patch->getID();
-      printData( 0,    patch, 1, desc.str(), "Press_CC_equil", press_eq);
-    }
   }  // patch loop
 } 
  
@@ -3052,14 +2936,6 @@ void ICE::computeTempFC(const ProcessorGroup*,
       computeTempFace<SFCZVariable<double> >(ZFC_iterator,adj_offset[2],
                                              rho_CC,Temp_CC, TempZ_FC);
 
-      //---- P R I N T   D A T A ------ 
-      if (switchDebug_Temp_FC ) {
-        ostringstream desc;
-        desc << "BOT_computeTempFC_Mat_" << indx << "_patch_"<< patch->getID(); 
-        printData_FC( indx, patch,1, desc.str(), "TempX_FC", TempX_FC);
-        printData_FC( indx, patch,1, desc.str(), "TempY_FC", TempY_FC);
-        printData_FC( indx, patch,1, desc.str(), "TempZ_FC", TempZ_FC);
-      }
     } // matls loop
   }  // patch loop
 }    
@@ -3167,17 +3043,6 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       }              
       new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch, gac, 1);
               
-      //---- P R I N T   D A T A ------
-  #if 1
-      if (switchDebug_vel_FC ) {
-        ostringstream desc;
-        desc << "TOP_computeVel_FC_Mat_" << indx << "_patch_"<< patch->getID();
-        printData(indx, patch, 1, desc.str(), "press_CC",    press_CC); 
-        printData(indx, patch, 1, desc.str(), "rho_CC",      rho_CC);
-        printData(indx, patch, 1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-        printVector(indx,patch,1, desc.str(), "vel_CC",  0,  vel_CC);
-      }
-  #endif
       SFCXVariable<double> uvel_FC, grad_P_XFC;
       SFCYVariable<double> vvel_FC, grad_P_YFC;
       SFCZVariable<double> wvel_FC, grad_P_ZFC;
@@ -3234,18 +3099,6 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       // (*)vel_FC BC are updated in 
       // ICE::addExchangeContributionToFCVel()
 
-      //---- P R I N T   D A T A ------ 
-      if (switchDebug_vel_FC ) {
-        ostringstream desc;
-        desc <<"BOT_computeVel_FC_Mat_" << indx << "_patch_"<< patch->getID();
-        printData_FC( indx, patch,1, desc.str(), "uvel_FC",  uvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "vvel_FC",  vvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "wvel_FC",  wvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "grad_P_XFC", grad_P_XFC);
-        printData_FC( indx, patch,1, desc.str(), "grad_P_YFC", grad_P_YFC);
-        printData_FC( indx, patch,1, desc.str(), "grad_P_ZFC", grad_P_ZFC); 
-        
-      }
     } // matls loop
   }  // patch loop
 }
@@ -3378,17 +3231,6 @@ void ICE::updateVel_FC(const ProcessorGroup*,
       // (*)vel_FC BC are updated in 
       // ICE::addExchangeContributionToFCVel()
 
-      //---- P R I N T   D A T A ------ 
-      if (switchDebug_vel_FC ) {
-        ostringstream desc;
-        desc <<"BOT_updateVel_FC_Mat_" << indx << "_patch_"<< patch->getID();
-        printData_FC( indx, patch,1, desc.str(), "uvel_FC",  uvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "vvel_FC",  vvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "wvel_FC",  wvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "grad_dp_XFC", grad_dp_XFC);
-        printData_FC( indx, patch,1, desc.str(), "grad_dp_YFC", grad_dp_YFC);
-        printData_FC( indx, patch,1, desc.str(), "grad_dp_ZFC", grad_dp_ZFC);
-      }
     } // matls loop
   }  // patch loop
 }
@@ -3608,20 +3450,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
                                     d_sharedState, d_customBC_var_basket);
       delete_CustomBCs(d_customBC_var_basket);
     }
-
-   //---- P R I N T   D A T A ------ 
-    if (switchDebug_Exchange_FC ) {
-      for (int m = 0; m < numMatls; m++)  {
-       Material* matl = d_sharedState->getMaterial( m );
-       int indx = matl->getDWIndex();
-       ostringstream desc;
-       desc <<"Exchange_FC_after_BC_Mat_" << indx <<"_patch_"<<patch->getID();
-       printData(    indx, patch,1, desc.str(), "sp_vol_CC", sp_vol_CC[m]);   
-       printData_FC( indx, patch,1, desc.str(), "uvel_FCME", uvel_FCME[m]);
-       printData_FC( indx, patch,1, desc.str(), "vvel_FCME", vvel_FCME[m]);
-       printData_FC( indx, patch,1, desc.str(), "wvel_FCME", wvel_FCME[m]);
-      }
-    }    
+    
   }  // patch loop  
 }
 
@@ -3716,19 +3545,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       vol_fracX_FC.initialize(nan, lowIndex,patch->getExtraSFCXHighIndex());
       vol_fracY_FC.initialize(nan, lowIndex,patch->getExtraSFCYHighIndex());
       vol_fracZ_FC.initialize(nan, lowIndex,patch->getExtraSFCZHighIndex()); 
-      
-          
-      //---- P R I N T   D A T A ------  
-      if (switchDebug_explicit_press ) {
-        ostringstream desc;
-        desc<<"middle_explicit_Pressure_Mat_"<<indx<<"_patch_"<<patch->getID();
-        printData(    indx, patch,1, desc.str(), "vol_frac",   vol_frac);
-        printData(    indx, patch,1, desc.str(), "speedSound", speedSound);
-        printData(    indx, patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC[m]);
-        printData_FC( indx, patch,1, desc.str(), "uvel_FC",    uvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "vvel_FC",    vvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "wvel_FC",    wvel_FC);
-      }
                  
       //__________________________________
       // Advection preprocessing
@@ -3804,18 +3620,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     set_CFI_BC<double>(press_CC,patch);
 #endif   
     delete_CustomBCs(d_customBC_var_basket);      
-       
-   //---- P R I N T   D A T A ------  
-    if (switchDebug_explicit_press) {
-      ostringstream desc;
-      desc << "BOT_explicit_Pressure_patch_" << patch->getID();
-//    printData( 0, patch, 1,desc.str(), "term1",         term1);
-      printData( 0, patch, 1,desc.str(), "term2",         term2);
-      printData( 0, patch, 1,desc.str(), "sumKappa",      sumKappa); 
-      printData( 0, patch, 1,desc.str(), "delP_Dilatate", delP_Dilatate);
-      printData( 0, patch, 1,desc.str(), "delP_MassX",    delP_MassX);
-      printData( 0, patch, 1,desc.str(), "Press_CC",      press_CC);
-    }
+
   }  // patch loop
 }
 
@@ -3888,14 +3693,6 @@ void ICE::computePressFC(const ProcessorGroup*,
     computePressFace<SFCZVariable<double> >(patch->getSFCZIterator(),
                                        adj_offset[2], sum_rho_CC, press_CC,
                                        pressZ_FC); 
-   //---- P R I N T   D A T A ------ 
-    if (switchDebug_PressFC) {
-      ostringstream desc;
-      desc << "press_FC_patch_" <<patch->getID();
-      printData_FC( 0, patch,0,desc.str(), "press_FC_RIGHT", pressX_FC);
-      printData_FC( 0, patch,0,desc.str(), "press_FC_TOP",   pressY_FC);
-      printData_FC( 0, patch,0,desc.str(), "press_FC_FRONT", pressZ_FC);
-    }
   }  // patch loop
 }
 
@@ -4168,13 +3965,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                            viscous_source + 
                            mass * gravity.z() * include_term) * delT );
       }
-
-      //---- P R I N T   D A T A ------ 
-      if (switchDebug_Source_Sink) {
-        ostringstream desc;
-        desc << "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
-        printVector(indx, patch, 1, desc.str(), "mom_source",  0, mom_source);
-      }
     }  // matls loop
   }  //patches
 }
@@ -4284,32 +4074,26 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       }
     
     
-    //__________________________________
-    //  User specified source/sink 
-    double Time= dataArchiver->getCurrentTime();  
-    if (  d_add_heat &&
-          Time >= d_add_heat_t_start && 
-          Time <= d_add_heat_t_final ) { 
-      for (int i = 0; i<(int) d_add_heat_matls.size(); i++) {
-        if(m == d_add_heat_matls[i] ){
-          for(CellIterator iter = patch->getCellIterator();!iter.done();
-              iter++){
-            IntVector c = *iter;
-            if ( vol_frac[c] > 0.001) {
-              int_eng_source[c] += d_add_heat_coeff[i]
-                * delT * rho_CC[c] * vol;
-            }
-          }  // iter loop
-        }  // if right matl
-      } 
-    }  // if add heat
+      //__________________________________
+      //  User specified source/sink 
+      double Time= dataArchiver->getCurrentTime();  
+      if (  d_add_heat &&
+            Time >= d_add_heat_t_start && 
+            Time <= d_add_heat_t_final ) { 
+        for (int i = 0; i<(int) d_add_heat_matls.size(); i++) {
+          if(m == d_add_heat_matls[i] ){
+            for(CellIterator iter = patch->getCellIterator();!iter.done();
+                iter++){
+              IntVector c = *iter;
+              if ( vol_frac[c] > 0.001) {
+                int_eng_source[c] += d_add_heat_coeff[i]
+                  * delT * rho_CC[c] * vol;
+              }
+            }  // iter loop
+          }  // if right matl
+        } 
+      }  // if add heat
 
-      //---- P R I N T   D A T A ------ 
-      if (switchDebug_Source_Sink) {
-        ostringstream desc;
-        desc <<  "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
-        printData(indx, patch,1,desc.str(),"int_eng_source", int_eng_source);
-      }
     }  // matl loop
   }  // patch loop
 }
@@ -4449,16 +4233,6 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 #endif
        }  //  if (models.size() > 0)
 
-        //---- P R I N T   D A T A ------ 
-        // Dump out all the matls data
-        if (switchDebug_LagrangianValues ) {
-          ostringstream desc;
-          desc <<"BOT_Lagrangian_Values_Mat_"<<indx<< "_patch_"<<patch->getID();
-          printData(  indx, patch,1, desc.str(), "mass_L_CC",    mass_L);
-          printVector(indx, patch,1, desc.str(), "mom_L_CC", 0,  mom_L);
-          printData(  indx, patch,1, desc.str(), "int_eng_L_CC", int_eng_L); 
-
-        }
         //____ B U L L E T   P R O O F I N G----
         // catch negative internal energies
         // ignore BP if timestep restart has already been requested
@@ -4597,14 +4371,6 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         sp_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c];
       }
 
-      //---- P R I N T   D A T A ------ 
-      if (switchDebug_LagrangianSpecificVol ) {
-        ostringstream desc;
-        desc <<"TOP_Lagrangian_sp_vol_Mat_"<<indx<< "_patch_"<<patch->getID();
-         printData( indx, patch,1, desc.str(), "rho_CC",     rho_CC);      
-         printData( indx, patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC);     
-         printData( indx, patch,1, desc.str(), "sp_vol_L",   sp_vol_L);      
-      }
       //__________________________________
       //   Contributions from models
       constCCVariable<double> Modelsp_vol_src;
@@ -4649,16 +4415,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       setSpecificVolBC(sp_vol_L, "SpecificVol", true ,rho_CC,vol_frac[m],
                        patch,d_sharedState, indx);
       
-      //---- P R I N T   D A T A ------ 
-      if (switchDebug_LagrangianSpecificVol ) {
-        ostringstream desc;
-        desc <<"BOT_Lagrangian_sp_vol_Mat_"<<indx<< "_patch_"<<patch->getID();
-        printData( indx, patch,1, desc.str(), "sp_vol_L",   sp_vol_L);    
-        printData( indx, patch,1, desc.str(), "sp_vol_src", sp_vol_src);  
-        if(d_models.size() > 0){
-          printData( indx, patch,1, desc.str(), "Modelsp_vol_src", Modelsp_vol_src);
-        }
-      }
+
       //____ B U L L E T   P R O O F I N G----
       // ignore BP if timestep restart has already been requested
       IntVector neg_cell;
@@ -4752,19 +4509,7 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
             IntVector c = *iter;                            
             q_L_CC[c] *= mass_L[m][c];
           }
-          
-          //---- P R I N T   D A T A ------
-          if (switchDebug_LagrangianTransportedVars ) {
-            ostringstream desc;
-            desc <<"BOT_LagrangianTransVars_BC_Mat_" <<indx<<"_patch_" 
-                 <<patch->getID();
-            printData(  indx, patch,1, desc.str(), tvar->var->getName(), q_old);
-            if(tvar->src){
-              printData(indx, patch,1, desc.str(), tvar->src->getName(), q_src);
-            }
-            printData(  indx, patch,1, desc.str(), Labelname, q_L_CC); 
-          }   
-             
+                
         }  // tvar matl
       }  // ice matl loop
     }  // tvar loop
@@ -4900,23 +4645,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         vel_CC[m][c]  = mom_L[m][c]/mass_L[m][c];
       }
     }
-    //---- P R I N T   D A T A ------ 
-    if (switchDebug_MomentumExchange_CC ) {
-      for (int m = 0; m < numALLMatls; m++) {
-        Material* matl = d_sharedState->getMaterial( m );
-        int indx = matl->getDWIndex();
-        ostringstream desc;
-        desc<<"TOP_addExchangeToMomentumAndEnergy_"<<indx<<"_patch_"
-            <<patch->getID();
-        printData(   indx, patch,1, desc.str(),"Temp_CC",    Temp_CC[m]);
-        printData(   indx, patch,1, desc.str(),"int_eng_L",  int_eng_L[m]);
-        printData(   indx, patch,1, desc.str(),"mass_L",     mass_L[m]);
-        printData(   indx, patch,1, desc.str(),"vol_frac_CC",vol_frac_CC[m]);
-        printVector( indx, patch,1, desc.str(),"mom_L", 0,   mom_L[m]);
-        printVector( indx, patch,1, desc.str(),"vel_CC", 0,  vel_CC[m]);
-      }
-    }
 
+    //__________________________________
+    //
     for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
       //---------- M O M E N T U M   E X C H A N G E
@@ -5148,22 +4879,6 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;
       }
     }
-
-    //---- P R I N T   D A T A ------ 
-    if (switchDebug_MomentumExchange_CC ) {
-      for(int m = 0; m < numALLMatls; m++) {
-        Material* matl = d_sharedState->getMaterial( m );
-        int indx = matl->getDWIndex();
-        ostringstream desc;
-        desc<<"addExchangeToMomentumAndEnergy_"<<indx<<"_patch_"
-            <<patch->getID();
-        printVector(indx, patch,1, desc.str(), "mom_L_ME", 0,mom_L_ME[m]);
-        printVector( indx, patch,1, desc.str(),"vel_CC", 0,  vel_CC[m]);
-        printData(  indx, patch,1, desc.str(),"int_eng_L_ME",int_eng_L_ME[m]);
-        printData(  indx, patch,1, desc.str(),"Tdot",        Tdot[m]);
-        printData(  indx, patch,1, desc.str(),"Temp_CC",     Temp_CC[m]);
-      }
-    }
   } //patches
 }
 
@@ -5391,35 +5106,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
             for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
               IntVector c = *iter;
               q_adv[c] = (q_L_CC[c] + q_advected[c]) ;
-            }                   
-            
-            //---- P R I N T   D A T A ------   
-            if (switchDebug_advance_advect ) {
-              ostringstream desc;
-              desc <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"
-                   <<patch->getID();
-              string Lag_labelName = tvar->var_Lagrangian->getName();
-              printData(indx, patch,1, desc.str(), Lag_labelName, q_L_CC);
-              printData(indx, patch,1, desc.str(), Labelname,     q_adv);
-            }    
+            }
           }
         }
       } 
-      
-      //---- P R I N T   D A T A ------   
-      if (switchDebug_advance_advect ) {
-       ostringstream desc;
-       desc <<"BOT_Advection_Mat_" <<indx<<"_patch_"<<patch->getID();
-       printData(   indx, patch,1, desc.str(), "mass_L",      mass_L); 
-       printVector( indx, patch,1, desc.str(), "mom_L_CC", 0, mom_L_ME); 
-       printData(   indx, patch,1, desc.str(), "sp_vol_L",    sp_vol_L);
-       printData(   indx, patch,1, desc.str(), "int_eng_L_CC",int_eng_L_ME);
-       
-       printData(   indx, patch,1, desc.str(), "mass_adv",     mass_adv); 
-       printVector( indx, patch,1, desc.str(), "mom_adv", 0,   mom_adv); 
-       printData(   indx, patch,1, desc.str(), "sp_vol_adv",   sp_vol_adv);
-       printData(   indx, patch,1, desc.str(), "int_eng_adv",  int_eng_adv);
-      }
  
       delete varBasket;
     }  // ice_matls loop
@@ -5516,16 +5206,7 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
                   
             //  Set Boundary Conditions
             setBC(q_CC, Labelname,  patch, d_sharedState, indx, new_dw);  
-            
-            //---- P R I N T   D A T A ------   
-            if (switchDebug_conserved_primitive ) {
-              ostringstream desc;
-              desc <<"BOT_convertConservedtoPrimitive_Vars_Mat_" <<indx<<"_patch_"
-                   <<patch->getID();
-              string adv_LabelName = tvar->var_adv->getName();
-              printData(indx, patch,1, desc.str(), adv_LabelName, q_adv);
-              printData(indx, patch,1, desc.str(), Labelname,     q_CC);
-            }    
+   
           }
         }
       } 
@@ -5576,19 +5257,7 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
         IntVector c = *iter;
         mach[c]  = vel_CC[c].length()/speedSound[c];
       }
-      //---- P R I N T   D A T A ------   
-      if (switchDebug_conserved_primitive ) {
-       ostringstream desc;
-       desc <<"BOT_conservedtoPrimitive_Vars_Mat_" <<indx<<"_patch_"<<patch->getID();
-       printData(   indx, patch,1, desc.str(), "mass_adv",    mass_adv);
-       printVector( indx, patch,1, desc.str(), "mom_adv", 0,  mom_adv); 
-       printData(   indx, patch,1, desc.str(), "sp_vol_adv",  sp_vol_adv);
-       printData(   indx, patch,1, desc.str(), "int_eng_adv", int_eng_adv);
-       printData(   indx, patch,1, desc.str(), "rho_CC",      rho_CC);
-       printData(   indx, patch,1, desc.str(), "temp_CC",     temp_CC);
-       printData(   indx, patch,1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-       printVector( indx, patch,1, desc.str(), "vel_CC", 0,   vel_CC);
-      }
+
       //____ B U L L E T   P R O O F I N G----
       // ignore BP if timestep restart has already been requested
       IntVector neg_cell;
