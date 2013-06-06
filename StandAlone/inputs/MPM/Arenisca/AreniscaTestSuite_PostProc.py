@@ -1310,7 +1310,7 @@ def test10_postProc(uda_path,save_path,**kwargs):
     working_dir = kwargs['WORKING_PATH']
   
     #Extract stress history
-    print "Post Processing Test: 10 - Pure Isochoric Strain Rates"
+    print "Post Processing Test: 10 - Transient Stress Eigenvalues with Constant Eigenvectors"
     times,sigmas = get_pStress(uda_path)
     Sxx = []
     Syy = []
@@ -1366,7 +1366,7 @@ def test10_postProc(uda_path,save_path,**kwargs):
     plt.ylabel(str_to_mathbf('Stress (MPa)'))
     if BIG_FIGURE:
       plt.legend(loc='upper right', bbox_to_anchor=(1.38,1.12))
-      plt.title('AreniscaTest 10:\nPurely Isochoric Strain Rates') 
+      plt.title('AreniscaTest 10:\nTransient Stress Eigenvalues with Constant Eigenvectors') 
       saveIMG(save_path+'/Test10_verificationPlot','1280x960')
     else:
       tmp = plt.rcParams['legend.fontsize']
