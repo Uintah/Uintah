@@ -221,6 +221,8 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
       } 
 
+      tsk->requires( Task::OldDW, _T_label, gac, 1 ); 
+
     } else { 
 
       tsk->requires( Task::OldDW, _co2_label, gn,  0 ); 
@@ -262,6 +264,8 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       for ( std::vector<const VarLabel*>::iterator iter = _T_varlabels.begin(); iter != _T_varlabels.end(); iter++) { 
         tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
       } 
+
+      tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
 
     } else { 
 
