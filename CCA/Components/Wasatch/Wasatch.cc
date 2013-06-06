@@ -238,9 +238,6 @@ namespace Wasatch{
 #     ifdef WASATCH_IN_ARCHES
     // we are only allowing for a single extra cell :(
     // make sure that extra cell and periodicity are consistent
-//    bool isPeriodic = ( periodicityVector.x() + ( (foundExtraCells) ? extraCells.x() : 0) == 1 &&
-//                        periodicityVector.y() + ( (foundExtraCells) ? extraCells.y() : 0 )== 1 &&
-//                        periodicityVector.z() + ( (foundExtraCells) ? extraCells.z() : 0 )== 1 );
     bool isPeriodic = periodicityVector.x() == 1 || periodicityVector.y() == 1 || periodicityVector.z() == 1;
     
     std::cout << "periodicity = " << isPeriodic << std::endl;
@@ -262,7 +259,6 @@ namespace Wasatch{
     }
 #     endif
         
-    //isPeriodic = (isXPeriodic || isYPeriodic || isZPeriodic );
     extraCells = Uintah::IntVector( (isXPeriodic) ? 0 : 1,
                                     (isYPeriodic) ? 0 : 1,
                                     (isZPeriodic) ? 0 : 1 );
@@ -391,13 +387,13 @@ namespace Wasatch{
       throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
     } else if (linSolver_) {
       proc0cout << "Detected solver: " << linSolver_->getName() << std::endl;
-//      if ( (linSolver_->getName()).compare("hypre") != 0 && wasatchParams->findBlock("MomentumEquations") ) {
-//        std::ostringstream msg;
-//        msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
-//        << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
-//        << std::endl;
-//        throw std::runtime_error( msg.str() );
-//      }
+      if ( (linSolver_->getName()).compare("hypre") != 0 && wasatchParams->findBlock("MomentumEquations") ) {
+        std::ostringstream msg;
+        msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
+        << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
+        << std::endl;
+        throw std::runtime_error( msg.str() );
+      }
     }
     
     //
