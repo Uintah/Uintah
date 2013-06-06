@@ -330,6 +330,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_wasatch->disable_wasatch_material();
   // let Wasatch parse its xml block to setup the transport equations. Here, we
   // should pass the entire uintah input file params.
+
+  Uintah::IntVector extraCells;
+  Wasatch::check_periodicity_extra_cells( params, extraCells);
+
   d_wasatch->problemSetup( params, materials_ps, grid, sharedState );
 
   Wasatch::GraphHelper* const solngh = d_wasatch->graph_categories()[Wasatch::ADVANCE_SOLUTION];
