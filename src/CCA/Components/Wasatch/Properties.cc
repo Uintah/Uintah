@@ -71,7 +71,7 @@ namespace Wasatch{
    */
   void parse_tabprops( Uintah::ProblemSpecP& params,
                        GraphHelper& gh,
-                       Category cat,
+                       const Category cat,
                        const bool doDenstPlus ) 
   {
     std::string fileName;
@@ -302,9 +302,8 @@ namespace Wasatch{
   setup_property_evaluation( Uintah::ProblemSpecP& params,
                              GraphCategories& gc )
   {
-    //_________________________________________________________________________________
-    // extracting the density tag in the cases that it is needed and also throwing the
-    // error messages in different error conditions regarding to the input file
+    //__________________________________________________________________________
+    // extract the density tag in the cases that it is needed
 
     Uintah::ProblemSpecP densityParams  = params->findBlock("Density");
     Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
@@ -325,7 +324,11 @@ namespace Wasatch{
       // determine which task list this goes on
       Category cat = parse_tasklist( tabPropsParams,false);
 
-      // Check to see if we have scalar transport equation already set up and the problem is in variable denstiy, so we can obtain solution variables in order to estimate their values at "*" RK stage to be able to estimate the value of density at this RK stage
+      /* Check to see if we have scalar transport equation already set up and the
+       * problem is variable density, so we can obtain solution variables in order
+       * to estimate their values at "*" RK stage to be able to estimate the value
+       * of density at this RK stage
+       */
       Uintah::ProblemSpecP transEqnParams  = params->findBlock("TransportEquation");      
       Uintah::ProblemSpecP momEqnParams  = params->findBlock("MomentumEquations");      
       bool isConstDensity;

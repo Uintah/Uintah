@@ -94,7 +94,7 @@ TabPropsEvaluator<FieldT>::
 TabPropsEvaluator( const InterpT* const interp,
                    const VarNames& ivarNames )
   : Expr::Expression<FieldT>(),
-    indepVarNames_( ivarNames   )
+    indepVarNames_( ivarNames )
 {
   evaluators_.push_back( interp );
 }
@@ -106,8 +106,7 @@ TabPropsEvaluator<FieldT>::
 ~TabPropsEvaluator()
 {
   for( Evaluators::iterator ieval=evaluators_.begin(); ieval!=evaluators_.end(); ++ieval ){
-    //jcs this was causing a segfault:
-    //    delete *ieval;
+    delete *ieval;
   }
 }
 
