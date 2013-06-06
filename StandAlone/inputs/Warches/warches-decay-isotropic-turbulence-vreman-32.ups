@@ -18,7 +18,7 @@
 
 <!--__________________________________-->
   <DataArchiver>
-    <filebase>warhces-decay-isotropic-turbulence-vreman-32.uda</filebase>
+    <filebase>warches-decay-isotropic-turbulence-vreman-32.uda</filebase>
 	<outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>    
     <save label="totalKineticEnergy"/>

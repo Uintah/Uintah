@@ -12,15 +12,13 @@
     <initTime>    0.0     </initTime>
     <delt_min>    1e-3 </delt_min>
     <delt_max>    1e-3     </delt_max>
-<!-- 
-    <max_Timesteps> 5 </max_Timesteps>
- -->
+    <max_Timesteps> 1000 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 <!--__________________________________-->
   <DataArchiver>
-    <filebase>warhces-decay-isotropic-turbulence-vreman-64.uda</filebase>
+    <filebase>warches-decay-isotropic-turbulence-vreman-64.uda</filebase>
 	<outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>    
     <save label="totalKineticEnergy"/>
@@ -48,7 +46,7 @@
       <Box label="1">
         <lower>       [0,0,0]         </lower>
         <upper>       [0.56548668,0.56548668,0.56548668]</upper>
-        <resolution>  [32,32,32]      </resolution>        
+        <resolution>  [64,64,64]      </resolution>        
         <patches>     [2,2,2]         </patches>
         <extraCells>[0,0,0]</extraCells>        
       </Box>
@@ -65,14 +63,13 @@
 
      <Wasatch>
 
-    <Turbulence>
-       <KolmogorovScale>1000000000000</KolmogorovScale>
-      <EddyViscosityConstant>0.2</EddyViscosityConstant>
-      <TurbulenceModel> VREMAN </TurbulenceModel>
+    <Turbulence model="VREMAN">
+      <EddyViscosityCoefficient>0.2</EddyViscosityCoefficient>
     </Turbulence>
 
     <Density>
       <IsConstant>true</IsConstant>
+      <NameTag name="densityCP" state="STATE_NONE"/>
     </Density>
 
     <!-- Set the initial condition for non-staggered scalar -->
