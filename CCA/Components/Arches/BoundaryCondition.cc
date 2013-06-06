@@ -1646,7 +1646,8 @@ BoundaryCondition::pressureBC(const Patch* patch,
     sub_types.push_back( VELOCITY_FILE ); 
     sub_types.push_back( MASSFLOW_FILE ); 
     sub_types.push_back( SWIRL );
-    sub_types.push_back( TURBULENT_INLET ) ;
+    sub_types.push_back( TURBULENT_INLET );
+    sub_types.push_back( STABL ); 
     sign = 1;
 
     zeroStencilDirection( patch, matl_index, sign, A, sub_types ); 
@@ -2638,6 +2639,10 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
             if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == MASSFLOW_INLET ) { 
 
               setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+
+            } else if ( bc_iter->second.type == STABL ) { 
+
+              setStABL( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, &bc_iter->second, bound_ptr ); 
  
             } else if (bc_iter->second.type == TURBULENT_INLET) {
 
@@ -4412,6 +4417,18 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
  
   ProblemSpecP db_root = db->getRootNode();
   ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions"); 
+  Vector grav; 
+  unsigned int dir_grav = 999; 
+  if ( db_root->findBlock("PhysicalConstants") ){ 
+    db_root->findBlock("PhysicalConstants")->require("gravity",grav);
+    if ( grav.x() != 0 ){ 
+      dir_grav = 0; 
+    } else if ( grav.y() != 0 ){ 
+      dir_grav = 1; 
+    } else if ( grav.z() != 0 ){ 
+      dir_grav = 2; 
+    } 
+  } 
   int bc_type_index = 0; 
 
   //Map types to strings:
@@ -4422,6 +4439,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
   d_bc_type_to_string.insert( std::make_pair( PRESSURE       , "PressureBC" ) );
   d_bc_type_to_string.insert( std::make_pair( OUTLET         , "OutletBC" ) );
   d_bc_type_to_string.insert( std::make_pair( SWIRL          , "Swirl" ) ); 
+  d_bc_type_to_string.insert( std::make_pair( STABL          , "StABL" ) ); 
   d_bc_type_to_string.insert( std::make_pair( WALL           , "WallBC" ) );
 
   // Now actually look for the boundary types
@@ -4503,6 +4521,23 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
           //old: remove when this is cleaned up: 
           d_inletBoundary = true; 
+
+        } else if ( type == "StABL" ){ 
+
+          my_info.type = STABL; 
+          db_BCType->require("roughness",my_info.zo); 
+          db_BCType->require("freestream_h",my_info.zh); 
+          db_BCType->require("value",my_info.u_inf);  // Using <value> as the infinite velocity
+          db_BCType->getWithDefault("k",my_info.k,0.41);
+
+          my_info.kappa = pow( my_info.k / log( my_info.zh / my_info.zo ), 2.0); 
+          my_info.ustar = pow( (my_info.kappa * pow(my_info.u_inf,2.0)), 0.5 ); 
+          if ( dir_grav < 3 ){ 
+            my_info.dir_gravity = dir_grav; 
+          } else { 
+            throw InvalidValue("Error: You must have a gravity direction specified to use the StABL BC.", __FILE__, __LINE__);
+          } 
+          found_bc = true; 
 
         } else if ( type == "PressureBC" ){
 
@@ -4939,6 +4974,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
             for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
               if ( density[*bound_ptr] > 1e-10 ){ 
+
                 if ( (bc_iter->second).type == MASSFLOW_INLET ) {
                   (bc_iter->second).mass_flow_rate = bc_value; 
                   (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
@@ -4966,6 +5002,10 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                     bc_iter->second.mass_flow_rate = bc_value; 
                     bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
                                                      ( area * density[*bound_ptr] ); 
+                    break; 
+
+                  case ( STABL ): 
+                    bc_iter->second.mass_flow_rate = 0.0; 
                     break; 
 
                   default: 
@@ -5119,9 +5159,13 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
 
             if ( bc_iter->second.type != VELOCITY_FILE ) { 
               
-              if ( bc_iter->second.type != TURBULENT_INLET ) {
+              if ( bc_iter->second.type != TURBULENT_INLET && bc_iter->second.type != STABL ) {
 
                 setVel__NEW( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.velocity ); 
+
+              } else if ( bc_iter->second.type == STABL ) { 
+
+                setStABL( patch, face, uVelocity, vVelocity, wVelocity, &bc_iter->second, bound_ptr ); 
 
               } else {
 
@@ -5392,6 +5436,145 @@ void BoundaryCondition::setTurbInlet( const Patch* patch, const Patch::FaceType&
 //  cout << "Inlet Timestep is " << t << endl;
 }
 
+void BoundaryCondition::setStABL( const Patch* patch, const Patch::FaceType& face, 
+        SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+        BCInfo* bcinfo,
+        Iterator bound_ptr  )
+{
+
+  IntVector insideCellDir = patch->faceDirection(face);
+
+  switch ( face ) {
+   case Patch::xminus :
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       Point p = patch->getCellPosition(c);
+       double vel = 0.0; 
+       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+         vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       }
+
+       uVel[c]  = vel;
+       uVel[cp] = vel;
+
+       vVel[c] = 0.0; 
+       wVel[c] = 0.0; 
+     }
+
+     break; 
+   case Patch::xplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       Point p = patch->getCellPosition(c);
+       double vel = 0.0; 
+       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+         vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       }
+
+       uVel[c]  = -vel;
+       uVel[cp] = -vel;
+
+       vVel[c] = 0.0; 
+       wVel[c] = 0.0; 
+
+     }
+     break; 
+   case Patch::yminus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       Point p = patch->getCellPosition(c);
+       double vel = 0.0; 
+       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+         vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       }
+
+       vVel[c]  = vel;
+       vVel[cp] = vel;
+
+       uVel[c] = 0.0; 
+       wVel[c] = 0.0; 
+
+
+     }
+     break; 
+   case Patch::yplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       Point p = patch->getCellPosition(c);
+       double vel = 0.0; 
+       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+         vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       }
+
+       vVel[c]  = -vel;
+       vVel[cp] = -vel;
+
+       uVel[c] = 0.0; 
+       wVel[c] = 0.0; 
+
+
+     }
+     break; 
+   case Patch::zminus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       Point p = patch->getCellPosition(c);
+       double vel = 0.0; 
+       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+         vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       }
+
+       wVel[c]  = vel;
+       wVel[cp] = vel;
+
+       uVel[c] = 0.0; 
+       vVel[c] = 0.0; 
+
+
+     }
+     break; 
+   case Patch::zplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       Point p = patch->getCellPosition(c);
+       double vel = 0.0; 
+       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+         vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       }
+
+       wVel[c]  = -vel;
+       wVel[cp] = -vel;
+
+       uVel[c] = 0.0; 
+       vVel[c] = 0.0; 
+
+     }
+     break; 
+   default:
+
+     break;
+
+ }
+}
 
 void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
@@ -6054,7 +6237,7 @@ BoundaryCondition::wallStress( const Patch* p,
     // This isn't that stylish but it should accomplish what the MPMArches code was doing
     //1) assumed flow cell = -1
     //2) assumed that wall velocity = 0
-    //3) assumed a csmag = 0.17 (ala kumar) 
+    //3) assumed a csmag = 0.17 (a la kumar) 
     
     int flow = -1; 
     double csmag;
