@@ -969,13 +969,6 @@ void Switcher::addMaterial(const ProblemSpecP& params, GridP& grid,
 }
 //______________________________________________________________________
 //
-void Switcher::scheduleInitializeAddedMaterial(const LevelP& level,
-                                               SchedulerP& sched)
-{
-  d_sim->scheduleInitializeAddedMaterial(level, sched);
-}
-//______________________________________________________________________
-//
 void Switcher::restartInitialize() {
   d_restarting = true;
   d_sim->restartInitialize();
