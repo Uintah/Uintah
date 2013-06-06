@@ -38,6 +38,7 @@
 #include <CCA/Components/ICE/TurbulenceModel/TurbulenceFactory.h>
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
+#include <CCA/Components/ICE/WallShearStressModel/WallShearStress.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -408,7 +409,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     //cout_norm << "Material attribute = " << index_val << endl;
 
     // Extract out the type of EOS and the associated parameters
-    ICEMaterial *mat = scinew ICEMaterial(ps);
+    ICEMaterial *mat = scinew ICEMaterial(ps, sharedState);
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will
     // ALWAYS have an index number as in <material index = "0">.
@@ -573,7 +574,7 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec,
     
     for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
          ps = ps->findNextBlock("material") ) {
-      ICEMaterial *mat = scinew ICEMaterial(ps);
+      ICEMaterial *mat = scinew ICEMaterial(ps, sharedState);
       sharedState->registerICEMaterial(mat);
     }
     
@@ -1430,7 +1431,6 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   t = scinew Task("ICE::accumulateMomentumSourceSinks", 
             this, &ICE::accumulateMomentumSourceSinks);
 
-                       // EQ  & RATE FORM     
   t->requires(Task::OldDW, lb->delTLabel,getLevel(patches));  
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
@@ -1440,7 +1440,6 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW,lb->pressZ_FCLabel,   press_matl,    oims, gac, 1);
   t->requires(Task::NewDW,lb->viscosityLabel,   ice_matls, gac, 2);
   t->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls, gac, 2);
-  t->requires(Task::NewDW,lb->sp_vol_CCLabel,   ice_matls, gac, 2);
   t->requires(Task::NewDW,lb->rho_CCLabel,       gac,2);
   t->requires(Task::NewDW, lb->vol_frac_CCLabel, gac,2);
 
@@ -3888,7 +3887,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       if(ice_matl){
         new_dw->get(viscosity_org, lb->viscosityLabel, indx,patch,gac,2); 
         old_dw->get(vel_CC,        lb->vel_CCLabel,    indx,patch,gac,2); 
-        new_dw->get(sp_vol_CC,     lb->sp_vol_CCLabel, indx,patch,gac,2); 
         
         //__________________________________
         //  compute the shear stress terms
@@ -3906,6 +3904,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           computeTauX(patch, vol_frac, vel_CC,viscosity,dx, tau_X_FC);
           computeTauY(patch, vol_frac, vel_CC,viscosity,dx, tau_Y_FC);
           computeTauZ(patch, vol_frac, vel_CC,viscosity,dx, tau_Z_FC);
+          
+          
+          
         }
         if(viscosity_test == 0.0 && d_turbulence){
           string warn="ERROR:\n input :viscosity can't be zero when calculate turbulence";
