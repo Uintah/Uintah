@@ -44216,15 +44216,8 @@ $as_echo "yes" >&6; }
   INC_SPATIALOPS_H="-I$with_spatialops/include"
   SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
 
-  if test "$sci_required_cuda" = "yes"; then
-    # The spatialops-structured lib is part of the new Nebo version of SpatialOps...
-    # once the Nebo version is merged into the main SpatialOps, then this if (more
-    # specifically the else part) can be removed.
-    SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil -lspatialops-structured"
-  else
-    SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil"
-  fi
-
+  SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil -lspatialops-structured"
+  
   HAVE_SPATIALOPS="yes"
 fi
 
