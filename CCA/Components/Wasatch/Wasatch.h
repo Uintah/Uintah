@@ -125,6 +125,9 @@ namespace Uintah{ class Task; }
 namespace Wasatch{
   void force_expressions_on_graph( Expr::TagList& exprTagList,
                                    GraphHelper* const graphHelper );
+  
+  void check_periodicity_extra_cells( const Uintah::ProblemSpecP& params,
+                                     Uintah::IntVector& extraCells );
   class EqnTimestepAdaptorBase;
   class TimeStepper;
   class CoordHelper;
