@@ -5,7 +5,7 @@
 <Uintah_specification>
 
    <Meta>
-       <title>Arenisca_Verification_Test_10_Pure_Isochoric_Strain_Rates_In_Different_Directions</title>
+       <title>Arenisca_Verification_Test_10_Transient_Stress_Eigenvalues_with_Constant_Eigenvectors</title>
    </Meta>
 
    <SimulationComponent type="mpm" />
@@ -19,7 +19,7 @@
    </Time>
 
    <DataArchiver>
-       <filebase> AreniscaTest_10_PureIsochoricStrainRates.uda </filebase>
+       <filebase> AreniscaTest_10_TransientStressEigenvaluesConstVectors.uda </filebase>
        <outputInterval>.01</outputInterval>
        <save label="p.x"/>
        <save label="p.velocity"/>

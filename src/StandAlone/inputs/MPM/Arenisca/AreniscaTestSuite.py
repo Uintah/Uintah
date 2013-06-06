@@ -34,7 +34,7 @@ POST_PROCESS_LIST = [
   'AreniscaTest_07_HydrostaticCompressionCapEvolution.ups',
   'AreniscaTest_08_LoadingUnloading.ups',
   'AreniscaTest_09_FluidFilledPoreSpace.ups',
-  'AreniscaTest_10_PureIsochoricStrainRates.ups',
+  'AreniscaTest_10_TransientStressEigenvaluesConstVectors.ups',
   'AreniscaTest_11_UniaxialStrainJ2plasticity.ups',
 ]
 
@@ -240,7 +240,7 @@ def post_proc(test,uda_path,save_path):
       test08_postProc(uda_path,save_path)
     if test_name == 'AreniscaTest_09_FluidFilledPoreSpace.ups':
       test09_postProc(uda_path,save_path)
-    if test_name == 'AreniscaTest_10_PureIsochoricStrainRates.ups':
+    if test_name == 'AreniscaTest_10_TransientStressEigenvaluesConstVectors.ups':
       test10_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)       
     if test_name == 'AreniscaTest_11_UniaxialStrainJ2plasticity.ups':
       test11_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)       
