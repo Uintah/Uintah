@@ -52,7 +52,7 @@ namespace Wasatch {
 
   /**
    *  \class OldVariable
-   *  \author James C. Sutherland
+   *  \author James C. Sutherland, Tony Saad
    *  \brief  This class provides support for carrying old variables around. It
    can also be used to copy variables from the old datawarehouse.
    *

@@ -163,11 +163,6 @@ namespace Wasatch{
         oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, vNames.xvol_frac_tag(), true);
         oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, vNames.yvol_frac_tag(), true);
         oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, vNames.zvol_frac_tag(), true);
-        // we must lock the fields on the initial condition
-        lockedFields.insert( vNames.svol_frac_tag().name() );
-        lockedFields.insert( vNames.xvol_frac_tag().name() );
-        lockedFields.insert( vNames.yvol_frac_tag().name() );
-        lockedFields.insert( vNames.zvol_frac_tag().name() );
       }
       
       // force on initial conditions graph
