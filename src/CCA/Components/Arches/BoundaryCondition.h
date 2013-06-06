@@ -100,7 +100,7 @@ namespace Uintah {
     public:
 
       //** WARNING: This needs to be duplicated in BoundaryCond_new.h for now until BoundaryCondition goes away **//
-      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL, TURBULENT_INLET }; 
+      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, STABL, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL, TURBULENT_INLET }; 
       enum DIRECTION { CENTER, EAST, WEST, NORTH, SOUTH, TOP, BOTTOM }; 
 
       // GROUP: Constructors:
@@ -247,6 +247,7 @@ namespace Uintah {
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel, 
         constCCVariable<double>& density, 
         Iterator bound_iter, Vector value );
+      
     
       void setTurbInlet( const Patch* patch, const Patch::FaceType& face, 
                          SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel, 
@@ -779,6 +780,15 @@ namespace Uintah {
         double swirl_no; 
         Vector swirl_cent; 
 
+        //Stabilized Atmospheric BL
+        double zo; 
+        double zh; 
+        double u_inf; 
+        double k; 
+        double kappa; 
+        double ustar; 
+        int dir_gravity; 
+
         // State: 
         double enthalpy; 
         double density; 
@@ -789,6 +799,11 @@ namespace Uintah {
         DigitalFilterInlet * TurbIn;
 
       };
+
+      void setStABL( const Patch* patch, const Patch::FaceType& face, 
+        SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+        BCInfo* bcinfo,
+        Iterator bound_ptr  );
 
       void printBCInfo(){ 
 
