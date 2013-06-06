@@ -12,9 +12,7 @@
     <initTime>    0.0     </initTime>
     <delt_min>    1e-3 </delt_min>
     <delt_max>    1e-3     </delt_max>
-<!-- 
-    <max_Timesteps> 5 </max_Timesteps>
- -->
+    <max_Timesteps> 1000 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
@@ -65,14 +63,13 @@
 
      <Wasatch>
 
-    <Turbulence>
-       <KolmogorovScale>1000000000000</KolmogorovScale>
-      <EddyViscosityConstant>0.2</EddyViscosityConstant>
-      <TurbulenceModel> VREMAN </TurbulenceModel>
+    <Turbulence model="VREMAN">
+      <EddyViscosityCoefficient>0.2</EddyViscosityCoefficient>
     </Turbulence>
 
     <Density>
       <IsConstant>true</IsConstant>
+      <NameTag name="densityCP" state="STATE_NONE"/>
     </Density>
 
     <!-- Set the initial condition for non-staggered scalar -->
