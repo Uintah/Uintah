@@ -71,12 +71,6 @@ namespace Uintah {
                               GridP& grid,
                               SimulationStateP& state );
 
-    virtual void scheduleInitializeAddedMaterial( const LevelP & level,
-                                                  SchedulerP   & scheduler );
-
-
-
-
     // AMR
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
                                          SchedulerP& scheduler,

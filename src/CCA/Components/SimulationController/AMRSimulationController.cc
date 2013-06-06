@@ -273,7 +273,6 @@ AMRSimulationController::run()
        d_sharedState->finalizeMaterials();
        d_scheduler->initialize();
        for (int i = 0; i < currentGrid->numLevels(); i++) {
-         d_sim->scheduleInitializeAddedMaterial(currentGrid->getLevel(i), d_scheduler);
          if (d_doAMR && i > 0){
            d_sim->scheduleRefineInterface(currentGrid->getLevel(i), d_scheduler, false, true);
          }
