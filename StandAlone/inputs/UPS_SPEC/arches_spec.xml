@@ -214,7 +214,7 @@
       </Turbulence>
 
       <Properties                       spec="REQUIRED NO_DATA"
-                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps, ClassicTable, ColdFlow)" >
+                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps, ClassicTable, ColdFlow, ConstantProps)" >
 
         <use_mixing_model               spec="OPTIONAL BOOLEAN" /> <!-- default is false --> 
         <empirical_soot                 spec="OPTIONAL BOOLEAN" />
@@ -336,6 +336,11 @@
             </stream> 
           </post_mix>
         </ClassicTable>
+
+        <ConstantProps                spec="OPTIONAL NO_DATA">
+          <density                    spec="REQUIRED DOUBLE 'positive'"/>
+          <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+        </ConstantProps>
 
         <emperical_soot               spec="OPTIONAL BOOLEAN" />
         <soot_factor                  spec="OPTIONAL DOUBLE '0,100'"/>

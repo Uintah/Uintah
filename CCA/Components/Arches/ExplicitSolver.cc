@@ -503,7 +503,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
 
     string mixmodel = d_props->getMixingModelType();
-    if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
+    if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" 
+        && mixmodel != "ColdFlow" && mixmodel != "ConstantProps")
       d_props->sched_reComputeProps(sched, patches, matls,
                                     d_timeIntegratorLabels[curr_level],
                                     true, false );
@@ -590,7 +591,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
 
 
-      if (mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
+      if (mixmodel != "TabProps" && mixmodel != "ClassicTable" 
+          && mixmodel != "ColdFlow" && mixmodel != "ConstantProps")
         d_props->sched_reComputeProps(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
                                       false, false);

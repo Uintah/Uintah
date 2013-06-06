@@ -28,7 +28,6 @@
     <save label="uVelocitySPBC"/>    
     <save label="vVelocitySPBC"/>    
     <save label="wVelocitySPBC"/>            
-    <save label="scalarSP"/>
     <save label="densityCP"/>
     <save label="viscosityCTS"/>
     <save label="continuityResidual"/>
