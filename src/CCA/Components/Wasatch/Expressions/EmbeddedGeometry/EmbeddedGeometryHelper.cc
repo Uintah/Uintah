@@ -64,8 +64,7 @@ namespace Wasatch{
 
   void
   parse_embedded_geometry( Uintah::ProblemSpecP parser,
-                           GraphCategories& gc,
-                           std::set<std::string>& lockedFields )
+                           GraphCategories& gc )
   {
     if (parser->findBlock("EmbeddedGeometry")) {
       

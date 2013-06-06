@@ -399,7 +399,7 @@ namespace Wasatch{
     // are typically associated with, e.g. initial conditions.
     //
     create_expressions_from_input( wasatchParams, graphCategories_ );
-    parse_embedded_geometry(wasatchParams, graphCategories_, locked_fields() );
+    parse_embedded_geometry(wasatchParams,graphCategories_);
     setup_property_evaluation( wasatchParams, graphCategories_ );
 
     //
