@@ -32,6 +32,7 @@
 #endif 
 # include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 # include <CCA/Components/Arches/ChemMix/ColdFlow.h>
+# include <CCA/Components/Arches/ChemMix/ConstantProps.h>
 #include <CCA/Components/Arches/Mixing/MixingModel.h>
 #include <CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
 #include <CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
@@ -102,7 +103,8 @@ Properties::~Properties()
 {
   delete d_mixingModel;
 
-  if ( mixModel == "TabProps" || mixModel == "ClassicTable" || mixModel == "ColdFlow" ){ 
+  if ( mixModel == "TabProps" || mixModel == "ClassicTable" 
+      || mixModel == "ColdFlow" || mixModel == "ConstantProps" ){ 
     delete d_mixingRxnTable; 
   }
 }
@@ -144,6 +146,8 @@ Properties::problemSetup(const ProblemSpecP& params)
     mixModel = "ClassicTable";
 	else if (db->findBlock("ColdFlow"))
 		mixModel = "ColdFlow";
+  else if (db->findBlock("ConstantProps"))
+    mixModel = "ConstantProps"; 
   else
     throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps and Boost libs.",__FILE__,__LINE__);
 
@@ -211,6 +215,10 @@ Properties::problemSetup(const ProblemSpecP& params)
 		d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab ); 
 		d_mixingRxnTable->problemSetup( db ); 
     d_reactingFlow = false;
+  } else if (mixModel == "ConstantProps" ) { 
+    d_mixingRxnTable = scinew ConstantProps( d_lab, d_MAlab ); 
+    d_mixingRxnTable->problemSetup( db ); 
+    d_reactingFlow = false; 
   }
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
         || mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
@@ -220,7 +228,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
   }
  
-  if (mixModel != "TabProps" && mixModel != "ClassicTable" && mixModel != "ColdFlow") {
+  if (mixModel != "TabProps" && mixModel != "ClassicTable" && mixModel != "ColdFlow" && mixModel != "ConstantProps") {
     d_mixingModel->problemSetup(db);
 
     if (d_calcEnthalpy){
