@@ -21,8 +21,6 @@
     <filebase>constantMMS.uda</filebase>
     <outputInterval>0.01</outputInterval>
     <save label="totalKineticEnergy"/>
-    <save label="totalummsLnError"/>
-    <save label="totalummsExactSol"/>
     <save label="pressurePS"/>
     <save label="scalarSP"/>
     <save label="CCVelocity"/>
@@ -33,7 +31,6 @@
     <save label="viscosityCTS"/>
     <save label="continuityResidual"/>
     <save label="velocityDivergence"/>
-    <save label="ummsLnError"/>
     <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -65,26 +62,6 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-
-      <MMS whichMMS="constantMMS">
-        <mmsErrorType>Linf</mmsErrorType>
-        <constantMMS>
-          <cu>1.0</cu>
-          <cv>11.0</cv>
-          <cw>.1</cw>
-          <cp>100</cp>
-          <phi0>0.3</phi0>
-        </constantMMS>
-      </MMS>
-
-      <Turbulence model="smagorinsky">
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-        <cf>0.0</cf>
-        <fac_mesh>1.0</fac_mesh>
-        <filterl>0.000001</filterl>
-        <var_const>0.1</var_const>
-      </Turbulence>
-
       <Properties>
         <use_mixing_model>false</use_mixing_model>
         <ColdFlowMixingModel>
@@ -99,11 +76,6 @@
         </ColdFlowMixingModel>
       </Properties>
 
-<!--
-      <BoundaryConditions>
-      </BoundaryConditions>
-
--->
       <ExplicitSolver>
         <initial_dt>1</initial_dt>
         <variable_dt>true</variable_dt>
@@ -119,6 +91,11 @@
 
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
+          <initialization type="constant">
+            <const_u>1.00</const_u>
+            <const_v>11.0</const_v>
+            <const_w>0.10</const_w>
+          </initialization>
         </MomentumSolver>
 
         <MixtureFractionSolver>
