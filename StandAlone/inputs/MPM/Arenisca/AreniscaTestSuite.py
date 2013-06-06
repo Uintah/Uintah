@@ -12,7 +12,6 @@ from AreniscaTestSuite_PostProc import *
 RUN_TESTS = True
 CLEAN_UDA = True
 
-
 #Automated script for running and post processing Arenisca verification tetsts. 
 # Requires that ../opt/StandAlone/ and ../opt/StandAlone/tools/extractors/ be on working PATH
 # If you would like to run tests with more than one processor than mpirun must also be on PATH
