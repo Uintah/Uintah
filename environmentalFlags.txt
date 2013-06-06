@@ -1,4 +1,4 @@
-This file contains the name of environmental variables that can be set.
+This file contains the name of environmental variables that can be set
 
 Set these like this:
  -> tcsh: setenv SCI_DEBUG ExecTimes:+
