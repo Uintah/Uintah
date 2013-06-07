@@ -553,35 +553,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   }  // mpm
 
 }
-/*______________________________________________________________________
- Function~  ICE::addMaterial--
- Purpose~   read in the exchange coefficients
- _____________________________________________________________________*/
-void ICE::addMaterial(const ProblemSpecP& prob_spec, 
-                      GridP& grid,
-                      SimulationStateP& sharedState)
-{
-  cout_doing << d_myworld->myrank() << " Doing ICE::addMaterial " << "\t\t\t ICE" << endl;
-  d_recompile = true;
-  ProblemSpecP mat_ps =   
-    prob_spec->findBlockWithAttribute("MaterialProperties","add");
 
-  string attr = "";
-  mat_ps->getAttribute("add",attr);
-  
-  if (attr == "true") {
-    ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
-    
-    for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
-         ps = ps->findNextBlock("material") ) {
-      ICEMaterial *mat = scinew ICEMaterial(ps, sharedState);
-      sharedState->registerICEMaterial(mat);
-    }
-    
-    d_exchCoeff->problemSetup(mat_ps, sharedState);
-    
-  }
-}
 /*______________________________________________________________________
  Function~  ICE::updateExchangeCoefficients--
  Purpose~   read in the exchange coefficients after a material has been
@@ -607,7 +579,7 @@ void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec,
  _____________________________________________________________________*/
 void ICE::outputProblemSpec(ProblemSpecP& root_ps)
 {
-  cout_doing << d_myworld->myrank() << " Doing ICE::addMaterial " << "\t\t\t ICE" << endl;
+  cout_doing << d_myworld->myrank() << " Doing ICE::outputProblemSpec " << "\t\t\t ICE" << endl;
 
   ProblemSpecP root = root_ps->getRootNode();
 

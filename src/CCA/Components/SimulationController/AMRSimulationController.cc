@@ -255,32 +255,7 @@ AMRSimulationController::run()
        DumpAllocator(DefaultAllocator(), filename.c_str());
 #endif
      }
-
-     // For material addition.  Once a material is added, need to
-     // reset the flag, but can't do it til the subsequent timestep
-     static int sub_step=0;
-
-     if(d_sharedState->needAddMaterial() != 0){
-       if(sub_step==1){
-         d_sharedState->resetNeedAddMaterial();
-         sub_step = -1;
-       }
-       sub_step++;
-     }
-
-     if(d_sharedState->needAddMaterial() != 0){
-       d_sim->addMaterial(d_ups, currentGrid, d_sharedState);
-       d_sharedState->finalizeMaterials();
-       d_scheduler->initialize();
-       for (int i = 0; i < currentGrid->numLevels(); i++) {
-         if (d_doAMR && i > 0){
-           d_sim->scheduleRefineInterface(currentGrid->getLevel(i), d_scheduler, false, true);
-         }
-       }
-       d_scheduler->compile();
-       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
-       d_scheduler->execute();
-     }
+     
      if(dbg_barrier.active()) {
        start=Time::currentSeconds();
        MPI_Barrier(d_myworld->getComm());
@@ -881,7 +856,7 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
   scheduleComputeStableTimestep(currentGrid, d_scheduler);
 
   if(d_output){
-    d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, true, d_sharedState->needAddMaterial());
+    d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, true);
   }
   
   d_scheduler->compile();
@@ -890,7 +865,6 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
   if(d_myworld->myrank() == 0)
     cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
   d_sharedState->compilationTime += dt;
-  d_sharedState->setNeedAddMaterial(0);
 }
 //______________________________________________________________________
 void

@@ -2355,21 +2355,6 @@ bool MPMICE::needRecompile(double time, double dt, const GridP& grid) {
     return false;
   }
 }
-                                                                                
-void MPMICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
-                         SimulationStateP&   sharedState)
-{
-  d_recompile = true;
-  if(d_sharedState->needAddMaterial() > 0){
-    d_ice->addMaterial(prob_spec, grid, d_sharedState);
-    cout << "Adding an ICE material" << endl;
-  }
-  if(d_sharedState->needAddMaterial() < 0){
-    d_mpm->addMaterial(prob_spec, grid, d_sharedState);
-    d_ice->updateExchangeCoefficients(prob_spec, grid, d_sharedState);
-    cout << "Adding an MPM material" << endl;
-  }
-}
 
 //______________________________________________________________________
 void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,

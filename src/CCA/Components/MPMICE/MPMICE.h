@@ -297,12 +297,7 @@ public:
                                DataWarehouse*, 
                                DataWarehouse*); 
 
-  // MATERIAL ADDITION
   virtual bool needRecompile(double time, double dt, const GridP& grid);
-
-  virtual void addMaterial(const ProblemSpecP& params,
-                           GridP& grid,
-                           SimulationStateP&);
 
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
 

@@ -104,10 +104,6 @@ namespace Uintah {
 
       virtual void outputProblemSpec(ProblemSpecP& ps);
       
-      virtual void addMaterial(const ProblemSpecP& params, 
-                               GridP& grid,
-                               SimulationStateP&);
-      
       virtual void updateExchangeCoefficients(const ProblemSpecP& params, 
                                               GridP& grid,
                                               SimulationStateP&);
@@ -695,11 +691,6 @@ namespace Uintah {
                                 DataWarehouse*,
                                 DataWarehouse*);
                                 
-      void setNeedAddMaterialFlag(const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse*,
-                                  DataWarehouse*);
                                 
       void computeLagrangian_Transported_Vars(const ProcessorGroup*,  
                                               const PatchSubset* patches,

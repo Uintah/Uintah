@@ -897,8 +897,7 @@ DataArchiver::createIndexXML(Dir& dir)
 void
 DataArchiver::finalizeTimestep(double time, double delt,
                                const GridP& grid, SchedulerP& sched,
-                               bool recompile /*=false*/,
-                               int addMaterial /*=0*/)
+                               bool recompile /*=false*/)
 {
   //this function should get called exactly once per timestep
   
@@ -915,7 +914,7 @@ DataArchiver::finalizeTimestep(double time, double delt,
   // or if there is a component switch or a new level in the grid
   // - BJW
   if (((delt != 0 || d_outputInitTimestep) && !wereSavesAndCheckpointsInitialized) || 
-      addMaterial !=0 || d_sharedState->d_switchState || grid->numLevels() != d_numLevelsInOutput) {
+        d_sharedState->d_switchState || grid->numLevels() != d_numLevelsInOutput) {
       /* skip the initialization timestep (normally, anyway) for this
          because it needs all computes to be set
          to find the save labels */
