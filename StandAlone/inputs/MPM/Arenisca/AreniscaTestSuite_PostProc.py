@@ -524,6 +524,91 @@ def plot_yield_surface_OLD(uda_path):
   plt.plot(np.array(I1s)/3.0,rs,'--k',linewidth=lineWidth+1,label='Initial Yield Surface')
   plt.plot(np.array(I1s)/3.0,-np.array(rs),'--k',linewidth=lineWidth+1)    
 
+def dyadicMultiply(a,b):
+  T = np.eye(3)
+  for i in range(3):
+    for j in range(3):
+      T[i][j] = a[i]*b[j]
+  return T
+
+def tensorSpectralMath(A,function,arg=None):
+  #Get eigen values and associated eigenvectors
+  eigVals,eigVecs = np.linalg.eig(A)
+  #Find repeated roots conditions
+  if eigVals[0] == eigVals[1] and eigVals[1] != eigVals[2]:
+    OneTwoRepeated = True
+    TwoThreeRepeated = False
+    AllEqual = False
+  elif eigVals[0] != eigVals[1] and eigVals[1] == eigVals[2]:
+    OneTwoRepeated = False
+    TwoThreeRepeated = True
+    AllEqual = False      
+  elif eigVals[0] == eigVals[1] and eigVals[0] == eigVals[2]:
+    OneTwoRepeated = False
+    TwoThreeRepeated = False
+    AllEqual = True
+  else:
+    OneTwoRepeated = False
+    TwoThreeRepeated = False
+    AllEqual = False
+  #Use spectral decomposition to compute the log of Epsilon to get F
+  modA = np.zeros((3,3))
+  #First two roots repeat
+  if OneTwoRepeated:
+    #Construct basis tensors
+    P01 = (dyadicMultiply(eigVecs[0],eigVecs[0])+dyadicMultiply(eigVecs[1],eigVecs[1]))
+    P22 = dyadicMultiply(eigVecs[2],eigVecs[2])
+    if function == 'log':
+      modA += np.log(eigVals[1])*P01    
+      modA += np.log(eigVals[2])*P22     
+    elif function == 'exp':
+      modA += np.exp(eigVals[1])*P01    
+      modA += np.exp(eigVals[2])*P22       
+    elif function == 'pow':
+      modA += np.power(eigVals[1],arg)*P01    
+      modA += np.power(eigVals[2],arg)*P22
+  #Second two roots repeat
+  elif TwoThreeRepeated:
+    #Construct basis tensors
+    P00 = dyadicMultiply(eigVecs[0],eigVecs[0])
+    P12 = (dyadicMultiply(eigVecs[1],eigVecs[1])+dyadicMultiply(eigVecs[2],eigVecs[2]))
+    if function == 'log':
+      modA += np.log(eigVals[0])*P00
+      modA += np.log(eigVals[1])*P12  
+    elif function == 'exp':
+      modA += np.exp(eigVals[0])*P00
+      modA += np.exp(eigVals[1])*P12     
+    elif function == 'pow':
+      modA += np.power(eigVals[0],arg)*P00
+      modA += np.power(eigVals[1],arg)*P12
+  #All are repeated roots
+  elif AllEqual:
+    #Construct basis tensor
+    P = (dyadicMultiply(eigVecs[0],eigVecs[0])+dyadicMultiply(eigVecs[1],eigVecs[1])+dyadicMultiply(eigVecs[2],eigVecs[2]))
+    if function == 'log':
+      modA += np.log(eigVals[0])*P
+    elif function == 'exp':
+      modA += np.exp(eigVals[0])*P     
+    elif function == 'pow':
+      modA += np.power(eigVals[0],arg)*P
+  #No repeated roots
+  else:
+    for i in range(3):
+      if function == 'log':
+	modA += np.log(eigVals[i])*dyadicMultiply(eigVecs[i],eigVecs[i])
+      elif function == 'exp':
+	modA += np.exp(eigVals[i])*dyadicMultiply(eigVecs[i],eigVecs[i])  
+      elif function == 'pow':
+	modA += np.power(eigVals[i],arg)*dyadicMultiply(eigVecs[i],eigVecs[i])
+  return modA  
+
+def tensor_exp(A):
+  return tensorSpectralMath(A,'exp',arg=None)
+def tensor_pow(A,ARG):
+  return tensorSpectralMath(A,'pow',ARG)
+def tensor_log(A):
+  return tensorSpectralMath(A,'log')
+  
 def J2VM(epsil_dot,dt,sig_Beg,K,G,tau_y):
   #J2 plasticity Von misses material model for 3D
   #Inputs: epsil_dot, dt, sig_Beg, K, G, tau_y
@@ -562,7 +647,7 @@ def defTable_to_J2Solution(def_times,Fs,bulk_mod,shear_mod,tau_yield,num_substep
   
   epsils = []
   for F in Fs:
-    epsils.append(np.array([[np.log(F[0][0]),0,0],[0,np.log(F[1][1]),0],[0,0,np.log(F[2][2])]]))
+    epsils.append(tensor_log(F))
     
   for leg in range(len(def_times)-1):
     t_start = def_times[leg]
@@ -1477,6 +1562,88 @@ def test11_postProc(uda_path,save_path,**kwargs):
     else:
       saveIMG(save_path+'/Test11_verificationPlot_b','640x480') 
       
+  
+  else:
+    print '\nERROR: need working directory to post process this problem'  
+  
+def test12_postProc(uda_path,save_path,**kwargs):
+  if 'WORKING_PATH' in kwargs:
+    working_dir = kwargs['WORKING_PATH']
+  
+    #Extract stress history
+    print "Post Processing Test: 12 - Pure Isochoric Strain Rates in Different Directions"
+    times,sigmas = get_pStress(uda_path)
+    Sxx = []
+    Syy = []
+    Szz = []
+    Sxy = []
+    for sigma in sigmas:
+      Sxx.append(sigma[0][0])
+      Syy.append(sigma[1][1])
+      Szz.append(sigma[2][2])
+      Sxy.append(sigma[0][1])
+      
+    #Analytical solution
+    material_dict = get_yield_surface(uda_path)
+    def_times,Fs = get_defTable(uda_path,working_dir)
+    tau_yield = material_dict['PEAKI1']/1e10
+    bulk_mod = material_dict['B0']
+    shear_mod = material_dict['G0']
+    
+    analytical_times,analytical_sigmas,epsils=defTable_to_J2Solution(def_times,Fs,bulk_mod,shear_mod,tau_yield,num_substeps=10)
+   
+    analytical_Sxx = []
+    analytical_Syy = []
+    analytical_Szz = []
+    analytical_Sxy = []
+    for sigma in analytical_sigmas:
+      analytical_Sxx.append(sigma[0][0])
+      analytical_Syy.append(sigma[1][1])
+      analytical_Szz.append(sigma[2][2])
+      analytical_Sxy.append(sigma[0][1])
+
+    ###PLOTTING
+    plt.figure(1)
+    plt.clf()
+    ax1 = plt.subplot(111)
+    if BIG_FIGURE:
+      plt.subplots_adjust(right=0.75)
+      param_text = material_dict['material string']
+      plt.figtext(0.77,0.68,param_text,ha='left',va='top',size='x-small')
+    else:
+      plt.subplots_adjust(left=0.15,top=0.96,bottom=0.15,right=0.96)       
+   
+    #analytical solution
+    plt.plot(analytical_times,np.array(analytical_Sxx)/1e6,':r',linewidth=lineWidth+2,label=str_to_mathbf('Analytical \sigma_{xx}'))  
+    plt.plot(analytical_times,np.array(analytical_Syy)/1e6,':g',linewidth=lineWidth+2,label=str_to_mathbf('Analytical \sigma_{yy}'))     
+    plt.plot(analytical_times,np.array(analytical_Szz)/1e6,':b',linewidth=lineWidth+2,label=str_to_mathbf('Analytical \sigma_{zz}'))
+    plt.plot(analytical_times,np.array(analytical_Sxy)/1e6,':k',linewidth=lineWidth+2,label=str_to_mathbf('Analytical \sigma_{xy}'))
+    #simulation results
+    plt.plot(times,np.array(Sxx)/1e6,'-r',label=str_to_mathbf('Uintah \sigma_{xx}'))       
+    plt.plot(times,np.array(Syy)/1e6,'-g',label=str_to_mathbf('Uintah \sigma_{yy}'))   
+    plt.plot(times,np.array(Szz)/1e6,'-b',label=str_to_mathbf('Uintah \sigma_{zz}'))
+    plt.plot(times,np.array(Sxy)/1e6,'-k',label=str_to_mathbf('Uintah \sigma_{xy}'))
+    
+    ax1.set_xlim(0,5.25)
+    #ax1.set_ylim(0,3) 
+    ax1.xaxis.set_major_formatter(formatter_int)
+    ax1.yaxis.set_major_formatter(formatter_int)     
+    #labels
+    plt.grid(True)         
+    plt.xlabel(str_to_mathbf('Time (s)'))
+    plt.ylabel(str_to_mathbf('Stress (MPa)'))
+    if BIG_FIGURE:
+      plt.legend(loc='upper right', bbox_to_anchor=(1.38,1.12))
+      plt.title('AreniscaTest 12:\nPure Isochoric Strain Rates in Different Directions') 
+      saveIMG(save_path+'/Test12_verificationPlot','1280x960')
+    else:
+      tmp = plt.rcParams['legend.fontsize']
+      plt.rcParams['legend.fontsize']='x-small'
+      plt.legend(loc=7)
+      saveIMG(save_path+'/Test12_verificationPlot','640x480')
+      plt.rcParams['legend.fontsize']=tmp
+    if SHOW_ON_MAKE:
+      plt.show()
   
   else:
     print '\nERROR: need working directory to post process this problem'  
