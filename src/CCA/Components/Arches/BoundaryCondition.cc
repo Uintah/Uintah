@@ -6401,7 +6401,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    Vector Dx = patch->dCell(); 
+    const Vector Dx = patch->dCell();
     double dx=0, dy=0; 
 
     vector<Patch::FaceType> bf;
@@ -6425,9 +6425,8 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
           getBCKind( patch, face, child, *iname, matlIndex, bc_kind, face_name ); 
 
           string whichface; 
-          int index=0; 
-          Vector Dx = patch->dCell(); 
-
+          int index=0;
+          
           if (face == 0){
             whichface = "x-";
             index = 0;
