@@ -69,6 +69,7 @@ WARNING
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
 #include <CCA/Components/Arches/Discretization.h>
+#include <Core/Exceptions/ParameterNotFound.h>
 namespace Uintah {
 class ArchesLabel;
 class MPMArchesLabel;
@@ -294,6 +295,147 @@ private:
       double _const_u;
       double _const_v; 
       double _const_w;  
+
+  };  
+
+  // constant initialization ------------------------
+  class StABLVel : public VelocityInitBase { 
+
+    public: 
+
+      StABLVel(){ 
+      };
+      ~StABLVel(){}; 
+
+      void problemSetup( ProblemSpecP db ){ 
+
+        std::string which_bc; 
+        db->require( "which_bc", which_bc ); 
+
+        Vector grav; 
+        db->getRootNode()->findBlock("PhysicalConstants")->require("gravity",grav);
+        if ( grav.x() != 0 ){ 
+          _dir_grav = 0; 
+        } else if ( grav.y() != 0 ){ 
+          _dir_grav = 1; 
+        } else if ( grav.z() != 0 ){ 
+          _dir_grav = 2; 
+        } else { 
+          throw ProblemSetupException("Error: The specified gravity doesnt indicate a clear up-down direction", __FILE__, __LINE__);
+        } 
+
+        ProblemSpecP db_bc   = db->getRootNode()->findBlock("Grid")->findBlock("BoundaryConditions"); 
+        bool found_boundary = false; 
+        _do_u = false; 
+        _do_v = false; 
+        _do_w = false; 
+
+        if ( db_bc ) { 
+
+          for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0; 
+                db_face = db_face->findNextBlock("Face") ){
+
+            std::string which_face = "NA"; 
+            db_face->getAttribute("side",which_face); 
+            _sign = 1.0; 
+
+            for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0; 
+                db_BCType = db_BCType->findNextBlock("BCType") ){
+
+              std::string name = "NA"; 
+              std::string type; 
+              db_BCType->getAttribute("label", name);
+              db_BCType->getAttribute("var", type); 
+
+              if ( name == which_bc && found_boundary == false ){ 
+
+                if ( found_boundary == false ){ 
+                  found_boundary = true; 
+                  db_BCType->require("roughness",_zo); 
+                  db_BCType->require("freestream_h",_zh); 
+                  db_BCType->require("value",_u_inf);  // Using <value> as the infinite velocity
+                  db_BCType->getWithDefault("k",_k,0.41);
+
+                  _kappa = pow( _k / log( _zh / _zo ), 2.0); 
+                  _ustar = pow( (_kappa * pow(_u_inf,2.0)), 0.5 ); 
+
+                  if ( which_face == "x-" ){ 
+                    _do_u = true; 
+                  } else if ( which_face =="x+" ){ 
+                    _sign = -1.0; 
+                    _do_u = true; 
+                  } else if ( which_face == "y-" ){ 
+                    _do_v = true; 
+                  } else if ( which_face == "y+" ){ 
+                    _sign = -1.0; 
+                    _do_v = true; 
+                  } else if ( which_face == "z-" ){ 
+                    _do_w = true; 
+                  } else if ( which_face == "z+" ){ 
+                    _sign = -1.0; 
+                    _do_w = true; 
+                  } 
+
+                } else { 
+                  throw ProblemSetupException("Error: You have two BCs with the same name using StABL: "+name, __FILE__, __LINE__);
+                }
+              } 
+
+            }
+          }
+        }
+
+      }; 
+
+      void setXVel( const Patch* patch, SFCXVariable<double>& uvel ){ 
+
+        if ( _do_u ){ 
+          for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ){
+            IntVector c = *iter; 
+            Point p = patch->getCellPosition(c);
+            uvel[c] = _ustar / _k * log( p(_dir_grav) / _zo ); 
+          }
+        } 
+
+      }; 
+      
+      void setYVel( const Patch* patch, SFCYVariable<double>& vvel ){ 
+
+        if ( _do_v ){ 
+          for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ){
+            IntVector c = *iter; 
+            Point p = patch->getCellPosition(c);
+            vvel[c] = _ustar / _k * log( p(_dir_grav) / _zo ); 
+          }
+        } 
+
+      }; 
+
+      void setZVel( const Patch* patch, SFCZVariable<double>& wvel ){ 
+
+        if ( _do_w ){ 
+          for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ){
+            IntVector c = *iter; 
+            Point p = patch->getCellPosition(c);
+            wvel[c] = _ustar / _k * log( p(_dir_grav) / _zo ); 
+          }
+        } 
+
+      }; 
+
+    private: 
+
+      unsigned int _dir_grav; 
+      double _zo; 
+      double _zh; 
+      double _k; 
+      double _kappa; 
+      double _u_inf; 
+      double _ustar; 
+      double _sign; 
+      bool _do_u; 
+      bool _do_v; 
+      bool _do_w; 
 
   };  
 

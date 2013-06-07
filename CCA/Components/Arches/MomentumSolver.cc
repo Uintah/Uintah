@@ -127,8 +127,12 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     } else if ( _init_type == "exponentialvortex" ){ 
     
      _init_function = scinew ExponentialVortex(); 
+
+    } else if ( _init_type == "StABL" ){ 
+
+      _init_function = scinew StABLVel(); 
     
-  } else { 
+    } else { 
 
       throw InvalidValue("Initialization type not recognized: " + _init_type, __FILE__, __LINE__);
 

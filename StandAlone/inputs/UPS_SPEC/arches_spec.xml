@@ -566,7 +566,7 @@
                                         attribute1="label REQUIRED STRING"/>
 
           <initialization               spec="OPTIONAL NO_DATA"           
-                                        attribute1="type REQUIRED STRING 'constant, taylor-green, almgren, exponentialvortex'">
+                                        attribute1="type REQUIRED STRING 'constant, taylor-green, almgren, exponentialvortex, StABL'">
 
            <const_u                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
            <const_v                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
@@ -585,6 +585,8 @@
            <R                           spec="REQUIRED DOUBLE" need_applies_to="type exponentialvortex"/>
            <U                           spec="REQUIRED DOUBLE" need_applies_to="type exponentialvortex"/>           
            <V                           spec="REQUIRED DOUBLE" need_applies_to="type exponentialvortex"/>           
+
+           <which_bc                    spec="REQUIRED STRING" need_applies_to="type StABL"/>
            
           </initialization>
         </MomentumSolver>
