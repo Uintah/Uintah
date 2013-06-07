@@ -66,9 +66,6 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps,
     d_cvModel = SpecificHeatFactory::create(ps);
   }
   
-
-  
-
   //__________________________________
   // Thermodynamic Transport Properties
   ps->require("thermal_conductivity",d_thermalConductivity);
@@ -77,6 +74,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps,
   ps->require("gamma",               d_gamma);
   ps->getWithDefault("tiny_rho",     d_tiny_rho,1.e-12);
 
+  d_WallShearStressModel = 0;
   if( d_viscosity > 0){
     d_WallShearStressModel = WallShearStressFactory::create(ps, sharedState);
   }
