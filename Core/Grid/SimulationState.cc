@@ -74,7 +74,6 @@ SimulationState::SimulationState(ProblemSpecP &ps)
    //__________________________________
    
    d_elapsed_time = 0.0;
-   d_needAddMaterial = 0;
 
   d_lockstepAMR               = false;
   d_updateOutputInterval      = false;

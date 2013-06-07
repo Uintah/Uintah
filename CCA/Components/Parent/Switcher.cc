@@ -962,13 +962,6 @@ Switcher::readSwitcherState(const ProblemSpecP& spec,SimulationStateP& state)
 
 //______________________________________________________________________
 //
-void Switcher::addMaterial(const ProblemSpecP& params, GridP& grid,
-                           SimulationStateP& state)
-{
-  d_sim->addMaterial(params, grid, state);
-}
-//______________________________________________________________________
-//
 void Switcher::restartInitialize() {
   d_restarting = true;
   d_sim->restartInitialize();

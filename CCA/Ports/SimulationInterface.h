@@ -139,10 +139,6 @@ WARNING
      virtual bool needRecompile(double /*time*/, double /*dt*/,
 				const GridP& /*grid*/) {return false;}
 
-     // direct component to add a new material
-     virtual void addMaterial(const ProblemSpecP& params, GridP& grid,
-                              SimulationStateP& state);
-
      virtual void scheduleSwitchTest(const LevelP& /*level*/, SchedulerP& /*sched*/)
        {};
  
