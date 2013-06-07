@@ -5,13 +5,13 @@
 <Uintah_specification>
 
    <Meta>
-       <title>Arenisca_Verification_Test_11_Uniaxial_Strain_J2_Plasticity</title>
+       <title>Arenisca_Verification_Test_12_Pure_Isochoric_Strain_Rates_in_Different_Directions</title>
    </Meta>
 
    <SimulationComponent type="mpm" />
 
    <Time>
-       <maxTime>8</maxTime>
+       <maxTime>5.0</maxTime>
        <initTime>0.0</initTime>
        <delt_min>1e-3</delt_min>
        <delt_max>1e-3</delt_max>
@@ -19,13 +19,12 @@
    </Time>
 
    <DataArchiver>
-       <filebase> AreniscaTest_11_UniaxialStrainJ2plasticity.uda </filebase>
+       <filebase> AreniscaTest_12_PureIsochoricStrainRatesInDiffDirs.uda </filebase>
        <outputInterval>.01</outputInterval>
        <save label="p.x"/>
        <save label="p.velocity"/>
        <save label="p.volume"/>
        <save label="p.stress"/>
-       <save label="p.deformationMeasure"/>
        <save label="p.particleID"/>
        <save label="g.stressFS"/>
        <save label = "p.evp"/>
@@ -33,12 +32,12 @@
     </DataArchiver>
 
     <MPM>
-      	<time_integrator>           explicit   </time_integrator>
-      	<interpolator>              gimp       </interpolator>
-        <withColor>                 false      </withColor>
-        <UsePrescribedDeformation>  true       </UsePrescribedDeformation>
-        <PrescribedDeformationFile>     inputs/MPM/Arenisca/AreniscaTest_11_PrescribedDeformation.inp  </PrescribedDeformationFile>
-        <minimum_subcycles_for_F>       6    </minimum_subcycles_for_F>
+      	<time_integrator>           explicit  </time_integrator>
+      	<use_load_curves>           true      </use_load_curves>
+      	<interpolator>              gimp      </interpolator>
+	<UsePrescribedDeformation>  true      </UsePrescribedDeformation>
+        <PrescribedDeformationFile>     inputs/MPM/Arenisca/AreniscaTest_12_PrescribedDeformation.inp  </PrescribedDeformationFile>
+        <minimum_subcycles_for_F>       -2    </minimum_subcycles_for_F>
     </MPM>
 
     <PhysicalConstants>
@@ -48,19 +47,13 @@
     <MaterialProperties>
        <MPM>
            <material>
-             <density>1050</density>
-	     <melt_temp>3695.0</melt_temp>
-	     <room_temp>294.0</room_temp>
-	     <thermal_conductivity>174.0e-7</thermal_conductivity>
-	     <specific_heat>134.0e-8</specific_heat>
-
               <constitutive_model type="Arenisca">
-	        <B0>79.e9</B0>
-	        <G0>70.e9</G0>
+	        <B0>1333.333e6</B0>
+	        <G0>500e6</G0>
                 <hardening_modulus>0.0</hardening_modulus>
 	        <FSLOPE> 1.0e-10 </FSLOPE>
 	        <FSLOPE_p> 1.0e-10 </FSLOPE_p>
-	        <PEAKI1> 165.0e16 </PEAKI1>
+	        <PEAKI1> 3.5355e16 </PEAKI1>
 	        <CR> 1.0 </CR>
 	        <T1_rate_dependence> 0.0 </T1_rate_dependence>
                 <T2_rate_dependence> 0.0 </T2_rate_dependence>
@@ -71,9 +64,13 @@
 	        <fluid_B0> 0.0 </fluid_B0>
 	        <fluid_pressure_initial> 0.0 </fluid_pressure_initial>
 	        <gruneisen_parameter>    0.0          </gruneisen_parameter>
-                <subcycling_characteristic_number> 10.0 </subcycling_characteristic_number>
+                <subcycling_characteristic_number> 10 </subcycling_characteristic_number>
 	        <kinematic_hardening_constant> 0.0 </kinematic_hardening_constant>
 	      </constitutive_model>
+
+	      <density>1000.0</density>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
 
               <geom_object>
                 <box label="Elem">
