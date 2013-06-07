@@ -393,7 +393,7 @@ private:
           for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ){
             IntVector c = *iter; 
             Point p = patch->getCellPosition(c);
-            uvel[c] = _ustar / _k * log( p(_dir_grav) / _zo ); 
+            uvel[c] = _sign * _ustar / _k * log( p(_dir_grav) / _zo ); 
           }
         } 
 
@@ -405,7 +405,7 @@ private:
           for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ){
             IntVector c = *iter; 
             Point p = patch->getCellPosition(c);
-            vvel[c] = _ustar / _k * log( p(_dir_grav) / _zo ); 
+            vvel[c] = _sign * _ustar / _k * log( p(_dir_grav) / _zo ); 
           }
         } 
 
@@ -417,7 +417,7 @@ private:
           for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ){
             IntVector c = *iter; 
             Point p = patch->getCellPosition(c);
-            wvel[c] = _ustar / _k * log( p(_dir_grav) / _zo ); 
+            wvel[c] = _sign * _ustar / _k * log( p(_dir_grav) / _zo ); 
           }
         } 
 
