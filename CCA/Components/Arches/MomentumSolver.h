@@ -329,6 +329,7 @@ private:
         _do_u = false; 
         _do_v = false; 
         _do_w = false; 
+        _sign = 1.0; 
 
         if ( db_bc ) { 
 
@@ -337,7 +338,6 @@ private:
 
             std::string which_face = "NA"; 
             db_face->getAttribute("side",which_face); 
-            _sign = 1.0; 
 
             for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0; 
                 db_BCType = db_BCType->findNextBlock("BCType") ){
