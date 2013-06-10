@@ -139,8 +139,8 @@ Builder::Builder( const Expr::Tag& resultTag,
                   const RadSpecMap& species,
                   const std::string& fileName  )
   : ExpressionBuilder( resultTag ),
-    tempTag_( tempTag ),
     rsm_( species ),
+    tempTag_( tempTag ),
     fileName_( fileName )
 {}
 
