@@ -30,7 +30,7 @@
 
     <!-- Spec for basic expression types -->
     <BasicExpression      spec="MULTIPLE NO_DATA"
-                            attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
+                            attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL'"
                             children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,
                                        SineFunction,GaussianFunction,DoubleTanhFunction,
                                        StepFunction,PlusProfile,SineTime,ExprAlgebra,Cylinder,
@@ -367,92 +367,92 @@
 
 
     <!-- Spec for basic expression types -->
-    <PostProcessingExpression           spec="MULTIPLE NO_DATA"
-                            attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD VelocityMagnitude Vorticity InterpolateExpression)" >
-      <TaskList                         spec="REQUIRED STRING 'initialization, advance_solution'" />
-      <NameTag                          spec="REQUIRED" />
+    <PostProcessingExpression spec="MULTIPLE NO_DATA"
+                              attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
+                              children1="ONE_OF(CHILD VelocityMagnitude Vorticity InterpolateExpression)" >
+      <TaskList               spec="REQUIRED STRING 'initialization, advance_solution'" />
+      <NameTag                spec="REQUIRED" />
 
-      <VelocityMagnitude  spec="OPTIONAL NO_DATA">
-        <XVelocity      spec="OPTIONAL NO_DATA">
-          <NameTag        spec="REQUIRED"/>
+      <VelocityMagnitude spec="OPTIONAL NO_DATA">
+        <XVelocity       spec="OPTIONAL NO_DATA">
+          <NameTag       spec="REQUIRED"/>
         </XVelocity>
-        <YVelocity      spec="OPTIONAL NO_DATA">
-          <NameTag        spec="REQUIRED"/>
+        <YVelocity       spec="OPTIONAL NO_DATA">
+          <NameTag       spec="REQUIRED"/>
         </YVelocity>
-        <ZVelocity      spec="OPTIONAL NO_DATA">
-          <NameTag        spec="REQUIRED"/>
+        <ZVelocity       spec="OPTIONAL NO_DATA">
+          <NameTag       spec="REQUIRED"/>
         </ZVelocity>     
       </VelocityMagnitude>
 
       <!-- Vorticity -->
       <!-- Note that the order of the velocities matters: wx = dw/dy - dv/dz, wy = du/dz - dw/dx, wz = dv/dx - du/dy -->
-      <Vorticity  spec="OPTIONAL NO_DATA">
+      <Vorticity   spec="OPTIONAL NO_DATA">
         <Component spec="REQUIRED STRING 'X, Y, Z'" />
         <Vel1      spec="OPTIONAL NO_DATA">
-          <NameTag        spec="REQUIRED"/>
+          <NameTag spec="REQUIRED"/>
         </Vel1>
         <Vel2      spec="OPTIONAL NO_DATA">
-          <NameTag        spec="REQUIRED"/>
+          <NameTag spec="REQUIRED"/>
         </Vel2>
       </Vorticity>
                         
       <!-- Interpolate fields from different locations -->
       <InterpolateExpression  spec="OPTIONAL NO_DATA"
                               attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL">
-          <NameTag        spec="REQUIRED"/>
+          <NameTag            spec="REQUIRED"/>
       </InterpolateExpression>
 
     </PostProcessingExpression>
     
     
     <!-- Spec for boundary condition expression types -->
-    <BCExpression      spec="MULTIPLE NO_DATA"
-                            attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD LinearFunction, ParabolicFunction, PowerLawFunction, VarDensMMSVelocity, VarDensMMSMomentum, VarDensMMSSolnVar" >
+    <BCExpression  spec="MULTIPLE NO_DATA"
+                   attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
+                   children1="ONE_OF(CHILD LinearFunction, ParabolicFunction, PowerLawFunction, VarDensMMSVelocity, VarDensMMSMomentum, VarDensMMSSolnVar" >
 
-      <TaskList           spec="REQUIRED STRING" /> <!-- initialization advance_solution - separate by space -->
+      <TaskList    spec="REQUIRED STRING" /> <!-- initialization advance_solution - separate by space -->
       
-      <NameTag            spec="REQUIRED" />
+      <NameTag     spec="REQUIRED" />
 
       <!-- linear function: a x + b !-->
-      <LinearFunction     spec="OPTIONAL NO_DATA"
-                            attribute1="slope REQUIRED DOUBLE"      
-                            attribute2="intercept REQUIRED DOUBLE" >
-        <NameTag            spec="REQUIRED" />
+      <LinearFunction spec="OPTIONAL NO_DATA"
+                      attribute1="slope REQUIRED DOUBLE"      
+                      attribute2="intercept REQUIRED DOUBLE" >
+        <NameTag      spec="REQUIRED" />
       </LinearFunction>
 
       <!-- parabolic function: a x^2 + b x + c !-->
       <ParabolicFunction  spec="OPTIONAL NO_DATA"
                           attribute1="type  REQUIRED STRING 'GENERAL, CENTERED'">
-				<Centered  spec="OPTIONAL NO_DATA" need_applies_to="type CENTERED"
-															attribute1="x0 REQUIRED DOUBLE"
-															attribute2="f0 REQUIRED DOUBLE"
-															attribute3="h REQUIRED DOUBLE"/>
+				<Centered spec="OPTIONAL NO_DATA" need_applies_to="type CENTERED"
+                  attribute1="x0 REQUIRED DOUBLE"
+                  attribute2="f0 REQUIRED DOUBLE"
+                  attribute3="h REQUIRED DOUBLE"/>
 				<General  spec="OPTIONAL NO_DATA" need_applies_to="type GENERAL"
-															attribute1="a REQUIRED DOUBLE"
-															attribute2="b REQUIRED DOUBLE"
-															attribute3="c REQUIRED DOUBLE"/>                          
-        <NameTag            spec="REQUIRED"/>
+                  attribute1="a REQUIRED DOUBLE"
+                  attribute2="b REQUIRED DOUBLE"
+                  attribute3="c REQUIRED DOUBLE"/>                          
+        <NameTag  spec="REQUIRED"/>
       </ParabolicFunction>      
       
       <!-- powerlaw function: phi = phi_center(1 - x/R)^(1/n) !-->
-      <PowerLawFunction  spec="OPTIONAL NO_DATA"
-                            attribute1="x0 REQUIRED DOUBLE"      
-                            attribute2="PhiCenter REQUIRED DOUBLE"
-                            attribute3="HalfHeight REQUIRED DOUBLE"
-                            attribute4="n REQUIRED DOUBLE">
-        <NameTag            spec="REQUIRED"/>
+      <PowerLawFunction spec="OPTIONAL NO_DATA"
+                        attribute1="x0 REQUIRED DOUBLE"      
+                        attribute2="PhiCenter REQUIRED DOUBLE"
+                        attribute3="HalfHeight REQUIRED DOUBLE"
+                        attribute4="n REQUIRED DOUBLE">
+        <NameTag        spec="REQUIRED"/>
       </PowerLawFunction>  
 
       <!-- Velocity profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDensMMSVelocity  spec="OPTIONAL NO_DATA"
-                    attribute1="side REQUIRED STRING">
+                           attribute1="side REQUIRED STRING">
       </VarDensMMSVelocity>      
 
       <!-- Momentum profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDensMMSMomentum  spec="OPTIONAL NO_DATA"
-                    attribute1="side REQUIRED STRING">
+                           attribute1="side REQUIRED STRING">
       </VarDensMMSMomentum> 
 
       <!-- Scalar solution variable profile on the boundaries with respect to time for the variable density MMS !-->
@@ -474,8 +474,8 @@
 		<TurbulentInlet  spec="OPTIONAL NO_DATA"
 										 attribute1="period OPTIONAL INTEGER"
 										 attribute2="timeperiod OPTIONAL DOUBLE">
-      <BaseName           spec="REQUIRED STRING" />  <!-- this will create 3 expressions: x-basename, y-basename, z-basename !-->
-			<InputFile         spec="REQUIRED STRING"/>
+      <BaseName      spec="REQUIRED STRING" />  <!-- this will create 3 expressions: x-basename, y-basename, z-basename !-->
+			<InputFile     spec="REQUIRED STRING"/>
 		</TurbulentInlet>      
 
     <!-- specify the thread counts at the ExprLib and SpatialOps level, respectively -->
@@ -493,37 +493,38 @@
        <Inverted       spec="OPTIONAL NO_DATA"/>
        <MovingGeometry spec="OPTIONAL NO_DATA"/>  
        <External       spec="OPTIONAL NO_DATA">
-        <SVolFraction     spec="REQUIRED STRING"/>
-        <XVolFraction     spec="REQUIRED STRING"/>
-        <YVolFraction     spec="REQUIRED STRING"/>
-        <ZVolFraction     spec="REQUIRED STRING"/>                        
+        <SVolFraction  spec="REQUIRED STRING"/>
+        <XVolFraction  spec="REQUIRED STRING"/>
+        <YVolFraction  spec="REQUIRED STRING"/>
+        <ZVolFraction  spec="REQUIRED STRING"/>                        
        </External>         
        <Intrusion      spec="MULTIPLE NO_DATA">
          <geom_object  spec="REQUIRED"/>
       </Intrusion>
-      <GeometryExpression            spec="OPTIONAL" />      
+      <GeometryExpression spec="OPTIONAL" />      
     </EmbeddedGeometry>
 
-    <BasicExpression            spec="MULTIPLE" />
+    <BasicExpression      spec="MULTIPLE" />
 
-    <BCExpression            spec="MULTIPLE" />
-    
-    <MomentInitialization   spec="MULTIPLE"/>
+    <BCExpression         spec="MULTIPLE" />
+ 
+    <MomentInitialization spec="MULTIPLE"/>
         
-    <PrecipitationBasicExpression     spec="MULTIPLE" />
+    <PrecipitationBasicExpression spec="MULTIPLE" />
 
-    <PostProcessingExpression           spec="MULTIPLE" />
+    <PostProcessingExpression     spec="MULTIPLE" />
+    
     <!-- ========================================= -->
     <!-- Spec for Taylor Vortex MMS types -->
     <!-- IMPORTANT: THE TAYLOR VORTEX FORMULATIONS (2D & 3D) INCORPORATE PERIODICITY IN THE IMPLEMENTATION (i.e. 2*Pi*coordinate).
                     TO REPRODUCE PERIODIC CONDITIONS CORRECTLY, YOUR DOMAIN SIZE SHOULD BE AN INTEGER MULTIPLE OF 2*PI
                     THIS MAKES IT EASIER FOR USERS TO SPECIFY DOMAIN SIZE WITH HIGHER ACCURACY -->
                         
-    <TaylorVortexMMS                    spec="MULTIPLE NO_DATA"
+    <TaylorVortexMMS      spec="MULTIPLE NO_DATA"
                           attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
                           children1="ONE_OF(CHILD VelocityX,VelocityY,GradPX,GradPY,TGVel3D)" >
-      <TaskList                             spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
-      <NameTag                              spec="REQUIRED" />
+      <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
+      <NameTag            spec="REQUIRED" />
       
       <!-- Taylor Green Vortex generalized Velocity field !-->
       <TGVel3D            spec="OPTIONAL NO_DATA"
@@ -665,7 +666,6 @@
         <MonolithicRHS      spec="OPTIONAL BOOLEAN"/>
         <SolutionVariable   spec="REQUIRED STRING" />
         <NumberOfEquations  spec="REQUIRED INTEGER"/>
-        <StaggeredDirection spec="OPTIONAL STRING 'X,Y,Z'"/>
         <DoDiffusion        spec="REQUIRED BOOLEAN"/>
         <DoConvection       spec="REQUIRED BOOLEAN"/>
         <X-Velocity         spec="OPTIONAL NO_DATA"> 
@@ -766,9 +766,9 @@
       
       <!-- Specify whether Wasatch should use a reference point or not. Set the ref pressure value and the ref cell IJK location. -->
       <!-- NOTE: the Reference pressure is turned off by default. If you don't want to use it, simply do NOT include the following block. -->   
-      <ReferenceValue        spec="OPTIONAL NO_DATA"
-                             attribute1="value    REQUIRED DOUBLE">
-         <ReferenceCell      spec="REQUIRED VECTOR" />                       
+      <ReferenceValue   spec="OPTIONAL NO_DATA"
+                        attribute1="value    REQUIRED DOUBLE">
+         <ReferenceCell spec="REQUIRED VECTOR" />                       
       </ReferenceValue>
       
       <Use3DLaplacian     spec="OPTIONAL BOOLEAN"/>                
@@ -807,18 +807,18 @@
         evaluation from a TabProps file.
       -->
     <TabProps         spec="MULTIPLE NO_DATA" >
-      <FileNamePrefix   spec="REQUIRED STRING" />
+      <FileNamePrefix spec="REQUIRED STRING" />
       <TaskList       spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
 
 
       <!-- allow renaming of independent variables from TabProps file -->
       <IndependentVariable  spec="MULTIPLE NO_DATA" >
         <NameInTable        spec="REQUIRED STRING" />
-        <NameTag                        spec="REQUIRED" />
+        <NameTag            spec="REQUIRED" />
       </IndependentVariable>
 
       <!-- Select dependent variable(s) to extract from this TabProps file -->
-      <ExtractVariable          spec="MULTIPLE NO_DATA">
+      <ExtractVariable    spec="MULTIPLE NO_DATA">
         <NameInTable      spec="REQUIRED STRING" />
         <NameTag          spec="REQUIRED" />
         <Type             spec="OPTIONAL STRING 'SVOL,XVOL,YVOL,ZVOL" />
@@ -837,6 +837,29 @@
       </ExtractDensity>
       
     </TabProps>
+
+    <!-- Radiative property calculation specification -->
+    <RadProps         spec="OPTIONAL NO_DATA">
+        
+      <!-- Absorbtion coefficients - Grey Gas -->
+      <GreyGasAbsCoef spec="OPTIONAL NO_DATA">
+        <FileName     spec="REQUIRED STRING"/> <!-- the name of the RadProps file to load -->
+        <NameTag      spec="REQUIRED"/>        <!-- the tag for the absorbtion coefficient -->
+        <!--
+           RadProps calculates properties based on the composition of a few species in the gas phase.
+           One must ensure that the species provided here are consistent with what is in the RadProps file.
+        -->
+        <SpeciesMoleFraction spec="MULTIPLE NO_DATA"
+                             attribute="name REQUIRED STRING 'CO2,CO,H2O,OH,NO'">
+          <NameTag           spec="REQUIRED"/>      
+        </SpeciesMoleFraction>
+        <Temperature spec="REQUIRED NO_DATA">
+          <NameTag spec="REQUIRED"/>
+        </Temperature>
+      </GreyGasAbsCoef>
+    </RadProps>
+
+
     <!-- ================== -->
     <!-- QMOM: Quadrature method of moments -->
     <!-- ================== -->
