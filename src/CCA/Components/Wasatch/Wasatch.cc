@@ -43,6 +43,9 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
 //-- SpatialOps includes --//
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
+#include <CCA/Components/Wasatch/Expressions/StableTimestep.h>
+
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/FVStaggeredBCTools.h>
 #ifdef ENABLE_THREADS
@@ -939,16 +942,36 @@ namespace Wasatch{
                         Uintah::DataWarehouse* new_dw )
   {
     Uintah::delt_vartype deltat = 1.0;
-    // FOR FIXED dt:
-    // if the this is not the first timestep, then grab dt from the olddw.
-    // This will avoid Uintah's message that it is setting dt to max dt/min dt
+    double val = 9999999999999.0;
+    
+    const GraphHelper* slnGraphHelper = graphCategories_[ADVANCE_SOLUTION];
+    const TagNames& tagNames = TagNames::self();
+    const bool useStableDT = slnGraphHelper->exprFactory->have_entry( tagNames.stableTimestep );
     if (sharedState_->getCurrentTopLevelTimeStep() > 0) {
-      old_dw->get( deltat, sharedState_->get_delt_label() );
-    }
+      if (useStableDT) {
+        //__________________
+        // loop over patches
+        for( int ip=0; ip<patches->size(); ++ip ){
+          StableTimestep& computeDtExpr = dynamic_cast<StableTimestep&>( slnGraphHelper->exprFactory->retrieve_expression( tagNames.stableTimestep, patches->get(ip)->getID(), false ) );
+          val = std::min( val, computeDtExpr.get_stable_dt() );
+        }
 
-    new_dw->put( deltat,
-                 sharedState_->get_delt_label(),
-                 Uintah::getLevel(patches) );
+      } else {
+        // FOR FIXED dt: (min = max in input file)
+        // if the this is not the first timestep, then grab dt from the olddw.
+        // This will avoid Uintah's message that it is setting dt to max dt/min dt
+        old_dw->get( deltat, sharedState_->get_delt_label() );
+      }
+    }
+    
+    if (useStableDT) {
+      new_dw->put(Uintah::delt_vartype(val),sharedState_->get_delt_label(),
+                  Uintah::getLevel(patches) );
+    } else {
+      new_dw->put( deltat,
+                  sharedState_->get_delt_label(),
+                  Uintah::getLevel(patches) );
+    }
       //                   material );
       // jcs it seems that we cannot specify a material here.  Why not?
   }

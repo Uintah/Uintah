@@ -79,7 +79,8 @@ SRCS += \
         $(SRCDIR)/ScalabilityTestSrc.cc   \
         $(SRCDIR)/SetCurrentTime.cc       \
         $(SRCDIR)/RadPropsEvaluator.cc	  \
-        $(SRCDIR)/VelocityMagnitude.cc    
+        $(SRCDIR)/VelocityMagnitude.cc    \
+        $(SRCDIR)/StableTimestep.cc    
 
 #
 # Subdirectories to build...

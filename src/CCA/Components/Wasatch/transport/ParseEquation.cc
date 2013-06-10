@@ -27,6 +27,7 @@
 #include <CCA/Components/Wasatch/TimeStepper.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
+
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 //-- Add headers for individual transport equations here --//
@@ -43,6 +44,7 @@
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
+#include <CCA/Components/Wasatch/Expressions/StableTimestep.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 
@@ -361,8 +363,8 @@ namespace Wasatch{
       if (srcTermDir == "Z") zSrcTermTag = parse_nametag( srcTermParams->findBlock("NameTag") );
     }
     
-    GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION];
-    GraphHelper* const icGraphHelper   = gc[INITIALIZATION  ];
+    GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION  ];
+    GraphHelper* const icGraphHelper   = gc[INITIALIZATION    ];
 
     //___________________________________________________________________________
     // resolve the momentum equation to be solved and create the adaptor for it.
@@ -439,6 +441,18 @@ namespace Wasatch{
       adaptors.push_back(adaptor);
     }
 
+    //
+    // ADD ADAPTIVE TIMESTEPPING
+    const Expr::Tag xVelTag = doxvel ? Expr::Tag(xvelname, Expr::STATE_NONE) : Expr::Tag();
+    const Expr::Tag yVelTag = doyvel ? Expr::Tag(yvelname, Expr::STATE_NONE) : Expr::Tag();
+    const Expr::Tag zVelTag = dozvel ? Expr::Tag(zvelname, Expr::STATE_NONE) : Expr::Tag();
+    const Expr::Tag viscTag = (params->findBlock("Viscosity")) ? parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
+    const Expr::ExpressionID stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestep::Builder( TagNames::self().stableTimestep,
+                                                                                      densityTag,
+                                                                                      viscTag,
+                                                                                      xVelTag,yVelTag,zVelTag ), true);
+    solnGraphHelper->rootIDs.insert( stabDtID );
+    
     //
     // loop over the local adaptors and set the initial and boundary conditions on each equation attached to that adaptor
     for( EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ){
