@@ -79,7 +79,7 @@ double JWL::computeRhoMicro(double press, double,
      Department of Chemistry 
      University of Utah
   */
-  double epsilon  = 1e-10;
+  double epsilon  = 1e-15;
   double rho_min = 0.0;                      // Such that f(min) < 0
   double rho_max = press*1.001/(om*cv*Temp); // Such that f(max) > 0
   iterVar.IL = rho_min;
