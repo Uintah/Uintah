@@ -378,6 +378,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           u_info.default_type = default_type;
           u_info.default_value = default_value;
 
+          if ( default_type == "Neumann" && default_value != 0.0 ){ 
+            throw ProblemSetupException("Error: Sorry.  I currently cannot support non-zero Neumann default for handoff velocity at this time.", __FILE__, __LINE__);
+          } 
+
           FaceToInput::iterator check_iter = _u_input.find(face_name); 
 
           if ( check_iter == _u_input.end() ){ 
@@ -392,6 +396,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           v_info.default_type = default_type;
           v_info.default_value = default_value;
 
+          if ( default_type == "Neumann" && default_value != 0.0 ){ 
+            throw ProblemSetupException("Error: Sorry.  I currently cannot support non-zero Neumann default for handoff velocity at this time.", __FILE__, __LINE__);
+          } 
+
           check_iter = _v_input.find(face_name); 
 
           if ( check_iter == _v_input.end() ){ 
@@ -405,6 +413,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           w_info.relative_xyz = rel_xyz;
           w_info.default_type = default_type;
           w_info.default_value = default_value;
+
+          if ( default_type == "Neumann" && default_value != 0.0 ){ 
+            throw ProblemSetupException("Error: Sorry.  I currently cannot support non-zero Neumann default for handoff velocity at this time.", __FILE__, __LINE__);
+          } 
 
           check_iter = _w_input.find(face_name); 
 
