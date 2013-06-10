@@ -209,19 +209,19 @@ sanityChecks()
 #if defined( DISABLE_SCI_MALLOC )
   if( getenv("MALLOC_STATS") ) {
     printf( "\nERROR:\n" );
-    printf( "ERROR: Environment variable MALLOC_STATS set, but SCI Malloc was not configured...\n" );
+    printf( "ERROR: Environment variable MALLOC_STATS set, but  --enable-sci-malloc was not configured...\n" );
     printf( "ERROR:\n\n" );
     Thread::exitAll( 1 );
   }
   if( getenv("MALLOC_TRACE") ) {
     printf( "\nERROR:\n" );
-    printf( "ERROR: Environment variable MALLOC_TRACE set, but SCI Malloc was not configured...\n" );
+    printf( "ERROR: Environment variable MALLOC_TRACE set, but  --enable-sci-malloc was not configured...\n" );
     printf( "ERROR:\n\n" );
     Thread::exitAll( 1 );
   }
   if( getenv("MALLOC_STRICT") ) {
     printf( "\nERROR:\n" );
-    printf( "ERROR: Environment variable MALLOC_STRICT set, but SCI Malloc was not configured...\n" );
+    printf( "ERROR: Environment variable MALLOC_STRICT set, but --enable-sci-malloc  was not configured...\n" );
     printf( "ERROR:\n\n" );
     Thread::exitAll( 1 );
   }
@@ -546,13 +546,14 @@ main( int argc, char *argv[], char *env[] )
         cout << "____SVN_____________________________________________________________\n";
         string sdir = string(sci_getenv("SCIRUN_SRCDIR"));
         if(do_svnDiff) {
-          string cmd = "svn diff " + sdir;
+          string cmd = "svn diff --username anonymous --password \"\" " + sdir;
+          cout << " cmd " << cmd << endl;
           system(cmd.c_str());
         }
         if(do_svnStat) {
-          string cmd = "svn info " + sdir;
+          string cmd = "svn info  --username anonymous --password \"\" " + sdir;
           system(cmd.c_str());
-          cmd = "svn stat -u " + sdir;
+          cmd = "svn stat -u  --username anonymous --password \"\" " + sdir;
           system(cmd.c_str());
         }
         cout << "____SVN_______________________________________________________________\n";
