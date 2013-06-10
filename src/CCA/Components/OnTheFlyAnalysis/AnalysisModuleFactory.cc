@@ -24,6 +24,7 @@
 
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <CCA/Components/OnTheFlyAnalysis/lineExtract.h>
+#include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/containerExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/1stLawThermo.h>
@@ -68,6 +69,8 @@ AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
 
       if ( module == "lineExtract" ) {
         modules.push_back (scinew lineExtract(         module_ps, sharedState, dataArchiver ) );
+      } else if ( module == "planeExtract" ) {
+        modules.push_back ( scinew planeExtract(       module_ps, sharedState, dataArchiver ) );
       } else if ( module == "containerExtract" ) {
         modules.push_back ( scinew containerExtract(   module_ps, sharedState, dataArchiver ) );
       } else if ( module == "particleExtract" ) {
