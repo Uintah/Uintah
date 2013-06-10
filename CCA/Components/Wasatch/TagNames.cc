@@ -33,6 +33,7 @@ namespace Wasatch{
   
   time    ( "time", Expr::STATE_NONE     ),
   timestep( "timestep", Expr::STATE_NONE ),
+  stableTimestep( "StableDT", Expr::STATE_NONE ),
   
   xsvolcoord( "XSVOL", Expr::STATE_NONE ),
   ysvolcoord( "YSVOL", Expr::STATE_NONE ),
