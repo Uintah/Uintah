@@ -29,6 +29,7 @@
 #include "FieldAdaptor.h"
 #include "Expressions/TabPropsEvaluator.h"
 #include "Expressions/DensityCalculator.h"
+#include "Expressions/RadPropsEvaluator.h"
 #include "Expressions/SolnVarEst.h"
 #include "TagNames.h"
 
@@ -37,6 +38,9 @@
 
 //--- TabProps includes ---//
 #include <tabprops/StateTable.h>
+
+//--- RadProps includes ---//
+#include <radprops/RadiativeSpecies.h>
 
 //--- Uintah includes ---//
 #include <Core/Parallel/Parallel.h>
@@ -59,6 +63,42 @@ namespace Wasatch{
 
   //====================================================================
 
+  void parse_radprops( Uintah::ProblemSpecP& params,
+                       GraphHelper& gh )
+  {
+    // for now, we only support grey gas properties.
+    Uintah::ProblemSpecP ggParams = params->findBlock("GreyGasAbsCoef");
+
+    /* Procedure:
+     *
+     *  1. Parse the file name
+     *  2. Determine the independent variables that are required
+     *  3. Register the expression to evaluate the radiative property
+     */
+    std::string fileName;
+    ggParams->get("FileName",fileName);
+
+    proc0cout << "Loading RadProps file: " << fileName << std::endl;
+
+    //___________________________________________________________
+    // get information for the independent variables in the table
+
+    RadSpecMap spMap;
+
+    for( Uintah::ProblemSpecP spParams = ggParams->findBlock("SpeciesMoleFraction");
+         spParams != 0;
+         spParams = spParams->findNextBlock("SpeciesMoleFraction") ){
+      std::string spnam;   spParams->getAttribute("name",spnam);
+      spMap[ species_enum( spnam ) ] = parse_nametag( spParams->findBlock("NameTag") );
+    }
+    typedef RadPropsEvaluator<SpatialOps::structured::SVolField>::Builder RadPropsExpr;
+    gh.exprFactory->register_expression( new RadPropsExpr( parse_nametag(ggParams->findBlock("NameTag")),
+                                                           parse_nametag(ggParams->findBlock("Temperature")->findBlock("NameTag")),
+                                                           spMap,fileName) );
+  }
+
+  //====================================================================
+
   /**
    *  \ingroup WasatchParser
    *  \brief set up TabProps for use on the given GraphHelper
@@ -66,7 +106,7 @@ namespace Wasatch{
    *  \param gh - the GraphHelper associated with this instance of TabProps.
    *  \param cat - the Category specifying the task associated with this 
    *         instance of TabProps.
-   *  \param doDenstPlus - the boolean showing wether we have a variable 
+   *  \param doDenstPlus - the boolean showing whether we have a variable
    *         density case and we want to do pressure projection or not
    */
   void parse_tabprops( Uintah::ProblemSpecP& params,
@@ -307,6 +347,11 @@ namespace Wasatch{
 
     Uintah::ProblemSpecP densityParams  = params->findBlock("Density");
     Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
+    Uintah::ProblemSpecP radPropsParams = params->findBlock("RadProps");
+
+    if( radPropsParams ){
+      parse_radprops( radPropsParams, *gc[ADVANCE_SOLUTION] );
+    }
 
     if (tabPropsParams) {
       if (tabPropsParams->findBlock("ExtractDensity") && !densityParams) {
