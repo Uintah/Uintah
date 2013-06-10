@@ -547,7 +547,6 @@ main( int argc, char *argv[], char *env[] )
         string sdir = string(sci_getenv("SCIRUN_SRCDIR"));
         if(do_svnDiff) {
           string cmd = "svn diff --username anonymous --password \"\" " + sdir;
-          cout << " cmd " << cmd << endl;
           system(cmd.c_str());
         }
         if(do_svnStat) {
