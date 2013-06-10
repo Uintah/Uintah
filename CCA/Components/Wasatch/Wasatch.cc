@@ -938,14 +938,17 @@ namespace Wasatch{
                         Uintah::DataWarehouse* old_dw,
                         Uintah::DataWarehouse* new_dw )
   {
-    const double deltat = 1.0; // jcs should get this from an input file possibly?
+    Uintah::delt_vartype deltat = 1.0;
+    // FOR FIXED dt:
+    // if the this is not the first timestep, then grab dt from the olddw.
+    // This will avoid Uintah's message that it is setting dt to max dt/min dt
+    if (sharedState_->getCurrentTopLevelTimeStep() > 0) {
+      old_dw->get( deltat, sharedState_->get_delt_label() );
+    }
 
-//       proc0cout << std::endl
-//                 << "Wasatch: executing 'Wasatch::computeDelT()' on all patches"
-//                 << std::endl;
-      new_dw->put( Uintah::delt_vartype(deltat),
-                  sharedState_->get_delt_label(),
-                  Uintah::getLevel(patches) );
+    new_dw->put( deltat,
+                 sharedState_->get_delt_label(),
+                 Uintah::getLevel(patches) );
       //                   material );
       // jcs it seems that we cannot specify a material here.  Why not?
   }
