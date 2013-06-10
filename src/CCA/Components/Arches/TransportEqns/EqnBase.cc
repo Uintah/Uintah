@@ -232,6 +232,9 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
               if ( !file_is_open ){ 
                 file_is_open = true;
                 outputfile.open(fname.str().c_str());
+                outputfile << "Patch Dimentions (exclusive): \n";
+                outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                outputfile << " high = " << patch->getCellHighIndex() << "\n";
                 outputfile << out.str();  
               } else { 
                 outputfile << out.str();  
@@ -244,6 +247,7 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
     }
 
     if ( file_is_open ){ 
+      cout << "\n  Notice: Handoff scalar " << d_eqnName << " has warning information printed to file for patch #: " << patch->getID() << "\n"; 
       outputfile.close(); 
     } 
 

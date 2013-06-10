@@ -6738,6 +6738,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
       }
     }
     if ( file_is_open ){ 
+      cout << "\n  Notice: Handoff velocity warning information has been printed to file for patch #: " << patch->getID() << "\n"; 
       outputfile.close(); 
     } 
   }
