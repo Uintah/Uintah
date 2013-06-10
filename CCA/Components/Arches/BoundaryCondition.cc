@@ -6416,6 +6416,11 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
     const Vector Dx = patch->dCell();
     double dx=0, dy=0; 
 
+    std::ofstream outputfile; 
+    std::stringstream fname; 
+    fname << "handoff_velocity" <<  "." << patch->getID();
+    bool file_is_open = false; 
+
     vector<Patch::FaceType> bf;
     vector<Patch::FaceType>::const_iterator bf_iter;
     patch->getBoundaryFaces(bf);
@@ -6537,7 +6542,18 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 mod_bound_ptr[index] = (i_uvel_bc_storage->second.values.begin()->first)[index];
                 CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.find( mod_bound_ptr - i_uvel_bc_storage->second.relative_ijk ); 
                 if ( check_iter == i_uvel_bc_storage->second.values.end() ){ 
-                  cout << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_uvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
+                  std::stringstream out; 
+                  out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_uvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
+                  if ( !file_is_open ){ 
+                    file_is_open = true; 
+                    outputfile.open(fname.str().c_str());
+                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                    outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                    outputfile << out.str();  
+                  } else { 
+                    outputfile << out.str();  
+                  } 
                 } 
               } else if ( index == 1 ){ 
                 //is this cell contained in list?
@@ -6548,7 +6564,18 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 mod_bound_ptr[index] = (i_uvel_bc_storage->second.values.begin()->first)[index];
                 CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.find( mod_bound_ptr - i_vvel_bc_storage->second.relative_ijk ); 
                 if ( check_iter == i_uvel_bc_storage->second.values.end() ){ 
-                  cout << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_vvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
+                  std::stringstream out; 
+                  out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_vvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
+                  if ( !file_is_open ){ 
+                    file_is_open = true; 
+                    outputfile.open(fname.str().c_str());
+                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                    outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                    outputfile << out.str();  
+                  } else { 
+                    outputfile << out.str();  
+                  } 
                 } 
               } else if ( index == 2 ){ 
                 //is this cell contained in list?
@@ -6559,7 +6586,18 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 mod_bound_ptr[index] = (i_uvel_bc_storage->second.values.begin()->first)[index];
                 CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.find( mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk ); 
                 if ( check_iter == i_wvel_bc_storage->second.values.end() ){ 
-                  cout << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
+                  std::stringstream out; 
+                  out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
+                  if ( !file_is_open ){ 
+                    file_is_open = true; 
+                    outputfile.open(fname.str().c_str());
+                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                    outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                    outputfile << out.str();  
+                  } else { 
+                    outputfile << out.str();  
+                  } 
                 } 
               }
             } 
@@ -6592,7 +6630,19 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                     found_it = true; 
                 }
                 if ( !found_it && patch->containsCell(check_iter->first + i_uvel_bc_storage->second.relative_ijk) ){ 
+                  std::stringstream out; 
                   cout << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+                  if ( !file_is_open ){ 
+                    file_is_open = true;
+                    outputfile.open(fname.str().c_str());
+                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                    outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                    outputfile << out.str();  
+                  } else { 
+                    std::stringstream out; 
+                    outputfile << out.str();  
+                  } 
                 } 
 
               } 
@@ -6623,7 +6673,19 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                     found_it = true; 
                 }
                 if ( !found_it && patch->containsCell(check_iter->first + i_vvel_bc_storage->second.relative_ijk) ){ 
+                  std::stringstream out; 
                   cout << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+                  if ( !file_is_open ){ 
+                    file_is_open = true;
+                    outputfile.open(fname.str().c_str());
+                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                    outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                    outputfile << out.str();  
+                  } else { 
+                    std::stringstream out; 
+                    outputfile << out.str();  
+                  } 
                 } 
 
               } 
@@ -6654,7 +6716,19 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                     found_it = true; 
                 }
                 if ( !found_it && patch->containsCell(check_iter->first + i_wvel_bc_storage->second.relative_ijk) ){ 
+                  std::stringstream out; 
                   cout << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+                  if ( !file_is_open ){ 
+                    file_is_open = true;
+                    outputfile.open(fname.str().c_str());
+                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                    outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                    outputfile << out.str();  
+                  } else { 
+                    std::stringstream out; 
+                    outputfile << out.str();  
+                  } 
                 } 
 
               } 
@@ -6663,5 +6737,8 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
         }
       }
     }
+    if ( file_is_open ){ 
+      outputfile.close(); 
+    } 
   }
 }
