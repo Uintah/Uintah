@@ -71,7 +71,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
         src_db->getWithDefault("calc_frequency", _calc_freq,3);;  //default matches the default of the radiation solvers
         found_radiation_model = true; 
 
-      } else if ( type == "rmcrt" ) { 
+      } else if ( type == "rmcrt_radiation" ) { 
 
         src_db->getWithDefault("calc_frequency", _calc_freq,3);;  //default matches the default of the radiation solvers
         found_radiation_model = true; 
