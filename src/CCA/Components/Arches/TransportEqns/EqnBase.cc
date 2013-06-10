@@ -67,6 +67,12 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
     Vector Dx = patch->dCell(); 
     double dx=0; 
     double dy=0; 
+
+    std::ofstream outputfile; 
+    std::stringstream fname; 
+    fname << "handoff_" << d_eqnName <<  "." << patch->getID();
+    bool file_is_open = false; 
+
     // Loop over all boundary faces on this patch
     for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
       Patch::FaceType face = *bf_iter; 
@@ -180,7 +186,18 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
             mod_bound_ptr[index] = (i_scalar_bc_storage->second.values.begin()->first)[index];
             BoundaryCondition_new::CellToValueMap::iterator check_iter = i_scalar_bc_storage->second.values.find(mod_bound_ptr - i_scalar_bc_storage->second.relative_ijk);
             if ( check_iter == i_scalar_bc_storage->second.values.end() ){ 
-              cout << "Scalar BC: " << d_eqnName << " - No UINTAH boundary cell " << *bound_ptr - i_scalar_bc_storage->second.relative_ijk << " in the handoff file." << endl;
+              std::stringstream out; 
+              out <<  "Scalar BC: " << d_eqnName << " - No UINTAH boundary cell " << *bound_ptr - i_scalar_bc_storage->second.relative_ijk << " in the handoff file." << endl;
+              if ( !file_is_open ){ 
+                file_is_open = true; 
+                outputfile.open(fname.str().c_str());
+                outputfile << "Patch Dimentions (exclusive): \n";
+                outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                outputfile << out.str();  
+              } else { 
+                outputfile << out.str();  
+              } 
             } 
           } 
 
@@ -210,13 +227,26 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
                 found_it = true; 
             }
             if ( !found_it && patch->containsCell(check_iter->first + i_scalar_bc_storage->second.relative_ijk) ){ 
-              cout << "Scalar BC: " << d_eqnName << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+              std::stringstream out; 
+              out << "Scalar BC: " << d_eqnName << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+              if ( !file_is_open ){ 
+                file_is_open = true;
+                outputfile.open(fname.str().c_str());
+                outputfile << out.str();  
+              } else { 
+                outputfile << out.str();  
+              } 
             } 
           } 
 
         }
       }
     }
+
+    if ( file_is_open ){ 
+      outputfile.close(); 
+    } 
+
   }
 }
 
