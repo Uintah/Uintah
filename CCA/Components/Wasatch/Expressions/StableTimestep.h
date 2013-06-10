@@ -28,9 +28,9 @@ class StableTimestep
   
   double invDx_, invDy_, invDz_;
   
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SOpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SOpT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SOpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SOpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SOpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SOpT;
   const X2SOpT* x2SInterp_;
   const Y2SOpT* y2SInterp_;
   const Z2SOpT* z2SInterp_;
