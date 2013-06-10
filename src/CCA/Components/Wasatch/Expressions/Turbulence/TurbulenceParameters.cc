@@ -48,7 +48,8 @@ namespace Wasatch {
     }
     
     // get the eddy viscosity constant
-    turbulenceInputParams->getWithDefault("EddyViscosityCoefficient",turbParams.eddyViscCoef, 0.1);
+    if ( turbParams.turbModelName != DYNAMIC )
+      turbulenceInputParams->get("EddyViscosityCoefficient",turbParams.eddyViscCoef);
 
     // get the turbulent Schmidt Number
     turbulenceInputParams->getWithDefault("TurbulentSchmidt",turbParams.turbSchmidt, 1.0);
