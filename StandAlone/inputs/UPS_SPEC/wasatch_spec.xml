@@ -857,6 +857,21 @@
           <NameTag spec="REQUIRED"/>
         </Temperature>
       </GreyGasAbsCoef>
+
+      <Particles>
+        <RefractiveIndex spec="REQUIRED"
+                         attribute1="real REQUIRED DOUBLE"
+                         attribute2="imag REQUIRED DOUBLE" />
+        <RadCoefType     spec="REQUIRED STRING 'PLANCK_ABS,PLANCK_SCA,ROSSELAND_ABS,ROSSELAND_SCA'" />
+        <NameTag         spec="REQUIRED"/>
+        <Temperature     spec="REQUIRED NO_DATA">
+          <NameTag       spec="REQUIRED"/>
+        </Temperature>
+        <ParticleRadius  spec="REQUIRED NO_DATA">
+          <NameTag       spec="REQUIRED"/>
+        </ParticleRadius>
+      </Particles>      
+
     </RadProps>
 
 

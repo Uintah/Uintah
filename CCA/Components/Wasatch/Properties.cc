@@ -66,6 +66,41 @@ namespace Wasatch{
   void parse_radprops( Uintah::ProblemSpecP& params,
                        GraphHelper& gh )
   {
+    //_________________________________________________
+    // Particle radiative properties
+    // jcs do we need multiple evaluators?  If so, we need a loop here...
+    Uintah::ProblemSpecP pParams = params->findBlock("Particles");
+    if( pParams ){
+
+      const Uintah::ProblemSpecP refIxParams = pParams->findBlock("RefractiveIndex");
+      std::complex<double> refIx;
+      refIxParams->getAttribute( "real", refIx.real() );
+      refIxParams->getAttribute( "imag", refIx.imag() );
+
+      ParticleRadProp propSelection;
+      const std::string prop = pParams->findBlock("RadCoefType")->getNodeValue();
+      if     ( prop == "PLANCK_ABS"    ) propSelection = PLANCK_ABSORPTION_COEFF;
+      else if( prop == "PLANCK_SCA"    ) propSelection = PLANCK_SCATTERING_COEFF;
+      else if( prop == "ROSSELAND_ABS" ) propSelection = ROSSELAND_ABSORPTION_COEFF;
+      else if( prop == "ROSSELAND_SCA" ) propSelection = ROSSELAND_SCATTERING_COEFF;
+      else{
+        std::ostringstream msg;
+        msg << std::endl << "Unsupported particle radiative property selection found: " << prop << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+
+      proc0cout << "Particle properties using refractive index: " << refIx << std::endl;
+
+      typedef ParticleRadProps<SpatialOps::structured::SVolField>::Builder ParticleProps;
+      gh.exprFactory->register_expression(
+          new ParticleProps( propSelection,
+                             parse_nametag( pParams->findBlock("NameTag") ),
+                             parse_nametag( pParams->findBlock("Temperature"   )->findBlock("NameTag")),
+                             parse_nametag( pParams->findBlock("ParticleRadius")->findBlock("NameTag")),
+                             refIx ) );
+    }
+
+    //___________________________________________________________
     // for now, we only support grey gas properties.
     Uintah::ProblemSpecP ggParams = params->findBlock("GreyGasAbsCoef");
 

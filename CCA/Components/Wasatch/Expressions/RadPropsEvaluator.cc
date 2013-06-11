@@ -29,6 +29,7 @@
  */
 
 #include "RadPropsEvaluator.h"
+#include <radprops/Particles.h>
 
 
 template< typename FieldT >
@@ -154,9 +155,108 @@ Builder::build() const
   return new RadPropsEvaluator<FieldT>( tempTag_, rsm_, fileName_ );
 }
 
+//==========================================================================
+
+
+template< typename FieldT >
+ParticleRadProps<FieldT>::
+ParticleRadProps( const ParticleRadProp prop,
+                  const Expr::Tag& tempTag,
+                  const Expr::Tag& pRadiusTag,
+                  const std::complex<double> refIndex )
+  : Expr::Expression<FieldT>(),
+    props_( new ParticleRadCoeffs(refIndex) ),
+    prop_( prop ),
+    tempTag_   ( tempTag    ),
+    pRadiusTag_( pRadiusTag )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+ParticleRadProps<FieldT>::
+~ParticleRadProps()
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+ParticleRadProps<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( tempTag_ );
+  exprDeps.requires_expression( pRadiusTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+ParticleRadProps<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+
+  temp_    = &fm.field_ref( tempTag_    );
+  pRadius_ = &fm.field_ref( pRadiusTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+ParticleRadProps<FieldT>::
+evaluate()
+{
+  FieldT& result = this->value();
+
+  typedef typename FieldT::const_iterator Iterator;
+
+  Iterator itemp=temp_->begin(), irad=pRadius_->begin();
+  const Iterator ite=temp_->end();
+  for( typename FieldT::iterator iprop=result.begin(); itemp!=ite; ++iprop, ++itemp, ++irad ){
+
+    switch( prop_ ){
+    case PLANCK_ABSORPTION_COEFF   : *iprop = props_->planck_abs_coeff( *irad, *itemp ); break;
+    case PLANCK_SCATTERING_COEFF   : *iprop = props_->planck_sca_coeff( *irad, *itemp ); break;
+    case ROSSELAND_ABSORPTION_COEFF: *iprop = props_->ross_abs_coeff  ( *irad, *itemp ); break;
+    case ROSSELAND_SCATTERING_COEFF: *iprop = props_->ross_sca_coeff  ( *irad, *itemp ); break;
+    }
+
+  }
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+ParticleRadProps<FieldT>::
+Builder::Builder( const ParticleRadProp prop,
+                  const Expr::Tag& resultTag,
+                  const Expr::Tag& tempTag,
+                  const Expr::Tag& pRadiusTag,
+                  const std::complex<double> refIndex )
+  : ExpressionBuilder( resultTag ),
+    prop_( prop ),
+    tempTag_( tempTag ),
+    pRadiusTag_( pRadiusTag ),
+    refIndex_( refIndex )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+ParticleRadProps<FieldT>::
+Builder::build() const
+{
+  return new ParticleRadProps<FieldT>( prop_, tempTag_, pRadiusTag_, refIndex_ );
+}
+
 
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
 template class RadPropsEvaluator<SpatialOps::structured::SVolField>;
+template class ParticleRadProps <SpatialOps::structured::SVolField>;
 //==========================================================================
