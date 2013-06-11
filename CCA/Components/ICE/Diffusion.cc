@@ -36,6 +36,7 @@
 #include <typeinfo>
 #include <Core/Util/DebugStream.h>
 using namespace Uintah;
+using std::cout;
 namespace Uintah {
 /* ---------------------------------------------------------------------
  Function~  scalarDiffusionOperator--
@@ -195,8 +196,10 @@ void q_flux_allFaces(DataWarehouse* new_dw,
                                    vol_frac_CC, q_CC, q_Z_FC, use_vol_frac); 
 }
 /*---------------------------------------------------------------------
- Function~  ICE::computeTauX_Components
- Purpose:   This function computes shear stress tau_xx, ta_xy, tau_xz 
+ Purpose:   This function computes shear stress 
+            tau_xx, ta_xy, tau_xz 
+            tau_yx, ta_yy, tau_yz
+            tau_zx, ta_zy, tau_zz
  
   Note:   - The edge velocities are defined as the average velocity 
             of the 4 cells surrounding that edge, however we only use 2 cells
@@ -204,12 +207,13 @@ void q_flux_allFaces(DataWarehouse* new_dw,
             there are two common cells that automatically cancel themselves out.
           - The viscosity we're using isn't right if it varies spatially.   
  ---------------------------------------------------------------------  */
-void computeTauX( const Patch* patch,
-                  constCCVariable<double>& vol_frac_CC,  
-                  constCCVariable<Vector>& vel_CC,      
-                  const CCVariable<double>& viscosity,                
-                  const Vector dx,                       
-                  SFCXVariable<Vector>& tau_X_FC)        
+void computeTauComponents( const Patch* patch,
+                           constCCVariable<double>& vol_frac_CC,  
+                           constCCVariable<Vector>& vel_CC,      
+                           const CCVariable<double>& viscosity,        
+                           SFCXVariable<Vector>& tau_X_FC,
+                           SFCYVariable<Vector>& tau_Y_FC,
+                           SFCZVariable<Vector>& tau_Z_FC )        
 {
   //__________________________________
   //  bullet proofing against AMR
@@ -218,6 +222,76 @@ void computeTauX( const Patch* patch,
     throw InternalError("AMRICE:computeTauX, computational footprint "
                         " has not been tested ", __FILE__, __LINE__ );
   }
+
+  Vector dx = patch->dCell();
+  //__________________________________
+  //  Compute over the entire domain the different components
+  CellIterator hi_lo = patch->getSFCXIterator(); 
+  IntVector low = hi_lo.begin();
+  IntVector hi  = hi_lo.end();
+  hi[0] += patch->getBCType(patch->xplus) ==Patch::Neighbor?1:0; 
+  CellIterator X_iterLimits( low,hi );
+  computeTauX_driver( X_iterLimits, vol_frac_CC,  vel_CC, viscosity, dx, tau_X_FC);
+  
+  
+  hi_lo = patch->getSFCYIterator();
+  low   = hi_lo.begin();
+  hi    = hi_lo.end();
+  hi[1] += patch->getBCType(patch->yplus) ==Patch::Neighbor?1:0; 
+  CellIterator Y_iterLimits( low,hi ); 
+  computeTauY_driver( Y_iterLimits, vol_frac_CC,  vel_CC, viscosity, dx, tau_Y_FC);
+
+
+  hi_lo = patch->getSFCZIterator();
+  low   = hi_lo.begin();
+  hi    = hi_lo.end();
+  hi[2] += patch->getBCType(patch->zplus) ==Patch::Neighbor?1:0; 
+  CellIterator Z_iterLimits( low,hi );
+  computeTauZ_driver( Z_iterLimits, vol_frac_CC,  vel_CC, viscosity, dx, tau_Z_FC);
+    
+  //__________________________________
+  //  Loop over all the faces of the computational domain and recompute the 
+  // shear stress terms using the corrected  dx
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+    Patch::FaceType face = *itr;
+         
+    CellIterator faceIterLimits=patch->getFaceIterator(face, Patch::SFCVars);
+    
+    if (face == Patch::xminus || face == Patch::xplus) {
+      Vector modDx( dx.x()/2, dx.y(), dx.z() );      
+      computeTauX_driver( faceIterLimits, vol_frac_CC,  vel_CC, viscosity, modDx, tau_X_FC);
+    }
+    if (face == Patch::yminus || face == Patch::yplus) {
+      Vector modDx( dx.x(), dx.y()/2, dx.z() );
+      computeTauY_driver( faceIterLimits, vol_frac_CC,  vel_CC, viscosity, modDx, tau_Y_FC);
+    }
+    if (face == Patch::zminus || face == Patch::zplus) {
+      Vector modDx( dx.x(), dx.y(), dx.z()/2 );
+      computeTauZ_driver( faceIterLimits, vol_frac_CC,  vel_CC, viscosity, modDx, tau_Z_FC);
+    }
+  }
+}
+
+
+
+/*---------------------------------------------------------------------
+ Purpose:  Computes shear stress tau_xx, ta_xy, tau_xz 
+ 
+  Note:   - The edge velocities are defined as the average velocity 
+            of the 4 cells surrounding that edge, however we only use 2 cells
+            to compute it.  When you take the difference of the edge velocities
+            there are two common cells that automatically cancel themselves out.
+          - The viscosity we're using isn't right if it varies spatially.   
+ ---------------------------------------------------------------------  */
+void computeTauX_driver( CellIterator iterLimits,
+                         constCCVariable<double>& vol_frac_CC,  
+                         constCCVariable<Vector>& vel_CC,      
+                         const CCVariable<double>& viscosity,                
+                         const Vector dx,                       
+                         SFCXVariable<Vector>& tau_X_FC)        
+{
   
   double term1, term2, grad_1, grad_2;
   double grad_uvel, grad_vvel, grad_wvel;
@@ -226,13 +300,7 @@ void computeTauX( const Patch* patch,
   // For multipatch problems adjust the iter limits
   // on the left patches to include the right face
   // of the cell at the patch boundary. 
-  // We compute tau_ZZ[right]-tau_XX[left] on each patch
-  CellIterator hi_lo = patch->getSFCXIterator();
-  IntVector low,hi; 
-  low = hi_lo.begin();
-  hi  = hi_lo.end();
-  hi[0] += patch->getBCType(patch->xplus) ==Patch::Neighbor?1:0; 
-  CellIterator iterLimits(low,hi); 
+  // We compute tau_ZZ[right]-tau_XX[left] on each patch 
   
   double invDX = 1.0/dx.x();
   double invDY = 1.0/dx.y();
@@ -315,11 +383,10 @@ void computeTauX( const Patch* patch,
     tau_X_FC[c].z(vis_FC * (grad_1 + grad_2)); 
 
     #if 0
-    if (c == IntVector(0,51,0) || c == IntVector(50,51,0)){
+    if (c == IntVector(0,0,5) || c == IntVector(100,0,5)){
       cout<<c<<" tau_XX: "<<tau_X_FC[c].x()<<
-      " tau_XY: "<<tau_X_FC[c].y()<<
-      " tau_XZ: "<<tau_X_FC[c].z()<<
-      " patch: " <<patch->getID()<<endl;     
+               " tau_XY: "<<tau_X_FC[c].y()<<
+               " tau_XZ: "<<tau_X_FC[c].z()<<endl;     
     } 
     #endif
   }
@@ -327,7 +394,6 @@ void computeTauX( const Patch* patch,
 
 
 /*---------------------------------------------------------------------
- Function~  ICE::computeTauY_Components
  Purpose:   This function computes shear stress tau_YY, ta_yx, tau_yz 
   Note:   - The edge velocities are defined as the average velocity 
             of the 4 cells surrounding that edge, however we only use2 cells
@@ -335,20 +401,13 @@ void computeTauX( const Patch* patch,
             there are two common cells that automatically cancel themselves out.
           - The viscosity we're using isn't right if it varies spatially. 
  ---------------------------------------------------------------------  */
-void computeTauY( const Patch* patch,
-                  constCCVariable<double>& vol_frac_CC,   
-                  constCCVariable<Vector>& vel_CC,      
-                  const CCVariable<double>& viscosity,                
-                  const Vector dx,                       
-                  SFCYVariable<Vector>& tau_Y_FC)        
+void computeTauY_driver( CellIterator iterLimits,
+                         constCCVariable<double>& vol_frac_CC,   
+                         constCCVariable<Vector>& vel_CC,      
+                         const CCVariable<double>& viscosity,                
+                         const Vector dx,                       
+                         SFCYVariable<Vector>& tau_Y_FC)        
 {
-  //__________________________________
-  //  bullet proofing against AMR
-  const Level* level = patch->getLevel();
-  if (level->getIndex() > 0) {
-    throw InternalError("AMRICE:computeTauY, computational footprint"
-                        " has not been tested ", __FILE__, __LINE__ );
-  }
   
   double term1, term2, grad_1, grad_2;
   double grad_uvel, grad_vvel, grad_wvel;
@@ -358,12 +417,7 @@ void computeTauY( const Patch* patch,
   // on the bottom patches to include the top face
   // of the cell at the patch boundary. 
   // We compute tau_YY[top]-tau_YY[bot] on each patch
-  CellIterator hi_lo = patch->getSFCYIterator();
-  IntVector low,hi; 
-  low = hi_lo.begin();
-  hi  = hi_lo.end();
-  hi[1] += patch->getBCType(patch->yplus) ==Patch::Neighbor?1:0; 
-  CellIterator iterLimits(low,hi); 
+
   
   double invDX = 1.0/dx.x();
   double invDY = 1.0/dx.y();
@@ -435,7 +489,7 @@ void computeTauY( const Patch* patch,
     tau_Y_FC[c].y(term1 - term2); 
     
     //__________________________________
-    //  tau_YX
+    //  tau_YX``
     grad_1 = ( vel_CC[c].x() - vel_CC[bottom].x() )* invDY;
     grad_2 = ( vvel_EC_right - vvel_EC_left )      * invDX;
     tau_Y_FC[c].x( vis_FC * (grad_1 + grad_2) ); 
@@ -459,7 +513,6 @@ void computeTauY( const Patch* patch,
 }
 
 /*---------------------------------------------------------------------
- Function~  ICE::computeTauZ
  Purpose:   This function computes shear stress tau_zx, ta_zy, tau_zz 
   Note:   - The edge velocities are defined as the average velocity 
             of the 4 cells surrounding that edge, however we only use 2 cells
@@ -467,20 +520,13 @@ void computeTauY( const Patch* patch,
             there are two common cells that automatically cancel themselves out.
           - The viscosity we're using isn't right if it varies spatially.
  ---------------------------------------------------------------------  */
-void computeTauZ( const Patch* patch,
-                  constCCVariable<double>& vol_frac_CC,   
-                  constCCVariable<Vector>& vel_CC,      
-                  const CCVariable<double>& viscosity,               
-                  const Vector dx,                       
-                  SFCZVariable<Vector>& tau_Z_FC)        
+void computeTauZ_driver( CellIterator iterLimits,
+                         constCCVariable<double>& vol_frac_CC,   
+                         constCCVariable<Vector>& vel_CC,      
+                         const CCVariable<double>& viscosity,               
+                         const Vector dx,                       
+                         SFCZVariable<Vector>& tau_Z_FC)        
 {
-  //__________________________________
-  //  bullet proofing against AMR
-  const Level* level = patch->getLevel();
-  if (level->getIndex() > 0) {
-    throw InternalError("AMRICE:computeTauZ, computational footprint"
-                        " has not been tested ", __FILE__, __LINE__ );
-  }
   double term1, term2, grad_1, grad_2;
   double grad_uvel, grad_vvel, grad_wvel;
  
@@ -490,12 +536,6 @@ void computeTauZ( const Patch* patch,
   // on the back patches to include the front face
   // of the cell at the patch boundary. 
   // We compute tau_ZZ[front]-tau_ZZ[back] on each patch
-  CellIterator hi_lo = patch->getSFCZIterator();
-  IntVector low,hi; 
-  low = hi_lo.begin();
-  hi  = hi_lo.end();
-  hi[2] += patch->getBCType(patch->zplus) ==Patch::Neighbor?1:0; 
-  CellIterator iterLimits(low,hi); 
   
   double invDX = 1.0/dx.x();
   double invDY = 1.0/dx.y();

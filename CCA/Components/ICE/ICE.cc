@@ -3764,13 +3764,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           if(d_turbulence){ 
             d_turbulence->callTurb(new_dw,patch,vel_CC,rho_CC,indx,lb,
                                    d_sharedState, viscosity);
-          }         
-          computeTauX(patch, vol_frac, vel_CC,viscosity,dx, tau_X_FC);
-          computeTauY(patch, vol_frac, vel_CC,viscosity,dx, tau_Y_FC);
-          computeTauZ(patch, vol_frac, vel_CC,viscosity,dx, tau_Z_FC);
+          }
           
-          
-          
+          computeTauComponents(patch, vol_frac, vel_CC,viscosity, tau_X_FC, tau_Y_FC, tau_Z_FC);  
         }
         if(viscosity_test == 0.0 && d_turbulence){
           string warn="ERROR:\n input :viscosity can't be zero when calculate turbulence";
