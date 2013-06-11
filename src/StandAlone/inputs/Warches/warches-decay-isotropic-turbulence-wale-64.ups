@@ -21,7 +21,6 @@
     <filebase>warches-decay-isotropic-turbulence-wale-64.uda</filebase>
 	<outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>    
-    <save label="totalKineticEnergy"/>
     <save label="uVelocitySPBC"/>    
     <save label="vVelocitySPBC"/>    
     <save label="wVelocitySPBC"/>            

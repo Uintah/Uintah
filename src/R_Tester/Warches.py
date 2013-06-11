@@ -97,11 +97,11 @@ NIGHTLYTESTS = []
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-  ("decay-isotropic-turbulence-dsmag32" , decayIsotropicTurbulenceDSmag32_ups,  8,  "All",  ["exactComparison","no_restart"] ),
+  ("decay-isotropic-turbulence-dsmag32" , decayIsotropicTurbulenceDSmag32_ups,  8,  "All",  ["exactComparison"] ),
   ("decay-isotropic-turbulence-dsmag64" , decayIsotropicTurbulenceDSmag64_ups,  8,  "All",  ["exactComparison","no_restart"] ),
-  ("decay-isotropic-turbulence-vreman32", decayIsotropicTurbulenceVreman32_ups, 8,  "All",  ["exactComparison","no_restart"] ),
+  ("decay-isotropic-turbulence-vreman32", decayIsotropicTurbulenceVreman32_ups, 8,  "All",  ["exactComparison"] ),
   ("decay-isotropic-turbulence-vreman64", decayIsotropicTurbulenceVreman64_ups, 8,  "All",  ["exactComparison","no_restart"] ),
-  ("decay-isotropic-turbulence-wale32"  , decayIsotropicTurbulenceWale32_ups,   8,  "All",  ["exactComparison","no_restart"] ),
+  ("decay-isotropic-turbulence-wale32"  , decayIsotropicTurbulenceWale32_ups,   8,  "All",  ["exactComparison"] ),
   ("decay-isotropic-turbulence-wale64"  , decayIsotropicTurbulenceWale64_ups,   8,  "All",  ["exactComparison","no_restart"] )
 ]
 
