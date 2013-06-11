@@ -34,37 +34,37 @@ else :
 # 
 # turbulenceDir = the_dir + "/TurbulenceVerification"
 # 
-# decayIsotropicTurbulenceCSmag32_ups = modUPS( turbulenceDir, \
+# decayIsotropicTurbulenceCSmag32_ups = modUPS( the_dir, \
 #                                        "decay-isotropic-turbulence-csmag_32.ups", \
 #                                        ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])
 #                                        
-# decayIsotropicTurbulenceCSmag64_ups = modUPS( turbulenceDir, \
+# decayIsotropicTurbulenceCSmag64_ups = modUPS( the_dir, \
 #                                        "decay-isotropic-turbulence-csmag_64.ups", \
 #                                        ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])
 #                                        
 decayIsotropicTurbulenceVreman32_ups = modUPS( the_dir, \
                                        "warches-decay-isotropic-turbulence-vreman-32.ups", \
-                                       ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])
+                                       ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "4" interval = "0.001"/>'])
                                         
 decayIsotropicTurbulenceVreman64_ups = modUPS( the_dir, \
                                        "warches-decay-isotropic-turbulence-vreman-64.ups", \
-                                       ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])
+                                       ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "4" interval = "0.001"/>'])
                                        
 decayIsotropicTurbulenceWale32_ups = modUPS( the_dir, \
                                        "warches-decay-isotropic-turbulence-wale-32.ups", \
-                                       ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])
+                                       ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "4" interval = "0.001"/>'])
                                        
 decayIsotropicTurbulenceWale64_ups = modUPS( the_dir, \
                                        "warches-decay-isotropic-turbulence-wale-64.ups", \
-                                       ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])
-# 
-# decayIsotropicTurbulenceDSmag32_ups = modUPS( turbulenceDir, \
-#                                        "decay-isotropic-turbulence-dsmag_32.ups", \
-#                                        ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])
-#                                        
-# decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
-#                                        "decay-isotropic-turbulence-dsmag_64.ups", \
-#                                        ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])                                       
+                                       ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "4" interval = "0.001"/>'])
+
+decayIsotropicTurbulenceDSmag32_ups = modUPS( the_dir, \
+                                       "warches-decay-isotropic-turbulence-dsmag-32.ups", \
+                                       ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "4" interval = "0.001"/>'])
+                                       
+decayIsotropicTurbulenceDSmag64_ups = modUPS( the_dir, \
+                                       "warches-decay-isotropic-turbulence-dsmag-64.ups", \
+                                       ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "4" interval = "0.001"/>'])                                       
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
@@ -97,10 +97,12 @@ NIGHTLYTESTS = []
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
+  ("decay-isotropic-turbulence-dsmag32" , decayIsotropicTurbulenceDSmag32_ups,  8,  "All",  ["exactComparison","no_restart"] ),
+  ("decay-isotropic-turbulence-dsmag64" , decayIsotropicTurbulenceDSmag64_ups,  8,  "All",  ["exactComparison","no_restart"] ),
   ("decay-isotropic-turbulence-vreman32", decayIsotropicTurbulenceVreman32_ups, 8,  "All",  ["exactComparison","no_restart"] ),
   ("decay-isotropic-turbulence-vreman64", decayIsotropicTurbulenceVreman64_ups, 8,  "All",  ["exactComparison","no_restart"] ),
-  ("decay-isotropic-turbulence-wale32"  , decayIsotropicTurbulenceWale32_ups, 8,  "All",  ["exactComparison","no_restart"] ),
-  ("decay-isotropic-turbulence-wale64"  , decayIsotropicTurbulenceWale64_ups, 8,  "All",  ["exactComparison","no_restart"] )      
+  ("decay-isotropic-turbulence-wale32"  , decayIsotropicTurbulenceWale32_ups,   8,  "All",  ["exactComparison","no_restart"] ),
+  ("decay-isotropic-turbulence-wale64"  , decayIsotropicTurbulenceWale64_ups,   8,  "All",  ["exactComparison","no_restart"] )
 ]
 
 #__________________________________
