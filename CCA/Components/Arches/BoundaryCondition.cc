@@ -2648,11 +2648,15 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
             bound_ptr.reset(); 
 
-            if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == MASSFLOW_INLET ) { 
+            if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == MASSFLOW_INLET
+#ifdef WASATCH_IN_ARCHES
+                || WALL
+#endif
+                ) {
 
-              setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+              setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity );
 
-            } else if ( bc_iter->second.type == STABL ) { 
+            } else if ( bc_iter->second.type == STABL ) {
 
               setStABL( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, &bc_iter->second, bound_ptr ); 
  
@@ -5611,6 +5615,11 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
 
        vVel[c] = value.y(); 
        wVel[c] = value.z(); 
+
+#ifdef WASATCH_IN_ARCHES
+       vVel[c] = - vVel[cp];
+       wVel[c] = - wVel[cp];
+#endif
      }
 
      break; 
@@ -5627,6 +5636,11 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
 
        vVel[c] = value.y(); 
        wVel[c] = value.z(); 
+       
+#ifdef WASATCH_IN_ARCHES
+       vVel[c] = - vVel[cm];
+       wVel[c] = - wVel[cm];
+#endif
      }
      break; 
    case Patch::yminus: 
@@ -5642,6 +5656,11 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        uVel[c] = value.x(); 
        wVel[c] = value.z(); 
 
+#ifdef WASATCH_IN_ARCHES
+       uVel[c] = - uVel[cp];
+       wVel[c] = - wVel[cp];
+#endif
+       
      }
      break; 
    case Patch::yplus: 
@@ -5658,6 +5677,10 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        uVel[c] = value.x(); 
        wVel[c] = value.z(); 
 
+#ifdef WASATCH_IN_ARCHES
+       uVel[c] = - uVel[cm];
+       wVel[c] = - wVel[cm];
+#endif
      }
      break; 
    case Patch::zminus: 
@@ -5673,6 +5696,10 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        uVel[c] = value.x(); 
        vVel[c] = value.y(); 
 
+#ifdef WASATCH_IN_ARCHES
+       uVel[c] = - uVel[cp];
+       vVel[c] = - vVel[cp];
+#endif
      }
      break; 
    case Patch::zplus: 
@@ -5689,6 +5716,10 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        uVel[c] = value.x(); 
        vVel[c] = value.y(); 
 
+#ifdef WASATCH_IN_ARCHES
+       uVel[c] = - uVel[cm];
+       vVel[c] = - vVel[cm];
+#endif
      }
      break; 
    default:
@@ -6713,7 +6744,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 bool found_it = false; 
                 for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 
                   if ( *bound_ptr == (check_iter->first + i_wvel_bc_storage->second.relative_ijk) )
-                    found_it = true; 
+                    found_it = true;
                 }
                 if ( !found_it && patch->containsCell(check_iter->first + i_wvel_bc_storage->second.relative_ijk) ){ 
                   std::stringstream out; 
