@@ -859,7 +859,7 @@
       </GreyGasAbsCoef>
 
       <Particles spec="OPTIONAL NO_DATA">
-        <RefractiveIndex spec="REQUIRED"
+        <RefractiveIndex spec="REQUIRED NO_DATA"
                          attribute1="real REQUIRED DOUBLE"
                          attribute2="imag REQUIRED DOUBLE" />
         <RadCoefType     spec="REQUIRED STRING 'PLANCK_ABS,PLANCK_SCA,ROSSELAND_ABS,ROSSELAND_SCA'" />
