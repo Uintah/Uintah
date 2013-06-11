@@ -100,7 +100,11 @@ namespace Uintah {
     public:
 
       //** WARNING: This needs to be duplicated in BoundaryCond_new.h for now until BoundaryCondition goes away **//
+      //** WARNING!!! ** // 
       enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, STABL, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL, TURBULENT_INLET }; 
+      //** END WARNING!!! **//
+      
+      
       enum DIRECTION { CENTER, EAST, WEST, NORTH, SOUTH, TOP, BOTTOM }; 
 
       // GROUP: Constructors:
