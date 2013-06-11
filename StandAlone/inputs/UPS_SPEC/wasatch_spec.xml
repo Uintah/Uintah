@@ -858,7 +858,7 @@
         </Temperature>
       </GreyGasAbsCoef>
 
-      <Particles>
+      <Particles spec="OPTIONAL NO_DATA">
         <RefractiveIndex spec="REQUIRED"
                          attribute1="real REQUIRED DOUBLE"
                          attribute2="imag REQUIRED DOUBLE" />
