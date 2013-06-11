@@ -61,26 +61,34 @@ namespace Uintah {
                  T& q_FC,
                  const bool use_vol_frac);
                  
-   void computeTauX( const Patch* patch,
-                     constCCVariable<double>& vol_frac_CC,  
-                     constCCVariable<Vector>& vel_CC,     
-                     const CCVariable<double>& viscosity,               
-                     const Vector dx,                      
-                     SFCXVariable<Vector>& tau_X_FC);      
+   void computeTauComponents( const Patch* patch,
+                              constCCVariable<double>& vol_frac_CC,  
+                              constCCVariable<Vector>& vel_CC,     
+                              const CCVariable<double>& viscosity,                
+                              SFCXVariable<Vector>& tau_X_FC, 
+                              SFCYVariable<Vector>& tau_Y_FC, 
+                              SFCZVariable<Vector>& tau_Z_FC );
+                     
+    void computeTauX_driver( CellIterator iterLimits,
+                             constCCVariable<double>& vol_frac_CC,  
+                             constCCVariable<Vector>& vel_CC,      
+                             const CCVariable<double>& viscosity,                
+                             const Vector dx,                       
+                             SFCXVariable<Vector>& tau_X_FC );
 
-   void computeTauY( const Patch* patch,
-                     constCCVariable<double>& vol_frac_CC,  
-                     constCCVariable<Vector>& vel_CC,     
-                     const CCVariable<double>& viscosity,              
-                     const Vector dx,                      
-                     SFCYVariable<Vector>& tau_Y_FC);      
+   void computeTauY_driver( CellIterator iterLimits,
+                            constCCVariable<double>& vol_frac_CC,  
+                            constCCVariable<Vector>& vel_CC,     
+                            const CCVariable<double>& viscosity,              
+                            const Vector dx,                      
+                            SFCYVariable<Vector>& tau_Y_FC );      
 
-   void computeTauZ( const Patch* patch,
-                     constCCVariable<double>& vol_frac_CC,  
-                     constCCVariable<Vector>& vel_CC,     
-                     const CCVariable<double>& viscosity,              
-                     const Vector dx,                      
-                     SFCZVariable<Vector>& tau_Z_FC);                 
+   void computeTauZ_driver( CellIterator iterLimits,
+                            constCCVariable<double>& vol_frac_CC,  
+                            constCCVariable<Vector>& vel_CC,     
+                            const CCVariable<double>& viscosity,              
+                            const Vector dx,                      
+                            SFCZVariable<Vector>& tau_Z_FC );                 
 } // End namespace Uintah
 
 #endif
