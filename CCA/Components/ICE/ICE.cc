@@ -26,7 +26,7 @@
 // This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
 // make the isnan function not work.  This define makes the cmath header
 // not get included since we do not need it anyway.
-#define _CPP_CMATH
+#  define _CPP_CMATH
 #endif
 #include <CCA/Components/ICE/ICE.h>
 #include <CCA/Components/ICE/impAMRICE.h>
