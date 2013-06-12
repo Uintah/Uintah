@@ -3675,7 +3675,7 @@ fi
 
 # Check whether --with-hdf5 was given.
 if test "${with_hdf5+set}" = set; then :
-  withval=$with_hdf5; with_hdf5="$withval"		      # with_hdf5 is the directory var
+  withval=$with_hdf5; with_hdf5="$withval"               # with_hdf5 is the directory var
    sci_required_hdf5=yes
 else
   # flag to check for the libs
@@ -3687,7 +3687,7 @@ fi
     as_fn_error $? "The file or directory parameter ($hdf5) specified for --with-hdf5 does not exist!  Please verify that the path and file are correct." "$LINENO" 5
   fi
 
-		      # undefinded otherwise
+                     # undefined otherwise
 
 
 
@@ -6516,7 +6516,12 @@ BUILD_ICE=yes
 BUILD_MPM=yes
 BUILD_MODELS_RADIATION=yes
 BUILD_WASATCH=no
-USE_WASATCH=no
+BUILD_WASATCH_IN_ARCHES=no
+
+if test "$USE_WASATCH" = ""; then
+  USE_WASATCH=undefined
+fi
+
 DEF_ARCHES=""
 DEF_ICE=""
 DEF_MPM=""
@@ -44347,14 +44352,18 @@ fi
 ##  --  Handle --enable-wasatch-in-arches --------------------------------
 
 if test "$wasatch_in_arches" = "yes"; then
-   if test "$USE_WASATCH" != yes; then
-      add_important_warning "Turning on Wasatch for use in Arches."
-      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Turning on Wasatch for use in Arches." >&5
-$as_echo "$as_me: WARNING: Turning on Wasatch for use in Arches." >&2;}
+   if test "$USE_WASATCH" = "no"; then
+      as_fn_error but USE_WASATCH was set to 'no'.  "--enable-wasatch-in-arches specified" "$LINENO" 5
+   fi
+   if test "$USE_WASATCH" = "undefined"; then
+      msg="Turning on Wasatch for use in Arches."
+      add_important_warning "$msg"
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $msg" >&5
+$as_echo "$as_me: WARNING: $msg" >&2;}
       USE_WASATCH=yes
    fi
    DEF_WASATCH="#define WASATCH_IN_ARCHES 1";
-   BUILD_WASATCH_IN_ARCHES="yes"
+   BUILD_WASATCH_IN_ARCHES=yes
 fi
 
 
@@ -44371,14 +44380,21 @@ if test "$USE_WASATCH" = "yes"; then
     as_fn_error $? "You specified the use of the Wasatch component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB)." "$LINENO" 5
   fi
 else
-  if test "$HAVE_BOOST" = "yes" &&
-     test "$HAVE_TABPROPS" = "yes" &&
-     test "$HAVE_SPATIALOPS" = "yes" &&
-     test "$HAVE_EXPRLIB" = "yes"; then
-    BUILD_WASATCH=yes
-    add_important_warning "All prereqs satisfied, turning on Wasatch component."
-    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: All prereqs satisfied" >&5
+  if test "$USE_WASATCH" = "no"; then
+      msg="Found Boost TabProps ExprLib etc but USE_WASATCH was set to 'no'.  Will not turn on Wasatch."
+      add_important_warning "$msg"
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $msg" >&5
+$as_echo "$as_me: WARNING: $msg" >&2;}
+  else
+    if test "$HAVE_BOOST" = "yes" &&
+       test "$HAVE_TABPROPS" = "yes" &&
+       test "$HAVE_SPATIALOPS" = "yes" &&
+       test "$HAVE_EXPRLIB" = "yes"; then
+      BUILD_WASATCH=yes
+      add_important_warning "All prereqs satisfied, turning on Wasatch component."
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: All prereqs satisfied" >&5
 $as_echo "$as_me: WARNING: All prereqs satisfied" >&2;}
+    fi
   fi
 fi
 

@@ -454,9 +454,9 @@ SCI_ARG_WITH(libxml2,
 SCI_ARG_WITH(hdf5,
   AC_HELP_STRING(--with-hdf5=DIR,
                  Use the hdf5 installation in DIR),
-  [with_hdf5="$withval"		      # with_hdf5 is the directory var
-   sci_required_hdf5=yes],		      # flag to check for the libs
-  [with_hdf5=""])		      # undefinded otherwise
+  [with_hdf5="$withval"               # with_hdf5 is the directory var
+   sci_required_hdf5=yes],            # flag to check for the libs
+  [with_hdf5=""])                     # undefined otherwise
 
 SCI_ARG_WITH(freetype,
   AC_HELP_STRING(--with-freetype=DIR,
@@ -1063,7 +1063,12 @@ BUILD_ICE=yes
 BUILD_MPM=yes
 BUILD_MODELS_RADIATION=yes
 BUILD_WASATCH=no
-USE_WASATCH=no
+BUILD_WASATCH_IN_ARCHES=no
+
+if test "$USE_WASATCH" = ""; then 
+  USE_WASATCH=undefined
+fi
+
 DEF_ARCHES=""
 DEF_ICE=""
 DEF_MPM=""
@@ -4252,13 +4257,17 @@ AC_SUBST(RADPROPS_LIB_DIR_FLAG)
 ##  --  Handle --enable-wasatch-in-arches --------------------------------
 
 if test "$wasatch_in_arches" = "yes"; then
-   if test "$USE_WASATCH" != yes; then
-      add_important_warning "Turning on Wasatch for use in Arches."
-      AC_MSG_WARN(Turning on Wasatch for use in Arches.)
+   if test "$USE_WASATCH" = "no"; then
+      AC_MSG_ERROR( --enable-wasatch-in-arches specified, but USE_WASATCH was set to 'no'. )
+   fi
+   if test "$USE_WASATCH" = "undefined"; then
+      msg="Turning on Wasatch for use in Arches."
+      add_important_warning "$msg"
+      AC_MSG_WARN($msg)
       USE_WASATCH=yes
    fi
    DEF_WASATCH="#define WASATCH_IN_ARCHES 1";
-   BUILD_WASATCH_IN_ARCHES="yes"
+   BUILD_WASATCH_IN_ARCHES=yes
 fi
 AC_SUBST(DEF_WASATCH_IN_ARCHES)
 AC_SUBST(BUILD_WASATCH_IN_ARCHES)
@@ -4275,13 +4284,19 @@ if test "$USE_WASATCH" = "yes"; then
     AC_MSG_ERROR(You specified the use of the Wasatch component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
   fi
 else
-  if test "$HAVE_BOOST" = "yes" &&
-     test "$HAVE_TABPROPS" = "yes" &&
-     test "$HAVE_SPATIALOPS" = "yes" &&
-     test "$HAVE_EXPRLIB" = "yes"; then
-    BUILD_WASATCH=yes
-    add_important_warning "All prereqs satisfied, turning on Wasatch component."
-    AC_MSG_WARN(All prereqs satisfied, turning on Wasatch component.)
+  if test "$USE_WASATCH" = "no"; then
+      msg="Found Boost TabProps ExprLib etc but USE_WASATCH was set to 'no'.  Will not turn on Wasatch."
+      add_important_warning "$msg"
+      AC_MSG_WARN($msg)
+  else
+    if test "$HAVE_BOOST" = "yes" &&
+       test "$HAVE_TABPROPS" = "yes" &&
+       test "$HAVE_SPATIALOPS" = "yes" &&
+       test "$HAVE_EXPRLIB" = "yes"; then
+      BUILD_WASATCH=yes
+      add_important_warning "All prereqs satisfied, turning on Wasatch component."
+      AC_MSG_WARN(All prereqs satisfied, turning on Wasatch component.)
+    fi
   fi
 fi
 
