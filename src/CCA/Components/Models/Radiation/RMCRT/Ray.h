@@ -279,6 +279,7 @@ namespace Uintah{
       const VarLabel* d_divQFiltLabel;
       const VarLabel* d_boundFluxLabel;
       const VarLabel* d_boundFluxFiltLabel;
+      const VarLabel* d_radiationVolqLabel;
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
       const VarLabel* d_flaggedCellsLabel;
