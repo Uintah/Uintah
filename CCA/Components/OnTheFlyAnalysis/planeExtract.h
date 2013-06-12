@@ -95,22 +95,59 @@ WARNING
                                       
   private:
 
-    void initialize(const ProcessorGroup*, 
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse*,
-                    DataWarehouse* new_dw);
+    void initialize( const ProcessorGroup*, 
+                     const PatchSubset* patches,
+                     const MaterialSubset*,
+                     DataWarehouse*,
+                     DataWarehouse* new_dw );
                     
-    void doAnalysis(const ProcessorGroup* pg,
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse*,
-                    DataWarehouse* new_dw);
+    void doAnalysis( const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset*,
+                     DataWarehouse*,
+                     DataWarehouse* new_dw );
                     
-    void createFile(string& filename, FILE*& fp);
+    void createFile( const string& filename, 
+                     const VarLabel* varLabel,
+                     const int matl,
+                     FILE*& fp );
     
-    void createDirectory(string& planeName, string& timestep, string& levelIndex);
-                    
+    void createDirectory( string& planeName, 
+                          string& timestep, 
+                          string& levelIndex );
+                          
+    template <class Tvar>      /* double */
+    void writeDataD( DataWarehouse*  new_dw,
+                     const VarLabel* varLabel,
+                     const int       indx,
+                     const Patch*    patch,
+                     CellIterator    iter,
+                     FILE*     fp );
+                     
+    template <class Tvar>     /* Vector */
+    void writeDataV( DataWarehouse*  new_dw,
+                     const VarLabel* varLabel,
+                     const int       indx,
+                     const Patch*    patch,
+                     CellIterator    iter,
+                     FILE*     fp );
+                     
+    template <class Tvar>     /* integer */   
+    void writeDataI( DataWarehouse*  new_dw,
+                     const VarLabel* varLabel,
+                     const int       indx,
+                     const Patch*    patch,
+                     CellIterator    iter,
+                     FILE*     fp );
+                     
+    template <class Tvar>     /* Stencil7 */
+    void writeDataS7( DataWarehouse*  new_dw,
+                      const VarLabel* varLabel,
+                      const int       indx,
+                      const Patch*    patch,
+                      CellIterator    iter,
+                      FILE*     fp );
+                                         
     
     // general labels
     class planeExtractLabel {
@@ -119,34 +156,30 @@ WARNING
       VarLabel* fileVarsStructLabel;
     };
     
-    
-    
     planeExtractLabel* ps_lb;
    
-
     struct plane{
       string  name;  
       Point   startPt;
       Point   endPt;
     };
-    
-    
        
     //__________________________________
     // global constants
     double d_writeFreq; 
     double d_startTime;
     double d_stopTime;
+    
     vector<VarLabel*> d_varLabels;
     vector<int> d_varMatl;
+    
     SimulationStateP d_sharedState;
-    vector<plane*> d_planes;
-    Output* d_dataArchiver;
-    ProblemSpecP d_prob_spec;
-    const Material* d_matl;
-    MaterialSet* d_matl_set;
+    vector<plane*>   d_planes;
+    Output*          d_dataArchiver;
+    ProblemSpecP     d_prob_spec;
     std::set<string> d_isDirCreated;
     
+    MaterialSet*     d_matl_set;
     MaterialSubset* d_zero_matl;
     
   
