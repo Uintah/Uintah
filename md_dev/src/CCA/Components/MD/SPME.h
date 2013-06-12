@@ -406,16 +406,12 @@ namespace Uintah {
       CenteredCardinalBSpline d_interpolatingSpline;    //!< Spline object to hold info for spline calculation
       std::vector<SPMEPatch*> d_spmePatches;            //!< Assuming multiple patches, these are the pieces of the SPME grid
       std::vector<SPMEMapPoint> d_gridMap;              //!< The data that maps the charges in the patch to-and-from the grid
+      SimpleGrid<dblcomplex>* d_Q;                       //!< The local version of the global Q grid
 
       // Variables we'll get from the MDSystem instance to make life easier
       Matrix3 d_unitCell;           //!< Unit cell lattice parameters
       Matrix3 d_inverseUnitCell;    //!< Inverse lattice parameters
       double d_systemVolume;        //!< Volume of the unit cell
-
-      // FFT Related variables
-      SimpleGrid<dblcomplex>* d_Q;         //!< The Q used for local and global reductions; handed off to FFT routines
-      fftw_plan d_forwardTransformPlan;    //!< FFTW plan for how the forward  3D transform will be executed
-      fftw_plan d_backwardTransformPlan;   //!< FFTW plan for how the backward 3D transform will be executed
 
   };
 

@@ -30,6 +30,8 @@
 #include <Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Disclosure/TypeUtils.h>
 
+#include <sci_defs/fftw_defs.h>
+
 #include <complex>
 
 namespace Uintah {
@@ -79,15 +81,6 @@ namespace Uintah {
       const VarLabel* pParticleIDLabel_preReloc;
 
       ///////////////////////////////////////////////////////////////////////////
-      // Grid Variables - For interpolation to Uintah grid
-      const VarLabel* gForceLabel;
-      const VarLabel* gAccelLabel;
-      const VarLabel* gVelocityLabel;
-      const VarLabel* gEnergyLabel;
-      const VarLabel* gMassLabel;
-      const VarLabel* gChargeLabel;
-
-      ///////////////////////////////////////////////////////////////////////////
       // Reduction Variables - General
       const VarLabel* vdwEnergyLabel;
 
@@ -95,6 +88,11 @@ namespace Uintah {
       // Reduction Variables - Electrostatics
       const VarLabel* spmeFourierEnergyLabel;
       const VarLabel* spmeFourierStressLabel;
+#ifdef HAVE_FFTW
+      const VarLabel* globalQLabel;
+      const VarLabel* forwardTransformPlanLabel;
+      const VarLabel* backwardTransformPlanLabel;
+#endif
 
   };
 

@@ -198,7 +198,7 @@ namespace Uintah {
 
       SimpleGrid<double>* d_theta;             //!<
       SimpleGrid<Matrix3>* d_stressPrefactor;  //!<
-      SimpleGrid<std::complex<double> >* Q;         //!<
+      SimpleGrid<std::complex<double> >* Q;    //!<
 
       const Patch* d_patch;                    //!<
 

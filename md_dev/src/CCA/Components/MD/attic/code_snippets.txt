@@ -158,12 +158,11 @@ while (!converged && (numIterations < maxIterations)) {
   
 ---------------------------------------------------------------------------------------------------  
   
-  //  task->setType(Task::OncePerProc);
-//  LoadBalancer* loadBal = sched->getLoadBalancer();
-//  GridP grid = level->getGrid();
-//  const PatchSet* perprocPatches = loadBal->getPerProcessorPatchSet(grid);
-//
-//  sched->addTask(task, perprocPatches, d_sharedState->allMaterials());
+task->setType(Task::OncePerProc);
+LoadBalancer* loadBal = sched->getLoadBalancer();
+GridP grid = level->getGrid();
+const PatchSet* perprocPatches = loadBal->getPerProcessorPatchSet(grid);
+sched->addTask(task, perprocPatches, d_sharedState->allMaterials());
 
 ---------------------------------------------------------------------------------------------------
 

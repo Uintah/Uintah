@@ -80,9 +80,16 @@ void MD::problemSetup(const ProblemSpecP& params,
   printTask(md_cout, "MD::problemSetup");
 
   d_sharedState = shared_state;
-  dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(d_lb->pXLabel);
-  ProblemSpecP md_ps = params->findBlock("MD");
 
+  d_dataArchiver = dynamic_cast<Output*>(getPort("output"));
+  if (!d_dataArchiver) {
+    throw InternalError("MD: couldn't get output port", __FILE__, __LINE__);
+  }
+
+  dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(d_lb->pXLabel);
+
+  // get path and name of the file with atom information
+  ProblemSpecP md_ps = params->findBlock("MD");
   md_ps->get("coordinateFile", d_coordinateFile);
 
   // create and populate the MD System object
@@ -117,27 +124,45 @@ void MD::scheduleInitialize(const LevelP& level,
 {
   printSchedule(level, md_cout, "MD::scheduleInitialize");
 
-  Task* task = scinew Task("MD::initialize", this, &MD::initialize);
-  task->computes(d_lb->pXLabel);
-  task->computes(d_lb->pForceLabel);
-  task->computes(d_lb->pAccelLabel);
-  task->computes(d_lb->pVelocityLabel);
-  task->computes(d_lb->pEnergyLabel);
-  task->computes(d_lb->pMassLabel);
-  task->computes(d_lb->pChargeLabel);
-  task->computes(d_lb->pParticleIDLabel);
+  // this task creates all the ParticleVariables and places atoms on correct patches spatially
+  Task* mdInitTask = scinew Task("MD::initialize", this, &MD::initialize);
+  mdInitTask->computes(d_lb->pXLabel);
+  mdInitTask->computes(d_lb->pForceLabel);
+  mdInitTask->computes(d_lb->pAccelLabel);
+  mdInitTask->computes(d_lb->pVelocityLabel);
+  mdInitTask->computes(d_lb->pEnergyLabel);
+  mdInitTask->computes(d_lb->pMassLabel);
+  mdInitTask->computes(d_lb->pChargeLabel);
+  mdInitTask->computes(d_lb->pParticleIDLabel);
+  sched->addTask(mdInitTask, level->eachPatch(), d_sharedState->allMaterials());
 
-  // reduction variables
-  task->computes(d_lb->vdwEnergyLabel);
-  task->computes(d_lb->spmeFourierEnergyLabel);
-  task->computes(d_lb->spmeFourierStressLabel);
+  // initialize nonbonded instance
+  Task* nonbondedInitTask = scinew Task("MD::nonbondedInitialize", this, &MD::nonbondedInitialize);
+  nonbondedInitTask->requires(Task::NewDW, d_lb->pXLabel, Ghost::None);
+  nonbondedInitTask->computes(d_lb->vdwEnergyLabel);
 
-  task->setType(Task::OncePerProc);
+  nonbondedInitTask->setType(Task::OncePerProc);
   LoadBalancer* loadBal = sched->getLoadBalancer();
   GridP grid = level->getGrid();
   const PatchSet* perprocPatches = loadBal->getPerProcessorPatchSet(grid);
-  sched->addTask(task, perprocPatches, d_sharedState->allMaterials());
-//  sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
+  sched->addTask(nonbondedInitTask, perprocPatches, d_sharedState->allMaterials());
+
+  // initialize electrostatics instance; if we're doing electrostatics
+  if (d_electrostatics->getType() != Electrostatics::NONE) {
+    Task* electrostaticsInitTask = scinew Task("MD::electrostaticsInitialize", this, &MD::electrostaticsInitialize);
+    if (d_electrostatics->getType() == Electrostatics::SPME) {
+      electrostaticsInitTask->computes(d_lb->spmeFourierEnergyLabel);
+      electrostaticsInitTask->computes(d_lb->spmeFourierStressLabel);
+      electrostaticsInitTask->computes(d_lb->globalQLabel);
+      electrostaticsInitTask->computes(d_lb->forwardTransformPlanLabel);
+      electrostaticsInitTask->computes(d_lb->backwardTransformPlanLabel);
+    }
+    electrostaticsInitTask->setType(Task::OncePerProc);
+    LoadBalancer* loadBal = sched->getLoadBalancer();
+    GridP grid = level->getGrid();
+    const PatchSet* perprocPatches = loadBal->getPerProcessorPatchSet(grid);
+    sched->addTask(electrostaticsInitTask, perprocPatches, d_sharedState->allMaterials());
+  }
 }
 
 void MD::scheduleComputeStableTimestep(const LevelP& level,
@@ -172,36 +197,6 @@ void MD::scheduleTimeAdvance(const LevelP& level,
 
   sched->scheduleParticleRelocation(level, d_lb->pXLabel_preReloc, d_sharedState->d_particleState_preReloc, d_lb->pXLabel,
                                     d_sharedState->d_particleState, d_lb->pParticleIDLabel, matls, 1);
-}
-
-void MD::computeStableTimestep(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw)
-{
-  printTask(patches, md_cout, "MD::computeStableTimestep");
-
-  if (pg->myrank() == 0) {
-    sum_vartype vdwEnergy;
-    sum_vartype spmeFourierEnergy;
-    matrix_sum spmeFourierStress;
-
-    new_dw->get(vdwEnergy, d_lb->vdwEnergyLabel);
-    new_dw->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-    new_dw->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
-
-    std::cout << std::endl;
-    std::cout << "-----------------------------------------------------" << std::endl;
-    std::cout << "Total Energy   = " << std::setprecision(16) << vdwEnergy << std::endl;
-    std::cout << "-----------------------------------------------------" << std::endl;
-    std::cout << "Fourier Energy = " << std::setprecision(16) << spmeFourierEnergy << std::endl;
-    std::cout << "-----------------------------------------------------" << std::endl;
-    std::cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
-    std::cout << "-----------------------------------------------------" << std::endl;
-    std::cout << std::endl;
-  }
-  new_dw->put(delt_vartype(1), d_sharedState->get_delt_label(), getLevel(patches));
 }
 
 void MD::scheduleCalculateNonBondedForces(SchedulerP& sched,
@@ -250,6 +245,11 @@ void MD::schedulePerformElectrostatics(SchedulerP& sched,
   task->requires(Task::NewDW, d_lb->pForceLabel_preReloc, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->forwardTransformPlanLabel);
+  task->requires(Task::OldDW, d_lb->backwardTransformPlanLabel);
+  task->requires(Task::OldDW, d_lb->globalQLabel);
 
   task->modifies(d_lb->pForceLabel_preReloc);
   task->computes(d_lb->pChargeLabel_preReloc);
@@ -313,54 +313,6 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   task->computes(d_lb->pParticleIDLabel_preReloc);
 
   sched->addTask(task, patches, matls);
-}
-
-void MD::extractCoordinates()
-{
-  std::ifstream inputFile;
-  inputFile.open(d_coordinateFile.c_str());
-  if (!inputFile.is_open()) {
-    string message = "\tCannot open input file: " + d_coordinateFile;
-    throw ProblemSetupException(message, __FILE__, __LINE__);
-  }
-
-  // do file IO to extract atom coordinates and charge
-  string line;
-  unsigned int numRead;
-  unsigned int numAtoms = d_system->getNumAtoms();
-  for (unsigned int i = 0; i < numAtoms; i++) {
-    // get the atom coordinates
-    getline(inputFile, line);
-    double x, y, z;
-    double charge;
-    numRead = sscanf(line.c_str(), "%lf %lf %lf %lf", &x, &y, &z, &charge);
-    if (numRead != 4) {
-      string message = "\tMalformed input file. Should have [x,y,z] coordinates and [charge] per line: ";
-      throw ProblemSetupException(message, __FILE__, __LINE__);
-    }
-
-    //FIXME This is hacky!! Fix for generic case of wrapping arbitrary coordinates into arbitrary unit cells using
-    //  reduced coordinate transformation!  -- JBH 5/9/13
-    Vector box = d_system->getBox();
-    if (x < 0)
-      x += box.x();
-    if (y < 0)
-      y += box.y();
-    if (z < 0)
-      z += box.z();
-
-    if (x >= box.x())
-      x -= box.x();
-    if (y >= box.y())
-      y -= box.y();
-    if (z >= box.z())
-      z -= box.z();
-
-    Atom atom(Point(x, y, z), charge);
-
-    d_atomList.push_back(atom);
-  }
-  inputFile.close();
 }
 
 void MD::initialize(const ProcessorGroup* pg,
@@ -438,14 +390,27 @@ void MD::initialize(const ProcessorGroup* pg,
         }
       }
     }
-    // Initially register our three reduction variables in the DW
-    new_dw->put(sum_vartype(0.0), d_lb->vdwEnergyLabel);
   }
+}
 
-  //   initialize electrostatics object
-  d_electrostatics->initialize(pg, patches, matls, old_dw, new_dw);
+void MD::nonbondedInitialize(const ProcessorGroup* pg,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw)
+{
+  printTask(patches, md_cout, "MD::nonbondedInitialize");
   d_nonbonded->initialize(pg, patches, matls, old_dw, new_dw);
+}
 
+void MD::electrostaticsInitialize(const ProcessorGroup* pg,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw)
+{
+  printTask(patches, md_cout, "MD::electrostaticsInitialize");
+  d_electrostatics->initialize(pg, patches, matls, old_dw, new_dw);
 }
 
 void MD::registerPermanentParticleState(SimpleMaterial* matl)
@@ -475,6 +440,36 @@ void MD::registerPermanentParticleState(SimpleMaterial* matl)
   // register the particle states with the shared SimulationState for persistence across timesteps
   d_sharedState->d_particleState_preReloc.push_back(d_particleState_preReloc);
   d_sharedState->d_particleState.push_back(d_particleState);
+}
+
+void MD::computeStableTimestep(const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw)
+{
+  printTask(patches, md_cout, "MD::computeStableTimestep");
+
+  if (pg->myrank() == 0) {
+    sum_vartype vdwEnergy;
+    sum_vartype spmeFourierEnergy;
+    matrix_sum spmeFourierStress;
+
+    new_dw->get(vdwEnergy, d_lb->vdwEnergyLabel);
+    new_dw->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
+    new_dw->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
+
+    std::cout << std::endl;
+    std::cout << "-----------------------------------------------------" << std::endl;
+    std::cout << "Total Energy   = " << std::setprecision(16) << vdwEnergy << std::endl;
+    std::cout << "-----------------------------------------------------" << std::endl;
+    std::cout << "Fourier Energy = " << std::setprecision(16) << spmeFourierEnergy << std::endl;
+    std::cout << "-----------------------------------------------------" << std::endl;
+    std::cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
+    std::cout << "-----------------------------------------------------" << std::endl;
+    std::cout << std::endl;
+  }
+  new_dw->put(delt_vartype(1), d_sharedState->get_delt_label(), getLevel(patches));
 }
 
 void MD::calculateNonBondedForces(const ProcessorGroup* pg,
@@ -690,4 +685,52 @@ void MD::updatePosition(const ProcessorGroup* pg,
     }  // end materials loop
 
   }  // end patch loop
+}
+
+void MD::extractCoordinates()
+{
+  std::ifstream inputFile;
+  inputFile.open(d_coordinateFile.c_str());
+  if (!inputFile.is_open()) {
+    string message = "\tCannot open input file: " + d_coordinateFile;
+    throw ProblemSetupException(message, __FILE__, __LINE__);
+  }
+
+  // do file IO to extract atom coordinates and charge
+  string line;
+  unsigned int numRead;
+  unsigned int numAtoms = d_system->getNumAtoms();
+  for (unsigned int i = 0; i < numAtoms; i++) {
+    // get the atom coordinates
+    getline(inputFile, line);
+    double x, y, z;
+    double charge;
+    numRead = sscanf(line.c_str(), "%lf %lf %lf %lf", &x, &y, &z, &charge);
+    if (numRead != 4) {
+      string message = "\tMalformed input file. Should have [x,y,z] coordinates and [charge] per line: ";
+      throw ProblemSetupException(message, __FILE__, __LINE__);
+    }
+
+    //FIXME This is hacky!! Fix for generic case of wrapping arbitrary coordinates into arbitrary unit cells using
+    //  reduced coordinate transformation!  -- JBH 5/9/13
+    Vector box = d_system->getBox();
+    if (x < 0)
+      x += box.x();
+    if (y < 0)
+      y += box.y();
+    if (z < 0)
+      z += box.z();
+
+    if (x >= box.x())
+      x -= box.x();
+    if (y >= box.y())
+      y -= box.y();
+    if (z >= box.z())
+      z -= box.z();
+
+    Atom atom(Point(x, y, z), charge);
+
+    d_atomList.push_back(atom);
+  }
+  inputFile.close();
 }

@@ -48,11 +48,11 @@ MDSystem::MDSystem(ProblemSpecP& ps,
                    GridP& grid)
 {
   ProblemSpecP mdsystem_ps = ps->findBlock("MDSystem");
-  mdsystem_ps->get("numAtoms", d_numAtoms);
-  mdsystem_ps->get("pressure", d_pressure);
-  mdsystem_ps->get("temperature", d_temperature);
-  mdsystem_ps->get("orthorhombic", d_orthorhombic);
-  mdsystem_ps->get("ghostcells", d_numGhostCells);
+  mdsystem_ps->require("numAtoms", d_numAtoms);
+  mdsystem_ps->require("pressure", d_pressure);
+  mdsystem_ps->require("temperature", d_temperature);
+  mdsystem_ps->require("orthorhombic", d_orthorhombic);
+  mdsystem_ps->require("ghostcells", d_numGhostCells);
 
   if (d_orthorhombic) {
     mdsystem_ps->get("boxSize", d_box);
