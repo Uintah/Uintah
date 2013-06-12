@@ -340,6 +340,7 @@
         <ConstantProps                spec="OPTIONAL NO_DATA">
           <density                    spec="REQUIRED DOUBLE 'positive'"/>
           <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+          <temperature_label_name     spec="OPTIONAL STRING"/> <!-- default = temperature -->
         </ConstantProps>
 
         <emperical_soot               spec="OPTIONAL BOOLEAN" />
