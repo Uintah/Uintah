@@ -112,12 +112,11 @@ evaluate()
   using namespace SpatialOps;
   double& result = this->value();
   
-  SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore::get<SVolField>( *rho_ );
   SpatialOps::SpatFldPtr<SVolField> kinVisc_ = SpatialOps::SpatialFieldStore::get<SVolField>( *rho_ );
-  
   if (isViscous_) *kinVisc_ <<= *visc_/ *rho_;
   else            *kinVisc_ <<= 0.0;
   
+  SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore::get<SVolField>( *rho_ );
   *tmp <<= 0.0;
   if (doX_) *tmp <<= (*x2SInterp_)(abs(*u_)) * invDx_ + *kinVisc_ * invDx_ * invDx_;       // u/dx + nu/dx2
   if (doY_) *tmp <<= *tmp + (*y2SInterp_)(abs(*v_))* invDy_ + *kinVisc_ * invDy_ * invDy_; // v/dy + nu/dy2
