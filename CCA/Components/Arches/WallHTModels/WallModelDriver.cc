@@ -131,12 +131,12 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
   _T_label        = VarLabel::find( _T_label_name );
   _cellType_label = VarLabel::find( "cellType" );
-  _HF_E_label     = VarLabel::find( "new_radiationFluxE" );
-  _HF_W_label     = VarLabel::find( "new_radiationFluxW" );
-  _HF_N_label     = VarLabel::find( "new_radiationFluxN" );
-  _HF_S_label     = VarLabel::find( "new_radiationFluxS" );
-  _HF_T_label     = VarLabel::find( "new_radiationFluxT" );
-  _HF_B_label     = VarLabel::find( "new_radiationFluxB" );
+  _HF_E_label     = VarLabel::find( "radiationFluxE" );
+  _HF_W_label     = VarLabel::find( "radiationFluxW" );
+  _HF_N_label     = VarLabel::find( "radiationFluxN" );
+  _HF_S_label     = VarLabel::find( "radiationFluxS" );
+  _HF_T_label     = VarLabel::find( "radiationFluxT" );
+  _HF_B_label     = VarLabel::find( "radiationFluxB" );
   _cc_vel_label   = VarLabel::find( "CCVelocity" ); 
 
   if ( !check_varlabels() ){ 
@@ -601,12 +601,12 @@ WallModelDriver::RegionHT::copySolution( const Patch* patch, CCVariable<double>&
 //
 //  _T_label        = VarLabel::find( _T_label_name );
 //  _cellType_label = VarLabel::find( "cellType" );
-//  _HF_E_label     = VarLabel::find( "new_radiationFluxE" );
-//  _HF_W_label     = VarLabel::find( "new_radiationFluxW" );
-//  _HF_N_label     = VarLabel::find( "new_radiationFluxN" );
-//  _HF_S_label     = VarLabel::find( "new_radiationFluxS" );
-//  _HF_T_label     = VarLabel::find( "new_radiationFluxT" );
-//  _HF_B_label     = VarLabel::find( "new_radiationFluxB" );
+//  _HF_E_label     = VarLabel::find( "radiationFluxE" );
+//  _HF_W_label     = VarLabel::find( "radiationFluxW" );
+//  _HF_N_label     = VarLabel::find( "radiationFluxN" );
+//  _HF_S_label     = VarLabel::find( "radiationFluxS" );
+//  _HF_T_label     = VarLabel::find( "radiationFluxT" );
+//  _HF_B_label     = VarLabel::find( "radiationFluxB" );
 //
 //  if ( !check_varlabels() ){ 
 //    throw InvalidValue("Error: One of the varlabels for the wall model was not found.", __FILE__, __LINE__);

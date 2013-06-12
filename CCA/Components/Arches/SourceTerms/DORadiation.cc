@@ -34,34 +34,34 @@ DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, MPMArchesLa
   _src_label = VarLabel::create( src_name, CC_double ); 
 
   // Add any other local variables here. 
-  _radiationSRCLabel = VarLabel::create("new_radiationSRC",  CC_double);
+  _radiationSRCLabel = VarLabel::create("radiationSRC",  CC_double);
   _extra_local_labels.push_back(_radiationSRCLabel);  
 
-  _radiationFluxELabel = VarLabel::create("new_radiationFluxE",  CC_double);
+  _radiationFluxELabel = VarLabel::create("radiationFluxE",  CC_double);
   _extra_local_labels.push_back(_radiationFluxELabel); 
 
-  _radiationFluxWLabel = VarLabel::create("new_radiationFluxW",  CC_double);
+  _radiationFluxWLabel = VarLabel::create("radiationFluxW",  CC_double);
   _extra_local_labels.push_back(_radiationFluxWLabel); 
 
-  _radiationFluxNLabel = VarLabel::create("new_radiationFluxN",  CC_double);
+  _radiationFluxNLabel = VarLabel::create("radiationFluxN",  CC_double);
   _extra_local_labels.push_back(_radiationFluxNLabel); 
 
-  _radiationFluxSLabel = VarLabel::create("new_radiationFluxS",  CC_double);
+  _radiationFluxSLabel = VarLabel::create("radiationFluxS",  CC_double);
   _extra_local_labels.push_back(_radiationFluxSLabel); 
 
-  _radiationFluxTLabel = VarLabel::create("new_radiationFluxT",  CC_double);
+  _radiationFluxTLabel = VarLabel::create("radiationFluxT",  CC_double);
   _extra_local_labels.push_back(_radiationFluxTLabel); 
 
-  _radiationFluxBLabel = VarLabel::create("new_radiationFluxB",  CC_double);
+  _radiationFluxBLabel = VarLabel::create("radiationFluxB",  CC_double);
   _extra_local_labels.push_back(_radiationFluxBLabel); 
 
-  _radiationVolqLabel = VarLabel::create("new_radiationVolq",  CC_double);
+  _radiationVolqLabel = VarLabel::create("radiationVolq",  CC_double);
   _extra_local_labels.push_back(_radiationVolqLabel); 
 
-  _abskgLabel    =  VarLabel::create("new_abskg",    CC_double);
+  _abskgLabel    =  VarLabel::create("abskg",    CC_double);
   _extra_local_labels.push_back(_abskgLabel); 
 
-  _abskpLocalLabel = VarLabel::create("new_abskp", CC_double); 
+  _abskpLocalLabel = VarLabel::create("abskp", CC_double); 
   _extra_local_labels.push_back(_abskpLocalLabel); 
 
   //Declare the source type: 
