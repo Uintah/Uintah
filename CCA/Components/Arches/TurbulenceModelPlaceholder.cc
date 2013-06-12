@@ -231,7 +231,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
       viscosity[c] = viscosity[c] + mol_viscos;
     }
 
-#ifndef WASATCH_IN_ARCHES
+//#ifndef WASATCH_IN_ARCHES
     //__________________________________
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -347,7 +347,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
         }
       }
     }
-#endif
+//#endif
   }
 }
 

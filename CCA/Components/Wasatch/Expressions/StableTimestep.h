@@ -26,7 +26,7 @@ class StableTimestep
   const YVolField* v_;
   const ZVolField* w_;
   
-  double invDx_, invDy_, invDz_;
+  double invDx_, invDy_, invDz_; // 1/dx, 1/dy, 1/dz
   
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SOpT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SOpT;
@@ -35,7 +35,7 @@ class StableTimestep
   const Y2SOpT* y2SInterp_;
   const Z2SOpT* z2SInterp_;
 
-  // gradient operators are only here to extract spacing information out of them
+  // gradient operators are declared here to extract grid-spacing information
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
@@ -43,13 +43,11 @@ class StableTimestep
   const GradYT* gradYOp_;
   const GradZT* gradZOp_;
 
-  /* declare operators associated with this expression here */
-
-    StableTimestep( const Expr::Tag& rhoTag,
-                const Expr::Tag& viscTag,
-                const Expr::Tag& uTag,
-                const Expr::Tag& vTag,
-                const Expr::Tag& wTag );
+  StableTimestep( const Expr::Tag& rhoTag,
+              const Expr::Tag& viscTag,
+              const Expr::Tag& uTag,
+              const Expr::Tag& vTag,
+              const Expr::Tag& wTag );
 public:
   class Builder : public Expr::ExpressionBuilder
   {
