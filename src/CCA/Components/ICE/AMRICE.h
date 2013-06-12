@@ -544,7 +544,9 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* finePatch,
            << label->getName() << ", cell " << badCell
            << " Q_CC " << Q[badCell] 
            << " Patch " << finePatch->getID() << " Level idx "
-           <<fineLevel->getIndex()<<"\n ";
+           <<fineLevel->getIndex()<<"\n\n"
+           <<"**** If the uninitialized variable is (sp_vol_CC) "
+           <<"make certain boundary conditions are set on all the domain faces ****\n";
       throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
   }
