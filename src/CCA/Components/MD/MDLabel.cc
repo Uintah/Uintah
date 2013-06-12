@@ -23,10 +23,14 @@
  */
 
 #include <CCA/Components/MD/MDLabel.h>
+#include <CCA/Components/MD/SimpleGrid.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
+
+#include <sci_defs/fftw_defs.h>
 
 using namespace Uintah;
 
@@ -60,20 +64,6 @@ MDLabel::MDLabel()
   pParticleIDLabel_preReloc = VarLabel::create("p.particleID+", ParticleVariable<long64>::getTypeDescription());
 
   ///////////////////////////////////////////////////////////////////////////
-  // Grid Variables
-  gForceLabel = VarLabel::create("g.force", NCVariable<Vector>::getTypeDescription());
-
-  gAccelLabel = VarLabel::create("g.accel", NCVariable<Vector>::getTypeDescription());
-
-  gVelocityLabel = VarLabel::create("g.velocity", NCVariable<Vector>::getTypeDescription());
-
-  gEnergyLabel = VarLabel::create("g.energy", NCVariable<std::complex<double> >::getTypeDescription());
-
-  gMassLabel = VarLabel::create("g.mass", NCVariable<double>::getTypeDescription());
-
-  gChargeLabel = VarLabel::create("g.charge", NCVariable<double>::getTypeDescription());
-
-  ///////////////////////////////////////////////////////////////////////////
   // Reduction Variables
   vdwEnergyLabel = VarLabel::create("vdwEnergy", sum_vartype::getTypeDescription());
 
@@ -81,6 +71,13 @@ MDLabel::MDLabel()
   // Reduction Variables - Electrostatic
   spmeFourierEnergyLabel = VarLabel::create("spmeFourierEnergy", sum_vartype::getTypeDescription());
   spmeFourierStressLabel = VarLabel::create("spmeFourierStress", matrix_sum::getTypeDescription());
+
+#ifdef HAVE_FFTW
+  globalQLabel = VarLabel::create("globalQ", SoleVariable<SimpleGrid<dblcomplex> >::getTypeDescription());
+  forwardTransformPlanLabel = VarLabel::create("forwardTransformPlan", SoleVariable<fftw_plan>::getTypeDescription());
+  backwardTransformPlanLabel = VarLabel::create("backwardTransformPlan", SoleVariable<fftw_plan>::getTypeDescription());
+#endif
+
 }
 
 MDLabel::~MDLabel()
@@ -105,17 +102,11 @@ MDLabel::~MDLabel()
   VarLabel::destroy(pParticleIDLabel_preReloc);
 
   ///////////////////////////////////////////////////////////////////////////
-  // Grid Variables
-  VarLabel::destroy(gForceLabel);
-  VarLabel::destroy(gAccelLabel);
-  VarLabel::destroy(gVelocityLabel);
-  VarLabel::destroy(gEnergyLabel);
-  VarLabel::destroy(gMassLabel);
-  VarLabel::destroy(gChargeLabel);
-
-  ///////////////////////////////////////////////////////////////////////////
   // Reduction Variables
   VarLabel::destroy(vdwEnergyLabel);
   VarLabel::destroy(spmeFourierEnergyLabel);
   VarLabel::destroy(spmeFourierStressLabel);
+  VarLabel::destroy(globalQLabel);
+  VarLabel::destroy(forwardTransformPlanLabel);
+  VarLabel::destroy(backwardTransformPlanLabel);
 }

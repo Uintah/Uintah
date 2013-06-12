@@ -102,6 +102,7 @@ void AnalyticNonBonded::initialize(const ProcessorGroup* pg,
       }
     }
   }
+  new_dw->put(sum_vartype(0.0), d_lb->vdwEnergyLabel);
 }
 
 void AnalyticNonBonded::setup(const ProcessorGroup* pg,

@@ -31,6 +31,7 @@
 #include <Core/Grid/Variables/ParticleVariable.h>
 
 #include <vector>
+#include <map>
 
 namespace Uintah {
 
@@ -45,7 +46,7 @@ namespace Uintah {
   class MDLabel;
 
   /**
-   *  @class LJTwelveSix
+   *  @class AnalyticNonBonded
    *  @ingroup MD
    *  @author Alan Humphrey and Justin Hooper
    *  @date   June, 2013

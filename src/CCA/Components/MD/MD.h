@@ -30,22 +30,16 @@
 
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Ports/Output.h>
 #include <CCA/Components/MD/MDLabel.h>
-#include <CCA/Components/MD/Electrostatics.h>
-#include <CCA/Components/MD/SPME.h>
 #include <CCA/Components/MD/NonBonded.h>
-#include <CCA/Components/MD/AnalyticNonBonded.h>
-#include <CCA/Components/MD/SPMEMapPoint.h>
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
+#include <CCA/Components/MD/Electrostatics.h>
 
 #include <vector>
 
 namespace Uintah {
 
   typedef std::complex<double> dblcomplex;
-  typedef int particleIndex;
-  typedef int particleId;
 
   class Point;
   class Vector;
@@ -65,6 +59,15 @@ namespace Uintah {
   class MD : public UintahParallelComponent, public SimulationInterface {
 
     public:
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      enum IntegratorType {
+        Explicit, Implicit,
+      };
 
       /**
        * @brief
@@ -112,35 +115,7 @@ namespace Uintah {
       virtual void scheduleTimeAdvance(const LevelP& level,
                                        SchedulerP&);
 
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      enum IntegratorType {
-        Explicit, Implicit,
-      };
-
     protected:
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleSetGridBoundaryConditions(SchedulerP&,
-                                             const PatchSet*,
-                                             const MaterialSet* matls);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleMDInitialize(SchedulerP& sched,
-                                const PatchSet* patches,
-                                const MaterialSet* matls,
-                                const LevelP& level);
 
       /**
        * @brief
@@ -202,6 +177,28 @@ namespace Uintah {
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void nonbondedInitialize(const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void electrostaticsInitialize(const ProcessorGroup* pg,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
 
       /**
        * @brief
@@ -307,6 +304,7 @@ namespace Uintah {
       };
 
       MDLabel* d_lb;                       //!< Uintah VarLabels specific to Uintah::MD
+      Output* d_dataArchiver;              //!< Handle to the Uintah data archiver
       SimulationStateP d_sharedState;      //!< Shared simulation state (global)
       SimpleMaterial* d_material;          //!< For now, this is a single material
       IntegratorType d_integrator;         //!< Integrator to use in position update of atoms

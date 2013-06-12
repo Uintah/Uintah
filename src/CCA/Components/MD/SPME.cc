@@ -30,6 +30,7 @@
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Box.h>
@@ -88,10 +89,10 @@ SPME::~SPME()
     delete d_Q;
   }
 
-// FFTW cleanup
-  fftw_destroy_plan(d_forwardTransformPlan);
-  fftw_destroy_plan(d_backwardTransformPlan);
-  fftw_cleanup();
+//// FFTW cleanup
+//  fftw_destroy_plan (d_forwardTransformPlan);
+//  fftw_destroy_plan (d_backwardTransformPlan);
+//  fftw_cleanup();
 }
 
 SPME::SPME(MDSystem* system,
@@ -122,24 +123,40 @@ void SPME::initialize(const ProcessorGroup* pg,
 {
   // We call SPME::initialize from MD::initialize, or if we've somehow maintained our object across a system change
 
-  // Check to make sure plusGhostExtents+minusGhostExtents is right way to enter number of ghost cells (i.e. total, not per offset)
-  IntVector klimits(d_kLimits(0), d_kLimits(1), d_kLimits(2));
-  IntVector zero(0, 0, 0);
-  d_Q = scinew SimpleGrid<dblcomplex>(klimits, zero, 0);
-  d_Q->initialize(dblcomplex(0.0, 0.0));
-
-  int xdim = d_kLimits(0);
-  int ydim = d_kLimits(1);
-  int zdim = d_kLimits(2);
-
-  fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q->getDataPtr());
-
-  d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
-  d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
-
-  // Initially register our three reduction variables in the DW
+  // Initially register our basic reduction variables in the DW
   new_dw->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
   new_dw->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
+
+  // now create SoleVariables to place in the DW; global Q and the FFTW plans (forward and backward)
+  // FFTW plans for forward and backward MPI 3D transform of global Q grid
+  SoleVariable<SimpleGrid<dblcomplex>*> QGrid;
+  SoleVariable<fftw_plan> forwardTransformPlan;
+  SoleVariable<fftw_plan> backwardTransformPlan;
+
+  IntVector zero(0, 0, 0);
+  SimpleGrid<dblcomplex>* Q = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, 0);
+  Q->initialize(dblcomplex(0.0, 0.0));
+  QGrid.setData(Q);
+
+  fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
+  fftw_plan forwardPlan, backwardPlan;
+  const ptrdiff_t xdim = d_kLimits(0);
+  const ptrdiff_t ydim = d_kLimits(0);
+  const ptrdiff_t zdim = d_kLimits(0);
+
+  forwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, pg->getComm(), FFTW_FORWARD, FFTW_MEASURE);
+  backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
+
+  forwardTransformPlan.setData(forwardPlan);
+  backwardTransformPlan.setData(backwardPlan);
+
+  new_dw->put(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
+  new_dw->put(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
+  new_dw->put(QGrid, d_lb->globalQLabel);
+
+  // now the local version of the global Q array
+  d_Q = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, 0);
+  Q->initialize(dblcomplex(0.0, 0.0));
 
   // Get useful information from global system descriptor to work with locally.
   d_unitCell = d_system->getUnitCell();
@@ -385,19 +402,23 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  std::vector<SPMEPatch*>::iterator PatchIterator;
-  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
-    SPMEPatch* spmePatch = *PatchIterator;
+  /*
+   * ptrdiff_t is a standard C integer type which is (at least) 32 bits wide
+   * on a 32-bit machine and 64 bits wide on a 64-bit machine.
+   */
+  ptrdiff_t xdim, ydim, zdim;
+  ptrdiff_t alloc_local, local_n, local_start;
 
-    int xdim = d_kLimits(0);
-    int ydim = d_kLimits(0);
-    int zdim = d_kLimits(0);
+  fftw_mpi_init();
 
-    SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
-    fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
-    d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
-    fftw_execute(d_forwardTransformPlan);
-  }
+  alloc_local = fftw_mpi_local_size_3d(xdim, ydim, zdim, MPI_COMM_WORLD, &local_n, &local_start);
+
+  // compute the in-place backward transform on global Q grid
+  SoleVariable<fftw_plan> forwardTransformPlan;
+  old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
+
+  fftw_execute(forwardTransformPlan.get());
+
 }
 
 void SPME::transformFourierToReal(const ProcessorGroup* pg,
@@ -406,19 +427,22 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  std::vector<SPMEPatch*>::iterator PatchIterator;
-  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
-    SPMEPatch* spmePatch = *PatchIterator;
+  /*
+   * ptrdiff_t is a standard C integer type which is (at least) 32 bits wide
+   * on a 32-bit machine and 64 bits wide on a 64-bit machine.
+   */
+  ptrdiff_t xdim, ydim, zdim;
+  ptrdiff_t alloc_local, local_n, local_start;
 
-    int xdim = d_kLimits(0);
-    int ydim = d_kLimits(0);
-    int zdim = d_kLimits(0);
+  fftw_mpi_init();
 
-    SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
-    fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
-    d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
-    fftw_execute(d_backwardTransformPlan);
-  }
+  alloc_local = fftw_mpi_local_size_3d(xdim, ydim, zdim, MPI_COMM_WORLD, &local_n, &local_start);
+
+  // compute the in-place backward transform on global Q grid
+  SoleVariable<fftw_plan> backwardTransformPlan;
+  old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
+
+  fftw_execute(backwardTransformPlan.get());
 }
 
 void SPME::reduceLocalQGrids()
