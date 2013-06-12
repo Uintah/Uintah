@@ -2831,7 +2831,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-##  require autoconf version 2.68
+##  require autoconf version 2.69
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
@@ -19677,7 +19677,7 @@ cat > conftest-exc.cc <<EOF
       }
     }
 EOF
-    $CXX -o conftest-exc conftest-exc.cc
+    $CXX $CFLAGS -o conftest-exc conftest-exc.cc $LDFLAGS
     ./conftest-exc > /dev/null 2>&1
 
     if test "$?" != "0"; then
@@ -21013,6 +21013,13 @@ _sci_includes=''
 
       ;;
     *linux*)
+      case $F77 in
+        *mpif77* )
+          msg="Assuming mpif77 behaves the same as gfortran..."
+          add_important_warning "$msg"
+          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $msg" >&5
+$as_echo "$as_me: WARNING: $msg" >&2;}
+      esac
       # Linux Library Check
       case $F77 in
         *pgf77*)
@@ -21417,7 +21424,7 @@ _sci_includes=''
 
 
           ;;
-        *gfortran*)
+        *gfortran* | *mpif77* )
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -44217,7 +44224,7 @@ $as_echo "yes" >&6; }
   SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
 
   SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil -lspatialops-structured"
-  
+
   HAVE_SPATIALOPS="yes"
 fi
 

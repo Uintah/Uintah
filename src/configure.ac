@@ -60,7 +60,7 @@
 ##  initialize configure 
 AC_INIT([Uintah],[1.5],[uintah-developer@gforge.sci.utah.edu])
 
-##  require autoconf version 2.68
+##  require autoconf version 2.69
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
@@ -2588,7 +2588,7 @@ cat > conftest-exc.cc <<EOF
       }
     }
 EOF
-    $CXX -o conftest-exc conftest-exc.cc
+    $CXX $CFLAGS -o conftest-exc conftest-exc.cc $LDFLAGS
     ./conftest-exc > /dev/null 2>&1 
 
     if test "$?" != "0"; then
@@ -2688,12 +2688,18 @@ if test "$with_fortran" != "no"; then
       SCI_TRY_LINK(F,fortran libraries,,,xlf90,$_sci_lib,,,$_sci_optional)
       ;;
     *linux*)
+      case $F77 in
+        *mpif77* )
+          msg="Assuming mpif77 behaves the same as gfortran..."
+          add_important_warning "$msg"
+          AC_MSG_WARN($msg)
+      esac
       # Linux Library Check
       case $F77 in
         *pgf77*)
           SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,$RT_LIB_FLAG,,$_sci_optional)
           ;;
-        *gfortran*)
+        *gfortran* | *mpif77* )
           SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
           ;;
         *ifort*)
