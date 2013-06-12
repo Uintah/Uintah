@@ -117,10 +117,10 @@ evaluate()
   else            *kinVisc_ <<= 0.0;
   
   SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore::get<SVolField>( *rho_ );
-  *tmp <<= 0.0;
-  if (doX_) *tmp <<= (*x2SInterp_)(abs(*u_)) * invDx_ + *kinVisc_ * invDx_ * invDx_;       // u/dx + nu/dx2
-  if (doY_) *tmp <<= *tmp + (*y2SInterp_)(abs(*v_))* invDy_ + *kinVisc_ * invDy_ * invDy_; // v/dy + nu/dy2
-  if (doZ_) *tmp <<= *tmp + (*z2SInterp_)(abs(*w_))* invDz_ + *kinVisc_ * invDz_ * invDz_; // w/dz + nu/dz2
+  if (!doX_) *tmp <<= 0.0;
+  if (doX_)  *tmp <<=        (*x2SInterp_)(abs(*u_)) * invDx_ + *kinVisc_ * invDx_ * invDx_;       // u/dx + nu/dx2
+  if (doY_)  *tmp <<= *tmp + (*y2SInterp_)(abs(*v_)) * invDy_ + *kinVisc_ * invDy_ * invDy_; // v/dy + nu/dy2
+  if (doZ_)  *tmp <<= *tmp + (*z2SInterp_)(abs(*w_)) * invDz_ + *kinVisc_ * invDz_ * invDz_; // w/dz + nu/dz2
   *tmp <<= 1.0 / *tmp;
   result = field_min_interior(*tmp);
 }
