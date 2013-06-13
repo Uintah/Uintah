@@ -2404,6 +2404,121 @@ We recently implemented the moment transport equation in Wasatch with the
 \end_layout
 
 \begin_layout Chapter
+Numerics
+\end_layout
+
+\begin_layout Standard
+Wasatch uses finite volume discretization on a staggered-grid arrangement.
+ All scalars are stored at cell centers including the pressure, while the
+ 
+\begin_inset Formula $x$
+\end_inset
+
+, 
+\begin_inset Formula $y$
+\end_inset
+
+, and 
+\begin_inset Formula $z$
+\end_inset
+
+ momentum and velocity components are stored at staggered locations.
+ Fluxes are stored at the faces of their corresponding fields.
+\end_layout
+
+\begin_layout Section
+Spatial Discretization
+\end_layout
+
+\begin_layout Subsection
+Flux Limiters
+\end_layout
+
+\begin_layout Section
+Time Integration
+\end_layout
+
+\begin_layout Standard
+Wasatch currently entertains both forward Euler (FE) and third-order Rungue-Kutt
+a strong stability preserving (RK3SSP) time integrators.
+\end_layout
+
+\begin_layout Subsection
+Stable Timestep Selection
+\end_layout
+
+\begin_layout Standard
+We use a simple stability constraint for timestep selection based on Von-Neumann
+ stability analysis of convective and diffusive equations.
+ Our stability constraint boils down to
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\left|u\right|\Delta t}{\Delta x}+\frac{\left|v\right|\Delta t}{\Delta y}+\frac{\left|w\right|\Delta t}{\Delta z}+\frac{\nu\Delta t}{\Delta x^{2}}+\frac{\nu\Delta t}{\Delta y^{2}}+\frac{\nu\Delta t}{\Delta z^{2}}\leq C_{\text{max}}
+\end{equation}
+
+\end_inset
+
+or
+\begin_inset Formula 
+\begin{equation}
+\Delta t\leq\frac{C_{\text{max}}}{S};\quad S\equiv\frac{\left|u\right|}{\Delta x}+\frac{\left|v\right|}{\Delta y}+\frac{\left|w\right|}{\Delta z}+\frac{\nu}{\Delta x^{2}}+\frac{\nu}{\Delta y^{2}}+\frac{\nu}{\Delta z^{2}}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $u$
+\end_inset
+
+, 
+\begin_inset Formula $v$
+\end_inset
+
+, and 
+\begin_inset Formula $w$
+\end_inset
+
+ are the velocity components, 
+\begin_inset Formula $\nu$
+\end_inset
+
+ is the kinematic viscosity, and 
+\begin_inset Formula $\Delta x$
+\end_inset
+
+, 
+\begin_inset Formula $\Delta y$
+\end_inset
+
+, and 
+\begin_inset Formula $\Delta z$
+\end_inset
+
+ are the mesh spacings in the 
+\begin_inset Formula $x$
+\end_inset
+
+, 
+\begin_inset Formula $y$
+\end_inset
+
+, and 
+\begin_inset Formula $z$
+\end_inset
+
+ directions, respectively.
+ The value of 
+\begin_inset Formula $C_{\text{max}}$
+\end_inset
+
+ is specified by the user through the input file (see: timestep_Multiplier)
+ and is typically chosen to be 0.5.
+\end_layout
+
+\begin_layout Chapter
 Order of Accuracy Verification
 \end_layout
 
