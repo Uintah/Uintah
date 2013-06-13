@@ -64,9 +64,9 @@ class VelEst
   const FieldT *vel_, *convTerm_;
   const SVolField *density_, *pressure_, *visc_;
   const double *tStep_; 
-  const bool is3d_;
 
   const Expr::Tag velt_, convTermt_, densityt_, visct_, tauxit_, tauyit_, tauzit_, pressuret_, tStept_;
+  const bool is3d_;
   
   VelEst( const Expr::Tag velTag,
           const Expr::Tag convTermTag,

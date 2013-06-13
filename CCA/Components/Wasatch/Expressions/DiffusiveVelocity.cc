@@ -110,11 +110,8 @@ evaluate()
 {
   using namespace SpatialOps;
   VelT& result = this->value();
-  if (isTurbulent_) {
-    result <<= - (coefVal_ + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
-  } else {
-    result <<= - coefVal_ * (*gradOp_)(*phi_);
-  }
+  if (isTurbulent_)  result <<= - (coefVal_ + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
+  else               result <<= - coefVal_ * (*gradOp_)(*phi_);
 }
 
 
@@ -188,12 +185,8 @@ evaluate()
 {
   using namespace SpatialOps;
   VelT& result = this->value();
-  if (isTurbulent_) {
-    result <<= - ((*interpOp_)(*coef_) + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
-  } else {
-    result <<= - (*interpOp_)(*coef_) * (*gradOp_)(*phi_);
-  }
-
+  if( isTurbulent_ ) result <<= - ((*interpOp_)(*coef_) + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
+  else               result <<= - (*interpOp_)(*coef_) * (*gradOp_)(*phi_);
 }
 
 //--------------------------------------------------------------------
