@@ -45,6 +45,7 @@
   <ups>cavityFlow_dx.ups</ups>
   <tst>cavityFlow_dx.tst</tst>
 </test>
+-->
 <test>
   <name>CavityFlow_dy</name>
   <ups>cavityFlow_dy.ups</ups>
@@ -60,6 +61,7 @@
   <ups>cavityFlow_dx.ups</ups>
   <tst>cavityFlow_res.tst</tst>
 </test>
+<!--
 <test>  
   <name>Lodi_pulse</name>
   <ups>Lodi_pulse.ups</ups>
