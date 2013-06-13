@@ -37,22 +37,19 @@ namespace Uintah {
 
   public:
   
-    // ------ constructors
     DynamicModel(ProblemSpecP& ps, SimulationStateP& sharedState);
-    
-    // ------ destructor
     virtual ~DynamicModel();
     
     virtual void computeTurbViscosity(DataWarehouse* new_dw,
-                                            const Patch* patch,
-                                            const CCVariable<Vector>& vel_CC,
-                                            const SFCXVariable<double>& uvel_FC,
-                                            const SFCYVariable<double>& vvel_FC,
-                                            const SFCZVariable<double>& wvel_FC,
-                                            const CCVariable<double>& rho_CC,
-                                            const int indx,
-                                            SimulationStateP&  d_sharedState,
-                                            CCVariable<double>& turb_viscosity);
+                                      const Patch* patch,                       
+                                      const CCVariable<Vector>& vel_CC,         
+                                      const SFCXVariable<double>& uvel_FC,      
+                                      const SFCYVariable<double>& vvel_FC,      
+                                      const SFCZVariable<double>& wvel_FC,      
+                                      const CCVariable<double>& rho_CC,         
+                                      const int indx,                           
+                                      SimulationStateP&  d_sharedState,         
+                                      CCVariable<double>& turb_viscosity);      
              
     virtual void scheduleComputeVariance(SchedulerP& sched, 
                                          const PatchSet* patches,
@@ -61,31 +58,30 @@ namespace Uintah {
   private:
     
     void computeSmagCoeff(DataWarehouse* new_dw,
-                                         const Patch* patch,
-                                         const CCVariable<Vector>& vel_CC,
-                                         const SFCXVariable<double>& uvel_FC,
-                                         const SFCYVariable<double>& vvel_FC,
-                                         const SFCZVariable<double>& wvel_FC,
-                                         const int indx,
-                                         SimulationStateP&  d_sharedState,
-                                         CCVariable<double>& term,
-                                         CCVariable<double>& meanSIJ);
+                          const Patch* patch,                                
+                          const CCVariable<Vector>& vel_CC,                  
+                          const SFCXVariable<double>& uvel_FC,               
+                          const SFCYVariable<double>& vvel_FC,               
+                          const SFCZVariable<double>& wvel_FC,               
+                          const int indx,                                    
+                          SimulationStateP&  d_sharedState,                  
+                          CCVariable<double>& term,                          
+                          CCVariable<double>& meanSIJ);                      
        
     template <class T>
     void applyFilter(const Patch* patch,
-                           CCVariable<T>& var,
-                           CCVariable<T>& var_hat);
+                     CCVariable<T>& var,           
+                     CCVariable<T>& var_hat);      
        
     void applyFilter(const Patch* patch,
-                           SCIRun::StaticArray<CCVariable<double> >& var,
-                           SCIRun::StaticArray<CCVariable<double> >& var_hat);
+                     SCIRun::StaticArray<CCVariable<double> >& var,           
+                     SCIRun::StaticArray<CCVariable<double> >& var_hat);      
                                                                 
     Smagorinsky_Model d_smag;
     
     double filter_width;
     double d_test_filter_width;
-    double d_model_constant;
-//    double d_turbPr; // turbulent prandtl number   
+    double d_model_constant;   
 
     void computeVariance(const ProcessorGroup*, 
                          const PatchSubset* patch,  
