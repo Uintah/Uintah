@@ -94,13 +94,14 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
 
-  result <<= *rhsPart_;
   if ( pressuret_ != emptyTag_ ){
-    result <<= result - (*gradOp_)(*pressure_);
+    if( volfract_ != emptyTag_ )  result <<= *volfrac_ * ( *rhsPart_ - (*gradOp_)(*pressure_) );
+    else                          result <<= *rhsPart_ - (*gradOp_)(*pressure_);
   }
-  
-  if ( volfract_ != emptyTag_ )
-    result <<= result * *volfrac_;
+  else{
+    if( volfract_ != emptyTag_ ) result <<= *volfrac_ * *rhsPart_;
+    else                         result <<= *rhsPart_;
+  }
 }
 
 //--------------------------------------------------------------------

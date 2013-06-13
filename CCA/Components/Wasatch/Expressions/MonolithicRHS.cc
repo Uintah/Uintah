@@ -45,7 +45,8 @@ MonolithicRHS( const Expr::Tag& dCoefTag,
     yconvFluxTag_( yconvFluxTag ),
     zconvFluxTag_( zconvFluxTag ),
     phiTag_      ( phiTag       ),
-    srcTag_      ( srcTag       )
+    srcTag_      ( srcTag       ),
+    is3d_( xconvFluxTag != Expr::Tag() && yconvFluxTag != Expr::Tag() && zconvFluxTag != Expr::Tag() && dCoefTag != Expr::Tag() )
 {
   assert( dCoefTag != Expr::Tag() );
 }
@@ -126,31 +127,29 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-
   const Expr::Tag nullTag = Expr::Tag();
 
-  if( xconvFluxTag_ == nullTag ){
-    result <<= (*divX_)( -(*interpX_)(*dCoef_) * (*gradX_)(*phi_) );
+  if( is3d_ ){ // inline everything for speed:
+    if( srcTag_ == nullTag )
+      result <<= -(*divX_)( -(*interpX_)(*dCoef_) * (*gradX_)(*phi_) + *convFluxX_ )
+                 -(*divY_)( -(*interpY_)(*dCoef_) * (*gradY_)(*phi_) + *convFluxY_ )
+                 -(*divZ_)( -(*interpZ_)(*dCoef_) * (*gradZ_)(*phi_) + *convFluxZ_ );
+    else
+      result <<= -(*divX_)( -(*interpX_)(*dCoef_) * (*gradX_)(*phi_) + *convFluxX_ )
+                 -(*divY_)( -(*interpY_)(*dCoef_) * (*gradY_)(*phi_) + *convFluxY_ )
+                 -(*divZ_)( -(*interpZ_)(*dCoef_) * (*gradZ_)(*phi_) + *convFluxZ_ )
+                 + *src_;
   }
   else{
-    result <<= (*divX_)( -(*interpX_)(*dCoef_) * (*gradX_)(*phi_) + *convFluxX_ );
+    if( xconvFluxTag_ == nullTag ) result <<=        -(*divX_)( -(*interpX_)(*dCoef_) * (*gradX_)(*phi_) );
+    else                           result <<=        -(*divX_)( -(*interpX_)(*dCoef_) * (*gradX_)(*phi_) - *convFluxX_ );
+    if( yconvFluxTag_ == nullTag ) result <<= result -(*divY_)( -(*interpY_)(*dCoef_) * (*gradY_)(*phi_) );
+    else                           result <<= result -(*divY_)( -(*interpY_)(*dCoef_) * (*gradY_)(*phi_) + *convFluxY_ );
+    if( zconvFluxTag_ == nullTag ) result <<= result -(*divZ_)( -(*interpZ_)(*dCoef_) * (*gradZ_)(*phi_) );
+    else                           result <<= result -(*divZ_)( -(*interpZ_)(*dCoef_) * (*gradZ_)(*phi_) + *convFluxZ_ );
+    if( srcTag_ != nullTag ) result <<= result + *src_;
   }
 
-  if( yconvFluxTag_ == nullTag ){
-    result <<= result +  (*divY_)( -(*interpY_)(*dCoef_) * (*gradY_)(*phi_) );
-  }
-  else{
-    result <<= result +  (*divY_)( -(*interpY_)(*dCoef_) * (*gradY_)(*phi_) + *convFluxY_ );
-  }
-
-  if( zconvFluxTag_ == nullTag ){
-    result <<= result + (*divZ_)( -(*interpZ_)(*dCoef_) * (*gradZ_)(*phi_) );
-  }
-  else{
-    result <<= result + (*divZ_)( -(*interpZ_)(*dCoef_) * (*gradZ_)(*phi_) + *convFluxZ_ );
-  }
-
-  if( srcTag_ != nullTag ) result <<= result + *src_;
 }
 
 //--------------------------------------------------------------------

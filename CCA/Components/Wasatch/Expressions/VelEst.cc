@@ -23,7 +23,8 @@ VelEst<FieldT>::VelEst( const Expr::Tag velTag,
     tauyit_   ( tauTags[1]  ),
     tauzit_   ( tauTags[2]  ),
     pressuret_(pressureTag ),
-    tStept_   ( timeStepTag )
+    tStept_   ( timeStepTag ),
+    is3d_( tauxit_ != Expr::Tag() && tauyit_ != Expr::Tag() && tauzit_ != Expr::Tag() )
 {}
 
 //------------------------------------------------------------------
@@ -113,22 +114,24 @@ void VelEst<FieldT>::evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
 
-  SpatFldPtr<FieldT> tmp = SpatialFieldStore::get<FieldT>( result );  
-  
-  result <<= *convTerm_;
-  
-  *tmp <<= 0.0;
-  if (tauxit_ != Expr::Tag()) 
-    *tmp <<= *tmp + (*divXOp_)( (*s2XFInterpOp_)(*visc_) * *tauxi_);
-  
-  if (tauyit_ != Expr::Tag())
-    *tmp <<= *tmp + (*divYOp_)( (*s2YFInterpOp_)(*visc_) * *tauyi_);
-  
-  if (tauzit_ != Expr::Tag())
-    *tmp <<= *tmp + (*divZOp_)( (*s2ZFInterpOp_)(*visc_) * *tauzi_);    
-  
-  result <<= result - ( 1 / (*scalarInterpOp_)(*density_) ) * ( *tmp + (*gradPOp_)(*pressure_) );
-  result <<= *vel_ + *tStep_ * result;
+  // jcs: we should be doing this, but it is causing diffs.  It is probably just roundoff error...?
+//  if( is3d_ ){ // optimize the 3D calculation since that is what we have most commonly:
+//    result <<= *vel_ + *tStep_ * ( *convTerm_ - ( 1 / (*scalarInterpOp_)(*density_) )
+//        * ( (*divXOp_)( (*s2XFInterpOp_)(*visc_) * *tauxi_ )
+//          + (*divYOp_)( (*s2YFInterpOp_)(*visc_) * *tauyi_ )
+//          + (*divZOp_)( (*s2ZFInterpOp_)(*visc_) * *tauzi_ )
+//          + (*gradPOp_)(*pressure_)
+//          )
+//        );
+//  }
+//  else{ // for 2D and 1D, things aren't as fast:
+    SpatFldPtr<FieldT> tmp = SpatialFieldStore::get<FieldT>( result );
+    if( tauxit_ != Expr::Tag() ) *tmp <<=        (*divXOp_)( (*s2XFInterpOp_)(*visc_) * *tauxi_ );
+    else                         *tmp <<= 0.0;
+    if( tauyit_ != Expr::Tag() ) *tmp <<= *tmp + (*divYOp_)( (*s2YFInterpOp_)(*visc_) * *tauyi_ );
+    if( tauzit_ != Expr::Tag() ) *tmp <<= *tmp + (*divZOp_)( (*s2ZFInterpOp_)(*visc_) * *tauzi_ );
+    result <<= *vel_ + *tStep_ * ( *convTerm_ - ( 1 / (*scalarInterpOp_)(*density_) ) * ( *tmp + (*gradPOp_)(*pressure_) ) );
+//  }
 }
 
 //------------------------------------------------------------------
