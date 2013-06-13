@@ -85,6 +85,19 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
 {
   srcTags_.push_back( ScalarRHS<FieldT>::resolve_field_tag( SOURCE_TERM, fieldTags ) );
   nullify_fields();
+
+  const bool is3d = doXDir_ && doYDir_ && doZDir_;
+  const bool haveAreaFrac = haveXAreaFrac_ || haveYAreaFrac_ || haveZAreaFrac_;
+  if( is3d && haveAreaFrac ){
+    if( !( haveXAreaFrac_ && haveYAreaFrac_ && haveZAreaFrac_ ) ){
+      std::ostringstream msg;
+      msg << __FILE__ << " : " << __LINE__ << std::endl
+          << "In 3D, it is expected that if one area fraction is provided, they all are..."
+          << std::endl << std::endl;
+      throw std::invalid_argument( msg.str() );
+
+    }
+  }
 }
 
 //------------------------------------------------------------------
@@ -207,37 +220,97 @@ void ScalarRHS<FieldT>::evaluate()
   using namespace SpatialOps;
 
   FieldT& rhs = this->value();
-  if (!doXDir_) rhs <<= 0.0;
 
-  SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( rhs );
+  // note that all of this logic is in place so that when we do the
+  // actual calculations we can be more efficient (eliminate temporaries,
+  // inline things, etc.)
 
-  if( doXDir_ ){
-    SpatialOps::SpatFldPtr<XFluxT> tmpx = SpatialOps::SpatialFieldStore::get<XFluxT>(rhs);
-    if( haveConvection_ ) *tmpx <<= - *xConvFlux_;
-    else                  *tmpx <<= 0.0;
-    if( haveDiffusion_ )  *tmpx <<= *tmpx - *xDiffFlux_;
-    if( haveXAreaFrac_ )  *tmpx <<= *tmpx * (*xAreaFracInterpOp_)(*xareafrac_);
-    rhs <<= (*divOpX_)(*tmpx);
+  if( doXDir_ && doYDir_ && doZDir_ && haveConvection_ && haveDiffusion_ ){
+    // inline everything
+    if( haveXAreaFrac_ ){ // previous error checking enfoces that y and z area fractions are also present
+      rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * ( *xConvFlux_ + *xDiffFlux_ ) )
+              -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * ( *yConvFlux_ + *yDiffFlux_ ) )
+              -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * ( *zConvFlux_ + *zDiffFlux_ ) );
+    }
+    else{
+      rhs <<= -(*divOpX_)( *xConvFlux_ + *xDiffFlux_ )
+              -(*divOpY_)( *yConvFlux_ + *yDiffFlux_ )
+              -(*divOpZ_)( *zConvFlux_ + *zDiffFlux_ );
+    }
   }
+  else{
+    // handle 2D and 1D cases - not quite as efficient since we won't be
+    // running as many production scale calculations in these configurations
 
-  if( doYDir_ ){
-    SpatialOps::SpatFldPtr<YFluxT> tmpy = SpatialOps::SpatialFieldStore::get<YFluxT>(rhs);
-    if( haveConvection_ ) *tmpy <<= *yConvFlux_;
-    else                  *tmpy <<= 0.0;
-    if( haveDiffusion_ )  *tmpy <<= *tmpy + *yDiffFlux_;
-    if( haveYAreaFrac_ )  *tmpy <<= *tmpy * (*yAreaFracInterpOp_)(*yareafrac_);
-    rhs <<= rhs - (*divOpY_)(*tmpy);
-  }
+    if( doXDir_ ){
+      if( haveConvection_ && haveDiffusion_ ){
+        if( haveXAreaFrac_ )
+          rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * (*xConvFlux_ + *xDiffFlux_) );
+        else
+          rhs <<= -(*divOpX_)( *xConvFlux_ + *xDiffFlux_ );
+      }
+      else if( haveConvection_ ){
+        if( haveXAreaFrac_ )
+          rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xConvFlux_ );
+        else
+          rhs <<= -(*divOpX_)( *xConvFlux_ );
+      }
+      else if( haveDiffusion_ ){
+        if( haveXAreaFrac_ )
+          rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xDiffFlux_ );
+        else
+          rhs <<= -(*divOpX_)( *xDiffFlux_ );
+      }
+    }
+    else{
+      rhs <<= 0.0; // zero so that we can sum in Y and Z contributions as necessary
+    }
 
-  if( doZDir_ ){
-    SpatialOps::SpatFldPtr<ZFluxT> tmpz = SpatialOps::SpatialFieldStore::get<ZFluxT>(rhs);
-    if( haveConvection_ ) *tmpz <<= *zConvFlux_;
-    else                  *tmpz <<= 0.0;
-    if( haveDiffusion_ )  *tmpz <<= *tmpz + *zDiffFlux_;
-    if( haveZAreaFrac_ )  *tmpz <<= *tmpz * (*zAreaFracInterpOp_)(*zareafrac_);
-    rhs <<= rhs - (*divOpZ_)(*tmpz);
-  }
+    if( doYDir_ ){
+      if( haveConvection_ && haveDiffusion_ ){
+        if( haveYAreaFrac_ )
+          rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * (*yConvFlux_ + *yDiffFlux_) );
+        else
+          rhs <<= rhs -(*divOpY_)( *yConvFlux_ + *yDiffFlux_ );
+      }
+      else if( haveConvection_ ){
+        if( haveYAreaFrac_ )
+          rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yConvFlux_ );
+        else
+          rhs <<= rhs -(*divOpY_)( *yConvFlux_ );
+      }
+      else if( haveDiffusion_ ){
+        if( haveYAreaFrac_ )
+          rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yDiffFlux_ );
+        else
+          rhs <<= rhs -(*divOpY_)( *yDiffFlux_ );
+      }
+    }
 
+    if( doZDir_ ){
+      if( haveConvection_ && haveDiffusion_ ){
+        if( haveZAreaFrac_ )
+          rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * (*zConvFlux_ + *zDiffFlux_) );
+        else
+          rhs <<= rhs -(*divOpZ_)( *zConvFlux_ + *zDiffFlux_ );
+      }
+      else if( haveConvection_ ){
+        if( haveZAreaFrac_ )
+          rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zConvFlux_ );
+        else
+          rhs <<= rhs -(*divOpZ_)( *zConvFlux_ );
+      }
+      else if( haveDiffusion_ ){
+        if( haveZAreaFrac_ )
+          rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zDiffFlux_ );
+        else
+          rhs <<= rhs -(*divOpZ_)( *zDiffFlux_ );
+      }
+    }
+  } // 2D and 1D cases
+
+  // accumulate source terms in.  This isn't quite as efficient
+  // because we don't have a great way to inline all of this yet.
   typename SrcVec::const_iterator isrc;
   for( isrc=srcTerm_.begin(); isrc!=srcTerm_.end(); ++isrc ) {
     if (isConstDensity_) {

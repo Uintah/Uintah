@@ -13,7 +13,8 @@ WeakConvectiveTerm<FieldT>::WeakConvectiveTerm( const Expr::Tag velTag,
     velt_    ( velTag      ),
     velxt_   ( velTags[0]  ),
     velyt_   ( velTags[1]  ),
-    velzt_   ( velTags[2]  )
+    velzt_   ( velTags[2]  ),
+    is3d_( velxt_ != Expr::Tag() && velyt_ != Expr::Tag() && velzt_ != Expr::Tag() )
 {}
 
 //------------------------------------------------------------------
@@ -27,13 +28,11 @@ WeakConvectiveTerm<FieldT>::~WeakConvectiveTerm()
 template< typename FieldT >
 void WeakConvectiveTerm<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
 {  
-
   exprDeps.requires_expression( velt_     );
   
   if( velxt_ != Expr::Tag() )  exprDeps.requires_expression( velxt_ );
   if( velyt_ != Expr::Tag() )  exprDeps.requires_expression( velyt_ );
   if( velzt_ != Expr::Tag() )  exprDeps.requires_expression( velzt_ );
-  
 }
 
 //------------------------------------------------------------------
@@ -50,8 +49,7 @@ void WeakConvectiveTerm<FieldT>::bind_fields( const Expr::FieldManagerList& fml 
 
   if( velxt_ != Expr::Tag() )  velx_ = &xVolFM.field_ref ( velxt_ ); 
   if( velyt_ != Expr::Tag() )  vely_ = &yVolFM.field_ref ( velyt_ ); 
-  if( velzt_ != Expr::Tag() )  velz_ = &zVolFM.field_ref ( velzt_ ); 
-  
+  if( velzt_ != Expr::Tag() )  velz_ = &zVolFM.field_ref ( velzt_ );
 }
 
 //------------------------------------------------------------------
@@ -84,17 +82,17 @@ void WeakConvectiveTerm<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= 0.0;
-
-  if (velxt_ != Expr::Tag()) 
-    result <<= result - (*xInterpOp_)(*velx_) * (*xFaceInterpOp_)( (*gradXOp_)(*vel_) );
-
-  if (velyt_ != Expr::Tag())
-    result <<= result - (*yInterpOp_)(*vely_) * (*yFaceInterpOp_)( (*gradYOp_)(*vel_) );
-
-  if (velzt_ != Expr::Tag())
-    result <<= result - (*zInterpOp_)(*velz_) * (*zFaceInterpOp_)( (*gradZOp_)(*vel_) );
-
+  if( is3d_ ){ // inline everything for 3D:
+    result <<= - (*xInterpOp_)(*velx_) * (*xFaceInterpOp_)( (*gradXOp_)(*vel_) )
+               - (*yInterpOp_)(*vely_) * (*yFaceInterpOp_)( (*gradYOp_)(*vel_) )
+               - (*zInterpOp_)(*velz_) * (*zFaceInterpOp_)( (*gradZOp_)(*vel_) );
+  }
+  else{ // not optimized in 2D and 1D:
+    if (velxt_ != Expr::Tag()) result <<=        - (*xInterpOp_)(*velx_) * (*xFaceInterpOp_)( (*gradXOp_)(*vel_) );
+    else                       result <<= 0.0;
+    if (velyt_ != Expr::Tag()) result <<= result - (*yInterpOp_)(*vely_) * (*yFaceInterpOp_)( (*gradYOp_)(*vel_) );
+    if (velzt_ != Expr::Tag()) result <<= result - (*zInterpOp_)(*velz_) * (*zFaceInterpOp_)( (*gradZOp_)(*vel_) );
+  }
 }
 
 //------------------------------------------------------------------

@@ -104,6 +104,8 @@ class MomRHSPart
   
   const DensityInterpT* densityInterpOp_;
   
+  const bool is3dconvdiff_;
+
   MomRHSPart( const Expr::Tag& convFluxX,
               const Expr::Tag& convFluxY,
               const Expr::Tag& convFluxZ,

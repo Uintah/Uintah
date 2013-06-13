@@ -54,7 +54,9 @@ MomRHSPart( const Expr::Tag& convFluxX,
     bodyForcet_( bodyForceTag ),
     srcTermt_  ( srcTermTag   ),
     emptyTag_  ( Expr::Tag()  ),
-    volfract_  ( volFracTag   )
+    volfract_  ( volFracTag   ),
+    is3dconvdiff_( cfluxXt_ != emptyTag_ && cfluxYt_ != emptyTag_ && cfluxZt_ != emptyTag_ &&
+                   tauXt_   != emptyTag_ && tauYt_   != emptyTag_ && tauZt_   != emptyTag_ )
 {}
 
 //--------------------------------------------------------------------
@@ -138,43 +140,42 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= 0.0;
-  
-  if( cfluxXt_ != emptyTag_ ){
-    result <<= result - (*divXOp_)(*cFluxX_);
+
+  if( is3dconvdiff_ ){ // inline all of convective and diffusive contributions
+    // note: this does not diff, but is slow:
+    result <<= - (*divXOp_)(*cFluxX_)
+               - (*divYOp_)(*cFluxY_)
+               - (*divZOp_)(*cFluxZ_)
+               + 2.0 * (*divXOp_)((*sVol2XFluxInterpOp_)(*visc_) * *tauX_ )
+               + 2.0 * (*divYOp_)((*sVol2YFluxInterpOp_)(*visc_) * *tauY_ )
+               + 2.0 * (*divZOp_)((*sVol2ZFluxInterpOp_)(*visc_) * *tauZ_ );
+//    // here we only distribute the (-) sign into the div operator, and this diffs one test:
+//    result <<= (*divXOp_)(-*cFluxX_)
+//              +(*divYOp_)(-*cFluxY_)
+//              +(*divZOp_)(-*cFluxZ_)
+//              + 2.0 * (*divXOp_)((*sVol2XFluxInterpOp_)(*visc_) * *tauX_ )
+//              + 2.0 * (*divYOp_)((*sVol2YFluxInterpOp_)(*visc_) * *tauY_ )
+//              + 2.0 * (*divZOp_)((*sVol2ZFluxInterpOp_)(*visc_) * *tauZ_ );
+//    // this is the fully inlined version, which causes diffs on ~9 tests.
+//    result <<= (*divXOp_)( -*cFluxX_ + 2.0 * (*sVol2XFluxInterpOp_)(*visc_) * *tauX_ ) +
+//               (*divYOp_)( -*cFluxY_ + 2.0 * (*sVol2YFluxInterpOp_)(*visc_) * *tauY_ ) +
+//               (*divZOp_)( -*cFluxZ_ + 2.0 * (*sVol2ZFluxInterpOp_)(*visc_) * *tauZ_ );
+  }
+  else{ // 1D and 2D cases, or cases with only convection or diffusion - not optimized for these...
+    if( cfluxXt_ != emptyTag_ ) result <<= - (*divXOp_)(*cFluxX_);
+    else                        result <<= 0.0;
+    if( cfluxYt_ != emptyTag_ ) result <<= result - (*divYOp_)(*cFluxY_);
+    if( cfluxZt_ != emptyTag_ ) result <<= result - (*divZOp_)(*cFluxZ_);
+
+    if( tauXt_ != emptyTag_ ) result <<= result + 2.0 * (*divXOp_)( (*sVol2XFluxInterpOp_)(*visc_) * *tauX_); // + 2*div(mu*S_xi)
+    if( tauYt_ != emptyTag_ ) result <<= result + 2.0 * (*divYOp_)( (*sVol2YFluxInterpOp_)(*visc_) * *tauY_); // + 2*div(mu*S_yi)
+    if( tauZt_ != emptyTag_ ) result <<= result + 2.0 * (*divZOp_)( (*sVol2ZFluxInterpOp_)(*visc_) * *tauZ_); // + 2*div(mu*S_zi)
   }
   
-  if( cfluxYt_ != emptyTag_ ){
-    result <<= result - (*divYOp_)(*cFluxY_);
-  }
-  
-  if( cfluxZt_ != emptyTag_ ){
-    result <<= result - (*divZOp_)(*cFluxZ_);
-  }
-  
-  if( tauXt_ != emptyTag_ ){
-    result <<= result + 2.0 * (*divXOp_)( (*sVol2XFluxInterpOp_)(*visc_) * *tauX_); // + 2*div(mu*S_xi)
-  }
-  
-  if( tauYt_ != emptyTag_ ){
-      result <<= result + 2.0 * (*divYOp_)( (*sVol2YFluxInterpOp_)(*visc_) * *tauY_); // + 2*div(mu*S_yi)
-  }
-  
-  if( tauZt_ != emptyTag_ ){
-    result <<= result + 2.0 * (*divZOp_)( (*sVol2ZFluxInterpOp_)(*visc_) * *tauZ_); // + 2*div(mu*S_zi)
-  }
-  
-  if( bodyForcet_ != emptyTag_ ){
-    result <<= result + (*densityInterpOp_)(*density_) * *bodyForce_;
-  }
-  
-  if( srcTermt_ != emptyTag_ ){
-    result <<= result + *srcTerm_;
-  }
-  
-  if ( volfract_ != emptyTag_ ) {
-    result <<= result * *volfrac_;
-  }  
+  // sum in other terms as required
+  if( bodyForcet_ != emptyTag_ ) result <<= result + (*densityInterpOp_)(*density_) * *bodyForce_;
+  if( srcTermt_   != emptyTag_ ) result <<= result + *srcTerm_;
+  if ( volfract_  != emptyTag_ ) result <<= result * *volfrac_;
 }
 
 //--------------------------------------------------------------------

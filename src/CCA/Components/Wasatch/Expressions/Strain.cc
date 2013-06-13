@@ -180,13 +180,8 @@ Strain<StrainT,VelT,VelT>::
 evaluate()
 {
   using namespace SpatialOps;
-
-  StrainT& Strain = this->value();
-  Strain <<= 0.0;
-
-  SpatFldPtr<StrainT> velgrad    = SpatialFieldStore::get<StrainT>( Strain );
-  SpatFldPtr<StrainT> dilatation = SpatialFieldStore::get<StrainT>( Strain );
-  Strain <<= (*velGradOp_)(*vel_) - 1.0/3.0*((*svolInterpOp_)(*dil_));
+  StrainT& strain = this->value();
+  strain <<= (*velGradOp_)(*vel_) - 1.0/3.0*((*svolInterpOp_)(*dil_));
 }
 
 //--------------------------------------------------------------------

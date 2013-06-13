@@ -21,6 +21,8 @@ class MonolithicRHS
 {
   const Expr::Tag dCoefTag_, xconvFluxTag_, yconvFluxTag_, zconvFluxTag_, phiTag_, srcTag_;
 
+  const bool is3d_;
+
   typedef typename FaceTypes<FieldT>::XFace  XFaceT;
   typedef typename FaceTypes<FieldT>::YFace  YFaceT;
   typedef typename FaceTypes<FieldT>::ZFace  ZFaceT;
