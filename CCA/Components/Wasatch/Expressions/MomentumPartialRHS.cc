@@ -141,6 +141,8 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
 
+  result <<= 0.0;
+
   if( is3dconvdiff_ ){ // inline all of convective and diffusive contributions
     // note: this does not diff, but is slow:
     result <<= - (*divXOp_)(*cFluxX_)
@@ -162,8 +164,7 @@ evaluate()
 //               (*divZOp_)( -*cFluxZ_ + 2.0 * (*sVol2ZFluxInterpOp_)(*visc_) * *tauZ_ );
   }
   else{ // 1D and 2D cases, or cases with only convection or diffusion - not optimized for these...
-    if( cfluxXt_ != emptyTag_ ) result <<= - (*divXOp_)(*cFluxX_);
-    else                        result <<= 0.0;
+    if( cfluxXt_ != emptyTag_ ) result <<= result - (*divXOp_)(*cFluxX_);
     if( cfluxYt_ != emptyTag_ ) result <<= result - (*divYOp_)(*cFluxY_);
     if( cfluxZt_ != emptyTag_ ) result <<= result - (*divZOp_)(*cFluxZ_);
 
