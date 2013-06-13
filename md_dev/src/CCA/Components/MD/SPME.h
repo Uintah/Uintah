@@ -406,7 +406,8 @@ namespace Uintah {
       CenteredCardinalBSpline d_interpolatingSpline;    //!< Spline object to hold info for spline calculation
       std::vector<SPMEPatch*> d_spmePatches;            //!< Assuming multiple patches, these are the pieces of the SPME grid
       std::vector<SPMEMapPoint> d_gridMap;              //!< The data that maps the charges in the patch to-and-from the grid
-      SimpleGrid<dblcomplex>* d_Q;                       //!< The local version of the global Q grid
+      SimpleGrid<dblcomplex>* d_Q;                      //!< The local version of the global Q grid
+      fftw_complex* d_localFFTData;                     //!< The local portion of the global 3D FFT data
 
       // Variables we'll get from the MDSystem instance to make life easier
       Matrix3 d_unitCell;           //!< Unit cell lattice parameters

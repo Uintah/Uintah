@@ -138,14 +138,22 @@ void SPME::initialize(const ProcessorGroup* pg,
   Q->initialize(dblcomplex(0.0, 0.0));
   QGrid.setData(Q);
 
-  fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
-  fftw_plan forwardPlan, backwardPlan;
+  /*
+   * ptrdiff_t is a standard C integer type which is (at least) 32 bits wide
+   * on a 32-bit machine and 64 bits wide on a 64-bit machine.
+   */
   const ptrdiff_t xdim = d_kLimits(0);
-  const ptrdiff_t ydim = d_kLimits(0);
-  const ptrdiff_t zdim = d_kLimits(0);
+  const ptrdiff_t ydim = d_kLimits(1);
+  const ptrdiff_t zdim = d_kLimits(2);
+  ptrdiff_t alloc_local, local_n, local_start;
+  fftw_plan forwardPlan, backwardPlan;
 
-  forwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, pg->getComm(), FFTW_FORWARD, FFTW_MEASURE);
-  backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
+  fftw_mpi_init();
+  alloc_local = fftw_mpi_local_size_3d(xdim, ydim, zdim, MPI_COMM_WORLD, &local_n, &local_start);
+  d_localFFTData = fftw_alloc_complex(alloc_local);
+
+  forwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, d_localFFTData, d_localFFTData, pg->getComm(), FFTW_FORWARD, FFTW_MEASURE);
+  backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, d_localFFTData, d_localFFTData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
 
   forwardTransformPlan.setData(forwardPlan);
   backwardTransformPlan.setData(backwardPlan);
@@ -283,7 +291,16 @@ void SPME::finalize(const ProcessorGroup* pg,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw)
 {
-  // Do cleanup here
+  SoleVariable<fftw_plan> forwardTransformPlan;
+  SoleVariable<fftw_plan> backwardTransformPlan;
+  SoleVariable<SimpleGrid<dblcomplex>*> QGrid;
+  old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
+  old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
+  old_dw->get(QGrid, d_lb->globalQLabel);
+
+  new_dw->put(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
+  new_dw->put(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
+  new_dw->put(QGrid, d_lb->globalQLabel);
 }
 
 void SPME::calculatePreTransform(const ProcessorGroup* pg,
@@ -402,23 +419,9 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  /*
-   * ptrdiff_t is a standard C integer type which is (at least) 32 bits wide
-   * on a 32-bit machine and 64 bits wide on a 64-bit machine.
-   */
-  ptrdiff_t xdim, ydim, zdim;
-  ptrdiff_t alloc_local, local_n, local_start;
-
-  fftw_mpi_init();
-
-  alloc_local = fftw_mpi_local_size_3d(xdim, ydim, zdim, MPI_COMM_WORLD, &local_n, &local_start);
-
-  // compute the in-place backward transform on global Q grid
   SoleVariable<fftw_plan> forwardTransformPlan;
   old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
-
   fftw_execute(forwardTransformPlan.get());
-
 }
 
 void SPME::transformFourierToReal(const ProcessorGroup* pg,
@@ -427,21 +430,8 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  /*
-   * ptrdiff_t is a standard C integer type which is (at least) 32 bits wide
-   * on a 32-bit machine and 64 bits wide on a 64-bit machine.
-   */
-  ptrdiff_t xdim, ydim, zdim;
-  ptrdiff_t alloc_local, local_n, local_start;
-
-  fftw_mpi_init();
-
-  alloc_local = fftw_mpi_local_size_3d(xdim, ydim, zdim, MPI_COMM_WORLD, &local_n, &local_start);
-
-  // compute the in-place backward transform on global Q grid
   SoleVariable<fftw_plan> backwardTransformPlan;
   old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
-
   fftw_execute(backwardTransformPlan.get());
 }
 

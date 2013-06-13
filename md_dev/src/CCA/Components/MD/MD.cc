@@ -253,6 +253,9 @@ void MD::schedulePerformElectrostatics(SchedulerP& sched,
 
   task->modifies(d_lb->pForceLabel_preReloc);
   task->computes(d_lb->pChargeLabel_preReloc);
+  task->computes(d_lb->forwardTransformPlanLabel);
+  task->computes(d_lb->backwardTransformPlanLabel);
+  task->computes(d_lb->globalQLabel);
 
   //---------------------------------------------------------------------------
 
