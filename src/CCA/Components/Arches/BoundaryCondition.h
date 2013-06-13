@@ -1165,7 +1165,8 @@ namespace Uintah {
 
       double d_turbPrNo;
       bool d_doMMS;
-      bool d_laminar_wall_shear; 
+      bool d_slip; 
+      double d_csmag_wall; 
 
       struct d_extraScalarBC {
         string d_scalar_name;

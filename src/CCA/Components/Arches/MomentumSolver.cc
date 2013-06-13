@@ -736,7 +736,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     // direction depending on the boundary conditions. 
     if ( !d_MAlab ){ 
 
-      //d_boundaryCondition->wallStress( patch, &velocityVars, &constVelocityVars, volFraction ); 
+      d_boundaryCondition->wallStress( patch, &velocityVars, &constVelocityVars, volFraction ); 
 
     } 
 
