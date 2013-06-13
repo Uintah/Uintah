@@ -1,25 +1,6 @@
 #include <CCA/Components/Arches/PropertyModels/ScalarVarianceScaleSim.h>
 #include <CCA/Components/Arches/Filter.h>
-
-// Instructions: 
-//  1) Make sure you add doxygen comments!!
-//  2) If this is not a CCVariable, then either replace with the appropriate 
-//     type or use the templated template.  
-//  2) Do a find and replace on CLASSNAME to change the your class name 
-//  3) Add implementaion details of your property. 
-//  4) Here is a brief checklist: 
-//     a) Any extra grid variables for this property need to be 
-//        given VarLabels in the constructor
-//     b) Any extra grid variable VarLabels need to be destroyed
-//        in the local destructor
-//     c) Add your input file details in problemSetup
-//     d) Add actual calculation of property in computeProp. 
-//     e) Make sure that you dummyInit any new variables that require OldDW 
-//        values.
-//     f) Make sure that _before_table_lookup is set propertly for this model.
-//        See _before_table_lookup variable. 
-//   5) Please clean up unused code from this template in your final version
-//   6) Please add comments to this list as you see fit to help the next person
+#include <CCA/Components/Arches/BoundaryCond_new.h>
 
 using namespace Uintah; 
 
@@ -32,6 +13,8 @@ ScalarVarianceScaleSim::ScalarVarianceScaleSim( std::string prop_name, Simulatio
   
   // Evaluated before or after table lookup: 
   _before_table_lookup = true; 
+
+  _boundary_condition = scinew BoundaryCondition_new( shared_state->getArchesMaterial(0)->getDWIndex() ); 
 
 }
 
@@ -48,6 +31,8 @@ ScalarVarianceScaleSim::~ScalarVarianceScaleSim( )
   }
 
   delete _filter; 
+  delete _boundary_condition;
+
 }
 
 
@@ -58,11 +43,11 @@ void ScalarVarianceScaleSim::problemSetup( const ProblemSpecP& inputdb )
 {
   ProblemSpecP db = inputdb; 
 
-  bool use_old_filter; 
+  bool use_old_filter = true; 
 
   db->require( "mixture_fraction_label", _mf_label_name ); 
   db->require( "density_label", _density_label_name ); 
-  db->getWithDefault( "use_old_filter", use_old_filter, true ); 
+  db->require( "variance_coefficient", _Cf ); 
 
   _filter = scinew Filter( use_old_filter );
 
@@ -80,6 +65,9 @@ void ScalarVarianceScaleSim::sched_computeProp( const LevelP& level, SchedulerP&
   _mf_label = 0; 
   _density_label = VarLabel::find( _density_label_name ); 
   _mf_label      = VarLabel::find( _mf_label_name ); 
+  _vol_frac_label= VarLabel::find( "volFraction" ); 
+  _celltype_label = VarLabel::find( "cellType" ); 
+  _filter_vol_label = VarLabel::find( "filterVolume" ); 
 
   if ( _mf_label == 0 ){ 
     throw InvalidValue("Error: Cannot match mixture fraction name with label.",__FILE__, __LINE__);             
@@ -87,20 +75,28 @@ void ScalarVarianceScaleSim::sched_computeProp( const LevelP& level, SchedulerP&
   if ( _density_label == 0 ){ 
     throw InvalidValue("Error: Cannot match density name with label.",__FILE__, __LINE__);             
   } 
+  if ( _vol_frac_label == 0 ){ 
+    throw InvalidValue("Error: Cannot match volume fraction name with label.",__FILE__, __LINE__);             
+  } 
 
   if ( time_substep == 0 ){ 
 
     tsk->computes( _prop_label );
     tsk->requires( Task::OldDW, _mf_label, Ghost::AroundCells, 1 ); 
-    tsk->requires( Task::OldDW, _density_label, Ghost::None, 0 ); 
+    tsk->requires( Task::OldDW, _density_label, Ghost::AroundCells, 1 ); 
+    tsk->requires( Task::OldDW, _vol_frac_label, Ghost::None, 0 ); 
 
   } else { 
 
     tsk->modifies( _prop_label ); 
     tsk->requires( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
-    tsk->requires( Task::NewDW, _density_label, Ghost::None, 0 ); 
+    tsk->requires( Task::NewDW, _density_label, Ghost::AroundCells, 1 ); 
+    tsk->requires( Task::NewDW, _vol_frac_label, Ghost::None, 0 ); 
 
   } 
+
+  tsk->requires( Task::NewDW, _filter_vol_label, Ghost::None, 0); 
+  tsk->requires( Task::NewDW, _celltype_label,     Ghost::AroundCells, 1); 
 
   sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
 
@@ -130,29 +126,80 @@ void ScalarVarianceScaleSim::computeProp(const ProcessorGroup* pc,
     filterRhoPhi.initialize(0.0);
     filterRhoPhiSqr.initialize(0.0);
 
-    CCVariable<double> prop; 
+    IntVector idxLo = patch->getExtraCellLowIndex(1);
+    IntVector idxHi = patch->getExtraCellHighIndex(1);
+
+    Array3<double> rhoPhi(idxLo, idxHi);
+    Array3<double> rhoPhiSqr(idxLo, idxHi);
+
+    CCVariable<double> norm_scalar_var; 
     constCCVariable<double> density; 
     constCCVariable<double> mf; 
+    constCCVariable<double> vol_fraction; 
+    constCCVariable<double> filter_volume; 
+    constCCVariable<int>    cell_type; 
+
+    new_dw->get(filter_volume, _filter_vol_label, matlIndex, patch, Ghost::None, 0); 
+    new_dw->get(cell_type, _celltype_label, matlIndex, patch, Ghost::AroundCells, 1); 
 
     if ( time_substep == 0 ) { 
-      new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
-      prop.initialize(0.0); 
+      new_dw->allocateAndPut( norm_scalar_var, _prop_label, matlIndex, patch ); 
+      norm_scalar_var.initialize(0.0); 
 
       old_dw->get( mf,      _mf_label, matlIndex, patch, Ghost::AroundCells, 1 ); 
-      old_dw->get( density, _density_label, matlIndex, patch, Ghost::None, 1 ); 
+      old_dw->get( density, _density_label, matlIndex, patch, Ghost::AroundCells, 1 ); 
+      old_dw->get( vol_fraction, _vol_frac_label, matlIndex, patch, Ghost::None, 0 ); 
     } else { 
-      new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
+      new_dw->getModifiable( norm_scalar_var, _prop_label, matlIndex, patch ); 
       new_dw->get( mf,      _mf_label, matlIndex, patch, Ghost::AroundCells, 1 ); 
-      new_dw->get( density, _density_label, matlIndex, patch, Ghost::None, 1 ); 
+      new_dw->get( density, _density_label, matlIndex, patch, Ghost::AroundCells, 1 ); 
+      new_dw->get( vol_fraction, _vol_frac_label, matlIndex, patch, Ghost::None, 0 ); 
     } 
 
-    CellIterator iter = patch->getCellIterator(); 
+    CellIterator iter = patch->getCellIterator(1); 
+
+    //create temp fields for filtering
+    for (iter.begin(); !iter.done(); iter++){
+      IntVector c = *iter; 
+      rhoPhi[c]    = density[c]*mf[c];
+      rhoPhiSqr[c] = density[c]*mf[c]*mf[c];
+    }
+
+    //filter the fields
+    _filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, density, filter_volume, cell_type, filterRho ); 
+    _filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoPhi, filter_volume, cell_type, filterRhoPhi ); 
+    _filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoPhiSqr, filter_volume, cell_type, filterRhoPhiSqr ); 
+
+    double small = 1e-10;
+
+    iter = patch->getCellIterator(); 
 
     for (iter.begin(); !iter.done(); iter++){
 
-      prop[*iter] = 0.0; // <--- do something here. 
+      IntVector c = *iter; 
+
+      double filter_phi = 0.0; 
+      if ( vol_fraction[c] > 0.0 ) 
+        filter_phi = filterRhoPhi[c] / filterRho[c]; 
+
+      norm_scalar_var[c] = _Cf * ( filterRhoPhiSqr[c]/filterRho[c] - filter_phi * filter_phi ); 
+
+      //limits: 
+      double var_limit = filter_phi * ( 1.0 - filter_phi ); 
+
+      if ( norm_scalar_var[c] < small ){ 
+        norm_scalar_var[c] = 0.0; 
+      } else if ( norm_scalar_var[c] > var_limit ){ 
+        norm_scalar_var[c] = var_limit; 
+      } 
+
+      norm_scalar_var[c] /= var_limit + small; //normalize it.
+      norm_scalar_var[c] *= vol_fraction[c]; 
 
     }
+
+    _boundary_condition->setScalarValueBC( 0, patch, norm_scalar_var, _prop_name ); 
+
   }
 }
 

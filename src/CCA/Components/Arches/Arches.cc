@@ -57,6 +57,7 @@
 #include <CCA/Components/Arches/PropertyModels/EmpSoot.h>
 #include <CCA/Components/Arches/PropertyModels/AlgebraicScalarDiss.h>
 #include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
+#include <CCA/Components/Arches/PropertyModels/ScalarVarianceScaleSim.h>
 #include <Core/IO/UintahZlibUtil.h>
 
 #if HAVE_TABPROPS
@@ -3085,8 +3086,14 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
 
       } else if ( prop_type == "heat_loss" ){ 
 
-        // Algebraic scalar dissipation rate 
+        // Heat loss
         PropertyModelBase::Builder* the_builder = new HeatLoss::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "scalsim_variance" ){ 
+
+        //Scalar variance using a scale similarity concept
+        PropertyModelBase::Builder* the_builder = new ScalarVarianceScaleSim::Builder( prop_name, d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder ); 
 
       } else {

@@ -27,11 +27,12 @@
         <model                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'cc_constant, fx_constant, 
-                                                                          scalar_diss, laminar_pr, 
+                                                                          laminar_pr, 
                                                                           extent_rxn, tab_strip_factor, 
                                                                           absorption_coefficient, 
                                                                           empirical_soot, 
                                                                           algebraic_scalar_diss,
+                                                                          scalsim_variance, 
                                                                           heat_loss'">
 
           <initialization               spec="REQUIRED NO_DATA"
@@ -107,13 +108,13 @@
           <soot_density                 spec="OPTIONAL DOUBLE 'positive'"
                                         need_applies_to="type empirical_soot"/> <!-- default of 1950.0 --> 
           <density_label                spec="OPTIONAL STRING"
-                                        need_applies_to="type empirical_soot"/> <!-- default of "density" --> 
+                                        need_applies_to="type empirical_soot, scalsim_variance"/> <!-- default of "density" --> 
           <temperature_label            spec="OPTIONAL STRING"
                                         need_applies_to="type empirical_soot"/> <!-- default of "temperature" --> 
           <absorption_label             spec="OPTIONAL STRING"
                                         need_applies_to="type empirical_soot"/> <!-- default of "absorpIN" --> 
           <mixture_fraction_label       spec="OPTIONAL STRING"
-                                        need_applies_to="type empirical_soot"/> <!-- default of "mixture_fraction" --> 
+                                        need_applies_to="type empirical_soot, scalsim_variance"/> <!-- default of "mixture_fraction" --> 
 
           <!-- Heat loss --> 
           <enthalpy_label               spec="REQUIRED STRING"
@@ -137,6 +138,12 @@
                                                                                  you assigned this model. This allows you to see the value of heat loss as computed from enthalpy without
                                                                                  actually using it. Note also that if you are after a constant heat loss and don't care to know the value 
                                                                                  as computed from enthalpy, then you are better off just using the cc_constant model. --> 
+
+          <!-- Scale Similarity Variance --> 
+          <!-- mixture_fraction_label   spec above --> 
+          <!-- density_label            spec above --> 
+          <variance_coefficient         spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type scalsim_variance"/> <!-- Multiplier (Cf) on the variance, var = Cf * (filter(z^2)- filter(z)^2) --> 
                                           
         </model>
       </PropertyModels>
