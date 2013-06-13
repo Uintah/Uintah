@@ -69,23 +69,23 @@ class DensityCalculator
   PointValues rhoEtaExEtaPoint_;
   PointValues rhoEtaPoint_;
 
-  std::vector<int> ReIindex;
+  std::vector<int> reIindex_;
 
   // Linear solver function variables
-  std::vector<double> J;           ///< A vector for the jacobian matrix
-  std::vector<double> g;           ///< A vector for the rhs functions in non-linear solver
-  std::vector<double> orderedEta;  ///< A vector to store all eta values in the same order as the table
+  std::vector<double> jac_;         ///< A vector for the jacobian matrix
+  std::vector<double> g_;           ///< A vector for the rhs functions in non-linear solver
+  std::vector<double> orderedEta_;  ///< A vector to store all eta values in the same order as the table
 
 
   DensityCalculator( const InterpT* const spline,
-                     const Expr::TagList& RhoEtaTags,           ///< rho*eta tag
-                     const Expr::TagList& RhoetaIncEtaNames,    ///< Tag for ReIEta
-                     const Expr::TagList& OrderedEtaTags );     ///< Tag for all of the eta's in the corect order
+                     const Expr::TagList& rhoEtaTags,           ///< rho*eta tag
+                     const Expr::TagList& rhoetaIncEtaNames,    ///< Tag for ReIEta
+                     const Expr::TagList& orderedEtaTags );     ///< Tag for all of the eta's in the corect order
 
-  bool nonlinear_solver( std::vector<double>& ReIeta,
-                         const std::vector<double>& ReEeta,
-                         const std::vector<double>& RhoEta,
-                         std::vector<int>& ReIindex,
+  bool nonlinear_solver( std::vector<double>& reIeta,
+                         const std::vector<double>& reEeta,
+                         const std::vector<double>& rhoEta,
+                         std::vector<int>& reIindex,
                          double& rho,
                          const InterpT&,
                          const double rtol );
@@ -134,7 +134,7 @@ DensityCalculator( const InterpT* const spline,
   orderedEtaTags_   ( orderedEtaTags    ),
   evaluator_        ( spline            )
 {
-  ReIindex.clear();
+  reIindex_.clear();
   int counter=0;
   bool match;
   for( typename Expr::TagList::const_iterator i=orderedEtaTags_.begin();
@@ -147,7 +147,7 @@ DensityCalculator( const InterpT* const spline,
          ++j )
     {
       if (*i==*j) {
-        ReIindex.push_back( counter );
+        reIindex_.push_back( counter );
         match=1;
         break;
       }
@@ -249,7 +249,7 @@ evaluate()
     }
 
     // calculate the result
-    const bool converged = nonlinear_solver( rhoEtaIncEtaPoint_, rhoEtaExEtaPoint_, rhoEtaPoint_, ReIindex, *irho , *evaluator_, 1e-9 );
+    const bool converged = nonlinear_solver( rhoEtaIncEtaPoint_, rhoEtaExEtaPoint_, rhoEtaPoint_, reIindex_, *irho , *evaluator_, 1e-9 );
     if( !converged )  ++convergeFailed;
 
     // increment all iterators to the next grid point
@@ -330,13 +330,13 @@ DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& ReIeta,
   const unsigned int maxIter = 70;    // the lowest iteration number seen in the tests is 5 which makes maxIter=6, however we use this number for saftiy.
   
   if( neq==0 ){
-    orderedEta.clear();
-    orderedEta=ReEeta;
-    rho = eval.value(orderedEta);
+    orderedEta_.clear();
+    orderedEta_=ReEeta;
+    rho = eval.value(orderedEta_);
   }
   else{
-    J.resize(neq*neq);                 // A vector for the jacobian matrix
-    g.resize(neq);                     // A vector for the rhs functions in non-linear solver
+    jac_.resize(neq*neq);                 // A vector for the jacobian matrix
+    g_.resize(neq);                     // A vector for the rhs functions in non-linear solver
     std::vector<int> ipiv(neq);        // work array for linear solver
 
     PointValues ReIetaTmp(ReIeta);
@@ -349,13 +349,13 @@ DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& ReIeta,
     do{
       ++itCounter;
       // Create the ordered eta vector
-      orderedEta.clear();
-      orderedEta=ReEeta;
+      orderedEta_.clear();
+      orderedEta_=ReEeta;
       for( size_t i=0; i<ReIindex.size(); i++ ) {
-        orderedEta.insert(orderedEta.begin()+ReIindex[i],ReIeta[i]);
+        orderedEta_.insert(orderedEta_.begin()+ReIindex[i],ReIeta[i]);
       }
 
-      double rhotmp = eval.value( orderedEta );
+      double rhotmp = eval.value( orderedEta_ );
 
       // Loop over different etas
       for( size_t k=0; k<neq; ++k ){
@@ -367,18 +367,18 @@ DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& ReIeta,
         }
 
         // Recreate the ordered eta vector with the modified eta vector
-        orderedEta.clear();
-        orderedEta=ReEeta;
+        orderedEta_.clear();
+        orderedEta_=ReEeta;
         for( size_t i=0; i<ReIindex.size(); i++ ) {
-          orderedEta.insert( orderedEta.begin()+ReIindex[i], ReIetaTmp[i] );
+          orderedEta_.insert( orderedEta_.begin()+ReIindex[i], ReIetaTmp[i] );
         }
 
-        const double rhoplus = eval.value(&orderedEta[0]);
+        const double rhoplus = eval.value(&orderedEta_[0]);
 
         // Calculating the rhs vextor components
-        g[k] = -( ReIeta[k] - (rhoEta[k] / rhotmp));
+        g_[k] = -( ReIeta[k] - (rhoEta[k] / rhotmp));
         for( size_t i=0; i<neq; ++i ) {
-          J[i + k*neq] = (( ReIetaTmp[i] - rhoEta[i]/rhoplus ) - ( ReIeta[i] - rhoEta[i]/rhotmp )) / deleta[k];
+          jac_[i + k*neq] = (( ReIetaTmp[i] - rhoEta[i]/rhoplus ) - ( ReIeta[i] - rhoEta[i]/rhotmp )) / deleta[k];
         }
       }
       
@@ -389,18 +389,18 @@ DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& ReIeta,
       // jcs why not use dgesv instead?
       // Factor general matrix J using Gaussian elimination with partial pivoting
       const int numEqns = neq;
-      dgetrf_(&numEqns, &numEqns, &J[0], &numEqns, &ipiv[0], &info);
+      dgetrf_(&numEqns, &numEqns, &jac_[0], &numEqns, &ipiv[0], &info);
       assert( info==0 );
       // Solving J * delta = g
       // note that on entry, g is the rhs and on exit, g is the solution (delta).
-      dgetrs_(&mode, &numEqns, &one, &J[0], &numEqns, &ipiv[0], &g[0], &numEqns, &info);
+      dgetrs_(&mode, &numEqns, &one, &jac_[0], &numEqns, &ipiv[0], &g_[0], &numEqns, &info);
       assert(info==0);
 
       // relative error calculations
       relErr = 0.0;
       for( size_t i=0; i<neq; ++i ){
-        ReIeta[i] += g[i];
-        relErr += std::abs( g[i]/(std::abs(ReIeta[i])+rtol) );
+        ReIeta[i] += g_[i];
+        relErr += std::abs( g_[i]/(std::abs(ReIeta[i])+rtol) );
       }
 
       rho = rhotmp;  // Updating rho
