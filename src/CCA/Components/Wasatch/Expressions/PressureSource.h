@@ -114,7 +114,7 @@ public:
      *  \param dens2StarTag a tag for estimation of density at the time stage "**"
      *         which is needed to calculate drhodt 
      *
-     *  \param dilTag a tag to hold dilitation term in constant density cases.
+     *  \param dilTag a tag to hold dilatation term in constant density cases.
      *
      *  \param timestepTag a tag to hold the timestep value.
      */
@@ -126,7 +126,7 @@ public:
              const Expr::Tag densStarTag,
              const Expr::Tag dens2StarTag,
              const Expr::Tag dilTag,
-             const Expr::Tag timestepTag);
+             const Expr::Tag timestepTag );
     
     ~Builder(){}
     

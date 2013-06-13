@@ -93,8 +93,6 @@ class MomRHSPart
   const FieldT    *srcTerm_;
 
   const FieldT* volfrac_;
-
-//  const SVolField* dil_;
   
   const DivX* divXOp_;
   const DivY* divYOp_;
