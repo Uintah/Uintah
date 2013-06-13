@@ -6514,19 +6514,19 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
               getIteratorBCValue<std::string>( patch, face, child, *iname, matlIndex, bc_s_value, bound_ptr); 
           } 
 
+          BoundaryCondition::FaceToInput::iterator i_uvel_bc_storage = _u_input.find( face_name ); 
+          BoundaryCondition::FaceToInput::iterator i_vvel_bc_storage = _v_input.find( face_name ); 
+          BoundaryCondition::FaceToInput::iterator i_wvel_bc_storage = _w_input.find( face_name ); 
+
+          //check the grid spacing: 
+          proc0cout <<  endl << "For momentum handoff file named: " << i_uvel_bc_storage->second.name << endl;
+          proc0cout <<          "  Grid and handoff spacing relative differences are: [" 
+            << std::abs(i_uvel_bc_storage->second.dx - dx)/dx << ", " 
+            << std::abs(i_uvel_bc_storage->second.dy - dy)/dy << "]" << endl << endl;
+
           if (foundIterator) {
 
             //if we are here, then we are of type "FromFile" 
-            BoundaryCondition::FaceToInput::iterator i_uvel_bc_storage = _u_input.find( face_name ); 
-            BoundaryCondition::FaceToInput::iterator i_vvel_bc_storage = _v_input.find( face_name ); 
-            BoundaryCondition::FaceToInput::iterator i_wvel_bc_storage = _w_input.find( face_name ); 
-
-            //check the grid spacing: 
-            proc0cout <<  endl << "For momentum handoff file named: " << i_uvel_bc_storage->second.name << endl;
-            proc0cout <<          "  Grid and handoff spacing relative differences are: [" 
-              << std::abs(i_uvel_bc_storage->second.dx - dx)/dx << ", " 
-              << std::abs(i_uvel_bc_storage->second.dy - dy)/dy << "]" << endl << endl;
-
             bound_ptr.reset(); 
 
             //this should assign the correct normal direction xyz value without forcing the user to have 

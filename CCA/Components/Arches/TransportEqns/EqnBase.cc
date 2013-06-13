@@ -144,19 +144,19 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
             getIteratorBCValue<std::string>( patch, face, child, d_eqnName, matlIndex, bc_s_value, bound_ptr ); 
         } 
 
+        BoundaryCondition_new::ScalarToBCValueMap& scalar_bc_info = d_boundaryCond->get_FromFileInfo(); 
+        BoundaryCondition_new::ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_info.find( face_name ); 
+
+        //check the grid spacing: 
+        proc0cout <<  endl << "For scalar handoff file named: " << i_scalar_bc_storage->second.name << endl;
+        proc0cout <<          "  Grid and handoff spacing relative differences are: [" 
+          << std::abs(i_scalar_bc_storage->second.dx - dx)/dx << ", " 
+          << std::abs(i_scalar_bc_storage->second.dy - dy)/dy << "]" << endl << endl;
+
         if (foundIterator) {
 
           //if we are here, then we are of type "FromFile" 
-          BoundaryCondition_new::ScalarToBCValueMap& scalar_bc_info = d_boundaryCond->get_FromFileInfo(); 
-          BoundaryCondition_new::ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_info.find( face_name ); 
-
           bound_ptr.reset(); 
-
-          //check the grid spacing: 
-          proc0cout <<  endl << "For scalar handoff file named: " << i_scalar_bc_storage->second.name << endl;
-          proc0cout <<          "  Grid and handoff spacing relative differences are: [" 
-            << std::abs(i_scalar_bc_storage->second.dx - dx)/dx << ", " 
-            << std::abs(i_scalar_bc_storage->second.dy - dy)/dy << "]" << endl << endl;
 
           //this should assign the correct normal direction xyz value without forcing the user to have 
           //to know what it is. 
