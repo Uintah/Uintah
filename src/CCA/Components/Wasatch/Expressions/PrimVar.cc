@@ -132,13 +132,18 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& phi = this->value();
-  SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( phi );
-  *tmp <<= 1.0; // we need to set this to 1.0 so that we don't get random values in out-of-domain faces
-  interpOp_->apply_to_field( *rho_, *tmp );
-  phi <<= *rhophi_ / *tmp;
-  if (volfract_ != Expr::Tag() ) {
-    phi <<= *volfrac_ * phi;
-  }
+
+  if( volfract_ != Expr::Tag() ) phi <<= *rhophi_ / (*interpOp_)(*rho_) * *volfrac_;
+  else                           phi <<= *rhophi_ / (*interpOp_)(*rho_);
+
+  // jcs this is how we had it previously.  Note the 1.0 initialization to avoid /0 in places.
+  //  SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( phi );
+  //  *tmp <<= 1.0; // we need to set this to 1.0 so that we don't get random values in out-of-domain faces
+  //  interpOp_->apply_to_field( *rho_, *tmp );
+  //  phi <<= *rhophi_ / *tmp;
+  //  if (volfract_ != Expr::Tag() ) {
+  //    phi <<= *volfrac_ * phi;
+  //  }
 }
 
 template< typename FieldT >
@@ -158,10 +163,10 @@ PrimVar<FieldT,DensT>::
 Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& rhoPhiTag,
                   const Expr::Tag& rhoTag,
-                  const Expr::Tag& volFracTag)
+                  const Expr::Tag& volFracTag )
   : ExpressionBuilder(result),
-    rhophit_( rhoPhiTag ),
-    rhot_   ( rhoTag    ),
+    rhophit_ ( rhoPhiTag  ),
+    rhot_    ( rhoTag     ),
     volfract_( volFracTag )
 {}
 
