@@ -738,7 +738,6 @@ namespace Wasatch{
   void Wasatch::scheduleComputeStableTimestep( const Uintah::LevelP& level,
                                                Uintah::SchedulerP& sched )
   {
-    proc0cout << "Scheduling compute stable timestep" << std::endl;
     GraphHelper* const tsGraphHelper = graphCategories_[ TIMESTEP_SELECTION ];
     const Uintah::PatchSet* const localPatches = get_patchset(USE_FOR_TASKS,level,sched);
 
@@ -760,7 +759,7 @@ namespace Wasatch{
     }
     else{ // default
 
-      proc0cout << "Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
+      proc0cout << "Scheduling Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
 
       Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
@@ -769,7 +768,18 @@ namespace Wasatch{
                       level.get_rep() );
       //              materials_->getUnion() );
       // jcs why can't we specify a metrial here?  It doesn't seem to be working if I do.
-
+      
+      const GraphHelper* slnGraphHelper = graphCategories_[ADVANCE_SOLUTION];
+      const TagNames& tagNames = TagNames::self();
+      const bool useStableDT = slnGraphHelper->exprFactory->have_entry( tagNames.stableTimestep );
+      // since the StableDT expression is only registered on the time_advance graph,
+      // make the necessary checks before adding a requires for that
+      if (sharedState_->getCurrentTopLevelTimeStep() > 0) {
+        if (useStableDT) {
+          task->requires(Uintah::Task::NewDW, Uintah::VarLabel::find(tagNames.stableTimestep.name()),  Uintah::Ghost::None, 0);
+        }
+      }
+                  
       sched->addTask( task, localPatches, materials_ );
     }
 
@@ -952,8 +962,10 @@ namespace Wasatch{
         //__________________
         // loop over patches
         for( int ip=0; ip<patches->size(); ++ip ){
-          StableTimestep& computeDtExpr = dynamic_cast<StableTimestep&>( slnGraphHelper->exprFactory->retrieve_expression( tagNames.stableTimestep, patches->get(ip)->getID(), false ) );
-          val = std::min( val, computeDtExpr.get_stable_dt() );
+          // grab the stable timestep value calculated by the StableDT expression
+          Uintah::PerPatch<double*> tempDtP;
+          new_dw->get(tempDtP, Uintah::VarLabel::find(tagNames.stableTimestep.name()), 0, patches->get(ip));          
+          val = std::min( val, *tempDtP );
         }
 
       } else {
