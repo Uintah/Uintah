@@ -90,17 +90,17 @@ class Vorticity
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, Vel1T, Vel1FaceT >::type Vel1GradT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, Vel2T, Vel2FaceT >::type Vel2GradT;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1FaceT, FieldT >::type InpterpVel1FaceT2FieldT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2FaceT, FieldT >::type InpterpVel2FaceT2FieldT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1FaceT, FieldT >::type InterpVel1FaceT2FieldT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2FaceT, FieldT >::type InterpVel2FaceT2FieldT;
 
   const Vel1T* vel1_;
   const Vel2T* vel2_;
 
-  const Vel1GradT* Vel1GradTOp_;
-  const Vel2GradT* Vel2GradTOp_;
+  const Vel1GradT* vel1GradTOp_;
+  const Vel2GradT* vel2GradTOp_;
 
-  const InpterpVel1FaceT2FieldT* InpterpVel1FaceT2FieldTOp_;
-  const InpterpVel2FaceT2FieldT* InpterpVel2FaceT2FieldTOp_;
+  const InterpVel1FaceT2FieldT* interpVel1FaceT2FieldTOp_;
+  const InterpVel2FaceT2FieldT* interpVel2FaceT2FieldTOp_;
 
   Vorticity( const Expr::Tag& vel1tag,
              const Expr::Tag& vel2tag );
