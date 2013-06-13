@@ -34,11 +34,9 @@ namespace Uintah {
   class Smagorinsky_Model : public Turbulence {
 
   public:
-    //----- constructors
     Smagorinsky_Model(ProblemSpecP& ps, SimulationStateP& sharedState);
     Smagorinsky_Model();
     
-    //----- destructor
     virtual ~Smagorinsky_Model();
     
     friend class DynamicModel;
@@ -60,9 +58,8 @@ namespace Uintah {
     
 
   private:
-    double filter_width;
+//    double d_filter_width;
     double d_model_constant;
-//    double d_turbPr; // turbulent prandtl number
 
     void computeStrainRate(const Patch* patch,
                            const SFCXVariable<double>& uvel_FC,
@@ -72,6 +69,7 @@ namespace Uintah {
                            SimulationStateP&  d_sharedState,
                            DataWarehouse* new_dw,
                            SCIRun::StaticArray<CCVariable<double> >& SIJ);
+                           
     void computeVariance(const ProcessorGroup*, 
                          const PatchSubset* patch,  
                          const MaterialSubset* matls,

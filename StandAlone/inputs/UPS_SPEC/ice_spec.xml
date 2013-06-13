@@ -15,11 +15,10 @@
       </ADD_HEAT>                                        
       <ClampSpecificVolume              spec="OPTIONAL BOOLEAN" />
       
-      <turbulence    spec="OPTIONAL NO_DATA"
-                      attribute1="model  REQUIRED STRING 'Smagorinsky Germano'">           
-        <model_constant                 spec="REQUIRED DOUBLE 'positive'"/>
-        <filter_width                   spec="REQUIRED DOUBLE '0,1'"/>
-        <turb_Pr                        spec="REQUIRED DOUBLE '0,1'"/>                            
+      <turbulence                       spec="OPTIONAL NO_DATA"
+                                          attribute1="model  REQUIRED STRING 'Smagorinsky Germano'">
+        <model_constant                 spec="REQUIRED DOUBLE 'positive'" need_applies_to="model  Smagorinsky Germano"/>
+        <filter_width                   spec="REQUIRED DOUBLE '0,1'"      need_applies_to="model  Germano"/>
       </turbulence>
       
       <customInitialization             spec="OPTIONAL NO_DATA" >
