@@ -110,7 +110,7 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   d_outletBC = 0;
   _using_new_intrusion  = false; 
   d_calcEnergyExchange  = false;
-  d_laminar_wall_shear = false; 
+  d_slip = false; 
 
   // x-direction
   index_map[0][0] = 0;
@@ -125,6 +125,7 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   index_map[2][1] = 2; 
   index_map[2][2] = 0; 
 }
+
 
 //****************************************************************************
 // Destructor
@@ -196,9 +197,11 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
        setupBCs( db_params );
      }
 
-     if ( db->findBlock( "laminar_wall_shear" ) ){ 
-       d_laminar_wall_shear = true; 
-     } 
+     db->getWithDefault("wall_csmag",d_csmag_wall,0.17);
+     if ( db->findBlock( "wall_slip" )){ 
+       d_slip = true; 
+       d_csmag_wall = 0.0; 
+     }          
 
     if ( db->findBlock("intrusions") ){ 
 
@@ -6273,8 +6276,8 @@ BoundaryCondition::wallStress( const Patch* p,
     IntVector xp = *iter + IntVector(1,0,0);
     IntVector ym = *iter - IntVector(0,1,0);
     IntVector yp = *iter + IntVector(0,1,0);
-    IntVector zm = *iter - IntVector(0,1,0);
-    IntVector zp = *iter + IntVector(0,1,0);
+    IntVector zm = *iter - IntVector(0,0,1);
+    IntVector zp = *iter + IntVector(0,0,1);
 
     //WARNINGS: 
     // This isn't that stylish but it should accomplish what the MPMArches code was doing
@@ -6283,138 +6286,134 @@ BoundaryCondition::wallStress( const Patch* p,
     //3) assumed a csmag = 0.17 (a la kumar) 
     
     int flow = -1; 
-    double csmag;
 
-    if ( d_laminar_wall_shear ){ 
-      csmag = 0.0; 
-    } else { 
-      csmag = 0.17; 
-    } 
+    if ( !d_slip ){ 
 
-    // curr cell is a flow cell 
-    if ( const_vars->cellType[c] == flow ){ 
+      // curr cell is a flow cell 
+      if ( const_vars->cellType[c] == flow ){ 
 
-      if ( const_vars->cellType[xm] == WALL || const_vars->cellType[xm] == INTRUSION ){ 
+        if ( const_vars->cellType[xm] == WALL || const_vars->cellType[xm] == INTRUSION ){ 
 
-        //y-dir
-        if ( const_vars->cellType[ym] == flow ){ 
+          //y-dir
+          if ( const_vars->cellType[ym] == flow ){ 
 
-          double mu_t = pow( csmag*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
+            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
 
-          //apply v-mom bc -
-          vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x(); 
+            //apply v-mom bc -
+            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x(); 
+
+          } 
+          if ( const_vars->cellType[zm] == flow ){ 
+
+            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
+
+            //apply w-mom bc -
+            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x(); 
+          } 
 
         } 
-        if ( const_vars->cellType[zm] == flow ){ 
 
-          double mu_t = pow( csmag*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
+        if ( const_vars->cellType[xp] == WALL || const_vars->cellType[xp] == INTRUSION){ 
+          
+          //y-dir
+          if ( const_vars->cellType[ym] == flow ){ 
 
-          //apply w-mom bc -
-          vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x(); 
+            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
+
+            //apply v-mom bc -
+            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x(); 
+          } 
+          if ( const_vars->cellType[zm] == flow ){ 
+
+            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
+
+            //apply w-mom bc -
+            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x(); 
+          } 
+
         } 
 
-      } 
+        if ( const_vars->cellType[ym] == WALL || const_vars->cellType[ym] == INTRUSION){ 
+          
+          //x-dir
+          if ( const_vars->cellType[xm] == flow ){ 
 
-      if ( const_vars->cellType[xp] == WALL || const_vars->cellType[xp] == INTRUSION){ 
-        
-        //y-dir
-        if ( const_vars->cellType[ym] == flow ){ 
+            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
 
-          double mu_t = pow( csmag*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
+            //apply u-mom bc -
+            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y(); 
+          } 
+          if ( const_vars->cellType[zm] == flow ){ 
 
-          //apply v-mom bc -
-          vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x(); 
-        } 
-        if ( const_vars->cellType[zm] == flow ){ 
+            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
 
-          double mu_t = pow( csmag*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
+            //apply w-mom bc -
+            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y(); 
+          } 
 
-          //apply w-mom bc -
-          vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x(); 
-        } 
-
-      } 
-
-      if ( const_vars->cellType[ym] == WALL || const_vars->cellType[ym] == INTRUSION){ 
-        
-        //x-dir
-        if ( const_vars->cellType[xm] == flow ){ 
-
-          double mu_t = pow( csmag*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
-
-          //apply u-mom bc -
-          vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y(); 
-        } 
-        if ( const_vars->cellType[zm] == flow ){ 
-
-          double mu_t = pow( csmag*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
-
-          //apply w-mom bc -
-          vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y(); 
         } 
 
-      } 
+        if ( const_vars->cellType[yp] == WALL || const_vars->cellType[yp] == INTRUSION){ 
+          
+          //x-dir
+          if ( const_vars->cellType[xm] == flow ){ 
 
-      if ( const_vars->cellType[yp] == WALL || const_vars->cellType[yp] == INTRUSION){ 
-        
-        //x-dir
-        if ( const_vars->cellType[xm] == flow ){ 
+            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
 
-          double mu_t = pow( csmag*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
+            //apply u-mom bc -
+            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y(); 
+          } 
+          if ( const_vars->cellType[zm] == flow ){ 
 
-          //apply u-mom bc -
-          vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y(); 
-        } 
-        if ( const_vars->cellType[zm] == flow ){ 
+            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
 
-          double mu_t = pow( csmag*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
+            //apply w-mom bc -
+            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y(); 
+          } 
 
-          //apply w-mom bc -
-          vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y(); 
-        } 
-
-      } 
-
-      if ( const_vars->cellType[zm] == WALL || const_vars->cellType[zm] == INTRUSION){ 
-        
-        //x-dir
-        if ( const_vars->cellType[xm] == flow ){ 
-
-          double mu_t = pow( csmag*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
-
-          //apply u-mom bc -
-          vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t +  const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z(); 
-        } 
-        if ( const_vars->cellType[ym] == flow ){ 
-
-          double mu_t = pow( csmag*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
-
-          //apply v-mom bc -
-          vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z(); 
         } 
 
-      } 
+        if ( const_vars->cellType[zm] == WALL || const_vars->cellType[zm] == INTRUSION){ 
+          
+          //x-dir
+          if ( const_vars->cellType[xm] == flow ){ 
 
-      if ( const_vars->cellType[zp] == WALL || const_vars->cellType[zp] == INTRUSION){ 
-        
-        //x-dir
-        if ( const_vars->cellType[xm] == flow ){ 
+            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
 
-          double mu_t = pow( csmag*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
+            //apply u-mom bc -
+            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t +  const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z(); 
+          } 
+          if ( const_vars->cellType[ym] == flow ){ 
 
-          //apply u-mom bc -
-          vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z(); 
+            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
+
+            //apply v-mom bc -
+            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z(); 
+          } 
+
         } 
-        if ( const_vars->cellType[ym] == flow ){ 
 
-          double mu_t = pow( csmag*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
+        if ( const_vars->cellType[zp] == WALL || const_vars->cellType[zp] == INTRUSION){ 
+          
+          //x-dir
+          if ( const_vars->cellType[xm] == flow ){ 
 
-          //apply v-mom bc -
-          vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z(); 
+            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
+
+            //apply u-mom bc -
+            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z(); 
+          } 
+          if ( const_vars->cellType[ym] == flow ){ 
+
+            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
+
+            //apply v-mom bc -
+            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z(); 
+          } 
+
         } 
 
-      } 
-
+      }
     }
   }
 } 

@@ -423,7 +423,8 @@
         </intrusions>
 
         <use_new_bcs                    spec="OPTIONAL NO_DATA"/> <!-- use the new boundary conditions as specified in the <Grid><BoundaryCondition> section --> 
-        <laminar_wall_shear             spec="OPTIONAL NO_DATA"/> <!-- Don't use a wall model for the shear term.  The default uses a classical mixing length wall model. --> 
+        <wall_slip                      spec="OPTIONAL NO_DATA"/> <!-- Use a slip wall BC --> 
+        <wall_csmag                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- Constant coefficient for the wall closure model.  default = 0.17. Set to zero for laminar conditions. --> 
         
         <TurbulentInlet                 spec="OPTIONAL NO_DATA" >
           <cell_low                     spec="REQUIRED INTEGER"/>
