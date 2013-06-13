@@ -116,11 +116,8 @@ evaluate()
 {
   using namespace SpatialOps;
   FluxT& result = this->value();  
-  if (isTurbulent_) {
-    result <<= - (*sVolInterpOp_)(*rho_) * (coefVal_ + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
-  } else {
-    result <<= - (*sVolInterpOp_)(*rho_) * coefVal_ * (*gradOp_)(*phi_);
-  }
+  if( isTurbulent_ ) result <<= - (*sVolInterpOp_)(*rho_) * (coefVal_ + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
+  else               result <<= - (*sVolInterpOp_)(*rho_) * coefVal_ * (*gradOp_)(*phi_);
 }
 
 
@@ -197,11 +194,8 @@ evaluate()
 {
   using namespace SpatialOps;
   FluxT& result = this->value();
-  if (isTurbulent_) {
-    result <<= - (*sVolInterpOp_)(*rho_) * ((*interpOp_)(*coef_) + (*interpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
-  } else {
-    result <<= - (*sVolInterpOp_)(*rho_) * (*interpOp_)(*coef_) * (*gradOp_)(*phi_);
-  }
+  if( isTurbulent_ ) result <<= - (*sVolInterpOp_)(*rho_) * ((*interpOp_)(*coef_) + (*interpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
+  else               result <<= - (*sVolInterpOp_)(*rho_) * (*interpOp_)(*coef_) * (*gradOp_)(*phi_);
 }
 
 //--------------------------------------------------------------------

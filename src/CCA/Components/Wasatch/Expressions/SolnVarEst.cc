@@ -7,15 +7,14 @@
 //====================================================================
 
 template< typename FieldT >
-SolnVarEst<FieldT>::SolnVarEst( const Expr::Tag solnVarOldTag,
-                                const Expr::Tag solnVarRHSTag,
-                                const Expr::Tag timeStepTag )
+SolnVarEst<FieldT>::SolnVarEst( const Expr::Tag& solnVarOldTag,
+                                const Expr::Tag& solnVarRHSTag,
+                                const Expr::Tag& timeStepTag )
   : Expr::Expression<FieldT>(),
     solnVarOldt_ ( solnVarOldTag ),
     solnVarRHSt_ ( solnVarRHSTag ),
     tStept_      ( timeStepTag   )
-{
-}
+{}
 
 //------------------------------------------------------------------
 
@@ -28,11 +27,9 @@ SolnVarEst<FieldT>::~SolnVarEst()
 template< typename FieldT >
 void SolnVarEst<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
 {  
-
   exprDeps.requires_expression( solnVarOldt_ );
   exprDeps.requires_expression( solnVarRHSt_ );
   exprDeps.requires_expression( tStept_      );  
-  
 }
 
 //------------------------------------------------------------------
@@ -40,20 +37,12 @@ void SolnVarEst<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
 template< typename FieldT >
 void SolnVarEst<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldMgrSelector<FieldT>::type& FM       = fml.field_manager<FieldT>();
-  const typename Expr::FieldMgrSelector<double>::type& tFM      = fml.field_manager<double>();
+  const typename Expr::FieldMgrSelector<FieldT>::type& FM  = fml.field_manager<FieldT>();
+  const typename Expr::FieldMgrSelector<double>::type& tFM = fml.field_manager<double>();
   
   solnVarOld_ = &FM.field_ref ( solnVarOldt_ );    
   solnVarRHS_ = &FM.field_ref ( solnVarRHSt_ );    
   tStep_      = &tFM.field_ref( tStept_      );
-  
-}
-
-//------------------------------------------------------------------
-
-template< typename FieldT >
-void SolnVarEst<FieldT>::bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{
 }
 
 //------------------------------------------------------------------
@@ -63,18 +52,16 @@ void SolnVarEst<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-
   result <<= *solnVarOld_ + *tStep_ * *solnVarRHS_ ;
-
 }
 
 //------------------------------------------------------------------
 
 template< typename FieldT >
 SolnVarEst<FieldT>::Builder::Builder( const Expr::Tag& result,
-                                      const Expr::Tag  solnVarOldTag,
-                                      const Expr::Tag  solnVarRHSTag,
-                                      const Expr::Tag  timeStepTag )
+                                      const Expr::Tag& solnVarOldTag,
+                                      const Expr::Tag& solnVarRHSTag,
+                                      const Expr::Tag& timeStepTag )
     : ExpressionBuilder(result),
       solnVarOldt_( solnVarOldTag ),
       solnVarRHSt_( solnVarRHSTag ),

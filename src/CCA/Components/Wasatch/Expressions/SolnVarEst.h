@@ -32,9 +32,9 @@ class SolnVarEst
   const double *tStep_; 
 
   
-  SolnVarEst( const Expr::Tag solnVarOldTag,
-              const Expr::Tag solnVarRHSTag,
-              const Expr::Tag timeStepTag );
+  SolnVarEst( const Expr::Tag& solnVarOldTag,
+              const Expr::Tag& solnVarRHSTag,
+              const Expr::Tag& timeStepTag );
 public:
   
   /**
@@ -56,9 +56,9 @@ public:
      *
      */
     Builder( const Expr::Tag& result,
-             const Expr::Tag  solnVarOldTag,
-             const Expr::Tag  solnVarRHSTag,
-             const Expr::Tag  timeStepTag );
+             const Expr::Tag& solnVarOldTag,
+             const Expr::Tag& solnVarRHSTag,
+             const Expr::Tag& timeStepTag );
     
     ~Builder(){}
 
@@ -73,7 +73,6 @@ public:
   ~SolnVarEst();
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
 };
