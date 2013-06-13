@@ -6519,10 +6519,12 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
           BoundaryCondition::FaceToInput::iterator i_wvel_bc_storage = _w_input.find( face_name ); 
 
           //check the grid spacing: 
-          proc0cout <<  endl << "For momentum handoff file named: " << i_uvel_bc_storage->second.name << endl;
-          proc0cout <<          "  Grid and handoff spacing relative differences are: [" 
-            << std::abs(i_uvel_bc_storage->second.dx - dx)/dx << ", " 
-            << std::abs(i_uvel_bc_storage->second.dy - dy)/dy << "]" << endl << endl;
+          if ( i_uvel_bc_storage != _u_input.end() ){ 
+            proc0cout <<  endl << "For momentum handoff file named: " << i_uvel_bc_storage->second.name << endl;
+            proc0cout <<          "  Grid and handoff spacing relative differences are: [" 
+              << std::abs(i_uvel_bc_storage->second.dx - dx)/dx << ", " 
+              << std::abs(i_uvel_bc_storage->second.dy - dy)/dy << "]" << endl << endl;
+          }
 
           if (foundIterator) {
 
