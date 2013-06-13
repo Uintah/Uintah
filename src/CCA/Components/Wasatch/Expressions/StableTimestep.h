@@ -74,7 +74,6 @@ public:
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
-  double get_stable_dt();
 };
 
 #endif // StableTimestep_Expr_h
