@@ -80,7 +80,9 @@ SRCS += \
         $(SRCDIR)/SetCurrentTime.cc       \
         $(SRCDIR)/RadPropsEvaluator.cc	  \
         $(SRCDIR)/VelocityMagnitude.cc    \
-        $(SRCDIR)/StableTimestep.cc    
+        $(SRCDIR)/StableTimestep.cc       \
+        $(SRCDIR)/TabPropsHeatLossEvaluator.cc
+            	
 
 #
 # Subdirectories to build...
