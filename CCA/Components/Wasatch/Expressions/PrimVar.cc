@@ -135,17 +135,17 @@ evaluate()
   using namespace SpatialOps;
   FieldT& phi = this->value();
 
-//  if( volfract_ != Expr::Tag() ) phi <<= *rhophi_ / (*interpOp_)(*rho_) * *volfrac_;
-//  else                           phi <<= *rhophi_ / (*interpOp_)(*rho_);
+  if( volfract_ != Expr::Tag() ) phi <<= *rhophi_ / (*interpOp_)(*rho_) * *volfrac_;
+  else                           phi <<= *rhophi_ / (*interpOp_)(*rho_);
 
   // jcs this is how we had it previously.  Note the 1.0 initialization to avoid /0 in places.
-    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( phi );
-    *tmp <<= 1.0; // we need to set this to 1.0 so that we don't get random values in out-of-domain faces
-    interpOp_->apply_to_field( *rho_, *tmp );
-    phi <<= *rhophi_ / *tmp;
-    if (volfract_ != Expr::Tag() ) {
-      phi <<= *volfrac_ * phi;
-    }
+//    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( phi );
+//    *tmp <<= 1.0; // we need to set this to 1.0 so that we don't get random values in out-of-domain faces
+//    interpOp_->apply_to_field( *rho_, *tmp );
+//    phi <<= *rhophi_ / *tmp;
+//    if (volfract_ != Expr::Tag() ) {
+//      phi <<= *volfrac_ * phi;
+//    }
 }
 
 template< typename FieldT >
