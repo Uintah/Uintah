@@ -823,8 +823,19 @@
         <NameTag          spec="REQUIRED" />
         <Type             spec="OPTIONAL STRING 'SVOL,XVOL,YVOL,ZVOL" />
       </ExtractVariable>
-      
-      <!-- An special case to extract density from this TabProps file -->
+
+      <!-- For tables with heat loss as an independent variable,
+           the heat loss must be computed from the enthalpy.
+           This allows the heat loss to be determined -->
+      <HeatLoss                       spec="OPTIONAL NO_DATA">
+        <NameTag                      spec="REQUIRED"/>
+        <HeatLossNameInTable          spec="REQUIRED STRING"/>
+        <AdiabaticEnthalpyNameInTable spec="REQUIRED STRING"/>
+        <SensibleEnthalpyNameInTable spec="REQUIRED STRING"/>
+        <EnthalpyNameInTable          spec="REQUIRED STRING"/>
+      </HeatLoss>
+
+      <!-- A special case to extract density from this TabProps file -->
       <ExtractDensity         spec="MULTIPLE NO_DATA">
         <NameInTable          spec="REQUIRED STRING" />
         <NameTag              spec="REQUIRED" />

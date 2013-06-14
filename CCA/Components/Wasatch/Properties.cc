@@ -28,6 +28,7 @@
 #include "ParseTools.h"
 #include "FieldAdaptor.h"
 #include "Expressions/TabPropsEvaluator.h"
+#include "Expressions/TabPropsHeatLossEvaluator.h"
 #include "Expressions/DensityCalculator.h"
 #include "Expressions/RadPropsEvaluator.h"
 #include "Expressions/SolnVarEst.h"
@@ -190,14 +191,14 @@ namespace Wasatch{
     // exact order dictated by the table.  This order will determine
     // the ordering for the arguments to the evaluator later on.
     typedef std::vector<std::string> Names;
-    std::vector<Expr::Tag> ivarNames;
+    Expr::TagList ivarNames;
     const Names& ivars = table.get_indepvar_names();
     for( Names::const_iterator inm=ivars.begin(); inm!=ivars.end(); ++inm ){
       ivarNames.push_back( ivarMap[*inm] );
     }
 
     //________________________________________________________________
-    // create an expression for each property.  alternatively, we
+    // create an expression for each property.  Alternatively, we
     // could create an expression that evaluated all required
     // properties at once, since the expression has that capability...
     for( Uintah::ProblemSpecP dvarParams = params->findBlock("ExtractVariable");
@@ -255,9 +256,46 @@ namespace Wasatch{
       }
     }
 
+    //____________________________________________________________
+    // create an expression to compute the heat loss, if requested
+    if( params->findBlock("HeatLoss") ){
+      Uintah::ProblemSpecP hlParams = params->findBlock("HeatLoss")->findBlock("EnthalpyNameInTable");
+      std::string enthName, hlName;
+      hlParams->get("EnthalpyNameInTable",enthName);
+      hlParams->get("HeatLossNameInTable",hlName);
+      size_t hlIx = 0;
+      Expr::TagList hlIvars = ivarNames;
+      for( ; hlIx<ivarNames.size(); ++hlIx ){
+        if( ivarNames[hlIx].name() == hlName ){
+          break;
+        }
+      }
+      hlIvars.erase( hlIvars.begin() + hlIx );
+
+      if( hlIx >= ivarNames.size() ){
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << endl
+            << "ERROR: heat loss specified (" << hlName << ") was not found in the table" << endl;
+        throw std::runtime_error( msg.str() );
+      }
+
+      std::string adEnthName, sensEnthName;
+      hlParams->get( "AdiabaticEnthalpyNameInTable", adEnthName );
+      hlParams->get( "SensibleEnthalpyNameInTable", sensEnthName );
+      const InterpT* const adEnthInterp   = table.find_entry( adEnthName   );
+      const InterpT* const sensEnthInterp = table.find_entry( sensEnthName );
+      const InterpT* const enthInterp     = table.find_entry( enthName     );
+      typedef TabPropsHeatLossEvaluator<SpatialOps::structured::SVolField>::Builder HLEval;
+      gh.exprFactory->register_expression( scinew HLEval( parse_nametag( hlParams->findBlock("NameTag") ),
+                                                          adEnthInterp->clone(),
+                                                          sensEnthInterp->clone(),
+                                                          enthInterp->clone(),
+                                                          hlIx,
+                                                          hlIvars ) );
+    }
+
     //________________________________________________________________
     // create an expression specifically for density.
-
     for( Uintah::ProblemSpecP densityParams = params->findBlock("ExtractDensity");
          densityParams != 0;
          densityParams = densityParams->findNextBlock("ExtractDensity") ){
