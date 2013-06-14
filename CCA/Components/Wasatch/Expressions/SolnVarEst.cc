@@ -14,7 +14,9 @@ SolnVarEst<FieldT>::SolnVarEst( const Expr::Tag& solnVarOldTag,
     solnVarOldt_ ( solnVarOldTag ),
     solnVarRHSt_ ( solnVarRHSTag ),
     tStept_      ( timeStepTag   )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //------------------------------------------------------------------
 

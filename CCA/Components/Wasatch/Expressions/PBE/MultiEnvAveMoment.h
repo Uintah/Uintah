@@ -87,7 +87,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 
@@ -102,13 +101,15 @@ public:
 template< typename FieldT >
 MultiEnvAveMoment<FieldT>::
 MultiEnvAveMoment( const Expr::TagList weightAndDerivativeTags,
-               const Expr::Tag phiTag,
-               const double initialMoment)
+                   const Expr::Tag phiTag,
+                   const double initialMoment )
 : Expr::Expression<FieldT>(),
-weightAndDerivativeTags_(weightAndDerivativeTags),
-phiTag_(phiTag),
-initialMoment_(initialMoment)
-{}
+  weightAndDerivativeTags_(weightAndDerivativeTags),
+  phiTag_(phiTag),
+  initialMoment_(initialMoment)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -144,14 +145,6 @@ bind_fields( const Expr::FieldManagerList& fml )
   }
   phi_ = &fm.field_ref( phiTag_ );
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MultiEnvAveMoment<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

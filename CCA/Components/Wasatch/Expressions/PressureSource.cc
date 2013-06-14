@@ -29,7 +29,9 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
   dens2Start_ ( densStarTag==Expr::Tag() ? Expr::Tag() : dens2StarTag   ),
   dilt_       ( isConstDensity ? dilTag  : Expr::Tag() ),
   timestept_  ( timestepTag )
-{}
+{
+  set_gpu_runnable( true );
+}
 
 //------------------------------------------------------------------
 

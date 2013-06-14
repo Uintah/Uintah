@@ -117,9 +117,7 @@ public:
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
-  
 };
 
 
@@ -143,15 +141,17 @@ Aggregation( const Expr::TagList& weightsTagList,
              const std::string aggModel,
              const bool useEffTags)
 : Expr::Expression<FieldT>(),
-weightsTagList_(weightsTagList),
-abscissaeTagList_(abscissaeTagList),
-efficiencyTagList_(efficiencyTagList),
-aggCoefTag_(aggCoefTag),
-momentOrder_(momentOrder),
-effCoef_(effCoef),
-aggModel_(aggModel),
-useEffTags_(useEffTags)
-{}
+  weightsTagList_(weightsTagList),
+  abscissaeTagList_(abscissaeTagList),
+  efficiencyTagList_(efficiencyTagList),
+  aggCoefTag_(aggCoefTag),
+  momentOrder_(momentOrder),
+  effCoef_(effCoef),
+  aggModel_(aggModel),
+  useEffTags_(useEffTags)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -206,14 +206,6 @@ bind_fields( const Expr::FieldManagerList& fml )
 template< typename FieldT >
 void
 Aggregation<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-Aggregation<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
@@ -221,7 +213,6 @@ evaluate()
   result <<= 0.0;
 
   SpatFldPtr<FieldT> tmp = SpatialFieldStore::get<FieldT>( result );
-  //*tmp <<= 0.0;
 
   int nEnv = weights_.size();
   

@@ -46,7 +46,9 @@ StrainTensorSquare( const Expr::Tag& s11Tag,
     S22Tag_(s22Tag),
     S32Tag_(s32Tag),
     S33Tag_(s33Tag)
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -111,7 +113,7 @@ evaluate()
   using namespace SpatialOps;
   SVolField& strTsrMag = this->value();
   strTsrMag <<= 0.0;
-  strTsrMag <<=   (*xxInterpOp_)(*S11_) * (*xxInterpOp_)(*S11_) // S11*S11
+  strTsrMag <<= (*xxInterpOp_)(*S11_) * (*xxInterpOp_)(*S11_) // S11*S11
               + (*yyInterpOp_)(*S22_) * (*yyInterpOp_)(*S22_) // S22*S22
               + (*zzInterpOp_)(*S33_) * (*zzInterpOp_)(*S33_) // S33*S33
               + 2.0 * (*xyInterpOp_)(*S21_) * (*xyInterpOp_)(*S21_) // S12*S12 + S21*S21 = 2.0*S21*S21
@@ -155,7 +157,9 @@ StrainTensorSquare::Builder::build() const
 WaleTensorMagnitude::
 WaleTensorMagnitude( const Expr::TagList& velTags )
 : StrainTensorBase( velTags )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -258,7 +262,9 @@ WaleTensorMagnitude::Builder::build() const
 VremanTensorMagnitude::
 VremanTensorMagnitude( const Expr::TagList& velTags )
 : StrainTensorBase( velTags )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -327,12 +333,14 @@ evaluate()
   // aa = aij * aij - corresponds to alpha_ij * alpha_ij (Vreman paper, eq. 5, denominator)
   SpatFldPtr<SVolField> aa = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   *aa <<=  *a11 * *a11 + *a12 * *a12 + *a13 * *a13
-            + *a21 * *a21 + *a22 * *a22 + *a32 * *a32
-            + *a31 * *a31 + *a32 * *a32 + *a33 * *a33;
+         + *a21 * *a21 + *a22 * *a22 + *a32 * *a32
+         + *a31 * *a31 + *a32 * *a32 + *a33 * *a33;
 
   // bbeta corresponds to B_\beta in the Vreman paper (eq. 8)
   SpatFldPtr<SVolField> bbeta = SpatialFieldStore::get<SVolField>( vremanTsrMag );
-  *bbeta <<= *b11 * *b22 - *b12 * *b12 + *b11 * *b33 - *b13 * *b13 + *b22 * *b33 - *b23 * *b23;
+  *bbeta <<= *b11 * *b22 - *b12 * *b12
+           + *b11 * *b33 - *b13 * *b13
+           + *b22 * *b33 - *b23 * *b23;
 
   // TSAAD: The reason that we are using conditionals over here has to do with
   // embedded boundaries. When embedded boundaries are present, and when taking

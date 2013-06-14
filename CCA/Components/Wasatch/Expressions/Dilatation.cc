@@ -37,7 +37,9 @@ Dilatation( const Expr::Tag& vel1tag,
     vel2t_( vel2tag ),
     vel3t_( vel3tag ),
     is3d_( vel1t_ != Expr::Tag() && vel2t_ != Expr::Tag() && vel3t_ != Expr::Tag() )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 

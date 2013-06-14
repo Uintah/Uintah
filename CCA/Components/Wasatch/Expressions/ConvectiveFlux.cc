@@ -165,10 +165,10 @@ void
 ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if( !isCentral_ )              psiInterpOp_    = opDB.retrieve_operator<LimiterInterpT>();
-  if( !isCentral_ )              phiInterpLowOp_ = opDB.retrieve_operator<PhiInterpLowT>();
-  phiInterpHiOp_  = opDB.retrieve_operator<PhiInterpHiT>();
-  velInterpOp_                                   = opDB.retrieve_operator<VelInterpT>();
+  if( !isCentral_ ) psiInterpOp_    = opDB.retrieve_operator<LimiterInterpT>();
+  if( !isCentral_ ) phiInterpLowOp_ = opDB.retrieve_operator<PhiInterpLowT>();
+  phiInterpHiOp_ = opDB.retrieve_operator<PhiInterpHiT>();
+  velInterpOp_   = opDB.retrieve_operator<VelInterpT>();
 }
 
 //--------------------------------------------------------------------

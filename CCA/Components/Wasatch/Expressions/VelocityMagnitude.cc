@@ -37,7 +37,9 @@ VelocityMagnitude( const Expr::Tag& vel1tag,
   vel2t_( vel2tag ),
   vel3t_( vel3tag ),
   is3d_( vel1t_ != Expr::Tag() && vel2t_ != Expr::Tag() && vel3t_ != Expr::Tag() )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -104,24 +106,11 @@ evaluate()
       );
   }
   else{ // 1D and 2D are assembled in pieces (slower):
-    if( vel1t_ != Expr::Tag() ){
-      SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( velMag );
-      interpVel1T2FieldTOp_->apply_to_field( *vel1_, *tmp );
-      velMag <<= *tmp * *tmp;
-    }
-    else{
-      velMag <<= 0.0;
-    }
-    if( vel2t_ != Expr::Tag() ){
-      SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( velMag );
-      interpVel2T2FieldTOp_->apply_to_field( *vel2_, *tmp );
-      velMag <<= velMag + *tmp * *tmp;
-    }
-    if( vel3t_ != Expr::Tag() ){
-      SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( velMag );
-      interpVel3T2FieldTOp_->apply_to_field( *vel3_, *tmp );
-      velMag <<= velMag + *tmp * *tmp;
-    }
+    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( velMag );
+    if( vel1t_ != Expr::Tag() ) velMag <<=          (*interpVel1T2FieldTOp_)(*vel1_) * (*interpVel1T2FieldTOp_)(*vel1_);
+    else                        velMag <<= 0.0;
+    if( vel2t_ != Expr::Tag() ) velMag <<= velMag + (*interpVel2T2FieldTOp_)(*vel2_) * (*interpVel2T2FieldTOp_)(*vel2_);
+    if( vel3t_ != Expr::Tag() ) velMag <<= velMag + (*interpVel3T2FieldTOp_)(*vel3_) * (*interpVel3T2FieldTOp_)(*vel3_);
     velMag <<= sqrt(velMag);
   }
 }
@@ -135,7 +124,7 @@ Builder::Builder( const Expr::Tag& result,
                  const Expr::Tag& vel2tag,
                  const Expr::Tag& vel3tag )
 : ExpressionBuilder(result),
-v1t_( vel1tag ), v2t_( vel2tag ), v3t_( vel3tag )
+  v1t_( vel1tag ), v2t_( vel2tag ), v3t_( vel3tag )
 {}
 
 //--------------------------------------------------------------------

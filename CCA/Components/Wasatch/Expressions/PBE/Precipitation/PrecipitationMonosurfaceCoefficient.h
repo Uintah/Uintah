@@ -65,9 +65,9 @@ public:
             const double growthCoefVal,
             const double expConst)
     : ExpressionBuilder(result),
-    supersatt_(superSatTag),
-    growthcoefval_(growthCoefVal),
-    expconst_(expConst)
+      supersatt_(superSatTag),
+      growthcoefval_(growthCoefVal),
+      expconst_(expConst)
     {}
 
     ~Builder(){}
@@ -87,7 +87,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
 };
@@ -108,10 +107,12 @@ PrecipitationMonosurfaceCoefficient( const Expr::Tag& superSatTag,
                                      const double growthCoefVal,
                                      const double expConst)
 : Expr::Expression<FieldT>(),
-superSatTag_(superSatTag),
-growthCoefVal_(growthCoefVal),
-expConst_(expConst)
-{}
+  superSatTag_(superSatTag),
+  growthCoefVal_(growthCoefVal),
+  expConst_(expConst)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -137,16 +138,8 @@ void
 PrecipitationMonosurfaceCoefficient<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  superSat_ = &fml.template field_manager<FieldT>().field_ref( superSatTag_ );
+  superSat_ = &fml.template field_ref<FieldT>( superSatTag_ );
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationMonosurfaceCoefficient<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

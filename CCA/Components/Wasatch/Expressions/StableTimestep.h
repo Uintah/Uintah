@@ -19,7 +19,8 @@ class StableTimestep
  : public Expr::Expression<double>
 {
   const Expr::Tag rhoTag_, viscTag_, uTag_, vTag_, wTag_;
-  bool doX_, doY_, doZ_, isViscous_;
+  const bool doX_, doY_, doZ_, isViscous_;
+  const bool is3dconvdiff_;
   const SVolField* rho_;
   const SVolField* visc_;
   const XVolField* u_;

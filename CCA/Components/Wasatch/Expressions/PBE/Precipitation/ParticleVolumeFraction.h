@@ -46,7 +46,6 @@ template< typename FieldT >
 class ParticleVolumeFraction
 : public Expr::Expression<FieldT>
 {
-  
   const Expr::TagList zerothMomentTagList_;            //list of all m0s
   const Expr::TagList firstMomentTagList_;             //list of all m1s
   const double convFac_; 														   //Conversion factor for consistent units
@@ -55,9 +54,9 @@ class ParticleVolumeFraction
   FieldVec zerothMoments_;
   FieldVec firstMoments_;
   
-  ParticleVolumeFraction( const Expr::TagList zerothMomentTagList_,
-                          const Expr::TagList firstMomentTagList_,
-                          const double convFac);
+  ParticleVolumeFraction( const Expr::TagList& zerothMomentTagList_,
+                          const Expr::TagList& firstMomentTagList_,
+                          const double convFac );
   
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -90,7 +89,6 @@ public:
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 
@@ -104,14 +102,16 @@ public:
 
 template< typename FieldT >
 ParticleVolumeFraction<FieldT>::
-ParticleVolumeFraction( const Expr::TagList zerothMomentTagList,
-                        const Expr::TagList firstMomentTagList, 
+ParticleVolumeFraction( const Expr::TagList& zerothMomentTagList,
+                        const Expr::TagList& firstMomentTagList,
                         const double convFac)
 : Expr::Expression<FieldT>(),
-zerothMomentTagList_(zerothMomentTagList),
-firstMomentTagList_(firstMomentTagList),
-convFac_(convFac)
-{}
+  zerothMomentTagList_(zerothMomentTagList),
+  firstMomentTagList_(firstMomentTagList),
+  convFac_(convFac)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -149,14 +149,6 @@ bind_fields( const Expr::FieldManagerList& fml )
     firstMoments_.push_back(&fm.field_ref(*iM1)); 
   }
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-ParticleVolumeFraction<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

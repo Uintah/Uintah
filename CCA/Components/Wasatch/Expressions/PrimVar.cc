@@ -51,7 +51,9 @@ PrimVar( const Expr::Tag& rhoPhiTag,
   : Expr::Expression<FieldT>(),
     rhophit_( rhoPhiTag ),
     rhot_   ( rhoTag    )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 

@@ -93,13 +93,13 @@ public:
              const double temperature,
              const double diffusionCoef)
     : ExpressionBuilder(result),
-    supersatt_(superSatTag),
-    eqconct_(eqConcTag),
-    surfaceengt_(surfaceEngTag),
-    molecularvolume_(molecularVolume),
-    surfaceenergy_(surfaceEnergy),
-    temperature_(temperature),
-    diffusioncoef_(diffusionCoef)
+      supersatt_(superSatTag),
+      eqconct_(eqConcTag),
+      surfaceengt_(surfaceEngTag),
+      molecularvolume_(molecularVolume),
+      surfaceenergy_(surfaceEnergy),
+      temperature_(temperature),
+      diffusioncoef_(diffusionCoef)
     {}
     
     ~Builder(){}
@@ -121,9 +121,7 @@ public:
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
-  
 };
 
 // ###################################################################
@@ -144,14 +142,16 @@ HomogeneousNucleationCoefficient( const Expr::Tag& superSatTag,
                                   const double temperature,
                                   const double diffusionCoef)
 : Expr::Expression<FieldT>(),
-superSatTag_(superSatTag),
-eqConcTag_(eqConcTag),
-surfaceEngTag_(surfaceEngTag),
-molecularVolume_(molecularVolume),
-surfaceEnergy_(surfaceEnergy),
-temperature_(temperature),
-diffusionCoef_(diffusionCoef)
-{}
+  superSatTag_(superSatTag),
+  eqConcTag_(eqConcTag),
+  surfaceEngTag_(surfaceEngTag),
+  molecularVolume_(molecularVolume),
+  surfaceEnergy_(surfaceEnergy),
+  temperature_(temperature),
+  diffusionCoef_(diffusionCoef)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -187,13 +187,6 @@ bind_fields( const Expr::FieldManagerList& fml )
 }
 
 //--------------------------------------------------------------------
-template< typename FieldT >
-void
-HomogeneousNucleationCoefficient<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
-
-//--------------------------------------------------------------------
 
 template< typename FieldT >
 void
@@ -202,7 +195,6 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= 0.0;
   
   //temporary fields to set before calculating coefficient
   SpatFldPtr<FieldT> delG = SpatialFieldStore::get<FieldT>( result );

@@ -63,9 +63,9 @@ public:
              const Expr::Tag& dissipationTag,
              const double coefVal )
     : ExpressionBuilder(result),
-    kinvisct_(kinViscTag),
-    dissipationt_(dissipationTag),
-    coefval_(coefVal)
+      kinvisct_(kinViscTag),
+      dissipationt_(dissipationTag),
+      coefval_(coefVal)
     {}
     
     ~Builder(){}
@@ -85,9 +85,7 @@ public:
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
-  
 };
 
 
@@ -106,10 +104,12 @@ TurbulentAggregationCoefficient( const Expr::Tag& kinViscTag,
                                  const Expr::Tag& dissipationTag,
                                  const double coefVal )
 : Expr::Expression<FieldT>(),
-kinViscTag_(kinViscTag),
-dissipationTag_(dissipationTag),
-coefVal_(coefVal)
-{}
+  kinViscTag_(kinViscTag),
+  dissipationTag_(dissipationTag),
+  coefVal_(coefVal)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -137,17 +137,9 @@ TurbulentAggregationCoefficient<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  kinVisc_ = &fm.field_ref( kinViscTag_ );
+  kinVisc_     = &fm.field_ref( kinViscTag_ );
   dissipation_ = &fm.field_ref( dissipationTag_ );
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TurbulentAggregationCoefficient<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

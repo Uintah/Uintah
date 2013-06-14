@@ -57,7 +57,9 @@ MomRHSPart( const Expr::Tag& convFluxX,
     volfract_  ( volFracTag   ),
     is3dconvdiff_( cfluxXt_ != emptyTag_ && cfluxYt_ != emptyTag_ && cfluxZt_ != emptyTag_ &&
                    tauXt_   != emptyTag_ && tauYt_   != emptyTag_ && tauZt_   != emptyTag_ )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 

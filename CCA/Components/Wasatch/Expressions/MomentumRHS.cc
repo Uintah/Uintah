@@ -40,7 +40,9 @@ MomRHS( const Expr::Tag& pressure,
     rhspartt_( partRHS ),
     volfract_( volFracTag ),
     emptyTag_( Expr::Tag() )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 

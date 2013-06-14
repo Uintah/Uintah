@@ -34,7 +34,9 @@ Vorticity( const Expr::Tag& vel1tag,
 : Expr::Expression<FieldT>(),
   vel1t_( vel1tag ),
   vel2t_( vel2tag )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 

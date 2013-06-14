@@ -97,7 +97,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 
@@ -160,14 +159,6 @@ bind_fields( const Expr::FieldManagerList& fml )
     knownMoments_.push_back( &fm.field_ref(*iMomTag) );
   }
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-QMOM<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

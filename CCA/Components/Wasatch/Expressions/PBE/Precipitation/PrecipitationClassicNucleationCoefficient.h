@@ -61,8 +61,8 @@ class PrecipitationClassicNucleationCoefficient
              const Expr::Tag& superSatTag,
              const double expConst )
     : ExpressionBuilder(result),
-    supersatt_(superSatTag),
-    expconst_(expConst)
+      supersatt_(superSatTag),
+      expconst_(expConst)
     {}
 
     ~Builder(){}
@@ -81,7 +81,6 @@ class PrecipitationClassicNucleationCoefficient
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
 };
@@ -99,9 +98,11 @@ PrecipitationClassicNucleationCoefficient<FieldT>::
 PrecipitationClassicNucleationCoefficient( const Expr::Tag& superSatTag,
                                            const double expConst)
 : Expr::Expression<FieldT>(),
-superSatTag_(superSatTag),
-expConst_(expConst)
-{}
+  superSatTag_(superSatTag),
+  expConst_(expConst)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -129,13 +130,6 @@ bind_fields( const Expr::FieldManagerList& fml )
 {
   superSat_ = &fml.template field_manager<FieldT>().field_ref( superSatTag_ );
 }
-
-//--------------------------------------------------------------------
-template< typename FieldT >
-void
-PrecipitationClassicNucleationCoefficient<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

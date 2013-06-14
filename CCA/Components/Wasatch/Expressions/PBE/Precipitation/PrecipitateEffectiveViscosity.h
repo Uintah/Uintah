@@ -72,12 +72,12 @@ public:
              const double power,
              const double minStrain)
     : ExpressionBuilder(result),
-    volumefractiont_(volumeFractionTag),
-    strainmagnitudet_(strainMagnitudeTag),
-    corrfac_(corrFac),
-    baseviscosity_(baseViscosity),
-    power_(power),
-    minstrain_(minStrain)
+      volumefractiont_(volumeFractionTag),
+      strainmagnitudet_(strainMagnitudeTag),
+      corrfac_(corrFac),
+      baseviscosity_(baseViscosity),
+      power_(power),
+      minstrain_(minStrain)
     {}
     
     ~Builder(){}
@@ -100,7 +100,6 @@ public:
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 
@@ -121,13 +120,15 @@ PrecipitateEffectiveViscosity( const Expr::Tag& volumeFractionTag,
                                const double power,
                                const double minStrain)
 : Expr::Expression<FieldT>(),
-volumeFractionTag_(volumeFractionTag),
-strainMagnitudeTag_(strainMagnitudeTag),
-corrFac_(corrFac),
-baseViscosity_(baseViscosity),
-power_(power),
-minStrain_(minStrain)
-{}
+  volumeFractionTag_(volumeFractionTag),
+  strainMagnitudeTag_(strainMagnitudeTag),
+  corrFac_(corrFac),
+  baseViscosity_(baseViscosity),
+  power_(power),
+  minStrain_(minStrain)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -165,14 +166,6 @@ bind_fields( const Expr::FieldManagerList& fml )
 template< typename FieldT >
 void
 PrecipitateEffectiveViscosity<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitateEffectiveViscosity<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
@@ -184,7 +177,6 @@ evaluate()
                  ( sqrt(2.0* *strainMagnitude_) < minStrain_ && 1.0 > (1 + 2.5 * corrFac_ * *volumeFraction_ ) * pow( minStrain_ , power_ ),  baseViscosity_)
                  ( sqrt(2.0* *strainMagnitude_) < minStrain_  , ( 1 + 2.5 * corrFac_ * *volumeFraction_ ) * pow( minStrain_ , power_ ) * baseViscosity_ ) 
                  ( (1 + 2.5 * corrFac_ * *volumeFraction_ ) * pow(2.0 * *strainMagnitude_, power_/2 ) * baseViscosity_ );
-
 }
 
 #endif
