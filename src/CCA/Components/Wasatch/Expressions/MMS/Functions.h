@@ -1587,7 +1587,8 @@ evaluate()
   
   const double alpha = 0.1;   // the continuity equation weighting factor 
   const double t = *t_ + *timestep_;  /// this is being added at timestep n+1
-  result <<= alpha / *timestep_ *
+
+  result <<= alpha *
     (
       (
           ( 10/( exp((5 * (*x_ * *x_))/( t + 10)) * ((2 * t + 5) * (2 * t + 5)) )
@@ -1622,7 +1623,7 @@ evaluate()
               - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5))
              )
        )
-   );
+   ) / *timestep_;
 }
 
 //--------------------------------------------------------------------
