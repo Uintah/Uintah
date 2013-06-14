@@ -92,6 +92,7 @@ evaluate()
 {
   using namespace SpatialOps;
   StrainT& strain = this->value();
+  strain <<= 0.0; // avoid potential garbage in extra/ghost cells
   strain <<= 0.5 * ( (*vel1GradOp_)(*vel1_) + (*vel2GradOp_)(*vel2_) );
 }
 
