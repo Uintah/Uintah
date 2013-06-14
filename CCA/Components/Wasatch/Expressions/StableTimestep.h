@@ -19,6 +19,7 @@ class StableTimestep
  : public Expr::Expression<double>
 {
   const Expr::Tag rhoTag_, viscTag_, uTag_, vTag_, wTag_;
+  double invDx_, invDy_, invDz_; // 1/dx, 1/dy, 1/dz
   const bool doX_, doY_, doZ_, isViscous_;
   const bool is3dconvdiff_;
   const SVolField* rho_;
@@ -27,7 +28,6 @@ class StableTimestep
   const YVolField* v_;
   const ZVolField* w_;
   
-  double invDx_, invDy_, invDz_; // 1/dx, 1/dy, 1/dz
   
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SOpT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SOpT;
