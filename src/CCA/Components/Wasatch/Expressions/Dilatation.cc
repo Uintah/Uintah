@@ -98,12 +98,13 @@ evaluate()
   using namespace SpatialOps;
   FieldT& dil = this->value();
 
+  dil <<= 0.0; // avoid potential garbage in extra/ghost cells
+
   if( is3d_ ){ // fully inline for 3D
     dil <<= (*vel1GradOp_)(*vel1_) + (*vel2GradOp_)(*vel2_) + (*vel3GradOp_)(*vel3_);
   }
   else{ // for 2D and 1D, assemble in pieces
     if( vel1t_ != Expr::Tag() ) dil <<=       (*vel1GradOp_)(*vel1_);
-    else                        dil <<= 0.0;
     if( vel2t_ != Expr::Tag() ) dil <<= dil + (*vel2GradOp_)(*vel2_);
     if( vel3t_ != Expr::Tag() ) dil <<= dil + (*vel3GradOp_)(*vel3_);
   }
