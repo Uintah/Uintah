@@ -49,25 +49,24 @@ class TabPropsEvaluator
   typedef std::vector<      FieldT*>  FieldVec;
   typedef std::vector<const FieldT*>  IndepVarVec;
   typedef std::vector<const InterpT*> Evaluators;
-  typedef std::vector<Expr::Tag>      VarNames;
 
-  const VarNames indepVarNames_;
+  const Expr::TagList indepVarNames_;
 
   IndepVarVec indepVars_;
   Evaluators  evaluators_;
 
   TabPropsEvaluator( const InterpT* const interp,
-                     const VarNames& ivarNames );
+                     const Expr::TagList& ivarNames );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
     const InterpT* const interp_;
-    const VarNames ivarNames_;
+    const Expr::TagList ivarNames_;
   public:
     Builder( const Expr::Tag& result,
              const InterpT* interp,
-             const VarNames& ivarNames );
+             const Expr::TagList& ivarNames );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   };
@@ -92,7 +91,7 @@ public:
 template< typename FieldT >
 TabPropsEvaluator<FieldT>::
 TabPropsEvaluator( const InterpT* const interp,
-                   const VarNames& ivarNames )
+                   const Expr::TagList& ivarNames )
   : Expr::Expression<FieldT>(),
     indepVarNames_( ivarNames )
 {
@@ -118,7 +117,7 @@ TabPropsEvaluator<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   // we depend on expressions for each of the independent variables.
-  for( VarNames::const_iterator inam=indepVarNames_.begin(); inam!=indepVarNames_.end(); ++inam ){
+  for( Expr::TagList::const_iterator inam=indepVarNames_.begin(); inam!=indepVarNames_.end(); ++inam ){
     exprDeps.requires_expression( *inam );
   }
 }
@@ -133,7 +132,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
 
   indepVars_.clear();
-  for( VarNames::const_iterator inam=indepVarNames_.begin(); inam!=indepVarNames_.end(); ++inam ){
+  for( Expr::TagList::const_iterator inam=indepVarNames_.begin(); inam!=indepVarNames_.end(); ++inam ){
     indepVars_.push_back( &fm.field_ref( *inam ) );
   }
 }
@@ -193,7 +192,7 @@ template< typename FieldT >
 TabPropsEvaluator<FieldT>::
 Builder::Builder( const Expr::Tag& result,
                   const InterpT* const interp,
-                  const VarNames& ivarNames )
+                  const Expr::TagList& ivarNames )
   : ExpressionBuilder(result),
     interp_   ( interp    ),
     ivarNames_( ivarNames )

@@ -25,7 +25,6 @@
 #include "Strain.h"
 
 #include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
 
 //====================================================================
 
