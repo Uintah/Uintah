@@ -145,21 +145,14 @@ evaluate()
 
   result <<= 0.0;
 
-  if( is3dconvdiff_ ){ // inline all of convective and diffusive contributions
+  if( is3dconvdiff_ ){ // inline all convective and diffusive contributions
     // note: this does not diff, but is slow:
-    result <<= - (*divXOp_)(*cFluxX_)
-               - (*divYOp_)(*cFluxY_)
-               - (*divZOp_)(*cFluxZ_)
-               + 2.0 * (*divXOp_)((*sVol2XFluxInterpOp_)(*visc_) * *tauX_ )
-               + 2.0 * (*divYOp_)((*sVol2YFluxInterpOp_)(*visc_) * *tauY_ )
-               + 2.0 * (*divZOp_)((*sVol2ZFluxInterpOp_)(*visc_) * *tauZ_ );
-//    // here we only distribute the (-) sign into the div operator, and this diffs one test:
-//    result <<= (*divXOp_)(-*cFluxX_)
-//              +(*divYOp_)(-*cFluxY_)
-//              +(*divZOp_)(-*cFluxZ_)
-//              + 2.0 * (*divXOp_)((*sVol2XFluxInterpOp_)(*visc_) * *tauX_ )
-//              + 2.0 * (*divYOp_)((*sVol2YFluxInterpOp_)(*visc_) * *tauY_ )
-//              + 2.0 * (*divZOp_)((*sVol2ZFluxInterpOp_)(*visc_) * *tauZ_ );
+    result <<= (*divXOp_)(-*cFluxX_)
+              +(*divYOp_)(-*cFluxY_)
+              +(*divZOp_)(-*cFluxZ_)
+              + 2.0 * (*divXOp_)((*sVol2XFluxInterpOp_)(*visc_) * *tauX_ )
+              + 2.0 * (*divYOp_)((*sVol2YFluxInterpOp_)(*visc_) * *tauY_ )
+              + 2.0 * (*divZOp_)((*sVol2ZFluxInterpOp_)(*visc_) * *tauZ_ );
 //    // this is the fully inlined version, which causes diffs on ~9 tests.
 //    result <<= (*divXOp_)( -*cFluxX_ + 2.0 * (*sVol2XFluxInterpOp_)(*visc_) * *tauX_ ) +
 //               (*divYOp_)( -*cFluxY_ + 2.0 * (*sVol2YFluxInterpOp_)(*visc_) * *tauY_ ) +

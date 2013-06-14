@@ -228,7 +228,7 @@ void ScalarRHS<FieldT>::evaluate()
 
   if( doXDir_ && doYDir_ && doZDir_ && haveConvection_ && haveDiffusion_ ){
     // inline everything
-    if( haveXAreaFrac_ ){ // previous error checking enfoces that y and z area fractions are also present
+    if( haveXAreaFrac_ ){ // previous error checking enforces that y and z area fractions are also present
       rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * ( *xConvFlux_ + *xDiffFlux_ ) )
               -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * ( *yConvFlux_ + *yDiffFlux_ ) )
               -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * ( *zConvFlux_ + *zDiffFlux_ ) );
