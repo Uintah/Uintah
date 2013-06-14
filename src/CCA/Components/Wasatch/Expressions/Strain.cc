@@ -36,7 +36,9 @@ Strain( const Expr::Tag& vel1Tag,
   : Expr::Expression<StrainT>(),
     vel1t_     ( vel1Tag ),
     vel2t_     ( vel2Tag )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -89,9 +91,8 @@ Strain<StrainT,Vel1T,Vel2T>::
 evaluate()
 {
   using namespace SpatialOps;
-  StrainT& Strain = this->value();
-  Strain <<= 0.0;
-  Strain <<= 0.5 * ( (*vel1GradOp_)(*vel1_) + (*vel2GradOp_)(*vel2_) );
+  StrainT& strain = this->value();
+  strain <<= 0.5 * ( (*vel1GradOp_)(*vel1_) + (*vel2GradOp_)(*vel2_) );
 }
 
 //--------------------------------------------------------------------

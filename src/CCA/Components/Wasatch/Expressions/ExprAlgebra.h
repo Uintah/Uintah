@@ -121,7 +121,9 @@ ExprAlgebra( const Expr::TagList srcTagList,
   srcTagList_ (srcTagList),
   algebraicOperation_( algebraicOperation ),
   isModifierExpr_( isModifierExpr )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 

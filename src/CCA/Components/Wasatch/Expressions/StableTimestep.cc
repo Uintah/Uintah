@@ -31,20 +31,20 @@ StableTimestep( const Expr::Tag& rhoTag,
             const Expr::Tag& vTag,
             const Expr::Tag& wTag )
 : Expr::Expression<double>(),
-rhoTag_( rhoTag ),
-viscTag_( viscTag ),
-uTag_( uTag ),
-vTag_( vTag ),
-wTag_( wTag ),
-invDx_(1.0),
-invDy_(1.0),
-invDz_(1.0)
-{
-  doX_       = uTag_ != Expr::Tag();
-  doY_       = vTag_ != Expr::Tag();
-  doZ_       = wTag_ != Expr::Tag();
-  isViscous_ = viscTag_ != Expr::Tag();
-}
+  rhoTag_( rhoTag ),
+  viscTag_( viscTag ),
+  uTag_( uTag ),
+  vTag_( vTag ),
+  wTag_( wTag ),
+  invDx_(1.0),
+  invDy_(1.0),
+  invDz_(1.0),
+  doX_( uTag_ != Expr::Tag() ),
+  doY_( vTag_ != Expr::Tag() ),
+  doZ_( wTag_ != Expr::Tag() ),
+  isViscous_( viscTag_ != Expr::Tag() ),
+  is3dconvdiff_( doX_ && doY_ && doZ_ && isViscous_ )
+{}
 
 //--------------------------------------------------------------------
 
@@ -112,17 +112,27 @@ evaluate()
   using namespace SpatialOps;
   double& result = this->value();
   
+  // jcs we need to switch to this once we have field_min_interior fixed.  This expression would then be ready for gpu.
+//  if( is3dconvdiff_ ){
+//    result <<= field_min_interior( 1.0 / (
+//        (*x2SInterp_)(abs(*u_)) * invDx_ + *visc_/ *rho_ * invDx_ * invDx_ +
+//        (*y2SInterp_)(abs(*v_)) * invDy_ + *visc_/ *rho_ * invDy_ * invDy_ +
+//        (*z2SInterp_)(abs(*w_)) * invDz_ + *visc_/ *rho_ * invDz_ * invDz_ )
+//        );
+//  }
+//  else{
   SpatialOps::SpatFldPtr<SVolField> kinVisc_ = SpatialOps::SpatialFieldStore::get<SVolField>( *rho_ );
   if (isViscous_) *kinVisc_ <<= *visc_/ *rho_;
   else            *kinVisc_ <<= 0.0;
   
   SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore::get<SVolField>( *rho_ );
   if (!doX_) *tmp <<= 0.0;
-  if (doX_)  *tmp <<=        (*x2SInterp_)(abs(*u_)) * invDx_ + *kinVisc_ * invDx_ * invDx_;       // u/dx + nu/dx2
+  if (doX_)  *tmp <<=        (*x2SInterp_)(abs(*u_)) * invDx_ + *kinVisc_ * invDx_ * invDx_; // u/dx + nu/dx2
   if (doY_)  *tmp <<= *tmp + (*y2SInterp_)(abs(*v_)) * invDy_ + *kinVisc_ * invDy_ * invDy_; // v/dy + nu/dy2
   if (doZ_)  *tmp <<= *tmp + (*z2SInterp_)(abs(*w_)) * invDz_ + *kinVisc_ * invDz_ * invDz_; // w/dz + nu/dz2
   *tmp <<= 1.0 / *tmp;
   result = field_min_interior(*tmp);
+//  }
 }
 
 //--------------------------------------------------------------------

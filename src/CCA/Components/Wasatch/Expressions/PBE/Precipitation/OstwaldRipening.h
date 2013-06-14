@@ -107,7 +107,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
 };
@@ -126,14 +125,16 @@ OstwaldRipening( const Expr::TagList weightsTagList,
                  const double expCoef,
                  const double tolmanLength,
                  const double rCutOff)
-  : Expr::Expression<FieldT>(),
+: Expr::Expression<FieldT>(),
   weightsTagList_  (weightsTagList),
   abscissaeTagList_(abscissaeTagList),
   moment0Tag_      (moment0Tag),
   expCoef_         (expCoef),
   tolmanLength_    (tolmanLength),
   rCutOff_         (rCutOff)
-  {}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -175,14 +176,6 @@ bind_fields( const Expr::FieldManagerList& fml )
     abscissae_.push_back(&volfm.field_ref(*iabscissa));
   }
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-OstwaldRipening<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

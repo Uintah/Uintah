@@ -25,7 +25,9 @@ VelEst<FieldT>::VelEst( const Expr::Tag velTag,
     pressuret_(pressureTag ),
     tStept_   ( timeStepTag ),
     is3d_( tauxit_ != Expr::Tag() && tauyit_ != Expr::Tag() && tauzit_ != Expr::Tag() )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //------------------------------------------------------------------
 
@@ -38,7 +40,6 @@ VelEst<FieldT>::~VelEst()
 template< typename FieldT >
 void VelEst<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
 {  
-
   exprDeps.requires_expression( velt_      );
   exprDeps.requires_expression( convTermt_ );
   exprDeps.requires_expression( densityt_  );
@@ -51,8 +52,6 @@ void VelEst<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
   if( tauxit_ != Expr::Tag() )  exprDeps.requires_expression( tauxit_ );
   if( tauyit_ != Expr::Tag() )  exprDeps.requires_expression( tauyit_ );
   if( tauzit_ != Expr::Tag() )  exprDeps.requires_expression( tauzit_ );
-
-  
 }
 
 //------------------------------------------------------------------
@@ -60,15 +59,15 @@ void VelEst<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
 template< typename FieldT >
 void VelEst<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldMgrSelector<FieldT>::type& FM    = fml.field_manager<FieldT>();
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm          = fml.field_manager<FieldT>();
   const typename Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
-  const typename Expr::FieldMgrSelector<XFace>::type& xFaceFM = fml.field_manager<XFace>();
-  const typename Expr::FieldMgrSelector<YFace>::type& yFaceFM = fml.field_manager<YFace>();
-  const typename Expr::FieldMgrSelector<ZFace>::type& zFaceFM = fml.field_manager<ZFace>();
-  const typename Expr::FieldMgrSelector<double>::type& tFM   = fml.field_manager<double>();
+  const typename Expr::FieldMgrSelector<XFace>::type& xFaceFM      = fml.field_manager<XFace>();
+  const typename Expr::FieldMgrSelector<YFace>::type& yFaceFM      = fml.field_manager<YFace>();
+  const typename Expr::FieldMgrSelector<ZFace>::type& zFaceFM      = fml.field_manager<ZFace>();
+  const typename Expr::FieldMgrSelector<double>::type& tFM         = fml.field_manager<double>();
   
-  vel_      = &FM.field_ref ( velt_ );    
-  convTerm_ = &FM.field_ref ( convTermt_ );    
+  vel_      = &fm.field_ref ( velt_ );    
+  convTerm_ = &fm.field_ref ( convTermt_ );    
   density_  = &scalarFM.field_ref ( densityt_ );    
   pressure_ = &scalarFM.field_ref ( pressuret_ );    
   tStep_    = &tFM.field_ref( tStept_      );

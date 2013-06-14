@@ -61,11 +61,11 @@ class PrecipitationSource
   const FieldT* density_;
   const FieldT* envWeight_;
 
-  PrecipitationSource( const Expr::TagList sourceTagList_,
-                       const Expr::Tag etaScaleTag_,
-                       const Expr::Tag densityTag_,
-                       const Expr::Tag envWeightTag_,
-                       const std::vector<double> molecVols_);
+  PrecipitationSource( const Expr::TagList& sourceTagList_,
+                       const Expr::Tag& etaScaleTag_,
+                       const Expr::Tag& densityTag_,
+                       const Expr::Tag& envWeightTag_,
+                       const std::vector<double>& molecVols_);
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -76,13 +76,13 @@ public:
              const Expr::Tag& etaScaleTag,
              const Expr::Tag& densityTag,
              const Expr::Tag& envWeightTag,
-             const std::vector<double> molecVols)
+             const std::vector<double>& molecVols)
     : ExpressionBuilder(result),
-      sourcetaglist_  (sourceTagList),
-      etascalet_      (etaScaleTag),
-      densityt_       (densityTag),
-      envweightt_     (envWeightTag),
-      molecvols_      (molecVols)
+      sourcetaglist_(sourceTagList),
+      etascalet_    (etaScaleTag),
+      densityt_     (densityTag),
+      envweightt_   (envWeightTag),
+      molecvols_    (molecVols)
     {}
     ~Builder(){}
     Expr::ExpressionBase* build() const
@@ -102,7 +102,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
 };
@@ -115,18 +114,20 @@ public:
 
 template< typename FieldT >
 PrecipitationSource<FieldT>::
-PrecipitationSource( const Expr::TagList sourceTagList,
-                     const Expr::Tag etaScaleTag,
-                     const Expr::Tag densityTag,
-                    const Expr::Tag envWeightTag,
-                     const std::vector<double> molecVols)
+PrecipitationSource( const Expr::TagList& sourceTagList,
+                     const Expr::Tag& etaScaleTag,
+                     const Expr::Tag& densityTag,
+                     const Expr::Tag& envWeightTag,
+                     const std::vector<double>& molecVols)
 : Expr::Expression<FieldT>(),
-  sourceTagList_  (sourceTagList),
-  etaScaleTag_    (etaScaleTag),
-  densityTag_     (densityTag),
-  envWeightTag_   (envWeightTag),
-  molecVols_      (molecVols)
-{}
+  sourceTagList_(sourceTagList),
+  etaScaleTag_  (etaScaleTag),
+  densityTag_   (densityTag),
+  envWeightTag_ (envWeightTag),
+  molecVols_    (molecVols)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -172,14 +173,6 @@ bind_fields( const Expr::FieldManagerList& fml )
 template< typename FieldT >
 void
 PrecipitationSource<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationSource<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
@@ -198,6 +191,8 @@ evaluate()
     ++sourceIterator;
   }
 }
+
+//--------------------------------------------------------------------
 
 #endif // PrecipitationSource_Expr_h
 

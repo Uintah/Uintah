@@ -49,6 +49,7 @@ MonolithicRHS( const Expr::Tag& dCoefTag,
     is3d_( xconvFluxTag != Expr::Tag() && yconvFluxTag != Expr::Tag() && zconvFluxTag != Expr::Tag() && dCoefTag != Expr::Tag() )
 {
   assert( dCoefTag != Expr::Tag() );
+  this->set_gpu_runnable( true );
 }
 
 //--------------------------------------------------------------------

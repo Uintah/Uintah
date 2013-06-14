@@ -90,9 +90,7 @@ public:
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
-  
 };
 
 
@@ -108,10 +106,12 @@ CriticalSurfaceEnergy( const Expr::Tag& superSatTag,
                        const double bulkSurfaceEnergy,
                        const double sqrtCoef)
 : Expr::Expression<FieldT>(),
-superSatTag_(superSatTag),
-bulkSurfaceEnergy_(bulkSurfaceEnergy),
-sqrtCoef_(sqrtCoef)
-{}
+  superSatTag_(superSatTag),
+  bulkSurfaceEnergy_(bulkSurfaceEnergy),
+  sqrtCoef_(sqrtCoef)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -139,14 +139,6 @@ bind_fields( const Expr::FieldManagerList& fml )
 {
   superSat_ = &fml.template field_manager<FieldT>().field_ref( superSatTag_ );
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-CriticalSurfaceEnergy<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

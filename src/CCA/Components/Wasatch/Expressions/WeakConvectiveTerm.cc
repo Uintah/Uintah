@@ -15,7 +15,9 @@ WeakConvectiveTerm<FieldT>::WeakConvectiveTerm( const Expr::Tag velTag,
     velyt_   ( velTags[1]  ),
     velzt_   ( velTags[2]  ),
     is3d_( velxt_ != Expr::Tag() && velyt_ != Expr::Tag() && velzt_ != Expr::Tag() )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //------------------------------------------------------------------
 

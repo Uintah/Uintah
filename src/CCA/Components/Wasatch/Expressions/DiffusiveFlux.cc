@@ -61,7 +61,9 @@ DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag& rhoTag,
     rhoTag_     ( rhoTag      ),
     turbDiffTag_( turbDiffTag ),
     coefVal_    ( coef        )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -136,7 +138,9 @@ DiffusiveFlux2( const Expr::Tag& rhoTag,
     coefTag_    ( coefTag     ),
     rhoTag_     ( rhoTag      ),
     turbDiffTag_( turbDiffTag )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 

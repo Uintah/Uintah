@@ -95,9 +95,10 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
           << "In 3D, it is expected that if one area fraction is provided, they all are..."
           << std::endl << std::endl;
       throw std::invalid_argument( msg.str() );
-
     }
   }
+
+  this->set_gpu_runnable( true );
 }
 
 //------------------------------------------------------------------

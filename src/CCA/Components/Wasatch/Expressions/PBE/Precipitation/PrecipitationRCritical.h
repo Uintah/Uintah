@@ -65,9 +65,9 @@ public:
              const Expr::Tag& surfaceEngTag,
              const double rKnotVal)
     : ExpressionBuilder(result),
-    supersatt_(superSatTag),
-    surfaceengt_(surfaceEngTag),
-    rknotval_(rKnotVal)
+      supersatt_(superSatTag),
+      surfaceengt_(surfaceEngTag),
+      rknotval_(rKnotVal)
     {}
 
     ~Builder(){}
@@ -87,7 +87,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
 };
@@ -108,7 +107,9 @@ PrecipitationRCritical( const Expr::Tag& superSatTag,
   superSatTag_(superSatTag),
   surfaceEngTag_(surfaceEngTag),
   rKnotVal_(rKnotVal)
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -136,18 +137,11 @@ void
 PrecipitationRCritical<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  superSat_ = &fml.template field_manager<FieldT>().field_ref( superSatTag_ );
-  if (surfaceEngTag_ != Expr::Tag() )
-    surfaceEng_ = &fml.template field_manager<FieldT>().field_ref( surfaceEngTag_ );
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
+  superSat_ = &fm.field_ref( superSatTag_ );
+  if( surfaceEngTag_ != Expr::Tag() )
+    surfaceEng_ = &fm.field_ref( surfaceEngTag_ );
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationRCritical<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 
