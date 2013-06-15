@@ -22,17 +22,17 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef _POLYNOMIALSPECIFICHEAT_H_
-#define _POLYNOMIALSPECIFICHEAT_H_
+#ifndef _NASAPOLYNOMIALSPECIFICHEAT_H_
+#define _NASAPOLYNOMIALSPECIFICHEAT_H_
 
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/SimulationStateP.h>
 
-//  A generalized Polynomial form for specific heat that asymptotes to a upper bound
+//  A generalized NASAPolynomial form for specific heat that asymptotes to a upper bound
 //   where:
 //
-//   Cv(T) = x^m/SUM(a_i * x^i)
+//   Cv(T) = SUM(a_i * x^i)/x^m 
 //           from i=0 to m
 //           where m is the maximum order
 //
@@ -43,10 +43,10 @@
 
 namespace Uintah {
 
-class PolynomialCv : public SpecificHeat {
+class NASAPolynomialCv : public SpecificHeat {
 public:
-  PolynomialCv(ProblemSpecP& ps);
-  ~PolynomialCv();
+  NASAPolynomialCv(ProblemSpecP& ps);
+  ~NASAPolynomialCv();
 
   virtual void outputProblemSpec(ProblemSpecP& ice_ps);
 
