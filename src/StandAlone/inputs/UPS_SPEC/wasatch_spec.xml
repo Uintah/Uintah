@@ -829,10 +829,6 @@
            This allows the heat loss to be determined -->
       <HeatLoss                       spec="OPTIONAL NO_DATA">
         <NameTag                      spec="REQUIRED"/>
-        <HeatLossNameInTable          spec="REQUIRED STRING"/>
-        <AdiabaticEnthalpyNameInTable spec="REQUIRED STRING"/>
-        <SensibleEnthalpyNameInTable spec="REQUIRED STRING"/>
-        <EnthalpyNameInTable          spec="REQUIRED STRING"/>
       </HeatLoss>
 
       <!-- A special case to extract density from this TabProps file -->
