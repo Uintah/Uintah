@@ -49,6 +49,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <fstream>
+#include <iterator>
 
 using std::endl;
 using std::flush;
@@ -258,20 +259,16 @@ namespace Wasatch{
 
     //____________________________________________________________
     // create an expression to compute the heat loss, if requested
+    // jcs we could automatically create some of these based on the
+    //     names in the table, since we have these names hard-coded
+    //     for heat loss cases
     if( params->findBlock("HeatLoss") ){
-      Uintah::ProblemSpecP hlParams = params->findBlock("HeatLoss")->findBlock("EnthalpyNameInTable");
-      std::string enthName, hlName;
-      hlParams->get("EnthalpyNameInTable",enthName);
-      hlParams->get("HeatLossNameInTable",hlName);
-      size_t hlIx = 0;
+      Uintah::ProblemSpecP hlParams = params->findBlock("HeatLoss");
+      const std::string hlName="HeatLoss";
+      const Names::const_iterator ivarIter = std::find(ivars.begin(),ivars.end(),hlName);
+      const size_t hlIx = std::distance( ivars.begin(), ivarIter );
       Expr::TagList hlIvars = ivarNames;
-      for( ; hlIx<ivarNames.size(); ++hlIx ){
-        if( ivarNames[hlIx].name() == hlName ){
-          break;
-        }
-      }
       hlIvars.erase( hlIvars.begin() + hlIx );
-
       if( hlIx >= ivarNames.size() ){
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << endl
@@ -279,17 +276,14 @@ namespace Wasatch{
         throw std::runtime_error( msg.str() );
       }
 
-      std::string adEnthName, sensEnthName;
-      hlParams->get( "AdiabaticEnthalpyNameInTable", adEnthName );
-      hlParams->get( "SensibleEnthalpyNameInTable", sensEnthName );
-      const InterpT* const adEnthInterp   = table.find_entry( adEnthName   );
-      const InterpT* const sensEnthInterp = table.find_entry( sensEnthName );
-      const InterpT* const enthInterp     = table.find_entry( enthName     );
+      const InterpT* const adEnthInterp   = table.find_entry( "AdiabaticEnthalpy" );
+      const InterpT* const sensEnthInterp = table.find_entry( "SensibleEnthalpy"  );
+      const InterpT* const enthInterp     = table.find_entry( "Enthalpy"          );
       typedef TabPropsHeatLossEvaluator<SpatialOps::structured::SVolField>::Builder HLEval;
       gh.exprFactory->register_expression( scinew HLEval( parse_nametag( hlParams->findBlock("NameTag") ),
-                                                          adEnthInterp->clone(),
+                                                          adEnthInterp  ->clone(),
                                                           sensEnthInterp->clone(),
-                                                          enthInterp->clone(),
+                                                          enthInterp    ->clone(),
                                                           hlIx,
                                                           hlIvars ) );
     }
