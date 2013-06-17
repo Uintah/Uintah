@@ -200,12 +200,15 @@ namespace Uintah {
       std::string name(){ return d_filebase;}
 
       //! Set up data arachive for restarting a Uintah simulation   
-      void restartInitialize(int timestep, const GridP& grid, DataWarehouse* dw,
-          LoadBalancer* lb, double* pTime /* passed back */);
+      void restartInitialize(       int             timestep,
+                              const GridP         & grid,
+                                    DataWarehouse * dw,
+                                    LoadBalancer  * lb,
+                                    double        * pTime /* passed back */ );
 
       inline ProblemSpecP getTimestepDoc(int index) { return getTimeData(index).d_tstop; }
 
-      static void queryEndiannessAndBits(ProblemSpecP, std::string& endianness, int& numBits);  
+      static void queryEndiannessAndBits( ProblemSpecP doc, std::string & endianness, int & numBits );
 
       // GROUP:  Information Access
       //////////
@@ -213,20 +216,17 @@ namespace Uintah {
       // variables. We also need to determine the type of each variable.
       // Get a list of scalar or vector variable names and  
       // a list of corresponding data types
-      void queryVariables( std::vector< std::string>& names,
-          std::vector< const TypeDescription *>&  );
-      void queryGlobals( std::vector< std::string>& names,
-          std::vector< const TypeDescription *>&  );
-      void queryTimesteps( std::vector<int>& index,
-          std::vector<double>& times );
+      void queryVariables( std::vector<std::string>              & names,
+                           std::vector<const TypeDescription *>  &  );
+      void queryGlobals(   std::vector<std::string>              & names,
+                           std::vector<const TypeDescription *>  &  );
+      void queryTimesteps( std::vector<int>                      & index,
+                           std::vector<double>                   & times );
 
       //! the ups is for the assignBCS that needs to happen
       //! if we are reading the simulation grid from the uda,
       //! and thus is only necessary on a true restart.
-      GridP queryGrid(int index, const ProblemSpec* ups = 0);
-
-
-
+      GridP queryGrid( int index, const ProblemSpec* ups = 0 );
 
 #if 0
       //////////
@@ -238,29 +238,43 @@ namespace Uintah {
 
       //////////
       // how long does a particle live?  Not variable specific.
-      void queryLifetime( double& min, double& max, particleId id);
+      void queryLifetime( double & min, double & max, particleId id );
 
       //////////
       // how long does a patch live?  Not variable specific
-      void queryLifetime( double& min, double& max, const Patch* patch);
+      void queryLifetime( double & min, double & max, const Patch * patch );
 
-      ConsecutiveRangeSet queryMaterials(const std::string& varname,
-          const Patch* patch, int index);
+      ConsecutiveRangeSet queryMaterials( const std::string & varname,
+                                          const Patch       * patch,
+                                                int           index );
 
-      int queryNumMaterials(const Patch* patch, int index);
+      int queryNumMaterials( const Patch* patch, int index );
 
       // Queries a variable for a material, patch, and index in time.
       // Optionally pass in DataFileInfo if you're iterating over
       // entries in the hash table (like restartInitialize does)
-      void query( Variable& var, const std::string& name, int matlIndex, 
-          const Patch* patch, int timeIndex, DataFileInfo* dfi = 0);
+      void query(       Variable     & var,
+                  const std::string  & name,
+                        int            matlIndex, 
+                  const Patch        * patch,
+                        int            timeIndex,
+                        DataFileInfo * dfi = 0 );
 
-      void query( Variable& var, const std::string& name, int matlIndex, 
-          const Patch* patch, int timeIndex,
-          Ghost::GhostType, int ngc);
+      void query(       Variable         & var,
+                  const std::string      & name,
+                        int                matlIndex, 
+                  const Patch            * patch,
+                        int                timeIndex,
+                        Ghost::GhostType   ghost_type,
+                        int                ngc );
 
-      void queryRegion( Variable& var, const std::string& name, int matlIndex, 
-          const Level* level, int timeIndex, IntVector low, IntVector high );
+      void queryRegion(       Variable    & var,
+                        const std::string & name,
+                              int           matlIndex, 
+                        const Level       * level,
+                              int           timeIndex,
+                              IntVector     low,
+                              IntVector     high );
 
       //////////
       // query the variable value for a particular particle  overtime;

@@ -99,7 +99,7 @@ DataArchive::~DataArchive()
 
 // static, so can be called from either DataArchive or TimeData
 void
-DataArchive::queryEndiannessAndBits(ProblemSpecP doc, string& endianness, int& numBits)
+DataArchive::queryEndiannessAndBits( ProblemSpecP doc, string & endianness, int & numBits )
 {
   ProblemSpecP meta = doc->findBlock("Meta");
 
@@ -807,6 +807,7 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
   queryGlobals(names, typeDescriptions);  
   
   map<string, VarLabel*> varMap;
+  map<string, VarLabel*> delThese;
   for (unsigned i = 0; i < names.size(); i++) {
     VarLabel * vl = VarLabel::find(names[i]);
     if( vl == NULL ) {
@@ -817,6 +818,10 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
       //const bool hasExtraCells = (grid->getPatchByID(0,0)->getExtraCells() != SCIRun::IntVector(0,0,0));
       // if extracells are specified, then create varlabels that are consistent with Wasatch varlabels.
       vl = VarLabel::create( names[i], typeDescriptions[i], IntVector(0,0,0) );
+
+      // At the end of this routine, we will need to delete the VarLabels that we create here in
+      // order to avoid a memory leak.
+      delThese[names[i]] = vl;
     }
     varMap[names[i]] = vl;
   }
@@ -877,6 +882,19 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
       dw->put(var, label, matl, patch); 
       delete var; // should have been cloned when it was put
     }
+  }
+
+  // The delThese variable, created above, is used to keep track of
+  // the VarLabels (for each of the data fields found in the data
+  // archive we are reading data out of) for which a varLabel does not
+  // already exist.  Now that we have read in the data, we no longer
+  // need these temporary VarLabels, so delete them to avoid a memory
+  // leak.  Note, most of these VarLabels will be 're-created' by
+  // individual components when they go to access their data.
+
+  map<string, VarLabel*>::iterator vm_iter = delThese.begin();
+  for( ; vm_iter != delThese.end(); vm_iter++ ) {
+    VarLabel::destroy( vm_iter->second );
   }
 }
 
