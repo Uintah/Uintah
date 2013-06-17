@@ -924,8 +924,9 @@ namespace Uintah{
         // Note that directions is a vector as: [-X,+X,-Y,+Y,-Z,+Z] ~ 0 means "off"/non-zero means "on"
         std::vector<int>              directions; 
         double                        mass_flow_rate; 
-        BCIterator                    bc_face_iterator;
-        BCIterator                    interior_cell_iterator; 
+        BCIterator                    bc_face_iterator;       //face iterator at the outflow
+        BCIterator                    interior_cell_iterator; //first flow cell adjacent to outflow 
+        BCIterator                    bc_cell_iterator;       //first interior wall cell at outflow
         bool                          has_been_initialized; 
         Vector                        velocity;
         std::string                   name; 
@@ -1005,6 +1006,7 @@ namespace Uintah{
 
       mutable CrowdMonitor bc_face_iterator_lock;
       mutable CrowdMonitor interior_cell_iterator_lock;
+      mutable CrowdMonitor bc_cell_iterator_lock;
 
       const VarLabel* _T_label; 
 
@@ -1087,6 +1089,45 @@ namespace Uintah{
         }
       }
 
+      /** @brief Add a cell iterator to the list of total iterators for this patch last solid cell at outflow */ 
+      void inline add_bc_cell_iterator( IntVector c, const Patch* patch, int dir, IntrusionBC::Boundary& intrusion ){ 
+
+        int p = patch->getID(); 
+
+        bc_cell_iterator_lock.readLock();
+        BCIterator::iterator iMAP = intrusion.bc_cell_iterator.find( p );
+        bc_cell_iterator_lock.readUnlock();
+
+        bc_cell_iterator_lock.writeLock();
+        if ( patch->containsCell( c ) ){ 
+
+          if ( iMAP == intrusion.bc_cell_iterator.end() ) {
+
+            //this is a new patch that hasn't been added yet
+            std::vector<IntVector> cell_indices; 
+            cell_indices.push_back(c); 
+            intrusion.bc_cell_iterator.insert(make_pair( p, cell_indices )); 
+
+          } else { 
+
+            //iterator already started for this patch
+            // does this cell alread exisit in the list? 
+            bool already_present = false; 
+            for ( std::vector<IntVector>::iterator iVEC = iMAP->second.begin(); iVEC != iMAP->second.end(); iVEC++ ){ 
+              if ( *iVEC == c ) { 
+                already_present = true; 
+              } 
+            } 
+
+            if ( !already_present ) { 
+              //not in the list, insert it: 
+              iMAP->second.push_back(c); 
+            } 
+          } 
+          bc_cell_iterator_lock.writeUnlock();
+        }
+      }
+
       void inline initialize_the_iterators( int p, IntrusionBC::Boundary& intrusion ){ 
 
         bc_face_iterator_lock.writeLock();
@@ -1112,6 +1153,18 @@ namespace Uintah{
 
         } 
         interior_cell_iterator_lock.writeUnlock();
+
+        bc_cell_iterator_lock.writeLock();
+        BCIterator::iterator iMAP3 = intrusion.bc_cell_iterator.find( p );
+        if ( iMAP2 == intrusion.bc_cell_iterator.end() ) {
+
+          //this is a new patch that hasn't been added yet
+          std::vector<IntVector> cell_indices; 
+          cell_indices.clear(); 
+          intrusion.bc_cell_iterator.insert(make_pair( p, cell_indices )); 
+
+        } 
+        bc_cell_iterator_lock.writeUnlock();
 
       } 
 

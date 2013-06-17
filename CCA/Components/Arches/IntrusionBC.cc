@@ -16,7 +16,7 @@ using namespace Uintah;
 //_________________________________________
 IntrusionBC::IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props, int WALL ) : 
   _lab(lab), _mpmlab(mpmlab), _props(props), _WALL(WALL),bc_face_iterator_lock("ARCHES bc_face_iterator lock"),
-  interior_cell_iterator_lock("ARCHES interior_cell_iterator lock")
+  interior_cell_iterator_lock("ARCHES interior_cell_iterator lock"), bc_cell_iterator_lock("ARCHES bc_cell_iterator lock")
 {
   // helper for the intvector direction 
   _dHelp.push_back( IntVector(-1,0,0) ); 
@@ -643,6 +643,7 @@ IntrusionBC::setCellType( const ProcessorGroup*,
       if ( !iter->second.has_been_initialized ){ 
         iter->second.bc_face_iterator.clear(); 
         iter->second.interior_cell_iterator.clear(); 
+        iter->second.bc_cell_iterator.clear();
         iter->second.has_been_initialized = true; 
       }
       initialize_the_iterators( patchID, iter->second ); 
@@ -715,6 +716,8 @@ IntrusionBC::setCellType( const ProcessorGroup*,
                   add_face_iterator( face_index, patch, idir, iter->second ); 
                   //interior iterator is the first flow cell next to the wall
                   add_interior_iterator( neighbor_index, patch, idir, iter->second );
+                  //last wall cell next to outlet
+                  add_bc_cell_iterator( c, patch, idir, iter->second ); 
                 } 
               } 
 
@@ -730,6 +733,7 @@ IntrusionBC::setCellType( const ProcessorGroup*,
                   IntVector face_index = neighbor_index + _faceDirHelp[idir]; 
                   add_face_iterator( face_index, patch, idir, iter->second ); 
                   add_interior_iterator( c, patch, idir, iter->second ); 
+                  add_bc_cell_iterator( neighbor_index, patch, idir, iter->second ); 
 
                 } 
               } 
@@ -1176,9 +1180,9 @@ IntrusionBC::setDensity( const Patch* patch,
 
       if ( iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){ 
 
-        if ( !iIntrusion->second.interior_cell_iterator.empty() ) {
+        if ( !iIntrusion->second.bc_cell_iterator.empty() ) {
 
-          BCIterator::iterator  iBC_iter = (iIntrusion->second.interior_cell_iterator).find(p);
+          BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_cell_iterator).find(p);
 
           for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
@@ -1188,7 +1192,7 @@ IntrusionBC::setDensity( const Patch* patch,
 
               if ( iIntrusion->second.directions[idir] != 0 ){ 
 
-                density[ c - _faceDirHelp[idir] ] = iIntrusion->second.density; 
+                density[ c ] = iIntrusion->second.density; 
 
               } 
             }
