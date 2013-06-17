@@ -552,6 +552,12 @@ SCI_ARG_ENABLE(gencode,
   [cuda_gencode="$enableval"],
   [cuda_gencode=${gencode=''}])
   
+SCI_ARG_ENABLE(stack_tracer,
+  AC_HELP_STRING(--enable-stack-tracer,
+                 Enable call stack trace generation),
+  [enable_stack_tracer="$enableval"],
+  [enable_stack_tracer=${enable_stack_tracer='no'}])  
+  
 SCI_ARG_ENABLE(exename,
   AC_HELP_STRING(--enable-exename=<name>,
                  Use name for executable name instead of the default: scirun),
@@ -3603,6 +3609,21 @@ AC_SUBST(PAPI_LIB_DIR_FLAG)
 AC_SUBST(PAPI_LIB_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/papi_testdefs.h"
+
+##  --  Check for anbled Stack Tracer  -------------------------------------------
+
+DEF_STACK_TRACER=
+USE_STACK_TRACER="no"
+  
+if test "$enable_stack_tracer" = "yes"; then
+  DEF_STACK_TRACER="#define USE_STACK_TRACER 1"
+  USE_STACK_TRACER="yes"
+fi
+
+AC_SUBST(USE_STACK_TRACER)
+AC_SUBST(DEF_STACK_TRACER)
+
+sci_defs_files="$sci_defs_files include/sci_defs/stacktracer_testdefs.h"
 
 
 ##  --  search for google perftools stuff  -------------------------------------------
