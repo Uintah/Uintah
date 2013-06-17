@@ -48,14 +48,17 @@ template< typename FieldT >
 class Aggregation
 : public Expr::Expression<FieldT>
 {
+public:
+  enum aggregation_t { CONSTANT, BROWNIAN, HYDRODYNAMIC };
   
+private:  
   const Expr::TagList weightsTagList_; // these are the tags of all weights
   const Expr::TagList abscissaeTagList_; // these are the tags of all abscissae
   const Expr::TagList efficiencyTagList_; //tags for collison efficiencies
   const Expr::Tag aggCoefTag_;    //optional coefficent which contaisn fluid properties
   const double momentOrder_;      // order of this moment
   const double effCoef_;          //efficiency coefficient of frequency
-  const std::string aggModel_;    //strign with type of aggregation model to use for fequency
+  const aggregation_t aggType_;   //enum for aggregation type
   const bool useEffTags_;         //boolean to use efficiency tags
   
   typedef std::vector<const FieldT*> FieldVec;
@@ -70,7 +73,7 @@ class Aggregation
                const Expr::Tag& aggCoefTag,
                const double momentOrder,
                const double effCoef,
-               const std::string aggModel,
+               const aggregation_t& aggType,
                const bool useEffTags);
   
 public:
@@ -84,7 +87,7 @@ public:
              const Expr::Tag& aggCoefTag,
              const double momentOrder,
              const double effCoef,
-             const std::string aggModel,
+             const aggregation_t& aggType,
              const bool useEffTags)
     : ExpressionBuilder(result),
     weightstaglist_(weightsTagList),
@@ -93,13 +96,13 @@ public:
     aggcoeft_(aggCoefTag),
     momentorder_(momentOrder),
     effcoef_(effCoef),
-    aggmodel_(aggModel),
+    aggtype_(aggType),
     useefftags_(useEffTags)
     {}
     ~Builder(){}
     Expr::ExpressionBase* build() const
     {
-      return new Aggregation<FieldT>( weightstaglist_,abscissaetaglist_, efficiencytaglist_, aggcoeft_, momentorder_, effcoef_, aggmodel_, useefftags_ );
+      return new Aggregation<FieldT>( weightstaglist_,abscissaetaglist_, efficiencytaglist_, aggcoeft_, momentorder_, effcoef_, aggtype_, useefftags_ );
     }
     
   private:
@@ -109,7 +112,7 @@ public:
     const Expr::Tag aggcoeft_;
     const double momentorder_;
     const double effcoef_;
-    const std::string aggmodel_;
+    const aggregation_t aggtype_;
     const bool useefftags_;
   };
   
@@ -138,7 +141,7 @@ Aggregation( const Expr::TagList& weightsTagList,
              const Expr::Tag& aggCoefTag,
              const double momentOrder,
              const double effCoef,
-             const std::string aggModel,
+             const aggregation_t& aggType,
              const bool useEffTags)
 : Expr::Expression<FieldT>(),
   weightsTagList_(weightsTagList),
@@ -147,7 +150,7 @@ Aggregation( const Expr::TagList& weightsTagList,
   aggCoefTag_(aggCoefTag),
   momentOrder_(momentOrder),
   effCoef_(effCoef),
-  aggModel_(aggModel),
+  aggType_(aggType),
   useEffTags_(useEffTags)
 {
   this->set_gpu_runnable( true );
@@ -216,7 +219,7 @@ evaluate()
 
   int nEnv = weights_.size();
   
-  if (aggModel_ == "CONSTANT") {  // \beta_{ij} = 1
+  if (aggType_ == CONSTANT) {  // \beta_{ij} = 1
     for (int i=0; i<nEnv; i++) {
       for (int j =0 ; j<nEnv; j++) {
         *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 ) - pow( ri , momentOrder_ ) * wi*wj;
@@ -224,7 +227,7 @@ evaluate()
         result <<= result + *tmp;
       }
     }
-  } else if (aggModel_ == "BROWNIAN") {  // \beta_{ij} = (r_i + r_j)^2 / r_i / r_j
+  } else if (aggType_ == BROWNIAN) {  // \beta_{ij} = (r_i + r_j)^2 / r_i / r_j
     for (int i=0; i<nEnv; i++) {
       for (int j =0 ; j<nEnv; j++) {
         *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj) / ri / rj - pow( ri , momentOrder_ ) * wi*wj * (ri+rj) * (ri+rj) /ri / rj;
@@ -232,7 +235,7 @@ evaluate()
         result <<= result + *tmp;
       }
     }
-  } else if (aggModel_ == "HYDRODYNAMIC" ) { // \beta_{ij} = (r_i + r_j)^3
+  } else if (aggType_ == HYDRODYNAMIC ) { // \beta_{ij} = (r_i + r_j)^3
     for (int i=0; i<nEnv; i++) {
       for (int j =0 ; j<nEnv; j++) {
         *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj)* (ri+rj) - pow( ri , momentOrder_ ) * wi*wj* (ri+rj) * (ri+rj)* (ri+rj);
@@ -249,4 +252,3 @@ evaluate()
 }
 
 #endif // Aggregation_Expr_h
-
