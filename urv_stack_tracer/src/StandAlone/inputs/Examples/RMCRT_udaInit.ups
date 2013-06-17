@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification>
+
+  <Meta>
+      <title>RMCRT</title>
+  </Meta>
+
+  <SimulationComponent type="RMCRT_Test" />
+  
+  <!--__________________________________-->
+  <!-- run for 10 timesteps for RT memory -->
+  <!-- and checkpoint testing             -->
+  <Time>
+    <maxTime>       10.0      </maxTime>
+    <initTime>      0.0       </initTime>
+    <delt_min>      0.00001   </delt_min>
+    <delt_max>      1         </delt_max>
+    <max_Timesteps> 10         </max_Timesteps>
+    <timestep_multiplier>  1  </timestep_multiplier>
+  </Time>
+
+  <!--____________________________________________________________________-->
+  <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "color"     var = "Dirichlet"> 
+                            <value> 0. </value> 
+        </BCType> 
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                            <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 0. </value>                
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType> 
+      </Face>               
+      <Face side = "y+">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                            <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    
+    <!-- This grid must be identical to the grid used by the initialization uda -->
+    <Level>  
+      <Box label="1">
+        <lower>     [0,0,0]     </lower>
+        <upper>     [3,3,3]     </upper>
+        <resolution>[10,10,10]  </resolution>
+        <extraCells>[1,1,1]     </extraCells>
+        <patches>   [2,2,2]     </patches>
+      </Box>
+    </Level>
+    
+  </Grid>
+  <!--__________________________________-->
+  <DataArchiver>
+  <filebase>test.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <save label = "color"   />
+      <save label = "divQ"    />
+      <save label = "abskg"   />
+      <save label = "sigmaT4" />
+      <checkpoint cycle = "2" timestepInterval = "2"/>
+  </DataArchiver>
+  
+  <!-- initialize abskg and temperature using a previously run uda -->
+  <!-- This is designed to restart inputs/ARCHES/methane8patch.ups-->
+  <initalizeUsingUda>
+    <uda_name> methaneplumeexplicit.uda.000 </uda_name>
+    <timestep>                 25       </timestep>
+    <abskg_varName>          abskgIN    </abskg_varName>
+    <temperature_varName>    tempIN     </temperature_varName>
+  </initalizeUsingUda>
+
+  <!--__________________________________ -->
+  <RMCRT>
+    <randomSeed>       true        </randomSeed>
+    <Temperature>       999        </Temperature>
+    <abskg>             999        </abskg>
+    <NoOfRays>          25         </NoOfRays>
+    <Threshold>         0.05       </Threshold>
+    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+    <shouldSetBCs>      true       </shouldSetBCs>
+  </RMCRT>
+</Uintah_specification>
