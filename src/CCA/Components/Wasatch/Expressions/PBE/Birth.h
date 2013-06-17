@@ -57,13 +57,13 @@ class Birth
 : public Expr::Expression<FieldT>
 {
 public:
-  enum birth_t { POINT, UNIFORM, NORMAL };
+  enum BirthModel { POINT, UNIFORM, NORMAL };
     
 private:    
   const Expr::Tag birthCoefTag_, rStarTag_;  //this will correspond to proper tags for constant calc & momnet dependency
   const double constCoef_;   //"pre" coefficient
   const double momentOrder_; // this is the order of the moment equation in which the Birth rate is used
-  const birth_t birthType_;  //enum for birth model
+  const BirthModel birthType_;  //enum for birth model
   const double constRStar_;
   const double stdDev_;
   const FieldT* birthCoef_; // this will correspond to the coefficient in the Birth rate term
@@ -73,7 +73,7 @@ private:
          const Expr::Tag& rStarTag,
          const double constCoef,
          const double momentOrder,
-         const birth_t birthType,
+         const BirthModel birthType,
          const double constRStar,
          const double stdDev);
   
@@ -88,7 +88,7 @@ public:
              const Expr::Tag& rStarTag,
              const double constCoef,
              const double momentOrder,
-             const birth_t birthType,
+             const BirthModel birthType,
              const double constRStar,
              const double stdDev)
     : ExpressionBuilder(result),
@@ -112,7 +112,7 @@ public:
     const Expr::Tag birthcoeft_, rstart_;
     const double constcoef_;
     const double momentorder_;
-    const birth_t birthtype_;
+    const BirthModel birthtype_;
     const double constrstar_;
     const double stddev_;
   };
@@ -138,7 +138,7 @@ Birth( const Expr::Tag& birthCoefTag,
        const Expr::Tag& rStarTag,
        const double constCoef,
        const double momentOrder,
-       const birth_t birthType,
+       const BirthModel birthType,
        const double constRStar,
        const double stdDev)
 : Expr::Expression<FieldT>(),

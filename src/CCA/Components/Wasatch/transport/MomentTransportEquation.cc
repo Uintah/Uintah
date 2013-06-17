@@ -209,7 +209,7 @@ namespace Wasatch {
         birthParams->get("ConstantRStar",ConstRStar);
     }
 
-    typename Birth<FieldT>::birth_t birthType;
+    typename Birth<FieldT>::BirthModel birthType = Birth<FieldT>::POINT;
     if (birthModel == "POINT") {
       birthType = Birth<FieldT>::POINT;
     } else if (birthModel == "UNIFORM") {
@@ -286,7 +286,7 @@ namespace Wasatch {
       }
     }
 
-    typename Aggregation<FieldT>::aggregation_t aggType;
+    typename Aggregation<FieldT>::AggregationModel aggType = Aggregation<FieldT>::CONSTANT;
     if (aggModel == "CONSTANT") {
       aggType = Aggregation<FieldT>::CONSTANT;
     } else if (aggModel == "BROWNIAN") {

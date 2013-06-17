@@ -49,7 +49,7 @@ class Aggregation
 : public Expr::Expression<FieldT>
 {
 public:
-  enum aggregation_t { CONSTANT, BROWNIAN, HYDRODYNAMIC };
+  enum AggregationModel { CONSTANT, BROWNIAN, HYDRODYNAMIC };
   
 private:  
   const Expr::TagList weightsTagList_; // these are the tags of all weights
@@ -58,7 +58,7 @@ private:
   const Expr::Tag aggCoefTag_;    //optional coefficent which contaisn fluid properties
   const double momentOrder_;      // order of this moment
   const double effCoef_;          //efficiency coefficient of frequency
-  const aggregation_t aggType_;   //enum for aggregation type
+  const AggregationModel aggType_;   //enum for aggregation type
   const bool useEffTags_;         //boolean to use efficiency tags
   
   typedef std::vector<const FieldT*> FieldVec;
@@ -73,7 +73,7 @@ private:
                const Expr::Tag& aggCoefTag,
                const double momentOrder,
                const double effCoef,
-               const aggregation_t& aggType,
+               const AggregationModel& aggType,
                const bool useEffTags);
   
 public:
@@ -87,7 +87,7 @@ public:
              const Expr::Tag& aggCoefTag,
              const double momentOrder,
              const double effCoef,
-             const aggregation_t& aggType,
+             const AggregationModel& aggType,
              const bool useEffTags)
     : ExpressionBuilder(result),
     weightstaglist_(weightsTagList),
@@ -112,7 +112,7 @@ public:
     const Expr::Tag aggcoeft_;
     const double momentorder_;
     const double effcoef_;
-    const aggregation_t aggtype_;
+    const AggregationModel aggtype_;
     const bool useefftags_;
   };
   
@@ -141,7 +141,7 @@ Aggregation( const Expr::TagList& weightsTagList,
              const Expr::Tag& aggCoefTag,
              const double momentOrder,
              const double effCoef,
-             const aggregation_t& aggType,
+             const AggregationModel& aggType,
              const bool useEffTags)
 : Expr::Expression<FieldT>(),
   weightsTagList_(weightsTagList),
