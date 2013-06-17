@@ -76,6 +76,7 @@ endif
 # way:
 #
 SRCS += \
+		$(SRCDIR)/DensityCalculator.cc    \
         $(SRCDIR)/ScalabilityTestSrc.cc   \
         $(SRCDIR)/SetCurrentTime.cc       \
         $(SRCDIR)/RadPropsEvaluator.cc	  \
