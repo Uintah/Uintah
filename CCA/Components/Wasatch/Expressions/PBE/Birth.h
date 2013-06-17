@@ -222,64 +222,102 @@ evaluate()
 
   if ( birthCoefTag_ != Expr::Tag () ) {
     if ( rStarTag_ != Expr::Tag () ) {
-      if (birthType_ == POINT ) {
-        result <<= constCoef_ * *birthCoef_ * pow(*rStar_, momentOrder_);
-      } else if (birthType_ == UNIFORM ) {
-        result <<= constCoef_ * *birthCoef_ * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
-                                                pow(*rStar_ - stdDev_, momentOrder_ + 1)) / (momentOrder_ + 1);
-      } else { //if (birthModel_ == "NORMAL" {
-        typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
-        typename FieldT::const_interior_iterator birthCoefIter = birthCoef_->interior_begin();
-        typename FieldT::interior_iterator resultsIter = result.interior_begin();
-        while (rStarIter!=rStar_->interior_end() ) {
-          const double intVal = integrate_birth_kernel(*rStarIter);
-          *resultsIter = constCoef_ * *birthCoefIter * intVal;
-          ++resultsIter;
-          ++rStarIter;
-          ++birthCoefIter;
+      
+      switch (birthType_) {
+        case POINT:
+          result <<= constCoef_ * *birthCoef_ * pow(*rStar_, momentOrder_);
+          break;
+        case UNIFORM:
+          result <<= constCoef_ * *birthCoef_ * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
+                                        pow(*rStar_ - stdDev_, momentOrder_ + 1)) / (momentOrder_ + 1);
+          break;
+        case NORMAL:
+        {
+          typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
+          typename FieldT::const_interior_iterator birthCoefIter = birthCoef_->interior_begin();
+          typename FieldT::interior_iterator resultsIter = result.interior_begin();
+          while (rStarIter!=rStar_->interior_end() ) {
+            const double intVal = integrate_birth_kernel(*rStarIter);
+            *resultsIter = constCoef_ * *birthCoefIter * intVal;
+            ++resultsIter;
+            ++rStarIter;
+            ++birthCoefIter;
+          }
         }
-      }
-
+          break;
+        default:
+          break;
+      } // SWITCH
+      
     } else {// constant r*
-      if (birthType_ == POINT ) {
-        result <<= constCoef_ * *birthCoef_ * pow(constRStar_, momentOrder_);
-      } else if (birthType_ == UNIFORM ) {
-        result <<= constCoef_ * *birthCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
-                                                pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
-      } else { //if (birthModel_ == "NORMAL" {
-        const double intVal = integrate_birth_kernel(constRStar_);        
-        result <<= constCoef_ * *birthCoef_ * intVal;
-      }
+      
+      switch (birthType_) {
+        case POINT:
+          result <<= constCoef_ * *birthCoef_ * pow(constRStar_, momentOrder_);
+          break;
+        case UNIFORM:
+          result <<= constCoef_ * *birthCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
+                                                 pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
+          break;
+        case NORMAL:
+        {
+          const double intVal = integrate_birth_kernel(constRStar_);
+          result <<= constCoef_ * *birthCoef_ * intVal;
+        }
+          break;
+        default:
+          break;
+      } // SWITCH
+      
     }
 
   } else { //const birth coefficient
-    if ( rStarTag_ != Expr::Tag () ) {
-      if (birthType_ == POINT ) {
-        result <<= constCoef_ * pow(*rStar_, momentOrder_);
-      } else if (birthType_ == UNIFORM ) {
-        result <<= constCoef_  * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
-                                   pow(*rStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
-      } else { //if (birthModel_ == "NORMAL" {
-        typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
-        typename FieldT::interior_iterator resultsIter = result.interior_begin();
-        while (rStarIter!=rStar_->interior_end() ) {
-          const double intVal = integrate_birth_kernel(*rStarIter);          
-          *resultsIter = constCoef_ * intVal;
-          ++resultsIter;
-          ++rStarIter;
+    if ( rStarTag_ != Expr::Tag () ) {      
+      
+      switch (birthType_) {
+        case POINT:
+          result <<= constCoef_ * pow(*rStar_, momentOrder_);
+          break;
+        case UNIFORM:
+          result <<= constCoef_  * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
+                                     pow(*rStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
+          break;
+        case NORMAL:
+        {
+          typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
+          typename FieldT::interior_iterator resultsIter = result.interior_begin();
+          while (rStarIter!=rStar_->interior_end() ) {
+            const double intVal = integrate_birth_kernel(*rStarIter);
+            *resultsIter = constCoef_ * intVal;
+            ++resultsIter;
+            ++rStarIter;
+          }
         }
-      }
+          break;
+        default:
+          break;
+      } // SWITCH
 
     } else { // constant r* & const coef
-      if (birthType_ == POINT ) {
-        result <<= constCoef_ * pow(constRStar_, momentOrder_);
-      } else if (birthType_ == UNIFORM ) {
-        result <<= constCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
-                                  pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
-      } else { //if (birthModel_ == "NORMAL" {
-        const double intVal = integrate_birth_kernel(constRStar_);
-        result <<= constCoef_ * intVal;
-      }
+      
+      switch (birthType_) {
+        case POINT:
+          result <<= constCoef_ * pow(constRStar_, momentOrder_);
+          break;
+        case UNIFORM:
+          result <<= constCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
+                          pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
+          break;
+        case NORMAL:
+        {
+          const double intVal = integrate_birth_kernel(constRStar_);
+          result <<= constCoef_ * intVal;
+        }
+          break;
+        default:
+          break;
+      } // SWITCH
+      
     }
   }
 }
