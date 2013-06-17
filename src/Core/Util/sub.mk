@@ -65,4 +65,10 @@ endif
 
 LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(SOCKET_LIBRARY)
 
+ifeq ($(USE_STACK_TRACER),yes)
+  SRCS += \
+        $(SRCDIR)/StackTracer.cc
+  LIBS := $(LIBS) $(MPI_LIBRARY)
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

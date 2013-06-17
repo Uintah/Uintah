@@ -714,6 +714,8 @@ GPERFTOOLS_LIB_DIR_FLAG
 INC_GPERFTOOLS_H
 DEF_GPERFTOOLS
 HAVE_GPERFTOOLS
+DEF_STACK_TRACER
+USE_STACK_TRACER
 PAPI_LIB_FLAG
 PAPI_LIB_DIR_FLAG
 INC_PAPI_H
@@ -995,6 +997,7 @@ enable_32bit
 enable_output_avg_walltime
 enable_ray_scatter
 enable_gencode
+enable_stack_tracer
 enable_exename
 enable_largesos
 enable_sci_malloc
@@ -1657,6 +1660,7 @@ Optional Features:
 --ray-scatter           Turn on ray scattering in Arches
 --enable-gencode        Specify compute capability for GPU code generation
                           (allowable values: 20, 21, 30, 35)
+--enable-stack-tracer   Enable call stack trace generation
 --enable-exename=<name> Use name for executable name instead of the default:
                           scirun
 --enable-largesos       Build one .so per directory
@@ -3870,6 +3874,17 @@ else
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-gencode --disable-gencode"
+
+
+
+  # Check whether --enable-stack_tracer was given.
+if test "${enable_stack_tracer+set}" = set; then :
+  enableval=$enable_stack_tracer; enable_stack_tracer="$enableval"
+else
+  enable_stack_tracer=${enable_stack_tracer='no'}
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-stack_tracer --disable-stack_tracer"
 
 
 
@@ -40144,6 +40159,21 @@ fi #end sci_required_papi
 
 
 sci_defs_files="$sci_defs_files include/sci_defs/papi_testdefs.h"
+
+##  --  Check for anbled Stack Tracer  -------------------------------------------
+
+DEF_STACK_TRACER=
+USE_STACK_TRACER="no"
+
+if test "$enable_stack_tracer" = "yes"; then
+  DEF_STACK_TRACER="#define USE_STACK_TRACER 1"
+  USE_STACK_TRACER="yes"
+fi
+
+
+
+
+sci_defs_files="$sci_defs_files include/sci_defs/stacktracer_testdefs.h"
 
 
 ##  --  search for google perftools stuff  -------------------------------------------
