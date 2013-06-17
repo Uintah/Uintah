@@ -39,8 +39,8 @@
  expression calculates the square of the filtered strain tensor,
  \f$\tilde{S}_{kl}\tilde{S}_{kl}\f$ where
  \f$S_{kl}=\frac{1}{2}(\frac{\partial\tilde{u}_k}{\partial x_l}+\frac{\partial\tilde{u}_l}{\partial x_k})\f$.
- Note that \f$ \tilde{S}_{kl}\tilde{S}_{kl} \equiv \tfrac{1}{2}|\tilde{S}|^2 \f$.
- The reason for calculating \f$ \tfrac{1}{2}|\tilde{S}|^2 \f$ instead of \f$ |\tilde{S}| \f$
+ Note that \f$ \tilde{S}_{kl}\tilde{S}_{kl} \equiv \frac{1}{2}|\tilde{S}|^2 \f$.
+ The reason for calculating \f$ \frac{1}{2}|\tilde{S}|^2 \f$ instead of \f$ |\tilde{S}| \f$
  is that it will be used in the WALE and VREMAN models which makes it easy to implement
  a unified interface across these turbulence models.
  *

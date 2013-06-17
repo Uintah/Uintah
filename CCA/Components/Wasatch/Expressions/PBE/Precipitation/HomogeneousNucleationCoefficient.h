@@ -53,8 +53,8 @@
  *  the modified homogeneous nucleation refers to this value as
  *  \f$ B_0 = z * k_f * N_1^2 * \exp ( -\Delta G / K_B T )  \f$ with
  *  \f$ \Delta G = \frac{16 \pi}{3} \frac{nu^2 \sigma^3}{K_B^2 T^2 \ln( S)^2 )} \f$
- *  \f$ \k_f = D*(48 \pi^2 \nu i_c)^{1/3} \f$
- *  \f$ z = \sqrt{ \frac{\Delta G}{3 \pi K_B T i_c^2} \f$
+ *  \f$ k_f = D*(48 \pi^2 \nu i_c)^{1/3} \f$
+ *  \f$ z = \sqrt{ \frac{\Delta G}{3 \pi K_B T i_c^2}} \f$
  *  \f$ N_1 = N_A c_{eq} S \f$
  *  \f$ i_c = \frac{32 \pi}{3} \frac{\nu^2 \sigma^3}{K_B^3 T^3 \ln(S)^3} \f$
  */
