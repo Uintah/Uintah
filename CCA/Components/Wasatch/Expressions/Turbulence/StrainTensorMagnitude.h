@@ -165,9 +165,8 @@ class WaleTensorMagnitude : public StrainTensorBase {
  *  \brief This calculates the Vreman tensor magnitude.
  This is used in the Vreman turbulent model. 
  See:
- Vreman 2004, An eddy-viscosity subgrid-scale model for turbulent shear ﬂow:
+ Vreman 2004, An eddy-viscosity subgrid-scale model for turbulent shear flow:
  Algebraic theory and applications
- *
  */
 class VremanTensorMagnitude : public StrainTensorBase {
   

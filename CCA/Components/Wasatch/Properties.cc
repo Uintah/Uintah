@@ -294,16 +294,15 @@ namespace Wasatch{
          densityParams != 0;
          densityParams = densityParams->findNextBlock("ExtractDensity") ){
         
-      std::vector<Expr::Tag> rhoEtaTags;
-      std::vector<Expr::Tag> reiEtaTags;
+      Expr::TagList rhoEtaTags, etaTags;
       for( Uintah::ProblemSpecP rhoEtaParams = densityParams->findBlock("DensityWeightedIVar");
           rhoEtaParams != 0;
           rhoEtaParams = rhoEtaParams->findNextBlock("DensityWeightedIVar") ){
         const Expr::Tag rhoEtaTag = parse_nametag( rhoEtaParams->findBlock("NameTag") );
         rhoEtaTags.push_back( rhoEtaTag );
-        Uintah::ProblemSpecP reiEtaParams = rhoEtaParams->findBlock("RelatedIVar");
-        const Expr::Tag reiEtaTag = parse_nametag( reiEtaParams->findBlock("NameTag") );
-        reiEtaTags.push_back( reiEtaTag );
+        Uintah::ProblemSpecP etaParams = rhoEtaParams->findBlock("RelatedIVar");
+        const Expr::Tag etaTag = parse_nametag( etaParams->findBlock("NameTag") );
+        etaTags.push_back( etaTag );
       }
 
 
@@ -322,27 +321,27 @@ namespace Wasatch{
 
       //_____________________________________
       // register the expression for density
-      Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
+      const Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
       typedef DensityCalculator<SpatialOps::structured::SVolField>::Builder DensCalc;
       gh.exprFactory->register_expression( scinew DensCalc( densityTag, interp->clone(), rhoEtaTags,
-                                                            reiEtaTags, ivarNames ) );
+                                                            etaTags, ivarNames ) );
 
       //_________________________________________________________________________________________
       // preparing the input arguments of the expression for density at the next RK time stages if they are needed to be estimated
       Expr::Tag densityStarTag = Expr::Tag();
-      Expr::TagList rhoEtaStarTags, ivarStarTags, reiEtaStarTags;
+      Expr::TagList rhoEtaStarTags, ivarStarTags, etaStarTags;
 
       Expr::Tag density2StarTag = Expr::Tag();
-      Expr::TagList rhoEta2StarTags, ivar2StarTags, reiEta2StarTags;
+      Expr::TagList rhoEta2StarTags, ivar2StarTags, eta2StarTags;
 
-      if (doDenstPlus && cat==INITIALIZATION) {    
+      if( doDenstPlus && cat==INITIALIZATION ){
         const TagNames& tagNames = TagNames::self();
-        densityStarTag = Expr::Tag(densityTag.name() + tagNames.star, Expr::STATE_NONE);
+        densityStarTag  = Expr::Tag(densityTag.name() + tagNames.star,       Expr::STATE_NONE);
         density2StarTag = Expr::Tag(densityTag.name() + tagNames.doubleStar, Expr::STATE_NONE);
         typedef DensityCalculator<SpatialOps::structured::SVolField>::Builder DensCalc;
-        const Expr::ExpressionID densStarID = gh.exprFactory->register_expression( scinew DensCalc( densityStarTag, interp->clone(), rhoEtaTags,reiEtaTags, ivarNames ) );
-        gh.rootIDs.insert(densStarID);
-        const Expr::ExpressionID dens2StarID = gh.exprFactory->register_expression( scinew DensCalc( density2StarTag, interp->clone(), rhoEtaTags, reiEtaTags, ivarNames ) );
+        const Expr::ExpressionID densStarID  = gh.exprFactory->register_expression( scinew DensCalc( densityStarTag,  interp->clone(), rhoEtaTags, etaTags, ivarNames ) );
+        const Expr::ExpressionID dens2StarID = gh.exprFactory->register_expression( scinew DensCalc( density2StarTag, interp->clone(), rhoEtaTags, etaTags, ivarNames ) );
+        gh.rootIDs.insert(densStarID );
         gh.rootIDs.insert(dens2StarID);
       }
       //============================================================
@@ -354,48 +353,31 @@ namespace Wasatch{
       
       // This calculations should only take place for variable density cases when we have both momentum and scalar transport equations
       //___________________________________
-      // first we estimate the density field at RK stage "*"
-      if (doDenstPlus && cat==ADVANCE_SOLUTION) {    
+      // estimate the density field at RK stage "*" and "**"
+      if( doDenstPlus && cat==ADVANCE_SOLUTION ){
         // Here the soln variables in density weighted form will be separated to generate rhoEta at the "*" stage
         const TagNames& tagNames = TagNames::self();
-        for ( Expr::TagList::const_iterator i=rhoEtaTags.begin(); i!=rhoEtaTags.end(); ++i ){
-          const Expr::Tag rhoEtaStarTag = Expr::Tag(i->name() + tagNames.star, Expr::STATE_NONE);
-          rhoEtaStarTags.push_back(rhoEtaStarTag);                      
+        BOOST_FOREACH( const Expr::Tag& tag, rhoEtaTags ){
+          rhoEtaStarTags .push_back( Expr::Tag( tag.name() + tagNames.star,       Expr::STATE_NONE ) );
+          rhoEta2StarTags.push_back( Expr::Tag( tag.name() + tagNames.doubleStar, Expr::STATE_NONE ) );
         }
-        for ( Expr::TagList::const_iterator i=ivarNames.begin(); i!=ivarNames.end(); ++i ){
-          const Expr::Tag ivarStarTag = Expr::Tag(i->name() + tagNames.star, Expr::STATE_NONE);
-          ivarStarTags.push_back(ivarStarTag);                      
+        BOOST_FOREACH( const Expr::Tag& tag, ivarNames ){
+          ivarStarTags. push_back( Expr::Tag( tag.name() + tagNames.star,       Expr::STATE_NONE ) );
+          ivar2StarTags.push_back( Expr::Tag( tag.name() + tagNames.doubleStar, Expr::STATE_NONE ) );
         }
-        for ( Expr::TagList::const_iterator i=reiEtaTags.begin(); i!=reiEtaTags.end(); ++i ){
-          const Expr::Tag reiEtaStarTag = Expr::Tag(i->name() + tagNames.star, Expr::STATE_NONE);
-          reiEtaStarTags.push_back(reiEtaStarTag);                      
+        BOOST_FOREACH( const Expr::Tag& tag, etaTags ){
+          etaStarTags .push_back( Expr::Tag( tag.name() + tagNames.star,       Expr::STATE_NONE ) );
+          eta2StarTags.push_back( Expr::Tag( tag.name() + tagNames.doubleStar, Expr::STATE_NONE ) );
         }
         
         // register the expression for density at RK time stage
         densityStarTag = Expr::Tag(densityTag.name() + tagNames.star, Expr::CARRY_FORWARD);
-        const Expr::ExpressionID densStar = gh.exprFactory->register_expression( scinew DensCalc( densityStarTag, interp->clone(), rhoEtaStarTags, reiEtaStarTags, ivarStarTags ) );
+        const Expr::ExpressionID densStar = gh.exprFactory->register_expression( scinew DensCalc( densityStarTag, interp->clone(), rhoEtaStarTags, etaStarTags, ivarStarTags ) );
         gh.exprFactory->cleave_from_children ( densStar );
-
-        //___________________________________
-        // and now we can estimate the density value at the next RK stage, which is "**"
-        
-        // Here the soln variables in density weighted form will be separated to generate rhoEta at the "**" stage
-        for ( Expr::TagList::const_iterator i=rhoEtaTags.begin(); i!=rhoEtaTags.end(); ++i ){
-          const Expr::Tag rhoEta2StarTag = Expr::Tag(i->name() + tagNames.doubleStar, Expr::STATE_NONE);
-          rhoEta2StarTags.push_back(rhoEta2StarTag);                      
-        }
-        for ( Expr::TagList::const_iterator i=ivarNames.begin(); i!=ivarNames.end(); ++i ){
-          const Expr::Tag ivar2StarTag = Expr::Tag(i->name() + tagNames.doubleStar, Expr::STATE_NONE);
-          ivar2StarTags.push_back(ivar2StarTag);                      
-        }
-        for ( Expr::TagList::const_iterator i=reiEtaTags.begin(); i!=reiEtaTags.end(); ++i ){
-          const Expr::Tag reiEta2StarTag = Expr::Tag(i->name() + tagNames.doubleStar, Expr::STATE_NONE);
-          reiEta2StarTags.push_back(reiEta2StarTag);                      
-        }
 
         // register the expression for density at RK time stage
         density2StarTag = Expr::Tag(densityTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD);
-        const Expr::ExpressionID dens2Star = gh.exprFactory->register_expression( scinew DensCalc( density2StarTag, interp->clone(), rhoEta2StarTags, reiEta2StarTags, ivar2StarTags ) );
+        const Expr::ExpressionID dens2Star = gh.exprFactory->register_expression( scinew DensCalc( density2StarTag, interp->clone(), rhoEta2StarTags, eta2StarTags, ivar2StarTags ) );
         gh.exprFactory->cleave_from_children ( dens2Star );
         
       } // density predictor
