@@ -249,6 +249,7 @@ namespace Uintah {
 
   SimulationController::~SimulationController()
   {
+    delete d_archive;
     delete d_timeinfo;
 #ifdef USE_PAPI_COUNTERS
     delete d_eventValues;
@@ -481,7 +482,7 @@ namespace Uintah {
       d_scheduler->get_dw(1)->finalize();
       
       // don't need it anymore...
-      delete d_archive;
+//      delete d_archive; // This was moved to the destructor
     }
 
     // Finalize the shared state/materials
