@@ -44,6 +44,7 @@ SRCS += $(SRCDIR)/MD.cc                         \
         $(SRCDIR)/SPMEMapPoint.cc               \
         $(SRCDIR)/SPMEPatch.cc                  \
         $(SRCDIR)/SimpleGrid.cc                 \
+        $(SRCDIR)/ShiftedCardinalBSpline.cc     \
         $(SRCDIR)/CenteredCardinalBSpline.cc
 
 SUBDIRS := \
