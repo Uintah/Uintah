@@ -69,7 +69,7 @@ VarLabel::create(const string& name,
   else {
     label = scinew VarLabel(name, td, boundaryLayer, vartype);
     allLabels[name]=label;
-    dbg << "Created VarLabel: " << label->d_name << std::endl;
+    dbg << "Creating VarLabel: " << label->d_name << std::endl;
   }
   label->addReference();
   lock.unlock(); 
@@ -87,7 +87,7 @@ VarLabel::destroy(const VarLabel* label)
     if(iter != allLabels.end() && iter->second == label)
       allLabels.erase(iter); 
       
-    dbg << "Deleted VarLabel: " << label->d_name << std::endl;  
+    dbg << "Deleting VarLabel: " << label->d_name << std::endl;  
     lock.unlock();
     delete label;
     

@@ -94,6 +94,19 @@ DataArchive::DataArchive(const std::string& filebase,
 
 DataArchive::~DataArchive()
 {
+  // The createdVarLabels_ member variable, is used to keep track of
+  // the VarLabels (for each of the data fields found in the data
+  // archive we are reading data out of) for which a varLabel does not
+  // already exist.  Now that we have read in the data, we no longer
+  // need these temporary VarLabels, so delete them to avoid a memory
+  // leak.  Note, most of these VarLabels will be 're-created' by
+  // individual components when they go to access their data.
+
+  map<string, VarLabel*>::iterator vm_iter = createdVarLabels_.begin();
+  for( ; vm_iter != createdVarLabels_.end(); vm_iter++ ) {
+    VarLabel::destroy( vm_iter->second );
+  }
+
   //d_indexDoc->releaseDocument();
 }
 
@@ -530,6 +543,7 @@ DataArchive::queryVariables(ProblemSpecP vars, vector<string>& names,
       if(name == "")
         throw InternalError("DataArchive::queryVariables:Variable name not found",
                             __FILE__, __LINE__);
+      std::cout << "query variables found " << name << std::endl;
       names.push_back(name);
     } else if(n->getNodeType() != ProblemSpec::TEXT_NODE){
       cerr << "DataArchive::queryVariables:WARNING: Unknown variable data: " << n->getNodeName() << '\n';
@@ -807,9 +821,10 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
   queryGlobals(names, typeDescriptions);  
   
   map<string, VarLabel*> varMap;
-  map<string, VarLabel*> delThese;
+
   for (unsigned i = 0; i < names.size(); i++) {
     VarLabel * vl = VarLabel::find(names[i]);
+    std::cout << "finding varlabel for: " << names[i] << std::endl;
     if( vl == NULL ) {
 //      proc0cout << "Warning, VarLabel for " << names[i] << " was not found... attempting to create.\n"
 //          << "However, it is possible that this may cause problems down the road...\n";
@@ -821,7 +836,7 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
 
       // At the end of this routine, we will need to delete the VarLabels that we create here in
       // order to avoid a memory leak.
-      delThese[names[i]] = vl;
+      createdVarLabels_[names[i]] = vl;
     }
     varMap[names[i]] = vl;
   }
@@ -882,19 +897,6 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
       dw->put(var, label, matl, patch); 
       delete var; // should have been cloned when it was put
     }
-  }
-
-  // The delThese variable, created above, is used to keep track of
-  // the VarLabels (for each of the data fields found in the data
-  // archive we are reading data out of) for which a varLabel does not
-  // already exist.  Now that we have read in the data, we no longer
-  // need these temporary VarLabels, so delete them to avoid a memory
-  // leak.  Note, most of these VarLabels will be 're-created' by
-  // individual components when they go to access their data.
-
-  map<string, VarLabel*>::iterator vm_iter = delThese.begin();
-  for( ; vm_iter != delThese.end(); vm_iter++ ) {
-    VarLabel::destroy( vm_iter->second );
   }
 }
 
