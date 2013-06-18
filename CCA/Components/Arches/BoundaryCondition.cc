@@ -6446,11 +6446,6 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
     const Vector Dx = patch->dCell();
     double dx=0, dy=0; 
 
-    std::ofstream outputfile; 
-    std::stringstream fname; 
-    fname << "handoff_velocity" <<  "." << patch->getID();
-    bool file_is_open = false; 
-
     vector<Patch::FaceType> bf;
     vector<Patch::FaceType>::const_iterator bf_iter;
     patch->getBoundaryFaces(bf);
@@ -6470,6 +6465,12 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
           string face_name; 
 
           getBCKind( patch, face, child, *iname, matlIndex, bc_kind, face_name ); 
+
+          std::ofstream outputfile; 
+          std::stringstream fname; 
+          fname << "handoff_velocity_" << face_name <<  "." << patch->getID();
+          bool file_is_open = false; 
+
 
           string whichface; 
           int index=0;
@@ -6766,12 +6767,12 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
               } 
             } 
           }
+          if ( file_is_open ){ 
+            cout << "\n  Notice: Handoff velocity warning information has been printed to file for patch #: " << patch->getID() << "\n"; 
+            outputfile.close(); 
+          } 
         }
       }
     }
-    if ( file_is_open ){ 
-      cout << "\n  Notice: Handoff velocity warning information has been printed to file for patch #: " << patch->getID() << "\n"; 
-      outputfile.close(); 
-    } 
   }
 }
