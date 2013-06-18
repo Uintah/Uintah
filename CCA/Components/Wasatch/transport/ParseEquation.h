@@ -125,6 +125,7 @@ namespace Wasatch{
    */
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
                                                                  TurbulenceParameters turbParams,
+                                                                 const bool useAdaptiveDt,
                                                                  const bool isConstDensity,
                                                                  const bool hasEmbeddedGeometry,
                                                                  const bool hasMovingGeometry,

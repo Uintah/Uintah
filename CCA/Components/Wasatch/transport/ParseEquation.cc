@@ -309,6 +309,7 @@ namespace Wasatch{
   
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
                                                                  TurbulenceParameters turbParams,
+                                                                 const bool useAdaptiveDt,
                                                                  const bool isConstDensity,
                                                                  const bool hasEmbeddedGeometry,
                                                                  const bool hasMovingGeometry,
@@ -443,15 +444,17 @@ namespace Wasatch{
 
     //
     // ADD ADAPTIVE TIMESTEPPING
-    const Expr::Tag xVelTag = doxvel ? Expr::Tag(xvelname, Expr::STATE_NONE) : Expr::Tag();
-    const Expr::Tag yVelTag = doyvel ? Expr::Tag(yvelname, Expr::STATE_NONE) : Expr::Tag();
-    const Expr::Tag zVelTag = dozvel ? Expr::Tag(zvelname, Expr::STATE_NONE) : Expr::Tag();
-    const Expr::Tag viscTag = (params->findBlock("Viscosity")) ? parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
-    const Expr::ExpressionID stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestep::Builder( TagNames::self().stableTimestep,
-                                                                                      densityTag,
-                                                                                      viscTag,
-                                                                                      xVelTag,yVelTag,zVelTag ), true);
-    solnGraphHelper->rootIDs.insert( stabDtID );
+    if (useAdaptiveDt) {
+      const Expr::Tag xVelTag = doxvel ? Expr::Tag(xvelname, Expr::STATE_NONE) : Expr::Tag();
+      const Expr::Tag yVelTag = doyvel ? Expr::Tag(yvelname, Expr::STATE_NONE) : Expr::Tag();
+      const Expr::Tag zVelTag = dozvel ? Expr::Tag(zvelname, Expr::STATE_NONE) : Expr::Tag();
+      const Expr::Tag viscTag = (params->findBlock("Viscosity")) ? parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
+      const Expr::ExpressionID stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestep::Builder( TagNames::self().stableTimestep,
+                                                                                                                           densityTag,
+                                                                                                                           viscTag,
+                                                                                                                           xVelTag,yVelTag,zVelTag ), true);
+      solnGraphHelper->rootIDs.insert( stabDtID );
+    }
     
     //
     // loop over the local adaptors and set the initial and boundary conditions on each equation attached to that adaptor
