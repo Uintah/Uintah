@@ -68,11 +68,6 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
     double dx=0; 
     double dy=0; 
 
-    std::ofstream outputfile; 
-    std::stringstream fname; 
-    fname << "handoff_" << d_eqnName <<  "." << patch->getID();
-    bool file_is_open = false; 
-
     // Loop over all boundary faces on this patch
     for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
       Patch::FaceType face = *bf_iter; 
@@ -88,6 +83,11 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
         string bc_kind = "NotSet"; 
         string face_name; 
         getBCKind( patch, face, child, d_eqnName, matlIndex, bc_kind, face_name ); 
+
+        std::ofstream outputfile; 
+        std::stringstream fname; 
+        fname << "handoff_" << d_eqnName << "_" << face_name <<  "." << patch->getID();
+        bool file_is_open = false; 
 
         string whichface; 
         int index=0; 
@@ -245,14 +245,12 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
           } 
 
         }
+        if ( file_is_open ){ 
+          cout << "\n  Notice: Handoff scalar " << d_eqnName << " has warning information printed to file for patch #: " << patch->getID() << "\n"; 
+          outputfile.close(); 
+        } 
       }
     }
-
-    if ( file_is_open ){ 
-      cout << "\n  Notice: Handoff scalar " << d_eqnName << " has warning information printed to file for patch #: " << patch->getID() << "\n"; 
-      outputfile.close(); 
-    } 
-
   }
 }
 
