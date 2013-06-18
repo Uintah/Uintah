@@ -84,13 +84,18 @@ mv *.dat $uda/.
 #__________________________________
 # if making a hardcopy
 if( $hardcopy == "y" || $hardcopy == "Y" ) then 
-echo "Generating the postscript file shockTube_AMR.ps"
-rm -f gp
+  echo "Generating the postscript file shockTube_AMR.ps"
+  rm -f gp
 
 cat > gp << fin
-set terminal x11 1
 set terminal postscript color solid "Times-Roman" 9 portrait
 set output "shockTube_AMR.ps"
+fin
+else
+  rm -f gp
+
+cat > gp << fin
+set terminal x11 1 size 1024,768
 fin
 endif
 
