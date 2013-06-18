@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 #include <fstream>
-
+#include <limits>
 //-- Uintah framework includes --//
 #include <sci_defs/uintah_defs.h>
 #include <CCA/Ports/Scheduler.h>
@@ -289,6 +289,11 @@ namespace Wasatch{
     sharedState_ = sharedState;
     wasatchParams_ = params->findBlock("Wasatch");
     
+    double deltMin, deltMax;
+    params->findBlock("Time")->require("delt_min", deltMin);
+    params->findBlock("Time")->require("delt_max", deltMax);
+    const bool useAdaptiveDt = std::abs(deltMax - deltMin) > 2.0*std::numeric_limits<double>::epsilon();
+    
     // Multithreading in ExprLib and SpatialOps
     if( wasatchParams_->findBlock("FieldParallelThreadCount") ){
 #    ifdef ENABLE_THREADS
@@ -503,6 +508,7 @@ namespace Wasatch{
       try{
           const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
                                                                       turbParams,
+                                                                      useAdaptiveDt,
                                                                       isConstDensity,
                                                                       hasEmbeddedGeometry,
                                                                       hasMovingBoundaries,
