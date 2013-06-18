@@ -214,6 +214,7 @@ namespace Uintah {
 
       IntVector d_totalCellExtent;      //!< Number of sub-cells in the global unit cell
 
+      // disable copy and assignment
       MDSystem(const MDSystem& system);
       MDSystem& operator=(const MDSystem& system);
 

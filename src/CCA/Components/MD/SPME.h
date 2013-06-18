@@ -26,10 +26,11 @@
 #define UINTAH_MD_ELECTROSTATICS_SPME_H
 
 #include <CCA/Components/MD/Electrostatics.h>
-#include <CCA/Components/MD/CenteredCardinalBSpline.h>
+#include <CCA/Components/MD/ShiftedCardinalBSpline.h>
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/MD/SPMEPatch.h>
+#include <CCA/Components/MD/PatchMaterialKey.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
@@ -165,10 +166,10 @@ namespace Uintah {
        * @param
        * @return
        */
-      std::vector<SPMEMapPoint> generateChargeMap(ParticleSubset* pset,
+      void generateChargeMap(std::vector<SPMEMapPoint>* chargeMap,
+                                                  ParticleSubset* pset,
                                                   constParticleVariable<Point>& particlePositions,
-                                                  constParticleVariable<long64>& particleIDs,
-                                                  CenteredCardinalBSpline& spline);
+                                                  constParticleVariable<long64>& particleIDs);
 
       /**
        * @brief Map points (charges) onto the underlying grid.
@@ -178,10 +179,9 @@ namespace Uintah {
        * @return
        */
       void mapChargeToGrid(SPMEPatch* spmePatch,
-                           const std::vector<SPMEMapPoint>& gridMap,
+                           const std::vector<SPMEMapPoint>* gridMap,
                            ParticleSubset* pset,
-                           constParticleVariable<double>& charges,
-                           int halfSupport);
+                           constParticleVariable<double>& charges);
 
       /**
        * @brief Map forces from grid back to points.
@@ -189,11 +189,10 @@ namespace Uintah {
        * @return
        */
       void mapForceFromGrid(SPMEPatch* spmePatch,
-                            const std::vector<SPMEMapPoint>& gridMap,
+                            const std::vector<SPMEMapPoint>* gridMap,
                             ParticleSubset* pset,
                             constParticleVariable<double>& charges,
-                            ParticleVariable<Vector>& pforcenew,
-                            int halfSupport);
+                            ParticleVariable<Vector>& pforcenew);
 
       /**
        * @brief
@@ -214,8 +213,7 @@ namespace Uintah {
        */
       vector<dblcomplex> generateBVector(const std::vector<double>& M,
                                          const int initialIndex,
-                                         const int localExtent,
-                                         const CenteredCardinalBSpline& spline) const;
+                                         const int localExtent) const;
       /**
        * @brief Generates the local portion of the B grid (see. Essmann et. al., J. Phys. Chem. 103, p 8577, 1995)
        *          Equation 4.8
@@ -403,9 +401,8 @@ namespace Uintah {
       double d_polarizationTolerance;                   //!< Tolerance threshold for polarizable system
       IntVector d_kLimits;                              //!< Number of grid divisions in each direction
       int d_maxPolarizableIterations;                   //!< Max number of polarization iterations to do
-      CenteredCardinalBSpline d_interpolatingSpline;    //!< Spline object to hold info for spline calculation
+      ShiftedCardinalBSpline d_interpolatingSpline;     //!< Spline object to hold info for spline calculation
       std::vector<SPMEPatch*> d_spmePatches;            //!< Assuming multiple patches, these are the pieces of the SPME grid
-      std::vector<SPMEMapPoint> d_gridMap;              //!< The data that maps the charges in the patch to-and-from the grid
       SimpleGrid<dblcomplex>* d_Q;                      //!< The local version of the global Q grid
       fftw_complex* d_localFFTData;                     //!< The local portion of the global 3D FFT data
 
@@ -413,6 +410,9 @@ namespace Uintah {
       Matrix3 d_unitCell;           //!< Unit cell lattice parameters
       Matrix3 d_inverseUnitCell;    //!< Inverse lattice parameters
       double d_systemVolume;        //!< Volume of the unit cell
+
+      //      std::vector<SPMEMapPoint> d_gridMap;   //!< The data that maps the charges in the patch to-and-from the grid
+      std::map<PatchMaterialKey, std::vector<SPMEMapPoint>*> d_gridMap;  //!< The data that maps the charges in the patch to-and-from the grid
 
   };
 
