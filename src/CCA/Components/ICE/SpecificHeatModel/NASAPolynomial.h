@@ -39,7 +39,10 @@
 // Inputs include the maximum order, coefficients up to that order (in logical order
 //  in the input file) and an optional minimum and maximum temperature to clamp
 //  specific heat dependence range.
-
+//  
+// Citation:
+//   'Coefficients for Calculating Thermodynamic and Transport Properties of Individual Species', 
+//    NASA Report TM-4513, by B.J. McBride, S. Gordon and M.A. Reno, October 1993.
 
 namespace Uintah {
 
