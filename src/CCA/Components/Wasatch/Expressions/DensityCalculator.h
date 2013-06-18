@@ -35,13 +35,28 @@
  *  \author Amir Biglari
  *  \date   Feb, 2011
  *
- *  \brief Evaluates density (\f$\rho\f$) and \f$\eta\f$ if we are given
- *         \f$\rho \cdot \eta\f$, using TabProps.
+ *  \brief Evaluates density (\f$\rho\f$) and \f$\vec{\eta}\f$ if we are given
+ *         \f$\rho \cdot \vec{\eta}\f$, \f$\vec{\theta}\f$ and
+ *         \f$\rho=G(\vec{\eta},\vec{\theta})\f$.
  *
- *  In general, we have \f$\rho = \mathcal{G}(\eta_1,\eta_2,\ldots\eta_{n_\eta})\f$
- *  and we are given some mixture of \f$\eta_i\f$ and $\rho \eta_j\f$. Given this,
- *  we need to find the consistent values of \f$\rho$\f and $\eta_j\f$.  This is
- *  done by solving a nonlinear system of equations using newton's method.
+ *  In general, we have a system of nonlinear equations
+ *  \f[
+ *     \rho = G(\vec{\eta},\vec{\theta})
+ *  \f]
+ *  with
+ *  \f[
+ *     \eta_i = \frac{\rho\eta_i}{G(\vec{\eta},\vec{\theta})}
+ *  \f]
+ *  where we are given \f$\rho\vec{\eta}\f$ and \f$\theta\f$ but want to find
+ *  \f$\rho\f$ and \f$\vec{\eta}\f$.  This is done by solving a nonlinear system
+ *  of equations using newton's method.
+ *
+ *  Note that, although we could populate \f$\vec{\eta}\f$ as part of this expression,
+ *  we currently only calculate the density.  This is because \f$\vec{\eta}\f$ is
+ *  calculated elsewhere currently.
+ *
+ *  \tparam FieldT the type of field to build this density evaluator for.
+ *    Currently, this class is instantiated only for SVolField.
  */
 template< typename FieldT >
 class DensityCalculator
@@ -53,69 +68,73 @@ class DensityCalculator
   typedef std::vector< typename FieldT::      iterator > VarIter;
   typedef std::vector< typename FieldT::const_iterator > ConstIter;
 
-  typedef std::vector<double> PointValues;
+  typedef std::vector<double> DoubleVec;
 
-  /* RhoetaIncEta and ReIEta mean "Rhoeta Included Eta" and are using to show a
-   subset of the eta's which can be weighted by density */
-  /* RhoetaExEta and ReEEta mean "Rhoeta Excluded Eta" and are using to show  a
-   subset of the eta's which can NOT be weighted by density */
-  const Expr::TagList rhoEtaTags_, rhoEtaIncEtaNames_, orderedEtaTags_;
-  Expr::TagList rhoEtaExEtaNames_;
+  /*
+   * rhoEtaIncEta and reIEta mean "rhoeta included eta" and are using to show a
+   * subset of the eta's which can be weighted by density.
+   *
+   * rhoetaExEta and reEEta mean "rhoeta excluded eta" and are using to show a
+   * subset of the eta's which can NOT be weighted by density
+   */
+  const Expr::TagList rhoEtaTags_, etaTags_, orderedIvarTags_;
+  Expr::TagList thetaTags_;
 
   const InterpT* const evaluator_; ///< calculates \f$\rho=\mathcal{G}(\eta_1,\eta_2,\ldots,\eta_{n_\eta})\f$.
 
-  IndepVarVec rhoEta_;
-  IndepVarVec rhoEtaExEta_;
+  IndepVarVec rhoEta_;      ///< density-weighted independent variables
+  IndepVarVec theta_;       ///< non-density-weighted independent variables
   VarIter     rhoEtaIncEtaIters_;
-  ConstIter   rhoEtaExEtaIters_;
+  ConstIter   thetaIters_;
   ConstIter   rhoEtaIters_;
 
-  PointValues rhoEtaIncEtaPoint_;
-  PointValues rhoEtaExEtaPoint_;
-  PointValues rhoEtaPoint_;
+  DoubleVec etaPoint_;    ///< values of \f$\vec{\eta}\f$     at a given point on the mesh
+  DoubleVec thetaPoint_;  ///< values of \f$\vec{\theta}\f$   at a given point on the mesh
+  DoubleVec rhoEtaPoint_; ///< values of \f$\rho\vec{\eta}\f$ at a given point on the mesh
 
-  std::vector<int> reIindex_;
+  std::vector<size_t> etaIndex_;  ///< locations of the eta variables in the full set of indep. vars. for the function.
 
-  // Linear solver function variables
-  std::vector<double> jac_;         ///< A vector for the jacobian matrix
-  std::vector<double> g_;           ///< A vector for the rhs functions in non-linear solver
-  std::vector<double> orderedEta_;  ///< A vector to store all eta values in the same order as the table
+  // Linear solver function variables - used in nonlinear_solver
+  DoubleVec jac_;          ///< A vector for the jacobian matrix
+  DoubleVec g_;            ///< A vector for the rhs functions in non-linear solver
+  DoubleVec orderedIvars_; ///< A vector to store all independent variables in the same order as the table
+  DoubleVec delta_, etaTmp_;
+  std::vector<int> ipiv_;  ///< integer work array for linear solver
 
+  DensityCalculator( const InterpT* const evaluator,          ///< evaluate rho given etas & thetas
+                     const Expr::TagList& rhoEtaTags,         ///< rho*eta tag
+                     const Expr::TagList& etaTags,            ///< Tags for eta
+                     const Expr::TagList& orderedIvarTags );  ///< Tag for all of the etas & thetas in the correct order
 
-  DensityCalculator( const InterpT* const evaluator,            ///< evaluate rho given etas
-                     const Expr::TagList& rhoEtaTags,           ///< rho*eta tag
-                     const Expr::TagList& rhoetaIncEtaNames,    ///< Tag for ReIEta
-                     const Expr::TagList& orderedEtaTags );     ///< Tag for all of the eta's in the correct order
-
-  bool nonlinear_solver( std::vector<double>& reIeta,
-                         const std::vector<double>& reEeta,
-                         const std::vector<double>& rhoEta,
-                         const std::vector<int>& reIindex,
-                         double& rho,
-                         const InterpT&,
+  bool nonlinear_solver( double& rho,                         ///< the density solution
+                         std::vector<double>& eta,            ///< solution for \f$\eta\f$ corresponding to the density-weighted independent variables
+                         const std::vector<double>& theta,    ///< non-density weighted independent variables
+                         const std::vector<double>& rhoEta,   ///< density weighted independent variables
+                         const std::vector<size_t>& etaIndex, ///< indices where the density-weighted independent variables should be included in the full set of independent variables.
+                         const InterpT&,                      ///< interpolant for density
                          const double rtol );
 
 public:
 
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::TagList rhoEtaTs_, rhoEtaIncEtaNs_, rhoEtaExEtaNs_, orderedEtaTs_;
-    const InterpT* const spline_;
+    const Expr::TagList rhoEtaTs_, etaTs_, thetaTs_, orderedIvarTs_;
+    const InterpT* const interp_;
   public:
     /**
      * @param result the density
      * @param densEvaluator the interpolant that provides density as a function of the independent variables, \f$\eta_j\f$
      * @param rhoEtaTags Tag for each of the density-weighted independent variables, \f$\rho\eta_j\f$
-     * @param rhoEtaIncEtaNames Tags corresponding to the primitive variables, \f$\eta_j\f$
-     * @param orderedEtaTags Tags corresponding to the full set of independent variables, \f$\eta_i\f$.
-     *   Note that this may be a superset of the rhoEtaIncEtaNames variable set since there may be
-     *   some variables that are not density weighted that we include in the analysis.
+     * @param etaTags Tags corresponding to the primitive variables, \f$\eta_j\f$
+     * @param orderedIvarTags Tags corresponding to the full set of independent variables, \f$\vec{\eta}\f$ and \f$\vec{\theta}\f$.
+     *   Note that this may be a superset of etaTags  set since there may be some
+     *   variables that are not density weighted that we include in the analysis.
      */
     Builder( const Expr::Tag& result,
              const InterpT* const densEvaluator,
              const Expr::TagList& rhoEtaTags,
-             const Expr::TagList& rhoEtaIncEtaNames,
-             const Expr::TagList& orderedEtaTags );
+             const Expr::TagList& etaTags,
+             const Expr::TagList& orderedIvarTags );
 
     Expr::ExpressionBase* build() const;
   };

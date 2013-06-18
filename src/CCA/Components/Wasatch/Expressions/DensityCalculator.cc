@@ -1,5 +1,6 @@
-
 #include "DensityCalculator.h"
+
+#include <boost/foreach.hpp>
 
 //-------------------------------------------------------------------
 
@@ -7,36 +8,21 @@ template< typename FieldT >
 DensityCalculator<FieldT>::
 DensityCalculator( const InterpT* const evaluator,
                    const Expr::TagList& rhoEtaTags,
-                   const Expr::TagList& rhoetaIncEtaNames,
-                   const Expr::TagList& orderedEtaTags )
+                   const Expr::TagList& etaTags,
+                   const Expr::TagList& orderedIvarTags )
 : Expr::Expression<FieldT>(),
-  rhoEtaTags_       ( rhoEtaTags        ),
-  rhoEtaIncEtaNames_( rhoetaIncEtaNames ),
-  orderedEtaTags_   ( orderedEtaTags    ),
-  evaluator_        ( evaluator         )
+  rhoEtaTags_     ( rhoEtaTags      ),
+  etaTags_        ( etaTags         ),
+  orderedIvarTags_( orderedIvarTags ),
+  evaluator_      ( evaluator       )
 {
-  reIindex_.clear();
-  int counter=0;
-  bool match;
-  for( typename Expr::TagList::const_iterator i=orderedEtaTags_.begin();
-      i!=orderedEtaTags_.end();
-      ++i, ++counter )
-  {
-    match=0;
-    for( typename Expr::TagList::const_iterator j=rhoEtaIncEtaNames_.begin();
-         j!=rhoEtaIncEtaNames_.end();
-         ++j )
-    {
-      if (*i==*j) {
-        reIindex_.push_back( counter );
-        match=1;
-        break;
-      }
-    }
-
-    if (!match)  {
-      rhoEtaExEtaNames_.push_back( *i );
-    }
+  etaIndex_.clear();
+  size_t counter=0;
+  BOOST_FOREACH( const Expr::Tag& ivarTag, orderedIvarTags_ ){
+    const typename Expr::TagList::const_iterator ii = std::find( etaTags_.begin(), etaTags_.end(), ivarTag );
+    if( ii != etaTags_.end() ) etaIndex_.push_back( counter );
+    else                       thetaTags_.push_back( ivarTag );
+    ++counter;
   }
 }
 
@@ -54,11 +40,11 @@ void
 DensityCalculator<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  for( Expr::TagList::const_iterator inam=rhoEtaTags_.begin(); inam!=rhoEtaTags_.end(); ++inam ){
-    exprDeps.requires_expression( *inam );
+  BOOST_FOREACH( const Expr::Tag& tag, rhoEtaTags_ ){
+    exprDeps.requires_expression( tag );
   }
-  for( Expr::TagList::const_iterator inam=rhoEtaExEtaNames_.begin(); inam!=rhoEtaExEtaNames_.end(); ++inam ){
-    exprDeps.requires_expression( *inam );
+  BOOST_FOREACH( const Expr::Tag& tag, thetaTags_ ){
+    exprDeps.requires_expression( tag );
   }
 }
 
@@ -72,12 +58,13 @@ bind_fields( const Expr::FieldManagerList& fml )
   const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
 
   rhoEta_.clear();
-  for( Expr::TagList::const_iterator inam=rhoEtaTags_.begin(); inam!=rhoEtaTags_.end(); ++inam ){
-    rhoEta_.push_back( &fm.field_ref( *inam ) );
+  BOOST_FOREACH( const Expr::Tag& tag, rhoEtaTags_ ){
+    rhoEta_.push_back( &fm.field_ref( tag ) );
   }
-  rhoEtaExEta_.clear();
-  for( Expr::TagList::const_iterator inam=rhoEtaExEtaNames_.begin(); inam!=rhoEtaExEtaNames_.end(); ++inam ){
-    rhoEtaExEta_.push_back( &fm.field_ref( *inam ) );
+
+  theta_.clear();
+  BOOST_FOREACH( const Expr::Tag& tag, thetaTags_ ){
+    theta_.push_back( &fm.field_ref( tag ) );
   }
 }
 
@@ -88,25 +75,13 @@ void
 DensityCalculator<FieldT>::
 evaluate()
 {
-  DepVarVec& results = this->get_value_vec();
+  FieldT& rho = this->value();
 
-  DepVarVec rhoEtaIncEta;
-  typename DepVarVec::iterator iReIEta = results.begin();
-  FieldT& rho = **iReIEta;
-  ++iReIEta;
-  for( ; iReIEta!=results.end(); ++iReIEta ){
-    rhoEtaIncEta.push_back( *iReIEta );
-  }
-
-  rhoEtaIncEtaIters_.clear();
-  rhoEtaExEtaIters_.clear();
+  thetaIters_.clear();
   rhoEtaIters_.clear();
 
-  for( typename DepVarVec::iterator i=rhoEtaIncEta.begin(); i!=rhoEtaIncEta.end(); ++i ){
-    rhoEtaIncEtaIters_.push_back( (*i)->begin() );
-  }
-  for( typename IndepVarVec::iterator i=rhoEtaExEta_.begin(); i!=rhoEtaExEta_.end(); ++i ){
-    rhoEtaExEtaIters_.push_back( (*i)->begin() );
+  for( typename IndepVarVec::iterator i=theta_.begin(); i!=theta_.end(); ++i ){
+    thetaIters_.push_back( (*i)->begin() );
   }
   for( typename IndepVarVec::const_iterator i=rhoEta_.begin(); i!=rhoEta_.end(); ++i ){
     rhoEtaIters_.push_back( (*i)->begin() );
@@ -118,33 +93,28 @@ evaluate()
   for( typename FieldT::iterator irho= rho.begin(); irho!=rho.end(); ++irho ){
 
     // extract indep vars at this grid point
-    rhoEtaIncEtaPoint_.clear();
+    etaPoint_.clear();
     rhoEtaPoint_.clear();
     for( typename ConstIter::const_iterator i=rhoEtaIters_.begin(); i!=rhoEtaIters_.end(); ++i ){
       rhoEtaPoint_.push_back( **i );
-      rhoEtaIncEtaPoint_.push_back( **i / (*irho + 1e-11) );
+      etaPoint_.push_back( **i / (*irho + 1e-11) );
     }
-    rhoEtaExEtaPoint_.clear();
-    for( typename ConstIter::const_iterator i=rhoEtaExEtaIters_.begin(); i!=rhoEtaExEtaIters_.end(); ++i ){
-      rhoEtaExEtaPoint_.push_back( **i );
+    thetaPoint_.clear();
+    for( typename ConstIter::const_iterator i=thetaIters_.begin(); i!=thetaIters_.end(); ++i ){
+      thetaPoint_.push_back( **i );
     }
 
     // calculate the result
-    const bool converged = nonlinear_solver( rhoEtaIncEtaPoint_, rhoEtaExEtaPoint_, rhoEtaPoint_, reIindex_, *irho , *evaluator_, 1e-9 );
+    const bool converged = nonlinear_solver( *irho , etaPoint_, thetaPoint_, rhoEtaPoint_, etaIndex_, *evaluator_, 1e-9 );
     if( !converged )  ++convergeFailed;
 
     // increment all iterators to the next grid point
-    typename PointValues::const_iterator iReIEta=rhoEtaIncEtaPoint_.begin();
-    for( typename VarIter::iterator i=rhoEtaIncEtaIters_.begin(); i!=rhoEtaIncEtaIters_.end(); ++i, ++iReIEta ){
-      **i = *iReIEta;
-      ++(*i);
-    }
     for( typename ConstIter::iterator i=rhoEtaIters_.begin(); i!=rhoEtaIters_.end(); ++i )  ++(*i);
-    for( typename ConstIter::iterator i=rhoEtaExEtaIters_.begin(); i!=rhoEtaExEtaIters_.end(); ++i )  ++(*i);
+    for( typename ConstIter::iterator i=thetaIters_.begin();  i!=thetaIters_.end();  ++i )  ++(*i);
 
   } // grid loop
 
-  if( convergeFailed>0 )
+  if( convergeFailed > 0 )
     std::cout << convergeFailed << " of " << rho.window_with_ghost().local_npts() << " points failed to converge on density solver" << std::endl;
 }
 
@@ -155,13 +125,13 @@ DensityCalculator<FieldT>::
 Builder::Builder( const Expr::Tag& result,
                   const InterpT* const densEvaluator,
                   const Expr::TagList& rhoEtaTags,
-                  const Expr::TagList& rhoEtaIncEtaNames,
+                  const Expr::TagList& etaTags,
                   const Expr::TagList& orderedEtaTags )
 : ExpressionBuilder(result),
-  rhoEtaTs_      ( rhoEtaTags        ),
-  rhoEtaIncEtaNs_( rhoEtaIncEtaNames ),
-  orderedEtaTs_  ( orderedEtaTags    ),
-  spline_        ( densEvaluator     )
+  rhoEtaTs_    ( rhoEtaTags     ),
+  etaTs_       ( etaTags        ),
+  orderedIvarTs_( orderedEtaTags ),
+  interp_      ( densEvaluator  )
 {}
 
 //--------------------------------------------------------------------
@@ -171,128 +141,123 @@ Expr::ExpressionBase*
 DensityCalculator<FieldT>::
 Builder::build() const
 {
-  return new DensityCalculator<FieldT>( spline_, rhoEtaTs_, rhoEtaIncEtaNs_, orderedEtaTs_);
+  return new DensityCalculator<FieldT>( interp_, rhoEtaTs_, etaTs_, orderedIvarTs_);
 }
 
 //====================================================================
 
 extern "C"{
-  void dgetrf_( const int* m,
-                const int* n,
-                double A[],
-                const int* lda,
-                int* ipiv,
-                int* info );
-
-  void dgetrs_( const char* trans,
-                const int* n,
-                const int* nrhs,
-                const double A[],
-                const int* lda,
-                const int* ipiv,
-                double b[],
-                const int* ldb,
-                int* info );
+  void dgesv_( const int* n,    // # of equations
+               const int* nrhs, // # of rhs to solve
+               double A[],      // lhs matrix
+               const int* lda,  // leading dim of A (#eqn for us)
+               int* ipiv,       // integer work array
+               double rhs[],    // rhs array
+               const int* ldb,  // dimension of rhs (#eqn for us)
+               int* info );
 }
 
 template< typename FieldT >
 bool
-DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& reIeta,
-                                             const std::vector<double>& reEeta,
+DensityCalculator<FieldT>::nonlinear_solver( double& rho,
+                                             std::vector<double>& eta,
+                                             const std::vector<double>& theta,
                                              const std::vector<double>& rhoEta,
-                                             const std::vector<int>& reIindex,
-                                             double& rho,
+                                             const std::vector<size_t>& etaIndex,
                                              const InterpT& eval,
                                              const double rtol )
 {
   using namespace std;
   const size_t neq = rhoEta.size();
   unsigned int itCounter = 0;
-  const unsigned int maxIter = 20;  // the lowest iteration number seen in the tests is 5 which makes maxIter=6.
+  const unsigned int maxIter = 20;
   
+  orderedIvars_.clear();
+  orderedIvars_ = theta;
+
   if( neq==0 ){
-    orderedEta_.clear();
-    orderedEta_=reEeta;
-    rho = eval.value(orderedEta_);
+    // no solve required - just a straight function evaluation.
+    rho = eval.value( orderedIvars_ );
+    return true;
   }
   else{
-    jac_.resize(neq*neq);       // A vector for the jacobian matrix
-    g_.resize(neq);             // A vector for the rhs functions in non-linear solver
-    std::vector<int> ipiv(neq); // work array for linear solver
-
-    PointValues reIetaTmp(reIeta);
-    double relErr;
-
-    std::vector<double> deleta(neq); 
-    for (size_t i=0; i<neq; ++i) 
-      deleta[i] = 1e-6 * reIeta[i] + 1e-11;
-
-    do{
-      ++itCounter;
-      // Create the ordered eta vector
-      orderedEta_.clear();
-      orderedEta_=reEeta;
-      for( size_t i=0; i<reIindex.size(); i++ ) {
-        orderedEta_.insert(orderedEta_.begin()+reIindex[i],reIeta[i]);
-      }
-
-      double rhotmp = eval.value( orderedEta_ );
-
-      // Loop over different etas
-      for( size_t k=0; k<neq; ++k ){
-        for( size_t i=0; i<neq; ++i ) {
-          if( k==i )
-            reIetaTmp[i]=reIeta[k] + deleta[k];
-          else
-            reIetaTmp[i] = reIeta[i];
-        }
-
-        // Recreate the ordered eta vector with the modified eta vector
-        orderedEta_.clear();
-        orderedEta_=reEeta;
-        for( size_t i=0; i<reIindex.size(); i++ ) {
-          orderedEta_.insert( orderedEta_.begin()+reIindex[i], reIetaTmp[i] );
-        }
-
-        const double rhoplus = eval.value(&orderedEta_[0]);
-
-        // Calculating the rhs vextor components
-        g_[k] = -( reIeta[k] - (rhoEta[k] / rhotmp));
-        for( size_t i=0; i<neq; ++i ) {
-          jac_[i + k*neq] = (( reIetaTmp[i] - rhoEta[i]/rhoplus ) - ( reIeta[i] - rhoEta[i]/rhotmp )) / deleta[k];
-        }
-      }
-      
-      // Solve the linear system
-      const char mode = 'n';
-      int one=1, info;
-
-      // jcs why not use dgesv instead?
-      // Factor general matrix J using Gaussian elimination with partial pivoting
-      const int numEqns = neq;
-      dgetrf_(&numEqns, &numEqns, &jac_[0], &numEqns, &ipiv[0], &info);
-      assert( info==0 );
-      // Solving J * delta = g
-      // note that on entry, g is the rhs and on exit, g is the solution (delta).
-      dgetrs_(&mode, &numEqns, &one, &jac_[0], &numEqns, &ipiv[0], &g_[0], &numEqns, &info);
-      assert(info==0);
-
-      // relative error calculations
-      relErr = 0.0;
-      for( size_t i=0; i<neq; ++i ){
-        reIeta[i] += g_[i];
-        relErr += std::abs( g_[i]/(std::abs(reIeta[i])+rtol) );
-      }
-
-      rho = rhotmp;  // Updating rho
-    } while (relErr>rtol && itCounter<maxIter);
-    if( itCounter >= maxIter ){
-//      std::cout << itCounter << setprecision(15) << " problems!  " << rho << " , " << relErr << ", " << g[0] << ", " << ReIeta[0] <<", "<<rhoEta[0]<< ", " << testrho << ", " << ReEeta[0] << std::endl;
-      return false;
+    // Create the ordered eta vector
+    for( size_t i=0; i<etaIndex.size(); ++i ) {
+      orderedIvars_.insert( orderedIvars_.begin()+etaIndex[i], eta[i] );
     }
-//    std::cout << "converged in " << itCounter << " iterations.  eta=" << ReIeta[0] << ", rhoeta=" << rho*ReIeta[0] << ", rho=" << rho << std::endl;  
+  }
 
-  } 
+  jac_   .resize(neq*neq);  // vector for the jacobian matrix
+  g_     .resize(neq    );  // vector for the rhs functions in non-linear solver
+  delta_ .resize(neq    );  // finite difference vector
+  etaTmp_.resize(neq    );  // work array for assembling the jacobian
+  ipiv_  .resize(neq    );  // work array for linear solver
+
+  double relErr=0.0;
+
+  for( size_t i=0; i<neq; ++i ){
+    delta_[i] = 1e-6 * eta[i] + 1e-11;
+  }
+
+  do{
+    ++itCounter;
+
+    // update the ordered eta vector with the current values of eta.
+    // jcs note that we could move this to the bottom of the loop, but
+    // it results in slightly different answers and diffs regression tests.
+    // Really, it should be at the bottom since otherwise we don't get
+    // the benefit of the final iteration...
+    for( size_t i=0; i<etaIndex.size(); ++i ) {
+      orderedIvars_[ etaIndex[i] ] = eta[i];
+    }
+
+    rho = eval.value( orderedIvars_ );
+
+    // Loop over different etas to construct the linear system
+    for( size_t k=0; k<neq; ++k ){
+
+      for( size_t i=0; i<neq; ++i ) {
+        if( k==i ) etaTmp_[i] = eta[k] + delta_[k];
+        else       etaTmp_[i] = eta[i];
+      }
+
+      // update the ordered eta vector with the modified eta vector
+      for( size_t i=0; i<etaIndex.size(); ++i ) {
+        orderedIvars_[ etaIndex[i] ] = etaTmp_[i];
+      }
+
+      const double rhoplus = eval.value( &orderedIvars_[0] );
+
+      // Calculating the rhs vector components
+      g_[k] = -( eta[k] - (rhoEta[k] / rho));
+      for( size_t i=0; i<neq; ++i ) {
+        jac_[i + k*neq] = (( etaTmp_[i] - rhoEta[i]/rhoplus ) - ( eta[i] - rhoEta[i]/rho )) / delta_[k];
+      }
+    } // linear system construction
+
+    // Solve the linear system
+    const int one=1; int info;
+
+    const int numEqns = neq;
+    // Solving J * delta = g
+    // note that on entry, g is the rhs and on exit, g is the solution (delta).
+    dgesv_( &numEqns, &one, &jac_[0], &numEqns, &ipiv_[0], &g_[0], &numEqns, &info );
+    assert( info==0 );
+
+    // relative error calculations
+    relErr = 0.0;
+    for( size_t i=0; i<neq; ++i ){
+      eta[i] += g_[i];
+      relErr += std::abs( g_[i]/(std::abs(eta[i])+rtol) );
+    }
+
+  } while( relErr>rtol && itCounter < maxIter );
+
+  if( itCounter >= maxIter ){
+//    std::cout << itCounter << setprecision(15) << " problems!  " << rho << " , " << relErr << ", " << g_[0] << ", " << eta[0] <<", "<< rhoEta[0] << std::endl;
+    return false;
+  }
+  //    std::cout << "converged in " << itCounter << " iterations.  eta=" << eta[0] << ", rhoeta=" << rho*eta[0] << ", rho=" << rho << std::endl;
 
   return true;
 }
