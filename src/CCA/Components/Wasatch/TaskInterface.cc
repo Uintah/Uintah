@@ -375,7 +375,7 @@ namespace Wasatch{
 //                         patches, Uintah::Task::ThisLevel,
 //                         materials, Uintah::Task::NormalDomain,
 //                         fieldInfo.ghostType, fieldInfo.nghost );
-          task.modifies( fieldInfo.varlabel,
+          task.modifiesWithScratchGhost( fieldInfo.varlabel,
                          patches, Uintah::Task::ThisLevel,
                          materials, Uintah::Task::NormalDomain,
                          fieldInfo.ghostType, fieldInfo.nghost);

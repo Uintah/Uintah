@@ -461,7 +461,7 @@ Task::computes(const VarLabel* var,
 
 //__________________________________
 void
-Task::modifies(const VarLabel* var,
+Task::modifiesWithScratchGhost(const VarLabel* var,
                const PatchSubset* patches,
                PatchDomainSpec patches_dom,
                const MaterialSubset* matls,
@@ -500,7 +500,25 @@ Task::modifies(const VarLabel* var,
                MaterialDomainSpec matls_dom,
                bool oldTG)
 {
-  modifies(var, patches, patches_dom,matls, matls_dom, Ghost::None, 0, oldTG);
+  if (matls == 0 && var->typeDescription()->isReductionVariable()) {
+    // default material for a reduction variable is the global material (-1)
+    matls = getGlobalMatlSubset();
+    matls_dom = OutOfDomain;
+    ASSERT(patches == 0);
+  }
+  
+  Dependency* dep = scinew Dependency(Modifies, this, NewDW, var, oldTG, patches, matls,
+                                      patches_dom, matls_dom);
+  dep->next=0;
+  if (mod_tail)
+    mod_tail->next=dep;
+  else
+    mod_head=dep;
+  mod_tail=dep;
+  
+  d_requires.insert(make_pair(var, dep));
+  d_computes.insert(make_pair(var, dep));
+  d_modifies.insert(make_pair(var, dep));
 }
 
 //__________________________________
