@@ -6594,9 +6594,9 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 //for the normal index but still loading it into memory
                 IntVector mod_bound_ptr = (*bound_ptr);
                 face_index_value = mod_bound_ptr[index]; 
-                mod_bound_ptr[index] = (i_uvel_bc_storage->second.values.begin()->first)[index];
+                mod_bound_ptr[index] = (i_vvel_bc_storage->second.values.begin()->first)[index];
                 CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.find( mod_bound_ptr - i_vvel_bc_storage->second.relative_ijk ); 
-                if ( check_iter == i_uvel_bc_storage->second.values.end() ){ 
+                if ( check_iter == i_vvel_bc_storage->second.values.end() ){ 
                   std::stringstream out; 
                   out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_vvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
                   if ( !file_is_open ){ 
@@ -6616,8 +6616,8 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 //for the normal index but still loading it into memory
                 IntVector mod_bound_ptr = (*bound_ptr);
                 face_index_value = mod_bound_ptr[index]; 
-                mod_bound_ptr[index] = (i_uvel_bc_storage->second.values.begin()->first)[index];
-                CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.find( mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk ); 
+                mod_bound_ptr[index] = (i_wvel_bc_storage->second.values.begin()->first)[index];
+                CellToValue::iterator check_iter = i_wvel_bc_storage->second.values.find( mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk ); 
                 if ( check_iter == i_wvel_bc_storage->second.values.end() ){ 
                   std::stringstream out; 
                   out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
