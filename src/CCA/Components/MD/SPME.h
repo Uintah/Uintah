@@ -33,6 +33,7 @@
 #include <CCA/Components/MD/PatchMaterialKey.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Thread/ConditionVariable.h>
 
 #include <vector>
 
@@ -74,12 +75,6 @@ namespace Uintah {
       /**
        * @brief
        * @param
-       */
-      ~SPME();
-
-      /**
-       * @brief
-       * @param
        * @param
        * @param
        * @param
@@ -91,6 +86,12 @@ namespace Uintah {
            const IntVector& kLimits,
            const int splineOrder,
            const int maxPolarizableIterations = 0);
+
+      /**
+       * @brief
+       * @param
+       */
+      ~SPME();
 
       /**
        * @brief
@@ -167,9 +168,9 @@ namespace Uintah {
        * @return
        */
       void generateChargeMap(std::vector<SPMEMapPoint>* chargeMap,
-                                                  ParticleSubset* pset,
-                                                  constParticleVariable<Point>& particlePositions,
-                                                  constParticleVariable<long64>& particleIDs);
+                             ParticleSubset* pset,
+                             constParticleVariable<Point>& particlePositions,
+                             constParticleVariable<long64>& particleIDs);
 
       /**
        * @brief Map points (charges) onto the underlying grid.
@@ -369,18 +370,25 @@ namespace Uintah {
                                   DataWarehouse* new_dw);
 
       /**
-       * @brief Reduce local set of Q grids
+       * @brief Reduce node-local Q data for the global reduction and FFT
        * @param None
        * @return None
        */
-      void reduceLocalQGrids();
+      void reduceNodeLocalQ();
+
+      /**
+       * @brief redistribute node-local Q data (force)
+       * @param None
+       * @return None
+       */
+      void distributeNodeLocalQ();
 
       /**
        * @brief Checks for convergence of polarizability calculation
        * @param None
        * @return Bool - true if converged, false if not
        */
-      bool checkConvergence();
+      bool checkConvergence() const;
 
       /**
        * @brief
@@ -403,7 +411,8 @@ namespace Uintah {
       int d_maxPolarizableIterations;                   //!< Max number of polarization iterations to do
       ShiftedCardinalBSpline d_interpolatingSpline;     //!< Spline object to hold info for spline calculation
       std::vector<SPMEPatch*> d_spmePatches;            //!< Assuming multiple patches, these are the pieces of the SPME grid
-      SimpleGrid<dblcomplex>* d_Q;                      //!< The local version of the global Q grid
+      SimpleGrid<dblcomplex>* d_Q_nodeLocal;            //!< The local version of the global Q grid
+      SimpleGrid<dblcomplex>* d_Q_nodeLocalScratch;     //!< The local version of the global Q grid
       fftw_complex* d_localFFTData;                     //!< The local portion of the global 3D FFT data
 
       // Variables we'll get from the MDSystem instance to make life easier
@@ -411,8 +420,10 @@ namespace Uintah {
       Matrix3 d_inverseUnitCell;    //!< Inverse lattice parameters
       double d_systemVolume;        //!< Volume of the unit cell
 
-      //      std::vector<SPMEMapPoint> d_gridMap;   //!< The data that maps the charges in the patch to-and-from the grid
+      // std::vector<SPMEMapPoint> d_gridMap;   //!< The data that maps the charges in the patch to-and-from the grid
       std::map<PatchMaterialKey, std::vector<SPMEMapPoint>*> d_gridMap;  //!< The data that maps the charges in the patch to-and-from the grid
+
+      Mutex d_Qlock;               //!< for local reductions on d_Q_nodeLocal (contention on overlapping ghost cells)
 
   };
 
