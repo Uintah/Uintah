@@ -99,7 +99,7 @@ WARNING
       
 
     unsigned int target_patches_;   //Minimum number of patches the algorithm attempts to reach
-   
+    SizeList d_inputMinTileSize;    //the minimum tile size (user input)
     SizeList d_minTileSize;         //the minimum tile size 
     SizeList d_tileSize;            //the size of tiles on each level
     SizeList d_numCells;            //the maximum number of cells in each dimension for each level
