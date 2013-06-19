@@ -1512,15 +1512,15 @@ case $host in
     ac_objext=o
 
     if test "$CC" = "icc"; then
-      CFLAGS=" -w1"
-      CXXFLAGS=" -w1"
+      CFLAGS="$CFLAGS -w1"
+      CXXFLAGS="$CXXFLAGS -w1"
     elif test "$CC" = "pgcc"; then
       # pgcc doesn't support -Wall (at least not on ranger.tacc.utexas.edu under pgcc v7.1-2)
-      CFLAGS=
-      CXXFLAGS=
+      CFLAGS=$CFLAGS
+      CXXFLAGS=$CXXFLAGS
     else
-      CFLAGS=" -Wall"
-      CXXFLAGS=" -Wall"
+      CFLAGS="$CFLAGS -Wall"
+      CXXFLAGS="$CXXFLAGS -Wall"
     fi
 
     ######################################
