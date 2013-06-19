@@ -75,7 +75,7 @@
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
-#  include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
+#include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 
 #include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
 
@@ -626,6 +626,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     PropertyModelBase* prop_model = iprop->second;
     if ( prop_model->getPropType() == "heat_loss" ){ 
       MixingRxnModel* mixing_table = d_props->getMixRxnModel();
+      std::map<string,double> table_constants = mixing_table->getAllConstants(); 
       if (d_props->getMixingModelType() == "ClassicTable" ) {
 
         ClassicTableInterface* classic_table = dynamic_cast<ClassicTableInterface*>(mixing_table); 
@@ -634,6 +635,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 
         HeatLoss* hl_prop_model = dynamic_cast<HeatLoss*>(prop_model); 
         hl_prop_model->set_hl_bounds(hl_bounds); 
+        hl_prop_model->set_table_ref(classic_table); 
 
       }
     } 
