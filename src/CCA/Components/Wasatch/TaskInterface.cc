@@ -52,6 +52,9 @@
 #include <stdexcept>
 #include <fstream>
 
+// getting ready for debugstream
+//#include <Core/Util/DebugStream.h>
+
 using std::endl;
 
 typedef Expr::ExpressionTree::TreeList TreeList;
@@ -60,6 +63,9 @@ typedef std::map<int,TreePtr> TreeMap;
 
 //#define WASATCH_TASK_DIAGNOSTICS
 //#define WASATCH_TASK_FIELD_DIAGNOSTICS
+// getting ready for debugstream
+//static SCIRun::DebugStream dbgt("Wasatch_Tasks", false);  // task diagnostics
+//static SCIRun::DebugStream dbgf("Wasatch_Fields", false); // field diagnostics
 
 namespace Wasatch{
 
@@ -365,13 +371,14 @@ namespace Wasatch{
           // jcs it appears that we need to set a "requires" so that
           // the proper ghost inforation is incoporated since
           // "modifies" does not allow us to do that.
-          task.requires( dw, fieldInfo.varlabel,
-                         patches, Uintah::Task::ThisLevel,
-                         materials, Uintah::Task::NormalDomain,
-                         fieldInfo.ghostType, fieldInfo.nghost );
+//          task.requires( dw, fieldInfo.varlabel,
+//                         patches, Uintah::Task::ThisLevel,
+//                         materials, Uintah::Task::NormalDomain,
+//                         fieldInfo.ghostType, fieldInfo.nghost );
           task.modifies( fieldInfo.varlabel,
                          patches, Uintah::Task::ThisLevel,
-                         materials, Uintah::Task::NormalDomain );
+                         materials, Uintah::Task::NormalDomain, false,
+                         fieldInfo.ghostType, fieldInfo.nghost);
           break;
 
         } // switch
