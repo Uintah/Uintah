@@ -98,9 +98,9 @@ void LinearArray3<T>::resize(int d1,
   dm1 = d1;
   dm2 = d2;
   dm3 = d3;
-//  if (objs) {
-//    delete objs;
-//  }
+  if (objs) {
+    delete objs;
+  }
   allocate();
 }
 

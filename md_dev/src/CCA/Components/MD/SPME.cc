@@ -56,9 +56,29 @@ extern SCIRun::Mutex cerrLock;
 
 static DebugStream spme_dbg("SPMEDBG", false);
 
-SPME::SPME()
+SPME::SPME() :
+    d_Qlock("node-local Q lock")
 {
 
+}
+
+SPME::SPME(MDSystem* system,
+           const double ewaldBeta,
+           const bool isPolarizable,
+           const double tolerance,
+           const IntVector& kLimits,
+           const int splineOrder,
+           const int maxPolarizableIterations) :
+    d_system(system),
+      d_ewaldBeta(ewaldBeta),
+      d_polarizable(isPolarizable),
+      d_polarizationTolerance(tolerance),
+      d_kLimits(kLimits),
+      d_maxPolarizableIterations(maxPolarizableIterations),
+      d_Qlock("node-local Q lock")
+{
+  d_interpolatingSpline = ShiftedCardinalBSpline(splineOrder);
+  d_electrostaticMethod = Electrostatics::SPME;
 }
 
 SPME::~SPME()
@@ -86,8 +106,8 @@ SPME::~SPME()
     delete spmePatch;
   }
 
-  if (d_Q) {
-    delete d_Q;
+  if (d_Q_nodeLocal) {
+    delete d_Q_nodeLocal;
   }
 
   std::map<PatchMaterialKey, std::vector<SPMEMapPoint>*>::iterator iter;
@@ -95,25 +115,6 @@ SPME::~SPME()
     std::vector<SPMEMapPoint>* gridmap = iter->second;
     delete gridmap;
   }
-
-}
-
-SPME::SPME(MDSystem* system,
-           const double ewaldBeta,
-           const bool isPolarizable,
-           const double tolerance,
-           const IntVector& kLimits,
-           const int splineOrder,
-           const int maxPolarizableIterations) :
-    d_system(system),
-      d_ewaldBeta(ewaldBeta),
-      d_polarizable(isPolarizable),
-      d_polarizationTolerance(tolerance),
-      d_kLimits(kLimits),
-      d_maxPolarizableIterations(maxPolarizableIterations)
-{
-  d_interpolatingSpline = ShiftedCardinalBSpline(splineOrder);
-  d_electrostaticMethod = Electrostatics::SPME;
 }
 
 //-----------------------------------------------------------------------------
@@ -132,14 +133,14 @@ void SPME::initialize(const ProcessorGroup* pg,
 
   // now create SoleVariables to place in the DW; global Q and the FFTW plans (forward and backward)
   // FFTW plans for forward and backward 3D transform of global Q grid
-  SoleVariable<SimpleGrid<dblcomplex>*> QGrid;
+  SoleVariable<SimpleGrid<dblcomplex>*> Q_global;
   SoleVariable<fftw_plan> forwardTransformPlan;
   SoleVariable<fftw_plan> backwardTransformPlan;
 
   IntVector zero(0, 0, 0);
   SimpleGrid<dblcomplex>* Q = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, 0);
   Q->initialize(dblcomplex(0.0, 0.0));
-  QGrid.setData(Q);
+  Q_global.setData(Q);
 
   /*
    * ptrdiff_t is a standard C integer type which is (at least) 32 bits wide
@@ -163,11 +164,13 @@ void SPME::initialize(const ProcessorGroup* pg,
 
   new_dw->put(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
   new_dw->put(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
-  new_dw->put(QGrid, d_lb->globalQLabel);
+  new_dw->put(Q_global, d_lb->globalQLabel);
 
-  // now the local version of the global Q array
-  d_Q = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, 0);
-  d_Q->initialize(dblcomplex(0.0, 0.0));
+  // now the local version of the global Q and Q_scratch arrays
+  d_Q_nodeLocal = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, 0);
+  d_Q_nodeLocalScratch = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, 0);
+  d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
+  d_Q_nodeLocalScratch->initialize(dblcomplex(0.0, 0.0));
 
   // Get useful information from global system descriptor to work with locally.
   d_unitCell = d_system->getUnitCell();
@@ -177,9 +180,30 @@ void SPME::initialize(const ProcessorGroup* pg,
   int numLocalSites;
   IntVector patchLowIndex, patchHighIndex, patchExtents;
   int xRatio, yRatio, zRatio;
-  int spaceAdjustment = 2;
+  int resizeFactor = 2;
 
-  // Create charge-maps for each patch/material set
+  /*
+   * --------------------------------------------------------------------------
+   * Create charge-maps for each patch/material set
+   * --------------------------------------------------------------------------
+   * In general, if we have a patch that occupies a cube of volume v, the entire system
+   * occupies a space of volume V, and we have N_i: The site density of the atoms of type i
+   * are N_i/V for the entire system.
+   *
+   * If we assume that the local density should mimic the global density, then n_i/v == N_i/V,
+   * where n_i is the number of sites in the local subspace.The number of local sites (n_i)
+   * is therefore just n_i=(v/V)*N_i.  For normal, liquid-like systems we would expect the
+   * density amplification due to packing effects to be in the range of 2-3.
+   *
+   * So, put all together, if we have a patch with extents x,y,z and the total system has extents X,Y,Z:
+   *
+   * (x/X * y/Y * z/Z)*N_i*(a factor between 2 and 3, but since we may have to adjust and want to double
+   * when we do, let's choose 2) is the number you're looking for.  You would presumably allocate this
+   * at initialization for every patch object you have and only reallocate by doubling if you exceed that
+   * number. (We may have a large number of re-allocations on occasion, but it should taper off quickly
+   * after the first re-allocation.)
+   */
+
   unsigned int numPatches = patches->size();
   for (unsigned int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
@@ -194,7 +218,7 @@ void SPME::initialize(const ProcessorGroup* pg,
       xRatio = patchExtents.x() / xdim;
       yRatio = patchExtents.y() / ydim;
       zRatio = patchExtents.z() / zdim;
-      numLocalSites = (xRatio * yRatio * zRatio) * d_system->getNumAtoms() * spaceAdjustment;
+      numLocalSites = (xRatio * yRatio * zRatio) * d_system->getNumAtoms() * resizeFactor;
       std::vector<SPMEMapPoint>* gridmap = new std::vector<SPMEMapPoint>();
       gridmap->reserve(numLocalSites);
       d_gridMap.insert(pair<PatchMaterialKey, std::vector<SPMEMapPoint>*>(PatchMaterialKey(patch, matl), gridmap));
@@ -227,7 +251,7 @@ void SPME::setup(const ProcessorGroup* pg,
       patchKHigh[idx] = floor(static_cast<double>(KComponent) * (patchHighIndex[idx] / totalCellExtent[idx]));
     }
 
-    IntVector patchKGridExtents = (patchKHigh - patchKLow);  // Number of K Grid points for this patch
+    IntVector patchKGridExtents = (patchKHigh - patchKLow);  // Number of K Grid points for this local patch
     IntVector patchKGridOffset = patchKLow;                  // Lowest K Grid point vector
     int splineSupport = d_interpolatingSpline.getSupport();
     IntVector plusGhostExtents = IntVector(splineSupport, splineSupport, splineSupport);
@@ -298,14 +322,26 @@ void SPME::calculate(const ProcessorGroup* pg,
     // Do calculation steps until the Real->Fourier space transform
     calculatePreTransform(pg, patches, materials, old_dw, new_dw);
 
-    // Reduce Q, forward transform, and redistribute charge grid
+    // Q grid reductions
+    reduceNodeLocalQ();
+
+    // Forward transform
     transformRealToFourier(pg, patches, materials, old_dw, new_dw);
+
+    // Redistribute charge grid
+    distributeNodeLocalQ();
 
     // Do Fourier space calculations on transformed data
     calculateInFourierSpace(pg, patches, materials, old_dw, new_dw);
 
-    // Reduce Q, reverse transform, and redistribute force grid
+    // Q grid reductions
+    reduceNodeLocalQ();
+
+    // Reverse transform
     transformFourierToReal(pg, patches, materials, old_dw, new_dw);
+
+    // Redistribute force grid
+    distributeNodeLocalQ();
 
     checkConvergence();
     numIterations++;
@@ -370,12 +406,6 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
       mapChargeToGrid(spmePatch, gridMap, pset, pcharge);
     }
   }
-
-  // local reduction for Q grids belonging to SPMEPatches (if more than one patch per proc)
-  reduceLocalQGrids();
-
-  // put local Q grid in for reduction via infrastructure
-//  new_dw->put(q_kgrid_sum(*(d_Q->getDataArray())), d_lb->QLabel);
 }
 
 void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
@@ -413,8 +443,8 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
       }
     }
   }
-  reduceLocalQGrids();
 
+  // put updated values for reduction variables into the DW
   new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
   new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->spmeFourierStressLabel);
 }
@@ -465,19 +495,13 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
 //  old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
 //  fftw_execute(forwardTransformPlan.get());
 
-  std::vector<SPMEPatch*>::iterator PatchIterator;
-  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
-    SPMEPatch* spmePatch = *PatchIterator;
+  int xdim = d_kLimits(0);
+  int ydim = d_kLimits(0);
+  int zdim = d_kLimits(0);
 
-    int xdim = d_kLimits(0);
-    int ydim = d_kLimits(0);
-    int zdim = d_kLimits(0);
-
-    SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
-    fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
-    fftw_plan d_forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
-    fftw_execute(d_forwardTransformPlan);
-  }
+  fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q_nodeLocal->getDataPtr());
+  fftw_plan forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
+  fftw_execute(forwardTransformPlan);
 }
 
 void SPME::transformFourierToReal(const ProcessorGroup* pg,
@@ -490,50 +514,13 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
 //  old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
 //  fftw_execute(backwardTransformPlan.get());
 
-  std::vector<SPMEPatch*>::iterator PatchIterator;
-  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); PatchIterator++) {
-    SPMEPatch* spmePatch = *PatchIterator;
+  int xdim = d_kLimits.x();
+  int ydim = d_kLimits.y();
+  int zdim = d_kLimits.z();
 
-    int xdim = d_kLimits.x();
-    int ydim = d_kLimits.y();
-    int zdim = d_kLimits.z();
-
-    SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
-    fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(Q->getDataPtr());
-    fftw_plan d_backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
-    fftw_execute(d_backwardTransformPlan);
-  }
-}
-
-void SPME::reduceLocalQGrids()
-{
-  LinearArray3<dblcomplex>* localQ = d_Q->getDataArray();
-
-  // If there's only one patch per proc
-  if (d_spmePatches.size() == 1) {
-    localQ->copyData(*(d_spmePatches[0]->getQ()->getDataArray()));
-    return;
-  }
-
-  // >1 patch per proc; do the local Q reduction
-  std::vector<SPMEPatch*>::iterator PatchIterator;
-  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); ++PatchIterator) {
-    SPMEPatch* spmePatch = *PatchIterator;
-    *localQ += *(spmePatch->getQ()->getDataArray());
-  }
-  d_Q->getDataArray()->copyData(*localQ);
-}
-
-bool SPME::checkConvergence()
-{
-  // Subroutine determines if polarizable component has converged
-  bool polarizable = getPolarizableCalculation();
-  if (!polarizable) {
-    return true;
-  } else {
-    // throw an exception for now, but eventually will check convergence here.
-    throw InternalError("Error: Polarizable force field not yet implemented!", __FILE__, __LINE__);
-  }
+  fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q_nodeLocal->getDataPtr());
+  fftw_plan backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
+  fftw_execute(backwardTransformPlan);
 }
 
 //----------------------------------------------------------------------------
@@ -779,16 +766,19 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
 
           // We need only wrap in the positive direction.  Therefore QAnchor.i + imask will never be less than zero
           int x_anchor = xBase + xmask;
-          if (x_anchor >= d_kLimits.x())
+          if (x_anchor >= d_kLimits.x()) {
             x_anchor -= d_kLimits.x();
+          }
 
           int y_anchor = yBase + ymask;
-          if (y_anchor >= d_kLimits.y())
+          if (y_anchor >= d_kLimits.y()) {
             y_anchor -= d_kLimits.y();
+          }
 
           int z_anchor = zBase + zmask;
-          if (z_anchor >= d_kLimits.z())
+          if (z_anchor >= d_kLimits.z()) {
             z_anchor -= d_kLimits.z();
+          }
 
           (*Q)(x_anchor, y_anchor, z_anchor) += val;
         }
@@ -831,39 +821,64 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
 
     for (int xmask = 0; xmask < xExtent; ++xmask) {
       int x_anchor = xBase + xmask;
-      if (x_anchor >= kX)
+      if (x_anchor >= kX) {
         x_anchor -= kX;
+      }
       for (int ymask = 0; ymask < yExtent; ++ymask) {
         int y_anchor = yBase + ymask;
-        if (y_anchor >= kY)
+        if (y_anchor >= kY) {
           y_anchor -= kY;
+        }
         for (int zmask = 0; zmask < zExtent; ++zmask) {
           int z_anchor = zBase + zmask;
-          if (z_anchor >= kZ)
+          if (z_anchor >= kZ) {
             z_anchor -= kZ;
+          }
 
           double QReal = real((*Q)(x_anchor, y_anchor, z_anchor));
-          double QMag = std::abs((*Q)(x_anchor, y_anchor, z_anchor));
-
           newForce += forceMap(xmask, ymask, zmask) * QReal * charge * d_inverseUnitCell;
         }
       }
     }
-
-    //49227.43325439056
-    /*
-     *  f1=  -2.8440279063396052        2.6027710155811845       0.99069892785288971
-     f2=  -1.2959262337781086       -2.2140864761359698        2.5686305300200476
-     f3=   4.2899558647618461       -2.2060911777299874       -3.0672208465506792
-     f4=   3.1706091601611490        2.0423127670957384       -4.2814464749644880
-     f5=  -2.8145420677778201        2.3389711802598274        1.3094128311605495
-     */
-
+    // sanity check
     if (pidx < 5) {
       std::cerr << " Force Check (" << pidx << "): " << newForce << endl;
       pforcenew[pidx] = newForce;
     }
+  }
+}
 
+void SPME::reduceNodeLocalQ()
+{
+  // If there's only one patch per MPI process
+  if (d_spmePatches.size() == 1) {
+    LinearArray3<dblcomplex>* Q_nodeLocal = d_Q_nodeLocal->getDataArray();
+    LinearArray3<dblcomplex>* Q_patch = d_spmePatches[0]->getQ()->getDataArray();
+    Q_nodeLocal->copyData(*Q_patch);
+    return;
+  }
+}
+
+void SPME::distributeNodeLocalQ()
+{
+  // If there's only one patch per MPI process
+  if (d_spmePatches.size() == 1) {
+    LinearArray3<dblcomplex>* Q_nodeLocal = d_Q_nodeLocal->getDataArray();
+    LinearArray3<dblcomplex>* Q_patch = d_spmePatches[0]->getQ()->getDataArray();
+    Q_patch->copyData(*Q_nodeLocal);
+    return;
+  }
+}
+
+bool SPME::checkConvergence() const
+{
+  // Subroutine determines if polarizable component has converged
+  bool polarizable = getPolarizableCalculation();
+  if (!polarizable) {
+    return true;
+  } else {
+    // throw an exception for now, but eventually will check convergence here.
+    throw InternalError("Error: Polarizable force field not yet implemented!", __FILE__, __LINE__);
   }
 }
 
