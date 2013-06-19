@@ -466,9 +466,9 @@ Task::modifies(const VarLabel* var,
                PatchDomainSpec patches_dom,
                const MaterialSubset* matls,
                MaterialDomainSpec matls_dom,
-               bool oldTG,
                Ghost::GhostType gtype,
-               int numGhostCells)
+               int numGhostCells,
+               bool oldTG)
 {
   if (matls == 0 && var->typeDescription()->isReductionVariable()) {
     // default material for a reduction variable is the global material (-1)
@@ -489,6 +489,18 @@ Task::modifies(const VarLabel* var,
   d_requires.insert(make_pair(var, dep));
   d_computes.insert(make_pair(var, dep));
   d_modifies.insert(make_pair(var, dep));
+}
+
+//__________________________________
+void
+Task::modifies(const VarLabel* var,
+               const PatchSubset* patches,
+               PatchDomainSpec patches_dom,
+               const MaterialSubset* matls,
+               MaterialDomainSpec matls_dom,
+               bool oldTG)
+{
+  modifies(var, patches, patches_dom,matls, matls_dom, Ghost::None, 0, oldTG);
 }
 
 //__________________________________
