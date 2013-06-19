@@ -377,7 +377,7 @@ namespace Wasatch{
 //                         fieldInfo.ghostType, fieldInfo.nghost );
           task.modifies( fieldInfo.varlabel,
                          patches, Uintah::Task::ThisLevel,
-                         materials, Uintah::Task::NormalDomain, false,
+                         materials, Uintah::Task::NormalDomain,
                          fieldInfo.ghostType, fieldInfo.nghost);
           break;
 
