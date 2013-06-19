@@ -1211,7 +1211,9 @@ class Task {
                   PatchDomainSpec patches_domain,
                   const MaterialSubset* matls,
                   MaterialDomainSpec matls_domain,
-                  bool oldTG = false);
+                  bool oldTG = false,
+                  Ghost::GhostType gtype = Ghost::None,
+                  int numGhostCells = 0);
 
     //////////
     // Insert Documentation Here:
