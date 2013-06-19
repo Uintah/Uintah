@@ -377,8 +377,8 @@ void TiledRegridder::OutputGridStats(Grid* newGrid)
 //______________________________________________________________________
 //
 void TiledRegridder::problemSetup(const ProblemSpecP& params, 
-                                const GridP& oldGrid,
-                                const SimulationStateP& state)
+                                  const GridP& oldGrid,
+                                  const SimulationStateP& state)
 {
   RegridderCommon::problemSetup(params, oldGrid, state);
   d_sharedState = state;
@@ -391,6 +391,7 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
   }
   // get min patch size
   regrid_spec->require("min_patch_size", d_minTileSize);
+  d_inputMinTileSize = d_minTileSize;
   int size=d_minTileSize.size();
 
   //it is not required to specifiy the minimum patch size on each level
@@ -493,14 +494,21 @@ void TiledRegridder::problemSetup_BulletProofing(const int L)
       msg << "Problem Setup: CompressedIntVector requires more than 10 bits, the size of the CompressedIntVector needs to be increased";
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
     }
+
+    if( fmod( d_inputMinTileSize[L][dir],d_cellRefinementRatio[L][dir] ) != 0) {
+      ostringstream msg;
+      msg << "Problem Setup: Regridder: The min_patch_size (" << d_inputMinTileSize[L] << ") is not divisible by the cell_refinement_ratio ("
+          <<  d_cellRefinementRatio[L] << ")" << fmod( d_inputMinTileSize[L][dir],d_cellRefinementRatio[L][dir] );
+      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+    }
   }  // loop over directions
+  
   
   if ( L!=0 && Mod( d_cellNum[L], d_minTileSize[L] ) != IntVector(0,0,0) ) {
     ostringstream msg;
     msg << "Problem Setup: Regridder: The overall number of cells on level " << L << "(" << d_cellNum[L] << ") is not divisible by the minimum patch size (" <<  d_minTileSize[L] << ")\n";
     throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
   }
-  
 }
 
 //______________________________________________________________________
