@@ -495,10 +495,10 @@ void TiledRegridder::problemSetup_BulletProofing(const int L)
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
     }
 
-    if( fmod( d_inputMinTileSize[L][dir],d_cellRefinementRatio[L][dir] ) != 0) {
+    if( d_inputMinTileSize[L][dir]%d_cellRefinementRatio[L][dir] != 0) {
       ostringstream msg;
       msg << "Problem Setup: Regridder: The min_patch_size (" << d_inputMinTileSize[L] << ") is not divisible by the cell_refinement_ratio ("
-          <<  d_cellRefinementRatio[L] << ")" << fmod( d_inputMinTileSize[L][dir],d_cellRefinementRatio[L][dir] );
+          <<  d_cellRefinementRatio[L] << ")";
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
     }
   }  // loop over directions
