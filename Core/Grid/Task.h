@@ -1214,9 +1214,11 @@ class Task {
         if a task can fill-in ghost values, then by all means do that and
         avoid an extra communication in the process. This, for example, is the
         case when one extrapolates data from the interior (e.g. Dynamic Smagorinsky
-        model).
+        model). Be aware that the ghost-values modified in one patch will
+        NOT be reproduced/correspond to interior cells of the neighboring patch,
+        and vice versa.
      */
-    void modifies(const VarLabel*,
+    void modifiesWithScratchGhost(const VarLabel*,
                   const PatchSubset* patches,
                   PatchDomainSpec patches_domain,
                   const MaterialSubset* matls,
