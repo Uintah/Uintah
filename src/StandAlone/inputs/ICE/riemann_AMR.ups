@@ -108,6 +108,7 @@
       <save label="mag_grad_temp_CC"/>
       <save label="mag_div_vel_CC"/>
       <save label="refineFlag"/>
+      <checkpoint timestepInterval="75" cycle="2"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
@@ -132,9 +133,14 @@
       <Regridder type="Tiled">
         <max_levels>        3    </max_levels>
         <cell_refinement_ratio>    [[4,1,1]]          </cell_refinement_ratio>
-        <min_patch_size>           [[10,1,1]]         </min_patch_size>
-        <cell_stability_dilation>   [2,0,0]           </cell_stability_dilation>   
+        <min_patch_size>           [[40,1,1]]          </min_patch_size>
+        <cell_stability_dilation>   [4,0,0]           </cell_stability_dilation>   
         <min_boundary_cells>       [1,0,0]            </min_boundary_cells>
+        
+        <!-- RT: Needed so the restart grid is identical to the original grid-->        
+        <max_timestep_interval>       0       </max_timestep_interval>
+        <cell_regrid_dilation>     [0,0,0]   </cell_regrid_dilation>
+        <!-- RT: -->
       </Regridder>
     </AMR>
     <!--____________________________________________________________________-->
