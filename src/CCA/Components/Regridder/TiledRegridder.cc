@@ -391,7 +391,6 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
   }
   // get min patch size
   regrid_spec->require("min_patch_size", d_minTileSize);
-  d_inputMinTileSize = d_minTileSize;
   int size=d_minTileSize.size();
 
   //it is not required to specifiy the minimum patch size on each level
@@ -403,6 +402,8 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
       d_minTileSize.push_back(lastSize);
     }
   }
+  
+  d_inputMinTileSize = d_minTileSize;
   
   LevelP level=oldGrid->getLevel(0);
 
@@ -495,9 +496,9 @@ void TiledRegridder::problemSetup_BulletProofing(const int L)
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
     }
 
-    if( d_inputMinTileSize[L][dir]%d_cellRefinementRatio[L][dir] != 0) {
+    if( L < d_maxLevels-1 && ( d_inputMinTileSize[L][dir]%d_cellRefinementRatio[L][dir] != 0 ) ) {
       ostringstream msg;
-      msg << "Problem Setup: Regridder: The min_patch_size (" << d_inputMinTileSize[L] << ") is not divisible by the cell_refinement_ratio ("
+      msg << "Problem Setup: Regridder L-"<< L <<": The min_patch_size (" << d_inputMinTileSize[L] << ") is not divisible by the cell_refinement_ratio ("
           <<  d_cellRefinementRatio[L] << ")";
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
     }
