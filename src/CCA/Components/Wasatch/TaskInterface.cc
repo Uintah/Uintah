@@ -53,7 +53,7 @@
 #include <fstream>
 
 // getting ready for debugstream
-//#include <Core/Util/DebugStream.h>
+#include <Core/Util/DebugStream.h>
 
 using std::endl;
 
@@ -61,11 +61,34 @@ typedef Expr::ExpressionTree::TreeList TreeList;
 typedef Expr::ExpressionTree::TreePtr  TreePtr;
 typedef std::map<int,TreePtr> TreeMap;
 
-//#define WASATCH_TASK_DIAGNOSTICS
-//#define WASATCH_TASK_FIELD_DIAGNOSTICS
-// getting ready for debugstream
-//static SCIRun::DebugStream dbgt("Wasatch_Tasks", false);  // task diagnostics
-//static SCIRun::DebugStream dbgf("Wasatch_Fields", false); // field diagnostics
+/*
+ usage:
+ To enable a debug stream, use the + identifier
+  tcsh: setenv SCI_DEBUG Wasatch_Tasks:+
+  bash: export SCI_DEBUG=Wasatch_Tasks:+
+
+ To disable a debug stream, use the - identifier
+  tcsh: setenv SCI_DEBUG Wasatch_Tasks:-
+  bash: export SCI_DEBUG=Wasatch_Tasks:-
+
+ To enable multiple debug flags, use a comma to separate them
+  tcsh: setenv SCI_DEBUG Wasatch_Tasks:+, Wasatch_Fields:+
+  bash: export SCI_DEBUG=Wasatch_Tasks:+, Wasatch_Fields:+
+ 
+ To enable one flag and disable another that was previously enabled, either
+ define a new flag excluding the unwanted flag, or redefine SCI_DEBUG with a -
+ after the unwanted flag
+   tcsh: setenv SCI_DEBUG Wasatch_Tasks:-, Wasatch_Fields:+
+   bash: export SCI_DEBUG=Wasatch_Tasks:-, Wasatch_Fields:+
+ 
+ */
+
+static SCIRun::DebugStream dbgt("Wasatch_Tasks", false);  // task diagnostics
+static SCIRun::DebugStream dbgf("Wasatch_Fields", false); // field diagnostics
+#define dbg_tasks_on  dbgt.active() && Uintah::Parallel::getMPIRank() == 0
+#define dbg_fields_on dbgf.active() && Uintah::Parallel::getMPIRank() == 0
+#define dbg_tasks  if( dbg_tasks_on  ) dbgt
+#define dbg_fields if( dbg_fields_on ) dbgf
 
 namespace Wasatch{
 
@@ -249,13 +272,10 @@ namespace Wasatch{
     //    not.  Currently, we don't have any scratch fields.  Not sure
     //    where those would be added.
     //
-
-#   ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-    proc0cout << "Field requirements for task '" << tree.name() << "'" << endl
-              << std::setw(10) << "Mode " << std::left << std::setw(20) << "Field Name"
-              << "DW  #Ghost PatchID" << endl
-              << "-----------------------------------------------------------------------" << endl;
-#   endif
+    dbg_fields << "Field requirements for task '" << tree.name() << "'" << endl
+               << std::setw(10) << "Mode " << std::left << std::setw(20) << "Field Name"
+               << "DW  #Ghost PatchID" << endl
+               << "-----------------------------------------------------------------------" << endl;
 
     //______________________________
     // cycle through each field type
@@ -274,15 +294,11 @@ namespace Wasatch{
         Expr::FieldInfo& fieldInfo = ii->second;
         const Expr::Tag& fieldTag = ii->first;
 
-#       ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-        proc0cout << "examining field: " << fieldTag << " for stage " << rkStage << std::endl;
-#       endif
+        dbg_fields << "examining field: " << fieldTag << " for stage " << rkStage << std::endl;
 
         // see if this field is required by the given tree
         if( !tree.has_field(fieldTag) ){
-#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-          proc0cout << "  - not required by this tree" << std::endl;
-#         endif
+          dbg_fields << "  - not required by this tree" << std::endl;
           continue;
         }
 
@@ -299,13 +315,11 @@ namespace Wasatch{
                          materials, Uintah::Task::NormalDomain,
                          fieldInfo.ghostType, fieldInfo.nghost );
 
-#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-          proc0cout << std::setw(10) << "(REQUIRES)"
-                    << std::setw(20) << std::left << fieldInfo.varlabel->getName()
-                    << "OLD   "
-                    << std::left << std::setw(5) << fieldInfo.nghost
-                    << *patches << endl;
-#         endif
+          dbg_fields << std::setw(10) << "(REQUIRES)"
+                     << std::setw(20) << std::left << fieldInfo.varlabel->getName()
+                     << "OLD   "
+                     << std::left << std::setw(5) << fieldInfo.nghost
+                     << *patches << endl;
         }
 
         //________________
@@ -314,9 +328,7 @@ namespace Wasatch{
 
           // if the field uses dynamic allocation, then the uintah task should not be aware of this field
           if( ! tree.is_persistent(fieldTag) ){
-#           ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-            proc0cout << " - field is not persistent -> hiding from Uintah." << std::endl;
-#           endif
+            dbg_fields << " - field is not persistent -> hiding from Uintah." << std::endl;
             continue;
           }
 
@@ -343,9 +355,7 @@ namespace Wasatch{
         switch( fieldInfo.mode ){
 
         case Expr::COMPUTES:
-#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-          proc0cout << std::setw(10) << "COMPUTES";
-#         endif
+          dbg_fields << std::setw(10) << "COMPUTES";
           ASSERT( dw == Uintah::Task::NewDW );
           task.computes( fieldInfo.varlabel,
                          patches, Uintah::Task::ThisLevel,
@@ -353,9 +363,7 @@ namespace Wasatch{
           break;
 
         case Expr::REQUIRES:
-#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-          proc0cout << std::setw(10) << "REQUIRES";
-#         endif
+          dbg_fields << std::setw(10) << "REQUIRES";
           task.requires( dw,
                          fieldInfo.varlabel,
                          patches, Uintah::Task::ThisLevel,
@@ -364,17 +372,8 @@ namespace Wasatch{
           break;
 
         case Expr::MODIFIES:
-#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-          proc0cout << std::setw(10) << "MODIFIES";
-#         endif
+          dbg_fields << std::setw(10) << "MODIFIES";
           ASSERT( dw == Uintah::Task::NewDW );
-          // jcs it appears that we need to set a "requires" so that
-          // the proper ghost inforation is incoporated since
-          // "modifies" does not allow us to do that.
-//          task.requires( dw, fieldInfo.varlabel,
-//                         patches, Uintah::Task::ThisLevel,
-//                         materials, Uintah::Task::NormalDomain,
-//                         fieldInfo.ghostType, fieldInfo.nghost );
           task.modifiesWithScratchGhost( fieldInfo.varlabel,
                          patches, Uintah::Task::ThisLevel,
                          materials, Uintah::Task::NormalDomain,
@@ -383,20 +382,16 @@ namespace Wasatch{
 
         } // switch
 
-#       ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-        proc0cout << std::setw(20) << std::left << fieldInfo.varlabel->getName();
-        if( fieldInfo.useOldDataWarehouse ){ proc0cout << "OLD   "; }
-        else{ proc0cout << "NEW   "; }
-        proc0cout << std::left << std::setw(5) << fieldInfo.nghost
+        dbg_fields << std::setw(20) << std::left << fieldInfo.varlabel->getName();
+        if( fieldInfo.useOldDataWarehouse ){ dbg_fields << "OLD   "; }
+        else{ dbg_fields << "NEW   "; }
+        dbg_fields<< std::left << std::setw(5) << fieldInfo.nghost
                   << *patches << endl;
-#       endif
 
       } // field loop
     } // field type loop
 
-#   ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-    proc0cout << endl;
-#   endif
+    dbg_fields << endl;
 
   }
 
@@ -407,9 +402,7 @@ namespace Wasatch{
   {
     ASSERT( !hasBeenScheduled_ );
 
-#   ifdef WASATCH_TASK_DIAGNOSTICS
-    proc0cout << "Scheduling task '" << taskName_ << "'" << endl;
-#   endif
+    dbg_tasks << "Scheduling task '" << taskName_ << "'" << endl;
 
     const PatchTreeTaskMap::iterator iptm = patchTreeMap_.begin();
     ASSERT( iptm != patchTreeMap_.end() );
@@ -495,16 +488,15 @@ namespace Wasatch{
 
         const int material = materials->get(im);
         try{
-#         ifdef WASATCH_TASK_DIAGNOSTICS
-          proc0cout << endl
-              << "Wasatch: executing graph '" << taskName_
-              << "' for patch " << patch->getID()
-              << " and material " << material
-              << endl;
-          if( Uintah::Parallel::getMPIRank() == 0 ){
+          dbg_tasks << endl
+                    << "Wasatch: executing graph '" << taskName_
+                    << "' for patch " << patch->getID()
+                    << " and material " << material
+                    << endl;
+          if (dbg_tasks_on) {
             fml_->dump_fields(std::cout);
           }
-#         endif
+
           fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
 
           if( hasPressureExpression_ ){
@@ -529,9 +521,8 @@ namespace Wasatch{
           tree->bind_fields( *fml_ );
           tree->bind_operators( opdb );
           tree->execute_tree();
-#         ifdef WASATCH_TASK_DIAGNOSTICS
-          proc0cout << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
-#         endif
+
+          dbg_tasks << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
           fml_->deallocate_fields();
         }
         catch( std::exception& e ){
