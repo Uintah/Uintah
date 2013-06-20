@@ -34,6 +34,9 @@ ifeq ($(BUILD_VISIT),yes)
 # install dir instead of user's .visit directory).
 VISIT_PLUGIN_INSTALL_TYPE = -private
 
+# forceversion, override from make: e.g. make FORCEVERSION="-forceversion 2.5.2"
+VISIT_FORCEVERSION = ""
+
 # 'SRCDIR' get's overwritten when the actual rules execute in make, so
 # I use my VISIT_SRCDIR to avoid this from happening...
 VISIT_SRCDIR := VisIt/udaReaderMTMD
@@ -74,8 +77,8 @@ ${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.${SO_OR_A_FILE}
 	@cd ${VISIT_SRCDIR}; \
           rm -f Makefile.visit; \
           mv Makefile Makefile.sci; \
-          ${VISIT_INSTALL_DIR}/bin/xml2cmake ${VISIT_PLUGIN_INSTALL_TYPE} -clobber udaReaderMTMD.xml; \
-          ${VISIT_INSTALL_DIR}/bin/xml2info -clobber $(OBJTOP_ABS)/${VISIT_SRCDIR}/udaReaderMTMD.xml; \
+          ${VISIT_INSTALL_DIR}/bin/xml2cmake ${VISIT_FORCEVERSION} ${VISIT_PLUGIN_INSTALL_TYPE} -clobber udaReaderMTMD.xml; \
+          ${VISIT_INSTALL_DIR}/bin/xml2info ${VISIT_FORCEVERSION} -clobber $(OBJTOP_ABS)/${VISIT_SRCDIR}/udaReaderMTMD.xml; \
           cmake . -DVISIT_DISABLE_SETTING_COMPILER:BOOL=TRUE -DCMAKE_CXX_COMPILER:FILEPATH=${CXX} -DCMAKE_CXX_FLAGS:STRING="-I${OBJTOP_ABS} -I${SRCTOP_ABS} ${CXXFLAGS}"; \
           cp Makefile Makefile.visit;
 
