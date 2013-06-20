@@ -669,26 +669,32 @@ namespace Wasatch{
         }
       }
       // -----------------------------------------------------------------------          
-            
-      TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
-                                                        "initialization",
-                                                        *icGraphHelper->exprFactory,
-                                                        level, sched,
-                                                        localPatches,
-                                                        materials_,
-                                                        patchInfoMap_,
-                                                        1, lockedFields_ );
+      try{
+        TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
+                                                          "initialization",
+                                                          *icGraphHelper->exprFactory,
+                                                          level, sched,
+                                                          localPatches,
+                                                          materials_,
+                                                          patchInfoMap_,
+                                                          1, lockedFields_ );
 
-      // set coordinate values as required by the IC graph.
-      icCoordHelper_->create_task( sched, localPatches, materials_ );
+        // set coordinate values as required by the IC graph.
+        icCoordHelper_->create_task( sched, localPatches, materials_ );
 
-      //_______________________________________________________
-      // create the TaskInterface and schedule this task for
-      // execution.  Note that field dependencies are assigned
-      // within the TaskInterface object.
-      task->schedule( icCoordHelper_->field_tags(), 1 );
-      taskInterfaceList_.push_back( task );
-
+        //_______________________________________________________
+        // create the TaskInterface and schedule this task for
+        // execution.  Note that field dependencies are assigned
+        // within the TaskInterface object.
+        task->schedule( icCoordHelper_->field_tags(), 1 );
+        taskInterfaceList_.push_back( task );
+      }
+      catch( std::exception& err ){
+        std::ostringstream msg;
+        msg << "ERROR SETTING UP GRAPH FOR INITIALIZATION" << std::endl
+            << err.what() << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
     }
     proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
