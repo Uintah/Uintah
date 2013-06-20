@@ -84,7 +84,6 @@ Uintah::ER_MMS( DataArchive * da, CommandLineFlags & clf )
       Point worstPos   = Point(-9,-9,-9);
       IntVector worstCell(-9,-9,-9);
       
-      Vector dx = level->dCell();             // you need to normalize the variable A by the 
       double A = 0.1;
       //__________________________________
       // Patch loop

@@ -395,7 +395,8 @@ int  set_MicroSlipTemperature_BC(const Patch* patch,
 
     IntVector axes = patch->getFaceAxes(face);
     //int P_dir = axes[0];  // principal direction
-    Vector DX = patch->dCell();
+    //
+    //Vector DX = patch->dCell();
     //double dx = DX[P_dir];
     //double alpha_temperature = sv->alpha_temperature;
     //double gas_constant = 1.0;   // Need to do something here
