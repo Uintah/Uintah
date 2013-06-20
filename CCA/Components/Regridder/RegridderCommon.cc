@@ -476,27 +476,27 @@ bool RegridderCommon::flaggedCellsExist(constCCVariable<int>& flaggedCells, IntV
   return false;
 }
 
-IntVector RegridderCommon::Less    (const IntVector& a, const IntVector& b)
+IntVector RegridderCommon::Less( const IntVector& a, const IntVector& b )
 {
   return IntVector(a.x() < b.x(), a.y() < b.y(), a.z() < b.z());
 }
 
-IntVector RegridderCommon::Greater (const IntVector& a, const IntVector& b)
+IntVector RegridderCommon::Greater( const IntVector& a, const IntVector& b )
 {
   return IntVector(a.x() > b.x(), a.y() > b.y(), a.z() > b.z());
 }
 
-IntVector RegridderCommon::And     (const IntVector& a, const IntVector& b)
+IntVector RegridderCommon::And( const IntVector& a, const IntVector& b )
 {
   return IntVector(a.x() & b.x(), a.y() & b.y(), a.z() & b.z());
 }
 
-IntVector RegridderCommon::Mod     (const IntVector& a, const IntVector& b)
+IntVector RegridderCommon::Mod( const IntVector& a, const IntVector& b )
 {
   return IntVector(a.x() % b.x(), a.y() % b.y(), a.z() % b.z());
 }
 
-IntVector RegridderCommon::Ceil    (const Vector& a)
+IntVector RegridderCommon::Ceil( const Vector& a )
 {
   return IntVector(static_cast<int>(ceil(a.x())), static_cast<int>(ceil(a.y())), static_cast<int>(ceil(a.z())));
 }
