@@ -4205,7 +4205,7 @@ if test "$with_tabprops"; then
     if test ! -d $with_tabprops; then
       AC_MSG_ERROR( '$with_tabprops' directory does not exist. )
     fi
-    for file in include/tabprops/StateTable.h lib/tabprops/libtabprops.a; do
+    for file in include/tabprops/StateTable.h lib/tabprops/libtabprops.a lib/tabprops/libinterp.a; do
       if test ! -f $with_tabprops/$file; then
         AC_MSG_ERROR( '$with_tabprops/$file' does not exist. )
       fi
@@ -4215,7 +4215,7 @@ if test "$with_tabprops"; then
   DEF_TABPROPS="#define HAVE_TABPROPS 1"
   INC_TABPROPS_H="-I$with_tabprops/include"
   TABPROPS_LIB_DIR_FLAG="-L$with_tabprops/lib/tabprops"
-  TABPROPS_LIB_FLAG="-ltabprops"
+  TABPROPS_LIB_FLAG="-ltabprops -linterp"
   HAVE_TABPROPS="yes"
 fi
 AC_SUBST(HAVE_TABPROPS)

@@ -44297,7 +44297,7 @@ $as_echo_n "checking for TabProps files (For now we are just verifying the exist
     if test ! -d $with_tabprops; then
       as_fn_error $? "'$with_tabprops' directory does not exist. " "$LINENO" 5
     fi
-    for file in include/tabprops/StateTable.h lib/tabprops/libtabprops.a; do
+    for file in include/tabprops/StateTable.h lib/tabprops/libtabprops.a lib/tabprops/libinterp.a; do
       if test ! -f $with_tabprops/$file; then
         as_fn_error $? "'$with_tabprops/$file' does not exist. " "$LINENO" 5
       fi
@@ -44308,7 +44308,7 @@ $as_echo "yes" >&6; }
   DEF_TABPROPS="#define HAVE_TABPROPS 1"
   INC_TABPROPS_H="-I$with_tabprops/include"
   TABPROPS_LIB_DIR_FLAG="-L$with_tabprops/lib/tabprops"
-  TABPROPS_LIB_FLAG="-ltabprops"
+  TABPROPS_LIB_FLAG="-ltabprops -linterp"
   HAVE_TABPROPS="yes"
 fi
 
