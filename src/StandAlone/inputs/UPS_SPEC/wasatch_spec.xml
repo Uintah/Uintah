@@ -832,8 +832,7 @@
       </HeatLoss>
 
       <!-- A special case to extract density from this TabProps file -->
-      <ExtractDensity         spec="MULTIPLE NO_DATA">
-        <NameInTable          spec="REQUIRED STRING" />
+      <ExtractDensity         spec="OPTIONAL NO_DATA">
         <NameTag              spec="REQUIRED" />
         <DensityWeightedIVar  spec="MULTIPLE NO_DATA">
           <NameTag            spec="REQUIRED" />

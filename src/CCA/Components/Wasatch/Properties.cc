@@ -308,12 +308,11 @@ namespace Wasatch{
 
       //_______________________________________
       // extract density variable information
-      std::string dvarTableName;
-      densityParams->get( "NameInTable", dvarTableName );
+      const std::string dvarTableName = "Density";
       if( !table.has_depvar(dvarTableName) ){
         std::ostringstream msg;
         msg << "Table '" << fileName
-            << "' has no dependent variable named '" << dvarTableName << "'"
+            << "' has no density entry in it, but density was requested through your input file!"
             << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
