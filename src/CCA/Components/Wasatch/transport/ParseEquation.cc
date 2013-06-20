@@ -121,7 +121,7 @@ namespace Wasatch{
     // resolve the transport equation to be solved and create the adaptor for it.
     //
     proc0cout << "------------------------------------------------" << std::endl;
-    proc0cout << "Creating transport equation for '" << eqnLabel << "'" << std::endl;
+    proc0cout << "Creating transport equation for '" << solnVariable << "'" << std::endl;
     Expr::ExpressionID rhsID;
 
     if( eqnLabel == "generic" ){
@@ -145,7 +145,7 @@ namespace Wasatch{
     //_____________________________________________________
     // set up initial conditions on this transport equation
     try{
-      proc0cout << "Setting initial conditions for transport equation '" << eqnLabel << "'" << std::endl;
+      proc0cout << "Setting initial conditions for transport equation '" << solnVariable << "'" << std::endl;
       icGraphHelper->rootIDs.insert( transeqn->initial_condition( *icGraphHelper->exprFactory ) );
     }
     catch( std::runtime_error& e ){
