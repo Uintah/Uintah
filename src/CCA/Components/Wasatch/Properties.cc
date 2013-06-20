@@ -290,10 +290,8 @@ namespace Wasatch{
 
     //________________________________________________________________
     // create an expression specifically for density.
-    for( Uintah::ProblemSpecP densityParams = params->findBlock("ExtractDensity");
-         densityParams != 0;
-         densityParams = densityParams->findNextBlock("ExtractDensity") ){
-        
+    const Uintah::ProblemSpecP densityParams = params->findBlock("ExtractDensity");
+    if( densityParams ){
       Expr::TagList rhoEtaTags, etaTags;
       for( Uintah::ProblemSpecP rhoEtaParams = densityParams->findBlock("DensityWeightedIVar");
           rhoEtaParams != 0;
@@ -381,7 +379,7 @@ namespace Wasatch{
         
       } // density predictor
 
-    } // density loop
+    } // density
 
   }
   //====================================================================
