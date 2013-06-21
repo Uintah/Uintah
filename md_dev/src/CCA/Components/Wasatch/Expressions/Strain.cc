@@ -25,7 +25,6 @@
 #include "Strain.h"
 
 #include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
 
 //====================================================================
 
@@ -36,7 +35,9 @@ Strain( const Expr::Tag& vel1Tag,
   : Expr::Expression<StrainT>(),
     vel1t_     ( vel1Tag ),
     vel2t_     ( vel2Tag )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -89,9 +90,9 @@ Strain<StrainT,Vel1T,Vel2T>::
 evaluate()
 {
   using namespace SpatialOps;
-  StrainT& Strain = this->value();
-  Strain <<= 0.0;
-  Strain <<= 0.5 * ( (*vel1GradOp_)(*vel1_) + (*vel2GradOp_)(*vel2_) );
+  StrainT& strain = this->value();
+  strain <<= 0.0; // avoid potential garbage in extra/ghost cells
+  strain <<= 0.5 * ( (*vel1GradOp_)(*vel1_) + (*vel2GradOp_)(*vel2_) );
 }
 
 //--------------------------------------------------------------------
@@ -180,13 +181,8 @@ Strain<StrainT,VelT,VelT>::
 evaluate()
 {
   using namespace SpatialOps;
-
-  StrainT& Strain = this->value();
-  Strain <<= 0.0;
-
-  SpatFldPtr<StrainT> velgrad    = SpatialFieldStore::get<StrainT>( Strain );
-  SpatFldPtr<StrainT> dilatation = SpatialFieldStore::get<StrainT>( Strain );
-  Strain <<= (*velGradOp_)(*vel_) - 1.0/3.0*((*svolInterpOp_)(*dil_));
+  StrainT& strain = this->value();
+  strain <<= (*velGradOp_)(*vel_) - 1.0/3.0*((*svolInterpOp_)(*dil_));
 }
 
 //--------------------------------------------------------------------

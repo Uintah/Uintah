@@ -1205,6 +1205,29 @@ class Task {
                   MaterialDomainSpec matls_domain = NormalDomain);
 
     //////////
+    /*! \brief Allows a task to do a modifies with ghost cell specification.
+     *
+     *  \warning Uintah was built around the assumption that one is NOT allowed
+        to modify ghost cells. Therefore, it is unlawful in the Uintah sense
+        to add a modifies with ghost cells. However, certain components such
+        as Wasatch break that design assumption from the point of view that,
+        if a task can fill-in ghost values, then by all means do that and
+        avoid an extra communication in the process. This, for example, is the
+        case when one extrapolates data from the interior (e.g. Dynamic Smagorinsky
+        model). Be aware that the ghost-values modified in one patch will
+        NOT be reproduced/correspond to interior cells of the neighboring patch,
+        and vice versa.
+     */
+    void modifiesWithScratchGhost(const VarLabel*,
+                  const PatchSubset* patches,
+                  PatchDomainSpec patches_domain,
+                  const MaterialSubset* matls,
+                  MaterialDomainSpec matls_domain,
+                  Ghost::GhostType gtype,
+                  int numGhostCells,
+                  bool oldTG = false);
+  
+    //////////
     // Most general case
     void modifies(const VarLabel*,
                   const PatchSubset* patches,

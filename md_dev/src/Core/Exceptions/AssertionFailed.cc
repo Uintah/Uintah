@@ -37,6 +37,10 @@
 #include <Core/Exceptions/AssertionFailed.h>
 #include <sstream>
 
+#ifdef EXCEPTIONS_CRASH
+#  include <iostream>
+#endif
+
 namespace SCIRun {
 
 AssertionFailed::AssertionFailed(const char* message,

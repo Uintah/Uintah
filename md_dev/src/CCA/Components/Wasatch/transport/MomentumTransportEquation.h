@@ -41,6 +41,14 @@
 
 namespace Wasatch{
 
+  template< typename FaceFieldT >
+  Expr::ExpressionID
+  setup_strain( const Expr::Tag& strainTag,
+               const Expr::Tag& vel1Tag,
+               const Expr::Tag& vel2Tag,
+               const Expr::Tag& dilTag,
+               Expr::ExpressionFactory& factory );
+
   void register_turbulence_expressions (const TurbulenceParameters& turbParams,
                                         Expr::ExpressionFactory& factory,
                                         const Expr::TagList& velTags,

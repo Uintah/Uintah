@@ -171,13 +171,6 @@ public:
   WasatchMaterial* getWasatchMaterial(int idx) const {
     return wasatch_matls[idx];
   }
-  
-  void setNeedAddMaterial(int nAM) {
-    d_needAddMaterial += nAM;
-  }
-  int needAddMaterial() const {
-    return d_needAddMaterial;
-  }
 
   inline void setParticleGhostLayer(Ghost::GhostType type, int ngc) {
     particle_ghost_type = type;
@@ -187,10 +180,6 @@ public:
   inline void getParticleGhostLayer(Ghost::GhostType& type, int& ngc) {
     type = particle_ghost_type;
     ngc = particle_ghost_layer;
-  }
-
-  void resetNeedAddMaterial() {
-    d_needAddMaterial = 0;
   }
 
   void finalizeMaterials();
@@ -333,8 +322,6 @@ private:
   MaterialSet    * orig_all_matls;
   MaterialSubset * refine_flag_matls;
   MaterialSubset * allInOneMatl;
-
-  int    d_needAddMaterial;
 
   // The time step that the top level (w.r.t. AMR) is at during a
   // simulation.  Usually corresponds to the Data Warehouse generation

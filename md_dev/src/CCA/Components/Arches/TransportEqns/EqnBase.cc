@@ -67,6 +67,7 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
     Vector Dx = patch->dCell(); 
     double dx=0; 
     double dy=0; 
+
     // Loop over all boundary faces on this patch
     for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
       Patch::FaceType face = *bf_iter; 
@@ -82,6 +83,11 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
         string bc_kind = "NotSet"; 
         string face_name; 
         getBCKind( patch, face, child, d_eqnName, matlIndex, bc_kind, face_name ); 
+
+        std::ofstream outputfile; 
+        std::stringstream fname; 
+        fname << "handoff_" << d_eqnName << "_" << face_name <<  "." << patch->getID();
+        bool file_is_open = false; 
 
         string whichface; 
         int index=0; 
@@ -138,19 +144,21 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
             getIteratorBCValue<std::string>( patch, face, child, d_eqnName, matlIndex, bc_s_value, bound_ptr ); 
         } 
 
-        if (foundIterator) {
+        BoundaryCondition_new::ScalarToBCValueMap& scalar_bc_info = d_boundaryCond->get_FromFileInfo(); 
+        BoundaryCondition_new::ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_info.find( face_name ); 
 
-          //if we are here, then we are of type "FromFile" 
-          BoundaryCondition_new::ScalarToBCValueMap& scalar_bc_info = d_boundaryCond->get_FromFileInfo(); 
-          BoundaryCondition_new::ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_info.find( face_name ); 
-
-          bound_ptr.reset(); 
-
-          //check the grid spacing: 
+        //check the grid spacing: 
+        if ( i_scalar_bc_storage != scalar_bc_info.end() ){ 
           proc0cout <<  endl << "For scalar handoff file named: " << i_scalar_bc_storage->second.name << endl;
           proc0cout <<          "  Grid and handoff spacing relative differences are: [" 
             << std::abs(i_scalar_bc_storage->second.dx - dx)/dx << ", " 
             << std::abs(i_scalar_bc_storage->second.dy - dy)/dy << "]" << endl << endl;
+        }
+
+        if (foundIterator) {
+
+          //if we are here, then we are of type "FromFile" 
+          bound_ptr.reset(); 
 
           //this should assign the correct normal direction xyz value without forcing the user to have 
           //to know what it is. 
@@ -180,7 +188,18 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
             mod_bound_ptr[index] = (i_scalar_bc_storage->second.values.begin()->first)[index];
             BoundaryCondition_new::CellToValueMap::iterator check_iter = i_scalar_bc_storage->second.values.find(mod_bound_ptr - i_scalar_bc_storage->second.relative_ijk);
             if ( check_iter == i_scalar_bc_storage->second.values.end() ){ 
-              cout << "Scalar BC: " << d_eqnName << " - No UINTAH boundary cell " << *bound_ptr - i_scalar_bc_storage->second.relative_ijk << " in the handoff file." << endl;
+              std::stringstream out; 
+              out <<  "Scalar BC: " << d_eqnName << " - No UINTAH boundary cell " << *bound_ptr - i_scalar_bc_storage->second.relative_ijk << " in the handoff file." << endl;
+              if ( !file_is_open ){ 
+                file_is_open = true; 
+                outputfile.open(fname.str().c_str());
+                outputfile << "Patch Dimentions (exclusive): \n";
+                outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                outputfile << out.str();  
+              } else { 
+                outputfile << out.str();  
+              } 
             } 
           } 
 
@@ -210,11 +229,26 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
                 found_it = true; 
             }
             if ( !found_it && patch->containsCell(check_iter->first + i_scalar_bc_storage->second.relative_ijk) ){ 
-              cout << "Scalar BC: " << d_eqnName << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+              std::stringstream out; 
+              out << "Scalar BC: " << d_eqnName << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+              if ( !file_is_open ){ 
+                file_is_open = true;
+                outputfile.open(fname.str().c_str());
+                outputfile << "Patch Dimentions (exclusive): \n";
+                outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                outputfile << out.str();  
+              } else { 
+                outputfile << out.str();  
+              } 
             } 
           } 
 
         }
+        if ( file_is_open ){ 
+          cout << "\n  Notice: Handoff scalar " << d_eqnName << " has warning information printed to file for patch #: " << patch->getID() << "\n"; 
+          outputfile.close(); 
+        } 
       }
     }
   }

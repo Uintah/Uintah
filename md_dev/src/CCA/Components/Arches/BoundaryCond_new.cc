@@ -347,7 +347,7 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
               double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
               double dx = Dx[P_dir];
               IntVector bp1(*bound_ptr - insideCellDir); 
-              scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * bc_value;
+              scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * i_scalar_bc_storage->second.default_value;
 
             } else if ( i_scalar_bc_storage->second.default_type == "Dirichlet" ){ 
 

@@ -56,10 +56,14 @@ template< typename FieldT >
 class Birth
 : public Expr::Expression<FieldT>
 {
+public:
+  enum BirthModel { POINT, UNIFORM, NORMAL };
+    
+private:    
   const Expr::Tag birthCoefTag_, rStarTag_;  //this will correspond to proper tags for constant calc & momnet dependency
   const double constCoef_;   //"pre" coefficient
   const double momentOrder_; // this is the order of the moment equation in which the Birth rate is used
-  const std::string birthModel_;
+  const BirthModel birthType_;  //enum for birth model
   const double constRStar_;
   const double stdDev_;
   const FieldT* birthCoef_; // this will correspond to the coefficient in the Birth rate term
@@ -69,7 +73,7 @@ class Birth
          const Expr::Tag& rStarTag,
          const double constCoef,
          const double momentOrder,
-         const std::string birthModel,
+         const BirthModel birthType,
          const double constRStar,
          const double stdDev);
   
@@ -84,7 +88,7 @@ public:
              const Expr::Tag& rStarTag,
              const double constCoef,
              const double momentOrder,
-             const std::string birthModel,
+             const BirthModel birthType,
              const double constRStar,
              const double stdDev)
     : ExpressionBuilder(result),
@@ -92,7 +96,7 @@ public:
     rstart_     (rStarTag),
     constcoef_  (constCoef),
     momentorder_(momentOrder),
-    birthmodel_ (birthModel),
+    birthtype_ (birthType),
     constrstar_ (constRStar),
     stddev_     (stdDev)
     {}
@@ -101,14 +105,14 @@ public:
 
     Expr::ExpressionBase* build() const
     {
-      return new Birth<FieldT>( birthcoeft_, rstart_, constcoef_, momentorder_, birthmodel_, constrstar_, stddev_ );
+      return new Birth<FieldT>( birthcoeft_, rstart_, constcoef_, momentorder_, birthtype_, constrstar_, stddev_ );
     }
 
   private:
     const Expr::Tag birthcoeft_, rstart_;
     const double constcoef_;
     const double momentorder_;
-    const std::string birthmodel_;
+    const BirthModel birthtype_;
     const double constrstar_;
     const double stddev_;
   };
@@ -117,7 +121,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 
@@ -135,7 +138,7 @@ Birth( const Expr::Tag& birthCoefTag,
        const Expr::Tag& rStarTag,
        const double constCoef,
        const double momentOrder,
-       const std::string birthModel,
+       const BirthModel birthType,
        const double constRStar,
        const double stdDev)
 : Expr::Expression<FieldT>(),
@@ -143,7 +146,7 @@ Birth( const Expr::Tag& birthCoefTag,
   rStarTag_    (rStarTag),
   constCoef_   (constCoef),
   momentOrder_ (momentOrder),
-  birthModel_  (birthModel),
+  birthType_  (birthType),
   constRStar_  (constRStar),
   stdDev_      (stdDev)
 {}
@@ -212,14 +215,6 @@ bind_fields( const Expr::FieldManagerList& fml )
 template< typename FieldT >
 void
 Birth<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-Birth<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
@@ -227,64 +222,102 @@ evaluate()
 
   if ( birthCoefTag_ != Expr::Tag () ) {
     if ( rStarTag_ != Expr::Tag () ) {
-      if (birthModel_ == "POINT" ) {
-        result <<= constCoef_ * *birthCoef_ * pow(*rStar_, momentOrder_);
-      } else if (birthModel_ == "UNIFORM" ) {
-        result <<= constCoef_ * *birthCoef_ * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
-                                                pow(*rStar_ - stdDev_, momentOrder_ + 1)) / (momentOrder_ + 1);
-      } else { //if (birthModel_ == "NORMAL" {
-        typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
-        typename FieldT::const_interior_iterator birthCoefIter = birthCoef_->interior_begin();
-        typename FieldT::interior_iterator resultsIter = result.interior_begin();
-        while (rStarIter!=rStar_->interior_end() ) {
-          const double intVal = integrate_birth_kernel(*rStarIter);
-          *resultsIter = constCoef_ * *birthCoefIter * intVal;
-          ++resultsIter;
-          ++rStarIter;
-          ++birthCoefIter;
+      
+      switch (birthType_) {
+        case POINT:
+          result <<= constCoef_ * *birthCoef_ * pow(*rStar_, momentOrder_);
+          break;
+        case UNIFORM:
+          result <<= constCoef_ * *birthCoef_ * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
+                                        pow(*rStar_ - stdDev_, momentOrder_ + 1)) / (momentOrder_ + 1);
+          break;
+        case NORMAL:
+        {
+          typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
+          typename FieldT::const_interior_iterator birthCoefIter = birthCoef_->interior_begin();
+          typename FieldT::interior_iterator resultsIter = result.interior_begin();
+          while (rStarIter!=rStar_->interior_end() ) {
+            const double intVal = integrate_birth_kernel(*rStarIter);
+            *resultsIter = constCoef_ * *birthCoefIter * intVal;
+            ++resultsIter;
+            ++rStarIter;
+            ++birthCoefIter;
+          }
         }
-      }
-
+          break;
+        default:
+          break;
+      } // SWITCH
+      
     } else {// constant r*
-      if (birthModel_ == "POINT" ) {
-        result <<= constCoef_ * *birthCoef_ * pow(constRStar_, momentOrder_);
-      } else if (birthModel_ == "UNIFORM" ) {
-        result <<= constCoef_ * *birthCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
-                                                pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
-      } else { //if (birthModel_ == "NORMAL" {
-        const double intVal = integrate_birth_kernel(constRStar_);        
-        result <<= constCoef_ * *birthCoef_ * intVal;
-      }
+      
+      switch (birthType_) {
+        case POINT:
+          result <<= constCoef_ * *birthCoef_ * pow(constRStar_, momentOrder_);
+          break;
+        case UNIFORM:
+          result <<= constCoef_ * *birthCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
+                                                 pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
+          break;
+        case NORMAL:
+        {
+          const double intVal = integrate_birth_kernel(constRStar_);
+          result <<= constCoef_ * *birthCoef_ * intVal;
+        }
+          break;
+        default:
+          break;
+      } // SWITCH
+      
     }
 
   } else { //const birth coefficient
-    if ( rStarTag_ != Expr::Tag () ) {
-      if (birthModel_ == "POINT" ) {
-        result <<= constCoef_ * pow(*rStar_, momentOrder_);
-      } else if (birthModel_ == "UNIFORM" ) {
-        result <<= constCoef_  * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
-                                   pow(*rStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
-      } else { //if (birthModel_ == "NORMAL" {
-        typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
-        typename FieldT::interior_iterator resultsIter = result.interior_begin();
-        while (rStarIter!=rStar_->interior_end() ) {
-          const double intVal = integrate_birth_kernel(*rStarIter);          
-          *resultsIter = constCoef_ * intVal;
-          ++resultsIter;
-          ++rStarIter;
+    if ( rStarTag_ != Expr::Tag () ) {      
+      
+      switch (birthType_) {
+        case POINT:
+          result <<= constCoef_ * pow(*rStar_, momentOrder_);
+          break;
+        case UNIFORM:
+          result <<= constCoef_  * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
+                                     pow(*rStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
+          break;
+        case NORMAL:
+        {
+          typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
+          typename FieldT::interior_iterator resultsIter = result.interior_begin();
+          while (rStarIter!=rStar_->interior_end() ) {
+            const double intVal = integrate_birth_kernel(*rStarIter);
+            *resultsIter = constCoef_ * intVal;
+            ++resultsIter;
+            ++rStarIter;
+          }
         }
-      }
+          break;
+        default:
+          break;
+      } // SWITCH
 
     } else { // constant r* & const coef
-      if (birthModel_ == "POINT" ) {
-        result <<= constCoef_ * pow(constRStar_, momentOrder_);
-      } else if (birthModel_ == "UNIFORM" ) {
-        result <<= constCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
-                                  pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
-      } else { //if (birthModel_ == "NORMAL" {
-        const double intVal = integrate_birth_kernel(constRStar_);
-        result <<= constCoef_ * intVal;
-      }
+      
+      switch (birthType_) {
+        case POINT:
+          result <<= constCoef_ * pow(constRStar_, momentOrder_);
+          break;
+        case UNIFORM:
+          result <<= constCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
+                          pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
+          break;
+        case NORMAL:
+        {
+          const double intVal = integrate_birth_kernel(constRStar_);
+          result <<= constCoef_ * intVal;
+        }
+          break;
+        default:
+          break;
+      } // SWITCH
+      
     }
   }
 }

@@ -172,8 +172,8 @@ namespace Wasatch{
       // of the evaluate method.
       typedef TurbulentViscosity::Builder TurbViscT;
       factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
-      //const Expr::ExpressionID turbViscID = factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
-      //factory.cleave_from_parents(turbViscID);
+//      const Expr::ExpressionID turbViscID = factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
+//      factory.cleave_from_parents(turbViscID);
     }
   }
   
@@ -295,7 +295,6 @@ namespace Wasatch{
   template< typename FaceFieldT >
   Expr::ExpressionID
   setup_strain( const Expr::Tag& strainTag,
-                const Expr::Tag& viscTag,
                 const Expr::Tag& vel1Tag,
                 const Expr::Tag& vel2Tag,
                 const Expr::Tag& dilTag,
@@ -567,15 +566,15 @@ namespace Wasatch{
     if ( isviscous_ ) {
       //const Expr::Tag viscosityTag = isTurbulent_ ? turbViscTag : viscTag;
       if( doxmom ){
-        const Expr::ExpressionID strainID = setup_strain< XFace >( tauxt, viscTag, thisVelTag_, velTags_[0], dilTag, factory );
+        const Expr::ExpressionID strainID = setup_strain< XFace >( tauxt, thisVelTag_, velTags_[0], dilTag, factory );
         if( stagLoc_ == XDIR )  normalStrainID_ = strainID;
       }
       if( doymom ){
-        const Expr::ExpressionID strainID = setup_strain< YFace >( tauyt, viscTag, thisVelTag_, velTags_[1], dilTag, factory );
+        const Expr::ExpressionID strainID = setup_strain< YFace >( tauyt, thisVelTag_, velTags_[1], dilTag, factory );
         if( stagLoc_ == YDIR )  normalStrainID_ = strainID;
       }
       if( dozmom ){
-        const Expr::ExpressionID strainID = setup_strain< ZFace >( tauzt, viscTag, thisVelTag_, velTags_[2], dilTag, factory );
+        const Expr::ExpressionID strainID = setup_strain< ZFace >( tauzt, thisVelTag_, velTags_[2], dilTag, factory );
         if( stagLoc_ == ZDIR )  normalStrainID_ = strainID;
       }
       factory.cleave_from_children( normalStrainID_   );

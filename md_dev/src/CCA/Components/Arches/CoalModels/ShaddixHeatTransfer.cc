@@ -69,10 +69,10 @@ ShaddixHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   ProblemSpecP db = params; 
  
   if(_radiation){
-    //d_volq_label = VarLabel::find("new_radiationVolq");
-    //d_abskg_label = VarLabel::find("new_abskg");
-    d_volq_label = d_fieldLabels->d_radiationVolqINLabel;
-    d_abskg_label = d_fieldLabels->d_abskgINLabel;
+    d_volq_label = VarLabel::find("radiationVolq");
+    d_abskg_label = VarLabel::find("abskg");
+   // d_volq_label = d_fieldLabels->d_radiationVolqINLabel;
+   // d_abskg_label = d_fieldLabels->d_abskgINLabel;
   }
  
   // check for viscosity
@@ -340,8 +340,8 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
     d_volq_label = d_fieldLabels->d_radiationVolqINLabel;
     d_abskg_label = d_fieldLabels->d_abskgINLabel;
   } else if(new_radiation){
-    d_volq_label = VarLabel::find("new_radiationVolq");
-    d_abskg_label = VarLabel::find("new_abskg");
+    d_volq_label = VarLabel::find("radiationVolq");
+    d_abskg_label = VarLabel::find("abskg");
   }
 
   // always require the gas-phase temperature

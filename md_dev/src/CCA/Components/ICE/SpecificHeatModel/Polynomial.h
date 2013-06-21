@@ -32,14 +32,17 @@
 //  A generalized Polynomial form for specific heat that asymptotes to a upper bound
 //   where:
 //
-//   Cv(T) = SUM(a_i * x^i)/x^m 
+//   Cv(T) = x^m/SUM(a_i * x^i)
 //           from i=0 to m
 //           where m is the maximum order
 //
 // Inputs include the maximum order, coefficients up to that order (in logical order
 //  in the input file) and an optional minimum and maximum temperature to clamp
 //  specific heat dependence range.
-
+//
+// Citation:
+//  'Complete Equation of State for Beta-HMX and Implications for Initiation' 
+//   by T.D. Sewell and R. Menikoff, AIP Conf. Proc., 2004, 706, 157.
 
 namespace Uintah {
 

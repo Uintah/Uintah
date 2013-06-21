@@ -33,7 +33,7 @@ namespace Wasatch {
     
     // get the name of the turbulence model
     std::string turbulenceModelName;
-    turbulenceInputParams->get("TurbulenceModel",turbulenceModelName);
+    turbulenceInputParams->getAttribute("model",turbulenceModelName);
     
     if ( turbulenceModelName.compare("SMAGORINSKY") == 0   ) {
       turbParams.turbModelName = SMAGORINSKY;
@@ -48,7 +48,8 @@ namespace Wasatch {
     }
     
     // get the eddy viscosity constant
-    turbulenceInputParams->getWithDefault("EddyViscosityConstant",turbParams.eddyViscCoef, 0.1);
+    if ( turbParams.turbModelName != DYNAMIC )
+      turbulenceInputParams->get("EddyViscosityCoefficient",turbParams.eddyViscCoef);
 
     // get the turbulent Schmidt Number
     turbulenceInputParams->getWithDefault("TurbulentSchmidt",turbParams.turbSchmidt, 1.0);

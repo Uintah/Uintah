@@ -34,7 +34,9 @@ Vorticity( const Expr::Tag& vel1tag,
 : Expr::Expression<FieldT>(),
   vel1t_( vel1tag ),
   vel2t_( vel2tag )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -61,11 +63,8 @@ void
 Vorticity<FieldT,Vel1T,Vel2T>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldMgrSelector<Vel1T>::type& v1fm = fml.template field_manager<Vel1T>();
-  const typename Expr::FieldMgrSelector<Vel2T>::type& v2fm = fml.template field_manager<Vel2T>();
-
-  if( vel1t_ != Expr::Tag() )  vel1_ = &v1fm.field_ref( vel1t_ );
-  if( vel2t_ != Expr::Tag() )  vel2_ = &v2fm.field_ref( vel2t_ );
+  if( vel1t_ != Expr::Tag() )  vel1_ = &fml.field_ref<Vel1T>( vel1t_ );
+  if( vel2t_ != Expr::Tag() )  vel2_ = &fml.field_ref<Vel2T>( vel2t_ );
 }
 
 //--------------------------------------------------------------------
@@ -75,13 +74,13 @@ void
 Vorticity<FieldT,Vel1T,Vel2T>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if( vel1t_ != Expr::Tag() )  {
-    Vel1GradTOp_               = opDB.retrieve_operator<Vel1GradT>();
-    InpterpVel1FaceT2FieldTOp_ = opDB.retrieve_operator<InpterpVel1FaceT2FieldT>();
+  if( vel1t_ != Expr::Tag() ){
+    vel1GradTOp_              = opDB.retrieve_operator<Vel1GradT>();
+    interpVel1FaceT2FieldTOp_ = opDB.retrieve_operator<InterpVel1FaceT2FieldT>();
   }
-  if( vel2t_ != Expr::Tag() )  {
-    Vel2GradTOp_               = opDB.retrieve_operator<Vel2GradT>();
-    InpterpVel2FaceT2FieldTOp_ = opDB.retrieve_operator<InpterpVel2FaceT2FieldT>();
+  if( vel2t_ != Expr::Tag() ){
+    vel2GradTOp_              = opDB.retrieve_operator<Vel2GradT>();
+    interpVel2FaceT2FieldTOp_ = opDB.retrieve_operator<InterpVel2FaceT2FieldT>();
   }
 }
 
@@ -95,28 +94,14 @@ evaluate()
   using namespace SpatialOps;
   FieldT& vorticity = this->value();
 
-  SpatFldPtr<FieldT> tmp = SpatialFieldStore::get<FieldT>( vorticity );
-
-  vorticity <<= 0.0;
-
-  if( vel1t_ != Expr::Tag() ){
-    SpatFldPtr<Vel1FaceT> tmp1 = SpatialFieldStore::get<Vel1FaceT>( vorticity );
-    Vel1GradTOp_->apply_to_field( *vel1_, *tmp1 );
-
-    *tmp <<= 0.0;
-    InpterpVel1FaceT2FieldTOp_->apply_to_field( *tmp1, *tmp );
-
-    vorticity <<= *tmp;
+  if( vel1t_ != Expr::Tag() && vel2t_ != Expr::Tag() ){
+    // fully inlined:
+    vorticity <<= (*interpVel1FaceT2FieldTOp_)( (*vel1GradTOp_)(*vel1_) )
+                - (*interpVel2FaceT2FieldTOp_)( (*vel2GradTOp_)(*vel2_) );
   }
-
-  if( vel2t_ != Expr::Tag() ){
-    SpatFldPtr<Vel2FaceT> tmp2 = SpatialFieldStore::get<Vel2FaceT>( vorticity );
-    Vel2GradTOp_->apply_to_field( *vel2_, *tmp2 );
-
-    *tmp <<= 0.0;
-    InpterpVel2FaceT2FieldTOp_->apply_to_field( *tmp2, *tmp );
-
-    vorticity <<= vorticity - *tmp;
+  else{
+    if( vel1t_ != Expr::Tag() ) vorticity <<=  (*interpVel1FaceT2FieldTOp_)( (*vel1GradTOp_)(*vel1_) );
+    if( vel2t_ != Expr::Tag() ) vorticity <<= -(*interpVel2FaceT2FieldTOp_)( (*vel2GradTOp_)(*vel2_) );
   }
 }
 
@@ -128,7 +113,7 @@ Builder::Builder( const Expr::Tag& result,
                  const Expr::Tag& vel1tag,
                  const Expr::Tag& vel2tag )
 : ExpressionBuilder(result),
-v1t_( vel1tag ), v2t_( vel2tag )
+  v1t_( vel1tag ), v2t_( vel2tag )
 {}
 
 //--------------------------------------------------------------------

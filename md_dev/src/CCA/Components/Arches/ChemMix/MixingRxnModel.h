@@ -306,7 +306,7 @@ namespace Uintah {
 
           bool rcce_table_on = false; 
           ProblemSpecP p = ps; 
-          bool doit = false; 
+          //bool doit = false;
 
           _rcce_fp  = false; 
           _rcce_eta = false; 
@@ -317,7 +317,7 @@ namespace Uintah {
             p->findBlock("rcce_fp")->getAttribute("xi_label", _xi_name ); 
             p->findBlock("rcce_fp")->getAttribute("hl_label", _hl_name ); 
             _rcce_fp = true; 
-            doit = true; 
+            //doit = true;
 
           } else if ( p->findBlock("rcce_eta") ){ 
 
@@ -325,9 +325,9 @@ namespace Uintah {
             p->findBlock("rcce_eta")->getAttribute("xi_label",  _xi_name ); 
             p->findBlock("rcce_eta")->getAttribute("hl_label",  _hl_name ); 
             _rcce_eta = true; 
-            doit = true; 
+            //doit = true;
 
-          } 
+          }
 
           if ( _rcce_fp ) { 
 

@@ -786,15 +786,6 @@ void impAMRICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
       IntVector c = *iter;
       rhs[c] += sumRefluxCorrection[c]; 
     }
-    
-    //__________________________________
-    //  Print Data
-    if(switchDebug_setupRHS){ 
-      ostringstream desc;     
-      desc << "apply_refluxFluxes_RHS"<< "_patch_"<< coarsePatch->getID();
-      printData(0, coarsePatch,   1, desc.str(), "rhs",             rhs);
-      printData(0, coarsePatch,   1, desc.str(), "refluxCorrection",sumRefluxCorrection);
-    }
   }  // course patch loop 
 }
 
@@ -908,15 +899,6 @@ void impAMRICE::coarsen_delP(const ProcessorGroup*,
       }
     }
 #endif
-
-    if (switchDebug_updatePressure) {
-      ostringstream desc;
-      desc << "BOT_coarsen_delP" << coarsePatch->getID();
-      printData( 0, coarsePatch, 0,desc.str(), "delP",delP);
-      printData( 0, coarsePatch, 0,desc.str(), "delP_old",delP_old);
-      printData( 0, coarsePatch, 0,desc.str(), "delP_correction",delP_correction);
-    }  
-
   } // for patches
 }
 /*______________________________________________________________________
@@ -995,17 +977,6 @@ void impAMRICE::zeroMatrix_UnderFinePatches(const ProcessorGroup*,
         A[c].p= 1;
       }
     }
-    //__________________________________
-    //  Print Data
-#if 1
-    if (switchDebug_setupMatrix) {    
-      ostringstream desc;
-      desc << "BOT_zeroMatrix_UnderFinePatches_coarse_patch_" << coarsePatch->getID()
-           <<  " L-" <<coarseLevel->getIndex()<< endl;
-      printStencil( 0, coarsePatch, 1, desc.str(), "A", A);
-    }
-#endif
-
   } // for patches
 }
 
@@ -1160,17 +1131,6 @@ void impAMRICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
         }  // coarseFineInterface faces
       }  // patch has a coarseFineInterface
     }  // finePatch loop 
-
-    //__________________________________
-    //  Print Data
-#if 1
-    if (switchDebug_setupMatrix) {    
-      ostringstream desc;
-      desc << "BOT_matrixBC_CFI_coarse_patch_" << coarsePatch->getID()
-          <<  " L-" <<coarseLevel->getIndex()<< endl;
-      printStencil( 0, coarsePatch, 1, desc.str(), "A_coarse", A_coarse);
-    } 
-#endif
   }  // course patch loop 
 }
   

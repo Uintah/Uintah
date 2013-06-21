@@ -49,9 +49,8 @@
        <Constant>0.0</Constant>
     </BasicExpression>
 
-    <Turbulence>
-      <EddyViscosityConstant>0.2</EddyViscosityConstant>
-      <TurbulenceModel> VREMAN </TurbulenceModel>
+    <Turbulence model="VREMAN">
+      <EddyViscosityCoefficient>0.2</EddyViscosityCoefficient>
     </Turbulence>
   
     <!-- Set the initial condition for x-mom -->

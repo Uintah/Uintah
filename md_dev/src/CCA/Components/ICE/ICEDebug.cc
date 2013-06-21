@@ -72,32 +72,6 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
   d_dbgSym_cutoff_value = 1e-12;
   d_dbgTime_to_printData = false;
   
-  // Turn off all the debuging switches
-  switchDebug_Initialize           = false;
-  switchDebug_equil_press         = false;
-  switchDebug_vel_FC              = false;
-  switchDebug_Temp_FC             = false;
-  switchDebug_PressDiffRF         = false;
-  switchDebug_Exchange_FC         = false;
-  switchDebug_explicit_press      = false;
-  switchDebug_setupMatrix         = false;
-  switchDebug_setupRHS            = false;
-  switchDebug_updatePressure      = false;
-  switchDebug_computeDelP         = false;
-  switchDebug_PressFC             = false;
-  switchDebug_LagrangianValues     = false;
-  switchDebug_LagrangianSpecificVol= false;
-  switchDebug_LagrangianTransportedVars = false;
-  switchDebug_MomentumExchange_CC       = false; 
-  switchDebug_Source_Sink               = false; 
-  switchDebug_advance_advect            = false;
-  switchDebug_conserved_primitive       = false;
-  
-  switchDebug_AMR_refine          = false;
-  switchDebug_AMR_refineInterface = false;
-  switchDebug_AMR_coarsen         = false;
-  switchDebug_AMR_reflux          = false;
-  
   //__________________________________
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
@@ -126,66 +100,12 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
            << " relative Tolerance: " << d_dbgSym_relative_tol << endl;
     }
 
-    for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
-        child = child->findNextBlock("debug")) {
-      map<string,string> debug_attr;
-      child->getAttributes(debug_attr);
-      if (debug_attr["label"]      == "switchDebug_Initialize")
-       switchDebug_Initialize            = true;
-      else if (debug_attr["label"] == "switchDebug_equil_press")
-       switchDebug_equil_press          = true;
-      else if (debug_attr["label"] == "switchDebug_PressDiffRF")
-       switchDebug_PressDiffRF          = true;
-      else if (debug_attr["label"] == "switchDebug_vel_FC")
-       switchDebug_vel_FC               = true;
-      else if (debug_attr["label"] == "switchDebug_Temp_FC")
-       switchDebug_Temp_FC               = true;
-      else if (debug_attr["label"] == "switchDebug_Exchange_FC")
-       switchDebug_Exchange_FC          = true;
-      else if (debug_attr["label"] == "switchDebug_explicit_press")
-       switchDebug_explicit_press       = true;
-      else if (debug_attr["label"] == "switchDebug_setupMatrix")
-       switchDebug_setupMatrix          = true;
-      else if (debug_attr["label"] == "switchDebug_setupRHS")
-       switchDebug_setupRHS             = true;
-      else if (debug_attr["label"] == "switchDebug_updatePressure")
-       switchDebug_updatePressure       = true;
-      else if (debug_attr["label"] == "switchDebug_computeDelP")
-       switchDebug_computeDelP          = true;
-      else if (debug_attr["label"] == "switchDebug_PressFC")
-       switchDebug_PressFC              = true;
-      else if (debug_attr["label"] == "switchDebug_LagrangianValues")
-       switchDebug_LagrangianValues      = true;
-      else if (debug_attr["label"] == "switchDebug_LagrangianSpecificVol")
-       switchDebug_LagrangianSpecificVol = true;
-      else if (debug_attr["label"] == "switchDebug_LagrangianTransportedVars")
-       switchDebug_LagrangianTransportedVars = true;
-      else if (debug_attr["label"] == "switchDebug_MomentumExchange_CC")
-       switchDebug_MomentumExchange_CC   = true;
-      else if (debug_attr["label"] == "switchDebug_Source_Sink")
-       switchDebug_Source_Sink           = true;
-      else if (debug_attr["label"] == "switchDebug_advance_advect")
-       switchDebug_advance_advect       = true;
-      else if (debug_attr["label"] == "switchDebug_conserved_primitive")
-       switchDebug_conserved_primitive  = true;
-      else if (debug_attr["label"] == "switchDebug_AMR_refine")
-       switchDebug_AMR_refine           = true;
-      else if (debug_attr["label"] == "switchDebug_AMR_refineInterface")
-       switchDebug_AMR_refineInterface  = true;
-      else if (debug_attr["label"] == "switchDebug_AMR_coarsen")
-       switchDebug_AMR_coarsen          = true;
-       else if (debug_attr["label"] == "switchDebug_AMR_reflux")
-       switchDebug_AMR_reflux           = true;
-    }
   }
  
   d_dbgNextDumpTime = d_dbgStartTime;
   if(fabs(d_dbgStartTime - 0.0) < d_SMALL_NUM){ 
     d_dbgTime_to_printData = true;
     d_dbgNextDumpTime = d_dbgStartTime;
-  }
-  if(switchDebug_Initialize){ 
-    d_dbgTime_to_printData = true;
   }
   
   //__________________________________

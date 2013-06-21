@@ -97,7 +97,7 @@ public:
    *  \author James C. Sutherland
    *  \date   June, 2010
    *
-   *  \brief builder for ScalarRHS objecst.
+   *  \brief builder for ScalarRHS objects.
    */
   class Builder : public Expr::ExpressionBuilder
   {
@@ -110,7 +110,7 @@ public:
      *         information for the various expressions that form the
      *         RHS.
      *
-     *  \param densityTag density tag for cases that we have contsant density and a source term.
+     *  \param densityTag density tag for cases that we have constant density and a source term.
      *
      *  \param isConstDensity a boolean o show if density is constant or not.
      */
@@ -147,7 +147,7 @@ public:
              const Expr::Tag& xAreaFracTag,
              const Expr::Tag& yAreaFracTag,
              const Expr::Tag& zAreaFracTag,
-             const bool isConstDensity);
+             const bool isConstDensity );
     virtual ~Builder(){}
     virtual Expr::ExpressionBase* build() const;
   protected:

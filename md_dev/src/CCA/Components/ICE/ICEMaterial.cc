@@ -26,8 +26,8 @@
 #include <CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 
 #include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeatFactory.h>
+#include <CCA/Components/ICE/WallShearStressModel/WallShearStressFactory.h>
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -40,9 +40,7 @@
 #include <Core/Labels/ICELabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <iostream>
 
 //#define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc 
 
@@ -50,24 +48,24 @@ using namespace std;
 using namespace Uintah;
 
 // Constructor
-ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
+ICEMaterial::ICEMaterial(ProblemSpecP& ps,
+                         SimulationStateP& sharedState): Material(ps)
 {
   
   //__________________________________
-  //  Create the different Models
+  //  Create the different Models for this material
   d_eos = EquationOfStateFactory::create(ps);
   if(!d_eos) {
     throw ParameterNotFound("ICE: No EOS specified", __FILE__, __LINE__);
   }
 
   ProblemSpecP cvModel_ps = ps->findBlock("SpecificHeatModel");
-  d_cv = 0;
+  d_cvModel = 0;
   if(cvModel_ps != 0) {
-    proc0cout << "CreatingSpecific heat model." << endl;
-    d_cv = SpecificHeatFactory::create(ps);
+    proc0cout << "Creating Specific heat model." << endl;
+    d_cvModel = SpecificHeatFactory::create(ps);
   }
   
-
   //__________________________________
   // Thermodynamic Transport Properties
   ps->require("thermal_conductivity",d_thermalConductivity);
@@ -75,6 +73,11 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
   ps->require("dynamic_viscosity",   d_viscosity);
   ps->require("gamma",               d_gamma);
   ps->getWithDefault("tiny_rho",     d_tiny_rho,1.e-12);
+
+  d_WallShearStressModel = 0;
+  if( d_viscosity > 0){
+    d_WallShearStressModel = WallShearStressFactory::create(ps, sharedState);
+  }
 
   //__________________________________
   //  Misc. Flags
@@ -129,8 +132,11 @@ ICEMaterial::~ICEMaterial()
   delete d_eos;
   delete lb;
   
-  if(d_cv){
-    delete d_cv;
+  if( d_cvModel ){
+    delete d_cvModel;
+  }
+  if( d_WallShearStressModel ){
+    delete d_WallShearStressModel;
   }
   
   for (int i = 0; i< (int)d_geom_objs.size(); i++) {
@@ -146,8 +152,8 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
   d_eos->outputProblemSpec(ice_ps);
   ice_ps->appendElement("thermal_conductivity",d_thermalConductivity);
   ice_ps->appendElement("specific_heat",       d_specificHeat);
-  if(d_cv != 0){
-    d_cv->outputProblemSpec(ice_ps);
+  if(d_cvModel != 0){
+    d_cvModel->outputProblemSpec(ice_ps);
   }
   ice_ps->appendElement("dynamic_viscosity",   d_viscosity);
   ice_ps->appendElement("gamma",               d_gamma);
@@ -171,7 +177,12 @@ EquationOfState * ICEMaterial::getEOS() const
 
 SpecificHeat *ICEMaterial::getSpecificHeatModel() const
 {
-  return d_cv;
+  return d_cvModel;
+}
+
+WallShearStress *ICEMaterial::getWallShearStressModel() const
+{
+  return d_WallShearStressModel;
 }
 
 double ICEMaterial::getGamma() const

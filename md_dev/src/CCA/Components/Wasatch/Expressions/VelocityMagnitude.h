@@ -54,18 +54,19 @@ class VelocityMagnitude
 : public Expr::Expression<FieldT>
 {
   const Expr::Tag vel1t_, vel2t_, vel3t_;
+  const bool is3d_;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1T, FieldT >::type InpterpVel1T2FieldT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2T, FieldT >::type InpterpVel2T2FieldT;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel3T, FieldT >::type InpterpVel3T2FieldT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1T, FieldT >::type InterpVel1T2FieldT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2T, FieldT >::type InterpVel2T2FieldT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, Vel3T, FieldT >::type InterpVel3T2FieldT;
     
   const Vel1T* vel1_;
   const Vel2T* vel2_;
   const Vel3T* vel3_;
   
-  const InpterpVel1T2FieldT* InpterpVel1T2FieldTOp_;
-  const InpterpVel2T2FieldT* InpterpVel2T2FieldTOp_;
-  const InpterpVel3T2FieldT* InpterpVel3T2FieldTOp_;
+  const InterpVel1T2FieldT* interpVel1T2FieldTOp_;
+  const InterpVel2T2FieldT* interpVel2T2FieldTOp_;
+  const InterpVel3T2FieldT* interpVel3T2FieldTOp_;
   
   VelocityMagnitude( const Expr::Tag& vel1tag,
                      const Expr::Tag& vel2tag,
@@ -82,9 +83,9 @@ public:
      *  \param vel3tag the velocity corresponding to the Vel3T template parameter
      */
     Builder( const Expr::Tag& result,
-            const Expr::Tag& vel1tag,
-            const Expr::Tag& vel2tag,
-            const Expr::Tag& vel3tag );
+             const Expr::Tag& vel1tag,
+             const Expr::Tag& vel2tag,
+             const Expr::Tag& vel3tag );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
     

@@ -110,7 +110,7 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   d_outletBC = 0;
   _using_new_intrusion  = false; 
   d_calcEnergyExchange  = false;
-  d_laminar_wall_shear = false; 
+  d_slip = false; 
 
   // x-direction
   index_map[0][0] = 0;
@@ -125,6 +125,7 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   index_map[2][1] = 2; 
   index_map[2][2] = 0; 
 }
+
 
 //****************************************************************************
 // Destructor
@@ -196,34 +197,11 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
        setupBCs( db_params );
      }
 
-     if ( db->findBlock( "laminar_wall_shear" ) ){ 
-       d_laminar_wall_shear = true; 
-     } 
-
-    if ( d_use_new_bcs ) { 
-
-      for (ProblemSpecP prefill_db = db->findBlock("Prefill"); prefill_db != 0; 
-            prefill_db = prefill_db->findNextBlock("Prefill") ) { 
-
-        std::string which_boundary = "null"; 
-        prefill_db->getAttribute( "bc", which_boundary ); 
-
-        if ( which_boundary == "null" ) { 
-          throw ProblemSetupException("Error: Must specify an associated boundary for the prefill attribute.",__FILE__,__LINE__); 
-        } 
-
-        ProblemSpecP geometry_db = prefill_db->findBlock("geom_object"); 
-        std::vector<GeometryPieceP> geometry; 
-        if ( geometry_db ) { 
-          GeometryPieceFactory::create( geometry_db, geometry ); 
-        } else { 
-          throw ProblemSetupException("Error: Must specify a geom_object in <Prefill> block.",__FILE__,__LINE__); 
-        } 
-
-        d_prefill_map.insert(make_pair(which_boundary, geometry));
-
-      } 
-    }
+     db->getWithDefault("wall_csmag",d_csmag_wall,0.17);
+     if ( db->findBlock( "wall_slip" )){ 
+       d_slip = true; 
+       d_csmag_wall = 0.0; 
+     }          
 
     if ( db->findBlock("intrusions") ){ 
 
@@ -403,6 +381,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           u_info.default_type = default_type;
           u_info.default_value = default_value;
 
+          if ( default_type == "Neumann" && default_value != 0.0 ){ 
+            throw ProblemSetupException("Error: Sorry.  I currently cannot support non-zero Neumann default for handoff velocity at this time.", __FILE__, __LINE__);
+          } 
+
           FaceToInput::iterator check_iter = _u_input.find(face_name); 
 
           if ( check_iter == _u_input.end() ){ 
@@ -417,6 +399,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           v_info.default_type = default_type;
           v_info.default_value = default_value;
 
+          if ( default_type == "Neumann" && default_value != 0.0 ){ 
+            throw ProblemSetupException("Error: Sorry.  I currently cannot support non-zero Neumann default for handoff velocity at this time.", __FILE__, __LINE__);
+          } 
+
           check_iter = _v_input.find(face_name); 
 
           if ( check_iter == _v_input.end() ){ 
@@ -430,6 +416,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           w_info.relative_xyz = rel_xyz;
           w_info.default_type = default_type;
           w_info.default_value = default_value;
+
+          if ( default_type == "Neumann" && default_value != 0.0 ){ 
+            throw ProblemSetupException("Error: Sorry.  I currently cannot support non-zero Neumann default for handoff velocity at this time.", __FILE__, __LINE__);
+          } 
 
           check_iter = _w_input.find(face_name); 
 
@@ -1671,7 +1661,8 @@ BoundaryCondition::pressureBC(const Patch* patch,
     sub_types.push_back( VELOCITY_FILE ); 
     sub_types.push_back( MASSFLOW_FILE ); 
     sub_types.push_back( SWIRL );
-    sub_types.push_back( TURBULENT_INLET ) ;
+    sub_types.push_back( TURBULENT_INLET );
+    sub_types.push_back( STABL ); 
     sign = 1;
 
     zeroStencilDirection( patch, matl_index, sign, A, sub_types ); 
@@ -2017,9 +2008,7 @@ BoundaryCondition::FlowInlet::FlowInlet(int cellID,
   inletVel = 0.0;
   fcr = 0.0;
   fsr = 0.0;
-  d_prefill_index = 0;
   d_ramping_inlet_flowrate = false;
-  d_prefill = false;
   // add cellId to distinguish different inlets
   std::stringstream stream_cellID;
   stream_cellID << d_cellTypeID;
@@ -2037,9 +2026,7 @@ BoundaryCondition::FlowInlet::FlowInlet():
   inletVel = 0.0;
   fcr = 0.0;
   fsr = 0.0;
-  d_prefill_index = 0;
   d_ramping_inlet_flowrate = false;
-  d_prefill = false;
 }
 
 BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
@@ -2050,7 +2037,6 @@ BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
   inletVel(copy.inletVel),
   fcr(copy.fcr),
   fsr(copy.fsr),
-  d_prefill_index(copy.d_prefill_index),
   d_ramping_inlet_flowrate(copy.d_ramping_inlet_flowrate),
   streamMixturefraction(copy.streamMixturefraction),
   calcStream(copy.calcStream),
@@ -2062,11 +2048,6 @@ BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
        it != copy.d_geomPiece.end(); ++it)
     d_geomPiece.push_back((*it)->clone());
   
-  if (d_prefill)
-    for (vector<GeometryPieceP>::const_iterator it = copy.d_prefillGeomPiece.begin();
-       it != copy.d_prefillGeomPiece.end(); ++it)
-      d_prefillGeomPiece.push_back((*it)->clone());
-
   d_area_label->addReference();
   d_flowRate_label->addReference();
 }
@@ -2088,13 +2069,10 @@ BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const Flow
   inletVel = copy.inletVel;
   fcr = copy.fcr;
   fsr = copy.fsr;
-  d_prefill_index = copy.d_prefill_index;
   d_ramping_inlet_flowrate = copy.d_ramping_inlet_flowrate;
   streamMixturefraction = copy.streamMixturefraction;
   calcStream = copy.calcStream;
   d_geomPiece = copy.d_geomPiece;
-  if (d_prefill)
-    d_prefillGeomPiece = copy.d_prefillGeomPiece;
 
   return *this;
 }
@@ -2221,37 +2199,6 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
     streamMixturefraction.d_mixVarVariance.push_back(0.0);
   }
  
-  //Prefill a geometry object with the flow inlet condition 
-  d_prefill = params->findBlock("Prefill"); 
-  if (params->findBlock("Prefill") ){
-
-    ProblemSpecP db_prefill = params->findBlock("Prefill");
-    std::string prefill_direction = "null"; 
-    db_prefill->getAttribute("direction",prefill_direction); 
-    //get the direction
-    if (prefill_direction == "X") {
-      d_prefill_index = 1;
-    }
-    else if (prefill_direction == "Y") {
-      d_prefill_index = 2;
-    }
-    else if (prefill_direction == "Z") {
-      d_prefill_index = 3;
-    }
-    else {
-      throw InvalidValue("Wrong prefill direction. Please add the direction attribute to the <Prefill> tag.", __FILE__, __LINE__);
-    }
-    //get the object
-    ProblemSpecP prefillGeomObjPS = db_prefill->findBlock("geom_object");
-    if (prefillGeomObjPS)
-    {
-      GeometryPieceFactory::create(prefillGeomObjPS, d_prefillGeomPiece); 
-    } 
-    else 
-    { 
-      throw ProblemSetupException("Error! Must specify a geom_object in <Prefill> block.",__FILE__,__LINE__); 
-    }
-  }
 }
 
 
@@ -2704,9 +2651,17 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
             bound_ptr.reset(); 
 
-            if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == MASSFLOW_INLET ) { 
+            if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == MASSFLOW_INLET
+#ifdef WASATCH_IN_ARCHES
+                || WALL
+#endif
+                ) {
 
-              setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+              setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity );
+
+            } else if ( bc_iter->second.type == STABL ) {
+
+              setStABL( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, &bc_iter->second, bound_ptr ); 
  
             } else if (bc_iter->second.type == TURBULENT_INLET) {
 
@@ -4396,166 +4351,6 @@ BoundaryCondition::mmsscalarBC(const Patch* patch,
   }
 }
 
-//****************************************************************************
-// Schedule  prefill
-//****************************************************************************
-void 
-BoundaryCondition::sched_Prefill(SchedulerP& sched, 
-                                 const PatchSet* patches,
-                                 const MaterialSet* matls)
-{
-  Task* tsk = scinew Task("BoundaryCondition::Prefill",this,
-                          &BoundaryCondition::Prefill);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,Ghost::None, 0);
-  
-  for (int ii = 0; ii < d_numInlets; ii++) {
-    tsk->requires(Task::NewDW, d_flowInlets[ii]->d_area_label);
-    tsk->requires(Task::NewDW, d_flowInlets[ii]->d_flowRate_label);
-  }
-
-  if (d_enthalpySolve) {
-    tsk->modifies(d_lab->d_enthalpySPLabel);
-  }
-  if (d_reactingScalarSolve) {
-    tsk->modifies(d_lab->d_reactscalarSPLabel);
-  }
-    
-  // This task computes new density, uVelocity, vVelocity and wVelocity, scalars
-  tsk->modifies(d_lab->d_densityCPLabel);
-  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_uVelRhoHatLabel);
-  tsk->modifies(d_lab->d_vVelRhoHatLabel);
-  tsk->modifies(d_lab->d_wVelRhoHatLabel);
-  //tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
-
-  tsk->modifies(d_lab->d_scalarSPLabel);
-
-  sched->addTask(tsk, patches, matls);
-}
-
-//****************************************************************************
-// Actually set flat profile at flow inlet boundary
-//****************************************************************************
-void 
-BoundaryCondition::Prefill(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    CCVariable<double> density;
-    SFCXVariable<double> uVelocity;
-    SFCYVariable<double> vVelocity;
-    SFCZVariable<double> wVelocity;
-    SFCXVariable<double> uVelRhoHat;
-    SFCYVariable<double> vVelRhoHat;
-    SFCZVariable<double> wVelRhoHat;
-    CCVariable<double> scalar;
-    CCVariable<double> reactscalar;
-    CCVariable<double> enthalpy;
-    constCCVariable<int> cellType;
-
-    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, indx, patch);
-    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, indx, patch);
-    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, indx, patch);
-    
-    new_dw->getModifiable(density, d_lab->d_densityCPLabel, indx, patch);
-    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
-    if (d_reactingScalarSolve)
-      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, indx, patch);
-    
-    if (d_enthalpySolve){ 
-      new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
-    }
-    
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None, 0);
-
-    // loop thru the flow inlets to set all the components of velocity and density
-    if (d_inletBoundary) {
-
-      double time = 0.0;
-      double ramping_factor;
-      Vector dx = patch->dCell();
-      Box patchInteriorBox = patch->getBox();
-
-      for (int indx = 0; indx < d_numInlets; indx++) {
-
-        sum_vartype area_var;
-        new_dw->get(area_var, d_flowInlets[indx]->d_area_label);
-        double area = area_var;
-        delt_vartype flow_r;
-        new_dw->get(flow_r, d_flowInlets[indx]->d_flowRate_label);
-        double flow_rate = flow_r;
-        FlowInlet* fi = d_flowInlets[indx];
-        // This call does something magical behind the scenes. 
-        fort_get_ramping_factor(fi->d_ramping_inlet_flowrate,
-                                time, ramping_factor);
-
-        if (fi->d_prefill) {
-
-          int nofGeomPieces = (int)fi->d_prefillGeomPiece.size();
-
-          for (int ii = 0; ii < nofGeomPieces; ii++) {
-
-            GeometryPieceP  piece = fi->d_prefillGeomPiece[ii];
-            Box geomBox = piece->getBoundingBox();
-            Box b = geomBox.intersect(patchInteriorBox);
-
-            if (!(b.degenerate())) {
-
-              for (CellIterator iter = patch->getCellCenterIterator(b); !iter.done(); iter++) {
-
-                Point p = patch->cellPosition(*iter);
-                // Do Velocities
-                if (piece->inside(p) && cellType[*iter] == d_flowfieldCellTypeVal) {
-                  if (fi->d_prefill_index == 1) {
-                    Point p_fx(p.x()-dx.x()/2.,p.y(),p.z()); // minus x-face
-                    if (piece->inside(p_fx))
-                      uVelocity[*iter] = flow_rate / (fi->calcStream.d_density * area);
-                  }
-                  if (fi->d_prefill_index == 2) {
-                    Point p_fy(p.x(),p.y()-dx.y()/2.,p.z()); // minus y-face
-                    if (piece->inside(p_fy))
-                      vVelocity[*iter] = flow_rate / (fi->calcStream.d_density * area);
-                  }
-                  if (fi->d_prefill_index == 3) {
-                    Point p_fz(p.x(),p.y(),p.z()-dx.z()/2.); // minus z-face
-                    if (piece->inside(p_fz))
-                      wVelocity[*iter] = flow_rate / (fi->calcStream.d_density * area);
-                  }
-
-                  // Now do scalars
-                  density[*iter] = fi->calcStream.d_density;
-                  scalar[*iter] = fi->streamMixturefraction.d_mixVars[0];
-                  if (d_enthalpySolve)
-                    enthalpy[*iter] = fi->calcStream.d_enthalpy;
-                  if (d_reactingScalarSolve)
-                    reactscalar[*iter] = fi->streamMixturefraction.d_rxnVars[0];
-                
-                } // Cell Iter loop 
-  
-              } // cell iterator loop
-            }
-          }  // geom iter
-        }  // prefill
-      }  // inlets loop
-    }
-    uVelRhoHat.copyData(uVelocity); 
-    vVelRhoHat.copyData(vVelocity); 
-    wVelRhoHat.copyData(wVelocity); 
-
-  }
-}
 
 void BoundaryCondition::sched_setAreaFraction(SchedulerP& sched, 
                                      const PatchSet* patches, 
@@ -4641,6 +4436,18 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
  
   ProblemSpecP db_root = db->getRootNode();
   ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions"); 
+  Vector grav; 
+  unsigned int dir_grav = 999; 
+  if ( db_root->findBlock("PhysicalConstants") ){ 
+    db_root->findBlock("PhysicalConstants")->require("gravity",grav);
+    if ( grav.x() != 0 ){ 
+      dir_grav = 0; 
+    } else if ( grav.y() != 0 ){ 
+      dir_grav = 1; 
+    } else if ( grav.z() != 0 ){ 
+      dir_grav = 2; 
+    } 
+  } 
   int bc_type_index = 0; 
 
   //Map types to strings:
@@ -4651,6 +4458,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
   d_bc_type_to_string.insert( std::make_pair( PRESSURE       , "PressureBC" ) );
   d_bc_type_to_string.insert( std::make_pair( OUTLET         , "OutletBC" ) );
   d_bc_type_to_string.insert( std::make_pair( SWIRL          , "Swirl" ) ); 
+  d_bc_type_to_string.insert( std::make_pair( STABL          , "StABL" ) ); 
   d_bc_type_to_string.insert( std::make_pair( WALL           , "WallBC" ) );
 
   // Now actually look for the boundary types
@@ -4732,6 +4540,23 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
           //old: remove when this is cleaned up: 
           d_inletBoundary = true; 
+
+        } else if ( type == "StABL" ){ 
+
+          my_info.type = STABL; 
+          db_BCType->require("roughness",my_info.zo); 
+          db_BCType->require("freestream_h",my_info.zh); 
+          db_BCType->require("value",my_info.u_inf);  // Using <value> as the infinite velocity
+          db_BCType->getWithDefault("k",my_info.k,0.41);
+
+          my_info.kappa = pow( my_info.k / log( my_info.zh / my_info.zo ), 2.0); 
+          my_info.ustar = pow( (my_info.kappa * pow(my_info.u_inf,2.0)), 0.5 ); 
+          if ( dir_grav < 3 ){ 
+            my_info.dir_gravity = dir_grav; 
+          } else { 
+            throw InvalidValue("Error: You must have a gravity direction specified to use the StABL BC.", __FILE__, __LINE__);
+          } 
+          found_bc = true; 
 
         } else if ( type == "PressureBC" ){
 
@@ -5168,6 +4993,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
             for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
               if ( density[*bound_ptr] > 1e-10 ){ 
+
                 if ( (bc_iter->second).type == MASSFLOW_INLET ) {
                   (bc_iter->second).mass_flow_rate = bc_value; 
                   (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
@@ -5195,6 +5021,10 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                     bc_iter->second.mass_flow_rate = bc_value; 
                     bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
                                                      ( area * density[*bound_ptr] ); 
+                    break; 
+
+                  case ( STABL ): 
+                    bc_iter->second.mass_flow_rate = 0.0; 
                     break; 
 
                   default: 
@@ -5348,9 +5178,13 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
 
             if ( bc_iter->second.type != VELOCITY_FILE ) { 
               
-              if ( bc_iter->second.type != TURBULENT_INLET ) {
+              if ( bc_iter->second.type != TURBULENT_INLET && bc_iter->second.type != STABL ) {
 
                 setVel__NEW( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.velocity ); 
+
+              } else if ( bc_iter->second.type == STABL ) { 
+
+                setStABL( patch, face, uVelocity, vVelocity, wVelocity, &bc_iter->second, bound_ptr ); 
 
               } else {
 
@@ -5621,6 +5455,145 @@ void BoundaryCondition::setTurbInlet( const Patch* patch, const Patch::FaceType&
 //  cout << "Inlet Timestep is " << t << endl;
 }
 
+void BoundaryCondition::setStABL( const Patch* patch, const Patch::FaceType& face, 
+        SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+        BCInfo* bcinfo,
+        Iterator bound_ptr  )
+{
+
+  IntVector insideCellDir = patch->faceDirection(face);
+
+  switch ( face ) {
+   case Patch::xminus :
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       Point p = patch->getCellPosition(c);
+       double vel = 0.0; 
+       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+         vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       }
+
+       uVel[c]  = vel;
+       uVel[cp] = vel;
+
+       vVel[c] = 0.0; 
+       wVel[c] = 0.0; 
+     }
+
+     break; 
+   case Patch::xplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       Point p = patch->getCellPosition(c);
+       double vel = 0.0; 
+       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+         vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       }
+
+       uVel[c]  = -vel;
+       uVel[cp] = -vel;
+
+       vVel[c] = 0.0; 
+       wVel[c] = 0.0; 
+
+     }
+     break; 
+   case Patch::yminus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       Point p = patch->getCellPosition(c);
+       double vel = 0.0; 
+       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+         vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       }
+
+       vVel[c]  = vel;
+       vVel[cp] = vel;
+
+       uVel[c] = 0.0; 
+       wVel[c] = 0.0; 
+
+
+     }
+     break; 
+   case Patch::yplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       Point p = patch->getCellPosition(c);
+       double vel = 0.0; 
+       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+         vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       }
+
+       vVel[c]  = -vel;
+       vVel[cp] = -vel;
+
+       uVel[c] = 0.0; 
+       wVel[c] = 0.0; 
+
+
+     }
+     break; 
+   case Patch::zminus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       Point p = patch->getCellPosition(c);
+       double vel = 0.0; 
+       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+         vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       }
+
+       wVel[c]  = vel;
+       wVel[cp] = vel;
+
+       uVel[c] = 0.0; 
+       vVel[c] = 0.0; 
+
+
+     }
+     break; 
+   case Patch::zplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       Point p = patch->getCellPosition(c);
+       double vel = 0.0; 
+       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+         vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       }
+
+       wVel[c]  = -vel;
+       wVel[cp] = -vel;
+
+       uVel[c] = 0.0; 
+       vVel[c] = 0.0; 
+
+     }
+     break; 
+   default:
+
+     break;
+
+ }
+}
 
 void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
@@ -5645,6 +5618,11 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
 
        vVel[c] = value.y(); 
        wVel[c] = value.z(); 
+
+#ifdef WASATCH_IN_ARCHES
+       vVel[c] = - vVel[cp];
+       wVel[c] = - wVel[cp];
+#endif
      }
 
      break; 
@@ -5661,6 +5639,11 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
 
        vVel[c] = value.y(); 
        wVel[c] = value.z(); 
+       
+#ifdef WASATCH_IN_ARCHES
+       vVel[c] = - vVel[cm];
+       wVel[c] = - wVel[cm];
+#endif
      }
      break; 
    case Patch::yminus: 
@@ -5676,6 +5659,11 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        uVel[c] = value.x(); 
        wVel[c] = value.z(); 
 
+#ifdef WASATCH_IN_ARCHES
+       uVel[c] = - uVel[cp];
+       wVel[c] = - wVel[cp];
+#endif
+       
      }
      break; 
    case Patch::yplus: 
@@ -5692,6 +5680,10 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        uVel[c] = value.x(); 
        wVel[c] = value.z(); 
 
+#ifdef WASATCH_IN_ARCHES
+       uVel[c] = - uVel[cm];
+       wVel[c] = - wVel[cm];
+#endif
      }
      break; 
    case Patch::zminus: 
@@ -5707,6 +5699,10 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        uVel[c] = value.x(); 
        vVel[c] = value.y(); 
 
+#ifdef WASATCH_IN_ARCHES
+       uVel[c] = - uVel[cp];
+       vVel[c] = - vVel[cp];
+#endif
      }
      break; 
    case Patch::zplus: 
@@ -5723,6 +5719,10 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        uVel[c] = value.x(); 
        vVel[c] = value.y(); 
 
+#ifdef WASATCH_IN_ARCHES
+       uVel[c] = - uVel[cm];
+       vVel[c] = - vVel[cm];
+#endif
      }
      break; 
    default:
@@ -6194,97 +6194,6 @@ BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
   }
 }
 
-// Bandaid until the face-centered scalar eqn is implemented 
-void 
-BoundaryCondition::sched_setPrefill__NEW( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
-{ 
-  Task* tsk = scinew Task("BoundaryCondition::setPrefill__NEW", this, &BoundaryCondition::setPrefill__NEW); 
-
-  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-
-  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None, 0 ); 
-
-  sched->addTask(tsk, patches, matls);
-
-} 
-
-void BoundaryCondition::setPrefill__NEW( const ProcessorGroup*,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse*,
-                                         DataWarehouse* new_dw )
-{
-  for (int p = 0; p < patches->size(); p++) {
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    Box patchInteriorBox = patch->getBox();
-
-    SFCXVariable<double> uVelocity; 
-    SFCYVariable<double> vVelocity; 
-    SFCZVariable<double> wVelocity; 
-    constCCVariable<int> cellType; 
-
-    new_dw->getModifiable( uVelocity, d_lab->d_uVelocitySPBCLabel, matl_index, patch ); 
-    new_dw->getModifiable( vVelocity, d_lab->d_vVelocitySPBCLabel, matl_index, patch ); 
-    new_dw->getModifiable( wVelocity, d_lab->d_wVelocitySPBCLabel, matl_index, patch ); 
-    new_dw->get( cellType, d_lab->d_cellTypeLabel, matl_index, patch, Ghost::None, 0 ); 
-
-    for ( std::map<std::string, std::vector<GeometryPieceP> >::iterator iter = d_prefill_map.begin(); 
-          iter != d_prefill_map.end(); iter++ ) { 
-
-      BCInfoMap::iterator ifound_bc = d_bc_information.end(); 
-      BCInfoMap::iterator ibc_info; 
-
-      // search for the boundary condition to match this prefill instruction 
-      for ( ibc_info = d_bc_information.begin(); ibc_info != d_bc_information.end(); ibc_info++ ){ 
-
-        if ( ibc_info->second.name == iter->first ){ 
-
-          ifound_bc = ibc_info; 
-
-        } 
-      } 
-
-      if ( ifound_bc == d_bc_information.end() ) { 
-
-        throw InvalidValue("Error: Unable to match prefill bc name with actual boundary condition. ", __FILE__, __LINE__); 
-
-      } else { 
-
-        // Prefill matched with boundary condition.  Now set all cells inside the 
-        // geometry piece with the velocity as specified by the matching boundary. 
-        int nofGeomPieces = (int)iter->second.size(); 
-
-        for (int i = 0; i < nofGeomPieces; i++) {
-
-          GeometryPieceP piece = iter->second[i]; 
-          Box geomBox = piece->getBoundingBox(); 
-          Box box = geomBox.intersect( patchInteriorBox ); 
-          Vector velocity = ifound_bc->second.velocity; 
-
-          if ( !(box.degenerate()) ){ 
-
-            for ( CellIterator icell = patch->getCellCenterIterator(box); !icell.done(); icell++ ) { 
-
-              Point p = patch->cellPosition( *icell ); 
-              if ( piece->inside( p ) && cellType[*icell] == -1 ) { 
-
-                uVelocity[*icell] = velocity[0];
-                vVelocity[*icell] = velocity[1]; 
-                wVelocity[*icell] = velocity[2]; 
-
-              } 
-            } 
-          } 
-        }
-      } 
-    } 
-  }
-}
 void 
 BoundaryCondition::setHattedIntrusionVelocity( const Patch* p, 
                                                SFCXVariable<double>& u, 
@@ -6367,148 +6276,144 @@ BoundaryCondition::wallStress( const Patch* p,
     IntVector xp = *iter + IntVector(1,0,0);
     IntVector ym = *iter - IntVector(0,1,0);
     IntVector yp = *iter + IntVector(0,1,0);
-    IntVector zm = *iter - IntVector(0,1,0);
-    IntVector zp = *iter + IntVector(0,1,0);
+    IntVector zm = *iter - IntVector(0,0,1);
+    IntVector zp = *iter + IntVector(0,0,1);
 
     //WARNINGS: 
     // This isn't that stylish but it should accomplish what the MPMArches code was doing
     //1) assumed flow cell = -1
     //2) assumed that wall velocity = 0
-    //3) assumed a csmag = 0.17 (ala kumar) 
+    //3) assumed a csmag = 0.17 (a la kumar) 
     
     int flow = -1; 
-    double csmag;
 
-    if ( d_laminar_wall_shear ){ 
-      csmag = 0.0; 
-    } else { 
-      csmag = 0.17; 
-    } 
+    if ( !d_slip ){ 
 
-    // curr cell is a flow cell 
-    if ( const_vars->cellType[c] == flow ){ 
+      // curr cell is a flow cell 
+      if ( const_vars->cellType[c] == flow ){ 
 
-      if ( const_vars->cellType[xm] == WALL || const_vars->cellType[xm] == INTRUSION ){ 
+        if ( const_vars->cellType[xm] == WALL || const_vars->cellType[xm] == INTRUSION ){ 
 
-        //y-dir
-        if ( const_vars->cellType[ym] == flow ){ 
+          //y-dir
+          if ( const_vars->cellType[ym] == flow ){ 
 
-          double mu_t = pow( csmag*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
+            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
 
-          //apply v-mom bc -
-          vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x(); 
+            //apply v-mom bc -
+            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x(); 
+
+          } 
+          if ( const_vars->cellType[zm] == flow ){ 
+
+            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
+
+            //apply w-mom bc -
+            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x(); 
+          } 
 
         } 
-        if ( const_vars->cellType[zm] == flow ){ 
 
-          double mu_t = pow( csmag*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
+        if ( const_vars->cellType[xp] == WALL || const_vars->cellType[xp] == INTRUSION){ 
+          
+          //y-dir
+          if ( const_vars->cellType[ym] == flow ){ 
 
-          //apply w-mom bc -
-          vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x(); 
+            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
+
+            //apply v-mom bc -
+            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x(); 
+          } 
+          if ( const_vars->cellType[zm] == flow ){ 
+
+            double mu_t = pow( d_csmag_wall*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
+
+            //apply w-mom bc -
+            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x(); 
+          } 
+
         } 
 
-      } 
+        if ( const_vars->cellType[ym] == WALL || const_vars->cellType[ym] == INTRUSION){ 
+          
+          //x-dir
+          if ( const_vars->cellType[xm] == flow ){ 
 
-      if ( const_vars->cellType[xp] == WALL || const_vars->cellType[xp] == INTRUSION){ 
-        
-        //y-dir
-        if ( const_vars->cellType[ym] == flow ){ 
+            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
 
-          double mu_t = pow( csmag*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.x();
+            //apply u-mom bc -
+            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y(); 
+          } 
+          if ( const_vars->cellType[zm] == flow ){ 
 
-          //apply v-mom bc -
-          vars->vVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.x(); 
-        } 
-        if ( const_vars->cellType[zm] == flow ){ 
+            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
 
-          double mu_t = pow( csmag*Dx.x(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.x();
+            //apply w-mom bc -
+            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y(); 
+          } 
 
-          //apply w-mom bc -
-          vars->wVelNonlinearSrc[c] -= 2.0 * Dx.y() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.x(); 
-        } 
-
-      } 
-
-      if ( const_vars->cellType[ym] == WALL || const_vars->cellType[ym] == INTRUSION){ 
-        
-        //x-dir
-        if ( const_vars->cellType[xm] == flow ){ 
-
-          double mu_t = pow( csmag*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
-
-          //apply u-mom bc -
-          vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y(); 
-        } 
-        if ( const_vars->cellType[zm] == flow ){ 
-
-          double mu_t = pow( csmag*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
-
-          //apply w-mom bc -
-          vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y(); 
         } 
 
-      } 
+        if ( const_vars->cellType[yp] == WALL || const_vars->cellType[yp] == INTRUSION){ 
+          
+          //x-dir
+          if ( const_vars->cellType[xm] == flow ){ 
 
-      if ( const_vars->cellType[yp] == WALL || const_vars->cellType[yp] == INTRUSION){ 
-        
-        //x-dir
-        if ( const_vars->cellType[xm] == flow ){ 
+            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
 
-          double mu_t = pow( csmag*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.y();
+            //apply u-mom bc -
+            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y(); 
+          } 
+          if ( const_vars->cellType[zm] == flow ){ 
 
-          //apply u-mom bc -
-          vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.y(); 
-        } 
-        if ( const_vars->cellType[zm] == flow ){ 
+            double mu_t = pow( d_csmag_wall*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
 
-          double mu_t = pow( csmag*Dx.y(), 2.0 ) * const_vars->density[c] * const_vars->wVelocity[c]/Dx.y();
+            //apply w-mom bc -
+            vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y(); 
+          } 
 
-          //apply w-mom bc -
-          vars->wVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.z() * ( mu_t + const_vars->viscosity[c] ) * const_vars->wVelocity[c] / Dx.y(); 
-        } 
-
-      } 
-
-      if ( const_vars->cellType[zm] == WALL || const_vars->cellType[zm] == INTRUSION){ 
-        
-        //x-dir
-        if ( const_vars->cellType[xm] == flow ){ 
-
-          double mu_t = pow( csmag*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
-
-          //apply u-mom bc -
-          vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t +  const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z(); 
-        } 
-        if ( const_vars->cellType[ym] == flow ){ 
-
-          double mu_t = pow( csmag*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
-
-          //apply v-mom bc -
-          vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z(); 
         } 
 
-      } 
+        if ( const_vars->cellType[zm] == WALL || const_vars->cellType[zm] == INTRUSION){ 
+          
+          //x-dir
+          if ( const_vars->cellType[xm] == flow ){ 
 
-      if ( const_vars->cellType[zp] == WALL || const_vars->cellType[zp] == INTRUSION){ 
-        
-        //x-dir
-        if ( const_vars->cellType[xm] == flow ){ 
+            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
 
-          double mu_t = pow( csmag*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
+            //apply u-mom bc -
+            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t +  const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z(); 
+          } 
+          if ( const_vars->cellType[ym] == flow ){ 
 
-          //apply u-mom bc -
-          vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z(); 
+            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
+
+            //apply v-mom bc -
+            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z(); 
+          } 
+
         } 
-        if ( const_vars->cellType[ym] == flow ){ 
 
-          double mu_t = pow( csmag*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
+        if ( const_vars->cellType[zp] == WALL || const_vars->cellType[zp] == INTRUSION){ 
+          
+          //x-dir
+          if ( const_vars->cellType[xm] == flow ){ 
 
-          //apply v-mom bc -
-          vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z(); 
+            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->uVelocity[c]/Dx.z();
+
+            //apply u-mom bc -
+            vars->uVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->uVelocity[c] / Dx.z(); 
+          } 
+          if ( const_vars->cellType[ym] == flow ){ 
+
+            double mu_t = pow( d_csmag_wall*Dx.z(), 2.0 ) * const_vars->density[c] * const_vars->vVelocity[c]/Dx.z();
+
+            //apply v-mom bc -
+            vars->vVelNonlinearSrc[c] -= 2.0 * Dx.x() * Dx.y() * ( mu_t + const_vars->viscosity[c] ) * const_vars->vVelocity[c] / Dx.z(); 
+          } 
+
         } 
 
-      } 
-
+      }
     }
   }
 } 
@@ -6538,7 +6443,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    Vector Dx = patch->dCell(); 
+    const Vector Dx = patch->dCell();
     double dx=0, dy=0; 
 
     vector<Patch::FaceType> bf;
@@ -6561,10 +6466,15 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
 
           getBCKind( patch, face, child, *iname, matlIndex, bc_kind, face_name ); 
 
-          string whichface; 
-          int index=0; 
-          Vector Dx = patch->dCell(); 
+          std::ofstream outputfile; 
+          std::stringstream fname; 
+          fname << "handoff_velocity_" << face_name <<  "." << patch->getID();
+          bool file_is_open = false; 
 
+
+          string whichface; 
+          int index=0;
+          
           if (face == 0){
             whichface = "x-";
             index = 0;
@@ -6604,19 +6514,21 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
               getIteratorBCValue<std::string>( patch, face, child, *iname, matlIndex, bc_s_value, bound_ptr); 
           } 
 
-          if (foundIterator) {
+          BoundaryCondition::FaceToInput::iterator i_uvel_bc_storage = _u_input.find( face_name ); 
+          BoundaryCondition::FaceToInput::iterator i_vvel_bc_storage = _v_input.find( face_name ); 
+          BoundaryCondition::FaceToInput::iterator i_wvel_bc_storage = _w_input.find( face_name ); 
 
-            //if we are here, then we are of type "FromFile" 
-            BoundaryCondition::FaceToInput::iterator i_uvel_bc_storage = _u_input.find( face_name ); 
-            BoundaryCondition::FaceToInput::iterator i_vvel_bc_storage = _v_input.find( face_name ); 
-            BoundaryCondition::FaceToInput::iterator i_wvel_bc_storage = _w_input.find( face_name ); 
-
-            //check the grid spacing: 
+          //check the grid spacing: 
+          if ( i_uvel_bc_storage != _u_input.end() ){ 
             proc0cout <<  endl << "For momentum handoff file named: " << i_uvel_bc_storage->second.name << endl;
             proc0cout <<          "  Grid and handoff spacing relative differences are: [" 
               << std::abs(i_uvel_bc_storage->second.dx - dx)/dx << ", " 
               << std::abs(i_uvel_bc_storage->second.dy - dy)/dy << "]" << endl << endl;
+          }
 
+          if (foundIterator) {
+
+            //if we are here, then we are of type "FromFile" 
             bound_ptr.reset(); 
 
             //this should assign the correct normal direction xyz value without forcing the user to have 
@@ -6663,7 +6575,18 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 mod_bound_ptr[index] = (i_uvel_bc_storage->second.values.begin()->first)[index];
                 CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.find( mod_bound_ptr - i_uvel_bc_storage->second.relative_ijk ); 
                 if ( check_iter == i_uvel_bc_storage->second.values.end() ){ 
-                  cout << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_uvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
+                  std::stringstream out; 
+                  out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_uvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
+                  if ( !file_is_open ){ 
+                    file_is_open = true; 
+                    outputfile.open(fname.str().c_str());
+                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                    outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                    outputfile << out.str();  
+                  } else { 
+                    outputfile << out.str();  
+                  } 
                 } 
               } else if ( index == 1 ){ 
                 //is this cell contained in list?
@@ -6671,10 +6594,21 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 //for the normal index but still loading it into memory
                 IntVector mod_bound_ptr = (*bound_ptr);
                 face_index_value = mod_bound_ptr[index]; 
-                mod_bound_ptr[index] = (i_uvel_bc_storage->second.values.begin()->first)[index];
+                mod_bound_ptr[index] = (i_vvel_bc_storage->second.values.begin()->first)[index];
                 CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.find( mod_bound_ptr - i_vvel_bc_storage->second.relative_ijk ); 
-                if ( check_iter == i_uvel_bc_storage->second.values.end() ){ 
-                  cout << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_vvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
+                if ( check_iter == i_vvel_bc_storage->second.values.end() ){ 
+                  std::stringstream out; 
+                  out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_vvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
+                  if ( !file_is_open ){ 
+                    file_is_open = true; 
+                    outputfile.open(fname.str().c_str());
+                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                    outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                    outputfile << out.str();  
+                  } else { 
+                    outputfile << out.str();  
+                  } 
                 } 
               } else if ( index == 2 ){ 
                 //is this cell contained in list?
@@ -6682,10 +6616,21 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 //for the normal index but still loading it into memory
                 IntVector mod_bound_ptr = (*bound_ptr);
                 face_index_value = mod_bound_ptr[index]; 
-                mod_bound_ptr[index] = (i_uvel_bc_storage->second.values.begin()->first)[index];
-                CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.find( mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk ); 
+                mod_bound_ptr[index] = (i_wvel_bc_storage->second.values.begin()->first)[index];
+                CellToValue::iterator check_iter = i_wvel_bc_storage->second.values.find( mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk ); 
                 if ( check_iter == i_wvel_bc_storage->second.values.end() ){ 
-                  cout << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
+                  std::stringstream out; 
+                  out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk << " in the handoff file." << endl; 
+                  if ( !file_is_open ){ 
+                    file_is_open = true; 
+                    outputfile.open(fname.str().c_str());
+                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                    outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                    outputfile << out.str();  
+                  } else { 
+                    outputfile << out.str();  
+                  } 
                 } 
               }
             } 
@@ -6718,7 +6663,19 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                     found_it = true; 
                 }
                 if ( !found_it && patch->containsCell(check_iter->first + i_uvel_bc_storage->second.relative_ijk) ){ 
-                  cout << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+                  std::stringstream out; 
+                  out << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+                  if ( !file_is_open ){ 
+                    file_is_open = true;
+                    outputfile.open(fname.str().c_str());
+                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                    outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                    outputfile << out.str();  
+                  } else { 
+                    std::stringstream out; 
+                    outputfile << out.str();  
+                  } 
                 } 
 
               } 
@@ -6749,7 +6706,19 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                     found_it = true; 
                 }
                 if ( !found_it && patch->containsCell(check_iter->first + i_vvel_bc_storage->second.relative_ijk) ){ 
-                  cout << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+                  std::stringstream out; 
+                  out << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+                  if ( !file_is_open ){ 
+                    file_is_open = true;
+                    outputfile.open(fname.str().c_str());
+                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                    outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                    outputfile << out.str();  
+                  } else { 
+                    std::stringstream out; 
+                    outputfile << out.str();  
+                  } 
                 } 
 
               } 
@@ -6777,15 +6746,31 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 bool found_it = false; 
                 for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){ 
                   if ( *bound_ptr == (check_iter->first + i_wvel_bc_storage->second.relative_ijk) )
-                    found_it = true; 
+                    found_it = true;
                 }
                 if ( !found_it && patch->containsCell(check_iter->first + i_wvel_bc_storage->second.relative_ijk) ){ 
-                  cout << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+                  std::stringstream out; 
+                  out << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+                  if ( !file_is_open ){ 
+                    file_is_open = true;
+                    outputfile.open(fname.str().c_str());
+                    outputfile << "Patch Dimentions (exclusive): \n";
+                    outputfile << " low  = " << patch->getCellLowIndex() << "\n";
+                    outputfile << " high = " << patch->getCellHighIndex() << "\n";
+                    outputfile << out.str();  
+                  } else { 
+                    std::stringstream out; 
+                    outputfile << out.str();  
+                  } 
                 } 
 
               } 
             } 
           }
+          if ( file_is_open ){ 
+            cout << "\n  Notice: Handoff velocity warning information has been printed to file for patch #: " << patch->getID() << "\n"; 
+            outputfile.close(); 
+          } 
         }
       }
     }

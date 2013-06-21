@@ -105,7 +105,7 @@ namespace Uintah {
     int    logging;            // Log Hypre solver (using Hypre options)
     bool   symmetric;          // Is LHS matrix symmetric
     bool   restart;            // Allow solver to restart if not converged
-    int setupFrequency;        // Frequency for calling hypre setup calls 
+    int    setupFrequency;     // Frequency for calling hypre setup calls
     int    relax_type;         // relaxation type
     
     // SMG parameters
@@ -311,112 +311,113 @@ namespace Uintah {
 
         HYPRE_StructMatrixInitialize(HA);
 #endif
-
-        for(int p=0;p<patches->size();p++){
-          const Patch* patch = patches->get(p);
-          printTask( patches, patch, cout_doing, "HypreSolver:solve: Create Matrix" );
-          //__________________________________
-          // Get A matrix from the DW
-          typename Types::symmetric_matrix_type AStencil4;
-          typename Types::matrix_type A;
-          if (params->getUseStencil4()) 
-            A_dw->get( AStencil4, A_label, matl, patch, Ghost::None, 0);
-          else 
-            A_dw->get( A, A_label, matl, patch, Ghost::None, 0);
-          
-          Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-
-          IntVector l,h;
-          if(params->getSolveOnExtraCells()){
-            l = patch->getExtraLowIndex(basis, IntVector(0,0,0));
-            h = patch->getExtraHighIndex(basis, IntVector(0,0,0));
-          } else {
-            l = patch->getLowIndex(basis);
-            h = patch->getHighIndex(basis);
-          }
-          
-          //__________________________________
-          // Feed it to Hypre
-          if(params->symmetric){
+        // setup the coefficient matrix ONLY on the first timestep, if we are doing a restart, or if we set setupFrequency != 0
+        if (timestep == 1 || restart || do_setup) {
+          for(int p=0;p<patches->size();p++){
+            const Patch* patch = patches->get(p);
+            printTask( patches, patch, cout_doing, "HypreSolver:solve: Create Matrix" );
+            //__________________________________
+            // Get A matrix from the DW
+            typename Types::symmetric_matrix_type AStencil4;
+            typename Types::matrix_type A;
+            if (params->getUseStencil4())
+              A_dw->get( AStencil4, A_label, matl, patch, Ghost::None, 0);
+            else
+              A_dw->get( A, A_label, matl, patch, Ghost::None, 0);
             
-            double* values = scinew double[(h.x()-l.x())*4]; 
-            int stencil_indices[] = {0,1,2,3};
+            Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
             
-
-            // use stencil4 as coefficient matrix. NOTE: This should be templated
-            // on the stencil type. This workaround is to get things moving
-            // until we convince component developers to move to stencil4. You must
-            // set params->setUseStencil4(true) when you setup your linear solver
-            // if you want to use stencil4. You must also provide a matrix of type 
-            // stencil4 otherwise this will crash.
-            if (params->getUseStencil4()) {
-              
-              for(int z=l.z();z<h.z();z++){
-                for(int y=l.y();y<h.y();y++){
-                  
-                  const Stencil4* AA = &AStencil4[IntVector(l.x(), y, z)];
-                  double* p = values;
-                  
-                  for(int x=l.x();x<h.x();x++){
-                    *p++ = AA->p;
-                    *p++ = AA->w;
-                    *p++ = AA->s;
-                    *p++ = AA->b;
-                    AA++;
-                  }
-                  IntVector ll(l.x(), y, z);
-                  IntVector hh(h.x()-1, y, z);
-                  HYPRE_StructMatrixSetBoxValues(*HA,
-                                                 ll.get_pointer(), hh.get_pointer(),
-                                                 4, stencil_indices, values);
-                  
-                } // y loop
-              }  // z loop              
-              
-            } else { // use stencil7
-              
-              for(int z=l.z();z<h.z();z++){
-                for(int y=l.y();y<h.y();y++){
-                  
-                  const Stencil7* AA = &A[IntVector(l.x(), y, z)];
-                  double* p = values;
-                  
-                  for(int x=l.x();x<h.x();x++){
-                    *p++ = AA->p;
-                    *p++ = AA->w;
-                    *p++ = AA->s;
-                    *p++ = AA->b;
-                    AA++;
-                  }
-                  IntVector ll(l.x(), y, z);
-                  IntVector hh(h.x()-1, y, z);
-                  HYPRE_StructMatrixSetBoxValues(*HA,
-                                                 ll.get_pointer(), hh.get_pointer(),
-                                                 4, stencil_indices, values);
-                  
-                } // y loop
-              }  // z loop              
+            IntVector l,h;
+            if(params->getSolveOnExtraCells()){
+              l = patch->getExtraLowIndex(basis, IntVector(0,0,0));
+              h = patch->getExtraHighIndex(basis, IntVector(0,0,0));
+            } else {
+              l = patch->getLowIndex(basis);
+              h = patch->getHighIndex(basis);
             }
-            delete[] values;
-          } else {
-            int stencil_indices[] = {0,1,2,3,4,5,6};
             
-            for(int z=l.z();z<h.z();z++){
-              for(int y=l.y();y<h.y();y++){
+            //__________________________________
+            // Feed it to Hypre
+            if(params->symmetric){
+              
+              double* values = scinew double[(h.x()-l.x())*4];
+              int stencil_indices[] = {0,1,2,3};
+              
+              
+              // use stencil4 as coefficient matrix. NOTE: This should be templated
+              // on the stencil type. This workaround is to get things moving
+              // until we convince component developers to move to stencil4. You must
+              // set params->setUseStencil4(true) when you setup your linear solver
+              // if you want to use stencil4. You must also provide a matrix of type
+              // stencil4 otherwise this will crash.
+              if (params->getUseStencil4()) {
                 
-                const double* values = &A[IntVector(l.x(), y, z)].p;
-                IntVector ll(l.x(), y, z);
-                IntVector hh(h.x()-1, y, z);
-                HYPRE_StructMatrixSetBoxValues(*HA,
-                                               ll.get_pointer(), hh.get_pointer(),
-                                               7, stencil_indices,
-                                               const_cast<double*>(values));
-              }  // y loop
-            } // z loop
+                for(int z=l.z();z<h.z();z++){
+                  for(int y=l.y();y<h.y();y++){
+                    
+                    const Stencil4* AA = &AStencil4[IntVector(l.x(), y, z)];
+                    double* p = values;
+                    
+                    for(int x=l.x();x<h.x();x++){
+                      *p++ = AA->p;
+                      *p++ = AA->w;
+                      *p++ = AA->s;
+                      *p++ = AA->b;
+                      AA++;
+                    }
+                    IntVector ll(l.x(), y, z);
+                    IntVector hh(h.x()-1, y, z);
+                    HYPRE_StructMatrixSetBoxValues(*HA,
+                                                   ll.get_pointer(), hh.get_pointer(),
+                                                   4, stencil_indices, values);
+                    
+                  } // y loop
+                }  // z loop
+                
+              } else { // use stencil7
+                
+                for(int z=l.z();z<h.z();z++){
+                  for(int y=l.y();y<h.y();y++){
+                    
+                    const Stencil7* AA = &A[IntVector(l.x(), y, z)];
+                    double* p = values;
+                    
+                    for(int x=l.x();x<h.x();x++){
+                      *p++ = AA->p;
+                      *p++ = AA->w;
+                      *p++ = AA->s;
+                      *p++ = AA->b;
+                      AA++;
+                    }
+                    IntVector ll(l.x(), y, z);
+                    IntVector hh(h.x()-1, y, z);
+                    HYPRE_StructMatrixSetBoxValues(*HA,
+                                                   ll.get_pointer(), hh.get_pointer(),
+                                                   4, stencil_indices, values);
+                    
+                  } // y loop
+                }  // z loop
+              }
+              delete[] values;
+            } else {
+              int stencil_indices[] = {0,1,2,3,4,5,6};
+              
+              for(int z=l.z();z<h.z();z++){
+                for(int y=l.y();y<h.y();y++){
+                  
+                  const double* values = &A[IntVector(l.x(), y, z)].p;
+                  IntVector ll(l.x(), y, z);
+                  IntVector hh(h.x()-1, y, z);
+                  HYPRE_StructMatrixSetBoxValues(*HA,
+                                                 ll.get_pointer(), hh.get_pointer(),
+                                                 7, stencil_indices,
+                                                 const_cast<double*>(values));
+                }  // y loop
+              } // z loop
+            }
           }
+          HYPRE_StructMatrixAssemble(*HA);
         }
-        HYPRE_StructMatrixAssemble(*HA);
-
 
         //__________________________________
         // Create the RHS

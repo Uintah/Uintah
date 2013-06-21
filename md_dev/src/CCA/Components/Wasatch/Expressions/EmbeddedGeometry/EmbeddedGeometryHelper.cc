@@ -64,7 +64,7 @@ namespace Wasatch{
 
   void
   parse_embedded_geometry( Uintah::ProblemSpecP parser,
-                                GraphCategories& gc )
+                           GraphCategories& gc )
   {
     if (parser->findBlock("EmbeddedGeometry")) {
       
@@ -151,10 +151,12 @@ namespace Wasatch{
       initgh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.zvol_frac_tag(), vNames.svol_frac_tag() ) );
 
       if (movingGeom) {
+        // when the geometry is moving, then recalculate volume fractions at every timestep
         solngh->exprFactory->register_expression( scinew xvolfracBuilder( vNames.xvol_frac_tag(), vNames.svol_frac_tag() ) );
         solngh->exprFactory->register_expression( scinew yvolfracBuilder( vNames.yvol_frac_tag(), vNames.svol_frac_tag() ) );
         solngh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.zvol_frac_tag(), vNames.svol_frac_tag() ) );
       } else {
+        // when the geometry is not moving, copy the volume fractions from the previous timestep
         OldVariable& oldVar = OldVariable::self();
         oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, vNames.svol_frac_tag(), true);
         oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, vNames.xvol_frac_tag(), true);
@@ -162,11 +164,10 @@ namespace Wasatch{
         oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, vNames.zvol_frac_tag(), true);
       }
       
-      // force on graph
+      // force on initial conditions graph
       initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.xvol_frac_tag() ) );
       initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.yvol_frac_tag() ) );
       initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.zvol_frac_tag() ) );
-      
     }
   }
   

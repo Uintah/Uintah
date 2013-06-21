@@ -37,7 +37,7 @@
  *  \ingroup Expressions
  *
  *  \brief An expression that interpolates between different field types.
-           For example, this can be usedto calculate cell centered velocities.
+           For example, this can be used to calculate cell centered velocities.
            This expression is currently specialized for staggered-to-cell centered
            interpolation.
  *  \tparam SrcT: Source field type.
@@ -50,11 +50,11 @@ class InterpolateExpression
 {
   const Expr::Tag srct_;
   
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SrcT, DestT >::type InpterpSrcT2DestT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SrcT, DestT >::type InterpSrcT2DestT;
   
   const SrcT* src_;
   
-  const InpterpSrcT2DestT* InpterpSrcT2DestTOp_;
+  const InterpSrcT2DestT* interpSrcT2DestTOp_;
   
   InterpolateExpression( const Expr::Tag& srctag );
   

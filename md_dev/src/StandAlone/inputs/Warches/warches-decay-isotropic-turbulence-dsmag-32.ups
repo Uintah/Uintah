@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
   <Meta>
-    <title>Arches Decay of Isotropic Turbulence - Vreman - 64x64x64</title>
+    <title>Arches Decay of Isotropic Turbulence - Constant Smagorinsky - 32x32x32</title>
   </Meta>
 
   <SimulationComponent type="arches"/>
@@ -12,33 +12,21 @@
     <initTime>    0.0     </initTime>
     <delt_min>    1e-3 </delt_min>
     <delt_max>    1e-3     </delt_max>
-<!-- 
-    <max_Timesteps> 5 </max_Timesteps>
- -->
+    <max_Timesteps> 10 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 <!--__________________________________-->
   <DataArchiver>
-    <filebase>warhces-decay-isotropic-turbulence-vreman-64.uda</filebase>
-	<outputTimestepInterval>10</outputTimestepInterval>
+    <filebase>warches-decay-isotropic-turbulence-dsmag-32.uda</filebase>
+	<outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>    
-    <save label="totalKineticEnergy"/>
     <save label="uVelocitySPBC"/>    
     <save label="vVelocitySPBC"/>    
     <save label="wVelocitySPBC"/>            
     <save label="continuityResidual"/>    
     <save label="TurbulentViscosity"/>    
-    
-<!-- 
-    <save label="pressurePS"/>
-    <save label="CCVelocity"/>
-    <save label="scalarSP"/>
-    <save label="densityCP"/>
-    <save label="viscosityCTS"/>
-    <save label="cellType"/>
- -->
-    <checkpoint cycle="2" timestepInterval="0.001"/>
+    <checkpoint cycle="4" timestepInterval="1"/>
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -65,69 +53,12 @@
 
      <Wasatch>
 
-    <Turbulence>
-       <KolmogorovScale>1000000000000</KolmogorovScale>
-      <EddyViscosityConstant>0.2</EddyViscosityConstant>
-      <TurbulenceModel> VREMAN </TurbulenceModel>
-    </Turbulence>
+    <Turbulence model="DYNAMIC"/>
 
     <Density>
       <IsConstant>true</IsConstant>
+      <NameTag name="densityCP" state="STATE_NONE"/>
     </Density>
-
-    <!-- Set the initial condition for non-staggered scalar -->
-    <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="wasatch_scalar" state="STATE_N" />
-    <Constant>0.0</Constant>
-    </BasicExpression>
-
-    <!-- Build a non-staggered scalar transport equation -->
-    <TransportEquation equation="generic">
-      <DisableTurbulenceModel/>
-      <SolutionVariable> wasatch_scalar </SolutionVariable>
-      <StrongForm>true</StrongForm>
-
-      <ConvectiveFluxExpression>
-        <Method>UPWIND</Method> 
-        <Direction>X</Direction>
-        <AdvectiveVelocity>
-            <NameTag name="uVelocitySPBC" state="STATE_N"/>
-        </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-
-      <ConvectiveFluxExpression>
-        <Method>UPWIND</Method>
-        <Direction>Y</Direction>
-        <AdvectiveVelocity>
-            <NameTag name="vVelocitySPBC" state="STATE_N"/>
-        </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-
-      <ConvectiveFluxExpression>
-        <Method>UPWIND</Method>
-        <Direction>Z</Direction>
-        <AdvectiveVelocity>
-            <NameTag name="wVelocitySPBC" state="STATE_N"/>
-        </AdvectiveVelocity>
-      </ConvectiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>0.2</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>0.2</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>0.2</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-    </TransportEquation>
 
     </Wasatch>
 <!--__________________________________-->
@@ -139,7 +70,7 @@
       </TimeIntegrator>
 
 
-      <set_initial_vel_condition inputfile="inputs/ARCHES/periodicTurb/cbc64_uvw_arches.gz"/>
+      <set_initial_vel_condition inputfile="inputs/ARCHES/periodicTurb/cbc32_uvw_arches.gz"/>
       <Turbulence model="wasatch">
       </Turbulence>
 

@@ -93,8 +93,6 @@ class MomRHSPart
   const FieldT    *srcTerm_;
 
   const FieldT* volfrac_;
-
-//  const SVolField* dil_;
   
   const DivX* divXOp_;
   const DivY* divYOp_;
@@ -106,6 +104,8 @@ class MomRHSPart
   
   const DensityInterpT* densityInterpOp_;
   
+  const bool is3dconvdiff_;
+
   MomRHSPart( const Expr::Tag& convFluxX,
               const Expr::Tag& convFluxY,
               const Expr::Tag& convFluxZ,

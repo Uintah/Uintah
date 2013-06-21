@@ -49,9 +49,7 @@
        <Constant>0.0</Constant>
     </BasicExpression>
 
-    <Turbulence>
-      <EddyViscosityConstant>0.2</EddyViscosityConstant>
-      <TurbulenceModel> DYNAMIC </TurbulenceModel>
+    <Turbulence model="DYNAMIC">
     </Turbulence>
   
     <!-- Set the initial condition for x-mom -->

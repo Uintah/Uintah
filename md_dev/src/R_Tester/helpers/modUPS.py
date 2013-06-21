@@ -10,22 +10,22 @@ from sys import exit
 
 def modUPS(directory, filename, changes):
     realdir = path.normpath(path.join(getcwd(), directory))
-    tmpdir = path.normpath(path.join(realdir, "tmp"))
+    tmpdir  = path.normpath(path.join(realdir, "tmp"))
     origfilename = "%s/%s" % (realdir, filename)
-    newfilename = "%s/tmp/MOD-%s" % (realdir, filename)
+    newfilename  = "%s/tmp/MOD-%s" % (realdir, filename)
     tempfilename = "%s/tmp/%s.tmp" % (realdir, filename)
 
     # see if filename exists in directory and create tmp
     try:
       stat(realdir)
     except Exception:
-      print "%s does not exist" % realdir
+      print "(%s) does not exist" % realdir
       exit(1)
   
     try:
       stat(origfilename)
     except Exception:
-      print "%s does not exist" % origfilename
+      print "(%s) does not exist" % origfilename
       exit(1)
     try:
       stat("%s/tmp" % realdir)

@@ -32,7 +32,7 @@ class VelEst
   typedef typename FaceTypes::YFace YFace; ///< The type of field for the y-face of FieldT.
   typedef typename FaceTypes::ZFace ZFace; ///< The type of field for the z-face of FieldT.
   
-  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type  ScalarInterpT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type ScalarInterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XFace >::type  S2XFInterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YFace >::type  S2YFInterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZFace >::type  S2ZFInterpT;
@@ -66,6 +66,7 @@ class VelEst
   const double *tStep_; 
 
   const Expr::Tag velt_, convTermt_, densityt_, visct_, tauxit_, tauyit_, tauzit_, pressuret_, tStept_;
+  const bool is3d_;
   
   VelEst( const Expr::Tag velTag,
           const Expr::Tag convTermTag,

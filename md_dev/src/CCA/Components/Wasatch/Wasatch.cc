@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 #include <fstream>
-
+#include <limits>
 //-- Uintah framework includes --//
 #include <sci_defs/uintah_defs.h>
 #include <CCA/Ports/Scheduler.h>
@@ -43,6 +43,9 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
 //-- SpatialOps includes --//
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
+#include <CCA/Components/Wasatch/Expressions/StableTimestep.h>
+
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/FVStaggeredBCTools.h>
 #ifdef ENABLE_THREADS
@@ -99,6 +102,11 @@ namespace Wasatch{
               << "             DATE: " << TabPropsVersionDate << std::endl
               << "-------------------------------------------------------------" << std::endl
               << std::endl;
+
+    materials_     = NULL;
+    icCoordHelper_ = NULL;
+    timeStepper_   = NULL;
+    linSolver_     = NULL;
 
     isRestarting_ = false;
 
@@ -175,45 +183,39 @@ namespace Wasatch{
 
   //--------------------------------------------------------------------
   
-  void Wasatch::preGridProblemSetup(const Uintah::ProblemSpecP& params,
-                           Uintah::GridP& grid,
-                           Uintah::SimulationStateP& state)
+  void check_periodicity_extra_cells( const Uintah::ProblemSpecP& params,
+                                      Uintah::IntVector& extraCells )
   {
     // disallow different periodicities on multiple levels
-    std::vector<Uintah::IntVector> levelPeriodicityVectors;    
+    std::vector<Uintah::IntVector> levelPeriodicityVectors;
     // disallow specification of extraCells and different periodicities on multiple levels
-        int nlevels = 0;
-      std::ostringstream msg;
-      bool foundExtraCells = false;
-      bool isPeriodic = false;
-      Uintah::ProblemSpecP gridspec = params->findBlock("Grid");
-      for( Uintah::ProblemSpecP level = gridspec->findBlock("Level");
-          level != 0;
-          level = gridspec->findNextBlock("Level") ) {
-        nlevels++;
-        Uintah::IntVector periodicDirs(0,0,0);
-        level->get("periodic", periodicDirs);
-        levelPeriodicityVectors.push_back(periodicDirs);
-        //isPeriodic = isPeriodic || (periodicDirs.x() == 1 || periodicDirs.y() == 1 || periodicDirs.z() == 1);
-        
-        for( Uintah::ProblemSpecP box = level->findBlock("Box");
-            box != 0;
-            box = level->findNextBlock("Box") ){
-          // note that a [0,0,0] specification gets added by default,
-          // so we will check to ensure that something other than
-          // [0,0,0] has not been specified.
-          if( box->findBlock("extraCells") ){
-            Uintah::IntVector extraCells;
-            box->get("extraCells",extraCells);
-            if( extraCells != Uintah::IntVector(0,0,0) ){
-              foundExtraCells = true;
-              std::string boxLabel;
-              box->get("label",boxLabel);
-              msg << "box '" << boxLabel << "' has extraCells specified." << endl;
-            }
+    int nlevels = 0;
+    std::ostringstream msg;
+    bool foundExtraCells = false;
+    Uintah::ProblemSpecP gridspec = params->findBlock("Grid");
+    for( Uintah::ProblemSpecP level = gridspec->findBlock("Level");
+        level != 0;
+        level = gridspec->findNextBlock("Level") ) {
+      nlevels++;
+      Uintah::IntVector periodicDirs(0,0,0);
+      level->get("periodic", periodicDirs);
+      levelPeriodicityVectors.push_back(periodicDirs);
+      
+      for( Uintah::ProblemSpecP box = level->findBlock("Box");
+          box != 0;
+          box = level->findNextBlock("Box") ){
+        // note that a [0,0,0] specification gets added by default,
+        // so we will check to ensure that something other than
+        // [0,0,0] has not been specified.
+        if( box->findBlock("extraCells") ){
+          //Uintah::IntVector extraCells;
+          box->get("extraCells",extraCells);
+          if( extraCells != Uintah::IntVector(0,0,0) ){
+            foundExtraCells = true;
           }
         }
       }
+    }
     
     // check for different periodicities on different levels
     std::vector<Uintah::IntVector>::iterator periodicityIter = levelPeriodicityVectors.begin();
@@ -225,48 +227,61 @@ namespace Wasatch{
       zPeriodSum += pvector.z();
       ++periodicityIter;
     }
-    if ( ( xPeriodSum !=0 && xPeriodSum < nlevels ) ||
-         ( yPeriodSum !=0 && yPeriodSum < nlevels ) ||
-         ( zPeriodSum !=0 && zPeriodSum < nlevels ) ) {
+    
+    if  ( ( xPeriodSum !=0 && xPeriodSum < nlevels ) ||
+          ( yPeriodSum !=0 && yPeriodSum < nlevels ) ||
+          ( zPeriodSum !=0 && zPeriodSum < nlevels ) ) {
       msg << endl
       << "  Specification of different periodicities for different levels is not supported in Wasatch." << endl
       << "  Please revise your input file." << endl
       << endl;
       throw std::runtime_error( msg.str() );
     }
-#     ifdef WASATCH_IN_ARCHES
-      if( !foundExtraCells && !isPeriodic ){
-        msg << endl
-        << "  Specification of 'extraCells' is required when wasatch-in-arches is enabled." << endl
-        << "  Please add an 'extraCells' block to your input file" << endl
-        << endl;
-        throw std::runtime_error( msg.str() );
-      }
-#     else
-      if( foundExtraCells ){
-        msg << endl
-        << "  Specification of 'extraCells' is forbidden in Wasatch. The number of extraCells is automatically determined." << endl
-        << "  Please remove it from your input file." << endl
-        << endl;
-        throw std::runtime_error( msg.str() );
-      }
-#     endif        
     
-    // set extra cells on all levels
-//    gridspec = params->findBlock("Grid");
-//    Uintah::ProblemSpecP levelspec = gridspec->findBlock("Level");
-//    Uintah::IntVector periodicDirs(0,0,0);
-//    levelspec->get("periodic", periodicDirs);
     Uintah::IntVector periodicityVector = levelPeriodicityVectors[0];
     const bool isXPeriodic = (periodicityVector.x() == 1) ? true : false;
     const bool isYPeriodic = (periodicityVector.y() == 1) ? true : false;
     const bool isZPeriodic = (periodicityVector.z() == 1) ? true : false;
+
+#     ifdef WASATCH_IN_ARCHES
+    // we are only allowing for a single extra cell :(
+    // make sure that extra cell and periodicity are consistent
+    bool isPeriodic = periodicityVector.x() == 1 || periodicityVector.y() == 1 || periodicityVector.z() == 1;
     
-    //isPeriodic = (isXPeriodic || isYPeriodic || isZPeriodic );
-    Uintah::IntVector extraCells( (isXPeriodic) ? 0 : 1,
-                                  (isYPeriodic) ? 0 : 1,
-                                  (isZPeriodic) ? 0 : 1 );
+    std::cout << "periodicity = " << isPeriodic << std::endl;
     
+    if( !foundExtraCells && !isPeriodic ){
+      msg << endl
+      << "  Specification of 'extraCells' is required when wasatch-in-arches is enabled." << endl
+      << "  Please add an 'extraCells' block to your input file" << endl
+      << endl;
+      throw std::runtime_error( msg.str() );
+    }
+#     else
+    if( foundExtraCells ){
+      msg << endl
+      << "  Specification of 'extraCells' is forbidden in Wasatch. The number of extraCells is automatically determined." << endl
+      << "  Please remove it from your input file." << endl
+      << endl;
+      throw std::runtime_error( msg.str() );
+    }
+#     endif
+        
+    extraCells = Uintah::IntVector( (isXPeriodic) ? 0 : 1,
+                                    (isYPeriodic) ? 0 : 1,
+                                    (isZPeriodic) ? 0 : 1 );
+
+  }
+
+  //--------------------------------------------------------------------
+
+  
+  void Wasatch::preGridProblemSetup(const Uintah::ProblemSpecP& params,
+                           Uintah::GridP& grid,
+                           Uintah::SimulationStateP& state)
+  {
+    Uintah::IntVector extraCells;
+    check_periodicity_extra_cells( params, extraCells);    
     grid->setExtraCells(extraCells);
   }
   //--------------------------------------------------------------------
@@ -278,6 +293,11 @@ namespace Wasatch{
   {
     sharedState_ = sharedState;
     wasatchParams_ = params->findBlock("Wasatch");
+    
+    double deltMin, deltMax;
+    params->findBlock("Time")->require("delt_min", deltMin);
+    params->findBlock("Time")->require("delt_max", deltMax);
+    const bool useAdaptiveDt = std::abs(deltMax - deltMin) > 2.0*std::numeric_limits<double>::epsilon();
     
     // Multithreading in ExprLib and SpatialOps
     if( wasatchParams_->findBlock("FieldParallelThreadCount") ){
@@ -380,13 +400,14 @@ namespace Wasatch{
       throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
     } else if (linSolver_) {
       proc0cout << "Detected solver: " << linSolver_->getName() << std::endl;
-//      if ( (linSolver_->getName()).compare("hypre") != 0 && wasatchParams->findBlock("MomentumEquations") ) {
-//        std::ostringstream msg;
-//        msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
-//        << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
-//        << std::endl;
-//        throw std::runtime_error( msg.str() );
-//      }
+      const bool needPressureSolve = wasatchParams->findBlock("MomentumEquations") && !(wasatchParams->findBlock("MomentumEquations")->findBlock("DisablePressureSolve"));
+      if ( (linSolver_->getName()).compare("hypre") != 0 && needPressureSolve) {
+        std::ostringstream msg;
+        msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
+        << "  Wasatch currently works with hypre solver only. Please change your solver type." << std::endl
+        << std::endl;
+        throw std::runtime_error( msg.str() );
+      }
     }
     
     //
@@ -492,6 +513,7 @@ namespace Wasatch{
       try{
           const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
                                                                       turbParams,
+                                                                      useAdaptiveDt,
                                                                       isConstDensity,
                                                                       hasEmbeddedGeometry,
                                                                       hasMovingBoundaries,
@@ -652,26 +674,32 @@ namespace Wasatch{
         }
       }
       // -----------------------------------------------------------------------          
-            
-      TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
-                                                        "initialization",
-                                                        *icGraphHelper->exprFactory,
-                                                        level, sched,
-                                                        localPatches,
-                                                        materials_,
-                                                        patchInfoMap_,
-                                                        1, lockedFields_ );
+      try{
+        TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
+                                                          "initialization",
+                                                          *icGraphHelper->exprFactory,
+                                                          level, sched,
+                                                          localPatches,
+                                                          materials_,
+                                                          patchInfoMap_,
+                                                          1, lockedFields_ );
 
-      // set coordinate values as required by the IC graph.
-      icCoordHelper_->create_task( sched, localPatches, materials_ );
+        // set coordinate values as required by the IC graph.
+        icCoordHelper_->create_task( sched, localPatches, materials_ );
 
-      //_______________________________________________________
-      // create the TaskInterface and schedule this task for
-      // execution.  Note that field dependencies are assigned
-      // within the TaskInterface object.
-      task->schedule( icCoordHelper_->field_tags(), 1 );
-      taskInterfaceList_.push_back( task );
-
+        //_______________________________________________________
+        // create the TaskInterface and schedule this task for
+        // execution.  Note that field dependencies are assigned
+        // within the TaskInterface object.
+        task->schedule( icCoordHelper_->field_tags(), 1 );
+        taskInterfaceList_.push_back( task );
+      }
+      catch( std::exception& err ){
+        std::ostringstream msg;
+        msg << "ERROR SETTING UP GRAPH FOR INITIALIZATION" << std::endl
+            << err.what() << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
     }
     proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
@@ -727,7 +755,6 @@ namespace Wasatch{
   void Wasatch::scheduleComputeStableTimestep( const Uintah::LevelP& level,
                                                Uintah::SchedulerP& sched )
   {
-    proc0cout << "Scheduling compute stable timestep" << std::endl;
     GraphHelper* const tsGraphHelper = graphCategories_[ TIMESTEP_SELECTION ];
     const Uintah::PatchSet* const localPatches = get_patchset(USE_FOR_TASKS,level,sched);
 
@@ -749,7 +776,7 @@ namespace Wasatch{
     }
     else{ // default
 
-      proc0cout << "Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
+      proc0cout << "Scheduling Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
 
       Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
@@ -758,7 +785,18 @@ namespace Wasatch{
                       level.get_rep() );
       //              materials_->getUnion() );
       // jcs why can't we specify a metrial here?  It doesn't seem to be working if I do.
-
+      
+      const GraphHelper* slnGraphHelper = graphCategories_[ADVANCE_SOLUTION];
+      const TagNames& tagNames = TagNames::self();
+      const bool useStableDT = slnGraphHelper->exprFactory->have_entry( tagNames.stableTimestep );
+      // since the StableDT expression is only registered on the time_advance graph,
+      // make the necessary checks before adding a requires for that
+      if (sharedState_->getCurrentTopLevelTimeStep() > 0) {
+        if (useStableDT) {
+          task->requires(Uintah::Task::NewDW, Uintah::VarLabel::find(tagNames.stableTimestep.name()),  Uintah::Ghost::None, 0);
+        }
+      }
+                  
       sched->addTask( task, localPatches, materials_ );
     }
 
@@ -930,14 +968,39 @@ namespace Wasatch{
                         Uintah::DataWarehouse* old_dw,
                         Uintah::DataWarehouse* new_dw )
   {
-    const double deltat = 1.0; // jcs should get this from an input file possibly?
+    Uintah::delt_vartype deltat = 1.0;
+    double val = 9999999999999.0;
+    
+    const GraphHelper* slnGraphHelper = graphCategories_[ADVANCE_SOLUTION];
+    const TagNames& tagNames = TagNames::self();
+    const bool useStableDT = slnGraphHelper->exprFactory->have_entry( tagNames.stableTimestep );
+    if (sharedState_->getCurrentTopLevelTimeStep() > 0) {
+      if (useStableDT) {
+        //__________________
+        // loop over patches
+        for( int ip=0; ip<patches->size(); ++ip ){
+          // grab the stable timestep value calculated by the StableDT expression
+          Uintah::PerPatch<double*> tempDtP;
+          new_dw->get(tempDtP, Uintah::VarLabel::find(tagNames.stableTimestep.name()), 0, patches->get(ip));          
+          val = std::min( val, *tempDtP );
+        }
 
-//       proc0cout << std::endl
-//                 << "Wasatch: executing 'Wasatch::computeDelT()' on all patches"
-//                 << std::endl;
-      new_dw->put( Uintah::delt_vartype(deltat),
+      } else {
+        // FOR FIXED dt: (min = max in input file)
+        // if the this is not the first timestep, then grab dt from the olddw.
+        // This will avoid Uintah's message that it is setting dt to max dt/min dt
+        old_dw->get( deltat, sharedState_->get_delt_label() );
+      }
+    }
+    
+    if (useStableDT) {
+      new_dw->put(Uintah::delt_vartype(val),sharedState_->get_delt_label(),
+                  Uintah::getLevel(patches) );
+    } else {
+      new_dw->put( deltat,
                   sharedState_->get_delt_label(),
                   Uintah::getLevel(patches) );
+    }
       //                   material );
       // jcs it seems that we cannot specify a material here.  Why not?
   }

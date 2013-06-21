@@ -62,8 +62,6 @@ WallShearStress* WallShearStressFactory::create( ProblemSpecP& ps,
          << "Newtonian\n"<< endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-  } else {          // Default model
-    scinew NewtonianModel(wss_ps, sharedState );
   }
   return 0;
 }

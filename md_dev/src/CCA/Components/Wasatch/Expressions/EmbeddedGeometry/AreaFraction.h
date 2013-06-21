@@ -96,8 +96,10 @@ template< typename DestT >
 AreaFraction<DestT>::
 AreaFraction( const Expr::Tag& srctag )
 : Expr::Expression<DestT>(),
-srct_( srctag )
-{}
+  srct_( srctag )
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -150,7 +152,6 @@ evaluate()
   destResult <<= 1.0; // this will ensure that the boundaries have an area fraction of 1.0. Wall BCs are NOT handled by volume fractions rather by the BCHelperTools.
   destResult <<= cond ( (*interpSrcT2DestTOp_)(*src_) < 1.0, 0.0 )
                       ( 1.0 );
-  
 }
 
 //--------------------------------------------------------------------
@@ -158,9 +159,9 @@ evaluate()
 template<typename DestT >
 AreaFraction<DestT>::
 Builder::Builder( const Expr::Tag& result,
-                 const Expr::Tag& srctag )
+                  const Expr::Tag& srctag )
 : ExpressionBuilder(result),
-srct_( srctag )
+  srct_( srctag )
 {}
 
 //--------------------------------------------------------------------

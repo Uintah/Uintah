@@ -29,8 +29,9 @@
 // Ask steve for a better way
 
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
+#include <CCA/Components/ICE/WallShearStressModel/WallShearStress.h>
+
 #include <CCA/Ports/DataWarehouseP.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -71,7 +72,8 @@ WARNING
  
  class ICEMaterial : public Material {
  public:
-   ICEMaterial(ProblemSpecP&);
+   ICEMaterial(ProblemSpecP&, 
+               SimulationStateP& sharedState);
    
    ~ICEMaterial();
 
@@ -83,6 +85,8 @@ WARNING
    // Get the associated specific heat model.  
    // If there is none specified, this will return a null (0) pointer
    SpecificHeat* getSpecificHeatModel() const;
+   
+   WallShearStress* getWallShearStressModel() const;
    
    double getGamma() const;
    double getViscosity() const;
@@ -107,7 +111,8 @@ WARNING
    
  private:
    EquationOfState *d_eos;
-   SpecificHeat    *d_cv;   // Specific heat model
+   SpecificHeat    *d_cvModel;   // Specific heat model
+   WallShearStress *d_WallShearStressModel;
 
    double d_viscosity;
    double d_gamma;

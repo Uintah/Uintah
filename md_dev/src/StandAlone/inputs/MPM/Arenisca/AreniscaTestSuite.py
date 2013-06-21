@@ -12,7 +12,6 @@ from AreniscaTestSuite_PostProc import *
 RUN_TESTS = True
 CLEAN_UDA = True
 
-
 #Automated script for running and post processing Arenisca verification tetsts. 
 # Requires that ../opt/StandAlone/ and ../opt/StandAlone/tools/extractors/ be on working PATH
 # If you would like to run tests with more than one processor than mpirun must also be on PATH
@@ -35,8 +34,9 @@ POST_PROCESS_LIST = [
   'AreniscaTest_07_HydrostaticCompressionCapEvolution.ups',
   'AreniscaTest_08_LoadingUnloading.ups',
   'AreniscaTest_09_FluidFilledPoreSpace.ups',
-  'AreniscaTest_10_PureIsochoricStrainRates.ups',
+  'AreniscaTest_10_TransientStressEigenvaluesConstVectors.ups',
   'AreniscaTest_11_UniaxialStrainJ2plasticity.ups',
+  'AreniscaTest_12_PureIsochoricStrainRatesInDiffDirs.ups',
 ]
 
 #get uintah/src path as enviornmental variable
@@ -70,19 +70,20 @@ TEST_LIST = []
 for test in POST_PROCESS_LIST:
   TEST_LIST.append(default_inputs_path+'/'+test)
 TEST_LIST = [
-  TEST_LIST[0],	#Test 01
-  TEST_LIST[1],	#Test 02
-  TEST_LIST[2],	#Test 03a
-  TEST_LIST[3],	#Test 03b
-  TEST_LIST[4],	#Test 03c
-  TEST_LIST[5],	#Test 04
-  TEST_LIST[6],	#Test 05
-  TEST_LIST[7],	#Test 06
-  TEST_LIST[8],	#Test 07
-  TEST_LIST[9],	#Test 08
+  TEST_LIST[0],  #Test 01
+  TEST_LIST[1],  #Test 02
+  TEST_LIST[2],  #Test 03a
+  TEST_LIST[3],  #Test 03b
+  TEST_LIST[4],  #Test 03c
+  TEST_LIST[5],  #Test 04
+  TEST_LIST[6],  #Test 05
+  TEST_LIST[7],  #Test 06
+  TEST_LIST[8],  #Test 07
+  TEST_LIST[9],  #Test 08
   TEST_LIST[10], #Test 09
   TEST_LIST[11], #Test 10
   TEST_LIST[12], #Test 11
+  TEST_LIST[13], #Test 12
   
   ]
 ### --------------------- ###
@@ -241,10 +242,12 @@ def post_proc(test,uda_path,save_path):
       test08_postProc(uda_path,save_path)
     if test_name == 'AreniscaTest_09_FluidFilledPoreSpace.ups':
       test09_postProc(uda_path,save_path)
-    if test_name == 'AreniscaTest_10_PureIsochoricStrainRates.ups':
+    if test_name == 'AreniscaTest_10_TransientStressEigenvaluesConstVectors.ups':
       test10_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)       
     if test_name == 'AreniscaTest_11_UniaxialStrainJ2plasticity.ups':
-      test11_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)       
+      test11_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)
+    if test_name == 'AreniscaTest_12_PureIsochoricStrainRatesInDiffDirs.ups':
+      test12_postProc(uda_path,save_path,WORKING_PATH=default_working_dir)       
   else:
     print '\nERROR: test: ',test,'\n\tNot on post processing list.\n'
 

@@ -48,6 +48,7 @@ class Dilatation
  : public Expr::Expression<FieldT>
 {
   const Expr::Tag vel1t_, vel2t_, vel3t_;
+  const bool is3d_;
 
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, Vel1T, FieldT >::type Vel1GradT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, Vel2T, FieldT >::type Vel2GradT;

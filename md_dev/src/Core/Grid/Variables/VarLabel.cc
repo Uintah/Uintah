@@ -54,8 +54,8 @@ VarLabel::create(const string& name,
     // two labels with the same name -- make sure they are the same type
     VarLabel* dup = iter->second;
     if(boundaryLayer != dup->d_boundaryLayer)
-      SCI_THROW(InternalError(string("Multiple VarLabels defined with different # of boundary layers"), __FILE__, __LINE__));
-
+      SCI_THROW(InternalError(string("Multiple VarLabels for " + dup->getName() + " defined with different # of boundary layers"), __FILE__, __LINE__));
+    
 #if !defined(_AIX) && !defined(__APPLE__) && !defined(_WIN32)
     // AIX uses lib.a's, therefore the "same" var labels are different...
     // Need to look into fixing this in a better way...
@@ -69,7 +69,7 @@ VarLabel::create(const string& name,
   else {
     label = scinew VarLabel(name, td, boundaryLayer, vartype);
     allLabels[name]=label;
-    dbg << "Created VarLabel: " << label->d_name << std::endl;
+    dbg << "Creating VarLabel: " << label->d_name << std::endl;
   }
   label->addReference();
   lock.unlock(); 
@@ -87,7 +87,7 @@ VarLabel::destroy(const VarLabel* label)
     if(iter != allLabels.end() && iter->second == label)
       allLabels.erase(iter); 
       
-    dbg << "Deleted VarLabel: " << label->d_name << std::endl;  
+    dbg << "Deleting VarLabel: " << label->d_name << std::endl;  
     lock.unlock();
     delete label;
     

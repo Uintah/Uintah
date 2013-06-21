@@ -7,6 +7,7 @@
 %  Example usage:
 %  compare_Rayleigh.m -pDir 1 -mat 0 -plot false -o out.400.cmp -uda rayleigh_400.uda
 %_________________________________
+
 clear all;
 close all;
 format short e;
@@ -14,8 +15,8 @@ format short e;
 function Usage
   printf('compare_Rayleigh.m <options>\n')                                                                    
   printf('options:\n')                                                                                       
-  printf('  -uda  <udaFileName> - name of the uda file \n')                                                  
-  printf('  -pDir <1,2,3>       - principal direction \n')                                                   
+  printf('  -uda  <udaFileName> - name of the uda file \n')                                                 
+  printf('  -aDir <1,2,3>       - axial direction \n')                                                   
   printf('  -mat                - material index \n')                                                        
   printf('  -plot <true, false> - produce a plot \n')                                                        
   printf('  -ts                 - Timestep to compute L2 error, default is the last timestep\n') 
@@ -49,7 +50,7 @@ for i = 1:2:nargin
 
   if ( strcmp(option,"-uda") )   
     uda = opt_value;
-  elseif (strcmp(option,"-pDir") ) 
+  elseif (strcmp(option,"-aDir") ) 
     pDir = str2num(opt_value);
   elseif (strcmp(option,"-mat") )
     mat = str2num(opt_value);
@@ -96,25 +97,36 @@ c0 = sprintf('puda -gridstats %s >& tmp',uda); unix(c0);
 resolution   = str2num(r1);
 domainLength = str2num(r2);
 
-% find the y direction
+% find the x and y directions
+
+% for each axial direction different y directions are possible
+% these scripts were built for each of the following planes
+% when creating new new tests you may want to try to follow this convention
+
 if(pDir == 1)
   yDir = 2;
+  xDir = 1;
 elseif(pDir == 2)
-  yDir = 2;
+  yDir = 3;
+  xDir = 2;
 elseif(pDir == 3)
-  yDir = 2;
+  yDir = 1;
+  xDir = 3;
 end
 
 %__________________________________
 %compute the exact solution & L2Norm
-xHalf = resolution(pDir)/2.0;
 
+%grabbing the data
+xHalf = resolution(xDir)/2.0;
+
+%sets the start and end cells for the line extract, depending on the plane
 if(pDir == 1)
-  startEnd = sprintf('-istart %i 0 0 -iend %i %i 0',xHalf,xHalf,resolution(yDir) -1 );
+  startEnd = sprintf('-istart %i 0 0 -iend %i %i 0',xHalf,xHalf,resolution(yDir) -1);
 elseif(pDir == 2)
-  startEnd = sprintf('-istart 0 0 0 -iend 0 %i 0',resolution(pDir)-1);
+  startEnd = sprintf('-istart 0 %i 0 -iend 0 %i %i',xHalf,xHalf,resolution(yDir)-1);
 elseif(pDir == 3)
-  startEnd = sprintf('-istart 0 0 0 -iend 0 0 %i',resolution(pDir)-1);
+  startEnd = sprintf('-istart 0 0 %i -iend %i 0 %i',xHalf,resolution(yDir)-1,xHalf);
 end
 
 c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o sim.dat -m %i  -uda %s','vel_CC >& /dev/null',L,ts-1,startEnd,mat,uda);
@@ -129,14 +141,14 @@ vel  = load('vel.dat');
 y_CC = vel(:,yDir);
 
 % Add an offset to y_CC to compensate for the poor vel_CC boundary  condition in ICE
-dy_2 = (y_CC(2) - y_CC(1) )/2
+dy_2 = (y_CC(2) - y_CC(1) )/2;
 y_CC_twk = y_CC + dy_2;
 y_CC_twk = y_CC;
 
-uvel = vel(:,3 + pDir);
+uvel = vel(:,3 + xDir);
 
 % computes exact solution
-time =physicalTime(ts)
+time =physicalTime(ts);
 
 vel_ratio_sim = uvel/vel_CC_initial;
 nu = viscosity/rho_CC;
@@ -147,7 +159,7 @@ vel_exact = vel_ratio_exact * vel_CC_initial;
 clear d;
 d = 0;
 d = abs(vel_ratio_sim - vel_ratio_exact);
-L2_norm = sqrt( sum(d.^2)/length(y_CC) )
+L2_norm = sqrt( sum(d.^2)/length(y_CC) );
 length(y_CC);
 
 % write L2_norm to a file
@@ -166,6 +178,7 @@ unix('/bin/rm vel.dat sim.dat tmp');
 % Plot the results from each timestep
 % onto 2 plots
 if (strcmp(makePlot,"true"))
+  h = figure(1)
   subplot(2,1,1),plot(uvel, y_CC, 'b:o;computed;', vel_exact, y_CC_twk, 'r:+;exact;')
   xlabel('u velocity')
   ylabel('y')
@@ -180,13 +193,13 @@ if (strcmp(makePlot,"true"))
 %   ylabel('eta');
 %   %legend('exact', 'computed');
 %   grid on;
-  
   subplot(2,1,2),plot(d,y_CC, 'b:+');
   hold on;
   xlabel('u - u_exact'); 
   ylabel('y');
   grid on;
-
-  pause
-
+  c1 = sprintf('%i_%i.jpg',resolution(yDir),yDir);
+  %saves the plot to an output file
+  %naming convention for the output file (resolution,yDir.jpg)
+  print (c1,'-djpg')
 end

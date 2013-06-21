@@ -26,6 +26,7 @@
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <CCA/Components/ICE/SpecificHeatModel/Debye.h>
 #include <CCA/Components/ICE/SpecificHeatModel/Component.h>
+#include <CCA/Components/ICE/SpecificHeatModel/NASAPolynomial.h>
 #include <CCA/Components/ICE/SpecificHeatModel/Polynomial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -58,6 +59,8 @@ SpecificHeat* SpecificHeatFactory::create(ProblemSpecP& ps)
       return(scinew DebyeCv(cv_ps));
     }else if (cv_model == "Component"){
       return(scinew ComponentCv(cv_ps));
+    }else if (cv_model == "NASAPolynomial"){
+      return(scinew NASAPolynomialCv(cv_ps));
     }else if (cv_model == "Polynomial"){
       return(scinew PolynomialCv(cv_ps));
     }else{
@@ -66,6 +69,7 @@ SpecificHeat* SpecificHeatFactory::create(ProblemSpecP& ps)
          << "Valid models are:\n"
          << " Debye\n"
          << " Component\n"
+         << " NASAPolynomial\n"
          << " Polynomial\n" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }

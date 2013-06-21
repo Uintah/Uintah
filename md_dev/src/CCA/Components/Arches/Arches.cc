@@ -57,6 +57,7 @@
 #include <CCA/Components/Arches/PropertyModels/EmpSoot.h>
 #include <CCA/Components/Arches/PropertyModels/AlgebraicScalarDiss.h>
 #include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
+#include <CCA/Components/Arches/PropertyModels/ScalarVarianceScaleSim.h>
 #include <Core/IO/UintahZlibUtil.h>
 
 #if HAVE_TABPROPS
@@ -74,7 +75,7 @@
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
-#  include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
+#include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 
 #include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
 
@@ -115,6 +116,7 @@
 #include <CCA/Components/Wasatch/TaskInterface.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentViscosity.h>
+#include <CCA/Components/Wasatch/Expressions/Dilatation.h>
 #endif // WASATCH_IN_ARCHES
 
 #include <iostream>
@@ -329,6 +331,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_wasatch->disable_wasatch_material();
   // let Wasatch parse its xml block to setup the transport equations. Here, we
   // should pass the entire uintah input file params.
+
+  Uintah::IntVector extraCells;
+  Wasatch::check_periodicity_extra_cells( params, extraCells);
+
   d_wasatch->problemSetup( params, materials_ps, grid, sharedState );
 
   Wasatch::GraphHelper* const solngh = d_wasatch->graph_categories()[Wasatch::ADVANCE_SOLUTION];
@@ -459,8 +465,49 @@ Arches::problemSetup(const ProblemSpecP& params,
     Expr::TagList velTags;
     velTags.push_back(xVelTagN);
     velTags.push_back(yVelTagN);
-    velTags.push_back(zVelTagN);    
-    Wasatch::register_turbulence_expressions(turbParams,*solngh->exprFactory,velTags,densityTag, isConstDensity);
+    velTags.push_back(zVelTagN);
+        
+    //
+    const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
+
+    // register dilatation
+    const Expr::Tag dilTag = tagNames.dilatation;
+    Expr::ExpressionFactory& solnFactory = *solngh->exprFactory;
+    if( !solnFactory.have_entry( dilTag ) ){
+      typedef Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
+      // if dilatation expression has not been registered, then register it
+      solnFactory.register_expression( new Dilatation(dilTag, velTags[0],velTags[1],velTags[2]) );
+    }
+    
+    // register strain components. Here we are assuming 3D...
+    typedef SpatialOps::structured::FaceTypes<XVolField>::XFace XSurfXField;
+    typedef SpatialOps::structured::FaceTypes<XVolField>::YFace XSurfYField;
+    typedef SpatialOps::structured::FaceTypes<XVolField>::ZFace XSurfZField;
+    const Expr::ExpressionID tauxxID = Wasatch::setup_strain<XSurfXField>(tagNames.tauxx, velTags[0], velTags[0], dilTag, solnFactory);
+    solnFactory.cleave_from_parents (tauxxID);
+    solnFactory.cleave_from_children(tauxxID);
+    Wasatch::setup_strain<XSurfYField>(tagNames.tauyx, velTags[0], velTags[1], dilTag, solnFactory);
+    Wasatch::setup_strain<XSurfZField>(tagNames.tauzx, velTags[0], velTags[2], dilTag, solnFactory);
+
+    typedef SpatialOps::structured::FaceTypes<YVolField>::XFace YSurfXField;
+    typedef SpatialOps::structured::FaceTypes<YVolField>::YFace YSurfYField;
+    typedef SpatialOps::structured::FaceTypes<YVolField>::ZFace YSurfZField;
+    Wasatch::setup_strain<YSurfXField>(tagNames.tauxy, velTags[1], velTags[0], dilTag, solnFactory);
+    const Expr::ExpressionID tauyyID = Wasatch::setup_strain<YSurfYField>(tagNames.tauyy, velTags[1], velTags[1], dilTag, solnFactory);
+    solnFactory.cleave_from_parents (tauyyID);
+    solnFactory.cleave_from_children(tauyyID);
+    Wasatch::setup_strain<YSurfZField>(tagNames.tauzy, velTags[1], velTags[2], dilTag, solnFactory);
+
+    typedef SpatialOps::structured::FaceTypes<ZVolField>::XFace ZSurfXField;
+    typedef SpatialOps::structured::FaceTypes<ZVolField>::YFace ZSurfYField;
+    typedef SpatialOps::structured::FaceTypes<ZVolField>::ZFace ZSurfZField;
+    Wasatch::setup_strain<ZSurfXField>(tagNames.tauxz, velTags[2], velTags[0], dilTag, solnFactory);
+    Wasatch::setup_strain<ZSurfYField>(tagNames.tauyz, velTags[2], velTags[1], dilTag, solnFactory);
+    const Expr::ExpressionID tauzzID = Wasatch::setup_strain<ZSurfZField>(tagNames.tauzz, velTags[2], velTags[2], dilTag, solnFactory);
+    solnFactory.cleave_from_parents (tauzzID);
+    solnFactory.cleave_from_children(tauzzID);
+    
+    Wasatch::register_turbulence_expressions(turbParams,solnFactory,velTags,densityTag, isConstDensity);
     Expr::TagList turbulenceExpressions;
     turbulenceExpressions.push_back(Wasatch::TagNames::self().turbulentviscosity);
     force_expressions_on_graph(turbulenceExpressions, solngh);
@@ -579,6 +626,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     PropertyModelBase* prop_model = iprop->second;
     if ( prop_model->getPropType() == "heat_loss" ){ 
       MixingRxnModel* mixing_table = d_props->getMixRxnModel();
+      std::map<string,double> table_constants = mixing_table->getAllConstants(); 
       if (d_props->getMixingModelType() == "ClassicTable" ) {
 
         ClassicTableInterface* classic_table = dynamic_cast<ClassicTableInterface*>(mixing_table); 
@@ -587,6 +635,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 
         HeatLoss* hl_prop_model = dynamic_cast<HeatLoss*>(prop_model); 
         hl_prop_model->set_hl_bounds(hl_bounds); 
+        hl_prop_model->set_table_ref(classic_table); 
 
       }
     } 
@@ -1011,7 +1060,6 @@ Arches::scheduleInitialize(const LevelP& level,
   // require : densityIN,[u,v,w]VelocityIN
   // compute : densitySP, [u,v,w]VelocitySP, scalarSP
   d_boundaryCondition->sched_setProfile(sched, patches, matls);
-  d_boundaryCondition->sched_Prefill(sched, patches, matls);
 
   // if multimaterial, update celltype for mm intrusions for exact
   // initialization.
@@ -1048,7 +1096,8 @@ Arches::scheduleInitialize(const LevelP& level,
 
   // Table Lookup
   string mixmodel = d_props->getMixingModelType();
-  if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
+  if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" 
+      && mixmodel != "ColdFlow" && mixmodel != "ConstantProps")
     d_props->sched_reComputeProps(sched, patches, matls,
                                 init_timelabel, true, true);
   else {
@@ -1063,7 +1112,6 @@ Arches::scheduleInitialize(const LevelP& level,
     //d_boundaryCondition->printBCInfo();
     d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
     d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls );
-    d_boundaryCondition->sched_setPrefill__NEW( sched, patches, matls );
   }
 
   d_boundaryCondition->sched_initInletBC(sched, patches, matls);
@@ -3040,8 +3088,14 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
 
       } else if ( prop_type == "heat_loss" ){ 
 
-        // Algebraic scalar dissipation rate 
+        // Heat loss
         PropertyModelBase::Builder* the_builder = new HeatLoss::Builder( prop_name, d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "scalsim_variance" ){ 
+
+        //Scalar variance using a scale similarity concept
+        PropertyModelBase::Builder* the_builder = new ScalarVarianceScaleSim::Builder( prop_name, d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder ); 
 
       } else {

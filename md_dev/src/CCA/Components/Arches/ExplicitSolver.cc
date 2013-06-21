@@ -79,6 +79,7 @@
 #include <CCA/Components/Wasatch/TaskInterface.h>
 #include <expression/ExprLib.h>
 #include <expression/PlaceHolderExpr.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 #endif // WASATCH_IN_ARCHES
 
 
@@ -503,7 +504,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
 
     string mixmodel = d_props->getMixingModelType();
-    if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
+    if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" 
+        && mixmodel != "ColdFlow" && mixmodel != "ConstantProps")
       d_props->sched_reComputeProps(sched, patches, matls,
                                     d_timeIntegratorLabels[curr_level],
                                     true, false );
@@ -590,7 +592,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
 
 
-      if (mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
+      if (mixmodel != "TabProps" && mixmodel != "ClassicTable" 
+          && mixmodel != "ColdFlow" && mixmodel != "ConstantProps")
         d_props->sched_reComputeProps(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
                                       false, false);
@@ -676,19 +679,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                             d_timeIntegratorLabels[curr_level]);
     }
 
-    d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-    if ((d_turbCounter%d_turbModelCalcFreq == 0)&&
-        ((curr_level==0)||((!(curr_level==0))&&d_turbModelRKsteps)))
-      d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
-                                            d_timeIntegratorLabels[curr_level]);
-
-
-
-    if ((curr_level==0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
-       sched_saveFECopies(sched, patches, matls,
-                                       d_timeIntegratorLabels[curr_level]);
-    }
-    
 #   ifdef WASATCH_IN_ARCHES
     /* hook in construction of task interface for wasatch transport equations here.
      * This is within the RK loop, so we need to pass the stage as well.
@@ -716,6 +706,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       std::stringstream strRKStage;
       strRKStage << curr_level;
       const std::set<std::string>& ioFieldSet = wasatch.locked_fields();
+
+      // keep these following lines alive. they will be needed when we start cherry-picking from the Wasatch graph
+//      std::set<Expr::ExpressionID> ids;
+//      ids.insert(gh->exprFactory->get_id(Wasatch::TagNames::self().turbulentviscosity));
+      
       Wasatch::TaskInterface* wasatchRHSTask =
       scinew Wasatch::TaskInterface( gh->rootIDs,
                                     "wasatch_in_arches_rhs_task_stage_" + strRKStage.str(),
@@ -735,6 +730,19 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //d_timeIntegrator->sched_wasatch_time_ave(sched, patches, matls, phi, phi_rhs, curr_level);
     }
 #   endif // WASATCH_IN_ARCHES
+
+    d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+    if ((d_turbCounter%d_turbModelCalcFreq == 0)&&
+        ((curr_level==0)||((!(curr_level==0))&&d_turbModelRKsteps)))
+      d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+                                               d_timeIntegratorLabels[curr_level]);
+
+
+    if ((curr_level==0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
+       sched_saveFECopies(sched, patches, matls,
+                                       d_timeIntegratorLabels[curr_level]);
+    }
+    
 
   }
 

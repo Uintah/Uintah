@@ -22,7 +22,9 @@ class BoundaryCondition_new {
 public: 
 
   //** WARNING: This needs to be duplicated in BoundaryCondition.h for now until BoundaryCondition goes away **//
-  enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL, TURBULENT_INLET }; 
+  //** WARNING!!! ** // 
+  enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, STABL, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL, TURBULENT_INLET }; 
+  //** END WARNING!!! **//
 
   typedef std::map<IntVector, double> CellToValueMap; 
   typedef std::map<Patch*, vector<CellToValueMap> > PatchToBCValueMap; 

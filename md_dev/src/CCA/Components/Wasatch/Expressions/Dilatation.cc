@@ -35,8 +35,11 @@ Dilatation( const Expr::Tag& vel1tag,
   : Expr::Expression<FieldT>(),
     vel1t_( vel1tag ),
     vel2t_( vel2tag ),
-    vel3t_( vel3tag )
-{}
+    vel3t_( vel3tag ),
+    is3d_( vel1t_ != Expr::Tag() && vel2t_ != Expr::Tag() && vel3t_ != Expr::Tag() )
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -94,15 +97,16 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& dil = this->value();
-  dil <<= 0.0;
-  if( vel1t_ != Expr::Tag() ){
-    dil <<= (*vel1GradOp_)(*vel1_);
+
+  dil <<= 0.0; // avoid potential garbage in extra/ghost cells
+
+  if( is3d_ ){ // fully inline for 3D
+    dil <<= (*vel1GradOp_)(*vel1_) + (*vel2GradOp_)(*vel2_) + (*vel3GradOp_)(*vel3_);
   }
-  if( vel2t_ != Expr::Tag() ){
-    dil <<= dil + (*vel2GradOp_)(*vel2_);
-  }
-  if( vel3t_ != Expr::Tag() ){
-    dil <<= dil + (*vel3GradOp_)(*vel3_);
+  else{ // for 2D and 1D, assemble in pieces
+    if( vel1t_ != Expr::Tag() ) dil <<=       (*vel1GradOp_)(*vel1_);
+    if( vel2t_ != Expr::Tag() ) dil <<= dil + (*vel2GradOp_)(*vel2_);
+    if( vel3t_ != Expr::Tag() ) dil <<= dil + (*vel3GradOp_)(*vel3_);
   }
 }
 

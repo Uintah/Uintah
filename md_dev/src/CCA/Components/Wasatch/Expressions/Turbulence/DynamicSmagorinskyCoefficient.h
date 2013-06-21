@@ -25,28 +25,30 @@ class DynamicSmagorinskyCoefficient
   const bool isConstDensity_;
   const bool doExtraFiltering_; // experimental
   
+  const SVolField* rho_;
+
+  // filtering operators
   typedef  SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Filter, SVolField, SVolField >::type BoxFilterT;
   typedef  SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Filter, XVolField, XVolField >::type XBoxFilterT;
   typedef  SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Filter, YVolField, YVolField >::type YBoxFilterT;
   typedef  SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Filter, ZVolField, ZVolField >::type ZBoxFilterT;
 
-  
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type Vel1InterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Vel2InterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Vel3InterpT;
-  
-  const SVolField* rho_;
-  
   const BoxFilterT*  boxFilterOp_;
   const XBoxFilterT* xBoxFilterOp_;
   const YBoxFilterT* yBoxFilterOp_;
   const ZBoxFilterT* zBoxFilterOp_;
-  
+
+  // velocity interpolants
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type Vel1InterpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Vel2InterpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Vel3InterpT;
+
   const Vel1InterpT* vel1InterpOp_;
   const Vel2InterpT* vel2InterpOp_;
   const Vel3InterpT* vel3InterpOp_;  
   
   
+  // extrapolant operators
   typedef Wasatch::OpTypes<SVolField>::BoundaryExtrapolant ExOpT;
   typedef Wasatch::OpTypes<XVolField>::BoundaryExtrapolant XExOpT;
   typedef Wasatch::OpTypes<YVolField>::BoundaryExtrapolant YExOpT;

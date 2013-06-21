@@ -108,6 +108,7 @@ bind_fields( const Expr::FieldManagerList& fml )
     break;
   case Wasatch::NONE :
     assert(false);
+    break;
   }
 }
 

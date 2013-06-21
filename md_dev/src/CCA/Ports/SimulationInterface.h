@@ -88,9 +88,7 @@ WARNING
      // Insert Documentation Here:
      virtual void scheduleInitialize(const LevelP& level,
 				     SchedulerP&) = 0;
-     //////////
-     virtual void scheduleInitializeAddedMaterial(const LevelP& level,
-                                                  SchedulerP&);
+
      //////////
      // restartInitialize() is called once and only once if and when a simulation is restarted.
      // This allows the simulation component to handle initializations that are necessary when
@@ -140,10 +138,6 @@ WARNING
      // ask the component if it needs to be recompiled
      virtual bool needRecompile(double /*time*/, double /*dt*/,
 				const GridP& /*grid*/) {return false;}
-
-     // direct component to add a new material
-     virtual void addMaterial(const ProblemSpecP& params, GridP& grid,
-                              SimulationStateP& state);
 
      virtual void scheduleSwitchTest(const LevelP& /*level*/, SchedulerP& /*sched*/)
        {};

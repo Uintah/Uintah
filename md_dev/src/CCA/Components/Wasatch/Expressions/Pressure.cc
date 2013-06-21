@@ -312,7 +312,7 @@ Pressure::setup_matrix()
   }
 
   // When boundary conditions are present, modify the pressure matrix coefficients at the boundary
-  if ( patch_->hasBoundaryFaces() )update_poisson_matrix((this->names())[0], matrix_, patch_, materialID_);
+  if ( patch_->hasBoundaryFaces() )update_poisson_matrix((this->get_tags())[0], matrix_, patch_, materialID_);
 
   // if the user specified a reference pressure, then modify the appropriate matrix coefficients
   if ( useRefPressure_ ) set_ref_poisson_coefs(matrix_, patch_, refPressureLocation_);

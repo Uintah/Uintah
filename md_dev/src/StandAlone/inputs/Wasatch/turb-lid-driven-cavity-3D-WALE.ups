@@ -9,9 +9,8 @@
   <Wasatch>
       <TimeIntegrator> FE </TimeIntegrator>
 
-    <Turbulence>
-      <EddyViscosityConstant>0.2</EddyViscosityConstant>
-      <TurbulenceModel> WALE </TurbulenceModel>
+    <Turbulence model="WALE">
+      <EddyViscosityCoefficient>0.2</EddyViscosityCoefficient>
     </Turbulence>
 
     <PostProcessingExpression type="SVOL">

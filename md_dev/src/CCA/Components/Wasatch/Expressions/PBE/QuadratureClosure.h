@@ -45,8 +45,8 @@ class QuadratureClosure
   FieldVec weights_;
   FieldVec abscissae_;
 
-  QuadratureClosure( const Expr::TagList weightsTagList_,
-                     const Expr::TagList abscissaeTagList_,
+  QuadratureClosure( const Expr::TagList& weightsTagList_,
+                     const Expr::TagList& abscissaeTagList_,
                      const double momentOrder );
 
 public:
@@ -78,7 +78,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
 };
@@ -95,14 +94,16 @@ public:
 
 template< typename FieldT >
 QuadratureClosure<FieldT>::
-QuadratureClosure( const Expr::TagList weightsTagList,
-                   const Expr::TagList abscissaeTagList,
+QuadratureClosure( const Expr::TagList& weightsTagList,
+                   const Expr::TagList& abscissaeTagList,
                    const double momentOrder )
   : Expr::Expression<FieldT>(),
     weightsTagList_(weightsTagList),
     abscissaeTagList_(abscissaeTagList),
     momentOrder_(momentOrder)
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -139,14 +140,6 @@ bind_fields( const Expr::FieldManagerList& fml )
     abscissae_.push_back(&volfm.field_ref(*iabscissa));
   }
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-QuadratureClosure<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

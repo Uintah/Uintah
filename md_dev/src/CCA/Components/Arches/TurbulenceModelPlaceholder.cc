@@ -97,7 +97,11 @@ TurbulenceModelPlaceholder::problemSetup(const ProblemSpecP& params)
 #ifdef WASATCH_IN_ARCHES
   // get the eddy viscosity constant
   ProblemSpecP db = params->findBlock("Turbulence");
-  db->getWithDefault("EddyViscosityConstant",d_CF, 0.2);
+  std::string modelName;
+  params->getAttribute("model",modelName);
+  if (modelName.compare("DYNAMIC") != 0) {
+    db->get("EddyViscosityCoefficient",d_CF);
+  }
 #endif
   d_turbPrNo = 0.4;
 }
@@ -227,7 +231,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
       viscosity[c] = viscosity[c] + mol_viscos;
     }
 
-#ifndef WASATCH_IN_ARCHES
+//#ifndef WASATCH_IN_ARCHES
     //__________________________________
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -343,7 +347,7 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
         }
       }
     }
-#endif
+//#endif
   }
 }
 

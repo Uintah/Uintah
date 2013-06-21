@@ -209,9 +209,18 @@ namespace Wasatch {
         birthParams->get("ConstantRStar",ConstRStar);
     }
 
+    typename Birth<FieldT>::BirthModel birthType = Birth<FieldT>::POINT;
+    if (birthModel == "POINT") {
+      birthType = Birth<FieldT>::POINT;
+    } else if (birthModel == "UNIFORM") {
+      birthType = Birth<FieldT>::UNIFORM;
+    } else if (birthModel == "NORMAL") {
+      birthType = Birth<FieldT>::NORMAL;
+    }
+    
     birthTag = Expr::Tag( thisPhiName + "_birth_" + birthModel, Expr::STATE_NONE );
     typedef typename Birth<FieldT>::Builder birth;
-    builder = scinew birth(birthTag, birthCoefTag, RStarTag, preCoef, momentOrder, birthModel, ConstRStar, stdDev);
+    builder = scinew birth(birthTag, birthCoefTag, RStarTag, preCoef, momentOrder, birthType, ConstRStar, stdDev);
 
     birthTags.push_back(birthTag);
     factory.register_expression( builder );
@@ -276,10 +285,19 @@ namespace Wasatch {
         factory.register_expression(builder);
       }
     }
+
+    typename Aggregation<FieldT>::AggregationModel aggType = Aggregation<FieldT>::CONSTANT;
+    if (aggModel == "CONSTANT") {
+      aggType = Aggregation<FieldT>::CONSTANT;
+    } else if (aggModel == "BROWNIAN") {
+      aggType = Aggregation<FieldT>::BROWNIAN;
+    } else if (aggModel == "HYDRODYNAMIC") {
+      aggType = Aggregation<FieldT>::HYDRODYNAMIC;
+    }
     
     aggTag = Expr::Tag( thisPhiName + "_agg_" + aggModel, Expr::STATE_NONE );
     typedef typename Aggregation<FieldT>::Builder aggregation;
-    builder = scinew aggregation(aggTag, weightsTagList, abscissaeTagList, efficiencyTagList, aggCoefTag,  momentOrder, efficiencyCoef, aggModel, useEffTags);
+    builder = scinew aggregation(aggTag, weightsTagList, abscissaeTagList, efficiencyTagList, aggCoefTag,  momentOrder, efficiencyCoef, aggType, useEffTags);
     aggTags.push_back(aggTag);
     factory.register_expression( builder );
   }
