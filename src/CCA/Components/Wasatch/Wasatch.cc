@@ -103,6 +103,11 @@ namespace Wasatch{
               << "-------------------------------------------------------------" << std::endl
               << std::endl;
 
+    materials_     = NULL;
+    icCoordHelper_ = NULL;
+    timeStepper_   = NULL;
+    linSolver_     = NULL;
+
     isRestarting_ = false;
 
     // disable memory windowing on variables.  This will ensure that
