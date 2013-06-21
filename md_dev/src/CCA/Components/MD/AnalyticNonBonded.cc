@@ -48,7 +48,8 @@ extern SCIRun::Mutex cerrLock;
 
 static DebugStream analytic_dbg("AnalyticNonbondedDbg", false);
 
-AnalyticNonBonded::AnalyticNonBonded()
+AnalyticNonBonded::AnalyticNonBonded() :
+    d_neighborlistLock("Nonbonded neighborlist lock")
 {
 
 }
@@ -62,7 +63,7 @@ AnalyticNonBonded::AnalyticNonBonded(MDSystem* system,
                                      const double r12,
                                      const double r6,
                                      const double cutoffRadius) :
-    d_system(system), d_r12(r12), d_r6(r6), d_cutoffRadius(cutoffRadius)
+    d_system(system), d_r12(r12), d_r6(r6), d_cutoffRadius(cutoffRadius), d_neighborlistLock("Nonbonded neighborlist lock")
 {
   d_nonBondedInteractionType = NonBonded::LJ12_6;
 }
@@ -189,6 +190,7 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
         unsigned int idx;
         unsigned int numNeighbors = d_neighborList[p][i].size();
         for (unsigned int j = 0; j < numNeighbors; j++) {
+
           idx = d_neighborList[p][i][j];
 
           // the vector distance between atom i and j
@@ -290,7 +292,9 @@ void AnalyticNonBonded::generateNeighborList(ParticleSubset* local_pset,
           r2 = sqrt(reducedX + reducedY + reducedZ);
           // only add neighbor atoms within spherical cut-off around atom "i"
           if (r2 < cut_sq) {
+            d_neighborlistLock.writeLock();
             d_neighborList[patchID][i].push_back(j);
+            d_neighborlistLock.writeUnlock();
           }
         }
       }
