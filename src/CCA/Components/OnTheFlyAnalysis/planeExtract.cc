@@ -493,66 +493,69 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
         }
         
         CellIterator iterLim = CellIterator(start_idx,end_idx);
-        
+
         //__________________________________
         //  Loop over all the variables
-        for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
-          
-          int matl = d_varMatl[i];
-          const VarLabel* varLabel = d_varLabels[i];
-          string labelName = varLabel->getName();
-          
-          // bulletproofing
-          if(varLabel == NULL){
-            throw InternalError("planeExtract: analyze label not found: " 
-                            + labelName , __FILE__, __LINE__);
-          }
+        if( iterLim.size() > 0 ){
+        
+          for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
 
-          ostringstream fname;
-          fname<< path << "/" << labelName <<"_"<< matl;
-          string filename = fname.str();
+            int matl = d_varMatl[i];
+            const VarLabel* varLabel = d_varLabels[i];
+            string labelName = varLabel->getName();
 
-          //__________________________________
-          //  Open the file pointer 
-          FILE *fp;
-          createFile(filename, varLabel, matl, fp);
+            // bulletproofing
+            if(varLabel == NULL){
+              throw InternalError("planeExtract: analyze label not found: " 
+                              + labelName , __FILE__, __LINE__);
+            }
 
-          //__________________________________
-          //  Now write to the file
-          const Uintah::TypeDescription* td = varLabel->typeDescription();
-          const Uintah::TypeDescription* subtype = td->getSubType();
-           
-          switch( td->getType() ){
-            case Uintah::TypeDescription::CCVariable:      // CC Variables
-              switch( subtype->getType( )) {
+            ostringstream fname;
+            fname<< path << "/" << patch->getID() << ":"<< labelName <<"_"<< matl<<".dat";
+            string filename = fname.str();
 
-              case Uintah::TypeDescription::double_type:
-                writeDataD< constCCVariable<double> >(   new_dw, varLabel, matl, patch, iterLim, fp );
-                break;
+            //__________________________________
+            //  Open the file pointer 
+            FILE *fp;
+            createFile(filename, varLabel, matl, fp);
 
-              case Uintah::TypeDescription::Vector:
-                writeDataV< constCCVariable<Vector> >(   new_dw, varLabel, matl, patch, iterLim, fp );
-                break;
+            //__________________________________
+            //  Now write to the file
+            const Uintah::TypeDescription* td = varLabel->typeDescription();
+            const Uintah::TypeDescription* subtype = td->getSubType();
 
-              case Uintah::TypeDescription::int_type:
-                writeDataI< constCCVariable<int> >(      new_dw, varLabel, matl, patch, iterLim, fp );
-                break;
-                 
-              case Uintah::TypeDescription::Stencil7:
-                writeDataS7< constCCVariable<Stencil7> >(new_dw, varLabel, matl, patch, iterLim, fp );
+            switch( td->getType() ){
+              case Uintah::TypeDescription::CCVariable:      // CC Variables
+                switch( subtype->getType( )) {
+
+                case Uintah::TypeDescription::double_type:
+                  writeDataD< constCCVariable<double> >(   new_dw, varLabel, matl, patch, iterLim, fp );
+                  break;
+
+                case Uintah::TypeDescription::Vector:
+                  writeDataV< constCCVariable<Vector> >(   new_dw, varLabel, matl, patch, iterLim, fp );
+                  break;
+
+                case Uintah::TypeDescription::int_type:
+                  writeDataI< constCCVariable<int> >(      new_dw, varLabel, matl, patch, iterLim, fp );
+                  break;
+
+                case Uintah::TypeDescription::Stencil7:
+                  writeDataS7< constCCVariable<Stencil7> >(new_dw, varLabel, matl, patch, iterLim, fp );
+                  break;
+                default:
+                  throw InternalError("planeExtract: invalid data type", __FILE__, __LINE__); 
+                }
                 break;
               default:
-                throw InternalError("planeExtract: invalid data type", __FILE__, __LINE__); 
-              }
-              break;
-            default:
-              ostringstream warn;
-              warn << "ERROR:AnalysisModule:planeExtact: ("<< labelName << " " 
-                   << td->getName() << " ) has not been implemented" << endl;
-              throw InternalError(warn.str(), __FILE__, __LINE__);
-          }
-          fclose(fp);
-        }  //loop over variables      
+                ostringstream warn;
+                warn << "ERROR:AnalysisModule:planeExtact: ("<< labelName << " " 
+                     << td->getName() << " ) has not been implemented" << endl;
+                throw InternalError(warn.str(), __FILE__, __LINE__);
+            }
+            fclose(fp);
+          }  //loop over variables 
+        }  // iterlim > 0    
       }  // loop over planes 
       lastWriteTime = now;     
     }  // time to write data
