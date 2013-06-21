@@ -75,7 +75,7 @@ class FluxLimiterInterpolant {
   
 private:
   
-  // Here, the advectivevelocity has been already interpolated to the phi cell
+  // Here, the advective velocity has been already interpolated to the phi cell
   // faces. The destination field should be of the same type as the advective
   // velocity, i.e. a staggered, cell centered field.
   const PhiFaceT* advectiveVelocity_;
@@ -109,8 +109,8 @@ public:
    *         boundary on its plus side.
    */
   FluxLimiterInterpolant( const std::vector<int>& dim,
-                         const std::vector<bool> hasPlusFace,
-                         const std::vector<bool> hasMinusBoundary);
+                          const std::vector<bool> hasPlusFace,
+                          const std::vector<bool> hasMinusBoundary);
   
   /**
    *  \brief Destructor for flux limiter interpolant.

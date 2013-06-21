@@ -170,7 +170,7 @@ namespace Wasatch{
     case XDIR : xSVolCoord_=true; break;
     case YDIR : ySVolCoord_=true; break;
     case ZDIR : zSVolCoord_=true; break;
-    default: assert(0);
+    default   : assert(0);        break;
     }
   }
   template<> inline void CoordHelper::requires_coordinate<XVolField>( const Direction dir )
@@ -180,7 +180,7 @@ namespace Wasatch{
     case XDIR : xXVolCoord_=true; break;
     case YDIR : yXVolCoord_=true; break;
     case ZDIR : zXVolCoord_=true; break;
-    default: assert(0);
+    default   : assert(0);        break;
     }
   }
   template<> inline void CoordHelper::requires_coordinate<YVolField>( const Direction dir )
@@ -190,7 +190,7 @@ namespace Wasatch{
     case XDIR : xYVolCoord_=true; break;
     case YDIR : yYVolCoord_=true; break;
     case ZDIR : zYVolCoord_=true; break;
-    default: assert(0);
+    default   : assert(0);        break;
     }
   }
   template<> inline void CoordHelper::requires_coordinate<ZVolField>( const Direction dir )
@@ -200,7 +200,7 @@ namespace Wasatch{
     case XDIR : xZVolCoord_=true; break;
     case YDIR : yZVolCoord_=true; break;
     case ZDIR : zZVolCoord_=true; break;
-    default: assert(0);
+    default   : assert(0);        break;
     }
   }
 

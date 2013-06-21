@@ -124,10 +124,12 @@ void
 MomRHSPart<FieldT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
+  densityInterpOp_ = opDB.retrieve_operator<DensityInterpT>();
+
   if( cfluxXt_ != emptyTag_ || tauXt_ != emptyTag_ )  divXOp_ = opDB.retrieve_operator<DivX>();
   if( cfluxYt_ != emptyTag_ || tauYt_ != emptyTag_ )  divYOp_ = opDB.retrieve_operator<DivY>();
   if( cfluxZt_ != emptyTag_ || tauZt_ != emptyTag_ )  divZOp_ = opDB.retrieve_operator<DivZ>();
-  densityInterpOp_                                            = opDB.retrieve_operator<DensityInterpT>();
+
   if( tauXt_ != emptyTag_ ) sVol2XFluxInterpOp_ = opDB.retrieve_operator<SVol2XFluxInterpT>();
   if( tauYt_ != emptyTag_ ) sVol2YFluxInterpOp_ = opDB.retrieve_operator<SVol2YFluxInterpT>();
   if( tauZt_ != emptyTag_ ) sVol2ZFluxInterpOp_ = opDB.retrieve_operator<SVol2ZFluxInterpT>();
