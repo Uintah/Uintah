@@ -147,8 +147,9 @@ namespace Wasatch {
 
   OldVariable::OldVariable()
   {
-    wasatchSync_ = false;
+    wasatchSync_  = false;
     hasDoneSetup_ = false;
+    wasatch_ = NULL;
   }
 
   //------------------------------------------------------------------
@@ -187,6 +188,7 @@ namespace Wasatch {
       msg << "OldVariable error: must call sync_with_wasatch() prior to adding variables!" << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
+    assert( wasatch_ != NULL );
     VarHelperBase* const vh = new VarHelper<T>(var, retainName);
     typedef typename Expr::PlaceHolder<T>::Builder PlaceHolder;
 
@@ -212,7 +214,7 @@ namespace Wasatch {
   void
   OldVariable::sync_with_wasatch( Wasatch* const wasatch )
   {
-    wasatch_ = wasatch;
+    wasatch_     = wasatch;
     wasatchSync_ = true;
   }
 

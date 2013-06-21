@@ -44,7 +44,7 @@ namespace Wasatch{
     : tagNames_(TagNames::self() ),
       xsvt_( tagNames_.xsvolcoord ),  ysvt_( tagNames_.ysvolcoord ),  zsvt_( tagNames_.zsvolcoord ),
       xxvt_( tagNames_.xxvolcoord ),  yxvt_( tagNames_.yxvolcoord ),  zxvt_( tagNames_.zxvolcoord ),
-      xyvt_( tagNames_.xyvolcoord),  yyvt_( tagNames_.yyvolcoord ),  zyvt_( tagNames_.zyvolcoord ),
+      xyvt_( tagNames_.xyvolcoord ),  yyvt_( tagNames_.yyvolcoord ),  zyvt_( tagNames_.zyvolcoord ),
       xzvt_( tagNames_.xzvolcoord ),  yzvt_( tagNames_.yzvolcoord ),  zzvt_( tagNames_.zzvolcoord )
   {
     needCoords_ = false;
@@ -53,6 +53,11 @@ namespace Wasatch{
     xXVolCoord_ = yXVolCoord_ = zXVolCoord_ = false;
     xYVolCoord_ = yYVolCoord_ = zYVolCoord_ = false;
     xZVolCoord_ = yZVolCoord_ = zZVolCoord_ = false;
+
+    xSVol_ = ySVol_ = zSVol_ = NULL;
+    xXVol_ = yXVol_ = zXVol_ = NULL;
+    xYVol_ = yYVol_ = zYVol_ = NULL;
+    xZVol_ = yZVol_ = zZVol_ = NULL;
 
     hasSetVarlabels_ = false;
 
