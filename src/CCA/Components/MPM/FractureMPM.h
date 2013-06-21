@@ -96,8 +96,6 @@ public:
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);
 
-  virtual void scheduleInitializeAddedMaterial(const LevelP& level,
-                                               SchedulerP&);
 
   //////////
   // Insert Documentation Here:
@@ -138,12 +136,6 @@ protected:
                                   const MaterialSubset* matls,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
-
-  virtual void actuallyInitializeAddedMaterial(const ProcessorGroup*,
-                                               const PatchSubset* patches,
-                                               const MaterialSubset* matls,
-                                               DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw);
 
   void scheduleInitializePressureBCs(const LevelP& level,
                                      SchedulerP&);

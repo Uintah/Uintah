@@ -96,7 +96,9 @@ SineTime<ValT>::
 SineTime( const Expr::Tag& ttag )
 : Expr::Expression<ValT>(),
   tTag_( ttag )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -220,7 +222,7 @@ private:
                  const std::vector<double> origin,  // origin on the minus face perpendicular to axis
                  const double insideValue,
                  const double outsideValue,
-                 const double radius);
+                 const double radius );
   const Expr::Tag tag1_, tag2_;
   const std::vector<double> origin_;
   const double insidevalue_, outsidevalue_, radius_;
@@ -241,7 +243,9 @@ CylinderPatch( const Expr::Tag& tag1,
 : Expr::Expression<FieldT>(),
   tag1_(tag1), tag2_(tag2), origin_(origin), insidevalue_(insideValue),
   outsidevalue_(outsideValue), radius_(radius)
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -536,11 +540,13 @@ StepFunction( const Expr::Tag& indepVarTag,
              const double lowValue,
              const double highValue)
 : Expr::Expression<FieldT>(),
-indepVarTag_(indepVarTag), 
-transitionPoint_(transitionPoint), 
-lowValue_(lowValue),
-highValue_(highValue)
-{}
+  indepVarTag_(indepVarTag),
+  transitionPoint_(transitionPoint),
+  lowValue_(lowValue),
+  highValue_(highValue)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -580,16 +586,16 @@ evaluate()
 
 template< typename FieldT >
 StepFunction<FieldT>::Builder::
-Builder(const Expr::Tag& result, 
-        const Expr::Tag& indepVarTag,
-        const double transitionPoint,
-        const double lowValue,
-        const double highValue)
+Builder( const Expr::Tag& result,
+         const Expr::Tag& indepVarTag,
+         const double transitionPoint,
+         const double lowValue,
+         const double highValue )
 : ExpressionBuilder(result),
-indepVarTag_(indepVarTag), 
-transitionPoint_(transitionPoint), 
-lowValue_(lowValue),
-highValue_(highValue)
+  indepVarTag_(indepVarTag),
+  transitionPoint_(transitionPoint),
+  lowValue_(lowValue),
+  highValue_(highValue)
 {}
 
 //--------------------------------------------------------------------
@@ -676,15 +682,17 @@ PlusProfile( const Expr::Tag& xTag,
              const double lowValue,
              const double highValue )
 : Expr::Expression<FieldT>(),
-xTag_     ( xTag      ), 
-yTag_     ( yTag      ), 
-xStart_   ( xStart    ), 
-yStart_   ( yStart    ), 
-xWidth_   ( xWidth    ), 
-yWidth_   ( yWidth    ), 
-lowValue_ ( lowValue  ),
-highValue_( highValue )
-{}
+  xTag_     ( xTag      ),
+  yTag_     ( yTag      ),
+  xStart_   ( xStart    ),
+  yStart_   ( yStart    ),
+  xWidth_   ( xWidth    ),
+  yWidth_   ( yWidth    ),
+  lowValue_ ( lowValue  ),
+  highValue_( highValue )
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -719,7 +727,7 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   result <<= cond( ( ((*x_ > xStart_)&&(*x_ < xStart_+xWidth_)) || ((*y_ > yStart_)&&(*y_ < yStart_+yWidth_)) ), highValue_ )
-  ( lowValue_ );
+                 ( lowValue_ );
 }
 
 //--------------------------------------------------------------------
@@ -736,14 +744,14 @@ Builder( const Expr::Tag& result,
          const double lowValue,
          const double highValue)
 : ExpressionBuilder(result),
-xTag_     ( xTag     ), 
-yTag_     ( yTag     ), 
-xStart_   ( xStart   ), 
-yStart_   ( yStart   ), 
-xWidth_   ( xWidth   ), 
-yWidth_   ( yWidth   ), 
-lowValue_ ( lowValue ),
-highValue_( highValue)
+  xTag_     ( xTag     ),
+  yTag_     ( yTag     ),
+  xStart_   ( xStart   ),
+  yStart_   ( yStart   ),
+  xWidth_   ( xWidth   ),
+  yWidth_   ( yWidth   ),
+  lowValue_ ( lowValue ),
+  highValue_( highValue)
 {}
 
 //--------------------------------------------------------------------
@@ -775,9 +783,9 @@ public:
   struct Builder : public Expr::ExpressionBuilder
   {
     Builder( const Expr::Tag& result,
-            const double lo,
-            const double hi,
-            const double seed);
+             const double lo,
+             const double hi,
+             const double seed );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -790,9 +798,9 @@ public:
   
 private:
   const double lo_, hi_, seed_;
-  RandomField(const double lo, 
-              const double hi, 
-              const double seed );
+  RandomField( const double lo,
+               const double hi,
+               const double seed );
 };
 
 //====================================================================
@@ -858,13 +866,13 @@ evaluate()
 template< typename ValT >
 RandomField<ValT>::Builder::
 Builder( const Expr::Tag& result,
-        const double lo,
-        const double hi,
-        const double seed)
+         const double lo,
+         const double hi,
+         const double seed )
 : ExpressionBuilder(result),
-lo_(lo),
-hi_(hi),
-seed_(seed)
+  lo_(lo),
+  hi_(hi),
+  seed_(seed)
 {}
 
 //--------------------------------------------------------------------
@@ -916,20 +924,20 @@ public:
               figure out which component you want.
      */
     Builder( const Expr::Tag& result,
-            const Expr::Tag& xTag,
-            const Expr::Tag& yTag,
-            const double xCenter,
-            const double yCenter,
-            const double vortexStrength,
-            const double vortexRadius,
-            const double U,
-            const double V,
-            const VelocityComponent velocityComponent);
+             const Expr::Tag& xTag,
+             const Expr::Tag& yTag,
+             const double xCenter,
+             const double yCenter,
+             const double vortexStrength,
+             const double vortexRadius,
+             const double u,
+             const double v,
+             const VelocityComponent velocityComponent);
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
     const Expr::Tag xTag_, yTag_;
-    const double xCenter_, yCenter_, vortexStrength_, vortexRadius_, U_, V_;
+    const double xCenter_, yCenter_, vortexStrength_, vortexRadius_, u_, v_;
     const VelocityComponent velocityComponent_;
   };
   
@@ -940,16 +948,16 @@ public:
 private:
   
   ExponentialVortex( const Expr::Tag& xTag,
-                    const Expr::Tag& yTag,
-                    const double xCenter,
-                    const double yCenter,                    
-                    const double vortexStrength,
-                    const double vortexRadius,
-                    const double U,
-                    const double V,
-                    const VelocityComponent velocityComponent);
+                     const Expr::Tag& yTag,
+                     const double xCenter,
+                     const double yCenter,
+                     const double vortexStrength,
+                     const double vortexRadius,
+                     const double U,
+                     const double V,
+                     const VelocityComponent velocityComponent);
   const Expr::Tag xTag_, yTag_;
-  const double xCenter_, yCenter_, vortexStrength_,  vortexRadius_, U_, V_;
+  const double xCenter_, yCenter_, vortexStrength_,  vortexRadius_, u_, v_;
   const VelocityComponent velocityComponent_;
   const FieldT *x_, *y_;
 };
@@ -959,25 +967,27 @@ private:
 template<typename FieldT>
 ExponentialVortex<FieldT>::
 ExponentialVortex( const Expr::Tag& xTag,
-                  const Expr::Tag& yTag,
-                  const double xCenter,
-                  const double yCenter,                  
-                  const double vortexStrength,
-                  const double vortexRadius,
-                  const double U,
-                  const double V,
-                  const VelocityComponent velocityComponent)
+                   const Expr::Tag& yTag,
+                   const double xCenter,
+                   const double yCenter,
+                   const double vortexStrength,
+                   const double vortexRadius,
+                   const double U,
+                   const double V,
+                   const VelocityComponent velocityComponent)
 : Expr::Expression<FieldT>(),
-xTag_     ( xTag      ), 
-yTag_     ( yTag      ), 
-xCenter_  ( xCenter   ),
-yCenter_  ( yCenter   ),
-vortexStrength_   ( vortexStrength    ), 
-vortexRadius_ ( vortexRadius ),
-U_ ( U ),
-V_ ( V ),
-velocityComponent_  ( velocityComponent )
-{}
+  xTag_   ( xTag    ),
+  yTag_   ( yTag    ),
+  xCenter_( xCenter ),
+  yCenter_( yCenter ),
+  vortexStrength_( vortexStrength ),
+  vortexRadius_  ( vortexRadius   ),
+  u_( U ),
+  v_( V ),
+  velocityComponent_( velocityComponent )
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -1011,20 +1021,23 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= 0.0;
+
   const double denom = 2.0*vortexRadius_*vortexRadius_;
   const double expFactor = 2.0 * vortexStrength_/denom;
   SpatFldPtr<FieldT> tmp = SpatialFieldStore::get<FieldT>( result );
-  *tmp <<= 0.0;
+
   *tmp <<= (*x_ - xCenter_)*(*x_ - xCenter_) + (*y_ - yCenter_)*(*y_- yCenter_);
+
   result <<= expFactor * exp(- *tmp/denom );
 
   switch (velocityComponent_) {
     case X1:
-      result <<=U_ - (*y_ - yCenter_)*result;
+      // jcs why do the work above if we only reset it here?
+      result <<= u_ - (*y_ - yCenter_)*result;
       break;
     case X2:
-      result <<=V_ + (*x_ - xCenter_)*result;
+      // jcs why do the work above if we only reset it here?
+      result <<= v_ + (*x_ - xCenter_)*result;
       break;
     default:
       break;
@@ -1042,19 +1055,19 @@ Builder( const Expr::Tag& result,
         const double yCenter,                  
         const double vortexStrength,
         const double vortexRadius,
-        const double U,
-        const double V,
-        const VelocityComponent velocityComponent)
+        const double u,
+        const double v,
+        const VelocityComponent velocityComponent )
 : ExpressionBuilder(result),
-xTag_     ( xTag      ), 
-yTag_     ( yTag      ), 
-xCenter_  ( xCenter   ),
-yCenter_  ( yCenter   ),
-vortexStrength_   ( vortexStrength    ), 
-vortexRadius_ ( vortexRadius ),
-U_( U ),
-V_( V ),
-velocityComponent_  ( velocityComponent )
+  xTag_   ( xTag    ),
+  yTag_   ( yTag    ),
+  xCenter_( xCenter ),
+  yCenter_( yCenter ),
+  vortexStrength_( vortexStrength ),
+  vortexRadius_  ( vortexRadius   ),
+  u_( u ),
+  v_( v ),
+  velocityComponent_( velocityComponent )
 {}
 
 //--------------------------------------------------------------------
@@ -1064,7 +1077,7 @@ Expr::ExpressionBase*
 ExponentialVortex<FieldT>::Builder::
 build() const
 {
-  return new ExponentialVortex<FieldT>( xTag_, yTag_, xCenter_, yCenter_, vortexStrength_, vortexRadius_, U_, V_, velocityComponent_);
+  return new ExponentialVortex<FieldT>( xTag_, yTag_, xCenter_, yCenter_, vortexStrength_, vortexRadius_, u_, v_, velocityComponent_);
 }
 
 //--------------------------------------------------------------------
@@ -1101,14 +1114,14 @@ public:
      figure out which component you want.
      */
     Builder( const Expr::Tag& result,
-            const Expr::Tag& xTag,
-            const Expr::Tag& yTag,
-            const double xCenter,
-            const double yCenter,
-            const double vortexStrength,            
-            const double vortexRadius,
-            const double U,
-            const VelocityComponent velocityComponent);
+             const Expr::Tag& xTag,
+             const Expr::Tag& yTag,
+             const double xCenter,
+             const double yCenter,
+             const double vortexStrength,
+             const double vortexRadius,
+             const double U,
+             const VelocityComponent velocityComponent );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -1124,15 +1137,15 @@ public:
 private:
   
   LambsDipole( const Expr::Tag& xTag,
-                    const Expr::Tag& yTag,
-                    const double xCenter,
-                    const double yCenter,     
-                    const double vortexStrength,              
-                    const double vortexRadius,
-                    const double U,
-                    const VelocityComponent velocityComponent);
+               const Expr::Tag& yTag,
+               const double xCenter,
+               const double yCenter,
+               const double vortexStrength,
+               const double vortexRadius,
+               const double U,
+               const VelocityComponent velocityComponent );
   const Expr::Tag xTag_, yTag_;
-  const double x0_, y0_, G_, R_, U_;
+  const double x0_, y0_, g_, r_, u_;
   const VelocityComponent velocityComponent_;
   const FieldT *x_, *y_;
 };
@@ -1142,22 +1155,22 @@ private:
 template<typename FieldT>
 LambsDipole<FieldT>::
 LambsDipole( const Expr::Tag& xTag,
-                  const Expr::Tag& yTag,
-                  const double x0,
-                  const double y0,    
-                  const double G,
-                  const double R,
-                  const double U,
-                  const VelocityComponent velocityComponent)
+             const Expr::Tag& yTag,
+             const double x0,
+             const double y0,
+             const double g,
+             const double r,
+             const double u,
+             const VelocityComponent velocityComponent )
 : Expr::Expression<FieldT>(),
-xTag_( xTag ), 
-yTag_( yTag ), 
-x0_  ( x0 ),
-y0_  ( y0 ),
-G_   ( G  ),
-R_   ( R  ),
-U_   ( U  ),
-velocityComponent_  ( velocityComponent )
+  xTag_( xTag ),
+  yTag_( yTag ),
+  x0_  ( x0 ),
+  y0_  ( y0 ),
+  g_   ( g  ),
+  r_   ( r  ),
+  u_   ( u  ),
+  velocityComponent_( velocityComponent )
 {}
 
 //--------------------------------------------------------------------
@@ -1195,7 +1208,7 @@ evaluate()
   result <<= 0.0;
   
   const double kR = 3.831705970207515;
-  const double k = kR/R_;
+  const double k = kR/r_;
   const double denom = boost::math::cyl_bessel_j(0, kR);
 
   SpatFldPtr<FieldT> xx0 = SpatialFieldStore::get<FieldT>( result );
@@ -1230,20 +1243,18 @@ evaluate()
   }
 
   switch (velocityComponent_) {
-      
-      
-      
     case X1:
-      result <<= U_ + cond ( *r <= R_, 
-                       2.0*G_/(k*denom) * ( k * *yy0 * *yy0 * *tmp0 / (*r * *r) + (*xx0 * *xx0 - *yy0 * *yy0) * *tmp1/(*r * *r * *r) ) )
-                      ( G_ + G_*R_*R_/(*r * *r) - 2.0*G_*R_*R_* (*xx0 * *xx0)/(*r * *r * *r * *r) );
+      result <<= u_ + cond ( *r <= r_,
+                       2.0*g_/(k*denom) * ( k * *yy0 * *yy0 * *tmp0 / (*r * *r) + (*xx0 * *xx0 - *yy0 * *yy0) * *tmp1/(*r * *r * *r) ) )
+                      ( g_ + g_*r_*r_/(*r * *r) - 2.0*g_*r_*r_* (*xx0 * *xx0)/(*r * *r * *r * *r) );
       break;
     case X2:
-      result <<= cond ( *r <= R_, 
-                        2.0*G_/denom * *xx0 * *yy0 * *tmp2 /(*r * *r) )
-                      ( - 2.0*R_*R_*G_* *xx0 * *yy0/(*r * *r * *r * *r) );      
+      result <<= cond ( *r <= r_,
+                        2.0*g_/denom * *xx0 * *yy0 * *tmp2 /(*r * *r) )
+                      ( - 2.0*r_*r_*g_* *xx0 * *yy0/(*r * *r * *r * *r) );
       break;
     default:
+      // jcs why do all of the work above if we are not using the result?
       break;
   }
 }
@@ -1327,7 +1338,7 @@ public:
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
-    const double D_, rho0_, rho1_;
+    const double d_, rho0_, rho1_;
     const Expr::Tag xTag_, tTag_;
   };
   
@@ -1342,7 +1353,7 @@ private:
                         const double D,
                         const double rho0,
                         const double rho1 );
-  const double D_, rho0_, rho1_;
+  const double d_, rho0_, rho1_;
   const Expr::Tag xTag_, tTag_;
   const FieldT* x_;
   const double* t_;
@@ -1358,12 +1369,14 @@ VarDensMMSSourceTerm( const Expr::Tag& xTag,
                       const double rho0,
                       const double rho1 )
 : Expr::Expression<FieldT>(),
-D_   ( D    ),
-rho0_( rho0 ),
-rho1_( rho1 ),
-xTag_( xTag ), 
-tTag_( tTag )
-{}
+  d_   ( D    ),
+  rho0_( rho0 ),
+  rho1_( rho1 ),
+  xTag_( xTag ),
+  tTag_( tTag )
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -1396,10 +1409,42 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= 0.0;
   
-  result <<= ((5 * rho0_ * (rho1_ * rho1_) * exp((5 * (*x_ * *x_))/(*t_ + 10))*(1500 * D_ - 120 * *t_ + 75 * (*t_ * *t_) * (*x_ * *x_) + 30 * (*t_ * *t_ * *t_) * (*x_ * *x_) + 750 * D_ * *t_ + 1560 * D_ * (*t_ * *t_) + 750 * D_ * (*t_ * *t_ * *t_) + 60 * D_ * (*t_ * *t_ * *t_ * *t_) - 1500 * D_ * (*x_ * *x_) + 30 * *t_ * (*x_ * *x_) - 606 * (*t_ * *t_) - 120 * (*t_ * *t_ * *t_) - 6 * (*t_ * *t_ * *t_ * *t_) + 75 * (*x_ * *x_) + 7500 * *t_ * *x_ * sin((2 * PI * *x_)/(3 * (*t_ + 10))) - 250 * PI * (*t_ * *t_) * cos((2 * PI * *x_)/(3*(*t_ + 10))) - 20 * PI * (*t_ * *t_ * *t_)*cos((2 * PI * *x_)/(3*(*t_ + 10))) - 1500 * D_ * (*t_ * *t_) * (*x_ * *x_) - 600 * D_ * (*t_ * *t_ * *t_) * (*x_ * *x_) + 3750 * (*t_ * *t_) * *x_ * sin((2 * PI * *x_)/(3 * (*t_ + 10))) + 300 * (*t_ * *t_ * *t_) * *x_ * sin((2 * PI * *x_)/(3*(*t_ + 10))) - 500 * PI * *t_ * cos((2 * PI * *x_)/(3 * (*t_ + 10))) - 600 * D_ * *t_ * (*x_ * *x_) - 600))/3 + (250 * rho0_ * rho1_ * (rho0_ - rho1_) * (*t_ + 10) * (3 * D_ + 3 * D_ * (*t_ * *t_) - PI * *t_ * cos((2 * PI * *x_)/(3 * (*t_ + 10)))))/3)/(((*t_ * *t_) + 1)*((*t_ + 10) * (*t_ + 10)) * ((5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (*x_ * *x_))/(*t_ + 10)) + 2 * rho1_ * *t_ * exp((5 * (*x_ * *x_))/(*t_ + 10))) * (5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (*x_ * *x_))/(*t_ + 10)) + 2 * rho1_ * *t_ * exp((5 * (*x_ * *x_))/(*t_ + 10)))));
-  
+  result <<=
+    (
+        ( 5 * rho0_ * (rho1_ * rho1_) * exp( (5 * (*x_ * *x_))/(*t_ + 10))
+            * ( 1500 * d_ - 120 * *t_ + 75 * (*t_ * *t_) * (*x_ * *x_)
+                + 30 * (*t_ * *t_ * *t_) * (*x_ * *x_) + 750 * d_ * *t_
+                + 1560 * d_ * (*t_ * *t_) + 750 * d_ * (*t_ * *t_ * *t_)
+                + 60 * d_ * (*t_ * *t_ * *t_ * *t_) - 1500 * d_ * (*x_ * *x_)
+                + 30 * *t_ * (*x_ * *x_) - 606 * (*t_ * *t_) - 120 * (*t_ * *t_ * *t_)
+                - 6 * (*t_ * *t_ * *t_ * *t_) + 75 * (*x_ * *x_)
+                + 7500 * *t_ * *x_ * sin((2 * PI * *x_)/(3 * (*t_ + 10)))
+                - 250 * PI * (*t_ * *t_) * cos((2 * PI * *x_)/(3*(*t_ + 10)))
+                - 20 * PI * (*t_ * *t_ * *t_)*cos((2 * PI * *x_)/(3*(*t_ + 10)))
+                - 1500 * d_ * (*t_ * *t_) * (*x_ * *x_)
+                - 600 * d_ * (*t_ * *t_ * *t_) * (*x_ * *x_)
+                + 3750 * (*t_ * *t_) * *x_ * sin((2 * PI * *x_)/(3 * (*t_ + 10)))
+                + 300 * (*t_ * *t_ * *t_) * *x_ * sin((2 * PI * *x_)/(3*(*t_ + 10)))
+                - 500 * PI * *t_ * cos((2 * PI * *x_)/(3 * (*t_ + 10)))
+                - 600 * d_ * *t_ * (*x_ * *x_) - 600
+              )
+         )/3
+         +
+         ( 250 * rho0_ * rho1_ * (rho0_ - rho1_) * (*t_ + 10) * (3 * d_ + 3 * d_ * (*t_ * *t_)
+           - PI * *t_ * cos(
+               (2 * PI * *x_)/(3 * (*t_ + 10))))
+         )/ 3
+     )
+     /
+     (
+         ( (*t_ * *t_) + 1)*((*t_ + 10) * (*t_ + 10))
+         *
+         (
+            (5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (*x_ * *x_))/(*t_ + 10)) + 2 * rho1_ * *t_ * exp((5 * (*x_ * *x_))/(*t_ + 10)))
+           *(5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (*x_ * *x_))/(*t_ + 10)) + 2 * rho1_ * *t_ * exp((5 * (*x_ * *x_))/(*t_ + 10)))
+         )
+     );
 }
 
 //--------------------------------------------------------------------
@@ -1413,11 +1458,11 @@ Builder( const Expr::Tag& result,
          const double rho0,
          const double rho1  )
 : ExpressionBuilder(result),
-D_   ( D    ),
-rho0_( rho0 ),
-rho1_( rho1 ),
-xTag_( xTag ), 
-tTag_( tTag )
+  d_   ( D    ),
+  rho0_( rho0 ),
+  rho1_( rho1 ),
+  xTag_( xTag ),
+  tTag_( tTag )
 {}
 
 //--------------------------------------------------------------------
@@ -1427,7 +1472,7 @@ Expr::ExpressionBase*
 VarDensMMSSourceTerm<FieldT>::Builder::
 build() const
 {
-  return new VarDensMMSSourceTerm<FieldT>( xTag_, tTag_, D_, rho0_, rho1_ );
+  return new VarDensMMSSourceTerm<FieldT>( xTag_, tTag_, d_, rho0_, rho1_ );
 }
 
 //--------------------------------------------------------------------
@@ -1500,7 +1545,9 @@ VarDensMMSContinuitySrc( const double rho0,
   xTag_( xTag ),
   tTag_( tTag ),
   timestepTag_( timestepTag )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -1537,13 +1584,46 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= 0.0;
   
   const double alpha = 0.1;   // the continuity equation weighting factor 
   const double t = *t_ + *timestep_;  /// this is being added at timestep n+1
-  result <<= alpha * ( ((10/(exp((5 * (*x_ * *x_))/( t + 10)) * ((2 * t + 5) * (2 * t + 5)) ) - (25 * (*x_ * *x_))/(exp(( 5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5) * ((t + 10) * (t + 10)) )) / rho0_ - 10/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * ((2 * t + 5) * (2 * t + 5)) ) + (25 * (*x_ * *x_)) / (rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5) * ((t + 10) * (t + 10)) ))/( ((5 / (exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5))) * ((5 / (exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)))) - (5 * t * sin((2 * PI * *x_)/(3 * t + 30)) * ((50 * *x_) / (rho0_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5) * (t + 10)) - (50 * *x_)/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5) * (t + 10)))) / (( (t * t) + 1) * ( ((5/(exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5))) * ((5/(exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5))) ) ) - (10 * PI * t * cos((2 * PI * *x_)/(3 * t + 30))) / ((3 * t + 30) * ((t * t) + 1) * ((5/(exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)))) );
-  result <<= result / *timestep_;
-  
+
+  result <<= alpha *
+    (
+      (
+          ( 10/( exp((5 * (*x_ * *x_))/( t + 10)) * ((2 * t + 5) * (2 * t + 5)) )
+          - (25 * (*x_ * *x_))/(exp(( 5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5) * ((t + 10) * (t + 10)) )
+          ) / rho0_
+          - 10/( rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * ((2 * t + 5) * (2 * t + 5)) )
+          + (25 * (*x_ * *x_)) / (rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5) * ((t + 10) * (t + 10)) )
+       )
+       /
+       (
+          ( (5 / (exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_
+           - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5))
+          )
+          *
+          ((5 / (exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)))
+       )
+       -
+       ( 5 * t * sin((2 * PI * *x_)/(3 * t + 30)) *
+           ((50 * *x_) / (rho0_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5) * (t + 10)) - (50 * *x_)/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5) * (t + 10)))
+       )
+       /
+       ( ( (t * t) + 1)
+           * ( ((5/(exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)))
+             * ((5/(exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)))
+             )
+       )
+       -
+       ( 10 * PI * t * cos((2 * PI * *x_)/(3 * t + 30)))
+       /
+       ( (3 * t + 30) * ((t * t) + 1)
+           * ( (5/(exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_
+              - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5))
+             )
+       )
+   ) / *timestep_;
 }
 
 //--------------------------------------------------------------------

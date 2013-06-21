@@ -40,7 +40,6 @@ namespace Uintah {
   public:
     // this function has a switch for all known go_types
     // and calls the proper class' readParameters()
-    // addMaterial() calls this
     static void create(const ProblemSpecP& ps,
 		       std::vector<GeometryPieceP>& objs);
 

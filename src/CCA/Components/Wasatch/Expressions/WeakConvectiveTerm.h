@@ -23,7 +23,6 @@ template< typename FieldT >
 class WeakConvectiveTerm
   : public Expr::Expression<FieldT>
 {  
-
   typedef SpatialOps::structured::FaceTypes<FieldT> FaceTypes;
   typedef typename FaceTypes::XFace XFace; ///< The type of field for the x-face of FieldT.
   typedef typename FaceTypes::YFace YFace; ///< The type of field for the y-face of FieldT.
@@ -59,6 +58,7 @@ class WeakConvectiveTerm
   const FieldT *vel_;
 
   const Expr::Tag velt_, velxt_, velyt_, velzt_;
+  const bool is3d_;
   
   WeakConvectiveTerm( const Expr::Tag velTag,
           const Expr::TagList velTags );

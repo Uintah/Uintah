@@ -92,9 +92,12 @@ my $syspath ="/usr/bin/:/usr/sbin:/bin";
 $ENV{"PATH"} = "$postProcessCmd_path:$sus_path:$scripts_path:$extraScripts_path:$syspath:$here_path:.";
 
 # bulletproofing
+print "----------------------   \n";
+print "Using the following commands:\n";
 system("which sus") == 0               || die("\nCannot find the command sus $@");
 system("which octave")  == 0           || die("\nCannot find the command octave $@");
 system("which gnuplot") == 0           || die("\nCannot find the command gnuplot $@");
+system("which mpirun")  == 0           || die("\nCannot find the command mpirun $@");
 system("which replace_XML_line")  == 0 || die("\nCannot find the command replace_XML_line $@");
 system("which replace_XML_value") == 0 || die("\nCannot find the command replace_XML_value $@");
 system("which findReplace")       == 0 || die("\nCannot find the command findReplace $@");

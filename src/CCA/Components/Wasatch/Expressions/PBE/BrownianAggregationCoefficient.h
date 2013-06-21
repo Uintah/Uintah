@@ -81,7 +81,6 @@ public:
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
 };
@@ -101,9 +100,11 @@ BrownianAggregationCoefficient<FieldT>::
 BrownianAggregationCoefficient( const Expr::Tag& densityTag,
                                 const double coefVal )
 : Expr::Expression<FieldT>(),
-densityTag_(densityTag),
-coefVal_(coefVal)
-{}
+  densityTag_(densityTag),
+  coefVal_(coefVal)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -132,14 +133,6 @@ bind_fields( const Expr::FieldManagerList& fml )
   const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
   density_ = &fm.field_ref( densityTag_ );
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-BrownianAggregationCoefficient<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

@@ -100,7 +100,11 @@ namespace Uintah {
     public:
 
       //** WARNING: This needs to be duplicated in BoundaryCond_new.h for now until BoundaryCondition goes away **//
-      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL, TURBULENT_INLET }; 
+      //** WARNING!!! ** // 
+      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, STABL, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL, TURBULENT_INLET }; 
+      //** END WARNING!!! **//
+      
+      
       enum DIRECTION { CENTER, EAST, WEST, NORTH, SOUTH, TOP, BOTTOM }; 
 
       // GROUP: Constructors:
@@ -247,6 +251,7 @@ namespace Uintah {
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel, 
         constCCVariable<double>& density, 
         Iterator bound_iter, Vector value );
+      
     
       void setTurbInlet( const Patch* patch, const Patch::FaceType& face, 
                          SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel, 
@@ -289,17 +294,6 @@ namespace Uintah {
                                        velType& vel, 
                                        constCCVariable<double>& P,
                                        constCCVariable<double>& density );
-
-      void sched_setPrefill__NEW( SchedulerP& sched,
-                                  const PatchSet* patches,
-                                  const MaterialSet* matls);
-
-      void setPrefill__NEW( const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset*,
-                            DataWarehouse*,
-                            DataWarehouse* new_dw );
-
 
       template <class stencilType> 
       void zeroStencilDirection( const Patch* patch, 
@@ -501,10 +495,6 @@ namespace Uintah {
       // Also sets flat profiles for density
       // ** WARNING ** Properties profile not done yet
       void sched_setProfile(SchedulerP&, 
-          const PatchSet* patches,
-          const MaterialSet* matls);
-
-      void sched_Prefill(SchedulerP&, 
           const PatchSet* patches,
           const MaterialSet* matls);
 
@@ -794,6 +784,15 @@ namespace Uintah {
         double swirl_no; 
         Vector swirl_cent; 
 
+        //Stabilized Atmospheric BL
+        double zo; 
+        double zh; 
+        double u_inf; 
+        double k; 
+        double kappa; 
+        double ustar; 
+        int dir_gravity; 
+
         // State: 
         double enthalpy; 
         double density; 
@@ -804,6 +803,11 @@ namespace Uintah {
         DigitalFilterInlet * TurbIn;
 
       };
+
+      void setStABL( const Patch* patch, const Patch::FaceType& face, 
+        SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+        BCInfo* bcinfo,
+        Iterator bound_ptr  );
 
       void printBCInfo(){ 
 
@@ -845,7 +849,6 @@ namespace Uintah {
 
       BCNameMap d_bc_type_to_string;                        ///< Matches the BC integer ID with the string name
       bool d_use_new_bcs;                                   ///< Turn on/off the new BC mech. 
-      std::map<std::string, std::vector<GeometryPieceP> > d_prefill_map;  ///< Contains inlet name/geometry piece pairing
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute u velocity BC terms
@@ -898,13 +901,6 @@ namespace Uintah {
           const MaterialSubset* matls,
           DataWarehouse* old_dw,
           DataWarehouse* new_dw);
-
-      void Prefill(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw);
-
 
       void initInletBC(const ProcessorGroup*,
           const PatchSubset* patches,
@@ -1019,15 +1015,12 @@ namespace Uintah {
           Vector d_velocity_vector; 
           double fcr;
           double fsr;
-          int d_prefill_index;
           bool d_ramping_inlet_flowrate;
-          bool d_prefill;
           InletStream streamMixturefraction;
           // calculated values
           Stream calcStream;
           // stores the geometry information, read from problem specs
           std::vector<GeometryPieceP> d_geomPiece;
-          std::vector<GeometryPieceP> d_prefillGeomPiece;
           void problemSetup(ProblemSpecP& params);
           // reduction variable label to get area
           VarLabel* d_area_label;
@@ -1172,7 +1165,8 @@ namespace Uintah {
 
       double d_turbPrNo;
       bool d_doMMS;
-      bool d_laminar_wall_shear; 
+      bool d_slip; 
+      double d_csmag_wall; 
 
       struct d_extraScalarBC {
         string d_scalar_name;

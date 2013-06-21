@@ -1955,33 +1955,6 @@ void SerialMPM::readInsertParticlesFile(string filename)
   }
 }
 
-void SerialMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
-                                                const PatchSubset* patches,
-                                                const MaterialSubset* /*matls*/,
-                                                DataWarehouse*,
-                                                DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    printTask(patches,patch,cout_doing,"Doing actuallyInitializeAddedMaterial");
-
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
-    cout << "num MPM Matls = " << numMPMMatls << endl;
-    CCVariable<short int> cellNAPID;
-    int m=numMPMMatls-1;
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-    particleIndex numParticles = mpm_matl->countParticles(patch);
-
-    new_dw->unfinalize();
-    mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
-
-    mpm_matl->getConstitutiveModel()->initializeCMData(patch, mpm_matl, new_dw);
-    new_dw->refinalize();
-  }
-}
-
-
 void SerialMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
                                               const PatchSubset* patches,
                                               const MaterialSubset* ,

@@ -4,6 +4,8 @@
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
+#include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
+
 
 // SEE PROPTEMPLATE.CC FOR INSTRUCTIONS
 
@@ -65,6 +67,9 @@ public:
     _high_hl = bounds[1]; 
   }; 
 
+  /** @brief get a reference to the table **/ 
+  void set_table_ref( MixingRxnModel* rxn_model ){ _rxn_model = rxn_model; }; 
+
   class Builder : public PropertyModelBase::Builder { 
 
   public: 
@@ -88,6 +93,7 @@ private:
   std::string _sen_h_label_name; 
 
   BoundaryCondition_new* _boundary_condition; 
+  MixingRxnModel* _rxn_model; 
 
   const VarLabel* _enthalpy_label; 
   const VarLabel* _adiab_h_label; 

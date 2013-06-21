@@ -29,7 +29,9 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
   dens2Start_ ( densStarTag==Expr::Tag() ? Expr::Tag() : dens2StarTag   ),
   dilt_       ( isConstDensity ? dilTag  : Expr::Tag() ),
   timestept_  ( timestepTag )
-{}
+{
+  set_gpu_runnable( true );
+}
 
 //------------------------------------------------------------------
 
@@ -114,18 +116,18 @@ void PressureSource::bind_fields( const Expr::FieldManagerList& fml )
 void PressureSource::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   if (!isConstDensity_) {
-    if( doX_ ) {
-      divXOp_         = opDB.retrieve_operator<DivXT>();
-      xFInterpOp_  = opDB.retrieve_operator<XFaceInterpT>();
+    if( doX_ ){
+      divXOp_       = opDB.retrieve_operator<DivXT>();
+      xFInterpOp_   = opDB.retrieve_operator<XFaceInterpT>();
       s2XFInterpOp_ = opDB.retrieve_operator<Scalar2XFInterpT>();
     }
-    if( doY_ ) {
-      divYOp_          = opDB.retrieve_operator<DivYT>();
+    if( doY_ ){
+      divYOp_       = opDB.retrieve_operator<DivYT>();
       yFInterpOp_   = opDB.retrieve_operator<YFaceInterpT>();
       s2YFInterpOp_ = opDB.retrieve_operator<Scalar2YFInterpT>();
     }
-    if( doZ_ ) {
-      divZOp_          = opDB.retrieve_operator<DivZT>();
+    if( doZ_ ){
+      divZOp_       = opDB.retrieve_operator<DivZT>();
       zFInterpOp_   = opDB.retrieve_operator<ZFaceInterpT>();
       s2ZFInterpOp_ = opDB.retrieve_operator<Scalar2ZFInterpT>();
     }
@@ -138,35 +140,46 @@ void PressureSource::evaluate()
 {
   using namespace SpatialOps;
   SVolField& result = this->value();
-  if (!doX_)  result <<= 0.0;
   
-  if (!isConstDensity_) {
+  if (isConstDensity_ ){
+    result <<= *dens_ * *dil_ / *timestep_;
+  }
+  else{ // variable density
 
     const double alpha = 0.1;   // the continuity equation weighting factor
 
-    if( doX_ ){
-      // P_src = nabla.(rho*u)^n - (1-alpha) * nabla.(rho*u)^(n+1)
-      result <<= (*divXOp_)( (*xFInterpOp_)(*xMom_) ) - (1.0 - alpha) * (*divXOp_) ( (*s2XFInterpOp_)(*densStar_) * (*xFInterpOp_)(*uStar_) );
+    if( doX_ && doY_ && doZ_ ){ // for 3D cases, inline the whole thing
+      result <<=
+          ( (*divXOp_)( (*xFInterpOp_)(*xMom_) ) - (1.0 - alpha) * (*divXOp_) ( (*s2XFInterpOp_)(*densStar_) * (*xFInterpOp_)(*uStar_) )
+          + (*divYOp_)( (*yFInterpOp_)(*yMom_) ) - (1.0 - alpha) * (*divYOp_) ( (*s2YFInterpOp_)(*densStar_) * (*yFInterpOp_)(*vStar_) )
+          + (*divZOp_)( (*zFInterpOp_)(*zMom_) ) - (1.0 - alpha) * (*divZOp_) ( (*s2ZFInterpOp_)(*densStar_) * (*zFInterpOp_)(*wStar_) )
+          + alpha * ((*dens2Star_ - *dens_)/(2 * *timestep_))
+          ) / *timestep_;
     }
-    
-    if( doY_ ){
-      // P_src = P_src + nabla.(rho*v)^n - (1-alpha) * nabla.(rho*v)^(n+1)
-      result <<= result + (*divYOp_)( (*yFInterpOp_)(*yMom_) ) - (1.0 - alpha) * (*divYOp_) ( (*s2YFInterpOp_)(*densStar_) * (*yFInterpOp_)(*vStar_) );
-    }
-    
-    if( doZ_ ){
-      // P_src = P_src + nabla.(rho*w)^n - (1-alpha) * nabla.(rho*w)^(n+1)      
-      result <<= result + (*divZOp_)( (*zFInterpOp_)(*zMom_) ) - (1.0 - alpha) * (*divZOp_) ( (*s2ZFInterpOp_)(*densStar_) * (*zFInterpOp_)(*wStar_) );
-    }
-    
-    result <<= result + alpha * ((*dens2Star_ - *dens_)/(2 * *timestep_));  // P_src = P_src + alpha * (drho/dt)^(n+1)
+    else{
+      // for 1D and 2D cases, we are not as efficient - add terms as needed...
+      if( doX_ ){
+        // P_src = nabla.(rho*u)^n - (1-alpha) * nabla.(rho*u)^(n+1)
+        result <<= (*divXOp_)( (*xFInterpOp_)(*xMom_) ) - (1.0 - alpha) * (*divXOp_) ( (*s2XFInterpOp_)(*densStar_) * (*xFInterpOp_)(*uStar_) );
+      }
+      else{
+        result <<= 0.0;
+      }
+
+      if( doY_ ){
+        // P_src = P_src + nabla.(rho*v)^n - (1-alpha) * nabla.(rho*v)^(n+1)
+        result <<= result + (*divYOp_)( (*yFInterpOp_)(*yMom_) ) - (1.0 - alpha) * (*divYOp_) ( (*s2YFInterpOp_)(*densStar_) * (*yFInterpOp_)(*vStar_) );
+      }
+
+      if( doZ_ ){
+        // P_src = P_src + nabla.(rho*w)^n - (1-alpha) * nabla.(rho*w)^(n+1)
+        result <<= result + (*divZOp_)( (*zFInterpOp_)(*zMom_) ) - (1.0 - alpha) * (*divZOp_) ( (*s2ZFInterpOp_)(*densStar_) * (*zFInterpOp_)(*wStar_) );
+      }
+
+      result <<= ( result + alpha * ((*dens2Star_ - *dens_)/(2 * *timestep_))) / *timestep_;  // P_src = P_src + alpha * (drho/dt)^(n+1)
+    } // 1D, 2D cases
+
   }
-  else {
-    result <<= *dens_ * *dil_;
-  }
-  
-  result <<= result / *timestep_ ;
-  
 }
 
 //------------------------------------------------------------------

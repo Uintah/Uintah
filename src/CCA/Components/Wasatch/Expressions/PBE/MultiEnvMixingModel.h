@@ -87,7 +87,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 
@@ -107,7 +106,9 @@ MultiEnvMixingModel( const Expr::Tag& mixFracTag,
   mixFracTag_(mixFracTag),
   scalarVarTag_(scalarVarTag),
   scalarDissTag_(scalarDissTag)
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -140,14 +141,6 @@ bind_fields( const Expr::FieldManagerList& fml )
   scalarVar_  = &fm.field_ref( scalarVarTag_  );
   scalarDiss_ = &fm.field_ref( scalarDissTag_ );
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MultiEnvMixingModel<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

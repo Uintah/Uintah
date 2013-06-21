@@ -102,7 +102,6 @@ public:
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
 };
@@ -126,13 +125,15 @@ AggregationEfficiency( const Expr::TagList& abscissaeTagList,
                        const double lengthParam,
                        const std::string growthModel)
 : Expr::Expression<FieldT>(),
-abscissaeTagList_(abscissaeTagList),
-growthCoefTag_(growthCoefTag),
-dissipationTag_(dissipationTag),
-densityTag_(densityTag),
-l_(lengthParam),
-growthModel_(growthModel)
-{}
+  abscissaeTagList_(abscissaeTagList),
+  growthCoefTag_(growthCoefTag),
+  dissipationTag_(dissipationTag),
+  densityTag_(densityTag),
+  l_(lengthParam),
+  growthModel_(growthModel)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -166,18 +167,10 @@ bind_fields( const Expr::FieldManagerList& fml )
   for (Expr::TagList::const_iterator iabscissa=abscissaeTagList_.begin(); iabscissa!=abscissaeTagList_.end(); iabscissa++) {
     abscissae_.push_back(&volfm.field_ref(*iabscissa));
   }
-  g0_ = &volfm.field_ref( growthCoefTag_) ;
+  g0_  = &volfm.field_ref( growthCoefTag_) ;
   eps_ = &volfm.field_ref( dissipationTag_ );
   rho_ = &volfm.field_ref( densityTag_ );
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-AggregationEfficiency<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

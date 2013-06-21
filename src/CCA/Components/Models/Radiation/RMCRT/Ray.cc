@@ -67,6 +67,7 @@ void Ray::constructor(){
   d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
   d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
   d_cellTypeLabel        = VarLabel::create( "cellType",         CCVariable<int>::getTypeDescription() );
+  d_radiationVolqLabel   = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
    
   d_matlSet       = 0;
   _isDbgOn        = dbg2.active();
@@ -114,6 +115,7 @@ Ray::~Ray()
   VarLabel::destroy( d_divQFiltLabel );
   VarLabel::destroy( d_boundFluxFiltLabel );
   VarLabel::destroy( d_cellTypeLabel );
+  VarLabel::destroy( d_radiationVolqLabel );
 
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
@@ -536,6 +538,7 @@ Ray::sched_rayTrace( const LevelP& level,
   tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
   tsk->requires( Task::OldDW, d_VRFluxLabel,         d_gn, 0 );
   tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 ); 
+  tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
   
   if (!tsk->usesDevice()) {
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
@@ -545,12 +548,14 @@ Ray::sched_rayTrace( const LevelP& level,
     if (!tsk->usesDevice()) {
       tsk->modifies( d_VRFluxLabel );
       tsk->modifies( d_boundFluxLabel );
+      tsk->modifies( d_radiationVolqLabel );
     }
   } else {
     tsk->computes( d_divQLabel );
     if (!tsk->usesDevice()) {
       tsk->computes( d_VRFluxLabel );
       tsk->computes( d_boundFluxLabel );
+      tsk->computes( d_radiationVolqLabel );
     }
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
@@ -579,11 +584,12 @@ Ray::rayTrace( const ProcessorGroup* pc,
   //  Carry Forward (old_dw -> new_dw)
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   if ( doCarryForward( timestep, radCalc_freq) ) {
-    printTask( level->getPatch(0), dbg, "Doing Ray::rayTrace carryForward (divQ, VRFlux, boundFlux )" );
+    printTask( level->getPatch(0), dbg, "Doing Ray::rayTrace carryForward (divQ, VRFlux, boundFlux, radiationVolq )" );
     
     new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls );
     new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls );
     new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );
+    new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls );
     return;
   }
   
@@ -622,17 +628,21 @@ Ray::rayTrace( const ProcessorGroup* pc,
     CCVariable<double> divQ;
     CCVariable<double> VRFlux;
     CCVariable<Stencil7> boundFlux;
+    CCVariable<double> radiationVolq;
 
     if( modifies_divQ ){
       old_dw->getModifiable( divQ,         d_divQLabel,          d_matl, patch );
       old_dw->getModifiable( VRFlux,       d_VRFluxLabel,        d_matl, patch );
       old_dw->getModifiable( boundFlux,    d_boundFluxLabel,     d_matl, patch );
+      old_dw->getModifiable( radiationVolq,d_radiationVolqLabel, d_matl, patch );
     }else{
       new_dw->allocateAndPut( divQ,      d_divQLabel,      d_matl, patch );
       divQ.initialize( 0.0 ); 
       new_dw->allocateAndPut( VRFlux,    d_VRFluxLabel,    d_matl, patch );
       VRFlux.initialize( 0.0 );
       new_dw->allocateAndPut( boundFlux,    d_boundFluxLabel, d_matl, patch );
+      new_dw->allocateAndPut( radiationVolq, d_radiationVolqLabel, d_matl, patch );
+      radiationVolq.initialize( 0.0 );
       
       for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
@@ -1055,6 +1065,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
       //__________________________________
       //  Compute divQ
       divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/_NoOfRays) );
+      radiationVolq[origin] = -divQ[origin] / abskg[origin]; // The minus sign is necessary due to the way the enthalpy source term is defined
       //} // end quick debug testing
     }  // end cell iterator
   } // end of if(_solveDivQ)
@@ -1124,12 +1135,14 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->modifies( d_divQLabel );
     tsk->modifies( d_VRFluxLabel );
     tsk->modifies( d_boundFluxLabel );
+    tsk->modifies( d_radiationVolqLabel );
 
   } else {
     
     tsk->computes( d_divQLabel );
     tsk->computes( d_VRFluxLabel );
     tsk->computes( d_boundFluxLabel );
+    tsk->computes( d_radiationVolqLabel );
 
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );

@@ -500,15 +500,6 @@ void ICE::setupMatrix(const ProcessorGroup*,
         A_tmp.t += vol_fracZ_FC[front]  * sp_volZ_FC[front];
         A_tmp.b += vol_fracZ_FC[back]   * sp_volZ_FC[back];
         
-      }
-
-      //---- P R I N T   D A T A ------ 
-      if (switchDebug_setupMatrix ) {
-        ostringstream desc;
-        desc << "setupMatrix_Mat_" << indx << "_patch_"<< patch->getID(); 
-        printData_FC( indx, patch,1, desc.str(), "vol_fracX_FC", vol_fracX_FC);
-        printData_FC( indx, patch,1, desc.str(), "vol_fracY_FC", vol_fracY_FC);
-        printData_FC( indx, patch,1, desc.str(), "vol_fracZ_FC", vol_fracZ_FC);
       }    
     }  //matl loop
         
@@ -539,14 +530,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
     }  
     //__________________________________
     //  Boundary conditons on A.e, A.w, A.n, A.s, A.t, A.b
-    ImplicitMatrixBC( A, patch);   
-
-    //---- P R I N T   D A T A ------   
-    if (switchDebug_setupMatrix) {    
-      ostringstream desc;
-      desc << "BOT_setupMatrix_patch_" << patch->getID();
-      printStencil( 0, patch, 1, desc.str(), "A", A);
-    }         
+    ImplicitMatrixBC( A, patch);         
   }
 }
 
@@ -643,15 +627,6 @@ void ICE::setupRHS(const ProcessorGroup*,
       pNewDW->get(vol_frac,   lb->vol_frac_CCLabel,   indx,patch,gac, 2);
       pNewDW->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,0);
       pNewDW->get(speedSound, lb->speedSound_CCLabel, indx,patch,gn,0);
-
-      //---- P R I N T   D A T A ------  
-      if (switchDebug_setupRHS) {
-        ostringstream desc;
-        desc << "Top_setupRHS_Mat_"<<indx<<"_patch_"<<patch->getID();
-        printData_FC( indx, patch,1, desc.str(), "uvel_FC",    uvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "vvel_FC",    vvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "wvel_FC",    wvel_FC);
-      }
         
       //__________________________________
       // Advection preprocessing
@@ -743,18 +718,7 @@ void ICE::setupRHS(const ProcessorGroup*,
         continue;
       }
       rhs.initialize(0.0, l, h);
-    }   
-    
-    //---- P R I N T   D A T A ------  
-    if (switchDebug_setupRHS) {
-      ostringstream desc;
-      desc << "BOT_setupRHS_patch_" << patch->getID();
-      printData( 0, patch, 0,desc.str(), "rhs",              rhs);
-      printData( 0, patch, 0,desc.str(), "sumAdvection",     sumAdvection);
-      printData( 0, patch, 0,desc.str(), "sum_impDelP",      sum_imp_delP);
-  //  printData( 0, patch, 0,desc.str(), "MassExchangeTerm", massExchTerm);
-      printData( 0, patch, 0,desc.str(), "term1",            term1);
-    }  
+    }     
   }  // patches loop
 //  cout << " Level " << level->getIndex() << " rhs " 
 //       << rhs_max << " rhs * vol " << rhs_max * vol <<  endl;
@@ -877,14 +841,7 @@ void ICE::updatePressure(const ProcessorGroup*,
            d_customBC_var_basket);
            
     delete_CustomBCs(d_customBC_var_basket);
-    //---- P R I N T   D A T A ------  
-    if (switchDebug_updatePressure) {
-      ostringstream desc;
-      desc << "BOT_updatePressure_patch_" << patch->getID();
-      printData( 0, patch, 1,desc.str(), "imp_delP",      imp_delP); 
-      printData( 0, patch, 1,desc.str(), "sum_imp_delP",  sum_imp_delP);
-      printData( 0, patch, 1,desc.str(), "Press_CC",      press_CC);
-    }
+
     //____ B U L L E T   P R O O F I N G----
     // ignore BP if a timestep restart has already been requested
     IntVector neg_cell;
@@ -961,14 +918,6 @@ void ICE::computeDel_P(const ProcessorGroup*,
       //initialGuess[c]  = delP_Dilatate[c];
     }    
 
-    //---- P R I N T   D A T A ------  
-    if (switchDebug_computeDelP) {
-      ostringstream desc;
-      desc << "BOT_computeDelP_patch_" << patch->getID();
-      printData( 0, patch, 1,desc.str(), "delP_Dilatate", delP_Dilatate);
-      printData( 0, patch, 1,desc.str(), "sum_imp_delP",  sum_imp_delP);
-    //printData( 0, patch, 1,desc.str(), "delP_MassX",    delP_MassX);
-    }
   } // patch loop
 }
  

@@ -59,7 +59,8 @@ PSELIBS := \
 	Core/Thread     \
 	Core/Geometry   
 
-LIBS := $(XML2_LIBRARY) $(PETSC_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(PETSC_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
+	$(F_LIBRARY) $(BOOST_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

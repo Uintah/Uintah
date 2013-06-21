@@ -68,10 +68,10 @@ public:
             const Expr::Tag& sBarTag,
             const double growthCoefVal)
     : ExpressionBuilder(result),
-    supersatt_(superSatTag),
-    eqconct_(eqConcTag),
-    sbart_(sBarTag),
-    growthcoefval_(growthCoefVal)
+      supersatt_(superSatTag),
+      eqconct_(eqConcTag),
+      sbart_(sBarTag),
+      growthcoefval_(growthCoefVal)
     {}
 
     ~Builder(){}
@@ -90,7 +90,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
 };
@@ -112,11 +111,13 @@ PrecipitationBulkDiffusionCoefficient( const Expr::Tag& superSatTag,
                                        const Expr::Tag& sBarTag,
                                        const double growthCoefVal )
 : Expr::Expression<FieldT>(),
-superSatTag_(superSatTag),
-eqConcTag_(eqConcTag),
-sBarTag_(sBarTag),
-growthCoefVal_(growthCoefVal)
-{}
+  superSatTag_(superSatTag),
+  eqConcTag_(eqConcTag),
+  sBarTag_(sBarTag),
+  growthCoefVal_(growthCoefVal)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -151,14 +152,6 @@ bind_fields( const Expr::FieldManagerList& fml )
   if ( sBarTag_ != Expr::Tag() )
     sBar_ = &fm.field_ref( sBarTag_ );
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationBulkDiffusionCoefficient<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

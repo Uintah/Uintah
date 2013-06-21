@@ -31,6 +31,15 @@
 
 namespace Uintah {
 
+// A standard Debye specific heat model designed for solids based on estimating
+// phonon contributions to the vibrational modes in the solid lattice.
+//
+// Citation:
+//  'Zur Theorie der spezifischen Waerme' by Peter Debye, Annalen der Physik, 1912, 39(4): 789
+//
+// And for English versions, check any standard physical chemistry or solid-state physics textbook.
+// 
+
 class DebyeCv : public SpecificHeat {
 public:
   DebyeCv(ProblemSpecP& ps);

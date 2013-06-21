@@ -40,7 +40,6 @@
       </IndependentVariable>
       
       <ExtractDensity>
-        <NameInTable>Density</NameInTable>
         <NameTag name="density" state="STATE_NONE" />
       </ExtractDensity>
       
@@ -57,7 +56,6 @@
       </IndependentVariable>
       
       <ExtractDensity>
-        <NameInTable>Density</NameInTable>
         <NameTag name="density" state="CARRY_FORWARD" />
         <DensityWeightedIVar>
           <NameTag name="rhof" state="STATE_N" />

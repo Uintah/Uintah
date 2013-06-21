@@ -357,17 +357,10 @@
       </DQMOM>
 
       <Properties>
-        <use_mixing_model>false</use_mixing_model>
-        <ColdFlowMixingModel>
-          <Stream>
-            <density>1.00</density>
-            <temperature>298</temperature>
-          </Stream>
-          <Stream>
-            <density>1.00</density>
-            <temperature>298</temperature>
-          </Stream>
-        </ColdFlowMixingModel>
+        <ConstantProps>
+          <density>1.0</density>
+          <temperature>298</temperature>
+        </ConstantProps>
       </Properties>
 
 <!--
@@ -385,16 +378,14 @@
             <tolerance>      1.0e-10  </tolerance>
             <maxiterations>    75     </maxiterations>
             <skip>              1     </skip>
+            <setupFrequency>    0     </setupFrequency>
+            <jump>              0     </jump>
           </Parameters>
         </PressureSolver>
 
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
-        <MixtureFractionSolver>
-          <convection_scheme>central-upwind</convection_scheme>
-        </MixtureFractionSolver>
 
       </ExplicitSolver>
     </ARCHES>

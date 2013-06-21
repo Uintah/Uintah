@@ -50,8 +50,8 @@ class MultiEnvSource
   const FieldT* phi_;
   const double initialMoment_;
 
-  MultiEnvSource( const Expr::TagList weightAndDerivativeTags,
-                  const Expr::Tag phiTag,
+  MultiEnvSource( const Expr::TagList& weightAndDerivativeTags,
+                  const Expr::Tag& phiTag,
                   const double initialMoment);
 
 public:
@@ -63,9 +63,9 @@ public:
              const Expr::Tag& phiTag,
              const double initialMoment)
     : ExpressionBuilder(result),
-    weightandderivtaglist_(weightAndDerivativeTags),
-    phit_(phiTag),
-    initialmoment_(initialMoment)
+      weightandderivtaglist_(weightAndDerivativeTags),
+      phit_(phiTag),
+      initialmoment_(initialMoment)
     {}
 
     ~Builder(){}
@@ -85,7 +85,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 
@@ -99,14 +98,16 @@ public:
 
 template< typename FieldT >
 MultiEnvSource<FieldT>::
-MultiEnvSource( const Expr::TagList weightAndDerivativeTags,
-               const Expr::Tag phiTag,
+MultiEnvSource( const Expr::TagList& weightAndDerivativeTags,
+                const Expr::Tag& phiTag,
                 const double initialMoment)
 : Expr::Expression<FieldT>(),
-weightAndDerivativeTags_(weightAndDerivativeTags),
-phiTag_(phiTag),
-initialMoment_(initialMoment)
-{}
+  weightAndDerivativeTags_(weightAndDerivativeTags),
+  phiTag_(phiTag),
+  initialMoment_(initialMoment)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -143,14 +144,6 @@ bind_fields( const Expr::FieldManagerList& fml )
   }
   phi_ = &fm.field_ref( phiTag_ );
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MultiEnvSource<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

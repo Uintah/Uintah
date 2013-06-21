@@ -42,10 +42,10 @@ void coarsenDriver_std(const IntVector& cl,
                        const IntVector& ch,                     
                        const IntVector& fl,                     
                        const IntVector& fh,                     
-                       const IntVector& refinementRatio,        
-                       const double ratio,                            
-                       const Level* coarseLevel,                
-                       constCCVariable<T>& fine_q_CC,           
+                       const IntVector& refinementRatio,
+                       const double ratio,
+                       const Level* coarseLevel,
+                       constCCVariable<T>& fine_q_CC,
                        CCVariable<T>& coarse_q_CC )
 {
   T zero(0.0);
@@ -55,6 +55,7 @@ void coarsenDriver_std(const IntVector& cl,
     T q_CC_tmp(zero);
     IntVector fineStart = coarseLevel->mapCellToFiner(c);
 
+    double count = 0;
     // for each coarse level cell iterate over the fine level cells   
     for(CellIterator inside(IntVector(0,0,0),refinementRatio );
         !inside.done(); inside++){
@@ -63,9 +64,25 @@ void coarsenDriver_std(const IntVector& cl,
       if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&
           fc.x() <= fh.x() && fc.y() <= fh.y() && fc.z() <= fh.z() ) {
         q_CC_tmp += fine_q_CC[fc];
+        count +=1.0;
+        //std::cout << "    " << fc << "   fine_q_CC " << fine_q_CC[fc] <<" q_CC_tmp: " << q_CC_tmp << endl;
       }
     }
     coarse_q_CC[c] =q_CC_tmp*ratio;
+    
+    //__________________________________
+    //  bulletproofing
+    #if SCI_ASSERTION_LEVEL > 0
+      if ( (fabs(ratio - 1.0/count) > 2 * DBL_EPSILON) && ratio != 1 ) {
+        std::ostringstream msg;
+        msg << " ERROR:  coarsenDriver_std: coarse cell " << c << "\n" 
+            <<  "Only (" << count << ") fine level cells were used to compute the coarse cell value."
+            << " There should have been ("<< 1/ratio << ") cells used";
+
+      throw InternalError(msg.str(),__FILE__,__LINE__);
+      } 
+    #endif
+    //std::cout << c << "   coarse_q_CC " << coarse_q_CC[c] << " ratio " << ratio << endl;
   }
 }
 

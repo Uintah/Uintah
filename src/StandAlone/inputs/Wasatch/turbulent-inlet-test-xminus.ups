@@ -12,9 +12,8 @@
       <NameTag name="density" state="STATE_NONE" />
     </Density>
     <TimeIntegrator>FE</TimeIntegrator>
-    <Turbulence>
-      <EddyViscosityConstant>0.1</EddyViscosityConstant>
-      <TurbulenceModel> VREMAN </TurbulenceModel>
+    <Turbulence model="VREMAN">
+      <EddyViscosityCoefficient>0.1</EddyViscosityCoefficient>
     </Turbulence>
 
 

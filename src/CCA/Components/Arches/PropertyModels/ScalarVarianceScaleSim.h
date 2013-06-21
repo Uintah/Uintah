@@ -27,6 +27,7 @@
 namespace Uintah{ 
 
   class Filter; 
+  class BoundaryCondition_new; 
 
   class ScalarVarianceScaleSim : public PropertyModelBase {
 
@@ -86,8 +87,14 @@ namespace Uintah{
 
       const VarLabel* _mf_label; 
       const VarLabel* _density_label; 
+      const VarLabel* _vol_frac_label;
+      const VarLabel* _filter_vol_label; 
+      const VarLabel* _celltype_label; 
 
       Filter* _filter; 
+      BoundaryCondition_new* _boundary_condition; 
+
+      double _Cf; 
 
   }; // class ScalarVarianceScaleSim
 }   // namespace Uintah

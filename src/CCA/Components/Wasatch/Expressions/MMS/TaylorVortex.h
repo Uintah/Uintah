@@ -78,7 +78,7 @@ private:
              const Expr::Tag& tTag,
              const double A,
              const double nu );
-  const double A_, nu_;
+  const double a_, nu_;
   const Expr::Tag xTag_, yTag_, tTag_;
   const ValT* x_;
   const ValT* y_;
@@ -137,7 +137,7 @@ private:
              const Expr::Tag& tTag,
              const double A,
              const double nu );
-  const double A_, nu_;
+  const double a_, nu_;
   const Expr::Tag xTag_, yTag_, tTag_;
   const ValT* x_;
   const ValT* y_;
@@ -200,7 +200,7 @@ private:
           const Expr::Tag& tTag,
           const double A,
           const double nu );
-  const double A_, nu_;
+  const double a_, nu_;
   const Expr::Tag xTag_, yTag_, tTag_;
   const ValT* x_;
   const ValT* y_;
@@ -263,7 +263,7 @@ private:
           const Expr::Tag& tTag,
           const double A,
           const double nu );
-  const double A_, nu_;
+  const double a_, nu_;
   const Expr::Tag xTag_, yTag_, tTag_;
   const ValT* x_;
   const ValT* y_;

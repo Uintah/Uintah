@@ -548,13 +548,13 @@
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, 
-                              VelocityInlet, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet, Swirl, FromFile,
+                              VelocityInlet, StABL, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet, Swirl, FromFile,
                               TurbulentInlet, Tabulated '"
                               attribute3="label     REQUIRED STRING "
                               attribute4="type      OPTIONAL STRING 'int'" >
                                                                 
           <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom 
-                                                                     MassFlowInlet Swirl VelocityInlet, TurbulentInlet, Tabulated, FromFile, VelocityFileInput" />
+                                                                     MassFlowInlet Swirl VelocityInlet, TurbulentInlet, StABL, Tabulated, FromFile, VelocityFileInput" />
 
           <!-- functor_name: name of a functor to be applied on this boundary. Developer must handle parsing and pointing to proper functor in the code -->                                                          
           <functor_name     spec="OPTIONAL STRING"  need_applies_to="var Neumann Dirichlet" />                                                                     
@@ -573,6 +573,13 @@
           
           <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl"/>
           <swirl_centroid   spec="REQUIRED VECTOR"  need_applies_to="var Swirl"/>
+
+          <!-- Stabilized Atmospheric Boundary Layer --> 
+          <!-- When using StABL, the free stream velocity is specified in the <value> tag. --> 
+          <roughness        spec="REQUIRED DOUBLE" need_applies_to="var StABL"/> <!-- roughness height for the ground [m]--> 
+          <freestream_h     spec="REQUIRED DOUBLE" need_applies_to="var StABL"/> <!-- height of the free stream velocity --> 
+          <k                spec="OPTIONAL DOUBLE" need_applies_to="var StABL"/> <!-- von Karman constant, default=0.41 --> 
+
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -626,21 +633,22 @@
 
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
     <Module                             spec="MULTIPLE NO_DATA"
-                                          attribute1="name REQUIRED STRING 'lineExtract, containerExtract, particleExtract flatPlate_heatFlux firstLawThermo minMax'" >
+                                          attribute1="name REQUIRED STRING 'lineExtract, planeExtract, containerExtract, particleExtract flatPlate_heatFlux firstLawThermo minMax'" >
       <material                         spec="OPTIONAL STRING" />
       <materialIndex                    spec="OPTIONAL INTEGER" />
-      <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
-      <timeStart                        spec="REQUIRED INTEGER" need_applies_to="name lineExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
-      <timeStop                         spec="REQUIRED INTEGER" need_applies_to="name lineExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
+      <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
+      <timeStart                        spec="REQUIRED INTEGER" need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
+      <timeStop                         spec="REQUIRED INTEGER" need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
       <colorThreshold                   spec="REQUIRED DOUBLE"  need_applies_to="name particleExtract"/>
        
-      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract particleExtract minMax">
+      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract planeExtract particleExtract minMax">
         <analyze                        spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING" 
                                           attribute2="matl  OPTIONAL STRING"
                                           attribute3="level OPTIONAL STRING" />
       </Variables>
-
+      
+      <!--  lineExtract -->
       <lines                            spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract">
         <line                           spec="MULTIPLE NO_DATA" attribute1="name REQUIRED STRING" > 
           <startingPt                   spec="REQUIRED VECTOR" />
@@ -649,6 +657,15 @@
         </line>
       </lines>
       
+      <!--  planeExtract -->
+      <planes                            spec="OPTIONAL NO_DATA" need_applies_to="name planeExtract">
+        <plane                           spec="MULTIPLE NO_DATA" attribute1="name REQUIRED STRING" > 
+          <startingPt                   spec="REQUIRED VECTOR" />
+          <endingPt                     spec="REQUIRED VECTOR" />
+        </plane>
+      </planes>      
+      
+      <!--  flatPlate_heatFlux -->
       <plane                           spec="MULTIPLE NO_DATA" need_applies_to="name flatPlate_heatFlux"> 
         <startingPt                   spec="REQUIRED VECTOR" />
         <endingPt                     spec="REQUIRED VECTOR" />

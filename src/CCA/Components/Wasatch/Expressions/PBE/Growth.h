@@ -89,7 +89,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 
@@ -108,11 +107,13 @@ Growth( const Expr::Tag& phiTag,
         const double momentOrder,
         const double constCoef)
   : Expr::Expression<FieldT>(),
-  phiTag_(phiTag),
-  growthCoefTag_(growthCoefTag),
-  momentOrder_(momentOrder),
-  constCoef_(constCoef)
-{}
+    phiTag_(phiTag),
+    growthCoefTag_(growthCoefTag),
+    momentOrder_(momentOrder),
+    constCoef_(constCoef)
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -145,14 +146,6 @@ bind_fields( const Expr::FieldManagerList& fml )
   if ( growthCoefTag_ != Expr::Tag () )
     growthCoef_ = &fm.field_ref( growthCoefTag_ );
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-Growth<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 

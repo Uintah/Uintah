@@ -49,9 +49,8 @@
        <Constant>0.0</Constant>
     </BasicExpression>
 
-    <Turbulence>
-      <EddyViscosityConstant>0.7</EddyViscosityConstant>
-      <TurbulenceModel> WALE </TurbulenceModel>
+    <Turbulence model="WALE">
+      <EddyViscosityCoefficient>0.7</EddyViscosityCoefficient>
     </Turbulence>
   
     <!-- Set the initial condition for x-mom -->

@@ -4,38 +4,69 @@
 <symbolicLinks> 
   /usr/local/home/harman/Builds/Fresh/NB/src/scripts/ /usr/local/home/harman/Builds/Fresh/NB/src/StandAlone/inputs
 </symbolicLinks>
-
+<!--
+<test>
+  <name>Couette-Poiseuille</name>
+  <ups>CouettePoiseuille.ups</ups>
+  <tst>Couette-Poiseuille.tst</tst>
+</test>
 <test>
   <name>advect_X_FO</name>
   <ups>advectPS.ups</ups>
   <tst>dx.tst</tst>
 </test>
-
 <test>
   <name>advect_Y_FO</name>
   <ups>advectPS.ups</ups>
   <tst>dy.tst</tst>
 </test>
-
 <test>
   <name>advect_Z_FO</name>
   <ups>advectPS.ups</ups>
   <tst>dz.tst</tst>
 </test>
-
 <test>
-  <name>Rayleigh</name>
-  <ups>rayleigh.ups</ups>
+  <name>Rayleigh_dx</name>
+  <ups>rayleigh_dx.ups</ups>
+  <tst>rayleigh_dx.tst</tst>
+</test>
+<test>
+  <name>Rayleigh_dy</name>
+  <ups>rayleigh_dy.ups</ups>
   <tst>rayleigh_dy.tst</tst>
 </test>
-
+<test>
+  <name>Rayleigh_dz</name>
+  <ups>rayleigh_dz.ups</ups>
+  <tst>rayleigh_dz.tst</tst>
+</test>
+<test>
+  <name>CavityFlow_dx</name>
+  <ups>cavityFlow_dx.ups</ups>
+  <tst>cavityFlow_dx.tst</tst>
+</test>
+-->
+<test>
+  <name>CavityFlow_dy</name>
+  <ups>cavityFlow_dy.ups</ups>
+  <tst>cavityFlow_dy.tst</tst>
+</test>
+<test>
+  <name>CavityFlow_dz</name>
+  <ups>cavityFlow_dz.ups</ups>
+  <tst>cavityFlow_dz.tst</tst>
+</test>
+<test>
+  <name>CavityFlow_Res</name>
+  <ups>cavityFlow_dx.ups</ups>
+  <tst>cavityFlow_res.tst</tst>
+</test>
 <!--
 <test>  
   <name>Lodi_pulse</name>
   <ups>Lodi_pulse.ups</ups>
   <tst>Lodi.tst</tst>
 </test>
-
 <test>
   <name>Test1</name>
   <ups>riemann.ups</ups>

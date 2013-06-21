@@ -33,10 +33,13 @@ VelocityMagnitude( const Expr::Tag& vel1tag,
            const Expr::Tag& vel2tag,
            const Expr::Tag& vel3tag )
 : Expr::Expression<FieldT>(),
-vel1t_( vel1tag ),
-vel2t_( vel2tag ),
-vel3t_( vel3tag )
-{}
+  vel1t_( vel1tag ),
+  vel2t_( vel2tag ),
+  vel3t_( vel3tag ),
+  is3d_( vel1t_ != Expr::Tag() && vel2t_ != Expr::Tag() && vel3t_ != Expr::Tag() )
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -80,9 +83,9 @@ void
 VelocityMagnitude<FieldT,Vel1T,Vel2T,Vel3T>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if( vel1t_ != Expr::Tag() )  InpterpVel1T2FieldTOp_ = opDB.retrieve_operator<InpterpVel1T2FieldT>();
-  if( vel2t_ != Expr::Tag() )  InpterpVel2T2FieldTOp_ = opDB.retrieve_operator<InpterpVel2T2FieldT>();
-  if( vel3t_ != Expr::Tag() )  InpterpVel3T2FieldTOp_ = opDB.retrieve_operator<InpterpVel3T2FieldT>();
+  if( vel1t_ != Expr::Tag() )  interpVel1T2FieldTOp_ = opDB.retrieve_operator<InterpVel1T2FieldT>();
+  if( vel2t_ != Expr::Tag() )  interpVel2T2FieldTOp_ = opDB.retrieve_operator<InterpVel2T2FieldT>();
+  if( vel3t_ != Expr::Tag() )  interpVel3T2FieldTOp_ = opDB.retrieve_operator<InterpVel3T2FieldT>();
 }
 
 //--------------------------------------------------------------------
@@ -94,23 +97,22 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& velMag = this->value();
-  velMag <<= 0.0;
-  if( vel1t_ != Expr::Tag() ){
-    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( velMag );
-    InpterpVel1T2FieldTOp_->apply_to_field( *vel1_, *tmp );
-    velMag <<= *tmp * *tmp;
+
+  if( is3d_ ){ // inline the 3D calculation for better performance:
+    velMag <<= sqrt(
+        (*interpVel1T2FieldTOp_)(*vel1_) * (*interpVel1T2FieldTOp_)(*vel1_) +
+        (*interpVel2T2FieldTOp_)(*vel2_) * (*interpVel2T2FieldTOp_)(*vel2_) +
+        (*interpVel3T2FieldTOp_)(*vel3_) * (*interpVel3T2FieldTOp_)(*vel3_)
+      );
   }
-  if( vel2t_ != Expr::Tag() ){
+  else{ // 1D and 2D are assembled in pieces (slower):
     SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( velMag );
-    InpterpVel2T2FieldTOp_->apply_to_field( *vel2_, *tmp );
-    velMag <<= velMag + *tmp * *tmp;
+    if( vel1t_ != Expr::Tag() ) velMag <<=          (*interpVel1T2FieldTOp_)(*vel1_) * (*interpVel1T2FieldTOp_)(*vel1_);
+    else                        velMag <<= 0.0;
+    if( vel2t_ != Expr::Tag() ) velMag <<= velMag + (*interpVel2T2FieldTOp_)(*vel2_) * (*interpVel2T2FieldTOp_)(*vel2_);
+    if( vel3t_ != Expr::Tag() ) velMag <<= velMag + (*interpVel3T2FieldTOp_)(*vel3_) * (*interpVel3T2FieldTOp_)(*vel3_);
+    velMag <<= sqrt(velMag);
   }
-  if( vel3t_ != Expr::Tag() ){
-    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( velMag );
-    InpterpVel3T2FieldTOp_->apply_to_field( *vel3_, *tmp );
-    velMag <<= velMag + *tmp * *tmp;
-  }
-  velMag <<= sqrt(velMag);
 }
 
 //--------------------------------------------------------------------
@@ -122,7 +124,7 @@ Builder::Builder( const Expr::Tag& result,
                  const Expr::Tag& vel2tag,
                  const Expr::Tag& vel3tag )
 : ExpressionBuilder(result),
-v1t_( vel1tag ), v2t_( vel2tag ), v3t_( vel3tag )
+  v1t_( vel1tag ), v2t_( vel2tag ), v3t_( vel3tag )
 {}
 
 //--------------------------------------------------------------------

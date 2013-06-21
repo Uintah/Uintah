@@ -147,8 +147,9 @@ namespace Wasatch {
 
   OldVariable::OldVariable()
   {
-    wasatchSync_ = false;
+    wasatchSync_  = false;
     hasDoneSetup_ = false;
+    wasatch_ = NULL;
   }
 
   //------------------------------------------------------------------
@@ -187,6 +188,7 @@ namespace Wasatch {
       msg << "OldVariable error: must call sync_with_wasatch() prior to adding variables!" << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
+    assert( wasatch_ != NULL );
     VarHelperBase* const vh = new VarHelper<T>(var, retainName);
     typedef typename Expr::PlaceHolder<T>::Builder PlaceHolder;
 
@@ -202,7 +204,7 @@ namespace Wasatch {
 
     // don't allow the ExpressionTree to reclaim memory for this field since
     // it will need to be seen by the task that copies it to the "old" value.
-    if ( wasatch_->locked_fields().find( var.name() ) != wasatch_->locked_fields().end() )  {
+    if ( wasatch_->locked_fields().find( var.name() ) == wasatch_->locked_fields().end() )  {
       wasatch_->locked_fields().insert( var.name() );
     }
   }
@@ -212,7 +214,7 @@ namespace Wasatch {
   void
   OldVariable::sync_with_wasatch( Wasatch* const wasatch )
   {
-    wasatch_ = wasatch;
+    wasatch_     = wasatch;
     wasatchSync_ = true;
   }
 

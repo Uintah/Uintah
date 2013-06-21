@@ -44,10 +44,7 @@ Smagorinsky_Model::Smagorinsky_Model(ProblemSpecP& ps,
   //__________________________________
   //typically filter_width=grid spacing(uniform) for implicit filter.
   ps->require("model_constant",d_model_constant);
-  ps->require("filter_width",d_filter_width);
-
-  //  ps->require("turb_Pr",d_turbPr);  
-  
+//  ps->require("filter_width",  d_filter_width);  
 }
 
 Smagorinsky_Model::Smagorinsky_Model()
@@ -79,7 +76,7 @@ void Smagorinsky_Model::computeTurbViscosity(DataWarehouse* new_dw,
   //keep the parameter here for future use
   
   Vector dx = patch->dCell();
-  filter_width = pow((dx.x()*dx.y()*dx.z()), 1.0/3.0);
+  double filter_width = pow((dx.x()*dx.y()*dx.z()), 1.0/3.0);
   double term = (d_model_constant * filter_width)
                *(d_model_constant * filter_width);
   

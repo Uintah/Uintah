@@ -41,7 +41,7 @@ DynamicModel::DynamicModel(ProblemSpecP& ps, SimulationStateP& sharedState)
   //test_filter_width usually equal 2*filter_width
 
   ps->require("filter_width",d_filter_width);
-  ps->require("test_filter_width",d_test_filter_width);
+//  ps->require("test_filter_width",d_test_filter_width);
   ps->require("model_constant", d_model_constant);
 
 //  ps->require("turb_Pr",d_turbPr);

@@ -194,11 +194,11 @@ WARNING
 
     bool flaggedCellsExist(constCCVariable<int>& flaggedCells, IntVector low, IntVector high);
 
-    IntVector Less    (const IntVector& a, const IntVector& b);
-    IntVector Greater (const IntVector& a, const IntVector& b);
-    IntVector And     (const IntVector& a, const IntVector& b);
-    IntVector Mod     (const IntVector& a, const IntVector& b);
-    IntVector Ceil    (const Vector& a);
+    IntVector Less(    const IntVector& a, const IntVector& b );
+    IntVector Greater( const IntVector& a, const IntVector& b );
+    IntVector And(     const IntVector& a, const IntVector& b );
+    IntVector Mod(     const IntVector& a, const IntVector& b );
+    IntVector Ceil(    const Vector& a );
 
     void problemSetup_BulletProofing(const int k);
     void GetFlaggedCells ( const GridP& origGrid, int levelIdx, DataWarehouse* dw );

@@ -31,6 +31,10 @@
 
 namespace Uintah {
 
+// Citation:
+//   'Coefficients for Calculating Thermodynamic and Transport Properties of Individual Species', 
+//    NASA Report TM-4513, by B.J. McBride, S. Gordon and M.A. Reno, October 1993.
+
 class ComponentCv : public SpecificHeat {
 public:
   ComponentCv(ProblemSpecP& ps);

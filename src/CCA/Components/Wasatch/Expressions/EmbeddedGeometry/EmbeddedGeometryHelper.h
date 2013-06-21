@@ -75,7 +75,7 @@ namespace Wasatch{
    */
   void
   parse_embedded_geometry( Uintah::ProblemSpecP parser,
-                                GraphCategories& gc );
+                           GraphCategories& gc );
   
 } // namespace Wasatch
 

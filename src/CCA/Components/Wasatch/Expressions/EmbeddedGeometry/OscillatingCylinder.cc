@@ -26,23 +26,23 @@
 //--------------------------------------------------------------------
 
 OscillatingCylinder::
-OscillatingCylinder(const std::string axis,
-                    const std::vector<double> origin,
-                    const std::vector<double> oscillatingdir,                    
-                    const double insideValue,
-                    const double outsideValue,
-                    const double radius,
-                    const double frequency,
-                    const double amplitude)
+OscillatingCylinder( const std::string axis,
+                     const std::vector<double>& origin,
+                     const std::vector<double>& oscillatingdir,
+                     const double insideValue,
+                     const double outsideValue,
+                     const double radius,
+                     const double frequency,
+                     const double amplitude )
 : Expr::Expression<SVolField>(),
-origin_(origin),
-oscillatingdir_(oscillatingdir),
-insidevalue_(insideValue),
-outsidevalue_(outsideValue),
-radius_(radius),
-frequency_(frequency),
-amplitude_(amplitude)
-{
+  origin_(origin),
+  oscillatingdir_(oscillatingdir),
+  insidevalue_(insideValue),
+  outsidevalue_(outsideValue),
+  radius_(radius),
+  frequency_(frequency),
+  amplitude_(amplitude)
+  {
   if ( axis == "X" ) {
     tag1_ = Expr::Tag("YSVOL", Expr::STATE_NONE);
     tag2_ = Expr::Tag("ZSVOL", Expr::STATE_NONE);
@@ -55,6 +55,7 @@ amplitude_(amplitude)
   }
   timet_ = Expr::Tag("time", Expr::STATE_NONE );
 
+  this->set_gpu_runnable( true );
 }
 
 //--------------------------------------------------------------------
@@ -102,23 +103,23 @@ evaluate()
 
 OscillatingCylinder::Builder::
 Builder( const Expr::Tag& result,
-        const std::string axis,
-        const std::vector<double> origin,
-        const std::vector<double> oscillatingdir,        
-        const double insideValue,
-        const double outsideValue,
-        const double radius,
-        const double frequency,
-        const double amplitude)
+         const std::string axis,
+         const std::vector<double>& origin,
+         const std::vector<double>& oscillatingdir,
+         const double insideValue,
+         const double outsideValue,
+         const double radius,
+         const double frequency,
+         const double amplitude )
 : ExpressionBuilder(result),
-axis_(axis),
-origin_(origin),
-oscillatingdir_(oscillatingdir),
-insidevalue_ (insideValue ),
-outsidevalue_(outsideValue),
-radius_(radius),
-frequency_(frequency),
-amplitude_(amplitude)
+  axis_(axis),
+  origin_(origin),
+  oscillatingdir_(oscillatingdir),
+  insidevalue_ (insideValue ),
+  outsidevalue_(outsideValue),
+  radius_(radius),
+  frequency_(frequency),
+  amplitude_(amplitude)
 {}
 
 //--------------------------------------------------------------------

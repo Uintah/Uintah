@@ -94,12 +94,25 @@ DataArchive::DataArchive(const std::string& filebase,
 
 DataArchive::~DataArchive()
 {
+  // The createdVarLabels_ member variable, is used to keep track of
+  // the VarLabels (for each of the data fields found in the data
+  // archive we are reading data out of) for which a varLabel does not
+  // already exist.  Now that we have read in the data, we no longer
+  // need these temporary VarLabels, so delete them to avoid a memory
+  // leak.  Note, most of these VarLabels will be 're-created' by
+  // individual components when they go to access their data.
+
+  map<string, VarLabel*>::iterator vm_iter = createdVarLabels_.begin();
+  for( ; vm_iter != createdVarLabels_.end(); vm_iter++ ) {
+    VarLabel::destroy( vm_iter->second );
+  }
+
   //d_indexDoc->releaseDocument();
 }
 
 // static, so can be called from either DataArchive or TimeData
 void
-DataArchive::queryEndiannessAndBits(ProblemSpecP doc, string& endianness, int& numBits)
+DataArchive::queryEndiannessAndBits( ProblemSpecP doc, string & endianness, int & numBits )
 {
   ProblemSpecP meta = doc->findBlock("Meta");
 
@@ -530,6 +543,7 @@ DataArchive::queryVariables(ProblemSpecP vars, vector<string>& names,
       if(name == "")
         throw InternalError("DataArchive::queryVariables:Variable name not found",
                             __FILE__, __LINE__);
+      std::cout << "query variables found " << name << std::endl;
       names.push_back(name);
     } else if(n->getNodeType() != ProblemSpec::TEXT_NODE){
       cerr << "DataArchive::queryVariables:WARNING: Unknown variable data: " << n->getNodeName() << '\n';
@@ -807,16 +821,22 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
   queryGlobals(names, typeDescriptions);  
   
   map<string, VarLabel*> varMap;
+
   for (unsigned i = 0; i < names.size(); i++) {
     VarLabel * vl = VarLabel::find(names[i]);
+    std::cout << "finding varlabel for: " << names[i] << std::endl;
     if( vl == NULL ) {
 //      proc0cout << "Warning, VarLabel for " << names[i] << " was not found... attempting to create.\n"
 //          << "However, it is possible that this may cause problems down the road...\n";
       //***** THIS ASSUMES A SINGLE GHOST CELL ***** BE CAREFUL ********
       // check if we have extracells specified. This affects Wasatch only and should have no impact on other components.
-      const bool hasExtraCells = (grid->getPatchByID(0,0)->getExtraCells() != SCIRun::IntVector(0,0,0));
+      //const bool hasExtraCells = (grid->getPatchByID(0,0)->getExtraCells() != SCIRun::IntVector(0,0,0));
       // if extracells are specified, then create varlabels that are consistent with Wasatch varlabels.
-      vl = VarLabel::create( names[i], typeDescriptions[i], hasExtraCells? IntVector(0,0,0) : IntVector(1,1,1) );
+      vl = VarLabel::create( names[i], typeDescriptions[i], IntVector(0,0,0) );
+
+      // At the end of this routine, we will need to delete the VarLabels that we create here in
+      // order to avoid a memory leak.
+      createdVarLabels_[names[i]] = vl;
     }
     varMap[names[i]] = vl;
   }

@@ -461,9 +461,9 @@ SCI_ARG_WITH(libxml2,
 SCI_ARG_WITH(hdf5,
   AC_HELP_STRING(--with-hdf5=DIR,
                  Use the hdf5 installation in DIR),
-  [with_hdf5="$withval"		      # with_hdf5 is the directory var
-   sci_required_hdf5=yes],		      # flag to check for the libs
-  [with_hdf5=""])		      # undefinded otherwise
+  [with_hdf5="$withval"               # with_hdf5 is the directory var
+   sci_required_hdf5=yes],            # flag to check for the libs
+  [with_hdf5=""])                     # undefined otherwise
 
 SCI_ARG_WITH(freetype,
   AC_HELP_STRING(--with-freetype=DIR,
@@ -1071,7 +1071,12 @@ BUILD_MPM=yes
 BUILD_MD=yes
 BUILD_MODELS_RADIATION=yes
 BUILD_WASATCH=no
-USE_WASATCH=no
+BUILD_WASATCH_IN_ARCHES=no
+
+if test "$USE_WASATCH" = ""; then 
+  USE_WASATCH=undefined
+fi
+
 DEF_ARCHES=""
 DEF_ICE=""
 DEF_MPM=""
@@ -1519,15 +1524,15 @@ case $host in
     ac_objext=o
 
     if test "$CC" = "icc"; then
-      CFLAGS=" -w1"
-      CXXFLAGS=" -w1"
+      CFLAGS="$CFLAGS -w1"
+      CXXFLAGS="$CXXFLAGS -w1"
     elif test "$CC" = "pgcc"; then
       # pgcc doesn't support -Wall (at least not on ranger.tacc.utexas.edu under pgcc v7.1-2)
-      CFLAGS=
-      CXXFLAGS=
+      CFLAGS=$CFLAGS
+      CXXFLAGS=$CXXFLAGS
     else
-      CFLAGS=" -Wall"
-      CXXFLAGS=" -Wall"
+      CFLAGS="$CFLAGS -Wall"
+      CXXFLAGS="$CXXFLAGS -Wall"
     fi
 
     ######################################
@@ -2600,7 +2605,7 @@ cat > conftest-exc.cc <<EOF
       }
     }
 EOF
-    $CXX -o conftest-exc conftest-exc.cc
+    $CXX $CFLAGS -o conftest-exc conftest-exc.cc $LDFLAGS
     ./conftest-exc > /dev/null 2>&1 
 
     if test "$?" != "0"; then
@@ -2700,12 +2705,18 @@ if test "$with_fortran" != "no"; then
       SCI_TRY_LINK(F,fortran libraries,,,xlf90,$_sci_lib,,,$_sci_optional)
       ;;
     *linux*)
+      case $F77 in
+        *mpif77* )
+          msg="Assuming mpif77 behaves the same as gfortran..."
+          add_important_warning "$msg"
+          AC_MSG_WARN($msg)
+      esac
       # Linux Library Check
       case $F77 in
         *pgf77*)
           SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,$RT_LIB_FLAG,,$_sci_optional)
           ;;
-        *gfortran*)
+        *gfortran* | *mpif77* )
           SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
           ;;
         *ifort*)
@@ -4187,14 +4198,7 @@ if test "$with_spatialops"; then
   INC_SPATIALOPS_H="-I$with_spatialops/include"
   SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
 
-  if test "$sci_required_cuda" = "yes"; then
-    # The spatialops-structured lib is part of the new Nebo version of SpatialOps...
-    # once the Nebo version is merged into the main SpatialOps, then this if (more
-    # specifically the else part) can be removed.
-    SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil -lspatialops-structured"
-  else
-    SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil"
-  fi
+  SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil -lspatialops-structured"
 
   HAVE_SPATIALOPS="yes"
 fi
@@ -4260,7 +4264,7 @@ if test "$with_tabprops"; then
     if test ! -d $with_tabprops; then
       AC_MSG_ERROR( '$with_tabprops' directory does not exist. )
     fi
-    for file in include/tabprops/StateTable.h lib/tabprops/libtabprops.a; do
+    for file in include/tabprops/StateTable.h lib/tabprops/libtabprops.a lib/tabprops/libinterp.a; do
       if test ! -f $with_tabprops/$file; then
         AC_MSG_ERROR( '$with_tabprops/$file' does not exist. )
       fi
@@ -4270,7 +4274,7 @@ if test "$with_tabprops"; then
   DEF_TABPROPS="#define HAVE_TABPROPS 1"
   INC_TABPROPS_H="-I$with_tabprops/include"
   TABPROPS_LIB_DIR_FLAG="-L$with_tabprops/lib/tabprops"
-  TABPROPS_LIB_FLAG="-ltabprops"
+  TABPROPS_LIB_FLAG="-ltabprops -linterp"
   HAVE_TABPROPS="yes"
 fi
 AC_SUBST(HAVE_TABPROPS)
@@ -4312,13 +4316,17 @@ AC_SUBST(RADPROPS_LIB_DIR_FLAG)
 ##  --  Handle --enable-wasatch-in-arches --------------------------------
 
 if test "$wasatch_in_arches" = "yes"; then
-   if test "$USE_WASATCH" != yes; then
-      add_important_warning "Turning on Wasatch for use in Arches."
-      AC_MSG_WARN(Turning on Wasatch for use in Arches.)
+   if test "$USE_WASATCH" = "no"; then
+      AC_MSG_ERROR( --enable-wasatch-in-arches specified, but USE_WASATCH was set to 'no'. )
+   fi
+   if test "$USE_WASATCH" = "undefined"; then
+      msg="Turning on Wasatch for use in Arches."
+      add_important_warning "$msg"
+      AC_MSG_WARN($msg)
       USE_WASATCH=yes
    fi
    DEF_WASATCH="#define WASATCH_IN_ARCHES 1";
-   BUILD_WASATCH_IN_ARCHES="yes"
+   BUILD_WASATCH_IN_ARCHES=yes
 fi
 AC_SUBST(DEF_WASATCH_IN_ARCHES)
 AC_SUBST(BUILD_WASATCH_IN_ARCHES)
@@ -4335,13 +4343,19 @@ if test "$USE_WASATCH" = "yes"; then
     AC_MSG_ERROR(You specified the use of the Wasatch component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
   fi
 else
-  if test "$HAVE_BOOST" = "yes" &&
-     test "$HAVE_TABPROPS" = "yes" &&
-     test "$HAVE_SPATIALOPS" = "yes" &&
-     test "$HAVE_EXPRLIB" = "yes"; then
-    BUILD_WASATCH=yes
-    add_important_warning "All prereqs satisfied, turning on Wasatch component."
-    AC_MSG_WARN(All prereqs satisfied, turning on Wasatch component.)
+  if test "$USE_WASATCH" = "no"; then
+      msg="Found Boost TabProps ExprLib etc but USE_WASATCH was set to 'no'.  Will not turn on Wasatch."
+      add_important_warning "$msg"
+      AC_MSG_WARN($msg)
+  else
+    if test "$HAVE_BOOST" = "yes" &&
+       test "$HAVE_TABPROPS" = "yes" &&
+       test "$HAVE_SPATIALOPS" = "yes" &&
+       test "$HAVE_EXPRLIB" = "yes"; then
+      BUILD_WASATCH=yes
+      add_important_warning "All prereqs satisfied, turning on Wasatch component."
+      AC_MSG_WARN(All prereqs satisfied, turning on Wasatch component.)
+    fi
   fi
 fi
 

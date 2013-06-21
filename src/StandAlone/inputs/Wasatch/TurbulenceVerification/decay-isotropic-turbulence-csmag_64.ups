@@ -49,11 +49,10 @@
        <Constant>0.0</Constant>
     </BasicExpression>
 
-    <Turbulence>
-      <EddyViscosityConstant>0.2</EddyViscosityConstant>
-      <TurbulenceModel> SMAGORINSKY </TurbulenceModel>
+    <Turbulence model="SMAGORINSKY">
+      <EddyViscosityCoefficient>0.2</EddyViscosityCoefficient>
     </Turbulence>
-  
+
     <!-- Set the initial condition for x-mom -->
     <BasicExpression type="XVOL">
       <TaskList>initialization</TaskList>

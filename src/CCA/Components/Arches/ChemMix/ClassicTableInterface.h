@@ -33,6 +33,7 @@
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/IO/UintahZlibUtil.h>
 
 #include   <string>
 
@@ -135,7 +136,7 @@ public:
                   DataWarehouse* new_dw );
 
   /** @brief Load table into memory */ 
-  void loadMixingTable( const string & inputfile );
+  void loadMixingTable(gzFile &fp, const string & inputfile );
 
   enum BoundaryType { DIRICHLET, NEUMANN, FROMFILE };
 
@@ -851,7 +852,7 @@ private:
 
   BoundaryCondition_new* _boundary_condition; 
 
-  void checkForConstants( const string & inputfile );
+  void checkForConstants(gzFile &fp, const string & inputfile );
 
   //previous Arches specific variables: 
   std::vector <std::vector<double> > i1;

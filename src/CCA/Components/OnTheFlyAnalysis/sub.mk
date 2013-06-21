@@ -36,6 +36,7 @@ SRCS     += \
 	$(SRCDIR)/AnalysisModuleFactory.cc \
 	$(SRCDIR)/AnalysisModule.cc	       \
 	$(SRCDIR)/lineExtract.cc	       \
+	$(SRCDIR)/planeExtract.cc	       \
 	$(SRCDIR)/flatPlate_heatFlux.cc	\
 	$(SRCDIR)/particleExtract.cc	\
 	$(SRCDIR)/containerExtract.cc	\

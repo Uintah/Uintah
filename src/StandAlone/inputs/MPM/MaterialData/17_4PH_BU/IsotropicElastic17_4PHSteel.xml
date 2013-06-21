@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- 17-4PH Bar Steel -->
+<Uintah_Include>
+  <shear_modulus>76.163e4</shear_modulus>
+  <bulk_modulus>155.95e4</bulk_modulus>
+</Uintah_Include>
+

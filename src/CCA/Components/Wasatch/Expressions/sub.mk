@@ -44,6 +44,7 @@ CUDA_ENABLED_SRCS = \
      Dilatation           \
      MomentumPartialRHS   \
      MomentumRHS          \
+     MonolithicRHS        \
      PoissonExpression    \
      Pressure             \
      PressureSource       \
@@ -75,10 +76,14 @@ endif
 # way:
 #
 SRCS += \
-        $(SRCDIR)/MonolithicRHS.cc        \
+		$(SRCDIR)/DensityCalculator.cc    \
         $(SRCDIR)/ScalabilityTestSrc.cc   \
         $(SRCDIR)/SetCurrentTime.cc       \
-        $(SRCDIR)/VelocityMagnitude.cc    
+        $(SRCDIR)/RadPropsEvaluator.cc	  \
+        $(SRCDIR)/VelocityMagnitude.cc    \
+        $(SRCDIR)/StableTimestep.cc       \
+        $(SRCDIR)/TabPropsHeatLossEvaluator.cc
+            	
 
 #
 # Subdirectories to build...
@@ -121,6 +126,9 @@ ifeq ($(HAVE_CUDA),yes)
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/MomentumRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentumRHS.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/MonolithicRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/MonolithicRHS.cc
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/PoissonExpression.cu : $(SRCTOP_ABS)/$(SRCDIR)/PoissonExpression.cc

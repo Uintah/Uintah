@@ -42,7 +42,9 @@ DiffusiveVelocity<GradT>::DiffusiveVelocity( const Expr::Tag& turbDiffTag,
     coefTag_    ( coefTag     ),
     turbDiffTag_( turbDiffTag ),
     coefVal_    ( 0.0         )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -110,11 +112,8 @@ evaluate()
 {
   using namespace SpatialOps;
   VelT& result = this->value();
-  if (isTurbulent_) {
-    result <<= - (coefVal_ + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
-  } else {
-    result <<= - coefVal_ * (*gradOp_)(*phi_);
-  }
+  if (isTurbulent_)  result <<= - (coefVal_ + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
+  else               result <<= - coefVal_ * (*gradOp_)(*phi_);
 }
 
 
@@ -132,7 +131,9 @@ DiffusiveVelocity2( const Expr::Tag& turbDiffTag,
     coefTag_    ( coefTag     ),
     turbDiffTag_( turbDiffTag )
 
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -188,12 +189,8 @@ evaluate()
 {
   using namespace SpatialOps;
   VelT& result = this->value();
-  if (isTurbulent_) {
-    result <<= - ((*interpOp_)(*coef_) + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
-  } else {
-    result <<= - (*interpOp_)(*coef_) * (*gradOp_)(*phi_);
-  }
-
+  if( isTurbulent_ ) result <<= - ((*interpOp_)(*coef_) + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
+  else               result <<= - (*interpOp_)(*coef_) * (*gradOp_)(*phi_);
 }
 
 //--------------------------------------------------------------------

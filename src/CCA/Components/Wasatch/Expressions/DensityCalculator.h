@@ -25,7 +25,7 @@
 #ifndef DensityCalculator_Expr_h
 #define DensityCalculator_Expr_h
 
-#include <tabprops/StateTable.h>
+#include <tabprops/TabProps.h>
 
 #include <expression/Expression.h>
 
@@ -35,8 +35,28 @@
  *  \author Amir Biglari
  *  \date   Feb, 2011
  *
- *  \brief Evaluates density and eta if we are given rho*eta, using TabProps,
- *         an external library for tabular property evaluation.
+ *  \brief Evaluates density (\f$\rho\f$) and \f$\vec{\eta}\f$ if we are given
+ *         \f$\rho \cdot \vec{\eta}\f$, \f$\vec{\theta}\f$ and
+ *         \f$\rho=G(\vec{\eta},\vec{\theta})\f$.
+ *
+ *  In general, we have a system of nonlinear equations
+ *  \f[
+ *     \rho = G(\vec{\eta},\vec{\theta})
+ *  \f]
+ *  with
+ *  \f[
+ *     \eta_i = \frac{\rho\eta_i}{G(\vec{\eta},\vec{\theta})}
+ *  \f]
+ *  where we are given \f$\rho\vec{\eta}\f$ and \f$\theta\f$ but want to find
+ *  \f$\rho\f$ and \f$\vec{\eta}\f$.  This is done by solving a nonlinear system
+ *  of equations using newton's method.
+ *
+ *  Note that, although we could populate \f$\vec{\eta}\f$ as part of this expression,
+ *  we currently only calculate the density.  This is because \f$\vec{\eta}\f$ is
+ *  calculated elsewhere currently.
+ *
+ *  \tparam FieldT the type of field to build this density evaluator for.
+ *    Currently, this class is instantiated only for SVolField.
  */
 template< typename FieldT >
 class DensityCalculator
@@ -48,59 +68,73 @@ class DensityCalculator
   typedef std::vector< typename FieldT::      iterator > VarIter;
   typedef std::vector< typename FieldT::const_iterator > ConstIter;
 
-  typedef std::vector<double> PointValues;
+  typedef std::vector<double> DoubleVec;
 
-  /* RhoetaIncEta and ReIEta mean "Rhoeta Included Eta" and are using to show a
-   subset of the eta's which can be weighted by density */
-  /* RhoetaExEta and ReEEta mean "Rhoeta Excluded Eta" and are using to show  a
-   subset of the eta's which can NOT be weighted by density */
-  const Expr::TagList rhoEtaTags_, rhoEtaIncEtaNames_, orderedEtaTags_;
-  Expr::TagList rhoEtaExEtaNames_;
+  /*
+   * rhoEtaIncEta and reIEta mean "rhoeta included eta" and are using to show a
+   * subset of the eta's which can be weighted by density.
+   *
+   * rhoetaExEta and reEEta mean "rhoeta excluded eta" and are using to show a
+   * subset of the eta's which can NOT be weighted by density
+   */
+  const Expr::TagList rhoEtaTags_, etaTags_, orderedIvarTags_;
+  Expr::TagList thetaTags_;
 
-  const InterpT* const evaluator_;
+  const InterpT* const evaluator_; ///< calculates \f$\rho=\mathcal{G}(\eta_1,\eta_2,\ldots,\eta_{n_\eta})\f$.
 
-  IndepVarVec rhoEta_;
-  IndepVarVec rhoEtaExEta_;
+  IndepVarVec rhoEta_;      ///< density-weighted independent variables
+  IndepVarVec theta_;       ///< non-density-weighted independent variables
   VarIter     rhoEtaIncEtaIters_;
-  ConstIter   rhoEtaExEtaIters_;
+  ConstIter   thetaIters_;
   ConstIter   rhoEtaIters_;
 
-  PointValues rhoEtaIncEtaPoint_;
-  PointValues rhoEtaExEtaPoint_;
-  PointValues rhoEtaPoint_;
+  DoubleVec etaPoint_;    ///< values of \f$\vec{\eta}\f$     at a given point on the mesh
+  DoubleVec thetaPoint_;  ///< values of \f$\vec{\theta}\f$   at a given point on the mesh
+  DoubleVec rhoEtaPoint_; ///< values of \f$\rho\vec{\eta}\f$ at a given point on the mesh
 
-  std::vector<int> ReIindex;
+  std::vector<size_t> etaIndex_;  ///< locations of the eta variables in the full set of indep. vars. for the function.
 
-  // Linear solver function variables
-  std::vector<double> J;           ///< A vector for the jacobian matrix
-  std::vector<double> g;           ///< A vector for the rhs functions in non-linear solver
-  std::vector<double> orderedEta;  ///< A vector to store all eta values in the same order as the table
+  // Linear solver function variables - used in nonlinear_solver
+  DoubleVec jac_;          ///< A vector for the jacobian matrix
+  DoubleVec g_;            ///< A vector for the rhs functions in non-linear solver
+  DoubleVec orderedIvars_; ///< A vector to store all independent variables in the same order as the table
+  DoubleVec delta_, etaTmp_;
+  std::vector<int> ipiv_;  ///< integer work array for linear solver
 
+  DensityCalculator( const InterpT* const evaluator,          ///< evaluate rho given etas & thetas
+                     const Expr::TagList& rhoEtaTags,         ///< rho*eta tag
+                     const Expr::TagList& etaTags,            ///< Tags for eta
+                     const Expr::TagList& orderedIvarTags );  ///< Tag for all of the etas & thetas in the correct order
 
-  DensityCalculator( const InterpT* const spline,
-                     const Expr::TagList& RhoEtaTags,           ///< rho*eta tag
-                     const Expr::TagList& RhoetaIncEtaNames,    ///< Tag for ReIEta
-                     const Expr::TagList& OrderedEtaTags );     ///< Tag for all of the eta's in the corect order
-
-  bool nonlinear_solver( std::vector<double>& ReIeta,
-                         const std::vector<double>& ReEeta,
-                         const std::vector<double>& RhoEta,
-                         std::vector<int>& ReIindex,
-                         double& rho,
-                         const InterpT&,
+  bool nonlinear_solver( double& rho,                         ///< the density solution
+                         std::vector<double>& eta,            ///< solution for \f$\eta\f$ corresponding to the density-weighted independent variables
+                         const std::vector<double>& theta,    ///< non-density weighted independent variables
+                         const std::vector<double>& rhoEta,   ///< density weighted independent variables
+                         const std::vector<size_t>& etaIndex, ///< indices where the density-weighted independent variables should be included in the full set of independent variables.
+                         const InterpT&,                      ///< interpolant for density
                          const double rtol );
 
 public:
+
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::TagList rhoEtaTs_, rhoEtaIncEtaNs_, rhoEtaExEtaNs_, orderedEtaTs_;
-    const InterpT* const spline_;
+    const Expr::TagList rhoEtaTs_, etaTs_, thetaTs_, orderedIvarTs_;
+    const InterpT* const interp_;
   public:
+    /**
+     * @param result the density
+     * @param densEvaluator the interpolant that provides density as a function of the independent variables, \f$\eta_j\f$
+     * @param rhoEtaTags Tag for each of the density-weighted independent variables, \f$\rho\eta_j\f$
+     * @param etaTags Tags corresponding to the primitive variables, \f$\eta_j\f$
+     * @param orderedIvarTags Tags corresponding to the full set of independent variables, \f$\vec{\eta}\f$ and \f$\vec{\theta}\f$.
+     *   Note that this may be a superset of etaTags  set since there may be some
+     *   variables that are not density weighted that we include in the analysis.
+     */
     Builder( const Expr::Tag& result,
-             const InterpT* const spline,
+             const InterpT* const densEvaluator,
              const Expr::TagList& rhoEtaTags,
-             const Expr::TagList& rhoEtaIncEtaNames,
-             const Expr::TagList& orderedEtaTags );
+             const Expr::TagList& etaTags,
+             const Expr::TagList& orderedIvarTags );
 
     Expr::ExpressionBase* build() const;
   };
@@ -111,311 +145,5 @@ public:
   void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
-
-
-
-// ###################################################################
-//
-//                          Implementation
-//
-// ###################################################################
-
-
-
-template< typename FieldT >
-DensityCalculator<FieldT>::
-DensityCalculator( const InterpT* const spline,
-                   const Expr::TagList& rhoEtaTags,
-                   const Expr::TagList& rhoetaIncEtaNames,
-                   const Expr::TagList& orderedEtaTags )
-: Expr::Expression<FieldT>(),
-  rhoEtaTags_       ( rhoEtaTags        ),
-  rhoEtaIncEtaNames_( rhoetaIncEtaNames ),
-  orderedEtaTags_   ( orderedEtaTags    ),
-  evaluator_        ( spline            )
-{
-  ReIindex.clear();
-  int counter=0;
-  bool match;
-  for( typename Expr::TagList::const_iterator i=orderedEtaTags_.begin();
-      i!=orderedEtaTags_.end();
-      ++i, ++counter )
-  {
-    match=0;
-    for( typename Expr::TagList::const_iterator j=rhoEtaIncEtaNames_.begin();
-         j!=rhoEtaIncEtaNames_.end();
-         ++j )
-    {
-      if (*i==*j) {
-        ReIindex.push_back( counter );
-        match=1;
-        break;
-      }
-    }
-
-    if (!match)  {
-      rhoEtaExEtaNames_.push_back( *i );
-    }
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-DensityCalculator<FieldT>::
-~DensityCalculator()
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-DensityCalculator<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  for( Expr::TagList::const_iterator inam=rhoEtaTags_.begin(); inam!=rhoEtaTags_.end(); ++inam ){
-    exprDeps.requires_expression( *inam );
-  }
-  for( Expr::TagList::const_iterator inam=rhoEtaExEtaNames_.begin(); inam!=rhoEtaExEtaNames_.end(); ++inam ){
-    exprDeps.requires_expression( *inam );
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-DensityCalculator<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-
-  rhoEta_.clear();
-  for( Expr::TagList::const_iterator inam=rhoEtaTags_.begin(); inam!=rhoEtaTags_.end(); ++inam ){
-    rhoEta_.push_back( &fm.field_ref( *inam ) );
-  }
-  rhoEtaExEta_.clear();
-  for( Expr::TagList::const_iterator inam=rhoEtaExEtaNames_.begin(); inam!=rhoEtaExEtaNames_.end(); ++inam ){
-    rhoEtaExEta_.push_back( &fm.field_ref( *inam ) );
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-DensityCalculator<FieldT>::
-evaluate()
-{
-  DepVarVec& results = this->get_value_vec();
-
-  DepVarVec rhoEtaIncEta;
-  typename DepVarVec::iterator iReIEta = results.begin();
-  FieldT& rho = **iReIEta;
-  ++iReIEta;
-  for( ; iReIEta!=results.end(); ++iReIEta ){
-    rhoEtaIncEta.push_back( *iReIEta );
-  }
-
-  rhoEtaIncEtaIters_.clear();
-  rhoEtaExEtaIters_.clear();
-  rhoEtaIters_.clear();
-
-  for( typename DepVarVec::iterator i=rhoEtaIncEta.begin(); i!=rhoEtaIncEta.end(); ++i ){
-    rhoEtaIncEtaIters_.push_back( (*i)->begin() );
-  }
-  for( typename IndepVarVec::iterator i=rhoEtaExEta_.begin(); i!=rhoEtaExEta_.end(); ++i ){
-    rhoEtaExEtaIters_.push_back( (*i)->begin() );
-  }
-  for( typename IndepVarVec::const_iterator i=rhoEta_.begin(); i!=rhoEta_.end(); ++i ){
-    rhoEtaIters_.push_back( (*i)->begin() );
-  }
-
-  unsigned int convergeFailed=0;
-
-  // loop over grid points.
-  for( typename FieldT::iterator irho= rho.begin(); irho!=rho.end(); ++irho ){
-
-    // extract indep vars at this grid point
-    rhoEtaIncEtaPoint_.clear();
-    rhoEtaPoint_.clear();
-    for( typename ConstIter::const_iterator i=rhoEtaIters_.begin(); i!=rhoEtaIters_.end(); ++i ){
-      rhoEtaPoint_.push_back( **i );
-      rhoEtaIncEtaPoint_.push_back( **i / (*irho + 1e-11) );
-    }
-    rhoEtaExEtaPoint_.clear();
-    for( typename ConstIter::const_iterator i=rhoEtaExEtaIters_.begin(); i!=rhoEtaExEtaIters_.end(); ++i ){
-      rhoEtaExEtaPoint_.push_back( **i );
-    }
-
-    // calculate the result
-    const bool converged = nonlinear_solver( rhoEtaIncEtaPoint_, rhoEtaExEtaPoint_, rhoEtaPoint_, ReIindex, *irho , *evaluator_, 1e-9 );
-    if( !converged )  ++convergeFailed;
-
-    // increment all iterators to the next grid point
-    typename PointValues::const_iterator iReIEta=rhoEtaIncEtaPoint_.begin();
-    for( typename VarIter::iterator i=rhoEtaIncEtaIters_.begin(); i!=rhoEtaIncEtaIters_.end(); ++i, ++iReIEta ){
-      **i = *iReIEta;
-      ++(*i);
-    }
-    for( typename ConstIter::iterator i=rhoEtaIters_.begin(); i!=rhoEtaIters_.end(); ++i )  ++(*i);
-    for( typename ConstIter::iterator i=rhoEtaExEtaIters_.begin(); i!=rhoEtaExEtaIters_.end(); ++i )  ++(*i);
-
-  } // grid loop
-
-  if( convergeFailed>0 )
-    std::cout << convergeFailed << " of " << rho.window_with_ghost().local_npts() << " points failed to converge on density solver" << std::endl;
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-DensityCalculator<FieldT>::
-Builder::Builder( const Expr::Tag& result,
-                  const InterpT* const spline,
-                  const Expr::TagList& rhoEtaTags,
-                  const Expr::TagList& rhoEtaIncEtaNames,
-                  const Expr::TagList& orderedEtaTags )
-: ExpressionBuilder(result),
-  rhoEtaTs_      ( rhoEtaTags        ),
-  rhoEtaIncEtaNs_( rhoEtaIncEtaNames ),
-  orderedEtaTs_  ( orderedEtaTags    ),
-  spline_        ( spline            )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-Expr::ExpressionBase*
-DensityCalculator<FieldT>::
-Builder::build() const
-{
-  return new DensityCalculator<FieldT>( spline_, rhoEtaTs_, rhoEtaIncEtaNs_, orderedEtaTs_);
-}
-
-//====================================================================
-
-extern "C"{
-  void dgetrf_( const int* m,
-                const int* n,
-                double A[],
-                const int* lda,
-                int* ipiv,
-                int* info );
-
-  void dgetrs_( const char* trans,
-                const int* n,
-                const int* nrhs,
-                const double A[],
-                const int* lda,
-                const int* ipiv,
-                double b[],
-                const int* ldb,
-                int* info );
-}
-
-template< typename FieldT >
-bool
-DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& ReIeta,
-                                             const std::vector<double>& ReEeta,
-                                             const std::vector<double>& rhoEta,
-                                             std::vector<int>& ReIindex,
-                                             double& rho,
-                                             const InterpT& eval,
-                                             const double rtol )
-{
-  using namespace std;
-  const size_t neq = rhoEta.size();
-  unsigned int itCounter = 0;
-  const unsigned int maxIter = 70;    // the lowest iteration number seen in the tests is 5 which makes maxIter=6, however we use this number for saftiy.
-  
-  if( neq==0 ){
-    orderedEta.clear();
-    orderedEta=ReEeta;
-    rho = eval.value(orderedEta);
-  }
-  else{
-    J.resize(neq*neq);                 // A vector for the jacobian matrix
-    g.resize(neq);                     // A vector for the rhs functions in non-linear solver
-    std::vector<int> ipiv(neq);        // work array for linear solver
-
-    PointValues ReIetaTmp(ReIeta);
-    double relErr;
-
-    std::vector<double> deleta(neq); 
-    for (size_t i=0; i<neq; ++i) 
-      deleta[i] = 1e-6 * ReIeta[i] + 1e-11;
-
-    do{
-      ++itCounter;
-      // Create the ordered eta vector
-      orderedEta.clear();
-      orderedEta=ReEeta;
-      for( size_t i=0; i<ReIindex.size(); i++ ) {
-        orderedEta.insert(orderedEta.begin()+ReIindex[i],ReIeta[i]);
-      }
-
-      double rhotmp = eval.value( orderedEta );
-
-      // Loop over different etas
-      for( size_t k=0; k<neq; ++k ){
-        for( size_t i=0; i<neq; ++i ) {
-          if( k==i )
-            ReIetaTmp[i]=ReIeta[k] + deleta[k];
-          else
-            ReIetaTmp[i] = ReIeta[i];
-        }
-
-        // Recreate the ordered eta vector with the modified eta vector
-        orderedEta.clear();
-        orderedEta=ReEeta;
-        for( size_t i=0; i<ReIindex.size(); i++ ) {
-          orderedEta.insert( orderedEta.begin()+ReIindex[i], ReIetaTmp[i] );
-        }
-
-        const double rhoplus = eval.value(&orderedEta[0]);
-
-        // Calculating the rhs vextor components
-        g[k] = -( ReIeta[k] - (rhoEta[k] / rhotmp));
-        for( size_t i=0; i<neq; ++i ) {
-          J[i + k*neq] = (( ReIetaTmp[i] - rhoEta[i]/rhoplus ) - ( ReIeta[i] - rhoEta[i]/rhotmp )) / deleta[k];
-        }
-      }
-      
-      // Solve the linear system
-      const char mode = 'n';
-      int one=1, info;
-
-      // jcs why not use dgesv instead?
-      // Factor general matrix J using Gaussian elimination with partial pivoting
-      const int numEqns = neq;
-      dgetrf_(&numEqns, &numEqns, &J[0], &numEqns, &ipiv[0], &info);
-      assert( info==0 );
-      // Solving J * delta = g
-      // note that on entry, g is the rhs and on exit, g is the solution (delta).
-      dgetrs_(&mode, &numEqns, &one, &J[0], &numEqns, &ipiv[0], &g[0], &numEqns, &info);
-      assert(info==0);
-
-      // relative error calculations
-      relErr = 0.0;
-      for( size_t i=0; i<neq; ++i ){
-        ReIeta[i] += g[i];
-        relErr += std::abs( g[i]/(std::abs(ReIeta[i])+rtol) );
-      }
-
-      rho = rhotmp;  // Updating rho
-    } while (relErr>rtol && itCounter<maxIter);
-    if( itCounter >= maxIter ){
-//      std::cout << itCounter << setprecision(15) << " problems!  " << rho << " , " << relErr << ", " << g[0] << ", " << ReIeta[0] <<", "<<rhoEta[0]<< ", " << testrho << ", " << ReEeta[0] << std::endl;
-      return false;
-    }
-//    std::cout << "converged in " << itCounter << " iterations.  eta=" << ReIeta[0] << ", rhoeta=" << rho*ReIeta[0] << ", rho=" << rho << std::endl;  
-
-  } 
-
-  return true;
-}
-
-//====================================================================
 
 #endif // DensityCalculator_Expr_h

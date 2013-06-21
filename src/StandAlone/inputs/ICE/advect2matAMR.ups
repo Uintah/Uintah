@@ -282,5 +282,27 @@
           </line>
         </lines>
       </Module>
+      <!--__________________________________-->
+      <Module name="planeExtract">
+       
+        <material>Atmosphere</material>
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>      0.001   </timeStart>
+        <timeStop>          100  </timeStop>
+       
+        <Variables>
+          <analyze label="press_CC" matl="0"/> 
+          <analyze label="rho_CC"/>
+          <analyze label="temp_CC"/>
+          <analyze label="vel_CC"/>
+        </Variables>
+
+        <planes>
+          <plane name="XY_plane"> 
+                <startingPt>  [0.4, 0.4, 0]   </startingPt>
+                <endingPt>    [0.6, 0.6, 0]   </endingPt>
+          </plane>
+        </planes>
+      </Module>
     </DataAnalysis>        
 </Uintah_specification>

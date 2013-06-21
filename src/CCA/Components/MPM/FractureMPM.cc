@@ -223,54 +223,6 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
   }
 }
 
-void FractureMPM::scheduleInitializeAddedMaterial(const LevelP& level,
-                                                SchedulerP& sched)
-{
-  if (cout_doing.active())
-    cout_doing << "Doing FractureMPM::scheduleInitializeAddedMaterial " << endl;
-
-  Task* t = scinew Task("FractureMPM::actuallyInitializeAddedMaterial",
-                  this, &FractureMPM::actuallyInitializeAddedMaterial);
-
-  int numALLMatls = d_sharedState->getNumMatls();
-  int numMPMMatls = d_sharedState->getNumMPMMatls();
-  MaterialSubset* add_matl = scinew MaterialSubset();
-  cout << "Added Material = " << numALLMatls-1 << endl;
-  add_matl->add(numALLMatls-1);
-  add_matl->addReference();
-
-  t->computes(lb->partCountLabel,          add_matl);
-  t->computes(lb->pXLabel,                 add_matl);
-  t->computes(lb->pDispLabel,              add_matl);
-  t->computes(lb->pMassLabel,              add_matl);
-  t->computes(lb->pVolumeLabel,            add_matl);
-  t->computes(lb->pTemperatureLabel,       add_matl);
-  t->computes(lb->pTempPreviousLabel,      add_matl); // for thermal stress
-  t->computes(lb->pdTdtLabel,  add_matl);
-  t->computes(lb->pVelocityLabel,          add_matl);
-  t->computes(lb->pExternalForceLabel,     add_matl);
-  t->computes(lb->pParticleIDLabel,        add_matl);
-  t->computes(lb->pDeformationMeasureLabel,add_matl);
-  t->computes(lb->pStressLabel,            add_matl);
-  t->computes(lb->pSizeLabel,              add_matl);
-
-  if (flags->d_reductionVars->accStrainEnergy) {
-    // Computes accumulated strain energy
-    t->computes(lb->AccStrainEnergyLabel);
-  }
-
-  const PatchSet* patches = level->eachPatch();
-
-  MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(numMPMMatls-1);
-  ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-  cm->addInitialComputesAndRequires(t, mpm_matl, patches);
-
-  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
-
-  // The task will have a reference to add_matl
-  if (add_matl->removeReference())
-    delete add_matl; // shouln't happen, but...
-}
 
 void FractureMPM::scheduleInitializePressureBCs(const LevelP& level,
                                               SchedulerP& sched)
@@ -1175,33 +1127,6 @@ void FractureMPM::actuallyInitialize(const ProcessorGroup*,
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 }
 
-void FractureMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
-                                                  const PatchSubset* patches,
-                                                  const MaterialSubset* matls,
-                                                  DataWarehouse*,
-                                                  DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    if (cout_doing.active())
-      cout_doing <<"Doing actuallyInitializeAddedMaterial on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
-
-
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
-    cout << "num MPM Matls = " << numMPMMatls << endl;
-    CCVariable<short int> cellNAPID;
-    int m=numMPMMatls-1;
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-    particleIndex numParticles = mpm_matl->countParticles(patch);
-
-    new_dw->unfinalize();
-    mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
-
-    mpm_matl->getConstitutiveModel()->initializeCMData(patch, mpm_matl, new_dw);
-    new_dw->refinalize();
-  }
-}
 
 
 void FractureMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
