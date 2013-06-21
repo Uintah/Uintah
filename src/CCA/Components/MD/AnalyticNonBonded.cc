@@ -49,7 +49,7 @@ extern SCIRun::Mutex cerrLock;
 static DebugStream analytic_dbg("AnalyticNonbondedDbg", false);
 
 AnalyticNonBonded::AnalyticNonBonded() :
-    d_neighborlistLock("Nonbonded neighborlist lock")
+    d_neighborlistLock("Nonbonded neighbor-list lock")
 {
 
 }
@@ -63,7 +63,7 @@ AnalyticNonBonded::AnalyticNonBonded(MDSystem* system,
                                      const double r12,
                                      const double r6,
                                      const double cutoffRadius) :
-    d_system(system), d_r12(r12), d_r6(r6), d_cutoffRadius(cutoffRadius), d_neighborlistLock("Nonbonded neighborlist lock")
+    d_system(system), d_r12(r12), d_r6(r6), d_cutoffRadius(cutoffRadius), d_neighborlistLock("Nonbonded neighbor-list lock")
 {
   d_nonBondedInteractionType = NonBonded::LJ12_6;
 }
@@ -161,12 +161,15 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
       IntVector lowInterior = patch->getCellHighIndex();
       IntVector highInterior = patch->getCellLowIndex();
       ParticleSubset* local_pset = old_dw->getParticleSubset(matl, patch, lowInterior, highInterior);
+      ParticleSubset* neighbor_pset = old_dw->getParticleSubset(matl, patch, Ghost::AroundNodes, SHRT_MAX, d_lb->pXLabel);
 
       // requires variables
       constParticleVariable<Point> px;
+      constParticleVariable<Point> pxNeighbors;
       constParticleVariable<Vector> pforce;
       constParticleVariable<double> penergy;
       old_dw->get(px, d_lb->pXLabel, local_pset);
+      old_dw->get(pxNeighbors, d_lb->pXLabel, neighbor_pset);
       old_dw->get(penergy, d_lb->pEnergyLabel, local_pset);
       old_dw->get(pforce, d_lb->pForceLabel, local_pset);
 
@@ -177,6 +180,7 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
       new_dw->allocateAndPut(penergynew, d_lb->pEnergyLabel_preReloc, local_pset);
 
       // loop over all atoms in system, calculate the forces
+      std::vector<vector<int> > neighbors = d_neighborList[p];
       double r2, ir2, ir6, ir12, T6, T12;
       double forceTerm;
       Vector totalForce, atomForce;
@@ -188,13 +192,13 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
 
         // loop over the neighbors of atom "i"
         size_t idx;
-        size_t numNeighbors = d_neighborList[p][i].size();
+        size_t numNeighbors = neighbors.size();
         for (size_t j = 0; j < numNeighbors; ++j) {
 
-          idx = d_neighborList[p][i][j];
+          idx = neighbors[i][j];
 
           // the vector distance between atom i and j
-          reducedCoordinates = px[i] - px[idx];
+          reducedCoordinates = px[i] - pxNeighbors[idx];
 
           // this is required for periodic boundary conditions
           reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
@@ -208,8 +212,8 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
           ir12 = ir6 * ir6;       // 1/r^12
           T12 = d_r12 * ir12;
           T6 = d_r6 * ir6;
-          penergynew[idx] = T12 - T6;  // energy
-          vdwEnergy += penergynew[idx];  // count the energy
+          penergynew[i] = T12 - T6;  // energy
+          vdwEnergy += penergynew[i];  // count the energy
           forceTerm = (12.0 * T12 - 6.0 * T6) * ir2;  // the force term
           totalForce = forceTerm * reducedCoordinates;
 
