@@ -45,7 +45,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/IO/UintahZlibUtil.h>
+
 
 
 using namespace std;
@@ -86,8 +86,16 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   // READ TABLE: 
   proc0cout << "----------Mixing Table Information---------------  " << endl;
-  loadMixingTable( tableFileName );
-  checkForConstants( tableFileName );
+  gzFile gzFp = gzopen(tableFileName.c_str(),"r");
+  if( gzFp == NULL ) {
+    // If errno is 0, then not enough memory to uncompress file.
+    proc0cout << "Error with gz in opening file: " << tableFileName << ". Errno: " << errno << "\n"; 
+    throw ProblemSetupException("Unable to open the given input file: " + tableFileName, __FILE__, __LINE__);
+  }
+  loadMixingTable(gzFp, tableFileName );
+  gzrewind(gzFp);
+  checkForConstants(gzFp, tableFileName );
+  gzclose(gzFp);
   proc0cout << "-------------------------------------------------  " << endl;
 
   // Extract independent and dependent variables from input file
@@ -913,19 +921,11 @@ ClassicTableInterface::getEnthalpyIndexInfo()
 
 //-----------------------------------------
   void
-ClassicTableInterface::loadMixingTable( const string & inputfile )
+  ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
 {
 
   proc0cout << " Preparing to read the table inputfile:   " << inputfile << "\n";
-  gzFile gzFp = gzopen( inputfile.c_str(), "r" );
-
-  if( gzFp == NULL ) {
-    // If errno is 0, then not enough memory to uncompress file.
-    proc0cout << "Error with gz in opening file: " << inputfile << ". Errno: " << errno << "\n"; 
-    throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
-  }
-
-  d_indepvarscount = getInt( gzFp );
+  d_indepvarscount = getInt( fp );
 
   proc0cout << " Total number of independent variables: " << d_indepvarscount << endl;
 
@@ -934,7 +934,7 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
   int hl_grid_size = -1; 
  
   for (int ii = 0; ii < d_indepvarscount; ii++) {
-    string varname = getString( gzFp );
+    string varname = getString( fp );
     d_allIndepVarNames[ii] =  varname ;
     if ( varname == "heat_loss" ) 
       index_is_hl = ii;  
@@ -942,7 +942,7 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
 
   d_allIndepVarNum = vector<int>(d_indepvarscount);
   for (int ii = 0; ii < d_indepvarscount; ii++) {
-    int grid_size = getInt( gzFp ); 
+    int grid_size = getInt( fp ); 
     d_allIndepVarNum[ii] =  grid_size ; 
 
     if ( ii == index_is_hl ) 
@@ -954,21 +954,21 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
   }
 
   // Total number of variables in the table: non-adaibatic table has sensibile enthalpy too
-  d_varscount = getInt( gzFp );
+  d_varscount = getInt( fp );
   proc0cout << " Total dependent variables in table: " << d_varscount << endl;
 
   d_allDepVarNames = vector<std::string>(d_varscount); 
   for (int ii = 0; ii < d_varscount; ii++) {
 
     std::string variable; 
-    variable = getString( gzFp );
+    variable = getString( fp );
     d_allDepVarNames[ii] = variable ; 
   }
 
   // Units
   d_allDepVarUnits = vector<std::string>(d_varscount); 
   for (int ii = 0; ii < d_varscount; ii++) {
-    std::string units = getString( gzFp );
+    std::string units = getString( fp );
     d_allDepVarUnits[ii] =  units ; 
   }
 
@@ -986,7 +986,7 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
   //assign values (backwards)
   for (int i = d_indepvarscount-2; i>=0; i--) {
 	  for (int j = 0; j < d_allIndepVarNum[i+1] ; j++) {
-	    double v = getDouble( gzFp );
+	    double v = getDouble( fp );
 	    indep_headers[i][j] = v;
 	  }
   }
@@ -1027,18 +1027,18 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
 	    for (int mm = 0; mm < d_allIndepVarNum[d_indepvarscount-1]; mm++) {
 			  if (read_assign) {
 				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
-					  double v = getDouble(gzFp);
+					  double v = getDouble(fp);
 					  i1[mm][i] = v;
 				  }
 			  } else {
 				  //read but don't assign inbetween vals
 				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
-					  double v = getDouble(gzFp);
+					  double v = getDouble(fp);
 					  v += 0.0;
 				  }
 			  }
 			    for (int j=0; j<size2; j++) {
-				    double v = getDouble(gzFp);
+				    double v = getDouble(fp);
 				    table[kk][j + mm*size2] = v;
 				  }
 			  }
@@ -1049,25 +1049,23 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
 			proc0cout << "loading --->" << d_allDepVarNames[kk] << endl;
 			if (read_assign) {
 				for (int i=0; i<d_allIndepVarNum[0]; i++) {
-					double v = getDouble(gzFp);
+					double v = getDouble(fp);
 					i1[0][i] = v;
 				}
 			} else { 
 			  for (int i=0; i<d_allIndepVarNum[0]; i++) {
-					double v = getDouble(gzFp);
+					double v = getDouble(fp);
 					v += 0.0;
 				}	
 			}
 			for (int j=0; j<size; j++) {
-				double v = getDouble(gzFp);
+				double v = getDouble(fp);
 				table[kk][j] = v;
 			}
 			if (read_assign){read_assign = false;}
 	  }
 	}
   
-  // Closing the file pointer
-  gzclose( gzFp );
 
 	proc0cout << "creating object " << endl;
 	
@@ -1185,35 +1183,27 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
 }
 
-void ClassicTableInterface::checkForConstants( const string & inputfile ) { 
+void ClassicTableInterface::checkForConstants(gzFile &fp, const string & inputfile ) { 
 
   proc0cout << "\n Looking for constants in the header... " << endl;
-
-  gzFile gzFp = gzopen( inputfile.c_str(), "r" );
-
-  if( gzFp == NULL ) {
-    // If errno is 0, then not enough memory to uncompress file.
-    proc0cout << "Error with gz in opening file: " << inputfile << ". Errno: " << errno << "\n"; 
-    throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
-  }
 
   bool look = true; 
   while ( look ){ 
 
-    char ch = gzgetc( gzFp ); 
+    char ch = gzgetc( fp ); 
 
     if ( ch == '#' ) { 
 
-      char key = gzgetc( gzFp );
+      char key = gzgetc( fp );
 
       if ( key == 'K' ) {
         for (int i = 0; i < 3; i++ ){
-          key = gzgetc( gzFp ); // reading the word KEY and space
+          key = gzgetc( fp ); // reading the word KEY and space
         }
 
         string name; 
         while ( true ) {
-          key = gzgetc( gzFp ); 
+          key = gzgetc( fp ); 
           if ( key == '=' ) { 
             break; 
           }
@@ -1222,7 +1212,7 @@ void ClassicTableInterface::checkForConstants( const string & inputfile ) {
 
         string value_s; 
         while ( true ) { 
-          key = gzgetc( gzFp ); 
+          key = gzgetc( fp ); 
           if ( key == '\n' || key == '\t' || key == ' ' ) { 
             break; 
           }
@@ -1238,7 +1228,7 @@ void ClassicTableInterface::checkForConstants( const string & inputfile ) {
 
       } else { 
         while ( true ) { 
-          ch = gzgetc( gzFp ); // skipping this line
+          ch = gzgetc( fp ); // skipping this line
           if ( ch == '\n' || ch == '\t' ) { 
             break; 
           }
@@ -1252,8 +1242,7 @@ void ClassicTableInterface::checkForConstants( const string & inputfile ) {
     }
   }
 
-  // Closing the file pointer
-  gzclose( gzFp );
+
 }
 //---------------------
 
