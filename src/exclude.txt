@@ -1,3 +1,4 @@
+
 doc/arches.lyx
 doc/*.txt
 doc/Doxyfile
