@@ -1091,43 +1091,38 @@ namespace Wasatch {
             const int iInterior = poissonField.window_without_ghost().flat_index( hasExtraCells ? ghostCellIJK : intCellIJK  );
             
             switch(face){
-              case Uintah::Patch::xminus:
-              {
-                const int ixInterior = dudt->window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK );
-                poissonRHS[iInterior]  += (*dudt)[ixInterior]/dx;
-              }
-                break;                
-              case Uintah::Patch::xplus:
-              {
-                const int ixInterior = dudt->window_without_ghost().flat_index( hasExtraCells? intCellIJK : ghostCellIJK  );
-                poissonRHS[iInterior]  -= (*dudt)[ixInterior]/dx;
-              }
-                break;
-                case Uintah::Patch::yminus:
-              {
-                const int iyInterior = dvdt->window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
-                poissonRHS[iInterior]  += (*dvdt)[iyInterior]/dy;
-              }                
-                case Uintah::Patch::yplus:
-              {
-                const int iyInterior = dvdt->window_without_ghost().flat_index( hasExtraCells? intCellIJK : ghostCellIJK  );
-                poissonRHS[iInterior]  -= (*dvdt)[iyInterior]/dy;
-              }
-                break;
-                case Uintah::Patch::zminus:
-              {
-                const int izInterior = dwdt->window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
-                poissonRHS[iInterior]  += (*dwdt)[izInterior]/dz;
-              }
-                break;                
-                case Uintah::Patch::zplus:
-              {
-                const int izInterior = dwdt->window_without_ghost().flat_index( hasExtraCells? intCellIJK : ghostCellIJK  );
-                poissonRHS[iInterior]  -= (*dwdt)[izInterior]/dz;
-              }
-                break;
-              default:
-                break;
+            case Uintah::Patch::xminus: {
+              const int ixInterior = dudt->window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK );
+              poissonRHS[iInterior]  += (*dudt)[ixInterior]/dx;
+              break;
+            }
+            case Uintah::Patch::xplus: {
+              const int ixInterior = dudt->window_without_ghost().flat_index( hasExtraCells? intCellIJK : ghostCellIJK  );
+              poissonRHS[iInterior]  -= (*dudt)[ixInterior]/dx;
+              break;
+            }
+            case Uintah::Patch::yminus: {
+              const int iyInterior = dvdt->window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+              poissonRHS[iInterior]  += (*dvdt)[iyInterior]/dy;
+              break;
+            }
+            case Uintah::Patch::yplus: {
+              const int iyInterior = dvdt->window_without_ghost().flat_index( hasExtraCells? intCellIJK : ghostCellIJK  );
+              poissonRHS[iInterior]  -= (*dvdt)[iyInterior]/dy;
+              break;
+            }
+            case Uintah::Patch::zminus: {
+              const int izInterior = dwdt->window_without_ghost().flat_index( hasExtraCells? ghostCellIJK : intCellIJK  );
+              poissonRHS[iInterior]  += (*dwdt)[izInterior]/dz;
+              break;
+            }
+            case Uintah::Patch::zplus: {
+              const int izInterior = dwdt->window_without_ghost().flat_index( hasExtraCells? intCellIJK : ghostCellIJK  );
+              poissonRHS[iInterior]  -= (*dwdt)[izInterior]/dz;
+              break;
+            }
+            default:
+              break;
             }
           }
         }
