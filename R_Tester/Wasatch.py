@@ -97,6 +97,17 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
+# to use these tests:
+# export WHICH_TESTS=debug
+# then make runLocalRT
+# by default, local tests are executed. 
+# To revert back to LocalTests, use:
+# export WHICH_TESTS=local
+DEBUGTESTS = [
+  ("convection-test-svol-ydir",     "convection-test-svol-ydir.ups",     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("convection-test-svol-zdir",     "convection-test-svol-zdir.ups",     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
+]
+
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
@@ -268,6 +279,8 @@ if __name__ == "__main__":
 
   if environ['WHICH_TESTS'] == "local":
     TESTS = LOCALTESTS
+  elif environ['WHICH_TESTS'] == "debug":
+    TESTS = DEBUGTESTS
   else:
     TESTS = NIGHTLYTESTS
 
