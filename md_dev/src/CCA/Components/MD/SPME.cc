@@ -946,7 +946,7 @@ void SPME::reduceNodeLocalQ(const ProcessorGroup* pg,
         for (size_t y = 0; y < yExtents; ++y) {
           for (size_t z = 0; z < zExtents; ++z) {
 
-            // We need only wrap in the positive direction.
+            // We only need to wrap in the positive direction.
             int x_anchor = xOffset + x;
             if (x_anchor >= d_kLimits.x()) {
               x_anchor -= d_kLimits.x();
