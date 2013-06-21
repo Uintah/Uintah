@@ -179,6 +179,8 @@ namespace Uintah {
 
       // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
       std::vector<neighborlist> d_neighborList;  //!< List of all atom neighbor indices
+
+      mutable CrowdMonitor d_neighborlistLock;
   };
 
 }  // End namespace Uintah
