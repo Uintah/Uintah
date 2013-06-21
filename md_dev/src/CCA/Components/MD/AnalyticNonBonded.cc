@@ -120,10 +120,10 @@ void AnalyticNonBonded::setup(const ProcessorGroup* pg,
       int matl = materials->get(m);
 
       // get interior (purely local) bounds of current patch to correctly initialize particles (atoms)
-      IntVector lowInterior = patch->getCellHighIndex();
-      IntVector highInterior = patch->getCellLowIndex();
+      IntVector lowInterior = patch->getCellLowIndex();
+      IntVector highInterior = patch->getCellHighIndex();
       ParticleSubset* local_pset = old_dw->getParticleSubset(matl, patch, lowInterior, highInterior);
-      ParticleSubset* neighbor_pset = old_dw->getParticleSubset(matl, patch);  // This will have ghost cells from requires
+      ParticleSubset* neighbor_pset = old_dw->getParticleSubset(matl, patch, Ghost::AroundNodes, SHRT_MAX, d_lb->pXLabel);
 
       constParticleVariable<Point> px_local;
       constParticleVariable<Point> px_neighbors;
@@ -141,6 +141,10 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
+  if (d_system->newBox()) {
+    setup(pg, patches, materials, old_dw, new_dw);
+  }
+
   Vector box = d_system->getBox();
   double vdwEnergy = 0;
 
