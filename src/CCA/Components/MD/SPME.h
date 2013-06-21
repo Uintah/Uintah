@@ -374,14 +374,22 @@ namespace Uintah {
        * @param None
        * @return None
        */
-      void reduceNodeLocalQ();
+      void reduceNodeLocalQ(const ProcessorGroup* pg,
+                            const PatchSubset* patches,
+                            const MaterialSubset* materials,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
 
       /**
        * @brief redistribute node-local Q data (force)
        * @param None
        * @return None
        */
-      void distributeNodeLocalQ();
+      void distributeNodeLocalQ(const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* materials,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
 
       /**
        * @brief Checks for convergence of polarizability calculation

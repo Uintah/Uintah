@@ -86,9 +86,9 @@ SPME::SPME(MDSystem* system,
 SPME::~SPME()
 {
   // cleanup the memory we have dynamically allocated
-  std::vector<SPMEPatch*>::iterator PatchIterator;
-  for (PatchIterator = d_spmePatches.begin(); PatchIterator != d_spmePatches.end(); ++PatchIterator) {
-    SPMEPatch* spmePatch = *PatchIterator;
+  std::vector<SPMEPatch*>::iterator patchIterator;
+  for (patchIterator = d_spmePatches.begin(); patchIterator != d_spmePatches.end(); ++patchIterator) {
+    SPMEPatch* spmePatch = *patchIterator;
 
     SimpleGrid<std::complex<double> >* q = spmePatch->getQ();
     if (q) {
@@ -112,9 +112,9 @@ SPME::~SPME()
     delete d_Q_nodeLocal;
   }
 
-  std::map<PatchMaterialKey, std::vector<SPMEMapPoint>*>::iterator iter;
-  for (iter = d_gridMap.begin(); iter != d_gridMap.end(); iter++) {
-    std::vector<SPMEMapPoint>* gridmap = iter->second;
+  std::map<PatchMaterialKey, std::vector<SPMEMapPoint>*>::iterator mapPointIterator;
+  for (mapPointIterator = d_gridMap.begin(); mapPointIterator != d_gridMap.end(); ++mapPointIterator) {
+    std::vector<SPMEMapPoint>* gridmap = mapPointIterator->second;
     delete gridmap;
   }
 }
@@ -129,18 +129,19 @@ void SPME::initialize(const ProcessorGroup* pg,
 {
   // We call SPME::initialize from MD::initialize, or if we've somehow maintained our object across a system change
 
-  size_t numPatches = patches->size();
-  d_spmePatches.reserve(numPatches);
+  // Get useful information from global system descriptor to work with locally.
+  d_unitCell = d_system->getUnitCell();
+  d_inverseUnitCell = d_system->getInverseCell();
+  d_systemVolume = d_system->getCellVolume();
 
-  // Initially register our basic reduction variables in the DW
-  new_dw->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
-  new_dw->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
+  // reserve space for the number of patches we're working with
+  d_spmePatches.reserve(patches->size());
 
   // now create SoleVariables to place in the DW; global Q and the FFTW plans (forward and backward)
   // FFTW plans for forward and backward 3D transform of global Q grid
-  SoleVariable<SimpleGrid<dblcomplex>*> Q_global;
   SoleVariable<fftw_plan> forwardTransformPlan;
   SoleVariable<fftw_plan> backwardTransformPlan;
+  SoleVariable<SimpleGrid<dblcomplex>*> Q_global;
 
   IntVector zero(0, 0, 0);
   SimpleGrid<dblcomplex>* Q = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, 0);
@@ -167,6 +168,9 @@ void SPME::initialize(const ProcessorGroup* pg,
   forwardTransformPlan.setData(forwardPlan);
   backwardTransformPlan.setData(backwardPlan);
 
+  // Initially register our basic reduction variables in the DW (initial timestep)
+  new_dw->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
+  new_dw->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
   new_dw->put(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
   new_dw->put(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
   new_dw->put(Q_global, d_lb->globalQLabel);
@@ -176,11 +180,6 @@ void SPME::initialize(const ProcessorGroup* pg,
   d_Q_nodeLocalScratch = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, 0);
   d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
   d_Q_nodeLocalScratch->initialize(dblcomplex(0.0, 0.0));
-
-  // Get useful information from global system descriptor to work with locally.
-  d_unitCell = d_system->getUnitCell();
-  d_inverseUnitCell = d_system->getInverseCell();
-  d_systemVolume = d_system->getCellVolume();
 
   int numLocalSites;
   IntVector patchLowIndex, patchHighIndex, patchExtents;
@@ -209,10 +208,11 @@ void SPME::initialize(const ProcessorGroup* pg,
    * after the first re-allocation.)
    */
 
-  for (unsigned int p = 0; p < numPatches; p++) {
+  size_t numPatches = patches->size();
+  size_t numMatls = materials->size();
+  for (size_t p = 0; p < numPatches; ++p) {
     const Patch* patch = patches->get(p);
-    unsigned int numMatls = materials->size();
-    for (unsigned int m = 0; m < numMatls; m++) {
+    for (size_t m = 0; m < numMatls; ++m) {
       int matl = materials->get(m);
 
       // (x/X * y/Y * z/Z) * N_i * resizeFactor
@@ -226,12 +226,12 @@ void SPME::initialize(const ProcessorGroup* pg,
       std::vector<SPMEMapPoint>* gridmap = new std::vector<SPMEMapPoint>();
       gridmap->reserve(numLocalSites);
 
-      // TODO may not need this lock...
+      // TODO don't think we need this lock, as the initialize task is OncePerProc (serial) ...
       d_gridmapsLock.readLock();
       d_gridMap.insert(pair<PatchMaterialKey, std::vector<SPMEMapPoint>*>(PatchMaterialKey(patch, matl), gridmap));
       d_gridmapsLock.readUnlock();
-    }
-  }
+    }  // end material loop
+  }  // end patch loop
 }
 
 // Note:  Must run SPME->setup() each time there is a new box/K grid mapping (e.g. every step for NPT)
@@ -243,11 +243,10 @@ void SPME::setup(const ProcessorGroup* pg,
                  DataWarehouse* new_dw)
 {
   size_t numPatches = patches->size();
-
-  for (size_t p = 0; p < numPatches; p++) {
+  size_t numMatls = materials->size();
+  for (size_t p = 0; p < numPatches; ++p) {
     const Patch* patch = patches->get(p);
-    unsigned int numMatls = materials->size();
-    for (unsigned int m = 0; m < numMatls; m++) {
+    for (size_t m = 0; m < numMatls; ++m) {
       int matl = materials->get(m);
 
       Vector totalCellExtent = (d_system->getCellExtent()).asVector();
@@ -321,8 +320,8 @@ void SPME::setup(const ProcessorGroup* pg,
       d_spmePatchMap.insert(pair<PatchMaterialKey, int>(PatchMaterialKey(patch, matl), p));
       d_spmePatchLock.writeUnlock();
 
-    }  // end matl loop
-  }  //end patch loop
+    }  // end material loop
+  }  // end patch loop
 }
 
 void SPME::calculate(const ProcessorGroup* pg,
@@ -344,25 +343,25 @@ void SPME::calculate(const ProcessorGroup* pg,
     calculatePreTransform(pg, patches, materials, old_dw, new_dw);
 
     // Q grid reductions
-    reduceNodeLocalQ();
+    reduceNodeLocalQ(pg, patches, materials, old_dw, new_dw);
 
     // Forward transform
     transformRealToFourier(pg, patches, materials, old_dw, new_dw);
 
     // Redistribute charge grid
-    distributeNodeLocalQ();
+    distributeNodeLocalQ(pg, patches, materials, old_dw, new_dw);
 
     // Do Fourier space calculations on transformed data
     calculateInFourierSpace(pg, patches, materials, old_dw, new_dw);
 
     // Q grid reductions
-    reduceNodeLocalQ();
+    reduceNodeLocalQ(pg, patches, materials, old_dw, new_dw);
 
     // Reverse transform
     transformFourierToReal(pg, patches, materials, old_dw, new_dw);
 
     // Redistribute force grid
-    distributeNodeLocalQ();
+    distributeNodeLocalQ(pg, patches, materials, old_dw, new_dw);
 
     checkConvergence();
     numIterations++;
@@ -399,11 +398,11 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
 {
-  unsigned int numPatches = patches->size();
-  for (unsigned int p = 0; p < numPatches; p++) {
+  size_t numPatches = patches->size();
+  size_t numMatls = materials->size();
+  for (size_t p = 0; p < numPatches; ++p) {
     const Patch* patch = patches->get(p);
-    unsigned int numMatls = materials->size();
-    for (unsigned int m = 0; m < numMatls; m++) {
+    for (size_t m = 0; m < numMatls; ++m) {
       int matl = materials->get(m);
 
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
@@ -434,8 +433,9 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
       d_spmePatchLock.readUnlock();
 
       mapChargeToGrid(spmePatch, gridMap, pset, pcharge);
-    }
-  }
+
+    }  // end material loop
+  }  // end patch loop
 }
 
 void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
@@ -447,11 +447,11 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
   double spmeFourierEnergy = 0.0;
   Matrix3 spmeFourierStress(0.0);
 
-  unsigned int numPatches = patches->size();
-  for (unsigned int p = 0; p < numPatches; p++) {
+  size_t numPatches = patches->size();
+  size_t numMatls = materials->size();
+  for (size_t p = 0; p < numPatches; ++p) {
     const Patch* patch = patches->get(p);
-    unsigned int numMatls = materials->size();
-    for (unsigned int m = 0; m < numMatls; m++) {
+    for (size_t m = 0; m < numMatls; ++m) {
       int matl = materials->get(m);
 
       PatchMaterialKey key(patch, matl);
@@ -473,17 +473,18 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
       for (size_t kX = 0; kX < xMax; ++kX) {
         for (size_t kY = 0; kY < yMax; ++kY) {
           for (size_t kZ = 0; kZ < zMax; ++kZ) {
-            std::complex<double> gridValue = (*Q)(kX, kY, kZ);
 
+            std::complex<double> gridValue = (*Q)(kX, kY, kZ);
             // Calculate (Q*Q^)*(B*C)
             (*Q)(kX, kY, kZ) *= (*fTheta)(kX, kY, kZ);
             spmeFourierEnergy += std::abs((*Q)(kX, kY, kZ) * conj(gridValue));
             spmeFourierStress += std::abs((*Q)(kX, kY, kZ) * conj(gridValue)) * (*stressPrefactor)(kX, kY, kZ);
+
           }
         }
       }
-    }
-  }
+    }  // end material loop
+  }  // end patch loop
 
   // put updated values for reduction variables into the DW
   new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
@@ -496,16 +497,15 @@ void SPME::calculatePostTransform(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  unsigned int numPatches = d_spmePatches.size();
-  for (unsigned int p = 0; p < numPatches; p++) {
-
-    d_spmePatchLock.readLock();
-    SPMEPatch* spmePatch = d_spmePatches[p];
-    d_spmePatchLock.readUnlock();
-
-    unsigned int numMatls = materials->size();
-    for (unsigned int m = 0; m < numMatls; m++) {
+  size_t numPatches = d_spmePatches.size();
+  size_t numMatls = materials->size();
+  for (size_t p = 0; p < numPatches; ++p) {
+    for (size_t m = 0; m < numMatls; ++m) {
       int matl = materials->get(m);
+
+      d_spmePatchLock.readLock();
+      SPMEPatch* spmePatch = d_spmePatches[p];
+      d_spmePatchLock.readUnlock();
 
       const Patch* patch = spmePatch->getPatch();
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
@@ -639,23 +639,25 @@ SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
 SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
                                         const IntVector& offset) const
 {
+  // sanity check
+  std::cerr << "System Volume: " << d_systemVolume << endl;
+
   std::vector<double> mp1 = SPME::generateMPrimeVector(d_kLimits.x());
   std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y());
   std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z());
 
-  size_t xExtents = extents.x();
-  size_t yExtents = extents.y();
-  size_t zExtents = extents.z();
-
-  int xOffset = offset.x();
-  int yOffset = offset.y();
-  int zOffset = offset.z();
   double PI = acos(-1.0);
   double PI2 = PI * PI;
   double invBeta2 = 1.0 / (d_ewaldBeta * d_ewaldBeta);
   double invVolFactor = 1.0 / (d_systemVolume * PI);
 
-  std::cerr << "System Volume: " << d_systemVolume << endl;
+  int xOffset = offset.x();
+  int yOffset = offset.y();
+  int zOffset = offset.z();
+
+  size_t xExtents = extents.x();
+  size_t yExtents = extents.y();
+  size_t zExtents = extents.z();
 
   SimpleGrid<double> CGrid(extents, offset, 0);  // No ghost cells; internal only
   for (size_t kX = 0; kX < xExtents; ++kX) {
@@ -683,23 +685,23 @@ void SPME::calculateStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor,
   std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y());
   std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z());
 
-  size_t xExtents = extents.x();
-  size_t yExtents = extents.y();
-  size_t zExtents = extents.z();
-
-  int XOffset = offset.x();
-  int YOffset = offset.y();
-  int ZOffset = offset.z();
-
   double PI = acos(-1.0);
   double PI2 = PI * PI;
   double invBeta2 = 1.0 / (d_ewaldBeta * d_ewaldBeta);
+
+  int xOffset = offset.x();
+  int yOffset = offset.y();
+  int zOffset = offset.z();
+
+  size_t xExtents = extents.x();
+  size_t yExtents = extents.y();
+  size_t zExtents = extents.z();
 
   for (size_t kX = 0; kX < xExtents; ++kX) {
     for (size_t kY = 0; kY < yExtents; ++kY) {
       for (size_t kZ = 0; kZ < zExtents; ++kZ) {
         if (kX != 0 || kY != 0 || kZ != 0) {
-          Vector m(mp1[kX + XOffset], mp2[kY + YOffset], mp3[kZ + ZOffset]);
+          Vector m(mp1[kX + xOffset], mp2[kY + yOffset], mp3[kZ + zOffset]);
           m = m * d_inverseUnitCell;
           double M2 = m.length2();
           Matrix3 localStressContribution(-2.0 * (1.0 + PI2 * M2 * invBeta2) / M2);
@@ -730,8 +732,9 @@ void SPME::generateChargeMap(std::vector<SPMEMapPoint>* chargeMap,
                              constParticleVariable<long64>& particleIDs)
 {
   // Loop through particles
-  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
+  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); ++iter) {
     particleIndex pidx = *iter;
+
     Point position = particlePositions[pidx];
     particleId pid = particleIDs[pidx];
     Vector particleGridCoordinates;
@@ -740,7 +743,7 @@ void SPME::generateChargeMap(std::vector<SPMEMapPoint>* chargeMap,
     particleGridCoordinates = (position.asVector()) * d_inverseUnitCell;
     // ** NOTE: JBH --> We may want to do this with a bit more thought eventually, since multiplying by the InverseUnitCell
     //                  is expensive if the system is orthorhombic, however it's not clear it's more expensive than dropping
-    //                  to call MDSystem->IsOrthorhombic() and then branching the if statement appropriately.
+    //                  to call MDSystem->isOrthorhombic() and then branching the if statement appropriately.
 
     Vector kReal = d_kLimits.asVector();
     particleGridCoordinates *= kReal;
@@ -757,11 +760,12 @@ void SPME::generateChargeMap(std::vector<SPMEMapPoint>* chargeMap,
 
     IntVector extents(xSplineArray.size(), ySplineArray.size(), zSplineArray.size());
     SimpleGrid<double> chargeGrid(extents, particleGridOffset, 0);
-
     SimpleGrid<SCIRun::Vector> forceGrid(extents, particleGridOffset, 0);
+
     size_t XExtent = xSplineArray.size();
     size_t YExtent = ySplineArray.size();
     size_t ZExtent = zSplineArray.size();
+
     for (size_t xidx = 0; xidx < XExtent; ++xidx) {
       double dampX = xSplineArray[xidx];
       for (size_t yidx = 0; yidx < YExtent; ++yidx) {
@@ -793,9 +797,8 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
   SimpleGrid<dblcomplex>* Q = spmePatch->getQ();
   Q->initialize(0.0);
 
-  ParticleSubset::iterator particleIter;
-  for (particleIter = pset->begin(); particleIter != pset->end(); particleIter++) {
-    particleIndex pidx = *particleIter;
+  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); ++iter) {
+    particleIndex pidx = *iter;
 
     double charge = charges[pidx];
     const SimpleGrid<double> chargeMap = (*gridMap)[pidx].getChargeGrid();
@@ -803,9 +806,11 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
 
     IntVector QAnchor = chargeMap.getOffset();  // Location of the 0,0,0 origin for the charge map grid
     IntVector SupportExtent = chargeMap.getExtents();  // Extents of the charge map grid
+
     int xBase = QAnchor.x();
     int yBase = QAnchor.y();
     int zBase = QAnchor.z();
+
     for (int xmask = 0; xmask < splineSupport; ++xmask) {
       for (int ymask = 0; ymask < splineSupport; ++ymask) {
         for (int zmask = 0; zmask < splineSupport; ++zmask) {
@@ -844,7 +849,7 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
 {
   SimpleGrid<std::complex<double> >* Q = spmePatch->getQ();
 
-  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
+  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); ++iter) {
     particleIndex pidx = *iter;
 
     SimpleGrid<SCIRun::Vector> forceMap = (*gridMap)[pidx].getForceGrid();
@@ -895,7 +900,11 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
   }
 }
 
-void SPME::reduceNodeLocalQ()
+void SPME::reduceNodeLocalQ(const ProcessorGroup* pg,
+                            const PatchSubset* patches,
+                            const MaterialSubset* materials,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw)
 {
   // If there's only one patch per MPI process
   if (d_spmePatches.size() == 1) {
@@ -904,9 +913,69 @@ void SPME::reduceNodeLocalQ()
     Q_nodeLocal->copyData(*Q_patch);
     return;
   }
+
+  size_t numPatches = patches->size();
+  size_t numMatls = materials->size();
+  for (size_t p = 0; p < numPatches; ++p) {
+    const Patch* patch = patches->get(p);
+    for (size_t m = 0; m < numMatls; ++m) {
+      int matl = materials->get(m);
+
+      PatchMaterialKey key(patch, matl);
+      d_gridmapsLock.readLock();
+      int idx = d_spmePatchMap.find(key)->second;
+      SPMEPatch* spmePatch = d_spmePatches[idx];
+      d_spmePatchLock.readUnlock();
+
+      SimpleGrid<dblcomplex>* QPatch = spmePatch->getQ();
+      IntVector offset = QPatch->getOffset();  // Location of the 0,0,0 origin for this portion of the global Q grid
+      IntVector globalExtents = d_Q_nodeLocal->getExtents();
+
+      int xOffset = offset.x();
+      int yOffset = offset.y();
+      int zOffset = offset.z();
+
+      IntVector extents = QPatch->getExtents();  // Extents of this portion of the global Q grid
+      size_t xExtents = extents.x();
+      size_t yExtents = extents.y();
+      size_t zExtents = extents.z();
+
+      // Need to lock this section so overlapping regions get full charge contribution
+      d_Qlock.lock();
+      for (size_t x = 0; x < xExtents; ++x) {
+        for (size_t y = 0; y < yExtents; ++y) {
+          for (size_t z = 0; z < zExtents; ++z) {
+
+            // We need only wrap in the positive direction.
+            int x_anchor = xOffset + x;
+            if (x_anchor >= d_kLimits.x()) {
+              x_anchor -= d_kLimits.x();
+            }
+
+            int y_anchor = yOffset + y;
+            if (y_anchor >= d_kLimits.y()) {
+              y_anchor -= d_kLimits.y();
+            }
+
+            int z_anchor = zOffset + z;
+            if (z_anchor >= d_kLimits.z()) {
+              z_anchor -= d_kLimits.z();
+            }
+
+            (*d_Q_nodeLocal)(x_anchor, y_anchor, z_anchor) = (*QPatch)(x, y, z);
+          }
+        }
+      }
+      d_Qlock.unlock();
+    }
+  }
 }
 
-void SPME::distributeNodeLocalQ()
+void SPME::distributeNodeLocalQ(const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* materials,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
 {
   // If there's only one patch per MPI process
   if (d_spmePatches.size() == 1) {
@@ -914,6 +983,42 @@ void SPME::distributeNodeLocalQ()
     LinearArray3<dblcomplex>* Q_patch = d_spmePatches[0]->getQ()->getDataArray();
     Q_patch->copyData(*Q_nodeLocal);
     return;
+  }
+
+  size_t numPatches = patches->size();
+  size_t numMatls = materials->size();
+  for (size_t p = 0; p < numPatches; ++p) {
+    const Patch* patch = patches->get(p);
+    for (size_t m = 0; m < numMatls; ++m) {
+      int matl = materials->get(m);
+
+      PatchMaterialKey key(patch, matl);
+      d_gridmapsLock.readLock();
+      int idx = d_spmePatchMap.find(key)->second;
+      SPMEPatch* spmePatch = d_spmePatches[idx];
+      d_spmePatchLock.readUnlock();
+
+      SimpleGrid<dblcomplex>* QPatch = spmePatch->getQ();
+      IntVector offset = QPatch->getOffset();  // Location of the 0,0,0 origin for this portion of the global Q grid
+      IntVector extents = QPatch->getExtents();  // Extents of this portion of the global Q grid
+
+      int xOffset = offset.x();
+      int yOffset = offset.y();
+      int zOffset = offset.z();
+
+      size_t xExtents = extents.x();
+      size_t yExtents = extents.y();
+      size_t zExtents = extents.z();
+
+      // TODO this should be read only - no lock should be required
+      for (size_t x = 0; x < xExtents; ++x) {
+        for (size_t y = 0; y < yExtents; ++y) {
+          for (size_t z = 0; z < zExtents; ++z) {
+            (*QPatch)(x, y, z) = (*d_Q_nodeLocal)((x + xOffset), (y + yOffset), (z + zOffset));
+          }
+        }
+      }
+    }
   }
 }
 

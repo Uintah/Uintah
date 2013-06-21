@@ -123,7 +123,7 @@ namespace Uintah {
        * @brief Returns prime (non-ghost only) offset for the first point in this
        *        SimpleGrid in reference to the global grid.
        * @param None
-       * @return IntVector The prime (non-ghost only) offset of this SImpleGrid.
+       * @return IntVector The prime (non-ghost only) offset of this SimpleGrid.
        */
       inline IntVector getNonGhostOffset() const
       {
