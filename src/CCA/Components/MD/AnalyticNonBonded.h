@@ -149,8 +149,6 @@ namespace Uintah {
         d_lb = lb;
       }
 
-    private:
-
       /**
        * @brief
        * @param None
@@ -161,6 +159,8 @@ namespace Uintah {
                                 constParticleVariable<Point> px_local,
                                 constParticleVariable<Point> px_neighbors,
                                 int patchID);
+
+    private:
 
       /**
        * @brief

@@ -122,10 +122,20 @@ namespace Uintah {
        * @param
        * @return
        */
-      void scheduleCalculateNonBondedForces(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls,
-                                            const LevelP& level);
+      void scheduleNonbondedCalculate(SchedulerP& sched,
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls,
+                                      const LevelP& level);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleElectrostaticsCalculate(SchedulerP& sched,
+                                           const PatchSet* patched,
+                                           const MaterialSet* matls,
+                                           const LevelP& level);
 
       /**
        * @brief
@@ -135,16 +145,6 @@ namespace Uintah {
       void scheduleInterpolateParticlesToGrid(SchedulerP&,
                                               const PatchSet*,
                                               const MaterialSet*);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void schedulePerformElectrostatics(SchedulerP& sched,
-                                         const PatchSet* patched,
-                                         const MaterialSet* matls,
-                                         const LevelP& level);
 
       /**
        * @brief
@@ -183,28 +183,6 @@ namespace Uintah {
        * @param
        * @return
        */
-      void nonbondedInitialize(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void electrostaticsInitialize(const ProcessorGroup* pg,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
       void registerPermanentParticleState(SimpleMaterial* matl);
 
       /**
@@ -223,22 +201,66 @@ namespace Uintah {
        * @param
        * @return
        */
-      void performElectrostatics(const ProcessorGroup* pg,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* matls,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw);
+      void nonbondedInitialize(const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
 
       /**
        * @brief
        * @param
        * @return
        */
-      void calculateNonBondedForces(const ProcessorGroup* pg,
+      void nonbondedSetup(const ProcessorGroup* pg,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void nonbondedCalculate(const ProcessorGroup* pg,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void electrostaticsInitialize(const ProcessorGroup* pg,
                                     const PatchSubset* patches,
                                     const MaterialSubset* matls,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void electrostaticsSetup(const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void electrostaticsCalculate(const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
 
       /**
        * @brief
@@ -307,7 +329,7 @@ namespace Uintah {
       Output* d_dataArchiver;              //!< Handle to the Uintah data archiver
       SimulationStateP d_sharedState;      //!< Shared simulation state (global)
       SimpleMaterial* d_material;          //!< For now, this is a single material
-      IntegratorType d_integrator;         //!< Integrator to use in position update of atoms
+      IntegratorType d_integrator;         //!< Timestep integrator
       double delt;                         //!< Simulation delta T
 
       string d_coordinateFile;             //!< Name of file with coordinates and charges of all atoms

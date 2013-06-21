@@ -410,7 +410,6 @@ namespace Uintah {
       IntVector d_kLimits;                              //!< Number of grid divisions in each direction
       int d_maxPolarizableIterations;                   //!< Max number of polarization iterations to do
       ShiftedCardinalBSpline d_interpolatingSpline;     //!< Spline object to hold info for spline calculation
-      std::vector<SPMEPatch*> d_spmePatches;            //!< Assuming multiple patches, these are the pieces of the SPME grid
       SimpleGrid<dblcomplex>* d_Q_nodeLocal;            //!< The local version of the global Q grid
       SimpleGrid<dblcomplex>* d_Q_nodeLocalScratch;     //!< The local version of the global Q grid
       fftw_complex* d_localFFTData;                     //!< The local portion of the global 3D FFT data
@@ -420,10 +419,13 @@ namespace Uintah {
       Matrix3 d_inverseUnitCell;    //!< Inverse lattice parameters
       double d_systemVolume;        //!< Volume of the unit cell
 
-      // std::vector<SPMEMapPoint> d_gridMap;   //!< The data that maps the charges in the patch to-and-from the grid
-      std::map<PatchMaterialKey, std::vector<SPMEMapPoint>*> d_gridMap;  //!< The data that maps the charges in the patch to-and-from the grid
+      std::vector<SPMEPatch*> d_spmePatches;           //!< Assuming multiple patches, these are the pieces of the SPME grid
+      std::map<PatchMaterialKey, int> d_spmePatchMap;  //!< These are the pieces of the K-space grid, map to Uintah patches
+      std::map<PatchMaterialKey, std::vector<SPMEMapPoint>*> d_gridMap;  //!< The data that maps the charges/forces
 
       Mutex d_Qlock;               //!< for local reductions on d_Q_nodeLocal (contention on overlapping ghost cells)
+      mutable CrowdMonitor d_spmePatchLock;
+      mutable CrowdMonitor d_gridmapsLock;
 
   };
 

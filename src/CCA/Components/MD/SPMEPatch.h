@@ -183,8 +183,6 @@ namespace Uintah {
         return d_patch;
       }
 
-      friend class SPME;
-
     private:
 
       // Patch dependent quantities
