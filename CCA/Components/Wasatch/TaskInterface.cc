@@ -48,6 +48,7 @@
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/PoissonExpression.h>
+#include <CCA/Components/Wasatch/ReductionHelper.h>
 
 #include <stdexcept>
 #include <fstream>
@@ -452,6 +453,10 @@ namespace Wasatch{
         pexpr.schedule_set_poisson_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );                      
       }      
     }
+    
+    // go through reduction variables that are computed in this Wasatch Task
+    // and insert a Uintah task immediately after.
+    ReductionHelper::self().schedule_tasks(Uintah::getLevelP(pss), scheduler_, materials_, tree, patchID, rkStage);
 
     hasBeenScheduled_ = true;
   }

@@ -1,5 +1,5 @@
 /**
- *  \file   OldVariable.h
+ *  \file   OldVariable.cc
  *  \date   Feb 7, 2013
  *  \author "James C. Sutherland"
  *
