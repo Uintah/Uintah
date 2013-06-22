@@ -78,6 +78,7 @@
 #include "ParseTools.h"
 #include "FieldClippingTools.h"
 #include "OldVariable.h"
+#include "ReductionHelper.h"
 
 using std::endl;
 
@@ -123,6 +124,7 @@ namespace Wasatch{
     icCoordHelper_  = new CoordHelper( *(graphCategories_[INITIALIZATION]->exprFactory) );
 
     OldVariable::self().sync_with_wasatch( this );
+    ReductionHelper::self().sync_with_wasatch( this );
   }
 
   //--------------------------------------------------------------------
@@ -603,6 +605,10 @@ namespace Wasatch{
       parse_var_dens_mms(VarDensMMSParams, graphCategories_);
     }
     
+    //
+    // process any reduction variables specified through the input file
+    //
+    ReductionHelper::self().parse_reduction_spec(wasatchParams);
   }
 
   //--------------------------------------------------------------------

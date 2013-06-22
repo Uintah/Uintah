@@ -82,6 +82,8 @@ SRCS += \
         $(SRCDIR)/RadPropsEvaluator.cc	  \
         $(SRCDIR)/VelocityMagnitude.cc    \
         $(SRCDIR)/StableTimestep.cc       \
+        $(SRCDIR)/Reduction.cc            \
+        $(SRCDIR)/ReductionBase.cc        \
         $(SRCDIR)/TabPropsHeatLossEvaluator.cc
             	
 

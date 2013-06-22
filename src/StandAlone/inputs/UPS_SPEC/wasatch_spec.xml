@@ -1021,6 +1021,11 @@
             
     </MomentTransportEquation>
 
+
+    <!-- ================== -->
+    <!-- STANDALONE GRAPH OPERATIONS AND EXPRESSION CREATION -->
+    <!-- ================== -->
+
     <ForceOnGraph spec="MULTIPLE NO_DATA" attribute1="tasklist REQUIRED STRING">
       <NameTag          spec="MULTIPLE" />
     </ForceOnGraph>
@@ -1028,6 +1033,15 @@
     <Cleave spec="MULTIPLE NO_DATA" attribute1="from REQUIRED STRING 'PARENTS,CHILDREN'">
       <NameTag spec="MULTIPLE" />
     </Cleave>
+
+    <Reduction spec="MULTIPLE NO_DATA" attribute1="tasklist REQUIRED STRING 'advance_solution'"
+                                       attribute2="op REQUIRED STRING 'min,max,sum'"
+                                       attribute3="output OPTIONAL BOOLEAN">
+      <NameTag          spec="REQUIRED" />
+      <Source spec="REQUIRED NO_DATA" attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL'" >
+      	<NameTag spec="REQUIRED"/>
+      </Source>       
+    </Reduction>
     
     <AttachDependency spec="MULTIPLE NO_DATA"
                       attribute1="tasklist REQUIRED STRING 'initialization,advance_solution'">
