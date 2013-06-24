@@ -195,7 +195,7 @@
     <save label="dilatation"/>
     <save label="vorticity_z"/>
     <save label="vel_magnitude"/>        
-    <save label="p_sum_uintah_reduction_var"/>    
+    <save label="p_sum_uintah"/>    
   </DataArchiver> 
 
   <Grid>
