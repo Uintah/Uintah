@@ -209,7 +209,7 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
        td->getType() != TypeDescription::SFCZVariable ){
        throwException = true;
     }
-    // CC Variables, only Doubles Vectors and Stencil7
+    // CC Variables, only Doubles, int Vectors and Stencil7
     if(td->getType() != TypeDescription::CCVariable       &&
        subtype->getType() != TypeDescription::double_type &&
        subtype->getType() != TypeDescription::int_type    &&
@@ -217,11 +217,12 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
        subtype->getType() != TypeDescription::Stencil7 ){
       throwException = true;
     }
-    // Face Centered Vars, only Doubles
+    // Face Centered Vars, only Doubles & Vectors
     if( (td->getType() == TypeDescription::SFCXVariable ||
          td->getType() == TypeDescription::SFCYVariable ||
-         td->getType() == TypeDescription::SFCZVariable) &&
-         subtype->getType() != TypeDescription::double_type) {
+         td->getType() == TypeDescription::SFCZVariable)    &&
+         subtype->getType() != TypeDescription::double_type &&
+         subtype->getType() != TypeDescription::Vector ){
       throwException = true;
     } 
     if(throwException){       
@@ -266,7 +267,7 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
     
     bool validPlane = false;
     
-    if( !X && !Y && Z){               /*  XY plane */
+    if( !X && !Y && Z){               /* XY plane */
       validPlane = true;
     }
     if( !X && Y && !Z){               /* XZ plane */
@@ -429,7 +430,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-       
+    Vector dx = patch->dCell();
     
     int proc = lb->getPatchwiseProcessorAssignment(patch);
     cout_dbg << Parallel::getMPIRank() << "   working on patch " << patch->getID() << " which is on proc " << proc << endl;
@@ -520,38 +521,53 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
             createFile(filename, varLabel, matl, fp);
 
             //__________________________________
-            //  Now write to the file
+            //
             const Uintah::TypeDescription* td = varLabel->typeDescription();
             const Uintah::TypeDescription* subtype = td->getSubType();
-
+            
+            // determing the offset for the different variable types
+            Vector offset;
             switch( td->getType() ){
               case Uintah::TypeDescription::CCVariable:      // CC Variables
-                switch( subtype->getType( )) {
-
-                case Uintah::TypeDescription::double_type:
-                  writeDataD< constCCVariable<double> >(   new_dw, varLabel, matl, patch, iterLim, fp );
-                  break;
-
-                case Uintah::TypeDescription::Vector:
-                  writeDataV< constCCVariable<Vector> >(   new_dw, varLabel, matl, patch, iterLim, fp );
-                  break;
-
-                case Uintah::TypeDescription::int_type:
-                  writeDataI< constCCVariable<int> >(      new_dw, varLabel, matl, patch, iterLim, fp );
-                  break;
-
-                case Uintah::TypeDescription::Stencil7:
-                  writeDataS7< constCCVariable<Stencil7> >(new_dw, varLabel, matl, patch, iterLim, fp );
-                  break;
-                default:
-                  throw InternalError("planeExtract: invalid data type", __FILE__, __LINE__); 
-                }
+                offset = Vector(0,0,0);
+                break;
+              case Uintah::TypeDescription::SFCXVariable:    // SFCX Variables
+                offset.x( -dx.x()/2 );
+                break;        
+              case Uintah::TypeDescription::SFCYVariable:    // SFCY Variables
+                offset.y( -dx.y()/2 );
+                break;
+              case Uintah::TypeDescription::SFCZVariable:    // SFCZ Variables
+                offset.z( -dx.z()/2 );
                 break;
               default:
                 ostringstream warn;
                 warn << "ERROR:AnalysisModule:planeExtact: ("<< labelName << " " 
                      << td->getName() << " ) has not been implemented" << endl;
                 throw InternalError(warn.str(), __FILE__, __LINE__);
+            }
+
+            //__________________________________
+            //  Now write to the file
+            switch( subtype->getType( )) {
+
+              case Uintah::TypeDescription::double_type:
+                writeDataD< constCCVariable<double> >(   new_dw, varLabel, matl, patch, offset, iterLim, fp );
+                break;
+
+              case Uintah::TypeDescription::Vector:
+                writeDataV< constCCVariable<Vector> >(   new_dw, varLabel, matl, patch, offset, iterLim, fp );
+                break;
+
+              case Uintah::TypeDescription::int_type:
+                writeDataI< constCCVariable<int> >(      new_dw, varLabel, matl, patch, offset, iterLim, fp );
+                break;
+
+              case Uintah::TypeDescription::Stencil7:
+                writeDataS7< constCCVariable<Stencil7> >(new_dw, varLabel, matl, patch, offset, iterLim, fp );
+                break;
+              default:
+                throw InternalError("planeExtract: invalid data type", __FILE__, __LINE__); 
             }
             fclose(fp);
           }  //loop over variables 
@@ -661,6 +677,7 @@ void planeExtract::writeDataD( DataWarehouse*  new_dw,
                               const VarLabel* varLabel,
                               const int       indx,
                               const Patch*    patch,
+                              const Vector&   offset,
                               CellIterator    iter,
                               FILE*     fp )
 {  
@@ -670,6 +687,7 @@ void planeExtract::writeDataD( DataWarehouse*  new_dw,
   for (;!iter.done();iter++) {
     IntVector c = *iter;
     Point here = patch->cellPosition(c);
+    here += offset;
                       
     fprintf(fp,    "%16.15E\t %16.15E\t %16.15E\t",here.x(),here.y(),here.z());
     fprintf(fp, "    %16.15E\n",Q_var[c]);
@@ -682,6 +700,7 @@ void planeExtract::writeDataV( DataWarehouse*  new_dw,
                                const VarLabel* varLabel,
                                const int       indx,
                                const Patch*    patch,
+                               const Vector&   offset,
                                CellIterator    iter,
                                FILE*     fp )
 {  
@@ -691,7 +710,8 @@ void planeExtract::writeDataV( DataWarehouse*  new_dw,
   for (;!iter.done();iter++) {
     IntVector c = *iter;
     Point here = patch->cellPosition(c);
-                      
+    here += offset;
+    
     fprintf(fp,    "%16.15E\t %16.15E\t %16.15E\t",here.x(), here.y(), here.z());
     fprintf(fp, "   %16.15E\t %16.15E\t %16.15E\n",Q_var[c].x(), Q_var[c].y(), Q_var[c].z() );
   }  
@@ -702,6 +722,7 @@ void planeExtract::writeDataI( DataWarehouse*  new_dw,
                                const VarLabel* varLabel,
                                const int       indx,
                                const Patch*    patch,
+                               const Vector&   offset,
                                CellIterator    iter,
                                FILE*     fp )
 {  
@@ -711,6 +732,7 @@ void planeExtract::writeDataI( DataWarehouse*  new_dw,
   for (;!iter.done();iter++) {
     IntVector c = *iter;
     Point here = patch->cellPosition(c);
+    here += offset;
                       
     fprintf(fp,    "%16.15E\t %16.15E\t %16.15E\t",here.x(), here.y(), here.z());
     fprintf(fp, "   %i \n",Q_var[c] );
@@ -722,6 +744,7 @@ void planeExtract::writeDataS7( DataWarehouse*  new_dw,
                                const VarLabel* varLabel,
                                const int       indx,
                                const Patch*    patch,
+                               const Vector&   offset,
                                CellIterator    iter,
                                FILE*     fp )
 {  
@@ -731,7 +754,8 @@ void planeExtract::writeDataS7( DataWarehouse*  new_dw,
   for (;!iter.done();iter++) {
     IntVector c = *iter;
     Point here = patch->cellPosition(c);
-    
+    here += offset;
+        
     fprintf(fp,    "%16.15E\t %16.15E\t %16.15E\t",here.x(), here.y(), here.z());
     fprintf(fp, "   %16.15E\t %16.15E\t %16.15E\t %16.15E\t %16.15E\t %16.15E\t %16.15E \n",
             Q[c].n, Q[c].s, Q[c].e, Q[c].w, Q[c].t, Q[c].b, Q[c].p );
