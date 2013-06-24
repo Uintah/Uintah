@@ -131,22 +131,13 @@ Builder::build() const
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-#define DECLARE_MIN_REDUCTION(VOL) template class Reduction< VOL, Uintah::Reductions::Min<double> >;
-#define DECLARE_MAX_REDUCTION(VOL) template class Reduction< VOL, Uintah::Reductions::Max<double> >;
-#define DECLARE_SUM_REDUCTION(VOL) template class Reduction< VOL, Uintah::Reductions::Sum<double> >;
-DECLARE_MIN_REDUCTION(SVolField);
-DECLARE_MIN_REDUCTION(XVolField);
-DECLARE_MIN_REDUCTION(YVolField);
-DECLARE_MIN_REDUCTION(ZVolField);
+#define DECLARE_REDUCTION_VARIANTS(VOL) \
+template class Reduction< VOL, Uintah::Reductions::Min<double> >; \
+template class Reduction< VOL, Uintah::Reductions::Max<double> >; \
+template class Reduction< VOL, Uintah::Reductions::Sum<double> >;
 
-DECLARE_MAX_REDUCTION(SVolField);
-DECLARE_MAX_REDUCTION(XVolField);
-DECLARE_MAX_REDUCTION(YVolField);
-DECLARE_MAX_REDUCTION(ZVolField);
-
-DECLARE_SUM_REDUCTION(SVolField);
-DECLARE_SUM_REDUCTION(XVolField);
-DECLARE_SUM_REDUCTION(YVolField);
-DECLARE_SUM_REDUCTION(ZVolField);
-
+DECLARE_REDUCTION_VARIANTS(SVolField);
+DECLARE_REDUCTION_VARIANTS(XVolField);
+DECLARE_REDUCTION_VARIANTS(YVolField);
+DECLARE_REDUCTION_VARIANTS(ZVolField);
 //==========================================================================

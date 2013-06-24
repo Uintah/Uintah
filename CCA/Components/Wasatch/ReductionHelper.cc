@@ -51,9 +51,6 @@
 
 //-- Uintah Includes --//
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Material.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/Reductions.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -140,6 +137,24 @@ namespace Wasatch {
 
   //------------------------------------------------------------------
   
+  ReductionEnum
+  ReductionHelper::select_reduction_enum( const std::string& strRedOp )
+  {
+    ReductionEnum redEnum;
+    if      (strRedOp.compare("min")==0) redEnum = ReduceMin;
+    else if (strRedOp.compare("max")==0) redEnum = ReduceMax;
+    else if (strRedOp.compare("sum")==0) redEnum = ReduceSum;
+    else {
+      std::ostringstream msg;
+      msg << "ERROR: unsupported reduction operatioin specified: '" << strRedOp << "'. ";
+      msg << "Supported reduction operations are: min, max, and sum." << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+    return redEnum;
+  }
+
+  //------------------------------------------------------------------
+  
   void
   ReductionHelper::parse_reduction_spec( Uintah::ProblemSpecP wasatchSpec )
   {    
@@ -151,12 +166,13 @@ namespace Wasatch {
       
       std::string reductionOperation;
       reductionSpec->getAttribute("op",reductionOperation);
+      ReductionEnum redEnum = select_reduction_enum(reductionOperation);
       
       bool printVar=false;
       reductionSpec->getAttribute("output",printVar);
       
       const Expr::Tag resultTag = parse_nametag(reductionSpec->findBlock("NameTag"));
-      //
+      
       Uintah::ProblemSpecP srcFldParams = reductionSpec->findBlock("Source");
       std::string fieldType;
       srcFldParams->getAttribute("type",fieldType);
@@ -165,51 +181,77 @@ namespace Wasatch {
       switch( get_field_type(fieldType) ){
         case SVOL :
         {
-          if      (reductionOperation.compare("min")==0)
-            self().add_variable<SVolField,ReductionMinOpT>(cat,resultTag,srcTag,printVar);
-          else if (reductionOperation.compare("max")==0)
-            self().add_variable<SVolField,ReductionMaxOpT>(cat,resultTag,srcTag,printVar);
-          else if (reductionOperation.compare("sum")==0)
-            self().add_variable<SVolField,ReductionSumOpT>(cat,resultTag,srcTag,printVar);
+          switch (redEnum) {
+            case ReduceMin: self().add_variable<SVolField,ReductionMinOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceMax: self().add_variable<SVolField,ReductionMaxOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceSum: self().add_variable<SVolField,ReductionSumOpT>(cat,resultTag,srcTag,printVar); break;
+            default:
+            {
+              std::ostringstream msg;
+              msg << "ERROR: unsupported reduction operation specified: '" << reductionOperation <<"'. ";
+              msg << "Supported reduction operations are: min, max, and sum." << std::endl;
+              throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+            }
+              break;
+          }
         }
           break;
         case XVOL :
         {
-          if      (reductionOperation.compare("min")==0)
-            self().add_variable<XVolField,ReductionMinOpT>(cat,resultTag,srcTag,printVar);
-          else if (reductionOperation.compare("max")==0)
-            self().add_variable<XVolField,ReductionMaxOpT>(cat,resultTag,srcTag,printVar);
-          else if (reductionOperation.compare("sum")==0)
-            self().add_variable<XVolField,ReductionSumOpT>(cat,resultTag,srcTag,printVar);
-        }
+          switch (redEnum) {
+            case ReduceMin: self().add_variable<XVolField,ReductionMinOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceMax: self().add_variable<XVolField,ReductionMaxOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceSum: self().add_variable<XVolField,ReductionSumOpT>(cat,resultTag,srcTag,printVar); break;
+            default:
+            {
+              std::ostringstream msg;
+              msg << "ERROR: unsupported reduction operation specified: '" << reductionOperation <<"'. ";
+              msg << "Supported reduction operations are: min, max, and sum." << std::endl;
+              throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+            }
+              break;
+          }
+        }        
           break;
         case YVOL :
         {
-          if      (reductionOperation.compare("min")==0)
-            self().add_variable<YVolField,ReductionMinOpT>(cat,resultTag,srcTag,printVar);
-          else if (reductionOperation.compare("max")==0)
-            self().add_variable<YVolField,ReductionMaxOpT>(cat,resultTag,srcTag,printVar);
-          else if (reductionOperation.compare("sum")==0)
-            self().add_variable<YVolField,ReductionSumOpT>(cat,resultTag,srcTag,printVar);
+          switch (redEnum) {
+            case ReduceMin: self().add_variable<YVolField,ReductionMinOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceMax: self().add_variable<YVolField,ReductionMaxOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceSum: self().add_variable<YVolField,ReductionSumOpT>(cat,resultTag,srcTag,printVar); break;
+            default:
+            {
+              std::ostringstream msg;
+              msg << "ERROR: unsupported reduction operation specified: '" << reductionOperation <<"'. ";
+              msg << "Supported reduction operations are: min, max, and sum." << std::endl;
+              throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+            }
+              break;
+          }
         }
           break;
         case ZVOL :
         {
-          if      (reductionOperation.compare("min")==0)
-            self().add_variable<ZVolField,ReductionMinOpT>(cat,resultTag,srcTag,printVar);
-          else if (reductionOperation.compare("max")==0)
-            self().add_variable<ZVolField,ReductionMaxOpT>(cat,resultTag,srcTag,printVar);
-          else if (reductionOperation.compare("sum")==0)
-            self().add_variable<ZVolField,ReductionSumOpT>(cat,resultTag,srcTag,printVar);
+          switch (redEnum) {
+            case ReduceMin: self().add_variable<ZVolField,ReductionMinOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceMax: self().add_variable<ZVolField,ReductionMaxOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceSum: self().add_variable<ZVolField,ReductionSumOpT>(cat,resultTag,srcTag,printVar); break;
+            default:
+            {
+              std::ostringstream msg;
+              msg << "ERROR: unsupported reduction operation specified: '" << reductionOperation <<"'. ";
+              msg << "Supported reduction operations are: min, max, and sum." << std::endl;
+              throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+            }
+              break;
+          }
         }
           break;
         default:
           std::ostringstream msg;
           msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-
-      
+      }      
     }
   }
   
@@ -239,23 +281,13 @@ namespace Wasatch {
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-#define DECLARE_MIN_HELPER(VOL) template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Min<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false);
-#define DECLARE_MAX_HELPER(VOL) template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Max<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false);
-#define DECLARE_SUM_HELPER(VOL) template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Sum<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false);
+#define DECLARE_REDUCTION_VARIANTES(VOL) \
+template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Min<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false); \
+template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Max<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false); \
+template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Sum<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false);
 
-DECLARE_MIN_HELPER(SVolField);
-DECLARE_MIN_HELPER(XVolField);
-DECLARE_MIN_HELPER(YVolField);
-DECLARE_MIN_HELPER(ZVolField);
-
-DECLARE_MAX_HELPER(SVolField);
-DECLARE_MAX_HELPER(XVolField);
-DECLARE_MAX_HELPER(YVolField);
-DECLARE_MAX_HELPER(ZVolField);
-
-DECLARE_SUM_HELPER(SVolField);
-DECLARE_SUM_HELPER(XVolField);
-DECLARE_SUM_HELPER(YVolField);
-DECLARE_SUM_HELPER(ZVolField);
-
+DECLARE_REDUCTION_VARIANTES(SVolField);
+DECLARE_REDUCTION_VARIANTES(XVolField);
+DECLARE_REDUCTION_VARIANTES(YVolField);
+DECLARE_REDUCTION_VARIANTES(ZVolField);
 //====================================================================
