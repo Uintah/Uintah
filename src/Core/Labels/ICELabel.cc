@@ -136,7 +136,9 @@ ICELabel::ICELabel()
   grad_dp_XFCLabel   = VarLabel::create("grad_dp_XFC",SFCX_double);
   grad_dp_YFCLabel   = VarLabel::create("grad_dp_YFC",SFCY_double);
   grad_dp_ZFCLabel   = VarLabel::create("grad_dp_ZFC",SFCZ_double);
-      
+  tau_X_FCLabel      = VarLabel::create("tau_X_FC",   SFCX_Vector);
+  tau_Y_FCLabel      = VarLabel::create("tau_Y_FC",   SFCY_Vector);
+  tau_Z_FCLabel      = VarLabel::create("tau_Z_FC",   SFCZ_Vector); 
   //__________________________________  
   // Misc labels
   machLabel           = VarLabel::create("mach",       CC_double); 
@@ -326,6 +328,10 @@ ICELabel::~ICELabel()
     VarLabel::destroy(grad_dp_XFCLabel);
     VarLabel::destroy(grad_dp_YFCLabel);
     VarLabel::destroy(grad_dp_ZFCLabel);
+    VarLabel::destroy(tau_X_FCLabel);
+    VarLabel::destroy(tau_Y_FCLabel);
+    VarLabel::destroy(tau_Z_FCLabel);
+
     // Misc labels
     VarLabel::destroy(IveBeenHereLabel);
     VarLabel::destroy(machLabel);

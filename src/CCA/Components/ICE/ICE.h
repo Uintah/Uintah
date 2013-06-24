@@ -805,9 +805,9 @@ namespace Uintah {
       int  d_surroundingMatl_indx;
       bool d_impICE;
       bool d_recompile;
-      bool d_canAddICEMaterial;
       bool d_with_mpm;
       bool d_with_rigid_mpm;
+      bool d_viscousFlow;
       
       int d_max_iter_equilibration;
       int d_max_iter_implicit;
