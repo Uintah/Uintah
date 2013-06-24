@@ -35,7 +35,7 @@ Reduction( const Expr::Tag& resultTag,
            bool printVar )
 : ReductionBase( resultTag,
                  srcTag,
-                 Uintah::VarLabel::create( resultTag.name() + "_uintah_reduction_var",
+                 Uintah::VarLabel::create( resultTag.name() + "_uintah",
                                                             Uintah::ReductionVariable<double, ReductionOpT >::getTypeDescription()
                                                             ),
                  get_reduction_name<ReductionOpT>(),
