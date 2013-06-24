@@ -30,21 +30,22 @@
 #ifndef Reduction_Helper_h
 #define Reduction_Helper_h
 
+//-- stl includes --//
 #include <string>
-#include <list>
 
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <CCA/Ports/SchedulerP.h>
+//-- Wasatch includes --//
+#include <CCA/Components/Wasatch/Expressions/ReductionBase.h>
+#include "GraphHelperTools.h"
+
+//-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
 
+//-- Expression includes --//
 #include <expression/ExprFwd.h>
 #include <expression/ExpressionTree.h>
-
-#include "GraphHelperTools.h"
 
 // forward declarations
 namespace Uintah{
@@ -92,6 +93,8 @@ namespace Wasatch {
 
     void sync_with_wasatch( Wasatch* const wasatch );
 
+    ReductionEnum select_reduction_enum( const std::string& strRedOp );
+    
     void parse_reduction_spec( Uintah::ProblemSpecP reductionParams );
     
     /**
@@ -116,7 +119,7 @@ namespace Wasatch {
                          const Uintah::MaterialSet* const materials,
                          const Expr::ExpressionTree::TreePtr tree,
                          const int patchID,
-                         const int rkStage);
+                         const int rkStage);// do we really need the rkstage here? maybe in the future...
   private:
 
     ReductionHelper();
