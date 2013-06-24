@@ -117,6 +117,9 @@ namespace Uintah {
     const VarLabel* grad_dp_XFCLabel;
     const VarLabel* grad_dp_YFCLabel;
     const VarLabel* grad_dp_ZFCLabel;
+    const VarLabel* tau_X_FCLabel;
+    const VarLabel* tau_Y_FCLabel;
+    const VarLabel* tau_Z_FCLabel;
 
     // Model support
     const VarLabel* modelMass_srcLabel;
