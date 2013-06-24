@@ -37,8 +37,8 @@ SRCS     += \
 	$(SRCDIR)/TimestepNumber.cc           \
 	$(SRCDIR)/SimpleBurn.cc               \
 	$(SRCDIR)/SteadyBurn.cc               \
-	$(SRCDIR)/SteadyState.cc
-
+	$(SRCDIR)/SteadyState.cc              \
+       $(SRCDIR)/DDT1.cc                     
 PSELIBS := \
 	Core/Exceptions                  \
 	Core/Geometry                    \
