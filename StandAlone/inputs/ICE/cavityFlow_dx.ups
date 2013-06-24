@@ -180,7 +180,7 @@
     <!--____________________________________________________________________-->                      
     <MaterialProperties>
        <ICE>
-         <material>
+         <material name="Atmosphere">
            <EOS type = "ideal_gas">                   </EOS>                   
            <dynamic_viscosity>  2.e-5                 </dynamic_viscosity>     
            <thermal_conductivity>0.0                  </thermal_conductivity>  
@@ -199,5 +199,33 @@
            </geom_object>
          </material>
       </ICE>       
-    </MaterialProperties>       
+    </MaterialProperties> 
+    
+    
+    <!--______________________________________________________________________-->
+    <DataAnalysis>
+      <Module name="planeExtract">
+       
+        <material>Atmosphere</material>
+        <samplingFrequency> 10 </samplingFrequency>
+        <timeStart>         0   </timeStart>
+        <timeStop>          100  </timeStop>
+       
+        <Variables>
+          <analyze label="press_CC" matl="0"/> 
+          <analyze label="rho_CC"/>
+          <analyze label="temp_CC"/>
+          <analyze label="vel_CC"/>
+          <analyze label="tau_X_FC"/>
+          <analyze label="tau_Y_FC"/>
+        </Variables>
+
+        <planes>
+          <plane name="XY_plane"> 
+                <startingPt>  [0.0, 0.0, 0]   </startingPt>
+                <endingPt>    [0.1, 0.1, 0]   </endingPt>
+          </plane>
+        </planes>
+      </Module>
+    </DataAnalysis>    
 </Uintah_specification>
