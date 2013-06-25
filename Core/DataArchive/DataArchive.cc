@@ -543,7 +543,6 @@ DataArchive::queryVariables(ProblemSpecP vars, vector<string>& names,
       if(name == "")
         throw InternalError("DataArchive::queryVariables:Variable name not found",
                             __FILE__, __LINE__);
-      std::cout << "query variables found " << name << std::endl;
       names.push_back(name);
     } else if(n->getNodeType() != ProblemSpec::TEXT_NODE){
       cerr << "DataArchive::queryVariables:WARNING: Unknown variable data: " << n->getNodeName() << '\n';
@@ -824,7 +823,6 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
 
   for (unsigned i = 0; i < names.size(); i++) {
     VarLabel * vl = VarLabel::find(names[i]);
-    std::cout << "finding varlabel for: " << names[i] << std::endl;
     if( vl == NULL ) {
 //      proc0cout << "Warning, VarLabel for " << names[i] << " was not found... attempting to create.\n"
 //          << "However, it is possible that this may cause problems down the road...\n";
