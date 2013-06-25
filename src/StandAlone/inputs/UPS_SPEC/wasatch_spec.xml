@@ -716,6 +716,9 @@
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
       <DisablePressureSolve   spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->   
       <Disabledmomdt          spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->
+      <CalculateKE            spec="OPTIONAL NO_DATA"
+                              attribute1="total OPTIONAL BOOLEAN"
+                              attribute2="output OPTIONAL BOOLEAN" />
       <X-Velocity             spec="OPTIONAL STRING" />
       <Y-Velocity             spec="OPTIONAL STRING" />
       <Z-Velocity             spec="OPTIONAL STRING" />
