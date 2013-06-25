@@ -104,7 +104,7 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 # To revert back to LocalTests, use:
 # export WHICH_TESTS=local
 DEBUGTESTS = [
-  ("reduction-test",       "reduction-test.ups",  4,  "All",  ["exactComparison","no_restart"] )
+  ("kinetic-energy-example",     "kinetic-energy-example.ups",   8,  "All",  ["exactComparison"] )  
 ]
 
 UNUSED_TESTS = []
@@ -184,7 +184,8 @@ NIGHTLYTESTS = [
   ("convection-test-svol-ydir-bc",  "convection-test-svol-ydir-bc.ups",  8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("convection-test-svol-zdir-bc",  "convection-test-svol-zdir-bc.ups",  8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("convection-test-svol-mixed-bc", "convection-test-svol-mixed-bc.ups", 8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
-  ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
+  ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("kinetic-energy-example",     "kinetic-energy-example.ups",   8,  "Linux",  ["exactComparison","no_restart"] )  
 ]
 
 #  ("radprops",                      "RadPropsInterface.ups",             2,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
@@ -261,7 +262,8 @@ LOCALTESTS = [
   ("convection-test-svol-ydir-bc",  "convection-test-svol-ydir-bc.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("convection-test-svol-zdir-bc",  "convection-test-svol-zdir-bc.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("convection-test-svol-mixed-bc", "convection-test-svol-mixed-bc.ups", 8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] )
+  ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("kinetic-energy-example",     "kinetic-energy-example.ups",   8,  "All",  ["exactComparison","no_restart"] )  
 ]
 
 #  ("radprops",                      "RadPropsInterface.ups",             2,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
