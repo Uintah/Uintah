@@ -27,8 +27,6 @@
 
 #include <expression/Expression.h>
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
-#include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
 
 /**
  *  \class 	VelocityMagnitude
