@@ -192,6 +192,8 @@ impAMRICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     scheduleComputePressFC(                 sched, patches, d_press_matl,
                                                             all_matls);
 
+    scheduleViscousShearStress(             sched, patches, ice_matls);
+
     scheduleAccumulateMomentumSourceSinks(  sched, patches, d_press_matl,
                                                             ice_matls_sub,
                                                             mpm_matls_sub,

@@ -167,7 +167,13 @@ namespace Uintah {
      void scheduleComputeThermoTransportProperties(SchedulerP&, 
                                                   const LevelP& level,
                                                   const MaterialSet*);
-      
+ 
+ 
+      void scheduleViscousShearStress( SchedulerP&, 
+                                       const PatchSet*,
+                                       const MaterialSet*);
+                                           
+                                               
       void scheduleAccumulateMomentumSourceSinks(SchedulerP&, 
                                             const PatchSet*,
                                             const MaterialSubset*,
@@ -183,8 +189,8 @@ namespace Uintah {
                                             const MaterialSet*);
       
       void scheduleComputeLagrangianValues(SchedulerP&, 
-                                          const PatchSet*,
-                                          const MaterialSet*);
+                                           const PatchSet*,
+                                           const MaterialSet*);
                  
       void scheduleComputeLagrangianSpecificVolume(SchedulerP&,
                                                    const PatchSet*,
@@ -463,7 +469,14 @@ namespace Uintah {
                                             const MaterialSubset* ice_matls,
                                             DataWarehouse* old_dw,
                                             DataWarehouse* new_dw);
-                                           
+
+
+      void viscousShearStress(const ProcessorGroup*,  
+                              const PatchSubset* patches,
+                              const MaterialSubset* ice_matls,
+                              DataWarehouse* old_dw, 
+                              DataWarehouse* new_dw);
+                                                                         
       void accumulateMomentumSourceSinks(const ProcessorGroup*,
                                          const PatchSubset* patches,
                                          const MaterialSubset* matls,
