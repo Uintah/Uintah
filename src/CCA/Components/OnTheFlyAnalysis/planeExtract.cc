@@ -32,7 +32,6 @@
 #include <Core/Grid/Material.h>
 #include <Core/Grid/SimulationState.h>
 
-#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -472,32 +471,20 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
         Point start_pt = d_planes[p]->startPt;
         Point end_pt   = d_planes[p]->endPt;
         
-        
         Box patchDomain = patch->getExtraBox();
         if(level->getIndex() > 0){ // ignore extra cells on fine patches
           patchDomain = patch->getBox();
         }
+        
         // intersection
         start_pt = Max(patchDomain.lower(), start_pt);
         end_pt   = Min(patchDomain.upper(), end_pt);
-        
-        // indices
-        IntVector start_idx, end_idx;
-        patch->findCell(start_pt, start_idx);
-        patch->findCell(end_pt,   end_idx);
-        
-        // increase the end_idx by 1 in the out of plane direction
-        for(int d=0; d<3; d++){
-          if (start_idx[d] == end_idx[d]){
-            end_idx[d] += 1;
-          }
-        }
-        
-        CellIterator iterLim = CellIterator(start_idx,end_idx);
-
+                
+        bool doWrite = (patch->containsPointInExtraCells(start_pt) && 
+                        patch->containsPointInExtraCells(end_pt - dx/2) );
         //__________________________________
         //  Loop over all the variables
-        if( iterLim.size() > 0 ){
+        if( doWrite ){
         
           for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
 
@@ -547,6 +534,8 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
                 throw InternalError(warn.str(), __FILE__, __LINE__);
             }
 
+            CellIterator iterLim = getIterator( td, patch,start_pt, end_pt );
+            
             //__________________________________
             //  Now write to the file
             switch( subtype->getType( )) {
@@ -760,4 +749,55 @@ void planeExtract::writeDataS7( DataWarehouse*  new_dw,
     fprintf(fp, "   %16.15E\t %16.15E\t %16.15E\t %16.15E\t %16.15E\t %16.15E\t %16.15E \n",
             Q[c].n, Q[c].s, Q[c].e, Q[c].w, Q[c].t, Q[c].b, Q[c].p );
   }  
+}
+
+//______________________________________________________________________
+//
+CellIterator 
+planeExtract::getIterator( const Uintah::TypeDescription* td, 
+                           const Patch* patch,
+                           const Point& start_pt,
+                           const Point& end_pt  ) 
+{
+  // indices
+  IntVector start_idx, end_idx;
+  patch->findCell(start_pt, start_idx);
+  patch->findCell(end_pt,   end_idx);
+  
+  // for face-centered data you need to add 1 for the last cell face
+  // in the extra cell
+  int x=0;
+  int y=0;
+  int z=0;
+  switch( td->getType() ){
+    case Uintah::TypeDescription::CCVariable:
+      break;
+    case Uintah::TypeDescription::SFCXVariable:
+      x = patch->getBCType(Patch::xplus) != Patch::Neighbor?1:0;
+      break;
+    case Uintah::TypeDescription::SFCYVariable:
+      y = patch->getBCType(Patch::yplus) != Patch::Neighbor?1:0;
+      break;
+    case Uintah::TypeDescription::SFCZVariable:
+      z = patch->getBCType(Patch::zplus) != Patch::Neighbor?1:0; 
+      break;
+    default:
+      ostringstream warn;
+      warn<< "ERROR:planeExtract::getIterator Don't know how to handle type: " << td->getName()<< endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+  }
+  
+  
+  end_idx += IntVector(x,y,z);
+  
+  // increase the end_idx by 1 in the out of plane direction
+  // you need this for 2D planes
+  for(int d=0; d<3; d++){
+    if (start_idx[d] == end_idx[d]){
+      end_idx[d] += 1;
+    }
+  }
+  
+  cout << " offset " << IntVector(x,y,z) <<  " " << CellIterator(start_idx,end_idx) << endl;
+  return CellIterator(start_idx,end_idx);
 }
