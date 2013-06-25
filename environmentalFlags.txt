@@ -67,3 +67,9 @@ MPMICE_DOING_COUT SCI_DEBUG     Outputs the name of each task as it's being
                                 scheduled and executed. 
 DBG_EqPress       SCI_DEBUG     Output debugging information if computeEquilibration throws
                                 an exception.
+
+WASATCH:
+__________________________________
+WASATCH_TASKS 				SCI_DEBUG			Outputs Wasatch task diagnostics. See TaskInterface.cc
+WASATCH_FIELDS 				SCI_DEBUG			Outputs information on Wasatch registered fields. See TaskInterface.cc
+WASATCH_REDUCTIONS 		SCI_DEBUG			Information about Wasatch's reduction tasks and related expressions. See ReductionBase.cc

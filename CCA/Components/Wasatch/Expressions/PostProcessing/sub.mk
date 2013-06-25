@@ -29,5 +29,8 @@
 
 SRCDIR := CCA/Components/Wasatch/Expressions/PostProcessing
 
-SRCS     +=                         \
-	$(SRCDIR)/InterpolateExpression.cc
+SRCS     +=                          \
+	$(SRCDIR)/InterpolateExpression.cc \
+  $(SRCDIR)/VelocityMagnitude.cc     \
+  $(SRCDIR)/KineticEnergy.cc         \
+  $(SRCDIR)/Vorticity.cc

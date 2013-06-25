@@ -2,7 +2,6 @@
 #include "Reduction.h"
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Grid/Variables/VarLabel.h>
 
 template< typename ReductionOpT >
 ReductionEnum get_reduction_name();
@@ -35,12 +34,8 @@ Reduction( const Expr::Tag& resultTag,
            bool printVar )
 : ReductionBase( resultTag,
                  srcTag,
-                 Uintah::VarLabel::create( resultTag.name() + "_uintah",
-                                                            Uintah::ReductionVariable<double, ReductionOpT >::getTypeDescription()
-                                                            ),
                  get_reduction_name<ReductionOpT>(),
                  printVar )
-
 {}
 
 //--------------------------------------------------------------------
@@ -128,9 +123,90 @@ Builder::build() const
   return new Reduction<SrcFieldT, ReductionOpT>( resultTag_, srcTag_, printVar_ );
 }
 
+// ###################################################################
+//
+//                          Implementation
+//
+// ###################################################################
+
+template<typename ReductionOpT >
+Reduction<double, ReductionOpT>::
+Reduction( const Expr::Tag& resultTag,
+          const Expr::Tag& srcTag,
+          bool printVar )
+: ReductionBase( resultTag,
+                srcTag,
+                get_reduction_name<ReductionOpT>(),
+                printVar )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename ReductionOpT >
+Reduction<double, ReductionOpT>::
+~Reduction()
+{}
+
+//--------------------------------------------------------------------
+
+template< typename ReductionOpT >
+Reduction<double, ReductionOpT>::
+Builder::Builder( const Expr::Tag& resultTag,
+                 const Expr::Tag& srcTag,
+                 bool printVar )
+: ExpressionBuilder( resultTag ),
+resultTag_       (resultTag  ),
+srcTag_          ( srcTag    ),
+printVar_        (printVar   )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename ReductionOpT >
+void
+Reduction<double,ReductionOpT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( this->srcTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename ReductionOpT >
+void
+Reduction<double,ReductionOpT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  src_ = &fml.template field_ref< double >( this->srcTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename ReductionOpT >
+void
+Reduction<double,ReductionOpT>::evaluate() {
+  double& result = this->value();
+  result = *src_;
+}
+
+//--------------------------------------------------------------------
+
+template< typename ReductionOpT >
+Expr::ExpressionBase*
+Reduction<double, ReductionOpT>::
+Builder::build() const
+{
+  return new Reduction<double, ReductionOpT>( resultTag_, srcTag_, printVar_ );
+}
+
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
+
+template class Reduction<double, Uintah::Reductions::Min<double> >;
+template class Reduction<double, Uintah::Reductions::Max<double> >;
+template class Reduction<double, Uintah::Reductions::Sum<double> >;
+
 #define DECLARE_REDUCTION_VARIANTS(VOL) \
 template class Reduction< VOL, Uintah::Reductions::Min<double> >; \
 template class Reduction< VOL, Uintah::Reductions::Max<double> >; \

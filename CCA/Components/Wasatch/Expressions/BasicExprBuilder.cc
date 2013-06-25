@@ -57,8 +57,9 @@
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/HomogeneousNucleationCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/CriticalSurfaceEnergy.h>
 
-#include <CCA/Components/Wasatch/Expressions/VelocityMagnitude.h>
-#include <CCA/Components/Wasatch/Expressions/Vorticity.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/Vorticity.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/VelocityMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 
 // BC Expressions Includes
@@ -823,6 +824,30 @@ namespace Wasatch{
           msg << "ERROR: unsupported field type '" << srcFieldType << "'" << "while parsing an InterpolateExpression." << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
+    } else if( params->findBlock("KineticEnergy") ) {
+      Uintah::ProblemSpecP keSpec = params->findBlock("KineticEnergy");
+      
+      Expr::Tag xVelTag = Expr::Tag();
+      if (keSpec->findBlock("XVelocity"))
+        xVelTag = parse_nametag( keSpec->findBlock("XVelocity")->findBlock("NameTag") );
+      
+      Expr::Tag yVelTag = Expr::Tag();
+      if (keSpec->findBlock("YVelocity"))
+        yVelTag = parse_nametag( keSpec->findBlock("YVelocity")->findBlock("NameTag") );
+      
+      Expr::Tag zVelTag = Expr::Tag();
+      if (keSpec->findBlock("ZVelocity"))
+        zVelTag = parse_nametag( keSpec->findBlock("ZVelocity")->findBlock("NameTag") );
+      
+      bool totalKE=false;
+      keSpec->getAttribute("total",totalKE);
+      if (totalKE) {
+        typedef typename TotalKineticEnergy<XVolField, YVolField, ZVolField>::Builder Builder;
+        builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
+      } else {
+        typedef typename KineticEnergy<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
+        builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
+      }      
     }
     
     return builder;
