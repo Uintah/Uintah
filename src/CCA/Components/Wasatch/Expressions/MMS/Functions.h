@@ -29,7 +29,6 @@
 
 #include <expression/Expression.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <spatialops/FieldReductions.h>
 
 #include <limits>
 #include <iostream>
