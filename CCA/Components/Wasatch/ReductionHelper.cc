@@ -37,10 +37,6 @@
 #include <expression/PlaceHolderExpr.h>
 #include <expression/ExpressionFactory.h>
 
-//-- SpatialOps includes --//
-#include <spatialops/FieldExpressions.h>
-#include <spatialops/structured/SpatialFieldStore.h>
-
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/Wasatch.h>
