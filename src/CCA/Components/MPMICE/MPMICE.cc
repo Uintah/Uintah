@@ -506,6 +506,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 
     d_ice->scheduleComputePressFC(            sched, ice_patches, press_matl,
                                                                     all_matls);
+                                                                    
+    d_ice->scheduleViscousShearStress(        sched, ice_patches, ice_matls);
+   
     d_ice->scheduleAccumulateMomentumSourceSinks(
                                               sched, ice_patches, press_matl,
                                                                   ice_matls_sub,
