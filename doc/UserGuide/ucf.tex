@@ -2299,6 +2299,135 @@ The input file specification is as follows:
 </DataAnalysis>
 \end{verbatim}
 
+\chapter{Order of Accuracy}
+\label{chap:OA}
+
+Order of accuracy is an extremely powerful framework that has been built to run a series of tests where multiple parameters are varied. The framework was originally built to easily do an order of accuracy analysis when resoultion was varied for a specific simulation. Since then it has been used for a variety of other tasks. The framework allows multiple tests to be easily repeated autonomously, proving to be extremely usefull for man studies. 
+
+\section{Using The Framework}
+
+The first step in using the framework, is to set up the tests you wish to run. All the assets this framework uses are located inside $\TT{/src/orderAccuracy/}$. $\TT{framwork\_scripts}$ contains all the scripts the framework uses to run, $\TT{postProcessTools}$ contains all the post processing scripts the study will use, and $\TT{test\_config\_files}$ contains all the studies which the framework can run. The framework has the ability to run any of .tst files located here. \\
+
+To run a study using the order of accuracy tools, edit the $\TT{components.xml}$ inside of $\TT{test\_config\_files}$. All of the components (ICE MPM MPMICE Arches Wasatch) should be commented out, un-comment any component you wish to use. Next go into the directory for whichever component you un-commented. In this directory are all the available tests for that component and symbolic links to all the associated input files. To run these studies, edit $\TT{whatToRun.xml}$ and un-comment any simulations you would like to run.
+
+Once all of the above steps have been done, you can follow these steps to run your studies.
+\begin{enumerate}
+
+\item cd to /opt/StandAlone or /dbg/StandAlone 
+\item Create a symbolic link to orderAccuracy \\
+\TT{ln -s /src/orderAccuracy}
+\item Set a readlink to the orderAccuracy directory using the following command \\
+\TT{set OA = `readlink -f orderAccuracy/`}
+\item Run the following command to run your study
+\begin{verbatim}
+orderAccuracy/framework_scripts/masterScript.pl $OA
+\end{verbatim}
+
+\end{enumerate}
+
+This will create a directory called $\TT{order\_of\_accuracy}$ which will contain all the studies you have run. WARNING - if you re-run any studies the framework with write over this directory, completely destroying anything that was previously there, so it is suggested to quickly move any data out of this directory.
+
+\section{Tests}
+
+The order of accuracy framework uses test or .tst files to determine which parameters will be changed. Once a new test has been created you must add it to $\TT{whatToRun.xml}$. An example .tst file will look something like this.
+
+\begin{verbatim}
+
+<start>
+<upsFile>cavityFlow_dx.ups</upsFile>
+
+<gnuplot>
+  <script>plotScript.gp</script>s
+  <title>ICE:Cavity Flow Res</title>
+  <ylabel>Error</ylabel>
+  <xlabel>Resolution</xlabel>
+</gnuplot>
+
+<AllTests>
+    <replace_lines>
+      <maxTime> 20 </maxTime>
+    </replace_lines>
+    <replace_values>
+      /Uintah_specification/Grid/BoundaryConditions/Face[@side='y+']
+      /BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value : [1,0,0] 
+    </replace_values>
+</AllTests>
+<Test>
+    <Title>16</Title>
+    <sus_cmd>mpirun -np 6 sus -mpi </sus_cmd>
+    <postProcess_cmd>compare_cavityFlow.m -pDir 1 -mat 0 -plot true 
+    -Re 5000</postProcess_cmd>
+    <x>16</x>
+    <replace_lines>
+      <resolution>  [16,16,1]     </resolution>
+    </replace_lines>
+</Test>
+<Test>
+    <Title>32</Title>
+    <sus_cmd>mpirun -np 6 sus -mpi</sus_cmd>
+    <postProcess_cmd>compare_cavityFlow.m -pDir 1 -mat 0 -plot true 
+    -Re 5000</postProcess_cmd>
+        <x>32</x>
+    <replace_lines>
+      <resolution>  [32,32,1]     </resolution>
+    </replace_lines>
+</Test>
+<Test>
+    <Title>64</Title>
+    <sus_cmd>mpirun -np 6 sus -mpi</sus_cmd>
+    <postProcess_cmd>compare_cavityFlow.m -pDir 1 -mat 0 -plot true 
+    -Re 5000</postProcess_cmd>
+    <x>64</x>
+    <replace_lines>
+      <resolution>  [64,64,1]     </resolution>
+    </replace_lines>
+</Test>
+
+</start>
+
+\end{verbatim}
+
+The following is a list of required parameters for the .tst files. These fields must be present, but many of them may remain empty.
+\begin{itemize}
+\item $\textless$start$\textgreater$ 
+\item $\textless$upsFile$\textgreater$ \\
+This points the .tst to the input file, only one input file can be specified per test.
+\item $\textless$gnuplot$\textgreater$ \\
+This is a generic gnuplot script which can be used to plot any data output through the post processing script. It was created and originally configured to compute the L2 norm, but can be modified to plot anything by modifying \TT{plotScript.gp} in the directory with the .tst file.
+\item $\textless$AllTests$\textgreater$ \\
+Items put in this section will modify all simulations.
+\item $\textless$Test$\textgreater$ \\
+Items put in this section will modify only this simulation.
+\item $\textless$Title$\textgreater$ \\
+Title of the current test. Many names used for files and directories will be based off this title.
+\item $\textless$sus\_cmd$\textgreater$ \\
+This is the sus command line you would normally give to run an input file, the input and output files are put in automatically and can be omitted.
+\item $\textless$postProcess\_cmd$\textgreater$ \\
+This line is used to feed the current tests uda and output file into a post processing script. The post processing scripts have their own inputs, and can be modified when the scripts are created. The one thing all compare scripts share as an input is -uda $\textless$uda name$\textgreater$ and -o $\textless$output file$\textgreater$ as these are automatically fed into the compare script by the framework, and must be included with all new post processing scripts.
+\item $\textless$x$\textgreater$\\
+this sets the x label for the gnuplot script
+\end{itemize}
+
+This section is for the two optional parameters, $\textless$replace\_lines$\textgreater$ and $\textless$replace\_values$\textgreater$. These two parameters are what specify the changes between the tests. These can both be placed inside $\textless$Test$\textgreater$ and $\textless$AllTests$\textgreater$. 
+\begin{itemize}
+\item $\textless$replace\_lines$\textgreater$\\
+This parameter is used to replace specific lines in the input files, and can be used when there is a unique tag such as $\textless$resolution$\textgreater$. To use this, just replace the line with the one you would like. This method is the simplest way to replace section of an input file.
+\item $\textless$replace\_values$\textgreater$ \\
+This section is for when a tag is not unique and a path to the correct place must be given. In the above example, the velocity value is not unique, it is located inside each face, thus the face must be specified. XML uses unique paths to find tags inside of other tags, this path must be given in order to replace the values. In order to find these tags the command $\TT{xmlstarlet}$ can be run on the input file, and the paths will be given.
+\end{itemize}
+
+\section{Additional information}
+Order of accuracy has a large amount of small intricacies to learn to fully utilize it, and this section hopes to familiarize you with some things you might not have thought possible.
+
+\subsection{Post Processing Tools}
+Inside $\TT{orderAccuracy}$ is a directory called $\TT{postProcessTools}$. This contains all the post processing scripts that are used in the current tests. All of these can be run on their own, but were created to be fed through the system. These scripts have generally been used to pull data out of the uda and compare it to either experimental or exact data. The scripts then plot this data with a unique filename, and output the L2 norm to a file. If you going to use a postprocessing script in a .tst file, be familiar with the script, and which arguments are needed for it to run correctly. Many postprocessing scripts have already been implimented, so be sure to become familiar with those that are already available.
+
+\subsection{Gnuplot scripts}
+Gnuplot is used in many sections of the order of accuracy framework, and learning where and how it uses it can be extremely helpful. plotScript.gp is the main gnuplot script that you can use to plot any data from your post processing script. This script may require a lot of manipulation to get what you want, but due to its integration with the system its much easier to work with. A few other gnuplot scripts are lying around to plot assorted data output through the post processing scripts. These scripts must be used after the fact.
+
+\subsection{Debugging}
+Many times an error you have is not brought up to the highest level and you will not see it. The easiest way to find an error is to familiarize yourself with the order of operations the system performs, and locate the point where the process ended. Sometimes the simulation will crash, and it may not be apparent what has happened. Be sure to check the output files of the latest test if something goes wrong.
+
 
 %\section{compare\_uda}
 

@@ -605,7 +605,7 @@ upper asymptote.  The form of the equation is:
 
 \begingroup
 \everymath{\normalsize}
-$C_v(T)=\frac{T^n}{\sum\limits_{i=0}^n a_i*T^i}$
+$C_v(T)=\frac{\sum\limits_{i=0}^n a_i*T^i}{T^n}$
 \endgroup
 \\
 
@@ -1357,6 +1357,163 @@ reactant.  Note the curvature of the reaction zone.
 %\label{results.CH4}
 %\end{figure}
 %\newpage
+
+\newpage
+\section{Verification and Validation}
+This section contains the verification and validation tests that have been performed on ICE. The below problems are run at a variety of resolutions on multiple planes, and compared to either exact solutions, or experimental data. Along with comparison plots the L2 norm is calculated to gauge the order of accuracy for many of these problems, allowing us a concise way to analyze these results. Many of these problems run with the order of accuracy framework described in \ref{chap:OA}. 
+
+\subsection*{\center Rayleigh Problem}
+\addcontentsline{toc}{subsection}{Rayleigh Problem}
+\subsubsection*{\underline{Problem Description}}
+The Rayleigh Problem is one of the few simple test cases to have an exact solution, which proves extremely usefull for verification. In this 2-D problem, a flat plate initial at rest is surrounded by a fluid. At t=0 the plate is instantaneously moved to a constant speed and the resulting velocity profile is observed.
+
+
+\subsubsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\footnotesize
+\item [Component used:] \hfill ICE
+\item [Order of Accuracy Framework:] \hfill Yes
+\item [Tests to run:] \hfill \\
+\begin{minipage}[t]{0.2\textwidth}
+{\bfseries Name} \\
+rayleigh\_dx.tst \\ \\ 
+rayleigh\_dy.tst \\ \\ 
+rayleigh\_dz.tst \\ \\ 
+\end{minipage}
+\begin{minipage}[t]{0.4\textwidth}
+{\bfseries Description} \\
+Rayleigh problem on the x-z plane \\  
+\\Rayleigh problem on the x-y plane \\ 
+\\Rayleigh problem  on the y-z plane \\ \\
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.3\textwidth}
+{\bfseries Varied Parameter} \\ 
+Resolution - 25 50 100 200 400\\ \\
+Resolution - 25 50 100 200 400\\ \\
+Resolution - 25 50 100 200 400\\ \\ 
+\end{minipage}
+
+\item [Associated input files:]\hfill \\
+rayleigh\_dx.ups \\
+rayleigh\_dy.ups \\
+rayleigh\_dz.ups \\
+
+\item [Postprocessing script:]\hfill \\
+\TT{compare\_Rayleigh.m}
+
+\item [Simulation Domain:]\hfill    .01 x .01 x .01 m
+
+\item [Example Runtimes:] \hfill \\
+ $<$5 minutes  (1 processor, 2.66 GHz Xeon)
+
+\item [Exact solution or data compared with:] \hfill \\
+Exact unsteady solution to the rayleigh problem \\ \\
+Incompressible Flow, by Panton pg 177 \cite{ref:Panton} \\ \\
+$U = U_0*(1-erf (\frac{y}{2*\sqrt{\nu*t}}))$
+  
+\end{description}
+\newpage
+\subsubsection*{\underline{Results}} 
+Figure \ref{fig:RayleighOA} shows the order of accuracy of the Rayleigh Problem. This figure shows the L2 norm plotted against the resolution in the principal direction in all the planes. \\Figure \ref{fig:Rayleigh} shows the horizontal velocity $u$ plotted against height $y$ for both the exact solution and the computed solution. 
+\begin{center}
+  \begin{figure}
+    \includegraphics[scale=.15]{rayleighOA.png}
+    \caption{L2 norm as a function of resolution}
+    \label{fig:RayleighOA}
+  \end{figure}
+ 
+  \begin{figure}
+    \includegraphics[scale=.25]{rayleigh.png}
+    \caption{$u$ component of velocity versus height $y$}
+    \label{fig:Rayleigh}
+  \end{figure} 
+\end{center}  
+  
+\newpage
+
+\subsection*{\center 2-D Lid-Driven Cavity Flow}
+\addcontentsline{toc}{subsection}{2-D Lid-Driven Cavity Flow}
+\subsubsection*{\underline{Problem Description}}
+2-D lid driven cavity flow is another one of the simple test cases available. In this problem a square box containing a fluid is driven from a lid at an initial velocity. This lid creates vorticies, and a velocity profile we can compare against. We can also compare the distinguishing features of the vorticies, for a less analytical analysis.
+
+
+\subsubsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\footnotesize
+\item [Component used:] \hfill ICE
+\item [Order of Accuracy Framework:] \hfill Yes
+\item [Tests to run:] \hfill \\
+\begin{minipage}[t]{0.2\textwidth}
+{\bfseries Name} \\
+cavityFlow\_dx.tst \\ \\ \\
+cavityFlow\_dy.tst \\ \\ \\
+cavityFlow\_dz.tst \\ \\ \\
+cavityFlow\_res.tst \\ \\ \\
+\end{minipage}
+\begin{minipage}[t]{0.4\textwidth}
+{\bfseries Description} \\
+Cavity Flow with a resolution of 128x128 on the x-z plane \\
+\\Cavity Flow with a resolution of 128x128 on the x-y plane \\
+\\Cavity Flow with a resolution of 128x128 the y-z plane \\
+\\Cavity Flow with a Reynolds Number of 5000 on the x-y plane \\
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.3\textwidth}
+{\bfseries Varied Parameter} \\ 
+Reynolds Number - 100 400 1000 3200 5000 7500 10000 \\ \\
+Reynolds Number - 100 400 1000 3200 5000 7500 10000 \\ \\
+Reynolds Number - 100 400 1000 3200 5000 7500 10000 \\ \\
+Resolution - 16 32 64 128 256
+\end{minipage}
+
+\item [Associated input files:]\hfill \\
+cavityFlow\_dx.ups \\
+cavityFlow\_dy.ups \\
+cavityFlow\_dz.ups \\
+
+\item [Postprocessing script:]\hfill \\
+\TT{compare\_cavityFlow.m}
+
+\item [Simulation Domain:]\hfill    .1 x .1 x .01 m
+
+\item [Example Runtimes:] \hfill \\
+ 3 hours per test (6 processors, 2.66 GHz Xeon)
+
+\item [Exact solution or data compared with:] \hfill \\
+This test case has neither an exact solution, nor good experimental data. Ghia et al. -1982\cite{ref:Ghia} has become the golden standard when looking to compare results for this specific case. The data located in the compare script comes from the tables located in this paper.
+  
+\end{description}
+\newpage
+\subsubsection*{\underline{Results}}
+Figure \ref{fig:cavityOA} shows the order of accuracy for the cavity flow problem at a reynolds number of 5000 in the x-y plane. Figures \ref{fig:cavityFlowx},\ref{fig:cavityFlowy}, and \ref{fig:cavityFlowx} show the nondimensional $u$ and $v$ components of velocity versus the nondimensional length $L$ in the perpendicular direction for all three planes. Each of these measurements are taken at the centerline in the corresponding direction of the velocity.
+  \begin{figure}
+    \includegraphics[scale=.25]{cavityOA.png}
+    \caption{Order of Accuracy for a Reynolds Number of 5000}
+    \label{fig:cavityOA}
+  \end{figure}
+  
+  \begin{figure}
+    \includegraphics[scale=.25]{cavityFlow_dx.jpg}
+    \caption{Nondimensional velocities versus nondimensional lengths in the x-z      plane}
+    \label{fig:cavityFlowx}
+  \end{figure}
+  
+  \begin{figure}
+    \includegraphics[scale=.25]{cavityFlow_dy.jpg}
+    \caption{Nondimensional velocities versus nondimensional lengths in the x-y      plane}
+    \label{fig:cavityFlowy}
+  \end{figure}
+  
+  \begin{figure}
+    \includegraphics[scale=.25]{cavityFlow_dz.jpg}
+    \caption{Nondimensional velocities versus nondimensional lengths in the y-z      plane}
+    \label{fig:cavityFlowz}
+  \end{figure}
+   
+  
+\newpage
+
 
 %\section{References}
 \bibliographystyle{plain}
