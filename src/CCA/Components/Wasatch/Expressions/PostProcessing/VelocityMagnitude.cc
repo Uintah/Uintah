@@ -27,6 +27,14 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
+// ###################################################################
+//
+//               Implementation
+//
+// ###################################################################
+
+//--------------------------------------------------------------------
+
 template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
 VelocityMagnitude<FieldT,Vel1T,Vel2T,Vel3T>::
 VelocityMagnitude( const Expr::Tag& vel1tag,

@@ -15,7 +15,7 @@
 #include <Core/Util/DebugStream.h>
 
 // reduction diagnostics
-static SCIRun::DebugStream dbgr("Wasatch_Reduction", false);
+static SCIRun::DebugStream dbgr("WASATCH_REDUCTIONS", false);
 #define dbg_reduction_on  dbgr.active()
 #define dbg_red  if( dbg_reduction_on  ) dbgr
 
@@ -70,7 +70,6 @@ protected:
 
   ReductionBase( const Expr::Tag& resultTag,
                  const Expr::Tag& srcTag,
-                 Uintah::VarLabel* reductionVarLabel,
                  ReductionEnum reductionName,
                  bool printVar=false);
   
@@ -90,7 +89,6 @@ public:
      */
     Builder( const Expr::Tag& resultTag,
              const Expr::Tag& srcTag,
-             Uintah::VarLabel* reductionVarLabel,
              ReductionEnum reductionName,
              bool printVar=false);
 
@@ -98,7 +96,6 @@ public:
 
   private:
     const Expr::Tag resultTag_, srcTag_;
-    Uintah::VarLabel* reductionVarLabel_;
     ReductionEnum reductionName_;
     bool printVar_;
   };

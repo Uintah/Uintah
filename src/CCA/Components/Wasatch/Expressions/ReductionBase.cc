@@ -10,19 +10,36 @@
 ReductionBase::
 ReductionBase( const Expr::Tag& resultTag,
               const Expr::Tag& srcTag,
-              Uintah::VarLabel* reductionVarLabel,
               ReductionEnum reductionName,
               bool printVar )
 : Expr::Expression<double>(),
   srcTag_( srcTag ),
-  reductionVarLabel_( reductionVarLabel ),
-  thisVarLabel_( Uintah::VarLabel::create( resultTag.name(),
-                                          Uintah::PerPatch<double>::getTypeDescription()
-                                          )
-                ),
   reductionName_( reductionName ),
   printVar_(printVar)
-{}
+{
+  const std::string redVarName = resultTag.name() + "_uintah";
+  switch (reductionName_) {
+    case ReduceMin:
+      reductionVarLabel_ = Uintah::VarLabel::create( redVarName,
+                                                    Uintah::ReductionVariable<double, ReductionMinOpT >::getTypeDescription()
+                                                    );
+      break;
+    case ReduceMax:
+      reductionVarLabel_ = Uintah::VarLabel::create( redVarName,
+                                                    Uintah::ReductionVariable<double, ReductionMaxOpT >::getTypeDescription()
+                                                    );
+      break;
+    case ReduceSum:
+      reductionVarLabel_ = Uintah::VarLabel::create( redVarName,
+                                                    Uintah::ReductionVariable<double, ReductionSumOpT >::getTypeDescription()
+                                                    );
+      break;
+    default:
+      break;
+  }
+  thisVarLabel_ = Uintah::VarLabel::create( resultTag.name(),
+                                           Uintah::PerPatch<double>::getTypeDescription() );
+}
 
 //--------------------------------------------------------------------
 
@@ -59,13 +76,11 @@ evaluate()
 ReductionBase::
 Builder::Builder( const Expr::Tag& resultTag,
                   const Expr::Tag& srcTag,
-                  Uintah::VarLabel* reductionVarLabel,
                   ReductionEnum reductionName,
                   bool printVar )
 : ExpressionBuilder  ( resultTag         ),
   resultTag_         ( resultTag         ),
   srcTag_            ( srcTag            ),
-  reductionVarLabel_ ( reductionVarLabel ),
   reductionName_     ( reductionName     ),
   printVar_          ( printVar          )
 {}
@@ -76,7 +91,7 @@ Expr::ExpressionBase*
 ReductionBase::
 Builder::build() const
 {
-  return new ReductionBase( resultTag_, srcTag_, reductionVarLabel_, reductionName_, printVar_ );
+  return new ReductionBase( resultTag_, srcTag_, reductionName_, printVar_ );
 }
 
 //--------------------------------------------------------------------

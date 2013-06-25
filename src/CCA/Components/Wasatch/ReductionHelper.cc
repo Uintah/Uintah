@@ -106,9 +106,9 @@ namespace Wasatch {
       return;
 
     const Expr::ExpressionID myID = factory.register_expression( new typename Reduction< SrcT, ReductionOpT >::Builder(resultTag,
-                                                                                                                       srcTag,
-                                                                                                                       printVar) );
-    //    Reduction< FieldT,Uintah::Reductions::Min<double> >::reductionTagList.push_back(reduceTag);
+                                                                                                srcTag,
+                                                                                                printVar) );
+
     ReductionBase::reductionTagList.push_back(resultTag);
     factory.cleave_from_parents(myID);
     factory.cleave_from_children(myID);
@@ -247,6 +247,23 @@ namespace Wasatch {
           }
         }
           break;
+        case PERPATCH :
+        {
+          switch (redEnum) {
+            case ReduceMin: self().add_variable<double, ReductionMinOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceMax: self().add_variable<double, ReductionMaxOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceSum: self().add_variable<double, ReductionSumOpT>(cat,resultTag,srcTag,printVar); break;
+            default:
+            {
+              std::ostringstream msg;
+              msg << "ERROR: unsupported reduction operation specified: '" << reductionOperation <<"'. ";
+              msg << "Supported reduction operations are: min, max, and sum." << std::endl;
+              throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+            }
+              break;
+          }
+        }
+          break;          
         default:
           std::ostringstream msg;
           msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;
@@ -281,13 +298,15 @@ namespace Wasatch {
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-#define DECLARE_REDUCTION_VARIANTES(VOL) \
+
+#define DECLARE_REDUCTION_VARIANTS(VOL) \
 template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Min<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false); \
 template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Max<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false); \
 template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Sum<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false);
 
-DECLARE_REDUCTION_VARIANTES(SVolField);
-DECLARE_REDUCTION_VARIANTES(XVolField);
-DECLARE_REDUCTION_VARIANTES(YVolField);
-DECLARE_REDUCTION_VARIANTES(ZVolField);
+DECLARE_REDUCTION_VARIANTS(double);
+DECLARE_REDUCTION_VARIANTS(SVolField);
+DECLARE_REDUCTION_VARIANTS(XVolField);
+DECLARE_REDUCTION_VARIANTS(YVolField);
+DECLARE_REDUCTION_VARIANTS(ZVolField);
 //====================================================================

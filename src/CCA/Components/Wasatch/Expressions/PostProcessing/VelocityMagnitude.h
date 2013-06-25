@@ -53,6 +53,8 @@ typename Vel3T >
 class VelocityMagnitude
 : public Expr::Expression<FieldT>
 {
+  
+protected:
   const Expr::Tag vel1t_, vel2t_, vel3t_;
   const bool is3d_;
 

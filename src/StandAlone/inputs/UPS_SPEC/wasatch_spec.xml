@@ -369,7 +369,7 @@
     <!-- Spec for basic expression types -->
     <PostProcessingExpression spec="MULTIPLE NO_DATA"
                               attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                              children1="ONE_OF(CHILD VelocityMagnitude Vorticity InterpolateExpression)" >
+                              children1="ONE_OF(CHILD VelocityMagnitude Vorticity InterpolateExpression KineticEnergy)" >
       <TaskList               spec="REQUIRED STRING 'initialization, advance_solution'" />
       <NameTag                spec="REQUIRED" />
 
@@ -384,6 +384,20 @@
           <NameTag       spec="REQUIRED"/>
         </ZVelocity>     
       </VelocityMagnitude>
+
+      <!-- KineticEnergy -->
+      <KineticEnergy spec="OPTIONAL NO_DATA"
+                     attribute1="total OPTIONAL BOOLEAN">
+        <XVelocity       spec="OPTIONAL NO_DATA">
+          <NameTag       spec="REQUIRED"/>
+        </XVelocity>
+        <YVelocity       spec="OPTIONAL NO_DATA">
+          <NameTag       spec="REQUIRED"/>
+        </YVelocity>
+        <ZVelocity       spec="OPTIONAL NO_DATA">
+          <NameTag       spec="REQUIRED"/>
+        </ZVelocity>     
+      </KineticEnergy>
 
       <!-- Vorticity -->
       <!-- Note that the order of the velocities matters: wx = dw/dy - dv/dz, wy = du/dz - dw/dx, wz = dv/dx - du/dy -->
@@ -1038,7 +1052,7 @@
                                        attribute2="op REQUIRED STRING 'min,max,sum'"
                                        attribute3="output OPTIONAL BOOLEAN">
       <NameTag          spec="REQUIRED" />
-      <Source spec="REQUIRED NO_DATA" attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL'" >
+      <Source spec="REQUIRED NO_DATA" attribute1="type REQUIRED STRING 'PERPATCH,SVOL,XVOL,YVOL,ZVOL'" >
       	<NameTag spec="REQUIRED"/>
       </Source>       
     </Reduction>
