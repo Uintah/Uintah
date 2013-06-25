@@ -38,7 +38,6 @@
 #include <expression/ExpressionFactory.h>
 
 //-- SpatialOps includes --//
-#include <spatialops/FieldExpressions.h>
 
 //-- Uintah Includes --//
 #include <CCA/Ports/DataWarehouse.h>

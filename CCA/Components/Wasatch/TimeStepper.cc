@@ -34,7 +34,7 @@
 #include <expression/PlaceHolderExpr.h>
 
 //-- SpatialOps includes --//
-#include <spatialops/FieldExpressions.h>
+#include <spatialops/Nebo.h>
 
 //-- Uintah Includes --//
 #include <CCA/Ports/Scheduler.h>
