@@ -48,8 +48,11 @@ namespace Wasatch{
   yzvolcoord( "YZVOL", Expr::STATE_NONE ),
   zzvolcoord( "ZZVOL", Expr::STATE_NONE ),
   
-  // momentum related variables
+  // energy related variables
+  kineticEnergy      ("KineticEnergy",   Expr::STATE_NONE  ),
+  totalKineticEnergy ("TotalKineticEnergy", Expr::STATE_NONE),
   
+  // momentum related variables
   pressure  ("pressure",   Expr::STATE_NONE  ),
   dilatation("dilatation", Expr::STATE_NONE),
   tauxx("tau_xx", Expr::STATE_NONE),

@@ -36,9 +36,10 @@
 #include "ScalabilityTestTransportEquation.h"
 #include "MomentumTransportEquation.h"
 #include "MomentTransportEquation.h"
-#include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
+#include <CCA/Components/Wasatch/ReductionHelper.h>
 
 //-- includes for the expressions built here --//
+#include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/PoissonExpression.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
@@ -47,6 +48,8 @@
 #include <CCA/Components/Wasatch/Expressions/StableTimestep.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/VelocityMagnitude.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
 
 //-- Uintah includes --//
 #include <Core/Exceptions/InvalidValue.h>
@@ -76,7 +79,7 @@ namespace Wasatch{
   class EqnTimestepAdaptor : public EqnTimestepAdaptorBase
   {
   public:
-    EqnTimestepAdaptor( Wasatch::TransportEquation* eqn ) : EqnTimestepAdaptorBase(eqn) {}
+    EqnTimestepAdaptor( TransportEquation* eqn ) : EqnTimestepAdaptorBase(eqn) {}
     void hook( TimeStepper& ts ) const
     {
       ts.add_equation<FieldT>( eqn_->solution_variable_name(),
@@ -86,7 +89,7 @@ namespace Wasatch{
 
   //==================================================================
 
-  EqnTimestepAdaptorBase::EqnTimestepAdaptorBase( Wasatch::TransportEquation* eqn )
+  EqnTimestepAdaptorBase::EqnTimestepAdaptorBase( TransportEquation* eqn )
     : eqn_(eqn)
   {}
 
@@ -107,7 +110,7 @@ namespace Wasatch{
                                           GraphCategories& gc )
   {
     EqnTimestepAdaptorBase* adaptor = NULL;
-    Wasatch::TransportEquation* transeqn = NULL;
+    TransportEquation* transeqn = NULL;
 
     std::string eqnLabel, solnVariable;
 
@@ -181,7 +184,7 @@ namespace Wasatch{
 
     for( int iEq=0; iEq<nEqs; iEq++ ){
 
-      Wasatch::TransportEquation* scaltesteqn = NULL;
+      TransportEquation* scaltesteqn = NULL;
 
       std::stringstream ss;
       ss << iEq;
@@ -320,7 +323,7 @@ namespace Wasatch{
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
     EqnTimestepAdaptorBase* adaptor = NULL;
-    Wasatch::TransportEquation* momtranseq = NULL;
+    TransportEquation* momtranseq = NULL;
 
     std::string xvelname, yvelname, zvelname;
     const Uintah::ProblemSpecP doxvel = params->get( "X-Velocity", xvelname );
@@ -457,10 +460,38 @@ namespace Wasatch{
     }
     
     //
+    // Calculate kinetic energy, if needed
+    if ( params->findBlock("CalculateKE") ) {
+      const Expr::Tag xVelTag = doxvel ? Expr::Tag(xvelname, Expr::STATE_NONE) : Expr::Tag();
+      const Expr::Tag yVelTag = doyvel ? Expr::Tag(yvelname, Expr::STATE_NONE) : Expr::Tag();
+      const Expr::Tag zVelTag = dozvel ? Expr::Tag(zvelname, Expr::STATE_NONE) : Expr::Tag();
+
+      Uintah::ProblemSpecP keSpec = params->findBlock("CalculateKE");
+      bool isTotalKE = true;
+      keSpec->getAttribute("total", isTotalKE);
+      if (isTotalKE) { // calculate total kinetic energy. then follow that with a reduction variable
+        bool outputKE = true;
+        keSpec->getAttribute("output", outputKE);
+        
+        // we need to create two expressions
+        const Expr::Tag tkeTempTag("TotalKE_temp", Expr::STATE_NONE);
+        solnGraphHelper->exprFactory->register_expression(scinew TotalKineticEnergy<XVolField,YVolField,ZVolField>::Builder( tkeTempTag,
+                                                                                                                        xVelTag,yVelTag,zVelTag ), true);
+
+        ReductionHelper::self().add_variable<double, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE);
+        
+      } else { // calculate local, pointwise kinetic energy
+        const Expr::ExpressionID keID = solnGraphHelper->exprFactory->register_expression(scinew KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder( TagNames::self().kineticEnergy,
+                                                                                                                         xVelTag,yVelTag,zVelTag ), true);
+        solnGraphHelper->rootIDs.insert( keID );
+      }
+    }
+    
+    //
     // loop over the local adaptors and set the initial and boundary conditions on each equation attached to that adaptor
     for( EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ){
       EqnTimestepAdaptorBase* const adaptor = *ia;
-      Wasatch::TransportEquation* momtranseq = adaptor->equation();
+      TransportEquation* momtranseq = adaptor->equation();
       //_____________________________________________________
       // set up initial conditions on this momentum equation
       try{
@@ -563,7 +594,7 @@ namespace Wasatch{
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
     EqnTimestepAdaptorBase* adaptor = NULL;
-    Wasatch::TransportEquation* momtranseq = NULL;
+    TransportEquation* momtranseq = NULL;
 
     std::cout << "Parsing moment transport equations\n";
     GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION];
@@ -624,7 +655,7 @@ namespace Wasatch{
     // loop over the local adaptors and set the initial and boundary conditions on each equation attached to that adaptor
     for( EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ){
       EqnTimestepAdaptorBase* const adaptor = *ia;
-      Wasatch::TransportEquation* momtranseq = adaptor->equation();
+      TransportEquation* momtranseq = adaptor->equation();
 
       //_____________________________________________________
       // set up initial conditions on this moment equation
@@ -768,7 +799,7 @@ namespace Wasatch{
 
     setup_convective_flux_expression<FieldT>( dir,
                                               solnVarTag, convFluxTag, volFracTag,
-                                              Wasatch::get_conv_interp_method(interpMethod),
+                                              get_conv_interp_method(interpMethod),
                                               advVelocityCorrectedTag,
                                               suffix,
                                               factory,
