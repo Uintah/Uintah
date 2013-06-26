@@ -576,16 +576,17 @@ namespace Wasatch{
     }
     
     else if(params->findBlock("CriticalSurfaceEnergy") ) {
-      double BulkSurfaceEnergy, T, MolarVolume, coef;
+      double BulkSurfaceEnergy, T, MolarVolume, coef, tolmanL;
       const double R = 8.314;
       const double N_A = 6.023e23;
       Uintah::ProblemSpecP coefParams = params->findBlock("CriticalSurfaceEnergy");
       coefParams -> getAttribute("Temperature",T);
       coefParams -> getAttribute("Bulk_Surf_Eng",BulkSurfaceEnergy);
       coefParams -> getAttribute("Molar_Vol",MolarVolume);
+      coefParams -> getWithDefault("TolmanLength",tolmanL,0.2);
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       double r1 = pow(3.0*MolarVolume/N_A/4.0/PI,1.0/3.0); //convert molar vol to molec radius
-      coef = 0.8 * R * T*BulkSurfaceEnergy* r1/MolarVolume;
+      coef = 4.0 * tolmanL * R * T*BulkSurfaceEnergy* r1/MolarVolume;
       typedef typename CriticalSurfaceEnergy<FieldT>::Builder Builder;
       builder = scinew Builder(tag, saturationTag, BulkSurfaceEnergy, coef);
     }

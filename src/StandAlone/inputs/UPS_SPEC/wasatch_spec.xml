@@ -301,6 +301,7 @@
         <Supersaturation spec = "REQUIRED NO_DATA">                                     
           <NameTag spec="REQUIRED"/>
         </Supersaturation>
+        <TolmanLength spec="OPTIONAL DOUBLE"/>
       </CriticalSurfaceEnergy>                                              
       
       <PrecipitationSource spec = "OPTIONAL NO_DATA" >
