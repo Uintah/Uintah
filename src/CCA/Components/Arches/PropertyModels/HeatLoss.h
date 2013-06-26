@@ -94,6 +94,7 @@ private:
 
   BoundaryCondition_new* _boundary_condition; 
   MixingRxnModel* _rxn_model; 
+  MixingRxnModel::InertMasterMap _inert_map; 
 
   const VarLabel* _enthalpy_label; 
   const VarLabel* _adiab_h_label; 

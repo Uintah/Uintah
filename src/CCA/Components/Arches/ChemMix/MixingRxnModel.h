@@ -192,7 +192,7 @@ namespace Uintah {
         virtual ~TransformBase(); 
 
         virtual bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ) = 0;  
-        virtual void transform( std::vector<double>& iv ) = 0; 
+        virtual void transform( std::vector<double>& iv, double inert ) = 0; 
 
       protected: 
         int _index_1;
@@ -214,7 +214,7 @@ namespace Uintah {
           bool no_transform_on = true; 
           return no_transform_on; 
         };  
-        void inline transform( std::vector<double>& iv ){};
+        void inline transform( std::vector<double>& iv, double inert ){};
     };
 
     class CoalTransform : public TransformBase {
@@ -275,7 +275,7 @@ namespace Uintah {
           return coal_table_on; 
         };  
 
-        void inline transform( std::vector<double>& iv ){
+        void inline transform( std::vector<double>& iv, double inert ){
           double f = 0.0; 
           if ( iv[_index_2] < 1.0 ){
 
@@ -405,7 +405,7 @@ namespace Uintah {
           return rcce_table_on; 
         };  
 
-        void inline transform( std::vector<double>& iv ){
+        void inline transform( std::vector<double>& iv, double inert ){
 
           double f   = 0.0;
           double eta = 0.0; 
@@ -528,10 +528,6 @@ namespace Uintah {
           return transform_on; 
         };  
 
-        void inline transform( std::vector<double>& iv ){
-          throw InvalidValue("Error: You have chosen to use post mixing but there is something wrong with your tranform.  Check your input file.",__FILE__,__LINE__); 
-        }; 
-
         void inline transform( std::vector<double>& iv, double inert ){
 
           double fcstar = iv[_index_1]; 
@@ -618,7 +614,7 @@ namespace Uintah {
           return transform_on; 
         };  
 
-        void inline transform( std::vector<double>& iv ){
+        void inline transform( std::vector<double>& iv, double inert ){
           iv[_index_2] = iv[_index_1] + iv[_index_2];
           iv[_index_1] = 0.0; 
         }; 

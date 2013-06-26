@@ -126,6 +126,13 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
 
 	} 
 
+  //inerts 
+  _inert_map = _rxn_model->getInertMap(); 
+  for ( MixingRxnModel::InertMasterMap::iterator iter = _inert_map.begin(); iter != _inert_map.end(); iter++ ){ 
+    const VarLabel* label = VarLabel::find( iter->first ); 
+    tsk->requires( Task::NewDW, label, Ghost::None, 0 ); 
+  } 
+
   sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
 	_has_been_computed = true; 
 
@@ -159,28 +166,36 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 		constCCVariable<double> h_sen;   //sensible enthalpy
 		constCCVariable<double> h_ad;    //adiabatic enthalpy
 
-		if ( time_substep == 0 ){ 
-
+    DataWarehouse* which_dw; 
+    if ( time_substep == 0 ){ 
+      which_dw = old_dw; 
       new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
       prop.initialize(0.0); 
-
-			old_dw->get( h     , _enthalpy_label , matlIndex , patch , Ghost::None , 0 );
-			old_dw->get( h_sen , _sen_h_label    , matlIndex , patch , Ghost::None , 0 );
-			old_dw->get( h_ad  , _adiab_h_label  , matlIndex , patch , Ghost::None , 0 );
-
-		} else { 
-
+    } else { 
       new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
+      which_dw = new_dw; 
+    } 
 
-			new_dw->get( h     , _enthalpy_label , matlIndex , patch , Ghost::None , 0 );
-			new_dw->get( h_sen , _sen_h_label    , matlIndex , patch , Ghost::None , 0 );
-			new_dw->get( h_ad  , _adiab_h_label  , matlIndex , patch , Ghost::None , 0 );
+    std::vector<constCCVariable<double> > inerts; // all the inert mixture fractions
+    for ( MixingRxnModel::InertMasterMap::iterator iter = _inert_map.begin(); iter != _inert_map.end(); iter++ ){ 
+      constCCVariable<double> the_inert; 
+      const VarLabel* the_label = VarLabel::find( iter->first ); 
+      which_dw->get( the_inert, the_label, matlIndex, patch, Ghost::None, 0 ); 
+      inerts.push_back( the_inert ); 
+    } 
 
-		} 
+	  which_dw->get( h     , _enthalpy_label , matlIndex , patch , Ghost::None , 0 );
+	  which_dw->get( h_sen , _sen_h_label    , matlIndex , patch , Ghost::None , 0 );
+	  which_dw->get( h_ad  , _adiab_h_label  , matlIndex , patch , Ghost::None , 0 );
 
     for (iter.begin(); !iter.done(); iter++){
 
 			IntVector c = *iter; 
+
+      double total_inert = 0.0; 
+      for ( int i = 0; i < inerts.size(); i++ ){ 
+        total_inert += inerts[i][c]; 
+      } 
 
 			double small = 1e-16;
       double numerator = h_ad[c] - h[c]; 
