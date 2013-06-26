@@ -104,7 +104,9 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 # To revert back to LocalTests, use:
 # export WHICH_TESTS=local
 DEBUGTESTS = [
-  ("kinetic-energy-example",     "kinetic-energy-example.ups",   8,  "All",  ["exactComparison"] )  
+  ("lid-driven-cavity-xy-Re1000",   "lid-driven-cavity-xy-Re1000.ups",   4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("lid-driven-cavity-xz-Re1000",   "lid-driven-cavity-xz-Re1000.ups",   4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("lid-driven-cavity-yz-Re1000",   "lid-driven-cavity-yz-Re1000.ups",   4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] )
 ]
 
 UNUSED_TESTS = []
