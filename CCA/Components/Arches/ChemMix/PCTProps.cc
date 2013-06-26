@@ -79,7 +79,7 @@ PCTProps::problemSetup( const ProblemSpecP& propertiesParameters )
   // insert the input file interface here
   //
 
-  problemSetupCommon( db_pct ); 
+  problemSetupCommon( db_pct, this ); 
 
 }
 

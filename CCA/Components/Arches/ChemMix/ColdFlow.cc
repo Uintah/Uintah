@@ -171,7 +171,7 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
   proc0cout << "  Matching sucessful!" << endl;
   proc0cout << endl;
 
-  problemSetupCommon( db_coldflow ); 
+  problemSetupCommon( db_coldflow, this ); 
 
   proc0cout << "--- End Cold Flow information --- " << endl;
   proc0cout << endl;

@@ -215,7 +215,7 @@
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/AcidBaseTable3D_3.mix.gz</inputfile>
           <cold_flow> true </cold_flow>
-          <acidbase fp_label="mixture_fraction" eta_label="rxn_extent"/>
+          <acidbase f_label="mixture_fraction" extent_label="rxn_extent"/>
         </ClassicTable>
       </Properties>
 

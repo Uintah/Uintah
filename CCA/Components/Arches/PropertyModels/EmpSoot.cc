@@ -108,7 +108,6 @@ void EmpSoot::sched_computeProp( const LevelP& level, SchedulerP& sched, int tim
 
     if ( time_substep == 0 ) {
       
-      tsk->computes( _prop_label ); 
       tsk->computes( _absorp_label ); 
 
       tsk->requires( Task::OldDW, _T_label,   gn, 0 ); 
@@ -117,7 +116,6 @@ void EmpSoot::sched_computeProp( const LevelP& level, SchedulerP& sched, int tim
       
     } else {
 
-      tsk->modifies( _prop_label ); 
       tsk->modifies( _absorp_label ); 
 
       tsk->requires( Task::NewDW, _T_label,   gn, 0 ); 
@@ -125,6 +123,8 @@ void EmpSoot::sched_computeProp( const LevelP& level, SchedulerP& sched, int tim
       tsk->requires( Task::NewDW, _f_label,   gn, 0 ); 
 
     }
+
+    tsk->modifies( _prop_label ); 
     
     sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
     
@@ -157,9 +157,9 @@ void EmpSoot::computeProp(const ProcessorGroup* pc,
     constCCVariable<double> f; 
     Ghost::GhostType  gn  = Ghost::None;
 
+    new_dw->getModifiable( soot_vf,     _prop_label,   matlIndex, patch ); 
     if ( time_substep != 0 ){
     
-      new_dw->getModifiable( soot_vf,     _prop_label,   matlIndex, patch ); 
       new_dw->getModifiable( absorp_coef, _absorp_label, matlIndex, patch ); 
 
       new_dw->get( temperature, _T_label,   matlIndex, patch, gn, 0 ); 
@@ -168,7 +168,6 @@ void EmpSoot::computeProp(const ProcessorGroup* pc,
 
     } else {
       
-      new_dw->allocateAndPut( soot_vf,     _prop_label,   matlIndex, patch ); 
       new_dw->allocateAndPut( absorp_coef, _absorp_label, matlIndex, patch ); 
       soot_vf.initialize(0.0); 
       absorp_coef.initialize(0.0); 

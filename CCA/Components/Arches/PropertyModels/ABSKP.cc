@@ -42,15 +42,7 @@ void ABSKP::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_
 
   if ( !(_has_been_computed) ) {
 
-    if ( time_substep == 0 ) {
-      
-      tsk->computes( _prop_label ); 
-
-    } else {
-
-      tsk->modifies( _prop_label ); 
-
-    }
+    tsk->modifies( _prop_label ); 
 
     CoalModelFactory& modelFactory = CoalModelFactory::self();
     heatmodels_ = modelFactory.retrieve_heattransfer_models();
@@ -85,12 +77,9 @@ void ABSKP::computeProp(const ProcessorGroup* pc,
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> prop; 
-    if ( new_dw->exists( _prop_label, matlIndex, patch ) ){
-      new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
-    }
-    prop.initialize(0.0);
+    new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
+    if ( time_substep == 0 )
+      prop.initialize(0.0);
 
     CellIterator iter = patch->getCellIterator(); 
 

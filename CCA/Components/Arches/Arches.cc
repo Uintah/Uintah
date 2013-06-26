@@ -3049,11 +3049,10 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
         PropertyModelBase::Builder* the_builder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState );
         prop_factory.register_property_model( prop_name, the_builder );
 
-      } else if ( prop_type == "absorption_coefficient" ) {
+      } else if ( prop_type == "particle_absorption_coefficient" ) {
+
         // Coal particles absorption coefficient rate calculation
-        if ( prop_name != "abskp" )
-          proc0cout << "Note:  " << prop_name  << " renamed to abskp. " << endl;
-        PropertyModelBase::Builder* the_builder = new ABSKP::Builder( "abskp", d_sharedState );
+        PropertyModelBase::Builder* the_builder = new ABSKP::Builder( prop_name, d_sharedState );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else if ( prop_type == "extent_rxn" ) {
