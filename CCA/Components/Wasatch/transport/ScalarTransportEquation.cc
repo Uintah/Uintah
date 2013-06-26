@@ -180,6 +180,17 @@ namespace Wasatch{
                                            patchInfoMap,
                                            materials, bcFunctorMap );
     }
+    
+    if (!isConstDensity_) {
+      process_boundary_conditions<FieldT>( primVarTag_,
+                                           primVarTag_.name(),
+                                           this->staggered_location(),
+                                           graphHelper,
+                                           localPatches,
+                                           patchInfoMap,
+                                           materials, bcFunctorMap );
+    }
+    
   }
 
 
@@ -227,6 +238,14 @@ namespace Wasatch{
                                            patchInfoMap,
                                            materials, bcFunctorMap, 
                                            this->solution_variable_name(), 0, "Dirichlet", solnVarStarBCTag.name() );
+
+      process_boundary_conditions<FieldT>( primVarTag_,
+                                           primVarTag_.name(),
+                                           this->staggered_location(),
+                                           graphHelper,
+                                           localPatches,
+                                           patchInfoMap,
+                                           materials, bcFunctorMap );
     }
 
   }
