@@ -21,8 +21,6 @@ HeatLoss::HeatLoss( std::string prop_name, SimulationStateP& shared_state ) : Pr
   _low_hl  = -1; 
   _high_hl =  1;
 
-  _using_table_key = true; 
-
 }
 
 //---------------------------------------------------------------------------
@@ -57,7 +55,11 @@ HeatLoss::problemSetup( const ProblemSpecP& inputdb )
   } 
 
   db->getWithDefault( "sensible_enthalpy_label"  , _sen_h_label_name   , "sensibleenthalpy" );
+  db->getWithDefault( "adiabatic_enthalpy_label"  , _adiab_h_label_name   , "adiabaticenthalpy" );
+
   db->require( "enthalpy_label", _enthalpy_label_name ); 
+
+  db->getWithDefault( "use_Ha_lookup", _use_h_ad_lookup, false);
 
   _noisy_heat_loss = false; 
   if ( db->findBlock( "noisy_hl_warning" ) ){ 
@@ -79,17 +81,12 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
   Task* tsk = scinew Task( taskname, this, &HeatLoss::computeProp, time_substep ); 
 
 	_enthalpy_label = 0; 
-//	_sen_h_label    = 0; 
 
 	_enthalpy_label = VarLabel::find( _enthalpy_label_name ); 
-//	_sen_h_label    = VarLabel::find( _sen_h_label_name    ); 
 
 	if ( _enthalpy_label == 0 ){ 
   	throw InvalidValue( "Error: Could not find enthalpy label with name: "+_enthalpy_label_name, __FILE__, __LINE__); 
 	} 
-//	if ( _sen_h_label == 0 ){ 
-//  	throw InvalidValue( "Error: Could not find sensible enthalpy label with name: "+_sen_h_label_name, __FILE__, __LINE__); 
-//	} 
 
   //mixture fractions: 
   vector<string> ivs;
@@ -115,7 +112,6 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
     } 
 
 		tsk->requires( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
-//		tsk->requires( Task::OldDW , _sen_h_label    , Ghost::None , 0 );
 
 	} else { 
 
@@ -125,7 +121,6 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
     } 
 
 		tsk->requires( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
-//		tsk->requires( Task::NewDW , _sen_h_label    , Ghost::None , 0 );
 
 	} 
 
@@ -166,7 +161,6 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
     CCVariable<double> prop; 
 
 		constCCVariable<double> h;       //enthalpy
-//		constCCVariable<double> h_sen;   //sensible enthalpy
 
     DataWarehouse* which_dw; 
     new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
@@ -186,7 +180,6 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
     } 
 
 	  which_dw->get( h     , _enthalpy_label , matlIndex , patch , Ghost::None , 0 );
-//	  which_dw->get( h_sen , _sen_h_label    , matlIndex , patch , Ghost::None , 0 );
 
     vector<string> ivs;
     ivs = _rxn_model->getAllIndepVars();
@@ -228,19 +221,17 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
       }
 
       //Get the adiabatic enthalpy
-      double h_adiab = _rxn_model->get_Ha( iv_values, total_inert ); 
-
 			double small = 1e-16;
-      double hl = h_adiab - h[c]; 
+      double hl = 0.0;
       double h_sens = _rxn_model->getTableValue( iv_values, _sen_h_label_name ); 
-      double h_ad_lookup = _rxn_model->getTableValue( iv_values, "adiabaticenthalpy");
-      //hl = h_ad_lookup - h[c];
-
-      if ( std::abs(h_ad_lookup - h_adiab) > 1e-16 ){ 
-        //std::cout << " the table value is " << h_ad_lookup - h_adiab  << " on cell = " << c << std::endl;
-        //std::cout << " h_lookup = " << h_ad_lookup << std::endl;
-        //std::cout << " h_comput = " << h_adiab << std::endl;
-      }
+      
+      if ( _use_h_ad_lookup ){ 
+        double h_ad_lookup = _rxn_model->getTableValue( iv_values, _adiab_h_label_name ); 
+        hl = h_ad_lookup - h[c];
+      } else { 
+        double h_adiab = _rxn_model->get_Ha( iv_values, total_inert ); 
+        hl = h_adiab - h[c]; 
+      } 
 
       hl /= ( h_sens + small );
       
