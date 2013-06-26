@@ -513,7 +513,7 @@ void SPME::calculatePostTransform(const ProcessorGroup* pg,
       old_dw->get(pcharge, d_lb->pChargeLabel, pset);
 
       ParticleVariable<Vector> pforcenew;
-      new_dw->getModifiable(pforcenew, d_lb->pForceLabel_preReloc, pset);
+      new_dw->allocateAndPut(pforcenew, d_lb->pElectrostaticsForceLabel_preReloc, pset);
 
       PatchMaterialKey key(spmePatch->getPatch(), matl);
       d_gridmapsLock.readLock();

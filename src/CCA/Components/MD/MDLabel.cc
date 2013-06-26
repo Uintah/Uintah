@@ -42,8 +42,11 @@ MDLabel::MDLabel()
   pXLabel_preReloc = VarLabel::create("p.x+", ParticleVariable<Point>::getTypeDescription(), IntVector(0, 0, 0),
                                       VarLabel::PositionVariable);
 
-  pForceLabel = VarLabel::create("p.force", ParticleVariable<Vector>::getTypeDescription());
-  pForceLabel_preReloc = VarLabel::create("p.force+", ParticleVariable<Vector>::getTypeDescription());
+  pNonbondedForceLabel = VarLabel::create("p.nonbonded_force", ParticleVariable<Vector>::getTypeDescription());
+  pNonbondedForceLabel_preReloc = VarLabel::create("p.nonbonded_force+", ParticleVariable<Vector>::getTypeDescription());
+
+  pElectrostaticsForceLabel = VarLabel::create("p.electrostatics_force", ParticleVariable<Vector>::getTypeDescription());
+  pElectrostaticsForceLabel_preReloc = VarLabel::create("p.electrostatics_force+", ParticleVariable<Vector>::getTypeDescription());
 
   pAccelLabel = VarLabel::create("p.accel", ParticleVariable<Vector>::getTypeDescription());
   pAccelLabel_preReloc = VarLabel::create("p.accel+", ParticleVariable<Vector>::getTypeDescription());
@@ -73,6 +76,8 @@ MDLabel::MDLabel()
   spmeFourierStressLabel = VarLabel::create("spmeFourierStress", matrix_sum::getTypeDescription());
 
 #ifdef HAVE_FFTW
+  ///////////////////////////////////////////////////////////////////////////
+  // Reduction Variables - specific to SPME
   globalQLabel = VarLabel::create("globalQ", SoleVariable<SimpleGrid<dblcomplex> >::getTypeDescription());
   forwardTransformPlanLabel = VarLabel::create("forwardTransformPlan", SoleVariable<fftw_plan>::getTypeDescription());
   backwardTransformPlanLabel = VarLabel::create("backwardTransformPlan", SoleVariable<fftw_plan>::getTypeDescription());
@@ -86,8 +91,10 @@ MDLabel::~MDLabel()
   // Particle Variables
   VarLabel::destroy(pXLabel);
   VarLabel::destroy(pXLabel_preReloc);
-  VarLabel::destroy(pForceLabel);
-  VarLabel::destroy(pForceLabel_preReloc);
+  VarLabel::destroy(pNonbondedForceLabel);
+  VarLabel::destroy(pNonbondedForceLabel_preReloc);
+  VarLabel::destroy(pElectrostaticsForceLabel);
+  VarLabel::destroy(pElectrostaticsForceLabel_preReloc);
   VarLabel::destroy(pAccelLabel);
   VarLabel::destroy(pAccelLabel_preReloc);
   VarLabel::destroy(pVelocityLabel);

@@ -259,8 +259,10 @@ namespace Uintah {
       void electrostaticsCalculate(const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw);
+                                   DataWarehouse* parentOldDW,
+                                   DataWarehouse* parentNewDW,
+                                   SchedulerP subScheduler,
+                                   LevelP level);
 
       /**
        * @brief
@@ -331,6 +333,9 @@ namespace Uintah {
       SimpleMaterial* d_material;          //!< For now, this is a single material
       IntegratorType d_integrator;         //!< Timestep integrator
       double delt;                         //!< Simulation delta T
+
+      SchedulerP d_subScheduler;           //!< Subscheduler for SPME::calculate() convergence loop
+      bool d_recompileSubscheduler;        //!< Whether or not the subscheduler taskgraph needs recompilation
 
       string d_coordinateFile;             //!< Name of file with coordinates and charges of all atoms
       std::vector<Atom> d_atomList;        //!< Individual atom neighbor list

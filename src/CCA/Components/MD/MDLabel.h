@@ -65,8 +65,10 @@ namespace Uintah {
       // Particle Variables
       const VarLabel* pXLabel;
       const VarLabel* pXLabel_preReloc;
-      const VarLabel* pForceLabel;
-      const VarLabel* pForceLabel_preReloc;
+      const VarLabel* pNonbondedForceLabel;
+      const VarLabel* pNonbondedForceLabel_preReloc;
+      const VarLabel* pElectrostaticsForceLabel;
+      const VarLabel* pElectrostaticsForceLabel_preReloc;
       const VarLabel* pAccelLabel;
       const VarLabel* pAccelLabel_preReloc;
       const VarLabel* pVelocityLabel;
@@ -88,7 +90,10 @@ namespace Uintah {
       // Reduction Variables - Electrostatics
       const VarLabel* spmeFourierEnergyLabel;
       const VarLabel* spmeFourierStressLabel;
+
 #ifdef HAVE_FFTW
+      ///////////////////////////////////////////////////////////////////////////
+      // Reduction Variables - specific to SPME
       const VarLabel* globalQLabel;
       const VarLabel* forwardTransformPlanLabel;
       const VarLabel* backwardTransformPlanLabel;

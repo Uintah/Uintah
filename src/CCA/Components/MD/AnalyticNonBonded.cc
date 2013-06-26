@@ -174,12 +174,12 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
       old_dw->get(px_local, d_lb->pXLabel, local_pset);
       old_dw->get(px_neighbors, d_lb->pXLabel, neighbor_pset);
       old_dw->get(penergy, d_lb->pEnergyLabel, local_pset);
-      old_dw->get(pforce, d_lb->pForceLabel, local_pset);
+      old_dw->get(pforce, d_lb->pNonbondedForceLabel, local_pset);
 
       // computes variables
       ParticleVariable<Vector> pforcenew;
       ParticleVariable<double> penergynew;
-      new_dw->allocateAndPut(pforcenew, d_lb->pForceLabel_preReloc, local_pset);
+      new_dw->allocateAndPut(pforcenew, d_lb->pNonbondedForceLabel_preReloc, local_pset);
       new_dw->allocateAndPut(penergynew, d_lb->pEnergyLabel_preReloc, local_pset);
 
       // loop over all atoms in system, calculate the forces
