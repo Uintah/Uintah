@@ -114,6 +114,7 @@
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
+\listings_params "tabsize=2"
 \tracking_changes false
 \output_changes false
 \html_math_output 0
@@ -8897,6 +8898,97 @@ Momentum and vorticity fields resulting from LambsDipole initialization.
 \end_inset
 
 
+\end_layout
+
+\begin_layout Section*
+Reduction
+\end_layout
+
+\begin_layout Standard
+The Reduction expression provides a means for specifying MPI-Reduction operation
+s on Wasatch expressions.
+ The Reduction expression consumes a field by applying a certain reduction
+ operation (i.e.
+ min) and returns a single value that is the same across all patches.
+ Reduction variables can be driven through the input file with the following
+ spec
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/Reduction-spec.xml"
+lstparams "caption={XML specification for a Reduction expression},label={lst:wasatch-reduction-spec}"
+
+\end_inset
+
+The comments in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "lst:wasatch-reduction-spec"
+
+\end_inset
+
+ describe the available options that can be used when specifying reduction
+ variables via input.
+ As an example of defining a reduction variable through the input file,
+ consider calculating the maximum velocity (i.e.
+ 
+\begin_inset Formula $u$
+\end_inset
+
+) and outputing it to the terminal.
+ This may achived via the following specification
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "listings/Reduction-example.xml"
+lstparams "caption={Specification of a reduction variable that calculates the maximum velocity and outputs its value to the terminal.},label={lst:wasatch-reduction-example}"
+
+\end_inset
+
+
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "lst:wasatch-reduction-example"
+
+\end_inset
+
+ creates an expression called u_max that stores the maximum value of the
+ velocity field.
+\end_layout
+
+\begin_layout Standard
+Warning: Reduction expressions cannot be saved by design (e.g.
+ PerPatch variable).
+ However, the reduction counterpart can be saved.
+ Therefore, to save reduction variables, simply append their name with 
+\begin_inset Quotes eld
+\end_inset
+
+_uintah
+\begin_inset Quotes erd
+\end_inset
+
+ and use that in the DataArchiver section of the ups input file.
+ For example, to the save 
+\begin_inset Quotes eld
+\end_inset
+
+u_max
+\begin_inset Quotes erd
+\end_inset
+
+ shown in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "lst:wasatch-reduction-example"
+
+\end_inset
+
+, use the following in the DataArchiver <save label="u_max_uintah"/>.
 \end_layout
 
 \begin_layout Section
