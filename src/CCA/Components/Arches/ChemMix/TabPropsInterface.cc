@@ -156,7 +156,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   proc0cout << "  Matching sucessful!" << endl;
   proc0cout << endl;
 
-  problemSetupCommon( db_tabprops ); 
+  problemSetupCommon( db_tabprops, this ); 
 
   // Confirm that table has been loaded into memory
   d_table_isloaded = true;
