@@ -92,7 +92,8 @@ namespace Uintah {
                              const PatchSubset* patches,
                              const MaterialSubset* materials,
                              DataWarehouse* old_dw,
-                             DataWarehouse* new_dw) = 0;
+                             DataWarehouse* new_dw,
+                             SchedulerP subscheduler = 0) = 0;
 
       /**
        * @brief

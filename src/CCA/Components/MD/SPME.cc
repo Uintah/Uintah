@@ -328,7 +328,8 @@ void SPME::calculate(const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* materials,
                      DataWarehouse* old_dw,
-                     DataWarehouse* new_dw)
+                     DataWarehouse* new_dw,
+                     SchedulerP subscheduler /* = 0 */)
 {
   if (d_system->newBox()) {
     setup(pg, patches, materials, old_dw, new_dw);

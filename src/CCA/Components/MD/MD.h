@@ -122,6 +122,26 @@ namespace Uintah {
        * @param
        * @return
        */
+      void scheduleNonbondedInitialize(SchedulerP& sched,
+                                       const PatchSet* perprocPatches,
+                                       const MaterialSet* matls,
+                                       const LevelP& level);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleNonbondedSetup(SchedulerP& sched,
+                                  const PatchSet* patches,
+                                  const MaterialSet* matls,
+                                  const LevelP& level);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
       void scheduleNonbondedCalculate(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls,
@@ -132,10 +152,50 @@ namespace Uintah {
        * @param
        * @return
        */
+      void scheduleNonbondedFinalize(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls,
+                                     const LevelP& level);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleElectrostaticsInitialize(SchedulerP& sched,
+                                            const PatchSet* perprocPatches,
+                                            const MaterialSet* matls,
+                                            const LevelP& level);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleElectrostaticsSetup(SchedulerP& sched,
+                                       const PatchSet* patched,
+                                       const MaterialSet* matls,
+                                       const LevelP& level);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
       void scheduleElectrostaticsCalculate(SchedulerP& sched,
                                            const PatchSet* patched,
                                            const MaterialSet* matls,
                                            const LevelP& level);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleElectrostaticsFinalize(SchedulerP& sched,
+                                          const PatchSet* patched,
+                                          const MaterialSet* matls,
+                                          const LevelP& level);
 
       /**
        * @brief
@@ -226,8 +286,20 @@ namespace Uintah {
       void nonbondedCalculate(const ProcessorGroup* pg,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw);
+                              DataWarehouse* parentOldDW,
+                              DataWarehouse* parentNewDW,
+                              SchedulerP subScheduler /*  = 0 */);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void nonbondedFinalize(const ProcessorGroup* pg,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw);
 
       /**
        * @brief
@@ -261,8 +333,18 @@ namespace Uintah {
                                    const MaterialSubset* matls,
                                    DataWarehouse* parentOldDW,
                                    DataWarehouse* parentNewDW,
-                                   SchedulerP subScheduler,
-                                   LevelP level);
+                                   SchedulerP subScheduler /*  = 0 */);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void electrostaticsFinalize(const ProcessorGroup* pg,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
 
       /**
        * @brief
