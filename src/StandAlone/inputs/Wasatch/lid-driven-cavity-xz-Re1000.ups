@@ -158,6 +158,10 @@
           <value> 0.0 </value>
         </BCType>        
 
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>        
+
       </Face>
       
       <Face side="x+">
@@ -173,6 +177,10 @@
         <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>                       
+
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>        
                         
       </Face>
       
@@ -187,6 +195,10 @@
         </BCType>
         
         <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>        
+
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_full">
           <value> 0.0 </value>
         </BCType>        
 
@@ -205,6 +217,10 @@
         <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>     
+
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs_full">
+          <value> 0.0 </value>
+        </BCType>        
                                    
       </Face>
 
