@@ -138,6 +138,9 @@
                                                                                  you assigned this model. This allows you to see the value of heat loss as computed from enthalpy without
                                                                                  actually using it. Note also that if you are after a constant heat loss and don't care to know the value 
                                                                                  as computed from enthalpy, then you are better off just using the cc_constant model. --> 
+          <use_Ha_lookup                spec="OPTIONAL BOOLEAN" 
+                                        need_applies_to="type heat_loss"/>  <!-- Rather than compute adiabatic enthalpy from the mixture fractions, lookup from the table the 
+                                                                                 adiabatic enthalpy. Note this will be slower than the default --> 
 
           <!-- Scale Similarity Variance --> 
           <!-- mixture_fraction_label   spec above --> 

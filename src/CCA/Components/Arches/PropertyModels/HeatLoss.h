@@ -84,6 +84,7 @@ private:
 
   std::string _enthalpy_label_name; 
   std::string _sen_h_label_name; 
+  std::string _adiab_h_label_name; 
 
   BoundaryCondition_new* _boundary_condition; 
   MixingRxnModel* _rxn_model; 
@@ -91,6 +92,7 @@ private:
 
   const VarLabel* _enthalpy_label; 
   const VarLabel* _sen_h_label; 
+  const VarLabel* _adiab_h_label; 
 
   double _low_hl; 
   double _high_hl; 
@@ -98,7 +100,7 @@ private:
 
   bool _noisy_heat_loss; 
   bool _constant_heat_loss; 
-  bool _using_table_key; 
+  bool _use_h_ad_lookup; 
 
   const VarLabel* _actual_hl_label;              ///< If computing heat loss but not actually using it, then stuff the computed value of heat loss in here. 
 
