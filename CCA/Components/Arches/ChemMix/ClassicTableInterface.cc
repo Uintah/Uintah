@@ -311,11 +311,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     int archIndex = 0; 
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    MixingRxnModel::InertMixing* inert_transform=0; 
-    if ( d_does_post_mixing && d_has_transform ){ 
-      inert_transform = dynamic_cast<MixingRxnModel::InertMixing*>(_iv_transform); 
-    }
-
     constCCVariable<double> eps_vol; 
     constCCVariable<int> cell_type; 
     new_dw->get( eps_vol, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
@@ -453,11 +448,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         total_inert_f += inert_f; 
       }
 
-      if ( d_does_post_mixing && d_has_transform ) { 
-        inert_transform->transform( iv, total_inert_f ); 
-      } else { 
-        _iv_transform->transform( iv ); 
-      }
+      _iv_transform->transform( iv, total_inert_f ); 
 
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
@@ -580,11 +571,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           }
 
-          if ( d_does_post_mixing && d_has_transform ) { 
-            inert_transform->transform( iv, total_inert_f ); 
-          } else { 
-            _iv_transform->transform( iv ); 
-          }
+          _iv_transform->transform( iv, total_inert_f ); 
 
           // now get state for boundary cell: 
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
@@ -777,7 +764,7 @@ ClassicTableInterface::oldTableHack( const InletStream& inStream, Stream& outStr
   if ( d_does_post_mixing && d_has_transform ) { 
     throw ProblemSetupException("ERROR! I shouldn't be in this part of the code.", __FILE__, __LINE__); 
   } else { 
-    _iv_transform->transform( iv ); 
+    _iv_transform->transform( iv, 0.0 ); 
   }
 
   double f                 = 0.0; 
@@ -1101,10 +1088,6 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 { 
 
   double total_inert_f = 0.0; 
-  MixingRxnModel::InertMixing* inert_transform=0; 
-  if ( d_does_post_mixing && d_has_transform ){ 
-    inert_transform = dynamic_cast<MixingRxnModel::InertMixing*>(_iv_transform); 
-  }
 
 	int dep_index = findIndex( depend_varname ); 
 
@@ -1116,11 +1099,7 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
   }
 
-  if ( d_does_post_mixing && d_has_transform ) { 
-    inert_transform->transform( iv, total_inert_f ); 
-  } else { 
-    _iv_transform->transform( iv ); 
-  }
+  _iv_transform->transform( iv, total_inert_f ); 
 
 	double table_value = ND_interp->find_val( iv, dep_index ); 
 
@@ -1145,10 +1124,6 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 { 
 
   double total_inert_f = 0.0; 
-  MixingRxnModel::InertMixing* inert_transform=0; 
-  if ( d_does_post_mixing && d_has_transform ){ 
-    inert_transform = dynamic_cast<MixingRxnModel::InertMixing*>(_iv_transform); 
-  }
 
 	int dep_index = findIndex( depend_varname ); 
 
@@ -1160,11 +1135,7 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
   }
 
-  if ( d_does_post_mixing && d_has_transform ) { 
-    inert_transform->transform( iv, total_inert_f ); 
-  } else { 
-    _iv_transform->transform( iv ); 
-  }
+  _iv_transform->transform( iv, total_inert_f ); 
 
 	double table_value = ND_interp->find_val( iv, dep_index ); 
 
