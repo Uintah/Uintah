@@ -852,7 +852,7 @@ namespace Wasatch{
     }
     
     if (!isConstDensity_) {
-/*      // set bcs for density
+      // set bcs for density
       const Expr::Tag densTag( densityTag_.name(), Expr::STATE_NONE );
       process_boundary_conditions<SVolField>( densTag,
                                               densTag.name(),
@@ -865,14 +865,20 @@ namespace Wasatch{
       // set bcs for density_*
       const TagNames& tagNames = TagNames::self();
       const Expr::Tag densStarTag( densityTag_.name()+tagNames.star, Expr::STATE_NONE );
+      const Expr::Tag densStarBCTag( densStarTag.name()+"_bc",Expr::STATE_NONE);
+      Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
+      if (!factory.have_entry(densStarBCTag)){
+        factory.register_expression ( new typename BCCopier<SVolField>::Builder(densStarBCTag, densTag) );
+      }  
       process_boundary_conditions<SVolField>( densStarTag,
                                               densStarTag.name(),
                                               NODIR,
                                               graphHelper,
                                               localPatches,
                                               patchInfoMap,
-                                              materials, bcFunctorMap );
-*/      
+                                              materials, bcFunctorMap,
+                                              densTag.name(), 0, "Dirichlet", densStarBCTag.name() );
+      
       // set bcs for velocity - cos we don't have a mechanism now to set them
       // on interpolated density field
       Expr::Tag velTag;
@@ -935,7 +941,34 @@ namespace Wasatch{
                                          localPatches,
                                          patchInfoMap,
                                          materials, bcFunctorMap );
-
+    if (!isConstDensity_) {
+      // set bcs for density
+      const Expr::Tag densTag( densityTag_.name(), Expr::STATE_NONE );
+      process_boundary_conditions<SVolField>( densTag,
+                                             densTag.name(),
+                                             NODIR,
+                                             graphHelper,
+                                             localPatches,
+                                             patchInfoMap,
+                                             materials, bcFunctorMap );
+      
+      // set bcs for density_*
+      const TagNames& tagNames = TagNames::self();
+      const Expr::Tag densStarTag( densityTag_.name()+tagNames.star, Expr::CARRY_FORWARD );
+      const Expr::Tag densStarBCTag( densStarTag.name()+"_bc",Expr::STATE_NONE);
+      Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
+      if (!factory.have_entry(densStarBCTag)){
+        factory.register_expression ( new typename BCCopier<SVolField>::Builder(densStarBCTag, densityTag_) );
+      }  
+      process_boundary_conditions<SVolField>( densStarTag,
+                                             densStarTag.name(),
+                                             NODIR,
+                                             graphHelper,
+                                             localPatches,
+                                             patchInfoMap,
+                                             materials, bcFunctorMap,
+                                             densityTag_.name(), 0, "Dirichlet", densStarBCTag.name());
+    }
     // set bcs for pressure
 //    process_boundary_conditions<SVolField>( pressure_tag(),
 //                                            "pressure",
