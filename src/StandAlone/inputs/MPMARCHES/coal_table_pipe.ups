@@ -308,7 +308,7 @@
         <use_mixing_model>true</use_mixing_model>
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/coal/oxy-coal.mix.gz</inputfile>
-          <coal fp_label="mixture_fraction_2" eta_label="coal_gas_mix_frac"/>
+          <coal fp_label="mixture_fraction_2" eta_label="coal_gas_mix_frac" hl_label="heat_loss"/>
         </ClassicTable>
       </Properties>
 

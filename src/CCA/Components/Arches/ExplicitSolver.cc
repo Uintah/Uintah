@@ -375,6 +375,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
        PropertyModelBase* prop_model = iprop->second;
        prop_model->cleanUp();
 
+       if ( curr_level == 0 )
+         prop_model->sched_timeStepInit( level, sched ); 
+
      }
     
     if (d_doDQMOM) {
@@ -506,6 +509,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     string mixmodel = d_props->getMixingModelType();
     if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" 
         && mixmodel != "ColdFlow" && mixmodel != "ConstantProps")
+
       d_props->sched_reComputeProps(sched, patches, matls,
                                     d_timeIntegratorLabels[curr_level],
                                     true, false );

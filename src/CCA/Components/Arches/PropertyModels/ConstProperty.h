@@ -110,15 +110,7 @@ namespace Uintah{
 
     if ( !(_has_been_computed) ) {
 
-      if ( time_substep == 0 ) {
-        
-        tsk->computes( _prop_label ); 
-
-      } else {
-
-        tsk->modifies( _prop_label ); 
-
-      }
+      tsk->modifies( _prop_label ); 
 
       if ( !(_has_been_computed ) ) 
         sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
@@ -144,11 +136,9 @@ namespace Uintah{
       int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
       pT prop; 
-      if ( new_dw->exists( _prop_label, matlIndex, patch ) ){
-        new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
-      } else {
-        new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
-        prop.initialize(0.0); 
+      new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
+      if ( time_substep == 0 ){ 
+        prop.initialize(0.0);
       }
 
       // DEVELOPER'S NOTE:

@@ -287,6 +287,7 @@
         <use_mixing_model>true</use_mixing_model>
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
+          <standard_flamelet f_label="mixture_fraction" hl_label="heat_loss" var_label="normalizedScalarVar"/>
         </ClassicTable>
       </Properties>
 

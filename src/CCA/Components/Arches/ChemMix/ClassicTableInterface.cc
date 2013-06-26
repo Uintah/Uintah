@@ -158,45 +158,35 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // Confirm that table has been loaded into memory
   d_table_isloaded = true;
 
-  problemSetupCommon( db_classic ); 
-
-  proc0cout << "--- End Classic Arches table information --- " << endl;
-  proc0cout << endl;
-
   // Match the requested dependent variables with their table index:
   getIndexInfo(); 
   if (!d_coldflow) 
     getEnthalpyIndexInfo();
 
-  // *** HACKISHNESS *** 
-  // Check for heat loss as a property model 
-  // If found, add sensible and adiabatic enthalpy to the lookup 
-  // Some of this is a repeat of what is happening already in HeatLoss.cc
-  const ProblemSpecP db_root = db_classic->getRootNode(); 
-  if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels") ){ 
-   const ProblemSpecP db_prop_models = 
-     db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
-
-    for ( ProblemSpecP model_db = db_prop_models->findBlock("model");
-        model_db != 0; model_db = model_db->findNextBlock("model") ){
-
-      std::string type; 
-      model_db->getAttribute( "type", type ); 
-
-      std::string adiab_name, sens_name; 
-
-      if ( type == "heat_loss" ){ 
-        model_db->getWithDefault( "adiabatic_enthalpy_label" , adiab_name  , "adiabaticenthalpy" );
-        model_db->getWithDefault( "sensible_enthalpy_label"  , sens_name   , "sensibleenthalpy" );
-        insertIntoMap( adiab_name ); 
-        insertIntoMap( sens_name ); 
-      } 
-
-    }
-  } 
-  //**** END HACKISHNESS ***
   //setting varlabels to roles:
   d_lab->setVarlabelToRole( "temperature", "temperature" );
+
+  problemSetupCommon( db_classic, this ); 
+
+  d_hl_upper_bound = 1; 
+  d_hl_lower_bound = -1; 
+
+  if ( _iv_transform->has_heat_loss() ){ 
+
+    const vector<double> hl_bounds = _iv_transform->get_hl_bounds( indep_headers, d_allIndepVarNum);
+
+    d_hl_lower_bound = hl_bounds[0];
+    d_hl_upper_bound = hl_bounds[1];
+
+    proc0cout << "\n Lower bounds on heat loss = " << d_hl_lower_bound << endl;
+    proc0cout << " Upper bounds on heat loss = " << d_hl_upper_bound << endl;
+
+  }
+
+  proc0cout << "\n --- End Classic Arches table information --- " << endl;
+  proc0cout << endl;
+
+
 }
 
 void ClassicTableInterface::tableMatching(){ 
@@ -345,7 +335,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
         DepVarCont storage;
 
-        storage.var = new CCVariable<double>; 
+        storage.var = scinew CCVariable<double>; 
         new_dw->allocateAndPut( *storage.var, i->second, matlIndex, patch ); 
         (*storage.var).initialize(0.0);
 
@@ -387,7 +377,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
         DepVarCont storage;
 
-        storage.var = new CCVariable<double>; 
+        storage.var = scinew CCVariable<double>; 
         new_dw->getModifiable( *storage.var, i->second, matlIndex, patch ); 
 
         IndexMap::iterator i_index = d_depVarIndexMap.find( i->first ); 
@@ -917,30 +907,19 @@ ClassicTableInterface::getEnthalpyIndexInfo()
   proc0cout << " Total number of independent variables: " << d_indepvarscount << endl;
 
   d_allIndepVarNames = vector<std::string>(d_indepvarscount);
-  int index_is_hl = -1; 
-  int hl_grid_size = -1; 
- 
-  for (int ii = 0; ii < d_indepvarscount; ii++) {
-    string varname = getString( fp );
-    d_allIndepVarNames[ii] =  varname ;
-    if ( varname == "heat_loss" ) 
-      index_is_hl = ii;  
-  }
 
   d_allIndepVarNum = vector<int>(d_indepvarscount);
-  for (int ii = 0; ii < d_indepvarscount; ii++) {
-    int grid_size = getInt( fp ); 
-    d_allIndepVarNum[ii] =  grid_size ; 
-
-    if ( ii == index_is_hl ) 
-      hl_grid_size = grid_size - 1; 
-  }
 
   for (int ii = 0; ii < d_indepvarscount; ii++){
+    std::string varname = getString( fp );
+    d_allIndepVarNames[ii] = varname;
+  }
+  for (int ii = 0; ii < d_indepvarscount; ii++){
+    int grid_size = getInt( fp );
+    d_allIndepVarNum[ii] = grid_size;
     proc0cout << " Independent variable: " << d_allIndepVarNames[ii] << " has a grid size of: " << d_allIndepVarNum[ii] << endl;
   }
 
-  // Total number of variables in the table: non-adaibatic table has sensibile enthalpy too
   d_varscount = getInt( fp );
   proc0cout << " Total dependent variables in table: " << d_varscount << endl;
 
@@ -950,6 +929,7 @@ ClassicTableInterface::getEnthalpyIndexInfo()
     std::string variable; 
     variable = getString( fp );
     d_allDepVarNames[ii] = variable ; 
+
   }
 
   // Units
@@ -958,8 +938,6 @@ ClassicTableInterface::getEnthalpyIndexInfo()
     std::string units = getString( fp );
     d_allDepVarUnits[ii] =  units ; 
   }
-
-
   
   //indep vars grids
   indep_headers = vector<vector<double> >(d_indepvarscount);  //vector contains 2 -> N dimensions
@@ -984,24 +962,12 @@ ClassicTableInterface::getEnthalpyIndexInfo()
 	  size = size*d_allIndepVarNum[i];
   }
 
-  // getting heat loss bounds: 
-  if ( index_is_hl != -1 ) { 
-    if ( index_is_hl == 0 ) {
-      d_hl_lower_bound = (i1[0][0]);
-      d_hl_upper_bound = (i1[hl_grid_size][0]);
-    } else { 
-	    d_hl_lower_bound = indep_headers[index_is_hl-1][0];
-	    d_hl_upper_bound = indep_headers[index_is_hl-1][d_allIndepVarNum[index_is_hl]-1];
-    }  
-    proc0cout << " Lower bounds on heat loss = " << d_hl_lower_bound << endl;
-    proc0cout << " Upper bounds on heat loss = " << d_hl_upper_bound << endl;
-  } 
 
   table = vector<vector<double> >(d_varscount); 
   for ( int i = 0; i < d_varscount; i++ ){ 
     table[i] = vector<double>(size);
   }
-	
+
   int size2 = size/d_allIndepVarNum[d_indepvarscount-1];
   proc0cout << "Table size " << size << endl;
   
@@ -1054,8 +1020,6 @@ ClassicTableInterface::getEnthalpyIndexInfo()
 	}
   
 
-	proc0cout << "creating object " << endl;
-	
 	if (d_indepvarscount == 1) {
 		ND_interp = new Interp1(d_allIndepVarNum, table, i1);
   }	else if (d_indepvarscount == 2) {

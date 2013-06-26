@@ -103,7 +103,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "co2_label", _co2_label_name, "CO2" ); 
   db->getWithDefault( "h2o_label", _h2o_label_name, "H2O" ); 
   db->getWithDefault( "T_label", _T_label_name, "temperature" ); 
-  db->getWithDefault( "abskp_label", _abskp_label_name, "new_abskp" ); 
+  db->getWithDefault( "abskp_label", _abskp_label_name, "abskp" ); 
   db->getWithDefault( "soot_label",  _soot_label_name, "sootFVIN" ); 
   db->getWithDefault( "psize_label", _size_label_name, "length");
   db->getWithDefault( "ptemperature_label", _pT_label_name, "temperature"); 
@@ -231,7 +231,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       tsk->requires( Task::OldDW, _soot_label, gn, 0 ); 
 
     }
-    if ( _abskp_label_name != "new_abskp" ){ 
+    if ( _abskp_label_name != "abskp" ){ 
       tsk->requires( Task::OldDW, _abskpLabel, gn, 0 ); 
     }
 
@@ -275,7 +275,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       tsk->requires( Task::NewDW, _soot_label, gn, 0); 
     }
 
-    if ( _abskp_label_name != "new_abskp" ){ 
+    if ( _abskp_label_name != "abskp" ){ 
       tsk->requires( Task::NewDW, _abskpLabel, gn, 0 ); 
     }
 
@@ -413,7 +413,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       old_dw->copyOut( radiation_vars.ABSKP,  _abskpLocalLabel, matlIndex, patch, Ghost::None, 0 );
       old_dw->copyOut( radiation_vars.volq,   _radiationVolqLabel, matlIndex, patch, Ghost::None, 0 );  
       old_dw->copyOut( radiation_vars.src,    _radiationSRCLabel, matlIndex, patch, Ghost::None, 0 );  
-      if ( _abskp_label_name != "new_abskp" ){ 
+      if ( _abskp_label_name != "abskp" ){ 
 
         constCCVariable<double> other_abskp; 
 
@@ -481,7 +481,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
       radiation_vars.ESRCG.initialize(0.0); 
 
-      if ( _abskp_label_name != "new_abskp" ){ 
+      if ( _abskp_label_name != "abskp" ){ 
 
         constCCVariable<double> other_abskp; 
         new_dw->get( other_abskp, _abskpLabel, matlIndex, patch, gn, 0 ); 
