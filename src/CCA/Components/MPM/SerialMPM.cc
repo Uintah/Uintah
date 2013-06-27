@@ -1635,17 +1635,19 @@ void SerialMPM::printParticleCount(const ProcessorGroup* pg,
   
   if(pg->myrank() == 0){
     cerr << "Created " << (long) pcount << " total particles\n";
-  }  
-  
+  }
+    
   //__________________________________
-  //  bulletproofing
-  ostringstream msg;
-  msg << "\n ERROR: zero particles were created. \n"
-      << "  Possible causes: \n" 
-      << "    1) The geom_objects are outside of the computational domain.\n"
-      << "    2) Insufficient grid resolution.  On single/multi-level (MPMICE) problems particles have to created\n"
-      << "       on the coarsest level for each geom_object.";
-  throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+  //  bulletproofing  
+  if(pcount == 0){
+    ostringstream msg;
+    msg << "\n ERROR: zero particles were created. \n"
+        << "  Possible causes: \n" 
+        << "    1) The geom_objects are outside of the computational domain.\n"
+        << "    2) Insufficient grid resolution.  On single/multi-level (MPMICE) problems particles have to created\n"
+        << "       on the coarsest level for each geom_object.";
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+  }
 }
 //______________________________________________________________________
 //
