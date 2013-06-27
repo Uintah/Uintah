@@ -1622,7 +1622,8 @@ void SerialMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
     d_switchCriteria->scheduleSwitchTest(level,sched);
   }
 }
-
+//______________________________________________________________________
+//
 void SerialMPM::printParticleCount(const ProcessorGroup* pg,
                                    const PatchSubset*,
                                    const MaterialSubset*,
@@ -1634,9 +1635,20 @@ void SerialMPM::printParticleCount(const ProcessorGroup* pg,
   
   if(pg->myrank() == 0){
     cerr << "Created " << (long) pcount << " total particles\n";
-  }
+  }  
+  
+  //__________________________________
+  //  bulletproofing
+  ostringstream msg;
+  msg << "\n ERROR: zero particles were created. \n"
+      << "  Possible causes: \n" 
+      << "    1) The geom_objects are outside of the computational domain.\n"
+      << "    2) Insufficient grid resolution.  On single/multi-level (MPMICE) problems particles have to created\n"
+      << "       on the coarsest level for each geom_object.";
+  throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
 }
-
+//______________________________________________________________________
+//
 void SerialMPM::computeAccStrainEnergy(const ProcessorGroup*,
                                        const PatchSubset*,
                                        const MaterialSubset*,
