@@ -1124,7 +1124,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch   = patches->get(p);
-    printTask(patches,patch,cout_doing,"Doing DDT1::computeBurnLogic");
+    printTask(patches,patch,cout_doing,"Doing DDT1::computeModelSources");
     
 
     /* Variable to modify or compute */
@@ -1430,10 +1430,10 @@ void DDT1::computeModelSources(const ProcessorGroup*,
   //__________________________________
   //save total quantities
   if(d_saveConservedVars->mass ){
-      new_dw->put(sum_vartype(totalBurnedMass),  DDT1::totalMassBurnedLabel);
+    new_dw->put(sum_vartype(totalBurnedMass),  DDT1::totalMassBurnedLabel);
   }
   if(d_saveConservedVars->energy){
-      new_dw->put(sum_vartype(totalHeatReleased),DDT1::totalHeatReleasedLabel);
+    new_dw->put(sum_vartype(totalHeatReleased),DDT1::totalHeatReleasedLabel);
   }
 }//End of Task
 

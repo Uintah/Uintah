@@ -1592,7 +1592,7 @@ void SerialMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
     amr_doing << "SerialMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
 
   // The simulation controller should not schedule it every time step
-  Task* task = scinew Task("errorEstimate", this, &SerialMPM::errorEstimate);
+  Task* task = scinew Task("MPM::errorEstimate", this, &SerialMPM::errorEstimate);
   
   // if the finest level, compute flagged cells
   if (coarseLevel->getIndex() == coarseLevel->getGrid()->numLevels()-1) {
