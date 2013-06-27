@@ -1639,7 +1639,7 @@ void SerialMPM::printParticleCount(const ProcessorGroup* pg,
     
   //__________________________________
   //  bulletproofing  
-  if(pcount == 0){
+  if(pcount == 0 && flags->d_with_arches == false){
     ostringstream msg;
     msg << "\n ERROR: zero particles were created. \n"
         << "  Possible causes: \n" 
