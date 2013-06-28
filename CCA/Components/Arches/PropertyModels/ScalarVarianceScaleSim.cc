@@ -176,22 +176,25 @@ void ScalarVarianceScaleSim::computeProp(const ProcessorGroup* pc,
       IntVector c = *iter; 
 
       double filter_phi = 0.0; 
-      if ( vol_fraction[c] > 0.0 ) 
+      if ( vol_fraction[c] > 0.0 ) {
         filter_phi = filterRhoPhi[c] / filterRho[c]; 
 
-      norm_scalar_var[c] = _Cf * ( filterRhoPhiSqr[c]/filterRho[c] - filter_phi * filter_phi ); 
+        norm_scalar_var[c] = _Cf * ( filterRhoPhiSqr[c]/filterRho[c] - filter_phi * filter_phi ); 
 
-      //limits: 
-      double var_limit = filter_phi * ( 1.0 - filter_phi ); 
+        //limits: 
+        double var_limit = filter_phi * ( 1.0 - filter_phi ); 
 
-      if ( norm_scalar_var[c] < small ){ 
-        norm_scalar_var[c] = 0.0; 
-      } else if ( norm_scalar_var[c] > var_limit ){ 
-        norm_scalar_var[c] = var_limit; 
-      } 
+        if ( norm_scalar_var[c] < small ){ 
+          norm_scalar_var[c] = 0.0; 
+        } else if ( norm_scalar_var[c] > var_limit ){ 
+          norm_scalar_var[c] = var_limit; 
+        } 
 
-      norm_scalar_var[c] /= var_limit + small; //normalize it.
-      norm_scalar_var[c] *= vol_fraction[c]; 
+        norm_scalar_var[c] /= var_limit + small; //normalize it.
+        norm_scalar_var[c] *= vol_fraction[c]; 
+      } else { 
+        norm_scalar_var[c] = 0.0;
+      }
 
     }
 
