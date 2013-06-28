@@ -69,9 +69,9 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/PowerLawBC.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/TurbulentInletBC.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
-#include "BoundaryConditions/VarDensMMSVelocity.h"
-#include "BoundaryConditions/VarDensMMSMomentum.h"
-#include "BoundaryConditions/VarDensMMSSolnVar.h"
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSVelocity.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSMomentum.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSSolnVar.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>

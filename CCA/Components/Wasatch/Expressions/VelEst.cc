@@ -1,4 +1,4 @@
-#include "VelEst.h"
+#include <CCA/Components/Wasatch/Expressions/VelEst.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>

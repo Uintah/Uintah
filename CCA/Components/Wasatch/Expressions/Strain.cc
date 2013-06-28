@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "Strain.h"
+#include <CCA/Components/Wasatch/Expressions/Strain.h>
 
 #include <spatialops/OperatorDatabase.h>
 
