@@ -75,6 +75,8 @@ NIGHTLYTESTS = [
    ("turbulent_inlet_test"        , "DigitalFilter/TurbulentInletChannel.ups"     , 6   , "Linux"  , ["exactComparison", "no_restart"]) ,
    ("masssource_con_den"          , "verify_masssource/source_channel_conden.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("masssource_var_den"          , "verify_masssource/source_channel_varden.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
+   ("heptane_pipe"                , "heptane_pipe.ups"                            , 1.1 , "Linux"  , ["exactComparison"]),
+   ("coal_table_pipe"             , "coal_table_pipe.ups"                         , 1.1 , "Linux"  , ["exactComparison"]),
 #   ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
 ]
 
@@ -102,9 +104,9 @@ LOCALTESTS = [
    ("dqmom_test_5"               , "DQMOM_regression/dqmom_test_5.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
    ("methane_jet"                , "ClassicMixingTables/ups/methane_jet.ups"     , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
 #   ("methane_RCCE"               , "methane_RCCE.ups"                            , 1.1 , "All "  , ["exactComparison"]) ,
-   ("acidbase_jet"               , "ClassicMixingTables/ups/acidbase_jet.ups"    , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
-   ("acidbase_jet_2D"            , "ClassicMixingTables/ups/acidbase_jet_2D.ups" , 1.1, "All" , ["exactComparison", "no_restart"]) ,
-   ("1DTableTest"                , "ClassicMixingTables/ups/1DTableTest.ups"     , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
+   ("acidbase_jet"               , "ClassicMixingTables/ups/acidbase_jet.ups"    , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("acidbase_jet_2D"            , "ClassicMixingTables/ups/acidbase_jet_2D.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("1DTableTest"                , "ClassicMixingTables/ups/1DTableTest.ups"     , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
    ("xplus_scalar_test"          , "ScalarTests/xplus_scalar_test.ups"           , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("yplus_scalar_test"          , "ScalarTests/yplus_scalar_test.ups"           , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("zplus_scalar_test"          , "ScalarTests/zplus_scalar_test.ups"           , 6   , "All"  , ["exactComparison", "no_restart"]) , 
@@ -114,6 +116,8 @@ LOCALTESTS = [
    ("turbulent_inlet_test"       , "DigitalFilter/TurbulentInletChannel.ups"     , 6   , "All"  , ["exactComparison", "no_restart"]) ,
    ("source_channel_conden"      , "verify_masssource/source_channel_conden.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
    ("source_channel_varden"      , "verify_masssource/source_channel_varden.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("heptane_pipe"               , "heptane_pipe.ups"                            , 1.1 , "All"  , ["exactComparison"]),
+   ("coal_table_pipe"            , "coal_table_pipe.ups"                         , 1.1 , "All"  , ["exactComparison"]),
 #   ("coal_channel"               , "Coal/coal_channel.ups"                       , 1.1 , "All"  , ["exactComparison", "no_restart"])
 ]
 

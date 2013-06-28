@@ -443,7 +443,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-				double table_value = ND_interp->find_val( iv, i->second.index );
+        double table_value = ND_interp->find_val( iv, i->second.index );
 
         // for post look-up mixing
         for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
