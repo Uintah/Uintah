@@ -917,7 +917,6 @@ ClassicTableInterface::getEnthalpyIndexInfo()
   for (int ii = 0; ii < d_indepvarscount; ii++){
     int grid_size = getInt( fp );
     d_allIndepVarNum[ii] = grid_size;
-    proc0cout << " Independent variable: " << d_allIndepVarNames[ii] << " has a grid size of: " << d_allIndepVarNum[ii] << endl;
   }
 
   d_varscount = getInt( fp );
