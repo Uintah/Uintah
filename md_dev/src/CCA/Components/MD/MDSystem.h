@@ -29,6 +29,8 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Grid/GridP.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/SimulationState.h>
 
 namespace Uintah {
 
@@ -65,152 +67,141 @@ namespace Uintah {
        * @param
        */
       MDSystem(ProblemSpecP& ps,
-               GridP& grid);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      inline double getVolume() const
-      {
-        return d_volume;
-      }
+               GridP& grid,
+               SimulationStateP& shared_state);
 
       /**
        * @brief
        * @param  None
        * @return
        */
-      inline Vector getPressure() const
-      {
-        return d_pressure;
-      }
+      inline Vector getPressure() const { return d_pressure; }
 
       /**
        * @brief
        * @param
        * @return
        */
-      inline double getTemperature() const
-      {
-        return d_temperature;
-      }
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      inline int getNumGhostCells() const
-      {
-        return d_numGhostCells;
-      }
+      inline double getTemperature() const { return d_temperature; }
 
       /**
        * @brief
        * @param None
        * @return
        */
-      inline bool isOrthorhombic() const
-      {
-        return d_orthorhombic;
-      }
+      inline bool isOrthorhombic() const { return d_orthorhombic; }
 
       /**
        * @brief
        * @param
        * @return
        */
-      inline bool newBox() const
-      {
-        return d_newBox;
-      }
+      inline bool queryBoxChanged() const { return d_boxChanged; }
+
+      /*
+       * @brief
+       * @param
+       * @return
+       */
+      inline void clearBoxChanged() { d_boxChanged = false; }
 
       /**
        * @brief
        * @param
        * @return
        */
-      inline void setNewBox(bool value)
-      {
-        d_newBox = value;
-      }
+      inline void markBoxChanged() { d_boxChanged = true; }
 
       /**
        * @brief
        * @param
        * @return
        */
-      inline Matrix3 getUnitCell() const
-      {
-        return d_unitCell;
-      }
+      inline Matrix3 getUnitCell() const { return d_unitCell; }
 
       /**
        * @brief
        * @param
        * @return
        */
-      inline Matrix3 getInverseCell() const
-      {
-        return d_inverseCell;
-      }
+      inline Matrix3 getInverseCell() const { return d_inverseCell; }
 
       /**
        * @brief
        * @param
        * @return
        */
-      inline double getCellVolume() const
-      {
-        return d_cellVolume;
-      }
+      inline double getCellVolume() const { return d_cellVolume; }
 
       /**
        * @brief
        * @param
        * @return
        */
-      inline IntVector getCellExtent() const
-      {
-        return d_totalCellExtent;
-      }
+      inline IntVector getCellExtent() const { return d_totalCellExtent; }
 
       /**
        * @brief
        * @param
        * @return
        */
-      inline unsigned int getNumAtoms() const
-      {
-        return d_numAtoms;
-      }
+      inline unsigned int getNumAtoms() const { return d_numAtoms; }
 
       /**
        * @brief
        * @param
        * @return
        */
-      inline Vector getBox() const
-      {
-        return d_box;
-      }
+      inline Vector getBox() const { return d_box; }
+
+      /*
+       * @brief
+       * @param
+       * @return
+       */
+      inline size_t getNumAtomTypes() const { return d_atomTypeList.size(); }
+
+      /*
+       * @brief
+       * @param
+       * @return
+       */
+      inline size_t getNumMoleculeType() const { return d_moleculeTypeList.size(); }
+
+      /*
+       * @brief
+       * @param
+       * @return
+       */
+      inline size_t getNumAtomsOfType(size_t TypeIndex) const { return d_atomTypeList[TypeIndex]; }
+
+      /*
+       * @brief
+       * @param
+       * @return
+       */
+      inline size_t getNumMoleculesOfType(size_t TypeIndex) const { return d_moleculeTypeList[TypeIndex]; }
+
 
     private:
 
-      unsigned int d_numAtoms;          //!< Total number of atoms in the simulation
-      double d_volume;                  //!< Total MD system unit cell volume
+      std::vector<size_t> d_atomTypeList;     //!< List of total number of each atom type in the simulation
+      std::vector<size_t> d_moleculeTypeList; //!< List of total number of each molecule type in the simulation
+      unsigned int d_numAtoms;             //!< Total number of atoms in the simulation
+      unsigned int d_numMolecules;         //!< Total number of molecules in the simulation
+      
       Vector d_pressure;                //!< Total MD system pressure
       double d_temperature;             //!< Total MD system temperature
-      int d_numGhostCells;              //!< Number of ghost cells used, a function of cutoffRadius and cell size
       bool d_orthorhombic;              //!< Whether or not the MD system is using orthorhombic coordinates
-      bool d_newBox;                    //!< Whether or not the system size has changed... create a new box
 
+      // Unit cell variables
       Matrix3 d_unitCell;               //!< MD system unit cell
       Matrix3 d_inverseCell;            //!< MD system inverse unit cell
-      double d_cellVolume;              //!< Cell volume; calculate internally, return at request for efficiency
+      double  d_cellVolume;             //!< Cell volume; calculate internally, return at request for efficiency
+
+      // Total cell variables
       Vector d_box;                     //!< The MD system input box size
+      bool d_boxChanged;                    //!< Whether or not the system size has changed... create a new box
 
       IntVector d_totalCellExtent;      //!< Number of sub-cells in the global unit cell
 

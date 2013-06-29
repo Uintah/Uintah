@@ -35,10 +35,6 @@ namespace Uintah {
   typedef int particleIndex;
   typedef int particleId;
 
-  class Point;
-  class Vector;
-  class ParticleSubset;
-
   /**
    *  @class SPMEMapPoint
    *  @ingroup MD

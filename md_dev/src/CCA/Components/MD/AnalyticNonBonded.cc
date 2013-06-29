@@ -127,8 +127,8 @@ void AnalyticNonBonded::setup(const ProcessorGroup* pg,
       // get particles within bounds of cutoff radius
       ParticleSubset* neighbor_pset = old_dw->getParticleSubset(matl, patch, Ghost::AroundNodes, CUTOFF_RADIUS, d_lb->pXLabel);
 
-      constParticleVariable<Point> px_local;
-      constParticleVariable<Point> px_neighbors;
+      constParticleVariable < Point > px_local;
+      constParticleVariable < Point > px_neighbors;
       old_dw->get(px_local, d_lb->pXLabel, local_pset);
       old_dw->get(px_neighbors, d_lb->pXLabel, neighbor_pset);
 
@@ -144,9 +144,10 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
                                   const MaterialSubset* materials,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw,
-                                  SchedulerP subscheduler /* = 0 */)
+                                  SchedulerP& subscheduler /* = 0 */,
+                                  const LevelP& level /* = 0 */)
 {
-  if (d_system->newBox()) {
+  if (d_system->queryBoxChanged()) {
     setup(pg, patches, materials, old_dw, new_dw);
   }
 
@@ -168,9 +169,9 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
       ParticleSubset* neighbor_pset = old_dw->getParticleSubset(matl, patch, Ghost::AroundNodes, CUTOFF_RADIUS, d_lb->pXLabel);
 
       // requires variables
-      constParticleVariable<Point> px_local;
-      constParticleVariable<Point> px_neighbors;
-      constParticleVariable<Vector> pforce;
+      constParticleVariable < Point > px_local;
+      constParticleVariable < Point > px_neighbors;
+      constParticleVariable < Vector > pforce;
       constParticleVariable<double> penergy;
       old_dw->get(px_local, d_lb->pXLabel, local_pset);
       old_dw->get(px_neighbors, d_lb->pXLabel, neighbor_pset);
@@ -178,7 +179,7 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
       old_dw->get(pforce, d_lb->pNonbondedForceLabel, local_pset);
 
       // computes variables
-      ParticleVariable<Vector> pforcenew;
+      ParticleVariable < Vector > pforcenew;
       ParticleVariable<double> penergynew;
       new_dw->allocateAndPut(pforcenew, d_lb->pNonbondedForceLabel_preReloc, local_pset);
       new_dw->allocateAndPut(penergynew, d_lb->pEnergyLabel_preReloc, local_pset);

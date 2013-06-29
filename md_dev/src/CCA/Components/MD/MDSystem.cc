@@ -27,6 +27,8 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/SimulationState.h>
 
 #include <iostream>
 
@@ -45,14 +47,15 @@ MDSystem::~MDSystem()
 }
 
 MDSystem::MDSystem(ProblemSpecP& ps,
-                   GridP& grid)
+                   GridP& grid,
+                   SimulationStateP& shared_state)
 {
+  //std::vector<int> d_atomTypeList;
   ProblemSpecP mdsystem_ps = ps->findBlock("MDSystem");
   mdsystem_ps->require("numAtoms", d_numAtoms);
   mdsystem_ps->require("pressure", d_pressure);
   mdsystem_ps->require("temperature", d_temperature);
   mdsystem_ps->require("orthorhombic", d_orthorhombic);
-  mdsystem_ps->require("ghostcells", d_numGhostCells);
 
   if (d_orthorhombic) {
     mdsystem_ps->get("boxSize", d_box);
@@ -74,10 +77,37 @@ MDSystem::MDSystem(ProblemSpecP& ps,
   IntVector lowIndex, highIndex;
   grid->getLevel(0)->findCellIndexRange(lowIndex, highIndex);
   d_totalCellExtent = highIndex - lowIndex;
+
+//  int numAtomTypes = 1; //shared_state->getNumMatls();
+//  std::vector<size_t> tempAtomTypeList(numAtomTypes);
+//  d_atomTypeList = tempAtomTypeList;
+  //d_atomTypeList.resize(shared_state->getNumMatls());
+  d_atomTypeList.resize(1); // Hard coded for our simple Material case
+  // Not so easy to do.
+//  const MaterialSet* materialList = shared_state->allMaterials();
+//  size_t numberMaterials = materialList->size();
+//  for (size_t matlIndex=0; matlIndex < numberMaterials; ++matlIndex) {
+//    d_atomTypeList.push_back()
+//  }
+//  // Determine the total number of atom types (from the system material list)
+//  d_numAtomType = shared_state->getNumMatls();
+
+  d_numMolecules = 0;
+  d_moleculeTypeList.resize(d_numMolecules);
+  // Determine total number of molecule types (looking ahead)
+  //d_numMoleculeType = shared_state->getNumMolecules();  ???
+
+  d_boxChanged = true;
+  d_cellVolume = 0.0;
+  this->calcCellVolume();
 }
 
 void MDSystem::calcCellVolume()
 {
+  if (d_orthorhombic) {
+    d_cellVolume = d_unitCell(0,0)*d_unitCell(1,1)*d_unitCell(2,2);
+    return;
+  }
   Vector A, B, C;
   A[0] = d_unitCell(0, 0);
   A[1] = d_unitCell(0, 1);
@@ -90,4 +120,5 @@ void MDSystem::calcCellVolume()
   C[2] = d_unitCell(2, 2);
 
   d_cellVolume = Dot(Cross(A, B), C);
+  return;
 }
