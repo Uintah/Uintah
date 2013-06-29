@@ -39,6 +39,7 @@ SPMEPatch::SPMEPatch()
 SPMEPatch::~SPMEPatch()
 {
   delete d_Q_patchLocal;
+  // FIXME - This delete causes "*** glibc detected *** free(): invalid pointer: 0x00007ff9e07c4018 ***"
 //  delete d_stressPrefactor;
   delete d_theta;
 
