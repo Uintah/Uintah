@@ -126,46 +126,29 @@ void MD::scheduleInitialize(const LevelP& level,
 {
   printSchedule(level, md_cout, "MD::scheduleInitialize");
 
-  // this task creates all the ParticleVariables and places atoms on correct patches spatially
-  Task* mdInitTask = scinew Task("MD::initialize", this, &MD::initialize);
-  mdInitTask->computes(d_lb->pXLabel);
-  mdInitTask->computes(d_lb->pNonbondedForceLabel);
-  mdInitTask->computes(d_lb->pElectrostaticsForceLabel);
-  mdInitTask->computes(d_lb->pAccelLabel);
-  mdInitTask->computes(d_lb->pVelocityLabel);
-  mdInitTask->computes(d_lb->pEnergyLabel);
-  mdInitTask->computes(d_lb->pMassLabel);
-  mdInitTask->computes(d_lb->pChargeLabel);
-  mdInitTask->computes(d_lb->pParticleIDLabel);
-  sched->addTask(mdInitTask, level->eachPatch(), d_sharedState->allMaterials());
-
-  // initialize nonbonded instance
-  Task* nonbondedInitTask = scinew Task("MD::nonbondedInitialize", this, &MD::nonbondedInitialize);
-  nonbondedInitTask->requires(Task::NewDW, d_lb->pXLabel, Ghost::None);
-  nonbondedInitTask->computes(d_lb->vdwEnergyLabel);
-
-  nonbondedInitTask->setType(Task::OncePerProc);
+  const MaterialSet* materials = d_sharedState->allMaterials();
   LoadBalancer* loadBal = sched->getLoadBalancer();
   GridP grid = level->getGrid();
   const PatchSet* perprocPatches = loadBal->getPerProcessorPatchSet(grid);
-  sched->addTask(nonbondedInitTask, perprocPatches, d_sharedState->allMaterials());
 
-  // initialize electrostatics instance; if we're doing electrostatics
-  if (d_electrostatics->getType() != Electrostatics::NONE) {
-    Task* electrostaticsInitTask = scinew Task("MD::electrostaticsInitialize", this, &MD::electrostaticsInitialize);
-    if (d_electrostatics->getType() == Electrostatics::SPME) {
-      electrostaticsInitTask->computes(d_lb->spmeFourierEnergyLabel);
-      electrostaticsInitTask->computes(d_lb->spmeFourierStressLabel);
-      electrostaticsInitTask->computes(d_lb->forwardTransformPlanLabel);
-      electrostaticsInitTask->computes(d_lb->backwardTransformPlanLabel);
-      electrostaticsInitTask->computes(d_lb->globalQLabel);
-    }
-    electrostaticsInitTask->setType(Task::OncePerProc);
-    LoadBalancer* loadBal = sched->getLoadBalancer();
-    GridP grid = level->getGrid();
-    const PatchSet* perprocPatches = loadBal->getPerProcessorPatchSet(grid);
-    sched->addTask(electrostaticsInitTask, perprocPatches, d_sharedState->allMaterials());
-  }
+  Task* task = scinew Task("MD::initialize", this, &MD::initialize);
+
+  task->computes(d_lb->pXLabel);
+  task->computes(d_lb->pNonbondedForceLabel);
+  task->computes(d_lb->pElectrostaticsForceLabel);
+  task->computes(d_lb->pAccelLabel);
+  task->computes(d_lb->pVelocityLabel);
+  task->computes(d_lb->pEnergyLabel);
+  task->computes(d_lb->pMassLabel);
+  task->computes(d_lb->pChargeLabel);
+  task->computes(d_lb->pParticleIDLabel);
+  sched->addTask(task, level->eachPatch(), materials);
+
+  // Nonbonded initialization - OncePerProc, during initial (0th) timestep.
+  scheduleNonbondedInitialize(sched, perprocPatches, materials, level);
+
+  // Nonbonded initialization - OncePerProc, during initial (0th) timestep.
+  scheduleElectrostaticsInitialize(sched, perprocPatches, materials, level);
 }
 
 void MD::scheduleComputeStableTimestep(const LevelP& level,
@@ -202,6 +185,31 @@ void MD::scheduleTimeAdvance(const LevelP& level,
                                     d_sharedState->d_particleState, d_lb->pParticleIDLabel, matls, 1);
 }
 
+void MD::scheduleNonbondedInitialize(SchedulerP& sched,
+                                     const PatchSet* perprocPatches,
+                                     const MaterialSet* matls,
+                                     const LevelP& level)
+{
+  printSchedule(perprocPatches, md_cout, "MD::scheduleNonbondedInitialize");
+
+  Task* task = scinew Task("MD::nonbondedInitialize", this, &MD::nonbondedInitialize);
+
+  task->requires(Task::NewDW, d_lb->pXLabel, Ghost::None, 0);
+  task->computes(d_lb->vdwEnergyLabel);
+
+  task->setType(Task::OncePerProc);
+
+  sched->addTask(task, perprocPatches, matls);
+}
+
+void MD::scheduleNonbondedSetup(SchedulerP& sched,
+                                const PatchSet* patches,
+                                const MaterialSet* matls,
+                                const LevelP& level)
+{
+  printSchedule(patches, md_cout, "MD::scheduleNonbondedSetup");
+}
+
 void MD::scheduleNonbondedCalculate(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls,
@@ -218,6 +226,54 @@ void MD::scheduleNonbondedCalculate(SchedulerP& sched,
   task->computes(d_lb->pNonbondedForceLabel_preReloc);
   task->computes(d_lb->pEnergyLabel_preReloc);
   task->computes(d_lb->vdwEnergyLabel);
+
+  sched->addTask(task, patches, matls);
+}
+
+void MD::scheduleNonbondedFinalize(SchedulerP& sched,
+                                   const PatchSet* patches,
+                                   const MaterialSet* matls,
+                                   const LevelP& level)
+{
+  printSchedule(patches, md_cout, "MD::scheduleNonbondedFinalize");
+
+  Task* task = scinew Task("MD::nonbondedFinalize", this, &MD::nonbondedFinalize);
+  sched->addTask(task, patches, matls);
+}
+
+void MD::scheduleElectrostaticsInitialize(SchedulerP& sched,
+                                          const PatchSet* perprocPatches,
+                                          const MaterialSet* matls,
+                                          const LevelP& level)
+{
+  printSchedule(perprocPatches, md_cout, "MD::scheduleElectrostaticsInitialize");
+
+  // initialize electrostatics instance; if we're doing electrostatics
+  if (d_electrostatics->getType() != Electrostatics::NONE) {
+    Task* task = scinew Task("MD::electrostaticsInitialize", this, &MD::electrostaticsInitialize);
+
+    if (d_electrostatics->getType() == Electrostatics::SPME) {
+      task->computes(d_lb->spmeFourierEnergyLabel);
+      task->computes(d_lb->spmeFourierStressLabel);
+      task->computes(d_lb->forwardTransformPlanLabel);
+      task->computes(d_lb->backwardTransformPlanLabel);
+      task->computes(d_lb->globalQLabel);
+    }
+
+    task->setType(Task::OncePerProc);
+
+    sched->addTask(task, perprocPatches, matls);
+  }
+}
+
+void MD::scheduleElectrostaticsSetup(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls,
+                                     const LevelP& level)
+{
+  printSchedule(patches, md_cout, "MD::scheduleElectrostaticsSetup");
+
+  Task* task = scinew Task("MD::electrostaticsSetup", this, &MD::electrostaticsSetup);
 
   sched->addTask(task, patches, matls);
 }
@@ -255,18 +311,15 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   sched->addTask(task, patches, matls);
 }
 
-void MD::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls)
+void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls,
+                                        const LevelP& level)
 {
-  printSchedule(patches, md_cout, "MD::scheduleInterpolateParticlesToGrid");
-}
+  printSchedule(patches, md_cout, "MD::scheduleElectrostaticsFinalize");
 
-void MD::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
-                                                 const PatchSet* patches,
-                                                 const MaterialSet* matls)
-{
-  printSchedule(patches, md_cout, "MD::scheduleInterpolateToParticlesAndUpdate");
+  Task* task = scinew Task("MD::electrostaticsFinalize", this, &MD::electrostaticsFinalize);
+  sched->addTask(task, patches, matls);
 }
 
 void MD::scheduleUpdatePosition(SchedulerP& sched,
@@ -380,38 +433,6 @@ void MD::initialize(const ProcessorGroup* pg,
   }
 }
 
-void MD::registerPermanentParticleState(SimpleMaterial* matl)
-{
-  // load up the ParticleVariables we want to register for relocation
-  d_particleState_preReloc.push_back(d_lb->pNonbondedForceLabel_preReloc);
-  d_particleState.push_back(d_lb->pNonbondedForceLabel);
-
-  d_particleState_preReloc.push_back(d_lb->pElectrostaticsForceLabel_preReloc);
-  d_particleState.push_back(d_lb->pElectrostaticsForceLabel);
-
-  d_particleState_preReloc.push_back(d_lb->pAccelLabel_preReloc);
-  d_particleState.push_back(d_lb->pAccelLabel);
-
-  d_particleState_preReloc.push_back(d_lb->pVelocityLabel_preReloc);
-  d_particleState.push_back(d_lb->pVelocityLabel);
-
-  d_particleState_preReloc.push_back(d_lb->pEnergyLabel_preReloc);
-  d_particleState.push_back(d_lb->pEnergyLabel);
-
-  d_particleState_preReloc.push_back(d_lb->pMassLabel_preReloc);
-  d_particleState.push_back(d_lb->pMassLabel);
-
-  d_particleState_preReloc.push_back(d_lb->pChargeLabel_preReloc);
-  d_particleState.push_back(d_lb->pChargeLabel);
-
-  d_particleState_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
-  d_particleState.push_back(d_lb->pParticleIDLabel);
-
-  // register the particle states with the shared SimulationState for persistence across timesteps
-  d_sharedState->d_particleState_preReloc.push_back(d_particleState_preReloc);
-  d_sharedState->d_particleState.push_back(d_particleState);
-}
-
 void MD::computeStableTimestep(const ProcessorGroup* pg,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
@@ -478,6 +499,17 @@ void MD::nonbondedCalculate(const ProcessorGroup* pg,
   d_nonbonded->finalize(pg, patches, matls, parentOldDW, parentNewDW);
 }
 
+void MD::nonbondedFinalize(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw)
+{
+  printTask(patches, md_cout, "MD::nonbondedFinalize");
+
+  d_nonbonded->finalize(pg, patches, matls, old_dw, new_dw);
+}
+
 void MD::electrostaticsInitialize(const ProcessorGroup* pg,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
@@ -513,22 +545,15 @@ void MD::electrostaticsCalculate(const ProcessorGroup* pg,
   d_electrostatics->finalize(pg, perprocPatches, matls, parentOldDW, parentNewDW);
 }
 
-void MD::interpolateParticlesToGrid(const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw)
+void MD::electrostaticsFinalize(const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
 {
-  printTask(patches, md_cout, "MD::interpolateChargesToGrid");
-}
+  printTask(patches, md_cout, "MD::electrostaticsFinalize");
 
-void MD::interpolateToParticlesAndUpdate(const ProcessorGroup* pg,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw)
-{
-  printTask(patches, md_cout, "MD::interpolateToParticlesAndUpdate");
+  d_electrostatics->finalize(pg, patches, matls, old_dw, new_dw);
 }
 
 void MD::updatePosition(const ProcessorGroup* pg,
@@ -619,6 +644,38 @@ void MD::updatePosition(const ProcessorGroup* pg,
   }  // end patch loop
 
   d_system->clearBoxChanged();
+}
+
+void MD::registerPermanentParticleState(SimpleMaterial* matl)
+{
+  // load up the ParticleVariables we want to register for relocation
+  d_particleState_preReloc.push_back(d_lb->pNonbondedForceLabel_preReloc);
+  d_particleState.push_back(d_lb->pNonbondedForceLabel);
+
+  d_particleState_preReloc.push_back(d_lb->pElectrostaticsForceLabel_preReloc);
+  d_particleState.push_back(d_lb->pElectrostaticsForceLabel);
+
+  d_particleState_preReloc.push_back(d_lb->pAccelLabel_preReloc);
+  d_particleState.push_back(d_lb->pAccelLabel);
+
+  d_particleState_preReloc.push_back(d_lb->pVelocityLabel_preReloc);
+  d_particleState.push_back(d_lb->pVelocityLabel);
+
+  d_particleState_preReloc.push_back(d_lb->pEnergyLabel_preReloc);
+  d_particleState.push_back(d_lb->pEnergyLabel);
+
+  d_particleState_preReloc.push_back(d_lb->pMassLabel_preReloc);
+  d_particleState.push_back(d_lb->pMassLabel);
+
+  d_particleState_preReloc.push_back(d_lb->pChargeLabel_preReloc);
+  d_particleState.push_back(d_lb->pChargeLabel);
+
+  d_particleState_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
+  d_particleState.push_back(d_lb->pParticleIDLabel);
+
+  // register the particle states with the shared SimulationState for persistence across timesteps
+  d_sharedState->d_particleState_preReloc.push_back(d_particleState_preReloc);
+  d_sharedState->d_particleState.push_back(d_particleState);
 }
 
 void MD::extractCoordinates()
