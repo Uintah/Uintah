@@ -72,6 +72,7 @@ namespace Uintah {
        */
       SimpleGrid(const IntVector& extents,
                  const IntVector& offset,
+                 const IntVector& origin,
                  const int numGhostCells);
 
       /**
@@ -96,7 +97,7 @@ namespace Uintah {
        */
       inline IntVector getExtents() const
       {
-        return d_gridExtents;
+        return d_internalExtents;
       }
 
       /**
@@ -109,14 +110,19 @@ namespace Uintah {
         return d_gridOffset;
       }
 
+      inline IntVector getOrigin() const
+      {
+        return d_internalOrigin;
+      }
+
       /**
        * @brief Returns prime (non-ghost only) extents of this SimpleGrid.
        * @param None
        * @return IntVector The prime (non-ghost only) extents of this SimpleGrid.
        */
-      inline IntVector getNonGhostExtent() const
+      inline IntVector getExtentWithGhost() const
       {
-        return d_gridExtents - IntVector(d_numGhostCells_, d_numGhostCells_, d_numGhostCells_);
+        return d_internalExtents + IntVector(d_numGhostCells, d_numGhostCells, d_numGhostCells);
       }
 
       /**The offset
@@ -125,9 +131,9 @@ namespace Uintah {
        * @param None
        * @return IntVector The prime (non-ghost only) offset of this SimpleGrid.
        */
-      inline IntVector getNonGhostOffset() const
+      inline IntVector getOffsetWithGhost() const
       {
-        return d_gridOffset - IntVector(d_numGhostCells_, d_numGhostCells_, d_numGhostCells_);
+        return d_gridOffset - d_internalOrigin;
       }
 
       /**
@@ -230,9 +236,9 @@ namespace Uintah {
        */
       inline SimpleGrid<T>& operator+=(const SimpleGrid<T>& gridIn)
       {
-        for (int x = 0; x < d_gridExtents.x(); ++x) {
-          for (int y = 0; y < d_gridExtents.y(); ++y) {
-            for (int z = 0; z < d_gridExtents.z(); ++z) {
+        for (int x = 0; x < d_internalExtents.x() + d_numGhostCells; ++x) {
+          for (int y = 0; y < d_internalExtents.y() + d_numGhostCells; ++y) {
+            for (int z = 0; z < d_internalExtents.z() + d_numGhostCells; ++z) {
               d_values(x, y, z) += gridIn.d_values(x, y, z);
             }
           }
@@ -247,9 +253,9 @@ namespace Uintah {
        */
       inline SimpleGrid<T>& operator-=(const SimpleGrid<T>& gridIn)
       {
-        for (int x = 0; x < d_gridExtents.x(); ++x) {
-          for (int y = 0; y < d_gridExtents.y(); ++y) {
-            for (int z = 0; z < d_gridExtents.z(); ++z) {
+        for (int x = 0; x < d_internalExtents.x() + d_numGhostCells; ++x) {
+          for (int y = 0; y < d_internalExtents.y() + d_numGhostCells; ++y) {
+            for (int z = 0; z < d_internalExtents.z() + d_numGhostCells; ++z) {
               d_values(x, y, z) -= gridIn.d_values(x, y, z);
             }
           }
@@ -264,9 +270,9 @@ namespace Uintah {
        */
       inline SimpleGrid<T>& operator*=(const SimpleGrid<T>& gridIn)
       {
-        for (int x = 0; x < d_gridExtents.x(); ++x) {
-          for (int y = 0; y < d_gridExtents.y(); ++y) {
-            for (int z = 0; z < d_gridExtents.z(); ++z) {
+        for (int x = 0; x < d_internalExtents.x() + d_numGhostCells; ++x) {
+          for (int y = 0; y < d_internalExtents.y() + d_numGhostCells; ++y) {
+            for (int z = 0; z < d_internalExtents.z() + d_numGhostCells; ++z) {
               d_values(x, y, z) *= gridIn.d_values(x, y, z);
             }
           }
@@ -281,11 +287,11 @@ namespace Uintah {
        */
       inline SimpleGrid<T>& operator/=(const SimpleGrid<T>& gridIn)
       {
-        for (int x = 0; x < d_gridExtents.x(); ++x) {
-          for (int y = 0; y < d_gridExtents.y(); ++y) {
-            for (int z = 0; z < d_gridExtents.z(); ++z) {
-//            // FIXME / is not well defined for vector/vector
-//            d_values(x, y, z) /= gridIn.d_values(x, y, z);
+        for (int x = 0; x < d_internalExtents.x() + d_numGhostCells; ++x) {
+          for (int y = 0; y < d_internalExtents.y() + d_numGhostCells; ++y) {
+            for (int z = 0; z < d_internalExtents.z() + d_numGhostCells; ++z) {
+            // FIXME / is not well defined for vector/vector
+            //d_values(x, y, z) /= gridIn.d_values(x, y, z);
             }
           }
         }
@@ -299,9 +305,9 @@ namespace Uintah {
        */
       inline SimpleGrid<T>& operator+=(const T& valueIn)
       {
-        for (int x = 0; x < d_gridExtents.x(); ++x) {
-          for (int y = 0; y < d_gridExtents.y(); ++y) {
-            for (int z = 0; z < d_gridExtents.z(); ++z) {
+        for (int x = 0; x < d_internalExtents.x() + d_numGhostCells; ++x) {
+          for (int y = 0; y < d_internalExtents.y() + d_numGhostCells; ++y) {
+            for (int z = 0; z < d_internalExtents.z() + d_numGhostCells; ++z) {
               d_values(x, y, z) += valueIn;
             }
           }
@@ -316,9 +322,9 @@ namespace Uintah {
        */
       inline SimpleGrid<T>& operator-=(const T& valueIn)
       {
-        for (int x = 0; x < d_gridExtents.x(); ++x) {
-          for (int y = 0; y < d_gridExtents.y(); ++y) {
-            for (int z = 0; z < d_gridExtents.z(); ++z) {
+        for (int x = 0; x < d_internalExtents.x() + d_numGhostCells; ++x) {
+          for (int y = 0; y < d_internalExtents.y() + d_numGhostCells; ++y) {
+            for (int z = 0; z < d_internalExtents.z() + d_numGhostCells; ++z) {
               d_values(x, y, z) -= valueIn;
             }
           }
@@ -333,9 +339,9 @@ namespace Uintah {
        */
       inline SimpleGrid<T>& operator*=(const double value)
       {
-        for (int x = 0; x < d_gridExtents.x(); ++x) {
-          for (int y = 0; y < d_gridExtents.y(); ++y) {
-            for (int z = 0; z < d_gridExtents.z(); ++z) {
+        for (int x = 0; x < d_internalExtents.x() + d_numGhostCells; ++x) {
+          for (int y = 0; y < d_internalExtents.y() + d_numGhostCells; ++y) {
+            for (int z = 0; z < d_internalExtents.z() + d_numGhostCells; ++z) {
               d_values(x, y, z) *= value;
             }
           }
@@ -350,9 +356,9 @@ namespace Uintah {
        */
       inline SimpleGrid<T>& operator/=(const double value)
       {
-        for (int x = 0; x < d_gridExtents.x(); ++x) {
-          for (int y = 0; y < d_gridExtents.y(); ++y) {
-            for (int z = 0; z < d_gridExtents.z(); ++z) {
+        for (int x = 0; x < d_internalExtents.x() + d_numGhostCells; ++x) {
+          for (int y = 0; y < d_internalExtents.y() + d_numGhostCells; ++y) {
+            for (int z = 0; z < d_internalExtents.z() + d_numGhostCells; ++z) {
               d_values(x, y, z) /= value;
             }
           }
@@ -376,9 +382,10 @@ namespace Uintah {
       inline SimpleGrid<T>& operator=(const SimpleGrid<T>& copy)
       {
         d_values = copy.d_values;
-        d_gridExtents = copy.d_gridExtents;
+        d_internalExtents = copy.d_internalExtents;
+        d_internalOrigin = copy.d_internalOrigin;
         d_gridOffset = copy.d_gridOffset;
-        d_numGhostCells_ = copy.d_numGhostCells_;
+        d_numGhostCells = copy.d_numGhostCells;
         return *this;
       }
 
@@ -392,9 +399,10 @@ namespace Uintah {
     private:
 
       LinearArray3<T> d_values;     //!< Grid cell values
-      IntVector d_gridExtents;      //!< Stores the number of total grid points in this grid
+      IntVector d_internalExtents;  //!< Stores the number of total grid points in this grid
       IntVector d_gridOffset;       //!< Stores the offset pointer for the first point in this grid in reference to the global grid
-      int d_numGhostCells_;         //!< The number of ghost cells for the patch the associated points are on
+      IntVector d_internalOrigin;           //!< IntVector which stores the x,y,z components of the first non-ghost point within the simple grid
+      int d_numGhostCells;         //!< The number of ghost cells for the patch the associated points are on
 
   };
 

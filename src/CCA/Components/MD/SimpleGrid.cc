@@ -47,26 +47,27 @@ namespace Uintah {
   template<typename T>
   SimpleGrid<T>::SimpleGrid(const IntVector& extents,
                             const IntVector& offset,
+                            const IntVector& origin,
                             const int numGhostCells) :
-      d_gridExtents(extents), d_gridOffset(offset), d_numGhostCells_(numGhostCells)
+      d_internalExtents(extents), d_gridOffset(offset), d_internalOrigin(origin), d_numGhostCells(numGhostCells)
   {
-    d_values.resize(extents.x(), extents.y(), extents.z());
+    d_values.resize(extents.x()+numGhostCells, extents.y()+numGhostCells, extents.z()+numGhostCells);
   }
 
   template<typename T>
   SimpleGrid<T>::SimpleGrid(const SimpleGrid& copy)
   {
     d_values = copy.d_values;
-    d_gridExtents = copy.d_gridExtents;
+    d_internalExtents = copy.d_internalExtents;
     d_gridOffset = copy.d_gridOffset;
-    d_numGhostCells_ = copy.d_numGhostCells_;
+    d_numGhostCells = copy.d_numGhostCells;
   }
 
   template<typename T>
   bool SimpleGrid<T>::verifyRegistration(const SimpleGrid<T>& gridIn)
   {
-    if ((d_gridExtents != gridIn.d_gridExtents) || (d_gridOffset != gridIn.d_gridOffset)
-        || (d_numGhostCells_ != gridIn.d_numGhostCells_)) {
+    if ((d_internalExtents != gridIn.d_internalExtents) || (d_gridOffset != gridIn.d_gridOffset)
+        || (d_numGhostCells != gridIn.d_numGhostCells) || (d_internalOrigin != gridIn.d_internalOrigin)) {
       ostringstream ostr;
       ostr << "Uintah::MD SimpleGrids differ in extent, offset or number of ghost cells.";
       throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
@@ -120,9 +121,10 @@ namespace Uintah {
   template<typename T>
   std::ostream& SimpleGrid<T>::print(std::ostream& out) const
   {
-    out << "Extent, [x,y,z]: " << d_gridExtents;
+    out << "Extent, [x,y,z]: " << d_internalExtents;
     out << "Offset, [x,y,z]: " << d_gridOffset;
-    out << "GhostCells, [x,y,z]: " << d_gridExtents;
+    out << "Origin, [x,y,z]: " << d_internalOrigin;
+    out << "GhostCells, [x,y,z]: " << d_internalExtents;
     return out;
   }
 

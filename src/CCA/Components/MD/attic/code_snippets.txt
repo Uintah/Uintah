@@ -1,3 +1,97 @@
+SPME.cc 06/27/13
+-------------------------------------------------------------------------------
+
+void SPME::setup_old(const ProcessorGroup* pg,
+                 const PatchSubset* patches,
+                 const MaterialSubset* materials,
+                 DataWarehouse* old_dw,
+                 DataWarehouse* new_dw)
+{
+  size_t numPatches = patches->size();
+  size_t numMatls = materials->size();
+  for (size_t p = 0; p < numPatches; ++p) {
+    const Patch* patch = patches->get(p);
+    for (size_t m = 0; m < numMatls; ++m) {
+      int matl = materials->get(m);
+
+      Vector totalCellExtent = (d_system->getCellExtent()).asVector();
+      Vector patchLowIndex = (patch->getCellLowIndex()).asVector();
+      Vector patchHighIndex = (patch->getCellHighIndex()).asVector();
+
+      Vector kReal = d_kLimits.asVector();
+
+      SCIRun::IntVector patchKLow, patchKHigh;
+      for (size_t idx = 0; idx < 3; ++idx) {
+        patchKLow[idx]  =  ceil(kReal[idx] * (patchLowIndex[idx]  / totalCellExtent[idx]));
+        patchKHigh[idx] = floor(kReal[idx] * (patchHighIndex[idx] / totalCellExtent[idx]));
+      }
+
+      IntVector patchKGridExtents = (patchKHigh - patchKLow);  // Number of K Grid points for this local patch
+      IntVector patchKGridOffset = patchKLow;
+      // Lowest K Grid point vector
+      int splineSupport = d_interpolatingSpline.getSupport();
+      IntVector  plusGhostExtents = IntVector(splineSupport, splineSupport, splineSupport);
+      IntVector minusGhostExtents = IntVector(0, 0, 0);  // All ghosts are in the positive direction for shifted splines
+
+
+      SPMEPatch* spmePatch = new SPMEPatch(patchKGridExtents, patchKGridOffset, plusGhostExtents, minusGhostExtents, patch);
+
+      // Check to make sure plusGhostExtents+minusGhostExtents is right way to enter number of ghost cells (i.e. total, not per offset)
+      SimpleGrid<dblcomplex>* q_patchLocal = scinew SimpleGrid<dblcomplex>(patchKGridExtents, patchKGridOffset, splineSupport);
+      q_patchLocal->initialize(std::complex<double>(0.0, 0.0));
+
+      // No ghost cells; internal only
+      SimpleGrid<Matrix3>* stressPrefactor = scinew SimpleGrid<Matrix3>(patchKGridExtents, patchKGridOffset, 0);
+      calculateStressPrefactor(stressPrefactor, patchKGridExtents, patchKGridOffset);
+
+      // No ghost cells; internal only
+      SimpleGrid<double>* fTheta = scinew SimpleGrid<double>(patchKGridExtents, patchKGridOffset, 0);
+      fTheta->initialize(0.0);
+
+      // Calculate B and C - we should only have to do this if KLimits or the inverse cell changes
+      SimpleGrid<double> fBGrid = calculateBGrid(patchKGridExtents, patchKGridOffset);
+      SimpleGrid<double> fCGrid = calculateCGrid(patchKGridExtents, patchKGridOffset);
+
+      // Composite B and C into Theta
+      size_t xExtent = patchKGridExtents.x();
+      size_t yExtent = patchKGridExtents.y();
+      size_t zExtent = patchKGridExtents.z();
+      for (size_t xidx = 0; xidx < xExtent; ++xidx) {
+        for (size_t yidx = 0; yidx < yExtent; ++yidx) {
+          for (size_t zidx = 0; zidx < zExtent; ++zidx) {
+
+            // Composite B and C into Theta
+            (*fTheta)(xidx, yidx, zidx) = fBGrid(xidx, yidx, zidx) * fCGrid(xidx, yidx, zidx);
+
+//            if (spme_dbg.active()) {
+//              cerrLock.lock();
+//              // looking for "nan" values interspersed in B and C
+//              if (std::isnan(fBGrid(xidx, yidx, zidx))) {
+//                std::cout << "B: " << xidx << " " << yidx << " " << zidx << std::endl;
+//                std::cin.get();
+//              }
+//              if (std::isnan(fCGrid(xidx, yidx, zidx))) {
+//                std::cout << "C: " << xidx << " " << yidx << " " << zidx << std::endl;
+//                std::cin.get();
+//              }
+//              cerrLock.unlock();
+            }
+          }
+        }
+      }
+      spmePatch->setTheta(fTheta);
+      spmePatch->setStressPrefactor(stressPrefactor);
+      spmePatch->setQ(q_patchLocal);
+
+      d_spmePatchLock.writeLock();
+      d_spmePatches.push_back(spmePatch);
+      d_spmePatchMap.insert(pair<PatchMaterialKey, int>(PatchMaterialKey(patch, matl), p));
+      d_spmePatchLock.writeUnlock();
+
+    }  // end material loop
+  }  // end patch loop
+}
+
 std::vector<Point> SPME::calcReducedCoords(const std::vector<Point>& localRealCoordinates,
                                            const MDSystem& system)
 {

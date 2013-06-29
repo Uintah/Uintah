@@ -28,12 +28,12 @@
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Math/Matrix3.h>
+#include <CCA/Components/MD/SPMEMapPoint.h>
+#include <CCA/Components/MD/MDSystem.h>
 
 #include <complex>
 
 namespace Uintah {
-
-  class IntVector;
 
   /**
    *  @class SPMEPatch
@@ -71,7 +71,12 @@ namespace Uintah {
                 IntVector offset,
                 IntVector plusGhostExtents,
                 IntVector minusGhostExtents,
-                const Patch* patch);
+                const Patch* patch,
+                double patchVolumeFraction,
+                int splineSupport,
+                MDSystem* system);
+
+      void verifyChargeMapAllocation(const int dataSize, const int globalAtomTypeIndex);
 
       /**
        * @brief
@@ -160,7 +165,7 @@ namespace Uintah {
        */
       inline SimpleGrid<std::complex<double> >* getQ()
       {
-        return Q;
+        return d_Q_patchLocal;
       }
 
       /**
@@ -170,14 +175,14 @@ namespace Uintah {
        */
       inline void setQ(SimpleGrid<std::complex<double> >* q)
       {
-        Q = q;
+        d_Q_patchLocal = q;
       }
 
-      /**
-       * @brief
-       * @param
-       * @return
-       */
+      inline std::vector<SPMEMapPoint>* getChargeMap(const int AtomTypeIndex)
+      {
+        return (&(d_chargeMapVector[AtomTypeIndex]));
+      }
+
       inline const Patch* getPatch() const
       {
         return d_patch;
@@ -196,14 +201,19 @@ namespace Uintah {
 
       SimpleGrid<double>* d_theta;             //!<
       SimpleGrid<Matrix3>* d_stressPrefactor;  //!<
-      SimpleGrid<std::complex<double> >* Q;    //!<
+      SimpleGrid<std::complex<double> >* d_Q_patchLocal;    //!<
 
       const Patch* d_patch;                    //!<
+
+      std::vector< std::vector<SPMEMapPoint> > d_chargeMapVector; // Holds the charge map for materials in the patch
 
       SPMEPatch(const SPMEPatch& patch);
       SPMEPatch& operator=(const SPMEPatch& patch);
 
   };
+
+  typedef std::pair<int, SPMEPatch*> SPMEPatchKey;
+
 
 }  // End namespace Uintah
 

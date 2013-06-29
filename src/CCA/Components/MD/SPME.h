@@ -127,7 +127,8 @@ namespace Uintah {
                      const MaterialSubset* materials,
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw,
-                     SchedulerP subscheduler /* = 0 */);
+                     SchedulerP& subscheduler,
+                     const LevelP& level);
 
       /**
        * @brief
@@ -380,6 +381,16 @@ namespace Uintah {
                             const MaterialSubset* materials,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw);
+      /*
+       * @brief Copy internal only patch local Q data to the node-local Q copy for global reduction
+       * @param None
+       * @return None
+       */
+      void copyToNodeLocalQ(const ProcessorGroup* pg,
+                            const PatchSubset* patches,
+                            const MaterialSubset* materials,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
 
       /**
        * @brief redistribute node-local Q data (force)
@@ -428,13 +439,10 @@ namespace Uintah {
       Matrix3 d_inverseUnitCell;    //!< Inverse lattice parameters
       double d_systemVolume;        //!< Volume of the unit cell
 
-      std::vector<SPMEPatch*> d_spmePatches;           //!< Assuming multiple patches, these are the pieces of the SPME grid
-      std::map<PatchMaterialKey, int> d_spmePatchMap;  //!< These are the pieces of the K-space grid, map to Uintah patches
-      std::map<PatchMaterialKey, std::vector<SPMEMapPoint>*> d_gridMap;  //!< The data that maps the charges/forces
+      std::map<int, SPMEPatch*> d_spmePatchMap;  //!< These are the pieces of the K-space grid, map to Uintah patches
 
       Mutex d_Qlock;               //!< for local reductions on d_Q_nodeLocal (contention on overlapping ghost cells)
       mutable CrowdMonitor d_spmePatchLock;
-      mutable CrowdMonitor d_gridmapsLock;
 
   };
 

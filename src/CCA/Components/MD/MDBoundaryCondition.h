@@ -31,7 +31,7 @@ namespace Uintah {
 
 using namespace SCIRun;
 
-class Vector;
+class SCIRun::Vector;
 
 /**
  *  @class MDDoundCond
