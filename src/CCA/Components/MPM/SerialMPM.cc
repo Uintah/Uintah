@@ -1592,7 +1592,7 @@ void SerialMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
     amr_doing << "SerialMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
 
   // The simulation controller should not schedule it every time step
-  Task* task = scinew Task("errorEstimate", this, &SerialMPM::errorEstimate);
+  Task* task = scinew Task("MPM::errorEstimate", this, &SerialMPM::errorEstimate);
   
   // if the finest level, compute flagged cells
   if (coarseLevel->getIndex() == coarseLevel->getGrid()->numLevels()-1) {
@@ -1622,7 +1622,8 @@ void SerialMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
     d_switchCriteria->scheduleSwitchTest(level,sched);
   }
 }
-
+//______________________________________________________________________
+//
 void SerialMPM::printParticleCount(const ProcessorGroup* pg,
                                    const PatchSubset*,
                                    const MaterialSubset*,
@@ -1635,8 +1636,21 @@ void SerialMPM::printParticleCount(const ProcessorGroup* pg,
   if(pg->myrank() == 0){
     cerr << "Created " << (long) pcount << " total particles\n";
   }
+    
+  //__________________________________
+  //  bulletproofing  
+  if(pcount == 0 && flags->d_with_arches == false){
+    ostringstream msg;
+    msg << "\n ERROR: zero particles were created. \n"
+        << "  Possible causes: \n" 
+        << "    1) The geom_objects are outside of the computational domain.\n"
+        << "    2) Insufficient grid resolution.  On single/multi-level (MPMICE) problems particles have to created\n"
+        << "       on the coarsest level for each geom_object.";
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+  }
 }
-
+//______________________________________________________________________
+//
 void SerialMPM::computeAccStrainEnergy(const ProcessorGroup*,
                                        const PatchSubset*,
                                        const MaterialSubset*,

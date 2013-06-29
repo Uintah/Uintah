@@ -246,14 +246,6 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_soot_precursors = d_mixingModel->getSootPrecursors();
     d_tabulated_soot  = d_mixingModel->getTabulatedSoot();  
     d_radiationCalc = false;
-  } else { 
-
-    if ( d_calcEnthalpy ) { 
-
-      d_H_air = d_mixingRxnTable->get_ox_enthalpy(); 
-
-
-    } 
   } 
 
 

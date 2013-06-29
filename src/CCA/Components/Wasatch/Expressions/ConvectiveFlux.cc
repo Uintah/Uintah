@@ -30,7 +30,6 @@
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-#include <spatialops/FieldExpressions.h>
 
 //------------------------------------------------------------------
 

@@ -814,10 +814,6 @@ public:
     return index; 
   }
 
-
-	
-protected :
-	
 private:
 
 	Interp_class * ND_interp;

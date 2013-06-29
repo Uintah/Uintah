@@ -27,6 +27,14 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
+// ###################################################################
+//
+//               Implementation
+//
+// ###################################################################
+
+//--------------------------------------------------------------------
+
 template< typename SrcT, typename DestT >
 InterpolateExpression<SrcT, DestT>::
 InterpolateExpression( const Expr::Tag& srctag )

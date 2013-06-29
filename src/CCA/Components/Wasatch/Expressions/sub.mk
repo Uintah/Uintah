@@ -53,8 +53,7 @@ CUDA_ENABLED_SRCS = \
      SolnVarEst           \
      Strain               \
      WeakConvectiveTerm   \
-     VelEst               \
-     Vorticity                  
+     VelEst
 
 ifeq ($(HAVE_CUDA),yes)
 
@@ -80,8 +79,9 @@ SRCS += \
         $(SRCDIR)/ScalabilityTestSrc.cc   \
         $(SRCDIR)/SetCurrentTime.cc       \
         $(SRCDIR)/RadPropsEvaluator.cc	  \
-        $(SRCDIR)/VelocityMagnitude.cc    \
         $(SRCDIR)/StableTimestep.cc       \
+        $(SRCDIR)/Reduction.cc            \
+        $(SRCDIR)/ReductionBase.cc        \
         $(SRCDIR)/TabPropsHeatLossEvaluator.cc
             	
 
@@ -154,8 +154,5 @@ ifeq ($(HAVE_CUDA),yes)
 
   $(OBJTOP_ABS)/$(SRCDIR)/VelEst.cu : $(SRCTOP_ABS)/$(SRCDIR)/VelEst.cc
 	cp $< $@
-
-  $(OBJTOP_ABS)/$(SRCDIR)/Vorticity.cu : $(SRCTOP_ABS)/$(SRCDIR)/Vorticity.cc
-	cp $< $@
-
+  
 endif

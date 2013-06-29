@@ -156,7 +156,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   proc0cout << "  Matching sucessful!" << endl;
   proc0cout << endl;
 
-  problemSetupCommon( db_tabprops ); 
+  problemSetupCommon( db_tabprops, this ); 
 
   // Confirm that table has been loaded into memory
   d_table_isloaded = true;
@@ -372,7 +372,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
         iv.push_back( (*i)[c] );
       }
 
-      _iv_transform->transform( iv ); 
+      _iv_transform->transform( iv, 0.0 ); 
 
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
@@ -474,7 +474,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
             }
           }
 
-          _iv_transform->transform( iv ); 
+          _iv_transform->transform( iv, 0.0 ); 
 
           // now get state for boundary cell: 
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
@@ -554,7 +554,7 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
     }
   }
 
-  _iv_transform->transform( iv ); 
+  _iv_transform->transform( iv, 0.0 ); 
 
   double f                 = 0.0; 
   double adiab_enthalpy    = 0.0; 

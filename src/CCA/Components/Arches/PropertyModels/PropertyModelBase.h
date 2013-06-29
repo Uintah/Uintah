@@ -39,34 +39,40 @@ public:
   /** @brief Scheduler for the actual property calculation */ 
   virtual void sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep ) = 0; 
 
-  /** @brief Scheduler for the dummy initialization as required by MPMArches */ 
-  virtual void sched_dummyInit( const LevelP& level, SchedulerP& sched ) = 0; 
-
   /** @brief Common setup for all models. **/
   void commonProblemSetup( const ProblemSpecP& inputdb );
 
-  /** @brief Scheduler for the initialization of the property */ 
+  /** @brief Scheduler for the initialization of the property **/ 
   virtual void sched_initialize( const LevelP& level, SchedulerP& sched ) = 0; 
+
+  /** @brief Initialize memory for the property **/ 
+  void sched_timeStepInit( const LevelP& level, SchedulerP& sched );
+  void timeStepInit( const ProcessorGroup* pc, 
+                     const PatchSubset* patches, 
+                     const MaterialSubset* matls, 
+                     DataWarehouse* old_dw, 
+                     DataWarehouse* new_dw
+                     );
 
   /** @brief Returns the property label */ 
   inline const VarLabel* getPropLabel(){
     return _prop_label; };
 
-  /** @brief Returns the property type as set in the derived class */
+  /** @brief Returns the property type as set in the derived class **/
   inline const std::string getPropType(){
     return _prop_type; }; 
 
-  /** @brief Returns a vector of extra labels stored for this specific property */ 
+  /** @brief Returns a vector of extra labels stored for this specific property **/ 
   inline const vector<const VarLabel*> getExtraLocalLabels(){
     return _extra_local_labels; }; 
 
-  /** @brief A method for cleaning up property values */ 
+  /** @brief A method for cleaning up property values **/ 
   inline void cleanUp() { _has_been_computed = false; };
 
-  /** @brief Returns the boolean to indicate if the model is to be evaluated before or after the table lookup */
+  /** @brief Returns the boolean to indicate if the model is to be evaluated before or after the table lookup **/
   inline bool beforeTableLookUp() { return _before_table_lookup; }; 
 
-  /** @brief Builder class containing instructions on how to build the property model */ 
+  /** @brief Builder class containing instructions on how to build the property model **/ 
   class Builder { 
 
     public: 

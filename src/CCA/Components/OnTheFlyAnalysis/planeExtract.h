@@ -121,6 +121,7 @@ WARNING
                      const VarLabel* varLabel,
                      const int       indx,
                      const Patch*    patch,
+                     const Vector&   offset,
                      CellIterator    iter,
                      FILE*     fp );
                      
@@ -129,6 +130,7 @@ WARNING
                      const VarLabel* varLabel,
                      const int       indx,
                      const Patch*    patch,
+                     const Vector&   offset,
                      CellIterator    iter,
                      FILE*     fp );
                      
@@ -137,6 +139,7 @@ WARNING
                      const VarLabel* varLabel,
                      const int       indx,
                      const Patch*    patch,
+                     const Vector&   offset,
                      CellIterator    iter,
                      FILE*     fp );
                      
@@ -145,8 +148,14 @@ WARNING
                       const VarLabel* varLabel,
                       const int       indx,
                       const Patch*    patch,
+                      const Vector&   offset,
                       CellIterator    iter,
                       FILE*     fp );
+                      
+    CellIterator getIterator( const Uintah::TypeDescription* td, 
+                              const Patch* patch,
+                              const Point& startPt,
+                              const Point& endPt  );
                                          
     
     // general labels

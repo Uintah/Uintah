@@ -78,6 +78,7 @@
 #include "ParseTools.h"
 #include "FieldClippingTools.h"
 #include "OldVariable.h"
+#include "ReductionHelper.h"
 
 using std::endl;
 
@@ -123,6 +124,7 @@ namespace Wasatch{
     icCoordHelper_  = new CoordHelper( *(graphCategories_[INITIALIZATION]->exprFactory) );
 
     OldVariable::self().sync_with_wasatch( this );
+    ReductionHelper::self().sync_with_wasatch( this );
   }
 
   //--------------------------------------------------------------------
@@ -374,6 +376,15 @@ namespace Wasatch{
         functorSet.insert(functorName);
         bcFunctorMap_.insert(std::pair< std::string, std::set<std::string> >(phiName,functorSet) );        
       }
+
+      Uintah::ProblemSpecP densityParams  = wasatchParams->findBlock("Density");
+      Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
+      std::set<std::string> functorSet;
+      std::string functorName = densityTag.name()+TagNames::self().star+"_bc";
+      std::string phiName     = densityTag.name()+TagNames::self().star;
+      functorSet.insert(functorName);
+      bcFunctorMap_.insert(std::pair< std::string, std::set<std::string> >(phiName,functorSet) );
+      
     }
 
     // PARSE IO FIELDS
@@ -603,6 +614,10 @@ namespace Wasatch{
       parse_var_dens_mms(VarDensMMSParams, graphCategories_);
     }
     
+    //
+    // process any reduction variables specified through the input file
+    //
+    ReductionHelper::self().parse_reduction_spec(wasatchParams);
   }
 
   //--------------------------------------------------------------------

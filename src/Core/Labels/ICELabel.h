@@ -42,6 +42,7 @@ namespace Uintah {
     const VarLabel* TMV_CCLabel;
     const VarLabel* press_CCLabel;
     const VarLabel* press_equil_CCLabel;
+    const VarLabel* eq_press_itersLabel;
     const VarLabel* delP_DilatateLabel;
     const VarLabel* delP_MassXLabel;
     const VarLabel* rho_micro_CCLabel;
@@ -57,6 +58,7 @@ namespace Uintah {
     const VarLabel* vel_CC_XchangeLabel;
     const VarLabel* speedSound_CCLabel;
     const VarLabel* vol_frac_CCLabel;
+    const VarLabel* viscous_src_CCLabel;
     const VarLabel* mom_source_CCLabel;
     const VarLabel* int_eng_source_CCLabel;
     const VarLabel* heatCond_src_CCLabel;
@@ -117,6 +119,9 @@ namespace Uintah {
     const VarLabel* grad_dp_XFCLabel;
     const VarLabel* grad_dp_YFCLabel;
     const VarLabel* grad_dp_ZFCLabel;
+    const VarLabel* tau_X_FCLabel;
+    const VarLabel* tau_Y_FCLabel;
+    const VarLabel* tau_Z_FCLabel;
 
     // Model support
     const VarLabel* modelMass_srcLabel;

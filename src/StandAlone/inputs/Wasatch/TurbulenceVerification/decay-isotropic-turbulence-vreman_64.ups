@@ -95,6 +95,8 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
+ 	 	 	 	 	 	 <Disabledmomdt/>
+ 	 	 	 	 	 	 <CalculateKE/>
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
       <Y-Velocity>v</Y-Velocity>
@@ -139,6 +141,7 @@
 
 
   <DataArchiver>
+ 	 	 	 	 	 	 <save label="TotalKineticEnergy_uintah"/>
     <filebase>decay-isotropic-turbulence-vreman-64.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>

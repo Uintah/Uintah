@@ -52,11 +52,8 @@ NIGHTLYTESTS = [
    ("almgrenMMS"                  , "mms/almgrenMMS.ups"                          , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("isotropic-turbulence-decay"  , "periodicTurb/isotropic-turbulence-decay.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]) , 
    ("helium_RT"                   , "helium_RT.ups"                               , 1.1 , "Linux"  , ["exactComparison"]) , 
-   ("isotropic-turbulence-decay"  , "periodicTurb/isotropic-turbulence-decay.ups" , 1.1 , "Darwin" , ["doesTestRun"       , "no_dbg", "no_restart"]) , 
    ("methane_explicit_table"      , "methane_explicit_table.ups"                  , 1.1 , "Linux"  , ["exactComparison"]) , 
-   ("methane_explicit_table"      , "methane_explicit_table.ups"                  , 1.1 , "Darwin" , ["doesTestRun"])     , 
    ("methane8patch"               , "methane8patch.ups"                           , 8   , "Linux"  , ["exactComparison"]) , 
-   ("methane8patch"               , "methane8patch.ups"                           , 8   , "Darwin" , ["doesTestRun"])     , 
    ("methanePetscRadSolver"       , methanePetscRadSolver_ups                     , 8   , "Linux"  , ["exactComparison"]) ,
 #   ("methane_RCCE"                , "methane_RCCE.ups"                            , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "Linux"  , ["exactComparison"]) ,
@@ -78,11 +75,20 @@ NIGHTLYTESTS = [
    ("turbulent_inlet_test"        , "DigitalFilter/TurbulentInletChannel.ups"     , 6   , "Linux"  , ["exactComparison", "no_restart"]) ,
    ("masssource_con_den"          , "verify_masssource/source_channel_conden.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("masssource_var_den"          , "verify_masssource/source_channel_varden.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
+   ("heptane_pipe"                , "heptane_pipe.ups"                            , 1.1 , "Linux"  , ["exactComparison"]),
+   ("coal_table_pipe"             , "coal_table_pipe.ups"                         , 1.1 , "Linux"  , ["exactComparison"]),
 #   ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
 ]
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
+#   ("constantMMS__NEW"            , "mms/constantMMS__NEW.ups"                    , 1.1 , "All"  , ["exactComparison"]) , 
+#   ("almgrenMMS__NEW"             , "mms/almgrenMMS__NEW.ups"                     , 1.1 , "All"  , ["exactComparison"]) , 
+#   ("isotropic-turbulence-decay__NEW"  , "periodicTurb/isotropic-turbulence-decay__NEW.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) , 
+#   ("helium_1m__NEW"              , "helium_1m__NEW.ups"                          , 1.1 , "All"  , ["exactComparison"]) , 
+#   ("methane_fire__NEW"           , "methane_fire__NEW.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
+#   ("methane_fire_8patch__NEW"    , "methane_fire_8patch__NEW.ups"                , 8   , "All"  , ["exactComparison"]) , 
+#   ("methane_fire_8patch_petscrad__NEW" , "methane_fire_8patch_petscrad__NEW.ups" , 8   , "All"  , ["exactComparison"]) ,
    ("rmcrt_bm1_1L"               , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "All"   , ["exactComparison"]) ,
    ("constantMMS"                , "mms/constantMMS.ups"                         , 1.1 , "All"   , ["exactComparison"]) , 
    ("almgrenMMS"                 , "mms/almgrenMMS.ups"                          , 1.1 , "All"   , ["exactComparison"]) , 
@@ -97,10 +103,10 @@ LOCALTESTS = [
    ("dqmom_test_4"               , "DQMOM_regression/dqmom_test_4.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
    ("dqmom_test_5"               , "DQMOM_regression/dqmom_test_5.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
    ("methane_jet"                , "ClassicMixingTables/ups/methane_jet.ups"     , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
-   ("methane_RCCE"               , "methane_RCCE.ups"                            , 1.1 , "All "  , ["exactComparison"]) ,
-   ("acidbase_jet"               , "ClassicMixingTables/ups/acidbase_jet.ups"    , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
-   ("acidbase_jet_2D"            , "ClassicMixingTables/ups/acidbase_jet_2D.ups" , 1.1, "All" , ["exactComparison", "no_restart"]) ,
-   ("1DTableTest"                , "ClassicMixingTables/ups/1DTableTest.ups"     , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
+#   ("methane_RCCE"               , "methane_RCCE.ups"                            , 1.1 , "All "  , ["exactComparison"]) ,
+   ("acidbase_jet"               , "ClassicMixingTables/ups/acidbase_jet.ups"    , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("acidbase_jet_2D"            , "ClassicMixingTables/ups/acidbase_jet_2D.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("1DTableTest"                , "ClassicMixingTables/ups/1DTableTest.ups"     , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
    ("xplus_scalar_test"          , "ScalarTests/xplus_scalar_test.ups"           , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("yplus_scalar_test"          , "ScalarTests/yplus_scalar_test.ups"           , 6   , "All"  , ["exactComparison", "no_restart"]) , 
    ("zplus_scalar_test"          , "ScalarTests/zplus_scalar_test.ups"           , 6   , "All"  , ["exactComparison", "no_restart"]) , 
@@ -110,6 +116,8 @@ LOCALTESTS = [
    ("turbulent_inlet_test"       , "DigitalFilter/TurbulentInletChannel.ups"     , 6   , "All"  , ["exactComparison", "no_restart"]) ,
    ("source_channel_conden"      , "verify_masssource/source_channel_conden.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
    ("source_channel_varden"      , "verify_masssource/source_channel_varden.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
+   ("heptane_pipe"               , "heptane_pipe.ups"                            , 1.1 , "All"  , ["exactComparison"]),
+   ("coal_table_pipe"            , "coal_table_pipe.ups"                         , 1.1 , "All"  , ["exactComparison"]),
 #   ("coal_channel"               , "Coal/coal_channel.ups"                       , 1.1 , "All"  , ["exactComparison", "no_restart"])
 ]
 

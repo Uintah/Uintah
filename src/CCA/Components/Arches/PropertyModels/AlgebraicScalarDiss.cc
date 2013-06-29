@@ -71,17 +71,16 @@ void AlgebraicScalarDiss::sched_computeProp( const LevelP& level, SchedulerP& sc
 
   if ( time_substep == 0 ){ 
 
-    tsk->computes( _prop_label );
     tsk->requires( Task::OldDW, _mf_label, Ghost::AroundCells, 1 ); 
     tsk->requires( Task::OldDW, _mu_t_label, Ghost::None, 0 ); 
 
   } else { 
 
-    tsk->modifies( _prop_label ); 
     tsk->requires( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
     tsk->requires( Task::NewDW, _mu_t_label, Ghost::None, 0 ); 
 
   } 
+  tsk->modifies( _prop_label ); 
 
   sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
 }
@@ -107,14 +106,12 @@ void AlgebraicScalarDiss::computeProp(const ProcessorGroup* pc,
     constCCVariable<double> mf;
     constCCVariable<double> mu_t; 
 
+    new_dw->getModifiable( prop, _prop_label, matlIndex, patch, Ghost::None, 0 ); 
     if ( time_substep == 0 ) { 
-      new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
       old_dw->get( mf, _mf_label, matlIndex, patch, Ghost::AroundCells, 1 ); 
       old_dw->get( mu_t, _mu_t_label, matlIndex, patch, Ghost::None, 0 ); 
-
-      prop.initialize(0.0); 
+      prop.initialize(0.0);
     } else { 
-      new_dw->getModifiable( prop, _prop_label, matlIndex, patch, Ghost::None, 0 ); 
       new_dw->get( mf, _mf_label, matlIndex, patch, Ghost::AroundCells, 1); 
       new_dw->get( mu_t, _mu_t_label, matlIndex, patch, Ghost::None, 0 ); 
     } 

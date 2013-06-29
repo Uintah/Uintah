@@ -36,6 +36,7 @@ using namespace Uintah;
 ICELabel::ICELabel()
 {
    // shortcuts
+  const TypeDescription* CC_int = CCVariable<int>::getTypeDescription();
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   const TypeDescription* CC_Vector = CCVariable<Vector>::getTypeDescription();
   
@@ -58,6 +59,7 @@ ICELabel::ICELabel()
   TMV_CCLabel             = VarLabel::create("TMV_CC",        CC_double);
   press_CCLabel           = VarLabel::create("press_CC",      CC_double);
   press_equil_CCLabel     = VarLabel::create("press_equil_CC",CC_double);
+  eq_press_itersLabel     = VarLabel::create("eq_press_iters",CC_int);
   delP_DilatateLabel      = VarLabel::create("delP_Dilatate", CC_double);
   delP_MassXLabel         = VarLabel::create("delP_MassX",    CC_double); 
   sum_rho_CCLabel         = VarLabel::create("sum_rho_CC",    CC_double);
@@ -71,6 +73,7 @@ ICELabel::ICELabel()
   DLabel                  = VarLabel::create("D",             CC_Vector); 
   speedSound_CCLabel      = VarLabel::create("speedSound_CC", CC_double);
   vol_frac_CCLabel        = VarLabel::create("vol_frac_CC",   CC_double);
+  viscous_src_CCLabel     = VarLabel::create("viscous_src_CC", CC_Vector);
   mom_source_CCLabel      = VarLabel::create("mom_source_CC", CC_Vector);
   int_eng_source_CCLabel  = VarLabel::create("intE_source_CC",CC_double);
   heatCond_src_CCLabel    = VarLabel::create("heatCond_src_CC",CC_double);
@@ -136,7 +139,9 @@ ICELabel::ICELabel()
   grad_dp_XFCLabel   = VarLabel::create("grad_dp_XFC",SFCX_double);
   grad_dp_YFCLabel   = VarLabel::create("grad_dp_YFC",SFCY_double);
   grad_dp_ZFCLabel   = VarLabel::create("grad_dp_ZFC",SFCZ_double);
-      
+  tau_X_FCLabel      = VarLabel::create("tau_X_FC",   SFCX_Vector);
+  tau_Y_FCLabel      = VarLabel::create("tau_Y_FC",   SFCY_Vector);
+  tau_Z_FCLabel      = VarLabel::create("tau_Z_FC",   SFCZ_Vector); 
   //__________________________________  
   // Misc labels
   machLabel           = VarLabel::create("mach",       CC_double); 
@@ -251,6 +256,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(press_CCLabel);
     VarLabel::destroy(TMV_CCLabel);
     VarLabel::destroy(press_equil_CCLabel);
+    VarLabel::destroy(eq_press_itersLabel);
     VarLabel::destroy(delP_DilatateLabel);
     VarLabel::destroy(delP_MassXLabel);
     VarLabel::destroy(rho_CCLabel);
@@ -266,6 +272,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(DLabel);
     VarLabel::destroy(speedSound_CCLabel);
     VarLabel::destroy(vol_frac_CCLabel);
+    VarLabel::destroy(viscous_src_CCLabel);
     VarLabel::destroy(mom_source_CCLabel);
     VarLabel::destroy(int_eng_source_CCLabel);
     VarLabel::destroy(heatCond_src_CCLabel);
@@ -326,6 +333,10 @@ ICELabel::~ICELabel()
     VarLabel::destroy(grad_dp_XFCLabel);
     VarLabel::destroy(grad_dp_YFCLabel);
     VarLabel::destroy(grad_dp_ZFCLabel);
+    VarLabel::destroy(tau_X_FCLabel);
+    VarLabel::destroy(tau_Y_FCLabel);
+    VarLabel::destroy(tau_Z_FCLabel);
+
     // Misc labels
     VarLabel::destroy(IveBeenHereLabel);
     VarLabel::destroy(machLabel);

@@ -44,9 +44,6 @@
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
-#include <spatialops/structured/MemoryWindow.h>
-#include <spatialops/FieldExpressions.h>
 
 namespace Wasatch {
 

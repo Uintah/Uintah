@@ -10,7 +10,7 @@ using namespace Uintah;
 ScalarVarianceScaleSim::ScalarVarianceScaleSim( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
 {
   _prop_label = VarLabel::create( prop_name, CCVariable<double>::getTypeDescription() ); 
-  
+
   // Evaluated before or after table lookup: 
   _before_table_lookup = true; 
 
@@ -79,16 +79,15 @@ void ScalarVarianceScaleSim::sched_computeProp( const LevelP& level, SchedulerP&
     throw InvalidValue("Error: Cannot match volume fraction name with label.",__FILE__, __LINE__);             
   } 
 
+  tsk->modifies( _prop_label ); 
   if ( time_substep == 0 ){ 
 
-    tsk->computes( _prop_label );
     tsk->requires( Task::OldDW, _mf_label, Ghost::AroundCells, 1 ); 
     tsk->requires( Task::OldDW, _density_label, Ghost::AroundCells, 1 ); 
     tsk->requires( Task::OldDW, _vol_frac_label, Ghost::None, 0 ); 
 
   } else { 
 
-    tsk->modifies( _prop_label ); 
     tsk->requires( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
     tsk->requires( Task::NewDW, _density_label, Ghost::AroundCells, 1 ); 
     tsk->requires( Task::NewDW, _vol_frac_label, Ghost::None, 0 ); 
@@ -142,15 +141,13 @@ void ScalarVarianceScaleSim::computeProp(const ProcessorGroup* pc,
     new_dw->get(filter_volume, _filter_vol_label, matlIndex, patch, Ghost::None, 0); 
     new_dw->get(cell_type, _celltype_label, matlIndex, patch, Ghost::AroundCells, 1); 
 
+    new_dw->getModifiable( norm_scalar_var, _prop_label, matlIndex, patch ); 
     if ( time_substep == 0 ) { 
-      new_dw->allocateAndPut( norm_scalar_var, _prop_label, matlIndex, patch ); 
       norm_scalar_var.initialize(0.0); 
-
       old_dw->get( mf,      _mf_label, matlIndex, patch, Ghost::AroundCells, 1 ); 
       old_dw->get( density, _density_label, matlIndex, patch, Ghost::AroundCells, 1 ); 
       old_dw->get( vol_fraction, _vol_frac_label, matlIndex, patch, Ghost::None, 0 ); 
     } else { 
-      new_dw->getModifiable( norm_scalar_var, _prop_label, matlIndex, patch ); 
       new_dw->get( mf,      _mf_label, matlIndex, patch, Ghost::AroundCells, 1 ); 
       new_dw->get( density, _density_label, matlIndex, patch, Ghost::AroundCells, 1 ); 
       new_dw->get( vol_fraction, _vol_frac_label, matlIndex, patch, Ghost::None, 0 ); 
@@ -179,22 +176,25 @@ void ScalarVarianceScaleSim::computeProp(const ProcessorGroup* pc,
       IntVector c = *iter; 
 
       double filter_phi = 0.0; 
-      if ( vol_fraction[c] > 0.0 ) 
+      if ( vol_fraction[c] > 0.0 ) {
         filter_phi = filterRhoPhi[c] / filterRho[c]; 
 
-      norm_scalar_var[c] = _Cf * ( filterRhoPhiSqr[c]/filterRho[c] - filter_phi * filter_phi ); 
+        norm_scalar_var[c] = _Cf * ( filterRhoPhiSqr[c]/filterRho[c] - filter_phi * filter_phi ); 
 
-      //limits: 
-      double var_limit = filter_phi * ( 1.0 - filter_phi ); 
+        //limits: 
+        double var_limit = filter_phi * ( 1.0 - filter_phi ); 
 
-      if ( norm_scalar_var[c] < small ){ 
-        norm_scalar_var[c] = 0.0; 
-      } else if ( norm_scalar_var[c] > var_limit ){ 
-        norm_scalar_var[c] = var_limit; 
-      } 
+        if ( norm_scalar_var[c] < small ){ 
+          norm_scalar_var[c] = 0.0; 
+        } else if ( norm_scalar_var[c] > var_limit ){ 
+          norm_scalar_var[c] = var_limit; 
+        } 
 
-      norm_scalar_var[c] /= var_limit + small; //normalize it.
-      norm_scalar_var[c] *= vol_fraction[c]; 
+        norm_scalar_var[c] /= var_limit + small; //normalize it.
+        norm_scalar_var[c] *= vol_fraction[c]; 
+      } else { 
+        norm_scalar_var[c] = 0.0;
+      }
 
     }
 

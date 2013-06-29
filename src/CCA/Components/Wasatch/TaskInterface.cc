@@ -48,6 +48,7 @@
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/PoissonExpression.h>
+#include <CCA/Components/Wasatch/ReductionHelper.h>
 
 #include <stdexcept>
 #include <fstream>
@@ -64,27 +65,27 @@ typedef std::map<int,TreePtr> TreeMap;
 /*
  usage:
  To enable a debug stream, use the + identifier
-  tcsh: setenv SCI_DEBUG Wasatch_Tasks:+
-  bash: export SCI_DEBUG=Wasatch_Tasks:+
+  tcsh: setenv SCI_DEBUG WASATCH_TASKS:+
+  bash: export SCI_DEBUG=WASATCH_TASKS:+
 
  To disable a debug stream, use the - identifier
-  tcsh: setenv SCI_DEBUG Wasatch_Tasks:-
-  bash: export SCI_DEBUG=Wasatch_Tasks:-
+  tcsh: setenv SCI_DEBUG WASATCH_TASKS:-
+  bash: export SCI_DEBUG=WASATCH_TASKS:-
 
  To enable multiple debug flags, use a comma to separate them
-  tcsh: setenv SCI_DEBUG Wasatch_Tasks:+, Wasatch_Fields:+
-  bash: export SCI_DEBUG=Wasatch_Tasks:+, Wasatch_Fields:+
+  tcsh: setenv SCI_DEBUG WASATCH_TASKS:+, WASATCH_FIELDS:+
+  bash: export SCI_DEBUG=WASATCH_TASKS:+, WASATCH_FIELDS:+
  
  To enable one flag and disable another that was previously enabled, either
  define a new flag excluding the unwanted flag, or redefine SCI_DEBUG with a -
  after the unwanted flag
-   tcsh: setenv SCI_DEBUG Wasatch_Tasks:-, Wasatch_Fields:+
-   bash: export SCI_DEBUG=Wasatch_Tasks:-, Wasatch_Fields:+
+   tcsh: setenv SCI_DEBUG WASATCH_TASKS:-, WASATCH_FIELDS:+
+   bash: export SCI_DEBUG=WASATCH_TASKS:-, WASATCH_FIELDS:+
  
  */
 
-static SCIRun::DebugStream dbgt("Wasatch_Tasks", false);  // task diagnostics
-static SCIRun::DebugStream dbgf("Wasatch_Fields", false); // field diagnostics
+static SCIRun::DebugStream dbgt("WASATCH_TASKS", false);  // task diagnostics
+static SCIRun::DebugStream dbgf("WASATCH_FIELDS", false); // field diagnostics
 #define dbg_tasks_on  dbgt.active() && Uintah::Parallel::getMPIRank() == 0
 #define dbg_fields_on dbgf.active() && Uintah::Parallel::getMPIRank() == 0
 #define dbg_tasks  if( dbg_tasks_on  ) dbgt
@@ -452,6 +453,10 @@ namespace Wasatch{
         pexpr.schedule_set_poisson_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );                      
       }      
     }
+    
+    // go through reduction variables that are computed in this Wasatch Task
+    // and insert a Uintah task immediately after.
+    ReductionHelper::self().schedule_tasks(Uintah::getLevelP(pss), scheduler_, materials_, tree, patchID, rkStage);
 
     hasBeenScheduled_ = true;
   }

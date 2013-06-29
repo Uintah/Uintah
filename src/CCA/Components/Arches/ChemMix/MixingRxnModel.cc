@@ -75,7 +75,7 @@ MixingRxnModel::~MixingRxnModel()
 
 //---------------------------------------------------------------------------
 void 
-MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
+MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* const model )
 {
 
   ProblemSpecP db = params; 
@@ -86,40 +86,35 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
   d_has_transform = true; 
   if ( db->findBlock("coal") ) {
 
-    double constant = 0.0; 
-    _iv_transform = scinew CoalTransform( constant ); 
+    _iv_transform = scinew CoalTransform( d_constants, model ); 
 
   } else if ( db->findBlock("rcce") ){ 
 
-    double constant = 0.0; 
-    _iv_transform = scinew CoalTransform( constant ); 
+    _iv_transform = scinew CoalTransform( d_constants, model ); 
 
   } else if ( db->findBlock("rcce_fp") ){ 
 
-    _iv_transform = scinew RCCETransform(); 
+    _iv_transform = scinew RCCETransform( d_constants, model ); 
 
   } else if ( db->findBlock("rcce_eta") ){ 
 
-    _iv_transform = scinew RCCETransform(); 
+    _iv_transform = scinew RCCETransform( d_constants, model ); 
 
   } else if ( db->findBlock("acidbase") ) {
 
-    doubleMap::iterator iter = d_constants.find( "transform_constant" ); 
-
-    if ( iter == d_constants.end() ) {
-      throw ProblemSetupException( "Could not find transform_constant for the acid/base table.",__FILE__, __LINE__ ); 
-    } else { 
-      double constant = iter->second; 
-      _iv_transform = scinew CoalTransform( constant ); 
-    }
-
-  } else if ( db->findBlock("slowfastchem") ) { 
-
-    _iv_transform = scinew SlowFastTransform(); 
+    _iv_transform = scinew AcidBase( d_constants, model ); 
 
   } else if ( db->findBlock("inert_mixing") ) {
 
-    _iv_transform = scinew InertMixing(); 
+    _iv_transform = scinew InertMixing( d_constants, model ); 
+
+  } else if ( db->findBlock("standard_flamelet" ) ) {
+
+    _iv_transform = scinew SingleMF( d_constants, model ); 
+
+  } else if ( db->findBlock("standard_equilibrium" ) ) { 
+
+    _iv_transform = scinew SingleMF( d_constants, model ); 
 
   } else { 
 
@@ -132,20 +127,6 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
 
   if ( !check_transform ){ 
     throw ProblemSetupException( "Could not properly setup independent variable transform based on input.",__FILE__,__LINE__); 
-  }
-
-  doubleMap::iterator iter = d_constants.find("H_ox");
-  if ( iter == d_constants.end() ){ 
-    proc0cout << " WARNING: Cannot find #KEY H_ox=*value* in the table.\n"; 
-    proc0cout << "          Make sure that your case doesn't require it. \n"; 
-    //throw ProblemSetupException( "H_ox (pure oxidizer enthalpy) required as an input.",__FILE__,__LINE__);
-  } else { 
-    _H_ox = iter->second; 
-  }
-
-  iter = d_constants.find("H_fuel");
-  if ( !(iter == d_constants.end()) ){ 
-    _H_fuel = iter->second; 
   }
 
   // For inert stream mixing // 
@@ -292,16 +273,13 @@ MixingRxnModel::TransformBase::TransformBase(){}
 MixingRxnModel::TransformBase::~TransformBase(){}
 MixingRxnModel::NoTransform::NoTransform(){}
 MixingRxnModel::NoTransform::~NoTransform(){}
-MixingRxnModel::CoalTransform::CoalTransform( double constant ) : d_constant(constant){}
+MixingRxnModel::CoalTransform::CoalTransform( std::map<string,double>& keys, MixingRxnModel* const model ) : _keys(keys), _model(model){}
 MixingRxnModel::CoalTransform::~CoalTransform(){}
-MixingRxnModel::RCCETransform::RCCETransform(){
-  _table_eta_index = 0;
-  _table_hl_index  = 1; 
-  _table_f_index   = 2; 
-}
+MixingRxnModel::AcidBase::AcidBase( std::map<string,double>& keys, MixingRxnModel* const model ) : _keys(keys), _model(model){}
+MixingRxnModel::AcidBase::~AcidBase(){}
+MixingRxnModel::RCCETransform::RCCETransform( std::map<string, double>& keys, MixingRxnModel* const model ) : _keys(keys), _model(model) {}
 MixingRxnModel::RCCETransform::~RCCETransform(){}
-MixingRxnModel::SlowFastTransform::SlowFastTransform(){}
-MixingRxnModel::SlowFastTransform::~SlowFastTransform(){}
-MixingRxnModel::InertMixing::InertMixing(){}
+MixingRxnModel::InertMixing::InertMixing( std::map<string,double>& keys, MixingRxnModel* const model ) : _keys(keys), _model(model) {}
 MixingRxnModel::InertMixing::~InertMixing(){}
-
+MixingRxnModel::SingleMF::SingleMF( std::map<string,double>& keys, MixingRxnModel* const model) : _keys(keys), _model(model) {}; 
+MixingRxnModel::SingleMF::~SingleMF(){}; 

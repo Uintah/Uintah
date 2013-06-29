@@ -47,19 +47,13 @@ public:
                     DataWarehouse        * new_dw, 
                     int                    time_substep );
 
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-  void dummyInit( const ProcessorGroup * pc, 
-                  const PatchSubset    * patches, 
-                  const MaterialSubset * matls, 
-                  DataWarehouse        * old_dw, 
-                  DataWarehouse        * new_dw );
-
   void sched_initialize( const LevelP& level, SchedulerP& sched );
   void initialize( const ProcessorGroup * pc, 
                    const PatchSubset    * patches, 
                    const MaterialSubset * matls, 
                    DataWarehouse        * old_dw, 
                    DataWarehouse        * new_dw );
+
 
   /** @brief get the bounds on heat loss from another source (table) **/ 
   void set_hl_bounds( vector<double> bounds ){ 
@@ -89,15 +83,16 @@ public:
 private: 
 
   std::string _enthalpy_label_name; 
-  std::string _adiab_h_label_name; 
   std::string _sen_h_label_name; 
+  std::string _adiab_h_label_name; 
 
   BoundaryCondition_new* _boundary_condition; 
   MixingRxnModel* _rxn_model; 
+  MixingRxnModel::InertMasterMap _inert_map; 
 
   const VarLabel* _enthalpy_label; 
-  const VarLabel* _adiab_h_label; 
   const VarLabel* _sen_h_label; 
+  const VarLabel* _adiab_h_label; 
 
   double _low_hl; 
   double _high_hl; 
@@ -105,6 +100,7 @@ private:
 
   bool _noisy_heat_loss; 
   bool _constant_heat_loss; 
+  bool _use_h_ad_lookup; 
 
   const VarLabel* _actual_hl_label;              ///< If computing heat loss but not actually using it, then stuff the computed value of heat loss in here. 
 

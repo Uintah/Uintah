@@ -26,7 +26,6 @@
 #define OscillatingCylinder_Expr_h
 
 #include <expression/Expression.h>
-#include <spatialops/FieldReductions.h>
 
 /**
  *  \class Oscillating Cylinder

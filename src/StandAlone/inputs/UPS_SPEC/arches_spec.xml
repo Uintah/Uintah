@@ -29,7 +29,7 @@
                                         attribute2="type REQUIRED STRING 'cc_constant, fx_constant, 
                                                                           laminar_pr, 
                                                                           extent_rxn, tab_strip_factor, 
-                                                                          absorption_coefficient, 
+                                                                          particle_absorption_coefficient, 
                                                                           empirical_soot, 
                                                                           algebraic_scalar_diss,
                                                                           scalsim_variance, 
@@ -138,6 +138,9 @@
                                                                                  you assigned this model. This allows you to see the value of heat loss as computed from enthalpy without
                                                                                  actually using it. Note also that if you are after a constant heat loss and don't care to know the value 
                                                                                  as computed from enthalpy, then you are better off just using the cc_constant model. --> 
+          <use_Ha_lookup                spec="OPTIONAL BOOLEAN" 
+                                        need_applies_to="type heat_loss"/>  <!-- Rather than compute adiabatic enthalpy from the mixture fractions, lookup from the table the 
+                                                                                 adiabatic enthalpy. Note this will be slower than the default --> 
 
           <!-- Scale Similarity Variance --> 
           <!-- mixture_fraction_label   spec above --> 
@@ -305,29 +308,45 @@
           <mf_for_hl                    spec="OPTIONAL NO_DATA"/>  <!-- DEVELOPER SWITCH --> 
           <enthalpy_label               spec="OPTIONAL STRING" />  <!-- Pointer to the enthalpy equation.  default = enthalpySP -->
           <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature --> 
+
+          <!-- IV specs for various table types --> 
+          <!-- IV ordering for table write: (1) mixture fraction (2) scalar variance (3) heat loss --> 
+          <standard_flamelet            spec="OPTIONAL NO_DATA"
+                                        attribute1="f_label   REQUIRED STRING"
+                                        attribute2="var_label REQUIRED STRING"
+                                        attribute3="hl_label  REQUIRED STRING"/>
+          <!-- IV ordering for table write: (1) mixture fraction (2) scalar variance (3) heat loss --> 
+          <standard_equilibrium         spec="OPTIONAL NO_DATA"
+                                        attribute1="f_label   REQUIRED STRING"
+                                        attribute2="var_label REQUIRED STRING"
+                                        attribute3="hl_label  REQUIRED STRING"/>
+          <!-- IV ordering for table write: (1) eta (2) heat loss (3) f --> 
           <coal                         spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
-                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+                                        attribute2="eta_label REQUIRED STRING"
+                                        attribute3="hl_label REQUIRED STRING"/> 
           <rcce                         spec="OPTIONAL NO_DATA"
                                         attribute1="fp_label REQUIRED STRING"
-                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified ni the TransportEqn node --> 
+                                        attribute2="eta_label REQUIRED STRING"
+                                        attribute3="hl_label REQUIRED STRING"/> 
           <rcce_fp                      spec="OPTIONAL NO_DATA"
                                         attribute1="xi_label REQUIRED STRING"
                                         attribute2="hl_label REQUIRED STRING"
-                                        attribute3="fp_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified ni the TransportEqn node --> 
+                                        attribute3="fp_label REQUIRED STRING"/> 
           <rcce_eta                     spec="OPTIONAL NO_DATA"
                                         attribute1="xi_label REQUIRED STRING"
-                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified ni the TransportEqn node --> 
-          <acidbase                     spec="OPTIONAL NO_DATA" 
-                                        attribute1="fp_label REQUIRED STRING"     
-                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
-          <slowfastchem                 spec="OPTIONAL NO_DATA" 
-                                        attribute1="fp_label REQUIRED STRING"     
-                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+                                        attribute2="eta_label REQUIRED STRING"
+                                        attribute3="hl_label REQUIRED STRING"/> 
           <inert_mixing                 spec="OPTIONAL NO_DATA"
                                         attribute1="fp_label REQUIRED STRING"
                                         attribute2="eta_label REQUIRED STRING"
-                                        attribute3="inert_label REQUIRED STRING"/> <!-- Attributes must match the transported IV's and the transported IV --> 
+                                        attribute3="inert_label REQUIRED STRING"
+                                        attribute4="hl_label REQUIRED STRING"/> 
+          <!-- IV ordering for table write: (1) mixture fraction (2) rxn extent --> 
+          <acidbase                     spec="OPTIONAL NO_DATA" 
+                                        attribute1="f_label REQUIRED STRING"     
+                                        attribute2="extent_label REQUIRED STRING"/> 
+
           <post_mix                     spec="OPTIONAL NO_DATA">
             <!-- Notes on post stream mixing: 
               1) Dependent variables that are not specified are assumed to be ZERO (even density)

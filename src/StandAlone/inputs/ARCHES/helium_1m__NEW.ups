@@ -33,7 +33,7 @@
       <Box label="1">
         <lower>       [0,0,0]   </lower>
         <upper>       [3,3,3]   </upper>
-        <resolution>  [30,30,30]</resolution>
+        <resolution>  [21,21,21]</resolution>
         <extraCells>  [1,1,1]   </extraCells>
         <patches>     [1,1,1]   </patches>
       </Box>
@@ -132,6 +132,22 @@
       <Turbulence model="compdynamicprocedure">
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
       </Turbulence>
+
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <determines_properties/>
+          <initialization type="constant">
+            <constant>.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+      </TransportEqns>
 
       <Properties>
         <ColdFlow>
