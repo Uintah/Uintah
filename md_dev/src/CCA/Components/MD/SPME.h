@@ -166,6 +166,94 @@ namespace Uintah {
       /**
        * @brief
        * @param
+       * @return
+       */
+      void scheduleCalculatePreTransform(const ProcessorGroup* pg,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* materials,
+                                         DataWarehouse* subOldDW,
+                                         DataWarehouse* subNewDW);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleReduceNodeLocalQ(const ProcessorGroup* pg,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* materials,
+                                    DataWarehouse* subOldDW,
+                                    DataWarehouse* subNewDW);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleTransformRealToFourier(const ProcessorGroup* pg,
+                                          const PatchSubset* perProcPatches,
+                                          const MaterialSubset* materials,
+                                          DataWarehouse* subOldDW,
+                                          DataWarehouse* subNewDW);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleDistributeChargeGrid(const ProcessorGroup* pg,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* materials,
+                                         DataWarehouse* subOldDW,
+                                         DataWarehouse* subNewDW);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleCalculateInFourierSpace(const ProcessorGroup* pg,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* materials,
+                                           DataWarehouse* subOldDW,
+                                           DataWarehouse* subNewDW);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleCopyToNodeLocalQ(const ProcessorGroup* pg,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* materials,
+                                    DataWarehouse* subOldDW,
+                                    DataWarehouse* subNewDW);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleTransformFourierToReal(const ProcessorGroup* pg,
+                                          const PatchSubset* perProcPatches,
+                                          const MaterialSubset* materials,
+                                          DataWarehouse* subOldDW,
+                                          DataWarehouse* subNewDW);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleDistributeForceGrid(const ProcessorGroup* pg,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* materials,
+                                       DataWarehouse* subOldDW,
+                                       DataWarehouse* subNewDW);
+
+      /**
+       * @brief
+       * @param
        * @param
        * @return
        */
