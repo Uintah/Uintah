@@ -35,6 +35,7 @@
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Box.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MiscMath.h>
@@ -96,7 +97,6 @@ SPME::~SPME()
 
   if (d_Q_nodeLocal) { delete d_Q_nodeLocal; }
   if (d_Q_nodeLocalScratch) { delete d_Q_nodeLocalScratch; }
-
 }
 
 
@@ -123,8 +123,7 @@ void SPME::initialize(const ProcessorGroup* pg,
 
   IntVector zero(0, 0, 0);
   SimpleGrid<dblcomplex>* Q = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, IV_ZERO, 0);
-  //Q->initialize(dblcomplex(0.0, 0.0));  // Initialization should be done at appropriate place in calculate loop
-  Q_global.setData(Q); // TODO May be superfluous
+  Q_global.setData(Q); // need this for datawarehouse
 
   /*
    * ptrdiff_t is a standard C integer type which is (at least) 32 bits wide
@@ -143,7 +142,6 @@ void SPME::initialize(const ProcessorGroup* pg,
 
   forwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, d_localFFTData, d_localFFTData, pg->getComm(), FFTW_FORWARD, FFTW_MEASURE);
   backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, d_localFFTData, d_localFFTData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
-  //
 
   // Allocate FFT plans for global Q data
   //ptrdiff_t Q_global_data;
@@ -322,8 +320,94 @@ void SPME::finalize(const ProcessorGroup* pg,
   new_dw->put(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
   new_dw->put(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
   new_dw->put(QGrid, d_lb->globalQLabel);
+}
 
-  //d_system->setBoxChanged(false); // No, we set a new box based on the results of the integrator
+void SPME::scheduleCalculatePreTransform(const ProcessorGroup* pg,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* materials,
+                                         DataWarehouse* subOldDW,
+                                         DataWarehouse* subNewDW)
+{
+  printTask(patches, spme_cout, "SPME::scheduleCalculatePreTransform");
+
+//  Task* task = scinew Task("SPME::calculatePreTransform", this, &SPME::calculatePreTransform);
+}
+
+void SPME::scheduleReduceNodeLocalQ(const ProcessorGroup* pg,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* materials,
+                                    DataWarehouse* subOldDW,
+                                    DataWarehouse* subNewDW)
+{
+  printTask(patches, spme_cout, "SPME::scheduleReduceNodeLocalQ");
+
+//  Task* task = scinew Task("SPME::reduceNodeLocalQ", this, &SPME::reduceNodeLocalQ);
+}
+
+void SPME::scheduleTransformRealToFourier(const ProcessorGroup* pg,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* materials,
+                                          DataWarehouse* subOldDW,
+                                          DataWarehouse* subNewDW)
+{
+  printTask(patches, spme_cout, "SPME::scheduleTransformRealToFourier");
+
+//  Task* task = scinew Task("SPME::transformRealToFourier", this, &SPME::transformRealToFourier);
+}
+
+void SPME::scheduleDistributeChargeGrid(const ProcessorGroup* pg,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* materials,
+                                        DataWarehouse* subOldDW,
+                                        DataWarehouse* subNewDW)
+{
+  printTask(patches, spme_cout, "SPME::scheduleDistributeNodeLocalQ");
+
+//  Task* task = scinew Task("SPME::distributeNodeLocalQ-charge", this, &SPME::distributeNodeLocalQ);
+}
+
+void SPME::scheduleCalculateInFourierSpace(const ProcessorGroup* pg,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* materials,
+                                           DataWarehouse* subOldDW,
+                                           DataWarehouse* subNewDW)
+{
+  printTask(patches, spme_cout, "SPME::scheduleCalculateInFourierSpace");
+
+//  Task* task = scinew Task("SPME::calculateInFourierSpace", this, &SPME::calculateInFourierSpace);
+}
+
+void SPME::scheduleCopyToNodeLocalQ(const ProcessorGroup* pg,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* materials,
+                                    DataWarehouse* subOldDW,
+                                    DataWarehouse* subNewDW)
+{
+  printTask(patches, spme_cout, "SPME::scheduleCopyToNodeLocalQ");
+
+//  Task* task = scinew Task("SPME::copyToNodeLocalQ", this, &SPME::copyToNodeLocalQ);
+}
+
+void SPME::scheduleTransformFourierToReal(const ProcessorGroup* pg,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* materials,
+                                          DataWarehouse* subOldDW,
+                                          DataWarehouse* subNewDW)
+{
+  printTask(patches, spme_cout, "SPME::scheduleTransformFourierToReal");
+
+//  Task* task = scinew Task("SPME::transformFourierToReal", this, &SPME::transformFourierToReal);
+}
+
+void SPME::scheduleDistributeForceGrid(const ProcessorGroup* pg,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* materials,
+                                       DataWarehouse* subOldDW,
+                                       DataWarehouse* subNewDW)
+{
+  printTask(patches, spme_cout, "SPME::scheduleDistributeNodeLocalQ");
+
+//  Task* task = scinew Task("SPME::distributeNodeLocalQ-force", this, &SPME::distributeNodeLocalQ);
 }
 
 void SPME::calculatePreTransform(const ProcessorGroup* pg,
