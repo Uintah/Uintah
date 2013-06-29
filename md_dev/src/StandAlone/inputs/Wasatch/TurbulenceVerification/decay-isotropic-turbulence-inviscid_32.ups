@@ -98,6 +98,8 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
+ 	 	 	 	 	 	 <Disabledmomdt/>
+ 	 	 	 	 	 	 <CalculateKE/>
       <DisableTurbulenceModel/>        
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
@@ -108,7 +110,6 @@
       <Viscosity>
         <NameTag name="viscosity" state="STATE_NONE" />
       </Viscosity>
-      
       <Pressure>
         <!-- ReferencePressure value="0.0">
               <ReferenceCell>[0,0,0]</ReferenceCell>
@@ -153,6 +154,7 @@
     <save label="z-mom"/>    
     <save label="pressure"/>
     <save label="dilatation"/>
+    <save label="TotalKineticEnergy_uintah"/>    
   </DataArchiver> 
 
   <Grid>

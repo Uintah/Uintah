@@ -57,8 +57,9 @@
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/HomogeneousNucleationCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/CriticalSurfaceEnergy.h>
 
-#include <CCA/Components/Wasatch/Expressions/VelocityMagnitude.h>
-#include <CCA/Components/Wasatch/Expressions/Vorticity.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/Vorticity.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/VelocityMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 
 // BC Expressions Includes
@@ -68,9 +69,9 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/PowerLawBC.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/TurbulentInletBC.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
-#include "BoundaryConditions/VarDensMMSVelocity.h"
-#include "BoundaryConditions/VarDensMMSMomentum.h"
-#include "BoundaryConditions/VarDensMMSSolnVar.h"
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSVelocity.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSMomentum.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSSolnVar.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -575,16 +576,17 @@ namespace Wasatch{
     }
     
     else if(params->findBlock("CriticalSurfaceEnergy") ) {
-      double BulkSurfaceEnergy, T, MolarVolume, coef;
+      double BulkSurfaceEnergy, T, MolarVolume, coef, tolmanL;
       const double R = 8.314;
       const double N_A = 6.023e23;
       Uintah::ProblemSpecP coefParams = params->findBlock("CriticalSurfaceEnergy");
       coefParams -> getAttribute("Temperature",T);
       coefParams -> getAttribute("Bulk_Surf_Eng",BulkSurfaceEnergy);
       coefParams -> getAttribute("Molar_Vol",MolarVolume);
+      coefParams -> getWithDefault("TolmanLength",tolmanL,0.2);
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       double r1 = pow(3.0*MolarVolume/N_A/4.0/PI,1.0/3.0); //convert molar vol to molec radius
-      coef = 0.8 * R * T*BulkSurfaceEnergy* r1/MolarVolume;
+      coef = 4.0 * tolmanL * R * T*BulkSurfaceEnergy* r1/MolarVolume;
       typedef typename CriticalSurfaceEnergy<FieldT>::Builder Builder;
       builder = scinew Builder(tag, saturationTag, BulkSurfaceEnergy, coef);
     }
@@ -823,6 +825,30 @@ namespace Wasatch{
           msg << "ERROR: unsupported field type '" << srcFieldType << "'" << "while parsing an InterpolateExpression." << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
+    } else if( params->findBlock("KineticEnergy") ) {
+      Uintah::ProblemSpecP keSpec = params->findBlock("KineticEnergy");
+      
+      Expr::Tag xVelTag = Expr::Tag();
+      if (keSpec->findBlock("XVelocity"))
+        xVelTag = parse_nametag( keSpec->findBlock("XVelocity")->findBlock("NameTag") );
+      
+      Expr::Tag yVelTag = Expr::Tag();
+      if (keSpec->findBlock("YVelocity"))
+        yVelTag = parse_nametag( keSpec->findBlock("YVelocity")->findBlock("NameTag") );
+      
+      Expr::Tag zVelTag = Expr::Tag();
+      if (keSpec->findBlock("ZVelocity"))
+        zVelTag = parse_nametag( keSpec->findBlock("ZVelocity")->findBlock("NameTag") );
+      
+      bool totalKE=false;
+      keSpec->getAttribute("total",totalKE);
+      if (totalKE) {
+        typedef typename TotalKineticEnergy<XVolField, YVolField, ZVolField>::Builder Builder;
+        builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
+      } else {
+        typedef typename KineticEnergy<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
+        builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
+      }      
     }
     
     return builder;

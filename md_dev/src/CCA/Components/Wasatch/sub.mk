@@ -36,6 +36,7 @@ SRCS    +=                              \
         $(SRCDIR)/CoordHelper.cc        \
         $(SRCDIR)/GraphHelperTools.cc   \
         $(SRCDIR)/OldVariable.cc		    \
+        $(SRCDIR)/ReductionHelper.cc  \
         $(SRCDIR)/ParseTools.cc         \
         $(SRCDIR)/Properties.cc         \
         $(SRCDIR)/TagNames.cc           \

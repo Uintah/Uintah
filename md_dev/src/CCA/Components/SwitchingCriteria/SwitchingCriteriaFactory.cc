@@ -28,6 +28,7 @@
 #include <CCA/Components/SwitchingCriteria/SimpleBurn.h>
 #include <CCA/Components/SwitchingCriteria/SteadyBurn.h>
 #include <CCA/Components/SwitchingCriteria/SteadyState.h>
+#include <CCA/Components/SwitchingCriteria/DDT1.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -67,7 +68,9 @@ SwitchingCriteria* SwitchingCriteriaFactory::create(ProblemSpecP& ps,
   } else if (criteria == "SteadyBurn" || criteria == "Steady_Burn" || 
              criteria == "steadyBurn" || criteria == "steady_Burn")  {
     switch_criteria = scinew SteadyBurnCriteria(switch_ps);
-  } else if (criteria == "SteadyState" || criteria == "steadystate")  {
+  } else if (criteria == "DDT1")  {
+    switch_criteria = scinew DDT1Criteria(switch_ps);
+  }else if (criteria == "SteadyState" || criteria == "steadystate")  {
     switch_criteria = scinew SteadyState(switch_ps);
   } else {
     ostringstream warn;

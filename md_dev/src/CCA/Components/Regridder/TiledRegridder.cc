@@ -364,13 +364,16 @@ void TiledRegridder::OutputGridStats(Grid* newGrid)
       double factor=1;
       for(int d=0;d<3;d++)
       {
-          factor*=newGrid->getLevel(l)->dCell()[d];
+        factor*=newGrid->getLevel(l)->dCell()[d];
       }
       
       //calculate mean
       double mean = total_cells /(double) num_patches;
       double stdv = sqrt((sum_of_cells_squared-total_cells*total_cells/(double)num_patches)/(double)num_patches);
-      cout << left << "  L" << setw(8) << l+1 << ": Patches: " << setw(8) << num_patches << " Total Cells: " << setw(8) << total_cells << " Mean Cells: " << setw(8) << mean << " stdv: " << setw(8) << stdv << " relative stdv: " << setw(8) << stdv/mean << " Volume: " << setw(8) << total_cells*factor << endl;
+      IntVector refineRatio = level->getRefinementRatio();
+      
+      cout << left << "  L" << setw(6)  << l+1 << " RefineRatio: "<<  refineRatio << setw(6)
+           << " Patches: " << setw(6) << num_patches << " Total Cells: " << setw(6) << total_cells << " Mean Cells: " << setw(6) << mean << " stdv: " << setw(6) << stdv << " relative stdv: " << setw(8) << stdv/mean << " Volume: " << setw(8) << total_cells*factor << endl;
     }
   }
 }

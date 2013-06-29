@@ -54,14 +54,12 @@ HeatLoss::problemSetup( const ProblemSpecP& inputdb )
 
   } 
 
-  db->require( "enthalpy_label", _enthalpy_label_name ); 
-  db->getWithDefault( "adiabatic_enthalpy_label" , _adiab_h_label_name , "adiabaticenthalpy" );
   db->getWithDefault( "sensible_enthalpy_label"  , _sen_h_label_name   , "sensibleenthalpy" );
+  db->getWithDefault( "adiabatic_enthalpy_label"  , _adiab_h_label_name   , "adiabaticenthalpy" );
 
-  if ( db->findBlock( "hl_bounds" ) ) { 
-    db->findBlock( "hl_bounds" )->getAttribute("low"  , _low_hl );
-    db->findBlock( "hl_bounds" )->getAttribute("high" , _high_hl);
-  }
+  db->require( "enthalpy_label", _enthalpy_label_name ); 
+
+  db->getWithDefault( "use_Ha_lookup", _use_h_ad_lookup, false);
 
   _noisy_heat_loss = false; 
   if ( db->findBlock( "noisy_hl_warning" ) ){ 
@@ -83,48 +81,55 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
   Task* tsk = scinew Task( taskname, this, &HeatLoss::computeProp, time_substep ); 
 
 	_enthalpy_label = 0; 
-	_adiab_h_label  = 0; 
-	_sen_h_label    = 0; 
 
 	_enthalpy_label = VarLabel::find( _enthalpy_label_name ); 
-	_adiab_h_label  = VarLabel::find( _adiab_h_label_name  ); 
-	_sen_h_label    = VarLabel::find( _sen_h_label_name    ); 
 
 	if ( _enthalpy_label == 0 ){ 
   	throw InvalidValue( "Error: Could not find enthalpy label with name: "+_enthalpy_label_name, __FILE__, __LINE__); 
 	} 
-	if ( _sen_h_label == 0 ){ 
-  	throw InvalidValue( "Error: Could not find sensible enthalpy label with name: "+_sen_h_label_name, __FILE__, __LINE__); 
-	} 
-	if ( _adiab_h_label == 0 ){ 
-  	throw InvalidValue( "Error: Could not find adiabatic enthalpy label with name: "+_adiab_h_label_name, __FILE__, __LINE__); 
-	} 
 
-	if ( time_substep == 0 && !_has_been_computed ){ 
+  //mixture fractions: 
+  vector<string> ivs;
+  ivs = _rxn_model->getAllIndepVars();
 
-		tsk->computes( _prop_label ); 
+  for ( vector<string>::iterator iter = ivs.begin(); iter != ivs.end(); iter++ ){ 
+    
+    if ( *iter != _prop_name ){ 
+      const VarLabel* label = VarLabel::find( *iter ); 
+
+      if ( label == 0 ){ 
+  	    throw InvalidValue( "Error: Could not find table IV label with name: "+*iter, __FILE__, __LINE__); 
+      } 
+		  tsk->requires( Task::NewDW , label , Ghost::None , 0 );
+    } 
+  } 
+
+  tsk->modifies( _prop_label ); 
+	if ( time_substep == 0 ){ 
 
     if ( _constant_heat_loss ){ 
       tsk->computes( _actual_hl_label ); 
     } 
 
-		tsk->requires( Task::OldDW , _enthalpy_label , Ghost::None , 0 );
-		tsk->requires( Task::OldDW , _sen_h_label    , Ghost::None , 0 );
-		tsk->requires( Task::OldDW , _adiab_h_label  , Ghost::None , 0 );
+		tsk->requires( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
 
 	} else { 
 
-		tsk->modifies( _prop_label ); 
 
     if ( _constant_heat_loss ){ 
       tsk->modifies( _actual_hl_label ); 
     } 
 
 		tsk->requires( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
-		tsk->requires( Task::NewDW , _sen_h_label    , Ghost::None , 0 );
-		tsk->requires( Task::NewDW , _adiab_h_label  , Ghost::None , 0 );
 
 	} 
+
+  //inerts 
+  _inert_map = _rxn_model->getInertMap(); 
+  for ( MixingRxnModel::InertMasterMap::iterator iter = _inert_map.begin(); iter != _inert_map.end(); iter++ ){ 
+    const VarLabel* label = VarLabel::find( iter->first ); 
+    tsk->requires( Task::NewDW, label, Ghost::None, 0 ); 
+  } 
 
   sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
 	_has_been_computed = true; 
@@ -156,37 +161,80 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
     CCVariable<double> prop; 
 
 		constCCVariable<double> h;       //enthalpy
-		constCCVariable<double> h_sen;   //sensible enthalpy
-		constCCVariable<double> h_ad;    //adiabatic enthalpy
 
-		if ( time_substep == 0 ){ 
-
-      new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
+    DataWarehouse* which_dw; 
+    new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
+    if ( time_substep == 0 ){ 
+      which_dw = new_dw; 
       prop.initialize(0.0); 
+    } else { 
+      which_dw = new_dw; 
+    } 
 
-			old_dw->get( h     , _enthalpy_label , matlIndex , patch , Ghost::None , 0 );
-			old_dw->get( h_sen , _sen_h_label    , matlIndex , patch , Ghost::None , 0 );
-			old_dw->get( h_ad  , _adiab_h_label  , matlIndex , patch , Ghost::None , 0 );
+    std::vector<constCCVariable<double> > inerts; // all the inert mixture fractions
+    for ( MixingRxnModel::InertMasterMap::iterator iter = _inert_map.begin(); iter != _inert_map.end(); iter++ ){ 
+      constCCVariable<double> the_inert; 
+      const VarLabel* the_label = VarLabel::find( iter->first ); 
+      which_dw->get( the_inert, the_label, matlIndex, patch, Ghost::None, 0 ); 
+      inerts.push_back( the_inert ); 
+    } 
 
-		} else { 
+	  which_dw->get( h     , _enthalpy_label , matlIndex , patch , Ghost::None , 0 );
 
-      new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
+    vector<string> ivs;
+    ivs = _rxn_model->getAllIndepVars();
+    std::map<std::string, constCCVariable<double> > mix_fracs; 
 
-			new_dw->get( h     , _enthalpy_label , matlIndex , patch , Ghost::None , 0 );
-			new_dw->get( h_sen , _sen_h_label    , matlIndex , patch , Ghost::None , 0 );
-			new_dw->get( h_ad  , _adiab_h_label  , matlIndex , patch , Ghost::None , 0 );
+    int index = 0; 
+    for ( vector<string>::iterator iter = ivs.begin(); iter != ivs.end(); iter++ ){ 
+      
+      if ( *iter != _prop_name ){ 
+        const VarLabel* label = VarLabel::find( *iter ); 
 
-		} 
+        constCCVariable<double> f; 
+        new_dw->get( f, label, matlIndex, patch, Ghost::None, 0); 
+        mix_fracs.insert(std::make_pair( *iter, f ) ); 
+        index++; 
+      } 
+    } 
 
     for (iter.begin(); !iter.done(); iter++){
 
 			IntVector c = *iter; 
 
+      double total_inert = 0.0; 
+      for ( int i = 0; i < inerts.size(); i++ ){ 
+        total_inert += inerts[i][c]; 
+      } 
+
+      vector<double> iv_values; 
+      for ( int ii = 0; ii < ivs.size(); ii++ ){
+
+        if ( ivs[ii] != _prop_name ){ 
+
+          std::map<std::string, constCCVariable<double> >::iterator iMF = mix_fracs.find(ivs[ii]); 
+          iv_values.push_back( iMF->second[c] );
+
+        } else { 
+          iv_values.push_back(0.0);
+        }
+      }
+
+      //Get the adiabatic enthalpy
 			double small = 1e-16;
-      double numerator = h_ad[c] - h[c]; 
+      double hl = 0.0;
+      double h_sens = _rxn_model->getTableValue( iv_values, _sen_h_label_name ); 
+      
+      if ( _use_h_ad_lookup ){ 
+        double h_ad_lookup = _rxn_model->getTableValue( iv_values, _adiab_h_label_name ); 
+        hl = h_ad_lookup - h[c];
+      } else { 
+        double h_adiab = _rxn_model->get_Ha( iv_values, total_inert ); 
+        hl = h_adiab - h[c]; 
+      } 
 
-      double hl = ( numerator ) / ( h_sen[c] + small ); 
-
+      hl /= ( h_sens + small );
+      
 			if ( hl < _low_hl ){ 
 				hl     = _low_hl;
 				oob_dn = true;
@@ -233,24 +281,6 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 
     } 
   }
-}
-
-//---------------------------------------------------------------------------
-//Method: Scheduler for Dummy Initialization
-//---------------------------------------------------------------------------
-void HeatLoss::sched_dummyInit( const LevelP& level, SchedulerP& sched )
-{
-}
-
-//---------------------------------------------------------------------------
-//Method: Actually do the Dummy Initialization
-//---------------------------------------------------------------------------
-void HeatLoss::dummyInit( const ProcessorGroup* pc, 
-                                            const PatchSubset* patches, 
-                                            const MaterialSubset* matls, 
-                                            DataWarehouse* old_dw, 
-                                            DataWarehouse* new_dw )
-{
 }
 
 //---------------------------------------------------------------------------

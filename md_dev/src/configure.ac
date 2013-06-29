@@ -4179,7 +4179,7 @@ if test "$with_spatialops"; then
     fi
     SPOPS_INCLUDE_DIR="include/spatialops"
     # Check includes
-    for file in FieldExpressions.h FieldFunctions.h OperatorDatabase.h \
+    for file in Nebo.h OperatorDatabase.h \
                 structured/SpatialField.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
                 particles structured; do
       if test ! -e $with_spatialops/$SPOPS_INCLUDE_DIR/$file; then

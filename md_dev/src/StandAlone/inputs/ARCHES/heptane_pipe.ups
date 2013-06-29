@@ -5,7 +5,7 @@
     <title>Pipe Emitting Heptane</title>
   </Meta>
 
-  <SimulationComponent type="mpmarches"/>
+  <SimulationComponent type="arches"/>
 
   <Solver type="hypre"/>
   <Time>
@@ -20,15 +20,18 @@
   <DataArchiver>
     <filebase>heptane_pipe.uda</filebase>
     <outputInitTimestep/>
-    <outputTimestepInterval>5</outputTimestepInterval>
+    <outputTimestepInterval>2</outputTimestepInterval>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>
-    <save label="heat_loss"/>
     <save label="enthalpy"/>
+    <save label="volFraction"/>
+    <save label="cellType"/>
 <!-- Table Variables -->
 <!-- iv's -->
     <save label="mixture_fraction"/>
+    <save label="scalar_var"/>
+    <save label="heat_loss"/>
 <!-- dv's -->
     <save label="density" table_lookup="true"/>
     <save label="CO2" table_lookup="true"/>
@@ -36,50 +39,11 @@
     <save label="H2O" table_lookup="true"/>
     <save label="CO" table_lookup="true"/>
     <save label="NC7H16" table_lookup="true"/>
+
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
 
-  <MPM>
-    <time_integrator>explicit</time_integrator>
-    <interpolator>linear</interpolator>
-  </MPM>
-  <MaterialProperties>
-    <MPM>
-      <material name="Composite Cylinder">
-        <density>   2489.0   </density>
-        <constitutive_model type="comp_mooney_rivlin">
-          <he_constant_1>5.0</he_constant_1>
-          <he_constant_2>1.0</he_constant_2>
-          <he_PR>.49</he_PR>
-        </constitutive_model>
-        <thermal_conductivity>  0.4494           </thermal_conductivity>
-        <specific_heat>         940.36           </specific_heat>
-        <geom_object>
-          <difference>
-            <cylinder label="outer cylinder">
-              <bottom>          [-1.0, 1.5, 1.5]   </bottom>
-              <top>              [1.0, 1.5, 1.5]   </top>
-              <radius>           0.8           </radius>
-            </cylinder>
-            <cylinder label="inner cylinder">
-              <bottom>          [-1.0, 1.5, 1.5]   </bottom>
-              <top>              [1.0, 1.5, 1.5]   </top>
-              <radius>           0.5          </radius>
-            </cylinder>
-          </difference>
-          <res>                 [2,2,2]         </res>
-          <velocity>            [0.0,0.0,0.0]   </velocity>
-          <temperature>         298             </temperature>
-        </geom_object>
-      </material>
-      <contact>
-        <type>null</type>
-        <vel_fields>              [0,0,0]         </vel_fields>
-        <mu> 0.0 </mu>
-      </contact>
-    </MPM>
-  </MaterialProperties>
   <Grid>
     <BoundaryConditions>
       <Face side="x-" name="floor">
@@ -98,31 +62,11 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normalizedScalarVar" var="Neumann">
+        <BCType id="all" label="scalar_var" var="Neumann">
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="SolidWallTemperature" var="Dirichlet">
-          <value>0.0</value>
-        </BCType>
-      </Face>
-      <Face circle="x-" origin="0 1.5 1.5" radius=".5" name="fuel inlet">
-        <BCType id="all" label="inlet" var="MassFlowInlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType id="all" label="enthalpy" var="Tabulated">
-          <value>adiabaticenthalpy</value>
-        </BCType>
-        <BCType id="all" label="passive_scalar" var="Dirichlet">
-          <value>1.0</value>
-        </BCType>
-        <BCType id="all" label="heat_loss" var="Dirichlet">
-          <value>0.</value>
-        </BCType>
-        <BCType id="all" label="normalizedScalarVar" var="Dirichlet">
-          <value>0.0</value>
+          <value>298</value>
         </BCType>
       </Face>
       <Face side="x+" name="x+ wall">
@@ -141,7 +85,7 @@
         <BCType id="all" label="heat_loss" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normalizedScalarVar" var="Dirichlet">
+        <BCType id="all" label="scalar_var" var="Dirichlet">
           <value>0.0</value>
         </BCType>
       </Face>
@@ -161,7 +105,7 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normalizedScalarVar" var="Dirichlet">
+        <BCType id="all" label="scalar_var" var="Dirichlet">
           <value>0.0</value>
         </BCType>
       </Face>
@@ -181,7 +125,7 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normalizedScalarVar" var="Dirichlet">
+        <BCType id="all" label="scalar_var" var="Dirichlet">
           <value>0.0</value>
         </BCType>
       </Face>
@@ -201,7 +145,7 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normalizedScalarVar" var="Dirichlet">
+        <BCType id="all" label="scalar_var" var="Dirichlet">
           <value>0.0</value>
         </BCType>
       </Face>
@@ -221,7 +165,7 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normalizedScalarVar" var="Dirichlet">
+        <BCType id="all" label="scalar_var" var="Dirichlet">
           <value>0.0</value>
         </BCType>
       </Face>
@@ -250,9 +194,8 @@
 
 <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
-        <ExplicitIntegrator order="second"/>
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
 
 <!-- SCALARS -->
       <TransportEqns>
@@ -263,7 +206,11 @@
           <determines_properties/>
           <initialization type="geometry_fill">
             <geom_object>
-              <cylinder label="inner cylinder"/>
+              <cylinder label="cylinder_fill">
+                <bottom>          [-1.0, 1.5, 1.5]   </bottom>
+                <top>              [1.0, 1.5, 1.5]   </top>
+                <radius>           0.5          </radius>
+              </cylinder>
             </geom_object>
             <constant_inside>1.0</constant_inside>
           </initialization>
@@ -309,6 +256,14 @@
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
+        <model type="scalsim_variance" label="scalar_var">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
+          <density_label>density</density_label>
+          <variance_coefficient>0.14</variance_coefficient> 
+        </model>
       </PropertyModels>
 
       <Turbulence model="smagorinsky">
@@ -320,22 +275,45 @@
       </Turbulence>
 
       <Properties>
-        <use_mixing_model>true</use_mixing_model>
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/heptane/C7H16_flmlt_nonadiabatic.mix.gz</inputfile>
+          <standard_flamelet f_label="mixture_fraction" var_label="scalar_var" hl_label="heat_loss"/>
         </ClassicTable>
       </Properties>
 
       <BoundaryConditions>
         <use_new_bcs/>
         <intrusions>
-          <intrusion label="pipe">
+          <intrusion label="flare">
             <geom_object>
-              <difference>
-                <cylinder label="outer cylinder"/>
-                <cylinder label="inner cylinder"/>
-              </difference>
+              <cylinder label="inner cylinder">
+                <bottom>          [-1.0, 1.5, 1.5]   </bottom>
+                <top>              [1.0, 1.5, 1.5]   </top>
+                <radius>           0.5          </radius>
+              </cylinder>
             </geom_object>
+            <flux_dir>x+</flux_dir>
+            <velocity type="massflow">
+              <flow_rate>0.25</flow_rate>
+            </velocity>
+            <scalars>
+              <scalar label="mixture_fraction" type="flat">
+                <constant>1.0</constant>
+              </scalar>
+              <scalar label="scalar_var" type="flat">
+                <constant>0.0</constant>
+              </scalar>
+              <scalar label="heat_loss" type="flat">
+                <constant>0.0</constant>
+              </scalar>
+              <scalar label="enthalpy" type="tabulated">
+                <depend_varname>adiabaticenthalpy</depend_varname>
+              </scalar>
+              <scalar label="passive_scalar" type="flat">
+                <constant>0.25</constant>
+              </scalar>
+            </scalars>
+
           </intrusion>
         </intrusions>
       </BoundaryConditions>
@@ -357,27 +335,9 @@
           <convection_scheme>upwind</convection_scheme>
         </MomentumSolver>
 
-        <MixtureFractionSolver>
-          <convection_scheme>central-upwind</convection_scheme>
-        </MixtureFractionSolver>
-
       </ExplicitSolver>
     </ARCHES>
 
   </CFD>
 
-  <Multimaterial>
-    <fluidThermalConductivity>0.03</fluidThermalConductivity>
-    <heatExchange>false</heatExchange>
-    <turbulentPrandtNo>0.7</turbulentPrandtNo>
-    <fluidHeatCapacity>1007.</fluidHeatCapacity>
-    <IfCutCell>false</IfCutCell>
-    <StationarySolid>true</StationarySolid>
-    <inviscid>false</inviscid>
-    <restart>true</restart>
-    <fixedCellType>true</fixedCellType>
-    <fixedTemp>true</fixedTemp>
-    <TestCutCells>true</TestCutCells>
-    <stairstep>true</stairstep>
-  </Multimaterial>
 </Uintah_specification>

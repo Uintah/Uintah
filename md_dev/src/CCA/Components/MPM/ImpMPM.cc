@@ -1556,7 +1556,7 @@ void ImpMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
     cout_doing << "ImpMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
               
   // The simulation controller should not schedule it every time step
-  Task* task = scinew Task("errorEstimate", this, &ImpMPM::errorEstimate);
+  Task* task = scinew Task("IMPM::errorEstimate", this, &ImpMPM::errorEstimate);
                                                                                 
   // if the finest level, compute flagged cells
   if (coarseLevel->getIndex() == coarseLevel->getGrid()->numLevels()-1) {

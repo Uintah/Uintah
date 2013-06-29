@@ -82,7 +82,7 @@ ConstantProps::problemSetup( const ProblemSpecP& propertiesParameters )
   d_lab->setVarlabelToRole( "temperature", "temperature" ); 
   d_lab->setVarlabelToRole( "density", "density" ); 
 
-  problemSetupCommon( db_coldflow ); 
+  problemSetupCommon( db_coldflow, this ); 
 
 }
 

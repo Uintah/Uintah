@@ -1,5 +1,5 @@
 /**
- *  \file   OldVariable.h
+ *  \file   OldVariable.cc
  *  \date   Feb 7, 2013
  *  \author "James C. Sutherland"
  *
@@ -38,7 +38,6 @@
 #include <expression/ExpressionFactory.h>
 
 //-- SpatialOps includes --//
-#include <spatialops/FieldExpressions.h>
 
 //-- Uintah Includes --//
 #include <CCA/Ports/DataWarehouse.h>

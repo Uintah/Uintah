@@ -57,15 +57,7 @@ void TabStripFactor::sched_computeProp( const LevelP& level, SchedulerP& sched, 
 
   if ( !(_has_been_computed) ) {
 
-    if ( time_substep == 0 ) {
-      
-      tsk->computes( _prop_label ); 
-
-    } else {
-
-      tsk->modifies( _prop_label ); 
-
-    }
+    tsk->modifies( _prop_label ); 
 
     const VarLabel* the_label = VarLabel::find(_co2_label);
     tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
@@ -97,12 +89,10 @@ void TabStripFactor::computeProp(const ProcessorGroup* pc,
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> prop; 
-    if ( new_dw->exists( _prop_label, matlIndex, patch ) ){
-      new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
-      prop.initialize(0.0); 
-    }
+    new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
+    if ( time_substep == 0 ){ 
+      prop.initialize(0.0);
+    } 
 
     const VarLabel* the_label = VarLabel::find(_co2_label);
     constCCVariable<double> co2; 

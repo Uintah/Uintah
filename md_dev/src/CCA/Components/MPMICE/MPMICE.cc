@@ -506,6 +506,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 
     d_ice->scheduleComputePressFC(            sched, ice_patches, press_matl,
                                                                     all_matls);
+                                                                    
+    d_ice->scheduleViscousShearStress(        sched, ice_patches, ice_matls);
+   
     d_ice->scheduleAccumulateMomentumSourceSinks(
                                               sched, ice_patches, press_matl,
                                                                   ice_matls_sub,
@@ -1002,6 +1005,8 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(Ilb->TMV_CCLabel,         press_matl);
   t->computes(Ilb->press_equil_CCLabel, press_matl);  
   t->computes(Ilb->sum_imp_delPLabel,   press_matl);  // needed by implicit ICE
+  t->computes(Ilb->eq_press_itersLabel, press_matl);
+  
   t->modifies(Ilb->sp_vol_CCLabel,      mpm_matls);
   t->computes(Ilb->sp_vol_CCLabel,      ice_matls);
   t->computes(Ilb->rho_CCLabel,         ice_matls);
@@ -1745,6 +1750,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<CCVariable<double> > sp_vol_new(numALLMatls);
     StaticArray<CCVariable<double> > f_theta(numALLMatls);
     StaticArray<CCVariable<double> > kappa(numALLMatls);
+    
     StaticArray<constCCVariable<double> > placeHolder(0);
     StaticArray<constCCVariable<double> > cv(numALLMatls);
     StaticArray<constCCVariable<double> > gamma(numALLMatls);
@@ -1753,19 +1759,24 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > rho_CC_old(numALLMatls);
     StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
     StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
+    
     constCCVariable<double> press;    
     CCVariable<double> press_new, delPress_tmp,sumKappa, TMV_CC;
-    CCVariable<double> sum_imp_delP;    
+    CCVariable<double> sum_imp_delP;
+    CCVariable<int>  nIterations;
+    
     Ghost::GhostType  gn = Ghost::None;
     //__________________________________
-    old_dw->get(press,                  Ilb->press_CCLabel, 0,patch,gn, 0); 
-    new_dw->allocateAndPut(press_new,   Ilb->press_equil_CCLabel, 0,patch);
-    new_dw->allocateAndPut(TMV_CC,      Ilb->TMV_CCLabel,         0,patch);
-    new_dw->allocateAndPut(sumKappa,    Ilb->sumKappaLabel,       0,patch);
-    new_dw->allocateAndPut(sum_imp_delP,Ilb->sum_imp_delPLabel,   0,patch);
+    old_dw->get( press,                  Ilb->press_CCLabel,       0,patch,gn, 0); 
+    new_dw->allocateAndPut( press_new,   Ilb->press_equil_CCLabel, 0,patch );
+    new_dw->allocateAndPut( TMV_CC,      Ilb->TMV_CCLabel,         0,patch );
+    new_dw->allocateAndPut( sumKappa,    Ilb->sumKappaLabel,       0,patch );
+    new_dw->allocateAndPut( sum_imp_delP,Ilb->sum_imp_delPLabel,   0,patch );
+    new_dw->allocateAndPut( nIterations, Ilb->eq_press_itersLabel, 0,patch );
     new_dw->allocateTemporary(delPress_tmp, patch); 
     
     sum_imp_delP.initialize(0.0);
+    nIterations.initialize(0);
 
     StaticArray<MPMMaterial*> mpm_matl(numALLMatls);
     StaticArray<ICEMaterial*> ice_matl(numALLMatls);
@@ -1779,27 +1790,27 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       if(ice_matl[m]){                    // I C E
-        old_dw->get(Temp[m],      Ilb->temp_CCLabel,      indx,patch,gn,0);
-        old_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,       indx,patch,gn,0);
-        old_dw->get(sp_vol_CC[m], Ilb->sp_vol_CCLabel,    indx,patch,gn,0);
-        old_dw->get(vel_CC[m],    Ilb->vel_CCLabel,       indx,patch,gn,0);
-        new_dw->get(cv[m],        Ilb->specific_heatLabel,indx,patch,gn,0);
-        new_dw->get(gamma[m],     Ilb->gammaLabel,        indx,patch,gn,0);
+        old_dw->get( Temp[m],      Ilb->temp_CCLabel,      indx, patch, gn,0 );
+        old_dw->get( rho_CC_old[m],Ilb->rho_CCLabel,       indx, patch, gn,0 );
+        old_dw->get( sp_vol_CC[m], Ilb->sp_vol_CCLabel,    indx, patch, gn,0 );
+        old_dw->get( vel_CC[m],    Ilb->vel_CCLabel,       indx, patch, gn,0 );
+        new_dw->get( cv[m],        Ilb->specific_heatLabel,indx, patch, gn,0 );
+        new_dw->get( gamma[m],     Ilb->gammaLabel,        indx, patch, gn,0 );
         new_dw->allocateAndPut(rho_CC_new[m], Ilb->rho_CCLabel,  indx,patch);
       }
       if(mpm_matl[m]){                    // M P M
-        new_dw->get(Temp[m],     MIlb->temp_CCLabel, indx,patch,gn,0);
-        new_dw->get(vel_CC[m],   MIlb->vel_CCLabel,  indx,patch,gn,0);
-        new_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx,patch,gn,0); 
-        new_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,  indx,patch,gn,0);
+        new_dw->get( Temp[m],     MIlb->temp_CCLabel, indx, patch, gn,0 );
+        new_dw->get( vel_CC[m],   MIlb->vel_CCLabel,  indx, patch, gn,0 );
+        new_dw->get( sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx, patch, gn,0 ); 
+        new_dw->get( rho_CC_old[m],Ilb->rho_CCLabel,  indx, patch, gn,0 );
         new_dw->allocateTemporary(rho_CC_new[m],  patch);
       }
       new_dw->allocateTemporary(rho_micro[m],  patch);
-      new_dw->allocateAndPut(vol_frac[m],   Ilb->vol_frac_CCLabel,  indx,patch);
-      new_dw->allocateAndPut(f_theta[m],    Ilb->f_theta_CCLabel,   indx,patch);
-      new_dw->allocateAndPut(speedSound[m], Ilb->speedSound_CCLabel,indx,patch);
-      new_dw->allocateAndPut(sp_vol_new[m], Ilb->sp_vol_CCLabel,    indx,patch);
-      new_dw->allocateAndPut(kappa[m],    Ilb->compressibilityLabel,indx,patch);
+      new_dw->allocateAndPut( vol_frac[m],   Ilb->vol_frac_CCLabel,   indx, patch);
+      new_dw->allocateAndPut( f_theta[m],    Ilb->f_theta_CCLabel,    indx, patch);
+      new_dw->allocateAndPut( speedSound[m], Ilb->speedSound_CCLabel, indx, patch);
+      new_dw->allocateAndPut( sp_vol_new[m], Ilb->sp_vol_CCLabel,     indx, patch);
+      new_dw->allocateAndPut( kappa[m],    Ilb->compressibilityLabel, indx, patch);
     }
 
     press_new.copyData(press);
@@ -1820,14 +1831,14 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           rho_micro[m][c] =  mpm_matl[m]->getConstitutiveModel()->
             computeRhoMicroCM(press_new[c],press_ref, mpm_matl[m],Temp[m][c],1.0/sp_vol_CC[m][c]);
         }
-        mat_volume[m] = (rho_CC_old[m][c]*cell_vol)/rho_micro[m][c];
+        mat_volume[m] = ( rho_CC_old[m][c]*cell_vol )/rho_micro[m][c];
         total_mat_vol += mat_volume[m];
       }  // numAllMatls loop
 
       TMV_CC[c] = total_mat_vol;
 
       for (int m = 0; m < numALLMatls; m++) {
-        vol_frac[m][c] = mat_volume[m]/total_mat_vol;
+        vol_frac[m][c]   = mat_volume[m]/total_mat_vol;
         rho_CC_new[m][c] = vol_frac[m][c]*rho_micro[m][c];
       }
     }  // cell iterator
@@ -1850,14 +1861,14 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         // evaluate press_eos at cell i,j,k
         for (int m = 0; m < numALLMatls; m++)  {
           if(ice_matl[m]){    // ICE
-            ice_matl[m]->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
-                                                   cv[m][c],Temp[m][c],
+            ice_matl[m]->getEOS()->computePressEOS( rho_micro[m][c], gamma[m][c],
+                                                   cv[m][c], Temp[m][c],
                                                    press_eos[m],
-                                                   dp_drho[m],dp_de[m]);
+                                                   dp_drho[m], dp_de[m] );
           } else if(mpm_matl[m]){    // MPM
             mpm_matl[m]->getConstitutiveModel()->
-              computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
-                                dp_drho[m], c_2,mpm_matl[m],Temp[m][c]);
+              computePressEOSCM( rho_micro[m][c], press_eos[m], press_ref,
+                                dp_drho[m], c_2,mpm_matl[m],Temp[m][c] );
           }
         }
 
@@ -1869,7 +1880,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         for (int m = 0; m < numALLMatls; m++)   {
           double Q =  press_new[c] - press_eos[m];
           double inv_y =  (vol_frac[m][c] * vol_frac[m][c])
-            / (dp_drho[m] * rho_CC_new[m][c] + d_SMALL_NUM);
+                        / (dp_drho[m] * rho_CC_new[m][c] + d_SMALL_NUM);
                                  
           A   +=  vol_frac[m][c];
           B   +=  Q * inv_y;
@@ -1907,6 +1918,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        //  If sum of vol_frac_CC ~= 1.0 then converged 
        if (fabs(sum-vol_frac_not_close_packed) < convergence_crit){
          converged = true;
+         
          //__________________________________
          // Find the speed of sound based on the converged solution
          //feclearexcept(FE_ALL_EXCEPT);
@@ -1968,19 +1980,26 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
      //__________________________________
      // If the pressure solution has stalled out 
-     //  then try a binary search
+     //  then try a binary search.  Keep track ofthe number
+     // of iterations inside of the search.
+     int binaryPressCount = 0;
+     
      if(count >= d_ice->d_max_iter_equilibration) {
         //int lev = patch->getLevel()->getIndex();
         //cout << "WARNING:MPMICE:ComputeEquilibrationPressure "
         //     << " Cell : " << c << " on level " << lev << " having a difficult time converging. \n"
         //    << " Now performing a binary pressure search " << endl;
 
+        int binaryPressCount;
         binaryPressureSearch( Temp, rho_micro, vol_frac, rho_CC_new,
                               speedSound,  dp_drho,  dp_de, 
                               press_eos, press, press_new, press_ref,
                               cv, gamma, convergence_crit, 
                               numALLMatls, count, sum, c);
+        binaryPressCount = count;
      }
+     
+     nIterations[c] = count + binaryPressCount;
      test_max_iter = std::max(test_max_iter, count);
 
       //__________________________________

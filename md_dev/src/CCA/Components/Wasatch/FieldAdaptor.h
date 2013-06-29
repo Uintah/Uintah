@@ -62,7 +62,8 @@ namespace Wasatch{
     SVOL, SSURFX, SSURFY, SSURFZ,
     XVOL, XSURFX, XSURFY, XSURFZ,
     YVOL, YSURFX, YSURFY, YSURFZ,
-    ZVOL, ZSURFX, ZSURFY, ZSURFZ
+    ZVOL, ZSURFX, ZSURFY, ZSURFZ,
+    PERPATCH
   };
 
   void get_bc_logicals( const Uintah::Patch* const patch,

@@ -106,6 +106,7 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_add_heat            = false;
   d_impICE              = false;
   d_useCompatibleFluxes = true;
+  d_viscousFlow         = false;
   
   d_max_iter_equilibration  = 100;
   d_delT_knob               = 1.0;
@@ -118,7 +119,6 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_modelInfo = 0;
   d_modelSetup = 0;
   d_recompile               = false;
-  d_canAddICEMaterial       = false;
   d_with_mpm                = false;
   d_with_rigid_mpm          = false;
   d_clampSpecificVolume     = false;
@@ -277,7 +277,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   }
 
   cfd_ps->require("cfl",d_CFL);
-  cfd_ps->get("CanAddICEMaterial",d_canAddICEMaterial);
   
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE");
   if(!cfd_ice_ps){
@@ -694,6 +693,7 @@ void ICE::restartInitialize()
 {
   cout_doing << d_myworld->myrank() << " Doing restartInitialize "<< "\t\t\t ICE" << endl;
 
+  //__________________________________
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;
     for( iter  = d_analysisModules.begin();
@@ -712,16 +712,24 @@ void ICE::restartInitialize()
       model->d_dataArchiver = dataArchiver;
     }
   }  
-  // which matl index is the surrounding matl.
-  int numMatls    = d_sharedState->getNumICEMatls();
+  //__________________________________
+  // ICE: Material specific flags
+  int numMatls = d_sharedState->getNumICEMatls();
   for (int m = 0; m < numMatls; m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    
     if(ice_matl->isSurroundingMatl()) {
       d_surroundingMatl_indx = ice_matl->getDWIndex();
     } 
+    
+    if(ice_matl->getViscosity() > 0.0){
+      d_viscousFlow = true;
+    }
+    
   }
   
-  // --------bulletproofing
+  //__________________________________
+  // bulletproofing
   Vector grav = getGravity();
   if (grav.length() >0.0 && d_surroundingMatl_indx == -9)  {
     throw ProblemSetupException("ERROR ICE::restartInitialize \n"
@@ -754,8 +762,8 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   t->requires(Task::NewDW, lb->thermalCondLabel,   gn,  0, true);
   t->requires(Task::NewDW, lb->gammaLabel,         gn,  0, true);
   t->requires(Task::NewDW, lb->specific_heatLabel, gn,  0, true);   
-  t->requires(Task::NewDW, lb->sp_vol_CCLabel,   gn,  0, true);   
-  t->requires(Task::NewDW, lb->viscosityLabel,   gn,  0, true);        
+  t->requires(Task::NewDW, lb->sp_vol_CCLabel,     gn,  0, true);   
+  t->requires(Task::NewDW, lb->viscosityLabel,     gn,  0, true);        
   
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   sched->addTask(t,level->eachPatch(), ice_matls); 
@@ -862,6 +870,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   
   scheduleComputePressFC(                 sched, patches, d_press_matl,
                                                           all_matls);
+
+  scheduleViscousShearStress(             sched, patches, ice_matls);
 
   scheduleAccumulateMomentumSourceSinks(  sched, patches, d_press_matl,
                                                           ice_matls_sub,
@@ -1276,6 +1286,43 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
   sched->addTask(task, patches, matls);
 }
 
+//______________________________________________________________________
+//
+void ICE::scheduleViscousShearStress(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSet* ice_matls)
+{ 
+  int levelIndex = getLevel(patches)->getIndex();
+  cout_doing << d_myworld->myrank() << " ICE::scheduleViscousShearStress" 
+             << "\t\t\t\t\tL-"<< levelIndex<< endl;
+                                
+  Task* t = scinew Task("ICE::viscousShearStress",
+                  this, &ICE::viscousShearStress);
+                     
+  Ghost::GhostType  gac = Ghost::AroundCells;
+
+  if(d_viscousFlow){
+    t->requires( Task::NewDW, lb->viscosityLabel,   gac, 2);
+    t->requires( Task::OldDW, lb->vel_CCLabel,      gac, 2);
+    t->requires( Task::NewDW, lb->rho_CCLabel,      gac, 2);
+    t->requires( Task::NewDW, lb->vol_frac_CCLabel, gac, 2);
+    
+    t->computes( lb->tau_X_FCLabel );
+    t->computes( lb->tau_Y_FCLabel );
+    t->computes( lb->tau_Z_FCLabel );
+  }
+  if(d_turbulence){
+    t->requires( Task::NewDW,lb->uvel_FCMELabel,    gac, 3);
+    t->requires( Task::NewDW,lb->vvel_FCMELabel,    gac, 3);
+    t->requires( Task::NewDW,lb->wvel_FCMELabel,    gac, 3);
+    t->computes( lb->turb_viscosity_CCLabel );
+  }
+  
+  t->computes( lb->viscous_src_CCLabel );
+  sched->addTask(t, patches, ice_matls);
+}
+
+
 /* _____________________________________________________________________
  Function~  ICE::scheduleAccumulateMomentumSourceSinks--
 _____________________________________________________________________*/
@@ -1297,22 +1344,15 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
 
   t->requires(Task::OldDW, lb->delTLabel,getLevel(patches));  
   Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gn  = Ghost::None;
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   
-  t->requires(Task::NewDW,lb->pressX_FCLabel,   press_matl,    oims, gac, 1);
-  t->requires(Task::NewDW,lb->pressY_FCLabel,   press_matl,    oims, gac, 1);
-  t->requires(Task::NewDW,lb->pressZ_FCLabel,   press_matl,    oims, gac, 1);
-  t->requires(Task::NewDW,lb->viscosityLabel,   ice_matls, gac, 2);
-  t->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls, gac, 2);
-  t->requires(Task::NewDW,lb->rho_CCLabel,       gac,2);
-  t->requires(Task::NewDW, lb->vol_frac_CCLabel, gac,2);
-
-  if(d_turbulence){
-    t->requires(Task::NewDW,lb->uvel_FCMELabel,   ice_matls, gac, 3);
-    t->requires(Task::NewDW,lb->vvel_FCMELabel,   ice_matls, gac, 3);
-    t->requires(Task::NewDW,lb->wvel_FCMELabel,   ice_matls, gac, 3);
-    t->computes(lb->turb_viscosity_CCLabel,   ice_matls);
-  } 
+  t->requires( Task::NewDW, lb->pressX_FCLabel,   press_matl,    oims, gac, 1);
+  t->requires( Task::NewDW, lb->pressY_FCLabel,   press_matl,    oims, gac, 1);
+  t->requires( Task::NewDW, lb->pressZ_FCLabel,   press_matl,    oims, gac, 1);
+  t->requires( Task::NewDW, lb->viscous_src_CCLabel, ice_matls, gn, 0);
+  t->requires( Task::NewDW, lb->rho_CCLabel,         gn, 0);
+  t->requires( Task::NewDW, lb->vol_frac_CCLabel,    gn, 0);
 
   t->computes(lb->mom_source_CCLabel);
   sched->addTask(t, patches, matls);
@@ -2059,6 +2099,10 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       cv[indx].initialize(    ice_matl->getSpecificHeat());    
       viscosity.initialize  ( ice_matl->getViscosity());
       thermalCond.initialize( ice_matl->getThermalConductivity());
+      
+      if(ice_matl->getViscosity() > 0.0){
+        d_viscousFlow = true;
+      }
        
     }
     // --------bulletproofing
@@ -2085,7 +2129,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocateAndPut(vol_frac_CC[indx],lb->vol_frac_CCLabel,  indx,patch);
       new_dw->allocateAndPut(vel_CC[indx],     lb->vel_CCLabel,       indx,patch);
     }
-
     
     double p_ref = getRefPress();
     press_CC.initialize(p_ref);
@@ -3671,9 +3714,141 @@ void ICE::updateVolumeFraction(const ProcessorGroup*,
     }
   }
 }
+
+//______________________________________________________________________
+//
+void ICE::viscousShearStress(const ProcessorGroup*,  
+                             const PatchSubset* patches,
+                             const MaterialSubset* /*matls*/,
+                             DataWarehouse* old_dw, 
+                             DataWarehouse* new_dw)
+{
+  const Level* level = getLevel(patches);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    cout_doing << d_myworld->myrank() << " Doing accumulate_momentum_source_sinks_MM on patch " <<
+      patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
+      
+    IntVector right, left, top, bottom, front, back;
+ 
+    Vector dx    = patch->dCell();
+    double areaX = dx.y() * dx.z();
+    double areaY = dx.x() * dx.z();
+    double areaZ = dx.x() * dx.y();
+    
+    //__________________________________
+    //  Matl loop 
+    int numMatls = d_sharedState->getNumICEMatls();
+    
+    for (int m = 0; m < numMatls; m++) {
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int indx = ice_matl->getDWIndex();
+      
+      CCVariable<Vector>   viscous_src;
+      new_dw->allocateAndPut( viscous_src,  lb->viscous_src_CCLabel,  indx, patch);
+      viscous_src.initialize( Vector(0.,0.,0.) );
+
+      //__________________________________
+      // Compute Viscous diffusion for this matl
+      if( d_viscousFlow ){
+        constCCVariable<double>   vol_frac;
+        constCCVariable<double>   rho_CC;
+        
+        Ghost::GhostType  gac = Ghost::AroundCells;
+        new_dw->get(vol_frac,  lb->vol_frac_CCLabel, indx,patch,gac,2);
+        new_dw->get(rho_CC,    lb->rho_CCLabel,      indx,patch,gac,2);
+      
+        SFCXVariable<Vector> tau_X_FC, Ttau_X_FC;
+        SFCYVariable<Vector> tau_Y_FC, Ttau_Y_FC;
+        SFCZVariable<Vector> tau_Z_FC, Ttau_Z_FC;  
+        
+        new_dw->allocateAndPut(tau_X_FC, lb->tau_X_FCLabel, indx,patch);      
+        new_dw->allocateAndPut(tau_Y_FC, lb->tau_Y_FCLabel, indx,patch);      
+        new_dw->allocateAndPut(tau_Z_FC, lb->tau_Z_FCLabel, indx,patch);   
+
+        tau_X_FC.initialize( Vector(0.0) );  // DEFAULT VALUE
+        tau_Y_FC.initialize( Vector(0.0) );
+        tau_Z_FC.initialize( Vector(0.0) );
+        
+        //__________________________________
+        //  compute the shear stress terms  
+        double viscosity_test = ice_matl->getViscosity();
+        
+        if(viscosity_test != 0.0) {
+          CCVariable<double>        viscosity;
+          constCCVariable<double>   viscosity_org;
+          constCCVariable<Vector>   vel_CC;
+
+          new_dw->get(viscosity_org, lb->viscosityLabel, indx, patch, gac,2); 
+          old_dw->get(vel_CC,        lb->vel_CCLabel,    indx, patch, gac,2); 
+
+          // don't alter the original value
+          new_dw->allocateTemporary(viscosity, patch, gac, 2);
+          viscosity.copyData(viscosity_org);
+          
+          // Use temporary arrays to eliminate the communication of shear stress components
+          // across the network.  Normally you would compute them in a separate task and then
+          // require them with ghostCells to compute the divergence.
+          SFCXVariable<Vector> Ttau_X_FC;
+          SFCYVariable<Vector> Ttau_Y_FC;
+          SFCZVariable<Vector> Ttau_Z_FC;  
+          
+          Ghost::GhostType  gac = Ghost::AroundCells;
+          new_dw->allocateTemporary(Ttau_X_FC, patch, gac, 1);
+          new_dw->allocateTemporary(Ttau_Y_FC, patch, gac, 1);
+          new_dw->allocateTemporary(Ttau_Z_FC, patch, gac, 1);
+          
+          Vector evilNum(-9e30);
+          Ttau_X_FC.initialize( evilNum );
+          Ttau_Y_FC.initialize( evilNum );
+          Ttau_Z_FC.initialize( evilNum );
+  
+          // turbulence model
+          if(d_turbulence){ 
+            d_turbulence->callTurb(new_dw,patch,vel_CC,rho_CC,indx,lb,
+                                   d_sharedState, viscosity);
+          }
+
+          computeTauComponents(patch, vol_frac, vel_CC,viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC);  
+
+          if(viscosity_test == 0.0 && d_turbulence){
+            string warn="ERROR:\n input :viscosity can't be zero when calculate turbulence";
+            throw ProblemSetupException(warn, __FILE__, __LINE__);
+          }
+
+          for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+            IntVector c = *iter;
+            right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
+            top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
+            front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);       
+
+            viscous_src[c].x(  (Ttau_X_FC[right].x() - Ttau_X_FC[left].x())  * areaX +
+                               (Ttau_Y_FC[top].x()   - Ttau_Y_FC[bottom].x())* areaY +    
+                               (Ttau_Z_FC[front].x() - Ttau_Z_FC[back].x())  * areaZ  );  
+
+            viscous_src[c].y(  (Ttau_X_FC[right].y() - Ttau_X_FC[left].y())  * areaX +
+                               (Ttau_Y_FC[top].y()   - Ttau_Y_FC[bottom].y())* areaY +      
+                               (Ttau_Z_FC[front].y() - Ttau_Z_FC[back].y())  * areaZ  );          
+
+            viscous_src[c].z(  (Ttau_X_FC[right].z() - Ttau_X_FC[left].z())  * areaX +
+                               (Ttau_Y_FC[top].z()   - Ttau_Y_FC[bottom].z())* areaY +
+                               (Ttau_Z_FC[front].z() - Ttau_Z_FC[back].z())  * areaZ  );
+          }
+          // copy the temporary data
+          tau_X_FC.copyPatch( Ttau_X_FC, tau_X_FC.getLowIndex(), tau_X_FC.getHighIndex() );
+          tau_Y_FC.copyPatch( Ttau_Y_FC, tau_Y_FC.getLowIndex(), tau_Y_FC.getHighIndex() );
+          tau_Z_FC.copyPatch( Ttau_Z_FC, tau_Z_FC.getLowIndex(), tau_Z_FC.getHighIndex() );
+          
+        }  // hasViscosity
+      }  // ice_matl
+    }  // matl loop
+  }  // patch loop
+}
+
+
 /* _____________________________________________________________________
- Function~  ICE::accumulateMomentumSourceSinks--
- Purpose~   This function accumulates all of the sources/sinks of momentum
+ Purpose~   accumulate all of the sources/sinks of momentum
  _____________________________________________________________________  */
 void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,  
                                         const PatchSubset* patches,
@@ -3687,145 +3862,87 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
 
     cout_doing << d_myworld->myrank() << " Doing accumulate_momentum_source_sinks_MM on patch " <<
       patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
-
-    int indx;
-    int numMatls  = d_sharedState->getNumMatls();
-
+      
     IntVector right, left, top, bottom, front, back;
-    Vector dx, gravity;
-    double pressure_source, mass, vol;
-    double viscous_source;
-    double include_term;
 
     delt_vartype delT; 
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
  
-    dx      = patch->dCell();
-    gravity = getGravity();
-    vol     = dx.x() * dx.y() * dx.z();
+    Vector dx      = patch->dCell();
+    double vol     = dx.x() * dx.y() * dx.z();
+    Vector gravity = getGravity();
+    
     double areaX = dx.y() * dx.z();
     double areaY = dx.x() * dx.z();
     double areaZ = dx.x() * dx.y();
     
-    constCCVariable<double>   rho_CC;
-    constCCVariable<double>   sp_vol_CC;
-    constCCVariable<double>   viscosity_org;
-    constCCVariable<Vector>   vel_CC;
-    constCCVariable<double>   vol_frac;
     constSFCXVariable<double> pressX_FC;
     constSFCYVariable<double> pressY_FC;
     constSFCZVariable<double> pressZ_FC;
     
     Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn  = Ghost::None;
     new_dw->get(pressX_FC,lb->pressX_FCLabel, 0, patch, gac, 1);
     new_dw->get(pressY_FC,lb->pressY_FCLabel, 0, patch, gac, 1);
     new_dw->get(pressZ_FC,lb->pressZ_FCLabel, 0, patch, gac, 1);
 
-  //__________________________________
-  //  Matl loop 
+    //__________________________________
+    //  Matl loop 
+    int numMatls  = d_sharedState->getNumMatls();
     for(int m = 0; m < numMatls; m++) {
       Material* matl        = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      indx = matl->getDWIndex();
-
-      new_dw->get(rho_CC,  lb->rho_CCLabel,      indx,patch,gac,2);
-      new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,patch,gac,2);
+      int indx = matl->getDWIndex();
+  
+      constCCVariable<double>  vol_frac;
+      constCCVariable<double>  rho_CC;
       CCVariable<Vector>   mom_source;
+      new_dw->get(vol_frac,  lb->vol_frac_CCLabel, indx,patch,gn,0);
+      new_dw->get(rho_CC,    lb->rho_CCLabel,      indx,patch,gn,0);
+      
       new_dw->allocateAndPut(mom_source,  lb->mom_source_CCLabel,  indx, patch);
-      mom_source.initialize(Vector(0.,0.,0.));
+      mom_source.initialize( Vector(0.,0.,0.) );
       
       //__________________________________
-      // Compute Viscous Terms 
-      SFCXVariable<Vector> tau_X_FC;
-      SFCYVariable<Vector> tau_Y_FC;
-      SFCZVariable<Vector> tau_Z_FC;  
-      // note tau_*_FC is the same size as press(*)_FC
-      tau_X_FC.allocate(pressX_FC.getLowIndex(), pressX_FC.getHighIndex());
-      tau_Y_FC.allocate(pressY_FC.getLowIndex(), pressY_FC.getHighIndex());
-      tau_Z_FC.allocate(pressZ_FC.getLowIndex(), pressZ_FC.getHighIndex());
-      
-      tau_X_FC.initialize(Vector(0.0));
-      tau_Y_FC.initialize(Vector(0.0));
-      tau_Z_FC.initialize(Vector(0.0));
-
-      if(ice_matl){
-        new_dw->get(viscosity_org, lb->viscosityLabel, indx,patch,gac,2); 
-        old_dw->get(vel_CC,        lb->vel_CCLabel,    indx,patch,gac,2); 
-        
-        //__________________________________
-        //  compute the shear stress terms
-        double viscosity_test = ice_matl->getViscosity();
-        if(viscosity_test != 0.0){
-        
-          CCVariable<double> viscosity;  // don't alter the original value
-          new_dw->allocateTemporary(viscosity, patch, gac, 2);
-          viscosity.copyData(viscosity_org);
-        
-          if(d_turbulence){ 
-            d_turbulence->callTurb(new_dw,patch,vel_CC,rho_CC,indx,lb,
-                                   d_sharedState, viscosity);
-          }
-          
-          computeTauComponents(patch, vol_frac, vel_CC,viscosity, tau_X_FC, tau_Y_FC, tau_Z_FC);  
-        }
-        if(viscosity_test == 0.0 && d_turbulence){
-          string warn="ERROR:\n input :viscosity can't be zero when calculate turbulence";
-          throw ProblemSetupException(warn, __FILE__, __LINE__);
-        }
-      }  // ice_matl
-      
-      // only include term if it's an ice matl
-      if (ice_matl) {
-        include_term = 1.0;
-      }else{
-        include_term = 0.0;
-      }
-      //__________________________________
-      //  accumulate sources
+      //  accumulate sources MPM and ICE matls
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
-        mass = rho_CC[c] * vol;
 
         right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
         top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
         front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
-
-        //__________________________________
-        //    X - M O M E N T U M 
-        pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[c]; 
+          
+        double press_src_X = ( pressX_FC[right] - pressX_FC[left] )   * vol_frac[c];
+        double press_src_Y = ( pressY_FC[top]   - pressY_FC[bottom] ) * vol_frac[c]; 
+        double press_src_Z = ( pressZ_FC[front] - pressZ_FC[back] )   * vol_frac[c];
         
-        viscous_source=(tau_X_FC[right].x() - tau_X_FC[left].x())  * areaX +
-                       (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())* areaY +
-                       (tau_Z_FC[front].x() - tau_Z_FC[back].x())  * areaZ;             
-
-        mom_source[c].x( (-pressure_source * areaX + 
-                           viscous_source +
-                           mass * gravity.x() * include_term) * delT ); 
-
-        //__________________________________
-        //    Y - M O M E N T U M
-        pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[c]; 
-
-        viscous_source=(tau_X_FC[right].y() - tau_X_FC[left].y())  * areaX +
-                       (tau_Y_FC[top].y()   - tau_Y_FC[bottom].y())* areaY +
-                       (tau_Z_FC[front].y() - tau_Z_FC[back].y())  * areaZ;
-
-        mom_source[c].y( (-pressure_source * areaY +
-                           viscous_source +
-                           mass * gravity.y() * include_term) * delT );    
-   
-        //__________________________________
-        //    Z - M O M E N T U M
-        pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[c]; 
-
-        viscous_source=(tau_X_FC[right].z() - tau_X_FC[left].z())  * areaX +
-                       (tau_Y_FC[top].z()   - tau_Y_FC[bottom].z())* areaY +
-                       (tau_Z_FC[front].z() - tau_Z_FC[back].z())  * areaZ;
-
-        mom_source[c].z( (-pressure_source * areaZ +
-                           viscous_source + 
-                           mass * gravity.z() * include_term) * delT );
+        mom_source[c].x( -press_src_X * areaX ); 
+        mom_source[c].y( -press_src_Y * areaY );    
+        mom_source[c].z( -press_src_Z * areaZ );
       }
+      
+      //__________________________________
+      //  ICE _matls: 
+      if(ice_matl){
+        constCCVariable<Vector> viscous_src;
+        new_dw->get(viscous_src, lb->viscous_src_CCLabel, indx, patch,gn,0);
+      
+        for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+          IntVector c = *iter;
+          double mass = rho_CC[c] * vol;
+
+          mom_source[c] = (mom_source[c] + viscous_src[c] + mass * gravity );
+        }
+        
+      }  //ice_matl
+      
+      //__________________________________
+      //  All Matls
+      for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        mom_source[c] *= delT; 
+      }
+      
     }  // matls loop
   }  //patches
 }

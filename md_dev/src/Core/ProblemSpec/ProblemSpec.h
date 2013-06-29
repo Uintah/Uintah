@@ -223,6 +223,11 @@ WARNING
      // attributes into result
      bool getAttribute(const std::string& value, int& result) const;
 
+     //////////
+     // passes back the boolean value associated with value of this node's
+     // attributes into result
+     bool getAttribute(const std::string& value, bool& result) const;
+
       //////////
       // adds an attribute of specified name and value to this node's 
       // attribute list

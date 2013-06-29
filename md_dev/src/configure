@@ -44762,7 +44762,7 @@ $as_echo_n "checking for SpatialOps files (For now we are just verifying the exi
     fi
     SPOPS_INCLUDE_DIR="include/spatialops"
     # Check includes
-    for file in FieldExpressions.h FieldFunctions.h OperatorDatabase.h \
+    for file in Nebo.h OperatorDatabase.h \
                 structured/SpatialField.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
                 particles structured; do
       if test ! -e $with_spatialops/$SPOPS_INCLUDE_DIR/$file; then

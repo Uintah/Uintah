@@ -169,6 +169,13 @@ namespace Uintah {
       return; 
     };
 
+    inline double get_Ha( std::vector<double>& iv, double inerts ){ 
+
+      double ha = _iv_transform->get_adiabatic_enthalpy( iv, inerts ); 
+      return ha; 
+
+    } 
+
     /** @brief Get a dependant variable's index **/ 
     virtual int findIndex(std::string) = 0; 
 
@@ -176,9 +183,7 @@ namespace Uintah {
     // In other words, is temperature changing? 
     // The strange logic is to make the logic less confusing in Properties.cc
     bool is_not_cold(){ if (d_coldflow){ return false; }else{ return true; }};
-
-    double get_ox_enthalpy(){ return _H_ox; }; 
-
+      
   protected :
 
     std::string _temperature_label_name; 
@@ -191,8 +196,19 @@ namespace Uintah {
         TransformBase();
         virtual ~TransformBase(); 
 
+        /** @brief Interface to the input file **/ 
         virtual bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ) = 0;  
-        virtual void transform( std::vector<double>& iv ) = 0; 
+        /** @brief Transforms the mixture fractions that are transported to the lookup IVs **/ 
+        virtual void transform( std::vector<double>& iv, double inert ) = 0; 
+        /** @brief AFTER the transform has occured, returns the two stream mixture fraction f = primary / ( primary + secondary ).
+                   Warning: This might not be general for case which have more than two streams. **/ 
+        virtual double get_adiabatic_enthalpy( std::vector<double>& iv, double inert ) = 0; 
+
+        /** @brief Get the heat loss upper and lower bounds **/ 
+        virtual const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> size ) = 0;  
+
+        /** @brief Check to see if this table deals with heat loss **/ 
+        virtual bool has_heat_loss() = 0; 
 
       protected: 
         int _index_1;
@@ -214,99 +230,455 @@ namespace Uintah {
           bool no_transform_on = true; 
           return no_transform_on; 
         };  
-        void inline transform( std::vector<double>& iv ){};
+
+        void inline transform( std::vector<double>& iv, double inert ){};
+
+        double inline get_adiabatic_enthalpy( std::vector<double>& iv, double inerts ){
+          throw InvalidValue("Error: Cannot return an adiabatic enthalpy for this case. Make sure you have identified your table properly (e.g., coal, rcce, standard_flamelet, etc... )",__FILE__,__LINE__); 
+        };
+
+        bool has_heat_loss(){ return false; };
+
+        const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> size )
+        {
+          vector<double> hl_bounds; 
+          hl_bounds.push_back(-1.0);
+          hl_bounds.push_back(1.0);
+          return hl_bounds; 
+        };  
+    };
+
+    class SingleMF : public TransformBase { 
+
+      //Single mixture fraction assumes that the IVs are ordered: 
+      //(1) mixture fraction
+      //(2) scalar variance
+      //(3) heat loss
+
+      public: 
+        SingleMF( std::map<string, double>& keys, MixingRxnModel* const model);
+        ~SingleMF(); 
+
+        bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
+
+          bool sf_transform = false; 
+          ProblemSpecP p = ps; 
+          typedef std::map<std::string,double> key_map;
+
+          if ( p->findBlock("standard_flamelet" )){
+
+            ProblemSpecP p_sf = p->findBlock("standard_flamelet"); 
+            p_sf->getAttribute("f_label",_f_name); 
+            p_sf->getAttribute("var_label", _var_name);
+            p_sf->getAttribute("hl_label", _hl_name);
+            sf_transform = true; 
+
+          } else if ( p->findBlock("standard_equilibrium") ){ 
+
+            ProblemSpecP p_sf = p->findBlock("standard_equilibrium"); 
+            p_sf->getAttribute("f_label",_f_name); 
+            p_sf->getAttribute("var_label", _var_name);
+            p_sf->getAttribute("hl_label", _hl_name);
+            sf_transform = true; 
+
+          } 
+
+          if ( sf_transform ){ 
+            _f_index= -1; 
+            _hl_index = -1; 
+            _var_index = -1; 
+
+            int index = 0; 
+            for ( std::vector<std::string>::iterator i = names.begin(); i != names.end(); i++ ){
+
+              if ( *i == _f_name){ 
+                _f_index = index; 
+              } else if ( *i == _var_name ){ 
+                _var_index = index; 
+              } else if ( *i == _hl_name ){ 
+                _hl_index = index; 
+              } 
+              index++; 
+
+            }
+            if ( _f_index == -1 ) {
+              proc0cout << "Warning: Could not match mixture fraction label to table variables!" << endl;
+              sf_transform = false; 
+            }
+            if ( _var_index == -1 ) {
+              proc0cout << "Warning: Could not match variance label to table variables!" << endl;
+              sf_transform = false; 
+            }
+            if ( _hl_index == -1 ) {
+              proc0cout << "Warning: Could not match heat loss label to table variables!" << endl;
+              sf_transform = false; 
+            }
+          } 
+
+          vector<double> my_ivs;
+          my_ivs.push_back(1);
+          my_ivs.push_back(0);
+          my_ivs.push_back(0); 
+          double h = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+          _H_fuel = h; 
+
+          my_ivs[0] = 0; 
+          h = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+          _H_ox = h; 
+
+          return sf_transform; 
+
+        };  
+
+        bool inline has_heat_loss(){ return true; }; 
+
+        void inline transform( std::vector<double>& iv, double inert ){
+
+          double f = iv[_f_index];
+          double var = iv[_var_index]; 
+          double hl = iv[_hl_index];
+
+          iv[0] = f;
+          iv[1] = var;
+          iv[2] = hl;
+        
+        };
+
+        double inline get_adiabatic_enthalpy( std::vector<double>& iv, double inerts ){
+          return iv[0]*_H_fuel + ( 1.0 - iv[0] )*_H_ox;
+        };
+
+        const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> const size )
+        {
+          vector<double> hl_bounds; 
+
+          hl_bounds.push_back(iv_grids[1][0]);
+          hl_bounds.push_back(iv_grids[1][size[2]-1]);
+
+          return hl_bounds; 
+        };  
+
+      private: 
+
+        string _f_name; 
+        string _var_name; 
+        string _hl_name; 
+
+        std::map<std::string,double> _keys;
+
+        int _f_index; 
+        int _var_index; 
+        int _hl_index; 
+
+        double _H_fuel; 
+        double _H_ox;
+
+        MixingRxnModel* const _model; 
+
     };
 
     class CoalTransform : public TransformBase {
 
       public: 
-        CoalTransform( double constant ); 
+        CoalTransform( std::map<string,double>& keys, MixingRxnModel* const model ); 
         ~CoalTransform(); 
 
         bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
           bool coal_table_on = false; 
           ProblemSpecP p = ps; 
           bool doit = false; 
+          _is_acidbase = false; 
+          typedef std::map<std::string,double> key_map;
+
+          std::map<std::string,double>::iterator iter = _keys.find( "transform_constant" ); 
+          if ( iter == _keys.end() ){ 
+            _constant = iter->second; 
+          } else { 
+            _constant = 0.0;
+          }
+
           if ( p->findBlock("coal") ){
 
-            p->findBlock("coal")->getAttribute("fp_label", _index_1_name );
-            p->findBlock("coal")->getAttribute("eta_label", _index_2_name ); 
+            p->findBlock("coal")->getAttribute("fp_label", _fp_name );
+            p->findBlock("coal")->getAttribute("eta_label", _eta_name ); 
+            p->findBlock("coal")->getAttribute("hl_label",_hl_name); 
             doit = true; 
+
+            vector<double> my_ivs;
+            my_ivs.push_back(0);
+            my_ivs.push_back(0);
+            my_ivs.push_back(1); 
+            _H_F1 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+            std::cout << " H f=1: " << _H_F1 << std::endl;
+
+            my_ivs[2] = 0; 
+            _H_F0 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+            std::cout << " H f=0: " << _H_F0 << std::endl;
+          
+            my_ivs[0] = 1;
+            _H_fuel = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
 
           } else if ( p->findBlock("rcce") ){ 
 
-            p->findBlock("rcce")->getAttribute("fp_label", _index_1_name );
-            p->findBlock("rcce")->getAttribute("eta_label", _index_2_name ); 
+            p->findBlock("rcce")->getAttribute("fp_label", _fp_name );
+            p->findBlock("rcce")->getAttribute("eta_label", _eta_name ); 
+            p->findBlock("rcce")->getAttribute("hl_label",_hl_name); 
             doit = true; 
+
+            vector<double> my_ivs;
+            my_ivs.push_back(0);
+            my_ivs.push_back(0);
+            my_ivs.push_back(1); 
+            _H_F1 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+
+            my_ivs[2] = 0; 
+            _H_F0 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+          
+            my_ivs[0] = 1;
+            _H_fuel = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
 
           } else if ( p->findBlock("acidbase") ){
 
-            p->findBlock("acidbase")->getAttribute("fp_label", _index_1_name );
-            p->findBlock("acidbase")->getAttribute("eta_label", _index_2_name ); 
+            p->findBlock("acidbase")->getAttribute("extent_label", _fp_name );
+            p->findBlock("acidbase")->getAttribute("f_label",      _eta_name ); 
             doit = true; 
+            _is_acidbase = true; 
 
           } 
 
           if ( doit ) { 
 
-            _index_1 = -1; 
-            _index_2 = -1; 
+            _eta_index = -1; 
+            _fp_index = -1; 
+            _hl_index = -1; 
 
             int index = 0; 
             for ( std::vector<std::string>::iterator i = names.begin(); i != names.end(); i++ ){
 
-              if ( *i == _index_1_name ) 
-                _index_1 = index; 
-              if ( *i == _index_2_name )
-                _index_2 = index; 
+              if ( *i == _eta_name ){ 
+                _eta_index = index; 
+              } else if ( *i == _fp_name ){ 
+                _fp_index = index; 
+              } else if ( *i == _hl_name ){ 
+                _hl_index = index; 
+              } 
               index++; 
 
             }
             coal_table_on = true; 
-            if ( _index_1 == -1 ) {
+            if ( _fp_index == -1 ) {
               proc0cout << "Warning: Could not match PRIMARY mixture fraction label to table variables!" << endl;
               coal_table_on = false; 
             }
-            if ( _index_2 == -1 ) {
+            if ( _eta_index == -1 ) {
               proc0cout << "Warning: Could not match ETA mixture fraction label to table variables!" << endl;
               coal_table_on = false; 
             }
+            if ( !_is_acidbase ){ 
+              if ( _hl_index == -1 ) {
+                proc0cout << "Warning: Could not match heat loss label to table variables!" << endl;
+                coal_table_on = false; 
+              }
+            } 
           } 
           return coal_table_on; 
         };  
 
-        void inline transform( std::vector<double>& iv ){
-          double f = 0.0; 
-          if ( iv[_index_2] < 1.0 ){
+        bool inline has_heat_loss(){ return true; }; 
 
-            f = ( iv[_index_1] - d_constant * iv[_index_2] ) / ( 1.0 - iv[_index_2] ); 
+        void inline transform( std::vector<double>& iv, double inert ){
+
+          double f = 0.0; 
+          double fp = iv[_fp_index];
+          double hl = 0;
+          if ( !_is_acidbase )
+            hl = iv[_hl_index]; 
+          double eta = iv[_eta_index]; 
+
+          if ( eta < 1.0 ){
+
+            f = ( fp - _constant * eta ) / ( 1.0 - eta ); 
 
             if ( f < 0.0 )
               f = 0.0;
             if ( f > 1.0 )
               f = 1.0; 
           }
-          iv[_index_1] = f; 
+
+          iv[0] = eta; 
+          iv[1] = hl; 
+          iv[2] = f; 
         
         }; 
+        
+        double inline get_adiabatic_enthalpy( std::vector<double>& iv, double inert ){
+
+          this->transform(iv, 0.0);
+
+          double H2 = iv[2]*_H_F1 + ( 1.0 - iv[2] )*_H_F0;
+
+          double H_ad = iv[0]*_H_fuel + ( 1.0 - iv[0] )*H2;
+
+          return H_ad;
+
+        };
+
+        const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> const size )
+        {
+          vector<double> hl_bounds; 
+          hl_bounds.push_back(iv_grids[0][0]);
+          hl_bounds.push_back(iv_grids[0][size[1]-1]);
+
+          return hl_bounds; 
+        };  
 
 
       private: 
 
-        double d_constant; 
+        double _constant; 
+
+        std::string _eta_name; 
+        std::string _fp_name; 
+        std::string _hl_name; 
+
+        int _eta_index; 
+        int _fp_index; 
+        int _hl_index; 
+
+        std::map<std::string,double> _keys;
+
+        bool _is_acidbase; 
+
+        double _H_F1; 
+        double _H_F0; 
+        double _H_fuel;
+
+        MixingRxnModel* const _model; 
+    };
+
+    class AcidBase: public TransformBase {
+
+      public: 
+        AcidBase( std::map<string,double>& keys, MixingRxnModel* const model ); 
+        ~AcidBase(); 
+
+        bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
+
+          bool acid_base_table_on = false; 
+          ProblemSpecP p = ps; 
+
+          bool doit = false; 
+          typedef std::map<std::string,double> key_map;
+
+          std::map<std::string,double>::iterator iter = _keys.find( "transform_constant" ); 
+          if ( iter == _keys.end() ){ 
+            throw InvalidValue("Error: The key: transform_constant is required for this table and wasn't found.",__FILE__,__LINE__); 
+          } else { 
+            _constant = iter->second; 
+          }
+
+          if ( p->findBlock("acidbase") ){
+
+            p->findBlock("acidbase")->getAttribute("extent_label", _fp_name );
+            p->findBlock("acidbase")->getAttribute("f_label",      _eta_name ); 
+
+            doit = true; 
+          } 
+
+          if ( doit ) { 
+
+            _eta_index = -1; 
+            _fp_index = -1; 
+
+            int index = 0; 
+            for ( std::vector<std::string>::iterator i = names.begin(); i != names.end(); i++ ){
+
+              if ( *i == _eta_name ){ 
+                _eta_index = index; 
+              } else if ( *i == _fp_name ){ 
+                _fp_index = index; 
+              } 
+              index++; 
+
+            }
+
+            acid_base_table_on = true; 
+
+            if ( _fp_index == -1 ) {
+              proc0cout << "Warning: Could not match PRIMARY mixture fraction label to table variables!" << endl;
+              acid_base_table_on = false; 
+            }
+            if ( _eta_index == -1 ) {
+              proc0cout << "Warning: Could not match ETA mixture fraction label to table variables!" << endl;
+              acid_base_table_on = false; 
+            }
+          } 
+
+          return acid_base_table_on; 
+
+        };  
+
+        bool inline has_heat_loss(){ return false; }; 
+
+        void inline transform( std::vector<double>& iv, double inert ){
+
+          double f = 0.0; 
+          double fp = iv[_fp_index];
+          double eta = iv[_eta_index]; 
+
+          if ( eta < 1.0 ){
+
+            f = ( fp - _constant * eta ) / ( 1.0 - eta ); 
+
+            if ( f < 0.0 )
+              f = 0.0;
+            if ( f > 1.0 )
+              f = 1.0; 
+          }
+
+          iv[0] = eta; 
+          iv[1] = f; 
+        
+        }; 
+        
+        double inline get_adiabatic_enthalpy( std::vector<double>& iv, double inert ){
+
+          throw InvalidValue("Error: No ability to return adiabatic enthalpy for the acid base transform",__FILE__,__LINE__); 
+
+        };
+
+        const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> const size )
+        {
+          throw InvalidValue("Error: No ability to return heat loss bounds for the acid base transform",__FILE__,__LINE__); 
+        };  
+
+
+      private: 
+
+        double _constant; 
+
+        std::string _eta_name; 
+        std::string _fp_name; 
+
+        int _eta_index; 
+        int _fp_index; 
+
+        std::map<std::string,double> _keys;
+
+        MixingRxnModel* const _model; 
     };
 
     class RCCETransform : public TransformBase {
 
       public: 
-        RCCETransform(); 
+        RCCETransform( std::map<string, double>& keys, MixingRxnModel* const model ); 
         ~RCCETransform(); 
 
         bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
 
           bool rcce_table_on = false; 
           ProblemSpecP p = ps; 
-          //bool doit = false;
+          typedef std::map<std::string,double> key_map;
 
           _rcce_fp  = false; 
           _rcce_eta = false; 
@@ -317,7 +689,6 @@ namespace Uintah {
             p->findBlock("rcce_fp")->getAttribute("xi_label", _xi_name ); 
             p->findBlock("rcce_fp")->getAttribute("hl_label", _hl_name ); 
             _rcce_fp = true; 
-            //doit = true;
 
           } else if ( p->findBlock("rcce_eta") ){ 
 
@@ -325,7 +696,6 @@ namespace Uintah {
             p->findBlock("rcce_eta")->getAttribute("xi_label",  _xi_name ); 
             p->findBlock("rcce_eta")->getAttribute("hl_label",  _hl_name ); 
             _rcce_eta = true; 
-            //doit = true;
 
           }
 
@@ -333,6 +703,7 @@ namespace Uintah {
 
             _xi_index = -1; 
             _fp_index = -1; 
+            _hl_index = -1;
 
             int index = 0; 
             for ( std::vector<std::string>::iterator i = names.begin(); i != names.end(); i++ ){
@@ -386,6 +757,18 @@ namespace Uintah {
 
             }
 
+            vector<double> my_ivs;
+            my_ivs.push_back(0);
+            my_ivs.push_back(0);
+            my_ivs.push_back(1); 
+            _H_F1 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+
+            my_ivs[2] = 0; 
+            _H_F0 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+          
+            my_ivs[0] = 1;
+            _H_fuel = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+
             rcce_table_on = true; 
 
             if ( _eta_index == -1 ) {
@@ -402,10 +785,14 @@ namespace Uintah {
             }
 
           } 
+
           return rcce_table_on; 
+
         };  
 
-        void inline transform( std::vector<double>& iv ){
+        bool inline has_heat_loss(){ return true; }; 
+
+        void inline transform( std::vector<double>& iv, double inert ){
 
           double f   = 0.0;
           double eta = 0.0; 
@@ -455,11 +842,32 @@ namespace Uintah {
           } 
 
           //reassign 
-          iv[_table_f_index]   = f; 
-          iv[_table_eta_index] = eta;
-          iv[_table_hl_index]  = hl; 
+          iv[0] = eta;
+          iv[1]  = hl; 
+          iv[2]   = f; 
         
         }; 
+
+        double inline get_adiabatic_enthalpy( std::vector<double>& iv, double inert ){
+
+          this->transform(iv, 0.0);
+
+          double H2 = iv[2]*_H_F1 + ( 1.0 - iv[2] )*_H_F0;
+
+          double H_ad = iv[0]*_H_fuel + ( 1.0 - iv[0] )*H2;
+
+          return H_ad;
+
+        };
+
+        const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> const size )
+        {
+          vector<double> hl_bounds; 
+          hl_bounds.push_back(iv_grids[0][0]);
+          hl_bounds.push_back(iv_grids[0][size[1]-1]);
+
+          return hl_bounds; 
+        };  
 
       private: 
 
@@ -480,12 +888,20 @@ namespace Uintah {
         int _table_hl_index; 
         int _table_f_index; 
 
+        double _H_F1; 
+        double _H_F0; 
+        double _H_fuel;
+
+        std::map<std::string, double> _keys; 
+
+        MixingRxnModel* const _model;
+
     };
 
     class InertMixing : public TransformBase {
 
       public: 
-        InertMixing(); 
+        InertMixing( std::map<string, double>& keys, MixingRxnModel* const model ); 
         ~InertMixing(); 
 
         bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
@@ -494,48 +910,67 @@ namespace Uintah {
           bool doit = false; 
           if ( p->findBlock("inert_mixing") ){
 
-            p->findBlock("inert_mixing")->getAttribute("fp_label",         _index_1_name );
-            p->findBlock("inert_mixing")->getAttribute("eta_label",     _index_2_name );
+            p->findBlock("inert_mixing")->getAttribute("fp_label",  _fp_name );
+            p->findBlock("inert_mixing")->getAttribute("eta_label", _eta_name );
+            p->findBlock("inert_mixing")->getAttribute("hl_label",  _hl_name );
             doit = true; 
 
           } 
 
           if ( doit ) { 
 
-            _index_1 = -1; 
-            _index_2 = -1; 
+            _eta_index = -1; 
+            _fp_index  = -1; 
+            _hl_index  = -1;
 
             int index = 0; 
             for ( std::vector<std::string>::iterator i = names.begin(); i != names.end(); i++ ){
 
-              if ( *i == _index_1_name ) 
-                _index_1 = index; 
-              if ( *i == _index_2_name )
-                _index_2 = index; 
-              index++; 
+              if ( *i == _fp_name ){ 
+                _fp_index = index; 
+              } else if ( *i == _eta_name ){ 
+                _eta_index = index; 
+              } else if ( *i == _hl_name ){
+                _hl_index = index; 
+              } 
 
             }
             transform_on = true; 
-            if ( _index_1 == -1 ) {
-              proc0cout << "Warning: Could not match f_cstar mixture fraction label to table variables!" << endl;
+            if ( _eta_index == -1 ) {
+              proc0cout << "Warning: Could not match Eta mixture fraction label to table variables!" << endl;
               transform_on = false; 
             }
-            if ( _index_2 == -1 ) {
-              proc0cout << "Warning: Could not match f_c mixture fraction label to table variables!" << endl;
+            if ( _fp_index == -1 ) {
+              proc0cout << "Warning: Could not match Fp mixture fraction label to table variables!" << endl;
               transform_on = false; 
             }
+            if ( _hl_index == -1 ){ 
+              proc0cout << "Warning: Could not match heat loss label to table variables!" << endl;
+              transform_on = false; 
+            } 
           } 
-          return transform_on; 
-        };  
 
-        void inline transform( std::vector<double>& iv ){
-          throw InvalidValue("Error: You have chosen to use post mixing but there is something wrong with your tranform.  Check your input file.",__FILE__,__LINE__); 
-        }; 
+          vector<double> my_ivs;
+          my_ivs.push_back(0);
+          my_ivs.push_back(0);
+          my_ivs.push_back(1); 
+          _H_F1 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+
+          my_ivs[2] = 0; 
+          _H_F0 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+          
+          my_ivs[0] = 1;
+          _H_fuel = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+
+          return transform_on; 
+
+        };  
 
         void inline transform( std::vector<double>& iv, double inert ){
 
-          double fcstar = iv[_index_1]; 
-          double fc = iv[_index_2];
+          double fcstar = iv[_fp_index]; 
+          double fc = iv[_eta_index];
+          double hl = iv[_hl_index]; 
 
           if ( inert < 1.0 ){
 
@@ -556,73 +991,68 @@ namespace Uintah {
                 f = 1.0; 
             }
 
-            iv[_index_1] = f; 
-            iv[_index_2] = eta;  
+            iv[0] = eta;  
+            iv[1] = hl; 
+            iv[2] = f; 
 
           } else { 
 
-            iv[_index_1] = 0.0; 
-            iv[_index_2] = 0.0;  
+            iv[0] = 0.0;  
+            iv[1] = hl; 
+            iv[2] = 0.0; 
 
           }
 
         };
 
-      private:
+        double inline get_adiabatic_enthalpy( std::vector<double>& iv, double inert ){
 
-    };
+          this->transform(iv, inert);
 
-    class SlowFastTransform : public TransformBase {
+          double H2 = iv[2]*_H_F1 + ( 1.0 - iv[2] )*_H_F0;
 
-      public: 
-        SlowFastTransform(); 
-        ~SlowFastTransform(); 
+          double H_ad = iv[0]*_H_fuel + ( 1.0 - iv[0] )*H2;
 
-        bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
-          bool transform_on = false; 
-          ProblemSpecP p = ps; 
-          bool doit = false; 
-          if ( p->findBlock("slowfastchem") ){
+          return H_ad;
 
-            p->findBlock("slowfastchem")->getAttribute("fp_label", _index_1_name );
-            p->findBlock("slowfastchem")->getAttribute("eta_label", _index_2_name ); 
-            doit = true; 
+        };
 
-          } 
+        bool inline has_heat_loss(){ return true; }; 
 
-          if ( doit ) { 
+        const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> const size )
+        {
+          vector<double> hl_bounds; 
+          hl_bounds.push_back(iv_grids[0][0]);
+          hl_bounds.push_back(iv_grids[0][size[1]-1]);
 
-            _index_1 = -1; 
-            _index_2 = -1; 
-
-            int index = 0; 
-            for ( std::vector<std::string>::iterator i = names.begin(); i != names.end(); i++ ){
-
-              if ( *i == _index_1_name ) 
-                _index_1 = index; 
-              if ( *i == _index_2_name )
-                _index_2 = index; 
-              index++; 
-
-            }
-            transform_on = true; 
-            if ( _index_1 == -1 ) {
-              proc0cout << "Warning: Could not match PRIMARY mixture fraction label to table variables!" << endl;
-              transform_on = false; 
-            }
-            if ( _index_2 == -1 ) {
-              proc0cout << "Warning: Could not match ETA mixture fraction label to table variables!" << endl;
-              transform_on = false; 
-            }
-          } 
-          return transform_on; 
+          return hl_bounds; 
         };  
 
-        void inline transform( std::vector<double>& iv ){
-          iv[_index_2] = iv[_index_1] + iv[_index_2];
-          iv[_index_1] = 0.0; 
-        }; 
+      private:
+
+        std::string _eta_name; 
+        std::string _fp_name; 
+        std::string _hl_name; 
+
+        int _eta_index; 
+        int _fp_index; 
+        int _hl_index; 
+
+        double _H_F1; 
+        double _H_F0; 
+        double _H_fuel;
+
+        std::map<std::string, double> _keys; 
+        MixingRxnModel* const _model; 
+
     };
+
+
+  public: 
+
+    TransformBase* _iv_transform; 
+
+  protected: 
 
     /** @brief Performs post mixing on table look up value based 
      * on a set of inert streams set from the input file */ 
@@ -679,11 +1109,10 @@ namespace Uintah {
     void setMixDVMap( const ProblemSpecP& root_params ); 
 
     /** @brief Common problem setup work */ 
-    void problemSetupCommon( const ProblemSpecP& params ); 
+    void problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* const model ); 
 
     ArchesLabel* d_lab;                     ///< Arches labels
     const MPMArchesLabel* d_MAlab;          ///< MPMArches labels
-    TransformBase* _iv_transform;           ///< Tool for mapping mixture fractions 
 
     bool d_coldflow;                        ///< Will not compute heat loss and will not initialized ethalpy
     bool d_adiabatic;                       ///< Will not compute heat loss
@@ -694,9 +1123,6 @@ namespace Uintah {
     std::string d_eta_label;                ///< Eta mixture fraction name for a coal table
     std::vector<string> d_allIndepVarNames; ///< Vector storing all independent variable names from table file
     std::vector<string> d_allDepVarNames;   ///< Vector storing all dependent variable names from the table file
-
-    double _H_ox;                          ///< Adiabatic air enthalpy
-    double _H_fuel;                        ///< Adiabatic fuel enthalpy
 
     /** @brief Insert a varLabel into the map where the varlabel has been created elsewhere */ 
     inline void insertExisitingLabelIntoMap( const string var_name ){ 

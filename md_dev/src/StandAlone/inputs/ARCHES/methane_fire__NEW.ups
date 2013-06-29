@@ -15,29 +15,27 @@
     <delt_min>0.00001</delt_min>
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
+    <max_Timesteps>51</max_Timesteps>
   </Time>
 
   <DataArchiver>
     <filebase>methane_fire.uda</filebase>
-    <outputInterval>0.1</outputInterval>
+    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputInitTimestep/>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
     <save label="CCVelocity"/>
     <save label="viscosityCTS"/>
-
     <save label="divQ"/>
-
-    <save label="scalar_variance"/>
+    <save label="scalar_var"/>
     <save label="mixture_fraction"/>
-    <save label="enthalpy"/>
-
+    <save label="heat_loss"/>
     <save label="temperature" table_lookup="true"/>
     <save label="density"/>
     <save label="CO2" table_lookup="true"/>
     <save label="velocityDivergence"/>
     <save label="continuityResidual"/>
-
-    <checkpoint cycle="2" interval="0.2"/>
+    <checkpoint cycle="2" interval="0.01"/>
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -59,10 +57,10 @@
         <BCType id="0" var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction_2"> 
+        <BCType id="0" var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType id="0" var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
         <BCType id="0" var="Neumann" label="enthalpy"> 
@@ -74,12 +72,12 @@
           <value>0.04527</value>
         </BCType>
         <BCType id="0" var="Dirichlet" label="mixture_fraction"> 
-          <value>0.0</value>
-        </BCType>
-        <BCType id="0" var="Dirichlet" label="mixture_fraction_2"> 
           <value>1.0</value>
         </BCType>
         <BCType id="0" var="Dirichlet" label="heat_loss"> 
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" var="Dirichlet" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
         <BCType id="0" var="Tabulated" label="enthalpy"> 
@@ -93,10 +91,10 @@
         <BCType id="0" var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction_2"> 
+        <BCType id="0" var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType id="0" var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
         <BCType id="0" var="Neumann" label="enthalpy"> 
@@ -110,10 +108,10 @@
         <BCType id="0" var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction_2"> 
+        <BCType id="0" var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType id="0" var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
         <BCType id="0" var="Neumann" label="enthalpy"> 
@@ -127,10 +125,10 @@
         <BCType id="0" var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction_2"> 
+        <BCType id="0" var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType id="0" var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
         <BCType id="0" var="Neumann" label="enthalpy"> 
@@ -144,10 +142,10 @@
         <BCType id="0" var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction_2"> 
+        <BCType id="0" var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType id="0" var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
         <BCType id="0" var="Neumann" label="enthalpy"> 
@@ -161,10 +159,10 @@
         <BCType id="0" var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction_2"> 
+        <BCType id="0" var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType id="0" var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
         <BCType id="0" var="Neumann" label="enthalpy"> 
@@ -248,13 +246,16 @@
           </initialization>
           <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
           <density_label>density</density_label>
-          <variance_coefficient>0.16</variance_coefficient>
+          <variance_coefficient>0.01</variance_coefficient> <!-- Warning: not a good default value --> 
         </model>
       </PropertyModels>
 
       <Properties>
         <ClassicTable>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_clipped.mxn.gz</inputfile>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic_new.mix.gz</inputfile>
+          <standard_equilibrium f_label="mixture_fraction"
+                                hl_label="heat_loss"
+                                var_label="scalar_var"/>
         </ClassicTable>
       </Properties>
 
@@ -285,24 +286,4 @@
     </ARCHES>
 
   </CFD>
-
-<!--____________________________________________________________________-->
-  <DataAnalysis>
-    <Module name="lineExtract">
-      <material>0</material>
-      <samplingFrequency> 1e10 </samplingFrequency>
-      <timeStart>          0   </timeStart>
-      <timeStop>          100  </timeStop>
-      <Variables>
-        <analyze label="uVelocitySPBC"/>
-        <analyze label="scalarSP"/>
-      </Variables>
-      <lines>
-        <line name="z_line">
-          <startingPt>  [1.5, 1.5, 0.0]   </startingPt>
-          <endingPt>    [1.5, 1.5, 3.0]   </endingPt>
-        </line>
-      </lines>
-    </Module>
-  </DataAnalysis>
 </Uintah_specification>

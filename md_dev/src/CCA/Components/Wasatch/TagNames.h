@@ -65,7 +65,8 @@ namespace Wasatch{
     temperature,
     e0, rhoE0,
     enthalpy,
-    xHeatFlux, yHeatFlux, zHeatFlux;
+    xHeatFlux, yHeatFlux, zHeatFlux,
+    kineticEnergy, totalKineticEnergy;
     
     // species related variables
     const Expr::Tag

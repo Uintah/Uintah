@@ -1,4 +1,4 @@
-#include "WeakConvectiveTerm.h"
+#include <CCA/Components/Wasatch/Expressions/WeakConvectiveTerm.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>

@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 #include <map>
 #include <string>
@@ -57,6 +58,8 @@ namespace Wasatch{
     validStrings["ZSURFX"] = ZSURFX;
     validStrings["ZSURFY"] = ZSURFY;
     validStrings["ZSURFZ"] = ZSURFZ;
+    
+    validStrings["PERPATCH"] = PERPATCH;
   }
 
   //------------------------------------------------------------------
@@ -65,6 +68,13 @@ namespace Wasatch{
   {
     set_string_map();
     std::transform( key.begin(), key.end(), key.begin(), ::toupper );
+
+    if (validStrings.find(key) == validStrings.end()) {
+      std::ostringstream msg;
+      msg << "ERROR: unsupported field type '" << key << "'" << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+    
     return validStrings[key];
   }
 

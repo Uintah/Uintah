@@ -32,7 +32,7 @@
     <save label="rxn_extent"/>
     <save label="residence_time"/>
     <save label="temperature" table_lookup="true"/>
-    <save label="density" table_lookup="true"/>
+    <!--save label="density" table_lookup="true"/-->
     <save label="pH" table_lookup="true"/>
     <save label="S" table_lookup="true"/>
     <save label="Eq-CaCO3" table_lookup="true"/>
@@ -190,7 +190,7 @@
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/AcidBaseTable2D.mix.gz</inputfile>
           <cold_flow> true </cold_flow>
-          <acidbase fp_label="mixture_fraction" eta_label="rxn_extent"/>
+          <acidbase f_label="mixture_fraction" extent_label="rxn_extent"/>
         </ClassicTable>
       </Properties>
 
