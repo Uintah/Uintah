@@ -485,6 +485,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
         read_MMS_BC_inputs(prob_spec,        d_customBC_var_basket->mms_var_basket);
   d_customBC_var_basket->using_Sine_BCs =
         read_Sine_BC_inputs(prob_spec,       d_customBC_var_basket->sine_var_basket);
+  d_customBC_var_basket->using_inletVel_BCs =
+        read_inletVel_BC_inputs(prob_spec,   d_customBC_var_basket->inletVel_var_basket);
   //__________________________________
   //  boundary condition warnings
   BC_bulletproofing(prob_spec,sharedState);
