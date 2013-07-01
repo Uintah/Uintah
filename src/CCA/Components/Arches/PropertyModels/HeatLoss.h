@@ -93,6 +93,7 @@ private:
   const VarLabel* _enthalpy_label; 
   const VarLabel* _sen_h_label; 
   const VarLabel* _adiab_h_label; 
+  const VarLabel* _vol_frac_label; 
 
   double _low_hl; 
   double _high_hl; 

@@ -83,10 +83,14 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
 	_enthalpy_label = 0; 
 
 	_enthalpy_label = VarLabel::find( _enthalpy_label_name ); 
+  _vol_frac_label= VarLabel::find( "volFraction" ); 
 
 	if ( _enthalpy_label == 0 ){ 
   	throw InvalidValue( "Error: Could not find enthalpy label with name: "+_enthalpy_label_name, __FILE__, __LINE__); 
 	} 
+  if ( _vol_frac_label == 0 ){ 
+    throw InvalidValue("Error: Cannot match volume fraction name with label.",__FILE__, __LINE__);             
+  } 
 
   //mixture fractions: 
   vector<string> ivs;
@@ -112,6 +116,7 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
     } 
 
 		tsk->requires( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
+    tsk->requires( Task::OldDW,  _vol_frac_label , Ghost::None , 0 ); 
 
 	} else { 
 
@@ -121,6 +126,7 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
     } 
 
 		tsk->requires( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
+    tsk->requires( Task::NewDW,  _vol_frac_label , Ghost::None , 0 ); 
 
 	} 
 
@@ -160,15 +166,18 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 
     CCVariable<double> prop; 
 
-		constCCVariable<double> h;       //enthalpy
+    constCCVariable<double> h;       //enthalpy
+    constCCVariable<double> eps;     //volume fraction 
 
     DataWarehouse* which_dw; 
     new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
     if ( time_substep == 0 ){ 
       which_dw = new_dw; 
       prop.initialize(0.0); 
+      old_dw->get( eps, _vol_frac_label, matlIndex, patch, Ghost::None, 0 ); 
     } else { 
       which_dw = new_dw; 
+      new_dw->get( eps, _vol_frac_label, matlIndex, patch, Ghost::None, 0 ); 
     } 
 
     std::vector<constCCVariable<double> > inerts; // all the inert mixture fractions
@@ -179,7 +188,7 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
       inerts.push_back( the_inert ); 
     } 
 
-	  which_dw->get( h     , _enthalpy_label , matlIndex , patch , Ghost::None , 0 );
+    which_dw->get( h, _enthalpy_label , matlIndex , patch , Ghost::None , 0 );
 
     vector<string> ivs;
     ivs = _rxn_model->getAllIndepVars();
@@ -202,49 +211,62 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 
 			IntVector c = *iter; 
 
-      double total_inert = 0.0; 
-      for ( int i = 0; i < inerts.size(); i++ ){ 
-        total_inert += inerts[i][c]; 
-      } 
+      if ( eps[c] > 0.0 ){ 
 
-      vector<double> iv_values; 
-      for ( int ii = 0; ii < ivs.size(); ii++ ){
+        double total_inert = 0.0; 
+        for ( int i = 0; i < inerts.size(); i++ ){ 
+          total_inert += inerts[i][c]; 
+        } 
 
-        if ( ivs[ii] != _prop_name ){ 
+        vector<double> iv_values; 
+        for ( int ii = 0; ii < ivs.size(); ii++ ){
 
-          std::map<std::string, constCCVariable<double> >::iterator iMF = mix_fracs.find(ivs[ii]); 
-          iv_values.push_back( iMF->second[c] );
+          if ( ivs[ii] != _prop_name ){ 
+
+            std::map<std::string, constCCVariable<double> >::iterator iMF = mix_fracs.find(ivs[ii]); 
+            iv_values.push_back( iMF->second[c] );
+
+          } else { 
+
+            iv_values.push_back(0.0);
+
+          }
+        }
+
+        double small = 1e-16;
+        double hl = 0.0;
+        double h_sens = _rxn_model->getTableValue( iv_values, _sen_h_label_name ); 
+        
+        if ( _use_h_ad_lookup ){ 
+
+          double h_ad_lookup = _rxn_model->getTableValue( iv_values, _adiab_h_label_name ); 
+          hl = h_ad_lookup - h[c];
 
         } else { 
-          iv_values.push_back(0.0);
-        }
-      }
 
-      //Get the adiabatic enthalpy
-			double small = 1e-16;
-      double hl = 0.0;
-      double h_sens = _rxn_model->getTableValue( iv_values, _sen_h_label_name ); 
-      
-      if ( _use_h_ad_lookup ){ 
-        double h_ad_lookup = _rxn_model->getTableValue( iv_values, _adiab_h_label_name ); 
-        hl = h_ad_lookup - h[c];
+          double h_adiab = _rxn_model->get_Ha( iv_values, total_inert ); 
+          hl = h_adiab - h[c]; 
+
+        } 
+
+        hl /= ( h_sens + small );
+
+			  if ( hl < _low_hl ){ 
+			  	hl     = _low_hl;
+			  	oob_dn = true;
+			  } 
+			  if ( hl > _high_hl ){ 
+			  	hl     = _high_hl;
+			  	oob_up = true;
+			  } 
+
+			  prop[c] = hl;
+
       } else { 
-        double h_adiab = _rxn_model->get_Ha( iv_values, total_inert ); 
-        hl = h_adiab - h[c]; 
+
+        prop[c] = 0.0;
+
       } 
-
-      hl /= ( h_sens + small );
-      
-			if ( hl < _low_hl ){ 
-				hl     = _low_hl;
-				oob_dn = true;
-			} 
-			if ( hl > _high_hl ){ 
-				hl     = _high_hl;
-				oob_up = true;
-			} 
-
-			prop[c] = hl;
 
     }
 
@@ -263,7 +285,7 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
     } 
 
     if ( _constant_heat_loss ){ 
-
+      //assuming this will be used for debugging and not production cases.
       CCVariable<double> actual_heat_loss; 
 
 		  if ( time_substep == 0 ){ 
