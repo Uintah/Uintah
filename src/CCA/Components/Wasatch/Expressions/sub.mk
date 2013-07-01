@@ -146,6 +146,9 @@ ifeq ($(HAVE_CUDA),yes)
   $(OBJTOP_ABS)/$(SRCDIR)/ScalarRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalarRHS.cc
 	cp $< $@
 
+  $(OBJTOP_ABS)/$(SRCDIR)/SolnVarEst.cu : $(SRCTOP_ABS)/$(SRCDIR)/SolnVarEst.cc
+	cp $< $@
+
   $(OBJTOP_ABS)/$(SRCDIR)/Strain.cu : $(SRCTOP_ABS)/$(SRCDIR)/Strain.cc
 	cp $< $@
 
