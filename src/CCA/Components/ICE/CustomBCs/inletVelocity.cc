@@ -55,7 +55,7 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
   ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
  
   bool usingBC = false;
-  string whichProfile =NULL; 
+  string whichProfile; 
   
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
                     face_ps=face_ps->findNextBlock("Face")) {
