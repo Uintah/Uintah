@@ -57,6 +57,10 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 
+#include <CCA/Components/Wasatch/ReductionHelper.h>
+
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
+
 //-- ExprLib Includes --//
 #include <expression/ExprLib.h>
 
@@ -463,7 +467,7 @@ namespace Wasatch{
                              const bool isConstDensity,
                              const Expr::Tag bodyForceTag,
                              const Expr::Tag srcTermTag,
-                             Expr::ExpressionFactory& factory,
+                             GraphHelper& graphHelper,
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
                              const bool hasEmbeddedGeometry,
@@ -489,6 +493,8 @@ namespace Wasatch{
     solverParams_ = NULL;
     set_vel_tags( params, velTags_ );
 
+    Expr::ExpressionFactory& factory = *(graphHelper.exprFactory);
+    
     const Expr::Tag thisMomTag = mom_tag( momName );
 
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
@@ -723,6 +729,31 @@ namespace Wasatch{
         pressureID_ = factory.get_id( pressure_tag() );
       }
     }
+    
+    // Kinetic energy calculation, if necessary
+    if ( params->findBlock("CalculateKE") ) {
+      Uintah::ProblemSpecP keSpec = params->findBlock("CalculateKE");
+      bool isTotalKE = true;
+      keSpec->getAttribute("total", isTotalKE);
+      if (isTotalKE) { // calculate total kinetic energy. then follow that with a reduction variable
+        if (!factory.have_entry( TagNames::self().totalKineticEnergy )) {
+          bool outputKE = true;
+          keSpec->getAttribute("output", outputKE);
+          
+          // we need to create two expressions
+          const Expr::Tag tkeTempTag("TotalKE_temp", Expr::STATE_NONE);
+          factory.register_expression(scinew typename TotalKineticEnergy<XVolField,YVolField,ZVolField>::Builder( tkeTempTag,
+                                                                                                                 velTags_[0],velTags_[1],velTags_[2] ),true);
+          
+          ReductionHelper::self().add_variable<double, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE, false);
+        }
+      } else if (!factory.have_entry( TagNames::self().kineticEnergy )) { // calculate local, pointwise kinetic energy
+        const Expr::ExpressionID keID = factory.register_expression(scinew typename KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder( TagNames::self().kineticEnergy,
+                                                                                                                                                                 velTags_[0],velTags_[1],velTags_[2] ), true);
+        graphHelper.rootIDs.insert( keID );
+      }
+    }
+
   }
 
   //------------------------------------------------------------------

@@ -49,7 +49,7 @@ class ReductionBase
 
 protected:
   const Expr::Tag srcTag_;               // Expr::Tag for the source field on which a reduction is to be applied
-  Uintah::VarLabel *reductionVarLabel_;  // this is the reduction varlabel
+  std::vector<Uintah::VarLabel*> rkRedVarLbls_; // these are the reduction varlabels, for each RK stage
   Uintah::VarLabel *thisVarLabel_;       // varlabel for the current perpatch expression
   ReductionEnum reductionName_;          // enum that provides simple switch option
   bool printVar_;                        // specify whether you want the reduction var printed or not
@@ -59,14 +59,16 @@ protected:
                               const Uintah::PatchSubset* const patches,
                               const Uintah::MaterialSubset* const materials,
                               Uintah::DataWarehouse* const oldDW,
-                              Uintah::DataWarehouse* const newDW );
+                              Uintah::DataWarehouse* const newDW,
+                              const int RKStage);
   
   void
   get_reduction_variable( const Uintah::ProcessorGroup* const pg,
                          const Uintah::PatchSubset* const patches,
                          const Uintah::MaterialSubset* const materials,
                          Uintah::DataWarehouse* const oldDW,
-                         Uintah::DataWarehouse* const newDW );
+                         Uintah::DataWarehouse* const newDW,
+                         const int RKStage);
 
   ReductionBase( const Expr::Tag& resultTag,
                  const Expr::Tag& srcTag,
@@ -104,10 +106,11 @@ public:
   ~ReductionBase();
   
   /**
-   *  \brief A static list of tags that keeps track of all reduction variables.
+   *  \brief A static map of tags that keeps track of all reduction variables along with a boolean that specifies whether reduction on
+       that variable must be done at every Runge-Kutta stage
    *
    */
-  static Expr::TagList reductionTagList;
+  static std::map<Expr::Tag, bool > reductionTagList;
 
   /**
    *  \brief Schedules a Uintah task that populates a reduction variable and

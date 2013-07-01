@@ -8,7 +8,6 @@
    <Solver type="hypre" />
   <Wasatch>
 
-    <TimeIntegrator>RK3SSP</TimeIntegrator>
     <Density>
       <IsConstant>true</IsConstant>
       <NameTag name="density" state="STATE_NONE" />
@@ -88,7 +87,7 @@
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="viscosity" state="STATE_NONE" />
-      <Constant>0.0</Constant>
+      <Constant>1e-5</Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
@@ -144,7 +143,7 @@
 
 
   <DataArchiver>
-    <filebase>decay-isotropic-turbulence-inviscid-32.uda</filebase>
+    <filebase>decay-isotropic-turbulence-viscous-32.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "10"/>

@@ -1054,7 +1054,8 @@
 
     <Reduction spec="MULTIPLE NO_DATA" attribute1="tasklist REQUIRED STRING 'advance_solution'"
                                        attribute2="op REQUIRED STRING 'min,max,sum'"
-                                       attribute3="output OPTIONAL BOOLEAN">
+                                       attribute3="perstage OPTIONAL BOOLEAN"
+                                       attribute4="output OPTIONAL BOOLEAN">
       <NameTag          spec="REQUIRED" />
       <Source spec="REQUIRED NO_DATA" attribute1="type REQUIRED STRING 'PERPATCH,SVOL,XVOL,YVOL,ZVOL'" >
       	<NameTag spec="REQUIRED"/>

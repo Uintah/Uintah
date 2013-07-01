@@ -87,7 +87,7 @@ namespace Wasatch{
                                const bool isConstDensity,
                                const Expr::Tag bodyForceTag,                              
                                const Expr::Tag srcTermTag,
-                               Expr::ExpressionFactory& factory,
+                               GraphHelper& graphHelper,
                                Uintah::ProblemSpecP params,
                                TurbulenceParameters turbulenceParams,
                                const bool hasEmbeddedGeometry,

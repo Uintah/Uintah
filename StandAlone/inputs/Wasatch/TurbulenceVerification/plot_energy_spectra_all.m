@@ -6,7 +6,7 @@ for i=1:length(models)
         filename=strcat('ke_wasatch','_',models(i),'_',res(j));
         basename=strcat(res(j),'_wasatch_',models(i));
         caption=strcat(captions(i),',',{' '},res(j),'^3');
-        energy_spectrum_plot_all(filename{:},basename{:},caption{:});
+        plot_energy_spectrum_all(filename{:},basename{:},caption{:});
     end
 end
 exit
