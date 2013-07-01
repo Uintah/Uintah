@@ -7,43 +7,13 @@
   <SimulationComponent type="wasatch"/>
    <Solver type="hypre" />
   <Wasatch>
-
     <TimeIntegrator>RK3SSP</TimeIntegrator>
+
     <Density>
       <IsConstant>true</IsConstant>
       <NameTag name="density" state="STATE_NONE" />
     </Density>
     
-    <PostProcessingExpression type="SVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="xvelcc" state="STATE_NONE" />
-      <InterpolateExpression type="XVOL">
-          <NameTag name="x-mom" state="STATE_N"/>
-      </InterpolateExpression>
-    </PostProcessingExpression>
-    
-    <PostProcessingExpression type="SVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="yvelcc" state="STATE_NONE" />
-      <InterpolateExpression type="YVOL">
-          <NameTag name="y-mom" state="STATE_N"/>
-      </InterpolateExpression>
-    </PostProcessingExpression>
-    
-    <PostProcessingExpression type="SVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="zvelcc" state="STATE_NONE" />
-      <InterpolateExpression type="ZVOL">
-          <NameTag name="z-mom" state="STATE_N"/>
-      </InterpolateExpression>
-    </PostProcessingExpression>
-    
-    <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="xvelcc" state="STATE_NONE" />
-      <NameTag name="yvelcc" state="STATE_NONE" />
-      <NameTag name="zvelcc" state="STATE_NONE" />
-    </ForceOnGraph>
-
     <BasicExpression type="SVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="pressure" state="STATE_N" />
@@ -62,7 +32,7 @@
       <TaskList>initialization</TaskList>
       <NameTag name="x-mom" state="STATE_N" />
       <ReadFromFile>
-        <FileName>inputs/Wasatch/TurbulenceVerification/cbc32_uvw_wasatch_u.gz</FileName>
+        <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_u.gz</FileName>
       </ReadFromFile>
     </BasicExpression>    
     
@@ -71,7 +41,7 @@
       <TaskList>initialization</TaskList>
       <NameTag name="y-mom" state="STATE_N" />
       <ReadFromFile>
-        <FileName>inputs/Wasatch/TurbulenceVerification/cbc32_uvw_wasatch_v.gz</FileName>
+        <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_v.gz</FileName>
       </ReadFromFile>
     </BasicExpression>    
     
@@ -80,7 +50,7 @@
       <TaskList>initialization</TaskList>
       <NameTag name="z-mom" state="STATE_N" />
       <ReadFromFile>
-        <FileName>inputs/Wasatch/TurbulenceVerification/cbc32_uvw_wasatch_w.gz</FileName>
+        <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_w.gz</FileName>
       </ReadFromFile>
     </BasicExpression>    
     
@@ -144,7 +114,7 @@
 
 
   <DataArchiver>
-    <filebase>decay-isotropic-turbulence-inviscid-32.uda</filebase>
+    <filebase>decay-isotropic-turbulence-inviscid-64.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "10"/>
@@ -162,7 +132,7 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[0.565486677646163,0.565486677646163,0.565486677646163]</upper>
-        <resolution>[32,32,32]</resolution>
+        <resolution>[64,64,64]</resolution>
         <patches>[2,2,2]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>

@@ -1,6 +1,6 @@
 % function: plot_energy_spectrum_uvw
-% author: Tony Saad
-% date: Sept 2012
+% author:   Tony Saad
+% date:     Sept, 2012
 %
 % plot_energy_spectrum_uvw: calculates the turbulent kinetic energy spectrum given
 % (u,v,w) velocities in a single csv file. 

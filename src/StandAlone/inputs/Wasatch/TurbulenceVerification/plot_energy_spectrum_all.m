@@ -2,14 +2,13 @@
 % http://code.google.com/p/fds-smv/source/browse/trunk/FDS/trunk/Utilities/
 % Matlab/scripts/plotspec.m
 % 
-% function: energy_spectrum_plot_all
-% author: Tony Saad
-% date: Sept 2012
+% function: plot_energy_spectrum_all
+% author:   Tony Saad
+% date:     Sept, 2012
 %
-% energy_spectrum_plot_all: plots all data for the energy spectrum
-% 
-% calculation
-% usage: energy_spectrum_plot_all('ke_wasatch_wale_32','32_wasatch_wale','Wale model, C_w = 0.7')
+% plot_energy_spectrum_all: plots all data (cbc, uda) for the energy spectrum calculation
+%                     
+% usage: plot_energy_spectrum_all('ke_wasatch_wale_32','32_wasatch_wale','Wale model, C_w = 0.7')
 %
 % 1. Run your turbulent flow simulation
 % 2. Use lineextract to save your u, v, and w velocities at t = 0.28s and t
@@ -34,7 +33,7 @@
 % have the title: Wale model, C_w = 0.7
 %
 
-function [] = energy_spectrum_plot_all(output_filename,base_name, figure_title)
+function [] = plot_energy_spectrum_all(output_filename,base_name, figure_title)
 
   close all   % cleanup  
   plot_style  % set some plot style parameters

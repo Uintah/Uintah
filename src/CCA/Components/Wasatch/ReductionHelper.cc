@@ -82,8 +82,11 @@ namespace Wasatch {
   ReductionHelper::add_variable( const Category category,
                                  const Expr::Tag& resultTag,
                                  const Expr::Tag& srcTag,
-                                 const bool printVar)
+                                 const bool printVar,
+                                 const bool reduceOnAllRKStages)
   {
+    reduceOnAllRKStages_ = reduceOnAllRKStages;
+    std::cout << "adding reduction variable " << resultTag << std::endl;
     if( hasDoneSetup_ ){
       std::ostringstream msg;
       msg << "ReductionHelper error: cannot add new variables after tasks have been registered!" << std::endl;
@@ -105,7 +108,7 @@ namespace Wasatch {
                                                                                                 srcTag,
                                                                                                 printVar) );
 
-    ReductionBase::reductionTagList.push_back(resultTag);
+    ReductionBase::reductionTagList.insert(std::pair< Expr::Tag, bool >(resultTag, reduceOnAllRKStages) );
     factory.cleave_from_parents(myID);
     factory.cleave_from_children(myID);
 
@@ -167,6 +170,9 @@ namespace Wasatch {
       bool printVar=false;
       reductionSpec->getAttribute("output",printVar);
       
+      bool perStage=false;
+      reductionSpec->getAttribute("perstage",perStage);
+      
       const Expr::Tag resultTag = parse_nametag(reductionSpec->findBlock("NameTag"));
       
       Uintah::ProblemSpecP srcFldParams = reductionSpec->findBlock("Source");
@@ -178,9 +184,9 @@ namespace Wasatch {
         case SVOL :
         {
           switch (redEnum) {
-            case ReduceMin: self().add_variable<SVolField,ReductionMinOpT>(cat,resultTag,srcTag,printVar); break;
-            case ReduceMax: self().add_variable<SVolField,ReductionMaxOpT>(cat,resultTag,srcTag,printVar); break;
-            case ReduceSum: self().add_variable<SVolField,ReductionSumOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceMin: self().add_variable<SVolField,ReductionMinOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceMax: self().add_variable<SVolField,ReductionMaxOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceSum: self().add_variable<SVolField,ReductionSumOpT>(cat, resultTag, srcTag, printVar, perStage); break;
             default:
             {
               std::ostringstream msg;
@@ -195,9 +201,9 @@ namespace Wasatch {
         case XVOL :
         {
           switch (redEnum) {
-            case ReduceMin: self().add_variable<XVolField,ReductionMinOpT>(cat,resultTag,srcTag,printVar); break;
-            case ReduceMax: self().add_variable<XVolField,ReductionMaxOpT>(cat,resultTag,srcTag,printVar); break;
-            case ReduceSum: self().add_variable<XVolField,ReductionSumOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceMin: self().add_variable<XVolField,ReductionMinOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceMax: self().add_variable<XVolField,ReductionMaxOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceSum: self().add_variable<XVolField,ReductionSumOpT>(cat, resultTag, srcTag, printVar, perStage); break;
             default:
             {
               std::ostringstream msg;
@@ -212,9 +218,9 @@ namespace Wasatch {
         case YVOL :
         {
           switch (redEnum) {
-            case ReduceMin: self().add_variable<YVolField,ReductionMinOpT>(cat,resultTag,srcTag,printVar); break;
-            case ReduceMax: self().add_variable<YVolField,ReductionMaxOpT>(cat,resultTag,srcTag,printVar); break;
-            case ReduceSum: self().add_variable<YVolField,ReductionSumOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceMin: self().add_variable<YVolField,ReductionMinOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceMax: self().add_variable<YVolField,ReductionMaxOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceSum: self().add_variable<YVolField,ReductionSumOpT>(cat, resultTag, srcTag, printVar, perStage); break;
             default:
             {
               std::ostringstream msg;
@@ -229,9 +235,9 @@ namespace Wasatch {
         case ZVOL :
         {
           switch (redEnum) {
-            case ReduceMin: self().add_variable<ZVolField,ReductionMinOpT>(cat,resultTag,srcTag,printVar); break;
-            case ReduceMax: self().add_variable<ZVolField,ReductionMaxOpT>(cat,resultTag,srcTag,printVar); break;
-            case ReduceSum: self().add_variable<ZVolField,ReductionSumOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceMin: self().add_variable<ZVolField,ReductionMinOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceMax: self().add_variable<ZVolField,ReductionMaxOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceSum: self().add_variable<ZVolField,ReductionSumOpT>(cat, resultTag, srcTag, printVar, perStage); break;
             default:
             {
               std::ostringstream msg;
@@ -246,9 +252,9 @@ namespace Wasatch {
         case PERPATCH :
         {
           switch (redEnum) {
-            case ReduceMin: self().add_variable<double, ReductionMinOpT>(cat,resultTag,srcTag,printVar); break;
-            case ReduceMax: self().add_variable<double, ReductionMaxOpT>(cat,resultTag,srcTag,printVar); break;
-            case ReduceSum: self().add_variable<double, ReductionSumOpT>(cat,resultTag,srcTag,printVar); break;
+            case ReduceMin: self().add_variable<double, ReductionMinOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceMax: self().add_variable<double, ReductionMaxOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceSum: self().add_variable<double, ReductionSumOpT>(cat, resultTag, srcTag, printVar, perStage); break;
             default:
             {
               std::ostringstream msg;
@@ -281,8 +287,11 @@ namespace Wasatch {
     // go through reduction variables that are computed in this Wasatch Task
     // and insert a Uintah task immediately after.
     Expr::ExpressionFactory& factory = tree->get_expression_factory();
-    BOOST_FOREACH( Expr::Tag rtag, ReductionBase::reductionTagList ){
-      if (tree->computes_field( rtag )) {
+    typedef std::map<Expr::Tag, bool> MapT;
+    BOOST_FOREACH( MapT::value_type& pair, ReductionBase::reductionTagList ){
+      const Expr::Tag rtag = pair.first;
+      const bool compute = (pair.second) ? true : rkStage==1;
+      if (tree->computes_field( rtag) && compute) {
         ReductionBase& redExpr = dynamic_cast<ReductionBase&>( factory.retrieve_expression( rtag, patchID, false ) );
         redExpr.schedule_set_reduction_vars( level, sched, materials, rkStage  );
       }
@@ -296,9 +305,9 @@ namespace Wasatch {
 #include <spatialops/structured/FVStaggered.h>
 
 #define DECLARE_REDUCTION_VARIANTS(VOL) \
-template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Min<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false); \
-template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Max<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false); \
-template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Sum<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false);
+template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Min<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false, const bool reduceOnAllRKStages=false); \
+template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Max<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false, const bool reduceOnAllRKStages=false); \
+template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Sum<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false, const bool reduceOnAllRKStages=false);
 
 DECLARE_REDUCTION_VARIANTS(double);
 DECLARE_REDUCTION_VARIANTS(SVolField);
