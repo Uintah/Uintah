@@ -33,7 +33,8 @@ SRCS     += $(SRCDIR)/C_BC_driver.cc \
        $(SRCDIR)/microSlipBCs.cc \
        $(SRCDIR)/LODI2.cc\
        $(SRCDIR)/MMS_BCs.cc\
-       $(SRCDIR)/sine.cc
+       $(SRCDIR)/sine.cc\
+       $(SRCDIR)/inletVelocity.cc
        
 PSELIBS := \
 	CCA/Ports \

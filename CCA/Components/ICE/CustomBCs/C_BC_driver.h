@@ -28,6 +28,7 @@
 #include <CCA/Components/ICE/CustomBCs/MMS_BCs.h>
 #include <CCA/Components/ICE/CustomBCs/microSlipBCs.h>
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
+#include <CCA/Components/ICE/CustomBCs/inletVelocity.h>
 #include <Core/Grid/SimulationState.h>
 
 namespace Uintah {
@@ -40,26 +41,32 @@ namespace Uintah {
 
     customBC_var_basket() {
       Lodi_var_basket = 0;
-      lv = NULL;
-      sv = NULL;
-      mms_v=NULL;
-      sine_v=NULL;
+      lv          = NULL;
+      sv          = NULL;
+      mms_v       = NULL;
+      sine_v      = NULL;
+      inletVel_v  = NULL;
 
-      Slip_var_basket=NULL;
-      mms_var_basket=NULL;
-      sine_var_basket=NULL;
+      Slip_var_basket = NULL;
+      mms_var_basket  = NULL;
+      sine_var_basket = NULL;
+      inletVel_var_basket = NULL;
 
-      usingMicroSlipBCs=false;
-      using_MMS_BCs=false;
-      using_Sine_BCs=false;
-      usingLodi=false;
-      setLodiBcs=false;
-      setMicroSlipBcs=false;
-      set_MMS_BCs=false;
-      set_Sine_BCs=false;
+      usingLodi         = false;
+      usingMicroSlipBCs = false;
+      using_MMS_BCs     = false;
+      using_Sine_BCs    = false;
+      using_inletVel_BCs= false;
+      
+      setLodiBcs        = false;
+      setMicroSlipBcs   = false;
+      set_MMS_BCs       = false;
+      set_Sine_BCs      = false;
+      set_inletVel_BCs  = false;
       d_gravity=Vector(0,0,0);
 
     };
+    
     ~customBC_var_basket() {};
     // LODI boundary condtions
     bool usingLodi;
@@ -78,11 +85,18 @@ namespace Uintah {
     bool set_MMS_BCs;
     mms_vars* mms_v;
     mms_variable_basket* mms_var_basket;
-
+    
+    // Sine boundary conditions
     bool using_Sine_BCs;
     bool set_Sine_BCs;
     sine_vars* sine_v;
     sine_variable_basket* sine_var_basket;
+    
+    // powerLawProfile or logLawProfile inlet velocity profile
+    bool using_inletVel_BCs;
+    bool set_inletVel_BCs;
+    inletVel_vars* inletVel_v;
+    inletVel_variable_basket* inletVel_var_basket;
     
     SimulationStateP sharedState;
     Vector d_gravity;
