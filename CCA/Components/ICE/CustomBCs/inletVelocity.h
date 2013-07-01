@@ -94,7 +94,7 @@ namespace Uintah {
                           inletVel_vars* sine_v)
 {
 //  cout<< "Doing set_sine_BCs_FC: \t\t" << whichVel   << " face " << face << endl;
-  
+#if 0  
   //__________________________________
   // on (x,y,z)minus faces move in one cell
   IntVector oneCell(0,0,0);
@@ -131,7 +131,8 @@ namespace Uintah {
     vel_FC[c] = x_one_zero * vel.x()                                 
               + y_one_zero * vel.y()                                 
               + z_one_zero * vel.z();                                
-  } 
+  }
+#endif 
   return bound_ptr.size(); 
 }                        
                                                 
