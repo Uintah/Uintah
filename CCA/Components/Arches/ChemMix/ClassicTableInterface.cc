@@ -1038,9 +1038,10 @@ ClassicTableInterface::getEnthalpyIndexInfo()
 double 
 ClassicTableInterface::getTableValue( std::vector<double> iv, std::string variable )
 {
-  IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( variable ); 
-  double value = ND_interp->find_val(iv, i_index->second );
-	return value; 
+  int dep_index = findIndex( variable ); 
+  _iv_transform->transform( iv, 0.0 ); 
+  double value = ND_interp->find_val( iv, dep_index );
+  return value; 
 }
 
 //---------------------------

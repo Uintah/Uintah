@@ -367,18 +367,18 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   {
 
     // Clean up all property models
-     PropertyModelFactory& propFactory = PropertyModelFactory::self();
-     PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
-     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
-         iprop != all_prop_models.end(); iprop++){
+    PropertyModelFactory& propFactory = PropertyModelFactory::self();
+    PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+        iprop != all_prop_models.end(); iprop++){
 
-       PropertyModelBase* prop_model = iprop->second;
-       prop_model->cleanUp();
+      PropertyModelBase* prop_model = iprop->second;
+      prop_model->cleanUp();
 
-       if ( curr_level == 0 )
-         prop_model->sched_timeStepInit( level, sched ); 
+      if ( curr_level == 0 )
+        prop_model->sched_timeStepInit( level, sched ); 
 
-     }
+    }
     
     if (d_doDQMOM) {
 
@@ -483,28 +483,23 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                            d_timeIntegratorLabels[curr_level]);
     }
 
-//    d_props->sched_reComputeProps(sched, patches, matls,
-//             d_timeIntegratorLabels[curr_level], false, false);
-//    sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
-//    sched_updateDensityGuess(sched, patches, matls,
-//                                    d_timeIntegratorLabels[curr_level]);
-//    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::Second;
-//    d_props->sched_reComputeProps(sched, patches, matls,
-//             d_timeIntegratorLabels[curr_level], false, false);
-//    sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
-//    sched_updateDensityGuess(sched, patches, matls,
-//                                    d_timeIntegratorLabels[curr_level]);
-
     // Property models needed before table lookup:
+    PropertyModelBase* hl_model = 0;
     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
           iprop != all_prop_models.end(); iprop++){
 
       PropertyModelBase* prop_model = iprop->second;
-      if ( prop_model->beforeTableLookUp() )
-        prop_model->sched_computeProp( level, sched, curr_level );
+
+      if ( prop_model->getPropType() == "heat_loss" ){
+        hl_model = prop_model; 
+      } else {
+        if ( prop_model->beforeTableLookUp() )
+          prop_model->sched_computeProp( level, sched, curr_level );
+      }
 
     }
-
+    if ( hl_model != 0 )
+      hl_model->sched_computeProp( level, sched, curr_level ); 
 
     string mixmodel = d_props->getMixingModelType();
     if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" 
@@ -552,6 +547,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_computeDensityLag(sched, patches, matls,
                            d_timeIntegratorLabels[curr_level],
                            false);
+
     if (d_maxDensityLag > 0.0)
       sched_checkDensityLag(sched, patches, matls,
                             d_timeIntegratorLabels[curr_level],
@@ -586,14 +582,22 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
 
       // Property models before table lookup
+      PropertyModelBase* hl_model = 0;
       for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
             iprop != all_prop_models.end(); iprop++){
 
         PropertyModelBase* prop_model = iprop->second;
-        if ( prop_model->beforeTableLookUp() )
-          prop_model->sched_computeProp( level, sched, curr_level );
+
+        if ( prop_model->getPropType() == "heat_loss" ){
+          hl_model = prop_model; 
+        } else {
+          if ( prop_model->beforeTableLookUp() )
+            prop_model->sched_computeProp( level, sched, curr_level );
+        }
 
       }
+      if ( hl_model != 0 )
+        hl_model->sched_computeProp( level, sched, curr_level ); 
 
 
       if (mixmodel != "TabProps" && mixmodel != "ClassicTable" 
