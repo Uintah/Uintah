@@ -392,9 +392,9 @@ namespace Uintah {
 
           std::map<std::string,double>::iterator iter = _keys.find( "transform_constant" ); 
           if ( iter == _keys.end() ){ 
-            _constant = iter->second; 
-          } else { 
             _constant = 0.0;
+          } else { 
+            _constant = iter->second; 
           }
 
           if ( p->findBlock("coal") ){
@@ -404,38 +404,12 @@ namespace Uintah {
             p->findBlock("coal")->getAttribute("hl_label",_hl_name); 
             doit = true; 
 
-            vector<double> my_ivs;
-            my_ivs.push_back(0);
-            my_ivs.push_back(0);
-            my_ivs.push_back(1); 
-            _H_F1 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
-            std::cout << " H f=1: " << _H_F1 << std::endl;
-
-            my_ivs[2] = 0; 
-            _H_F0 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
-            std::cout << " H f=0: " << _H_F0 << std::endl;
-          
-            my_ivs[0] = 1;
-            _H_fuel = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
-
           } else if ( p->findBlock("rcce") ){ 
 
             p->findBlock("rcce")->getAttribute("fp_label", _fp_name );
             p->findBlock("rcce")->getAttribute("eta_label", _eta_name ); 
             p->findBlock("rcce")->getAttribute("hl_label",_hl_name); 
             doit = true; 
-
-            vector<double> my_ivs;
-            my_ivs.push_back(0);
-            my_ivs.push_back(0);
-            my_ivs.push_back(1); 
-            _H_F1 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
-
-            my_ivs[2] = 0; 
-            _H_F0 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
-          
-            my_ivs[0] = 1;
-            _H_fuel = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
 
           } else if ( p->findBlock("acidbase") ){
 
@@ -480,6 +454,22 @@ namespace Uintah {
                 coal_table_on = false; 
               }
             } 
+
+            if ( !_is_acidbase ){ 
+
+              vector<double> my_ivs;
+              my_ivs.push_back(0);
+              my_ivs.push_back(0);
+              my_ivs.push_back(1); 
+              _H_F1 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+
+              my_ivs[2] = 0; 
+              _H_F0 = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+          
+              my_ivs[0] = 1;
+              _H_fuel = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+
+            }
           } 
           return coal_table_on; 
         };  
