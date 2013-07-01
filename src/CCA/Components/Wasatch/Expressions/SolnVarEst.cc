@@ -1,4 +1,4 @@
-#include "SolnVarEst.h"
+#include <CCA/Components/Wasatch/Expressions/SolnVarEst.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
