@@ -135,6 +135,7 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
   for ( MixingRxnModel::InertMasterMap::iterator iter = _inert_map.begin(); iter != _inert_map.end(); iter++ ){ 
     const VarLabel* label = VarLabel::find( iter->first ); 
     tsk->requires( Task::NewDW, label, Ghost::None, 0 ); 
+    _use_h_ad_lookup = true; 
   } 
 
   sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
@@ -180,12 +181,18 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
       new_dw->get( eps, _vol_frac_label, matlIndex, patch, Ghost::None, 0 ); 
     } 
 
-    std::vector<constCCVariable<double> > inerts; // all the inert mixture fractions
+    MixingRxnModel::StringToCCVar inerts; 
+    inerts.clear(); 
     for ( MixingRxnModel::InertMasterMap::iterator iter = _inert_map.begin(); iter != _inert_map.end(); iter++ ){ 
+
       constCCVariable<double> the_inert; 
       const VarLabel* the_label = VarLabel::find( iter->first ); 
       which_dw->get( the_inert, the_label, matlIndex, patch, Ghost::None, 0 ); 
-      inerts.push_back( the_inert ); 
+
+      MixingRxnModel::ConstVarContainer v;
+      v.var = the_inert; 
+      inerts.insert( make_pair( iter->first, v) ); 
+
     } 
 
     which_dw->get( h, _enthalpy_label , matlIndex , patch , Ghost::None , 0 );
@@ -213,11 +220,6 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 
       if ( eps[c] > 0.0 ){ 
 
-        double total_inert = 0.0; 
-        for ( int i = 0; i < inerts.size(); i++ ){ 
-          total_inert += inerts[i][c]; 
-        } 
-
         vector<double> iv_values; 
         for ( int ii = 0; ii < ivs.size(); ii++ ){
 
@@ -235,16 +237,16 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 
         double small = 1e-16;
         double hl = 0.0;
-        double h_sens = _rxn_model->getTableValue( iv_values, _sen_h_label_name ); 
+        double h_sens = _rxn_model->getTableValue( iv_values, _sen_h_label_name, inerts, c ); 
         
         if ( _use_h_ad_lookup ){ 
 
-          double h_ad_lookup = _rxn_model->getTableValue( iv_values, _adiab_h_label_name ); 
+          double h_ad_lookup = _rxn_model->getTableValue( iv_values, _adiab_h_label_name, inerts, c ); 
           hl = h_ad_lookup - h[c];
 
         } else { 
 
-          double h_adiab = _rxn_model->get_Ha( iv_values, total_inert ); 
+          double h_adiab = _rxn_model->get_Ha( iv_values, 0.0 ); 
           hl = h_adiab - h[c]; 
 
         } 
