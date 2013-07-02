@@ -264,7 +264,7 @@ void AnalyticNonBonded::finalize(const ProcessorGroup* pg,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
 {
-
+  // for now, do nothing
 }
 
 void AnalyticNonBonded::generateNeighborList(ParticleSubset* local_pset,
