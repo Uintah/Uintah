@@ -46,7 +46,8 @@ static DebugStream cout_doing("ICE_BC_CC", false);
             -reads input parameters needed setBC routines
  ______________________________________________________________________  */
 bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
-                            inletVel_variable_basket* VB)
+                             inletVel_variable_basket* VB,
+                             GridP& grid)
 {
   //__________________________________
   // search the BoundaryConditions problem spec
@@ -72,6 +73,13 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
       if ( (whichProfile == "powerLawProfile" || whichProfile == "logProfile") && !setThisFace ) {
         usingBC = true;
         setThisFace = true;
+        
+        //__________________________________
+        // bulletproofing
+        if (bc_type["id"] == "all"){
+          string warn="ERROR:\n Inputs:inletVelocity Boundary Conditions: You've specified the 'id' = all \n The 'id' must be the ice material.";
+          throw ProblemSetupException(warn, __FILE__, __LINE__);  
+        }
       }
     }
   }
@@ -79,11 +87,25 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
   //  read in variables required by the boundary
   //  conditions and put them in the variable basket
   if(usingBC ){
-    ProblemSpecP iv_ps = bc_ps->findBlock("inletVelocity_BC");
-    if (!iv_ps) {
+  
+    // set default values
+   
+    ProblemSpecP inlet_ps = bc_ps->findBlock("inletVelocity");
+    if (!inlet_ps) {
       string warn="ERROR:\n Inputs:Boundary Conditions: Cannot find inletVelocity_BC block";
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
+    inlet_ps -> get( "roughness",             VB->roughness   );
+    inlet_ps -> get( "frictionVelocity",      VB->frictionVelocity );
+    inlet_ps -> get( "exponent",              VB->exponent    );
+    inlet_ps -> get( "U_infinity",            VB->U_infinity  );
+    inlet_ps -> require( "verticalDirection", VB->verticalDir );
+    
+    // determine the orgin of the domain
+    BBox b;
+    grid->getInteriorSpatialRange(b);
+    VB->gridOrigin = b.min();
+    VB->gridHeight = b.max() - b.min();
   }
   return usingBC;
 }
@@ -114,22 +136,13 @@ void addRequires_inletVel(Task* t,
 #endif
 }
 
-#if 0
 /*______________________________________________________________________ 
  Purpose~   get data from the datawarehouse
 ______________________________________________________________________ */
-void  preprocess_inletVelocity_BCs(DataWarehouse* new_dw,
-                                   DataWarehouse* /*old_dw*/,
-                                   ICELabel* lb,
-                                   const int /*indx*/,
-                                   const Patch* patch,
-                                   const string& where,
-                                   bool& set_BCs,
-                                   sine_vars* sine_v)
+void  preprocess_inletVelocity_BCs(const string& where,
+                                   bool& set_BCs)
 {
-  Ghost::GhostType  gn  = Ghost::None;
   set_BCs = false; 
-  sine_v->where = where;
   //__________________________________
   //    Equilibrium pressure
   if(where == "EqPress"){
@@ -158,8 +171,6 @@ void  preprocess_inletVelocity_BCs(DataWarehouse* new_dw,
     set_BCs = true;
   }
 }
-
-#endif
 /*_________________________________________________________________
  Purpose~  Set inlet velocity boundary conditions
 ___________________________________________________________________*/
@@ -170,39 +181,51 @@ int  set_inletVelocity_BC(const Patch* patch,
                           Iterator& bound_ptr,
                           const string& bc_kind,
                           SimulationStateP& sharedState,
-                          inletVel_variable_basket* var_basket,
-                          inletVel_vars* inletVel_v)                     
+                          inletVel_variable_basket* VB )                     
 
 {
   int nCells = 0;
+  
   if (var_desc == "Velocity" && (bc_kind == "powerLawProfile" || bc_kind == "logProfile") ) {
-    cout_doing << "    Vel_CC (Sine) \t\t" <<patch->getFaceName(face)<< endl;
-#if 0    
+    cout_doing << "    Vel_CC (" << bc_kind << ") \t\t" <<patch->getFaceName(face)<< endl;
+
     // bulletproofing
-    if (!sine_var_basket || !sine_v){
-      throw InternalError("set_Sine_velocity_BC", __FILE__, __LINE__);
+    if (!VB ){
+      throw InternalError("set_inletVelocity_BC", __FILE__, __LINE__);
+    }
+    const Level* level = patch->getLevel();
+    
+    int nDir = patch->getFaceAxes(face)[0];  //normal velocity direction
+    int vDir = VB->verticalDir;              // vertical direction
+    double height = VB->gridHeight[vDir];
+    
+    // compute the velocity in the normal direction
+    // u = U_infinity * (h/height)^n
+    
+    if( bc_kind == "powerLawProfile" ){
+      for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
+        IntVector c = *bound_ptr; 
+        
+        Point here = level->getCellPosition(c);
+        double h = here.asVector()[vDir] - height;
+        
+        vel_CC[c].x();
+        vel_CC[c].y();  
+        vel_CC[c].z();                                               
+      }
     }
     
-    double A       = sine_var_basket->A;
-    double omega   = sine_var_basket->omega; 
-    Vector vel_ref = sine_var_basket->vel_ref;           
-    double t       = sharedState->getElapsedTime(); 
-    t += sine_v->delT;
-    double change  = A * sin(omega*t);
-    
-    Vector smallNum(1e-100);
-    Vector one_or_zero = vel_ref/(vel_ref + smallNum);                                 
-                                                      
-    // only alter the velocity in the direction that the reference_velocity
-    // is non-zero.       
-    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
-      IntVector c = *bound_ptr;                                           
-      vel_CC[c].x(vel_ref.x() +  one_or_zero.x() * change);
-      vel_CC[c].y(vel_ref.y() +  one_or_zero.y() * change);  
-      vel_CC[c].z(vel_ref.z() +  one_or_zero.z() * change);                                               
+    //   u = frictionVel * (1/vonKarman) * ln(h/roughness
+    else if( bc_kind == "logLawProfile" ){
+      for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
+        IntVector c = *bound_ptr;                                           
+        vel_CC[c].x();
+        vel_CC[c].y();  
+        vel_CC[c].z();                                               
+      }
+    }else{
     }
     nCells += bound_ptr.size();
-#endif
   }
 
   return nCells; 

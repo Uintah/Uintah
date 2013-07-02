@@ -965,6 +965,11 @@ void setBC(CCVariable<Vector>& var_CC,
                                            custom_BC_basket->sine_var_basket,
                                            custom_BC_basket->sine_v);
         }
+        else if ( custom_BC_basket->set_inletVel_BCs) {
+          nCells += set_inletVelocity_BC(patch, face, var_CC, desc,
+                                         bound_ptr, bc_kind, sharedState,
+                                         custom_BC_basket->inletVel_var_basket );
+        }
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {

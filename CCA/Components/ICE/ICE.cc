@@ -130,10 +130,11 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
 
   d_customInitialize_basket  = scinew customInitialize_basket();
   d_customBC_var_basket  = scinew customBC_var_basket();
-  d_customBC_var_basket->Lodi_var_basket =  scinew Lodi_variable_basket();
-  d_customBC_var_basket->Slip_var_basket =  scinew Slip_variable_basket();
-  d_customBC_var_basket->mms_var_basket  =  scinew mms_variable_basket();
-  d_customBC_var_basket->sine_var_basket =  scinew sine_variable_basket();
+  d_customBC_var_basket->Lodi_var_basket     =  scinew Lodi_variable_basket();
+  d_customBC_var_basket->Slip_var_basket     =  scinew Slip_variable_basket();
+  d_customBC_var_basket->mms_var_basket      =  scinew mms_variable_basket();
+  d_customBC_var_basket->sine_var_basket     =  scinew sine_variable_basket();
+  d_customBC_var_basket->inletVel_var_basket =  scinew inletVel_variable_basket();
   d_press_matl    = 0;
   d_press_matlSet = 0;
 }
@@ -150,7 +151,8 @@ ICE::~ICE()
   delete d_customBC_var_basket->Lodi_var_basket;
   delete d_customBC_var_basket->Slip_var_basket;
   delete d_customBC_var_basket->mms_var_basket;
-  delete d_customBC_var_basket->sine_var_basket;  
+  delete d_customBC_var_basket->sine_var_basket;
+  delete d_customBC_var_basket->inletVel_var_basket;
   delete d_customBC_var_basket;
   delete d_conservationTest;
   delete lb;
@@ -473,7 +475,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  Custom BC setup
-
   d_customBC_var_basket->d_gravity    = d_gravity;
   d_customBC_var_basket->sharedState  = sharedState;
   
@@ -486,7 +487,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   d_customBC_var_basket->using_Sine_BCs =
         read_Sine_BC_inputs(prob_spec,       d_customBC_var_basket->sine_var_basket);
   d_customBC_var_basket->using_inletVel_BCs =
-        read_inletVel_BC_inputs(prob_spec,   d_customBC_var_basket->inletVel_var_basket);
+        read_inletVel_BC_inputs(prob_spec,   d_customBC_var_basket->inletVel_var_basket, grid);
+        
   //__________________________________
   //  boundary condition warnings
   BC_bulletproofing(prob_spec,sharedState);
