@@ -96,7 +96,8 @@ namespace Wasatch{
              Uintah::DataWarehouse* const oldDW,
              Uintah::DataWarehouse* const newDW,
              const double deltat,
-             const int rkStage )
+             const int rkStage,
+             const TimeIntegrator& timeInt )
   {
     typedef std::set< TimeStepper::FieldInfo<FieldT> > Fields;
     for( typename Fields::const_iterator ifld=fields.begin(); ifld!=fields.end(); ++ifld ){
@@ -123,13 +124,12 @@ namespace Wasatch{
       const FieldT* const fold = wrap_uintah_field_as_spatialops<FieldT>(phiOld,patch);
       const FieldT* const frhs = wrap_uintah_field_as_spatialops<FieldT>(rhs,patch);
       using namespace SpatialOps;
-      if (rkStage==1) {
-        *fnew <<= *fold + deltat * *frhs;
-      } else if (rkStage==2) {
-        *fnew <<= 0.25 * *fnew + 0.75 * *fold + 0.25*deltat * *frhs;
-      } else if (rkStage==3) {
-        *fnew <<= 2.0/3.0* *fnew + 1.0/3.0* *fold + 2.0/3.0*deltat * *frhs;
-      }
+      
+      const double a = timeInt.alpha[rkStage-1];
+      const double b = timeInt.beta[rkStage-1];
+            
+      if   (rkStage==1) *fnew <<= *fold + deltat * *frhs; // for the first stage, no need to do an extra multiplication
+      else              *fnew <<= a * *fold + b * (*fnew  + deltat * *frhs);
       delete fnew; delete fold; delete frhs;
     }
   }
@@ -137,10 +137,12 @@ namespace Wasatch{
   //==================================================================
 
   TimeStepper::TimeStepper( Uintah::SimulationStateP sharedState,
-                            GraphHelper& solnGraphHelper )
+                            GraphHelper& solnGraphHelper,
+                            const TimeIntegrator timeInt )
     : sharedState_( sharedState ),
       solnGraphHelper_( &solnGraphHelper ),
-      coordHelper_( new CoordHelper( *(solnGraphHelper_->exprFactory) ) )
+      coordHelper_( new CoordHelper( *(solnGraphHelper_->exprFactory) ) ),
+      timeInt_(timeInt)
   {}
 
   //------------------------------------------------------------------
@@ -325,10 +327,10 @@ namespace Wasatch{
         //____________________________________________
         // update variables on this material and patch
 				// jcs note that we could do this in parallel
-        do_update<SO::SVolField>( scalarFields_, patch, material, oldDW, newDW, deltat, rkStage );
-        do_update<SO::XVolField>( xVolFields_,   patch, material, oldDW, newDW, deltat, rkStage );
-        do_update<SO::YVolField>( yVolFields_,   patch, material, oldDW, newDW, deltat, rkStage );
-        do_update<SO::ZVolField>( zVolFields_,   patch, material, oldDW, newDW, deltat, rkStage );
+        do_update<SO::SVolField>( scalarFields_, patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
+        do_update<SO::XVolField>( xVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
+        do_update<SO::YVolField>( yVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
+        do_update<SO::ZVolField>( zVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
 
       } // material loop
     } // patch loop

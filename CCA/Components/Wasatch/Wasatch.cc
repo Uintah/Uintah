@@ -422,9 +422,10 @@ namespace Wasatch{
     }
     
     //
-    std::string timeIntegrator;
-    wasatchParams->get("TimeIntegrator",timeIntegrator);
-    if (timeIntegrator=="RK3SSP") nRKStages_ = 3;
+    std::string timeIntName;
+    wasatchParams->get("TimeIntegrator",timeIntName);
+    TimeIntegrator timeInt(timeIntName);
+    nRKStages_ = timeInt.nStages;
 
     //
     // create expressions explicitly defined in the input file.  These
@@ -586,7 +587,7 @@ namespace Wasatch{
     }
     
     if( buildTimeIntegrator_ ){
-      timeStepper_ = scinew TimeStepper( sharedState_, *graphCategories_[ ADVANCE_SOLUTION ] );
+      timeStepper_ = scinew TimeStepper( sharedState_, *graphCategories_[ ADVANCE_SOLUTION ], timeInt );
     }    
     
     //
