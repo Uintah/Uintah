@@ -67,8 +67,12 @@ MDLabel::MDLabel()
   pParticleIDLabel_preReloc = VarLabel::create("p.particleID+", ParticleVariable<long64>::getTypeDescription());
 
   ///////////////////////////////////////////////////////////////////////////
-  // Reduction Variables
+  // Reduction Variables - Nonbonded
   vdwEnergyLabel = VarLabel::create("vdwEnergy", sum_vartype::getTypeDescription());
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Sole Variables - Nonbonded
+  nonbondedDependencyLabel = VarLabel::create("nonbondedDependency", SoleVariable<double>::getTypeDescription());
 
   ///////////////////////////////////////////////////////////////////////////
   // Reduction Variables - Electrostatic
@@ -77,10 +81,11 @@ MDLabel::MDLabel()
 
 #ifdef HAVE_FFTW
   ///////////////////////////////////////////////////////////////////////////
-  // Reduction Variables - specific to SPME
+  // Sole Variables - SPME
   globalQLabel = VarLabel::create("globalQ", SoleVariable<SimpleGrid<dblcomplex> >::getTypeDescription());
   forwardTransformPlanLabel = VarLabel::create("forwardTransformPlan", SoleVariable<fftw_plan>::getTypeDescription());
   backwardTransformPlanLabel = VarLabel::create("backwardTransformPlan", SoleVariable<fftw_plan>::getTypeDescription());
+  electrostaticsDependencyLabel = VarLabel::create("electrostaticsDependency", SoleVariable<double>::getTypeDescription());
 #endif
 
 }
@@ -113,7 +118,12 @@ MDLabel::~MDLabel()
   VarLabel::destroy(vdwEnergyLabel);
   VarLabel::destroy(spmeFourierEnergyLabel);
   VarLabel::destroy(spmeFourierStressLabel);
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Sole Variables
   VarLabel::destroy(globalQLabel);
   VarLabel::destroy(forwardTransformPlanLabel);
   VarLabel::destroy(backwardTransformPlanLabel);
+  VarLabel::destroy(backwardTransformPlanLabel);
+  VarLabel::destroy(electrostaticsDependencyLabel);
 }

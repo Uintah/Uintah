@@ -29,6 +29,7 @@
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <CCA/Components/MD/PatchMaterialKey.h>
+#include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/SoleVariable.h>
@@ -156,6 +157,8 @@ void SPME::initialize(const ProcessorGroup* pg,
   new_dw->put(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
   new_dw->put(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
   new_dw->put(Q_global, d_lb->globalQLabel);
+  SoleVariable<double> dependency;
+  new_dw->put(dependency, d_lb->electrostaticsDependencyLabel);
 
   // now the local version of the global Q and Q_scratch arrays
   d_Q_nodeLocal = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, IV_ZERO, 0);
@@ -248,7 +251,9 @@ void SPME::setup(const ProcessorGroup* pg,
       }
     }
   }
-  return;
+  SoleVariable<double> dependency;
+  old_dw->get(dependency, d_lb->electrostaticsDependencyLabel);
+  new_dw->put(dependency, d_lb->electrostaticsDependencyLabel);
 }
 
 void SPME::calculate(const ProcessorGroup* pg,
@@ -259,10 +264,6 @@ void SPME::calculate(const ProcessorGroup* pg,
                      SchedulerP& subscheduler,
                      const LevelP& level)
 {
-  if (d_system->queryBoxChanged()) {
-    setup(pg, patches, materials, old_dw, new_dw);
-  }
-
   bool converged = false;
   int numIterations = 0;
   while (!converged && (numIterations < d_maxPolarizableIterations)) {
@@ -303,6 +304,132 @@ void SPME::calculate(const ProcessorGroup* pg,
   SPME::calculatePostTransform(pg, patches, materials, old_dw, new_dw);
 }
 
+//void SPME::calculate(const ProcessorGroup* pg,
+//                     const PatchSubset* perProcPatches,
+//                     const MaterialSubset* materials,
+//                     DataWarehouse* parentOldDW,
+//                     DataWarehouse* parentNewDW,
+//                     SchedulerP& subscheduler,
+//                     const LevelP& level)
+//{
+//  // this PatchSet is used for SPME::setup and also many of the subscheduled tasks
+//  const PatchSet* patches = level->eachPatch();
+//
+//  if (d_system->queryBoxChanged()) {
+//    setup(pg, perProcPatches, materials, parentOldDW, parentNewDW);
+//  }
+//
+//  // temporarily turn off parentDW scrubbing
+//  DataWarehouse::ScrubMode parentOldDW_scrubmode = parentOldDW->setScrubbing(DataWarehouse::ScrubNone);
+//  DataWarehouse::ScrubMode parentNewDW_scrubmode = parentNewDW->setScrubbing(DataWarehouse::ScrubNone);
+//
+//  GridP grid = level->getGrid();
+//  subscheduler->setParentDWs(parentOldDW, parentNewDW);
+//  subscheduler->advanceDataWarehouse(grid);
+//
+//  DataWarehouse* subOldDW = subscheduler->get_dw(2);
+//  DataWarehouse* subNewDW = subscheduler->get_dw(3);
+//
+////  delt_vartype dt;
+////  subNewDW = subscheduler->get_dw(3);
+////  parentOldDW->get(dt, d_sharedState->get_delt_label(),level.get_rep());
+////  subNewDW->put(dt, d_sharedState->get_delt_label(),level.get_rep());
+//
+//  // transfer data from parentOldDW to subDW
+//  subNewDW->transferFrom(parentNewDW, d_lb->pXLabel, perProcPatches, materials);
+//  subNewDW->transferFrom(parentNewDW, d_lb->pElectrostaticsForceLabel, perProcPatches, materials);
+//  subNewDW->transferFrom(parentNewDW, d_lb->pChargeLabel, perProcPatches, materials);
+//  subNewDW->transferFrom(parentNewDW, d_lb->pParticleIDLabel, perProcPatches, materials);
+//
+//  // explicitly forward SoleVariables to subDW (transferFrom only works with Grid and Particle Variables)
+//  SoleVariable<fftw_plan> forwardTransformPlan;
+//  SoleVariable<fftw_plan> backwardTransformPlan;
+//  SoleVariable<SimpleGrid<dblcomplex>*> QGrid;
+//  parentNewDW->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
+//  parentNewDW->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
+//  parentNewDW->get(QGrid, d_lb->globalQLabel);
+//  subNewDW->put(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
+//  subNewDW->put(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
+//  subNewDW->put(QGrid, d_lb->globalQLabel);
+//
+//  bool converged = false;
+//  int numIterations = 0;
+//  bool recompileSubscheduler = true;
+//
+//  while (!converged && (numIterations < d_maxPolarizableIterations)) {
+//
+//    // compile task graph (once)
+//    if (recompileSubscheduler) {
+//      subscheduler->initialize(3, 1);
+//
+//      // prep for the forward FFT
+//      scheduleCalculatePreTransform(pg, patches, materials, subOldDW, subNewDW);
+//
+//      // Q grid reductions for forward FFT
+//      scheduleReduceNodeLocalQ(pg, patches, materials, subOldDW, subNewDW);
+//
+//      // Forward transform
+//      scheduleTransformRealToFourier(pg, perProcPatches, materials, subOldDW, subNewDW);
+//
+//      // Redistribute charge grid
+//      scheduleDistributeChargeGrid(pg, patches, materials, subOldDW, subNewDW);
+//
+//      // Do Fourier space calculations on transformed data
+//      scheduleCalculateInFourierSpace(pg, patches, materials, subOldDW, subNewDW);
+//
+//      // Q grid reductions for reverse FFT
+//      scheduleCopyToNodeLocalQ(pg, patches, materials, subOldDW, subNewDW);
+//
+//      // Reverse transform
+//      scheduleTransformFourierToReal(pg, perProcPatches, materials, subOldDW, subNewDW);
+//
+//      // Redistribute force grid
+//      scheduleDistributeForceGrid(pg, patches, materials, subOldDW, subNewDW);
+//
+//      // compile task graph
+//      subscheduler->compile();
+//
+//      // make sure the above only happens once
+//      recompileSubscheduler = false;
+//    }
+//
+//    // Move subNewDW to subOldDW
+//    //  - scrub the subScheduler
+//    //  - execute the tasks
+//    subscheduler->advanceDataWarehouse(grid);
+//    subOldDW = subscheduler->get_dw(2);
+//    subNewDW = subscheduler->get_dw(3);
+//    subOldDW->setScrubbing(DataWarehouse::ScrubComplete);
+//    subNewDW->setScrubbing(DataWarehouse::ScrubNone);
+//
+//    subscheduler->execute();
+//
+//    checkConvergence();
+//    numIterations++;
+//  }
+//
+//  // Move products of iteration (only) from subNewDW --> parentNewDW
+//  subNewDW = subscheduler->get_dw(3);
+//  bool replace = true;
+//
+//  parentNewDW->transferFrom(subNewDW, d_lb->pXLabel, perProcPatches, materials, replace);
+//  parentNewDW->transferFrom(subNewDW, d_lb->pElectrostaticsForceLabel, perProcPatches, materials, replace);
+//  parentNewDW->transferFrom(subNewDW, d_lb->pChargeLabel, perProcPatches, materials, replace);
+//  parentNewDW->transferFrom(subNewDW, d_lb->pParticleIDLabel, perProcPatches, materials, replace);
+//
+//  subNewDW->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
+//  subNewDW->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
+//  subNewDW->get(QGrid, d_lb->globalQLabel);
+//  parentNewDW->put(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
+//  parentNewDW->put(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
+//  parentNewDW->put(QGrid, d_lb->globalQLabel);
+//
+//  //  Turn scrubbing back on
+//  parentOldDW->setScrubbing(parentOldDW_scrubmode);
+//  parentNewDW->setScrubbing(parentNewDW_scrubmode);
+//
+//}
+
 void SPME::finalize(const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset* materials,
@@ -323,23 +450,23 @@ void SPME::finalize(const ProcessorGroup* pg,
 }
 
 void SPME::scheduleCalculatePreTransform(const ProcessorGroup* pg,
-                                         const PatchSubset* patches,
+                                         const PatchSet* patches,
                                          const MaterialSubset* materials,
                                          DataWarehouse* subOldDW,
                                          DataWarehouse* subNewDW)
 {
-  printTask(patches, spme_cout, "SPME::scheduleCalculatePreTransform");
+  printSchedule(patches, spme_cout, "SPME::scheduleCalculatePreTransform");
 
 //  Task* task = scinew Task("SPME::calculatePreTransform", this, &SPME::calculatePreTransform);
 }
 
 void SPME::scheduleReduceNodeLocalQ(const ProcessorGroup* pg,
-                                    const PatchSubset* patches,
+                                    const PatchSet* patches,
                                     const MaterialSubset* materials,
                                     DataWarehouse* subOldDW,
                                     DataWarehouse* subNewDW)
 {
-  printTask(patches, spme_cout, "SPME::scheduleReduceNodeLocalQ");
+  printSchedule(patches, spme_cout, "SPME::scheduleReduceNodeLocalQ");
 
 //  Task* task = scinew Task("SPME::reduceNodeLocalQ", this, &SPME::reduceNodeLocalQ);
 }
@@ -356,34 +483,34 @@ void SPME::scheduleTransformRealToFourier(const ProcessorGroup* pg,
 }
 
 void SPME::scheduleDistributeChargeGrid(const ProcessorGroup* pg,
-                                        const PatchSubset* patches,
+                                        const PatchSet* patches,
                                         const MaterialSubset* materials,
                                         DataWarehouse* subOldDW,
                                         DataWarehouse* subNewDW)
 {
-  printTask(patches, spme_cout, "SPME::scheduleDistributeNodeLocalQ");
+  printSchedule(patches, spme_cout, "SPME::scheduleDistributeNodeLocalQ");
 
 //  Task* task = scinew Task("SPME::distributeNodeLocalQ-charge", this, &SPME::distributeNodeLocalQ);
 }
 
 void SPME::scheduleCalculateInFourierSpace(const ProcessorGroup* pg,
-                                           const PatchSubset* patches,
+                                           const PatchSet* patches,
                                            const MaterialSubset* materials,
                                            DataWarehouse* subOldDW,
                                            DataWarehouse* subNewDW)
 {
-  printTask(patches, spme_cout, "SPME::scheduleCalculateInFourierSpace");
+  printSchedule(patches, spme_cout, "SPME::scheduleCalculateInFourierSpace");
 
 //  Task* task = scinew Task("SPME::calculateInFourierSpace", this, &SPME::calculateInFourierSpace);
 }
 
 void SPME::scheduleCopyToNodeLocalQ(const ProcessorGroup* pg,
-                                    const PatchSubset* patches,
+                                    const PatchSet* patches,
                                     const MaterialSubset* materials,
                                     DataWarehouse* subOldDW,
                                     DataWarehouse* subNewDW)
 {
-  printTask(patches, spme_cout, "SPME::scheduleCopyToNodeLocalQ");
+  printSchedule(patches, spme_cout, "SPME::scheduleCopyToNodeLocalQ");
 
 //  Task* task = scinew Task("SPME::copyToNodeLocalQ", this, &SPME::copyToNodeLocalQ);
 }
@@ -400,12 +527,12 @@ void SPME::scheduleTransformFourierToReal(const ProcessorGroup* pg,
 }
 
 void SPME::scheduleDistributeForceGrid(const ProcessorGroup* pg,
-                                       const PatchSubset* patches,
+                                       const PatchSet* patches,
                                        const MaterialSubset* materials,
                                        DataWarehouse* subOldDW,
                                        DataWarehouse* subNewDW)
 {
-  printTask(patches, spme_cout, "SPME::scheduleDistributeNodeLocalQ");
+  printSchedule(patches, spme_cout, "SPME::scheduleDistributeNodeLocalQ");
 
 //  Task* task = scinew Task("SPME::distributeNodeLocalQ-force", this, &SPME::distributeNodeLocalQ);
 }
