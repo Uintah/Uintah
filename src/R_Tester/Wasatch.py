@@ -23,18 +23,38 @@ liddrivencavity3DRe1000rk3_ups = modUPS( the_dir, \
                                        "lid-driven-cavity-3D-Re1000.ups", \
                                        ["<TimeIntegrator> RK3SSP </TimeIntegrator>", \
                                        "<filebase>liddrivencavity3DRe1000rk3.uda</filebase>"])
+
+lid_driven_cavity_3D_Re1000_rk2_ups = modUPS( the_dir, \
+                                       "lid-driven-cavity-3D-Re1000.ups", \
+                                       ["<TimeIntegrator> RK2SSP </TimeIntegrator>", \
+                                       "<filebase>liddrivencavity3DRe1000rk3.uda</filebase>"])
+
+rk2_verification_ode_ups = modUPS( the_dir, \
+                                       "rk3-verification-ode.ups", \
+                                       ["<TimeIntegrator> RK2SSP </TimeIntegrator>", \
+                                       "<filebase>rk2-verification-ode.uda</filebase>"])
+
+rk2_verification_timedep_source_ups = modUPS( the_dir, \
+                                       "rk3-verification-timedep-source.ups", \
+                                       ["<TimeIntegrator> RK2SSP </TimeIntegrator>", \
+                                       "<filebase>rk2-verification-timedep-source.uda</filebase>"])
+                                       
 liddrivencavity3Dlaminarperf_ups = modUPS( the_dir, \
                                        "lid-driven-cavity-3D-Re1000.ups", \
                                        ["<max_Timesteps> 50 </max_Timesteps>","<resolution>[100,100,100]</resolution>","<patches>[1,1,1]</patches>"])
+                                       
 liddrivencavity3Dvremanperf_ups = modUPS( the_dir, \
                                        "turb-lid-driven-cavity-3D-VREMAN.ups", \
                                        ["<max_Timesteps> 50 </max_Timesteps>","<resolution>[100,100,100]</resolution>","<patches>[1,1,1]</patches>"])
+                                       
 liddrivencavity3Dsmagorinskyperf_ups = modUPS( the_dir, \
                                        "turb-lid-driven-cavity-3D-SMAGORINSKY.ups", \
                                        ["<max_Timesteps> 50 </max_Timesteps>","<resolution>[100,100,100]</resolution>","<patches>[1,1,1]</patches>"])
+                                       
 liddrivencavity3Dwaleperf_ups = modUPS( the_dir, \
                                        "turb-lid-driven-cavity-3D-WALE.ups", \
                                        ["<max_Timesteps> 50 </max_Timesteps>","<resolution>[100,100,100]</resolution>","<patches>[1,1,1]</patches>"])
+                                       
 scalabilitytestperf_ups = modUPS( the_dir, \
                                   "scalability-test.ups", \
                                   ["<max_Timesteps> 1000 </max_Timesteps>"])                                       
@@ -185,7 +205,10 @@ NIGHTLYTESTS = [
   ("convection-test-svol-zdir-bc",  "convection-test-svol-zdir-bc.ups",  8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("convection-test-svol-mixed-bc", "convection-test-svol-mixed-bc.ups", 8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("kinetic-energy-example",     "kinetic-energy-example.ups",   8,  "Linux",  ["exactComparison","no_restart"] )  
+  ("kinetic-energy-example",     "kinetic-energy-example.ups",   8,  "Linux",  ["exactComparison","no_restart"] ),
+  ("rk2-verification-ode",                     rk2_verification_ode_ups,   1,  "Linux",   ["exactComparison","no_restart"] ),
+  ("rk2-verification-timedep-source",          rk2_verification_timedep_source_ups,   1,  "Linux",   ["exactComparison","no_restart","do_not_validate"] ),
+  ("lid-driven-cavity-3D-Re1000-rk2",   lid_driven_cavity_3D_Re1000_rk2_ups,   8,  "Linux",  ["exactComparison","no_restart"] )  
 ]
 
 #  ("radprops",                      "RadPropsInterface.ups",             2,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
@@ -263,7 +286,10 @@ LOCALTESTS = [
   ("convection-test-svol-zdir-bc",  "convection-test-svol-zdir-bc.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("convection-test-svol-mixed-bc", "convection-test-svol-mixed-bc.ups", 8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("kinetic-energy-example",     "kinetic-energy-example.ups",   8,  "All",  ["exactComparison","no_restart"] )  
+  ("kinetic-energy-example",     "kinetic-energy-example.ups",   8,  "All",  ["exactComparison","no_restart"] ) ,
+  ("rk2-verification-ode",                     rk2_verification_ode_ups,   1,  "All",   ["exactComparison","no_restart"] ),
+  ("rk2-verification-timedep-source",          rk2_verification_timedep_source_ups,   1,  "All",   ["exactComparison","no_restart","do_not_validate"] ),
+  ("lid-driven-cavity-3D-Re1000-rk2",   lid_driven_cavity_3D_Re1000_rk2_ups,   8,  "All",  ["exactComparison","no_restart"] )
 ]
 
 #  ("radprops",                      "RadPropsInterface.ups",             2,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
