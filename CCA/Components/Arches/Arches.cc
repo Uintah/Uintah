@@ -477,7 +477,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     if( !solnFactory.have_entry( dilTag ) ){
       typedef Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
       // if dilatation expression has not been registered, then register it
-      solnFactory.register_expression( new Dilatation(dilTag, velTags[0],velTags[1],velTags[2]) );
+      solnFactory.register_expression( new Dilatation(dilTag, velTags) );
     }
     
     // register strain components. Here we are assuming 3D...
