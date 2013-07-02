@@ -299,9 +299,6 @@ void SPME::calculate(const ProcessorGroup* pg,
     checkConvergence();
     numIterations++;
   }
-
-  // Do force spreading and clean up calculations -- or does this go in finalize?
-  SPME::calculatePostTransform(pg, patches, materials, old_dw, new_dw);
 }
 
 //void SPME::calculate(const ProcessorGroup* pg,
@@ -436,6 +433,11 @@ void SPME::finalize(const ProcessorGroup* pg,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw)
 {
+
+
+  // Do force spreading and clean up calculations -- or does this go in finalize?
+  SPME::calculatePostTransform(pg, patches, materials, old_dw, new_dw);
+
   // carry FFTW related SoleVariables forward
   SoleVariable<fftw_plan> forwardTransformPlan;
   SoleVariable<fftw_plan> backwardTransformPlan;

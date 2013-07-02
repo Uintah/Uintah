@@ -338,10 +338,6 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   task->setType(Task::OncePerProc);
 
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pElectrostaticsForceLabel, Ghost::None, 0);
-  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
 
   task->requires(Task::OldDW, d_lb->forwardTransformPlanLabel);
@@ -349,8 +345,6 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   task->requires(Task::OldDW, d_lb->globalQLabel);
   task->requires(Task::OldDW, d_lb->electrostaticsDependencyLabel);
 
-  task->computes(d_lb->pElectrostaticsForceLabel_preReloc);
-  task->computes(d_lb->pChargeLabel_preReloc);
   task->computes(d_lb->forwardTransformPlanLabel);
   task->computes(d_lb->backwardTransformPlanLabel);
   task->computes(d_lb->globalQLabel);
@@ -374,9 +368,15 @@ void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
 
   Task* task = scinew Task("MD::electrostaticsFinalize", this, &MD::electrostaticsFinalize);
 
+  task->requires(Task::OldDW, d_lb->pElectrostaticsForceLabel, Ghost::None, 0);
+  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost:: Ghost::None, 0);
+
   task->requires(Task::NewDW, d_lb->forwardTransformPlanLabel);
   task->requires(Task::NewDW, d_lb->backwardTransformPlanLabel);
   task->requires(Task::NewDW, d_lb->globalQLabel);
+
+  task->computes(d_lb->pElectrostaticsForceLabel_preReloc);
+  task->computes(d_lb->pChargeLabel_preReloc);
 
   sched->addTask(task, patches, matls);
 }
