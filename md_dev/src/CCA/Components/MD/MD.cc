@@ -109,16 +109,17 @@ void MD::problemSetup(const ProblemSpecP& params,
   if (d_electrostatics->getType() == Electrostatics::SPME) {
     dynamic_cast<SPME*>(d_electrostatics)->setMDLabel(d_lb);
 
-    // create subscheduler for convergence loop in SPME::calculate
-    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-    d_subScheduler = sched->createSubScheduler();
-
-    d_subScheduler->initialize(3,1);
-    d_subScheduler->clearMappings();
-    d_subScheduler->mapDataWarehouse(Task::ParentOldDW, 0);
-    d_subScheduler->mapDataWarehouse(Task::ParentNewDW, 1);
-    d_subScheduler->mapDataWarehouse(Task::OldDW, 2);
-    d_subScheduler->mapDataWarehouse(Task::NewDW, 3);
+    // TODO uncomment me for subscheduler version
+//    // create subscheduler for convergence loop in SPME::calculate
+//    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+//    d_subScheduler = sched->createSubScheduler();
+//
+//    d_subScheduler->initialize(3,1);
+//    d_subScheduler->clearMappings();
+//    d_subScheduler->mapDataWarehouse(Task::ParentOldDW, 0);
+//    d_subScheduler->mapDataWarehouse(Task::ParentNewDW, 1);
+//    d_subScheduler->mapDataWarehouse(Task::OldDW, 2);
+//    d_subScheduler->mapDataWarehouse(Task::NewDW, 3);
   }
 
   // create and register MD materials (this is ill defined right now)
@@ -244,6 +245,7 @@ void MD::scheduleNonbondedSetup(SchedulerP& sched,
 
   Task* task = scinew Task("MD::nonbondedSetup", this, &MD::nonbondedSetup);
 
+  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->nonbondedDependencyLabel);
   task->computes(d_lb->nonbondedDependencyLabel);
 
@@ -259,9 +261,9 @@ void MD::scheduleNonbondedCalculate(SchedulerP& sched,
 
   Task* task = scinew Task("MD::nonbondedCalculate", this, &MD::nonbondedCalculate, d_subScheduler, level);
 
-  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pNonbondedForceLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pEnergyLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::OldDW, d_lb->pNonbondedForceLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::OldDW, d_lb->pEnergyLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->nonbondedDependencyLabel, Ghost::None, 0);
 
   task->computes(d_lb->pNonbondedForceLabel_preReloc);
@@ -334,11 +336,12 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
 
   Task* task = scinew Task("electrostaticsCalculate", this, &MD::electrostaticsCalculate, d_subScheduler, level);
 
-  task->hasSubScheduler(true);
-  task->setType(Task::OncePerProc);
+  // TODO uncomment me for subscheduler version
+//  task->hasSubScheduler(true);
+//  task->setType(Task::OncePerProc);
 
-  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
 
   task->requires(Task::OldDW, d_lb->forwardTransformPlanLabel);
   task->requires(Task::OldDW, d_lb->backwardTransformPlanLabel);
@@ -353,10 +356,13 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   task->computes(d_lb->spmeFourierEnergyLabel);
   task->computes(d_lb->spmeFourierStressLabel);
 
-  LoadBalancer* loadBal = sched->getLoadBalancer();
-  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
+  // TODO uncomment me for subscheduler version
+//  LoadBalancer* loadBal = sched->getLoadBalancer();
+//  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
+//
+//  sched->addTask(task, perProcPatches, matls);
 
-  sched->addTask(task, perProcPatches, matls);
+  sched->addTask(task, patches, matls);
 }
 
 void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
@@ -390,13 +396,13 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
 
   Task* task = scinew Task("updatePosition", this, &MD::updatePosition);
 
-  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::NewDW, d_lb->pNonbondedForceLabel_preReloc, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::NewDW, d_lb->pElectrostaticsForceLabel_preReloc, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pAccelLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pVelocityLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pMassLabel, Ghost::AroundNodes, SHRT_MAX);
-  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, SHRT_MAX);
+  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::NewDW, d_lb->pNonbondedForceLabel_preReloc, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::NewDW, d_lb->pElectrostaticsForceLabel_preReloc, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::OldDW, d_lb->pAccelLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::OldDW, d_lb->pVelocityLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::OldDW, d_lb->pMassLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_sharedState->get_delt_label());
 
   task->computes(d_lb->pXLabel_preReloc);

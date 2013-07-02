@@ -229,8 +229,15 @@ void SPME::setup(const ProcessorGroup* pg,
     calculateStressPrefactor(stressPrefactor, spmePatchExtents, spmePatchOffset);
     SimpleGrid<double>* fTheta = currentSPMEPatch->getTheta();
 
-    SimpleGrid<double> fBGrid = calculateBGrid(spmePatchExtents, spmePatchOffset);
-    SimpleGrid<double> fCGrid = calculateCGrid(spmePatchExtents, spmePatchOffset);
+    // No ghost cells; internal only
+    SimpleGrid<double> fBGrid(spmePatchExtents, spmePatchOffset, IV_ZERO, 0);
+    SimpleGrid<double> fCGrid(spmePatchExtents, spmePatchOffset, IV_ZERO, 0);
+
+    // A SimpleGrid<double> of B(m1,m2,m3)=|b1(m1)|^2 * |b2(m2)|^2 * |b3(m3)|^2
+    calculateBGrid(fBGrid, spmePatchExtents, spmePatchOffset);
+
+    // A SimpleGrid<double> of C(m1,m2,m3)=(1/(PI*V))*exp(-PI^2*M^2/Beta^2)/M^2
+    calculateCGrid(fCGrid, spmePatchExtents, spmePatchOffset);
 
     // Composite B*C into Theta
 // Stubbing out interface to swap dimensions for FFT efficiency
@@ -724,51 +731,29 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
 
 //----------------------------------------------------------------------------
 // Setup related routines
-std::vector<dblcomplex> SPME::generateBVector(const std::vector<double>& mFractional,
-                                              const int initialIndex,
-                                              const int localGridExtent) const
-{
-  double PI = acos(-1.0);
-  double twoPI = 2.0 * PI;
-  int n = d_interpolatingSpline.getOrder();
 
-  std::vector<dblcomplex> B(localGridExtent);
-  std::vector<double> zeroAlignedSpline = d_interpolatingSpline.evaluateGridAligned(0);
-
-  size_t endingIndex = initialIndex + localGridExtent;
-
-  // Formula 4.4 in Essman et al.: A smooth particle mesh Ewald method
-  for (size_t BIndex = initialIndex; BIndex < endingIndex; ++BIndex) {
-    double twoPi_m_over_K = twoPI * mFractional[BIndex];
-    double numerator_term = static_cast<double>(n - 1) * twoPi_m_over_K;
-    dblcomplex numerator = dblcomplex(cos(numerator_term), sin(numerator_term));
-    dblcomplex denominator = 0.0;
-    for (int denomIndex = 0; denomIndex <= n - 2; ++denomIndex) {
-      double denom_term = static_cast<double>(denomIndex) * twoPi_m_over_K;
-      denominator += zeroAlignedSpline[denomIndex + 1] * dblcomplex(cos(denom_term), sin(denom_term));
-    }
-    B[BIndex] = numerator / denominator;
-  }
-  return B;
-}
-
-SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
-                                        const IntVector& globalOffset) const
+void SPME::calculateBGrid(SimpleGrid<double>& BGrid,
+                          const IntVector& localExtents,
+                          const IntVector& globalOffset) const
 {
   size_t limit_Kx = d_kLimits.x();
   size_t limit_Ky = d_kLimits.y();
   size_t limit_Kz = d_kLimits.z();
 
-  std::vector<double> mf1 = SPME::generateMFractionalVector(limit_Kx);
-  std::vector<double> mf2 = SPME::generateMFractionalVector(limit_Ky);
-  std::vector<double> mf3 = SPME::generateMFractionalVector(limit_Kz);
+  std::vector<double> mf1(limit_Kx);
+  std::vector<double> mf2(limit_Ky);
+  std::vector<double> mf3(limit_Kz);
+  SPME::generateMFractionalVector(mf1, limit_Kx);
+  SPME::generateMFractionalVector(mf2, limit_Ky);
+  SPME::generateMFractionalVector(mf3, limit_Kz);
 
   // localExtents is without ghost grid points
-  std::vector<dblcomplex> b1 = generateBVector(mf1, globalOffset.x(), localExtents.x());
-  std::vector<dblcomplex> b2 = generateBVector(mf2, globalOffset.y(), localExtents.y());
-  std::vector<dblcomplex> b3 = generateBVector(mf3, globalOffset.z(), localExtents.z());
-
-  SimpleGrid<double> BGrid(localExtents, globalOffset, IV_ZERO, 0);  // No ghost cells; internal only
+  std::vector<dblcomplex> b1(localExtents.x());
+  std::vector<dblcomplex> b2(localExtents.y());
+  std::vector<dblcomplex> b3(localExtents.z());
+  generateBVector(b1, mf1, globalOffset.x(), localExtents.x());
+  generateBVector(b2, mf2, globalOffset.y(), localExtents.y());
+  generateBVector(b3, mf3, globalOffset.z(), localExtents.z());
 
   size_t xExtents = localExtents.x();
   size_t yExtents = localExtents.y();
@@ -785,11 +770,37 @@ SimpleGrid<double> SPME::calculateBGrid(const IntVector& localExtents,
       }
     }
   }
-  return BGrid;
 }
 
-SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
-                                        const IntVector& offset) const
+void SPME::generateBVector(std::vector<dblcomplex>& bVector,
+                           const std::vector<double>& mFractional,
+                           const int initialIndex,
+                           const int localGridExtent) const
+{
+  double PI = acos(-1.0);
+  double twoPI = 2.0 * PI;
+  int n = d_interpolatingSpline.getOrder();
+
+  std::vector<double> zeroAlignedSpline = d_interpolatingSpline.evaluateGridAligned(0);
+  size_t endingIndex = initialIndex + localGridExtent;
+
+  // Formula 4.4 in Essman et al.: A smooth particle mesh Ewald method
+  for (size_t BIndex = initialIndex; BIndex < endingIndex; ++BIndex) {
+    double twoPi_m_over_K = twoPI * mFractional[BIndex];
+    double numerator_term = static_cast<double>(n - 1) * twoPi_m_over_K;
+    dblcomplex numerator = dblcomplex(cos(numerator_term), sin(numerator_term));
+    dblcomplex denominator = 0.0;
+    for (int denomIndex = 0; denomIndex <= n - 2; ++denomIndex) {
+      double denom_term = static_cast<double>(denomIndex) * twoPi_m_over_K;
+      denominator += zeroAlignedSpline[denomIndex + 1] * dblcomplex(cos(denom_term), sin(denom_term));
+    }
+    bVector[BIndex] = numerator / denominator;
+  }
+}
+
+void SPME::calculateCGrid(SimpleGrid<double>& CGrid,
+                          const IntVector& extents,
+                          const IntVector& offset) const
 {
   // sanity check
   std::cerr << "System Volume: " << d_systemVolume << endl;
@@ -811,7 +822,6 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
   size_t yExtents = extents.y();
   size_t zExtents = extents.z();
 
-  SimpleGrid<double> CGrid(extents, offset, IV_ZERO, 0);  // No ghost cells; internal only
   for (size_t kX = 0; kX < xExtents; ++kX) {
     for (size_t kY = 0; kY < yExtents; ++kY) {
       for (size_t kZ = 0; kZ < zExtents; ++kZ) {
@@ -826,7 +836,6 @@ SimpleGrid<double> SPME::calculateCGrid(const IntVector& extents,
     }
   }
   CGrid(0, 0, 0) = 0;
-  return CGrid;
 }
 
 void SPME::calculateStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor,

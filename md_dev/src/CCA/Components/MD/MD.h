@@ -37,6 +37,8 @@
 
 #include <vector>
 
+#define CUTOFF_RADIUS SHRT_MAX
+
 namespace Uintah {
 
   class SimpleMaterial;

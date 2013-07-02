@@ -295,6 +295,19 @@ namespace Uintah {
                                             const int splineOrder);
 
       /**
+       * @brief Generates the local portion of the B grid (see. Essmann et. al., J. Phys. Chem. 103, p 8577, 1995)
+       *          Equation 4.8
+       * @param
+       * @param Extents - The number of internal grid points on the current processor
+       * @param Offsets - The global mapping of the local (0,0,0) coordinate into the global grid index
+       *
+       * @return None
+       */
+      void calculateBGrid(SimpleGrid<double>& BGrid,
+                                        const IntVector& localExtents,
+                                        const IntVector& globalOffset) const;
+
+      /**
        * @brief
        * @param
        * @param
@@ -302,19 +315,10 @@ namespace Uintah {
        * @param
        * @return
        */
-      vector<dblcomplex> generateBVector(const std::vector<double>& M,
-                                         const int initialIndex,
-                                         const int localExtent) const;
-      /**
-       * @brief Generates the local portion of the B grid (see. Essmann et. al., J. Phys. Chem. 103, p 8577, 1995)
-       *          Equation 4.8
-       * @param Extents - The number of internal grid points on the current processor
-       * @param Offsets - The global mapping of the local (0,0,0) coordinate into the global grid index
-       *
-       * @return A SimpleGrid<double> of B(m1,m2,m3)=|b1(m1)|^2 * |b2(m2)|^2 * |b3(m3)|^2
-       */
-      SimpleGrid<double> calculateBGrid(const IntVector& extents,
-                                        const IntVector& offsets) const;
+      void generateBVector(std::vector<dblcomplex>& bVector,
+                           const std::vector<double>& mFractional,
+                           const int initialIndex,
+                           const int localGridExtent) const;
 
       /**
        * @brief Generates the local portion of the C grid (see. Essmann et. al., J. Phys. Chem. 103, p 8577, 1995)
@@ -322,10 +326,11 @@ namespace Uintah {
        * @param Extents - The number of internal grid points on the current processor
        * @param Offsets - The global mapping of the local (0,0,0) coordinate into the global grid index
        *
-       * @return A SimpleGrid<double> of C(m1,m2,m3)=(1/(PI*V))*exp(-PI^2*M^2/Beta^2)/M^2
+       * @return None
        */
-      SimpleGrid<double> calculateCGrid(const IntVector& extents,
-                                        const IntVector& offsets) const;
+      void calculateCGrid(SimpleGrid<double>& CGrid,
+                          const IntVector& extents,
+                          const IntVector& offsets) const;
 
       /**
        * @brief
@@ -370,18 +375,13 @@ namespace Uintah {
        * @param InterpolatingSpline - CenteredCardinalBSpline that determines the number of wrapping points necessary
        * @return std::vector<double> of the reduced coordinates for the local grid along the input lattice direction
        */
-      inline std::vector<double> generateMFractionalVector(size_t kMax) const
+      inline void generateMFractionalVector(std::vector<double>& mFractional,
+                                            size_t kMax) const
       {
-        int numPoints = kMax;  // For simplicity, store the whole vector
-        std::vector<double> mFractional(numPoints);
-
         double kMaxInv = 1.0 / static_cast<double>(kMax);
-
         for (size_t idx = 0; idx < kMax; ++idx) {
           mFractional[idx] = static_cast<double>(idx) * kMaxInv;
         }
-
-        return mFractional;
       }
 
       /**
