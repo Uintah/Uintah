@@ -384,6 +384,7 @@ namespace Uintah {
         ~CoalTransform(); 
 
         bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
+
           bool coal_table_on = false; 
           ProblemSpecP p = ps; 
           bool doit = false; 
@@ -923,6 +924,8 @@ namespace Uintah {
               } else if ( *i == _hl_name ){
                 _hl_index = index; 
               } 
+
+              index++;
 
             }
             transform_on = true; 
