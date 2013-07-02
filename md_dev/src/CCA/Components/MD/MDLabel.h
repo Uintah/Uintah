@@ -83,8 +83,12 @@ namespace Uintah {
       const VarLabel* pParticleIDLabel_preReloc;
 
       ///////////////////////////////////////////////////////////////////////////
-      // Reduction Variables - General
+      // Reduction Variables - Nonbonded
       const VarLabel* vdwEnergyLabel;
+
+      ///////////////////////////////////////////////////////////////////////////
+      // Sole Variables - Nonbonded
+      const VarLabel* nonbondedDependencyLabel;
 
       ///////////////////////////////////////////////////////////////////////////
       // Reduction Variables - Electrostatics
@@ -93,10 +97,11 @@ namespace Uintah {
 
 #ifdef HAVE_FFTW
       ///////////////////////////////////////////////////////////////////////////
-      // Reduction Variables - specific to SPME
+      // Sole Variables - SPME
       const VarLabel* globalQLabel;
       const VarLabel* forwardTransformPlanLabel;
       const VarLabel* backwardTransformPlanLabel;
+      const VarLabel* electrostaticsDependencyLabel;
 #endif
 
   };

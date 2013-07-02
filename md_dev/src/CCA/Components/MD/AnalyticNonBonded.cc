@@ -27,6 +27,7 @@
 #include <CCA/Components/MD/MDLabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Box.h>
@@ -102,9 +103,10 @@ void AnalyticNonBonded::initialize(const ProcessorGroup* pg,
     }  // end material loop
   }  // end patch loop
 
-  // initialize global sum reduction of "vdwEnergy"
+  // global sum reduction of "vdwEnergy" - van der Waals potential energy
   new_dw->put(sum_vartype(0.0), d_lb->vdwEnergyLabel);
-
+  SoleVariable<double> dependency;
+  new_dw->put(dependency, d_lb->nonbondedDependencyLabel);
 }
 
 void AnalyticNonBonded::setup(const ProcessorGroup* pg,
@@ -127,8 +129,8 @@ void AnalyticNonBonded::setup(const ProcessorGroup* pg,
       // get particles within bounds of cutoff radius
       ParticleSubset* neighbor_pset = old_dw->getParticleSubset(matl, patch, Ghost::AroundNodes, CUTOFF_RADIUS, d_lb->pXLabel);
 
-      constParticleVariable < Point > px_local;
-      constParticleVariable < Point > px_neighbors;
+      constParticleVariable<Point> px_local;
+      constParticleVariable<Point> px_neighbors;
       old_dw->get(px_local, d_lb->pXLabel, local_pset);
       old_dw->get(px_neighbors, d_lb->pXLabel, neighbor_pset);
 
@@ -144,13 +146,9 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
                                   const MaterialSubset* materials,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw,
-                                  SchedulerP& subscheduler /* = 0 */,
-                                  const LevelP& level /* = 0 */)
+                                  SchedulerP& subscheduler,
+                                  const LevelP& level)
 {
-  if (d_system->queryBoxChanged()) {
-    setup(pg, patches, materials, old_dw, new_dw);
-  }
-
   Vector box = d_system->getBox();
   double vdwEnergy = 0;
 
@@ -169,9 +167,9 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
       ParticleSubset* neighbor_pset = old_dw->getParticleSubset(matl, patch, Ghost::AroundNodes, CUTOFF_RADIUS, d_lb->pXLabel);
 
       // requires variables
-      constParticleVariable < Point > px_local;
-      constParticleVariable < Point > px_neighbors;
-      constParticleVariable < Vector > pforce;
+      constParticleVariable<Point> px_local;
+      constParticleVariable<Point> px_neighbors;
+      constParticleVariable<Vector> pforce;
       constParticleVariable<double> penergy;
       old_dw->get(px_local, d_lb->pXLabel, local_pset);
       old_dw->get(px_neighbors, d_lb->pXLabel, neighbor_pset);
@@ -179,7 +177,7 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
       old_dw->get(pforce, d_lb->pNonbondedForceLabel, local_pset);
 
       // computes variables
-      ParticleVariable < Vector > pforcenew;
+      ParticleVariable<Vector> pforcenew;
       ParticleVariable<double> penergynew;
       new_dw->allocateAndPut(pforcenew, d_lb->pNonbondedForceLabel_preReloc, local_pset);
       new_dw->allocateAndPut(penergynew, d_lb->pEnergyLabel_preReloc, local_pset);

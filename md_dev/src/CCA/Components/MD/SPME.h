@@ -123,7 +123,7 @@ namespace Uintah {
        * @return None
        */
       void calculate(const ProcessorGroup* pg,
-                     const PatchSubset* patches,
+                     const PatchSubset* perProcPatches,
                      const MaterialSubset* materials,
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw,
@@ -169,7 +169,7 @@ namespace Uintah {
        * @return
        */
       void scheduleCalculatePreTransform(const ProcessorGroup* pg,
-                                         const PatchSubset* patches,
+                                         const PatchSet* patches,
                                          const MaterialSubset* materials,
                                          DataWarehouse* subOldDW,
                                          DataWarehouse* subNewDW);
@@ -180,7 +180,7 @@ namespace Uintah {
        * @return
        */
       void scheduleReduceNodeLocalQ(const ProcessorGroup* pg,
-                                    const PatchSubset* patches,
+                                    const PatchSet* patches,
                                     const MaterialSubset* materials,
                                     DataWarehouse* subOldDW,
                                     DataWarehouse* subNewDW);
@@ -202,7 +202,7 @@ namespace Uintah {
        * @return
        */
       void scheduleDistributeChargeGrid(const ProcessorGroup* pg,
-                                         const PatchSubset* patches,
+                                         const PatchSet* patches,
                                          const MaterialSubset* materials,
                                          DataWarehouse* subOldDW,
                                          DataWarehouse* subNewDW);
@@ -213,7 +213,7 @@ namespace Uintah {
        * @return
        */
       void scheduleCalculateInFourierSpace(const ProcessorGroup* pg,
-                                           const PatchSubset* patches,
+                                           const PatchSet* patches,
                                            const MaterialSubset* materials,
                                            DataWarehouse* subOldDW,
                                            DataWarehouse* subNewDW);
@@ -224,7 +224,7 @@ namespace Uintah {
        * @return
        */
       void scheduleCopyToNodeLocalQ(const ProcessorGroup* pg,
-                                    const PatchSubset* patches,
+                                    const PatchSet* patches,
                                     const MaterialSubset* materials,
                                     DataWarehouse* subOldDW,
                                     DataWarehouse* subNewDW);
@@ -246,7 +246,7 @@ namespace Uintah {
        * @return
        */
       void scheduleDistributeForceGrid(const ProcessorGroup* pg,
-                                       const PatchSubset* patches,
+                                       const PatchSet* patches,
                                        const MaterialSubset* materials,
                                        DataWarehouse* subOldDW,
                                        DataWarehouse* subNewDW);
