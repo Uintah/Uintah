@@ -42,59 +42,60 @@ namespace Uintah {
   // This struct contains misc. global variables that are needed
   // by most setBC routines.
   struct inletVel_variable_basket{
-    double delT;
-    double p_ref;
-    Vector vel_ref;
+    int    verticalDir;       // which direction is vertical [0,1,2]
+    
+    // log law profile
+    double roughness;         // aerodynamic roughness
+    double vonKarman;         // vonKarman constant 
+    Vector frictionVelocity;       // U_star or friction velocity
+    
+    // powerlaw profile
+    double exponent;         // 
+    Vector U_infinity;       // U_infinity
+    
+    Point gridOrigin;
+    Vector gridHeight;
   };    
   //____________________________________________________________
   // This struct contains all of the additional variables needed by setBC.
   struct inletVel_vars{
     string where;
-    double delT;
   };
   //____________________________________________________________
   bool read_inletVel_BC_inputs(const ProblemSpecP&,
-                               inletVel_variable_basket* vb);
+                               inletVel_variable_basket* vb,
+                               GridP& grid);
                   
   void addRequires_inletVel(Task* t, 
                             const string& where,
                             ICELabel* lb,
                             const MaterialSubset* ice_matls);
                        
-  void  preprocess_inletVel_BCs(DataWarehouse* new_dw,
-                                DataWarehouse* old_dw,
-                                ICELabel* lb,
-                                const int indx,
-                                const Patch* patch,
-                                const string& where,
-                                bool& setSine_BCs,
-                                inletVel_vars* mss_v);
+  void  preprocess_inletVelocity_BCs(const string& where,
+                                     bool& set_BCs);
                            
-  int set_inletVel_BC(const Patch* patch,
-                      const Patch::FaceType face,
-                      CCVariable<Vector>& vel_CC,
-                      const string& var_desc,
-                      Iterator& bound_ptr,
-                      const string& bc_kind,
-                      SimulationStateP& sharedState,
-                      inletVel_variable_basket* inlet_var_basket,
-                      inletVel_vars* inlet_v);
+  int set_inletVelocity_BC(const Patch* patch,
+                           const Patch::FaceType face,
+                           CCVariable<Vector>& vel_CC,
+                           const string& var_desc,
+                           Iterator& bound_ptr,
+                           const string& bc_kind,
+                           SimulationStateP& sharedState,
+                           inletVel_variable_basket* inlet_var_basket );
                         
                         
 /*______________________________________________________________________ 
  Purpose~   Sets the face center velocity boundary conditions
  ______________________________________________________________________*/
  template<class T>
- int set_inletVel_BCs_FC( const Patch* patch,
-                          const Patch::FaceType face,
-                          T& vel_FC,
-                          Iterator& bound_ptr,
-                          SimulationStateP& sharedState,
-                          inletVel_variable_basket* sine_var_basket,
-                          inletVel_vars* sine_v)
+ int set_inletVelocity_BCs_FC( const Patch* patch,
+                               const Patch::FaceType face,
+                               T& vel_FC,
+                               Iterator& bound_ptr,
+                               inletVel_variable_basket* VB )
 {
-//  cout<< "Doing set_sine_BCs_FC: \t\t" << whichVel   << " face " << face << endl;
-#if 0  
+
+std::cout<< "Doing set_inletVelocity_BCs_FC: \t\t"   << " face " << face << endl;
   //__________________________________
   // on (x,y,z)minus faces move in one cell
   IntVector oneCell(0,0,0);
@@ -112,27 +113,16 @@ namespace Uintah {
   double z_one_zero = fabs(one_or_zero.z());
 
   //__________________________________
-  //                            
-  double A     = sine_var_basket->A;
-  double omega = sine_var_basket->omega;
-  Vector vel_ref=sine_var_basket->vel_ref;                                
-  double t     = sharedState->getElapsedTime();                         
-  t += sine_v->delT;     
-  double change =   A * sin(omega*t);
-                                             
+  //                                         
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  
     IntVector c = *bound_ptr - oneCell;                  
       
-    Vector vel(0.0,0.0,0.0);                                         
-    vel.x(vel_ref.x() +  change); 
-    vel.y(vel_ref.y() +  change );
-    vel.z(vel_ref.z() +  change );  
+    Vector vel(0.0,0.0,0.0); 
                                                                      
     vel_FC[c] = x_one_zero * vel.x()                                 
               + y_one_zero * vel.y()                                 
               + z_one_zero * vel.z();                                
   }
-#endif 
   return bound_ptr.size(); 
 }                        
                                                 

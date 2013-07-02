@@ -26,6 +26,7 @@
 #define Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 #include <CCA/Components/ICE/CustomBCs/MMS_BCs.h>
 #include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
+#include <CCA/Components/ICE/CustomBCs/inletVelocity.h>
 #include <CCA/Components/ICE/CustomBCs/microSlipBCs.h>
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
@@ -289,7 +290,13 @@ void setBC(T& vel_FC,
             nCells+= set_Sine_BCs_FC<T>(patch, face, vel_FC, bound_ptr, sharedState,
                                         custom_BC_basket->sine_var_basket,
                                         custom_BC_basket->sine_v);
-          }         
+          }
+          //__________________________________
+          // Custom BCs
+          else if( (bc_kind == "powerLawProfile" || bc_kind == "logProfile") ){
+            nCells+= set_inletVelocity_BCs_FC<T>(patch, face, vel_FC, bound_ptr,
+                                                 custom_BC_basket->inletVel_var_basket);
+          }       
 
           //__________________________________
           //  debugging

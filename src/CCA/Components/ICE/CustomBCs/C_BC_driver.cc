@@ -115,7 +115,13 @@ void preprocess_CustomBCs(const string& where,
     preprocess_Sine_BCs( new_dw,old_dw, lb,indx,patch, where,
                         C_BC_basket->set_Sine_BCs, 
                         C_BC_basket->sine_v);        
-  }         
+  }  
+  
+  //__________________________________
+  //  inletVelocity conditions
+  if(C_BC_basket->using_inletVel_BCs){
+    preprocess_inletVelocity_BCs(  where, C_BC_basket->set_inletVel_BCs);        
+  }       
 }
 
 //______________________________________________________________________
