@@ -489,13 +489,13 @@
                               attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, 
                                                                      VelocityInlet, StABL, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet, Swirl, FromFile,
-                                                                     TurbulentInlet, Tabulated powerLawProfile logLawProfile'"
+                                                                     TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                               attribute3="label     REQUIRED STRING "
                               attribute4="type      OPTIONAL STRING 'int'" >
                                                                 
           <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom 
                                                                      MassFlowInlet Swirl VelocityInlet, TurbulentInlet, StABL, Tabulated, 
-                                                                     FromFile, VelocityFileInput, powerLawProfile, logLawProfile" />
+                                                                     FromFile, VelocityFileInput, powerLawProfile, logWindProfile" />
 
           <!-- functor_name: name of a functor to be applied on this boundary. Developer must handle parsing and pointing to proper functor in the code -->                                                          
           <functor_name     spec="OPTIONAL STRING"  need_applies_to="var Neumann Dirichlet" />                                                                     
@@ -545,11 +545,9 @@
         <alpha_temperature  spec="REQUIRED DOUBLE 'positive'"/>
       </microSlip>
 
-      <inletVelocity        spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'powerLawProfile, logProfile'">
-        <roughness          spec="REQUIRED DOUBLE 'positive'" need_applies_to="type logProfile" />
-        <frictionVel        spec="REQUIRED DOUBLE 'positive'" need_applies_to="type logProfile" />
+      <inletVelocity        spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'powerLawProfile, logWindProfile'">
+        <roughness          spec="REQUIRED DOUBLE 'positive'" need_applies_to="type logWindProfile" />
         <exponent           spec="REQUIRED DOUBLE 'positive'" need_applies_to="type powerLawProfile" /> 
-        <freestreamVel      spec="REQUIRED VECTOR"            need_applies_to="type logProfile powerLawProfile" />
         <verticalDirection  spec="REQUIRED INTEGER '0,2'" />
       </inletVelocity>
       
