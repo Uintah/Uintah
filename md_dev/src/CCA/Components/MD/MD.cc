@@ -372,12 +372,12 @@ void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
   task->requires(Task::OldDW, d_lb->pElectrostaticsForceLabel, Ghost::None, 0);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost:: Ghost::None, 0);
 
+  task->computes(d_lb->pElectrostaticsForceLabel_preReloc);
+  task->computes(d_lb->pChargeLabel_preReloc);
+
   task->requires(Task::NewDW, d_lb->forwardTransformPlanLabel);
   task->requires(Task::NewDW, d_lb->backwardTransformPlanLabel);
   task->requires(Task::NewDW, d_lb->globalQLabel);
-
-  task->computes(d_lb->pElectrostaticsForceLabel_preReloc);
-  task->computes(d_lb->pChargeLabel_preReloc);
 
   sched->addTask(task, patches, matls);
 }
