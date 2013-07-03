@@ -109,17 +109,16 @@ void MD::problemSetup(const ProblemSpecP& params,
   if (d_electrostatics->getType() == Electrostatics::SPME) {
     dynamic_cast<SPME*>(d_electrostatics)->setMDLabel(d_lb);
 
-    // TODO uncomment me for subscheduler version
-//    // create subscheduler for convergence loop in SPME::calculate
-//    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-//    d_subScheduler = sched->createSubScheduler();
-//
-//    d_subScheduler->initialize(3,1);
-//    d_subScheduler->clearMappings();
-//    d_subScheduler->mapDataWarehouse(Task::ParentOldDW, 0);
-//    d_subScheduler->mapDataWarehouse(Task::ParentNewDW, 1);
-//    d_subScheduler->mapDataWarehouse(Task::OldDW, 2);
-//    d_subScheduler->mapDataWarehouse(Task::NewDW, 3);
+    // create subscheduler for convergence loop in SPME::calculate
+    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+    d_subScheduler = sched->createSubScheduler();
+
+    d_subScheduler->initialize(3,1);
+    d_subScheduler->clearMappings();
+    d_subScheduler->mapDataWarehouse(Task::ParentOldDW, 0);
+    d_subScheduler->mapDataWarehouse(Task::ParentNewDW, 1);
+    d_subScheduler->mapDataWarehouse(Task::OldDW, 2);
+    d_subScheduler->mapDataWarehouse(Task::NewDW, 3);
   }
 
   // create and register MD materials (this is ill defined right now)
@@ -148,8 +147,7 @@ void MD::scheduleInitialize(const LevelP& level,
 
   const MaterialSet* materials = d_sharedState->allMaterials();
   LoadBalancer* loadBal = sched->getLoadBalancer();
-  GridP grid = level->getGrid();
-  const PatchSet* perprocPatches = loadBal->getPerProcessorPatchSet(grid);
+  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
 
   Task* task = scinew Task("MD::initialize", this, &MD::initialize);
 
@@ -166,11 +164,11 @@ void MD::scheduleInitialize(const LevelP& level,
 
   // Nonbonded initialization - OncePerProc, during initial (0th) timestep.
   // The required pXlabel is available to this OncePerProc task in the new_dw from the computes above
-  scheduleNonbondedInitialize(sched, perprocPatches, materials, level);
+  scheduleNonbondedInitialize(sched, perProcPatches, materials, level);
 
   // Nonbonded initialization - OncePerProc, during initial (0th) timestep.
   //   This OncePerProc task requires nothing
-  scheduleElectrostaticsInitialize(sched, perprocPatches, materials, level);
+  scheduleElectrostaticsInitialize(sched, perProcPatches, materials, level);
 }
 
 void MD::scheduleComputeStableTimestep(const LevelP& level,
@@ -255,11 +253,11 @@ void MD::scheduleNonbondedSetup(SchedulerP& sched,
 void MD::scheduleNonbondedCalculate(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls,
-                                    const LevelP& level)
+                                    const LevelP level)
 {
   printSchedule(patches, md_cout, "MD::scheduleNonbondedCalculate");
 
-  Task* task = scinew Task("MD::nonbondedCalculate", this, &MD::nonbondedCalculate, d_subScheduler, level);
+  Task* task = scinew Task("MD::nonbondedCalculate", this, &MD::nonbondedCalculate, level);
 
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pNonbondedForceLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
@@ -334,13 +332,13 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
 {
   printSchedule(patches, md_cout, "MD::scheduleElectrostaticsCalculate");
 
-  Task* task = scinew Task("electrostaticsCalculate", this, &MD::electrostaticsCalculate, d_subScheduler, level);
+  Task* task = scinew Task("electrostaticsCalculate", this, &MD::electrostaticsCalculate, level);
 
-  // TODO uncomment me for subscheduler version
-//  task->hasSubScheduler(true);
-//  task->setType(Task::OncePerProc);
+  task->hasSubScheduler(true);
+  task->setType(Task::OncePerProc);
 
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
 
   task->requires(Task::OldDW, d_lb->forwardTransformPlanLabel);
@@ -356,13 +354,10 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   task->computes(d_lb->spmeFourierEnergyLabel);
   task->computes(d_lb->spmeFourierStressLabel);
 
-  // TODO uncomment me for subscheduler version
-//  LoadBalancer* loadBal = sched->getLoadBalancer();
-//  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
-//
-//  sched->addTask(task, perProcPatches, matls);
+  LoadBalancer* loadBal = sched->getLoadBalancer();
+  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
 
-  sched->addTask(task, patches, matls);
+  sched->addTask(task, perProcPatches, matls);
 }
 
 void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
@@ -556,12 +551,11 @@ void MD::nonbondedCalculate(const ProcessorGroup* pg,
                             const MaterialSubset* matls,
                             DataWarehouse* parentOldDW,
                             DataWarehouse* parentNewDW,
-                            SchedulerP subscheduler,
                             const LevelP level)
 {
   printTask(patches, md_cout, "MD::nonbondedCalculate");
 
-  d_nonbonded->calculate(pg, patches, matls, parentOldDW, parentNewDW, subscheduler, level);
+  d_nonbonded->calculate(pg, patches, matls, parentOldDW, parentNewDW, d_subScheduler, level);
 }
 
 void MD::nonbondedFinalize(const ProcessorGroup* pg,
@@ -602,7 +596,6 @@ void MD::electrostaticsCalculate(const ProcessorGroup* pg,
                                  const MaterialSubset* matls,
                                  DataWarehouse* parentOldDW,
                                  DataWarehouse* parentNewDW,
-                                 SchedulerP subscheduler,
                                  const LevelP level)
 {
   printTask(perprocPatches, md_cout, "MD::electrostaticsCalculate");
@@ -612,8 +605,7 @@ void MD::electrostaticsCalculate(const ProcessorGroup* pg,
 //  parentOldDW->get(dt, d_sharedState->get_delt_label(),level.get_rep());
 //  subNewDW->put(dt, d_sharedState->get_delt_label(),level.get_rep());
 
-  d_electrostatics->calculate(pg, perprocPatches, matls, parentOldDW, parentNewDW, subscheduler, level);
-//  d_electrostatics->finalize(pg, perprocPatches, matls, parentOldDW, parentNewDW);
+  d_electrostatics->calculate(pg, perprocPatches, matls, parentOldDW, parentNewDW, d_subScheduler, level, d_sharedState);
 }
 
 void MD::electrostaticsFinalize(const ProcessorGroup* pg,
