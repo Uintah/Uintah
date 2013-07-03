@@ -366,6 +366,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
   {
 
+#ifdef WASATCH_IN_ARCHES
+    d_momSolver->sched_constructMomentum( level, sched, curr_level ); 
+#endif
+
     // Clean up all property models
     PropertyModelFactory& propFactory = PropertyModelFactory::self();
     PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
