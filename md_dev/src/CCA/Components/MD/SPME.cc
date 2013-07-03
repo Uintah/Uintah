@@ -31,6 +31,8 @@
 #include <CCA/Components/MD/PatchMaterialKey.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
@@ -278,8 +280,6 @@ void SPME::calculate(const ProcessorGroup* pg,
 
     // Do calculation steps until the Real->Fourier space transform
     calculatePreTransform(pg, perProcPatches, materials, old_dw, new_dw);
-    // We have a oncePerPatch threaded, locked initialization of d_Q_nodeLocal in calculatePreTransform
-    //   This is inefficient and should be fixed; we should need to do this once per proc, rather than once per patch
 
     // Q grid reductions
     reduceNodeLocalQ(pg, perProcPatches, materials, old_dw, new_dw);
@@ -287,16 +287,8 @@ void SPME::calculate(const ProcessorGroup* pg,
     // Forward transform
     transformRealToFourier(pg, perProcPatches, materials, old_dw, new_dw);
 
-    // Redistribute charge grid
-    distributeNodeLocalQ(pg, perProcPatches, materials, old_dw, new_dw);
-
     // Do Fourier space calculations on transformed data
     calculateInFourierSpace(pg, perProcPatches, materials, old_dw, new_dw);
-    // We have a oncePerPatch threaded, locked initialization of d_Q_nodeLocal in calculateInFourierSpace
-    //   This is inefficient and should be fixed; we should need to do this once per proc, rather than once per patch
-
-    // Q grid composition (!Not reduction)
-    copyToNodeLocalQ(pg, perProcPatches, materials, old_dw, new_dw);
 
     // Reverse transform
     transformFourierToReal(pg, perProcPatches, materials, old_dw, new_dw);
@@ -383,14 +375,8 @@ void SPME::calculate(const ProcessorGroup* pg,
 //      // Forward transform
 //      scheduleTransformRealToFourier(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, level);
 //
-//      // Redistribute charge grid
-//      scheduleDistributeChargeGrid(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
-//
 //      // Do Fourier space calculations on transformed data
 //      scheduleCalculateInFourierSpace(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
-//
-//      // Q grid reductions for reverse FFT
-//      scheduleCopyToNodeLocalQ(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
 //
 //      // Reverse transform
 //      scheduleTransformFourierToReal(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, level);
@@ -623,11 +609,11 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
 
     }  // end Atom Type Loop
   }  // end Patch loop
-  d_Qlock.lock();
-  d_Q_nodeLocal->initialize(dblcomplex(0.0,0.0));
-  d_Qlock.unlock();
-  // This initializes things once for each patch, but it's probably the easiest way to do it nonetheless.
-  // Later we can set a state variable to check if it's initialized and if so not re-initialize it.
+
+  // TODO keep an eye on this to make sure it works like we think it should
+  if (Thread::self()->myid() == 0) {
+    d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
+  }
 }
 
 void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
@@ -667,15 +653,24 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
     size_t yMax = localExtents[systemMidKDimension];
     size_t zMax = localExtents[systemMinKDimension];
 
+    // local-to-global Q coordinate translation. This eliminates the copy to-and-from local SPMEPatches
+    IntVector localQOffset = Q_patchLocal->getOffset();  // Location of the local Q patches 0,0,0 origin
+    int xBase = localQOffset[0];
+    int yBase = localQOffset[1];
+    int zBase = localQOffset[2];
+
     for (size_t kX = 0; kX < xMax; ++kX) {
       for (size_t kY = 0; kY < yMax; ++kY) {
         for (size_t kZ = 0; kZ < zMax; ++kZ) {
+          int x_global = xBase + kX;
+          int y_global = yBase + kY;
+          int z_global = zBase + kZ;
 
-          std::complex<double> gridValue = (*Q_patchLocal)(kX, kY, kZ);
+          std::complex<double> gridValue = (*d_Q_nodeLocal)(x_global, y_global, z_global);
           // Calculate (Q*Q^)*(B*C)
-          (*Q_patchLocal)(kX, kY, kZ) *= (*fTheta)(kX, kY, kZ);
-          spmeFourierEnergy += std::abs((*Q_patchLocal)(kX, kY, kZ) * conj(gridValue));
-          spmeFourierStress += std::abs((*Q_patchLocal)(kX, kY, kZ) * conj(gridValue)) * (*stressPrefactor)(kX, kY, kZ);
+          (*d_Q_nodeLocal)(x_global, y_global, z_global) *= (*fTheta)(kX, kY, kZ);
+          spmeFourierEnergy += std::abs((*d_Q_nodeLocal)(x_global, y_global, z_global) * conj(gridValue));
+          spmeFourierStress += std::abs((*d_Q_nodeLocal)(x_global, y_global, z_global) * conj(gridValue)) * (*stressPrefactor)(kX, kY, kZ);
         }
       }
     }
@@ -1263,9 +1258,10 @@ void SPME::distributeNodeLocalQ(const ProcessorGroup* pg,
         }
       }
     }
-    d_Qlock.lock();
-    d_Q_nodeLocal->initialize(dblcomplex(0.0,0.0));
-    d_Qlock.unlock();
+    // TODO keep an eye on this to make sure it works like we think it should
+    if (Thread::self()->myid() == 0) {
+      d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
+    }
   }
 }
 
