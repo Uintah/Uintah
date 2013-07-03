@@ -95,6 +95,8 @@ WARNING
                                       
   private:
 
+    enum PlaneType {XY=0, XZ=1, YZ=2, NONE=-9};
+    
     void initialize( const ProcessorGroup*, 
                      const PatchSubset* patches,
                      const MaterialSubset*,
@@ -154,10 +156,14 @@ WARNING
                       
     CellIterator getIterator( const Uintah::TypeDescription* td, 
                               const Patch* patch,
-                              const Point& startPt,
-                              const Point& endPt  );
+                              const IntVector& start_idx,
+                              const IntVector& end_idx  );
                                          
-    
+    inline bool containsCellInclusive( const IntVector& low, 
+                                       const IntVector& high, 
+                                       const IntVector& cell,
+                                       const PlaneType plane );
+                                       
     // general labels
     class planeExtractLabel {
     public:
@@ -171,6 +177,8 @@ WARNING
       string  name;  
       Point   startPt;
       Point   endPt;
+      PlaneType planeType;
+      
     };
        
     //__________________________________
