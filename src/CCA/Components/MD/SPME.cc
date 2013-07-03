@@ -307,6 +307,17 @@ void SPME::calculate(const ProcessorGroup* pg,
     checkConvergence();
     numIterations++;
   }
+
+    // explicitly forward SoleVariables to subDW (transferFrom only works with Grid and Particle Variables)
+    SoleVariable<fftw_plan> forwardTransformPlan;
+    SoleVariable<fftw_plan> backwardTransformPlan;
+    SoleVariable<SimpleGrid<dblcomplex>*> QGrid;
+    old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
+    old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
+    old_dw->get(QGrid, d_lb->globalQLabel);
+    new_dw->put(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
+    new_dw->put(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
+    new_dw->put(QGrid, d_lb->globalQLabel);
 }
 
 //void SPME::calculate(const ProcessorGroup* pg,
@@ -438,21 +449,9 @@ void SPME::finalize(const ProcessorGroup* pg,
                     DataWarehouse* new_dw)
 {
 
-
   // Do force spreading and clean up calculations -- or does this go in finalize?
   SPME::calculatePostTransform(pg, patches, materials, old_dw, new_dw);
 
-  // carry FFTW related SoleVariables forward
-  SoleVariable<fftw_plan> forwardTransformPlan;
-  SoleVariable<fftw_plan> backwardTransformPlan;
-  SoleVariable<SimpleGrid<dblcomplex>*> QGrid;
-  old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
-  old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
-  old_dw->get(QGrid, d_lb->globalQLabel);
-
-  new_dw->put(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
-  new_dw->put(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
-  new_dw->put(QGrid, d_lb->globalQLabel);
 }
 
 void SPME::scheduleCalculatePreTransform(SchedulerP& sched,
