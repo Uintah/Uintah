@@ -45,7 +45,6 @@ namespace Uintah {
       sv          = NULL;
       mms_v       = NULL;
       sine_v      = NULL;
-      inletVel_v  = NULL;
 
       Slip_var_basket = NULL;
       mms_var_basket  = NULL;
@@ -95,7 +94,6 @@ namespace Uintah {
     // powerLawProfile or logLawProfile inlet velocity profile
     bool using_inletVel_BCs;
     bool set_inletVel_BCs;
-    inletVel_vars* inletVel_v;
     inletVel_variable_basket* inletVel_var_basket;
     
     SimulationStateP sharedState;
@@ -105,18 +103,18 @@ namespace Uintah {
   
   
    void computesRequires_CustomBCs(Task* t, 
-                                           const string& where,
-                                           ICELabel* lb,
-                                           const MaterialSubset* ice_matls,
-                                           customBC_var_basket* C_BC_basket);
+                                   const string& where,                      
+                                   ICELabel* lb,                             
+                                   const MaterialSubset* ice_matls,          
+                                   customBC_var_basket* C_BC_basket);        
  
    void preprocess_CustomBCs(const string& where,
-                                     DataWarehouse* old_dw, 
-                                     DataWarehouse* new_dw,
-                                     ICELabel* lb,
-                                     const Patch* patch,
-                                     const int indx,
-                                     customBC_var_basket* C_BC_basket);
+                             DataWarehouse* old_dw,                    
+                             DataWarehouse* new_dw,                    
+                             ICELabel* lb,                             
+                             const Patch* patch,                       
+                             const int indx,                           
+                             customBC_var_basket* C_BC_basket);        
                             
    void delete_CustomBCs(customBC_var_basket* C_BC_basket);
   

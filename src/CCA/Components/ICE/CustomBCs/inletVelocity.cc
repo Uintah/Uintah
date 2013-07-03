@@ -28,10 +28,9 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Math/MiscMath.h>
+
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Math/MiscMath.h>
-#include <typeinfo>
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;
@@ -58,7 +57,7 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
   bool usingBC = false;
   string whichProfile; 
   
-  for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
+  for (ProblemSpecP face_ps = bc_ps->findBlock("Face"); face_ps != 0; 
                     face_ps=face_ps->findNextBlock("Face")) {
     map<string,string> face;
     face_ps->getAttributes(face);
@@ -70,7 +69,7 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
       bc_iter->getAttributes(bc_type);
       
       whichProfile = bc_type["var"];
-      if ( (whichProfile == "powerLawProfile" || whichProfile == "logProfile") && !setThisFace ) {
+      if ( (whichProfile == "powerLawProfile" || whichProfile == "logWindProfile") && !setThisFace ) {
         usingBC = true;
         setThisFace = true;
         
@@ -89,56 +88,29 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
   if(usingBC ){
   
     // set default values
+    VB->vonKarman = 0.4;
    
     ProblemSpecP inlet_ps = bc_ps->findBlock("inletVelocity");
     if (!inlet_ps) {
       string warn="ERROR:\n Inputs:Boundary Conditions: Cannot find inletVelocity_BC block";
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
+    
     inlet_ps -> get( "roughness",             VB->roughness   );
-    inlet_ps -> get( "frictionVelocity",      VB->frictionVelocity );
+    inlet_ps -> get( "vonKarmanConstant",     VB->vonKarman   );
     inlet_ps -> get( "exponent",              VB->exponent    );
-    inlet_ps -> get( "U_infinity",            VB->U_infinity  );
     inlet_ps -> require( "verticalDirection", VB->verticalDir );
     
-    // determine the orgin of the domain
+    // computational domain
     BBox b;
     grid->getInteriorSpatialRange(b);
-    VB->gridOrigin = b.min();
-    VB->gridHeight = b.max() - b.min();
+    VB->gridMin = b.min();
+    VB->gridMax = b.max();
   }
   return usingBC;
 }
-/* ______________________________________________________________________ 
- Purpose~   add the requires for the different task 
- ______________________________________________________________________  */
-void addRequires_inletVel(Task* t, 
-                          const string& where,
-                          ICELabel* lb,
-                          const MaterialSubset* /*ice_matls*/)
-{
-  cout_doing<< "Doing addRequires_inletVel: \t\t" <<t->getName()
-            << " " << where << endl;
-#if 0  
-  Ghost::GhostType  gn  = Ghost::None;
-  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-  MaterialSubset* press_matl = scinew MaterialSubset();
-  press_matl->add(0);
-  press_matl->addReference();
-  
-  if(where == "CC_Exchange"){
-    t->requires(Task::NewDW, lb->press_CCLabel, press_matl,oims,gn, 0); 
-   
-  }
-  if(where == "Advection"){
-    t->requires(Task::NewDW, lb->press_CCLabel, press_matl,oims,gn, 0);    
-  }
-#endif
-}
 
-/*______________________________________________________________________ 
- Purpose~   get data from the datawarehouse
-______________________________________________________________________ */
+//______________________________________________________________________ 
 void  preprocess_inletVelocity_BCs(const string& where,
                                    bool& set_BCs)
 {
@@ -180,13 +152,12 @@ int  set_inletVelocity_BC(const Patch* patch,
                           const string& var_desc,
                           Iterator& bound_ptr,
                           const string& bc_kind,
-                          SimulationStateP& sharedState,
-                          inletVel_variable_basket* VB )                     
-
+                          const Vector& bc_value,
+                          inletVel_variable_basket* VB )
 {
   int nCells = 0;
   
-  if (var_desc == "Velocity" && (bc_kind == "powerLawProfile" || bc_kind == "logProfile") ) {
+  if (var_desc == "Velocity" && (bc_kind == "powerLawProfile" || bc_kind == "logWindProfile") ) {
     cout_doing << "    Vel_CC (" << bc_kind << ") \t\t" <<patch->getFaceName(face)<< endl;
 
     // bulletproofing
@@ -197,33 +168,72 @@ int  set_inletVelocity_BC(const Patch* patch,
     
     int nDir = patch->getFaceAxes(face)[0];  //normal velocity direction
     int vDir = VB->verticalDir;              // vertical direction
-    double height = VB->gridHeight[vDir];
     
+
+    //__________________________________
     // compute the velocity in the normal direction
-    // u = U_infinity * (h/height)^n
-    
+    // u = U_infinity * pow( h/height )^n
     if( bc_kind == "powerLawProfile" ){
+  
+      double height     = VB->gridMax(vDir);
+      Vector U_infinity = bc_value;
+      double n          = VB->exponent;
+      
+      std::cout << "     height: " << height << " exponent: " << n << " U_infinity: " << U_infinity 
+           << " nDir: " << nDir << " vDir: " << vDir << endl;
+           
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
         IntVector c = *bound_ptr; 
         
         Point here = level->getCellPosition(c);
-        double h = here.asVector()[vDir] - height;
+        double h = here.asVector()[vDir];
         
-        vel_CC[c].x();
-        vel_CC[c].y();  
-        vel_CC[c].z();                                               
+        vel_CC[c]    = U_infinity;              // set the components that are not normal to the face
+        double ratio = h/height;           
+        
+        ratio = SCIRun::Clamp(ratio,0.0,1.0);  // clamp so 0< h/height < 1 in the edge cells 
+        
+        vel_CC[c][nDir] = U_infinity[nDir] * pow(ratio, n);
+        std::cout << "        " << c <<  " h " << h  << " h/height  " << ratio << " vel_CC: " << vel_CC[c] <<endl;                               
       }
     }
     
-    //   u = frictionVel * (1/vonKarman) * ln(h/roughness
-    else if( bc_kind == "logLawProfile" ){
+    //__________________________________
+    //   u = U_star * (1/vonKarman) * ln( (z-d)/roughness)
+    else if( bc_kind == "logWindProfile" ){
+    
+      double inv_K       = 1.0/VB->vonKarman;
+      double d           = VB->gridMin(vDir);  // origin
+      double gridMax     = VB->gridMax(vDir);
+      Vector frictionVel = bc_value;
+      double roughness   = VB->roughness;
+      
+      std::cout << "     d: " << d << " frictionVel: " << frictionVel << " roughness: " << roughness 
+                << " nDir: " << nDir << " vDir: " << vDir << endl;
+    
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
-        IntVector c = *bound_ptr;                                           
-        vel_CC[c].x();
-        vel_CC[c].y();  
-        vel_CC[c].z();                                               
+        IntVector c = *bound_ptr;
+        
+        Point here = level->getCellPosition(c);
+        double z   = here.asVector()[vDir];
+        
+        vel_CC[c]    = frictionVel;            // set the components that are not normal to the face
+        double ratio = (z - d)/roughness;
+        
+        vel_CC[c][nDir] = frictionVel[nDir] * inv_K * log(ratio);
+        
+        // Clamp edge/corner values 
+        if(z < d || z > gridMax){
+          vel_CC[c] = Vector(0,0,0);
+        }
+
+        std::cout << "        " << c <<  " z " << z  << " z-d " << z-d << " ratio " << ratio << " vel_CC: " << vel_CC[c] <<endl;
       }
     }else{
+      ostringstream warn;
+      warn << "ERROR ICE::set_inletVelocity_BC  This type of boundary condition has not been implemented ("
+           << bc_kind << ")\n" << endl; 
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     nCells += bound_ptr.size();
   }
