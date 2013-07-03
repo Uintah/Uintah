@@ -145,7 +145,7 @@ namespace Uintah {
       void scheduleNonbondedCalculate(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls,
-                                      const LevelP& level);
+                                      const LevelP level);
 
       /**
        * @brief
@@ -281,7 +281,6 @@ namespace Uintah {
                               const MaterialSubset* matls,
                               DataWarehouse* parentOldDW,
                               DataWarehouse* parentNewDW,
-                              SchedulerP subScheduler,
                               const LevelP level);
 
       /**
@@ -327,7 +326,6 @@ namespace Uintah {
                                    const MaterialSubset* matls,
                                    DataWarehouse* parentOldDW,
                                    DataWarehouse* parentNewDW,
-                                   SchedulerP subscheduler,
                                    const LevelP level);
 
       /**

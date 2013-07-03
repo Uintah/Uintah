@@ -94,7 +94,8 @@ namespace Uintah {
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw,
                              SchedulerP& subscheduler,
-                             const LevelP& level) = 0;
+                             const LevelP& level,
+                             SimulationStateP& sharedState) = 0;
 
       /**
        * @brief

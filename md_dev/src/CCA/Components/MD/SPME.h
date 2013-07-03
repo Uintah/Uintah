@@ -39,6 +39,8 @@
 
 #include <sci_defs/fftw_defs.h>
 
+#define CUTOFF_RADIUS SHRT_MAX
+
 namespace Uintah {
 
   using namespace SCIRun;
@@ -128,7 +130,8 @@ namespace Uintah {
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw,
                      SchedulerP& subscheduler,
-                     const LevelP& level);
+                     const LevelP& level,
+                     SimulationStateP& sharedState);
 
       /**
        * @brief
@@ -168,9 +171,10 @@ namespace Uintah {
        * @param
        * @return
        */
-      void scheduleCalculatePreTransform(const ProcessorGroup* pg,
+      void scheduleCalculatePreTransform(SchedulerP& sched,
+                                         const ProcessorGroup* pg,
                                          const PatchSet* patches,
-                                         const MaterialSubset* materials,
+                                         const MaterialSet* materials,
                                          DataWarehouse* subOldDW,
                                          DataWarehouse* subNewDW);
 
@@ -179,9 +183,10 @@ namespace Uintah {
        * @param
        * @return
        */
-      void scheduleReduceNodeLocalQ(const ProcessorGroup* pg,
+      void scheduleReduceNodeLocalQ(SchedulerP& sched,
+                                    const ProcessorGroup* pg,
                                     const PatchSet* patches,
-                                    const MaterialSubset* materials,
+                                    const MaterialSet* materials,
                                     DataWarehouse* subOldDW,
                                     DataWarehouse* subNewDW);
 
@@ -190,31 +195,35 @@ namespace Uintah {
        * @param
        * @return
        */
-      void scheduleTransformRealToFourier(const ProcessorGroup* pg,
-                                          const PatchSubset* perProcPatches,
-                                          const MaterialSubset* materials,
+      void scheduleTransformRealToFourier(SchedulerP& sched,
+                                          const ProcessorGroup* pg,
+                                          const PatchSet* perProcPatches,
+                                          const MaterialSet* materials,
                                           DataWarehouse* subOldDW,
-                                          DataWarehouse* subNewDW);
+                                          DataWarehouse* subNewDW,
+                                          const LevelP& level);
 
       /**
        * @brief
        * @param
        * @return
        */
-      void scheduleDistributeChargeGrid(const ProcessorGroup* pg,
-                                         const PatchSet* patches,
-                                         const MaterialSubset* materials,
-                                         DataWarehouse* subOldDW,
-                                         DataWarehouse* subNewDW);
+      void scheduleDistributeChargeGrid(SchedulerP& sched,
+                                        const ProcessorGroup* pg,
+                                        const PatchSet* patches,
+                                        const MaterialSet* materials,
+                                        DataWarehouse* subOldDW,
+                                        DataWarehouse* subNewDW);
 
       /**
        * @brief
        * @param
        * @return
        */
-      void scheduleCalculateInFourierSpace(const ProcessorGroup* pg,
+      void scheduleCalculateInFourierSpace(SchedulerP& sched,
+                                           const ProcessorGroup* pg,
                                            const PatchSet* patches,
-                                           const MaterialSubset* materials,
+                                           const MaterialSet* materials,
                                            DataWarehouse* subOldDW,
                                            DataWarehouse* subNewDW);
 
@@ -223,9 +232,10 @@ namespace Uintah {
        * @param
        * @return
        */
-      void scheduleCopyToNodeLocalQ(const ProcessorGroup* pg,
+      void scheduleCopyToNodeLocalQ(SchedulerP& sched,
+                                    const ProcessorGroup* pg,
                                     const PatchSet* patches,
-                                    const MaterialSubset* materials,
+                                    const MaterialSet* materials,
                                     DataWarehouse* subOldDW,
                                     DataWarehouse* subNewDW);
 
@@ -234,20 +244,23 @@ namespace Uintah {
        * @param
        * @return
        */
-      void scheduleTransformFourierToReal(const ProcessorGroup* pg,
-                                          const PatchSubset* perProcPatches,
-                                          const MaterialSubset* materials,
+      void scheduleTransformFourierToReal(SchedulerP& sched,
+                                          const ProcessorGroup* pg,
+                                          const PatchSet* perProcPatches,
+                                          const MaterialSet* materials,
                                           DataWarehouse* subOldDW,
-                                          DataWarehouse* subNewDW);
+                                          DataWarehouse* subNewDW,
+                                          const LevelP& level);
 
       /**
        * @brief
        * @param
        * @return
        */
-      void scheduleDistributeForceGrid(const ProcessorGroup* pg,
+      void scheduleDistributeForceGrid(SchedulerP& sched,
+                                       const ProcessorGroup* pg,
                                        const PatchSet* patches,
-                                       const MaterialSubset* materials,
+                                       const MaterialSet* materials,
                                        DataWarehouse* subOldDW,
                                        DataWarehouse* subNewDW);
 
