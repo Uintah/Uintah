@@ -2556,7 +2556,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
         break;
       case TypeDescription::ParticleVariable:
         {
-          d_plock.writeLock();
+          d_pvlock.writeLock();
           if(!fromDW->d_pvarDB.exists(var, matl, patch))
             SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
                                       "in transferFrom", __FILE__, __LINE__));
