@@ -111,8 +111,8 @@ void MD::problemSetup(const ProblemSpecP& params,
 
     // create subscheduler for convergence loop in SPME::calculate
     Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-    d_subScheduler = sched->createSubScheduler();
 
+    d_subScheduler = sched->createSubScheduler();
     d_subScheduler->initialize(3,1);
     d_subScheduler->clearMappings();
     d_subScheduler->mapDataWarehouse(Task::ParentOldDW, 0);
@@ -300,10 +300,15 @@ void MD::scheduleElectrostaticsInitialize(SchedulerP& sched,
       task->computes(d_lb->spmeFourierStressLabel);
 
       // sole variables
+      task->computes(d_lb->electrostaticsDependencyLabel);
       task->computes(d_lb->forwardTransformPlanLabel);
       task->computes(d_lb->backwardTransformPlanLabel);
       task->computes(d_lb->globalQLabel);
-      task->computes(d_lb->electrostaticsDependencyLabel);
+      task->computes(d_lb->globalQLabel1);
+      task->computes(d_lb->globalQLabel2);
+      task->computes(d_lb->globalQLabel3);
+      task->computes(d_lb->globalQLabel4);
+      task->computes(d_lb->globalQLabel5);
     }
 
     task->setType(Task::OncePerProc);
@@ -349,6 +354,11 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   task->computes(d_lb->forwardTransformPlanLabel);
   task->computes(d_lb->backwardTransformPlanLabel);
   task->computes(d_lb->globalQLabel);
+  task->computes(d_lb->globalQLabel1);
+  task->computes(d_lb->globalQLabel2);
+  task->computes(d_lb->globalQLabel3);
+  task->computes(d_lb->globalQLabel4);
+  task->computes(d_lb->globalQLabel5);
 
   // reduction variables
   task->computes(d_lb->spmeFourierEnergyLabel);
@@ -369,12 +379,13 @@ void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
 
   Task* task = scinew Task("MD::electrostaticsFinalize", this, &MD::electrostaticsFinalize);
 
+  // particle variables
   task->requires(Task::OldDW, d_lb->pElectrostaticsForceLabel, Ghost::None, 0);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost:: Ghost::None, 0);
-
   task->computes(d_lb->pElectrostaticsForceLabel_preReloc);
   task->computes(d_lb->pChargeLabel_preReloc);
 
+  // sole variables
   task->requires(Task::NewDW, d_lb->forwardTransformPlanLabel);
   task->requires(Task::NewDW, d_lb->backwardTransformPlanLabel);
   task->requires(Task::NewDW, d_lb->globalQLabel);
