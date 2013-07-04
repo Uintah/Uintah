@@ -46,6 +46,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 
 #include <sci_values.h>
 #include <sci_defs/fftw_defs.h>
@@ -727,9 +728,24 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
 //  old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
 //  fftw_execute(forwardTransformPlan.get());
 
-  int xdim = d_kLimits(0);
-  int ydim = d_kLimits(0);
-  int zdim = d_kLimits(0);
+  int xdim = d_kLimits[0];
+  int ydim = d_kLimits[1];
+  int zdim = d_kLimits[2];
+
+//  std::ofstream dumpout;
+//  dumpout.open("Q.out",std::ofstream::out);
+//
+//  for (int x=0; x < xdim; ++x) {
+//    for (int y=0; y < ydim; ++y) {
+//      for (int z=0; z < zdim; ++z) {
+//        dumpout <<  std::setw(8) << std::fixed << std:: setprecision(4) << std::right << real((*d_Q_nodeLocal)(x,y,z)) << " ";
+//      }
+//      dumpout << std::endl;
+//    }
+//    dumpout << std::endl;
+//  }
+//
+//  dumpout.close();
 
   fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q_nodeLocal->getDataPtr());
   fftw_plan forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
@@ -746,9 +762,9 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
 //  old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
 //  fftw_execute(backwardTransformPlan.get());
 
-  int xdim = d_kLimits.x();
-  int ydim = d_kLimits.y();
-  int zdim = d_kLimits.z();
+  int xdim = d_kLimits[0];
+  int ydim = d_kLimits[1];
+  int zdim = d_kLimits[2];
 
   fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q_nodeLocal->getDataPtr());
   fftw_plan backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
@@ -785,14 +801,10 @@ void SPME::calculateBGrid(SimpleGrid<double>& BGrid,
   size_t yExtents = localExtents.y();
   size_t zExtents = localExtents.z();
 
-  int xOffset = globalOffset.x();
-  int yOffset = globalOffset.y();
-  int zOffset = globalOffset.z();
-
   for (size_t kX = 0; kX < xExtents; ++kX) {
     for (size_t kY = 0; kY < yExtents; ++kY) {
       for (size_t kZ = 0; kZ < zExtents; ++kZ) {
-        BGrid(kX, kY, kZ) = norm(b1[kX + xOffset]) * norm(b2[kY + yOffset]) * norm(b3[kZ + zOffset]);
+        BGrid(kX, kY, kZ) = norm(b1[kX]) * norm(b2[kY]) * norm(b3[kZ]);
       }
     }
   }
@@ -1137,12 +1149,15 @@ void SPME::copyToNodeLocalQ(const ProcessorGroup* pg,
     // We SHOULDN'T need to lock because we should never hit the same memory location with any two threads..
     // Wrapping shouldn't be needed since the patch spatial decomposition ensures no internals to a patch cross boundary conditions.
     for (int xmask = 0; xmask < xExtent; ++xmask) {
-      int x_index = xBase + xmask;
+      int x_local = xmask;
+      int x_global = xBase + xmask;
       for (int ymask = 0; ymask < yExtent; ++ymask) {
-        int y_index = yBase + ymask;
+        int y_local = ymask;
+        int y_global = yBase + ymask;
         for (int zmask = 0; zmask < zExtent; ++zmask) {
-          int z_index = zBase + zmask;
-          (*d_Q_nodeLocal)(x_index, y_index, z_index) = (*Q_patchLocal)(x_index, y_index, z_index);
+          int z_local = zmask;
+          int z_global = zBase + zmask;
+          (*d_Q_nodeLocal)(x_global, y_global, z_global) = (*Q_patchLocal)(x_local, y_local, z_local);
         }
       }
     }
@@ -1183,18 +1198,18 @@ void SPME::reduceNodeLocalQ(const ProcessorGroup* pg,
 
     d_Qlock.lock();
     for (int xmask = 0; xmask < xExtent; ++xmask) {
-      int x_local = xBase + xmask;
-      int x_global = x_local;
+      int x_local = xmask;
+      int x_global = xBase + xmask;
       if (x_global >= xMax) { x_global -= xMax; }
       if (x_global < 0)     { x_global += xMax; }
       for (int ymask = 0; ymask < yExtent; ++ymask) {
-        int y_local = yBase + ymask;
-        int y_global = y_local;
+        int y_local = ymask;
+        int y_global = yBase + ymask;
         if (y_global >= yMax) { y_global -= yMax; }
         if (y_global < 0)     { y_global += yMax; }
         for (int zmask = 0; zmask < zExtent; ++zmask) {
-          int z_local = zBase + zmask;
-          int z_global = z_local;
+          int z_local = zmask;
+          int z_global = zBase + zmask;
           if (z_global >= zMax) { z_global -= zMax; }
           if (z_global < 0)     { z_global += zMax; }
           // Recall d_Q_nodeLocal is a complete copy of the Q grid for reduction across MPI threads
@@ -1239,28 +1254,24 @@ void SPME::distributeNodeLocalQ(const ProcessorGroup* pg,
     int zMax = globalBoundaries[2];
 
     for (int xmask = 0; xmask < xExtent; ++xmask) {
-      int x_local = xBase + xmask;
-      int x_global = x_local;
+      int x_local = xmask;
+      int x_global = xBase + xmask;
       if (x_global >= xMax) { x_global -= xMax; }
       if (x_global < 0)     { x_global += xMax; }
       for (int ymask = 0; ymask < yExtent; ++ymask) {
-        int y_local = yBase + ymask;
-        int y_global = y_local;
+        int y_local = ymask;
+        int y_global = yBase + ymask;
         if (y_global >= yMax) { y_global -= yMax; }
         if (y_global < 0)     { y_global += yMax; }
         for (int zmask = 0; zmask < zExtent; ++zmask) {
-          int z_local = zBase + zmask;
-          int z_global = z_local;
+          int z_local = zmask;
+          int z_global = zBase + zmask;
           if (z_global >= zMax) { z_global -= zMax; }
           if (z_global < 0)     { z_global += zMax; }
           // Recall d_Q_nodeLocal is a complete copy of the Q grid for reduction across MPI threads
           (*Q_patchLocal)(x_local,y_local,z_local) = (*d_Q_nodeLocal)(x_global,y_global,z_global);
         }
       }
-    }
-    // TODO keep an eye on this to make sure it works like we think it should
-    if (Thread::self()->myid() == 0) {
-      d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
     }
   }
 }
@@ -1274,6 +1285,11 @@ bool SPME::checkConvergence() const
   } else {
     // throw an exception for now, but eventually will check convergence here.
     throw InternalError("Error: Polarizable force field not yet implemented!", __FILE__, __LINE__);
+  }
+
+  // TODO keep an eye on this to make sure it works like we think it should
+  if (Thread::self()->myid() == 0) {
+    d_Q_nodeLocal->initialize(dblcomplex(0.0, 0.0));
   }
 }
 
