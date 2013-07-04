@@ -82,10 +82,16 @@ MDLabel::MDLabel()
 #ifdef HAVE_FFTW
   ///////////////////////////////////////////////////////////////////////////
   // Sole Variables - SPME
-  globalQLabel = VarLabel::create("globalQ", SoleVariable<SimpleGrid<dblcomplex> >::getTypeDescription());
   forwardTransformPlanLabel = VarLabel::create("forwardTransformPlan", SoleVariable<fftw_plan>::getTypeDescription());
   backwardTransformPlanLabel = VarLabel::create("backwardTransformPlan", SoleVariable<fftw_plan>::getTypeDescription());
   electrostaticsDependencyLabel = VarLabel::create("electrostaticsDependency", SoleVariable<double>::getTypeDescription());
+
+  globalQLabel = VarLabel::create("globalQ", SoleVariable<SimpleGrid<dblcomplex> >::getTypeDescription());
+  globalQLabel1 = VarLabel::create("globalQ1", SoleVariable<SimpleGrid<dblcomplex> >::getTypeDescription());
+  globalQLabel2 = VarLabel::create("globalQ2", SoleVariable<SimpleGrid<dblcomplex> >::getTypeDescription());
+  globalQLabel3 = VarLabel::create("globalQ3", SoleVariable<SimpleGrid<dblcomplex> >::getTypeDescription());
+  globalQLabel4 = VarLabel::create("globalQ4", SoleVariable<SimpleGrid<dblcomplex> >::getTypeDescription());
+  globalQLabel5 = VarLabel::create("globalQ5", SoleVariable<SimpleGrid<dblcomplex> >::getTypeDescription());
 #endif
 
 }
@@ -121,9 +127,14 @@ MDLabel::~MDLabel()
 
   ///////////////////////////////////////////////////////////////////////////
   // Sole Variables
-  VarLabel::destroy(globalQLabel);
   VarLabel::destroy(forwardTransformPlanLabel);
   VarLabel::destroy(backwardTransformPlanLabel);
   VarLabel::destroy(backwardTransformPlanLabel);
   VarLabel::destroy(electrostaticsDependencyLabel);
+  VarLabel::destroy(globalQLabel);
+  VarLabel::destroy(globalQLabel1);
+  VarLabel::destroy(globalQLabel2);
+  VarLabel::destroy(globalQLabel3);
+  VarLabel::destroy(globalQLabel4);
+  VarLabel::destroy(globalQLabel5);
 }

@@ -219,9 +219,10 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
 
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
-  if (affinity.active()) {
-    Thread::self()->set_affinity(0);  // bind main thread to cpu 0
-  }
+  // TODO we need to turn this back on when we have a way of coordinating access to cores shared by threads from different pools
+//  if (affinity.active()) {
+//    Thread::self()->set_affinity(0);  // bind main thread to cpu 0
+//  }
 #ifdef HAVE_CUDA
   state->setUnifiedScheduler(this);
 #endif
@@ -230,10 +231,31 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
 SchedulerP UnifiedScheduler::createSubScheduler()
 {
   UnifiedScheduler* newsched = scinew UnifiedScheduler(d_myworld, m_outPort, this);
-  newsched->d_sharedState = d_sharedState;
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
   newsched->d_sharedState = d_sharedState;
+
+  // create a subscheduler thread pool
+  newsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
+
+  std::cout << std::endl << "\tUsing EXPERIMENTAL Multi-threaded sub-scheduler" << std::endl << "\tCreating " << numThreads_
+            << " thread(s) for task execution in separate thread pool." << std::endl << std::endl;
+
+  char name[1024];
+
+  // Create the UnifiedWorkerThreads for the subscheduler here
+  for (int i = 0; i < newsched->numThreads_; i++) {
+    UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(newsched, i);
+    newsched->t_worker[i] = worker;
+    sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i);
+    Thread * t = scinew Thread(worker, name);
+    newsched->t_thread[i] = t;
+  }
+  // TODO we need to turn this back on when we have a way of coordinating access to cores shared by threads from different pools
+//  if (affinity.active()) {
+//    Thread::self()->set_affinity(0);  // bind main thread to cpu 0
+//  }
+
   return newsched;
 }
 
@@ -2059,9 +2081,10 @@ void UnifiedSchedulerWorker::run()
   }
 
   Thread::self()->set_myid(d_id + 1);
-  if (affinity.active()) {
-    Thread::self()->set_affinity(d_id + 1);
-  }
+  // TODO we need to turn this back on when we have a way of coordinating access to cores shared by threads from different pools
+//  if (affinity.active()) {
+//    Thread::self()->set_affinity(d_id + 1);
+//  }
 
   while (true) {
     //wait for main thread signal

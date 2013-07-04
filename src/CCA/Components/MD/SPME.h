@@ -208,36 +208,12 @@ namespace Uintah {
        * @param
        * @return
        */
-      void scheduleDistributeChargeGrid(SchedulerP& sched,
-                                        const ProcessorGroup* pg,
-                                        const PatchSet* patches,
-                                        const MaterialSet* materials,
-                                        DataWarehouse* subOldDW,
-                                        DataWarehouse* subNewDW);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
       void scheduleCalculateInFourierSpace(SchedulerP& sched,
                                            const ProcessorGroup* pg,
                                            const PatchSet* patches,
                                            const MaterialSet* materials,
                                            DataWarehouse* subOldDW,
                                            DataWarehouse* subNewDW);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleCopyToNodeLocalQ(SchedulerP& sched,
-                                    const ProcessorGroup* pg,
-                                    const PatchSet* patches,
-                                    const MaterialSet* materials,
-                                    DataWarehouse* subOldDW,
-                                    DataWarehouse* subNewDW);
 
       /**
        * @brief
@@ -257,12 +233,12 @@ namespace Uintah {
        * @param
        * @return
        */
-      void scheduleDistributeForceGrid(SchedulerP& sched,
-                                       const ProcessorGroup* pg,
-                                       const PatchSet* patches,
-                                       const MaterialSet* materials,
-                                       DataWarehouse* subOldDW,
-                                       DataWarehouse* subNewDW);
+      void scheduleDistributeNodeLocalQ(SchedulerP& sched,
+                                        const ProcessorGroup* pg,
+                                        const PatchSet* patches,
+                                        const MaterialSet* materials,
+                                        DataWarehouse* subOldDW,
+                                        DataWarehouse* subNewDW);
 
       /**
        * @brief
