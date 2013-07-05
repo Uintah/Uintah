@@ -213,7 +213,8 @@ namespace Uintah {
                                            const PatchSet* patches,
                                            const MaterialSet* materials,
                                            DataWarehouse* subOldDW,
-                                           DataWarehouse* subNewDW);
+                                           DataWarehouse* subNewDW,
+                                           DataWarehouse* parentNewDW);
 
       /**
        * @brief
@@ -401,7 +402,8 @@ namespace Uintah {
                                    const PatchSubset* patches,
                                    const MaterialSubset* materials,
                                    DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw);
+                                   DataWarehouse* new_dw,
+                                   DataWarehouse* parentNewDW);
 
       /**
        * @brief Perform calculations proceeding the FFT transform from Fourier to real space.

@@ -300,7 +300,6 @@ void SPME::calculate(const ProcessorGroup* pg,
 
   // transfer data from parentOldDW to subDW
   subNewDW->transferFrom(parentOldDW, d_lb->pXLabel, perProcPatches, allMaterialsUnion);
-  subNewDW->transferFrom(parentOldDW, d_lb->pElectrostaticsForceLabel, perProcPatches, allMaterialsUnion);
   subNewDW->transferFrom(parentOldDW, d_lb->pChargeLabel, perProcPatches, allMaterialsUnion);
   subNewDW->transferFrom(parentOldDW, d_lb->pParticleIDLabel, perProcPatches, allMaterialsUnion);
 
@@ -326,13 +325,15 @@ void SPME::calculate(const ProcessorGroup* pg,
   subNewDW->put(QGrid, d_lb->globalQLabel4);
   subNewDW->put(QGrid, d_lb->globalQLabel5);
 
-  sum_vartype spmeFourierEnergy;
-  matrix_sum spmeFourierStress;
-  parentOldDW->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-  parentOldDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
-
-  subNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-  subNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
+  // reduction variables
+//  sum_vartype spmeFourierEnergy;
+//  matrix_sum spmeFourierStress;
+//  parentOldDW->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
+//  parentOldDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
+//  subNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
+//  subNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
+  parentNewDW->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
+  parentNewDW->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
 
   bool converged = false;
   int numIterations = 0;
@@ -364,7 +365,7 @@ void SPME::calculate(const ProcessorGroup* pg,
       scheduleTransformRealToFourier(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, level);
 
       // Do Fourier space calculations on transformed data
-      scheduleCalculateInFourierSpace(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
+      scheduleCalculateInFourierSpace(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, parentNewDW);
 
       // Reverse transform
       scheduleTransformFourierToReal(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, level);
@@ -379,6 +380,9 @@ void SPME::calculate(const ProcessorGroup* pg,
       recompileSubscheduler = false;
     }
 
+    // Need to re-map subNewDW
+    subNewDW = subscheduler->get_dw(3);
+
     // move subNewDW to subOldDW
     subscheduler->advanceDataWarehouse(grid);
 //    subOldDW->setScrubbing(DataWarehouse::ScrubComplete);
@@ -391,10 +395,16 @@ void SPME::calculate(const ProcessorGroup* pg,
     numIterations++;
   }
 
-  // No products of iterations (read only info from ParentOldDW) so don't need forward subNewDW --> parentNewDW
-  //  just need to forward parentOldDW --> parentNewDW as the computes state (in MD::scheduleElectrostaticsCalculate)
+  // Need to re-map subNewDW so we're "getting" from the right subDW when forwarding SoleVariables
+  subNewDW = subscheduler->get_dw(3);
 
-  // Sole Variables
+  /*
+   * No ParticleVariable products from iterations (read only info from ParentOldDW) so don't need forward these
+   * subNewDW --> parentNewDW, just need to forward the SoleVariables; parentOldDW --> parentNewDW, as the
+   * computes statements specify in MD::scheduleElectrostaticsCalculate
+   */
+
+  // Push Sole Variables up to the parent DW
   SoleVariable<SimpleGrid<dblcomplex>*> QGridParent;
   SoleVariable<fftw_plan> forwardTransformPlanParent;
   SoleVariable<fftw_plan> backwardTransformPlanParent;
@@ -406,7 +416,6 @@ void SPME::calculate(const ProcessorGroup* pg,
   subNewDW->get(QGridParent, d_lb->globalQLabel3);
   subNewDW->get(QGridParent, d_lb->globalQLabel4);
   subNewDW->get(QGridParent, d_lb->globalQLabel5);
-
   parentNewDW->put(forwardTransformPlanParent, d_lb->forwardTransformPlanLabel);
   parentNewDW->put(backwardTransformPlanParent, d_lb->backwardTransformPlanLabel);
   parentNewDW->put(QGridParent, d_lb->globalQLabel);
@@ -416,7 +425,9 @@ void SPME::calculate(const ProcessorGroup* pg,
   parentNewDW->put(QGridParent, d_lb->globalQLabel4);
   parentNewDW->put(QGridParent, d_lb->globalQLabel5);
 
-  // Reduction Variables
+  // Push Reduction Variables up to the parent DW
+  sum_vartype spmeFourierEnergy;
+  matrix_sum spmeFourierStress;
   subNewDW->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
   subNewDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
   parentNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
@@ -433,10 +444,8 @@ void SPME::finalize(const ProcessorGroup* pg,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw)
 {
-
-  // Do force spreading and clean up calculations -- or does this go in finalize?
+  // Do force spreading
   SPME::calculatePostTransform(pg, patches, materials, old_dw, new_dw);
-
 }
 
 void SPME::scheduleCalculatePreTransform(SchedulerP& sched,
@@ -450,13 +459,12 @@ void SPME::scheduleCalculatePreTransform(SchedulerP& sched,
 
   Task* task = scinew Task("SPME::calculatePreTransform", this, &SPME::calculatePreTransform);
 
-  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::ParentNewDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->globalQLabel);
 
   task->computes(d_lb->pXLabel);
-  task->computes(d_lb->pElectrostaticsForceLabel);
   task->computes(d_lb->pChargeLabel);
   task->computes(d_lb->pParticleIDLabel);
   task->computes(d_lb->globalQLabel1);
@@ -511,11 +519,12 @@ void SPME::scheduleCalculateInFourierSpace(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* materials,
                                            DataWarehouse* subOldDW,
-                                           DataWarehouse* subNewDW)
+                                           DataWarehouse* subNewDW,
+                                           DataWarehouse* parentNewDW)
 {
   printSchedule(patches, spme_cout, "SPME::scheduleCalculateInFourierSpace");
 
-  Task* task = scinew Task("SPME::calculateInFourierSpace", this, &SPME::calculateInFourierSpace);
+  Task* task = scinew Task("SPME::calculateInFourierSpace", this, &SPME::calculateInFourierSpace, parentNewDW);
 
   task->requires(Task::NewDW, d_lb->globalQLabel3);
 
@@ -626,7 +635,6 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
   // these need to be transfered forward each timestep so they can ultimately be passed back to the parent DW
   bool replace = true;
   new_dw->transferFrom(old_dw, d_lb->pXLabel, patches, materials, replace);
-  new_dw->transferFrom(old_dw, d_lb->pElectrostaticsForceLabel, patches, materials, replace);
   new_dw->transferFrom(old_dw, d_lb->pChargeLabel, patches, materials, replace);
   new_dw->transferFrom(old_dw, d_lb->pParticleIDLabel, patches, materials, replace);
 
@@ -727,7 +735,8 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* materials,
                                    DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw)
+                                   DataWarehouse* new_dw,
+                                   DataWarehouse* parent_new_dw)
 {
   double spmeFourierEnergy = 0.0;
   Matrix3 spmeFourierStress(0.0);
@@ -786,6 +795,14 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
   // put updated values for reduction variables into the DW
   new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
   new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->spmeFourierStressLabel);
+
+//  // [APH]TODO delete me
+  sum_vartype spmeFourierEnergyNew;
+  matrix_sum spmeFourierStressNew;
+  new_dw->get(spmeFourierEnergyNew, d_lb->spmeFourierEnergyLabel);
+  new_dw->get(spmeFourierStressNew, d_lb->spmeFourierStressLabel);
+//  parent_new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
+//  parent_new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->spmeFourierStressLabel);
 
   // forward global-Q through the VarLabel chain; support for modifies on SoleVariables will fix this
   SoleVariable<SimpleGrid<dblcomplex>*> QGrid;
