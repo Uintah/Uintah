@@ -8,7 +8,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/Directives.h>
-
 #include <vector>
 #include <string>
 

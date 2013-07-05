@@ -553,7 +553,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
 
           d_totIter = 8;
           NIter = 3;
-          delta = PO2_inf/40.0;
+          delta = PO2_inf/30.0;
           d_tol = 1e-15;
           f1 = 1.0;
           icount = 0;

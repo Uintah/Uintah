@@ -77,7 +77,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     d_volq_label = d_fieldLabels->d_radiationVolqINLabel;
     d_abskg_label = d_fieldLabels->d_abskgINLabel;
   } else if(new_radiation){
-      //    d_volq_label = VarLabel::find("radiationVolq");
+    d_volq_label = VarLabel::find("radiationVolq");  //this line need further modification
     d_abskg_label = VarLabel::find("abskg");
   }
 
