@@ -33,6 +33,7 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
+#include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
 
 // includes for Uintah
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
@@ -181,11 +182,29 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     proc0cout << "\n Lower bounds on heat loss = " << d_hl_lower_bound << endl;
     proc0cout << " Upper bounds on heat loss = " << d_hl_upper_bound << endl;
 
+    PropertyModelFactory& propFactory = PropertyModelFactory::self();
+    PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+        iprop != all_prop_models.end(); iprop++){
+
+      PropertyModelBase* prop_model = iprop->second;
+      if ( prop_model->getPropType() == "heat_loss" ){ 
+
+        HeatLoss* hl_model = dynamic_cast<HeatLoss*>(prop_model); 
+
+        std::string h_name = hl_model->get_hs_label_name(); 
+        insertIntoMap( h_name ); 
+
+        h_name = hl_model->get_ha_label_name(); 
+        insertIntoMap( h_name ); 
+
+      }
+    }
+
   }
 
   proc0cout << "\n --- End Classic Arches table information --- " << endl;
   proc0cout << endl;
-
 
 }
 

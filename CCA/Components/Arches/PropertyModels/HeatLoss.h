@@ -61,6 +61,9 @@ public:
     _high_hl = bounds[1]; 
   }; 
 
+  std::string get_hs_label_name(){ return _sen_h_label_name; }; 
+  std::string get_ha_label_name(){ return _adiab_h_label_name; }; 
+
   /** @brief get a reference to the table **/ 
   void set_table_ref( MixingRxnModel* rxn_model ){ _rxn_model = rxn_model; }; 
 
