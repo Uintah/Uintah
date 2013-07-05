@@ -167,6 +167,8 @@ private:
   const VarLabel* d_volq_label;
   const VarLabel* d_abskg_label;
 
+  string _div_q_label_name;
+  
   double visc;
   double yelem[5];              ///< Fractions of each element in coal (C, H, N, O, S respectively)
   vector<double>  ash_mass_init;         ///< Initial ash mass
