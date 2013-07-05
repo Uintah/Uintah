@@ -59,7 +59,9 @@ DiffusiveVelocity<GradT>::DiffusiveVelocity( const Expr::Tag& turbDiffTag,
     coefTag_( Expr::Tag() ),
     turbDiffTag_( turbDiffTag ),
     coefVal_( coef )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
