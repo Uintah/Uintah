@@ -365,7 +365,7 @@ void SPME::calculate(const ProcessorGroup* pg,
       scheduleTransformRealToFourier(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, level);
 
       // Do Fourier space calculations on transformed data
-      scheduleCalculateInFourierSpace(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, parentNewDW);
+      scheduleCalculateInFourierSpace(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
 
       // Reverse transform
       scheduleTransformFourierToReal(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, level);
@@ -519,12 +519,11 @@ void SPME::scheduleCalculateInFourierSpace(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* materials,
                                            DataWarehouse* subOldDW,
-                                           DataWarehouse* subNewDW,
-                                           DataWarehouse* parentNewDW)
+                                           DataWarehouse* subNewDW)
 {
   printSchedule(patches, spme_cout, "SPME::scheduleCalculateInFourierSpace");
 
-  Task* task = scinew Task("SPME::calculateInFourierSpace", this, &SPME::calculateInFourierSpace, parentNewDW);
+  Task* task = scinew Task("SPME::calculateInFourierSpace", this, &SPME::calculateInFourierSpace);
 
   task->requires(Task::NewDW, d_lb->globalQLabel3);
 
@@ -735,8 +734,7 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* materials,
                                    DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw,
-                                   DataWarehouse* parent_new_dw)
+                                   DataWarehouse* new_dw)
 {
   double spmeFourierEnergy = 0.0;
   Matrix3 spmeFourierStress(0.0);
@@ -795,14 +793,6 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
   // put updated values for reduction variables into the DW
   new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
   new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->spmeFourierStressLabel);
-
-//  // [APH]TODO delete me
-  sum_vartype spmeFourierEnergyNew;
-  matrix_sum spmeFourierStressNew;
-  new_dw->get(spmeFourierEnergyNew, d_lb->spmeFourierEnergyLabel);
-  new_dw->get(spmeFourierStressNew, d_lb->spmeFourierStressLabel);
-//  parent_new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
-//  parent_new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->spmeFourierStressLabel);
 
   // forward global-Q through the VarLabel chain; support for modifies on SoleVariables will fix this
   SoleVariable<SimpleGrid<dblcomplex>*> QGrid;
