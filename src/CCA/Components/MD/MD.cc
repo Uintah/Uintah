@@ -520,15 +520,15 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
   new_dw->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
   new_dw->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
 
-  proc0thread0cout << std::endl;
-  proc0thread0cout << "-----------------------------------------------------"           << std::endl;
-  proc0thread0cout << "Total Energy   = " << std::setprecision(16) << vdwEnergy         << std::endl;
-  proc0thread0cout << "-----------------------------------------------------"           << std::endl;
-  proc0thread0cout << "Fourier Energy = " << std::setprecision(16) << spmeFourierEnergy << std::endl;
-  proc0thread0cout << "-----------------------------------------------------"           << std::endl;
-  proc0thread0cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
-  proc0thread0cout << "-----------------------------------------------------"           << std::endl;
-  proc0thread0cout << std::endl;
+  proc0cout << std::endl;
+  proc0cout << "-----------------------------------------------------"           << std::endl;
+  proc0cout << "Total Energy   = " << std::setprecision(16) << vdwEnergy         << std::endl;
+  proc0cout << "-----------------------------------------------------"           << std::endl;
+  proc0cout << "Fourier Energy = " << std::setprecision(16) << spmeFourierEnergy << std::endl;
+  proc0cout << "-----------------------------------------------------"           << std::endl;
+  proc0cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
+  proc0cout << "-----------------------------------------------------"           << std::endl;
+  proc0cout << std::endl;
 
   new_dw->put(delt_vartype(1), d_sharedState->get_delt_label(), getLevel(patches));
 }
