@@ -310,6 +310,19 @@ namespace Uintah {
                            const int localGridExtent) const;
 
       /**
+       * @brief
+       * @param
+       * @param
+       * @param
+       * @param
+       * @return
+       */
+      void generateBVectorChunk(std::vector<dblcomplex>& bVector,
+                                const int m_initial,
+                                const int localGridExtent,
+                                const int K) const;
+
+      /**
        * @brief Generates the local portion of the C grid (see. Essmann et. al., J. Phys. Chem. 103, p 8577, 1995)
        *          Equation 3.9
        * @param Extents - The number of internal grid points on the current processor
