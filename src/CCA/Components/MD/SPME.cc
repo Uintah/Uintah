@@ -185,19 +185,21 @@ void SPME::initialize(const ProcessorGroup* pg,
   IntVector minusGhostExtents(0,0,0);
 
   for(size_t p = 0; p < numPatches; ++p) {
+
     const Patch* patch = patches->get(p);
     Vector patchLowIndex  = (patch->getCellLowIndex()).asVector();
     Vector patchHighIndex = (patch->getCellHighIndex()).asVector();
     Vector localCellExtent = patchHighIndex - patchLowIndex;
 
-    double localCellVolumeFraction = (localCellExtent.x()*localCellExtent.y()*localCellExtent.z())/
-                                     (systemCellExtent.x()*systemCellExtent.y()*systemCellExtent.z());
+    double localCellVolumeFraction = (localCellExtent.x() * localCellExtent.y() * localCellExtent.z())
+                                     / (systemCellExtent.x() * systemCellExtent.y() * systemCellExtent.z());
 
     IntVector patchKLow, patchKHigh;
     for (size_t index = 0; index < 3; ++index) {
-      patchKLow[index] = ceil(kReal[index] * (patchLowIndex[index] / systemCellExtent[index]));
+      patchKLow[index] = floor(kReal[index] * (patchLowIndex[index] / systemCellExtent[index]));
       patchKHigh[index] = floor(kReal[index] * (patchHighIndex[index] / systemCellExtent[index]));
     }
+
     IntVector patchKGridExtents = (patchKHigh - patchKLow); // Number of K grid points in the local patch
     IntVector patchKGridOffset  = patchKLow;                // Starting indices for K grid in local patch
 
@@ -854,18 +856,16 @@ void SPME::calculateBGrid(SimpleGrid<double>& BGrid,
   size_t yExtents = localExtents.y();
   size_t zExtents = localExtents.z();
 
-  int xOffset = globalOffset.x();
-  int yOffset = globalOffset.y();
-  int zOffset = globalOffset.z();
-
   // localExtents is without ghost grid points
   std::vector<dblcomplex> b1(xExtents);
   std::vector<dblcomplex> b2(yExtents);
   std::vector<dblcomplex> b3(zExtents);
-  generateBVector(b1, mf1, xOffset, xExtents);
-  generateBVector(b2, mf2, yOffset, yExtents);
-  generateBVector(b3, mf3, zOffset, zExtents);
-
+  //  generateBVector(b1, mf1, globalOffset.x(), localExtents.x());
+  //  generateBVector(b2, mf2, globalOffset.y(), localExtents.y());
+  //  generateBVector(b3, mf3, globalOffset.z(), localExtents.z());
+  generateBVectorChunk(b1, globalOffset[0], localExtents[0], d_kLimits[0]);
+  generateBVectorChunk(b2, globalOffset[1], localExtents[1], d_kLimits[1]);
+  generateBVectorChunk(b3, globalOffset[2], localExtents[2], d_kLimits[2]);
 
   for (size_t kX = 0; kX < xExtents; ++kX) {
     for (size_t kY = 0; kY < yExtents; ++kY) {
@@ -896,6 +896,34 @@ void SPME::generateBVector(std::vector<dblcomplex>& bVector,
     dblcomplex denominator = 0.0;
     for (int denomIndex = 0; denomIndex <= n - 2; ++denomIndex) {
       double denom_term = static_cast<double>(denomIndex) * twoPi_m_over_K;
+      denominator += zeroAlignedSpline[denomIndex + 1] * dblcomplex(cos(denom_term), sin(denom_term));
+    }
+    bVector[BIndex] = numerator / denominator;
+  }
+}
+
+void SPME::generateBVectorChunk(std::vector<dblcomplex>& bVector,
+                                const int m_initial,
+                                const int localGridExtent,
+                                const int K) const
+{
+  double PI = acos(-1.0);
+  double twoPI = 2.0 * PI;
+  int n = d_interpolatingSpline.getOrder();
+  double KReal = static_cast<double>(K);
+  double OrderMinus1 = static_cast<double>(n - 1);
+
+  std::vector<double> zeroAlignedSpline = d_interpolatingSpline.evaluateGridAligned(0);
+
+  // Formula 4.4 in Essman et. al.: A Smooth Particle Mesh Ewald Method
+  for (int BIndex = 0; BIndex < localGridExtent; ++BIndex) {
+    double m = static_cast<double>(m_initial + BIndex);
+    double twoPI_m_over_K = twoPI * m / KReal;  // --> 2*pi*m/K
+    double numerator_scalar = twoPI_m_over_K * OrderMinus1;  // --> (n-1)*2*pi*m/K
+    dblcomplex numerator = dblcomplex(cos(numerator_scalar), sin(numerator_scalar));
+    dblcomplex denominator(0.0, 0.0);
+    for (int denomIndex = 0; denomIndex <= (n - 2); ++denomIndex) {
+      double denom_term = static_cast<double>(denomIndex) * twoPI_m_over_K;
       denominator += zeroAlignedSpline[denomIndex + 1] * dblcomplex(cos(denom_term), sin(denom_term));
     }
     bVector[BIndex] = numerator / denominator;
@@ -1212,8 +1240,10 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
     }
     // sanity check
     if (pidx < 5) {
+      cerrLock.lock();
       std::cerr << " Force Check (" << pidx << "): " << newForce << endl;
       pforcenew[pidx] = newForce;
+      cerrLock.unlock();
     }
   }
 }

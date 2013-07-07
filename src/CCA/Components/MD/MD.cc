@@ -430,6 +430,9 @@ void MD::initialize(const ProcessorGroup* pg,
 {
   printTask(patches, md_cout, "MD::initialize");
 
+  Matrix3 systemInverseCell = d_system->getInverseCell();
+  IntVector totalSystemExtent = d_system->getCellExtent();
+
   // loop through all patches
   unsigned int numAtoms = d_system->getNumAtoms();
   unsigned int numPatches = patches->size();
@@ -458,10 +461,14 @@ void MD::initialize(const ProcessorGroup* pg,
       // eventually we'll need to use PFS for this
       vector<Atom> localAtoms;
       for (unsigned int i = 0; i < numAtoms; ++i) {
-        if (containsAtom(low, high, d_atomList[i].coords)) {
+        Vector reducedCoordinates = ((d_atomList[i].coords).asVector() * systemInverseCell);
+
+        IntVector cellCoordinates((reducedCoordinates * totalSystemExtent.asVector()).asPoint());
+        if (containsAtom(low, high, cellCoordinates)) {
           localAtoms.push_back(d_atomList[i]);
         }
       }
+
       // insert particle type counting loop here
 
       ParticleSubset* pset = new_dw->createParticleSubset(localAtoms.size(), matl, patch);

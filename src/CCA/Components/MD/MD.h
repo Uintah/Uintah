@@ -392,7 +392,7 @@ namespace Uintah {
        */
       inline bool containsAtom(const IntVector& l,
                                const IntVector& h,
-                               const Point& p) const
+                               const IntVector& p) const
       {
         return ((p.x() >= l.x() && p.x() < h.x()) && (p.y() >= l.y() && p.y() < h.y()) && (p.z() >= l.z() && p.z() < h.z()));
       }
