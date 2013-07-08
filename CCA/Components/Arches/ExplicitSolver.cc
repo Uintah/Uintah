@@ -564,7 +564,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
+#ifdef WASATCH_IN_ARCHES
     d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level] );
+    //d_momSolver->sched_solveVelHatWarches( level, sched, curr_level ); 
+#else 
+    d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level] );
+#endif 
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
       EqnBase* eqn = iter->second;
