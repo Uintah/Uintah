@@ -197,7 +197,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
        setupBCs( db_params );
      }
 
-     db->getWithDefault("wall_csmag",d_csmag_wall,0.17);
+     db->getWithDefault("wall_csmag",d_csmag_wall,0.0);
      if ( db->findBlock( "wall_slip" )){ 
        d_slip = true; 
        d_csmag_wall = 0.0; 
