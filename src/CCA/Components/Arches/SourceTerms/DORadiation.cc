@@ -267,6 +267,19 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
       tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
 
+      for ( int i = 0; i < _nQn_part; i++ ){ 
+
+        //--size--
+        tsk->requires( Task::NewDW, _size_varlabels[i], Ghost::None, 0 ); 
+
+        //--temperature--
+        tsk->requires( Task::NewDW, _T_varlabels[i], Ghost::None, 0 ); 
+
+        //--weight--
+        tsk->requires( Task::NewDW, _w_varlabels[i], Ghost::None, 0 ); 
+
+      } 
+
     } else { 
 
       tsk->requires( Task::NewDW, _co2_label, gn,  0 ); 
@@ -285,6 +298,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       tsk->modifies( *iter ); 
 
     }
+
   }
 
   tsk->requires(Task::OldDW, _labels->d_cellTypeLabel, gac, 1 ); 
@@ -464,7 +478,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
         new_dw->getCopy( radiation_vars.temperature,  _T_label,   matlIndex, patch, gn, 0 );
 
       }
-
 
       new_dw->getModifiable( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
