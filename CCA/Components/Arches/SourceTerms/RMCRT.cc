@@ -163,6 +163,10 @@ RMCRT_Radiation::extraSetup()
 { 
   _tempLabel = _labels->getVarlabelByRole(ArchesLabel::TEMPERATURE);
   proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName() << endl;
+
+  if ( _tempLabel == 0 ){ 
+    throw ProblemSetupException("Error: No temperature label found.",__FILE__,__LINE__); 
+  } 
   
 #ifdef HAVE_CUDA
   _RMCRT = scinew Ray(_sharedState->getUnifiedScheduler());
@@ -323,6 +327,7 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
 
   if ( time_sub_step == 0 ) { 
     tsk->computes( _abskgLabel );
+    tsk->requires( Task::OldDW, _tempLabel, Ghost::None, 0 ); 
     //gas
     for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
 
@@ -379,6 +384,8 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
     } 
   } else {  
     tsk->modifies( _abskgLabel );
+    tsk->requires( Task::NewDW, _tempLabel, Ghost::None, 0 ); 
+
     for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
       tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
     } 
@@ -410,7 +417,9 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
                                 const int time_sub_step )
 {
   for (int p=0; p < patches->size(); p++){
+
     std::vector<constCCVariable<double> > species; 
+    constCCVariable<double> gas_temperature; 
 
     const Patch* patch = patches->get(p);
 
@@ -428,6 +437,8 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
       new_dw->getModifiable( abskp,  _abskgLabel,  _matl, patch );
       which_dw = new_dw; 
     }
+
+    which_dw->get( gas_temperature, _tempLabel, _matl, patch, Ghost::None, 0 ); 
 
     typedef std::vector<constCCVariable<double> > CCCV; 
     typedef std::vector<const VarLabel*> CCCVL; 
