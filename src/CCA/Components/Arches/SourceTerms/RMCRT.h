@@ -157,7 +157,6 @@ private:
   SimulationStateP      _sharedState;
   ProblemSpecP          _ps;  // needed for extraSetup()
  
-  const VarLabel* _T_label;
   const VarLabel* _tempLabel;
   const VarLabel* _sigmaT4Label;
   const VarLabel* _abskgLabel;
