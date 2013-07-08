@@ -24,22 +24,13 @@
 
 #include <CCA/Components/ICE/CustomBCs/inletVelocity.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
-#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/SimulationState.h>
-
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Util/DebugStream.h>
 
-using namespace Uintah;
+
+static SCIRun::DebugStream cout_BC_CC("ICE_BC_CC", false);
 namespace Uintah {
-//__________________________________
-//  To turn on couts
-//  setenv SCI_DEBUG "INLETVEL_DOING_COUT:+"
-static DebugStream cout_doing("ICE_BC_CC", false);
-
 /* ______________________________________________________________________
  Purpose~   -returns (true) if the inletVel BC is specified on any face,
             -reads input parameters needed setBC routines
@@ -158,7 +149,7 @@ int  set_inletVelocity_BC(const Patch* patch,
   int nCells = 0;
   
   if (var_desc == "Velocity" && (bc_kind == "powerLawProfile" || bc_kind == "logWindProfile") ) {
-    cout_doing << "    Vel_CC (" << bc_kind << ") \t\t" <<patch->getFaceName(face)<< endl;
+    //cout_BC_CC << "    Vel_CC (" << bc_kind << ") \t\t" <<patch->getFaceName(face)<< endl;
 
     // bulletproofing
     if (!VB ){
@@ -174,27 +165,32 @@ int  set_inletVelocity_BC(const Patch* patch,
     // compute the velocity in the normal direction
     // u = U_infinity * pow( h/height )^n
     if( bc_kind == "powerLawProfile" ){
-  
-      double height     = VB->gridMax(vDir);
-      Vector U_infinity = bc_value;
-      double n          = VB->exponent;
+      double d          =  VB->gridMin(vDir);
+      double height     =  VB->gridMax(vDir) - d;
+      Vector U_infinity =  bc_value;
+      double n          =  VB->exponent;
       
-      std::cout << "     height: " << height << " exponent: " << n << " U_infinity: " << U_infinity 
-           << " nDir: " << nDir << " vDir: " << vDir << endl;
+//      std::cout << "     height: " << height << " exponent: " << n << " U_infinity: " << U_infinity 
+//           << " nDir: " << nDir << " vDir: " << vDir << endl;
            
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
         IntVector c = *bound_ptr; 
         
-        Point here = level->getCellPosition(c);
-        double h = here.asVector()[vDir];
+        Point here   = level->getCellPosition(c);
+        double h     = here.asVector()[vDir] ;
         
         vel_CC[c]    = U_infinity;              // set the components that are not normal to the face
-        double ratio = h/height;           
+        double ratio = (h - d)/height;           
         
         ratio = SCIRun::Clamp(ratio,0.0,1.0);  // clamp so 0< h/height < 1 in the edge cells 
         
         vel_CC[c][nDir] = U_infinity[nDir] * pow(ratio, n);
-        std::cout << "        " << c <<  " h " << h  << " h/height  " << ratio << " vel_CC: " << vel_CC[c] <<endl;                               
+        
+        // Clamp edge/corner values 
+        if( h < d || h > height ){
+          vel_CC[c] = Vector(0,0,0);
+        }
+//        std::cout << "        " << c <<  " h " << h  << " h/height  " << ratio << " vel_CC: " << vel_CC[c] <<endl;                               
       }
     }
     
@@ -208,14 +204,14 @@ int  set_inletVelocity_BC(const Patch* patch,
       Vector frictionVel = bc_value;
       double roughness   = VB->roughness;
       
-      std::cout << "     d: " << d << " frictionVel: " << frictionVel << " roughness: " << roughness 
-                << " nDir: " << nDir << " vDir: " << vDir << endl;
+//      std::cout << "     d: " << d << " frictionVel: " << frictionVel << " roughness: " << roughness 
+//                << " nDir: " << nDir << " vDir: " << vDir << endl;
     
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
         IntVector c = *bound_ptr;
         
         Point here = level->getCellPosition(c);
-        double z   = here.asVector()[vDir];
+        double z   = here.asVector()[vDir] ;
         
         vel_CC[c]    = frictionVel;            // set the components that are not normal to the face
         double ratio = (z - d)/roughness;
@@ -227,7 +223,7 @@ int  set_inletVelocity_BC(const Patch* patch,
           vel_CC[c] = Vector(0,0,0);
         }
 
-        std::cout << "        " << c <<  " z " << z  << " z-d " << z-d << " ratio " << ratio << " vel_CC: " << vel_CC[c] <<endl;
+//        std::cout << "        " << c <<  " z " << z  << " z-d " << z-d << " ratio " << ratio << " vel_CC: " << vel_CC[c] <<endl;
       }
     }else{
       ostringstream warn;

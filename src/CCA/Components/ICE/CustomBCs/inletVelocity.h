@@ -25,18 +25,15 @@
 #ifndef ICE_INLETVELOCITY_h
 #define ICE_INLETVELOCITY_h
 
-#include <CCA/Ports/DataWarehouse.h>
-#include <Core/Labels/ICELabel.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationStateP.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <typeinfo>
+#include <Core/Util/DebugStream.h>
 
-using namespace Uintah;
+
+static SCIRun::DebugStream coutBC_FC("ICE_BC_FC", false);
 namespace Uintah {
 
   //_____________________________________________________________
@@ -85,7 +82,8 @@ namespace Uintah {
                                inletVel_variable_basket* VB )
 {
 
-std::cout<< "Doing set_inletVelocity_BCs_FC: \t\t"   << " face " << face << endl;
+  coutBC_FC<< "Doing set_inletVelocity_BCs_FC: \t\t" 
+            << "("<< bc_kind << ") \t\t" <<patch->getFaceName(face)<< endl;
   //__________________________________
   // on (x,y,z)minus faces move in one cell
   IntVector oneCell(0,0,0);
@@ -102,21 +100,21 @@ std::cout<< "Doing set_inletVelocity_BCs_FC: \t\t"   << " face " << face << endl
   //__________________________________
   // 
   if( bc_kind == "powerLawProfile" ){
-  
-    double height     = VB->gridMax(vDir);
+    double d          = VB->gridMin(vDir);
+    double height     = VB->gridMax(vDir) - d;
     double U_infinity = bc_value;
     double n          = VB->exponent;
   
     for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
       IntVector c = *bound_ptr - oneCell;
       
-       Point here = level->getCellPosition(c);
+       Point here   = level->getCellPosition(c);
        double h     = here.asVector()[vDir];
-       double ratio = h/height;
+       double ratio = (h - d)/height;
        ratio = SCIRun::Clamp(ratio,0.0,1.0);  // clamp so 0< h/height < 1 in the edge cells 
 
        vel_FC[c] = U_infinity * pow(ratio, n);
-       std::cout << "        " << c <<  " h " << h  << " h/height  " << ratio << " vel_FC: " << vel_FC[c] <<endl;
+//     std::cout << "        " << c <<  " h " << h  << " h/height  " << ratio << " vel_FC: " << vel_FC[c] <<endl;
     }
   }
   //__________________________________
@@ -144,7 +142,7 @@ std::cout<< "Doing set_inletVelocity_BCs_FC: \t\t"   << " face " << face << endl
         vel_FC[c] = 0;
       }
       
-      std::cout << "        " << c <<  " z " << z  << " h/height  " << ratio << " vel_FC: " << vel_FC[c] <<endl;
+//    std::cout << "        " << c <<  " z " << z  << " h/height  " << ratio << " vel_FC: " << vel_FC[c] <<endl;
     }
   }else{
     ostringstream warn;

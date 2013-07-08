@@ -45,12 +45,11 @@
 #include <Core/Containers/StaticArray.h>
 #include <time.h>
 
-namespace Uintah {
 
 static DebugStream BC_dbg(  "ICE_BC_DBG", false);
 static DebugStream cout_BC_CC("ICE_BC_CC", false);
 static DebugStream cout_BC_FC("ICE_BC_FC", false);
-
+namespace Uintah {
   class DataWarehouse;
  
   void BC_bulletproofing(const ProblemSpecP& prob_spec,SimulationStateP& sharedState );
@@ -208,7 +207,7 @@ void setBC(T& vel_FC,
            SimulationStateP& sharedState,
            customBC_var_basket* custom_BC_basket)      
 {
-  cout_BC_FC << "setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<endl;
+  cout_BC_FC << "--------setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<endl;
   Vector cell_dx = patch->dCell();
   string whichVel = "unknown";  
   
@@ -303,14 +302,14 @@ void setBC(T& vel_FC,
           //  debugging
           if( BC_dbg.active() ) {
             bound_ptr.reset();
-            BC_dbg <<whichVel<< " Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
+            BC_dbg <<whichVel<<" Face: "<< patch->getFaceName(face) <<"\t numCellsTouched " << nCells
                  <<"\t child " << child  <<" NumChildren "<<numChildren 
                  <<"\t BC kind "<< bc_kind <<" \tBC value "<< value
                  <<"\t bound_ptr= " << bound_ptr<< endl;
           }              
         }  // Children loop
       }
-      cout_BC_FC << patch->getFaceName(face) << " \t " << whichVel << " \t" << bc_kind << " faceDir: " << faceDir << " numChildren: " << numChildren 
+      cout_BC_FC << patch->getFaceName(face) << " \t " << whichVel << " \t" << bc_kind << "\t faceDir: " << faceDir << " numChildren: " << numChildren 
                  << " nCells: " << nCells << endl;
       //__________________________________
       //  bulletproofing
@@ -335,7 +334,7 @@ void setBC(T& vel_FC,
 template <class T>
 void set_CFI_BC( CCVariable<T>& q_CC, const Patch* patch)        
 { 
-  cout_BC_CC << "set_CFI_BC "<< endl; 
+  cout_BC_CC << "-------- set_CFI_BC "<< endl; 
   //__________________________________
   // On the fine levels at the coarse fine interface 
   BC_dbg << *patch << " ";
