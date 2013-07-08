@@ -152,6 +152,10 @@ public:
                                 SchedulerP& sched, 
                                 const int timesubstep );
 
+  void sched_solveVelHatWarches( const LevelP& level, 
+                                 SchedulerP& sched, 
+                                 const int timesubstep );
+
   void setInitVelCondition( const Patch* patch, 
                             SFCXVariable<double>& uvel, 
                             SFCYVariable<double>& vvel, 
@@ -214,6 +218,13 @@ private:
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
                           const int timesubstep );
+
+  void solveVelHatWarches( const ProcessorGroup* pc,
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           const int timesubstep );
 
 
   // const VarLabel* (required)

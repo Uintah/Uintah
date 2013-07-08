@@ -1430,3 +1430,69 @@ void MomentumSolver::constructMomentum( const ProcessorGroup* pc,
   }
 }
 
+void MomentumSolver::sched_solveVelHatWarches( const LevelP& level, 
+                                               SchedulerP& sched, 
+                                               const int timesubstep )
+{
+  Task* tsk = scinew Task( "MomentumSolver::solveVelHatWarches", this, 
+                            &MomentumSolver::solveVelHatWarches, timesubstep ); 
+
+  tsk->requires( Task::NewDW, d_lab->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
+  tsk->requires( Task::NewDW, d_lab->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
+  tsk->requires( Task::NewDW, d_lab->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
+
+  tsk->modifies( d_lab->d_uVelRhoHatLabel ); 
+  tsk->modifies( d_lab->d_vVelRhoHatLabel ); 
+  tsk->modifies( d_lab->d_wVelRhoHatLabel ); 
+
+  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
+}
+
+void MomentumSolver::solveVelHatWarches( const ProcessorGroup* pc,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset*,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw,
+                                         const int timesubstep )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    constSFCXVariable<double> u;
+    constSFCYVariable<double> v;
+    constSFCZVariable<double> w;
+
+    new_dw->get( u, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None, 0 ); 
+    new_dw->get( v, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None, 0 ); 
+    new_dw->get( w, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None, 0 ); 
+
+    SFCZVariable<double> uhat; 
+    SFCZVariable<double> vhat; 
+    SFCZVariable<double> what; 
+
+    new_dw->getModifiable( uhat, d_lab->d_uVelRhoHatLabel, matlIndex, patch ); 
+    new_dw->getModifiable( vhat, d_lab->d_vVelRhoHatLabel, matlIndex, patch ); 
+    new_dw->getModifiable( what, d_lab->d_wVelRhoHatLabel, matlIndex, patch ); 
+
+    delt_vartype DT; 
+    old_dw->get( DT, d_lab->d_sharedState->get_delt_label() ); 
+    double dt = DT; 
+
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+
+      IntVector c = *iter; 
+
+      uhat[c] = u[c] - dt * uhat[c]; 
+      vhat[c] = v[c] - dt * vhat[c]; 
+      what[c] = w[c] - dt * what[c]; 
+
+    }
+  }
+}
+
+
+
