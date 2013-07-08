@@ -461,6 +461,8 @@ void SPME::scheduleCalculatePreTransform(SchedulerP& sched,
 
   Task* task = scinew Task("SPME::calculatePreTransform", this, &SPME::calculatePreTransform);
 
+  int CUTOFF_RADIUS = d_system->getRequiredGhostCells();
+
   task->requires(Task::ParentNewDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);

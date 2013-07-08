@@ -39,8 +39,6 @@
 
 #include <sci_defs/fftw_defs.h>
 
-#define CUTOFF_RADIUS SHRT_MAX
-
 namespace Uintah {
 
   using namespace SCIRun;

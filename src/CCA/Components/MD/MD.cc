@@ -243,7 +243,6 @@ void MD::scheduleNonbondedSetup(SchedulerP& sched,
 
   Task* task = scinew Task("MD::nonbondedSetup", this, &MD::nonbondedSetup);
 
-  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->nonbondedDependencyLabel);
   task->computes(d_lb->nonbondedDependencyLabel);
 
@@ -258,6 +257,8 @@ void MD::scheduleNonbondedCalculate(SchedulerP& sched,
   printSchedule(patches, md_cout, "MD::scheduleNonbondedCalculate");
 
   Task* task = scinew Task("MD::nonbondedCalculate", this, &MD::nonbondedCalculate, level);
+
+  int CUTOFF_RADIUS = d_system->getRequiredGhostCells();
 
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pNonbondedForceLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
@@ -342,6 +343,8 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   task->hasSubScheduler(true);
   task->setType(Task::OncePerProc);
 
+  int CUTOFF_RADIUS = d_system->getRequiredGhostCells();
+
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
@@ -401,6 +404,8 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
   printSchedule(patches, md_cout, "MD::scheduleUpdatePosition");
 
   Task* task = scinew Task("updatePosition", this, &MD::updatePosition);
+
+  int CUTOFF_RADIUS = d_system->getRequiredGhostCells();
 
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::NewDW, d_lb->pNonbondedForceLabel_preReloc, Ghost::AroundNodes, CUTOFF_RADIUS);

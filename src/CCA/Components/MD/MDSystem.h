@@ -182,13 +182,19 @@ namespace Uintah {
        */
       inline size_t getNumMoleculesOfType(size_t TypeIndex) const { return d_moleculeTypeList[TypeIndex]; }
 
+      /*
+       * @brief
+       * @param
+       * @return
+       */
+      inline size_t getRequiredGhostCells() const { return d_numGhostCells; }
 
     private:
 
       std::vector<size_t> d_atomTypeList;     //!< List of total number of each atom type in the simulation
       std::vector<size_t> d_moleculeTypeList; //!< List of total number of each molecule type in the simulation
-      unsigned int d_numAtoms;             //!< Total number of atoms in the simulation
-      unsigned int d_numMolecules;         //!< Total number of molecules in the simulation
+      unsigned int d_numAtoms;                //!< Total number of atoms in the simulation
+      unsigned int d_numMolecules;            //!< Total number of molecules in the simulation
       
       Vector d_pressure;                //!< Total MD system pressure
       double d_temperature;             //!< Total MD system temperature
@@ -201,9 +207,13 @@ namespace Uintah {
 
       // Total cell variables
       Vector d_box;                     //!< The MD system input box size
-      bool d_boxChanged;                    //!< Whether or not the system size has changed... create a new box
+      bool d_boxChanged;                //!< Whether or not the system size has changed... create a new box
 
       IntVector d_totalCellExtent;      //!< Number of sub-cells in the global unit cell
+      size_t d_numGhostCells;           //!< Number of ghost cells tasks will request for neighbor calculations
+
+      inline size_t max(int a, int b){ return (a > b ? a : b); }
+      inline double max(int a, int b, int c) { return (max(max(a,b),c)); }
 
       // disable copy and assignment
       MDSystem(const MDSystem& system);
