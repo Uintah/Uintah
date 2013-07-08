@@ -33,8 +33,6 @@
 #include <vector>
 #include <map>
 
-#define CUTOFF_RADIUS SHRT_MAX
-
 namespace Uintah {
 
   using namespace SCIRun;
@@ -179,12 +177,6 @@ namespace Uintah {
       double d_r12;						                   //!< The van der Waals repulsive parameter
       double d_r6;				                       //!< The van der Waals dispersion parameter
       double d_cutoffRadius;                     //!< The short-range cut, in Angstroms
-
-      // d_neighborList[p][i][i] contains the index of all atoms located within a short ranged cut off from atom "i" for a particular patch
-//      std::map<PatchMaterialKey, neighborlist> d_neighborList;  //!< List of all atom neighbor indices
-      std::vector<neighborlist> d_neighborList;  //!< List of all atom neighbor indices
-
-      mutable CrowdMonitor d_neighborlistLock;
   };
 
 }  // End namespace Uintah

@@ -78,6 +78,16 @@ MDSystem::MDSystem(ProblemSpecP& ps,
   grid->getLevel(0)->findCellIndexRange(lowIndex, highIndex);
   d_totalCellExtent = highIndex - lowIndex;
 
+  // Determine number of ghost cells tasks should request for neighbor calculations
+  IntVector resolution;
+  double cutoffRadius;
+  ProblemSpecP root_ps = ps->getRootNode();
+  root_ps->findBlock("Grid")->findBlock("Level")->findBlock("Box")->require("resolution", resolution);
+  root_ps->findBlock("MD")->findBlock("Nonbonded")->require("cutoffRadius", cutoffRadius);
+  Vector normalized = Vector(cutoffRadius,cutoffRadius,cutoffRadius) / (d_box/resolution.asVector());
+  IntVector maxDimValues(ceil(normalized.x()), ceil(normalized.y()), ceil(normalized.z()));
+  d_numGhostCells = max(maxDimValues.x(), maxDimValues.y(), maxDimValues.z());
+
 //  int numAtomTypes = 1; //shared_state->getNumMatls();
 //  std::vector<size_t> tempAtomTypeList(numAtomTypes);
 //  d_atomTypeList = tempAtomTypeList;
