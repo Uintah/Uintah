@@ -267,6 +267,7 @@ void MD::scheduleNonbondedCalculate(SchedulerP& sched,
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pNonbondedForceLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pEnergyLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->nonbondedDependencyLabel, Ghost::None, 0);
 
   task->computes(d_lb->pNonbondedForceLabel_preReloc);
