@@ -347,15 +347,13 @@ namespace Uintah {
       /**
        * @brief Generates split grid vector.
        *        Generates the vector of points from 0..K/2 in the first half of the array, followed by -K/2..-1
+       * @param mPrime - A reference to the vector to populate
        * @param kMax - Maximum number of grid points for direction
        * @param spline - CenteredCardinalBSpline that determines the number of wrapping points necessary
        * @return std::vector<double> of (0..[m=K/2],[K/2-K]..-1);
        */
-      inline std::vector<double> generateMPrimeVector(unsigned int kMax) const
+      inline void generateMPrimeVector(std::vector<double>& mPrime, unsigned int kMax) const
       {
-        int numPoints = kMax;  // For simplicity, store the whole vector
-        std::vector<double> mPrime(numPoints);
-
         size_t halfMax = kMax / 2;
 
         for (size_t idx = 0; idx <= halfMax; ++idx) {
@@ -365,8 +363,6 @@ namespace Uintah {
         for (size_t Index = halfMax + 1; Index < kMax; ++Index) {
           mPrime[Index] = static_cast<double>(static_cast<double>(Index) - static_cast<int>(kMax));
         }
-
-        return mPrime;
       }
 
       /**
