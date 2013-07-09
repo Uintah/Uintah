@@ -31,7 +31,7 @@ SRCDIR   := CCA/Components/ICE/WallShearStressModel
 
 SRCS     += $(SRCDIR)/WallShearStressFactory.cc    \
 	     $(SRCDIR)/WallShearStress.cc           \
-            $(SRCDIR)/NewtonianModel.cc   
+            $(SRCDIR)/logLawModel.cc   
 
 PSELIBS :=  
 LIBS	:= 
