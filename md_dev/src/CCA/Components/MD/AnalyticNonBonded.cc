@@ -147,10 +147,14 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
       constParticleVariable<Point> px_neighbors;
       constParticleVariable<Vector> pforce;
       constParticleVariable<double> penergy;
+      constParticleVariable<long64> pid_local;
+      constParticleVariable<long64> pid_neighbor;
       old_dw->get(px_local, d_lb->pXLabel, local_pset);
       old_dw->get(px_neighbors, d_lb->pXLabel, neighbor_pset);
       old_dw->get(penergy, d_lb->pEnergyLabel, local_pset);
       old_dw->get(pforce, d_lb->pNonbondedForceLabel, local_pset);
+      old_dw->get(pid_local, d_lb->pParticleIDLabel, local_pset);
+      old_dw->get(pid_neighbor, d_lb->pParticleIDLabel, neighbor_pset);
 
       // computes variables
       ParticleVariable<Vector> pforcenew;
@@ -162,35 +166,28 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
       double r2, ir2, ir6, ir12, T6, T12;
       double forceTerm;
       Vector totalForce, atomForce;
-      Vector reducedCoordinates;
+      Vector atomicDistanceVector;
 
       size_t localAtoms = local_pset->numParticles();
-      size_t numNeighbors = neighbor_pset->numParticles();
+      size_t neighborAtoms = neighbor_pset->numParticles();
 
       // loop over all local atoms
       for (size_t i = 0; i < localAtoms; ++i) {
         atomForce = Vector(0.0, 0.0, 0.0);
 
         // loop over the neighbors of atom "i"
-        for (size_t j = 0; j < numNeighbors; ++j) {
+        for (size_t j = 0; j < neighborAtoms; ++j) {
 
-          // the vector distance between atom i and j
-          reducedCoordinates = px_local[i] - px_neighbors[j];
+          // Ai != Aj
+          if (pid_local[i] != pid_neighbor[j]) {
 
-          // this is required for periodic boundary conditions
-          reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
+            // the vector distance between atom i and j
+            atomicDistanceVector = px_local[i] - px_neighbors[j];
 
-          double reducedX = reducedCoordinates[0] * reducedCoordinates[0];
-          double reducedY = reducedCoordinates[1] * reducedCoordinates[1];
-          double reducedZ = reducedCoordinates[2] * reducedCoordinates[2];
+            // this is required for periodic boundary conditions
+            atomicDistanceVector -= (atomicDistanceVector / box).vec_rint() * box;
 
-          r2 = reducedX + reducedY + reducedZ;
-
-          // eliminate atoms outside of cutoff radius, add those within as neighbors
-          if ((fabs(reducedCoordinates[0]) < d_cutoffRadius) && (fabs(reducedCoordinates[1]) < d_cutoffRadius)
-              && (fabs(reducedCoordinates[2]) < d_cutoffRadius)) {
-
-            r2 = sqrt(reducedX + reducedY + reducedZ);
+            r2 = atomicDistanceVector.length2();
 
             // only add neighbor atoms within spherical cut-off around atom "i"
             if (r2 < cut_sq) {
@@ -203,16 +200,18 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
               penergynew[i] = T12 - T6;  // energy
               vdwEnergy += penergynew[i];  // count the energy
               forceTerm = (12.0 * T12 - 6.0 * T6) * ir2;  // the force term
-              totalForce = forceTerm * reducedCoordinates;
+              totalForce = forceTerm * atomicDistanceVector;
 
               // the contribution of force on atom i
               atomForce += totalForce;
-            }
-          }
-        }  // end neighbor loop for atom "i"
+
+            }  // end if (r2 < cut_sq)
+          }  // end Ai != Aj
+        }  // end neighbor loop for atom "j"
 
         // sum up contributions to force for atom i
         pforcenew[i] += atomForce;
+
       }  // end atom loop
 
       // this accounts for double energy from Aij <--> Aji
@@ -250,7 +249,7 @@ void AnalyticNonBonded::finalize(const ProcessorGroup* pg,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
 {
-  // for now, do nothing
+// for now, do nothing
 }
 
 void AnalyticNonBonded::generateNeighborList(ParticleSubset* local_pset,
@@ -297,20 +296,20 @@ void AnalyticNonBonded::generateNeighborList(ParticleSubset* local_pset,
 bool AnalyticNonBonded::isNeighbor(const Point* atom1,
                                    const Point* atom2)
 {
-  // get the simulation box size
+// get the simulation box size
   Vector box = d_system->getBox();
 
   double r2;
   Vector reducedCoordinates;
   double cut_sq = d_cutoffRadius * d_cutoffRadius;
 
-  // the vector distance between atom 1 and 2
+// the vector distance between atom 1 and 2
   reducedCoordinates = *atom1 - *atom2;
 
-  // this is required for periodic boundary conditions
+// this is required for periodic boundary conditions
   reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
 
-  // check if outside of cutoff radius
+// check if outside of cutoff radius
   if ((fabs(reducedCoordinates[0]) < d_cutoffRadius) && (fabs(reducedCoordinates[1]) < d_cutoffRadius)
       && (fabs(reducedCoordinates[2]) < d_cutoffRadius)) {
     r2 = sqrt(pow(reducedCoordinates[0], 2.0) + pow(reducedCoordinates[1], 2.0) + pow(reducedCoordinates[2], 2.0));
