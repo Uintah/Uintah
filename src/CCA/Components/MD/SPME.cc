@@ -1010,16 +1010,30 @@ void SPME::calculateStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor,
           Matrix3 localStressContribution(-2.0 * (1.0 + PI2 * M2 * invBeta2) / M2);
 
           // Multiply by fourier vectorial contribution
-          for (size_t s1 = 0; s1 < 3; ++s1) {
-            for (size_t s2 = 0; s2 < 3; ++s2) {
-              localStressContribution(s1, s2) *= (m[s1] * m[s2]);
-            }
-          }
+          /*
+           * for (size_t s1 = 0; s1 < 3; ++s1)
+           *   for (size_t s2 = 0; s2 < 3; ++s2)
+           *     localStressContribution(s1, s2) *= (m[s1] * m[s2]);
+           */
+          localStressContribution(0, 0) *= (m[0] * m[0]);
+          localStressContribution(0, 1) *= (m[0] * m[1]);
+          localStressContribution(0, 2) *= (m[0] * m[2]);
+          localStressContribution(1, 0) *= (m[1] * m[0]);
+          localStressContribution(1, 1) *= (m[1] * m[1]);
+          localStressContribution(1, 2) *= (m[1] * m[2]);
+          localStressContribution(2, 0) *= (m[2] * m[0]);
+          localStressContribution(2, 1) *= (m[2] * m[1]);
+          localStressContribution(2, 2) *= (m[2] * m[2]);
 
           // Account for delta function
-          for (size_t delta = 0; delta < 3; ++delta) {
-            localStressContribution(delta, delta) += 1.0;
-          }
+          /*
+           * for (size_t delta = 0; delta < 3; ++delta)
+           *   localStressContribution(delta, delta) += 1.0;
+           */
+          localStressContribution(0, 0) += 1.0;
+          localStressContribution(1, 1) += 1.0;
+          localStressContribution(2, 2) += 1.0;
+
 
           (*stressPrefactor)(kX, kY, kZ) = localStressContribution;
         }
