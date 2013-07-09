@@ -515,7 +515,6 @@ namespace Uintah {
       int d_maxPolarizableIterations;                   //!< Max number of polarization iterations to do
       ShiftedCardinalBSpline d_interpolatingSpline;     //!< Spline object to hold info for spline calculation
       SimpleGrid<dblcomplex>* d_Q_nodeLocal;            //!< The local version of the global Q grid
-      SimpleGrid<dblcomplex>* d_Q_nodeLocalScratch;     //!< The local version of the global Q grid
       fftw_complex* d_localFFTData;                     //!< The local portion of the global 3D FFT data
 
       // Variables we'll get from the MDSystem instance to make life easier
