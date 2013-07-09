@@ -3812,6 +3812,14 @@ void ICE::viscousShearStress(const ProcessorGroup*,
           if(d_turbulence){ 
             d_turbulence->callTurb(new_dw,patch,vel_CC,rho_CC,indx,lb,
                                    d_sharedState, viscosity);
+             
+            // keep around for diagnostics                       
+            CCVariable<double> turb_viscosity;           
+            new_dw->allocateAndPut(turb_viscosity, lb->turb_viscosity_CCLabel, indx,patch);
+            IntVector lo = turb_viscosity.getLowIndex();
+            IntVector hi = turb_viscosity.getHighIndex();
+            turb_viscosity.copyPatch( viscosity, lo, hi );     
+                                   
           }
 
           computeTauComponents(patch, vol_frac, vel_CC,viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC);  
