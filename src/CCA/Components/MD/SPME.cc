@@ -939,9 +939,13 @@ void SPME::calculateCGrid(SimpleGrid<double>& CGrid,
   // sanity check
   proc0thread0cout << "System Volume: " << d_systemVolume << endl;
 
-  std::vector<double> mp1 = SPME::generateMPrimeVector(d_kLimits.x());
-  std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y());
-  std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z());
+  std::vector<double> mp1(d_kLimits.x());
+  std::vector<double> mp2(d_kLimits.y());
+  std::vector<double> mp3(d_kLimits.z());
+
+  SPME::generateMPrimeVector(mp1, d_kLimits.x());
+  SPME::generateMPrimeVector(mp2, d_kLimits.y());
+  SPME::generateMPrimeVector(mp3, d_kLimits.z());
 
   double PI = acos(-1.0);
   double PI2 = PI * PI;
@@ -976,9 +980,13 @@ void SPME::calculateStressPrefactor(SimpleGrid<Matrix3>* stressPrefactor,
                                     const IntVector& extents,
                                     const IntVector& offset)
 {
-  std::vector<double> mp1 = SPME::generateMPrimeVector(d_kLimits.x());
-  std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y());
-  std::vector<double> mp3 = SPME::generateMPrimeVector(d_kLimits.z());
+  std::vector<double> mp1(d_kLimits.x());
+  std::vector<double> mp2(d_kLimits.y());
+  std::vector<double> mp3(d_kLimits.z());
+
+  SPME::generateMPrimeVector(mp1, d_kLimits.x());
+  SPME::generateMPrimeVector(mp2, d_kLimits.y());
+  SPME::generateMPrimeVector(mp3, d_kLimits.z());
 
   double PI = acos(-1.0);
   double PI2 = PI * PI;
