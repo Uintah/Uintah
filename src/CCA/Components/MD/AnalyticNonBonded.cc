@@ -183,15 +183,13 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
           double reducedX = reducedCoordinates[0] * reducedCoordinates[0];
           double reducedY = reducedCoordinates[1] * reducedCoordinates[1];
           double reducedZ = reducedCoordinates[2] * reducedCoordinates[2];
+
           r2 = reducedX + reducedY + reducedZ;
 
           // eliminate atoms outside of cutoff radius, add those within as neighbors
           if ((fabs(reducedCoordinates[0]) < d_cutoffRadius) && (fabs(reducedCoordinates[1]) < d_cutoffRadius)
               && (fabs(reducedCoordinates[2]) < d_cutoffRadius)) {
 
-            double reducedX = reducedCoordinates[0] * reducedCoordinates[0];
-            double reducedY = reducedCoordinates[1] * reducedCoordinates[1];
-            double reducedZ = reducedCoordinates[2] * reducedCoordinates[2];
             r2 = sqrt(reducedX + reducedY + reducedZ);
 
             // only add neighbor atoms within spherical cut-off around atom "i"

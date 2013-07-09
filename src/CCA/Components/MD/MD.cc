@@ -184,7 +184,11 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
 
   task->computes(d_sharedState->get_delt_label(), level.get_rep());
 
-  sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
+  task->setType(Task::OncePerProc);
+  LoadBalancer* loadBal = sched->getLoadBalancer();
+  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
+
+  sched->addTask(task, perProcPatches, d_sharedState->allMaterials());
 }
 
 void MD::scheduleTimeAdvance(const LevelP& level,
@@ -405,15 +409,13 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
 
   Task* task = scinew Task("updatePosition", this, &MD::updatePosition);
 
-  int CUTOFF_RADIUS = d_system->getRequiredGhostCells();
-
-  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  task->requires(Task::NewDW, d_lb->pNonbondedForceLabel_preReloc, Ghost::AroundNodes, CUTOFF_RADIUS);
-  task->requires(Task::NewDW, d_lb->pElectrostaticsForceLabel_preReloc, Ghost::AroundNodes, CUTOFF_RADIUS);
-  task->requires(Task::OldDW, d_lb->pAccelLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  task->requires(Task::OldDW, d_lb->pVelocityLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  task->requires(Task::OldDW, d_lb->pMassLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+  task->requires(Task::OldDW, d_lb->pXLabel, Ghost::None, 0);
+  task->requires(Task::NewDW, d_lb->pNonbondedForceLabel_preReloc, Ghost::None, 0);
+  task->requires(Task::NewDW, d_lb->pElectrostaticsForceLabel_preReloc, Ghost::None, 0);
+  task->requires(Task::OldDW, d_lb->pAccelLabel, Ghost::None, 0);
+  task->requires(Task::OldDW, d_lb->pVelocityLabel, Ghost::None, 0);
+  task->requires(Task::OldDW, d_lb->pMassLabel, Ghost::None, 0);
+  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::None, 0);
   task->requires(Task::OldDW, d_sharedState->get_delt_label());
 
   task->computes(d_lb->pXLabel_preReloc);

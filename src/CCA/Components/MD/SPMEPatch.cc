@@ -100,8 +100,9 @@ SPMEPatch::SPMEPatch(IntVector extents,
   d_chargeMapVector.resize(numAtomTypes);
   for (size_t AtomType = 0; AtomType < numAtomTypes; ++AtomType) {
     std::vector<SPMEMapPoint> gridmapTemp;
-    gridmapTemp.reserve(10);
+//    gridmapTemp.reserve(10);
     d_chargeMapVector.push_back(gridmapTemp);
+
     //int totalNumberOfAtomType = system->getNumAtomsOfType(AtomType);
     //int estimatedLocalNumberOfAtomType = patchVolumeFraction * estimatedMaximumMultiplier * totalNumberOfAtomType;
     //std::vector<SPMEMapPoint>* gridmap = new std::vector<SPMEMapPoint>();
@@ -121,7 +122,7 @@ void SPMEPatch::verifyChargeMapAllocation(const int dataSize, const int globalAt
   int newVectorSize = currentVectorSize * 2;
   while (dataSize < newVectorSize) { newVectorSize *= 2; }
   vector<SPMEMapPoint> tempStorage = d_chargeMapVector[globalAtomTypeIndex];
-  d_chargeMapVector[globalAtomTypeIndex].reserve(static_cast<size_t> (newVectorSize));
+//  d_chargeMapVector[globalAtomTypeIndex].reserve(static_cast<size_t> (newVectorSize));
   // Not sure we need the insert?
   d_chargeMapVector[globalAtomTypeIndex].insert(d_chargeMapVector[globalAtomTypeIndex].begin(),tempStorage.begin(),tempStorage.end());
   return;
