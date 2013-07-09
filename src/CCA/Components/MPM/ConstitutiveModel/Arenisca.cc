@@ -204,24 +204,24 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
   one_sqrt_three = 1.0/sqrt_three;
 
   ps->require("FSLOPE",d_cm.FSLOPE);
-  ps->require("FSLOPE_p",d_cm.FSLOPE_p);  // not used
-  ps->require("hardening_modulus",d_cm.hardening_modulus); //not used
   ps->require("CR",d_cm.CR); // not used
-  ps->require("T1_rate_dependence",d_cm.T1_rate_dependence);
-  ps->require("T2_rate_dependence",d_cm.T2_rate_dependence);
   ps->require("p0_crush_curve",d_cm.p0_crush_curve);
   ps->require("p1_crush_curve",d_cm.p1_crush_curve);
   ps->require("p3_crush_curve",d_cm.p3_crush_curve);
   ps->require("p4_fluid_effect",d_cm.p4_fluid_effect); // b1
   ps->require("fluid_B0",d_cm.fluid_B0);               // kf
-  ps->require("fluid_pressure_initial",d_cm.fluid_pressure_initial);             // Pf0
-  ps->require("gruneisen_parameter",d_cm.gruneisen_parameter);             // Pf0
   ps->require("subcycling_characteristic_number",d_cm.subcycling_characteristic_number);
-  ps->require("kinematic_hardening_constant",d_cm.kinematic_hardening_constant); // not used
   ps->require("PEAKI1",d_cm.PEAKI1);
   ps->require("B0",d_cm.B0);
   ps->require("G0",d_cm.G0);
-
+  ps->getWithDefault("FSLOPE_p",d_cm.FSLOPE_p, 0.0);  // not used
+  ps->getWithDefault("hardening_modulus",d_cm.hardening_modulus, 0.0); //not used
+  ps->getWithDefault("kinematic_hardening_constant",d_cm.kinematic_hardening_constant, 0.0); // not used
+  ps->getWithDefault("fluid_pressure_initial",d_cm.fluid_pressure_initial, 0.0); // Pf0
+  ps->getWithDefault("gruneisen_parameter",d_cm.gruneisen_parameter, 0.1);
+  ps->getWithDefault("T1_rate_dependence",d_cm.T1_rate_dependence, 0.0);
+  ps->getWithDefault("T2_rate_dependence",d_cm.T2_rate_dependence, 0.0);
+  
   initializeLocalMPMLabels();
 }
 Arenisca::Arenisca(const Arenisca* cm)
@@ -1119,7 +1119,10 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         }
 
         // Compute the averaged stress
-        Matrix3 AvgStress = (pStress_new[idx] + pStress_old[idx])*0.5;
+        //T2D: change to use this
+        //  Matrix3 AvgStressVol = (pStress_new[idx]*pvolume[idx] + pStress_old[idx]*pvolume_old[idx])*0.5;
+        //not this
+        Matrix3 AvgStressVol = (pStress_new[idx] + pStress_old[idx])*pvolume[idx]*0.5;
 
   #ifdef JC_DEBUG_PARTICLE // Print plastic work //T2D UNFINISHED aka wrong!!
         // Verify plastic work is positive
@@ -1140,12 +1143,12 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
   #endif
 
         // Compute the strain energy associated with the particle
-        double e = (D(0,0)*AvgStress(0,0) +
-                    D(1,1)*AvgStress(1,1) +
-                    D(2,2)*AvgStress(2,2) +
-                2.*(D(0,1)*AvgStress(0,1) +
-                    D(0,2)*AvgStress(0,2) +
-                    D(1,2)*AvgStress(1,2))) * pvolume[idx]*delT;
+        double e = (D(0,0)*AvgStressVol(0,0) +
+                    D(1,1)*AvgStressVol(1,1) +
+                    D(2,2)*AvgStressVol(2,2) +
+                2.*(D(0,1)*AvgStressVol(0,1) +
+                    D(0,2)*AvgStressVol(0,2) +
+                    D(1,2)*AvgStressVol(1,2)))*delT;
 
         // Accumulate the total strain energy
         se += e;
