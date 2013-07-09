@@ -530,7 +530,7 @@ namespace Uintah {
       std::map<int, SPMEPatch*> d_spmePatchMap;  //!< These are the pieces of the K-space grid, map to Uintah patches
 
       Mutex d_Qlock;               //!< for local reductions on d_Q_nodeLocal (contention on overlapping ghost cells)
-      mutable CrowdMonitor d_spmePatchLock;
+      mutable CrowdMonitor d_spmeLock;
 
   };
 

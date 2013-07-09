@@ -63,7 +63,7 @@ static DebugStream spme_cout("SPMECout", false);
 static DebugStream spme_dbg("SPMEDBG", false);
 
 SPME::SPME() :
-    d_Qlock("node-local Q lock"), d_spmePatchLock("SPMEPatch data structures lock")
+    d_Qlock("node-local Q lock"), d_spmeLock("SPMEPatch data structures lock")
 {
 
 }
@@ -82,7 +82,7 @@ SPME::SPME(MDSystem* system,
       d_kLimits(kLimits),
       d_maxPolarizableIterations(maxPolarizableIterations),
       d_Qlock("node-local Q lock"),
-      d_spmePatchLock("SPME shared data structure lock")
+      d_spmeLock("SPME shared data structure lock")
 {
   d_interpolatingSpline = ShiftedCardinalBSpline(splineOrder);
   d_electrostaticMethod = Electrostatics::SPME;
@@ -208,9 +208,9 @@ void SPME::initialize(const ProcessorGroup* pg,
                                          patch, localCellVolumeFraction, splineSupport, d_system);
 
     // Map the current spmePatch into the SPME object.
-    d_spmePatchLock.writeLock();
+    d_spmeLock.writeLock();
     d_spmePatchMap.insert(SPMEPatchKey(patch->getID(),spmePatch));
-    d_spmePatchLock.writeUnlock();
+    d_spmeLock.writeUnlock();
   }
 }
 
@@ -937,7 +937,7 @@ void SPME::calculateCGrid(SimpleGrid<double>& CGrid,
                           const IntVector& offset) const
 {
   // sanity check
-  std::cerr << "System Volume: " << d_systemVolume << endl;
+  proc0thread0cout << "System Volume: " << d_systemVolume << endl;
 
   std::vector<double> mp1 = SPME::generateMPrimeVector(d_kLimits.x());
   std::vector<double> mp2 = SPME::generateMPrimeVector(d_kLimits.y());
