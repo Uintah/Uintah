@@ -89,30 +89,7 @@ void AnalyticNonBonded::setup(const ProcessorGroup* pg,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw)
 {
-//  // create neighbor list for each atom in the system
-//  size_t numPatches = patches->size();
-//  size_t numMatls = materials->size();
-//  for (size_t p = 0; p < numPatches; ++p) {
-//    const Patch* patch = patches->get(p);
-//    for (size_t m = 0; m < numMatls; ++m) {
-//      int matl = materials->get(m);
-//
-//      // get particles within bounds of current patch (interior, no ghost cells)
-//      ParticleSubset* local_pset = old_dw->getParticleSubset(matl, patch);
-//
-//      // get particles within bounds of cutoff radius
-//      ParticleSubset* neighbor_pset = old_dw->getParticleSubset(matl, patch, Ghost::AroundNodes, CUTOFF_RADIUS, d_lb->pXLabel);
-//
-//      constParticleVariable<Point> px_local;
-//      constParticleVariable<Point> px_neighbors;
-//      old_dw->get(px_local, d_lb->pXLabel, local_pset);
-//      old_dw->get(px_neighbors, d_lb->pXLabel, neighbor_pset);
-//
-//      int patchIdx = patch->getID();
-//      generateNeighborList(local_pset, neighbor_pset, px_local, px_neighbors, d_neighborList[patchIdx]);
-//
-//    }  // end material loop
-//  }  // end patch loop
+
 }
 
 void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
@@ -291,30 +268,5 @@ void AnalyticNonBonded::generateNeighborList(ParticleSubset* local_pset,
       }
     }
   }
-}
-
-bool AnalyticNonBonded::isNeighbor(const Point* atom1,
-                                   const Point* atom2)
-{
-// get the simulation box size
-  Vector box = d_system->getBox();
-
-  double r2;
-  Vector reducedCoordinates;
-  double cut_sq = d_cutoffRadius * d_cutoffRadius;
-
-// the vector distance between atom 1 and 2
-  reducedCoordinates = *atom1 - *atom2;
-
-// this is required for periodic boundary conditions
-  reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
-
-// check if outside of cutoff radius
-  if ((fabs(reducedCoordinates[0]) < d_cutoffRadius) && (fabs(reducedCoordinates[1]) < d_cutoffRadius)
-      && (fabs(reducedCoordinates[2]) < d_cutoffRadius)) {
-    r2 = sqrt(pow(reducedCoordinates[0], 2.0) + pow(reducedCoordinates[1], 2.0) + pow(reducedCoordinates[2], 2.0));
-    return r2 < cut_sq;
-  }
-  return false;
 }
 

@@ -163,14 +163,6 @@ namespace Uintah {
 
     private:
 
-      /**
-       * @brief
-       * @param None
-       * @return
-       */
-      bool isNeighbor(const Point* atom1,
-                      const Point* atom2);
-
       NonBondedType d_nonBondedInteractionType;  //!< Implementation type for the non-bonded interactions
       MDSystem* d_system;                        //!< A handle to the MD simulation system object
       MDLabel* d_lb;                             //!< A handle on the set of MD specific labels

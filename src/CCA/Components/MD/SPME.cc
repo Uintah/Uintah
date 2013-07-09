@@ -99,7 +99,6 @@ SPME::~SPME()
   }
 
   if (d_Q_nodeLocal) { delete d_Q_nodeLocal; }
-  if (d_Q_nodeLocalScratch) { delete d_Q_nodeLocalScratch; }
 }
 
 
@@ -128,6 +127,9 @@ void SPME::initialize(const ProcessorGroup* pg,
   SimpleGrid<dblcomplex>* Q = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, IV_ZERO, 0);
   Q_global.setData(Q); // need this for datawarehouse
 
+  // now the local version of the global Q array
+  d_Q_nodeLocal = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, IV_ZERO, 0);
+
   /*
    * ptrdiff_t is a standard C integer type which is (at least) 32 bits wide
    * on a 32-bit machine and 64 bits wide on a 64-bit machine.
@@ -135,16 +137,24 @@ void SPME::initialize(const ProcessorGroup* pg,
   const ptrdiff_t xdim = d_kLimits(0);
   const ptrdiff_t ydim = d_kLimits(1);
   const ptrdiff_t zdim = d_kLimits(2);
-  ptrdiff_t alloc_local, local_n, local_start;
+
+  // TODO change this to MPI plan
   fftw_plan forwardPlan, backwardPlan;
+  fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q_nodeLocal->getDataPtr());
+  forwardPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
+  backwardPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
+  // TODO change this to MPI plan see below
 
-  fftw_mpi_init();
-  // We shouldn't need the local information if FFTW will handle data distribution
-  alloc_local = fftw_mpi_local_size_3d(xdim, ydim, zdim, MPI_COMM_WORLD, &local_n, &local_start);
-  d_localFFTData = fftw_alloc_complex(alloc_local);
-
-  forwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, d_localFFTData, d_localFFTData, pg->getComm(), FFTW_FORWARD, FFTW_MEASURE);
-  backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, d_localFFTData, d_localFFTData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
+//  ptrdiff_t alloc_local, local_n, local_start;
+//  fftw_plan forwardPlan, backwardPlan;
+//
+//  fftw_mpi_init();
+//  // We shouldn't need the local information if FFTW will handle data distribution
+//  alloc_local = fftw_mpi_local_size_3d(xdim, ydim, zdim, MPI_COMM_WORLD, &local_n, &local_start);
+//  d_localFFTData = fftw_alloc_complex(alloc_local);
+//
+//  forwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, d_localFFTData, d_localFFTData, pg->getComm(), FFTW_FORWARD, FFTW_MEASURE);
+//  backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, d_localFFTData, d_localFFTData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
 
   // Allocate FFT plans for global Q data
   //ptrdiff_t Q_global_data;
@@ -167,10 +177,6 @@ void SPME::initialize(const ProcessorGroup* pg,
   new_dw->put(Q_global, d_lb->globalQLabel3);
   new_dw->put(Q_global, d_lb->globalQLabel4);
   new_dw->put(Q_global, d_lb->globalQLabel5);
-
-  // now the local version of the global Q and Q_scratch arrays
-  d_Q_nodeLocal = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, IV_ZERO, 0);
-  d_Q_nodeLocalScratch = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, IV_ZERO, 0);
 
 // ------------------------------------------------------------------------
 // Allocate and map the SPME patches
@@ -328,14 +334,15 @@ void SPME::calculate(const ProcessorGroup* pg,
   subNewDW->put(QGrid, d_lb->globalQLabel5);
 
   // reduction variables
-//  sum_vartype spmeFourierEnergy;
-//  matrix_sum spmeFourierStress;
-//  parentOldDW->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-//  parentOldDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
-//  subNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-//  subNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
-  parentNewDW->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
-  parentNewDW->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
+  //  sum_vartype spmeFourierEnergy;
+  //  matrix_sum spmeFourierStress;
+  //  parentOldDW->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
+  //  parentOldDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
+  //  subNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
+  //  subNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
+    parentNewDW->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
+    parentNewDW->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
+
 
   bool converged = false;
   int numIterations = 0;
@@ -428,12 +435,12 @@ void SPME::calculate(const ProcessorGroup* pg,
   parentNewDW->put(QGridParent, d_lb->globalQLabel5);
 
   // Push Reduction Variables up to the parent DW
-  sum_vartype spmeFourierEnergy;
-  matrix_sum spmeFourierStress;
-  subNewDW->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-  subNewDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
-  parentNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-  parentNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
+  sum_vartype spmeFourierEnergyNew;
+  matrix_sum spmeFourierStressNew;
+  subNewDW->get(spmeFourierEnergyNew, d_lb->spmeFourierEnergyLabel);
+  subNewDW->get(spmeFourierStressNew, d_lb->spmeFourierStressLabel);
+  parentNewDW->put(spmeFourierEnergyNew, d_lb->spmeFourierEnergyLabel);
+  parentNewDW->put(spmeFourierStressNew, d_lb->spmeFourierStressLabel);
 
   //  Turn scrubbing back on
   parentOldDW->setScrubbing(parentOldDW_scrubmode);
@@ -510,6 +517,7 @@ void SPME::scheduleTransformRealToFourier(SchedulerP& sched,
   task->requires(Task::OldDW, d_lb->backwardTransformPlanLabel);
   task->requires(Task::NewDW, d_lb->globalQLabel2);
 
+  task->computes(d_lb->forwardTransformPlanLabel);
   task->computes(d_lb->globalQLabel3);
 
   LoadBalancer* loadBal = sched->getLoadBalancer();
@@ -555,7 +563,6 @@ void SPME::scheduleTransformFourierToReal(SchedulerP& sched,
   task->requires(Task::OldDW, d_lb->backwardTransformPlanLabel);
   task->requires(Task::NewDW, d_lb->globalQLabel4);
 
-  task->computes(d_lb->forwardTransformPlanLabel);
   task->computes(d_lb->backwardTransformPlanLabel);
   task->computes(d_lb->globalQLabel5);
 
@@ -696,8 +703,10 @@ void SPME::reduceNodeLocalQ(const ProcessorGroup* pg,
           int z_global = zBase + zmask;
           if (z_global >= zMax) { z_global -= zMax; }
           if (z_global < 0)     { z_global += zMax; }
+
           // Recall d_Q_nodeLocal is a complete copy of the Q grid for reduction across MPI threads
           (*d_Q_nodeLocal)(x_global,y_global,z_global) += (*Q_patchLocal)(x_local,y_local,z_local);
+
         }
       }
     }
@@ -716,17 +725,15 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-//  SoleVariable<fftw_plan> forwardTransformPlan;
-//  old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
-//  fftw_execute(forwardTransformPlan.get());
+  SoleVariable<fftw_plan> forwardTransformPlan;
+  old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
+  fftw_plan forwardPlan = forwardTransformPlan.get();
+  fftw_execute(forwardPlan);
 
-  int xdim = d_kLimits[0];
-  int ydim = d_kLimits[1];
-  int zdim = d_kLimits[2];
-
-  fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q_nodeLocal->getDataPtr());
-  fftw_plan forwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
-  fftw_execute(forwardTransformPlan);
+  // carry forward plan for forward FFT
+  SoleVariable<fftw_plan> global_forwardTransformPlan;
+  old_dw->get(global_forwardTransformPlan, d_lb->forwardTransformPlanLabel);
+  new_dw->put(global_forwardTransformPlan, d_lb->forwardTransformPlanLabel);
 
   // forward global-Q through the VarLabel chain; support for modifies on SoleVariables will fix this
   SoleVariable<SimpleGrid<dblcomplex>*> QGrid;
@@ -810,24 +817,14 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-//  SoleVariable<fftw_plan> backwardTransformPlan;
-//  old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
-//  fftw_execute(backwardTransformPlan.get());
+  SoleVariable<fftw_plan> backwardTransformPlan;
+  old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
+  fftw_plan backwardPlan = backwardTransformPlan.get();
+  fftw_execute(backwardPlan);
 
-  int xdim = d_kLimits[0];
-  int ydim = d_kLimits[1];
-  int zdim = d_kLimits[2];
-
-  fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q_nodeLocal->getDataPtr());
-  fftw_plan backwardTransformPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
-  fftw_execute(backwardTransformPlan);
-
-  // done with FFT plans for this iteration, no explicitly forward FFT plans to new-subDW so we have them next iteration
-  SoleVariable<fftw_plan> global_forwardTransformPlan;
+  // carry forward plan for backward FFT
   SoleVariable<fftw_plan> global_backwardTransformPlan;
-  old_dw->get(global_forwardTransformPlan, d_lb->forwardTransformPlanLabel);
   old_dw->get(global_backwardTransformPlan, d_lb->backwardTransformPlanLabel);
-  new_dw->put(global_forwardTransformPlan, d_lb->forwardTransformPlanLabel);
   new_dw->put(global_backwardTransformPlan, d_lb->backwardTransformPlanLabel);
 
   // forward global-Q through the VarLabel chain; support for modifies on SoleVariables will fix this
