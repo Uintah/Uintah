@@ -715,6 +715,11 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf, int mat )
                   findMinMax<SFCXVariable<float>,float>( da, var, matl, patch, t, clf );
                   break;
                 }
+              case Uintah::TypeDescription::Vector:
+                {
+                  findMinMax<SFCXVariable<Vector>,Vector>( da, var, matl, patch, t, clf );
+                  break;
+                }
               default:
                 cerr << "SCFXVariable  of unknown type: " << subtype->getType() << endl;
                 break;
@@ -734,6 +739,11 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf, int mat )
                   findMinMax<SFCYVariable<float>,float>( da, var, matl, patch, t, clf );
                   break;
                 }
+              case Uintah::TypeDescription::Vector:
+                {
+                  findMinMax<SFCYVariable<Vector>,Vector>( da, var, matl, patch, t, clf );
+                  break;
+                }
               default:
                 cerr << "SCFYVariable  of unknown type: " << subtype->getType() << "\n";
                 break;
@@ -751,6 +761,11 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf, int mat )
               case Uintah::TypeDescription::float_type:
                 {
                   findMinMax<SFCZVariable<float>,float>( da, var, matl, patch, t, clf );
+                  break;
+                }
+              case Uintah::TypeDescription::Vector:
+                {
+                  findMinMax<SFCZVariable<Vector>,Vector>( da, var, matl, patch, t, clf );
                   break;
                 }
               default:
