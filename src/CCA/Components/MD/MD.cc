@@ -41,6 +41,7 @@
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
@@ -160,6 +161,7 @@ void MD::scheduleInitialize(const LevelP& level,
   task->computes(d_lb->pMassLabel);
   task->computes(d_lb->pChargeLabel);
   task->computes(d_lb->pParticleIDLabel);
+  task->computes(d_lb->subSchedulerDependencyLabel);
   sched->addTask(task, level->eachPatch(), materials);
 
   // Nonbonded initialization - OncePerProc, during initial (0th) timestep.
@@ -309,12 +311,6 @@ void MD::scheduleElectrostaticsInitialize(SchedulerP& sched,
       task->computes(d_lb->electrostaticsDependencyLabel);
       task->computes(d_lb->forwardTransformPlanLabel);
       task->computes(d_lb->backwardTransformPlanLabel);
-      task->computes(d_lb->globalQLabel);
-      task->computes(d_lb->globalQLabel1);
-      task->computes(d_lb->globalQLabel2);
-      task->computes(d_lb->globalQLabel3);
-      task->computes(d_lb->globalQLabel4);
-      task->computes(d_lb->globalQLabel5);
     }
 
     task->setType(Task::OncePerProc);
@@ -353,20 +349,14 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-
   task->requires(Task::OldDW, d_lb->forwardTransformPlanLabel);
   task->requires(Task::OldDW, d_lb->backwardTransformPlanLabel);
-  task->requires(Task::OldDW, d_lb->globalQLabel);
   task->requires(Task::OldDW, d_lb->electrostaticsDependencyLabel);
+  task->requires(Task::OldDW, d_lb->subSchedulerDependencyLabel, Ghost::None, 0);
 
+  task->computes(d_lb->subSchedulerDependencyLabel);
   task->computes(d_lb->forwardTransformPlanLabel);
   task->computes(d_lb->backwardTransformPlanLabel);
-  task->computes(d_lb->globalQLabel);
-  task->computes(d_lb->globalQLabel1);
-  task->computes(d_lb->globalQLabel2);
-  task->computes(d_lb->globalQLabel3);
-  task->computes(d_lb->globalQLabel4);
-  task->computes(d_lb->globalQLabel5);
 
   // reduction variables
   task->computes(d_lb->spmeFourierEnergyLabel);
@@ -390,13 +380,10 @@ void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
   // particle variables
   task->requires(Task::OldDW, d_lb->pElectrostaticsForceLabel, Ghost::None, 0);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost:: Ghost::None, 0);
+  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
+
   task->computes(d_lb->pElectrostaticsForceLabel_preReloc);
   task->computes(d_lb->pChargeLabel_preReloc);
-
-  // sole variables
-  task->requires(Task::NewDW, d_lb->forwardTransformPlanLabel);
-  task->requires(Task::NewDW, d_lb->backwardTransformPlanLabel);
-  task->requires(Task::NewDW, d_lb->globalQLabel);
 
   sched->addTask(task, patches, matls);
 }
@@ -465,6 +452,7 @@ void MD::initialize(const ProcessorGroup* pg,
       ParticleVariable<double> pmass;
       ParticleVariable<double> pcharge;
       ParticleVariable<long64> pids;
+      CCVariable<int> subSchedulerDependency;
 
       // eventually we'll need to use PFS for this
       vector<Atom> localAtoms;
@@ -489,6 +477,8 @@ void MD::initialize(const ProcessorGroup* pg,
       new_dw->allocateAndPut(pmass, d_lb->pMassLabel, pset);
       new_dw->allocateAndPut(pcharge, d_lb->pChargeLabel, pset);
       new_dw->allocateAndPut(pids, d_lb->pParticleIDLabel, pset);
+      new_dw->allocateAndPut(subSchedulerDependency, d_lb->subSchedulerDependencyLabel, matl, patch, Ghost::None, 0);
+      subSchedulerDependency.initialize(0);
 
       int numParticles = pset->numParticles();
       for (int i = 0; i < numParticles; ++i) {

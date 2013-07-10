@@ -96,19 +96,14 @@ namespace Uintah {
       const VarLabel* spmeFourierStressLabel;
 
 #ifdef HAVE_FFTW
+
       ///////////////////////////////////////////////////////////////////////////
       // Sole Variables - SPME
       const VarLabel* forwardTransformPlanLabel;
       const VarLabel* backwardTransformPlanLabel;
       const VarLabel* electrostaticsDependencyLabel;
+      const VarLabel* subSchedulerDependencyLabel;
 
-      const VarLabel* globalQLabel;
-      const VarLabel* globalQLabel1;
-      const VarLabel* globalQLabel2;
-      const VarLabel* globalQLabel3;
-      const VarLabel* globalQLabel4;
-      const VarLabel* globalQLabel5;
-      const VarLabel* globalQLabel6;
 #endif
 
   };
