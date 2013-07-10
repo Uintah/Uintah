@@ -62,9 +62,7 @@ class Dilatation
   const Vel2GradT* vel2GradOp_;
   const Vel3GradT* vel3GradOp_;
 
-  Dilatation( const Expr::Tag& vel1tag,
-              const Expr::Tag& vel2tag,
-              const Expr::Tag& vel3tag );
+  Dilatation( const Expr::TagList& velTags );
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -77,14 +75,12 @@ public:
      *  \param vel3tag the velocity corresponding to the Vel3T template parameter
      */
     Builder( const Expr::Tag& result,
-             const Expr::Tag& vel1tag,
-             const Expr::Tag& vel2tag,
-             const Expr::Tag& vel3tag );
+            const Expr::TagList& velTags );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
 
   private:
-    const Expr::Tag v1t_, v2t_, v3t_;
+    const Expr::TagList velTags_;
   };
 
   ~Dilatation();

@@ -77,9 +77,35 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     d_volq_label = d_fieldLabels->d_radiationVolqINLabel;
     d_abskg_label = d_fieldLabels->d_abskgINLabel;
   } else if(new_radiation){
-    d_volq_label = VarLabel::find("radiationVolq");
+    d_volq_label = VarLabel::find("radiationVolq");  //this line need further modification
     d_abskg_label = VarLabel::find("abskg");
   }
+
+
+  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") ){ 
+
+    // Look for the opl specified in the radiation model: 
+    ProblemSpecP sources_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
+    for (ProblemSpecP src_db = sources_db->findBlock("src");
+          src_db !=0; src_db = src_db->findNextBlock("src")){
+
+      string type; 
+      src_db->getAttribute("type", type); 
+
+      if ( type == "do_radiation" ){ 
+
+        src_db->getAttribute("label", _div_q_label_name); 
+
+      } else if ( type == "rmcrt_radiation") { 
+
+        src_db->getAttribute("label", _div_q_label_name); 
+
+      } 
+    }
+  } else { 
+    throw InvalidValue("Error: You dont have radiation turned on which is needed for EnthalpyShaddix",__FILE__,__LINE__);
+  }
+
  
   // check for viscosity
   const ProblemSpecP params_root = db->getRootNode(); 
@@ -309,6 +335,12 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
 {
   std::string taskname = "EnthalpyShaddix::computeModel";
   Task* tsk = scinew Task(taskname, this, &EnthalpyShaddix::computeModel);
+
+
+  d_volq_label = VarLabel::find( _div_q_label_name ); 
+  if ( d_volq_label == 0 ){ 
+    throw InvalidValue("Error: Could not identify a volQ label",__FILE__,__LINE__);
+  } 
 
   d_timeSubStep = timeSubStep; 
 

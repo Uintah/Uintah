@@ -9,6 +9,8 @@
 #include <CCA/Components/Arches/Directives.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 
 using namespace std;
 using namespace Uintah; 
@@ -218,11 +220,9 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
         } else { 
           throw ProblemSetupException("Error: Could not find particle weight quadrature node: w_qn"+out.str() , __FILE__, __LINE__);
         }
-
       } 
 
       tsk->requires( Task::OldDW, _T_label, gac, 1 ); 
-
     } else { 
 
       tsk->requires( Task::OldDW, _co2_label, gn,  0 ); 
@@ -332,10 +332,9 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
     ArchesVariables radiation_vars; 
     ArchesConstVariables const_radiation_vars;
-     
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
-
+    constCCVariable<double> mixT;
     typedef std::vector<constCCVariable<double> > CCCV; 
     typedef std::vector<const VarLabel*> CCCVL; 
 
@@ -343,6 +342,11 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     CCCV weights; 
     CCCV size;
     CCCV pT; 
+
+    double weights_scaling_constant;
+    double size_scaling_constant;
+    DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
+    string tlabelname;
 
     if ( timeSubStep == 0 ) { 
 
@@ -360,7 +364,12 @@ DORadiation::computeSource( const ProcessorGroup* pc,
           constCCVariable<double> var; 
           old_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
           size.push_back( var ); 
-        } 
+          //to get size scaling constant
+          if(iter == _size_varlabels.begin()){
+            tlabelname = (*iter)->getName();
+            size_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(tlabelname).getScalingConstant();
+          } 
+        }
 
         //--temperature--
         for ( CCCVL::iterator iter = _T_varlabels.begin(); iter != _T_varlabels.end(); iter++ ){ 
@@ -374,9 +383,15 @@ DORadiation::computeSource( const ProcessorGroup* pc,
           constCCVariable<double> var; 
           old_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
           weights.push_back( var ); 
+          //to get weight scaling constant
+          if(iter == _w_varlabels.begin()){
+            tlabelname = (*iter)->getName();
+            weights_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(tlabelname).getScalingConstant();
+          } 
         } 
 
         old_dw->getCopy( radiation_vars.temperature, _T_label, matlIndex , patch , gac , 1 );
+        old_dw->get( mixT, _T_label, matlIndex , patch , gac , 1 );
 
       } else { 
 
@@ -455,6 +470,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
         } 
 
         new_dw->getCopy( radiation_vars.temperature, _T_label, matlIndex , patch , gac , 1 );
+        new_dw->get( mixT, _T_label, matlIndex , patch , gac , 1 );
 
       } else { 
 
@@ -464,7 +480,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
         new_dw->getCopy( radiation_vars.temperature,  _T_label,   matlIndex, patch, gn, 0 );
 
       }
-
 
       new_dw->getModifiable( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
@@ -487,7 +502,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
         new_dw->get( other_abskp, _abskpLabel, matlIndex, patch, gn, 0 ); 
         radiation_vars.ABSKP.copyData( other_abskp ); 
       } 
-
     } 
 
     old_dw->get( const_radiation_vars.cellType , _labels->d_cellTypeLabel, matlIndex, patch, gac, 1 ); 
@@ -500,14 +514,26 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
           if ( _prop_calculator->does_scattering() ){ 
 
-            _prop_calculator->compute( patch, species, size, pT, weights, _nQn_part, radiation_vars.ABSKG, radiation_vars.ABSKP ); 
+            _prop_calculator->compute( patch, species, size_scaling_constant, size, pT, weights_scaling_constant, weights, _nQn_part, mixT, radiation_vars.ABSKG, radiation_vars.ABSKP); 
+            //            to calculate blackbody emissive flux
+            for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
 
+              IntVector c = *iter;
+              radiation_vars.ESRCG[c] = 1.0*5.67e-8/M_PI*radiation_vars.ABSKG[c]*pow(mixT[c],4);
+              //              std::cout<<"Lu_abskg!!!="<<radiation_vars.ABSKG[c]<<"ESRCT="<<radiation_vars.ESRCG[c]<<endl;
+            }
           } else { 
 
-            _prop_calculator->compute( patch, species, radiation_vars.ABSKG );
+            _prop_calculator->compute( patch, species, mixT, radiation_vars.ABSKG);
 
+            //            to calculate blackbody emissive flux
+            for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
+
+              IntVector c = *iter;
+              radiation_vars.ESRCG[c] = 1.0*5.67e-8/M_PI*radiation_vars.ABSKG[c]*pow(mixT[c],4);
+              //              std::cout<<"Lu_abskg!!!="<<radiation_vars.ABSKG[c]<<"ESRCT="<<radiation_vars.ESRCG[c]<<endl;
+            }
           } 
-
         } else { 
 
           _DO_model->computeRadiationProps( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 

@@ -44,8 +44,6 @@
  // setenv SCI_DEBUG "ICE_BC_DBG:+,ICE_BC_DOING:+"
  // Note:  BC_dbg doesn't work if the iterator bound is
  //        not defined
-static DebugStream BC_dbg(  "ICE_BC_DBG", false);
-static DebugStream BC_doing("ICE_BC_DOING", false);
 
 //#define TEST
 #undef TEST
@@ -408,7 +406,7 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
                    DataWarehouse* new_dw,
                    customBC_var_basket* custom_BC_basket)
 {
-  BC_doing << " get_rho_micro: (" << which_Var <<")"<< endl;
+  BC_dbg << " get_rho_micro: (" << which_Var <<")"<< endl;
   
   if( which_Var !="rho_micro" && which_Var !="sp_vol" ){
     throw InternalError("setBC (pressure): Invalid option for which_var", __FILE__, __LINE__);
@@ -569,7 +567,7 @@ void setBC(CCVariable<double>& press_CC,
     return;
   }
   
-  cout_BC_CC << "setBC (press_CC) \t"<< kind <<" " << which_Var
+  cout_BC_CC << "-------- setBC (press_CC) \t"<< kind <<" " << which_Var
             << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
 
   int numALLMatls = sharedState->getNumMatls();
@@ -675,7 +673,7 @@ void setBC(CCVariable<double>& press_CC,
         //  debugging
         if( BC_dbg.active() ) {
           bound_ptr.reset();
-          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<"\t numCellsTouched " << nCells
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound_ptr = "<< bound_ptr<< endl;
@@ -717,7 +715,7 @@ void setBC(CCVariable<double>& var_CC,
   if(patch->hasBoundaryFaces() == false){
     return;
   }
-  cout_BC_CC << "setBC (double) \t"<< desc << " mat_id = " 
+  cout_BC_CC << "-------- setBC (double) \t"<< desc << " mat_id = " 
              << mat_id <<  ", Patch: "<< patch->getID() << endl;
   Vector cell_dx = patch->dCell();
   bool isNotInitialTimestep = (sharedState->getCurrentTopLevelTimeStep() > 0);
@@ -827,7 +825,7 @@ void setBC(CCVariable<double>& var_CC,
         //  debugging
         if( BC_dbg.active() ) {
           bound_ptr.reset();
-          cout  <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
+          cout  <<"Face: "<< patch->getFaceName(face) <<"\t numCellsTouched " << nCells
                 <<"\t child " << child  <<" NumChildren "<<numChildren 
                 <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                 <<"\t bound_itr "<< bound_ptr << endl;
@@ -876,7 +874,7 @@ void setBC(CCVariable<Vector>& var_CC,
  if(patch->hasBoundaryFaces() == false){
     return;
   }
-  cout_BC_CC <<"setBC (Vector_CC) \t"<< desc <<" mat_id = " 
+  cout_BC_CC <<"-------- setBC (Vector_CC) \t"<< desc <<" mat_id = " 
               <<mat_id<<  ", Patch: "<< patch->getID() << endl;
   
   bool isNotInitialTimestep = (sharedState->getCurrentTopLevelTimeStep() > 0);
@@ -965,10 +963,16 @@ void setBC(CCVariable<Vector>& var_CC,
                                            custom_BC_basket->sine_var_basket,
                                            custom_BC_basket->sine_v);
         }
+        else if ( custom_BC_basket->set_inletVel_BCs) {
+          nCells += set_inletVelocity_BC(patch, face, var_CC, desc,
+                                         bound_ptr, bc_kind, bc_value,
+                                         custom_BC_basket->inletVel_var_basket );
+        }
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
+          bound_ptr.reset();
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<"\t numCellsTouched " << nCells
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound_ptr = "<< bound_ptr<< endl;
@@ -1015,7 +1019,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
   if(patch->hasBoundaryFaces() == false){
     return;
   }
-  cout_BC_CC << "setSpecificVolBC \t"<< desc <<" "
+  cout_BC_CC << "-------- setSpecificVolBC \t"<< desc <<" "
              << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
                 
   Vector dx = patch->dCell();
@@ -1083,7 +1087,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
         //  debugging
         if( BC_dbg.active() ) {
           bound_ptr.reset();
-          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<"\t numCellsTouched " << nCells
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = "<< bound_ptr << endl;

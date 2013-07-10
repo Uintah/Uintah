@@ -29,8 +29,14 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/SimulationStateP.h>
+
 #include <Core/Grid/Patch.h>
 #include <Core/Geometry/Vector.h>
+
 
 namespace Uintah {
 
@@ -47,16 +53,21 @@ namespace Uintah {
     WallShearStress( ProblemSpecP& ps, SimulationStateP& sharedState);
     virtual ~WallShearStress(); 
 
-    virtual void computeWallShearStresses(DataWarehouse* new_dw,
-                                      const Patch* patch,
-                                      const CCVariable<Vector>& vel_CC,
-                                      const SFCXVariable<double>& uvel_FC,
-                                      const SFCYVariable<double>& vvel_FC,
-                                      const SFCZVariable<double>& wvel_FC,
-                                      const CCVariable<double>& rho_CC,
-                                      const int indx,
-                                      SimulationStateP&  d_sharedState,
-                                      CCVariable<double>& turb_viscosity) = 0;
+    virtual void scheduleInitialize(SchedulerP& sched, 
+                                    const LevelP& level) = 0;
+    
+    
+    virtual
+    void computeWallShearStresses( DataWarehouse* new_dw,
+                                   const Patch* patch,
+                                   constCCVariable<double>& vol_frac_CC,  
+                                   constCCVariable<Vector>& vel_CC,      
+                                   const CCVariable<double>& viscosity,        
+                                   SFCXVariable<Vector>& tau_X_FC,
+                                   SFCYVariable<Vector>& tau_Y_FC,
+                                   SFCZVariable<Vector>& tau_Z_FC ) = 0;
+    
+
   protected:
     
   };// End class WallShearStress

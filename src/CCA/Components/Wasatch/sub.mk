@@ -29,47 +29,47 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/Wasatch
+SRCDIR := CCA/Components/Wasatch
 
-SRCS    +=                              \
-        $(SRCDIR)/FieldAdaptor.cc       \
-        $(SRCDIR)/CoordHelper.cc        \
-        $(SRCDIR)/GraphHelperTools.cc   \
-        $(SRCDIR)/OldVariable.cc		    \
-        $(SRCDIR)/ReductionHelper.cc  \
-        $(SRCDIR)/ParseTools.cc         \
-        $(SRCDIR)/Properties.cc         \
-        $(SRCDIR)/TagNames.cc           \
-        $(SRCDIR)/TaskInterface.cc      \
-        $(SRCDIR)/TimeStepper.cc        \
-        $(SRCDIR)/Wasatch.cc            \
-        $(SRCDIR)/BCHelperTools.cc      \
-        $(SRCDIR)/ConvectiveInterpolationMethods.cc
+SRCS +=                                              \
+        $(SRCDIR)/BCHelperTools.cc                   \
+        $(SRCDIR)/ConvectiveInterpolationMethods.cc  \
+        $(SRCDIR)/CoordHelper.cc                     \
+        $(SRCDIR)/FieldAdaptor.cc                    \
+        $(SRCDIR)/GraphHelperTools.cc                \
+        $(SRCDIR)/OldVariable.cc                     \
+        $(SRCDIR)/ParseTools.cc                      \
+        $(SRCDIR)/Properties.cc                      \
+        $(SRCDIR)/ReductionHelper.cc                 \
+        $(SRCDIR)/TagNames.cc                        \
+        $(SRCDIR)/TaskInterface.cc                   \
+        $(SRCDIR)/TimeStepper.cc                     \
+        $(SRCDIR)/Wasatch.cc 
 
 PSELIBS :=                        \
-	CCA/Components/Schedulers \
-	CCA/Ports                 \
-	Core/Disclosure           \
-	Core/Exceptions           \
-	Core/IO                   \
-	Core/Geometry             \
-	Core/GeometryPiece        \
-	Core/Grid                 \
-	Core/Math                 \
-	Core/Parallel             \
-	Core/ProblemSpec          \
-	Core/Util                 
+        CCA/Components/Schedulers \
+        CCA/Ports                 \
+        Core/Disclosure           \
+        Core/Exceptions           \
+        Core/Geometry             \
+        Core/GeometryPiece        \
+        Core/Grid                 \
+        Core/IO                   \
+        Core/Math                 \
+        Core/Parallel             \
+        Core/ProblemSpec          \
+        Core/Util                 
 
-LIBS := $(Z_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)   \
-        $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                   \
-        $(TABPROPS_LIBRARY) $(HDF5_LIBRARY) $(RADPROPS_LIBRARY)    \
+LIBS := $(Z_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)    \
+        $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                    \
+        $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY)                     \
         $(BOOST_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) 
 
-INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE) \
+INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE)    \
             $(HDF5_INCLUDE) $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE) \
             $(BOOST_INCLUDE) $(LAPACK_INCLUDE)
 
-SUBDIRS := \
+SUBDIRS :=                      \
         $(SRCDIR)/Operators     \
         $(SRCDIR)/Expressions   \
         $(SRCDIR)/transport

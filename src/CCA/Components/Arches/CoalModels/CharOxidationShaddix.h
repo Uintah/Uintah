@@ -142,6 +142,7 @@ private:
   double DO2;
   double gamma;
   int d_totIter;
+  int NIter;
   double f1;
   double f2;
   double f3;

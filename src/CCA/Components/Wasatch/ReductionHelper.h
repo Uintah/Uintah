@@ -98,21 +98,28 @@ namespace Wasatch {
     void parse_reduction_spec( Uintah::ProblemSpecP reductionParams );
     
     /**
-     * @brief add a new variable to the list of reduction variables
-     * @param category indicates which task category this should be active on
+     * @brief add a new variable to the list of reduction variables.
+     * @param category indicates which task category this should be active on.
      * @param resultTag indicates tag of the resulting reduction expression, i.e.
-              ("pressure_min", Expr::NONE)
+              ("pressure_min", Expr::NONE).
      * @param srcTag indicates tag of the source expression on which the reduction
-              is to be applied, i.e. ("pressure", Expr::NONE)
+              is to be applied, i.e. ("pressure", Expr::NONE).
      * @param printVar indicates whether you want to output the reduction result
-              to the processor_0 std::cout stream
+              to the processor_0 std::cout stream.
+     * @param reduceOnAllRKStages Indicates whether you want to perform the reduction
+              at every intermediate runge-kutta stage. See warning below for advice
+              on use this parameter.
      *
+     \warning It is recommended that you do NOT reduce at every single runge-kutta stage.
+     Reduction at every stage not only reduces scalability but also induces the creation
+     and managment of additional Uintah variables.
      */
     template<typename SrcT, typename ReductionOpT>
     void add_variable( const Category category,
                        const Expr::Tag& resultTag,
                        const Expr::Tag& srcTag,
-                       const bool printVar=false );
+                       const bool printVar=false,
+                       const bool reduceOnAllRKStages=false);
     
     void schedule_tasks( const Uintah::LevelP& level,
                          Uintah::SchedulerP sched,
@@ -127,6 +134,7 @@ namespace Wasatch {
     Wasatch* wasatch_;
     bool wasatchSync_;
     bool hasDoneSetup_;
+    bool reduceOnAllRKStages_;
   };
 
 } /* namespace Wasatch */

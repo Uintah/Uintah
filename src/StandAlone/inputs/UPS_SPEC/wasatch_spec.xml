@@ -501,7 +501,7 @@
     <!-- NOTE: when using Wasatch in Arches, the Wasatch TimeIntegrator tag has no effect at all because Arches
          handles the time integration of the Wasatch scalars in this case. It is only necessary to specify
          the Arches time integration scheme !-->
-    <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, FE'" />
+    <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, RK2SSP, FE'" />
 
     <EmbeddedGeometry  spec="OPTIONAL NO_DATA"
                        children1="ONE_OF(CHILD Intrusion, GeometryExpression, External)" >
@@ -1054,7 +1054,8 @@
 
     <Reduction spec="MULTIPLE NO_DATA" attribute1="tasklist REQUIRED STRING 'advance_solution'"
                                        attribute2="op REQUIRED STRING 'min,max,sum'"
-                                       attribute3="output OPTIONAL BOOLEAN">
+                                       attribute3="perstage OPTIONAL BOOLEAN"
+                                       attribute4="output OPTIONAL BOOLEAN">
       <NameTag          spec="REQUIRED" />
       <Source spec="REQUIRED NO_DATA" attribute1="type REQUIRED STRING 'PERPATCH,SVOL,XVOL,YVOL,ZVOL'" >
       	<NameTag spec="REQUIRED"/>

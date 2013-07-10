@@ -20,6 +20,16 @@
         <model_constant                 spec="REQUIRED DOUBLE 'positive'" need_applies_to="model  Smagorinsky Germano"/>
         <filter_width                   spec="REQUIRED DOUBLE '0,1'"      need_applies_to="model  Germano"/>
       </turbulence>
+
+      <wallShearStress                  spec="OPTIONAL NO_DATA"
+                                          attribute1="model  REQUIRED STRING 'logLawModel'">
+        
+        <domainFace                     spec="REQUIRED STRING 'x-, x+, y-, y+, z-, z+'" need_applies_to="model  logLawModel"/>
+        <roughnessConstant              spec="OPTIONAL DOUBLE 'positive'"               need_applies_to="model  logLawModel"/>
+        <roughnessInputFile             spec="OPTIONAL STRING"                          need_applies_to="model  logLawModel"/>
+        <vonKarmanConstant              spec="OPTIONAL DOUBLE '0,0.5'"                  need_applies_to="model  logLawModel"/>
+      </wallShearStress>
+
       
       <customInitialization             spec="OPTIONAL NO_DATA" >
         <manufacturedSolution           spec="OPTIONAL NO_DATA"

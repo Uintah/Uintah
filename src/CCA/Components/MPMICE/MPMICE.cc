@@ -119,11 +119,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
                          // unlike the situation for ice materials
 
   d_switchCriteria = 0;
-
-  // Turn off all the debuging switches
-  switchDebug_InterpolateNCToCC_0 = false;
-  switchDebug_InterpolateCCToNC   = false;
-  switchDebug_InterpolatePAndGradP= false;
 }
 
 MPMICE::~MPMICE()
@@ -215,24 +210,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     for(vector<ModelInterface*>::iterator iter = d_ice->d_models.begin();
        iter != d_ice->d_models.end(); iter++){
       (*iter)->setMPMLabel(Mlb);
-    }
-  }
-  
-  
-  //__________________________________
-  //  M P M I C E
-  ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
-  if (debug_ps) {   
-    for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
-        child = child->findNextBlock("debug")) {
-      map<string,string> debug_attr;
-      child->getAttributes(debug_attr);
-      if (debug_attr["label"]      == "switchDebug_InterpolateNCToCC_0")
-        switchDebug_InterpolateNCToCC_0 = true;
-      else if (debug_attr["label"] == "switchDebug_InterpolateCCToNC")
-        switchDebug_InterpolateCCToNC   = true;
-      else if (debug_attr["label"] == "switchDebug_InterpolatePAndGradP")
-        switchDebug_InterpolatePAndGradP   = true;       
     }
   }
   

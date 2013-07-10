@@ -293,8 +293,10 @@ namespace Wasatch{
                               Uintah::GridP& grid,
                               Uintah::SimulationStateP& sharedState )
   {
+    wasatchSpec_ = params->findBlock("Wasatch");
+    if (!wasatchSpec_) return;
+
     sharedState_ = sharedState;
-    wasatchParams_ = params->findBlock("Wasatch");
     
     double deltMin, deltMax;
     params->findBlock("Time")->require("delt_min", deltMin);
@@ -302,10 +304,10 @@ namespace Wasatch{
     const bool useAdaptiveDt = std::abs(deltMax - deltMin) > 2.0*std::numeric_limits<double>::epsilon();
     
     // Multithreading in ExprLib and SpatialOps
-    if( wasatchParams_->findBlock("FieldParallelThreadCount") ){
+    if( wasatchSpec_->findBlock("FieldParallelThreadCount") ){
 #    ifdef ENABLE_THREADS
       int spatialOpsThreads=0;
-      wasatchParams_->get( "FieldParallelThreadCount", spatialOpsThreads );
+      wasatchSpec_->get( "FieldParallelThreadCount", spatialOpsThreads );
       SpatialOps::set_hard_thread_count(NTHREADS);
       SpatialOps::set_soft_thread_count( spatialOpsThreads );
       proc0cout << "-> Wasatch is running with " << SpatialOps::get_soft_thread_count()
@@ -315,10 +317,10 @@ namespace Wasatch{
       proc0cout << "NOTE: cannot specify thread counts unless SpatialOps is built with multithreading" << std::endl;
 #    endif
     }
-    if( wasatchParams_->findBlock("TaskParallelThreadCount") ){
+    if( wasatchSpec_->findBlock("TaskParallelThreadCount") ){
 #    ifdef ENABLE_THREADS
       int exprLibThreads=0;
-      wasatchParams_->get( "TaskParallelThreadCount", exprLibThreads );
+      wasatchSpec_->get( "TaskParallelThreadCount", exprLibThreads );
       Expr::set_hard_thread_count( NTHREADS );
       Expr::set_soft_thread_count( exprLibThreads );
       proc0cout << "-> Wasatch is running with " << Expr::get_soft_thread_count()
@@ -359,13 +361,11 @@ namespace Wasatch{
         }
       }
     }
-    Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
-    if (!wasatchParams) return;
     
     // Here we add the functors name of the "*" stage variables BC to the functormap
-    if (wasatchParams->findBlock("MomentumEquations") && wasatchParams->findBlock("Density") && wasatchParams->findBlock("TransportEquation")) {
+    if (wasatchSpec_->findBlock("MomentumEquations") && wasatchSpec_->findBlock("Density") && wasatchSpec_->findBlock("TransportEquation")) {
 
-      for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("TransportEquation");
+      for( Uintah::ProblemSpecP transEqnParams=wasatchSpec_->findBlock("TransportEquation");
           transEqnParams != 0;
           transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
         std::string solnVarName;
@@ -377,7 +377,7 @@ namespace Wasatch{
         bcFunctorMap_.insert(std::pair< std::string, std::set<std::string> >(phiName,functorSet) );        
       }
 
-      Uintah::ProblemSpecP densityParams  = wasatchParams->findBlock("Density");
+      Uintah::ProblemSpecP densityParams  = wasatchSpec_->findBlock("Density");
       Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
       std::set<std::string> functorSet;
       std::string functorName = densityTag.name()+TagNames::self().star+"_bc";
@@ -411,7 +411,7 @@ namespace Wasatch{
       throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
     } else if (linSolver_) {
       proc0cout << "Detected solver: " << linSolver_->getName() << std::endl;
-      const bool needPressureSolve = wasatchParams->findBlock("MomentumEquations") && !(wasatchParams->findBlock("MomentumEquations")->findBlock("DisablePressureSolve"));
+      const bool needPressureSolve = wasatchSpec_->findBlock("MomentumEquations") && !(wasatchSpec_->findBlock("MomentumEquations")->findBlock("DisablePressureSolve"));
       if ( (linSolver_->getName()).compare("hypre") != 0 && needPressureSolve) {
         std::ostringstream msg;
         msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
@@ -422,22 +422,23 @@ namespace Wasatch{
     }
     
     //
-    std::string timeIntegrator;
-    wasatchParams->get("TimeIntegrator",timeIntegrator);
-    if (timeIntegrator=="RK3SSP") nRKStages_ = 3;
+    std::string timeIntName;
+    wasatchSpec_->get("TimeIntegrator",timeIntName);
+    TimeIntegrator timeInt(timeIntName);
+    nRKStages_ = timeInt.nStages;
 
     //
     // create expressions explicitly defined in the input file.  These
     // are typically associated with, e.g. initial conditions.
     //
-    create_expressions_from_input( wasatchParams, graphCategories_ );
-    parse_embedded_geometry(wasatchParams,graphCategories_);
-    setup_property_evaluation( wasatchParams, graphCategories_ );
+    create_expressions_from_input( wasatchSpec_, graphCategories_ );
+    parse_embedded_geometry(wasatchSpec_,graphCategories_);
+    setup_property_evaluation( wasatchSpec_, graphCategories_ );
 
     //
     // get the turbulence params, if any, and parse them.
     //
-    Uintah::ProblemSpecP turbulenceModelParams = wasatchParams->findBlock("Turbulence");
+    Uintah::ProblemSpecP turbulenceModelParams = wasatchSpec_->findBlock("Turbulence");
     struct TurbulenceParameters turbParams = {1.0,0.1,NONE};
     parse_turbulence_input(turbulenceModelParams, turbParams);
     
@@ -445,16 +446,16 @@ namespace Wasatch{
     // extract the density tag for scalar transport equations and momentum equations
     // and perform error handling
     //
-    Uintah::ProblemSpecP momEqnParams   = wasatchParams->findBlock("MomentumEquations");
-    Uintah::ProblemSpecP densityParams  = wasatchParams->findBlock("Density");
+    Uintah::ProblemSpecP momEqnParams   = wasatchSpec_->findBlock("MomentumEquations");
+    Uintah::ProblemSpecP densityParams  = wasatchSpec_->findBlock("Density");
     bool existSrcTerm=false;
 
-    for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("TransportEquation");
+    for( Uintah::ProblemSpecP transEqnParams=wasatchSpec_->findBlock("TransportEquation");
         transEqnParams != 0;
         transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
       existSrcTerm = (existSrcTerm || transEqnParams->findBlock("SourceTermExpression") );
     }
-    Uintah::ProblemSpecP transEqnParams = wasatchParams->findBlock("TransportEquation");
+    Uintah::ProblemSpecP transEqnParams = wasatchSpec_->findBlock("TransportEquation");
 
     Expr::Tag densityTag = Expr::Tag();
     bool isConstDensity = true;
@@ -483,9 +484,9 @@ namespace Wasatch{
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
     //
-    const bool hasEmbeddedGeometry = wasatchParams->findBlock("EmbeddedGeometry");
+    const bool hasEmbeddedGeometry = wasatchSpec_->findBlock("EmbeddedGeometry");
 
-    for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("TransportEquation");
+    for( Uintah::ProblemSpecP transEqnParams=wasatchSpec_->findBlock("TransportEquation");
          transEqnParams != 0;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
       adaptors_.push_back( parse_equation( transEqnParams, turbParams, hasEmbeddedGeometry, densityTag, isConstDensity, graphCategories_ ) );
@@ -494,7 +495,7 @@ namespace Wasatch{
     //
     // Build coupled transport equations scalability test for wasatch.
     //
-    for( Uintah::ProblemSpecP scalEqnParams=wasatchParams->findBlock("ScalabilityTest");
+    for( Uintah::ProblemSpecP scalEqnParams=wasatchSpec_->findBlock("ScalabilityTest");
         scalEqnParams != 0;
         scalEqnParams=scalEqnParams->findNextBlock("ScalabilityTest") ) {
       try{
@@ -515,11 +516,11 @@ namespace Wasatch{
     // Build momentum transport equations.  This registers all expressions
     // required for solution of each momentum equation.
     //
-    for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("MomentumEquations");
+    for( Uintah::ProblemSpecP momEqnParams=wasatchSpec_->findBlock("MomentumEquations");
         momEqnParams != 0;
         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
       bool hasMovingBoundaries = false;
-      if (hasEmbeddedGeometry) hasMovingBoundaries = wasatchParams->findBlock("EmbeddedGeometry")->findBlock("MovingGeometry") ;
+      if (hasEmbeddedGeometry) hasMovingBoundaries = wasatchSpec_->findBlock("EmbeddedGeometry")->findBlock("MovingGeometry") ;
       // note - parse_momentum_equations returns a vector of equation adaptors
       try{
           const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
@@ -547,14 +548,14 @@ namespace Wasatch{
     // Build moment transport equations.  This registers all expressions
     // required for solution of each momentum equation.
     //
-    for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("MomentTransportEquation");
+    for( Uintah::ProblemSpecP momEqnParams=wasatchSpec_->findBlock("MomentTransportEquation");
         momEqnParams != 0;
         momEqnParams=momEqnParams->findNextBlock("MomentTransportEquation") ){
       // note - parse_moment_transport_equations returns a vector of equation adaptors
       try{
         //For the Multi-Environment mixing model, the entire Wasatch Block must be passed to find values for initial moments
         const EquationAdaptors adaptors =
-            parse_moment_transport_equations( momEqnParams, wasatchParams, isConstDensity,
+            parse_moment_transport_equations( momEqnParams, wasatchSpec_, isConstDensity,
                                               hasEmbeddedGeometry, graphCategories_ );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
@@ -569,7 +570,7 @@ namespace Wasatch{
 
     //
     // Build poisson equations
-    for( Uintah::ProblemSpecP poissonEqnParams=wasatchParams->findBlock("PoissonEquation");
+    for( Uintah::ProblemSpecP poissonEqnParams=wasatchSpec_->findBlock("PoissonEquation");
         poissonEqnParams != 0;
         poissonEqnParams=poissonEqnParams->findNextBlock("PoissonEquation") ){
       try{
@@ -586,13 +587,13 @@ namespace Wasatch{
     }
     
     if( buildTimeIntegrator_ ){
-      timeStepper_ = scinew TimeStepper( sharedState_, *graphCategories_[ ADVANCE_SOLUTION ] );
+      timeStepper_ = scinew TimeStepper( sharedState_, *graphCategories_[ ADVANCE_SOLUTION ], timeInt );
     }    
     
     //
     // force additional expressions on the graph
     //
-    for( Uintah::ProblemSpecP forceOnGraphParams=wasatchParams->findBlock("ForceOnGraph");
+    for( Uintah::ProblemSpecP forceOnGraphParams=wasatchSpec_->findBlock("ForceOnGraph");
         forceOnGraphParams != 0;
         forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") )
     {
@@ -604,12 +605,12 @@ namespace Wasatch{
       }
     }
 
-    parse_cleave_requests    ( wasatchParams, graphCategories_ );
-    parse_attach_dependencies( wasatchParams, graphCategories_ );
+    parse_cleave_requests    ( wasatchSpec_, graphCategories_ );
+    parse_attach_dependencies( wasatchSpec_, graphCategories_ );
     //
     // get the variable density params, if any, and parse them.
     //
-    Uintah::ProblemSpecP VarDensMMSParams = wasatchParams->findBlock("VariableDensityMMS");
+    Uintah::ProblemSpecP VarDensMMSParams = wasatchSpec_->findBlock("VariableDensityMMS");
     if (VarDensMMSParams) {
       parse_var_dens_mms(VarDensMMSParams, graphCategories_);
     }
@@ -617,7 +618,7 @@ namespace Wasatch{
     //
     // process any reduction variables specified through the input file
     //
-    ReductionHelper::self().parse_reduction_spec(wasatchParams);
+    ReductionHelper::self().parse_reduction_spec(wasatchSpec_);
   }
 
   //--------------------------------------------------------------------
@@ -885,7 +886,7 @@ namespace Wasatch{
       //
       // process clipping on fields
       //
-      process_field_clipping( wasatchParams_, graphCategories_, localPatches );      
+      process_field_clipping( wasatchSpec_, graphCategories_, localPatches );      
     }
 
     // ensure that any "CARRY_FORWARD" variable has an initialization provided for it.

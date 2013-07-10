@@ -148,6 +148,14 @@ public:
                                     const TimeIntegratorLabel* timelabels,
                                     bool set_BC);
 
+  void sched_constructMomentum( const LevelP& level, 
+                                SchedulerP& sched, 
+                                const int timesubstep );
+
+  void sched_solveVelHatWarches( const LevelP& level, 
+                                 SchedulerP& sched, 
+                                 const int timesubstep );
+
   void setInitVelCondition( const Patch* patch, 
                             SFCXVariable<double>& uvel, 
                             SFCYVariable<double>& vvel, 
@@ -204,6 +212,20 @@ private:
                                const TimeIntegratorLabel* timelabels,
                                bool set_BC);
 
+  void constructMomentum( const ProcessorGroup* pc,
+                          const PatchSubset* patches,
+                          const MaterialSubset*,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const int timesubstep );
+
+  void solveVelHatWarches( const ProcessorGroup* pc,
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           const int timesubstep );
+
 
   // const VarLabel* (required)
   const ArchesLabel* d_lab;
@@ -229,6 +251,9 @@ private:
   bool d_doMMS;
   vector<string> d_new_sources; 
 
+  const VarLabel* _u_mom; 
+  const VarLabel* _v_mom; 
+  const VarLabel* _w_mom; 
 
   //--------------------- for initialization -----------
   class VelocityInitBase { 

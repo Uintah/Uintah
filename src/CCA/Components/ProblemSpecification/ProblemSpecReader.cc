@@ -1311,7 +1311,7 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
     if( !validateString( text ) ) {
       throw ProblemSetupException( "Invalid string value for " + classType + ": " + completeName + ". '" + 
                                    text + "' not found in this list:\n" + concatStrings( validValues_ ) + "\n" +
-                                   getErrorInfo( node ),
+                                   getErrorInfo( node ) + "\n\n Are you using quotation marks around the string when you shouldn't be?",
                                    __FILE__, __LINE__ );
     }
     break;

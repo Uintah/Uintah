@@ -36,7 +36,7 @@ SRCDIR := CCA/Components/Wasatch/Expressions
 # WARNING: If you add a file to the list of CUDA_SRCS, you must add a
 # corresponding rule at the end of this file!
 #
-CUDA_ENABLED_SRCS = \
+CUDA_ENABLED_SRCS =       \
      BasicExprBuilder     \
      ConvectiveFlux       \
      DiffusiveFlux        \
@@ -75,26 +75,25 @@ endif
 # way:
 #
 SRCS += \
-		$(SRCDIR)/DensityCalculator.cc    \
+        $(SRCDIR)/DensityCalculator.cc    \
         $(SRCDIR)/ScalabilityTestSrc.cc   \
         $(SRCDIR)/SetCurrentTime.cc       \
-        $(SRCDIR)/RadPropsEvaluator.cc	  \
+        $(SRCDIR)/RadPropsEvaluator.cc    \
         $(SRCDIR)/StableTimestep.cc       \
         $(SRCDIR)/Reduction.cc            \
         $(SRCDIR)/ReductionBase.cc        \
         $(SRCDIR)/TabPropsHeatLossEvaluator.cc
-            	
 
 #
 # Subdirectories to build...
 #
 
 SUBDIRS := \
-        $(SRCDIR)/MMS \
-        $(SRCDIR)/PBE \
-        $(SRCDIR)/PostProcessing \
-        $(SRCDIR)/Turbulence  \
-        $(SRCDIR)/EmbeddedGeometry
+        $(SRCDIR)/EmbeddedGeometry \
+        $(SRCDIR)/MMS              \
+        $(SRCDIR)/PBE              \
+        $(SRCDIR)/PostProcessing   \
+        $(SRCDIR)/Turbulence       
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
@@ -144,6 +143,9 @@ ifeq ($(HAVE_CUDA),yes)
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/ScalarRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalarRHS.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/SolnVarEst.cu : $(SRCTOP_ABS)/$(SRCDIR)/SolnVarEst.cc
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/Strain.cu : $(SRCTOP_ABS)/$(SRCDIR)/Strain.cc

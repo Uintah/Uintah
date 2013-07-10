@@ -6,6 +6,16 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/BowmanNOx.h>
 
+#include <sci_defs/uintah_defs.h>
+#ifdef WASATCH_IN_ARCHES
+//-- SpatialOps includes --//
+#include <spatialops/Nebo.h>
+#include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
+#include <spatialops/OperatorDatabase.h>
+#include <spatialops/structured/SpatialFieldStore.h>
+#endif
+
 //===========================================================================
 
 using namespace std;
@@ -62,6 +72,17 @@ BowmanNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   std::string taskname = "BowmanNOx::eval";
   Task* tsk = scinew Task(taskname, this, &BowmanNOx::computeSource, timeSubStep);
 
+  Ghost::GhostType  gType;
+  int nGhosts;
+  
+#ifdef WASATCH_IN_ARCHES
+  gType = Ghost::AroundCells;
+  nGhosts = Wasatch::get_n_ghost<SVolField>();
+#else
+  gType = Ghost::None;
+  nGhosts = 0;
+#endif
+
   if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
@@ -69,7 +90,15 @@ BowmanNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
 
     tsk->computes(_src_label);
   } else {
-    tsk->modifies(_src_label); 
+#ifdef WASATCH_IN_ARCHES
+    
+    tsk->modifiesWithScratchGhost( _src_label,
+                                  level->eachPatch()->getUnion(), Uintah::Task::ThisLevel,
+                                  _shared_state->allArchesMaterials()->getUnion(), Uintah::Task::NormalDomain,
+                                  gType, nGhosts);
+#else
+    tsk->modifies(_src_label);
+#endif
   }
 
   // resolve some labels: 
@@ -78,11 +107,12 @@ BowmanNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   _rho_label = VarLabel::find( _rho_name ); 
   _temperature_label = VarLabel::find( _temperature_name ); 
 
-  tsk->requires( Task::OldDW, _n2_label, Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, _o2_label, Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, _rho_label, Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, _temperature_label, Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, _field_labels->d_volFractionLabel, Ghost::None, 0 ); 
+
+  tsk->requires( Task::OldDW, _n2_label, gType, nGhosts );
+  tsk->requires( Task::OldDW, _o2_label, gType, nGhosts );
+  tsk->requires( Task::OldDW, _rho_label, gType, nGhosts );
+  tsk->requires( Task::OldDW, _temperature_label, gType, nGhosts );
+  tsk->requires( Task::OldDW, _field_labels->d_volFractionLabel, gType, nGhosts ); 
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
@@ -115,10 +145,21 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
 
     CCVariable<double> rate; 
 
+    Ghost::GhostType  gType;
+    int nGhosts;
+
+#ifdef WASATCH_IN_ARCHES
+    gType = Ghost::AroundCells;
+    nGhosts = Wasatch::get_n_ghost<SVolField>();
+#else
+    gType = Ghost::None;
+    nGhosts = 0;
+#endif
+
     if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( rate, _src_label, matlIndex, patch ); 
+      new_dw->getModifiable( rate, _src_label, matlIndex, patch, gType, nGhosts );
     } else { 
-      new_dw->allocateAndPut( rate, _src_label, matlIndex, patch ); 
+      new_dw->allocateAndPut( rate, _src_label, matlIndex, patch, gType, nGhosts );
       rate.initialize(0.0); 
     } 
 
@@ -126,15 +167,34 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
     constCCVariable<double> O2; 
     constCCVariable<double> rho; 
     constCCVariable<double> T; 
-    constCCVariable<double> vol_fraction; 
+    constCCVariable<double> vol_fraction;
 
-    old_dw->get( N2 , _n2_label          , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( O2  , _o2_label          , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( rho , _rho_label         , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( T   , _temperature_label , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( vol_fraction, _field_labels->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 ); 
+    old_dw->get( N2 , _n2_label          , matlIndex , patch , gType , nGhosts );
+    old_dw->get( O2  , _o2_label          , matlIndex , patch , gType , nGhosts );
+    old_dw->get( rho , _rho_label         , matlIndex , patch , gType , nGhosts );
+    old_dw->get( T   , _temperature_label , matlIndex , patch , gType , nGhosts );
+    old_dw->get( vol_fraction, _field_labels->d_volFractionLabel, matlIndex, patch, gType, nGhosts );
 
-//    delt_vartype DT; 
+
+#ifdef WASATCH_IN_ARCHES
+    using namespace Wasatch;
+    using namespace SpatialOps;
+    using SpatialOps::operator *;
+
+    // SVolField = CCVariable<double> with 1 ghost cell
+    SVolField* const rate_        = wrap_uintah_field_as_spatialops<SVolField>(rate,patch);
+    const SVolField* const N2_    = wrap_uintah_field_as_spatialops<SVolField>(N2,patch);
+    const SVolField* const O2_    = wrap_uintah_field_as_spatialops<SVolField>(O2,patch);
+    const SVolField* const rho_   = wrap_uintah_field_as_spatialops<SVolField>(rho,patch);
+    const SVolField* const T_     = wrap_uintah_field_as_spatialops<SVolField>(T,patch);
+    const SVolField* const vfrac_ = wrap_uintah_field_as_spatialops<SVolField>(vol_fraction,patch);
+    
+    *rate_ <<= 30000.0 * _A / ( sqrt(*T_) ) * exp(-_E_R/ *T_) * (1.0e-3/_MW_N2 * *N2_ * *rho_) * sqrt(1.0e-3/_MW_O2 * *O2_ * *rho_);
+    *rate_ <<= cond( *rate_ < 1.0e-16, 0.0)
+                   ( *rate_ );
+    delete rate_; delete N2_; delete O2_; delete rho_; delete T_; delete vfrac_;
+#else
+//    delt_vartype DT;
 //    old_dw->get(DT, _field_labels->d_sharedState->get_delt_label()); 
 //    double dt = DT;
 
@@ -146,17 +206,21 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
       double n2  = N2[c] * rho[c] / _MW_N2 * 1.0e-3; 
       double o2  = O2[c] * rho[c] / _MW_O2 * 1.0e-3; 
 
-      double T_pow = pow( T[c], 0.5 ); 
-      double o2_pow = pow( o2, 0.5 ); 
+      double T_pow = sqrt( T[c] );
+      double o2_pow = sqrt( o2  );
 
       double my_exp = -1.0 * _E_R / T[c]; 
 
-      rate[c] = _A / T_pow * exp( my_exp ) * n2 * o2_pow * 30000; 
+//      rate[c] = T[c];
+      rate[c] = _A / T_pow * exp( my_exp ) * n2 * o2_pow * 30000;
 
+//      rate[c] = 30000.0 * _A / sqrt(T[c]) * exp( -_E_R / T[c] ) * ( 1.0e-3/_MW_N2 * N2[c] * rho[c]) * sqrt(1.0e-3/ _MW_O2 * O2[c] * rho[c]);
+      
       if ( rate[c] < 1.0e-16 ){
         rate[c] = 0.0;
       } 
     }
+#endif
   }
 }
 //---------------------------------------------------------------------------

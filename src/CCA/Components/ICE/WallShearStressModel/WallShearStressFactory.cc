@@ -24,7 +24,7 @@
 
 
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStressFactory.h>
-#include <CCA/Components/ICE/WallShearStressModel/NewtonianModel.h>
+#include <CCA/Components/ICE/WallShearStressModel/logLawModel.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -44,7 +44,7 @@ WallShearStressFactory::~WallShearStressFactory()
 WallShearStress* WallShearStressFactory::create( ProblemSpecP& ps, 
                                                  SimulationStateP& sharedState )
 {
-  ProblemSpecP wss_ps = ps->findBlock("WallShearStressModel");
+  ProblemSpecP wss_ps = ps->findBlock("wallShearStress");
   
   if(wss_ps){
     std::string WSS_model;
@@ -53,8 +53,8 @@ WallShearStress* WallShearStressFactory::create( ProblemSpecP& ps,
       throw ProblemSetupException("No model specified for WallShearStress", __FILE__, __LINE__); 
     }
     
-    if (WSS_model == "Newtonian"){
-      return( scinew NewtonianModel( wss_ps, sharedState ) );
+    if (WSS_model == "logLawModel"){
+      return( scinew logLawModel( wss_ps, sharedState ) );
     }else{
       ostringstream warn;
       warn << "ERROR ICE: Unknown WallShearStress model ("<< WSS_model << " )\n"

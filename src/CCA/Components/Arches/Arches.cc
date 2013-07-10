@@ -111,6 +111,7 @@
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/transport/MomentumTransportEquation.h>
 #include <CCA/Components/Wasatch/transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/GraphHelperTools.h>
 #include <CCA/Components/Wasatch/TaskInterface.h>
@@ -430,26 +431,48 @@ Arches::problemSetup(const ProblemSpecP& params,
     typedef Expr::PlaceHolder<ZVolField>  ZAreaFractionT;
     solngh->exprFactory->register_expression( new ZAreaFractionT::Builder(zAreaFractionTag) );
   }
+  
+  // viscosity
+  std::string viscosityName = d_lab->d_viscosityCTSLabel->getName();
+  const Expr::Tag viscosityTag( viscosityName, Expr::STATE_NONE );
+  if( !(solngh->exprFactory->have_entry( viscosityTag )) ) {
+    // register placeholder expressions for z area fraction field: "areaFractionFZ"
+    typedef Expr::PlaceHolder<SVolField>  ViscosityT;
+    solngh->exprFactory->register_expression( new ViscosityT::Builder(viscosityTag) );
+  }
+  
+  // time - currently this holds NOTHING
+  const Expr::Tag timeTag( "time", Expr::STATE_NONE );
+  const Expr::Tag timeStepTag( "timestep", Expr::STATE_NONE );
+  if( !(solngh->exprFactory->have_entry( timeTag )) ) {
+    // register placeholder expressions for z area fraction field: "areaFractionFZ"
+    typedef Expr::PlaceHolder<double>  TimeT;
+    solngh->exprFactory->register_expression( new TimeT::Builder(timeTag) );
+    solngh->exprFactory->register_expression( new TimeT::Builder(timeStepTag) );    
+  }
+
 
   //____________________________________________________________________________
   // Register density - Wasatch MUST specify the name of the density that ARCHES is
   // pulling out from tables
   //
-  Uintah::ProblemSpecP densityParams = params->findBlock("Wasatch")->findBlock("Density");
+  Uintah::ProblemSpecP densitySpec = params->findBlock("Wasatch")->findBlock("Density");
   bool isConstDensity = false;
-  densityParams->get("IsConstant",isConstDensity);
   Expr::Tag densityTag = Expr::Tag();
   
-  typedef Expr::PlaceHolder<SVolField>  DensityT;
-  densityTag = Wasatch::parse_nametag( densityParams->findBlock("NameTag") );
+  if (densitySpec) {
+    densitySpec->get("IsConstant",isConstDensity);
+    typedef Expr::PlaceHolder<SVolField>  DensityT;
+    densityTag = Wasatch::parse_nametag( densitySpec->findBlock("NameTag") );
     
-  if( !(solngh->exprFactory->have_entry( densityTag )) ) {
-    // register placeholder expressions for density field
-    solngh->exprFactory->register_expression( new DensityT::Builder(densityTag) );
-  }
-  
-  if( !(initgh->exprFactory->have_entry( densityTag )) ) {
-    initgh->exprFactory->register_expression( new DensityT::Builder(densityTag) );
+    if( !(solngh->exprFactory->have_entry( densityTag )) ) {
+      // register placeholder expressions for density field
+      solngh->exprFactory->register_expression( new DensityT::Builder(densityTag) );
+    }
+    
+    if( !(initgh->exprFactory->have_entry( densityTag )) ) {
+      initgh->exprFactory->register_expression( new DensityT::Builder(densityTag) );
+    }
   }
   
   //____________________________________________________________________________
@@ -477,7 +500,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     if( !solnFactory.have_entry( dilTag ) ){
       typedef Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
       // if dilatation expression has not been registered, then register it
-      solnFactory.register_expression( new Dilatation(dilTag, velTags[0],velTags[1],velTags[2]) );
+      solnFactory.register_expression( new Dilatation(dilTag, velTags) );
     }
     
     // register strain components. Here we are assuming 3D...
@@ -523,6 +546,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   typedef Expr::PlaceHolder<SVolField>  FieldExpr;
   for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
     Wasatch::TransportEquation* transEq = (*ia)->equation();
+    if (transEq->dir_name() == "") continue; // skip all non-cell centered equations
     std::string solnVarName = transEq->solution_variable_name();
     if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_N  ) ) )
       solngh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N)) );

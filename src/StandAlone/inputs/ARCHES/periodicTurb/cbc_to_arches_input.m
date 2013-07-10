@@ -79,7 +79,7 @@ fprintf( fileID,'%i %i %i\n',n, n, n );
 for k=1:n
     for j=1:n
         for i=1:n
-            fprintf( fileID,'%.16f %.16f %.16f %.16f\n',u(i,j,k),v(i,j,k),w(i,j,k) );
+            fprintf( fileID,'%.16f %.16f %.16f \n',u(i,j,k),v(i,j,k),w(i,j,k) );
         end
     end
 end

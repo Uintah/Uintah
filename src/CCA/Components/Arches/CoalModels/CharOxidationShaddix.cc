@@ -551,8 +551,9 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
 
           PO2_surf = PO2_inf;
 
-          d_totIter = 100;
-          delta = PO2_inf/100.0;
+          d_totIter = 8;
+          NIter = 3;
+          delta = PO2_inf/30.0;
           d_tol = 1e-15;
           f1 = 1.0;
           icount = 0;
@@ -567,7 +568,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
           // Solving diffusion of O2:
           // Newton_Raphson method - faster does not always converge 
            
-          for ( int iter = 0; iter < 12; iter++) {
+          for ( int iter = 0; iter < NIter; iter++) {
             icount++;
             CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/unscaled_particle_temperature);
             OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
@@ -643,13 +644,13 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
                 break;
               }
 
-              if(icount > d_totIter+12-1) {
+              if(icount > d_totIter+NIter-1) {
                 //cout << "CharOxidationShaddix::computeModel : problem with bisection convergence, reaction rate set to zero" << endl;
                 //cout << "icount " << icount << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << endl;
                 //PO2_surf = 0.0;
                 //CO2CO = 0.0;
                 //q = 0.0;
-                PO2_surf = PO2_inf;
+                PO2_surf = PO2_inf*3/2.0;
                 CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/unscaled_particle_temperature);
                 OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
                 gamma = -(1.0-OF);
@@ -669,7 +670,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
                 //PO2_surf = 0.0;
                 //CO2CO = 0.0;
                 //q = 0.0;
-                PO2_surf = PO2_inf;
+                PO2_surf = PO2_inf*3/2.0;
                 CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/unscaled_particle_temperature);
                 OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
                 gamma = -(1.0-OF);
@@ -678,8 +679,11 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
                 break;
               }
             }
+
           }              
         }
+
+    
 
         // if d_unweighted, char_production_rate_=single particle rate, else, total rate
         char_production_rate_ = devolChar[c];
@@ -707,14 +711,9 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
           gas_char_rate[c] = -char_reaction_rate_*unscaled_weight;
           particle_temp_rate[c] = particle_temp_rate_*unscaled_weight;
         }
- 
         surface_rate[c] = WC*q;  // in kg/s/m^2
         PO2surf_[c] = PO2_surf;
-
       }
     }//end cell loop
   }//end patch loop
 }
-
-
-
