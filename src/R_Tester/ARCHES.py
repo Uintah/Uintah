@@ -75,8 +75,8 @@ NIGHTLYTESTS = [
    ("turbulent_inlet_test"        , "DigitalFilter/TurbulentInletChannel.ups"     , 6   , "Linux"  , ["exactComparison", "no_restart"]) ,
    ("masssource_con_den"          , "verify_masssource/source_channel_conden.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("masssource_var_den"          , "verify_masssource/source_channel_varden.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
-   ("heptane_pipe"                , "heptane_pipe.ups"                            , 1.1 , "Linux"  , ["exactComparison"]),
-   ("coal_table_pipe"             , "coal_table_pipe.ups"                         , 1.1 , "Linux"  , ["exactComparison"]),
+#   ("heptane_pipe"                , "heptane_pipe.ups"                            , 1.1 , "Linux"  , ["exactComparison"]),
+#   ("coal_table_pipe"             , "coal_table_pipe.ups"                         , 1.1 , "Linux"  , ["exactComparison"]),
 #   ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
 ]
 
