@@ -69,9 +69,9 @@ namespace Wasatch{
   {
   public:
 
-    typedef typename FaceTypes<FieldT>::XFace  XFaceT; ///< The type of field on the x-faces of the volume.
-    typedef typename FaceTypes<FieldT>::YFace  YFaceT; ///< The type of field on the y-faces of the volume.
-    typedef typename FaceTypes<FieldT>::ZFace  ZFaceT; ///< The type of field on the z-faces of the volume.
+    typedef typename FaceTypes<FieldT>::XFace  XFace; ///< The type of field on the x-faces of the volume.
+    typedef typename FaceTypes<FieldT>::YFace  YFace; ///< The type of field on the y-faces of the volume.
+    typedef typename FaceTypes<FieldT>::ZFace  ZFace; ///< The type of field on the z-faces of the volume.
 
     /**
      *  \brief Construct a MomentumTransportEquation
@@ -87,7 +87,7 @@ namespace Wasatch{
                                const bool isConstDensity,
                                const Expr::Tag bodyForceTag,                              
                                const Expr::Tag srcTermTag,
-                               Expr::ExpressionFactory& factory,
+                               GraphHelper& graphHelper,
                                Uintah::ProblemSpecP params,
                                TurbulenceParameters turbulenceParams,
                                const bool hasEmbeddedGeometry,
@@ -141,7 +141,7 @@ namespace Wasatch{
 
   private:
 
-    const bool isviscous_, isConstDensity_;
+    const bool isViscous_, isConstDensity_;
     Uintah::SolverParameters* solverParams_;
     
     const bool isTurbulent_;

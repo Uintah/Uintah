@@ -246,6 +246,7 @@ namespace Wasatch{
     std::set<std::string>& locked_fields(){ return lockedFields_; }
     void set_wasatch_materials(const Uintah::MaterialSet* const materials) { materials_ = materials; }
     const Uintah::MaterialSet* const get_wasatch_materials() const{ return materials_; }
+    const Uintah::ProblemSpecP get_wasatch_spec(){return wasatchSpec_;}
 
   private:
     bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling
@@ -255,7 +256,7 @@ namespace Wasatch{
     std::set<std::string> lockedFields_;   ///< prevent the ExpressionTree from reclaiming memory on these fields.
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;
-    Uintah::ProblemSpecP wasatchParams_;
+    Uintah::ProblemSpecP wasatchSpec_;
     std::map<std::string, std::set<std::string> > bcFunctorMap_;
 
     /**

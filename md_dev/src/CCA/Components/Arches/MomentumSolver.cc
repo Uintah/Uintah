@@ -62,15 +62,20 @@ MomentumSolver(const ArchesLabel* label,
                TurbulenceModel* turb_model,
                BoundaryCondition* bndry_cond,
                PhysicalConstants* physConst) : 
-                                   d_lab(label), d_MAlab(MAlb),
-                                   d_turbModel(turb_model), 
-                                   d_boundaryCondition(bndry_cond),
-                                   d_physicalConsts(physConst)
+               d_lab(label), d_MAlab(MAlb),
+               d_turbModel(turb_model), 
+               d_boundaryCondition(bndry_cond),
+               d_physicalConsts(physConst)
 {
   d_discretize = 0;
   d_source = 0;
   d_rhsSolver = 0;
   _init_type = "none";  
+
+  _u_mom = VarLabel::create( "Umom", SFCXVariable<double>::getTypeDescription() ); 
+  _v_mom = VarLabel::create( "Vmom", SFCYVariable<double>::getTypeDescription() ); 
+  _w_mom = VarLabel::create( "Wmom", SFCZVariable<double>::getTypeDescription() ); 
+
 }
 
 //****************************************************************************
@@ -84,6 +89,11 @@ MomentumSolver::~MomentumSolver()
   if ( _init_type != "none" ){ 
     delete _init_function; 
   }
+
+  VarLabel::destroy( _u_mom ); 
+  VarLabel::destroy( _v_mom ); 
+  VarLabel::destroy( _w_mom ); 
+
 }
 
 //****************************************************************************
@@ -1320,3 +1330,169 @@ MomentumSolver::prepareExtraProjection(const ProcessorGroup* pc,
     }
   }
 }
+
+void 
+MomentumSolver::sched_constructMomentum( const LevelP& level, 
+                                         SchedulerP& sched, 
+                                         const int timesubstep )
+{ 
+
+  Task* tsk = scinew Task( "MomentumSolver::constructMomentum", this, 
+                            &MomentumSolver::constructMomentum, timesubstep ); 
+
+  Task::WhichDW which_dw; 
+  if ( timesubstep == 0 ){ 
+  
+    tsk->computes( _u_mom ); 
+    tsk->computes( _v_mom ); 
+    tsk->computes( _w_mom ); 
+    which_dw = Task::OldDW; 
+  } else { 
+
+    tsk->modifies( _u_mom ); 
+    tsk->modifies( _v_mom ); 
+    tsk->modifies( _w_mom ); 
+    which_dw = Task::NewDW; 
+  } 
+
+  tsk->requires( which_dw, d_lab->d_uVelocitySPBCLabel, Ghost::AroundFaces, 1 ); 
+  tsk->requires( which_dw, d_lab->d_vVelocitySPBCLabel, Ghost::AroundFaces, 1 ); 
+  tsk->requires( which_dw, d_lab->d_wVelocitySPBCLabel, Ghost::AroundFaces, 1 ); 
+  tsk->requires( which_dw, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 ); 
+
+  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
+
+} 
+
+void MomentumSolver::constructMomentum( const ProcessorGroup* pc,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset*,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw,
+                                        const int timesubstep )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    DataWarehouse* which_dw; 
+
+    SFCXVariable<double> u_mom; 
+    SFCYVariable<double> v_mom; 
+    SFCZVariable<double> w_mom; 
+
+    constCCVariable<double> rho;
+    constSFCXVariable<double> u; 
+    constSFCYVariable<double> v; 
+    constSFCZVariable<double> w; 
+
+    if ( timesubstep == 0 ){ 
+      which_dw = old_dw; 
+      new_dw->allocateAndPut( u_mom, _u_mom, matlIndex, patch );  
+      new_dw->allocateAndPut( v_mom, _v_mom, matlIndex, patch );  
+      new_dw->allocateAndPut( w_mom, _w_mom, matlIndex, patch );  
+      u_mom.initialize(0.0);
+      v_mom.initialize(0.0);
+      w_mom.initialize(0.0);
+    } else { 
+      which_dw = new_dw; 
+      new_dw->getModifiable( u_mom, _u_mom, matlIndex, patch );  
+      new_dw->getModifiable( v_mom, _v_mom, matlIndex, patch );  
+      new_dw->getModifiable( w_mom, _w_mom, matlIndex, patch );  
+    } 
+
+    which_dw->get( u, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, 1 ); 
+    which_dw->get( v, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, 1 ); 
+    which_dw->get( w, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, 1 ); 
+    which_dw->get( rho, d_lab->d_densityCPLabel,   matlIndex, patch, Ghost::AroundCells, 1 ); 
+
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+      IntVector c = *iter; 
+
+      //down
+      u_mom[c] = 0.5 * (rho[c] + rho[c-IntVector(1,0,0)]) * u[c]; 
+      v_mom[c] = 0.5 * (rho[c] + rho[c-IntVector(0,1,0)]) * v[c]; 
+      w_mom[c] = 0.5 * (rho[c] + rho[c-IntVector(0,0,1)]) * w[c]; 
+
+      //up
+      if ( patch->getBCType(Patch::xplus) != Patch::Neighbor )
+        u_mom[c+IntVector(1,0,0)] = 0.5 * (rho[c] + rho[c+IntVector(1,0,0)]) * u[c]; 
+      if ( patch->getBCType(Patch::yplus) != Patch::Neighbor )
+        v_mom[c+IntVector(0,1,0)] = 0.5 * (rho[c] + rho[c+IntVector(0,1,0)]) * v[c]; 
+      if ( patch->getBCType(Patch::zplus) != Patch::Neighbor )
+        w_mom[c+IntVector(0,0,1)] = 0.5 * (rho[c] + rho[c+IntVector(0,0,1)]) * w[c]; 
+
+    }
+  }
+}
+
+void MomentumSolver::sched_solveVelHatWarches( const LevelP& level, 
+                                               SchedulerP& sched, 
+                                               const int timesubstep )
+{
+  Task* tsk = scinew Task( "MomentumSolver::solveVelHatWarches", this, 
+                            &MomentumSolver::solveVelHatWarches, timesubstep ); 
+
+  tsk->requires( Task::NewDW, d_lab->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
+  tsk->requires( Task::NewDW, d_lab->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
+  tsk->requires( Task::NewDW, d_lab->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
+
+  tsk->modifies( d_lab->d_uVelRhoHatLabel ); 
+  tsk->modifies( d_lab->d_vVelRhoHatLabel ); 
+  tsk->modifies( d_lab->d_wVelRhoHatLabel ); 
+
+  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
+}
+
+void MomentumSolver::solveVelHatWarches( const ProcessorGroup* pc,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset*,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw,
+                                         const int timesubstep )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    constSFCXVariable<double> u;
+    constSFCYVariable<double> v;
+    constSFCZVariable<double> w;
+
+    new_dw->get( u, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None, 0 ); 
+    new_dw->get( v, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None, 0 ); 
+    new_dw->get( w, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None, 0 ); 
+
+    SFCZVariable<double> uhat; 
+    SFCZVariable<double> vhat; 
+    SFCZVariable<double> what; 
+
+    new_dw->getModifiable( uhat, d_lab->d_uVelRhoHatLabel, matlIndex, patch ); 
+    new_dw->getModifiable( vhat, d_lab->d_vVelRhoHatLabel, matlIndex, patch ); 
+    new_dw->getModifiable( what, d_lab->d_wVelRhoHatLabel, matlIndex, patch ); 
+
+    delt_vartype DT; 
+    old_dw->get( DT, d_lab->d_sharedState->get_delt_label() ); 
+    double dt = DT; 
+
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+
+      IntVector c = *iter; 
+
+      uhat[c] = u[c] - dt * uhat[c]; 
+      vhat[c] = v[c] - dt * vhat[c]; 
+      what[c] = w[c] - dt * what[c]; 
+
+    }
+  }
+}
+
+
+

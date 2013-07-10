@@ -4,8 +4,8 @@
 % Matlab/scripts/plotspec_uvw.m
 %
 % function: tke_spectrum
-% author: Tony Saad
-% date: Sept 2012
+% author:   Tony Saad
+% date:     Sept, 2012
 %
 % tke_spectrum: calculates the turbulent kinetic energy spectrum given
 % u, v, and w velocities. The user must also provide the domain length L.

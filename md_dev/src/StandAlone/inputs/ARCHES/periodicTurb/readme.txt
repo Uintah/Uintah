@@ -4,13 +4,9 @@ Date:     Sept, 2012
 
 This directory contains a widely used test case for verifying your turbulence model. The case consists of a isotropic-turbulence initial conditions that decay over time. The initial conditions correspond to periodic grids of sizes 32x32x32 and 64x64x64, respectively. These are provided by the files:
 
-cbc32_uvw_wasatch_u.gz
-cbc32_uvw_wasatch_v.gz
-cbc32_uvw_wasatch_w.gz
+cbc32_uvw_arches.gz
 
-cbc64_uvw_wasatch_u.gz
-cbc64_uvw_wasatch_v.gz
-cbc64_uvw_wasatch_w.gz
+cbc64_uvw_arches.gz
 
 The cbc terminology is in honor of the original experiment by Comte-Bellot and Corrsin in which they generated grid turbulence and extracted plenty of statistics including energy spectra.
 
@@ -18,9 +14,9 @@ This directory also contains a collection of matlab scripts that will help you p
 
 In general, you will only need to work with the function energy_spectrum_plot_all. All other matlab scripts include helper functions that are used by energy_spectrum_plot_all. To use this energy_spectrum_plot_all, follow these steps:
 
-1. Run your turbulent flow simulation
+1. Run your turbulent flow simulation. It is recommended that you run those from the StandAlone directory and save the uda archives there as well.
 
-2. Use lineextract to save your u, v, and w velocities at t=0.0s, t = 0.28s, and t= 0.66s as these correspond to the experimental datapoints
+2. Use lineextract to save your u, v, and w velocities at t=0.0s, t = 0.28s, and t= 0.66s as these correspond to the experimental datapoints. Note that bash scripts are provided to generate the lineextract files for you. You MUST execute those, however, from the StandAlone directory and have the uda data there as well.
 
 3. With lineextract, save your output as: 
     [uvel/vvel/wvel]_basename_[t0.0s/t0.28s/t0.66s].txt

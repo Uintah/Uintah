@@ -974,7 +974,10 @@ namespace Uintah {
       int  d_OrderOfAdvection;
       bool d_useCompatibleFluxes;
       bool d_clampSpecificVolume;
+      
       Turbulence* d_turbulence;
+      WallShearStress *d_WallShearStressModel;
+      
       std::vector<AnalysisModule*> d_analysisModules;
       
       std::string d_delT_scheme;

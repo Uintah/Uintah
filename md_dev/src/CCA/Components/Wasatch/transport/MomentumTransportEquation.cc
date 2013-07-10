@@ -57,6 +57,10 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 
+#include <CCA/Components/Wasatch/ReductionHelper.h>
+
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
+
 //-- ExprLib Includes --//
 #include <expression/ExprLib.h>
 
@@ -287,6 +291,105 @@ namespace Wasatch{
     return Expr::Tag( momTag.name() + "_rhs_partial", Expr::STATE_NONE );
   }
 
+  
+  //==================================================================
+  
+  void set_vel_star_tags( Expr::TagList velTags,
+                         Expr::TagList& velStarTags )
+  {
+    const TagNames& tagNames = TagNames::self();
+    if( velTags[0] != Expr::Tag() ) velStarTags.push_back( Expr::Tag(velTags[0].name() + tagNames.star, Expr::STATE_NONE) );
+    else         velStarTags.push_back( Expr::Tag() );
+    if( velTags[1] != Expr::Tag() ) velStarTags.push_back( Expr::Tag(velTags[1].name() + tagNames.star, Expr::STATE_NONE) );
+    else         velStarTags.push_back( Expr::Tag() );
+    if( velTags[2] != Expr::Tag() ) velStarTags.push_back( Expr::Tag(velTags[2].name() + tagNames.star, Expr::STATE_NONE) );
+    else         velStarTags.push_back( Expr::Tag() );
+  }
+  
+  //==================================================================
+  
+  void set_vel_tags( Uintah::ProblemSpecP params,
+                    Expr::TagList& velTags )
+  {
+    std::string xvelname, yvelname, zvelname;
+    Uintah::ProblemSpecP doxvel,doyvel,dozvel;
+    doxvel = params->get( "X-Velocity", xvelname );
+    doyvel = params->get( "Y-Velocity", yvelname );
+    dozvel = params->get( "Z-Velocity", zvelname );
+    if( doxvel ) velTags.push_back( Expr::Tag(xvelname, Expr::STATE_NONE) );
+    else         velTags.push_back( Expr::Tag() );
+    if( doyvel ) velTags.push_back( Expr::Tag(yvelname, Expr::STATE_NONE) );
+    else         velTags.push_back( Expr::Tag() );
+    if( dozvel ) velTags.push_back( Expr::Tag(zvelname, Expr::STATE_NONE) );
+    else         velTags.push_back( Expr::Tag() );
+  }
+  
+  //==================================================================
+  
+  void set_mom_tags( Uintah::ProblemSpecP params,
+                    Expr::TagList& momTags )
+  {
+    std::string xmomname, ymomname, zmomname;
+    Uintah::ProblemSpecP doxmom,doymom,dozmom;
+    doxmom = params->get( "X-Momentum", xmomname );
+    doymom = params->get( "Y-Momentum", ymomname );
+    dozmom = params->get( "Z-Momentum", zmomname );
+    if( doxmom ) momTags.push_back( Expr::Tag(xmomname, Expr::STATE_N) );
+    else         momTags.push_back( Expr::Tag() );
+    if( doymom ) momTags.push_back( Expr::Tag(ymomname, Expr::STATE_N) );
+    else         momTags.push_back( Expr::Tag() );
+    if( dozmom ) momTags.push_back( Expr::Tag(zmomname, Expr::STATE_N) );
+    else         momTags.push_back( Expr::Tag() );
+  }
+  
+  //==================================================================
+  
+  template< typename FieldT >
+  void
+  set_tau_tags( const bool* doMom,
+               const bool isViscous,
+               Expr::TagList& tauTags )
+  {
+    const Direction stagLoc = get_staggered_location<FieldT>();
+    std::string thisMomDirName;
+    switch (stagLoc) {
+      case XDIR:
+        thisMomDirName = "x";
+        break;
+      case YDIR:
+        thisMomDirName = "y";
+        break;
+      case ZDIR:
+        thisMomDirName = "z";
+        break;
+      case NODIR:
+      default:
+        thisMomDirName = "";
+        break;
+    }
+
+    if( doMom[0] && isViscous ) tauTags.push_back( Expr::Tag("tau_x" + thisMomDirName , Expr::STATE_NONE) );
+    else                        tauTags.push_back( Expr::Tag() );
+    if( doMom[1] && isViscous ) tauTags.push_back( Expr::Tag("tau_y" + thisMomDirName , Expr::STATE_NONE) );
+    else                        tauTags.push_back( Expr::Tag() );
+    if( doMom[2] && isViscous ) tauTags.push_back( Expr::Tag("tau_z" + thisMomDirName , Expr::STATE_NONE) );
+    else                        tauTags.push_back( Expr::Tag() );
+  }
+  
+  //==================================================================
+  
+  void set_convflux_tags( const bool* doMom,
+                         Expr::TagList& cfTags,
+                         const Expr::Tag thisMomTag )
+  {
+    if( doMom[0] ) cfTags.push_back( Expr::Tag(thisMomTag.name() + "_convFlux_x", Expr::STATE_NONE) );
+    else         cfTags.push_back( Expr::Tag() );
+    if( doMom[1] ) cfTags.push_back( Expr::Tag(thisMomTag.name() + "_convFlux_y", Expr::STATE_NONE) );
+    else         cfTags.push_back( Expr::Tag() );
+    if( doMom[2] ) cfTags.push_back( Expr::Tag(thisMomTag.name() + "_convFlux_z", Expr::STATE_NONE) );
+    else         cfTags.push_back( Expr::Tag() );
+  }
+
   //==================================================================
 
   /**
@@ -311,6 +414,53 @@ namespace Wasatch{
 
   //==================================================================
 
+  template< typename FieldT >
+  Expr::ExpressionID
+  register_strain_tensor( const bool* const doMom,
+                         const bool isViscous,
+                         const Expr::TagList& velTags,
+                         Expr::TagList& tauTags,
+                         const Expr::Tag& dilTag,
+                         Expr::ExpressionFactory& factory )
+  {
+    const Direction stagLoc = get_staggered_location<FieldT>();
+
+    typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
+    typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
+    typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
+
+    set_tau_tags<FieldT>( doMom, isViscous, tauTags );
+    const Expr::Tag& tauxt = tauTags[0];
+    const Expr::Tag& tauyt = tauTags[1];
+    const Expr::Tag& tauzt = tauTags[2];
+    
+    Expr::ExpressionID normalStrainID;
+    
+    const int thisVelIdx = (stagLoc == XDIR) ? 0 : ( (stagLoc == YDIR) ? 1 : 2 );    
+    const Expr::Tag& thisVelTag = velTags[thisVelIdx];
+
+    // register necessary strain expression when the flow is viscous
+    if ( isViscous ) {
+      if( doMom[0] ){
+        const Expr::ExpressionID strainID = setup_strain< XFace >( tauxt, thisVelTag, velTags[0], dilTag, factory );
+        if( stagLoc == XDIR )  normalStrainID = strainID;
+      }
+      if( doMom[1] ){
+        const Expr::ExpressionID strainID = setup_strain< YFace >( tauyt, thisVelTag, velTags[1], dilTag, factory );
+        if( stagLoc == YDIR )  normalStrainID = strainID;
+      }
+      if( doMom[2] ){
+        const Expr::ExpressionID strainID = setup_strain< ZFace >( tauzt, thisVelTag, velTags[2], dilTag, factory );
+        if( stagLoc == ZDIR )  normalStrainID = strainID;
+      }
+      factory.cleave_from_children( normalStrainID );
+      factory.cleave_from_parents( normalStrainID  );
+    }
+    return normalStrainID;
+  }
+  
+  //==================================================================
+
   template< typename FluxT, typename AdvelT >
   Expr::ExpressionID
   setup_convective_flux( const Expr::Tag& fluxTag,
@@ -325,97 +475,44 @@ namespace Wasatch{
   }
 
   //==================================================================
-
-  void set_vel_star_tags( Expr::TagList velTags,
-                          Expr::TagList& velStarTags )
-  {
-    const TagNames& tagNames = TagNames::self();
-    if( velTags[0] != Expr::Tag() ) velStarTags.push_back( Expr::Tag(velTags[0].name() + tagNames.star, Expr::STATE_NONE) );
-    else         velStarTags.push_back( Expr::Tag() );
-    if( velTags[1] != Expr::Tag() ) velStarTags.push_back( Expr::Tag(velTags[1].name() + tagNames.star, Expr::STATE_NONE) );
-    else         velStarTags.push_back( Expr::Tag() );
-    if( velTags[2] != Expr::Tag() ) velStarTags.push_back( Expr::Tag(velTags[2].name() + tagNames.star, Expr::STATE_NONE) );
-    else         velStarTags.push_back( Expr::Tag() );
-  }
-
-  //==================================================================
   
-  void set_vel_tags( Uintah::ProblemSpecP params,
-                     Expr::TagList& velTags )
-  {
-    std::string xvelname, yvelname, zvelname;
-    Uintah::ProblemSpecP doxvel,doyvel,dozvel;
-    doxvel = params->get( "X-Velocity", xvelname );
-    doyvel = params->get( "Y-Velocity", yvelname );
-    dozvel = params->get( "Z-Velocity", zvelname );
-    if( doxvel ) velTags.push_back( Expr::Tag(xvelname, Expr::STATE_NONE) );
-    else         velTags.push_back( Expr::Tag() );
-    if( doyvel ) velTags.push_back( Expr::Tag(yvelname, Expr::STATE_NONE) );
-    else         velTags.push_back( Expr::Tag() );
-    if( dozvel ) velTags.push_back( Expr::Tag(zvelname, Expr::STATE_NONE) );
-    else         velTags.push_back( Expr::Tag() );
-  }
-
-  //==================================================================
- 
-  void set_mom_tags( Uintah::ProblemSpecP params,
-                     Expr::TagList& momTags )
-  {
-    std::string xmomname, ymomname, zmomname;
-    Uintah::ProblemSpecP doxmom,doymom,dozmom;
-    doxmom = params->get( "X-Momentum", xmomname );
-    doymom = params->get( "Y-Momentum", ymomname );
-    dozmom = params->get( "Z-Momentum", zmomname );
-    if( doxmom ) momTags.push_back( Expr::Tag(xmomname, Expr::STATE_N) );
-    else         momTags.push_back( Expr::Tag() );
-    if( doymom ) momTags.push_back( Expr::Tag(ymomname, Expr::STATE_N) );
-    else         momTags.push_back( Expr::Tag() );
-    if( dozmom ) momTags.push_back( Expr::Tag(zmomname, Expr::STATE_N) );
-    else         momTags.push_back( Expr::Tag() );
-  }
-  
-  //==================================================================
-
   template< typename FieldT >
-  void
-  set_tau_tags( Uintah::ProblemSpecP params,
-                Expr::TagList& tauTags,
-                const std::string thisMomDirName)
+  Expr::ExpressionID
+  register_convective_fluxes( const bool* const doMom,
+                              const Expr::TagList& velTags,
+                              Expr::TagList& cfTags,
+                              const Expr::Tag& momTag,
+                              Expr::ExpressionFactory& factory )
   {
-    std::string xmomname, ymomname, zmomname;
-    Uintah::ProblemSpecP doxmom,doymom,dozmom;
-    Uintah::ProblemSpecP isviscous;
-    isviscous = params->findBlock("Viscosity");
-    doxmom = params->get( "X-Momentum", xmomname );
-    doymom = params->get( "Y-Momentum", ymomname );
-    dozmom = params->get( "Z-Momentum", zmomname );
-    //
-    if( doxmom && isviscous ) tauTags.push_back( Expr::Tag("tau_x" + thisMomDirName , Expr::STATE_NONE) );
-    else                      tauTags.push_back( Expr::Tag() );
-    if( doymom && isviscous ) tauTags.push_back( Expr::Tag("tau_y" + thisMomDirName , Expr::STATE_NONE) );
-    else                      tauTags.push_back( Expr::Tag() );
-    if( dozmom && isviscous ) tauTags.push_back( Expr::Tag("tau_z" + thisMomDirName , Expr::STATE_NONE) );
-    else                      tauTags.push_back( Expr::Tag() );
-  }
+    set_convflux_tags( doMom, cfTags, momTag );
+    const Expr::Tag cfxt = cfTags[0];
+    const Expr::Tag cfyt = cfTags[1];
+    const Expr::Tag cfzt = cfTags[2];
 
-  //==================================================================
+    typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
+    typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
+    typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
 
-  void set_convflux_tags( Uintah::ProblemSpecP params,
-                          Expr::TagList& cfTags,
-                          const Expr::Tag thisMomTag )
-  {
-    std::string xmomname, ymomname, zmomname;
-    Uintah::ProblemSpecP doxmom,doymom,dozmom;
-    doxmom = params->get( "X-Momentum", xmomname );
-    doymom = params->get( "Y-Momentum", ymomname );
-    dozmom = params->get( "Z-Momentum", zmomname );
-    //
-    if( doxmom ) cfTags.push_back( Expr::Tag(thisMomTag.name() + "_convFlux_x", Expr::STATE_NONE) );
-    else         cfTags.push_back( Expr::Tag() );
-    if( doymom ) cfTags.push_back( Expr::Tag(thisMomTag.name() + "_convFlux_y", Expr::STATE_NONE) );
-    else         cfTags.push_back( Expr::Tag() );
-    if( dozmom ) cfTags.push_back( Expr::Tag(thisMomTag.name() + "_convFlux_z", Expr::STATE_NONE) );
-    else         cfTags.push_back( Expr::Tag() );
+    Expr::ExpressionID normalConvFluxID;
+    Direction stagLoc = get_staggered_location<FieldT>();
+    
+    if( doMom[0] ){
+      const Expr::ExpressionID id = setup_convective_flux< XFace, XVolField >( cfxt, momTag, velTags[0], factory );
+      if( stagLoc == XDIR )  normalConvFluxID = id;
+    }
+    if( doMom[1] ){
+      const Expr::ExpressionID id = setup_convective_flux< YFace, YVolField >( cfyt, momTag, velTags[1], factory );
+      if( stagLoc == YDIR )  normalConvFluxID = id;
+    }
+    if( doMom[2] ){
+      const Expr::ExpressionID id = setup_convective_flux< ZFace, ZVolField >( cfzt, momTag, velTags[2], factory );
+      if( stagLoc == ZDIR )  normalConvFluxID = id;
+    }
+    // convective fluxes require ghost updates after they are calculated
+    // jcs note that we need to set BCs on these quantities as well.
+    factory.cleave_from_children( normalConvFluxID );
+    factory.cleave_from_parents ( normalConvFluxID );
+    return normalConvFluxID;
   }
 
   //==================================================================
@@ -463,7 +560,7 @@ namespace Wasatch{
                              const bool isConstDensity,
                              const Expr::Tag bodyForceTag,
                              const Expr::Tag srcTermTag,
-                             Expr::ExpressionFactory& factory,
+                             GraphHelper& graphHelper,
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
                              const bool hasEmbeddedGeometry,
@@ -477,7 +574,7 @@ namespace Wasatch{
                          isConstDensity,
                          hasEmbeddedGeometry,
                          params ),
-      isviscous_       ( params->findBlock("Viscosity") ? true : false ),
+      isViscous_       ( params->findBlock("Viscosity") ? true : false ),
       isConstDensity_  ( isConstDensity                       ),
       isTurbulent_     ( turbulenceParams.turbModelName != NONE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
@@ -489,122 +586,60 @@ namespace Wasatch{
     solverParams_ = NULL;
     set_vel_tags( params, velTags_ );
 
-    const Expr::Tag thisMomTag = mom_tag( momName );
+    Expr::ExpressionFactory& factory = *(graphHelper.exprFactory);
 
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
+    thisMomName_ = momName;
+    const Expr::Tag thisMomTag = mom_tag( thisMomName_ );
+    
+    const TagNames& tagNames = TagNames::self();
     
     std::string xmomname, ymomname, zmomname; // these are needed to construct fx, fy, and fz for pressure RHS
-    Uintah::ProblemSpecP doxmom,doymom,dozmom;
-    doxmom = params->get( "X-Momentum", xmomname );
-    doymom = params->get( "Y-Momentum", ymomname );
-    dozmom = params->get( "Z-Momentum", zmomname );
-
-    if (stagLoc_ == XDIR) thisMomName_ = xmomname;
-    if (stagLoc_ == YDIR) thisMomName_ = ymomname;
-    if (stagLoc_ == ZDIR) thisMomName_ = zmomname;
+    bool doMom[3];
+    doMom[0] = params->get( "X-Momentum", xmomname );
+    doMom[1] = params->get( "Y-Momentum", ymomname );
+    doMom[2] = params->get( "Z-Momentum", zmomname );
 
     //_____________
     // volume fractions for embedded boundaries Terms
     VolFractionNames& vNames = VolFractionNames::self();
-    Expr::Tag volFracTag =     this->has_embedded_geometry()             ? vNames.svol_frac_tag() : Expr::Tag();
-    Expr::Tag xAreaFracTag = ( this->has_embedded_geometry() && doxmom ) ? vNames.xvol_frac_tag() : Expr::Tag();
-    Expr::Tag yAreaFracTag = ( this->has_embedded_geometry() && doymom ) ? vNames.yvol_frac_tag() : Expr::Tag();
-    Expr::Tag zAreaFracTag = ( this->has_embedded_geometry() && dozmom ) ? vNames.zvol_frac_tag() : Expr::Tag();
+    Expr::Tag volFracTag =     this->has_embedded_geometry()               ? vNames.svol_frac_tag() : Expr::Tag();
+    Expr::Tag xAreaFracTag = ( this->has_embedded_geometry() && doMom[0] ) ? vNames.xvol_frac_tag() : Expr::Tag();
+    Expr::Tag yAreaFracTag = ( this->has_embedded_geometry() && doMom[1] ) ? vNames.yvol_frac_tag() : Expr::Tag();
+    Expr::Tag zAreaFracTag = ( this->has_embedded_geometry() && doMom[2] ) ? vNames.zvol_frac_tag() : Expr::Tag();
 
     //__________________
-    // old variables
-    // Here we calculate drhoudt using rhou and rhou_old. The catch is to remember
-    // to set the momentum_rhs_full to zero at wall/inlet boundaries.
-    // One could also calculate this time derivative from rho, u and rho_old, u_old.
-    // We may consider this option later.
-    bool enabledudtInPRHS = !(params->findBlock("Disabledmomdt"));
-    const TagNames& tagNames = TagNames::self();
-    
-    if (enabledudtInPRHS) {
-      OldVariable& oldVar = OldVariable::self();
-      Expr::Tag dthisMomdtTag = Expr::Tag( "d_" + thisMomName_ + "_dt" , Expr::STATE_NONE );
-      Expr::Tag thisMomOldTag = Expr::Tag( thisMomName_  + "_old", Expr::STATE_NONE );
-      Expr::Tag thisMomOldOldTag = Expr::Tag( thisMomName_  + "_old_old", Expr::STATE_NONE );
-      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomTag);
-      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomOldTag);
-      factory.register_expression( new typename TimeDerivative<FieldT>::Builder(dthisMomdtTag,thisMomOldTag,thisMomOldOldTag,tagNames.timestep));
-    }
+    // convective fluxes
+    Expr::TagList cfTags; // these tags will be filled by register_convective_fluxes
+    normalConvFluxID_ = register_convective_fluxes<FieldT>(doMom, velTags_, cfTags, thisMomTag, factory);
 
     //__________________
-    // dilatation
+    // dilatation - needed by pressure source term and strain tensor
     const Expr::Tag dilTag = tagNames.dilatation;
     if( !factory.have_entry( dilTag ) ){
       typedef typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
       // if dilatation expression has not been registered, then register it
-      factory.register_expression( new Dilatation(dilTag, velTags_[0],velTags_[1],velTags_[2]) );
+      factory.register_expression( new Dilatation(dilTag, velTags_) );
     }
 
     //___________________________________
     // diffusive flux (strain components)
     Expr::TagList tauTags;
-    const std::string thisMomDirName = this->dir_name();
-    set_tau_tags<FieldT>( params, tauTags, thisMomDirName );
-    const Expr::Tag tauxt = tauTags[0];
-    const Expr::Tag tauyt = tauTags[1];
-    const Expr::Tag tauzt = tauTags[2];
-    //
-    const Expr::Tag viscTag = (isviscous_) ? parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
+    normalStrainID_ = register_strain_tensor<FieldT>(doMom, isViscous_, velTags_, tauTags, dilTag, factory);
+    
     //--------------------------------------
     // TURBULENCE
     // check if we have a turbulence model turned on
+    // check if the flow is viscous
+    const Expr::Tag viscTag = (isViscous_) ? parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
+    
     bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
     const Expr::Tag turbViscTag = tagNames.turbulentviscosity;
-    if ( isTurbulent_ && isviscous_ && enableTurbulenceModel ) {
+    if ( isTurbulent_ && isViscous_ && enableTurbulenceModel ) {
       register_turbulence_expressions(turbulenceParams, factory, velTags_, densTag, is_constant_density() );
       factory.attach_dependency_to_expression(turbViscTag, viscTag);
     }
     // END TURBULENCE
     //--------------------------------------
-    // check if inviscid or not
-    if ( isviscous_ ) {
-      //const Expr::Tag viscosityTag = isTurbulent_ ? turbViscTag : viscTag;
-      if( doxmom ){
-        const Expr::ExpressionID strainID = setup_strain< XFace >( tauxt, thisVelTag_, velTags_[0], dilTag, factory );
-        if( stagLoc_ == XDIR )  normalStrainID_ = strainID;
-      }
-      if( doymom ){
-        const Expr::ExpressionID strainID = setup_strain< YFace >( tauyt, thisVelTag_, velTags_[1], dilTag, factory );
-        if( stagLoc_ == YDIR )  normalStrainID_ = strainID;
-      }
-      if( dozmom ){
-        const Expr::ExpressionID strainID = setup_strain< ZFace >( tauzt, thisVelTag_, velTags_[2], dilTag, factory );
-        if( stagLoc_ == ZDIR )  normalStrainID_ = strainID;
-      }
-      factory.cleave_from_children( normalStrainID_   );
-      factory.cleave_from_parents( normalStrainID_   );
-    }
-
-    //__________________
-    // convective fluxes
-    Expr::TagList cfTags;
-    set_convflux_tags( params, cfTags, thisMomTag );
-    const Expr::Tag cfxt = cfTags[0];
-    const Expr::Tag cfyt = cfTags[1];
-    const Expr::Tag cfzt = cfTags[2];
-
-    if( doxmom ){
-      const Expr::ExpressionID id = setup_convective_flux< XFace, XVolField >( cfxt, thisMomTag, velTags_[0], factory );
-      if( stagLoc_ == XDIR )  normalConvFluxID_ = id;
-    }
-    if( doymom ){
-      const Expr::ExpressionID id = setup_convective_flux< YFace, YVolField >( cfyt, thisMomTag, velTags_[1], factory );
-      if( stagLoc_ == YDIR )  normalConvFluxID_ = id;
-    }
-    if( dozmom ){
-      const Expr::ExpressionID id = setup_convective_flux< ZFace, ZVolField >( cfzt, thisMomTag, velTags_[2], factory );
-      if( stagLoc_ == ZDIR )  normalConvFluxID_ = id;
-    }
-    // convective fluxes require ghost updates after they are calculated
-    // jcs note that we need to set BCs on these quantities as well.
-    factory.cleave_from_children( normalConvFluxID_ );
-    factory.cleave_from_parents ( normalConvFluxID_ );    
 
     //_________________________________________________________
     // partial rhs:
@@ -626,11 +661,29 @@ namespace Wasatch{
     }
     const Expr::ExpressionID momRHSPartID = factory.register_expression(
         new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( thisMomTag ),
-                                                  cfxt, cfyt, cfzt, viscTag,
-                                                  tauxt, tauyt, tauzt, densityTag_,
+                                                  cfTags[0] , cfTags[1] , cfTags[2] , viscTag,
+                                                  tauTags[0], tauTags[1], tauTags[2], densityTag_,
                                                   bodyForceTag, srcTermTag,
                                                   volTag) );
     factory.cleave_from_parents ( momRHSPartID );
+    
+    //__________________
+    // drhou/dt - needed by pressure BCs
+    // Here we calculate drhoudt using rhou and rhou_old. The catch is to remember
+    // to set the momentum_rhs_full to zero at wall/inlet boundaries.
+    // One could also calculate this time derivative from rho, u and rho_old, u_old.
+    // We may consider this option later.
+    bool enabledudtInPRHS = !(params->findBlock("Disabledmomdt"));    
+    if (enabledudtInPRHS) {
+      OldVariable& oldVar = OldVariable::self();
+      Expr::Tag dthisMomdtTag = Expr::Tag( "d_" + thisMomName_ + "_dt" , Expr::STATE_NONE );
+      Expr::Tag thisMomOldTag = Expr::Tag( thisMomName_  + "_old", Expr::STATE_NONE );
+      Expr::Tag thisMomOldOldTag = Expr::Tag( thisMomName_  + "_old_old", Expr::STATE_NONE );
+      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomTag);
+      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomOldTag);
+      factory.register_expression( new typename TimeDerivative<FieldT>::Builder(dthisMomdtTag,thisMomOldTag,thisMomOldOldTag,tagNames.timestep));
+    }
+
     //__________________
     // Pressure source term
     if (!isConstDensity) {
@@ -646,7 +699,7 @@ namespace Wasatch{
         factory.cleave_from_parents ( convTermWeakID_ );
         factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, convTermWeak, tauTags, densTag, viscTag, oldPressureTag, tagNames.timestep ));
       }
-    } 
+    }
     
     Expr::Tag pSourceTag = Expr::Tag( "pressure-source-term", Expr::STATE_NONE);
     if( !factory.have_entry( pSourceTag ) ){
@@ -663,7 +716,7 @@ namespace Wasatch{
     
     
     //__________________
-    // calculating velocity at the current time step    
+    // calculate velocity at the current time step    
     factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( thisVelTag_, thisMomTag, densityTag_, volTag ));
     
     //__________________
@@ -695,16 +748,16 @@ namespace Wasatch{
         
         // if pressure expression has not be registered, then register it
         Expr::Tag fxt, fyt, fzt;
-        if( doxmom )  fxt = Expr::Tag( xmomname + "_rhs_partial", Expr::STATE_NONE );
-        if( doymom )  fyt = Expr::Tag( ymomname + "_rhs_partial", Expr::STATE_NONE );
-        if( dozmom )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );
+        if( doMom[0] )  fxt = Expr::Tag( xmomname + "_rhs_partial", Expr::STATE_NONE );
+        if( doMom[1] )  fyt = Expr::Tag( ymomname + "_rhs_partial", Expr::STATE_NONE );
+        if( doMom[2] )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );
 
         // add drhoudt term to the pressure rhs
         Expr::Tag dxmomdtt, dymomdtt, dzmomdtt;
         if (enabledudtInPRHS) {
-          if( doxmom )  dxmomdtt = Expr::Tag( "d_" + xmomname + "_dt", Expr::STATE_NONE );
-          if( doymom )  dymomdtt = Expr::Tag( "d_" + ymomname + "_dt", Expr::STATE_NONE );
-          if( dozmom )  dzmomdtt = Expr::Tag( "d_" + zmomname + "_dt", Expr::STATE_NONE );
+          if( doMom[0] )  dxmomdtt = Expr::Tag( "d_" + xmomname + "_dt", Expr::STATE_NONE );
+          if( doMom[1] )  dymomdtt = Expr::Tag( "d_" + ymomname + "_dt", Expr::STATE_NONE );
+          if( doMom[2] )  dzmomdtt = Expr::Tag( "d_" + zmomname + "_dt", Expr::STATE_NONE );
         }
 
         Expr::TagList ptags;
@@ -723,6 +776,31 @@ namespace Wasatch{
         pressureID_ = factory.get_id( pressure_tag() );
       }
     }
+    
+    // Kinetic energy calculation, if necessary
+    if ( params->findBlock("CalculateKE") ) {
+      Uintah::ProblemSpecP keSpec = params->findBlock("CalculateKE");
+      bool isTotalKE = true;
+      keSpec->getAttribute("total", isTotalKE);
+      if (isTotalKE) { // calculate total kinetic energy. then follow that with a reduction variable
+        if (!factory.have_entry( TagNames::self().totalKineticEnergy )) {
+          bool outputKE = true;
+          keSpec->getAttribute("output", outputKE);
+          
+          // we need to create two expressions
+          const Expr::Tag tkeTempTag("TotalKE_temp", Expr::STATE_NONE);
+          factory.register_expression(scinew typename TotalKineticEnergy<XVolField,YVolField,ZVolField>::Builder( tkeTempTag,
+                                                                                                                 velTags_[0],velTags_[1],velTags_[2] ),true);
+          
+          ReductionHelper::self().add_variable<double, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE, false);
+        }
+      } else if (!factory.have_entry( TagNames::self().kineticEnergy )) { // calculate local, pointwise kinetic energy
+        const Expr::ExpressionID keID = factory.register_expression(scinew typename KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder( TagNames::self().kineticEnergy,
+                                                                                                                                                                 velTags_[0],velTags_[1],velTags_[2] ), true);
+        graphHelper.rootIDs.insert( keID );
+      }
+    }
+
   }
 
   //------------------------------------------------------------------
@@ -799,9 +877,6 @@ namespace Wasatch{
       }
     }
         
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
     typedef typename NormalFaceSelector<FieldT>::NormalFace NormalFace;
 
     // set initial bcs for momentum
@@ -910,9 +985,6 @@ namespace Wasatch{
                              const Uintah::MaterialSubset* const materials,
                              const std::map<std::string, std::set<std::string> >& bcFunctorMap)
   {
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
     typedef typename NormalFaceSelector<FieldT>::NormalFace NormalFace;
 
     // set bcs for momentum
@@ -996,7 +1068,7 @@ namespace Wasatch{
 
     // set bcs for normal strains
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
-    if(isviscous_) {
+    if(isViscous_) {
       Expr::Tag normalStrainTag = factory.get_label(normalStrainID_);
       process_boundary_conditions<NormalFace>( normalStrainTag,
                                   normalStrainTag.name(),

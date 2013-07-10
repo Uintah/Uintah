@@ -118,7 +118,6 @@ namespace Wasatch{
       switch (stagLoc_) {
       case XDIR:
         return "x";
-        break;
       case YDIR:
         return "y";
       case ZDIR:

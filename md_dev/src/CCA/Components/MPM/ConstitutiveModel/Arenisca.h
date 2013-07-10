@@ -52,23 +52,23 @@ namespace Uintah {
   public:
     struct CMData {
       double FSLOPE;
-      double FSLOPE_p;
-      double hardening_modulus;
       double CR;
-      double T1_rate_dependence;
-      double T2_rate_dependence;
       double p0_crush_curve;
       double p1_crush_curve;
       double p3_crush_curve;
       double p4_fluid_effect;
-      double kinematic_hardening_constant;
       double fluid_B0;
-      double fluid_pressure_initial;
-      double gruneisen_parameter;
       double subcycling_characteristic_number;
       double PEAKI1;
       double B0;
       double G0;
+      double FSLOPE_p;
+      double hardening_modulus;
+      double kinematic_hardening_constant;
+      double fluid_pressure_initial;
+      double gruneisen_parameter;
+      double T1_rate_dependence;
+      double T2_rate_dependence;
     };
     const VarLabel* pLocalizedLabel;
     const VarLabel* pLocalizedLabel_preReloc;

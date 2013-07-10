@@ -1,7 +1,7 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Pressure Projection Test with a 1D Convective Case in xsvn update-direction</title>
+    <title>Pressure Projection Test with a 1D Convective Case in x-direction</title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>

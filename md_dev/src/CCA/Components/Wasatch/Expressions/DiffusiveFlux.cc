@@ -44,7 +44,9 @@ DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag& rhoTag,
     rhoTag_     ( rhoTag      ),
     turbDiffTag_( turbDiffTag ),
     coefVal_    ( 0.0         )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 

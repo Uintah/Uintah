@@ -514,6 +514,25 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
             density = mixingTable->getTableValue(iv, "density"); 
 
             //get values for all other scalars that depend on a table lookup: 
+            for (std::map<std::string, scalarInletBase*>::iterator iter_lookup = iIntrusion->second.scalar_map.begin(); 
+                                                                   iter_lookup != iIntrusion->second.scalar_map.end(); 
+                                                                   iter_lookup++ ){ 
+
+              if ( iter_lookup->second->get_type() == scalarInletBase::TABULATED ){ 
+
+                tabulatedScalar& tab_scalar = dynamic_cast<tabulatedScalar&>(*iter_lookup->second);
+
+                std::string lookup_name = tab_scalar.get_depend_var_name(); 
+
+                double lookup_value = mixingTable->getTableValue(iv, lookup_name);
+
+                cout_intrusiondebug << "IntrusionBC::Setting scalar " << iter_lookup->first << " to a lookup value of: " << lookup_value << std::endl;
+
+                tab_scalar.set_scalar_constant( lookup_value ); 
+
+              } 
+
+            } 
           }
 
           iIntrusion->second.density_map.insert(std::make_pair(c, density)); 

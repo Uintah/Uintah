@@ -113,6 +113,8 @@ void VelEst<FieldT>::evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
 
+  result <<= 0.0;  // jcs without this, the variable density tests go haywire.
+
   if( is3d_ ){ // optimize the 3D calculation since that is what we have most commonly:
     result <<= *vel_ + *tStep_ * ( *convTerm_ - ( 1 / (*scalarInterpOp_)(*density_) )
         * ( (*divXOp_)( (*s2XFInterpOp_)(*visc_) * *tauxi_ )

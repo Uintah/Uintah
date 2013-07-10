@@ -26,6 +26,7 @@
 #define Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 #include <CCA/Components/ICE/CustomBCs/MMS_BCs.h>
 #include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
+#include <CCA/Components/ICE/CustomBCs/inletVelocity.h>
 #include <CCA/Components/ICE/CustomBCs/microSlipBCs.h>
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
@@ -44,12 +45,11 @@
 #include <Core/Containers/StaticArray.h>
 #include <time.h>
 
-namespace Uintah {
 
 static DebugStream BC_dbg(  "ICE_BC_DBG", false);
 static DebugStream cout_BC_CC("ICE_BC_CC", false);
 static DebugStream cout_BC_FC("ICE_BC_FC", false);
-
+namespace Uintah {
   class DataWarehouse;
  
   void BC_bulletproofing(const ProblemSpecP& prob_spec,SimulationStateP& sharedState );
@@ -207,7 +207,7 @@ void setBC(T& vel_FC,
            SimulationStateP& sharedState,
            customBC_var_basket* custom_BC_basket)      
 {
-  cout_BC_FC << "setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<endl;
+  cout_BC_FC << "--------setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<endl;
   Vector cell_dx = patch->dCell();
   string whichVel = "unknown";  
   
@@ -289,20 +289,27 @@ void setBC(T& vel_FC,
             nCells+= set_Sine_BCs_FC<T>(patch, face, vel_FC, bound_ptr, sharedState,
                                         custom_BC_basket->sine_var_basket,
                                         custom_BC_basket->sine_v);
-          }         
+          }
+          //__________________________________
+          // Custom BCs
+          else if( (bc_kind == "powerLawProfile" || bc_kind == "logWindProfile") ){
+            nCells+= set_inletVelocity_BCs_FC<T>(patch, face, vel_FC, 
+                                                 bound_ptr, bc_kind, value,
+                                                 custom_BC_basket->inletVel_var_basket);
+          }       
 
           //__________________________________
           //  debugging
           if( BC_dbg.active() ) {
             bound_ptr.reset();
-            BC_dbg <<whichVel<< " Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
+            BC_dbg <<whichVel<<" Face: "<< patch->getFaceName(face) <<"\t numCellsTouched " << nCells
                  <<"\t child " << child  <<" NumChildren "<<numChildren 
                  <<"\t BC kind "<< bc_kind <<" \tBC value "<< value
                  <<"\t bound_ptr= " << bound_ptr<< endl;
           }              
         }  // Children loop
       }
-      cout_BC_FC << patch->getFaceName(face) << " \t " << whichVel << " \t" << bc_kind << " faceDir: " << faceDir << " numChildren: " << numChildren 
+      cout_BC_FC << patch->getFaceName(face) << " \t " << whichVel << " \t" << bc_kind << "\t faceDir: " << faceDir << " numChildren: " << numChildren 
                  << " nCells: " << nCells << endl;
       //__________________________________
       //  bulletproofing
@@ -327,7 +334,7 @@ void setBC(T& vel_FC,
 template <class T>
 void set_CFI_BC( CCVariable<T>& q_CC, const Patch* patch)        
 { 
-  cout_BC_CC << "set_CFI_BC "<< endl; 
+  cout_BC_CC << "-------- set_CFI_BC "<< endl; 
   //__________________________________
   // On the fine levels at the coarse fine interface 
   BC_dbg << *patch << " ";
