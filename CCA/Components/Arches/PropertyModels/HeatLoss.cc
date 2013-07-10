@@ -221,7 +221,7 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
       if ( eps[c] > 0.0 ){ 
 
         vector<double> iv_values; 
-        for ( int ii = 0; ii < ivs.size(); ii++ ){
+        for ( unsigned int ii = 0; ii < ivs.size(); ii++ ){
 
           if ( ivs[ii] != _prop_name ){ 
 
@@ -238,10 +238,11 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
         double small = 1e-16;
         double hl = 0.0;
         double h_sens = _rxn_model->getTableValue( iv_values, _sen_h_label_name, inerts, c ); 
+        double h_ad_lookup = 0.0; 
         
         if ( _use_h_ad_lookup ){ 
 
-          double h_ad_lookup = _rxn_model->getTableValue( iv_values, _adiab_h_label_name, inerts, c ); 
+          h_ad_lookup = _rxn_model->getTableValue( iv_values, _adiab_h_label_name, inerts, c ); 
           hl = h_ad_lookup - h[c];
 
         } else { 
@@ -279,10 +280,12 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
      
       if ( oob_up || oob_dn ) {  
 				std::cout << "Patch with bounds: " << patch->getCellLowIndex() << " to " << patch->getCellHighIndex()  << std::endl;
-        if ( oob_dn ) 
+        if ( oob_dn ){
           std::cout << "   --> lower heat loss exceeded. " << std::endl;
-        if ( oob_up ) 
+        }
+        if ( oob_up ){
           std::cout << "   --> upper heat loss exceeded. " << std::endl;
+        }
       } 
     } 
 
