@@ -267,6 +267,19 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
       tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
 
+      for ( int i = 0; i < _nQn_part; i++ ){ 
+
+        //--size--
+        tsk->requires( Task::NewDW, _size_varlabels[i], Ghost::None, 0 ); 
+
+        //--temperature--
+        tsk->requires( Task::NewDW, _T_varlabels[i], Ghost::None, 0 ); 
+
+        //--weight--
+        tsk->requires( Task::NewDW, _w_varlabels[i], Ghost::None, 0 ); 
+
+      } 
+
     } else { 
 
       tsk->requires( Task::NewDW, _co2_label, gn,  0 ); 
