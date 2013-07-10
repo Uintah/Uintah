@@ -86,8 +86,6 @@ WARNING
    // If there is none specified, this will return a null (0) pointer
    SpecificHeat* getSpecificHeatModel() const;
    
-   WallShearStress* getWallShearStressModel() const;
-   
    double getGamma() const;
    double getViscosity() const;
    double getSpeedOfSound() const;
@@ -112,7 +110,6 @@ WARNING
  private:
    EquationOfState *d_eos;
    SpecificHeat    *d_cvModel;   // Specific heat model
-   WallShearStress *d_WallShearStressModel;
 
    double d_viscosity;
    double d_gamma;

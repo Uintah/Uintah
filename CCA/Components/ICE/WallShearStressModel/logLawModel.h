@@ -39,40 +39,30 @@ namespace Uintah {
     
     virtual void scheduleInitialize(SchedulerP& sched, 
                                     const LevelP& level);
-    
-    
-    //__________________________________
-    //  Explicit instantiation.  C++ doesn't support
-    // templated virtual functions
-    void computeWallShearStresses(DataWarehouse* new_dw,
-                                  const Patch* patch,                      
-                                  const CCVariable<Vector>& vel_CC,        
-                                  SFCXVariable<Vector>& Tau_FC){           
-      wallShearStresses( new_dw, patch, vel_CC, Tau_FC);
-    }
-                                         
-    void computeWallShearStresses(DataWarehouse* new_dw,
-                                  const Patch* patch,                      
-                                  const CCVariable<Vector>& vel_CC,        
-                                  SFCYVariable<Vector>& Tau_FC){           
-      wallShearStresses( new_dw, patch, vel_CC, Tau_FC);
-    }
-                                         
-    void computeWallShearStresses(DataWarehouse* new_dw,
-                                  const Patch* patch,                      
-                                  const CCVariable<Vector>& vel_CC,        
-                                  SFCZVariable<Vector>& Tau_FC){
-      wallShearStresses( new_dw, patch, vel_CC, Tau_FC);
-    }
+
+
+    virtual
+    void computeWallShearStresses( DataWarehouse* new_dw,
+                                   const Patch* patch,
+                                   constCCVariable<double>& vol_frac_CC,  
+                                   constCCVariable<Vector>& vel_CC,      
+                                   const CCVariable<double>& viscosity,        
+                                   SFCXVariable<Vector>& tau_X_FC,
+                                   SFCYVariable<Vector>& tau_Y_FC,
+                                   SFCZVariable<Vector>& tau_Z_FC );
+
+    private:
     
     //__________________________________
     //
     template<class T> 
     void wallShearStresses(DataWarehouse* new_dw,
                            const Patch* patch,
-                           const CCVariable<Vector>& vel_CC,
+                           constCCVariable<double>& vol_frac_CC,
+                           constCCVariable<Vector>& vel_CC,
                            T& Tau_FC);
-    private:
+    
+    
       Patch::FaceType d_face;
       double d_roughnessConstant;
       double d_vonKarman; 

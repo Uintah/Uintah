@@ -32,8 +32,12 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Patch.h>
 #include <cmath>
+#include<iomanip>
+
 using namespace Uintah;
+using namespace std;
 static DebugStream cout_doing("ICE_DOING_COUT", false);
+#define SMALL_NUM 1e-100
 
 //______________________________________________________________________
 //  Reference:  R. Stoll, F. Porte-Agel, "Effect of Roughness on Surface Boundary
@@ -45,7 +49,7 @@ logLawModel::logLawModel(ProblemSpecP& ps, SimulationStateP& sharedState)
   : WallShearStress(ps, sharedState)
 {
   string face;
-  ps->require("face", face);
+  ps->require("domainFace", face);
   
   if ( face == "x-" ) {
     d_face = Patch::xminus;
@@ -66,6 +70,7 @@ logLawModel::logLawModel(ProblemSpecP& ps, SimulationStateP& sharedState)
     d_face = Patch::zplus;
   }
   
+  
   d_vonKarman = 0.4;                // default value
   ps->get( "vonKarmanConstant", d_vonKarman );
 
@@ -76,9 +81,9 @@ logLawModel::logLawModel(ProblemSpecP& ps, SimulationStateP& sharedState)
   
   if( d_roughnessConstant != -9 && roughnessInputFile != "none") {
     ostringstream warn;
-    warn << "ERROR ICE::WallShearStressModel:logLaw\n"
+    warn << "\nERROR ICE::WallShearStressModel:logLawModel\n"
          << "    You cannot specify both a constant roughness ("<< d_roughnessConstant<< ")"
-         << "     and read in the roughness from an input file (" << roughnessInputFile << ").";
+         << " and read in the roughness from a file (" << roughnessInputFile << ").";
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 }
@@ -94,13 +99,37 @@ void logLawModel::scheduleInitialize(SchedulerP& sched,
 {
 }
 
+//______________________________________________________________________
+//  Wrapper around the calls for the individual components   
+void logLawModel::computeWallShearStresses( DataWarehouse* new_dw,
+                                            const Patch* patch,
+                                            constCCVariable<double>& vol_frac_CC,  
+                                            constCCVariable<Vector>& vel_CC,      
+                                            const CCVariable<double>& viscosity,    
+                                            SFCXVariable<Vector>& tau_X_FC,
+                                            SFCYVariable<Vector>& tau_Y_FC,
+                                            SFCZVariable<Vector>& tau_Z_FC )
+{
+  if( d_face == Patch::xminus || d_face == Patch::xplus ){
+    wallShearStresses< SFCXVariable<Vector> >( new_dw, patch, vol_frac_CC, vel_CC, tau_X_FC);
+  }
+  
+  if( d_face == Patch::yminus || d_face == Patch::yplus ){  
+    wallShearStresses< SFCYVariable<Vector> >( new_dw, patch, vol_frac_CC, vel_CC, tau_Y_FC);
+  }
+  
+  if( d_face == Patch::zminus || d_face == Patch::zplus ){  
+    wallShearStresses< SFCZVariable<Vector> >( new_dw, patch, vol_frac_CC, vel_CC, tau_Z_FC);
+  }                              
+}
 
 //______________________________________________________________________
 //
 template<class T>
 void logLawModel::wallShearStresses(DataWarehouse* new_dw,
                                     const Patch* patch,
-                                    const CCVariable<Vector>& vel_CC,
+                                    constCCVariable<double>& vol_frac_CC,
+                                    constCCVariable<Vector>& vel_CC,
                                     T& Tau_FC)
 {
   vector<Patch::FaceType> bf;
@@ -123,27 +152,45 @@ void logLawModel::wallShearStresses(DataWarehouse* new_dw,
       
       double denominator = log( z_CC/d_roughnessConstant );       // this assumes constant roughness
       
-      IntVector oneCell = patch->faceDirection(face);
+      IntVector oneCell(0,0,0);
+      if( d_face == Patch::xplus || d_face == Patch::yplus || d_face == Patch::zplus){
+        oneCell= patch->faceDirection(face);
+      }
+      
+      
+/*`==========TESTING==========*/
+      cout << " logLawModel " << patch->getFaceName(face) << " iterator: "
+           << patch->getFaceIterator(face, Patch::SFCVars) << endl;
+      cout << "    oneCell: " << oneCell << " dir1: " << dir1 << " dir2 " << dir2 << " p_dir " << p_dir 
+           << " z_CC: " << z_CC << endl; 
+/*===========TESTING==========`*/       
 
-      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-      for(CellIterator iter = patch->getFaceIterator(face, MEC); !iter.done(); iter++){
+      //__________________________________
+      //
+      for(CellIterator iter = patch->getFaceIterator(face, Patch::SFCVars); !iter.done(); iter++){
         IntVector c = *iter;
-        IntVector adj  = c - oneCell;
+        IntVector adj  = c - oneCell;                           // for x+, y+, z+ faces use the velocity from the adjacent cell
         
-        double vel1 = vel_CC[c][dir1];
-        double vel2 = vel_CC[c][dir2];
+        double vel1 = vel_CC[adj][dir1];
+        double vel2 = vel_CC[adj][dir2];
         
         double u_tilde = ( pow( vel1, 2)  + pow(vel2, 2) );
-        u_tilde = sqrt(u_tilde);
-        
+        u_tilde = sqrt(u_tilde) + SMALL_NUM;                   // avoid division by 0
+          
         // eq (5)
         double tau_s = -pow( (u_tilde * d_vonKarman )/denominator, 2);
         
         // eq (6)
-        Vector Tau_tmp(0,0,0);
-        Tau_tmp[dir1] = tau_s * ( vel1/u_tilde );
-        Tau_tmp[dir2] = tau_s * ( vel2/u_tilde );
-        Tau_FC[c] = Tau_tmp;
+        Vector tau_tmp(0,0,0);
+        tau_tmp[dir1] = tau_s * ( vel1/u_tilde );
+        tau_tmp[dir2] = tau_s * ( vel2/u_tilde );
+        
+/*`==========TESTING==========*/
+        cout << " c " << c << " adj " << adj << setw(8) <<" u_tilde: " << u_tilde 
+             << setw(8) << " tau_s: " << tau_s << " Tau_tmp " << tau_tmp << setw(8) << "vel1: " << vel1 << " vel2 " << vel2 << endl; 
+/*===========TESTING==========`*/
+             
+        Tau_FC[c] = tau_tmp;
       }
     }  // face
   }  // face iterator

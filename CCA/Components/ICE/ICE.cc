@@ -39,6 +39,7 @@
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStress.h>
+#include <CCA/Components/ICE/WallShearStressModel/WallShearStressFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -161,6 +162,10 @@ ICE::~ICE()
 
   if(d_turbulence){
     delete d_turbulence;
+  }
+  
+  if( d_WallShearStressModel ){
+    delete d_WallShearStressModel;
   }
 
   if(d_analysisModules.size() != 0){
@@ -438,8 +443,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   }
   
   //__________________________________
-  // Set up turbulence models - needs to be done after materials are initialized
+  // Set up turbulence and wall shear stress models - needs to be done after materials are initialized
   d_turbulence = TurbulenceFactory::create(cfd_ice_ps, sharedState);
+  
+  d_WallShearStressModel = WallShearStressFactory::create(cfd_ice_ps, sharedState);
+  
 
   //__________________________________
   //  conservationTest
@@ -1320,6 +1328,13 @@ void ICE::scheduleViscousShearStress(SchedulerP& sched,
     t->requires( Task::NewDW,lb->vvel_FCMELabel,    gac, 3);
     t->requires( Task::NewDW,lb->wvel_FCMELabel,    gac, 3);
     t->computes( lb->turb_viscosity_CCLabel );
+  }
+  
+  //__________________________________
+  // bulletproofing
+  if( (d_viscousFlow == 0.0 && d_turbulence) || (d_viscousFlow == 0.0 && d_WallShearStressModel )){
+    string warn = "\nERROR:ICE:viscousShearStress\n The viscosity can't be 0 when using a turbulence model or a wall shear stress model";
+    throw ProblemSetupException(warn, __FILE__, __LINE__);
   }
   
   t->computes( lb->viscous_src_CCLabel );
@@ -3809,9 +3824,9 @@ void ICE::viscousShearStress(const ProcessorGroup*,
           Ttau_Z_FC.initialize( evilNum );
   
           // turbulence model
-          if(d_turbulence){ 
-            d_turbulence->callTurb(new_dw,patch,vel_CC,rho_CC,indx,lb,
-                                   d_sharedState, viscosity);
+          if( d_turbulence ){ 
+            d_turbulence->callTurb( new_dw, patch, vel_CC, rho_CC, indx, lb,
+                                    d_sharedState, viscosity );
              
             // keep around for diagnostics                       
             CCVariable<double> turb_viscosity;           
@@ -3822,11 +3837,11 @@ void ICE::viscousShearStress(const ProcessorGroup*,
                                    
           }
 
-          computeTauComponents(patch, vol_frac, vel_CC,viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC);  
-
-          if(viscosity_test == 0.0 && d_turbulence){
-            string warn="ERROR:\n input :viscosity can't be zero when calculate turbulence";
-            throw ProblemSetupException(warn, __FILE__, __LINE__);
+          computeTauComponents( patch, vol_frac, vel_CC,viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC);
+          
+          // wall model
+          if( d_WallShearStressModel ){
+            d_WallShearStressModel -> computeWallShearStresses( new_dw, patch, vol_frac, vel_CC,viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC); 
           }
 
           for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){

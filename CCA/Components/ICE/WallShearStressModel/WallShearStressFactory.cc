@@ -44,7 +44,7 @@ WallShearStressFactory::~WallShearStressFactory()
 WallShearStress* WallShearStressFactory::create( ProblemSpecP& ps, 
                                                  SimulationStateP& sharedState )
 {
-  ProblemSpecP wss_ps = ps->findBlock("WallShearStressModel");
+  ProblemSpecP wss_ps = ps->findBlock("wallShearStress");
   
   if(wss_ps){
     std::string WSS_model;

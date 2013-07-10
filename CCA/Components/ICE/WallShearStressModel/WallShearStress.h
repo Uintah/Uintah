@@ -57,23 +57,17 @@ namespace Uintah {
                                     const LevelP& level) = 0;
     
     
-    //__________________________________
-    //  Explicit instantiation.  C++ doesn't support
-    // templated virtual functions
-    virtual void computeWallShearStresses(DataWarehouse* new_dw,
-                                          const Patch* patch,
-                                          const CCVariable<Vector>& vel_CC,
-                                          SFCXVariable<Vector>& Tau_FC) = 0;
-                                         
-    virtual void computeWallShearStresses(DataWarehouse* new_dw,
-                                          const Patch* patch,
-                                          const CCVariable<Vector>& vel_CC,
-                                          SFCYVariable<Vector>& Tau_FC) = 0;
-                                         
-    virtual void computeWallShearStresses(DataWarehouse* new_dw,
-                                          const Patch* patch,
-                                          const CCVariable<Vector>& vel_CC,
-                                          SFCZVariable<Vector>& Tau_FC) = 0;
+    virtual
+    void computeWallShearStresses( DataWarehouse* new_dw,
+                                   const Patch* patch,
+                                   constCCVariable<double>& vol_frac_CC,  
+                                   constCCVariable<Vector>& vel_CC,      
+                                   const CCVariable<double>& viscosity,        
+                                   SFCXVariable<Vector>& tau_X_FC,
+                                   SFCYVariable<Vector>& tau_Y_FC,
+                                   SFCZVariable<Vector>& tau_Z_FC ) = 0;
+    
+
   protected:
     
   };// End class WallShearStress
