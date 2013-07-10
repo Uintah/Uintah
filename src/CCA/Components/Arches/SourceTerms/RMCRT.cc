@@ -330,6 +330,7 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
 
   if ( time_sub_step == 0 ) { 
     tsk->computes( _abskgLabel );
+    tsk->computes( _abskpLabel ); 
     tsk->requires( Task::OldDW, _tempLabel, Ghost::None, 0 ); 
     //gas
     for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
@@ -387,6 +388,7 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
     } 
   } else {  
     tsk->modifies( _abskgLabel );
+    tsk->modifies( _abskpLabel ); 
     tsk->requires( Task::NewDW, _tempLabel, Ghost::None, 0 ); 
 
     for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
