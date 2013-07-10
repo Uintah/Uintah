@@ -572,16 +572,3 @@ DORadiationModel::BurnsChriston::BurnsChriston(){};
 DORadiationModel::BurnsChriston::~BurnsChriston(){};
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
