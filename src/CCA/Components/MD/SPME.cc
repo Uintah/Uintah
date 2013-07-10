@@ -46,6 +46,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <cstring>
 
 #include <sci_values.h>
 #include <sci_defs/fftw_defs.h>
@@ -123,6 +124,7 @@ void SPME::initialize(const ProcessorGroup* pg,
   SoleVariable<fftw_plan> backwardTransformPlan;
   SoleVariable<SimpleGrid<dblcomplex>*> Q_global;
 
+  // Data structures for global and node-local versions of the Q grid
   IntVector zero(0, 0, 0);
   SimpleGrid<dblcomplex>* Q = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, IV_ZERO, 0);
   Q_global.setData(Q); // need this for datawarehouse
@@ -131,35 +133,44 @@ void SPME::initialize(const ProcessorGroup* pg,
   d_Q_nodeLocal = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, IV_ZERO, 0);
 
   /*
-   * ptrdiff_t is a standard C integer type which is (at least) 32 bits wide
-   * on a 32-bit machine and 64 bits wide on a 64-bit machine.
+   * Now do all the FFTW setup for the global FFTs
+   */
+
+//  const ptrdiff_t xdim = d_kLimits(0);
+//  const ptrdiff_t ydim = d_kLimits(1);
+//  const ptrdiff_t zdim = d_kLimits(2);
+//  fftw_plan forwardPlan, backwardPlan;
+//  fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q_nodeLocal->getDataPtr());
+//  forwardPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
+//  backwardPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
+
+  /*
+   * ptrdiff_t is a type able to represent the result of any valid pointer subtraction operation.
+   * It is a standard C integer type which is (at least) 32 bits wide
+   *   on a 32-bit machine and 64 bits wide on a 64-bit machine.
    */
   const ptrdiff_t xdim = d_kLimits(0);
   const ptrdiff_t ydim = d_kLimits(1);
   const ptrdiff_t zdim = d_kLimits(2);
 
-  // TODO change this to MPI plan
+  ptrdiff_t alloc_local, local_n, local_start;
   fftw_plan forwardPlan, backwardPlan;
-  fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q_nodeLocal->getDataPtr());
-  forwardPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
-  backwardPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
-  // TODO change this to MPI plan see below
 
-//  ptrdiff_t alloc_local, local_n, local_start;
-//  fftw_plan forwardPlan, backwardPlan;
-//
-//  fftw_mpi_init();
-//  // We shouldn't need the local information if FFTW will handle data distribution
-//  alloc_local = fftw_mpi_local_size_3d(xdim, ydim, zdim, MPI_COMM_WORLD, &local_n, &local_start);
-//  d_localFFTData = fftw_alloc_complex(alloc_local);
-//
-//  forwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, d_localFFTData, d_localFFTData, pg->getComm(), FFTW_FORWARD, FFTW_MEASURE);
-//  backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, d_localFFTData, d_localFFTData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
+  // Must initialize FFTW MPI before FFTW_MPI calls are made
+  fftw_mpi_init();
 
-  // Allocate FFT plans for global Q data
-  //ptrdiff_t Q_global_data;
-  //forwardPlan = fftw_mpi_plan_dft_3d(d_kLimits.x(),d_kLimits.y(),d_kLimits.z());
+  // This is the local portion of the global FFT array that will reside on each portion (slab decomposition)
+  alloc_local = fftw_mpi_local_size_3d(xdim, ydim, zdim, pg->getComm(), &local_n, &local_start);
+  d_localFFTData.complexData = fftw_alloc_complex(alloc_local);
+  d_localFFTData.numElements = local_n;
+  d_localFFTData.startAddress = local_start;
 
+  // create the forward and reverse FFT MPI plans
+  fftw_complex* complexData = d_localFFTData.complexData;
+  forwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_FORWARD, FFTW_MEASURE);
+  backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
+
+  // set the SoleVariable data to be the forward and reverse FFTW plans
   forwardTransformPlan.setData(forwardPlan);
   backwardTransformPlan.setData(backwardPlan);
 
@@ -725,10 +736,26 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
+//  SoleVariable<fftw_plan> forwardTransformPlan;
+//  old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
+//  fftw_plan forwardPlan = forwardTransformPlan.get();
+//  fftw_execute(forwardPlan);
+
   SoleVariable<fftw_plan> forwardTransformPlan;
   old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
   fftw_plan forwardPlan = forwardTransformPlan.get();
+
+  // setup and copy data to-and-from this processor's portion of the global FFT array
+  fftw_complex* local_chunk = d_localFFTData.complexData;
+  ptrdiff_t local_n = d_localFFTData.numElements; // a (local_n * kLimits.y * kLimits.z) chunk of the global array
+  ptrdiff_t local_start = d_localFFTData.startAddress;
+  dblcomplex* nodeLocalData = d_Q_nodeLocal->getDataPtr();
+  dblcomplex* globalOffset = nodeLocalData + local_start;
+  size_t numElements = local_n * d_kLimits[1] * d_kLimits[2];
+
+  std::memcpy(local_chunk, globalOffset, numElements);
   fftw_execute(forwardPlan);
+  std::memcpy(globalOffset, local_chunk, numElements);
 
   // carry forward plan for forward FFT
   SoleVariable<fftw_plan> global_forwardTransformPlan;
@@ -817,10 +844,26 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
+//  SoleVariable<fftw_plan> backwardTransformPlan;
+//  old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
+//  fftw_plan backwardPlan = backwardTransformPlan.get();
+//  fftw_execute(backwardPlan);
+
   SoleVariable<fftw_plan> backwardTransformPlan;
   old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
   fftw_plan backwardPlan = backwardTransformPlan.get();
+
+  // setup and copy data to-and-from this processor's portion of the global FFT array
+  fftw_complex* local_chunk = d_localFFTData.complexData;
+  ptrdiff_t local_n = d_localFFTData.numElements;
+  ptrdiff_t local_start = d_localFFTData.startAddress;
+  dblcomplex* nodeLocalData = d_Q_nodeLocal->getDataPtr();
+  dblcomplex* globalOffset = nodeLocalData + local_start;
+  size_t numElements = local_n * d_kLimits[1] * d_kLimits[2];
+
+  std::memcpy(local_chunk, globalOffset, numElements);
   fftw_execute(backwardPlan);
+  std::memcpy(globalOffset, local_chunk, numElements);
 
   // carry forward plan for backward FFT
   SoleVariable<fftw_plan> global_backwardTransformPlan;
@@ -933,8 +976,10 @@ void SPME::calculateCGrid(SimpleGrid<double>& CGrid,
                           const IntVector& extents,
                           const IntVector& offset) const
 {
-  // sanity check
-  proc0thread0cout << "System Volume: " << d_systemVolume << endl;
+  if (spme_dbg.active()) {
+    // sanity check
+    proc0thread0cout << "System Volume: " << d_systemVolume << endl;
+  }
 
   std::vector<double> mp1(d_kLimits.x());
   std::vector<double> mp2(d_kLimits.y());
@@ -1260,11 +1305,13 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
       }
     }
     // sanity check
-    if (pidx < 5) {
-      cerrLock.lock();
-      std::cerr << " Force Check (" << pidx << "): " << newForce << endl;
-      pforcenew[pidx] = newForce;
-      cerrLock.unlock();
+    if (spme_dbg.active()) {
+      if (pidx < 5) {
+        cerrLock.lock();
+        std::cerr << " Force Check (" << pidx << "): " << newForce << endl;
+        pforcenew[pidx] = newForce;
+        cerrLock.unlock();
+      }
     }
   }
 }
