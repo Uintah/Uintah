@@ -133,18 +133,8 @@ void SPME::initialize(const ProcessorGroup* pg,
   d_Q_nodeLocal = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, IV_ZERO, 0);
 
   /*
-   * Now do all the FFTW setup for the global FFTs
-   */
-
-//  const ptrdiff_t xdim = d_kLimits(0);
-//  const ptrdiff_t ydim = d_kLimits(1);
-//  const ptrdiff_t zdim = d_kLimits(2);
-//  fftw_plan forwardPlan, backwardPlan;
-//  fftw_complex* array_fft = reinterpret_cast<fftw_complex*>(d_Q_nodeLocal->getDataPtr());
-//  forwardPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_FORWARD, FFTW_MEASURE);
-//  backwardPlan = fftw_plan_dft_3d(xdim, ydim, zdim, array_fft, array_fft, FFTW_BACKWARD, FFTW_MEASURE);
-
-  /*
+   * Now do FFTW setup for the global FFTs...
+   *
    * ptrdiff_t is a type able to represent the result of any valid pointer subtraction operation.
    * It is a standard C integer type which is (at least) 32 bits wide
    *   on a 32-bit machine and 64 bits wide on a 64-bit machine.
@@ -261,10 +251,10 @@ void SPME::setup(const ProcessorGroup* pg,
     SimpleGrid<double> fCGrid(spmePatchExtents, spmePatchOffset, IV_ZERO, 0);
 
     // A SimpleGrid<double> of B(m1,m2,m3)=|b1(m1)|^2 * |b2(m2)|^2 * |b3(m3)|^2
-    calculateBGrid(fBGrid, spmePatchExtents, spmePatchOffset);
+    SPME::calculateBGrid(fBGrid, spmePatchExtents, spmePatchOffset);
 
     // A SimpleGrid<double> of C(m1,m2,m3)=(1/(PI*V))*exp(-PI^2*M^2/Beta^2)/M^2
-    calculateCGrid(fCGrid, spmePatchExtents, spmePatchOffset);
+    SPME::calculateCGrid(fCGrid, spmePatchExtents, spmePatchOffset);
 
     // Composite B*C into Theta
 // Stubbing out interface to swap dimensions for FFT efficiency
@@ -642,8 +632,8 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
       std::vector<SPMEMapPoint>* gridMap = currentSPMEPatch->getChargeMap(globalAtomType);
 
       // and generate the charge map
-      generateChargeMap(gridMap, pset, px, pids);
-      mapChargeToGrid(currentSPMEPatch, gridMap, pset, pcharge);
+      SPME::generateChargeMap(gridMap, pset, px, pids);
+      SPME::mapChargeToGrid(currentSPMEPatch, gridMap, pset, pcharge);
 
     }  // end Atom Type Loop
   }  // end Patch loop
@@ -736,26 +726,21 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-//  SoleVariable<fftw_plan> forwardTransformPlan;
-//  old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
-//  fftw_plan forwardPlan = forwardTransformPlan.get();
-//  fftw_execute(forwardPlan);
-
   SoleVariable<fftw_plan> forwardTransformPlan;
   old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
   fftw_plan forwardPlan = forwardTransformPlan.get();
 
   // setup and copy data to-and-from this processor's portion of the global FFT array
-  fftw_complex* local_chunk = d_localFFTData.complexData;
-  ptrdiff_t local_n = d_localFFTData.numElements; // a (local_n * kLimits.y * kLimits.z) chunk of the global array
-  ptrdiff_t local_start = d_localFFTData.startAddress;
+  fftw_complex* localChunk = d_localFFTData.complexData;
+  ptrdiff_t localN = d_localFFTData.numElements; // a (local_n * kLimits.y * kLimits.z) chunk of the global array
+  ptrdiff_t localStart = d_localFFTData.startAddress;
   dblcomplex* nodeLocalData = d_Q_nodeLocal->getDataPtr();
-  dblcomplex* globalOffset = nodeLocalData + local_start;
-  size_t numElements = local_n * d_kLimits[1] * d_kLimits[2];
+  dblcomplex* globalOffset = nodeLocalData + localStart;
+  size_t numElements = localN * d_kLimits[1] * d_kLimits[2];
 
-  std::memcpy(local_chunk, globalOffset, numElements);
+  std::memcpy(localChunk, globalOffset, numElements * sizeof(dblcomplex));
   fftw_execute(forwardPlan);
-  std::memcpy(globalOffset, local_chunk, numElements);
+  std::memcpy(globalOffset, localChunk, numElements * sizeof(dblcomplex));
 
   // carry forward plan for forward FFT
   SoleVariable<fftw_plan> global_forwardTransformPlan;
@@ -844,26 +829,21 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-//  SoleVariable<fftw_plan> backwardTransformPlan;
-//  old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
-//  fftw_plan backwardPlan = backwardTransformPlan.get();
-//  fftw_execute(backwardPlan);
-
   SoleVariable<fftw_plan> backwardTransformPlan;
   old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
   fftw_plan backwardPlan = backwardTransformPlan.get();
 
   // setup and copy data to-and-from this processor's portion of the global FFT array
-  fftw_complex* local_chunk = d_localFFTData.complexData;
-  ptrdiff_t local_n = d_localFFTData.numElements;
-  ptrdiff_t local_start = d_localFFTData.startAddress;
+  fftw_complex* localChunk = d_localFFTData.complexData;
+  ptrdiff_t localN = d_localFFTData.numElements;
+  ptrdiff_t localStart = d_localFFTData.startAddress;
   dblcomplex* nodeLocalData = d_Q_nodeLocal->getDataPtr();
-  dblcomplex* globalOffset = nodeLocalData + local_start;
-  size_t numElements = local_n * d_kLimits[1] * d_kLimits[2];
+  dblcomplex* globalOffset = nodeLocalData + localStart;
+  size_t numElements = localN * d_kLimits[1] * d_kLimits[2];
 
-  std::memcpy(local_chunk, globalOffset, numElements);
+  std::memcpy(localChunk, globalOffset, numElements * sizeof(dblcomplex));
   fftw_execute(backwardPlan);
-  std::memcpy(globalOffset, local_chunk, numElements);
+  std::memcpy(globalOffset, localChunk, numElements * sizeof(dblcomplex));
 
   // carry forward plan for backward FFT
   SoleVariable<fftw_plan> global_backwardTransformPlan;
@@ -905,9 +885,9 @@ void SPME::calculateBGrid(SimpleGrid<double>& BGrid,
   //  generateBVector(b1, mf1, globalOffset.x(), localExtents.x());
   //  generateBVector(b2, mf2, globalOffset.y(), localExtents.y());
   //  generateBVector(b3, mf3, globalOffset.z(), localExtents.z());
-  generateBVectorChunk(b1, globalOffset[0], localExtents[0], d_kLimits[0]);
-  generateBVectorChunk(b2, globalOffset[1], localExtents[1], d_kLimits[1]);
-  generateBVectorChunk(b3, globalOffset[2], localExtents[2], d_kLimits[2]);
+  SPME::generateBVectorChunk(b1, globalOffset[0], localExtents[0], d_kLimits[0]);
+  SPME::generateBVectorChunk(b2, globalOffset[1], localExtents[1], d_kLimits[1]);
+  SPME::generateBVectorChunk(b3, globalOffset[2], localExtents[2], d_kLimits[2]);
 
   for (size_t kX = 0; kX < xExtents; ++kX) {
     for (size_t kY = 0; kY < yExtents; ++kY) {
@@ -1237,7 +1217,7 @@ void SPME::calculatePostTransform(const ProcessorGroup* pg,
       std::vector<SPMEMapPoint>* gridMap = currentSPMEPatch->getChargeMap(globalAtomType);
 
       // Calculate electrostatic contribution to f_ij(r)
-      mapForceFromGrid(currentSPMEPatch, gridMap, pset, pcharge, pforcenew);
+      SPME::mapForceFromGrid(currentSPMEPatch, gridMap, pset, pcharge, pforcenew);
 
       ParticleVariable<double> pchargenew;
       new_dw->allocateAndPut(pchargenew, d_lb->pChargeLabel_preReloc, pset);
