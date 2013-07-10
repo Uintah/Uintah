@@ -473,6 +473,7 @@ void SPME::scheduleTransformRealToFourier(SchedulerP& sched,
 
   Task* task = scinew Task("SPME::transformRealToFourier", this, &SPME::transformRealToFourier);
   task->setType(Task::OncePerProc);
+  task->usesMPI(true);
 
   task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
   task->requires(Task::OldDW, d_lb->forwardTransformPlanLabel);
@@ -519,6 +520,7 @@ void SPME::scheduleTransformFourierToReal(SchedulerP& sched,
 
   Task* task = scinew Task("SPME::transformFourierToReal", this, &SPME::transformFourierToReal);
   task->setType(Task::OncePerProc);
+  task->usesMPI(true);
 
   task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
   task->requires(Task::OldDW, d_lb->forwardTransformPlanLabel);
@@ -676,6 +678,12 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
+  // Do the homebrew MPI_Allreduce on our local Q-grid before we do the forward FFT
+  int totalElements = d_kLimits(0) * d_kLimits(1) * d_kLimits(2);
+  dblcomplex* sendbuf = d_Q_nodeLocal->getDataPtr();
+  dblcomplex* recvbuf = d_Q_nodeLocalScratch->getDataPtr();
+  MPI_Allreduce(sendbuf, recvbuf, totalElements, MPI_DOUBLE_COMPLEX, MPI_SUM, pg->getComm());
+
   SoleVariable<fftw_plan> forwardTransformPlan;
   old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
   fftw_plan forwardPlan = forwardTransformPlan.get();
@@ -684,13 +692,12 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
   fftw_complex* localChunk = d_localFFTData.complexData;
   ptrdiff_t localN = d_localFFTData.numElements; // a (local_n * kLimits.y * kLimits.z) chunk of the global array
   ptrdiff_t localStart = d_localFFTData.startAddress;
-  dblcomplex* nodeLocalData = d_Q_nodeLocal->getDataPtr();
-  dblcomplex* globalOffset = nodeLocalData + localStart;
+  dblcomplex* nodeLocalData = recvbuf + localStart;
   size_t numElements = localN * d_kLimits[1] * d_kLimits[2];
 
-  std::memcpy(localChunk, globalOffset, numElements * sizeof(dblcomplex));
+  std::memcpy(localChunk, nodeLocalData, numElements * sizeof(dblcomplex));
   fftw_execute(forwardPlan);
-  std::memcpy(globalOffset, localChunk, numElements * sizeof(dblcomplex));
+  std::memcpy(nodeLocalData, localChunk, numElements * sizeof(dblcomplex));
 
   // carry forward plan for forward FFT
   SoleVariable<fftw_plan> global_forwardTransformPlan;
@@ -747,11 +754,11 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
           int y_global = yBase + kY;
           int z_global = zBase + kZ;
 
-          std::complex<double> gridValue = (*d_Q_nodeLocal)(x_global, y_global, z_global);
+          std::complex<double> gridValue = (*d_Q_nodeLocalScratch)(x_global, y_global, z_global);
           // Calculate (Q*Q^)*(B*C)
-          (*d_Q_nodeLocal)(x_global, y_global, z_global) *= (*fTheta)(kX, kY, kZ);
-          spmeFourierEnergy += std::abs((*d_Q_nodeLocal)(x_global, y_global, z_global) * conj(gridValue));
-          spmeFourierStress += std::abs((*d_Q_nodeLocal)(x_global, y_global, z_global) * conj(gridValue)) * (*stressPrefactor)(kX, kY, kZ);
+          (*d_Q_nodeLocalScratch)(x_global, y_global, z_global) *= (*fTheta)(kX, kY, kZ);
+          spmeFourierEnergy += std::abs((*d_Q_nodeLocalScratch)(x_global, y_global, z_global) * conj(gridValue));
+          spmeFourierStress += std::abs((*d_Q_nodeLocalScratch)(x_global, y_global, z_global) * conj(gridValue)) * (*stressPrefactor)(kX, kY, kZ);
         }
       }
     }
@@ -770,6 +777,12 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
+  // Do the homebrew MPI_Allreduce on our local Q-scratch-grid before we do the reverse FFT
+  int totalElements = d_kLimits(0) * d_kLimits(1) * d_kLimits(2);
+  dblcomplex* sendbuf = d_Q_nodeLocalScratch->getDataPtr();
+  dblcomplex* recvbuf = d_Q_nodeLocal->getDataPtr();
+  MPI_Allreduce(sendbuf, recvbuf, totalElements, MPI_DOUBLE_COMPLEX, MPI_SUM, pg->getComm());
+
   SoleVariable<fftw_plan> backwardTransformPlan;
   old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
   fftw_plan backwardPlan = backwardTransformPlan.get();
@@ -778,13 +791,12 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
   fftw_complex* localChunk = d_localFFTData.complexData;
   ptrdiff_t localN = d_localFFTData.numElements;
   ptrdiff_t localStart = d_localFFTData.startAddress;
-  dblcomplex* nodeLocalData = d_Q_nodeLocal->getDataPtr();
-  dblcomplex* globalOffset = nodeLocalData + localStart;
+  dblcomplex* nodeLocalData = recvbuf + localStart;
   size_t numElements = localN * d_kLimits[1] * d_kLimits[2];
 
-  std::memcpy(localChunk, globalOffset, numElements * sizeof(dblcomplex));
+  std::memcpy(localChunk, nodeLocalData, numElements * sizeof(dblcomplex));
   fftw_execute(backwardPlan);
-  std::memcpy(globalOffset, localChunk, numElements * sizeof(dblcomplex));
+  std::memcpy(nodeLocalData, localChunk, numElements * sizeof(dblcomplex));
 
   // carry forward plan for backward FFT
   SoleVariable<fftw_plan> global_backwardTransformPlan;
@@ -1010,9 +1022,9 @@ void SPME::generateChargeMap(std::vector<SPMEMapPoint>* chargeMap,
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); ++iter) {
     particleIndex pidx = *iter;
 
-    Point position = particlePositions[pidx];
+    SCIRun::Point position = particlePositions[pidx];
     particleId pid = particleIDs[pidx];
-    Vector particleGridCoordinates;
+    SCIRun::Vector particleGridCoordinates;
 
     //Calculate reduced coordinates of point to recast into charge grid
     particleGridCoordinates = (position.asVector()) * d_inverseUnitCell;
@@ -1020,20 +1032,20 @@ void SPME::generateChargeMap(std::vector<SPMEMapPoint>* chargeMap,
     //                  is expensive if the system is orthorhombic, however it's not clear it's more expensive than dropping
     //                  to call MDSystem->isOrthorhombic() and then branching the if statement appropriately.
 
-    Vector kReal = d_kLimits.asVector();
+    SCIRun::Vector kReal = d_kLimits.asVector();
     particleGridCoordinates *= kReal;
-    IntVector particleGridOffset(particleGridCoordinates.asPoint());
-    Vector splineValues = particleGridOffset.asVector() - particleGridCoordinates;
+    SCIRun::IntVector particleGridOffset(particleGridCoordinates.asPoint());
+    SCIRun::Vector splineValues = particleGridOffset.asVector() - particleGridCoordinates;
 
-    vector<double> xSplineArray = d_interpolatingSpline.evaluateGridAligned(splineValues.x());
-    vector<double> ySplineArray = d_interpolatingSpline.evaluateGridAligned(splineValues.y());
-    vector<double> zSplineArray = d_interpolatingSpline.evaluateGridAligned(splineValues.z());
+    std::vector<double> xSplineArray = d_interpolatingSpline.evaluateGridAligned(splineValues.x());
+    std::vector<double> ySplineArray = d_interpolatingSpline.evaluateGridAligned(splineValues.y());
+    std::vector<double> zSplineArray = d_interpolatingSpline.evaluateGridAligned(splineValues.z());
 
-    vector<double> xSplineDeriv = d_interpolatingSpline.derivativeGridAligned(splineValues.x());
-    vector<double> ySplineDeriv = d_interpolatingSpline.derivativeGridAligned(splineValues.y());
-    vector<double> zSplineDeriv = d_interpolatingSpline.derivativeGridAligned(splineValues.z());
+    std::vector<double> xSplineDeriv = d_interpolatingSpline.derivativeGridAligned(splineValues.x());
+    std::vector<double> ySplineDeriv = d_interpolatingSpline.derivativeGridAligned(splineValues.y());
+    std::vector<double> zSplineDeriv = d_interpolatingSpline.derivativeGridAligned(splineValues.z());
 
-    IntVector extents(xSplineArray.size(), ySplineArray.size(), zSplineArray.size());
+    SCIRun::IntVector extents(xSplineArray.size(), ySplineArray.size(), zSplineArray.size());
 
     SimpleGrid<double> chargeGrid(extents, particleGridOffset, IV_ZERO, 0);
     SimpleGrid<SCIRun::Vector> forceGrid(extents, particleGridOffset, IV_ZERO, 0);
