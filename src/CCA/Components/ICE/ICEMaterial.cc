@@ -27,7 +27,6 @@
 
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeatFactory.h>
-#include <CCA/Components/ICE/WallShearStressModel/WallShearStressFactory.h>
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -73,11 +72,6 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps,
   ps->require("dynamic_viscosity",   d_viscosity);
   ps->require("gamma",               d_gamma);
   ps->getWithDefault("tiny_rho",     d_tiny_rho,1.e-12);
-
-  d_WallShearStressModel = 0;
-  if( d_viscosity > 0){
-    d_WallShearStressModel = WallShearStressFactory::create(ps, sharedState);
-  }
 
   //__________________________________
   //  Misc. Flags
@@ -135,9 +129,6 @@ ICEMaterial::~ICEMaterial()
   if( d_cvModel ){
     delete d_cvModel;
   }
-  if( d_WallShearStressModel ){
-    delete d_WallShearStressModel;
-  }
   
   for (int i = 0; i< (int)d_geom_objs.size(); i++) {
     delete d_geom_objs[i];
@@ -178,11 +169,6 @@ EquationOfState * ICEMaterial::getEOS() const
 SpecificHeat *ICEMaterial::getSpecificHeatModel() const
 {
   return d_cvModel;
-}
-
-WallShearStress *ICEMaterial::getWallShearStressModel() const
-{
-  return d_WallShearStressModel;
 }
 
 double ICEMaterial::getGamma() const
