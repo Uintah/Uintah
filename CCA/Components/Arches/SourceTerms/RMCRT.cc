@@ -4,6 +4,9 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+
 
 using namespace std;
 using namespace Uintah; 
@@ -430,11 +433,11 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
     CCVariable<double> abskp; 
     if ( time_sub_step == 0 ) { 
       new_dw->allocateAndPut( abskg, _abskgLabel, _matl, patch ); 
-      new_dw->allocateAndPut( abskp, _abskgLabel, _matl, patch ); 
+      new_dw->allocateAndPut( abskp, _abskpLabel, _matl, patch ); 
       which_dw = old_dw; 
     } else { 
       new_dw->getModifiable( abskg,  _abskgLabel,  _matl, patch );
-      new_dw->getModifiable( abskp,  _abskgLabel,  _matl, patch );
+      new_dw->getModifiable( abskp,  _abskpLabel,  _matl, patch );
       which_dw = new_dw; 
     }
 
@@ -447,11 +450,22 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
     CCCV size;
     CCCV pT; 
 
+    double weights_scaling_constant;
+    double size_scaling_constant;
+    DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
+    string tlabelname;
+
     //--size--
     for ( CCCVL::iterator iter = _size_varlabels.begin(); iter != _size_varlabels.end(); iter++ ){ 
       constCCVariable<double> var; 
       which_dw->get( var, *iter, _matl, patch, Ghost::None, 0 ); 
       size.push_back( var ); 
+      //to get size scaling constant
+      if(iter == _size_varlabels.begin()){
+        tlabelname = (*iter)->getName();
+        size_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(tlabelname).getScalingConstant();
+      } 
+
     } 
 
     //--temperature--
@@ -466,6 +480,12 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
       constCCVariable<double> var; 
       which_dw->get( var, *iter, _matl, patch, Ghost::None, 0 ); 
       weights.push_back( var ); 
+      //to get weight scaling constant
+      if(iter == _w_varlabels.begin()){
+        tlabelname = (*iter)->getName();
+        weights_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(tlabelname).getScalingConstant();
+      } 
+
     } 
 
     //--participating species--
@@ -477,9 +497,9 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
 
     // compute absorption (gas and particle) coefficient(s) via RadPropertyCalulator
     if ( _prop_calculator->does_scattering() ){
-      _prop_calculator->compute( patch, species, size, pT, weights, _nQn_part, abskg, abskp ); 
+      _prop_calculator->compute( patch, species, size_scaling_constant, size, pT, weights_scaling_constant, weights, _nQn_part, gas_temperature, abskg, abskp ); 
     } else { 
-      _prop_calculator->compute( patch, species, abskg );
+      _prop_calculator->compute( patch, species, gas_temperature, abskg );
     } 
     
     // abskg boundary conditions are set in setBoundaryCondition()
