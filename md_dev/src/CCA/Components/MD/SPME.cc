@@ -103,6 +103,14 @@ SPME::~SPME()
   if (d_Q_nodeLocal) { delete d_Q_nodeLocal; }
 
   if (d_Q_nodeLocalScratch) { delete d_Q_nodeLocalScratch; }
+
+#ifdef HAVE_FFTW
+
+  fftw_cleanup_threads();
+  fftw_mpi_cleanup();
+  fftw_cleanup();
+
+#endif
 }
 
 
@@ -145,7 +153,8 @@ void SPME::initialize(const ProcessorGroup* pg,
   ptrdiff_t alloc_local, local_n, local_start;
   fftw_plan forwardPlan, backwardPlan;
 
-  // Must initialize FFTW MPI before FFTW_MPI calls are made
+  // Must initialize FFTW MPI and threads before FFTW_MPI calls are made
+  fftw_init_threads();
   fftw_mpi_init();
 
   // This is the local portion of the global FFT array that will reside on each portion (slab decomposition)
@@ -156,6 +165,7 @@ void SPME::initialize(const ProcessorGroup* pg,
 
   // create the forward and reverse FFT MPI plans
   fftw_complex* complexData = d_localFFTData.complexData;
+  fftw_plan_with_nthreads(Parallel::getNumThreads());
   forwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_FORWARD, FFTW_MEASURE);
   backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
 
