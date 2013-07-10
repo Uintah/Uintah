@@ -515,6 +515,7 @@ namespace Uintah {
       int d_maxPolarizableIterations;                   //!< Max number of polarization iterations to do
       ShiftedCardinalBSpline d_interpolatingSpline;     //!< Spline object to hold info for spline calculation
       SimpleGrid<dblcomplex>* d_Q_nodeLocal;            //!< The local version of the global Q grid
+      SimpleGrid<dblcomplex>* d_Q_nodeLocalScratch;     //!< Scratch version of the global Q grid - for Allreduce
 
       struct LocalFFTData {
           fftw_complex* complexData;
