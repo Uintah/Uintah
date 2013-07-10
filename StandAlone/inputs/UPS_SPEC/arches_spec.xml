@@ -778,14 +778,14 @@
 
             <!-- Radiation models --> 
             <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
-            <abskp_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation" />
+            <abskp_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation rmcrt_radiation" />
             <calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every RK step, default = false --> 
             <co2_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of CO2, default = CO2 --> 
             <h2o_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of H2O, default = H2O --> 
             <T_label                    spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of temperature, default = temperature -->  
             <soot_label                 spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of absorbtion coefficient, default = absorpIN (old Arches variable) --> 
-            <psize_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of the particle size --> 
-            <ptemperature_label         spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of the particle size --> 
+            <psize_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation rmcrt_radiation" /> <!-- string label of the particle size --> 
+            <ptemperature_label         spec="OPTIONAL STRING"  need_applies_to="type do_radiation rmcrt_radiation" /> <!-- string label of the particle size --> 
             <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >
               <opl                        spec="REQUIRED DOUBLE" />                                    <!-- optical path length --> 
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
@@ -869,7 +869,7 @@
                 <particles               spec="OPTIONAL NO_DATA" need_applies_to="type radprops">
                   <model_type            spec="REQUIRED STRING 'planck, rossland'"/> <!-- Type of absorption coefficient --> 
                   <complex_ir_real       spec="REQUIRED DOUBLE 'positive'"/> <!-- Real part of the complex index of refraction --> 
-                  <complex_ir_imag       spec="REQUIRED DOUBLE 'positive'"/> <!-- Imaginary part of the complex index of refraction --> 
+                  <complex_ir_imag       spec="REQUIRED DOUBLE 'negative'"/> <!-- Imaginary part of the complex index of refraction --> 
                 </particles>
               </property_calculator> 
               

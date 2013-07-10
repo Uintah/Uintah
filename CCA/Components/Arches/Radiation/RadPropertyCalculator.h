@@ -315,9 +315,7 @@ namespace Uintah {
                 } 
               }
 
-              abskp[c] = abskp[c]<0.9 ? abskp[c] : 0.9; //to set upper bounds 0.9 for abskp 
               abskg[c] += abskp[c]; 
-              abskg[c] = abskg[c]<1.0 ? abskg[c] : 1.0; //to set upper bounds 1.0 for abskg
 
             }
           };
