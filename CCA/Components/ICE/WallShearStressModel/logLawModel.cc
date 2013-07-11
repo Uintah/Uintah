@@ -66,10 +66,10 @@ logLawModel::logLawModel(ProblemSpecP& ps, SimulationStateP& sharedState)
   if ( face == "z-" ) {
     d_face = Patch::zminus;
   }
-  if ( face == "z-" ) {
+  if ( face == "z+" ) {
     d_face = Patch::zplus;
   }
-  
+
   
   d_vonKarman = 0.4;                // default value
   ps->get( "vonKarmanConstant", d_vonKarman );
@@ -159,10 +159,13 @@ void logLawModel::wallShearStresses(DataWarehouse* new_dw,
       
       
 /*`==========TESTING==========*/
+#if 0
       cout << " logLawModel " << patch->getFaceName(face) << " iterator: "
            << patch->getFaceIterator(face, Patch::SFCVars) << endl;
+
       cout << "    oneCell: " << oneCell << " dir1: " << dir1 << " dir2 " << dir2 << " p_dir " << p_dir 
            << " z_CC: " << z_CC << endl; 
+#endif
 /*===========TESTING==========`*/       
 
       //__________________________________
@@ -171,14 +174,14 @@ void logLawModel::wallShearStresses(DataWarehouse* new_dw,
         IntVector c = *iter;
         IntVector adj  = c - oneCell;                           // for x+, y+, z+ faces use the velocity from the adjacent cell
         
-        double vel1 = vel_CC[adj][dir1];
+        double vel1 = vel_CC[adj][dir1];                        // transverse velocity components
         double vel2 = vel_CC[adj][dir2];
         
-        double u_tilde = ( pow( vel1, 2)  + pow(vel2, 2) );
-        u_tilde = sqrt(u_tilde) + SMALL_NUM;                   // avoid division by 0
+        double u_tilde = ( pow(vel1, 2)  + pow(vel2, 2) );
+        u_tilde = sqrt( u_tilde ) + SMALL_NUM;                   // avoid division by 0
           
         // eq (5)
-        double tau_s = -pow( (u_tilde * d_vonKarman )/denominator, 2);
+        double tau_s = -pow( ( u_tilde * d_vonKarman )/denominator, 2);
         
         // eq (6)
         Vector tau_tmp(0,0,0);
@@ -186,8 +189,10 @@ void logLawModel::wallShearStresses(DataWarehouse* new_dw,
         tau_tmp[dir2] = tau_s * ( vel2/u_tilde );
         
 /*`==========TESTING==========*/
+#if 0
         cout << " c " << c << " adj " << adj << setw(8) <<" u_tilde: " << u_tilde 
              << setw(8) << " tau_s: " << tau_s << " Tau_tmp " << tau_tmp << setw(8) << "vel1: " << vel1 << " vel2 " << vel2 << endl; 
+#endif
 /*===========TESTING==========`*/
              
         Tau_FC[c] = tau_tmp;
