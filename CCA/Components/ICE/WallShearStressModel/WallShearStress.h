@@ -53,21 +53,24 @@ namespace Uintah {
     WallShearStress( ProblemSpecP& ps, SimulationStateP& sharedState);
     virtual ~WallShearStress(); 
 
-    virtual void scheduleInitialize(SchedulerP& sched, 
-                                    const LevelP& level) = 0;
+    virtual void sched_Initialize(SchedulerP& sched, 
+                                  const LevelP& level,
+                                  const MaterialSet* matls) = 0;
     
-    
+    virtual void sched_AddComputeRequires(Task* task, 
+                                          const MaterialSubset* matls) = 0;
+                                               
     virtual
-    void computeWallShearStresses( DataWarehouse* new_dw,
+    void computeWallShearStresses( DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw,
                                    const Patch* patch,
+                                   const int indx,
                                    constCCVariable<double>& vol_frac_CC,  
                                    constCCVariable<Vector>& vel_CC,      
                                    const CCVariable<double>& viscosity,        
                                    SFCXVariable<Vector>& tau_X_FC,
                                    SFCYVariable<Vector>& tau_Y_FC,
                                    SFCZVariable<Vector>& tau_Z_FC ) = 0;
-    
-
   protected:
     
   };// End class WallShearStress
