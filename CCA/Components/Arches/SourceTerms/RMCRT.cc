@@ -85,6 +85,7 @@ RMCRT_Radiation::~RMCRT_Radiation()
   VarLabel::destroy( _sigmaT4Label ); 
   VarLabel::destroy( _abskgLabel );
   VarLabel::destroy( _absorpLabel );
+  VarLabel::destroy( _abskpLabel ); 
 
   delete _prop_calculator; 
   delete _RMCRT; 
