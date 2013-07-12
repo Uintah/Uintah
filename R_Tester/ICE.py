@@ -71,9 +71,16 @@ NIGHTLYTESTS = [   ("advect",           "advect.ups",              1, "Linux", [
 # Tests that are run during local regression testing
 LOCALTESTS = NIGHTLYTESTS
 
-#LOCALTESTS = [   ("advect",           "advect.ups",           1, "ALL", ["exactComparison"]),    \
-#                 ("riemann_sm",       "riemann_sm.ups",       1, "All", ["exactComparison"])       
-#              ]
+ICETESTS = [   ("advect",           "advect.ups",           1, "ALL", ["exactComparison"]),    \
+               ("riemann_sm",       "riemann_sm.ups",       1, "All", ["exactComparison"])       
+             ]
+#__________________________________
+
+
+#__________________________________
+# The following line is parsed by the local RT script
+# and allows the user to select the different subsets
+#LIST: LOCALTESTS ICETESTS NIGHTLYTESTS
 #__________________________________
 
 def getNightlyTests() :
@@ -82,14 +89,22 @@ def getNightlyTests() :
 def getLocalTests() :
   return LOCALTESTS
 
+
 #__________________________________
-
-if __name__ == "__main__":
-
-  if environ['WHICH_TESTS'] == "local":
+# returns the list  
+def getTestList(me) :
+  if me == "LOCALTESTS":
     TESTS = LOCALTESTS
+  elif me == "ICETESTS":
+    TESTS = ICETESTS
   else:
     TESTS = NIGHTLYTESTS
+  return TESTS
+
+#__________________________________
+if __name__ == "__main__":
+
+  TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "ICE")
   exit( result )

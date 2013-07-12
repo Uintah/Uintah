@@ -127,8 +127,6 @@ DEBUGTESTS = [
   ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] )
 ]
 
-UNUSED_TESTS = []
-
 NIGHTLYTESTS = [
   ("reduction-test",       "reduction-test.ups",  4,  "Linux",  ["exactComparison","no_restart"] ),
   ("lid-drive-cavity-xy-Re1000-adaptive",       liddrivencavityXYRe1000adaptive_ups,  4,  "All",  ["exactComparison","no_restart"] ),
@@ -291,9 +289,13 @@ LOCALTESTS = [
   ("rk2-verification-timedep-source",          rk2_verification_timedep_source_ups,   1,  "All",   ["exactComparison","no_restart","do_not_validate"] ),
   ("lid-driven-cavity-3D-Re1000-rk2",   lid_driven_cavity_3D_Re1000_rk2_ups,   8,  "All",  ["exactComparison","no_restart"] )
 ]
-
+  
 #  ("radprops",                      "RadPropsInterface.ups",             2,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
   
+#__________________________________
+# The following list is parsed by the local RT script
+# and allows the user to select the tests to run
+#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
 #__________________________________
 
 def getNightlyTests() :
@@ -302,16 +304,20 @@ def getNightlyTests() :
 def getLocalTests() :
   return LOCALTESTS
 
-#__________________________________
-
-if __name__ == "__main__":
-
-  if environ['WHICH_TESTS'] == "local":
+# returns the list  
+def getTestList(me) :
+  if me == "LOCALTESTS":
     TESTS = LOCALTESTS
-  elif environ['WHICH_TESTS'] == "debug":
+  elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
   else:
     TESTS = NIGHTLYTESTS
+  return TESTS
+
+#__________________________________
+if __name__ == "__main__":
+
+  TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "Wasatch")
   exit( result )

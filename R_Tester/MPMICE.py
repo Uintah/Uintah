@@ -54,7 +54,11 @@ LOCALTESTS = [   ("massX",                 "massX.ups",                 1,  "Lin
                  ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison","no_dbg"]),   \
                  ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"])
     	       ]
-
+DEBUGTESTS =[]
+#__________________________________
+# The following list is parsed by the local RT script
+# and allows the user to select the tests to run
+#LIST: LOCALTESTS DEUGTESTS NIGHTLYTESTS
 #__________________________________
 
 def getNightlyTests() :
@@ -63,14 +67,20 @@ def getNightlyTests() :
 def getLocalTests() :
   return LOCALTESTS
 
+# returns the list  
+def getTestList(me) :
+  if me == "LOCALTESTS":
+    TESTS = LOCALTESTS
+  elif me == "DEBUGTESTS":
+    TESTS = DEGUGTESTS
+  else:
+    TESTS = NIGHTLYTESTS
+  return TESTS
 #__________________________________
 
 if __name__ == "__main__":
 
-  if environ['WHICH_TESTS'] == "local":
-    TESTS = LOCALTESTS
-  else:
-    TESTS = NIGHTLYTESTS
+  TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "MPMICE")
   exit( result )
