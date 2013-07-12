@@ -34,7 +34,12 @@ NIGHTLYTESTS = [   ("poissonGPU1",       "poissonGPU1.ups",         1, "Linux", 
 # Tests that are run during local regression testing
 LOCALTESTS = NIGHTLYTESTS
 
+DEBUGTESTS = []
 
+#__________________________________
+# The following list is parsed by the local RT script
+# and allows the user to select the tests to run
+#LIST: LOCALTESTS DEUGTESTS NIGHTLYTESTS
 #__________________________________
 
 def getNightlyTests() :
@@ -43,12 +48,21 @@ def getNightlyTests() :
 def getLocalTests() :
   return LOCALTESTS
 
+# returns the list  
+def getTestList(me) :
+  if me == "LOCALTESTS":
+    TESTS = LOCALTESTS
+  elif me == "DEBUGTESTS":
+    TESTS = DEBUGTESTS
+  else:
+    TESTS = NIGHTLYTESTS
+  return TESTS
+
 #__________________________________
 
 if __name__ == "__main__":
-  if environ['WHICH_TESTS'] == "local":
-    TESTS = LOCALTESTS
-  else:
-    TESTS = NIGHTLYTESTS
+
+  TESTS = getTestList( environ['WHICH_TESTS'] )
+  
   result = runSusTests(argv, TESTS, "GPU")
   exit( result )

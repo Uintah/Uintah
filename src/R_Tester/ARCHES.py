@@ -46,7 +46,6 @@ methanePetscRadSolver_ups = modUPS( the_dir,                 \
 #  massource_coal_DQMOM: a coal reacting channel flow with a constant mass source term (or with coal mass source term), used to test mass conservation for pressure solver
 #  methane_RCCE: 3m fire using the westbrook dryer/RCCE model
 
-UNUSED_TESTS = []
 NIGHTLYTESTS = [
    ("constantMMS"                 , "mms/constantMMS.ups"                         , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("almgrenMMS"                  , "mms/almgrenMMS.ups"                          , 1.1 , "Linux"  , ["exactComparison"]) , 
@@ -121,6 +120,31 @@ LOCALTESTS = [
 #   ("coal_channel"               , "Coal/coal_channel.ups"                       , 1.1 , "All"  , ["exactComparison", "no_restart"])
 ]
 
+DEBUGTESTS = []
+
+SCALARTESTS = [
+   ("xplus_scalar_test"          , "ScalarTests/xplus_scalar_test.ups"           , 6   , "All"  , ["exactComparison", "no_restart"]) , 
+   ("yplus_scalar_test"          , "ScalarTests/yplus_scalar_test.ups"           , 6   , "All"  , ["exactComparison", "no_restart"]) , 
+   ("zplus_scalar_test"          , "ScalarTests/zplus_scalar_test.ups"           , 6   , "All"  , ["exactComparison", "no_restart"]) , 
+   ("xminus_scalar_test"         , "ScalarTests/xminus_scalar_test.ups"          , 6   , "All"  , ["exactComparison", "no_restart"]) , 
+   ("yminus_scalar_test"         , "ScalarTests/yminus_scalar_test.ups"          , 6   , "All"  , ["exactComparison", "no_restart"]) , 
+   ("zminus_scalar_test"         , "ScalarTests/zminus_scalar_test.ups"          , 6   , "All"  , ["exactComparison", "no_restart"])
+]
+
+
+DQMONTESTS = [
+   ("dqmom_test_1"               , "DQMOM_regression/dqmom_test_1.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
+   ("dqmom_test_2"               , "DQMOM_regression/dqmom_test_2.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
+   ("dqmom_test_3"               , "DQMOM_regression/dqmom_test_3.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
+   ("dqmom_test_4"               , "DQMOM_regression/dqmom_test_4.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
+   ("dqmom_test_5"               , "DQMOM_regression/dqmom_test_5.ups"           , 1.1 , "All"   , ["exactComparison"]) 
+]
+
+
+#__________________________________
+# The following list is parsed by the local RT script
+# and allows the user to select the tests to run
+#LIST: LOCALTESTS DEBUGTESTS SCALARTESTS DQMONTESTS NIGHTLYTESTS
 #__________________________________
 
 def getNightlyTests() :
@@ -128,15 +152,26 @@ def getNightlyTests() :
 
 def getLocalTests() :
   return LOCALTESTS
+  
+# returns the list  
+def getTestList(me) :
+  if me == "LOCALTESTS":
+    TESTS = LOCALTESTS
+  elif me == "DEBUGTESTS":
+    TESTS = DEBUGTESTS
+  elif me == "SCALARTESTS":
+    TESTS = SCALARTESTS
+  elif me == "DQMONTESTS":
+    TESTS = DQMONTESTS
+  else:
+    TESTS = NIGHTLYTESTS
+  return TESTS
 
 #__________________________________
 
 if __name__ == "__main__":
 
-  if environ['WHICH_TESTS'] == "local":
-    TESTS = LOCALTESTS
-  else:
-    TESTS = NIGHTLYTESTS
+  TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "ARCHES")
   exit( result )
