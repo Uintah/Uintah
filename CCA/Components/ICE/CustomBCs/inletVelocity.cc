@@ -86,17 +86,24 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
       string warn="ERROR:\n Inputs:Boundary Conditions: Cannot find inletVelocity_BC block";
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
-    
-    inlet_ps -> get( "roughness",             VB->roughness   );
-    inlet_ps -> get( "vonKarmanConstant",     VB->vonKarman   );
-    inlet_ps -> get( "exponent",              VB->exponent    );
-    inlet_ps -> require( "verticalDirection", VB->verticalDir );
-    
     // computational domain
+
     BBox b;
     grid->getInteriorSpatialRange(b);
     VB->gridMin = b.min();
     VB->gridMax = b.max();
+    
+    inlet_ps -> get( "roughness",             VB->roughness   );
+    inlet_ps -> get( "vonKarmanConstant",     VB->vonKarman   );
+    inlet_ps -> get( "exponent",              VB->exponent    ); 
+    inlet_ps -> require( "verticalDirection", VB->verticalDir );
+    
+    Vector tmp = b.max() - b.min();
+    double maxHeight = tmp[ VB->verticalDir ];   // default value
+    
+    inlet_ps -> get( "maxHeight",             maxHeight   );
+    Vector lo = b.min().asVector();
+    VB->maxHeight = maxHeight - lo[ VB->verticalDir ];
   }
   return usingBC;
 }
@@ -166,12 +173,13 @@ int  set_inletVelocity_BC(const Patch* patch,
     // u = U_infinity * pow( h/height )^n
     if( bc_kind == "powerLawProfile" ){
       double d          =  VB->gridMin(vDir);
-      double height     =  VB->gridMax(vDir) - d;
+      double gridHeight =  VB->gridMax(vDir);
+      double height     =  VB->maxHeight;
       Vector U_infinity =  bc_value;
       double n          =  VB->exponent;
       
-//      std::cout << "     height: " << height << " exponent: " << n << " U_infinity: " << U_infinity 
-//           << " nDir: " << nDir << " vDir: " << vDir << endl;
+      //std::cout << "     height: " << height << " exponent: " << n << " U_infinity: " << U_infinity 
+      //     << " nDir: " << nDir << " vDir: " << vDir << endl;
            
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
         IntVector c = *bound_ptr; 
@@ -179,18 +187,21 @@ int  set_inletVelocity_BC(const Patch* patch,
         Point here   = level->getCellPosition(c);
         double h     = here.asVector()[vDir] ;
         
-        vel_CC[c]    = U_infinity;              // set the components that are not normal to the face
-        double ratio = (h - d)/height;           
+        vel_CC[c]    = U_infinity;             // set the components that are not normal to the face           
+        double ratio = (h - d)/height;
+        ratio = SCIRun::Clamp(ratio,0.0,1.0);
         
-        ratio = SCIRun::Clamp(ratio,0.0,1.0);  // clamp so 0< h/height < 1 in the edge cells 
-        
-        vel_CC[c][nDir] = U_infinity[nDir] * pow(ratio, n);
+        if( h > d && h < height){
+          vel_CC[c][nDir] = U_infinity[nDir] * pow(ratio, n);
+        }else{                                // if height < h < gridHeight
+          vel_CC[c][nDir] = U_infinity[nDir];
+        }
         
         // Clamp edge/corner values 
-        if( h < d || h > height ){
+        if( h < d || h > gridHeight ){
           vel_CC[c] = Vector(0,0,0);
         }
-//        std::cout << "        " << c <<  " h " << h  << " h/height  " << ratio << " vel_CC: " << vel_CC[c] <<endl;                               
+        //std::cout << "        " << c <<  " h " << h  << " h/height  " << ratio << " vel_CC: " << vel_CC[c] <<endl;                               
       }
     }
     
