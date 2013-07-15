@@ -194,8 +194,9 @@ evaluate()
       weightsIterator!=weights_.end();
       ++weightsIterator, ++abscissaeIterator) {
     *surfaceEnergyModification <<=  1.0 - tolmanLength_ / **abscissaeIterator ;
-    result <<= result + cond(**abscissaeIterator > rCutOff_, (**weightsIterator) / *moment0_ * exp( *surfaceEnergyModification *  expCoef_ / **abscissaeIterator ) )
-                            ( 0.0 );
+    result <<= cond( *moment0_ > 0/0 , result + cond(**abscissaeIterator > rCutOff_, (**weightsIterator) / *moment0_ * exp( *surfaceEnergyModification *  expCoef_ / **abscissaeIterator ) )
+                                                    ( 0.0 ) )
+                   (0.0);
   }
 }
 
