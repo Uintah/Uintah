@@ -546,7 +546,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   typedef Expr::PlaceHolder<SVolField>  FieldExpr;
   for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
     Wasatch::TransportEquation* transEq = (*ia)->equation();
-    if (transEq->dir_name() == "") continue; // skip all non-cell centered equations
+    if (!(transEq->dir_name() == "") ) continue; // skip all non-cell centered equations
     std::string solnVarName = transEq->solution_variable_name();
     if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_N  ) ) )
       solngh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N)) );
