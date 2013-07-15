@@ -129,11 +129,6 @@ void SPME::initialize(const ProcessorGroup* pg,
   d_inverseUnitCell = d_system->getInverseCell();
   d_systemVolume    = d_system->getCellVolume();
 
-  // now create SoleVariables to place in the DW; global Q and the FFTW plans (forward and backward)
-  // FFTW plans for forward and backward 3D transform of global Q grid
-  SoleVariable<fftw_plan> forwardTransformPlan;
-  SoleVariable<fftw_plan> backwardTransformPlan;
-
   // now the local version of the global Q and Q_scratch arrays
   IntVector zero(0, 0, 0);
   d_Q_nodeLocal = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, IV_ZERO, 0);
@@ -151,7 +146,6 @@ void SPME::initialize(const ProcessorGroup* pg,
   const ptrdiff_t zdim = d_kLimits(2);
 
   ptrdiff_t alloc_local, local_n, local_start;
-  fftw_plan forwardPlan, backwardPlan;
 
   // Must initialize FFTW MPI and threads before FFTW_MPI calls are made
   fftw_init_threads();
@@ -166,12 +160,8 @@ void SPME::initialize(const ProcessorGroup* pg,
   // create the forward and reverse FFT MPI plans
   fftw_complex* complexData = d_localFFTData.complexData;
   fftw_plan_with_nthreads(Parallel::getNumThreads());
-  forwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_FORWARD, FFTW_MEASURE);
-  backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
-
-  // set the SoleVariable data to be the forward and reverse FFTW plans
-  forwardTransformPlan.setData(forwardPlan);
-  backwardTransformPlan.setData(backwardPlan);
+  d_forwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_FORWARD, FFTW_MEASURE);
+  d_backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
 
   // Initially register sole and reduction variables in the DW (initial timestep)
   new_dw->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
@@ -179,11 +169,9 @@ void SPME::initialize(const ProcessorGroup* pg,
 
   SoleVariable<double> dependency;
   new_dw->put(dependency, d_lb->electrostaticsDependencyLabel);
-  new_dw->put(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
-  new_dw->put(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
 
-// ------------------------------------------------------------------------
-// Allocate and map the SPME patches
+  // ------------------------------------------------------------------------
+  // Allocate and map the SPME patches
   Vector kReal = d_kLimits.asVector();
 
   size_t numPatches = patches->size();
@@ -315,14 +303,6 @@ void SPME::calculate(const ProcessorGroup* pg,
   subNewDW->transferFrom(parentOldDW, d_lb->pChargeLabel, perProcPatches, allMaterialsUnion);
   subNewDW->transferFrom(parentOldDW, d_lb->pParticleIDLabel, perProcPatches, allMaterialsUnion);
 
-  // explicitly forward SoleVariables to subDW (NOTE: transferFrom only works with Grid and Particle Variables)
-  SoleVariable<fftw_plan> forwardTransformPlan;
-  SoleVariable<fftw_plan> backwardTransformPlan;
-  parentOldDW->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
-  parentOldDW->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
-  subNewDW->put(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
-  subNewDW->put(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
-
   // reduction variables
   //  sum_vartype spmeFourierEnergy;
   //  matrix_sum spmeFourierStress;
@@ -344,9 +324,6 @@ void SPME::calculate(const ProcessorGroup* pg,
     if (recompileSubscheduler) {
 
       subscheduler->initialize(3, 1);
-
-      subscheduler->overrideVariableBehavior(d_lb->forwardTransformPlanLabel->getName(), false, false, false, true, true);
-      subscheduler->overrideVariableBehavior(d_lb->backwardTransformPlanLabel->getName(), false, false, false, true, true);
 
       // prep for the forward FFT
       scheduleCalculatePreTransform(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
@@ -396,15 +373,6 @@ void SPME::calculate(const ProcessorGroup* pg,
    * subNewDW --> parentNewDW, just need to forward the SoleVariables; parentOldDW --> parentNewDW, as the
    * computes statements specify in MD::scheduleElectrostaticsCalculate
    */
-
-  // Push Sole Variables up to the parent DW
-  SoleVariable<SimpleGrid<dblcomplex>*> QGridParent;
-  SoleVariable<fftw_plan> forwardTransformPlanParent;
-  SoleVariable<fftw_plan> backwardTransformPlanParent;
-  subNewDW->get(forwardTransformPlanParent, d_lb->forwardTransformPlanLabel);
-  subNewDW->get(backwardTransformPlanParent, d_lb->backwardTransformPlanLabel);
-  parentNewDW->put(forwardTransformPlanParent, d_lb->forwardTransformPlanLabel);
-  parentNewDW->put(backwardTransformPlanParent, d_lb->backwardTransformPlanLabel);
 
   // Push Reduction Variables up to the parent DW
   sum_vartype spmeFourierEnergyNew;
@@ -486,11 +454,8 @@ void SPME::scheduleTransformRealToFourier(SchedulerP& sched,
   task->usesMPI(true);
 
   task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
-  task->requires(Task::OldDW, d_lb->forwardTransformPlanLabel);
-  task->requires(Task::OldDW, d_lb->backwardTransformPlanLabel);
 
   task->modifies(d_lb->subSchedulerDependencyLabel);
-  task->computes(d_lb->forwardTransformPlanLabel);
 
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches = loadBal->getPerProcessorPatchSet(level);
@@ -533,11 +498,8 @@ void SPME::scheduleTransformFourierToReal(SchedulerP& sched,
   task->usesMPI(true);
 
   task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
-  task->requires(Task::OldDW, d_lb->forwardTransformPlanLabel);
-  task->requires(Task::OldDW, d_lb->backwardTransformPlanLabel);
 
   task->modifies(d_lb->subSchedulerDependencyLabel);
-  task->computes(d_lb->backwardTransformPlanLabel);
 
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perproc_patches =  loadBal->getPerProcessorPatchSet(level);
@@ -694,10 +656,6 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
   dblcomplex* recvbuf = d_Q_nodeLocalScratch->getDataPtr();
   MPI_Allreduce(sendbuf, recvbuf, totalElements, MPI_DOUBLE_COMPLEX, MPI_SUM, pg->getComm());
 
-  SoleVariable<fftw_plan> forwardTransformPlan;
-  old_dw->get(forwardTransformPlan, d_lb->forwardTransformPlanLabel);
-  fftw_plan forwardPlan = forwardTransformPlan.get();
-
   // setup and copy data to-and-from this processor's portion of the global FFT array
   fftw_complex* localChunk = d_localFFTData.complexData;
   ptrdiff_t localN = d_localFFTData.numElements; // a (local_n * kLimits.y * kLimits.z) chunk of the global array
@@ -706,13 +664,8 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
   size_t numElements = localN * d_kLimits[1] * d_kLimits[2];
 
   std::memcpy(localChunk, nodeLocalData, numElements * sizeof(dblcomplex));
-  fftw_execute(forwardPlan);
+  fftw_execute(d_forwardPlan);
   std::memcpy(nodeLocalData, localChunk, numElements * sizeof(dblcomplex));
-
-  // carry forward plan for forward FFT
-  SoleVariable<fftw_plan> global_forwardTransformPlan;
-  old_dw->get(global_forwardTransformPlan, d_lb->forwardTransformPlanLabel);
-  new_dw->put(global_forwardTransformPlan, d_lb->forwardTransformPlanLabel);
 }
 
 void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
@@ -793,10 +746,6 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
   dblcomplex* recvbuf = d_Q_nodeLocal->getDataPtr();
   MPI_Allreduce(sendbuf, recvbuf, totalElements, MPI_DOUBLE_COMPLEX, MPI_SUM, pg->getComm());
 
-  SoleVariable<fftw_plan> backwardTransformPlan;
-  old_dw->get(backwardTransformPlan, d_lb->backwardTransformPlanLabel);
-  fftw_plan backwardPlan = backwardTransformPlan.get();
-
   // setup and copy data to-and-from this processor's portion of the global FFT array
   fftw_complex* localChunk = d_localFFTData.complexData;
   ptrdiff_t localN = d_localFFTData.numElements;
@@ -805,13 +754,8 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
   size_t numElements = localN * d_kLimits[1] * d_kLimits[2];
 
   std::memcpy(localChunk, nodeLocalData, numElements * sizeof(dblcomplex));
-  fftw_execute(backwardPlan);
+  fftw_execute(d_backwardPlan);
   std::memcpy(nodeLocalData, localChunk, numElements * sizeof(dblcomplex));
-
-  // carry forward plan for backward FFT
-  SoleVariable<fftw_plan> global_backwardTransformPlan;
-  old_dw->get(global_backwardTransformPlan, d_lb->backwardTransformPlanLabel);
-  new_dw->put(global_backwardTransformPlan, d_lb->backwardTransformPlanLabel);
 }
 
 //----------------------------------------------------------------------------
