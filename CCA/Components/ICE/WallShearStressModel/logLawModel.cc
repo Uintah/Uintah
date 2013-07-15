@@ -130,7 +130,7 @@ void logLawModel::Initialize(const ProcessorGroup*,
       
       CCVariable<double> roughness;
       new_dw->allocateAndPut(roughness, d_roughnessLabel, indx,patch);
-      roughness.initialize( d_roughnessConstant );
+      roughness.initialize( d_roughnessConstant );            // This needs to be changed
       
       new_dw->put( roughness, d_roughnessLabel, indx, patch );
     }
@@ -143,7 +143,7 @@ void logLawModel::sched_AddComputeRequires(Task* task,
                                            const MaterialSubset* matls)
 {
  // printSchedule(level,dbg,"logLawModel::schedcomputeWallShearStresses");
-  task->requires(Task::OldDW, d_roughnessLabel,   matls, Ghost::None, 0);
+  task->requires(Task::OldDW, d_roughnessLabel, matls, Ghost::None, 0);
   task->computes(d_roughnessLabel);
 }
 
@@ -246,8 +246,8 @@ void logLawModel::wallShearStresses(DataWarehouse* old_dw,
         
         // eq (6)
         Vector tau_tmp(0,0,0);
-        tau_tmp[dir1] = tau_s * ( vel1/u_tilde );
-        tau_tmp[dir2] = tau_s * ( vel2/u_tilde );
+        tau_tmp[dir1] = tau_s * vol_frac_CC[adj] *( vel1/u_tilde );
+        tau_tmp[dir2] = tau_s * vol_frac_CC[adj] *( vel2/u_tilde );
         
 /*`==========TESTING==========*/
 #if 0
