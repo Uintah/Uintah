@@ -523,6 +523,8 @@ namespace Uintah {
           ptrdiff_t startAddress;
       };
 
+      fftw_plan d_forwardPlan;                          //!< Forward FFTW MPI plan
+      fftw_plan d_backwardPlan;                         //!< Reverse FFTW MPI plan
       LocalFFTData d_localFFTData;                      //!< The local portion of the global 3D FFT data
 
       // Variables we'll get from the MDSystem instance to make life easier

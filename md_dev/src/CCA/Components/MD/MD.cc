@@ -309,8 +309,6 @@ void MD::scheduleElectrostaticsInitialize(SchedulerP& sched,
 
       // sole variables
       task->computes(d_lb->electrostaticsDependencyLabel);
-      task->computes(d_lb->forwardTransformPlanLabel);
-      task->computes(d_lb->backwardTransformPlanLabel);
     }
 
     task->setType(Task::OncePerProc);
@@ -349,16 +347,10 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  task->requires(Task::OldDW, d_lb->forwardTransformPlanLabel);
-  task->requires(Task::OldDW, d_lb->backwardTransformPlanLabel);
   task->requires(Task::OldDW, d_lb->electrostaticsDependencyLabel);
   task->requires(Task::OldDW, d_lb->subSchedulerDependencyLabel, Ghost::None, 0);
 
   task->computes(d_lb->subSchedulerDependencyLabel);
-  task->computes(d_lb->forwardTransformPlanLabel);
-  task->computes(d_lb->backwardTransformPlanLabel);
-
-  // reduction variables
   task->computes(d_lb->spmeFourierEnergyLabel);
   task->computes(d_lb->spmeFourierStressLabel);
 
