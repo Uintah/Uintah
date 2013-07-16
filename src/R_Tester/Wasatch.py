@@ -117,12 +117,6 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
-# to use these tests:
-# export WHICH_TESTS=debug
-# then make runLocalRT
-# by default, local tests are executed. 
-# To revert back to LocalTests, use:
-# export WHICH_TESTS=local
 DEBUGTESTS = [
   ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] )
 ]
@@ -298,20 +292,17 @@ LOCALTESTS = [
 #LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
 #__________________________________
 
-def getNightlyTests() :
-  return NIGHTLYTESTS
-
-def getLocalTests() :
-  return LOCALTESTS
-
 # returns the list  
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = LOCALTESTS
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
-  else:
+  elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  else:
+    print "\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    exit(1)
   return TESTS
 
 #__________________________________

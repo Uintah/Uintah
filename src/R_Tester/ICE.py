@@ -82,23 +82,17 @@ ICETESTS = [   ("advect",           "advect.ups",           1, "ALL", ["exactCom
 # and allows the user to select the different subsets
 #LIST: LOCALTESTS ICETESTS NIGHTLYTESTS
 #__________________________________
-
-def getNightlyTests() :
-  return NIGHTLYTESTS
-
-def getLocalTests() :
-  return LOCALTESTS
-
-
-#__________________________________
 # returns the list  
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = LOCALTESTS
   elif me == "ICETESTS":
     TESTS = ICETESTS
-  else:
+  elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  else:
+    print "\nERROR:ICE.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    exit(1)
   return TESTS
 
 #__________________________________

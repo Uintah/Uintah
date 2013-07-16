@@ -147,11 +147,6 @@ DQMONTESTS = [
 #LIST: LOCALTESTS DEBUGTESTS SCALARTESTS DQMONTESTS NIGHTLYTESTS
 #__________________________________
 
-def getNightlyTests() :
-  return NIGHTLYTESTS
-
-def getLocalTests() :
-  return LOCALTESTS
   
 # returns the list  
 def getTestList(me) :
@@ -163,8 +158,11 @@ def getTestList(me) :
     TESTS = SCALARTESTS
   elif me == "DQMONTESTS":
     TESTS = DQMONTESTS
-  else:
+  elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  else:
+    print "\nERROR:ARCHES.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    exit(1)
   return TESTS
 
 #__________________________________
