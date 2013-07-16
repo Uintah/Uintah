@@ -422,7 +422,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 #endif
     ierr = MatMPIAIJSetPreallocation(d_A,PETSC_DEFAULT,diag,PETSC_DEFAULT,onnz);
 #else
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 3))
+#if ((PETSC_VERSION_MAJOR == 3) && ((PETSC_VERSION_MINOR == 3) || (PETSC_VERSION_MINOR == 4)))
     MatCreateAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
                     globalcolumns, PETSC_DEFAULT, diag,
                     PETSC_DEFAULT, onnz, &d_A);
