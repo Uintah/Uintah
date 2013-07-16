@@ -300,7 +300,7 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
 
 {
   int ierr;
-#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 3))
+#if ((PETSC_VERSION_MAJOR == 3) && ((PETSC_VERSION_MINOR == 3) || (PETSC_VERSION_MINOR == 4)))
   ierr = MatCreateAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
                              globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
 #else
