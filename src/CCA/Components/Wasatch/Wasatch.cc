@@ -467,6 +467,7 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       const bool existDensity = densityParams->findBlock("NameTag");
+      if (existDensity) densityTag = parse_nametag( densityParams->findBlock("NameTag") );
       densityParams->get("IsConstant",isConstDensity);
 
       if( !isConstDensity || existSrcTerm || momEqnParams) {
@@ -476,7 +477,6 @@ namespace Wasatch{
               << "       must be provided in the <Density> block" << endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
-        densityTag = parse_nametag( densityParams->findBlock("NameTag") );
       }
     }
 
