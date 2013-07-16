@@ -55,20 +55,17 @@ DEBUGTESTS =[]
 #LIST: LOCALTESTS DEUGTESTS NIGHTLYTESTS
 #___________________________________
 
-def getNightlyTests() :
-  return NIGHTLYTESTS
-
-def getLocalTests() :
-  return LOCALTESTS
-
 # returns the list  
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = LOCALTESTS
   elif me == "DEBUGTESTS":
-    TESTS = DEGUGTESTS
-  else:
+    TESTS = DEBUGTESTS
+  elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  else:
+    print "\nERROR:UCF.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    exit(1)
   return TESTS
 #__________________________________
 

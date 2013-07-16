@@ -53,23 +53,20 @@ DEBUGTESTS =[]
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DEUGTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
 #__________________________________
-
-def getNightlyTests() :
-  return NIGHTLYTESTS
-
-def getLocalTests() :
-  return LOCALTESTS
 
 # returns the list  
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = LOCALTESTS
   elif me == "DEBUGTESTS":
-    TESTS = DEGUGTESTS
-  else:
+    TESTS = DEBUGTESTS
+  elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  else:
+    print "\nERROR:IMPM.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    exit(1)
   return TESTS
 #__________________________________
 

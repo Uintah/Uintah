@@ -8,7 +8,7 @@
 # define environmental variables and export them
 HTMLLOG=""
 LOCAL_OR_NIGHTLY_TEST="local"
-WHICH_TESTS=${WHICH_TESTS:="local"}  #default value is local, it can be set by the buildbot
+WHICH_TESTS=${WHICH_TESTS:="LOCALTESTS"}  #default value is local tests, it can be set by the buildbot
 OS=`uname -s`
 PARALLELISM=8
 WEBLOG=""
@@ -99,6 +99,13 @@ if test ${TEST_COMPONENTS:+1}; then
     echo ""
     echo "Using TEST_COMPONENTS env var for list of components to test: ($TEST_COMPONENTS)"
     selectedCompTests=$TEST_COMPONENTS
+    
+    let n=0                                          # use the environment variable
+    for componentTest in $selectedCompTests; do
+      WHICH_TESTS[$n]=$WHICH_TESTS
+      let n=n+1
+    done
+  
 else
   if test "$TERM" == "dumb" -o "$TERM" == "emacs"; then
     echo
@@ -106,7 +113,7 @@ else
     echo "       (Consider setting environment variable TEST_COMPONENTS.)  Goodbye."
     echo
     exit                                                                                    
-  fi
+  fi  
   if test "$EMACS" == "t"; then
     echo
     echo "ERROR: startLocalTest cannot be run from within emacs..."
@@ -138,7 +145,6 @@ else
   # find what subset of the tests the user wants to run
   let n=0
   for componentTest in $selectedCompTests; do
-    WHICH_TESTS[$n]="local"  # default value
     
     let t=`grep -c LIST TestScripts/$componentTest.py`
     testSubsets=`grep LIST TestScripts/$componentTest.py | cut -d: -f2-10`

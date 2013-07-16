@@ -214,13 +214,28 @@ def generateGS() :
     # - Determine (ask the user?) if the (sus) binary is up to date.
     ##############################################################
 
-    components = options.test_file
+    allComponentsTests = options.test_file
     
+    
+    # parse the inputs which are in the form ( <component>:<test> )
+    components      = []          # list that contains each test name
+    componentTests  = []          # contains the name list of tests to run
+    
+    for component in allComponentsTests :
+      me = component.split(':')
+      c = me[0]
+      t = me[1]
+      components.append( c )
+      componentTests.append( t )
+    
+    print "\nComponents (%s), tests(%s) " % (components,componentTests)
+    
+
     # Exit if the component hasn't been compiled.  Note, not all components
     # are listed in the configVars.mk file 
     configVars = options.build_directory + "/configVars.mk"
     for component in components :
-      
+
       searchString = "BUILD_%s=no" % upper(component)  # search for BUILD_<COMPONENT>=no
       for line in open(configVars):
         if searchString in line:
@@ -256,9 +271,11 @@ def generateGS() :
             if os.path.isdir( component ) :
                 print "Deleting " + component
                 shutil.rmtree( component )
-
+    
+    counter = -1;
     for component in components :
-
+        counter = counter + 1
+        
         # Pull the list of tests from the the 'component's python module's 'TESTS' variable:
         # (Need to 'import' the module first.)
         if options.verbose :
@@ -281,20 +298,8 @@ def generateGS() :
         if not os.path.islink( "inputs" ) :
             os.symlink( inputs, "inputs" )
 
-
-        # determine which tests (local/nightly) to run default is local
-        whichTests = os.getenv( 'WHICH_TESTS', "local" )
-        
-        print "Which_tests: %s " % whichTests
-        if whichTests == "local" :
-            tests = THE_COMPONENT.getLocalTests()
-        elif whichTests == "nightly" :
-            tests = THE_COMPONENT.getNightlyTests()
-        else :
-            print "\nThe environmental variable WHICH_TESTS:(%s) is not valid" % whichTests
-            print "the valid options are local or nightly. \n"
-            exit (-1)
-          
+        # find the list of tests (local/nightly/debug/......)
+        tests = THE_COMPONENT.getTestList( componentTests[counter] )
                   
         if options.verbose :
             print "About to run tests for component: " + component

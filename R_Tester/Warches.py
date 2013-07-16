@@ -88,6 +88,7 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( the_dir, \
 #  1) The "folder name" must be the same as input file without the extension.
 #  2) If the processors is > 1.0 then an mpirun command will be used
 #  3) Performance_tests are not run on a debug build.
+#
 #______________________________________________________________________
 
 UNUSED_TESTS = []
@@ -112,20 +113,17 @@ DEBUGTESTS   =[]
 #LIST: LOCALTESTS DEUGTESTS NIGHTLYTESTS
 #__________________________________
 
-def getNightlyTests() :
-  return NIGHTLYTESTS
-
-def getLocalTests() :
-  return LOCALTESTS
-
 # returns the list  
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = LOCALTESTS
   elif me == "DEBUGTESTS":
-    TESTS = DEGUGTESTS
-  else:
+    TESTS = DEBUGTESTS
+  elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  else:
+    print "\nERROR:Warches.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    exit(1)
   return TESTS
 #__________________________________
 
