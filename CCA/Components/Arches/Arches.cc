@@ -1835,11 +1835,6 @@ void
 Arches::MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched, bool& recompile, bool doing_restart )
 { 
   if ( doing_restart ) { 
-    const PatchSet* patches= level->eachPatch();
-    const MaterialSet* matls = d_sharedState->allArchesMaterials();
-    d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, doing_restart );
-    d_boundaryCondition->sched_setupNewIntrusions( sched, patches, matls );
-
     recompile = true; 
   }
 } 
@@ -1877,6 +1872,9 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     }
 
     d_nlSolver->checkMomBCs( sched, patches, matls ); 
+
+    d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, d_doingRestart );
+    d_boundaryCondition->sched_setupNewIntrusions( sched, patches, matls );
 
   }
   
