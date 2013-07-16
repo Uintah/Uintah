@@ -703,9 +703,14 @@ case $host in
     IS_OSX="yes"
     DEF_OSX="#define IS_OSX 1"
 
-    # New Mac Clang comiler does not support the -faltivec flag...
+    # New Mac Clang compiler does not support the -faltivec flag...
     altivec="-faltivec"
     $CC --version | grep -q -i clang > /dev/null 2>&1
+    if test $? = 0; then
+      altivec="" 
+    fi
+    # New Mac gcc47 compiler also does not support the -faltivec flag...
+    $CC --version | grep -q -i gcc47 > /dev/null 2>&1
     if test $? = 0; then
       altivec="" 
     fi
