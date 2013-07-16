@@ -106,10 +106,10 @@ NIGHTLYTESTS = []
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-  ("decay-isotropic-turbulence-csmag32" , decayIsotropicTurbulenceCSmag32_ups,  8,  "All",  ["exactComparison"] ),
-  ("decay-isotropic-turbulence-csmag32-rk2" , decayIsotropicTurbulenceCSmag32rk2_ups,  8,  "All",  ["exactComparison"] ),
-  ("decay-isotropic-turbulence-csmag32-rk3" , decayIsotropicTurbulenceCSmag32rk3_ups,  8,  "All",  ["exactComparison"] ),  
-  ("decay-isotropic-turbulence-csmag64" , decayIsotropicTurbulenceCSmag64_ups,  8,  "All",  ["exactComparison","no_restart"] ),
+#   ("decay-isotropic-turbulence-csmag32" , decayIsotropicTurbulenceCSmag32_ups,  8,  "All",  ["exactComparison"] ),
+#   ("decay-isotropic-turbulence-csmag32-rk2" , decayIsotropicTurbulenceCSmag32rk2_ups,  8,  "All",  ["exactComparison"] ),
+#   ("decay-isotropic-turbulence-csmag32-rk3" , decayIsotropicTurbulenceCSmag32rk3_ups,  8,  "All",  ["exactComparison"] ),  
+#   ("decay-isotropic-turbulence-csmag64" , decayIsotropicTurbulenceCSmag64_ups,  8,  "All",  ["exactComparison","no_restart"] ),
   ("decay-isotropic-turbulence-dsmag32" , decayIsotropicTurbulenceDSmag32_ups,  8,  "All",  ["exactComparison"] ),
   ("decay-isotropic-turbulence-dsmag64" , decayIsotropicTurbulenceDSmag64_ups,  8,  "All",  ["exactComparison","no_restart"] ),
   ("decay-isotropic-turbulence-vreman32", decayIsotropicTurbulenceVreman32_ups, 8,  "All",  ["exactComparison"] ),
