@@ -1795,8 +1795,8 @@ ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
       cout << "!!          Fix your .ups file or update the ups_spec.xml\n";
       cout << "!!          specification.  Reason for failure is:\n";
       cout << "\n";
-      throw;
     }
+    throw;
   }
 
   namedGeomPieces_g.clear();
@@ -1947,6 +1947,10 @@ ProblemSpecReader::readInputFile( const string & filename, bool validate /* = fa
     
   // you must free doc when you are done.
   // Add the parser contents to the ProblemSpecP
+
+  if (doc == 0) {
+    throw ProblemSetupException( "Error parsing .ups file: " + full_filename , __FILE__, __LINE__ );
+  }
 
   ProblemSpecP prob_spec = scinew ProblemSpec( xmlDocGetRootElement(doc), true );
 
