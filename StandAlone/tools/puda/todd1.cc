@@ -66,7 +66,7 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
   // write header to file
   FILE *fp;
   fp = fopen("todd1.out","w");
-  fprintf(fp, "#Time                      ICE_totalIntEng            MPM_totalIntEng             totalIntEng                 total_ICE_Flux                 XFace_flux                 YFace_flux                 ZFace_flux\n");
+  fprintf(fp, "#Time                      ICE_totalIntEng            MPM_totalIntEng             totalIntEng                 total_ICE_Flux                 XFace_flux                 YFace_flux                 ZFace_flux                 MPM_totalMass                 ICE_totalMass\n");
   fclose(fp);
   
       
@@ -89,6 +89,7 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
       // MPM: total internal energy
       
       double MPM_TotalIntEng = 0.0;
+      double MPM_TotalMass   = 0.0;
       
       for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
 
@@ -107,7 +108,7 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
         if( pset->numParticles() > 0 ){  // are there particles on this patch
           for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
             particleIndex idx = *iter;    
-
+            MPM_TotalMass  += pMass[idx];
             MPM_TotalIntEng += pTempNew[idx] * pMass[idx] * Cp;
           } // particle Loop  
         }
@@ -117,6 +118,7 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
       //__________________________________
       // ICE: total internal energy
       double ICE_TotalIntEng = 0.0;
+      double ICE_TotalMass   = 0.0;
       
       for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
 
@@ -137,6 +139,7 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
         //  Sum contributions over patch        
         for (CellIterator iter=patch->getCellIterator();!iter.done();iter++){
           IntVector c = *iter;
+          ICE_TotalMass   += rho_CC[c] * vol;
           ICE_TotalIntEng += rho_CC[c] * vol * cv * temp_CC[c];
         }
           
@@ -293,7 +296,7 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
       } // for patches
       
       cout << time << " Internal Energy: ICE: " << ICE_TotalIntEng << " MPM: " << MPM_TotalIntEng 
-                   << " total: " << ICE_TotalIntEng + MPM_TotalIntEng << " total_flux " << total_flux <<endl;
+                   << " total: " << ICE_TotalIntEng + MPM_TotalIntEng << " total_flux " << total_flux << " Total Mass: MPM: "<< MPM_TotalMass << " ICE: " << ICE_TotalMass <<endl;
       
       for (int f = 0; f<Patch::numFaces; f++){
         cout << "    face: " << faceName[f] << " faceFlux: " << faceFlux[f] << "\t sumKE: " << sumKE_map[f] << "\t sumH: " << sumH_map[f] << "\t sumMdot; " << sumMdot_map[f] <<"\n"<< endl;
@@ -308,14 +311,16 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
 
       FILE *fp;
       fp = fopen("todd1.out","a");
-      fprintf(fp, "%16.15E      %16.15E      %16.15E       %16.15E       %16.15E      %16.15E       %16.15E       %16.15E\n", time, 
+      fprintf(fp, "%16.15E      %16.15E      %16.15E       %16.15E       %16.15E      %16.15E       %16.15E       %16.15E       %16.15E       %16.15E\n", time, 
                   ICE_TotalIntEng, 
                   MPM_TotalIntEng, 
                   totalIntEng,
                   total_flux,
                   X_flux,
                   Y_flux,
-                  Z_flux );
+                  Z_flux,
+                  MPM_TotalMass,
+                  ICE_TotalMass );
 
       fclose(fp);  
     }  // timestep loop
