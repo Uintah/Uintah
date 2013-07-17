@@ -202,13 +202,9 @@ NIGHTLYTESTS = [
   ("rk2-verification-timedep-source",          rk2_verification_timedep_source_ups,   1,  "Linux",   ["exactComparison","no_restart","do_not_validate"] ),
   ("lid-driven-cavity-3D-Re1000-rk2",   lid_driven_cavity_3D_Re1000_rk2_ups,   8,  "Linux",  ["exactComparison","no_restart"] )  
 ]
-
 #  ("radprops",                      "RadPropsInterface.ups",             2,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
 
-# Tests that are run during local regression testing
-LOCALTESTS = [
-  ("reduction-test",       "reduction-test.ups",  4,  "All",  ["exactComparison","no_restart"] ),
-  ("lid-drive-cavity-xy-Re1000-adaptive",       liddrivencavityXYRe1000adaptive_ups,  4,  "All",  ["exactComparison","no_restart"] ),
+TURBULENCETESTS =[
   ("decay-isotropic-turbulence-dsmag32",       "TurbulenceVerification/"+decayIsotropicTurbulenceDSmag32_ups,  8,  "All",  ["exactComparison"] ), 
   ("decay-isotropic-turbulence-dsmag64",       "TurbulenceVerification/"+decayIsotropicTurbulenceDSmag64_ups,  8,  "All",  ["exactComparison","no_restart"] ), 
   ("decay-isotropic-turbulence-csmag32",       "TurbulenceVerification/"+decayIsotropicTurbulenceCSmag32_ups,  8,  "All",  ["exactComparison"] ), 
@@ -216,94 +212,161 @@ LOCALTESTS = [
   ("decay-isotropic-turbulence-vreman32",      "TurbulenceVerification/"+decayIsotropicTurbulenceVreman32_ups, 8,  "All",  ["exactComparison"] ), 
   ("decay-isotropic-turbulence-vreman64",      "TurbulenceVerification/"+decayIsotropicTurbulenceVreman64_ups, 8,  "All",  ["exactComparison","no_restart"] ), 
   ("decay-isotropic-turbulence-wale32",        "TurbulenceVerification/"+decayIsotropicTurbulenceWale32_ups,   8,  "All",  ["exactComparison"] ), 
-  ("decay-isotropic-turbulence-wale64",        "TurbulenceVerification/"+decayIsotropicTurbulenceWale64_ups,   8,  "All",  ["exactComparison","no_restart"] ), 
-  ("turbulent-inlet-test-xminus",              "turbulent-inlet-test-xminus.ups",    12,  "All",  ["exactComparison","no_restart"] ),                         
+  ("decay-isotropic-turbulence-wale64",        "TurbulenceVerification/"+decayIsotropicTurbulenceWale64_ups,   8,  "All",  ["exactComparison","no_restart"] ),
+  ("turb-lid-driven-cavity-3D-WALE",           "turb-lid-driven-cavity-3D-WALE.ups",   8,  "All",  ["exactComparison","no_restart"] ),                       
+  ("turb-lid-driven-cavity-3D-SMAGORINSKY",    "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "All",  ["exactComparison","no_restart"] ),                
+  ("turb-lid-driven-cavity-3D-scalar",         "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "All",  ["exactComparison","no_restart"] ),
+  ("turbulent-inlet-test-xminus",              "turbulent-inlet-test-xminus.ups",    12,  "All",  ["exactComparison","no_restart"] ),
+  ("turb-lid-driven-cavity-3D-VREMAN",         "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "All",  ["exactComparison","no_restart"] )  
+]
+
+INTRUSIONTESTS=[
   ("intrusion_flow_past_cylinder_xy",          "intrusion_flow_past_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         
   ("intrusion_flow_past_cylinder_xz",          "intrusion_flow_past_cylinder_xz.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         
   ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         
   ("intrusion_flow_past_objects_xy",           "intrusion_flow_past_objects_xy.ups",    16,  "All",  ["exactComparison","no_restart"] ),                         
   ("intrusion_flow_over_icse",                 "intrusion_flow_over_icse.ups",          16,  "All",  ["exactComparison","no_restart"] ),                         
-  ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ), 
-  ("turb-lid-driven-cavity-3D-VREMAN",         "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "All",  ["exactComparison","no_restart"] ),                         
-  ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), 
-  ("taylor-green-vortex-mms-pressure-src",      "taylor-green-vortex-mms-pressure-src.ups",   4,  "All",   ["exactComparison","no_restart"] ),                 
-  ("rk3-verification-ode",                     "rk3-verification-ode.ups",   1,  "All",   ["exactComparison","no_restart"] ),                                
-  ("rk3-verification-timedep-source",          "rk3-verification-timedep-source.ups",   1,  "All",   ["exactComparison","no_restart"] ),                     
-  ("bc-modifier-expression-test-multiple",     "bc-modifier-expression-test-multiple.ups",   8,  "All",   ["exactComparison","no_restart"] ),                
-  ("read-from-file-test",                      "read-from-file-test.ups",   8,  "All",   ["exactComparison","no_restart"] ),                                 
-  ("channel-flow-symmetry-bc",                 "channel-flow-symmetry-bc.ups",   6,  "All",   ["exactComparison","no_restart"] ),                            
-  ("turb-lid-driven-cavity-3D-WALE",           "turb-lid-driven-cavity-3D-WALE.ups",   8,  "All",  ["exactComparison","no_restart"] ),                       
-  ("turb-lid-driven-cavity-3D-SMAGORINSKY",    "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "All",  ["exactComparison","no_restart"] ),                
-  ("turb-lid-driven-cavity-3D-scalar",         "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "All",  ["exactComparison","no_restart"] ),         
-  ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "All",  ["exactComparison","no_restart"] ),         
-  ("varden-projection-advection-xdir",              "varden-projection-advection-xdir.ups",   3,  "All",  ["exactComparison","no_restart"] ),         
-  ("varden-projection-advection-ydir",              "varden-projection-advection-ydir.ups",   3,  "All",  ["exactComparison","no_restart"] ),         
-  ("varden-projection-advection-zdir",              "varden-projection-advection-zdir.ups",   3,  "All",  ["exactComparison","no_restart"] ),         
+  ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] )
+]
+
+PROJECTIONTESTS=[
   ("channel-flow-xy-xminus-pressure-outlet",   "channel-flow-xy-xminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               
   ("channel-flow-xy-xplus-pressure-outlet",    "channel-flow-xy-xplus-pressure-outlet.ups",    6,  "All",  ["exactComparison","no_restart"] ),               
   ("channel-flow-xz-zminus-pressure-outlet",   "channel-flow-xz-zminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               
   ("channel-flow-xz-zplus-pressure-outlet",    "channel-flow-xz-zplus-pressure-outlet.ups",    6,  "All",  ["exactComparison","no_restart"] ),               
   ("channel-flow-yz-yminus-pressure-outlet",   "channel-flow-yz-yminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               
   ("channel-flow-yz-yplus-pressure-outlet",    "channel-flow-yz-yplus-pressure-outlet.ups",    6,  "All",  ["exactComparison","no_restart"] ),               
-  ("lid-driven-cavity-3D-Re1000",   "lid-driven-cavity-3D-Re1000.ups",   8,  "All",   ["exactComparison"] ),                
-  ("liddrivencavity3DRe1000rk3",   liddrivencavity3DRe1000rk3_ups,   8,  "All",  ["exactComparison","no_restart"] ),                        
+  ("channel-flow-symmetry-bc",                 "channel-flow-symmetry-bc.ups",   6,  "All",   ["exactComparison","no_restart"] ),                              
+  ("lid-driven-cavity-3D-Re1000",   "lid-driven-cavity-3D-Re1000.ups",   8,  "All",   ["exactComparison"] ),
   ("lid-driven-cavity-xy-Re1000",   "lid-driven-cavity-xy-Re1000.ups",   4,  "All",   ["exactComparison","no_restart"] ),                   
   ("lid-driven-cavity-xz-Re1000",   "lid-driven-cavity-xz-Re1000.ups",   4,  "All",   ["exactComparison","no_restart"] ),                   
   ("lid-driven-cavity-yz-Re1000",   "lid-driven-cavity-yz-Re1000.ups",   4,  "All",   ["exactComparison","no_restart"] ),                   
-  ("hydrostatic-pressure-test",     "hydrostatic-pressure-test.ups",     8,  "All",   ["exactComparison","no_restart"] ),                   
-  ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("BasicScalarTransportEq_2L",     "BasicScalarTransportEq_2L.ups",     1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("TabPropsInterface",             "TabPropsInterface.ups",             1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("bc-test-mixed",                 "bc-test-mixed.ups",                 4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("ScalarTransportEquation",       "ScalarTransportEquation.ups",       1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("hydrostatic-pressure-test",     "hydrostatic-pressure-test.ups",     8,  "All",   ["exactComparison","no_restart"] ),    
   ("taylor-green-vortex-2d-xy",          "taylor-green-vortex-2d-xy.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("taylor-green-vortex-2d-xz",          "taylor-green-vortex-2d-xz.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("taylor-green-vortex-2d-yz",          "taylor-green-vortex-2d-yz.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("taylor-green-vortex-2d-yz",          "taylor-green-vortex-2d-yz.ups",          4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+  ("taylor-green-vortex-mms-pressure-src",      "taylor-green-vortex-mms-pressure-src.ups",   4,  "All",   ["exactComparison","no_restart"] ),                                   
+  ("taylor-green-vortex-3d",          "taylor-green-vortex-3d.ups",          8,  "All",   ["exactComparison","no_restart","no_memoryTest"] )  
+]
+
+RKTESTS=[
+  ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ), 
+  ("rk3-verification-ode",                     "rk3-verification-ode.ups",   1,  "All",   ["exactComparison","no_restart"] ),                                
+  ("rk3-verification-timedep-source",          "rk3-verification-timedep-source.ups",   1,  "All",   ["exactComparison","no_restart"] ),                     
+  ("liddrivencavity3DRe1000rk3",   liddrivencavity3DRe1000rk3_ups,   8,  "All",  ["exactComparison","no_restart"] ),                        
+  ("rk2-verification-ode",                     rk2_verification_ode_ups,   1,  "All",   ["exactComparison","no_restart"] ),
+  ("rk2-verification-timedep-source",          rk2_verification_timedep_source_ups,   1,  "All",   ["exactComparison","no_restart","do_not_validate"] ),
+  ("lid-driven-cavity-3D-Re1000-rk2",   lid_driven_cavity_3D_Re1000_rk2_ups,   8,  "All",  ["exactComparison","no_restart"] )  
+]
+
+VARDENTESTS=[
+  ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "All",  ["exactComparison","no_restart"] ),         
+  ("varden-projection-advection-xdir",              "varden-projection-advection-xdir.ups",   3,  "All",  ["exactComparison","no_restart"] ),         
+  ("varden-projection-advection-ydir",              "varden-projection-advection-ydir.ups",   3,  "All",  ["exactComparison","no_restart"] ),         
+  ("varden-projection-advection-zdir",              "varden-projection-advection-zdir.ups",   3,  "All",  ["exactComparison","no_restart"] )        
+]
+
+MISCTESTS=[
+  ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("kinetic-energy-example",     "kinetic-energy-example.ups",   8,  "All",  ["exactComparison","no_restart"] ) ,
   ("scalability-test",              "scalability-test.ups",              1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("taylor-green-vortex-3d",          "taylor-green-vortex-3d.ups",          8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("qmom-realizable-test",          "qmom-realizable-test.ups",          8,  "All",   ["exactComparison","no_restart"] ),   
-  ("qmom-test",                     "qmom-test.ups",                     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("qmom-aggregation-test",         "qmom-aggregation-test.ups",         1,  "All",  ["exactComparison","no_restart"] ),   
-  ("qmom-birth-test",               "qmom-birth-test.ups",               1,  "All",  ["exactComparison","no_restart"] ),   
-  ("qmom-ostwald-test",             "qmom-ostwald-test.ups",             1,  "All",  ["exactComparison","no_restart"] ),
-  ("qmom-surface-energy-test",      "qmom-surface-energy-test.ups",      1,  "All",  ["exactComparison","no_restart"] ),    
+  ("read-from-file-test",                      "read-from-file-test.ups",   8,  "All",   ["exactComparison","no_restart"] ),                                 
+  ("reduction-test",       "reduction-test.ups",  4,  "All",  ["exactComparison","no_restart"] ),
+  ("lid-drive-cavity-xy-Re1000-adaptive",       liddrivencavityXYRe1000adaptive_ups,  4,  "All",  ["exactComparison","no_restart"] ),  
+  ("TabPropsInterface",             "TabPropsInterface.ups",             1,  "All",   ["exactComparison","no_restart","no_memoryTest"] )    
+]
+
+CONVECTIONTESTS=[
   ("convection-test-svol-xdir",     "convection-test-svol-xdir.ups",     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("convection-test-svol-ydir",     "convection-test-svol-ydir.ups",     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("convection-test-svol-zdir",     "convection-test-svol-zdir.ups",     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("convection-test-svol-xdir-bc",  "convection-test-svol-xdir-bc.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("convection-test-svol-ydir-bc",  "convection-test-svol-ydir-bc.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("convection-test-svol-zdir-bc",  "convection-test-svol-zdir-bc.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("convection-test-svol-mixed-bc", "convection-test-svol-mixed-bc.ups", 8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
-  ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
-  ("kinetic-energy-example",     "kinetic-energy-example.ups",   8,  "All",  ["exactComparison","no_restart"] ) ,
-  ("rk2-verification-ode",                     rk2_verification_ode_ups,   1,  "All",   ["exactComparison","no_restart"] ),
-  ("rk2-verification-timedep-source",          rk2_verification_timedep_source_ups,   1,  "All",   ["exactComparison","no_restart","do_not_validate"] ),
-  ("lid-driven-cavity-3D-Re1000-rk2",   lid_driven_cavity_3D_Re1000_rk2_ups,   8,  "All",  ["exactComparison","no_restart"] )
+  ("convection-test-svol-mixed-bc", "convection-test-svol-mixed-bc.ups", 8,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
 ]
-  
+
+BCTESTS=[
+  ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("bc-modifier-expression-test-multiple",     "bc-modifier-expression-test-multiple.ups",   8,  "All",   ["exactComparison","no_restart"] ),                
+  ("bc-test-mixed",                 "bc-test-mixed.ups",                 4,  "All",   ["exactComparison","no_restart","no_memoryTest"] )     
+]
+
+QMOMTESTS=[
+  ("qmom-realizable-test",          "qmom-realizable-test.ups",          8,  "All",   ["exactComparison","no_restart"] ),   
+  ("qmom-test",                     "qmom-test.ups",                     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("qmom-aggregation-test",         "qmom-aggregation-test.ups",         1,  "All",  ["exactComparison","no_restart"] ),   
+  ("qmom-birth-test",               "qmom-birth-test.ups",               1,  "All",  ["exactComparison","no_restart"] ),   
+  ("qmom-ostwald-test",             "qmom-ostwald-test.ups",             1,  "All",  ["exactComparison","no_restart"] ),
+  ("qmom-surface-energy-test",      "qmom-surface-energy-test.ups",      1,  "All",  ["exactComparison","no_restart"] )    
+]
+
+SCALARTRANSPORTTESTS=[
+  ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups",   1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("BasicScalarTransportEq_2L",     "BasicScalarTransportEq_2L.ups",     1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
+  ("ScalarTransportEquation",       "ScalarTransportEquation.ups",       1,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
+]
+
 #  ("radprops",                      "RadPropsInterface.ups",             2,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
   
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS TURBULENCETESTS INTRUSIONTESTS  PROJECTIONTESTS  RKTESTS  VARDENTESTS  MISCTESTS  CONVECTIONTESTS  BCTESTS  QMOMTESTS  SCALARTRANSPORTTESTS DEBUGTESTS NIGHTLYTESTS
 #__________________________________
+ALLTESTS = TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS
+
 
 # returns the list  
 def getTestList(me) :
   if me == "LOCALTESTS":
-    TESTS = LOCALTESTS
+    TESTS = ALLTESTS
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
+  elif me == "TURBULENCETESTS":
+    TESTS = TURBULENCETESTS
+  elif me == "PROJECTIONTESTS":
+    TESTS = PROJECTIONTESTS    
+  elif me == "RKTESTS":
+    TESTS = RKTESTS
+  elif me == "VARDENTESTS":
+    TESTS = VARDENTESTS
+  elif me == "MISCTESTS":
+    TESTS = MISCTESTS
+  elif me == "CONVECTIONTESTS":
+    TESTS = CONVECTIONTESTS
+  elif me == "BCTESTS":
+    TESTS = BCTESTS
+  elif me == "QMOMTESTS":
+    TESTS = QMOMTESTS
+  elif me == "SCALARTRANSPORTTESTS":
+    TESTS = SCALARTRANSPORTTESTS    
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
   else:
     print "\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
   return TESTS
+
+
+
+# TSAAD: As an alternative to the annoying list of if-statements above, consider the following cleaner code... maybe we'll adopt
+# this in the near future
+# ALLTESTS = TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS
+# LOCALTESTS = ALLTESTS
+# 
+# TESTNAMES=["LOCALTESTS","DEBUGTESTS","NIGHTLYTESTS","TURBULENCETESTS","INTRUSIONTESTS","PROJECTIONTESTS","RKTESTS","VARDENTESTS","MISCTESTS","CONVECTIONTESTS","BCTESTS","QMOMTESTS","SCALARTRANSPORTTESTS"]
+# TESTSDICTIONARY={}
+# for testname in TESTNAMES:
+# 	TESTSDICTIONARY[testname]=eval(testname)
+# 
+# # returns the list  
+# def getTestList(me) :
+# 	return TESTSDICTIONARY[me]
+
+
 
 #__________________________________
 if __name__ == "__main__":
