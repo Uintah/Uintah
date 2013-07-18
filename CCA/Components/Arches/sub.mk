@@ -68,8 +68,7 @@ ifeq ($(HAVE_PETSC),yes)
 endif
 
 ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/linearSolveKernels.cu          \
-          $(SRCDIR)/calculateMomentsKernels.cu
+  SRCS += $(SRCDIR)/constructLinearSystemKernel.cu
 endif
 
 
