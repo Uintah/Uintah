@@ -19,7 +19,6 @@
 
   <DataArchiver>
     <filebase>coal_pipe.uda</filebase>
-    <outputInitTimestep/>
     <outputTimestepInterval>2</outputTimestepInterval>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
