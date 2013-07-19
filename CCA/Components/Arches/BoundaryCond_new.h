@@ -81,7 +81,7 @@ public:
     CCVariable<Vector>& areaFraction, 
     CCVariable<double>& volFraction, 
     constCCVariable<int>& pcell, 
-    const int wallType, 
+    vector<int> wallType, 
     const int flowType );
 
   /** @brief Compute the volume weights for the filter cell **/
