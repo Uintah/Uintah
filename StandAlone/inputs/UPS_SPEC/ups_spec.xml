@@ -200,7 +200,9 @@
       <thickness              spec="REQUIRED DOUBLE 'positive'" />
       <num_radius             spec="REQUIRED DOUBLE 'positive'" />
     </plane_shell>
+    
 
+    <!--  Note:  smoothcyl is not intended to be used with the union, difference intersection -->
     <smoothcyl                spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
       <discretization_scheme  spec="REQUIRED STRING" />
