@@ -4480,9 +4480,9 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
       constSFCYVariable<double> old_Fy; 
       constSFCZVariable<double> old_Fz; 
 
-      old_dw->get( old_Fx, d_lab->d_areaFractionFXLabel, indx, patch, Ghost::None, 0 )
-      old_dw->get( old_Fy, d_lab->d_areaFractionFYLabel, indx, patch, Ghost::None, 0 )
-      old_dw->get( old_Fz, d_lab->d_areaFractionFZLabel, indx, patch, Ghost::None, 0 )
+      old_dw->get( old_Fx, d_lab->d_areaFractionFXLabel, indx, patch, Ghost::None, 0 );
+      old_dw->get( old_Fy, d_lab->d_areaFractionFYLabel, indx, patch, Ghost::None, 0 );
+      old_dw->get( old_Fz, d_lab->d_areaFractionFZLabel, indx, patch, Ghost::None, 0 );
 
       areaFractionFX.copyData( old_Fx );
       areaFractionFY.copyData( old_Fy );
