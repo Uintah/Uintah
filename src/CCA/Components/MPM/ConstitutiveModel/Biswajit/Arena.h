@@ -56,7 +56,6 @@ namespace Uintah {
     const VarLabel* pBackStressIsoLabel;
     const VarLabel* pKappaStateLabel;
     const VarLabel* pLocalizedLabel;
-    const VarLabel* pVelGradLabel;
 
     const VarLabel* pPlasticStrainLabel_preReloc;
     const VarLabel* pPlasticStrainVolLabel_preReloc;
@@ -65,14 +64,10 @@ namespace Uintah {
     const VarLabel* pBackStressIsoLabel_preReloc;
     const VarLabel* pKappaStateLabel_preReloc;
     const VarLabel* pLocalizedLabel_preReloc;
-    const VarLabel* pVelGradLabel_preReloc;
 
   protected:
 
     UintahBB::InternalVariableModel* d_intvar;
-
-    bool d_taylorSeriesForDefGrad;
-    int d_numTaylorTerms; // Number of terms in series expansion
 
   public:
 
