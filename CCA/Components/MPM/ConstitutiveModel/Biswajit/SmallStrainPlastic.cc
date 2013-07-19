@@ -630,7 +630,6 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
 {
   // General stuff
   Matrix3 one; one.Identity(); Matrix3 zero(0.0);
-  Matrix3 defGrad_new; defGrad_new.Identity(); 
   Matrix3 rightStretch; rightStretch.Identity(); 
   Matrix3 rotation; rotation.Identity(); 
   Matrix3 rateOfDef_new(0.0); 
@@ -653,8 +652,6 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
   double sqrtTwoThird = 1.0/sqrtThreeTwo;
   double totalStrainEnergy = 0.0;
 
-  Ghost::GhostType  gac = Ghost::AroundCells;
-
   // Do thermal expansion?
   if (!flag->d_doThermalExpansion) {
     CTE = 0.0;
@@ -664,14 +661,8 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
   for(int patchIndex=0; patchIndex<patches->size(); patchIndex++){
     const Patch* patch = patches->get(patchIndex);
 
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector>    d_S(interpolator->size());
-    vector<double>    S(interpolator->size());
-    
     // Get grid size
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
     // Get the set of particles
     int dwi = matl->getDWIndex();
@@ -680,23 +671,21 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
     // GET GLOBAL DATA 
 
     // Get the deformation gradient (F)
-    constParticleVariable<Matrix3>  pDefGrad;
-    old_dw->get(pDefGrad, lb->pDeformationMeasureLabel, pset);
+    constParticleVariable<double>   pVol_new;
+    constParticleVariable<Matrix3>  pVelGrad_new, pDefGrad_new;
+    new_dw->get(pVol_new,     lb->pVolumeLabel_preReloc,             pset);
+    new_dw->get(pVelGrad_new, lb->pVelGradLabel_preReloc,            pset);
+    new_dw->get(pDefGrad_new, lb->pDeformationMeasureLabel_preReloc, pset);
 
     // Get the particle location, particle size, particle mass, particle volume
     constParticleVariable<Point>  px;
-    constParticleVariable<Matrix3> psize;
-    constParticleVariable<double> pMass, pVol_old;
+    constParticleVariable<double> pMass;
     old_dw->get(px,       lb->pXLabel,      pset);
-    old_dw->get(psize,    lb->pSizeLabel,   pset);
     old_dw->get(pMass,    lb->pMassLabel,   pset);
-    old_dw->get(pVol_old, lb->pVolumeLabel, pset);
 
     // Get the velocity from the grid and particle velocity
     constParticleVariable<Vector> pVelocity;
-    constNCVariable<Vector>       gVelocity;
     old_dw->get(pVelocity, lb->pVelocityLabel, pset);
-    new_dw->get(gVelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
 
     // Get the particle stress and temperature
     constParticleVariable<Matrix3> pStress_old;
@@ -723,16 +712,11 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
 
     // Create and allocate arrays for storing the updated information
     // GLOBAL
-    ParticleVariable<Matrix3> pDefGrad_new, pStress_new;
-    ParticleVariable<double>  pVol_new;
+    ParticleVariable<Matrix3> pStress_new;
     ParticleVariable<double> pdTdt, p_q;
 
-    new_dw->allocateAndPut(pDefGrad_new,  
-                           lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pStress_new,      
                            lb->pStressLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pVol_new, 
-                           lb->pVolumeLabel_preReloc,             pset);
     new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,        pset);
     new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
 
@@ -768,37 +752,15 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
-      //-----------------------------------------------------------------------
-      // Stage 1:
-      //-----------------------------------------------------------------------
-      // Calculate the velocity gradient (L) from the grid velocity
-      Matrix3 velGrad(0.0);
-      if(!flag->d_axisymmetric){
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDefGrad[idx]);
-
-        computeVelocityGradient(velGrad,ni,d_S, oodx, gVelocity);
-      } else {  // axi-symmetric kinematics
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                                   psize[idx],pDefGrad[idx]);
-        // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gVelocity,px[idx]);
-      }
-
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient F_n^np1 = dudx * dt + Identity
-      // Update the deformation gradient tensor to its time n+1 value.
-      Matrix3 defGradInc = velGrad*delT + one;
-      defGrad_new = defGradInc*pDefGrad[idx];
-      pDefGrad_new[idx] = defGrad_new;
-      double J_new = defGrad_new.Determinant();
+      double J_new = pDefGrad_new[idx].Determinant();
 
       // If the erosion algorithm sets the stress to zero then don't allow
       // any deformation.
       if(d_setStressToZero && pLocalized_old[idx]){
-        pDefGrad_new[idx] = pDefGrad[idx];
-        J_new = pDefGrad[idx].Determinant();
+
+        // **WARNING** TODO: Need to carry foward other data too
+        pStress_new[idx] = zero;
+        continue;
       }
 
       // Check 1: Check for negative Jacobian (determinant of deformation gradient)
@@ -806,24 +768,20 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
         cerr << getpid() 
              << "**ERROR** Negative Jacobian of deformation gradient" 
              << " in particle " << idx << endl;
-        cerr << "l = " << velGrad << endl;
-        cerr << "F_old = " << pDefGrad[idx] << endl;
-        cerr << "F_inc = " << defGradInc << endl;
-        cerr << "F_new = " << defGrad_new << endl;
-        cerr << "J_old = " << pDefGrad[idx].Determinant() << endl;
+        cerr << "l = " << pVelGrad_new[idx] << endl;
+        cerr << "F_new = " << pDefGrad_new[idx] << endl;
         cerr << "J_new = " << J_new << endl;
         throw ParameterNotFound("**ERROR**:InvalidValue: J < 0.0", __FILE__, __LINE__);
       }
 
       // Calculate the current density and deformed volume
       double rho_cur = rho_0/J_new;
-      pVol_new[idx]=pMass[idx]/rho_cur;
 
       // Compute polar decomposition of F (F = RU)
-      pDefGrad[idx].polarDecompositionRMB(rightStretch, rotation);
+      pDefGrad_new[idx].polarDecompositionRMB(rightStretch, rotation);
 
       // Calculate rate of deformation tensor (D)
-      rateOfDef_new = (velGrad + velGrad.Transpose())*0.5;
+      rateOfDef_new = (pVelGrad_new[idx] + pVelGrad_new[idx].Transpose())*0.5;
 
       // Rotate the total rate of deformation tensor back to the 
       // material configuration
@@ -870,7 +828,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       state->backStress          = backStress_old;
 
       // Compute the pressure
-      double pressure_new = d_eos->computePressure(matl, state, defGrad_new, 
+      double pressure_new = d_eos->computePressure(matl, state, pDefGrad_new[idx], 
                                                    rateOfDef_new, delT);
       state->pressure = pressure_new;
 
@@ -1273,7 +1231,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       // Update the stress/back stress
 
       // Use new rotation
-      defGrad_new.polarDecompositionRMB(rightStretch, rotation);
+      pDefGrad_new[idx].polarDecompositionRMB(rightStretch, rotation);
 
       backStress_new = (rotation*backStress_new)*(rotation.Transpose());
       sigma_new = (rotation*sigma_new)*(rotation.Transpose());
@@ -1307,7 +1265,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(bulk/rho_cur);
-        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        Matrix3 D=(pVelGrad_new[idx] + pVelGrad_new[idx].Transpose())*0.5;
         double Dkk=D.Trace();
         p_q[idx] = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
         de_s = -p_q[idx]*Dkk/rho_cur;
@@ -1329,7 +1287,6 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
     }
-    delete interpolator;
   }
 
   if (cout_EP.active()) 
@@ -1594,26 +1551,3 @@ double SmallStrainPlastic::getCompressibility()
   return 1.0/d_initialData.Bulk;
 }
 
-void
-SmallStrainPlastic::scheduleCheckNeedAddMPMMaterial(Task* task,
-                                                const MPMMaterial* ,
-                                                const PatchSet* ) const
-{
-  task->computes(lb->NeedAddMPMMaterialLabel);
-}
-
-void SmallStrainPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
-                                             const MPMMaterial* matl,
-                                             DataWarehouse* ,
-                                             DataWarehouse* new_dw)
-{
-  if (cout_EP.active()) {
-    cout_EP << getpid() << "checkNeedAddMPMMaterial: In : Matl = " << matl
-            << " id = " << matl->getDWIndex() <<  " patch = "
-            << (patches->get(0))->getID();
-  }
-
-  double need_add=0.;
-
-  new_dw->put(sum_vartype(need_add),     lb->NeedAddMPMMaterialLabel);
-}
