@@ -578,6 +578,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     }
 
     //----SUM UP RHS
+    //
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
