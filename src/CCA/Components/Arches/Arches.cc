@@ -1071,8 +1071,10 @@ Arches::scheduleInitialize(const LevelP& level,
   }
   //
   // compute the cell area fraction
-  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls );
+  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls, 0, true );
   d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, false );
+  //AF must be called again to account for intrusions
+  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls, 1, true ); 
 
   // base initialization of all scalars
   sched_scalarInit(level, sched);
@@ -1249,13 +1251,6 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_wVelRhoHatLabel);
     tsk->computes(d_lab->d_CCVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
-    tsk->computes(d_lab->d_areaFractionLabel);
-    tsk->computes(d_lab->d_volFractionLabel);
-#ifdef WASATCH_IN_ARCHES
-    tsk->computes(d_lab->d_areaFractionFXLabel);
-    tsk->computes(d_lab->d_areaFractionFYLabel);
-    tsk->computes(d_lab->d_areaFractionFZLabel);
-#endif
     tsk->computes(d_lab->d_densityGuessLabel);
     tsk->computes(d_lab->d_totalKineticEnergyLabel); 
     tsk->computes(d_lab->d_kineticEnergyLabel); 
@@ -1381,26 +1376,6 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> reactScalarDiffusivity;
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
-    CCVariable<Vector> areaFraction;
-    CCVariable<double> volFraction;
-#ifdef WASATCH_IN_ARCHES
-    SFCXVariable<double> areaFractionFX;
-    SFCYVariable<double> areaFractionFY;
-    SFCZVariable<double> areaFractionFZ;
-#endif
-
-    new_dw->allocateAndPut( areaFraction, d_lab->d_areaFractionLabel, indx, patch );
-#ifdef WASATCH_IN_ARCHES
-    new_dw->allocateAndPut( areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch );
-    new_dw->allocateAndPut( areaFractionFY, d_lab->d_areaFractionFYLabel, indx, patch );
-    new_dw->allocateAndPut( areaFractionFZ, d_lab->d_areaFractionFZLabel, indx, patch );
-    areaFractionFX.initialize(1.0);
-    areaFractionFY.initialize(1.0);
-    areaFractionFZ.initialize(1.0);
-#endif
-    new_dw->allocateAndPut( volFraction, d_lab->d_volFractionLabel, indx, patch );
-    areaFraction.initialize(Vector(1.,1.,1.));
-    volFraction.initialize(1.0);
 
     CCVariable<double> scalarBoundarySrc;
     CCVariable<double> enthalpyBoundarySrc;

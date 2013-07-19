@@ -4352,32 +4352,65 @@ BoundaryCondition::mmsscalarBC(const Patch* patch,
 }
 
 
-void BoundaryCondition::sched_setAreaFraction(SchedulerP& sched, 
-                                     const PatchSet* patches, 
-                                     const MaterialSet* matls )
+void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched, 
+                                               const PatchSet* patches, 
+                                               const MaterialSet* matls,
+                                               const int timesubstep, 
+                                               const bool reinitialize )
 {
-  Task* tsk = scinew Task( "BoundaryCondition::setAreaFraction",this, &BoundaryCondition::setAreaFraction);
 
-  tsk->modifies(d_lab->d_areaFractionLabel); 
+  Task* tsk = scinew Task( "BoundaryCondition::setAreaFraction",this, &BoundaryCondition::setAreaFraction, timesubstep, reinitialize );
+
+  if ( timesubstep == 0 ){
+
+    tsk->computes( d_lab->d_areaFractionLabel );
+    tsk->computes( d_lab->d_filterVolumeLabel ); 
+    tsk->computes( d_lab->d_volFractionLabel );
 #ifdef WASATCH_IN_ARCHES
-  tsk->modifies(d_lab->d_areaFractionFXLabel); 
-  tsk->modifies(d_lab->d_areaFractionFYLabel); 
-  tsk->modifies(d_lab->d_areaFractionFZLabel); 
+    tsk->computes(d_lab->d_areaFractionFXLabel); 
+    tsk->computes(d_lab->d_areaFractionFYLabel); 
+    tsk->computes(d_lab->d_areaFractionFZLabel); 
 #endif
-  tsk->modifies(d_lab->d_volFractionLabel); 
-  tsk->computes(d_lab->d_filterVolumeLabel); 
+
+  } else {
+
+    //only in cases where geometry moves. 
+    tsk->modifies( d_lab->d_areaFractionLabel );
+    tsk->modifies( d_lab->d_volFractionLabel); 
+    tsk->modifies( d_lab->d_filterVolumeLabel ); 
+#ifdef WASATCH_IN_ARCHES
+    tsk->modifies(d_lab->d_areaFractionFXLabel); 
+    tsk->modifies(d_lab->d_areaFractionFYLabel); 
+    tsk->modifies(d_lab->d_areaFractionFZLabel); 
+#endif
+
+  }
+
+  if ( !reinitialize ){
+
+    tsk->requires( Task::OldDW, d_lab->d_areaFractionLabel, Ghost::None, 0 );
+    tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
+    tsk->requires( Task::OldDW, d_lab->d_filterVolumeLabel, Ghost::None, 0 );
+  
+  }
+
   tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 ); 
  
   sched->addTask(tsk, patches, matls);
+
 }
 void 
 BoundaryCondition::setAreaFraction( const ProcessorGroup*,
-                               const PatchSubset* patches,
-                               const MaterialSubset*,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw)
+                                    const PatchSubset* patches,
+                                    const MaterialSubset*,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw, 
+                                    const int timesubstep, 
+                                    const bool reinitialize )
 {
+
   for (int p = 0; p < patches->size(); p++) {
+
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -4393,37 +4426,99 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     CCVariable<double>   filterVolume; 
 
     new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::AroundCells, 1 ); 
-    new_dw->getModifiable( areaFraction, d_lab->d_areaFractionLabel, indx, patch );  
+
+    if ( timesubstep == 0 ){
+
+      new_dw->allocateAndPut( areaFraction, d_lab->d_areaFractionLabel, indx, patch );
+      new_dw->allocateAndPut( volFraction,  d_lab->d_volFractionLabel, indx, patch );
+      new_dw->allocateAndPut( filterVolume, d_lab->d_filterVolumeLabel, indx, patch ); 
+      volFraction.initialize(1.0);
+      filterVolume.initialize(1.0);
+
+      for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
+        areaFraction[*iter] = Vector(1.0,1.0,1.0);
+      }
+
 #ifdef WASATCH_IN_ARCHES
-    new_dw->getModifiable( areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch );  
-    new_dw->getModifiable( areaFractionFY, d_lab->d_areaFractionFYLabel, indx, patch );  
-    new_dw->getModifiable( areaFractionFZ, d_lab->d_areaFractionFZLabel, indx, patch );  
+      new_dw->allocateAndPut( areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch );  
+      new_dw->allocateAndPut( areaFractionFY, d_lab->d_areaFractionFYLabel, indx, patch );  
+      new_dw->allocateAndPut( areaFractionFZ, d_lab->d_areaFractionFZLabel, indx, patch );  
+      areaFractionFX.initialize(1.0);
+      areaFractionFY.initialize(1.0);
+      areaFractionFZ.initialize(1.0);
 #endif 
-    new_dw->getModifiable( volFraction, d_lab->d_volFractionLabel, indx, patch );  
-    new_dw->allocateAndPut( filterVolume, d_lab->d_filterVolumeLabel, indx, patch ); 
 
-    int flowType = -1; 
-    if (d_MAlab)
-      d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_mmWallID, flowType ); 
+    } else { 
 
-    if (d_wallBdry) 
-      d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_wallBdry->d_cellTypeID, flowType ); 
-
-    d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, WALL, flowType ); 
-    d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, INTRUSION, flowType ); 
-    d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, MMWALL, flowType ); 
-
-    d_newBC->computeFilterVolume( patch, cellType, filterVolume ); 
+      new_dw->getModifiable( areaFraction, d_lab->d_areaFractionLabel, indx, patch );  
+      new_dw->getModifiable( volFraction, d_lab->d_volFractionLabel, indx, patch );  
+      new_dw->getModifiable( filterVolume, d_lab->d_filterVolumeLabel, indx, patch );
 
 #ifdef WASATCH_IN_ARCHES
-    //copy for wasatch-arches: 
-    for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
-      areaFractionFX[c] = areaFraction[c].x(); 
-      areaFractionFY[c] = areaFraction[c].y(); 
-      areaFractionFZ[c] = areaFraction[c].z(); 
+      new_dw->getModifiable( areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch );  
+      new_dw->getModifiable( areaFractionFY, d_lab->d_areaFractionFYLabel, indx, patch );  
+      new_dw->getModifiable( areaFractionFZ, d_lab->d_areaFractionFZLabel, indx, patch );  
+#endif 
+
     }
+
+    if ( !reinitialize ){
+
+      constCCVariable<double> old_vol_frac; 
+      constCCVariable<Vector> old_area_frac; 
+      constCCVariable<double> old_filter_vol; 
+      old_dw->get( old_area_frac, d_lab->d_areaFractionLabel, indx, patch, Ghost::None, 0 );
+      old_dw->get( old_vol_frac,  d_lab->d_volFractionLabel, indx, patch, Ghost::None, 0 );
+      old_dw->get( old_filter_vol,  d_lab->d_filterVolumeLabel, indx, patch, Ghost::None, 0 );
+
+      areaFraction.copyData( old_area_frac );
+      volFraction.copyData( old_vol_frac );
+      filterVolume.copyData( old_filter_vol );
+
+#ifdef WASATCH_IN_ARCHES
+      constSFCXVariable<double> old_Fx;
+      constSFCYVariable<double> old_Fy; 
+      constSFCZVariable<double> old_Fz; 
+
+      old_dw->get( old_Fx, d_lab->d_areaFractionFXLabel, indx, patch, Ghost::None, 0 )
+      old_dw->get( old_Fy, d_lab->d_areaFractionFYLabel, indx, patch, Ghost::None, 0 )
+      old_dw->get( old_Fz, d_lab->d_areaFractionFZLabel, indx, patch, Ghost::None, 0 )
+
+      areaFractionFX.copyData( old_Fx );
+      areaFractionFY.copyData( old_Fy );
+      areaFractionFZ.copyData( old_Fz );
 #endif 
+    
+    } else { 
+
+      int flowType = -1; 
+
+      vector<int> wall_type; 
+
+      if (d_MAlab)
+        wall_type.push_back( d_mmWallID );
+
+      if (d_wallBdry) 
+        wall_type.push_back( d_wallBdry->d_cellTypeID );
+
+      wall_type.push_back( WALL );
+      wall_type.push_back( MMWALL );
+      wall_type.push_back( INTRUSION );
+
+      d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, wall_type, flowType ); 
+
+      d_newBC->computeFilterVolume( patch, cellType, filterVolume ); 
+
+#ifdef WASATCH_IN_ARCHES
+      //copy for wasatch-arches: 
+      for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter; 
+        areaFractionFX[c] = areaFraction[c].x(); 
+        areaFractionFY[c] = areaFraction[c].y(); 
+        areaFractionFZ[c] = areaFraction[c].z(); 
+      }
+#endif 
+    }
   }
 }
 
