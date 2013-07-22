@@ -959,7 +959,6 @@ IntrusionBC::gatherReductionInformation( const ProcessorGroup*,
     double mass_flow = 0.0; 
     double min_vel = 99.0e9; 
     double max_vel = 0.0; 
-    bool found_iterator = false; 
 
     if ( _intrusion_on ) { 
     
@@ -967,7 +966,6 @@ IntrusionBC::gatherReductionInformation( const ProcessorGroup*,
 
         if ( !iIntrusion->second.bc_face_iterator.empty() ) {
 
-          found_iterator = true; 
           BCIterator::iterator iBC_iter = (iIntrusion->second.bc_face_iterator).begin(); 
           
           for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
@@ -1033,8 +1031,6 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
 {
 
   for ( int p = 0; p < patches->size(); p++ ){ 
-
-    const Patch* patch = patches->get(p); 
 
     proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
 
