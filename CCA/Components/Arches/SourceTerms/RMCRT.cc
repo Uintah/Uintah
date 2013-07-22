@@ -150,7 +150,6 @@ RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
   _ps->getWithDefault( "abskp_label", _abskp_label_name, "abskp" ); 
   _ps->getWithDefault( "psize_label", _size_label_name, "length");
   _ps->getWithDefault( "ptemperature_label", _pT_label_name, "temperature"); 
-  _VolFrac_label_name = "volFraction";
   //get the number of quadrature nodes and store it locally 
   _nQn_part = 0;
   if ( _ps->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") ){
@@ -349,10 +348,8 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
         throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
       }
     }
-    _VolFraction_Label = VarLabel::find(_VolFrac_label_name);
-      std::cout<<"label="<<_VolFrac_label_name<<endl;
       
-    tsk->requires( Task::OldDW, _VolFraction_Label, Ghost::None, 0 ); 
+    tsk->requires( Task::OldDW, _labels->d_volFractionLabel, Ghost::None, 0 ); 
 
     //particles
     for ( int i = 0; i < _nQn_part; i++ ){ 
@@ -400,7 +397,7 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
     tsk->modifies( _abskgLabel );
     tsk->modifies( _abskpLabel ); 
     tsk->requires( Task::NewDW, _tempLabel, Ghost::None, 0 ); 
-    tsk->requires( Task::NewDW, _VolFraction_Label, Ghost::None, 0 ); 
+    tsk->requires( Task::NewDW, _labels->d_volFractionLabel, Ghost::None, 0 ); 
 
     for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
       tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
@@ -456,7 +453,7 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
     }
 
     which_dw->get( gas_temperature, _tempLabel, _matl, patch, Ghost::None, 0 ); 
-    which_dw->get( VolFractionBC, _VolFraction_Label, _matl, patch, Ghost::None, 0 ); 
+    which_dw->get( VolFractionBC, _labels->d_volFractionLabel, _matl, patch, Ghost::None, 0 ); 
 
     typedef std::vector<constCCVariable<double> > CCCV; 
     typedef std::vector<const VarLabel*> CCCVL; 
@@ -513,7 +510,8 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
 
     // compute absorption (gas and particle) coefficient(s) via RadPropertyCalulator
     if ( _prop_calculator->does_scattering() ){
-      _prop_calculator->compute( patch, VolFractionBC, species, size_scaling_constant, size, pT, weights_scaling_constant, weights, _nQn_part, gas_temperature, abskg, abskp ); 
+      _prop_calculator->compute( patch, VolFractionBC, species, size_scaling_constant, size, pT, 
+          weights_scaling_constant, weights, _nQn_part, gas_temperature, abskg, abskp ); 
     } else { 
       _prop_calculator->compute( patch, VolFractionBC, species, gas_temperature, abskg );
     } 

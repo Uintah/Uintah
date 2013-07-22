@@ -107,7 +107,6 @@ private:
   std::string _co2_label_name; 
   std::string _h2o_label_name; 
   std::string _T_label_name; 
-  std::string _VolFrac_label_name;
   std::string _abskp_label_name; 
   std::string _soot_label_name; 
   std::string _size_label_name; 
@@ -128,7 +127,6 @@ private:
   const VarLabel* _co2_label; 
   const VarLabel* _h2o_label; 
   const VarLabel* _T_label; 
-  const VarLabel* _VolFrac_label;
   const VarLabel* _abskgLabel;
   const VarLabel* _abskpLocalLabel;
   const VarLabel* _abskpLabel;

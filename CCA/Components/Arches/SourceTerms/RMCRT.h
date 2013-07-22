@@ -163,12 +163,10 @@ private:
   const VarLabel* _abskpLabel; 
   const VarLabel* _absorpLabel;
   const VarLabel* _cellTypeLabel; 
-  const VarLabel* _VolFraction_Label;
 
   std::string _abskp_label_name; 
   std::string _size_label_name; 
   std::string _pT_label_name; 
-  std::string _VolFrac_label_name;
   std::vector<const VarLabel*> _size_varlabels; 
   std::vector<const VarLabel*> _w_varlabels; 
   std::vector<const VarLabel*> _T_varlabels; 

@@ -103,8 +103,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
       }
 
-    _div_q_label_name = "radiationVolq";  //this is the correct definition, the previous part shall be removed after make sure
-
+      _div_q_label_name = "radiationVolq";  //this is the correct definition, the previous part shall be removed after make sure
  
     }
   } else { 
