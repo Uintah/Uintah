@@ -66,7 +66,7 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
   // write header to file
   FILE *fp;
   fp = fopen("todd1.out","w");
-  fprintf(fp, "#Time                      ICE_totalIntEng            MPM_totalIntEng             totalIntEng                 total_ICE_Flux                 XFace_flux                 YFace_flux                 ZFace_flux                 MPM_totalMass                 ICE_totalMass\n");
+  fprintf(fp, "#Time                      ICE_totalIntEng            MPM_totalIntEng             totalIntEng                 total_ICE_Flux                 E_X_flux                 E_Y_flux                 E_Z_flux                 mDot_X_flux                 mDot_Y_flux                 mDot_Z_flux                 MPM_totalMass                 ICE_totalMass\n");
   fclose(fp);
   
       
@@ -305,20 +305,27 @@ Uintah::todd1( DataArchive * da, CommandLineFlags & clf )
       //__________________________________
       // write data 
       double totalIntEng = ICE_TotalIntEng + MPM_TotalIntEng;
-      double X_flux      = faceFlux[0] + faceFlux[1];
-      double Y_flux      = faceFlux[2] + faceFlux[3];
-      double Z_flux      = faceFlux[4] + faceFlux[5];    
+      double E_X_flux      = faceFlux[0] + faceFlux[1];
+      double E_Y_flux      = faceFlux[2] + faceFlux[3];
+      double E_Z_flux      = faceFlux[4] + faceFlux[5];
 
+      double mDot_X      = sumMdot_map[0] + sumMdot_map[1];
+      double mDot_Y      = sumMdot_map[2] + sumMdot_map[3];
+      double mDot_Z      = sumMdot_map[4] + sumMdot_map[5];
+      
       FILE *fp;
       fp = fopen("todd1.out","a");
-      fprintf(fp, "%16.15E      %16.15E      %16.15E       %16.15E       %16.15E      %16.15E       %16.15E       %16.15E       %16.15E       %16.15E\n", time, 
+      fprintf(fp, "%16.15E      %16.15E      %16.15E       %16.15E       %16.15E      %16.15E       %16.15E       %16.15E       %16.15E       %16.15E       %16.15E       %16.15E       %16.15E\n", time, 
                   ICE_TotalIntEng, 
                   MPM_TotalIntEng, 
                   totalIntEng,
                   total_flux,
-                  X_flux,
-                  Y_flux,
-                  Z_flux,
+                  E_X_flux,
+                  E_Y_flux,
+                  E_Z_flux,
+                  mDot_X,
+                  mDot_Y,
+                  mDot_Z,
                   MPM_TotalMass,
                   ICE_TotalMass );
 
