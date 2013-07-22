@@ -259,11 +259,16 @@ namespace Uintah {
               } 
 
               if(VolFraction==1.0){
+
                 _gg_radprops->mixture_coeffs( plankCff, rossCff, effCff, mol_frac, T );
 
-              abskg[c] = effCff; //need to generalize this to the other coefficients
-              }else    //for DO radiation model, the value of abskp and abskg doesn't matter, since DO have it's own BC (Blackbody assumption). for RMCRT, however, abskg[c] actually means the wall emissivity, so we set abskp and abskg =1.0 here in order to get a black body BC for RMCRT.
+                abskg[c] = effCff; //need to generalize this to the other coefficients
+
+              } else {   //for DO radiation model, the value of abskp and abskg doesn't matter, since DO have it's own BC (Blackbody assumption). for RMCRT, however, abskg[c] actually means the wall emissivity, so we set abskp and abskg =1.0 here in order to get a black body BC for RMCRT.
+
                 abskg[c] = 1.0;
+
+              }
 
             }
 

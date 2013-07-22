@@ -364,8 +364,9 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     CCCV size;
     CCCV pT; 
 
-    double weights_scaling_constant;
-    double size_scaling_constant;
+    double weights_scaling_constant=1.0;
+    double size_scaling_constant=1.0;
+
     DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
     string tlabelname;
 

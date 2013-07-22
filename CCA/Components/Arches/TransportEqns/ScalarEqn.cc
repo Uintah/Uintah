@@ -461,8 +461,6 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   for (vector<SourceContainer>::iterator iter = d_sources.begin(); 
        iter != d_sources.end(); iter++){
     SourceTermBase& temp_src = src_factory.retrieve_source_term( iter->name ); 
-    const VarLabel* temp_varLabel; 
-    temp_varLabel = temp_src.getSrcLabel(); 
     tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 ); 
   }
   
