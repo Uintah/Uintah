@@ -56,7 +56,6 @@ SRCS     += \
 	$(SRCDIR)/SphereShellPiece.cc \
 	$(SRCDIR)/SmoothGeomPiece.cc \
 	$(SRCDIR)/SmoothCylGeomPiece.cc \
-	$(SRCDIR)/CorrugEdgeGeomPiece.cc \
         $(SRCDIR)/EllipsoidGeometryPiece.cc 
 #	$(SRCDIR)/GUVSphereShellPiece.cc \
 
