@@ -576,7 +576,7 @@ namespace Wasatch{
                          params ),
       isViscous_       ( params->findBlock("Viscosity") ? true : false ),
       isConstDensity_  ( isConstDensity                       ),
-      isTurbulent_     ( turbulenceParams.turbModelName != NONE ),
+      isTurbulent_     ( turbulenceParams.turbModelName != NOTURBULENCE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
       densityTag_      ( densTag                              ),
       normalStrainID_  ( Expr::ExpressionID::null_id()        ),

@@ -41,7 +41,7 @@ namespace Wasatch{
     DYNAMIC,
     WALE,
     VREMAN,
-    NONE
+    NOTURBULENCE
   };
   
   /**

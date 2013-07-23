@@ -359,7 +359,7 @@ namespace Wasatch{
     // Turbulence
     Expr::Tag turbDiffTag = Expr::Tag();
     bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
-    if (turbulenceParams.turbModelName != NONE && enableTurbulenceModel ) {
+    if (turbulenceParams.turbModelName != NOTURBULENCE && enableTurbulenceModel ) {
       Expr::Tag turbViscTag = TagNames::self().turbulentviscosity;//Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
       turbDiffTag = turbulent_diffusivity_tag();//Expr::Tag( "TurbulentDiffusivity", Expr::STATE_NONE );
       
