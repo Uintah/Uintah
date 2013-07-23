@@ -146,7 +146,8 @@ namespace Wasatch{
                      const Uintah::MaterialSet* const materials,
                      const PatchInfoMap& info,
                      const int rkStage,
-                     const std::set<std::string>& ioFieldSet );
+                     const std::set<std::string>& ioFieldSet,
+                     const bool lockAllFields=false);
 
     ~TreeTaskExecute();
 
@@ -165,7 +166,8 @@ namespace Wasatch{
                                     const Uintah::MaterialSet* const materials,
                                     const PatchInfoMap& patchInfoMap,
                                     const int rkStage,
-                                    const std::set<std::string>& ioFieldSet)
+                                    const std::set<std::string>& ioFieldSet,
+                                    const bool lockAllFields)
     : scheduler_( sched ),
       patches_( patches ),
       materials_( materials ),
@@ -209,7 +211,7 @@ namespace Wasatch{
       } // loop over persistent fields
 
       // uncomment the next line to force Uintah to manage all fields:
-      // tree->lock_fields(*fml_);
+      if (lockAllFields) tree->lock_fields(*fml_);
 
       tree->register_fields( *fml_ );
 
@@ -556,7 +558,8 @@ namespace Wasatch{
                                 const Uintah::MaterialSet* const materials,
                                 const PatchInfoMap& info,
                                 const int rkStage,
-                                const std::set<std::string>& ioFieldSet )
+                                const std::set<std::string>& ioFieldSet,
+                                const bool lockAllFields)
   {
     // only set up trees on the patches that we own on this process.
     const Uintah::PatchSet*  perproc_patchset = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
@@ -601,7 +604,7 @@ namespace Wasatch{
     BOOST_FOREACH( TreeMap& tl, trLstTrns ){
       execList_.push_back( scinew TreeTaskExecute( tl, tl.begin()->second->name(),
                                                    sched, patches, materials,
-                                                   info, rkStage, ioFieldSet ) );
+                                                   info, rkStage, ioFieldSet, lockAllFields ) );
     }
 
   }

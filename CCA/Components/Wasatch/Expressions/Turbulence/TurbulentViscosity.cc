@@ -106,7 +106,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   case Wasatch::VREMAN :
     vremanTsrMag_ = &scalarfm.field_ref( vremanTsrMagTag_ );
     break;
-  case Wasatch::NONE :
+  case Wasatch::NOTURBULENCE :
     assert(false);
     break;
   }
