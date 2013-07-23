@@ -4391,7 +4391,13 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
     tsk->requires( Task::OldDW, d_lab->d_areaFractionLabel, Ghost::None, 0 );
     tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
     tsk->requires( Task::OldDW, d_lab->d_filterVolumeLabel, Ghost::None, 0 );
-  
+
+#ifdef WASATCH_IN_ARCHES
+    tsk->requires( Task::OldDW, d_lab->d_areaFractionFXLabel, Ghost::None, 0 );
+    tsk->requires( Task::OldDW, d_lab->d_areaFractionFYLabel, Ghost::None, 0 );
+    tsk->requires( Task::OldDW, d_lab->d_areaFractionFZLabel, Ghost::None, 0 );
+#endif
+
   }
 
   tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 ); 
@@ -4478,12 +4484,10 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 #ifdef WASATCH_IN_ARCHES
       constSFCXVariable<double> old_Fx;
       constSFCYVariable<double> old_Fy; 
-      constSFCZVariable<double> old_Fz; 
-
+      constSFCZVariable<double> old_Fz;
       old_dw->get( old_Fx, d_lab->d_areaFractionFXLabel, indx, patch, Ghost::None, 0 );
       old_dw->get( old_Fy, d_lab->d_areaFractionFYLabel, indx, patch, Ghost::None, 0 );
       old_dw->get( old_Fz, d_lab->d_areaFractionFZLabel, indx, patch, Ghost::None, 0 );
-
       areaFractionFX.copyData( old_Fx );
       areaFractionFY.copyData( old_Fy );
       areaFractionFZ.copyData( old_Fz );
