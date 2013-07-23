@@ -45,7 +45,6 @@ NIGHTLYTESTS = [
                   ("adiCuPTW4000s696K",                   "adiCuPTW4000s696K.ups",                   1,  "Linux", ["exactComparison"] ),  
                   ("adiCuSCG4000s696K",                   "adiCuSCG4000s696K.ups",                   1,  "Linux", ["exactComparison"] ),  
                   ("adiCuZA4000s696K",                    "adiCuZA4000s696K.ups",                    1,  "Linux", ["exactComparison"] ),  
-                  ("test_corrug_plate",                   "test_corrug_plate.ups",                   1,  "Linux", ["exactComparison"] ),  
                   ("test_cyl_pene_no_ero",                "test_cyl_pene_no_ero.ups",                1,  "Linux", ["exactComparison"] ),  
                   ("test_gurson_beckerdrucker_mts",       "test_gurson_beckerdrucker_mts.ups",       1,  "Linux", ["exactComparison"] ),  
                   ("test_hypoviscoelastic_radial_return", "test_hypoviscoelastic_radial_return.ups", 1,  "Linux", ["exactComparison"] ),  
@@ -80,7 +79,6 @@ NIGHTLYTESTS = [
                   ("adiCuPTW4000s696K",                   "adiCuPTW4000s696K.ups",                   1,  "Darwin", ["doesTestRun"]    ),     
                   ("adiCuSCG4000s696K",                   "adiCuSCG4000s696K.ups",                   1,  "Darwin", ["doesTestRun"]    ),     
                   ("adiCuZA4000s696K",                    "adiCuZA4000s696K.ups",                    1,  "Darwin", ["doesTestRun"]    ),     
-                  ("test_corrug_plate",                   "test_corrug_plate.ups",                   1,  "Darwin", ["doesTestRun"]    ),     
                   ("test_cyl_pene_no_ero",                "test_cyl_pene_no_ero.ups",                1,  "Darwin", ["doesTestRun"]    ),     
                   ("test_gurson_beckerdrucker_mts",       "test_gurson_beckerdrucker_mts.ups",       1,  "Darwin", ["doesTestRun"]    ),
                   
