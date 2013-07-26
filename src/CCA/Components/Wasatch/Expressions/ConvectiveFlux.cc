@@ -36,11 +36,13 @@
 template< typename PhiInterpT, typename VelInterpT >
 ConvectiveFlux<PhiInterpT, VelInterpT>::
 ConvectiveFlux( const Expr::Tag& phiTag,
-               const Expr::Tag& velTag )
+                const Expr::Tag& velTag )
 : Expr::Expression<PhiFaceT>(),
 phiTag_( phiTag ),
 velTag_( velTag )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 
@@ -110,13 +112,13 @@ ConvectiveFluxLimiter( const Expr::Tag& phiTag,
                       const Wasatch::ConvInterpMethods limiterType,
                       const Expr::Tag& volFracTag )
 : Expr::Expression<PhiFaceT>(),
-phiTag_             ( phiTag     ),
-velTag_             ( velTag     ),
-volFracTag_         ( volFracTag ),
-limiterType_        ( limiterType ),
-isUpwind_           ( limiterType_ == Wasatch::UPWIND  ),
-isCentral_          ( limiterType_ == Wasatch::CENTRAL ),
-hasEmbeddedBoundary_( volFracTag != Expr::Tag() )
+  phiTag_             ( phiTag     ),
+  velTag_             ( velTag     ),
+  volFracTag_         ( volFracTag ),
+  limiterType_        ( limiterType ),
+  isUpwind_           ( limiterType_ == Wasatch::UPWIND  ),
+  isCentral_          ( limiterType_ == Wasatch::CENTRAL ),
+  hasEmbeddedBoundary_( volFracTag != Expr::Tag() )
 {}
 
 //--------------------------------------------------------------------
@@ -148,12 +150,10 @@ void
 ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldMgrSelector<PhiVolT>::type& phiVolFM = fml.template field_manager<PhiVolT>();
-  phi_ = &phiVolFM.field_ref( phiTag_ );
+  phi_ = &fml.template field_ref<PhiVolT>( phiTag_ );
+  vel_ = &fml.template field_ref<VelVolT>( velTag_ );
   
-  vel_ = &fml.template field_manager<VelVolT>().field_ref( velTag_ );
-  
-  if (hasEmbeddedBoundary_) volFrac_ = &phiVolFM.field_ref( volFracTag_ );
+  if (hasEmbeddedBoundary_) volFrac_ = &fml.template field_ref<PhiVolT>( volFracTag_ );
 }
 
 //--------------------------------------------------------------------
