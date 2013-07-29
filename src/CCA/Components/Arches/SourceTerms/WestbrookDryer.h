@@ -126,7 +126,13 @@ public:
       double fuel_low  = _flam_low_m * diluent + _flam_low_b; 
       double fuel_high = _flam_up_m  * diluent + _flam_up_b; 
 
-      if ( f_tot_fuel > fuel_low && f_tot_fuel < fuel_high ) { 
+      double loc_fuel = f_tot_fuel*d_MF_HC_f1; 
+
+      //using a premix concept here which is why we need the 
+      //total mixture fraction and not C*.  but, since the fuel
+      //may contain some inert, we must multiply by the 
+      //d_MF_HC_f1 variable to get only the hydrocarbon. 
+      if ( loc_fuel > fuel_low && loc_fuel < fuel_high ) { 
         compute_rate = true; 
       } 
 
