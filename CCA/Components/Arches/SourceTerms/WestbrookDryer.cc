@@ -67,17 +67,17 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   
   _using_xi = false; 
   if ( db->findBlock("xi_label") ){ 
-    db->require("xi_label", d_xi_label);                                        // The name of the total mixture fraction label 
+    db->require("xi_label", d_xi_label);                                      // The name of the total mixture fraction label 
     _using_xi = true; 
   } else { 
-    db->require("eta_label", d_eta_label);                             // The name of the eta (intermediate fuel) mixture fraciton label
+    db->require("eta_label", d_eta_label);                                    // The name of the eta (intermediate fuel) mixture fraciton label
     db->require("fp_label",  d_fp_label);
   }
 
   db->getWithDefault("o2_label", d_o2_label, "O2");                           // The name of the O2 label
 
   if ( db->findBlock("temperature_clip") ){ 
-    db->getWithDefault("temperature_clip", d_T_clip, 10000);                 // [K], Turns off the rate below this T.
+    db->getWithDefault("temperature_clip", d_T_clip, 10000);                  // [K], Turns off the rate below this T.
     _use_T_clip = true;
   }
 
