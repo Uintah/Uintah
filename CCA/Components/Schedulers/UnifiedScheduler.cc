@@ -1724,8 +1724,7 @@ void UnifiedScheduler::createCudaStreams(int numStreams,
   idleStreamsLock_.writeUnlock();
 }
 
-void UnifiedScheduler::createCudaEvents(int numEvents,
-    int device)
+void UnifiedScheduler::createCudaEvents(int numEvents, int device)
 {
   cudaError_t retVal;
 
@@ -1736,7 +1735,7 @@ void UnifiedScheduler::createCudaEvents(int numEvents,
     CUDA_RT_SAFE_CALL(retVal = cudaEventCreate(&(*event)));
     idleEvents[device].push(event);
   }
-  idleEventsLock_.writeLock();
+  idleEventsLock_.writeUnlock();
 }
 
 void UnifiedScheduler::freeCudaStreams()
