@@ -1647,11 +1647,11 @@ void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
 }
 
 void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
-    const VarLabel* label,
-    int matlIndex,
-    const Patch* patch,
-    IntVector size,
-    double* h_compData)
+                                       const VarLabel* label,
+                                       int matlIndex,
+                                       const Patch* patch,
+                                       IntVector size,
+                                       double* h_compData)
 {
   // set the device and CUDA context
   cudaError_t retVal;
@@ -1709,8 +1709,7 @@ void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
   dtask->incrementH2DCopyCount();
 }
 
-void UnifiedScheduler::createCudaStreams(int numStreams,
-    int device)
+void UnifiedScheduler::createCudaStreams(int numStreams, int device)
 {
   cudaError_t retVal;
 
@@ -1735,6 +1734,20 @@ void UnifiedScheduler::createCudaEvents(int numEvents, int device)
     CUDA_RT_SAFE_CALL(retVal = cudaEventCreate(&(*event)));
     idleEvents[device].push(event);
   }
+  idleEventsLock_.writeUnlock();
+}
+
+void UnifiedScheduler::addCudaStream(cudaStream_t* stream, int device)
+{
+  idleStreamsLock_.writeLock();
+  idleStreams[device].push(stream);
+  idleStreamsLock_.writeUnlock();
+}
+
+void UnifiedScheduler::addCudaEvent(cudaEvent_t* event, int device)
+{
+  idleEventsLock_.writeLock();
+  idleEvents[device].push(event);
   idleEventsLock_.writeUnlock();
 }
 
@@ -1806,25 +1819,9 @@ cudaEvent_t* UnifiedScheduler::getCudaEvent(int device)
   return event;
 }
 
-void UnifiedScheduler::addCudaStream(cudaStream_t* stream,
-    int device)
-{
-  idleStreamsLock_.writeLock();
-  idleStreams[device].push(stream);
-  idleStreamsLock_.writeUnlock();
-}
-
-void UnifiedScheduler::addCudaEvent(cudaEvent_t* event,
-    int device)
-{
-  idleEventsLock_.writeLock();
-  idleEvents[device].push(event);
-  idleEventsLock_.writeUnlock();
-}
-
 double* UnifiedScheduler::getDeviceRequiresPtr(const VarLabel* label,
-    int matlIndex,
-    const Patch* patch)
+                                               int matlIndex,
+                                               const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
   deviceRequiresLock_.readLock();
@@ -1835,8 +1832,8 @@ double* UnifiedScheduler::getDeviceRequiresPtr(const VarLabel* label,
 }
 
 double* UnifiedScheduler::getDeviceComputesPtr(const VarLabel* label,
-    int matlIndex,
-    const Patch* patch)
+                                               int matlIndex,
+                                               const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
   deviceComputesLock_.readLock();
@@ -1847,8 +1844,8 @@ double* UnifiedScheduler::getDeviceComputesPtr(const VarLabel* label,
 }
 
 double* UnifiedScheduler::getHostRequiresPtr(const VarLabel* label,
-    int matlIndex,
-    const Patch* patch)
+                                             int matlIndex,
+                                             const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
   hostRequiresLock_.readLock();
@@ -1859,8 +1856,8 @@ double* UnifiedScheduler::getHostRequiresPtr(const VarLabel* label,
 }
 
 double* UnifiedScheduler::getHostComputesPtr(const VarLabel* label,
-    int matlIndex,
-    const Patch* patch)
+                                             int matlIndex,
+                                             const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
   hostComputesLock_.readLock();
@@ -1871,8 +1868,8 @@ double* UnifiedScheduler::getHostComputesPtr(const VarLabel* label,
 }
 
 IntVector UnifiedScheduler::getDeviceRequiresSize(const VarLabel* label,
-    int matlIndex,
-    const Patch* patch)
+                                                  int matlIndex,
+                                                  const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
   hostRequiresLock_.readLock();
@@ -1883,8 +1880,8 @@ IntVector UnifiedScheduler::getDeviceRequiresSize(const VarLabel* label,
 }
 
 IntVector UnifiedScheduler::getDeviceComputesSize(const VarLabel* label,
-    int matlIndex,
-    const Patch* patch)
+                                                  int matlIndex,
+                                                  const Patch* patch)
 {
   VarLabelMatl<Patch> var(label, matlIndex, patch);
   deviceComputesLock_.readLock();
@@ -1895,8 +1892,8 @@ IntVector UnifiedScheduler::getDeviceComputesSize(const VarLabel* label,
 }
 
 void UnifiedScheduler::requestD2HCopy(const VarLabel* label,
-    int matlIndex,
-    const Patch* patch,
+                                      int matlIndex,
+                                      const Patch* patch,
     cudaStream_t* stream,
     cudaEvent_t* event)
 {
