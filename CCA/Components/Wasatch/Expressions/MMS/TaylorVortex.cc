@@ -41,7 +41,7 @@ VelocityX( const Expr::Tag& xtag,
   : Expr::Expression<ValT>(),
     a_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {
-  this->set_gpu_runnable( true );
+  this->set_gpu_runnable( false );  // not GPU ready because of the time transfer that doesn't yet work.
 }
 
 //--------------------------------------------------------------------
@@ -126,7 +126,7 @@ VelocityY( const Expr::Tag& xtag,
   : Expr::Expression<ValT>(),
     a_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {
-  this->set_gpu_runnable( true );
+  this->set_gpu_runnable( false );  // not GPU ready because of the time transfer that doesn't yet work.
 }
 
 //--------------------------------------------------------------------
@@ -211,7 +211,7 @@ GradPX( const Expr::Tag& xtag,
   : Expr::Expression<ValT>(),
     a_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {
-  this->set_gpu_runnable( true );
+  this->set_gpu_runnable( false );  // not GPU ready because of the time transfer that doesn't yet work.
 }
 
 //--------------------------------------------------------------------
@@ -296,7 +296,7 @@ GradPY( const Expr::Tag& xtag,
   : Expr::Expression<ValT>(),
     a_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {
-  this->set_gpu_runnable( true );
+  this->set_gpu_runnable( false );  // not GPU ready because of the time transfer that doesn't yet work.
 }
 
 //--------------------------------------------------------------------
