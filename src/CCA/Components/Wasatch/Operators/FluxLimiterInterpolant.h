@@ -37,9 +37,8 @@
 #include <vector>
 #include <string>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
-#include "spatialops/SpatialOpsDefs.h"
-#include "spatialops/structured/MemoryTypes.h"
-#include "spatialops/structured/FVTools.h"
+#include <spatialops/SpatialOpsDefs.h>
+#include <spatialops/structured/SpatialFieldStore.h>
 /**
  *  \class     FluxLimiterInterpolant
  *  \author    Tony Saad
@@ -85,14 +84,13 @@ private:
   
   SpatialOps::structured::IntVec unitNormal_;
   
-  mutable std::vector<PhiVolT> srcFields_;
+  typedef typename SpatialOps::SpatFldPtr<const PhiVolT> PhiVolTPtr;
+  mutable std::vector<PhiVolTPtr> srcFields_;
   
   // boundary information
   bool hasPlusBoundary_, hasMinusBoundary_;
   
-  void build_src_fields( const PhiVolT& src,
-                         const SpatialOps::MemoryType consumerMemoryType = SpatialOps::LOCAL_RAM,
-                         const unsigned short int devIdx = 0) const;
+  void build_src_fields( const PhiVolT& src ) const;
   
 public:
   

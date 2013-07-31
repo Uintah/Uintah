@@ -177,28 +177,32 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
   
   using namespace SpatialOps;
   using namespace SpatialOps::structured;
-  
-  const MemoryType dMemType = dest.memory_device_type();  // destination memory type
-  const unsigned short int dDevIdx = dest.device_index(); // destination device index
-  
-  build_src_fields(src, dMemType, dDevIdx);
+
+
+  build_src_fields(src);
   
   const MemoryWindow& wdest = dest.window_with_ghost(); // used for velocity & interpolated phi
   IntVec destExtent = wdest.extent() - unitNormal_*3 - unitNormal_ * (hasPlusBoundary_ ? 1 : 0);
   IntVec destBaseOffset = wdest.offset() + unitNormal_*2;
   // this is the destination field value - always on the boundary
   const MemoryWindow wd( wdest.glob_dim(),
-                        destBaseOffset,
-                        destExtent,
-                        wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
+                         destBaseOffset,
+                         destExtent,
+                         wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
 
-  typename PhiFaceT::value_type* destVals = dest.field_values(dMemType, dDevIdx);
-  typename PhiFaceT::value_type* velVals  = const_cast<PhiFaceT*>(advectiveVelocity_)->field_values(dMemType, dDevIdx);
-  PhiVolT    d( wd, destVals, ExternalStorage, dMemType, dDevIdx );
-  PhiVolT aVel( wd, velVals,  ExternalStorage, dMemType, dDevIdx );
+  const MemoryType dMemType = dest.memory_device_type();  // destination memory type
+  const unsigned short int dDevIdx = dest.device_index(); // destination device index
+  typename PhiFaceT::value_type* destVals = const_cast<typename PhiFaceT::value_type*>( dest.field_values(dMemType, dDevIdx) );
 
-  PhiVolT& vfracmm = srcFields_[0];
-  PhiVolT& vfracpp = srcFields_[3];
+  const MemoryType advelMemType = advectiveVelocity_->memory_device_type();  // advel memory type
+  const unsigned short int advelDevIdx = advectiveVelocity_->device_index(); // advel device index
+  typename PhiFaceT::value_type* velVals = const_cast<typename PhiFaceT::value_type*>( advectiveVelocity_->field_values(advelMemType,advelDevIdx) );
+
+  PhiVolT d( wd, destVals, ExternalStorage, dMemType, dDevIdx );
+  const PhiVolT aVel( wd, velVals, ExternalStorage, advelMemType, advelDevIdx );
+
+  const PhiVolT& vfracmm = *srcFields_[0];
+  const PhiVolT& vfracpp = *srcFields_[3];
   
   d <<= cond( aVel > 0.0 && vfracmm == 0.0, 0.0 )
             ( aVel < 0.0 && vfracpp == 0.0, 0.0 )
@@ -210,12 +214,10 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
 template< typename PhiVolT, typename PhiFaceT >
 void
 FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
-build_src_fields( const PhiVolT& src,
-                  const SpatialOps::MemoryType memType,
-                  const unsigned short int devIdx ) const {
+build_src_fields( const PhiVolT& src ) const
+{
   using namespace SpatialOps;
   using namespace SpatialOps::structured;
-  typename PhiVolT::value_type* srcvals = const_cast<PhiVolT&>(src).field_values(memType, devIdx);
   
   srcFields_.clear();
 
@@ -229,13 +231,13 @@ build_src_fields( const PhiVolT& src,
     //  below is a depiction of the nomenclature, cells and faces...
     //  | minus-minus |  minus  || plus  | plus-plus
     const MemoryWindow srcwin( wsrc.glob_dim(),
-                              wsrc.offset() + unitNormal_*i,
-                              wsrc.extent() - unitNormal_*3,
-                              wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
+                               wsrc.offset() + unitNormal_*i,
+                               wsrc.extent() - unitNormal_*3,
+                               wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
     
-    PhiVolT field(srcwin, srcvals, ExternalStorage, memType, devIdx);
+    const PhiVolT * field = new PhiVolT( srcwin, src );
     
-    srcFields_.push_back(field);
+    srcFields_.push_back( PhiVolTPtr(field) );
   }
 }
 
@@ -261,11 +263,12 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   
   const MemoryType dMemType = dest.memory_device_type();  // destination memory type
   const unsigned short int dDevIdx = dest.device_index(); // destination device index
+  typename PhiFaceT::value_type* destVals = const_cast<typename PhiFaceT::value_type*>( dest.field_values(dMemType, dDevIdx) );
 
-  typename PhiFaceT::value_type* destVals = dest.field_values(dMemType, dDevIdx);
-  typename PhiFaceT::value_type* velVals  = const_cast<PhiFaceT*>(advectiveVelocity_)->field_values(dMemType, dDevIdx);
-  typename PhiVolT::value_type*  srcVals  = const_cast<PhiVolT&>(src).field_values(dMemType, dDevIdx);
-  
+  const MemoryType advelMemType = advectiveVelocity_->memory_device_type();  // advel memory type
+  const unsigned short int advelDevIdx = advectiveVelocity_->device_index(); // advel device index
+  typename PhiFaceT::value_type* velVals = const_cast<typename PhiFaceT::value_type*>( advectiveVelocity_->field_values(advelMemType,advelDevIdx) );
+
   int pm[2]={1,-1}; // plus or minus face
   int zo[2]={0,1};  // zero and one
   const double infinity_ = 1.0e10;
@@ -303,12 +306,13 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
                            baseOffset  + unitNormal_ * pm[direc] * 2,
                            extent,
                            wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
-    
-    PhiVolT     d( wd, destVals, ExternalStorage, dMemType, dDevIdx );
-    PhiVolT  aVel( wd, velVals,  ExternalStorage, dMemType, dDevIdx );
-    PhiVolT    s1( ws1, srcVals, ExternalStorage, dMemType, dDevIdx );
-    PhiVolT    s2( ws2, srcVals, ExternalStorage, dMemType, dDevIdx );
-    PhiVolT    s3( ws3, srcVals, ExternalStorage, dMemType, dDevIdx );
+
+
+    PhiVolT d( wd, destVals, ExternalStorage, dMemType, dDevIdx );
+    const PhiVolT aVel( wd, velVals, ExternalStorage, advelMemType, advelDevIdx );
+    const PhiVolT s1( ws1, src );
+    const PhiVolT s2( ws2, src );
+    const PhiVolT s3( ws3, src );
     
     SpatFldPtr<PhiVolT> fdir = SpatialFieldStore::get<PhiVolT>( aVel );
     *fdir <<= - pm[direc] * aVel; // flow direction
@@ -319,53 +323,18 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
     const bool isBoundaryFace = (hasMinusBoundary_ && direc==0) || (hasPlusBoundary_ && direc==1);    
 
     switch (limiterType_) {
-      case Wasatch::UPWIND:
-        d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, UPWIND );
-        break;
-        
-      case Wasatch::SUPERBEE:
-        d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, SUPERBEE );
-        break;
-        
-      case Wasatch::CHARM:
-        d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, CHARM );
-        break;
-        
-      case Wasatch::KOREN:
-        d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, KOREN );
-        break;
-        
-      case Wasatch::MC:
-        d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, MC );
-        break;
-        
-      case Wasatch::OSPRE:
-        d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, OSPRE );
-        break;
-        
-      case Wasatch::SMART:
-        d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, SMART );
-        break;
-        
-      case Wasatch::VANLEER:
-        d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, VANLEER );
-        break;
-        
-      case Wasatch::HCUS:
-        d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, HCUS );
-        break;
-        
-      case Wasatch::MINMOD:
-        d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, MINMOD );
-        break;
-        
-      case Wasatch::HQUICK:
-        d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, HQUICK );
-        break;
-        
-      default:
-        d <<= 0.0;
-        break;
+    case Wasatch::UPWIND  : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, UPWIND   ); break;
+    case Wasatch::SUPERBEE: d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, SUPERBEE ); break;
+    case Wasatch::CHARM   : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, CHARM    ); break;
+    case Wasatch::KOREN   : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, KOREN    ); break;
+    case Wasatch::MC      : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, MC       ); break;
+    case Wasatch::OSPRE   : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, OSPRE    ); break;
+    case Wasatch::SMART   : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, SMART    ); break;
+    case Wasatch::VANLEER : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, VANLEER  ); break;
+    case Wasatch::HCUS    : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, HCUS     ); break;
+    case Wasatch::MINMOD  : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, MINMOD   ); break;
+    case Wasatch::HQUICK  : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, HQUICK   ); break;
+    default               : d <<= 0.0;                                              break;
     }            
   }
 
@@ -377,17 +346,17 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
                          destExtent,
                          wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
 
-  PhiVolT    d( wd, destVals, ExternalStorage, dMemType, dDevIdx );
-  PhiVolT aVel( wd, velVals,  ExternalStorage, dMemType, dDevIdx );
+  PhiVolT d( wd, destVals, ExternalStorage, dMemType, dDevIdx );
+  const PhiVolT aVel( wd, velVals, ExternalStorage, advelMemType, advelDevIdx );
   
   // build the source fields - these correspond to windows into minus-minus,
   // minus, plus, and plus-plus with respect to destination (face).
-  build_src_fields(src,dMemType,dDevIdx);
+  build_src_fields(src);
   
-  PhiVolT& smm = srcFields_[0];
-  PhiVolT& sm  = srcFields_[1];
-  PhiVolT& sp  = srcFields_[2];
-  PhiVolT& spp = srcFields_[3];
+  const PhiVolT& smm = *srcFields_[0];
+  const PhiVolT& sm  = *srcFields_[1];
+  const PhiVolT& sp  = *srcFields_[2];
+  const PhiVolT& spp = *srcFields_[3];
   
   SpatFldPtr<PhiVolT> rm = SpatialFieldStore::get<PhiVolT>( sm );
   *rm <<= (sm-smm)/(sp-sm);
@@ -396,54 +365,18 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   *rp <<= (spp-sp)/(sp-sm);
       
   switch (limiterType_) {
-      
-    case Wasatch::UPWIND:
-      d <<= 0.0;
-      break;
-      
-    case Wasatch::SUPERBEE:
-      d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, SUPERBEE );
-      break;
-      
-    case Wasatch::CHARM:
-      d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, CHARM );
-      break;
-      
-    case Wasatch::KOREN:
-      d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, KOREN );
-      break;
-      
-    case Wasatch::MC:
-      d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, MC );
-      break;
-      
-    case Wasatch::OSPRE:
-      d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, OSPRE );
-      break;
-      
-    case Wasatch::SMART:
-      d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, SMART );
-      break;
-      
-    case Wasatch::VANLEER:
-      d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, VANLEER );
-      break;
-      
-    case Wasatch::HCUS:
-      d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, HCUS );
-      break;
-      
-    case Wasatch::MINMOD:
-      d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, MINMOD );
-      break;
-      
-    case Wasatch::HQUICK:
-      d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, HQUICK );
-      break;
-      
-    default:
-      d <<= 0.0;
-      break;
+  case Wasatch::UPWIND  : d <<= 0.0;                                                   break;
+  case Wasatch::SUPERBEE: d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, SUPERBEE ); break;
+  case Wasatch::CHARM   : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, CHARM    ); break;
+  case Wasatch::KOREN   : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, KOREN    ); break;
+  case Wasatch::MC      : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, MC       ); break;
+  case Wasatch::OSPRE   : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, OSPRE    ); break;
+  case Wasatch::SMART   : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, SMART    ); break;
+  case Wasatch::VANLEER : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, VANLEER  ); break;
+  case Wasatch::HCUS    : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, HCUS     ); break;
+  case Wasatch::MINMOD  : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, MINMOD   ); break;
+  case Wasatch::HQUICK  : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, HQUICK   ); break;
+  default               : d <<= 0.0;                                                   break;
   }
 }
 
