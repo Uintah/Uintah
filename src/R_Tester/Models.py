@@ -37,23 +37,31 @@ NIGHTLYTESTS = [   ("HePlume",       "HePlume.ups",       4, "Linux",  ["exactCo
 LOCALTESTS   = [   ("HePlume",       "HePlume.ups",       4, "Linux",  ["exactComparison"]), \
                    ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux",  ["exactComparison"])
     	        ]
-
+               
+DEBUGTESTS   =[]
+#__________________________________
+# The following list is parsed by the local RT script
+# and allows the user to select the tests to run
+#LIST: LOCALTESTS DEUGTESTS NIGHTLYTESTS
 #__________________________________
 
-def getNightlyTests() :
-  return NIGHTLYTESTS
-
-def getLocalTests() :
-  return LOCALTESTS
-
+# returns the list  
+def getTestList(me) :
+  if me == "LOCALTESTS":
+    TESTS = LOCALTESTS
+  elif me == "DEBUGTESTS":
+    TESTS = DEBUGTESTS
+  elif me == "NIGHTLYTESTS":
+    TESTS = NIGHTLYTESTS
+  else:
+    print "\nERROR:Models.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    exit(1)
+  return TESTS
 #__________________________________
 
 if __name__ == "__main__":
 
-  if environ['WHICH_TESTS'] == "local":
-    TESTS = LOCALTESTS
-  else:
-    TESTS = NIGHTLYTESTS
+  TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "Models")
   exit( result )

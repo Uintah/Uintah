@@ -77,11 +77,12 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     d_volq_label = d_fieldLabels->d_radiationVolqINLabel;
     d_abskg_label = d_fieldLabels->d_abskgINLabel;
   } else if(new_radiation){
-    d_volq_label = VarLabel::find("radiationVolq");  //this line need further modification
+    //    d_volq_label = VarLabel::find("radiationVolq");  //this line need further modification
     d_abskg_label = VarLabel::find("abskg");
   }
 
 
+  // this part is not correct and need further discussion (wyxpuma)
   if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") ){ 
 
     // Look for the opl specified in the radiation model: 
@@ -100,7 +101,10 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
         src_db->getAttribute("label", _div_q_label_name); 
 
-      } 
+      }
+
+      _div_q_label_name = "radiationVolq";  //this is the correct definition, the previous part shall be removed after make sure
+ 
     }
   } else { 
     throw InvalidValue("Error: You dont have radiation turned on which is needed for EnthalpyShaddix",__FILE__,__LINE__);

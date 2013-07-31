@@ -576,7 +576,7 @@ namespace Wasatch{
                          params ),
       isViscous_       ( params->findBlock("Viscosity") ? true : false ),
       isConstDensity_  ( isConstDensity                       ),
-      isTurbulent_     ( turbulenceParams.turbModelName != NONE ),
+      isTurbulent_     ( turbulenceParams.turbModelName != NOTURBULENCE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
       densityTag_      ( densTag                              ),
       normalStrainID_  ( Expr::ExpressionID::null_id()        ),
@@ -1131,6 +1131,26 @@ namespace Wasatch{
   template class MomentumTransportEquation< XVolField >;
   template class MomentumTransportEquation< YVolField >;
   template class MomentumTransportEquation< ZVolField >;
+  
+#define INSTANTIATE_SETUP_STRAIN(VOLT) \
+  template Expr::ExpressionID setup_strain< SpatialOps::structured::FaceTypes<VOLT>::XFace > ( const Expr::Tag& strainTag, \
+                                                                                                const Expr::Tag& vel1Tag,\
+                                                                                                const Expr::Tag& vel2Tag,\
+                                                                                                const Expr::Tag& dilTag,\
+                                                                                                Expr::ExpressionFactory& factory ); \
+  template Expr::ExpressionID setup_strain< SpatialOps::structured::FaceTypes<VOLT>::YFace > ( const Expr::Tag& strainTag, \
+                                                                                                const Expr::Tag& vel1Tag,\
+                                                                                                const Expr::Tag& vel2Tag,\
+                                                                                                const Expr::Tag& dilTag,\
+                                                                                                Expr::ExpressionFactory& factory ); \
+  template Expr::ExpressionID setup_strain< SpatialOps::structured::FaceTypes<VOLT>::ZFace > ( const Expr::Tag& strainTag, \
+                                                                                                const Expr::Tag& vel1Tag,\
+                                                                                                const Expr::Tag& vel2Tag,\
+                                                                                                const Expr::Tag& dilTag,\
+                                                                                                Expr::ExpressionFactory& factory );
+  INSTANTIATE_SETUP_STRAIN(XVolField);
+  INSTANTIATE_SETUP_STRAIN(YVolField);
+  INSTANTIATE_SETUP_STRAIN(ZVolField);
   //==================================================================
 
 } // namespace Wasatch

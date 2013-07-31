@@ -333,7 +333,6 @@ CamClay::computeStressTensor(const PatchSubset* patches,
   Matrix3 one; one.Identity(); Matrix3 zero(0.0);
   double sqrtThreeTwo = sqrt(1.5);
   double sqrtTwoThird = 1.0/sqrtThreeTwo;
-  Ghost::GhostType  gac = Ghost::AroundCells;
   Vector waveSpeed(1.e-12,1.e-12,1.e-12);
   double rho_0 = matl->getInitialDensity();
   double totalStrainEnergy = 0.0;
@@ -368,14 +367,8 @@ CamClay::computeStressTensor(const PatchSubset* patches,
   for(int patchIndex=0; patchIndex<patches->size(); patchIndex++){
     const Patch* patch = patches->get(patchIndex);
 
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector>    d_S(interpolator->size());
-    vector<double>    S(interpolator->size());
-    
     // Get grid size
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
     // Get the set of particles
     int dwi = matl->getDWIndex();
@@ -383,24 +376,23 @@ CamClay::computeStressTensor(const PatchSubset* patches,
 
     // GET GLOBAL DATA 
 
-    // Get the deformation gradient (F)
-    constParticleVariable<Matrix3>  pDefGrad;
-    old_dw->get(pDefGrad, lb->pDeformationMeasureLabel, pset);
+    // Get the new volume, velocity gradient, and deformation gradient (F)
+    constParticleVariable<double>   pVol_new;
+    constParticleVariable<Matrix3>  pVelGrad_new, pDefGrad, pDefGrad_new;
+    new_dw->get(pVol_new,     lb->pVolumeLabel_preReloc,             pset);
+    new_dw->get(pVelGrad_new, lb->pVelGradLabel_preReloc,            pset);
+    new_dw->get(pDefGrad_new, lb->pDeformationMeasureLabel_preReloc, pset);
+    old_dw->get(pDefGrad,     lb->pDeformationMeasureLabel,          pset);
 
-    // Get the particle location, particle size, particle mass, particle volume
+    // Get the particle location, particle mass, particle volume
     constParticleVariable<Point>  px;
-    constParticleVariable<Matrix3> psize;
-    constParticleVariable<double> pMass, pVol_old;
+    constParticleVariable<double> pMass;
     old_dw->get(px,       lb->pXLabel,      pset);
-    old_dw->get(psize,    lb->pSizeLabel,   pset);
     old_dw->get(pMass,    lb->pMassLabel,   pset);
-    old_dw->get(pVol_old, lb->pVolumeLabel, pset);
 
-    // Get the velocity from the grid and particle velocity
+    // Get the particle velocity
     constParticleVariable<Vector> pVelocity;
-    constNCVariable<Vector>       gVelocity;
     old_dw->get(pVelocity, lb->pVelocityLabel, pset);
-    new_dw->get(gVelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
 
     // Get the particle stress 
     constParticleVariable<Matrix3> pStress_old;
@@ -419,16 +411,11 @@ CamClay::computeStressTensor(const PatchSubset* patches,
 
     // Create and allocate arrays for storing the updated information
     // GLOBAL
-    ParticleVariable<Matrix3> pDefGrad_new, pStress_new;
-    ParticleVariable<double>  pVol_new;
+    ParticleVariable<Matrix3> pStress_new;
     ParticleVariable<double>  pdTdt, p_q;
 
-    new_dw->allocateAndPut(pDefGrad_new,  
-                           lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pStress_new,      
                            lb->pStressLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pVol_new, 
-                           lb->pVolumeLabel_preReloc,             pset);
     new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,        pset);
     new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
 
@@ -460,59 +447,18 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       //-----------------------------------------------------------------------
       // Stage 1:
       //-----------------------------------------------------------------------
-      // Calculate the velocity gradient (L) from the grid velocity
-      Matrix3 velGrad(0.0);
-      if(!flag->d_axisymmetric){
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDefGrad[idx]);
-
-        computeVelocityGradient(velGrad,ni,d_S, oodx, gVelocity);
-      } else {  // axi-symmetric kinematics
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                                   psize[idx],pDefGrad[idx]);
-        // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gVelocity,px[idx]);
-      }
-
       // Calculate rate of deformation tensor (D)
-      Matrix3 rateOfDef_new = (velGrad + velGrad.Transpose())*0.5;
+      Matrix3 rateOfDef_new = (pVelGrad_new[idx] + pVelGrad_new[idx].Transpose())*0.5;
 
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient F_n^np1 = dudx * dt + Identity
-      // Update the deformation gradient tensor to its time n+1 value.
-      // Improve upon first order estimate of deformation gradient
-      // Update the deformation gradient using subcycling
-      double Lnorm_dt = velGrad.Norm()*delT;
-      int num_scs = max(1, 2*((int) Lnorm_dt));
-      if (num_scs > 1000){
-        cout << "NUM_SCS = " << num_scs << endl;
-      }
-
-      double dtsc = delT/(double (num_scs));
-      Matrix3 defGrad_new = pDefGrad[idx];
-      Matrix3 defGradInc = one + velGrad*dtsc;
-      for(int n=0;n<num_scs;n++){
-        defGrad_new = defGradInc*defGrad_new;
-      }
-
-      pDefGrad_new[idx] = defGrad_new;
-      double J_new = defGrad_new.Determinant();
-
-      if (cout_CC_F.active()) {
-        cout_CC_F << "CamClay: idx = " << idx << " F_old = " << pDefGrad[idx] << " F_new = " << defGrad_new << " L = " << velGrad << endl;
-      }
+      // Calculate J
+      double J_new = pDefGrad_new[idx].Determinant();
 
       // Check 1: Check for negative Jacobian (determinant of deformation gradient)
       if (!(J_new > 0.0)) {
         cerr << getpid() 
              << "**ERROR** Negative Jacobian of deformation gradient" 
              << " in particle " << idx << " of mass = " << pMass[idx] << endl;
-        cerr << "l = " << velGrad << endl;
-        cerr << "F_old = " << pDefGrad[idx] << endl;
-        cerr << "F_inc = " << defGradInc << endl;
-        cerr << "F_new = " << defGrad_new << endl;
-        cerr << "J_old = " << pDefGrad[idx].Determinant() << endl;
+        cerr << "F_new = " << pDefGrad_new[idx] << endl;
         cerr << "J_new = " << J_new << endl;
         cerr << " strain_old = " << pStrain_old[idx] << endl;
         cerr << " elastic_strain_old = " << pElasticStrain_old[idx] << endl;
@@ -522,7 +468,6 @@ CamClay::computeStressTensor(const PatchSubset* patches,
 
       // Calculate the current mass density and deformed volume
       double rho_cur = rho_0/J_new;
-      pVol_new[idx]=pMass[idx]/rho_cur;
 
       // Compute polar decompositions of F_old and F_new (F = RU)
       Matrix3 rightStretch_old; rightStretch_old.Identity();
@@ -530,7 +475,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       pDefGrad[idx].polarDecompositionRMB(rightStretch_old, rotation_old);
       Matrix3 rightStretch_new; rightStretch_new.Identity();
       Matrix3 rotation_new; rotation_new.Identity();
-      defGrad_new.polarDecompositionRMB(rightStretch_new, rotation_new);
+      pDefGrad_new[idx].polarDecompositionRMB(rightStretch_new, rotation_new);
 
       // Unrotate the spatial rate of deformation tensor and elastic strain
       rateOfDef_new = (rotation_old.Transpose())*(rateOfDef_new*rotation_old);
@@ -836,11 +781,8 @@ CamClay::computeStressTensor(const PatchSubset* patches,
             //desc << " p_old = " << p << " q_old = " << q << " pc_old = " << pc_n << " f_old = " << ftrial << endl;
             desc << " p = " << p << " q = " << q << " pc = " << pc << " f = " << fyield << endl
                       << " eps_v_e = " << strain_elast_v << " eps_s_e = " << strain_elast_s << endl;
-            desc <<  "L = " << velGrad << endl;
-            desc << "F_old = " << pDefGrad[idx] << endl;
-            desc << "F_inc = " << defGradInc << endl;
-            desc << "F_new = " << defGrad_new << endl;
-            desc << "J_old = " << pDefGrad[idx].Determinant() << endl;
+            desc <<  "L = " << pVelGrad_new[idx] << endl;
+            desc << "F_new = " << pDefGrad_new[idx] << endl;
             desc << "J_new = " << J_new << endl;
             throw ConvergenceFailure(desc.str(), iter_break, rtolf, tolf, __FILE__, __LINE__);
           }
@@ -937,7 +879,6 @@ CamClay::computeStressTensor(const PatchSubset* patches,
         flag->d_reductionVars->strainEnergy) {
       new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
     }
-    delete interpolator;
   }
 
   if (cout_CC.active()) 
@@ -1044,25 +985,3 @@ double CamClay::getCompressibility()
   return 1.0/d_eos->initialBulkModulus();
 }
 
-void
-CamClay::scheduleCheckNeedAddMPMMaterial(Task* task,
-                                         const MPMMaterial* ,
-                                         const PatchSet* ) const
-{
-  task->computes(lb->NeedAddMPMMaterialLabel);
-}
-
-void CamClay::checkNeedAddMPMMaterial(const PatchSubset* patches,
-                                      const MPMMaterial* matl,
-                                      DataWarehouse* ,
-                                      DataWarehouse* new_dw)
-{
-  if (cout_CC.active()) {
-    cout_CC << getpid() << "checkNeedAddMPMMaterial: In : Matl = " << matl
-            << " id = " << matl->getDWIndex() <<  " patch = "
-            << (patches->get(0))->getID();
-  }
-
-  double need_add=0.;
-  new_dw->put(sum_vartype(need_add),     lb->NeedAddMPMMaterialLabel);
-}

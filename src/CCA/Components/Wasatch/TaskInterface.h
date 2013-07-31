@@ -113,7 +113,8 @@ namespace Wasatch{
                    const Uintah::MaterialSet* const materials,
                    const PatchInfoMap& info,
                    const int RKStage,
-                   const std::set<std::string>& ioFieldSet );
+                   const std::set<std::string>& ioFieldSet,
+                   const bool lockAllFields=false);
 
     ~TaskInterface();
 

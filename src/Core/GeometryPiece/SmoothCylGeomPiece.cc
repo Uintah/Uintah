@@ -36,6 +36,10 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
+//______________________________________________________________________
+//    Note:  This is not intended to be used with the union, difference intersection
+//           operators.
+//______________________________________________________________________
 
 
 const string SmoothCylGeomPiece::TYPE_NAME = "smoothcyl";

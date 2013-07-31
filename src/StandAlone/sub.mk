@@ -313,12 +313,7 @@ link_tools:
 link_localRT:
 	@( if ! test -L StandAlone/localRT; then \
                echo "Creating link to localRT script." ; \
-	       ln -sf $(SRCTOP_ABS)/scripts/localRT StandAlone/localRT; \
-	   fi )
-link_regression_tester:
-	@( if ! test -L StandAlone/run_RT; then \
-               echo "Creating link to regression_tester script." ; \
-	       ln -sf $(SRCTOP_ABS)/scripts/regression_tester StandAlone/run_RT; \
+	       ln -sf $(SRCTOP_ABS)/R_Tester/toplevel/localRT StandAlone/localRT; \
 	   fi )
 
 # The REDSTORM portion of the following command somehow prevents Make, on Redstorm,

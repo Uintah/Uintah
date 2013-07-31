@@ -44,7 +44,7 @@ namespace Wasatch {
     } else if ( turbulenceModelName.compare("VREMAN") == 0 ) {
       turbParams.turbModelName = VREMAN;
     } else {
-      turbParams.turbModelName = NONE;
+      turbParams.turbModelName = NOTURBULENCE;
     }
     
     // get the eddy viscosity constant

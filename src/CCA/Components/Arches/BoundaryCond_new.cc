@@ -531,13 +531,12 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
 //---------------------------------------------------------------------------
 // Method: Set the area fraction for all cells
 //---------------------------------------------------------------------------
-void BoundaryCondition_new::setAreaFraction( 
-    const Patch* patch,
-    CCVariable<Vector>& areaFraction, 
-    CCVariable<double>&  volFraction, 
-    constCCVariable<int>& cellType, 
-    const int wallType, 
-    const int flowType )
+void BoundaryCondition_new::setAreaFraction( const Patch* patch,
+                                             CCVariable<Vector>& areaFraction, 
+                                             CCVariable<double>&  volFraction, 
+                                             constCCVariable<int>& cellType, 
+                                             vector<int> wallType, 
+                                             const int flowType )
 {
 
   // areaFraction is a vector with:
@@ -557,33 +556,43 @@ void BoundaryCondition_new::setAreaFraction(
     IntVector cyp = *iter + IntVector(0,1,0);
     IntVector czp = *iter + IntVector(0,0,1); 
 
-    // curr cell is a wall 
-    if ( cellType[c] == wallType ) {
-      areaFraction[c] = Vector(0.,0.,0.);
-      volFraction[c]  = 0.0;
-    }
+    vector<int>::iterator wt_iter; 
 
-    // x-minus is a wall but curr cell is flow 
-    if ( cellType[c] == flowType && cellType[cxm] == wallType ) {
-      Vector T = areaFraction[c]; 
-      T[0] = 0.;
-      areaFraction[c] = T;
-    }
+    for ( wt_iter = wallType.begin(); wt_iter != wallType.end(); wt_iter++ ){
 
-    // y-minus is a wall but curr cell is flow
-    if ( cellType[c] == flowType && cellType[cym] == wallType ) {
-      Vector T = areaFraction[c]; 
-      T[1] = 0.;
-      areaFraction[c] = T;
-    }
+      int type = *wt_iter; 
 
-    // z-minus is a wall but curr cell is flowType
-    if (cellType[c] == flowType && cellType[czm] == wallType ) {
-      Vector T = areaFraction[c]; 
-      T[2] = 0.;
-      areaFraction[c] = T;
+      // curr cell is a wall 
+      if ( cellType[c] == type ) {
+
+        areaFraction[c] = Vector(0.,0.,0.);
+        volFraction[c]  = 0.0;
+
+      }
+
+      // x-minus is a wall but curr cell is flow 
+      if ( cellType[c] == flowType && cellType[cxm] == type ) {
+        Vector T = areaFraction[c]; 
+        T[0] = 0.;
+        areaFraction[c] = T;
+      }
+
+      // y-minus is a wall but curr cell is flow
+      if ( cellType[c] == flowType && cellType[cym] == type ) {
+        Vector T = areaFraction[c]; 
+        T[1] = 0.;
+        areaFraction[c] = T;
+      }
+
+      // z-minus is a wall but curr cell is flowType
+      if (cellType[c] == flowType && cellType[czm] == type ) {
+        Vector T = areaFraction[c]; 
+        T[2] = 0.;
+        areaFraction[c] = T;
+      }
     }
   }
+
   //__________________________________
   // loop over computational domain faces
   vector<Patch::FaceType> bf;
@@ -595,15 +604,24 @@ void BoundaryCondition_new::setAreaFraction(
     Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
     
     for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+
       IntVector c = *iter;
-      if ( cellType[c] == wallType ){
 
-        int P_dir = patch->getFaceAxes(face)[0];  //principal dir.
+      vector<int>::iterator wt_iter; 
 
-        Vector T = areaFraction[c]; 
-        T[P_dir] = 0.;
-        areaFraction[c] = T; 
+      for ( wt_iter = wallType.begin(); wt_iter != wallType.end(); wt_iter++ ){
 
+        int type = *wt_iter; 
+
+        if ( cellType[c] == type ){
+
+          int P_dir = patch->getFaceAxes(face)[0];  //principal dir.
+
+          Vector T = areaFraction[c]; 
+          T[P_dir] = 0.;
+          areaFraction[c] = T; 
+
+        }
       }
     }
   }

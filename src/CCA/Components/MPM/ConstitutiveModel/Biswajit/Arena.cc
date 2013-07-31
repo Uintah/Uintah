@@ -96,13 +96,6 @@ Arena::Arena(ProblemSpecP& ps, MPMFlags* Mflag) : ConstitutiveModel(Mflag)
   ps->require("B0",d_cm.B0);
   ps->require("G0",d_cm.G0);
 
-  // Use subcyling for def grad calculation by default.  Else use
-  // Taylor series expansion
-  ps->getWithDefault("useTaylorSeriesForDefGrad", d_taylorSeriesForDefGrad, false);
-  if (d_taylorSeriesForDefGrad) {
-    ps->getWithDefault("num_taylor_terms", d_numTaylorTerms, 10);
-  } 
-
   d_intvar = UintahBB::InternalVariableModelFactory::create(ps);
   if(!d_intvar){
     ostringstream desc;
@@ -131,10 +124,6 @@ Arena::Arena(const Arena* cm) : ConstitutiveModel(cm)
   d_cm.B0 = cm->d_cm.B0;
   d_cm.G0 = cm->d_cm.G0;
 
-  // Taylor series for deformation gradient calculation
-  d_taylorSeriesForDefGrad = cm->d_taylorSeriesForDefGrad;
-  d_numTaylorTerms = cm->d_numTaylorTerms;
-
   d_intvar = UintahBB::InternalVariableModelFactory::createCopy(cm->d_intvar);
 
   initializeLocalMPMLabels();
@@ -156,8 +145,6 @@ Arena::~Arena()
   VarLabel::destroy(pKappaStateLabel_preReloc);
   VarLabel::destroy(pLocalizedLabel);
   VarLabel::destroy(pLocalizedLabel_preReloc);
-  VarLabel::destroy(pVelGradLabel);
-  VarLabel::destroy(pVelGradLabel_preReloc);
 
   delete d_intvar;
 }
@@ -185,11 +172,6 @@ void Arena::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("B0",d_cm.B0);
   cm_ps->appendElement("G0",d_cm.G0);
 
-  cm_ps->appendElement("useTaylorSeriesForDefGrad", d_taylorSeriesForDefGrad);
-  if (d_taylorSeriesForDefGrad) {
-    cm_ps->appendElement("num_taylor_terms", d_numTaylorTerms);
-  }
-
   d_intvar->outputProblemSpec(cm_ps);
 }
 
@@ -213,7 +195,6 @@ void Arena::initializeCMData(const Patch* patch,
   ParticleVariable<Matrix3> pBackStressIso;
   ParticleVariable<double> pKappaState;
   ParticleVariable<int> pLocalized;
-  ParticleVariable<Matrix3> pVelGrad;
   new_dw->allocateAndPut(pPlasticStrain,     pPlasticStrainLabel, pset);
   new_dw->allocateAndPut(pPlasticStrainVol,     pPlasticStrainVolLabel, pset);
   new_dw->allocateAndPut(pElasticStrainVol,     pElasticStrainVolLabel, pset);
@@ -221,7 +202,6 @@ void Arena::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pBackStressIso,  pBackStressIsoLabel, pset);
   new_dw->allocateAndPut(pKappaState,     pKappaStateLabel, pset);
   new_dw->allocateAndPut(pLocalized,      pLocalizedLabel,  pset);
-  new_dw->allocateAndPut(pVelGrad, pVelGradLabel, pset);
   ParticleSubset::iterator iter = pset->begin();
   Matrix3 Identity, zero(0.0);
   Identity.Identity();
@@ -233,7 +213,6 @@ void Arena::initializeCMData(const Patch* patch,
     pBackStressIso[*iter] = Identity*d_cm.fluid_pressure_initial;
     pKappaState[*iter] = 0.0;
     pLocalized[*iter] = 0.0;
-    pVelGrad[*iter] = zero;
   }
   computeStableTimestep(patch, matl, new_dw);
 
@@ -302,7 +281,6 @@ void Arena::computeStressTensor(const PatchSubset* patches,
                                       DataWarehouse* new_dw)
 {
   // Define some constants
-  Ghost::GhostType  gac   = Ghost::AroundCells;
   double one_third = 1.0/(3.0);
   double two_third = 2.0/(3.0);
   double four_third = 4.0/(3.0);
@@ -339,35 +317,25 @@ void Arena::computeStressTensor(const PatchSubset* patches,
     double J,c_dil=0.0,se=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-
-    // Declare the interpolator variables
-    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-    vector<double> S(interpolator->size());
 
     // Get particle subset for the current patch
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-    // Get the grid variables
-    constNCVariable<Vector> gvelocity;
-    new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
-
     // Get the particle variables
     delt_vartype delT;
     constParticleVariable<int>     pLocalized;
     constParticleVariable<double>  pmass, 
+                                   pvolume,
                                    pPlasticStrain, 
                                    pElasticStrainVol,
                                    pPlasticStrainVol,
                                    pKappaState;
     constParticleVariable<Point>   px;
     constParticleVariable<Vector>  pvelocity;
-    constParticleVariable<Matrix3> psize, 
-                                   pVelGrad,
-                                   pDefGrad, 
+    constParticleVariable<Matrix3> pVelGrad_new, 
+                                   pDefGrad_new, 
+                                   pDefGrad,
                                    stress_old,
                                    pBackStress,
                                    pBackStressIso;
@@ -381,36 +349,33 @@ void Arena::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pKappaState,         pKappaStateLabel,                   pset);
     old_dw->get(px,                  lb->pXLabel,                        pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,                 pset);
-    old_dw->get(psize,               lb->pSizeLabel,                     pset);
-    old_dw->get(pVelGrad,            pVelGradLabel,                      pset);
-    old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel,       pset);
     old_dw->get(stress_old,          lb->pStressLabel,                   pset);
     old_dw->get(pBackStress,         pBackStressLabel,                   pset);
     old_dw->get(pBackStressIso,      pBackStressIsoLabel,                pset);
 
+    new_dw->get(pvolume,             lb->pVolumeLabel_preReloc,             pset);
+    new_dw->get(pVelGrad_new,        lb->pVelGradLabel_preReloc,            pset);
+    new_dw->get(pDefGrad_new,        lb->pDeformationMeasureLabel_preReloc, pset);
+    old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel,          pset);
+
     // Allocate particle variables
     ParticleVariable<int>          pLocalized_new;
-    ParticleVariable<double>       pvolume, p_q, pdTdt, 
+    ParticleVariable<double>       p_q, pdTdt, 
                                    pPlasticStrain_new, 
                                    pElasticStrainVol_new,
                                    pPlasticStrainVol_new,
                                    pKappaState_new;
-    ParticleVariable<Matrix3>      pVelGrad_new,
-                                   pDefGrad_new, 
-                                   stress_new,
+    ParticleVariable<Matrix3>      stress_new,
                                    pBackStress_new,
                                    pBackStressIso_new;
 
     new_dw->allocateAndPut(pLocalized_new,        pLocalizedLabel_preReloc,              pset);
-    new_dw->allocateAndPut(pvolume,               lb->pVolumeLabel_preReloc,             pset);
     new_dw->allocateAndPut(p_q,                   lb->p_qLabel_preReloc,                 pset);
     new_dw->allocateAndPut(pdTdt,                 lb->pdTdtLabel_preReloc,               pset);
     new_dw->allocateAndPut(pPlasticStrain_new,    pPlasticStrainLabel_preReloc,          pset);
     new_dw->allocateAndPut(pElasticStrainVol_new, pElasticStrainVolLabel_preReloc,       pset);
     new_dw->allocateAndPut(pPlasticStrainVol_new, pPlasticStrainVolLabel_preReloc,       pset);
     new_dw->allocateAndPut(pKappaState_new,       pKappaStateLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pVelGrad_new,          pVelGradLabel_preReloc,                pset);
-    new_dw->allocateAndPut(pDefGrad_new,          lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(stress_new,            lb->pStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pBackStress_new,       pBackStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pBackStressIso_new,    pBackStressIsoLabel_preReloc,          pset);
@@ -441,56 +406,16 @@ void Arena::computeStressTensor(const PatchSubset* patches,
     for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;
 
-      //re-zero the velocity gradient:
-      pLocalized_new[idx]=pLocalized[idx];
-      Matrix3 velGrad(0.0);
-      if(!flag->d_axisymmetric){
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
-                                                   pDefGrad[idx]);
-        computeVelocityGradient(velGrad,ni,d_S, oodx, gvelocity);
-
-      } else {  // axi-symmetric kinematics
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                   psize[idx],pDefGrad[idx]);
-        // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
-      }
-      if (isnan(velGrad.Trace())) {
-        cerr << "Particle = " << idx <<  " velGrad = " << velGrad << endl;
-        cerr << "  " << " deformation gradient = " <<  pDefGrad[idx] << endl;
+      if (isnan(pVelGrad_new[idx].Trace())) {
+        cerr << "Particle = " << idx <<  " velGrad = " << pVelGrad_new[idx] << endl;
+        cerr << "  " << " deformation gradient = " <<  pDefGrad_new[idx] << endl;
         throw InvalidValue("**ERROR**: Nan in velocity gradient value", __FILE__, __LINE__);
       }
 
-      pVelGrad_new[idx] = velGrad;
-
-      // Update the deformation gradient, Old First Order Way
-      //pDefGrad_new[idx]=(velGrad_new*delT+Identity)*pDefGrad[idx];
-
-      // Improve upon first order estimate of deformation gradient
-      int num_scs = 1;
-      if (d_taylorSeriesForDefGrad) {
-        // Use Taylor series expansion
-        // Compute mid point velocity gradient
-        Matrix3 Amat = (pVelGrad[idx] + pVelGrad_new[idx])*(0.5*delT);
-        Matrix3 Finc = Amat.Exponential(d_numTaylorTerms);
-        Matrix3 Fnew = Finc*pDefGrad[idx];
-        pDefGrad_new[idx] = Fnew;
-      } else {
-        // Update the deformation gradient using subcycling
-        Matrix3 F=pDefGrad[idx];
-        double Lnorm_dt = velGrad.Norm()*delT;
-        num_scs = max(num_scs, 2*((int) Lnorm_dt));
-        if(num_scs > 1000){
-          cout << "NUM_SCS = " << num_scs << endl;
-        }
-        double dtsc = delT/(double (num_scs));
-        Matrix3 OP_velGrad_DT = Identity + velGrad*dtsc;
-        for(int n=0;n<num_scs;n++){
-          F=OP_velGrad_DT*F;
-        }
-        pDefGrad_new[idx]=F;
+      pLocalized_new[idx]=pLocalized[idx];
+      if (pLocalized_new[idx] < 0) {
+        /* WARNING :  TODO: Need to update variables */
+        continue;
       }
 
       // Compute the Jacobian and delete the particle in the case of negative Jacobian
@@ -499,18 +424,13 @@ void Arena::computeStressTensor(const PatchSubset* patches,
         cout<< "ERROR, negative J! "<<endl;
         cout<<"J= "<<J<<endl;
         cout<<"Fnew= "<< pDefGrad_new[idx] <<endl;
-        cout<<"Fold= "<<pDefGrad[idx]<<endl;
-        cout<<"L= "<<velGrad<<endl;
-        cout<<"num_scs= "<<num_scs<<endl;
+        cout<<"L= "   << pVelGrad_new[idx] <<endl;
         pLocalized_new[idx] = -999;
         cout<<"DELETING Arena particle " << endl;
-        J=1;
-        pDefGrad_new[idx] = Identity;
         //throw InvalidValue("**ERROR**:Negative Jacobian", __FILE__, __LINE__);
       }
 
-      // Update particle volume and density
-      pvolume[idx]=(pmass[idx]/rho_orig)*J;
+      // Update particle density
       rho_cur[idx] = rho_orig/J;
     }
 
@@ -574,11 +494,6 @@ void Arena::computeStressTensor(const PatchSubset* patches,
 
       // Compute the symmetric part of the velocity gradient
       Matrix3 D = (pVelGrad_new[idx] + pVelGrad_new[idx].Transpose())*0.5;
-      if (isnan(pVelGrad_new[idx].Trace())) {
-        cerr << "Particle = " << idx <<  " velGrad = " << pVelGrad_new[idx] << endl;
-        cerr << "  " << " rate of deformation = " <<  D << endl;
-        throw InvalidValue("**ERROR**: Nan in velocity gradient value", __FILE__, __LINE__);
-      }
 
       // Use polar decomposition to compute the rotation and stretch tensors
       Matrix3 tensorR, tensorU;
@@ -1670,8 +1585,6 @@ void Arena::computeStressTensor(const PatchSubset* patches,
     // Delete the ModelState pointer (don't need it any more)
     delete state;
 
-    delete interpolator;
-
   }
 
 }
@@ -1874,7 +1787,6 @@ void Arena::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pBackStressIsoLabel);
   from.push_back(pKappaStateLabel);
   from.push_back(pLocalizedLabel);
-  from.push_back(pVelGradLabel);
   to.push_back(pPlasticStrainLabel_preReloc);
   to.push_back(pPlasticStrainVolLabel_preReloc);
   to.push_back(pElasticStrainVolLabel_preReloc);
@@ -1882,7 +1794,6 @@ void Arena::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pBackStressIsoLabel_preReloc);
   to.push_back(pKappaStateLabel_preReloc);
   to.push_back(pLocalizedLabel_preReloc);
-  to.push_back(pVelGradLabel_preReloc);
 
   // Add the particle state for the internal variable models
   d_intvar->addParticleState(from, to);
@@ -1907,7 +1818,6 @@ void Arena::addInitialComputesAndRequires(Task* task,
   task->computes(pBackStressIsoLabel, matlset);
   task->computes(pKappaStateLabel,    matlset);
   task->computes(pLocalizedLabel,     matlset);
-  task->computes(pVelGradLabel,     matlset);
 
   // Add internal evolution variables computed by internal variable model
   d_intvar->addInitialComputesAndRequires(task, matl, patch);
@@ -1930,7 +1840,6 @@ void Arena::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pBackStressIsoLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, pKappaStateLabel,    matlset, Ghost::None);
   task->requires(Task::OldDW, pLocalizedLabel,     matlset, Ghost::None);
-  task->requires(Task::OldDW, pVelGradLabel,     matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pParticleIDLabel,     matlset, Ghost::None);
   task->computes(pPlasticStrainLabel_preReloc,     matlset);
   task->computes(pPlasticStrainVolLabel_preReloc,  matlset);
@@ -1939,7 +1848,6 @@ void Arena::addComputesAndRequires(Task* task,
   task->computes(pBackStressIsoLabel_preReloc,     matlset);
   task->computes(pKappaStateLabel_preReloc,        matlset);
   task->computes(pLocalizedLabel_preReloc,         matlset);
-  task->computes(pVelGradLabel_preReloc,         matlset);
 
   // Add internal evolution variables computed by internal variable model
   d_intvar->addComputesAndRequires(task, matl, patches);
@@ -2044,11 +1952,6 @@ void Arena::initializeLocalMPMLabels()
     ParticleVariable<int>::getTypeDescription());
   pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
     ParticleVariable<int>::getTypeDescription());
-  pVelGradLabel = VarLabel::create("p.velGrad",
-    ParticleVariable<Matrix3>::getTypeDescription());
-  pVelGradLabel_preReloc = VarLabel::create("p.velGrad+",
-    ParticleVariable<Matrix3>::getTypeDescription());
-
 }
 
 //--------------------------------------------------------------------------

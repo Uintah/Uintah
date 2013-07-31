@@ -70,11 +70,13 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
 
         src_db->getWithDefault("calc_frequency", _calc_freq,3);;  //default matches the default of the radiation solvers
         found_radiation_model = true; 
+        _rad_type = DORADIATION; 
 
       } else if ( type == "rmcrt_radiation" ) { 
 
         src_db->getWithDefault("calc_frequency", _calc_freq,3);;  //default matches the default of the radiation solvers
         found_radiation_model = true; 
+        _rad_type = RMCRT; 
 
       } 
     }
@@ -131,13 +133,18 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
   _T_label        = VarLabel::find( _T_label_name );
   _cellType_label = VarLabel::find( "cellType" );
-  _HF_E_label     = VarLabel::find( "radiationFluxE" );
-  _HF_W_label     = VarLabel::find( "radiationFluxW" );
-  _HF_N_label     = VarLabel::find( "radiationFluxN" );
-  _HF_S_label     = VarLabel::find( "radiationFluxS" );
-  _HF_T_label     = VarLabel::find( "radiationFluxT" );
-  _HF_B_label     = VarLabel::find( "radiationFluxB" );
   _cc_vel_label   = VarLabel::find( "CCVelocity" ); 
+
+  if ( _rad_type == DORADIATION ){
+    _HF_E_label     = VarLabel::find( "radiationFluxE" );
+    _HF_W_label     = VarLabel::find( "radiationFluxW" );
+    _HF_N_label     = VarLabel::find( "radiationFluxN" );
+    _HF_S_label     = VarLabel::find( "radiationFluxS" );
+    _HF_T_label     = VarLabel::find( "radiationFluxT" );
+    _HF_B_label     = VarLabel::find( "radiationFluxB" );
+  } else if ( _rad_type == RMCRT ){
+    _Total_HF_label = VarLabel::find( "boundFlux");
+  }
 
   if ( !check_varlabels() ){ 
     throw InvalidValue("Error: One of the varlabels for the wall model was not found.", __FILE__, __LINE__);
@@ -151,14 +158,22 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 
     task->requires( Task::OldDW, _cc_vel_label, Ghost::None, 0 ); 
     task->requires( Task::OldDW , _T_label        , Ghost::None , 0 ); 
-
     task->requires( Task::NewDW , _cellType_label , Ghost::None , 0 );
-    task->requires( Task::NewDW , _HF_E_label     , Ghost::None , 0 );
-    task->requires( Task::NewDW , _HF_W_label     , Ghost::None , 0 );
-    task->requires( Task::NewDW , _HF_N_label     , Ghost::None , 0 );
-    task->requires( Task::NewDW , _HF_S_label     , Ghost::None , 0 );
-    task->requires( Task::NewDW , _HF_T_label     , Ghost::None , 0 );
-    task->requires( Task::NewDW , _HF_B_label     , Ghost::None , 0 );
+
+    if ( _rad_type == DORADIATION ){
+
+      task->modifies( _HF_E_label  );
+      task->modifies( _HF_W_label  );
+      task->modifies( _HF_N_label  );
+      task->modifies( _HF_S_label  );
+      task->modifies( _HF_T_label  );
+      task->modifies( _HF_B_label  );
+
+    } else if (_rad_type == RMCRT ) { 
+
+      task->modifies( _Total_HF_label ); 
+
+    }
 
   } else { 
 
@@ -201,20 +216,48 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 
       new_dw->getModifiable(  vars.T, _T_label, _matl_index   , patch ); 
       new_dw->allocateAndPut( vars.T_copy     , _T_copy_label , _matl_index, patch ); 
-
       new_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::None, 0 );
-      new_dw->get(   vars.incident_hf_e     , _HF_E_label     , _matl_index , patch , Ghost::None, 0 );
-      new_dw->get(   vars.incident_hf_w     , _HF_W_label     , _matl_index , patch , Ghost::None, 0 );
-      new_dw->get(   vars.incident_hf_n     , _HF_N_label     , _matl_index , patch , Ghost::None, 0 );
-      new_dw->get(   vars.incident_hf_s     , _HF_S_label     , _matl_index , patch , Ghost::None, 0 );
-      new_dw->get(   vars.incident_hf_t     , _HF_T_label     , _matl_index , patch , Ghost::None, 0 );
-      new_dw->get(   vars.incident_hf_b     , _HF_B_label     , _matl_index , patch , Ghost::None, 0 );
+
+      if ( _rad_type == DORADIATION ){
+
+        new_dw->getModifiable(   vars.incident_hf_e     , _HF_E_label     , _matl_index , patch  );
+        new_dw->getModifiable(   vars.incident_hf_w     , _HF_W_label     , _matl_index , patch  );
+        new_dw->getModifiable(   vars.incident_hf_n     , _HF_N_label     , _matl_index , patch  );
+        new_dw->getModifiable(   vars.incident_hf_s     , _HF_S_label     , _matl_index , patch  );
+        new_dw->getModifiable(   vars.incident_hf_t     , _HF_T_label     , _matl_index , patch  );
+        new_dw->getModifiable(   vars.incident_hf_b     , _HF_B_label     , _matl_index , patch  );
+
+      } else if ( _rad_type == RMCRT ){
+
+        CCVariable<Stencil7> total_hf; 
+        new_dw->getModifiable( total_hf, _Total_HF_label, _matl_index, patch, Ghost::None, 0 );
+        new_dw->allocateTemporary( vars.incident_hf_e, patch );
+        new_dw->allocateTemporary( vars.incident_hf_w, patch );
+        new_dw->allocateTemporary( vars.incident_hf_n, patch );
+        new_dw->allocateTemporary( vars.incident_hf_s, patch );
+        new_dw->allocateTemporary( vars.incident_hf_t, patch );
+        new_dw->allocateTemporary( vars.incident_hf_b, patch );
+
+        for (CellIterator iter=patch->getCellIterator();
+                         !iter.done(); iter++){
+
+          //copy because RMCRT has fluxes stored in Stencil7 container: 
+          IntVector c = *iter; 
+          vars.incident_hf_e[c] = total_hf[c].e;
+          vars.incident_hf_w[c] = total_hf[c].w; 
+          vars.incident_hf_n[c] = total_hf[c].n;
+          vars.incident_hf_s[c] = total_hf[c].s; 
+          vars.incident_hf_t[c] = total_hf[c].t;
+          vars.incident_hf_b[c] = total_hf[c].b; 
+
+        }
+      }
 
       std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
 
       for ( iter = _all_ht_models.begin(); iter != _all_ht_models.end(); iter++ ){
 
-        (*iter)->computeHT( patch, vars );
+        (*iter)->computeHT( patch, vars, vars.T );
 
       }
 
@@ -310,7 +353,7 @@ WallModelDriver::SimpleHT::problemSetup( const ProblemSpecP& input_db ){
 
 //----------------------------------
 void 
-WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars ){ 
+WallModelDriver::SimpleHT::computeHT( const Patch* patch, const HTVariables& vars, CCVariable<double>& T ){ 
 
   double T_wall, net_q;
   vector<Patch::FaceType> bf;
@@ -360,7 +403,7 @@ WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars ){
           T_wall = T_wall > _T_max ? _T_max : T_wall;
           T_wall = T_wall < _T_min ? _T_min : T_wall;
 
-          vars.T[adj] = ( 1.0 - _relax ) * vars.T_old[adj] + ( _relax ) * T_wall;
+          T[adj] = ( 1.0 - _relax ) * vars.T_old[adj] + ( _relax ) * T_wall;
 
       }
     }
@@ -441,7 +484,7 @@ WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){
 
 //----------------------------------
 void 
-WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars ){ 
+WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& vars, CCVariable<double>& T ){ 
 
   int num;
   double TW1, TW0, Tmax, Tmin, net_q, error, initial_error;
@@ -500,7 +543,7 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars ){
 
                     initial_error = fabs( TW0 - TW1 ) / TW1;
                     
-                    vars.T[c] = TW0;
+                    T[c] = TW0;
 
                     error = 1;
                     num = 0;
@@ -528,7 +571,7 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars ){
 
                     }
 
-                    vars.T[c] = (1-wi.relax)*vars.T_old[c]+wi.relax*TW0; 
+                    T[c] = (1-wi.relax)*vars.T_old[c]+wi.relax*TW0; 
 
                   } 
                 }

@@ -48,9 +48,13 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   _src_label      = VarLabel::create( src_name,  CC_double ); 
   _sigmaT4Label   = VarLabel::create("sigmaT4",  CC_double );
+  _extra_local_labels.push_back(_sigmaT4Label); 
   _abskgLabel     = VarLabel::create( "abskg",   CC_double );
+  _extra_local_labels.push_back(_abskgLabel); 
   _absorpLabel    = VarLabel::create( "absorp",  CC_double );
+  _extra_local_labels.push_back(_absorpLabel); 
   _abskpLabel     = VarLabel::create( "abskp",   CC_double ); 
+  _extra_local_labels.push_back(_abskpLabel); 
   _cellTypeLabel  = _labels->d_cellTypeLabel; 
   
   //Declare the source type: 
@@ -85,6 +89,7 @@ RMCRT_Radiation::~RMCRT_Radiation()
   VarLabel::destroy( _sigmaT4Label ); 
   VarLabel::destroy( _abskgLabel );
   VarLabel::destroy( _absorpLabel );
+  VarLabel::destroy( _abskpLabel ); 
 
   delete _prop_calculator; 
   delete _RMCRT; 
@@ -145,7 +150,6 @@ RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
   _ps->getWithDefault( "abskp_label", _abskp_label_name, "abskp" ); 
   _ps->getWithDefault( "psize_label", _size_label_name, "length");
   _ps->getWithDefault( "ptemperature_label", _pT_label_name, "temperature"); 
-
   //get the number of quadrature nodes and store it locally 
   _nQn_part = 0;
   if ( _ps->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") ){
@@ -344,6 +348,9 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
         throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
       }
     }
+      
+    tsk->requires( Task::OldDW, _labels->d_volFractionLabel, Ghost::None, 0 ); 
+
     //particles
     for ( int i = 0; i < _nQn_part; i++ ){ 
 
@@ -390,6 +397,7 @@ RMCRT_Radiation::sched_radProperties( const LevelP& level,
     tsk->modifies( _abskgLabel );
     tsk->modifies( _abskpLabel ); 
     tsk->requires( Task::NewDW, _tempLabel, Ghost::None, 0 ); 
+    tsk->requires( Task::NewDW, _labels->d_volFractionLabel, Ghost::None, 0 ); 
 
     for ( std::vector<const VarLabel*>::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
       tsk->requires( Task::NewDW, *iter, Ghost::None, 0 ); 
@@ -425,6 +433,7 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
 
     std::vector<constCCVariable<double> > species; 
     constCCVariable<double> gas_temperature; 
+    constCCVariable<double> VolFractionBC; 
 
     const Patch* patch = patches->get(p);
 
@@ -444,6 +453,7 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
     }
 
     which_dw->get( gas_temperature, _tempLabel, _matl, patch, Ghost::None, 0 ); 
+    which_dw->get( VolFractionBC, _labels->d_volFractionLabel, _matl, patch, Ghost::None, 0 ); 
 
     typedef std::vector<constCCVariable<double> > CCCV; 
     typedef std::vector<const VarLabel*> CCCVL; 
@@ -452,8 +462,9 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
     CCCV size;
     CCCV pT; 
 
-    double weights_scaling_constant;
-    double size_scaling_constant;
+    double weights_scaling_constant=1.0;
+    double size_scaling_constant=1.0;
+
     DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
     string tlabelname;
 
@@ -499,9 +510,10 @@ RMCRT_Radiation::radProperties( const ProcessorGroup* ,
 
     // compute absorption (gas and particle) coefficient(s) via RadPropertyCalulator
     if ( _prop_calculator->does_scattering() ){
-      _prop_calculator->compute( patch, species, size_scaling_constant, size, pT, weights_scaling_constant, weights, _nQn_part, gas_temperature, abskg, abskp ); 
+      _prop_calculator->compute( patch, VolFractionBC, species, size_scaling_constant, size, pT, 
+          weights_scaling_constant, weights, _nQn_part, gas_temperature, abskg, abskp ); 
     } else { 
-      _prop_calculator->compute( patch, species, gas_temperature, abskg );
+      _prop_calculator->compute( patch, VolFractionBC, species, gas_temperature, abskg );
     } 
     
     // abskg boundary conditions are set in setBoundaryCondition()
@@ -529,19 +541,47 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   
   //__________________________________
   //  schedule the tasks
+std::cout << "test 1" << std::endl;
   for (int L=0; L< maxLevels; ++L){
   
+std::cout << "test 2" << std::endl;
     if( L != archesLevelIndex ){
-    
+   
+std::cout << "test 3" << std::endl;
+	 
       string taskname = "RMCRT_Radiation::sched_initialize"; 
       Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
 
       LevelP level = grid->getLevel(L);
       printSchedule(level,dbg,taskname);
+
+      for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
+           iter != _extra_local_labels.end(); iter++){
+
+        tsk->computes(*iter); 
+
+      }
       
       tsk->computes( _cellTypeLabel );
       sched->addTask(tsk, level->eachPatch(), _matlSet);
-    }
+    } else { 
+      string taskname = "RMCRT_Radiation::sched_initialize"; 
+      Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
+
+      LevelP level = grid->getLevel(L);
+      printSchedule(level,dbg,taskname);
+
+      tsk->computes(_src_label);
+
+      for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
+           iter != _extra_local_labels.end(); iter++){
+
+        tsk->computes(*iter); 
+
+      }
+      
+      sched->addTask(tsk, level->eachPatch(), _matlSet);
+    } 
 
   // THIS IS THE RIGHT WAY TO INITIALIZE cellType
   // The problem is _bc is not defined at this point in Arches::problemSetup
@@ -573,9 +613,24 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
     printTask(patches,patch,dbg,"Doing RMCRT_Radiation::initialize");
 
 
-    CCVariable<int> cellType;        // HACK UNTIL WE KNOW WHAT TO DO
-    new_dw->allocateAndPut( cellType,    _cellTypeLabel,    _matl, patch );
-    cellType.initialize( 0 ); 
+//    CCVariable<int> cellType;        // HACK UNTIL WE KNOW WHAT TO DO
+//    new_dw->allocateAndPut( cellType,    _cellTypeLabel,    _matl, patch );
+//    cellType.initialize( 0 ); 
+
+    CCVariable<double> src;
+
+    new_dw->allocateAndPut( src, _src_label, _matl, patch ); 
+
+    src.initialize(0.0); 
+
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
+         iter != _extra_local_labels.end(); iter++){
+
+      CCVariable<double> temp_var; 
+      new_dw->allocateAndPut(temp_var, *iter, _matl, patch ); 
+      temp_var.initialize(0.0);
+      
+    }
   }
 }
 

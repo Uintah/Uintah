@@ -181,6 +181,14 @@
         <BCType id="all" var="Neumann" label="rhof">
           <value> 0.0 </value>
         </BCType>
+
+        <BCType id="all" var="Neumann" label="f">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Neumann" label="density">
+          <value> 0.0 </value>
+        </BCType>
                 
         <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
           <value> 0.0 </value>
@@ -203,6 +211,14 @@
         </BCType>          
         
         <BCType id="all" var="Neumann" label="rhof">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Neumann" label="f">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Neumann" label="density">
           <value> 0.0 </value>
         </BCType>
 

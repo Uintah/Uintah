@@ -68,16 +68,16 @@ namespace Uintah {
 
       };
 
-    void compute( const Patch* patch, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
+      void compute( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
 
-      _calculator->computeProps( patch, species, mixT, abskg );
+      _calculator->computeProps( patch, VolFractionBC, species, mixT, abskg );
 
       };
 
-    void compute( const Patch* patch, RadCalcSpeciesList species, double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, 
-                  double weights_scaling_constant, RadCalcSpeciesList weights, const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp ){
+      void compute( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, 
+                    double weights_scaling_constant, RadCalcSpeciesList weights, const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp ){
 
-      _calculator->computePropsWithParticles( patch, species, size_scaling_constant, size, pT, weights_scaling_constant, weights, N, mixT, abskg, abskp ); 
+      _calculator->computePropsWithParticles( patch, VolFractionBC, species, size_scaling_constant, size, pT, weights_scaling_constant, weights, N, mixT, abskg, abskp ); 
 
       };
 
@@ -102,8 +102,11 @@ namespace Uintah {
           virtual ~PropertyCalculatorBase(){};
 
           virtual bool problemSetup( const ProblemSpecP& db )=0; 
-        virtual void computeProps( const Patch* patch, RadCalcSpeciesList species, constCCVariable<double>& mixT,  CCVariable<double>& abskg )=0; 
+          virtual void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, 
+                                     RadCalcSpeciesList species, constCCVariable<double>& mixT,  
+                                     CCVariable<double>& abskg )=0; 
           virtual void computePropsWithParticles( const Patch* patch,
+                                                  constCCVariable<double>& VolFractionBC,
                                                   RadCalcSpeciesList species,
                                                   double size_scaling_constant,
                                                   RadCalcSpeciesList size,
@@ -225,7 +228,7 @@ namespace Uintah {
           
           //__________________________________
           //
-        void computeProps( const Patch* patch, RadCalcSpeciesList species,  constCCVariable<double>& mixT, CCVariable<double>& abskg){ 
+          void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species,  constCCVariable<double>& mixT, CCVariable<double>& abskg){ 
 
             int N = species.size(); 
 
@@ -238,6 +241,7 @@ namespace Uintah {
               double effCff   = 0.0; 
               std::vector<double> mol_frac; 
               double T        = mixT[c];
+              double VolFraction = VolFractionBC[c];
 
               //convert mass frac to mol frac
               for ( int i = 1; i < N; i++ ){ 
@@ -246,24 +250,34 @@ namespace Uintah {
                 // as set in the problemsetup function.
                 // Also note that the mixture molecular weight arriving from the table
                 // is assumed to be the inverse mixture molecular weight
-                double value = (species[i])[c] * _sp_mw[i-1] * 1.0 / (species[0])[c];
-                //              ^^species^^^^    ^^1/MW^^^^^  ^^^^^MIX MW^^^^^^^^^^
+
+                double value = (species[0])[c]==0 ? 0.0 : (species[i])[c] * _sp_mw[i-1] * 1.0 / (species[0])[c];
+                //                                          ^^species^^^^    ^^1/MW^^^^^  ^^^^^MIX MW^^^^^^^^^^
+                
                 if ( value < 0 ){ 
                   throw InvalidValue( "Error: For some reason I am getting negative mol fractions in the scattering portion of radiation property calculator.",__FILE__,__LINE__);
-                       
                 } 
+
                 mol_frac.push_back(value); 
+
               } 
 
-              _gg_radprops->mixture_coeffs( plankCff, rossCff, effCff, mol_frac, T );
+              if ( VolFraction > 1.e-16 ){
 
-              abskg[c] = effCff; //need to generalize this to the other coefficients
+                _gg_radprops->mixture_coeffs( plankCff, rossCff, effCff, mol_frac, T );
 
+                abskg[c] = effCff; //need to generalize this to the other coefficients
+
+              } else { 
+
+                abskg[c] = 0.0; 
+
+              }
             }
 
           };
 
-          void computePropsWithParticles( const Patch* patch, RadCalcSpeciesList species, 
+        void computePropsWithParticles( const Patch* patch,  constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
                                           double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
                                           const int Nqn, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp ){
             int N = species.size(); 
@@ -277,48 +291,58 @@ namespace Uintah {
               double effCff   = 0.0; 
               std::vector<double> mol_frac; 
               double T        = mixT[c];
+              double VolFraction = VolFractionBC[c];
               double unscaled_weight;
               double unscaled_size;
 
               //convert mass frac to mol frac
               for ( int i = 1; i < N; i++ ){ 
-                double value = (species[i])[c] * _sp_mw[i-1] * 1.0/(species[0])[c];
-                //              ^^species^^^^    ^^1/MW^^^^^   ^^^^^MIX MW^^^^^^^^
-                //                  std::cout<<"molefr="<<value<<"massfr="<<species[i][c]<<"mw="<<1.0/_sp_mw[i-1]<<"mix_mw="<<1.0/species[0][c]<<"\n";
-                if ( value < 0 ){ 
+
+                double value = (species[0])[c]==0.0 ? 0.0 : (species[i])[c] * _sp_mw[i-1] * 1.0/(species[0])[c];
+                //                                           ^^species^^^^    ^^1/MW^^^^^   ^^^^^MIX MW^^^^^^^^
+
+                if(value<0){
                   throw InvalidValue( "Error: For some reason I am getting negative mol fractions in the radiation property calculator.",__FILE__,__LINE__);
-                } 
+                }
+
                 mol_frac.push_back(value); 
+
               } 
 
-              _gg_radprops->mixture_coeffs( plankCff, rossCff, effCff, mol_frac, T );
+              if ( VolFraction > 1.e-16 ){
 
-              abskg[c] = effCff; //need to generalize this to the other coefficients
+                _gg_radprops->mixture_coeffs( plankCff, rossCff, effCff, mol_frac, T );
+
+                abskg[c] = effCff; //need to generalize this to the other coefficients
               
-              //now compute the particle values: 
-              abskp[c] = 0.0; 
-              for ( int i = 0; i < Nqn; i++ ){ 
+                //now compute the particle values: 
+                abskp[c] = 0.0; 
+                for ( int i = 0; i < Nqn; i++ ){ 
 
-                unscaled_weight = (weights[i])[c]*weights_scaling_constant;
-                unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
-                if ( _p_planck_abskp ){ 
+                  unscaled_weight = (weights[i])[c]*weights_scaling_constant;
+                  unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
 
-                  double abskp_i = _part_radprops->planck_abs_coeff( unscaled_size, (pT[i])[c] );
-                  abskp[c] += abskp_i * unscaled_weight; 
-                  //                  std::cout<<"size="<<unscaled_size<<", "<<size_scaling_constant<<", pt="<<pT[i][c]<<", w="<<weights[i][c]<<", "<<weights_scaling_constant<<", abskp="<<abskp[c]<<", p_i="<<abskp_i<<"\n";
+                  if ( _p_planck_abskp ){ 
+
+                    double abskp_i = _part_radprops->planck_abs_coeff( unscaled_size, (pT[i])[c] );
+                    abskp[c] += abskp_i * unscaled_weight; 
                     
-                } else if ( _p_ros_abskp ){ 
+                  } else if ( _p_ros_abskp ){ 
 
-                  double abskp_i =  _part_radprops->ross_abs_coeff( unscaled_size, (pT[i])[c] );
-                  abskp[c] += abskp_i * unscaled_weight; 
+                    double abskp_i =  _part_radprops->ross_abs_coeff( unscaled_size, (pT[i])[c] );
+                    abskp[c] += abskp_i * unscaled_weight; 
 
-                } 
+                  } 
+                }
+
+                abskg[c] += abskp[c]; 
+
+              }else{    
+
+                abskp[c] = 0.0;
+                abskg[c] = 0.0;
+
               }
-
-              abskp[c] = abskp[c]<0.9 ? abskp[c] : 0.9; //to set upper bounds 0.9 for abskp 
-              abskg[c] += abskp[c]; 
-              abskg[c] = abskg[c]<1.0 ? abskg[c] : 1.0; //to set upper bounds 1.0 for abskg
-
             }
           };
 
@@ -365,11 +389,11 @@ namespace Uintah {
           
           //__________________________________
           //
-        void computeProps( const Patch* patch, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
+          void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
             abskg.initialize(_value); 
           }; 
 
-          void computePropsWithParticles( const Patch* patch, RadCalcSpeciesList species, 
+          void computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
                                           double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
                                           const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp ){
 
@@ -422,7 +446,7 @@ namespace Uintah {
           
           //__________________________________
           //
-        void computeProps( const Patch* patch, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
+          void computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
             
             BBox domain(_min,_max);
             
@@ -451,7 +475,7 @@ namespace Uintah {
             } 
           }; 
 
-          void computePropsWithParticles( const Patch* patch, RadCalcSpeciesList species, 
+          void computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
                                           double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
                                           const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp ){
 

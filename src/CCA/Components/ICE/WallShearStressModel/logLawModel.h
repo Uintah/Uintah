@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef _NEWTONIANMODEL_H_
-#define _NEWTONIANMODEL_H_
+#ifndef _LOGLAWMODEL_H_
+#define _LOGLAWMODEL_H_
 
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStress.h>
 
@@ -37,32 +37,47 @@ namespace Uintah {
     
     virtual ~logLawModel();
     
-    virtual void scheduleInitialize(SchedulerP& sched, 
-                                    const LevelP& level);
-
+    virtual void sched_Initialize(SchedulerP& sched, 
+                                  const LevelP& level,
+                                  const MaterialSet* matls);
+                                    
+    virtual void sched_AddComputeRequires(Task* task, 
+                                          const MaterialSubset* matls);
 
     virtual
-    void computeWallShearStresses( DataWarehouse* new_dw,
+    void computeWallShearStresses( DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw,
                                    const Patch* patch,
+                                   const int indx,
                                    constCCVariable<double>& vol_frac_CC,  
                                    constCCVariable<Vector>& vel_CC,      
                                    const CCVariable<double>& viscosity,        
                                    SFCXVariable<Vector>& tau_X_FC,
                                    SFCYVariable<Vector>& tau_Y_FC,
                                    SFCZVariable<Vector>& tau_Z_FC );
-
     private:
     
     //__________________________________
     //
     template<class T> 
-    void wallShearStresses(DataWarehouse* new_dw,
+    void wallShearStresses(DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
                            const Patch* patch,
+                           const int indx,
                            constCCVariable<double>& vol_frac_CC,
                            constCCVariable<Vector>& vel_CC,
                            T& Tau_FC);
+                           
+    void Initialize(const ProcessorGroup*, 
+                    const PatchSubset* ,
+                    const MaterialSubset* ,
+                    DataWarehouse*, 
+                    DataWarehouse*);
     
-    
+      const VarLabel* d_roughnessLabel;
+      const VarLabel* d_roughnessLabel2;
+      
+      SimulationStateP d_sharedState;
       Patch::FaceType d_face;
       double d_roughnessConstant;
       double d_vonKarman; 

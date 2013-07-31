@@ -1065,7 +1065,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
       //__________________________________
       //  Compute divQ
       divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/_NoOfRays) );
-      radiationVolq[origin] = -divQ[origin] / abskg[origin]; // The minus sign is necessary due to the way the enthalpy source term is defined
+      // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
+      radiationVolq[origin] = 4.0 * _pi * abskg[origin] *  (sumI/_NoOfRays) ; 
       //} // end quick debug testing
     }  // end cell iterator
   } // end of if(_solveDivQ)

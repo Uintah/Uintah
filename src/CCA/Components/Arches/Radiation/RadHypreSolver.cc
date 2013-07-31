@@ -410,8 +410,6 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
   skip = 1;
   HYPRE_StructSolver solver, precond;
 
-  
-  int me = d_myworld->myrank();
   double start_time = Time::currentSeconds();
 
   if (d_kspType == "1") {

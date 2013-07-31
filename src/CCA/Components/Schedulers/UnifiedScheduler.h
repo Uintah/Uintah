@@ -33,11 +33,6 @@
 
 namespace Uintah {
 
-
-using std::vector;
-using std::map;
-using std::queue;
-using std::set;
 using std::ofstream;
 
 class Task;
@@ -64,7 +59,7 @@ KEYWORDS
    Task Scheduler, Multi-threaded, CPU, GPU, MIC
 
 DESCRIPTION
-   This class is meant to be serve as a single, unified, multi-threaded
+   This class is meant to be serve as a single-processor, unified, multi-threaded
    Uintah task scheduler to support, schedule and execute solely CPU tasks
    or some combination of CPU, GPU and MIC tasks when enabled.
   
@@ -129,27 +124,19 @@ WARNING
 
     void requestD2HCopy(const VarLabel* label, int matlIndex, const Patch* patch, cudaStream_t* stream, cudaEvent_t* event);
 
-    void createCudaStreams(int numStreams, int device);
-
-    void createCudaEvents(int numEvents, int device);
-
     cudaStream_t* getCudaStream(int device);
 
     cudaEvent_t* getCudaEvent(int device);
-
-    void addCudaStream(cudaStream_t* stream, int device);
-
-    void addCudaEvent(cudaEvent_t* event, int device);
 
     enum CopyType { H2D, D2H };
 
 #endif
 
     /* thread shared data, needs lock protection when accessed */
-    vector<int>           phaseTasks;
-    vector<int>           phaseTasksDone;
-    vector<DetailedTask*> phaseSyncTask;
-    vector<int>           histogram;
+    std::vector<int>           phaseTasks;
+    std::vector<int>           phaseTasksDone;
+    std::vector<DetailedTask*> phaseSyncTask;
+    std::vector<int>           histogram;
     DetailedTasks*        dts;
     int   currentIteration;
     int   numTasksDone;
@@ -187,6 +174,14 @@ WARNING
 
     void h2dComputesCopy (DetailedTask* dtask, const VarLabel* label, int matlIndex, const Patch* patch, IntVector size, double* h_compData);
 
+    void createCudaStreams(int numStreams, int device);
+
+    void createCudaEvents(int numEvents, int device);
+
+    void addCudaStream(cudaStream_t* stream, int device);
+
+    void addCudaEvent(cudaEvent_t* event, int device);
+
     void reclaimStreams(DetailedTask* dtask, CopyType type);
 
     void reclaimEvents(DetailedTask* dtask, CopyType type);
@@ -213,15 +208,17 @@ WARNING
       }
     };
 
-    map<VarLabelMatl<Patch>, GPUGridVariable> deviceRequiresPtrs;
-    map<VarLabelMatl<Patch>, GPUGridVariable> deviceComputesPtrs;
-    map<VarLabelMatl<Patch>, GPUGridVariable> hostRequiresPtrs;
-    map<VarLabelMatl<Patch>, GPUGridVariable> hostComputesPtrs;
-    vector<queue<cudaStream_t*> >  idleStreams;
-    vector<queue<cudaEvent_t*> >   idleEvents;
-    set<double*>  pinnedHostPtrs;
+    std::set<double*>  pinnedHostPtrs;
     int           numDevices_;
     int           currentDevice_;
+
+    /* thread shared data, needs lock protection when accessed */
+    std::map<VarLabelMatl<Patch>, GPUGridVariable> deviceRequiresPtrs;
+    std::map<VarLabelMatl<Patch>, GPUGridVariable> deviceComputesPtrs;
+    std::map<VarLabelMatl<Patch>, GPUGridVariable> hostRequiresPtrs;
+    std::map<VarLabelMatl<Patch>, GPUGridVariable> hostComputesPtrs;
+    std::vector<std::queue<cudaStream_t*> >  idleStreams;
+    std::vector<std::queue<cudaEvent_t*> >   idleEvents;
 
     // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)
     mutable CrowdMonitor deviceComputesLock_;
