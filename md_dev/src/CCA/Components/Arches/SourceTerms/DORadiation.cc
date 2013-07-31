@@ -117,12 +117,12 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   }
   
   proc0cout << " --- DO Radiation Model Summary: --- " << endl;
-  proc0cout << "   -> calculation frequency: " << _radiation_calc_freq << endl;
-  proc0cout << "   -> co2 label name:    " << _co2_label_name << endl; 
-  proc0cout << "   -> h20 label name:    " << _h2o_label_name << endl;
-  proc0cout << "   -> T label name:      " << _T_label_name << endl;
-  proc0cout << "   -> absorp label name: " << _abskp_label_name << endl;
-  proc0cout << "   -> soot label name:   " << _soot_label_name << endl;
+  proc0cout << "   -> calculation frequency:     " << _radiation_calc_freq << endl;
+  proc0cout << "   -> co2 label name:            " << _co2_label_name << endl; 
+  proc0cout << "   -> h20 label name:            " << _h2o_label_name << endl;
+  proc0cout << "   -> T label name:              " << _T_label_name << endl;
+  proc0cout << "   -> absorp label name:         " << _abskp_label_name << endl;
+  proc0cout << "   -> soot label name:           " << _soot_label_name << endl;
   proc0cout << " --- end DO Radiation Summary ------ " << endl;
 
   _DO_model = scinew DORadiationModel( _labels, _MAlab, _bc, _my_world ); 
@@ -223,11 +223,13 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       } 
 
       tsk->requires( Task::OldDW, _T_label, gac, 1 ); 
+      tsk->requires( Task::OldDW, _labels->d_volFractionLabel, gac, 1);
     } else { 
 
       tsk->requires( Task::OldDW, _co2_label, gn,  0 ); 
       tsk->requires( Task::OldDW, _h2o_label, gn,  0 ); 
       tsk->requires( Task::OldDW, _T_label,   gac, 1 ); 
+      tsk->requires( Task::OldDW, _labels->d_volFractionLabel,   gac, 1 ); 
       tsk->requires( Task::OldDW, _soot_label, gn, 0 ); 
 
     }
@@ -266,12 +268,27 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
       } 
 
       tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
+      tsk->requires( Task::NewDW, _labels->d_volFractionLabel, gac, 1 ); 
+
+      for ( int i = 0; i < _nQn_part; i++ ){ 
+
+        //--size--
+        tsk->requires( Task::NewDW, _size_varlabels[i], Ghost::None, 0 ); 
+
+        //--temperature--
+        tsk->requires( Task::NewDW, _T_varlabels[i], Ghost::None, 0 ); 
+
+        //--weight--
+        tsk->requires( Task::NewDW, _w_varlabels[i], Ghost::None, 0 ); 
+
+      } 
 
     } else { 
 
       tsk->requires( Task::NewDW, _co2_label, gn,  0 ); 
       tsk->requires( Task::NewDW, _h2o_label, gn,  0 ); 
       tsk->requires( Task::NewDW, _T_label,   gac, 1 ); 
+      tsk->requires( Task::NewDW, _labels->d_volFractionLabel,   gac, 1 ); 
       tsk->requires( Task::NewDW, _soot_label, gn, 0); 
     }
 
@@ -335,6 +352,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
     constCCVariable<double> mixT;
+    constCCVariable<double> VolFractionBC;
     typedef std::vector<constCCVariable<double> > CCCV; 
     typedef std::vector<const VarLabel*> CCCVL; 
 
@@ -343,8 +361,9 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     CCCV size;
     CCCV pT; 
 
-    double weights_scaling_constant;
-    double size_scaling_constant;
+    double weights_scaling_constant=1.0;
+    double size_scaling_constant=1.0;
+
     DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
     string tlabelname;
 
@@ -392,6 +411,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
         old_dw->getCopy( radiation_vars.temperature, _T_label, matlIndex , patch , gac , 1 );
         old_dw->get( mixT, _T_label, matlIndex , patch , gac , 1 );
+        old_dw->get( VolFractionBC, _labels->d_volFractionLabel , matlIndex , patch , gac , 1 );
 
       } else { 
 
@@ -471,6 +491,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
         new_dw->getCopy( radiation_vars.temperature, _T_label, matlIndex , patch , gac , 1 );
         new_dw->get( mixT, _T_label, matlIndex , patch , gac , 1 );
+        new_dw->get( VolFractionBC, _labels->d_volFractionLabel, matlIndex , patch , gac , 1 );
 
       } else { 
 
@@ -514,24 +535,23 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
           if ( _prop_calculator->does_scattering() ){ 
 
-            _prop_calculator->compute( patch, species, size_scaling_constant, size, pT, weights_scaling_constant, weights, _nQn_part, mixT, radiation_vars.ABSKG, radiation_vars.ABSKP); 
+            _prop_calculator->compute( patch, VolFractionBC, species, size_scaling_constant, size, pT, 
+                weights_scaling_constant, weights, _nQn_part, mixT, radiation_vars.ABSKG, radiation_vars.ABSKP); 
             //            to calculate blackbody emissive flux
             for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
 
               IntVector c = *iter;
               radiation_vars.ESRCG[c] = 1.0*5.67e-8/M_PI*radiation_vars.ABSKG[c]*pow(mixT[c],4);
-              //              std::cout<<"Lu_abskg!!!="<<radiation_vars.ABSKG[c]<<"ESRCT="<<radiation_vars.ESRCG[c]<<endl;
             }
           } else { 
 
-            _prop_calculator->compute( patch, species, mixT, radiation_vars.ABSKG);
+            _prop_calculator->compute( patch, VolFractionBC, species, mixT, radiation_vars.ABSKG);
 
             //            to calculate blackbody emissive flux
             for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
 
               IntVector c = *iter;
               radiation_vars.ESRCG[c] = 1.0*5.67e-8/M_PI*radiation_vars.ABSKG[c]*pow(mixT[c],4);
-              //              std::cout<<"Lu_abskg!!!="<<radiation_vars.ABSKG[c]<<"ESRCT="<<radiation_vars.ESRCG[c]<<endl;
             }
           } 
         } else { 

@@ -299,8 +299,22 @@ Parallel::getMPISize()
 }
 
 void
-Parallel::finalizeManager(Circumstances circumstances)
+Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
 {
+  static bool finalized = false;
+
+  if( finalized ) {
+    // Due to convoluted logic, signal, and exception handling,
+    // finalizeManager() can be easily/mistakenly called multiple
+    // times.  This catches that case and returns harmlessly.
+    //
+    // (One example of this occurs when MPI_Abort causes an SIG_TERM
+    // to be thrown, which is caught by Uintah's exit handler, which
+    // in turn calls finalizeManager.)
+    return;
+  }
+  finalized = true;
+
   // worldRank is not reset here as even after finalizeManager,
   // some things need to know their rank...
 
@@ -316,7 +330,7 @@ Parallel::finalizeManager(Circumstances circumstances)
         errorcode = (errorcode << 16) + 1; // see LAM man MPI_Abort
       }
       if (Parallel::getMPIRank() == 0) {
-        cout << "An exception was thrown... Goodbye.\n";
+        cout << "FinalizeManager() called... Calling MPI_Abort.\n";
       }
       cerr.flush();
       cout.flush();
@@ -334,8 +348,8 @@ Parallel::finalizeManager(Circumstances circumstances)
     rootContext=0;
   }
 
-  //MPI can no longer be used
-  determinedIfUsingMPI=false;
+  // MPI can no longer be used.
+  determinedIfUsingMPI = false;
 }
 
 ProcessorGroup*

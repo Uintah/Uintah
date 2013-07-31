@@ -45,12 +45,11 @@ NIGHTLYTESTS = [
                   ("adiCuPTW4000s696K",                   "adiCuPTW4000s696K.ups",                   1,  "Linux", ["exactComparison"] ),  
                   ("adiCuSCG4000s696K",                   "adiCuSCG4000s696K.ups",                   1,  "Linux", ["exactComparison"] ),  
                   ("adiCuZA4000s696K",                    "adiCuZA4000s696K.ups",                    1,  "Linux", ["exactComparison"] ),  
-                  ("test_corrug_plate",                   "test_corrug_plate.ups",                   1,  "Linux", ["exactComparison"] ),  
                   ("test_cyl_pene_no_ero",                "test_cyl_pene_no_ero.ups",                1,  "Linux", ["exactComparison"] ),  
                   ("test_gurson_beckerdrucker_mts",       "test_gurson_beckerdrucker_mts.ups",       1,  "Linux", ["exactComparison"] ),  
                   ("test_hypoviscoelastic_radial_return", "test_hypoviscoelastic_radial_return.ups", 1,  "Linux", ["exactComparison"] ),  
                   ("advect_3L_3D",                        "advect_3L_3D.ups",                        4,  "Linux", ["exactComparison", "no_restart"] ),  
-                  ("advect_2L_3D_slabs",                  "advect_2L_3D_slabs.ups",                  3,  "Linux", [ "no_restart"] ),  
+                  ("advect_2L_3D_slabs",                  "advect_2L_3D_slabs.ups",                  3,  "Linux", [ "no_restart","no_dbg"] ),  
                   ("advect_2L_3D_edges",                  "advect_2L_3D_edges.ups",                  1,  "Linux", ["exactComparison", "no_restart"] ),  
                   ("riemannMPM_ML",                       "riemannMPM_ML.ups",                       1,  "Linux", ["exactComparison"] ),  
                   ("Charpy",                              "Charpy.ups",                              8,  "Linux", ["exactComparison"] ),  
@@ -80,7 +79,6 @@ NIGHTLYTESTS = [
                   ("adiCuPTW4000s696K",                   "adiCuPTW4000s696K.ups",                   1,  "Darwin", ["doesTestRun"]    ),     
                   ("adiCuSCG4000s696K",                   "adiCuSCG4000s696K.ups",                   1,  "Darwin", ["doesTestRun"]    ),     
                   ("adiCuZA4000s696K",                    "adiCuZA4000s696K.ups",                    1,  "Darwin", ["doesTestRun"]    ),     
-                  ("test_corrug_plate",                   "test_corrug_plate.ups",                   1,  "Darwin", ["doesTestRun"]    ),     
                   ("test_cyl_pene_no_ero",                "test_cyl_pene_no_ero.ups",                1,  "Darwin", ["doesTestRun"]    ),     
                   ("test_gurson_beckerdrucker_mts",       "test_gurson_beckerdrucker_mts.ups",       1,  "Darwin", ["doesTestRun"]    ),
                   
@@ -101,23 +99,31 @@ NIGHTLYTESTS = [
               
 # Tests that are run during local regression testing              
 LOCALTESTS = NIGHTLYTESTS
+DEBUGTESTS =[]
 
 #__________________________________
+# The following list is parsed by the local RT script
+# and allows the user to select the tests to run
+#LIST: LOCALTESTS DEUGTESTS NIGHTLYTESTS
+#__________________________________
 
-def getNightlyTests() :
-  return NIGHTLYTESTS
-
-def getLocalTests() :
-  return LOCALTESTS
-
+# returns the list  
+def getTestList(me) :
+  if me == "LOCALTESTS":
+    TESTS = LOCALTESTS
+  elif me == "DEBUGTESTS":
+    TESTS = DEBUGTESTS
+  elif me == "NIGHTLYTESTS":
+    TESTS = NIGHTLYTESTS
+  else:
+    print "\nERROR:MPM.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    exit(1)
+  return TESTS
 #__________________________________
 
 if __name__ == "__main__":
 
-  if environ['WHICH_TESTS'] == "local":
-    TESTS = LOCALTESTS
-  else:
-    TESTS = NIGHTLYTESTS
+  TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "MPM")
   exit( result )

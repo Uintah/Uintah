@@ -48,23 +48,30 @@ LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",
                ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "Linux", ["do_performance_test"]), \
                ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "Linux", ["exactComparison"])
              ]
-
+DEBUGTESTS =[]
 #__________________________________
+# The following list is parsed by the local RT script
+# and allows the user to select the tests to run
+#LIST: LOCALTESTS DEUGTESTS NIGHTLYTESTS
+#___________________________________
 
-def getNightlyTests() :
-  return NIGHTLYTESTS
-
-def getLocalTests() :
-  return LOCALTESTS
-
+# returns the list  
+def getTestList(me) :
+  if me == "LOCALTESTS":
+    TESTS = LOCALTESTS
+  elif me == "DEBUGTESTS":
+    TESTS = DEBUGTESTS
+  elif me == "NIGHTLYTESTS":
+    TESTS = NIGHTLYTESTS
+  else:
+    print "\nERROR:UCF.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    exit(1)
+  return TESTS
 #__________________________________
 
 if __name__ == "__main__":
 
-  if environ['WHICH_TESTS'] == "local":
-    TESTS = LOCALTESTS
-  else:
-    TESTS = NIGHTLYTESTS
+  TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "UCF")
   exit( result )

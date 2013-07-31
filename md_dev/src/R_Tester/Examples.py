@@ -44,20 +44,32 @@ LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1, "ALL", ["exac
                ]
                  #  ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",     1, "ALL", ["exactComparison"])
 
+DEBUGTESTS   =[]
+
 #__________________________________
-
-def getNightlyTests() :
-  return NIGHTLYTESTS
-
-def getLocalTests() :
-  return LOCALTESTS
+# The following list is parsed by the local RT script
+# and allows the user to select the tests to run
+#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
+#__________________________________
+  
+# returns the list  
+def getTestList(me) :
+  if me == "LOCALTESTS":
+    TESTS = LOCALTESTS
+  elif me == "DEBUGTESTS":
+    TESTS = DEBUGTESTS
+  elif me == "NIGHTLYTESTS":
+    TESTS = NIGHTLYTESTS
+  else:
+    print "\nERROR:Examples.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    exit(1)
+  return TESTS
 
 #__________________________________
 
 if __name__ == "__main__":
-  if environ['WHICH_TESTS'] == "local":
-    TESTS = LOCALTESTS
-  else:
-    TESTS = NIGHTLYTESTS
+
+  TESTS = getTestList( environ['WHICH_TESTS'] )   
+    
   result = runSusTests(argv, TESTS, "Examples")
   exit( result )

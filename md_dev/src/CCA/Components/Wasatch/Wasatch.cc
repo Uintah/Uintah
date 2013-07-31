@@ -439,7 +439,7 @@ namespace Wasatch{
     // get the turbulence params, if any, and parse them.
     //
     Uintah::ProblemSpecP turbulenceModelParams = wasatchSpec_->findBlock("Turbulence");
-    struct TurbulenceParameters turbParams = {1.0,0.1,NONE};
+    struct TurbulenceParameters turbParams = {1.0,0.1,NOTURBULENCE};
     parse_turbulence_input(turbulenceModelParams, turbParams);
     
     //
@@ -467,6 +467,7 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       const bool existDensity = densityParams->findBlock("NameTag");
+      if (existDensity) densityTag = parse_nametag( densityParams->findBlock("NameTag") );
       densityParams->get("IsConstant",isConstDensity);
 
       if( !isConstDensity || existSrcTerm || momEqnParams) {
@@ -476,7 +477,6 @@ namespace Wasatch{
               << "       must be provided in the <Density> block" << endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
-        densityTag = parse_nametag( densityParams->findBlock("NameTag") );
       }
     }
 

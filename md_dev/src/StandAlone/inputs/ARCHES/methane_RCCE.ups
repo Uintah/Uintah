@@ -297,9 +297,7 @@
       <Properties>
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_gogolek.mix.gz</inputfile>
-          <!-- note that this just using the coal transform (as it should).
-               It doesn't imply that we are actually solving the coal phase --> 
-          <coal eta_label = "mixture_fraction" fp_label = "mixture_fraction_2"/>
+          <rcce eta_label = "mixture_fraction" fp_label = "mixture_fraction_2" hl_label="heat_loss"/>
         </ClassicTable>
       </Properties>
 

@@ -683,8 +683,6 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
           }              
         }
 
-    
-
         // if d_unweighted, char_production_rate_=single particle rate, else, total rate
         char_production_rate_ = devolChar[c];
         if(d_unweighted)

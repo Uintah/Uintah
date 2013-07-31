@@ -128,7 +128,9 @@ Strain( const Expr::Tag& velTag,
   : Expr::Expression<StrainT>(),
     velt_     ( velTag  ),
     dilt_     ( dilTag  )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 

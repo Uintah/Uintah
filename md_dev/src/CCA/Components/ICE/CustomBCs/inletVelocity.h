@@ -48,6 +48,7 @@ namespace Uintah {
     
     // powerlaw profile
     double exponent;
+    double maxHeight;              // max height of velocity profile before it's set to u_infinity
     
     Point gridMin;
     Point gridMax;
@@ -101,7 +102,8 @@ namespace Uintah {
   // 
   if( bc_kind == "powerLawProfile" ){
     double d          = VB->gridMin(vDir);
-    double height     = VB->gridMax(vDir) - d;
+    double gridHeight =  VB->gridMax(vDir);  
+    double height     =  VB->maxHeight;      
     double U_infinity = bc_value;
     double n          = VB->exponent;
   
@@ -113,8 +115,18 @@ namespace Uintah {
        double ratio = (h - d)/height;
        ratio = SCIRun::Clamp(ratio,0.0,1.0);  // clamp so 0< h/height < 1 in the edge cells 
 
-       vel_FC[c] = U_infinity * pow(ratio, n);
-//     std::cout << "        " << c <<  " h " << h  << " h/height  " << ratio << " vel_FC: " << vel_FC[c] <<endl;
+       if( h > d && h < height){
+         vel_FC[c] = U_infinity * pow(ratio, n);
+       }else{                                // if height < h < gridHeight
+         vel_FC[c] = U_infinity;
+       }
+
+       // Clamp edge/corner values 
+       if( h < d || h > gridHeight ){
+         vel_FC[c] = 0;
+       }
+  
+     //std::cout << "        " << c <<  " h " << h  << " h/height  " << (h - d)/height << " vel_FC: " << vel_FC[c] <<endl;
     }
   }
   //__________________________________

@@ -69,6 +69,8 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/PowerLawBC.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/TurbulentInletBC.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSDensity.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSMixtureFraction.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSVelocity.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSMomentum.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSSolnVar.h>
@@ -960,6 +962,18 @@ namespace Wasatch{
         throw std::invalid_argument( msg.str() );
       }
       builder = scinew typename VarDensMMSMomExpr::Builder( tag, tagNames.time, bcSide );
+    }
+
+    else if ( params->findBlock("VarDensMMSMixtureFraction") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSMixtureFraction");      
+      typedef VarDensMMSMixtureFraction<FieldT> VarDensMMSMixtureFractionExpr;
+      builder = scinew typename VarDensMMSMixtureFractionExpr::Builder( tag, tagNames.time );
+    }
+
+    else if ( params->findBlock("VarDensMMSDensity") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSDensity");      
+      typedef VarDensMMSDensity<FieldT> VarDensMMSDensityExpr;
+      builder = scinew typename VarDensMMSDensityExpr::Builder( tag, tagNames.time );
     }
 
     else if ( params->findBlock("VarDensMMSSolnVar") ){

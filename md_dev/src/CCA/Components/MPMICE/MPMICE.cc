@@ -568,7 +568,10 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
   d_mpm->scheduleFinalParticleUpdate(         sched, mpm_patches, mpm_matls);
-
+  if( d_mpm->flags->d_computeScaleFactor ){
+    d_mpm->scheduleComputeParticleScaleFactor(sched, mpm_patches, mpm_matls);
+  }
+  
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
     const PatchSet* ice_patches = ice_level->eachPatch();

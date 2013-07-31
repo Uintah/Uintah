@@ -8,13 +8,12 @@
 # define environmental variables and export them
 HTMLLOG=""
 LOCAL_OR_NIGHTLY_TEST="local"
-WHICH_TESTS=${WHICH_TESTS:="local"}  #default value is local, it can be set by the buildbot
+WHICH_TESTS=${WHICH_TESTS:="LOCALTESTS"}  #default value is local tests, it can be set by the buildbot
 OS=`uname -s`
 PARALLELISM=8
 WEBLOG=""
 BUILD_DIR=/dev/null
 
-echo "WHICH_TESTS: $WHICH_TESTS"
 export BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST WHICH_TESTS OS
 
 #__________________________________
@@ -100,6 +99,13 @@ if test ${TEST_COMPONENTS:+1}; then
     echo ""
     echo "Using TEST_COMPONENTS env var for list of components to test: ($TEST_COMPONENTS)"
     selectedCompTests=$TEST_COMPONENTS
+    
+    let n=0                                          # use the environment variable
+    for componentTest in $selectedCompTests; do
+      WHICH_TESTS[$n]=$WHICH_TESTS
+      let n=n+1
+    done
+  
 else
   if test "$TERM" == "dumb" -o "$TERM" == "emacs"; then
     echo
@@ -107,7 +113,7 @@ else
     echo "       (Consider setting environment variable TEST_COMPONENTS.)  Goodbye."
     echo
     exit                                                                                    
-  fi
+  fi  
   if test "$EMACS" == "t"; then
     echo
     echo "ERROR: startLocalTest cannot be run from within emacs..."
@@ -122,12 +128,9 @@ else
   allComponentTests=`ls TestScripts/*.py | grep -v __init__ | sed "s/.py//g" | sed "s,TestScripts/,,g"`
 
   list=""
-  n="0"
   for comp in $allComponentTests; do
     list="$list $comp - off,"
-    n=$(( $n + 1 ))
   done
-  echo $list
 
   selectedCompTests=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 61 15 $list`
 
@@ -136,7 +139,50 @@ else
     echo "Cancel selected... Goodbye."                                                                  
     echo ""
     exit                                                                                    
-  fi 
+  fi
+  
+  #__________________________________
+  # find what subset of the tests the user wants to run
+  let n=0
+  for componentTest in $selectedCompTests; do
+    
+    let t=`grep -c LIST TestScripts/$componentTest.py`
+    testSubsets=`grep LIST TestScripts/$componentTest.py | cut -d: -f2-10`
+    
+    #__________________________________
+    # open dialog box if the component has the line
+    #  "#LIST: LOCALTESTS NIGHTLYTESTS ......"
+    
+    if [ $t != 0 ]; then
+      list=""
+      for tests in $testSubsets; do
+        if [ $tests == "LOCALTESTS" ]; then
+          list="$list $tests - on"
+        else
+          list="$list $tests - off  "
+        fi
+      done
+
+      declare -a selectedSubset=(`dialog --stdout --separate-output --checklist " [$componentTest] Select ONE set of tests to run" 20 61 15 $list`)
+
+      if [ ${#selectedSubset[@]} == 0 ] ; then                                                                
+        echo ""
+        echo "Cancel selected... Goodbye."                                                                  
+        echo ""
+        exit                                                                                    
+      fi
+      if [ ${#selectedSubset[@]} != 1 ] ; then
+        echo ""
+        echo "ERROR: You selected more than one set of tests to run."
+        echo "...now exiting"
+        exit  
+      fi
+      
+      WHICH_TESTS[$n]=$selectedSubset
+
+    fi
+    let n=n+1
+  done
 fi
 
 #__________________________________
@@ -147,8 +193,9 @@ echo ""
 echo ""
 date
 let retval=0;
+let c=0;
 for componentTest in $selectedCompTests; do
-  echo "Running $componentTest Tests"
+  echo "Running $componentTest:${WHICH_TESTS[c]} Tests"
 
   # clean up old test results
   /bin/rm -f $componentTest.log >/dev/null 2>&1
@@ -162,7 +209,7 @@ for componentTest in $selectedCompTests; do
   echo "setenv OS $OS"                                       >> "$doTestScript"
   echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
   echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
-  echo "setenv WHICH_TESTS $WHICH_TESTS"                     >> "$doTestScript"
+  echo "setenv WHICH_TESTS ${WHICH_TESTS[c]}"                >> "$doTestScript"
   echo "setenv SCI_MALLOC_ENABLED $SCI_MALLOC_ENABLED"       >> "$doTestScript"
 
   BUILD_TYPE="opt"
@@ -203,6 +250,7 @@ for componentTest in $selectedCompTests; do
   
   echo ""
   echo ""
+  let c=c+1;
 done
 echo "__________________________________"
 echo "  S U M M A R Y "

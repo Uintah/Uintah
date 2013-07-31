@@ -644,12 +644,20 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   t->computes(lb->specific_heatLabel);
   t->computes(lb->press_CCLabel,     d_press_matl, oims);
   t->computes(lb->initialGuessLabel, d_press_matl, oims); 
-  
-  sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
+  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+    
+  sched->addTask(t, level->eachPatch(), ice_matls);
 
-  if (d_impICE)
-    d_solver->scheduleInitialize(level,sched,
-                                 d_sharedState->allICEMaterials());
+  if (d_impICE){
+    d_solver->scheduleInitialize(level,sched, ice_matls);
+  }
+  
+  //__________________________________
+  //  Wall shear stress model initialization
+  if( d_WallShearStressModel ){
+    d_WallShearStressModel->sched_Initialize(sched, level, ice_matls);
+  }
+  
   //__________________________________
   // Models Initialization
   if(d_models.size() != 0){
@@ -677,7 +685,6 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   // and temperature fields.  You need to do this
   // after the models have initialized the flowfield
   Vector grav = getGravity();
-  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   if (grav.length() > 0 ) {
     cout_doing << d_myworld->myrank() << " Doing ICE::scheduleHydroStaticAdj " << endl;
@@ -1328,6 +1335,10 @@ void ICE::scheduleViscousShearStress(SchedulerP& sched,
     t->requires( Task::NewDW,lb->vvel_FCMELabel,    gac, 3);
     t->requires( Task::NewDW,lb->wvel_FCMELabel,    gac, 3);
     t->computes( lb->turb_viscosity_CCLabel );
+  }
+  
+  if( d_WallShearStressModel ){
+    d_WallShearStressModel->sched_AddComputeRequires( t, ice_matls->getUnion() );
   }
   
   //__________________________________
@@ -3841,7 +3852,9 @@ void ICE::viscousShearStress(const ProcessorGroup*,
           
           // wall model
           if( d_WallShearStressModel ){
-            d_WallShearStressModel -> computeWallShearStresses( new_dw, patch, vol_frac, vel_CC,viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC); 
+            d_WallShearStressModel -> computeWallShearStresses( old_dw, new_dw, patch, indx, 
+                                                                vol_frac, vel_CC, viscosity, 
+                                                                Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC); 
           }
 
           for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){

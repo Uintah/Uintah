@@ -34,6 +34,8 @@ namespace Uintah{
 
     public: 
 
+      enum RAD_MODEL_TYPE { DORADIATION, RMCRT };
+
       WallModelDriver( SimulationStateP& shared_state ); 
       ~WallModelDriver(); 
 
@@ -52,13 +54,15 @@ namespace Uintah{
         CCVariable<double> T_copy; 
         constCCVariable<double> T_old;
         constCCVariable<int> celltype; 
-        constCCVariable<double > incident_hf_e; 
-        constCCVariable<double > incident_hf_w; 
-        constCCVariable<double > incident_hf_n; 
-        constCCVariable<double > incident_hf_s; 
-        constCCVariable<double > incident_hf_t; 
-        constCCVariable<double > incident_hf_b; 
+        CCVariable<double > incident_hf_e; 
+        CCVariable<double > incident_hf_w; 
+        CCVariable<double > incident_hf_n; 
+        CCVariable<double > incident_hf_s; 
+        CCVariable<double > incident_hf_t; 
+        CCVariable<double > incident_hf_b; 
+        CCVariable<Stencil7> total_hf; 
         constCCVariable<Vector > cc_vel; 
+        WallModelDriver::RAD_MODEL_TYPE model_type; 
 
       };
 
@@ -67,7 +71,8 @@ namespace Uintah{
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency
       std::string _T_label_name;         ///< Temperature label name
       SimulationStateP& _shared_state; 
-      int _matl_index; 
+      int _matl_index;                   ///< Material index
+      RAD_MODEL_TYPE _rad_type;          ///< Type of radiation model 
 
       // Net heat flux var labels: 
       const VarLabel* _T_copy_label; 
@@ -82,6 +87,7 @@ namespace Uintah{
       const VarLabel* _HF_S_label; 
       const VarLabel* _HF_T_label; 
       const VarLabel* _HF_B_label; 
+      const VarLabel* _Total_HF_label; 
 
       void doWallHT( const ProcessorGroup* my_world,
                      const PatchSubset* patches, 
@@ -109,33 +115,40 @@ namespace Uintah{
           result = false; 
           offender = "cell_type"; 
         } 
-        if ( _HF_E_label == 0 ){ 
-          result = false; 
-          offender = "heat_flux_e"; 
-        } 
-        if ( _HF_W_label == 0 ){ 
-          result = false; 
-          offender = "heat_flux_w"; 
-        } 
-        if ( _HF_N_label == 0 ){ 
-          result = false; 
-          offender = "heat_flux_n"; 
-        } 
-        if ( _HF_S_label == 0 ){ 
-          result = false; 
-          offender = "heat_flux_s"; 
-        } 
-        if ( _HF_T_label == 0 ){ 
-          result = false; 
-          offender = "heat_flux_t"; 
-        } 
-        if ( _HF_B_label == 0 ){ 
-          result = false; 
-          offender = "heat_flux_b"; 
-        } 
         if ( _cc_vel_label == 0 ){
           result = false; 
           offender = "CCVelocity";
+        }
+        if ( _rad_type == DORADIATION){
+          if ( _HF_E_label == 0 ){ 
+            result = false; 
+            offender = "heat_flux_e"; 
+          } 
+          if ( _HF_W_label == 0 ){ 
+            result = false; 
+            offender = "heat_flux_w"; 
+          } 
+          if ( _HF_N_label == 0 ){ 
+            result = false; 
+            offender = "heat_flux_n"; 
+          } 
+          if ( _HF_S_label == 0 ){ 
+            result = false; 
+            offender = "heat_flux_s"; 
+          } 
+          if ( _HF_T_label == 0 ){ 
+            result = false; 
+            offender = "heat_flux_t"; 
+          } 
+          if ( _HF_B_label == 0 ){ 
+            result = false; 
+            offender = "heat_flux_b"; 
+          } 
+        } else { 
+          if ( _Total_HF_label == 0 ){
+            result = false; 
+            offender = "total_heat_flux";
+          }
         }
 
         cout_wmd_dbg << " WallModelDriver:: The missing varlabel = " << offender << std::endl;
@@ -164,7 +177,7 @@ namespace Uintah{
           virtual ~HTModelBase(){}; 
 
           virtual void problemSetup( const ProblemSpecP& input_db ) = 0;
-          virtual void computeHT( const Patch* patch, HTVariables& vars ) = 0; 
+          virtual void computeHT( const Patch* patch, const HTVariables& vars, CCVariable<double>& T ) = 0; 
           virtual void copySolution( const Patch* patch, CCVariable<double>& T, constCCVariable<double>& T_old, constCCVariable<int>& cell_type ) = 0; 
 
         private: 
@@ -201,7 +214,7 @@ namespace Uintah{
           ~SimpleHT(); 
 
           void problemSetup( const ProblemSpecP& input_db ); 
-          void computeHT( const Patch* patch, HTVariables& vars ); 
+          void computeHT( const Patch* patch, const HTVariables& vars, CCVariable<double>& T ); 
           void copySolution( const Patch* patch, CCVariable<double>& T, constCCVariable<double>& T_copy, constCCVariable<int>& cell_type ); 
 
         private: 
@@ -229,7 +242,7 @@ namespace Uintah{
           ~RegionHT(); 
 
           void problemSetup( const ProblemSpecP& input_db ); 
-          void computeHT( const Patch* patch, HTVariables& vars ); 
+          void computeHT( const Patch* patch, const HTVariables& vars, CCVariable<double>& T ); 
           void copySolution( const Patch* patch, CCVariable<double>& T, constCCVariable<double>& T_copy, constCCVariable<int>& cell_type ); 
 
         private: 
@@ -254,7 +267,7 @@ namespace Uintah{
 
           std::vector<IntVector> _d; 
 
-          inline constCCVariable<double> get_flux( int i, HTVariables& vars ){ 
+          inline constCCVariable<double> get_flux( int i, const HTVariables& vars ){ 
 
             constCCVariable<double> q; 
             switch (i) {

@@ -64,7 +64,6 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
     vector<Patch::FaceType> bf;
     vector<Patch::FaceType>::const_iterator bf_iter;
     patch->getBoundaryFaces(bf);
-    Vector Dx = patch->dCell(); 
     double dx=0; 
     double dy=0; 
 
@@ -75,7 +74,6 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(matlIndex);
       for (int child = 0; child < numChildren; child++){
 
-        double bc_value = -9; 
         Vector bc_v_value(0,0,0); 
         std::string bc_s_value = "NA";
 
@@ -91,7 +89,6 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
 
         string whichface; 
         int index=0; 
-        double di; 
         Vector Dx = patch->dCell(); 
 
         if (face == 0){

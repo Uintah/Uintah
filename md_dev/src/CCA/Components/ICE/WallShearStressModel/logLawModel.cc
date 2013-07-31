@@ -27,16 +27,17 @@
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Geometry/IntVector.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Patch.h>
 #include <cmath>
-#include<iomanip>
+#include <iomanip>
 
 using namespace Uintah;
 using namespace std;
-static DebugStream cout_doing("ICE_DOING_COUT", false);
+static DebugStream dbg("ICE_DOING_COUT", false);
 #define SMALL_NUM 1e-100
 
 //______________________________________________________________________
@@ -48,6 +49,8 @@ static DebugStream cout_doing("ICE_DOING_COUT", false);
 logLawModel::logLawModel(ProblemSpecP& ps, SimulationStateP& sharedState)
   : WallShearStress(ps, sharedState)
 {
+  d_sharedState = sharedState;
+    
   string face;
   ps->require("domainFace", face);
   
@@ -66,10 +69,10 @@ logLawModel::logLawModel(ProblemSpecP& ps, SimulationStateP& sharedState)
   if ( face == "z-" ) {
     d_face = Patch::zminus;
   }
-  if ( face == "z-" ) {
+  if ( face == "z+" ) {
     d_face = Patch::zplus;
   }
-  
+
   
   d_vonKarman = 0.4;                // default value
   ps->get( "vonKarmanConstant", d_vonKarman );
@@ -86,23 +89,71 @@ logLawModel::logLawModel(ProblemSpecP& ps, SimulationStateP& sharedState)
          << " and read in the roughness from a file (" << roughnessInputFile << ").";
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
+  
+  d_roughnessLabel  = VarLabel::create("logLaw_roughness", CCVariable<double>::getTypeDescription());
+  
 }
 
 logLawModel::~logLawModel()
 {
+   VarLabel::destroy(d_roughnessLabel);
 }
 
 //______________________________________________________________________
 //
-void logLawModel::scheduleInitialize(SchedulerP& sched,
-                                     const LevelP& level)
+void logLawModel::sched_Initialize(SchedulerP& sched,
+                                   const LevelP& level,        
+                                   const MaterialSet* matls)   
 {
+  printSchedule(level,dbg,"logLawModel::schedInitialize");
+  
+  Task* t = scinew Task("logLawModel::Initialize",
+                  this, &logLawModel::Initialize);
+
+  t->computes(d_roughnessLabel);
+  sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
+}
+//______________________________________________________________________
+//
+void logLawModel::Initialize(const ProcessorGroup*, 
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse*, 
+                             DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,dbg,"logLawModel::Initialize");
+    
+    for (int m = 0; m < matls->size(); m++ ) {
+      int indx = matls->get(m);
+      
+      CCVariable<double> roughness;
+      new_dw->allocateAndPut(roughness, d_roughnessLabel, indx,patch);
+      roughness.initialize( d_roughnessConstant );            // This needs to be changed
+      
+      new_dw->put( roughness, d_roughnessLabel, indx, patch );
+    }
+  }
 }
 
 //______________________________________________________________________
+//  Schedule variables that are needed by this model
+void logLawModel::sched_AddComputeRequires(Task* task, 
+                                           const MaterialSubset* matls)
+{
+ // printSchedule(level,dbg,"logLawModel::schedcomputeWallShearStresses");
+  task->requires(Task::OldDW, d_roughnessLabel, matls, Ghost::None, 0);
+  task->computes(d_roughnessLabel);
+}
+
+
+//______________________________________________________________________
 //  Wrapper around the calls for the individual components   
-void logLawModel::computeWallShearStresses( DataWarehouse* new_dw,
+void logLawModel::computeWallShearStresses( DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw,
                                             const Patch* patch,
+                                            const int indx,
                                             constCCVariable<double>& vol_frac_CC,  
                                             constCCVariable<Vector>& vel_CC,      
                                             const CCVariable<double>& viscosity,    
@@ -111,31 +162,41 @@ void logLawModel::computeWallShearStresses( DataWarehouse* new_dw,
                                             SFCZVariable<Vector>& tau_Z_FC )
 {
   if( d_face == Patch::xminus || d_face == Patch::xplus ){
-    wallShearStresses< SFCXVariable<Vector> >( new_dw, patch, vol_frac_CC, vel_CC, tau_X_FC);
+    wallShearStresses< SFCXVariable<Vector> >( old_dw, new_dw, patch, indx, vol_frac_CC, vel_CC, tau_X_FC);
   }
   
   if( d_face == Patch::yminus || d_face == Patch::yplus ){  
-    wallShearStresses< SFCYVariable<Vector> >( new_dw, patch, vol_frac_CC, vel_CC, tau_Y_FC);
+    wallShearStresses< SFCYVariable<Vector> >( old_dw, new_dw, patch, indx, vol_frac_CC, vel_CC, tau_Y_FC);
   }
   
   if( d_face == Patch::zminus || d_face == Patch::zplus ){  
-    wallShearStresses< SFCZVariable<Vector> >( new_dw, patch, vol_frac_CC, vel_CC, tau_Z_FC);
+    wallShearStresses< SFCZVariable<Vector> >( old_dw, new_dw, patch, indx, vol_frac_CC, vel_CC, tau_Z_FC);
   }                              
 }
 
 //______________________________________________________________________
 //
 template<class T>
-void logLawModel::wallShearStresses(DataWarehouse* new_dw,
+void logLawModel::wallShearStresses(DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw,
                                     const Patch* patch,
+                                    const int indx,
                                     constCCVariable<double>& vol_frac_CC,
                                     constCCVariable<Vector>& vel_CC,
                                     T& Tau_FC)
 {
+  // transfer variable forward
+  constCCVariable<double> roughnessOld;
+  CCVariable<double>      roughness;
+  
+  old_dw->get(        roughnessOld,  d_roughnessLabel, indx, patch, Ghost::None, 0);
+  new_dw->allocateAndPut( roughness, d_roughnessLabel, indx, patch );
+  roughness.copyData( roughnessOld );
+    
+  //__________________________________
+  // 
   vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  
-  
+  patch->getBoundaryFaces(bf);  
   for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
     Patch::FaceType face = *itr;
     
@@ -159,10 +220,13 @@ void logLawModel::wallShearStresses(DataWarehouse* new_dw,
       
       
 /*`==========TESTING==========*/
+#if 0
       cout << " logLawModel " << patch->getFaceName(face) << " iterator: "
            << patch->getFaceIterator(face, Patch::SFCVars) << endl;
+
       cout << "    oneCell: " << oneCell << " dir1: " << dir1 << " dir2 " << dir2 << " p_dir " << p_dir 
            << " z_CC: " << z_CC << endl; 
+#endif
 /*===========TESTING==========`*/       
 
       //__________________________________
@@ -171,23 +235,25 @@ void logLawModel::wallShearStresses(DataWarehouse* new_dw,
         IntVector c = *iter;
         IntVector adj  = c - oneCell;                           // for x+, y+, z+ faces use the velocity from the adjacent cell
         
-        double vel1 = vel_CC[adj][dir1];
+        double vel1 = vel_CC[adj][dir1];                        // transverse velocity components
         double vel2 = vel_CC[adj][dir2];
         
-        double u_tilde = ( pow( vel1, 2)  + pow(vel2, 2) );
-        u_tilde = sqrt(u_tilde) + SMALL_NUM;                   // avoid division by 0
+        double u_tilde = ( pow(vel1, 2)  + pow(vel2, 2) );
+        u_tilde = sqrt( u_tilde ) + SMALL_NUM;                   // avoid division by 0
           
         // eq (5)
-        double tau_s = -pow( (u_tilde * d_vonKarman )/denominator, 2);
+        double tau_s = -pow( ( u_tilde * d_vonKarman )/denominator, 2);
         
         // eq (6)
         Vector tau_tmp(0,0,0);
-        tau_tmp[dir1] = tau_s * ( vel1/u_tilde );
-        tau_tmp[dir2] = tau_s * ( vel2/u_tilde );
+        tau_tmp[dir1] = tau_s * vol_frac_CC[adj] *( vel1/u_tilde );
+        tau_tmp[dir2] = tau_s * vol_frac_CC[adj] *( vel2/u_tilde );
         
 /*`==========TESTING==========*/
+#if 0
         cout << " c " << c << " adj " << adj << setw(8) <<" u_tilde: " << u_tilde 
              << setw(8) << " tau_s: " << tau_s << " Tau_tmp " << tau_tmp << setw(8) << "vel1: " << vel1 << " vel2 " << vel2 << endl; 
+#endif
 /*===========TESTING==========`*/
              
         Tau_FC[c] = tau_tmp;

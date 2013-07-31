@@ -35,13 +35,21 @@ else :
 # turbulenceDir = the_dir + "/TurbulenceVerification"
 # 
 # decayIsotropicTurbulenceCSmag32_ups = modUPS( the_dir, \
-#                                        "decay-isotropic-turbulence-csmag_32.ups", \
-#                                        ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])
+#                                        "warches-decay-isotropic-turbulence-csmag-32.ups", \
+#                                        ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "4" interval = "0.001"/>'])
+# 
+# decayIsotropicTurbulenceCSmag32rk2_ups = modUPS( the_dir, \
+#                                        "warches-decay-isotropic-turbulence-csmag-32.ups", \
+#                                        ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "4" interval = "0.001"/>','<ExplicitIntegrator order="second"/>'])
+# 
+# decayIsotropicTurbulenceCSmag32rk3_ups = modUPS( the_dir, \
+#                                        "warches-decay-isotropic-turbulence-csmag-32.ups", \
+#                                        ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "4" interval = "0.001"/>','<ExplicitIntegrator order="third"/>'])
 #                                        
 # decayIsotropicTurbulenceCSmag64_ups = modUPS( the_dir, \
-#                                        "decay-isotropic-turbulence-csmag_64.ups", \
-#                                        ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "2" interval = "0.001"/>'])
-#                                        
+#                                        "warches-decay-isotropic-turbulence-csmag-64.ups", \
+#                                        ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "4" interval = "0.001"/>'])
+                                       
 decayIsotropicTurbulenceVreman32_ups = modUPS( the_dir, \
                                        "warches-decay-isotropic-turbulence-vreman-32.ups", \
                                        ["<max_Timesteps> 10 </max_Timesteps>","<outputTimestepInterval>1</outputTimestepInterval>",'<checkpoint cycle = "4" interval = "0.001"/>'])
@@ -88,6 +96,7 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( the_dir, \
 #  1) The "folder name" must be the same as input file without the extension.
 #  2) If the processors is > 1.0 then an mpirun command will be used
 #  3) Performance_tests are not run on a debug build.
+#
 #______________________________________________________________________
 
 UNUSED_TESTS = []
@@ -97,6 +106,10 @@ NIGHTLYTESTS = []
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
+#   ("decay-isotropic-turbulence-csmag32" , decayIsotropicTurbulenceCSmag32_ups,  8,  "All",  ["exactComparison"] ),
+#   ("decay-isotropic-turbulence-csmag32-rk2" , decayIsotropicTurbulenceCSmag32rk2_ups,  8,  "All",  ["exactComparison"] ),
+#   ("decay-isotropic-turbulence-csmag32-rk3" , decayIsotropicTurbulenceCSmag32rk3_ups,  8,  "All",  ["exactComparison"] ),  
+#   ("decay-isotropic-turbulence-csmag64" , decayIsotropicTurbulenceCSmag64_ups,  8,  "All",  ["exactComparison","no_restart"] ),
   ("decay-isotropic-turbulence-dsmag32" , decayIsotropicTurbulenceDSmag32_ups,  8,  "All",  ["exactComparison"] ),
   ("decay-isotropic-turbulence-dsmag64" , decayIsotropicTurbulenceDSmag64_ups,  8,  "All",  ["exactComparison","no_restart"] ),
   ("decay-isotropic-turbulence-vreman32", decayIsotropicTurbulenceVreman32_ups, 8,  "All",  ["exactComparison"] ),
@@ -105,22 +118,30 @@ LOCALTESTS = [
   ("decay-isotropic-turbulence-wale64"  , decayIsotropicTurbulenceWale64_ups,   8,  "All",  ["exactComparison","no_restart"] )
 ]
 
+DEBUGTESTS   =[]
+#__________________________________
+# The following list is parsed by the local RT script
+# and allows the user to select the tests to run
+#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
 #__________________________________
 
-def getNightlyTests() :
-  return NIGHTLYTESTS
-
-def getLocalTests() :
-  return LOCALTESTS
-
+# returns the list  
+def getTestList(me) :
+  if me == "LOCALTESTS":
+    TESTS = LOCALTESTS
+  elif me == "DEBUGTESTS":
+    TESTS = DEBUGTESTS
+  elif me == "NIGHTLYTESTS":
+    TESTS = NIGHTLYTESTS
+  else:
+    print "\nERROR:Warches.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    exit(1)
+  return TESTS
 #__________________________________
 
 if __name__ == "__main__":
 
-  if environ['WHICH_TESTS'] == "local":
-    TESTS = LOCALTESTS
-  else:
-    TESTS = NIGHTLYTESTS
+  TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "Warches")
   exit( result )

@@ -68,8 +68,7 @@ ifeq ($(HAVE_PETSC),yes)
 endif
 
 ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/linearSolveKernels.cu          \
-          $(SRCDIR)/calculateMomentsKernels.cu
+  SRCS += $(SRCDIR)/constructLinearSystemKernel.cu
 endif
 
 
@@ -109,8 +108,9 @@ ifeq ($(HAVE_HYPRE),yes)
 endif
 
 LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
-        $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(TABPROPS_LIBRARY) \
-        $(BOOST_LIBRARY) $(Z_LIBRARY) $(RADPROPS_LIBRARY)
+        $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \
+        $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY) \
+        $(BOOST_LIBRARY) $(Z_LIBRARY)
 
 INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE)
 

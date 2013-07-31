@@ -711,22 +711,12 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateTemporary(rho_cur,      pset);
     new_dw->allocateTemporary(rotation,     pset);
 
-    // Loop over the particles of the current patch to compute particle density
-    //T2D: remove once stable timestep is made into a modular function
-    for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
-      particleIndex idx = *iter;
-
-      // Update particle density
-      J = pDefGrad_new[idx].Determinant();
-      rho_cur[idx] = rho_orig/J;
-    }
-
     // Loop over the particles of the current patch to update particle
     // stress at the end of the current timestep along with all other
     // required data such plastic strain, elastic strain, cap position, etc.
 #ifdef JC_DEBUG_SMALL_TIMESTEP
     Vector idvel(1,1,1);   // temp
-      Vector vbulk(1,1,1);   // temp
+    Vector vbulk(1,1,1);   // temp
     Vector vshear(1,1,1);  // temp
 #endif
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
@@ -737,6 +727,12 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         // is not coded in the current source code. Further development of Arenisca
         // may ativate this feature.
         pdTdt[idx] = 0.0;
+
+        // Compute particle density
+        J = pDefGrad_new[idx].Determinant();
+        rho_cur[idx] = rho_orig/J;
+
+        pLocalized_new[idx]=pLocalized[idx];
 
         //Set scratch parameters to old values
         pScratchDouble1_new[idx] = pScratchDouble1[idx];

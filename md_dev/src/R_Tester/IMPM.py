@@ -49,21 +49,30 @@ LOCALTESTS = [    ("4disks_2d.1mat",   "4disks_2d.1mat.ups", 1,   "None"), \
 	           ("adiCuSCG01s296K",  "adiCuSCG01s296K.ups",1.1, "ALL"), \
 	           ("adiCuZA01s296K",   "adiCuZA01s296K.ups", 1.1, "ALL")
     	       ]       
-
+DEBUGTESTS =[]
+#__________________________________
+# The following list is parsed by the local RT script
+# and allows the user to select the tests to run
+#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
 #__________________________________
 
-def getNightlyTests() :
-  return NIGHTLYTESTS
-
-def getLocalTests() :
-  return LOCALTESTS
+# returns the list  
+def getTestList(me) :
+  if me == "LOCALTESTS":
+    TESTS = LOCALTESTS
+  elif me == "DEBUGTESTS":
+    TESTS = DEBUGTESTS
+  elif me == "NIGHTLYTESTS":
+    TESTS = NIGHTLYTESTS
+  else:
+    print "\nERROR:IMPM.py  getTestList:  The test list (%s) does not exist!\n\n" % me
+    exit(1)
+  return TESTS
+#__________________________________
 
 if __name__ == "__main__":
 
-  if environ['WHICH_TESTS'] == "local":
-    TESTS = LOCALTESTS
-  else:
-    TESTS = NIGHTLYTESTS
+  TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "IMPM")
   exit( result )

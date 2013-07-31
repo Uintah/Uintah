@@ -765,7 +765,9 @@ namespace Uintah {
 
       void sched_setAreaFraction(SchedulerP& sched, 
           const PatchSet* patches, 
-          const MaterialSet* matls );
+          const MaterialSet* matls, 
+          const int timesubstep,
+          const bool reinitialize );
 
       /** @brief The struct to hold all needed information for each boundary spec */
       struct BCInfo { 
@@ -918,7 +920,9 @@ namespace Uintah {
           const PatchSubset* patches,
           const MaterialSubset*,
           DataWarehouse* old_dw,
-          DataWarehouse* new_dw);
+          DataWarehouse* new_dw, 
+          const int timesubstep, 
+          const bool reinitialize );
 
       void setFlatProfV( const Patch* patch, 
           SFCXVariable<double>& u, SFCYVariable<double>& v, SFCZVariable<double>& w, 
