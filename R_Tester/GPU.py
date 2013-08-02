@@ -34,12 +34,12 @@ NIGHTLYTESTS = [   ("poissonGPU1",       "poissonGPU1.ups",         1, "Linux", 
 # Tests that are run during local regression testing
 LOCALTESTS = NIGHTLYTESTS
 
-DEBUGTESTS = []
+DEBUGTESTS = [("RMCRT_test_1L",     "RMCRT_test_1L.ups",     1.1, "Linux", ["gpu", "no_restart", "no_uda_comparison", "sus_options= -gpu"])]
 
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DEUGTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
 #__________________________________
 
 # returns the list  
