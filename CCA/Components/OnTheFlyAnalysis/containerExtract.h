@@ -137,8 +137,8 @@ namespace Uintah {
       //__________________________________
       // global constants
       double d_writeFreq; 
-      double d_StartTime;
-      double d_StopTime;
+      double d_startTime;
+      double d_stopTime;
       vector<VarLabel*> d_varLabels;
       SimulationStateP d_sharedState;
       vector<container*> d_containers;
