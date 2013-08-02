@@ -229,7 +229,7 @@ namespace Uintah{
       double _abskg_thld;
       
        
-      int    _NoOfRays;                      // number of rays per cell used to compute divQ
+      int    _nDivQRays;                      // number of rays per cell used to compute divQ
       int    _nRadRays;                     // number of rays per radiometer used to compute radiative flux
       int    _nFluxRays;                    // number of rays per cell used to compute radiative flux
       int    d_matl;

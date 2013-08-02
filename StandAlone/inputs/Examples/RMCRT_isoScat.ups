@@ -105,7 +105,7 @@
     <abskg>             999        </abskg>
     <sigmaScat>         1          </sigmaScat>
     <abskgBench4>       1          </abskgBench4>
-    <NoOfRays>          25         </NoOfRays>
+    <nDivQRays>         5         </nDivQRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark>         1          </benchmark>

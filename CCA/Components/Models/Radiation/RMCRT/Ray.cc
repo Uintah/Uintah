@@ -141,7 +141,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   d_sharedState = sharedState;
   ProblemSpecP rmcrt_ps = rmcrtps;
-  rmcrt_ps->getWithDefault( "NoOfRays"  ,       _NoOfRays  ,      10 );
+  rmcrt_ps->getWithDefault( "nDivQRays" ,       _nDivQRays ,        10 );       // Number of rays per cell used to compute divQ 
   rmcrt_ps->getWithDefault( "Threshold" ,       _Threshold ,      0.01 );       // When to terminate a ray
   rmcrt_ps->getWithDefault( "randomSeed",       _isSeedRandom,    true );       // random or deterministic seed.
   rmcrt_ps->getWithDefault( "benchmark" ,       _benchmark,       0 );  
@@ -153,8 +153,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "VROrientation"  ,  _orient,          Vector(0,0,1) );     // Normal vector of the radiometer orientation (Cartesian)
   rmcrt_ps->getWithDefault( "VRLocationsMin" ,  _VRLocationsMin,  IntVector(0,0,0) );  // minimum extent of the string or block of virtual radiometers
   rmcrt_ps->getWithDefault( "VRLocationsMax" ,  _VRLocationsMax,  IntVector(0,0,0) );  // maximum extent of the string or block or virtual radiometers
-  rmcrt_ps->getWithDefault( "nRadRays"  ,      _nRadRays  ,      1000 );
-  rmcrt_ps->getWithDefault( "nFluxRays" ,       _nFluxRays,     500 );                 // number of rays per cell for computation of boundary fluxes
+  rmcrt_ps->getWithDefault( "nRadRays"  ,       _nRadRays ,       1000 );
+  rmcrt_ps->getWithDefault( "nFluxRays" ,       _nFluxRays,       1 );                 // number of rays per cell for computation of boundary fluxes
   rmcrt_ps->getWithDefault( "sigmaScat"  ,      _sigmaScat  ,      0 );                // scattering coefficient
   rmcrt_ps->getWithDefault( "abskgBench4"  ,    _abskgBench4,      1 );                // absorption coefficient specific to Bench4
   rmcrt_ps->get(             "shouldSetBCs" ,   _onOff_SetBCs );                       // ignore applying boundary conditions
@@ -195,7 +195,16 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 cout<< endl << "RAY_SCATTER IS DEFINED" << endl; 
 #endif
 
-
+  if(_nDivQRays==1){
+    ostringstream warn;
+    warn << "WARNING: You have specified only 1 ray to compute the radiative flux divergence." << endl;
+    warn << "For better accuracy and stability, specify nDivQRays greater than 2." << endl;
+  }
+  if(_nFluxRays==1){
+    ostringstream warn;
+    warn << "WARNING: You have specified only 1 ray to compute radiative fluxes." << endl;
+    warn << "For better accuracy and stability, specify nFluxRays greater than 2." << endl;
+  }
 
   if (_benchmark > 5 || _benchmark < 0  ){
     ostringstream warn;
@@ -212,7 +221,7 @@ cout<< endl << "RAY_SCATTER IS DEFINED" << endl;
 
   if (_virtRad && _nRadRays < int(15 + pow(5.4, _viewAng/40) ) ){
     ostringstream warn;
-    warn << "Number of rays:  ("<< _nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, _viewAng/40) ) <<"). Errors will exceed 1%. " << endl;
+    warn << "Number of radiometer rays:  ("<< _nRadRays <<") is less than the recommended number of ("<< int(15 + pow(5.4, _viewAng/40) ) <<"). Errors will exceed 1%. " << endl;
   } 
 
   //__________________________________
@@ -847,7 +856,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
         // quick flux debug test
         //if(face==3 && j==Ny-1 && k==Nz/2)  // Burns flux locations
         //if(face==5 && j==Nx/2 && k==Nx-1){  // benchmark4, benchmark5: Siegel top surface flux locations
-        //if ( origin.x()==0 && origin.y()==234 ){    // ifrf restart case. face should be 0 for these cells.
 
         // A given flow cell may have 0,1,2,3,4,5, or 6 faces that are adjacent to a wall.
         // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
@@ -1025,13 +1033,13 @@ Ray::rayTrace( const ProcessorGroup* pc,
       double sumI = 0;
       
       // ray loop
-      for (int iRay=0; iRay < _NoOfRays; iRay++){
+      for (int iRay=0; iRay < _nDivQRays; iRay++){
 
         if(_isSeedRandom == false){
           _mTwister.seed((i + j +k) * iRay +1);
         }
 
-        // see http://www.cgafaq.info/wiki/aandom_Points_On_Sphere for explanation
+        // Random Points On Sphere
 
         double plusMinus_one = 2 * _mTwister.randDblExc() - 1;
         double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
@@ -1064,9 +1072,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
       
       //__________________________________
       //  Compute divQ
-      divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/_NoOfRays) );
+      divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/_nDivQRays) );
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
-      radiationVolq[origin] = 4.0 * _pi * abskg[origin] *  (sumI/_NoOfRays) ; 
+      radiationVolq[origin] = 4.0 * _pi * abskg[origin] *  (sumI/_nDivQRays) ; 
       //} // end quick debug testing
     }  // end cell iterator
   } // end of if(_solveDivQ)
@@ -1312,7 +1320,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
       //__________________________________
       //  ray loop
-      for (int iRay=0; iRay < _NoOfRays; iRay++){
+      for (int iRay=0; iRay < _nDivQRays; iRay++){
         IntVector cur      = origin;
         IntVector prevCell = cur;
         
@@ -1535,9 +1543,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
       //__________________________________
       //  Compute divQ
-      divQ_fine[origin] = 4.0 * _pi * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/_NoOfRays) );
+      divQ_fine[origin] = 4.0 * _pi * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/_nDivQRays) );
 
-      dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/_NoOfRays) << endl;
+      dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/_nDivQRays) << endl;
        // } // end quick debug testing
     }  // end cell iterator
 
@@ -2444,7 +2452,9 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
      intensity = exp(-optical_thickness);
 
      //  wall emission 12/15/11
-     sumI += abskg[cur]*sigmaT4OverPi[cur] * intensity;
+     double wallEmissivity = abskg[cur];
+     if (wallEmissivity > 1.0) wallEmissivity = 1.0; // Ensure wall emissivity doesn't exceed one. 
+     sumI += wallEmissivity*sigmaT4OverPi[cur] * intensity;
 
      intensity = intensity * fs;  
 
@@ -2527,8 +2537,8 @@ Ray::filter( const ProcessorGroup*,
     divQ_dw->get(divQ,               d_divQLabel,        d_matl, patch, d_gn, 0);
     divQ_dw->get(boundFlux,          d_boundFluxLabel,   d_matl, patch, d_gn, 0);
     
-    new_dw->allocateAndPut(divQFilt, d_boundFluxLabel,   d_matl, patch);
-    new_dw->allocateAndPut(divQFilt, d_divQLabel,        d_matl, patch);
+    new_dw->allocateAndPut(divQFilt, d_boundFluxLabel,   d_matl, patch); // !! This needs to be fixed.  I need to create boundFluxFilt variable
+    new_dw->allocateAndPut(divQFilt,      d_divQLabel,        d_matl, patch);
 
     if( modifies_divQFilt ){
        old_dw->getModifiable(  divQFilt,  d_divQFiltLabel,  d_matl, patch );

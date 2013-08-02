@@ -208,7 +208,7 @@
             <RMCRT>
                 <randomSeed>         false     </randomSeed>
                 <abskg>             999        </abskg>
-                <NoOfRays>          5          </NoOfRays>
+                <nDivQRays>          5          </nDivQRays>
                 <nFluxRays>         1000           </nFluxRays>
                 <Threshold>         0.05       </Threshold>
                 <solveBoundaryFlux> true       </solveBoundaryFlux>
