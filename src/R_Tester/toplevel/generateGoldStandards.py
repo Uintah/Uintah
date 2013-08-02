@@ -31,10 +31,11 @@ OS            = platform.system()
 debug_build   = ""
 no_sci_malloc = ""
                       # HACK 
-                      # 1 for GPU RT machine (albion), 0 otherwise.
+                      # 1 for GPU RT machine (albion, aurora), 0 otherwise.
                       #   need to make this generic, perhaps pycuda?
-has_gpu       = 1 if socket.gethostname() == "albion" else 0
-
+has_gpu       = 0 
+if socket.gethostname() == "albion" or socket.gethostname() == "aurora": 
+  has_gpu = 1
 ####################################################################################
 
 #script_dir=os.sys.path[0]
