@@ -119,10 +119,7 @@ WARNING
       VarLabel* fileVarsStructLabel;
     };
     
-    
-    
     lineExtractLabel* ps_lb;
-   
 
     struct line{
       string  name;  
@@ -137,8 +134,8 @@ WARNING
     //__________________________________
     // global constants
     double d_writeFreq; 
-    double d_StartTime;
-    double d_StopTime;
+    double d_startTime;
+    double d_stopTime;
     vector<VarLabel*> d_varLabels;
     vector<int> d_varMatl;
     SimulationStateP d_sharedState;

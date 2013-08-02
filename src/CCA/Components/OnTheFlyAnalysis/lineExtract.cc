@@ -118,8 +118,8 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Read in timing information
   d_prob_spec->require("samplingFrequency", d_writeFreq);
-  d_prob_spec->require("timeStart",         d_StartTime);            
-  d_prob_spec->require("timeStop",          d_StopTime);
+  d_prob_spec->require("timeStart",         d_startTime);            
+  d_prob_spec->require("timeStop",          d_stopTime);
 
   ProblemSpecP vars_ps = d_prob_spec->findBlock("Variables");
   if (!vars_ps){
@@ -321,7 +321,7 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
     
     
     // Start time < stop time
-    if(d_StartTime > d_StopTime){
+    if(d_startTime > d_stopTime){
       throw ProblemSetupException("\n ERROR:lineExtract: startTime > stopTime. \n", __FILE__, __LINE__);
     }
     
@@ -448,11 +448,20 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
     
   const Level* level = getLevel(patches);
   
+  // the user may want to restart from an uda that wasn't using the DA module
+  // This logic allows that.
   max_vartype writeTime;
-  old_dw->get(writeTime, ps_lb->lastWriteTimeLabel);
-  double lastWriteTime = writeTime;
+  double lastWriteTime = 0;
+  if( old_dw->exists( ps_lb->lastWriteTimeLabel ) ){
+    old_dw->get(writeTime, ps_lb->lastWriteTimeLabel);
+    lastWriteTime = writeTime;
+  }
 
   double now = d_dataArchiver->getCurrentTime();
+  if(now < d_startTime || now > d_stopTime){
+    return;
+  }
+  
   double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
   
   for(int p=0;p<patches->size();p++){

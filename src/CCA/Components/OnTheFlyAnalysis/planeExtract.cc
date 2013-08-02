@@ -420,9 +420,14 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
     
   const Level* level = getLevel(patches);
   
+  // the user may want to restart from an uda that wasn't using the DA module
+  // This logic allows that.
   max_vartype writeTime;
-  old_dw->get(writeTime, ps_lb->lastWriteTimeLabel);
-  double lastWriteTime = writeTime;
+  double lastWriteTime = 0;
+  if( old_dw->exists( ps_lb->lastWriteTimeLabel ) ){
+    old_dw->get(writeTime, ps_lb->lastWriteTimeLabel);
+    lastWriteTime = writeTime;
+  }
 
   double now = d_dataArchiver->getCurrentTime();
   
@@ -715,7 +720,7 @@ void planeExtract::createFile(const string& filename,
   fprintf(fp,"\n");
   fflush(fp);
   
-  cout << Parallel::getMPIRank() << " planeExtract:Created file " << filename << endl;
+  cout_doing << Parallel::getMPIRank() << " planeExtract:Created file " << filename << endl;
 }
 //______________________________________________________________________
 // create the directory structure   planeName/LevelIndex
@@ -878,7 +883,7 @@ planeExtract::getIterator( const Uintah::TypeDescription* td,
 
   IntVector stop_idx = end_idx + IntVector(x,y,z);
   
-  cout << " offset " << IntVector(x,y,z) <<  " " << CellIterator(start_idx,stop_idx) << endl;
+  cout_doing << " offset " << IntVector(x,y,z) <<  " " << CellIterator(start_idx,stop_idx) << endl;
   return CellIterator(start_idx,stop_idx);
 }
 
