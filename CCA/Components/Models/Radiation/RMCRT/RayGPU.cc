@@ -115,7 +115,7 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     // set up and launch kernel
     cudaStream_t* stream = _scheduler->getCudaStream(device);
     launchRayTraceKernel(dimGrid, dimBlock, stream, patchLo, patchHi, patchSize, domainLo, domainHi, cellSpacing, d_absk, d_sigmaT4,
-                         d_divQ, this->_virtRad, this->_isSeedRandom, this->_CCRays, this->_NoOfRays, this->_viewAng,
+                         d_divQ, this->_virtRad, this->_isSeedRandom, this->_CCRays, this->_nDivQRays, this->_viewAng,
                          this->_Threshold, globalDevStates);
 
     // get updated divQ back into host memory
