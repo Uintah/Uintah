@@ -2441,7 +2441,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          tMax_prev = 0;
 
          curLength = 0;  // allow for multiple scattering events per ray
-         if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
+         //if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
        }
 
 #endif
