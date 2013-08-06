@@ -187,7 +187,6 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     warn << "As such, this task will run slower than is necessary." << endl;
     warn << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << endl;
     warn << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 #endif
 
