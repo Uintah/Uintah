@@ -32,6 +32,7 @@ NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",         1, "ALL"),
                    ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",     1, "ALL",["exactComparison"]),
                    ("RMCRT_ML",         "RMCRT_ML.ups",         1, "ALL", ["exactComparison"]),
                    ("RMCRT_VR",         "RMCRT_VR.ups",         1, "ALL", ["exactComparison"]),
+                   ("RMCRT_isoScat",    "RMCRT_isoScat.ups",    1, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1, "ALL", ["exactComparison"])
                ]
 
@@ -41,6 +42,7 @@ LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1, "ALL", ["exac
                    ("RMCRT_ML",         "RMCRT_ML.ups",         1, "ALL", ["exactComparison"]),
                    ("RMCRT_VR",         "RMCRT_VR.ups",         1, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1, "ALL", ["exactComparison"]), 
+                   ("RMCRT_isoScat",    "RMCRT_isoScat.ups",    1, "ALL", ["exactComparison"]),
                ]
                  #  ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",     1, "ALL", ["exactComparison"])
 
