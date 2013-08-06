@@ -190,17 +190,17 @@ bind_fields( const Expr::FieldManagerList& fml )
   weights_.clear();
   abscissae_.clear();
   efficiency_.clear();
-  BOOST_FOREACH( const Expr::Tag& iweight, weightsTagList_ ){
-    weights_.push_back(&volfm.field_ref(iweight));
+  for( typename Expr::TagList::const_iterator iweight=weightsTagList_.begin(); iweight!=weightsTagList_.end(); ++iweight ){
+    weights_.push_back(&volfm.field_ref(*iweight));
   }
-  BOOST_FOREACH( const Expr::Tag& iabscissa, abscissaeTagList_ ){
-    abscissae_.push_back(&volfm.field_ref(iabscissa));
+  for( typename Expr::TagList::const_iterator iabscissa=abscissaeTagList_.begin(); iabscissa!=abscissaeTagList_.end(); ++iabscissa){
+    abscissae_.push_back(&volfm.field_ref(*iabscissa));
   }
   if( aggCoefTag_ != Expr::Tag() )
     aggCoef_ = &volfm.field_ref(aggCoefTag_) ;
   if( useEffTags_ ){
-    BOOST_FOREACH( const Expr::Tag& iefficiency, efficiencyTagList_ ){
-      efficiency_.push_back(&volfm.field_ref(iefficiency));
+    for( typename Expr::TagList::const_iterator iefficiency=efficiencyTagList_.begin(); iefficiency!=efficiencyTagList_.end(); ++iefficiency){
+      efficiency_.push_back(&volfm.field_ref(*iefficiency));
     }
   }
 }
