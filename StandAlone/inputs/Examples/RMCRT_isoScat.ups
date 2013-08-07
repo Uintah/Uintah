@@ -12,11 +12,11 @@
   <!-- run for 10 timesteps for RT memory -->
   <!-- and checkpoint testing             -->
   <Time>
-    <maxTime>       1.0      </maxTime>
+    <maxTime>       10.0      </maxTime>
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 1         </max_Timesteps>
+    <max_Timesteps> 10         </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
 
@@ -30,7 +30,10 @@
                             <value> 0. </value> 
         </BCType> 
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
-                            <value> 0. </value>
+                            <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
         </BCType>
       </Face>
       <Face side = "x+">
@@ -38,7 +41,10 @@
                            <value> 0. </value>                
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
-                           <value> 0. </value>
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
         </BCType>
       </Face>
       <Face side = "y-">
@@ -46,7 +52,10 @@
                            <value> 0. </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
-                           <value> 0. </value>
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
         </BCType> 
       </Face>               
       <Face side = "y+">
@@ -54,7 +63,10 @@
                             <value> 0. </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
-                           <value> 0. </value>
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
         </BCType>
       </Face>
       <Face side = "z-">
@@ -64,6 +76,9 @@
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1. </value>
         </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
       </Face>
       <Face side = "z+">
         <BCType id = "0"   label = "color"     var = "Dirichlet">
@@ -72,6 +87,9 @@
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1. </value>
         </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
       </Face>
     </BoundaryConditions>
 
@@ -79,7 +97,7 @@
       <Box label = "0">                              
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
-         <resolution> [10,10,10]  </resolution>    
+         <resolution> [21,21,21]  </resolution>    
          <patches>    [1,1,1]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
       </Box>
@@ -88,7 +106,7 @@
   </Grid>
   <!--__________________________________-->
   <DataArchiver>
-  <filebase>rmcrt_isoScat.uda</filebase>
+  <filebase>rmcrt_1L.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "color"   />
       <save label = "divQ"    />
@@ -100,16 +118,16 @@
   
   <!--__________________________________ -->
   <RMCRT>
-    <randomSeed>         false     </randomSeed>
+    <randomSeed>        false     </randomSeed>
     <Temperature>       64.804     </Temperature>
     <abskg>             999        </abskg>
     <sigmaScat>         1          </sigmaScat>
     <abskgBench4>       1          </abskgBench4>
-    <nDivQRays>         5         </nDivQRays>
+    <nDivQRays>         3          </nDivQRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark>         1          </benchmark>
-    <solveBoundaryFlux> false      </solveBoundaryFlux>
+    <solveBoundaryFlux> true      </solveBoundaryFlux>
     <CCRays>            false      </CCRays>
   </RMCRT>
 </Uintah_specification>
