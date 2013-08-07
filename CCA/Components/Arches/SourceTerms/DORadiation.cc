@@ -167,6 +167,10 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     if ( _using_prop_calculator ) { 
 
       std::vector<std::string> part_sp = _prop_calculator->get_participating_sp(); //participating species from property calculator
+      _species_varlabels.resize(0);
+      _size_varlabels.resize(0);
+      _w_varlabels.resize(0);
+      _T_varlabels.resize(0);
 
       for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
 
@@ -374,9 +378,11 @@ DORadiation::computeSource( const ProcessorGroup* pc,
         //--species--
         for ( CCCVL::iterator iter = _species_varlabels.begin();  iter != _species_varlabels.end(); iter++ ){ 
           constCCVariable<double> var; 
+          // std::cout<<"species_label="<<*iter<<", "; 
           old_dw->get( var, *iter, matlIndex, patch, Ghost::None, 0 ); 
           species.push_back( var ); 
         }
+        // std::cout<<"species.size="<<species.size()<<endl; 
 
         //--size--
         for ( CCCVL::iterator iter = _size_varlabels.begin(); iter != _size_varlabels.end(); iter++ ){ 
