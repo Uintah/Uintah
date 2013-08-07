@@ -369,9 +369,9 @@ def generateGS() :
                 np = int( np )
                 mpirun = "%s -np %s  " % (MPIRUN,np)
 
-                command = mpirun + MALLOC_FLAG + sus + " -mpi " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  #+ " >> sus_log.txt " 
+                command = mpirun + MALLOC_FLAG + sus + " -mpi " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + "| tee sus_log.txt " 
             else :
-                command = sus + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  #+ " >> sus_log.txt " 
+                command = sus + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + "| tee sus_log.txt " 
 
             print "Running command: " + command
 
