@@ -109,7 +109,7 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
     throw InternalError("lineExtract:couldn't get output port", __FILE__, __LINE__);
   }
                                
-  ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime", 
+  ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime_lineE", 
                                             max_vartype::getTypeDescription());
 
   ps_lb->fileVarsStructLabel   = VarLabel::create("FileInfo_lineExtract", 

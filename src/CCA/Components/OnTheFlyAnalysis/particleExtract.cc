@@ -113,7 +113,7 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
   d_matl_set->addAll(m);
   d_matl_set->addReference();   
   
-  ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime", 
+  ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime_partE", 
                                             max_vartype::getTypeDescription());
                                             
    ps_lb->filePointerLabel  =  VarLabel::create("filePointer", 
