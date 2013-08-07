@@ -52,7 +52,7 @@ EnthalpyShaddix::EnthalpyShaddix( std::string modelName,
   Pr = 0.7;
   sigma = 5.67e-8;   // [=] J/s/m^2/K^4 : Stefan-Boltzmann constant (from white book)
   pi = 3.14159265358979;
-  ksi = 0.7; // Fraction of the heat released by char oxidation that goes to the particle 
+  ksi = 0.6; // Fraction of the heat released by char oxidation that goes to the particle 
   Hc0 = -1.686e6; // J/kg
   Hh0 = 0.0;
   Ha0 = -1.504e7;
@@ -699,33 +699,39 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         
         // Newton's method
         // Initial guess
-        double Tguess = 305.0;
+        double Tguess = 283.0;
+        double Tguess_old;
         int icount = 0;
-        double d_tol = 1e-15;
+        double d_tol = 0.1;
         double delta = 1;
         double f1 = 1.0;
         double f2 = 1.0;
-
-        for ( int iter = 0; iter < 12; iter++) {
+        double dT;  //temperature change for each step
+        for ( int iter = 0; iter < 15; iter++) {
           icount++;
           f1 = unscaled_particle_enthalpy - calc_enthalpy(Tguess, unscaled_raw_coal_mass, unscaled_char_mass, unscaled_ash_mass);    
-          if (std::abs(f1) < d_tol) break;
+          //          if (std::abs(f1) < d_tol) break;
           Tguess += delta;
           f2 = unscaled_particle_enthalpy - calc_enthalpy(Tguess, unscaled_raw_coal_mass, unscaled_char_mass, unscaled_ash_mass);
-          Tguess -= delta + f1*delta/(f2-f1);
+          dT = f1*delta/(f2-f1)+delta;
+          Tguess -= 0.8*dT;    //to add an coefficient for steadness
           Tguess = max(273.0, min(Tguess,3000.0));
+          if(std::fabs(Tguess-Tguess_old)<d_tol) break;
+          Tguess_old = Tguess;
         }
-        /*
-        if(icount > 11){
-          cout << "enth1 " << icount << " " << Tguess << " " << f2 << " " << f1 << " " << unscaled_particle_enthalpy << " " << weight[c] << endl;
-          cout << "masses " << unscaled_raw_coal_mass << " " << unscaled_char_mass << " " << unscaled_ash_mass << endl;
-          double Tlow = 273.0;
-          double Thigh = 2000.0;
-          double Hlow = calc_enthalpy(Tlow, unscaled_raw_coal_mass, unscaled_char_mass, unscaled_ash_mass);
-          double Hhigh = calc_enthalpy(Thigh, unscaled_raw_coal_mass, unscaled_char_mass, unscaled_ash_mass);
-          cout << "Hlow " << Hlow << " Hhigh " << Hhigh << endl;   
-        }
-        */
+        
+        if(icount>14)
+          std::cout<<"high iterations!="<<icount<<"T="<<Tguess<<", "<<Tguess_old<<endl;        
+        // if(icount > 11){
+        //   cout << "enth1 " << icount << " " << Tguess << " " << f2 << " " << f1 << " " << unscaled_particle_enthalpy << " " << weight[c] << endl;
+        //   cout << "masses " << unscaled_raw_coal_mass << " " << unscaled_char_mass << " " << unscaled_ash_mass << endl;
+        //   double Tlow = 273.0;
+        //   double Thigh = 2000.0;
+        //   double Hlow = calc_enthalpy(Tlow, unscaled_raw_coal_mass, unscaled_char_mass, unscaled_ash_mass);
+        //   double Hhigh = calc_enthalpy(Thigh, unscaled_raw_coal_mass, unscaled_char_mass, unscaled_ash_mass);
+        //   cout << "Hlow " << Hlow << " Hhigh " << Hhigh << endl;   
+        // }
+        
 
         particle_temperature = max(273.0,min(Tguess,3000.0));
 
@@ -742,8 +748,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         // Q_convection (see Section 5.4 of LES_Coal document)
         Q_convection = Nu*pi*blow*rkg*unscaled_length*(gas_temperature - particle_temperature);
 
-
-
         // Radiation part: -------------------------
         bool DO_NEW_ABSKP = false;
         Q_radiation = 0.0;
@@ -758,7 +762,8 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         } else if ( _radiation && !DO_NEW_ABSKP ) { 
           double Qabs = 0.8;
           double Apsc = (pi/4.0)*Qabs*pow(unscaled_length,2.0);
-          double Eb = 4.0*sigma*pow(particle_temperature,4.0);
+          //          double Eb = 4.0*sigma*pow(particle_temperature,4.0);
+          double Eb = 4.0*sigma*pow(gas_temperature,4.0);
           FSum = radiationVolqIN[c];    
           Q_radiation = Apsc*(FSum - Eb);
           abskp_ = pi/4.0*Qabs*unscaled_weight*pow(unscaled_length,2.0); 
@@ -775,7 +780,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
           Q_reaction = charoxi_temp_source[c];
           heat_rate_ = ((Q_convection + Q_radiation)*unscaled_weight + ksi*Q_reaction - devol_gas_source[c]*hc - chargas_source[c]*hh)/
                        (d_pe_scaling_constant*d_w_scaling_constant);
-          gas_heat_rate_ = -unscaled_weight*Q_convection - ksi*Q_reaction + devol_gas_source[c]*hc + chargas_source[c]*hh;
+          gas_heat_rate_ = -unscaled_weight*(Q_convection+1.0*Q_radiation) - ksi*Q_reaction + devol_gas_source[c]*hc + chargas_source[c]*hh;
         }
       }
   
