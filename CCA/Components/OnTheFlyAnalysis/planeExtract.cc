@@ -103,7 +103,7 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
     throw InternalError("planeExtract:couldn't get output port", __FILE__, __LINE__);
   }
                                
-  ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime",
+  ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime_planeE",
                                             max_vartype::getTypeDescription());
 
   //__________________________________
