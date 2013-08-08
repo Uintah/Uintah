@@ -4611,6 +4611,41 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           found_bc = true; 
 
           // note that the mass flow rate is in the BCstruct value 
+          
+          //compute the density:
+          typedef std::vector<std::string> StringVec; 
+          typedef std::map<std::string, double> StringDoubleMap;
+          MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
+          StringVec iv_var_names = mixingTable->getAllIndepVars(); 
+          vector<double> iv; 
+
+          for ( StringVec::iterator iv_iter = iv_var_names.begin(); iv_iter != iv_var_names.end(); iv_iter++){
+
+            string curr_iv = *iv_iter; 
+            cout << curr_iv << endl;
+
+            for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0; 
+                db_BCType2 = db_BCType2->findNextBlock("BCType") ){
+
+              string curr_var; 
+              db_BCType2->getAttribute("label",curr_var);
+
+              if ( curr_var == curr_iv ){
+                string type;
+                db_BCType2->getAttribute("var",type);
+                if ( type != "Dirichlet"){
+                  throw InvalidValue("Error: Cannot compute property values for MassFlowInlet because not all IVs are of type Dirichlet: "+curr_var, __FILE__, __LINE__); 
+                } else { 
+                  double value; 
+                  db_BCType2->require("value",value);
+                  iv.push_back(value);
+                }
+              }
+            }
+          }
+
+          double density = mixingTable->getTableValue(iv,"density");
+          my_info.density = density; 
 
           //old: remove when this is cleaned up: 
           d_inletBoundary = true; 
@@ -5093,15 +5128,15 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
 
               if ( density[*bound_ptr] > 1e-10 ){ 
 
-                if ( (bc_iter->second).type == MASSFLOW_INLET ) {
-                  (bc_iter->second).mass_flow_rate = bc_value; 
-                  (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
-                                                   ( area * density[*bound_ptr] );
-                } else if ( (bc_iter->second).type == SWIRL ) { 
-                    (bc_iter->second).mass_flow_rate = bc_value; 
-                    (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
-                                                     ( area * density[*bound_ptr] ); 
-                } 
+//                if ( (bc_iter->second).type == MASSFLOW_INLET ) {
+//                  (bc_iter->second).mass_flow_rate = bc_value; 
+//                  (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
+//                                                   ( area * density[*bound_ptr] );
+//                } else if ( (bc_iter->second).type == SWIRL ) { 
+//                    (bc_iter->second).mass_flow_rate = bc_value; 
+//                    (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
+//                                                     ( area * density[*bound_ptr] );
+//                } 
 
                 switch ( bc_iter->second.type ) {
 
@@ -5114,7 +5149,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                   case ( MASSFLOW_INLET ): 
                     bc_iter->second.mass_flow_rate = bc_value; 
                     bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
-                                                     ( area * density[*bound_ptr] );
+                                                     ( area * bc_iter->second.density );
                     break;
                   case ( SWIRL ):
                     bc_iter->second.mass_flow_rate = bc_value; 
@@ -5138,7 +5173,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
       proc0cout << "  ----> BC Label: " << bc_iter->second.name << endl;
       proc0cout << "            area: " << area << endl;
       proc0cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
-      proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl; 
+      proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl;
 
     }
     proc0cout << endl;

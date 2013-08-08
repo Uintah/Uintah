@@ -615,10 +615,10 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             if (i->first == "density") {
               // Two ways of setting density.  Note that the old ARCHES code used the table value directly and not the ghost_value as defined below. 
               // This gets density = bc value on face:
-              //double ghost_value = 2.0*table_value - arches_density[cp1];
-              //arches_density[c] = ghost_value; 
+              double ghost_value = 2.0*table_value - arches_density[cp1];
+              arches_density[c] = ghost_value; 
               // This gets density = bc value in extra cell 
-              arches_density[c] = table_value; 
+              //arches_density[c] = table_value; 
 
               if (d_MAlab)
                 mpmarches_denmicro[c] = table_value; 
