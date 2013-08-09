@@ -2785,7 +2785,11 @@ E_{2}= & \alpha\Delta x_{2}^{p}
 
 \end_inset
 
-These equations can be easily solved by taking their ratio
+The order 
+\begin_inset Formula $p$
+\end_inset
+
+ is readily calculated by taking the ratio of these two equations
 \begin_inset Formula 
 \begin{equation}
 \frac{E_{1}}{E_{2}}=\left(\frac{\Delta x_{1}}{\Delta x_{2}}\right)^{p}=r_{x}^{p}.
@@ -2825,6 +2829,33 @@ key "oberkampf_verification_2010"
 
 \begin_layout Subsection
 Using Richardson's Extrapolation
+\end_layout
+
+\begin_layout Standard
+When an analytical solution is not available, or when one is dealing with
+ PDEs where the effects of spatial and temporal errors compound, Richardson's
+ extrapolation provides a convenient way of calculating the order of accuracy.
+ Recall that the order of accuracy of a given discretization method determines
+ the rate of convergence of the method.
+ Hence, in principle, one does not need an analytical solution to analyze
+ the rate of convergence.
+ The key disadvantage of this approach is that one cannot assess the validity
+ of the numerical solution.
+ However, such verification may be carried out by comparing to experimental
+ data or nuermical solutions obtained via other codes.
+\end_layout
+
+\begin_layout Standard
+Given three numerical solutions that were obtained with systematic mesh
+ refinement, the order of a method can be determined via
+\begin_inset Formula 
+\begin{equation}
+p=\ln\left(\frac{f_{i+2}-f_{i+1}}{f_{i+1}-f_{i}}\right)\frac{1}{\ln\frac{1}{r}}.
+\end{equation}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
