@@ -671,8 +671,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Weight equations:
         for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
              iEqn != weightEqns.end(); ++iEqn ) {
-          const VarLabel* source_label = (*iEqn)->getSourceLabel();
-
           if (z >= dimension ) {
             stringstream err_msg;
             err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
@@ -685,8 +683,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Weighted abscissa equations:
         for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
              iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-          const VarLabel* source_label = (*iEqn)->getSourceLabel();
-
           // Make sure several critera are met for an acceptable solution
           if (z >= dimension ) {
             stringstream err_msg;
@@ -751,7 +747,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           // Weight equations:
           for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
               iEqn != weightEqns.end(); ++iEqn ) {
-              const VarLabel* source_label = (*iEqn)->getSourceLabel();
               
               if (z >= dimension ) {
                   stringstream err_msg;
@@ -766,7 +761,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           // Weighted abscissa equations:
           for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
               iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-              const VarLabel* source_label = (*iEqn)->getSourceLabel();
 
               // Make sure several critera are met for an acceptable solution
               if (z >= dimension ) {
@@ -947,7 +941,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Weight equations:
         for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
              iEqn != weightEqns.end(); ++iEqn ) {
-          const VarLabel* source_label = (*iEqn)->getSourceLabel();
 
           if (z >= dimension ) {
             stringstream err_msg;
@@ -969,7 +962,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Weighted abscissa equations:
         for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); 
              iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-          const VarLabel* source_label = (*iEqn)->getSourceLabel();
   
           // Make sure several critera are met for an acceptable solution
           if (z >= dimension ) {
@@ -1307,7 +1299,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Weight equations:
         for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
              iEqn != weightEqns.end(); ++iEqn ) {
-          const VarLabel* source_label = (*iEqn)->getSourceLabel();
 
           if (z >= dimension ) {
             stringstream err_msg;
@@ -1329,7 +1320,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Weighted abscissa equations:
         for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); 
              iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-          const VarLabel* source_label = (*iEqn)->getSourceLabel();
   
           // Make sure several critera are met for an acceptable solution
           if (z >= dimension ) {
@@ -1370,14 +1360,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       // set weight transport eqn source terms equal to zero
       for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
            iEqn != weightEqns.end(); iEqn++) {
-        const VarLabel* source_label = (*iEqn)->getSourceLabel();
         (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
       }
 
       // set weighted abscissa transport eqn source terms equal to results
       for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
            iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-        const VarLabel* source_label = (*iEqn)->getSourceLabel();
         (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
       }
 
