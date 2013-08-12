@@ -1158,19 +1158,19 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 	  if (d_cm.T2_rate_dependence == 0 && d_cm.T1_rate_dependence != 0){
 	  tau1 = d_cm.T1_rate_dependence;
           tau = max(tau1 , 1E-15); // asking non-zero tau 
-          cout << "D(0,1) = " << D(0,1) << endl;
-          cout << "D(0,0) = " << D(0,0) << endl;
-          cout << "D(1,1) = " << D(1,1) << endl;
-          cout << "D(2,2) = " << D(2,2) << endl;
+        //cout << "D(0,1) = " << D(0,1) << endl;
+        //cout << "D(0,0) = " << D(0,0) << endl;
+        //cout << "D(1,1) = " << D(1,1) << endl;
+        //cout << "D(2,2) = " << D(2,2) << endl;
         //cout << "Part 2 T2=0, T1!=0, Tau = " << tau << endl;
         //cout << "pStressQS_new[idx] = " << pStressQS_new[idx] << endl;
         //cout << "pStress_new[idx] = " << pStress_new[idx] << endl;
           }
           else{
-          cout << "D(0,1) = " << D(0,1) << endl;
-          cout << "D(0,0) = " << D(0,0) << endl;
-          cout << "D(1,1) = " << D(1,1) << endl;
-          cout << "D(2,2) = " << D(2,2) << endl;
+        //cout << "D(0,1) = " << D(0,1) << endl;
+        //cout << "D(0,0) = " << D(0,0) << endl;
+        //cout << "D(1,1) = " << D(1,1) << endl;
+        //cout << "D(2,2) = " << D(2,2) << endl;
         // Compute the norm of strain rate
         double Dnormsq = D(0,0)*D(0,0) +
                          D(1,1)*D(1,1) +
@@ -1178,10 +1178,10 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                          2.0*(D(0,1)*D(0,1) +
                          D(0,2)*D(0,2) +
                          D(1,2)*D(1,2));
-         cout << "D(0,0) = " << D(0,0) << endl;
+       //cout << "D(0,0) = " << D(0,0) << endl;
          double Dnorm1 = Pow(Dnormsq,0.5);
          double Dnorm = max(Dnorm1 , 1e-15); // print result to observe the range
-         cout <<"Dnorm="<<Dnorm << endl;
+       //cout <<"Dnorm="<<Dnorm << endl;
          double inv_eqstrain = 1.0/Dnorm;
 
         tau1 = d_cm.T1_rate_dependence*Pow(inv_eqstrain,d_cm.T2_rate_dependence);
