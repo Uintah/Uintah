@@ -3176,66 +3176,90 @@ void ICE::updateVel_FC(const ProcessorGroup*,
  Purpose~   Add the exchange contribution to vel_FC and compute 
             sp_vol_FC for implicit Pressure solve
 _____________________________________________________________________*/
-template<class V, class T> 
+template<class constSFC, class SFC> 
     void ICE::add_vel_FC_exchange( CellIterator iter,
-                             IntVector adj_offset,
-                             int numMatls,
-                             FastMatrix& K,
-                             double delT,
-                             StaticArray<constCCVariable<double> >& vol_frac_CC,
-                             StaticArray<constCCVariable<double> >& sp_vol_CC,
-                             V& vel_FC,
-                             T& sp_vol_FC,
-                             T& vel_FCME)        
+                                   IntVector adj_offset,
+                                   int numMatls,
+                                   FastMatrix& K,
+                                   double delT,
+                                   StaticArray<constCCVariable<double> >& vol_frac_CC,
+                                   StaticArray<constCCVariable<double> >& sp_vol_CC,
+                                   StaticArray< constSFC> & vel_FC,
+                                   StaticArray< SFC >& sp_vol_FC,
+                                   StaticArray< SFC >& vel_FCME)        
                                        
 {
-  double b[MAX_MATLS], b_sp_vol[MAX_MATLS];
-  double vel[MAX_MATLS], tmp[MAX_MATLS];
-  FastMatrix a(numMatls, numMatls);
+  //__________________________________
+  //          Single Material
+  if (numMatls == 1){
+
+    // put in tmp arrays for speed!
+    constCCVariable<double>& sp_vol_tmp = sp_vol_CC[0];
+    constSFC& vel_FC_tmp  = vel_FC[0];         
+    SFC& vel_FCME_tmp     = vel_FCME[0];
+    SFC& sp_vol_FC_tmp    = sp_vol_FC[0];
+
+    for(;!iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector adj = c + adj_offset; 
+      double sp_vol     = sp_vol_tmp[c];
+      double sp_vol_adj = sp_vol_tmp[adj];
+      double sp_volFC   = 2.0 * (sp_vol_adj * sp_vol)/
+                                (sp_vol_adj + sp_vol);
+
+      sp_vol_FC_tmp[c] = sp_volFC;
+      vel_FCME_tmp[c] = vel_FC_tmp[c];
+    }
+  }
+  else{         // Multi-material
+    double b[MAX_MATLS], b_sp_vol[MAX_MATLS];
+    double vel[MAX_MATLS], tmp[MAX_MATLS];
+    FastMatrix a(numMatls, numMatls);
   
-  for(;!iter.done(); iter++){
-    IntVector c = *iter;
-    IntVector adj = c + adj_offset; 
+    for(;!iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector adj = c + adj_offset; 
 
-    //__________________________________
-    //   Compute beta and off diagonal term of
-    //   Matrix A, this includes b[m][m].
-    //  You need to make sure that mom_exch_coeff[m][m] = 0
-    
-    // - Form diagonal terms of Matrix (A)
-    //  - Form RHS (b) 
-    for(int m = 0; m < numMatls; m++)  {
-      b_sp_vol[m] = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/
-        (sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
-      tmp[m] = -0.5 * delT * (vol_frac_CC[m][adj] + vol_frac_CC[m][c]);
-      vel[m] = vel_FC[m][c];
-    }
+      //__________________________________
+      //   Compute beta and off diagonal term of
+      //   Matrix A, this includes b[m][m].
+      //  You need to make sure that mom_exch_coeff[m][m] = 0
 
-    for(int m = 0; m < numMatls; m++)  {
-      double betasum = 1;
-      double bsum = 0;
-      double bm = b_sp_vol[m];
-      double vm = vel[m];
-      for(int n = 0; n < numMatls; n++)  {
-        double b = bm * tmp[n] * K(n,m);
-        a(m,n)    = b;
-        betasum -= b;
-        bsum -= b * (vel[n] - vm);
+      // - Form diagonal terms of Matrix (A)
+      //  - Form RHS (b) 
+      for(int m = 0; m < numMatls; m++)  {
+        b_sp_vol[m] = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/
+          (sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
+        tmp[m] = -0.5 * delT * (vol_frac_CC[m][adj] + vol_frac_CC[m][c]);
+        vel[m] = vel_FC[m][c];
       }
-      a(m,m) = betasum;
-      b[m] = bsum;
-    }
 
-    //__________________________________
-    //  - solve and backout velocities
-    
-    a.destructiveSolve(b, b_sp_vol);
-    //  For implicit solve we need sp_vol_FC
-    for(int m = 0; m < numMatls; m++) {
-      vel_FCME[m][c] = vel_FC[m][c] + b[m];
-      sp_vol_FC[m][c] = b_sp_vol[m];// only needed by implicit Pressure
-    }
-  }  // iterator
+      for(int m = 0; m < numMatls; m++)  {
+        double betasum = 1;
+        double bsum = 0;
+        double bm = b_sp_vol[m];
+        double vm = vel[m];
+        for(int n = 0; n < numMatls; n++)  {
+          double b = bm * tmp[n] * K(n,m);
+          a(m,n)    = b;
+          betasum -= b;
+          bsum -= b * (vel[n] - vm);
+        }
+        a(m,m) = betasum;
+        b[m] = bsum;
+      }
+
+      //__________________________________
+      //  - solve and backout velocities
+
+      a.destructiveSolve(b, b_sp_vol);
+      //  For implicit solve we need sp_vol_FC
+      for(int m = 0; m < numMatls; m++) {
+        vel_FCME[m][c] = vel_FC[m][c] + b[m];
+        sp_vol_FC[m][c] = b_sp_vol[m];// only needed by implicit Pressure
+      }
+    }  // iterator
+  }  // multiple materials
 }
 
 /*_____________________________________________________________________
@@ -3349,22 +3373,22 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
                                 
     //__________________________________
     //  tack on exchange contribution
-    add_vel_FC_exchange<StaticArray<constSFCXVariable<double> >,
-                        StaticArray<     SFCXVariable<double> > >
+    add_vel_FC_exchange<constSFCXVariable<double> ,
+                        SFCXVariable<double> >
                         (XFC_iterator, 
                         adj_offset[0],  numMatls,    K, 
                         delT,           vol_frac_CC, sp_vol_CC,
                         uvel_FC,        sp_vol_XFC,  uvel_FCME);
-                        
-    add_vel_FC_exchange<StaticArray<constSFCYVariable<double> >,
-                        StaticArray<     SFCYVariable<double> > >
+ 
+    add_vel_FC_exchange<constSFCYVariable<double> ,
+                        SFCYVariable<double> >
                         (YFC_iterator, 
                         adj_offset[1],  numMatls,    K, 
                         delT,           vol_frac_CC, sp_vol_CC,
                         vvel_FC,        sp_vol_YFC,  vvel_FCME);
                         
-    add_vel_FC_exchange<StaticArray<constSFCZVariable<double> >,
-                        StaticArray<     SFCZVariable<double> > >
+    add_vel_FC_exchange<constSFCZVariable<double> ,
+                        SFCZVariable<double> >
                         (ZFC_iterator, 
                         adj_offset[2],  numMatls,    K, 
                         delT,           vol_frac_CC, sp_vol_CC,
