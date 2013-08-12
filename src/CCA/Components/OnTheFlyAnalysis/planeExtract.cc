@@ -432,6 +432,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
   double now = d_dataArchiver->getCurrentTime();
   
   if(now < d_startTime || now > d_stopTime){
+    new_dw->put(max_vartype(lastWriteTime), ps_lb->lastWriteTimeLabel);
     return;
   }
   
