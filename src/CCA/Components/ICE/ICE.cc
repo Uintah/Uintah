@@ -1567,8 +1567,15 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
 
   cout_doing << d_myworld->myrank() << " ICE::scheduleAddExchangeToMomentumAndEnergy" 
              << "\t\t\tL-"<< levelIndex << endl;
-  t=scinew Task("ICE::addExchangeToMomentumAndEnergy",
+             
+ if(d_sharedState->getNumMatls() == 1){            
+    t=scinew Task("ICE::addExchangeToMomentumAndEnergy_1matl",
+                this, &ICE::addExchangeToMomentumAndEnergy_1matl);             
+
+  } else {           
+    t=scinew Task("ICE::addExchangeToMomentumAndEnergy",
                 this, &ICE::addExchangeToMomentumAndEnergy);
+  }
 
   Ghost::GhostType  gn  = Ghost::None;
 //  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
@@ -4558,6 +4565,101 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
   }  // patch loop
 }
 
+
+///______________________________________________________________________
+//   Single material version of momentum and heat exchange.
+//   It sets the boundary conditions.  Do this for speed
+void ICE::addExchangeToMomentumAndEnergy_1matl(const ProcessorGroup*,
+                                               const PatchSubset* patches,
+                                               const MaterialSubset*,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw)
+{
+  const Level* level = getLevel(patches);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << d_myworld->myrank() << " Doing doCCMomExchange_1matl on patch "<< patch->getID()
+               <<"\t\t\t ICE \tL-" <<level->getIndex()<< endl;
+
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
+
+    CCVariable<double>  Temp_CC;
+    constCCVariable<double>  gamma;
+    constCCVariable<Vector>  mom_L;
+    constCCVariable<double>  int_eng_L;
+    constCCVariable<double>  cv;
+
+    // Create variables for the results
+    CCVariable<Vector>  mom_L_ME;
+    CCVariable<Vector>  vel_CC;
+    CCVariable<double>  int_eng_L_ME;
+    CCVariable<double>  Tdot;
+    constCCVariable<double>  mass_L;
+    constCCVariable<double>  old_temp;
+    
+    Ghost::GhostType  gn = Ghost::None;
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);   
+    int indx = ice_matl->getDWIndex();
+    
+    old_dw->get(old_temp,  lb->temp_CCLabel,      indx, patch, gn, 0);   
+    new_dw->get(cv,        lb->specific_heatLabel,indx, patch, gn, 0);   
+    new_dw->get(gamma,     lb->gammaLabel,        indx, patch, gn, 0);   
+    new_dw->get(mass_L,    lb->mass_L_CCLabel,    indx, patch, gn, 0);   
+    new_dw->get(mom_L,     lb->mom_L_CCLabel,     indx, patch, gn, 0);   
+    new_dw->get(int_eng_L, lb->int_eng_L_CCLabel, indx, patch, gn, 0);   
+    
+    new_dw->allocateAndPut(Tdot,        lb->Tdot_CCLabel,    indx,patch);
+    new_dw->allocateAndPut(mom_L_ME,    lb->mom_L_ME_CCLabel,indx,patch);
+    new_dw->allocateAndPut(int_eng_L_ME,lb->eng_L_ME_CCLabel,indx,patch);
+    
+    new_dw->allocateTemporary(vel_CC,  patch);
+    new_dw->allocateTemporary(Temp_CC, patch);
+
+    //__________________________________
+    // Convert momenta to velocities and internal energy to Temp
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      Temp_CC[c] = int_eng_L[c]/(mass_L[c]*cv[c]);  
+      vel_CC[c]  = mom_L[c]/mass_L[c];              
+    }
+
+    //__________________________________
+    //  Apply boundary conditions
+    if(d_customBC_var_basket->usingLodi || 
+       d_customBC_var_basket->usingMicroSlipBCs){ 
+      CCVariable<double> temp_CC_Xchange;
+      CCVariable<Vector> vel_CC_Xchange;
+      
+      new_dw->allocateAndPut(temp_CC_Xchange,lb->temp_CC_XchangeLabel,indx,patch);
+      new_dw->allocateAndPut(vel_CC_Xchange, lb->vel_CC_XchangeLabel, indx,patch);
+      vel_CC_Xchange.copy(  vel_CC  );
+      temp_CC_Xchange.copy( Temp_CC );
+    }
+ 
+    preprocess_CustomBCs("CC_Exchange",old_dw, new_dw, lb, patch, indx, d_customBC_var_basket);
+
+    setBC(vel_CC, "Velocity",   patch, d_sharedState, indx, new_dw, d_customBC_var_basket);
+    setBC(Temp_CC,"Temperature",gamma, cv, patch, d_sharedState, 
+                                       indx, new_dw,  d_customBC_var_basket);
+#if SET_CFI_BC                                         
+//      set_CFI_BC<Vector>(vel_CC[m],  patch);
+//      set_CFI_BC<double>(Temp_CC[m], patch);
+#endif
+    delete_CustomBCs(d_customBC_var_basket);
+    
+    //__________________________________
+    // Convert vars. primitive-> flux 
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      int_eng_L_ME[c] = Temp_CC[c]*cv[c] * mass_L[c];
+      mom_L_ME[c]     = vel_CC[c]        * mass_L[c];
+      Tdot[c]         = (Temp_CC[c] - old_temp[c])/delT;
+    }
+  } //patches
+}
+
+
 /*_____________________________________________________________________
  Function~  ICE::addExchangeToMomentumAndEnergy--
    This task adds the  exchange contribution to the 
@@ -4590,10 +4692,10 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
  by Kashiwa, above equation 4.13.
  _____________________________________________________________________  */
 void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+                                         const PatchSubset* patches,
+                                         const MaterialSubset*,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){

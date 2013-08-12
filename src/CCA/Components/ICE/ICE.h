@@ -502,6 +502,12 @@ namespace Uintah {
                                            DataWarehouse*,
                                            DataWarehouse*);
 
+      void addExchangeToMomentumAndEnergy_1matl(const ProcessorGroup*,
+                                                const PatchSubset* ,
+                                                const MaterialSubset*,
+                                                DataWarehouse* ,
+                                                DataWarehouse* );
+
       void addExchangeToMomentumAndEnergy(const ProcessorGroup*,
                                           const PatchSubset*,
                                           const MaterialSubset*,
