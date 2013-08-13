@@ -216,7 +216,11 @@ evaluate()
     *iC <<= 32.0*PI/3.0* molecularVolume_ * molecularVolume_ * surfaceEnergy_ * surfaceEnergy_ * surfaceEnergy_ / 
             (KB*KB*KB *temperature_*temperature_*temperature_ *log(*superSat_) *log(*superSat_)* log(*superSat_) );
   }
-  *z <<= sqrt( *delG/ (3.0*PI*KB*temperature_* *iC * *iC) );
+  //add in a check for gibb's energy < 0 for stability
+  *z <<= cond( *delG > 0.0, sqrt( *delG/ (3.0*PI*KB*temperature_* *iC * *iC) ) )
+             (1.0);
+  *delG <<= cond( *delG > 0.0, *delG )
+                (0.0);
   
   *kF <<= diffusionCoef_ * pow(48.0*PI*PI*molecularVolume_ * *iC, 1.0/3.0);
   *N1 <<= NA * *eqConc_ * *superSat_;
