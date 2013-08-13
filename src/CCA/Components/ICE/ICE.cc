@@ -3517,14 +3517,13 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       // Advection preprocessing
       // - divide vol_frac_cc/vol
       bool bulletProof_test=true;
+      advectVarBasket* varBasket = scinew advectVarBasket();
+      
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx,
-                                    bulletProof_test, new_dw); 
+                                    bulletProof_test, new_dw, varBasket); 
       //__________________________________
       //   advect vol_frac
-      // common variables that get passed into the advection operators
-      advectVarBasket* varBasket = scinew advectVarBasket();
       varBasket->doRefluxing = false;  // don't need to reflux here
-      
       advector->advectQ(vol_frac, patch, q_advected, varBasket,  
                         vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw);
                         
@@ -5176,10 +5175,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       advectVarBasket* varBasket = scinew advectVarBasket();
       varBasket->new_dw = new_dw;
       varBasket->old_dw = old_dw;
-      varBasket->indx = indx;
-      varBasket->patch = patch;
-      varBasket->level = level;
-      varBasket->lb  = lb;
+      varBasket->indx   = indx;
+      varBasket->patch  = patch;
+      varBasket->level  = level;
+      varBasket->lb     = lb;
       varBasket->doRefluxing = d_doRefluxing;
       varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
       varBasket->AMR_subCycleProgressVar = AMR_subCycleProgressVar;
@@ -5187,8 +5186,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       //__________________________________
       //   Advection preprocessing
       bool bulletProof_test=true;
-      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx,
-                                    bulletProof_test, new_dw); 
+      advector->inFluxOutFluxVolume(uvel_FC, vvel_FC, wvel_FC, delT, patch,indx,
+                                    bulletProof_test, new_dw, varBasket); 
       //__________________________________
       // mass
       advector->advectMass(mass_L, q_advected,  varBasket);

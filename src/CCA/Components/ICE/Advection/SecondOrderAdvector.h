@@ -56,7 +56,8 @@ namespace Uintah {
                                      const Patch* patch,
                                      const int& indx,
                                      const bool& bulletProof_test,
-                                     DataWarehouse* new_dw);
+                                     DataWarehouse* new_dw,
+                                     advectVarBasket* varBasket);
                          
     virtual void  advectQ(const CCVariable<double>& q_CC,
                           const Patch* patch,
@@ -82,7 +83,6 @@ namespace Uintah {
                             advectVarBasket* vb);
 
   private:
-    CCVariable<fflux> d_OFS;  // outflux slabs
     CCVariable<facedata<double> > d_mass_slabs;  // outflux slabs
 
   private:                                 
@@ -104,12 +104,14 @@ namespace Uintah {
                        SFCXVariable<double>& q_XFC,
                        SFCYVariable<double>& q_YFC,
                        SFCZVariable<double>& q_ZFC,
-                       F save_q_FC);  // passed in function
+                       F save_q_FC,
+                       advectVarBasket* varBasket);  // passed in function
                        
     template<class T>
       void q_FC_operator(CellIterator iter, 
                          IntVector adj_offset,
                          const int face,
+                         const CCVariable< fflux >& OFS,
                          const CCVariable<facedata<double> >& q_OAFS,
                          const CCVariable<double>& q_CC,
                          T& q_FC);
@@ -119,7 +121,8 @@ namespace Uintah {
                           const Patch* patch,
                           SFCXVariable<double>& q_XFC,
                           SFCYVariable<double>& q_YFC,
-                          SFCZVariable<double>& q_ZFC);
+                          SFCZVariable<double>& q_ZFC,
+                          advectVarBasket* vb);
                           
     template<class T, class V>
       void q_FC_flux_operator(CellIterator iter, 
@@ -127,6 +130,7 @@ namespace Uintah {
                               const int face,
                               const Patch* patch,
                               const bool is_Q_massSpecific,
+                              const CCVariable< fflux >& OFS,
                               const CCVariable<facedata<V> >& q_OAFS,
                               T& q_FC_flux);
                                   
