@@ -557,14 +557,11 @@ namespace Wasatch {
         // loop over every patch in the patch subset
         for( int ipss=0; ipss<patches->size(); ++ipss ){
           
-          // get a pointer to the current patch
-          const Uintah::Patch* const patch = patches->get(ipss);
-          
           // loop over materials
           for( int im=0; im<materials->size(); ++im ){
             //    if (hasVolFrac_) {
             // attach the modifier expression to the target expression
-            factory.attach_modifier_expression( modifierTag, phiTag, patch->getID(), true );
+            factory.attach_modifier_expression( modifierTag, phiTag, true );
             //    }
             
           }

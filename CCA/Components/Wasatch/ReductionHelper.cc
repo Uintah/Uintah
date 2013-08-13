@@ -281,7 +281,6 @@ namespace Wasatch {
                                    Uintah::SchedulerP sched,
                                    const Uintah::MaterialSet* const materials,
                                    const Expr::ExpressionTree::TreePtr tree,
-                                   const int patchID,
                                    const int rkStage)
   {
     // go through reduction variables that are computed in this Wasatch Task
@@ -292,7 +291,7 @@ namespace Wasatch {
       const Expr::Tag rtag = pair.first;
       const bool compute = (pair.second) ? true : rkStage==1;
       if (tree->computes_field( rtag) && compute) {
-        ReductionBase& redExpr = dynamic_cast<ReductionBase&>( factory.retrieve_expression( rtag, patchID, false ) );
+        ReductionBase& redExpr = dynamic_cast<ReductionBase&>( factory.retrieve_expression( rtag, false ) );
         redExpr.schedule_set_reduction_vars( level, sched, materials, rkStage  );
       }
     }    
