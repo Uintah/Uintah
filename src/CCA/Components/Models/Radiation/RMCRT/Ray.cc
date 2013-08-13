@@ -666,7 +666,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
    }
     unsigned long int size = 0;                        // current size of PathIndex
     Vector Dx = patch->dCell();                        // cell spacing
- 
+    double DyDxRatio = Dx.y() / Dx.x();                //noncubic
+    double DzDxRatio = Dx.z() / Dx.x();                //noncubic 
     //______________________________________________________________________
     //           R A D I O M E T E R
     //______________________________________________________________________
@@ -697,9 +698,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
             Vector direction_vector;
             Vector inv_direction_vector;
-
-            double DyDxRatio = Dx.y() / Dx.x(); //noncubic
-            double DzDxRatio = Dx.z() / Dx.x(); //noncubic
             
             Vector ray_location;
             ray_location[0] =   i +  0.5 ;
@@ -936,17 +934,16 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
             IntVector cur = origin;
 
-            if(_isSeedRandom == false){           // !! This could use a compiler directive for speed-up
+            if(_isSeedRandom == false){                 // !! This could use a compiler directive for speed-up
               _mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
             }
-
-            Vector direction_vector;
 
             // Surface Way to generate a ray direction from the positive z face
             double phi   = 2 * M_PI * _mTwister.rand(); //azimuthal angle.  Range of 0 to 2pi
             double theta = acos(_mTwister.rand());      // polar angle for the hemisphere
           
             //Convert to Cartesian
+            Vector direction_vector;
             direction_vector[0] =  sin(theta) * cos(phi);
             direction_vector[1] =  sin(theta) * sin(phi);
             direction_vector[2] =  cos(theta);
@@ -955,8 +952,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
             adjustDirection(direction_vector, dirIndexOrder[RayFace], dirSignSwap[RayFace]);
             Vector inv_direction_vector = Vector(1.0)/direction_vector;
 
-            double DyDxRatio = Dx.y() / Dx.x(); //noncubic
-            double DzDxRatio = Dx.z() / Dx.x(); //noncubic
+
 
             Vector ray_location;
 
@@ -967,9 +963,12 @@ Ray::rayTrace( const ProcessorGroup* pc,
           
             // Put point on correct face
             adjustLocation(ray_location, locationIndexOrder[RayFace],  locationShift[RayFace], DyDxRatio, DzDxRatio);
+            
+            
             ray_location[0] += origin.x();
             ray_location[1] += origin.y();
             ray_location[2] += origin.z();
+            
             updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, &_mTwister);
 
             sumProjI += cos(theta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
@@ -1049,9 +1048,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
         direction_vector[1] = r*sin(theta);
         direction_vector[2] = plusMinus_one;                  
         Vector inv_direction_vector = Vector(1.0)/direction_vector;
-
-        double DyDxRatio = Dx.y() / Dx.x(); //noncubic
-        double DzDxRatio = Dx.z() / Dx.x(); //noncubic
         
         Vector ray_location;
         Vector ray_location_prev;
@@ -1353,16 +1349,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
         int step[3];                                           // Gives +1 or -1 based on sign
         bool sign[3];
-        for ( int ii= 0; ii<3; ii++){
-          if (inv_direction[ii]>0){
-            step[ii] = 1;
-            sign[ii] = 1;
-          }
-          else{
-            step[ii] = -1;
-            sign[ii] = 0;
-          }
-        }
+        findStepSize( step, sign, inv_direction );
         
         //__________________________________
         // define tMax & tDelta on all levels
@@ -1653,6 +1640,24 @@ Ray::computeExtents(LevelP level_0,
   }  
 }
 
+//______________________________________________________________________
+//
+void Ray::findStepSize(int step[],
+                       bool sign[],
+                       const Vector& inv_direction_vector){
+  // get new step and sign
+  for ( int d= 0; d<3; d++){
+    if (inv_direction_vector[d]>0){
+      step[d] = 1;
+      sign[d] = 1;
+    }
+    else{
+      step[d] = -1;
+      sign[d] = 0;
+    }
+  }
+}
+
 
 
 //______________________________________________________________________
@@ -1694,9 +1699,9 @@ bool Ray::has_a_boundary(const IntVector &c,
   bool hasBoundary = false;
 
   adjacentCell = c;
-  adjacentCell[0] = c[0] - 1; // west
+  adjacentCell[0] = c[0] - 1;     // west
 
-  if (celltype[adjacentCell]+1){ // cell type of flow is -1, so when cellType+1 isn't false, we
+  if (celltype[adjacentCell]+1){    // cell type of flow is -1, so when cellType+1 isn't false, we
     boundaryFaces.push_back(0);     // know we're at a boundary
     hasBoundary = true;
   }
@@ -1709,7 +1714,7 @@ bool Ray::has_a_boundary(const IntVector &c,
   }
 
   adjacentCell[0] -= 1;
-  adjacentCell[1] = c[1] - 1; // south
+  adjacentCell[1] = c[1] - 1;     // south
 
   if (celltype[adjacentCell]+1){
     boundaryFaces.push_back(2);
@@ -1724,14 +1729,14 @@ bool Ray::has_a_boundary(const IntVector &c,
   }
 
   adjacentCell[1] -= 1;
-  adjacentCell[2] = c[2] - 1; // bottom
+  adjacentCell[2] = c[2] - 1;     // bottom
 
   if (celltype[adjacentCell]+1){
     boundaryFaces.push_back(4);
     hasBoundary = true;
   }
 
-  adjacentCell[2] += 2; // top
+  adjacentCell[2] += 2;           // top
 
   if (celltype[adjacentCell]+1){
     boundaryFaces.push_back(5);
@@ -2283,16 +2288,8 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
   // Step and sign for ray marching
    int step[3];                                          // Gives +1 or -1 based on sign
    bool sign[3];
-   for ( int ii= 0; ii<3; ii++){
-     if (inv_direction_vector[ii]>0){
-       step[ii] = 1;
-       sign[ii] = 1;
-     }
-     else{
-       step[ii] = -1;
-       sign[ii] = 0;
-     }
-   }
+   
+   findStepSize(step, sign, inv_direction_vector);
 
    double DyDxRatio = Dx.y() / Dx.x(); //noncubic
    double DzDxRatio = Dx.z() / Dx.x(); //noncubic
@@ -2401,27 +2398,19 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
 
          // Get new direction (below is isotropic scatteirng)
          double plusMinus_one = 2 * _mTwister->randDblExc() - 1;
-         double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
-         double theta = 2 * M_PI * _mTwister->randDblExc();            // Uniform betwen 0-2Pi
+         double r = sqrt(1 - plusMinus_one * plusMinus_one);          // Radius of circle at z
+         double theta = 2 * M_PI * _mTwister->randDblExc();           // Uniform betwen 0-2Pi
 
          Vector direction_vector;
-         direction_vector[0] = r*cos(theta);                   // Convert to cartesian
+         direction_vector[0] = r*cos(theta);                          // Convert to cartesian
          direction_vector[1] = r*sin(theta);
          direction_vector[2] = plusMinus_one;
 
          inv_direction_vector = Vector(1.0)/direction_vector;
 
          // get new step and sign
-         for ( int ii= 0; ii<3; ii++){
-           if (inv_direction_vector[ii]>0){
-             step[ii] = 1;
-             sign[ii] = 1;
-           }
-           else{
-             step[ii] = -1;
-             sign[ii] = 0;
-           }
-         }
+         findStepSize( step, sign, inv_direction_vector);
+         
 
          // if sign[face] changes sign, put ray back into prevCell (back scattering)
          // a sign change only occurs when the product of old and new is negative
@@ -2452,7 +2441,11 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
 
      //  wall emission 12/15/11
      double wallEmissivity = abskg[cur];
-     if (wallEmissivity > 1.0) wallEmissivity = 1.0; // Ensure wall emissivity doesn't exceed one. 
+     
+     if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one. 
+       wallEmissivity = 1.0;
+     } 
+     
      sumI += wallEmissivity*sigmaT4OverPi[cur] * intensity;
 
      intensity = intensity * fs;  
