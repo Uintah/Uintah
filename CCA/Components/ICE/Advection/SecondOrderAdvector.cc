@@ -51,7 +51,6 @@ SecondOrderAdvector::SecondOrderAdvector(DataWarehouse* new_dw,
                                          const bool isNewGrid) 
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
-  new_dw->allocateTemporary(d_OFS,         patch, gac, 1);
   new_dw->allocateTemporary(r_out_x,       patch, gac, 1); 
   new_dw->allocateTemporary(r_out_y,       patch, gac, 1); 
   new_dw->allocateTemporary(r_out_z,       patch, gac, 1);
@@ -67,7 +66,6 @@ SecondOrderAdvector::SecondOrderAdvector(DataWarehouse* new_dw,
       const IntVector& c = *iter;
 
       for(int face = TOP; face <= BACK; face++ )  {
-        d_OFS[c].d_fflux[face]    = EVILNUM;
         r_out_x[c].d_fflux[face]  = EVILNUM;
         r_out_y[c].d_fflux[face]  = EVILNUM;
         r_out_z[c].d_fflux[face]  = EVILNUM;
@@ -117,7 +115,8 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
                                           const Patch* patch,
                                           const int& indx,
                                           const bool& bulletProof_test,
-                                          DataWarehouse* new_dw)
+                                          DataWarehouse* new_dw,
+                                          advectVarBasket* VB)
 
 {
 
@@ -127,7 +126,8 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
   double delY_top, delY_bottom, delX_right, delX_left, delZ_front, delZ_back;
   double delX = dx.x(), delY = dx.y(), delZ = dx.z();
   double r_x, r_y, r_z;
-
+  
+  new_dw->allocateTemporary(VB->OFS, patch, Ghost::AroundCells, 1);
   // Compute outfluxes 
 
   //__________________________________
@@ -151,7 +151,7 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
     double delX_Z = delX * delZ;
     double delX_Y = delX * delY;
     double delY_Z = delY * delZ;
-    fflux& ofs = d_OFS[c];
+    fflux& ofs = VB->OFS[c];
     ofs.d_fflux[TOP]   = delY_top   * delX_Z;
     ofs.d_fflux[BOTTOM]= delY_bottom* delX_Z;
     ofs.d_fflux[RIGHT] = delX_right * delY_Z;
@@ -219,11 +219,11 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
     for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++) {
       const IntVector& c = *iter; 
       double total_fluxout = 0.0;
-      fflux ofs = d_OFS[c];
+      fflux ofs = VB->OFS[c];
       
       for(int face = TOP; face <= BACK; face++ )  {
-        total_fluxout  += d_OFS[c].d_fflux[face];
-        d_OFS[c].d_fflux[face] = 0.0;
+        total_fluxout  += VB->OFS[c].d_fflux[face];
+        VB->OFS[c].d_fflux[face] = 0.0;
       }
       
       // keep track of which cells are bad
@@ -280,7 +280,7 @@ void SecondOrderAdvector::advectMass( const CCVariable<double>& mass,
 
   advectSlabs<double>(d_mass_slabs, patch,mass, mass_advected, 
                         d_notUsedX, d_notUsedY, d_notUsedZ, 
-                        ignore_q_FC_calc_D());
+                        ignore_q_FC_calc_D(), varBasket);
                       
   // compute mass_CC/mass_vertex for each cell node                    
   mass_massVertex_ratio(mass, patch, mass_grad_x, mass_grad_y, mass_grad_z);
@@ -344,7 +344,7 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& A_CC,
         
   advectSlabs<double>(q_OAFS,patch,q_CC, q_advected, 
                         d_notUsedX, d_notUsedY, d_notUsedZ, 
-                        ignore_q_FC_calc_D());
+                        ignore_q_FC_calc_D(), varBasket);
                       
   q_FC_fluxes<double>(q_CC, q_OAFS, varBasket->desc, varBasket);  
 }
@@ -388,9 +388,9 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
                         q_grad_x, q_grad_y, q_grad_z);
         
   advectSlabs<double>(q_OAFS,patch, q_CC, q_advected, 
-                      q_XFC, q_YFC, q_ZFC, save_q_FC());
+                      q_XFC, q_YFC, q_ZFC, save_q_FC(), varBasket);
                       
-  q_FC_PlusFaces( q_OAFS, q_CC, patch, q_XFC, q_YFC, q_ZFC);
+  q_FC_PlusFaces( q_OAFS, q_CC, patch, q_XFC, q_YFC, q_ZFC, varBasket);
   
   // fluxes on faces at the coarse fine interfaces                    
   q_FC_fluxes<double>(q_CC, q_OAFS, "vol_frac", varBasket);
@@ -442,7 +442,7 @@ void SecondOrderAdvector::advectQ(const CCVariable<Vector>& A_CC,
 
   advectSlabs<Vector>(q_OAFS,patch, q_CC, q_advected, 
                       d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignore_q_FC_calc_V());
+                      ignore_q_FC_calc_V(), varBasket);
 
   q_FC_fluxes<Vector>(q_CC, q_OAFS, varBasket->desc, varBasket);  
 }
@@ -458,13 +458,15 @@ void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
                                        SFCXVariable<double>& q_XFC,
                                        SFCYVariable<double>& q_YFC,
                                        SFCZVariable<double>& q_ZFC,
-                                       F save_q_FC)  // function is passed in
+                                       F save_q_FC,
+                                       advectVarBasket* VB)  // function is passed in
   
 {
                                  //  W A R N I N G
   Vector dx = patch->dCell();    // assumes equal cell spacing             
   double invVol = 1.0/(dx.x() * dx.y() * dx.z());     
 
+  CCVariable<fflux>& OFS = VB->OFS;  // for brevity
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
     const IntVector& c = *iter;
  
@@ -476,8 +478,8 @@ void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
       //__________________________________
       //   S L A B S
       IntVector ac = c + S_ac[f];     // slab adjacent cell
-      double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
-      double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
+      double outfluxVol = OFS[c ].d_fflux[OF_slab[f]];
+      double influxVol  = OFS[ac].d_fflux[IF_slab[f]];
 
       T q_faceFlux_tmp = q_OAFS[ac].d_data[IF_slab[f]] * influxVol
                        - q_OAFS[c].d_data[OF_slab[f]] * outfluxVol;
@@ -567,6 +569,7 @@ template<class T>
 void SecondOrderAdvector::q_FC_operator(CellIterator iter, 
                                         IntVector adj_offset,
                                         const int face,
+                                        const CCVariable< fflux >& OFS,
                                         const CCVariable<facedata<double> >& q_OAFS,
                                         const CCVariable<double>& q_CC,
                                         T& q_FC)
@@ -577,8 +580,8 @@ void SecondOrderAdvector::q_FC_operator(CellIterator iter,
      
      // face:           LEFT,   BOTTOM,   BACK  
      // IF_slab[face]:  RIGHT,  TOP,      FRONT
-    double outfluxVol = d_OFS[R].d_fflux[face];
-    double influxVol  = d_OFS[L].d_fflux[IF_slab[face]];
+    double outfluxVol = OFS[R].d_fflux[face];
+    double influxVol  = OFS[L].d_fflux[IF_slab[face]];
                        
     double q_faceFlux = q_OAFS[L].d_data[IF_slab[face]] * influxVol 
                       - q_OAFS[R].d_data[face] * outfluxVol;
@@ -597,13 +600,13 @@ void SecondOrderAdvector::q_FC_operator(CellIterator iter,
  Compute q_FC values on the faces between the extra cells
  and the interior domain only on the x+, y+, z+ patch faces 
 _____________________________________________________________________*/
-void SecondOrderAdvector::q_FC_PlusFaces(
-                                   const CCVariable<facedata<double> >& q_OAFS,
-                                   const CCVariable<double>& q_CC,
-                                   const Patch* patch,
-                                   SFCXVariable<double>& q_XFC,
-                                   SFCYVariable<double>& q_YFC,
-                                   SFCZVariable<double>& q_ZFC)
+void SecondOrderAdvector::q_FC_PlusFaces( const CCVariable<facedata<double> >& q_OAFS,
+                                          const CCVariable<double>& q_CC,
+                                          const Patch* patch,
+                                          SFCXVariable<double>& q_XFC,
+                                          SFCYVariable<double>& q_YFC,
+                                          SFCZVariable<double>& q_ZFC,
+                                          advectVarBasket* vb)
 {                                                  
   vector<IntVector> adj_offset(3);
   adj_offset[0] = IntVector(-1, 0, 0);    // X faces
@@ -617,17 +620,17 @@ void SecondOrderAdvector::q_FC_PlusFaces(
   if (patchOnBoundary.x() == 1 ){  
     CellIterator Xiter=patch->getFaceIterator(Patch::xplus,MEC);
     q_FC_operator<SFCXVariable<double> >(Xiter, adj_offset[0],LEFT,  
-                                        q_OAFS,q_CC,q_XFC);  
+                                        vb->OFS, q_OAFS,q_CC,q_XFC);  
   }
   if (patchOnBoundary.y() == 1){
     CellIterator Yiter=patch->getFaceIterator(Patch::yplus,MEC);
     q_FC_operator<SFCYVariable<double> >(Yiter, adj_offset[1],BOTTOM,
-                                        q_OAFS,q_CC,q_YFC);
+                                        vb->OFS, q_OAFS,q_CC,q_YFC);
   }
   if (patchOnBoundary.z() == 1){
     CellIterator Ziter=patch->getFaceIterator(Patch::zplus,MEC);
     q_FC_operator<SFCZVariable<double> >(Ziter, adj_offset[2],BACK,  
-                                        q_OAFS,q_CC,q_ZFC);   
+                                        vb->OFS, q_OAFS,q_CC,q_ZFC);   
   }
 }
 
@@ -642,6 +645,7 @@ void SecondOrderAdvector::q_FC_flux_operator(CellIterator iter,
                                              const int face,
                                              const Patch* patch,
                                              const bool is_Q_massSpecific,
+                                             const CCVariable< fflux >& OFS,
                                              const CCVariable<facedata<V> >& q_OAFS,
                                              T& q_FC_flux)
 { 
@@ -661,8 +665,8 @@ void SecondOrderAdvector::q_FC_flux_operator(CellIterator iter,
      
      // face:           LEFT,   BOTTOM,   BACK  
      // IF_slab[face]:  RIGHT,  TOP,      FRONT
-    double outfluxVol = d_OFS[c].d_fflux[out_indx];
-    double influxVol  = d_OFS[ac].d_fflux[in_indx];
+    double outfluxVol = OFS[c].d_fflux[out_indx];
+    double influxVol  = OFS[ac].d_fflux[in_indx];
                        
     //  if(is_Q_massSpecific) then
     //    q_OAFS = (mass, momentum, sp_vol*mass, transportedVars) 
@@ -741,14 +745,14 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
     CellIterator YFC_iter = patch->getSFCYIterator();
     CellIterator ZFC_iter = patch->getSFCZIterator();
     
-    q_FC_flux_operator<SFCXVariable<T>, T>(XFC_iter, adj_offset[0],LEFT, patch,
-                                           is_Q_massSpecific, q_OAFS,q_X_FC_flux); 
+    q_FC_flux_operator<SFCXVariable<T>, T>(XFC_iter, adj_offset[0], LEFT, patch,
+                                           is_Q_massSpecific, vb->OFS, q_OAFS, q_X_FC_flux); 
 
-    q_FC_flux_operator<SFCYVariable<T>, T>(YFC_iter, adj_offset[1],BOTTOM, patch,
-                                           is_Q_massSpecific, q_OAFS,q_Y_FC_flux); 
+    q_FC_flux_operator<SFCYVariable<T>, T>(YFC_iter, adj_offset[1], BOTTOM, patch,
+                                           is_Q_massSpecific, vb->OFS, q_OAFS, q_Y_FC_flux); 
 
-    q_FC_flux_operator<SFCZVariable<T>, T>(ZFC_iter, adj_offset[2],BACK, patch,
-                                           is_Q_massSpecific, q_OAFS,q_Z_FC_flux);
+    q_FC_flux_operator<SFCZVariable<T>, T>(ZFC_iter, adj_offset[2], BACK, patch,
+                                           is_Q_massSpecific, vb->OFS, q_OAFS, q_Z_FC_flux);
                                            
  /*`==========TESTING==========*/    
 #ifdef REFLUX_DBG                

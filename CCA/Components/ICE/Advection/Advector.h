@@ -42,7 +42,7 @@ namespace Uintah {
   class DataWarehouse;
   class Patch;
 
-  struct advectVarBasket{
+  struct advectVarBasket{          // variables that are transferred from ICE
       bool useCompatibleFluxes;
       bool is_Q_massSpecific;
       DataWarehouse* new_dw;
@@ -54,6 +54,7 @@ namespace Uintah {
       const Patch* patch;
       const Level* level;
       bool doRefluxing;
+      CCVariable<fflux> OFS;  // outflux slabs
   };
   
   class Advector {
@@ -74,7 +75,8 @@ namespace Uintah {
                                      const Patch* patch,
                                      const int& indx,
                                      const bool& bulletProofing_test,
-                                     DataWarehouse* new_dw) = 0;
+                                     DataWarehouse* new_dw,
+                                     advectVarBasket* varBasket) = 0;
 
     virtual void  advectQ(const CCVariable<double>& q_CC,
                           const Patch* patch,
