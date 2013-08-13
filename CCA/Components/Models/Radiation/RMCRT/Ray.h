@@ -163,23 +163,6 @@ namespace Uintah{
                          double& sumI,
                          MTRand * _mTwister);
 
-      /** @brief Adjust the location of a ray origin depending on the cell face */
-      void adjustLocation(Vector &location,
-                          const IntVector &indexOrder,
-                          const IntVector &shift,
-                          const double &DyDxRatio,
-                          const double &DzDxRatio);
-
-      /** @brief Adjust the direction of a ray depending on the cell face */
-      void adjustDirection(Vector &directionVector,
-                           const IntVector &indexOrder,
-                           const IntVector &signOrder);
-
-      /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
-      bool has_a_boundary(const IntVector &c,
-                          constCCVariable<int> &celltype,
-                          vector<int> &boundaryFaces);
-
 
       //__________________________________
       //  Multilevel tasks
@@ -377,6 +360,27 @@ namespace Uintah{
                                const IntVector &cell,
                                const int &dir);
 
+
+      void findStepSize(int step[],
+                        bool sign[],
+                        const Vector& inv_direction_vector);
+                       
+      /** @brief Adjust the location of a ray origin depending on the cell face */
+      void adjustLocation(Vector &location,
+                          const IntVector &indexOrder,
+                          const IntVector &shift,
+                          const double &DyDxRatio,
+                          const double &DzDxRatio);
+
+      /** @brief Adjust the direction of a ray depending on the cell face */
+      void adjustDirection(Vector &directionVector,
+                           const IntVector &indexOrder,
+                           const IntVector &signOrder);
+
+      /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
+      bool has_a_boundary(const IntVector &c,
+                          constCCVariable<int> &celltype,
+                          vector<int> &boundaryFaces);
     //______________________________________________________________________
     //   Boundary Conditions
 
