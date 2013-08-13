@@ -70,7 +70,7 @@ namespace Wasatch {
    *   redHelp.add_variable<SSurfXField, ReductionMaxOpT>( graph_category, varTag2 );
    *   redHelp.add_variable<XVolField, ReductionSumOpT >( graph_category, varTag3 );
    *   // ...
-   *   redHelp.schedule_tasks(Uintah::getLevelP(pss), scheduler_, materials_, tree, patchID, rkStage);
+   *   redHelp.schedule_tasks(Uintah::getLevelP(pss), scheduler_, materials_, tree, rkStage);
    *  \endcode
    *
    *  \warning Note that add_variable will ONLY register the appropriate reduction
@@ -125,7 +125,6 @@ namespace Wasatch {
                          Uintah::SchedulerP sched,
                          const Uintah::MaterialSet* const materials,
                          const Expr::ExpressionTree::TreePtr tree,
-                         const int patchID,
                          const int rkStage);// do we really need the rkstage here? maybe in the future...
   private:
 
