@@ -52,7 +52,6 @@ using std::vector;
       const VarLabel* pPressureLabel;
       const VarLabel* pScratchVecLabel;
       const VarLabel* pScratchLabel;
-      const VarLabel* pLocalizedMPMLabel;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;
       const VarLabel* pXXLabel;
@@ -100,6 +99,8 @@ using std::vector;
       const VarLabel* pParticleIDLabel_preReloc;
       const VarLabel* pSizeLabel;
       const VarLabel* pSizeLabel_preReloc;
+      const VarLabel* pLocalizedMPMLabel;
+      const VarLabel* pLocalizedMPMLabel_preReloc;
 
       const VarLabel* pFiberDirLabel;
       const VarLabel* pFiberDirLabel_preReloc;
