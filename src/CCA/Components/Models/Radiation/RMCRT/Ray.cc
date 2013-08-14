@@ -932,8 +932,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
           // Flux ray loop
           for (int iRay=0; iRay < _nFluxRays; iRay++){
 
-            IntVector cur = origin;
-
             if(_isSeedRandom == false){                 // !! This could use a compiler directive for speed-up
               mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
             }
@@ -1057,6 +1055,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
       //  Compute divQ
       divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/_nDivQRays) );
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
+      
       radiationVolq[origin] = 4.0 * _pi * abskg[origin] *  (sumI/_nDivQRays) ; 
       //} // end quick debug testing
     }  // end cell iterator
@@ -2301,7 +2300,9 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
    //Initializes the following values for each ray
    double intensity = 1.0;
    double fs = 1.0;
-   double optical_thickness = 0;
+   double optical_thickness      = 0;
+   double optical_thickness_prev = 0;
+   double expOpticalThick_prev   = 1.0;
 
 #ifdef RAY_SCATTER
    double scatCoeff = _sigmaScat; //[m^-1]  !! HACK !! This needs to come from data warehouse
@@ -2314,7 +2315,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
 #endif
 
    //+++++++Begin ray tracing+++++++++++++++++++
-   int nReflect = 0; // Number of reflections that a ray has undergone
+   int nReflect = 0;                // Number of reflections that a ray has undergone
    //Threshold while loop
    while (intensity > _Threshold){
 
@@ -2323,7 +2324,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
      while (in_domain){
 
        prevCell = cur;
-       double disMin = -9;  // Common variable name in ray tracing. Represents ray segment length.
+       double disMin = -9;          // Common variable name in ray tracing. Represents ray segment length.
 
        //__________________________________
        //  Determine which cell the ray will enter next
@@ -2376,7 +2377,11 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
 
        //Eqn 3-15(see below reference) while
        //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-       sumI += sigmaT4OverPi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
+       double expOpticalThick = exp(-optical_thickness);
+       
+       sumI += sigmaT4OverPi[prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
+       
+       expOpticalThick_prev = expOpticalThick;
 
 #ifdef RAY_SCATTER
        curLength += disMin * Dx.x(); // July 18
