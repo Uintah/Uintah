@@ -362,6 +362,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pSizeLabel);
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
+  t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pCellNAPIDLabel);
   if(flags->d_artificial_viscosity){
@@ -1450,6 +1451,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
   t->requires(Task::OldDW, lb->pTempPreviousLabel,     Ghost::None);
+  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,     Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pSizeLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,one_matl,
@@ -1468,6 +1470,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pDispLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc);
+  t->computes(lb->pLocalizedMPMLabel_preReloc);
 
   if(flags->d_artificial_viscosity){
     t->requires(Task::OldDW, lb->p_qLabel,               Ghost::None);
@@ -3593,6 +3596,13 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         old_dw->get(pq,                    lb->p_qLabel,                 pset);
         new_dw->allocateAndPut(pqNew,      lb->p_qLabel_preReloc,        pset);
         pqNew.copyData(pq);
+      }
+
+      ParticleVariable<int> isLocalized;
+      new_dw->allocateAndPut(isLocalized, lb->pLocalizedMPMLabel_preReloc,pset);
+      ParticleSubset::iterator iter = pset->begin();
+      for (; iter != pset->end(); iter++){
+        isLocalized[*iter] = 0;
       }
 
       old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );

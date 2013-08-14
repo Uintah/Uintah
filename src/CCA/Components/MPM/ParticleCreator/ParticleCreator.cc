@@ -786,10 +786,8 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pdTdtLabel);
   particle_state_preReloc.push_back(d_lb->pdTdtLabel_preReloc);
 
-  if (d_flags->d_integrator_type == "explicit"){
-    particle_state.push_back(d_lb->pLocalizedMPMLabel);
-    particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
-  }
+  particle_state.push_back(d_lb->pLocalizedMPMLabel);
+  particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
 
   if (d_artificial_viscosity) {
     particle_state.push_back(d_lb->p_qLabel);
