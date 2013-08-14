@@ -47,7 +47,7 @@ NIGHTLYTESTS = [
                   ("adiCuZA4000s696K",                    "adiCuZA4000s696K.ups",                    1,  "Linux", ["exactComparison"] ),  
                   ("test_cyl_pene_no_ero",                "test_cyl_pene_no_ero.ups",                1,  "Linux", ["exactComparison"] ),  
                   ("test_gurson_beckerdrucker_mts",       "test_gurson_beckerdrucker_mts.ups",       1,  "Linux", ["exactComparison"] ),  
-                  ("test_hypoviscoelastic_radial_return", "test_hypoviscoelastic_radial_return.ups", 1,  "Linux", ["exactComparison"] ),  
+                  ("test_hypoviscoelastic_radial_return", "test_hypoviscoelastic_rad_ret.ups", 1,  "Linux", ["exactComparison"] ),  
                   ("advect_3L_3D",                        "advect_3L_3D.ups",                        4,  "Linux", ["exactComparison", "no_restart"] ),  
                   ("advect_2L_3D_slabs",                  "advect_2L_3D_slabs.ups",                  3,  "Linux", [ "no_restart","no_dbg"] ),  
                   ("advect_2L_3D_edges",                  "advect_2L_3D_edges.ups",                  1,  "Linux", ["exactComparison", "no_restart"] ),  
