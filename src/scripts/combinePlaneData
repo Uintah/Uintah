@@ -86,7 +86,7 @@ foreach T (t*)
       @ rc += $status
 
       # sort the data by column 2 then column 1 then column 3
-      sort -k2,2n -k1,1n -k3,3n All_$X >> All_$X.clean
+      sort -k2,2g -k1,1g -k3,3g All_$X >> All_$X.clean
       @ rc += $status
 
       mv All_$X.clean All_$X
