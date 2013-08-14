@@ -689,6 +689,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
           double sumI_prev = 0; // used for VR
           double sldAngl   = 0; // solid angle of VR
           double VRTheta   = 0; // the polar angle of each ray from the radiometer normal
+          
+          //__________________________________
           // ray loop
           for (int iRay=0; iRay < _nRadRays; iRay++){
             
@@ -739,11 +741,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
               
             if (_orient[0] > 0 && _orient[1] < 0) //quadrant 4
               psiRot = (2*_pi - psiRot);
-          
-            // x,y, and z represent the pre-rotated direction vector of a ray
-            double x;
-            double y;
-            double z;
+              
 
             double phi = 0; // the azimuthal angle of each ray
             double range = 1 - cos(deltaTheta); // cos(0) to cos(deltaTheta) gives the range of possible vals
@@ -757,10 +755,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
             // This guarantees that the polar angle of the ray is within the delta_theta
             VRTheta = acos(cos(deltaTheta)+range*mTwister.randDblExc());
             
-            //Convert to Cartesian
-            x = sin(VRTheta)*cos(phi);
-            y = sin(VRTheta)*sin(phi);
-            z = cos(VRTheta);
+            //Convert to Cartesian x,y, and z represent the pre-rotated direction vector of a ray
+            double x = sin(VRTheta)*cos(phi);
+            double y = sin(VRTheta)*sin(phi);
+            double z = cos(VRTheta);
 
             // ++++++++ Apply the rotational offsets ++++++
             direction_vector[0] = 
@@ -800,11 +798,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
     //          B O U N D A R Y F L U X
     //______________________________________________________________________
     if( _solveBoundaryFlux){
-      vector<Patch::FaceType> bf;
-
-      IntVector pLow;
-      IntVector pHigh;
-      level->findInteriorCellIndexRange(pLow, pHigh);
 
       //_____________________________________________
       //   Ordering for Surface Method
@@ -831,7 +824,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
       dirSignSwap[4]  = IntVector(1, 1, -1);
       dirSignSwap[5]  = IntVector(1, 1, 1);
 
-
       locationIndexOrder[0] = IntVector(1,0,2);
       locationIndexOrder[1] = IntVector(1,0,2);
       locationIndexOrder[2] = IntVector(0,1,2);
@@ -846,7 +838,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
       locationShift[4] = IntVector(0, 0, 1);
       locationShift[5] = IntVector(0, 0, 0);
 
-
+      //__________________________________
+      //
       for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
 
@@ -858,8 +851,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
         // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
         vector<int> boundaryFaces;
         boundaryFaces.clear();
-        if(_benchmark==4 || _benchmark==5) boundaryFaces.push_back(5); // Benchmark4 benchmark5
-
+        if(_benchmark==4 || _benchmark==5){
+          boundaryFaces.push_back(5);
+        }
 
         // determine if origin has one or more boundary faces, and if so, populate boundaryFaces vector
         boundFlux[origin].p = has_a_boundary(origin, celltype, boundaryFaces);
@@ -915,15 +909,14 @@ Ray::rayTrace( const ProcessorGroup* pc,
         if(_benchmark==5){
           f=fopen("benchmark5.txt", "w");
         }
-    //__________________________________
-    // Loop over boundary faces of the cell at hand and compute incident radiative flux
+        
+        //__________________________________
+        // Loop over boundary faces of the cell and compute incident radiative flux
         for (vector<int>::iterator it=boundaryFaces.begin() ; it < boundaryFaces.end(); it++ ){  // 5/25
 
-          int face = *it;  // face uses Uintah ordering
-          int UintahFace[6] = {1,0,3,2,5,4}; //Uintah face iterator is an enum with the order WESNBT
-          int RayFace = UintahFace[face];    // All the Ray functions are based on the face order of EWNSTB
-          //  IntVector origin = IntVector(i,j,k);
-
+          int face = *it;                     // face uses Uintah ordering
+          int UintahFace[6] = {1,0,3,2,5,4};  // Uintah face iterator is an enum with the order WESNBT
+          int RayFace = UintahFace[face];     // All the Ray functions are based on the face order of EWNSTB
           double sumI     = 0;
           double sumProjI = 0;
           double sumI_prev= 0;
@@ -937,7 +930,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
             }
 
             // Surface Way to generate a ray direction from the positive z face
-            double phi   = 2 * M_PI * mTwister.rand(); //azimuthal angle.  Range of 0 to 2pi
+            double phi   = 2 * M_PI * mTwister.rand(); // azimuthal angle.  Range of 0 to 2pi
             double theta = acos(mTwister.rand());      // polar angle for the hemisphere
           
             //Convert to Cartesian
@@ -950,29 +943,23 @@ Ray::rayTrace( const ProcessorGroup* pc,
             adjustDirection(direction_vector, dirIndexOrder[RayFace], dirSignSwap[RayFace]);
             Vector inv_direction_vector = Vector(1.0)/direction_vector;
 
-
-
-            Vector ray_location;
-
             // Surface way to generate a ray location from the negative y face
+            Vector ray_location;
             ray_location[0] =  mTwister.rand() ;
             ray_location[1] =  0;
             ray_location[2] =  mTwister.rand() * DzDxRatio ;
           
             // Put point on correct face
             adjustLocation(ray_location, locationIndexOrder[RayFace],  locationShift[RayFace], DyDxRatio, DzDxRatio);
-            
-            
+                        
             ray_location[0] += origin.x();
             ray_location[1] += origin.y();
             ray_location[2] += origin.z();
             
             updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
-            sumProjI += cos(theta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
+            sumProjI += cos(theta) * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
 
-
-            // from all the rays up to that point
             sumI_prev = sumI;
 
           } // end of flux ray loop
@@ -980,26 +967,19 @@ Ray::rayTrace( const ProcessorGroup* pc,
           //__________________________________
           //  Compute Net Flux to the boundary
           //itr->second.net = sumProjI * 2*_pi/_nFluxRays - abskg[origin] * sigmaT4OverPi[origin] * _pi; // !!origin is a flow cell, not a wall
-          double fluxIn = sumProjI * 2 *_pi/_nFluxRays;
-          switch(face){
-          case 0 : boundFlux[origin].w = fluxIn; break;
-          case 1 : boundFlux[origin].e = fluxIn; break;
-          case 2 : boundFlux[origin].s = fluxIn; break;
-          case 3 : boundFlux[origin].n = fluxIn; break;
-          case 4 : boundFlux[origin].b = fluxIn; break;
-          case 5 : boundFlux[origin].t = fluxIn; break;
+                    
+          boundFlux[origin][face] = sumProjI * 2 *_pi/_nFluxRays;
+
+          if(_benchmark==5){
+            fprintf(f, "%lf \n",boundFlux[origin][face]);
           }
-          if(_benchmark==5)fprintf(f, "%lf \n",sumProjI * 2*_pi/_nFluxRays);
 
+        } // boundary faces loop
 
-        } // end of looping through the vector boundaryFaces
-
-        if(_benchmark==5) fclose(f);
-
-      //}// end of file for benchmark4 verification test
-      //} // end of quick flux debug
-
-      }// end cell iterator
+        if(_benchmark==5){
+          fclose(f);
+        }
+      }  // end cell iterator
 
       // if(_applyFilter)
       // Put a cell iterator here
@@ -2419,12 +2399,9 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          curLength = 0;  // allow for multiple scattering events per ray
          //if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
        }
-
 #endif
 
      } //end domain while loop.  ++++++++++++++
-
-     intensity = exp(-optical_thickness);
 
      //  wall emission 12/15/11
      double wallEmissivity = abskg[cur];
@@ -2432,6 +2409,8 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
      if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one. 
        wallEmissivity = 1.0;
      } 
+     
+     intensity = exp(-optical_thickness);
      
      sumI += wallEmissivity*sigmaT4OverPi[cur] * intensity;
 
