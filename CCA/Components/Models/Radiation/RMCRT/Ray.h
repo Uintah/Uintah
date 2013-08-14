@@ -161,7 +161,7 @@ namespace Uintah{
                          constCCVariable<int>& celltype,
                          unsigned long int& size,
                          double& sumI,
-                         MTRand * _mTwister);
+                         MTRand& mTwister);
 
 
       //__________________________________
@@ -360,7 +360,18 @@ namespace Uintah{
                                const IntVector &cell,
                                const int &dir);
 
+      
+      //__________________________________
+      //
+      Vector findRayDirection( MTRand& mTwister,
+                               const bool isSeedRandom,
+                               const int i = -9,
+                               const int j = -9,
+                               const int k = -9,
+                               const int iRay = -9);
 
+      //__________________________________
+      //
       void findStepSize(int step[],
                         bool sign[],
                         const Vector& inv_direction_vector);

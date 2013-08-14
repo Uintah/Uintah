@@ -603,7 +603,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
   
   //__________________________________
   //
-  MTRand _mTwister;
+  MTRand mTwister;
   
   // Determine the size of the domain.
   IntVector domainLo, domainHi;
@@ -693,7 +693,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           for (int iRay=0; iRay < _nRadRays; iRay++){
             
             if(_isSeedRandom == false){
-              _mTwister.seed((i + j +k) * iRay +1);
+              mTwister.seed((i + j +k) * iRay +1);
             }
 
             Vector direction_vector;
@@ -753,9 +753,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
             // Generate two uniformly-distributed-over-the-solid-angle random numbers
             // Used in determining the ray direction
-            phi = 2 * _pi * _mTwister.randDblExc(); //azimuthal angle.  Range of 0 to 2pi
+            phi = 2 * _pi * mTwister.randDblExc(); //azimuthal angle.  Range of 0 to 2pi
             // This guarantees that the polar angle of the ray is within the delta_theta
-            VRTheta = acos(cos(deltaTheta)+range*_mTwister.randDblExc());
+            VRTheta = acos(cos(deltaTheta)+range*mTwister.randDblExc());
             
             //Convert to Cartesian
             x = sin(VRTheta)*cos(phi);
@@ -781,7 +781,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
              inv_direction_vector = Vector(1.0)/direction_vector;       
             
             // get the intensity for this ray
-            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, &_mTwister);
+            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
             sumProjI += cos(VRTheta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
                                                            // from all the rays up to that point
             sumI_prev = sumI;
@@ -935,12 +935,12 @@ Ray::rayTrace( const ProcessorGroup* pc,
             IntVector cur = origin;
 
             if(_isSeedRandom == false){                 // !! This could use a compiler directive for speed-up
-              _mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
+              mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
             }
 
             // Surface Way to generate a ray direction from the positive z face
-            double phi   = 2 * M_PI * _mTwister.rand(); //azimuthal angle.  Range of 0 to 2pi
-            double theta = acos(_mTwister.rand());      // polar angle for the hemisphere
+            double phi   = 2 * M_PI * mTwister.rand(); //azimuthal angle.  Range of 0 to 2pi
+            double theta = acos(mTwister.rand());      // polar angle for the hemisphere
           
             //Convert to Cartesian
             Vector direction_vector;
@@ -957,9 +957,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
             Vector ray_location;
 
             // Surface way to generate a ray location from the negative y face
-            ray_location[0] =  _mTwister.rand() ;
+            ray_location[0] =  mTwister.rand() ;
             ray_location[1] =  0;
-            ray_location[2] =  _mTwister.rand() * DzDxRatio ;
+            ray_location[2] =  mTwister.rand() * DzDxRatio ;
           
             // Put point on correct face
             adjustLocation(ray_location, locationIndexOrder[RayFace],  locationShift[RayFace], DyDxRatio, DzDxRatio);
@@ -969,7 +969,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
             ray_location[1] += origin.y();
             ray_location[2] += origin.z();
             
-            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, &_mTwister);
+            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
             sumProjI += cos(theta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
 
@@ -1032,21 +1032,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
       
       // ray loop
       for (int iRay=0; iRay < _nDivQRays; iRay++){
-
-        if(_isSeedRandom == false){
-          _mTwister.seed((i + j +k) * iRay +1);
-        }
-
-        // Random Points On Sphere
-
-        double plusMinus_one = 2 * _mTwister.randDblExc() - 1;
-        double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
-        double theta = 2 * M_PI * _mTwister.randDblExc();            // Uniform betwen 0-2Pi
-
-        Vector direction_vector;
-        direction_vector[0] = r*cos(theta);                   // Convert to cartesian
-        direction_vector[1] = r*sin(theta);
-        direction_vector[2] = plusMinus_one;                  
+  
+        
+        Vector direction_vector =findRayDirection(mTwister,_isSeedRandom, i, j, k, iRay );                        
         Vector inv_direction_vector = Vector(1.0)/direction_vector;
         
         Vector ray_location;
@@ -1057,11 +1045,11 @@ Ray::rayTrace( const ProcessorGroup* pc,
           ray_location[1] =   j +  0.5 * DyDxRatio ;
           ray_location[2] =   k +  0.5 * DzDxRatio ;
         } else{
-          ray_location[0] =   i +  _mTwister.rand() ;
-          ray_location[1] =   j +  _mTwister.rand() * DyDxRatio ;
-          ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ;
+          ray_location[0] =   i +  mTwister.rand() ;
+          ray_location[1] =   j +  mTwister.rand() * DyDxRatio ;
+          ray_location[2] =   k +  mTwister.rand() * DzDxRatio ;
         }
-        updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, &_mTwister);
+        updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
         
       }  // Ray loop
       
@@ -1184,7 +1172,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   int maxLevels    = fineLevel->getGrid()->numLevels();
   int levelPatchID = fineLevel->getPatch(0)->getID();
   LevelP level_0 = new_dw->getGrid()->getLevel(0);
-  MTRand _mTwister;
+  MTRand mTwister;
 
   //__________________________________
   //retrieve the coarse level data
@@ -1321,30 +1309,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         
         int L       = maxLevels -1;  // finest level
         int prevLev = L;
-        
-        if(_isSeedRandom == false){
-          _mTwister.seed((i + j +k) * iRay +1);
-        }
 
-        //__________________________________
-        //  Ray direction      
-        // see http://www.cgafaq.info/wiki/aandom_Points_On_Sphere for explanation
-
-        double plusMinus_one = 2 * _mTwister.randDblExc() - 1;
-        double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
-        double theta = 2 * M_PI * _mTwister.randDblExc();      // Uniform betwen 0-2Pi
-
-        // dbg2 << " plusMinus_one " << plusMinus_one << " r " << r << " theta " << theta << endl;
-
-        Vector direction;
-        direction[0] = r*cos(theta);                           // Convert to cartesian
-        direction[1] = r*sin(theta);
-        direction[2] = plusMinus_one;
-        
-/*`==========TESTING==========*/
- //       direction = Vector(0,1,0);                   // Debug:: shoot ray in 1 directon
-/*===========TESTING==========`*/
-        
+        Vector direction = findRayDirection( mTwister,_isSeedRandom, i, j, k, iRay );
+                             
         Vector inv_direction = Vector(1.0)/direction;
 
         int step[3];                                           // Gives +1 or -1 based on sign
@@ -1356,9 +1323,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         // go from finest to coarset level so you can compare 
         // with 1L rayTrace results.
         
-        tMax.x( (sign[0]  - _mTwister.rand())            * inv_direction[0] );  
-        tMax.y( (sign[1]  - _mTwister.rand()) * DyDx[L]  * inv_direction[1] );  
-        tMax.z( (sign[2]  - _mTwister.rand()) * DzDx[L]  * inv_direction[2] );  
+        tMax.x( (sign[0]  - mTwister.rand())            * inv_direction[0] );  
+        tMax.y( (sign[1]  - mTwister.rand()) * DyDx[L]  * inv_direction[1] );  
+        tMax.z( (sign[2]  - mTwister.rand()) * DzDx[L]  * inv_direction[2] );  
         
         for(int Lev = maxLevels-1; Lev>-1; Lev--){
           //Length of t to traverse one cell
@@ -1639,6 +1606,32 @@ Ray::computeExtents(LevelP level_0,
     }
   }  
 }
+
+//______________________________________________________________________
+//
+Vector Ray::findRayDirection(MTRand& mTwister,
+                             const bool isSeedRandom,
+                             const int i,
+                             const int j,
+                             const int k,
+                             const int iRay )
+{
+  if( isSeedRandom == false ){
+    mTwister.seed((i + j +k) * iRay +1);
+  }
+
+  // Random Points On Sphere
+  double plusMinus_one = 2 * mTwister.randDblExc() - 1;
+  double r = sqrt(1 - plusMinus_one * plusMinus_one);     // Radius of circle at z
+  double theta = 2 * M_PI * mTwister.randDblExc();        // Uniform betwen 0-2Pi
+
+  Vector direction_vector;
+  direction_vector[0] = r*cos(theta);                     // Convert to cartesian
+  direction_vector[1] = r*sin(theta);
+  direction_vector[2] = plusMinus_one;
+  return direction_vector;
+}
+
 
 //______________________________________________________________________
 //
@@ -2279,7 +2272,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
                        constCCVariable<int>& celltype,
                        unsigned long int& size,
                        double& sumI,
-                       MTRand * _mTwister)
+                       MTRand& mTwister)
 
 {
 
@@ -2310,15 +2303,13 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
    double fs = 1.0;
    double optical_thickness = 0;
 
-
-   //#define RAY_SCATTER 1
 #ifdef RAY_SCATTER
    double scatCoeff = _sigmaScat; //[m^-1]  !! HACK !! This needs to come from data warehouse
    if (scatCoeff == 0) scatCoeff = 1e-99;  // avoid division by zero
 
    // Determine the length at which scattering will occur
    // See CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
-   double scatLength = -log(_mTwister->randDblExc() ) / scatCoeff;
+   double scatLength = -log(mTwister.randDblExc() ) / scatCoeff;
    double curLength = 0;
 #endif
 
@@ -2392,26 +2383,17 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
        if (curLength > scatLength && in_domain){
 
          // get new scatLength for each scattering event
-         scatLength = -log(_mTwister->randDblExc() ) / scatCoeff; 
-         //store old step
-         int stepOld = step[face];
+         scatLength = -log(mTwister.randDblExc() ) / scatCoeff; 
 
-         // Get new direction (below is isotropic scatteirng)
-         double plusMinus_one = 2 * _mTwister->randDblExc() - 1;
-         double r = sqrt(1 - plusMinus_one * plusMinus_one);          // Radius of circle at z
-         double theta = 2 * M_PI * _mTwister->randDblExc();           // Uniform betwen 0-2Pi
-
-         Vector direction_vector;
-         direction_vector[0] = r*cos(theta);                          // Convert to cartesian
-         direction_vector[1] = r*sin(theta);
-         direction_vector[2] = plusMinus_one;
-
+         bool randomSeed = true;
+         Vector direction_vector =  findRayDirection( mTwister, randomSeed); 
+         
          inv_direction_vector = Vector(1.0)/direction_vector;
 
          // get new step and sign
+         int stepOld = step[face];
          findStepSize( step, sign, inv_direction_vector);
          
-
          // if sign[face] changes sign, put ray back into prevCell (back scattering)
          // a sign change only occurs when the product of old and new is negative
          if( step[face] * stepOld < 0 ){
@@ -2471,7 +2453,6 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
 
        in_domain = 1;
 
-
      }  // if reflection
    }  // threshold while loop.
 } // end of updateSumI function
@@ -2512,9 +2493,6 @@ Ray::filter( const ProcessorGroup*,
               const bool includeEC,
               bool modifies_divQFilt)
 {
-
-
-
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
@@ -2530,7 +2508,7 @@ Ray::filter( const ProcessorGroup*,
     divQ_dw->get(boundFlux,          d_boundFluxLabel,   d_matl, patch, d_gn, 0);
     
     new_dw->allocateAndPut(divQFilt, d_boundFluxLabel,   d_matl, patch); // !! This needs to be fixed.  I need to create boundFluxFilt variable
-    new_dw->allocateAndPut(divQFilt,      d_divQLabel,        d_matl, patch);
+    new_dw->allocateAndPut(divQFilt, d_divQLabel,        d_matl, patch);
 
     if( modifies_divQFilt ){
        old_dw->getModifiable(  divQFilt,  d_divQFiltLabel,  d_matl, patch );
