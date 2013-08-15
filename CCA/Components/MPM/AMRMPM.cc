@@ -325,6 +325,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pStressLabel);
   t->computes(lb->pVelGradLabel);
   t->computes(lb->pSizeLabel);
+//  t->computes(lb->pLocalizedMPMLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
@@ -1044,7 +1045,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,                         gnone);
   t->requires(Task::OldDW, lb->pVolumeLabel,                       gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,           gnone);
-//  t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,                gnone);
+  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
 
   t->computes(lb->pDispLabel_preReloc);
   t->computes(lb->pVelocityLabel_preReloc);
@@ -1054,6 +1055,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pTempPreviousLabel_preReloc); // for thermal stress
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
+  t->computes(lb->pLocalizedMPMLabel_preReloc);
 //  t->computes(lb->pVelGradLabel_preReloc);
 //  t->computes(lb->pDeformationMeasureLabel_preReloc);
 //  t->computes(lb->pVolumeLabel_preReloc);
@@ -2895,6 +2897,13 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pids_new, lb->pParticleIDLabel_preReloc, pset);
       pids_new.copyData(pids);
       psizeNew.copyData(psize);
+
+      ParticleVariable<int> isLocalized;
+      new_dw->allocateAndPut(isLocalized, lb->pLocalizedMPMLabel_preReloc,pset);
+      ParticleSubset::iterator iter = pset->begin();
+      for (; iter != pset->end(); iter++){
+        isLocalized[*iter] = 0;
+      }
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
