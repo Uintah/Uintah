@@ -289,11 +289,11 @@ namespace Wasatch {
       modTag = Expr::Tag(bc_functor_name,Expr::STATE_NONE);
     }
     // attach the modifier expression to the target expression
-    factory.attach_modifier_expression( modTag, phiTag, true );
+    factory.attach_modifier_expression( modTag, phiTag, patch->getID(), true );
     
     // now retrieve the modifier expression and set the ghost and interior points
     BoundaryConditionBase<FieldT>& modExpr =
-      dynamic_cast<BoundaryConditionBase<FieldT>&>( factory.retrieve_modifier_expression( modTag, false ) );
+      dynamic_cast<BoundaryConditionBase<FieldT>&>( factory.retrieve_modifier_expression( modTag, patch->getID(), false ) );
 
     
     // this is needed for bc expressions that require global uintah indexing, e.g. TurbulentInletBC
@@ -886,7 +886,7 @@ namespace Wasatch {
               while (functorIter != (*iter).second.end() ) {
                 const std::string& functorName = *functorIter;
                 const Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
-                factory.attach_modifier_expression( modTag, phiTag, true );
+                factory.attach_modifier_expression( modTag, phiTag, patch->getID(), true );
                 ++functorIter;
               }
             }
