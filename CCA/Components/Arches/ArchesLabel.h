@@ -31,6 +31,8 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Util/Handle.h>
+#include <sci_defs/uintah_defs.h>
+
 #include <map>
 
 /**************************************
@@ -149,6 +151,13 @@ namespace Uintah {
       const VarLabel* d_vVelocitySPBCLabel;
       // W-Velocity Labels
       const VarLabel* d_wVelocitySPBCLabel;
+      
+      // UMom Labels
+      const VarLabel* d_uMomLabel;
+      // VMom Labels
+      const VarLabel* d_vMomLabel;
+      // WMom Labels
+      const VarLabel* d_wMomLabel;
 
       // Scalar Labels
       //computed for old_dw in paramInit

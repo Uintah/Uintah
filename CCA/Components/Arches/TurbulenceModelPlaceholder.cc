@@ -29,12 +29,6 @@
 
 
 //----- TurbulenceModelPlaceholder.cc --------------------------------------------------
-# ifdef WASATCH_IN_ARCHES
-  #include <expression/ExprLib.h>
-  #include <expression/PlaceHolderExpr.h>
-  #include <expression/ExpressionFactory.h>
-#endif
-
 #include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
@@ -94,15 +88,6 @@ TurbulenceModelPlaceholder::getMolecularViscosity() const {
 void
 TurbulenceModelPlaceholder::problemSetup(const ProblemSpecP& params)
 {
-#ifdef WASATCH_IN_ARCHES
-  // get the eddy viscosity constant
-  ProblemSpecP db = params->findBlock("Turbulence");
-  std::string modelName;
-  params->getAttribute("model",modelName);
-  if (modelName.compare("DYNAMIC") != 0) {
-    db->get("EddyViscosityCoefficient",d_CF);
-  }
-#endif
   d_turbPrNo = 0.4;
 }
 
@@ -127,14 +112,6 @@ TurbulenceModelPlaceholder::sched_reComputeTurbSubmodel(SchedulerP& sched,
   
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel,  gn);
   //tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
-  
-#ifdef WASATCH_IN_ARCHES
-  std::string wasatchViscName = Wasatch::TagNames::self().turbulentviscosity.name();
-  VarLabel* wasatchTurbViscLabel = VarLabel::find(wasatchViscName);
-  if (wasatchTurbViscLabel != NULL) {
-    tsk->requires(Task::NewDW, wasatchTurbViscLabel, gac, 1);
-  }
-#endif
   
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
   // for multimaterial
@@ -162,21 +139,12 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
                                         const TimeIntegratorLabel* timelabels)
 {
   //  double time = d_lab->d_sharedState->getElapsedTime();
-#ifdef WASATCH_IN_ARCHES
-  std::string wasatchViscName = Wasatch::TagNames::self().turbulentviscosity.name();
-  VarLabel* wasatchTurbViscLabel = VarLabel::find(wasatchViscName);
-  bool exists_ = (wasatchTurbViscLabel != NULL);
-#endif  
   
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     //constCCVariable<double> density;
-    
-#ifdef WASATCH_IN_ARCHES
-    constCCVariable<double> wasatchTurbViscosity;
-#endif
     
     CCVariable<double> viscosity; // this is the total viscosity that arches uses
     CCVariable<double> turbViscosity;
@@ -191,11 +159,6 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
     
     new_dw->getModifiable(viscosity,     d_lab->d_viscosityCTSLabel,indx, patch);
     new_dw->getModifiable(turbViscosity, d_lab->d_turbViscosLabel, indx, patch );
-    
-#ifdef WASATCH_IN_ARCHES
-    exists_ = exists_ && new_dw->exists(wasatchTurbViscLabel, indx, patch);
-    if (exists_) new_dw->get(wasatchTurbViscosity, wasatchTurbViscLabel, indx, patch, gn, 0);
-#endif
     
 //    new_dw->get(density,     d_lab->d_densityCPLabel,      indx, patch, gn,  0);
     
@@ -213,25 +176,14 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
     
-#ifdef WASATCH_IN_ARCHES
-    if (exists_)
-      viscosity.copyData(wasatchTurbViscosity);
-    else
-      viscosity.initialize(0.0);
-#endif
-    
-#ifndef WASATCH_IN_ARCHES
     viscosity.initialize(0.0);
-#endif
     
     turbViscosity.copyData(viscosity);
-    
-    for ( CellIterator iter=patch->getCellIterator(); !iter.done(); ++iter ){      
+    for ( CellIterator iter=patch->getCellIterator(); !iter.done(); ++iter ){
       IntVector c = *iter;
       viscosity[c] = viscosity[c] + mol_viscos;
     }
-
-//#ifndef WASATCH_IN_ARCHES
+    
     //__________________________________
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -347,7 +299,6 @@ TurbulenceModelPlaceholder::reComputeTurbSubmodel(const ProcessorGroup*,
         }
       }
     }
-//#endif
   }
 }
 

@@ -58,6 +58,7 @@ WARNING
 
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/NonlinearSolver.h>
+#include <CCA/Components/Arches/MomentumSolver.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -98,6 +99,8 @@ public:
 
   virtual ~ExplicitSolver();
 
+  MomentumSolver* get_momentum_solver(){return d_momSolver;}
+  
   /** @brief Input file interface. **/ 
   virtual void problemSetup(const ProblemSpecP& input_db,
                             SimulationStateP& state);
