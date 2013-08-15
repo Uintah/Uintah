@@ -128,7 +128,7 @@ namespace Wasatch{
         // get a pointer to the current patch
         const Uintah::Patch* const patch = patches->get(ipss);
 
-        Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( fieldTag, false ) );
+        Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( fieldTag, patch->getID(), false ) );
         MinMaxClip<FieldT> clipper(min,max);
         phiExpr.process_after_evaluate(fieldTag.name(),clipper);    
       }

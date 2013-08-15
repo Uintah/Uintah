@@ -289,7 +289,7 @@ namespace Wasatch{
     // loop over patches
     for( int ip=0; ip<patches->size(); ++ip ){
       SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>(
-          factory->retrieve_expression( timeTag, false ) );
+          factory->retrieve_expression( timeTag, patches->get(ip)->getID(), false ) );
       settimeexpr.set_integrator_stage( rkStage );
       settimeexpr.set_deltat( deltat );
       settimeexpr.set_time( sharedState_->getElapsedTime() );
