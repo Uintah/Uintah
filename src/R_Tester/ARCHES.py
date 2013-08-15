@@ -140,11 +140,15 @@ DQMONTESTS = [
    ("dqmom_test_5"               , "DQMOM_regression/dqmom_test_5.ups"           , 1.1 , "All"   , ["exactComparison"]) 
 ]
 
+RMCRTTESTS = [
+  ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "Linux"  , ["exactComparison"])
+]
+
 
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DEBUGTESTS SCALARTESTS DQMONTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS RMCRTTESTS DEBUGTESTS SCALARTESTS DQMONTESTS NIGHTLYTESTS
 #__________________________________
 
   
@@ -154,6 +158,8 @@ def getTestList(me) :
     TESTS = LOCALTESTS
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
+  elif me == "RMCRTTESTS":
+    TESTS = RMCRTTESTS
   elif me == "SCALARTESTS":
     TESTS = SCALARTESTS
   elif me == "DQMONTESTS":
