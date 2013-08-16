@@ -1025,7 +1025,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
       divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/_nDivQRays) );
 
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
-      
       radiationVolq[origin] = 4.0 * _pi * abskg[origin] *  (sumI/_nDivQRays) ; 
 
     }  // end cell iterator
@@ -1134,7 +1133,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   if ( doCarryForward( timestep, radCalc_freq) ) {
     printTask( fineLevel->getPatch(0), dbg, "Coing Ray::rayTrace_dataOnion carryForward ( divQ )" );
     
-    new_dw->transferFrom( old_dw, d_divQLabel,      finePatches, matls );    
+    new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls );
+    new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls );    
     return;
   } 
   
@@ -1146,7 +1146,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   MTRand mTwister;
 
   //__________________________________
-  //retrieve the coarse level data
+  // retrieve the coarse level data
+  // compute the level dependent variables that are constant
   StaticArray< constCCVariable<double> > abskg(maxLevels);
   StaticArray< constCCVariable<double> >sigmaT4OverPi(maxLevels);
   constCCVariable<double> abskg_fine;
@@ -1154,7 +1155,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
     
   DataWarehouse* abskg_dw   = new_dw->getOtherDataWarehouse(which_abskg_dw);
   DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
-  
+
   vector<Vector> Dx(maxLevels);
   double DyDx[maxLevels];
   double DzDx[maxLevels];
@@ -1230,12 +1231,16 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
     }
     
     CCVariable<double> divQ_fine;
+    CCVariable<double> radiationVolq_fine;
     
     if( modifies_divQ ){
-      old_dw->getModifiable( divQ_fine,  d_divQLabel, d_matl, finePatch );
+      old_dw->getModifiable( divQ_fine,         d_divQLabel,          d_matl, finePatch );
+      old_dw->getModifiable( radiationVolq_fine,d_radiationVolqLabel, d_matl, finePatch );
     }else{
-      new_dw->allocateAndPut( divQ_fine, d_divQLabel, d_matl, finePatch );
+      new_dw->allocateAndPut( divQ_fine,          d_divQLabel,         d_matl, finePatch );
+      new_dw->allocateAndPut( radiationVolq_fine, d_radiationVolqLabel, d_matl,finePatch );
       divQ_fine.initialize( 0.0 );
+      radiationVolq_fine.initialize( 0.0 );
     }
 
     unsigned long int size = 0;                             // current size of PathIndex
@@ -1248,16 +1253,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       int i = origin.x();
       int j = origin.y();
       int k = origin.z();
-      
-      // Allow for quick debugging test
-     /*  IntVector pLow;
-       IntVector pHigh;
-       level->findInteriorCellIndexRange(pLow, pHigh);
-       int Nx = pHigh[0] - pLow[0];
-       if (i==Nx/2 && k==Nx/2){
-     */
-      
-      
 /*`==========TESTING==========*/
       if(origin == IntVector(10,10,0) && _isDbgOn ){
         dbg2.setActive(true);
@@ -1311,7 +1306,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         double intensity      = 1.0;
         double fs             = 1.0;
         int    nReflect       = 0;             // Number of reflections
-        double optical_thickness = 0;
+        double optical_thickness     = 0;
+        double expOpticalThick_prev  = 1.0;    // exp(-opticalThick_prev)
         bool   onFineLevel    = true;
         const Level* level    = fineLevel;
 
@@ -1350,7 +1346,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             // next cell index and position
             cur[dir]  = cur[dir] + step[dir];
             Point pos = level->getCellPosition(cur);
-            Vector dx_prev = level->dCell();  //  Used to compute coarsenRatio
+            Vector dx_prev = Dx[L];  //  Used to compute coarsenRatio
 
             
             //__________________________________
@@ -1382,37 +1378,30 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             }
             
             //__________________________________
-            // Account for uniqueness of first step after reaching a new level
-
-            //__________________________________
             //  update marching variables
             disMin        = (tMax[dir] - tMax_prev);        // Todd:   replace tMax[dir]
             tMax_prev     = tMax[dir];
             tMax[dir]     = tMax[dir] + tDelta[L][dir];
 
+            //__________________________________
+            // Account for uniqueness of first step after reaching a new level
             Vector dx = level->dCell();
-
-
             IntVector coarsenRatio = IntVector(1,1,1);
+    
             coarsenRatio[0] = dx[0]/dx_prev[0];
             coarsenRatio[1] = dx[1]/dx_prev[1];
             coarsenRatio[2] = dx[2]/dx_prev[2];
-
-            // Update DyDx and DzDx ratios in the event that coarsening is not uniform in each dir.
-            DyDx[L] = dx.y() / dx.x();
-            DzDx[L] = dx.z() / dx.x();
-            Dx[L] = dx;
 
             Vector lineup;
             for (int ii=0; ii<3; ii++){
               if (sign[ii]) {
                 lineup[ii] = -(cur[ii] % coarsenRatio[ii] - (coarsenRatio[ii] - 1 ));
               }
-
               else {
-                 lineup[ii] = cur[ii] % coarsenRatio[ii];
+                lineup[ii] = cur[ii] % coarsenRatio[ii];
               }
             }
+
             tMax += lineup * tDelta[prevLev];
             
             in_domain = domain_BB.inside(pos);
@@ -1421,16 +1410,18 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             //  Update the ray location
             //this is necessary to find the absorb_coef at the endpoints of each step if doing interpolations
             //ray_location_prev = ray_location;
-            //ray_location      = ray_location + (disMin * direction_vector);// If this line is used,  make sure that direction_vector is adjusted after a reflection
+            //ray_location      = ray_location + (disMin * direction_vector);
+            // If this line is used,  make sure that direction_vector is adjusted after a reflection
 
-            // The running total of alpha*length
-            double optical_thickness_prev = optical_thickness;
+
             optical_thickness += Dx[prevLev].x() * abskg[prevLev][prevCell]*disMin;
             size++;
 
-            //Eqn 3-15(see below reference) while
-            //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-            sumI += sigmaT4OverPi[prevLev][prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
+            double expOpticalThick = exp(-optical_thickness);
+            
+            sumI += sigmaT4OverPi[prevLev][prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
+            
+            expOpticalThick_prev = expOpticalThick;
             
             dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
             //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
@@ -1468,11 +1459,15 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       //__________________________________
       //  Compute divQ
       divQ_fine[origin] = 4.0 * _pi * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/_nDivQRays) );
+      
+      // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
+      radiationVolq_fine[origin] = 4.0 * _pi * abskg_fine[origin] *  (sumI/_nDivQRays) ;
 
       dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/_nDivQRays) << endl;
-       // } // end quick debug testing
     }  // end cell iterator
 
+    //__________________________________
+    //
     double end =clock();
     double efficiency = size/((end-start)/ CLOCKS_PER_SEC);
     if (finePatch->getGridIndex() == levelPatchID) {
@@ -2266,15 +2261,17 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
    double tDeltaX = abs(inv_direction_vector[0]);
    double tDeltaY = abs(inv_direction_vector[1]) * DyDxRatio;
    double tDeltaZ = abs(inv_direction_vector[2]) * DzDxRatio;
-   double tMax_prev = 0;
-   bool in_domain = true;
+
 
    //Initializes the following values for each ray
-   double intensity = 1.0;
-   double fs = 1.0;
+   bool in_domain     = true;
+   double tMax_prev   = 0;
+   double intensity   = 1.0;
+   double fs          = 1.0;
+   int nReflect       = 0;                // Number of reflections
    double optical_thickness      = 0;
-   double optical_thickness_prev = 0;
    double expOpticalThick_prev   = 1.0;
+
 
 #ifdef RAY_SCATTER
    double scatCoeff = _sigmaScat; //[m^-1]  !! HACK !! This needs to come from data warehouse
@@ -2287,7 +2284,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
 #endif
 
    //+++++++Begin ray tracing+++++++++++++++++++
-   int nReflect = 0;                // Number of reflections that a ray has undergone
+
    //Threshold while loop
    while (intensity > _Threshold){
 
@@ -2338,13 +2335,10 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
        ray_location[2] = ray_location[2] + (disMin  / inv_direction_vector[2]);
 
        in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
-       // The running total of alpha*length
-       double optical_thickness_prev = optical_thickness;
+
        optical_thickness += Dx.x() * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..
        // were adjusted by DyDxRatio or DzDxRatio, this line is now correct for noncubic domains.
-       //optical_thickness += Dx.x() * _abskgBench4*disMin; // Use this line for Benchmark4 rather than the above line
-
-
+       
        size++;
 
        //Eqn 3-15(see below reference) while
