@@ -604,7 +604,7 @@ Arches::problemSetup(const ProblemSpecP& params,
       StringVec DepVarsString = d_mixingTable->getAllDepVars();
       for (size_t i=0; i<DepVarsString.size(); i++) {
         proc0cout << "Creating Wasatch Expression for " << DepVarsString[i] << "... ";
-        const Expr::Tag WasTableTag( DepVarsString[i] , Expr::STATE_N );
+        const Expr::Tag WasTableTag( DepVarsString[i] , Expr::STATE_NONE );
         if( !(solngh->exprFactory->have_entry( WasTableTag )) ) {
           solngh->exprFactory->register_expression( new SVolExprT::Builder(WasTableTag));
           proc0cout << " done" << endl;
