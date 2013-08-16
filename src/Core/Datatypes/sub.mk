@@ -32,31 +32,25 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := Core/Datatypes
 
-SRCS += $(SRCDIR)/Clipper.cc                    \
-        $(SRCDIR)/Color.cc                      \
+SRCS += $(SRCDIR)/Color.cc                      \
         $(SRCDIR)/ColumnMatrix.cc               \
         $(SRCDIR)/Datatype.cc                   \
         $(SRCDIR)/DenseColMajMatrix.cc          \
         $(SRCDIR)/DenseMatrix.cc                \
-        $(SRCDIR)/Field.cc                      \
         $(SRCDIR)/Image.cc                      \
         $(SRCDIR)/Matrix.cc                     \
         $(SRCDIR)/MatrixOperations.cc           \
-        $(SRCDIR)/Mesh.cc                       \
         $(SRCDIR)/PropertyManager.cc            \
         $(SRCDIR)/SearchGrid.cc                 \
         $(SRCDIR)/SparseRowMatrix.cc            \
         $(SRCDIR)/String.cc                     \
-	$(SRCDIR)/FieldInterfaceAux.cc          \
         $(SRCDIR)/TypeName.cc                   \
         $(SRCDIR)/Archive.cc	                \
         $(SRCDIR)/ScalarParticles.cc 		\
         $(SRCDIR)/VectorParticles.cc 		\
         $(SRCDIR)/TensorParticles.cc 		\
         $(SRCDIR)/PSet.cc 			\
-        $(SRCDIR)/VariableCache.cc 		\
-#       $(SRCDIR)/cd_templates.cc \
-
+        $(SRCDIR)/VariableCache.cc 		
 
 ifeq ($(HAVE_TEEM),yes)
   SRCS += \
@@ -68,14 +62,13 @@ PSELIBS := \
         Core/Containers   \
         Core/Disclosure   \
         Core/Exceptions   \
-        Core/Grid   \
         Core/Geometry     \
+        Core/Grid         \
         Core/Math         \
         Core/Persistent   \
+	Core/ProblemSpec  \
         Core/Thread       \
-        Core/Util         \
-	\
-	Core/ProblemSpec
+        Core/Util         
 
 LIBS := $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY)           \
         $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)         \
@@ -86,6 +79,7 @@ LIBS := $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY)           \
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 ifeq ($(HAVE_TEEM),yes)
-INCLUDES += $(TEEM_INCLUDE)
+  INCLUDES += $(TEEM_INCLUDE)
 endif
+
 INCLUDES += $(BLAS_INCLUDE)
