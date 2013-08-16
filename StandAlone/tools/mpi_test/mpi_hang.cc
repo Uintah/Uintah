@@ -29,7 +29,7 @@
 // Date:   July. 2013
 //
 
-#include <mpi.h>
+#include <sci_defs/mpi_defs.h>
 
 #include <stdlib.h>
 
