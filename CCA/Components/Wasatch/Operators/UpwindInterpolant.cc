@@ -48,7 +48,15 @@ void
 UpwindInterpolant<SrcT,DestT>::
 set_advective_velocity( const DestT& theAdvectiveVelocity )
 {
-  // !!! NOT THREAD SAFE !!! USE LOCK
+# ifdef ENABLE_THREADS
+  /*
+   * Because this operator may be accessed by multiple expressions simultaneously,
+   * there is the possibility that the advective velocity could be set by multiple
+   * threads simultaneously.  Therefore, we lock this until the apply_to_field()
+   * is done with the advective velocity to prevent race conditions.
+   */
+  mutex_.lock();
+#endif
   advectiveVelocity_ = &theAdvectiveVelocity;
 }
 
@@ -117,6 +125,10 @@ apply_to_field( const SrcT& src, DestT& dest )
             ( 0.5 * (s1 + s2) );
 
   advectiveVelocity_ = NULL;
+
+# ifdef ENABLE_THREADS
+  mutex_.unlock();
+# endif
 }
 
 //--------------------------------------------------------------------
