@@ -541,7 +541,7 @@ SCI_ARG_ENABLE(output-avg-walltime,
   [output_avg_walltime=${output_avg_walltime='no'}])
   
 SCI_ARG_ENABLE(ray-scatter,
-  AC_HELP_STRING(--ray-scatter,
+  AC_HELP_STRING(--enable-ray-scatter,
                  Turn on ray scattering in Arches),
   [ray_scatter="$enableval"],
   [ray_scatter=${ray_scatter=''}])
@@ -2202,55 +2202,6 @@ SCI_TRY_LINK(STL_HEADERS,standard template library headers,algorithm vector map 
   std::vector<int> vec;
   std::cout << "blah" << std::endl;
 ],required)
-
-AC_MSG_CHECKING(for location of hash_map)
-DEF_HASHMAP=None
-AC_TRY_COMPILE([#include <hash_map>
-                std::hash_map<int, int> xx;], ,
-		[DEF_HASHMAP=HAVE_STD_HASHMAP])
-if test "$DEF_HASHMAP" = "None"; then
-  AC_TRY_COMPILE([#include <ext/hash_map>
-                 std::hash_map<int, int> xx;], ,
-		 [DEF_HASHMAP=HAVE_EXT_HASHMAP])
-fi
-# win32 has hash_map in stdext namespace (7 deprecates it in std, 8 requires stdext)
-if test "$DEF_HASHMAP" = "None"; then
-  AC_TRY_COMPILE([#include <hash_map>
-                 stdext::hash_map<int, int> xx;], ,
-		 [DEF_HASHMAP=HAVE_STDEXT_HASHMAP])
-fi
-
-############################################################
-#
-# If CUDA is being used, then we can't use TR1... it causes
-# compilation errors when using the nvcc compiler.
-#
-if test "$sci_required_cuda" != "yes"; then
-  if test "$DEF_HASHMAP" = "None" && test "$IS_OSX" != "yes"; then
-    # gcc-4.3 has depricated <ext/hash_map> so check for <backward/hash_map> first
-    AC_TRY_COMPILE([#include <tr1/unordered_map>
-                   std::tr1::unordered_map<int, int> xx;], ,
-                   [DEF_HASHMAP=HAVE_TR1_HASHMAP])
-  fi
-fi
-############################################################
-
-if test "$DEF_HASHMAP" = "None"; then
-  AC_TRY_COMPILE([#include <ext/hash_map>
-                 __gnu_cxx::hash_map<int, int> xx;], ,
-                 [DEF_HASHMAP=HAVE_GNU_HASHMAP])
-fi
-if test "$DEF_HASHMAP" = "None"; then
-  DEF_HASHMAP=
-  AC_MSG_RESULT(not found)
-  AC_MSG_WARN([Cannot find hash_map, will use map instead])
-else
-  AC_MSG_RESULT(found: $DEF_HASHMAP)
-  DEF_HASHMAP="#define $DEF_HASHMAP 1"
-fi
-AC_SUBST(DEF_HASHMAP)
-sci_defs_files="$sci_defs_files include/sci_defs/hashmap_testdefs.h"
-AC_LANG(C)
 
 ##  --  search for libxml2 --
 _sci_optional=required
@@ -4065,6 +4016,66 @@ AC_SUBST(INC_BOOST_H)
 AC_SUBST(BOOST_LIB_FLAG)
 AC_SUBST(BOOST_LIB_DIR_FLAG)
 AC_LANG([C])
+
+##  --  search for Hash Map ------------------------
+
+AC_MSG_CHECKING(for location of hash_map)
+
+if test "$HAVE_BOOST" = "yes"; then
+  DEF_HASHMAP=USE_BOOST_HASHMAP
+fi
+
+if test "$DEF_HASHMAP" = "None"; then
+  DEF_HASHMAP=None
+  AC_TRY_COMPILE([#include <hash_map>
+                 std::hash_map<int, int> xx;], ,
+                 [DEF_HASHMAP=HAVE_STD_HASHMAP])
+fi
+
+if test "$DEF_HASHMAP" = "None"; then
+  AC_TRY_COMPILE([#include <ext/hash_map>
+                 std::hash_map<int, int> xx;], ,
+		 [DEF_HASHMAP=HAVE_EXT_HASHMAP])
+fi
+# win32 has hash_map in stdext namespace (7 deprecates it in std, 8 requires stdext)
+if test "$DEF_HASHMAP" = "None"; then
+  AC_TRY_COMPILE([#include <hash_map>
+                 stdext::hash_map<int, int> xx;], ,
+		 [DEF_HASHMAP=HAVE_STDEXT_HASHMAP])
+fi
+
+############################################################
+#
+# If CUDA is being used, then we can't use TR1... it causes
+# compilation errors when using the nvcc compiler.
+#
+if test "$sci_required_cuda" != "yes"; then
+  if test "$DEF_HASHMAP" = "None" && test "$IS_OSX" != "yes"; then
+    # gcc-4.3 has depricated <ext/hash_map> so check for <backward/hash_map> first
+    AC_TRY_COMPILE([#include <tr1/unordered_map>
+                   std::tr1::unordered_map<int, int> xx;], ,
+                   [DEF_HASHMAP=HAVE_TR1_HASHMAP])
+  fi
+fi
+############################################################
+
+if test "$DEF_HASHMAP" = "None"; then
+  AC_TRY_COMPILE([#include <ext/hash_map>
+                 __gnu_cxx::hash_map<int, int> xx;], ,
+                 [DEF_HASHMAP=HAVE_GNU_HASHMAP])
+fi
+if test "$DEF_HASHMAP" = "None"; then
+  DEF_HASHMAP=
+  AC_MSG_RESULT(not found)
+  AC_MSG_WARN([Cannot find hash_map, will use map instead])
+else
+  AC_MSG_RESULT(found: $DEF_HASHMAP)
+  DEF_HASHMAP="#define $DEF_HASHMAP 1"
+fi
+AC_SUBST(DEF_HASHMAP)
+sci_defs_files="$sci_defs_files include/sci_defs/hashmap_testdefs.h"
+AC_LANG(C)
+
 ##  --  Handle --enable-wasatch_3p... ------------------------
 
 if test "$wasatch_3p" = "yes"; then

@@ -680,6 +680,7 @@ SPATIALOPS_LIB_FLAG
 INC_SPATIALOPS_H
 DEF_SPATIALOPS
 HAVE_SPATIALOPS
+DEF_HASHMAP
 BOOST_LIB_DIR_FLAG
 BOOST_LIB_FLAG
 INC_BOOST_H
@@ -782,7 +783,6 @@ SSTREAM_COMPAT
 INC_XML2_H
 XML2_LIB_DIR_FLAG
 XML2_LIB_FLAG
-DEF_HASHMAP
 DEF_IEEEFP
 DEF_STAT64
 DL_LIB_DIR_FLAG
@@ -1654,7 +1654,7 @@ Optional Features:
 --enable-32bit          Compile in 32 bit mode
 --enable-output-avg-walltime
                           Output ellapsed wall-times
---ray-scatter           Turn on ray scattering in Arches
+--enable-ray-scatter    Turn on ray scattering in Arches
 --enable-gencode        Specify compute capability for GPU code generation
                           (allowable values: 20, 21, 30, 35)
 --enable-exename=<name> Use name for executable name instead of the default:
@@ -15193,129 +15193,6 @@ _sci_includes=''
 
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for location of hash_map" >&5
-$as_echo_n "checking for location of hash_map... " >&6; }
-DEF_HASHMAP=None
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <hash_map>
-                std::hash_map<int, int> xx;
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_compile "$LINENO"; then :
-  DEF_HASHMAP=HAVE_STD_HASHMAP
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "$DEF_HASHMAP" = "None"; then
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <ext/hash_map>
-                 std::hash_map<int, int> xx;
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_compile "$LINENO"; then :
-  DEF_HASHMAP=HAVE_EXT_HASHMAP
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-# win32 has hash_map in stdext namespace (7 deprecates it in std, 8 requires stdext)
-if test "$DEF_HASHMAP" = "None"; then
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <hash_map>
-                 stdext::hash_map<int, int> xx;
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_compile "$LINENO"; then :
-  DEF_HASHMAP=HAVE_STDEXT_HASHMAP
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-
-############################################################
-#
-# If CUDA is being used, then we can't use TR1... it causes
-# compilation errors when using the nvcc compiler.
-#
-if test "$sci_required_cuda" != "yes"; then
-  if test "$DEF_HASHMAP" = "None" && test "$IS_OSX" != "yes"; then
-    # gcc-4.3 has depricated <ext/hash_map> so check for <backward/hash_map> first
-    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <tr1/unordered_map>
-                   std::tr1::unordered_map<int, int> xx;
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_compile "$LINENO"; then :
-  DEF_HASHMAP=HAVE_TR1_HASHMAP
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-  fi
-fi
-############################################################
-
-if test "$DEF_HASHMAP" = "None"; then
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <ext/hash_map>
-                 __gnu_cxx::hash_map<int, int> xx;
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_compile "$LINENO"; then :
-  DEF_HASHMAP=HAVE_GNU_HASHMAP
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-if test "$DEF_HASHMAP" = "None"; then
-  DEF_HASHMAP=
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-$as_echo "not found" >&6; }
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Cannot find hash_map, will use map instead" >&5
-$as_echo "$as_me: WARNING: Cannot find hash_map, will use map instead" >&2;}
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: found: $DEF_HASHMAP" >&5
-$as_echo "found: $DEF_HASHMAP" >&6; }
-  DEF_HASHMAP="#define $DEF_HASHMAP 1"
-fi
-
-sci_defs_files="$sci_defs_files include/sci_defs/hashmap_testdefs.h"
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-
 ##  --  search for libxml2 --
 _sci_optional=required
 _sci_lib=
@@ -15734,7 +15611,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
 
 
 if test "$IS_VC" = "yes"; then
@@ -44151,6 +44028,140 @@ ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+##  --  search for Hash Map ------------------------
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for location of hash_map" >&5
+$as_echo_n "checking for location of hash_map... " >&6; }
+
+if test "$HAVE_BOOST" = "yes"; then
+  DEF_HASHMAP=USE_BOOST_HASHMAP
+fi
+
+if test "$DEF_HASHMAP" = "None"; then
+  DEF_HASHMAP=None
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <hash_map>
+                 std::hash_map<int, int> xx;
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  DEF_HASHMAP=HAVE_STD_HASHMAP
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+if test "$DEF_HASHMAP" = "None"; then
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <ext/hash_map>
+                 std::hash_map<int, int> xx;
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  DEF_HASHMAP=HAVE_EXT_HASHMAP
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+# win32 has hash_map in stdext namespace (7 deprecates it in std, 8 requires stdext)
+if test "$DEF_HASHMAP" = "None"; then
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <hash_map>
+                 stdext::hash_map<int, int> xx;
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  DEF_HASHMAP=HAVE_STDEXT_HASHMAP
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+############################################################
+#
+# If CUDA is being used, then we can't use TR1... it causes
+# compilation errors when using the nvcc compiler.
+#
+if test "$sci_required_cuda" != "yes"; then
+  if test "$DEF_HASHMAP" = "None" && test "$IS_OSX" != "yes"; then
+    # gcc-4.3 has depricated <ext/hash_map> so check for <backward/hash_map> first
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <tr1/unordered_map>
+                   std::tr1::unordered_map<int, int> xx;
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  DEF_HASHMAP=HAVE_TR1_HASHMAP
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  fi
+fi
+############################################################
+
+if test "$DEF_HASHMAP" = "None"; then
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <ext/hash_map>
+                 __gnu_cxx::hash_map<int, int> xx;
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  DEF_HASHMAP=HAVE_GNU_HASHMAP
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+if test "$DEF_HASHMAP" = "None"; then
+  DEF_HASHMAP=
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
+$as_echo "not found" >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Cannot find hash_map, will use map instead" >&5
+$as_echo "$as_me: WARNING: Cannot find hash_map, will use map instead" >&2;}
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: found: $DEF_HASHMAP" >&5
+$as_echo "found: $DEF_HASHMAP" >&6; }
+  DEF_HASHMAP="#define $DEF_HASHMAP 1"
+fi
+
+sci_defs_files="$sci_defs_files include/sci_defs/hashmap_testdefs.h"
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
 
 ##  --  Handle --enable-wasatch_3p... ------------------------
 

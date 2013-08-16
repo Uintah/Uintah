@@ -72,7 +72,6 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/DataArchive/DataArchive.h>
 
-#include <sci_hash_map.h>
 #include <teem/nrrd.h>
 
 #include <iostream>
