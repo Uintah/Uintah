@@ -697,7 +697,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
 #   ifdef WASATCH_IN_ARCHES
-    /* hook in construction of task interface for wasatch transport equations here.
+    /* hook in construction of task interface for wasatch scalar transport equations here.
      * This is within the RK loop, so we need to pass the stage as well.
      *
      * Note that at this point we should also build Expr::PlaceHolder objects
@@ -713,38 +713,46 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       std::vector<std::string> phi;
       std::vector<std::string> phi_rhs;
       
+      std::set< Expr::ExpressionID > scalRHSIDs;
       for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
         Wasatch::TransportEquation* transEq = (*ia)->equation();
+        if ( !(transEq->dir_name() == "") ) continue; // skip momentum equations
         std::string solnVarName = transEq->solution_variable_name();
         phi.push_back(solnVarName);
-        phi_rhs.push_back(solnVarName + "_rhs");
+        std::string rhsName =solnVarName + "_rhs";
+        phi_rhs.push_back(rhsName);
+        //
+        scalRHSIDs.insert( gh->exprFactory->get_id(Expr::Tag(rhsName,Expr::STATE_NONE) ) );
       }
       //
       std::stringstream strRKStage;
       strRKStage << curr_level;
       const std::set<std::string>& ioFieldSet = wasatch.locked_fields();
 
-      // keep these following lines alive. they will be needed when we start cherry-picking from the Wasatch graph
-//      std::set<Expr::ExpressionID> ids;
-//      ids.insert(gh->exprFactory->get_id(Wasatch::TagNames::self().turbulentviscosity));
+      if (!(scalRHSIDs.empty())) {
+        // ADD THE FORCE-ON-GRAPH EXPRESSIONS TO THIS TASK. THERE IS A MAJOR LIMITATION HERE:
+        // IF ANY OF THE FORCED DEPENDENCIES ARE SHARED WITH ANOTHER TASKINTERFACE, THEN WE WILL
+        // GET MULTIPLE COMPUTES ERRORS FROM UINTAH.
+        if ( !( gh->forcedIDs.empty() ) ) scalRHSIDs.insert(gh->forcedIDs.begin(), gh->forcedIDs.end());
+        Wasatch::TaskInterface* wasatchRHSTask =
+        scinew Wasatch::TaskInterface( scalRHSIDs,
+                                      "warches_scalar_rhs_task_stage_" + strRKStage.str(),
+                                      *(gh->exprFactory),
+                                      level, sched, patches, matls,
+                                      wasatch.patch_info_map(),
+                                      curr_level+1,
+                                      ioFieldSet
+                                      );
+        
+        // jcs need to build a CoordHelper (or graph the one from wasatch?) - see Wasatch::TimeStepper.cc...
+        wasatch.task_interface_list().push_back( wasatchRHSTask );
+        wasatchRHSTask->schedule( curr_level +1 );
+        // note that there is another interface for this if we need some fields from the new DW.
+        d_timeIntegrator->sched_fe_update(sched, patches, matls, phi, phi_rhs, curr_level, true);
+        if(curr_level>0) d_timeIntegrator->sched_time_ave(sched, patches, matls, phi, curr_level, true);
+        //d_timeIntegrator->sched_wasatch_time_ave(sched, patches, matls, phi, phi_rhs, curr_level);
+      }
       
-      Wasatch::TaskInterface* wasatchRHSTask =
-      scinew Wasatch::TaskInterface( gh->rootIDs,
-                                    "wasatch_in_arches_rhs_task_stage_" + strRKStage.str(),
-                                    *(gh->exprFactory),
-                                    level, sched, patches, matls,
-                                    wasatch.patch_info_map(),
-                                    curr_level+1,
-                                    ioFieldSet
-                                    );
-      
-      // jcs need to build a CoordHelper (or graph the one from wasatch?) - see Wasatch::TimeStepper.cc...
-      wasatch.task_interface_list().push_back( wasatchRHSTask );
-      wasatchRHSTask->schedule( curr_level +1 );
-      // note that there is another interface for this if we need some fields from the new DW.
-      d_timeIntegrator->sched_fe_update(sched, patches, matls, phi, phi_rhs, curr_level, true);
-      if(curr_level>0) d_timeIntegrator->sched_time_ave(sched, patches, matls, phi, curr_level, true);
-      //d_timeIntegrator->sched_wasatch_time_ave(sched, patches, matls, phi, phi_rhs, curr_level);
     }
 #   endif // WASATCH_IN_ARCHES
 

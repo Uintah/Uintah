@@ -165,7 +165,9 @@ namespace Wasatch{
     for( Expr::TagList::iterator exprtag=exprTagList.begin();
         exprtag!=exprTagList.end();
         ++exprtag ){
-      graphHelper->rootIDs.insert( graphHelper->exprFactory->get_id(*exprtag) );      
+      const Expr::ExpressionID exprID = graphHelper->exprFactory->get_id(*exprtag);
+      graphHelper->rootIDs.insert( exprID );
+      graphHelper->forcedIDs.insert( exprID );
     }    
   }
   
@@ -179,7 +181,9 @@ namespace Wasatch{
         exprParams = exprParams->findNextBlock("NameTag") )
     {
       const Expr::Tag tag = parse_nametag( exprParams );
-      gh->rootIDs.insert( gh->exprFactory->get_id(tag) );
+      const Expr::ExpressionID exprID = gh->exprFactory->get_id(tag);
+      gh->rootIDs.insert( exprID );
+      gh->forcedIDs.insert( exprID );
     }
   }
 
