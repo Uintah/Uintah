@@ -39,6 +39,11 @@
 #include <vector>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 
+#include <spatialops/SpatialOpsConfigure.h>
+#ifdef ENABLE_THREADS
+#include <boost/thread/mutex.hpp>
+#endif
+
 /**
  *  \class     UpwindInterpolant
  *  \author    Tony Saad
@@ -49,11 +54,7 @@
  *
  *  \todo Parallelize apply_to_field() method
  *
- *  \todo Add mutex when set_advective_velocity() is set.  Release
- *	  when apply_to_field() is done.
- *
- *  This class is a lightweight operator, i.e. it does NOT implement a
- *  matvec operation. The UpwindInterplant will interpolate the
+ *  The UpwindInterplant will interpolate the
  *  convective flux \f$\phi u_i\f$ where \f$\phi\f$ denotes a
  *  staggered or non-staggered field. For example, if \f$\phi\f$
  *  denotes the temperature T, then, \f$\phi\f$ is a scalar volume
@@ -77,6 +78,10 @@ class UpwindInterpolant {
   // faces. The destination field should be of the same type as the advective
   // velocity, i.e. a staggered, cell centered field.
   const DestT* advectiveVelocity_;
+
+# ifdef ENABLE_THREADS
+  boost::mutex mutex_;
+# endif
 
 public:
 

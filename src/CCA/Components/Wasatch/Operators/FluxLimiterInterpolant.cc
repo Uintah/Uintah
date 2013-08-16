@@ -147,7 +147,15 @@ void
 FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
 set_advective_velocity( const PhiFaceT &theAdvectiveVelocity )
 {
-  // !!! NOT THREAD SAFE !!! USE LOCK
+# ifdef ENABLE_THREADS
+  /*
+   * Because this operator may be accessed by multiple expressions simultaneously,
+   * there is the possibility that the advective velocity could be set by multiple
+   * threads simultaneously.  Therefore, we lock this until the apply_to_field()
+   * is done with the advective velocity to prevent race conditions.
+   */
+  mutex_.lock();
+#endif
   advectiveVelocity_ = &theAdvectiveVelocity;
 }
 
@@ -246,7 +254,7 @@ build_src_fields( const PhiVolT& src ) const
 template< typename PhiVolT, typename PhiFaceT >
 void
 FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
-apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
+apply_to_field( const PhiVolT &src, PhiFaceT &dest )
 {
   // This will calculate the flux limiter function psi. The convective flux is
   // written as: phi_face = phi_lo - psi*(phi_lo - phi_hi) where
@@ -285,28 +293,27 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
     
     // this is the destination field value - always on the boundary
     const MemoryWindow wd( wdest.glob_dim(),
-                          destBaseOffset,
-                          destExtent,
-                          wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
+                           destBaseOffset,
+                           destExtent,
+                           wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
     
     // ghost cell: on a minus face, this is src-minus. on a plus face, this is src-plus
     const MemoryWindow ws1( wsrc.glob_dim(),
-                           baseOffset,
-                           extent,
-                           wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
+                            baseOffset,
+                            extent,
+                            wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
     
     // first interior cell: on a minus face, this is src-plus. on a plus face this is src-minus
     const MemoryWindow ws2( wsrc.glob_dim(),
-                           baseOffset + unitNormal_ * pm[direc],
-                           extent,
-                           wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
+                            baseOffset + unitNormal_ * pm[direc],
+                            extent,
+                            wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
         
     // second interior cell: on a minus face, this is src-plus-plus. on a plus face, this is src-minus-minus
     const MemoryWindow ws3( wsrc.glob_dim(),
-                           baseOffset  + unitNormal_ * pm[direc] * 2,
-                           extent,
-                           wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
-
+                            baseOffset  + unitNormal_ * pm[direc] * 2,
+                            extent,
+                            wsrc.has_bc(0), wsrc.has_bc(1), wsrc.has_bc(2) );
 
     PhiVolT d( wd, destVals, ExternalStorage, dMemType, dDevIdx );
     const PhiVolT aVel( wd, velVals, ExternalStorage, advelMemType, advelDevIdx );
@@ -378,6 +385,10 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   case Wasatch::HQUICK  : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, HQUICK   ); break;
   default               : d <<= 0.0;                                                   break;
   }
+
+# ifdef ENABLE_THREADS
+  mutex_.unlock();
+# endif
 }
 
 //==================================================================
