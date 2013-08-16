@@ -44032,8 +44032,15 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 ##  --  search for Hash Map ------------------------
 
+ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for location of hash_map" >&5
 $as_echo_n "checking for location of hash_map... " >&6; }
+DEF_HASHMAP=None
 
 if test "$HAVE_BOOST" = "yes"; then
   DEF_HASHMAP=USE_BOOST_HASHMAP
@@ -44053,7 +44060,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   DEF_HASHMAP=HAVE_STD_HASHMAP
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
@@ -44072,7 +44079,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   DEF_HASHMAP=HAVE_EXT_HASHMAP
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
@@ -44091,7 +44098,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   DEF_HASHMAP=HAVE_STDEXT_HASHMAP
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
@@ -44117,7 +44124,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   DEF_HASHMAP=HAVE_TR1_HASHMAP
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
@@ -44138,7 +44145,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   DEF_HASHMAP=HAVE_GNU_HASHMAP
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext

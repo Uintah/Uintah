@@ -4019,7 +4019,9 @@ AC_LANG([C])
 
 ##  --  search for Hash Map ------------------------
 
+AC_LANG([C++])
 AC_MSG_CHECKING(for location of hash_map)
+DEF_HASHMAP=None
 
 if test "$HAVE_BOOST" = "yes"; then
   DEF_HASHMAP=USE_BOOST_HASHMAP
