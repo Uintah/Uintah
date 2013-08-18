@@ -541,14 +541,10 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   
   //__________________________________
   //  schedule the tasks
-std::cout << "test 1" << std::endl;
   for (int L=0; L< maxLevels; ++L){
   
-std::cout << "test 2" << std::endl;
     if( L != archesLevelIndex ){
    
-std::cout << "test 3" << std::endl;
-	 
       string taskname = "RMCRT_Radiation::sched_initialize"; 
       Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
 
