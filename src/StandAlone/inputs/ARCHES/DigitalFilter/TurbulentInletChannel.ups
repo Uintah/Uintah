@@ -3,7 +3,7 @@
   <Meta>
    </Meta>
 
-  <SimulationComponent type="mpmarches"/>
+  <SimulationComponent type="arches"/>
 
   <Solver type="hypre"/>
   <Time>
@@ -207,46 +207,5 @@
     </ARCHES>
 
   </CFD>
-
- <MPM>
-    <time_integrator>explicit</time_integrator>
-    <interpolator>linear</interpolator>
-  </MPM>
-
-  <MaterialProperties>
-    <MPM>
-      <material name="Nothingness">
-        <density>   2489.0   </density>
-        <constitutive_model type="comp_mooney_rivlin">
-          <he_constant_1>5.0</he_constant_1>
-          <he_constant_2>1.0</he_constant_2>
-          <he_PR>.49</he_PR>
-        </constitutive_model>
-        <thermal_conductivity>  0.4494           </thermal_conductivity>
-        <specific_heat>         940.36           </specific_heat>
-      
-      </material>
-      <contact>
-        <type>null</type>
-        <vel_fields>              [0,0,0]         </vel_fields>
-        <mu> 0.0 </mu>
-      </contact>
-    </MPM>
-  </MaterialProperties>
-
-  <Multimaterial>
-    <fluidThermalConductivity>0.03</fluidThermalConductivity>
-    <heatExchange>false</heatExchange>
-    <turbulentPrandtNo>0.7</turbulentPrandtNo>
-    <fluidHeatCapacity>1007.</fluidHeatCapacity>
-    <IfCutCell>false</IfCutCell>
-    <StationarySolid>true</StationarySolid>
-    <inviscid>false</inviscid>
-    <restart>true</restart>
-    <fixedCellType>true</fixedCellType>
-    <fixedTemp>true</fixedTemp>
-    <TestCutCells>true</TestCutCells>
-    <stairstep>true</stairstep>
-  </Multimaterial>
 
 </Uintah_specification>
