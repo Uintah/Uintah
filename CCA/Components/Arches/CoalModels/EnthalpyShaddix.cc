@@ -6,6 +6,7 @@
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/CoalModels/fortran/rqpart_fort.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
@@ -23,29 +24,32 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 // Builder:
 EnthalpyShaddixBuilder::EnthalpyShaddixBuilder( const std::string         & modelName,
-                                                      const vector<std::string> & reqICLabelNames,
-                                                      const vector<std::string> & reqScalarLabelNames,
-                                                      ArchesLabel         * fieldLabels,
-                                                      SimulationStateP          & sharedState,
-                                                      int qn ) :
+                                                const vector<std::string> & reqICLabelNames,
+                                                const vector<std::string> & reqScalarLabelNames,
+                                                ArchesLabel               * fieldLabels,
+                                                SimulationStateP          & sharedState,
+                                                Properties                * props, 
+                                                int qn ) :
   ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
 {
+  d_props = props; 
 }
 
 EnthalpyShaddixBuilder::~EnthalpyShaddixBuilder(){}
 
 ModelBase* EnthalpyShaddixBuilder::build() {
-  return scinew EnthalpyShaddix( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return scinew EnthalpyShaddix( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_props, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
 EnthalpyShaddix::EnthalpyShaddix( std::string modelName, 
-                                        SimulationStateP& sharedState,
-                                        ArchesLabel* fieldLabels,
-                                        vector<std::string> icLabelNames, 
-                                        vector<std::string> scalarLabelNames,
-                                        int qn ) 
+                                  SimulationStateP& sharedState,
+                                  ArchesLabel* fieldLabels,
+                                  vector<std::string> icLabelNames, 
+                                  vector<std::string> scalarLabelNames,
+                                  Properties* props, 
+                                  int qn ) 
 : HeatTransfer(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   // Set constants
@@ -57,6 +61,7 @@ EnthalpyShaddix::EnthalpyShaddix( std::string modelName,
   Hh0 = 0.0;
   Ha0 = -1.504e7;
   Rgas = 8314.3; // J/K/kmol
+  d_props = props; 
 }
 
 EnthalpyShaddix::~EnthalpyShaddix()
@@ -296,6 +301,12 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
   E30 = calc_enthalpy(T0, 0.0, 0.0, ashmass30);
   cout << "initial particles enthalpies T=1300 " << E00 << " " << E10 << " " << E20 << " " << E30 << endl;
 */
+
+  //getting the table: 
+  MixingRxnModel* mixing_table = d_props->getMixRxnModel(); 
+  //string test="Hc0"; 
+  //double value = mixing_table->getDoubleTableConstant( test );
+
 
 }
 

@@ -8,6 +8,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/Directives.h>
+#include <CCA/Components/Arches/Properties.h>
 #include <vector>
 #include <string>
 
@@ -31,17 +32,20 @@ class EnthalpyShaddixBuilder: public ModelBuilder
 {
 public: 
   EnthalpyShaddixBuilder( const std::string          & modelName,
-                             const vector<std::string>  & reqICLabelNames,
-                             const vector<std::string>  & reqScalarLabelNames,
-                             ArchesLabel          * fieldLabels,
-                             SimulationStateP           & sharedState,
-                             int qn );
+                          const vector<std::string>  & reqICLabelNames,
+                          const vector<std::string>  & reqScalarLabelNames,
+                          ArchesLabel                * fieldLabels,
+                          SimulationStateP           & sharedState,
+                          Properties                 * props, 
+                          int qn );
 
   ~EnthalpyShaddixBuilder(); 
 
   ModelBase* build(); 
 
 private:
+
+  Properties* d_props; 
 
 }; 
 
@@ -59,6 +63,7 @@ public:
                 ArchesLabel* fieldLabels,
                 vector<std::string> reqICLabelNames, 
                 vector<std::string> reqScalarLabelNames, 
+                Properties* props, 
                 int qn );
 
   ~EnthalpyShaddix();
@@ -165,6 +170,8 @@ private:
   const VarLabel* d_abskp;  ///< Label for thermal conductivity (of the particles, I think???)
   const VarLabel* d_volq_label;
   const VarLabel* d_abskg_label;
+
+  Properties* d_props; 
 
   string _div_q_label_name;
   
