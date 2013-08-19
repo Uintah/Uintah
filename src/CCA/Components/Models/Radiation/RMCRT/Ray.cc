@@ -1327,14 +1327,14 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             //__________________________________
             //  Determine the princple direction the ray is traveling
             //  
-            if (tMax.x() < tMax.y()){
-              if (tMax.x() < tMax.z()){
+            if ( tMax[0] < tMax[1] ){    // X < Y
+              if ( tMax[0] < tMax[2] ){  // X < Z
                 dir = X;
               } else {
                 dir = Z;
               }
             } else {
-              if(tMax.y() <tMax.z()){
+              if(tMax[1] <tMax[2] ){     // Y < Z
                 dir = Y;
               } else {
                 dir = Z;
@@ -1611,7 +1611,7 @@ void Ray::reflect(double& fs,
   // apply reflection condition
   step *= -1;                // begin stepping in opposite direction
   sign = (sign==1) ? 0 : 1;  //  swap sign from 1 to 0 or vice versa
-  dbg2 << " REFLECTING " << endl;
+  //dbg2 << " REFLECTING " << endl;
 }
             
 
@@ -2266,32 +2266,31 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
    bool sign[3];
    
    findStepSize(step, sign, inv_direction_vector);
+  
+ 
+   Vector direction_vector = Vector(1.0)/inv_direction_vector;
+   Vector D_DxRatio(1, Dx.y()/Dx.x(), Dx.z()/Dx.x() );
 
-   double DyDxRatio = Dx.y() / Dx.x(); //noncubic
-   double DzDxRatio = Dx.z() / Dx.x(); //noncubic
-
-   double tMaxX = (origin[0] + sign[0]             - ray_location[0]) * inv_direction_vector[0];
-   double tMaxY = (origin[1] + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1];
-   double tMaxZ = (origin[2] + sign[2] * DzDxRatio - ray_location[2]) * inv_direction_vector[2];
+   Vector tMax;         // (mixing bools, ints and doubles)
+   tMax.x( (origin[0] + sign[0]                - ray_location[0]) * inv_direction_vector[0] );
+   tMax.y( (origin[1] + sign[1] * D_DxRatio[1] - ray_location[1]) * inv_direction_vector[1] );
+   tMax.z( (origin[2] + sign[2] * D_DxRatio[2] - ray_location[2]) * inv_direction_vector[2] );
 
    //Length of t to traverse one cell
-   double tDeltaX = abs(inv_direction_vector[0]);
-   double tDeltaY = abs(inv_direction_vector[1]) * DyDxRatio;
-   double tDeltaZ = abs(inv_direction_vector[2]) * DzDxRatio;
-
-
+   Vector tDelta = Abs(inv_direction_vector) * D_DxRatio;
+   
    //Initializes the following values for each ray
    bool in_domain     = true;
    double tMax_prev   = 0;
    double intensity   = 1.0;
    double fs          = 1.0;
-   int nReflect       = 0;                // Number of reflections
+   int nReflect       = 0;                 // Number of reflections
    double optical_thickness      = 0;
    double expOpticalThick_prev   = 1.0;
 
 
 #ifdef RAY_SCATTER
-   double scatCoeff = _sigmaScat; //[m^-1]  !! HACK !! This needs to come from data warehouse
+   double scatCoeff = _sigmaScat;          //[m^-1]  !! HACK !! This needs to come from data warehouse
    if (scatCoeff == 0) scatCoeff = 1e-99;  // avoid division by zero
 
    // Determine the length at which scattering will occur
@@ -2301,59 +2300,46 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
 #endif
 
    //+++++++Begin ray tracing+++++++++++++++++++
-
    //Threshold while loop
    while (intensity > _Threshold){
 
-     int face = -9;
+     DIR face = NONE;
 
      while (in_domain){
 
        prevCell = cur;
-       double disMin = -9;          // Common variable name in ray tracing. Represents ray segment length.
+       double disMin = -9;          // Represents ray segment length.
 
        //__________________________________
        //  Determine which cell the ray will enter next
-       if (tMaxX < tMaxY){
-         if (tMaxX < tMaxZ){
-           cur[0]    = cur[0] + step[0];
-           disMin    = tMaxX - tMax_prev;
-           tMax_prev = tMaxX;
-           tMaxX     = tMaxX + tDeltaX;
-           face      = 0;
+       if ( tMax[0] < tMax[1] ){        // X < Y
+         if ( tMax[0] < tMax[2] ){      // X < Z
+           face = X;
+         } else {
+           face = Z;
          }
-         else {
-           cur[2]    = cur[2] + step[2];
-           disMin    = tMaxZ - tMax_prev;
-           tMax_prev = tMaxZ;
-           tMaxZ     = tMaxZ + tDeltaZ;
-           face      = 2;
-         }
-       }
-       else {
-         if(tMaxY <tMaxZ){
-           cur[1]    = cur[1] + step[1];
-           disMin    = tMaxY - tMax_prev;
-           tMax_prev = tMaxY;
-           tMaxY     = tMaxY + tDeltaY;
-           face      = 1;
-         }
-         else {
-           cur[2]    = cur[2] + step[2];
-           disMin    = tMaxZ - tMax_prev;
-           tMax_prev = tMaxZ;
-           tMaxZ     = tMaxZ + tDeltaZ;
-           face      =2;
+       } else {
+         if( tMax[1] < tMax[2] ){       // Y < Z
+           face = Y;
+         } else {
+           face = Z;
          }
        }
 
-       ray_location[0] = ray_location[0] + (disMin  / inv_direction_vector[0]);
-       ray_location[1] = ray_location[1] + (disMin  / inv_direction_vector[1]);
-       ray_location[2] = ray_location[2] + (disMin  / inv_direction_vector[2]);
+       //__________________________________
+       //  update marching variables
+       cur[face]  = cur[face] + step[face];
+       disMin     = (tMax[face] - tMax_prev);
+       tMax_prev  = tMax[face];
+       tMax[face] = tMax[face] + tDelta[face];
+
+       ray_location[0] = ray_location[0] + (disMin  * direction_vector[0]);
+       ray_location[1] = ray_location[1] + (disMin  * direction_vector[1]);
+       ray_location[2] = ray_location[2] + (disMin  * direction_vector[2]);
 
        in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
 
-       optical_thickness += Dx.x() * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..
+       optical_thickness += Dx.x() * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
        // were adjusted by DyDxRatio or DzDxRatio, this line is now correct for noncubic domains.
        
        size++;
@@ -2374,9 +2360,8 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          scatLength = -log(mTwister.randDblExc() ) / scatCoeff; 
 
          bool randomSeed = true;
-         Vector direction_vector =  findRayDirection( mTwister, randomSeed); 
-         
-         inv_direction_vector = Vector(1.0)/direction_vector;
+         Vector direction_vector =  findRayDirection( mTwister, randomSeed ); 
+         inv_direction_vector    = Vector(1.0)/direction_vector;
 
          // get new step and sign
          int stepOld = step[face];
@@ -2388,17 +2373,14 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
            cur = prevCell;
          }
          
-         // get new tMax
-         tMaxX = (cur[0] + sign[0]             - ray_location[0]) * inv_direction_vector[0];
-         tMaxY = (cur[1] + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1];
-         tMaxZ = (cur[2] + sign[2] * DzDxRatio - ray_location[2]) * inv_direction_vector[2];
+         // get new tMax (mixing bools, ints and doubles)
+         tMax.x( ( cur[0] + sign[0]                - ray_location[0]) * inv_direction_vector[0] );
+         tMax.y( ( cur[1] + sign[1] * D_DxRatio[1] - ray_location[1]) * inv_direction_vector[1] );
+         tMax.z( ( cur[2] + sign[2] * D_DxRatio[2] - ray_location[2]) * inv_direction_vector[2] );
 
          // Length of t to traverse one cell
-         tDeltaX = abs(inv_direction_vector[0]);
-         tDeltaY = abs(inv_direction_vector[1]) * DyDxRatio;
-         tDeltaZ = abs(inv_direction_vector[2]) * DzDxRatio;
+         tDelta    = Abs(inv_direction_vector) * D_DxRatio;
          tMax_prev = 0;
-
          curLength = 0;  // allow for multiple scattering events per ray
          //if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
        }

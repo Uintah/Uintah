@@ -204,7 +204,7 @@ namespace Uintah{
                const int mat_id);
 
     private: 
-      enum DIR {X, Y, Z, NONE};
+      enum DIR {X=0, Y=1, Z=2, NONE=-9};
       double _pi;
       double _Threshold;
       double _sigma;
