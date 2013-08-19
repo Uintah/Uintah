@@ -146,6 +146,17 @@ namespace Uintah {
     /** @brief Returns a <string, double> map of KEY constants found in the table */ 
     inline doubleMap& getAllConstants(){ return d_constants; };
 
+    inline double getDoubleTableConstant(const string key ){
+      
+      doubleMap::iterator iter = d_constants.find(key);
+
+      if ( iter != d_constants.end() ){
+        return iter->second; 
+      } else { 
+        throw InvalidValue("Error: Table constant not found: "+key,__FILE__,__LINE__); 
+      }
+    }
+
     /** @brief Returns the map of participating inerts **/
     inline InertMasterMap& getInertMap(){ return d_inertMap; }; 
 
