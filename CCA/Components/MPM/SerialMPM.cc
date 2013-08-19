@@ -1541,6 +1541,7 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
+  t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->NC_CCweightLabel);
   t->computes(d_sharedState->get_delt_label(),getLevel(patches));
 
@@ -4692,7 +4693,7 @@ SerialMPM::refine(const ProcessorGroup*,
         ParticleVariable<Vector> pvelocity, pexternalforce, pdisp;
         ParticleVariable<Matrix3> psize, pVelGrad;
         ParticleVariable<double> pTempPrev,p_q;
-        ParticleVariable<int>    pLoadCurve;
+        ParticleVariable<int>    pLoadCurve,pLoc;
         ParticleVariable<long64> pID;
         ParticleVariable<Matrix3> pdeform, pstress;
         
@@ -4707,6 +4708,7 @@ SerialMPM::refine(const ProcessorGroup*,
         new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, pset);
         new_dw->allocateAndPut(pID,            lb->pParticleIDLabel,    pset);
         new_dw->allocateAndPut(pdisp,          lb->pDispLabel,          pset);
+        new_dw->allocateAndPut(pLoc,           lb->pLocalizedMPMLabel,  pset);
         if (flags->d_useLoadCurves){
           new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
         }
