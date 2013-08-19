@@ -999,7 +999,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
       
       // ray loop
       for (int iRay=0; iRay < _nDivQRays; iRay++){
-  
         
         Vector direction_vector =findRayDirection(mTwister,_isSeedRandom, i, j, k, iRay );                        
         Vector inv_direction_vector = Vector(1.0)/direction_vector;
@@ -1276,8 +1275,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         int L       = maxLevels -1;  // finest level
         int prevLev = L;
 
-        Vector direction = findRayDirection( mTwister,_isSeedRandom, i, j, k, iRay );
-                             
+        Vector direction = findRayDirection( mTwister,_isSeedRandom, i, j, k, iRay ); 
         Vector inv_direction = Vector(1.0)/direction;
 
         int step[3];                                           // Gives +1 or -1 based on sign
@@ -1312,7 +1310,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         const Level* level    = fineLevel;
 
 
-        dbg2 << "  fineLevel_ROI_Lo: " <<  fineLevel_ROI_Lo << " fineLevel_ROI_HI: " << fineLevel_ROI_Hi << endl;
+        //dbg2 << "  fineLevel_ROI_Lo: " <<  fineLevel_ROI_Lo << " fineLevel_ROI_HI: " << fineLevel_ROI_Hi << endl;
          
         //______________________________________________________________________
         //  Threshold  loop
@@ -1357,8 +1355,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
             bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCell(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
             
-            dbg2 << cur << " jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
-                 << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl; 
+            //dbg2 << cur << " jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
+            //     << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl; 
                  
             if( jumpFinetoCoarserLevel ){
               cur   = level->mapCellToCoarser(cur); 
@@ -1366,7 +1364,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
               L     = level->getIndex();
               onFineLevel = false;
               
-              dbg2 << " Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
+              // NEVER UNCOMMENT EXCEPT FOR DEBUGGING
+              //dbg2 << " Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
             } else if ( jumpCoarsetoCoarserLevel ){
               
               IntVector c_old = cur;
@@ -1374,7 +1373,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
               level = level->getCoarserLevel().get_rep();
               L     = level->getIndex();
               
-              dbg2 << " Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
+              //dbg2 << " Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
             }
             
             //__________________________________
@@ -1423,36 +1422,32 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             
             expOpticalThick_prev = expOpticalThick;
             
-            dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
+            // NEVER UNCOMMENT EXCEPT FOR DEBUGGING
+            //dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
             //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
             //dbg2 << "    direction " << direction << endl;
          
           } //end domain while loop.  ++++++++++++++
 
+          double wallEmissivity = abskg[L][cur];
+     
+          if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one. 
+            wallEmissivity = 1.0;
+          }
+          
           intensity = exp(-optical_thickness);
 
-          //  wall emission
-          sumI += abskg[L][cur] * sigmaT4OverPi[L][cur] * intensity;
+          sumI += wallEmissivity * sigmaT4OverPi[L][cur] * intensity;
 
           intensity = intensity * fs;  
            
           //__________________________________
           //  Reflections
-          if (intensity > _Threshold){
-
+          if (intensity > _Threshold && _allowReflect ){
             ++nReflect;
-            fs = fs * (1 - abskg[L][cur]);
-
-            //put cur back inside the domain
-            cur = prevCell;
-            in_domain = 1;
-
-            // apply reflection condition
-            step[dir] *= -1;                      // begin stepping in opposite direction
-            sign[dir] = (sign[dir]==1) ? 0 : 1;  //  swap sign from 1 to 0 or vice versa
+            reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir] );
             
-            dbg2 << " REFLECTING " << endl;
-          }  // if reflection
+          }
         }  // threshold while loop.
       }  // Ray loop
 
@@ -1463,7 +1458,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
       radiationVolq_fine[origin] = 4.0 * _pi * abskg_fine[origin] *  (sumI/_nDivQRays) ;
 
-      dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/_nDivQRays) << endl;
+      //dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/_nDivQRays) << endl;
     }  // end cell iterator
 
     //__________________________________
@@ -1597,6 +1592,28 @@ Vector Ray::findRayDirection(MTRand& mTwister,
   direction_vector[2] = plusMinus_one;
   return direction_vector;
 }
+//______________________________________________________________________
+//
+void Ray::reflect(double& fs,
+                  IntVector& cur,
+                  IntVector& prevCell,
+                  const double abskg,
+                  bool& in_domain,
+                  int& step,
+                  bool& sign)
+{
+  fs = fs * (1 - abskg);
+
+  //put cur back inside the domain
+  cur = prevCell;
+  in_domain = true;
+
+  // apply reflection condition
+  step *= -1;                // begin stepping in opposite direction
+  sign = (sign==1) ? 0 : 1;  //  swap sign from 1 to 0 or vice versa
+  dbg2 << " REFLECTING " << endl;
+}
+            
 
 
 //______________________________________________________________________
@@ -2370,13 +2387,13 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          if( step[face] * stepOld < 0 ){
            cur = prevCell;
          }
+         
          // get new tMax
          tMaxX = (cur[0] + sign[0]             - ray_location[0]) * inv_direction_vector[0];
          tMaxY = (cur[1] + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1];
          tMaxZ = (cur[2] + sign[2] * DzDxRatio - ray_location[2]) * inv_direction_vector[2];
 
-         // get new tDelta
-         //Length of t to traverse one cell
+         // Length of t to traverse one cell
          tDeltaX = abs(inv_direction_vector[0]);
          tDeltaY = abs(inv_direction_vector[1]) * DyDxRatio;
          tDeltaZ = abs(inv_direction_vector[2]) * DzDxRatio;
@@ -2398,32 +2415,16 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
      
      intensity = exp(-optical_thickness);
      
-     sumI += wallEmissivity*sigmaT4OverPi[cur] * intensity;
+     sumI += wallEmissivity * sigmaT4OverPi[cur] * intensity;
 
-     intensity = intensity * fs;  
-
-     // for DOM comparisons, we don't allow for reflections, so 
-     // when a ray reaches the end of the domain, we force it to terminate. 
-     if(!_allowReflect) intensity = 0; //9-21-12
+     intensity = intensity * fs;
                                             
      //__________________________________
      //  Reflections
-     if (intensity > _Threshold){
-       
+     if ( (intensity > _Threshold) && _allowReflect){
+       reflect( fs, cur, prevCell, abskg[cur], in_domain, step[face], sign[face] );
        ++nReflect;
-       fs = fs * (1-abskg[cur]);
-
-       //put cur back inside the domain
-       cur = prevCell;
-
-       // apply reflection condition
-       step[face] *= -1;                      // begin stepping in opposite direction
-       sign[face] = (sign[face]==1) ? 0 : 1; //  swap sign from 1 to 0 or vice versa
-       inv_direction_vector[face] *= -1;
-
-       in_domain = 1;
-
-     }  // if reflection
+     }
    }  // threshold while loop.
 } // end of updateSumI function
 

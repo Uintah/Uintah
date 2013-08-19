@@ -369,6 +369,15 @@ namespace Uintah{
                                const int j = -9,
                                const int k = -9,
                                const int iRay = -9);
+      //__________________________________
+      //
+      void reflect(double& fs,
+                   IntVector& cur,
+                   IntVector& prevCell,
+                   const double abskg,
+                   bool& in_domain,
+                   int& step,
+                   bool& sign);
 
       //__________________________________
       //
