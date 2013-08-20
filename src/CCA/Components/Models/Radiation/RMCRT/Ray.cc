@@ -769,11 +769,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
               x*(-sin(thetaRot)) +
               y*sin(phiRot)*cos(thetaRot) +
               z*cos(phiRot)*cos(thetaRot);
-          
-             Vector inv_direction_vector = Vector(1.0)/direction_vector;       
             
             // get the intensity for this ray
-            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+            updateSumI( direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
             
             sumProjI += cos(VRTheta) * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
                                                            // from all the rays up to that point
@@ -921,49 +919,24 @@ Ray::rayTrace( const ProcessorGroup* pc,
           // Flux ray loop
           for (int iRay=0; iRay < _nFluxRays; iRay++){
 
-            if(_isSeedRandom == false){                 // !! This could use a compiler directive for speed-up
-              mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
-            }
-
-            // Surface Way to generate a ray direction from the positive z face
-            double phi   = 2 * M_PI * mTwister.rand(); // azimuthal angle.  Range of 0 to 2pi
-            double theta = acos(mTwister.rand());      // polar angle for the hemisphere
-          
-            //Convert to Cartesian
-            Vector direction_vector;
-            direction_vector[0] =  sin(theta) * cos(phi);
-            direction_vector[1] =  sin(theta) * sin(phi);
-            direction_vector[2] =  cos(theta);
-          
-            // Put direction vector as coming from correct face
-            adjustDirection(direction_vector, dirIndexOrder[RayFace], dirSignSwap[RayFace]);
-            Vector inv_direction_vector = Vector(1.0)/direction_vector;
-
-            // Surface way to generate a ray location from the negative y face
-            Vector ray_location;
-            ray_location[0] =  mTwister.rand() ;
-            ray_location[1] =  0;
-            ray_location[2] =  mTwister.rand() * DzDxRatio ;
-          
-            // Put point on correct face
-            adjustLocation(ray_location, locationIndexOrder[RayFace],  locationShift[RayFace], DyDxRatio, DzDxRatio);
-                        
-            ray_location[0] += origin.x();
-            ray_location[1] += origin.y();
-            ray_location[2] += origin.z();
+            Vector direction_vector, ray_location; 
+            double cosTheta;
+            rayDirection_cellFace( mTwister, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
+                                   direction_vector, cosTheta );
+                                   
+            rayLocation_cellFace( mTwister, origin, locationIndexOrder[RayFace], locationShift[RayFace], 
+                                  DyDxRatio, DzDxRatio, ray_location);            
             
-            updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+            updateSumI( direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
-            sumProjI += cos(theta) * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
+            sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
 
             sumI_prev = sumI;
 
           } // end of flux ray loop
 
           //__________________________________
-          //  Compute Net Flux to the boundary
-          //itr->second.net = sumProjI * 2*_pi/_nFluxRays - abskg[origin] * sigmaT4OverPi[origin] * _pi; // !!origin is a flow cell, not a wall
-                    
+          //  Compute Net Flux to the boundary                    
           boundFlux[origin][face] = sumProjI * 2 *_pi/_nFluxRays;
 
           if(_benchmark==5){
@@ -1000,12 +973,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
       // ray loop
       for (int iRay=0; iRay < _nDivQRays; iRay++){
         
-        Vector direction_vector =findRayDirection(mTwister,_isSeedRandom, i, j, k, iRay );                        
-        Vector inv_direction_vector = Vector(1.0)/direction_vector;
+        Vector direction_vector =findRayDirection(mTwister,_isSeedRandom, i, j, k, iRay );
         
         Vector ray_location;
-        Vector ray_location_prev;
-
         if(_CCRays){
           ray_location[0] =   i +  0.5 ;
           ray_location[1] =   j +  0.5 * DyDxRatio ;
@@ -1015,7 +985,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           ray_location[1] =   j +  mTwister.rand() * DyDxRatio ;
           ray_location[2] =   k +  mTwister.rand() * DzDxRatio ;
         }
-        updateSumI(inv_direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+        updateSumI( direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
         
       }  // Ray loop
       
@@ -1637,32 +1607,60 @@ void Ray::findStepSize(int step[],
 
 
 //______________________________________________________________________
-void Ray::adjustDirection(Vector &directionVector, 
-                          const IntVector &indexOrder, 
-                          const IntVector &signOrder){
+// Compute the Ray direction from a cell face
+void Ray::rayDirection_cellFace( MTRand& mTwister,
+                                 const IntVector& origin,
+                                 const IntVector& indexOrder, 
+                                 const IntVector& signOrder,
+                                 const int iRay,
+                                 Vector& directionVector,
+                                 double& cosTheta)
+{
 
-  Vector tmpry = directionVector;
+  if(_isSeedRandom == false){                 // !! This could use a compiler directive for speed-up
+    mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
+  }
 
-  directionVector[0] = tmpry[indexOrder[0]] * signOrder[0];
-  directionVector[1] = tmpry[indexOrder[1]] * signOrder[1];
-  directionVector[2] = tmpry[indexOrder[2]] * signOrder[2];
+  // Surface Way to generate a ray direction from the positive z face
+  double phi   = 2 * M_PI * mTwister.rand(); // azimuthal angle.  Range of 0 to 2pi
+  double theta = acos(mTwister.rand());      // polar angle for the hemisphere
+  cosTheta = cos(theta);
 
+  //Convert to Cartesian
+  Vector tmp;
+  tmp[0] =  sin(theta) * cos(phi);
+  tmp[1] =  sin(theta) * sin(phi);
+  tmp[2] =  cosTheta;
+
+  // Put direction vector as coming from correct face,
+  directionVector[0] = tmp[indexOrder[0]] * signOrder[0];
+  directionVector[1] = tmp[indexOrder[1]] * signOrder[1];
+  directionVector[2] = tmp[indexOrder[2]] * signOrder[2];
 }
 
 //______________________________________________________________________
-//
-void Ray::adjustLocation(Vector &location, 
-                        const IntVector &indexOrder, 
-                        const IntVector &shift, 
-                        const double &DyDxRatio, 
-                        const double &DzDxRatio){
+//  Compute the Ray location from a cell face
+void Ray::rayLocation_cellFace( MTRand& mTwister,
+                                const IntVector& origin,
+                                const IntVector &indexOrder, 
+                                const IntVector &shift, 
+                                const double &DyDxRatio, 
+                                const double &DzDxRatio,
+                                Vector& location)
+{
+  Vector tmp;
+  tmp[0] =  mTwister.rand() ;
+  tmp[1] =  0;
+  tmp[2] =  mTwister.rand() * DzDxRatio ;
+  
+  // Put point on correct face
+  location[0] = tmp[indexOrder[0]] + shift[0];
+  location[1] = tmp[indexOrder[1]] + shift[1] * DyDxRatio;
+  location[2] = tmp[indexOrder[2]] + shift[2] * DzDxRatio;
 
-  Vector tmpry = location;
-
-  location[0] = tmpry[indexOrder[0]] + shift[0];
-  location[1] = tmpry[indexOrder[1]] + shift[1] * DyDxRatio;
-  location[2] = tmpry[indexOrder[2]] + shift[2] * DzDxRatio;
-
+  location[0] += origin.x();
+  location[1] += origin.y();
+  location[2] += origin.z();
 }
 
 //______________________________________________________________________
@@ -2244,7 +2242,7 @@ void Ray::carryForward ( const ProcessorGroup*,
 }
 
 //______________________________________________________________________
-void Ray::updateSumI ( Vector& inv_direction_vector,
+void Ray::updateSumI ( Vector& ray_direction,
                        Vector& ray_location,
                        const IntVector& origin,
                        const Vector& Dx,
@@ -2265,19 +2263,17 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
    int step[3];                                          // Gives +1 or -1 based on sign
    bool sign[3];
    
-   findStepSize(step, sign, inv_direction_vector);
-  
- 
-   Vector direction_vector = Vector(1.0)/inv_direction_vector;
+   Vector inv_ray_direction = Vector(1.0)/ray_direction;
+   findStepSize(step, sign, inv_ray_direction);
    Vector D_DxRatio(1, Dx.y()/Dx.x(), Dx.z()/Dx.x() );
 
    Vector tMax;         // (mixing bools, ints and doubles)
-   tMax.x( (origin[0] + sign[0]                - ray_location[0]) * inv_direction_vector[0] );
-   tMax.y( (origin[1] + sign[1] * D_DxRatio[1] - ray_location[1]) * inv_direction_vector[1] );
-   tMax.z( (origin[2] + sign[2] * D_DxRatio[2] - ray_location[2]) * inv_direction_vector[2] );
+   tMax.x( (origin[0] + sign[0]                - ray_location[0]) * inv_ray_direction[0] );
+   tMax.y( (origin[1] + sign[1] * D_DxRatio[1] - ray_location[1]) * inv_ray_direction[1] );
+   tMax.z( (origin[2] + sign[2] * D_DxRatio[2] - ray_location[2]) * inv_ray_direction[2] );
 
    //Length of t to traverse one cell
-   Vector tDelta = Abs(inv_direction_vector) * D_DxRatio;
+   Vector tDelta = Abs(inv_ray_direction) * D_DxRatio;
    
    //Initializes the following values for each ray
    bool in_domain     = true;
@@ -2333,9 +2329,9 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
        tMax_prev  = tMax[face];
        tMax[face] = tMax[face] + tDelta[face];
 
-       ray_location[0] = ray_location[0] + (disMin  * direction_vector[0]);
-       ray_location[1] = ray_location[1] + (disMin  * direction_vector[1]);
-       ray_location[2] = ray_location[2] + (disMin  * direction_vector[2]);
+       ray_location[0] = ray_location[0] + (disMin  * ray_direction[0]);
+       ray_location[1] = ray_location[1] + (disMin  * ray_direction[1]);
+       ray_location[2] = ray_location[2] + (disMin  * ray_direction[2]);
 
        in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
 
@@ -2359,13 +2355,13 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          // get new scatLength for each scattering event
          scatLength = -log(mTwister.randDblExc() ) / scatCoeff; 
 
-         bool randomSeed = true;
-         direction_vector      =  findRayDirection( mTwister, randomSeed ); 
-         inv_direction_vector  = Vector(1.0)/direction_vector;
+         bool randomSeed   = true;
+         ray_direction     =  findRayDirection( mTwister, randomSeed ); 
+         inv_ray_direction = Vector(1.0)/ray_direction;
 
          // get new step and sign
          int stepOld = step[face];
-         findStepSize( step, sign, inv_direction_vector);
+         findStepSize( step, sign, inv_ray_direction);
          
          // if sign[face] changes sign, put ray back into prevCell (back scattering)
          // a sign change only occurs when the product of old and new is negative
@@ -2374,12 +2370,12 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          }
          
          // get new tMax (mixing bools, ints and doubles)
-         tMax.x( ( cur[0] + sign[0]                - ray_location[0]) * inv_direction_vector[0] );
-         tMax.y( ( cur[1] + sign[1] * D_DxRatio[1] - ray_location[1]) * inv_direction_vector[1] );
-         tMax.z( ( cur[2] + sign[2] * D_DxRatio[2] - ray_location[2]) * inv_direction_vector[2] );
+         tMax.x( ( cur[0] + sign[0]                - ray_location[0]) * inv_ray_direction[0] );
+         tMax.y( ( cur[1] + sign[1] * D_DxRatio[1] - ray_location[1]) * inv_ray_direction[1] );
+         tMax.z( ( cur[2] + sign[2] * D_DxRatio[2] - ray_location[2]) * inv_ray_direction[2] );
 
          // Length of t to traverse one cell
-         tDelta    = Abs(inv_direction_vector) * D_DxRatio;
+         tDelta    = Abs(inv_ray_direction) * D_DxRatio;
          tMax_prev = 0;
          curLength = 0;  // allow for multiple scattering events per ray
          

@@ -386,16 +386,22 @@ namespace Uintah{
                         const Vector& inv_direction_vector);
                        
       /** @brief Adjust the location of a ray origin depending on the cell face */
-      void adjustLocation(Vector &location,
-                          const IntVector &indexOrder,
-                          const IntVector &shift,
-                          const double &DyDxRatio,
-                          const double &DzDxRatio);
+      void rayLocation_cellFace( MTRand& mTwister,
+                                 const IntVector& origin,
+                                 const IntVector &indexOrder, 
+                                 const IntVector &shift, 
+                                 const double &DyDxRatio, 
+                                 const double &DzDxRatio,
+                                 Vector& location );
 
       /** @brief Adjust the direction of a ray depending on the cell face */
-      void adjustDirection(Vector &directionVector,
-                           const IntVector &indexOrder,
-                           const IntVector &signOrder);
+      void rayDirection_cellFace( MTRand& mTwister,
+                                  const IntVector& origin,
+                                  const IntVector& indexOrder,   
+                                  const IntVector& signOrder,    
+                                  const int iRay,                
+                                  Vector& directionVector,       
+                                  double& cosTheta );            
 
       /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
       bool has_a_boundary(const IntVector &c,
