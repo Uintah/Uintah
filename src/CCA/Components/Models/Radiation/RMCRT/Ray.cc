@@ -2360,8 +2360,8 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          scatLength = -log(mTwister.randDblExc() ) / scatCoeff; 
 
          bool randomSeed = true;
-         Vector direction_vector =  findRayDirection( mTwister, randomSeed ); 
-         inv_direction_vector    = Vector(1.0)/direction_vector;
+         direction_vector      =  findRayDirection( mTwister, randomSeed ); 
+         inv_direction_vector  = Vector(1.0)/direction_vector;
 
          // get new step and sign
          int stepOld = step[face];
@@ -2382,6 +2382,7 @@ void Ray::updateSumI ( Vector& inv_direction_vector,
          tDelta    = Abs(inv_direction_vector) * D_DxRatio;
          tMax_prev = 0;
          curLength = 0;  // allow for multiple scattering events per ray
+         
          //if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
        }
 #endif
