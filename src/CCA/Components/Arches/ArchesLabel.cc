@@ -246,10 +246,17 @@ ArchesLabel::ArchesLabel()
   d_enthDiffCoefLabel       =  VarLabel::create("enthDiffCoef",       CC_double);
   d_reactscalDiffCoefLabel  =  VarLabel::create("reactscalDiffCoef",  CC_double);
 
+#ifdef WASATCH_IN_ARCHES
+  d_uVelRhoHatRHSPartLabel =  VarLabel::create("Umom_rhs_partial",     SFCX_double);
+  d_vVelRhoHatRHSPartLabel =  VarLabel::create("Vmom_rhs_partial",     SFCY_double);
+  d_wVelRhoHatRHSPartLabel =  VarLabel::create("Wmom_rhs_partial",     SFCZ_double);  
+#endif
+
   // for corrector step
   d_uVelRhoHatLabel     =  VarLabel::create("uvelRhoHat",     SFCX_double);
   d_vVelRhoHatLabel     =  VarLabel::create("vvelRhoHat",     SFCY_double);
   d_wVelRhoHatLabel     =  VarLabel::create("wvelRhoHat",     SFCZ_double);
+
   d_uVelRhoHat_CCLabel  =  VarLabel::create("uvelRhoHat_CC",  CC_double );
   d_vVelRhoHat_CCLabel  =  VarLabel::create("vvelRhoHat_CC",  CC_double );
   d_wVelRhoHat_CCLabel  =  VarLabel::create("wvelRhoHat_CC",  CC_double );
@@ -508,6 +515,12 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(iMoment->second); 
  }
 
+#ifdef WASATCH_IN_ARCHES
+  VarLabel::destroy(d_uVelRhoHatRHSPartLabel);
+  VarLabel::destroy(d_vVelRhoHatRHSPartLabel);
+  VarLabel::destroy(d_wVelRhoHatRHSPartLabel);
+#endif
+  
   VarLabel::destroy(d_strainMagnitudeLabel);
   VarLabel::destroy(d_strainMagnitudeMLLabel);
   VarLabel::destroy(d_strainMagnitudeMMLabel);
