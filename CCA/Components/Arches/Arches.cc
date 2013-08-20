@@ -102,6 +102,44 @@
 #include <Core/Math/MiscMath.h>
 
 #ifdef WASATCH_IN_ARCHES
+
+#define CREATE_NAMETAG_SPEC(parentSpec, name, state) { \
+  Uintah::ProblemSpecP tagSpec = parentSpec->appendChild("NameTag"); \
+    tagSpec->setAttribute("name",name); \
+    tagSpec->setAttribute("state",state); \
+}
+
+#define CREATE_WASATCH_VISCOSITY_SPEC(visVal, task) \
+{\
+  const std::string viscName = d_lab->d_viscosityCTSLabel->getName(); \
+  Uintah::ProblemSpecP viscSpec = params->findBlock("Wasatch")->appendChild("BasicExpression"); \
+    viscSpec->setAttribute("type","SVOL"); \
+    viscSpec->appendElement("TaskList",task); \
+  CREATE_NAMETAG_SPEC(viscSpec, viscName, "STATE_NONE"); \
+  viscSpec->appendElement("Constant",visVal); \
+  if ( (std::string) task == "initialization") { \
+    Uintah::ProblemSpecP forceSpec = params->findBlock("Wasatch")->appendChild("ForceOnGraph"); \
+    forceSpec->setAttribute("tasklist","initialization"); \
+    CREATE_NAMETAG_SPEC(forceSpec, viscName, "STATE_NONE"); \
+  } \
+}
+
+
+#define CREATE_WASATCH_MOM_SPEC { \
+  const std::string viscName = d_lab->d_viscosityCTSLabel->getName(); \
+  Uintah::ProblemSpecP momSpec = params->findBlock("Wasatch")->appendChild("MomentumEquations"); \
+  momSpec->appendChild("Disabledmomdt"); \
+  momSpec->appendElement("X-Velocity",d_lab->d_uVelocitySPBCLabel->getName()); \
+  momSpec->appendElement("Y-Velocity",d_lab->d_vVelocitySPBCLabel->getName()); \
+  momSpec->appendElement("Z-Velocity",d_lab->d_wVelocitySPBCLabel->getName()); \
+  momSpec->appendElement("X-Momentum",d_lab->d_uMomLabel->getName()); \
+  momSpec->appendElement("Y-Momentum",d_lab->d_vMomLabel->getName()); \
+  momSpec->appendElement("Z-Momentum",d_lab->d_wMomLabel->getName()); \
+  CREATE_NAMETAG_SPEC(momSpec->appendChild("Viscosity"), viscName, "STATE_NONE");\
+  momSpec->appendChild("Pressure"); \
+}
+//
+#include <CCA/Components/Arches/NonlinearSolver.h>
 #include <expression/ExprLib.h>
 #include <expression/PlaceHolderExpr.h>
 #include <expression/ExpressionFactory.h>
@@ -360,6 +398,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   // a <ForceOnGraph> on the initialization task for viscosity
   // make sure that the xml spec for momentum is NOT in the input file already. This is necessary
   // for restarts
+  // UNCOMMENT THIS LINE TO TRIGGER WASATCH CALCULATION OF MOM_RHS
 //  if ( !(params->findBlock("Wasatch")->findBlock("MomentumEquations")) ) {
 //    // grab the viscosity from Arches and pass it on to Wasatch
 //    double viscVal;
@@ -706,7 +745,9 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db,sharedState);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
-
+#ifdef WASATCH_IN_ARCHES
+  d_nlSolver->set_use_wasatch_mom_rhs(true);
+#endif
   //__________________
   //This is not the proper way to get our DA.  Scheduler should
   //pass us a DW pointer on every function call.  I don't think
@@ -1060,18 +1101,19 @@ Arches::scheduleInitialize(const LevelP& level,
   // Compute Turb subscale model (output Varlabel have CTS appended to them)
   // require : densityCP, viscosityIN, [u,v,w]VelocitySP
   // compute : viscosityCTS
+
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
   if (!d_MAlab) {
-
+    
     if (d_mixedModel) {
       d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
-                                                            init_timelabel);
+                                                          init_timelabel);
     }
-
+    
     d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
-
+    
   }
-//#endif
+//#endif // WASATCH_IN_ARCHES
   //______________________
   //Data Analysis
   if(d_analysisModules.size() != 0){
@@ -1121,6 +1163,7 @@ Arches::scheduleInitialize(const LevelP& level,
   // if you want to use the volume fraction in the initialization of a wasatch transported
   // variable, then arches must first schedule a calculation for the volume fraction
   // before wasatch could use it.
+  d_nlSolver->get_momentum_solver()->sched_computeMomentum( level, sched, 0, true );
   d_wasatch->set_wasatch_materials(d_sharedState->allArchesMaterials());
   d_wasatch->scheduleInitialize( level, sched );
 # endif // WASATCH_IN_ARCHES
@@ -1424,7 +1467,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     new_dw->allocateAndPut(density,   d_lab->d_densityCPLabel,    indx, patch);
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
     new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
-//#endif
+//#endif // WASATCH_IN_ARCHES
     new_dw->allocateAndPut(turb_viscosity,    d_lab->d_turbViscosLabel,       indx, patch);
     if (d_dynScalarModel) {
       new_dw->allocateAndPut(scalarDiffusivity,     d_lab->d_scalarDiffusivityLabel,     indx, patch);
@@ -1444,7 +1487,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     double visVal = d_physicalConsts->getMolecularViscosity();
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
     viscosity.initialize(visVal);
-//#endif
+//#endif // WASATCH_IN_ARCHES
     turb_viscosity.initialize(0.0);
 
     if (d_dynScalarModel) {

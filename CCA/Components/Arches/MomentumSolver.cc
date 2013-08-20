@@ -405,6 +405,7 @@ void MomentumSolver::solveVelHat(const LevelP& level,
   else if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Third )
     timeSubStep = 2; 
 
+//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
   // Schedule additional sources for evaluation
   SourceTermFactory& factory = SourceTermFactory::self(); 
   for (vector<std::string>::iterator iter = d_new_sources.begin(); 
@@ -412,8 +413,8 @@ void MomentumSolver::solveVelHat(const LevelP& level,
     SourceTermBase& src = factory.retrieve_source_term( *iter ); 
     src.sched_computeSource( level, sched, timeSubStep ); 
   }
-
-  sched_buildLinearMatrixVelHat(sched, patches, matls, 
+//#endif // WASATCH_IN_ARCHES
+  sched_buildLinearMatrixVelHat(sched, patches, matls,
                                 timelabels);
 
 }
@@ -477,7 +478,9 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   }
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
+//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
   tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,   gac, 1);
+//#endif // WASATCH_IN_ARCHES
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,  gac, 2);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 2);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 2);
@@ -485,6 +488,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   
   // required for computing div constraint
 //#ifdef divergenceconstraint
+//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
   if (timelabels->multiple_steps){
     tsk->requires(Task::NewDW, d_lab->d_scalarTempLabel,    gac, 1);
   }else{
@@ -495,7 +499,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_scalDiffCoefLabel, 
                              d_lab->d_stencilMatl, oams,    gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_scalDiffCoefSrcLabel, gn, 0);
-//#endif
+//#endif // WASATCH_IN_ARCHES
 
   if (d_mixedModel) {
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
@@ -507,7 +511,8 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     }
   }
 
-    // for multi-material
+//#endif // divergenceconstraint
+  // for multi-material
     // requires su_drag[x,y,z], sp_drag[x,y,z] for arches
 
   if (d_MAlab) {
@@ -524,12 +529,13 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->modifies(d_lab->d_wVelRhoHatLabel);
     
 //#ifdef divergenceconstraint
+//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     tsk->computes(d_lab->d_divConstraintLabel);
   }else{
     tsk->modifies(d_lab->d_divConstraintLabel);
   }
-//#endif
+//#endif // divergenceonstraint
  // build linear matrix vel hat 
   tsk->modifies(d_lab->d_umomBoundarySrcLabel);
   tsk->modifies(d_lab->d_vmomBoundarySrcLabel);
@@ -550,7 +556,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     const VarLabel* srcLabel = src.getSrcLabel(); 
     tsk->requires(Task::NewDW, srcLabel, gn, 0); 
   }
-
+//#endif // WASATCH_IN_ARCHES
   sched->addTask(tsk, patches, matls);
 }
 
@@ -617,13 +623,16 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     old_values_dw->get(constVelocityVars.old_wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
 
     new_dw->get(constVelocityVars.new_density, d_lab->d_densityCPLabel,     indx, patch, gac, 1);
+//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
     new_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayLabel,   indx, patch, gac, 1);
+//#endif // WASATCH_IN_ARCHES
     new_dw->get(constVelocityVars.viscosity,   d_lab->d_viscosityCTSLabel,  indx, patch, gac, 2);
     new_dw->get(constVelocityVars.uVelocity,   d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.vVelocity,   d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.wVelocity,   d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 2);
 
 //#ifdef divergenceconstraint
+//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC 
     if (timelabels->multiple_steps){
       new_dw->get(constVelocityVars.scalar, d_lab->d_scalarTempLabel,indx, patch, gac, 1);
     }else{
@@ -649,7 +658,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                              d_lab->d_divConstraintLabel, indx, patch);
     }
     velocityVars.divergence.initialize(0.0);
-    //#endif    
+    //#endif // divergenceconstraint
 
  // boundary source terms 
     new_dw->getModifiable(velocityVars.umomBoundarySrc,
@@ -658,7 +667,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                              d_lab->d_vmomBoundarySrcLabel, indx, patch);
     new_dw->getModifiable(velocityVars.wmomBoundarySrc,
                                              d_lab->d_wmomBoundarySrcLabel, indx, patch);
-
+//#endif // WASATCH_IN_ARCHES
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
@@ -675,7 +684,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       new_dw->get(constVelocityVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,   indx, patch,gn, 0);
       new_dw->get(constVelocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,   indx, patch,gn, 0);
     }
-
+//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->allocateTemporary(velocityVars.uVelocityCoeff[ii],         patch);
       new_dw->allocateTemporary(velocityVars.vVelocityCoeff[ii],         patch);
@@ -698,11 +707,13 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->allocateTemporary(velocityVars.uVelNonlinearSrc,  patch);
     new_dw->allocateTemporary(velocityVars.vVelNonlinearSrc,  patch);
     new_dw->allocateTemporary(velocityVars.wVelNonlinearSrc,  patch);
-     
+//#endif // WASATCH_IN_ARCHES
+
     new_dw->getModifiable(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel,indx, patch);
     new_dw->getModifiable(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel,indx, patch);
     new_dw->getModifiable(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel,indx, patch);
-    
+
+//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
     velocityVars.uVelRhoHat.copy(constVelocityVars.old_uVelocity,
                                  velocityVars.uVelRhoHat.getLowIndex(),
                                  velocityVars.uVelRhoHat.getHighIndex());
@@ -724,14 +735,13 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       velocityVars.wFmms.initialize(0.0);
     }
 
-
     //__________________________________
     //  compute coefficients
     d_discretize->calculateVelocityCoeff(patch, 
                                      delta_t, d_central, 
                                      cellinfo, &velocityVars,
                                      &constVelocityVars);
-                                         
+    
     //__________________________________
     //  Compute the sources
     d_source->calculateVelocitySource(patch, 
@@ -744,10 +754,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     // take of the wall shear stress
     // This adds the contribution to the nonLinearSrc of each 
     // direction depending on the boundary conditions. 
-    if ( !d_MAlab ){ 
-
-      d_boundaryCondition->wallStress( patch, &velocityVars, &constVelocityVars, volFraction ); 
-
+    if ( !d_MAlab ){
+      d_boundaryCondition->wallStress( patch, &velocityVars, &constVelocityVars, volFraction );
     } 
 
     //__________________________________
@@ -963,7 +971,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       }
     }
 
-    // sets coefs in the direction of the wall to zero 
+    // sets coefs in the direction of the wall to zero
     d_boundaryCondition->mmvelocityBC(patch, cellinfo,
                                       &velocityVars, &constVelocityVars);
 
@@ -980,9 +988,9 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       d_rhsSolver->calculateHatVelocity(patch, delta_t,
                                        cellinfo, &velocityVars, &constVelocityVars, volFraction);
     }
-
-    d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat, 
-        velocityVars.vVelRhoHat, velocityVars.wVelRhoHat, constVelocityVars.new_density ); 
+    
+    d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat,
+                                                    velocityVars.vVelRhoHat, velocityVars.wVelRhoHat, constVelocityVars.new_density );
 
     //MMS boundary conditions ~Setting the uncorrected velocities~
     if (d_doMMS) { 
@@ -994,7 +1002,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                          time_shiftmms, 
                                          delta_t);
     }
-    
+//#endif // WASATCH_IN_ARCHES
     //__________________________________
     //
     double time_shift = 0.0;
@@ -1039,8 +1047,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                                           constVelocityVars.old_wVelocity ); 
     } 
 
-
-//#ifdef divergenceconstraint    
+//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
+//#ifdef divergenceconstraint
     // compute divergence constraint to use in pressure equation
     d_discretize->computeDivergence(pc, patch, new_dw, &velocityVars, &constVelocityVars,
                     d_filter_divergence_constraint,d_3d_periodic);
@@ -1057,8 +1065,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       velocityVars.divergence[c] = (factor_old*old_divergence[c]+                              
                                     factor_new*velocityVars.divergence[c])/factor_divide;      
     }
-
-//#endif
+//#endif // WASATCH_IN_ARCHES
+//#endif // divergenceconstraint
 
   }
 }
@@ -1331,24 +1339,27 @@ MomentumSolver::prepareExtraProjection(const ProcessorGroup* pc,
   }
 }
 
+//
+//------------------------------------------------------------------------------------------------
+
 void 
-MomentumSolver::sched_constructMomentum( const LevelP& level, 
+MomentumSolver::sched_computeMomentum( const LevelP& level,
                                          SchedulerP& sched, 
-                                         const int timesubstep )
+                                         const int timesubstep,
+                                         const bool isInitialization )
 { 
 
-  Task* tsk = scinew Task( "MomentumSolver::constructMomentum", this, 
-                            &MomentumSolver::constructMomentum, timesubstep ); 
+  Task* tsk = scinew Task( "MomentumSolver::computeMomentum", this,
+                            &MomentumSolver::computeMomentum, timesubstep, isInitialization );
 
   Task::WhichDW which_dw; 
-  if ( timesubstep == 0 ){ 
-  
+  if ( timesubstep == 0 ){
     tsk->computes( _u_mom ); 
     tsk->computes( _v_mom ); 
-    tsk->computes( _w_mom ); 
-    which_dw = Task::OldDW; 
-  } else { 
-
+    tsk->computes( _w_mom );
+    which_dw = Task::NewDW;
+    //which_dw = isInitialization ? Task::NewDW : Task::OldDW;
+  } else {
     tsk->modifies( _u_mom ); 
     tsk->modifies( _v_mom ); 
     tsk->modifies( _w_mom ); 
@@ -1364,12 +1375,16 @@ MomentumSolver::sched_constructMomentum( const LevelP& level,
 
 } 
 
-void MomentumSolver::constructMomentum( const ProcessorGroup* pc,
+//
+//------------------------------------------------------------------------------------------------
+
+void MomentumSolver::computeMomentum( const ProcessorGroup* pc,
                                         const PatchSubset* patches,
                                         const MaterialSubset*,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw,
-                                        const int timesubstep )
+                                        const int timesubstep,
+                                        const bool isInitialization )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -1390,14 +1405,16 @@ void MomentumSolver::constructMomentum( const ProcessorGroup* pc,
     constSFCZVariable<double> w; 
 
     if ( timesubstep == 0 ){ 
-      which_dw = old_dw; 
+      //which_dw = isInitialization ? new_dw : old_dw;
+      which_dw = new_dw;
       new_dw->allocateAndPut( u_mom, _u_mom, matlIndex, patch );  
       new_dw->allocateAndPut( v_mom, _v_mom, matlIndex, patch );  
-      new_dw->allocateAndPut( w_mom, _w_mom, matlIndex, patch );  
+      new_dw->allocateAndPut( w_mom, _w_mom, matlIndex, patch );
+      // CAREFUL HERE - WE MAY NEED TO INITIALIZE!
       u_mom.initialize(0.0);
       v_mom.initialize(0.0);
       w_mom.initialize(0.0);
-    } else { 
+    } else {
       which_dw = new_dw; 
       new_dw->getModifiable( u_mom, _u_mom, matlIndex, patch );  
       new_dw->getModifiable( v_mom, _v_mom, matlIndex, patch );  
@@ -1408,47 +1425,174 @@ void MomentumSolver::constructMomentum( const ProcessorGroup* pc,
     which_dw->get( v, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, 1 ); 
     which_dw->get( w, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, 1 ); 
     which_dw->get( rho, d_lab->d_densityCPLabel,   matlIndex, patch, Ghost::AroundCells, 1 ); 
-
+    
+    IntVector lo = patch->getExtraCellLowIndex();
+    IntVector hi = patch->getExtraCellHighIndex();
+    
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
-      IntVector c = *iter; 
+      IntVector c = *iter;
 
-      //down
-      u_mom[c] = 0.5 * (rho[c] + rho[c-IntVector(1,0,0)]) * u[c]; 
-      v_mom[c] = 0.5 * (rho[c] + rho[c-IntVector(0,1,0)]) * v[c]; 
-      w_mom[c] = 0.5 * (rho[c] + rho[c-IntVector(0,0,1)]) * w[c]; 
-
-      //up
-      if ( patch->getBCType(Patch::xplus) != Patch::Neighbor )
-        u_mom[c+IntVector(1,0,0)] = 0.5 * (rho[c] + rho[c+IntVector(1,0,0)]) * u[c]; 
-      if ( patch->getBCType(Patch::yplus) != Patch::Neighbor )
-        v_mom[c+IntVector(0,1,0)] = 0.5 * (rho[c] + rho[c+IntVector(0,1,0)]) * v[c]; 
-      if ( patch->getBCType(Patch::zplus) != Patch::Neighbor )
-        w_mom[c+IntVector(0,0,1)] = 0.5 * (rho[c] + rho[c+IntVector(0,0,1)]) * w[c]; 
-
+      IntVector west = c - IntVector(1,0,0);
+      IntVector south = c - IntVector(0,1,0);
+      IntVector bottom = c - IntVector(0,0,1);
+      u_mom[c] = 0.5 * (rho[c] + rho[west]) * u[c];
+      v_mom[c] = 0.5 * (rho[c] + rho[south]) * v[c];
+      w_mom[c] = 0.5 * (rho[c] + rho[bottom]) * w[c];
     }
+    
+    
+    //__________________________________
+    // set values in extra cells
+    vector<Patch::FaceType> b_face;
+    patch->getBoundaryFaces(b_face);
+    vector<Patch::FaceType>::const_iterator itr;
+    
+    // Loop over boundary faces
+    for( itr = b_face.begin(); itr != b_face.end(); ++itr ){
+      Patch::FaceType face = *itr;
+      
+      IntVector unitNormal = patch->getFaceDirection(face);
+      
+      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+      CellIterator iter=patch->getFaceIterator(face, MEC);
+      
+      switch (face) {
+        case Patch::xminus:
+          for(;!iter.done();iter++){
+            IntVector c = *iter;
+            IntVector shiftX = c;
+            IntVector shiftY = c - IntVector(0,1,0);
+            IntVector shiftZ = c - IntVector(0,0,1);
+            
+            u_mom[c] = rho[c] * u[c];
+            v_mom[c] = 0.5 * (rho[c] + rho[shiftY]) * v[c];
+            w_mom[c] = 0.5 * (rho[c] + rho[shiftZ]) * w[c];
+          }
+          break;
+        case Patch::xplus:
+          for(;!iter.done();iter++){
+            IntVector c = *iter;
+            IntVector shiftX = c + IntVector(1,0,0);
+            IntVector shiftY = c + IntVector(0,1,0);
+            IntVector shiftZ = c + IntVector(0,0,1);
+            
+            u_mom[c]      = 0.5 * (rho[c] + rho[c - IntVector(1,0,0)]) * u[c];
+            u_mom[shiftX] = rho[c] * u[c];
+            v_mom[c] = 0.5 * (rho[c] + rho[shiftY]) * v[c];
+            w_mom[c] = 0.5 * (rho[c] + rho[shiftZ]) * w[c];
+          }
+          break;
+        case Patch::yminus:
+          for(;!iter.done();iter++){
+            IntVector c = *iter;
+            
+            IntVector shiftX = c - IntVector(1,0,0);
+            IntVector shiftY = c;
+            IntVector shiftZ = c - IntVector(0,0,1);
+            
+            u_mom[c] = 0.5 * (rho[c] + rho[shiftX]) * u[c];
+            v_mom[c] = rho[c] * v[c];
+            w_mom[c] = 0.5 * (rho[c] + rho[shiftZ]) * w[c];
+          }
+          break;
+        case Patch::yplus:
+          for(;!iter.done();iter++){
+            IntVector c = *iter;
+            
+            IntVector shiftX = c + IntVector(1,0,0);
+            IntVector shiftY = c + IntVector(0,1,0);
+            IntVector shiftZ = c + IntVector(0,0,1);
+            
+            u_mom[c] = 0.5 * (rho[c] + rho[shiftX]) * u[c];
+            v_mom[c] = 0.5 * (rho[c] + rho[c - IntVector(0,1,0)]) * v[c];
+            v_mom[shiftY] = rho[c] * v[c];
+            w_mom[c] = 0.5 * (rho[c] + rho[shiftZ]) * w[c];
+          }
+          break;
+
+        case Patch::zminus:
+          for(;!iter.done();iter++){
+            IntVector c = *iter;
+            
+            IntVector shiftX = c - IntVector(1,0,0);
+            IntVector shiftY = c - IntVector(0,1,0);
+            IntVector shiftZ = c;
+            
+            u_mom[c] = 0.5 * (rho[c] + rho[shiftX]) * u[c];
+            v_mom[c] = 0.5 * (rho[c] + rho[shiftY]) * v[c];
+            w_mom[c] = rho[c] * w[c];
+          }
+          break;
+        case Patch::zplus:
+          for(;!iter.done();iter++){
+            IntVector c = *iter;
+            
+            IntVector shiftX = c + IntVector(1,0,0);
+            IntVector shiftY = c + IntVector(0,1,0);
+            IntVector shiftZ = c + IntVector(0,0,1);
+            
+            u_mom[c] = 0.5 * (rho[c] + rho[shiftX]) * u[c];
+            v_mom[c] = 0.5 * (rho[c] + rho[shiftY]) * v[c];
+            w_mom[c] = 0.5 * (rho[c] + rho[c - IntVector(0,0,1)]) * w[c];
+            w_mom[shiftZ] = rho[c] * w[c];
+          }
+          break;
+
+          
+        default:
+          break;
+      }
+    }
+
   }
 }
 
-void MomentumSolver::sched_solveVelHatWarches( const LevelP& level, 
+//
+//------------------------------------------------------------------------------------------------
+
+void MomentumSolver::sched_computeVelHatWarches( const LevelP& level,
                                                SchedulerP& sched, 
                                                const int timesubstep )
 {
-  Task* tsk = scinew Task( "MomentumSolver::solveVelHatWarches", this, 
-                            &MomentumSolver::solveVelHatWarches, timesubstep ); 
+  Task* tsk = scinew Task( "MomentumSolver::computeVelHatWarches", this,
+                            &MomentumSolver::computeVelHatWarches, timesubstep );
 
-  tsk->requires( Task::NewDW, d_lab->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
-  tsk->requires( Task::NewDW, d_lab->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
-  tsk->requires( Task::NewDW, d_lab->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
+  Task::WhichDW which_dw;
+  if ( timesubstep == 0 ){
+    which_dw = Task::OldDW;
+  } else {
+    which_dw = Task::NewDW;
+  }
+  tsk->requires( which_dw, d_lab->d_uMomLabel, Ghost::None, 0 );
+  tsk->requires( which_dw, d_lab->d_vMomLabel, Ghost::None, 0 );
+  tsk->requires( which_dw, d_lab->d_wMomLabel, Ghost::None, 0 );
 
-  tsk->modifies( d_lab->d_uVelRhoHatLabel ); 
-  tsk->modifies( d_lab->d_vVelRhoHatLabel ); 
-  tsk->modifies( d_lab->d_wVelRhoHatLabel ); 
+  tsk->requires( which_dw, d_lab->d_uVelRhoHatRHSPartLabel, Ghost::None, 0 );
+  tsk->requires( which_dw, d_lab->d_vVelRhoHatRHSPartLabel, Ghost::None, 0 );
+  tsk->requires( which_dw, d_lab->d_wVelRhoHatRHSPartLabel, Ghost::None, 0 );
+  
+  tsk->requires( Task::NewDW, VarLabel::find("density"), Ghost::AroundCells, 1 );
+  
+  tsk->requires( Task::OldDW, d_lab->d_sharedState->get_delt_label() );
+
+  if ( timesubstep == 0 ){
+    tsk->computes( d_lab->d_uVelRhoHatLabel );
+    tsk->computes( d_lab->d_vVelRhoHatLabel );
+    tsk->computes( d_lab->d_wVelRhoHatLabel );
+  } else {
+    tsk->modifies( d_lab->d_uVelRhoHatLabel );
+    tsk->modifies( d_lab->d_vVelRhoHatLabel );
+    tsk->modifies( d_lab->d_wVelRhoHatLabel );
+  }
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
 
-void MomentumSolver::solveVelHatWarches( const ProcessorGroup* pc,
+//
+//------------------------------------------------------------------------------
+
+void MomentumSolver::computeVelHatWarches( const ProcessorGroup* pc,
                                          const PatchSubset* patches,
                                          const MaterialSubset*,
                                          DataWarehouse* old_dw,
@@ -1462,34 +1606,62 @@ void MomentumSolver::solveVelHatWarches( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    constSFCXVariable<double> u;
-    constSFCYVariable<double> v;
-    constSFCZVariable<double> w;
+    DataWarehouse* which_dw = (timesubstep==0) ? old_dw : new_dw;
 
-    new_dw->get( u, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None, 0 ); 
-    new_dw->get( v, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None, 0 ); 
-    new_dw->get( w, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None, 0 ); 
+    constSFCXVariable<double> umom;
+    constSFCYVariable<double> vmom;
+    constSFCZVariable<double> wmom;
+    
+    which_dw->get( umom, d_lab->d_uMomLabel, matlIndex, patch, Ghost::None, 0 );
+    which_dw->get( vmom, d_lab->d_vMomLabel, matlIndex, patch, Ghost::None, 0 );
+    which_dw->get( wmom, d_lab->d_wMomLabel, matlIndex, patch, Ghost::None, 0 );
 
-    SFCZVariable<double> uhat; 
-    SFCZVariable<double> vhat; 
-    SFCZVariable<double> what; 
-
-    new_dw->getModifiable( uhat, d_lab->d_uVelRhoHatLabel, matlIndex, patch ); 
-    new_dw->getModifiable( vhat, d_lab->d_vVelRhoHatLabel, matlIndex, patch ); 
-    new_dw->getModifiable( what, d_lab->d_wVelRhoHatLabel, matlIndex, patch ); 
-
+    constSFCXVariable<double> umomRhsPart;
+    constSFCYVariable<double> vmomRhsPart;
+    constSFCZVariable<double> wmomRhsPart;
+    
+    new_dw->get( umomRhsPart, d_lab->d_uVelRhoHatRHSPartLabel, matlIndex, patch, Ghost::None, 0 );
+    new_dw->get( vmomRhsPart, d_lab->d_vVelRhoHatRHSPartLabel, matlIndex, patch, Ghost::None, 0 );
+    new_dw->get( wmomRhsPart, d_lab->d_wVelRhoHatRHSPartLabel, matlIndex, patch, Ghost::None, 0 );
+    
+    constCCVariable<double> rho;
+    new_dw->get( rho, VarLabel::find("density"),   matlIndex, patch, Ghost::AroundCells, 1 );
+    
+    SFCXVariable<double> uhat;
+    SFCYVariable<double> vhat;
+    SFCZVariable<double> what;
+    if (timesubstep==0) {
+      new_dw->allocateAndPut( uhat, d_lab->d_uVelRhoHatLabel, matlIndex, patch );
+      new_dw->allocateAndPut( vhat, d_lab->d_vVelRhoHatLabel, matlIndex, patch );
+      new_dw->allocateAndPut( what, d_lab->d_wVelRhoHatLabel, matlIndex, patch );
+      uhat.initialize(0.0);
+      vhat.initialize(0.0);
+      what.initialize(0.0);
+    } else {
+      new_dw->getModifiable( uhat, d_lab->d_uVelRhoHatLabel, matlIndex, patch );
+      new_dw->getModifiable( vhat, d_lab->d_vVelRhoHatLabel, matlIndex, patch );
+      new_dw->getModifiable( what, d_lab->d_wVelRhoHatLabel, matlIndex, patch );
+    }
+    
     delt_vartype DT; 
     old_dw->get( DT, d_lab->d_sharedState->get_delt_label() ); 
-    double dt = DT; 
+    double dt = DT;
 
+    
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-
-      IntVector c = *iter; 
-
-      uhat[c] = u[c] - dt * uhat[c]; 
-      vhat[c] = v[c] - dt * vhat[c]; 
-      what[c] = w[c] - dt * what[c]; 
-
+      IntVector c = *iter;
+      
+      IntVector west = c - IntVector(1,0,0);
+      IntVector south = c - IntVector(0,1,0);
+      IntVector bottom = c - IntVector(0,0,1);
+      const double rhox = 0.5 * (rho[c] + rho[west]);
+      const double rhoy = 0.5 * (rho[c] + rho[south]);
+      const double rhoz = 0.5 * (rho[c] + rho[bottom]);
+      // the incoming uhat = convective + diffusive fluxes calculated by wasatch
+      // to construct the vel-hat velocities, we do the following calculation
+      uhat[c] = (umom[c] + dt * umomRhsPart[c])/rhox;
+      vhat[c] = (vmom[c] + dt * vmomRhsPart[c])/rhoy;
+      what[c] = (wmom[c] + dt * wmomRhsPart[c])/rhoz;
     }
   }
 }

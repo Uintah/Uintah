@@ -148,11 +148,12 @@ public:
                                     const TimeIntegratorLabel* timelabels,
                                     bool set_BC);
 
-  void sched_constructMomentum( const LevelP& level, 
+  void sched_computeMomentum( const LevelP& level,
                                 SchedulerP& sched, 
-                                const int timesubstep );
+                                const int timesubstep,
+                                const bool isInitialization=false );
 
-  void sched_solveVelHatWarches( const LevelP& level, 
+  void sched_computeVelHatWarches( const LevelP& level,
                                  SchedulerP& sched, 
                                  const int timesubstep );
 
@@ -212,14 +213,15 @@ private:
                                const TimeIntegratorLabel* timelabels,
                                bool set_BC);
 
-  void constructMomentum( const ProcessorGroup* pc,
+  void computeMomentum( const ProcessorGroup* pc,
                           const PatchSubset* patches,
                           const MaterialSubset*,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
-                          const int timesubstep );
+                          const int timesubstep,
+                          const bool isInitialization=false);
 
-  void solveVelHatWarches( const ProcessorGroup* pc,
+  void computeVelHatWarches( const ProcessorGroup* pc,
                            const PatchSubset* patches,
                            const MaterialSubset*,
                            DataWarehouse* old_dw,
