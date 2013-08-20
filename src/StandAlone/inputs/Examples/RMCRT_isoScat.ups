@@ -112,6 +112,7 @@
       <save label = "divQ"    />
       <save label = "abskg"   />
       <save label = "sigmaT4" />
+      <save label = "boundFlux"/>
       <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
   
@@ -124,6 +125,7 @@
     <sigmaScat>         1          </sigmaScat>
     <abskgBench4>       1          </abskgBench4>
     <nDivQRays>         3          </nDivQRays>
+    <nFluxRays>         20         </nFluxRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark>         1          </benchmark>
