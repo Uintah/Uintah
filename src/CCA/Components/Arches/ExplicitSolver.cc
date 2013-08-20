@@ -175,6 +175,9 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
   d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
                                         d_turbModel, d_boundaryCondition,
                                         d_physicalConsts);
+  
+  d_momSolver->set_use_wasatch_mom_rhs(this->get_use_wasatch_mom_rhs());
+  
   d_momSolver->setMMS(d_doMMS);
   d_momSolver->problemSetup(db);
 
@@ -563,7 +566,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     {
       //____________________________________________________________________________
       // check if wasatch momentum equations were specified
-      if (wasatch.get_wasatch_spec()->findBlock("MomentumEquations")) {
+      if ( wasatch.get_wasatch_spec()->findBlock("MomentumEquations") && this->get_use_wasatch_mom_rhs() ) {
         // if momentum equations were specified in Wasatch, then we only care about the partial RHS. Hence, we need to
         // modify the root IDs a bit and generate a new set of rootIDs with wchich we can construct the required taskinterface
         // get the ID of the momentum RHS
@@ -713,8 +716,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     // Schedule an interpolation of the face centered velocity data
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-    sched_interpolateFromFCToCC(sched, patches, matls,
-                        d_timeIntegratorLabels[curr_level]);
+    if (!(this->get_use_wasatch_mom_rhs())) sched_interpolateFromFCToCC(sched, patches, matls,
+                                                                        d_timeIntegratorLabels[curr_level]);
 //#endif // WASATCH_IN_ARCHES
     // Compute mms error
     if (d_doMMS){
@@ -838,7 +841,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_turbViscosLabel,  gn, 0);
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-  tsk->requires(Task::OldDW, d_lab->d_CCVelocityLabel, gn, 0);
+  if (!(this->get_use_wasatch_mom_rhs())) tsk->requires(Task::OldDW, d_lab->d_CCVelocityLabel, gn, 0);
 //#endif // WASATCH_IN_ARCHES
   tsk->requires(Task::OldDW, d_lab->d_densityGuessLabel,  gn, 0);
 
@@ -852,9 +855,11 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_vVelocitySPBCLabel);
   tsk->computes(d_lab->d_wVelocitySPBCLabel);
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-  tsk->computes(d_lab->d_uVelRhoHatLabel);
-  tsk->computes(d_lab->d_vVelRhoHatLabel);
-  tsk->computes(d_lab->d_wVelRhoHatLabel);
+  if (!(this->get_use_wasatch_mom_rhs())) {
+    tsk->computes(d_lab->d_uVelRhoHatLabel);
+    tsk->computes(d_lab->d_vVelRhoHatLabel);
+    tsk->computes(d_lab->d_wVelRhoHatLabel);
+  }
 //#endif // WASATCH_IN_ARCHES
   tsk->computes(d_lab->d_densityCPLabel);
   tsk->computes(d_lab->d_scalarSPLabel);
@@ -864,7 +869,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_vmomBoundarySrcLabel);
   tsk->computes(d_lab->d_wmomBoundarySrcLabel);
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-  tsk->computes(d_lab->d_viscosityCTSLabel);
+  if (!(this->get_use_wasatch_mom_rhs())) tsk->computes(d_lab->d_viscosityCTSLabel);
 //#endif // WASATCH_IN_ARCHES
   tsk->computes(d_lab->d_turbViscosLabel);
 
@@ -1374,7 +1379,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     old_dw->get(turb_viscosity,    d_lab->d_turbViscosLabel,  indx, patch, gn, 0);
 
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-    old_dw->get(ccVel,     d_lab->d_CCVelocityLabel, indx, patch, gn, 0);
+    if (!(this->get_use_wasatch_mom_rhs())) old_dw->get(ccVel,     d_lab->d_CCVelocityLabel, indx, patch, gn, 0);
 //#endif // WASATCH_IN_ARCHES
 
     if (d_enthalpySolve){
@@ -1419,15 +1424,17 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     wVelocity_new.copyData(wVelocity); // copy old into new
 
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-    SFCXVariable<double> uVelRhoHat_new;
-    new_dw->allocateAndPut(uVelRhoHat_new, d_lab->d_uVelRhoHatLabel, indx, patch);
-    uVelRhoHat_new.initialize(0.0);     // copy old into new
-    SFCYVariable<double> vVelRhoHat_new;
-    new_dw->allocateAndPut(vVelRhoHat_new, d_lab->d_vVelRhoHatLabel, indx, patch);
-    vVelRhoHat_new.initialize(0.0); // copy old into new
-    SFCZVariable<double> wVelRhoHat_new;
-    new_dw->allocateAndPut(wVelRhoHat_new, d_lab->d_wVelRhoHatLabel, indx, patch);
-    wVelRhoHat_new.initialize(0.0); // copy old into new
+    if (!(this->get_use_wasatch_mom_rhs())) {
+      SFCXVariable<double> uVelRhoHat_new;
+      new_dw->allocateAndPut(uVelRhoHat_new, d_lab->d_uVelRhoHatLabel, indx, patch);
+      uVelRhoHat_new.initialize(0.0);     // copy old into new
+      SFCYVariable<double> vVelRhoHat_new;
+      new_dw->allocateAndPut(vVelRhoHat_new, d_lab->d_vVelRhoHatLabel, indx, patch);
+      vVelRhoHat_new.initialize(0.0); // copy old into new
+      SFCZVariable<double> wVelRhoHat_new;
+      new_dw->allocateAndPut(wVelRhoHat_new, d_lab->d_wVelRhoHatLabel, indx, patch);
+      wVelRhoHat_new.initialize(0.0); // copy old into new
+    }
 //#endif // WASATCH_IN_ARCHES
 
     CCVariable<double> scalar_new;
@@ -1460,9 +1467,11 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     density_temp.copyData(density); // copy old into new
 
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-    CCVariable<double> viscosity_new;
-    new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityCTSLabel, indx, patch);
-    viscosity_new.copyData(viscosity); // copy old into new
+    if (!(this->get_use_wasatch_mom_rhs())) {
+      CCVariable<double> viscosity_new;
+      new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityCTSLabel, indx, patch);
+      viscosity_new.copyData(viscosity); // copy old into new
+    }
 //#endif // WASATCH_IN_ARCHES
 
     CCVariable<double> turb_viscosity_new;

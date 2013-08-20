@@ -204,7 +204,8 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   d_do_dummy_solve                 =  false; 
   d_doAMR                          = doAMR;
   d_init_mix_frac                  = 0.0; 
-  d_calcVariance                   = false; 
+  d_calcVariance                   = false;
+  d_useWasatchMomRHS               = false;
 }
 
 // ****************************************************************************
@@ -398,15 +399,15 @@ Arches::problemSetup(const ProblemSpecP& params,
   // a <ForceOnGraph> on the initialization task for viscosity
   // make sure that the xml spec for momentum is NOT in the input file already. This is necessary
   // for restarts
-  // UNCOMMENT THIS LINE TO TRIGGER WASATCH CALCULATION OF MOM_RHS
-//  if ( !(params->findBlock("Wasatch")->findBlock("MomentumEquations")) ) {
-//    // grab the viscosity from Arches and pass it on to Wasatch
-//    double viscVal;
-//    params->findBlock("PhysicalConstants")->get("viscosity",viscVal);
-//    CREATE_WASATCH_VISCOSITY_SPEC(viscVal,"initialization");   // need an initial condition for Viscosity in Arches
-//    CREATE_WASATCH_VISCOSITY_SPEC(viscVal,"advance_solution");
-//    CREATE_WASATCH_MOM_SPEC;
-//  }
+  d_useWasatchMomRHS = (db->findBlock("ExplicitSolver")->findBlock("MomentumSolver")->findBlock("use_wasatch_momentum_rhs")) ? true : false;
+  if ( !(params->findBlock("Wasatch")->findBlock("MomentumEquations")) && d_useWasatchMomRHS ) {
+    // grab the viscosity from Arches and pass it on to Wasatch
+    double viscVal;
+    params->findBlock("PhysicalConstants")->get("viscosity",viscVal);
+    CREATE_WASATCH_VISCOSITY_SPEC(viscVal,"initialization");   // need an initial condition for Viscosity in Arches
+    CREATE_WASATCH_VISCOSITY_SPEC(viscVal,"advance_solution");
+    CREATE_WASATCH_MOM_SPEC;
+  }
 
   // lock viscosity
   d_wasatch->lock_field(d_lab->d_viscosityCTSLabel->getName());
@@ -741,13 +742,14 @@ Arches::problemSetup(const ProblemSpecP& params,
   else{
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver, __FILE__, __LINE__);
   }
+#ifdef WASATCH_IN_ARCHES
+  d_nlSolver->set_use_wasatch_mom_rhs(d_useWasatchMomRHS);
+#endif
+  
   d_nlSolver->setExtraProjection(d_extraProjection);
   d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db,sharedState);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
-#ifdef WASATCH_IN_ARCHES
-  d_nlSolver->set_use_wasatch_mom_rhs(true);
-#endif
   //__________________
   //This is not the proper way to get our DA.  Scheduler should
   //pass us a DW pointer on every function call.  I don't think
@@ -1103,15 +1105,17 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : viscosityCTS
 
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-  if (!d_MAlab) {
-    
-    if (d_mixedModel) {
-      d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
-                                                          init_timelabel);
+  if (!d_useWasatchMomRHS) {
+    if (!d_MAlab) {
+      
+      if (d_mixedModel) {
+        d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+                                                            init_timelabel);
+      }
+      
+      d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
+      
     }
-    
-    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
-    
   }
 //#endif // WASATCH_IN_ARCHES
   //______________________
@@ -1243,6 +1247,7 @@ Arches::sched_paramInit(const LevelP& level,
 
     tsk->computes(d_lab->d_densityCPLabel);
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
+  if (!d_useWasatchMomRHS)
     tsk->computes(d_lab->d_viscosityCTSLabel);
 //#endif
     tsk->computes(d_lab->d_turbViscosLabel);
@@ -1466,7 +1471,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     }
     new_dw->allocateAndPut(density,   d_lab->d_densityCPLabel,    indx, patch);
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
+    if (!d_useWasatchMomRHS) new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
 //#endif // WASATCH_IN_ARCHES
     new_dw->allocateAndPut(turb_viscosity,    d_lab->d_turbViscosLabel,       indx, patch);
     if (d_dynScalarModel) {
@@ -1486,7 +1491,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     pressure.initialize(0.0);
     double visVal = d_physicalConsts->getMolecularViscosity();
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-    viscosity.initialize(visVal);
+    if (!d_useWasatchMomRHS) viscosity.initialize(visVal);
 //#endif // WASATCH_IN_ARCHES
     turb_viscosity.initialize(0.0);
 

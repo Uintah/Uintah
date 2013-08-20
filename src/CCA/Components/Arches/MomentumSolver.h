@@ -172,6 +172,9 @@ public:
     d_momentum_coupling = doMC;
   }
 
+  inline void set_use_wasatch_mom_rhs(const bool useWasatchMomRHS) { d_useWasatchMomRHS = useWasatchMomRHS; }
+  inline bool get_use_wasatch_mom_rhs() { return d_useWasatchMomRHS; }
+  
 private:
 
   // GROUP: Constructors (private):
@@ -251,7 +254,8 @@ private:
   bool d_filter_divergence_constraint;
   bool d_mixedModel;
   bool d_doMMS;
-  vector<string> d_new_sources; 
+  vector<string> d_new_sources;
+  bool d_useWasatchMomRHS;
 
   const VarLabel* _u_mom; 
   const VarLabel* _v_mom; 

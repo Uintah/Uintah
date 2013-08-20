@@ -1,1 +1,1 @@
-sed -i '/<DataArchiver/a \ \t \t \t \t \t \t <save label="TotalKineticEnergy_uintah"\/>' *.ups 
+sed -i '/<MomentumSolver/a \ \t \t \t \t \t \t <use_wasatch_momentum_rhs\/>' *.ups 

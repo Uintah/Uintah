@@ -123,6 +123,7 @@
         </PressureSolver>
 
         <MomentumSolver>
+ 	 	 	 	 	 	 <use_wasatch_momentum_rhs/>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
 

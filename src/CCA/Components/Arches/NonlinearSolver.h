@@ -152,8 +152,8 @@ public:
                              const PatchSet* patches,
                              const MaterialSet* matls) = 0;
   
-  void set_use_wasatch_mom_rhs(const bool useWasatchMomRHS) { d_useWasatchMomRHS = useWasatchMomRHS;}
-  const bool get_use_wasatch_mom_rhs() { return d_useWasatchMomRHS;}
+  inline void set_use_wasatch_mom_rhs(const bool useWasatchMomRHS) { d_useWasatchMomRHS = useWasatchMomRHS;}
+  inline const bool get_use_wasatch_mom_rhs() { return d_useWasatchMomRHS;}
 
 protected:
    const ProcessorGroup* d_myworld;

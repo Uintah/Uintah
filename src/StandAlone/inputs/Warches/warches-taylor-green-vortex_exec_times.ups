@@ -20,25 +20,7 @@
   <DataArchiver>
     <filebase>taylor-green-vortex.uda</filebase>
     <outputInterval>0.01</outputInterval>
-    <save label="totalKineticEnergy"/>
-<!-- 
-    <save label="totalummsLnError"/>
-    <save label="totalvmmsLnError"/>
-    <save label="totalummsExactSol"/>
-    <save label="totalvmmsExactSol"/>
- -->
-    <save label="pressurePS"/>
-    <save label="scalarSP"/>
-<!--     <save label="CCVelocity"/> -->
-    <save label="uVelocitySPBC"/>
-    <save label="vVelocitySPBC"/>
-<!--     <save label="continuityResidual"/> -->
-<!--     <save label="velocityDivergence"/> -->
-<!-- 
-    <save label="ummsLnError"/>
-    <save label="vmmsLnError"/>
- -->
-    <checkpoint cycle="2" interval="0.05"/>
+    <checkpoint cycle="0" interval="0"/>
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -66,7 +48,7 @@
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitIntegrator order="third"/>
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
 
@@ -105,7 +87,7 @@
         </PressureSolver>
 
         <MomentumSolver>
- 	 	 	 	 	 	 <use_wasatch_momentum_rhs/>
+          <use_wasatch_momentum_rhs/>        
           <convection_scheme>central</convection_scheme>
           <initialization type="almgren">
             <A>1</A>
