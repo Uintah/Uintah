@@ -56,8 +56,8 @@ EnthalpyShaddix::EnthalpyShaddix( std::string modelName,
   Pr = 0.7;
   sigma = 5.67e-8;   // [=] J/s/m^2/K^4 : Stefan-Boltzmann constant (from white book)
   pi = 3.14159265358979;
-  ksi = 0.6; // Fraction of the heat released by char oxidation that goes to the particle 
-  Hc0 = -1.686e6; // J/kg
+  ksi = 0.5; // Fraction of the heat released by char oxidation that goes to the particle 
+  Hc0 = -1.328e6; // J/kg
   Hh0 = 0.0;
   Ha0 = -1.504e7;
   Rgas = 8314.3; // J/K/kmol
