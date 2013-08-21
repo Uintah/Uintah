@@ -16,7 +16,7 @@
     <delt_min>0.000001</delt_min>
     <delt_max>0.001</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
-    <max_Timesteps>100</max_Timesteps>
+    <max_Timesteps>10</max_Timesteps>
   </Time>
 
   <DataArchiver>
@@ -27,7 +27,7 @@
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>
     <save label="mixture_fraction_sb"/>   <!-- Super Bee flux lim. --> 
-    <checkpoint cycle="2" interval="0.02"/>
+    <checkpoint cycle="2" timestepInterval="1"/>
   </DataArchiver>
 
   <Grid>

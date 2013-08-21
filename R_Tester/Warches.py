@@ -137,8 +137,14 @@ TURBULENCETESTS=[
   ("decay-isotropic-turbulence-wale64"  , "turbulence-verification/"+decayIsotropicTurbulenceWale64_ups,   8,  "All",  ["exactComparison","no_restart"] )
 ]
 
+BCTESTS=[
+  ("bc-test-xy-inlet-outlet-pressure" , "warches-bc-test-xy-inlet-outlet-pressure.ups",  6,  "All",  ["exactComparison"] ),
+  ("bc-test-xz-inlet-outlet-pressure" , "warches-bc-test-xz-inlet-outlet-pressure.ups",  6,  "All",  ["exactComparison"] ),
+  ("bc-test-yx-inlet-outlet-pressure" , "warches-bc-test-yx-inlet-outlet-pressure.ups",  6,  "All",  ["exactComparison"] ),  
+  ("bc-test-comprehensive" , "warches-bc-test-comprehensive.ups",  16,  "All",  ["exactComparison"] )
+]
 # Tests that are run during local regression testing
-LOCALTESTS = VISCOUSTESTS + TURBULENCETESTS
+LOCALTESTS = VISCOUSTESTS + TURBULENCETESTS + BCTESTS
 
 DEBUGTESTS   =[
   ("decay-isotropic-turbulence-vreman64", "turbulence-verification/"+decayIsotropicTurbulenceVreman64_ups, 8,  "All",  ["exactComparison","no_restart"] ),
@@ -148,7 +154,7 @@ DEBUGTESTS   =[
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS VISCOUSTESTS TURBULENCETESTS DEBUGTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS VISCOUSTESTS TURBULENCETESTS DEBUGTESTS NIGHTLYTESTS BCTESTS
 #__________________________________
 
 # returns the list  
@@ -163,6 +169,8 @@ def getTestList(me) :
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  elif me == "BCTESTS":
+    TESTS = BCTESTS    
   else:
     print "\nERROR:Warches.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
