@@ -1584,9 +1584,9 @@ void MomentumSolver::sched_computeVelHatWarches( const LevelP& level,
   tsk->requires( which_dw, d_lab->d_vMomLabel, Ghost::None, 0 );
   tsk->requires( which_dw, d_lab->d_wMomLabel, Ghost::None, 0 );
 
-  tsk->requires( which_dw, d_lab->d_uVelRhoHatRHSPartLabel, Ghost::None, 0 );
-  tsk->requires( which_dw, d_lab->d_vVelRhoHatRHSPartLabel, Ghost::None, 0 );
-  tsk->requires( which_dw, d_lab->d_wVelRhoHatRHSPartLabel, Ghost::None, 0 );
+  tsk->requires( Task::NewDW, d_lab->d_uVelRhoHatRHSPartLabel, Ghost::None, 0 );
+  tsk->requires( Task::NewDW, d_lab->d_vVelRhoHatRHSPartLabel, Ghost::None, 0 );
+  tsk->requires( Task::NewDW, d_lab->d_wVelRhoHatRHSPartLabel, Ghost::None, 0 );
   
   tsk->requires( Task::NewDW, VarLabel::find("density"), Ghost::AroundCells, 1 );
   
