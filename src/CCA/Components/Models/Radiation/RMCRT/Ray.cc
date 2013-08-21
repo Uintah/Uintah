@@ -76,6 +76,40 @@ void Ray::constructor(){
   d_gn            = Ghost::None;
   d_orderOfInterpolation = -9;
   _onOff_SetBCs   = true;
+  
+  //_____________________________________________
+  //   Ordering for Surface Method
+  // This block of code is used to properly place ray origins, and orient ray directions
+  // onto the correct face.  This is necessary, because by default, the rays are placed
+  // and oriented onto a default face, then require adjustment onto the proper face.
+  _dirIndexOrder[EAST]   = IntVector(2, 1, 0);
+  _dirIndexOrder[WEST]   = IntVector(2, 1, 0);
+  _dirIndexOrder[NORTH]  = IntVector(0, 2, 1);
+  _dirIndexOrder[SOUTH]  = IntVector(0, 2, 1);
+  _dirIndexOrder[TOP]    = IntVector(0, 1, 2);
+  _dirIndexOrder[BOT]    = IntVector(0, 1, 2);
+
+  // Ordering is slightly different from 6Flux since here, rays pass through origin cell from the inside faces.
+  _dirSignSwap[EAST]     = IntVector(-1, 1,  1);
+  _dirSignSwap[WEST]     = IntVector( 1, 1,  1);
+  _dirSignSwap[NORTH]    = IntVector( 1, -1, 1);
+  _dirSignSwap[SOUTH]    = IntVector( 1, 1,  1);
+  _dirSignSwap[TOP]      = IntVector( 1, 1, -1);
+  _dirSignSwap[BOT]      = IntVector( 1, 1,  1);
+
+  _locationIndexOrder[EAST]  = IntVector(1,0,2);
+  _locationIndexOrder[WEST]  = IntVector(1,0,2);
+  _locationIndexOrder[NORTH] = IntVector(0,1,2);
+  _locationIndexOrder[SOUTH] = IntVector(0,1,2);
+  _locationIndexOrder[TOP]   = IntVector(0,2,1);
+  _locationIndexOrder[BOT]   = IntVector(0,2,1);
+
+  _locationShift[EAST]   = IntVector(1, 0, 0);
+  _locationShift[WEST]   = IntVector(0, 0, 0);
+  _locationShift[NORTH]  = IntVector(0, 1, 0);
+  _locationShift[SOUTH]  = IntVector(0, 0, 0);
+  _locationShift[TOP]    = IntVector(0, 0, 1);
+  _locationShift[BOT]    = IntVector(0, 0, 0);
 }
 
 
@@ -793,45 +827,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
     //______________________________________________________________________
     if( _solveBoundaryFlux){
 
-      //_____________________________________________
-      //   Ordering for Surface Method
-      // This block of code is used to properly place ray origins, and orient ray directions
-      // onto the correct face.  This is necessary, because by default, the rays are placed
-      // and oriented onto a default face, then require adjustment onto the proper face.
-      vector <IntVector> dirIndexOrder(6);
-      vector <IntVector> dirSignSwap(6);
-      vector <IntVector> locationIndexOrder(6);
-      vector <IntVector> locationShift(6);
-
-      dirIndexOrder[0]  = IntVector(2, 1, 0);
-      dirIndexOrder[1]  = IntVector(2, 1, 0);
-      dirIndexOrder[2]  = IntVector(0, 2, 1);
-      dirIndexOrder[3]  = IntVector(0, 2, 1);
-      dirIndexOrder[4]  = IntVector(0, 1, 2);
-      dirIndexOrder[5]  = IntVector(0, 1, 2);
-
-      // Ordering is slightly different from 6Flux since here, rays pass through origin cell from the inside faces.
-      dirSignSwap[0]  = IntVector(-1, 1, 1);
-      dirSignSwap[1]  = IntVector(1, 1, 1);
-      dirSignSwap[2]  = IntVector(1, -1, 1);
-      dirSignSwap[3]  = IntVector(1, 1, 1);
-      dirSignSwap[4]  = IntVector(1, 1, -1);
-      dirSignSwap[5]  = IntVector(1, 1, 1);
-
-      locationIndexOrder[0] = IntVector(1,0,2);
-      locationIndexOrder[1] = IntVector(1,0,2);
-      locationIndexOrder[2] = IntVector(0,1,2);
-      locationIndexOrder[3] = IntVector(0,1,2);
-      locationIndexOrder[4] = IntVector(0,2,1);
-      locationIndexOrder[5] = IntVector(0,2,1);
-
-      locationShift[0] = IntVector(1, 0, 0);
-      locationShift[1] = IntVector(0, 0, 0);
-      locationShift[2] = IntVector(0, 1, 0);
-      locationShift[3] = IntVector(0, 0, 0);
-      locationShift[4] = IntVector(0, 0, 1);
-      locationShift[5] = IntVector(0, 0, 0);
-
       //__________________________________
       //
       for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
@@ -908,9 +903,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
         // Loop over boundary faces of the cell and compute incident radiative flux
         for (vector<int>::iterator it=boundaryFaces.begin() ; it < boundaryFaces.end(); it++ ){  // 5/25
 
-          int face = *it;                     // face uses Uintah ordering
-          int UintahFace[6] = {1,0,3,2,5,4};  // Uintah face iterator is an enum with the order WESNBT
-          int RayFace = UintahFace[face];     // All the Ray functions are based on the face order of EWNSTB
+          int RayFace = *it;                     // face uses Uintah ordering
+          int UintahFace[6] = {WEST,EAST,SOUTH,NORTH,BOT,TOP};
+          
           double sumI     = 0;
           double sumProjI = 0;
           double sumI_prev= 0;
@@ -921,10 +916,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
             Vector direction_vector, ray_location; 
             double cosTheta;
-            rayDirection_cellFace( mTwister, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
+            rayDirection_cellFace( mTwister, origin, _dirIndexOrder[RayFace], _dirSignSwap[RayFace], iRay,
                                    direction_vector, cosTheta );
                                    
-            rayLocation_cellFace( mTwister, origin, locationIndexOrder[RayFace], locationShift[RayFace], 
+            rayLocation_cellFace( mTwister, origin, _locationIndexOrder[RayFace], _locationShift[RayFace], 
                                   DyDxRatio, DzDxRatio, ray_location);            
             
             updateSumI( direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
@@ -936,11 +931,12 @@ Ray::rayTrace( const ProcessorGroup* pc,
           } // end of flux ray loop
 
           //__________________________________
-          //  Compute Net Flux to the boundary                    
-          boundFlux[origin][face] = sumProjI * 2 *_pi/_nFluxRays;
+          //  Compute Net Flux to the boundary
+          int face = UintahFace[RayFace];            
+          boundFlux[origin][ face ] = sumProjI * 2 *_pi/_nFluxRays;
 
           if(_benchmark==5){
-            fprintf(f, "%lf \n",boundFlux[origin][face]);
+            fprintf(f, "%lf \n",boundFlux[origin][ face ]);
           }
 
         } // boundary faces loop
@@ -1676,14 +1672,14 @@ bool Ray::has_a_boundary(const IntVector &c,
   adjacentCell[0] = c[0] - 1;     // west
 
   if (celltype[adjacentCell]+1){    // cell type of flow is -1, so when cellType+1 isn't false, we
-    boundaryFaces.push_back(0);     // know we're at a boundary
+    boundaryFaces.push_back( WEST );     // know we're at a boundary
     hasBoundary = true;
   }
 
-  adjacentCell[0] += 2; // east
+  adjacentCell[0] += 2;           // east
 
   if (celltype[adjacentCell]+1){
-    boundaryFaces.push_back(1);
+    boundaryFaces.push_back( EAST );
     hasBoundary = true;
   }
 
@@ -1691,14 +1687,14 @@ bool Ray::has_a_boundary(const IntVector &c,
   adjacentCell[1] = c[1] - 1;     // south
 
   if (celltype[adjacentCell]+1){
-    boundaryFaces.push_back(2);
+    boundaryFaces.push_back( SOUTH );
     hasBoundary = true;
   }
 
-  adjacentCell[1] += 2; // north
+  adjacentCell[1] += 2;           // north
 
   if (celltype[adjacentCell]+1){
-    boundaryFaces.push_back(3);
+    boundaryFaces.push_back( NORTH );
     hasBoundary = true;
   }
 
@@ -1706,14 +1702,14 @@ bool Ray::has_a_boundary(const IntVector &c,
   adjacentCell[2] = c[2] - 1;     // bottom
 
   if (celltype[adjacentCell]+1){
-    boundaryFaces.push_back(4);
+    boundaryFaces.push_back( BOT );
     hasBoundary = true;
   }
 
   adjacentCell[2] += 2;           // top
 
   if (celltype[adjacentCell]+1){
-    boundaryFaces.push_back(5);
+    boundaryFaces.push_back( TOP );
     hasBoundary = true;
   }
 
