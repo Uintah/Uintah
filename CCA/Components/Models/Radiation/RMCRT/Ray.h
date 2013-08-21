@@ -205,6 +205,9 @@ namespace Uintah{
 
     private: 
       enum DIR {X=0, Y=1, Z=2, NONE=-9};
+      //           -x      +x       -y       +y     -z     +z
+      enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};
+      
       double _pi;
       double _Threshold;
       double _sigma;
@@ -247,6 +250,12 @@ namespace Uintah{
       Vector _orient;
       IntVector _VRLocationsMin;        // These should be physical points in the domain   --Todd
       IntVector _VRLocationsMax;        // What happens if the resolution changes
+      
+      // Boundary flux constant variables  (consider using array container when C++ 11 is used)
+      map <int,IntVector> _dirIndexOrder;
+      map <int,IntVector> _dirSignSwap;
+      map <int,IntVector> _locationIndexOrder;
+      map <int,IntVector> _locationShift;
 
       Ghost::GhostType d_gn;
       Ghost::GhostType d_gac;
