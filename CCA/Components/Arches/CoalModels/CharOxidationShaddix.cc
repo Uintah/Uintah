@@ -650,7 +650,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
                 //PO2_surf = 0.0;
                 //CO2CO = 0.0;
                 //q = 0.0;
-                PO2_surf = PO2_inf*3/2.0;
+                PO2_surf = PO2_inf*2.0/3.0;;
                 CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/unscaled_particle_temperature);
                 OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
                 gamma = -(1.0-OF);
