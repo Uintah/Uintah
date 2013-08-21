@@ -128,13 +128,13 @@ TURBULENCETESTS=[
   ("decay-isotropic-turbulence-csmag32" , "turbulence-verification/"+decayIsotropicTurbulenceCSmag32_ups,  8,  "All",  ["exactComparison"] ),
   ("decay-isotropic-turbulence-csmag32-rk2" , "turbulence-verification/"+decayIsotropicTurbulenceCSmag32rk2_ups,  8,  "All",  ["exactComparison"] ),
   ("decay-isotropic-turbulence-csmag32-rk3" , "turbulence-verification/"+decayIsotropicTurbulenceCSmag32rk3_ups,  8,  "All",  ["exactComparison"] ),  
-  ("decay-isotropic-turbulence-csmag64" , "turbulence-verification/"+decayIsotropicTurbulenceCSmag64_ups,  8,  "All",  ["exactComparison","no_restart"] ),
+  ("decay-isotropic-turbulence-csmag64" , "turbulence-verification/"+decayIsotropicTurbulenceCSmag64_ups,  8,  "All",  ["exactComparison","no_restart", "no_dbg"] ),
   ("decay-isotropic-turbulence-dsmag32" , "turbulence-verification/"+decayIsotropicTurbulenceDSmag32_ups,  8,  "All",  ["exactComparison"] ),
-  ("decay-isotropic-turbulence-dsmag64" , "turbulence-verification/"+decayIsotropicTurbulenceDSmag64_ups,  8,  "All",  ["exactComparison","no_restart"] ),
+  ("decay-isotropic-turbulence-dsmag64" , "turbulence-verification/"+decayIsotropicTurbulenceDSmag64_ups,  8,  "All",  ["exactComparison","no_restart", "no_dbg"] ),
   ("decay-isotropic-turbulence-vreman32", "turbulence-verification/"+decayIsotropicTurbulenceVreman32_ups, 8,  "All",  ["exactComparison"] ),
-  ("decay-isotropic-turbulence-vreman64", "turbulence-verification/"+decayIsotropicTurbulenceVreman64_ups, 8,  "All",  ["exactComparison","no_restart"] ),
+  ("decay-isotropic-turbulence-vreman64", "turbulence-verification/"+decayIsotropicTurbulenceVreman64_ups, 8,  "All",  ["exactComparison","no_restart", "no_dbg"] ),
   ("decay-isotropic-turbulence-wale32"  , "turbulence-verification/"+decayIsotropicTurbulenceWale32_ups,   8,  "All",  ["exactComparison"] ),
-  ("decay-isotropic-turbulence-wale64"  , "turbulence-verification/"+decayIsotropicTurbulenceWale64_ups,   8,  "All",  ["exactComparison","no_restart"] )
+  ("decay-isotropic-turbulence-wale64"  , "turbulence-verification/"+decayIsotropicTurbulenceWale64_ups,   8,  "All",  ["exactComparison","no_restart", "no_dbg"] )
 ]
 
 BCTESTS=[
