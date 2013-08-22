@@ -129,6 +129,7 @@
   const std::string viscName = d_lab->d_viscosityCTSLabel->getName(); \
   Uintah::ProblemSpecP momSpec = params->findBlock("Wasatch")->appendChild("MomentumEquations"); \
   momSpec->appendChild("Disabledmomdt"); \
+  momSpec->appendChild("DisablePressureSolve"); \
   momSpec->appendElement("X-Velocity",d_lab->d_uVelocitySPBCLabel->getName()); \
   momSpec->appendElement("Y-Velocity",d_lab->d_vVelocitySPBCLabel->getName()); \
   momSpec->appendElement("Z-Velocity",d_lab->d_wVelocitySPBCLabel->getName()); \
@@ -240,6 +241,7 @@ Arches::~Arches()
   releasePort("solver");
 
 #ifdef WASATCH_IN_ARCHES
+  d_wasatch->releasePort("solver");
   delete d_wasatch;
 #endif // WASATCH_IN_ARCHES
 }
@@ -369,6 +371,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   // we must attach the solver to Wasatch "manually"
   d_wasatch->attachPort("solver",  dynamic_cast<SolverInterface*>(getPort("solver")));
+  d_wasatch->disable_timestepper_creation();
   d_wasatch->disable_wasatch_material();
   // let Wasatch parse its xml block to setup the transport equations. Here, we
   // should pass the entire uintah input file params.
@@ -1821,7 +1824,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 #ifdef WASATCH_IN_ARCHES
 
   // disable Wasatch's time integrator because Arches is handling it.
-  d_wasatch->disable_timestepper_creation();
   d_wasatch->scheduleTimeAdvance( level, sched );
   d_nlSolver->nonlinearSolve(level, sched, *d_wasatch, d_timeIntegrator );
 
