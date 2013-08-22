@@ -642,13 +642,15 @@ namespace Wasatch{
 
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
 
-    if( linSolver_ ){
+#ifndef WASATCH_IN_ARCHES // this is a bit annoying... when warches is turned on, disable any linearsolver calls from Wasatch
+    if( linSolver_ ) {
       linSolver_->scheduleInitialize( level, sched, 
                                       sharedState_->allMaterials() );
 
       sched->overrideVariableBehavior("hypre_solver_label",false,false,
                                       false,true,true);
     }
+#endif
 
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 
