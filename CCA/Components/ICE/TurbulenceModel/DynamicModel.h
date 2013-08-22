@@ -42,11 +42,11 @@ namespace Uintah {
     
     virtual void computeTurbViscosity(DataWarehouse* new_dw,
                                       const Patch* patch,                       
-                                      const CCVariable<Vector>& vel_CC,         
-                                      const SFCXVariable<double>& uvel_FC,      
-                                      const SFCYVariable<double>& vvel_FC,      
-                                      const SFCZVariable<double>& wvel_FC,      
-                                      const CCVariable<double>& rho_CC,         
+                                      constCCVariable<Vector>& vel_CC,         
+                                      constSFCXVariable<double>& uvel_FC,      
+                                      constSFCYVariable<double>& vvel_FC,      
+                                      constSFCZVariable<double>& wvel_FC,      
+                                      constCCVariable<double>& rho_CC,         
                                       const int indx,                           
                                       SimulationStateP&  d_sharedState,         
                                       CCVariable<double>& turb_viscosity);      
@@ -59,19 +59,19 @@ namespace Uintah {
     
     void computeSmagCoeff(DataWarehouse* new_dw,
                           const Patch* patch,                                
-                          const CCVariable<Vector>& vel_CC,                  
-                          const SFCXVariable<double>& uvel_FC,               
-                          const SFCYVariable<double>& vvel_FC,               
-                          const SFCZVariable<double>& wvel_FC,               
+                          constCCVariable<Vector>& vel_CC,                  
+                          constSFCXVariable<double>& uvel_FC,               
+                          constSFCYVariable<double>& vvel_FC,               
+                          constSFCZVariable<double>& wvel_FC,               
                           const int indx,                                    
                           SimulationStateP&  d_sharedState,                  
                           CCVariable<double>& term,                          
                           CCVariable<double>& meanSIJ);                      
-       
-    template <class T>
-    void applyFilter(const Patch* patch,
-                     CCVariable<T>& var,           
-                     CCVariable<T>& var_hat);      
+
+    template <class T, class V> 
+    void applyFilter(const Patch* patch, 
+                     T& var,
+                     CCVariable<V>& var_hat);      
        
     void applyFilter(const Patch* patch,
                      SCIRun::StaticArray<CCVariable<double> >& var,           
