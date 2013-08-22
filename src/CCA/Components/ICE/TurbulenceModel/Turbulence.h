@@ -52,11 +52,11 @@ namespace Uintah {
 
     virtual void computeTurbViscosity(DataWarehouse* new_dw,
                                       const Patch* patch,
-                                      const CCVariable<Vector>& vel_CC,
-                                      const SFCXVariable<double>& uvel_FC,
-                                      const SFCYVariable<double>& vvel_FC,
-                                      const SFCZVariable<double>& wvel_FC,
-                                      const CCVariable<double>& rho_CC,
+                                      constCCVariable<Vector>& vel_CC,
+                                      constSFCXVariable<double>& uvel_FC,
+                                      constSFCYVariable<double>& vvel_FC,
+                                      constSFCZVariable<double>& wvel_FC,
+                                      constCCVariable<double>& rho_CC,
                                       const int indx,
                                       SimulationStateP&  d_sharedState,
                                       CCVariable<double>& turb_viscosity) = 0;
@@ -67,8 +67,8 @@ namespace Uintah {
    
     void callTurb(DataWarehouse* new_dw,
                  const Patch* patch,
-                 const CCVariable<Vector>& vel_CC,
-                 const CCVariable<double>& rho_CC,
+                 constCCVariable<Vector>& vel_CC,
+                 constCCVariable<double>& rho_CC,
                  const int indx,
                  ICELabel* lb,
                  SimulationStateP&  d_sharedState,
