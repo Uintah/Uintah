@@ -963,29 +963,29 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
         }
       }
 
-      // sets the velocity to the solid velocity on the faces
-      // note that solid velocity is assumed zero here. 
-      if (d_boundaryCondition->anyArchesPhysicalBC()) {
-
-        if (!d_doMMS) {
-          d_boundaryCondition->velocityBC(patch,
-                                        cellinfo, &velocityVars,
-                                        &constVelocityVars);
-        }
-
-      }
-
-      if (d_boundaryCondition->isUsingNewBC()) {
-
-        if (!d_doMMS) {
-          d_boundaryCondition->velocityBC(patch,
-                                        cellinfo, &velocityVars,
-                                        &constVelocityVars);
-        }
-      }
+//      // sets the velocity to the solid velocity on the faces
+//      // note that solid velocity is assumed zero here. 
+//      if (d_boundaryCondition->anyArchesPhysicalBC()) {
+//
+//        if (!d_doMMS) {
+//          d_boundaryCondition->velocityBC(patch,
+//                                        cellinfo, &velocityVars,
+//                                        &constVelocityVars);
+//        }
+//
+//      }
+//
+//      if (d_boundaryCondition->isUsingNewBC()) {
+//
+//        if (!d_doMMS) {
+//          d_boundaryCondition->velocityBC(patch,
+//                                        cellinfo, &velocityVars,
+//                                        &constVelocityVars);
+//        }
+//      }
 
       // sets coefs in the direction of the wall to zero
-      d_boundaryCondition->mmvelocityBC(patch, cellinfo,
+      d_boundaryCondition->wallVelocityBC(patch, cellinfo,
                                         &velocityVars, &constVelocityVars);
 
       d_source->modifyVelMassSource(patch,
@@ -1005,20 +1005,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat,
                                                       velocityVars.vVelRhoHat, velocityVars.wVelRhoHat, constVelocityVars.new_density );
 
-      //MMS boundary conditions ~Setting the uncorrected velocities~
-      if (d_doMMS) { 
-        double time_shiftmms = 0.0;
-        time_shiftmms = delta_t * timelabels->time_position_multiplier_before_average;
-
-        d_boundaryCondition->mmsvelocityBC(patch, cellinfo, 
-                                           &velocityVars, &constVelocityVars, 
-                                           time_shiftmms, 
-                                           delta_t);
-      }
     }
+
+
 //#endif // WASATCH_IN_ARCHES
-    //__________________________________
-    //
+
+
     double time_shift = 0.0;
     if ( d_boundaryCondition->getInletBC() ) {
 
@@ -1027,6 +1019,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                             &velocityVars, &constVelocityVars,
                                             indx, 
                                             time_shift);
+
     } else if ( d_boundaryCondition->isUsingNewBC() ) { 
 
       time_shift = delta_t * timelabels->time_position_multiplier_before_average;

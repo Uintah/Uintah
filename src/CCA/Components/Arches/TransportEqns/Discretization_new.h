@@ -1714,7 +1714,7 @@ namespace Uintah{
 
         //NOTE: To save declaring too many variables, we stuff
         // mu_T into gamma and then add in the other bits afterwards
-
+        //
         face_gamma = centralInterp( c, coord, mu_t ); 
         face_D     = centralInterp( c, coord, D_mol ); 
         face_rho   = centralInterp( c, coord, rho   ); 
@@ -1810,9 +1810,24 @@ namespace Uintah{
         Vector c_af = areaFraction[c]; 
         Vector cp_af = areaFraction[c + coord]; 
 
-        Fdiff[c] = Dx.y()*Dx.z() * 
-                   ( face_gamma.plus * grad_phi.plus * cp_af.x() - 
-                     face_gamma.minus * grad_phi.minus * c_af.x() ); 
+        FaceBoundaryBool check = checkFacesForBoundaries( p, c, coord );
+
+        double plus_flux = 0;
+        double minus_flux = 0;
+
+        if ( check.plus )
+          plus_flux = 0.0;
+        else
+          plus_flux = face_gamma.plus * grad_phi.plus * cp_af.x(); 
+
+        if ( check.minus )
+          minus_flux = 0.0;
+        else 
+          minus_flux = face_gamma.minus * grad_phi.minus * c_af.x(); 
+
+        Fdiff[c] += Dx.y()*Dx.z() * 
+                   ( plus_flux - 
+                     minus_flux ); 
 
 #ifdef YDIM
         coord[0] = 0; coord[1] = 1; coord[2] = 0; 
@@ -1827,9 +1842,21 @@ namespace Uintah{
 
         cp_af = areaFraction[c + coord]; 
 
-        Fdiff[c] += Dx.x()*Dx.z() *  
-                   ( face_gamma.plus * grad_phi.plus * cp_af.y() - 
-                     face_gamma.minus * grad_phi.minus * c_af.y() ); 
+        check = checkFacesForBoundaries( p, c, coord );
+
+        if ( check.plus )
+          plus_flux = 0.0;
+        else
+          plus_flux = face_gamma.plus * grad_phi.plus * cp_af.y(); 
+
+        if ( check.minus )
+          minus_flux = 0.0;
+        else 
+          minus_flux = face_gamma.minus * grad_phi.minus * c_af.y(); 
+
+        Fdiff[c] += Dx.x()*Dx.z() * 
+                   ( plus_flux - 
+                     minus_flux ); 
 #endif
 #ifdef ZDIM
         coord[0] = 0; coord[1] = 0; coord[2] = 1; 
@@ -1844,9 +1871,21 @@ namespace Uintah{
 
         cp_af = areaFraction[c + coord]; 
 
+        check = checkFacesForBoundaries( p, c, coord );
+
+        if ( check.plus )
+          plus_flux = 0.0;
+        else
+          plus_flux = face_gamma.plus * grad_phi.plus * cp_af.z(); 
+
+        if ( check.minus )
+          minus_flux = 0.0;
+        else 
+          minus_flux = face_gamma.minus * grad_phi.minus * c_af.z(); 
+
         Fdiff[c] += Dx.x()*Dx.y() * 
-                   ( face_gamma.plus * grad_phi.plus * cp_af.z() - 
-                     face_gamma.minus * grad_phi.minus * c_af.z() ); 
+                   ( plus_flux - 
+                     minus_flux ); 
 
 #endif
 
