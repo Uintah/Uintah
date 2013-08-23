@@ -16,13 +16,13 @@
     <delt_min>0.000001</delt_min>
     <delt_max>0.001</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
-    <max_Timesteps>10</max_Timesteps>
+    <max_Timesteps>5</max_Timesteps>
   </Time>
 
   <DataArchiver>
     <filebase>warches-bc-test-comprehensive.uda</filebase>
     <outputInitTimestep/>
-    <outputTimestepInterval>25</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>
@@ -102,7 +102,7 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[4,1,1]</upper>
-        <resolution>[160,40,40]</resolution>
+        <resolution>[80,20,20]</resolution>
         <extraCells>[1,1,1]</extraCells>
         <patches>[4,2,2]</patches>
       </Box>

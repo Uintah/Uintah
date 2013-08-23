@@ -147,9 +147,7 @@ BCTESTS=[
 LOCALTESTS = VISCOUSTESTS + TURBULENCETESTS + BCTESTS
 
 DEBUGTESTS   =[
-  ("decay-isotropic-turbulence-vreman64", "turbulence-verification/"+decayIsotropicTurbulenceVreman64_ups, 8,  "All",  ["exactComparison","no_restart"] ),
-  ("decay-isotropic-turbulence-wale32"  , "turbulence-verification/"+decayIsotropicTurbulenceWale32_ups,   8,  "All",  ["exactComparison"] ),
-  ("decay-isotropic-turbulence-wale64"  , "turbulence-verification/"+decayIsotropicTurbulenceWale64_ups,   8,  "All",  ["exactComparison","no_restart"] )  
+  ("bc-test-comprehensive" , "warches-bc-test-comprehensive.ups",  16,  "All",  ["exactComparison"] )
 ]
 #__________________________________
 # The following list is parsed by the local RT script
