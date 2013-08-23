@@ -772,8 +772,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
             rayDirection_VR( mTwister, origin, iRay, _VR, DyDx, DzDx, direction_vector, cosVRTheta);
             
             // get the intensity for this ray
-            updateSumI( direction_vector, ray_location, origin, Dx, 
-                        domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+            updateSumI( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
             
             sumProjI += cosVRTheta * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
                                                          // from all the rays up to that point
@@ -890,7 +889,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
             rayLocation_cellFace( mTwister, origin, _locationIndexOrder[RayFace], _locationShift[RayFace], 
                                   DyDx, DzDx, ray_location);            
             
-            updateSumI( direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+            updateSumI( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
             sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
 
@@ -939,7 +938,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
         Vector ray_location;
         rayLocation( mTwister, origin, DyDx,  DzDx, _CCRays, ray_location);
 
-        updateSumI( direction_vector, ray_location, origin, Dx, domainLo, domainHi, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+        updateSumI( direction_vector, ray_location, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
         
       }  // Ray loop
       
@@ -2275,8 +2274,6 @@ void Ray::updateSumI ( Vector& ray_direction,
                        Vector& ray_location,
                        const IntVector& origin,
                        const Vector& Dx,
-                       const IntVector& domainLo,
-                       const IntVector& domainHi,
                        constCCVariable<double>& sigmaT4OverPi,
                        constCCVariable<double>& abskg,
                        constCCVariable<int>& celltype,
