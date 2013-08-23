@@ -1323,7 +1323,7 @@ IntrusionBC::setDensity( const Patch* patch,
 
               if ( iIntrusion->second.directions[idir] != 0 ){ 
 
-                density[ c ] = 2.0*iIntrusion->second.density-density[c+_inside[idir]]; 
+                density[ c ] = 2.0*iIntrusion->second.density - density[c+_dHelp[idir]]; 
 
               } 
             }
