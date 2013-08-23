@@ -247,9 +247,18 @@ namespace Uintah{
       // Virtual Radiometer parameters
       bool _virtRad;
       double _viewAng;
-      Vector _orient;
       IntVector _VRLocationsMin;        // These should be physical points in the domain   --Todd
       IntVector _VRLocationsMax;        // What happens if the resolution changes
+      
+      struct VR_variables{
+        double thetaRot;
+        double phiRot; 
+        double psiRot;
+        double deltaTheta;
+        double range;
+        double sldAngl;
+      };
+      VR_variables _VR;
       
       // Boundary flux constant variables  (consider using array container when C++ 11 is used)
       map <int,IntVector> _dirIndexOrder;
@@ -370,14 +379,7 @@ namespace Uintah{
                                const int &dir);
 
       
-      //__________________________________
-      //
-      Vector findRayDirection( MTRand& mTwister,
-                               const bool isSeedRandom,
-                               const int i = -9,
-                               const int j = -9,
-                               const int k = -9,
-                               const int iRay = -9);
+
       //__________________________________
       //
       void reflect(double& fs,
@@ -393,15 +395,42 @@ namespace Uintah{
       void findStepSize(int step[],
                         bool sign[],
                         const Vector& inv_direction_vector);
+      
+      //__________________________________
+      //
+      void rayLocation( MTRand& mTwister,
+                       const IntVector origin,
+                       const double DyDx, 
+                       const double DzDx,
+                       const bool useCCRays,
+                       Vector& location);
+
+      
                        
       /** @brief Adjust the location of a ray origin depending on the cell face */
       void rayLocation_cellFace( MTRand& mTwister,
                                  const IntVector& origin,
                                  const IntVector &indexOrder, 
                                  const IntVector &shift, 
-                                 const double &DyDxRatio, 
-                                 const double &DzDxRatio,
+                                 const double &DyDx, 
+                                 const double &DzDx,
                                  Vector& location );
+      //__________________________________
+      //
+      Vector findRayDirection( MTRand& mTwister,
+                               const bool isSeedRandom,
+                               const IntVector& = IntVector(-9,-9,-9),
+                               const int iRay = -9);
+      //__________________________________
+      //  
+      void rayDirection_VR( MTRand& mTwister,
+                            const IntVector& origin,
+                            const int iRay,
+                            VR_variables& VR,
+                            const double DyDx,
+                            const double DzDx,
+                            Vector& directionVector,
+                            double& cosVRTheta );
 
       /** @brief Adjust the direction of a ray depending on the cell face */
       void rayDirection_cellFace( MTRand& mTwister,
@@ -471,6 +500,16 @@ namespace Uintah{
                         DataWarehouse*,
                         DataWarehouse*,
                         const VarLabel* variable);
+                        
+    //______________________________________________________________________
+    //  Helpers
+    bool less_Eq(    const IntVector& a, const IntVector& b ){
+      return ( a.x() <= b.x() && a.y() <= b.y() && a.z() <= b.z() );
+    }
+    bool greater_Eq( const IntVector& a, const IntVector& b ){
+      return ( a.x() >= b.x() && a.y() >= b.y() && a.z() >= b.z() );
+    }                    
+                        
 
   }; // class Ray
 } // namespace Uintah
