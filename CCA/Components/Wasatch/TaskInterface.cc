@@ -394,8 +394,7 @@ namespace Wasatch{
         dbg_fields << std::setw(20) << std::left << fieldInfo.varlabel->getName();
         if( fieldInfo.useOldDataWarehouse ){ dbg_fields << "OLD   "; }
         else{ dbg_fields << "NEW   "; }
-        dbg_fields<< std::left << std::setw(5) << fieldInfo.nghost
-                  << *patches << endl;
+        dbg_fields << std::left << std::setw(5) << fieldInfo.nghost << *patches << endl;
 
       } // field loop
     } // field type loop
@@ -506,9 +505,7 @@ namespace Wasatch{
                     << "' for patch " << patch->getID()
                     << " and material " << material
                     << endl;
-          if (dbg_tasks_on) {
-            fml_->dump_fields(std::cout);
-          }
+          if( dbg_tasks_on ) fml_->dump_fields(std::cout);
 
           fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
 

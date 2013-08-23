@@ -218,7 +218,7 @@ namespace Wasatch{
                                                Expr::ExpressionFactory& factory,
                                                Uintah::ProblemSpecP params,
                                                const bool hasEmbeddedGeometry,
-                                               TurbulenceParameters turbulenceParams);
+                                               const TurbulenceParameters& turbulenceParams);
 
     /**
      *  \brief Parse the input file to get the name of the solution
