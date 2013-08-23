@@ -154,8 +154,6 @@ namespace Uintah{
                          Vector& ray_location,
                          const IntVector& origin,
                          const Vector& Dx,
-                         const IntVector& domainLo,
-                         const IntVector& domainHi,
                          constCCVariable<double>& sigmaT4Pi,
                          constCCVariable<double>& abskg,
                          constCCVariable<int>& celltype,
