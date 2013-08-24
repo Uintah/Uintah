@@ -3705,7 +3705,7 @@ EOF
                              CUDA libraries and headers,
                              cuda.h,
                              $_cuda_inc,
-                             cudart cuda,
+                             cudart,
                              $_cuda_lib,
                              ,
                              cuda_conf_test.cu,
