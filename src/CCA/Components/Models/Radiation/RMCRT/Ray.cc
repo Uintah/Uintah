@@ -26,7 +26,7 @@
 #include <CCA/Components/Models/Radiation/RMCRT/MersenneTwister.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
-#include <Core/Containers/StaticArray.h>
+
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/BBox.h>
@@ -1094,7 +1094,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       dbg << " getting coarse level data L-" <<L<< endl;
     }
     Vector dx = level->dCell();
-    DyDx[L] = dx.y() / dx.x();
+    DyDx[L] = dx.y() / dx.x(); 
     DzDx[L] = dx.z() / dx.x();
     Dx[L] = dx;
   } 
@@ -1181,195 +1181,21 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       } 
 /*===========TESTING==========`*/
       
-      
       double sumI = 0;
-      
-      Vector tMax;
-      vector<Vector> tDelta(maxLevels);
 
       //__________________________________
       //  ray loop
       for (int iRay=0; iRay < _nDivQRays; iRay++){
-        IntVector cur      = origin;
-        IntVector prevCell = cur;
         
-        int L       = maxLevels -1;  // finest level
-        int prevLev = L;
+        Vector ray_location;
+        //rayLocation( mTwister, origin, DyDx,  DzDx, _CCRays, ray_location);
 
-        Vector direction = findRayDirection( mTwister,_isSeedRandom, origin, iRay ); 
-        Vector inv_direction = Vector(1.0)/direction;
-
-        int step[3];                                           // Gives +1 or -1 based on sign
-        bool sign[3];
-        findStepSize( step, sign, inv_direction );
-        
-        //__________________________________
-        // define tMax & tDelta on all levels
-        // go from finest to coarset level so you can compare 
-        // with 1L rayTrace results.
-        
-        tMax.x( (sign[0]  - mTwister.rand())            * inv_direction[0] );  
-        tMax.y( (sign[1]  - mTwister.rand()) * DyDx[L]  * inv_direction[1] );  
-        tMax.z( (sign[2]  - mTwister.rand()) * DzDx[L]  * inv_direction[2] );  
-        
-        for(int Lev = maxLevels-1; Lev>-1; Lev--){
-          //Length of t to traverse one cell
-          tDelta[Lev].x( abs(inv_direction[0]) );
-          tDelta[Lev].y( abs(inv_direction[1]) * DyDx[Lev] );
-          tDelta[Lev].z( abs(inv_direction[2]) * DzDx[Lev] );
-        }
-
-        //Initializes the following values for each ray
-        bool   in_domain      = true;
-        double tMax_prev      = 0;
-        double intensity      = 1.0;
-        double fs             = 1.0;
-        int    nReflect       = 0;             // Number of reflections
-        double optical_thickness     = 0;
-        double expOpticalThick_prev  = 1.0;    // exp(-opticalThick_prev)
-        bool   onFineLevel    = true;
-        const Level* level    = fineLevel;
+        Vector ray_direction = findRayDirection( mTwister,_isSeedRandom, origin, iRay ); 
+               
+        updateSumI_ML( ray_direction, ray_location, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
+                       fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, size, sumI, mTwister);
 
 
-        //dbg2 << "  fineLevel_ROI_Lo: " <<  fineLevel_ROI_Lo << " fineLevel_ROI_HI: " << fineLevel_ROI_Hi << endl;
-         
-        //______________________________________________________________________
-        //  Threshold  loop
-        while (intensity > _Threshold){
-          
-          DIR dir = NONE;
-          while (in_domain){
-            
-            prevCell = cur;
-            prevLev  = L;
-            
-            double disMin = -9;   // Ray segment length.
-            
-            //__________________________________
-            //  Determine the princple direction the ray is traveling
-            //  
-            if ( tMax[0] < tMax[1] ){    // X < Y
-              if ( tMax[0] < tMax[2] ){  // X < Z
-                dir = X;
-              } else {
-                dir = Z;
-              }
-            } else {
-              if(tMax[1] <tMax[2] ){     // Y < Z
-                dir = Y;
-              } else {
-                dir = Z;
-              }
-            }
-            
-            // next cell index and position
-            cur[dir]  = cur[dir] + step[dir];
-            Point pos = level->getCellPosition(cur);
-            Vector dx_prev = Dx[L];  //  Used to compute coarsenRatio
-
-            
-            //__________________________________
-            // Logic for moving between levels
-            // currently you can only move from fine to coarse level
-            
-            //bool jumpFinetoCoarserLevel   = ( onFineLevel && finePatch->containsCell(cur) == false );
-            bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
-            bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCell(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
-            
-            //dbg2 << cur << " jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
-            //     << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl; 
-                 
-            if( jumpFinetoCoarserLevel ){
-              cur   = level->mapCellToCoarser(cur); 
-              level = level->getCoarserLevel().get_rep();      // move to a coarser level
-              L     = level->getIndex();
-              onFineLevel = false;
-              
-              // NEVER UNCOMMENT EXCEPT FOR DEBUGGING
-              //dbg2 << " Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
-            } else if ( jumpCoarsetoCoarserLevel ){
-              
-              IntVector c_old = cur;
-              cur   = level->mapCellToCoarser(cur); 
-              level = level->getCoarserLevel().get_rep();
-              L     = level->getIndex();
-              
-              //dbg2 << " Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
-            }
-            
-            //__________________________________
-            //  update marching variables
-            disMin        = (tMax[dir] - tMax_prev);        // Todd:   replace tMax[dir]
-            tMax_prev     = tMax[dir];
-            tMax[dir]     = tMax[dir] + tDelta[L][dir];
-
-            //__________________________________
-            // Account for uniqueness of first step after reaching a new level
-            Vector dx = level->dCell();
-            IntVector coarsenRatio = IntVector(1,1,1);
-    
-            coarsenRatio[0] = dx[0]/dx_prev[0];
-            coarsenRatio[1] = dx[1]/dx_prev[1];
-            coarsenRatio[2] = dx[2]/dx_prev[2];
-
-            Vector lineup;
-            for (int ii=0; ii<3; ii++){
-              if (sign[ii]) {
-                lineup[ii] = -(cur[ii] % coarsenRatio[ii] - (coarsenRatio[ii] - 1 ));
-              }
-              else {
-                lineup[ii] = cur[ii] % coarsenRatio[ii];
-              }
-            }
-
-            tMax += lineup * tDelta[prevLev];
-            
-            in_domain = domain_BB.inside(pos);
-
-            //__________________________________
-            //  Update the ray location
-            //this is necessary to find the absorb_coef at the endpoints of each step if doing interpolations
-            //ray_location_prev = ray_location;
-            //ray_location      = ray_location + (disMin * direction_vector);
-            // If this line is used,  make sure that direction_vector is adjusted after a reflection
-
-
-            optical_thickness += Dx[prevLev].x() * abskg[prevLev][prevCell]*disMin;
-            size++;
-
-            double expOpticalThick = exp(-optical_thickness);
-            
-            sumI += sigmaT4OverPi[prevLev][prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
-            
-            expOpticalThick_prev = expOpticalThick;
-            
-            // NEVER UNCOMMENT EXCEPT FOR DEBUGGING
-            //dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
-            //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
-            //dbg2 << "    direction " << direction << endl;
-         
-          } //end domain while loop.  ++++++++++++++
-
-          double wallEmissivity = abskg[L][cur];
-     
-          if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one. 
-            wallEmissivity = 1.0;
-          }
-          
-          intensity = exp(-optical_thickness);
-
-          sumI += wallEmissivity * sigmaT4OverPi[L][cur] * intensity;
-
-          intensity = intensity * fs;  
-           
-          //__________________________________
-          //  Reflections
-          if (intensity > _Threshold && _allowReflect ){
-            ++nReflect;
-            reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir] );
-            
-          }
-        }  // threshold while loop.
       }  // Ray loop
 
       //__________________________________
@@ -2432,6 +2258,211 @@ void Ray::updateSumI ( Vector& ray_direction,
      }
    }  // threshold while loop.
 } // end of updateSumI function
+
+//______________________________________________________________________
+//  Multi-level 
+ void Ray::updateSumI_ML ( Vector& ray_direction,
+                           Vector& ray_location,
+                           const IntVector& origin,
+                           const vector<Vector>& Dx,
+                           const BBox& domain_BB,
+                           const int maxLevels,
+                           const Level* fineLevel,
+                           double DyDx[],
+                           double DzDx[],
+                           const IntVector& fineLevel_ROI_Lo,
+                           const IntVector& fineLevel_ROI_Hi,
+                           vector<IntVector>& regionLo,
+                           vector<IntVector>& regionHi,
+                           StaticArray< constCCVariable<double> >& sigmaT4OverPi,
+                           StaticArray< constCCVariable<double> >& abskg,
+                           unsigned long int& size,
+                           double& sumI,
+                           MTRand& mTwister)
+{
+  
+  int L       = maxLevels -1;  // finest level
+  int prevLev = L;
+  
+  IntVector cur      = origin;
+  IntVector prevCell = cur;
+  
+  int step[3];                                           // Gives +1 or -1 based on sign
+  bool sign[3];
+  
+  Vector inv_direction = Vector(1.0)/ray_direction;
+  findStepSize( step, sign, inv_direction );
+        
+  //__________________________________
+  // define tMax & tDelta on all levels
+  // go from finest to coarset level so you can compare 
+  // with 1L rayTrace results.
+  
+  Vector tMax;
+  vector<Vector> tDelta(maxLevels);
+  
+  tMax.x( (sign[0]  - mTwister.rand())            * inv_direction[0] );  
+  tMax.y( (sign[1]  - mTwister.rand()) * DyDx[L]  * inv_direction[1] );  
+  tMax.z( (sign[2]  - mTwister.rand()) * DzDx[L]  * inv_direction[2] );  
+
+  for(int Lev = maxLevels-1; Lev>-1; Lev--){
+    //Length of t to traverse one cell
+    tDelta[Lev].x( abs(inv_direction[0]) );
+    tDelta[Lev].y( abs(inv_direction[1]) * DyDx[Lev] );
+    tDelta[Lev].z( abs(inv_direction[2]) * DzDx[Lev] );
+  }
+
+  //Initializes the following values for each ray
+  bool   in_domain      = true;
+  double tMax_prev      = 0;
+  double intensity      = 1.0;
+  double fs             = 1.0;
+  int    nReflect       = 0;             // Number of reflections
+  double optical_thickness     = 0;
+  double expOpticalThick_prev  = 1.0;    // exp(-opticalThick_prev)
+  bool   onFineLevel    = true;
+  const Level* level    = fineLevel;
+
+
+  //dbg2 << "  fineLevel_ROI_Lo: " <<  fineLevel_ROI_Lo << " fineLevel_ROI_HI: " << fineLevel_ROI_Hi << endl;
+
+  //______________________________________________________________________
+  //  Threshold  loop
+  while (intensity > _Threshold){
+    DIR dir = NONE;
+    while (in_domain){
+
+      prevCell = cur;
+      prevLev  = L;
+
+      double disMin = -9;   // Ray segment length.
+
+      //__________________________________
+      //  Determine the princple direction the ray is traveling
+      //  
+      if ( tMax[0] < tMax[1] ){    // X < Y
+        if ( tMax[0] < tMax[2] ){  // X < Z
+          dir = X;
+        } else {
+          dir = Z;
+        }
+      } else {
+        if(tMax[1] <tMax[2] ){     // Y < Z
+          dir = Y;
+        } else {
+          dir = Z;
+        }
+      }
+
+      // next cell index and position
+      cur[dir]  = cur[dir] + step[dir];
+      Point pos = level->getCellPosition(cur);
+      Vector dx_prev = Dx[L];  //  Used to compute coarsenRatio
+
+
+      //__________________________________
+      // Logic for moving between levels
+      // currently you can only move from fine to coarse level
+
+      //bool jumpFinetoCoarserLevel   = ( onFineLevel && finePatch->containsCell(cur) == false );
+      bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
+      bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCell(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
+
+      //dbg2 << cur << " jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
+      //     << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl; 
+
+      if( jumpFinetoCoarserLevel ){
+        cur   = level->mapCellToCoarser(cur); 
+        level = level->getCoarserLevel().get_rep();      // move to a coarser level
+        L     = level->getIndex();
+        onFineLevel = false;
+
+        // NEVER UNCOMMENT EXCEPT FOR DEBUGGING
+        //dbg2 << " Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
+      } else if ( jumpCoarsetoCoarserLevel ){
+
+        IntVector c_old = cur;
+        cur   = level->mapCellToCoarser(cur); 
+        level = level->getCoarserLevel().get_rep();
+        L     = level->getIndex();
+
+        //dbg2 << " Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
+      }
+
+      //__________________________________
+      //  update marching variables
+      disMin        = (tMax[dir] - tMax_prev);        // Todd:   replace tMax[dir]
+      tMax_prev     = tMax[dir];
+      tMax[dir]     = tMax[dir] + tDelta[L][dir];
+
+      //__________________________________
+      // Account for uniqueness of first step after reaching a new level
+      Vector dx = level->dCell();
+      IntVector coarsenRatio = IntVector(1,1,1);
+
+      coarsenRatio[0] = dx[0]/dx_prev[0];
+      coarsenRatio[1] = dx[1]/dx_prev[1];
+      coarsenRatio[2] = dx[2]/dx_prev[2];
+
+      Vector lineup;
+      for (int ii=0; ii<3; ii++){
+        if (sign[ii]) {
+          lineup[ii] = -(cur[ii] % coarsenRatio[ii] - (coarsenRatio[ii] - 1 ));
+        }
+        else {
+          lineup[ii] = cur[ii] % coarsenRatio[ii];
+        }
+      }
+
+      tMax += lineup * tDelta[prevLev];
+
+      in_domain = domain_BB.inside(pos);
+
+      //__________________________________
+      //  Update the ray location
+      //this is necessary to find the absorb_coef at the endpoints of each step if doing interpolations
+      //ray_location_prev = ray_location;
+      //ray_location      = ray_location + (disMin * direction_vector);
+      // If this line is used,  make sure that direction_vector is adjusted after a reflection
+
+
+      optical_thickness += Dx[prevLev].x() * abskg[prevLev][prevCell]*disMin;
+      size++;
+
+      double expOpticalThick = exp(-optical_thickness);
+
+      sumI += sigmaT4OverPi[prevLev][prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
+
+      expOpticalThick_prev = expOpticalThick;
+
+      // NEVER UNCOMMENT EXCEPT FOR DEBUGGING
+      //dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
+      //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
+      //dbg2 << "    direction " << direction << endl;
+
+    } //end domain while loop.  ++++++++++++++
+
+    double wallEmissivity = abskg[L][cur];
+
+    if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one. 
+      wallEmissivity = 1.0;
+    }
+
+    intensity = exp(-optical_thickness);
+
+    sumI += wallEmissivity * sigmaT4OverPi[L][cur] * intensity;
+
+    intensity = intensity * fs;  
+
+    //__________________________________
+    //  Reflections
+    if (intensity > _Threshold && _allowReflect ){
+      ++nReflect;
+      reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir] );
+
+    }
+  }  // threshold while loop.
+}
 
 
 //---------------------------------------------------------------------------

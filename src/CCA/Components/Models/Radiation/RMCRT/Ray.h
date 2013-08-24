@@ -26,13 +26,14 @@
 #define Uintah_Component_Arches_Ray_h
 
 #include <CCA/Ports/Scheduler.h>
+#include <Core/Containers/StaticArray.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <sci_defs/uintah_defs.h>
 
+#include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
 #ifdef HAVE_CUDA
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
@@ -146,21 +147,6 @@ namespace Uintah{
                                          Task::WhichDW temp_dw,
                                          const int radCalc_freq,
                                          const bool backoutTemp = false);
- 
- 
-                                         
-      /** @brief Update the running total of the incident intensity */
-      void  updateSumI ( Vector& inv_direction_vector, // can change if scattering occurs
-                         Vector& ray_location,
-                         const IntVector& origin,
-                         const Vector& Dx,
-                         constCCVariable<double>& sigmaT4Pi,
-                         constCCVariable<double>& abskg,
-                         constCCVariable<int>& celltype,
-                         unsigned long int& size,
-                         double& sumI,
-                         MTRand& mTwister);
-
 
       //__________________________________
       //  Multilevel tasks
@@ -331,7 +317,40 @@ namespace Uintah{
                                Task::WhichDW which_abskg_dw,
                                Task::WhichDW which_sigmaT4_dw,
                                const int radCalc_freq );
- 
+                               
+                               
+      /** @brief Update the running total of the incident intensity */
+      void  updateSumI ( Vector& ray_direction, // can change if scattering occurs
+                         Vector& ray_location,
+                         const IntVector& origin,
+                         const Vector& Dx,
+                         constCCVariable<double>& sigmaT4Pi,
+                         constCCVariable<double>& abskg,
+                         constCCVariable<int>& celltype,
+                         unsigned long int& size,
+                         double& sumI,
+                         MTRand& mTwister);
+                         
+      
+      void  updateSumI_ML ( Vector& ray_direction, 
+                            Vector& ray_location,
+                            const IntVector& origin,
+                            const vector<Vector>& Dx,
+                            const BBox& domain_BB,
+                            const int maxLevels,
+                            const Level* fineLevel,
+                            double DyDx[],
+                            double DzDx[],
+                            const IntVector& fineLevel_ROI_Lo,
+                            const IntVector& fineLevel_ROI_Hi,
+                            vector<IntVector>& regionLo,
+                            vector<IntVector>& regionHi,
+                            StaticArray< constCCVariable<double> >& sigmaT4Pi,
+                            StaticArray< constCCVariable<double> >& abskg,
+                            unsigned long int& size,
+                            double& sumI,
+                            MTRand& mTwister);
+     //__________________________________ 
      void computeExtents(LevelP level_0,
                         const Level* fineLevel,
                         const Patch* patch,
