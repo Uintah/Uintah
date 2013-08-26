@@ -127,7 +127,7 @@ namespace Wasatch{
                                      const Uintah::PatchSet* const localPatches,
                                      const PatchInfoMap& patchInfoMap,
                                      const Uintah::MaterialSubset* const materials,
-                                     const std::map<std::string, std::set<std::string> >& bcFunctorMap)
+                                     const std::map<std::string, std::set<std::string> >& bcFunctorMap )
   {
 
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
@@ -135,7 +135,7 @@ namespace Wasatch{
     
     // multiply the initial condition by the volume fraction for embedded geometries
     if( hasEmbeddedGeometry_ ){
-            
+
       std::cout << "attaching modifier expression on " << phiTag << std::endl;
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;

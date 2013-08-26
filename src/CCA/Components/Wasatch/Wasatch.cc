@@ -143,8 +143,8 @@ namespace Wasatch{
       delete *i;
     }
 
-    for( std::list<const Uintah::PatchSet*>::iterator i=patchSetList_.begin(); i!=patchSetList_.end(); ++i ){
-      delete *i;
+    for( std::map<const Uintah::LevelP, const Uintah::PatchSet*>::iterator i=patchSetList_.begin(); i!=patchSetList_.end(); ++i ){
+      delete i->second;
     }
 
     delete icCoordHelper_;
@@ -1052,7 +1052,7 @@ namespace Wasatch{
       //     for( std::set<int>::const_iterator ip=procs.begin(); ip!=procs.end(); ++ip ){
       //       patches->addEach( allPatches->getSubset( *ip )->getVector() );
       //     }
-      patchSetList_.push_back( patches );
+      patchSetList_[level] = patches;
       return patches;
     }
     }
