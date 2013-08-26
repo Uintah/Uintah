@@ -470,10 +470,12 @@ DWDatabase<DomainType>::getVarLabelMatlTriples( vector<VarLabelMatl<DomainType> 
     };
   }
 
-#elif HAVE_TR1_HASHMAP
+#elif HAVE_TR1_HASHMAP || HAVE_C11_HASHMAP 
 
-  namespace std { 
+  namespace std {
+#if HAVE_TR1_HASHMAP 
     namespace tr1 {
+#endif 
       using Uintah::DWDatabase;
       using Uintah::VarLabelMatl;
       template <class DomainType>
@@ -488,7 +490,9 @@ DWDatabase<DomainType>::getVarLabelMatlTriples( vector<VarLabelMatl<DomainType> 
                    ^ (size_t)v.domain_ ^ (size_t)v.matlIndex_ );
         }
       };
+#if HAVE_TR1_HASHMAP 
     } // end namespace tr1
+#endif 
   } // end namespace std
 
 #endif // HAVE_GNU_HASHMAP

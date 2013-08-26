@@ -63,6 +63,17 @@
    using std::hash_multimap;
    using std::hash;
 
+#elif defined(HAVE_C11_HASHMAP)
+
+#  include <unordered_map>
+
+   template<typename A, typename B, typename C> class hash_map : public std::unordered_map<A, B, C> {
+      public:
+      hash_map(int &n) : std::unordered_map<A,B,C>(n){}
+   };
+   template<typename A, typename B> class hash_multimap : public std::unordered_multimap<A, B> {};
+   using std::hash;
+
 #elif defined(HAVE_TR1_HASHMAP)
 
 #  include <tr1/unordered_map>
