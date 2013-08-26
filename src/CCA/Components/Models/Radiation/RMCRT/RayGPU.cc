@@ -49,10 +49,8 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
                       const int radCalc_freq)
 {
   // set the CUDA device and context
+  cout << " device " << device << endl;
   CUDA_RT_SAFE_CALL( cudaSetDevice(device) );
-
-  // Single material now, but can't assume 0, need the specific ARCHES or ICE material here
-  int matl = matls->getVector().front();
   int numPatches = patches->size();
 
   const Level* level = getLevel(patches);
@@ -62,9 +60,12 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
   uint3 domainHi = make_uint3(dLo.x(), dHi.y(), dHi.z());
 
   // requires and computes on device
-  double* d_absk = NULL;
-  double* d_sigmaT4 = NULL;
-  double* d_divQ = NULL;
+  double* dev_absk      = NULL;
+  double* dev_sigmaT4   = NULL;
+  double* dev_divQ      = NULL;
+  double* dev_VRFlux    = NULL;
+  double* dev_radVolq   = NULL;
+  double* dev_boundFlux = NULL;
 
   // patch loop
   for (int p = 0; p < numPatches; p++) {
@@ -73,16 +74,20 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     printTask(patches, patch, dbggpu, "Doing Ray::rayTraceGPU");
 
     // pointers to device-side grid-variables
-    d_absk    = _scheduler->getDeviceRequiresPtr(d_abskgLabel, matl, patch);
-    d_sigmaT4 = _scheduler->getDeviceRequiresPtr(d_sigmaT4_label, matl, patch);
-    d_divQ    = _scheduler->getDeviceComputesPtr(d_divQLabel, matl, patch);
-
+    dev_absk      = _scheduler->getDeviceRequiresPtr(d_abskgLabel,        d_matl, patch);
+    dev_sigmaT4   = _scheduler->getDeviceRequiresPtr(d_sigmaT4_label,     d_matl, patch);
+    
+    dev_divQ      = _scheduler->getDeviceComputesPtr(d_divQLabel,         d_matl, patch);
+    dev_VRFlux    = _scheduler->getDeviceComputesPtr(d_VRFluxLabel,       d_matl, patch);
+    dev_boundFlux = _scheduler->getDeviceComputesPtr(d_boundFluxLabel,    d_matl, patch);
+    dev_radVolq   = _scheduler->getDeviceComputesPtr(d_radiationVolqLabel,d_matl, patch);
+    
     // Calculate the memory block size
     IntVector nec = patch->getExtraCells();
     IntVector l = patch->getCellLowIndex();
     IntVector h = patch->getCellHighIndex();
 
-    IntVector divQSize = _scheduler->getDeviceComputesSize(d_divQLabel, matl, patch);
+    IntVector divQSize = _scheduler->getDeviceComputesSize(d_divQLabel, d_matl, patch);
     int xdim = divQSize.x();
     int ydim = divQSize.y();
     int zdim = divQSize.z();
@@ -112,15 +117,17 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
     CUDA_RT_SAFE_CALL( cudaMalloc((void**)&globalDevStates, numStates * sizeof(curandState)) );
 
+
     // set up and launch kernel
     cudaStream_t* stream = _scheduler->getCudaStream(device);
-    launchRayTraceKernel(dimGrid, dimBlock, stream, patchLo, patchHi, patchSize, domainLo, domainHi, cellSpacing, d_absk, d_sigmaT4,
-                         d_divQ, this->_virtRad, this->_isSeedRandom, this->_CCRays, this->_nDivQRays, this->_viewAng,
-                         this->_Threshold, globalDevStates);
 
+    launchRayTraceKernel(dimGrid, dimBlock, stream, patchLo, patchHi, patchSize, domainLo, domainHi, cellSpacing, 
+                         dev_absk, dev_sigmaT4, dev_divQ, dev_VRFlux, dev_boundFlux, dev_radVolq, 
+                         this->_virtRad, this->_isSeedRandom, this->_CCRays, this->_nDivQRays, this->_viewAng,
+                         this->_Threshold, globalDevStates);
     // get updated divQ back into host memory
     cudaEvent_t* event = _scheduler->getCudaEvent(device);
-    _scheduler->requestD2HCopy(d_divQLabel, matl, patch, stream, event);
+    _scheduler->requestD2HCopy(d_divQLabel, d_matl, patch, stream, event);
 
     // free device-side RNG states
     CUDA_RT_SAFE_CALL( cudaFree(globalDevStates) );
