@@ -616,12 +616,6 @@ Ray::sched_rayTrace( const LevelP& level,
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
   
-  // when carryforward is needed
-  tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
-  tsk->requires( Task::OldDW, d_VRFluxLabel,         d_gn, 0 );
-  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 ); 
-  tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
-  
   if (!tsk->usesDevice()) {
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
   }
@@ -682,7 +676,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
-
   constCCVariable<double> sigmaT4OverPi;
   constCCVariable<double> abskg;
   constCCVariable<int>    celltype;
@@ -705,10 +698,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
     CCVariable<double> radiationVolq;
 
     if( modifies_divQ ){
-      old_dw->getModifiable( divQ,         d_divQLabel,          d_matl, patch );
-      old_dw->getModifiable( VRFlux,       d_VRFluxLabel,        d_matl, patch );
-      old_dw->getModifiable( boundFlux,    d_boundFluxLabel,     d_matl, patch );
-      old_dw->getModifiable( radiationVolq,d_radiationVolqLabel, d_matl, patch );
+      new_dw->getModifiable( divQ,         d_divQLabel,          d_matl, patch );
+      new_dw->getModifiable( VRFlux,       d_VRFluxLabel,        d_matl, patch );
+      new_dw->getModifiable( boundFlux,    d_boundFluxLabel,     d_matl, patch );
+      new_dw->getModifiable( radiationVolq,d_radiationVolqLabel, d_matl, patch );
     }else{
       new_dw->allocateAndPut( divQ,      d_divQLabel,      d_matl, patch );
       divQ.initialize( 0.0 ); 
