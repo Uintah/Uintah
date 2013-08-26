@@ -164,11 +164,16 @@ namespace Uintah{
 
       void sched_ROI_Extents ( const LevelP& level, 
                                SchedulerP& scheduler );
-           
-      /* transfer a variable from old_dw -> new_dw for convience */   
-      void sched_CarryForward ( const LevelP& level,
-                                SchedulerP& scheduler,
-                                const VarLabel* variable );
+      //__________________________________
+      //  Carry Forward tasks     
+      // transfer a variable from old_dw -> new_dw for convience */   
+      void sched_CarryForward_Var ( const LevelP& level,
+                                    SchedulerP& scheduler,
+                                    const VarLabel* variable );
+                                    
+      void sched_carryForward_rayTrace( const LevelP& level, 
+                                        SchedulerP& sched,
+                                        const int radCalc_freq );
       
                                
       //__________________________________
@@ -510,13 +515,21 @@ namespace Uintah{
                        const MaterialSubset* matls,
                        DataWarehouse*,
                        DataWarehouse* new_dw);
-                       
-    void carryForward ( const ProcessorGroup*,
-                        const PatchSubset* ,
-                        const MaterialSubset*,
-                        DataWarehouse*,
-                        DataWarehouse*,
-                        const VarLabel* variable);
+    //______________________________________________________________________
+    //    Carry Foward tasks                     
+    void carryForward_Var ( const ProcessorGroup*,
+                            const PatchSubset* ,
+                            const MaterialSubset*,
+                            DataWarehouse*,
+                            DataWarehouse*,
+                            const VarLabel* variable);
+                            
+    void  carryForward_rayTrace( const ProcessorGroup* pc,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw,
+                                 const int radCalc_freq );
                         
     //______________________________________________________________________
     //  Helpers

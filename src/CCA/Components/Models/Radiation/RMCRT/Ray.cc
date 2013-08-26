@@ -662,16 +662,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 
   const Level* level = getLevel(patches);
-   //__________________________________
-  //  Carry Forward (old_dw -> new_dw)
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   if ( doCarryForward( timestep, radCalc_freq) ) {
-    printTask( level->getPatch(0), dbg, "Doing Ray::rayTrace carryForward (divQ, VRFlux, boundFlux, radiationVolq )" );
-    
-    new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls );
-    new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls );
-    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );
-    new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls );
     return;
   }
   
@@ -2068,15 +2060,62 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
 
 
 //______________________________________________________________________
-// Utility task:  move variable from old_dw -> new_dw
-void Ray::sched_CarryForward ( const LevelP& level, 
-                               SchedulerP& sched,
-                               const VarLabel* variable)
+//  Carry forward variables that are computed on a radiatiion step
+// create a separate task since the Unified scheduler doesn't support
+// pulling data from the old_dw AND not computing something.
+void Ray::sched_carryForward_rayTrace( const LevelP& level, 
+                                       SchedulerP& sched,
+                                       const int radCalc_freq )
+{
+
+  Task* tsk= scinew Task( "Ray::carryForward_rayTrace", this, 
+                           &Ray::carryForward_rayTrace, radCalc_freq );
+
+
+  printSchedule(level,dbg, "Ray::carryForward_rayTrace");
+  
+  tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
+  tsk->requires( Task::OldDW, d_VRFluxLabel,         d_gn, 0 );
+  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 ); 
+  tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );  
+}
+
+//______________________________________________________________________
+
+void  Ray::carryForward_rayTrace( const ProcessorGroup* pc,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw,
+                                  const int radCalc_freq )
 { 
-  string taskname = "        carryForward_" + variable->getName();
+   //__________________________________
+  //  Carry Forward (old_dw -> new_dw)
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  if ( doCarryForward( timestep, radCalc_freq) ) {
+    const Level* level = getLevel( patches );
+    printTask( level->getPatch(0), dbg, "Doing Ray::rayTrace carryForward_rayTrace (divQ, VRFlux, boundFlux, radiationVolq )" );
+    
+    new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls );
+    new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls );
+    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );
+    new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls );
+    return;
+  }
+}
+
+//______________________________________________________________________
+// Utility task:  move variable from old_dw -> new_dw
+void Ray::sched_CarryForward_Var ( const LevelP& level, 
+                                   SchedulerP& sched,
+                                   const VarLabel* variable)
+{ 
+  string taskname = "        carryForward_Var" + variable->getName();
   printSchedule(level, dbg, taskname);
 
-  Task* tsk = scinew Task( taskname, this, &Ray::carryForward, variable );
+  Task* tsk = scinew Task( taskname, this, &Ray::carryForward_Var, variable );
   
   tsk->requires(Task::OldDW, variable,   d_gn, 0);
   tsk->computes(variable);
@@ -2085,12 +2124,12 @@ void Ray::sched_CarryForward ( const LevelP& level,
 }
 
 //______________________________________________________________________
-void Ray::carryForward ( const ProcessorGroup*,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw,
-                         const VarLabel* variable)
+void Ray::carryForward_Var ( const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw, 
+                             DataWarehouse* new_dw,
+                             const VarLabel* variable)
 {
   new_dw->transferFrom(old_dw, variable, patches, matls);
 }
