@@ -170,6 +170,8 @@
           <scalar                       spec="OPTIONAL NO_DATA" 
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type mass_balance"/>
+          <one_minus_scalar             spec="OPTIONAL NO_DATA"   
+                                        need_applies_to="type mass_balance"/>
 
                                      
 
