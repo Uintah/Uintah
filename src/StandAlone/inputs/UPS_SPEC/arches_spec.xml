@@ -153,7 +153,7 @@
 
       <EfficiencyCalculator             spec="OPTIONAL NO_DATA">
 
-        <calculator                     spec="OPTIONAL NO_DATA"
+        <calculator                     spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'combustion_efficiency, mass_balance'">
 
