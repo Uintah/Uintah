@@ -155,7 +155,7 @@
 
         <calculator                     spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'combustion_efficiency'">
+                                        attribute2="type REQUIRED STRING 'combustion_efficiency, mass_balance'">
 
           <mixture_fraction             spec="REQUIRED NO_DATA"
                                         attribute1="mf_label_1 REQUIRED STRING"
@@ -166,6 +166,12 @@
                                         need_applies_to="type combustion_efficiency"/>
           <phi_at_feq1                  spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type combustion_efficiency"/>
+
+          <scalar                       spec="OPTIONAL NO_DATA" 
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type mass_balance"/>
+
+                                     
 
         </calculator>
 
