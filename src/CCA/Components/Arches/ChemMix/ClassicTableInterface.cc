@@ -617,11 +617,14 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
               // This gets density = bc value on face:
               double ghost_value = 2.0*table_value - arches_density[cp1];
               arches_density[c] = ghost_value; 
+              //clunky reassignment of density: 
+              (*i->second.var)[c] = ghost_value;
+
               // This gets density = bc value in extra cell 
               //arches_density[c] = table_value; 
 
               if (d_MAlab)
-                mpmarches_denmicro[c] = table_value; 
+                mpmarches_denmicro[c] = ghost_value; 
 
             } else if (i->first == "temperature" && !d_coldflow) {
               arches_temperature[c] = table_value; 

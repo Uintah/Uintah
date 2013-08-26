@@ -87,11 +87,21 @@ namespace Uintah {
               check = calculator->problemSetup( calc_db ); 
 
               if ( !check ){ 
-                throw InvalidValue("Error: Trouble setting up efficiency calculator.",__FILE__, __LINE__); 
+                throw InvalidValue("Error: Trouble setting up combustion efficiency calculator.",__FILE__, __LINE__); 
               } 
 
               _my_calculators.insert(make_pair(name,calculator)); 
 
+            } else if ( type == "mass_balance" ) { 
+
+              Calculator* calculator = scinew MassBalance( name, _bcs, _a_labs );
+              check = calculator->problemSetup( calc_db ); 
+
+              if ( !check ){ 
+                throw InvalidValue("Error: Trouble setting up mass balance calculator.",__FILE__, __LINE__); 
+              } 
+
+              _my_calculators.insert(make_pair(name,calculator)); 
 
             } else { 
 
@@ -197,6 +207,518 @@ namespace Uintah {
           ArchesLabel* _a_labs; 
 
           //.....
+
+      }; 
+
+      //_______________MASS BALANCE_____________________
+      class MassBalance : public Calculator { 
+
+        /** @class  MassBalance
+         *  @author Jeremy Thornock
+         *  @date   Aug 2013
+         *
+         *  @brief Computes a species mass balance
+         *
+         *  @details 
+         * Computes
+         *
+         * In - Out + Accum = S
+         *
+         * where 
+         *
+         *  In  = mass flow in through inlets and pressure BC, \int_{IN} (\rho u \phi) \cdot dA 
+         *  Out = mass flow out through outlets and pressure BC, \int_{OUT} (\rho u \phi) \cdot dA  
+         *  Accum = accumulation, \frac{\partial \rho \phi}{\partial t} 
+         *  S = source (not explicitly computed) 
+         *
+         *  Note that is S may be interpreted as the residual in cases where no source actually 
+         *  exisits in the domain. 
+         *
+         *
+         */
+
+        public: 
+
+          MassBalance(std::string id, const BoundaryCondition* bcs, ArchesLabel* a_lab) 
+            : Calculator(id, a_lab), _bcs(bcs) {
+
+            proc0cout << " Instantiating a calculator named: " << _id << " of type: mass_balance" << std::endl;
+
+            _IN_label    = VarLabel::create( _id+"_in",    sum_vartype::getTypeDescription() ); 
+            _OUT_label   = VarLabel::create( _id+"_out",   sum_vartype::getTypeDescription() ); 
+            _ACCUM_label = VarLabel::create( _id+"_accum", sum_vartype::getTypeDescription() ); 
+            _residual_label = VarLabel::create(  _id, sum_vartype::getTypeDescription() ); 
+            _no_species = false; 
+          
+          }; 
+
+          ~MassBalance(){
+          
+            VarLabel::destroy( _IN_label ); 
+            VarLabel::destroy( _OUT_label ); 
+            VarLabel::destroy( _ACCUM_label ); 
+            VarLabel::destroy( _residual_label );
+
+          }; 
+
+          bool problemSetup( const ProblemSpecP& db ){
+
+            ProblemSpecP params = db; 
+        
+            string species_label; 
+            if ( db->findBlock("scalar") ){
+              db->findBlock("scalar")->getAttribute("label",species_label); 
+              _phi_label = VarLabel::find( species_label );
+
+              if ( db->findBlock("one_minus_scalar") ){
+                _A = 1;
+                _C = 1; 
+              } else { 
+                _A = -1; 
+                _C = 0;
+              }
+
+            } else { 
+              _no_species = true; 
+            }
+
+
+            return true; 
+          
+          }; 
+
+          /** @brief Should compute any summation over boundaries */ 
+          void sched_computeReductionVars( const LevelP& level, 
+                                           SchedulerP& sched ){
+        
+            const std::string name =  "MassBalance::computeReductionVars";
+            Task* tsk = scinew Task( name, this, 
+                &MassBalance::computeReductionVars); 
+
+            tsk->computes( _IN_label ); 
+            tsk->computes( _OUT_label ); 
+            tsk->computes( _ACCUM_label ); 
+
+            tsk->requires( Task::NewDW, _a_labs->d_densityCPLabel, Ghost::None, 0 ); 
+            tsk->requires( Task::OldDW, _a_labs->d_densityCPLabel, Ghost::None, 0 ); 
+            tsk->requires( Task::NewDW, _a_labs->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
+            tsk->requires( Task::NewDW, _a_labs->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
+            tsk->requires( Task::NewDW, _a_labs->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
+            tsk->requires( Task::OldDW,  _a_labs->d_sharedState->get_delt_label(), Ghost::None, 0);
+            tsk->requires( Task::NewDW, _a_labs->d_cellTypeLabel, Ghost::None, 0 );
+
+            if ( !_no_species ){
+              tsk->requires( Task::NewDW, _phi_label, Ghost::None, 0 ); 
+              tsk->requires( Task::OldDW, _phi_label, Ghost::None, 0 ); 
+            }
+
+            sched->addTask( tsk, level->eachPatch(), _a_labs->d_sharedState->allArchesMaterials() ); 
+          
+          };
+
+          void computeReductionVars( const ProcessorGroup* pc, 
+                                     const PatchSubset* patches, 
+                                     const MaterialSubset* matls, 
+                                     DataWarehouse* old_dw, 
+                                     DataWarehouse* new_dw )
+          {
+            for (int p = 0; p < patches->size(); p++) {
+
+              const Patch* patch = patches->get(p);
+              int archIndex = 0; // only one arches material
+              int indx = _a_labs->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+              constSFCXVariable<double> u; 
+              constSFCYVariable<double> v; 
+              constSFCZVariable<double> w; 
+              constCCVariable<double> rho; 
+              constCCVariable<double> old_rho; 
+              constCCVariable<double> phi; 
+              constCCVariable<double> old_phi; 
+              constCCVariable<int> cell_type; 
+
+              new_dw->get( u, _a_labs->d_uVelocitySPBCLabel, indx, patch, Ghost::None, 0 ); 
+              new_dw->get( v, _a_labs->d_vVelocitySPBCLabel, indx, patch, Ghost::None, 0 ); 
+              new_dw->get( w, _a_labs->d_wVelocitySPBCLabel, indx, patch, Ghost::None, 0 ); 
+              new_dw->get( rho, _a_labs->d_densityCPLabel, indx, patch, Ghost::None, 0 ); 
+              new_dw->get( cell_type, _a_labs->d_cellTypeLabel, indx, patch, Ghost::None, 0 );
+              old_dw->get( old_rho, _a_labs->d_densityCPLabel, indx, patch, Ghost::None, 0 ); 
+
+              delt_vartype DT;
+              old_dw->get(DT, _a_labs->d_sharedState->get_delt_label());
+              double dt = DT; 
+
+              if ( !_no_species ){
+                new_dw->get( phi, _phi_label, indx, patch, Ghost::None, 0 ); 
+                old_dw->get( old_phi, _phi_label, indx, patch, Ghost::None, 0 ); 
+              }
+
+              double sum_in    = 0.0;
+              double sum_out   = 0.0; 
+              double sum_accum = 0.0; 
+              Vector Dx = patch->dCell(); 
+
+              double vol = Dx.x()* Dx.y()* Dx.z(); 
+
+              if ( _no_species ){
+                for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ) { 
+
+                  IntVector c = *iter; 
+
+                  if ( cell_type[c] == -1 )
+                    sum_accum += (rho[c] - old_rho[c])/dt * vol; 
+
+                }
+              } else { 
+
+                for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ) { 
+
+                  IntVector c = *iter; 
+
+                  if ( cell_type[c] == -1 ) 
+                    sum_accum += (rho[c] * (_C-_A*phi[c]) - old_rho[c] * (_C-_A*old_phi[c])) / dt * vol;  
+
+                }
+              }
+
+              for ( BoundaryCondition::BCInfoMap::const_iterator bc_iter = _bcs->d_bc_information.begin(); 
+                    bc_iter != _bcs->d_bc_information.end(); bc_iter++){
+
+                if ( bc_iter->second.type != BoundaryCondition::WALL ){ 
+
+                  vector<Patch::FaceType>::const_iterator bf_iter;
+                  vector<Patch::FaceType> bf;
+                  patch->getBoundaryFaces(bf);
+
+                  for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++){
+
+                    //get the face
+                    Patch::FaceType face = *bf_iter;
+                    IntVector insideCellDir = patch->faceDirection(face); 
+
+                    //get the number of children
+                    int numChildren = patch->getBCDataArray(face)->getNumberChildren(indx); //assumed one material
+
+                    for (int child = 0; child < numChildren; child++){
+
+                      double bc_value = -9; 
+                      Vector bc_v_value(0,0,0); 
+                      std::string bc_s_value = "NA";
+
+                      Iterator bound_ptr;
+                      string bc_kind = "NotSet"; 
+                      string face_name; 
+                      getBCKind( patch, face, child, bc_iter->second.name, indx, bc_kind, face_name ); 
+
+                      bool foundIterator = "false"; 
+                      if ( bc_kind == "Tabulated" || bc_kind == "FromFile" ){ 
+                        foundIterator = 
+                          getIteratorBCValue<std::string>( patch, face, child, bc_iter->second.name, indx, bc_s_value, bound_ptr ); 
+                      } else if ( bc_kind == "VelocityInlet" ){
+                        foundIterator = 
+                          getIteratorBCValue<Vector>( patch, face, child, bc_iter->second.name, indx, bc_v_value, bound_ptr );
+                      } else { 
+                        foundIterator = 
+                          getIteratorBCValue<double>( patch, face, child, bc_iter->second.name, indx, bc_value, bound_ptr ); 
+                      } 
+
+                      if ( foundIterator ) {
+
+                        switch(face) { 
+
+                          case Patch::xminus: 
+                            for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                              IntVector c = *bound_ptr; 
+
+                              if ( cell_type[ c - insideCellDir] == -1 ){
+                                const double A     = Dx.y()*Dx.z();     
+
+                                int norm = 0; 
+
+                                const double rho_u_A_in  = get_minus_in_flux( u, rho, c, insideCellDir, norm ) * A;  
+                                const double rho_u_A_out = get_minus_out_flux( u, rho, c, insideCellDir, norm ) * A;  
+
+                                if ( !_no_species ){
+
+                                  sum_in  += rho_u_A_in * (_C-_A*phi[c]); 
+                                  sum_out += rho_u_A_out* (_C-_A*phi[c]);  
+
+                                } else {
+
+                                  sum_in += rho_u_A_in; 
+                                  sum_out += rho_u_A_out; 
+
+                                }
+                              }
+
+                            }
+                            break; 
+                          case Patch::xplus:
+                            for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                              IntVector c = *bound_ptr; 
+                              if ( cell_type[ c - insideCellDir] == -1 ){
+                                const double A     = Dx.y()*Dx.z();     
+
+                                int norm = 0; 
+
+                                const double rho_u_A_in  = get_plus_in_flux( u, rho, c, insideCellDir, norm ) * A;  
+                                const double rho_u_A_out = get_plus_out_flux( u, rho, c, insideCellDir, norm ) * A;  
+
+                                if ( !_no_species ){
+
+                                  sum_in += rho_u_A_in * (_C-_A*phi[c]); 
+                                  sum_out += rho_u_A_out* (_C-_A*phi[c]);  
+
+                                } else {
+
+                                  sum_in += rho_u_A_in; 
+                                  sum_out += rho_u_A_out; 
+
+                                }
+                              }
+
+                            }
+                            break; 
+                          case Patch::yminus: 
+                            for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                              IntVector c = *bound_ptr; 
+                              if ( cell_type[ c - insideCellDir] == -1 ){
+                                const double A     = Dx.x()*Dx.z();     
+
+                                int norm = 1; 
+
+                                const double rho_u_A_in  = get_minus_in_flux( v, rho, c, insideCellDir, norm ) * A;  
+                                const double rho_u_A_out = get_minus_out_flux( v, rho, c, insideCellDir, norm ) * A;  
+
+                                if ( !_no_species ){
+
+                                  sum_in += rho_u_A_in * (_C-_A*phi[c]); 
+                                  sum_out += rho_u_A_out* (_C-_A*phi[c]);  
+
+                                } else {
+
+                                  sum_in += rho_u_A_in; 
+                                  sum_out += rho_u_A_out; 
+
+                                }
+                              }
+
+                            }
+                            break; 
+                          case Patch::yplus:
+                            for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                              IntVector c = *bound_ptr; 
+                              if ( cell_type[ c - insideCellDir] == -1 ){
+                                const double A     = Dx.x()*Dx.z();     
+
+                                int norm = 1; 
+
+                                const double rho_u_A_in  = get_plus_in_flux( v, rho, c, insideCellDir, norm ) * A;  
+                                const double rho_u_A_out = get_plus_out_flux( v, rho, c, insideCellDir, norm ) * A;  
+
+                                if ( !_no_species ){
+
+                                  sum_in += rho_u_A_in * (_C-_A*phi[c]); 
+                                  sum_out += rho_u_A_out* (_C-_A*phi[c]);  
+
+                                } else {
+
+                                  sum_in += rho_u_A_in; 
+                                  sum_out += rho_u_A_out; 
+
+                                }
+                              }
+
+                            }
+                            break; 
+                          case Patch::zminus: 
+                            for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                              IntVector c = *bound_ptr; 
+                              if ( cell_type[ c - insideCellDir] == -1 ){
+                                const double A     = Dx.x()*Dx.y();     
+
+                                int norm = 2; 
+
+                                const double rho_u_A_in  = get_minus_in_flux( w, rho, c, insideCellDir, norm ) * A;  
+                                const double rho_u_A_out = get_minus_out_flux( w, rho, c, insideCellDir, norm ) * A;  
+
+                                if ( !_no_species ){
+
+                                  sum_in += rho_u_A_in * (_C-_A*phi[c]); 
+                                  sum_out += rho_u_A_out * (_C-_A*phi[c]); 
+
+                                } else {
+
+                                  sum_in += rho_u_A_in; 
+                                  sum_out += rho_u_A_out; 
+
+                                }
+                              }
+
+                            }
+                            break; 
+                          case Patch::zplus:
+                            for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                              IntVector c = *bound_ptr; 
+                              if ( cell_type[ c - insideCellDir] == -1 ){
+                                const double A     = Dx.x()*Dx.y();     
+
+                                int norm = 2; 
+
+                                const double rho_u_A_in  = get_plus_in_flux( w, rho, c, insideCellDir, norm ) * A;  
+                                const double rho_u_A_out = get_plus_out_flux( w, rho, c, insideCellDir, norm ) * A;  
+
+                                if ( !_no_species ){
+
+                                  sum_in += rho_u_A_in * (_C-_A*phi[c]); 
+                                  sum_out += rho_u_A_out * (_C-_A*phi[c]); 
+
+                                } else {
+
+                                  sum_in += rho_u_A_in; 
+                                  sum_out += rho_u_A_out; 
+
+                                }
+                              }
+                            }
+                            break; 
+                          default: 
+                            throw InvalidValue("Error: Face type not recognized: " + face, __FILE__, __LINE__); 
+                            break; 
+                        } 
+                      }
+                    }
+                  }
+                } 
+              }
+
+              new_dw->put( sum_vartype( sum_in ), _IN_label ); 
+              new_dw->put( sum_vartype( sum_out ), _OUT_label ); 
+              new_dw->put( sum_vartype( sum_accum ), _ACCUM_label ); 
+
+            }
+          
+          }; 
+
+          /** @brief Should actually compute the efficiency */            
+          void sched_computeEfficiency( const LevelP& level, 
+                                        SchedulerP& sched )
+          {
+          
+            const std::string name =  "MassBalance::computeEfficiency";
+            Task* tsk = scinew Task( name, this, 
+                &MassBalance::computeEfficiency); 
+
+            tsk->requires( Task::NewDW, _IN_label ); 
+            tsk->requires( Task::NewDW, _OUT_label ); 
+            tsk->requires( Task::NewDW, _ACCUM_label ); 
+
+            tsk->computes( _residual_label ); 
+
+            sched->addTask( tsk, level->eachPatch(), _a_labs->d_sharedState->allArchesMaterials() ); 
+          
+          };
+
+          void computeEfficiency(  const ProcessorGroup* pc, 
+                                   const PatchSubset* patches, 
+                                   const MaterialSubset* matls, 
+                                   DataWarehouse* old_dw, 
+                                   DataWarehouse* new_dw )
+          {
+
+            sum_vartype in; 
+            sum_vartype out; 
+            sum_vartype accum; 
+            new_dw->get( in, _IN_label ); 
+            new_dw->get( out, _OUT_label ); 
+            new_dw->get( accum, _ACCUM_label );
+
+            double residual = in - out + accum; 
+  
+            new_dw->put( delt_vartype( residual ), _residual_label ); 
+
+          }; 
+
+        private: 
+
+          template<typename UT>
+          const double inline get_minus_in_flux( UT& u, constCCVariable<double>& rho, const IntVector c, 
+              const IntVector inside_dir, const int norm ){ 
+
+            IntVector cp = c - inside_dir; 
+
+            const double rho_f = 0.5 * ( rho[c] + rho[cp] ); 
+            const double u_f   = std::abs(std::min( 0.0, inside_dir[norm]*u[c] ));
+
+            const double flux = rho_f * u_f; 
+
+            return flux; 
+
+          };
+
+          template<typename UT>
+          const double inline get_minus_out_flux( UT& u, constCCVariable<double>& rho, const IntVector c, 
+              const IntVector inside_dir, const int norm ){ 
+
+            IntVector cp = c - inside_dir; 
+
+            const double rho_f = 0.5 * ( rho[c] + rho[cp] ); 
+            const double u_f   = std::max( 0.0, inside_dir[norm]*u[c] ); 
+
+            const double flux = rho_f * u_f; 
+
+            return flux; 
+
+          };
+
+          template<typename UT>
+          const double inline get_plus_in_flux( UT& u, constCCVariable<double>& rho, const IntVector c, 
+              const IntVector inside_dir, const int norm ){ 
+
+            IntVector cp = c - inside_dir; 
+
+            const double rho_f = 0.5 * ( rho[c] + rho[cp] ); 
+            const double u_f   = std::abs(std::min( 0.0, inside_dir[norm]*u[cp] )); 
+
+            const double flux = rho_f * u_f; 
+
+            return flux; 
+
+          };
+
+          template<typename UT>
+          const double inline get_plus_out_flux( UT& u, constCCVariable<double>& rho, const IntVector c, 
+              const IntVector inside_dir, const int norm ){ 
+
+            IntVector cp = c - inside_dir; 
+
+            const double rho_f = 0.5 * ( rho[c] + rho[cp] ); 
+            const double u_f   = std::max( 0.0, inside_dir[norm]*u[cp] ); 
+
+            const double flux = rho_f * u_f; 
+
+            return flux; 
+
+          };
+
+          const VarLabel* _IN_label; 
+          const VarLabel* _OUT_label; 
+          const VarLabel* _ACCUM_label; 
+          const VarLabel* _residual_label; 
+          const VarLabel* _phi_label; 
+
+          const BoundaryCondition* _bcs; 
+
+          bool _no_species; 
+
+          double _A;
+          double _C; 
 
       }; 
 
@@ -642,7 +1164,6 @@ namespace Uintah {
 
 
   }; 
-
 }
 
 #endif
