@@ -1009,7 +1009,7 @@ namespace Wasatch{
 
       } else {
         // FOR FIXED dt: (min = max in input file)
-        // if the this is not the first timestep, then grab dt from the olddw.
+        // if this is not the first timestep, then grab dt from the olddw.
         // This will avoid Uintah's message that it is setting dt to max dt/min dt
         old_dw->get( deltat, sharedState_->get_delt_label() );
       }
@@ -1023,8 +1023,6 @@ namespace Wasatch{
                   sharedState_->get_delt_label(),
                   Uintah::getLevel(patches) );
     }
-      //                   material );
-      // jcs it seems that we cannot specify a material here.  Why not?
   }
 
   //------------------------------------------------------------------
