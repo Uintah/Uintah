@@ -628,11 +628,9 @@ Ray::sched_rayTrace( const LevelP& level,
     }
   } else {
     tsk->computes( d_divQLabel );
-    if (!tsk->usesDevice()) {
-      tsk->computes( d_VRFluxLabel );
-      tsk->computes( d_boundFluxLabel );
-      tsk->computes( d_radiationVolqLabel );
-    }
+    tsk->computes( d_VRFluxLabel );
+    tsk->computes( d_boundFluxLabel );
+    tsk->computes( d_radiationVolqLabel );
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
   
