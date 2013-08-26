@@ -44047,6 +44047,25 @@ if test "$HAVE_BOOST" = "yes"; then
 fi
 
 if test "$DEF_HASHMAP" = "None"; then
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <unordered_map>
+                 std::unordered_map<int, int> xx;
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  DEF_HASHMAP=HAVE_C11_HASHMAP
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+if test "$DEF_HASHMAP" = "None"; then
   DEF_HASHMAP=None
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */

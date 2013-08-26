@@ -4028,6 +4028,12 @@ if test "$HAVE_BOOST" = "yes"; then
 fi
 
 if test "$DEF_HASHMAP" = "None"; then
+  AC_TRY_COMPILE([#include <unordered_map>
+                 std::unordered_map<int, int> xx;], ,
+		 [DEF_HASHMAP=HAVE_C11_HASHMAP])
+fi
+
+if test "$DEF_HASHMAP" = "None"; then
   DEF_HASHMAP=None
   AC_TRY_COMPILE([#include <hash_map>
                  std::hash_map<int, int> xx;], ,
