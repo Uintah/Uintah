@@ -640,7 +640,7 @@ namespace Wasatch{
 
     setup_patchinfo_map( level, sched );
 
-    const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
+    const Uintah::PatchSet* const allPatches = get_patchset( USE_FOR_TASKS, level, sched );
 
 #ifndef WASATCH_IN_ARCHES // this is a bit annoying... when warches is turned on, disable any linearsolver calls from Wasatch
     if( linSolver_ ) {
@@ -671,7 +671,7 @@ namespace Wasatch{
       // -----------------------------------------------------------------------
       // INITIAL BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
-      const Uintah::PatchSet* const localPatches2 = get_patchset( USE_FOR_OPERATORS, level, sched );
+      const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
       const GraphHelper* icGraphHelper2 = graphCategories_[ INITIALIZATION ];
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
       
@@ -683,7 +683,7 @@ namespace Wasatch{
         // set up initial boundary conditions on this transport equation
         try{
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_initial_boundary_conditions( *icGraphHelper2, localPatches2,
+          transEq->setup_initial_boundary_conditions( *icGraphHelper2, localPatches,
               patchInfoMap_, materials_->getUnion(), bcFunctorMap_);
         }
         catch( std::runtime_error& e ){
@@ -701,13 +701,13 @@ namespace Wasatch{
                                                           "initialization",
                                                           *icGraphHelper->exprFactory,
                                                           level, sched,
-                                                          localPatches,
+                                                          allPatches,
                                                           materials_,
                                                           patchInfoMap_,
                                                           1, lockedFields_ );
 
         // set coordinate values as required by the IC graph.
-        icCoordHelper_->create_task( sched, localPatches, materials_ );
+        icCoordHelper_->create_task( sched, allPatches, materials_ );
 
         //_______________________________________________________
         // create the TaskInterface and schedule this task for
