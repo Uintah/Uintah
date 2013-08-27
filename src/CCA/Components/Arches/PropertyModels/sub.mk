@@ -12,7 +12,8 @@ SRCS += \
         $(SRCDIR)/AlgebraicScalarDiss.cc \
         $(SRCDIR)/ScalarVarianceScaleSim.cc \
         $(SRCDIR)/HeatLoss.cc \
-        $(SRCDIR)/ConstProperty.cc
+        $(SRCDIR)/ConstProperty.cc \
+        $(SRCDIR)/NormScalarVariance.cc
 
 
 

@@ -5,24 +5,18 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
 
-// SEE PROPTEMPLATE.CC FOR INSTRUCTIONS
 
 /** 
-* @class  ADD
-* @author ADD
-* @date   ADD
-* 
-* @brief Computes ADD INFORMATION HERE
-*
-* ADD INPUT FILE INFORMATION HERE: 
-* The input file interface for this property should like this in your UPS file: 
-* \code 
-*   <PropertyModels>
-*     <.......>
-*   </PropertyModels>
-* \endcode 
-*  
-*/ 
+ * @class  AlgebraicScalarDiss
+ * @author Jeremy Thornock, revised by Alex Abboud
+ * @date   Oct, 2012, revision August 2013
+ * 
+ * @brief computes the scalar dissipation rate
+ * this is to be used in the "1 eqn" model for scalar variance as part of a 
+ * source term for the second moment of the mixture fraction
+ * \f$ \chi_Z = 2*(D+D_t) | \nabla Z |^2 = 2*(D+D_t) \frac{dZ}{dx_i} \frac{dZ}{dx_i} \f$
+ * gradient of Z makes this highly dependent on grid resolution
+ */ 
 
 namespace Uintah{ 
 
@@ -83,7 +77,8 @@ namespace Uintah{
       double _D;                             ///< filtered molecular diffusion coeff.  (assumed constant) 
 
       const VarLabel* _mf_label; 
-      const VarLabel* _mu_t_label; 
+      const VarLabel* _mu_t_label;
+      const VarLabel* _volfrac_label;
 
   }; // class AlgebraicScalarDiss
 }   // namespace Uintah
