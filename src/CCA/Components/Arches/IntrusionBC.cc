@@ -15,8 +15,9 @@ using namespace Uintah;
 
 //_________________________________________
 IntrusionBC::IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props, int WALL ) : 
-  _lab(lab), _mpmlab(mpmlab), _props(props), _WALL(WALL),bc_face_iterator_lock("ARCHES bc_face_iterator lock"),
-  interior_cell_iterator_lock("ARCHES interior_cell_iterator lock"), bc_cell_iterator_lock("ARCHES bc_cell_iterator lock")
+  _lab(lab), _mpmlab(mpmlab), _props(props), _WALL(WALL),_bc_face_iterator_lock("ARCHES bc_face_iterator lock"),
+  _interior_cell_iterator_lock("ARCHES interior_cell_iterator lock"), _bc_cell_iterator_lock("ARCHES bc_cell_iterator lock"),
+  _iterator_initializer_lock("ARCHES inintialize_the_iterators lock")
 {
   // helper for the intvector direction 
   _dHelp.push_back( IntVector(-1,0,0) ); 
@@ -781,6 +782,16 @@ IntrusionBC::setCellType( const ProcessorGroup*,
         iter->second.bc_cell_iterator.clear();
         iter->second.has_been_initialized = true; 
       }
+
+      // ----------------------------------------------------------------------
+      // NOTE: the inline method initialize_the_iterators (below) has been made thread-safe due to shared data structures:
+      //  BCIterator - typedef std::map<int, std::vector<IntVector> >
+      //  bc_face_iterator, interior_cell_iterator and bc_cell_iterator
+      // ----------------------------------------------------------------------
+      // These data structures are used in member functions, of which some are scheduled tasks, e.g.:
+      //  IntrusionBC::setHattedVelocity, IntrusionBC::addScalarRHS,
+      //  IntrusionBC::setDensity, IntrusionBC::computeProperties
+      // ----------------------------------------------------------------------
       initialize_the_iterators( patchID, iter->second ); 
 
       for ( int i = 0; i < (int)iter->second.geometry.size(); i++ ){ 
@@ -834,6 +845,16 @@ IntrusionBC::setCellType( const ProcessorGroup*,
             } 
           }
 
+          // ----------------------------------------------------------------------
+          // NOTE: the inline methods: add_face_iterator, add_interior_iterator and add_bc_cell_iterator (below)
+          //  have been made thread-safe due to shared data structures:
+          //  BCIterator - typedef std::map<int, std::vector<IntVector> >
+          //  bc_face_iterator, interior_cell_iterator and bc_cell_iterator
+          // ----------------------------------------------------------------------
+          // These data structures are used in member functions, of which some are scheduled tasks, e.g.:
+          //  IntrusionBC::setHattedVelocity, IntrusionBC::addScalarRHS,
+          //  IntrusionBC::setDensity, IntrusionBC::computeProperties
+          // ----------------------------------------------------------------------
           for ( int idir = 0; idir < 6; idir++ ){ 
 
             //check if current cell is in 

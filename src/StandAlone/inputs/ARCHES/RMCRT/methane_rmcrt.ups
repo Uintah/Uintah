@@ -362,7 +362,7 @@
                 <nDivQRays>          5         </nDivQRays>
                 <Threshold>         0.05       </Threshold>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
-                <solveBoundFlux>    true       </solveBoundFlux>
+                <solveBoundaryFlux>    true       </solveBoundaryFlux>
                 <nFluxRays>         2          </nFluxRays>
                 <property_calculator type="radprops">
                   <grey_gas>

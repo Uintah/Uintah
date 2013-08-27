@@ -18,6 +18,7 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Thread/ConditionVariable.h>
 
 //============================================
 
@@ -1004,50 +1005,51 @@ namespace Uintah{
       bool _do_energy_exchange; 
       bool _mpm_energy_exchange; 
 
-      mutable CrowdMonitor bc_face_iterator_lock;
-      mutable CrowdMonitor interior_cell_iterator_lock;
-      mutable CrowdMonitor bc_cell_iterator_lock;
+      Mutex _bc_face_iterator_lock;
+      Mutex _interior_cell_iterator_lock;
+      Mutex _bc_cell_iterator_lock;
+      Mutex _iterator_initializer_lock;
 
       const VarLabel* _T_label; 
 
       /** @brief Add a face iterator to the list of total iterators for this patch and face */ 
       void inline add_face_iterator( IntVector c, const Patch* patch, int dir, IntrusionBC::Boundary& intrusion ){ 
 
-        if ( patch->containsCell( c + _inside[dir] ) ) { 
+        _bc_face_iterator_lock.lock();
+        {
+          if ( patch->containsCell( c + _inside[dir] ) ) {
 
-          int p = patch->getID(); 
+            int p = patch->getID();
 
-          bc_face_iterator_lock.readLock();
-          BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
-          bc_face_iterator_lock.readUnlock();
+            BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
 
-          bc_face_iterator_lock.writeLock();
-          if ( iMAP == intrusion.bc_face_iterator.end() ) {
+            if ( iMAP == intrusion.bc_face_iterator.end() ) {
 
-            //this is a new patch that hasn't been added yet
-            std::vector<IntVector> cell_indices; 
-            cell_indices.push_back(c);
-            intrusion.bc_face_iterator.insert(make_pair( p, cell_indices )); 
+              //this is a new patch that hasn't been added yet
+              std::vector<IntVector> cell_indices;
+              cell_indices.push_back(c);
+              intrusion.bc_face_iterator.insert(make_pair( p, cell_indices ));
 
-          } else { 
+            } else {
 
-            //iterator already started for this patch
-            // does this cell already exist in the list?
+              //iterator already started for this patch
+              // does this cell already exist in the list?
 
-            bool already_present = false; 
-            for ( std::vector<IntVector>::iterator iVEC = iMAP->second.begin(); iVEC != iMAP->second.end(); iVEC++ ){ 
-              if ( *iVEC == c ) { 
-                already_present = true; 
-              } 
-            } 
+              bool already_present = false;
+              for ( std::vector<IntVector>::iterator iVEC = iMAP->second.begin(); iVEC != iMAP->second.end(); iVEC++ ){
+                if ( *iVEC == c ) {
+                  already_present = true;
+                }
+              }
 
-            if ( !already_present ) { 
-              //not in the list, insert it: 
-              iMAP->second.push_back(c); 
-            } 
+              if ( !already_present ) {
+                //not in the list, insert it:
+                iMAP->second.push_back(c);
+              }
+            }
           }
-          bc_face_iterator_lock.writeUnlock();
         }
+        _bc_face_iterator_lock.unlock();
       }
 
       /** @brief Add a face iterator to the list of total iterators for this patch and face */ 
@@ -1055,38 +1057,38 @@ namespace Uintah{
 
         int p = patch->getID(); 
 
-        interior_cell_iterator_lock.readLock();
-        BCIterator::iterator iMAP = intrusion.interior_cell_iterator.find( p );
-        interior_cell_iterator_lock.readUnlock();
+        _interior_cell_iterator_lock.lock();
+        {
+          BCIterator::iterator iMAP = intrusion.interior_cell_iterator.find( p );
 
-        interior_cell_iterator_lock.writeLock();
-        if ( patch->containsCell( c ) ){ 
+          if ( patch->containsCell( c ) ){
 
-          if ( iMAP == intrusion.bc_face_iterator.end() ) {
+            if ( iMAP == intrusion.bc_face_iterator.end() ) {
 
-            //this is a new patch that hasn't been added yet
-            std::vector<IntVector> cell_indices; 
-            cell_indices.push_back(c); 
-            intrusion.bc_face_iterator.insert(make_pair( p, cell_indices )); 
+              //this is a new patch that hasn't been added yet
+              std::vector<IntVector> cell_indices;
+              cell_indices.push_back(c);
+              intrusion.bc_face_iterator.insert(make_pair( p, cell_indices ));
 
-          } else { 
+            } else {
 
-            //iterator already started for this patch
-            // does this cell alread exisit in the list? 
-            bool already_present = false; 
-            for ( std::vector<IntVector>::iterator iVEC = iMAP->second.begin(); iVEC != iMAP->second.end(); iVEC++ ){ 
-              if ( *iVEC == c ) { 
-                already_present = true; 
+              //iterator already started for this patch
+              // does this cell alread exisit in the list?
+              bool already_present = false;
+              for ( std::vector<IntVector>::iterator iVEC = iMAP->second.begin(); iVEC != iMAP->second.end(); iVEC++ ){
+                if ( *iVEC == c ) {
+                  already_present = true;
+                }
+              }
+
+              if ( !already_present ) {
+                //not in the list, insert it:
+                iMAP->second.push_back(c);
               } 
             } 
-
-            if ( !already_present ) { 
-              //not in the list, insert it: 
-              iMAP->second.push_back(c); 
-            } 
-          } 
-          interior_cell_iterator_lock.writeUnlock();
+          }
         }
+        _interior_cell_iterator_lock.unlock();
       }
 
       /** @brief Add a cell iterator to the list of total iterators for this patch last solid cell at outflow */ 
@@ -1094,77 +1096,75 @@ namespace Uintah{
 
         int p = patch->getID(); 
 
-        bc_cell_iterator_lock.readLock();
-        BCIterator::iterator iMAP = intrusion.bc_cell_iterator.find( p );
-        bc_cell_iterator_lock.readUnlock();
+        _bc_cell_iterator_lock.lock();
+        {
+          BCIterator::iterator iMAP = intrusion.bc_cell_iterator.find( p );
 
-        bc_cell_iterator_lock.writeLock();
-        if ( patch->containsCell( c ) ){ 
+          if ( patch->containsCell( c ) ){
 
-          if ( iMAP == intrusion.bc_cell_iterator.end() ) {
+            if ( iMAP == intrusion.bc_cell_iterator.end() ) {
 
-            //this is a new patch that hasn't been added yet
-            std::vector<IntVector> cell_indices; 
-            cell_indices.push_back(c); 
-            intrusion.bc_cell_iterator.insert(make_pair( p, cell_indices )); 
+              //this is a new patch that hasn't been added yet
+              std::vector<IntVector> cell_indices;
+              cell_indices.push_back(c);
+              intrusion.bc_cell_iterator.insert(make_pair( p, cell_indices ));
 
-          } else { 
+            } else {
 
-            //iterator already started for this patch
-            // does this cell alread exisit in the list? 
-            bool already_present = false; 
-            for ( std::vector<IntVector>::iterator iVEC = iMAP->second.begin(); iVEC != iMAP->second.end(); iVEC++ ){ 
-              if ( *iVEC == c ) { 
-                already_present = true; 
+              //iterator already started for this patch
+              // does this cell alread exisit in the list?
+              bool already_present = false;
+              for ( std::vector<IntVector>::iterator iVEC = iMAP->second.begin(); iVEC != iMAP->second.end(); iVEC++ ){
+                if ( *iVEC == c ) {
+                  already_present = true;
+                }
+              }
+
+              if ( !already_present ) {
+                //not in the list, insert it:
+                iMAP->second.push_back(c);
               } 
             } 
-
-            if ( !already_present ) { 
-              //not in the list, insert it: 
-              iMAP->second.push_back(c); 
-            } 
-          } 
-          bc_cell_iterator_lock.writeUnlock();
+          }
         }
+        _bc_cell_iterator_lock.unlock();
       }
 
       void inline initialize_the_iterators( int p, IntrusionBC::Boundary& intrusion ){ 
 
-        bc_face_iterator_lock.writeLock();
-        BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
-        if ( iMAP == intrusion.bc_face_iterator.end() ) {
+        _iterator_initializer_lock.lock();
+        {
+          BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
+          if ( iMAP == intrusion.bc_face_iterator.end() ) {
 
-          //this is a new patch that hasn't been added yet
-          std::vector<IntVector> cell_indices; 
-          cell_indices.clear(); 
-          intrusion.bc_face_iterator.insert(make_pair( p, cell_indices )); 
+            //this is a new patch that hasn't been added yet
+            std::vector<IntVector> cell_indices;
+            cell_indices.clear();
+            intrusion.bc_face_iterator.insert(make_pair( p, cell_indices ));
 
+          }
+
+          BCIterator::iterator iMAP2 = intrusion.interior_cell_iterator.find( p );
+          if ( iMAP2 == intrusion.interior_cell_iterator.end() ) {
+
+            //this is a new patch that hasn't been added yet
+            std::vector<IntVector> cell_indices;
+            cell_indices.clear();
+            intrusion.interior_cell_iterator.insert(make_pair( p, cell_indices ));
+
+          }
+
+          BCIterator::iterator iMAP3 = intrusion.bc_cell_iterator.find( p );
+          if ( iMAP2 == intrusion.bc_cell_iterator.end() ) {
+
+            //this is a new patch that hasn't been added yet
+            std::vector<IntVector> cell_indices;
+            cell_indices.clear();
+            intrusion.bc_cell_iterator.insert(make_pair( p, cell_indices ));
+
+          }
         }
-        bc_face_iterator_lock.writeUnlock();
-
-        interior_cell_iterator_lock.writeLock();
-        BCIterator::iterator iMAP2 = intrusion.interior_cell_iterator.find( p );
-        if ( iMAP2 == intrusion.interior_cell_iterator.end() ) {
-
-          //this is a new patch that hasn't been added yet
-          std::vector<IntVector> cell_indices; 
-          cell_indices.clear(); 
-          intrusion.interior_cell_iterator.insert(make_pair( p, cell_indices )); 
-
-        } 
-        interior_cell_iterator_lock.writeUnlock();
-
-        bc_cell_iterator_lock.writeLock();
-        BCIterator::iterator iMAP3 = intrusion.bc_cell_iterator.find( p );
-        if ( iMAP2 == intrusion.bc_cell_iterator.end() ) {
-
-          //this is a new patch that hasn't been added yet
-          std::vector<IntVector> cell_indices; 
-          cell_indices.clear(); 
-          intrusion.bc_cell_iterator.insert(make_pair( p, cell_indices )); 
-
-        } 
-        bc_cell_iterator_lock.writeUnlock();
+        _iterator_initializer_lock.unlock();
 
       } 
 
