@@ -143,7 +143,7 @@ namespace Wasatch{
       delete *i;
     }
 
-    for( std::map<const Uintah::LevelP, const Uintah::PatchSet*>::iterator i=patchSetList_.begin(); i!=patchSetList_.end(); ++i ){
+    for( std::map<int, const Uintah::PatchSet*>::iterator i=patchesForOperators_.begin(); i!=patchesForOperators_.end(); ++i ){
       delete i->second;
     }
 
@@ -747,29 +747,29 @@ namespace Wasatch{
                                      Uintah::SchedulerP& sched )
   {
     //_______________________________________________________________
-     // Set up the operators associated with the local patches.  We
-     // only need to do this once, so we choose to do it here.  It
-     // could just as well be done on any other schedule callback that
-     // has access to the levels (patches).
-     //
-     // Also save off the timestep label information.
-     //
-     {
-       const Uintah::PatchSet* patches = get_patchset( USE_FOR_OPERATORS, level, sched );
+    // Set up the operators associated with the local patches.  We
+    // only need to do this once, so we choose to do it here.  It
+    // could just as well be done on any other schedule callback that
+    // has access to the levels (patches).
+    //
+    // Also save off the timestep label information.
+    //
+    const Uintah::PatchSet* patches = get_patchset( USE_FOR_OPERATORS, level, sched );
 
-       for( int ipss=0; ipss<patches->size(); ++ipss ){
-         const Uintah::PatchSubset* pss = patches->getSubset(ipss);
-         for( int ip=0; ip<pss->size(); ++ip ){
-           SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
-           const Uintah::Patch* const patch = pss->get(ip);
-           build_operators( *patch, *opdb );
-           PatchInfo& pi = patchInfoMap_[patch->getID()];
-           pi.operators = opdb;
-           pi.patchID = patch->getID();
-           //std::cout << "Set up operators for Patch ID: " << patch->getID() << " on process " << Uintah::Parallel::getMPIRank() << std::endl;
-         }
-       }
-     }
+    for( int ipss=0; ipss<patches->size(); ++ipss ){
+      const Uintah::PatchSubset* pss = patches->getSubset(ipss);
+      for( int ip=0; ip<pss->size(); ++ip ){
+        SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
+        const Uintah::Patch* const patch = pss->get(ip);
+        build_operators( *patch, *opdb );
+        PatchInfo& pi = patchInfoMap_[patch->getID()];
+        pi.operators = opdb;
+        pi.patchID = patch->getID();
+//        std::cout << "Set up operators for Patch ID: " << patch->getID()
+//                  << " on level " << level->getID()
+//                  << " and process " << Uintah::Parallel::getMPIRank() << std::endl;
+      }
+    }
   }
 
   //--------------------------------------------------------------------
@@ -1040,8 +1040,14 @@ namespace Wasatch{
       break;
 
     case USE_FOR_OPERATORS: {
+      const int levelID = level->getID();
       const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
       const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myrank() );
+
+      std::map< int, const Uintah::PatchSet* >::iterator ip = patchesForOperators_.find( levelID );
+
+      if( ip != patchesForOperators_.end() ) return ip->second;
+
       Uintah::PatchSet* patches = new Uintah::PatchSet;
       // jcs: this results in "normal" scheduling and WILL NOT WORK FOR LINEAR SOLVES
       //      in that case, we need to use "gang" scheduling: addAll( localPatches )
@@ -1050,7 +1056,7 @@ namespace Wasatch{
       //     for( std::set<int>::const_iterator ip=procs.begin(); ip!=procs.end(); ++ip ){
       //       patches->addEach( allPatches->getSubset( *ip )->getVector() );
       //     }
-      patchSetList_[level] = patches;
+      patchesForOperators_[levelID] = patches;
       return patches;
     }
     }
