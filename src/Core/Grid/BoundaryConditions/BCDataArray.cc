@@ -422,7 +422,7 @@ BCGeomBase* BCDataArray::getChild(int mat_id,int i) const
   return 0;
 }
 
-void BCDataArray::print()
+void BCDataArray::print() const
 {
   bcDataArrayType::const_iterator bcda_itr;
   for (bcda_itr = d_BCDataArray.begin(); bcda_itr != d_BCDataArray.end(); 

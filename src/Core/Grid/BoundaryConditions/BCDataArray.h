@@ -104,7 +104,7 @@ namespace Uintah {
      BCGeomBase* getChild(int mat_id,int ichild) const;
 
      /// Print out the various boundary condition geometry types.
-     void print();
+     void print() const;
      
      /// The map is for the mat_id.  -1 is for mat_id = "all", 0, for 
      /// mat_id = "0", etc.
