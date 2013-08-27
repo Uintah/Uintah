@@ -2688,7 +2688,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
             const BoundCond<Vector>* bc =
               dynamic_cast<const BoundCond<Vector>*>(vel_bcs);
             if (bc != 0) {
-              if (bc->getBCType__NEW() == "Dirichlet") {
+              if (bc->getBCType() == "Dirichlet") {
                 for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
                   gvelocity_old[*nbound_ptr] = bc->getValue();
                   gacceleration[*nbound_ptr] = bc->getValue();
