@@ -153,7 +153,7 @@ bool BCData::find(const string& bc_type,const string& bc_variable) const
   const BoundCondBase* bc = getBCValues(bc_variable);
 
   if (bc) {
-    if (bc->getBCType__NEW() == bc_type) {
+    if (bc->getBCType() == bc_type) {
       delete bc;
       return true;
     }
@@ -180,7 +180,7 @@ void BCData::print() const
   BCData_dbg << "size of d_BCData = " << d_BCData.size() << endl;
   for (itr = d_BCData.begin(); itr != d_BCData.end(); itr++) {
     BCData_dbg << "BC = " << (*itr)->getBCVariable() << " type = " 
-               << (*itr)->getBCType__NEW() << endl;
+               << (*itr)->getBCType() << endl;
   }
   
 }

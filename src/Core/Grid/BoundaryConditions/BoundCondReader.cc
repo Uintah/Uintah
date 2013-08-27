@@ -420,7 +420,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
       BoundCondFactory::create(child,bc,mat_id, face_label);
       BCR_dbg << "Inserting into mat_id = " << mat_id << " bc = " 
               <<  bc->getBCVariable() << " bctype = " 
-              <<  bc->getBCType__NEW() 
+              <<  bc->getBCType()
               <<  " "  << bc  << endl;
 
       bctype_data.insert(pair<int,BoundCondBase*>(mat_id,bc->clone()));
@@ -448,7 +448,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     for (it = bctype_data.begin(); it != bctype_data.end(); it++) {
       BCR_dbg << "Getting out mat_id = " << it->first << " bc = " 
               << it->second->getBCVariable() <<  " bctype = " 
-              << it->second->getBCType__NEW() << endl;
+              << it->second->getBCType() << endl;
       //      cout << "mat = " << it -> first << " BoundCondBase address = " 
       //   << it->second << " bctype = " 
       //   << typeid(*(it->second)).name() << endl;

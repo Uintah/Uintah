@@ -159,7 +159,7 @@ getBCKind( const Patch* patch,
   bc = bcd->getBoundCondData( mat_id, desc, child);
 
   if (bc != 0) {
-    bc_kind  = bc->getBCType__NEW();
+    bc_kind  = bc->getBCType();
     face_label = bc->getBCFaceName(); 
     delete bc;
   }

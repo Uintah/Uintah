@@ -75,7 +75,7 @@ WARNING
    BoundCond(string var_name, string type, T value, const std::string face_label, const std::string functor_name)
      {
        d_variable = var_name;
-       d_type__NEW = type;
+       d_type = type;
        d_value = value;
        d_face_label = face_label;
        d_functor_name = functor_name;
@@ -102,7 +102,7 @@ WARNING
    BoundCond(string var_name,string type)
      {
        d_variable = var_name;
-       d_type__NEW = type;
+       d_type = type;
        d_value = NoValue();
        d_face_label = "none";
        d_functor_name = "none";
@@ -111,7 +111,7 @@ WARNING
    BoundCond(string var_name)
      {
        d_variable = var_name;
-       d_type__NEW = "";
+       d_type = "";
        d_value = NoValue();
        d_face_label = "none";
        d_functor_name = "none";
