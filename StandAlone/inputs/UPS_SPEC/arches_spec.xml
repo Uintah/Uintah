@@ -33,7 +33,8 @@
                                                                           empirical_soot, 
                                                                           algebraic_scalar_diss,
                                                                           scalsim_variance, 
-                                                                          heat_loss'">
+                                                                          heat_loss,
+                                                                          norm_scalar_var'">
 
           <initialization               spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant'">
@@ -55,7 +56,7 @@
 
           <!-- algebraic scalar dissipation rate model --> 
           <mixture_fraction_label       spec="REQUIRED STRING"
-                                        need_applies_to="type algebraic_scalar_diss"/>
+                                        need_applies_to="type algebraic_scalar_diss, norm_scalar_var"/>
           <turbulent_Sc                 spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type algebraic_scalar_diss"/>
           <D                            spec="REQUIRED DOUBLE 'positive'"
@@ -147,6 +148,14 @@
           <!-- density_label            spec above --> 
           <variance_coefficient         spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type scalsim_variance"/> <!-- Multiplier (Cf) on the variance, var = Cf * (filter(z^2)- filter(z)^2) --> 
+                                        
+          <!-- Normalized Scalar Variance for use with transport eqn models -->                              
+          <!--mixture_fraction_label       spec="REQUIRED STRING" 
+                                        need_applies_to="type norm_scalar_var"/-->
+          <second_moment_label          spec="REQUIRED STRING"
+                                        need_applies_to="type norm_scalar_var"/>
+          <Clip spec="OPTIONAL BOOLEAN" need_applies_to="type norm_scalar_var"/>                              
+                                                                                                    
                                           
         </model>
       </PropertyModels>
@@ -754,7 +763,8 @@
                                                                            rmcrt_radiation, 
                                                                            bowman_nox,
                                                                            wasatch_expr,
-                                                                           pc_transport'">                                                           
+                                                                           pc_transport,
+                                                                           moment2_mixture_fraction_src'">                                                           
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
@@ -778,6 +788,10 @@
             <injector_region            spec="REQUIRED NO_DATA" need_applies_to="type fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src">
               <geom_object/>
             </injector_region>
+            
+            <!-- specs nneded for second moment of mixture fraction source-->
+            <density_label              spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/>
+            <scalar_dissipation_label   spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/> 
 
             <!-- inject_type = constant : constant value in every cell that is contained within the geom object (use <constant> spec)--> 
             <!-- inject_type = fromfile : reads an input file and assigns value at each i,j,k matching the inputfile 
@@ -962,6 +976,7 @@
             <velocity                   spec="OPTIONAL DOUBLE"/>
             <density                    spec="OPTIONAL DOUBLE"/>
             <phi                        spec="OPTIONAL DOUBLE"/>
+                      
           </src>
 
         </Sources>

@@ -20,7 +20,8 @@ SRCS += \
 	 			$(SRCDIR)/RMCRT.cc \
 	 			$(SRCDIR)/BowmanNOx.cc \
 				$(SRCDIR)/PCTransport.cc \
-        $(SRCDIR)/MMS1.cc
+        $(SRCDIR)/MMS1.cc \
+        $(SRCDIR)/SecondMFMoment.cc
 
 
 

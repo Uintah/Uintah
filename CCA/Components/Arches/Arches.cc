@@ -58,6 +58,7 @@
 #include <CCA/Components/Arches/PropertyModels/AlgebraicScalarDiss.h>
 #include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
 #include <CCA/Components/Arches/PropertyModels/ScalarVarianceScaleSim.h>
+#include <CCA/Components/Arches/PropertyModels/NormScalarVariance.h>
 #include <Core/IO/UintahZlibUtil.h>
 
 #if HAVE_TABPROPS
@@ -3057,6 +3058,12 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
         //Scalar variance using a scale similarity concept
         PropertyModelBase::Builder* the_builder = new ScalarVarianceScaleSim::Builder( prop_name, d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder ); 
+        
+      } else if ( prop_type == "norm_scalar_var") {
+        
+        //Normalized scalar variance based on second mixfrac moment
+        PropertyModelBase::Builder* the_builder = new NormScalarVariance::Builder( prop_name, d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );    
 
       } else {
 
