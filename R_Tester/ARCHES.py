@@ -76,6 +76,7 @@ NIGHTLYTESTS = [
    ("masssource_var_den"          , "verify_masssource/source_channel_varden.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]),
    ("heptane_pipe"                , "heptane_pipe.ups"                            , 1.1 , "Linux"  , ["exactComparison"]),
    ("coal_table_pipe"             , "coal_table_pipe.ups"                         , 1.1 , "Linux"  , ["exactComparison"]),
+   ("scalar_var_1eqn"             , "scalar_variance_1eqn.ups"                    , 4   , "Linux"  , ["exactComparison", "no_restart"]),
 #   ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
 ]
 
@@ -117,6 +118,7 @@ LOCALTESTS = [
    ("source_channel_varden"      , "verify_masssource/source_channel_varden.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
    ("heptane_pipe"               , "heptane_pipe.ups"                            , 1.1 , "All"  , ["exactComparison"]),
    ("coal_table_pipe"            , "coal_table_pipe.ups"                         , 1.1 , "All"  , ["exactComparison"]),
+   ("scalar_var_1eqn"            , "scalar_variance_1eqn.ups"                    , 4   , "All"  , ["exactComparison", "no_restart"]),
 #   ("coal_channel"               , "Coal/coal_channel.ups"                       , 1.1 , "All"  , ["exactComparison", "no_restart"])
 ]
 
