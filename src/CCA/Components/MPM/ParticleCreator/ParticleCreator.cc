@@ -358,6 +358,7 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(ptemperature,   d_lb->pTemperatureLabel,   subset);
   new_dw->allocateAndPut(pparticleID,    d_lb->pParticleIDLabel,    subset);
   new_dw->allocateAndPut(psize,          d_lb->pSizeLabel,          subset);
+  new_dw->allocateAndPut(plocalized,     d_lb->pLocalizedMPMLabel,  subset);
   new_dw->allocateAndPut(pfiberdir,      d_lb->pFiberDirLabel,      subset); 
   // for thermal stress
   new_dw->allocateAndPut(ptempPrevious,  d_lb->pTempPreviousLabel,  subset); 
@@ -521,6 +522,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
 */
 
   ptemperature[i] = (*obj)->getInitialData_double("temperature");
+  plocalized[i] = 0;
 
   //MMS
   string mms_type = d_flags->d_mms_type;
@@ -783,6 +785,9 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
   particle_state.push_back(d_lb->pdTdtLabel);
   particle_state_preReloc.push_back(d_lb->pdTdtLabel_preReloc);
+
+  particle_state.push_back(d_lb->pLocalizedMPMLabel);
+  particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
 
   if (d_artificial_viscosity) {
     particle_state.push_back(d_lb->p_qLabel);

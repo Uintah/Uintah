@@ -1580,7 +1580,8 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
         
         if( attribute->currentValue_ == "" ) {
           // If this tag has a "needAppliesTo_", then the parent's attribute must have a current value.
-          throw ProblemSetupException("this is an error\n", __FILE__, __LINE__); // FIXME fix error message...
+          throw ProblemSetupException( "ERROR: while parsing the child tag: '" + childTag->name_ + 
+                                       "', Could not find the required (need_applies_to) parent attribute: '" + childTag->needAppliesTo_.parentAttributeName_ + "'.\n", __FILE__, __LINE__ );
         }
 
         dbg << "NEED_APPLIES_TO '" << childTag->parent_->getCompleteName() << " '" << childTag->needAppliesTo_.parentAttributeName_ 
@@ -1735,7 +1736,8 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
 
         if( attribute->currentValue_ == "" ) {
           // If this tag has a "needAppliesTo_", then the parent's attribute must have a current value.
-          throw ProblemSetupException("this is an error\n", __FILE__, __LINE__); // FIXME fix error message...
+          throw ProblemSetupException( "ERROR: while parsing the child tag: '" + tag->name_ + 
+                                       "', Could not find the required (need_applies_to) parent attribute: '" + tag->needAppliesTo_.parentAttributeName_ + "'.\n", __FILE__, __LINE__ );
         }
         else {
           vector<string>::const_iterator iter = find( tag->needAppliesTo_.validValues_.begin(), tag->needAppliesTo_.validValues_.end(),

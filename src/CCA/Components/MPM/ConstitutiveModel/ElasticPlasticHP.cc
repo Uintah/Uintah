@@ -1058,7 +1058,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         } // end of flow_rule if
       } // end of temperature if
 
-      delete defState;
       // Calculate the updated hydrostatic stress
       double p = d_eos->computePressure(matl, state, tensorF_new, tensorD,delT);
 
@@ -1111,7 +1110,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           }
         }
       }
-
+      
       //-----------------------------------------------------------------------
       // Stage 3:
       //-----------------------------------------------------------------------
@@ -1323,7 +1322,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
-
+      
+      delete defState;
       delete state;
     }  // end particle loop
 
@@ -1867,8 +1867,6 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       trialS = tensorS + defState->devStressInc;
       trialStress    = trialS + One*(bulk*incStrain.Trace());
       
-      delete defState;
-      
       // Calculate the equivalent stress
       // this will be removed next, it should be computed in the flow stress routine
       // the flow stress routines should be passed the entire stress (not just deviatoric)
@@ -1976,6 +1974,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         totalStrainEnergy += pStrainEnergy;
       }
       delete state;
+      delete defState;
     }
     
     if (flag->d_reductionVars->accStrainEnergy ||

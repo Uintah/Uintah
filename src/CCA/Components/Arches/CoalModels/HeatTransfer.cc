@@ -25,9 +25,7 @@ HeatTransfer::HeatTransfer( std::string modelName,
                             int qn ) 
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
-  _radiation = false;
-  old_radiation = false;
-  new_radiation = false;
+  d_radiation = false;
   d_quadNode = qn;
 
   // Create a label for this model
@@ -82,23 +80,18 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   // grab weight scaling factor and small value
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
 
-  // Check for radiation 
-  const ProblemSpecP params_root = db->getRootNode();
-  if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")) {
-    const ProblemSpecP db_enth = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
-    if(db_enth->findBlock("DORadiationModel")) {
-      old_radiation = true; //if gas phase radiation is turned on
-      _radiation = old_radiation;
-    }
-  } else {
-    SourceTermFactory& source_factory = SourceTermFactory::self();
-    new_radiation = source_factory.source_term_exists( "divQ");
-    _radiation = new_radiation;
+  // check for a radiation model: 
+  SourceTermFactory& srcs = SourceTermFactory::self(); 
+  if ( srcs.source_type_exists("do_radiation") ){
+    d_radiation = true; 
+  }
+  if ( srcs.source_type_exists( "rmcrt_radiation") ){
+    d_radiation = true;
   }
 
   //user can specifically turn off radiation heat transfer
   if (db->findBlock("noRadiation"))
-    _radiation = false; 
+    d_radiation = false; 
 
   // set model clipping
   db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );

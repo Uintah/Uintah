@@ -72,6 +72,9 @@ public:
   /** @brief Determine if a source term is contained in the factory. */
   bool source_term_exists( const std::string name );
 
+  /** @brief Determine if a source term type is contained in the factory. */
+  bool source_type_exists( const std::string type );
+
   typedef std::map< std::string, SourceTermBase::Builder* > BuildMap;
   typedef std::map< std::string, SourceTermBase*    >       SourceMap;
 

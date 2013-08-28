@@ -133,8 +133,8 @@ WARNING
     //__________________________________
     // global constants
     double d_writeFreq; 
-    double d_StartTime;
-    double d_StopTime;
+    double d_startTime;
+    double d_stopTime;
     double d_colorThreshold;
     vector<VarLabel*> d_varLabels;
     SimulationStateP d_sharedState;

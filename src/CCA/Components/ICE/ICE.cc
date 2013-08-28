@@ -1567,8 +1567,15 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
 
   cout_doing << d_myworld->myrank() << " ICE::scheduleAddExchangeToMomentumAndEnergy" 
              << "\t\t\tL-"<< levelIndex << endl;
-  t=scinew Task("ICE::addExchangeToMomentumAndEnergy",
+             
+ if(d_sharedState->getNumMatls() == 1){            
+    t=scinew Task("ICE::addExchangeToMomentumAndEnergy_1matl",
+                this, &ICE::addExchangeToMomentumAndEnergy_1matl);             
+
+  } else {           
+    t=scinew Task("ICE::addExchangeToMomentumAndEnergy",
                 this, &ICE::addExchangeToMomentumAndEnergy);
+  }
 
   Ghost::GhostType  gn  = Ghost::None;
 //  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
@@ -3176,66 +3183,90 @@ void ICE::updateVel_FC(const ProcessorGroup*,
  Purpose~   Add the exchange contribution to vel_FC and compute 
             sp_vol_FC for implicit Pressure solve
 _____________________________________________________________________*/
-template<class V, class T> 
+template<class constSFC, class SFC> 
     void ICE::add_vel_FC_exchange( CellIterator iter,
-                             IntVector adj_offset,
-                             int numMatls,
-                             FastMatrix& K,
-                             double delT,
-                             StaticArray<constCCVariable<double> >& vol_frac_CC,
-                             StaticArray<constCCVariable<double> >& sp_vol_CC,
-                             V& vel_FC,
-                             T& sp_vol_FC,
-                             T& vel_FCME)        
+                                   IntVector adj_offset,
+                                   int numMatls,
+                                   FastMatrix& K,
+                                   double delT,
+                                   StaticArray<constCCVariable<double> >& vol_frac_CC,
+                                   StaticArray<constCCVariable<double> >& sp_vol_CC,
+                                   StaticArray< constSFC> & vel_FC,
+                                   StaticArray< SFC >& sp_vol_FC,
+                                   StaticArray< SFC >& vel_FCME)        
                                        
 {
-  double b[MAX_MATLS], b_sp_vol[MAX_MATLS];
-  double vel[MAX_MATLS], tmp[MAX_MATLS];
-  FastMatrix a(numMatls, numMatls);
+  //__________________________________
+  //          Single Material
+  if (numMatls == 1){
+
+    // put in tmp arrays for speed!
+    constCCVariable<double>& sp_vol_tmp = sp_vol_CC[0];
+    constSFC& vel_FC_tmp  = vel_FC[0];         
+    SFC& vel_FCME_tmp     = vel_FCME[0];
+    SFC& sp_vol_FC_tmp    = sp_vol_FC[0];
+
+    for(;!iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector adj = c + adj_offset; 
+      double sp_vol     = sp_vol_tmp[c];
+      double sp_vol_adj = sp_vol_tmp[adj];
+      double sp_volFC   = 2.0 * (sp_vol_adj * sp_vol)/
+                                (sp_vol_adj + sp_vol);
+
+      sp_vol_FC_tmp[c] = sp_volFC;
+      vel_FCME_tmp[c] = vel_FC_tmp[c];
+    }
+  }
+  else{         // Multi-material
+    double b[MAX_MATLS], b_sp_vol[MAX_MATLS];
+    double vel[MAX_MATLS], tmp[MAX_MATLS];
+    FastMatrix a(numMatls, numMatls);
   
-  for(;!iter.done(); iter++){
-    IntVector c = *iter;
-    IntVector adj = c + adj_offset; 
+    for(;!iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector adj = c + adj_offset; 
 
-    //__________________________________
-    //   Compute beta and off diagonal term of
-    //   Matrix A, this includes b[m][m].
-    //  You need to make sure that mom_exch_coeff[m][m] = 0
-    
-    // - Form diagonal terms of Matrix (A)
-    //  - Form RHS (b) 
-    for(int m = 0; m < numMatls; m++)  {
-      b_sp_vol[m] = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/
-        (sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
-      tmp[m] = -0.5 * delT * (vol_frac_CC[m][adj] + vol_frac_CC[m][c]);
-      vel[m] = vel_FC[m][c];
-    }
+      //__________________________________
+      //   Compute beta and off diagonal term of
+      //   Matrix A, this includes b[m][m].
+      //  You need to make sure that mom_exch_coeff[m][m] = 0
 
-    for(int m = 0; m < numMatls; m++)  {
-      double betasum = 1;
-      double bsum = 0;
-      double bm = b_sp_vol[m];
-      double vm = vel[m];
-      for(int n = 0; n < numMatls; n++)  {
-        double b = bm * tmp[n] * K(n,m);
-        a(m,n)    = b;
-        betasum -= b;
-        bsum -= b * (vel[n] - vm);
+      // - Form diagonal terms of Matrix (A)
+      //  - Form RHS (b) 
+      for(int m = 0; m < numMatls; m++)  {
+        b_sp_vol[m] = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/
+          (sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
+        tmp[m] = -0.5 * delT * (vol_frac_CC[m][adj] + vol_frac_CC[m][c]);
+        vel[m] = vel_FC[m][c];
       }
-      a(m,m) = betasum;
-      b[m] = bsum;
-    }
 
-    //__________________________________
-    //  - solve and backout velocities
-    
-    a.destructiveSolve(b, b_sp_vol);
-    //  For implicit solve we need sp_vol_FC
-    for(int m = 0; m < numMatls; m++) {
-      vel_FCME[m][c] = vel_FC[m][c] + b[m];
-      sp_vol_FC[m][c] = b_sp_vol[m];// only needed by implicit Pressure
-    }
-  }  // iterator
+      for(int m = 0; m < numMatls; m++)  {
+        double betasum = 1;
+        double bsum = 0;
+        double bm = b_sp_vol[m];
+        double vm = vel[m];
+        for(int n = 0; n < numMatls; n++)  {
+          double b = bm * tmp[n] * K(n,m);
+          a(m,n)    = b;
+          betasum -= b;
+          bsum -= b * (vel[n] - vm);
+        }
+        a(m,m) = betasum;
+        b[m] = bsum;
+      }
+
+      //__________________________________
+      //  - solve and backout velocities
+
+      a.destructiveSolve(b, b_sp_vol);
+      //  For implicit solve we need sp_vol_FC
+      for(int m = 0; m < numMatls; m++) {
+        vel_FCME[m][c] = vel_FC[m][c] + b[m];
+        sp_vol_FC[m][c] = b_sp_vol[m];// only needed by implicit Pressure
+      }
+    }  // iterator
+  }  // multiple materials
 }
 
 /*_____________________________________________________________________
@@ -3349,22 +3380,22 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
                                 
     //__________________________________
     //  tack on exchange contribution
-    add_vel_FC_exchange<StaticArray<constSFCXVariable<double> >,
-                        StaticArray<     SFCXVariable<double> > >
+    add_vel_FC_exchange<constSFCXVariable<double> ,
+                        SFCXVariable<double> >
                         (XFC_iterator, 
                         adj_offset[0],  numMatls,    K, 
                         delT,           vol_frac_CC, sp_vol_CC,
                         uvel_FC,        sp_vol_XFC,  uvel_FCME);
-                        
-    add_vel_FC_exchange<StaticArray<constSFCYVariable<double> >,
-                        StaticArray<     SFCYVariable<double> > >
+ 
+    add_vel_FC_exchange<constSFCYVariable<double> ,
+                        SFCYVariable<double> >
                         (YFC_iterator, 
                         adj_offset[1],  numMatls,    K, 
                         delT,           vol_frac_CC, sp_vol_CC,
                         vvel_FC,        sp_vol_YFC,  vvel_FCME);
                         
-    add_vel_FC_exchange<StaticArray<constSFCZVariable<double> >,
-                        StaticArray<     SFCZVariable<double> > >
+    add_vel_FC_exchange<constSFCZVariable<double> ,
+                        SFCZVariable<double> >
                         (ZFC_iterator, 
                         adj_offset[2],  numMatls,    K, 
                         delT,           vol_frac_CC, sp_vol_CC,
@@ -3486,14 +3517,13 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       // Advection preprocessing
       // - divide vol_frac_cc/vol
       bool bulletProof_test=true;
+      advectVarBasket* varBasket = scinew advectVarBasket();
+      
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx,
-                                    bulletProof_test, new_dw); 
+                                    bulletProof_test, new_dw, varBasket); 
       //__________________________________
       //   advect vol_frac
-      // common variables that get passed into the advection operators
-      advectVarBasket* varBasket = scinew advectVarBasket();
       varBasket->doRefluxing = false;  // don't need to reflux here
-      
       advector->advectQ(vol_frac, patch, q_advected, varBasket,  
                         vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw);
                         
@@ -4534,6 +4564,101 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
   }  // patch loop
 }
 
+
+///______________________________________________________________________
+//   Single material version of momentum and heat exchange.
+//   It sets the boundary conditions.  Do this for speed
+void ICE::addExchangeToMomentumAndEnergy_1matl(const ProcessorGroup*,
+                                               const PatchSubset* patches,
+                                               const MaterialSubset*,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw)
+{
+  const Level* level = getLevel(patches);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << d_myworld->myrank() << " Doing doCCMomExchange_1matl on patch "<< patch->getID()
+               <<"\t\t\t ICE \tL-" <<level->getIndex()<< endl;
+
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
+
+    CCVariable<double>  Temp_CC;
+    constCCVariable<double>  gamma;
+    constCCVariable<Vector>  mom_L;
+    constCCVariable<double>  int_eng_L;
+    constCCVariable<double>  cv;
+
+    // Create variables for the results
+    CCVariable<Vector>  mom_L_ME;
+    CCVariable<Vector>  vel_CC;
+    CCVariable<double>  int_eng_L_ME;
+    CCVariable<double>  Tdot;
+    constCCVariable<double>  mass_L;
+    constCCVariable<double>  old_temp;
+    
+    Ghost::GhostType  gn = Ghost::None;
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);   
+    int indx = ice_matl->getDWIndex();
+    
+    old_dw->get(old_temp,  lb->temp_CCLabel,      indx, patch, gn, 0);   
+    new_dw->get(cv,        lb->specific_heatLabel,indx, patch, gn, 0);   
+    new_dw->get(gamma,     lb->gammaLabel,        indx, patch, gn, 0);   
+    new_dw->get(mass_L,    lb->mass_L_CCLabel,    indx, patch, gn, 0);   
+    new_dw->get(mom_L,     lb->mom_L_CCLabel,     indx, patch, gn, 0);   
+    new_dw->get(int_eng_L, lb->int_eng_L_CCLabel, indx, patch, gn, 0);   
+    
+    new_dw->allocateAndPut(Tdot,        lb->Tdot_CCLabel,    indx,patch);
+    new_dw->allocateAndPut(mom_L_ME,    lb->mom_L_ME_CCLabel,indx,patch);
+    new_dw->allocateAndPut(int_eng_L_ME,lb->eng_L_ME_CCLabel,indx,patch);
+    
+    new_dw->allocateTemporary(vel_CC,  patch);
+    new_dw->allocateTemporary(Temp_CC, patch);
+
+    //__________________________________
+    // Convert momenta to velocities and internal energy to Temp
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      Temp_CC[c] = int_eng_L[c]/(mass_L[c]*cv[c]);  
+      vel_CC[c]  = mom_L[c]/mass_L[c];              
+    }
+
+    //__________________________________
+    //  Apply boundary conditions
+    if(d_customBC_var_basket->usingLodi || 
+       d_customBC_var_basket->usingMicroSlipBCs){ 
+      CCVariable<double> temp_CC_Xchange;
+      CCVariable<Vector> vel_CC_Xchange;
+      
+      new_dw->allocateAndPut(temp_CC_Xchange,lb->temp_CC_XchangeLabel,indx,patch);
+      new_dw->allocateAndPut(vel_CC_Xchange, lb->vel_CC_XchangeLabel, indx,patch);
+      vel_CC_Xchange.copy(  vel_CC  );
+      temp_CC_Xchange.copy( Temp_CC );
+    }
+ 
+    preprocess_CustomBCs("CC_Exchange",old_dw, new_dw, lb, patch, indx, d_customBC_var_basket);
+
+    setBC(vel_CC, "Velocity",   patch, d_sharedState, indx, new_dw, d_customBC_var_basket);
+    setBC(Temp_CC,"Temperature",gamma, cv, patch, d_sharedState, 
+                                       indx, new_dw,  d_customBC_var_basket);
+#if SET_CFI_BC                                         
+//      set_CFI_BC<Vector>(vel_CC[m],  patch);
+//      set_CFI_BC<double>(Temp_CC[m], patch);
+#endif
+    delete_CustomBCs(d_customBC_var_basket);
+    
+    //__________________________________
+    // Convert vars. primitive-> flux 
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      int_eng_L_ME[c] = Temp_CC[c]*cv[c] * mass_L[c];
+      mom_L_ME[c]     = vel_CC[c]        * mass_L[c];
+      Tdot[c]         = (Temp_CC[c] - old_temp[c])/delT;
+    }
+  } //patches
+}
+
+
 /*_____________________________________________________________________
  Function~  ICE::addExchangeToMomentumAndEnergy--
    This task adds the  exchange contribution to the 
@@ -4566,10 +4691,10 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
  by Kashiwa, above equation 4.13.
  _____________________________________________________________________  */
 void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+                                         const PatchSubset* patches,
+                                         const MaterialSubset*,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
@@ -5050,10 +5175,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       advectVarBasket* varBasket = scinew advectVarBasket();
       varBasket->new_dw = new_dw;
       varBasket->old_dw = old_dw;
-      varBasket->indx = indx;
-      varBasket->patch = patch;
-      varBasket->level = level;
-      varBasket->lb  = lb;
+      varBasket->indx   = indx;
+      varBasket->patch  = patch;
+      varBasket->level  = level;
+      varBasket->lb     = lb;
       varBasket->doRefluxing = d_doRefluxing;
       varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
       varBasket->AMR_subCycleProgressVar = AMR_subCycleProgressVar;
@@ -5061,8 +5186,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       //__________________________________
       //   Advection preprocessing
       bool bulletProof_test=true;
-      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx,
-                                    bulletProof_test, new_dw); 
+      advector->inFluxOutFluxVolume(uvel_FC, vvel_FC, wvel_FC, delT, patch,indx,
+                                    bulletProof_test, new_dw, varBasket); 
       //__________________________________
       // mass
       advector->advectMass(mass_L, q_advected,  varBasket);

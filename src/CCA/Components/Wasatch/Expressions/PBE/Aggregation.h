@@ -26,6 +26,7 @@
 #define Aggregation_Expr_h
 
 #include <expression/Expression.h>
+#include <boost/foreach.hpp>
 
 #define ri *abscissae_[i]
 #define rj *abscissae_[j]
@@ -189,16 +190,16 @@ bind_fields( const Expr::FieldManagerList& fml )
   weights_.clear();
   abscissae_.clear();
   efficiency_.clear();
-  for (Expr::TagList::const_iterator iweight=weightsTagList_.begin(); iweight!=weightsTagList_.end(); iweight++) {
+  for( typename Expr::TagList::const_iterator iweight=weightsTagList_.begin(); iweight!=weightsTagList_.end(); ++iweight ){
     weights_.push_back(&volfm.field_ref(*iweight));
   }
-  for (Expr::TagList::const_iterator iabscissa=abscissaeTagList_.begin(); iabscissa!=abscissaeTagList_.end(); iabscissa++) {
+  for( typename Expr::TagList::const_iterator iabscissa=abscissaeTagList_.begin(); iabscissa!=abscissaeTagList_.end(); ++iabscissa){
     abscissae_.push_back(&volfm.field_ref(*iabscissa));
   }
-  if ( aggCoefTag_ != Expr::Tag() )
+  if( aggCoefTag_ != Expr::Tag() )
     aggCoef_ = &volfm.field_ref(aggCoefTag_) ;
-  if (useEffTags_) {
-    for (Expr::TagList::const_iterator iefficiency=efficiencyTagList_.begin(); iefficiency!=efficiencyTagList_.end(); iefficiency++) {
+  if( useEffTags_ ){
+    for( typename Expr::TagList::const_iterator iefficiency=efficiencyTagList_.begin(); iefficiency!=efficiencyTagList_.end(); ++iefficiency){
       efficiency_.push_back(&volfm.field_ref(*iefficiency));
     }
   }
@@ -221,27 +222,27 @@ evaluate()
   
   switch (aggType_) {
     case CONSTANT: // \beta_{ij} = 1
-      for (int i=0; i<nEnv; i++) {
-        for (int j =0 ; j<nEnv; j++) {
-          *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 ) - pow( ri , momentOrder_ ) * wi*wj;
-          if (useEffTags_) *tmp <<= *efficiency_[i*nEnv  + j] * *tmp;
+      for( int i=0; i<nEnv; i++ ){
+        for( int j =0 ; j<nEnv; j++ ){
+          *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 ) - pow( ri, momentOrder_ ) * wi*wj;
+          if( useEffTags_ ) *tmp <<= *efficiency_[i*nEnv + j] * *tmp;
           result <<= result + *tmp;
         }
       }
     case BROWNIAN: // \beta_{ij} = (r_i + r_j)^2 / r_i / r_j
-      for (int i=0; i<nEnv; i++) { 
-        for (int j =0 ; j<nEnv; j++) {
-          *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj) / ri / rj - pow( ri , momentOrder_ ) * wi*wj * (ri+rj) * (ri+rj) /ri / rj;
-          if (useEffTags_) *tmp <<= *efficiency_[i*nEnv  + j] * *tmp;
+      for( int i=0; i<nEnv; i++ ){
+        for( int j =0 ; j<nEnv; j++ ){
+          *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj) / (ri*rj) - pow( ri, momentOrder_ ) * wi*wj * (ri+rj) * (ri+rj) / (ri*rj);
+          if( useEffTags_ ) *tmp <<= *efficiency_[i*nEnv + j] * *tmp;
           result <<= result + *tmp;
         }
       }
       break;
     case HYDRODYNAMIC: // \beta_{ij} = (r_i + r_j)^3
-      for (int i=0; i<nEnv; i++) {
-        for (int j =0 ; j<nEnv; j++) {
-          *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj)* (ri+rj) - pow( ri , momentOrder_ ) * wi*wj* (ri+rj) * (ri+rj)* (ri+rj);
-          if (useEffTags_) *tmp <<= *efficiency_[i*nEnv  + j] * *tmp;
+      for( int i=0; i<nEnv; i++ ){
+        for( int j =0 ; j<nEnv; j++ ){
+          *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj)* (ri+rj) - pow( ri, momentOrder_ ) * wi*wj* (ri+rj) * (ri+rj)* (ri+rj);
+          if( useEffTags_ ) *tmp <<= *efficiency_[i*nEnv + j] * *tmp;
           result <<= result + *tmp;
         }
       }

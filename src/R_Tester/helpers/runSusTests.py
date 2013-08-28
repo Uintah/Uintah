@@ -73,9 +73,12 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   svn_revision    = getoutput("svn info ../src |grep Revision")
   
   
-                    # 1 for GPU RT machine (albion), 0 otherwise.
+                    # 1 for GPU RT machine (albion, aurora), 0 otherwise.
                     #   need to make this generic, perhaps pycuda?
-  has_gpu         = 1 if socket.gethostname() == "albion" else 0
+  has_gpu         = 0 
+  if socket.gethostname() == "albion" or socket.gethostname() == "aurora": 
+    has_gpu = 1
+
   
   #__________________________________
   # set environmental variables
@@ -272,7 +275,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       continue
       
     if do_gpu == 1 and has_gpu == 0:
-      print "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n"
+      print "\nWARNING: skipping this test.  This machine is not configured to run gpu tests ( do_gpu: %s, has_gpu: %s)\n" %(do_gpu,has_gpu)
       continue      
       
     

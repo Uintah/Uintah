@@ -30,6 +30,31 @@
 SRCDIR := StandAlone/tools/mpi_test
 
 ##############################################
+# mpi_hang.cc
+
+SRCS    := $(SRCDIR)/mpi_hang.cc
+PROGRAM := $(SRCDIR)/mpi_hang
+
+ifeq ($(IS_STATIC_BUILD),yes)
+
+  PSELIBS := $(CORE_STATIC_PSELIBS)
+
+else # Non-static build
+
+  PSELIBS := \
+        Core/Thread \
+        Core/Parallel
+endif
+
+ifeq ($(IS_STATIC_BUILD),yes)
+  LIBS := $(CORE_STATIC_LIBS)
+else
+  LIBS := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
+endif
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
 # async_mpi_test.cc
 
 SRCS    := $(SRCDIR)/async_mpi_test.cc

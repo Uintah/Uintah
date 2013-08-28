@@ -1925,9 +1925,11 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     
     doc->output(xmlFilename.c_str());
     //doc->releaseDocument();
+
+    d_sharedState->outputTime += Time::currentSeconds()-start;
   }
   d_outputLock.unlock(); 
-  d_sharedState->outputTime += Time::currentSeconds()-start;
+
 
 
 } // end output()

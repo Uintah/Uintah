@@ -1,7 +1,7 @@
 <Uintah_specification>
 
   <Meta>
-      <title>GPUScheduler Test</title>
+      <title>Unified Scheduler Test</title>
   </Meta>
 
   <SimulationComponent type="unifiedschedulertest" />
@@ -17,7 +17,7 @@
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 10        </max_Timesteps>
+    <max_Timesteps> 20        </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   
@@ -77,7 +77,7 @@
       <Box label = "1">                              
          <lower>     [0,0,0]        </lower>         
          <upper>     [1.0,1.0,1.0]  </upper>         
-         <resolution>[50,50,50]     </resolution>    
+         <resolution>[128,128,128]     </resolution>    
          <patches>   [1,1,1]        </patches>       
       </Box>                                         
     </Level>

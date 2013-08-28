@@ -30,7 +30,6 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Thread/Time.h>
-
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -538,11 +537,37 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
     }
 
+    vector<CCVariable<double>* > Source_weights_weightedAbscissas ;
+    // Weight equations:
+    for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
+         iEqn != weightEqns.end(); ++iEqn ) {
+      const VarLabel* source_label = (*iEqn)->getSourceLabel();
+      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      if( new_dw->exists(source_label, matlIndex, patch) ) {
+        new_dw->getModifiable(*tempCCVar, source_label, matlIndex, patch);
+      } else {
+        new_dw->allocateAndPut(*tempCCVar, source_label, matlIndex, patch);
+      }
+      Source_weights_weightedAbscissas.push_back(tempCCVar);
+    }
+
+    // Weighted abscissa equations:
+    for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
+         iEqn != weightedAbscissaEqns.end(); ++iEqn) {
+      const VarLabel* source_label = (*iEqn)->getSourceLabel();
+      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      if (new_dw->exists(source_label, matlIndex, patch)) {
+        new_dw->getModifiable(*tempCCVar, source_label, matlIndex, patch);
+      } else {
+        new_dw->allocateAndPut(*tempCCVar, source_label, matlIndex, patch);
+      }
+      Source_weights_weightedAbscissas.push_back(tempCCVar);
+    }
+
     // Cell iterator
     for ( CellIterator iter = patch->getCellIterator();
           !iter.done(); ++iter) {
       IntVector c = *iter;
-
       vector<double> weights;
       vector<double> weightedAbscissas;
       vector<double> models;
@@ -646,41 +671,25 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Weight equations:
         for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
              iEqn != weightEqns.end(); ++iEqn ) {
-          const VarLabel* source_label = (*iEqn)->getSourceLabel();
-          CCVariable<double> tempCCVar;
-          if( new_dw->exists(source_label, matlIndex, patch) ) {
-            new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-          } else {
-            new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-          }
-
           if (z >= dimension ) {
             stringstream err_msg;
             err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
             throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
           } else {
-            tempCCVar[c] = (*XX)[z];
+            (*(Source_weights_weightedAbscissas[z]))[c] = (*XX)[z];
           }
           ++z;
         }
         // Weighted abscissa equations:
         for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
              iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-          const VarLabel* source_label = (*iEqn)->getSourceLabel();
-          CCVariable<double> tempCCVar;
-          if (new_dw->exists(source_label, matlIndex, patch)) {
-            new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-          } else {
-            new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-          }
-
           // Make sure several critera are met for an acceptable solution
           if (z >= dimension ) {
             stringstream err_msg;
             err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
             throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
           } else {
-            tempCCVar[c] = (*XX)[z];
+            (*(Source_weights_weightedAbscissas[z]))[c] = (*XX)[z];
           }
           ++z;
         }
@@ -719,7 +728,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
                   
                   double start_FileWriteTime = Time::currentSeconds();
                   
-                  
                   // write X matrix
                   sizeofit = sprintf( filename, "X_%.2d.mat", currentTimeStep );
                   oStream.open(filename);
@@ -739,41 +747,28 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           // Weight equations:
           for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
               iEqn != weightEqns.end(); ++iEqn ) {
-              const VarLabel* source_label = (*iEqn)->getSourceLabel();
-              CCVariable<double> tempCCVar;
-              if( new_dw->exists(source_label, matlIndex, patch) ) {
-                  new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-              } else {
-                  new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-              }
               
               if (z >= dimension ) {
                   stringstream err_msg;
                   err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
                   throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
               } else {
-                  tempCCVar[c] = (*XX)[z];
+                (*(Source_weights_weightedAbscissas[z]))[c] = (*XX)[z];
+
               }
               ++z;
           }
           // Weighted abscissa equations:
           for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
               iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-              const VarLabel* source_label = (*iEqn)->getSourceLabel();
-              CCVariable<double> tempCCVar;
-              if (new_dw->exists(source_label, matlIndex, patch)) {
-                  new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-              } else {
-                  new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-              }
-              
+
               // Make sure several critera are met for an acceptable solution
               if (z >= dimension ) {
                   stringstream err_msg;
                   err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
                   throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
               } else {
-                  tempCCVar[c] = (*XX)[z];
+                (*(Source_weights_weightedAbscissas[z]))[c] = (*XX)[z];
               }
               ++z;
           }
@@ -946,27 +941,20 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Weight equations:
         for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
              iEqn != weightEqns.end(); ++iEqn ) {
-          const VarLabel* source_label = (*iEqn)->getSourceLabel();
-          CCVariable<double> tempCCVar;
-          if( new_dw->exists(source_label, matlIndex, patch) ) {
-            new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-          } else {
-            new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-          }
 
           if (z >= dimension ) {
             stringstream err_msg;
             err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
             throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
           } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
-            tempCCVar[c] = 0.0;
+            (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( isnan( Xlong[z] ) ) {
-            tempCCVar[c] = 0.0;
+            (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
-            tempCCVar[c] = 0.0;
+            (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
             conditionNumber[c] = -1.0; 
           } else {
-            tempCCVar[c] = Xlong[z];
+            (*(Source_weights_weightedAbscissas[z]))[c] = Xlong[z];
           }
           ++z;
         }
@@ -974,13 +962,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Weighted abscissa equations:
         for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); 
              iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-          const VarLabel* source_label = (*iEqn)->getSourceLabel();
-          CCVariable<double> tempCCVar;
-          if (new_dw->exists(source_label, matlIndex, patch)) {
-            new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-          } else {
-            new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-          }
   
           // Make sure several critera are met for an acceptable solution
           if (z >= dimension ) {
@@ -988,18 +969,17 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
             throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
           } else if(  fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
-            tempCCVar[c] = 0.0;
+            (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( isnan( Xlong[z] ) ){
-            tempCCVar[c] = 0.0;
+            (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
-            tempCCVar[c] = 0.0;
+            (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
             conditionNumber[c] = -1.0; 
           } else {
-            tempCCVar[c] = Xlong[z];
+            (*(Source_weights_weightedAbscissas[z]))[c] = Xlong[z];
           }
           ++z;
         }
-  
 
       } else {
 
@@ -1319,27 +1299,20 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Weight equations:
         for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
              iEqn != weightEqns.end(); ++iEqn ) {
-          const VarLabel* source_label = (*iEqn)->getSourceLabel();
-          CCVariable<double> tempCCVar;
-          if( new_dw->exists(source_label, matlIndex, patch) ) {
-            new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-          } else {
-            new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-          }
 
           if (z >= dimension ) {
             stringstream err_msg;
             err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
             throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
           } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
-            tempCCVar[c] = 0.0;
+            (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( isnan( (*XX)[z] ) ) {
-            tempCCVar[c] = 0.0;
+            (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
-            tempCCVar[c] = 0.0;
+            (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
             conditionNumber[c] = -1.0; 
           } else {
-            tempCCVar[c] = (*XX)[z];
+            (*(Source_weights_weightedAbscissas[z]))[c] = (*XX)[z];
           }
           ++z;
         }
@@ -1347,13 +1320,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // Weighted abscissa equations:
         for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); 
              iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-          const VarLabel* source_label = (*iEqn)->getSourceLabel();
-          CCVariable<double> tempCCVar;
-          if (new_dw->exists(source_label, matlIndex, patch)) {
-            new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-          } else {
-            new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-          }
   
           // Make sure several critera are met for an acceptable solution
           if (z >= dimension ) {
@@ -1361,14 +1327,14 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
             throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
           } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
-            tempCCVar[c] = 0;
+            (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( isnan( (*XX)[z] ) ){
-            tempCCVar[c] = 0;
+            (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
-            tempCCVar[c] = 0.0;
+            (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
             conditionNumber[c] = -1.0; 
           } else {
-            tempCCVar[c] = (*XX)[z];
+            (*(Source_weights_weightedAbscissas[z]))[c] = (*XX)[z];
           }
           ++z;
         }
@@ -1394,36 +1360,23 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       // set weight transport eqn source terms equal to zero
       for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
            iEqn != weightEqns.end(); iEqn++) {
-        const VarLabel* source_label = (*iEqn)->getSourceLabel();
-        CCVariable<double> tempCCVar;
-        if (new_dw->exists(source_label, matlIndex, patch)) {
-          new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-        } else {
-          new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-        }
-        tempCCVar[c] = 0.0;
+        (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
       }
 
       // set weighted abscissa transport eqn source terms equal to results
       for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
            iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-        const VarLabel* source_label = (*iEqn)->getSourceLabel();
-        CCVariable<double> tempCCVar;
-        if (new_dw->exists(source_label, matlIndex, patch)) {
-          new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-        } else {
-          new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
-        }
-        tempCCVar[c] = 0.0;
+        (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
       }
 
 #endif //end if not verifying
 
     }//end for cells
-
+    // to release the pointers
+    for(unsigned int i=0; i<Source_weights_weightedAbscissas.size(); ++i ){
+      delete Source_weights_weightedAbscissas[i];
+    }
   }//end per patch
-
-
 
   // ---------------------------------------------
   // Verification Procedure:

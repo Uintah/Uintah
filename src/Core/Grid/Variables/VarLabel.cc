@@ -69,7 +69,7 @@ VarLabel::create(const string& name,
   else {
     label = scinew VarLabel(name, td, boundaryLayer, vartype);
     allLabels[name]=label;
-    dbg << "Creating VarLabel: " << label->d_name << std::endl;
+    dbg << "Creating VarLabel: " << label->d_name << " address = " << label << std::endl;
   }
   label->addReference();
   lock.unlock(); 

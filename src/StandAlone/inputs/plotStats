@@ -57,6 +57,11 @@ paste -d "  " .elapsedTime .meanTime .physicalTime .delT .memAve .memMax>& .data
 
 rm -f .elapsedTime .meanTime .physicalTime .delT .memAve .memMax 
 rm -f .plotStats_tmp .plotStats_tmp1 .tmp
+
+set procs   = `grep processors $out| cut -d" " -f 2`
+set machine = `grep Machine    $out | cut -d":" -f 2`
+set date    = `grep -m1 Date   $out | cut -d" " -f2-8,10`
+
 echo "Done extracting data"
 
 echo "" > gp
@@ -101,6 +106,7 @@ plot '.data' using 1:3           t 'Physical Time' with lines,\
     #----------second plot-------------
 set size 1.0,0.33       
 set origin 0.0,0.66
+set title "$date : $machine : $procs Processors"
 set ylabel 'Delt'
 set y2label 'Physical Time'
 
@@ -110,6 +116,7 @@ plot '.data' using 1:4           t 'Delt' with lines, \
     #----------third plot-------------
 set size 1.0,0.33       
 set origin 0.0,0.0
+set title ''
 set xlabel "ElapsedTime"
 set ylabel "Memory useage [MB]"
 set y2label ""
@@ -123,6 +130,11 @@ fin
 # plot it up
 gnuplot gp
 
+
+if($hardcopy == "y" || $hardcopy == "Y") then
+  echo "converting PostScript files to PDF"
+  ps2pdf plotStat.ps
+endif
 
 #__________________________________
 # clean up

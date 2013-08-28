@@ -343,9 +343,8 @@ void Arenisca::initializeCMData(const Patch* patch,
 
 #ifdef CSM_PORE_PRESSURE_INITIAL
   ParticleVariable<double>  pdTdt;
-  constParticleVariable<Matrix3> pDefGrad;
-  ParticleVariable<Matrix3> //pDefGrad,
-                            pStress;
+  constParticleVariable<Matrix3> pDefGrad;  //pDefGrad,
+  ParticleVariable<Matrix3> pStress;  
 
   new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
   //new_dw->get(pDefGrad,    lb->pDeformationMeasureLabel, pset);
@@ -711,12 +710,22 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateTemporary(rho_cur,      pset);
     new_dw->allocateTemporary(rotation,     pset);
 
+    // Loop over the particles of the current patch to compute particle density
+    //T2D: remove once stable timestep is made into a modular function
+    for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
+      particleIndex idx = *iter;
+
+      // Update particle density
+      J = pDefGrad_new[idx].Determinant();
+      rho_cur[idx] = rho_orig/J;
+    }
+
     // Loop over the particles of the current patch to update particle
     // stress at the end of the current timestep along with all other
     // required data such plastic strain, elastic strain, cap position, etc.
 #ifdef JC_DEBUG_SMALL_TIMESTEP
     Vector idvel(1,1,1);   // temp
-    Vector vbulk(1,1,1);   // temp
+      Vector vbulk(1,1,1);   // temp
     Vector vshear(1,1,1);  // temp
 #endif
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
@@ -727,12 +736,6 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         // is not coded in the current source code. Further development of Arenisca
         // may ativate this feature.
         pdTdt[idx] = 0.0;
-
-        // Compute particle density
-        J = pDefGrad_new[idx].Determinant();
-        rho_cur[idx] = rho_orig/J;
-
-        pLocalized_new[idx]=pLocalized[idx];
 
         //Set scratch parameters to old values
         pScratchDouble1_new[idx] = pScratchDouble1[idx];
@@ -781,8 +784,56 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         double lame       = bulk - two_third*shear,
                threeKby2G = (3.0 * bulk) / (2.0 * shear);
 
+
+
+
+
+
+ //cout << "++++++++++++++++++++++++++++++++++++++++++++" << endl;
+        //--------------------------------------------------------------------//
+        //-------------Rate Dependence / Duvaut Lions-------------------------//
+        Matrix3 unrotated_stress;
+        // With Rate Dependence if T1 or T2 is not equal to zero
+        if (d_cm.T1_rate_dependence != 0 || d_cm.T2_rate_dependence != 0){
+          unrotated_stress = (tensorR.Transpose())*(pStressQS_old[idx]*tensorR);
+          //cout << "unrotated_stress =  " << unrotated_stress << endl;
+          //cout << "pStressQS_old[idx] " << pStressQS_old[idx] << endl;
+          //cout << "pStress_old[idx] =  " << pStress_old[idx] << endl;
+          //cout << "T1 or T2 is not equal to zero PART 1" << endl;
+          //cout << "PART 1 pStress_new[idx] = " << pStress_new[idx] << endl;
+          //cout << "PART 1 pStressQS_new[idx] = " << pStressQS_new[idx] << endl;
+          //cout << "PART 1 pStress_old[idx] = " << pStress_old[idx] << endl;
+          
+          //cout << "PART 1 pStressQS_old[idx] = " << pStressQS_old[idx] << endl;
+        }
+        else{
+          // Without Rate Dependene when T1 and T2 are equal to zero
+
+
+
+
+
+
+
         // Compute the unrotated stress at the first of the current timestep
-        Matrix3 unrotated_stress = (tensorR.Transpose())*(pStress_old[idx]*tensorR);
+        //Matrix3 
+	unrotated_stress = (tensorR.Transpose())*(pStress_old[idx]*tensorR);
+
+
+
+
+ //cout << "unrotated_stress =  " << unrotated_stress << endl;
+           //cout << "pStress_old[idx] =  " << pStress_old[idx] << endl;
+           //cout << "T1 and T2 is equal to zero PART 1" << endl;
+           //cout << "PART 1 pStress_new[idx] = " << pStress_new[idx] << endl;
+           //cout << "PART 1 pStressQS_new[idx] = " << pStressQS_new[idx] << endl;
+           //cout << "PART 1 pStress_old[idx] = " << pStress_old[idx] << endl;
+           
+           //cout << "PART 1 pStressQS_old[idx] = " << pStressQS_old[idx] << endl;
+        }
+        //----------End Initial Part of Rate Dependence ---------------------//
+
+
 
         // Compute the unrotated trial stress for the full timestep
         Matrix3 stress_diff_step  = (Identity*lame*(D.Trace()*delT) + D*delT*2.0*shear),
@@ -1067,6 +1118,137 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         pStressQS_new[idx] = pStress_new[idx];
         //d_cm.T1_rate_dependence
         //d_cm.T2_rate_dependence
+
+//cout << "pStressQS_new = " << pStressQS_new << endl;
+        
+        //--------------------------------------------------------------------//
+        // --------------Rate Dependence Code Continued-----------------------//
+        // T2D: Hamid 
+        // Determination if Rate Dependence / Duvaut-Lions will be used
+        // d.cm.T1_rate_dependence and d.cm.T2_rate_dependence are defined by the user input
+        // tau is the material characteristic response time to deformation
+
+
+      #ifdef CSM_RATE_DEPENDENCE
+        cout << "We made it! Line:" << __LINE__;
+      #endif  
+
+        if (d_cm.T1_rate_dependence != 0 || d_cm.T2_rate_dependence != 0){
+          //cout << "Rate Dependence Part 2" << endl;
+          pCapXQS_new[idx]   = pCapX_new[idx];
+          pZetaQS_new[idx]   = pZeta_new[idx];
+          pIotaQS_new[idx]   = pIota_new[idx];
+          pStressQS_new[idx] = pStress_new[idx];
+		  
+      //d_cm.T1_rate_dependence
+      //d_cm.T2_rate_dependence
+      //cout << "T1 = " << d_cm.T1_rate_dependence << endl;
+      //cout << "T2 = " << d_cm.T2_rate_dependence << endl;
+      //cout << "Trial Stress = " << S_trial_step << endl;
+      // Initializing tau, RAT, pRH, prh for Duvaut Lions Rate Dependence
+
+	double tau1 = 0,
+               tau = 0,
+	       RAT = 0,
+	       pRH = 0,
+	       prh = 0,
+               trace = 0;
+          
+	// Calculating Material Characteristic, for T2=0
+	  if (d_cm.T2_rate_dependence == 0 && d_cm.T1_rate_dependence != 0){
+	  tau1 = d_cm.T1_rate_dependence;
+          tau = max(tau1 , 1E-15); // asking non-zero tau 
+        //cout << "D(0,1) = " << D(0,1) << endl;
+        //cout << "D(0,0) = " << D(0,0) << endl;
+        //cout << "D(1,1) = " << D(1,1) << endl;
+        //cout << "D(2,2) = " << D(2,2) << endl;
+        //cout << "Part 2 T2=0, T1!=0, Tau = " << tau << endl;
+        //cout << "pStressQS_new[idx] = " << pStressQS_new[idx] << endl;
+        //cout << "pStress_new[idx] = " << pStress_new[idx] << endl;
+          }
+          else{
+        //cout << "D(0,1) = " << D(0,1) << endl;
+        //cout << "D(0,0) = " << D(0,0) << endl;
+        //cout << "D(1,1) = " << D(1,1) << endl;
+        //cout << "D(2,2) = " << D(2,2) << endl;
+        // Compute the norm of strain rate
+        double Dnormsq = D(0,0)*D(0,0) +
+                         D(1,1)*D(1,1) +
+                         D(2,2)*D(2,2) +
+                         2.0*(D(0,1)*D(0,1) +
+                         D(0,2)*D(0,2) +
+                         D(1,2)*D(1,2));
+       //cout << "D(0,0) = " << D(0,0) << endl;
+         double Dnorm1 = Pow(Dnormsq,0.5);
+         double Dnorm = max(Dnorm1 , 1e-15); // print result to observe the range
+       //cout <<"Dnorm="<<Dnorm << endl;
+         double inv_eqstrain = 1.0/Dnorm;
+
+        tau1 = d_cm.T1_rate_dependence*Pow(inv_eqstrain,d_cm.T2_rate_dependence);
+        tau = max(tau1 , 1e-15); // asking non-zero tau
+
+
+		    //tau = d_cm.T1_rate_dependence*Pow((1.0/D.Trace()),d_cm.T2_rate_dependence);
+		    // tau is actually equal to T1*(1/(tauref*D.Trace()))^T2. But as long as 
+		    // Arenisca is run using seconds as the time unit, tauref does not effect calculations.
+        //cout << "T1 and T2 != 0   Tau = " << tau << endl;
+        //cout << "D.Trace() = " << D.Trace() << endl;
+        //cout << "D.Trace() = " << trace << endl;
+        //cout << "pStressQS_new[idx] = " << pStressQS_new[idx] << endl;
+        //cout << "pStress_new[idx] = " << pStress_new[idx] << endl;
+        }
+
+        // RH Calculations
+        RAT   = delT/tau;					
+        pRH   = (1.0-exp(-RAT))/RAT;
+        prh   = exp(-RAT) -pRH; 
+
+        //cout << "RAT = " << RAT << endl;
+        //cout << "pRH = " << pRH << endl;
+        //cout << "prh = " << prh << endl;
+        
+        
+        // Stress Calculations
+	// sigHi = stress_diff_step + pStress_old = C:edot*delT + sigmaHi0
+	// sigLo = pStressQS_new[idx]
+	// sigHi0 = pStress_old
+	// sigLo0 = pStressQS_old[idx]
+
+	pStress_new[idx] = pStressQS_new[idx] + pRH*(stress_diff_step + pStress_old[idx]) 
+        - pRH*pStressQS_new[idx] + prh*pStress_old[idx] - prh*pStressQS_old[idx];
+        //cout << "Stress Calc pStress_new[idx] = " << pStress_new[idx] << endl;
+        //cout << "Stress Calc pStressQS_new[idx] = " << pStressQS_new[idx] << endl;
+        //cout << "Stress Calc pStress_old[idx] = " << pStress_old[idx] << endl;
+        //cout << "Stress Calc stress_diff_step = " << stress_diff_step << endl;
+        //cout << "Stress Calc pStressQS_old[idx] = " << pStressQS_old[idx] << endl;
+        
+        
+		  // Internal State Variables		
+		  
+        } 
+        else {
+        double tau1 = 0,
+               tau = 0,
+	       RAT = 0,
+	       pRH = 0,
+	       prh = 0,
+               trace = 0;
+          pCapXQS_new[idx]   = pCapX_new[idx];
+          pZetaQS_new[idx]   = pZeta_new[idx];
+          pIotaQS_new[idx]   = pIota_new[idx];
+          pStressQS_new[idx] = pStress_new[idx];
+          
+          tau = 1e-15;
+          RAT   = delT/tau;					
+          pRH   = (1.0-exp(-RAT))/RAT;
+          prh   = exp(-RAT) -pRH;
+          
+          pStress_new[idx] = pStressQS_new[idx] + pRH*(stress_diff_step + pStress_old[idx]) 
+          - pRH*pStressQS_new[idx] + prh*pStress_old[idx] - prh*pStressQS_old[idx];
+        
+        }
+		  
+		//----------End Rate Dependence ----------------------------//
 
         // Compute the total strain energy and the stable timestep based on both
         // the particle velocities and wave speed.

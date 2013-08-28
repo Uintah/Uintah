@@ -148,11 +148,12 @@ public:
                                     const TimeIntegratorLabel* timelabels,
                                     bool set_BC);
 
-  void sched_constructMomentum( const LevelP& level, 
+  void sched_computeMomentum( const LevelP& level,
                                 SchedulerP& sched, 
-                                const int timesubstep );
+                                const int timesubstep,
+                                const bool isInitialization=false );
 
-  void sched_solveVelHatWarches( const LevelP& level, 
+  void sched_computeVelHatWarches( const LevelP& level,
                                  SchedulerP& sched, 
                                  const int timesubstep );
 
@@ -171,6 +172,9 @@ public:
     d_momentum_coupling = doMC;
   }
 
+  inline void set_use_wasatch_mom_rhs(const bool useWasatchMomRHS) { d_useWasatchMomRHS = useWasatchMomRHS; }
+  inline bool get_use_wasatch_mom_rhs() { return d_useWasatchMomRHS; }
+  
 private:
 
   // GROUP: Constructors (private):
@@ -212,14 +216,15 @@ private:
                                const TimeIntegratorLabel* timelabels,
                                bool set_BC);
 
-  void constructMomentum( const ProcessorGroup* pc,
+  void computeMomentum( const ProcessorGroup* pc,
                           const PatchSubset* patches,
                           const MaterialSubset*,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
-                          const int timesubstep );
+                          const int timesubstep,
+                          const bool isInitialization=false);
 
-  void solveVelHatWarches( const ProcessorGroup* pc,
+  void computeVelHatWarches( const ProcessorGroup* pc,
                            const PatchSubset* patches,
                            const MaterialSubset*,
                            DataWarehouse* old_dw,
@@ -249,7 +254,8 @@ private:
   bool d_filter_divergence_constraint;
   bool d_mixedModel;
   bool d_doMMS;
-  vector<string> d_new_sources; 
+  vector<string> d_new_sources;
+  bool d_useWasatchMomRHS;
 
   const VarLabel* _u_mom; 
   const VarLabel* _v_mom; 

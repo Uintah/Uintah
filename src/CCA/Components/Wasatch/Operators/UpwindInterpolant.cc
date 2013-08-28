@@ -48,7 +48,15 @@ void
 UpwindInterpolant<SrcT,DestT>::
 set_advective_velocity( const DestT& theAdvectiveVelocity )
 {
-  // !!! NOT THREAD SAFE !!! USE LOCK
+# ifdef ENABLE_THREADS
+  /*
+   * Because this operator may be accessed by multiple expressions simultaneously,
+   * there is the possibility that the advective velocity could be set by multiple
+   * threads simultaneously.  Therefore, we lock this until the apply_to_field()
+   * is done with the advective velocity to prevent race conditions.
+   */
+  mutex_.lock();
+#endif
   advectiveVelocity_ = &theAdvectiveVelocity;
 }
 
@@ -73,8 +81,10 @@ apply_to_field( const SrcT& src, DestT& dest )
   const MemoryType dMemType = dest.memory_device_type();  // destination memory type
   const unsigned short int dDevIdx = dest.device_index(); // destination device index
   typename DestT::value_type* destVals = dest.field_values(dMemType, dDevIdx);
-  typename DestT::value_type* velVals  = const_cast<DestT*>(advectiveVelocity_)->field_values(dMemType, dDevIdx);
-  typename SrcT::value_type*  srcVals  = const_cast<SrcT&>(src).field_values(dMemType, dDevIdx);
+
+  const MemoryType advelMemType = advectiveVelocity_->memory_device_type();  // destination memory type
+  const unsigned short int advelDevIdx = advectiveVelocity_->device_index(); // destination device index
+  typename DestT::value_type* velVals  = const_cast<typename DestT::value_type*>(advectiveVelocity_->field_values(advelMemType, advelDevIdx));
   
   const MemoryWindow& ws = src.window_with_ghost();
 
@@ -104,17 +114,21 @@ apply_to_field( const SrcT& src, DestT& dest )
   // to work ONLY with SVol as source and X,Y,ZVol for destination fields.
   // Although the destination field is of a "different" type, we create a window
   // that is the "same size" as the source field to allow us to use a nebo assignment
-  SrcT     d( wd,  destVals, ExternalStorage ); // NOTE here how we are crating a SrcT field from a DesT one.
+  SrcT  d( wd,  destVals, ExternalStorage ); // NOTE here how we are crating a SrcT field from a DesT one.
   //This is a trick because we know that the fields in this case are of the same size
-  SrcT  aVel( wd,  velVals, ExternalStorage, dMemType, dDevIdx );
-  SrcT    s1( ws1, srcVals, ExternalStorage, dMemType, dDevIdx );
-  SrcT    s2( ws2, srcVals, ExternalStorage, dMemType, dDevIdx );
+  const SrcT  aVel( wd,  velVals, ExternalStorage, advelMemType, advelDevIdx );
+  const SrcT    s1( ws1, src );
+  const SrcT    s2( ws2, src );
 
   d <<= cond( aVel > 0.0, s1  )
             ( aVel < 0.0, s2  )
             ( 0.5 * (s1 + s2) );
 
   advectiveVelocity_ = NULL;
+
+# ifdef ENABLE_THREADS
+  mutex_.unlock();
+# endif
 }
 
 //--------------------------------------------------------------------

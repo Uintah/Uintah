@@ -31,6 +31,8 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Util/Handle.h>
+#include <sci_defs/uintah_defs.h>
+
 #include <map>
 
 /**************************************
@@ -149,6 +151,13 @@ namespace Uintah {
       const VarLabel* d_vVelocitySPBCLabel;
       // W-Velocity Labels
       const VarLabel* d_wVelocitySPBCLabel;
+      
+      // UMom Labels
+      const VarLabel* d_uMomLabel;
+      // VMom Labels
+      const VarLabel* d_vMomLabel;
+      // WMom Labels
+      const VarLabel* d_wMomLabel;
 
       // Scalar Labels
       //computed for old_dw in paramInit
@@ -300,6 +309,12 @@ namespace Uintah {
       const VarLabel* d_vVelRhoHatLabel;
       const VarLabel* d_wVelRhoHatLabel;
 
+      // the following three labels are used when WArches is enabled. They refer
+      // to the momentum partial rhs that is calculated by Wasatch
+      const VarLabel* d_uVelRhoHatRHSPartLabel;
+      const VarLabel* d_vVelRhoHatRHSPartLabel;
+      const VarLabel* d_wVelRhoHatRHSPartLabel;
+      
       const VarLabel* d_uVelRhoHat_CCLabel;
       const VarLabel* d_vVelRhoHat_CCLabel;
       const VarLabel* d_wVelRhoHat_CCLabel;

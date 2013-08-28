@@ -221,7 +221,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   for (int L = 0; L < maxLevels; L++) {
     if( L != archesLevelIndex ){
       const LevelP& level = grid->getLevel(L);
-      _RMCRT->sched_CarryForward ( level, sched, _cellTypeLabel );
+      _RMCRT->sched_CarryForward_Var ( level, sched, _cellTypeLabel );
     }
   }
 
@@ -304,6 +304,9 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
         Task::WhichDW celltype_dw = Task::NewDW;
         
         _RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, _radiation_calc_freq, backoutTemp);
+        
+        _RMCRT->sched_carryForward_rayTrace( level, sched, _radiation_calc_freq );
+        
         _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq );
       }
     }
@@ -541,14 +544,10 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   
   //__________________________________
   //  schedule the tasks
-std::cout << "test 1" << std::endl;
   for (int L=0; L< maxLevels; ++L){
   
-std::cout << "test 2" << std::endl;
     if( L != archesLevelIndex ){
    
-std::cout << "test 3" << std::endl;
-	 
       string taskname = "RMCRT_Radiation::sched_initialize"; 
       Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
 

@@ -36,6 +36,7 @@ NIGHTLYTESTS = [   ("massX",                 "massX.ups",                 1,  "L
                    ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Linux", ["exactComparison"]),    \
                    ("BurnRate",              "BurnRate.ups",              1.1,"Linux", ["startFromCheckpoint"]), \
                    ("DDT1ConvectiveBurning", "DDT1ConvectiveBurning.ups", 1.1,"Linux", ["exactComparison"]),    \
+                   ("DDT",                   "DDT.ups",                   1,  "Linux", ["exactComparison","no_dbg"]),    \
                    ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison","no_dbg"]),    \
                    ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"])
     	       ]
@@ -51,6 +52,7 @@ LOCALTESTS = [   ("massX",                 "massX.ups",                 1,  "Lin
                  ("TRWnoz",                "TRWnoz.ups",                1,  "Linux", ["exactComparison"]),   \
                  ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Linux", ["exactComparison"]),   \
                  ("DDT1ConvectiveBurning", "DDT1ConvectiveBurning.ups", 1.1,"Linux", ["exactComparison"]),   \
+                 ("DDT",                   "DDT.ups",                   1,  "Linux", ["exactComparison","no_dbg"]),    \
                  ("InductionTime",         "InductionTime.ups",         1  ,"Linux", ["exactComparison","no_dbg"]),   \
                  ("InductionPropagation",  "InductionPropagation.ups",  1  ,"Linux", ["exactComparison","no_dbg"])
     	       ]
@@ -58,7 +60,7 @@ DEBUGTESTS =[]
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DEUGTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
 #__________________________________
 
 # returns the list  
