@@ -225,6 +225,10 @@ namespace Uintah {
         int size() const {
           return (int)set.size();
         }
+      
+        const vector<ComputeSubset<T>*>& getVector() const
+        { return set; }
+      
         ComputeSubset<T>* getSubset(int idx) {
           return set[idx];
         }
