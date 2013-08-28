@@ -342,11 +342,6 @@ BCDataArray::getBoundCondData(int mat_id, const string type, int ichild) const
     bool found_it = new_bc.find(type);
     if (found_it == true)
       return new_bc.getBCValues(type);
-    else {
-      found_it = new_bc.find("Auxiliary");
-      if (found_it)
-        return new_bc.getBCValues("Auxiliary");
-    }
   }
   // Check the mat_id = "all" case
   itr = d_BCDataArray.find(-1);
@@ -356,11 +351,6 @@ BCDataArray::getBoundCondData(int mat_id, const string type, int ichild) const
       bool found_it = new_bc_all.find(type);
       if (found_it == true)
         return new_bc_all.getBCValues(type);
-      else {
-        found_it = new_bc_all.find("Auxiliary");
-        if (found_it)
-          return new_bc_all.getBCValues("Auxiliary");
-      }
       return 0;
     }
   }
