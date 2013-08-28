@@ -149,6 +149,23 @@ SourceTermFactory::source_term_exists( const std::string name )
   return return_value;
 }
 
+bool
+SourceTermFactory::source_type_exists( const std::string type )
+{
+
+  for ( SourceMap::iterator iter = _sources.begin(); iter != _sources.end(); iter++){ 
+  
+    string my_type = iter->second->getSourceType(); 
+
+    if ( my_type == type )
+      return true; 
+
+  }
+
+  return false; 
+
+}
+
 void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, BoundaryCondition* bcs, const ProcessorGroup*  my_world )
 {
 

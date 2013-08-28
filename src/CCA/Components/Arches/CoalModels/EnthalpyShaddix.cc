@@ -78,44 +78,12 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
   ProblemSpecP db = params; 
  
-  if(old_radiation){
-    d_volq_label = d_fieldLabels->d_radiationVolqINLabel;
-    d_abskg_label = d_fieldLabels->d_abskgINLabel;
-  } else if(new_radiation){
-    //    d_volq_label = VarLabel::find("radiationVolq");  //this line need further modification
+  if ( d_radiation ){
+
     d_abskg_label = VarLabel::find("abskg");
+    d_volq_label  = VarLabel::find("radiationVolq"); 
   }
 
-
-  // this part is not correct and need further discussion (wyxpuma)
-  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") ){ 
-
-    // Look for the opl specified in the radiation model: 
-    ProblemSpecP sources_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources");
-    for (ProblemSpecP src_db = sources_db->findBlock("src");
-          src_db !=0; src_db = src_db->findNextBlock("src")){
-
-      string type; 
-      src_db->getAttribute("type", type); 
-
-      if ( type == "do_radiation" ){ 
-
-        src_db->getAttribute("label", _div_q_label_name); 
-
-      } else if ( type == "rmcrt_radiation") { 
-
-        src_db->getAttribute("label", _div_q_label_name); 
-
-      }
-
-      _div_q_label_name = "radiationVolq";  //this is the correct definition, the previous part shall be removed after make sure
- 
-    }
-  } else { 
-    throw InvalidValue("Error: You dont have radiation turned on which is needed for EnthalpyShaddix",__FILE__,__LINE__);
-  }
-
- 
   // check for viscosity
   const ProblemSpecP params_root = db->getRootNode(); 
   if (params_root->findBlock("PhysicalConstants")) {
@@ -351,12 +319,6 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
   std::string taskname = "EnthalpyShaddix::computeModel";
   Task* tsk = scinew Task(taskname, this, &EnthalpyShaddix::computeModel);
 
-
-  d_volq_label = VarLabel::find( _div_q_label_name ); 
-  if ( d_volq_label == 0 ){ 
-    throw InvalidValue("Error: Could not identify a volQ label",__FILE__,__LINE__);
-  } 
-
   d_timeSubStep = timeSubStep; 
 
   if (d_timeSubStep == 0 ) { // && !d_labelSchedInit) {
@@ -426,7 +388,7 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_cpINLabel, Ghost::None, 0);
  
-  if(_radiation){
+  if ( d_radiation ) {
     tsk->requires(Task::OldDW, d_abskg_label,  Ghost::None, 0);   
     tsk->requires(Task::OldDW, d_volq_label, Ghost::None, 0);
   }
@@ -603,7 +565,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> abskgIN;
     constCCVariable<double> radiationVolqIN;
 
-    if(_radiation){
+    if ( d_radiation ) {
       old_dw->get(abskgIN, d_abskg_label, matlIndex, patch, gn, 0);
       old_dw->get(radiationVolqIN, d_volq_label, matlIndex, patch, gn, 0);
     }
@@ -762,7 +724,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         // Radiation part: -------------------------
         bool DO_NEW_ABSKP = false;
         Q_radiation = 0.0;
-        if ( _radiation  && DO_NEW_ABSKP){ 
+        if ( d_radiation  && DO_NEW_ABSKP){ 
           // New Glacier Code for ABSKP: 
           double qabs = 0.0; 
           double qsca = 0.0; 
@@ -770,7 +732,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
           fort_rqpart( unscaled_length, particle_temperature, unscaled_ash_mass, init_ash_frac, qabs, qsca ); 
 
           //what goes next?!
-        } else if ( _radiation && !DO_NEW_ABSKP ) { 
+        } else if ( d_radiation && !DO_NEW_ABSKP ) { 
           double Qabs = 0.8;
           double Apsc = (pi/4.0)*Qabs*pow(unscaled_length,2.0);
           //          double Eb = 4.0*sigma*pow(particle_temperature,4.0);
