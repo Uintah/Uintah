@@ -21,7 +21,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-//    File   : sci_hash_map.h
+
+//    File   : sci_algorithm.h
 //    Author : Wayne Witzel
 //    Date   : Jul 7 2002
 //

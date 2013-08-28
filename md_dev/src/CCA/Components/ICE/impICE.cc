@@ -621,12 +621,12 @@ void ICE::setupRHS(const ProcessorGroup*,
       vol_fracX_FC.initialize(nan, lowIndex,patch->getExtraSFCXHighIndex());
       vol_fracY_FC.initialize(nan, lowIndex,patch->getExtraSFCYHighIndex());
       vol_fracZ_FC.initialize(nan, lowIndex,patch->getExtraSFCZHighIndex());     
-      new_dw->get(uvel_FC,    lb->uvel_FCMELabel,     indx,patch,gac, 2);       
-      new_dw->get(vvel_FC,    lb->vvel_FCMELabel,     indx,patch,gac, 2);       
-      new_dw->get(wvel_FC,    lb->wvel_FCMELabel,     indx,patch,gac, 2);       
-      pNewDW->get(vol_frac,   lb->vol_frac_CCLabel,   indx,patch,gac, 2);
-      pNewDW->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,0);
-      pNewDW->get(speedSound, lb->speedSound_CCLabel, indx,patch,gn,0);
+      new_dw->get(uvel_FC,    lb->uvel_FCMELabel,     indx,patch, gac, 2);       
+      new_dw->get(vvel_FC,    lb->vvel_FCMELabel,     indx,patch, gac, 2);       
+      new_dw->get(wvel_FC,    lb->wvel_FCMELabel,     indx,patch, gac, 2);       
+      pNewDW->get(vol_frac,   lb->vol_frac_CCLabel,   indx,patch, gac, 2);
+      pNewDW->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch, gn, 0);
+      pNewDW->get(speedSound, lb->speedSound_CCLabel, indx,patch, gn, 0);
         
       //__________________________________
       // Advection preprocessing
@@ -637,17 +637,17 @@ void ICE::setupRHS(const ProcessorGroup*,
       advectVarBasket* varBasket = scinew advectVarBasket();
       varBasket->new_dw = new_dw;
       varBasket->old_dw = old_dw;
-      varBasket->indx = indx;
-      varBasket->patch = patch;
-      varBasket->level = level;
-      varBasket->lb  = lb;
-      varBasket->doRefluxing = d_doAMR;  // always reflux with amr
-      varBasket->is_Q_massSpecific = false;
-      varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
-      varBasket->AMR_subCycleProgressVar = 0;  // for lockstep it's always 0
+      varBasket->indx   = indx;
+      varBasket->patch  = patch;
+      varBasket->level  = level;
+      varBasket->lb     = lb;
+      varBasket->doRefluxing             = d_doAMR; // always reflux with amr
+      varBasket->is_Q_massSpecific       = false;
+      varBasket->useCompatibleFluxes     = d_useCompatibleFluxes;
+      varBasket->AMR_subCycleProgressVar = 0;       // for lockstep it's always 0
       
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx, 
-                                    bulletProof_test, pNewDW); 
+                                    bulletProof_test, pNewDW, varBasket); 
 
       advector->advectQ(vol_frac, patch, q_advected, varBasket, 
                         vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw); 

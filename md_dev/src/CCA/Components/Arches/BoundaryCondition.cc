@@ -788,7 +788,7 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
             for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
               IntVector currCell(colX, colY, colZ);
 
-              if (cellType[currCell] == d_mmWallID) {
+              if (cellType[currCell] == INTRUSION ) {
                 mmGasVolFrac[currCell] = 0.0;
                 voidFracMPM[currCell] = 0.0;
               }
@@ -1564,26 +1564,6 @@ BoundaryCondition::pressureBC(const Patch* patch,
   CCVariable<Stencil7>& A = vars->pressCoeff;
   constCCVariable<int>& cellType = constvars->cellType;
   
-  //__________________________________
-  //  intrusion Boundary Conditions
-  if(_using_new_intrusion){
-    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      if(cellType[c] == wall_BC){
-        A[c].p = 0.0;
-        A[c].e = 0.0;
-        A[c].w = 0.0;
-        A[c].n = 0.0;
-        A[c].s = 0.0;
-        A[c].t = 0.0;
-        A[c].b = 0.0;
-        vars->pressNonlinearSrc[c] = 0.0;
-        vars->pressLinearSrc[c] = -1.0;
-      }
-    }
-  }
-
-
   if ( !d_use_new_bcs ) { 
     //__________________________________
     //  Pressure, outlet, and wall BC
@@ -1645,6 +1625,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
         }
       }
     }
+
   } else { 
 
     std::vector<BC_TYPE> add_types; 
@@ -1656,6 +1637,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
 
     std::vector<BC_TYPE> sub_types; 
     sub_types.push_back( WALL ); 
+    sub_types.push_back( INTRUSION ); 
     sub_types.push_back( MASSFLOW_INLET ); 
     sub_types.push_back( VELOCITY_INLET ); 
     sub_types.push_back( VELOCITY_FILE ); 
@@ -1823,11 +1805,12 @@ BoundaryCondition::sched_setIntrusionTemperature( SchedulerP& sched,
 //______________________________________________________________________
 // compute multimaterial wall bc
 void 
-BoundaryCondition::mmvelocityBC(const Patch* patch,
+BoundaryCondition::wallVelocityBC(const Patch* patch,
                                 CellInformation*,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars)
 {
+
   //__________________________________
   //    X dir
   IntVector idxLoU = patch->getSFCXFORTLowIndex__Old();
@@ -1835,6 +1818,8 @@ BoundaryCondition::mmvelocityBC(const Patch* patch,
   int ioff = 1;
   int joff = 0;
   int koff = 0;
+
+  int boundary_type = BoundaryCondition::INTRUSION; 
 
   fort_mmbcvelocity(idxLoU, idxHiU,
                     vars->uVelocityCoeff[Arches::AE],
@@ -1844,7 +1829,7 @@ BoundaryCondition::mmvelocityBC(const Patch* patch,
                     vars->uVelocityCoeff[Arches::AT],
                     vars->uVelocityCoeff[Arches::AB],
                     vars->uVelNonlinearSrc, vars->uVelLinearSrc,
-                    constvars->cellType, d_mmWallID, ioff, joff, koff);
+                    constvars->cellType, boundary_type, ioff, joff, koff);
 
   //__________________________________
   //    Y dir
@@ -1862,7 +1847,7 @@ BoundaryCondition::mmvelocityBC(const Patch* patch,
                     vars->vVelocityCoeff[Arches::AE],
                     vars->vVelocityCoeff[Arches::AW],
                     vars->vVelNonlinearSrc, vars->vVelLinearSrc,
-                    constvars->cellType, d_mmWallID, ioff, joff, koff);
+                    constvars->cellType, boundary_type, ioff, joff, koff);
 
   //__________________________________
   //    Z dir
@@ -1880,7 +1865,171 @@ BoundaryCondition::mmvelocityBC(const Patch* patch,
                     vars->wVelocityCoeff[Arches::AN],
                     vars->wVelocityCoeff[Arches::AS],
                     vars->wVelNonlinearSrc, vars->wVelLinearSrc,
-                    constvars->cellType, d_mmWallID, ioff, joff, koff);
+                    constvars->cellType, boundary_type, ioff, joff, koff);
+
+  //__________________________________
+  //    X dir
+  ioff = 1;
+  joff = 0;
+  koff = 0;
+
+  idxLoU = patch->getSFCXFORTLowIndex__Old();
+  idxHiU = patch->getSFCXFORTHighIndex__Old();
+  fort_mmbcvelocity(idxLoU, idxHiU,
+                    vars->uVelocityConvectCoeff[Arches::AE],
+                    vars->uVelocityConvectCoeff[Arches::AW],
+                    vars->uVelocityConvectCoeff[Arches::AN],
+                    vars->uVelocityConvectCoeff[Arches::AS],
+                    vars->uVelocityConvectCoeff[Arches::AT],
+                    vars->uVelocityConvectCoeff[Arches::AB],
+                    vars->uVelNonlinearSrc, vars->uVelLinearSrc,
+                    constvars->cellType, boundary_type, ioff, joff, koff);
+
+  //__________________________________
+  //    Y dir
+  idxLoU = patch->getSFCYFORTLowIndex__Old();
+  idxHiU = patch->getSFCYFORTHighIndex__Old();
+  
+  ioff = 0;
+  joff = 1;
+  koff = 0;
+  fort_mmbcvelocity(idxLoU, idxHiU,
+                    vars->vVelocityConvectCoeff[Arches::AN],
+                    vars->vVelocityConvectCoeff[Arches::AS],
+                    vars->vVelocityConvectCoeff[Arches::AT],
+                    vars->vVelocityConvectCoeff[Arches::AB],
+                    vars->vVelocityConvectCoeff[Arches::AE],
+                    vars->vVelocityConvectCoeff[Arches::AW],
+                    vars->vVelNonlinearSrc, vars->vVelLinearSrc,
+                    constvars->cellType, boundary_type, ioff, joff, koff);
+
+  //__________________________________
+  //    Z dir
+  idxLoU = patch->getSFCZFORTLowIndex__Old();
+  idxHiU = patch->getSFCZFORTHighIndex__Old();
+
+  ioff = 0;
+  joff = 0;
+  koff = 1;
+  fort_mmbcvelocity(idxLoU, idxHiU,
+                    vars->wVelocityConvectCoeff[Arches::AT],
+                    vars->wVelocityConvectCoeff[Arches::AB],
+                    vars->wVelocityConvectCoeff[Arches::AE],
+                    vars->wVelocityConvectCoeff[Arches::AW],
+                    vars->wVelocityConvectCoeff[Arches::AN],
+                    vars->wVelocityConvectCoeff[Arches::AS],
+                    vars->wVelNonlinearSrc, vars->wVelLinearSrc,
+                    constvars->cellType, boundary_type, ioff, joff, koff);
+
+  boundary_type = BoundaryCondition::WALL; 
+
+  //__________________________________
+  //    X dir
+  idxLoU = patch->getSFCXFORTLowIndex__Old();
+  idxHiU = patch->getSFCXFORTHighIndex__Old();
+  ioff = 1;
+  joff = 0;
+  koff = 0;
+
+  fort_mmbcvelocity(idxLoU, idxHiU,
+                    vars->uVelocityCoeff[Arches::AE],
+                    vars->uVelocityCoeff[Arches::AW],
+                    vars->uVelocityCoeff[Arches::AN],
+                    vars->uVelocityCoeff[Arches::AS],
+                    vars->uVelocityCoeff[Arches::AT],
+                    vars->uVelocityCoeff[Arches::AB],
+                    vars->uVelNonlinearSrc, vars->uVelLinearSrc,
+                    constvars->cellType, boundary_type, ioff, joff, koff);
+
+  //__________________________________
+  //    Y dir
+  idxLoU = patch->getSFCYFORTLowIndex__Old();
+  idxHiU = patch->getSFCYFORTHighIndex__Old();
+  
+  ioff = 0;
+  joff = 1;
+  koff = 0;
+  fort_mmbcvelocity(idxLoU, idxHiU,
+                    vars->vVelocityCoeff[Arches::AN],
+                    vars->vVelocityCoeff[Arches::AS],
+                    vars->vVelocityCoeff[Arches::AT],
+                    vars->vVelocityCoeff[Arches::AB],
+                    vars->vVelocityCoeff[Arches::AE],
+                    vars->vVelocityCoeff[Arches::AW],
+                    vars->vVelNonlinearSrc, vars->vVelLinearSrc,
+                    constvars->cellType, boundary_type, ioff, joff, koff);
+
+  //__________________________________
+  //    Z dir
+  idxLoU = patch->getSFCZFORTLowIndex__Old();
+  idxHiU = patch->getSFCZFORTHighIndex__Old();
+
+  ioff = 0;
+  joff = 0;
+  koff = 1;
+  fort_mmbcvelocity(idxLoU, idxHiU,
+                    vars->wVelocityCoeff[Arches::AT],
+                    vars->wVelocityCoeff[Arches::AB],
+                    vars->wVelocityCoeff[Arches::AE],
+                    vars->wVelocityCoeff[Arches::AW],
+                    vars->wVelocityCoeff[Arches::AN],
+                    vars->wVelocityCoeff[Arches::AS],
+                    vars->wVelNonlinearSrc, vars->wVelLinearSrc,
+                    constvars->cellType, boundary_type, ioff, joff, koff);
+
+  //__________________________________
+  //    X dir
+  ioff = 1;
+  joff = 0;
+  koff = 0;
+
+  idxLoU = patch->getSFCXFORTLowIndex__Old();
+  idxHiU = patch->getSFCXFORTHighIndex__Old();
+  fort_mmbcvelocity(idxLoU, idxHiU,
+                    vars->uVelocityConvectCoeff[Arches::AE],
+                    vars->uVelocityConvectCoeff[Arches::AW],
+                    vars->uVelocityConvectCoeff[Arches::AN],
+                    vars->uVelocityConvectCoeff[Arches::AS],
+                    vars->uVelocityConvectCoeff[Arches::AT],
+                    vars->uVelocityConvectCoeff[Arches::AB],
+                    vars->uVelNonlinearSrc, vars->uVelLinearSrc,
+                    constvars->cellType, boundary_type, ioff, joff, koff);
+
+  //__________________________________
+  //    Y dir
+  idxLoU = patch->getSFCYFORTLowIndex__Old();
+  idxHiU = patch->getSFCYFORTHighIndex__Old();
+  
+  ioff = 0;
+  joff = 1;
+  koff = 0;
+  fort_mmbcvelocity(idxLoU, idxHiU,
+                    vars->vVelocityConvectCoeff[Arches::AN],
+                    vars->vVelocityConvectCoeff[Arches::AS],
+                    vars->vVelocityConvectCoeff[Arches::AT],
+                    vars->vVelocityConvectCoeff[Arches::AB],
+                    vars->vVelocityConvectCoeff[Arches::AE],
+                    vars->vVelocityConvectCoeff[Arches::AW],
+                    vars->vVelNonlinearSrc, vars->vVelLinearSrc,
+                    constvars->cellType, boundary_type, ioff, joff, koff);
+
+  //__________________________________
+  //    Z dir
+  idxLoU = patch->getSFCZFORTLowIndex__Old();
+  idxHiU = patch->getSFCZFORTHighIndex__Old();
+
+  ioff = 0;
+  joff = 0;
+  koff = 1;
+  fort_mmbcvelocity(idxLoU, idxHiU,
+                    vars->wVelocityConvectCoeff[Arches::AT],
+                    vars->wVelocityConvectCoeff[Arches::AB],
+                    vars->wVelocityConvectCoeff[Arches::AE],
+                    vars->wVelocityConvectCoeff[Arches::AW],
+                    vars->wVelocityConvectCoeff[Arches::AN],
+                    vars->wVelocityConvectCoeff[Arches::AS],
+                    vars->wVelNonlinearSrc, vars->wVelLinearSrc,
+                    constvars->cellType, boundary_type, ioff, joff, koff);
 }
 
 //______________________________________________________________________
@@ -1896,7 +2045,7 @@ BoundaryCondition::mmpressureBC(DataWarehouse* new_dw,
 
     IntVector c = *iter; 
 
-    if ( constvars->cellType[c] == d_mmWallID ){ 
+    if ( constvars->cellType[c] == INTRUSION ){ 
 
       const double constant = 1.0; 
       const double value    = 0.0; 
@@ -1906,22 +2055,22 @@ BoundaryCondition::mmpressureBC(DataWarehouse* new_dw,
 
     } else { 
 
-      if ( constvars->cellType[ c + IntVector(1,0,0) ] == d_mmWallID ){ 
+      if ( constvars->cellType[ c + IntVector(1,0,0) ] == INTRUSION ){ 
         vars->pressCoeff[c].e = 0.0; 
       } 
-      if ( constvars->cellType[ c - IntVector(1,0,0) ] == d_mmWallID ){ 
+      if ( constvars->cellType[ c - IntVector(1,0,0) ] == INTRUSION ){ 
         vars->pressCoeff[c].w = 0.0; 
       } 
-      if ( constvars->cellType[ c + IntVector(0,1,0) ] == d_mmWallID ){ 
+      if ( constvars->cellType[ c + IntVector(0,1,0) ] == INTRUSION ){ 
         vars->pressCoeff[c].n = 0.0; 
       } 
-      if ( constvars->cellType[ c - IntVector(0,1,0) ] == d_mmWallID ){ 
+      if ( constvars->cellType[ c - IntVector(0,1,0) ] == INTRUSION ){ 
         vars->pressCoeff[c].s = 0.0; 
       } 
-      if ( constvars->cellType[ c + IntVector(0,0,1) ] == d_mmWallID ){ 
+      if ( constvars->cellType[ c + IntVector(0,0,1) ] == INTRUSION ){ 
         vars->pressCoeff[c].t = 0.0; 
       } 
-      if ( constvars->cellType[ c - IntVector(0,0,1) ] == d_mmWallID ){ 
+      if ( constvars->cellType[ c - IntVector(0,0,1) ] == INTRUSION ){ 
         vars->pressCoeff[c].b = 0.0; 
       } 
 
@@ -3613,745 +3762,6 @@ BoundaryCondition::setInletFlowRates(const ProcessorGroup*,
   }
 }
 
-//****************************************************************************
-//Actually calculate the mms velocity BC
-//****************************************************************************
-void 
-BoundaryCondition::mmsvelocityBC(const Patch* patch,
-                                 CellInformation* cellinfo,
-                                 ArchesVariables* vars,
-                                 ArchesConstVariables* constvars,
-                                 double time_shift,
-                                 double dt)
-{
-  mmsuVelocityBC(patch, cellinfo, vars, constvars, time_shift, dt);
-
-  mmsvVelocityBC(patch, cellinfo, vars, constvars, time_shift, dt);
-
-  mmswVelocityBC(patch, cellinfo, vars, constvars, time_shift, dt);
-}
-
-
-//****************************************************************************
-// call fortran routine to calculate the MMS U Velocity BC
-// Sets the uncorrected velocity values (velRhoHat)!  These should not be
-// corrected after the projection so that the values persist to 
-// the next time step.
-//****************************************************************************
-void 
-BoundaryCondition::mmsuVelocityBC(const Patch* patch,
-                                  CellInformation* cellinfo,
-                                  ArchesVariables* vars,
-                                  ArchesConstVariables* constvars, 
-                                  double time_shift,
-                                  double dt)
-{
-  int wall_celltypeval = wallCellType();
-
-  // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-
-  // Check to see if patch borders a wall
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  double time=d_lab->d_sharedState->getElapsedTime();
-  double current_time = time + time_shift;
-  
-  if (xminus) {
-    
-    int colX = idxLo.x();
-    double pi = acos(-1.0);
-
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-        
-        if (constvars->cellType[xminusCell] == wall_celltypeval){
-          // Directly set the hat velocity
-
-          if (d_mms == "constantMMS"){
-            vars->uVelRhoHat[currCell] = cu;
-            vars->uVelRhoHat[xminusCell] = cu;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->uVelRhoHat[currCell] = 1 - amp * cos(2.0*pi*( cellinfo->xu[colX] - current_time))
-                                                 * sin(2.0*pi*( cellinfo->yy[colY] - current_time))
-                                                 * exp(-2.0*d_viscosity*current_time);
-                                                 
-            vars->uVelRhoHat[xminusCell] = 1 - amp * cos(2.0*pi*( cellinfo->xu[colX-1] - current_time))
-                                                   * sin(2.0*pi*( cellinfo->yy[colY] - current_time))
-                                                   * exp(-2.0*d_viscosity*current_time);
-
-          }
-        }
-      }
-    }
-  }
-
-  if (xplus) {
-  
-    double pi = acos(-1.0);
-
-    int colX = idxHi.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        IntVector xplusplusCell(colX+2,colY,colZ);
-        
-        if (constvars->cellType[xplusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->uVelRhoHat[xplusCell] = cu;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->uVelRhoHat[xplusCell] = 1 - amp * cos(2.0*pi*( cellinfo->xu[colX+1] - current_time))
-                                                  * sin(2.0*pi*( cellinfo->yy[colY] - current_time))
-                                                  * exp(-2.0*d_viscosity*current_time);
-          }
-        }
-      }
-    }
-  }
-
-  if (yminus) {
-    int colY = idxLo.y();
-    double pi = acos(-1.0);
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        
-        if (constvars->cellType[yminusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->uVelRhoHat[yminusCell] = cu;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->uVelRhoHat[yminusCell] = 1 - amp * cos(2.0*pi*( cellinfo->xu[colX] - current_time ))
-                                                   * sin(2.0*pi*( cellinfo->yy[colY-1] - current_time ))
-                                                   * exp(-2.0*d_viscosity*current_time);
-          }
-        }
-      }
-    }
-  }
-
-  if (yplus) {
-    int colY = idxHi.y();
-    double pi = acos(-1.0);
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-
-        if (constvars->cellType[yplusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->uVelRhoHat[yplusCell] = cu;
-          }
-          else if (d_mms == "almgrenMMS"){
-            
-            vars->uVelRhoHat[yplusCell] = 1 - amp * cos(2.0*pi*( cellinfo->xu[colX] - current_time ))
-                                                  * sin(2.0*pi*( cellinfo->yy[colY+1] - current_time ))
-                                                  * exp(-2.0*d_viscosity*current_time);
-          }
-        }
-      }
-    }
-  }
-
-
-  if (zminus) {
-    int colZ = idxLo.z();
-    double pi = acos(-1.0);
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        
-        if (constvars->cellType[zminusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->uVelRhoHat[zminusCell] = cu;
-          }
-          else if (d_mms == "almgrenMMS"){
-            
-            vars->uVelRhoHat[zminusCell] = 1 - amp * cos(2.0*pi*( cellinfo->xu[colX] - current_time ))
-                                                   * sin(2.0*pi*( cellinfo->yy[colY] - current_time ))
-                                                   * exp(-2.0*d_viscosity*current_time);
-          }            
-        }
-      }
-    }
-  }
-
-  if (zplus) {
-    int colZ = idxHi.z();
-    //double pi = acos(-1.0);
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        
-        if (constvars->cellType[zplusCell] == wall_celltypeval){
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->uVelRhoHat[zplusCell] = cu;
-          }
-          else if (d_mms == "almgrenMMS"){
-            double pi = acos(-1.0);
-            vars->uVelRhoHat[zplusCell] = 1 - amp * cos(2.0*pi* ( cellinfo->xu[colX] - current_time ))
-                                                  * sin(2.0*pi* ( cellinfo->yy[colY] - current_time ))
-                                                  * exp(-2.0*d_viscosity*current_time);
-          }            
-        }
-      }
-    }
-  }
-}
-  
-//****************************************************************************
-// call fortran routine to calculate the MMS V Velocity BC
-//****************************************************************************
-void 
-BoundaryCondition::mmsvVelocityBC(const Patch* patch,
-                                  CellInformation* cellinfo,
-                                  ArchesVariables* vars,
-                                  ArchesConstVariables* constvars,
-                                  double time_shift, 
-                                  double dt) 
-{
-  int wall_celltypeval = wallCellType();
-
-  // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-
-  // Check to see if patch borders a wall
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  double time=d_lab->d_sharedState->getElapsedTime();
-  double current_time=time + time_shift;
-  
-  if (xminus) {
-    int colX = idxLo.x();
-    double pi = acos(-1.0);
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-        
-        if (constvars->cellType[xminusCell] == wall_celltypeval){
-          
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->vVelRhoHat[xminusCell] = cv;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->vVelRhoHat[xminusCell] = 1 + amp * sin(2.0*pi* ( cellinfo->xx[colX-1] - current_time ))
-                                                   * cos(2.0*pi* ( cellinfo->yv[colY] - current_time ))
-                                                   * exp(-2.0*d_viscosity*current_time);
-          }
-          
-        }
-      }
-    }
-  }
-  
-  if (xplus) {
-    int colX = idxHi.x();
-    double pi = acos(-1.0);
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        
-        if (constvars->cellType[xplusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->vVelRhoHat[xplusCell] = cv;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->vVelRhoHat[xplusCell] = 1 + amp * sin(2.0*pi*( cellinfo->xx[colX+1] - current_time ))
-                                                 * cos(2.0*pi*( cellinfo->yv[colY] - current_time ))
-                                                 * exp(-2.0*d_viscosity*current_time);
-          }
-          
-        }
-      }
-    }
-  }
-  
-  if (yminus) {
-    int colY = idxLo.y();
-    double pi = acos(-1.0);
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        
-        if (constvars->cellType[yminusCell] == wall_celltypeval){
-          
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->vVelRhoHat[yminusCell] = cv;
-            vars->vVelRhoHat[currCell]   = cv;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->vVelRhoHat[yminusCell] = 1 + amp * sin(2.0*pi*( cellinfo->xx[colX] - current_time ))
-                                                  * cos(2.0*pi*( cellinfo->yv[colY-1] - current_time ))
-                                                  * exp(-2.0*d_viscosity*current_time);
-
-            vars->vVelRhoHat[currCell]   = 1 + amp * sin(2.0*pi*( cellinfo->xx[colX] - current_time ))
-                                                  * cos(2.0*pi*( cellinfo->yv[colY] - current_time ))
-                                                  * exp(-2.0*d_viscosity*current_time);
-
-          }
-          
-        }
-      }
-    }
-  }
-  if (yplus) {
-    int colY = idxHi.y();
-    double pi = acos(-1.0);
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        IntVector yplusplusCell(colX, colY+2, colZ);
-        
-        if (constvars->cellType[yplusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->vVelRhoHat[yplusCell] = cv;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->vVelRhoHat[yplusCell] = 1 + amp * sin(2.0*pi*( cellinfo->xx[colX] - current_time ))
-                                                 * cos(2.0*pi*( cellinfo->yv[colY+1] - current_time ))
-                                                 * exp(-2.0*d_viscosity*current_time);
-          }
-          
-        }
-      }
-    }
-  }
-  if (zminus) {
-    int colZ = idxLo.z();
-    double pi = acos(-1.0);
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        
-        if (constvars->cellType[zminusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->vVelRhoHat[zminusCell] = cv;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->vVelRhoHat[zminusCell] = 1 + amp * sin(2.0*pi*( cellinfo->xx[colX] - current_time ))
-                                                  * cos(2.0*pi*( cellinfo->yv[colY] - current_time ))
-                                                  * exp(-2.0*d_viscosity*current_time);
-          }            
-        }
-      }
-    }
-  }
-  if (zplus) {
-    int colZ = idxHi.z();
-    double pi = acos(-1.0);
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        
-        if (constvars->cellType[zplusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->vVelRhoHat[zplusCell] = cv;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->vVelRhoHat[zplusCell] = 1 + amp * sin(2.0*pi*( cellinfo->xx[colX] - current_time ))
-                                                 * cos(2.0*pi*( cellinfo->yv[colY] - current_time ))
-                                                 * exp(-2.0*d_viscosity*current_time);
-          }            
-        }
-      }
-    }
-  }
-}
-
-//****************************************************************************
-// call fortran routine to calculate the MMS W Velocity BC
-//****************************************************************************
-void 
-BoundaryCondition::mmswVelocityBC(const Patch* patch,
-                                  CellInformation* cellinfo,
-                                  ArchesVariables* vars,
-                                  ArchesConstVariables* constvars,
-                                  double time_shift, 
-                                  double dt) 
-{
-  int wall_celltypeval = wallCellType();
-
-  // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-
-  // Check to see if patch borders a wall
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  //double time=d_lab->d_sharedState->getElapsedTime();
-  //double current_time = time + time_shift;
-
-  //currently only supporting sinemms in x-y plane
-  
-  if (xminus) {
-    int colX = idxLo.x();
-    //double pi = acos(-1.0);
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-        
-        if (constvars->cellType[xminusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->wVelRhoHat[xminusCell] = cw;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->wVelRhoHat[xminusCell] = 0.0;
-          }
-        }
-      }
-    }
-  }
-  
-  if (xplus) {
-    int colX = idxHi.x();
-    //double pi = acos(-1.0);
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        
-        if (constvars->cellType[xplusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->wVelRhoHat[xplusCell] = cw;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->wVelRhoHat[xplusCell] = 0.0;
-          }
-        }
-      }
-    }
-  }
-  
-  if (yminus) {
-    int colY = idxLo.y();
-    //double pi = acos(-1.0);
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        
-        if (constvars->cellType[yminusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->wVelRhoHat[yminusCell] = cw;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->wVelRhoHat[yminusCell] = 0.0;
-          }
-          
-        }
-      }
-    }
-  }
-  if (yplus) {
-    int colY = idxHi.y();
-    //double pi = acos(-1.0);
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        
-        if (constvars->cellType[yplusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->wVelRhoHat[yplusCell] = cw;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->wVelRhoHat[yplusCell] = 0.0;
-          }
-          
-        }
-      }
-    }
-  }
-  if (zminus) {
-    int colZ = idxLo.z();
-    //double pi = acos(-1.0);
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        
-        if (constvars->cellType[zminusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->wVelRhoHat[currCell]   = cw;
-            vars->wVelRhoHat[zminusCell] = cw;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->wVelRhoHat[currCell]   = 0.0;
-            vars->wVelRhoHat[zminusCell] = 0.0;
-          }            
-        }
-      }
-    }
-  }
-  if (zplus) {
-    int colZ = idxHi.z();
-    //double pi = acos(-1.0);
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        IntVector zplusplusCell(colX, colY, colZ+2);
-        
-        if (constvars->cellType[zplusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->wVelRhoHat[zplusCell] = cw;
-          }
-          else if (d_mms == "almgrenMMS"){
-            vars->wVelRhoHat[zplusCell] = 0.0;
-          }            
-        }
-      }  // X
-    }  // Y
-  }  // zplus
-}
-
-//****************************************************************************
-// Actually compute the MMS scalar bcs
-//****************************************************************************
-void 
-BoundaryCondition::mmsscalarBC(const Patch* patch,
-                               CellInformation* cellinfo,
-                               ArchesVariables* vars,
-                               ArchesConstVariables* constvars,
-                               double time_shift,
-                               double dt)
-{
-  // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-
-  // Get the wall boundary and flow field codes
-  int wall_celltypeval = wallCellType();
-
-  //double time=d_lab->d_sharedState->getElapsedTime();
-  //double current_time = time + time_shift;
-
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  if (xminus) {
-    int colX = idxLo.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-
-        if (constvars->cellType[xminusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->scalar[xminusCell] = phi0;
-          }
-          else if (d_mms == "almgrenMMS"){
-          }
-          
-        }
-      }
-    }
-  }
-
-
-  if (xplus) {
-    int colX = idxHi.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-
-        if (constvars->cellType[xplusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-           if (d_mms == "constantMMS"){
-            vars->scalar[xplusCell] = phi0;
-          }
-          else if (d_mms == "almgrenMMS"){
-          }
-          
-        }
-      }
-    }
-  }
-
-
-  if (yminus) {
-    int colY = idxLo.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        
-        if (constvars->cellType[yminusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->scalar[yminusCell] = phi0;
-          }
-          else if (d_mms == "almgrenMMS"){
-          }
-          
-        }
-      }
-    }
-  }
-
-
-  if (yplus) {
-    int colY = idxHi.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        
-        if (constvars->cellType[yplusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->scalar[yplusCell] = phi0;
-          }
-          else if (d_mms == "almgrenMMS"){
-          }
-          
-        }
-      }
-    }
-  }
-
-
-
-  if (zminus) {
-    int colZ = idxLo.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        
-        if (constvars->cellType[zminusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->scalar[zminusCell] = phi0;
-          }
-          else if (d_mms == "almgrenMMS"){
-          }            
-        }
-      }
-    }
-  }
-
-
-  if (zplus) {
-    int colZ = idxHi.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        
-        if (constvars->cellType[zplusCell] == wall_celltypeval){
-
-          // Directly set the hat velocity
-          if (d_mms == "constantMMS"){
-            vars->scalar[zplusCell] = phi0;
-          }
-          else if (d_mms == "almgrenMMS"){
-          }            
-        }
-      }
-    }
-  }
-}
-
-
 void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched, 
                                                const PatchSet* patches, 
                                                const MaterialSet* matls,
@@ -4611,6 +4021,41 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           found_bc = true; 
 
           // note that the mass flow rate is in the BCstruct value 
+          
+          //compute the density:
+          typedef std::vector<std::string> StringVec; 
+          typedef std::map<std::string, double> StringDoubleMap;
+          MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
+          StringVec iv_var_names = mixingTable->getAllIndepVars(); 
+          vector<double> iv; 
+
+          for ( StringVec::iterator iv_iter = iv_var_names.begin(); iv_iter != iv_var_names.end(); iv_iter++){
+
+            string curr_iv = *iv_iter; 
+            cout << curr_iv << endl;
+
+            for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0; 
+                db_BCType2 = db_BCType2->findNextBlock("BCType") ){
+
+              string curr_var; 
+              db_BCType2->getAttribute("label",curr_var);
+
+              if ( curr_var == curr_iv ){
+                string type;
+                db_BCType2->getAttribute("var",type);
+                if ( type != "Dirichlet"){
+                  throw InvalidValue("Error: Cannot compute property values for MassFlowInlet because not all IVs are of type Dirichlet: "+curr_var, __FILE__, __LINE__); 
+                } else { 
+                  double value; 
+                  db_BCType2->require("value",value);
+                  iv.push_back(value);
+                }
+              }
+            }
+          }
+
+          double density = mixingTable->getTableValue(iv,"density");
+          my_info.density = density; 
 
           //old: remove when this is cleaned up: 
           d_inletBoundary = true; 
@@ -5093,15 +4538,15 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
 
               if ( density[*bound_ptr] > 1e-10 ){ 
 
-                if ( (bc_iter->second).type == MASSFLOW_INLET ) {
-                  (bc_iter->second).mass_flow_rate = bc_value; 
-                  (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
-                                                   ( area * density[*bound_ptr] );
-                } else if ( (bc_iter->second).type == SWIRL ) { 
-                    (bc_iter->second).mass_flow_rate = bc_value; 
-                    (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
-                                                     ( area * density[*bound_ptr] ); 
-                } 
+//                if ( (bc_iter->second).type == MASSFLOW_INLET ) {
+//                  (bc_iter->second).mass_flow_rate = bc_value; 
+//                  (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
+//                                                   ( area * density[*bound_ptr] );
+//                } else if ( (bc_iter->second).type == SWIRL ) { 
+//                    (bc_iter->second).mass_flow_rate = bc_value; 
+//                    (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
+//                                                     ( area * density[*bound_ptr] );
+//                } 
 
                 switch ( bc_iter->second.type ) {
 
@@ -5114,7 +4559,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                   case ( MASSFLOW_INLET ): 
                     bc_iter->second.mass_flow_rate = bc_value; 
                     bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
-                                                     ( area * density[*bound_ptr] );
+                                                     ( area * bc_iter->second.density );
                     break;
                   case ( SWIRL ):
                     bc_iter->second.mass_flow_rate = bc_value; 
@@ -5138,7 +4583,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
       proc0cout << "  ----> BC Label: " << bc_iter->second.name << endl;
       proc0cout << "            area: " << area << endl;
       proc0cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
-      proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl; 
+      proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl;
 
     }
     proc0cout << endl;

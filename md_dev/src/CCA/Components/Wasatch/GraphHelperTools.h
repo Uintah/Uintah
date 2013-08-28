@@ -87,6 +87,7 @@ namespace Wasatch{
   {
     Expr::ExpressionFactory* const exprFactory;  ///< The factory used to build expressions
     IDSet rootIDs;                               ///< The root IDs used to create the graph
+    IDSet forcedIDs;                             ///< The set of IDs that were forced on this graph
     GraphHelper( Expr::ExpressionFactory* ef );
   };
 

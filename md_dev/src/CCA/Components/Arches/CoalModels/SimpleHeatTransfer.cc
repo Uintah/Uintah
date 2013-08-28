@@ -294,7 +294,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_cpINLabel, Ghost::None, 0);
  
-  if(_radiation){
+  if( d_radiation){
     tsk->requires(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
     tsk->requires(Task::OldDW, d_fieldLabels->d_abskgINLabel,  Ghost::None, 0);   
     tsk->requires(Task::OldDW, d_fieldLabels->d_radiationVolqINLabel, Ghost::None, 0);
@@ -436,7 +436,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> radiationVolqIN;
     CCVariable<double> enthNonLinSrc;
 
-    if(_radiation){
+    if(d_radiation){
       old_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
       old_dw->get(abskgIN, d_fieldLabels->d_abskgINLabel, matlIndex, patch, gn, 0);
       old_dw->get(radiationVolqIN, d_fieldLabels->d_radiationVolqINLabel, matlIndex, patch, gn, 0);
@@ -582,7 +582,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         // Radiation part: -------------------------
         bool DO_NEW_ABSKP = false; 
         Q_radiation = 0.0;
-        if ( _radiation  && DO_NEW_ABSKP){ 
+        if ( d_radiation  && DO_NEW_ABSKP){ 
           // New Glacier Code for ABSKP: 
           double qabs = 0.0; 
           double qsca = 0.0; 
@@ -590,7 +590,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
           fort_rqpart( unscaled_length, unscaled_particle_temperature, unscaled_ash_mass, init_ash_frac, qabs, qsca ); 
 
           //what goes next?!
-        } else if ( _radiation && !DO_NEW_ABSKP ) { 
+        } else if ( d_radiation && !DO_NEW_ABSKP ) { 
           double Qabs = 0.8;
           double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
           double Eb = 4*sigma*pow(unscaled_particle_temperature,4);

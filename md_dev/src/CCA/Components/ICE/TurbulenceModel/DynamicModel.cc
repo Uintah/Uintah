@@ -58,11 +58,11 @@ DynamicModel::~DynamicModel()
   -----------------------------------------------------------------------  */  
 void DynamicModel::computeTurbViscosity(DataWarehouse* new_dw,
                                         const Patch* patch,
-                                        const CCVariable<Vector>& vel_CC,
-                                        const SFCXVariable<double>& uvel_FC,
-                                        const SFCYVariable<double>& vvel_FC,
-                                        const SFCZVariable<double>& wvel_FC,
-                                        const CCVariable<double>& rho_CC,
+                                        constCCVariable<Vector>& vel_CC,
+                                        constSFCXVariable<double>& uvel_FC,
+                                        constSFCYVariable<double>& vvel_FC,
+                                        constSFCZVariable<double>& wvel_FC,
+                                        constCCVariable<double>& rho_CC,
                                         const int indx,
                                         SimulationStateP&  d_sharedState,
                                         CCVariable<double>& turb_viscosity)
@@ -92,9 +92,10 @@ void DynamicModel::computeTurbViscosity(DataWarehouse* new_dw,
   Function~  applyFilter
   Purpose~ Calculate the filtered values
   -----------------------------------------------------------------------  */
-template <class T> void DynamicModel::applyFilter(const Patch* patch, 
-                                                  CCVariable<T>& var,
-                                                  CCVariable<T>& var_hat)
+template <class T, class V> 
+  void DynamicModel::applyFilter(const Patch* patch, 
+                                 T& var,
+                                 CCVariable<V>& var_hat)
 { 
   int NGC =1;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 
@@ -128,13 +129,17 @@ template <class T> void DynamicModel::applyFilter(const Patch* patch,
           }
         }
       }   
-
 //   At boundary, under developing
-
-          
-       
    }    
 }
+
+//______________________________________________________________________
+// Explicit template instantiations:
+template void DynamicModel::applyFilter< constCCVariable<Vector>, Vector >( const Patch* patch, constCCVariable<Vector>& var, CCVariable<Vector>& var_hat);
+template void DynamicModel::applyFilter< CCVariable<double>, double >(      const Patch* patch, CCVariable<double>& var,      CCVariable<double>& var_hat);
+
+
+
 
 /* ---------------------------------------------------------------------
   Function~  applyFilter
@@ -176,10 +181,10 @@ void DynamicModel::applyFilter(const Patch* patch,
   -----------------------------------------------------------------------  */
 void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
                                     const Patch* patch,  
-                                    const CCVariable<Vector>& vel_CC,
-                                    const SFCXVariable<double>& uvel_FC,
-                                    const SFCYVariable<double>& vvel_FC,
-                                    const SFCZVariable<double>& wvel_FC,
+                                    constCCVariable<Vector>& vel_CC,
+                                    constSFCXVariable<double>& uvel_FC,
+                                    constSFCYVariable<double>& vvel_FC,
+                                    constSFCZVariable<double>& wvel_FC,
                                     const int indx,
                                     SimulationStateP&  d_sharedState,
                                     CCVariable<double>& term,
@@ -188,7 +193,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
   double Cs, meanSIJ_hat;
   StaticArray<CCVariable<double> > SIJ(6), SIJ_hat(6), LIJ(6), MIJ(6); 
   StaticArray<CCVariable<double> > alpha(6), beta(6), beta_hat(6);
-  CCVariable<Vector> vel_CC_tmp, vel_CC_hat;
+  CCVariable<Vector> vel_CC_hat;
   CCVariable<double> vel_prod, vel_prod_hat, LM, MM; 
 
   Ghost::GhostType  gac = Ghost::AroundCells;  
@@ -207,10 +212,8 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
   new_dw->allocateTemporary(MM,           patch, gac ,1);   
   new_dw->allocateTemporary(vel_prod,     patch, gac ,2);
   new_dw->allocateTemporary(vel_prod_hat, patch, gac ,1);
-  new_dw->allocateTemporary(vel_CC_tmp,   patch, gac ,2);
   new_dw->allocateTemporary(vel_CC_hat,   patch, gac ,1);  
 
-  vel_CC_tmp.initialize(Vector(0.0,0.0,0.0));
   vel_CC_hat.initialize(Vector(0.0,0.0,0.0));   
  
   d_smag.computeStrainRate(patch, uvel_FC, vvel_FC, wvel_FC, 
@@ -219,8 +222,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
   int NGC =2;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 
    IntVector c = *iter;
-   
-   vel_CC_tmp[c] = vel_CC[c];
+
    meanSIJ[c] = 
     sqrt(2.0 * (SIJ[0][c]*SIJ[0][c] + SIJ[1][c]*SIJ[1][c] + SIJ[2][c]*SIJ[2][c] + 
          2.0 * (SIJ[3][c]*SIJ[3][c] + SIJ[4][c]*SIJ[4][c] + SIJ[5][c]*SIJ[5][c])));
@@ -230,14 +232,12 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
       beta[comp][c] = A * SIJ[comp][c];
     }
   }
-   
-  setBC(vel_CC_tmp,"Velocity", patch, d_sharedState, indx, new_dw);
 
   for (int comp = 0; comp < 6; comp++ ) {
     setBC(beta[comp],"zeroNeumann",patch, d_sharedState, indx, new_dw);
   } 
 
-  applyFilter(patch, vel_CC_tmp, vel_CC_hat); //need vel_CC_tmp for the template function
+  applyFilter(patch, vel_CC,    vel_CC_hat);
   applyFilter(patch, SIJ,        SIJ_hat);  
   applyFilter(patch, beta,       beta_hat); 
 

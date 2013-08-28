@@ -128,8 +128,8 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Read in timing information
   d_prob_spec->require("samplingFrequency", d_writeFreq);
-  d_prob_spec->require("timeStart",         d_StartTime);            
-  d_prob_spec->require("timeStop",          d_StopTime);
+  d_prob_spec->require("timeStart",         d_startTime);            
+  d_prob_spec->require("timeStop",          d_stopTime);
 
   ProblemSpecP vars_ps = d_prob_spec->findBlock("Variables");
   if (!vars_ps){
@@ -445,12 +445,21 @@ void MinMax::computeMinMax(const ProcessorGroup* pg,
                            const MaterialSubset*,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw)
-{  
+{ 
+   // the user may want to restart from an uda that wasn't using the DA module
+  // This logic allows that.
   max_vartype writeTime;
-  old_dw->get(writeTime, d_lb->lastCompTimeLabel);
-  double lastWriteTime = writeTime;
+  double lastWriteTime = 0;
+  if( old_dw->exists( d_lb->lastCompTimeLabel ) ){
+    old_dw->get(writeTime, d_lb->lastCompTimeLabel);
+    lastWriteTime = writeTime;
+  }
 
   double now = d_dataArchiver->getCurrentTime();
+  if(now < d_startTime || now > d_stopTime){
+    return;
+  }
+  
   double nextWriteTime = lastWriteTime + 1.0/d_writeFreq;
   //__________________________________
   // compute min/max if it's time to write

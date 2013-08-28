@@ -69,7 +69,8 @@ namespace Uintah {
 class EnthalpySolver;
 class TimeIntegratorLabel;
 class PartVel; 
-class DQMOM; 
+class DQMOM;
+class MomentumSolver;
 class NonlinearSolver {
 
 public:
@@ -133,6 +134,8 @@ public:
   virtual void setMMS(bool doMMS) = 0;
 
   virtual bool getMMS() const = 0;
+  
+  virtual MomentumSolver* get_momentum_solver() = 0;
 
   virtual void setExtraProjection(bool extraProjection) = 0;
 
@@ -147,13 +150,17 @@ public:
 
   virtual void checkMomBCs( SchedulerP& sched,
                              const PatchSet* patches,
-                             const MaterialSet* matls) = 0; 
+                             const MaterialSet* matls) = 0;
+  
+  inline void set_use_wasatch_mom_rhs(const bool useWasatchMomRHS) { d_useWasatchMomRHS = useWasatchMomRHS;}
+  inline const bool get_use_wasatch_mom_rhs() { return d_useWasatchMomRHS;}
 
 protected:
    const ProcessorGroup* d_myworld;
    string d_timeIntegratorType;
    // enthalpy solver
    EnthalpySolver* d_enthalpySolver;
+   bool d_useWasatchMomRHS;
 private:
 
 }; // End class NonlinearSolver

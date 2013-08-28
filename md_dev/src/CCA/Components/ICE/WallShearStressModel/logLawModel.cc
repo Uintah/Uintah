@@ -242,7 +242,7 @@ void logLawModel::wallShearStresses(DataWarehouse* old_dw,
         u_tilde = sqrt( u_tilde ) + SMALL_NUM;                   // avoid division by 0
           
         // eq (5)
-        double tau_s = -pow( ( u_tilde * d_vonKarman )/denominator, 2);
+        double tau_s = pow( ( u_tilde * d_vonKarman )/denominator, 2);
         
         // eq (6)
         Vector tau_tmp(0,0,0);

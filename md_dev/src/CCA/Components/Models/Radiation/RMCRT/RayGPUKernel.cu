@@ -42,9 +42,12 @@ __global__ void rayTraceKernel(const uint3 patchLo,
                                const uint3 domainLo,
                                const uint3 domainHi,
                                const double3 cellSpacing,
-                               double* device_abskg,
-                               double* device_sigmaT4,
-                               double* device_divQ,
+                               double* dev_abskg,
+                               double* dev_sigmaT4,
+                               double* dev_divQ,
+                               double* dev_VRFlux,
+                               double* dev_boundFlux, 
+                               double* dev_radVolq,
                                bool virtRad,
                                bool isSeedRandom,
                                bool ccRays,
@@ -75,7 +78,9 @@ __global__ void rayTraceKernel(const uint3 patchLo,
 
       //_______________________________________________________________________
       // ray loop
+#if 0
       #pragma unroll
+
       for (int iRay = 0; iRay < numRays; iRay++) {
 
         // initialize device RNG states
@@ -115,13 +120,19 @@ __global__ void rayTraceKernel(const uint3 patchLo,
         }
 
         updateSumIDevice(domainLo, domainHi, patchSize, origin, cellSpacing, inv_direction_vector,
-                         ray_location, device_sigmaT4, device_abskg, &threshold, &sumI);
+                         ray_location, dev_sigmaT4, dev_abskg, &threshold, &sumI);
 
       }  // end ray loop
 
       //__________________________________
       //  Compute divQ
-      device_divQ[idx] = 4.0 * M_PI * device_abskg[idx] * (device_sigmaT4[idx] - (sumI / numRays));
+      dev_divQ[idx] = 4.0 * M_PI * dev_abskg[idx] * (dev_sigmaT4[idx] - (sumI / numRays));
+#endif
+      dev_divQ[idx]       = 0.0;
+      dev_VRFlux[idx]     = 0.0;
+      dev_boundFlux[idx]  = 0.0;
+      dev_radVolq[idx]    = 0.0;
+
 
     } // end z-slice loop
   }  // end domain boundary check
@@ -138,8 +149,8 @@ __device__ void updateSumIDevice(const uint3& domainLo,
                                  const double3& cellSpacing,
                                  const double3& inv_direction_vector,
                                  const double3& ray_location,
-                                 double* device_sigmaT4,
-                                 double* device_abskg,
+                                 double* dev_sigmaT4,
+                                 double* dev_abskg,
                                  double* threshold,
                                  double* sumI)
 {
@@ -245,23 +256,23 @@ __device__ void updateSumIDevice(const uint3& domainLo,
       //  Update the ray location
       double optical_thickness_prev = optical_thickness;
       int prev_index = INDEX3D(dx,dy,prevCell.x,prevCell.y,prevCell.z) + (dx*dy);
-      optical_thickness += cellSpacing.x * device_abskg[prev_index] * disMin;
+      optical_thickness += cellSpacing.x * dev_abskg[prev_index] * disMin;
       // device_sigmaT4[idx] always 0.3183314161909468?
-      *sumI += device_sigmaT4[prev_index] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
+      *sumI += dev_sigmaT4[prev_index] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
 
     } // end domain while loop
 
     intensity = exp(-optical_thickness);
     int cur_index = INDEX3D(dx,dy,cur.x,cur.y,cur.z) + (dx*dy);
-    *sumI += device_abskg[cur_index] * device_sigmaT4[cur_index] * intensity;
-    intensity = intensity * (1 - device_abskg[cur_index]);
+    *sumI += dev_abskg[cur_index] * dev_sigmaT4[cur_index] * intensity;
+    intensity = intensity * (1 - dev_abskg[cur_index]);
 
     //__________________________________
     //  Reflections
     if (intensity > *threshold) {
 
       ++nReflect;
-      fs = fs * (1 - device_abskg[cur_index]);
+      fs = fs * (1 - dev_abskg[cur_index]);
 
       // put cur back inside the domain
       cur = prevCell;
@@ -350,9 +361,12 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                           const uint3 domainLo,
                           const uint3 domainHi,
                           const double3 cellSpacing,
-                          double* device_abskg,
-                          double* device_sigmaT4,
-                          double* device_divQ,
+                          double* dev_abskg,
+                          double* dev_sigmaT4,
+                          double* dev_divQ,
+                          double* dev_VRFlux,
+                          double* dev_boundFlux,
+                          double* dev_radVolq,
                           bool virtRad,
                           bool isSeedRandom,
                           bool ccRays,
@@ -367,9 +381,12 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                                       domainLo,
                                                       domainHi,
                                                       cellSpacing,
-                                                      device_abskg,
-                                                      device_sigmaT4,
-                                                      device_divQ,
+                                                      dev_abskg,
+                                                      dev_sigmaT4,
+                                                      dev_divQ,
+                                                      dev_VRFlux,
+                                                      dev_boundFlux,
+                                                      dev_radVolq,
                                                       virtRad,
                                                       isSeedRandom,
                                                       ccRays,

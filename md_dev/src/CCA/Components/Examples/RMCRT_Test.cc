@@ -311,9 +311,9 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   // move data to the new_dw for simplicity
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
-    d_RMCRT->sched_CarryForward( level, sched, d_cellTypeLabel );
-    d_RMCRT->sched_CarryForward( level, sched, d_colorLabel );
-    d_RMCRT->sched_CarryForward( level, sched, d_abskgLabel );
+    d_RMCRT->sched_CarryForward_Var( level, sched, d_cellTypeLabel );
+    d_RMCRT->sched_CarryForward_Var( level, sched, d_colorLabel );
+    d_RMCRT->sched_CarryForward_Var( level, sched, d_abskgLabel );
   }
   
   
@@ -383,6 +383,9 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
         const bool backoutTemp    = true;
         
         d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
+        
+        d_RMCRT->sched_carryForward_rayTrace( level, sched, d_radCalc_freq );
+        
         d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq );
       }
     }

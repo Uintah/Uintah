@@ -26,13 +26,14 @@
 #define Uintah_Component_Arches_Ray_h
 
 #include <CCA/Ports/Scheduler.h>
+#include <Core/Containers/StaticArray.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <sci_defs/uintah_defs.h>
 
+#include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
 #ifdef HAVE_CUDA
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
@@ -51,9 +52,12 @@ void launchRayTraceKernel(dim3 dimGrid,
                           const uint3 domainLo,
                           const uint3 domainHi,
                           const double3 cellSpacing,
-                          double* device_abskg,
-                          double* device_sigmaT4,
-                          double* device_divQ,
+                          double* dev_abskg,
+                          double* dev_sigmaT4,
+                          double* dev_divQ,
+                          double* dev_VRFlux,
+                          double* dev_boundFlux,
+                          double* dev_radVolq,
                           bool virtRad,
                           bool isSeedRandom,
                           bool ccRays,
@@ -146,40 +150,6 @@ namespace Uintah{
                                          Task::WhichDW temp_dw,
                                          const int radCalc_freq,
                                          const bool backoutTemp = false);
- 
- 
-                                         
-      /** @brief Update the running total of the incident intensity */
-      void  updateSumI ( Vector& inv_direction_vector, // can change if scattering occurs
-                         Vector& ray_location,
-                         const IntVector& origin,
-                         const Vector& Dx,
-                         const IntVector& domainLo,
-                         const IntVector& domainHi,
-                         constCCVariable<double>& sigmaT4Pi,
-                         constCCVariable<double>& abskg,
-                         constCCVariable<int>& celltype,
-                         unsigned long int& size,
-                         double& sumI,
-                         MTRand * _mTwister);
-
-      /** @brief Adjust the location of a ray origin depending on the cell face */
-      void adjustLocation(Vector &location,
-                          const IntVector &indexOrder,
-                          const IntVector &shift,
-                          const double &DyDxRatio,
-                          const double &DzDxRatio);
-
-      /** @brief Adjust the direction of a ray depending on the cell face */
-      void adjustDirection(Vector &directionVector,
-                           const IntVector &indexOrder,
-                           const IntVector &signOrder);
-
-      /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
-      bool has_a_boundary(const IntVector &c,
-                          constCCVariable<int> &celltype,
-                          vector<int> &boundaryFaces);
-
 
       //__________________________________
       //  Multilevel tasks
@@ -197,11 +167,16 @@ namespace Uintah{
 
       void sched_ROI_Extents ( const LevelP& level, 
                                SchedulerP& scheduler );
-           
-      /* transfer a variable from old_dw -> new_dw for convience */   
-      void sched_CarryForward ( const LevelP& level,
-                                SchedulerP& scheduler,
-                                const VarLabel* variable );
+      //__________________________________
+      //  Carry Forward tasks     
+      // transfer a variable from old_dw -> new_dw for convience */   
+      void sched_CarryForward_Var ( const LevelP& level,
+                                    SchedulerP& scheduler,
+                                    const VarLabel* variable );
+                                    
+      void sched_carryForward_rayTrace( const LevelP& level, 
+                                        SchedulerP& sched,
+                                        const int radCalc_freq );
       
                                
       //__________________________________
@@ -221,7 +196,10 @@ namespace Uintah{
                const int mat_id);
 
     private: 
-      enum DIR {X, Y, Z, NONE};
+      enum DIR {X=0, Y=1, Z=2, NONE=-9};
+      //           -x      +x       -y       +y     -z     +z
+      enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};
+      
       double _pi;
       double _Threshold;
       double _sigma;
@@ -229,7 +207,7 @@ namespace Uintah{
       double _abskg_thld;
       
        
-      int    _NoOfRays;                      // number of rays per cell used to compute divQ
+      int    _nDivQRays;                    // number of rays per cell used to compute divQ
       int    _nRadRays;                     // number of rays per radiometer used to compute radiative flux
       int    _nFluxRays;                    // number of rays per cell used to compute radiative flux
       int    d_matl;
@@ -261,9 +239,24 @@ namespace Uintah{
       // Virtual Radiometer parameters
       bool _virtRad;
       double _viewAng;
-      Vector _orient;
       IntVector _VRLocationsMin;        // These should be physical points in the domain   --Todd
       IntVector _VRLocationsMax;        // What happens if the resolution changes
+      
+      struct VR_variables{
+        double thetaRot;
+        double phiRot; 
+        double psiRot;
+        double deltaTheta;
+        double range;
+        double sldAngl;
+      };
+      VR_variables _VR;
+      
+      // Boundary flux constant variables  (consider using array container when C++ 11 is used)
+      map <int,IntVector> _dirIndexOrder;
+      map <int,IntVector> _dirSignSwap;
+      map <int,IntVector> _locationIndexOrder;
+      map <int,IntVector> _locationShift;
 
       Ghost::GhostType d_gn;
       Ghost::GhostType d_gac;
@@ -332,7 +325,40 @@ namespace Uintah{
                                Task::WhichDW which_abskg_dw,
                                Task::WhichDW which_sigmaT4_dw,
                                const int radCalc_freq );
- 
+                               
+                               
+      /** @brief Update the running total of the incident intensity */
+      void  updateSumI ( Vector& ray_direction, // can change if scattering occurs
+                         Vector& ray_location,
+                         const IntVector& origin,
+                         const Vector& Dx,
+                         constCCVariable<double>& sigmaT4Pi,
+                         constCCVariable<double>& abskg,
+                         constCCVariable<int>& celltype,
+                         unsigned long int& size,
+                         double& sumI,
+                         MTRand& mTwister);
+                         
+      
+      void  updateSumI_ML ( Vector& ray_direction, 
+                            Vector& ray_location,
+                            const IntVector& origin,
+                            const vector<Vector>& Dx,
+                            const BBox& domain_BB,
+                            const int maxLevels,
+                            const Level* fineLevel,
+                            double DyDx[],
+                            double DzDx[],
+                            const IntVector& fineLevel_ROI_Lo,
+                            const IntVector& fineLevel_ROI_Hi,
+                            vector<IntVector>& regionLo,
+                            vector<IntVector>& regionHi,
+                            StaticArray< constCCVariable<double> >& sigmaT4Pi,
+                            StaticArray< constCCVariable<double> >& abskg,
+                            unsigned long int& size,
+                            double& sumI,
+                            MTRand& mTwister);
+     //__________________________________ 
      void computeExtents(LevelP level_0,
                         const Level* fineLevel,
                         const Patch* patch,
@@ -377,6 +403,73 @@ namespace Uintah{
                                const IntVector &cell,
                                const int &dir);
 
+      
+
+      //__________________________________
+      //
+      void reflect(double& fs,
+                   IntVector& cur,
+                   IntVector& prevCell,
+                   const double abskg,
+                   bool& in_domain,
+                   int& step,
+                   bool& sign);
+
+      //__________________________________
+      //
+      void findStepSize(int step[],
+                        bool sign[],
+                        const Vector& inv_direction_vector);
+      
+      //__________________________________
+      //
+      void rayLocation( MTRand& mTwister,
+                       const IntVector origin,
+                       const double DyDx, 
+                       const double DzDx,
+                       const bool useCCRays,
+                       Vector& location);
+
+      
+                       
+      /** @brief Adjust the location of a ray origin depending on the cell face */
+      void rayLocation_cellFace( MTRand& mTwister,
+                                 const IntVector& origin,
+                                 const IntVector &indexOrder, 
+                                 const IntVector &shift, 
+                                 const double &DyDx, 
+                                 const double &DzDx,
+                                 Vector& location );
+      //__________________________________
+      //
+      Vector findRayDirection( MTRand& mTwister,
+                               const bool isSeedRandom,
+                               const IntVector& = IntVector(-9,-9,-9),
+                               const int iRay = -9);
+      //__________________________________
+      //  
+      void rayDirection_VR( MTRand& mTwister,
+                            const IntVector& origin,
+                            const int iRay,
+                            VR_variables& VR,
+                            const double DyDx,
+                            const double DzDx,
+                            Vector& directionVector,
+                            double& cosVRTheta );
+
+      /** @brief Adjust the direction of a ray depending on the cell face */
+      void rayDirection_cellFace( MTRand& mTwister,
+                                  const IntVector& origin,
+                                  const IntVector& indexOrder,   
+                                  const IntVector& signOrder,    
+                                  const int iRay,                
+                                  Vector& directionVector,       
+                                  double& cosTheta );            
+
+      /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
+      bool has_a_boundary(const IntVector &c,
+                          constCCVariable<int> &celltype,
+                          vector<int> &boundaryFaces);
     //______________________________________________________________________
     //   Boundary Conditions
 
@@ -425,13 +518,31 @@ namespace Uintah{
                        const MaterialSubset* matls,
                        DataWarehouse*,
                        DataWarehouse* new_dw);
-                       
-    void carryForward ( const ProcessorGroup*,
-                        const PatchSubset* ,
-                        const MaterialSubset*,
-                        DataWarehouse*,
-                        DataWarehouse*,
-                        const VarLabel* variable);
+    //______________________________________________________________________
+    //    Carry Foward tasks                     
+    void carryForward_Var ( const ProcessorGroup*,
+                            const PatchSubset* ,
+                            const MaterialSubset*,
+                            DataWarehouse*,
+                            DataWarehouse*,
+                            const VarLabel* variable);
+                            
+    void  carryForward_rayTrace( const ProcessorGroup* pc,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw,
+                                 const int radCalc_freq );
+                        
+    //______________________________________________________________________
+    //  Helpers
+    bool less_Eq(    const IntVector& a, const IntVector& b ){
+      return ( a.x() <= b.x() && a.y() <= b.y() && a.z() <= b.z() );
+    }
+    bool greater_Eq( const IntVector& a, const IntVector& b ){
+      return ( a.x() >= b.x() && a.y() >= b.y() && a.z() >= b.z() );
+    }                    
+                        
 
   }; // class Ray
 } // namespace Uintah

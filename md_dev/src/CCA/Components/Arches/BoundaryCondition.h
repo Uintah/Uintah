@@ -554,22 +554,6 @@ namespace Uintah {
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Actually compute mms velocity BC terms
-      void mmsvelocityBC(const Patch* patch,
-          CellInformation* cellinfo,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars,
-          double time_shift,
-          double dt);
-
-      void mmsscalarBC(const Patch* patch,
-          CellInformation* cellinfo,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars,
-          double time_shift,
-          double dt);
-
       /** @brief Applies boundary conditions to A matrix for boundary conditions */
       void pressureBC(const Patch* patch,
           const int matl_index, 
@@ -645,7 +629,7 @@ namespace Uintah {
           ArchesConstVariables* constvars);
 
       // compute multimaterial wall bc
-      void mmvelocityBC(const Patch* patch,
+      void wallVelocityBC(const Patch* patch,
           CellInformation* cellinfo,
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
@@ -724,27 +708,6 @@ namespace Uintah {
       void sched_setInletFlowRates(SchedulerP& sched,
           const PatchSet* patches,
           const MaterialSet* matls);
-
-      void mmsuVelocityBC(const Patch* patch,
-          CellInformation* cellinfo,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars,
-          double time_shift,
-          double dt);
-
-      void mmsvVelocityBC(const Patch* patch,
-          CellInformation* cellinfo,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars,
-          double time_shift,
-          double dt);
-
-      void mmswVelocityBC(const Patch* patch,
-          CellInformation* cellinfo,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars,
-          double time_shift,
-          double dt);
 
       inline void setMMS(bool doMMS) {
         d_doMMS=doMMS;

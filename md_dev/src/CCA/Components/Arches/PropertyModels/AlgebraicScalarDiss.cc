@@ -57,7 +57,8 @@ void AlgebraicScalarDiss::sched_computeProp( const LevelP& level, SchedulerP& sc
   _mf_label = VarLabel::find( _mf_name ); 
   _mu_t_label = 0;
   _mu_t_label = VarLabel::find( "turb_viscosity" ); 
-
+  _volfrac_label = 0;
+  _volfrac_label = VarLabel::find( "volFraction" );
 
   if ( _mf_label == 0 ){ 
     throw InvalidValue("Error: Cannot match mixture fraction name with label.",__FILE__, __LINE__);             
@@ -65,7 +66,10 @@ void AlgebraicScalarDiss::sched_computeProp( const LevelP& level, SchedulerP& sc
   if ( _mu_t_label == 0 ){ 
     throw InvalidValue("Error: Cannot match turbulent viscosity name with label.",__FILE__, __LINE__);             
   } 
-
+  if ( _volfrac_label == 0){
+    throw InvalidValue("Error: Cannot match volume fraction name with label.",__FILE__, __LINE__);    
+  }
+  
   std::string taskname = "AlgebraicScalarDiss::computeProp"; 
   Task* tsk = scinew Task( taskname, this, &AlgebraicScalarDiss::computeProp, time_substep ); 
 
@@ -73,12 +77,12 @@ void AlgebraicScalarDiss::sched_computeProp( const LevelP& level, SchedulerP& sc
 
     tsk->requires( Task::OldDW, _mf_label, Ghost::AroundCells, 1 ); 
     tsk->requires( Task::OldDW, _mu_t_label, Ghost::None, 0 ); 
-
+    tsk->requires( Task::OldDW, _volfrac_label, Ghost::AroundCells, 1);
   } else { 
 
     tsk->requires( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
     tsk->requires( Task::NewDW, _mu_t_label, Ghost::None, 0 ); 
-
+    tsk->requires( Task::NewDW, _volfrac_label, Ghost::AroundCells, 1);
   } 
   tsk->modifies( _prop_label ); 
 
@@ -105,15 +109,18 @@ void AlgebraicScalarDiss::computeProp(const ProcessorGroup* pc,
     CCVariable<double>      prop; 
     constCCVariable<double> mf;
     constCCVariable<double> mu_t; 
+    constCCVariable<double> vf;
 
     new_dw->getModifiable( prop, _prop_label, matlIndex, patch, Ghost::None, 0 ); 
     if ( time_substep == 0 ) { 
       old_dw->get( mf, _mf_label, matlIndex, patch, Ghost::AroundCells, 1 ); 
       old_dw->get( mu_t, _mu_t_label, matlIndex, patch, Ghost::None, 0 ); 
+      old_dw->get( vf, _volfrac_label, matlIndex, patch, Ghost::AroundCells, 1);
       prop.initialize(0.0);
     } else { 
       new_dw->get( mf, _mf_label, matlIndex, patch, Ghost::AroundCells, 1); 
       new_dw->get( mu_t, _mu_t_label, matlIndex, patch, Ghost::None, 0 ); 
+      new_dw->get( vf, _volfrac_label, matlIndex, patch, Ghost::AroundCells, 1);
     } 
 
     CellIterator iter = patch->getCellIterator(); 
@@ -130,14 +137,26 @@ void AlgebraicScalarDiss::computeProp(const ProcessorGroup* pc,
       IntVector czm = c - IntVector(0,0,1); 
       IntVector czp = c + IntVector(0,0,1); 
 
-      double gradZ = 1.0/Dx.x() * ( 0.5*(mf[cxm] + mf[cxp]) - mf[c] ) + 
-                     1.0/Dx.y() * ( 0.5*(mf[cym] + mf[cyp]) - mf[c] ) + 
-                     1.0/Dx.z() * ( 0.5*(mf[czm] + mf[czp]) - mf[c] ); 
+      if (vf[c] > 0.0 ) {
+        //use dz/dx_i equal to zero in wall direction
+        double mfxp, mfxm, mfyp, mfym, mfzp, mfzm;
+        mfxp = (vf[cxp] > 0.0) ? mf[cxp] : mf[c];
+        mfxm = (vf[cxm] > 0.0) ? mf[cxm] : mf[c];
+        mfyp = (vf[cyp] > 0.0) ? mf[cyp] : mf[c];
+        mfym = (vf[cym] > 0.0) ? mf[cym] : mf[c];
+        mfzp = (vf[czp] > 0.0) ? mf[czp] : mf[c];
+        mfzm = (vf[czm] > 0.0) ? mf[czm] : mf[c];
 
-      gradZ = std::abs(gradZ);
-
-      double Dt = mu_t[c] / _Sc_t; 
-      prop[c] = 2.0 * ( _D + Dt ) * pow(gradZ,2.0);
+        //calc dz/dx_i dz/dx_i
+        double gradZ2 = 0.5/Dx.x() * ( mfxp - mfxm ) * 0.5/Dx.x() * ( mfxp - mfxm ) + 
+                        0.5/Dx.y() * ( mfyp - mfym ) * 0.5/Dx.y() * ( mfyp - mfym ) +
+                        0.5/Dx.z() * ( mfzp - mfzm ) * 0.5/Dx.z() * ( mfzp - mfzm );
+        
+        double Dt = mu_t[c] / _Sc_t; 
+        prop[c] = 2.0 * ( _D + Dt) * gradZ2;
+      } else {
+        prop[c] = 0.0;
+      }
 
     }
   }

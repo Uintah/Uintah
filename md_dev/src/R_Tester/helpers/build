@@ -31,6 +31,7 @@ if [ "$OS" = "Linux" ]; then
   if [ "$MACHINE" == "rt" ]; then    
     COMMON="      --with-boost=/usr/installed/boost/1.50  \\
      --enable-wasatch_3p \\
+     --enable-ray-scatter \\
      USE_WASATCH=yes \\"
 #    COMMON="\\"  
     ENV="     CC=gcc \\
@@ -80,16 +81,7 @@ if [ "$OS" = "Linux" ]; then
     ENV="      CC=gcc \\
        CXX=g++ \\
        F77=gfortran"   
-  fi   
-      
-elif [ "$OS" = "Darwin" ]; then
-  export PETSC_ARCH=darwin9.4.0-c-real-opt
-  COMMON="    --enable-package='Uintah Teem' \\
-       --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC-9.4.0/gcc-4.0.1-openmpi-32bit \\
-       --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC-9.4.0/gcc-4.0.1-openmpi-32bit \\
-       --with-mpi=/usr/local/openmpi \\"
-  DBG_CONFIGURE="$COMMON $DBG_CONFIGURE"
-  OPT_CONFIGURE="$COMMON '--enable-optimize=-mcpu=7450 -O2 -fsigned-char -maltivec -mabi=altivec -mpowerpc-gfxopt' $OPT_CONFIGURE"
+  fi
 fi
 
 

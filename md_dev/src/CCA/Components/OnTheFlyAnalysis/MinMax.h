@@ -131,8 +131,8 @@ GENERAL INFORMATION
     //__________________________________
     // global constants always begin with "d_"
     double d_writeFreq; 
-    double d_StartTime;
-    double d_StopTime;
+    double d_startTime;
+    double d_stopTime;
     
     struct varProperties{
       VarLabel* label;

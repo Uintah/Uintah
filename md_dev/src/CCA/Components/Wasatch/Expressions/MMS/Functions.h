@@ -663,7 +663,7 @@ private:
                const double yWidth,
                const double lowValue,
                const double highValue );
-  const Expr::Tag xTag_, yTag_;;
+  const Expr::Tag xTag_, yTag_;
   const double xStart_, yStart_, xWidth_, yWidth_, lowValue_, highValue_;
   const FieldT *x_, *y_;
 };

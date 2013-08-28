@@ -359,9 +359,11 @@
                 <opl>               0.01       </opl>
                 <randomSeed>        false      </randomSeed>
                 <abskg>             999        </abskg>
-                <NoOfRays>          10         </NoOfRays>
+                <nDivQRays>          5         </nDivQRays>
                 <Threshold>         0.05       </Threshold>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+                <solveBoundaryFlux>    true       </solveBoundaryFlux>
+                <nFluxRays>         2          </nFluxRays>
                 <property_calculator type="radprops">
                   <grey_gas>
                     <inputfile>inputs/ARCHES/RMCRT/GreyGasProperties.txt</inputfile>

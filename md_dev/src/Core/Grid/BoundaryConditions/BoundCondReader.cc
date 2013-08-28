@@ -420,35 +420,19 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
       BoundCondFactory::create(child,bc,mat_id, face_label);
       BCR_dbg << "Inserting into mat_id = " << mat_id << " bc = " 
               <<  bc->getBCVariable() << " bctype = " 
-              <<  bc->getBCType__NEW() 
+              <<  bc->getBCType()
               <<  " "  << bc  << endl;
 
       bctype_data.insert(pair<int,BoundCondBase*>(mat_id,bc->clone()));
       delete bc;
     }
 
-    // Add the Auxillary boundary condition type
-#if 1
-    set<int> materials;
-    for (multimap<int,BoundCondBase*>::const_iterator i = bctype_data.begin();
-         i != bctype_data.end(); i++) {
-      //      cout << "mat id = " << i->first << endl;
-      materials.insert(i->first);
-    }
-    for (set<int>::const_iterator i = materials.begin(); i != materials.end();
-         i++) {
-      BoundCondBase* bc = scinew BoundCond<NoValue>("Auxiliary");
-      bctype_data.insert(pair<int,BoundCondBase*>(*i,bc->clone()));
-      delete bc;
-    }
-#endif
-
     // Print out all of the bcs just created
     multimap<int,BoundCondBase*>::const_iterator it;
     for (it = bctype_data.begin(); it != bctype_data.end(); it++) {
       BCR_dbg << "Getting out mat_id = " << it->first << " bc = " 
               << it->second->getBCVariable() <<  " bctype = " 
-              << it->second->getBCType__NEW() << endl;
+              << it->second->getBCType() << endl;
       //      cout << "mat = " << it -> first << " BoundCondBase address = " 
       //   << it->second << " bctype = " 
       //   << typeid(*(it->second)).name() << endl;

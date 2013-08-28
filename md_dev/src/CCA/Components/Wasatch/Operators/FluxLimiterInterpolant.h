@@ -37,9 +37,14 @@
 #include <vector>
 #include <string>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
-#include "spatialops/SpatialOpsDefs.h"
-#include "spatialops/structured/MemoryTypes.h"
-#include "spatialops/structured/FVTools.h"
+
+#include <spatialops/SpatialOpsConfigure.h>
+#ifdef ENABLE_THREADS
+#include <boost/thread/mutex.hpp>
+#endif
+
+#include <spatialops/SpatialOpsDefs.h>
+#include <spatialops/structured/SpatialFieldStore.h>
 /**
  *  \class     FluxLimiterInterpolant
  *  \author    Tony Saad
@@ -48,13 +53,10 @@
  *
  *  \todo Consider basing this on the SpatialOps::structured::Stencil2 stuff.
  *  \todo Parallelize apply_to_field() method
- *  \todo Add mutex when set_advective_velocity() is set.  Release
- *	  when apply_to_field() is done.
  *
  *  \brief     Calculates convective flux using a flux limiter.
  *
- *  This class is a lightweight operator, i.e. it does NOT implement a
- *  matvec operation. The FluxLimiterInterpolant will interpolate the
+ *  The FluxLimiterInterpolant will interpolate the
  *  convective flux \f$\phi u_i\f$ where \f$\phi\f$ denotes a staggered or
  *  non-staggered field. For example, if \f$\phi\f$ denotes the temperature
  *  T, then, \f$\phi\f$ is a scalar volume field. On the other hand, if \f$\phi\f$
@@ -85,14 +87,17 @@ private:
   
   SpatialOps::structured::IntVec unitNormal_;
   
-  mutable std::vector<PhiVolT> srcFields_;
+  typedef typename SpatialOps::SpatFldPtr<const PhiVolT> PhiVolTPtr;
+  mutable std::vector<PhiVolTPtr> srcFields_;
   
   // boundary information
   bool hasPlusBoundary_, hasMinusBoundary_;
   
-  void build_src_fields( const PhiVolT& src,
-                         const SpatialOps::MemoryType consumerMemoryType = SpatialOps::LOCAL_RAM,
-                         const unsigned short int devIdx = 0) const;
+# ifdef ENABLE_THREADS
+  boost::mutex mutex_;
+# endif
+
+  void build_src_fields( const PhiVolT& src ) const;
   
 public:
   
@@ -142,7 +147,7 @@ public:
    *         hold the convective flux \f$\phi*u_i\f$ in the direction
    *         i. It will be stored on the staggered cell centers.
    */
-  void apply_to_field(const PhiVolT &src, PhiFaceT &dest) const;
+  void apply_to_field(const PhiVolT &src, PhiFaceT &dest);
   
   void apply_embedded_boundaries(const PhiVolT &src, PhiFaceT &dest) const;
 };

@@ -52,9 +52,6 @@ MPMLabel::MPMLabel()
   pPressureLabel  = VarLabel::create( "p.pressure",
 			ParticleVariable<double>::getTypeDescription() );
   
-  pLocalizedMPMLabel  = VarLabel::create( "p.localizedMPM",
-			ParticleVariable<int>::getTypeDescription() );
-  
   pScratchVecLabel  = VarLabel::create( "p.scratchvec",
 			ParticleVariable<Vector>::getTypeDescription() );
   
@@ -161,6 +158,12 @@ MPMLabel::MPMLabel()
   
   pSizeLabel_preReloc = VarLabel::create( "p.size+",
 			ParticleVariable<Matrix3>::getTypeDescription());
+  
+  pLocalizedMPMLabel  = VarLabel::create( "p.localizedMPM",
+			ParticleVariable<int>::getTypeDescription() );
+  
+  pLocalizedMPMLabel_preReloc  = VarLabel::create( "p.localizedMPM+",
+			ParticleVariable<int>::getTypeDescription() );
   
   pFiberDirLabel  = VarLabel::create( "p.fiberdir",
                         ParticleVariable<Vector>::getTypeDescription() );
@@ -712,6 +715,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pScaleFactorLabel);
   VarLabel::destroy(pScaleFactorLabel_preReloc);
   VarLabel::destroy(pLocalizedMPMLabel);
+  VarLabel::destroy(pLocalizedMPMLabel_preReloc);
   VarLabel::destroy(pScratchLabel);
   VarLabel::destroy(pSizeLabel);
   VarLabel::destroy(pSizeLabel_preReloc);

@@ -51,7 +51,7 @@ Uintah::jim1( DataArchive * da, CommandLineFlags & clf )
   vector<const Uintah::TypeDescription*> types;
   da->queryVariables(vars, types);
   ASSERTEQ(vars.size(), types.size());
-  cout << "There are " << vars.size() << " variables:\n";
+  cout << "#There are " << vars.size() << " variables:\n";
   for(int i=0;i<(int)vars.size();i++)
     cout << vars[i] << ": " << types[i]->getName() << endl;
       
@@ -59,16 +59,16 @@ Uintah::jim1( DataArchive * da, CommandLineFlags & clf )
   vector<double> times;
   da->queryTimesteps(index, times);
   ASSERTEQ(index.size(), times.size());
-  cout << "There are " << index.size() << " timesteps:\n";
-  for( int i = 0; i < (int)index.size(); i++ ) {
-    cout << index[i] << ": " << times[i] << endl;
-  }
+  cout << "#There are " << index.size() << " timesteps:\n";
+//  for( int i = 0; i < (int)index.size(); i++ ) {
+//    cout << index[i] << ": " << times[i] << endl;
+//  }
       
   findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, clf.time_step_lower, clf.time_step_upper);
       
   for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
     double time = times[t];
-    cout << "time = " << time << endl;
+    //cout << "time = " << time << endl;
     GridP grid = da->queryGrid(t);
     ostringstream fnum;
     string filename;

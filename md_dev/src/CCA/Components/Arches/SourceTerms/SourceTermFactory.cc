@@ -15,6 +15,7 @@
 #include <CCA/Components/Arches/SourceTerms/DORadiation.h>
 #include <CCA/Components/Arches/SourceTerms/RMCRT.h>
 #include <CCA/Components/Arches/SourceTerms/PCTransport.h>
+#include <CCA/Components/Arches/SourceTerms/SecondMFMoment.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
@@ -146,6 +147,23 @@ SourceTermFactory::source_term_exists( const std::string name )
   }
 
   return return_value;
+}
+
+bool
+SourceTermFactory::source_type_exists( const std::string type )
+{
+
+  for ( SourceMap::iterator iter = _sources.begin(); iter != _sources.end(); iter++){ 
+  
+    string my_type = iter->second->getSourceType(); 
+
+    if ( my_type == type )
+      return true; 
+
+  }
+
+  return false; 
+
 }
 
 void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, BoundaryCondition* bcs, const ProcessorGroup*  my_world )
@@ -295,6 +313,10 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         SourceTermBase::Builder* srcBuilder = scinew PCTransport::Builder( src_name, required_varLabels, shared_state ); 
         factory.register_source_term( src_name, srcBuilder );
 
+      } else if ( src_type == "moment2_mixture_fraction_src" ) {
+        SourceTermBase::Builder* srcBuilder = scinew SecondMFMoment::Builder(src_name, required_varLabels, shared_state );
+        factory.register_source_term( src_name, srcBuilder );
+        
       } else {
         proc0cout << "For source term named: " << src_name << endl;
         proc0cout << "with type: " << src_type << endl;

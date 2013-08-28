@@ -426,7 +426,7 @@ namespace Uintah {
                                        T& vel_FC,
                                        T& grad_dp_FC);
                                        
-      template<class V, class T>
+      template<class constSFC, class SFC >
         void add_vel_FC_exchange( CellIterator it,
                                        IntVector adj_offset,
                                        int numMatls,
@@ -434,9 +434,9 @@ namespace Uintah {
                                        double delT,
                                        StaticArray<constCCVariable<double> >& vol_frac_CC,
                                        StaticArray<constCCVariable<double> >& sp_vol_CC,
-                                       V & vel_FC,
-                                       T & sp_vol_FC,
-                                       T & vel_FCME);
+                                       StaticArray< constSFC >& vel_FC,
+                                       StaticArray< SFC > & sp_vol_FC,
+                                       StaticArray< SFC > & vel_FCME);
                                     
 
       void addExchangeContributionToFCVel(const ProcessorGroup*, 
@@ -501,6 +501,12 @@ namespace Uintah {
                                            const MaterialSubset* matls,
                                            DataWarehouse*,
                                            DataWarehouse*);
+
+      void addExchangeToMomentumAndEnergy_1matl(const ProcessorGroup*,
+                                                const PatchSubset* ,
+                                                const MaterialSubset*,
+                                                DataWarehouse* ,
+                                                DataWarehouse* );
 
       void addExchangeToMomentumAndEnergy(const ProcessorGroup*,
                                           const PatchSubset*,

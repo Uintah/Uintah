@@ -363,6 +363,7 @@ private:
   bool d_doMMS;
   bool d_with_mpmarches;
   bool d_extraProjection;
+  bool d_useWasatchMomRHS;
 
   ScaleSimilarityModel* d_scaleSimilarityModel;
   PhysicalConstants* d_physicalConsts;

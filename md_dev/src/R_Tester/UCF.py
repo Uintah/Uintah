@@ -52,7 +52,7 @@ DEBUGTESTS =[]
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DEUGTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
 #___________________________________
 
 # returns the list  

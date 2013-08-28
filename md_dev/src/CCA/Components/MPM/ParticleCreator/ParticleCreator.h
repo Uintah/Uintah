@@ -120,8 +120,8 @@ namespace Uintah {
     ParticleVariable<long64> pparticleID;
     ParticleVariable<Vector> pdisp;
     ParticleVariable<Vector> pfiberdir; 
-
     ParticleVariable<int> pLoadCurveID;
+    ParticleVariable<int> plocalized;
 
     MPMLabel* d_lb;
     MPMFlags* d_flags;

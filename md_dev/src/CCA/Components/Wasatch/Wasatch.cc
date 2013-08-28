@@ -143,8 +143,8 @@ namespace Wasatch{
       delete *i;
     }
 
-    for( std::list<const Uintah::PatchSet*>::iterator i=patchSetList_.begin(); i!=patchSetList_.end(); ++i ){
-      delete *i;
+    for( std::map<int, const Uintah::PatchSet*>::iterator i=patchesForOperators_.begin(); i!=patchesForOperators_.end(); ++i ){
+      delete i->second;
     }
 
     delete icCoordHelper_;
@@ -165,7 +165,9 @@ namespace Wasatch{
     for( Expr::TagList::iterator exprtag=exprTagList.begin();
         exprtag!=exprTagList.end();
         ++exprtag ){
-      graphHelper->rootIDs.insert( graphHelper->exprFactory->get_id(*exprtag) );      
+      const Expr::ExpressionID exprID = graphHelper->exprFactory->get_id(*exprtag);
+      graphHelper->rootIDs.insert( exprID );
+      graphHelper->forcedIDs.insert( exprID );
     }    
   }
   
@@ -179,7 +181,9 @@ namespace Wasatch{
         exprParams = exprParams->findNextBlock("NameTag") )
     {
       const Expr::Tag tag = parse_nametag( exprParams );
-      gh->rootIDs.insert( gh->exprFactory->get_id(tag) );
+      const Expr::ExpressionID exprID = gh->exprFactory->get_id(tag);
+      gh->rootIDs.insert( exprID );
+      gh->forcedIDs.insert( exprID );
     }
   }
 
@@ -636,15 +640,17 @@ namespace Wasatch{
 
     setup_patchinfo_map( level, sched );
 
-    const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
+    const Uintah::PatchSet* const allPatches = get_patchset( USE_FOR_TASKS, level, sched );
 
-    if( linSolver_ ){
+#ifndef WASATCH_IN_ARCHES // this is a bit annoying... when warches is turned on, disable any linearsolver calls from Wasatch
+    if( linSolver_ ) {
       linSolver_->scheduleInitialize( level, sched, 
                                       sharedState_->allMaterials() );
 
       sched->overrideVariableBehavior("hypre_solver_label",false,false,
                                       false,true,true);
     }
+#endif
 
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 
@@ -665,7 +671,7 @@ namespace Wasatch{
       // -----------------------------------------------------------------------
       // INITIAL BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
-      const Uintah::PatchSet* const localPatches2 = get_patchset( USE_FOR_OPERATORS, level, sched );
+      const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
       const GraphHelper* icGraphHelper2 = graphCategories_[ INITIALIZATION ];
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
       
@@ -677,7 +683,7 @@ namespace Wasatch{
         // set up initial boundary conditions on this transport equation
         try{
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_initial_boundary_conditions( *icGraphHelper2, localPatches2,
+          transEq->setup_initial_boundary_conditions( *icGraphHelper2, localPatches,
               patchInfoMap_, materials_->getUnion(), bcFunctorMap_);
         }
         catch( std::runtime_error& e ){
@@ -695,13 +701,13 @@ namespace Wasatch{
                                                           "initialization",
                                                           *icGraphHelper->exprFactory,
                                                           level, sched,
-                                                          localPatches,
+                                                          allPatches,
                                                           materials_,
                                                           patchInfoMap_,
                                                           1, lockedFields_ );
 
         // set coordinate values as required by the IC graph.
-        icCoordHelper_->create_task( sched, localPatches, materials_ );
+        icCoordHelper_->create_task( sched, allPatches, materials_ );
 
         //_______________________________________________________
         // create the TaskInterface and schedule this task for
@@ -741,29 +747,29 @@ namespace Wasatch{
                                      Uintah::SchedulerP& sched )
   {
     //_______________________________________________________________
-     // Set up the operators associated with the local patches.  We
-     // only need to do this once, so we choose to do it here.  It
-     // could just as well be done on any other schedule callback that
-     // has access to the levels (patches).
-     //
-     // Also save off the timestep label information.
-     //
-     {
-       const Uintah::PatchSet* patches = get_patchset( USE_FOR_OPERATORS, level, sched );
+    // Set up the operators associated with the local patches.  We
+    // only need to do this once, so we choose to do it here.  It
+    // could just as well be done on any other schedule callback that
+    // has access to the levels (patches).
+    //
+    // Also save off the timestep label information.
+    //
+    const Uintah::PatchSet* patches = get_patchset( USE_FOR_OPERATORS, level, sched );
 
-       for( int ipss=0; ipss<patches->size(); ++ipss ){
-         const Uintah::PatchSubset* pss = patches->getSubset(ipss);
-         for( int ip=0; ip<pss->size(); ++ip ){
-           SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
-           const Uintah::Patch* const patch = pss->get(ip);
-           build_operators( *patch, *opdb );
-           PatchInfo& pi = patchInfoMap_[patch->getID()];
-           pi.operators = opdb;
-           pi.patchID = patch->getID();
-           //std::cout << "Set up operators for Patch ID: " << patch->getID() << " on process " << Uintah::Parallel::getMPIRank() << std::endl;
-         }
-       }
-     }
+    for( int ipss=0; ipss<patches->size(); ++ipss ){
+      const Uintah::PatchSubset* pss = patches->getSubset(ipss);
+      for( int ip=0; ip<pss->size(); ++ip ){
+        SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
+        const Uintah::Patch* const patch = pss->get(ip);
+        build_operators( *patch, *opdb );
+        PatchInfo& pi = patchInfoMap_[patch->getID()];
+        pi.operators = opdb;
+        pi.patchID = patch->getID();
+//        std::cout << "Set up operators for Patch ID: " << patch->getID()
+//                  << " on level " << level->getID()
+//                  << " and process " << Uintah::Parallel::getMPIRank() << std::endl;
+      }
+    }
   }
 
   //--------------------------------------------------------------------
@@ -1003,7 +1009,7 @@ namespace Wasatch{
 
       } else {
         // FOR FIXED dt: (min = max in input file)
-        // if the this is not the first timestep, then grab dt from the olddw.
+        // if this is not the first timestep, then grab dt from the olddw.
         // This will avoid Uintah's message that it is setting dt to max dt/min dt
         old_dw->get( deltat, sharedState_->get_delt_label() );
       }
@@ -1017,8 +1023,6 @@ namespace Wasatch{
                   sharedState_->get_delt_label(),
                   Uintah::getLevel(patches) );
     }
-      //                   material );
-      // jcs it seems that we cannot specify a material here.  Why not?
   }
 
   //------------------------------------------------------------------
@@ -1036,8 +1040,14 @@ namespace Wasatch{
       break;
 
     case USE_FOR_OPERATORS: {
+      const int levelID = level->getID();
       const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
       const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myrank() );
+
+      std::map< int, const Uintah::PatchSet* >::iterator ip = patchesForOperators_.find( levelID );
+
+      if( ip != patchesForOperators_.end() ) return ip->second;
+
       Uintah::PatchSet* patches = new Uintah::PatchSet;
       // jcs: this results in "normal" scheduling and WILL NOT WORK FOR LINEAR SOLVES
       //      in that case, we need to use "gang" scheduling: addAll( localPatches )
@@ -1046,7 +1056,7 @@ namespace Wasatch{
       //     for( std::set<int>::const_iterator ip=procs.begin(); ip!=procs.end(); ++ip ){
       //       patches->addEach( allPatches->getSubset( *ip )->getVector() );
       //     }
-      patchSetList_.push_back( patches );
+      patchesForOperators_[levelID] = patches;
       return patches;
     }
     }

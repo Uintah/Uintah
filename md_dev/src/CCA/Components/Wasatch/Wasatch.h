@@ -283,7 +283,7 @@ namespace Wasatch{
     EquationAdaptors adaptors_;  ///< set of transport equations to be solved
 
     std::list< const TaskInterface*  > taskInterfaceList_;
-    std::list< const Uintah::PatchSet* > patchSetList_;
+    std::map< int, const Uintah::PatchSet* > patchesForOperators_;
 
     Wasatch( const Wasatch& ); // disallow copying
     Wasatch& operator=( const Wasatch& ); // disallow assignment

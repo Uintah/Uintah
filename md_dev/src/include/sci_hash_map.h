@@ -34,7 +34,18 @@
 #include <sci_defs/hashmap_defs.h>
 
 #define HAVE_HASH_MAP
-#if defined(HAVE_STD_HASHMAP)
+
+#if defined(USE_BOOST_HASHMAP)
+
+#  include <boost/unordered_map.hpp>
+   template<typename A, typename B, typename C> class hash_map : public boost::unordered_map<A, B, C> {
+      public:
+      hash_map(int &n) : boost::unordered_map<A,B,C>(n){}
+   };
+   template<typename A, typename B> class hash_multimap : public boost::unordered_multimap<A, B> {};
+
+#elif defined(HAVE_STD_HASHMAP)
+
 #  include <hash_map>
    using std::hash_map;
    using std::hash_multimap;
@@ -44,31 +55,54 @@
 #  else
      using std::hash_compare; // MS VC 7
 #  endif
+
 #elif defined(HAVE_EXT_HASHMAP)
+
 #  include <ext/hash_map>
    using std::hash_map;
    using std::hash_multimap;
    using std::hash;
+
+#elif defined(HAVE_C11_HASHMAP)
+
+#  include <unordered_map>
+
+   template<typename A, typename B, typename C> class hash_map : public std::unordered_map<A, B, C> {
+      public:
+      hash_map(int &n) : std::unordered_map<A,B,C>(n){}
+   };
+   template<typename A, typename B> class hash_multimap : public std::unordered_multimap<A, B> {};
+   using std::hash;
+
 #elif defined(HAVE_TR1_HASHMAP)
+
 #  include <tr1/unordered_map>
-template<typename A, typename B, typename C> class hash_map : public std::tr1::unordered_map<A, B, C> {
-   public:
-   hash_map(int &n) : std::tr1::unordered_map<A,B,C>(n){}
-};
+
+   template<typename A, typename B, typename C> class hash_map : public std::tr1::unordered_map<A, B, C> {
+      public:
+      hash_map(int &n) : std::tr1::unordered_map<A,B,C>(n){}
+   };
    template<typename A, typename B> class hash_multimap : public std::tr1::unordered_multimap<A, B> {};
    using std::tr1::hash;
+
 #elif defined(HAVE_GNU_HASHMAP)
+
 #  include <ext/hash_map>
    using __gnu_cxx::hash_map;
    using __gnu_cxx::hash_multimap;
    using __gnu_cxx::hash;
+
 #elif defined(HAVE_STDEXT_HASHMAP)
+
 #  include <hash_map>
    using stdext::hash_map;
    using stdext::hash_multimap;
    using stdext::hash_compare; // MS VC 8
+
 #else
+
 #  undef HAVE_HASH_MAP
+
 #endif
 
 #endif // SCI_Hash_Map_h

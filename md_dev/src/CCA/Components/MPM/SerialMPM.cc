@@ -332,6 +332,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pStressLabel);
   t->computes(lb->pVelGradLabel);
   t->computes(lb->pSizeLabel);
+  t->computes(lb->pLocalizedMPMLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
@@ -871,7 +872,7 @@ void SerialMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addRequiresDamageParameter(t, mpm_matl, patches);
   }
-  t->computes(lb->pLocalizedMPMLabel);
+  t->computes(lb->pLocalizedMPMLabel_preReloc);
 
   if(flags->d_deleteRogueParticles){
     t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
@@ -899,7 +900,7 @@ void SerialMPM::scheduleFindRogueParticles(SchedulerP& sched,
     t->requires(Task::NewDW, lb->numLocInCellLabel,       gac, 1);
     t->requires(Task::NewDW, lb->numInCellLabel,          gac, 1);
     t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
-    t->modifies(lb->pLocalizedMPMLabel);
+    t->modifies(lb->pLocalizedMPMLabel_preReloc);
 
     sched->addTask(t, patches, matls);
   }
@@ -1161,6 +1162,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::OldDW, lb->pVolumeLabel,                    gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,        gnone);
+  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -1238,7 +1240,7 @@ void SerialMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
 
   Ghost::GhostType gnone = Ghost::None;
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
-  t->requires(Task::NewDW, lb->pLocalizedMPMLabel,              gnone);
+  t->requires(Task::NewDW, lb->pLocalizedMPMLabel_preReloc,     gnone);
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
 
   t->modifies(lb->pTemperatureLabel_preReloc);
@@ -1322,7 +1324,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,gnone);
   t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
-  t->requires(Task::NewDW, lb->pLocalizedMPMLabel,              gnone);
+  t->requires(Task::NewDW, lb->pLocalizedMPMLabel_preReloc,     gnone);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -1539,6 +1541,7 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
+  t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->NC_CCweightLabel);
   t->computes(d_sharedState->get_delt_label(),getLevel(patches));
 
@@ -2352,7 +2355,7 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
 
       // Get the localization info
       ParticleVariable<int> isLocalized;
-      new_dw->allocateAndPut(isLocalized, lb->pLocalizedMPMLabel, pset);
+      new_dw->allocateAndPut(isLocalized, lb->pLocalizedMPMLabel_preReloc,pset);
       ParticleSubset::iterator iter = pset->begin(); 
       for (; iter != pset->end(); iter++){
         isLocalized[*iter] = 0;
@@ -2427,7 +2430,7 @@ void SerialMPM::findRogueParticles(const ProcessorGroup*,
       new_dw->get(numLocInCell, lb->numLocInCellLabel, dwi, patch, gac, 1);
       new_dw->get(numInCell,    lb->numInCellLabel,    dwi, patch, gac, 1);
       old_dw->get(px, lb->pXLabel, pset);
-      new_dw->getModifiable(isLocalized, lb->pLocalizedMPMLabel, pset);
+      new_dw->getModifiable(isLocalized, lb->pLocalizedMPMLabel_preReloc, pset);
 
       // Look at the number of localized particles in the current and
       // surrounding cells
@@ -3274,6 +3277,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<Vector> pdispnew;
       constParticleVariable<Matrix3> pFOld;
       ParticleVariable<Matrix3> pFNew,pVelGrad;
+      constParticleVariable<int> pLocalized;
 
       // for thermal stress analysis
       ParticleVariable<double> pTempPreNew; 
@@ -3291,6 +3295,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
+      old_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
 
       new_dw->allocateAndPut(pvelocitynew,lb->pVelocityLabel_preReloc,    pset);
       new_dw->allocateAndPut(pxnew,       lb->pXLabel_preReloc,           pset);
@@ -3451,10 +3456,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           Matrix3 Finc = Amat.Exponential(abs(flags->d_min_subcycles_for_F));
           pFNew[idx] = Finc*pFOld[idx];
         }
-#if 0
-        Matrix3 Finc = tensorL*delT + Identity;
-        pFNew[idx] = Finc*pFOld[idx];
-#endif
 
         double J=pFNew[idx].Determinant();
         pvolume[idx]=(pmassNew[idx]/rho_init)*J;
@@ -3563,7 +3564,33 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
       } //end of pressureStabilization loop  at the patch level
 
-      // scale back huge particle velocities.  Default for d_max_vel is 3.e105, hence the conditional
+      if(flags->d_erosionAlgorithm=="ZeroStress"){
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          if(pLocalized[idx]){
+            pFNew[idx] = pFOld[idx];
+            pVelGrad[idx]= Matrix3(0.0);
+          }
+        }
+      }
+
+      if(flags->d_erosionAlgorithm=="AllowNoShear" ||
+         flags->d_erosionAlgorithm=="AllowNoTension"){
+        double third = 1./3.;
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          if(pLocalized[idx]){
+            double cbrtJ = cbrt(pFNew[idx].Determinant());
+            pFNew[idx] = cbrtJ*Identity;
+            pVelGrad[idx]=third*pVelGrad[idx].Trace()*Identity;
+          }
+        }
+      }
+
+      // scale back huge particle velocities.
+      // Default for d_max_vel is 3.e105, hence the conditional
       if(flags->d_max_vel < 1.e105){
        for(ParticleSubset::iterator iter  = pset->begin();
                                     iter != pset->end(); iter++){
@@ -3575,9 +3602,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             //pvelocitynew[idx]=pvelocity[idx];
           }
         }
-      }
-     }
-    }
+      }// for particles
+     } // max velocity flag
+    }  // for materials
 
     // DON'T MOVE THESE!!!
     //__________________________________
@@ -3634,7 +3661,7 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
 
       new_dw->get(pdTdt,        lb->pdTdtLabel_preReloc,             pset);
       new_dw->get(pmassNew,     lb->pMassLabel_preReloc,             pset);
-      new_dw->get(pLocalized,   lb->pLocalizedMPMLabel,              pset);
+      new_dw->get(pLocalized,   lb->pLocalizedMPMLabel_preReloc,     pset);
 
       new_dw->getModifiable(pTempNew, lb->pTemperatureLabel_preReloc,pset);
 
@@ -3856,7 +3883,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
       new_dw->get(pdTdt,        lb->pdTdtLabel_preReloc,             pset);
       new_dw->get(pFNew,        lb->pDeformationMeasureLabel_preReloc, pset);
-      new_dw->get(pLocalized,         lb->pLocalizedMPMLabel,        pset);
+      new_dw->get(pLocalized,   lb->pLocalizedMPMLabel_preReloc,     pset);
 
       new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,     pset);
 
@@ -4666,7 +4693,7 @@ SerialMPM::refine(const ProcessorGroup*,
         ParticleVariable<Vector> pvelocity, pexternalforce, pdisp;
         ParticleVariable<Matrix3> psize, pVelGrad;
         ParticleVariable<double> pTempPrev,p_q;
-        ParticleVariable<int>    pLoadCurve;
+        ParticleVariable<int>    pLoadCurve,pLoc;
         ParticleVariable<long64> pID;
         ParticleVariable<Matrix3> pdeform, pstress;
         
@@ -4681,6 +4708,7 @@ SerialMPM::refine(const ProcessorGroup*,
         new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, pset);
         new_dw->allocateAndPut(pID,            lb->pParticleIDLabel,    pset);
         new_dw->allocateAndPut(pdisp,          lb->pDispLabel,          pset);
+        new_dw->allocateAndPut(pLoc,           lb->pLocalizedMPMLabel,  pset);
         if (flags->d_useLoadCurves){
           new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
         }

@@ -78,8 +78,8 @@ Turbulence::~Turbulence()
   -----------------------------------------------------------------------  */  
 void Turbulence::callTurb(DataWarehouse* new_dw,
                           const Patch* patch,
-                          const CCVariable<Vector>& vel_CC,
-                          const CCVariable<double>& rho_CC,
+                          constCCVariable<Vector>& vel_CC,
+                          constCCVariable<double>& rho_CC,
                           const int indx,
                           ICELabel* lb,
                           SimulationStateP&  d_sharedState,

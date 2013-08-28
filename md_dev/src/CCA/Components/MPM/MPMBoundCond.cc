@@ -69,7 +69,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
          const BoundCond<Vector>* bc = 
            dynamic_cast<const BoundCond<Vector>*>(bcb); 
           if (bc != 0) {
-            if (bc->getBCType__NEW() == "Dirichlet") {
+            if (bc->getBCType() == "Dirichlet") {
               Vector bcv = bc->getValue();
               for (nbound_ptr.reset();!nbound_ptr.done();nbound_ptr++){ 
                 IntVector nd = *nbound_ptr;
@@ -91,7 +91,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
           const BoundCondBase* bcb =
             patch->getArrayBCValues(face,dwi,"Symmetric",nu,nbound_ptr,child);
 
-          if (bcb->getBCType__NEW() == "symmetry") {
+          if (bcb->getBCType() == "symmetry") {
             if (face == Patch::xplus || face == Patch::xminus){
               if(interp_type=="linear"){
                for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {
@@ -265,7 +265,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
             dynamic_cast<const BoundCond<double>*>(bcb);
           
           if (bc != 0) {
-            if (bc->getBCType__NEW() == "Dirichlet") {
+            if (bc->getBCType() == "Dirichlet") {
               double bcv = bc->getValue();
               for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
                 IntVector nd = *nbound_ptr;
@@ -279,7 +279,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             
-            if (bc->getBCType__NEW() == "Neumann"){
+            if (bc->getBCType() == "Neumann"){
               Vector deltax = patch->dCell();
               double dx = -9;
               IntVector off(-9,-9,-9);

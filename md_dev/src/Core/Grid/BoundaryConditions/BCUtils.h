@@ -75,7 +75,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
 
     if (new_bcs != 0) {
       bc_value = new_bcs->getValue();
-      bc_kind  = new_bcs->getBCType__NEW();
+      bc_kind  = new_bcs->getBCType();
       foundBC = true;
     }
     delete bc;
@@ -85,7 +85,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
   // Symmetry
   if( !foundBC ){
     bc = bcd->getBoundCondData(mat_id,"Symmetric",child);
-    string test  = bc->getBCType__NEW();
+    string test  = bc->getBCType();
 
     if (test == "symmetry") {
       bc_kind  = "symmetry";
