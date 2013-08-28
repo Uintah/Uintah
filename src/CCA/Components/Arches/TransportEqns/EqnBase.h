@@ -1,5 +1,6 @@
 #ifndef Uintah_Component_Arches_TransportEquationBase_h
 #define Uintah_Component_Arches_TransportEquationBase_h
+
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
@@ -14,9 +15,12 @@
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/IntrusionBC.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Thread/Mutex.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Components/Arches/Directives.h>
+
+extern SCIRun::Mutex cerrLock;
 
 //========================================================================
 
@@ -291,7 +295,9 @@ private:
 template <class phiType, class constPhiType>  
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight, constCCVariable<double>& eps_v  ) 
 {
+  cerrLock.lock();
   proc0cout << "initializing scalar equation " << d_eqnName << endl;
+  cerrLock.unlock();
 
   // Initialization function bullet proofing 
   if( d_initFunction == "step" || d_initFunction == "env_step" ) {
@@ -400,7 +406,9 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 template <class phiType>  
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCVariable<double>& eps_v ) 
 {
+  cerrLock.lock();
   proc0cout << "initializing scalar equation " << d_eqnName << endl;
+  cerrLock.unlock();
 
   // Initialization function bullet proofing 
   if( d_initFunction == "step" || d_initFunction == "env_step" ) {
