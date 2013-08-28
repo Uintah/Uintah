@@ -96,7 +96,7 @@ void sched_dummyInit( const LevelP& level, SchedulerP& sched );
 
   /** @brief  Access function for radiation flag (on/off) */
   inline bool getRadiationFlag(){
-    return _radiation; };   
+    return d_radiation; };   
 
   /** @brief  Return the VarLabel for the model term for absorption coefficient */
   inline const VarLabel* getabskpLabel() {
@@ -113,9 +113,7 @@ void sched_dummyInit( const LevelP& level, SchedulerP& sched );
 
 protected:
 
-  bool _radiation;
-  bool new_radiation;
-  bool old_radiation;
+  bool d_radiation;
   const VarLabel* d_abskpLabel;
   const VarLabel* d_qconvLabel;
   const VarLabel* d_qradLabel;
