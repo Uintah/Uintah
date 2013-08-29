@@ -229,6 +229,11 @@ namespace Uintah {
         ComputeSubset<T>* getSubset(int idx) {
           return set[idx];
         }
+      
+      /// Returns the vector of subsets managed by this set
+        const vector<ComputeSubset<T>*>& getVector() const
+        { return set; }
+      
         const ComputeSubset<T>* getSubset(int idx) const {
           return set[idx];
         }
