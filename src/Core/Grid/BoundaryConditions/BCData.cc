@@ -132,6 +132,11 @@ BCData::getBCValues(const string& var_name) const
 
 }
 
+const vector<BoundCondBase*>&
+BCData::getBCData() const
+{
+  return d_BCData;
+}
 
 bool BCData::find(const string& var_name) const
 {

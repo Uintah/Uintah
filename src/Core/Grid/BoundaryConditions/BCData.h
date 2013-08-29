@@ -74,6 +74,18 @@ WARNING
     bool operator<(const BCData&) const;
     void setBCValues(BoundCondBase* bc);
     const BoundCondBase* getBCValues(const string& type) const;
+    
+    /**
+     *  \author Tony Saad
+     *  \date   August 29, 2013
+     *  \brief  Returns a reference to the vector of boundary conditions (BoundCondBase) attached 
+     to this BCData. Recall that BCDataArray stores a collection of BCGeometries. Each BCGeomBase
+     has BCData associated with it. The BCData stores all the boundary specification via BoundCond
+     and BoundCondBase. This boundary specification corresponds to all the spec within a given
+     <Face> xml tag in the input file.
+     */
+    const vector<BoundCondBase*>& getBCData() const;
+    
     void print() const;
     bool find(const string& type) const;
     bool find(const string& bc_type,const string& bc_variable) const;
