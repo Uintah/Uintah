@@ -550,7 +550,7 @@ SCI_ARG_ENABLE(gencode,
   AC_HELP_STRING(--enable-gencode,
                  Specify compute capability for GPU code generation (allowable values: 20, 21, 30, 35)),
   [cuda_gencode="$enableval"],
-  [cuda_gencode=${gencode=''}])
+  [cuda_gencode=${gencode='20'}])
   
 SCI_ARG_ENABLE(exename,
   AC_HELP_STRING(--enable-exename=<name>,
@@ -3614,14 +3614,8 @@ if test "$sci_required_cuda" = "yes"; then
   echo
   AS_MESSAGE(checking for required CUDA components......)
   echo
-  
-  # This is now turned off to test some static builds on the GPU-enabled Jaguar-XK6
-  # guard against building staticaly linked Uintah with CUDA
-  #if test \( "$with_cuda" \) -a \( "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a" \); then
-    #AC_MSG_ERROR( [Cannot build a statically linked version of Uintah with CUDA support...] )
-  #fi
 
-  # check that the CUDA installation and SDK exist
+  # check that the CUDA installation
   if ! test -d "$with_cuda"; then
     AC_MSG_ERROR( [The directory specified with --with-cuda=DIR is not valid: $with_cuda] )
   fi
@@ -3648,9 +3642,6 @@ if test "$sci_required_cuda" = "yes"; then
 # code to compile and test various system GPU/CUDA properties
 # (these files, etc are deleted after tests)
 #------------------------------------------------------------------------------
-# test if CUDA coompiler, nvcc can compile tr1/type_traits headers provided by host compiler
-# there is a known incopmpatibility with nvcc and GNU 4.4 tr1/type_traits headers
-
 # test CUDA libraries and headers
   cat > cuda_conf_test.cu << EOF
 #include <stdlib.h>
@@ -3690,10 +3681,10 @@ int main(int argc, char **argv) {
     printf("a:%d = %f\n", i, *(results+i));
   }
 
-    cudaFree(dev_a);
-    cudaFree(dev_results);
-    free(a);
-    free(results);
+  cudaFree(dev_a);
+  cudaFree(dev_results);
+  free(a);
+  free(results);
 
   cudaDeviceReset();
 
