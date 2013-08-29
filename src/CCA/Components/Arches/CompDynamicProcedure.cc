@@ -42,6 +42,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -1575,9 +1576,13 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }  
 
-    if (pc->myrank() == 0)
-      cerr << "Time for the Filter operation in Turbulence Model: " << 
-        Time::currentSeconds()-start_turbTime << " seconds\n";
+    string msg = "Time for the Filter operation in Turbulence Model: ";
+    if (Uintah::Parallel::getNumThreads() > 1) {
+      proc0thread0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
+    } else {
+      proc0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
+    }
+
     TAU_PROFILE_START(compute2);
 
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {

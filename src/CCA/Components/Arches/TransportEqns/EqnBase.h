@@ -15,6 +15,7 @@
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/IntrusionBC.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -295,9 +296,12 @@ private:
 template <class phiType, class constPhiType>  
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight, constCCVariable<double>& eps_v  ) 
 {
-  cerrLock.lock();
-  proc0cout << "initializing scalar equation " << d_eqnName << endl;
-  cerrLock.unlock();
+  string msg = "initializing scalar equation ";
+  if (Uintah::Parallel::getNumThreads() > 1 ) {
+    proc0thread0cout << msg << d_eqnName << endl;
+  } else {
+    proc0cout << msg << d_eqnName << endl;
+  }
 
   // Initialization function bullet proofing 
   if( d_initFunction == "step" || d_initFunction == "env_step" ) {
@@ -406,9 +410,12 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 template <class phiType>  
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCVariable<double>& eps_v ) 
 {
-  cerrLock.lock();
-  proc0cout << "initializing scalar equation " << d_eqnName << endl;
-  cerrLock.unlock();
+  string msg = "initializing scalar equation ";
+  if (Uintah::Parallel::getNumThreads() > 1 ) {
+    proc0thread0cout << msg << d_eqnName << endl;
+  } else {
+    proc0cout << msg << d_eqnName << endl;
+  }
 
   // Initialization function bullet proofing 
   if( d_initFunction == "step" || d_initFunction == "env_step" ) {
