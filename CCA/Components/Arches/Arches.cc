@@ -2345,7 +2345,13 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
   //        at the zeroth timestep the scalar is 0.0 everywhere, and at the first timestep the step function has already been convected/diffused)
   // ***************************************
 
-  proc0cout << "Initializing all DQMOM weighted abscissa equations..." << endl;
+  string msg = "Initializing all DQMOM weighted abscissa equations...";
+  if (Uintah::Parallel::getNumThreads() > 1) {
+    proc0thread0cout << msg << std::endl;
+  } else {
+    proc0cout << msg << std::endl;
+  }
+
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now.
     int archIndex = 0;

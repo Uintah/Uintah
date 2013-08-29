@@ -43,6 +43,7 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Thread/Thread.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Grid/SimulationState.h>
@@ -891,9 +892,11 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       d_filter->applyFilter_noPetsc< Array3<double> >(pc, patch,betaIJ[ii], filterVolume, cellType, betaHATIJ[ii]);
     }
 
-    if (pc->myrank() == 0){
-      cerr << "Time for the Filter operation in Turbulence Model: " << 
-        Time::currentSeconds()-start_turbTime << " seconds\n";
+    string msg = "Time for the Filter operation in Turbulence Model: ";
+    if (Uintah::Parallel::getNumThreads() > 1) {
+      proc0thread0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
+    } else {
+      proc0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
     }
 
   TAU_PROFILE_START(compute2);
