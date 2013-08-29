@@ -59,7 +59,23 @@ WARNING
 
   class BoundCondBase  {
   public:
-  
+
+    /**
+     *  \enum   BoundCondValueTypeEnum
+     *  \author Tony Saad
+     *  \date   August 29, 2013
+     *
+     *  \brief An enum that lists the datatypes associated with the values specified for boundary conditions.
+     */
+    enum BoundCondValueTypeEnum
+    {
+      INT_TYPE,
+      DOUBLE_TYPE,
+      VECTOR_TYPE,
+      STRING_TYPE,
+      UNKNOWN_TYPE
+    };
+
     BoundCondBase() {};
     virtual ~BoundCondBase() {};
     virtual BoundCondBase* clone() = 0;
@@ -68,11 +84,20 @@ WARNING
     const std::string getBCFaceName() const { return d_face_label; };
     const std::string getFunctorName() const { return d_functor_name; };
     
+    /**
+     *  \author Tony Saad
+     *  \date   August 29, 2013
+     *  \brief  Returns an BoundCondValueTypeEnum that designates the data type associated with the 
+     value of this boundary condition.
+     */
+    const BoundCondValueTypeEnum getValueType() const { return d_value_type; };
+    
   protected:
     string d_variable;          // Pressure, Density, etc
-    string d_type;         // Dirichlet, Neumann, etc
+    string d_type;              // Dirichlet, Neumann, etc
     std::string d_face_label;   // holds the user specified name of the bc face: left-wall, ox-inlet,...
     std::string d_functor_name; // holds the name of a functor to be applied on this boundary
+    BoundCondValueTypeEnum d_value_type;        // int, double, string, vector, unknown
   };
 } // End namespace Uintah
 
