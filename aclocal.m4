@@ -777,12 +777,16 @@ done
 AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
 # Allow GPU code generation for specific compute capabilities: 2.0, 2.1, 3.0, 3.5
-#   We need to be able to generate code for Fermi and Kepler,
-#   and also for earlier compute capabilities, even non-UVA environments.
-if test "$cuda_gencode" = ""; then
-	NVCC_CXXFLAGS=" "
+#   We only support code generation for Fermi and Kepler architectures now (APH 09/28/13)
+if test \( "$cuda_gencode" != "20" \) -a \( "$cuda_gencode" != "21" \) -a \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \); then
+  AC_MSG_RESULT([no])
+  AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 2.0, 2.1, 3.0, 3.5] )
+fi  
+  
+if test "$cuda_gencode" != "20"; then
+  NVCC_CXXFLAGS="-gencode arch=compute_$cuda_gencode,code=sm_$cuda_gencode "
 else	
-	NVCC_CXXFLAGS="-gencode arch=compute_$cuda_gencode,code=sm_$cuda_gencode "
+	NVCC_CXXFLAGS="-gencode arch=compute_20,code=sm_20 "
 fi
 
 # set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ comiler
