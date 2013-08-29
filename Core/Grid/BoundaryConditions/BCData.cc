@@ -40,9 +40,6 @@ using std::endl;
 // export SCI_DEBUG="BCDA_DBG:+"
 static DebugStream BCData_dbg("BCDATA_DBG",false);
 
-#define PRINT
-#undef PRINT
-
 BCData::BCData() 
 {
 }
