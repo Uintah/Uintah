@@ -33,7 +33,7 @@
     <save label="mixture_fraction"/>
     <save label="mf_moment_2"/>
 
-    <checkpoint cycle="2" timestepInterval="25"/>
+    <checkpoint cycle="2" timestepInterval="10"/>
     <compression>gzip</compression>
   </DataArchiver>
 
