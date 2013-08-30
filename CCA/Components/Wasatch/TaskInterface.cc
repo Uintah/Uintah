@@ -288,13 +288,13 @@ namespace Wasatch{
       PropertyMap& properties = ifm->second->properties();
       PropertyMap::iterator ipm = properties.find("UintahInfo");
       assert( ipm != properties.end() );
-      Expr::IDInfoMap& infomap = boost::any_cast< boost::reference_wrapper<Expr::IDInfoMap> >(ipm->second);
+      Expr::IDUintahInfoMap& infomap = boost::any_cast< boost::reference_wrapper<Expr::IDUintahInfoMap> >(ipm->second);
 
       //______________________________________
       // cycle through each field of this type
-      for( Expr::IDInfoMap::iterator ii=infomap.begin(); ii!=infomap.end(); ++ii ){
+      for( Expr::IDUintahInfoMap::iterator ii=infomap.begin(); ii!=infomap.end(); ++ii ){
 
-        Expr::FieldInfo& fieldInfo = ii->second;
+        Expr::UintahFieldAllocInfo& fieldInfo = *(ii->second);
         const Expr::Tag& fieldTag = ii->first;
 
         dbg_fields << "examining field: " << fieldTag << " for stage " << rkStage << std::endl;
