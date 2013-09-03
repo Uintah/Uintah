@@ -21,7 +21,8 @@ SRCS += \
 	 			$(SRCDIR)/BowmanNOx.cc \
 				$(SRCDIR)/PCTransport.cc \
         $(SRCDIR)/MMS1.cc \
-        $(SRCDIR)/SecondMFMoment.cc
+        $(SRCDIR)/SecondMFMoment.cc \
+        $(SRCDIR)/DissipationSource.cc
 
 
 
