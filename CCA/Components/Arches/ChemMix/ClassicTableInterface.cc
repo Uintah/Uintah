@@ -56,8 +56,8 @@ using namespace Uintah;
 // Default Constructor 
 //--------------------------------------------------------------------------- 
 ClassicTableInterface::ClassicTableInterface( ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
-  MixingRxnModel( labels, MAlabels ), depVarIndexMapLock("ARCHES d_depVarIndexMap lock"),
-  enthalpyVarIndexMapLock("ARCHES d_enthalpyVarIndexMap lock")
+  MixingRxnModel( labels, MAlabels ), d_depVarIndexMapLock("ARCHES d_depVarIndexMap lock"),
+  d_enthalpyVarIndexMapLock("ARCHES d_enthalpyVarIndexMap lock")
 {
   _boundary_condition = scinew BoundaryCondition_new( labels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
 }
@@ -880,17 +880,17 @@ ClassicTableInterface::getIndexInfo()
     std::string name = i->first; 
     int index = findIndex( name ); 
 
-    depVarIndexMapLock.readLock();
+    d_depVarIndexMapLock.readLock();
     IndexMap::iterator iter = d_depVarIndexMap.find( name );
-    depVarIndexMapLock.readUnlock();
+    d_depVarIndexMapLock.readUnlock();
 
     // Only insert variable if it isn't already there. 
     if ( iter == d_depVarIndexMap.end() ) {
       cout_tabledbg << " Inserting " << name << " index information into storage." << endl;
 
-      depVarIndexMapLock.writeLock();
+      d_depVarIndexMapLock.writeLock();
       iter = d_depVarIndexMap.insert( make_pair( name, index ) ).first; 
-      depVarIndexMapLock.writeUnlock();
+      d_depVarIndexMapLock.writeUnlock();
     }
   }
 }
@@ -899,7 +899,7 @@ ClassicTableInterface::getIndexInfo()
   void 
 ClassicTableInterface::getEnthalpyIndexInfo()
 {
-  enthalpyVarIndexMapLock.writeLock();
+  d_enthalpyVarIndexMapLock.writeLock();
   cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up sensible enthalpy" << endl;
   int index = findIndex( "sensibleenthalpy" ); 
 
@@ -911,7 +911,7 @@ ClassicTableInterface::getEnthalpyIndexInfo()
 
   index = findIndex( "density" ); 
   d_enthalpyVarIndexMap.insert( make_pair( "density", index ));
-  enthalpyVarIndexMapLock.writeUnlock();
+  d_enthalpyVarIndexMapLock.writeUnlock();
 }
 
 //-------------------------------------
