@@ -228,10 +228,19 @@ WARNING
      // attributes into result
      bool getAttribute(const std::string& value, bool& result) const;
 
-      //////////
-      // adds an attribute of specified name and value to this node's 
-      // attribute list
-      void setAttribute(const std::string& name, const std::string& value);
+    //////////
+    // adds an attribute of specified name and value to this node's 
+    // attribute list
+     void setAttribute(const std::string& name, const std::string& value);
+
+     //////////
+     // removes an attribute with name attrName
+     void removeAttribute (const std::string& attrName);
+
+     //////////
+     // replaces the value of attribute attrName with newValue
+     void replaceAttributeValue(const std::string& attrName,
+                                const std::string& newValue);
 
       /*************
         Methods involving node information
