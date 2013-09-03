@@ -59,6 +59,7 @@
 #include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
 #include <CCA/Components/Arches/PropertyModels/ScalarVarianceScaleSim.h>
 #include <CCA/Components/Arches/PropertyModels/NormScalarVariance.h>
+#include <CCA/Components/Arches/PropertyModels/ScalarDissipation.h>
 #include <Core/IO/UintahZlibUtil.h>
 
 #if HAVE_TABPROPS
@@ -3078,7 +3079,13 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
         
         //Normalized scalar variance based on second mixfrac moment
         PropertyModelBase::Builder* the_builder = new NormScalarVariance::Builder( prop_name, d_sharedState );
-        prop_factory.register_property_model( prop_name, the_builder );    
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "scalar_diss") {
+
+        //Scalar dissipation based on the transported squared gradient of mixture fraction for 2-eqn scalar var model
+        PropertyModelBase::Builder* the_builder = new ScalarDissipation::Builder( prop_name, d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
 
       } else {
 

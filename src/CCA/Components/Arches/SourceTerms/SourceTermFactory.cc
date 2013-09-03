@@ -16,6 +16,7 @@
 #include <CCA/Components/Arches/SourceTerms/RMCRT.h>
 #include <CCA/Components/Arches/SourceTerms/PCTransport.h>
 #include <CCA/Components/Arches/SourceTerms/SecondMFMoment.h>
+#include <CCA/Components/Arches/SourceTerms/DissipationSource.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
@@ -315,6 +316,10 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
 
       } else if ( src_type == "moment2_mixture_fraction_src" ) {
         SourceTermBase::Builder* srcBuilder = scinew SecondMFMoment::Builder(src_name, required_varLabels, shared_state );
+        factory.register_source_term( src_name, srcBuilder );
+        
+      } else if ( src_type == "dissipation_src" ) {
+        SourceTermBase::Builder* srcBuilder = scinew DissipationSource::Builder(src_name, required_varLabels, shared_state );
         factory.register_source_term( src_name, srcBuilder );
         
       } else {
