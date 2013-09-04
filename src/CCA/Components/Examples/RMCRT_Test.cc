@@ -129,7 +129,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   if (prob_spec->findBlock("RMCRT")){
     ProblemSpecP rmcrt_ps = prob_spec->findBlock("RMCRT"); 
     
-#ifdef HAVE_CUDA
+#ifdef HAVE_CUDA_OLD
     d_RMCRT = scinew Ray(dynamic_cast<UnifiedScheduler*>(getPort("scheduler")));
 #else
     d_RMCRT = scinew Ray();
