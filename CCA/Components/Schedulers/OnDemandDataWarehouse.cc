@@ -124,11 +124,10 @@ OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
   cudaError_t retVal;
   CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
   for (int i=0; i< numDevices; i++ ){
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
     GPUDataWarehouse * gpuDW;
     gpuDW = new GPUDataWarehouse();
     gpuDW->setDebug(gpudbg.active());
-    gpuDW->init_device();
+    gpuDW->init_device(i);
     d_gpuDWs.push_back(gpuDW);
   }
 #endif
