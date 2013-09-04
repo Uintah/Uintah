@@ -1024,10 +1024,21 @@ bool DetailedTask::checkCUDAStreamDone()
   // sets the CUDA context, for the call to cudaEventQuery()
   cudaError_t retVal;
   CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(deviceNum_));
-
   retVal = cudaStreamQuery(*d_cudaStream);
-  if (retVal == cudaSuccess) return true;
-  return false;
+  if (retVal == cudaSuccess) {
+//  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;
+    return true;
+  }
+  else if (retVal == cudaErrorNotReady ) { 
+    return false;
+  }
+  else if (retVal ==  cudaErrorLaunchFailure) {
+    SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task:"+ getName() , __FILE__, __LINE__));
+    return false;
+  } else { //other error
+    CUDA_RT_SAFE_CALL (retVal);
+    return false;
+  }
 }
 
 #endif

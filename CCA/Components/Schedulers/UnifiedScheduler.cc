@@ -1480,7 +1480,11 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask)
           // copy the requires variable data to the device
           GPUGridVariable<double> device_var;
           if (dw->getGPUDW()->exist(req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j))){
-            gpu_stats << "skip H2D copy of " << req->var->getName() << endl;
+            if (gpu_stats.active()) {
+              cerrLock.lock();
+              gpu_stats << "skip H2D copy of " << req->var->getName() << endl;
+              cerrLock.unlock();
+            }
             continue;
           }
           h2dRequiresLock_.writeLock();
@@ -1497,8 +1501,12 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask)
               pinnedHostPtrs.insert(h_reqData);
             }
           }
-          gpu_stats << "post H2D copy of " << req->var->getName() << " ,size= "<< size.x()*size.y()*size.z()*sizeof(double) 
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            gpu_stats << "post H2D copy of " << req->var->getName() << " ,size= "<< size.x()*size.y()*size.z()*sizeof(double) 
                   << " from "<< h_reqData << " to " << device_var.getPointer() << " , use stream " <<   dtask->getCUDAStream() << endl;
+            cerrLock.unlock();
+          }
           CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_var.getPointer(), h_reqData, 
                   device_var.getMemSize(), cudaMemcpyHostToDevice, *(dtask->getCUDAStream())));
           h2dRequiresLock_.writeUnlock();
@@ -1550,8 +1558,12 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask)
           GPUGridVariable<double> device_var;
           dw->getGPUDW()->allocateAndPut(device_var, comp->var->getName().c_str(), patches->get(i)->getID(), matls->get(j), 
                   make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()));
-          gpu_stats << "allocated device copy of " << comp->var->getName() << " ,size= "<< device_var.getMemSize() 
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            gpu_stats << "allocated device copy of " << comp->var->getName() << " ,size= "<< device_var.getMemSize() 
                   << " at " << device_var.getPointer() << " on device " <<   dtask->getDeviceNum() << endl;
+            cerrLock.unlock();
+          }
           d2hComputesLock_.writeUnlock();
         }
       }
@@ -1567,9 +1579,11 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask)
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::initiateH2DComputesCopies");
   TAU_PROFILE("UnifiedScheduler::initiateH2DComputesCopies()", " ", TAU_USER);
 
-  // determine which variables it will require
-  cudaError_t retVal;
   const Task* task = dtask->getTask();
+  cudaError_t retVal;
+  int device = dtask->getDeviceNum();
+  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
+  // determine which variables it will require
   for (const Task::Dependency* comp = task->getComputes(); comp != 0; comp = comp->next) {
     constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(dtask->getMaterials());
@@ -1655,10 +1669,17 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask)
               pinnedHostPtrs.insert(h_compData);
             }
           }
-          CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(h_compData, device_ptr, 
-                  device_var.getMemSize(), cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
-          gpu_stats << "post D2H copy of " << comp->var->getName() << " ,size= "<< device_var.getMemSize() 
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            gpu_stats << "post D2H copy of " << comp->var->getName() << " ,size= "<< device_var.getMemSize() 
                   << " to "<< h_compData << " from " << device_ptr << " , use stream " <<   dtask->getCUDAStream() << endl;
+            cerrLock.unlock();
+          }
+          retVal = cudaMemcpyAsync(h_compData, device_ptr, 
+                  device_var.getMemSize(), cudaMemcpyDeviceToHost, *dtask->getCUDAStream());
+           if (retVal ==  cudaErrorLaunchFailure) 
+               SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
+           else CUDA_RT_SAFE_CALL(retVal);
         //  h2dComputesCopy(dtask, comp->var, matls->get(j), patches->get(i), size, h_compData, d_compData);
           // check if preallocated size is correct
           d2hComputesLock_.writeUnlock();
@@ -1687,17 +1708,11 @@ void UnifiedScheduler::createCudaStreams(int numStreams, int device)
   idleStreamsLock_.writeUnlock();
 }
 
-void UnifiedScheduler::addCudaStream(cudaStream_t* stream, int device)
-{
-  idleStreamsLock_.writeLock();
-  idleStreams[device].push(stream);
-  idleStreamsLock_.writeUnlock();
-}
-
 
 void UnifiedScheduler::freeCudaStreams()
 {
   cudaError_t retVal;
+  idleStreamsLock_.writeLock();
   int numQueues = idleStreams.size();
 
   for (int i = 0; i < numQueues; i++) {
@@ -1708,6 +1723,7 @@ void UnifiedScheduler::freeCudaStreams()
       CUDA_RT_SAFE_CALL(retVal = cudaStreamDestroy(*stream));
     }
   }
+  idleStreamsLock_.writeUnlock();
 }
 
 
@@ -1725,7 +1741,11 @@ cudaStream_t* UnifiedScheduler::getCudaStream(int device)
     // this will get put into idle stream queue and properly disposed of later
     stream = ((cudaStream_t*)malloc(sizeof(cudaStream_t)));
     CUDA_RT_SAFE_CALL( retVal = cudaStreamCreate(&(*stream)));
-    gpu_stats << "created cuda stream" << stream << endl;
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      gpu_stats << "created cuda stream " << stream << " on device " << device << endl;
+      cerrLock.unlock();
+    }
   }
   idleStreamsLock_.writeUnlock();
 

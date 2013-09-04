@@ -123,10 +123,13 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* name, int
   var.setArray3(offset, size, NULL);
   void* addr;
   CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device_id));
+  if (d_debug) {
+    printf("cuda Malloc for %s, size %ld from (%d,%d,%d) to (%d,%d,%d) " , name, var.getMemSize(), 
+            low.x, low.y, low.z, high.x, high.y, high.z);
+  }
   CUDA_RT_SAFE_CALL( retVal = cudaMalloc(&addr, var.getMemSize()) );
   if (d_debug) {
-    printf("cuda Malloc for %s, size %ld from (%d,%d,%d) to (%d,%d,%d) at 0x%x on device %d\n" , name, var.getMemSize(), 
-            low.x, low.y, low.z, high.x, high.y, high.z, addr, device_id );
+    printf(" at 0x%x on device %d\n" , addr ,device_id);
   }
   var.setArray3(offset, size, addr);
   put(var, name, patchID, maltIndex);
