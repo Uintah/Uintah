@@ -180,9 +180,7 @@ void OnDemandDataWarehouse::clear()
   d_levelDB.clear();
   d_lvlock.writeUnlock();
 #ifdef HAVE_CUDA
-  for (int i; i<d_gpuDWs.size(); i++) {
-    cudaError_t retVal;
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
+  for (int i=0; i<d_gpuDWs.size(); i++) {
     d_gpuDWs[i]->clear();
     delete d_gpuDWs[i];
   }

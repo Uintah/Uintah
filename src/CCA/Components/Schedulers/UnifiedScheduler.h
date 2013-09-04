@@ -172,8 +172,6 @@ WARNING
 
     void createCudaStreams(int numStreams, int device);
 
-    void addCudaStream(cudaStream_t* stream, int device);
-
     void reclaimStreams(DetailedTask* dtask);
 
     cudaError_t unregisterPageLockedHostMem();
