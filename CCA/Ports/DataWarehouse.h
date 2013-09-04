@@ -41,6 +41,10 @@
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
+#include <sci_defs/cuda_defs.h>
+#ifdef HAVE_CUDA
+#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+#endif
 
 #include <iosfwd>
 
@@ -270,6 +274,15 @@ public:
   virtual void reduceMPI(const VarLabel* label, const Level* level,
 	  const MaterialSubset* matls, int nComm) = 0;
 
+#ifdef HAVE_CUDA
+  GPUDataWarehouse *getGPUDW(int i) const { return d_gpuDWs[i]; }
+  GPUDataWarehouse *getGPUDW() const { 
+    int i;
+    cudaError_t retVal;
+    CUDA_RT_SAFE_CALL( retVal = cudaGetDevice(&i));
+    return d_gpuDWs[i]; 
+  }
+#endif
 protected:
   DataWarehouse( const ProcessorGroup* myworld,
 		 Scheduler* scheduler, 
@@ -283,7 +296,10 @@ protected:
   // for the first DW) to the correct generation number based on how
   // many previous time steps had taken place before the restart.
   int d_generation;
-     
+  
+#ifdef HAVE_CUDA
+  std::vector<GPUDataWarehouse*> d_gpuDWs;
+#endif
 private:
   DataWarehouse(const DataWarehouse&);
   DataWarehouse& operator=(const DataWarehouse&);

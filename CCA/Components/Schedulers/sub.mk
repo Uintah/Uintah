@@ -58,7 +58,7 @@ SRCS += \
 	$(SRCDIR)/templates.cc
 	
 ifeq ($(HAVE_CUDA),yes)
-	SRCS += $(SRCDIR)/GPUThreadedMPIScheduler.cc
+	SRCS += $(SRCDIR)/GPUDataWarehouse.cu
 endif
 
 PSELIBS := \

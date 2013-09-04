@@ -854,7 +854,7 @@ Task::doitDevice(const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       vector<DataWarehouseP>& dws,
-                      int device)
+                      void* device)
 {
   DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
   DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);

@@ -56,7 +56,6 @@
 
 #ifdef HAVE_CUDA
 #include <CCA/Components/Examples/UnifiedSchedulerTest.h>
-#include <CCA/Components/Examples/GPUSchedulerTest.h>
 #include <CCA/Components/Examples/PoissonGPU1.h>
 #endif
 
@@ -183,9 +182,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #ifdef HAVE_CUDA
   if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
     return scinew PoissonGPU1(world);
-  }
-  if (sim_comp == "gpuschedulertest" || sim_comp == "GPUSCHEDULERTEST") {
-    return scinew GPUSchedulerTest(world);
   }
   if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
     return scinew UnifiedSchedulerTest(world);

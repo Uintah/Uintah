@@ -35,7 +35,7 @@
 
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
-#ifdef HAVE_CUDA
+#ifdef HAVE_CUDA_OLD
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #include <curand.h>
 #include <curand_kernel.h>
@@ -94,7 +94,7 @@ namespace Uintah{
     public: 
 
       Ray();
-#ifdef HAVE_CUDA
+#ifdef HAVE_CUDA_OLD
       Ray(UnifiedScheduler* scheduler);
 #endif
       ~Ray(); 
@@ -295,7 +295,7 @@ namespace Uintah{
                      Task::WhichDW which_celltype_dw,
                      const int radCalc_freq );
 
-#ifdef HAVE_CUDA
+#ifdef HAVE_CUDA_OLD
 
       UnifiedScheduler* _scheduler;
 

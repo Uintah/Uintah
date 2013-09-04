@@ -125,7 +125,7 @@ Ray::Ray()
 //---------------------------------------------------------------------------
 // Method: Constructor for GPU Version.
 //---------------------------------------------------------------------------
-#ifdef HAVE_CUDA
+#ifdef HAVE_CUDA_OLD
 Ray::Ray(UnifiedScheduler* scheduler)
 {
   _scheduler = scheduler;
@@ -600,7 +600,7 @@ Ray::sched_rayTrace( const LevelP& level,
                      const int radCalc_freq )
 {
   std::string taskname = "Ray::rayTrace";
-#ifdef HAVE_CUDA
+#ifdef HAVE_CUDA_OLD
   std::string gputaskname = "Ray::rayTraceGPU";
   Task* tsk = scinew Task( &Ray::rayTraceGPU, gputaskname, taskname, this,
                            &Ray::rayTrace, modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );

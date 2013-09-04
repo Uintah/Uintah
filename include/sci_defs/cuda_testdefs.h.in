@@ -35,6 +35,11 @@
 #  include <cuda_runtime.h>
 #  include <cuda_runtime_api.h>
 
+#ifdef __CUDACC__
+#define HOST_DEVICE __host__ __device__
+#else
+#define HOST_DEVICE 
+#endif
 
 #ifdef __cplusplus
 extern "C" {

@@ -23,11 +23,12 @@
  */
 
 #include <sci_defs/cuda_defs.h>
+#include <Core/Grid/Variables/GPUGridVariable.h>
+#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+//no linker for device code, need to include the whole source...
+#include <CCA/Components/Schedulers/GPUDataWarehouse.cu>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+namespace Uintah {
 //______________________________________________________________________
 //
 // @brief A kernel that applies the stencil used in timeAdvance(...)
@@ -37,18 +38,26 @@ extern "C" {
 // @param ghostLayers the number of layers of ghost cells
 // @param phi pointer to the source phi allocated on the device
 // @param newphi pointer to the sink phi allocated on the device
-__global__ void unifiedSchedulerTestKernel(uint3 domainLow,
+__global__ void unifiedSchedulerTestKernel(int patchID,
+                                           int matlIndex,
+                                           uint3 domainLow,
                                            uint3 domainHigh,
-                                           uint3 domainSize,
-                                           int NGC,
-                                           double *phi,
-                                           double *newphi) {
+                                           GPUDataWarehouse *old_gpudw,
+                                           GPUDataWarehouse *new_gpudw) {
+  GPUGridVariable<double> phi;
+  GPUGridVariable<double> newphi;
+  old_gpudw->get(phi, "phi", patchID, matlIndex);
+  new_gpudw->get(newphi, "phi", patchID, matlIndex);
   // calculate the thread indices
   int i = blockDim.x * blockIdx.x + threadIdx.x;
   int j = blockDim.y * blockIdx.y + threadIdx.y;
 
   // Get the size of the data block in which the variables reside.
   //  This is essentially the stride in the index calculations.
+  uint3 domainSize;
+  domainSize.x=domainHigh.x-domainLow.x;
+  domainSize.y=domainHigh.y-domainLow.y;
+  domainSize.z=domainHigh.z-domainLow.z;
   int dx = domainSize.x;
   int dy = domainSize.y;
 
@@ -60,17 +69,14 @@ __global__ void unifiedSchedulerTestKernel(uint3 domainLow,
   //  memory accesses.
   if(i > 0 && j > 0 && i < domainHigh.x && j < domainHigh.y) {
     for (int k = domainLow.z; k < domainHigh.z; k++) {
-      // For an array of [ A ][ B ][ C ], we can index it thus:
-      // (a * B * C) + (b * C) + (c * 1)
-      int idx = INDEX3D(dx,dy,i,j,k);
-
-      newphi[idx] = (1. / 6)
-                  * (phi[INDEX3D(dx,dy, (i-1), j, k)]
-                   + phi[INDEX3D(dx,dy, (i+1), j, k)]
-                   + phi[INDEX3D(dx,dy, i, (j-1), k)]
-                   + phi[INDEX3D(dx,dy, i, (j+1), k)]
-                   + phi[INDEX3D(dx,dy, i, j, (k-1))]
-                   + phi[INDEX3D(dx,dy, i, j, (k+1))]);
+      
+      newphi[make_int3(i,j,k)] = (1. / 6)
+                  * (phi[make_int3(i-1, j, k)]
+                   + phi[make_int3(i+1, j, k)]
+                   + phi[make_int3(i, j-1, k)]
+                   + phi[make_int3(i, j+1, k)]
+                   + phi[make_int3(i, j, k-1)]
+                   + phi[make_int3(i, j, k+1)]);
     }
   }
 }
@@ -78,21 +84,21 @@ __global__ void unifiedSchedulerTestKernel(uint3 domainLow,
 void launchUnifiedSchedulerTestKernel(dim3 dimGrid,
                                       dim3 dimBlock,
                                       cudaStream_t* stream,
+                                      int patchID,
+                                      int matlIndex,
                                       uint3 domainLow,
                                       uint3 domainHigh,
-                                      uint3 domainSize,
-                                      int numGhostCells,
-                                      double* d_phi,
-                                      double* d_newphi)
+                                      GPUDataWarehouse* old_gpudw,
+                                      GPUDataWarehouse* new_gpudw
+                                      )
 {
-  unifiedSchedulerTestKernel<<< dimGrid, dimBlock, 0, *stream >>>(domainLow,
+  unifiedSchedulerTestKernel<<< dimGrid, dimBlock, 0, *stream >>>(patchID,
+                                                                  matlIndex,
+                                                                  domainLow,
                                                                   domainHigh,
-                                                                  domainSize,
-                                                                  numGhostCells,
-                                                                  d_phi,
-                                                                  d_newphi);
+                                                                  old_gpudw,
+                                                                  new_gpudw
+                                                                  );
 }
 
-#ifdef __cplusplus
-}
-#endif
+} //end namespace Uintah

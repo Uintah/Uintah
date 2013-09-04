@@ -40,6 +40,10 @@
 #include <cstring>
 
 #include <sci_defs/cuda_defs.h>
+#ifdef HAVE_CUDA
+#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+#include <Core/Grid/Variables/GPUGridVariable.h>
+#endif
 
 #define USE_PACKING
 
@@ -83,13 +87,8 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
       recvLock("MPI receive Lock")
 #ifdef HAVE_CUDA
       ,
-      deviceComputesLock_("Device-DB Device computes ptrs lock"),
-      hostComputesLock_("Device-DB host computes ptrs lock"),
-      deviceRequiresLock_("Device-DB device requires ptrs lock"),
-      hostRequiresLock_("Device-DB host requires ptrs lock"),
       idleStreamsLock_("CUDA streams lock"),
-      idleEventsLock_("CUDA events lock"),
-      h2dComputesLock_("Device-DB computes copy lock"),
+      d2hComputesLock_("Device-DB computes copy lock"),
       h2dRequiresLock_("Device-DB requires copy lock")
 
 #endif
@@ -101,7 +100,6 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
     // we need one of these for each GPU, as each device will have it's own CUDA context
     for (int i = 0; i < numDevices_; i++) {
       idleStreams.push_back(std::queue<cudaStream_t*>());
-      idleEvents.push_back(std::queue<cudaEvent_t*>());
     }
 
     // disable memory windowing on variables.  This will ensure that
@@ -134,7 +132,6 @@ UnifiedScheduler::~UnifiedScheduler()
   }
 #ifdef HAVE_CUDA
   freeCudaStreams();
-  freeCudaEvents();
 #endif
 }
 
@@ -485,12 +482,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
 
 #ifdef HAVE_CUDA  
   // Free up all the pointer maps for device and pinned host pointers
-  if (d_sharedState->getCurrentTopLevelTimeStep() != 0) {
-    freeDeviceRequiresMem();         // call cudaFree on all device memory for task->requires
-    freeDeviceComputesMem();         // call cudaFree on all device memory for task->computes
-    unregisterPageLockedHostMem();   // unregister all registered, page-locked host memory
-    clearGpuDBMaps();
-  }
+  unregisterPageLockedHostMem();   // unregister all registered, page-locked host memory
 #endif
 
   // end while( numTasksDone < ntasks )
@@ -869,8 +861,7 @@ void UnifiedScheduler::runTasks(int t_id)
        */
       else if (dts->numInitiallyReadyDeviceTasks() > 0) {
         readyTask = dts->peekNextInitiallyReadyDeviceTask();
-        cudaError_t retVal = readyTask->checkH2DCopyDependencies();
-        if (retVal == cudaSuccess) {
+        if (readyTask->checkCUDAStreamDone()) {
           // All of this task's h2d copies is complete, so add it to the completion
           // pending GPU task queue and prepare to run.
           readyTask = dts->getNextInitiallyReadyDeviceTask();
@@ -891,8 +882,7 @@ void UnifiedScheduler::runTasks(int t_id)
        */
       else if (dts->numCompletionPendingDeviceTasks() > 0) {
         readyTask = dts->peekNextCompletionPendingDeviceTask();
-        cudaError_t retVal = readyTask->checkD2HCopyDependencies();
-        if (retVal == cudaSuccess) {
+        if (readyTask->checkCUDAStreamDone()) {
           readyTask = dts->getNextCompletionPendingDeviceTask();
           havework = true;
           gpuPending = true;
@@ -945,20 +935,21 @@ void UnifiedScheduler::runTasks(int t_id)
       }
 #ifdef HAVE_CUDA
       else if (gpuInitReady) {
-        // initiate all asynchronous H2D memory copies for this task's computes and requires
-        initiateH2DRequiresCopies(readyTask);
-        initiateH2DComputesCopies(readyTask);
+        // initiate all asynchronous H2D memory copies for this task's requires
+        readyTask->setCUDAStream(getCudaStream(readyTask->getDeviceNum()));
+        postH2DCopies(readyTask);
+        preallocateDeviceMemory(readyTask);
+        for (int i = 0; i < (int)dws.size(); i++) {
+          dws[i]->getGPUDW()->syncto_device();
+        }
         dts->addInitiallyReadyDeviceTask(readyTask);
       } else if (gpuRunReady) {
-        // recycle this task's H2D copies streams and events
-        reclaimStreams(readyTask, H2D);
-        reclaimEvents(readyTask, H2D);
         runTask(readyTask, currentIteration, t_id);
+        postD2HCopies(readyTask);
         dts->addCompletionPendingDeviceTask(readyTask);
       } else if (gpuPending) {
         // recycle this task's D2H copies streams and events
-        reclaimStreams(readyTask, D2H);
-        reclaimEvents(readyTask, D2H);
+        reclaimStreams(readyTask);
         postMPISends(readyTask, currentIteration, t_id);
         numTasksDone++;
         if (taskorder.active()){
@@ -1407,13 +1398,16 @@ void UnifiedScheduler::gpuInitialize()
   currentDevice_ = 0;
 }
 
-void UnifiedScheduler::initiateH2DRequiresCopies(DetailedTask* dtask)
+void UnifiedScheduler::postH2DCopies(DetailedTask* dtask)
 {
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::initiateH2DRequiresCopies");
   TAU_PROFILE("UnifiedScheduler::initiateH2DRequiresCopies()", " ", TAU_USER);
 
   // determine which variables it will require
+  cudaError_t retVal;
+  int device = dtask->getDeviceNum();
+  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
   const Task* task = dtask->getTask();
   for (const Task::Dependency* req = task->getRequires(); req != 0; req = req->next) {
     constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
@@ -1428,20 +1422,11 @@ void UnifiedScheduler::initiateH2DRequiresCopies(DetailedTask* dtask)
       //   one stream and one event per variable per H2D copy (numPatches * numMatls)
       int numPatches = patches->size();
       int numMatls = matls->size();
-      int numStreams = numPatches * numMatls;
-      int numEvents = numStreams;
-      int device = dtask->getDeviceNum();
-
-      int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
-      if (timeStep > 0) {
-        // knowing how many H2D "requires" copies we'll need, allocate streams and events for them
-        createCudaStreams(numStreams, device);
-        createCudaEvents(numEvents, device);
-      }
 
       int dwIndex = req->mapDataWarehouse();
       OnDemandDataWarehouseP dw = dws[dwIndex];
       IntVector size;
+      IntVector offset;
       double* h_reqData = NULL;
 
       for (int i = 0; i < numPatches; i++) {
@@ -1462,6 +1447,7 @@ void UnifiedScheduler::initiateH2DRequiresCopies(DetailedTask* dtask)
             ccVar.getWindow()->getData()->addReference();
             h_reqData = (double*)ccVar.getWindow()->getData()->getPointer();
             size = ccVar.getWindow()->getData()->size();
+            offset = ccVar.getWindow()->getOffset();
 
           } else if (type == TypeDescription::NCVariable) {
             constNCVariable<double> ncVar;
@@ -1469,37 +1455,66 @@ void UnifiedScheduler::initiateH2DRequiresCopies(DetailedTask* dtask)
             ncVar.getWindow()->getData()->addReference();
             h_reqData = (double*)ncVar.getWindow()->getData()->getPointer();
             size = ncVar.getWindow()->getData()->size();
+            offset = ncVar.getWindow()->getOffset();
 
           } else if (type == TypeDescription::SFCXVariable) {
             constSFCXVariable<double> sfcxVar;
             dw->get(sfcxVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
             h_reqData = (double*)sfcxVar.getWindow()->getData()->getPointer();
             size = sfcxVar.getWindow()->getData()->size();
+            offset = sfcxVar.getWindow()->getOffset();
 
           } else if (type == TypeDescription::SFCYVariable) {
             constSFCYVariable<double> sfcyVar;
             dw->get(sfcyVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
             h_reqData = (double*)sfcyVar.getWindow()->getData()->getPointer();
             size = sfcyVar.getWindow()->getData()->size();
+            offset = sfcyVar.getWindow()->getOffset();
 
           } else if (type == TypeDescription::SFCZVariable) {
             constSFCZVariable<double> sfczVar;
             dw->get(sfczVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
             h_reqData = (double*)sfczVar.getWindow()->getData()->getPointer();
             size = sfczVar.getWindow()->getData()->size();
+            offset = sfczVar.getWindow()->getOffset();
+
           }
 
           // copy the requires variable data to the device
+          GPUGridVariable<double> device_var;
+          if (dw->getGPUDW()->exist(req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j))){
+            gpu_stats << "skip H2D copy of " << req->var->getName() << endl;
+            continue;
+          }
           h2dRequiresLock_.writeLock();
-          h2dRequiresCopy(dtask, req->var, matls->get(j), patches->get(i), size, h_reqData);
+          IntVector low = offset;
+          IntVector high = offset + size;
+          dw->getGPUDW()->allocateAndPut(device_var, req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j), 
+                  make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()));
+          const bool pinned = (*(pinnedHostPtrs.find(h_reqData)) == h_reqData);
+          if (!pinned) {
+            // pin/page-lock host memory for asynchronous host-to-device copy
+            // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
+            retVal = cudaHostRegister(h_reqData, size.x()*size.y()*size.z()*sizeof(double), cudaHostRegisterPortable);
+            if (retVal == cudaSuccess) {
+              pinnedHostPtrs.insert(h_reqData);
+            }
+          }
+          gpu_stats << "post H2D copy of " << req->var->getName() << " ,size= "<< size.x()*size.y()*size.z()*sizeof(double) 
+                  << " from "<< h_reqData << " to " << device_var.getPointer() << " , use stream " <<   dtask->getCUDAStream() << endl;
+          CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_var.getPointer(), h_reqData, 
+                  device_var.getMemSize(), cudaMemcpyHostToDevice, *(dtask->getCUDAStream())));
           h2dRequiresLock_.writeUnlock();
         }
       }
+    } else {
+       SCI_THROW(InternalError("Cannot copy unsupported variable types to GPU:" +
+                            req->var->getName(), __FILE__, __LINE__));
     }
   }
 }
 
-void UnifiedScheduler::initiateH2DComputesCopies(DetailedTask* dtask)
+void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask)
 {
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::initiateH2DComputesCopies");
@@ -1520,20 +1535,64 @@ void UnifiedScheduler::initiateH2DComputesCopies(DetailedTask* dtask)
       //   one stream and one event per variable per H2D copy (numPatches * numMatls)
       int numPatches = patches->size();
       int numMatls = matls->size();
-      int numStreams = numPatches * numMatls;
-      int numEvents = numPatches * numMatls;
       int device = dtask->getDeviceNum();
 
-      // knowing how many H2D "computes" copies we'll need, allocate streams and events for them
-      int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
-      if (timeStep > 0) {
-        createCudaStreams(numStreams, device);
-        createCudaEvents(numEvents, device);
+      int dwIndex = comp->mapDataWarehouse();
+      OnDemandDataWarehouseP dw = dws[dwIndex];
+      IntVector low;
+      IntVector high;
+
+      for (int i = 0; i < numPatches; i++) {
+        for (int j = 0; j < numMatls; j++) {
+          IntVector lowOffset, highOffset;
+          Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
+          Patch::getGhostOffsets(type, comp->gtype, comp->numGhostCells, lowOffset, highOffset);
+          patches->get(i)->computeExtents(basis, comp->var->getBoundaryLayer(), lowOffset, highOffset, low, high);
+          
+          d2hComputesLock_.writeLock();
+          GPUGridVariable<double> device_var;
+          dw->getGPUDW()->allocateAndPut(device_var, comp->var->getName().c_str(), patches->get(i)->getID(), matls->get(j), 
+                  make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()));
+          gpu_stats << "allocated device copy of " << comp->var->getName() << " ,size= "<< device_var.getMemSize() 
+                  << " at " << device_var.getPointer() << " on device " <<   dtask->getDeviceNum() << endl;
+          d2hComputesLock_.writeUnlock();
+        }
       }
+    }
+  }
+}
+
+
+
+void UnifiedScheduler::postD2HCopies(DetailedTask* dtask)
+{
+
+  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::initiateH2DComputesCopies");
+  TAU_PROFILE("UnifiedScheduler::initiateH2DComputesCopies()", " ", TAU_USER);
+
+  // determine which variables it will require
+  cudaError_t retVal;
+  const Task* task = dtask->getTask();
+  for (const Task::Dependency* comp = task->getComputes(); comp != 0; comp = comp->next) {
+    constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(dtask->getMaterials());
+
+    // for now, we're only interested in grid variables
+    TypeDescription::Type type = comp->var->typeDescription()->getType();
+    if (type == TypeDescription::CCVariable || type == TypeDescription::NCVariable || type == TypeDescription::SFCXVariable
+        || type == TypeDescription::SFCYVariable || type == TypeDescription::SFCZVariable) {
+
+      // this is so we can allocate persistent events and streams to distribute when needed
+      //   one stream and one event per variable per H2D copy (numPatches * numMatls)
+      int numPatches = patches->size();
+      int numMatls = matls->size();
+      int device = dtask->getDeviceNum();
+
 
       int dwIndex = comp->mapDataWarehouse();
       OnDemandDataWarehouseP dw = dws[dwIndex];
       IntVector size;
+      IntVector offset;
       double* h_compData = NULL;
 
       for (int i = 0; i < numPatches; i++) {
@@ -1546,6 +1605,7 @@ void UnifiedScheduler::initiateH2DComputesCopies(DetailedTask* dtask)
             ccVar.getWindow()->getData()->addReference();
             h_compData = (double*)ccVar.getWindow()->getData()->getPointer();
             size = ccVar.getWindow()->getData()->size();
+            offset = ccVar.getWindow()->getOffset();
 
           } else if (type == TypeDescription::NCVariable) {
             NCVariable<double> ncVar;
@@ -1553,160 +1613,67 @@ void UnifiedScheduler::initiateH2DComputesCopies(DetailedTask* dtask)
             ncVar.getWindow()->getData()->addReference();
             h_compData = (double*)ncVar.getWindow()->getData()->getPointer();
             size = ncVar.getWindow()->getData()->size();
+            offset = ncVar.getWindow()->getOffset();
 
           } else if (type == TypeDescription::SFCXVariable) {
             SFCXVariable<double> sfcxVar;
             dw->allocateAndPut(sfcxVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
             h_compData = (double*)sfcxVar.getWindow()->getData()->getPointer();
             size = sfcxVar.getWindow()->getData()->size();
+            offset = sfcxVar.getWindow()->getOffset();
 
           } else if (type == TypeDescription::SFCYVariable) {
             SFCYVariable<double> sfcyVar;
             dw->allocateAndPut(sfcyVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
             h_compData = (double*)sfcyVar.getWindow()->getData()->getPointer();
             size = sfcyVar.getWindow()->getData()->size();
+            offset = sfcyVar.getWindow()->getOffset();
 
           } else if (type == TypeDescription::SFCZVariable) {
             SFCZVariable<double> sfczVar;
             dw->allocateAndPut(sfczVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
             h_compData = (double*)sfczVar.getWindow()->getData()->getPointer();
             size = sfczVar.getWindow()->getData()->size();
+            offset = sfczVar.getWindow()->getOffset();
           }
 
           // copy the computes  data to the device
-          h2dComputesLock_.writeLock();
-          h2dComputesCopy(dtask, comp->var, matls->get(j), patches->get(i), size, h_compData);
-          h2dComputesLock_.writeUnlock();
+          d2hComputesLock_.writeLock();
+          GPUGridVariable<double> device_var;
+          dw->getGPUDW()->get(device_var, comp->var->getName().c_str(), patches->get(i)->getID(), matls->get(j));
+          int3 device_offset;
+          int3 device_size;
+          void* device_ptr;
+          device_var.getOffsetSizePtr(device_offset, device_size, device_ptr);
+
+          // if offset and size is equal to CPU DW, directly copy back to CPU var memory;
+          if (device_offset.x == offset.x() && device_offset.y == offset.y() && device_offset.y == offset.y() &&
+              device_size.x == size.x() &&  device_size.y == size.y()  && device_size.z == size.z() ) {
+          const bool pinned = (*(pinnedHostPtrs.find(h_compData)) == h_compData);
+          if (!pinned) {
+            // pin/page-lock host memory for asynchronous host-to-device copy
+            // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
+            retVal = cudaHostRegister(h_compData, size.x()*size.y()*size.z()*sizeof(double), cudaHostRegisterPortable);
+            if (retVal == cudaSuccess) {
+              pinnedHostPtrs.insert(h_compData);
+            }
+          }
+          CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(h_compData, device_ptr, 
+                  device_var.getMemSize(), cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
+          gpu_stats << "post D2H copy of " << comp->var->getName() << " ,size= "<< device_var.getMemSize() 
+                  << " to "<< h_compData << " from " << device_ptr << " , use stream " <<   dtask->getCUDAStream() << endl;
+        //  h2dComputesCopy(dtask, comp->var, matls->get(j), patches->get(i), size, h_compData, d_compData);
+          // check if preallocated size is correct
+          d2hComputesLock_.writeUnlock();
+          } else {
+            //need  selective copy back to CPU memory.
+               SCI_THROW(InternalError("Cannot copy unmatched size variable from CPU to host:" +
+                            comp->var->getName(), __FILE__, __LINE__));
+          }
         }
       }
     }
   }
-}
-
-void UnifiedScheduler::h2dRequiresCopy(DetailedTask* dtask,
-                                       const VarLabel* label,
-                                       int matlIndex,
-                                       const Patch* patch,
-                                       IntVector size,
-                                       double* h_reqData)
-{
-  // set the device and CUDA context
-  cudaError_t retVal;
-  int device = dtask->getDeviceNum();
-  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
-
-  double* d_reqData;
-  size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
-  VarLabelMatl<Patch> var(label, matlIndex, patch);
-
-  const bool pinned = (*(pinnedHostPtrs.find(h_reqData)) == h_reqData);
-  if (!pinned) {
-    // pin/page-lock host memory for asynchronous host-to-device copy
-    // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
-    retVal = cudaHostRegister(h_reqData, nbytes, cudaHostRegisterPortable);
-    if (retVal == cudaSuccess) {
-      pinnedHostPtrs.insert(h_reqData);
-    }
-  }
-
-  CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&d_reqData, nbytes));
-  hostRequiresPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_reqData, size, device)));
-  deviceRequiresPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, d_reqData, size, device)));
-
-  if (gpu_stats.active()) {
-    cudaDeviceProp deviceProp;
-    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&deviceProp, device));
-    cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device
-    << ", " << deviceProp.name << ") for REQUIRES variable " << label->getName() << endl;
-    cerrLock.unlock();
-  }
-
-  // get a stream and an event from the appropriate queues
-  cudaStream_t* stream = getCudaStream(device);
-  dtask->addH2DStream(stream);
-
-  cudaEvent_t* event = getCudaEvent(device);
-  dtask->addH2DCopyEvent(event);
-
-  // set up the host2device memcopy and follow it with an event added to the stream
-  CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(d_reqData, h_reqData, nbytes, cudaMemcpyHostToDevice, *stream));
-  CUDA_RT_SAFE_CALL(retVal = cudaEventRecord(*event, *stream));
-
-  if (gpu_stats.active()) {
-    cudaDeviceProp deviceProp;
-    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&deviceProp, device));
-    cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying REQUIRES variable \"" << label->getName()
-    << "\" host to device (dev-" << device << ", " << deviceProp.name << "), [" << d_reqData << " <-- " << h_reqData << "], " << nbytes << " bytes"
-    << endl;
-    cerrLock.unlock();
-  }
-
-  dtask->incrementH2DCopyCount();
-}
-
-void UnifiedScheduler::h2dComputesCopy(DetailedTask* dtask,
-                                       const VarLabel* label,
-                                       int matlIndex,
-                                       const Patch* patch,
-                                       IntVector size,
-                                       double* h_compData)
-{
-  // set the device and CUDA context
-  cudaError_t retVal;
-  int device = dtask->getDeviceNum();
-  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
-
-  double* d_compData;
-  size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
-  VarLabelMatl<Patch> var(label, matlIndex, patch);
-
-  const bool pinned = (*(pinnedHostPtrs.find(h_compData)) == h_compData);
-  if (!pinned) {
-    // pin/page-lock host memory for asynchronous host-to-device copy
-    // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
-    retVal = cudaHostRegister(h_compData, nbytes, cudaHostRegisterPortable);
-    if (retVal == cudaSuccess) {
-      pinnedHostPtrs.insert(h_compData);
-    }
-  }
-
-  CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&d_compData, nbytes));
-  hostComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, h_compData, size, device)));
-  deviceComputesPtrs.insert(pair<VarLabelMatl<Patch>, GPUGridVariable>(var, GPUGridVariable(dtask, d_compData, size, device)));
-
-  if (gpu_stats.active()) {
-    cudaDeviceProp deviceProp;
-    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&deviceProp, device));
-    cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " allocating " << nbytes << " bytes on device (" << device
-    << ", " << deviceProp.name << ") for COMPUTES variable " << label->getName() << endl;
-    cerrLock.unlock();
-  }
-
-  // get a stream and an event from the appropriate queues
-  cudaStream_t* stream = getCudaStream(device);
-  dtask->addH2DStream(stream);
-
-  cudaEvent_t* event = getCudaEvent(device);
-  dtask->addH2DCopyEvent(event);
-
-  // set up the host2device memcopy and follow it with an event added to the stream
-  CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(d_compData, h_compData, nbytes, cudaMemcpyHostToDevice, *stream));
-  CUDA_RT_SAFE_CALL(retVal = cudaEventRecord(*event, *stream));
-
-  if (gpu_stats.active()) {
-    cudaDeviceProp deviceProp;
-    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&deviceProp, device));
-    cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying COMPUTES variable \"" << label->getName()
-    << "\" host to device (dev-" << device << ", " << deviceProp.name << "), [" << d_compData << " <-- " << h_compData << "], " << nbytes << " bytes"
-    << endl;
-    cerrLock.unlock();
-  }
-
-  dtask->incrementH2DCopyCount();
 }
 
 void UnifiedScheduler::createCudaStreams(int numStreams, int device)
@@ -1723,20 +1690,6 @@ void UnifiedScheduler::createCudaStreams(int numStreams, int device)
   idleStreamsLock_.writeUnlock();
 }
 
-void UnifiedScheduler::createCudaEvents(int numEvents, int device)
-{
-  cudaError_t retVal;
-
-  idleEventsLock_.writeLock();
-  for (int j = 0; j < numEvents; j++) {
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
-    cudaEvent_t* event = (cudaEvent_t*)malloc(sizeof(cudaEvent_t));
-    CUDA_RT_SAFE_CALL(retVal = cudaEventCreate(&(*event)));
-    idleEvents[device].push(event);
-  }
-  idleEventsLock_.writeUnlock();
-}
-
 void UnifiedScheduler::addCudaStream(cudaStream_t* stream, int device)
 {
   idleStreamsLock_.writeLock();
@@ -1744,12 +1697,6 @@ void UnifiedScheduler::addCudaStream(cudaStream_t* stream, int device)
   idleStreamsLock_.writeUnlock();
 }
 
-void UnifiedScheduler::addCudaEvent(cudaEvent_t* event, int device)
-{
-  idleEventsLock_.writeLock();
-  idleEvents[device].push(event);
-  idleEventsLock_.writeUnlock();
-}
 
 void UnifiedScheduler::freeCudaStreams()
 {
@@ -1766,20 +1713,6 @@ void UnifiedScheduler::freeCudaStreams()
   }
 }
 
-void UnifiedScheduler::freeCudaEvents()
-{
-  cudaError_t retVal;
-  int numQueues = idleEvents.size();
-
-  for (int i = 0; i < numQueues; i++) {
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
-    while (!idleEvents[i].empty()) {
-      cudaEvent_t* event = idleEvents[i].front();
-      idleEvents[i].pop();
-      CUDA_RT_SAFE_CALL(retVal = cudaEventDestroy(*event));
-    }
-  }
-}
 
 cudaStream_t* UnifiedScheduler::getCudaStream(int device)
 {
@@ -1794,176 +1727,14 @@ cudaStream_t* UnifiedScheduler::getCudaStream(int device)
     CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
     // this will get put into idle stream queue and properly disposed of later
     stream = ((cudaStream_t*)malloc(sizeof(cudaStream_t)));
+    CUDA_RT_SAFE_CALL( retVal = cudaStreamCreate(&(*stream)));
+    gpu_stats << "created cuda stream" << stream << endl;
   }
   idleStreamsLock_.writeUnlock();
 
   return stream;
 }
 
-cudaEvent_t* UnifiedScheduler::getCudaEvent(int device)
-{
-  cudaError_t retVal;
-  cudaEvent_t* event;
-
-  idleEventsLock_.writeLock();
-  if (idleEvents[device].size() > 0) {
-    event = idleEvents[device].front();
-    idleEvents[device].pop();
-  } else {  // shouldn't need any more than the queue capacity, but in case
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
-    // this will get put into idle event queue and properly disposed of later
-    event = ((cudaEvent_t*)malloc(sizeof(cudaEvent_t)));
-  }
-  idleEventsLock_.writeUnlock();
-
-  return event;
-}
-
-double* UnifiedScheduler::getDeviceRequiresPtr(const VarLabel* label,
-                                               int matlIndex,
-                                               const Patch* patch)
-{
-  VarLabelMatl<Patch> var(label, matlIndex, patch);
-  deviceRequiresLock_.readLock();
-  double* d_reqPtr = deviceRequiresPtrs.find(var)->second.ptr;
-  deviceRequiresLock_.readUnlock();
-
-  return d_reqPtr;
-}
-
-double* UnifiedScheduler::getDeviceComputesPtr(const VarLabel* label,
-                                               int matlIndex,
-                                               const Patch* patch)
-{
-  VarLabelMatl<Patch> var(label, matlIndex, patch);
-  deviceComputesLock_.readLock();
-  double* d_compPtr = deviceComputesPtrs.find(var)->second.ptr;
-  deviceComputesLock_.readUnlock();
-
-  return d_compPtr;
-}
-
-double* UnifiedScheduler::getHostRequiresPtr(const VarLabel* label,
-                                             int matlIndex,
-                                             const Patch* patch)
-{
-  VarLabelMatl<Patch> var(label, matlIndex, patch);
-  hostRequiresLock_.readLock();
-  double* h_reqPtr = hostRequiresPtrs.find(var)->second.ptr;
-  hostRequiresLock_.readUnlock();
-
-  return h_reqPtr;
-}
-
-double* UnifiedScheduler::getHostComputesPtr(const VarLabel* label,
-                                             int matlIndex,
-                                             const Patch* patch)
-{
-  VarLabelMatl<Patch> var(label, matlIndex, patch);
-  hostComputesLock_.readLock();
-  double* h_compPtr = hostComputesPtrs.find(var)->second.ptr;
-  hostComputesLock_.readUnlock();
-
-  return h_compPtr;
-}
-
-IntVector UnifiedScheduler::getDeviceRequiresSize(const VarLabel* label,
-                                                  int matlIndex,
-                                                  const Patch* patch)
-{
-  VarLabelMatl<Patch> var(label, matlIndex, patch);
-  hostRequiresLock_.readLock();
-  IntVector size = deviceRequiresPtrs.find(var)->second.size;
-  hostRequiresLock_.readUnlock();
-
-  return size;
-}
-
-IntVector UnifiedScheduler::getDeviceComputesSize(const VarLabel* label,
-                                                  int matlIndex,
-                                                  const Patch* patch)
-{
-  VarLabelMatl<Patch> var(label, matlIndex, patch);
-  deviceComputesLock_.readLock();
-  IntVector size = deviceComputesPtrs.find(var)->second.size;
-  deviceComputesLock_.readUnlock();
-
-  return size;
-}
-
-void UnifiedScheduler::requestD2HCopy(const VarLabel* label,
-                                      int matlIndex,
-                                      const Patch* patch,
-    cudaStream_t* stream,
-    cudaEvent_t* event)
-{
-  cudaError_t retVal;
-  VarLabelMatl<Patch> var(label, matlIndex, patch);
-
-  // set the CUDA context
-  DetailedTask* dtask = hostComputesPtrs.find(var)->second.dtask;
-  int device = dtask->getDeviceNum();
-  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
-
-  // collect arguments and setup the async d2h copy
-  double* d_compData = deviceComputesPtrs.find(var)->second.ptr;
-  double* h_compData = hostComputesPtrs.find(var)->second.ptr;
-  IntVector size = hostComputesPtrs.find(var)->second.size;
-  size_t nbytes = size.x() * size.y() * size.z() * sizeof(double);
-
-  if (gpu_stats.active()) {
-    cudaDeviceProp deviceProp;
-    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&deviceProp, device));
-    cerrLock.lock();
-    gpu_stats << "GPUStats: proc " << d_myworld->myrank() << " copying RESULT   variable \"" << label->getName()
-    << "\" device to host (dev-" << device << ", " << deviceProp.name << "), [" << d_compData << " --> " << h_compData << "], " << nbytes << " bytes"
-    << endl;
-    cerrLock.unlock();
-  }
-
-  // event and stream were already added to the task in getCudaEvent(...) and getCudaStream(...)
-  CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(h_compData, d_compData, nbytes, cudaMemcpyDeviceToHost, *stream));
-  CUDA_RT_SAFE_CALL(retVal = cudaEventRecord(*event, *stream));
-
-  dtask->incrementD2HCopyCount();
-}
-
-cudaError_t UnifiedScheduler::freeDeviceRequiresMem()
-{
-  cudaError_t retVal;
-  std::map<VarLabelMatl<Patch>, GPUGridVariable>::iterator iter;
-
-  for (iter = deviceRequiresPtrs.begin(); iter != deviceRequiresPtrs.end(); iter++) {
-
-    // set the device & CUDA context
-    int device = iter->second.device;
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
-    // set the CUDA context so the free() works
-
-    // free the device requires memory
-    double* d_reqPtr = iter->second.ptr;
-    CUDA_RT_SAFE_CALL(retVal = cudaFree(d_reqPtr));
-  }
-  return retVal;
-}
-
-cudaError_t UnifiedScheduler::freeDeviceComputesMem()
-{
-  cudaError_t retVal;
-  std::map<VarLabelMatl<Patch>, GPUGridVariable>::iterator iter;
-
-  for (iter = deviceComputesPtrs.begin(); iter != deviceComputesPtrs.end(); iter++) {
-
-    // set the device & CUDA context
-    int device = iter->second.device;
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
-
-    // free the device computes memory
-    double* d_compPtr = iter->second.ptr;
-    CUDA_RT_SAFE_CALL(retVal = cudaFree(d_compPtr));
-  }
-  return retVal;
-}
 
 cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
 {
@@ -1976,55 +1747,19 @@ cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
     double* ptr = *iter;
     CUDA_RT_SAFE_CALL(retVal = cudaHostUnregister(ptr));
   }
+  pinnedHostPtrs.clear();
   return retVal;
 }
 
-void UnifiedScheduler::reclaimStreams(DetailedTask* dtask,
-                                      CopyType type)
+void UnifiedScheduler::reclaimStreams(DetailedTask* dtask)
 {
-  std::vector<cudaStream_t*>* dtaskStreams;
-  std::vector<cudaStream_t*>::iterator iter;
-  int device = dtask->getDeviceNum();
-
   idleStreamsLock_.writeLock();
-  dtaskStreams = ((type == H2D) ? dtask->getH2DStreams() : dtask->getD2HStreams());
   // reclaim DetailedTask streams
-  for (iter = dtaskStreams->begin(); iter != dtaskStreams->end(); iter++) {
-    cudaStream_t* stream = *iter;
-    this->idleStreams[device].push(stream);
-  }
+  idleStreams[dtask->getDeviceNum()].push(dtask->getCUDAStream());
+  dtask->setCUDAStream(NULL);
   idleStreamsLock_.writeUnlock();
-
-  dtaskStreams->clear();
 }
 
-void UnifiedScheduler::reclaimEvents(DetailedTask* dtask,
-                                     CopyType type)
-{
-  std::vector<cudaEvent_t*>* dtaskEvents;
-  std::vector<cudaEvent_t*>::iterator iter;
-  int device = dtask->getDeviceNum();
-
-  idleEventsLock_.writeLock();
-  dtaskEvents = ((type == H2D) ? dtask->getH2DCopyEvents() : dtask->getD2HCopyEvents());
-  // reclaim DetailedTask events
-  for (iter = dtaskEvents->begin(); iter != dtaskEvents->end(); iter++) {
-    cudaEvent_t* event = *iter;
-    this->idleEvents[device].push(event);
-  }
-  idleEventsLock_.writeUnlock();
-
-  dtaskEvents->clear();
-}
-
-void UnifiedScheduler::clearGpuDBMaps()
-{
-  deviceRequiresPtrs.clear();
-  deviceComputesPtrs.clear();
-  hostRequiresPtrs.clear();
-  hostComputesPtrs.clear();
-  pinnedHostPtrs.clear();
-}
 
 #endif
 

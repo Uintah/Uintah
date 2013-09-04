@@ -55,10 +55,10 @@ endif
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/PoissonGPU1.cc                 \
           $(SRCDIR)/PoissonGPU1Kernel.cu           \
-          $(SRCDIR)/GPUSchedulerTest.cc            \
-          $(SRCDIR)/GPUSchedulerTestKernel.cu      \
           $(SRCDIR)/UnifiedSchedulerTest.cc        \
           $(SRCDIR)/UnifiedSchedulerTestKernel.cu
+#          $(SRCDIR)/GPUSchedulerTest.cc            \
+#          $(SRCDIR)/GPUSchedulerTestKernel.cu      \
           
 endif
 
