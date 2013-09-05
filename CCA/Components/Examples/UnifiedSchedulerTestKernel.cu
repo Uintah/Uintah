@@ -61,13 +61,13 @@ __global__ void unifiedSchedulerTestKernel(int patchID,
   if(i < domainHigh.x && j < domainHigh.y) {
     for (int k = domainLow.z; k < domainHigh.z; k++) {
       
-      newphi[make_int3(i,j,k)] = (1. / 6)
-                  * (phi[make_int3(i-1, j, k)]
-                   + phi[make_int3(i+1, j, k)]
-                   + phi[make_int3(i, j-1, k)]
-                   + phi[make_int3(i, j+1, k)]
-                   + phi[make_int3(i, j, k-1)]
-                   + phi[make_int3(i, j, k+1)]);
+      newphi(i,j,k) = (1. / 6)
+                  * (phi(i-1, j, k)
+                   + phi(i+1, j, k)
+                   + phi(i, j-1, k)
+                   + phi(i, j+1, k)
+                   + phi(i, j, k-1)
+                   + phi(i, j, k+1));
     }
   }
 }
