@@ -49,17 +49,8 @@ __global__ void unifiedSchedulerTestKernel(int patchID,
   old_gpudw->get(phi, "phi", patchID, matlIndex);
   new_gpudw->get(newphi, "phi", patchID, matlIndex);
   // calculate the thread indices
-  int i = blockDim.x * blockIdx.x + threadIdx.x;
-  int j = blockDim.y * blockIdx.y + threadIdx.y;
-
-  // Get the size of the data block in which the variables reside.
-  //  This is essentially the stride in the index calculations.
-  uint3 domainSize;
-  domainSize.x=domainHigh.x-domainLow.x;
-  domainSize.y=domainHigh.y-domainLow.y;
-  domainSize.z=domainHigh.z-domainLow.z;
-  int dx = domainSize.x;
-  int dy = domainSize.y;
+  int i = blockDim.x * blockIdx.x + threadIdx.x + domainLow.x;
+  int j = blockDim.y * blockIdx.y + threadIdx.y + domainLow.y;
 
   // If the threads are within the bounds of the ghost layers
   //  the algorithm is allowed to stream along the z direction
@@ -67,7 +58,7 @@ __global__ void unifiedSchedulerTestKernel(int patchID,
   //  is streamed because it allows access of x and y elements
   //  that are close to one another which should allow coalesced
   //  memory accesses.
-  if(i > 0 && j > 0 && i < domainHigh.x && j < domainHigh.y) {
+  if(i < domainHigh.x && j < domainHigh.y) {
     for (int k = domainLow.z; k < domainHigh.z; k++) {
       
       newphi[make_int3(i,j,k)] = (1. / 6)
