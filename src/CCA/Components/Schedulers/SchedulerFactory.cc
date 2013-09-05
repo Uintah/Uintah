@@ -39,10 +39,6 @@
 
 #include <sci_defs/cuda_defs.h>
 
-#ifdef HAVE_CUDA
-#include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
-#endif
-
 #include <iostream>
 
 using namespace std;
@@ -87,11 +83,6 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
       } else if (Threaded2.active()) {
         scheduler = "ThreadedMPI2Scheduler";
       }
-#ifdef HAVE_CUDA
-      else if (GPU.active()) {
-        scheduler = "GPUThreadedMPIScheduler";
-      }
-#endif
       else {
         scheduler = "UnifiedScheduler";
       }
@@ -104,9 +95,8 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
     }
     if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "ThreadedMPIScheduler")
                                                 && (scheduler != "ThreadedMPI2Scheduler")
-                                                && (scheduler != "GPUThreadedMPIScheduler")
                                                 && (scheduler != "UnifiedScheduler")) {
-      throw ProblemSetupException("Threaded, GPU or Unified Scheduler needed for -nthreads", __FILE__, __LINE__);
+      throw ProblemSetupException("Threaded or Unified Scheduler needed for -nthreads", __FILE__, __LINE__);
     }
   }
 
@@ -129,11 +119,6 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   } else if (scheduler == "UnifiedScheduler" || scheduler == "Unified") {
     sch = scinew UnifiedScheduler(world, output, NULL);
   }
-#ifdef HAVE_CUDA
-  else if (scheduler == "GPUThreadedMPIScheduler" || scheduler == "GPUThreadedMPI") {
-    sch = scinew GPUThreadedMPIScheduler(world, output, NULL);
-  }
-#endif
   else {
     sch = 0;
     throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);

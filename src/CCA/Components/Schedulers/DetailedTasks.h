@@ -268,22 +268,10 @@ namespace Uintah {
     int getDeviceNum () {
       return deviceNum_;
     }
-    bool addH2DCopyEvent(cudaEvent_t* event);
-    bool addD2HCopyEvent(cudaEvent_t* event);
-    bool addH2DStream(cudaStream_t* stream);
-    bool addD2HStream(cudaStream_t* stream);
-    cudaError_t checkH2DCopyDependencies();
-    cudaError_t checkD2HCopyDependencies();
-    std::vector<cudaStream_t*>* getH2DStreams() { return &h2dStreams; }
-    std::vector<cudaStream_t*>* getD2HStreams() { return &d2hStreams; }
-    std::vector<cudaEvent_t*>* getH2DCopyEvents()  { return &h2dCopyEvents;  }
-    std::vector<cudaEvent_t*>* getD2HCopyEvents()  { return &d2hCopyEvents;  }
-    inline void incrementH2DCopyCount() { h2dCopyCount_++; }
-    inline void decrementH2DCopyCount() { h2dCopyCount_--; }
-    inline void incrementD2HCopyCount() { d2hCopyCount_++; }
-    inline void decrementD2HCopyCount() { d2hCopyCount_--; }
-    inline int getH2DCopyCount() { return h2dCopyCount_; }
-    inline int getD2HCopyCount() { return d2hCopyCount_; }
+    cudaStream_t*   getCUDAStream() {return d_cudaStream;};
+    void setCUDAStream(cudaStream_t* s) { d_cudaStream = s;};
+
+    bool checkCUDAStreamDone();
 #endif
 
   protected:
@@ -339,15 +327,9 @@ namespace Uintah {
     // these will be used when the mechanism to know when H2D & D2H copies are complete has been refined
     bool deviceExternallyReady_;
     bool completed_;
-    int  h2dCopyCount_;
-    int  d2hCopyCount_;
     int  deviceNum_;
 
-    // these lists are needed to attach CUDA calls to the correct stream for a particular GridVariablevariable, etc
-    std::vector<cudaStream_t*>  h2dStreams;
-    std::vector<cudaStream_t*>  d2hStreams;
-    std::vector<cudaEvent_t*>   h2dCopyEvents;
-    std::vector<cudaEvent_t*>   d2hCopyEvents;
+    cudaStream_t*   d_cudaStream;
 #endif
 
   }; // end class DetailedTask

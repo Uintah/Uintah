@@ -128,8 +128,6 @@ WARNING
 
     cudaEvent_t* getCudaEvent(int device);
 
-    enum CopyType { H2D, D2H };
-
 #endif
 
     /* thread shared data, needs lock protection when accessed */
@@ -166,68 +164,29 @@ WARNING
 
     void gpuInitialize();
 
-    void initiateH2DRequiresCopies(DetailedTask* dtask);
+    void postD2HCopies(DetailedTask* dtask);
+    
+    void preallocateDeviceMemory(DetailedTask* dtask);
 
-    void initiateH2DComputesCopies(DetailedTask* dtask);
-
-    void h2dRequiresCopy (DetailedTask* dtask, const VarLabel* label, int matlIndex, const Patch* patch, IntVector size, double* h_reqData);
-
-    void h2dComputesCopy (DetailedTask* dtask, const VarLabel* label, int matlIndex, const Patch* patch, IntVector size, double* h_compData);
+    void postH2DCopies(DetailedTask* dtask);
 
     void createCudaStreams(int numStreams, int device);
 
-    void createCudaEvents(int numEvents, int device);
-
-    void addCudaStream(cudaStream_t* stream, int device);
-
-    void addCudaEvent(cudaEvent_t* event, int device);
-
-    void reclaimStreams(DetailedTask* dtask, CopyType type);
-
-    void reclaimEvents(DetailedTask* dtask, CopyType type);
-
-    cudaError_t freeDeviceRequiresMem();
-
-    cudaError_t freeDeviceComputesMem();
+    void reclaimStreams(DetailedTask* dtask);
 
     cudaError_t unregisterPageLockedHostMem();
 
     void freeCudaStreams();
 
-    void freeCudaEvents();
-
-    void clearGpuDBMaps();
-
-    struct GPUGridVariable {
-      DetailedTask* dtask;
-      double*       ptr;
-      IntVector     size;
-      int           device;
-      GPUGridVariable(DetailedTask* _dtask, double* _ptr, IntVector _size, int _device)
-        : dtask(_dtask), ptr(_ptr), size(_size), device(_device) {
-      }
-    };
-
-    std::set<double*>  pinnedHostPtrs;
     int           numDevices_;
     int           currentDevice_;
 
-    /* thread shared data, needs lock protection when accessed */
-    std::map<VarLabelMatl<Patch>, GPUGridVariable> deviceRequiresPtrs;
-    std::map<VarLabelMatl<Patch>, GPUGridVariable> deviceComputesPtrs;
-    std::map<VarLabelMatl<Patch>, GPUGridVariable> hostRequiresPtrs;
-    std::map<VarLabelMatl<Patch>, GPUGridVariable> hostComputesPtrs;
     std::vector<std::queue<cudaStream_t*> >  idleStreams;
-    std::vector<std::queue<cudaEvent_t*> >   idleEvents;
+    std::set<double*>  pinnedHostPtrs;
 
     // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)
-    mutable CrowdMonitor deviceComputesLock_;
-    mutable CrowdMonitor hostComputesLock_;
-    mutable CrowdMonitor deviceRequiresLock_;
-    mutable CrowdMonitor hostRequiresLock_;
     mutable CrowdMonitor idleStreamsLock_;
-    mutable CrowdMonitor idleEventsLock_;
-    mutable CrowdMonitor h2dComputesLock_;
+    mutable CrowdMonitor d2hComputesLock_;
     mutable CrowdMonitor h2dRequiresLock_;
 
 #endif

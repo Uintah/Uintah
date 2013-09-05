@@ -28,6 +28,7 @@
 #include <Core/Util/DebugStream.h>
 
 using SCIRun::Mutex;
+Mutex coutLock( "cout lock" );
 Mutex cerrLock( "cerr lock" );
 
 SCIRun::DebugStream dbg_barrier("MPIBarriers",false);

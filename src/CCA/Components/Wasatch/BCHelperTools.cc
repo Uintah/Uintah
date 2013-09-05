@@ -30,6 +30,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Grid/Variables/Stencil4.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -1178,12 +1179,18 @@ namespace Wasatch {
       for( int child = 0; child<numChildren; ++child ){
         SCIRun::Iterator bound_ptr;
 
-        //patch->getBCDataArray(face)->getCellFaceIterator(material, bound_ptr, child);
+        //
         double bc_value;
         std::string bc_kind;
         std::string bc_name = "none";
         std::string bc_functor_name = "none";        
-        get_iter_bcval_bckind_bcname( patch, face, child, poissonTag.name(), material, bc_value, bound_ptr, bc_kind, bc_name,bc_functor_name);
+        //get_iter_bcval_bckind_bcname( patch, face, child, poissonTag.name(), material, bc_value, bound_ptr, bc_kind, bc_name,bc_functor_name);
+        getBCKind(patch,face,child,poissonTag.name(), material, bc_kind, bc_name);
+        
+        if (bc_kind.compare("Dirichlet")==0 || bc_kind.compare("Neumann")==0)
+          getBCValue( patch, face, child, poissonTag.name(), material, bc_value );
+        
+        patch->getBCDataArray(face)->getCellFaceIterator(material, bound_ptr, child);
         
         SCIRun::IntVector insideCellDir = patch->faceDirection(face);
         const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );

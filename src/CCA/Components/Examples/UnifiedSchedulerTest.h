@@ -28,24 +28,9 @@
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 
 #include <sci_defs/cuda_defs.h>
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void launchUnifiedSchedulerTestKernel(dim3 dimGrid,
-                                      dim3 dimBlock,
-                                      cudaStream_t* stream,
-                                      uint3 domainLow,
-                                      uint3 domainHigh,
-                                      uint3 domainSize,
-                                      int numGhostCells,
-                                      double* d_phi,
-                                      double* d_newphi);
-#ifdef __cplusplus
-}
-#endif
 
 namespace Uintah {
 
@@ -142,13 +127,24 @@ namespace Uintah {
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
-                          int device);
+                          void* stream);
 
       UnifiedSchedulerTest(const UnifiedSchedulerTest& gst);
 
       UnifiedSchedulerTest& operator=(const UnifiedSchedulerTest& gst);
 
   };
+void launchUnifiedSchedulerTestKernel(dim3 dimGrid,
+                                      dim3 dimBlock,
+                                      cudaStream_t* stream,
+                                      int patchID,
+                                      int matlIndex,
+                                      uint3 domainLow,
+                                      uint3 domainHigh,
+                                      GPUDataWarehouse* old_gpudw,
+                                      GPUDataWarehouse* new_gpudw
+                                      );
+
 }
 
 #endif

@@ -59,6 +59,7 @@
 #include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
 #include <CCA/Components/Arches/PropertyModels/ScalarVarianceScaleSim.h>
 #include <CCA/Components/Arches/PropertyModels/NormScalarVariance.h>
+#include <CCA/Components/Arches/PropertyModels/ScalarDissipation.h>
 #include <Core/IO/UintahZlibUtil.h>
 
 #if HAVE_TABPROPS
@@ -2345,7 +2346,13 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
   //        at the zeroth timestep the scalar is 0.0 everywhere, and at the first timestep the step function has already been convected/diffused)
   // ***************************************
 
-  proc0cout << "Initializing all DQMOM weighted abscissa equations..." << endl;
+  string msg = "Initializing all DQMOM weighted abscissa equations...";
+  if (Uintah::Parallel::getNumThreads() > 1) {
+    proc0thread0cout << msg << std::endl;
+  } else {
+    proc0cout << msg << std::endl;
+  }
+
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now.
     int archIndex = 0;
@@ -3072,7 +3079,13 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
         
         //Normalized scalar variance based on second mixfrac moment
         PropertyModelBase::Builder* the_builder = new NormScalarVariance::Builder( prop_name, d_sharedState );
-        prop_factory.register_property_model( prop_name, the_builder );    
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "scalar_diss") {
+
+        //Scalar dissipation based on the transported squared gradient of mixture fraction for 2-eqn scalar var model
+        PropertyModelBase::Builder* the_builder = new ScalarDissipation::Builder( prop_name, d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
 
       } else {
 

@@ -79,6 +79,7 @@ extern SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 
 static DebugStream dbg( "OnDemandDataWarehouse", false );
+static DebugStream gpudbg( "GPUDataWarehouse", false );
 static DebugStream warn( "OnDemandDataWarehouse_warn", true );
 static DebugStream particles("DWParticles", false);
 static DebugStream particles2("DWParticles2", false);
@@ -118,6 +119,18 @@ OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
   restart = false;
   hasRestarted_ = false;
   aborted = false;
+#ifdef HAVE_CUDA
+  int numDevices;
+  cudaError_t retVal;
+  CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+  for (int i=0; i< numDevices; i++ ){
+    GPUDataWarehouse * gpuDW;
+    gpuDW = new GPUDataWarehouse();
+    gpuDW->setDebug(gpudbg.active());
+    gpuDW->init_device(i);
+    d_gpuDWs.push_back(gpuDW);
+  }
+#endif
 }
 //______________________________________________________________________
 //
@@ -166,6 +179,12 @@ void OnDemandDataWarehouse::clear()
   d_lvlock.writeLock();
   d_levelDB.clear();
   d_lvlock.writeUnlock();
+#ifdef HAVE_CUDA
+  for (int i=0; i<d_gpuDWs.size(); i++) {
+    d_gpuDWs[i]->clear();
+    delete d_gpuDWs[i];
+  }
+#endif
 }
 //__________________________________
 //

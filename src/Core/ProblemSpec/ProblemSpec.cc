@@ -1521,6 +1521,24 @@ ProblemSpec::setAttribute(const string& name,
 
 //______________________________________________________________________
 //
+void
+ProblemSpec::removeAttribute(const string& attrName)
+{
+  xmlAttr* attr = xmlHasProp(d_node, BAD_CAST attrName.c_str());
+  if (attr) xmlRemoveProp(attr);
+}
+//______________________________________________________________________
+//
+void
+ProblemSpec::replaceAttributeValue(const std::string& attrName,
+                                   const std::string& newValue)
+{
+  removeAttribute(attrName);
+  setAttribute(attrName,newValue);
+}
+
+//______________________________________________________________________
+//
 ProblemSpecP
 ProblemSpec::getFirstChild() 
 {

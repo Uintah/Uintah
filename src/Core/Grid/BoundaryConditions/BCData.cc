@@ -40,9 +40,6 @@ using std::endl;
 // export SCI_DEBUG="BCDA_DBG:+"
 static DebugStream BCData_dbg("BCDATA_DBG",false);
 
-#define PRINT
-#undef PRINT
-
 BCData::BCData() 
 {
 }
@@ -135,6 +132,11 @@ BCData::getBCValues(const string& var_name) const
 
 }
 
+const vector<BoundCondBase*>&
+BCData::getBCData() const
+{
+  return d_BCData;
+}
 
 bool BCData::find(const string& var_name) const
 {

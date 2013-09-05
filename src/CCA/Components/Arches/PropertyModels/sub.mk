@@ -13,7 +13,8 @@ SRCS += \
         $(SRCDIR)/ScalarVarianceScaleSim.cc \
         $(SRCDIR)/HeatLoss.cc \
         $(SRCDIR)/ConstProperty.cc \
-        $(SRCDIR)/NormScalarVariance.cc
+        $(SRCDIR)/NormScalarVariance.cc \
+        $(SRCDIR)/ScalarDissipation.cc
 
 
 

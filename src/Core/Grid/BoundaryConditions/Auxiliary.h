@@ -22,27 +22,25 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_GRID_BoundCond_H
-#define UINTAH_GRID_BoundCond_H
+#ifndef UINTAH_GRID_AuxiliaryBoundCond_H
+#define UINTAH_GRID_AuxiliaryBoundCond_H
 
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Malloc/Allocator.h>
-#include <string>
+
 
 namespace Uintah {
-using std::string;
- using namespace SCIRun;
    
 /**************************************
 
 CLASS
-   BoundCond
+   AuxiliaryBoundCond
    
    
 GENERAL INFORMATION
 
-   BoundCond.h
+   AuxiliaryBoundCond.h
 
    John A. Schmidt
    Department of Mechanical Engineering
@@ -52,7 +50,7 @@ GENERAL INFORMATION
   
 
 KEYWORDS
-   BoundCond
+   AuxiliaryBoundCond
 
 DESCRIPTION
    Long description...
@@ -61,78 +59,22 @@ WARNING
   
 ****************************************/
 
- class NoValue {
-
- public:
-   NoValue() {};
-   ~NoValue() {};
- };
-
- template <class T>  class BoundCond : public BoundCondBase {
- public:
-   BoundCond() {};
-
-   BoundCond(string var_name, string type, T value, const std::string face_label, const std::string functor_name, const BoundCondBase::BoundCondValueTypeEnum val_type)
-     {
-       d_variable     = var_name;
-       d_type         = type;
-       d_value        = value;
-       d_face_label   = face_label;
-       d_functor_name = functor_name;
-       d_value_type   = val_type;
-     };
-   virtual ~BoundCond() {};
-   virtual BoundCond* clone()
-   {
-     return scinew BoundCond(*this);
+  class AuxiliaryBoundCond : public BoundCondBase  {
+  public:
+    AuxiliaryBoundCond():BoundCondBase("Auxiliary") {};
+    AuxiliaryBoundCond(ProblemSpecP&) {d_type = "Auxiliary";};
+    virtual ~AuxiliaryBoundCond() {};
+    virtual AuxiliaryBoundCond* clone() {
+      return scinew AuxiliaryBoundCond(*this);
+    };
+    virtual string getKind() const {return "auxiliary";};
+  private:
+#if 0
+    AuxiliaryBoundCond(const AuxiliaryBoundCond&);
+    AuxiliaryBoundCond& operator=(const AuxiliaryBoundCond&);
+#endif
+     
    };
-
-   T getValue() const { return d_value;}; 
-
- protected:
-   T d_value;
-
- };
-
-
- template <> class BoundCond<NoValue> : public BoundCondBase {
-
-
- public:
-
-   BoundCond(string var_name,string type)
-     {
-       d_variable = var_name;
-       d_type = type;
-       d_value = NoValue();
-       d_face_label = "none";
-       d_functor_name = "none";
-       d_value_type = BoundCondBase::UNKNOWN_TYPE;
-     };
-
-   BoundCond(string var_name)
-     {
-       d_variable = var_name;
-       d_type = "";
-       d_value = NoValue();
-       d_face_label = "none";
-       d_functor_name = "none";
-       d_value_type = BoundCondBase::UNKNOWN_TYPE;
-     };
-
-   virtual BoundCond* clone()
-   {
-     return scinew BoundCond(*this);
-   };
-
-   
- protected:
-   NoValue d_value;
-
- };
- 
 } // End namespace Uintah
-
-
 
 #endif

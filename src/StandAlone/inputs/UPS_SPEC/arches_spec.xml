@@ -34,7 +34,8 @@
                                                                           algebraic_scalar_diss,
                                                                           scalsim_variance, 
                                                                           heat_loss,
-                                                                          norm_scalar_var'">
+                                                                          norm_scalar_var,
+                                                                          scalar_diss'">
 
           <initialization               spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant'">
@@ -60,7 +61,12 @@
           <turbulent_Sc                 spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type algebraic_scalar_diss"/>
           <D                            spec="REQUIRED DOUBLE 'positive'"
-                                        need_applies_to="type algebraic_scalar_diss"/>
+                                        need_applies_to="type algebraic_scalar_diss, scalar_diss"/>
+          <!-- scalar dissipation model for 2-eqn -->   
+          <!-- D                        spec above -->
+          <grad_mixfrac2_label          spec="REQUIRED STRING"
+                                        need_applies_to="type scalar_diss"/>
+                                        
 
           <!-- laminar pr --> 
           <atm_pressure                 spec="OPTIONAL DOUBLE"/>
@@ -150,8 +156,7 @@
                                         need_applies_to="type scalsim_variance"/> <!-- Multiplier (Cf) on the variance, var = Cf * (filter(z^2)- filter(z)^2) --> 
                                         
           <!-- Normalized Scalar Variance for use with transport eqn models -->                              
-          <!--mixture_fraction_label       spec="REQUIRED STRING" 
-                                        need_applies_to="type norm_scalar_var"/-->
+          <!-- mixture_fraction_label    spec above -->
           <second_moment_label          spec="REQUIRED STRING"
                                         need_applies_to="type norm_scalar_var"/>
           <Clip spec="OPTIONAL BOOLEAN" need_applies_to="type norm_scalar_var"/>                              
@@ -764,7 +769,8 @@
                                                                            bowman_nox,
                                                                            wasatch_expr,
                                                                            pc_transport,
-                                                                           moment2_mixture_fraction_src'">                                                           
+                                                                           moment2_mixture_fraction_src,
+                                                                           dissipation_src'">                                                           
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
@@ -792,6 +798,11 @@
             <!-- specs nneded for second moment of mixture fraction source-->
             <density_label              spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/>
             <scalar_dissipation_label   spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/> 
+            
+            <!-- specs needed for the dissipation term for 2eqn scalr var model -->
+            <mixture_fraction_label     spec="REQUIRED STRING" need_applies_to="type dissipation_src"/>
+            <gradmixfrac_label          spec="REQUIRED STRING" need_applies_to="type dissipation_src"/>
+            <D                          spec="REQUIRED DOUBLE" need_applies_to="type dissipation_src"/>
 
             <!-- inject_type = constant : constant value in every cell that is contained within the geom object (use <constant> spec)--> 
             <!-- inject_type = fromfile : reads an input file and assigns value at each i,j,k matching the inputfile 

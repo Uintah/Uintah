@@ -226,8 +226,6 @@ DetailedTask::DetailedTask(Task* task,
 #ifdef HAVE_CUDA
   deviceExternallyReady_ = false;
   completed_ = false;
-  h2dCopyCount_ = 0;
-  d2hCopyCount_ = 0;
   deviceNum_ = -1;
 #endif
 }
@@ -270,7 +268,9 @@ void DetailedTask::doit(const ProcessorGroup* pg,
 #ifdef HAVE_CUDA
   // determine if task will be executed on CPU or device, e.g. GPU or MIC
   if (task->usesDevice()) {
-    task->doitDevice(pg, patches, matls, dws, deviceNum_);
+    cudaError_t retVal;
+    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(deviceNum_));
+    task->doitDevice(pg, patches, matls, dws, d_cudaStream);
   } else {
     task->doit(pg, patches, matls, dws);
   }
@@ -1019,94 +1019,28 @@ void DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask,
 }
 
 #ifdef HAVE_CUDA
-bool DetailedTask::addH2DCopyEvent(cudaEvent_t* event)
-{
-  h2dCopyEvents.push_back(event);
-  bool retVal = h2dCopyEvents.back() == event ? true : false;
-  return retVal;
-}
-
-bool DetailedTask::addD2HCopyEvent(cudaEvent_t* event)
-{
-  d2hCopyEvents.push_back(event);
-  bool retVal = d2hCopyEvents.back() == event ? true : false;
-  return retVal;
-}
-
-bool DetailedTask::addH2DStream(cudaStream_t* stream)
-{
-  h2dStreams.push_back(stream);
-  bool retVal = h2dStreams.back() == stream ? true : false;
-  return retVal;
-}
-
-bool DetailedTask::addD2HStream(cudaStream_t* stream)
-{
-  d2hStreams.push_back(stream);
-  bool retVal = d2hStreams.back() == stream ? true : false;
-  return retVal;
-}
-
-cudaError_t DetailedTask::checkH2DCopyDependencies()
+bool DetailedTask::checkCUDAStreamDone()
 {
   // sets the CUDA context, for the call to cudaEventQuery()
   cudaError_t retVal;
-  int device = this->getDeviceNum();
-  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
-
-  // even one unrecorded event means all device memory is not ready
-  cudaEvent_t* event = NULL;
-  retVal = cudaErrorNotReady;
-  std::vector<cudaEvent_t*>::iterator iter;
-  for (iter = h2dCopyEvents.begin(); iter != h2dCopyEvents.end(); iter++) {
-    event = *iter;
-
-    /*
-     * A return value of cudaSuccess indicates event completion, but we can't wrap cudaEventQuery
-     * with error handling like other calls, as cudaErrorNotReady is seen as fatal and execution is halted.
-     * cudaErrorNotReady simply means the event hasn't completed and is technically not an error.
-     */
-    retVal = cudaEventQuery(*event);
-    if (retVal != cudaSuccess) {
-      return retVal;
-    }
-    retVal = cudaErrorNotReady;
+  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(deviceNum_));
+  retVal = cudaStreamQuery(*d_cudaStream);
+  if (retVal == cudaSuccess) {
+//  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;
+    return true;
   }
-
-  // otherwise this task is ready for execution
-  this->deviceExternallyReady_ = true;
-  return cudaSuccess;
+  else if (retVal == cudaErrorNotReady ) { 
+    return false;
+  }
+  else if (retVal ==  cudaErrorLaunchFailure) {
+    SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task:"+ getName() , __FILE__, __LINE__));
+    return false;
+  } else { //other error
+    CUDA_RT_SAFE_CALL (retVal);
+    return false;
+  }
 }
 
-cudaError_t DetailedTask::checkD2HCopyDependencies()
-{
-  // sets the CUDA context, must be at least one per process per device
-  cudaError_t retVal;
-  int device = this->getDeviceNum();
-  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(device));
-
-  // even one unrecorded event means all result data is not back on the CPU
-  cudaEvent_t* event = NULL;
-  retVal = cudaErrorNotReady;
-  std::vector<cudaEvent_t*>::iterator iter;
-  for (iter = d2hCopyEvents.begin(); iter != d2hCopyEvents.end(); iter++) {
-    event = *iter;
-
-    /*
-     * A return value of cudaSuccess indicates event completion, but we can't wrap cudaEventQuery
-     * with error handling like other calls, as cudaErrorNotReady is seen as fatal and execution is halted.
-     * cudaErrorNotReady simply means the event hasn't completed and is technically not an error.
-     */
-    retVal = cudaEventQuery(*event);
-    if (retVal != cudaSuccess) {
-      return retVal;
-    }
-    retVal = cudaErrorNotReady;
-  }
-
-  this->completed_ = true;
-  return cudaSuccess;
-}
 #endif
 
 void DetailedTask::done(vector<OnDemandDataWarehouseP>& dws)

@@ -11,6 +11,8 @@
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
+extern SCIRun::Mutex coutLock; // Debug: Used to sync cout so it is readable (when output by  multiple threads)
+
 using namespace Uintah; 
 
 //_________________________________________
@@ -1053,70 +1055,74 @@ IntrusionBC::printIntrusionInformation( const ProcessorGroup*,
 
   for ( int p = 0; p < patches->size(); p++ ){ 
 
-    proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
+    coutLock.lock();
+    {
+      proc0cout << "----- Intrusion Summary ----- \n " << std::endl;
 
-    for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){ 
+      for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){
 
-      sum_vartype area_var; 
-      new_dw->get( area_var, iter->second.bc_area ); 
-      double area = area_var; 
+        sum_vartype area_var;
+        new_dw->get( area_var, iter->second.bc_area );
+        double area = area_var;
 
-      sum_vartype total_mdot_var; 
-      max_vartype max_vel_var; 
-      min_vartype min_vel_var; 
+        sum_vartype total_mdot_var;
+        max_vartype max_vel_var;
+        min_vartype min_vel_var;
 
-      new_dw->get( total_mdot_var, iter->second.total_m_dot ); 
-      new_dw->get( max_vel_var, iter->second.max_vel ); 
-      new_dw->get( min_vel_var, iter->second.min_vel ); 
+        new_dw->get( total_mdot_var, iter->second.total_m_dot );
+        new_dw->get( max_vel_var, iter->second.max_vel );
+        new_dw->get( min_vel_var, iter->second.min_vel );
 
-      double max_vel = max_vel_var; 
-      double min_vel = min_vel_var; 
-      double total_mdot = total_mdot_var; 
+        double max_vel = max_vel_var;
+        double min_vel = min_vel_var;
+        double total_mdot = total_mdot_var;
 
-      if ( iter->second.type == SIMPLE_WALL ){ 
+        if ( iter->second.type == SIMPLE_WALL ){
 
-        proc0cout << " Intrusion name/type: " << iter->first << " / Simple wall " << std::endl;
+          proc0cout << " Intrusion name/type: " << iter->first << " / Simple wall " << std::endl;
 
-      } else if ( iter->second.type == INLET ){ 
+        } else if ( iter->second.type == INLET ){
 
-        proc0cout << " Intrusion name/type: " << iter->first << " / Inlet" << std::endl;
-        proc0cout << "             m_dot  = "  << total_mdot << std::endl;
-        proc0cout << " max vel. component = " << max_vel << std::endl;
-        proc0cout << " min vel. component = " << min_vel << std::endl;
-        proc0cout << "           density  = "  << iter->second.density << std::endl;
-        proc0cout << "         inlet area = "  << area << std::endl << std::endl;
+          proc0cout << " Intrusion name/type: " << iter->first << " / Inlet" << std::endl;
+          proc0cout << "             m_dot  = "  << total_mdot << std::endl;
+          proc0cout << " max vel. component = " << max_vel << std::endl;
+          proc0cout << " min vel. component = " << min_vel << std::endl;
+          proc0cout << "           density  = "  << iter->second.density << std::endl;
+          proc0cout << "         inlet area = "  << area << std::endl << std::endl;
 
-        proc0cout << " Active inlet directions (normals): " << std::endl;
+          proc0cout << " Active inlet directions (normals): " << std::endl;
 
-        for ( int idir = 0; idir < 6; idir++ ){ 
+          for ( int idir = 0; idir < 6; idir++ ){
 
-          if ( iter->second.directions[idir] != 0 ){ 
-            proc0cout << "   " << _dHelp[idir] << std::endl;
+            if ( iter->second.directions[idir] != 0 ){
+              proc0cout << "   " << _dHelp[idir] << std::endl;
+            }
+
           }
 
-        }
 
+          proc0cout << std::endl << " Scalar information: " << std::endl;
 
-        proc0cout << std::endl << " Scalar information: " << std::endl;
+          for ( std::map<std::string, scalarInletBase*>::iterator i_scalar = iter->second.scalar_map.begin();
+              i_scalar != iter->second.scalar_map.end(); i_scalar++ ){
 
-        for ( std::map<std::string, scalarInletBase*>::iterator i_scalar = iter->second.scalar_map.begin(); 
-            i_scalar != iter->second.scalar_map.end(); i_scalar++ ){ 
-   
-          IntVector c(0,0,0); 
-          proc0cout << "     -> " << i_scalar->first << ":   value = " << i_scalar->second->get_scalar(c) << std::endl;
-          
+            IntVector c(0,0,0);
+            proc0cout << "     -> " << i_scalar->first << ":   value = " << i_scalar->second->get_scalar(c) << std::endl;
+
+          }
+
         } 
 
-      } 
+        proc0cout << std::endl;
 
-      proc0cout << std::endl;
+        proc0cout << " Solid T  = "  << iter->second.temperature << std::endl;
 
-      proc0cout << " Solid T  = "  << iter->second.temperature << std::endl;
+        proc0cout << " \n";
 
-      proc0cout << " \n";
-
+      }
+      proc0cout << "----- End Intrusion Summary ----- \n " << std::endl;
     }
-    proc0cout << "----- End Intrusion Summary ----- \n " << std::endl;
+    coutLock.unlock();
   }
 }
 

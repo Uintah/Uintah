@@ -27,9 +27,11 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Thread/Time.h>
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -1404,7 +1406,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   proc0cout << "    Time for file write: " << total_FileWriteTime << " seconds\n";
 #endif
 
-  proc0cout << "    Time for AX=B construction: " << total_AXBConstructionTime << " seconds\n";
+  string msg = "    Time for AX=B construction: ";
+  if (Uintah::Parallel::getNumThreads() > 1) {
+    proc0thread0cout << msg << total_AXBConstructionTime << " seconds\n";
+  } else {
+    proc0cout << msg << total_AXBConstructionTime << " seconds\n";
+  }
 
   if( d_solverType == "Lapack-invert" ) { 
     proc0cout << "    Time for Lapack inversion-multiplication: " << total_SolveTime << " seconds\n";
@@ -1421,7 +1428,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   }else if( d_solverType == "Optimize"){
     proc0cout << " Time for Optimized Method solution: " << total_SolveTime << "seconds\n";
   }else if( d_solverType == "Simplest"){
-      proc0cout << " Time for Simplest Method solution: " << total_SolveTime << "seconds\n";
+      proc0cout << "    Time for Simplest Method solution: " << total_SolveTime << "seconds\n";
   }
 
 #endif

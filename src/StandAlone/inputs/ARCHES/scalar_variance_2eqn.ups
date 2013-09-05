@@ -19,7 +19,7 @@
 
   <DataArchiver>
     <outputInitTimestep/>
-    <filebase>scalar_variance_1eqn.uda</filebase>
+    <filebase>scalar_variance_2eqn.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="passive_scalar"/>
 
@@ -32,6 +32,9 @@
     <save label="mf2_src"/>
     <save label="mixture_fraction"/>
     <save label="mf_moment_2"/>
+    
+    <save label="gradmf2"/> 
+    <save label="gradmf2_src"/>
 
     <checkpoint cycle="2" timestepInterval="10"/>
     <compression>gzip</compression>
@@ -68,7 +71,9 @@
         <BCType id="all" label="mf_moment_2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-
+        <BCType id="all" label="gradmf2" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
       </Face>
       <Face rectangle="x-" lower="0 .075 0" upper="0 .125 0.1" name="inlet">
         <BCType id="all" label="inlet" var="VelocityInlet">
@@ -86,7 +91,9 @@
         <BCType id="all" label="mf_moment_2" var="Dirichlet">
          <value> 1.0 </value>
         </BCType>
-
+        <BCType id="all" label="gradmf2" var="Dirichlet">
+          <value> 0.0 </value>
+        </BCType>
       </Face>
       <Face side="x+" name="x+ wall">
         <BCType id="all" label="top" var="OutletBC">
@@ -104,7 +111,9 @@
         <BCType id="all" label="mf_moment_2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-
+        <BCType id="all" label="gradmf2" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
       </Face>
       <Face side="y-" name="y- wall">
         <BCType id="all" label="y-pressure" var="PressureBC">
@@ -122,7 +131,9 @@
         <BCType id="all" label="mf_moment_2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-
+        <BCType id="all" label="gradmf2" var="Neumann">
+          <value> 0.0 </value>
+        </BCType> 
       </Face>
       <Face side="y+" name="y+ wall">
         <BCType id="all" label="y+pressure" var="PressureBC">
@@ -158,7 +169,9 @@
         <BCType id="all" label="mf_moment_2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-
+        <BCType id="all" label="gradmf2" var="Neumann">
+          <value> 0.0 </value>
+        </BCType> 
       </Face>
       <Face side="z+" name="z+ wall">
         <BCType id="all" label="z+pressure" var="PressureBC">
@@ -176,7 +189,9 @@
         <BCType id="all" label="mf_moment_2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-
+        <BCType id="all" label="gradmf2" var="Neumann">
+          <value> 0.0 </value>
+        </BCType>
       </Face>
     </BoundaryConditions>
 
@@ -235,34 +250,48 @@
             <constant> 0.0 </constant>
           </initialization>
           <src label="mf2_src"/>
-<determines_properties/>
-
+          <determines_properties/>
            <Clipping>
             <low>0.0</low>
             <high>1.0</high>
           </Clipping>
-
         </Eqn>
 
+        <Eqn label="gradmf2" type="CCscalar">
+          <doDiff> true </doDiff>
+          <doConv> true </doConv>
+          <conv_scheme> super_bee </conv_scheme>
+          <initialization type="constant">
+            <constant> 0.0 </constant>
+          </initialization>
+          <src label="gradmf2_src"/>
+          <Clipping>
+            <low> 0.0 </low>
+          </Clipping>  
+          <determines_properties/>
+        </Eqn> 
 
         <Sources>
           <src label="mf2_src" type="moment2_mixture_fraction_src">
             <density_label> density </density_label>
             <scalar_dissipation_label> scalarDiss </scalar_dissipation_label>
           </src>
-
+          <src label="gradmf2_src" type="dissipation_src">
+            <D> 0.00001 </D>
+            <mixture_fraction_label> mixture_fraction </mixture_fraction_label>
+            <gradmixfrac_label> gradmf2 </gradmixfrac_label>
+          </src>
         </Sources>
 
       </TransportEqns>
 
       <PropertyModels>
-        <model type="algebraic_scalar_diss" label="scalarDiss">
+        <model type="scalar_diss" label="scalarDiss">
           <initialization type="constant">
             <constant> 0.0 </constant>
           </initialization>
-          <mixture_fraction_label> mixture_fraction </mixture_fraction_label>
-          <turbulent_Sc> 0.4 </turbulent_Sc>
           <D> 0.00001 </D>
+          <grad_mixfrac2_label> gradmf2 </grad_mixfrac2_label>
         </model>
 
         <model type="norm_scalar_var" label="normScalarVar">
