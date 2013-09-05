@@ -43,6 +43,7 @@ public:
   HOST_DEVICE void put(GPUGridVariableBase &var, char const* label, int patchID, int maltID, bool overWrite=false);
   HOST_DEVICE void allocateAndPut(GPUGridVariableBase &var, char const* name, int patchID, int maltID, int3 low, int3 high);
   HOST_DEVICE bool exist(char const* name, int patchID, int maltIndex);
+  HOST_DEVICE bool remove(char const* name, int patchID, int maltIndex);
   HOST_DEVICE void init_device(int id);
   HOST_DEVICE void syncto_device(); 
   HOST_DEVICE void clear();

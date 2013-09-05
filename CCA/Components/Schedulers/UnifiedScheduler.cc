@@ -937,7 +937,7 @@ void UnifiedScheduler::runTasks(int t_id)
         postH2DCopies(readyTask);
         preallocateDeviceMemory(readyTask);
         for (int i = 0; i < (int)dws.size(); i++) {
-          dws[i]->getGPUDW()->syncto_device();
+          dws[i]->getGPUDW(readyTask->getDeviceNum())->syncto_device();
         }
         dts->addInitiallyReadyDeviceTask(readyTask);
       } else if (gpuRunReady) {
@@ -1480,12 +1480,22 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask)
           // copy the requires variable data to the device
           GPUGridVariable<double> device_var;
           if (dw->getGPUDW()->exist(req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j))){
-            if (gpu_stats.active()) {
-              cerrLock.lock();
-              gpu_stats << "skip H2D copy of " << req->var->getName() << endl;
-              cerrLock.unlock();
+            dw->getGPUDW()->get(device_var, req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j));
+            int3 device_offset;
+            int3 device_size;
+            void *device_ptr;
+            device_var.getOffsetSizePtr(device_offset, device_size, device_ptr);
+            if (device_offset.x == offset.x() && device_offset.y == offset.y() && device_offset.y == offset.y() &&
+                device_size.x == size.x() &&  device_size.y == size.y()  && device_size.z == size.z() ) {
+              if (gpu_stats.active()) {
+                cerrLock.lock();
+                gpu_stats << "skip H2D copy of " << req->var->getName() << endl;
+                cerrLock.unlock();
+              }
+              continue;
+            } else {
+                dw->getGPUDW()->remove(req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j));
             }
-            continue;
           }
           h2dRequiresLock_.writeLock();
           IntVector low = offset;

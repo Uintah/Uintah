@@ -34,9 +34,11 @@ namespace Uintah {
     public:
       HOST_DEVICE virtual ~GPUArray3(){};
       HOST_DEVICE const T& operator[](const int3& idx) const{ //get data from global index
+        CHECK_INSIDE(idx,d_offset, d_size)
         return d_data[ idx.x-d_offset.x + d_size.x*(idx.y-d_offset.y + (idx.z-d_offset.z)*d_size.y)];
       }
       HOST_DEVICE T& operator[](const int3& idx){ //get data from global index
+        CHECK_INSIDE(idx,d_offset, d_size)
         return d_data[ idx.x-d_offset.x + d_size.x*(idx.y-d_offset.y + (idx.z-d_offset.z)*d_size.y)];
       }
       HOST_DEVICE T*  getPointer() const{
@@ -45,12 +47,12 @@ namespace Uintah {
       HOST_DEVICE size_t getMemSize() const {
         return d_size.x*d_size.y*d_size.z*sizeof(T);
       }
-      HOST_DEVICE void setOffsetSizePtr(const int3& offset, const int3& size, void *ptr){
+      HOST_DEVICE void setOffsetSizePtr(const int3& offset, const int3& size, void* &ptr){
         d_offset = offset;
         d_size = size;
         d_data = (T*) ptr;
       }
-      HOST_DEVICE void getOffsetSizePtr(int3& offset, int3& size, void * &ptr){
+      HOST_DEVICE void getOffsetSizePtr(int3& offset, int3& size, void* &ptr){
         offset = d_offset;
         size = d_size;
         ptr = (void*) d_data;
@@ -77,7 +79,7 @@ namespace Uintah {
     protected:
       HOST_DEVICE GPUGridVariableBase() {}
     private:
-      HOST_DEVICE  virtual void setArray3(const int3& offset, const int3& size, void* ptr) = 0;
+      HOST_DEVICE  virtual void setArray3(const int3& offset, const int3& size, void* &ptr) = 0;
       HOST_DEVICE  virtual void getArray3(int3& offset, int3& size, void* &ptr) = 0;
       HOST_DEVICE GPUGridVariableBase& operator=(const GPUGridVariableBase&);
       HOST_DEVICE GPUGridVariableBase(const GPUGridVariableBase&);
@@ -91,7 +93,7 @@ namespace Uintah {
         return GPUArray3<T>::getMemSize();
       }
     private:
-      HOST_DEVICE virtual void setArray3(const int3& offset, const int3& size, void* ptr) {
+      HOST_DEVICE virtual void setArray3(const int3& offset, const int3& size, void* &ptr) {
         GPUArray3<T>::setOffsetSizePtr(offset, size, ptr);
       }
       HOST_DEVICE virtual void getArray3(int3& offset, int3& size, void* &ptr) {
