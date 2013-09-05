@@ -175,11 +175,7 @@ RMCRT_Radiation::extraSetup()
     throw ProblemSetupException("Error: No temperature label found.",__FILE__,__LINE__); 
   } 
   
-#ifdef HAVE_CUDA
-  _RMCRT = scinew Ray(_sharedState->getUnifiedScheduler());
-#else
   _RMCRT = scinew Ray();
-#endif
 
   _RMCRT->registerVarLabels(_matl, 
                             _abskgLabel,

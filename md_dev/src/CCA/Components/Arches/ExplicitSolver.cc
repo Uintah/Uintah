@@ -2817,6 +2817,9 @@ void ExplicitSolver::computeKE( const ProcessorGroup* pc,
 
     new_dw->put(sum_vartype(sum_ke), d_lab->d_totalKineticEnergyLabel);
 
+    if ( sum_ke != sum_ke )
+      throw InvalidValue("Error: KE is diverging.",__FILE__,__LINE__);
+
   }
 }
 

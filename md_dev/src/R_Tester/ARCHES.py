@@ -56,6 +56,7 @@ NIGHTLYTESTS = [
    ("methanePetscRadSolver"       , methanePetscRadSolver_ups                     , 8   , "Linux"  , ["exactComparison"]) ,
 #   ("methane_RCCE"                , "methane_RCCE.ups"                            , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "Linux"  , ["exactComparison"]) ,
+   ("methane_rmcrt_const_props"   , "RMCRT/methane_rmcrt_const_props.ups"         , 4 ,   "Linux"  , ["exactComparison"]) ,
    ("dqmom_test_1"                , "DQMOM_regression/dqmom_test_1.ups"           , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("dqmom_test_2"                , "DQMOM_regression/dqmom_test_2.ups"           , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("dqmom_test_3"                , "DQMOM_regression/dqmom_test_3.ups"           , 1.1 , "Linux"  , ["exactComparison"]) , 
@@ -77,6 +78,7 @@ NIGHTLYTESTS = [
    ("heptane_pipe"                , "heptane_pipe.ups"                            , 1.1 , "Linux"  , ["exactComparison"]),
    ("coal_table_pipe"             , "coal_table_pipe.ups"                         , 1.1 , "Linux"  , ["exactComparison"]),
    ("scalar_var_1eqn"             , "scalar_variance_1eqn.ups"                    , 4   , "Linux"  , ["exactComparison", "no_restart"]),
+   ("scalar_var_2eqn"             , "scalar_variance_2eqn.ups"                    , 4   , "Linux"  , ["exactComparison", "no_restart"]),
 #   ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
 ]
 
@@ -90,6 +92,7 @@ LOCALTESTS = [
 #   ("methane_fire_8patch__NEW"    , "methane_fire_8patch__NEW.ups"                , 8   , "All"  , ["exactComparison"]) , 
 #   ("methane_fire_8patch_petscrad__NEW" , "methane_fire_8patch_petscrad__NEW.ups" , 8   , "All"  , ["exactComparison"]) ,
    ("rmcrt_bm1_1L"               , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "All"   , ["exactComparison"]) ,
+   ("methane_rmcrt_const_props"  , "RMCRT/methane_rmcrt_const_props.ups"         , 4 ,   "All"   , ["exactComparison"]) ,
    ("constantMMS"                , "mms/constantMMS.ups"                         , 1.1 , "All"   , ["exactComparison"]) , 
    ("almgrenMMS"                 , "mms/almgrenMMS.ups"                          , 1.1 , "All"   , ["exactComparison"]) , 
    ("isotropic-turbulence-decay" , "periodicTurb/isotropic-turbulence-decay.ups" , 1.1 , "All"   , ["exactComparison", "no_restart"]) , 
@@ -119,6 +122,7 @@ LOCALTESTS = [
    ("heptane_pipe"               , "heptane_pipe.ups"                            , 1.1 , "All"  , ["exactComparison"]),
    ("coal_table_pipe"            , "coal_table_pipe.ups"                         , 1.1 , "All"  , ["exactComparison"]),
    ("scalar_var_1eqn"            , "scalar_variance_1eqn.ups"                    , 4   , "All"  , ["exactComparison", "no_restart"]),
+   ("scalar_var_2eqn"            , "scalar_variance_2eqn.ups"                    , 4   , "All"  , ["exactComparison", "no_restart"]),
 #   ("coal_channel"               , "Coal/coal_channel.ups"                       , 1.1 , "All"  , ["exactComparison", "no_restart"])
 ]
 
@@ -144,6 +148,7 @@ DQMOMTESTS = [
 
 RMCRTTESTS = [
   ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "Linux"  , ["exactComparison"])
+  ("methane_rmcrt_const_props"   , "RMCRT/methane_rmcrt_const_props.ups"         , 4 ,   "Linux"  , ["exactComparison"])
 ]
 
 

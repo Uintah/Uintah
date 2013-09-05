@@ -33,10 +33,12 @@
 //   Make sure that MPI_Init is called before using 'proc0cout'...
 //
 #define proc0cout if( Uintah::Parallel::getMPIRank() == 0 ) std::cout
+#define proc0cerr if( Uintah::Parallel::getMPIRank() == 0 ) std::cerr
 
 // Further reduce excess spew on large threaded parallel runs.
 //   Make sure that MPI_Init and MPI_Init_thread are called before using 'proc0thread0cout'...
 #define proc0thread0cout if( Uintah::Parallel::getMPIRank() == 0 && SCIRun::Thread::self()->myid()== 0 ) std::cout
+#define proc0thread0cerr if( Uintah::Parallel::getMPIRank() == 0 && SCIRun::Thread::self()->myid()== 0 ) std::cerr
 
 namespace Uintah {
 

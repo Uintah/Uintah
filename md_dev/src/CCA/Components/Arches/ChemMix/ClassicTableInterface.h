@@ -873,15 +873,14 @@ private:
   string d_enthalpy_name; 
   const VarLabel* d_enthalpy_label; 
 
-  IndexMap d_depVarIndexMap;                    ///< Reference to the integer location of the variable
-  IndexMap d_enthalpyVarIndexMap;               ///< Reference to the integer location of variables for heat loss calculation
-  mutable CrowdMonitor depVarIndexMapLock;      ///< Multiple reader, single writer lock (pthread_rwlock_t wrapper) for d_depVarIndexMap
-  mutable CrowdMonitor enthalpyVarIndexMapLock; ///< Multiple reader, single writer lock (pthread_rwlock_t wrapper) for d_enthalpyVarIndexMap
+  IndexMap d_depVarIndexMap;                      ///< Reference to the integer location of the variable
+  IndexMap d_enthalpyVarIndexMap;                 ///< Reference to the integer location of variables for heat loss calculation
+  mutable CrowdMonitor d_depVarIndexMapLock;      ///< Multiple reader, single writer lock (pthread_rwlock_t wrapper) for d_depVarIndexMap
+  mutable CrowdMonitor d_enthalpyVarIndexMapLock; ///< Multiple reader, single writer lock (pthread_rwlock_t wrapper) for d_enthalpyVarIndexMap
 
   std::vector<int>    d_allIndepVarNum;         ///< Vector storing the grid size for the Independent variables
   std::vector<string> d_allDepVarUnits;         ///< Units for the dependent variables
-
-  vector<string> d_allUserDepVarNames;          ///< Vector storing all independent variable names requested in input file
+  std::vector<string> d_allUserDepVarNames;     ///< Vector storing all independent variable names requested in input file
 
   BoundaryCondition_new* _boundary_condition; 
 

@@ -116,7 +116,6 @@ void NormScalarVariance::computeProp(const ProcessorGroup* pc,
     } 
       
     CellIterator iter = patch->getCellIterator(); 
-    Vector Dx = patch->dCell();
     
     double small = 1.0e-10;
     double scalarVar;

@@ -225,13 +225,15 @@ namespace Uintah {
         int size() const {
           return (int)set.size();
         }
-      
-        const vector<ComputeSubset<T>*>& getVector() const
-        { return set; }
-      
+            
         ComputeSubset<T>* getSubset(int idx) {
           return set[idx];
         }
+      
+      /// Returns the vector of subsets managed by this set
+        const vector<ComputeSubset<T>*>& getVector() const
+        { return set; }
+      
         const ComputeSubset<T>* getSubset(int idx) const {
           return set[idx];
         }

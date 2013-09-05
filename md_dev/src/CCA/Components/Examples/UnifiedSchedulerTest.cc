@@ -37,7 +37,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
-
 #include <sci_defs/cuda_defs.h>
 
 using namespace std;
@@ -358,35 +357,20 @@ void UnifiedSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                                           const MaterialSubset* matls,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw,
-                                          int device)
+                                          void*  stream)
 {
-  // set the CUDA device and context
-  CUDA_RT_SAFE_CALL( cudaSetDevice(device));
-
-  // get a handle on the GPU scheduler to query for device and host pointers, etc
-  UnifiedScheduler* sched = dynamic_cast<UnifiedScheduler*>(getPort("scheduler"));
-
   // Do time steps
   int numGhostCells = 1;
   int matl = 0;
-
-  // requisite pointers
-  double* d_phi = NULL;
-  double* d_newphi = NULL;
 
   int numPatches = patches->size();
   for (int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
     double residual = 0;
 
-    d_phi = sched->getDeviceRequiresPtr(phi_label, matl, patch);
-    d_newphi = sched->getDeviceComputesPtr(phi_label, matl, patch);
-
     // Calculate the memory block size
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
-    IntVector s = sched->getDeviceRequiresSize(phi_label, matl, patch);
-    int xdim = s.x(), ydim = s.y();
 
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
                    patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
@@ -395,10 +379,12 @@ void UnifiedSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                    patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
                    patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
+    IntVector s = h-l;
+    int xdim = s.x(), ydim = s.y();
+
     // Domain extents used by the kernel to prevent out of bounds accesses.
     uint3 domainLow = make_uint3(l.x(), l.y(), l.z());
     uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
-    uint3 domainSize = make_uint3(s.x(), s.y(), s.z());
 
     // Set up number of thread blocks in X and Y directions accounting for dimensions not divisible by 8
     int xBlocks = ((xdim % 8) == 0) ? (xdim / 8) : ((xdim / 8) + 1);
@@ -411,12 +397,10 @@ void UnifiedSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     dim3 dimBlock(tpbX, tpbY, tpbZ);  // block dimensions (threads per block)
 
     // setup and launch kernel
-    cudaStream_t* stream = sched->getCudaStream(device);
-    launchUnifiedSchedulerTestKernel(dimGrid, dimBlock, stream, domainLow, domainHigh, domainSize, numGhostCells, d_phi, d_newphi);
-
-    // get the results back to the host
-    cudaEvent_t* event = sched->getCudaEvent(device);
-    sched->requestD2HCopy(phi_label, matl, patch, stream, event);
+    launchUnifiedSchedulerTestKernel(dimGrid, dimBlock, (cudaStream_t *)stream, 
+            patch->getID(), matl, 
+            domainLow, domainHigh,
+            old_dw->getGPUDW()->getdevice_ptr(), new_dw->getGPUDW()->getdevice_ptr());
 
     new_dw->put(sum_vartype(residual), residual_label);
 

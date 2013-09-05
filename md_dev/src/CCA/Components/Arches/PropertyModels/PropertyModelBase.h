@@ -11,11 +11,11 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Exceptions/InvalidValue.h>
-#include <Core/Thread/Mutex.h>
+
 #include <typeinfo>
 
-extern SCIRun::Mutex cerrLock;
 
 /** 
 * @class  PropertyModelBase
@@ -117,9 +117,12 @@ protected:
 template <class phiT > 
 void PropertyModelBase::base_initialize( const Patch* patch, phiT& phi ){
 
-  cerrLock.lock();
-  proc0cout << "Initializing property models. " << endl;
-  cerrLock.unlock();
+  string msg = "Initializing property models. ";
+  if (Uintah::Parallel::getNumThreads() > 1 ) {
+    proc0thread0cout << msg << endl;
+  } else {
+    proc0cout << msg << endl;
+  }
   
   if ( _init_type == "constant" ) {
 

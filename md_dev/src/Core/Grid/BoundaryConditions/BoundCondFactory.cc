@@ -79,18 +79,18 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
       case ProblemSpec::NUMBER_TYPE:
         if( bc_attr["type"] == "int" ){                  // integer ONLY if the tag 'type = "int"' is added
           child->get( "value", i_value);
-          bc = scinew BoundCond<int> ( bc_attr["label"], bc_attr["var"], i_value, face_label, functor_name );
+          bc = scinew BoundCond<int> ( bc_attr["label"], bc_attr["var"], i_value, face_label, functor_name, BoundCondBase::INT_TYPE );
         }else{                                           // double (default) 
           child->get( "value", d_value );
-          bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label, functor_name );
+          bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label, functor_name, BoundCondBase::DOUBLE_TYPE );
         }
         break;
       case ProblemSpec::VECTOR_TYPE:
         child->get( "value", v_value );
-        bc = scinew BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value, face_label, functor_name );
+        bc = scinew BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value, face_label, functor_name, BoundCondBase::VECTOR_TYPE );
         break;
       case ProblemSpec::STRING_TYPE:
-        bc = scinew BoundCond<std::string>( bc_attr["label"], bc_attr["var"], s_value, face_label, functor_name );
+        bc = scinew BoundCond<std::string>( bc_attr["label"], bc_attr["var"], s_value, face_label, functor_name, BoundCondBase::STRING_TYPE );
         break;
       case ProblemSpec::UNKNOWN_TYPE:
       default:
