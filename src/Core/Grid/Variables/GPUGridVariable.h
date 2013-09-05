@@ -41,6 +41,14 @@ namespace Uintah {
         CHECK_INSIDE(idx,d_offset, d_size)
         return d_data[ idx.x-d_offset.x + d_size.x*(idx.y-d_offset.y + (idx.z-d_offset.z)*d_size.y)];
       }
+      HOST_DEVICE const T& operator()(const int& x, const int& y, const int& z) const{ //get data from global index
+        CHECK_INSIDE3(x,y,z,d_offset, d_size)
+        return d_data[ x-d_offset.x + d_size.x*(y-d_offset.y + (z-d_offset.z)*d_size.y)];
+      }
+      HOST_DEVICE T& operator()(const int& x, const int& y, const int& z){ //get data from global index
+        CHECK_INSIDE3(x,y,z,d_offset, d_size)
+        return d_data[ x-d_offset.x + d_size.x*(y-d_offset.y + (z-d_offset.z)*d_size.y)];
+      }
       HOST_DEVICE T*  getPointer() const{
         return d_data;
       }
