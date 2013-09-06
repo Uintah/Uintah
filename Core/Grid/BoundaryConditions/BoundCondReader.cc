@@ -427,21 +427,21 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
       delete bc;
     }
 
-    // Add the Auxillary boundary condition type
-#if 1
-    set<int> materials;
-    for (multimap<int,BoundCondBase*>::const_iterator i = bctype_data.begin();
-         i != bctype_data.end(); i++) {
-      //      cout << "mat id = " << i->first << endl;
-      materials.insert(i->first);
-    }
-    for (set<int>::const_iterator i = materials.begin(); i != materials.end();
-         i++) {
-      BoundCondBase* bc = scinew BoundCond<NoValue>("Auxiliary");
-      bctype_data.insert(pair<int,BoundCondBase*>(*i,bc->clone()));
-      delete bc;
-    }
-#endif
+//    // Add the Auxillary boundary condition type
+//#if 1
+//    set<int> materials;
+//    for (multimap<int,BoundCondBase*>::const_iterator i = bctype_data.begin();
+//         i != bctype_data.end(); i++) {
+//      //      cout << "mat id = " << i->first << endl;
+//      materials.insert(i->first);
+//    }
+//    for (set<int>::const_iterator i = materials.begin(); i != materials.end();
+//         i++) {
+//      BoundCondBase* bc = scinew BoundCond<NoValue>("Auxiliary");
+//      bctype_data.insert(pair<int,BoundCondBase*>(*i,bc->clone()));
+//      delete bc;
+//    }
+//#endif
 
     // Print out all of the bcs just created
     multimap<int,BoundCondBase*>::const_iterator it;
