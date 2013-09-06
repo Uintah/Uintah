@@ -181,7 +181,7 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
     if (d_myworld->myrank() == 0) {
       cerr << "Error: no thread number specified" << endl;
       throw ProblemSetupException(
-          "This scheduler requires number of threads to be in the range [1, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
+          "This scheduler requires number of threads to be in the range [2, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
           __FILE__, __LINE__);
     }
   } else if (numThreads_ > MAX_THREADS) {
@@ -211,11 +211,12 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
     sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i);
     Thread * t = scinew Thread(worker, name);
     t_thread[i] = t;
-    //t->detach();
+//    t->detach();
   }
 
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
+
   // TODO we need to turn this back on when we have a way of coordinating access to cores shared by threads from different pools
 //  if (affinity.active()) {
 //    Thread::self()->set_affinity(0);  // bind main thread to cpu 0
@@ -239,12 +240,13 @@ SchedulerP UnifiedScheduler::createSubScheduler()
 
   // Create the UnifiedWorkerThreads for the subscheduler here
   for (int i = 0; i < newsched->numThreads_; i++) {
-    UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(newsched, i);
+    UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(newsched, i + numThreads_);
     newsched->t_worker[i] = worker;
-    sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i);
+    sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i + numThreads_);
     Thread * t = scinew Thread(worker, name);
     newsched->t_thread[i] = t;
   }
+
   // TODO we need to turn this back on when we have a way of coordinating access to cores shared by threads from different pools
 //  if (affinity.active()) {
 //    Thread::self()->set_affinity(0);  // bind main thread to cpu 0
