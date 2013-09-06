@@ -99,7 +99,7 @@ LOCALTESTS = [
    ("helium_RT"                  , "helium_RT.ups"                               , 1.1 , "All"   , ["exactComparison"]) , 
    ("methane_explicit_table"     , "methane_explicit_table.ups"                  , 1.1 , "All"   , ["exactComparison"]) , 
    ("methane8patch"              , "methane8patch.ups"                           , 8   , "All"   , ["exactComparison"]) , 
-#   ("methanePetscRadSolver"      , methanePetscRadSolver_ups                     , 8   , "All"   , ["exactComparison"]) ,
+   ("methanePetscRadSolver"      , methanePetscRadSolver_ups                     , 8   , "All"   , ["exactComparison"]) ,
    ("dqmom_test_1"               , "DQMOM_regression/dqmom_test_1.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
    ("dqmom_test_2"               , "DQMOM_regression/dqmom_test_2.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
    ("dqmom_test_3"               , "DQMOM_regression/dqmom_test_3.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
