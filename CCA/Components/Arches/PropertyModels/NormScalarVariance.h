@@ -79,6 +79,7 @@ namespace Uintah{
     const VarLabel* _mf_label; 
     const VarLabel* _mf_m2_label; 
     const VarLabel* _vf_label;
+    const VarLabel* _var_label;
     
     bool clip;
     
