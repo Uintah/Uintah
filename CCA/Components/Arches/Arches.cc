@@ -563,6 +563,8 @@ Arches::problemSetup(const ProblemSpecP& params,
     // their respective problemSetup
     if (sources_db) {
 
+      vector<string> used_sources; 
+
       SourceTermFactory& src_factory = SourceTermFactory::self();
 
       for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")){
@@ -577,15 +579,29 @@ Arches::problemSetup(const ProblemSpecP& params,
 
             string check_label; 
             found_src_db->getAttribute("label",check_label);
-            if ( check_label == srcname ){
-              SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
-              a_src.problemSetup( found_src_db );
 
-              //Add any table lookup species to the table lookup list:                                      
-              std::vector<std::string> tbl_lookup = a_src.get_tablelookup_species();                        
-              for ( std::vector<std::string>::iterator iter = tbl_lookup.begin(); iter != tbl_lookup.end(); ++iter ){                                           
-                d_lab->add_species( *iter );
-              }                                                                                             
+            if ( check_label == srcname ){
+
+              vector<string>::iterator it = find( used_sources.begin(), used_sources.end(), srcname);
+
+              if ( it == used_sources.end() ){
+                used_sources.push_back( srcname );
+
+                SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
+                a_src.problemSetup( found_src_db );
+                cout << "**************************" << endl;
+                cout << " ***********************" << endl;
+                cout << "      " << srcname << "      " << endl;
+                cout << " ***********************" << endl;
+                cout << "**************************" << endl;
+
+                //Add any table lookup species to the table lookup list:                                      
+                std::vector<std::string> tbl_lookup = a_src.get_tablelookup_species();                        
+                for ( std::vector<std::string>::iterator iter = tbl_lookup.begin(); iter != tbl_lookup.end(); ++iter ){                                           
+                  d_lab->add_species( *iter );
+                }
+
+              }
             }
           }
         }
