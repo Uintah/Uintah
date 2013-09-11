@@ -87,12 +87,20 @@ adaptive problem.
    the example for lattice\_refinement\_ratio, and for each level not
    included in the list, it will be set to the last value specified.
  \item cell\_stability\_dilation - How much to pad the refinement flags
-   in each dimension for stability reasons.
+   in each dimension for stability reasons.  Reset on every timestep. 
  \item cell\_regrid\_dilation - How much to pad the refinement flags in
-   each dimension in order to reduce regridding frequency.
+   each dimension in order to reduce regridding frequency. If the refinement flags are still in the finest level due to large enough padding then regridding will not occur. Reset only when regridding occurs.  
  \item min\_boundary\_cells - The minimum number of cells that needs to
    exist between one level's coarser level and its finer level (i.e.,
    between level 0 and 2).
+\end{itemize}
+
+
+When running a non adaptive problem. Adaptive regridding can be turned off by setting $<$doAMR$>$ to false in the beginning of the input file.
+\begin{itemize}
+  \item min\_timestep\_interval - The minumum number of timesteps between each regrid. This will not force a regrid but after the set number of timesteps a regrid will be considered. Only used when adaptive regridding is turned off. min\_timestep\_interval $\leq$ cell\_stability\_dilation + 1 
+  \item max\_timestep\_interval - The maximum number of timesteps between each regrid.  This will not force a regrid.
+ It tells the code it has been a set number of timesteps since the last regrid and it should look at if a regrid is needed. Used primarely when adaptive regridding is turned off.
 \end{itemize}
 
 Hierarchical Specific Settings
