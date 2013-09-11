@@ -174,7 +174,7 @@
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
             <tolerance>      1e-12  </tolerance>
-            <maxiterations>  1000   </maxiterations>
+            <maxiterations>  50   </maxiterations>
             <relax_type>     2       </relax_type>
            </Parameters>
 
@@ -226,28 +226,23 @@
         </BCType>                       
 
         <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 0.0 </value>
-          <functor_name>mms-left-mom</functor_name>          
+          <value> mms-left-mom </value>
         </BCType>
 
         <BCType id="all" var="Dirichlet" label="u">
-          <value> 0.0 </value>
-          <functor_name>mms-left-vel</functor_name>          
+          <value> mms-left-vel </value>
         </BCType>          
    
         <BCType id="all" var="Dirichlet" label="rhof">
-          <value> 0.0 </value>
-          <functor_name>mms-bc-rhof</functor_name>          
+          <value> mms-bc-rhof </value>
         </BCType>
 
         <BCType id="all" var="Dirichlet" label="f">
-          <value> 0.0 </value>
-          <functor_name>mms-bc-f</functor_name>          
+          <value> mms-bc-f </value>
         </BCType>
 
         <BCType id="all" var="Dirichlet" label="density">
-          <value> 0.0 </value>
-          <functor_name>mms-bc-rho</functor_name>          
+          <value> mms-bc-rho </value>
         </BCType>
                         
         <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
@@ -263,28 +258,23 @@
         </BCType>                       
 
         <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 0.0 </value>
-          <functor_name>mms-right-mom</functor_name>          
+          <value> mms-right-mom </value>
         </BCType>
 
         <BCType id="all" var="Dirichlet" label="u">
-          <value> 0.0 </value>
-          <functor_name>mms-right-vel</functor_name>          
+          <value>mms-right-vel</value>          
         </BCType>          
         
         <BCType id="all" var="Dirichlet" label="rhof">
-          <value> 0.0 </value>
-          <functor_name>mms-bc-rhof</functor_name>          
+          <value>mms-bc-rhof</value>          
         </BCType>
 
         <BCType id="all" var="Dirichlet" label="f">
-          <value> 0.0 </value>
-          <functor_name>mms-bc-f</functor_name>          
+          <value>mms-bc-f</value>          
         </BCType>
 
         <BCType id="all" var="Dirichlet" label="density">
-          <value> 0.0 </value>
-          <functor_name>mms-bc-rho</functor_name>          
+          <value>mms-bc-rho</value>          
         </BCType>
 
         <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">

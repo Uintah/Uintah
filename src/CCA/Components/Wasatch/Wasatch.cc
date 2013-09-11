@@ -79,6 +79,7 @@
 #include "FieldClippingTools.h"
 #include "OldVariable.h"
 #include "ReductionHelper.h"
+#include "BCHelper.h"
 
 using std::endl;
 
@@ -154,6 +155,8 @@ namespace Wasatch{
       delete igc->second->exprFactory;
       delete igc->second;
     }
+    
+    delete bcHelper_;
   }
 
   //--------------------------------------------------------------------
@@ -280,6 +283,45 @@ namespace Wasatch{
   }
 
   //--------------------------------------------------------------------
+  
+  void process_bc_face_names( Uintah::ProblemSpecP bcProbSpec )
+  {
+    if (!bcProbSpec) return;
+    int i=0;
+    std::string strFaceID;
+    std::set<std::string> faceNameSet;
+    for (Uintah::ProblemSpecP faceSpec = bcProbSpec->findBlock("Face");
+         faceSpec != 0; faceSpec=faceSpec->findNextBlock("Face"), i++) {
+      
+      std::string faceName = "none";
+      faceSpec->getAttribute("name",faceName);
+      
+      strFaceID = number_to_string(i);
+      
+      if (faceName=="none" || faceName=="") {
+        faceName ="Face_" + strFaceID;
+        faceSpec->setAttribute("name",faceName);
+      } else {
+        if ( faceNameSet.find(faceName) != faceNameSet.end() ) {
+          bool fndInc = false;
+          int j = 1;
+          while (!fndInc) {
+            if ( faceNameSet.find( faceName + "_" + number_to_string(j) ) != faceNameSet.end() )
+              j++;
+            else
+              fndInc = true;
+          }
+          // rename this face
+          faceName = faceName + "_" + number_to_string(j);
+          std::cout << "WARNING: I found a duplicate face label " << faceName << " in your Boundary condition specification. I will rename it to " << faceName << std::endl;
+          faceSpec->replaceAttributeValue("name", faceName);
+        }
+      }
+      faceNameSet.insert(faceName);
+    }
+  }
+  
+  //--------------------------------------------------------------------
 
   
   void Wasatch::preGridProblemSetup(const Uintah::ProblemSpecP& params,
@@ -290,6 +332,7 @@ namespace Wasatch{
     check_periodicity_extra_cells( params, extraCells);    
     grid->setExtraCells(extraCells);
   }
+  
   //--------------------------------------------------------------------
 
   void Wasatch::problemSetup( const Uintah::ProblemSpecP& params,
@@ -300,6 +343,12 @@ namespace Wasatch{
     wasatchSpec_ = params->findBlock("Wasatch");
     if (!wasatchSpec_) return;
 
+    // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
+    if ( params->findBlock("Grid") ) {
+      Uintah::ProblemSpecP bcProbSpec = params->findBlock("Grid")->findBlock("BoundaryConditions");
+      process_bc_face_names( bcProbSpec );
+    }
+    
     sharedState_ = sharedState;
     
     double deltMin, deltMax;
@@ -345,8 +394,13 @@ namespace Wasatch{
         for( Uintah::ProblemSpecP bcTypeParams=faceBCParams->findBlock("BCType");
             bcTypeParams != 0;
             bcTypeParams=bcTypeParams->findNextBlock("BCType") ){
+          
           std::string functorName;
-          if ( bcTypeParams->get("functor_name",functorName) ) {
+          
+          bcTypeParams->get( "value", functorName );
+          Uintah::ProblemSpec::InputType theInputType = bcTypeParams->getInputType(functorName);
+          // if the value of this bc is of type string, then it is a functor. add to the list of functors
+          if ( theInputType == Uintah::ProblemSpec::STRING_TYPE ) {
             
             std::string phiName;
             bcTypeParams->getAttribute("label",phiName);
@@ -641,7 +695,8 @@ namespace Wasatch{
     setup_patchinfo_map( level, sched );
 
     const Uintah::PatchSet* const allPatches = get_patchset( USE_FOR_TASKS, level, sched );
-
+    const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
+    
 #ifndef WASATCH_IN_ARCHES // this is a bit annoying... when warches is turned on, disable any linearsolver calls from Wasatch
     if( linSolver_ ) {
       linSolver_->scheduleInitialize( level, sched, 
@@ -656,6 +711,8 @@ namespace Wasatch{
 
     Expr::ExpressionFactory& exprFactory = *icGraphHelper->exprFactory;
 
+    bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+    
     //_______________________________________
     // set the time
     Expr::TagList timeTags;
@@ -671,8 +728,6 @@ namespace Wasatch{
       // -----------------------------------------------------------------------
       // INITIAL BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
-      const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
-      const GraphHelper* icGraphHelper2 = graphCategories_[ INITIALIZATION ];
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
       
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
@@ -683,8 +738,7 @@ namespace Wasatch{
         // set up initial boundary conditions on this transport equation
         try{
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_initial_boundary_conditions( *icGraphHelper2, localPatches,
-              patchInfoMap_, materials_->getUnion(), bcFunctorMap_);
+          transEq->setup_initial_boundary_conditions( *icGraphHelper, *bcHelper_);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -831,15 +885,16 @@ namespace Wasatch{
   Wasatch::scheduleTimeAdvance( const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched )
   {
-    if( isRestarting_ ){
-      setup_patchinfo_map( level, sched );
-      isRestarting_ = false;
-    }
-
     const Uintah::PatchSet* const allPatches = get_patchset( USE_FOR_TASKS, level, sched );
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
     const GraphHelper* advSolGraphHelper = graphCategories_[ ADVANCE_SOLUTION ];
 
+    if( isRestarting_ ){
+      setup_patchinfo_map( level, sched );
+      bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+      isRestarting_ = false;
+    }
+    
     for( int iStage=1; iStage<=nRKStages_; iStage++ ){
       // jcs why do we need this instead of getting the level?
       // jcs notes:
@@ -871,7 +926,7 @@ namespace Wasatch{
         // set up boundary conditions on this transport equation
         try{
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_boundary_conditions(*advSolGraphHelper, localPatches, patchInfoMap_, materials_->getUnion(),bcFunctorMap_);
+          transEq->setup_boundary_conditions(*advSolGraphHelper, *bcHelper_);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;

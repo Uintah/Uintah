@@ -47,23 +47,30 @@ public:
   void set_staggered(bool staggered) { isStaggered_ = staggered; }
   void set_interior_coef( const double coef) { ci_ = coef;}
   void set_ghost_coef( const double coef) { cg_ = coef;}
-  void set_interior_points( const std::vector<int> flatInteriorPoints ) {
-    flatInteriorPoints_.insert( flatInteriorPoints_.end(),flatInteriorPoints.begin(),flatInteriorPoints.end() );
+  
+  void set_interior_points( std::vector<SpatialOps::structured::IntVec>* vecInteriorPoints ) {
+    vecInteriorPts_  = vecInteriorPoints;
   }
-  void set_ghost_points( const std::vector<int> flatGhostPoints ){
-    flatGhostPoints_.insert( flatGhostPoints_.end(), flatGhostPoints.begin(), flatGhostPoints.end() );
+  void set_ghost_points( std::vector<SpatialOps::structured::IntVec>* vecGhostPoints ){
+    vecGhostPts_ = vecGhostPoints;
   }
+
   void set_patch_cell_offset( const SpatialOps::structured::IntVec& patchCellOffset ){
     patchCellOffset_ = patchCellOffset;
   }
 
+  BoundaryConditionBase()
+  {
+    vecInteriorPts_ = NULL;
+    vecGhostPts_ = NULL;
+  }
   virtual ~BoundaryConditionBase(){}
 
 protected:
   bool isStaggered_;
   double ci_, cg_;
-  std::vector<int> flatInteriorPoints_;  
-  std::vector<int> flatGhostPoints_;
+  std::vector<SpatialOps::structured::IntVec>* vecInteriorPts_;
+  std::vector<SpatialOps::structured::IntVec>* vecGhostPts_;
   SpatialOps::structured::IntVec patchCellOffset_;
 };
 

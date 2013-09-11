@@ -97,8 +97,7 @@
  -->
       <Face rectangle="x-" lower="0 0.0625 -1" upper="0 0.1875 1">
         <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
-          <value> 10.0 </value>
-          <functor_name>parabolic-inlet</functor_name>
+          <value> parabolic-inlet </value>
         </BCType>
       </Face>
 

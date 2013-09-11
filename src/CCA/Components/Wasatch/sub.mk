@@ -44,6 +44,7 @@ SRCS +=                                              \
         $(SRCDIR)/TagNames.cc                        \
         $(SRCDIR)/TaskInterface.cc                   \
         $(SRCDIR)/TimeStepper.cc                     \
+        $(SRCDIR)/BCHelper.cc                        \
         $(SRCDIR)/Wasatch.cc 
 
 PSELIBS :=                        \

@@ -39,7 +39,12 @@
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
+        <ConstantDiffusivity>0.1</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>0.1</ConstantDiffusivity>
       </DiffusiveFluxExpression>
 
     </TransportEquation>
@@ -48,11 +53,11 @@
 
 
   <Time>
-    <maxTime>0.5</maxTime>
+    <maxTime>5</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>0.00001</delt_max>
-    <max_Timesteps> 3 </max_Timesteps>    
+    <max_Timesteps> 10 </max_Timesteps>    
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
@@ -64,29 +69,44 @@
     <checkpoint cycle = "2" interval = "0.00001"/>
     <compression>gzip</compression>
     <save label="phi-dirichlet-dirichlet-a"/>
+    <save label="phi-dirichlet-dirichlet-a_rhs"/>    
   </DataArchiver> 
 
   <Grid>
       <BoundaryConditions>
       
-      <Face rectangle="x-" lower="0 0.0625 -1" upper="0 0.1875 1">
+      <Face rectangle="x-" lower="0 0.0625 -1" upper="0 0.1875 1" name="blagui">
         <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
-          <value> 10.0 </value>
-          <functor_name>powerlaw-inlet</functor_name>
+          <value>powerlaw-inlet</value>
         </BCType>
       </Face>
 
-      <Face side="x-">
+      <Face side="x-" name="blagui">
         <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
           <value> 0.0 </value>
         </BCType>
       </Face>
       
-      <Face side="x+">
+      <Face side="x+" name="paspas">
         <BCType id="all" var="Neumann" label="phi-dirichlet-dirichlet-a">
           <value> 0.0 </value>
         </BCType>
       </Face>
+      
+      
+      
+       <Face side="y-" name="blagui">
+        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
+          <value> 0.1 </value>
+        </BCType>
+      </Face>
+      
+      <Face side="y+" name="paspas">
+        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
+          <value> 0.1 </value>
+        </BCType>
+      </Face>
+
     </BoundaryConditions>
 
     <Level>
@@ -94,9 +114,9 @@
         <lower>[0,0,0]</lower>
         <upper>[0.5,0.25,0.01]</upper>
         <resolution>[80,80,2]</resolution>
-        <patches>[1,1,1]</patches>
+        <patches>[3,3,1]</patches>
       </Box>
-      <periodic>[0,1,1]</periodic>
+      <periodic>[0,0,1]</periodic>
     </Level>
   </Grid>
 
