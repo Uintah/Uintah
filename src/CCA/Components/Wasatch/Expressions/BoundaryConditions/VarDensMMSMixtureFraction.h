@@ -99,8 +99,9 @@ evaluate()
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
     std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
     std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    const double bcValue = ( (5 / (2 * *t_ +5)) * exp(-1125 / (10 + *t_)) );
     for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
-      f(*ig) = ( ( (5 / (2 * *t_ +5)) * exp(-1125 / (10 + *t_)) ) - ci*f(*ii) ) / cg;
+      f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
     }
   }
 }
