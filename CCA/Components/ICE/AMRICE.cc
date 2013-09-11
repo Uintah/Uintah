@@ -599,34 +599,34 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
                              fineLevel, refineRatio, fl,fh, vol_frac);     
         } // boundary face loop
         
+        customBC_localVars* BC_localVars = scinew customBC_localVars();
 #if 0        
         // Worry about this later
         // the problem is that you don't know have delT for the finer level at this point in the cycle
         preprocess_CustomBCs("setBC_FineLevel",fine_old_dw, fine_new_dw, lb,  patch, 999,
-                       d_customBC_var_basket);
+                       d_BC_globalVars, BC_localVars);
 #endif
 
         constCCVariable<double> placeHolder;
 
         
         setBC(rho_CC, "Density",  placeHolder, placeHolder,
-              patch,d_sharedState, indx, fine_new_dw, d_customBC_var_basket);
+              patch,d_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars);
 
         setBC(vel_CC, "Velocity", 
-              patch,d_sharedState, indx, fine_new_dw, d_customBC_var_basket);       
+              patch,d_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars);       
 
         setBC(temp_CC,"Temperature",gamma, cv,
-              patch,d_sharedState, indx, fine_new_dw, d_customBC_var_basket);
+              patch,d_sharedState, indx, fine_new_dw, d_BC_globalVars, BC_localVars);
 
         setSpecificVolBC(sp_vol_CC[m], "SpecificVol", false,rho_CC,vol_frac,
                          patch,d_sharedState, indx);
                          
         sp_vol_const[m] = sp_vol_CC[m];  // needed by pressure BC
                          
-#if 0
         // worry about this later
-        delete_CustomBCs(d_customBC_var_basket);
-#endif
+        delete_CustomBCs(d_BC_globalVars, BC_localVars);
+
         //__________________________________
         //    Model Variables                     
         if(d_modelSetup && d_modelSetup->tvars.size() > 0){
@@ -648,6 +648,8 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       
       //__________________________________
       //  Pressure boundary condition
+      customBC_localVars* notUsed = scinew customBC_localVars();
+      
       CCVariable<double> press_CC;
       StaticArray<CCVariable<double> > placeHolder(0);
       
@@ -655,7 +657,9 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       
       setBC(press_CC, placeHolder, sp_vol_const, d_surroundingMatl_indx,
             "sp_vol", "Pressure", patch , d_sharedState, 0, fine_new_dw, 
-            d_customBC_var_basket);
+            d_BC_globalVars, notUsed);
+            
+      delete_CustomBCs(d_BC_globalVars, notUsed);
                   
     }  // patches loop
     cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg

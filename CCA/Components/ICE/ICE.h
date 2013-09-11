@@ -973,7 +973,7 @@ namespace Uintah {
       
       //__________________________________
       // Misc
-      customBC_var_basket* d_customBC_var_basket;
+      customBC_globalVars* d_BC_globalVars;
       customInitialize_basket* d_customInitialize_basket;
       
       Advector* d_advector;
