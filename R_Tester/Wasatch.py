@@ -118,7 +118,7 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #______________________________________________________________________
 
 DEBUGTESTS = [
-  ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] )
+  ("turbulent-inlet-test-xminus",              "turbulent-inlet-test-xminus.ups",    12,  "All",  ["exactComparison","no_restart"] )
 ]
 
 NIGHTLYTESTS = [
@@ -314,7 +314,7 @@ SCALARTRANSPORTTESTS=[
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS TURBULENCETESTS INTRUSIONTESTS  PROJECTIONTESTS  RKTESTS  VARDENTESTS  MISCTESTS  CONVECTIONTESTS  BCTESTS  QMOMTESTS  SCALARTRANSPORTTESTS DEBUGTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS BCTESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PROJECTIONTESTS QMOMTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
 #__________________________________
 ALLTESTS = TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS
 
@@ -345,6 +345,8 @@ def getTestList(me) :
     TESTS = SCALARTRANSPORTTESTS    
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
+  elif me == "INTRUSIONTESTS":
+    TESTS = INTRUSIONTESTS    
   else:
     print "\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

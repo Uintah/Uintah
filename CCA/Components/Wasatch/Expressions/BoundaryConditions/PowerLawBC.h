@@ -67,13 +67,22 @@ public:
     FieldT& f = this->value();
     const double ci = this->ci_;
     const double cg = this->cg_;
-    std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
-    std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
-    double value;
-    for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib ){
-      //value = phic_ * (1.0 - std::pow( std::fabs( (*x_)[*ia] - x0_ ) / R_ , n_ )); // this is another type of powerlaw that provides a flatter profile.
-      value = phic_ * std::pow( 1.0 - std::fabs( (*x_)[*ia] - x0_ ) / R_ , 1.0/n_ );
-      f[*ia] = ( value - ci*f[*ib] ) / cg;
+    
+    if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+      double val = 0.0;
+      std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+      std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+      if(this->isStaggered_) {
+        for( ; ig != (this->vecGhostPts_)->end(); ++ig ){
+          val = phic_ * std::pow( 1.0 - std::fabs( (*x_)(*ig) - x0_ ) / R_ , 1.0/n_ );
+          f(*ig) = val;
+        }
+      } else {
+        for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+          val = phic_ * std::pow( 1.0 - std::fabs( (*x_)(*ig) - x0_ ) / R_ , 1.0/n_ );
+          f(*ig) = ( val - ci*f(*ii) ) / cg;
+        }
+      }
     }
   }
 

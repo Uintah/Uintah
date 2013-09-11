@@ -45,6 +45,7 @@ namespace Wasatch{
 
   class ExprDeps;  // forward declaration.
   class GraphHelper;
+  class BCHelper;
   /**
    *  \ingroup WasatchCore
    *  \class  TransportEquation
@@ -104,6 +105,9 @@ namespace Wasatch{
      */
     const std::string& solution_variable_name() const{ return solnVarName_; }
 
+    const Expr::Tag solution_variable_tag() const{ return Expr::Tag(solnVarName_, Expr::STATE_N); }
+
+    const Expr::Tag rhs_tag() const{ return Expr::Tag(solnVarName_ + "_rhs", Expr::STATE_NONE); }
     /**
      *  \brief Obtain the staggered location of the solution variable that is
      *  governed by this transport equation.
@@ -139,11 +143,7 @@ namespace Wasatch{
      *  via the <code>Expression::process_after_evaluate</code> method.
      */
     virtual void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                                    const Uintah::PatchSet* const localPatches,
-                                                    const PatchInfoMap& patchInfoMap,
-                                                    const Uintah::MaterialSubset* const materials,
-                                                   const std::map<std::string, std::set<std::string> >& bcFunctorMap_) = 0;
-
+                                                   BCHelper& bcHelper ) = 0;
 
     /**
      *  Set up the boundary condition evaluators for this
@@ -154,10 +154,7 @@ namespace Wasatch{
      *  via the <code>Expression::process_after_evaluate</code> method.
      */
     virtual void setup_boundary_conditions( const GraphHelper& graphHelper,
-                                            const Uintah::PatchSet* const localPatches,
-                                            const PatchInfoMap& patchInfoMap,
-                                            const Uintah::MaterialSubset* const materials,
-                                           const std::map<std::string, std::set<std::string> >& bcFunctorMap_ ) = 0;
+                                            BCHelper& bcHelper ) = 0;
 
     /**
      *  Return the ExpressionID that identifies an expression that will

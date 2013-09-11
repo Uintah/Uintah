@@ -72,13 +72,12 @@ WARNING
  public:
    BoundCond() {};
 
-   BoundCond(string var_name, string type, T value, const std::string face_label, const std::string functor_name, const BoundCondBase::BoundCondValueTypeEnum val_type)
+   BoundCond(string var_name, string type, T value, const std::string face_label, const BoundCondBase::BoundCondValueTypeEnum val_type)
      {
        d_variable     = var_name;
        d_type         = type;
        d_value        = value;
        d_face_label   = face_label;
-       d_functor_name = functor_name;
        d_value_type   = val_type;
      };
    virtual ~BoundCond() {};
@@ -106,7 +105,6 @@ WARNING
        d_type = type;
        d_value = NoValue();
        d_face_label = "none";
-       d_functor_name = "none";
        d_value_type = BoundCondBase::UNKNOWN_TYPE;
      };
 
@@ -116,7 +114,6 @@ WARNING
        d_type = "";
        d_value = NoValue();
        d_face_label = "none";
-       d_functor_name = "none";
        d_value_type = BoundCondBase::UNKNOWN_TYPE;
      };
 

@@ -59,39 +59,6 @@ namespace Wasatch {
   /**
    *  \ingroup WasatchCore
    *
-   *  \brief Function that builds the boundary conditions associated
-   *         with the dependent variable of a scalar transport equation.
-   *
-   *  \param phiTag the tag for the variable to set BCs on
-   *
-   *  \param staggeredLocation the direction for staggering for this variable
-   *
-   *  \param graphHelper This is needed to extract the expression
-   *         associated with a transport equation dependent var.
-   *
-   *  \param localPatches a pointer to the Uintah::PatchSet.
-   *
-   *  \param patchInfoMap This is needed to extract the operators
-   *         database associated with a given patch.
-   *
-   *  \param materials a pointer to the Uintah::MaterialSubset.
-   */
-  template < typename FieldT >
-  void process_boundary_conditions( const Expr::Tag& phiTag,
-                                    const std::string& fieldName,
-                                    const Direction staggeredLocation,
-                                    const GraphHelper& graphHelper,
-                                    const Uintah::PatchSet* const localPatches,
-                                    const PatchInfoMap& patchInfoMap,
-                                    const Uintah::MaterialSubset* const materials,
-                                    const std::map<std::string, std::set<std::string> >& bcFunctorMap,
-                                    std::string useFieldForBCIterator="",
-                                    double useBCValue=0,
-                                    std::string useBCKind="",
-                                    std::string useBCFunctorName="");
-  /**
-   *  \ingroup WasatchCore
-   *
    *  \brief Function that updates poisson rhs when boundaries are present.
    *
    *  \param poissonTag The Expr::Tag of the poisson variable (e.g. pressure).
