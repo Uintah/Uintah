@@ -146,6 +146,8 @@ void delete_CustomBCs(customBC_globalVars* global,
       delete local->sine_v;
     } 
   }
+  
+  delete local;
 }
 
 
