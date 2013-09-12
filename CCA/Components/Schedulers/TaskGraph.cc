@@ -988,7 +988,7 @@ TaskGraph::createDetailedDependencies()
       currphase++;
     }
   }
-
+  d_myworld->setgComm(currcomm);
   d_numtaskphases=currphase+1;
 
   TAU_PROFILE_STOP(rctimer);
