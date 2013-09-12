@@ -68,15 +68,15 @@ namespace Wasatch {
   //****************************************************************************  
   template <typename T>
   bool get_iter_bcval_bckind_bcname( const Uintah::Patch* patch,
-                             const Uintah::Patch::FaceType face,
-                             const int child,
-                             const std::string& desc,
-                             const int mat_id,
-                             T& bc_value,
-                             SCIRun::Iterator& bound_ptr,
-                             std::string& bc_kind,
-                             std::string& bc_face_name,
-                             std::string& bc_functor_name)
+                                     const Uintah::Patch::FaceType face,
+                                     const int child,
+                                     const std::string& desc,
+                                     const int mat_id,
+                                     T& bc_value,
+                                     SCIRun::Iterator& bound_ptr,
+                                     std::string& bc_kind,
+                                     std::string& bc_face_name,
+                                     std::string& bc_functor_name )
   {
     SCIRun::Iterator nu;
     const Uintah::BoundCondBase* const bc = patch->getArrayBCValues( face, mat_id, desc, bound_ptr, nu, child );
@@ -87,7 +87,7 @@ namespace Wasatch {
     bc_functor_name="none";
     if (new_bcs != 0) {      // non-symmetric
       bc_value = new_bcs->getValue();
-      bc_kind =  new_bcs->getBCType();
+      bc_kind  = new_bcs->getBCType();
       bc_face_name = new_bcs->getBCFaceName();
     }
 
