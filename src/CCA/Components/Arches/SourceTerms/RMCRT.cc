@@ -169,7 +169,8 @@ void
 RMCRT_Radiation::extraSetup()
 { 
   _tempLabel = _labels->getVarlabelByRole(ArchesLabel::TEMPERATURE);
-  proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName() << endl;
+  proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName()
+            << "   abskg label name:       " << _abskgLabel->getName() << endl;
 
   if ( _tempLabel == 0 ){ 
     throw ProblemSetupException("Error: No temperature label found.",__FILE__,__LINE__); 
