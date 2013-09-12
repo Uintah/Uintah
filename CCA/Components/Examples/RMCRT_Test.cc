@@ -509,14 +509,9 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
   const int timestep = d_old_uda->timestep;
   const int uda_matl = d_old_uda->matl;
 
-  vector<CCVariable<double>*> uda_temp(     patches->size() );
-  vector<CCVariable<double>*> uda_abskg(    patches->size() );
+  //__________________________________
+  //  Cell Type
   vector<CCVariable<int>*>    uda_cellType( patches->size() );
-
-  proc0cout << "Extracting data from " << d_old_uda->udaName
-            << " at time " << times[timestep] 
-            << " and initializing RMCRT variables " << endl;
-            
   // loop over the UDA patches          
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -524,15 +519,6 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
     IntVector low  = patch->getExtraCellLowIndex();
     IntVector high = patch->getExtraCellHighIndex();
     
-
-    uda_temp[p]  = scinew CCVariable<double>;
-    uda_abskg[p] = scinew CCVariable<double>;
-    
-    archive->queryRegion( *(CCVariable<double>*) uda_temp[p],  
-                         d_old_uda->temperatureName, uda_matl, uda_level, timestep, low, high);
-
-    archive->queryRegion( *(CCVariable<double>*) uda_abskg[p], 
-                          d_old_uda->abskgName,      uda_matl, uda_level, timestep, low, high);
     
     if (d_old_uda->cellTypeName != "NONE" ){
       uda_cellType[p] = scinew CCVariable<int>;                      
@@ -541,10 +527,79 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
                       
     }
   }
+  
+  //__________________________________
+  // abskg and temperature
+  // Note the user may have saved the data as a float so you 
+  // must take that into account.
+  // Determine what type (float/double) the variables were saved as
+  vector<string> vars;
+  vector<const Uintah::TypeDescription*> types;
+  const Uintah::TypeDescription* subType = NULL;
+
+  archive->queryVariables(vars, types);
+
+  for (unsigned int i = 0; i < vars.size(); i++) {
+    if (d_old_uda->abskgName == vars[i]) {
+      subType = types[i]->getSubType();
+    } else if (d_old_uda->temperatureName == vars[i]){
+      subType = types[i]->getSubType();
+    }
+  }
+  
+  //__________________________________
+  //  Now put the data into temporary arrays
+  proc0cout << "Extracting data from " << d_old_uda->udaName
+          << " at time " << times[timestep] 
+          << " and initializing RMCRT variables " << endl;
+
+  vector<CCVariable<double>*> uda_temp(  patches->size() );
+  vector<CCVariable<double>*> uda_abskg( patches->size() );
+    
+  // loop over the UDA patches          
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    
+    IntVector low  = patch->getExtraCellLowIndex();
+    IntVector high = patch->getExtraCellHighIndex();
+  
+    //             D O U B L E 
+    if ( subType->getType() == Uintah::TypeDescription::double_type ) {
+      uda_temp[p]  = scinew CCVariable<double>;
+      uda_abskg[p] = scinew CCVariable<double>;
+
+      archive->queryRegion( *(CCVariable<double>*) uda_temp[p],  
+                     d_old_uda->temperatureName, uda_matl, uda_level, timestep, low, high);
+
+      archive->queryRegion( *(CCVariable<double>*) uda_abskg[p], 
+                     d_old_uda->abskgName,       uda_matl, uda_level, timestep, low, high);
+    //            F L O A T     
+    }else if( subType->getType() == Uintah::TypeDescription::float_type ) {                                          
+      CCVariable<float> uda_tempF;
+      CCVariable<float> uda_abskgF;                                                            
+      
+      uda_temp[p]   = scinew CCVariable<double>;                                                 
+      uda_abskg[p]  = scinew CCVariable<double>;
+      new_dw->allocateTemporary(*uda_temp[p], patch);                                                 
+      new_dw->allocateTemporary(*uda_abskg[p], patch);
+      
+      archive->queryRegion( uda_tempF,                                  
+                     d_old_uda->temperatureName, uda_matl, uda_level, timestep, low, high);      
+
+      archive->queryRegion( uda_abskgF,                                 
+                     d_old_uda->abskgName,       uda_matl, uda_level, timestep, low, high);      
+                                                                                                 
+      for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {            
+        IntVector c(*iter);                                                                      
+        (*uda_temp[p])[c]  = uda_tempF[c]; 
+        (*uda_abskg[p])[c] = uda_abskgF[c];
+      }                                                                                          
+    }
+  }
   delete archive;
 
   //__________________________________
-  //  initialize 
+  //  initialize the data and put it in the dw
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,dbg,"Doing initializeWithUda");    
