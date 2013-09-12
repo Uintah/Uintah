@@ -81,8 +81,10 @@ WARNING
 
       MPI_Comm getgComm(int i) const {
         if (d_threads < 1 || i == -1) return d_comm; 
-        else return d_gComms[i%d_threads];
+        else return d_gComms[i];
       }
+
+      void setgComm (int i) const; 
 
 
    private:
@@ -99,7 +101,7 @@ WARNING
       int d_size;
       int d_threads;
       MPI_Comm d_comm;
-      std::vector<MPI_Comm> d_gComms;
+      mutable std::vector<MPI_Comm> d_gComms;
       bool d_allmpi;
       
       ProcessorGroup(const ProcessorGroup&);
