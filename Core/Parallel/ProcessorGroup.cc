@@ -47,6 +47,7 @@ ProcessorGroup::~ProcessorGroup()
 void
 ProcessorGroup::setgComm(int nComm) const
 {
+  if (d_threads <= 1 || d_size <=1) return;
   int curr_size=d_gComms.size();
   if (nComm <= curr_size) return;
   d_gComms.resize(nComm);
