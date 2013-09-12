@@ -524,7 +524,7 @@ namespace Wasatch {
   template< typename FieldT >
   void MomentTransportEquation<FieldT>::
   setup_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                    BCHelper& bcHelper )
+                                     BCHelper& bcHelper )
   {
     bcHelper.set_task_category(INITIALIZATION);
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;

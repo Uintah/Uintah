@@ -115,6 +115,7 @@
 #include "PatchInfo.h"
 #include "GraphHelperTools.h"
 #include "FieldTypes.h"
+#include "BCHelper.h"
 
 #include <expression/ExpressionFactory.h>
 
@@ -133,7 +134,6 @@ namespace Wasatch{
   class TimeStepper;
   class CoordHelper;
   class TaskInterface;
-  class BCHelper;
 
   /**
    *  \ingroup WasatchCore
@@ -265,8 +265,10 @@ namespace Wasatch{
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;
     Uintah::ProblemSpecP wasatchSpec_;
-    std::map<std::string, std::set<std::string> > bcFunctorMap_;
+
+    BCFunctorMap bcFunctorMap_;
     BCHelper* bcHelper_;
+
     /**
      *  a container of information for constructing ExprLib graphs.
      *  These are then wrapped as Wasatch::TaskInterface objects and

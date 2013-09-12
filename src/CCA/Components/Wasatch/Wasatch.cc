@@ -406,14 +406,15 @@ namespace Wasatch{
             bcTypeParams->getAttribute("label",phiName);
             std::cout << "functor applies to " << phiName << std::endl;
             
-            std::map< std::string,std::set<std::string> >::iterator iter = bcFunctorMap_.find(phiName);
+            BCFunctorMap::iterator iter = bcFunctorMap_.find(phiName);
             // check if we already have an entry for phiname
             if ( iter != bcFunctorMap_.end() ) {
               (*iter).second.insert(functorName);
-            } else if ( iter == bcFunctorMap_.end() ) {
-              std::set<std::string> functorSet;
-              functorSet.insert(functorName);
-              bcFunctorMap_.insert(std::pair< std::string, std::set<std::string> >(phiName,functorSet) );
+            }
+            else{
+              BCFunctorMap::mapped_type functorSet;
+              functorSet.insert( functorName );
+              bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
             }
           }          
         }
@@ -428,20 +429,20 @@ namespace Wasatch{
           transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
         std::string solnVarName;
         transEqnParams->get("SolutionVariable",solnVarName);
-        std::set<std::string> functorSet;
-        std::string functorName = solnVarName+TagNames::self().star+"_bc";
-        std::string phiName     = solnVarName+TagNames::self().star;
+        BCFunctorMap::mapped_type functorSet;
+        BCFunctorMap::key_type functorName = solnVarName+TagNames::self().star+"_bc";
+        BCFunctorMap::key_type phiName     = solnVarName+TagNames::self().star;
         functorSet.insert(functorName);
-        bcFunctorMap_.insert(std::pair< std::string, std::set<std::string> >(phiName,functorSet) );        
+        bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
       }
 
       Uintah::ProblemSpecP densityParams  = wasatchSpec_->findBlock("Density");
       Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-      std::set<std::string> functorSet;
-      std::string functorName = densityTag.name()+TagNames::self().star+"_bc";
-      std::string phiName     = densityTag.name()+TagNames::self().star;
+      BCFunctorMap::mapped_type functorSet;
+      BCFunctorMap::key_type functorName = densityTag.name()+TagNames::self().star+"_bc";
+      BCFunctorMap::key_type phiName     = densityTag.name()+TagNames::self().star;
       functorSet.insert(functorName);
-      bcFunctorMap_.insert(std::pair< std::string, std::set<std::string> >(phiName,functorSet) );
+      bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
       
     }
 

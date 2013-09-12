@@ -66,6 +66,8 @@ static SCIRun::DebugStream dbgbc("WASATCH_BC", false);
 
 namespace Wasatch {
   
+  typedef std::map<std::string, std::set<std::string> > BCFunctorMap;
+
 //  enum AtomicBCTypeEnum
 //  {
 //    DIRICHLET,
@@ -230,33 +232,40 @@ namespace Wasatch {
    *  \author  Tony Saad
    *  \date    September, 2013
    *
-   *  \brief The BCHelper class provides a centralized approach to dealing with boundary conditions.
-   The model adopted for our boundary condition implementation relies on the basic assumption that
-   all boundary specification within a <Face> specification in a ups input file belong to the same
-   boundary. This is the essential assumption on which this entire class is built.
-   
-   The class operates in the following manner. After Uintah performs its input-file setup, it 
-   automatically constructs BC-related objects and iterators based on input specification. The 
-   Uintah model operates as follows: Every Uintah::Patch is a logical box that may contain
-   boundary faces. For every face, Uintah creates a Uintah::BCDataArray object. The BCDataArray class
-   sotres ALL the information related to the boundary condition(s) specified at that boundary face.
-   For example, if a boundary face consists of two geometric objects (side, and circle), then the
-   BCDataArray contains information about the side and the cirle, their iterators, the boundary
-   conditions specified by the user on each of these boundaries (i.e. side and cirle). Uintah refers
-   to these sub-boundaries as "children". Then, to summarize, for each boundary face, Uintah constructs
-   a BCDataArray object. The BCDataArray object constains information about the children specified 
-   at a face.
-   
-   Now each child is stored as a BCGeom ojbect. Each BCGeom object contains an iterator that lists
-   the extracells at that geom object as well as a Uintah::BCData object. The Uintah::BCData class
-   contains information about the boundaries specified by the user.   
+   *  The BCHelper class provides a centralized approach to dealing with boundary
+   *  conditions. The model adopted for our boundary condition implementation
+   *  relies on the basic assumption that all boundary specification within a
+   *  <Face> specification in a ups input file belong to the same boundary.
+   *  This is the essential assumption on which this entire class is built.
+   *
+   *  The class operates in the following manner. After Uintah performs its
+   *  input-file setup, it automatically constructs BC-related objects and
+   *  iterators based on input specification. The Uintah model operates as
+   *  follows:
+   *   <ul>
+   *   <li> Every Uintah::Patch is a logical box that may contain boundary faces.
+   *   <li> For every face, Uintah creates a Uintah::BCDataArray object.
+   *   <li> The BCDataArray class stores ALL the information related to the boundary
+   *    condition(s) specified at that boundary face.
+   *   </ul>
+   *  For example, if a boundary face consists of two geometric objects (side,
+   *  and circle), then the BCDataArray contains information about the side and
+   *  the circle, their iterators, the boundary conditions specified by the user
+   *  on each of these boundaries (i.e. side and circle). Uintah refers to these
+   *  sub-boundaries as "children". Then, to summarize, for each boundary face,
+   *  Uintah constructs a BCDataArray object. The BCDataArray object contains
+   *  information about the children specified at a face.
+   *
+   *  Now each child is stored as a BCGeom object. Each BCGeom object contains
+   *  an iterator that lists the extra cells at that geom object as well as a
+   *  Uintah::BCData object. The Uintah::BCData class contains information about
+   *  the boundaries specified by the user.
    */
 
   class BCHelper {
 
   private:
     typedef SpatialOps::structured::IntVec                     IntVecT;            // SpatialOps IntVec
-    typedef std::map <std::string, std::set<std::string>     > StrSetMapT;
     typedef std::map <int, BoundaryIterators                 > patchIDBndItrMapT; // temporary map that stores boundary iterators per patch id
     typedef std::map <std::string, patchIDBndItrMapT         > MaskMapT;
     typedef std::map <std::string, std::vector<BoundarySpec> > BCMapT;
@@ -264,7 +273,7 @@ namespace Wasatch {
     const Uintah::PatchSet*    const localPatches_;
     const Uintah::MaterialSet* const materials_;
     const PatchInfoMap&        patchInfoMap_;
-    const StrSetMapT&          bcFunctorMap_;
+    const BCFunctorMap&        bcFunctorMap_;
     GraphCategories&           grafCat_;
     Category                   taskCat_;
     
@@ -277,10 +286,10 @@ namespace Wasatch {
     BCMapT                     varNameBoundarySpecMap_;
     
     template<typename FieldT>
-    std::vector<IntVecT>* get_extra_bnd_mask( const BoundarySpec& myBCSpec );
+    const std::vector<IntVecT>* get_extra_bnd_mask( const BoundarySpec& myBCSpec ) const;
 
     template<typename FieldT>
-    std::vector<IntVecT>* get_interior_bnd_mask( const BoundarySpec& myBCSpec );
+    const std::vector<IntVecT>* get_interior_bnd_mask( const BoundarySpec& myBCSpec ) const;
 
     void add_boundary_iterator( const BoundaryIterators& myIters,
                                 const std::string& bcName,
@@ -301,33 +310,33 @@ namespace Wasatch {
               const Uintah::MaterialSet* const materials,
               const PatchInfoMap& patchInfoMap,
               GraphCategories& grafCat,
-              const std::map<std::string, std::set<std::string> >& bcFunctorMap );
+              const BCFunctorMap& bcFunctorMap );
     
     ~BCHelper();
 
     /**
      *  \brief Specifies the graph/task category from which the BCHelper will extract expressions
-     and set boundary conditions on. This function is really useful when setting a series of
-     boundary conditions, back-to-back, as it allows one to use the simple apply_boundary_condition
-     interface without having to specify the graph category every time.
+     *  and set boundary conditions on. This function is really useful when setting a series of
+     *  boundary conditions, back-to-back, as it allows one to use the simple apply_boundary_condition
+     *  interface without having to specify the graph category every time.
      *
      *  \param taskCat A Category enum designating the graph category.
      *
      */
-    void set_task_category( Category taskCat );
+    void set_task_category( const Category taskCat );
     
     /**
      *  \brief Function that allows one to add an auxiliary boundary condition based on an existing
-     one. This situation typically arises when one needs to specify an auxiliary boundary condition
-     to complement one specified by the user. For example, at a moving wall, the user typically specifies
-     velocity but boundary conditions must be specified on the momentum RHS, among other things.
+     *  one. This situation typically arises when one needs to specify an auxiliary boundary condition
+     *  to complement one specified by the user. For example, at a moving wall, the user typically specifies
+     *  velocity but boundary conditions must be specified on the momentum RHS, among other things.
      *
-     *  \param srcVarName An std::string designating the name of the variable on which one desires
-     to "template" the auxiliary boudnary. By "template" we mean that the new boundary condition will
-     be set on the same boundary(ies), patches, etc...
+     *  \param srcVarName A string designating the name of the variable on which one desires
+     *  to "template" the auxiliary boundary. By "template" we mean that the new boundary condition will
+     *  be set on the same boundary(ies), patches, etc...
      *
      *  \param newVarName An std::string designating the name of the auxiliary variable, i.e. the
-     variable for which we want to create a new boundary condition.
+     *  variable for which we want to create a new boundary condition.
      *
      *  \param newValue The value (double) of the auxiliary variable at the boundary.
      *
@@ -339,16 +348,16 @@ namespace Wasatch {
                                            const BoundaryTypeEnum newBCType );
     /**
      *  \brief Function that allows one to add an auxiliary boundary condition based on an existing
-     one. This situation typically arises when one needs to specify an auxiliary boundary condition
-     to complement one specified by the user. For example, at a moving wall, the user typically specifies
-     velocity but boundary conditions must be specified on the momentum RHS, among other things.
+     *  one. This situation typically arises when one needs to specify an auxiliary boundary condition
+     *  to complement one specified by the user. For example, at a moving wall, the user typically specifies
+     *  velocity but boundary conditions must be specified on the momentum RHS, among other things.
      *
-     *  \param srcVarName An std::string designating the name of the variable on which one desires
-     to "template" the auxiliary boudnary. By "template" we mean that the new boundary condition will
-     be set on the same boundary(ies), patches, etc...
+     *  \param srcVarName A string designating the name of the variable on which one desires
+     *  to "template" the auxiliary boundary. By "template" we mean that the new boundary condition will
+     *  be set on the same boundary(ies), patches, etc...
      *
      *  \param newVarName An std::string designating the name of the auxiliary variable, i.e. the
-     variable for which we want to create a new boundary condition.
+     *  variable for which we want to create a new boundary condition.
      *
      *  \param functorName The name of the functor that applies to the auxiliary boundary.
      *
@@ -363,14 +372,14 @@ namespace Wasatch {
     /**
      *  \brief Key member function that applies a boundary condition on a given expression.
      *
-     *  \param varTag The Expr::Tag of the expression on which the boundary condition is to be 
-     applied.
+     *  \param varTag The Expr::Tag of the expression on which the boundary
+     *   condition is to be applied.
      *
      *  \param taskCat Specifies on which graph to apply this boundary condition.
      *
      *  \param setOnExtraOnly Optional boolean flag - specifies whether to set the boundary value
-     DIRECTLY on the extra cells without doing averaging using interior cells. This is only useful
-     for DIRICHLET boundary conditions.
+     *  DIRECTLY on the extra cells without doing averaging using interior cells. This is only useful
+     *  for DIRICHLET boundary conditions.
      */
     template<typename FieldT>
     void apply_boundary_condition( const Expr::Tag& varTag,
@@ -379,20 +388,20 @@ namespace Wasatch {
 
     /**
      *  \brief Lightweight version of the the previous function to apply boundary conditions on a
-     given expression. This function does NOT take CATEGORY enum that specifies the graph in which
-     the BC is to be applied. The caveat here is that you MUST specify the default taskCategory
-     by using BCHelper::set_task_category
+     *  given expression. This function does NOT take CATEGORY enum that specifies the graph in which
+     *  the BC is to be applied. The caveat here is that you MUST specify the default taskCategory
+     *  by using BCHelper::set_task_category
      *
-     *  \param varTag The Expr::Tag of the expression on which the boundary condition is to be
-     applied.
+     *  \param varTag The Expr::Tag of the expression on which the boundary
+     *  condition is to be applied.
      *
      *
      *  \param setOnExtraOnly Optional boolean flag - specifies whether to set the boundary value
-     DIRECTLY on the extra cells without doing averaging using interior cells. This is only useful
-     for DIRICHLET boundary conditions.
+     *  DIRECTLY on the extra cells without doing averaging using interior cells. This is only useful
+     *  for DIRICHLET boundary conditions.
      *
      *  \warning BE VERY CAREFUL WHEN USING THIS! YOU MUST SET THE TASK CATEGORY BEFORE, OTHERWISE,
-     YOU WILL RISK USING AN INVALID TASK CATEGORY!!!
+     *  YOU WILL RISK USING AN INVALID TASK CATEGORY!!!
      *
      */
     template<typename FieldT>
@@ -402,7 +411,7 @@ namespace Wasatch {
      *  \brief Print boundary conditions summary.
      *
      */
-    void print();
+    void print() const;
     
   }; // class BCHelper
 
