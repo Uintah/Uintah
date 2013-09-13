@@ -23,7 +23,7 @@
  */
 
 //-- Wasatch includes --//
-#include "MomentTransportEquation.h"
+#include <CCA/Components/Wasatch/transport/MomentTransportEquation.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>

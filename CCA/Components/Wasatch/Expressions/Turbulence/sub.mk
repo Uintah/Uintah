@@ -29,10 +29,54 @@
 
 SRCDIR   := CCA/Components/Wasatch/Expressions/Turbulence
 
-SRCS     +=                               \
-	$(SRCDIR)/TurbulentViscosity.cc		      \
-	$(SRCDIR)/TurbulentDiffusivity.cc	      \
-  $(SRCDIR)/StrainTensorBase.cc     	    \
-	$(SRCDIR)/StrainTensorMagnitude.cc 	    \
+#
+# These are files that if CUDA is enabled (via configure), must be
+# compiled using the nvcc compiler.
+#
+# WARNING: If you add a file to the list of CUDA_SRCS, you must add a
+# corresponding rule at the end of this file!
+#
+CUDA_ENABLED_SRCS =       \
+     StrainTensorMagnitude     
+
+ifeq ($(HAVE_CUDA),yes)
+
+   # CUDA enabled files, listed here (and with a rule at the end of
+   # this sub.mk) are copied to the binary side and renamed with a .cu
+   # extension (.cc replaced with .cu) so that they can be compiled
+   # using the nvcc compiler.
+
+   SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(OBJTOP_ABS)/$(SRCDIR)/$(var).cu)
+
+else
+
+   SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).cc)
+
+endif
+
+#
+# Non-CUDA Dependent src files... can be specified the old fashioned
+# way:
+#
+SRCS     +=                                    \
+	$(SRCDIR)/TurbulentViscosity.cc		       \
+	$(SRCDIR)/TurbulentDiffusivity.cc	       \
+    $(SRCDIR)/StrainTensorBase.cc     	       \
 	$(SRCDIR)/DynamicSmagorinskyCoefficient.cc \
 	$(SRCDIR)/TurbulenceParameters.cc
+
+########################################################################
+#
+# Rules to copy CUDA enabled source (.cc) files to the binary build tree
+# and rename with a .cu extension.
+#
+
+ifeq ($(HAVE_CUDA),yes)
+  # If Copy the 'original' .cc files into the binary tree and rename as .cu
+
+  $(OBJTOP_ABS)/$(SRCDIR)/StrainTensorMagnitude.cu : $(SRCTOP_ABS)/$(SRCDIR)/StrainTensorMagnitude.cc
+	cp $< $@
+	
+endif
+	
+	
