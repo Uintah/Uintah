@@ -2241,9 +2241,8 @@ void Ray::updateSumI ( Vector& ray_direction,
 
          // get new scatLength for each scattering event
          scatLength = -log(mTwister.randDblExc() ) / scatCoeff; 
-
-         bool randomSeed   = true;
-         ray_direction     =  findRayDirection( mTwister, randomSeed ); 
+         
+         ray_direction     =  findRayDirection( mTwister, _isSeedRandom, cur ); 
          inv_ray_direction = Vector(1.0)/ray_direction;
 
          // get new step and sign

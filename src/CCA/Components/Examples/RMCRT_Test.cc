@@ -223,15 +223,25 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     vector<double> times;
     archive->queryTimesteps(index, times);
   
-    if( d_old_uda->timestep >= index.size() ){
+  
+    bool foundIndex = false;
+    int timeIndex = -9;
+    for (unsigned int i = 0; i < index.size(); i++) {
+      if( d_old_uda->timestep == index[i] ){
+        foundIndex = true;
+        timeIndex = i;
+      }
+    }
+    
+    if( ! foundIndex ){
       ostringstream warn;
       warn << "The timestep ("<< d_old_uda->timestep << ") was not found in the uda\n"
-           << "There are " << index.size()-1 << " timesteps\n";
+           << "There are " << index.size() << " timesteps\n";
       throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
     }   
     
     // are the grids the same ?
-    GridP uda_grid = archive->queryGrid(d_old_uda->timestep); 
+    GridP uda_grid = archive->queryGrid( timeIndex ); 
     areGridsEqual(uda_grid.get_rep(), grid.get_rep());
     
     
@@ -503,10 +513,17 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
   vector<int> index;
   vector<double> times;
   archive->queryTimesteps(index, times);
-  GridP uda_grid = archive->queryGrid(d_old_uda->timestep);
+  int timeIndex = -9;
   
-  const Level*  uda_level = uda_grid->getLevel(0).get_rep();        // there's only one level in these problem 
-  const int timestep = d_old_uda->timestep;
+  for (unsigned int i = 0; i < index.size(); i++) {
+    if( d_old_uda->timestep == index[i] ){
+      timeIndex = i;
+    }
+  }
+  
+  GridP uda_grid = archive->queryGrid(timeIndex);
+  
+  const Level*  uda_level = uda_grid->getLevel(0).get_rep();        // there's only one level in these problem
   const int uda_matl = d_old_uda->matl;
 
   //__________________________________
@@ -523,7 +540,7 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
     if (d_old_uda->cellTypeName != "NONE" ){
       uda_cellType[p] = scinew CCVariable<int>;                      
       archive->queryRegion( *(CCVariable<int>*) uda_cellType[p],  
-                      d_old_uda->cellTypeName, uda_matl, uda_level, timestep, low, high);
+                      d_old_uda->cellTypeName, uda_matl, uda_level, timeIndex, low, high);
                       
     }
   }
@@ -550,7 +567,7 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
   //__________________________________
   //  Now put the data into temporary arrays
   proc0cout << "Extracting data from " << d_old_uda->udaName
-          << " at time " << times[timestep] 
+          << " at time " << times[timeIndex] 
           << " and initializing RMCRT variables " << endl;
 
   vector<CCVariable<double>*> uda_temp(  patches->size() );
@@ -569,10 +586,10 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
       uda_abskg[p] = scinew CCVariable<double>;
 
       archive->queryRegion( *(CCVariable<double>*) uda_temp[p],  
-                     d_old_uda->temperatureName, uda_matl, uda_level, timestep, low, high);
+                     d_old_uda->temperatureName, uda_matl, uda_level, timeIndex, low, high);
 
       archive->queryRegion( *(CCVariable<double>*) uda_abskg[p], 
-                     d_old_uda->abskgName,       uda_matl, uda_level, timestep, low, high);
+                     d_old_uda->abskgName,       uda_matl, uda_level, timeIndex, low, high);
     //            F L O A T     
     }else if( subType->getType() == Uintah::TypeDescription::float_type ) {                                          
       CCVariable<float> uda_tempF;
@@ -584,10 +601,10 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
       new_dw->allocateTemporary(*uda_abskg[p], patch);
       
       archive->queryRegion( uda_tempF,                                  
-                     d_old_uda->temperatureName, uda_matl, uda_level, timestep, low, high);      
+                     d_old_uda->temperatureName, uda_matl, uda_level, timeIndex, low, high);      
 
       archive->queryRegion( uda_abskgF,                                 
-                     d_old_uda->abskgName,       uda_matl, uda_level, timestep, low, high);      
+                     d_old_uda->abskgName,       uda_matl, uda_level, timeIndex, low, high);      
                                                                                                  
       for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {            
         IntVector c(*iter);                                                                      
