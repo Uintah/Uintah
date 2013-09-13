@@ -360,7 +360,6 @@ namespace Wasatch {
     BCMapT::iterator iter = varNameBoundarySpecMap_.find(varName);
     if ( iter != varNameBoundarySpecMap_.end() ) {
       // if we already have an entry for varname, then all we need to do is add the new boundary condition to it
-      std::vector<BoundarySpec>& bcSpecVec = (*iter).second;
       (*iter).second.push_back(bcSpec);
     }
     else{
@@ -644,7 +643,6 @@ namespace Wasatch {
     // associated with it.    
     BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() ) {
       BOOST_FOREACH( const int im, matSubSet->getVector() ) {
-        const int matID = matSubSet->get(im);
         BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() ) {
           BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
             const int patchID = patch->getID();
@@ -676,21 +674,11 @@ namespace Wasatch {
       return;
     }
     
-    const Direction stagLoc = get_staggered_location<FieldT>();
-    
     const vector<BoundarySpec>& myBCSpecVec = (*varNameBoundarySpecMap_.find(fieldName)).second;
     
-    // loop over the material set
     BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() ) {
-      
-      // loop over materials
       BOOST_FOREACH( const int im, matSubSet->getVector() ) {        
-        const int matID = matSubSet->get(im);
-        
-        // loop over local patches
         BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() ) {
-          
-          // loop over every patch in the patch subset
           BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
             const int patchID = patch->getID();
 
