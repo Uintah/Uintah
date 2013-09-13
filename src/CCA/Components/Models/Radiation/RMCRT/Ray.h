@@ -413,7 +413,8 @@ namespace Uintah{
                    const double abskg,
                    bool& in_domain,
                    int& step,
-                   bool& sign);
+                   bool& sign,
+                   double& ray_direction);
 
       //__________________________________
       //
