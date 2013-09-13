@@ -1307,7 +1307,8 @@ void Ray::reflect(double& fs,
                   const double abskg,
                   bool& in_domain,
                   int& step,
-                  bool& sign)
+                  bool& sign,
+                  double& ray_direction)
 {
   fs = fs * (1 - abskg);
 
@@ -1318,6 +1319,7 @@ void Ray::reflect(double& fs,
   // apply reflection condition
   step *= -1;                // begin stepping in opposite direction
   sign = (sign==1) ? 0 : 1;  //  swap sign from 1 to 0 or vice versa
+  ray_direction *= -1;
   //dbg2 << " REFLECTING " << endl;
 }
             
@@ -2214,7 +2216,10 @@ void Ray::updateSumI ( Vector& ray_direction,
        ray_location[0] = ray_location[0] + (disMin  * ray_direction[0]);
        ray_location[1] = ray_location[1] + (disMin  * ray_direction[1]);
        ray_location[2] = ray_location[2] + (disMin  * ray_direction[2]);
-
+       
+//cout << "cur " << cur << " face " << face << " tmax " << tMax << " rayLoc " << ray_location << 
+//        " inv_dir: " << inv_ray_direction << " disMin: " << disMin << endl;
+       
        in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
 
        optical_thickness += Dx.x() * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
@@ -2279,11 +2284,14 @@ void Ray::updateSumI ( Vector& ray_direction,
      sumI += wallEmissivity * sigmaT4OverPi[cur] * intensity;
 
      intensity = intensity * fs;
-                                            
+     
+     // when a ray reaches the end of the domain, we force it to terminate. 
+     if(!_allowReflect) intensity = 0;                                 
+     
      //__________________________________
      //  Reflections
      if ( (intensity > _Threshold) && _allowReflect){
-       reflect( fs, cur, prevCell, abskg[cur], in_domain, step[face], sign[face] );
+       reflect( fs, cur, prevCell, abskg[cur], in_domain, step[face], sign[face], ray_direction[face]);
        ++nReflect;
      }
    }  // threshold while loop.
@@ -2483,12 +2491,15 @@ void Ray::updateSumI ( Vector& ray_direction,
     sumI += wallEmissivity * sigmaT4OverPi[L][cur] * intensity;
 
     intensity = intensity * fs;  
-
+    
+     // when a ray reaches the end of the domain, we force it to terminate. 
+     if(!_allowReflect) intensity = 0;
+    
     //__________________________________
     //  Reflections
     if (intensity > _Threshold && _allowReflect ){
       ++nReflect;
-      reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir] );
+      reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], inv_direction[dir] );
 
     }
   }  // threshold while loop.
