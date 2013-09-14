@@ -820,7 +820,7 @@ namespace Wasatch{
     namespace SS = SpatialOps::structured;
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
    
-    bcHelper.set_task_category(INITIALIZATION);
+    const Category taskCat = INITIALIZATION;
     
     // multiply the initial condition by the volume fraction for embedded geometries
     if (hasEmbeddedGeometry_) {
@@ -856,7 +856,7 @@ namespace Wasatch{
     typedef typename NormalFaceSelector<FieldT>::NormalFace NormalFace;
 
     if (factory.have_entry(mom_tag(thisMomName_))) {
-      bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag() );
+      bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
     }
     
     // set bcs for velocity - cos we don't have a mechanism now to set them
@@ -869,7 +869,7 @@ namespace Wasatch{
       default:                         break;
     }
     if (factory.have_entry(velTag)) {
-      //bcHelper.apply_boundary_condition<FieldT>( velTag );
+      //bcHelper.apply_boundary_condition<FieldT>( velTag, taskCat );
     }
     
     // set bcs for pressure
@@ -879,13 +879,13 @@ namespace Wasatch{
     
     // set bcs for partial rhs
     if (factory.have_entry(rhs_part_tag(mom_tag(thisMomName_)))) {
-      bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(solution_variable_tag()) );
+      bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(solution_variable_tag()), taskCat );
     }
 
     if (!isConstDensity_) {
       // set bcs for density
       const Expr::Tag densTag( densityTag_.name(), Expr::STATE_NONE );
-      bcHelper.apply_boundary_condition<SVolField>(densTag);
+      bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
       const TagNames& tagNames = TagNames::self();
@@ -898,7 +898,7 @@ namespace Wasatch{
 
 //      BoundarySpec starBCSpec = {Uintah::Patch::xminus, 0, "whatever", densStarTag.name(), densStarBCTag.name(), 0.0, SS::Numeric3Vec<double>(0,0,0), DIRICHLET };
       bcHelper.add_auxiliary_boundary_condition( densTag.name(), densStarTag.name(), densStarBCTag.name(), DIRICHLET);
-      bcHelper.apply_boundary_condition<SVolField>(densStarTag);
+      bcHelper.apply_boundary_condition<SVolField>(densStarTag, taskCat);
 
       // set bcs for velocity - cos we don't have a mechanism now to set them
       // on interpolated density field
@@ -909,7 +909,7 @@ namespace Wasatch{
         case ZDIR:  velTag=velTags_[2];  break;
         default:                         break;
       }
-      bcHelper.apply_boundary_condition<FieldT>(velTag);
+      bcHelper.apply_boundary_condition<FieldT>(velTag, taskCat);
     }
   }
 
@@ -923,15 +923,15 @@ namespace Wasatch{
     namespace SS = SpatialOps::structured;
     typedef typename NormalFaceSelector<FieldT>::NormalFace NormalFace;
     
-    bcHelper.set_task_category(ADVANCE_SOLUTION);
-    
+    const Category taskCat = ADVANCE_SOLUTION;
+
     // set bcs for momentum
-    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag() );
+    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
 
     // set bcs for partial rhs
-    bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(mom_tag(thisMomName_)), true);
+    bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(mom_tag(thisMomName_)), taskCat, true);
     // set bcs for partial full rhs
-    bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(thisMomName_ + "_rhs_full", Expr::STATE_NONE), true);
+    bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(thisMomName_ + "_rhs_full", Expr::STATE_NONE), taskCat, true);
 
 
     // set bcs for velocity - cos we don't have a mechanism now to set them
@@ -943,12 +943,12 @@ namespace Wasatch{
       case ZDIR:  velTag=velTags_[2];  break;
       default:                         break;
     }
-    bcHelper.apply_boundary_condition<FieldT>( velTag );
+    bcHelper.apply_boundary_condition<FieldT>( velTag, taskCat );
 
     if (!isConstDensity_) {
       // set bcs for density
       const Expr::Tag densTag( densityTag_.name(), Expr::STATE_NONE );
-      bcHelper.apply_boundary_condition<SVolField>(densTag);
+      bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
       const TagNames& tagNames = TagNames::self();
@@ -959,7 +959,7 @@ namespace Wasatch{
         factory.register_expression ( new typename BCCopier<SVolField>::Builder(densStarBCTag, densityTag_) );
       }
       bcHelper.add_auxiliary_boundary_condition( densityTag_.name(), densStarTag.name(), densStarBCTag.name(), DIRICHLET);
-      bcHelper.apply_boundary_condition<SVolField>(densStarTag);
+      bcHelper.apply_boundary_condition<SVolField>(densStarTag, taskCat);
     }
 
   }

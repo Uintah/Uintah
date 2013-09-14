@@ -124,7 +124,8 @@ namespace Wasatch{
   setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                                      BCHelper& bcHelper )
   {
-    bcHelper.set_task_category(INITIALIZATION);
+    const Category taskCat = INITIALIZATION;
+   
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
     
@@ -147,11 +148,11 @@ namespace Wasatch{
     }
     
     if( factory.have_entry(phiTag) ){
-      bcHelper.apply_boundary_condition<FieldT>( phiTag );
+      bcHelper.apply_boundary_condition<FieldT>( phiTag, taskCat );
     }
     
     if( !isConstDensity_ ){
-      bcHelper.apply_boundary_condition<FieldT>( primVarTag_ );
+      bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
     }
             
   }
@@ -164,13 +165,9 @@ namespace Wasatch{
                              BCHelper& bcHelper )
   {            
     namespace SS = SpatialOps::structured;
-    bcHelper.set_task_category(ADVANCE_SOLUTION);
-    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag() );
-    
-//    BoundarySpec rhsBCSpec = {Uintah::Patch::xminus, 0, "none", this->solution_variable_name() + "_rhs", "none", 0.0, SS::Numeric3Vec<double>(0,0,0), Wasatch::DIRICHLET };
-//    bcHelper.add_auxiliary_boundary_condition( this->solution_variable_name(), rhsBCSpec);
-//
-    bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), false );
+    const Category taskCat = ADVANCE_SOLUTION;
+    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );    
+    bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, false );
     
     
     if( !isConstDensity_ ){
@@ -183,11 +180,10 @@ namespace Wasatch{
         factory.register_expression ( new typename BCCopier<SVolField>::Builder(solnVarStarBCTag, Expr::Tag( this->solution_variable_name(),Expr::STATE_N )) );
       }
       
-      //BoundarySpec starBCSpec = {Uintah::Patch::xminus, 0, "whatever", solnVarStarTag.name(), solnVarStarBCTag.name(), 0.0, SS::Numeric3Vec<double>(0,0,0), Wasatch::DIRICHLET };
       bcHelper.add_auxiliary_boundary_condition( this->solution_variable_name(), solnVarStarTag.name(), solnVarStarBCTag.name(), Wasatch::DIRICHLET );
-      bcHelper.apply_boundary_condition<FieldT>( solnVarStarTag );
+      bcHelper.apply_boundary_condition<FieldT>( solnVarStarTag, taskCat );
       
-      bcHelper.apply_boundary_condition<FieldT>( primVarTag_ );
+      bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
     }
     
     

@@ -51,18 +51,24 @@
 
 namespace Wasatch {
   
-  BoundaryTypeEnum select_bc_type_enum( const std::string& bcTypeStr )
+  BndCondTypeEnum select_bc_type_enum( const std::string& bcTypeStr )
   {
-    if ( bcTypeStr == "Dirichlet" )          return DIRICHLET;
+    if      ( bcTypeStr == "Dirichlet" )     return DIRICHLET;
     else if ( bcTypeStr == "Neumann" )       return NEUMANN;
-    else if ( bcTypeStr == "Wall" )          return WALL;
+    else                                     return UNSUPPORTED;
+  }
+
+  BndTypeEnum select_bnd_type_enum( const std::string& bcTypeStr )
+  {
+    if      ( bcTypeStr == "Wall" )          return WALL;
     else if ( bcTypeStr == "VelocityInlet" ) return VELOCITYINLET;
     else if ( bcTypeStr == "Pressure" )      return PRESSURE;
     else if ( bcTypeStr == "Outflow" )       return OUTFLOW;
-    else                                     return UNSUPPORTED;
+    else if ( bcTypeStr == "None" )          return USER;
+    else                                     return INVALID;
   }
-  
-  const std::string bc_type_enum_to_string( const BoundaryTypeEnum bcTypeEnum )
+
+  const std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum )
   {
     switch (bcTypeEnum) {
       case DIRICHLET:
@@ -71,6 +77,15 @@ namespace Wasatch {
       case NEUMANN:
         return "Neumann";
         break;
+      default:
+        return "Unsupported";
+        break;
+    }
+  }
+
+  const std::string bnd_type_enum_to_string( const BndTypeEnum bcTypeEnum )
+  {
+    switch (bcTypeEnum) {
       case WALL:
         return "Wall";
         break;
@@ -83,18 +98,28 @@ namespace Wasatch {
       case OUTFLOW:
         return "Outflow";
         break;
+      case USER:
+        return "User";
+        break;
       default:
-        return "Unsupported";
+        return "Invalid";
         break;
     }
   }
 
   template<typename OST>
-  OST& operator<<( OST& os, const BoundaryTypeEnum bcTypeEnum )
+  OST& operator<<( OST& os, const BndTypeEnum bcTypeEnum )
+  {
+    os << bnd_type_enum_to_string(bcTypeEnum);
+    return os;
+  }
+  
+  template<typename OST>
+  OST& operator<<( OST& os, const BndCondTypeEnum bcTypeEnum )
   {
     os << bc_type_enum_to_string(bcTypeEnum);
     return os;
-  }
+  }  
 
   // This function returns true if the boundary condition is applied in the same direction
   // as the staggered field. For example, xminus/xplus on a XVOL field.
@@ -138,23 +163,25 @@ namespace Wasatch {
 
   template <typename FieldT>
   void get_bcop_coefs( const SpatialOps::OperatorDatabase& opdb,
-                       const BoundarySpec& myBCSpec,
+                       const BndSpec& myBndSpec,
+                       const BndCondSpec& myBndCondSpec,
                        double& ci,
                        double& cg,
                        bool setOnExtraOnly=false )
   {
-    const BoundaryTypeEnum& bcTypeEnum = myBCSpec.bcType;
-    const Uintah::Patch::FaceType& face = myBCSpec.face;
+    const BndCondTypeEnum& atomBCTypeEnum = myBndCondSpec.bcType;
+    const Uintah::Patch::FaceType& face = myBndSpec.face;
     const bool isStagNorm = is_staggered_normal<FieldT>(face);
 
-    if ( setOnExtraOnly || ( isStagNorm && myBCSpec.bcType != NEUMANN ) ){
+    if ( setOnExtraOnly || ( isStagNorm && atomBCTypeEnum != NEUMANN ) )
+    {
       cg = 1.0;
       ci = 0.0;
       return;
     }
     
     typedef BCOpTypeSelector<FieldT> OpT;
-    switch (bcTypeEnum) {
+    switch (atomBCTypeEnum) {
       case DIRICHLET:
       {
         switch (face) {
@@ -196,7 +223,13 @@ namespace Wasatch {
           }
 
           default:
+          {
+            std::ostringstream msg;
+            msg << "ERROR: An invalid uintah face has been specified when tyring to apply bc on "
+                << myBndCondSpec.varName << std::endl;
+            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
             break;
+          }
         }
         break; // DIRICHLET
       }
@@ -241,38 +274,26 @@ namespace Wasatch {
             break;
           }
           default:
+          {
+            std::ostringstream msg;
+            msg << "ERROR: An invalid uintah face has been specified when tyring to apply bc on "
+            << myBndCondSpec.varName << std::endl;
+            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
             break;
+          }
         }
         break; // NEUMANN
       }
         
       default:
+      {
+        std::ostringstream msg;
+        msg << "ERROR: It looks like you have specified an UNSUPPORTED basic boundary Type!"
+        << "Basic boundary types can only be either DIRICHLET or NEUMANN. Please revise your input file." << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         break;
+      }
     }
-  }
-
-  //****************************************************************************
-  /**
-   *
-   *  \brief Helps with staggered fields.
-   *
-   */
-  //****************************************************************************
-  
-  Uintah::IntVector get_face_offset( const Uintah::Patch::FaceType& face )
-  {
-    Uintah::IntVector faceOffset;
-    switch( face ){
-      case Uintah::Patch::xminus: faceOffset = Uintah::IntVector(1,0,0);   break;
-      case Uintah::Patch::xplus : faceOffset = Uintah::IntVector(1,0,0);   break;
-      case Uintah::Patch::yminus: faceOffset = Uintah::IntVector(0,1,0);   break;
-      case Uintah::Patch::yplus : faceOffset = Uintah::IntVector(0,1,0);   break;
-      case Uintah::Patch::zminus: faceOffset = Uintah::IntVector(0,0,1);   break;
-      case Uintah::Patch::zplus : faceOffset = Uintah::IntVector(0,0,1);   break;
-      default:                    faceOffset = Uintah::IntVector(0,0,0);   break;
-    }
-
-    return faceOffset;
   }
 
   //****************************************************************************
@@ -294,8 +315,8 @@ namespace Wasatch {
     std::vector<SS::IntVec>& intBndSOIter      = myBndIters.interiorBndCells;
     std::vector<SS::IntVec>& extraPlusBndCells = myBndIters.extraPlusBndCells;
     
+    // MAJOR WARNING HERE - WHEN WE MOVE TO RUNTIME GHOST CELLS, WE NEED TO USE THE APPROPRIATE PATCH OFFSET
     const Uintah::IntVector patchCellOffset = patch->getExtraCellLowIndex(1);
-    Uintah::IntVector faceOffset = get_face_offset(face); // we need the face offset because uintah indexes extra cells from -1, -1, -1
     Uintah::IntVector unitNormal = patch->faceDirection(face); // this is needed to construct interior cells
     Uintah::IntVector bcPointIJK;
 
@@ -342,31 +363,46 @@ namespace Wasatch {
   //------------------------------------------------------------------------------------------------
 
   BCHelper::~BCHelper()
-  {}
+  {}    
   
   //------------------------------------------------------------------------------------------------
   
-  void BCHelper::set_task_category( const Category taskCat )
+  void BCHelper::add_boundary_condition( const std::string&     bcName,
+                                         const BndCondSpec& bcSpec )
   {
-    taskCat_ = taskCat;
-  }
-  
-  
-  //------------------------------------------------------------------------------------------------
-  
-  void BCHelper::add_boundary_condition( const BoundarySpec& bcSpec )
-  {
-    const std::string varName = bcSpec.varName;
-    BCMapT::iterator iter = varNameBoundarySpecMap_.find(varName);
-    if ( iter != varNameBoundarySpecMap_.end() ) {
-      // if we already have an entry for varname, then all we need to do is add the new boundary condition to it
-      (*iter).second.push_back(bcSpec);
+    using namespace std;
+    if ( bndNameBndSpecMap_.find(bcName) != bndNameBndSpecMap_.end() ) {
+      BndSpec& existingBCSpec = (*bndNameBndSpecMap_.find(bcName)).second;
+      vector<BndCondSpec>& bcSpecVec = existingBCSpec.bcSpecVec;
+      vector<BndCondSpec>::iterator it = std::find(bcSpecVec.begin(), bcSpecVec.end(), bcSpec);
+      if ( it == bcSpecVec.end() ) {
+        DBGBC << "adding bc " << bcSpec.varName << " on " << bcName << " \n";
+        bcSpecVec.push_back(bcSpec);
+      } else {
+        DBGBC << "bc " << bcSpec.varName << " already exists on " << bcName << ". skipping \n";
+      }
+    } else {
+      DBGBC << " ERROR! boundary face " << bcName << " does not exist!!! \n";
     }
-    else{
+  }
+
+  //------------------------------------------------------------------------------------------------
+  
+  void BCHelper::add_physical_boundary_type( const std::string&      bcfaceName,
+                                             Uintah::Patch::FaceType face,
+                                             const BndTypeEnum& physicalBCType,
+                                             const int               patchID )
+  {
+    DBGBC << "adding physical boundary " << bcfaceName << " of type " << physicalBCType << " on patch " << patchID << std::endl;
+    if ( bndNameBndSpecMap_.find(bcfaceName) != bndNameBndSpecMap_.end() ) {
+      DBGBC << " adding to existing \n";
+      BndSpec& existingBCSpec = (*bndNameBndSpecMap_.find(bcfaceName)).second;
+      existingBCSpec.patchIDs.push_back(patchID);
+    } else {
+      DBGBC << " adding new \n";
       // if this is the first time that we are adding this variable, then create the necessary info to store this
-      std::vector<BoundarySpec> bcSpecVec;
-      bcSpecVec.push_back(bcSpec);
-      varNameBoundarySpecMap_.insert( BCMapT::value_type(varName,bcSpecVec) );
+      BndSpec myPhysBCSpec = {bcfaceName, face, physicalBCType, std::vector<int>(1, patchID) };
+      bndNameBndSpecMap_.insert( BndMapT::value_type(bcfaceName, myPhysBCSpec) );
     }
   }
   
@@ -375,10 +411,10 @@ namespace Wasatch {
   void BCHelper::add_auxiliary_boundary_condition( const std::string& srcVarName,
                                                    const std::string& newVarName,
                                                    const double& newValue,
-                                                   const BoundaryTypeEnum newBCType )
+                                                   const BndCondTypeEnum newBCType )
   {
     namespace SS = SpatialOps::structured;
-    BoundarySpec newBCSpec = {Uintah::Patch::numFaces, 0, "", newVarName, "none", newValue, SS::Numeric3Vec<double>(0,0,0), newBCType, DOUBLE_TYPE };
+    BndCondSpec newBCSpec = {newVarName, "none", newValue,SS::Numeric3Vec<double>(0,0,0), newBCType, DOUBLE_TYPE};
     add_auxiliary_boundary_condition(srcVarName, newBCSpec);
   }
   
@@ -387,36 +423,25 @@ namespace Wasatch {
   void BCHelper::add_auxiliary_boundary_condition( const std::string& srcVarName,
                                                    const std::string& newVarName,
                                                    const std::string& functorName,
-                                                   const BoundaryTypeEnum newBCType )
+                                                   const BndCondTypeEnum newBCType )
   {
     namespace SS = SpatialOps::structured;
-    BoundarySpec newBCSpec = {Uintah::Patch::numFaces, 0, "", newVarName, functorName, 0.0, SS::Numeric3Vec<double>(0,0,0), newBCType, FUNCTOR_TYPE };
+    BndCondSpec newBCSpec = {newVarName, functorName, 0.0, SS::Numeric3Vec<double>(0,0,0), newBCType, FUNCTOR_TYPE};
     add_auxiliary_boundary_condition(srcVarName, newBCSpec);
   }
 
   //------------------------------------------------------------------------------------------------
   
   void BCHelper::add_auxiliary_boundary_condition(const std::string& srcVarName,
-                                                  const BoundarySpec& bcSpec)
+                                                  BndCondSpec bcSpec)
   {
     using namespace std;
-    
-    // check if this auxiliary bc already exists...
-    if ( varNameBoundarySpecMap_.find(bcSpec.varName) != varNameBoundarySpecMap_.end() ) {
-      std::cout << "WARNING: Trying to add an auxiliary boundary condition that already exists. Skipping... \n";
-      return;
-    }
-    
-    const BCMapT::const_iterator iter = varNameBoundarySpecMap_.find(srcVarName);
-    if( iter != varNameBoundarySpecMap_.end() ){
-      const vector<BoundarySpec>& auxBCSpecVec = (*iter).second; // copy the bcSpec vector for srcVarName
-      BOOST_FOREACH( const BoundarySpec& auxBCSpec, auxBCSpecVec ){
-        // all we need to do here is copy the patchID and the face name from the existing BC spec.
-        // the rest is provided by the calling function
-        BoundarySpec newBCSpec = bcSpec;
-        newBCSpec.patchID      = auxBCSpec.patchID;
-        newBCSpec.bcName       = auxBCSpec.bcName;
-        add_boundary_condition(newBCSpec);
+    BOOST_FOREACH( BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
+    {
+      BndSpec& myBndSpec = bndSpecPair.second;
+      const BndCondSpec* myBndCondSpec = myBndSpec.find(srcVarName);
+      if (myBndCondSpec) {
+        add_boundary_condition(myBndSpec.bndName, bcSpec);
       }
     }
   }
@@ -443,16 +468,24 @@ namespace Wasatch {
   
   template<typename FieldT>
   const std::vector<SpatialOps::structured::IntVec>*
-  BCHelper::get_extra_bnd_mask( const BoundarySpec& myBCSpec ) const
+  BCHelper::get_extra_bnd_mask( const BndSpec& myBndSpec,
+                               const int& patchID ) const
   {
-    const std::string bcName = myBCSpec.bcName;
-    const int patchID = myBCSpec.patchID;
-    const bool isStagNorm = is_staggered_normal<FieldT>(myBCSpec.face);
-    const bool isPlusSide = is_plus_side<FieldT>(myBCSpec.face);
-    if (isStagNorm && isPlusSide) {
-      return &((*(*bcNamePatchIDMaskMap_.find(bcName)).second.find(patchID)).second.extraPlusBndCells);
+    const std::string bcName = myBndSpec.bndName;
+    const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);
+    const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
+    if ( bcNamePatchIDMaskMap_.find(bcName) != bcNamePatchIDMaskMap_.end() ) {
+      const patchIDBndItrMapT& myMap = (*bcNamePatchIDMaskMap_.find(bcName)).second;
+      if ( myMap.find(patchID) != myMap.end() ) {
+        const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
+        if (isStagNorm && isPlusSide) {
+          return &(myIters.extraPlusBndCells);
+        } else {
+          return &(myIters.extraBndCells);
+        }
+      }
     } else {
-      return &((*(*bcNamePatchIDMaskMap_.find(bcName)).second.find(patchID)).second.extraBndCells);
+      return NULL;
     }
   }
 
@@ -460,34 +493,35 @@ namespace Wasatch {
   
   template<typename FieldT>
   const std::vector<SpatialOps::structured::IntVec>*
-  BCHelper::get_interior_bnd_mask( const BoundarySpec& myBCSpec ) const
+  BCHelper::get_interior_bnd_mask( const BndSpec& myBndSpec,
+                                  const int& patchID ) const
   {
-    const std::string bcName = myBCSpec.bcName;
-    const int patchID = myBCSpec.patchID;
-    const bool isStagNorm = is_staggered_normal<FieldT>(myBCSpec.face);
-    const bool isPlusSide = is_plus_side<FieldT>(myBCSpec.face);
-    if (isStagNorm && isPlusSide) {
-      return &((*(*bcNamePatchIDMaskMap_.find(bcName)).second.find(patchID)).second.extraBndCells);
+    const std::string bcName = myBndSpec.bndName;
+    const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);
+    const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
+    
+    if ( bcNamePatchIDMaskMap_.find(bcName) != bcNamePatchIDMaskMap_.end() ) {
+      const patchIDBndItrMapT& myMap = (*bcNamePatchIDMaskMap_.find(bcName)).second;
+      if ( myMap.find(patchID) != myMap.end() ) {
+        const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
+        if (isStagNorm && isPlusSide) {
+          return &(myIters.extraBndCells);
+        } else {
+          return &(myIters.interiorBndCells);
+        }
+      }
     } else {
-      return &((*(*bcNamePatchIDMaskMap_.find(bcName)).second.find(patchID)).second.interiorBndCells);
-    }    
+      return NULL;
+    }
   }
 
   //------------------------------------------------------------------------------------------------
   
   void BCHelper::print() const
   {
-    DBGBC << "Printing BC Summary: " << std::endl;
-    DBGBC << "Variable Name " << std::setw(48) << "Boundary Condition \n";
-    //DBGBC << std::setfill('-') << std::setw(42) << "-" << std::endl;
-    BOOST_FOREACH( const BCMapT::value_type& varNameBCSpecPair, varNameBoundarySpecMap_ ){
-      DBGBC << varNameBCSpecPair.first;
-      //DBGBC << std::setw(30);
-      BOOST_FOREACH( const BoundarySpec& bcSpec, varNameBCSpecPair.second ) {
-        DBGBC << std::setfill(' ')  << std::setw((int) varNameBCSpecPair.first.length()) << std::setw(48)<< bcSpec.bcName << std::endl
-              << std::setfill(' ')  << std::setw((int) varNameBCSpecPair.first.length()) << std::setw(48)<< bcSpec.value << std::endl;
-      }
-    }    
+    BOOST_FOREACH( const BndMapT::value_type& bcNameBCSpecPair, bndNameBndSpecMap_ ){
+      bcNameBCSpecPair.second.print();
+    }
   }
   
   //------------------------------------------------------------------------------------------------
@@ -510,7 +544,8 @@ namespace Wasatch {
           // loop over every patch in the patch subset
           BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
             
-            DBGBC << "Patch ID = " << patch->getID() << std::endl;
+            const int patchID = patch->getID();
+            DBGBC << "Patch ID = " << patchID << std::endl;
                         
             std::vector<Uintah::Patch::FaceType> bndFaces;
             patch->getBoundaryFaces(bndFaces);
@@ -549,6 +584,11 @@ namespace Wasatch {
                 }
                 DBGBC << " bc name = " << bcName << std::endl;                
 
+                BndTypeEnum physicalBCType = select_bnd_type_enum(thisGeom->getBCType());
+                add_physical_boundary_type( bcName, face, physicalBCType, patchID);
+                DBGBC << " bc name = " << bcName << std::endl
+                          << " physical bc type = " << physicalBCType << std::endl;
+                
                 //__________________________________________________________________________________
                 Uintah::Iterator bndIter; // allocate iterator
                 // get the iterator for the extracells for this child
@@ -556,7 +596,7 @@ namespace Wasatch {
                 
                 BoundaryIterators myIters;
                 pack_uintah_iterator_as_spatialops(face, patch, bndIter, myIters); // convert the Uintah iterator to a SpatialOps-friendly mask
-                add_boundary_iterator( myIters, bcName, patch->getID() );
+                add_boundary_iterator( myIters, bcName, patchID );
                 
                 //__________________________________________________________________________________
                 // Now, each BCGeomObject has BCData associated with it. This BCData contains the list
@@ -567,10 +607,10 @@ namespace Wasatch {
                 
                 BOOST_FOREACH( Uintah::BoundCondBase* bndCondBase, bcData.getBCData() ) {
                   const std::string varName     = bndCondBase->getBCVariable();
-                  const BoundaryTypeEnum bcTypeEnum = select_bc_type_enum(bndCondBase->getBCType());
+                  const BndCondTypeEnum atomBCTypeEnum = select_bc_type_enum(bndCondBase->getBCType());
                   
                   DBGBC << " bc variable = " << varName << std::endl
-                        << " bc type = "     << bcTypeEnum << std::endl;
+                        << " bc type = "     << atomBCTypeEnum << std::endl;
                   
                   double doubleVal=0;
                   SpatialOps::structured::Numeric3Vec<double> vecVal(0.0, 0.0, 0.0);
@@ -578,12 +618,14 @@ namespace Wasatch {
                   BCValueTypeEnum bcValType=INVALID_TYPE;
                   
                   switch ( bndCondBase->getValueType() ) {
+                      
                     case Uintah::BoundCondBase::DOUBLE_TYPE: {
                       const Uintah::BoundCond<double>* const new_bc = dynamic_cast<const Uintah::BoundCond<double>*>(bndCondBase);
                       doubleVal = new_bc->getValue();
                       bcValType = DOUBLE_TYPE;
                       break;
                     }
+                      
                     case Uintah::BoundCondBase::VECTOR_TYPE: {
                       const Uintah::BoundCond<Uintah::Vector>* const new_bc = dynamic_cast<const Uintah::BoundCond<Uintah::Vector>*>(bndCondBase);
                       Uintah::Vector uintahVecVal = new_bc->getValue();
@@ -593,6 +635,7 @@ namespace Wasatch {
                       bcValType = VECTOR_TYPE;
                       break;
                     }
+                      
                     case Uintah::BoundCondBase::STRING_TYPE: {
                       const Uintah::BoundCond<std::string>* const new_bc = dynamic_cast<const Uintah::BoundCond<std::string>*>(bndCondBase);
                       functorName = new_bc->getValue();
@@ -602,11 +645,21 @@ namespace Wasatch {
                     }
                       
                     default:
+                    {
+                      std::ostringstream msg;
+                      msg << "ERROR: It looks like you have specified an unsupported datatype value for boundary " << bcName << ". "
+                      << "Supported datatypes are: double, vector, and string (i.e. functor name)." << std::endl;
+                      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+                    }
                       break;
                   }
                   
-                  const BoundarySpec thisBndSpec = {face, patch->getID(), bcName, varName, functorName, doubleVal, vecVal, bcTypeEnum, bcValType};
-                  add_boundary_condition(thisBndSpec);
+                  //const BoundarySpec thisBndSpec = {face, patch->getID(), bcName, varName, functorName, doubleVal, vecVal, atomBCTypeEnum, USER, bcValType};
+                  //add_boundary_condition(thisBndSpec);
+                  
+                  // NEW STUFF
+                  const BndCondSpec bndCondSpecNew = {varName, functorName, doubleVal, vecVal, atomBCTypeEnum, bcValType};
+                  add_boundary_condition(bcName, bndCondSpecNew);
                 }
               } // boundary child loop (note, a boundary child is what Wasatch thinks of as a boundary condition
             } // boundary faces loop
@@ -667,17 +720,11 @@ namespace Wasatch {
       } // matSubSet
     } // materials_
     
-    // first, search for this field and see if it is part of the boundary conditions or not
-    if ( varNameBoundarySpecMap_.find(fieldName) == varNameBoundarySpecMap_.end() ) {
-      DBGBC << "NOTE: no boundary conditions specified for " << fieldName
-            << ".\nI will not apply any boundary conditions on this field." << endl;
-      return;
-    }
-    
-    const vector<BoundarySpec>& myBCSpecVec = (*varNameBoundarySpecMap_.find(fieldName)).second;
-    
-    BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() ) {
-      BOOST_FOREACH( const int im, matSubSet->getVector() ) {        
+    BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
+    {
+      const BndSpec& myBndSpec = bndSpecPair.second;
+      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(fieldName);
+      if (myBndCondSpec) {        
         BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() ) {
           BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
             const int patchID = patch->getID();
@@ -689,16 +736,8 @@ namespace Wasatch {
             const SpatialOps::OperatorDatabase& opdb = *(ipi->second.operators);
             
             //_____________________________________________________________________________________
-            BOOST_FOREACH( const BoundarySpec& myBCSpec, myBCSpecVec ){
-              if (myBCSpec.patchID != patchID) continue; // no bc to apply here...
-
-              // make sure that we're on the same page, i mean patch!
-              ASSERT(myBCSpec.patchID == patchID);
-              
-              DBGBC << "applying bc for " << myBCSpec.varName << " on boundary "
-                    << myBCSpec.bcName << " on patch " << myBCSpec.patchID << endl
-                    << "  The bc functor is " << myBCSpec.functorName << endl;
-              
+            // check if we have this patchID in the list of patchIDs
+            if (myBndSpec.find_patchid(patchID)) {              
               // create unique names for the modifier expressions
               const string strPatchID = number_to_string(patchID);
               
@@ -706,13 +745,13 @@ namespace Wasatch {
               Expr::ExpressionBuilder* builder = NULL;
               
               // create constant bc expressions. These are not created from the input file.
-              if( myBCSpec.bcValType != FUNCTOR_TYPE ){ // constant bc
-                modTag = Expr::Tag( fieldName + "_bc_" + myBCSpec.bcName + "_patch_" + strPatchID, Expr::STATE_NONE );
-                builder = new typename ConstantBC<FieldT>::Builder( modTag, myBCSpec.value );
+              if( myBndCondSpec->bcValType != FUNCTOR_TYPE ){ // constant bc
+                modTag = Expr::Tag( fieldName + "_bc_" + myBndSpec.bndName + "_patch_" + strPatchID, Expr::STATE_NONE );
+                builder = new typename ConstantBC<FieldT>::Builder( modTag, myBndCondSpec->value );
                 factory.register_expression( builder, true );
               }
               else{ // expression bc
-                modTag = Expr::Tag( myBCSpec.functorName, Expr::STATE_NONE );
+                modTag = Expr::Tag( myBndCondSpec->functorName, Expr::STATE_NONE );
               }
               
               // attach the modifier expression to the target expression
@@ -729,34 +768,24 @@ namespace Wasatch {
               
               // check if this is a staggered field on a face in the same staggered direction (XVolField on x- Face)
               // and whether this a Neumann bc or not.
-              const bool isStagNorm = is_staggered_normal<FieldT>(myBCSpec.face) && myBCSpec.bcType!=NEUMANN;
+              const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face) && myBndCondSpec->bcType!=NEUMANN;
               modExpr.set_staggered(isStagNorm);
               
               // set the ghost and interior points as well as coefficients
               double ci, cg;
-              get_bcop_coefs<FieldT>(opdb, myBCSpec, ci, cg, setOnExtraOnly);
+              get_bcop_coefs<FieldT>(opdb, myBndSpec, *myBndCondSpec, ci, cg, setOnExtraOnly);
 
               modExpr.set_ghost_coef( cg );
-              modExpr.set_ghost_points( get_extra_bnd_mask<FieldT>(myBCSpec) );
+              modExpr.set_ghost_points( get_extra_bnd_mask<FieldT>(myBndSpec, patchID) );
               modExpr.set_interior_coef( ci );
-              modExpr.set_interior_points( get_interior_bnd_mask<FieldT>(myBCSpec) );
+              modExpr.set_interior_points( get_interior_bnd_mask<FieldT>(myBndSpec,patchID) );              
             }
-            //_____________________________________________________________________________________
           }
         }
       }
     }
   }
   
-  //------------------------------------------------------------------------------------------------
-  
-  template <typename FieldT>
-  void BCHelper::apply_boundary_condition( const Expr::Tag& varTag,
-                                           const bool setOnExtraOnly )
-  {
-    apply_boundary_condition<FieldT>( varTag, taskCat_, setOnExtraOnly );
-  }
-
   //------------------------------------------------------------------------------------------------
   
   //==========================================================================
@@ -766,10 +795,7 @@ namespace Wasatch {
 #define INSTANTIATE_BC_TYPES(VOLT) \
   template void BCHelper::apply_boundary_condition< VOLT >( const Expr::Tag& varTag, \
                                                             const Category& taskCat, \
-                                                            bool setOnExtraOnly);    \
-  template void BCHelper::apply_boundary_condition< VOLT >( const Expr::Tag& varTag, \
                                                             bool setOnExtraOnly);
-
   INSTANTIATE_BC_TYPES(SpatialOps::structured::SVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::structured::XVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::structured::YVolField);
