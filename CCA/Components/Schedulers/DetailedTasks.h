@@ -324,7 +324,6 @@ namespace Uintah {
     ProfileType d_profileType;
 
 #ifdef HAVE_CUDA
-    // these will be used when the mechanism to know when H2D & D2H copies are complete has been refined
     bool deviceExternallyReady_;
     bool completed_;
     int  deviceNum_;
