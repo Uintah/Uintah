@@ -42,7 +42,8 @@ BCGeomBase::BCGeomBase()
 {
   d_cells = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
   d_nodes = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
-  d_bcname = "NotSet"; 
+  d_bcname = "NotSet";
+  d_bctype = "None";
 }
 
 
@@ -50,7 +51,8 @@ BCGeomBase::BCGeomBase(const BCGeomBase& rhs)
 {
   d_cells=rhs.d_cells;
   d_nodes=rhs.d_nodes;
-  d_bcname = rhs.d_bcname; 
+  d_bcname = rhs.d_bcname;
+  d_bctype = rhs.d_bctype;
 }
 
 
@@ -61,7 +63,8 @@ BCGeomBase& BCGeomBase::operator=(const BCGeomBase& rhs)
 
   d_cells = rhs.d_cells;
   d_nodes = rhs.d_nodes;
-  d_bcname = rhs.d_bcname; 
+  d_bcname = rhs.d_bcname;
+  d_bctype = rhs.d_bctype;
 
   return *this;
 }

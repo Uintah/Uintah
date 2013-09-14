@@ -526,7 +526,7 @@ namespace Wasatch {
   setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                                      BCHelper& bcHelper )
   {
-    bcHelper.set_task_category(INITIALIZATION);
+    const Category taskCat = INITIALIZATION;
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     
     
@@ -554,7 +554,7 @@ namespace Wasatch {
     
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
     if (factory.have_entry(phiTag))
-      bcHelper.apply_boundary_condition<FieldT>(this->solution_variable_tag());
+      bcHelper.apply_boundary_condition<FieldT>(this->solution_variable_tag(), taskCat);
 
 
   }
@@ -566,8 +566,8 @@ namespace Wasatch {
   setup_boundary_conditions( const GraphHelper& graphHelper,
                              BCHelper& bcHelper )
   {
-    bcHelper.set_task_category(ADVANCE_SOLUTION);
-    bcHelper.apply_boundary_condition<FieldT>(this->solution_variable_tag());
+    const Category taskCat = ADVANCE_SOLUTION;
+    bcHelper.apply_boundary_condition<FieldT>(this->solution_variable_tag(), taskCat);
   }
 
   //------------------------------------------------------------------

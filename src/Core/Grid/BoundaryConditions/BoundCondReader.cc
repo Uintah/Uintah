@@ -375,6 +375,15 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     BCR_dbg << "Setting name to: " << name << endl;
     bcGeom->setBCName( name ); 
   }
+  
+  // get the bctype - mainly used by wasatch:
+  std::string wasatchBCType;
+  if (values.find("type") != values.end()){
+    std::string name = values["type"];
+    BCR_dbg << "Setting bc type to: " << name << endl;
+    bcGeom->setBCType( wasatchBCType );
+  }
+
 
   BCR_dbg << "Face = " << fc << endl;
   return bcGeom;

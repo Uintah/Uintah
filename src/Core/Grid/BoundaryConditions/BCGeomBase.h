@@ -111,11 +111,15 @@ namespace Uintah {
     string getBCName(){ return d_bcname; }; 
     void setBCName( std::string bcname ){ d_bcname = bcname; }; 
 
+    /// Get the name for this boundary specification
+    string getBCType(){ return d_bctype; };
+    void setBCType( std::string bctype ){ d_bctype = bctype; };
+
   protected:
     Iterator d_cells;
     Iterator d_nodes;
-    string d_bcname; 
-
+    string   d_bcname;
+    string   d_bctype;
   };
 
   template<class T> class cmp_type {
