@@ -21,8 +21,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-//----- RayGPU.cu ----------------------------------------------
+
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+#include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #include <Core/Grid/DbgOutput.h>
 
 #include <sci_defs/cuda_defs.h>

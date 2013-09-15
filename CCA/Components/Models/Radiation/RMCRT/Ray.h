@@ -39,7 +39,6 @@
 #ifdef HAVE_CUDA
   #include <curand.h>
   #include <curand_kernel.h>
-  #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 #endif
 
 #include <iostream>
@@ -508,27 +507,6 @@ namespace Uintah{
 
   }; // class Ray
 
-  //______________________________________________________________________
-  void launchRayTraceKernel(dim3 dimGrid,
-                            dim3 dimBlock,
-                            int patchID,
-                            int matlIndex,
-                            const uint3 patchLo,
-                            const uint3 patchHi,
-                            const uint3 patchSize,
-                            const uint3 domainLo,
-                            const uint3 domainHi,
-                            const double3 cellSpacing,
-                            curandState* globalDevRandStates,
-                            cudaStream_t* stream,
-                            bool virtRad,
-                            bool isSeedRandom,
-                            bool ccRays,
-                            int numDivQRays,
-                            double viewAngle,
-                            double threshold,
-                            GPUDataWarehouse* old_gpudw,
-                            GPUDataWarehouse* new_gpudw);
 } // namespace Uintah
 
 #endif
