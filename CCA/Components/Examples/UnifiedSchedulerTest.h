@@ -134,6 +134,7 @@ namespace Uintah {
       UnifiedSchedulerTest& operator=(const UnifiedSchedulerTest& gst);
 
   };
+
 void launchUnifiedSchedulerTestKernel(dim3 dimGrid,
                                       dim3 dimBlock,
                                       cudaStream_t* stream,
@@ -142,9 +143,8 @@ void launchUnifiedSchedulerTestKernel(dim3 dimGrid,
                                       uint3 domainLow,
                                       uint3 domainHigh,
                                       GPUDataWarehouse* old_gpudw,
-                                      GPUDataWarehouse* new_gpudw
-                                      );
+                                      GPUDataWarehouse* new_gpudw);
 
-}
+} //end namespace Uintah
 
 #endif

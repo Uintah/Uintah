@@ -360,7 +360,6 @@ void UnifiedSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                                           void*  stream)
 {
   // Do time steps
-  int numGhostCells = 1;
   int matl = 0;
 
   int numPatches = patches->size();
@@ -397,10 +396,15 @@ void UnifiedSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     dim3 dimBlock(tpbX, tpbY, tpbZ);  // block dimensions (threads per block)
 
     // setup and launch kernel
-    launchUnifiedSchedulerTestKernel(dimGrid, dimBlock, (cudaStream_t *)stream, 
-            patch->getID(), matl, 
-            domainLow, domainHigh,
-            old_dw->getGPUDW()->getdevice_ptr(), new_dw->getGPUDW()->getdevice_ptr());
+    launchUnifiedSchedulerTestKernel(dimGrid,
+                                     dimBlock,
+                                     (cudaStream_t *) stream,
+                                     patch->getID(),
+                                     matl,
+                                     domainLow,
+                                     domainHigh,
+                                     old_dw->getGPUDW()->getdevice_ptr(),
+                                     new_dw->getGPUDW()->getdevice_ptr());
 
     new_dw->put(sum_vartype(residual), residual_label);
 
