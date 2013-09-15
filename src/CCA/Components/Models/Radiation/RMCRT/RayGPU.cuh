@@ -33,6 +33,28 @@
 
 namespace Uintah {
 
+void launchRayTraceKernel(dim3 dimGrid,
+                          dim3 dimBlock,
+                          int patchID,
+                          int matlIndex,
+                          const uint3 patchLo,
+                          const uint3 patchHi,
+                          const uint3 patchSize,
+                          const uint3 domainLo,
+                          const uint3 domainHi,
+                          const double3 cellSpacing,
+                          curandState* globalDevRandStates,
+                          cudaStream_t* stream,
+                          bool virtRad,
+                          bool isSeedRandom,
+                          bool ccRays,
+                          int numDivQRays,
+                          double viewAngle,
+                          double threshold,
+                          GPUDataWarehouse* old_gpudw,
+                          GPUDataWarehouse* new_gpudw);
+
+
 __global__ void rayTraceKernel(dim3 dimGrid,
                                dim3 dimBlock,
                                int patchID,
@@ -80,6 +102,7 @@ __device__ double randDevice(curandState* globalState);
 
 
 __device__ unsigned int hashDevice(unsigned int a);
+
 
 } //end namespace Uintah
 
