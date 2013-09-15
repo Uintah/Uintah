@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -48,8 +48,6 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
-
-#include <sci_defs/cuda_defs.h>
 
 using namespace std;
 using SCIRun::Point;
@@ -129,11 +127,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   if (prob_spec->findBlock("RMCRT")){
     ProblemSpecP rmcrt_ps = prob_spec->findBlock("RMCRT"); 
     
-#ifdef HAVE_CUDA_OLD
-    d_RMCRT = scinew Ray(dynamic_cast<UnifiedScheduler*>(getPort("scheduler")));
-#else
     d_RMCRT = scinew Ray();
-#endif
 
     d_RMCRT->registerVarLabels(0,d_abskgLabel,
                                  d_absorpLabel,
@@ -226,7 +220,8 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   
     bool foundIndex = false;
     int timeIndex = -9;
-    for (unsigned int i = 0; i < index.size(); i++) {
+    unsigned int size = index.size();
+    for (unsigned int i = 0; i < size; i++) {
       if( d_old_uda->timestep == index[i] ){
         foundIndex = true;
         timeIndex = i;
@@ -515,7 +510,8 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
   archive->queryTimesteps(index, times);
   int timeIndex = -9;
   
-  for (unsigned int i = 0; i < index.size(); i++) {
+  unsigned int size = index.size();
+  for (unsigned int i = 0; i < size; i++) {
     if( d_old_uda->timestep == index[i] ){
       timeIndex = i;
     }
