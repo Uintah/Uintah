@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -21,44 +21,37 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 #ifndef RAY_GPU_CUH
 #define RAY_GPU_CUH
+
+#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 
 #include <sci_defs/cuda_defs.h>
 #include <curand.h>
 #include <curand_kernel.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace Uintah {
 
-/*
- * NOTE ON DEVICE CODE:
- *
- *  CUDA does not have a linker for device code, therefore all called __device__ functions must
- *  be visible from the calling function. This means the called function needs to be either in
- *  the same file, or in a file included by the file from which the function is called.
- */
-
-__global__ void rayTraceKernel(const uint3 patchLo,
+__global__ void rayTraceKernel(dim3 dimGrid,
+                               dim3 dimBlock,
+                               int patchID,
+                               int matlIndex,
+                               const uint3 patchLo,
                                const uint3 patchHi,
                                const uint3 patchSize,
                                const uint3 domainLo,
                                const uint3 domainHi,
                                const double3 cellSpacing,
-                               double* dev_abskg,
-                               double* dev_sigmaT4,
-                               double* dev_divQ,
-                               double* dev_VRFlux,
-                               double* dev_boundFlux, 
-                               double* dev_radVolq,
+                               curandState* globalDevRandStates,
                                bool virtRad,
                                bool isSeedRandom,
                                bool ccRays,
                                int numRays,
                                double viewAngle,
                                double threshold,
-                               curandState* globalDevStates);
+                               Uintah::GPUDataWarehouse* old_gpudw,
+                               Uintah::GPUDataWarehouse* new_gpudw);
 
 
 __device__ void updateSumIDevice(const uint3& domainLow,
@@ -88,8 +81,6 @@ __device__ double randDevice(curandState* globalState);
 
 __device__ unsigned int hashDevice(unsigned int a);
 
-#ifdef __cplusplus
-}
-#endif
+} //end namespace Uintah
 
 #endif

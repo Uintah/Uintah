@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,39 +35,11 @@
 
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
-#ifdef HAVE_CUDA_OLD
-#include <CCA/Components/Schedulers/UnifiedScheduler.h>
-#include <curand.h>
-#include <curand_kernel.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-void launchRayTraceKernel(dim3 dimGrid,
-                          dim3 dimBlock,
-                          cudaStream_t* stream,
-                          const uint3 patchLo,
-                          const uint3 patchHi,
-                          const uint3 patchSize,
-                          const uint3 domainLo,
-                          const uint3 domainHi,
-                          const double3 cellSpacing,
-                          double* dev_abskg,
-                          double* dev_sigmaT4,
-                          double* dev_divQ,
-                          double* dev_VRFlux,
-                          double* dev_boundFlux,
-                          double* dev_radVolq,
-                          bool virtRad,
-                          bool isSeedRandom,
-                          bool ccRays,
-                          int numRays,
-                          double viewAngle,
-                          double threshold,
-                          curandState* globalDevStates);
-#ifdef __cplusplus
-}
-#endif
+#ifdef HAVE_CUDA
+  #include <curand.h>
+  #include <curand_kernel.h>
+  #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 #endif
 
 #include <iostream>
@@ -87,6 +59,7 @@ void launchRayTraceKernel(dim3 dimGrid,
  *
  */
 class MTRand; //forward declaration for use in updateSumI
+
 namespace Uintah{
 
   class Ray  {
@@ -94,9 +67,6 @@ namespace Uintah{
     public: 
 
       Ray();
-#ifdef HAVE_CUDA_OLD
-      Ray(UnifiedScheduler* scheduler);
-#endif
       ~Ray(); 
 
       //__________________________________
@@ -279,10 +249,6 @@ namespace Uintah{
       const VarLabel* d_ROI_LoCellLabel;
       const VarLabel* d_ROI_HiCellLabel;
 
-      //__________________________________
-      //  
-      void constructor();
-      
       //----------------------------------------
       void rayTrace( const ProcessorGroup* pc, 
                      const PatchSubset* patches, 
@@ -295,24 +261,19 @@ namespace Uintah{
                      Task::WhichDW which_celltype_dw,
                      const int radCalc_freq );
 
-#ifdef HAVE_CUDA_OLD
-
-      UnifiedScheduler* _scheduler;
-
+#ifdef HAVE_CUDA
       //______________________________________________________________________
-      //
       void rayTraceGPU( const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw,
-                        int device,
+                        void* stream,
                         bool modifies_divQ,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW which_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw,
                         const int radCalc_freq);
-
 #endif
 
       //__________________________________
@@ -546,6 +507,28 @@ namespace Uintah{
                         
 
   }; // class Ray
+
+  //______________________________________________________________________
+  void launchRayTraceKernel(dim3 dimGrid,
+                            dim3 dimBlock,
+                            int patchID,
+                            int matlIndex,
+                            const uint3 patchLo,
+                            const uint3 patchHi,
+                            const uint3 patchSize,
+                            const uint3 domainLo,
+                            const uint3 domainHi,
+                            const double3 cellSpacing,
+                            curandState* globalDevRandStates,
+                            cudaStream_t* stream,
+                            bool virtRad,
+                            bool isSeedRandom,
+                            bool ccRays,
+                            int numDivQRays,
+                            double viewAngle,
+                            double threshold,
+                            GPUDataWarehouse* old_gpudw,
+                            GPUDataWarehouse* new_gpudw);
 } // namespace Uintah
 
 #endif
