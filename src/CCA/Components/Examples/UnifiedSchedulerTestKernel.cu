@@ -25,7 +25,7 @@
 #include <sci_defs/cuda_defs.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
-//no linker for device code, need to include the whole source...
+// linker support for device code not ready yet, need to include the whole source...
 #include <CCA/Components/Schedulers/GPUDataWarehouse.cu>
 
 namespace Uintah {
@@ -44,10 +44,12 @@ __global__ void unifiedSchedulerTestKernel(int patchID,
                                            uint3 domainHigh,
                                            GPUDataWarehouse *old_gpudw,
                                            GPUDataWarehouse *new_gpudw) {
+
   GPUGridVariable<double> phi;
   GPUGridVariable<double> newphi;
   old_gpudw->get(phi, "phi", patchID, matlIndex);
   new_gpudw->get(newphi, "phi", patchID, matlIndex);
+
   // calculate the thread indices
   int i = blockDim.x * blockIdx.x + threadIdx.x + domainLow.x;
   int j = blockDim.y * blockIdx.y + threadIdx.y + domainLow.y;
@@ -80,16 +82,14 @@ void launchUnifiedSchedulerTestKernel(dim3 dimGrid,
                                       uint3 domainLow,
                                       uint3 domainHigh,
                                       GPUDataWarehouse* old_gpudw,
-                                      GPUDataWarehouse* new_gpudw
-                                      )
+                                      GPUDataWarehouse* new_gpudw)
 {
   unifiedSchedulerTestKernel<<< dimGrid, dimBlock, 0, *stream >>>(patchID,
                                                                   matlIndex,
                                                                   domainLow,
                                                                   domainHigh,
                                                                   old_gpudw,
-                                                                  new_gpudw
-                                                                  );
+                                                                  new_gpudw);
 }
 
 } //end namespace Uintah
