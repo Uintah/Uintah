@@ -275,8 +275,8 @@ public:
 	  const MaterialSubset* matls, int nComm) = 0;
 
 #ifdef HAVE_CUDA
-  GPUDataWarehouse *getGPUDW(int i) const { return d_gpuDWs[i]; }
-  GPUDataWarehouse *getGPUDW() const { 
+  GPUDataWarehouse* getGPUDW(int i) const { return d_gpuDWs[i]; }
+  GPUDataWarehouse* getGPUDW() const {
     int i;
     cudaError_t retVal;
     CUDA_RT_SAFE_CALL( retVal = cudaGetDevice(&i));

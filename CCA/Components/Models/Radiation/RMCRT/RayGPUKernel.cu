@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,40 +22,39 @@
  * IN THE SOFTWARE.
  */
 
-//----- RayGPUDevice.cu ----------------------------------------------
-
 #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
+
 #include <sci_defs/cuda_defs.h>
 #include <curand.h>
 #include <curand_kernel.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace Uintah {
 
 //---------------------------------------------------------------------------
 // Kernel: The GPU ray tracer kernel
 //---------------------------------------------------------------------------
-__global__ void rayTraceKernel(const uint3 patchLo,
+__global__ void rayTraceKernel(dim3 dimGrid,
+                               dim3 dimBlock,
+                               int patchID,
+                               int matlIndex,
+                               const uint3 patchLo,
                                const uint3 patchHi,
                                const uint3 patchSize,
                                const uint3 domainLo,
                                const uint3 domainHi,
                                const double3 cellSpacing,
-                               double* dev_abskg,
-                               double* dev_sigmaT4,
-                               double* dev_divQ,
-                               double* dev_VRFlux,
-                               double* dev_boundFlux, 
-                               double* dev_radVolq,
+                               curandState* globalDevRandStates,
                                bool virtRad,
                                bool isSeedRandom,
                                bool ccRays,
                                int numRays,
                                double viewAngle,
                                double threshold,
-                               curandState* globalDevStates)
+                               Uintah::GPUDataWarehouse* old_gpudw,
+                               Uintah::GPUDataWarehouse* new_gpudw)
 {
+#if 0
+
   // calculate the thread indices
   int tidX = threadIdx.x + blockIdx.x * blockDim.x;
   int tidY = threadIdx.y + blockIdx.y * blockDim.y;
@@ -78,7 +77,6 @@ __global__ void rayTraceKernel(const uint3 patchLo,
 
       //_______________________________________________________________________
       // ray loop
-#if 0
       #pragma unroll
 
       for (int iRay = 0; iRay < numRays; iRay++) {
@@ -127,15 +125,15 @@ __global__ void rayTraceKernel(const uint3 patchLo,
       //__________________________________
       //  Compute divQ
       dev_divQ[idx] = 4.0 * M_PI * dev_abskg[idx] * (dev_sigmaT4[idx] - (sumI / numRays));
-#endif
+
       dev_divQ[idx]       = 0.0;
       dev_VRFlux[idx]     = 0.0;
       dev_boundFlux[idx]  = 0.0;
       dev_radVolq[idx]    = 0.0;
 
-
     } // end z-slice loop
   }  // end domain boundary check
+#endif
 }  // end ray trace kernel
 
 
@@ -154,6 +152,7 @@ __device__ void updateSumIDevice(const uint3& domainLo,
                                  double* threshold,
                                  double* sumI)
 {
+#if 0
   // Get the size of the data block in which the variables reside.
   // This is essentially the stride in the index calculations.
   int dx = patchSize.x;
@@ -285,6 +284,7 @@ __device__ void updateSumIDevice(const uint3& domainLo,
 
     }  // end if reflection
   }  // end threshold while loop.
+#endif
 }  // end of updateSumI function
 
 
@@ -353,49 +353,45 @@ __device__ unsigned int hashDevice(unsigned int a)
 }
 
 __host__ void launchRayTraceKernel(dim3 dimGrid,
-                          dim3 dimBlock,
-                          cudaStream_t* stream,
-                          const uint3 patchLo,
-                          const uint3 patchHi,
-                          const uint3 patchSize,
-                          const uint3 domainLo,
-                          const uint3 domainHi,
-                          const double3 cellSpacing,
-                          double* dev_abskg,
-                          double* dev_sigmaT4,
-                          double* dev_divQ,
-                          double* dev_VRFlux,
-                          double* dev_boundFlux,
-                          double* dev_radVolq,
-                          bool virtRad,
-                          bool isSeedRandom,
-                          bool ccRays,
-                          int numRays,
-                          double viewAngle,
-                          double threshold,
-                          curandState* globalDevStates)
+                                   dim3 dimBlock,
+                                   int patchID,
+                                   int matlIndex,
+                                   const uint3 patchLo,
+                                   const uint3 patchHi,
+                                   const uint3 patchSize,
+                                   const uint3 domainLo,
+                                   const uint3 domainHi,
+                                   const double3 cellSpacing,
+                                   curandState* globalDevRandStates,
+                                   cudaStream_t* stream,
+                                   bool virtRad,
+                                   bool isSeedRandom,
+                                   bool ccRays,
+                                   int numDivQRays,
+                                   double viewAngle,
+                                   double threshold,
+                                   Uintah::GPUDataWarehouse* old_gpudw,
+                                   Uintah::GPUDataWarehouse* new_gpudw)
 {
-  rayTraceKernel<<< dimGrid, dimBlock, 0, *stream >>>(patchLo,
+  rayTraceKernel<<< dimGrid, dimBlock, 0, *stream >>>(dimGrid,
+                                                      dimBlock,
+                                                      patchID,
+                                                      matlIndex,
+                                                      patchLo,
                                                       patchHi,
                                                       patchSize,
                                                       domainLo,
                                                       domainHi,
                                                       cellSpacing,
-                                                      dev_abskg,
-                                                      dev_sigmaT4,
-                                                      dev_divQ,
-                                                      dev_VRFlux,
-                                                      dev_boundFlux,
-                                                      dev_radVolq,
+                                                      globalDevRandStates,
                                                       virtRad,
                                                       isSeedRandom,
                                                       ccRays,
-                                                      numRays,
+                                                      numDivQRays,
                                                       viewAngle,
                                                       threshold,
-                                                      globalDevStates);
+                                                      old_gpudw,
+                                                      new_gpudw);
 }
 
-#ifdef __cplusplus
-}
-#endif
+} //end namespace Uintah
