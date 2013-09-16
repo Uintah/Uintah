@@ -523,21 +523,20 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
   const int uda_matl = d_old_uda->matl;
 
   //__________________________________
-  //  Cell Type
-  vector<CCVariable<int>*>    uda_cellType( patches->size() );
-  // loop over the UDA patches          
+  //  Cell Type: loop over the UDA patches          
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
     IntVector low  = patch->getExtraCellLowIndex();
     IntVector high = patch->getExtraCellHighIndex();
+
+    CCVariable<int> cellType, uda_cellType;
+    new_dw->allocateAndPut(cellType, d_cellTypeLabel, d_matl, patch); 
+    cellType.initialize(d_flow_cell);   
     
-    
-    if (d_old_uda->cellTypeName != "NONE" ){
-      uda_cellType[p] = scinew CCVariable<int>;                      
-      archive->queryRegion( *(CCVariable<int>*) uda_cellType[p],  
-                      d_old_uda->cellTypeName, uda_matl, uda_level, timeIndex, low, high);
-                      
+    if (d_old_uda->cellTypeName != "NONE" ){                      
+      archive->queryRegion( uda_cellType,  d_old_uda->cellTypeName, uda_matl, uda_level, timeIndex, low, high);
+      cellType.copyData(uda_cellType);                
     }
   }
   
@@ -559,86 +558,55 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
       subType = types[i]->getSubType();
     }
   }
-  
+
   //__________________________________
-  //  Now put the data into temporary arrays
+  //  Load abskg & temperature from old uda into new data warehouse
   proc0cout << "Extracting data from " << d_old_uda->udaName
           << " at time " << times[timeIndex] 
           << " and initializing RMCRT variables " << endl;
-
-  vector<CCVariable<double>*> uda_temp(  patches->size() );
-  vector<CCVariable<double>*> uda_abskg( patches->size() );
     
   // loop over the UDA patches          
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    printTask(patches, patch,dbg,"Doing initializeWithUda");
+    
+    CCVariable<double> color;
+    CCVariable<double> abskg;
+    new_dw->allocateAndPut(color,    d_colorLabel,    d_matl, patch);
+    new_dw->allocateAndPut(abskg,    d_abskgLabel,    d_matl, patch);
     
     IntVector low  = patch->getExtraCellLowIndex();
     IntVector high = patch->getExtraCellHighIndex();
   
     //             D O U B L E 
     if ( subType->getType() == Uintah::TypeDescription::double_type ) {
-      uda_temp[p]  = scinew CCVariable<double>;
-      uda_abskg[p] = scinew CCVariable<double>;
+      CCVariable<double> uda_temp;
+      CCVariable<double> uda_abskg;
 
-      archive->queryRegion( *(CCVariable<double>*) uda_temp[p],  
-                     d_old_uda->temperatureName, uda_matl, uda_level, timeIndex, low, high);
-
-      archive->queryRegion( *(CCVariable<double>*) uda_abskg[p], 
-                     d_old_uda->abskgName,       uda_matl, uda_level, timeIndex, low, high);
+      archive->queryRegion( uda_temp,  d_old_uda->temperatureName, uda_matl, uda_level, timeIndex, low, high);
+      archive->queryRegion( uda_abskg, d_old_uda->abskgName,       uda_matl, uda_level, timeIndex, low, high);
+      
+      color.copyData( uda_temp );
+      abskg.copyData( uda_abskg );
     //            F L O A T     
     }else if( subType->getType() == Uintah::TypeDescription::float_type ) {                                          
-      CCVariable<float> uda_tempF;
-      CCVariable<float> uda_abskgF;                                                            
+      CCVariable<float> uda_temp;
+      CCVariable<float> uda_abskg;
       
-      uda_temp[p]   = scinew CCVariable<double>;                                                 
-      uda_abskg[p]  = scinew CCVariable<double>;
-      new_dw->allocateTemporary(*uda_temp[p], patch);                                                 
-      new_dw->allocateTemporary(*uda_abskg[p], patch);
+      archive->queryRegion( uda_temp,  d_old_uda->temperatureName, uda_matl, uda_level, timeIndex, low, high);
+      archive->queryRegion( uda_abskg, d_old_uda->abskgName,       uda_matl, uda_level, timeIndex, low, high);
       
-      archive->queryRegion( uda_tempF,                                  
-                     d_old_uda->temperatureName, uda_matl, uda_level, timeIndex, low, high);      
-
-      archive->queryRegion( uda_abskgF,                                 
-                     d_old_uda->abskgName,       uda_matl, uda_level, timeIndex, low, high);      
-                                                                                                 
-      for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {            
-        IntVector c(*iter);                                                                      
-        (*uda_temp[p])[c]  = uda_tempF[c]; 
-        (*uda_abskg[p])[c] = uda_abskgF[c];
-      }                                                                                          
+      for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
+        IntVector c(*iter);                      
+        color[c] = uda_temp[c];            
+        abskg[c] = uda_abskg[c];
+      }                                                                                    
     }
-  }
-  delete archive;
-
-  //__________________________________
-  //  initialize the data and put it in the dw
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,dbg,"Doing initializeWithUda");    
-
-    CCVariable<double> color;
-    CCVariable<double> abskg;
-    CCVariable<int> cellType; 
-    new_dw->allocateAndPut(color,    d_colorLabel,    d_matl, patch);
-    new_dw->allocateAndPut(abskg,    d_abskgLabel,    d_matl, patch);
-    new_dw->allocateAndPut(cellType, d_cellTypeLabel, d_matl, patch); 
-    cellType.initialize(d_flow_cell);
-
-    for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
-      IntVector c(*iter);                      
-      color[c] = (*uda_temp[p])[c];            
-      abskg[c] = (*uda_abskg[p])[c];           
-
-      if (d_old_uda->cellTypeName != "NONE" ){ 
-       cellType[c] = (*uda_cellType[p])[c];    
-      }
-    }
-
-    // set boundary conditions 
+    
     d_RMCRT->setBC(color,  d_colorLabel->getName(), patch, d_matl);
     d_RMCRT->setBC(abskg,  d_abskgLabel->getName(), patch, d_matl);
   }
+  delete archive;
 }
 
 
