@@ -278,10 +278,10 @@ namespace Uintah {
         return "y-plus";
         break;
       case Patch::zminus:
-        return "y-minus";
+        return "z-minus";
         break;
       case Patch::zplus:
-        return "y-plus";
+        return "z-plus";
         break;
       case Patch::invalidFace:
         return "invalid-face";
