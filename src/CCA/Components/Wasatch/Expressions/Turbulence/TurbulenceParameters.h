@@ -30,7 +30,7 @@
 namespace Wasatch{
   /**
    *  \ingroup WasatchCore
-   *  \struct TurbulenceModelsNames
+   *  \enum TurbulenceModelsNames
    *  \author Tony Saad, Amir Biglari
    *  \date   June, 2012
    *

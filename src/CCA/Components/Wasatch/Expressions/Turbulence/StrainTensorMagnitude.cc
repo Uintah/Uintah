@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "StrainTensorMagnitude.h"
+#include <CCA/Components/Wasatch/Expressions/Turbulence/StrainTensorMagnitude.h>
 
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>

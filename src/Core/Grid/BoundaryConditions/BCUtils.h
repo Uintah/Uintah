@@ -85,7 +85,7 @@ namespace Uintah {
     // Symmetry
     if( !foundBC ){
       bc = bcd->getBoundCondData(mat_id,"Symmetric",child);
-      string test  = bc->getBCType();
+      string test =(bc) ? bc->getBCType() : "NotSet";
       
       if (test == "symmetry") {
         bc_kind  = "symmetry";

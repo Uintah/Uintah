@@ -48,10 +48,6 @@ class VarDensMMSMomentum
 : public BoundaryConditionBase<FieldT>
 {
 public:
-  enum BCSide{
-    RIGHT,
-    LEFT
-  };
   class Builder : public Expr::ExpressionBuilder
   {
   public:
@@ -65,7 +61,7 @@ public:
      */
     Builder( const Expr::Tag& resultTag,
              const Expr::Tag& indepVarTag,
-             const BCSide side ) :
+             const SpatialOps::structured::BCSide side ) :
     ExpressionBuilder(resultTag),
     indepVarTag_ (indepVarTag),
     side_   (side   )
@@ -73,7 +69,7 @@ public:
     Expr::ExpressionBase* build() const{ return new VarDensMMSMomentum(indepVarTag_, side_); }
   private:
     const Expr::Tag indepVarTag_;
-    const BCSide side_;
+    const SpatialOps::structured::BCSide side_;
   };
   
   ~VarDensMMSMomentum(){}
@@ -81,13 +77,13 @@ public:
   void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<double>( indepVarTag_ ); }
   void evaluate();
 private:
-  VarDensMMSMomentum( const Expr::Tag& indepVarTag, const BCSide side )
+  VarDensMMSMomentum( const Expr::Tag& indepVarTag, const SpatialOps::structured::BCSide side )
    : indepVarTag_( indepVarTag ),
      side_( side )
   {}  
   const double* t_;
   const Expr::Tag indepVarTag_;
-  const BCSide side_;
+  const SpatialOps::structured::BCSide side_;
 };
 
 // ###################################################################
@@ -105,18 +101,41 @@ VarDensMMSMomentum<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
+  namespace SS = SpatialOps::structured;
   FieldT& f = this->value();
   const double ci = this->ci_;
   const double cg = this->cg_;
-  std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
-  std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
-  if (side_==RIGHT) {
-    for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib )
-      f[*ia] = ( (5 * *t_ * sin((30 * PI )/(3 * *t_ + 30)))/(( (*t_ * *t_) + 1)*((5 / (exp(1125/(*t_ + 10))*(2 * *t_ + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125/(*t_ + 10))*(2 * *t_ + 5)))) - ci*f[*ib] ) / cg;
-  }
-  else if (side_==LEFT) {
-    for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib )
-      f[*ia] = ( (5 * *t_ * sin((-30 * PI )/(3 * *t_ + 30)))/(( (*t_ * *t_) + 1)*((5 / (exp(1125/(*t_ + 10))*(2 * *t_ + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125/(*t_ + 10))*(2 * *t_ + 5)))) - ci*f[*ib] ) / cg;
+  
+  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+    std::vector<SS::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<SS::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    if (this->isStaggered_) {
+      if (side_==SS::PLUS_SIDE) {
+        const double bcValue = (5 * *t_ * sin((30 * PI )/(3 * *t_ + 30)))/(( (*t_ * *t_) + 1)*((5 / (exp(1125/(*t_ + 10))*(2 * *t_ + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125/(*t_ + 10))*(2 * *t_ + 5))));
+        for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+          f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
+          f(*ii) = ( bcValue - ci*f(*ig) ) / cg;
+        }
+      } else if (side_ == SS::MINUS_SIDE) {
+        const double bcValue = (5 * *t_ * sin((-30 * PI )/(3 * *t_ + 30)))/(( (*t_ * *t_) + 1)*((5 / (exp(1125/(*t_ + 10))*(2 * *t_ + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125/(*t_ + 10))*(2 * *t_ + 5))));
+        for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+          f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
+          f(*ii) = ( bcValue - ci*f(*ii) ) / cg;
+        }
+      }
+    } else {
+      if (side_==SS::PLUS_SIDE) {
+        const double bcValue = (5 * *t_ * sin((30 * PI )/(3 * *t_ + 30)))/(( (*t_ * *t_) + 1)*((5 / (exp(1125/(*t_ + 10))*(2 * *t_ + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125/(*t_ + 10))*(2 * *t_ + 5))));
+        for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+          f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
+        }
+      } else if (side_ == SS::MINUS_SIDE) {
+        const double bcValue = (5 * *t_ * sin((-30 * PI )/(3 * *t_ + 30)))/(( (*t_ * *t_) + 1)*((5 / (exp(1125/(*t_ + 10))*(2 * *t_ + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125/(*t_ + 10))*(2 * *t_ + 5))));        
+        for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+          f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
+        }
+      }
+    }
   }
 }
 

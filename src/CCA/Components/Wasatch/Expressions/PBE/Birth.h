@@ -96,7 +96,7 @@ public:
     rstart_     (rStarTag),
     constcoef_  (constCoef),
     momentorder_(momentOrder),
-    birthtype_ (birthType),
+    birthtype_  (birthType),
     constrstar_ (constRStar),
     stddev_     (stdDev)
     {}
@@ -146,7 +146,7 @@ Birth( const Expr::Tag& birthCoefTag,
   rStarTag_    (rStarTag),
   constCoef_   (constCoef),
   momentOrder_ (momentOrder),
-  birthType_  (birthType),
+  birthType_   (birthType),
   constRStar_  (constRStar),
   stdDev_      (stdDev)
 {}
@@ -169,15 +169,15 @@ Birth<FieldT>::integrate_birth_kernel( const double rStar ) {
   const double dx = (6.0*stdDev_)/npts;
   
   x[0] = rStar - 3.0*stdDev_;
-  for(int i =1; i<npts; i++)
+  for( int i=1; i<npts; ++i )
     x[i] = x[i-1] + dx;
   
   double intVal = 0.0;
-  for(int i =0; i < npts-1; i++) {
+  for(int i =0; i < npts-1; ++i ){
     const double xa = x[i]   - rStar;
     const double xb = x[i+1] - rStar;
     //.399 ~ 1/sqrt(2pi)
-    intVal += dx/2.0/0.399*(   pow(x[i]  ,momentOrder_) * exp(-stdDev_/2.0 * xa*xa)
+    intVal += dx/2.0/0.399*(  pow(x[i]  ,momentOrder_) * exp(-stdDev_/2.0 * xa*xa)
                             + pow(x[i+1],momentOrder_) * exp(-stdDev_/2.0 * xb*xb) );
   }
   return intVal;
@@ -190,10 +190,8 @@ void
 Birth<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  if ( birthCoefTag_ != Expr::Tag () )
-    exprDeps.requires_expression( birthCoefTag_ );
-  if (rStarTag_ != Expr::Tag () )
-    exprDeps.requires_expression( rStarTag_ );
+  if( birthCoefTag_ != Expr::Tag () ) exprDeps.requires_expression( birthCoefTag_ );
+  if( rStarTag_     != Expr::Tag () ) exprDeps.requires_expression( rStarTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -204,10 +202,8 @@ Birth<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  if ( birthCoefTag_ != Expr::Tag () )
-    birthCoef_ = &fm.field_ref( birthCoefTag_ );
-  if (rStarTag_ != Expr::Tag () )
-    rStar_ = &fm.field_ref( rStarTag_ );
+  if( birthCoefTag_ != Expr::Tag () ) birthCoef_ = &fm.field_ref( birthCoefTag_ );
+  if( rStarTag_     != Expr::Tag () ) rStar_     = &fm.field_ref( rStarTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -229,10 +225,9 @@ evaluate()
           break;
         case UNIFORM:
           result <<= constCoef_ * *birthCoef_ * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
-                                        pow(*rStar_ - stdDev_, momentOrder_ + 1)) / (momentOrder_ + 1);
+                                                  pow(*rStar_ - stdDev_, momentOrder_ + 1)) / (momentOrder_ + 1);
           break;
-        case NORMAL:
-        {
+        case NORMAL: {
           typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
           typename FieldT::const_interior_iterator birthCoefIter = birthCoef_->interior_begin();
           typename FieldT::interior_iterator resultsIter = result.interior_begin();
@@ -243,8 +238,8 @@ evaluate()
             ++rStarIter;
             ++birthCoefIter;
           }
-        }
           break;
+        }
         default:
           break;
       } // SWITCH
@@ -259,12 +254,11 @@ evaluate()
           result <<= constCoef_ * *birthCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
                                                  pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
           break;
-        case NORMAL:
-        {
+        case NORMAL: {
           const double intVal = integrate_birth_kernel(constRStar_);
           result <<= constCoef_ * *birthCoef_ * intVal;
-        }
           break;
+        }
         default:
           break;
       } // SWITCH
@@ -282,8 +276,7 @@ evaluate()
           result <<= constCoef_  * ( pow(*rStar_ + stdDev_, momentOrder_ + 1) -
                                      pow(*rStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
           break;
-        case NORMAL:
-        {
+        case NORMAL: {
           typename FieldT::const_interior_iterator rStarIter = rStar_->interior_begin();
           typename FieldT::interior_iterator resultsIter = result.interior_begin();
           while (rStarIter!=rStar_->interior_end() ) {
@@ -292,8 +285,8 @@ evaluate()
             ++resultsIter;
             ++rStarIter;
           }
-        }
           break;
+        }
         default:
           break;
       } // SWITCH
@@ -306,14 +299,13 @@ evaluate()
           break;
         case UNIFORM:
           result <<= constCoef_ * ( pow(constRStar_ + stdDev_, momentOrder_ + 1) -
-                          pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
+                                    pow(constRStar_ - stdDev_, momentOrder_ + 1) ) / (momentOrder_ + 1);
           break;
-        case NORMAL:
-        {
+        case NORMAL: {
           const double intVal = integrate_birth_kernel(constRStar_);
           result <<= constCoef_ * intVal;
-        }
           break;
+        }
         default:
           break;
       } // SWITCH

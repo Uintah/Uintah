@@ -1,4 +1,36 @@
 #!/bin/csh -f
+#______________________________________________________________________
+# cat_OnTheFly:
+#   This script concatenates data produced from the 
+#    <DataAnalysis>
+#      <Module name="lineExtract">
+#   module.   The directory structure from the module is:
+#
+#|<UdaName>
+#|-- probe0
+#|   `-- L-0
+#|       |-- i195_j725_k19
+#|       |-- i195_j726_k19
+#|       |-- i195_j727_k19
+#|       |-- i195_j728_k19
+#|       |-- i195_j729_k19
+#|-- probe1
+#|   `-- L-0
+#|       |-- i195_j725_k39
+#|       |-- i195_j726_k39
+#|       |-- i195_j727_k39
+#|-- probe2
+#|   `-- L-0
+#|       |-- i195_j725_k58
+#|       |-- i195_j726_k58
+#|-- probe3
+#|   `-- L-0
+#|       |-- i195_j725_k78
+#|       |-- i195_j726_k78
+#
+#  and the usage is 
+#       cat_OnTheFly  <uda>  <master_uda>
+#______________________________________________________________________
 
 if( $#argv != 2 ) then
   echo " ERROR: "
@@ -19,13 +51,16 @@ endif
 
 echo "working on $uda"
 
+#__________________________________
 # find all of the lines with i_j_k files in them
 # Substitute @@@ for " " in each name and directory
+# remove "./"  from the front of the path
 cd $uda
-set these = (`find . -maxdepth 3 -name "i[0-9]*" -printf "%p\n" | sed s/"\ "/"@@@"/g`)
-set dirs  = (`find . -maxdepth 3 -name "i[0-9]*" -printf "%h\n" | sed s/"\ "/"@@@"/g`)
+set these = (`find . -maxdepth 3 -name "i[0-9]*" -printf "%p\n" | sed s/"\ "/"@@@"/g | sed s/"\.\/"/""/g` )
+set dirs  = (`find . -maxdepth 3 -name "i[0-9]*" -printf "%h\n" | sed s/"\ "/"@@@"/g | sed s/"\.\/"/""/g` )
 cd "$here/$master_uda"
 
+#__________________________________
 # make the directory structure in the master uda
 foreach i ( $dirs[*]:q )
   set X = `echo $i | sed s/"@@@"/"\ "/g`
@@ -37,9 +72,10 @@ end
 
 cd $here
 
+
+#__________________________________
 # concatenate each of the $uda/dat files to $master_uda/dat
-foreach i ( $these[*]:q )
-  set X = `echo $i | sed s/"@@@"/"\ "/g`
+foreach X ( $these[*]:q )
   
   if( -e "$uda/$X" ) then
   
@@ -54,10 +90,11 @@ foreach i ( $these[*]:q )
     # remove the header from the temporary file
     set header = `head -n1 "$master_uda/$X.tmp"`
     sed -i /"X_CC"/d "$master_uda/$X.tmp"
-    
+
     # now reconstruct the file and remove duplicate lines
-    # sort the file by time
-    echo $header > "$master_uda/$X"
+    # sort the file by time 
+    echo "$header" > "$master_uda/$X"
+    
     sort -k4 -g "$master_uda/$X.tmp"|uniq >> "$master_uda/$X"
 
     /bin/rm "$master_uda/$X.tmp"

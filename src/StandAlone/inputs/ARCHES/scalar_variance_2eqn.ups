@@ -151,7 +151,9 @@
         <BCType id="all" label="mf_moment_2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-
+        <BCType id="all" label="gradmf2" var="Neumann">
+          <value> 0.0 </value>
+        </BCType> 
       </Face>
       <Face side="z-" name="z- wall">
         <BCType id="all" label="z-pressure" var="PressureBC">

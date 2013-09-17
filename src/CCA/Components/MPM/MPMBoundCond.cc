@@ -65,7 +65,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         if (type == "Velocity"){
          const  BoundCondBase* bcb = 
             patch->getArrayBCValues(face,dwi,"Velocity",nu,nbound_ptr,child);
-
+          if (!bcb) continue;
          const BoundCond<Vector>* bc = 
            dynamic_cast<const BoundCond<Vector>*>(bcb); 
           if (bc != 0) {
@@ -90,7 +90,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         } else if (type == "Symmetric"){
           const BoundCondBase* bcb =
             patch->getArrayBCValues(face,dwi,"Symmetric",nu,nbound_ptr,child);
-
+          if (!bcb) continue;
           if (bcb->getBCType() == "symmetry") {
             if (face == Patch::xplus || face == Patch::xminus){
               if(interp_type=="linear"){
@@ -260,7 +260,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         if(type=="Pressure" || type=="Temperature"){
           const BoundCondBase *bcb = 
             patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr, child);
-
+          if (!bcb) continue;
           const BoundCond<double>* bc = 
             dynamic_cast<const BoundCond<double>*>(bcb);
           

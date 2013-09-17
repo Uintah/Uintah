@@ -462,12 +462,12 @@
 
       <!-- Velocity profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDensMMSVelocity  spec="OPTIONAL NO_DATA"
-                           attribute1="side REQUIRED STRING">
+                           attribute1="side REQUIRED STRING 'PLUS,MINUS'">
       </VarDensMMSVelocity>      
 
       <!-- Momentum profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDensMMSMomentum  spec="OPTIONAL NO_DATA"
-                           attribute1="side REQUIRED STRING">
+                           attribute1="side REQUIRED STRING 'PLUS,MINUS'">
       </VarDensMMSMomentum> 
 
       <!-- Scalar solution variable profile on the boundaries with respect to time for the variable density MMS !-->

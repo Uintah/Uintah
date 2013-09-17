@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -48,8 +48,6 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
-
-#include <sci_defs/cuda_defs.h>
 
 using namespace std;
 using SCIRun::Point;
@@ -129,11 +127,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   if (prob_spec->findBlock("RMCRT")){
     ProblemSpecP rmcrt_ps = prob_spec->findBlock("RMCRT"); 
     
-#ifdef HAVE_CUDA_OLD
-    d_RMCRT = scinew Ray(dynamic_cast<UnifiedScheduler*>(getPort("scheduler")));
-#else
     d_RMCRT = scinew Ray();
-#endif
 
     d_RMCRT->registerVarLabels(0,d_abskgLabel,
                                  d_absorpLabel,
@@ -223,15 +217,26 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     vector<double> times;
     archive->queryTimesteps(index, times);
   
-    if( d_old_uda->timestep >= index.size() ){
+  
+    bool foundIndex = false;
+    int timeIndex = -9;
+    unsigned int size = index.size();
+    for (unsigned int i = 0; i < size; i++) {
+      if( d_old_uda->timestep == index[i] ){
+        foundIndex = true;
+        timeIndex = i;
+      }
+    }
+    
+    if( ! foundIndex ){
       ostringstream warn;
       warn << "The timestep ("<< d_old_uda->timestep << ") was not found in the uda\n"
-           << "There are " << index.size()-1 << " timesteps\n";
+           << "There are " << index.size() << " timesteps\n";
       throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
     }   
     
     // are the grids the same ?
-    GridP uda_grid = archive->queryGrid(d_old_uda->timestep); 
+    GridP uda_grid = archive->queryGrid( timeIndex ); 
     areGridsEqual(uda_grid.get_rep(), grid.get_rep());
     
     
@@ -503,74 +508,105 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
   vector<int> index;
   vector<double> times;
   archive->queryTimesteps(index, times);
-  GridP uda_grid = archive->queryGrid(d_old_uda->timestep);
+  int timeIndex = -9;
   
-  const Level*  uda_level = uda_grid->getLevel(0).get_rep();        // there's only one level in these problem 
-  const int timestep = d_old_uda->timestep;
+  unsigned int size = index.size();
+  for (unsigned int i = 0; i < size; i++) {
+    if( d_old_uda->timestep == index[i] ){
+      timeIndex = i;
+    }
+  }
+  
+  GridP uda_grid = archive->queryGrid(timeIndex);
+  
+  const Level*  uda_level = uda_grid->getLevel(0).get_rep();        // there's only one level in these problem
   const int uda_matl = d_old_uda->matl;
 
-  vector<CCVariable<double>*> uda_temp(     patches->size() );
-  vector<CCVariable<double>*> uda_abskg(    patches->size() );
-  vector<CCVariable<int>*>    uda_cellType( patches->size() );
-
-  proc0cout << "Extracting data from " << d_old_uda->udaName
-            << " at time " << times[timestep] 
-            << " and initializing RMCRT variables " << endl;
-            
-  // loop over the UDA patches          
+  //__________________________________
+  //  Cell Type: loop over the UDA patches          
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
     IntVector low  = patch->getExtraCellLowIndex();
     IntVector high = patch->getExtraCellHighIndex();
-    
 
-    uda_temp[p]  = scinew CCVariable<double>;
-    uda_abskg[p] = scinew CCVariable<double>;
+    CCVariable<int> cellType, uda_cellType;
+    new_dw->allocateAndPut(cellType, d_cellTypeLabel, d_matl, patch); 
+    cellType.initialize(d_flow_cell);   
     
-    archive->queryRegion( *(CCVariable<double>*) uda_temp[p],  
-                         d_old_uda->temperatureName, uda_matl, uda_level, timestep, low, high);
-
-    archive->queryRegion( *(CCVariable<double>*) uda_abskg[p], 
-                          d_old_uda->abskgName,      uda_matl, uda_level, timestep, low, high);
-    
-    if (d_old_uda->cellTypeName != "NONE" ){
-      uda_cellType[p] = scinew CCVariable<int>;                      
-      archive->queryRegion( *(CCVariable<int>*) uda_cellType[p],  
-                      d_old_uda->cellTypeName, uda_matl, uda_level, timestep, low, high);
-                      
+    if (d_old_uda->cellTypeName != "NONE" ){                      
+      archive->queryRegion( uda_cellType,  d_old_uda->cellTypeName, uda_matl, uda_level, timeIndex, low, high);
+      cellType.copyData(uda_cellType);                
     }
   }
-  delete archive;
+  
+  //__________________________________
+  // abskg and temperature
+  // Note the user may have saved the data as a float so you 
+  // must take that into account.
+  // Determine what type (float/double) the variables were saved as
+  vector<string> vars;
+  vector<const Uintah::TypeDescription*> types;
+  const Uintah::TypeDescription* subType = NULL;
+
+  archive->queryVariables(vars, types);
+
+  for (unsigned int i = 0; i < vars.size(); i++) {
+    if (d_old_uda->abskgName == vars[i]) {
+      subType = types[i]->getSubType();
+    } else if (d_old_uda->temperatureName == vars[i]){
+      subType = types[i]->getSubType();
+    }
+  }
 
   //__________________________________
-  //  initialize 
+  //  Load abskg & temperature from old uda into new data warehouse
+  proc0cout << "Extracting data from " << d_old_uda->udaName
+          << " at time " << times[timeIndex] 
+          << " and initializing RMCRT variables " << endl;
+    
+  // loop over the UDA patches          
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,dbg,"Doing initializeWithUda");    
-
+    printTask(patches, patch,dbg,"Doing initializeWithUda");
+    
     CCVariable<double> color;
     CCVariable<double> abskg;
-    CCVariable<int> cellType; 
     new_dw->allocateAndPut(color,    d_colorLabel,    d_matl, patch);
     new_dw->allocateAndPut(abskg,    d_abskgLabel,    d_matl, patch);
-    new_dw->allocateAndPut(cellType, d_cellTypeLabel, d_matl, patch); 
-    cellType.initialize(d_flow_cell);
+    
+    IntVector low  = patch->getExtraCellLowIndex();
+    IntVector high = patch->getExtraCellHighIndex();
+  
+    //             D O U B L E 
+    if ( subType->getType() == Uintah::TypeDescription::double_type ) {
+      CCVariable<double> uda_temp;
+      CCVariable<double> uda_abskg;
 
-    for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
-      IntVector c(*iter);                      
-      color[c] = (*uda_temp[p])[c];            
-      abskg[c] = (*uda_abskg[p])[c];           
-
-      if (d_old_uda->cellTypeName != "NONE" ){ 
-       cellType[c] = (*uda_cellType[p])[c];    
-      }
+      archive->queryRegion( uda_temp,  d_old_uda->temperatureName, uda_matl, uda_level, timeIndex, low, high);
+      archive->queryRegion( uda_abskg, d_old_uda->abskgName,       uda_matl, uda_level, timeIndex, low, high);
+      
+      color.copyData( uda_temp );
+      abskg.copyData( uda_abskg );
+    //            F L O A T     
+    }else if( subType->getType() == Uintah::TypeDescription::float_type ) {                                          
+      CCVariable<float> uda_temp;
+      CCVariable<float> uda_abskg;
+      
+      archive->queryRegion( uda_temp,  d_old_uda->temperatureName, uda_matl, uda_level, timeIndex, low, high);
+      archive->queryRegion( uda_abskg, d_old_uda->abskgName,       uda_matl, uda_level, timeIndex, low, high);
+      
+      for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
+        IntVector c(*iter);                      
+        color[c] = uda_temp[c];            
+        abskg[c] = uda_abskg[c];
+      }                                                                                    
     }
-
-    // set boundary conditions 
+    
     d_RMCRT->setBC(color,  d_colorLabel->getName(), patch, d_matl);
     d_RMCRT->setBC(abskg,  d_abskgLabel->getName(), patch, d_matl);
   }
+  delete archive;
 }
 
 

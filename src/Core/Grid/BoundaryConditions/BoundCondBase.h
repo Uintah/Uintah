@@ -82,7 +82,6 @@ WARNING
     const string getBCVariable() const { return d_variable; };
     const string getBCType() const { return d_type; };
     const std::string getBCFaceName() const { return d_face_label; };
-    const std::string getFunctorName() const { return d_functor_name; };
     
     /**
      *  \author Tony Saad
@@ -96,7 +95,6 @@ WARNING
     string d_variable;          // Pressure, Density, etc
     string d_type;              // Dirichlet, Neumann, etc
     std::string d_face_label;   // holds the user specified name of the bc face: left-wall, ox-inlet,...
-    std::string d_functor_name; // holds the name of a functor to be applied on this boundary
     BoundCondValueTypeEnum d_value_type;        // int, double, string, vector, unknown
   };
 } // End namespace Uintah

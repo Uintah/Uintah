@@ -47,7 +47,6 @@ namespace Uintah {
     double gamma;
     double cv;
     string whichMMS;
-    double delT;
   };    
   //____________________________________________________________
   // This struct contains all of the additional variables needed by setBC.

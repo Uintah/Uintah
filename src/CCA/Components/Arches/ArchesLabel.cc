@@ -492,6 +492,8 @@ ArchesLabel::ArchesLabel()
   d_areaFractionFYLabel       = VarLabel::create("areaFractionFY", SFCY_double);
   d_areaFractionFZLabel       = VarLabel::create("areaFractionFZ", SFCZ_double);
 
+  //normal scalar var label
+  d_varianceLabel             = VarLabel::create("scalar_variance", CC_double);
 }
 
 //****************************************************************************
@@ -790,6 +792,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_areaFractionFYLabel); 
   VarLabel::destroy(d_areaFractionFZLabel); 
   VarLabel::destroy(d_volFractionLabel); 
+  
+  VarLabel::destroy(d_varianceLabel);
 
   for (PartVelMap::iterator i = partVel.begin(); i != partVel.end(); i++){
     VarLabel::destroy(i->second); 

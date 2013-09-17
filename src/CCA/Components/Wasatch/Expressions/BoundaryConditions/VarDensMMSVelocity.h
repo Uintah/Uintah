@@ -48,10 +48,6 @@ class VarDensMMSVelocity
 : public BoundaryConditionBase<FieldT>
 {
 public:
-  enum BCSide{
-    RIGHT,
-    LEFT
-  };
   class Builder : public Expr::ExpressionBuilder
   {
   public:
@@ -65,7 +61,7 @@ public:
      */
     Builder( const Expr::Tag& resultTag,
              const Expr::Tag& indepVarTag,
-             const BCSide side ) :
+             const SpatialOps::structured::BCSide side ) :
     ExpressionBuilder(resultTag),
     indepVarTag_ (indepVarTag),
     side_ (side)
@@ -73,7 +69,7 @@ public:
     Expr::ExpressionBase* build() const{ return new VarDensMMSVelocity(indepVarTag_, side_); }
   private:
     const Expr::Tag indepVarTag_;
-    const BCSide side_;
+    const SpatialOps::structured::BCSide side_;
   };
   
   ~VarDensMMSVelocity(){}
@@ -82,13 +78,13 @@ public:
   void evaluate();
 private:
   VarDensMMSVelocity( const Expr::Tag& indepVarTag,
-              const BCSide side ) :
+                      const SpatialOps::structured::BCSide side ) :
   indepVarTag_ (indepVarTag),
   side_ (side)
   {}  
   const double* t_;
   const Expr::Tag indepVarTag_;
-  const BCSide side_;
+  const SpatialOps::structured::BCSide side_;
 };
 
 // ###################################################################
@@ -106,19 +102,44 @@ VarDensMMSVelocity<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
+  namespace SS = SpatialOps::structured;
+  
   FieldT& f = this->value();
   const double ci = this->ci_;
   const double cg = this->cg_;
-  std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
-  std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
-  if (side_==RIGHT) {
-    for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib )
-      f[*ia] = ( ( ((-5 * *t_)/( *t_ * *t_ + 1)) * sin(10 * PI / (*t_ + 10) ) ) - ci*f[*ib] ) / cg;
-  }
-  else if (side_==LEFT) {
-    for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib )
-      f[*ia] = ( ( ((-5 * *t_)/( *t_ * *t_ + 1)) * sin(-10 * PI / (*t_ + 10) ) ) - ci*f[*ib] ) / cg;
-  }
+  
+  
+  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+    std::vector<SS::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<SS::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    if (this->isStaggered_) {
+      if (side_== SS::PLUS_SIDE) {
+        const double bcValue = ( ((-5 * *t_)/( *t_ * *t_ + 1)) * sin(10 * PI / (*t_ + 10) ) );
+        for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+          f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
+          f(*ii) = ( bcValue - ci*f(*ig) ) / cg;
+        }
+      } else if (side_ == SS::MINUS_SIDE) {
+        const double bcValue = ( ((-5 * *t_)/( *t_ * *t_ + 1)) * sin(-10 * PI / (*t_ + 10) ) );
+        for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+          f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
+          f(*ii) = ( bcValue - ci*f(*ii) ) / cg;
+        }
+      }
+    } else {
+      if (side_== SS::PLUS_SIDE) {
+        const double bcValue = ( ((-5 * *t_)/( *t_ * *t_ + 1)) * sin(10 * PI / (*t_ + 10) ) );        
+        for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+          f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
+        }
+      } else if (side_ == SS::MINUS_SIDE) {
+        const double bcValue = ( ((-5 * *t_)/( *t_ * *t_ + 1)) * sin(-10 * PI / (*t_ + 10) ) );        
+        for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+          f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
+        }
+      }
+    }
+  }  
 }
 
 #endif // Var_Dens_MMS_Vel_Expr_h

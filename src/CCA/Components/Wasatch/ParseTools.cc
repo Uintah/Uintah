@@ -137,4 +137,17 @@ namespace Wasatch{
 
   //============================================================================
 
+  template <typename T>
+  std::string number_to_string ( T n )
+  {
+    std::stringstream ss;
+    ss << n;
+    return ss.str();
+  }
+
+  // Explicit Instantiation  
+  template std::string number_to_string<int> ( int n );
+
+  //============================================================================
+  
 } // namespace Wasatch

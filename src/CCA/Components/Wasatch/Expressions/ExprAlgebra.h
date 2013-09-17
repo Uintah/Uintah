@@ -72,9 +72,9 @@ public:
      *  @param algebraicOperation selects the operation to apply
      */
     Builder( const Expr::Tag& resultTag,
-            Expr::TagList srcTagList,
-            const OperationType algebraicOperation,
-            const bool isModifierExpr=false);
+             Expr::TagList srcTagList,
+             const OperationType algebraicOperation,
+             const bool isModifierExpr=false);
     
     Expr::ExpressionBase* build() const;
     
@@ -197,9 +197,9 @@ Builder::Builder( const Expr::Tag& resultTag,
                  const OperationType algebraicOperation,
                  const bool isModifierExpr)
 : ExpressionBuilder( resultTag ),
-srcTagList_( srcTagList ),
-algebraicOperation_( algebraicOperation ),
-isModifierExpr_( isModifierExpr )
+  srcTagList_( srcTagList ),
+  algebraicOperation_( algebraicOperation ),
+  isModifierExpr_( isModifierExpr )
 {}
 
 //--------------------------------------------------------------------

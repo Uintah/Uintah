@@ -66,7 +66,7 @@ extern "C" {
         exit(EXIT_FAILURE);                                                    \
     } }
 
- // int3 bound checking
+// int3 bound checking
 #if SCI_CUDA_ASSERTION_LEVEL >= 3
 #  define CHECK_INSIDE( idx, offset, size ) {                                                          \
     if (idx.x < offset.x || idx.y< offset.y || idx.z < offset.z ||                                     \
@@ -80,7 +80,7 @@ extern "C" {
 #endif
 
 #if SCI_CUDA_ASSERTION_LEVEL >= 3
-#  define CHECK_INSIDE3( x, y, z, offset, size ) {                                                          \
+#  define CHECK_INSIDE3( x, y, z, offset, size ) {                                                         \
     if (x < offset.x || y< offset.y || z < offset.z ||                                                     \
         x > offset.x + size.x || y > offset.y + size.y || z > offset.z + size.z)                           \
           printf ("GPU OUT_OF_BOUND ERROR (%d, %d, %d) not inside (%d, %d, %d)-(%d, %d, %d) \n",           \

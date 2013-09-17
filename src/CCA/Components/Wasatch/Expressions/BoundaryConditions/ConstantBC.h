@@ -93,15 +93,19 @@ evaluate()
   FieldT& f = this->value();
   const double ci = this->ci_;
   const double cg = this->cg_;
-  std::vector<int>::const_iterator ig = (this->flatGhostPoints_).begin();    // ig is the ghost flat index
-  std::vector<int>::const_iterator ii = (this->flatInteriorPoints_).begin(); // ii is the interior flat index
-  if(this->isStaggered_) {
-    for( ; ig != (this->flatGhostPoints_).end(); ++ig, ++ii ){
-      f[*ig] = bcValue_;
-    }
-  } else {
-    for( ; ig != (this->flatGhostPoints_).end(); ++ig, ++ii ){
-      f[*ig] = ( bcValue_- ci * f[*ii] ) / cg;
+
+  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    if(this->isStaggered_) {
+      for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii){
+        f(*ig) = bcValue_;
+        f(*ii) = bcValue_;
+      }
+    } else {
+      for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+        f(*ig) = ( bcValue_- ci * f(*ii) ) / cg;
+      }
     }
   }
 }

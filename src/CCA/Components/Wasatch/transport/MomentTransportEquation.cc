@@ -23,7 +23,7 @@
  */
 
 //-- Wasatch includes --//
-#include "MomentTransportEquation.h"
+#include <CCA/Components/Wasatch/transport/MomentTransportEquation.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
@@ -47,6 +47,7 @@
 #include <CCA/Components/Wasatch/transport/ParseEquation.h>
 
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
+#include <CCA/Components/Wasatch/BCHelper.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -519,25 +520,23 @@ namespace Wasatch {
   }
 
   //------------------------------------------------------------------
-
+  
   template< typename FieldT >
   void MomentTransportEquation<FieldT>::
-  setup_initial_boundary_conditions(const GraphHelper& graphHelper,
-                            const Uintah::PatchSet* const localPatches,
-                            const PatchInfoMap& patchInfoMap,
-                            const Uintah::MaterialSubset* const materials,
-                            const std::map<std::string, std::set<std::string> >& bcFunctorMap)
+  setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+                                     BCHelper& bcHelper )
   {
+    const Category taskCat = INITIALIZATION;
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     
     
     // multiply the initial condition by the volume fraction for embedded geometries
     if (hasEmbeddedGeometry_) {
-
+      
       Expr::Tag phiTag = Expr::Tag( this->solution_variable_name(),
                                    Expr::STATE_N );
       
-            std::cout << "attaching modifier expression on " << phiTag << std::endl;
+      std::cout << "attaching modifier expression on " << phiTag << std::endl;
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
       Expr::TagList theTagList;
@@ -549,63 +548,26 @@ namespace Wasatch {
                                                                    ExprAlgbr::PRODUCT,
                                                                    true) );
       
-      for( int ip=0; ip<localPatches->size(); ++ip ){
-        
-        // get the patch subset
-        const Uintah::PatchSubset* const patches = localPatches->getSubset(ip);
-        
-        // loop over every patch in the patch subset
-        for( int ipss=0; ipss<patches->size(); ++ipss ){
-          
-          // get a pointer to the current patch
-          const Uintah::Patch* const patch = patches->get(ipss);
-          
-          // loop over materials
-          for( int im=0; im<materials->size(); ++im ){
-            //    if (hasVolFrac_) {
-            // attach the modifier expression to the target expression
-            factory.attach_modifier_expression( modifierTag, phiTag, patch->getID(), true );
-            //    }
-            
-          }
-        }
-      }
+      factory.attach_modifier_expression( modifierTag, phiTag );
     }
-
+    
     
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
-    if (factory.have_entry(phiTag)) {
-      process_boundary_conditions<FieldT>( phiTag,
-                                          this->solution_variable_name(),
-                                          this->staggered_location(),
-                                          graphHelper,
-                                          localPatches,
-                                          patchInfoMap,
-                                          materials, bcFunctorMap );
-    }
+    if (factory.have_entry(phiTag))
+      bcHelper.apply_boundary_condition<FieldT>(this->solution_variable_tag(), taskCat);
+
 
   }
 
   //------------------------------------------------------------------
-
+  
   template< typename FieldT >
   void MomentTransportEquation<FieldT>::
-  setup_boundary_conditions(const GraphHelper& graphHelper,
-                            const Uintah::PatchSet* const localPatches,
-                            const PatchInfoMap& patchInfoMap,
-                            const Uintah::MaterialSubset* const materials,
-                            const std::map<std::string, std::set<std::string> >& bcFunctorMap)
+  setup_boundary_conditions( const GraphHelper& graphHelper,
+                             BCHelper& bcHelper )
   {
-
-    // see BCHelperTools.cc
-    process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name(),
-                                                   Expr::STATE_N ),
-                                        this->solution_variable_name(),
-                                        this->staggered_location(),
-                                        graphHelper,
-                                        localPatches,
-                                        patchInfoMap,
-                                        materials, bcFunctorMap );
+    const Category taskCat = ADVANCE_SOLUTION;
+    bcHelper.apply_boundary_condition<FieldT>(this->solution_variable_tag(), taskCat);
   }
 
   //------------------------------------------------------------------

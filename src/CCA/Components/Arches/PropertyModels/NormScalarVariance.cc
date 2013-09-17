@@ -37,6 +37,7 @@ void NormScalarVariance::problemSetup( const ProblemSpecP& inputdb )
   ProblemSpecP db = inputdb; 
   db->require( "mixture_fraction_label", _mf_label_name ); 
   db->require( "second_moment_label", _mf_m2_label_name ); 
+  _var_label   = VarLabel::find( "scalar_variance" );
 
   clip = false;
   if (db->findBlock("Clip") )
@@ -66,12 +67,12 @@ void NormScalarVariance::sched_computeProp( const LevelP& level, SchedulerP& sch
 
   tsk->modifies( _prop_label );
   if ( time_substep == 0 ){ 
-    
+    tsk->computes( _var_label );
     tsk->requires( Task::OldDW, _mf_label, Ghost::AroundCells, 1); 
     tsk->requires( Task::OldDW, _mf_m2_label, Ghost::None, 0 ); 
     tsk->requires( Task::OldDW, _vf_label, Ghost::AroundCells, 1); 
   } else { 
-
+    tsk->modifies( _var_label );
     tsk->requires( Task::NewDW, _mf_label, Ghost::AroundCells, 1 ); 
     tsk->requires( Task::NewDW, _mf_m2_label, Ghost::None, 0 ); 
     tsk->requires( Task::NewDW, _vf_label, Ghost::AroundCells, 1); 
@@ -99,17 +100,21 @@ void NormScalarVariance::computeProp(const ProcessorGroup* pc,
  
     CCVariable<double> prop; 
     CCVariable<double> mf_m2; 
+    CCVariable<double> scalarVar;
     constCCVariable<double> mf; 
     constCCVariable<double> vf;
     
     if ( time_substep == 0 ) { 
       new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
+      new_dw->allocateAndPut( scalarVar, _var_label, matlIndex, patch );
       prop.initialize(0.0);
+      scalarVar.initialize(0.0);
       old_dw->get( mf,       _mf_label, matlIndex, patch, Ghost::None, 0); 
       old_dw->getModifiable( mf_m2, _mf_m2_label, matlIndex, patch, Ghost::None, 0); 
       old_dw->get( vf,       _vf_label, matlIndex, patch, Ghost::None, 0);
     } else { 
       new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
+      new_dw->getModifiable( scalarVar, _var_label, matlIndex, patch );
       new_dw->get( mf,       _mf_label, matlIndex, patch, Ghost::None, 0); 
       new_dw->getModifiable( mf_m2, _mf_m2_label, matlIndex, patch, Ghost::None, 0); 
       new_dw->get( vf,       _vf_label, matlIndex, patch, Ghost::None, 0);
@@ -118,7 +123,6 @@ void NormScalarVariance::computeProp(const ProcessorGroup* pc,
     CellIterator iter = patch->getCellIterator(); 
     
     double small = 1.0e-10;
-    double scalarVar;
     double maxVar;
         
     for (iter.begin(); !iter.done(); iter++){
@@ -126,25 +130,26 @@ void NormScalarVariance::computeProp(const ProcessorGroup* pc,
       
       if (vf[c] > 0.0) {
         maxVar = mf[c] * (1.0 - mf[c]);
-        scalarVar = mf_m2[c] - mf[c]*mf[c];
+        scalarVar[c] = mf_m2[c] - mf[c]*mf[c];
         if (maxVar < 0.0)
           maxVar = 0.0;   //hard set this is 0, since some compliers 1 - 1*1 != 0
         
-        if (scalarVar <= small) {
+        if (scalarVar[c] <= small) {
           if (clip ) {
             mf_m2[c] = mf[c]*mf[c];
           }
-          scalarVar = 0.0;
-        } else if (scalarVar > maxVar) {
-          scalarVar = maxVar;
+          scalarVar[c] = 0.0;
+        } else if (scalarVar[c] > maxVar) {
+          scalarVar[c] = maxVar;
           if (clip) {
             mf_m2[c] = mf[c];
           } 
         }
         
-        prop[c] = scalarVar/(maxVar + small);       
+        prop[c] = scalarVar[c]/(maxVar + small);    
       } else {
         prop[c] = 0.0;
+        scalarVar[c] = 0.0;
       }
 
     }
@@ -179,9 +184,10 @@ void NormScalarVariance::dummyInit( const ProcessorGroup* pc,
 void NormScalarVariance::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "NormScalarVariance::initialize"; 
-  
+
   Task* tsk = scinew Task(taskname, this, &NormScalarVariance::initialize);
   tsk->computes(_prop_label); 
+  tsk->computes(_var_label );
   
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 }
@@ -203,9 +209,12 @@ void NormScalarVariance::initialize( const ProcessorGroup* pc,
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
     
     CCVariable<double> prop; 
+    CCVariable<double> scalarVar;
     
     new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
     prop.initialize(0.0); 
+    new_dw->allocateAndPut( scalarVar, _var_label, matlIndex, patch );
+    scalarVar.initialize(0.0);
     
     PropertyModelBase::base_initialize( patch, prop ); // generic initialization functionality 
     

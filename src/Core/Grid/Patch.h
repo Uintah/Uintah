@@ -121,7 +121,8 @@ WARNING
         numFaces, // 6
         invalidFace
       };
-
+    friend std::ostream& operator<<(std::ostream& out, const FaceType& face);
+    
       enum VariableBasis {
         NodeBased = Ghost::AroundNodes,
         CellBased = Ghost::AroundCells,

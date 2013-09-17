@@ -86,6 +86,9 @@ namespace Wasatch{
                                   GraphCategories& graphCat );
 
 
+  template <typename T>
+  std::string number_to_string ( T n );
+  
 } // namespace Wasatch
 
 

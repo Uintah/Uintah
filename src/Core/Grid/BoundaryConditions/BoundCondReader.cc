@@ -375,6 +375,15 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     BCR_dbg << "Setting name to: " << name << endl;
     bcGeom->setBCName( name ); 
   }
+  
+  // get the bctype - mainly used by wasatch:
+  std::string wasatchBCType;
+  if (values.find("type") != values.end()){
+    std::string wasatchBCType = values["type"];
+    BCR_dbg << "Setting bc type to: " << wasatchBCType << endl;
+    bcGeom->setBCType( wasatchBCType );
+  }
+
 
   BCR_dbg << "Face = " << fc << endl;
   return bcGeom;
@@ -427,21 +436,21 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
       delete bc;
     }
 
-    // Add the Auxillary boundary condition type
-#if 1
-    set<int> materials;
-    for (multimap<int,BoundCondBase*>::const_iterator i = bctype_data.begin();
-         i != bctype_data.end(); i++) {
-      //      cout << "mat id = " << i->first << endl;
-      materials.insert(i->first);
-    }
-    for (set<int>::const_iterator i = materials.begin(); i != materials.end();
-         i++) {
-      BoundCondBase* bc = scinew BoundCond<NoValue>("Auxiliary");
-      bctype_data.insert(pair<int,BoundCondBase*>(*i,bc->clone()));
-      delete bc;
-    }
-#endif
+//    // Add the Auxillary boundary condition type
+//#if 1
+//    set<int> materials;
+//    for (multimap<int,BoundCondBase*>::const_iterator i = bctype_data.begin();
+//         i != bctype_data.end(); i++) {
+//      //      cout << "mat id = " << i->first << endl;
+//      materials.insert(i->first);
+//    }
+//    for (set<int>::const_iterator i = materials.begin(); i != materials.end();
+//         i++) {
+//      BoundCondBase* bc = scinew BoundCond<NoValue>("Auxiliary");
+//      bctype_data.insert(pair<int,BoundCondBase*>(*i,bc->clone()));
+//      delete bc;
+//    }
+//#endif
 
     // Print out all of the bcs just created
     multimap<int,BoundCondBase*>::const_iterator it;
@@ -480,6 +489,19 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
 
       bcgeom_data[itr->first]->addBC(itr->second);
     }
+    
+    //____________________________________________________________________
+    // CAUTION! tsaad: If NO BCs have been specified on this boundary, then NO iterators for that boundary
+    // will be added. The next if-statement circumvents that problem for lack of a better design.
+    // This is done to reduce input-file clutter. For example, for a constant density flow problem
+    // a stationary-wall boundary is well defined and there's no reason for the user to input
+    // any BCs there. To be able to set BCs through the code, we still need access to the iterator
+    // for that boundary.
+    if (bctype_data.size() == 0) {
+      bcgeom_data[-1] = bcGeom->clone();
+    }
+    //-------------------------------------------------------------------
+    
     for (bc_geom_itr = bcgeom_data.begin(); bc_geom_itr != bcgeom_data.end();
         bc_geom_itr++) {
       d_BCReaderData[face_side].addBCData(bc_geom_itr->first,
