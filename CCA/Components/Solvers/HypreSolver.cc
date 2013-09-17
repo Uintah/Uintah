@@ -149,7 +149,7 @@ namespace Uintah {
                    SoleVariable<hypre_solver_structP>::getTypeDescription());
                    
       firstPassThrough = true;
-      totalsolvertime_ = 0.0;
+      movingAverage_   = 0.0;
     }
 
     virtual ~HypreStencil7() {
@@ -956,7 +956,6 @@ namespace Uintah {
         //__________________________________
         // Push the solution into Uintah data structure
         double solve_dt = Time::currentSeconds()-solve_start;
-        totalsolvertime_ += solve_dt;
 
         for(int p=0;p<patches->size();p++){
           const Patch* patch = patches->get(p);
@@ -1004,12 +1003,19 @@ namespace Uintah {
 
         double dt=Time::currentSeconds()-tstart;
         if(pg->myrank() == 0){
+
           cout << "Solve of " << X_label->getName() 
                << " on level " << level->getIndex()
-               << " completed in " << dt 
-               << " s (solve only: " << solve_dt << " s, "
-               << "mean: " <<  totalsolvertime_/timestep << " s, "
-               << num_iterations << " iterations, residual = " << final_res_norm << ")."
+               << " completed in " << dt
+               << " s (solve only: " << solve_dt << " s, ";
+          if (timestep > 2) {
+            // alpha = 2/(N+1)
+            // averaging window is 10.
+            double alpha = 2.0/(std::min(timestep - 2, 10) + 1);
+            movingAverage_ = alpha*solve_dt + (1-alpha)*movingAverage_;
+            cout << "mean: " <<  movingAverage_ << " s, ";
+          }
+               cout << num_iterations << " iterations, residual = " << final_res_norm << ")."
                << std::endl;
         }
         tstart = Time::currentSeconds();
@@ -1143,7 +1149,7 @@ namespace Uintah {
     const VarLabel* hypre_solver_label;
     SoleVariable<hypre_solver_structP> d_hypre_solverP_;
     bool firstPassThrough;
-    double totalsolvertime_;
+    double movingAverage_;
   };
   
   //______________________________________________________________________
