@@ -38,23 +38,23 @@ ProcessorGroup::ProcessorGroup(const ProcessorGroup* parent,
    : d_parent(parent), d_rank(rank), d_size(size),  d_threads(threads),
      d_comm(comm),  d_allmpi(allmpi)
 {
-  int status;
-  if (d_threads > 0){
-    d_gComms.resize(d_threads);
-    for (int i=0; i< d_threads; i++){
-     if((status=MPI_Comm_dup(comm, &d_gComms[i])) != MPI_SUCCESS){
-       /*char string_name[1000];
-       int resultlen=1000;
-       MPI_Error_string(status, string_name, &resultlen);
-       cerr << "MPI Error in MPI_Comm_dup: " << string_name << '\n';*/
-       cerr << "MPI Error in MPI_Comm_dup\n" ;
-       Thread::exitAll(1);
-     }
-    }
-  }
 }
 
 ProcessorGroup::~ProcessorGroup()
 {
 }
 
+void
+ProcessorGroup::setgComm(int nComm) const
+{
+  if (d_threads <= 1  || !d_allmpi ) return;
+  int curr_size=d_gComms.size();
+  if (nComm <= curr_size) return;
+  d_gComms.resize(nComm);
+  for (int i=curr_size; i< nComm; i++){
+    if(MPI_Comm_dup(d_comm, &d_gComms[i]) != MPI_SUCCESS){
+      std::cerr << "MPI Error in MPI_Comm_dup\n" ;
+      Thread::exitAll(1);
+    }
+  }
+}

@@ -214,25 +214,23 @@ evaluate()
 
   int tIndex = calculate_time_index();
 
-  SpatialOps::structured::IntVec localCellIJK;
-  SpatialOps::structured::IntVec globalCellIJK;  
-  
-  std::vector<int>::const_iterator ig = (this->flatGhostPoints_).begin();    // ig is the ghost flat index
-  std::vector<int>::const_iterator ii = (this->flatInteriorPoints_).begin(); // ii is the interior flat index
+  typedef SpatialOps::structured::IntVec IntVecT;
+  IntVecT globalCellIJK;
 
-  for( ; ig != (this->flatGhostPoints_).end(); ++ig, ++ii ){
-    // get i,j,k index from flat index
-    localCellIJK  = f.window_with_ghost().ijk_index_from_local(*ig);
-    globalCellIJK = localCellIJK - SpatialOps::structured::IntVec(1,1,1) - minC_ + this->patchCellOffset_;
-
-    // linear interpolation between the turbulent-data points
-    const double y0 = fluct_[tIndex][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
-    const double y1 = fluct_[tIndex + 1][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
-    const double a = (y1-y0)/dx_;
-    const double bcValue = a*coord_ + y0;
-    
-    //double bcValue_ = fluct_[tIndex][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
-    f[*ig] = ( bcValue - ci * f[*ii] ) / cg;
+  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+    std::vector<IntVecT>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<IntVecT>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+      globalCellIJK = *ig - minC_ + this->patchCellOffset_;
+      // linear interpolation between the turbulent-data points
+      const double y0 = fluct_[tIndex][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
+      const double y1 = fluct_[tIndex + 1][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
+      const double a = (y1-y0)/dx_;
+      const double bcValue = a*coord_ + y0;
+      //double bcValue_ = fluct_[tIndex][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
+      f(*ig) = ( bcValue - ci * f(*ii) ) / cg;
+      if (this->isStaggered_) f(*ii) = ( bcValue - ci * f(*ig) ) / cg;
+    }
   }
 }
 

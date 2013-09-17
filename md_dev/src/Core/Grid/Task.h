@@ -98,7 +98,7 @@ class Task {
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
-                                void* device) = 0;
+                                void* stream) = 0;
     };
 
   private:
@@ -390,7 +390,7 @@ class Task {
                              const MaterialSubset* matls,
                              DataWarehouse* fromDW,
                              DataWarehouse* toDW,
-                             void* device);
+                             void* stream);
       public:
         // class ActionDevice
         ActionDevice(T* ptr,
@@ -399,7 +399,7 @@ class Task {
                                           const MaterialSubset* matls,
                                           DataWarehouse* fromDW,
                                           DataWarehouse* toDW,
-                                          void* device))
+                                          void* stream))
             : ptr(ptr), pmfdevice(pmfdevice)
         {
         }
@@ -414,9 +414,9 @@ class Task {
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
-                                void* device)
+                                void* stream)
         {
-          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, device);
+          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, stream);
         }
     };  // end class ActionDevice
 
@@ -428,7 +428,7 @@ class Task {
                              const MaterialSubset* matls,
                              DataWarehouse* fromDW,
                              DataWarehouse* toDW,
-                             void* device,
+                             void* stream,
                              Arg1 arg1);
         Arg1 arg1;
       public:
@@ -439,7 +439,7 @@ class Task {
                                            const MaterialSubset* matls,
                                            DataWarehouse* fromDW,
                                            DataWarehouse* toDW,
-                                           void* device,
+                                           void* stream,
                                            Arg1 arg1),
                       Arg1 arg1)
             : ptr(ptr), pmfdevice(pmfdevice), arg1(arg1)
@@ -456,9 +456,9 @@ class Task {
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
-                                void* device)
+                                void* stream)
         {
-          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, device, arg1);
+          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, stream, arg1);
         }
     };  // end class ActionDevice1
 
@@ -470,7 +470,7 @@ class Task {
                              const MaterialSubset* matls,
                              DataWarehouse* fromDW,
                              DataWarehouse* toDW,
-                             void* device,
+                             void* stream,
                              Arg1 arg1,
                              Arg2 arg2);
         Arg1 arg1;
@@ -483,7 +483,7 @@ class Task {
                                            const MaterialSubset* matls,
                                            DataWarehouse* fromDW,
                                            DataWarehouse* toDW,
-                                           void* device,
+                                           void* stream,
                                            Arg1 arg1,
                                            Arg2 arg2),
                       Arg1 arg1,
@@ -502,9 +502,9 @@ class Task {
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
-                                void* device)
+                                void* stream)
         {
-          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, device, arg1, arg2);
+          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, stream, arg1, arg2);
         }
     };  // end class ActionDevice2
 
@@ -516,7 +516,7 @@ class Task {
                              const MaterialSubset* matls,
                              DataWarehouse* fromDW,
                              DataWarehouse* toDW,
-                             void* device,
+                             void* stream,
                              Arg1 arg1,
                              Arg2 arg2,
                              Arg3 arg3);
@@ -531,7 +531,7 @@ class Task {
                                            const MaterialSubset* matls,
                                            DataWarehouse* fromDW,
                                            DataWarehouse* toDW,
-                                           void* device,
+                                           void* stream,
                                            Arg1 arg1,
                                            Arg2 arg2,
                                            Arg3 arg3),
@@ -552,9 +552,9 @@ class Task {
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
-                                void* device)
+                                void* stream)
         {
-          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, device, arg1, arg2, arg3);
+          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, stream, arg1, arg2, arg3);
         }
     };  // end class ActionDevice3
 
@@ -566,7 +566,7 @@ class Task {
                              const MaterialSubset* matls,
                              DataWarehouse* fromDW,
                              DataWarehouse* toDW,
-                             void* device,
+                             void* stream,
                              Arg1 arg1,
                              Arg2 arg2,
                              Arg3 arg3,
@@ -583,7 +583,7 @@ class Task {
                                            const MaterialSubset* matls,
                                            DataWarehouse* fromDW,
                                            DataWarehouse* toDW,
-                                           void* device,
+                                           void* stream,
                                            Arg1 arg1,
                                            Arg2 arg2,
                                            Arg3 arg3,
@@ -606,9 +606,9 @@ class Task {
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
-                                void* device)
+                                void* stream)
         {
-          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, device, arg1, arg2, arg3, arg4);
+          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, stream, arg1, arg2, arg3, arg4);
         }
     };  // end class ActionDevice4
 
@@ -620,7 +620,7 @@ class Task {
                              const MaterialSubset* matls,
                              DataWarehouse* fromDW,
                              DataWarehouse* toDW,
-                             void* device,
+                             void* stream,
                              Arg1 arg1,
                              Arg2 arg2,
                              Arg3 arg3,
@@ -639,7 +639,7 @@ class Task {
                                            const MaterialSubset* matls,
                                            DataWarehouse* fromDW,
                                            DataWarehouse* toDW,
-                                           void* device,
+                                           void* stream,
                                            Arg1 arg1,
                                            Arg2 arg2,
                                            Arg3 arg3,
@@ -664,9 +664,9 @@ class Task {
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
-                                void* device)
+                                void* stream)
         {
-          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, device, arg1, arg2, arg3, arg4, arg5);
+          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, stream, arg1, arg2, arg3, arg4, arg5);
         }
     };  // end class ActionDevice5
     // end Device Action constructors
@@ -834,7 +834,7 @@ class Task {
                               const MaterialSubset* matls,
                               DataWarehouse* fromDW,
                               DataWarehouse* toDW,
-                              void* device),
+                              void* stream),
          const std::string& taskNameDevice,
          const std::string& taskName,
          T* ptr,
@@ -860,7 +860,7 @@ class Task {
                               const MaterialSubset* matls,
                               DataWarehouse* fromDW,
                               DataWarehouse* toDW,
-                              void* device,
+                              void* stream,
                               Arg1 arg1),
          const std::string& taskNameDevice,
          const std::string& taskName,
@@ -871,7 +871,7 @@ class Task {
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
                         Arg1 arg1),
-         void* device,
+         void* stream,
          Arg1 arg1)
         :
           d_taskName(taskName),
@@ -890,7 +890,7 @@ class Task {
                               const MaterialSubset* matls,
                               DataWarehouse* fromDW,
                               DataWarehouse* toDW,
-                              void* device,
+                              void* stream,
                               Arg1 arg1,
                               Arg2 arg2),
          const std::string& taskNameDevice,
@@ -922,7 +922,7 @@ class Task {
                               const MaterialSubset* matls,
                               DataWarehouse* fromDW,
                               DataWarehouse* toDW,
-                              void* device,
+                              void* stream,
                               Arg1 arg1,
                               Arg2 arg2,
                               Arg3 arg3),
@@ -957,7 +957,7 @@ class Task {
                               const MaterialSubset* matls,
                               DataWarehouse* fromDW,
                               DataWarehouse* toDW,
-                              void* device,
+                              void* stream,
                               Arg1 arg1,
                               Arg2 arg2,
                               Arg3 arg3,
@@ -995,7 +995,7 @@ class Task {
                               const MaterialSubset* matls,
                               DataWarehouse* fromDW,
                               DataWarehouse* toDW,
-                              void* device,
+                              void* stream,
                               Arg1 arg1,
                               Arg2 arg2,
                               Arg3 arg3,
@@ -1282,7 +1282,7 @@ class Task {
                             const PatchSubset*,
                             const MaterialSubset*,
                             vector<DataWarehouseP>& dws,
-                            void* device);
+                            void* stream);
 
     inline const string& getName() const
     {

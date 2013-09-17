@@ -95,11 +95,14 @@ evaluate()
   FieldT& f = this->value();
   const double ci = this->ci_;
   const double cg = this->cg_;
-  std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
-  std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
   const double bcValue = -1 / ( (5/(exp(1125/( *t_ + 10)) * (2 * *t_ + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125 / (*t_ + 10)) * (2 * *t_ + 5)));
-  for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib )
-    f[*ia] = ( bcValue - ci*f[*ib] ) / cg;
+  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+    std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+    for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+      f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
+    }
+  }
 }
 
 #endif // Var_Dens_MMS_Density_Expr_h

@@ -32,6 +32,7 @@
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <CCA/Components/Wasatch/transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/Expressions/MonolithicRHS.h>
+#include <CCA/Components/Wasatch/BCHelper.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -115,22 +116,16 @@ namespace Wasatch{
   template< typename FieldT >
   void ScalabilityTestTransportEquation<FieldT>::
   setup_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                     const Uintah::PatchSet* const localPatches,
-                                     const PatchInfoMap& patchInfoMap,
-                                     const Uintah::MaterialSubset* const materials,
-                                     const std::map<std::string, std::set<std::string> >& bcFunctorMap)
+                                    BCHelper& bcHelper )
   {}
-
+  
   //------------------------------------------------------------------
-
+  
   template< typename FieldT >
   void ScalabilityTestTransportEquation<FieldT>::
   setup_boundary_conditions( const GraphHelper& graphHelper,
-                             const Uintah::PatchSet* const localPatches,
-                             const PatchInfoMap& patchInfoMap,
-                             const Uintah::MaterialSubset* const materials,
-                             const std::map<std::string, std::set<std::string> >& bcFunctorMap)
-                             {}
+                             BCHelper& bcHelper )
+  {}
 
   //------------------------------------------------------------------
 

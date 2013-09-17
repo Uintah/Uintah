@@ -95,7 +95,9 @@ namespace Wasatch{
    */
   template< typename FieldT, typename UFT >
   inline FieldT* wrap_uintah_field_as_spatialops( UFT& uintahVar,
-                                                  const Uintah::Patch* const patch )
+                                                  const Uintah::Patch* const patch,
+                                                  const SpatialOps::MemoryType mtype=SpatialOps::LOCAL_RAM,
+                                                  const unsigned short int deviceIndex=0 )
   {
     /*
      * NOTE: before changing things here, look at the line:
@@ -141,7 +143,9 @@ namespace Wasatch{
     return new FieldT( SpatialOps::structured::MemoryWindow( size, offset, extent,
                                                              bcPlus[0], bcPlus[1], bcPlus[2] ),
                        const_cast<typename FieldT::AtomicT*>( uintahVar.getPointer() ),
-                       SpatialOps::structured::ExternalStorage );
+                       SpatialOps::structured::ExternalStorage,
+                       mtype,
+                       deviceIndex );
   }
 
   /**

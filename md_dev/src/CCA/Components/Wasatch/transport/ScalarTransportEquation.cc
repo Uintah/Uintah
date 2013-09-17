@@ -22,6 +22,12 @@
  * IN THE SOFTWARE.
  */
 
+//-- ExprLib includes --//
+#include <expression/ExprLib.h>
+
+//-- SpatialOps includes --//
+#include <spatialops/structured/IndexTriplet.h>
+
 //-- Wasatch includes --//
 #include "ScalarTransportEquation.h"
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
@@ -34,15 +40,7 @@
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BCCopier.h>
-
-//-- ExprLib includes --//
-#include <expression/ExprLib.h>
-
-//-- SpatialOps includes --//
-#include <spatialops/structured/IndexTriplet.h>
-
-//-- Wasatch includes --//
-#include "ParseEquation.h"
+#include <CCA/Components/Wasatch/BCHelper.h>
 
 //-- Uintah includes --//
 #include <Core/Parallel/Parallel.h>
@@ -124,17 +122,15 @@ namespace Wasatch{
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
   setup_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                     const Uintah::PatchSet* const localPatches,
-                                     const PatchInfoMap& patchInfoMap,
-                                     const Uintah::MaterialSubset* const materials,
-                                     const std::map<std::string, std::set<std::string> >& bcFunctorMap )
+                                     BCHelper& bcHelper )
   {
-
+    const Category taskCat = INITIALIZATION;
+   
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
     
     // multiply the initial condition by the volume fraction for embedded geometries
-    if( hasEmbeddedGeometry_ ){
+    if( hasEmbeddedGeometry_ ) {
 
       std::cout << "attaching modifier expression on " << phiTag << std::endl;
       //create modifier expression
@@ -148,76 +144,31 @@ namespace Wasatch{
                                                                    ExprAlgbr::PRODUCT,
                                                                    true) );
       
-      for( int ip=0; ip<localPatches->size(); ++ip ){
-        
-        // get the patch subset
-        const Uintah::PatchSubset* const patches = localPatches->getSubset(ip);
-        
-        // loop over every patch in the patch subset
-        for( int ipss=0; ipss<patches->size(); ++ipss ){
-          
-          // get a pointer to the current patch
-          const Uintah::Patch* const patch = patches->get(ipss);
-          
-          // loop over materials
-          for( int im=0; im<materials->size(); ++im ){
-            //    if (hasVolFrac_) {
-            // attach the modifier expression to the target expression
-            factory.attach_modifier_expression( modifierTag, phiTag, patch->getID(), true );
-            //    }
-            
-          }
-        }
-      }
+      factory.attach_modifier_expression( modifierTag, phiTag );
     }
-
+    
     if( factory.have_entry(phiTag) ){
-      process_boundary_conditions<FieldT>( phiTag,
-                                           this->solution_variable_name(),
-                                           this->staggered_location(),
-                                           graphHelper,
-                                           localPatches,
-                                           patchInfoMap,
-                                           materials, bcFunctorMap );
+      bcHelper.apply_boundary_condition<FieldT>( phiTag, taskCat );
     }
     
     if( !isConstDensity_ ){
-      process_boundary_conditions<FieldT>( primVarTag_,
-                                           primVarTag_.name(),
-                                           this->staggered_location(),
-                                           graphHelper,
-                                           localPatches,
-                                           patchInfoMap,
-                                           materials, bcFunctorMap );
+      bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
     }
+            
   }
 
   //------------------------------------------------------------------
-
+  
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
   setup_boundary_conditions( const GraphHelper& graphHelper,
-                             const Uintah::PatchSet* const localPatches,
-                             const PatchInfoMap& patchInfoMap,
-                             const Uintah::MaterialSubset* const materials,
-                             const std::map<std::string, std::set<std::string> >& bcFunctorMap)
-  {
-    // see BCHelperTools.cc
-    process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name(),Expr::STATE_N ),
-                                         this->solution_variable_name(),
-                                         this->staggered_location(),
-                                         graphHelper,
-                                         localPatches,
-                                         patchInfoMap,
-                                         materials, bcFunctorMap );
-    // see BCHelperTools.cc
-    process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name()+"_rhs",Expr::STATE_NONE ),
-                                        this->solution_variable_name() + "_rhs",
-                                        this->staggered_location(),
-                                        graphHelper,
-                                        localPatches,
-                                        patchInfoMap,
-                                        materials, bcFunctorMap );
+                             BCHelper& bcHelper )
+  {            
+    namespace SS = SpatialOps::structured;
+    const Category taskCat = ADVANCE_SOLUTION;
+    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );    
+    bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, false );
+    
     
     if( !isConstDensity_ ){
       // set bcs for solnVar_*
@@ -228,23 +179,14 @@ namespace Wasatch{
       if (!factory.have_entry(solnVarStarBCTag)){
         factory.register_expression ( new typename BCCopier<SVolField>::Builder(solnVarStarBCTag, Expr::Tag( this->solution_variable_name(),Expr::STATE_N )) );
       }
-      process_boundary_conditions<FieldT>( solnVarStarTag,
-                                           solnVarStarTag.name(),
-                                           this->staggered_location(),
-                                           graphHelper,
-                                           localPatches,
-                                           patchInfoMap,
-                                           materials, bcFunctorMap, 
-                                           this->solution_variable_name(), 0, "Dirichlet", solnVarStarBCTag.name() );
-
-      process_boundary_conditions<FieldT>( primVarTag_,
-                                           primVarTag_.name(),
-                                           this->staggered_location(),
-                                           graphHelper,
-                                           localPatches,
-                                           patchInfoMap,
-                                           materials, bcFunctorMap );
+      
+      bcHelper.add_auxiliary_boundary_condition( this->solution_variable_name(), solnVarStarTag.name(), solnVarStarBCTag.name(), Wasatch::DIRICHLET );
+      bcHelper.apply_boundary_condition<FieldT>( solnVarStarTag, taskCat );
+      
+      bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
     }
+    
+    
   }
 
   //------------------------------------------------------------------

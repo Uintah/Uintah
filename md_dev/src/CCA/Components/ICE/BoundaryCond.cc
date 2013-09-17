@@ -404,7 +404,7 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
                    const string& which_Var,
                    SimulationStateP& sharedState,
                    DataWarehouse* new_dw,
-                   customBC_var_basket* custom_BC_basket)
+                   customBC_globalVars* globalVars)
 {
   BC_dbg << " get_rho_micro: (" << which_Var <<")"<< endl;
   
@@ -412,7 +412,7 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
     throw InternalError("setBC (pressure): Invalid option for which_var", __FILE__, __LINE__);
   }
   
-  Vector gravity = custom_BC_basket->d_gravity; 
+  Vector gravity = globalVars->d_gravity; 
 //  int timestep = sharedState->getCurrentTopLevelTimeStep();
   int numICEMatls  = sharedState->getNumICEMatls();
     
@@ -561,7 +561,8 @@ void setBC(CCVariable<double>& press_CC,
            SimulationStateP& sharedState, 
            const int mat_id,
            DataWarehouse* new_dw,
-           customBC_var_basket* custom_BC_basket)
+           customBC_globalVars* globalVars,
+           customBC_localVars* localVars)
 {
   if(patch->hasBoundaryFaces() == false){
     return;
@@ -572,7 +573,7 @@ void setBC(CCVariable<double>& press_CC,
 
   int numALLMatls = sharedState->getNumMatls();
   bool isNotInitialTimestep = (sharedState->getCurrentTopLevelTimeStep() > 0);  
-  Vector gravity = custom_BC_basket->d_gravity;
+  Vector gravity = globalVars->d_gravity;
   StaticArray<CCVariable<double> > rho_micro(numALLMatls);
   
   for (int m = 0; m < numALLMatls; m++) {
@@ -580,7 +581,7 @@ void setBC(CCVariable<double>& press_CC,
   }
   
   get_rho_micro(rho_micro, rho_micro_tmp, sp_vol_CC, 
-                patch, which_Var, sharedState,  new_dw, custom_BC_basket);
+                patch, which_Var, sharedState,  new_dw, globalVars);
                 
   //__________________________________
   //  -Set the LODI BC's first, then let the other BC's wipe out what
@@ -602,11 +603,10 @@ void setBC(CCVariable<double>& press_CC,
     bool is_lodi_pressBC = patch->haveBC(face,mat_id,"LODI","Pressure");
     
     if(kind == "Pressure"       && is_lodi_pressBC 
-       && isNotInitialTimestep  && custom_BC_basket->setLodiBcs){
+       && isNotInitialTimestep  && localVars->setLodiBcs){
        
        nCells_LODI[face] += 
-       FacePress_LODI(patch, press_CC, rho_micro, sharedState,face,
-                      custom_BC_basket->lv);
+       FacePress_LODI(patch, press_CC, rho_micro, sharedState,face, localVars->lv);
     }
   }
 
@@ -650,19 +650,19 @@ void setBC(CCVariable<double>& press_CC,
                                           
         //__________________________________
         //  Custom Boundary Conditions
-        else if (bc_kind == "MMS_1" && custom_BC_basket->set_MMS_BCs) {
+        else if (bc_kind == "MMS_1" && localVars->set_MMS_BCs) {
           nCells += set_MMS_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
-                                       sharedState, 
-                                       custom_BC_basket->mms_var_basket,
-                                       custom_BC_basket->mms_v);
+                                      sharedState, 
+                                      globalVars->mms_var_basket,
+                                      localVars->mms_v);
         }                    
         //__________________________________
         //  Sine
-        else if (bc_kind == "Sine" && custom_BC_basket->set_Sine_BCs) {
+        else if (bc_kind == "Sine" && localVars->set_Sine_BCs) {
           nCells += set_Sine_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
-                                        sharedState, 
-                                        custom_BC_basket->sine_var_basket,
-                                        custom_BC_basket->sine_v);
+                                       sharedState, 
+                                       globalVars->sine_var_basket,
+                                       localVars->sine_v);
         }
         
         
@@ -709,7 +709,8 @@ void setBC(CCVariable<double>& var_CC,
            SimulationStateP& sharedState, 
            const int mat_id,
            DataWarehouse*,
-           customBC_var_basket* custom_BC_basket)    // NG hack
+           customBC_globalVars* globalVars,
+           customBC_localVars* localVars)
 {
 
   if(patch->hasBoundaryFaces() == false){
@@ -740,13 +741,11 @@ void setBC(CCVariable<double>& var_CC,
     bool is_tempBC_lodi=  patch->haveBC(face,mat_id,"LODI","Temperature");  
     bool is_rhoBC_lodi =  patch->haveBC(face,mat_id,"LODI","Density");
     
-    Lodi_vars* lv = custom_BC_basket->lv;
-    if( desc == "Temperature"  && is_tempBC_lodi 
-        && isNotInitialTimestep && custom_BC_basket->setLodiBcs ){
+    Lodi_vars* lv = localVars->lv;
+    if( desc == "Temperature"  && is_tempBC_lodi  && isNotInitialTimestep && localVars->setLodiBcs ){
       nCells_LODI[face] += FaceTemp_LODI(patch, face, var_CC, lv, cell_dx, sharedState);
     }   
-    else if (desc == "Density"  && is_rhoBC_lodi 
-        && isNotInitialTimestep && custom_BC_basket->setLodiBcs){
+    else if (desc == "Density"  && is_rhoBC_lodi  && isNotInitialTimestep && localVars->setLodiBcs){
       nCells_LODI[face] += FaceDensity_LODI(patch, face, var_CC, lv, cell_dx);
     }
   }
@@ -788,28 +787,28 @@ void setBC(CCVariable<double>& var_CC,
         }
         //__________________________________
         //  Custom Boundary Conditions
-        if ( desc == "Temperature" &&custom_BC_basket->setMicroSlipBcs) {
-          nCells += set_MicroSlipTemperature_BC(patch,face,var_CC,
-                                                  bound_ptr, bc_kind, bc_value,
-                                                  custom_BC_basket->sv);
+        if ( desc == "Temperature" && localVars->setMicroSlipBcs) {
+          nCells += set_MicroSlipTemperature_BC( patch,face,var_CC,
+                                                 bound_ptr, bc_kind, bc_value,
+                                                 localVars->sv);
         }
-        else if ( desc == "Temperature" && custom_BC_basket->set_MMS_BCs) {
+        else if ( desc == "Temperature" && localVars->set_MMS_BCs) {
           nCells += set_MMS_Temperature_BC(patch, face, var_CC, 
                                              bound_ptr, bc_kind, 
-                                             custom_BC_basket->mms_var_basket,
-                                             custom_BC_basket->mms_v);
+                                             globalVars->mms_var_basket,
+                                             localVars->mms_v);
         }
-        else if ( desc == "Temperature" && custom_BC_basket->set_Sine_BCs) {
-          nCells += set_Sine_Temperature_BC(patch, face, var_CC, 
-                                              bound_ptr, bc_kind, 
-                                              custom_BC_basket->sine_var_basket,
-                                              custom_BC_basket->sine_v);
+        else if ( desc == "Temperature" && localVars->set_Sine_BCs) {
+          nCells += set_Sine_Temperature_BC( patch, face, var_CC, 
+                                             bound_ptr, bc_kind, 
+                                             globalVars->sine_var_basket,
+                                             localVars->sine_v);
         }
         //__________________________________
         // Temperature and Gravity and ICE Matls
         // -Ignore this during intialization phase,
         //  since we backout the temperature field
-        Vector gravity = custom_BC_basket->d_gravity;                        
+        Vector gravity = globalVars->d_gravity;                        
         Material *matl = sharedState->getMaterial(mat_id);
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         int P_dir =  patch->getFaceAxes(face)[0];  // principal direction
@@ -869,7 +868,8 @@ void setBC(CCVariable<Vector>& var_CC,
            SimulationStateP& sharedState, 
            const int mat_id,
            DataWarehouse* ,
-           customBC_var_basket* custom_BC_basket)
+           customBC_globalVars* globalVars,
+           customBC_localVars* localVars)
 {
  if(patch->hasBoundaryFaces() == false){
     return;
@@ -897,10 +897,10 @@ void setBC(CCVariable<Vector>& var_CC,
     Patch::FaceType face = *iter;
     bool is_velBC_lodi   = patch->haveBC(face,mat_id,"LODI","Velocity");
     
-    Lodi_vars* lv = custom_BC_basket->lv;
+    Lodi_vars* lv = localVars->lv;
     
     if( desc == "Velocity"      && is_velBC_lodi 
-        && isNotInitialTimestep && custom_BC_basket->setLodiBcs) {
+        && isNotInitialTimestep && localVars->setLodiBcs) {
         
       nCells_LODI[face] += FaceVel_LODI( patch, face, var_CC, lv, cell_dx, sharedState);
     }
@@ -946,27 +946,27 @@ void setBC(CCVariable<Vector>& var_CC,
         }
         //__________________________________
         //  Custom Boundary Conditions
-        else if (custom_BC_basket->setMicroSlipBcs) {
-          nCells += set_MicroSlipVelocity_BC(patch,face,var_CC,desc,
-                                               bound_ptr, bc_kind, bc_value,
-                                               custom_BC_basket->sv);
+        else if ( localVars->setMicroSlipBcs ) {
+          nCells += set_MicroSlipVelocity_BC( patch,face,var_CC,desc,
+                                              bound_ptr, bc_kind, bc_value,
+                                              localVars->sv);
         }
-        else if ( custom_BC_basket->set_MMS_BCs) {
-          nCells += set_MMS_Velocity_BC(patch, face, var_CC, desc,
+        else if ( localVars->set_MMS_BCs ) {
+          nCells += set_MMS_Velocity_BC( patch, face, var_CC, desc,
+                                         bound_ptr, bc_kind, sharedState,
+                                         globalVars->mms_var_basket,
+                                         localVars->mms_v);
+        }
+        else if ( localVars->set_Sine_BCs ) {
+          nCells += set_Sine_Velocity_BC( patch, face, var_CC, desc,
                                           bound_ptr, bc_kind, sharedState,
-                                          custom_BC_basket->mms_var_basket,
-                                          custom_BC_basket->mms_v);
+                                          globalVars->sine_var_basket,
+                                          localVars->sine_v);
         }
-        else if ( custom_BC_basket->set_Sine_BCs) {
-          nCells += set_Sine_Velocity_BC(patch, face, var_CC, desc,
-                                           bound_ptr, bc_kind, sharedState,
-                                           custom_BC_basket->sine_var_basket,
-                                           custom_BC_basket->sine_v);
-        }
-        else if ( custom_BC_basket->set_inletVel_BCs) {
-          nCells += set_inletVelocity_BC(patch, face, var_CC, desc,
-                                         bound_ptr, bc_kind, bc_value,
-                                         custom_BC_basket->inletVel_var_basket );
+        else if ( localVars->set_inletVel_BCs ) {
+          nCells += set_inletVelocity_BC( patch, face, var_CC, desc,
+                                          bound_ptr, bc_kind, bc_value,
+                                          globalVars->inletVel_var_basket );
         }
         //__________________________________
         //  debugging
@@ -1329,18 +1329,15 @@ void setBC(CCVariable<double>& var,
           const int mat_id,
           DataWarehouse* new_dw)
 {
-  customBC_var_basket* basket  = scinew customBC_var_basket();
+  customBC_globalVars* globalVars = scinew customBC_globalVars();
+  customBC_localVars* localVars   = scinew customBC_localVars();
   constCCVariable<double> placeHolder;
   
-  basket->setLodiBcs      = false;
-  basket->setMicroSlipBcs = false;
-  basket->set_MMS_BCs     = false;
-  basket->set_Sine_BCs    = false;
-  
   setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
-        mat_id, new_dw,basket);
+        mat_id, new_dw, globalVars, localVars );
   
-  delete basket;
+  delete globalVars;
+  delete localVars;
 } 
 //__________________________________  
 void setBC(CCVariable<double>& press_CC,          
@@ -1354,16 +1351,14 @@ void setBC(CCVariable<double>& press_CC,
          const int mat_id, 
          DataWarehouse* new_dw) {
          
-  customBC_var_basket* basket  = scinew customBC_var_basket();
-  basket->setLodiBcs      = false;
-  basket->setMicroSlipBcs = false;
-  basket->set_MMS_BCs     = false;
-  basket->set_Sine_BCs    = false;
+  customBC_globalVars* globalVars = scinew customBC_globalVars();
+  customBC_localVars* localVars   = scinew customBC_localVars();
   
   setBC(press_CC, rho_micro, sp_vol, surroundingMatl_indx,
-        whichVar, kind, p, sharedState, mat_id, new_dw, basket); 
+        whichVar, kind, p, sharedState, mat_id, new_dw, globalVars, localVars); 
 
-  delete basket;         
+  delete globalVars;
+  delete localVars;         
 }   
 //__________________________________       
 void setBC(CCVariable<Vector>& variable,
@@ -1373,15 +1368,13 @@ void setBC(CCVariable<Vector>& variable,
           const int mat_id,
           DataWarehouse* new_dw)
 { 
-  customBC_var_basket* basket  = scinew customBC_var_basket();
-  basket->setLodiBcs      = false;
-  basket->setMicroSlipBcs = false;
-  basket->set_MMS_BCs     = false;
-  basket->set_Sine_BCs    = false;
+  customBC_globalVars* globalVars  = scinew customBC_globalVars();
+  customBC_localVars* localVars    = scinew customBC_localVars();
    
-  setBC( variable, type, p, sharedState, mat_id, new_dw,basket);
+  setBC( variable, type, p, sharedState, mat_id, new_dw,globalVars, localVars);
   
-  delete basket; 
+  delete globalVars;
+  delete localVars; 
 }
 
 

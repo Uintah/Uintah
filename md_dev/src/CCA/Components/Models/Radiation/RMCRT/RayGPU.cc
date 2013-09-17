@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -21,116 +21,101 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-//----- RayGPU.cu ----------------------------------------------
+
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+#include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #include <Core/Grid/DbgOutput.h>
 
 #include <sci_defs/cuda_defs.h>
 
+#define BLOCKSIZE 16
+
 using namespace Uintah;
 using namespace std;
 
-static DebugStream dbggpu("RAY", false);
-
+static DebugStream dbggpu("RAYGPU", false);
 
 //---------------------------------------------------------------------------
-// Method: The GPU ray tracer - setup and invoke ray trace kernel
+// Method: The GPU ray tracer - setup for ray trace kernel
 //---------------------------------------------------------------------------
 void Ray::rayTraceGPU(const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
-                      int device,
+                      void* stream,
                       bool modifies_divQ,
                       Task::WhichDW which_abskg_dw,
                       Task::WhichDW which_sigmaT4_dw,
                       Task::WhichDW which_celltype_dw,
                       const int radCalc_freq)
 {
-  // set the CUDA device and context
-  cout << " device " << device << endl;
-  CUDA_RT_SAFE_CALL( cudaSetDevice(device) );
-  int numPatches = patches->size();
+  // bail if not doing a radiation step
+  // equivalent to CPU rayTrace conditional: if ( doCarryForward( timestep, radCalc_freq) )
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  if ( (timestep%radCalc_freq != 0) && (timestep != 1) ) {
+    return;
+  }
 
   const Level* level = getLevel(patches);
-  IntVector dLo, dHi;
-  level->findInteriorCellIndexRange(dLo, dHi);
-  uint3 domainLo = make_uint3(dLo.x(), dLo.y(), dLo.z());
-  uint3 domainHi = make_uint3(dLo.x(), dHi.y(), dHi.z());
 
-  // requires and computes on device
-  double* dev_absk      = NULL;
-  double* dev_sigmaT4   = NULL;
-  double* dev_divQ      = NULL;
-  double* dev_VRFlux    = NULL;
-  double* dev_radVolq   = NULL;
-  double* dev_boundFlux = NULL;
+  // Determine the size of the domain.
+  IntVector domainLo, domainHi;
+  IntVector domainLo_EC, domainHi_EC;
+  level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
+  level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
+
+  const uint3 dev_domainLo = make_uint3(domainLo_EC.x(), domainLo_EC.y(), domainLo_EC.z());
+  const uint3 dev_domainHi = make_uint3(domainHi_EC.x(), domainHi_EC.y(), domainHi_EC.z());
 
   // patch loop
-  for (int p = 0; p < numPatches; p++) {
+  int numPatches = patches->size();
+  for (int p = 0; p < numPatches; ++p) {
 
     const Patch* patch = patches->get(p);
     printTask(patches, patch, dbggpu, "Doing Ray::rayTraceGPU");
 
-    // pointers to device-side grid-variables
-    dev_absk      = _scheduler->getDeviceRequiresPtr(d_abskgLabel,        d_matl, patch);
-    dev_sigmaT4   = _scheduler->getDeviceRequiresPtr(d_sigmaT4_label,     d_matl, patch);
-    
-    dev_divQ      = _scheduler->getDeviceComputesPtr(d_divQLabel,         d_matl, patch);
-    dev_VRFlux    = _scheduler->getDeviceComputesPtr(d_VRFluxLabel,       d_matl, patch);
-    dev_boundFlux = _scheduler->getDeviceComputesPtr(d_boundFluxLabel,    d_matl, patch);
-    dev_radVolq   = _scheduler->getDeviceComputesPtr(d_radiationVolqLabel,d_matl, patch);
-    
     // Calculate the memory block size
-    IntVector nec = patch->getExtraCells();
-    IntVector l = patch->getCellLowIndex();
-    IntVector h = patch->getCellHighIndex();
+    const IntVector nec = patch->getExtraCells();
+    const IntVector low = patch->getCellLowIndex();
+    const IntVector high = patch->getCellHighIndex();
+    const IntVector size = high - low;
 
-    IntVector divQSize = _scheduler->getDeviceComputesSize(d_divQLabel, d_matl, patch);
-    int xdim = divQSize.x();
-    int ydim = divQSize.y();
-    int zdim = divQSize.z();
+    const int xdim = size.x();
+    const int ydim = size.y();
+    const int zdim = size.z();
 
-    // get the cell spacing and convert to CUDA vector type
-    Vector dcell = patch->dCell();
-    const double3 cellSpacing = make_double3(dcell.x(), dcell.y(), dcell.z());
+    // get the cell spacing and convert patch extents to CUDA vector type
+    const Vector dx = patch->dCell();
+    const double3 cellSpacing = make_double3(dx.x(), dx.y(), dx.z());
+    const uint3 dev_patchLo = make_uint3(low.x(), low.y(), low.z());
+    const uint3 dev_patchHi = make_uint3(high.x(), high.y(), high.z());
+    const uint3 dev_patchSize = make_uint3(xdim, ydim, zdim);
 
-    // Patch extents used by the kernel to prevent out of bounds accesses.
-    const uint3 patchLo = make_uint3(l.x(), l.y(), l.z());
-    const uint3 patchHi = make_uint3(h.x(), h.y(), h.z());
-    const uint3 patchSize = make_uint3(xdim, ydim, zdim);
-
-    // Set up number of thread blocks in X and Y directions accounting for dimensions not divisible by 8
-    int xBlocks = ((xdim % 8) == 0) ? (xdim / 8) : ((xdim / 8) + 1);
-    int yBlocks = ((ydim % 8) == 0) ? (ydim / 8) : ((ydim / 8) + 1);
-    dim3 dimGrid(xBlocks, yBlocks, 1); // grid dimensions (blocks per grid))
-
-    // block dimensions (threads per block)
-    int tpbX = 8;
-    int tpbY = 8;
-    int tpbZ = 1;
-    dim3 dimBlock(tpbX, tpbY, tpbZ);
+    // define dimesions of the thread grid to be launched
+    int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
+    int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
+    dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
+    dim3 dimGrid(xblocks, yblocks, 1);
 
     // setup random number generator states on the device, 1 for each thread
-    curandState* globalDevStates;
+    curandState* globalDevRandStates;
     int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
-    CUDA_RT_SAFE_CALL( cudaMalloc((void**)&globalDevStates, numStates * sizeof(curandState)) );
+    CUDA_RT_SAFE_CALL( cudaMalloc((void**)&globalDevRandStates, numStates * sizeof(curandState)) );
 
 
     // set up and launch kernel
-    cudaStream_t* stream = _scheduler->getCudaStream(device);
 
-    launchRayTraceKernel(dimGrid, dimBlock, stream, patchLo, patchHi, patchSize, domainLo, domainHi, cellSpacing, 
-                         dev_absk, dev_sigmaT4, dev_divQ, dev_VRFlux, dev_boundFlux, dev_radVolq, 
-                         this->_virtRad, this->_isSeedRandom, this->_CCRays, this->_nDivQRays, this->_viewAng,
-                         this->_Threshold, globalDevStates);
-    // get updated divQ back into host memory
-    cudaEvent_t* event = _scheduler->getCudaEvent(device);
-    _scheduler->requestD2HCopy(d_divQLabel, d_matl, patch, stream, event);
+    launchRayTraceKernel(dimGrid, dimBlock,
+                         patch->getID(), d_matl,
+                         dev_patchLo, dev_patchHi, dev_patchSize,
+                         dev_domainLo, dev_domainHi, cellSpacing,
+                         globalDevRandStates, (cudaStream_t*)stream,
+                         _virtRad, _isSeedRandom, _CCRays, _nDivQRays, _viewAng, _Threshold,
+                         old_dw->getGPUDW()->getdevice_ptr(), new_dw->getGPUDW()->getdevice_ptr());
 
     // free device-side RNG states
-    CUDA_RT_SAFE_CALL( cudaFree(globalDevStates) );
+    CUDA_RT_SAFE_CALL( cudaFree(globalDevRandStates) );
 
   }  //end patch loop
 }  // end GPU ray trace method

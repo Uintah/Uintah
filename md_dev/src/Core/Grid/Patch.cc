@@ -261,6 +261,43 @@ namespace Uintah {
     out.setf(ios::scientific ,ios::floatfield);
     return out;
   }
+  
+  std::string faceTypeToString(const Patch::FaceType face)
+  {
+    switch (face) {
+      case Patch::xminus:
+        return "x-minus";
+        break;
+      case Patch::xplus:
+        return "x-plus";
+        break;
+      case Patch::yminus:
+        return "y-minus";
+        break;
+      case Patch::yplus:
+        return "y-plus";
+        break;
+      case Patch::zminus:
+        return "z-minus";
+        break;
+      case Patch::zplus:
+        return "z-plus";
+        break;
+      case Patch::invalidFace:
+        return "invalid-face";
+        break;
+      default:
+        return "unknonw face type";
+        break;
+    }
+  }
+  
+  ostream&
+  operator<<(ostream& out, const Patch::FaceType& face)
+  {
+    out << faceTypeToString(face);
+    return out;
+  }
 }
 
 void

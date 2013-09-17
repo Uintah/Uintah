@@ -38,10 +38,7 @@ class ParabolicBC
                const double x0) :
   indepVarTag_ (indepVarTag),
   a_(a), b_(b), c_(c), x0_(x0)
-  {
-    this->flatGhostPoints_.resize(0,0);
-    this->flatInteriorPoints_.resize(0,0);
-  }
+  {}
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -72,12 +69,22 @@ public:
     FieldT& f = this->value();
     const double ci = this->ci_;
     const double cg = this->cg_;
-    std::vector<int>::const_iterator ia = this->flatGhostPoints_.begin(); // ia is the ghost flat index
-    std::vector<int>::const_iterator ib = this->flatInteriorPoints_.begin(); // ib is the interior flat index
-    double x = 0.0;
-    for( ; ia != this->flatGhostPoints_.end(); ++ia, ++ib ){
-      x = (*x_)[*ia] - x0_;
-      f[*ia] = ( (a_ * x*x + b_ * x + c_) - ci*f[*ib] ) / cg;
+    
+    if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {      
+      double x = 0.0;
+      std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
+      std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
+      if(this->isStaggered_) {
+        for( ; ig != (this->vecGhostPts_)->end(); ++ig ){
+          x = (*x_)(*ig) - x0_;
+          f(*ig) = a_ * x*x + b_ * x + c_;
+        }
+      } else {
+        for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+          x = (*x_)(*ig) - x0_;
+          f(*ig) = ( (a_ * x*x + b_ * x + c_) - ci*f(*ii) ) / cg;
+        }
+      }
     }
   }
 

@@ -35,20 +35,16 @@ namespace Uintah {
   class DataWarehouse;
 
   //_____________________________________________________________
-  // This struct contains misc. variables that are need by the 
-  // the different custom boundary conditions
-  struct customBC_var_basket {
+  // This struct contains misc. variables that are needed by the 
+  // the different custom boundary conditions and are considered global
+  //  Don't put anything in here that is local to a task.cu
+  struct customBC_globalVars {
 
-    customBC_var_basket() {
-      Lodi_var_basket = 0;
-      lv          = NULL;
-      sv          = NULL;
-      mms_v       = NULL;
-      sine_v      = NULL;
-
-      Slip_var_basket = NULL;
-      mms_var_basket  = NULL;
-      sine_var_basket = NULL;
+    customBC_globalVars() {
+      Lodi_var_basket     = NULL;
+      Slip_var_basket     = NULL;
+      mms_var_basket      = NULL;
+      sine_var_basket     = NULL;
       inletVel_var_basket = NULL;
 
       usingLodi         = false;
@@ -56,44 +52,28 @@ namespace Uintah {
       using_MMS_BCs     = false;
       using_Sine_BCs    = false;
       using_inletVel_BCs= false;
-      
-      setLodiBcs        = false;
-      setMicroSlipBcs   = false;
-      set_MMS_BCs       = false;
-      set_Sine_BCs      = false;
-      set_inletVel_BCs  = false;
-      d_gravity=Vector(0,0,0);
 
     };
     
-    ~customBC_var_basket() {};
+    ~customBC_globalVars() {};
     // LODI boundary condtions
     bool usingLodi;
     Lodi_variable_basket* Lodi_var_basket;
-    Lodi_vars* lv;
-    bool setLodiBcs;
     
     // Micro slip boundary conditions
     bool usingMicroSlipBCs;
-    bool setMicroSlipBcs;
-    Slip_vars* sv;
     Slip_variable_basket* Slip_var_basket;
     
     // method of manufactured Solution BCs
     bool using_MMS_BCs;
-    bool set_MMS_BCs;
-    mms_vars* mms_v;
     mms_variable_basket* mms_var_basket;
     
     // Sine boundary conditions
     bool using_Sine_BCs;
-    bool set_Sine_BCs;
-    sine_vars* sine_v;
     sine_variable_basket* sine_var_basket;
     
     // powerLawProfile or logLawProfile inlet velocity profile
     bool using_inletVel_BCs;
-    bool set_inletVel_BCs;
     inletVel_variable_basket* inletVel_var_basket;
     
     SimulationStateP sharedState;
@@ -101,12 +81,53 @@ namespace Uintah {
 
   };
   
+  //_____________________________________________________________
+  // This struct contains variables that are local to a task or function
+  struct customBC_localVars {
+
+    customBC_localVars() {
+      
+      lv          = NULL;
+      sv          = NULL;
+      mms_v       = NULL;
+      sine_v      = NULL;
+      
+      setLodiBcs        = false;
+      setMicroSlipBcs   = false;
+      set_MMS_BCs       = false;
+      set_Sine_BCs      = false;
+      set_inletVel_BCs  = false;
+    };
+    
+    ~customBC_localVars() {};
+    // LODI boundary condtions
+    bool setLodiBcs;
+    Lodi_vars* lv;
+    
+    // Micro slip boundary conditions
+    bool setMicroSlipBcs;
+    Slip_vars* sv;
+    
+    // method of manufactured Solution BCs
+    bool set_MMS_BCs;
+    mms_vars* mms_v;
+    
+    // Sine boundary conditions
+    bool set_Sine_BCs;
+    sine_vars* sine_v;
+    
+    // powerLawProfile or logLawProfile inlet velocity profile
+    bool set_inletVel_BCs;
+  };  
+
+  //______________________________________________________________________
+  //
   
    void computesRequires_CustomBCs(Task* t, 
                                    const string& where,                      
                                    ICELabel* lb,                             
                                    const MaterialSubset* ice_matls,          
-                                   customBC_var_basket* C_BC_basket);        
+                                   customBC_globalVars* global);        
  
    void preprocess_CustomBCs(const string& where,
                              DataWarehouse* old_dw,                    
@@ -114,9 +135,11 @@ namespace Uintah {
                              ICELabel* lb,                             
                              const Patch* patch,                       
                              const int indx,                           
-                             customBC_var_basket* C_BC_basket);        
+                             customBC_globalVars* global,
+                             customBC_localVars* localVars);        
                             
-   void delete_CustomBCs(customBC_var_basket* C_BC_basket);
+   void delete_CustomBCs( customBC_globalVars* global,
+                          customBC_localVars* local );
   
 } // End namespace Uintah  
 #endif

@@ -220,7 +220,7 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   t->computes(lb->sum_imp_delPLabel, press_matl, oims);
  
   computesRequires_CustomBCs(t, "imp_update_press_CC", lb, ice_matls,
-                              d_customBC_var_basket);
+                              d_BC_globalVars);
   
   t->computes(lb->press_CCLabel,      press_matl,oims); 
   sched->addTask(t, patches, all_matls);                 
@@ -379,7 +379,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->requires( Task::NewDW, lb->sum_imp_delPLabel,   press_matl, oims, gac,1);
     
   computesRequires_CustomBCs(t, "implicitPressureSolve", lb, ice_matls,
-                             d_customBC_var_basket);
+                             d_BC_globalVars);
 
   //__________________________________
   // ImplicitVel_FC
@@ -833,14 +833,16 @@ void ICE::updatePressure(const ProcessorGroup*,
     }   
     //__________________________________
     //  set boundary conditions   
+    customBC_localVars* BC_localVars = scinew customBC_localVars();
+    
     preprocess_CustomBCs("imp_update_press_CC",parent_old_dw,parent_new_dw, 
-                            lb,  patch, 999,d_customBC_var_basket);
+                            lb,  patch, 999, d_BC_globalVars, BC_localVars );
 
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, 
-           d_customBC_var_basket);
+           d_BC_globalVars, BC_localVars );
            
-    delete_CustomBCs(d_customBC_var_basket);
+    delete_CustomBCs(d_BC_globalVars, BC_localVars);
 
     //____ B U L L E T   P R O O F I N G----
     // ignore BP if a timestep restart has already been requested

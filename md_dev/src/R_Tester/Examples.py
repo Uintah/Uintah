@@ -34,6 +34,7 @@ NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",         1, "ALL"),
                    ("RMCRT_VR",         "RMCRT_VR.ups",         1, "ALL", ["exactComparison"]),
                    ("RMCRT_isoScat",    "RMCRT_isoScat.ups",    1, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1, "ALL", ["exactComparison"]),
+                   ("RMCRT_udaInit",    "RMCRT_udaInit.ups",    1, "ALL", ["exactComparison","no_restart"]),
                    ("RMCRT_1L_perf",    "RMCRT_1L_perf.ups",    1, "ALL", ["do_performance_test"]),
                    ("RMCRT_DO_perf",    "RMCRT_DO_perf.ups",    1, "ALL", ["do_performance_test"]),
                ]
@@ -45,21 +46,29 @@ LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1, "ALL", ["exac
                    ("RMCRT_VR",         "RMCRT_VR.ups",         1, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1, "ALL", ["exactComparison"]), 
                    ("RMCRT_isoScat",    "RMCRT_isoScat.ups",    1, "ALL", ["exactComparison"]),
+                   ("RMCRT_udaInit",    "RMCRT_udaInit.ups",    1, "ALL", ["exactComparison","no_restart"]),
                ]
                  #  ("RMCRT_bm1_DO",     "RMCRT_bm1_DO.ups",     1, "ALL", ["exactComparison"])
+
+GPUTESTS      = [  ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1.1, "Linux", ["gpu", "no_restart", "exactComparison", "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_ML",         "RMCRT_ML.ups",         1.1, "Linux", ["gpu", "no_restart", "exactComparison", "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1.1, "Linux", ["gpu", "no_restart", "exactComparison", "sus_options=-nthreads 4 -gpu"]), 
+               ]
 
 DEBUGTESTS   =[]
 
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS DEBUGTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS GPUTESTS DEBUGTESTS NIGHTLYTESTS
 #__________________________________
   
 # returns the list  
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = LOCALTESTS
+  elif me == "GPUTESTS":
+    TESTS = GPUTESTS
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,10 +35,12 @@
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+
 #include <time.h>
 #include <fstream>
+
 #include <include/sci_defs/uintah_testdefs.h.in>
-#include <CCA/Components/Arches/BoundaryCondition.h>
 
 
 //--------------------------------------------------------------
@@ -50,10 +52,11 @@ static DebugStream dbg2("RAY_DEBUG",false);
 static DebugStream dbg_BC("RAY_BC", false);
 
 
-//______________________________________________________________________
-//
-//______________________________________________________________________
-void Ray::constructor(){
+//---------------------------------------------------------------------------
+// Class: Constructor.
+//---------------------------------------------------------------------------
+Ray::Ray()
+{
   _pi = acos(-1); 
 
   d_sigmaT4_label        = VarLabel::create( "sigmaT4",          CCVariable<double>::getTypeDescription() );
@@ -111,27 +114,6 @@ void Ray::constructor(){
   _locationShift[TOP]    = IntVector(0, 0, 1);
   _locationShift[BOT]    = IntVector(0, 0, 0);
 }
-
-
-
-//---------------------------------------------------------------------------
-// Class: Constructor. 
-//---------------------------------------------------------------------------
-Ray::Ray()
-{
-  constructor();  // put everything that is common to cpu & gpu inside the function above
-}
-
-//---------------------------------------------------------------------------
-// Method: Constructor for GPU Version.
-//---------------------------------------------------------------------------
-#ifdef HAVE_CUDA_OLD
-Ray::Ray(UnifiedScheduler* scheduler)
-{
-  _scheduler = scheduler;
-  constructor();
-}
-#endif
 
 //---------------------------------------------------------------------------
 // Method: Destructor
@@ -269,17 +251,17 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  CONSTANT VR VARIABLES
-  //  In spherical coordinates, the polar angle, theta_rot,
-  //  represents the counterclockwise rotation about the y axis,
-  //  The azimuthal angle represents the negative of the
-  //  counterclockwise rotation about the z axis.
+  //ï¿½ In spherical coordinates, the polar angle, theta_rot,
+  //ï¿½ represents the counterclockwise rotation about the y axis,
+  //ï¿½ The azimuthal angle represents the negative of the
+  //ï¿½ counterclockwise rotation about the z axis.
   //  Convert the user specified radiometer vector normal into three axial
   //  rotations about the x,y, and z axes.
   _VR.thetaRot  = acos(orient[2]/sqrt(orient[0]*orient[0]+orient[1]*orient[1] +orient[2]*orient[2]));
   double psiRot = acos(orient[0]/sqrt(orient[0]*orient[0]+orient[1]*orient[1]));
 
-  //  The calculated rotations must be adjusted if the x and y components of the normal vector
-  //  are in the 3rd or 4th quadrants due to the constraints on arccos
+  //ï¿½ The calculated rotations must be adjusted if the x and y components of the normal vector
+  //ï¿½ are in the 3rd or 4th quadrants due to the constraints on arccos
   if (orient[0] < 0 && orient[1] < 0)       // quadrant 3
     psiRot = (_pi/2 + psiRot);
 
@@ -287,7 +269,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     psiRot = (2*_pi - psiRot);
 
   _VR.psiRot = psiRot;
-  //  phiRot is always  0. There will never be a need for a rotation about the x axis.  All
+  //  phiRot is always  0. There will never be a need for a rotation about the x axis.ï¿½ All
   //  possible rotations can be accomplished using the other two.
   _VR.phiRot = 0;
 
@@ -600,18 +582,18 @@ Ray::sched_rayTrace( const LevelP& level,
                      const int radCalc_freq )
 {
   std::string taskname = "Ray::rayTrace";
-#ifdef HAVE_CUDA_OLD
+#ifdef HAVE_CUDA
   std::string gputaskname = "Ray::rayTraceGPU";
-  Task* tsk = scinew Task( &Ray::rayTraceGPU, gputaskname, taskname, this,
-                           &Ray::rayTrace, modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+  Task* tsk = scinew Task( &Ray::rayTraceGPU, gputaskname, taskname, this, &Ray::rayTrace,
+                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
 #else
-  Task* tsk= scinew Task( taskname, this, &Ray::rayTrace,
-                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+  Task* tsk = scinew Task( taskname, this, &Ray::rayTrace,
+                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
 #endif
 
   printSchedule(level,dbg,taskname);
 
-  // require an infinite number of ghost cells so  you can access the entire domain.
+  // require an infinite number of ghost cells so you can access the entire domain.
   Ghost::GhostType  gac  = Ghost::AroundCells;
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
@@ -1307,7 +1289,8 @@ void Ray::reflect(double& fs,
                   const double abskg,
                   bool& in_domain,
                   int& step,
-                  bool& sign)
+                  bool& sign,
+                  double& ray_direction)
 {
   fs = fs * (1 - abskg);
 
@@ -1318,6 +1301,7 @@ void Ray::reflect(double& fs,
   // apply reflection condition
   step *= -1;                // begin stepping in opposite direction
   sign = (sign==1) ? 0 : 1;  //  swap sign from 1 to 0 or vice versa
+  ray_direction *= -1;
   //dbg2 << " REFLECTING " << endl;
 }
             
@@ -1422,7 +1406,7 @@ void Ray::rayDirection_VR( MTRand& mTwister,
   
   // Generate two uniformly-distributed-over-the-solid-angle random numbers
   // Used in determining the ray direction
-  double phi = 2 * _pi * mTwister.randDblExc(); //azimuthal angle.  Range of 0 to 2pi
+  double phi = 2 * _pi * mTwister.randDblExc(); //azimuthal angle.ï¿½ Range of 0 to 2pi
     
   // This guarantees that the polar angle of the ray is within the delta_theta
   double VRTheta = acos(cos(deltaTheta)+range*mTwister.randDblExc());
@@ -1756,7 +1740,7 @@ void Ray::setBC(CCVariable<T>& Q_CC,
           dbg_BC <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
              <<"\t child " << child  <<" NumChildren "<<numChildren 
              <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-             <<"\t bound limits = "<< bound_ptr << endl;
+             <<"\t bound limits = "<< bound_ptr << std::endl;
         }
       }  // if iterator found
     }  // child loop
@@ -2214,7 +2198,10 @@ void Ray::updateSumI ( Vector& ray_direction,
        ray_location[0] = ray_location[0] + (disMin  * ray_direction[0]);
        ray_location[1] = ray_location[1] + (disMin  * ray_direction[1]);
        ray_location[2] = ray_location[2] + (disMin  * ray_direction[2]);
-
+       
+//cout << "cur " << cur << " face " << face << " tmax " << tMax << " rayLoc " << ray_location << 
+//        " inv_dir: " << inv_ray_direction << " disMin: " << disMin << endl;
+       
        in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
 
        optical_thickness += Dx.x() * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
@@ -2236,9 +2223,8 @@ void Ray::updateSumI ( Vector& ray_direction,
 
          // get new scatLength for each scattering event
          scatLength = -log(mTwister.randDblExc() ) / scatCoeff; 
-
-         bool randomSeed   = true;
-         ray_direction     =  findRayDirection( mTwister, randomSeed ); 
+         
+         ray_direction     =  findRayDirection( mTwister, _isSeedRandom, cur ); 
          inv_ray_direction = Vector(1.0)/ray_direction;
 
          // get new step and sign
@@ -2279,11 +2265,14 @@ void Ray::updateSumI ( Vector& ray_direction,
      sumI += wallEmissivity * sigmaT4OverPi[cur] * intensity;
 
      intensity = intensity * fs;
-                                            
+     
+     // when a ray reaches the end of the domain, we force it to terminate. 
+     if(!_allowReflect) intensity = 0;                                 
+     
      //__________________________________
      //  Reflections
      if ( (intensity > _Threshold) && _allowReflect){
-       reflect( fs, cur, prevCell, abskg[cur], in_domain, step[face], sign[face] );
+       reflect( fs, cur, prevCell, abskg[cur], in_domain, step[face], sign[face], ray_direction[face]);
        ++nReflect;
      }
    }  // threshold while loop.
@@ -2483,12 +2472,15 @@ void Ray::updateSumI ( Vector& ray_direction,
     sumI += wallEmissivity * sigmaT4OverPi[L][cur] * intensity;
 
     intensity = intensity * fs;  
-
+    
+     // when a ray reaches the end of the domain, we force it to terminate. 
+     if(!_allowReflect) intensity = 0;
+    
     //__________________________________
     //  Reflections
     if (intensity > _Threshold && _allowReflect ){
       ++nReflect;
-      reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir] );
+      reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], inv_direction[dir] );
 
     }
   }  // threshold while loop.

@@ -115,6 +115,7 @@
 #include "PatchInfo.h"
 #include "GraphHelperTools.h"
 #include "FieldTypes.h"
+#include "BCHelper.h"
 
 #include <expression/ExpressionFactory.h>
 
@@ -128,6 +129,7 @@ namespace Wasatch{
   
   void check_periodicity_extra_cells( const Uintah::ProblemSpecP& params,
                                      Uintah::IntVector& extraCells );
+  
   class EqnTimestepAdaptorBase;
   class TimeStepper;
   class CoordHelper;
@@ -263,7 +265,9 @@ namespace Wasatch{
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;
     Uintah::ProblemSpecP wasatchSpec_;
-    std::map<std::string, std::set<std::string> > bcFunctorMap_;
+
+    BCFunctorMap bcFunctorMap_;
+    BCHelper* bcHelper_;
 
     /**
      *  a container of information for constructing ExprLib graphs.

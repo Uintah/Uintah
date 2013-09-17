@@ -932,9 +932,9 @@ namespace Wasatch{
       valParams->getAttribute("side",side);
       
       typedef VarDensMMSVelocity<FieldT> VarDensMMSVExpr;
-      typename VarDensMMSVExpr::BCSide bcSide;
-      if      (side == "right" ) bcSide = VarDensMMSVExpr::RIGHT;
-      else if (side == "left"  ) bcSide = VarDensMMSVExpr::LEFT;
+      SpatialOps::structured::BCSide bcSide;
+      if      (side == "PLUS" ) bcSide = SpatialOps::structured::PLUS_SIDE;
+      else if (side == "MINUS"  ) bcSide = SpatialOps::structured::MINUS_SIDE;
       else {
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
@@ -951,9 +951,9 @@ namespace Wasatch{
       valParams->getAttribute("side",side);
       
       typedef VarDensMMSMomentum<FieldT> VarDensMMSMomExpr;
-      typename VarDensMMSMomExpr::BCSide bcSide;
-      if      (side == "right" ) bcSide = VarDensMMSMomExpr::RIGHT;
-      else if (side == "left"  ) bcSide = VarDensMMSMomExpr::LEFT;
+      SpatialOps::structured::BCSide bcSide;
+      if      (side == "PLUS" ) bcSide = SpatialOps::structured::PLUS_SIDE;
+      else if (side == "MINUS"  ) bcSide = SpatialOps::structured::MINUS_SIDE;
       else {
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
