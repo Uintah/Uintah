@@ -133,9 +133,9 @@ evaluate()
   using namespace SpatialOps;
   SVolField& result = this->value();
 
-  const double dx = 1.0 / std::abs( gradXOp_->get_plus_coef() );
-  const double dy = 1.0 / std::abs( gradYOp_->get_plus_coef() );
-  const double dz = 1.0 / std::abs( gradZOp_->get_plus_coef() );
+  const double dx = 1.0 / std::abs( gradXOp_->coefs().get_coef(1) ); //high coefficient
+  const double dy = 1.0 / std::abs( gradYOp_->coefs().get_coef(1) ); //high coefficient
+  const double dz = 1.0 / std::abs( gradZOp_->coefs().get_coef(1) ); //high coefficient
   const double avgVol = std::pow(dx*dy*dz, 1.0/3.0);
   
   double mixingLengthSq = turbParams_.eddyViscCoef * avgVol;
