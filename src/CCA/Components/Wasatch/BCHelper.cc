@@ -187,38 +187,38 @@ namespace Wasatch {
         switch (face) {
           case Uintah::Patch::xminus: {
             const typename OpT::DirichletX* const op = opdb.retrieve_operator<typename OpT::DirichletX>();
-            cg = op->get_minus_coef();
-            ci = op->get_plus_coef();
+            cg = op->coefs().get_coef(0); //low coefficient
+            ci = op->coefs().get_coef(1); //high coefficient
             break;
           }
           case Uintah::Patch::xplus: {
             const typename OpT::DirichletX* const op = opdb.retrieve_operator<typename OpT::DirichletX>();
-            cg = op->get_plus_coef();
-            ci = op->get_minus_coef();
+            cg = op->coefs().get_coef(1); //high coefficient
+            ci = op->coefs().get_coef(0); //low coefficient
             break;
           }
           case Uintah::Patch::yminus: {
             const typename OpT::DirichletY* const op = opdb.retrieve_operator<typename OpT::DirichletY>();
-            cg = op->get_minus_coef();
-            ci = op->get_plus_coef();
+            cg = op->coefs().get_coef(0); //low coefficient
+            ci = op->coefs().get_coef(1); //high coefficient
             break;
           }
           case Uintah::Patch::yplus: {
             const typename OpT::DirichletY* const op = opdb.retrieve_operator<typename OpT::DirichletY>();
-            cg = op->get_plus_coef();
-            ci = op->get_minus_coef();
+            cg = op->coefs().get_coef(1); //high coefficient
+            ci = op->coefs().get_coef(0); //low coefficient
             break;
           }
           case Uintah::Patch::zminus: {
             const typename OpT::DirichletZ* const op = opdb.retrieve_operator<typename OpT::DirichletZ>();
-            cg = op->get_minus_coef();
-            ci = op->get_plus_coef();
+            cg = op->coefs().get_coef(1); //low coefficient
+            ci = op->coefs().get_coef(0); //high coefficient
             break;
           }
           case Uintah::Patch::zplus: {
             const typename OpT::DirichletZ* const op = opdb.retrieve_operator<typename OpT::DirichletZ>();
-            cg = op->get_plus_coef();
-            ci = op->get_minus_coef();
+            cg = op->coefs().get_coef(1); //high coefficient
+            ci = op->coefs().get_coef(0); //low coefficient
             break;
           }
 
@@ -239,38 +239,38 @@ namespace Wasatch {
         switch (face) {
           case Uintah::Patch::xminus: {
             const typename OpT::NeumannX* const op = opdb.retrieve_operator<typename OpT::NeumannX>();
-            cg = op->get_minus_coef();
-            ci = op->get_plus_coef();
+            cg = op->coefs().get_coef(0); //low coefficient
+            ci = op->coefs().get_coef(1); //high coefficient
             break;
           }
           case Uintah::Patch::xplus: {
             const typename OpT::NeumannX* const op = opdb.retrieve_operator<typename OpT::NeumannX>();
-            cg = op->get_plus_coef();
-            ci = op->get_minus_coef();
+            cg = op->coefs().get_coef(1); //high coefficient
+            ci = op->coefs().get_coef(0); //low coefficient
             break;
           }
           case Uintah::Patch::yminus: {
             const typename OpT::NeumannY* const op = opdb.retrieve_operator<typename OpT::NeumannY>();
-            cg = op->get_minus_coef();
-            ci = op->get_plus_coef();
+            cg = op->coefs().get_coef(0); //low coefficient
+            ci = op->coefs().get_coef(1); //high coefficient
             break;
           }
           case Uintah::Patch::yplus: {
             const typename OpT::NeumannY* const op = opdb.retrieve_operator<typename OpT::NeumannY>();
-            cg = op->get_plus_coef();
-            ci = op->get_minus_coef();
+            cg = op->coefs().get_coef(1); //high coefficient
+            ci = op->coefs().get_coef(0); //low coefficient
             break;
           }
           case Uintah::Patch::zminus: {
             const typename OpT::NeumannZ* const op = opdb.retrieve_operator<typename OpT::NeumannZ>();
-            cg = op->get_minus_coef();
-            ci = op->get_plus_coef();
+            cg = op->coefs().get_coef(0); //low coefficient
+            ci = op->coefs().get_coef(1); //high coefficient
             break;
           }
           case Uintah::Patch::zplus: {
             const typename OpT::NeumannZ* const op = opdb.retrieve_operator<typename OpT::NeumannZ>();
-            cg = op->get_plus_coef();
-            ci = op->get_minus_coef();
+            cg = op->coefs().get_coef(1); //high coefficient
+            ci = op->coefs().get_coef(0); //low coefficient
             break;
           }
           default:
