@@ -624,7 +624,7 @@ namespace Wasatch {
                   DBGBC << " bc variable = " << varName << std::endl
                         << " bc type = "     << atomBCTypeEnum << std::endl;
                   
-                  double doubleVal=0;
+                  double doubleVal=0.0;
                   std::string functorName="none";
                   BCValueTypeEnum bcValType=INVALID_TYPE;
                   
@@ -644,7 +644,10 @@ namespace Wasatch {
                       DBGBC << " functor name = " << functorName << std::endl;                      
                       break;
                     }
-                      
+                    case Uintah::BoundCondBase::VECTOR_TYPE: {
+                      // do nothing here... this is added for WARCHES support
+                      break;
+                    }
                     default:
                     {
                       std::ostringstream msg;
@@ -663,7 +666,7 @@ namespace Wasatch {
         } // patch subset loop
       } // material loop
     } // material subset loop
-    print();
+    //print();
   }
 
   //------------------------------------------------------------------------------------------------
