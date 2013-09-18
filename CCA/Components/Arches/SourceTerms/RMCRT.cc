@@ -60,7 +60,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   //Declare the source type: 
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
 
-//  _archesLevelIndex      = -9;
+  _archesLevelIndex      = -9;
   _prop_calculator       = 0;
   _using_prop_calculator = 0; 
   _RMCRT                 = 0;
@@ -203,10 +203,9 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 { 
   // HACK This should be pulled in from arches, not computed here.
   GridP grid = level->getGrid();
-  int archesLevelIndex = grid->numLevels()-1; // this is the finest level
 
   // only sched on RK step 0 and on arches level
-  if ( timeSubStep != 0  || level->getIndex() != archesLevelIndex) {  
+  if ( timeSubStep != 0  || level->getIndex() != _archesLevelIndex) {  
     return;
   } 
 
@@ -216,7 +215,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   // move data on non-arches level to the new_dw for simplicity
   // do this on all timesteps
   for (int L = 0; L < maxLevels; L++) {
-    if( L != archesLevelIndex ){
+    if( L != _archesLevelIndex ){
       const LevelP& level = grid->getLevel(L);
       _RMCRT->sched_CarryForward_Var ( level, sched, _cellTypeLabel );
     }
@@ -239,7 +238,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
   if( _whichAlgo == dataOnion ){
-    const LevelP& fineLevel = grid->getLevel(archesLevelIndex);
+    const LevelP& fineLevel = grid->getLevel(_archesLevelIndex);
     Task::WhichDW temp_dw = Task::OldDW;
     
     // modify Radiative properties on the finest level
@@ -279,7 +278,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   //  RMCRT is performed on the coarse level
   // and the results are interpolated to the fine (arches) level
   if( _whichAlgo == coarseLevel ){
-    const LevelP& fineLevel = grid->getLevel(archesLevelIndex);
+    const LevelP& fineLevel = grid->getLevel(_archesLevelIndex);
     Task::WhichDW temp_dw = Task::OldDW;
    
     // compute Radiative properties and sigmaT4 on the finest level
@@ -531,7 +530,7 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   // HACK archesLevelIndex should be pulled in from arches, not computed here.
   GridP grid = level->getGrid();
   int maxLevels = grid->numLevels();
-  int archesLevelIndex = maxLevels-1; // this is the index of the finest level  
+  _archesLevelIndex = grid->numLevels()-1; // this is the finest level  
 
   //__________________________________
   //  Additional bulletproofing, this belongs in problem setup
@@ -542,57 +541,27 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   //__________________________________
   //  schedule the tasks
   for (int L=0; L< maxLevels; ++L){
-  
-    if( L != archesLevelIndex ){
-   
-      string taskname = "RMCRT_Radiation::sched_initialize"; 
-      Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
+    string taskname = "RMCRT_Radiation::sched_initialize"; 
+    Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
 
-      LevelP level = grid->getLevel(L);
-      printSchedule(level,dbg,taskname);
-
-      for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
-           iter != _extra_local_labels.end(); iter++){
-
-        tsk->computes(*iter); 
-
-      }
-      
-      tsk->computes( _cellTypeLabel );
-      sched->addTask(tsk, level->eachPatch(), _matlSet);
-    } else { 
-      string taskname = "RMCRT_Radiation::sched_initialize"; 
-      Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
-
-      LevelP level = grid->getLevel(L);
-      printSchedule(level,dbg,taskname);
-
+    LevelP level = grid->getLevel(L);
+    printSchedule(level,dbg,taskname);
+               
+    if( L == _archesLevelIndex ) {
       tsk->computes(_src_label);
-
-      for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
-           iter != _extra_local_labels.end(); iter++){
-
-        tsk->computes(*iter); 
-
-      }
-      
-      sched->addTask(tsk, level->eachPatch(), _matlSet);
-    } 
-
-  // THIS IS THE RIGHT WAY TO INITIALIZE cellType
-  // The problem is _bc is not defined at this point in Arches::problemSetup
-  #if 0 
-    //__________________________________
-    // cellType initialization
-    const PatchSet* patches = level->eachPatch();
-    if ( _bc->isUsingNewBC() ) {
-      _bc->sched_cellTypeInit__NEW( sched, patches, _matlSet );
     } else {
-      _bc->sched_cellTypeInit(sched, patches, _matlSet);
+      tsk->computes( _cellTypeLabel );
+    } 
+    
+    //__________________________________
+    //  all levels
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
+           iter != _extra_local_labels.end(); iter++){
+      tsk->computes(*iter); 
     }
-   #endif
+    
+    sched->addTask(tsk, level->eachPatch(), _matlSet);
   }
-
 }
 //______________________________________________________________________
 //
@@ -603,22 +572,24 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
                              DataWarehouse* , 
                              DataWarehouse* new_dw )
 {
+  const int L_indx = getLevel(patches)->getIndex();
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing RMCRT_Radiation::initialize");
-
-
-//    CCVariable<int> cellType;        // HACK UNTIL WE KNOW WHAT TO DO
-//    new_dw->allocateAndPut( cellType,    _cellTypeLabel,    _matl, patch );
-//    cellType.initialize( 0 ); 
-
-    CCVariable<double> src;
-
-    new_dw->allocateAndPut( src, _src_label, _matl, patch ); 
-
-    src.initialize(0.0); 
-
+    
+    if( L_indx == _archesLevelIndex ){    // arches level
+      CCVariable<double> src;
+      new_dw->allocateAndPut( src, _src_label, _matl, patch ); 
+      src.initialize(0.0); 
+    }else{                                // other levels
+      CCVariable<int> cellType;        
+      new_dw->allocateAndPut( cellType,    _cellTypeLabel,    _matl, patch );
+      cellType.initialize( 0 );           // HACK UNTIL WE KNOW WHAT TO DO
+    }
+    
+    //__________________________________
+    // all levels
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
          iter != _extra_local_labels.end(); iter++){
 

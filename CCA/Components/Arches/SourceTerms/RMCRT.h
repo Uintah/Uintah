@@ -135,8 +135,8 @@ private:
   //__________________________________
   //
   int     _radiation_calc_freq;
-
   int     _matl;
+  int     _archesLevelIndex;
   MaterialSet* _matlSet;
   
 
