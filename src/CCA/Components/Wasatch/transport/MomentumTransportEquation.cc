@@ -821,7 +821,7 @@ namespace Wasatch{
     {
       const std::string& bndName = bndPair.first;
       BndSpec& myBndSpec = bndPair.second;
-      std::cout << "this boundary: " << (int) myBndSpec.bndType << std::endl;
+      
       switch (myBndSpec.bndType) {
         case WALL:
         {
