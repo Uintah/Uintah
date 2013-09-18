@@ -148,7 +148,9 @@ DQMOMTESTS = [
 
 RMCRTTESTS = [
   ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "ALL"  , ["exactComparison"]) ,
-#  ("methane_rmcrt_const_props"   , "RMCRT/methane_rmcrt_const_props.ups"         , 4 ,   "ALL"  , ["exactComparison"])
+  ("rmcrt_bm1_ML"                , "RMCRT/rmcrt_bm1_ML.ups"                      , 1.1 , "ALL"  , ["exactComparison"]) , 
+  ("rmcrt_bm1_DO"                , "RMCRT/rmcrt_bm1_DO.ups"                      , 1.1 , "ALL"  , ["exactComparison"]) ,
+  ("methane_rmcrt_const_props"   , "RMCRT/methane_rmcrt_const_props.ups"         , 4 ,   "ALL"  , ["exactComparison"])
 ]
 
 
