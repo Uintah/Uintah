@@ -107,6 +107,8 @@ namespace Wasatch{
                    const bool hasEmbeddedGeometry,
                    Uintah::SolverInterface& linSolver );
 
+    void verify_boundary_conditions(BCHelper& bcHelper);
+    
     /**
      *  \brief apply the boundary conditions on the initial condition
      *         associated with this transport equation

@@ -118,27 +118,10 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #______________________________________________________________________
 
 DEBUGTESTS = [
-              ("turb-lid-driven-cavity-3D-WALE",           "turb-lid-driven-cavity-3D-WALE.ups",   8,  "All",  ["exactComparison","no_restart"] ),
-              ("turb-lid-driven-cavity-3D-SMAGORINSKY",    "turb-lid-driven-cavity-3D-SMAGORINSKY.ups",   8,  "All",  ["exactComparison","no_restart"] ),
-              ("turb-lid-driven-cavity-3D-scalar",         "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "All",  ["exactComparison","no_restart"] ),
-              ("turbulent-inlet-test-xminus",              "turbulent-inlet-test-xminus.ups",    12,  "All",  ["exactComparison","no_restart"] ),
-              ("turb-lid-driven-cavity-3D-VREMAN",         "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "All",  ["exactComparison","no_restart"] ),
-              ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
-              ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
-              ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
-              ("bc-modifier-expression-test-multiple",     "bc-modifier-expression-test-multiple.ups",   8,  "All",   ["exactComparison","no_restart"] ),
-              ("bc-test-mixed",                 "bc-test-mixed.ups",                 4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
-              ("intrusion_flow_past_cylinder_xy",          "intrusion_flow_past_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ),
-              ("intrusion_flow_past_cylinder_xz",          "intrusion_flow_past_cylinder_xz.ups",    8,  "All",  ["exactComparison","no_restart"] ),
-              ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "All",  ["exactComparison","no_restart"] ),
-              ("intrusion_flow_past_objects_xy",           "intrusion_flow_past_objects_xy.ups",    16,  "All",  ["exactComparison","no_restart"] ),
-              ("intrusion_flow_over_icse",                 "intrusion_flow_over_icse.ups",          16,  "All",  ["exactComparison","no_restart"] ),
-              ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ),
-              ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "All",  ["exactComparison","no_restart"] ),
-              ("varden-projection-advection-xdir",              "varden-projection-advection-xdir.ups",   3,  "All",  ["exactComparison","no_restart"] ),
-              ("varden-projection-advection-ydir",              "varden-projection-advection-ydir.ups",   3,  "All",  ["exactComparison","no_restart"] ),
-              ("varden-projection-advection-zdir",              "varden-projection-advection-zdir.ups",   3,  "All",  ["exactComparison","no_restart"] )                            
-]
+  ("lid-driven-cavity-xy-Re1000",   "lid-driven-cavity-xy-Re1000.ups",   4,  "All",  ["exactComparison","no_restart"] ),
+  ("lid-driven-cavity-xz-Re1000",   "lid-driven-cavity-xz-Re1000.ups",   4,  "All",  ["exactComparison","no_restart"] ),
+  ("lid-driven-cavity-yz-Re1000",   "lid-driven-cavity-yz-Re1000.ups",   4,  "All",  ["exactComparison","no_restart"] )
+  ]
 
 NIGHTLYTESTS = [
   ("reduction-test",       "reduction-test.ups",  4,  "Linux",  ["exactComparison","no_restart"] ),
