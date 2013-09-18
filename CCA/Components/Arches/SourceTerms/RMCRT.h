@@ -56,9 +56,9 @@ public:
                    
   ~RMCRT_Radiation();
 
-  void problemSetup(const ProblemSpecP& db);
+  void problemSetup(const ProblemSpecP& db );
   
-  void extraSetup();
+  void extraSetup(GridP& grid);
   
   void sched_computeSource( const LevelP& level, 
                             SchedulerP& sched, 
