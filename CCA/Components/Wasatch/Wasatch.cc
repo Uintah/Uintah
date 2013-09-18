@@ -156,7 +156,9 @@ namespace Wasatch{
       delete igc->second;
     }
     
-    delete bcHelper_;
+    for (BCHelperMapT::iterator it=bcHelperMap_.begin(); it != bcHelperMap_.end(); ++it) {
+      delete it->second;
+    }
   }
 
   //--------------------------------------------------------------------
@@ -284,7 +286,7 @@ namespace Wasatch{
 
   //--------------------------------------------------------------------
   
-  void process_bc_face_names( Uintah::ProblemSpecP bcProbSpec )
+  void assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
   {
     if (!bcProbSpec) return;
     int i=0;
@@ -320,7 +322,7 @@ namespace Wasatch{
       faceNameSet.insert(faceName);
     }
   }
-  
+
   //--------------------------------------------------------------------
 
   
@@ -346,7 +348,7 @@ namespace Wasatch{
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
     if ( params->findBlock("Grid") ) {
       Uintah::ProblemSpecP bcProbSpec = params->findBlock("Grid")->findBlock("BoundaryConditions");
-      process_bc_face_names( bcProbSpec );
+      assign_unique_boundary_names( bcProbSpec );
     }
     
     sharedState_ = sharedState;
@@ -712,8 +714,8 @@ namespace Wasatch{
 
     Expr::ExpressionFactory& exprFactory = *icGraphHelper->exprFactory;
 
-    bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
-    
+    //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+    bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     //_______________________________________
     // set the time
     Expr::TagList timeTags;
@@ -738,8 +740,9 @@ namespace Wasatch{
         //______________________________________________________
         // set up initial boundary conditions on this transport equation
         try{
+          transEq->verify_boundary_conditions( *bcHelperMap_[level->getID()]);
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_initial_boundary_conditions( *icGraphHelper, *bcHelper_);
+          transEq->setup_initial_boundary_conditions( *icGraphHelper, *bcHelperMap_[level->getID()]);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -892,8 +895,8 @@ namespace Wasatch{
 
     if( isRestarting_ ){
       setup_patchinfo_map( level, sched );
-      bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
-      isRestarting_ = false;
+      //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+      bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     }
     
     for( int iStage=1; iStage<=nRKStages_; iStage++ ){
@@ -926,8 +929,9 @@ namespace Wasatch{
         //______________________________________________________
         // set up boundary conditions on this transport equation
         try{
+          if( isRestarting_ ) transEq->verify_boundary_conditions(*bcHelperMap_[level->getID()]);
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_boundary_conditions(*advSolGraphHelper, *bcHelper_);
+          transEq->setup_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -951,6 +955,8 @@ namespace Wasatch{
       process_field_clipping( wasatchSpec_, graphCategories_, localPatches );      
     }
 
+    if (isRestarting_) isRestarting_ = false;
+    
     // ensure that any "CARRY_FORWARD" variable has an initialization provided for it.
     if( buildTimeIntegrator_ ) { // make sure that we have a timestepper created - this is needed for wasatch-in-arches
       const Expr::ExpressionFactory* const icFactory = graphCategories_[INITIALIZATION]->exprFactory;

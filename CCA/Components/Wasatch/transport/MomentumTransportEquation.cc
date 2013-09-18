@@ -811,6 +811,94 @@ namespace Wasatch{
   }
 
   //------------------------------------------------------------------
+
+  template< typename FieldT >
+  void MomentumTransportEquation<FieldT>::
+  verify_boundary_conditions( BCHelper& bcHelper )
+  {
+    // parse things logically
+    BOOST_FOREACH( BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
+    {
+      const std::string& bndName = bndPair.first;
+      BndSpec& myBndSpec = bndPair.second;
+      std::cout << "this boundary: " << (int) myBndSpec.bndType << std::endl;
+      switch (myBndSpec.bndType) {
+        case WALL:
+        {
+          // first check if the user specified boundary conditions at the wall
+          if ( myBndSpec.has_field(thisVelTag_.name()) || myBndSpec.has_field(thisMomName_) ||
+               myBndSpec.has_field(thisMomName_ + "_rhs_full") || myBndSpec.has_field(thisMomName_ + "_rhs_part") ) {
+            std::ostringstream msg;
+            msg << "ERROR: You cannot specify any momentum-related boundary conditions at a stationary wall. "
+            << "This error occured while trying to analyze boundary " << bndName
+            << std::endl;
+            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+          }
+          
+          BndCondSpec momBCSpec = {solution_variable_name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, momBCSpec);
+          
+          BndCondSpec velBCSpec = {thisVelTag_.name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, velBCSpec);
+          
+          bool applyRHSBCs=false;
+          switch (this->staggered_location()) {
+            case XDIR:
+            {
+              if (myBndSpec.face == Uintah::Patch::xminus || myBndSpec.face == Uintah::Patch::xplus) {
+                applyRHSBCs = true;
+              }
+            }
+              break;
+            case YDIR:
+              if (myBndSpec.face == Uintah::Patch::yminus || myBndSpec.face == Uintah::Patch::yplus) {
+                applyRHSBCs = true;
+              }
+              break;
+            case ZDIR:
+              if (myBndSpec.face == Uintah::Patch::zminus || myBndSpec.face == Uintah::Patch::zplus) {
+                applyRHSBCs = true;
+              }
+              break;
+            default:
+              break;
+          }
+
+          if (applyRHSBCs) {
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
+            
+            BndCondSpec rhsFullBCSpec = {thisMomName_ + "_rhs_full", "none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+          }
+          
+        }
+          break;
+        case VELOCITY:
+        {
+          BndCondSpec momBCSpec = {solution_variable_name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, momBCSpec);
+          
+          BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
+          
+          BndCondSpec rhsFullBCSpec = {thisMomName_ + "_rhs_full","none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+        }
+          break;
+        case USER:
+        {
+          // prase through the list of user specified BCs that are relevant to this transport equation
+        }
+          break;
+          
+        default:
+          break;
+      }
+    }    
+  }
+  
+  //------------------------------------------------------------------
   
   template< typename FieldT >
   void MomentumTransportEquation<FieldT>::
@@ -853,24 +941,26 @@ namespace Wasatch{
       factory.attach_modifier_expression( modifierTag, mom_tag(thisMomName_) );
     }
 
+    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
+
     typedef typename NormalFaceSelector<FieldT>::NormalFace NormalFace;
 
-    if (factory.have_entry(mom_tag(thisMomName_))) {
-      bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
-    }
-    
-    // set bcs for velocity - cos we don't have a mechanism now to set them
-    // on interpolated density field
-    Expr::Tag velTag;
-    switch (this->staggered_location()) {
-      case XDIR:  velTag=velTags_[0];  break;
-      case YDIR:  velTag=velTags_[1];  break;
-      case ZDIR:  velTag=velTags_[2];  break;
-      default:                         break;
-    }
-    if (factory.have_entry(velTag)) {
-      //bcHelper.apply_boundary_condition<FieldT>( velTag, taskCat );
-    }
+//    if (factory.have_entry(mom_tag(thisMomName_))) {
+//      //bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
+//    }
+//    
+//    // set bcs for velocity - cos we don't have a mechanism now to set them
+//    // on interpolated density field
+//    Expr::Tag velTag;
+//    switch (this->staggered_location()) {
+//      case XDIR:  velTag=velTags_[0];  break;
+//      case YDIR:  velTag=velTags_[1];  break;
+//      case ZDIR:  velTag=velTags_[2];  break;
+//      default:                         break;
+//    }
+//    if (factory.have_entry(velTag)) {
+//      //bcHelper.apply_boundary_condition<FieldT>( velTag, taskCat );
+//    }
     
     // set bcs for pressure
     // We cannot set pressure BCs here using Wasatch's BC techniques because
@@ -878,9 +968,9 @@ namespace Wasatch{
     // a uintah task for that. See Pressure.cc
     
     // set bcs for partial rhs
-    if (factory.have_entry(rhs_part_tag(mom_tag(thisMomName_)))) {
-      bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(solution_variable_tag()), taskCat );
-    }
+//    if (factory.have_entry(rhs_part_tag(mom_tag(thisMomName_)))) {
+//      bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(solution_variable_tag()), taskCat );
+//    }
 
     if (!isConstDensity_) {
       // set bcs for density
@@ -902,14 +992,14 @@ namespace Wasatch{
 
       // set bcs for velocity - cos we don't have a mechanism now to set them
       // on interpolated density field
-      Expr::Tag velTag;
-      switch (this->staggered_location()) {
-        case XDIR:  velTag=velTags_[0];  break;
-        case YDIR:  velTag=velTags_[1];  break;
-        case ZDIR:  velTag=velTags_[2];  break;
-        default:                         break;
-      }
-      bcHelper.apply_boundary_condition<FieldT>(velTag, taskCat);
+//      Expr::Tag velTag;
+//      switch (this->staggered_location()) {
+//        case XDIR:  velTag=velTags_[0];  break;
+//        case YDIR:  velTag=velTags_[1];  break;
+//        case ZDIR:  velTag=velTags_[2];  break;
+//        default:                         break;
+//      }
+      bcHelper.apply_boundary_condition<FieldT>(thisVelTag_, taskCat);
     }
   }
 
@@ -924,26 +1014,38 @@ namespace Wasatch{
     typedef typename NormalFaceSelector<FieldT>::NormalFace NormalFace;
     
     const Category taskCat = ADVANCE_SOLUTION;
+    
+    
 
     // set bcs for momentum
     bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
-
+    // set bcs for velocity
+    bcHelper.apply_boundary_condition<FieldT>( thisVelTag_, taskCat );
     // set bcs for partial rhs
     bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(mom_tag(thisMomName_)), taskCat, true);
     // set bcs for partial full rhs
     bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(thisMomName_ + "_rhs_full", Expr::STATE_NONE), taskCat, true);
 
+    
+    // set bcs for momentum
+    //bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
+
+    // set bcs for partial rhs
+//    bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(mom_tag(thisMomName_)), taskCat, true);
+    // set bcs for partial full rhs
+//    bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(thisMomName_ + "_rhs_full", Expr::STATE_NONE), taskCat, true);
+
 
     // set bcs for velocity - cos we don't have a mechanism now to set them
     // on interpolated density field
-    Expr::Tag velTag;
-    switch (this->staggered_location()) {
-      case XDIR:  velTag=velTags_[0];  break;
-      case YDIR:  velTag=velTags_[1];  break;
-      case ZDIR:  velTag=velTags_[2];  break;
-      default:                         break;
-    }
-    bcHelper.apply_boundary_condition<FieldT>( velTag, taskCat );
+//    Expr::Tag velTag;
+//    switch (this->staggered_location()) {
+//      case XDIR:  velTag=velTags_[0];  break;
+//      case YDIR:  velTag=velTags_[1];  break;
+//      case ZDIR:  velTag=velTags_[2];  break;
+//      default:                         break;
+//    }
+//    bcHelper.apply_boundary_condition<FieldT>( velTag, taskCat );
 
     if (!isConstDensity_) {
       // set bcs for density

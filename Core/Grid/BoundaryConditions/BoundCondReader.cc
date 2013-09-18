@@ -153,7 +153,11 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
 
   map<string,string> values;
   face_ps->getAttributes(values);
-      
+  map<string,string>::iterator it = values.begin();
+  while (it != values.end()) {
+    std::cout << "first = " << (*it).first << " second " << (*it).second << std::endl;
+    ++it;
+  }
   // Have three possible types for the boundary condition face:
   // a. side (original -- entire side is one bc)
   // b. cirle (part of the side consists of a circle)
@@ -377,11 +381,10 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   }
   
   // get the bctype - mainly used by wasatch:
-  std::string wasatchBCType;
   if (values.find("type") != values.end()){
-    std::string wasatchBCType = values["type"];
-    BCR_dbg << "Setting bc type to: " << wasatchBCType << endl;
-    bcGeom->setBCType( wasatchBCType );
+    std::string bndType = values["type"];
+    BCR_dbg << "Setting bc type to: " << bndType << endl;
+    bcGeom->setBndType( bndType );
   }
 
 
