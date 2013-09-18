@@ -924,7 +924,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   for (SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); iter++){
 
     SourceTermBase* src = iter->second;
-    src->extraSetup();
+    src->extraSetup(grid);
 
   }
 

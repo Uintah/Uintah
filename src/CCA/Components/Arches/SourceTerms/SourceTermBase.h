@@ -1,22 +1,24 @@
 #ifndef Uintah_Component_Arches_SourceTermBase_h
 #define Uintah_Component_Arches_SourceTermBase_h
 
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/SimulationStateP.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+
+#include <Core/Grid/Box.h>
+#include <Core/Grid/GridP.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Exceptions/InvalidValue.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/Box.h>
-#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <typeinfo>
-#include <Core/GeometryPiece/GeometryPiece.h>
-#include <Core/GeometryPiece/GeometryPieceFactory.h>
 
 //===============================================================
 
@@ -64,7 +66,7 @@ public:
   virtual void sched_initialize( const LevelP& level, SchedulerP& sched ) = 0;
 
   /** @brief Work to be performed after properties are setup */ 
-  virtual void extraSetup(){ };
+  virtual void extraSetup(GridP& grid){ };
 
   /** @brief reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
   // Note I need two of these flags; 1 for scheduling and 1 for actual execution.
