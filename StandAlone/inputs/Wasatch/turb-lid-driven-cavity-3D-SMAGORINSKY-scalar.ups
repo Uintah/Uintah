@@ -287,7 +287,7 @@
           <value> 0.0 </value>
         </BCType>
                 
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_full">
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs">
           <value> 0.0 </value>
         </BCType>        
                                    

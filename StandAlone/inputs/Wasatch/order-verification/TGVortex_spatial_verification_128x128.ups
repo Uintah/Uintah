@@ -122,8 +122,8 @@
     <save label="tau_yx"/>
     <save label="x-mom_rhs_partial"/>
     <save label="y-mom_rhs_partial"/>        
-    <save label="x-mom_rhs_full"/>
-    <save label="y-mom_rhs_full"/>            
+    <save label="x-mom_rhs"/>
+    <save label="y-mom_rhs"/>            
     <save label="x-mom_convFlux_x"/>
     <save label="x-mom_convFlux_y"/>
     <save label="y-mom_convFlux_x"/>        

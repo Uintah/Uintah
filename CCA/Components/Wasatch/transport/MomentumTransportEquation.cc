@@ -526,7 +526,7 @@ namespace Wasatch{
                   Uintah::SolverInterface& linSolver )
   {
     const Expr::Tag momTag = mom_tag( momName );
-    const Expr::Tag rhsFullTag( momTag.name() + "_rhs_full", Expr::STATE_NONE );
+    const Expr::Tag rhsFullTag( momTag.name() + "_rhs", Expr::STATE_NONE );
     bool  enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
     
     Expr::Tag volFracTag = Expr::Tag();
@@ -819,7 +819,7 @@ namespace Wasatch{
         {
           // first check if the user specified boundary conditions at the wall
           if ( myBndSpec.has_field(thisVelTag_.name()) || myBndSpec.has_field(thisMomName_) ||
-               myBndSpec.has_field(thisMomName_ + "_rhs_full") || myBndSpec.has_field(thisMomName_ + "_rhs_part") ) {
+               myBndSpec.has_field(rhs_name()) || myBndSpec.has_field(thisMomName_ + "_rhs_part") ) {
             std::ostringstream msg;
             msg << "ERROR: You cannot specify any momentum-related boundary conditions at a stationary wall. "
             << "This error occured while trying to analyze boundary " << bndName
@@ -860,7 +860,7 @@ namespace Wasatch{
             BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
             
-            BndCondSpec rhsFullBCSpec = {thisMomName_ + "_rhs_full", "none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+            BndCondSpec rhsFullBCSpec = {rhs_name(), "none" ,0.0,DIRICHLET,DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
           }
           
@@ -877,7 +877,7 @@ namespace Wasatch{
           BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
           
-          BndCondSpec rhsFullBCSpec = {thisMomName_ + "_rhs_full","none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+          BndCondSpec rhsFullBCSpec = {rhs_name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
         }
           break;
@@ -945,7 +945,7 @@ namespace Wasatch{
     // set bcs for partial rhs
     bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(mom_tag(thisMomName_)), taskCat, true);
     // set bcs for partial full rhs
-    bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(thisMomName_ + "_rhs_full", Expr::STATE_NONE), taskCat, true);
+    bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true);
 
     if (!isConstDensity_) {
       // set bcs for density
