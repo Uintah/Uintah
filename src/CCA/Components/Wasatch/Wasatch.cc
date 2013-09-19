@@ -391,7 +391,7 @@ namespace Wasatch{
     if (bcParams) {
       for( Uintah::ProblemSpecP faceBCParams=bcParams->findBlock("Face");
           faceBCParams != 0;
-          faceBCParams=faceBCParams->findNextBlock("BCType") ){
+          faceBCParams=faceBCParams->findNextBlock("Face") ){
         
         for( Uintah::ProblemSpecP bcTypeParams=faceBCParams->findBlock("BCType");
             bcTypeParams != 0;
