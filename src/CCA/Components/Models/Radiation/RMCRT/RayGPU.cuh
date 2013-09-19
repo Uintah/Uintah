@@ -30,19 +30,36 @@
 #include <sci_defs/cuda_defs.h>
 #include <curand.h>
 #include <curand_kernel.h>
+#include <string>
 
 namespace Uintah {
+using namespace std;
+
+
+HOST_DEVICE struct varLabelNames{
+  const char* divQ;
+  const char* abskg;
+  const char* sigmaT4;
+  const char* celltype;
+  const char* VRFlux;
+  const char* boundFlux;
+  const char* radVolQ;
+};
+
+HOST_DEVICE struct patchParams{
+  double3 dx;             // cell spacing
+  uint3 lowIndex;         // cell low index not including extra or ghost cells
+  uint3 highIndex;        // cell high index not including extra or ghost cells
+  uint3 size;
+  int ID;                 // patch ID
+};
 
 void launchRayTraceKernel(dim3 dimGrid,
                           dim3 dimBlock,
-                          int patchID,
                           int matlIndex,
-                          const uint3 patchLo,
-                          const uint3 patchHi,
-                          const uint3 patchSize,
+                          patchParams patch,
                           const uint3 domainLo,
                           const uint3 domainHi,
-                          const double3 cellSpacing,
                           curandState* globalDevRandStates,
                           cudaStream_t* stream,
                           bool virtRad,
@@ -51,20 +68,21 @@ void launchRayTraceKernel(dim3 dimGrid,
                           int numDivQRays,
                           double viewAngle,
                           double threshold,
-                          GPUDataWarehouse* old_gpudw,
-                          GPUDataWarehouse* new_gpudw);
+                          bool modifies_divQ,                               
+                          varLabelNames labelNames,
+                          GPUDataWarehouse* abskg_gdw,
+                          GPUDataWarehouse* sigmaT4_gdw,
+                          GPUDataWarehouse* celltype_gdw,
+                          GPUDataWarehouse* old_gdw,
+                          GPUDataWarehouse* new_gdw);
 
 
 __global__ void rayTraceKernel(dim3 dimGrid,
                                dim3 dimBlock,
-                               int patchID,
                                int matlIndex,
-                               const uint3 patchLo,
-                               const uint3 patchHi,
-                               const uint3 patchSize,
+                               patchParams patch,
                                const uint3 domainLo,
                                const uint3 domainHi,
-                               const double3 cellSpacing,
                                curandState* globalDevRandStates,
                                bool virtRad,
                                bool isSeedRandom,
@@ -72,8 +90,13 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                int numRays,
                                double viewAngle,
                                double threshold,
-                               Uintah::GPUDataWarehouse* old_gpudw,
-                               Uintah::GPUDataWarehouse* new_gpudw);
+                               bool modifies_divQ,
+                               varLabelNames labelNames,
+                               GPUDataWarehouse* abskg_gdw,
+                               GPUDataWarehouse* sigmaT4_gdw,
+                               GPUDataWarehouse* celltype_gdw,
+                               GPUDataWarehouse* old_gdw,
+                               GPUDataWarehouse* new_gdw);
 
 
 __device__ void updateSumIDevice(const uint3& domainLow,

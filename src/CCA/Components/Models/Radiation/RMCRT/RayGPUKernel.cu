@@ -23,7 +23,12 @@
  */
 
 #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
-
+#include <Core/Grid/Variables/GPUGridVariable.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+// linker support for device code not ready yet, need to include the whole source...
+#include <CCA/Components/Schedulers/GPUDataWarehouse.cu>
+#include <Core/Grid/Variables/Stencil7.h>
 #include <sci_defs/cuda_defs.h>
 #include <curand.h>
 #include <curand_kernel.h>
@@ -35,14 +40,10 @@ namespace Uintah {
 //---------------------------------------------------------------------------
 __global__ void rayTraceKernel(dim3 dimGrid,
                                dim3 dimBlock,
-                               int patchID,
-                               int matlIndex,
-                               const uint3 patchLo,
-                               const uint3 patchHi,
-                               const uint3 patchSize,
+                               int matl,
+                               patchParams patch,
                                const uint3 domainLo,
                                const uint3 domainHi,
-                               const double3 cellSpacing,
                                curandState* globalDevRandStates,
                                bool virtRad,
                                bool isSeedRandom,
@@ -50,11 +51,57 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                int numRays,
                                double viewAngle,
                                double threshold,
-                               Uintah::GPUDataWarehouse* old_gpudw,
-                               Uintah::GPUDataWarehouse* new_gpudw)
+                               bool modifies_divQ,
+                               varLabelNames labelNames,
+                               GPUDataWarehouse* abskg_gdw,
+                               GPUDataWarehouse* sigmaT4_gdw,
+                               GPUDataWarehouse* celltype_gdw,
+                               GPUDataWarehouse* old_gdw,
+                               GPUDataWarehouse* new_gdw)
 {
-#if 0
+printf( " AAA \n" );
+  GPUGridVariable<double> divQ;
+  GPUGridVariable<double> VRFlux;
+  GPUGridVariable<Stencil7> boundFlux;
+  GPUGridVariable<double> radiationVolQ;
+  GPUGridVariable<int> celltype;
 
+
+  if( modifies_divQ ){
+    new_gdw->get( divQ,         labelNames.divQ,          patch.ID, matl );
+    new_gdw->get( VRFlux,       labelNames.VRFlux,        patch.ID, matl );
+    new_gdw->get( boundFlux,    labelNames.boundFlux,     patch.ID, matl );
+    new_gdw->get( radiationVolQ,labelNames.radVolQ,       patch.ID, matl );
+  }else{
+    new_gdw->put( divQ,         labelNames.divQ,          patch.ID, matl );
+    new_gdw->put( VRFlux,       labelNames.VRFlux,        patch.ID, matl );
+    new_gdw->put( boundFlux,    labelNames.boundFlux,     patch.ID, matl );
+    new_gdw->put( radiationVolQ,labelNames.radVolQ,       patch.ID, matl );
+    
+ #if 0
+    new_gdw->allocateAndPut( divQ,      d_divQLabel,      d_matl, patch );
+    divQ.initialize( 0.0 ); 
+    new_gdw->allocateAndPut( VRFlux,    d_VRFluxLabel,    d_matl, patch );
+    VRFlux.initialize( 0.0 );
+    new_gdw->allocateAndPut( boundFlux,    d_boundFluxLabel, d_matl, patch );
+    new_gdw->allocateAndPut( radiationVolq, d_radiationVolqLabel, d_matl, patch );
+    radiationVolq.initialize( 0.0 );
+
+    for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+      IntVector origin = *iter;
+
+      boundFlux[origin].p = 0.0;
+      boundFlux[origin].w = 0.0;
+      boundFlux[origin].e = 0.0;
+      boundFlux[origin].s = 0.0;
+      boundFlux[origin].n = 0.0;
+      boundFlux[origin].b = 0.0;
+      boundFlux[origin].t = 0.0;
+    }
+    #endif
+ }
+
+#if 0
   // calculate the thread indices
   int tidX = threadIdx.x + blockIdx.x * blockDim.x;
   int tidY = threadIdx.y + blockIdx.y * blockDim.y;
@@ -351,17 +398,14 @@ __device__ unsigned int hashDevice(unsigned int a)
 
     return a;
 }
+//______________________________________________________________________
 
 __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    dim3 dimBlock,
-                                   int patchID,
                                    int matlIndex,
-                                   const uint3 patchLo,
-                                   const uint3 patchHi,
-                                   const uint3 patchSize,
+                                   patchParams patch,
                                    const uint3 domainLo,
                                    const uint3 domainHi,
-                                   const double3 cellSpacing,
                                    curandState* globalDevRandStates,
                                    cudaStream_t* stream,
                                    bool virtRad,
@@ -369,20 +413,22 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    bool ccRays,
                                    int numDivQRays,
                                    double viewAngle,
-                                   double threshold,
-                                   Uintah::GPUDataWarehouse* old_gpudw,
-                                   Uintah::GPUDataWarehouse* new_gpudw)
+                                   double threshold, 
+                                   bool modifies_divQ,
+                                   varLabelNames labelNames,                           
+                                   GPUDataWarehouse* abskg_gdw,
+                                   GPUDataWarehouse* sigmaT4_gdw,
+                                   GPUDataWarehouse* celltype_gdw,
+                                   GPUDataWarehouse* old_gdw,
+                                   GPUDataWarehouse* new_gdw)
 {
-  rayTraceKernel<<< dimGrid, dimBlock, 0, *stream >>>(dimGrid,
-                                                      dimBlock,
-                                                      patchID,
+  cout << " inside " << endl;
+  rayTraceKernel<<< dimGrid, dimBlock, 0, *stream >>>(dimGrid, 
+                                                      dimBlock, 
                                                       matlIndex,
-                                                      patchLo,
-                                                      patchHi,
-                                                      patchSize,
-                                                      domainLo,
+                                                      patch,
+                                                      domainLo, 
                                                       domainHi,
-                                                      cellSpacing,
                                                       globalDevRandStates,
                                                       virtRad,
                                                       isSeedRandom,
@@ -390,8 +436,14 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                                       numDivQRays,
                                                       viewAngle,
                                                       threshold,
-                                                      old_gpudw,
-                                                      new_gpudw);
+                                                      modifies_divQ,
+                                                      labelNames,
+                                                      abskg_gdw,
+                                                      sigmaT4_gdw,
+                                                      celltype_gdw,
+                                                      old_gdw,
+                                                      new_gdw);
+  cout << " BBB inside" << endl;
 }
 
 } //end namespace Uintah
