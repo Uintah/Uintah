@@ -111,8 +111,8 @@
     <save label="tau_zx"/>
     <save label="x-mom_rhs_partial"/>
     <save label="z-mom_rhs_partial"/>
-    <save label="x-mom_rhs_full"/>
-    <save label="z-mom_rhs_full"/>
+    <save label="x-mom_rhs"/>
+    <save label="z-mom_rhs"/>
 
   </DataArchiver> 
 

@@ -107,7 +107,9 @@ namespace Wasatch{
 
     const Expr::Tag solution_variable_tag() const{ return Expr::Tag(solnVarName_, Expr::STATE_N); }
 
-    const Expr::Tag rhs_tag() const{ return Expr::Tag(solnVarName_ + "_rhs", Expr::STATE_NONE); }
+    const Expr::Tag rhs_tag() const { return Expr::Tag(solnVarName_ + "_rhs", Expr::STATE_NONE); }
+    
+    const std::string rhs_name() const{ return solnVarName_ + "_rhs"; }
     /**
      *  \brief Obtain the staggered location of the solution variable that is
      *  governed by this transport equation.
