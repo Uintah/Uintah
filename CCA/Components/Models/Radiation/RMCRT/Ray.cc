@@ -140,8 +140,8 @@ Ray::~Ray()
 
 //______________________________________________________________________
 //  Logic for determing when to carry forward
-bool doCarryForward( const int timestep,
-                     const int radCalc_freq){
+bool Ray::doCarryForward( const int timestep,
+                          const int radCalc_freq){
   bool test = (timestep%radCalc_freq != 0 && timestep != 1);
   return test;
 }
