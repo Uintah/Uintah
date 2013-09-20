@@ -48,10 +48,29 @@ HOST_DEVICE struct varLabelNames{
 
 HOST_DEVICE struct patchParams{
   double3 dx;             // cell spacing
-  uint3 lowIndex;         // cell low index not including extra or ghost cells
-  uint3 highIndex;        // cell high index not including extra or ghost cells
-  uint3 size;
+  uint3 lo;               // cell low index not including extra or ghost cells
+  uint3 hi;               // cell high index not including extra or ghost cells
+  uint3 nCells;           // number of cells in each dir
   int ID;                 // patch ID
+};
+
+HOST_DEVICE struct RMCRT_flags{
+  bool modifies_divQ;
+  bool virtRad;
+  bool solveDivQ;
+  bool allowReflect;
+  bool solveBoundaryFlux;
+  bool isSeedRandom;
+  bool CCRays;
+  
+  double sigma;               // StefanBoltzmann constant
+  double sigmaScat;           // scattering coefficient
+  double threshold;
+  
+  int   nDivQRays;            // number of rays per cell used to compute divQ
+  int   nRadRays;             // number of rays for virtual radiometer
+  int   nFluxRays;            // number of boundary flux rays
+  
 };
 
 void launchRayTraceKernel(dim3 dimGrid,
@@ -62,13 +81,7 @@ void launchRayTraceKernel(dim3 dimGrid,
                           const uint3 domainHi,
                           curandState* globalDevRandStates,
                           cudaStream_t* stream,
-                          bool virtRad,
-                          bool isSeedRandom,
-                          bool ccRays,
-                          int numDivQRays,
-                          double viewAngle,
-                          double threshold,
-                          bool modifies_divQ,                               
+                          RMCRT_flags RT_flags,                               
                           varLabelNames labelNames,
                           GPUDataWarehouse* abskg_gdw,
                           GPUDataWarehouse* sigmaT4_gdw,
@@ -84,13 +97,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                const uint3 domainLo,
                                const uint3 domainHi,
                                curandState* globalDevRandStates,
-                               bool virtRad,
-                               bool isSeedRandom,
-                               bool ccRays,
-                               int numRays,
-                               double viewAngle,
-                               double threshold,
-                               bool modifies_divQ,
+                               RMCRT_flags RT_flags,
                                varLabelNames labelNames,
                                GPUDataWarehouse* abskg_gdw,
                                GPUDataWarehouse* sigmaT4_gdw,

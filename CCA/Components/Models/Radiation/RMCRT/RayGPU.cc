@@ -56,6 +56,7 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     return;
   }
 
+  //__________________________________
   // Determine the size of the domain.
   IntVector domainLo, domainHi;
   IntVector domainLo_EC, domainHi_EC;
@@ -65,6 +66,9 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
   const uint3 dev_domainLo = make_uint3(domainLo_EC.x(), domainLo_EC.y(), domainLo_EC.z());
   const uint3 dev_domainHi = make_uint3(domainHi_EC.x(), domainHi_EC.y(), domainHi_EC.z());
 
+  
+  //__________________________________
+  //  
   GPUDataWarehouse* old_gdw = old_dw->getGPUDW()->getdevice_ptr();
   GPUDataWarehouse* new_gdw = new_dw->getGPUDW()->getdevice_ptr();
   
@@ -72,6 +76,8 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
   GPUDataWarehouse* sigmaT4_gdw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw)->getGPUDW();
   GPUDataWarehouse* celltype_gdw = new_dw->getOtherDataWarehouse(which_celltype_dw)->getGPUDW();
   
+  //__________________________________
+  //  varLabel name struct
   varLabelNames labelNames;
   labelNames.abskg     = d_abskgLabel->getName().c_str();    // cuda doesn't support C++ strings
   labelNames.sigmaT4   = d_sigmaT4_label->getName().c_str();
@@ -81,6 +87,29 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
   labelNames.boundFlux = d_boundFluxLabel->getName().c_str();
   labelNames.radVolQ   = d_radiationVolqLabel->getName().c_str();
   
+  
+  //__________________________________
+  //  RMCRT_flags
+  RMCRT_flags RT_flags;
+  RT_flags.modifies_divQ = modifies_divQ;
+  
+  RT_flags.virtRad            = _virtRad;
+  RT_flags.solveDivQ          = _solveDivQ;
+  RT_flags.allowReflect       = _allowReflect;
+  RT_flags.solveBoundaryFlux  = _solveBoundaryFlux;
+  RT_flags.isSeedRandom       = _isSeedRandom;
+  RT_flags.CCRays             = _CCRays;
+  
+  RT_flags.sigma      = _sigma;;    
+  RT_flags.sigmaScat  = _sigmaScat; 
+  RT_flags.threshold  = _Threshold;
+  
+  RT_flags.nDivQRays = _nDivQRays;   
+  RT_flags.nRadRays  = _nRadRays;    
+  RT_flags.nFluxRays = _nFluxRays;
+  
+  //______________________________________________________________________
+  //
   // patch loop
   int numPatches = patches->size();
   for (int p = 0; p < numPatches; ++p) {
@@ -100,12 +129,11 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     // get the cell spacing and convert patch extents to CUDA vector type
     patchParams patchP;
     const Vector dx = patch->dCell();
-    patchP.dx        = make_double3(dx.x(), dx.y(), dx.z());
-    patchP.lowIndex  = make_uint3(low.x(), low.y(), low.z());
-    patchP.highIndex = make_uint3(high.x(), high.y(), high.z());
-    patchP.ID = patch->getID();
-    
-    const uint3 dev_patchSize = make_uint3(xdim, ydim, zdim);
+    patchP.dx     = make_double3(dx.x(), dx.y(), dx.z());
+    patchP.lo     = make_uint3(low.x(), low.y(), low.z());
+    patchP.hi     = make_uint3(high.x(), high.y(), high.z());
+    patchP.ID     = patch->getID();
+    patchP.nCells = make_uint3(xdim, ydim, zdim);
 
     // define dimesions of the thread grid to be launched
     int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
@@ -129,13 +157,7 @@ cout << " Here " << endl;
                          dev_domainHi, 
                          globalDevRandStates, 
                          (cudaStream_t*)stream,
-                         _virtRad, 
-                         _isSeedRandom, 
-                         _CCRays, 
-                         _nDivQRays, 
-                         _viewAng, 
-                         _Threshold,
-                         modifies_divQ,
+                         RT_flags,
                          labelNames,
                          abskg_gdw, 
                          sigmaT4_gdw, 
