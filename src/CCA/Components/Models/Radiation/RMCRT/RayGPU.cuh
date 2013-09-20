@@ -79,7 +79,7 @@ void launchRayTraceKernel(dim3 dimGrid,
                           patchParams patch,
                           const uint3 domainLo,
                           const uint3 domainHi,
-                          curandState* globalDevRandStates,
+                          curandState* randNumStates,
                           cudaStream_t* stream,
                           RMCRT_flags RT_flags,                               
                           varLabelNames labelNames,
@@ -96,7 +96,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                patchParams patch,
                                const uint3 domainLo,
                                const uint3 domainHi,
-                               curandState* globalDevRandStates,
+                               curandState* randNumStates,
                                RMCRT_flags RT_flags,
                                varLabelNames labelNames,
                                GPUDataWarehouse* abskg_gdw,
@@ -104,8 +104,23 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                GPUDataWarehouse* celltype_gdw,
                                GPUDataWarehouse* old_gdw,
                                GPUDataWarehouse* new_gdw);
+                               
+__device__ double3 findRayDirectionDevice(curandState* randNumStates,
+                                          const bool isSeedRandom,
+                                          const uint3 origin,
+                                          const int iRay,
+                                          const int tidX);
+                                    
+__device__ double3 rayLocationDevice( curandState* randNumStates,
+                                      const uint3 origin,
+                                      const double DyDx, 
+                                      const double DzDx,
+                                      const bool useCCRays);
 
-
+__device__ void findStepSizeDevice(int step[],
+                                   bool sign[],
+                                   const double3& inv_direction_vector);
+                                   
 __device__ void updateSumIDevice(const uint3& domainLow,
                                  const uint3& domainHigh,
                                  const uint3& domainSize,
@@ -125,13 +140,92 @@ __device__ bool containsCellDevice(const uint3& domainLow,
                                    const int& face);
 
 
-__device__ double randDblExcDevice(curandState* globalState);
+__device__ double randDblExcDevice(curandState* randNumStates);
 
 
-__device__ double randDevice(curandState* globalState);
+__device__ double randDevice(curandState* randNumStates);
 
 
 __device__ unsigned int hashDevice(unsigned int a);
+
+
+
+
+//______________________________________________________________________
+//
+// returns a - b
+inline HOST_DEVICE double3 operator-(const double3 & a, const double3 & b) {
+  return make_double3(a.x-b.x, a.y-b.y, a.z-b.z);
+}
+//__________________________________
+//  returns a + b
+inline HOST_DEVICE double3 operator+(const double3 & a, const double3 & b) {
+  return make_double3(a.x+b.x, a.y+b.y, a.z+b.z);
+}
+//__________________________________
+//  return -a
+inline HOST_DEVICE double3 operator-(const double3 & a) {
+  return make_double3(-a.x,-a.y,-a.z);
+}
+//__________________________________
+//  returns double3 * scalar
+inline HOST_DEVICE double3 operator*(const double3 & a, double b) {
+  return make_double3(a.x*b, a.y*b, a.z*b);
+}
+//__________________________________
+//  returns double3 * scalar
+inline HOST_DEVICE double3 operator*(double b, const double3 & a) {
+  return make_double3(a.x*b, a.y*b, a.z*b);
+}
+//__________________________________
+//  returns double3/scalar
+inline HOST_DEVICE double3 operator/(const double3 & a, double b) {
+  b = 1.0f / b;
+  return a*b;
+}
+//__________________________________
+//  returns scalar/double3
+inline HOST_DEVICE double3 operator/(double a, const double3& b){
+  return make_double3(a/b.x, a/b.y, a/b.z);
+}
+
+//______________________________________________________________________
+//
+// returns a - b
+inline HOST_DEVICE uint3 operator-(const uint3 & a, const uint3 & b) {
+  return make_uint3(a.x-b.x, a.y-b.y, a.z-b.z);
+}
+//__________________________________
+//  returns a + b
+inline HOST_DEVICE uint3 operator+(const uint3 & a, const uint3 & b) {
+  return make_uint3(a.x+b.x, a.y+b.y, a.z+b.z);
+}
+//__________________________________
+//  return -a
+inline HOST_DEVICE uint3 operator-(const uint3 & a) {
+  return make_uint3(-a.x,-a.y,-a.z);
+}
+//__________________________________
+//  returns uint3 * scalar
+inline HOST_DEVICE uint3 operator*(const uint3 & a, int b) {
+  return make_uint3(a.x*b, a.y*b, a.z*b);
+}
+//__________________________________
+//  returns uint3 * scalar
+inline HOST_DEVICE uint3 operator*(int b, const uint3 & a) {
+  return make_uint3(a.x*b, a.y*b, a.z*b);
+}
+//__________________________________
+//  returns uint3/scalar
+inline HOST_DEVICE uint3 operator/(const uint3 & a, int b) {
+  b = 1.0f / b;
+  return a*b;
+}
+//__________________________________
+//  returns scalar/uint3
+inline HOST_DEVICE uint3 operator/(int a, const uint3& b){
+  return make_uint3(a/b.x, a/b.y, a/b.z);
+}
 
 
 } //end namespace Uintah

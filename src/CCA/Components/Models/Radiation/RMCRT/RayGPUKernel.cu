@@ -24,14 +24,18 @@
 
 #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #include <Core/Grid/Variables/GPUGridVariable.h>
-#include <Core/Grid/Variables/Stencil7.h>
-#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+
 // linker support for device code not ready yet, need to include the whole source...
 #include <CCA/Components/Schedulers/GPUDataWarehouse.cu>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <sci_defs/cuda_defs.h>
 #include <curand.h>
 #include <curand_kernel.h>
+
+//__________________________________
+//  To Do
+//  - fix seed in random number generator
+
 
 namespace Uintah {
 
@@ -44,7 +48,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                patchParams patch,
                                const uint3 domainLo,
                                const uint3 domainHi,
-                               curandState* globalDevRandStates,
+                               curandState* randNumStates,
                                RMCRT_flags RT_flags,
                                varLabelNames labelNames,
                                GPUDataWarehouse* abskg_gdw,
@@ -53,8 +57,8 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                GPUDataWarehouse* old_gdw,
                                GPUDataWarehouse* new_gdw)
 {
-printf( " AAA \n" );
-return;
+  printf( " AAA \n" );
+
   GPUGridVariable<double> divQ;
   GPUGridVariable<double> VRFlux;
   GPUGridVariable<Stencil7> boundFlux;
@@ -141,6 +145,11 @@ return;
         #pragma unroll
 
         for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
+        
+          double3 direction_vector = findRayDirectionDevice( randNumStates, RT_flags.isSeedRandom, origin, iRay, tidX );
+          
+          double3 ray_location = rayLocationDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
+        
         }    
       }  // end z-slice loop
     }  // end domain boundary check
@@ -223,10 +232,252 @@ return;
 #endif
 }  // end ray trace kernel
 
+//______________________________________________________________________
+//
+//______________________________________________________________________
+__device__ double3 findRayDirectionDevice(curandState* randNumStates,
+                                          const bool isSeedRandom,
+                                          const uint3 origin,
+                                          const int iRay,
+                                          const int tidX)
+{
 
+  if( isSeedRandom == false ){
+   // mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
+   curand_init( hashDevice(tidX), tidX, 0, &randNumStates[tidX] );        // TODD FIX THIS
+  }
+
+  // Random Points On Sphere
+  double plusMinus_one = 2 * randDblExcDevice( randNumStates ) - 1;
+  double r = sqrt(1 - plusMinus_one * plusMinus_one);             // Radius of circle at z
+  double theta = 2 * M_PI * randDblExcDevice( randNumStates );    // Uniform betwen 0-2Pi
+
+  double3 dirVector;
+  dirVector.x = r*cos(theta);                     // Convert to cartesian
+  dirVector.y = r*sin(theta);
+  dirVector.z = plusMinus_one;
+  return dirVector;
+}
+
+//______________________________________________________________________
+//
+__device__ double3 rayLocationDevice( curandState* randNumStates,
+                                      const uint3 origin,
+                                      const double DyDx, 
+                                      const double DzDx,
+                                      const bool useCCRays)
+{
+  double3 location;
+  if( useCCRays == false ){
+    location.x =   origin.x +  randDevice( randNumStates ) ;
+    location.y =   origin.y +  randDevice( randNumStates ) * DyDx ;
+    location.z =   origin.z +  randDevice( randNumStates) * DzDx ;
+  }else{
+    location.x =   origin.x +  0.5 ;
+    location.y =   origin.y +  0.5 * DyDx ;
+    location.z =   origin.z +  0.5 * DzDx ;
+  }
+  return location;
+}
+
+
+//______________________________________________________________________
+//
+__device__ void findStepSizeDevice(int step[],
+                                   bool sign[],
+                                   const double3& inv_direction_vector){
+#if 0
+  // get new step and sign
+  for ( int d= 0; d<3; d++){
+    if (inv_direction_vector[d]>0){
+      step[d] = 1;
+      sign[d] = 1;
+    }
+    else{
+      step[d] = -1;
+      sign[d] = 0;
+    }
+  }
+#endif
+}
+//______________________________________________________________________
+__device__ void updateSumIDevice ( const double3& ray_direction,
+                                   const double3& ray_location,
+                                   const uint3& origin,
+                                   const double3& Dx,
+                                   double* sigmaT4OverPi,
+                                   double* abskg,
+                                   int* celltype,
+                                   unsigned long int& size,
+                                   double& sumI,
+                                   curandState* randNumStates)
+
+{
+
+  uint3 cur = origin;
+  uint3 prevCell = cur;
+  // Step and sign for ray marching
+  int step[3];                                          // Gives +1 or -1 based on sign    
+  bool sign[3];                                                                            
+                                                                                           
+  double3 inv_ray_direction = 1.0/ray_direction;
+
+
+  findStepSizeDevice(step, sign, inv_ray_direction);                                             
+  double3 D_DxRatio = make_double3(1, Dx.y/Dx.x, Dx.z/Dx.x );                                      
+
+  double3 tMax;         // (mixing bools, ints and doubles)                                 
+  tMax.x = (origin.x + sign[0]               - ray_location.x) * inv_ray_direction.x ; 
+  tMax.y = (origin.y + sign[1] * D_DxRatio.y - ray_location.y) * inv_ray_direction.y ; 
+  tMax.z = (origin.z + sign[2] * D_DxRatio.z - ray_location.z) * inv_ray_direction.z ; 
+
+  //Length of t to traverse one cell
+  double3 tDelta;                                                   
+  tDelta.x = abs( inv_ray_direction.x );
+  tDelta.y = abs( inv_ray_direction.y ) * D_DxRatio.y;
+  tDelta.z = abs( inv_ray_direction.z ) * D_DxRatio.z;                                      
+#if 0                                                                                           
+  //Initializes the following values for each ray                                          
+  bool in_domain     = true;                                                               
+  double tMax_prev   = 0;                                                                  
+  double intensity   = 1.0;                                                                
+  double fs          = 1.0;                                                                
+  int nReflect       = 0;                 // Number of reflections                         
+  double optical_thickness      = 0;                                                       
+  double expOpticalThick_prev   = 1.0;                                                     
+
+
+#ifdef RAY_SCATTER
+  double scatCoeff = _sigmaScat;          //[m^-1]  !! HACK !! This needs to come from data warehouse
+  if (scatCoeff == 0) scatCoeff = 1e-99;  // avoid division by zero
+
+  // Determine the length at which scattering will occur
+  // See CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
+  double scatLength = -log( randDblExc(randNumStates) ) / scatCoeff;
+  double curLength = 0;
+#endif
+
+  //+++++++Begin ray tracing+++++++++++++++++++
+  //Threshold while loop
+  while (intensity > _Threshold){
+    DIR face = NONE;
+
+    while (in_domain){
+
+      prevCell = cur;
+      double disMin = -9;          // Represents ray segment length.
+
+      //__________________________________
+      //  Determine which cell the ray will enter next
+      if ( tMax.x < tMax.y ){        // X < Y
+        if ( tMax.x < tMax.z ){      // X < Z
+          face = X;
+        } else {
+          face = Z;
+        }
+      } else {
+        if( tMax.y < tMax.z ){       // Y < Z
+          face = Y;
+        } else {
+          face = Z;
+        }
+      }
+
+      //__________________________________
+      //  update marching variables
+      cur[face]  = cur[face] + step[face];
+      disMin     = (tMax[face] - tMax_prev);
+      tMax_prev  = tMax[face];
+      tMax[face] = tMax[face] + tDelta[face];
+
+      ray_location.x = ray_location.x + (disMin  * ray_direction.x);
+      ray_location.y = ray_location.y + (disMin  * ray_direction.y);
+      ray_location.z = ray_location.z + (disMin  * ray_direction.z);
+
+//cout << "cur " << cur << " face " << face << " tmax " << tMax << " rayLoc " << ray_location << 
+//        " inv_dir: " << inv_ray_direction << " disMin: " << disMin << endl;
+
+      in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
+
+      optical_thickness += Dx.x() * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
+      // were adjusted by DyDx  or DzDx, this line is now correct for noncubic domains.
+
+      size++;
+
+      //Eqn 3-15(see below reference) while
+      //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
+      double expOpticalThick = exp(-optical_thickness);
+
+      sumI += sigmaT4OverPi[prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
+
+      expOpticalThick_prev = expOpticalThick;
+
+#ifdef RAY_SCATTER
+      curLength += disMin * Dx.x(); // July 18
+      if (curLength > scatLength && in_domain){
+
+        // get new scatLength for each scattering event
+        scatLength = -log(mTwister.randDblExc() ) / scatCoeff; 
+
+        ray_direction     =  findRayDirection( mTwister, _isSeedRandom, cur ); 
+        inv_ray_direction = Vector(1.0)/ray_direction;
+
+        // get new step and sign
+        int stepOld = step[face];
+        findStepSize( step, sign, inv_ray_direction);
+
+        // if sign[face] changes sign, put ray back into prevCell (back scattering)
+        // a sign change only occurs when the product of old and new is negative
+        if( step[face] * stepOld < 0 ){
+          cur = prevCell;
+        }
+
+        // get new tMax (mixing bools, ints and doubles)
+        tMax.x = ( ( cur.x + sign.x               - ray_location.x) * inv_ray_direction.x );
+        tMax.y = ( ( cur.y + sign.y * D_DxRatio.y - ray_location.y) * inv_ray_direction.y );
+        tMax.z = ( ( cur.z + sign.z * D_DxRatio.z - ray_location.z) * inv_ray_direction.z );
+
+        // Length of t to traverse one cell
+        tDelta    = Abs(inv_ray_direction) * D_DxRatio;
+        tMax_prev = 0;
+        curLength = 0;  // allow for multiple scattering events per ray
+
+        //if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
+      }
+#endif
+
+    } //end domain while loop.  ++++++++++++++
+
+    //  wall emission 12/15/11
+    double wallEmissivity = abskg[cur];
+
+    if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one. 
+      wallEmissivity = 1.0;
+    } 
+
+    intensity = exp(-optical_thickness);
+
+    sumI += wallEmissivity * sigmaT4OverPi[cur] * intensity;
+
+    intensity = intensity * fs;
+
+    // when a ray reaches the end of the domain, we force it to terminate. 
+    if(!_allowReflect) intensity = 0;                                 
+
+    //__________________________________
+    //  Reflections
+    if ( (intensity > _Threshold) && _allowReflect){
+      reflect( fs, cur, prevCell, abskg[cur], in_domain, step[face], sign[face], ray_direction[face]);
+      ++nReflect;
+    }
+  }  // threshold while loop.
+#endif
+} // end of updateSumI function
 //---------------------------------------------------------------------------
 // Device Function:
 //---------------------------------------------------------------------------
+
+#if 0
 __device__ void updateSumIDevice(const uint3& domainLo,
                                  const uint3& domainHi,
                                  const uint3& patchSize,
@@ -239,7 +490,7 @@ __device__ void updateSumIDevice(const uint3& domainLo,
                                  double* threshold,
                                  double* sumI)
 {
-#if 0
+
   // Get the size of the data block in which the variables reside.
   // This is essentially the stride in the index calculations.
   int dx = patchSize.x;
@@ -371,9 +622,8 @@ __device__ void updateSumIDevice(const uint3& domainLo,
 
     }  // end if reflection
   }  // end threshold while loop.
-#endif
 }  // end of updateSumI function
-
+#endif
 
 //---------------------------------------------------------------------------
 // Device Function:
