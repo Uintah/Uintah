@@ -666,7 +666,9 @@ namespace Wasatch{
       std::stringstream wID;
       std::string baseName;
       std::string stateType;
+      double maxDt;
       Uintah::ProblemSpecP multiEnvParams = params->findBlock("MultiEnvMixingModel");
+      multiEnvParams -> getAttribute("MaxDt",maxDt);
       Expr::TagList multiEnvWeightsTags;
       params->findBlock("NameTag")->getAttribute("name",baseName);
       params->findBlock("NameTag")->getAttribute("state",stateType);
@@ -687,7 +689,7 @@ namespace Wasatch{
       const Expr::Tag mixFracTag = parse_nametag( multiEnvParams->findBlock("MixtureFraction")->findBlock("NameTag") );
       const Expr::Tag scalarVarTag = parse_nametag( multiEnvParams->findBlock("ScalarVariance")->findBlock("NameTag") );
       const Expr::Tag scalarDissTag = parse_nametag( multiEnvParams->findBlock("ScalarDissipation")->findBlock("NameTag") );
-      builder = scinew typename MultiEnvMixingModel<FieldT>::Builder(multiEnvWeightsTags, mixFracTag, scalarVarTag, scalarDissTag);
+      builder = scinew typename MultiEnvMixingModel<FieldT>::Builder(multiEnvWeightsTags, mixFracTag, scalarVarTag, scalarDissTag, maxDt);
     }
     
     else if (params->findBlock("PrecipitationSource") ) {
