@@ -45,13 +45,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                const uint3 domainLo,
                                const uint3 domainHi,
                                curandState* globalDevRandStates,
-                               bool virtRad,
-                               bool isSeedRandom,
-                               bool ccRays,
-                               int numRays,
-                               double viewAngle,
-                               double threshold,
-                               bool modifies_divQ,
+                               RMCRT_flags RT_flags,
                                varLabelNames labelNames,
                                GPUDataWarehouse* abskg_gdw,
                                GPUDataWarehouse* sigmaT4_gdw,
@@ -60,14 +54,14 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                GPUDataWarehouse* new_gdw)
 {
 printf( " AAA \n" );
+return;
   GPUGridVariable<double> divQ;
   GPUGridVariable<double> VRFlux;
   GPUGridVariable<Stencil7> boundFlux;
   GPUGridVariable<double> radiationVolQ;
   GPUGridVariable<int> celltype;
 
-
-  if( modifies_divQ ){
+  if( RT_flags.modifies_divQ ){
     new_gdw->get( divQ,         labelNames.divQ,          patch.ID, matl );
     new_gdw->get( VRFlux,       labelNames.VRFlux,        patch.ID, matl );
     new_gdw->get( boundFlux,    labelNames.boundFlux,     patch.ID, matl );
@@ -99,18 +93,64 @@ printf( " AAA \n" );
       boundFlux[origin].t = 0.0;
     }
     #endif
- }
+  }
 
-#if 0
   // calculate the thread indices
   int tidX = threadIdx.x + blockIdx.x * blockDim.x;
   int tidY = threadIdx.y + blockIdx.y * blockDim.y;
 
   // Get the extents of the data block in which the variables reside.
   // This is essentially the stride in the index calculations.
-  int dx = patchSize.x;
-  int dy = patchSize.y;
+  uint3 nCells = patch.nCells;
+  
+  double DyDx = patch.dx.y/patch.dx.x;
+  double DzDx = patch.dx.z/patch.dx.x;
 
+  
+  //______________________________________________________________________
+  //           R A D I O M E T E R
+  //______________________________________________________________________
+  if ( RT_flags.virtRad ){  
+  }
+  
+  //______________________________________________________________________
+  //          B O U N D A R Y F L U X
+  //______________________________________________________________________
+  if( RT_flags.solveBoundaryFlux ){
+  }
+  
+  
+  //______________________________________________________________________
+  //         S O L V E   D I V Q
+  //______________________________________________________________________
+  if( RT_flags.solveDivQ ){
+  
+    // GPU equivalent of GridIterator loop - calculate sets of rays per thread
+    if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX <= patch.hi.x && tidY <= patch.hi.y) { // patch boundary check
+      #pragma unroll
+      for (int z = patch.lo.z; z <= patch.lo.z; z++) { // loop through z slices
+
+        // calculate the index for individual threads
+        int idx = INDEX3D( nCells.x, nCells.y, tidX, tidY,z );
+
+        uint3 origin = make_uint3(tidX, tidY, z);  // for each thread
+        double sumI = 0;
+
+        //__________________________________
+        // ray loop
+        #pragma unroll
+
+        for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
+        }    
+      }  // end z-slice loop
+    }  // end domain boundary check
+  }  // solve divQ
+  
+  
+//______________________________________________________________________
+//______________________________________________________________________
+
+#if 0  
   // GPU equivalent of GridIterator loop - calculate sets of rays per thread
   if (tidX >= patchLo.x && tidY >= patchLo.y && tidX <= patchHi.x && tidY <= patchHi.y) { // patch boundary check
     #pragma unroll
@@ -408,13 +448,7 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    const uint3 domainHi,
                                    curandState* globalDevRandStates,
                                    cudaStream_t* stream,
-                                   bool virtRad,
-                                   bool isSeedRandom,
-                                   bool ccRays,
-                                   int numDivQRays,
-                                   double viewAngle,
-                                   double threshold, 
-                                   bool modifies_divQ,
+                                   RMCRT_flags RT_flags,
                                    varLabelNames labelNames,                           
                                    GPUDataWarehouse* abskg_gdw,
                                    GPUDataWarehouse* sigmaT4_gdw,
@@ -430,13 +464,7 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                                       domainLo, 
                                                       domainHi,
                                                       globalDevRandStates,
-                                                      virtRad,
-                                                      isSeedRandom,
-                                                      ccRays,
-                                                      numDivQRays,
-                                                      viewAngle,
-                                                      threshold,
-                                                      modifies_divQ,
+                                                      RT_flags,
                                                       labelNames,
                                                       abskg_gdw,
                                                       sigmaT4_gdw,
