@@ -142,9 +142,9 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     dim3 dimGrid(xblocks, yblocks, 1);
 
     // setup random number generator states on the device, 1 for each thread
-    curandState* globalDevRandStates;
+    curandState* randNumStates;
     int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
-    CUDA_RT_SAFE_CALL( cudaMalloc((void**)&globalDevRandStates, numStates * sizeof(curandState)) );
+    CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );
 
 
     // set up and launch kernel
@@ -155,7 +155,7 @@ cout << " Here " << endl;
                          patchP,
                          dev_domainLo, 
                          dev_domainHi, 
-                         globalDevRandStates, 
+                         randNumStates, 
                          (cudaStream_t*)stream,
                          RT_flags,
                          labelNames,
@@ -166,7 +166,7 @@ cout << " Here " << endl;
                          new_gdw);
 cout << " there " << endl;
     // free device-side RNG states
-    CUDA_RT_SAFE_CALL( cudaFree(globalDevRandStates) );
+    CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
 
   }  //end patch loop
 }  // end GPU ray trace method
