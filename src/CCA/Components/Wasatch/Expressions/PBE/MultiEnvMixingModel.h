@@ -53,10 +53,12 @@ class MultiEnvMixingModel
   const FieldT* mixFrac_; 											 // mixture fraction from grid
   const FieldT* scalarVar_; 										 // sclar variance form grid
   const FieldT* scalarDiss_;
-
+  const double maxDt_;
+  
   MultiEnvMixingModel( const Expr::Tag& mixFracTag_,
                        const Expr::Tag& scalarVarTag_,
-                       const Expr::Tag& scalarDissTag_);
+                       const Expr::Tag& scalarDissTag_,
+                       const double& maxDt_ );
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -65,22 +67,25 @@ public:
     Builder( const Expr::TagList& results,
              const Expr::Tag& mixFracTag,
              const Expr::Tag& scalarVarTag,
-             const Expr::Tag& scalarDissTag)
+             const Expr::Tag& scalarDissTag,
+             const double& maxDt)
     : ExpressionBuilder(results),
     mixfract_(mixFracTag),
     scalarvart_(scalarVarTag),
-    scalardisst_(scalarDissTag)
+    scalardisst_(scalarDissTag),
+    maxdt_(maxDt)
     {}
 
     ~Builder(){}
 
     Expr::ExpressionBase* build() const
     {
-      return new MultiEnvMixingModel<FieldT>( mixfract_, scalarvart_, scalardisst_ );
+      return new MultiEnvMixingModel<FieldT>( mixfract_, scalarvart_, scalardisst_, maxdt_ );
     }
 
   private:
     const Expr::Tag mixfract_, scalarvart_, scalardisst_;
+    double maxdt_;
   };
 
   ~MultiEnvMixingModel();
@@ -101,11 +106,13 @@ template< typename FieldT >
 MultiEnvMixingModel<FieldT>::
 MultiEnvMixingModel( const Expr::Tag& mixFracTag,
                      const Expr::Tag& scalarVarTag,
-                     const Expr::Tag& scalarDissTag)
+                     const Expr::Tag& scalarDissTag,
+                     const double& maxDt)
 : Expr::Expression<FieldT>(),
   mixFracTag_(mixFracTag),
   scalarVarTag_(scalarVarTag),
-  scalarDissTag_(scalarDissTag)
+  scalarDissTag_(scalarDissTag),
+  maxDt_(maxDt)
 {
   this->set_gpu_runnable( true );
 }
@@ -153,32 +160,37 @@ evaluate()
   typedef std::vector<FieldT*> ResultsVec;
 
   ResultsVec& results = this->get_value_vec();
-
+  
+  double small = 1.0e-10;
   // w1
-  *results[0] <<= cond( *mixFrac_ == 0.0, 1.0  )
-                      ( *mixFrac_ == 1.0, 0.0  )
+  *results[0] <<= cond( *mixFrac_ <= small, 1.0  )
+                      ( *mixFrac_ >= 1.0-small, 0.0  )
                       ( *scalarVar_/ *mixFrac_ );
   
   // dw1/dt
-  *results[1] <<= cond( *mixFrac_ == 0.0 || *mixFrac_ == 1.0, 0.0 )
-                      (- *scalarDiss_/ *mixFrac_ );
-  
-  // w2
-  *results[2] <<= cond( *mixFrac_ == 0.0 || *mixFrac_ == 1.0, 0.0 )
-                      ( -1.0 + *scalarVar_ / (*mixFrac_ * *mixFrac_ - *mixFrac_) );
+  *results[1] <<= cond( *mixFrac_ <= small || *mixFrac_ >= 1.0-small, 0.0 )
+                      ( - *scalarDiss_/ *mixFrac_ > - *results[0]/maxDt_, - *scalarDiss_/ *mixFrac_ )
+                      ( - *results[0]/maxDt_ );
 
-  // dw2/dt
-  *results[3] <<= cond( *mixFrac_ == 0.0 || *mixFrac_ == 1.0, 0.0 )
-                      ( *scalarDiss_ / (*mixFrac_ - *mixFrac_ * *mixFrac_) );
-  
   // w3
-  *results[4] <<= cond( *mixFrac_ == 0.0, 0.0 )
-                      ( *mixFrac_ == 1.0, 1.0 )
+  *results[4] <<= cond( *mixFrac_ <= small, 0.0 )
+                      ( *mixFrac_ >= 1.0-small, 1.0 )
                       ( - *scalarVar_ / ( *mixFrac_ - 1.0 ) );
 
   // dw3/dt
-  *results[5] <<= cond( *mixFrac_ == 0.0 || *mixFrac_ == 1.0, 0.0 )
-                      ( - *scalarDiss_ / (1.0 - *mixFrac_) );
+  *results[5] <<= cond( *mixFrac_ <= small || *mixFrac_ >= 1.0-small, 0.0 )
+                      ( - *scalarDiss_ / (1.0 - *mixFrac_) > - *results[4]/maxDt_, - *scalarDiss_ / (1.0 - *mixFrac_) )
+                      ( - *results[4]/maxDt_);
+  
+  //weight 2 last, sicne stability requires w1&3 calc
+  // w2
+  *results[2] <<= cond( *mixFrac_ <= small || *mixFrac_ >= 1.0-small, 0.0 )
+                      ( 1.0 + *scalarVar_ / (*mixFrac_ * *mixFrac_ - *mixFrac_) );
+  
+  // dw2/dt
+  *results[3] <<= cond( *mixFrac_ <= small || *mixFrac_ >= 1.0-small, 0.0 )
+                      ( *scalarDiss_ / (*mixFrac_ - *mixFrac_ * *mixFrac_) < (*results[0] + *results[4])/maxDt_ , *scalarDiss_ / (*mixFrac_ - *mixFrac_ * *mixFrac_) )
+                      ( (*results[0] + *results[4])/maxDt_ );
 }
 
 #endif

@@ -351,7 +351,8 @@
         </EnergyDissipation>  
       </TurbulentAggregationCoefficient>
       
-      <MultiEnvMixingModel spec = "OPTIONAL NO_DATA">
+      <MultiEnvMixingModel spec = "OPTIONAL NO_DATA"
+                           attribute1 = "MaxDt REQUIRED DOUBLE">
         <MixtureFraction spec = "REQUIRED NO_DATA" > 
           <NameTag spec	= "REQUIRED"/>
         </MixtureFraction>      
