@@ -1130,7 +1130,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       radiationVolq_fine.initialize( 0.0 );
     }
 
-    unsigned long int size = 0;                             // current size of PathIndex
+    unsigned long int nRaySteps = 0;                             // current size of PathIndex
 
     //__________________________________
     //
@@ -1158,7 +1158,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         Vector ray_direction = findRayDirection( mTwister,_isSeedRandom, origin, iRay ); 
                
         updateSumI_ML( ray_direction, ray_location, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
-                       fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, size, sumI, mTwister);
+                       fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, nRaySteps, sumI, mTwister);
 
 
       }  // Ray loop
@@ -1176,12 +1176,12 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
     //__________________________________
     //
     double end =clock();
-    double efficiency = size/((end-start)/ CLOCKS_PER_SEC);
+    double efficiency = nRaySteps/((end-start)/ CLOCKS_PER_SEC);
     if (finePatch->getGridIndex() == levelPatchID) {
       cout<< endl;
       cout << " RMCRT REPORT: Patch " << levelPatchID <<endl;
       cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms
-      cout << " Size: " << size << endl;
+      cout << " Size: " << nRaySteps << endl;
       cout << " Efficiency: " << efficiency << " steps per sec" << endl;
       cout << endl;
     }
@@ -2117,7 +2117,7 @@ void Ray::updateSumI ( Vector& ray_direction,
                        constCCVariable<double>& sigmaT4OverPi,
                        constCCVariable<double>& abskg,
                        constCCVariable<int>& celltype,
-                       unsigned long int& size,
+                       unsigned long int& nRaySteps,
                        double& sumI,
                        MTRand& mTwister)
 
@@ -2207,7 +2207,7 @@ void Ray::updateSumI ( Vector& ray_direction,
        optical_thickness += Dx.x() * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
        // were adjusted by DyDx  or DzDx, this line is now correct for noncubic domains.
        
-       size++;
+       nRaySteps++;
 
        //Eqn 3-15(see below reference) while
        //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
@@ -2295,7 +2295,7 @@ void Ray::updateSumI ( Vector& ray_direction,
                            vector<IntVector>& regionHi,
                            StaticArray< constCCVariable<double> >& sigmaT4OverPi,
                            StaticArray< constCCVariable<double> >& abskg,
-                           unsigned long int& size,
+                           unsigned long int& nRaySteps,
                            double& sumI,
                            MTRand& mTwister)
 {
@@ -2446,7 +2446,7 @@ void Ray::updateSumI ( Vector& ray_direction,
 
 
       optical_thickness += Dx[prevLev].x() * abskg[prevLev][prevCell]*disMin;
-      size++;
+      nRaySteps++;
 
       double expOpticalThick = exp(-optical_thickness);
 
