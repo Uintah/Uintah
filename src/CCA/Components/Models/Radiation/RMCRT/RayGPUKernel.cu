@@ -46,8 +46,8 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                dim3 dimBlock,
                                int matl,
                                patchParams patch,
-                               const uint3 domainLo,
-                               const uint3 domainHi,
+                               const int3 domainLo,
+                               const int3 domainHi,
                                curandState* randNumStates,
                                RMCRT_flags RT_flags,
                                varLabelNames labelNames,
@@ -59,11 +59,14 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 {
   printf( " AAA \n" );
 
+  GPUGridVariable<double> sigmaT4OverPi;      // These should be const variables
+  GPUGridVariable<double> abskg;              // Need to use getRegion() to get the data
+  GPUGridVariable<int> celltype;
+
   GPUGridVariable<double> divQ;
   GPUGridVariable<double> VRFlux;
   GPUGridVariable<Stencil7> boundFlux;
   GPUGridVariable<double> radiationVolQ;
-  GPUGridVariable<int> celltype;
 
   if( RT_flags.modifies_divQ ){
     new_gdw->get( divQ,         labelNames.divQ,          patch.ID, matl );
@@ -105,7 +108,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 
   // Get the extents of the data block in which the variables reside.
   // This is essentially the stride in the index calculations.
-  uint3 nCells = patch.nCells;
+  int3 nCells = patch.nCells;
   
   double DyDx = patch.dx.y/patch.dx.x;
   double DzDx = patch.dx.z/patch.dx.x;
@@ -137,7 +140,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
         // calculate the index for individual threads
         int idx = INDEX3D( nCells.x, nCells.y, tidX, tidY,z );
 
-        uint3 origin = make_uint3(tidX, tidY, z);  // for each thread
+        int3 origin = make_int3(tidX, tidY, z);  // for each thread
         double sumI = 0;
 
         //__________________________________
@@ -149,87 +152,19 @@ __global__ void rayTraceKernel(dim3 dimGrid,
           double3 direction_vector = findRayDirectionDevice( randNumStates, RT_flags.isSeedRandom, origin, iRay, tidX );
           
           double3 ray_location = rayLocationDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
+         
+          updateSumIDevice( direction_vector, ray_location, origin, patch.dx,  sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
+        } //Ray loop
+        //__________________________________
+        //  Compute divQ
+        divQ[origin] = 4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/RT_flags.nDivQRays) );
+
+        // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
+        radiationVolQ[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/RT_flags.nDivQRays) ;
         
-        }    
       }  // end z-slice loop
     }  // end domain boundary check
   }  // solve divQ
-  
-  
-//______________________________________________________________________
-//______________________________________________________________________
-
-#if 0  
-  // GPU equivalent of GridIterator loop - calculate sets of rays per thread
-  if (tidX >= patchLo.x && tidY >= patchLo.y && tidX <= patchHi.x && tidY <= patchHi.y) { // patch boundary check
-    #pragma unroll
-    for (int z = patchLo.z; z <= patchHi.z; z++) { // loop through z slices
-
-      // calculate the index for individual threads
-      int idx = INDEX3D(dx,dy,tidX,tidY,z);
-
-      uint3 origin = make_uint3(tidX, tidY, z);  // for each thread
-      double sumI = 0;
-
-      //_______________________________________________________________________
-      // ray loop
-      #pragma unroll
-
-      for (int iRay = 0; iRay < numRays; iRay++) {
-
-        // initialize device RNG states
-        if (isSeedRandom == false) {
-          curand_init(hashDevice(tidX), tidX, 0, &globalDevStates[tidX]);
-        }
-
-        // for explanation see: http://www.cgafaq.info/wiki/Random_Points_On_Sphere
-        double plusMinus_one = 2 * randDblExcDevice(globalDevStates) - 1;
-        double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
-        double theta = 2 * M_PI * randDblExcDevice(globalDevStates);      // Uniform between 0-2Pi
-
-        // Convert to cartesian coordinates
-        double3 direction_vector;
-        direction_vector.x = r * cos(theta);
-        direction_vector.y = r * sin(theta);
-        direction_vector.z = plusMinus_one;
-
-        double3 inv_direction_vector;
-        inv_direction_vector.x = 1.0 / direction_vector.x;
-        inv_direction_vector.y = 1.0 / direction_vector.y;
-        inv_direction_vector.z = 1.0 / direction_vector.z;
-
-        double DyDxRatio = cellSpacing.y / cellSpacing.x;  //noncubic
-        double DzDxRatio = cellSpacing.z / cellSpacing.x;  //noncubic
-
-        double3 ray_location;
-
-        if (ccRays) {
-          ray_location.x = origin.x + 0.5;
-          ray_location.y = origin.y + 0.5 * DyDxRatio;  //noncubic
-          ray_location.z = origin.z + 0.5 * DzDxRatio;  //noncubic
-        } else {
-          ray_location.x = origin.x + randDevice(globalDevStates);
-          ray_location.y = origin.y + randDevice(globalDevStates) * DyDxRatio;  //noncubic
-          ray_location.z = origin.z + randDevice(globalDevStates) * DzDxRatio;  //noncubic
-        }
-
-        updateSumIDevice(domainLo, domainHi, patchSize, origin, cellSpacing, inv_direction_vector,
-                         ray_location, dev_sigmaT4, dev_abskg, &threshold, &sumI);
-
-      }  // end ray loop
-
-      //__________________________________
-      //  Compute divQ
-      dev_divQ[idx] = 4.0 * M_PI * dev_abskg[idx] * (dev_sigmaT4[idx] - (sumI / numRays));
-
-      dev_divQ[idx]       = 0.0;
-      dev_VRFlux[idx]     = 0.0;
-      dev_boundFlux[idx]  = 0.0;
-      dev_radVolq[idx]    = 0.0;
-
-    } // end z-slice loop
-  }  // end domain boundary check
-#endif
 }  // end ray trace kernel
 
 //______________________________________________________________________
@@ -237,7 +172,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 //______________________________________________________________________
 __device__ double3 findRayDirectionDevice(curandState* randNumStates,
                                           const bool isSeedRandom,
-                                          const uint3 origin,
+                                          const int3 origin,
                                           const int iRay,
                                           const int tidX)
 {
@@ -262,7 +197,7 @@ __device__ double3 findRayDirectionDevice(curandState* randNumStates,
 //______________________________________________________________________
 //
 __device__ double3 rayLocationDevice( curandState* randNumStates,
-                                      const uint3 origin,
+                                      const int3 origin,
                                       const double DyDx, 
                                       const double DzDx,
                                       const bool useCCRays)
@@ -300,22 +235,48 @@ __device__ void findStepSizeDevice(int step[],
   }
 #endif
 }
+
+
+//______________________________________________________________________
+//
+__device__ void reflect(double& fs,
+                         uint3& cur,
+                         uint3& prevCell,
+                         const double abskg,
+                         bool& in_domain,
+                         int& step,
+                         bool& sign,
+                         double& ray_direction)
+{
+  fs = fs * (1 - abskg);
+
+  //put cur back inside the domain
+  cur = prevCell;
+  in_domain = true;
+
+  // apply reflection condition
+  step *= -1;                // begin stepping in opposite direction
+  sign = (sign==1) ? 0 : 1;  //  swap sign from 1 to 0 or vice versa
+  ray_direction *= -1;
+  //dbg2 << " REFLECTING " << endl;
+}
+
 //______________________________________________________________________
 __device__ void updateSumIDevice ( const double3& ray_direction,
                                    const double3& ray_location,
-                                   const uint3& origin,
+                                   const int3& origin,
                                    const double3& Dx,
-                                   double* sigmaT4OverPi,
-                                   double* abskg,
-                                   int* celltype,
-                                   unsigned long int& size,
+                                   GPUGridVariable<double>& sigmaT4OverPi,
+                                   GPUGridVariable<double>& abskg,
+                                   GPUGridVariable<int>& celltype,
                                    double& sumI,
-                                   curandState* randNumStates)
+                                   curandState* randNumStates,
+                                   RMCRT_flags RT_flags)
 
 {
 
-  uint3 cur = origin;
-  uint3 prevCell = cur;
+  int3 cur = origin;
+  int3 prevCell = cur;
   // Step and sign for ray marching
   int step[3];                                          // Gives +1 or -1 based on sign    
   bool sign[3];                                                                            
@@ -336,7 +297,7 @@ __device__ void updateSumIDevice ( const double3& ray_direction,
   tDelta.x = abs( inv_ray_direction.x );
   tDelta.y = abs( inv_ray_direction.y ) * D_DxRatio.y;
   tDelta.z = abs( inv_ray_direction.z ) * D_DxRatio.z;                                      
-#if 0                                                                                           
+                                                                                 
   //Initializes the following values for each ray                                          
   bool in_domain     = true;                                                               
   double tMax_prev   = 0;                                                                  
@@ -359,9 +320,9 @@ __device__ void updateSumIDevice ( const double3& ray_direction,
 
   //+++++++Begin ray tracing+++++++++++++++++++
   //Threshold while loop
-  while (intensity > _Threshold){
+  while (intensity > RT_flags.threshold){
     DIR face = NONE;
-
+    
     while (in_domain){
 
       prevCell = cur;
@@ -382,7 +343,7 @@ __device__ void updateSumIDevice ( const double3& ray_direction,
           face = Z;
         }
       }
-
+#if 0
       //__________________________________
       //  update marching variables
       cur[face]  = cur[face] + step[face];
@@ -394,15 +355,16 @@ __device__ void updateSumIDevice ( const double3& ray_direction,
       ray_location.y = ray_location.y + (disMin  * ray_direction.y);
       ray_location.z = ray_location.z + (disMin  * ray_direction.z);
 
+#endif
 //cout << "cur " << cur << " face " << face << " tmax " << tMax << " rayLoc " << ray_location << 
 //        " inv_dir: " << inv_ray_direction << " disMin: " << disMin << endl;
 
       in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
 
-      optical_thickness += Dx.x() * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
+      optical_thickness += Dx.x * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
       // were adjusted by DyDx  or DzDx, this line is now correct for noncubic domains.
 
-      size++;
+      RT_flags.nRaySteps ++;
 
       //Eqn 3-15(see below reference) while
       //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
@@ -447,7 +409,7 @@ __device__ void updateSumIDevice ( const double3& ray_direction,
 #endif
 
     } //end domain while loop.  ++++++++++++++
-
+    
     //  wall emission 12/15/11
     double wallEmissivity = abskg[cur];
 
@@ -462,16 +424,19 @@ __device__ void updateSumIDevice ( const double3& ray_direction,
     intensity = intensity * fs;
 
     // when a ray reaches the end of the domain, we force it to terminate. 
-    if(!_allowReflect) intensity = 0;                                 
+    if( !RT_flags.allowReflect ) intensity = 0;                                 
 
+
+#if 0
     //__________________________________
     //  Reflections
-    if ( (intensity > _Threshold) && _allowReflect){
+    if ( (intensity > RT_flags.threshold) && RT_flags.allowReflect){
       reflect( fs, cur, prevCell, abskg[cur], in_domain, step[face], sign[face], ray_direction[face]);
       ++nReflect;
     }
-  }  // threshold while loop.
 #endif
+  }  // threshold while loop.
+
 } // end of updateSumI function
 //---------------------------------------------------------------------------
 // Device Function:
@@ -628,9 +593,9 @@ __device__ void updateSumIDevice(const uint3& domainLo,
 //---------------------------------------------------------------------------
 // Device Function:
 //---------------------------------------------------------------------------
-__device__ bool containsCellDevice(const uint3& domainLo,
-                                   const uint3& domainHi,
-                                   const uint3& cell,
+__device__ bool containsCellDevice(const int3& domainLo,
+                                   const int3& domainHi,
+                                   const int3& cell,
                                    const int& face)
 {
   switch (face) {
@@ -694,8 +659,8 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    dim3 dimBlock,
                                    int matlIndex,
                                    patchParams patch,
-                                   const uint3 domainLo,
-                                   const uint3 domainHi,
+                                   const int3 domainLo,
+                                   const int3 domainHi,
                                    curandState* globalDevRandStates,
                                    cudaStream_t* stream,
                                    RMCRT_flags RT_flags,

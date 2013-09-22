@@ -63,8 +63,8 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
   level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
   level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
 
-  const uint3 dev_domainLo = make_uint3(domainLo_EC.x(), domainLo_EC.y(), domainLo_EC.z());
-  const uint3 dev_domainHi = make_uint3(domainHi_EC.x(), domainHi_EC.y(), domainHi_EC.z());
+  const int3 dev_domainLo = make_int3(domainLo_EC.x(), domainLo_EC.y(), domainLo_EC.z());
+  const int3 dev_domainHi = make_int3(domainHi_EC.x(), domainHi_EC.y(), domainHi_EC.z());
 
   
   //__________________________________
@@ -108,6 +108,8 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
   RT_flags.nRadRays  = _nRadRays;    
   RT_flags.nFluxRays = _nFluxRays;
   
+  double start=clock();  
+  
   //______________________________________________________________________
   //
   // patch loop
@@ -120,20 +122,20 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     // Calculate the memory block size
     const IntVector low = patch->getCellLowIndex();
     const IntVector high = patch->getCellHighIndex();
-    const IntVector size = high - low;
+    const IntVector patchSize = high - low;
 
-    const int xdim = size.x();
-    const int ydim = size.y();
-    const int zdim = size.z();
+    const int xdim = patchSize.x();
+    const int ydim = patchSize.y();
+    const int zdim = patchSize.z();
 
     // get the cell spacing and convert patch extents to CUDA vector type
     patchParams patchP;
     const Vector dx = patch->dCell();
     patchP.dx     = make_double3(dx.x(), dx.y(), dx.z());
-    patchP.lo     = make_uint3(low.x(), low.y(), low.z());
-    patchP.hi     = make_uint3(high.x(), high.y(), high.z());
+    patchP.lo     = make_int3(low.x(), low.y(), low.z());
+    patchP.hi     = make_int3(high.x(), high.y(), high.z());
     patchP.ID     = patch->getID();
-    patchP.nCells = make_uint3(xdim, ydim, zdim);
+    patchP.nCells = make_int3(xdim, ydim, zdim);
 
     // define dimesions of the thread grid to be launched
     int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
@@ -146,7 +148,9 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
     CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );
 
-
+    
+    RT_flags.nRaySteps = 0;
+    //__________________________________
     // set up and launch kernel
 cout << " Here " << endl;
     launchRayTraceKernel(dimGrid, 
@@ -167,6 +171,19 @@ cout << " Here " << endl;
 cout << " there " << endl;
     // free device-side RNG states
     CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
-
+    
+    //__________________________________
+    //
+    double end =clock();
+    double efficiency = RT_flags.nRaySteps/((end-start)/ CLOCKS_PER_SEC);
+    
+    if (patch->getGridIndex() == 0) {
+      cout<< endl;
+      cout << " RMCRT REPORT: Patch 0" << endl;
+      cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms
+      cout << " Size: " << RT_flags.nRaySteps << endl;
+      cout << " Efficiency: " << efficiency << " steps per sec" << endl;
+      cout << endl;
+    }
   }  //end patch loop
 }  // end GPU ray trace method

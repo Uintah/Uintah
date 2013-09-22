@@ -48,9 +48,9 @@ HOST_DEVICE struct varLabelNames{
 
 HOST_DEVICE struct patchParams{
   double3 dx;             // cell spacing
-  uint3 lo;               // cell low index not including extra or ghost cells
-  uint3 hi;               // cell high index not including extra or ghost cells
-  uint3 nCells;           // number of cells in each dir
+  int3 lo;               // cell low index not including extra or ghost cells
+  int3 hi;               // cell high index not including extra or ghost cells
+  int3 nCells;           // number of cells in each dir
   int ID;                 // patch ID
 };
 
@@ -70,15 +70,21 @@ HOST_DEVICE struct RMCRT_flags{
   int   nDivQRays;            // number of rays per cell used to compute divQ
   int   nRadRays;             // number of rays for virtual radiometer
   int   nFluxRays;            // number of boundary flux rays
+  int   nRaySteps;            // number of ray steps taken
   
 };
+
+
+enum DIR {X=0, Y=1, Z=2, NONE=-9};
+//           -x      +x       -y       +y     -z     +z
+enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};
 
 void launchRayTraceKernel(dim3 dimGrid,
                           dim3 dimBlock,
                           int matlIndex,
                           patchParams patch,
-                          const uint3 domainLo,
-                          const uint3 domainHi,
+                          const int3 domainLo,
+                          const int3 domainHi,
                           curandState* randNumStates,
                           cudaStream_t* stream,
                           RMCRT_flags RT_flags,                               
@@ -94,8 +100,8 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                dim3 dimBlock,
                                int matlIndex,
                                patchParams patch,
-                               const uint3 domainLo,
-                               const uint3 domainHi,
+                               const int3 domainLo,
+                               const int3 domainHi,
                                curandState* randNumStates,
                                RMCRT_flags RT_flags,
                                varLabelNames labelNames,
@@ -107,12 +113,12 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                
 __device__ double3 findRayDirectionDevice(curandState* randNumStates,
                                           const bool isSeedRandom,
-                                          const uint3 origin,
+                                          const int3 origin,
                                           const int iRay,
                                           const int tidX);
                                     
 __device__ double3 rayLocationDevice( curandState* randNumStates,
-                                      const uint3 origin,
+                                      const int3 origin,
                                       const double DyDx, 
                                       const double DzDx,
                                       const bool useCCRays);
@@ -120,23 +126,30 @@ __device__ double3 rayLocationDevice( curandState* randNumStates,
 __device__ void findStepSizeDevice(int step[],
                                    bool sign[],
                                    const double3& inv_direction_vector);
-                                   
-__device__ void updateSumIDevice(const uint3& domainLow,
-                                 const uint3& domainHigh,
-                                 const uint3& domainSize,
-                                 const uint3& origin,
-                                 const double3& cellSpacing,
-                                 const double3& inv_direction_vector,
-                                 const double3& ray_location,
-                                 double* device_sigmaT4,
-                                 double* device_abskg,
-                                 double* threshold,
-                                 double* sumI);
+                                 
+__device__ void reflect(double& fs,
+                        int3& cur,
+                        int3& prevCell,
+                        const double abskg,
+                        bool& in_domain,
+                        int& step,
+                        bool& sign,
+                        double& ray_direction);
+                                                          
+__device__ void updateSumIDevice ( const double3& ray_direction,
+                                   const double3& ray_location,
+                                   const int3& origin,
+                                   const double3& Dx,
+                                   GPUGridVariable<double>&  sigmaT4OverPi,
+                                   GPUGridVariable<double>& abskg,
+                                   GPUGridVariable<int>& celltype,
+                                   double& sumI,
+                                   curandState* randNumStates,
+                                   RMCRT_flags RT_flags);
 
-
-__device__ bool containsCellDevice(const uint3& domainLow,
-                                   const uint3& domainHigh,
-                                   const uint3& cell,
+__device__ bool containsCellDevice(const int3& domainLow,
+                                   const int3& domainHigh,
+                                   const int3& cell,
                                    const int& face);
 
 
@@ -192,39 +205,39 @@ inline HOST_DEVICE double3 operator/(double a, const double3& b){
 //______________________________________________________________________
 //
 // returns a - b
-inline HOST_DEVICE uint3 operator-(const uint3 & a, const uint3 & b) {
-  return make_uint3(a.x-b.x, a.y-b.y, a.z-b.z);
+inline HOST_DEVICE int3 operator-(const int3 & a, const int3 & b) {
+  return make_int3(a.x-b.x, a.y-b.y, a.z-b.z);
 }
 //__________________________________
 //  returns a + b
-inline HOST_DEVICE uint3 operator+(const uint3 & a, const uint3 & b) {
-  return make_uint3(a.x+b.x, a.y+b.y, a.z+b.z);
+inline HOST_DEVICE int3 operator+(const int3 & a, const int3 & b) {
+  return make_int3(a.x+b.x, a.y+b.y, a.z+b.z);
 }
 //__________________________________
 //  return -a
-inline HOST_DEVICE uint3 operator-(const uint3 & a) {
-  return make_uint3(-a.x,-a.y,-a.z);
+inline HOST_DEVICE int3 operator-(const int3 & a) {
+  return make_int3(-a.x,-a.y,-a.z);
 }
 //__________________________________
-//  returns uint3 * scalar
-inline HOST_DEVICE uint3 operator*(const uint3 & a, int b) {
-  return make_uint3(a.x*b, a.y*b, a.z*b);
+//  returns int3 * scalar
+inline HOST_DEVICE int3 operator*(const int3 & a, int b) {
+  return make_int3(a.x*b, a.y*b, a.z*b);
 }
 //__________________________________
-//  returns uint3 * scalar
-inline HOST_DEVICE uint3 operator*(int b, const uint3 & a) {
-  return make_uint3(a.x*b, a.y*b, a.z*b);
+//  returns int3 * scalar
+inline HOST_DEVICE int3 operator*(int b, const int3 & a) {
+  return make_int3(a.x*b, a.y*b, a.z*b);
 }
 //__________________________________
-//  returns uint3/scalar
-inline HOST_DEVICE uint3 operator/(const uint3 & a, int b) {
+//  returns int3/scalar
+inline HOST_DEVICE int3 operator/(const int3 & a, int b) {
   b = 1.0f / b;
   return a*b;
 }
 //__________________________________
-//  returns scalar/uint3
-inline HOST_DEVICE uint3 operator/(int a, const uint3& b){
-  return make_uint3(a/b.x, a/b.y, a/b.z);
+//  returns scalar/int3
+inline HOST_DEVICE int3 operator/(int a, const int3& b){
+  return make_int3(a/b.x, a/b.y, a/b.z);
 }
 
 
