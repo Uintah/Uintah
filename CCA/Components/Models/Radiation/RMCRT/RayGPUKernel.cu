@@ -35,6 +35,9 @@
 //__________________________________
 //  To Do
 //  - fix seed in random number generator
+//  - Figure out how to initialize variables.
+//  - Start using [] operators for int3
+//  - 
 
 
 namespace Uintah {
@@ -68,6 +71,10 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   GPUGridVariable<Stencil7> boundFlux;
   GPUGridVariable<double> radiationVolQ;
 
+  abskg_gdw->get(   abskg   ,       labelNames.abskg ,   patch.ID, matl );
+  sigmaT4_gdw->get( sigmaT4OverPi , labelNames.sigmaT4,  patch.ID, matl );
+  celltype_gdw->get( celltype ,     labelNames.celltype, patch.ID, matl );
+
   if( RT_flags.modifies_divQ ){
     new_gdw->get( divQ,         labelNames.divQ,          patch.ID, matl );
     new_gdw->get( VRFlux,       labelNames.VRFlux,        patch.ID, matl );
@@ -80,12 +87,9 @@ __global__ void rayTraceKernel(dim3 dimGrid,
     new_gdw->put( radiationVolQ,labelNames.radVolQ,       patch.ID, matl );
     
  #if 0
-    new_gdw->allocateAndPut( divQ,      d_divQLabel,      d_matl, patch );
+       // Not sure how to initialize variables on GPU
     divQ.initialize( 0.0 ); 
-    new_gdw->allocateAndPut( VRFlux,    d_VRFluxLabel,    d_matl, patch );
     VRFlux.initialize( 0.0 );
-    new_gdw->allocateAndPut( boundFlux,    d_boundFluxLabel, d_matl, patch );
-    new_gdw->allocateAndPut( radiationVolq, d_radiationVolqLabel, d_matl, patch );
     radiationVolq.initialize( 0.0 );
 
     for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
@@ -224,7 +228,7 @@ __device__ void findStepSizeDevice(int step[],
 #if 0
   // get new step and sign
   for ( int d= 0; d<3; d++){
-    if (inv_direction_vector[d]>0){
+    if (inv_direction_vector[d]>0){         // Need []  operator
       step[d] = 1;
       sign[d] = 1;
     }
@@ -284,25 +288,25 @@ __device__ void updateSumIDevice ( const double3& ray_direction,
   double3 inv_ray_direction = 1.0/ray_direction;
 
 
-  findStepSizeDevice(step, sign, inv_ray_direction);                                             
-  double3 D_DxRatio = make_double3(1, Dx.y/Dx.x, Dx.z/Dx.x );                                      
+  findStepSizeDevice(step, sign, inv_ray_direction);
+  double3 D_DxRatio = make_double3(1, Dx.y/Dx.x, Dx.z/Dx.x );
 
-  double3 tMax;         // (mixing bools, ints and doubles)                                 
+  double3 tMax;         // (mixing bools, ints and doubles)
   tMax.x = (origin.x + sign[0]               - ray_location.x) * inv_ray_direction.x ; 
   tMax.y = (origin.y + sign[1] * D_DxRatio.y - ray_location.y) * inv_ray_direction.y ; 
   tMax.z = (origin.z + sign[2] * D_DxRatio.z - ray_location.z) * inv_ray_direction.z ; 
 
   //Length of t to traverse one cell
-  double3 tDelta;                                                   
+  double3 tDelta; 
   tDelta.x = abs( inv_ray_direction.x );
   tDelta.y = abs( inv_ray_direction.y ) * D_DxRatio.y;
   tDelta.z = abs( inv_ray_direction.z ) * D_DxRatio.z;                                      
-                                                                                 
-  //Initializes the following values for each ray                                          
-  bool in_domain     = true;                                                               
-  double tMax_prev   = 0;                                                                  
-  double intensity   = 1.0;                                                                
-  double fs          = 1.0;                                                                
+
+  //Initializes the following values for each ray
+  bool in_domain     = true;
+  double tMax_prev   = 0;
+  double intensity   = 1.0;
+  double fs          = 1.0;
   int nReflect       = 0;                 // Number of reflections                         
   double optical_thickness      = 0;                                                       
   double expOpticalThick_prev   = 1.0;                                                     
@@ -424,7 +428,7 @@ __device__ void updateSumIDevice ( const double3& ray_direction,
     intensity = intensity * fs;
 
     // when a ray reaches the end of the domain, we force it to terminate. 
-    if( !RT_flags.allowReflect ) intensity = 0;                                 
+    if( !RT_flags.allowReflect ) intensity = 0;
 
 
 #if 0
@@ -436,159 +440,8 @@ __device__ void updateSumIDevice ( const double3& ray_direction,
     }
 #endif
   }  // threshold while loop.
-
 } // end of updateSumI function
-//---------------------------------------------------------------------------
-// Device Function:
-//---------------------------------------------------------------------------
 
-#if 0
-__device__ void updateSumIDevice(const uint3& domainLo,
-                                 const uint3& domainHi,
-                                 const uint3& patchSize,
-                                 const uint3& origin,
-                                 const double3& cellSpacing,
-                                 const double3& inv_direction_vector,
-                                 const double3& ray_location,
-                                 double* dev_sigmaT4,
-                                 double* dev_abskg,
-                                 double* threshold,
-                                 double* sumI)
-{
-
-  // Get the size of the data block in which the variables reside.
-  // This is essentially the stride in the index calculations.
-  int dx = patchSize.x;
-  int dy = patchSize.y;;
-
-  uint3 cur = origin;
-  uint3 prevCell = cur;
-
-  // Step and sign for ray marching, gives +1 or -1 based on sign
-  int step[3];
-  bool sign[3];
-
-  // unrolled
-  if (inv_direction_vector.x > 0) {
-    step[0] = 1;
-    sign[0] = 1;
-  } else {
-    step[0] = -1;
-    sign[0] = 0;
-  }
-
-  if (inv_direction_vector.y > 0) {
-    step[1] = 1;
-    sign[1] = 1;
-  } else {
-    step[1] = -1;
-    sign[1] = 0;
-  }
-
-  if (inv_direction_vector.z > 0) {
-    step[2] = 1;
-    sign[2] = 1;
-  } else {
-    step[2] = -1;
-    sign[2] = 0;
-  }
-
-  double DyDxRatio = cellSpacing.y / cellSpacing.x;  //noncubic
-  double DzDxRatio = cellSpacing.z / cellSpacing.x;  //noncubic
-
-  double tMaxX = (origin.x + sign[0] - ray_location.x) * inv_direction_vector.x;
-  double tMaxY = (origin.y + sign[1] * DyDxRatio - ray_location.y) * inv_direction_vector.y;
-  double tMaxZ = (origin.z + sign[2] * DzDxRatio - ray_location.z) * inv_direction_vector.z;
-
-  //Length of t to traverse one cell
-  double tDeltaX = abs(inv_direction_vector.x);
-  double tDeltaY = abs(inv_direction_vector.y) * DyDxRatio;
-  double tDeltaZ = abs(inv_direction_vector.z) * DzDxRatio;
-  double tMax_prev = 0;
-  bool in_domain = true;
-
-  //Initializes the following values for each ray
-  double intensity = 1.0;
-  double fs = 1.0;
-  double optical_thickness = 0;
-
-  // begin ray tracing
-  int nReflect = 0;  // Number of reflections that a ray has undergone
-  while (intensity > *threshold) { // threshold while loop
-    int face = -9;
-    while (in_domain) {
-      prevCell = cur;
-      double disMin = -9;  // Common variable name in ray tracing. Represents ray segment length.
-
-      //__________________________________
-      //  Determine which cell the ray will enter next
-      if (tMaxX < tMaxY) {
-        if (tMaxX < tMaxZ) {
-          cur.x = cur.x + step[0];
-          disMin = tMaxX - tMax_prev;
-          tMax_prev = tMaxX;
-          tMaxX = tMaxX + tDeltaX;
-          face = 0;
-        } else {
-          cur.z = cur.z + step[2];
-          disMin = tMaxZ - tMax_prev;
-          tMax_prev = tMaxZ;
-          tMaxZ = tMaxZ + tDeltaZ;
-          face = 2;
-        }
-      } else {
-        if (tMaxY < tMaxZ) {
-          cur.y = cur.y + step[1];
-          disMin = tMaxY - tMax_prev;
-          tMax_prev = tMaxY;
-          tMaxY = tMaxY + tDeltaY;
-          face = 1;
-        } else {
-          cur.z = cur.z + step[2];
-          disMin = tMaxZ - tMax_prev;
-          tMax_prev = tMaxZ;
-          tMaxZ = tMaxZ + tDeltaZ;
-          face = 2;
-        }
-      }
-
-      in_domain = containsCellDevice(domainLo, domainHi, cur, face);
-
-      //__________________________________
-      //  Update the ray location
-      double optical_thickness_prev = optical_thickness;
-      int prev_index = INDEX3D(dx,dy,prevCell.x,prevCell.y,prevCell.z) + (dx*dy);
-      optical_thickness += cellSpacing.x * dev_abskg[prev_index] * disMin;
-      // device_sigmaT4[idx] always 0.3183314161909468?
-      *sumI += dev_sigmaT4[prev_index] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
-
-    } // end domain while loop
-
-    intensity = exp(-optical_thickness);
-    int cur_index = INDEX3D(dx,dy,cur.x,cur.y,cur.z) + (dx*dy);
-    *sumI += dev_abskg[cur_index] * dev_sigmaT4[cur_index] * intensity;
-    intensity = intensity * (1 - dev_abskg[cur_index]);
-
-    //__________________________________
-    //  Reflections
-    if (intensity > *threshold) {
-
-      ++nReflect;
-      fs = fs * (1 - dev_abskg[cur_index]);
-
-      // put cur back inside the domain
-      cur = prevCell;
-
-      // apply reflection condition
-      step[face] *= -1;                        // begin stepping in opposite direction
-      sign[face] = (sign[face] == 1) ? 0 : 1;  // swap sign from 1 to 0 or vice versa
-
-      in_domain = true;
-
-    }  // end if reflection
-  }  // end threshold while loop.
-}  // end of updateSumI function
-#endif
 
 //---------------------------------------------------------------------------
 // Device Function:
@@ -610,7 +463,6 @@ __device__ bool containsCellDevice(const int3& domainLo,
   }
 }
 
-
 //---------------------------------------------------------------------------
 // Device Function:
 //---------------------------------------------------------------------------
@@ -624,7 +476,6 @@ __device__ double randDevice(curandState* globalState)
     return (double)val * (1.0/4294967295.0);
 }
 
-
 //---------------------------------------------------------------------------
 // Device Function:
 //---------------------------------------------------------------------------
@@ -637,7 +488,6 @@ __device__ double randDblExcDevice(curandState* globalState)
 
     return ( (double)val + 0.5 ) * (1.0/4294967296.0);
 }
-
 
 //---------------------------------------------------------------------------
 // Device Function:
@@ -653,6 +503,7 @@ __device__ unsigned int hashDevice(unsigned int a)
 
     return a;
 }
+
 //______________________________________________________________________
 
 __host__ void launchRayTraceKernel(dim3 dimGrid,
@@ -664,7 +515,7 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    curandState* globalDevRandStates,
                                    cudaStream_t* stream,
                                    RMCRT_flags RT_flags,
-                                   varLabelNames labelNames,                           
+                                   varLabelNames labelNames,
                                    GPUDataWarehouse* abskg_gdw,
                                    GPUDataWarehouse* sigmaT4_gdw,
                                    GPUDataWarehouse* celltype_gdw,
