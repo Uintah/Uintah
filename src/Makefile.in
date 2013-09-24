@@ -253,14 +253,16 @@ $(VCSOLUTION): $(ALLVCPROJECTS)
 
 gold_standards :
 	@mkdir -p $(OBJTOP_ABS)/TestData;                    \
+	 echo -n "Started at: "; date;                       \
          cd $(OBJTOP_ABS)/TestData;                          \
-	 components=`$(SRCTOP_ABS)/R_Tester/helpers/selectComponents.sh $(SRCTOP_ABS)/R_Tester`; \
-	 if test "$$?" -eq 0; then                            \
-            export PYTHONPATH="$(SRCTOP_ABS)/R_Tester/toplevel:$(SRCTOP_ABS)/R_Tester"; \
-            $(SRCTOP_ABS)/R_Tester/toplevel/generateGoldStandards.py \
+	 components=`$(SRCTOP_ABS)/R_Tester/helpers/selectComponents.sh $(SRCTOP_ABS)/R_Tester`;                 \
+	 if test "$$?" -eq 0; then                                                                               \
+            export PYTHONPATH="$(SRCTOP_ABS)/R_Tester/toplevel:$(SRCTOP_ABS)/R_Tester";                          \
+            $(SRCTOP_ABS)/R_Tester/toplevel/generateGoldStandards.py                                             \
 	                                           -d $(IS_DEBUG) -b $(OBJTOP_ABS) -s $(SRCTOP_ABS) $$components \
-	                                           -m $(SCI_MALLOC_ON) -j $(MAKE_PARALLELISM) -v; \
-         fi
+	                                           -m $(SCI_MALLOC_ON) -j $(MAKE_PARALLELISM) -v;                \
+         fi;                                                                                                     \
+	 echo -n "Ended at: "; date
 
 #__________________________________
 #  to execute the local regression tester
