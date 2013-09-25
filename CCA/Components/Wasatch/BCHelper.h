@@ -124,7 +124,7 @@ namespace Wasatch {
   {
     WALL,
     VELOCITY,
-    ATMOSPHERE,
+    OPEN,
     OUTFLOW,
     USER,     // user controls all bcs!
     INVALID

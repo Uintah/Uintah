@@ -920,11 +920,11 @@ namespace Wasatch{
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
         }
           break;
-        case ATMOSPHERE:
+        case OPEN:
         {
           if (isNormal) {
             // register pressurebc functor for this boundary. we'll register one functor per boundary
-            const Expr::Tag atmBCTag(bndName + "_atmosphere", Expr::STATE_NONE);
+            const Expr::Tag atmBCTag(bndName + "_open", Expr::STATE_NONE);
             typedef typename PressureBC<FieldT>::Builder Builder;
             //bcHelper.register_functor_expression( scinew Builder( atmBCTag, thisVelTag_ ), ADVANCE_SOLUTION );
             advSlnFactory.register_expression( scinew Builder( atmBCTag, thisVelTag_ ) );
