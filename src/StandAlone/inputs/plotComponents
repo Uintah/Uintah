@@ -24,10 +24,14 @@ endif
 
 grep -q TaskGlobalCom $out
 if($status) then
-  echo "Couldn't task communication output in the output file"
-  echo "You must have the environmental variable:
+  echo ""
+  echo "ERROR:"
+  echo "Could not find task communication output in the output file"
+  echo "You must have the environmental variable:"
+  echo ""
   echo "    SCI_DEBUG ComponentTimings:+"
-  echo "set.
+  echo ""
+  echo " set when you run your simulation"
   exit
 endif
     
