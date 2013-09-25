@@ -153,11 +153,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
 
   map<string,string> values;
   face_ps->getAttributes(values);
-  map<string,string>::iterator it = values.begin();
-  while (it != values.end()) {
-    std::cout << "first = " << (*it).first << " second " << (*it).second << std::endl;
-    ++it;
-  }
+      
   // Have three possible types for the boundary condition face:
   // a. side (original -- entire side is one bc)
   // b. cirle (part of the side consists of a circle)

@@ -98,7 +98,8 @@ namespace Wasatch{
                             Uintah::ProblemSpecP params);
 
     ~MomentTransportEquation();
-    void verify_boundary_conditions(BCHelper& bcHelper){}
+    void verify_boundary_conditions(BCHelper& bcHelper,
+                                    GraphCategories& graphCat){}
     
     /**
      *  \brief apply the boundary conditions on the initial condition

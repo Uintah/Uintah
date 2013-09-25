@@ -32,6 +32,7 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/Operators/Operators.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
+#include <CCA/Components/Wasatch/BCHelper.h>
 
 //-- Uintah Includes --//
 #include <Core/Grid/Variables/VarLabel.h>
@@ -129,6 +130,7 @@ class Pressure
   typedef Uintah::CCVariable<Uintah::Stencil4> MatType;
   MatType matrix_;
   const Uintah::Patch* patch_;
+  BCHelper* bcHelper_;
 
   Pressure( const std::string& pressureName,
             const std::string& pressureRHSName,
@@ -218,6 +220,7 @@ public:
 
   void set_patch( const Uintah::Patch* const patch ){ patch_ = const_cast<Uintah::Patch*> (patch); }
   
+  void set_bchelper(BCHelper* bcHelper) { bcHelper_ = bcHelper;}
   /**
    *  \brief set the RKStage for the current pressure evaluation. We need this to
              reduce the number of pressure-solve iterations in the 2nd and 3rd

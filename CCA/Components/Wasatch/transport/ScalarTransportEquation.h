@@ -170,7 +170,8 @@ namespace Wasatch{
 
     ~ScalarTransportEquation();
 
-    void verify_boundary_conditions(BCHelper& bcHelper){}
+    void verify_boundary_conditions(BCHelper& bcHelper,
+                                    GraphCategories& graphCat){}
     
     /**
      *  \brief setup the boundary conditions associated with this transport equation

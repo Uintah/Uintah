@@ -37,6 +37,7 @@
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
+#include <CCA/Components/Wasatch/Expressions/Pressure.h>
 
 //-- ExprLib Includes --//
 #include <expression/ExprLib.h>
@@ -62,7 +63,7 @@ namespace Wasatch {
   {
     if      ( bndTypeStr == "Wall"     )  return WALL;
     else if ( bndTypeStr == "Velocity" )  return VELOCITY;
-    else if ( bndTypeStr == "Pressure" )  return PRESSURE;
+    else if ( bndTypeStr == "Atmosphere" )  return ATMOSPHERE;
     else if ( bndTypeStr == "Outflow"  )  return OUTFLOW;
     else if ( bndTypeStr == "None"
               || bndTypeStr == "User"  )  return USER;
@@ -93,8 +94,8 @@ namespace Wasatch {
       case VELOCITY:
         return "Velocity";
         break;
-      case PRESSURE:
-        return "Pressure";
+      case ATMOSPHERE:
+        return "Atmosphere";
         break;
       case OUTFLOW:
         return "Outflow";
@@ -316,6 +317,10 @@ namespace Wasatch {
     std::vector<SS::IntVec>& intBndSOIter      = myBndIters.interiorBndCells;
     std::vector<SS::IntVec>& extraPlusBndCells = myBndIters.extraPlusBndCells;
     
+    // save pointer to the Uintah iterator. This will be needed for expression that require access to the
+    // native uintah iterators, such as the pressure expression.
+    myBndIters.extraBndCellsUintah = bndIter;
+    
     // MAJOR WARNING HERE - WHEN WE MOVE TO RUNTIME GHOST CELLS, WE NEED TO USE THE APPROPRIATE PATCH OFFSET
     const Uintah::IntVector patchCellOffset = patch->getExtraCellLowIndex(1);
     Uintah::IntVector unitNormal = patch->faceDirection(face); // this is needed to construct interior cells
@@ -400,19 +405,19 @@ namespace Wasatch {
 
   //------------------------------------------------------------------------------------------------
   
-  void BCHelper::add_boundary_type( const std::string&      bndName,
-                                    Uintah::Patch::FaceType face,
-                                    const BndTypeEnum&      bndType,
-                                    const int               patchID )
+  void BCHelper::add_boundary( const std::string&      bndName,
+                                Uintah::Patch::FaceType face,
+                                const BndTypeEnum&      bndType,
+                                const int               patchID )
   {
     DBGBC << "adding boundary " << bndName << " of type " << bndType << " on patch " << patchID << std::endl;
     if ( bndNameBndSpecMap_.find(bndName) != bndNameBndSpecMap_.end() ) {
       DBGBC << " adding to existing \n";
-      BndSpec& existingBCSpec = (*bndNameBndSpecMap_.find(bndName)).second;
-      existingBCSpec.patchIDs.push_back(patchID);
+      BndSpec& existingBndSpec = (*bndNameBndSpecMap_.find(bndName)).second;
+      existingBndSpec.patchIDs.push_back(patchID);
     } else {
       DBGBC << " adding new \n";
-      // if this is the first time that we are adding this variable, then create the necessary info to store this
+      // this is the first time that we are adding this boundary. create the necessary info to store this
       BndSpec myBndSpec = {bndName, face, bndType, std::vector<int>(1, patchID) };
       bndNameBndSpecMap_.insert( BndMapT::value_type(bndName, myBndSpec) );
     }
@@ -460,9 +465,9 @@ namespace Wasatch {
 
   //------------------------------------------------------------------------------------------------
   
-  void BCHelper::add_boundary_iterator( const BoundaryIterators& myIters,
-                                        const std::string& bndName,
-                                        const int& patchID )
+  void BCHelper::add_boundary_mask( const BoundaryIterators& myIters,
+                                    const std::string& bndName,
+                                    const int& patchID )
   {
     using namespace std;
     if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
@@ -496,9 +501,8 @@ namespace Wasatch {
           return &(myIters.extraBndCells);
         }
       }
-    } else {
-      return NULL;
     }
+    return NULL;
   }
 
   //------------------------------------------------------------------------------------------------
@@ -522,11 +526,32 @@ namespace Wasatch {
           return &(myIters.interiorBndCells);
         }
       }
-    } else {
-      return NULL;
     }
+    return NULL;
   }
-
+  //------------------------------------------------------------------------------------------------
+  
+  Uintah::Iterator&
+  BCHelper::get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
+                                      const int& patchID )
+  {
+    const std::string bndName = myBndSpec.bndName;
+    
+    if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
+      patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      if ( myMap.find(patchID) != myMap.end() ) {
+        BoundaryIterators& myIters = (*myMap.find(patchID)).second;
+        return myIters.extraBndCellsUintah;
+      }
+    }
+    
+    std::ostringstream msg;
+    msg << "ERROR: It looks like you were trying to grab a boundary iterator that doesn't exist! "
+    << "This could be caused by requesting an iterator for a boundary/patch combination that is inconsistent with your input. "
+    << "Otherwise, this is likely a major bug that needs to be addressed by a core Wasatch developer." << std::endl;
+    throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+  }
+  
   //------------------------------------------------------------------------------------------------
   
   void BCHelper::print() const
@@ -597,7 +622,7 @@ namespace Wasatch {
                 DBGBC << " boundary name = " << bndName << std::endl;
                 DBGBC << " geom bndtype  = " << thisGeom->getBndType() << std::endl;
                 BndTypeEnum bndType = select_bnd_type_enum(thisGeom->getBndType());
-                add_boundary_type( bndName, face, bndType, patchID);
+                add_boundary( bndName, face, bndType, patchID );
                 DBGBC << " bc name = " << bndName << std::endl
                       << " boundary type type = " << bndType << std::endl;
                 
@@ -608,7 +633,7 @@ namespace Wasatch {
                 
                 BoundaryIterators myIters;
                 pack_uintah_iterator_as_spatialops(face, patch, bndIter, myIters); // convert the Uintah iterator to a SpatialOps-friendly mask
-                add_boundary_iterator( myIters, bndName, patchID );
+                add_boundary_mask( myIters, bndName, patchID );
                 
                 //__________________________________________________________________________________
                 // Now, each BCGeomObject has BCData associated with it. This BCData contains the list
@@ -677,7 +702,7 @@ namespace Wasatch {
   }
   
   //------------------------------------------------------------------------------------------------
-
+  
   template <typename FieldT>
   void BCHelper::apply_boundary_condition( const Expr::Tag& varTag,
                                            const Category& taskCat,
@@ -788,6 +813,11 @@ namespace Wasatch {
               double ci, cg;
               get_bcop_coefs<FieldT>(opdb, myBndSpec, *myBndCondSpec, ci, cg, setOnExtraOnly);
 
+              // get the unit normal
+              const Uintah::IntVector uNorm = patch->getFaceDirection(myBndSpec.face);
+              const IntVecT unitNormal( uNorm.x(), uNorm.y(), uNorm.z() );
+              modExpr.set_boundary_normal(unitNormal);
+              
               modExpr.set_ghost_coef( cg );
               modExpr.set_ghost_points( get_extra_bnd_mask<FieldT>(myBndSpec, patchID) );
               modExpr.set_interior_coef( ci );
@@ -798,9 +828,137 @@ namespace Wasatch {
       }
     }
   }
-  
   //------------------------------------------------------------------------------------------------
   
+  void BCHelper::synchronize_pressure_expression()
+  {
+    Expr::ExpressionFactory& factory = *(grafCat_[ADVANCE_SOLUTION]->exprFactory);
+    if (!factory.have_entry( pressure_tag() )) return;
+    BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() ) {
+      // loop over every patch in the patch subset
+      BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
+        const int patchID = patch->getID();
+        // go through the patch ids and pass the bchelper to the pressure expression
+        Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
+        pexpr.set_bchelper(this); // add the bchelper class to the pressure expression on ALL patches
+      }
+    }
+  }
+
+  //------------------------------------------------------------------------------------------------
+  
+  void BCHelper::update_pressure_matrix( Uintah::CCVariable<Uintah::Stencil4>& pMatrix,
+                                        const Uintah::Patch* patch )
+  {
+    const int patchID = patch->getID();
+    const Uintah::Vector spacing = patch->dCell();
+    const double dx = spacing[0];
+    const double dy = spacing[1];
+    const double dz = spacing[2];
+    const double dx2 = dx*dx;
+    const double dy2 = dy*dy;
+    const double dz2 = dz*dz;
+    
+    BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
+    {
+      const BndSpec& myBndSpec = bndSpecPair.second;
+      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pressure_tag().name());
+      const Uintah::IntVector unitNormal = patch->getFaceDirection(myBndSpec.face);
+//      if (myBndCondSpec) {
+        //_____________________________________________________________________________________
+        // check if we have this patchID in the list of patchIDs
+        if (myBndSpec.has_patch(patchID))
+        {
+          Uintah::Iterator& bndMask = get_uintah_extra_bnd_mask(myBndSpec,patchID);
+          
+          double sign = (myBndSpec.bndType == OUTFLOW || myBndSpec.bndType == ATMOSPHERE) ? 1.0 : -1.0;
+          if (myBndCondSpec) {
+            if (myBndCondSpec->bcType == DIRICHLET) {
+              sign = 1.0;
+            }
+          }
+          
+          for( bndMask.reset(); !bndMask.done(); ++bndMask ) {
+            Uintah::Stencil4& coefs = pMatrix[*bndMask - unitNormal];
+            switch(myBndSpec.face){
+              case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p += sign/dx2; break;
+              case Uintah::Patch::xplus :                coefs.p += sign/dx2; break;
+              case Uintah::Patch::yminus: coefs.s = 0.0; coefs.p += sign/dy2; break;
+              case Uintah::Patch::yplus :                coefs.p += sign/dy2; break;
+              case Uintah::Patch::zminus: coefs.b = 0.0; coefs.p += sign/dz2; break;
+              case Uintah::Patch::zplus :                coefs.p += sign/dz2; break;
+              default:                                                        break;
+            }
+          }
+          
+//        }
+      }
+    }
+  }
+  //------------------------------------------------------------------------------------------------
+  
+  void BCHelper::apply_pressure_bc( SVolField& pressureField,
+                                   const Uintah::Patch* patch )
+  {
+    typedef std::vector<SpatialOps::structured::IntVec> MaskT;
+    
+    const int patchID = patch->getID();
+
+    const Uintah::Vector res = patch->dCell();
+    const double dx = res[0];
+    const double dy = res[1];
+    const double dz = res[2];
+
+    BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
+    {
+      const BndSpec& myBndSpec = bndSpecPair.second;
+      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pressure_tag().name());
+      
+      double spacing = 1.0;
+      switch( myBndSpec.face ){
+        case Uintah::Patch::xminus: case Uintah::Patch::xplus :  spacing = dx;  break;
+        case Uintah::Patch::yminus: case Uintah::Patch::yplus :  spacing = dy;  break;
+        case Uintah::Patch::zminus: case Uintah::Patch::zplus :  spacing = dz;  break;
+        default:                                                                break;
+      } // switch
+      
+      if (myBndCondSpec) {
+        //_____________________________________________________________________________________
+        // check if we have this patchID in the list of patchIDs
+        if (myBndSpec.has_patch(patchID))
+        {
+          const MaskT* iBndMask = get_interior_bnd_mask<SVolField>(myBndSpec,patchID);
+          const MaskT* eBndMask = get_extra_bnd_mask<SVolField>(myBndSpec,patchID);
+          MaskT::const_iterator ii = iBndMask->begin();
+          MaskT::const_iterator ig = eBndMask->begin();
+          if(!iBndMask || !eBndMask) return;
+          if (myBndSpec.bndType == OUTFLOW || myBndSpec.bndType == ATMOSPHERE) {
+            for (; ii != iBndMask->end(); ++ii, ++ig) {
+              pressureField(*ig) = -pressureField(*ii);
+            }
+          } else {
+            switch (myBndCondSpec->bcType) {
+              case DIRICHLET:
+                for (; ii != iBndMask->end(); ++ii, ++ig) {
+                  pressureField(*ig) = 2.0*myBndCondSpec->value - pressureField(*ii);
+                }
+                break;
+              case NEUMANN:
+                for (; ii != iBndMask->end(); ++ii, ++ig) {
+                  pressureField(*ig) = spacing * myBndCondSpec->value + pressureField(*ii);
+                }
+                break;
+              default:
+                break;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  //------------------------------------------------------------------------------------------------
+
   //==========================================================================
   // Explicit template instantiation for supported versions of this class
   #include <spatialops/structured/FVStaggered.h>

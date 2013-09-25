@@ -309,7 +309,8 @@ Pressure::setup_matrix()
   }
 
   // When boundary conditions are present, modify the pressure matrix coefficients at the boundary
-  if ( patch_->hasBoundaryFaces() )update_poisson_matrix((this->get_tags())[0], matrix_, patch_, materialID_);
+  if (patch_->hasBoundaryFaces() && bcHelper_)
+      bcHelper_->update_pressure_matrix(matrix_, patch_);
 
   // if the user specified a reference pressure, then modify the appropriate matrix coefficients
   if ( useRefPressure_ ) set_ref_poisson_coefs(matrix_, patch_, refPressureLocation_);
@@ -523,10 +524,10 @@ Pressure::process_bcs ( const Uintah::ProcessorGroup* const pg,
     // loop over patches
     for( int ip=0; ip<patches->size(); ++ip ){
       const Uintah::Patch* const patch = patches->get(ip);
-      if ( patch->hasBoundaryFaces() ) {
+      if ( patch->hasBoundaryFaces() && bcHelper_ ) {
         newDW->get( pressureField_, pressureLabel_, material, patch, gt, ng);
         SVolField* const pressure = wrap_uintah_field_as_spatialops<SVolField>(pressureField_,patch);
-        process_poisson_bcs(pressure_tag(), *pressure, patch, material);
+        bcHelper_->apply_pressure_bc(*pressure,patch);
         delete pressure;
       }
     }

@@ -78,6 +78,7 @@ namespace Wasatch {
                                      std::string& bc_face_name,
                                      std::string& bc_functor_name )
   {
+    std::cout << "Getting old fashioned iterator!\n";
     SCIRun::Iterator nu;
     const Uintah::BoundCondBase* const bc = patch->getArrayBCValues( face, mat_id, desc, bound_ptr, nu, child );
     const Uintah::BoundCond<T>* const new_bcs = dynamic_cast<const Uintah::BoundCond<T>*>(bc);
@@ -391,6 +392,22 @@ namespace Wasatch {
               default:                                                      break;
             }
           }
+        } else if (bc_kind == "OutletBC") { // outflow bc
+          for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+            SCIRun::IntVector bc_point_indices(*bound_ptr);
+            
+            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bc_point_indices - insideCellDir : bc_point_indices];
+            
+            switch(face){
+              case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p += 1.0/dx2; break;
+              case Uintah::Patch::xplus :                coefs.p += 1.0/dx2; break;
+              case Uintah::Patch::yminus: coefs.s = 0.0; coefs.p += 1.0/dy2; break;
+              case Uintah::Patch::yplus :                coefs.p += 1.0/dy2; break;
+              case Uintah::Patch::zminus: coefs.b = 0.0; coefs.p += 1.0/dz2; break;
+              case Uintah::Patch::zplus :                coefs.p += 1.0/dz2; break;
+              default:                                                       break;
+            }
+          }          
         } else { // when no pressure BC is specified, it implies that we have a wall/inlet.
                  // note that when the face is periodic, then bound_ptr is empty
           for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
@@ -608,6 +625,26 @@ namespace Wasatch {
               const int iGhost    = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : ghostCellIJK);              
               poissonField[iGhost] = spacing*bc_value + poissonField[iInterior];
             }
+            
+          } else if (bc_kind=="OutletBC") {
+            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+              SCIRun::IntVector bc_point_indices(*bound_ptr);
+              
+              bc_point_indices = bc_point_indices - patchCellOffset;
+              
+              const SS::IntVec   intCellIJK( bc_point_indices[0],
+                                            bc_point_indices[1],
+                                            bc_point_indices[2] );
+              
+              const SS::IntVec extraCellIJK( bc_point_indices[0] + bcPointGhostOffset[0],
+                                             bc_point_indices[1] + bcPointGhostOffset[1],
+                                             bc_point_indices[2] + bcPointGhostOffset[2] );
+              
+              const int iInterior  = poissonField.window_without_ghost().flat_index( hasExtraCells? extraCellIJK : intCellIJK  );
+              const int iGhost     = poissonField.window_without_ghost().flat_index( hasExtraCells? intCellIJK   : extraCellIJK);
+              poissonField[iGhost] = -poissonField[iInterior];
+            }
+            
           } else {
             return;
           }

@@ -42,6 +42,8 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BCCopier.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/OutflowBC.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/PressureBC.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/PressureSource.h>
@@ -515,6 +517,35 @@ namespace Wasatch{
 
   //==================================================================
 
+  bool is_normal_to_boundary(const Direction stagLoc,
+                             const Uintah::Patch::FaceType face)
+  {
+    bool isNormal = false;
+    switch (stagLoc) {
+      case XDIR:
+      {
+        if (face == Uintah::Patch::xminus || face == Uintah::Patch::xplus) {
+          isNormal = true;
+        }
+      }
+        break;
+      case YDIR:
+        if (face == Uintah::Patch::yminus || face == Uintah::Patch::yplus) {
+          isNormal = true;
+        }
+        break;
+      case ZDIR:
+        if (face == Uintah::Patch::zminus || face == Uintah::Patch::zplus) {
+          isNormal = true;
+        }
+        break;
+      default:
+        break;
+    }
+    return isNormal;
+  }
+  //==================================================================
+
   template< typename FieldT >
   Expr::ExpressionID
   MomentumTransportEquation<FieldT>::
@@ -786,7 +817,7 @@ namespace Wasatch{
         }
       } else if (!factory.have_entry( TagNames::self().kineticEnergy )) { // calculate local, pointwise kinetic energy
         const Expr::ExpressionID keID = factory.register_expression(scinew typename KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder( TagNames::self().kineticEnergy,
-                                                                                                                                                                 velTags_[0],velTags_[1],velTags_[2] ), true);
+                                                                                                                                                      velTags_[0],velTags_[1],velTags_[2] ), true);
         graphHelper.rootIDs.insert( keID );
       }
     }
@@ -806,14 +837,18 @@ namespace Wasatch{
 
   template< typename FieldT >
   void MomentumTransportEquation<FieldT>::
-  verify_boundary_conditions( BCHelper& bcHelper )
+  verify_boundary_conditions( BCHelper& bcHelper, GraphCategories& graphCat )
   {
-    // parse things logically
+    Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
+    
+    // make logical decisions based on the specified boundary types
     BOOST_FOREACH( BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
     {
       const std::string& bndName = bndPair.first;
       BndSpec& myBndSpec = bndPair.second;
       
+      const bool isNormal = is_normal_to_boundary(this->staggered_location(), myBndSpec.face);
+            
       switch (myBndSpec.bndType) {
         case WALL:
         {
@@ -831,32 +866,9 @@ namespace Wasatch{
           bcHelper.add_boundary_condition(bndName, momBCSpec);
           
           BndCondSpec velBCSpec = {thisVelTag_.name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
-          bcHelper.add_boundary_condition(bndName, velBCSpec);
-          
-          bool applyRHSBCs=false;
-          switch (this->staggered_location()) {
-            case XDIR:
-            {
-              if (myBndSpec.face == Uintah::Patch::xminus || myBndSpec.face == Uintah::Patch::xplus) {
-                applyRHSBCs = true;
-              }
-            }
-              break;
-            case YDIR:
-              if (myBndSpec.face == Uintah::Patch::yminus || myBndSpec.face == Uintah::Patch::yplus) {
-                applyRHSBCs = true;
-              }
-              break;
-            case ZDIR:
-              if (myBndSpec.face == Uintah::Patch::zminus || myBndSpec.face == Uintah::Patch::zplus) {
-                applyRHSBCs = true;
-              }
-              break;
-            default:
-              break;
-          }
+          bcHelper.add_boundary_condition(bndName, velBCSpec);          
 
-          if (applyRHSBCs) {
+          if (isNormal) {
             BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
             
@@ -879,6 +891,57 @@ namespace Wasatch{
           
           BndCondSpec rhsFullBCSpec = {rhs_name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+          
+          BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, pressureBCSpec);
+        }
+          break;
+        case OUTFLOW:
+        {
+          if(isNormal) {
+            // register outflow functor for this boundary. we'll register one functor per boundary
+            const Expr::Tag outBCTag(bndName + "_outflow", Expr::STATE_NONE);
+            typedef typename OutflowBC<FieldT>::Builder Builder;
+            //bcHelper.register_functor_expression( scinew Builder( outBCTag, thisVelTag_ ), ADVANCE_SOLUTION );
+            advSlnFactory.register_expression( scinew Builder( outBCTag, thisVelTag_ ) );            
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),outBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
+          } else {
+            BndCondSpec rhsFullBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+          }
+          // after the correction has been made, up
+          BndCondSpec momBCSpec = {thisMomName_, "none", 0.0, NEUMANN, DOUBLE_TYPE};
+          BndCondSpec velBCSpec = {thisVelTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, momBCSpec);
+          bcHelper.add_boundary_condition(bndName, velBCSpec);
+
+          BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, pressureBCSpec);
+        }
+          break;
+        case ATMOSPHERE:
+        {
+          if (isNormal) {
+            // register pressurebc functor for this boundary. we'll register one functor per boundary
+            const Expr::Tag atmBCTag(bndName + "_atmosphere", Expr::STATE_NONE);
+            typedef typename PressureBC<FieldT>::Builder Builder;
+            //bcHelper.register_functor_expression( scinew Builder( atmBCTag, thisVelTag_ ), ADVANCE_SOLUTION );
+            advSlnFactory.register_expression( scinew Builder( atmBCTag, thisVelTag_ ) );
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),atmBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
+          } else {
+            BndCondSpec rhsFullBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+          }
+
+          BndCondSpec momBCSpec = {thisMomName_, "none", 0.0, NEUMANN, DOUBLE_TYPE};
+          BndCondSpec velBCSpec = {thisVelTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, momBCSpec);
+          bcHelper.add_boundary_condition(bndName, velBCSpec);
+
+          BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, pressureBCSpec);
         }
           break;
         case USER:
@@ -916,7 +979,6 @@ namespace Wasatch{
       const TagNames& tagNames = TagNames::self();
       const Expr::Tag densStarTag( densityTag_.name()+tagNames.star, Expr::STATE_NONE );
       const Expr::Tag densStarBCTag( densStarTag.name()+"_bc",Expr::STATE_NONE);
-      Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
       if (!factory.have_entry(densStarBCTag)){
         factory.register_expression ( new typename BCCopier<SVolField>::Builder(densStarBCTag, densTag) );
       }
