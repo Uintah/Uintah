@@ -78,7 +78,6 @@ namespace Wasatch {
                                      std::string& bc_face_name,
                                      std::string& bc_functor_name )
   {
-    std::cout << "Getting old fashioned iterator!\n";
     SCIRun::Iterator nu;
     const Uintah::BoundCondBase* const bc = patch->getArrayBCValues( face, mat_id, desc, bound_ptr, nu, child );
     const Uintah::BoundCond<T>* const new_bcs = dynamic_cast<const Uintah::BoundCond<T>*>(bc);

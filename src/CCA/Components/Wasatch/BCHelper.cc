@@ -63,7 +63,7 @@ namespace Wasatch {
   {
     if      ( bndTypeStr == "Wall"     )  return WALL;
     else if ( bndTypeStr == "Velocity" )  return VELOCITY;
-    else if ( bndTypeStr == "Atmosphere" )  return ATMOSPHERE;
+    else if ( bndTypeStr == "Open"     )  return OPEN;
     else if ( bndTypeStr == "Outflow"  )  return OUTFLOW;
     else if ( bndTypeStr == "None"
               || bndTypeStr == "User"  )  return USER;
@@ -94,8 +94,8 @@ namespace Wasatch {
       case VELOCITY:
         return "Velocity";
         break;
-      case ATMOSPHERE:
-        return "Atmosphere";
+      case OPEN:
+        return "Open";
         break;
       case OUTFLOW:
         return "Outflow";
@@ -871,7 +871,7 @@ namespace Wasatch {
         {
           Uintah::Iterator& bndMask = get_uintah_extra_bnd_mask(myBndSpec,patchID);
           
-          double sign = (myBndSpec.bndType == OUTFLOW || myBndSpec.bndType == ATMOSPHERE) ? 1.0 : -1.0;
+          double sign = (myBndSpec.bndType == OUTFLOW || myBndSpec.bndType == OPEN) ? 1.0 : -1.0;
           if (myBndCondSpec) {
             if (myBndCondSpec->bcType == DIRICHLET) {
               sign = 1.0;
@@ -932,7 +932,7 @@ namespace Wasatch {
           MaskT::const_iterator ii = iBndMask->begin();
           MaskT::const_iterator ig = eBndMask->begin();
           if(!iBndMask || !eBndMask) return;
-          if (myBndSpec.bndType == OUTFLOW || myBndSpec.bndType == ATMOSPHERE) {
+          if (myBndSpec.bndType == OUTFLOW || myBndSpec.bndType == OPEN) {
             for (; ii != iBndMask->end(); ++ii, ++ig) {
               pressureField(*ig) = -pressureField(*ii);
             }
