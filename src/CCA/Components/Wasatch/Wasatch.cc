@@ -314,8 +314,9 @@ namespace Wasatch{
               fndInc = true;
           }
           // rename this face
+          std::cout << "WARNING: I found a duplicate face label " << faceName;
           faceName = faceName + "_" + number_to_string(j);
-          std::cout << "WARNING: I found a duplicate face label " << faceName << " in your Boundary condition specification. I will rename it to " << faceName << std::endl;
+          std::cout << " in your Boundary condition specification. I will rename it to " << faceName << std::endl;
           faceSpec->replaceAttributeValue("name", faceName);
         }
       }
@@ -716,6 +717,7 @@ namespace Wasatch{
 
     //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+    
     //_______________________________________
     // set the time
     Expr::TagList timeTags;
@@ -740,7 +742,7 @@ namespace Wasatch{
         //______________________________________________________
         // set up initial boundary conditions on this transport equation
         try{
-          transEq->verify_boundary_conditions( *bcHelperMap_[level->getID()]);
+          transEq->verify_boundary_conditions( *bcHelperMap_[level->getID()], graphCategories_);
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
           transEq->setup_initial_boundary_conditions( *icGraphHelper, *bcHelperMap_[level->getID()]);
         }
@@ -929,7 +931,7 @@ namespace Wasatch{
         //______________________________________________________
         // set up boundary conditions on this transport equation
         try{
-          if( isRestarting_ ) transEq->verify_boundary_conditions(*bcHelperMap_[level->getID()]);
+          if( isRestarting_ ) transEq->verify_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
           transEq->setup_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
         }
@@ -949,6 +951,8 @@ namespace Wasatch{
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
       
+      // pass the bc Helper to pressure expressions on all patches
+      bcHelperMap_[level->getID()]->synchronize_pressure_expression();
       //
       // process clipping on fields
       //

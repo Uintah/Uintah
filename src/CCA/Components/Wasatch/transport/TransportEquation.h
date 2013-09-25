@@ -136,7 +136,8 @@ namespace Wasatch{
 
     Expr::ExpressionID get_rhs_id() const{ return rhsExprID_; }
 
-    virtual void verify_boundary_conditions( BCHelper& bcHelper)=0;
+    virtual void verify_boundary_conditions( BCHelper& bcHelper,
+                                             GraphCategories& graphCat)=0;
     
     /**
      *  Set up the boundary condition on initial conditions evaluators for this

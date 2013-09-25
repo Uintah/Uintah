@@ -59,6 +59,11 @@ public:
     patchCellOffset_ = patchCellOffset;
   }
 
+  void set_boundary_normal( const SpatialOps::structured::IntVec& bndNormal )
+  {
+    bndNormal_ = bndNormal;
+  }
+  
   BoundaryConditionBase()
   {
     vecInteriorPts_ = NULL;
@@ -72,6 +77,7 @@ protected:
   const std::vector<SpatialOps::structured::IntVec>* vecInteriorPts_;
   const std::vector<SpatialOps::structured::IntVec>* vecGhostPts_;
   SpatialOps::structured::IntVec patchCellOffset_;
+  SpatialOps::structured::IntVec bndNormal_;
 };
 
 #endif // BoundaryConditionBase_Expr_h
