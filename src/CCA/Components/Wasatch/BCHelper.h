@@ -210,9 +210,9 @@ namespace Wasatch {
   //****************************************************************************
   struct BndSpec
   {
-    std::string              bndName;      // name of the boundary condition
+    std::string              name;     // name of the boundary condition
     Uintah::Patch::FaceType  face;        // x-minus, x-plus, y-minus, y-plus, z-minus, z-plus
-    BndTypeEnum              bndType;       // Wall, inlet, etc...
+    BndTypeEnum              type;     // Wall, inlet, etc...
     std::vector<int>         patchIDs;    // list of patch IDs that this bc lives on
     std::vector<BndCondSpec> bcSpecVec;
 
@@ -258,7 +258,7 @@ namespace Wasatch {
     void print() const
     {
       using namespace std;
-      cout << "Boundary: " << bndName << " face: " << face << " BndType: " << bndType << endl;
+      cout << "Boundary: " << name << " face: " << face << " BndType: " << type << endl;
       for (vector<BndCondSpec>::const_iterator it=bcSpecVec.begin(); it != bcSpecVec.end(); ++it) {
         (*it).print();
       }
@@ -278,10 +278,11 @@ namespace Wasatch {
   //****************************************************************************
   struct BoundaryIterators
   {
-    std::vector<SpatialOps::structured::IntVec> extraBndCells;     // iterator for extra cells
-    std::vector<SpatialOps::structured::IntVec> extraPlusBndCells; // iterator for extra cells
-    std::vector<SpatialOps::structured::IntVec> interiorBndCells;  // iterator for interior cells
-    Uintah::Iterator extraBndCellsUintah;                          // We still need the Unitah iterator
+    std::vector<SpatialOps::structured::IntVec> extraBndCells;        // iterator for extra cells
+    std::vector<SpatialOps::structured::IntVec> extraPlusBndCells;    // iterator for extra cells
+    std::vector<SpatialOps::structured::IntVec> interiorBndCells;     // iterator for interior cells
+    std::vector<SpatialOps::structured::IntVec> interiorEdgeCells;    // iterator for interior cells
+    Uintah::Iterator extraBndCellsUintah;                             // We still need the Unitah iterator
   };
   
   //****************************************************************************
@@ -399,6 +400,7 @@ namespace Wasatch {
     typedef SpatialOps::structured::IntVec             IntVecT;            // SpatialOps IntVec
     typedef std::map <int, BoundaryIterators         > patchIDBndItrMapT; // temporary map that stores boundary iterators per patch id
     typedef std::map <std::string, patchIDBndItrMapT > MaskMapT;
+    typedef std::map <std::string, std::vector<IntVecT> >           EdgeCellsMapT;   // for logical domain boundaries, 1 set of corner cells per boundary, regardless of patcIDs
     
     const Uintah::PatchSet*    const localPatches_;
     const Uintah::MaterialSet* const materials_   ;
@@ -414,6 +416,8 @@ namespace Wasatch {
     // bndNameBndSpecMap_ stores BndSpec information for each of the specified boundaries. This
     // map is indexed by the (unique) boundary name.
     BndMapT                    bndNameBndSpecMap_;
+    
+    EdgeCellsMapT            bndNameEdgeCellsMap_;
 
     template<typename FieldT>
     const std::vector<IntVecT>* get_extra_bnd_mask( const BndSpec& myBndSpec,
@@ -425,6 +429,9 @@ namespace Wasatch {
     
     Uintah::Iterator& get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
                                                  const int& patchID );
+    
+    const std::vector<IntVecT>* get_edge_mask( const BndSpec& myBndSpec,
+                                                  const int& patchID ) const;
     
     // Add boundary iterator (mask) for boundary "bndName" and patch "patchID"
     void add_boundary_mask( const BoundaryIterators& myIters,

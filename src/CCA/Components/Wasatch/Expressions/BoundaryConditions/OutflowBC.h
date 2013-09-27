@@ -70,7 +70,7 @@ public:
     using namespace SpatialOps::structured;
     FieldT& f = this->value();
 
-    if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {      
+    if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
       std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
       std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
       const IntVec& offset = this->bndNormal_;
@@ -91,8 +91,17 @@ public:
             //f(*ii) = (1.0/ *dt_)*( -ub + 4.0/3.0*ui - 1.0/3.0*uii) + 4.0/3.0*fi - 1.0/3.0*fii;
           } else { // u.n <= 0.0, flow in
             f(*ii) = -(1.0/ *dt_) * ub;
+          }
+        }
+      
+        if (this->cornerInteriorPts_) {
+          std::vector<IntVec>::const_iterator ic = (this->cornerInteriorPts_)->begin(); // ii is the interior flat index
+          for (; ic != (this->cornerInteriorPts_)->end(); ++ic) {
+            const double ub  = (*u_)(*ic);            // boundary cell
+            f(*ic) = -(1.0/ *dt_) * ub;
           }          
         }
+        
       } else {
         std::ostringstream msg;
         msg << "ERROR: You cannot use the OutflowBC boundary expression with non staggered fields!"
