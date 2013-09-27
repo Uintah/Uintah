@@ -341,6 +341,10 @@ namespace Wasatch{
           fieldInfo.mode = Expr::REQUIRES;
           fieldInfo.useOldDataWarehouse = (rkStage < 2);
         }
+        else if( fieldTag.context() == Expr::STATE_NP1 ){
+          fieldInfo.mode = Expr::REQUIRES;
+          fieldInfo.useOldDataWarehouse = false;
+        }
         else{
           fieldInfo.mode = Expr::REQUIRES;
           if( newDWFields.find( fieldTag ) != newDWFields.end() )
@@ -565,7 +569,6 @@ namespace Wasatch{
     std::vector<TreeMap> trLstTrns(localPatches->size());
 
     for( int ip=0; ip<localPatches->size(); ++ip ){
-
       const int patchID = localPatches->get(ip)->getID();
       TreePtr tree( scinew Expr::ExpressionTree(roots,factory,patchID,taskName) );
       const TreeList treeList = tree->split_tree();

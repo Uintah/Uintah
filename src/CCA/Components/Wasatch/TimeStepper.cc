@@ -137,12 +137,13 @@ namespace Wasatch{
   //==================================================================
 
   TimeStepper::TimeStepper( Uintah::SimulationStateP sharedState,
-                            GraphHelper& solnGraphHelper,
+                            GraphCategories& grafCat,
                             const TimeIntegrator timeInt )
-    : sharedState_( sharedState ),
-      solnGraphHelper_( &solnGraphHelper ),
-      coordHelper_( new CoordHelper( *(solnGraphHelper_->exprFactory) ) ),
-      timeInt_(timeInt)
+    : sharedState_        ( sharedState ),
+      solnGraphHelper_    ( grafCat[ADVANCE_SOLUTION] ),
+      postProcGraphHelper_( grafCat[POSTPROCESSING] ),
+      coordHelper_        ( new CoordHelper( *(solnGraphHelper_->exprFactory) ) ),
+      timeInt_            ( timeInt )
   {}
 
   //------------------------------------------------------------------
@@ -356,6 +357,8 @@ namespace Wasatch{
     typedef Expr::PlaceHolder<FieldT>  FieldExpr;
     solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N  )),true );
     solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)),true );
+    
+    postProcGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)),true );
   }
 
   //------------------------------------------------------------------
