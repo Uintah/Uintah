@@ -220,37 +220,41 @@ evaluate()
 
   int nEnv = weights_.size();
   
-  switch (aggType_) {
-    case CONSTANT: // \beta_{ij} = 1
-      for( int i=0; i<nEnv; i++ ){
-        for( int j =0 ; j<nEnv; j++ ){
-          *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 ) - pow( ri, momentOrder_ ) * wi*wj;
-          if( useEffTags_ ) *tmp <<= *efficiency_[i*nEnv + j] * *tmp;
-          result <<= result + *tmp;
+  if (momentOrder_ != 3) {
+    switch (aggType_) {
+      case CONSTANT: // \beta_{ij} = 1
+        for( int i=0; i<nEnv; i++ ){
+          for( int j =0 ; j<nEnv; j++ ){
+            *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 ) - pow( ri, momentOrder_ ) * wi*wj;
+            if( useEffTags_ ) *tmp <<= *efficiency_[i*nEnv + j] * *tmp;
+            result <<= result + *tmp;
+          }
         }
-      }
-    case BROWNIAN: // \beta_{ij} = (r_i + r_j)^2 / r_i / r_j
-      for( int i=0; i<nEnv; i++ ){
-        for( int j =0 ; j<nEnv; j++ ){
-          *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj) / (ri*rj) - pow( ri, momentOrder_ ) * wi*wj * (ri+rj) * (ri+rj) / (ri*rj);
-          if( useEffTags_ ) *tmp <<= *efficiency_[i*nEnv + j] * *tmp;
-          result <<= result + *tmp;
+      case BROWNIAN: // \beta_{ij} = (r_i + r_j)^2 / r_i / r_j
+        for( int i=0; i<nEnv; i++ ){
+          for( int j =0 ; j<nEnv; j++ ){
+            *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj) / (ri*rj) - pow( ri, momentOrder_ ) * wi*wj * (ri+rj) * (ri+rj) / (ri*rj);
+            if( useEffTags_ ) *tmp <<= *efficiency_[i*nEnv + j] * *tmp;
+            result <<= result + *tmp;
+          }
         }
-      }
-      break;
-    case HYDRODYNAMIC: // \beta_{ij} = (r_i + r_j)^3
-      for( int i=0; i<nEnv; i++ ){
-        for( int j =0 ; j<nEnv; j++ ){
-          *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj)* (ri+rj) - pow( ri, momentOrder_ ) * wi*wj* (ri+rj) * (ri+rj)* (ri+rj);
-          if( useEffTags_ ) *tmp <<= *efficiency_[i*nEnv + j] * *tmp;
-          result <<= result + *tmp;
+        break;
+      case HYDRODYNAMIC: // \beta_{ij} = (r_i + r_j)^3
+        for( int i=0; i<nEnv; i++ ){
+          for( int j =0 ; j<nEnv; j++ ){
+            *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj)* (ri+rj) - pow( ri, momentOrder_ ) * wi*wj* (ri+rj) * (ri+rj)* (ri+rj);
+            if( useEffTags_ ) *tmp <<= *efficiency_[i*nEnv + j] * *tmp;
+            result <<= result + *tmp;
+          }
         }
-      }
-      break;
+        break;
       
-    default:
-      break;
-  }  
+      default:
+        break;
+    } 
+  } else {
+    result <<= 0.0;
+  }
 
   result <<= effCoef_ * result;
 

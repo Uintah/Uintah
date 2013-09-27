@@ -71,6 +71,7 @@ class HomogeneousNucleationCoefficient
   const double surfaceEnergy_;    //value if constant surface energy
   const double temperature_; 
   const double diffusionCoef_; //diffusion coefficient
+  const double sRatio_;
   
   HomogeneousNucleationCoefficient( const Expr::Tag& superSatTag,
                                     const Expr::Tag& eqConcTag,
@@ -78,7 +79,8 @@ class HomogeneousNucleationCoefficient
                                     const double molecularVolume,
                                     const double surfaceEnergy,
                                     const double temperature,
-                                    const double diffusionCoef);
+                                    const double diffusionCoef,
+                                    const double sRatio);
   
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -91,7 +93,8 @@ public:
              const double molecularVolume,
              const double surfaceEnergy,
              const double temperature,
-             const double diffusionCoef)
+             const double diffusionCoef,
+             const double sRatio)
     : ExpressionBuilder(result),
       supersatt_(superSatTag),
       eqconct_(eqConcTag),
@@ -99,14 +102,15 @@ public:
       molecularvolume_(molecularVolume),
       surfaceenergy_(surfaceEnergy),
       temperature_(temperature),
-      diffusioncoef_(diffusionCoef)
+      diffusioncoef_(diffusionCoef),
+      sratio_(sRatio)
     {}
     
     ~Builder(){}
     
     Expr::ExpressionBase* build() const
     {
-      return new HomogeneousNucleationCoefficient<FieldT>( supersatt_, eqconct_, surfaceengt_, molecularvolume_, surfaceenergy_, temperature_, diffusioncoef_);
+      return new HomogeneousNucleationCoefficient<FieldT>( supersatt_, eqconct_, surfaceengt_, molecularvolume_, surfaceenergy_, temperature_, diffusioncoef_, sratio_);
     }
     
   private:
@@ -115,6 +119,7 @@ public:
     const double surfaceenergy_;
     const double temperature_;
     const double diffusioncoef_;
+    const double sratio_;
   };
   
   ~HomogeneousNucleationCoefficient();
@@ -140,7 +145,8 @@ HomogeneousNucleationCoefficient( const Expr::Tag& superSatTag,
                                   const double molecularVolume,
                                   const double surfaceEnergy,
                                   const double temperature,
-                                  const double diffusionCoef)
+                                  const double diffusionCoef,
+                                  const double sRatio)
 : Expr::Expression<FieldT>(),
   superSatTag_(superSatTag),
   eqConcTag_(eqConcTag),
@@ -148,7 +154,8 @@ HomogeneousNucleationCoefficient( const Expr::Tag& superSatTag,
   molecularVolume_(molecularVolume),
   surfaceEnergy_(surfaceEnergy),
   temperature_(temperature),
-  diffusionCoef_(diffusionCoef)
+  diffusionCoef_(diffusionCoef),
+  sRatio_(sRatio)
 {
   this->set_gpu_runnable( true );
 }
@@ -223,7 +230,7 @@ evaluate()
                 (0.0);
   
   *kF <<= diffusionCoef_ * pow(48.0*PI*PI*molecularVolume_ * *iC, 1.0/3.0);
-  *N1 <<= NA * *eqConc_ * *superSat_;
+  *N1 <<= NA * *eqConc_ * *superSat_ / sRatio_;
 
   result <<= cond( *superSat_ > 1.0, *z * *kF * *N1 * *N1 * exp( - *delG/ KB /temperature_ ) )
                  ( 0.0 );

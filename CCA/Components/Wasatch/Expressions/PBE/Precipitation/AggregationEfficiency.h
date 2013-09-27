@@ -48,7 +48,7 @@ class AggregationEfficiency
   const Expr::Tag dissipationTag_;        //energy dissipation tag
   const Expr::Tag densityTag_;            //fluid density tag
 
-  const double l_;              //parameter for scaling the efficiency model and matching units
+  const double l_;                        //parameter for scaling the efficiency model and matching units
   const std::string growthModel_;         //string with type of growth rate model to use 
   
   typedef std::vector<const FieldT*> FieldVec;
@@ -200,6 +200,8 @@ evaluate()
                        cond ( ri > rj, l_ * *g0_ / (ri * *rho_ * (ri + rj) * (ri + rj) * *eps_) )
                             ( l_ * *g0_ / (rj * *rho_ * (ri + rj) * (ri + rj) * *eps_) ) )
                      ( 0.0 );
+        *tmp <<= cond( *tmp > 0.0, *tmp)
+                     (0.0); 
         *results[idx++] <<= *tmp/(1.0 + *tmp);
       }
     }
@@ -212,6 +214,8 @@ evaluate()
                        cond ( ri > rj, l_ * *g0_ / (ri * *rho_ * (ri + rj) * (ri + rj) * *eps_) )
                             ( l_ * *g0_ / (rj * *rho_ * (ri + rj) * (ri + rj) * *eps_) ) )
                      ( 0.0 );
+        *tmp <<= cond( *tmp > 0.0, *tmp)
+                     (0.0);
         *results[idx++] <<= *tmp/(1.0 + *tmp);
       }
     }         
@@ -222,6 +226,8 @@ evaluate()
       for (int j =0 ; j<nEnv; j++) {
         *tmp <<= cond( *rho_ > 0.0 && *eps_ > 0.0, l_ * *g0_  / ( *rho_ * (ri + rj)  * (ri + rj) * *eps_) )
                      ( 0.0 );
+        *tmp <<= cond( *tmp > 0.0, *tmp)
+                     (0.0);
         *results[idx++] <<= *tmp/(1.0 + *tmp);
       }
     }
