@@ -96,7 +96,7 @@ adaptive problem.
 \end{itemize}
 
 
-When running a non adaptive problem. Adaptive regridding can be turned off by setting $<$doAMR$>$ to false in the beginning of the input file.
+When running a non adaptive problem. Adaptive regridding can be turned off by commenting out the regridding section.
 \begin{itemize}
   \item min\_timestep\_interval - The minumum number of timesteps between each regrid. This will not force a regrid but after the set number of timesteps a regrid will be considered. Only used when adaptive regridding is turned off. min\_timestep\_interval $\leq$ cell\_stability\_dilation + 1 
   \item max\_timestep\_interval - The maximum number of timesteps between each regrid.  This will not force a regrid.
