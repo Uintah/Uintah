@@ -526,7 +526,7 @@ namespace Wasatch{
     }
     
     else if (params->findBlock("HomogeneousNucleationCoefficient") ) {
-      double MolecularVolume, T, D;
+      double MolecularVolume, T, D, sRatio;
       double SurfaceEnergy = 1.0;
       Uintah::ProblemSpecP coefParams = params->findBlock("HomogeneousNucleationCoefficient");
       coefParams -> getAttribute("Molar_Vol",MolecularVolume);
@@ -534,6 +534,7 @@ namespace Wasatch{
         coefParams -> getAttribute("Surf_Eng",SurfaceEnergy);
       coefParams -> getAttribute("Temperature",T);
       coefParams -> getAttribute("Diff_Coef",D);
+      coefParams -> getAttribute("S_Ratio", sRatio);
       MolecularVolume = MolecularVolume/6.02214129e23; //convert molar to molecular volume in this term
       Expr::Tag surfaceEngTag;
       if ( coefParams->findBlock("SurfaceEnergy") )
@@ -541,7 +542,7 @@ namespace Wasatch{
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       const Expr::Tag eqConcTag = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
       typedef typename HomogeneousNucleationCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, eqConcTag,  surfaceEngTag, MolecularVolume, SurfaceEnergy, T, D);
+      builder = scinew Builder(tag, saturationTag, eqConcTag,  surfaceEngTag, MolecularVolume, SurfaceEnergy, T, D, sRatio);
     }
     
     else if (params->findBlock("PrecipitationSimpleRStarValue") ) {

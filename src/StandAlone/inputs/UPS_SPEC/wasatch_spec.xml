@@ -261,7 +261,8 @@
                                              attribute1="Molar_Vol REQUIRED DOUBLE"
                                              attribute2="Surf_Eng OPTIONAL DOUBLE"
                                              attribute3="Temperature REQUIRED DOUBLE"
-                                             attribute4="Diff_Coef REQUIRED DOUBLE">
+                                             attribute4="Diff_Coef REQUIRED DOUBLE"
+                                             attribute5="S_Ratio REQUIRED DOUBLE">
         <Supersaturation spec = "REQUIRED NO_DATA">                                   
           <NameTag spec="REQUIRED"/>
         </Supersaturation>
