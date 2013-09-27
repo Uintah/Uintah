@@ -61,9 +61,6 @@ Pressure::Pressure( const std::string& pressureName,
                     const Expr::Tag& fxtag,
                     const Expr::Tag& fytag,
                     const Expr::Tag& fztag,
-                    const Expr::Tag& dudttag,
-                    const Expr::Tag& dvdttag,
-                    const Expr::Tag& dwdttag,
                     const Expr::Tag& pSourceTag,
                     const Expr::Tag& timesteptag,
                     const Expr::Tag& volfractag,
@@ -87,10 +84,6 @@ Pressure::Pressure( const std::string& pressureName,
 
     volfract_(volfractag),
 
-    dudtt_(dudttag),
-    dvdtt_(dvdttag),
-    dwdtt_(dwdttag),
-  
     doX_( fxtag != Expr::Tag() ),
     doY_( fytag != Expr::Tag() ),
     doZ_( fztag != Expr::Tag() ),
@@ -209,10 +202,6 @@ Pressure::advertise_dependents( Expr::ExprDeps& exprDeps )
   exprDeps.requires_expression( pSourcet_ );
   if(volfract_ != Expr::Tag() ) exprDeps.requires_expression( volfract_ );
   
-  if(dudtt_ != Expr::Tag() ) exprDeps.requires_expression( dudtt_ );
-  if(dvdtt_ != Expr::Tag() ) exprDeps.requires_expression( dvdtt_ );
-  if(dwdtt_ != Expr::Tag() ) exprDeps.requires_expression( dwdtt_ );
-
   exprDeps.requires_expression( timestept_ );
   
   const TagNames& tagNames = TagNames::self();
@@ -233,13 +222,6 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
   if( doY_ )  fy_ = &yvfm.field_ref( fyt_ );
   if( doZ_ )  fz_ = &zvfm.field_ref( fzt_ );
   pSource_ = &svfm.field_ref( pSourcet_  );
-
-  dxmomdt_ = NULL;
-  dymomdt_ = NULL;
-  dzmomdt_ = NULL;
-  if( doX_ && dudtt_ != Expr::Tag() )  dxmomdt_ = &xvfm.field_ref( dudtt_ );
-  if( doY_ && dvdtt_ != Expr::Tag() )  dymomdt_ = &yvfm.field_ref( dvdtt_ );
-  if( doZ_ && dwdtt_ != Expr::Tag() )  dzmomdt_ = &zvfm.field_ref( dwdtt_ );
 
   if( volfract_ != Expr::Tag() ) volfrac_ = &svfm.field_ref( volfract_ );
 
@@ -363,7 +345,7 @@ Pressure::evaluate()
 
   // update pressure rhs for any BCs
   if(patch_->hasBoundaryFaces())
-    update_poisson_rhs(pressure_tag(),matrix_, pressure, rhs, patch_, materialID_,dxmomdt_, dymomdt_, dzmomdt_);
+    update_poisson_rhs(pressure_tag(),matrix_, pressure, rhs, patch_, materialID_);
 
   // process embedded boundaries
   if (volfract_ != Expr::Tag())
@@ -540,9 +522,6 @@ Pressure::Builder::Builder( const Expr::TagList& result,
                             const Expr::Tag& fxtag,
                             const Expr::Tag& fytag,
                             const Expr::Tag& fztag,
-                            const Expr::Tag& dudttag,
-                            const Expr::Tag& dvdttag,
-                            const Expr::Tag& dwdttag,
                             const Expr::Tag& pSourceTag,
                             const Expr::Tag& timesteptag,
                             const Expr::Tag& volfractag,
@@ -560,9 +539,6 @@ Pressure::Builder::Builder( const Expr::TagList& result,
    psrct_( pSourceTag ),
    timestept_( timesteptag ),
    volfract_ ( volfractag  ),
-   dudtt_(dudttag),
-   dvdtt_(dvdttag),
-   dwdtt_(dwdttag),
    hasMovingGeometry_(hasMovingGeometry),
    userefpressure_( userefpressure ),
    refpressurevalue_( refPressureValue ),
@@ -579,7 +555,6 @@ Pressure::Builder::build() const
 {
   const Expr::TagList& ptags = get_computed_field_tags();
   return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_,
-                       dudtt_, dvdtt_, dwdtt_,
                        psrct_, timestept_,volfract_,hasMovingGeometry_, userefpressure_,
                        refpressurevalue_, refpressurelocation_, use3dlaplacian_,
                        sparams_, solver_ );

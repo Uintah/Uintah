@@ -810,17 +810,17 @@ namespace Wasatch{
         if( doMom[2] )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );
 
         // add drhoudt term to the pressure rhs
-        Expr::Tag dxmomdtt, dymomdtt, dzmomdtt;
-        if (enabledudtInPRHS) {
-          if( doMom[0] )  dxmomdtt = Expr::Tag( "d_" + xmomname + "_dt", Expr::STATE_NONE );
-          if( doMom[1] )  dymomdtt = Expr::Tag( "d_" + ymomname + "_dt", Expr::STATE_NONE );
-          if( doMom[2] )  dzmomdtt = Expr::Tag( "d_" + zmomname + "_dt", Expr::STATE_NONE );
-        }
+//        Expr::Tag dxmomdtt, dymomdtt, dzmomdtt;
+//        if (enabledudtInPRHS) {
+//          if( doMom[0] )  dxmomdtt = Expr::Tag( "d_" + xmomname + "_dt", Expr::STATE_NONE );
+//          if( doMom[1] )  dymomdtt = Expr::Tag( "d_" + ymomname + "_dt", Expr::STATE_NONE );
+//          if( doMom[2] )  dzmomdtt = Expr::Tag( "d_" + zmomname + "_dt", Expr::STATE_NONE );
+//        }
 
         Expr::TagList ptags;
         ptags.push_back( pressure_tag() );
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
-        const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt, dxmomdtt, dymomdtt, dzmomdtt,
+        const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
                                                                                         pSourceTag, tagNames.timestep, volFracTag, 
                                                                                         hasMovingGeometry, usePressureRefPoint, refPressureValue, 
                                                                                         refPressureLocation, use3DLaplacian,
