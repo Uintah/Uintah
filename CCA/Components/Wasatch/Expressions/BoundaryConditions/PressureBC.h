@@ -93,6 +93,15 @@ public:
             f(*ii) = -(1.0/ *dt_) * ub;
           }
         }
+        
+        if (this->cornerInteriorPts_) {
+          std::vector<IntVec>::const_iterator ic = (this->cornerInteriorPts_)->begin(); // ii is the interior flat index
+          for (; ic != (this->cornerInteriorPts_)->end(); ++ic) {
+            const double ub  = (*u_)(*ic);            // boundary cell
+            f(*ic) = -(1.0/ *dt_) * ub;
+          }
+        }
+
       } else {
         std::ostringstream msg;
         msg << "ERROR: You cannot use the OutflowBC boundary expression with non staggered fields!"

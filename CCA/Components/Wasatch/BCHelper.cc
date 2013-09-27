@@ -311,11 +311,26 @@ namespace Wasatch {
                                            Uintah::Iterator& bndIter,
                                            BoundaryIterators& myBndIters)
   {
-    namespace SS = SpatialOps::structured;
-        
+    namespace SS = SpatialOps::structured;    
+    typedef SpatialOps::structured::IntVec IntVecT;
+    
     std::vector<SS::IntVec>& extraBndSOIter    = myBndIters.extraBndCells;
     std::vector<SS::IntVec>& intBndSOIter      = myBndIters.interiorBndCells;
     std::vector<SS::IntVec>& extraPlusBndCells = myBndIters.extraPlusBndCells;
+
+    std::vector<SS::IntVec>& intEdgeSOIter    = myBndIters.interiorEdgeCells;
+
+    int i, j;
+    switch (face) {
+      case Uintah::Patch::xminus:
+      case Uintah::Patch::xplus: i=1; j=2; break;
+      case Uintah::Patch::yminus:
+      case Uintah::Patch::yplus: i=0; j=2; break;
+      case Uintah::Patch::zminus:
+      case Uintah::Patch::zplus: i=0; j=1; break;
+      default:
+        break;
+    }            
     
     // save pointer to the Uintah iterator. This will be needed for expression that require access to the
     // native uintah iterators, such as the pressure expression.
@@ -325,11 +340,25 @@ namespace Wasatch {
     const Uintah::IntVector patchCellOffset = patch->getExtraCellLowIndex(1);
     Uintah::IntVector unitNormal = patch->faceDirection(face); // this is needed to construct interior cells
     Uintah::IntVector bcPointIJK;
-
+    
+    Uintah::IntVector edgePoint;
+    Uintah::IntVector idxHi = patch->getCellHighIndex();
+    Uintah::IntVector idxLo = patch->getCellLowIndex() - patchCellOffset;
     for( bndIter.reset(); !bndIter.done(); bndIter++ )
     {
       bcPointIJK = *bndIter - patchCellOffset;
       extraBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
+      
+      edgePoint = *bndIter - unitNormal;
+      if (bcPointIJK[i] == idxHi[i] ||
+          bcPointIJK[j] == idxHi[j] ||
+          bcPointIJK[i] == idxLo[i] ||
+          bcPointIJK[j] == idxLo[j]  )
+      {
+        intEdgeSOIter.push_back( IntVecT(bcPointIJK[0], bcPointIJK[1], bcPointIJK[2]) );
+      }
+
+      
       bcPointIJK -= unitNormal;
       intBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
     }
@@ -458,7 +487,7 @@ namespace Wasatch {
       BndSpec& myBndSpec = bndSpecPair.second;
       const BndCondSpec* myBndCondSpec = myBndSpec.find(srcVarName);
       if (myBndCondSpec) {
-        add_boundary_condition(myBndSpec.bndName, bcSpec);
+        add_boundary_condition(myBndSpec.name, bcSpec);
       }
     }
   }
@@ -482,13 +511,29 @@ namespace Wasatch {
   }
 
   //------------------------------------------------------------------------------------------------
+
+  const std::vector<SpatialOps::structured::IntVec>*
+  BCHelper::get_edge_mask( const BndSpec& myBndSpec, const int& patchID ) const
+  {
+    const std::string bndName = myBndSpec.name;
+    if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
+      const patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      if ( myMap.find(patchID) != myMap.end() ) {
+        const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
+        return &(myIters.interiorEdgeCells);
+      }
+    }
+    return NULL;
+  }
+
+  //------------------------------------------------------------------------------------------------
   
   template<typename FieldT>
   const std::vector<SpatialOps::structured::IntVec>*
   BCHelper::get_extra_bnd_mask( const BndSpec& myBndSpec,
                                const int& patchID ) const
   {
-    const std::string bndName = myBndSpec.bndName;
+    const std::string bndName = myBndSpec.name;
     const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);
     const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
     if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
@@ -512,7 +557,7 @@ namespace Wasatch {
   BCHelper::get_interior_bnd_mask( const BndSpec& myBndSpec,
                                   const int& patchID ) const
   {
-    const std::string bndName = myBndSpec.bndName;
+    const std::string bndName = myBndSpec.name;
     const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);
     const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
     
@@ -535,7 +580,7 @@ namespace Wasatch {
   BCHelper::get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
                                       const int& patchID )
   {
-    const std::string bndName = myBndSpec.bndName;
+    const std::string bndName = myBndSpec.name;
     
     if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
       patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
@@ -583,7 +628,7 @@ namespace Wasatch {
             
             const int patchID = patch->getID();
             DBGBC << "Patch ID = " << patchID << std::endl;
-                        
+            
             std::vector<Uintah::Patch::FaceType> bndFaces;
             patch->getBoundaryFaces(bndFaces);
             std::vector<Uintah::Patch::FaceType>::const_iterator faceIterator = bndFaces.begin();
@@ -787,7 +832,7 @@ namespace Wasatch {
               if( myBndCondSpec->is_functor() ) { // functor bc
                 modTag = Expr::Tag( myBndCondSpec->functorName, Expr::STATE_NONE );
               } else { // constant bc
-                modTag = Expr::Tag( fieldName + "_bc_" + myBndSpec.bndName + "_patch_" + strPatchID, Expr::STATE_NONE );
+                modTag = Expr::Tag( fieldName + "_bc_" + myBndSpec.name + "_patch_" + strPatchID, Expr::STATE_NONE );
                 builder = new typename ConstantBC<FieldT>::Builder( modTag, myBndCondSpec->value );
                 factory.register_expression( builder, true );
               }
@@ -821,7 +866,8 @@ namespace Wasatch {
               modExpr.set_ghost_coef( cg );
               modExpr.set_ghost_points( get_extra_bnd_mask<FieldT>(myBndSpec, patchID) );
               modExpr.set_interior_coef( ci );
-              modExpr.set_interior_points( get_interior_bnd_mask<FieldT>(myBndSpec,patchID) );              
+              modExpr.set_interior_points( get_interior_bnd_mask<FieldT>(myBndSpec,patchID) );
+              //modExpr.set_interior_corner_points( get_edge_mask(myBndSpec,patchID) );
             }
           }
         }
@@ -871,7 +917,7 @@ namespace Wasatch {
         {
           Uintah::Iterator& bndMask = get_uintah_extra_bnd_mask(myBndSpec,patchID);
           
-          double sign = (myBndSpec.bndType == OUTFLOW || myBndSpec.bndType == OPEN) ? 1.0 : -1.0;
+          double sign = (myBndSpec.type == OUTFLOW || myBndSpec.type == OPEN) ? 1.0 : -1.0;
           if (myBndCondSpec) {
             if (myBndCondSpec->bcType == DIRICHLET) {
               sign = 1.0;
@@ -932,7 +978,7 @@ namespace Wasatch {
           MaskT::const_iterator ii = iBndMask->begin();
           MaskT::const_iterator ig = eBndMask->begin();
           if(!iBndMask || !eBndMask) return;
-          if (myBndSpec.bndType == OUTFLOW || myBndSpec.bndType == OPEN) {
+          if (myBndSpec.type == OUTFLOW || myBndSpec.type == OPEN) {
             for (; ii != iBndMask->end(); ++ii, ++ig) {
               pressureField(*ig) = -pressureField(*ii);
             }

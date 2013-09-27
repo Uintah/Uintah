@@ -885,7 +885,7 @@ namespace Wasatch{
       
       const bool isNormal = is_normal_to_boundary(this->staggered_location(), myBndSpec.face);
             
-      switch (myBndSpec.bndType) {
+      switch (myBndSpec.type) {
         case WALL:
         {
           // first check if the user specified boundary conditions at the wall
