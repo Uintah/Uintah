@@ -121,6 +121,7 @@ namespace Wasatch{
     graphCategories_[ INITIALIZATION     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ TIMESTEP_SELECTION ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ ADVANCE_SOLUTION   ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
+    graphCategories_[ POSTPROCESSING     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
 
     icCoordHelper_  = new CoordHelper( *(graphCategories_[INITIALIZATION]->exprFactory) );
 
@@ -649,7 +650,7 @@ namespace Wasatch{
     }
     
     if( buildTimeIntegrator_ ){
-      timeStepper_ = scinew TimeStepper( sharedState_, *graphCategories_[ ADVANCE_SOLUTION ], timeInt );
+      timeStepper_ = scinew TimeStepper( sharedState_, graphCategories_, timeInt );
     }    
     
     //
@@ -950,6 +951,25 @@ namespace Wasatch{
       }
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
+
+      
+      // post processing
+      GraphHelper* const postProcGH = graphCategories_[ POSTPROCESSING ];
+      Expr::ExpressionFactory& postProcFactory = *postProcGH->exprFactory;
+      if( !postProcGH->rootIDs.empty() )
+      {
+        TaskInterface* const task = scinew TaskInterface( postProcGH->rootIDs,
+                                                         "postprocessing",
+                                                          postProcFactory,
+                                                          level, sched,
+                                                          allPatches,
+                                                          materials_,
+                                                          patchInfoMap_,
+                                                          iStage, lockedFields_ );
+        task->schedule(iStage);
+        taskInterfaceList_.push_back( task );
+      }
+      proc0cout << "Wasatch: done creating post-processing task(s)" << std::endl;
       
       // pass the bc Helper to pressure expressions on all patches
       bcHelperMap_[level->getID()]->synchronize_pressure_expression();

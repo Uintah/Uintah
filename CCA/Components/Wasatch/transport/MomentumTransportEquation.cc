@@ -51,6 +51,8 @@
 #include <CCA/Components/Wasatch/Expressions/WeakConvectiveTerm.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/ContinuityResidual.h>
+
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
@@ -63,6 +65,7 @@
 
 //-- ExprLib Includes --//
 #include <expression/ExprLib.h>
+#include <expression/PlaceHolderExpr.h>
 
 using std::string;
 
@@ -589,7 +592,7 @@ namespace Wasatch{
                              const bool isConstDensity,
                              const Expr::Tag bodyForceTag,
                              const Expr::Tag srcTermTag,
-                             GraphHelper& graphHelper,
+                             GraphCategories& grafCat,
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
                              const bool hasEmbeddedGeometry,
@@ -615,6 +618,7 @@ namespace Wasatch{
     solverParams_ = NULL;
     set_vel_tags( params, velTags_ );
 
+    GraphHelper& graphHelper   = *(grafCat[ADVANCE_SOLUTION  ]);
     Expr::ExpressionFactory& factory = *(graphHelper.exprFactory);
 
     thisMomName_ = momName;
@@ -654,6 +658,38 @@ namespace Wasatch{
       typedef typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
       // if dilatation expression has not been registered, then register it
       factory.register_expression( new Dilatation(dilTag, velTags_) );
+    }
+    
+    //__________________
+    // dilatation - needed by pressure source term and strain tensor
+    bool computeContinuityResidual = params->findBlock("ComputeMassResidual");
+    if (computeContinuityResidual)
+    {
+      GraphHelper& postProcGH   = *(grafCat[POSTPROCESSING]);
+      Expr::ExpressionFactory& postProcFactory = *(postProcGH.exprFactory);
+      
+      const Expr::Tag contTag = tagNames.continuityresidual;
+      
+      if( !postProcFactory.have_entry( contTag ) ){
+        typedef typename ContinuityResidual<SVolField,XVolField,YVolField,ZVolField>::Builder ContResT;
+        // if dilatation expression has not been registered, then register it
+        Expr::TagList np1MomTags;
+        if(doMom[0])
+          np1MomTags.push_back(Expr::Tag("x-mom",Expr::STATE_NP1));
+        else
+          np1MomTags.push_back(Expr::Tag());
+        if(doMom[1])
+          np1MomTags.push_back(Expr::Tag("y-mom",Expr::STATE_NP1));
+        else
+          np1MomTags.push_back(Expr::Tag());
+        if(doMom[2])
+          np1MomTags.push_back(Expr::Tag("z-mom",Expr::STATE_NP1));
+        else
+          np1MomTags.push_back(Expr::Tag());
+        
+        Expr::ExpressionID contID = postProcFactory.register_expression( new ContResT(contTag, Expr::Tag(), np1MomTags) );
+        postProcGH.rootIDs.insert(contID);
+      }
     }
 
     //___________________________________

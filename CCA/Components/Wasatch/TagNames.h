@@ -99,6 +99,10 @@ namespace Wasatch{
     // predictor related variables suffix strings
     const std::string
     star, doubleStar;
+    
+    // postprocessing-related tags
+    const Expr::Tag
+    continuityresidual;
 
   private:
     TagNames();
