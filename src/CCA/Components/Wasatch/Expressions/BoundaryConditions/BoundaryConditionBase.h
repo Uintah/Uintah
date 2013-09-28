@@ -56,8 +56,8 @@ public:
     vecGhostPts_ = vecGhostPoints;
   }
 
-  void set_interior_corner_points( const std::vector<SpatialOps::structured::IntVec>* cornerInteriorPts ) {
-    cornerInteriorPts_  = cornerInteriorPts;
+  void set_interior_edge_points( const std::vector<SpatialOps::structured::IntVec>* interiorEdgePoints ) {
+    interiorEdgePoints_  = interiorEdgePoints;
   }
   
   void set_patch_cell_offset( const SpatialOps::structured::IntVec& patchCellOffset ){
@@ -73,7 +73,7 @@ public:
   {
     vecInteriorPts_ = NULL;
     vecGhostPts_ = NULL;
-    cornerInteriorPts_ = NULL;
+    interiorEdgePoints_ = NULL;
   }
   virtual ~BoundaryConditionBase(){}
 
@@ -84,7 +84,7 @@ protected:
   const std::vector<SpatialOps::structured::IntVec>* vecGhostPts_;
   SpatialOps::structured::IntVec patchCellOffset_;
   SpatialOps::structured::IntVec bndNormal_;
-  const std::vector<SpatialOps::structured::IntVec>* cornerInteriorPts_;
+  const std::vector<SpatialOps::structured::IntVec>* interiorEdgePoints_;
 };
 
 #endif // BoundaryConditionBase_Expr_h

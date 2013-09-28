@@ -320,6 +320,17 @@ namespace Wasatch {
 
     std::vector<SS::IntVec>& intEdgeSOIter    = myBndIters.interiorEdgeCells;
 
+   
+    bool plusEdge[3];
+    bool minusEdge[3];
+
+    minusEdge[0] = patch->getBCType(Uintah::Patch::xminus) != Uintah::Patch::Neighbor;
+    plusEdge[0] =  patch->getBCType(Uintah::Patch::xplus) != Uintah::Patch::Neighbor;
+    minusEdge[1] = patch->getBCType(Uintah::Patch::yminus) != Uintah::Patch::Neighbor;
+    plusEdge[1] =  patch->getBCType(Uintah::Patch::yplus) != Uintah::Patch::Neighbor;
+    minusEdge[2] = patch->getBCType(Uintah::Patch::zminus) != Uintah::Patch::Neighbor;
+    plusEdge[2] =  patch->getBCType(Uintah::Patch::zplus) != Uintah::Patch::Neighbor;
+
     int i, j;
     switch (face) {
       case Uintah::Patch::xminus:
@@ -338,23 +349,25 @@ namespace Wasatch {
     
     // MAJOR WARNING HERE - WHEN WE MOVE TO RUNTIME GHOST CELLS, WE NEED TO USE THE APPROPRIATE PATCH OFFSET
     const Uintah::IntVector patchCellOffset = patch->getExtraCellLowIndex(1);
+    
     Uintah::IntVector unitNormal = patch->faceDirection(face); // this is needed to construct interior cells
     Uintah::IntVector bcPointIJK;
     
     Uintah::IntVector edgePoint;
-    Uintah::IntVector idxHi = patch->getCellHighIndex();
-    Uintah::IntVector idxLo = patch->getCellLowIndex() - patchCellOffset;
+    Uintah::IntVector idxHi = patch->getCellHighIndex() - IntVector(1,1,1);// - patchCellOffset;
+    Uintah::IntVector idxLo = patch->getCellLowIndex();
     for( bndIter.reset(); !bndIter.done(); bndIter++ )
     {
       bcPointIJK = *bndIter - patchCellOffset;
       extraBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
       
       edgePoint = *bndIter - unitNormal;
-      if (bcPointIJK[i] == idxHi[i] ||
-          bcPointIJK[j] == idxHi[j] ||
-          bcPointIJK[i] == idxLo[i] ||
-          bcPointIJK[j] == idxLo[j]  )
+      if (edgePoint[i] == idxHi[i] && plusEdge[i] ||
+          edgePoint[j] == idxHi[j] && plusEdge[j] ||
+          edgePoint[i] == idxLo[i] && minusEdge[i] ||
+          edgePoint[j] == idxLo[j] && minusEdge[j] )
       {
+        edgePoint -= patchCellOffset;
         intEdgeSOIter.push_back( IntVecT(bcPointIJK[0], bcPointIJK[1], bcPointIJK[2]) );
       }
 
@@ -867,7 +880,7 @@ namespace Wasatch {
               modExpr.set_ghost_points( get_extra_bnd_mask<FieldT>(myBndSpec, patchID) );
               modExpr.set_interior_coef( ci );
               modExpr.set_interior_points( get_interior_bnd_mask<FieldT>(myBndSpec,patchID) );
-              //modExpr.set_interior_corner_points( get_edge_mask(myBndSpec,patchID) );
+              //modExpr.set_interior_edge_points( get_edge_mask(myBndSpec,patchID) );
             }
           }
         }
