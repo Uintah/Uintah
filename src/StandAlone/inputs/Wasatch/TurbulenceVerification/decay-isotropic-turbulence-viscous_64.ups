@@ -69,7 +69,7 @@
     <!-- Momentum transport equations -->
     <MomentumEquations>
 		
-		 <CalculateKE/>
+		 <ComputeKE/>
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
       <Y-Velocity>v</Y-Velocity>

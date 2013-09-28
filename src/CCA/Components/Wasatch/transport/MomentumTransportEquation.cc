@@ -810,8 +810,8 @@ namespace Wasatch{
     }
     
     // Kinetic energy calculation, if necessary
-    if ( params->findBlock("CalculateKE") ) {
-      Uintah::ProblemSpecP keSpec = params->findBlock("CalculateKE");
+    if ( params->findBlock("ComputeKE") ) {
+      Uintah::ProblemSpecP keSpec = params->findBlock("ComputeKE");
       bool isTotalKE = true;
       keSpec->getAttribute("total", isTotalKE);
       if (isTotalKE) { // calculate total kinetic energy. then follow that with a reduction variable
