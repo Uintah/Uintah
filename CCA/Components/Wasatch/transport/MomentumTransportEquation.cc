@@ -725,23 +725,6 @@ namespace Wasatch{
     factory.cleave_from_parents ( momRHSPartID );
     
     //__________________
-    // drhou/dt - needed by pressure BCs
-    // Here we calculate drhoudt using rhou and rhou_old. The catch is to remember
-    // to set the momentum_rhs_full to zero at wall/inlet boundaries.
-    // One could also calculate this time derivative from rho, u and rho_old, u_old.
-    // We may consider this option later.
-    bool enabledudtInPRHS = !(params->findBlock("Disabledmomdt"));    
-    if (enabledudtInPRHS) {
-      OldVariable& oldVar = OldVariable::self();
-      Expr::Tag dthisMomdtTag = Expr::Tag( "d_" + thisMomName_ + "_dt" , Expr::STATE_NONE );
-      Expr::Tag thisMomOldTag = Expr::Tag( thisMomName_  + "_old", Expr::STATE_NONE );
-      Expr::Tag thisMomOldOldTag = Expr::Tag( thisMomName_  + "_old_old", Expr::STATE_NONE );
-      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomTag);
-      oldVar.add_variable<FieldT>( ADVANCE_SOLUTION, thisMomOldTag);
-      factory.register_expression( new typename TimeDerivative<FieldT>::Builder(dthisMomdtTag,thisMomOldTag,thisMomOldOldTag,tagNames.timestep));
-    }
-
-    //__________________
     // Pressure source term
     if (!isConstDensity) {
       // calculating velocity at the next time step    
@@ -808,14 +791,6 @@ namespace Wasatch{
         if( doMom[0] )  fxt = Expr::Tag( xmomname + "_rhs_partial", Expr::STATE_NONE );
         if( doMom[1] )  fyt = Expr::Tag( ymomname + "_rhs_partial", Expr::STATE_NONE );
         if( doMom[2] )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );
-
-        // add drhoudt term to the pressure rhs
-//        Expr::Tag dxmomdtt, dymomdtt, dzmomdtt;
-//        if (enabledudtInPRHS) {
-//          if( doMom[0] )  dxmomdtt = Expr::Tag( "d_" + xmomname + "_dt", Expr::STATE_NONE );
-//          if( doMom[1] )  dymomdtt = Expr::Tag( "d_" + ymomname + "_dt", Expr::STATE_NONE );
-//          if( doMom[2] )  dzmomdtt = Expr::Tag( "d_" + zmomname + "_dt", Expr::STATE_NONE );
-//        }
 
         Expr::TagList ptags;
         ptags.push_back( pressure_tag() );
