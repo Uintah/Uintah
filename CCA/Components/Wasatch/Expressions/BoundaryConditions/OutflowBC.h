@@ -94,9 +94,9 @@ public:
           }
         }
       
-        if (this->cornerInteriorPts_) {
-          std::vector<IntVec>::const_iterator ic = (this->cornerInteriorPts_)->begin(); // ii is the interior flat index
-          for (; ic != (this->cornerInteriorPts_)->end(); ++ic) {
+        if (this->interiorEdgePoints_) {
+          std::vector<IntVec>::const_iterator ic = (this->interiorEdgePoints_)->begin(); // ii is the interior flat index
+          for (; ic != (this->interiorEdgePoints_)->end(); ++ic) {
             const double ub  = (*u_)(*ic);            // boundary cell
             f(*ic) = -(1.0/ *dt_) * ub;
           }          
