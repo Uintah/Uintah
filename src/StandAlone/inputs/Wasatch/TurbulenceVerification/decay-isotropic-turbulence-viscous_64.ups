@@ -68,7 +68,7 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
-		 <Disabledmomdt/>
+		
 		 <CalculateKE/>
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>

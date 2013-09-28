@@ -724,7 +724,6 @@
     <MomentumEquations  spec="OPTIONAL NO_DATA">
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
       <DisablePressureSolve   spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->   
-      <Disabledmomdt          spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->
       <ComputeMassResidual    spec="OPTIONAL NO_DATA" />
       <CalculateKE            spec="OPTIONAL NO_DATA"
                               attribute1="total OPTIONAL BOOLEAN"
