@@ -90,12 +90,13 @@ public:
   //returns if a variable is marked valid or invalid
   bool isValid() const {return d_valid;}
 
-  void emit(OutputContext&, 
+  void emit(OutputContext&, const IntVector& l, const IntVector& h,
+            const std::string& compressionModeHint);
 #if HAVE_PIDX
-            PIDXOutputContext&,
-#endif
+  void emit(PIDXOutputContext&,int vc, char* var_name, int* offset, int* count,
             const IntVector& l, const IntVector& h,
             const std::string& compressionModeHint);
+#endif
   void read(InputContext&, long end, bool swapbytes, int nByteMode,
             const std::string& compressionMode);
 

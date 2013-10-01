@@ -233,11 +233,13 @@ public:
 			    const PatchSubset*, const MaterialSubset*,
                             bool replace = false, const PatchSubset* = 0) = 0;
 
-  virtual void emit(OutputContext&, 
+  virtual void emit(OutputContext&, const VarLabel* label, int matlIndex, 
+                    const Patch* patch) = 0;
+
 #if HAVE_PIDX
-                    PIDXOutputContext&,
-#endif
+  virtual void emit(PIDXOutputContext&,int vc, char* var_name, int* offset, int* count,
                     const VarLabel* label, int matlIndex, const Patch* patch) = 0;
+#endif
 
   // Scrubbing
   enum ScrubMode {

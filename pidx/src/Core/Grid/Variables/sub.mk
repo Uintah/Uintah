@@ -60,6 +60,12 @@ SRCS += \
         $(SRCDIR)/VarLabel.cc                   \
         $(SRCDIR)/Variable.cc                   
 
+#HAVE_PIDX
+ifeq ($(HAVE_PIDX),yes)
+	INCLUDES += ${PIDX_INCLUDE}
+	LIBS += $(PIDX_LIBRARY)
+endif
+
 #
 #         $(SRCDIR)/ParticleVariable_templates.cc \
 #         $(SRCDIR)/NCVariable_templates.cc \

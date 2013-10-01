@@ -57,11 +57,11 @@ public:
   int total_dimension;
   int fd;
   int global_dimension[5];
+  PIDX_file idx_ptr;
   MPI_Comm comm;
   
   /* added from test_pidx_writer.c */
-    PIDX_file idx;
-    PIDX_variable variable;
+  PIDX_variable *variable;
 
   //   private:
   //       OutputContext(const OutputContext&);

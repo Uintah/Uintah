@@ -2095,9 +2095,6 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
 //
 void 
 OnDemandDataWarehouse::emit(OutputContext& oc, 
-#if HAVE_PIDX
-                            PIDXOutputContext& pc,
-#endif
                             const VarLabel* label,
                             int matlIndex, 
                             const Patch* patch)
@@ -2164,12 +2161,84 @@ OnDemandDataWarehouse::emit(OutputContext& oc,
   if (var == NULL) {
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__));
   }
-  var->emit(oc,
-#if HAVE_PIDX
-            pc,
-#endif
-            l, h, label->getCompressionMode());
+  var->emit(oc,l, h, label->getCompressionMode());
 }
+
+#if HAVE_PIDX
+void 
+OnDemandDataWarehouse::emit(PIDXOutputContext& pc,int vc, char* var_name,
+                            int* v_offset, int* v_count,
+                            const VarLabel* label,
+                            int matlIndex, 
+                            const Patch* patch)
+{
+  checkGetAccess(label, matlIndex, patch);
+
+  Variable* var = NULL;
+  IntVector l, h;
+  if(patch) {
+    // Save with the boundary layer, otherwise restarting from the DataArchive won't work.
+    patch->computeVariableExtents( label->typeDescription()->getType(),
+        label->getBoundaryLayer(), Ghost::None, 0,
+        l, h );
+   switch(label->typeDescription()->getType())
+    {
+      case TypeDescription::NCVariable:
+      case TypeDescription::CCVariable:
+      case TypeDescription::SFCXVariable:
+      case TypeDescription::SFCYVariable:
+      case TypeDescription::SFCZVariable:
+        //get list
+      {
+        vector<Variable*> varlist;
+        d_lock.readLock();
+        d_varDB.getlist(label, matlIndex, patch, varlist);
+        d_lock.readUnlock();
+
+        GridVariableBase* v = NULL;
+        for (vector<Variable*>::reverse_iterator rit = varlist.rbegin();; ++rit) {
+          if (rit == varlist.rend()) {
+            v = NULL;
+            break;
+          }
+          v = dynamic_cast<GridVariableBase*> (*rit);
+          //verify that the variable is valid and matches the dependencies requirements.
+          if (v && v->isValid() && Min(l, v->getLow()) == v->getLow() && Max(h, v->getHigh()) == v->getHigh()) //find a completed region
+            break;
+        }
+        var = v;
+      }
+        break;
+      case TypeDescription::ParticleVariable:
+        d_lvlock.readLock();
+        var=d_pvarDB.get(label, matlIndex, patch);
+        d_lvlock.readUnlock();
+        break;
+      default:
+        d_lock.readLock();
+        var=d_varDB.get(label, matlIndex, patch);
+        d_lock.readUnlock();
+    }
+  }
+  else
+  {
+    l=h=IntVector(-1,-1,-1);
+
+    const Level* level = patch?patch->getLevel():0;
+    d_lvlock.readLock();
+    if(d_levelDB.exists(label, matlIndex, level))
+      var = d_levelDB.get(label, matlIndex, level);
+    d_lvlock.readUnlock();
+  }
+
+cout << "Working here" << endl;
+  if (var == NULL) {
+    SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__));
+  }
+  var->emit(pc,vc,var_name,v_offset,v_count,l, h, label->getCompressionMode());
+}
+
+#endif
 //______________________________________________________________________
 //
 void 

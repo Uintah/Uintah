@@ -8,13 +8,19 @@ namespace Uintah {
                                        int globalExtents[5], MPI_Comm comm)
     : filename(filename), timestep(timeStep), comm(comm)
 {
-  int gextent[5];
+  const int *gextent;
   int returnV;
 
-  for (int i = 0; i < 5; i++)
-    gextent[i] = globalExtents[i];
+  //  for (int i = 0; i < 5; i++)
+  gextent = globalExtents;
 
-	    
+
+  PIDX_time_step_define(0, 2, "time%04d/");	    
+  std::cout << "timestep = " << timestep << " filename = " << filename << std::endl;
+  std::cout << "gextent[0] = " << gextent[0] << " gextent[1] = " << gextent[1] <<
+    "gextent[2] = " << gextent[2] << " gextent[3] = " << gextent[3] <<
+    "gextent[4] = " << gextent[4] << std::endl;
+  idx_ptr = PIDX_create(comm, timestep, filename.c_str(), 15, 256, 3, gextent);
 // std::cout<<"Test C : Calling PIDX\n";
 // PIDX_create((char*)filename, comm, 15, 256, 3, gextent);
 // std::cout<<"Return Value\n" << returnV;

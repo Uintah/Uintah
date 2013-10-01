@@ -1663,7 +1663,17 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     return;
   }
 
- double start = Time::currentSeconds();
+  double start = Time::currentSeconds();
+
+  bool uda_io = false;
+  bool pidx_io =  true;
+  int rank;
+
+  int x1;
+  int vc = 0;
+  int *v_offset; 
+  int *v_count; 
+  int number_of_variables;
 
 #if SCI_ASSERTION_LEVEL >= 2
   // double-check to make sure only called once per level
@@ -1726,6 +1736,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
   string dataFilebase;
   string dataFilename;
   const Level* level = NULL;
+  IntVector clowIndex,chighIndex;
 
   // find the xml filename and data filename that we will write to
   // Normal reductions will be handled by outputReduction, but checkpoint
@@ -1736,12 +1747,14 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     ASSERT(patches->size() != 0);
     ASSERT(patches->get(0) != 0);
     level = patches->get(0)->getLevel();
+   
     IntVector lowIndex,highIndex;
     level->findIndexRange(lowIndex,highIndex);
     cout << "IndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
     level->findNodeIndexRange(lowIndex,highIndex);
     cout << "NodeIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
     level->findCellIndexRange(lowIndex,highIndex);
+    level->findCellIndexRange(clowIndex,chighIndex);
     cout << "CellIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
     level->findInteriorIndexRange(lowIndex,highIndex);
     cout << "InteriorIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
@@ -1767,6 +1780,12 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     dataFilename = tdir.getName() + "/" + dataFilebase;
   }
 
+  int fd;
+  char* filename;
+  long cur=0;
+  // Open the data file
+  filename = (char*) dataFilename.c_str();
+
   // Not only lock to prevent multiple threads from writing over the same
   // file, but also lock because xerces (DOM..) has thread-safety issues.
 
@@ -1789,51 +1808,66 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
       doc = loadDocument(xmlFilename);
     } else
 #endif
-    doc = ProblemSpec::createDocument("Uintah_Output");
+      if (uda_io == true) {
+        doc = ProblemSpec::createDocument("Uintah_Output");
 
-    // Find the end of the file
-    ASSERT(doc != 0);
-    ProblemSpecP n = doc->findBlock("Variable");
+        // Find the end of the file
+        ASSERT(doc != 0);
+        ProblemSpecP n = doc->findBlock("Variable");
     
-    long cur=0;
-    while(n != 0){
-      ProblemSpecP endNode = n->findBlock("end");
-      ASSERT(endNode != 0);
-      long end = atol(endNode->getNodeValue().c_str());
+
+        while(n != 0){
+          ProblemSpecP endNode = n->findBlock("end");
+          ASSERT(endNode != 0);
+          long end = atol(endNode->getNodeValue().c_str());
       
-      if(end > cur)
-        cur=end;
-      n = n->findNextBlock("Variable");
-    }
+          if(end > cur)
+            cur=end;
+          n = n->findNextBlock("Variable");
+        }
 
-    int fd;
-    char* filename;
-    // Open the data file
-    filename = (char*) dataFilename.c_str();
-    fd = open(filename, flags, 0666);
 
-    if ( fd == -1 ) {
-      cerr << "Cannot open dataFile: " << dataFilename << '\n';
-      throw ErrnoException("DataArchiver::output (open call)", errno, __FILE__, __LINE__);
-    }
+
+
+   
+        fd = open(filename, flags, 0666);
+
+        if ( fd == -1 ) {
+          cerr << "Cannot open dataFile: " << dataFilename << '\n';
+          throw ErrnoException("DataArchiver::output (open call)", errno, __FILE__, __LINE__);
+        }
+      }
 
     // loop over variables
     // char* varXX;
     // varXX[0] = 0;
 #if HAVE_PIDX
     string idxFilename(filename);
-    idxFilename = idxFilename + "_X.idx";
+    idxFilename = idxFilename + ".idx";
     int globalExtents[5];
+    globalExtents[0] = chighIndex[0] - clowIndex[0];
+    globalExtents[1] = chighIndex[1] - clowIndex[1];
+    globalExtents[2] = chighIndex[2] - clowIndex[2];
+    globalExtents[3] = globalExtents[4] = 1;
     std::cerr<<"Creating PIDXOutputContext..." << idxFilename << endl;
-    PIDXOutputContext pc(idxFilename, timeStep,globalExtents,
-                         d_myworld->getComm());
-#endif
-    int rank;
-    MPI_Comm_rank(d_myworld->getComm(), &rank);
-    int x1;
+    PIDXOutputContext  pc(idxFilename, timeStep,globalExtents,d_myworld->getComm());
 
+    if (pidx_io == true) {
+      //    pc->variable = (PIDX_variable*) malloc(sizeof (PIDX_variable) * number_of_variables*number_of_materials);
+
+      MPI_Comm_rank(d_myworld->getComm(), &rank);
+      
+      vc = 0;
+      v_offset = (int *) malloc(5 * sizeof(int));
+      v_count = (int *) malloc(5 * sizeof(int));
+      number_of_variables = saveLabels.size();
+      cout << "Number of variables = " << number_of_variables << endl;
+      pc.variable = (PIDX_variable*) malloc(sizeof (PIDX_variable) * number_of_variables);
+      memset(pc.variable, 0, sizeof (PIDX_variable) * number_of_variables);
+    }
+#endif
     vector<SaveItem>::iterator saveIter;
-//    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+    //    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
     for(saveIter = saveLabels.begin(), x1=0; saveIter!= saveLabels.end(); saveIter++, x1++) {
 
       const VarLabel* var = saveIter->label_;
@@ -1882,35 +1916,54 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
           patch = 0;
           patchID = -1;
 
-                } else {
-                    patch = patches->get(p);
-                    patchID = patch->getID();
+        } else {
+          patch = patches->get(p);
+          patchID = patch->getID();
 
-                    IntVector hi, low, range;
-                    low = patch->getCellLowIndex();
-                    hi = patch->getCellHighIndex();
+          IntVector hi, low, range;
+          low = patch->getCellLowIndex();
+          hi = patch->getCellHighIndex();
 
-                    std::cout << "ELSE: Patch info: \nPatch number " << p << "\n";
-                    std::cout << "Patch extent " << low.x() << ", " << low.y() << ", " << low.z() << " " << hi.x() << ", " << hi.y() << ", " << hi.z() << "\n";
-                    std::cout << " X" << rank << " [" << x1 << ", " << p << " ]\n";
-                    std::cout << " X" << ", " << " ]\n";
+          std::cout << "ELSE: Patch info: \nPatch number " << p << "\n";
+          std::cout << "Patch extent " << low.x() << ", " << low.y() << ", " << low.z() << " " << hi.x() << ", " << hi.y() << ", " << hi.z() << "\n";
+          std::cout << " X" << rank << " [" << x1 << ", " << p << " ]\n";
+          std::cout << " X" << ", " << " ]\n";
+          if (pidx_io == true) {
+            v_offset[0] = low.x();
+            v_offset[1] = low.y();
+            v_offset[2] = low.z();
+            v_offset[3] = 0;
+            v_offset[4] = 0;
+            v_count[0] = hi.x() - low.x() + 1;
+            v_count[1] = hi.y() - low.y() + 1;
+            v_count[2] = hi.z() - low.z() + 1;
+            v_count[3] = 1;
+            v_count[4] = 1;
+          }
+                      
         }
         
-       //IntVector hi, low, range;
-       //low = patch->getCellLowIndex();
-       //hi = patch->getCellHighIndex();
-       
-       //std::cout<<"Patch info: \nPatch number "<< p << "\n";
-       //std::cout<< "Patch extent " << low.x() << ", "<< low.y() << ", " <<  low.z() <<" "  <<hi.x() << ", "<< hi.y() << ", "<< hi.z()  << "\n";
-       //std::cout<< " X" << rank << " [" <<x1 << ", " << p << " ]\n";
-       //std::cout<< " X" <<  ", " <<  " ]\n";
-
         for(int m=0;m<var_matls->size();m++){
           
           // add info for this variable to the current xml file
           int matlIndex = var_matls->get(m);
           // Variables may not exist when we get here due to something whacky with weird AMR stuff...
-          ProblemSpecP pdElem = doc->appendChild("Variable");
+
+#if HAVE_PIDX
+          if (pidx_io == true) {
+            std::cerr<<"Creating PIDXOutputContext...\n";
+            //  This appears to be redundant
+            //  PIDXOutputContext pc(filename, d_myworld->getComm());
+            cout << "DataArchiver call to emit" << endl;
+            new_dw->emit(pc, vc, (char*) var->getName().c_str(),v_offset,v_count,var, 
+                         matlIndex, patch);
+            vc++;
+          }
+#endif
+
+          ProblemSpecP pdElem;
+          if (uda_io == true) {
+          pdElem = doc->appendChild("Variable");
           
           pdElem->appendElement("variable", var->getName());
           pdElem->appendElement("index", matlIndex);
@@ -1919,71 +1972,76 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
           if (var->getBoundaryLayer() != IntVector(0,0,0))
             pdElem->appendElement("boundaryLayer", var->getBoundaryLayer());
 
+
 #if 0          
           off_t ls = lseek(fd, cur, SEEK_SET);
 
           if(ls == -1) {
-            cerr << "lseek error - file: " << filename << ", errno=" << errno << '\n';
-            throw ErrnoException("DataArchiver::output (lseek call)", errno, __FILE__, __LINE__);
-          }
+          cerr << "lseek error - file: " << filename << ", errno=" << errno << '\n';
+          throw ErrnoException("DataArchiver::output (lseek call)", errno, __FILE__, __LINE__);
+        }
 #endif
           // Pad appropriately
           if(cur%PADSIZE != 0){
-            long pad = PADSIZE-cur%PADSIZE;
-            char* zero = scinew char[pad];
-            memset(zero, 0, pad);
-            int err = (int)write(fd, zero, pad);
-            if (err != pad) {
-              cerr << "Error writing to file: " << filename << ", errno=" << errno << '\n';
-              SCI_THROW(ErrnoException("DataArchiver::output (write call)", errno, __FILE__, __LINE__));
-            }
-            cur+=pad;
-            delete[] zero;
-          }
+          long pad = PADSIZE-cur%PADSIZE;
+          char* zero = scinew char[pad];
+          memset(zero, 0, pad);
+          int err = (int)write(fd, zero, pad);
+          if (err != pad) {
+          cerr << "Error writing to file: " << filename << ", errno=" << errno << '\n';
+          SCI_THROW(ErrnoException("DataArchiver::output (write call)", errno, __FILE__, __LINE__));
+        }
+          cur+=pad;
+          delete[] zero;
+        }
           ASSERTEQ(cur%PADSIZE, 0);
           pdElem->appendElement("start", cur);
           
           // output data to data file
           OutputContext oc(fd, filename, cur, pdElem, d_outputDoubleAsFloat && type != CHECKPOINT);
-#if HAVE_PIDX
-          std::cerr<<"Creating PIDXOutputContext...\n";
-          //  This appears to be redundant
-          //  PIDXOutputContext pc(filename, d_myworld->getComm());
-          new_dw->emit(oc, pc,  var, matlIndex, patch);
-#else
-          new_dw->emit(oc, var, matlIndex, patch);
-#endif
 
+          new_dw->emit(oc, var, matlIndex, patch);
           pdElem->appendElement("end", oc.cur);
           pdElem->appendElement("filename", dataFilebase.c_str());
+
           
 #if SCI_ASSERTION_LEVEL >= 1
           struct stat st;
           int s = fstat(fd, &st);
 
           if(s == -1) {
-            cerr << "fstat error - file: " << filename << ", errno=" << errno << '\n';
-            throw ErrnoException("DataArchiver::output (stat call)", errno, __FILE__, __LINE__);
-          }
+          cerr << "fstat error - file: " << filename << ", errno=" << errno << '\n';
+          throw ErrnoException("DataArchiver::output (stat call)", errno, __FILE__, __LINE__);
+        }
           ASSERTEQ(oc.cur, st.st_size);
 #endif
           
           cur=oc.cur;
         }
-      }
-    }
-    // close files and handles 
-    int s = close(fd);
-    if(s == -1) {
-      cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
-      throw ErrnoException("DataArchiver::output (close call)", errno, __FILE__, __LINE__);
-    }
+        }  // Materials
+        }   //  Patches
+        }     //  Variables
+
+          if (pidx_io == true ) {
+          PIDX_write(pc.idx_ptr);
+          PIDX_close(pc.idx_ptr);
+        }
+      
+
+          // close files and handles 
+          if (uda_io == true) {
+          int s = close(fd);
+          if(s == -1) {
+          cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
+          throw ErrnoException("DataArchiver::output (close call)", errno, __FILE__, __LINE__);
+        }
     
-    doc->output(xmlFilename.c_str());
-    //doc->releaseDocument();
-  }
-  d_outputLock.unlock(); 
-  d_sharedState->outputTime += Time::currentSeconds()-start;
+          doc->output(xmlFilename.c_str());
+        }
+          //doc->releaseDocument();
+        }
+          d_outputLock.unlock(); 
+          d_sharedState->outputTime += Time::currentSeconds()-start;
 
 
 } // end output()
