@@ -1335,6 +1335,14 @@ void ICE::scheduleViscousShearStress(SchedulerP& sched,
     t->requires( Task::NewDW,lb->vvel_FCMELabel,    gac, 3);
     t->requires( Task::NewDW,lb->wvel_FCMELabel,    gac, 3);
     t->computes( lb->turb_viscosity_CCLabel );
+#if 0
+    t->computes( lb->scratch0Label );
+    t->computes( lb->scratch1Label );
+    t->computes( lb->scratch2Label );
+    t->computes( lb->scratch3Label );
+    t->computes( lb->scratch4Label );
+    t->computes( lb->scratch5Label );
+#endif
   }
   
   if( d_WallShearStressModel ){
@@ -3875,15 +3883,7 @@ void ICE::viscousShearStress(const ProcessorGroup*,
           // turbulence model
           if( d_turbulence ){ 
             d_turbulence->callTurb( new_dw, patch, vel_CC, rho_CC, indx, lb,
-                                    d_sharedState, viscosity );
-             
-            // keep around for diagnostics                       
-            CCVariable<double> turb_viscosity;           
-            new_dw->allocateAndPut(turb_viscosity, lb->turb_viscosity_CCLabel, indx,patch);
-            IntVector lo = turb_viscosity.getLowIndex();
-            IntVector hi = turb_viscosity.getHighIndex();
-            turb_viscosity.copyPatch( viscosity, lo, hi );     
-                                   
+                                    d_sharedState, viscosity );                                   
           }
 
           computeTauComponents( patch, vol_frac, vel_CC,viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC);

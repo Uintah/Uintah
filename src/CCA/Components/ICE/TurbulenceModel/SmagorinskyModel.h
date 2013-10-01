@@ -43,6 +43,7 @@ namespace Uintah {
     
     virtual void computeTurbViscosity(DataWarehouse* new_dw,
                                       const Patch* patch,
+                                      const ICELabel* lb,
                                       constCCVariable<Vector>& vel_CC,
                                       constSFCXVariable<double>& uvel_FC,
                                       constSFCYVariable<double>& vvel_FC,
