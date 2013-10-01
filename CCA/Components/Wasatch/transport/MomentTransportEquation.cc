@@ -95,7 +95,9 @@ namespace Wasatch {
         // register a moment closure expression
         const Expr::Tag momentClosureTag( basePhiName + "_" + twoPreviousMomentOrderStr.str(), Expr::STATE_N );
         typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
-        factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-2));
+        
+        if (!factory.have_entry( momentClosureTag ) )
+          factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-2));
       }
       typedef typename Growth<FieldT>::Builder growth;
       builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
@@ -108,7 +110,9 @@ namespace Wasatch {
         // register a moment closure expression
         const Expr::Tag momentClosureTag( basePhiName + "_" + nextMomentOrderStr.str(), Expr::STATE_N );
         typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
-        factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder+1));
+        
+        if (!factory.have_entry( momentClosureTag ) )
+          factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder+1));
       }
       typedef typename Growth<FieldT>::Builder growth;
       builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
@@ -120,7 +124,9 @@ namespace Wasatch {
       if (momentOrder == 0) { //register closure expr
         const Expr::Tag momentClosureTag( basePhiName + "_" + previousMomentOrderStr.str(), Expr::STATE_N );
         typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
-        factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-1));
+        
+        if (!factory.have_entry( momentClosureTag ) )
+          factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-1));
       }
       typedef typename Growth<FieldT>::Builder growth;
       builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
