@@ -72,9 +72,6 @@ Variable::setForeign()
 
 void
 Variable::emit( OutputContext& oc,
-#if HAVE_PIDX
-                PIDXOutputContext& pc,
-#endif
                 const IntVector& l,
                 const IntVector& h, const string& compressionModeHint )
 {
@@ -129,11 +126,14 @@ Variable::emit( OutputContext& oc,
     emitNormal(outstream, l, h, oc.varnode, oc.outputDoubleAsFloat);
   }
 
+
+
   string preGzip = outstream.str();
   string preGzip2;
   string buffer; // trying to avoid copying the strings back and forth
   string buffer2;
   string* writeoutString = &preGzip;
+
 
   if (use_gzip) {
     writeoutString = gzipCompress(&preGzip, &buffer);
@@ -166,6 +166,7 @@ Variable::emit( OutputContext& oc,
 
   const char* writebuffer = (*writeoutString).c_str();
   unsigned long writebufferSize = (*writeoutString).size();
+ 
   if(writebufferSize>0)
   {
   #ifdef _WIN32
@@ -173,15 +174,6 @@ Variable::emit( OutputContext& oc,
   #else
     ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
   #endif
-
-#if HAVE_PIDX
-
-/* -AM */
-//   PIDX_variable_local_layout(pc.idx, pc.variable, (char*)writebuffer, MPI_DOUBLE);
-//   PIDX_write(pc.idx);
-//   PIDX_close(pc.idx);
-
-#endif
 
     if(s != (long)writebufferSize) {
       cerr << "\nVariable::emit - write system call failed writing to " << oc.filename 
@@ -213,6 +205,52 @@ Variable::emit( OutputContext& oc,
     //appendElement(oc.varnode, "compression", compressionMode);
     oc.varnode->appendElement("compression", compressionMode);
 }
+
+#if HAVE_PIDX
+void
+Variable::emit(PIDXOutputContext& pc,int vc, char * var_name,int* offset,
+                int* count,
+                const IntVector& l,
+                const IntVector& h, const string& compressionModeHint )
+{
+
+  cout << "Start of PIDX emit" << endl;
+ProblemSpecP dummy;
+
+  std::ostringstream outstream;
+  emitNormal(outstream, l, h, dummy,false);
+
+  string writeoutString = outstream.str();
+  double *pidx_buffer;
+
+  const char* writebuffer = (writeoutString).c_str();
+  unsigned long writebufferSize = (writeoutString).size();
+
+  cout << "write buffer size = " << writebufferSize << endl;
+ 
+  if(writebufferSize>0) {
+
+    pidx_buffer = (double *) malloc((writebufferSize/8)*sizeof(double));
+
+    cout << "offsets: " << offset[0] << " " << offset[1] << " " << offset[2] << " "
+         << offset[3] << " " << offset[4] << endl;
+    cout << "count: " << count[0] << " " << count[1] << " " << count[2] << " "
+         << count[3] << " " << count[4] << endl;
+    pidx_buffer = (double*)writebuffer;
+    for (unsigned long i = 0; i< writebufferSize/8; i++) {
+          cout << "pidx_buffer[ " << i << "] = " << pidx_buffer[i] << endl;
+    }
+
+    pc.variable[vc] = PIDX_variable_global_define(pc.idx_ptr, var_name, /*sample_per_variable_buffer[vc]*/ 1, MPI_DOUBLE);
+    PIDX_variable_local_add(pc.idx_ptr, pc.variable[vc], (int*) offset, 
+                                  (int*) count);
+    PIDX_variable_local_layout(pc.idx_ptr, pc.variable[vc], pidx_buffer, MPI_DOUBLE);
+
+  }
+
+}
+
+#endif
 
 string*
 Variable::gzipCompress(string* pUncompressed, string* pBuffer)
