@@ -30,7 +30,12 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Patch.h>
 
+//#define DEBUGGING  // turn on computes for scratch* inside ofICE::scheduleViscousShearStress
+
+
 using namespace Uintah;
+using namespace std;
+
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
 DynamicModel::DynamicModel(ProblemSpecP& ps, SimulationStateP& sharedState)
@@ -58,6 +63,7 @@ DynamicModel::~DynamicModel()
   -----------------------------------------------------------------------  */  
 void DynamicModel::computeTurbViscosity(DataWarehouse* new_dw,
                                         const Patch* patch,
+                                        const ICELabel* lb,
                                         constCCVariable<Vector>& vel_CC,
                                         constSFCXVariable<double>& uvel_FC,
                                         constSFCYVariable<double>& vvel_FC,
@@ -75,18 +81,19 @@ void DynamicModel::computeTurbViscosity(DataWarehouse* new_dw,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   CCVariable<double> meanSIJ, term;
+
   new_dw->allocateTemporary(meanSIJ, patch, gac,2);  
   new_dw->allocateTemporary(term,    patch, gac,1);  
   term.initialize(0.0);
  
-  computeSmagCoeff(new_dw, patch, vel_CC, uvel_FC, vvel_FC, wvel_FC, 
+  computeSmagCoeff(new_dw, patch, lb, vel_CC, uvel_FC, vvel_FC, wvel_FC, 
                    indx, d_sharedState, term, meanSIJ);
   
   int NGC =1;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {
-    IntVector c = *iter;    
+    IntVector c = *iter;
     turb_viscosity[c] = d_model_constant * rho_CC[c] * term[c] * meanSIJ[c];
-   }
+  }
 }
 /* ---------------------------------------------------------------------
   Function~  applyFilter
@@ -98,37 +105,26 @@ template <class T, class V>
                                  CCVariable<V>& var_hat)
 { 
   int NGC =1;  // number of ghostCells
+  V zero(0);
+  
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 
     IntVector c = *iter;
     int i = c.x();
     int j = c.y();
     int k = c.z();
-   
-/*    var_hat[c] = var[c]/8 +
-            var[IntVector(i-1,j,  k  )]/16 + var[IntVector(i+1,j,  k  )]/16 +
-            var[IntVector(i,  j-1,k  )]/16 + var[IntVector(i,  j+1,k  )]/16 +
-            var[IntVector(i-1,j-1,k  )]/32 + var[IntVector(i+1,j-1,k  )]/32 +
-            var[IntVector(i-1,j+1,k  )]/32 + var[IntVector(i+1,j+1,k  )]/32 +
-            var[IntVector(i,  j,  k-1)]/16 +
-            var[IntVector(i-1,j,  k-1)]/32 + var[IntVector(i+1,j,  k-1)]/32 +
-            var[IntVector(i,  j-1,k-1)]/32 + var[IntVector(i,  j+1,k-1)]/32 +
-            var[IntVector(i-1,j-1,k-1)]/64 + var[IntVector(i+1,j-1,k-1)]/64 +
-            var[IntVector(i-1,j+1,k-1)]/64 + var[IntVector(i+1,j+1,k-1)]/64 +
-            var[IntVector(i,  j,  k+1)]/16 +
-            var[IntVector(i-1,j,  k+1)]/32 + var[IntVector(i+1,j,  k+1)]/32 +
-            var[IntVector(i,  j-1,k+1)]/32 + var[IntVector(i,  j+1,k+1)]/32 +
-            var[IntVector(i-1,j-1,k+1)]/64 + var[IntVector(i+1,j-1,k+1)]/64 +
-            var[IntVector(i-1,j+1,k+1)]/64 + var[IntVector(i+1,j+1,k+1)]/64;*/
+    
+    var_hat[c] = zero;
+    
+    for (int kk = -1; kk <= 1; kk ++) {
+      for (int jj = -1; jj <= 1; jj ++) {
+        for (int ii = -1; ii <= 1; ii ++) {
+          IntVector neighborCell = IntVector(i+ii,j+jj,k+kk);
 
-      for (int kk = -1; kk <= 1; kk ++) {
-        for (int jj = -1; jj <= 1; jj ++) {
-          for (int ii = -1; ii <= 1; ii ++) {
-           IntVector neighbourCell = IntVector(i+ii,j+jj,k+kk);
-           double temp = (1.0-0.5*abs(ii))*(1.0-0.5*abs(jj))*(1.0-0.5*abs(kk))/8;
-           var_hat[c] += var[neighbourCell]*temp;
-          }
+          double temp = (1.0-0.5*abs(ii))*(1.0-0.5*abs(jj))*(1.0-0.5*abs(kk))/8;
+          var_hat[c] += var[neighborCell]*temp;
         }
-      }   
+      }
+    }   
 //   At boundary, under developing
    }    
 }
@@ -137,8 +133,6 @@ template <class T, class V>
 // Explicit template instantiations:
 template void DynamicModel::applyFilter< constCCVariable<Vector>, Vector >( const Patch* patch, constCCVariable<Vector>& var, CCVariable<Vector>& var_hat);
 template void DynamicModel::applyFilter< CCVariable<double>, double >(      const Patch* patch, CCVariable<double>& var,      CCVariable<double>& var_hat);
-
-
 
 
 /* ---------------------------------------------------------------------
@@ -157,17 +151,18 @@ void DynamicModel::applyFilter(const Patch* patch,
     int j = c.y();
     int k = c.z();
 
-  for (int comp = 0; comp <= 5; comp++) {
-    var_hat[comp][c]=0.0;   
-  }     
+    for (int comp = 0; comp < 6; comp++) {
+      var_hat[comp][c]=0.0;   
+    }     
                
     for (int kk = -1; kk <= 1; kk ++) {
       for (int jj = -1; jj <= 1; jj ++) {
         for (int ii = -1; ii <= 1; ii ++) {
-          IntVector neighbourCell = IntVector(i+ii,j+jj,k+kk);
+          IntVector neighborCell = IntVector(i+ii,j+jj,k+kk);
+
           double temp = (1.0-0.5*abs(ii))*(1.0-0.5*abs(jj))*(1.0-0.5*abs(kk))/8;
-          for (int comp = 0; comp <= 5; comp++) {
-             var_hat[comp][c] += var[comp][neighbourCell]*temp;   
+          for (int comp = 0; comp < 6; comp++) {
+             var_hat[comp][c] += var[comp][neighborCell]*temp;   
            }                 
          }
        }
@@ -180,7 +175,8 @@ void DynamicModel::applyFilter(const Patch* patch,
   Purpose~ Calculate Cs
   -----------------------------------------------------------------------  */
 void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
-                                    const Patch* patch,  
+                                    const Patch* patch,
+                                    const ICELabel* lb,          // for debugging
                                     constCCVariable<Vector>& vel_CC,
                                     constSFCXVariable<double>& uvel_FC,
                                     constSFCYVariable<double>& vvel_FC,
@@ -189,7 +185,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
                                     SimulationStateP&  d_sharedState,
                                     CCVariable<double>& term,
                                     CCVariable<double>& meanSIJ)
-{  
+{
   double Cs, meanSIJ_hat;
   StaticArray<CCVariable<double> > SIJ(6), SIJ_hat(6), LIJ(6), MIJ(6); 
   StaticArray<CCVariable<double> > alpha(6), beta(6), beta_hat(6);
@@ -197,7 +193,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
   CCVariable<double> vel_prod, vel_prod_hat, LM, MM; 
 
   Ghost::GhostType  gac = Ghost::AroundCells;  
-  for (int comp = 0; comp <= 5; comp++) {
+  for (int comp = 0; comp < 6; comp++) {
     new_dw->allocateTemporary(SIJ[comp],      patch, gac ,2);
     new_dw->allocateTemporary(LIJ[comp],      patch, gac ,1);
     new_dw->allocateTemporary(MIJ[comp],      patch, gac ,1);
@@ -205,27 +201,43 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
     new_dw->allocateTemporary(beta[comp],     patch, gac ,2);
     new_dw->allocateTemporary(beta_hat[comp], patch, gac ,1);
     new_dw->allocateTemporary(SIJ_hat[comp],  patch, gac ,1);
-    SIJ[comp].initialize(0.0);
-    beta[comp].initialize(0.0);    
-  }  
+    SIJ[comp].initialize(-9);
+    beta[comp].initialize(-9);
+    
+    LIJ[comp].initialize(-9);
+    MIJ[comp].initialize(-9);
+  }
+   
   new_dw->allocateTemporary(LM,           patch, gac ,1);
-  new_dw->allocateTemporary(MM,           patch, gac ,1);   
+  new_dw->allocateTemporary(MM,           patch, gac ,1);
   new_dw->allocateTemporary(vel_prod,     patch, gac ,2);
   new_dw->allocateTemporary(vel_prod_hat, patch, gac ,1);
-  new_dw->allocateTemporary(vel_CC_hat,   patch, gac ,1);  
-
-  vel_CC_hat.initialize(Vector(0.0,0.0,0.0));   
- 
+  new_dw->allocateTemporary(vel_CC_hat,   patch, gac ,1);
+  
+  /*===========DEBUGGING==========*/  
+#ifdef DEBUGGING
+  CCVariable<double> dbg0, dbg1, dbg2, dbg3, dbg4, dbg5;
+  new_dw->allocateAndPut(dbg0,    lb->scratch0Label,    indx,patch);
+  new_dw->allocateAndPut(dbg1,    lb->scratch0Label,    indx,patch);
+  new_dw->allocateAndPut(dbg2,    lb->scratch0Label,    indx,patch);
+  new_dw->allocateAndPut(dbg3,    lb->scratch0Label,    indx,patch);
+  new_dw->allocateAndPut(dbg4,    lb->scratch0Label,    indx,patch);
+  new_dw->allocateAndPut(dbg5,    lb->scratch0Label,    indx,patch);
+#endif
+  /*===========DEBUGGING==========*/ 
+  
+  //__________________________________
+  //  compute mean strain rate
   d_smag.computeStrainRate(patch, uvel_FC, vvel_FC, wvel_FC, 
                            indx, d_sharedState, new_dw, SIJ);
-    
+ 
   int NGC =2;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 
-   IntVector c = *iter;
+    IntVector c = *iter;
 
-   meanSIJ[c] = 
-    sqrt(2.0 * (SIJ[0][c]*SIJ[0][c] + SIJ[1][c]*SIJ[1][c] + SIJ[2][c]*SIJ[2][c] + 
-         2.0 * (SIJ[3][c]*SIJ[3][c] + SIJ[4][c]*SIJ[4][c] + SIJ[5][c]*SIJ[5][c])));
+    meanSIJ[c] = 
+        sqrt(2.0 * (SIJ[0][c]*SIJ[0][c] + SIJ[1][c]*SIJ[1][c] + SIJ[2][c]*SIJ[2][c] + 
+             2.0 * (SIJ[3][c]*SIJ[3][c] + SIJ[4][c]*SIJ[4][c] + SIJ[5][c]*SIJ[5][c])));
          
     double A = 2.0 * filter_width * filter_width * meanSIJ[c];
     for (int comp = 0; comp < 6; comp ++ ) {
@@ -234,7 +246,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
   }
 
   for (int comp = 0; comp < 6; comp++ ) {
-    setBC(beta[comp],"zeroNeumann",patch, d_sharedState, indx, new_dw);
+    setZeroNeumannBC_CC( patch, beta[comp], NGC);
   } 
 
   applyFilter(patch, vel_CC,    vel_CC_hat);
@@ -242,7 +254,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
   applyFilter(patch, beta,       beta_hat); 
 
   vector<IntVector> vel_prod_comp(6);    // ignore the z component
-  vel_prod_comp[0] = IntVector(0,0,0);   // UUvel_CC
+  vel_prod_comp[0] = IntVector(0,0,0);   // UUvel_CC      Using a map might be cleaner
   vel_prod_comp[1] = IntVector(1,1,0);   // VVvel_CC
   vel_prod_comp[2] = IntVector(2,2,0);   // WWvel_CC
   vel_prod_comp[3] = IntVector(0,1,0);   // UVvel_CC
@@ -256,18 +268,16 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
     int comp1 = vel_prod_comp[i][1];
       
     //__________________________________
-    // compute velocity products
-    for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 
+    // compute velocity products and LIJ
+    NGC = 2;
+    for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++) { 
       IntVector c = *iter;
       vel_prod[c] = vel_CC[c][comp0] * vel_CC[c][comp1];
     }
-    
-    setBC(vel_prod,"zeroNeumann",patch, d_sharedState, indx, new_dw);
-    
-    vel_prod_hat.initialize(0.0);
-    
+
+    setZeroNeumannBC_CC( patch, vel_prod, NGC);
+
     applyFilter(patch, vel_prod,   vel_prod_hat); 
-      
 
     NGC = 1;
     for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {  
@@ -276,12 +286,15 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
     }
   }
   
+  //__________________________________
+  //  Compute LM & MM
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {  
     IntVector c = *iter;    
 
     meanSIJ_hat = 
     sqrt(2.0 * (SIJ_hat[0][c]*SIJ_hat[0][c] + SIJ_hat[1][c]*SIJ_hat[1][c] + SIJ_hat[2][c]*SIJ_hat[2][c] + 
          2.0 * (SIJ_hat[3][c]*SIJ_hat[3][c] + SIJ_hat[4][c]*SIJ_hat[4][c] + SIJ_hat[5][c]*SIJ_hat[5][c])));
+
     //__________________________________
     //test filter width is assumed to be twice that of the basic filter 
     // instead of using d_test_filter_width given in input file
@@ -293,43 +306,82 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
     }
     
     LM[c] = LIJ[0][c] * MIJ[0][c] + 
-                LIJ[1][c] * MIJ[1][c] + 
-                LIJ[2][c] * MIJ[2][c] +
-          2 * (LIJ[3][c] * MIJ[3][c] + 
-                LIJ[4][c] * MIJ[4][c] + 
-                LIJ[5][c] * MIJ[5][c]);
+            LIJ[1][c] * MIJ[1][c] + 
+            LIJ[2][c] * MIJ[2][c] +
+       2 * (LIJ[3][c] * MIJ[3][c] + 
+            LIJ[4][c] * MIJ[4][c] + 
+            LIJ[5][c] * MIJ[5][c] );
                  
     MM[c] = MIJ[0][c] * MIJ[0][c] + 
-                 MIJ[1][c] * MIJ[1][c] + 
-                 MIJ[2][c] * MIJ[2][c] +
-           2 * (MIJ[3][c] * MIJ[3][c] + 
-                 MIJ[4][c] * MIJ[4][c] + 
-                 MIJ[5][c] * MIJ[5][c] );
-            
-   }    
-   //__________________________________
-   //calculate the local Smagorinsky coefficient
-   //Cs is truncated to zero in case LM is negative 
-   //to inhibit the potential for diverging solutions
-   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {  
-     IntVector c = *iter;
-     if (MM[c] < 1.0e-20) {
-        term[c] = 0.0;
-      }        
-     else{
-       if(LM[c] <= 1.e-20){
-         Cs = 0.0;
-       } else {
-         Cs = sqrt(LM[c] / MM[c]);
-         if (Cs > 10.0){
-           Cs = 10.0;
-         }
-       }
-       term[c] = (Cs * filter_width) * (Cs * filter_width);
-     } 
-   }//iter
+            MIJ[1][c] * MIJ[1][c] + 
+            MIJ[2][c] * MIJ[2][c] +
+       2 * (MIJ[3][c] * MIJ[3][c] + 
+            MIJ[4][c] * MIJ[4][c] + 
+            MIJ[5][c] * MIJ[5][c] );
+  }
+  
+/*==========DEBUGGING==========*/
+#ifdef DEBUGGING
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {  
+      IntVector c = *iter;
+
+#if 0
+      dbg0[c] = LIJ[0][c];
+      dbg1[c] = LIJ[1][c];
+      dbg2[c] = LIJ[2][c];
+      dbg3[c] = LIJ[3][c];
+      dbg4[c] = LIJ[4][c];
+      dbg5[c] = LIJ[5][c];
+#endif
+
+      dbg0[c] = MIJ[0][c];
+      dbg1[c] = MIJ[1][c];
+      dbg2[c] = MIJ[2][c];
+      dbg3[c] = MIJ[3][c];
+      dbg4[c] = MIJ[4][c];
+      dbg5[c] = MIJ[5][c];
+
+#if 0
+      dbg0[c] = SIJ[0][c];
+      dbg1[c] = SIJ[1][c];
+      dbg2[c] = SIJ[2][c];
+      dbg3[c] = SIJ[3][c];
+      dbg4[c] = SIJ[4][c];
+      dbg5[c] = SIJ[5][c];
+      
+      dbg0[c] = beta[0][c];
+      dbg1[c] = beta[1][c];
+      dbg2[c] = beta[2][c];
+      dbg3[c] = beta[3][c];
+      dbg4[c] = beta[4][c];
+      dbg5[c] = beta[5][c];
+#endif
+    } 
+#endif
+/*===========DEBUGGING==========*/  
+      
+  //__________________________________
+  //calculate the local Smagorinsky coefficient
+  //Cs is truncated to zero in case LM is negative 
+  //to inhibit the potential for diverging solutions
+  for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {  
+    IntVector c = *iter;
+    if (MM[c] < 1.0e-20) {
+       term[c] = 0.0;
+    } else {
+      if(LM[c] <= 1.e-20){
+        Cs = 0.0;
+      } else {
+        Cs = sqrt(LM[c] / MM[c]);
+        if (Cs > 10.0){
+          Cs = 10.0;
+        }
+      }
+     term[c] = (Cs * filter_width) * (Cs * filter_width);
+    } 
+  }//iter
 }
-//__________________________________
+//______________________________________________________________________
 //
 void DynamicModel::scheduleComputeVariance(SchedulerP& sched,
                                            const PatchSet* patches,
@@ -347,7 +399,7 @@ void DynamicModel::scheduleComputeVariance(SchedulerP& sched,
     }
   }
 }
-//__________________________________
+//______________________________________________________________________
 //
 void DynamicModel::computeVariance(const ProcessorGroup*, 
                                    const PatchSubset* patches,
@@ -373,19 +425,24 @@ void DynamicModel::computeVariance(const ProcessorGroup*,
 
         double sum_f = 0;
         double sum_fsquared = 0;
+        
         for (int kk = -1; kk <= 1; kk ++) {
           for (int jj = -1; jj <= 1; jj ++) {
             for (int ii = -1; ii <= 1; ii ++) {
+            
               IntVector neighborCell = c+IntVector(ii,jj,kk);
               double weight = (1.0-0.5*abs(ii))*(1.0-0.5*abs(jj))*(1.0-0.5*abs(kk))/8;
               double value = f[neighborCell];
               sum_f += weight*value;
               sum_fsquared += weight*value*value;
+            
             }
           }
         }
         fvar[c] = sum_fsquared - sum_f*sum_f;
       }
+      
+      // I'm not sure if this is correct --Todd
       setBC(fvar,s->scalarVariance->getName(),patch, d_sharedState, matl, new_dw);
     }
   }

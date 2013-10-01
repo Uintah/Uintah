@@ -132,7 +132,13 @@ namespace Uintah {
     //Misc Labels
     const VarLabel* IveBeenHereLabel;
     const VarLabel* machLabel;
-    const VarLabel* scratchLabel;
+    const VarLabel* scratch0Label;
+    const VarLabel* scratch1Label;
+    const VarLabel* scratch2Label;
+    const VarLabel* scratch3Label;
+    const VarLabel* scratch4Label;
+    const VarLabel* scratch5Label;
+    
     const VarLabel* scratchVecLabel;
     const VarLabel* scratch_FCXLabel;
     const VarLabel* scratch_FCYLabel;
