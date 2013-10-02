@@ -21,7 +21,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-9      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
-       <max_Timesteps> 2 </max_Timesteps>
+       <max_Timesteps> 10 </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -136,11 +136,11 @@
        <Level>
            <Box label="1">
               <lower>        [0,0,0]    </lower>
-              <upper>        [6,6,6]    </upper>
+              <upper>        [5,5,5]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [2,2,2]    </patches>
            </Box>
-           <spacing>         [1,1,1]    </spacing>
+           <spacing>         [.25,.25,.25]    </spacing>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
@@ -156,16 +156,16 @@
       <save label="wvel_FC"/>
       <save label="uvel_FCME"/>
       <save label="vvel_FCME"/>
-      <save label="wvel_FCME"/>
+      <save label="wvel_FCME"/> -->
       <save label="delP_Dilatate"/>
       <save label="rho_CC"/>
       <save label="press_CC"/>
-      <save label="mom_L_ME_CC"/>
 
-      <save label="vel_CC"/>         
-      <save label="KineticEnergy"/>
-      <save label="TotalIntEng"/>
-      <checkpoint interval="0.005" cycle="2"/> -->
+      <!-- <save label="mom_L_ME_CC"/> -->
+      <!-- <save label="vel_CC"/>      -->    
+<!--      <save label="KineticEnergy"/>
+      <save label="TotalIntEng"/> -->
+     <!--  <checkpoint interval="0.005" cycle="2"/> -->
    </DataArchiver>
 
     
