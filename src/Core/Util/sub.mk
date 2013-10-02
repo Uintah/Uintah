@@ -34,10 +34,6 @@ SRCS += \
         $(SRCDIR)/Endian.cc             \
         $(SRCDIR)/Environment.cc        \
         $(SRCDIR)/FileUtils.cc          \
-        $(SRCDIR)/LogFile.cc            \
-        $(SRCDIR)/ProgressReporter.cc   \
-        $(SRCDIR)/RegressionReporter.cc \
-        $(SRCDIR)/SimpleProfiler.cc     \
         $(SRCDIR)/SizeTypeConvert.cc    \
         $(SRCDIR)/RWS.cc                \
         $(SRCDIR)/sci_system.cc         \
@@ -45,23 +41,15 @@ SRCS += \
         $(SRCDIR)/Timer.cc              \
         $(SRCDIR)/TypeDescription.cc    \
         $(SRCDIR)/ProgressiveWarning.cc \
-        $(SRCDIR)/Util.cc 
+        $(SRCDIR)/ProgressReporter.cc   \
+        $(SRCDIR)/Util.cc               \
+        $(SRCDIR)/DynamicLoader.cc      \
+        $(SRCDIR)/soloader.cc           \
+        $(SRCDIR)/Socket.cc  
 
 SRCS += $(REFCOUNT_IMPL)
 
-ifneq ($(IS_REDSTORM),yes)
-  SRCS += \
-        $(SRCDIR)/DynamicLoader.cc      \
-        $(SRCDIR)/DynamicCompilation.cc \
-        $(SRCDIR)/soloader.cc           \
-        $(SRCDIR)/Socket.cc             
-endif
-
 PSELIBS := Core/Containers Core/Exceptions Core/Thread
-
-ifeq ($(IS_WIN),yes)
-  PSELIBS += Core_OS
-endif
 
 LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(SOCKET_LIBRARY)
 
