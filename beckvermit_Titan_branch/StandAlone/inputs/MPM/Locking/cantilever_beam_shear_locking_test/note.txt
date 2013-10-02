@@ -1,0 +1,7 @@
+same problem at different resolutions
+
+from:
+
+"Mitigating kinematic locking in the material point method"
+by
+C.M. Masta, P. Mackenzie-Helnweina, P. Arduinoa, G.R. Millera, W. Shinb, 

@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @version: -->
+<Uintah_specification>
+    <!--  Unsteady T-Burner Test  -->
+    <Solver type="hypre" />
+      
+    <Meta>
+       <title> Unsteady T-Burner 2-D Test </title>
+    </Meta> 
+   
+    <SimulationComponent type="mpmice" />
+    
+    <!--____________________________________________________________________-->
+    <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+    <Time>
+       <maxTime>             0.25    </maxTime>
+       <initTime>            0.0     </initTime>
+       <delt_min>            0.0     </delt_min>
+       <delt_max>            2.0e-6  </delt_max>
+       <delt_init>           1e-10   </delt_init>
+       <max_Timesteps>       410     </max_Timesteps>
+       <max_delt_increase>   1       </max_delt_increase>
+       <timestep_multiplier> 0.5     </timestep_multiplier>
+    </Time>
+        
+    <!--____________________________________________________________________-->
+    <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+    <Grid>
+      <BoundaryConditions>
+        <Face side="x+">
+          <BCType id="0" label="Pressure" var="Neumann">
+             <value>  0 </value>
+          </BCType>
+          <BCType id="all" label="Velocity" var="Dirichlet">
+             <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id="0" label="Temperature" var="Dirichlet">
+             <value> 300.0  </value>
+          </BCType>
+          <BCType id="1" label="Temperature" var="Neumann">
+             <value> 0.0  </value>
+          </BCType>
+          <BCType id="all" label="Density" var="Neumann">
+             <value> 0.0  </value>
+          </BCType>
+          <BCType id="all" label="SpecificVol" var="computeFromDensity">
+             <value> 0.0  </value>
+          </BCType>
+        </Face>
+        <Face side="x-">
+          <BCType id="0" label="Pressure" var="Neumann">
+             <value>  0 </value>
+          </BCType>
+          <BCType id="all" label="Velocity" var="Dirichlet">
+             <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id="0" label="Temperature" var="Dirichlet">
+             <value> 300.0  </value>
+          </BCType>
+          <BCType id="1" label="Temperature" var="Neumann">
+             <value> 0.0  </value>
+          </BCType>
+          <BCType id="all" label="Density" var="Neumann">
+             <value> 0.0  </value>
+          </BCType>
+          <BCType id="all" label="SpecificVol" var="computeFromDensity">
+             <value> 0.0  </value>
+          </BCType>
+        </Face>
+
+        <Face circle="y+" origin="0.00 0.069 0.0" radius="0.009">
+          <BCType id="0" label="Pressure" var="Dirichlet">
+              <value> 3445050.0   </value>
+          </BCType>
+          <BCType id="all" label="Velocity" var="Neumann">
+             <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id="all" label="Temperature" var="Neumann">
+             <value> 0.0  </value>
+          </BCType>
+          <BCType id="all" label="Density" var="Neumann">
+             <value> 0.0  </value>
+          </BCType>
+          <BCType id="all" label="SpecificVol" var="computeFromDensity">
+             <value> 0.0  </value>
+          </BCType>
+        </Face>
+        <Face side="y+">
+          <BCType id="0" label="Pressure" var="Neumann">
+             <value>  0 </value>
+          </BCType>
+          <BCType id="all" label="Velocity" var="Dirichlet">
+             <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id="all" label="Temperature" var="Neumann">
+             <value> 0.0  </value>
+          </BCType>
+          <BCType id="all" label="Density" var="Neumann">
+             <value> 0.0  </value>
+          </BCType>
+          <BCType id="all" label="SpecificVol" var="computeFromDensity">
+             <value> 0.0  </value>
+          </BCType>
+        </Face>
+        <Face side="y-">
+          <BCType id="0" label="Pressure" var="Neumann">
+             <value>  0 </value>
+          </BCType>
+          <BCType id="all" label="Velocity" var="Dirichlet">
+             <value> [0.,0.,0.] </value>
+          </BCType>
+          <BCType id="all" label="Temperature" var="Neumann">
+             <value> 0.0  </value>
+          </BCType>
+          <BCType id="all" label="Density" var="Neumann">
+             <value> 0.0  </value>
+          </BCType>
+          <BCType id="all" label="SpecificVol" var="computeFromDensity">
+             <value> 0.0  </value>
+          </BCType>
+        </Face>
+
+        <Face side="z+">
+          <BCType id="all" label="Symmetric" var="symmetry">
+          </BCType>
+        </Face>
+        <Face side="z-">
+          <BCType id="all" label="Symmetric" var="symmetry">
+          </BCType>
+        </Face>
+      </BoundaryConditions> 
+    
+      <Level>
+        <Box label="1">
+           <lower>        [-0.411, 0, -0.0015]   </lower>
+           <upper>        [ 0.411,  0.069,  0.0015]   </upper>
+           <extraCells>   [1,1,1]                     </extraCells>
+           <patches>      [4,1,1]                     </patches> 
+           <resolution>   [274, 23, 1]                </resolution>
+        </Box>
+      </Level>
+    </Grid>
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <DataArchiver>
+      <filebase>TBurner.uda</filebase>
+      <!-- <outputInterval>  4.0e-5 </outputInterval> -->
+      <outputTimestepInterval> 100 </outputTimestepInterval>
+      <compression>  gzip  </compression>
+      <save label="press_CC"/>
+      <save label="temp_CC"/>
+      <save label="vel_CC"/>
+      <save label="p.x"/>
+      <save label="p.mass"/>
+      <save label="p.particleID"/> 
+<!-- To run a simulation, you SHOULD comment out the labels below to save data storage. -->      
+<!--  Below this line -->
+      <save label = "vol_frac_CC"/>
+      <save label = "rho_CC"/> 
+      <save label = "sp_vol_CC"/>
+      <save label = "speedSound_CC"/>
+      <save label = "mom_source_CC"/>
+      <save label = "intE_source_CC"/>
+      <save label = "UnsteadyBurn.SurfTemp"/>
+      <save label = "UnsteadyBurn.SurfTempGrad"/>
+      <save label = "UnsteadyBurn.PartSurfTempGrad"/>
+      <save label = "UnsteadyBurn.PartSurfTemp"/>
+      <save label = "UnsteadyBurn.BurningCell"/>
+      <save label = "g.mass"/>
+      <save label = "g.stressFS"/>
+      <save label = "p.temperature"/>
+      <save label = "p.velocity"/>
+      <save label = "p.stress"/>
+      <save label = "delP_Dilatate"/>
+      <save label = "delP_MassX"/>
+<!--  Above this line -->
+
+      <!-- <checkpoint cycle="2" timestepInterval="3000"/> -->
+      <checkpoint cycle="2" timestepInterval="100"/>
+    </DataArchiver>
+
+
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.1</cfl>
+       <ICE>        
+
+      <TimeStepControl>
+         <Scheme_for_delT_calc> aggressive    </Scheme_for_delT_calc>
+         <knob_for_speedSound>  0.000        </knob_for_speedSound>
+       </TimeStepControl> 
+        
+       <ImplicitSolver>
+         <max_outer_iterations>           20   </max_outer_iterations>
+         <outer_iteration_tolerance>  1.01e-7  </outer_iteration_tolerance>
+         <iters_before_timestep_restart>  16   </iters_before_timestep_restart>
+         <Parameters>
+            <tolerance>      1.e-7     </tolerance>
+            <norm>           LInfinity </norm>
+            <criteria>       Absolute  </criteria>
+            <solver>         cg        </solver>
+            <preconditioner> pfmg      </preconditioner>
+            <maxiterations>  200       </maxiterations>
+            <npre>           1         </npre>
+            <npost>          1         </npost>
+            <skip>           1         </skip>
+            <jump>           0         </jump>
+         </Parameters>
+       </ImplicitSolver>
+
+        <max_iteration_equilibration> 1000 </max_iteration_equilibration>
+        <advection type="SecondOrder" useCompatibleFluxes="true"/>
+        <ClampSpecificVolume>     true          </ClampSpecificVolume>
+        <solution technique="EqForm"/>
+       </ICE>
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]      </gravity>
+       <reference_pressure> 3445050      </reference_pressure>
+    </PhysicalConstants>
+
+    <MPM>
+        <time_integrator>            explicit     </time_integrator>
+        <artificial_viscosity>           true     </artificial_viscosity>
+        <interpolator>                   gimp     </interpolator>
+        <minimum_particle_mass>          1.e-10   </minimum_particle_mass>
+        <maximum_particle_velocity>      1.e4     </maximum_particle_velocity>
+        <artificial_damping_coeff>       0.0      </artificial_damping_coeff>
+        <use_load_curves>                false    </use_load_curves>
+        <do_contact_friction_heating>    false    </do_contact_friction_heating>
+        <create_new_particles>           false    </create_new_particles>
+        <erosion algorithm="ZeroStress"/>
+        <DoThermalExpansion>             false    </DoThermalExpansion>
+        <testForNegTemps_mpm>            false    </testForNegTemps_mpm>
+
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material name="Reactant">
+           <density>              1840.0 </density>
+           <thermal_conductivity> 0.452  </thermal_conductivity>
+           <specific_heat>        996.0  </specific_heat>
+           <C_p>                  996.0  </C_p>
+           <room_temp>            294.0  </room_temp>
+           <melt_temp>            688.0  </melt_temp>
+
+           <constitutive_model type="comp_neo_hook">
+               <shear_modulus> 8e8  </shear_modulus>
+               <bulk_modulus>  20e8 </bulk_modulus>               
+           </constitutive_model>
+
+           <geom_object>
+             <union label="HMX">
+               <box>
+                  <min>        [ 0.4096, -2.00, -2.00]   </min>
+                  <max>        [ 2.0000,  2.00,  2.00]   </max>
+               </box>
+               <box>
+                  <min>        [-2.0000, -2.00, -2.00]   </min>
+                  <max>        [-0.4096,  2.00,  2.00]   </max>
+               </box>
+             </union>
+             <res>           [2,2,2]        </res>
+             <velocity>      [0.0,0.0,0.0]  </velocity>
+             <temperature>   300.0          </temperature>
+           </geom_object>
+         </material>
+
+         <contact>
+           <type>        approach </type>
+           <vel_fields>  [0]    </vel_fields>
+           <mu>          0.0    </mu>
+         </contact>
+
+       </MPM>
+
+       <ICE>
+         <material name="Product">
+           <EOS type="ideal_gas"/>
+           <dynamic_viscosity>      0.0               </dynamic_viscosity>
+           <thermal_conductivity>   0.0               </thermal_conductivity>
+           <specific_heat>          855.349794238683  </specific_heat>
+           <gamma>                  1.4               </gamma>
+           <isSurroundingMatl>      true              </isSurroundingMatl>
+
+           <geom_object>
+             <difference label="High_Gas">
+               <box>
+                 <min>  [ 0.150, -2.00, -2.00]  </min>
+                 <max>  [ 2.000,  2.00,  2.00]  </max>
+               </box>
+               <union label="HMX"/>
+             </difference>
+             <res>                [2,2,2]          </res>
+             <velocity>           [0.0,0.0,0.0]    </velocity>
+             <temperature>        3160.0           </temperature>
+             <density>            3.194398415      </density>
+             <pressure>           3453662.625      </pressure>
+           </geom_object>
+
+           <geom_object>
+             <difference label="Low_Gas">
+               <box>
+                 <min>   [-2.00, -2.00, -2.00]  </min>
+                 <max>   [ 2.00,  2.00,  2.00]  </max>
+               </box>
+               <union>
+                 <difference label="High_Gas"/>
+                 <union label="HMX"/>
+               </union>
+             </difference>
+             <res>                [2,2,2]            </res>
+             <velocity>           [0.0,0.0,0.0]      </velocity>
+             <temperature>        3160               </temperature>
+	     <density>            3.178466253        </density>
+             <pressure>           3436437.375        </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+
+      <exchange_properties>  
+         <exchange_coefficients>
+              <momentum>  [ 2e5]     </momentum>
+              <heat>      [ 2e5]     </heat>
+         </exchange_coefficients>
+      </exchange_properties> 
+    </MaterialProperties>
+
+    <Models>
+      <Model type="Unsteady_Burn">
+        <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
+        <BoundaryParticles>    1            </BoundaryParticles>
+        <BurnrateModCoef>      1.0          </BurnrateModCoef>
+        <CondPhaseHeat>        4.0e5        </CondPhaseHeat>
+        <CondUnsteadyCoef>     0.20          </CondUnsteadyCoef>
+        <fromMaterial>         Reactant     </fromMaterial>
+        <GasPhaseHeat>         3.018e6      </GasPhaseHeat>
+        <GasUnsteadyCoef>      0.25         </GasUnsteadyCoef>
+        <HeatConductGasPh>     0.07         </HeatConductGasPh>
+        <HeatConductCondPh>    0.2          </HeatConductCondPh>
+        <IdealGasConst>        8.314        </IdealGasConst>
+        <IgnitionTemp>         550.0        </IgnitionTemp>
+        <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
+        <PreExpCondPh>         1.637e15     </PreExpCondPh>
+        <PreExpGasPh>          1.6e-3       </PreExpGasPh>
+        <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>
+        <ThresholdPressure>    50000        </ThresholdPressure>
+        <toMaterial>           Product      </toMaterial>
+      </Model>
+    </Models>
+
+    <PhysicalBC>
+       <MPM>
+      </MPM>
+    </PhysicalBC>
+
+</Uintah_specification>
