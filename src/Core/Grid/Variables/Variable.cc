@@ -214,8 +214,8 @@ Variable::emit(PIDXOutputContext& pc,int vc, char * var_name,int* offset,
                 const IntVector& h, const string& compressionModeHint )
 {
 
-  cout << "Start of PIDX emit" << endl;
-ProblemSpecP dummy;
+  // cout << "Start of PIDX emit" << endl;
+  ProblemSpecP dummy;
 
   std::ostringstream outstream;
   emitNormal(outstream, l, h, dummy,false);
@@ -226,25 +226,26 @@ ProblemSpecP dummy;
   const char* writebuffer = (writeoutString).c_str();
   unsigned long writebufferSize = (writeoutString).size();
 
-  cout << "write buffer size = " << writebufferSize << endl;
+  //  cout << "write buffer size = " << writebufferSize << endl;
  
   if(writebufferSize>0) {
 
     pidx_buffer = (double *) malloc((writebufferSize/8)*sizeof(double));
 
-    cout << "offsets: " << offset[0] << " " << offset[1] << " " << offset[2] << " "
-         << offset[3] << " " << offset[4] << endl;
-    cout << "count: " << count[0] << " " << count[1] << " " << count[2] << " "
-         << count[3] << " " << count[4] << endl;
+    //    cout << "offsets: " << offset[0] << " " << offset[1] << " " << offset[2] << " "
+    //         << offset[3] << " " << offset[4] << endl;
+    //    cout << "count: " << count[0] << " " << count[1] << " " << count[2] << " "
+    //         << count[3] << " " << count[4] << endl;
     pidx_buffer = (double*)writebuffer;
-    for (unsigned long i = 0; i< writebufferSize/8; i++) {
-          cout << "pidx_buffer[ " << i << "] = " << pidx_buffer[i] << endl;
-    }
+    //    for (unsigned long i = 0; i< writebufferSize/8; i++) {
+      //    cout << "pidx_buffer[ " << i << "] = " << pidx_buffer[i] << endl;
+    //    }
 
     pc.variable[vc] = PIDX_variable_global_define(pc.idx_ptr, var_name, /*sample_per_variable_buffer[vc]*/ 1, MPI_DOUBLE);
     PIDX_variable_local_add(pc.idx_ptr, pc.variable[vc], (int*) offset, 
                                   (int*) count);
-    PIDX_variable_local_layout(pc.idx_ptr, pc.variable[vc], pidx_buffer, MPI_DOUBLE);
+    PIDX_variable_local_layout(pc.idx_ptr, pc.variable[vc], 
+                               pidx_buffer, MPI_DOUBLE);
 
   }
 

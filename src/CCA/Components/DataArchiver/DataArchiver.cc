@@ -1667,6 +1667,10 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 
   bool uda_io = false;
   bool pidx_io =  true;
+  double start_time = 0.;
+  double end_time = 0.;
+  double io_time = 0.;
+  double max_time = 0.;
   int rank;
 
   int x1;
@@ -1750,18 +1754,18 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
    
     IntVector lowIndex,highIndex;
     level->findIndexRange(lowIndex,highIndex);
-    cout << "IndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
+    //    cout << "IndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
     level->findNodeIndexRange(lowIndex,highIndex);
-    cout << "NodeIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
+    //   cout << "NodeIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
     level->findCellIndexRange(lowIndex,highIndex);
     level->findCellIndexRange(clowIndex,chighIndex);
-    cout << "CellIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
+    //    cout << "CellIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
     level->findInteriorIndexRange(lowIndex,highIndex);
-    cout << "InteriorIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
+    //    cout << "InteriorIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
     level->findInteriorNodeIndexRange(lowIndex,highIndex);
-    cout << "InteriorNodeIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
+    //    cout << "InteriorNodeIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
     level->findInteriorCellIndexRange(lowIndex,highIndex);
-    cout << "InteriorCellIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
+    //    cout << "InteriorCellIndexRange: lowIndex = " << lowIndex << " highIndex = " << highIndex << endl;
 #if SCI_ASSERTION_LEVEL >= 1
     for(int i=0;i<patches->size();i++)
       ASSERT(patches->get(i)->getLevel() == level);
@@ -1809,6 +1813,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     } else
 #endif
       if (uda_io == true) {
+        start_time = MPI_Wtime();
         doc = ProblemSpec::createDocument("Uintah_Output");
 
         // Find the end of the file
@@ -1849,8 +1854,9 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     globalExtents[1] = chighIndex[1] - clowIndex[1];
     globalExtents[2] = chighIndex[2] - clowIndex[2];
     globalExtents[3] = globalExtents[4] = 1;
-    std::cerr<<"Creating PIDXOutputContext..." << idxFilename << endl;
+    //    std::cerr<<"Creating PIDXOutputContext..." << idxFilename << endl;
     PIDXOutputContext  pc(idxFilename, timeStep,globalExtents,d_myworld->getComm());
+    number_of_variables = saveLabels.size();
 
     if (pidx_io == true) {
       //    pc->variable = (PIDX_variable*) malloc(sizeof (PIDX_variable) * number_of_variables*number_of_materials);
@@ -1861,12 +1867,18 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
       v_offset = (int *) malloc(5 * sizeof(int));
       v_count = (int *) malloc(5 * sizeof(int));
       number_of_variables = saveLabels.size();
-      cout << "Number of variables = " << number_of_variables << endl;
+      //      cout << "Number of variables = " << number_of_variables << endl;
       pc.variable = (PIDX_variable*) malloc(sizeof (PIDX_variable) * number_of_variables);
       memset(pc.variable, 0, sizeof (PIDX_variable) * number_of_variables);
     }
 #endif
     vector<SaveItem>::iterator saveIter;
+    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+
+      const VarLabel* var = saveIter->label_;
+      string type = var->typeDescription()->getName().c_str();
+      //      cout << "type = " << type << endl;
+    }
     //    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
     for(saveIter = saveLabels.begin(), x1=0; saveIter!= saveLabels.end(); saveIter++, x1++) {
 
@@ -1923,11 +1935,12 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
           IntVector hi, low, range;
           low = patch->getCellLowIndex();
           hi = patch->getCellHighIndex();
-
+#if 0
           std::cout << "ELSE: Patch info: \nPatch number " << p << "\n";
           std::cout << "Patch extent " << low.x() << ", " << low.y() << ", " << low.z() << " " << hi.x() << ", " << hi.y() << ", " << hi.z() << "\n";
           std::cout << " X" << rank << " [" << x1 << ", " << p << " ]\n";
           std::cout << " X" << ", " << " ]\n";
+#endif
           if (pidx_io == true) {
             v_offset[0] = low.x();
             v_offset[1] = low.y();
@@ -1951,10 +1964,10 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 
 #if HAVE_PIDX
           if (pidx_io == true) {
-            std::cerr<<"Creating PIDXOutputContext...\n";
+            //            std::cerr<<"Creating PIDXOutputContext...\n";
             //  This appears to be redundant
             //  PIDXOutputContext pc(filename, d_myworld->getComm());
-            cout << "DataArchiver call to emit" << endl;
+            //            cout << "DataArchiver call to emit" << endl;
             new_dw->emit(pc, vc, (char*) var->getName().c_str(),v_offset,v_count,var, 
                          matlIndex, patch);
             vc++;
@@ -2034,12 +2047,26 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
           if(s == -1) {
           cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
           throw ErrnoException("DataArchiver::output (close call)", errno, __FILE__, __LINE__);
-        }
+          }
     
           doc->output(xmlFilename.c_str());
-        }
+          end_time = MPI_Wtime();
+          io_time = end_time - start_time;
+          
+          MPI_Allreduce(&io_time,&max_time, 1,MPI_DOUBLE,MPI_MAX, 
+                        d_myworld->getComm() );
+          if (io_time == max_time)
+            cout << "Timestep = " << timeStep 
+                 << " Global Volume = " << globalExtents[0] << "," << globalExtents[1]
+                 << "," << globalExtents[2] << "," 
+                 << " Throughput = " 
+                 << (globalExtents[0]*globalExtents[1]*globalExtents[2]*number_of_variables*sizeof(double))/(1024.*1024.*max_time) << " MiB/sec " << " Max Time = " << max_time  
+                 << " Number of variables = " << number_of_variables 
+                 << endl;
+              
+          }
           //doc->releaseDocument();
-        }
+  }
           d_outputLock.unlock(); 
           d_sharedState->outputTime += Time::currentSeconds()-start;
 

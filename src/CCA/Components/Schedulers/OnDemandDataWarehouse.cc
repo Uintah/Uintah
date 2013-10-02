@@ -2231,7 +2231,6 @@ OnDemandDataWarehouse::emit(PIDXOutputContext& pc,int vc, char* var_name,
     d_lvlock.readUnlock();
   }
 
-cout << "Working here" << endl;
   if (var == NULL) {
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__));
   }

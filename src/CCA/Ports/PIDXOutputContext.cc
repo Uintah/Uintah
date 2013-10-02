@@ -16,11 +16,11 @@ namespace Uintah {
 
 
   PIDX_time_step_define(0, 2, "time%04d/");	    
-  std::cout << "timestep = " << timestep << " filename = " << filename << std::endl;
-  std::cout << "gextent[0] = " << gextent[0] << " gextent[1] = " << gextent[1] <<
-    "gextent[2] = " << gextent[2] << " gextent[3] = " << gextent[3] <<
-    "gextent[4] = " << gextent[4] << std::endl;
-  idx_ptr = PIDX_create(comm, timestep, filename.c_str(), 15, 256, 3, gextent);
+  // std::cout << "timestep = " << timestep << " filename = " << filename << std::endl;
+  // std::cout << "gextent[0] = " << gextent[0] << " gextent[1] = " << gextent[1] <<
+  //   "gextent[2] = " << gextent[2] << " gextent[3] = " << gextent[3] <<
+  //   "gextent[4] = " << gextent[4] << std::endl;
+  idx_ptr = PIDX_create(comm, timestep, filename.c_str(), 15, 32, 3, gextent);
 // std::cout<<"Test C : Calling PIDX\n";
 // PIDX_create((char*)filename, comm, 15, 256, 3, gextent);
 // std::cout<<"Return Value\n" << returnV;
