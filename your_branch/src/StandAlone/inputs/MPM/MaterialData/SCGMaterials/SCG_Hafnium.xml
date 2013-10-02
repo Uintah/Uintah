@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- SCG Hafnium -->
+<!-- 
+    From: 
+          Steinberg, D.J. Equation of State and Strength Properties of Selected Materials.
+           UCRL-MA-106439: Change 1, Feb. 1996.
+-->
+<Uintah_Include>
+
+    <density>     13300.0 </density>       <!-- kg/m^3 -->
+    <thermal_conductivity> 23.0 </thermal_conductivity>  <!-- W/mK -->
+    <specific_heat> 144.0 </specific_heat> <!-- J/kgK -->
+    <room_temp>     298.0 </room_temp>     <!-- K -->
+    <melt_temp>    2815.0 </melt_temp>     <!-- K -->
+
+    <!-- Constitutive Model -->
+    <constitutive_model type="elastic_plastic">
+      <!-- Plasticity Model -->
+      <flow_model type="steinberg_cochran_guinan">
+        <mu_0>   55.8e9   </mu_0>     <!-- Pa -->
+        <sigma_0> 0.9e9   </sigma_0>  <!-- Pa -->
+        <Y_max>   1.45e9  </Y_max>    <!-- Pa -->
+        <beta>    210     </beta>
+        <n>       0.1     </n>
+        <A>       1.06    </A>        <!-- Pa^-1 -->
+        <B>       3.60e-4 </B>        <!-- K^-1 -->
+        <T_m0> 2815.0     </T_m0>     <!-- K -->
+        <Gamma_0> 1.09    </Gamma_0>
+        <a>       0.94    </a>
+        <epsilon_p0> 0.0  </epsilon_p0>
+      </flow_model>
+
+
+      <!-- Shear Modulus Model -->
+      <shear_modulus_model type="scg_shear">
+        <mu_0> 55.8e9   </mu_0>       <!-- Pa -->
+        <A>     1.06    </A>          <!-- Pa^-1 -->
+        <B>     3.60e-4 </B>          <!-- K^-1 -->
+      </shear_modulus_model>
+
+      <!-- Melting Temperature Model -->
+      <melting_temp_model type="scg_Tm">
+        <T_m0> 2815.0  </T_m0>        <!-- K -->
+        <Gamma_0> 1.09 </Gamma_0> 
+        <a>       0.94 </a>
+      </melting_temp_model>
+
+      <!-- Equation of State -->
+      <equation_of_state type="mie_gruneisen">
+        <C_0>    2980.0   </C_0>      <!-- m/s -->
+        <Gamma_0>   1.09  </Gamma_0>   
+        <S_alpha>   1.448 </S_alpha>   
+        <S_2>      -3.852 </S_2>       
+        <S_3>       7.0   </S_3>       
+        <!-- <b>         0.15 </b> -->
+      </equation_of_state>
+
+      <initial_material_temperature>  298.0 </initial_material_temperature> <!-- K -->
+    </constitutive_model>
+</Uintah_Include>

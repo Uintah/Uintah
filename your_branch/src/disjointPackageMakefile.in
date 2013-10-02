@@ -1,0 +1,179 @@
+#
+#  The MIT License
+#
+#  Copyright (c) 1997-2012 The University of Utah
+# 
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to
+#  deal in the Software without restriction, including without limitation the
+#  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+#  sell copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+#  IN THE SOFTWARE.
+# 
+# 
+# If you change this file, you must re-run configure before the changes
+# will be effective
+# This makefile was inspired by:
+# http://www.canb.auug.org.au/~millerp/rmch/recu-make-cons-harm.html
+
+# Default target
+default: all
+
+include $(SCIRUN_OBJTOP)/configVars.mk
+
+INCLUDES += -I$(SRCTOP) -I$(SCIRUN_SRCTOP)/include -I$(SCIRUN_SRCTOP) -I$(SCIRUN_OBJTOP) @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_BLT_H@ @INC_GLOBUS_H@ @INC_XERCESC_H@ @INC_PETSC_H@ $(TAU_INCLUDE)
+
+SSTREAM_COMPAT := @SSTREAM_COMPAT@
+ifeq ($(SSTREAM_COMPAT),yes)
+INCLUDES := $(INCLUDES) -I$(SCIRUN_SRCTOP)/include/compat
+endif
+INCLUDES := $(sort $(INCLUDES))
+
+SUBDIRS := $(MYPKG)
+
+LIBDIR = $(OBJTOP)lib/
+LIBDIR_ABS = $(shell cd $(OBJTOP)lib; pwd)
+SCIRUN_LIBDIR = $(SCIRUN_OBJTOP)/lib/
+SCIRUN_LIBDIR_ABS = $(shell cd $(SCIRUN_LIBDIR); pwd)
+
+SOFLAGS         := @SOFLAGS@ -L$(LIBDIR_ABS) -L$(SCIRUN_LIBDIR_ABS) $(CFLAGS)
+LDFLAGS         := @LDFLAGS@ -L$(LIBDIR_ABS) -L$(SCIRUN_LIBDIR_ABS) $(CFLAGS)
+
+include localdefs.mk
+
+# Actually include the module makefile fragments
+ALLSUBDIRS := . 
+include $(SCIRUN_SCRIPTS)/recurse.mk
+ALLOBJSUBDIRS :=$(patsubst $(SRCTOP)%,$(OBJTOP)%, $(ALLSUBDIRS))
+MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
+MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
+SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
+CREATETCLINDEX := $(OBJTOP)/createTclIndex
+
+# etags generation
+C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
+CPP_FILES := $(patsubst %,%/*.cc, $(ALLSUBDIRS))
+HEADER_FILES := $(patsubst %,%/*.h, $(ALLSUBDIRS))
+
+ETAGS_FILES := $(wildcard $(HEADER_FILES) $(C_FILES) $(CPP_FILES) )
+TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
+ETAGS := @ETAGS@
+
+all:: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(ALLTARGETS)
+
+$(MAKEFILEDIRS):
+	@echo creating directory $@
+	@mkdir -p $@
+
+$(LIBDIR):
+	mkdir -p $(LIBDIR)
+
+$(ALLOBJS): $(ALLGEN)
+
+# Make emacs etags file
+sciTAGS:  $(ETAGS_FILES) $(TCL_ETAGS_FILES)
+	$(ETAGS) -o sciTAGS $(ETAGS_FILES)
+	$(ETAGS) -o sciTAGS -a -l none --regex='/itcl_class[ \t]+\([^ \t]+\)/\1/' --regex='/[ \t]+method[ \t]+\([^ \t]+\)/\1/' $(TCL_ETAGS_FILES)
+
+# The sophsticated looking $(...) mess below is just to convert a
+# subdirectory of the form a/b/c into ../../..
+ifeq ($(LARGESOS),yes)
+  HERE = $(LIBDIR)lib$(firstword $(subst /," ",$(subst $(OBJTOP_ABS)/,,$@))).so
+else
+  HERE = $(LIBDIR)lib$(subst /,_,$(patsubst $(OBJTOP_ABS)/%/,%,$(dir $@))).so
+endif
+$(SUBMAKEFILES): $(SCIRUN_SCRIPTS)/Makefile.tmpl
+	@echo creating $@
+	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(strip $(SRCTOP)), -e 's,@HERE_TARGET@,$(strip $(HERE)),' $< > $@
+
+ifeq ($(CC_DEPEND_REGEN),-MD)
+  ALLDEPENDS :=  $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
+else
+  ALLDEPENDS := $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+endif
+
+clean::
+	rm -f $(patsubst %,%/*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
+	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
+	  do if test -d $$fname; then rm -rf $$fname; fi; done
+	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
+	rm -f $(LIBDIR)so_locations ./so_locations
+	rm -f $(ALLDEPENDS)
+	rm -f $(CLEANLIBS)
+	rm -f $(CLEANPROGS)
+	rm -f y.output
+	rm -Rf $(LIBDIR)
+	-rm -f sciTAGS
+
+distclean:: clean
+	rm -f config.status config.log config.cache
+	rm -f $(CREATETCLINDEX) $(SCIRUN_SCRIPTS)/CC $(SCIRUN_SCRIPTS)/cc
+	rm -f $(patsubst %,%/Makefile, $(ALLOBJSUBDIRS))
+	rm -f stamp-
+
+cleanall:: cleanai cleanAI cleanjs cleanJS cleantz cleanTZ cleanrest
+
+cleanai::
+	rm -f $(patsubst %,%/[a-i]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[a-i]*.ii, $(ALLOBJSUBDIRS))
+cleanAI::
+	rm -f $(patsubst %,%/[A-I]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[A-I]*.ii, $(ALLOBJSUBDIRS))
+cleanjs::
+	rm -f $(patsubst %,%/[j-s]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[j-s]*.ii, $(ALLOBJSUBDIRS))
+cleanJS::
+	rm -f $(patsubst %,%/[J-S]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[J-S]*.ii, $(ALLOBJSUBDIRS))
+cleantz::
+	rm -f $(patsubst %,%/[t-z]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[t-z]*.ii, $(ALLOBJSUBDIRS))
+cleanTZ::
+	rm -f $(patsubst %,%/[T-Z]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[T-Z]*.ii, $(ALLOBJSUBDIRS))
+cleanrest::
+	rm -f $(patsubst %,%/*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/*.ii, $(ALLOBJSUBDIRS))
+	-rmdir $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
+	rm -f $(LIBDIR)so_locations
+	rm -f $(CLEANLIBS)
+	rm -f $(CLEANPROGS)
+	rm -f y.output
+	rm -Rf $(LIBDIR)
+
+objs: $(CLEANOBJS)
+
+ifeq (,$(findstring objs,$(MAKECMDGOALS)))
+# This includes all of the dependencies.  We prepend the absolute path
+# to the obj dir to prevent make from wasting time searching for them
+# in other directories
+
+  ifeq ($(CC_DEPEND_REGEN),-MD)
+    -include $(patsubst %.o,$(OBJTOP_ABS)/%.d, $(CLEANOBJS))
+  else
+    -include $(patsubst %,$(OBJTOP_ABS)/%/depend.mk, $(patsubst $(SRCTOP)/%,%,$(ALLSUBDIRS)))
+  endif
+
+else
+
+# If we are making the special target "objs", we skip the dependencies.
+# This is a hack for a "quick" compile.
+
+endif
+
