@@ -1,0 +1,34 @@
+<config>
+<postProcessCmd_path></postProcessCmd_path>
+
+<symbolicLinks></symbolicLinks>
+
+<!-- Ray convergence test using Burns & Christon benchmark -->
+<test>
+  <name>RMCRT_OA_Ray_1L</name>
+  <ups>RMCRT_test_1L.ups</ups>
+  <tst>ray.tst</tst>
+</test>
+
+<!-- Ray convergence test using Burns & Christon benchmark and Data Onion-->
+<test>
+  <name>RMCRT_OA_Ray_DO</name>
+  <ups>RMCRT_bm1_DO.ups</ups>
+  <tst>ray_bm1_DO.tst</tst>
+</test> 
+
+<!-- Grid convergence test using Burns & Christon benchmark
+<test>
+  <name>RMCRT_OA_Ray</name>
+  <ups>RMCRT_test_1L.ups</ups>
+  <tst>dx.tst</tst>
+</test>
+-->
+<!-- Error versus refinement ratio using Burns & Christon benchmark 
+<test>
+  <name>RMCRT_refineRatio</name>
+  <ups>RMCRT_ML.ups</ups>
+  <tst>refineRatio.tst</tst>
+</test>
+-->
+</config>

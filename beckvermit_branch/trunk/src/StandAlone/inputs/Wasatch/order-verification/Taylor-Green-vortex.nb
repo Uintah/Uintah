@@ -1,0 +1,749 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 8.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[     24447,        740]
+NotebookOptionsPosition[     22449,        668]
+NotebookOutlinePosition[     22805,        684]
+CellTagsIndexPosition[     22762,        681]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"u", "=", 
+   RowBox[{"1", "-", 
+    RowBox[{"A", " ", 
+     RowBox[{"Exp", "[", 
+      RowBox[{
+       RowBox[{"-", "2"}], " ", "\[Nu]", " ", "t"}], "]"}], 
+     RowBox[{"Cos", "[", 
+      RowBox[{
+       RowBox[{"2", "*", "Pi", "*", "x"}], "-", "t"}], "]"}], 
+     RowBox[{"Sin", "[", 
+      RowBox[{
+       RowBox[{"2", "*", "Pi", "*", "y"}], "-", "t"}], "]"}]}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"v", "=", 
+   RowBox[{"1", "+", 
+    RowBox[{"A", " ", 
+     RowBox[{"Exp", "[", 
+      RowBox[{
+       RowBox[{"-", "2"}], " ", "\[Nu]", " ", "t"}], "]"}], 
+     RowBox[{"Cos", "[", 
+      RowBox[{
+       RowBox[{"2", "*", "Pi", "*", "y"}], "-", "t"}], "]"}], 
+     RowBox[{"Sin", "[", 
+      RowBox[{
+       RowBox[{"2", "*", "Pi", "*", "x"}], "-", "t"}], "]"}]}]}]}], 
+  ";"}]}], "Input",
+ CellChangeTimes->{{3.561922523964785*^9, 3.561922591585229*^9}, {
+  3.561992129406437*^9, 3.56199214484608*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"tauxx", "=", 
+  RowBox[{
+   RowBox[{"-", "2"}], " ", "\[Nu]", " ", 
+   RowBox[{"D", "[", 
+    RowBox[{"u", ",", "x"}], "]"}]}]}], "\[IndentingNewLine]", 
+ RowBox[{"ContourPlot", "[", 
+  RowBox[{
+   RowBox[{"tauxx", "/.", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"t", "\[Rule]", "0"}], ",", 
+      RowBox[{"A", "\[Rule]", "1"}], ",", 
+      RowBox[{"\[Nu]", "\[Rule]", "0.001"}]}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"y", ",", "0", ",", "1"}], "}"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.561945814983871*^9, 3.561945823588543*^9}, 
+   3.5619868218372726`*^9, {3.562072339116384*^9, 3.5620723436450157`*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"-", "4"}], " ", "A", " ", 
+  SuperscriptBox["\[ExponentialE]", 
+   RowBox[{
+    RowBox[{"-", "2"}], " ", "t", " ", "\[Nu]"}]], " ", "\[Pi]", " ", "\[Nu]",
+   " ", 
+  RowBox[{"Sin", "[", 
+   RowBox[{"t", "-", 
+    RowBox[{"2", " ", "\[Pi]", " ", "x"}]}], "]"}], " ", 
+  RowBox[{"Sin", "[", 
+   RowBox[{"t", "-", 
+    RowBox[{"2", " ", "\[Pi]", " ", "y"}]}], "]"}]}]], "Output",
+ CellChangeTimes->{{3.561945824503955*^9, 3.56194582770688*^9}, {
+   3.561986743206169*^9, 3.561986757883122*^9}, 3.561986827638535*^9, {
+   3.561987580203801*^9, 3.561987590485311*^9}, {3.561988240176176*^9, 
+   3.5619882430846453`*^9}, 3.5619921462237988`*^9, 3.562000719082532*^9, 
+   3.562003752973015*^9, 3.562008872690167*^9, 3.562011009368065*^9, 
+   3.562072312726947*^9, 3.56207234468498*^9}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.5620724913046083`*^9, 3.56207249187115*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"tauyy", "=", 
+  RowBox[{
+   RowBox[{"-", "2"}], "\[Nu]", " ", 
+   RowBox[{"D", "[", 
+    RowBox[{"v", ",", "y"}], "]"}]}]}], "\[IndentingNewLine]", 
+ RowBox[{"ContourPlot", "[", 
+  RowBox[{
+   RowBox[{"tauyy", "/.", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"t", "\[Rule]", "0"}], ",", 
+      RowBox[{"A", "\[Rule]", "1"}], ",", 
+      RowBox[{"\[Nu]", "\[Rule]", "0.001"}]}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"y", ",", "0", ",", "1"}], "}"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.561950339993595*^9, 3.56195034738515*^9}, {
+   3.561986745013884*^9, 3.561986755939973*^9}, 3.561986825869018*^9, {
+   3.562072348684998*^9, 3.5620723590055857`*^9}}],
+
+Cell[BoxData[
+ RowBox[{"4", " ", "A", " ", 
+  SuperscriptBox["\[ExponentialE]", 
+   RowBox[{
+    RowBox[{"-", "2"}], " ", "t", " ", "\[Nu]"}]], " ", "\[Pi]", " ", "\[Nu]",
+   " ", 
+  RowBox[{"Sin", "[", 
+   RowBox[{"t", "-", 
+    RowBox[{"2", " ", "\[Pi]", " ", "x"}]}], "]"}], " ", 
+  RowBox[{"Sin", "[", 
+   RowBox[{"t", "-", 
+    RowBox[{"2", " ", "\[Pi]", " ", "y"}]}], "]"}]}]], "Output",
+ CellChangeTimes->{
+  3.561950348981564*^9, {3.5619867458967247`*^9, 3.561986758698559*^9}, 
+   3.5619868282563972`*^9, {3.561987580659438*^9, 3.56198759100211*^9}, 
+   3.561988243699539*^9, 3.561992149383697*^9, 3.5620007195343246`*^9, 
+   3.562003753421283*^9, 3.562008873121873*^9, 3.5620110100873938`*^9, 
+   3.562072313201232*^9, 3.56207235937502*^9}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.5620724957975883`*^9, 3.562072495840987*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"tauxy", "=", 
+  RowBox[{
+   RowBox[{"-", " ", "\[Nu]"}], 
+   RowBox[{"(", " ", 
+    RowBox[{
+     RowBox[{"D", "[", 
+      RowBox[{"u", ",", "y"}], "]"}], "+", 
+     RowBox[{"D", "[", 
+      RowBox[{"v", ",", "x"}], "]"}]}], ")"}]}]}]], "Input",
+ CellChangeTimes->{{3.5619867150287848`*^9, 3.561986736726968*^9}, {
+  3.561987106159566*^9, 3.561987106438382*^9}, {3.5619875778367558`*^9, 
+  3.561987594430942*^9}}],
+
+Cell[BoxData["0"], "Output",
+ CellChangeTimes->{{3.56198673705624*^9, 3.561986761205687*^9}, {
+   3.561987581141815*^9, 3.56198759497971*^9}, 3.561988244220683*^9, 
+   3.561992151791657*^9, 3.562000720051609*^9, 3.562003753864031*^9, 
+   3.5620088735410957`*^9, 3.562011010839137*^9, 3.562072313701705*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"tauyx", "=", 
+  RowBox[{
+   RowBox[{"-", " ", "\[Nu]"}], 
+   RowBox[{"(", " ", 
+    RowBox[{
+     RowBox[{"D", "[", 
+      RowBox[{"v", ",", "x"}], "]"}], "+", 
+     RowBox[{"D", "[", 
+      RowBox[{"u", ",", "y"}], "]"}]}], ")"}]}]}]], "Input",
+ CellChangeTimes->{{3.5619867731599092`*^9, 3.5619867810686827`*^9}, {
+  3.561987112302868*^9, 3.561987112575246*^9}, {3.561987576485314*^9, 
+  3.56198760866041*^9}}],
+
+Cell[BoxData["0"], "Output",
+ CellChangeTimes->{
+  3.561986781780386*^9, {3.561987581658668*^9, 3.561987609052658*^9}, 
+   3.561988244752213*^9, 3.561992152290194*^9, 3.56200072057031*^9, 
+   3.562003754343583*^9, 3.5620088739764853`*^9, 3.5620110115732317`*^9, 
+   3.5620723142032948`*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"xConvFluxX", "=", 
+  RowBox[{"Simplify", "[", 
+   RowBox[{"u", "*", "u"}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"ContourPlot", "[", 
+  RowBox[{
+   RowBox[{"xConvFluxX", "/.", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"t", "\[Rule]", "0"}], ",", 
+      RowBox[{"A", "\[Rule]", "1"}], ",", 
+      RowBox[{"\[Nu]", "\[Rule]", "0.001"}]}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"y", ",", "0", ",", "1"}], "}"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.561922654540511*^9, 3.5619226678439198`*^9}, {
+  3.561922765523213*^9, 3.5619227797419653`*^9}, {3.561922830266224*^9, 
+  3.5619228315067787`*^9}, {3.5619881719922733`*^9, 3.561988176544435*^9}, {
+  3.562000714996976*^9, 3.562000729032236*^9}, {3.562072363842477*^9, 
+  3.562072367935936*^9}}],
+
+Cell[BoxData[
+ SuperscriptBox[
+  RowBox[{"(", 
+   RowBox[{"1", "+", 
+    RowBox[{"A", " ", 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{
+       RowBox[{"-", "2"}], " ", "t", " ", "\[Nu]"}]], " ", 
+     RowBox[{"Cos", "[", 
+      RowBox[{"t", "-", 
+       RowBox[{"2", " ", "\[Pi]", " ", "x"}]}], "]"}], " ", 
+     RowBox[{"Sin", "[", 
+      RowBox[{"t", "-", 
+       RowBox[{"2", " ", "\[Pi]", " ", "y"}]}], "]"}]}]}], ")"}], 
+  "2"]], "Output",
+ CellChangeTimes->{{3.561922769036586*^9, 3.561922780716671*^9}, 
+   3.561922832319263*^9, 3.5619881814646807`*^9, 3.5619882452879667`*^9, 
+   3.5619921528499527`*^9, {3.562000721347816*^9, 3.5620007295700006`*^9}, 
+   3.562003754902639*^9, 3.562008874488789*^9, 3.562011012387879*^9, 
+   3.562072314864128*^9, 3.562072370750209*^9}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.562072499813534*^9, 3.562072499843913*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"xConvFluxY", "=", 
+  RowBox[{"Simplify", "[", 
+   RowBox[{"u", "*", "v"}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"ContourPlot", "[", 
+  RowBox[{
+   RowBox[{"xConvFluxY", "/.", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"t", "\[Rule]", "0"}], ",", 
+      RowBox[{"A", "\[Rule]", "1"}], ",", 
+      RowBox[{"\[Nu]", "\[Rule]", "0.001"}]}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"y", ",", "0", ",", "1"}], "}"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.56192278398901*^9, 3.5619227954872837`*^9}, {
+  3.56192283510679*^9, 3.5619228357533712`*^9}, {3.561988181896147*^9, 
+  3.561988192334694*^9}, {3.5620007237869797`*^9, 3.5620007270507402`*^9}, {
+  3.562072375166719*^9, 3.562072378076457*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(", 
+   RowBox[{"1", "-", 
+    RowBox[{"A", " ", 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{
+       RowBox[{"-", "2"}], " ", "t", " ", "\[Nu]"}]], " ", 
+     RowBox[{"Cos", "[", 
+      RowBox[{"t", "-", 
+       RowBox[{"2", " ", "\[Pi]", " ", "y"}]}], "]"}], " ", 
+     RowBox[{"Sin", "[", 
+      RowBox[{"t", "-", 
+       RowBox[{"2", " ", "\[Pi]", " ", "x"}]}], "]"}]}]}], ")"}], " ", 
+  RowBox[{"(", 
+   RowBox[{"1", "+", 
+    RowBox[{"A", " ", 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{
+       RowBox[{"-", "2"}], " ", "t", " ", "\[Nu]"}]], " ", 
+     RowBox[{"Cos", "[", 
+      RowBox[{"t", "-", 
+       RowBox[{"2", " ", "\[Pi]", " ", "x"}]}], "]"}], " ", 
+     RowBox[{"Sin", "[", 
+      RowBox[{"t", "-", 
+       RowBox[{"2", " ", "\[Pi]", " ", "y"}]}], "]"}]}]}], ")"}]}]], "Output",\
+
+ CellChangeTimes->{3.561922796842708*^9, 3.561922836191833*^9, 
+  3.561988185200006*^9, 3.561988245855571*^9, 3.561992153601265*^9, 
+  3.562000731166923*^9, 3.562003755411427*^9, 3.562008875044168*^9, 
+  3.562011013310301*^9, 3.562072315431253*^9, 3.5620724068118353`*^9}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.56207250213626*^9, 3.562072502459519*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"yConvFluxX", "=", 
+  RowBox[{"Simplify", "[", 
+   RowBox[{"v", "*", "u"}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"ContourPlot", "[", 
+  RowBox[{
+   RowBox[{"yConvFluxX", "/.", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"t", "\[Rule]", "0"}], ",", 
+      RowBox[{"A", "\[Rule]", "1"}], ",", 
+      RowBox[{"\[Nu]", "\[Rule]", "0.001"}]}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"y", ",", "0", ",", "1"}], "}"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.561988194112191*^9, 3.561988222756876*^9}, {
+  3.56200073608076*^9, 3.5620007371224003`*^9}, {3.562072385156921*^9, 
+  3.562072401954597*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(", 
+   RowBox[{"1", "-", 
+    RowBox[{"A", " ", 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{
+       RowBox[{"-", "2"}], " ", "t", " ", "\[Nu]"}]], " ", 
+     RowBox[{"Cos", "[", 
+      RowBox[{"t", "-", 
+       RowBox[{"2", " ", "\[Pi]", " ", "y"}]}], "]"}], " ", 
+     RowBox[{"Sin", "[", 
+      RowBox[{"t", "-", 
+       RowBox[{"2", " ", "\[Pi]", " ", "x"}]}], "]"}]}]}], ")"}], " ", 
+  RowBox[{"(", 
+   RowBox[{"1", "+", 
+    RowBox[{"A", " ", 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{
+       RowBox[{"-", "2"}], " ", "t", " ", "\[Nu]"}]], " ", 
+     RowBox[{"Cos", "[", 
+      RowBox[{"t", "-", 
+       RowBox[{"2", " ", "\[Pi]", " ", "x"}]}], "]"}], " ", 
+     RowBox[{"Sin", "[", 
+      RowBox[{"t", "-", 
+       RowBox[{"2", " ", "\[Pi]", " ", "y"}]}], "]"}]}]}], ")"}]}]], "Output",\
+
+ CellChangeTimes->{{3.561988224099896*^9, 3.561988246560811*^9}, 
+   3.561992154282531*^9, 3.562000737692996*^9, 3.562003756134437*^9, 
+   3.562008875813939*^9, 3.562011015220934*^9, 3.562072316546908*^9, {
+   3.562072392676057*^9, 3.5620724026349373`*^9}}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.562072544456729*^9, 3.5620725447975197`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"yConvFluxY", "=", 
+  RowBox[{"Simplify", "[", 
+   RowBox[{"v", "*", "v"}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"ContourPlot", "[", 
+  RowBox[{
+   RowBox[{"yConvFluxY", "/.", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"t", "\[Rule]", "0"}], ",", 
+      RowBox[{"A", "\[Rule]", "1"}], ",", 
+      RowBox[{"\[Nu]", "\[Rule]", "0.001"}]}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"y", ",", "0", ",", "1"}], "}"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.561988225766912*^9, 3.561988235124896*^9}, {
+  3.562000739611054*^9, 3.562000742450273*^9}, {3.562072413908719*^9, 
+  3.56207241730375*^9}}],
+
+Cell[BoxData[
+ SuperscriptBox[
+  RowBox[{"(", 
+   RowBox[{
+    RowBox[{"-", "1"}], "+", 
+    RowBox[{"A", " ", 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{
+       RowBox[{"-", "2"}], " ", "t", " ", "\[Nu]"}]], " ", 
+     RowBox[{"Cos", "[", 
+      RowBox[{"t", "-", 
+       RowBox[{"2", " ", "\[Pi]", " ", "y"}]}], "]"}], " ", 
+     RowBox[{"Sin", "[", 
+      RowBox[{"t", "-", 
+       RowBox[{"2", " ", "\[Pi]", " ", "x"}]}], "]"}]}]}], ")"}], 
+  "2"]], "Output",
+ CellChangeTimes->{{3.561988235877831*^9, 3.561988247225995*^9}, 
+   3.56199215520907*^9, 3.562000743156487*^9, 3.5620037564510403`*^9, 
+   3.562008876498312*^9, 3.562011016694121*^9, 3.5620723168819637`*^9, 
+   3.5620724179957867`*^9}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.562072504927774*^9, 3.562072505215983*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"xRHSPart", "=", 
+  RowBox[{"FullSimplify", "[", 
+   RowBox[{
+    RowBox[{"-", 
+     RowBox[{"D", "[", 
+      RowBox[{"xConvFluxX", ",", "x"}], "]"}]}], "-", 
+    RowBox[{"D", "[", 
+     RowBox[{"xConvFluxY", ",", "y"}], "]"}], "-", 
+    RowBox[{"D", "[", 
+     RowBox[{"tauxx", ",", "x"}], "]"}], "-", 
+    RowBox[{"D", "[", 
+     RowBox[{"tauyx", ",", "y"}], "]"}]}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"ContourPlot", "[", 
+  RowBox[{
+   RowBox[{"xRHSPart", "/.", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"t", "\[Rule]", "0"}], ",", 
+      RowBox[{"A", "\[Rule]", "1"}], ",", 
+      RowBox[{"\[Nu]", "\[Rule]", "0.001"}]}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"y", ",", "0", ",", "1"}], "}"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.561988248311878*^9, 3.5619882942936907`*^9}, {
+  3.561988706637826*^9, 3.561988708012979*^9}, {3.561988741354672*^9, 
+  3.561988743569189*^9}, {3.562000807338098*^9, 3.5620008561128473`*^9}, {
+  3.562072427762755*^9, 3.5620724322910767`*^9}}],
+
+Cell[BoxData[
+ RowBox[{"A", " ", 
+  SuperscriptBox["\[ExponentialE]", 
+   RowBox[{
+    RowBox[{"-", "4"}], " ", "t", " ", "\[Nu]"}]], " ", "\[Pi]", " ", 
+  RowBox[{"(", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "A"}], " ", 
+     RowBox[{"Sin", "[", 
+      RowBox[{"2", " ", 
+       RowBox[{"(", 
+        RowBox[{"t", "-", 
+         RowBox[{"2", " ", "\[Pi]", " ", "x"}]}], ")"}]}], "]"}]}], "+", 
+    RowBox[{"2", " ", 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{"2", " ", "t", " ", "\[Nu]"}]], " ", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Cos", "[", 
+        RowBox[{
+         RowBox[{"2", " ", "t"}], "-", 
+         RowBox[{"2", " ", "\[Pi]", " ", 
+          RowBox[{"(", 
+           RowBox[{"x", "+", "y"}], ")"}]}]}], "]"}], "-", 
+       RowBox[{"4", " ", "\[Pi]", " ", "\[Nu]", " ", 
+        RowBox[{"Cos", "[", 
+         RowBox[{"t", "-", 
+          RowBox[{"2", " ", "\[Pi]", " ", "x"}]}], "]"}], " ", 
+        RowBox[{"Sin", "[", 
+         RowBox[{"t", "-", 
+          RowBox[{"2", " ", "\[Pi]", " ", "y"}]}], "]"}]}]}], ")"}]}]}], 
+   ")"}]}]], "Output",
+ CellChangeTimes->{{3.5619882878855343`*^9, 3.561988295858884*^9}, 
+   3.561988711465987*^9, 3.5619887451173687`*^9, 3.5619921601590137`*^9, {
+   3.56200081871139*^9, 3.562000829271106*^9}, 3.5620008601872587`*^9, 
+   3.562003760640458*^9, 3.562008881410527*^9, 3.562011021821517*^9, 
+   3.562072321026888*^9, 3.562072442474112*^9}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.562072506887941*^9, 3.562072507156973*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"yRHSPart", " ", "=", " ", 
+  RowBox[{"FullSimplify", "[", 
+   RowBox[{
+    RowBox[{"-", 
+     RowBox[{"D", "[", 
+      RowBox[{"yConvFluxX", ",", "x"}], "]"}]}], "-", 
+    RowBox[{"D", "[", 
+     RowBox[{"yConvFluxY", ",", "y"}], "]"}], "-", 
+    RowBox[{"D", "[", 
+     RowBox[{"tauyy", ",", "y"}], "]"}], "-", 
+    RowBox[{"D", "[", 
+     RowBox[{"tauxy", ",", "x"}], "]"}]}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"ContourPlot", "[", 
+  RowBox[{
+   RowBox[{"yRHSPart", "/.", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"t", "\[Rule]", "0"}], ",", 
+      RowBox[{"A", "\[Rule]", "1"}], ",", 
+      RowBox[{"\[Nu]", "\[Rule]", "0.001"}]}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"y", ",", "0", ",", "1"}], "}"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.561988661145074*^9, 3.561988685485021*^9}, {
+  3.5619888461387444`*^9, 3.5619888502421093`*^9}, {3.562003761297819*^9, 
+  3.562003768794244*^9}, {3.562072434106596*^9, 3.562072445172958*^9}}],
+
+Cell[BoxData[
+ RowBox[{"A", " ", 
+  SuperscriptBox["\[ExponentialE]", 
+   RowBox[{
+    RowBox[{"-", "4"}], " ", "t", " ", "\[Nu]"}]], " ", "\[Pi]", " ", 
+  RowBox[{"(", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", "2"}], " ", 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{"2", " ", "t", " ", "\[Nu]"}]], " ", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Cos", "[", 
+        RowBox[{
+         RowBox[{"2", " ", "t"}], "-", 
+         RowBox[{"2", " ", "\[Pi]", " ", 
+          RowBox[{"(", 
+           RowBox[{"x", "+", "y"}], ")"}]}]}], "]"}], "-", 
+       RowBox[{"4", " ", "\[Pi]", " ", "\[Nu]", " ", 
+        RowBox[{"Cos", "[", 
+         RowBox[{"t", "-", 
+          RowBox[{"2", " ", "\[Pi]", " ", "y"}]}], "]"}], " ", 
+        RowBox[{"Sin", "[", 
+         RowBox[{"t", "-", 
+          RowBox[{"2", " ", "\[Pi]", " ", "x"}]}], "]"}]}]}], ")"}]}], "-", 
+    RowBox[{"A", " ", 
+     RowBox[{"Sin", "[", 
+      RowBox[{"2", " ", 
+       RowBox[{"(", 
+        RowBox[{"t", "-", 
+         RowBox[{"2", " ", "\[Pi]", " ", "y"}]}], ")"}]}], "]"}]}]}], 
+   ")"}]}]], "Output",
+ CellChangeTimes->{3.56198869619862*^9, 3.561988852335115*^9, 
+  3.561992163463313*^9, 3.562003771424748*^9, 3.562008884418469*^9, 
+  3.5620110234249697`*^9, 3.562072322412363*^9, 3.5620724488008003`*^9}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.562072508624695*^9, 3.562072508896701*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"xRHSFull", "=", 
+  RowBox[{"FullSimplify", "[", 
+   RowBox[{"D", "[", 
+    RowBox[{"u", ",", "t"}], "]"}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"ContourPlot", "[", 
+  RowBox[{
+   RowBox[{"xRHSFull", "/.", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"t", "\[Rule]", "0"}], ",", 
+      RowBox[{"A", "\[Rule]", "1"}], ",", 
+      RowBox[{"\[Nu]", "\[Rule]", "0.001"}]}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"y", ",", "0", ",", "1"}], "}"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.561990265006669*^9, 3.561990298194614*^9}, {
+  3.562072448383305*^9, 3.562072454059443*^9}}],
+
+Cell[BoxData[
+ RowBox[{"A", " ", 
+  SuperscriptBox["\[ExponentialE]", 
+   RowBox[{
+    RowBox[{"-", "2"}], " ", "t", " ", "\[Nu]"}]], " ", 
+  RowBox[{"(", 
+   RowBox[{
+    RowBox[{"Cos", "[", 
+     RowBox[{"2", " ", 
+      RowBox[{"(", 
+       RowBox[{"t", "-", 
+        RowBox[{"\[Pi]", " ", 
+         RowBox[{"(", 
+          RowBox[{"x", "+", "y"}], ")"}]}]}], ")"}]}], "]"}], "-", 
+    RowBox[{"\[Nu]", " ", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Sin", "[", 
+        RowBox[{"2", " ", "\[Pi]", " ", 
+         RowBox[{"(", 
+          RowBox[{"x", "-", "y"}], ")"}]}], "]"}], "+", 
+       RowBox[{"Sin", "[", 
+        RowBox[{
+         RowBox[{"2", " ", "t"}], "-", 
+         RowBox[{"2", " ", "\[Pi]", " ", 
+          RowBox[{"(", 
+           RowBox[{"x", "+", "y"}], ")"}]}]}], "]"}]}], ")"}]}]}], 
+   ")"}]}]], "Output",
+ CellChangeTimes->{{3.5619902707831717`*^9, 3.5619902987243347`*^9}, 
+   3.561992163916823*^9, {3.562003772118864*^9, 3.562003778822235*^9}, 
+   3.562008885487398*^9, 3.562011062219689*^9, 3.5620723228769293`*^9, 
+   3.562072454958642*^9}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.56207251086448*^9, 3.562072511086258*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"yRHSFull", "=", 
+  RowBox[{"FullSimplify", "[", 
+   RowBox[{"D", "[", 
+    RowBox[{"v", ",", "t"}], "]"}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"ContourPlot", "[", 
+  RowBox[{
+   RowBox[{"yRHSFull", "/.", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"t", "\[Rule]", "0"}], ",", 
+      RowBox[{"A", "\[Rule]", "1"}], ",", 
+      RowBox[{"\[Nu]", "\[Rule]", "0.001"}]}], "}"}]}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", "0", ",", "1"}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"y", ",", "0", ",", "1"}], "}"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.561990400632256*^9, 3.5619904066559553`*^9}, {
+  3.562072463297435*^9, 3.5620724663022346`*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"-", "A"}], " ", 
+  SuperscriptBox["\[ExponentialE]", 
+   RowBox[{
+    RowBox[{"-", "2"}], " ", "t", " ", "\[Nu]"}]], " ", 
+  RowBox[{"(", 
+   RowBox[{
+    RowBox[{"Cos", "[", 
+     RowBox[{
+      RowBox[{"2", " ", "t"}], "-", 
+      RowBox[{"2", " ", "\[Pi]", " ", 
+       RowBox[{"(", 
+        RowBox[{"x", "+", "y"}], ")"}]}]}], "]"}], "+", 
+    RowBox[{"\[Nu]", " ", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Sin", "[", 
+        RowBox[{"2", " ", "\[Pi]", " ", 
+         RowBox[{"(", 
+          RowBox[{"x", "-", "y"}], ")"}]}], "]"}], "-", 
+       RowBox[{"Sin", "[", 
+        RowBox[{
+         RowBox[{"2", " ", "t"}], "-", 
+         RowBox[{"2", " ", "\[Pi]", " ", 
+          RowBox[{"(", 
+           RowBox[{"x", "+", "y"}], ")"}]}]}], "]"}]}], ")"}]}]}], 
+   ")"}]}]], "Output",
+ CellChangeTimes->{3.5620724687077217`*^9}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.5620725124558287`*^9, 3.562072512688361*^9}}]
+},
+WindowSize->{1457, 966},
+WindowMargins->{{0, Automatic}, {Automatic, 75}},
+FrontEndVersion->"8.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (November 6, \
+2010)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[557, 20, 965, 30, 57, "Input"],
+Cell[CellGroupData[{
+Cell[1547, 54, 720, 19, 57, "Input"],
+Cell[2270, 75, 813, 18, 37, "Output"]
+}, Open  ]],
+Cell[3098, 96, 93, 1, 33, "Input"],
+Cell[CellGroupData[{
+Cell[3216, 101, 762, 20, 57, "Input"],
+Cell[3981, 123, 750, 17, 37, "Output"]
+}, Open  ]],
+Cell[4746, 143, 94, 1, 33, "Input"],
+Cell[CellGroupData[{
+Cell[4865, 148, 437, 12, 33, "Input"],
+Cell[5305, 162, 306, 4, 33, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[5648, 171, 436, 12, 33, "Input"],
+Cell[6087, 185, 290, 5, 33, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[6414, 195, 853, 20, 57, "Input"],
+Cell[7270, 217, 789, 19, 45, "Output"]
+}, Open  ]],
+Cell[8074, 239, 92, 1, 33, "Input"],
+Cell[CellGroupData[{
+Cell[8191, 244, 802, 19, 57, "Input"],
+Cell[8996, 265, 1127, 30, 42, "Output"]
+}, Open  ]],
+Cell[10138, 298, 91, 1, 33, "Input"],
+Cell[CellGroupData[{
+Cell[10254, 303, 702, 18, 57, "Input"],
+Cell[10959, 323, 1112, 30, 42, "Output"]
+}, Open  ]],
+Cell[12086, 356, 94, 1, 33, InheritFromParent],
+Cell[CellGroupData[{
+Cell[12205, 361, 700, 18, 57, "Input"],
+Cell[12908, 381, 712, 19, 45, "Output"]
+}, Open  ]],
+Cell[13635, 403, 92, 1, 33, "Input"],
+Cell[CellGroupData[{
+Cell[13752, 408, 1094, 28, 57, "Input"],
+Cell[14849, 438, 1420, 37, 42, "Output"]
+}, Open  ]],
+Cell[16284, 478, 92, 1, 33, "Input"],
+Cell[CellGroupData[{
+Cell[16401, 483, 1053, 27, 57, "Input"],
+Cell[17457, 512, 1292, 35, 42, "Output"]
+}, Open  ]],
+Cell[18764, 550, 92, 1, 33, "Input"],
+Cell[CellGroupData[{
+Cell[18881, 555, 682, 18, 57, "Input"],
+Cell[19566, 575, 1076, 31, 37, "Output"]
+}, Open  ]],
+Cell[20657, 609, 91, 1, 33, "Input"],
+Cell[CellGroupData[{
+Cell[20773, 614, 686, 18, 57, "Input"],
+Cell[21462, 634, 874, 28, 37, "Output"]
+}, Open  ]],
+Cell[22351, 665, 94, 1, 33, "Input"]
+}
+]
+*)
+
+(* End of internal cache information *)
