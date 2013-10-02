@@ -1,0 +1,186 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- @version: -->
+<Uintah_specification>
+
+<!-- T91 Cylinder, units are ug, cm, us -->
+
+   <Meta>
+       <title>T91 cylinder with internal pressure</title>
+   </Meta>    
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>            50.0         </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           0.01724        </delt_max>
+       <delt_init>          1.0e-9      </delt_init>
+       <timestep_multiplier>0.5         </timestep_multiplier>
+   </Time>    
+
+   <DataArchiver>
+      <filebase>pressSmoothCylCBDI.uda</filebase>
+      <outputInterval> 1.0 </outputInterval>
+      <save label="BndyTraction_xminus"></save>
+      <save label="BndyTraction_yminus"></save>
+      <save label="BndyTraction_zminus"></save>
+      <save label="BndyTraction_xplus"></save>
+      <save label="BndyTraction_yplus"></save>
+      <save label="BndyTraction_zplus"></save>
+      <save label="BndyForce_xminus"></save>
+      <save label="BndyForce_yminus"></save>
+      <save label="BndyForce_zminus"></save>
+      <save label="BndyForce_xplus"></save>
+      <save label="BndyForce_yplus"></save>
+      <save label="BndyForce_zplus"></save>
+      <save label = "p.x"/>
+      <save label = "p.mass"/>
+      <save label = "p.volume"/>
+      <save label = "p.temperature"/>
+      <save label = "p.epsf"/>
+      <save label = "p.localized"/> 
+      <save label = "p.stress"/>
+      <save label = "p.deformationMeasure"/>
+      <save label = "p.velocity"/>
+      <save label = "p.loadCurveID"/>
+      <save label = "p.externalforce"/>
+      <save label = "StrainEnergy"/>
+      <save label = "KineticEnergy"/>
+      <save label = "TotalMass"/>
+      <save label = "g.mass"/>
+      <save label = "g.temperature"/>
+      <save label = "g.stressFS"/>
+      <save label = "g.velocity"/>
+      <checkpoint cycle = "2" interval = "25.0"/>
+   </DataArchiver>
+
+   <MPM>
+     <interpolator>cpdi</interpolator>
+     <DoPressureStabilization>true</DoPressureStabilization>
+     <minimum_particle_mass> 1.0e-8</minimum_particle_mass>
+     <maximum_particle_velocity> 1.0e8</maximum_particle_velocity>
+     <artificial_damping_coeff> 0.0 </artificial_damping_coeff>
+     <artificial_viscosity> false </artificial_viscosity>
+     <use_load_curves> true </use_load_curves>
+     <erosion algorithm = "ZeroStress"/>
+     <boundary_traction_faces>[xminus,xplus,yminus,yplus,zplus,zminus]</boundary_traction_faces>
+     <use_CBDI_boundary_condition>true</use_CBDI_boundary_condition>
+   </MPM>
+
+   <PhysicalConstants>
+      <gravity>            [0,0,0]   </gravity>
+   </PhysicalConstants>
+
+   <MaterialProperties>
+     <MPM>
+       <material name="T91">
+	 <density>8e6</density>
+	 <constitutive_model type="UCNH"> 
+	   <bulk_modulus>166.7e4</bulk_modulus>
+	   <shear_modulus>76.9e4</shear_modulus>
+
+	   <usePlasticity>false</usePlasticity>
+
+	   <useDamage>true</useDamage>
+	   <failure_criteria>MohrColoumb</failure_criteria>
+	   <friction_angle>0.0</friction_angle>
+	   <tensile_cutoff_fraction_of_cohesion>1.e10</tensile_cutoff_fraction_of_cohesion>
+	   <failure_distrib>constant</failure_distrib>
+	   <failure_mean> 0.1512e4 </failure_mean>
+
+	 </constitutive_model>
+	 <thermal_conductivity>1.0</thermal_conductivity>
+	 <specific_heat>5</specific_heat>
+         <geom_object>
+	   <smoothcyl label = "cylinder">
+	     <discretization_scheme> pie_slices </discretization_scheme>
+	     <bottom>[0.0,0.0,0.0]</bottom>
+	     <top>[0.0,0.0,0.005]</top>
+	     <outer_radius> 0.55 </outer_radius>
+	     <inner_radius> 0.45 </inner_radius>
+	     <num_radial> 20 </num_radial>
+	     <num_axial> 1 </num_axial>
+	     <num_angular> 157 </num_angular>
+	     <arc_start_angle> 0 </arc_start_angle>
+	     <arc_angle> 90 </arc_angle>
+	   </smoothcyl>
+           <res>                 [1,1,1]         </res>
+           <velocity>            [0.0,0.0,0.0]   </velocity>
+           <temperature>         300             </temperature>
+         </geom_object>
+       </material>
+
+       <contact>
+         <type>single_velocity</type>
+         <materials>              [0,1]         </materials>
+       </contact>
+
+     </MPM>
+   </MaterialProperties>
+
+   <PhysicalBC>
+     <MPM>
+       <pressure>
+         <geom_object>
+           <cylinder label = "middle cylinder">
+             <bottom>           [0.0,0.0,0.0]   </bottom>
+             <top>              [0.0,0.0,.005]   </top>
+             <radius>           0.45             </radius>
+           </cylinder>
+         </geom_object>
+         <outward_normal>false</outward_normal>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+<!-- Final value of load (pressure) desired is 0.1e4 (10^5 Pa).  -->
+           <time_point>
+             <time> 100.0 </time>
+             <load> 0.025e4 </load>
+           </time_point>
+           <time_point>
+             <time> 1.e10 </time>
+             <load> 0.025e4 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+     </MPM>
+   </PhysicalBC>
+
+   <Grid>
+     <Level>
+       <Box label = "1">
+         <lower>        [0.0,0.0,-0.005]           </lower>
+         <upper>        [0.6,0.6,0.01]    </upper>
+         <patches>      [8,8,1]           </patches>
+        <extraCells>    [1,1,1]           </extraCells>
+       </Box>
+       <spacing>   [0.005,0.005,0.005]  </spacing>
+     </Level>
+     <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+     </BoundaryConditions>
+   </Grid>
+       
+</Uintah_specification>
+
