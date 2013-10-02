@@ -286,6 +286,19 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
       compressedStream.read((char*)&uncompressed_size_64, nByteMode);
       
       unsigned long uncompressed_size = convertSizeType(&uncompressed_size_64, swapBytes, nByteMode);
+
+      if( uncompressed_size > 1000000000 ) {
+        cout << "\n";
+        cout << "--------------------------------------------------------------------------\n";
+        cout << "!!!!!!!! WARNING !!!!!!!! \n";
+        cout << "\n";
+        cout << "Size of uncompressed variable seems wrong: " << uncompressed_size << "\n";
+        cout << "Most likely, the UDA you are trying to read is corrupted due to a problem with\n";
+        cout << "libz when it was created... Also, an exception most likely is about to be thrown...\n";
+        cout << "--------------------------------------------------------------------------\n";
+        cout << "\n\n";
+      }
+
       const char* compressed_data = data.c_str() + nByteMode;
       
       long compressed_datasize = datasize - (long)(nByteMode);
