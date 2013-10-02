@@ -257,18 +257,18 @@ $(VCSOLUTION): $(ALLVCPROJECTS)
 # Targets for zlib verification
 verify_zlib : sus
 ifneq ($(IS_OSX),yes)
-	@num_libs=`ldd lib/*.so StandAlone/sus | grep libz | cut -f3 -d" " | sort -u | wc | awk '{print $$1}'`; \
+	@num_libs=`ldd lib/*.so StandAlone/sus | grep libz.so | cut -f3 -d" " | sort -u | wc | awk '{print $$1}'`; \
          if test "$$num_libs" -ne 1; then                                                                       \
             echo "It appears that more than one version of libz was linked into Uintah...";                     \
             echo "This will cause the use of compression for UDAs to fail.";                                    \
-            exit -1;                                                                                            \
+            exit 1;                                                                                             \
          fi
 else
-	@num_libs=`otool -L lib/*.dylib StandAlone/sus | grep libz | cut -f1 -d" " | sort -u | wc | awk '{print $$1}'`;  \
+	@num_libs=`otool -L lib/*.dylib StandAlone/sus | grep libz.dylib | cut -f1 -d" " | sort -u | wc | awk '{print $$1}'`;  \
          if test "$$num_libs" -ne 1; then                                                                       \
             echo "It appears that more than one version of libz was linked into Uintah...";                     \
             echo "This will cause the use of compression for UDAs to fail.";                                    \
-            exit -1;                                                                                            \
+            exit 1;                                                                                             \
          fi
 endif
 
