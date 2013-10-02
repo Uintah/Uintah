@@ -260,14 +260,25 @@ ifneq ($(IS_OSX),yes)
 	@num_libs=`ldd lib/*.so StandAlone/sus | grep libz\\. | cut -f3 -d" " | sort -u | wc | awk '{print $$1}'`; \
          if test "$$num_libs" -ne 1; then                                                                       \
             echo "It appears that more than one version of libz was linked into Uintah...";                     \
-            echo "This will cause the use of compression for UDAs to fail.";                                    \
+            echo "This will cause the use of compression for UDAs to fail:";                                    \
+            echo "";                                                                                            \
+            ldd lib/*.so StandAlone/sus | grep libz\\. | cut -f3 -d" " | sort -u;                               \
+            echo "";                                                                                            \
+            echo "Exiting make... Goodbye.";                                                                    \
+            echo "";                                                                                            \
             exit 1;                                                                                             \
          fi
 else
 	@num_libs=`otool -L lib/*.dylib StandAlone/sus | grep libz\\. | cut -f1 -d" " | sort -u | wc | awk '{print $$1}'`;  \
          if test "$$num_libs" -ne 1; then                                                                       \
+            echo "";                                                                                            \
             echo "It appears that more than one version of libz was linked into Uintah...";                     \
-            echo "This will cause the use of compression for UDAs to fail.";                                    \
+            echo "This will cause the use of compression for UDAs to fail:";                                    \
+            echo "";                                                                                            \
+            otool -L lib/*.dylib StandAlone/sus | grep libz\\. | cut -f1 -d" " | sort -u;                       \
+            echo "";                                                                                            \
+            echo "Exiting make... Goodbye.";                                                                    \
+            echo "";                                                                                            \
             exit 1;                                                                                             \
          fi
 endif
