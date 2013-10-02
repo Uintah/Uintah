@@ -154,7 +154,8 @@ WARNING
                              double Vc,
                              double surfArea, 
                              double delT, 
-                             double solidMass);
+                             double solidMass,
+                             const double min_mass_in_a_cell);
     
     double computeInductionAngle( IntVector *nodeIdx, 
                                   constNCVariable<double> &rctMass_NC, 
@@ -251,8 +252,7 @@ WARNING
     double d_Fb; /* Preexponential for suface flame spread equation  PreexpoConst */
     double d_Fc; /* exponent term for suface flame spread equaiton   ExponentialConst */
     double d_PS; /* P0 for surface flame spread equation             PressureShift */  
-      
-    double MIN_MASS_IN_A_CELL;
+    
     
     double CC1; /* CC1 = Ac*R*Kc*Ec/Cp        */
     double CC2; /* CC2 = Qc/Cp/2              */

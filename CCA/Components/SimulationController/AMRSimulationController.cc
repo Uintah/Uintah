@@ -338,21 +338,24 @@ AMRSimulationController::run()
      
      // override for the global level as well (which only matters on dw 0)
      DataWarehouse* oldDW = d_scheduler->get_dw(0);
-     oldDW->override(delt_vartype(delt),
-                                      d_sharedState->get_delt_label());
+     oldDW->override( delt_vartype(delt), d_sharedState->get_delt_label() );
 
      // a component may update the output interval or the checkpoint interval
      // during a simulation.  For example in deflagration -> detonation simulations
      if (d_output && d_sharedState->updateOutputInterval() && !first ) {
-         min_vartype outputInv_var;
-         oldDW->get(outputInv_var, d_sharedState->get_outputInterval_label());
-         if (!outputInv_var.isBenignValue()) d_output->updateOutputInterval(outputInv_var);
+       min_vartype outputInv_var;
+       oldDW->get( outputInv_var, d_sharedState->get_outputInterval_label() );
+       if ( !outputInv_var.isBenignValue() ){
+         d_output->updateOutputInterval( outputInv_var );
+       }
      }
 
      if (d_output && d_sharedState->updateCheckpointInterval() && !first ) {
-         min_vartype checkInv_var;
-         oldDW->get(checkInv_var, d_sharedState->get_checkpointInterval_label());
-         if (!checkInv_var.isBenignValue()) d_output->updateCheckpointInterval(checkInv_var);
+       min_vartype checkInv_var;
+       oldDW->get( checkInv_var, d_sharedState->get_checkpointInterval_label() );
+       if ( !checkInv_var.isBenignValue() ){
+         d_output->updateCheckpointInterval( checkInv_var );
+       }
      }
  
      if (first) first = false;

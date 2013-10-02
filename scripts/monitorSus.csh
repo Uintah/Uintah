@@ -65,7 +65,7 @@ while (1)
   set minutes = $interval"m"
   sleep $minutes
   
-  @ ts = `grep timestep out | tr -d '[:punct:]' | awk 'END {print $3}'`
+  @ ts = `grep timestep $out | tr -d '[:punct:]' | awk 'END {print $3}'`
   if $ts == $ts_old then
     date
     echo "Now killing job $jid on timestep $ts_old"
