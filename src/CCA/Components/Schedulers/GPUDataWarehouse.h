@@ -49,6 +49,8 @@ public:
   HOST_DEVICE void clear();
   HOST_DEVICE GPUDataWarehouse* getdevice_ptr(){return device_copy;};
   HOST_DEVICE void setDebug(bool s){d_debug=s;}
+  
+  
 private:
   int numItems;
   struct dataItem {   // flat array
