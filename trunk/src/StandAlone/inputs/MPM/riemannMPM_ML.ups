@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+<!-- @version: -->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>multi-level shock tube problem</title>
+   </Meta>    
+
+   <SimulationComponent type="amrmpm" />
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.0005      </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-6      </delt_init>
+       <max_Timesteps>      500         </max_Timesteps>
+       <timestep_multiplier>0.1         </timestep_multiplier>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+       <BoundaryConditions>
+         <Face side = "x-">
+             <BCType id = "all"   label = "Symmetric" var = "symmetry"> </BCType>
+         </Face>
+         <Face side = "x+">
+             <BCType id = "all"   label = "Symmetric" var = "symmetry"> </BCType>
+         </Face>
+         <Face side = "y-">
+             <BCType id = "all"   label = "Symmetric" var = "symmetry"> </BCType>
+         </Face>                  
+         <Face side = "y+">
+             <BCType id = "all"   label = "Symmetric" var = "symmetry"> </BCType>
+         </Face>
+         <Face side = "z-">
+             <BCType id = "all"   label = "Symmetric" var = "symmetry"> </BCType>
+         </Face> 
+         <Face side = "z+">
+             <BCType id = "all"   label = "Symmetric" var = "symmetry"> </BCType>
+         </Face>
+       </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>        [0.,0,0]       </lower>
+              <upper>        [1.,.005,.005] </upper>
+              <extraCells>   [0,0,0]        </extraCells>
+              <patches>      [1,1,1]        </patches>
+              <resolution>   [200,1,1]      </resolution>
+           </Box>
+       </Level>
+       
+       <Level>
+        <Box label = "1">
+          <lower>       [ 0.5,  0,  0]      </lower>
+          <upper>       [ 1.0, .005,.005]   </upper>
+          <resolution>  [100, 1, 1]         </resolution>  <!-- RR: 1 -->
+          <patches>     [1,1,1]             </patches>
+          <extraCells>  [0,0,0]             </extraCells>
+        </Box>
+      </Level> 
+    </Grid>    
+    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>riemannMPM_2L.uda</filebase>
+      <!--<outputInterval>.0001</outputInterval> -->
+      <outputTimestepInterval> 10 </outputTimestepInterval>
+      <save label = "p.x"/>
+      <save label = "p.mass"/>
+      <save label = "p.volume"/>
+      <save label = "p.velocity"/>
+      <save label = "p.temperature"/>
+      <save label = "p.stress"/>
+      <save label = "p.particleID"/>
+      
+      <save label="g.mass"/>
+      <save label="g.velocity"/>
+      <save label="g.volume"/>
+      <save label="g.velocity_star"/>
+      <save label="g.acceleration"/>
+      <save label="g.externalforce"/>
+      <save label="g.internalforce"/>
+      <!-- needed for regression tester dat comparisons -->       
+      <save label="KineticEnergy"/>
+      <checkpoint timestepInterval="50" cycle="2"/>
+   </DataArchiver>
+
+    <MPM>
+        <time_integrator>       explicit  </time_integrator>
+        <interpolator>          linear    </interpolator>
+        <artificial_viscosity>  true      </artificial_viscosity>
+        <do_grid_reset>         true      </do_grid_reset>
+        <minimum_mass_for_acc>  1.0e-15   </minimum_mass_for_acc>
+    </MPM>
+   <!--__________________________________-->
+    <AMR>
+      <useLockStep> true </useLockStep>
+      <MPM>
+        <manualGrid> true </manualGrid>
+      </MPM>
+    </AMR>
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <!--____________________________________________________________________-->
+    <!--     Material Properties and Initial Conditions                     -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material>
+              <density>   .11768292682926831   </density>
+              <constitutive_model type="ideal_gas">
+                  <specific_heat>  717.5            </specific_heat>
+                  <gamma>           1.4             </gamma>
+              </constitutive_model>
+              <thermal_conductivity>  0.0           </thermal_conductivity>
+              <specific_heat>         717.5         </specific_heat>
+              <geom_object>
+               <box label="rightpartition">
+                    <min>           [ 0.5, -1.0,-1.0 ]   </min>
+                    <max>           [ 2.0,  2.0, 2.0 ]   </max>
+                </box>
+                <res>               [8,1,1]         </res>
+                <velocity>          [0.0,0.0,0.0]   </velocity>
+                <temperature>       300             </temperature>
+              </geom_object>
+         </material>
+         <material>
+              <density>   1.1768292682926831        </density>
+              <constitutive_model type="ideal_gas">
+                  <specific_heat>    717.5          </specific_heat>
+                  <gamma>             1.4           </gamma>
+              </constitutive_model>
+              <thermal_conductivity>  0.0           </thermal_conductivity>
+              <specific_heat>         717.5         </specific_heat>
+              <geom_object>
+               <box label="leftpartition">
+                    <min>           [-2.0, -1.0,-1.0 ]   </min>
+                    <max>           [ 0.5,  2.0, 2.0 ]   </max>
+                </box>
+                <res>               [8,1,1]         </res>
+                <velocity>          [0.0,0.0,0.0]   </velocity>
+                <temperature>       300             </temperature>
+              </geom_object>
+         </material>
+
+         <contact>
+            <type>single_velocity</type>
+            <vel_fields>              [0,0,0]       </vel_fields>
+         </contact>
+       </MPM>
+    </MaterialProperties>  
+
+</Uintah_specification>

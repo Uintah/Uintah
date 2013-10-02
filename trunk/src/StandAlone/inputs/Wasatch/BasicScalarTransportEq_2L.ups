@@ -1,0 +1,229 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test the generic scalar transport equation and initial conditions</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <doAMR>true</doAMR>
+
+  <AMR>
+    <useLockStep> true </useLockStep>
+  </AMR>
+
+  <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+      <NameTag name="rho" state="STATE_NONE" /> 
+    </Density>
+
+    <!-- Set a constant density to be used by the source term -->
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="rho" state="STATE_NONE" />
+      <Constant> 1.0 </Constant>      
+    </BasicExpression>
+    
+    <!-- Set the initial condition expression for phi1 -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi1" state="STATE_N" />
+      <GaussianFunction amplitude="20.0" deviation="2.0" mean="5.0" baseline="1.0">
+        <NameTag name="XSVOL" state="STATE_NONE" />
+      </GaussianFunction>
+    </BasicExpression>
+
+    <!-- create an expression for the diffusion coefficient of phi1
+        that is a simple function of phi1 -->
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="phi1-diffcoef" state="STATE_NONE" />
+      <GaussianFunction amplitude="0.2" deviation="4.0" mean="10.0" baseline="0.1">
+        <NameTag name="phi1" state="STATE_N" />
+      </GaussianFunction>
+    </BasicExpression>
+
+
+    <!--
+        Create a transport equation for a generic scalar.  Here we set an
+        initial condition on the scalar as a gaussian function.  We also
+        set a simple relationship for the diffusion coefficient as a
+        gaussian function of the scalar.
+      -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi1</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <DiffusionCoefficient>
+          <NameTag name="phi1-diffcoef" state="STATE_NONE" />
+        </DiffusionCoefficient>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <DiffusionCoefficient>
+          <NameTag name="phi1-diffcoef" state="STATE_NONE" />
+        </DiffusionCoefficient>
+      </DiffusiveFluxExpression>
+
+      <!-- here we use a constant diffusivity in the z-direction. this is an anisotropic diffusion coefficient... -->
+      <DiffusiveFluxExpression>
+        <Direction>Z</Direction>
+        <ConstantDiffusivity>0.3</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+
+
+    <!-- Set the initial condition for phi2 -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi2" state="STATE_N" />
+      <LinearFunction slope="1.0" intercept="-2.0">
+        <NameTag name="YSVOL" state="STATE_NONE" />
+      </LinearFunction>
+    </BasicExpression>
+
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi2</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <ConstantDiffusivity>0.1</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>0.2</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Z</Direction>
+        <ConstantDiffusivity>0.3</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+
+
+    <!-- Set the initial condition for phi3 -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi3" state="STATE_N" />
+      <SineFunction amplitude="20.0" frequency="0.75" offset="0">
+        <NameTag name="ZSVOL" state="STATE_NONE" />
+      </SineFunction>
+    </BasicExpression>
+
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi3</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <ConstantDiffusivity>0.1</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <ConstantDiffusivity>0.2</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <DiffusiveFluxExpression>
+        <Direction>Z</Direction>
+        <ConstantDiffusivity>0.3</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+    </TransportEquation>
+
+
+    <!-- Set the initial condition for phi3 -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi4" state="STATE_N" />
+      <SineFunction amplitude="20.0" frequency="0.75" offset="0">
+        <NameTag name="ZSVOL" state="STATE_NONE" />
+      </SineFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="phi4 source term" state="STATE_NONE" />
+      <SineFunction amplitude="1.0" frequency="0.75" offset="-0.0">
+        <NameTag name="XSVOL" state="STATE_NONE" />
+      </SineFunction>
+    </BasicExpression>
+
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi4</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <ConstantDiffusivity>0.1</ConstantDiffusivity>
+      </DiffusiveFluxExpression>
+
+      <SourceTermExpression>
+        <NameTag name="phi4 source term" state="STATE_NONE" />
+      </SourceTermExpression>
+
+    </TransportEquation>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>5.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>1</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>wasatch_test_2L.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "3.0"/>
+    <compression>gzip</compression>
+    <save label="phi1"/>
+    <save label="phi2"/>
+    <save label="phi3"/>
+    <save label="phi1-diffcoef"/>
+    <save label="phi4"/>
+    <save label="phi4 source term"/>
+  </DataArchiver>
+
+  <Grid>
+  
+    <Level>
+      <Box label="0">
+        <lower>[0,0,0]</lower>
+        <upper>[10,10,10]</upper>
+        <resolution>[10,10,10]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[10,10,10]</upper>
+        <resolution>[10,10,10]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>
