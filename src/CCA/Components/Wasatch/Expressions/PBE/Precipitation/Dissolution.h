@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,14 +26,11 @@
 #define Dissolution_Expr_h
 
 #include <expression/Expression.h>
-//#include <spatialops/structured/FVStaggeredFieldTypes.h>
-//#include <spatialops/structured/FVStaggeredOperatorTypes.h>
-//#include <spatialops/FieldExpressionsExtended.h>
 
 /**
- *  \class Dissolution
+ *  \class  Dissolution
  *  \author Alex Abboud
- *  \date 
+ *  \date   October, 2013
  *  \brief death by dissolution source term
  */
 template< typename FieldT >
@@ -56,13 +53,13 @@ class Dissolution
   FieldVec weights_;
   FieldVec abscissae_;
   
-  Dissolution( const Expr::TagList& weightsTagList_,
-               const Expr::TagList& abscissaeTagList_,
-               const Expr::Tag& sBarTag_,
-               const Expr::Tag& superSatTag_,
-               const double rMin_,
-               const double momentOrder_,
-               const double deathCoef_ );
+  Dissolution( const Expr::TagList& weightsTagList,
+               const Expr::TagList& abscissaeTagList,
+               const Expr::Tag& sBarTag,
+               const Expr::Tag& superSatTag,
+               const double rMin,
+               const double momentOrder,
+               const double deathCoef );
   
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -77,17 +74,16 @@ public:
              const double momentOrder,
              const double deathCoef )
     : ExpressionBuilder(result),
-    weightstaglist_(weightsTagList),
-    abscissaetaglist_(abscissaeTagList),
-    sbart_(sBarTag),
-    supersatt_(superSatTag),
-    rmin_(rMin),
-    momentorder_(momentOrder),
-    deathcoef_(deathCoef)
+      weightstaglist_(weightsTagList),
+      abscissaetaglist_(abscissaeTagList),
+      sbart_(sBarTag),
+      supersatt_(superSatTag),
+      rmin_(rMin),
+      momentorder_(momentOrder),
+      deathcoef_(deathCoef)
     {}
     ~Builder(){}
-    Expr::ExpressionBase* build() const
-    {
+    Expr::ExpressionBase* build() const{
       return new Dissolution<FieldT>( weightstaglist_, abscissaetaglist_, sbart_, supersatt_, rmin_, momentorder_, deathcoef_ );
     }
     
@@ -101,11 +97,10 @@ public:
     const double deathcoef_;
   };
   
-  ~Dissolution();
+  ~Dissolution(){}
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
 };
@@ -130,20 +125,13 @@ Dissolution( const Expr::TagList& weightsTagList,
              const double momentOrder,
              const double deathCoef )
 : Expr::Expression<FieldT>(),
-weightsTagList_(weightsTagList),
-abscissaeTagList_(abscissaeTagList),
-sBarTag_(sBarTag),
-superSatTag_(superSatTag),
-rMin_(rMin),
-momentOrder_(momentOrder),
-deathCoef_(deathCoef)
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-Dissolution<FieldT>::
-~Dissolution()
+  weightsTagList_(weightsTagList),
+  abscissaeTagList_(abscissaeTagList),
+  sBarTag_(sBarTag),
+  superSatTag_(superSatTag),
+  rMin_(rMin),
+  momentOrder_(momentOrder),
+  deathCoef_(deathCoef)
 {}
 
 //--------------------------------------------------------------------
@@ -175,17 +163,9 @@ bind_fields( const Expr::FieldManagerList& fml )
   for (Expr::TagList::const_iterator iabscissa=abscissaeTagList_.begin(); iabscissa!=abscissaeTagList_.end(); iabscissa++) {
     abscissae_.push_back(&volfm.field_ref(*iabscissa));
   }
-  sBar_ = &volfm.field_ref( sBarTag_ );
+  sBar_     = &volfm.field_ref( sBarTag_ );
   superSat_ = &volfm.field_ref( superSatTag_ );
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-Dissolution<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 
@@ -197,7 +177,6 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   result <<= 0.0;
-  double k, Sum;
 
   typename FieldT::interior_iterator resultsIter = result.interior_begin();
   int nEnv = weights_.size();
@@ -206,7 +185,7 @@ evaluate()
   
   std::vector<typename FieldT::const_interior_iterator> weightIterators;
   std::vector<typename FieldT::const_interior_iterator> abscissaeIterators;
-  for (int i=0; i<nEnv; ++i) {
+  for( size_t i=0; i<nEnv; ++i ){
     typename FieldT::const_interior_iterator thisIterator = weights_[i]->interior_begin();
     weightIterators.push_back(thisIterator);
     
@@ -216,30 +195,28 @@ evaluate()
   typename FieldT::const_interior_iterator sBarIterator = sBar_->interior_begin();
   typename FieldT::const_interior_iterator superSatIterator = superSat_->interior_begin();
   
-  while (sampleIterator != sampleField->interior_end() ) {
-    Sum = 0.0;
+  while( sampleIterator != sampleField->interior_end() ){
+    double sum = 0.0;
     
-    for (int i = 0; i<nEnv; i++) {
+    for( size_t i = 0; i<nEnv; ++i ){
       if (*sBarIterator > *superSatIterator && *abscissaeIterators[i] < rMin_ &&
           *weightIterators[i] > 1.0e-3 && *abscissaeIterators[i] > 0.0) {
-        k = 0.25 * (1.0 - erf(8.0*log(*abscissaeIterators[i]/rMin_))) * 
-                   (1.0 - erf(5.0*(-2.5-log10(*weightIterators[i]))) );
-        Sum = Sum  -30.0 * k * *weightIterators[i] * pow(*abscissaeIterators[i], momentOrder_);
+        const double k = 0.25 * (1.0 - erf(8.0*log(*abscissaeIterators[i]/rMin_))) *
+                                (1.0 - erf(5.0*(-2.5-log10(*weightIterators[i]))) );
+        sum = sum  -30.0 * k * *weightIterators[i] * pow(*abscissaeIterators[i], momentOrder_);
       }
     }
-    *resultsIter = Sum * deathCoef_;
+    *resultsIter = sum * deathCoef_;
     
     ++superSatIterator;
     ++sBarIterator;
     ++sampleIterator;
     ++resultsIter;
-    for (int i = 0; i<nEnv; i++) {
-      weightIterators[i] +=1;
-      abscissaeIterators[i] +=1;
+    for( size_t i = 0; i<nEnv; i++ ){
+      ++weightIterators[i];
+      ++abscissaeIterators[i];
     }
   }
-  
-  
 }
 
 #endif // Dissolution_Expr_h
