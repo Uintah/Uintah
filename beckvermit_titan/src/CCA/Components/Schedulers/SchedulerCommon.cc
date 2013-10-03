@@ -1077,7 +1077,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   DataWarehouse* oldDataWarehouse = this->get_dw(0);
   DataWarehouse* newDataWarehouse = this->getLastDW();
 
-  oldDataWarehouse->setScrubbing(DataWarehouse::ScrubNone);
+//  oldDataWarehouse->setScrubbing(DataWarehouse::ScrubNone);
+  oldDataWarehouse->setScrubbing(DataWarehouse::ScrubComplete);
   newDataWarehouse->setScrubbing(DataWarehouse::ScrubNone);
   const Grid* oldGrid = oldDataWarehouse->getGrid();
   vector<Task*> dataTasks;

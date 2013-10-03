@@ -68,7 +68,7 @@ AC_INIT([Uintah],[1.5],[uintah-developer@gforge.sci.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-AC_PREREQ(2.69)
+AC_PREREQ(2.63)
 
 AC_COPYRIGHT(
 ##
