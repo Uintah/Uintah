@@ -719,11 +719,6 @@ namespace Wasatch{
           growthParams->get("GrowthModel", modelType);
           sourceTag = Expr::Tag( "m_" + basePhiName + "_3_growth_" + modelType, Expr::STATE_NONE);
           sourceTagList.push_back(sourceTag);
-          if (growthParams->findBlock("OstwaldRipening") ){
-            molecVolumes.push_back(molecVol);
-            sourceTag = Expr::Tag( "m_" + basePhiName + "_3_Ostwald_Ripening", Expr::STATE_NONE);
-            sourceTagList.push_back(sourceTag);
-          }
         }
         for( Uintah::ProblemSpecP birthParams=momentParams->findBlock("BirthExpression");
              birthParams != 0;
@@ -731,6 +726,13 @@ namespace Wasatch{
           molecVolumes.push_back(molecVol);
           birthParams->get("BirthModel", modelType);
           sourceTag = Expr::Tag("m_" + basePhiName + "_3_birth_" + modelType, Expr::STATE_NONE);
+          sourceTagList.push_back(sourceTag);
+        }
+        for( Uintah::ProblemSpecP deathParams=momentParams->findBlock("Dissolution");
+            deathParams != 0;
+            deathParams = deathParams->findNextBlock("Dissolution") ){
+          molecVolumes.push_back(molecVol);
+          sourceTag = Expr::Tag( "m_" + basePhiName + "_3_death", Expr::STATE_NONE);
           sourceTagList.push_back(sourceTag);
         }
       }

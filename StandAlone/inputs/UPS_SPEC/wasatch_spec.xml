@@ -981,6 +981,16 @@
       </BirthExpression>      
       
       <!-- ================================================================================== -->            
+      <!-- Dissolution Expression - requires that ostwald ripening is on-->
+      <Dissolution spec="OPTIONAL NO_DATA">
+        <CriticalRadius   spec="REQUIRED DOUBLE"/>
+        <DeathCoefficient spec="OPTIONAL DOUBLE"/>
+        <Supersaturation  spec="REQUIRED NO_DATA">
+          <NameTag   spec="REQUIRED"/>        
+        </Supersaturation> 
+      </Dissolution>
+      
+      <!-- ================================================================================== -->            
       <!-- Aggregation Expression -->
       <AggregationExpression spec = "MULTIPLE NO_DATA">
         <AggregationModel spec = "REQUIRED STRING 'CONSTANT, BROWNIAN, HYDRODYNAMIC'"/>
