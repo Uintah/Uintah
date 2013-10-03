@@ -24,6 +24,7 @@
 
 #include "UpwindInterpolant.h"
 #include "OperatorTypes.h"
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
 
 #include <cmath>
 #include <sstream>
@@ -77,46 +78,43 @@ apply_to_field( const SrcT& src, DestT& dest )
   using namespace SpatialOps;
   using namespace SpatialOps::structured;
   typedef s2detail::ExtentsAndOffsets<SrcT,DestT> Extents;
-  
-  const MemoryType dMemType = dest.memory_device_type();  // destination memory type
-  const unsigned short int dDevIdx = dest.device_index(); // destination device index
-  typename DestT::value_type* destVals = dest.field_values(dMemType, dDevIdx);
 
-  const MemoryType advelMemType = advectiveVelocity_->memory_device_type();  // destination memory type
-  const unsigned short int advelDevIdx = advectiveVelocity_->device_index(); // destination device index
-  typename DestT::value_type* velVals  = const_cast<typename DestT::value_type*>(advectiveVelocity_->field_values(advelMemType, advelDevIdx));
-  
   const MemoryWindow& ws = src.window_with_ghost();
-
+  const BoundaryCellInfo& bcs = src.boundary_info();
   const MemoryWindow ws1( ws.glob_dim(),
                           ws.offset() + Extents::Src1Offset::int_vec(),
-                          ws.extent() + Extents::Src1Extent::int_vec() + ws.has_bc()*Extents::Src1ExtentBC::int_vec(),
-                          ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
+                          ws.extent() + Extents::Src1Extent::int_vec()  );
 
   const MemoryWindow ws2( ws.glob_dim(),
                           ws.offset() + Extents::Src2Offset::int_vec(),
-                          ws.extent() + Extents::Src2Extent::int_vec() + ws.has_bc()*Extents::Src2ExtentBC::int_vec(),
-                          ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
+                          ws.extent() + Extents::Src2Extent::int_vec()  );
 
   const MemoryWindow& wdest = dest.window_with_ghost();
-
+  const BoundaryCellInfo& bcd = dest.boundary_info();
   const MemoryWindow wd( wdest.glob_dim(),
                          wdest.offset() + Extents::DestOffset::int_vec(),
-                         wdest.extent() + Extents::DestExtent::int_vec() + wdest.has_bc()*Extents::DestExtentBC::int_vec(),
-                         wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
+                         wdest.extent() + Extents::DestExtent::int_vec()  );
 
-# ifndef NDEBUG
-  assert( ws1.extent() == ws2.extent() && ws1.extent() == wd.extent() );
-# endif
+//# ifndef NDEBUG
+//  assert( ws1.extent() == ws2.extent() && ws1.extent() == wd.extent() );
+//# endif
 
   // build fields using these newly created windows to do the stencil operation.
   // PAY ATTENTION to how we windowed on the destination field. This is likely
   // to work ONLY with SVol as source and X,Y,ZVol for destination fields.
   // Although the destination field is of a "different" type, we create a window
   // that is the "same size" as the source field to allow us to use a nebo assignment
-  SrcT  d( wd,  destVals, ExternalStorage ); // NOTE here how we are crating a SrcT field from a DesT one.
+  const MemoryType dMemType = dest.memory_device_type();  // destination memory type
+  const unsigned short int dDevIdx = dest.device_index(); // destination device index
+  typename DestT::value_type* destVals = dest.field_values(dMemType, dDevIdx);
+  SrcT  d( wd,  bcd, dest.get_ghost_data(), destVals, ExternalStorage, dMemType, dDevIdx );
+
+  // NOTE here how we are crating a SrcT field from a DesT one.
   //This is a trick because we know that the fields in this case are of the same size
-  const SrcT  aVel( wd,  velVals, ExternalStorage, advelMemType, advelDevIdx );
+  const MemoryType advelMemType = advectiveVelocity_->memory_device_type();  // destination memory type
+  const unsigned short int advelDevIdx = advectiveVelocity_->device_index(); // destination device index
+  typename DestT::value_type* velVals  = const_cast<typename DestT::value_type*>(advectiveVelocity_->field_values(advelMemType, advelDevIdx));
+  const SrcT  aVel( wd, bcd, advectiveVelocity_->get_ghost_data(), velVals, ExternalStorage, advelMemType, advelDevIdx );
   const SrcT    s1( ws1, src );
   const SrcT    s2( ws2, src );
 
