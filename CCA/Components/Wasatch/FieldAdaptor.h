@@ -67,8 +67,8 @@ namespace Wasatch{
   };
 
   void get_bc_logicals( const Uintah::Patch* const patch,
-                        SCIRun::IntVector& bcMinus,
-                        SCIRun::IntVector& bcPlus );
+                        SpatialOps::structured::IntVec& bcMinus,
+                        SpatialOps::structured::IntVec& bcPlus );
 
   /**
    *  \ingroup WasatchFields
@@ -105,7 +105,7 @@ namespace Wasatch{
      * in Wasatch.cc.  This is currently preventing Uintah from
      * combining patch memory.
      */
-
+    namespace SS = SpatialOps::structured;
     using SCIRun::IntVector;
 
     const SCIRun::IntVector lowIx       = uintahVar.getLowIndex();
@@ -114,17 +114,10 @@ namespace Wasatch{
     const SCIRun::IntVector fieldOffset = uintahVar.getWindow()->getOffset();
     const SCIRun::IntVector fieldExtent = highIx - lowIx;
 
-    using SpatialOps::structured::IntVec;
 
-    const IntVec size( fieldSize[0],
-                       fieldSize[1],
-                       fieldSize[2] );
-    const IntVec extent( fieldExtent[0],
-                         fieldExtent[1],
-                         fieldExtent[2] );
-    const IntVec offset( lowIx[0]-fieldOffset[0],
-                         lowIx[1]-fieldOffset[1],
-                         lowIx[2]-fieldOffset[2] );
+    const SS::IntVec   size( fieldSize[0],   fieldSize[1],   fieldSize[2]   );
+    const SS::IntVec extent( fieldExtent[0], fieldExtent[1], fieldExtent[2] );
+    const SS::IntVec offset( lowIx[0]-fieldOffset[0], lowIx[1]-fieldOffset[1], lowIx[2]-fieldOffset[2] );
 //
 //    std::cout << "Patch [" << patch->getID() << "] size: " << patch->getExtraCellHighIndex(0) - patch->getExtraCellLowIndex(0)
 //                  << "  hi: " << highIx
@@ -137,11 +130,11 @@ namespace Wasatch{
 //                  << " extent: " << extent
 //                  << std::endl;
 
-    SCIRun::IntVector bcMinus, bcPlus;
+    SS::IntVec bcMinus, bcPlus;
     get_bc_logicals( patch, bcMinus, bcPlus );
-
-    return new FieldT( SpatialOps::structured::MemoryWindow( size, offset, extent,
-                                                             bcPlus[0], bcPlus[1], bcPlus[2] ),
+    return new FieldT( SpatialOps::structured::MemoryWindow( size, offset, extent ),
+                       SS::BoundaryCellInfo::build<FieldT>(bcPlus),
+                       SS::GhostData(1),  /* for now, we hard-code one ghost cell */
                        const_cast<typename FieldT::AtomicT*>( uintahVar.getPointer() ),
                        SpatialOps::structured::ExternalStorage,
                        mtype,
@@ -259,12 +252,7 @@ namespace Wasatch{
    *         (-) side.
    */
   template<typename FieldT> inline int get_n_ghost(){
-    const SpatialOps::structured::IntVec ngm = FieldT::Ghost::NGhostMinus::int_vec();
-#   ifndef NDEBUG
-    const SpatialOps::structured::IntVec ngp = FieldT::Ghost::NGhostPlus::int_vec();
-    assert( ngm==ngp && ngm[0]==ngm[1] && ngm[0]==ngm[2] );
-#   endif
-    return ngm[0];
+    return 1;
   }
 
   template<> inline int get_n_ghost<double>(){ return 0; };
