@@ -239,7 +239,7 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
   }
   
   /* initialize constants */
-  CC1 = Ac*R*Kc/Ec/Cp;        
+  CC1 = Ac * R * Kc/Ec/Cp;        
   CC2 = Qc/Cp/2;              
   CC3 = 4*Kg*Bg*MW*MW/Cp/R/R;  
   CC4 = Qc/Cp;                
@@ -1068,6 +1068,12 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
       old_dw->get( me,  adjOutIntervalsLabel );
       double hasSwitched = me; 
     
+      // for readability
+      const VarLabel* outIntervalLabel      = d_sharedState->get_outputInterval_label();
+      const VarLabel* chkpointIntervalLabel = d_sharedState->get_checkpointInterval_label();
+      
+      //__________________________________
+      // Pressure
       if ( press_switch_adj_IO && d_adj_IO_Press->onOff && isDoubleEqual( hasSwitched, ZERO) ){
 
         double newOUT  = d_adj_IO_Press->output_interval;
@@ -1078,12 +1084,12 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         cout << *patch << endl;
         cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<<  endl;
 
-        new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
-        new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
-      }
-
-      // detonation detected
-      if ( det_switch_adj_IO && d_adj_IO_Det->onOff && isDoubleEqual(hasSwitched, PRESSURE_EXCEEDED) ){
+        new_dw->put( min_vartype( newOUT ),  outIntervalLabel );
+        new_dw->put( min_vartype( newCKPT ), chkpointIntervalLabel );
+      }             
+      //__________________________________
+      //  DETONATON
+      else if ( det_switch_adj_IO && d_adj_IO_Det->onOff && isDoubleEqual(hasSwitched, PRESSURE_EXCEEDED) ){
 
         double newOUT  = d_adj_IO_Det->output_interval;
         double newCKPT = d_adj_IO_Det->chkPt_interval;
@@ -1093,8 +1099,19 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         cout << *patch << endl;
         cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<< endl;
 
-        new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
-        new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
+        new_dw->put( min_vartype( newOUT ),  outIntervalLabel );
+        new_dw->put( min_vartype( newCKPT ), chkpointIntervalLabel );
+      }
+      else {        
+      //__________________________________
+      //  DEFAULT
+        min_vartype oldOUT;
+        min_vartype oldCKPT;
+        oldOUT.setBenignValue();
+        oldCKPT.setBenignValue();
+
+        new_dw->put( oldOUT,  outIntervalLabel );
+        new_dw->put( oldCKPT, chkpointIntervalLabel );
       }
       new_dw->put( max_vartype(hasSwitched), adjOutIntervalsLabel );
     }
@@ -1232,7 +1249,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     double cv_rct = mpm_matl->getSpecificHeat();
    
     double cell_vol = dx.x()*dx.y()*dx.z();
-     MIN_MASS_IN_A_CELL = dx.x()*dx.y()*dx.z()*d_TINY_RHO;
+    double min_mass_in_a_cell = dx.x()*dx.y()*dx.z()*d_TINY_RHO;
     //__________________________________
     //  Loop over cells
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
@@ -1332,10 +1349,10 @@ void DDT1::computeModelSources(const ProcessorGroup*,
 
           burnedMass = computeBurnedMass(Tzero, Tsurf, productPress,
                               rctSpvol[c], surfArea, delT,
-                              solidMass);
+                              solidMass, min_mass_in_a_cell);
           // Clamp burned mass to total convertable mass in cell
-          if(burnedMass + MIN_MASS_IN_A_CELL > solidMass){
-             burnedMass = solidMass - MIN_MASS_IN_A_CELL;
+          if(burnedMass + min_mass_in_a_cell > solidMass){
+             burnedMass = solidMass - min_mass_in_a_cell;
           }
           // Store debug variables
           onSurface[c] = surfArea;
@@ -1378,7 +1395,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
 
           burnedMass = computeBurnedMass(Tzero, Tsurf, productPress,
                               rctSpvol[c], surfArea, delT,
-                              solidMass);
+                              solidMass, min_mass_in_a_cell);
 
           /* 
            // If cracking applies, add to mass
@@ -1390,8 +1407,8 @@ void DDT1::computeModelSources(const ProcessorGroup*,
           */
 
           // Clamp burned mass to total convertable mass in cell
-          if(burnedMass + MIN_MASS_IN_A_CELL > solidMass){
-             burnedMass = solidMass - MIN_MASS_IN_A_CELL;
+          if(burnedMass + min_mass_in_a_cell > solidMass){
+             burnedMass = solidMass - min_mass_in_a_cell;
           }
 
           /* conservation of mass, momentum and energy   */
@@ -1493,14 +1510,14 @@ void DDT1::refine(const ProcessorGroup*,
 /******************* Bisection Newton Solver ********************************/    
 /****************************************************************************/
 double DDT1::computeBurnedMass(double To, double& Ts, double P, double Vc, double surfArea, 
-                               double delT, double solidMass){  
+                               double delT, double solidMass, const double min_mass_in_a_cell){  
   IterationVariables iterVar;
   UpdateConstants(To, P, Vc, &iterVar);
   Ts = BisectionNewton(Ts, &iterVar);
   double m =  m_Ts(Ts, &iterVar);
   double burnedMass = delT * surfArea * m;
-  if (burnedMass + MIN_MASS_IN_A_CELL > solidMass) 
-      burnedMass = solidMass - MIN_MASS_IN_A_CELL;  
+  if (burnedMass + min_mass_in_a_cell > solidMass) 
+      burnedMass = solidMass - min_mass_in_a_cell;  
   return burnedMass;
   
 }
@@ -1589,15 +1606,15 @@ double DDT1::Func(double Ts, IterationVariables *iterVar){
 double DDT1::Deri(double Ts, IterationVariables *iterVar){
   double m = m_Ts(Ts, iterVar);
   double K1 = Ts-iterVar->C2;
-  double K2 = sqrt(m*m+iterVar->C3);
-  double K3 = (R*Ts*(K1-iterVar->C2)+Ec*K1)*m*iterVar->C5;
-  double K4 = (K2+m)*(K2+m)*K1*K2*R*Ts*Ts;
+  double K2 = sqrt( m * m + iterVar->C3 );
+  double K3 = ( R * Ts * (K1-iterVar->C2) + Ec * K1) * m * iterVar->C5;
+  double K4 = (K2 + m) * ( K2 + m ) * K1 * K2 * R * Ts * Ts;
   return 1.0 + K3/K4;
 }
 
 /* F_Ts(Ts_max) is the max of F_Ts function */
 double DDT1::Ts_max(IterationVariables *iterVar){
-  return 0.5*(2.0*R*iterVar->C2 - Ec + sqrt(4.0*R*R*iterVar->C2*iterVar->C2+Ec*Ec))/R;
+  return 0.5*(2.0 * R * iterVar->C2 - Ec + sqrt(4.0 * R * R * iterVar->C2*iterVar->C2 + Ec * Ec))/R;
 } 
 
 void DDT1::SetInterval(double f, double Ts, IterationVariables *iterVar){  
@@ -1647,7 +1664,7 @@ double DDT1::BisectionNewton(double Ts, IterationVariables *iterVar){
           Ts += delta_new;
           y = Func(Ts, iterVar);
 
-          if(fabs(y)<EPSILON)
+          if(fabs(y)< EPSILON)
               return Ts;
 
           if(Ts<iterVar->IL || Ts>iterVar->IR || fabs(delta_new)>fabs(delta_old*0.7))
