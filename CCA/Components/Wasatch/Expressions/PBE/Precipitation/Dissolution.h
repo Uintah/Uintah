@@ -26,6 +26,8 @@
 #define Dissolution_Expr_h
 
 #include <expression/Expression.h>
+#include <cmath>  // log
+#include <boost/math/special_functions/erf.hpp> // erf
 
 /**
  *  \class  Dissolution
@@ -201,8 +203,8 @@ evaluate()
     for( size_t i = 0; i<nEnv; ++i ){
       if (*sBarIterator > *superSatIterator && *abscissaeIterators[i] < rMin_ &&
           *weightIterators[i] > 1.0e-3 && *abscissaeIterators[i] > 0.0) {
-        const double k = 0.25 * (1.0 - erf(8.0*log(*abscissaeIterators[i]/rMin_))) *
-                                (1.0 - erf(5.0*(-2.5-log10(*weightIterators[i]))) );
+        const double k = 0.25 * (1.0 - boost::math::erf(8.0*std::log(*abscissaeIterators[i]/rMin_))) *
+                                (1.0 - boost::math::erf(5.0*(-2.5-std::log10(*weightIterators[i]))) );
         sum = sum  -30.0 * k * *weightIterators[i] * pow(*abscissaeIterators[i], momentOrder_);
       }
     }
