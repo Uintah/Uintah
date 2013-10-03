@@ -952,6 +952,10 @@ namespace Wasatch{
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
 
+      //
+      // process clipping on fields
+      //
+      process_field_clipping( wasatchSpec_, graphCategories_, localPatches );
       
       // post processing
       GraphHelper* const postProcGH = graphCategories_[ POSTPROCESSING ];
@@ -973,10 +977,6 @@ namespace Wasatch{
       
       // pass the bc Helper to pressure expressions on all patches
       bcHelperMap_[level->getID()]->synchronize_pressure_expression();
-      //
-      // process clipping on fields
-      //
-      process_field_clipping( wasatchSpec_, graphCategories_, localPatches );      
     }
 
     if (isRestarting_) isRestarting_ = false;

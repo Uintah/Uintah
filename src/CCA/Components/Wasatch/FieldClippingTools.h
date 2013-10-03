@@ -95,6 +95,7 @@ namespace Wasatch{
   operator()( FieldT& f ) const
   {
     using namespace SpatialOps;
+    std::cout << "clipping........\n";
     f <<= cond( f < min_, min_ )
               ( f > max_, max_ )
               ( f );    
@@ -111,13 +112,19 @@ namespace Wasatch{
   template<typename FieldT>
   void
   clip_expr(const Uintah::PatchSet* const localPatches, 
-            const GraphHelper& graphHelper,
+            GraphHelper& graphHelper,
+            const Category& cat,
             const Expr::Tag& fieldTag,
             const double min,
             const double max) 
   {
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     
+    if (cat == POSTPROCESSING) {
+      const Expr::ExpressionID expID = factory.get_id(fieldTag);
+      graphHelper.rootIDs.insert(expID);
+    }
+
     for( int ip=0; ip<localPatches->size(); ++ip ){
       // get the patch subset
       const Uintah::PatchSubset* const patches = localPatches->getSubset(ip);
@@ -130,7 +137,7 @@ namespace Wasatch{
 
         Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( fieldTag, patch->getID(), false ) );
         MinMaxClip<FieldT> clipper(min,max);
-        phiExpr.process_after_evaluate(fieldTag.name(),clipper);    
+        phiExpr.process_after_evaluate(fieldTag.name(),clipper);
       }
     }
   }
@@ -151,8 +158,9 @@ namespace Wasatch{
       clipParams->getAttribute("tasklist", taskListName);
       
       Category cat = INITIALIZATION;
-      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
-      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+      if      ( taskListName == "initialization"   )   cat = INITIALIZATION;
+      else if ( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+      else if ( taskListName == "post_processing"  )   cat = POSTPROCESSING;
       else{
         std::ostringstream msg;
         msg << "ERROR: unsupported task list specified in FieldClipping block '" << taskListName << "'" << std::endl;
@@ -172,10 +180,10 @@ namespace Wasatch{
         const Expr::Tag fieldTag = parse_nametag( fieldParams->findBlock("NameTag") );
         
         switch( get_field_type(fieldType) ){
-          case SVOL : clip_expr< SVolField >( localPatches,*graphHelper, fieldTag, min, max );  break;
-          case XVOL : clip_expr< XVolField >( localPatches,*graphHelper, fieldTag, min, max );  break;
-          case YVOL : clip_expr< YVolField >( localPatches,*graphHelper, fieldTag, min, max );  break;
-          case ZVOL : clip_expr< ZVolField >( localPatches,*graphHelper, fieldTag, min, max );  break;
+          case SVOL : clip_expr< SVolField >( localPatches,*graphHelper, cat, fieldTag, min, max );  break;
+          case XVOL : clip_expr< XVolField >( localPatches,*graphHelper, cat, fieldTag, min, max );  break;
+          case YVOL : clip_expr< YVolField >( localPatches,*graphHelper, cat, fieldTag, min, max );  break;
+          case ZVOL : clip_expr< ZVolField >( localPatches,*graphHelper, cat, fieldTag, min, max );  break;
           default:
             std::ostringstream msg;
             msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;
