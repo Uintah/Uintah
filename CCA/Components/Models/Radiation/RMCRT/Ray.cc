@@ -23,7 +23,7 @@
  */
 
 //----- Ray.cc ----------------------------------------------
-#include <CCA/Components/Models/Radiation/RMCRT/MersenneTwister.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 
@@ -35,7 +35,8 @@
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <Core/Math/MersenneTwister.h>
+
 
 #include <time.h>
 #include <fstream>
