@@ -181,7 +181,7 @@ evaluate()
   result <<= 0.0;
 
   typename FieldT::interior_iterator resultsIter = result.interior_begin();
-  int nEnv = weights_.size();
+  const size_t nEnv = weights_.size();
   const FieldT* sampleField = weights_[0];
   typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
   
@@ -214,7 +214,7 @@ evaluate()
     ++sBarIterator;
     ++sampleIterator;
     ++resultsIter;
-    for( size_t i = 0; i<nEnv; i++ ){
+    for( size_t i = 0; i<nEnv; ++i ){
       ++weightIterators[i];
       ++abscissaeIterators[i];
     }
