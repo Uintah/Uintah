@@ -362,10 +362,10 @@ namespace Wasatch {
       extraBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
       
       edgePoint = *bndIter - unitNormal;
-      if( (edgePoint[i] == idxHi[i]) && plusEdge[i]  ||
-          (edgePoint[j] == idxHi[j]) && plusEdge[j]  ||
-          (edgePoint[i] == idxLo[i]) && minusEdge[i] ||
-          (edgePoint[j] == idxLo[j]) && minusEdge[j] )
+      if( ((edgePoint[i] == idxHi[i]) && plusEdge[i]  ) ||
+          ((edgePoint[j] == idxHi[j]) && plusEdge[j]  ) ||
+          ((edgePoint[i] == idxLo[i]) && minusEdge[i] ) ||
+          ((edgePoint[j] == idxLo[j]) && minusEdge[j] ) )
       {
         edgePoint -= patchCellOffset;
         intEdgeSOIter.push_back( IntVecT(bcPointIJK[0], bcPointIJK[1], bcPointIJK[2]) );
