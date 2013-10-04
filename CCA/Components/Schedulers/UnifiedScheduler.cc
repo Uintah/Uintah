@@ -1388,10 +1388,17 @@ int UnifiedScheduler::getAviableThreadNum()
 
 #ifdef HAVE_CUDA
 
-void UnifiedScheduler::gpuInitialize()
+void UnifiedScheduler::gpuInitialize(bool reset)
 {
   cudaError_t retVal;
   CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices_));
+  if (reset){
+    for (int i=0; i< numDevices_ ; i++) {
+      CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
+      CUDA_RT_SAFE_CALL(retVal = cudaDeviceReset());
+    }
+  }
+  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(0));
   currentDevice_ = 0;
 }
 
@@ -1484,7 +1491,7 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask)
             int3 device_offset;
             int3 device_size;
             void *device_ptr;
-            device_var.getOffsetSizePtr(device_offset, device_size, device_ptr);
+            device_var.getArray3(device_offset, device_size, device_ptr);
             if (device_offset.x == offset.x() && device_offset.y == offset.y() && device_offset.y == offset.y() &&
                 device_size.x == size.x() &&  device_size.y == size.y()  && device_size.z == size.z() ) {
               if (gpu_stats.active()) {
@@ -1665,7 +1672,7 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask)
           int3 device_offset;
           int3 device_size;
           void* device_ptr;
-          device_var.getOffsetSizePtr(device_offset, device_size, device_ptr);
+          device_var.getArray3(device_offset, device_size, device_ptr);
 
           // if offset and size is equal to CPU DW, directly copy back to CPU var memory;
           if (device_offset.x == offset.x() && device_offset.y == offset.y() && device_offset.y == offset.y() &&

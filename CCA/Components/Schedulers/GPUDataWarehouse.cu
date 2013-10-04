@@ -33,57 +33,60 @@ namespace Uintah {
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::get(GPUGridVariableBase &var, char const* name, int patchID, int maltIndex)
+GPUDataWarehouse::get(const GPUGridVariableBase &var, char const* name, int patchID, int maltIndex)
+{
+  GPUDataWarehouse::dataItem* item=getItem(name, patchID, maltIndex);
+  if (item) var.setArray3(item->var_offset, item->var_size, item->var_ptr);
+  else printf("ERROR:\nGPUDataWarehouse::get( %s ) unknown variable from GPUDataWarehouse",name);
+}
+
+HOST_DEVICE void
+GPUDataWarehouse::getModifiable(GPUGridVariableBase &var, char const* name, int patchID, int maltIndex)
+{
+  GPUDataWarehouse::dataItem* item=getItem(name, patchID, maltIndex);
+  if (item) var.setArray3(item->var_offset, item->var_size, item->var_ptr);
+  else printf("ERROR:\nGPUDataWarehouse::getModifiable( %s )  unknown variable from GPUDataWarehouse",name);
+}
+
+HOST_DEVICE GPUDataWarehouse::dataItem* 
+GPUDataWarehouse::getItem(char const* name, int patchID, int maltIndex)
 {
 #ifdef __CUDA_ARCH__
-  __shared__ int3 offset;
-  __shared__ int3 size;
-  __shared__ void* ptr;
-  __syncthreads();  //sync before get
-
+  __shared__ int index;
   int numThreads = blockDim.x*blockDim.y*blockDim.z;
   int blockID = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
   int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
   int i=threadID;
   char const *s1 = name;
-
+  __syncthreads();
+  index = -1;
+  
   if (d_debug && threadID == 0 && blockID==0) {
-    printf("device getting %s from DW 0x%x", name, (unsigned int)this);
+    printf("device getting item %s from DW 0x%x", name, (unsigned int)this);
     printf("size (%d vars)\n", numItems);
   }
 
+  __syncthreads();  //sync before get
   while(i<numItems){
     int strmatch=0;
     char *s2 = &(d_varDB[i].label[0]);
     while (!(strmatch = *(unsigned char *) s1 - *(unsigned char *) s2) && *s2) ++s1, ++s2; //strcmp
 
     if (strmatch==0 && d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex){
-      offset = d_varDB[i].var_offset;
-      size   = d_varDB[i].var_size;
-      ptr    = d_varDB[i].var_ptr;
+      index = i;
     }
     i=i+numThreads;
   }
-
   //sync before return;
   __syncthreads();
-  var.setArray3(offset, size, ptr);
-
-
-  if (d_debug && threadID == 0 && blockID==0) { // printf from GPU only support two variables...
-    printf("device got %s (patch: %d) ", name, patchID);
-    printf("loc 0x%x ", ptr);
-    printf("from GPUDW 0x%x on ", device_copy);
-    printf("device %d\n", device_id);
-  }
-
+  if (index==-1) return NULL;
+  else return &d_varDB[index];
 #else
   //__________________________________
   // cpu code
   int i= 0;
   while(i<numItems){
     if (!strncmp(d_varDB[i].label, name, MAX_NAME) &&  d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex) {
-      var.setArray3(d_varDB[i].var_offset, d_varDB[i].var_size , d_varDB[i].var_ptr);
       break;
     }
     i++;
@@ -97,6 +100,7 @@ GPUDataWarehouse::get(GPUGridVariableBase &var, char const* name, int patchID, i
   if (d_debug){
     printf("host got %s loc 0x%x from GPUDW 0x%x on device %d\n", name, d_varDB[i].var_ptr, device_copy, device_id);
   }
+  return &d_varDB[i];
 #endif
 }
 //______________________________________________________________________
@@ -124,7 +128,7 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, char const* name, int patchID, i
   var.getArray3(d_varDB[i].var_offset, d_varDB[i].var_size, d_varDB[i].var_ptr);
   
   if (d_debug){
-    printf("host put %s (patch: %d) loc 0x%x into GPUDW 0x%x on device %d\n", name, patchID, d_varDB[i].var_ptr, device_copy, device_id);
+    printf("host put %s (patch: %d) loc 0x%x into GPUDW 0x%x on device %d, size [%d,%d,%d]\n", name, patchID, d_varDB[i].var_ptr, device_copy, device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
   }
   d_dirty=true;
 #endif

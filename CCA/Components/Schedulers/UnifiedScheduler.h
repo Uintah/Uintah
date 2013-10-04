@@ -162,7 +162,7 @@ WARNING
 
 #ifdef HAVE_CUDA
 
-    void gpuInitialize();
+    void gpuInitialize(bool reset=false);
 
     void postD2HCopies(DetailedTask* dtask);
     
