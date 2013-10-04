@@ -29,6 +29,7 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Math/MersenneTwister.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Util/DebugStream.h>
 
@@ -52,6 +53,12 @@ namespace Uintah {
     
     Point gridMin;
     Point gridMax;
+    
+    // variance
+    bool addVariance;             // add variance to the inlet velocity profile
+    double C_mu;                   // constant
+    double u_star;                // roughnes
+    
   }; 
   //____________________________________________________________
   bool read_inletVel_BC_inputs(const ProblemSpecP&,
@@ -162,6 +169,12 @@ namespace Uintah {
          << bc_kind << ")\n" << endl; 
     throw InternalError(warn.str(), __FILE__, __LINE__);
   }
+  
+  
+  
+  
+  
+  
   return bound_ptr.size(); 
 }
 
