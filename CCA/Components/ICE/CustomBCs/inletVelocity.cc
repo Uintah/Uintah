@@ -104,6 +104,15 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
     inlet_ps -> get( "maxHeight",             maxHeight   );
     Vector lo = b.min().asVector();
     VB->maxHeight = maxHeight - lo[ VB->verticalDir ];
+    
+    //__________________________________
+    //  Add variance to the velocity profile
+    ProblemSpecP var_ps = inlet_ps->findBlock("variance");
+    if (var_ps) {
+      VB->addVariance = true;
+      var_ps -> get( "C_mu", VB->C_mu   );
+      var_ps -> get( "frictionVel", VB->u_star   );
+    }
   }
   return usingBC;
 }
@@ -112,32 +121,8 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
 void  preprocess_inletVelocity_BCs(const string& where,
                                    bool& set_BCs)
 {
-  set_BCs = false; 
-  //__________________________________
-  //    Equilibrium pressure
-  if(where == "EqPress"){
-    set_BCs = false; 
-  }
-  //__________________________________
-  //    Explicit and semi-implicit update pressure
-  if(where == "update_press_CC"){
-    set_BCs = false; 
-  }
-  if(where == "implicitPressureSolve"){
-    set_BCs = false;
-  }
-   
-  if(where == "imp_update_press_CC"){
-    set_BCs = false;
-  }
-  //__________________________________
-  //    cc_ Exchange
-  if(where == "CC_Exchange"){
-    set_BCs = true;
-  }
-  //__________________________________
-  //    Advection
-  if(where == "Advection"){
+  set_BCs = false;
+  if(where == "CC_Exchange" || where == "Advection"){
     set_BCs = true;
   }
 }
@@ -233,7 +218,6 @@ int  set_inletVelocity_BC(const Patch* patch,
         if(z < d || z > gridMax){
           vel_CC[c] = Vector(0,0,0);
         }
-
 //        std::cout << "        " << c <<  " z " << z  << " z-d " << z-d << " ratio " << ratio << " vel_CC: " << vel_CC[c] <<endl;
       }
     }else{
@@ -243,6 +227,64 @@ int  set_inletVelocity_BC(const Patch* patch,
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     nCells += bound_ptr.size();
+    
+    //__________________________________
+    //  Additon of a 'kick' or variance to the mean velocity profile
+    //  This matches the Turbulent Kinetic Energy profile of 1/sqrt(C_u) * u_star^2 ( 1- Z/height)^2
+    //   where:
+    //          C_mu:     empirical constant
+    //          u_star:  frictionVelocity
+    //          Z:       height above the ground
+    //          height:  Boundar layer height, assumed to be the domain height
+    //
+    //   TKE = 1/2 * (sigma.x^2 + sigma.y^2 + sigma.z^2)
+    //    where sigma.x^2 = (1/N-1) * sum( u_mean - u)^2
+    //
+    //%  Reference: Castro, I, Apsley, D. "Flow and dispersion over topography;
+    //             A comparison between numerical and Laboratory Data for 
+    //             two-dimensional flows", Atmospheric Environment Vol. 31, No. 6
+    //             pp 839-850, 1997.
+    
+    if (VB->addVariance ){
+      MTRand mTwister;
+      
+      double gridHeight =  VB->gridMax(vDir); 
+      double d          =  VB->gridMin(vDir);
+      double inv_Cmu    = 1.0/VB->C_mu;
+      double u_star2    = VB->u_star * VB->u_star;
+      
+      for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
+        IntVector c = *bound_ptr;
+        
+        Point here = level->getCellPosition(c);
+        double z   = here.asVector()[vDir] ;
+        
+        double ratio = (z - d)/gridHeight;
+        
+        double TKE = inv_Cmu * u_star2 * pow( (1 - ratio),2 );
+        
+        // Assume that the TKE is evenly distrubuted between all three components of velocity
+        // 1/2 * (sigma.x^2 + sigma.y^2 + sigma.z^2) = 3/2 * sigma^2
+        
+        const double variance = 0.66666 * TKE;
+        
+
+//        if( c.z() == 10){
+//          std::cout << z << ", vel_CC.x, " << vel_CC[c].x() << ", velPlusKick, " << mTwister.randNorm(vel_CC[c].x(), variance) << ", TKE, " << TKE << endl;
+//        }
+        
+        //__________________________________
+        // from the random number compute the new velocity knowing the mean velcity and variance
+        vel_CC[c].x( mTwister.randNorm( vel_CC[c].x(), variance ) );
+        vel_CC[c].y( mTwister.randNorm( vel_CC[c].y(), variance ) );
+        vel_CC[c].z( mTwister.randNorm( vel_CC[c].z(), variance ) );
+                
+        // Clamp edge/corner values 
+        if(z < d || z > gridHeight ){
+          vel_CC[c] = Vector(0,0,0);
+        }
+      }
+    }
   }
 
   return nCells; 
