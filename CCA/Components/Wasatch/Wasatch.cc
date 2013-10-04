@@ -255,7 +255,7 @@ namespace Wasatch{
     const bool isYPeriodic = (periodicityVector.y() == 1) ? true : false;
     const bool isZPeriodic = (periodicityVector.z() == 1) ? true : false;
 
-#     ifdef WASATCH_IN_ARCHES
+#   ifdef WASATCH_IN_ARCHES
     // we are only allowing for a single extra cell :(
     // make sure that extra cell and periodicity are consistent
     bool isPeriodic = periodicityVector.x() == 1 || periodicityVector.y() == 1 || periodicityVector.z() == 1;
@@ -269,7 +269,7 @@ namespace Wasatch{
       << endl;
       throw std::runtime_error( msg.str() );
     }
-#     else
+#   else
     if( foundExtraCells ){
       msg << endl
       << "  Specification of 'extraCells' is forbidden in Wasatch. The number of extraCells is automatically determined." << endl
@@ -277,7 +277,7 @@ namespace Wasatch{
       << endl;
       throw std::runtime_error( msg.str() );
     }
-#     endif
+#   endif
         
     extraCells = Uintah::IntVector( (isXPeriodic) ? 0 : 1,
                                     (isYPeriodic) ? 0 : 1,
