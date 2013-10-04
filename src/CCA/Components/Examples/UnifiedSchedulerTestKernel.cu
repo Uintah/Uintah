@@ -23,6 +23,7 @@
  */
 
 #include <sci_defs/cuda_defs.h>
+#include <Core/Geometry/GPUVector.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 // linker support for device code not ready yet, need to include the whole source...
