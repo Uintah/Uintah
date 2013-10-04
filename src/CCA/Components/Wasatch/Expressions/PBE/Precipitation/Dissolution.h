@@ -47,8 +47,8 @@ class Dissolution
   const FieldT* sBar_;
   const FieldT* superSat_;
   
-  const double momentOrder_;    // order of the current moment
   const double rMin_;           //smallest radius possible before deaht occurs
+  const double momentOrder_;    // order of the current moment
   const double deathCoef_; 
   
   typedef std::vector<const FieldT*> FieldVec;
