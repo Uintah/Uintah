@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 #include <Core/OS/Dir.h>
-#include <Core/Parallel/Parallel.h>
 
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
@@ -213,62 +212,13 @@ Dir::move(Dir& destDir)
    return;
 }
 
-
-
-void wait ( int seconds )
-{
-  clock_t endwait;
-  endwait = clock() + seconds * CLOCKS_PER_SEC ;
-  while (clock() < endwait) {}
-}
-
 void
 Dir::copy(const std::string& filename, Dir& destDir)
 {
    string filepath = name_ + "/" + filename;
    int code =system((string("cp ") + filepath + " " + destDir.name_).c_str());
-
-   // something went wrong
-   if (code != 0){
-   
-   //__________________________________
-   // output system information
-    ostringstream proc;
-    proc << Uintah::Parallel::getMPIRank() << ".txt";
-     
-    vector<string> cmds;
-    cmds.push_back( "hostname > " + proc.str() );
-    cmds.push_back( "printf \"__________________________printenv\n\" >> " + proc.str() );
-    cmds.push_back( "printenv >>" + proc.str() );
-    cmds.push_back( "printf \"__________________________ls -l\n\" >> "    + proc.str() );
-    cmds.push_back( "ls -l    >> " + proc.str() );
-    cmds.push_back( "printf \"__________________________ls -l ..\n\" >> " + proc.str() );
-    cmds.push_back( "ls -l .. >> " + proc.str() );
-    cmds.push_back( "printf \"__________________________which cp\n\" >> " + proc.str() );
-    cmds.push_back( "which cp >> " + proc.str() );    
-    cmds.push_back( "printf \"__________________________________\n\" >> " + proc.str() );
-    
-    for (int i=1; i<cmds.size(); i++) {
-      system( cmds[i].c_str() );
-    }
-    
-    
-    //__________________________________
-    //  Try to copy the file 
-     for (int i=0; i<10; i++ ){
-       cout << "\n\n WARNING WARNING WARNING" << endl;
-       cout << " The system (cp) command failed with the return code (" << code << "). " << " filepath: " << filepath << " destDir: " << destDir.name_<< "  Trying again in 2 seconds " << endl;
-       wait(2);
-       code =system((string("cp ") + filepath + " " + destDir.name_).c_str());
-       
-       if( code == 0){
-
-         cout << " SUCCESSFULLY executed cp command \n\n" << endl;
-         return;
-       }
-     }
-     //throw InternalError(string("Dir::copy failed to copy: ") + filepath, __FILE__, __LINE__);
-   }
+   if (code != 0)
+      throw InternalError(string("Dir::copy failed to copy: ") + filepath, __FILE__, __LINE__);
    return;
 }
 

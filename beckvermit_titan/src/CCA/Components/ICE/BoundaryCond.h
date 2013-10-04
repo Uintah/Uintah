@@ -64,7 +64,8 @@ namespace Uintah {
                       SimulationStateP& sharedState,
                       const int mat_id,
                       DataWarehouse* new_dw,
-                      customBC_var_basket* C_BC_basket);
+                      customBC_globalVars* globalVars,
+                      customBC_localVars* localVars);
             
    void setBC(CCVariable<double>& var,     
                       const std::string& type,     // stub function
@@ -84,7 +85,8 @@ namespace Uintah {
                       SimulationStateP& sharedState,
                       const int mat_id, 
                       DataWarehouse* new_dw,
-                      customBC_var_basket* C_BC_basket);
+                      customBC_globalVars* globalVars,
+                      customBC_localVars* localVars);
              
    void setBC(CCVariable<double>& press_CC,          
                       StaticArray<CCVariable<double> >& rho_micro,
@@ -105,7 +107,8 @@ namespace Uintah {
                       SimulationStateP& sharedState,
                       const int mat_id,
                       DataWarehouse* new_dw, 
-                      customBC_var_basket* C_BC_basket);
+                      customBC_globalVars* globalVars,
+                      customBC_localVars* localVars);
              
    void setBC(CCVariable<Vector>& variable,  // stub function
                       const std::string& type,
@@ -205,7 +208,8 @@ void setBC(T& vel_FC,
            const Patch* patch,    
            const int mat_id,
            SimulationStateP& sharedState,
-           customBC_var_basket* custom_BC_basket)      
+           customBC_globalVars* globalVars,
+           customBC_localVars*  localVars)      
 {
   cout_BC_FC << "--------setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<endl;
   Vector cell_dx = patch->dCell();
@@ -280,22 +284,22 @@ void setBC(T& vel_FC,
           else if(bc_kind == "MMS_1"){
             nCells+= set_MMS_BCs_FC<T>(patch, face, vel_FC, bound_ptr,
                                         cell_dx, sharedState,
-                                        custom_BC_basket->mms_var_basket,
-                                        custom_BC_basket->mms_v);
+                                        globalVars->mms_var_basket,
+                                        localVars->mms_v);
           }
           //__________________________________
           // Custom BCs
           else if(bc_kind == "Sine"){
             nCells+= set_Sine_BCs_FC<T>(patch, face, vel_FC, bound_ptr, sharedState,
-                                        custom_BC_basket->sine_var_basket,
-                                        custom_BC_basket->sine_v);
+                                        globalVars->sine_var_basket,
+                                        localVars->sine_v);
           }
           //__________________________________
           // Custom BCs
           else if( (bc_kind == "powerLawProfile" || bc_kind == "logWindProfile") ){
             nCells+= set_inletVelocity_BCs_FC<T>(patch, face, vel_FC, 
                                                  bound_ptr, bc_kind, value,
-                                                 custom_BC_basket->inletVel_var_basket);
+                                                 globalVars->inletVel_var_basket);
           }       
 
           //__________________________________

@@ -37,18 +37,18 @@ void computesRequires_CustomBCs(Task* t,
                                 const string& where,
                                 ICELabel* lb,
                                 const MaterialSubset* ice_matls,
-                                customBC_var_basket* C_BC_basket)
+                                customBC_globalVars* basket)
 {   
-  if(C_BC_basket->usingLodi){             // LODI         
-    addRequires_Lodi( t, where,  lb, ice_matls, C_BC_basket->Lodi_var_basket);
+  if(basket->usingLodi){             // LODI         
+    addRequires_Lodi( t, where,  lb, ice_matls, basket->Lodi_var_basket);
   }
-  if(C_BC_basket->usingMicroSlipBCs){     // MicroSlip          
-    addRequires_MicroSlip( t, where,  lb, ice_matls, C_BC_basket->Slip_var_basket);
+  if(basket->usingMicroSlipBCs){     // MicroSlip          
+    addRequires_MicroSlip( t, where,  lb, ice_matls, basket->Slip_var_basket);
   }
-  if(C_BC_basket->using_MMS_BCs){         // method of manufactured solutions         
+  if(basket->using_MMS_BCs){         // method of manufactured solutions         
     addRequires_MMS( t, where,  lb, ice_matls);
   }
-  if(C_BC_basket->using_Sine_BCs){         // method of manufactured solutions         
+  if(basket->using_Sine_BCs){         // method of manufactured solutions         
     addRequires_Sine( t, where,  lb, ice_matls);
   }      
 }
@@ -62,91 +62,88 @@ void preprocess_CustomBCs(const string& where,
                           ICELabel* lb,
                           const Patch* patch,
                           const int indx,
-                          customBC_var_basket* C_BC_basket)
+                          customBC_globalVars* globalVars,
+                          customBC_localVars* localVars)
 {
   delt_vartype delT;
   const Level* level = patch->getLevel();
-  old_dw->get(delT, C_BC_basket->sharedState->get_delt_label(),level);
+  old_dw->get(delT, globalVars->sharedState->get_delt_label(),level);
    
-   C_BC_basket->setMicroSlipBcs = false;
-   C_BC_basket->set_MMS_BCs     = false;
-   C_BC_basket->set_Sine_BCs    = false;
-   C_BC_basket->setLodiBcs      = false;
   //__________________________________
   //   LODI
-  if(C_BC_basket->usingLodi){  
-    C_BC_basket->lv = scinew Lodi_vars();
+  if( globalVars->usingLodi ){  
+    localVars->lv = scinew Lodi_vars();
     
     preprocess_Lodi_BCs( old_dw, new_dw, lb, patch, where,
                        indx,  
-                       C_BC_basket->sharedState,
-                       C_BC_basket->setLodiBcs,
-                       C_BC_basket->lv, 
-                       C_BC_basket->Lodi_var_basket);        
+                       globalVars->sharedState,
+                       localVars->setLodiBcs,
+                       localVars->lv, 
+                       globalVars->Lodi_var_basket);        
   }
   //__________________________________
   //  micro slip boundary conditions
-  if(C_BC_basket->usingMicroSlipBCs){  
-    C_BC_basket->sv = scinew Slip_vars();
+  if( globalVars->usingMicroSlipBCs ){  
+    localVars->sv = scinew Slip_vars();
     
     preprocess_MicroSlip_BCs( old_dw, new_dw, lb, patch, where,
                               indx,  
-                              C_BC_basket->sharedState,
-                              C_BC_basket->setMicroSlipBcs,
-                              C_BC_basket->sv, 
-                              C_BC_basket->Slip_var_basket);        
+                              globalVars->sharedState,
+                              localVars->setMicroSlipBcs,
+                              localVars->sv, 
+                              globalVars->Slip_var_basket);        
   }
   //__________________________________
   //  method of manufactured solutions boundary conditions
-  if(C_BC_basket->using_MMS_BCs){  
-    C_BC_basket->mms_v = scinew mms_vars();
-    C_BC_basket->mms_v->delT = (double)delT;
-    C_BC_basket->mms_var_basket->delT= (double)delT;
+  if( globalVars->using_MMS_BCs ){  
+    localVars->mms_v = scinew mms_vars();
+    localVars->mms_v->delT = (double)delT;
     preprocess_MMS_BCs( new_dw,old_dw, lb,indx,patch, where,
-                        C_BC_basket->set_MMS_BCs, 
-                        C_BC_basket->mms_v);        
+                        localVars->set_MMS_BCs, 
+                        localVars->mms_v);        
   }
   //__________________________________
   //  Sine boundary conditions
-  if(C_BC_basket->using_Sine_BCs){  
-    C_BC_basket->sine_v = scinew sine_vars();
-    C_BC_basket->sine_v->delT = (double)delT;
-    C_BC_basket->sine_var_basket->delT= (double)delT;
+  if( globalVars->using_Sine_BCs ){  
+    localVars->sine_v = scinew sine_vars();
+    localVars->sine_v->delT = (double)delT;
+    globalVars->sine_var_basket->delT= (double)delT;
     preprocess_Sine_BCs( new_dw,old_dw, lb,indx,patch, where,
-                        C_BC_basket->set_Sine_BCs, 
-                        C_BC_basket->sine_v);        
+                        localVars->set_Sine_BCs, 
+                        localVars->sine_v);        
   }  
   
   //__________________________________
   //  inletVelocity conditions
-  if(C_BC_basket->using_inletVel_BCs){
-    preprocess_inletVelocity_BCs(  where, C_BC_basket->set_inletVel_BCs);        
+  if( globalVars->using_inletVel_BCs ){
+    preprocess_inletVelocity_BCs(  where, localVars->set_inletVel_BCs);        
   }       
 }
 
 //______________________________________________________________________
 // Function:   delete_CustomBCs
 //______________________________________________________________________
-void delete_CustomBCs(customBC_var_basket* C_BC_basket)
+void delete_CustomBCs(customBC_globalVars* global,
+                      customBC_localVars* local)
 {
-  if(C_BC_basket->usingLodi){  
-    if(C_BC_basket->lv) {
-      delete C_BC_basket->lv;
+  if( global->usingLodi ){  
+    if( local->lv ) {
+      delete local->lv;
     }
   }
-  if(C_BC_basket->usingMicroSlipBCs){  
-    if(C_BC_basket->sv) {
-      delete C_BC_basket->sv;
+  if( global->usingMicroSlipBCs ){  
+    if( local->sv ) {
+      delete local->sv;
     }
   }
-  if(C_BC_basket->using_MMS_BCs){
-    if(C_BC_basket->mms_v) {
-      delete C_BC_basket->mms_v;
+  if( global->using_MMS_BCs ){
+    if(local->mms_v) {
+      delete local->mms_v;
     } 
   }
-  if(C_BC_basket->using_Sine_BCs){
-    if(C_BC_basket->sine_v) {
-      delete C_BC_basket->sine_v;
+  if( global->using_Sine_BCs ){
+    if( local->sine_v ) {
+      delete local->sine_v;
     } 
   }
 }

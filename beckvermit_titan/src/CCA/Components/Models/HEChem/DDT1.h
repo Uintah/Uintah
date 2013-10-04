@@ -232,44 +232,43 @@ WARNING
     double d_crackVolThreshold; // for cracking
 
     // Burn Model
-    double R ;  /* IdealGasConst      */
-    double Ac;  /* PreExpCondPh       */
-    double Ec;  /* ActEnergyCondPh in unit of Temperature    */
-    double Bg;  /* PreExpGasPh        */
-    double Qc;  /* CondPhaseHeat      */
-    double Qg;  /* GasPhaseHeat       */
-    double Kg;  /* HeatConductGasPh   */
-    double Kc;  /* HeatConductCondPh  */
-    double Cp;  /* SpecificHeatCondPh */
-    double MW;  /* MoleWeightGasPh    */
-    double BP;  /* Number of Particles at Boundary          */
+    double d_R ;  /* IdealGasConst      */
+    double d_Ac;  /* PreExpCondPh       */
+    double d_Ec;  /* ActEnergyCondPh in unit of Temperature    */
+    double d_Bg;  /* PreExpGasPh        */
+    double d_Qc;  /* CondPhaseHeat      */
+    double d_Qg;  /* GasPhaseHeat       */
+    double d_Kg;  /* HeatConductGasPh   */
+    double d_Kc;  /* HeatConductCondPh  */
+    double d_Cp;  /* SpecificHeatCondPh */
+    double d_MW;  /* MoleWeightGasPh    */
+    double d_BP;  /* Number of Particles at Boundary          */
     double d_thresholdPress_SB; /*Threshold Press for burning */
-    double ignitionTemp;        /* IgnitionTemp  */
+    double d_ignitionTemp;        /* IgnitionTemp  */
     
     //Induction Model
     bool   d_useInductionTime;
     double d_IC; /* Ignition time constant                           IgnitionConst */
     double d_Fb; /* Preexponential for suface flame spread equation  PreexpoConst */
     double d_Fc; /* exponent term for suface flame spread equaiton   ExponentialConst */
-    double d_PS; /* P0 for surface flame spread equation             PressureShift */  
+    double d_PS; /* P0 for surface flame spread equation             PressureShift */
     
-    
-    double CC1; /* CC1 = Ac*R*Kc*Ec/Cp        */
-    double CC2; /* CC2 = Qc/Cp/2              */
-    double CC3; /* CC3 = 4*Kg*Bg*W*W/Cp/R/R;  */
-    double CC4; /* CC4 = Qc/Cp                */
-    double CC5; /* CC5 = Qg/Cp                */
+    double d_CC1; /* d_CC1 = Ac*R*Kc*Ec/Cp        */
+    double d_CC2; /* d_CC2 = Qc/Cp/2              */
+    double d_CC3; /* d_CC3 = 4*Kg*Bg*W*W/Cp/R/R;  */
+    double d_CC4; /* d_CC4 = Qc/Cp                */
+    double d_CC5; /* d_CC5 = Qg/Cp                */
       
     /* C's, IL & IR, Tmin & Tmax are updated in UpdateConstants function  */
     // Structure used to pass values into the iterator.  This is used to 
     //   prevent global definitions that may be corrupted by 
     //   multiple versions working on the same variables.
     typedef struct {
-      double C1; /* C1 = CC1 / Vc, (Vc = Condensed Phase Specific Volume) */
-      double C2; /* C2 = To + CC2     */
-      double C3; /* C3 = CC3 * P * P  */
-      double C4; /* C4 = To + CC4     */
-      double C5; /* C5 = CC5 * C3     */
+      double C1; /* C1 = d_CC1 / Vc, (Vc = Condensed Phase Specific Volume) */
+      double C2; /* C2 = To + d_CC2     */
+      double C3; /* C3 = d_CC3 * P * P  */
+      double C4; /* C4 = To + d_CC4     */
+      double C5; /* C5 = d_CC5 * C3     */
           
       double Tmin, Tmax; /* define the range of Ts */
       double IL, IR;     /* for interval update, left values and right values */
@@ -313,7 +312,7 @@ WARNING
     adj_IO* d_adj_IO_Press;
     adj_IO* d_adj_IO_Det;  
       
-    static const double EPSILON;   /* stop epsilon for Bisection-Newton method */   
+    static const double d_EPSILON;   /* stop epsilon for Bisection-Newton method */   
     #define d_SMALL_NUM 1e-100
     #define d_TINY_RHO 1e-12
   };

@@ -53,7 +53,8 @@ namespace Uintah {
                                      const Patch* patch,
                                      const int&  indx,
                                      const bool& bulletProof_test,
-                                     DataWarehouse* new_dw);
+                                     DataWarehouse* new_dw,
+                                     advectVarBasket* vb);
 
     virtual void  advectQ(const CCVariable<double>& q_CC,
                           const Patch* patch,
@@ -79,7 +80,6 @@ namespace Uintah {
                             advectVarBasket* vb);
     
   private:
-    CCVariable<fflux> d_OFS;
     
     friend class FirstOrderCEAdvector;
 
@@ -92,26 +92,30 @@ namespace Uintah {
                        SFCXVariable<double>& q_XFC,
                        SFCYVariable<double>& q_YFC,
                        SFCZVariable<double>& q_ZFC,
-                       F function); 
+                       F function,
+                       advectVarBasket* VB); 
                                                        
     template<class T>
       void q_FC_operator(CellIterator iter, 
                          IntVector adj_offset,
                          const int face,
-                         const CCVariable<double>& q_CC,
+                         const CCVariable< fflux >& OFS,
+                         const CCVariable< double >& q_CC,
                          T& q_FC);
                         
       void q_FC_PlusFaces(const CCVariable<double>& q_CC,
                           const Patch* patch,
                           SFCXVariable<double>& q_XFC,
                           SFCYVariable<double>& q_YFC,
-                          SFCZVariable<double>& q_ZFC);
+                          SFCZVariable<double>& q_ZFC,
+                          advectVarBasket* VB);
                                   
     template<class T, class V>
       void q_FC_flux_operator(CellIterator iter, 
                               IntVector adj_offset,
                               const int face,
-                              const CCVariable<V>& q_CC,
+                              const CCVariable< fflux >& OFS,
+                              const CCVariable< V >& q_CC,
                               T& q_FC);
                                                
     template<class T>
