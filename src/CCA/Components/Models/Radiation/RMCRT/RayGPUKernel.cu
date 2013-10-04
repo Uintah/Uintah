@@ -62,9 +62,9 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 {
   printf( " AAA \n" );
 
-  GPUGridVariable<double> sigmaT4OverPi;      // These should be const variables
-  GPUGridVariable<double> abskg;              // Need to use getRegion() to get the data
-  GPUGridVariable<int> celltype;
+  const GPUGridVariable<double> sigmaT4OverPi;      // These should be const variables
+  const GPUGridVariable<double> abskg;              // Need to use getRegion() to get the data
+  const GPUGridVariable<int> celltype;
 
   GPUGridVariable<double> divQ;
   GPUGridVariable<double> VRFlux;
@@ -76,10 +76,10 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   celltype_gdw->get( celltype ,     labelNames.celltype, patch.ID, matl );
 
   if( RT_flags.modifies_divQ ){
-    new_gdw->get( divQ,         labelNames.divQ,          patch.ID, matl );
-    new_gdw->get( VRFlux,       labelNames.VRFlux,        patch.ID, matl );
-    new_gdw->get( boundFlux,    labelNames.boundFlux,     patch.ID, matl );
-    new_gdw->get( radiationVolQ,labelNames.radVolQ,       patch.ID, matl );
+    new_gdw->getModifiable( divQ,         labelNames.divQ,          patch.ID, matl );
+    new_gdw->getModifiable( VRFlux,       labelNames.VRFlux,        patch.ID, matl );
+    new_gdw->getModifiable( boundFlux,    labelNames.boundFlux,     patch.ID, matl );
+    new_gdw->getModifiable( radiationVolQ,labelNames.radVolQ,       patch.ID, matl );
   }else{
     new_gdw->put( divQ,         labelNames.divQ,          patch.ID, matl );
     new_gdw->put( VRFlux,       labelNames.VRFlux,        patch.ID, matl );
@@ -270,9 +270,9 @@ __device__ void updateSumIDevice ( const double3& ray_direction,
                                    const double3& ray_location,
                                    const int3& origin,
                                    const double3& Dx,
-                                   GPUGridVariable<double>& sigmaT4OverPi,
-                                   GPUGridVariable<double>& abskg,
-                                   GPUGridVariable<int>& celltype,
+                                   const GPUGridVariable<double>& sigmaT4OverPi,
+                                   const GPUGridVariable<double>& abskg,
+                                   const GPUGridVariable<int>& celltype,
                                    double& sumI,
                                    curandState* randNumStates,
                                    RMCRT_flags RT_flags)

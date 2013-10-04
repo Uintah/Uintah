@@ -39,7 +39,8 @@ class GPUDataWarehouse{
 public:
   GPUDataWarehouse(){numItems=0;device_copy=0;d_debug=false;d_dirty=true;};
   virtual ~GPUDataWarehouse(){};
-  HOST_DEVICE void get(GPUGridVariableBase &var, char const* label, int patchID, int maltID);
+  HOST_DEVICE void get(const GPUGridVariableBase &var, char const* label, int patchID, int maltID);
+  HOST_DEVICE void getModifiable(GPUGridVariableBase &var, char const* label, int patchID, int maltID);
   HOST_DEVICE void put(GPUGridVariableBase &var, char const* label, int patchID, int maltID, bool overWrite=false);
   HOST_DEVICE void allocateAndPut(GPUGridVariableBase &var, char const* name, int patchID, int maltID, int3 low, int3 high);
   HOST_DEVICE bool exist(char const* name, int patchID, int maltIndex);
@@ -49,7 +50,6 @@ public:
   HOST_DEVICE void clear();
   HOST_DEVICE GPUDataWarehouse* getdevice_ptr(){return device_copy;};
   HOST_DEVICE void setDebug(bool s){d_debug=s;}
-  
   
 private:
   int numItems;
@@ -67,6 +67,7 @@ private:
   GPUDataWarehouse*  device_copy;  //in-device copy location
   int device_id;
   bool d_debug;
+  HOST_DEVICE dataItem* getItem(char const* label, int patchID, int maltID);
 };
 
 
