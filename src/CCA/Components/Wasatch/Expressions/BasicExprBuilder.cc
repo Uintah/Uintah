@@ -459,10 +459,13 @@ namespace Wasatch{
     const double R = 8.314;
 
     if (params->findBlock("PrecipitationBulkDiffusionCoefficient") ) {
-      double coef, molecularVolume, diffusionCoefficient;
+      double coef, molecularVolume, diffusionCoefficient, sMin;
       Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationBulkDiffusionCoefficient");
       coefParams -> getAttribute("Molec_Vol",molecularVolume);
       coefParams -> getAttribute("Diff_Coef",diffusionCoefficient);
+      sMin = 0.0;
+      if (coefParams->getAttribute("S_Min", sMin) )
+        coefParams->getAttribute("S_Min", sMin);
       coef = molecularVolume*diffusionCoefficient;
       Expr::Tag sBarTag;
       if (coefParams->findBlock("SBar") ) 
@@ -470,7 +473,7 @@ namespace Wasatch{
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       const Expr::Tag eqTag  = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
       typedef typename PrecipitationBulkDiffusionCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, eqTag, sBarTag, coef);
+      builder = scinew Builder(tag, saturationTag, eqTag, sBarTag, coef, sMin);
     }
     
     else if (params->findBlock("CylindricalDiffusionCoefficient") ) {
@@ -489,15 +492,18 @@ namespace Wasatch{
     }
     
     else if (params->findBlock("KineticGrowthCoefficient") ) {
-      double coef;
+      double coef, sMax;
       Uintah::ProblemSpecP coefParams = params->findBlock("KineticGrowthCoefficient");
       coefParams -> getAttribute("K_A",coef);
+      sMax = 1e10;
+      if( coefParams->getAttribute("S_Max",sMax) )
+        coefParams->getAttribute("S_Max",sMax);
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       Expr::Tag sBarTag;
       if (coefParams->findBlock("SBar") ) 
         sBarTag = parse_nametag( coefParams->findBlock("SBar")->findBlock("NameTag") );
       typedef typename KineticGrowthCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, saturationTag, sBarTag, coef);
+      builder = scinew Builder( tag, saturationTag, sBarTag, coef, sMax);
     }
     
     else if (params->findBlock("PrecipitationMonosurfaceCoefficient") ) {
