@@ -56,7 +56,7 @@ using namespace std;
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
-const double DDT1::EPSILON   = 1e-6;   /* stop epsilon for Bisection-Newton method */
+const double DDT1::d_EPSILON   = 1e-6;   /* stop epsilon for Bisection-Newton method */
 
 DDT1::DDT1(const ProcessorGroup* myworld,
            ProblemSpecP& params,
@@ -178,18 +178,18 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
   d_matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
   d_matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
   d_matl2 = sharedState->parseAndLookupMaterial(d_params, "burnMaterial");
-  d_params->require("IdealGasConst",     R );
-  d_params->require("PreExpCondPh",      Ac);
-  d_params->require("ActEnergyCondPh",   Ec);
-  d_params->require("PreExpGasPh",       Bg);
-  d_params->require("CondPhaseHeat",     Qc);
-  d_params->require("GasPhaseHeat",      Qg);
-  d_params->require("HeatConductGasPh",  Kg);
-  d_params->require("HeatConductCondPh", Kc);
-  d_params->require("SpecificHeatBoth",  Cp);
-  d_params->require("MoleWeightGasPh",   MW);
-  d_params->require("BoundaryParticles", BP);
-  d_params->require("IgnitionTemp",      ignitionTemp);
+  d_params->require("IdealGasConst",     d_R );
+  d_params->require("PreExpCondPh",      d_Ac);
+  d_params->require("ActEnergyCondPh",   d_Ec);
+  d_params->require("PreExpGasPh",       d_Bg);
+  d_params->require("CondPhaseHeat",     d_Qc);
+  d_params->require("GasPhaseHeat",      d_Qg);
+  d_params->require("HeatConductGasPh",  d_Kg);
+  d_params->require("HeatConductCondPh", d_Kc);
+  d_params->require("SpecificHeatBoth",  d_Cp);
+  d_params->require("MoleWeightGasPh",   d_MW);
+  d_params->require("BoundaryParticles", d_BP);
+  d_params->require("IgnitionTemp",      d_ignitionTemp);
   d_params->require("ThresholdPressureSB",d_thresholdPress_SB);
   d_params->getWithDefault("useCrackModel",    d_useCrackModel, false); 
   d_params->getWithDefault("useInductionTime", d_useInductionTime, false);
@@ -239,11 +239,11 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
   }
   
   /* initialize constants */
-  CC1 = Ac * R * Kc/Ec/Cp;        
-  CC2 = Qc/Cp/2;              
-  CC3 = 4*Kg*Bg*MW*MW/Cp/R/R;  
-  CC4 = Qc/Cp;                
-  CC5 = Qg/Cp;           
+  d_CC1 = d_Ac * d_R * d_Kc/d_Ec/d_Cp;        
+  d_CC2 = d_Qc/d_Cp/2;              
+  d_CC3 = 4*d_Kg*d_Bg*d_MW*d_MW/d_Cp/d_R/d_R;  
+  d_CC4 = d_Qc/d_Cp;                
+  d_CC5 = d_Qg/d_Cp;           
     
   //__________________________________
   //  define the materialSet
@@ -317,19 +317,19 @@ void DDT1::outputProblemSpec(ProblemSpecP& ps)
   model_ps->appendElement("b",    d_b);
   model_ps->appendElement("E0",   d_E0);
 
-  model_ps->appendElement("IdealGasConst",     R );
-  model_ps->appendElement("PreExpCondPh",      Ac);
-  model_ps->appendElement("ActEnergyCondPh",   Ec);
-  model_ps->appendElement("PreExpGasPh",       Bg);
-  model_ps->appendElement("CondPhaseHeat",     Qc);
-  model_ps->appendElement("GasPhaseHeat",      Qg);
-  model_ps->appendElement("HeatConductGasPh",  Kg);
-  model_ps->appendElement("HeatConductCondPh", Kc);
-  model_ps->appendElement("SpecificHeatBoth",  Cp);
-  model_ps->appendElement("MoleWeightGasPh",   MW);
-  model_ps->appendElement("BoundaryParticles", BP);
+  model_ps->appendElement("IdealGasConst",     d_R );
+  model_ps->appendElement("PreExpCondPh",      d_Ac);
+  model_ps->appendElement("ActEnergyCondPh",   d_Ec);
+  model_ps->appendElement("PreExpGasPh",       d_Bg);
+  model_ps->appendElement("CondPhaseHeat",     d_Qc);
+  model_ps->appendElement("GasPhaseHeat",      d_Qg);
+  model_ps->appendElement("HeatConductGasPh",  d_Kg);
+  model_ps->appendElement("HeatConductCondPh", d_Kc);
+  model_ps->appendElement("SpecificHeatBoth",  d_Cp);
+  model_ps->appendElement("MoleWeightGasPh",   d_MW);
+  model_ps->appendElement("BoundaryParticles", d_BP);
   model_ps->appendElement("ThresholdPressureSB", d_thresholdPress_SB);
-  model_ps->appendElement("IgnitionTemp",      ignitionTemp);
+  model_ps->appendElement("IgnitionTemp",      d_ignitionTemp);
  
   model_ps->appendElement("IgnitionConst",     d_IC );
   model_ps->appendElement("PressureShift",     d_PS );
@@ -847,10 +847,10 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
                    productPress = press_CC[adjCell];
                  }
 
-                if( burning == NOTDEFINED && numPPC[adjCell] <= BP ){
+                if( burning == NOTDEFINED && numPPC[adjCell] <= d_BP ){
                   for (int m = 0; m < numAllMatls; m++){
 
-                    if( vol_frac_CC[m][adjCell] > 0.2 && temp_CC[m][adjCell] > ignitionTemp ){
+                    if( vol_frac_CC[m][adjCell] > 0.2 && temp_CC[m][adjCell] > d_ignitionTemp ){
                      // Is the surface exposed for burning?
                       if( minOverMax < 0.7 && numPPC[c] > 0 ){        
                         burning = ONSURFACE;
@@ -873,7 +873,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
 
                  // make sure the temperature exceeded value is set
                   for (int m = 0; m < numAllMatls; m++){
-                    if(temp_CC[m][adjCell] > ignitionTemp){
+                    if(temp_CC[m][adjCell] > d_ignitionTemp){
                       temperatureExceeded = true;
                       break;
                     } 
@@ -922,9 +922,9 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
                       calculateInductionTime = true;
 
                       for (int m = 0; m < numAllMatls; m++){
-                        if(vol_frac_CC[m][c] > 0.2 && temp_CC[m][c] > ignitionTemp){
+                        if(vol_frac_CC[m][c] > 0.2 && temp_CC[m][c] > d_ignitionTemp){
                           theta_HotGas = 0.0;
-                        }else if(vol_frac_CC[m][adjcell] > 0.2 && temp_CC[m][adjcell] > ignitionTemp){
+                        }else if(vol_frac_CC[m][adjcell] > 0.2 && temp_CC[m][adjcell] > d_ignitionTemp){
 
                           Point hotcellCord = patch->getCellPosition(adjcell);
                           Point cellCord    = patch->getCellPosition(c);
@@ -950,7 +950,7 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
                       //__________________________________
                       //  Determining vectors for direction of flame
                       for (int m = 0; m < numAllMatls; m++){ 
-                        if(temp_CC[m][adjcell] > ignitionTemp){
+                        if(temp_CC[m][adjcell] > d_ignitionTemp){
                           Point hotcellCord = patch->getCellPosition(adjcell);
                           Point cellCord    = patch->getCellPosition(c);  
                           double cos_theta  = 0;
@@ -1068,12 +1068,6 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
       old_dw->get( me,  adjOutIntervalsLabel );
       double hasSwitched = me; 
     
-      // for readability
-      const VarLabel* outIntervalLabel      = d_sharedState->get_outputInterval_label();
-      const VarLabel* chkpointIntervalLabel = d_sharedState->get_checkpointInterval_label();
-      
-      //__________________________________
-      // Pressure
       if ( press_switch_adj_IO && d_adj_IO_Press->onOff && isDoubleEqual( hasSwitched, ZERO) ){
 
         double newOUT  = d_adj_IO_Press->output_interval;
@@ -1084,12 +1078,12 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         cout << *patch << endl;
         cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<<  endl;
 
-        new_dw->put( min_vartype( newOUT ),  outIntervalLabel );
-        new_dw->put( min_vartype( newCKPT ), chkpointIntervalLabel );
-      }             
-      //__________________________________
-      //  DETONATON
-      else if ( det_switch_adj_IO && d_adj_IO_Det->onOff && isDoubleEqual(hasSwitched, PRESSURE_EXCEEDED) ){
+        new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
+        new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
+      }
+
+      // detonation detected
+      if ( det_switch_adj_IO && d_adj_IO_Det->onOff && isDoubleEqual(hasSwitched, PRESSURE_EXCEEDED) ){
 
         double newOUT  = d_adj_IO_Det->output_interval;
         double newCKPT = d_adj_IO_Det->chkPt_interval;
@@ -1099,19 +1093,8 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
         cout << *patch << endl;
         cout << "    new outputInterval: " << newOUT << " new checkpoint Interval: " << newCKPT << "\n\n"<< endl;
 
-        new_dw->put( min_vartype( newOUT ),  outIntervalLabel );
-        new_dw->put( min_vartype( newCKPT ), chkpointIntervalLabel );
-      }
-      else {        
-      //__________________________________
-      //  DEFAULT
-        min_vartype oldOUT;
-        min_vartype oldCKPT;
-        oldOUT.setBenignValue();
-        oldCKPT.setBenignValue();
-
-        new_dw->put( oldOUT,  outIntervalLabel );
-        new_dw->put( oldCKPT, chkpointIntervalLabel );
+        new_dw->put( min_vartype( newOUT ),  d_sharedState->get_outputInterval_label() );
+        new_dw->put( min_vartype( newCKPT ), d_sharedState->get_checkpointInterval_label() );
       }
       new_dw->put( max_vartype(hasSwitched), adjOutIntervalsLabel );
     }
@@ -1368,7 +1351,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
           momentum_src_2[c]  += momX;
 
           double energyX      = cv_rct*rctTemp[c]*burnedMass; 
-          double releasedHeat = burnedMass * (Qc + Qg);
+          double releasedHeat = burnedMass * (d_Qc + d_Qg);
           energy_src_0[c]    -= energyX;
           energy_src_2[c]    += energyX + releasedHeat;
           totalHeatReleased  += releasedHeat;
@@ -1421,7 +1404,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
           momentum_src_1[c]  += momX;
 
           double energyX      = cv_rct*rctTemp[c]*burnedMass;
-          double releasedHeat = burnedMass * (Qc + Qg);
+          double releasedHeat = burnedMass * (d_Qc + d_Qg);
           energy_src_0[c]    -= energyX;
           energy_src_1[c]    += energyX + releasedHeat;
           totalHeatReleased  += releasedHeat;
@@ -1551,18 +1534,18 @@ double DDT1::computeInductionAngle(IntVector *nodeIdx,
 }  
 //______________________________________________________________________
 void DDT1::UpdateConstants(double To, double P, double Vc, IterationVariables *iterVar){
-  /* CC1 = Ac*R*Kc/Ec/Cp        */
-  /* CC2 = Qc/Cp/2              */
-  /* CC3 = 4*Kg*Bg*W*W/Cp/R/R;  */
-  /* CC4 = Qc/Cp                */
-  /* CC5 = Qg/Cp                */
+  /* d_CC1 = Ac*R*Kc/Ec/Cp        */
+  /* d_CC2 = Qc/Cp/2              */
+  /* d_CC3 = 4*Kg*Bg*W*W/Cp/R/R;  */
+  /* d_CC4 = Qc/Cp                */
+  /* d_CC5 = Qg/Cp                */
   /* Vc = Condensed Phase Specific Volume */
 
-  iterVar->C1 = CC1 / Vc; 
-  iterVar->C2 = To + CC2; 
-  iterVar->C3 = CC3 * P*P;
-  iterVar->C4 = To + CC4; 
-  iterVar->C5 = CC5 * iterVar->C3; 
+  iterVar->C1 = d_CC1 / Vc; 
+  iterVar->C2 = To + d_CC2; 
+  iterVar->C3 = d_CC3 * P*P;
+  iterVar->C4 = To + d_CC4; 
+  iterVar->C5 = d_CC5 * iterVar->C3; 
 
   iterVar->Tmin = iterVar->C4;
   double Tsmax = Ts_max(iterVar);
@@ -1589,7 +1572,7 @@ double DDT1::F_Ts(double Ts, IterationVariables *iterVar){
 }
 
 double DDT1::m_Ts(double Ts, IterationVariables *iterVar){
-  return sqrt( iterVar->C1*Ts*Ts/(Ts-iterVar->C2)*exp(-Ec/R/Ts) );
+  return sqrt( iterVar->C1*Ts*Ts/(Ts-iterVar->C2)*exp(-d_Ec/d_R/Ts) );
 }
 
 double DDT1::Ts_m(double m, IterationVariables *iterVar){
@@ -1607,14 +1590,14 @@ double DDT1::Deri(double Ts, IterationVariables *iterVar){
   double m = m_Ts(Ts, iterVar);
   double K1 = Ts-iterVar->C2;
   double K2 = sqrt( m * m + iterVar->C3 );
-  double K3 = ( R * Ts * (K1-iterVar->C2) + Ec * K1) * m * iterVar->C5;
-  double K4 = (K2 + m) * ( K2 + m ) * K1 * K2 * R * Ts * Ts;
+  double K3 = ( d_R * Ts * (K1-iterVar->C2) + d_Ec * K1) * m * iterVar->C5;
+  double K4 = (K2 + m) * ( K2 + m ) * K1 * K2 * d_R * Ts * Ts;
   return 1.0 + K3/K4;
 }
 
 /* F_Ts(Ts_max) is the max of F_Ts function */
 double DDT1::Ts_max(IterationVariables *iterVar){
-  return 0.5*(2.0 * R * iterVar->C2 - Ec + sqrt(4.0 * R * R * iterVar->C2*iterVar->C2 + Ec * Ec))/R;
+  return 0.5*(2.0 * d_R * iterVar->C2 - d_Ec + sqrt(4.0 * d_R * d_R * iterVar->C2*iterVar->C2 + d_Ec * d_Ec))/d_R;
 } 
 
 void DDT1::SetInterval(double f, double Ts, IterationVariables *iterVar){  
@@ -1645,7 +1628,7 @@ double DDT1::BisectionNewton(double Ts, IterationVariables *iterVar){
       y = Func(Ts, iterVar);
       SetInterval(y, Ts, iterVar);
 
-      if(fabs(y)<EPSILON)
+      if(fabs(y)<d_EPSILON)
           return Ts;
 
       delta_new = 1e100;
@@ -1664,7 +1647,7 @@ double DDT1::BisectionNewton(double Ts, IterationVariables *iterVar){
           Ts += delta_new;
           y = Func(Ts, iterVar);
 
-          if(fabs(y)< EPSILON)
+          if(fabs(y)< d_EPSILON)
               return Ts;
 
           if(Ts<iterVar->IL || Ts>iterVar->IR || fabs(delta_new)>fabs(delta_old*0.7))

@@ -220,7 +220,7 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   t->computes(lb->sum_imp_delPLabel, press_matl, oims);
  
   computesRequires_CustomBCs(t, "imp_update_press_CC", lb, ice_matls,
-                              d_customBC_var_basket);
+                              d_BC_globalVars);
   
   t->computes(lb->press_CCLabel,      press_matl,oims); 
   sched->addTask(t, patches, all_matls);                 
@@ -379,7 +379,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->requires( Task::NewDW, lb->sum_imp_delPLabel,   press_matl, oims, gac,1);
     
   computesRequires_CustomBCs(t, "implicitPressureSolve", lb, ice_matls,
-                             d_customBC_var_basket);
+                             d_BC_globalVars);
 
   //__________________________________
   // ImplicitVel_FC
@@ -621,12 +621,12 @@ void ICE::setupRHS(const ProcessorGroup*,
       vol_fracX_FC.initialize(nan, lowIndex,patch->getExtraSFCXHighIndex());
       vol_fracY_FC.initialize(nan, lowIndex,patch->getExtraSFCYHighIndex());
       vol_fracZ_FC.initialize(nan, lowIndex,patch->getExtraSFCZHighIndex());     
-      new_dw->get(uvel_FC,    lb->uvel_FCMELabel,     indx,patch,gac, 2);       
-      new_dw->get(vvel_FC,    lb->vvel_FCMELabel,     indx,patch,gac, 2);       
-      new_dw->get(wvel_FC,    lb->wvel_FCMELabel,     indx,patch,gac, 2);       
-      pNewDW->get(vol_frac,   lb->vol_frac_CCLabel,   indx,patch,gac, 2);
-      pNewDW->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,0);
-      pNewDW->get(speedSound, lb->speedSound_CCLabel, indx,patch,gn,0);
+      new_dw->get(uvel_FC,    lb->uvel_FCMELabel,     indx,patch, gac, 2);       
+      new_dw->get(vvel_FC,    lb->vvel_FCMELabel,     indx,patch, gac, 2);       
+      new_dw->get(wvel_FC,    lb->wvel_FCMELabel,     indx,patch, gac, 2);       
+      pNewDW->get(vol_frac,   lb->vol_frac_CCLabel,   indx,patch, gac, 2);
+      pNewDW->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch, gn, 0);
+      pNewDW->get(speedSound, lb->speedSound_CCLabel, indx,patch, gn, 0);
         
       //__________________________________
       // Advection preprocessing
@@ -637,17 +637,17 @@ void ICE::setupRHS(const ProcessorGroup*,
       advectVarBasket* varBasket = scinew advectVarBasket();
       varBasket->new_dw = new_dw;
       varBasket->old_dw = old_dw;
-      varBasket->indx = indx;
-      varBasket->patch = patch;
-      varBasket->level = level;
-      varBasket->lb  = lb;
-      varBasket->doRefluxing = d_doAMR;  // always reflux with amr
-      varBasket->is_Q_massSpecific = false;
-      varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
-      varBasket->AMR_subCycleProgressVar = 0;  // for lockstep it's always 0
+      varBasket->indx   = indx;
+      varBasket->patch  = patch;
+      varBasket->level  = level;
+      varBasket->lb     = lb;
+      varBasket->doRefluxing             = d_doAMR; // always reflux with amr
+      varBasket->is_Q_massSpecific       = false;
+      varBasket->useCompatibleFluxes     = d_useCompatibleFluxes;
+      varBasket->AMR_subCycleProgressVar = 0;       // for lockstep it's always 0
       
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx, 
-                                    bulletProof_test, pNewDW); 
+                                    bulletProof_test, pNewDW, varBasket); 
 
       advector->advectQ(vol_frac, patch, q_advected, varBasket, 
                         vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw); 
@@ -833,14 +833,16 @@ void ICE::updatePressure(const ProcessorGroup*,
     }   
     //__________________________________
     //  set boundary conditions   
+    customBC_localVars* BC_localVars = scinew customBC_localVars();
+    
     preprocess_CustomBCs("imp_update_press_CC",parent_old_dw,parent_new_dw, 
-                            lb,  patch, 999,d_customBC_var_basket);
+                            lb,  patch, 999, d_BC_globalVars, BC_localVars );
 
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, 
-           d_customBC_var_basket);
+           d_BC_globalVars, BC_localVars );
            
-    delete_CustomBCs(d_customBC_var_basket);
+    delete_CustomBCs(d_BC_globalVars, BC_localVars);
 
     //____ B U L L E T   P R O O F I N G----
     // ignore BP if a timestep restart has already been requested

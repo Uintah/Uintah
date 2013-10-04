@@ -969,7 +969,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
 
 
   computesRequires_CustomBCs(t, "EqPress", Ilb, ice_matls, 
-                            d_ice->d_customBC_var_basket);
+                            d_ice->d_BC_globalVars);
                               
                               //  A L L _ M A T L S
   t->computes(Ilb->f_theta_CCLabel);
@@ -2064,14 +2064,15 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //   Don't set Lodi bcs, we already compute Press
     //   in all the extra cells.
     // - make copy of press for implicit calc.
+    customBC_localVars* BC_localVars = scinew customBC_localVars();
     preprocess_CustomBCs("EqPress",old_dw, new_dw, Ilb, patch, 999,
-                          d_ice->d_customBC_var_basket);
+                          d_ice->d_BC_globalVars, BC_localVars);
     
     setBC(press_new,   rho_micro, placeHolder,d_ice->d_surroundingMatl_indx,
           "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, 
-          d_ice->d_customBC_var_basket);
+          d_ice->d_BC_globalVars, BC_localVars);
     
-    delete_CustomBCs(d_ice->d_customBC_var_basket);
+    delete_CustomBCs( d_ice->d_BC_globalVars, BC_localVars );
 
      
     //__________________________________
