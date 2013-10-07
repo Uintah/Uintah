@@ -299,6 +299,7 @@ void setBC(T& vel_FC,
           else if( (bc_kind == "powerLawProfile" || bc_kind == "logWindProfile") ){
             nCells+= set_inletVelocity_BCs_FC<T>(patch, face, vel_FC, 
                                                  bound_ptr, bc_kind, value,
+                                                 localVars->inletVel_v,
                                                  globalVars->inletVel_var_basket);
           }       
 

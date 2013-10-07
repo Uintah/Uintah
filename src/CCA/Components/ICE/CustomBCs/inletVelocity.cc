@@ -29,7 +29,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 
 
-static SCIRun::DebugStream cout_BC_CC("ICE_BC_CC", false);
+static SCIRun::DebugStream BC_CC("ICE_BC_CC", false);
 namespace Uintah {
 /* ______________________________________________________________________
  Purpose~   -returns (true) if the inletVel BC is specified on any face,
@@ -117,13 +117,72 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
   return usingBC;
 }
 
+/* ______________________________________________________________________ 
+ Function~  addRequires_Sine--   
+ ______________________________________________________________________  */
+void addRequires_inletVel(Task* t, 
+                          const string& where,
+                          ICELabel* lb,
+                          const MaterialSubset* ice_matls,
+                          const bool recursive)
+{
+  BC_CC<< "Doing addRequires_inletVel: \t\t" <<t->getName()
+            << " " << where << endl;
+  
+  Ghost::GhostType  gn  = Ghost::None;
+
+  //std::cout << " addRequires_inletVel: " << recursive <<  " where: " << where << endl;
+  
+  if(where == "implicitPressureSolve"){
+    t->requires(Task::OldDW, lb->vel_CCLabel, ice_matls, gn);
+  }
+  else if(where == "velFC_Exchange"){
+    
+    //__________________________________
+    // define parent data warehouse
+    Task::WhichDW pOldDW = Task::OldDW;
+    if(recursive) {
+      pOldDW  = Task::ParentOldDW;
+    }
+  
+    t->requires(pOldDW, lb->vel_CCLabel, ice_matls, gn);
+  }
+}
+
 //______________________________________________________________________ 
-void  preprocess_inletVelocity_BCs(const string& where,
-                                   bool& set_BCs)
+void  preprocess_inletVelocity_BCs(DataWarehouse* old_dw,
+                                   ICELabel* lb,
+                                   const int indx,
+                                   const Patch* patch,
+                                   const string& where,
+                                   bool& set_BCs,
+                                   const bool recursive,
+                                   inletVel_vars* inletVel_v)
 {
   set_BCs = false;
-  if(where == "CC_Exchange" || where == "Advection"){
+  
+  //std::cout << " preprocess_inletVelocity_BCs: " << where << " recursive: " << recursive << endl;
+  
+  if(where == "velFC_Exchange"){
     set_BCs = true;
+    
+    // change the definition of parent(old)DW
+    // when implicit
+    DataWarehouse* pOldDW = old_dw;
+    if(recursive) {
+      pOldDW  = old_dw->getOtherDataWarehouse(Task::ParentOldDW); 
+    }
+    
+    pOldDW->get(inletVel_v->vel_CC, lb->vel_CCLabel, indx, patch,Ghost::None,0);
+  }
+  
+  if( where == "CC_Exchange" ) {
+    set_BCs = true;
+    inletVel_v->addVariance = false;    // local on/off switch
+  }
+  if( where == "Advection" ){
+    set_BCs = true;
+    inletVel_v->addVariance = true;
   }
 }
 /*_________________________________________________________________
@@ -136,7 +195,8 @@ int  set_inletVelocity_BC(const Patch* patch,
                           Iterator& bound_ptr,
                           const string& bc_kind,
                           const Vector& bc_value,
-                          inletVel_variable_basket* VB )
+                          inletVel_variable_basket* VB,
+                          inletVel_vars* inletVel_v )
 {
   int nCells = 0;
   
@@ -186,8 +246,10 @@ int  set_inletVelocity_BC(const Patch* patch,
         if( h < d || h > gridHeight ){
           vel_CC[c] = Vector(0,0,0);
         }
-        //std::cout << "        " << c <<  " h " << h  << " h/height  " << ratio << " vel_CC: " << vel_CC[c] <<endl;                               
+        
+        // std::cout << "        " << c <<  " h " << h  << " h/height  " << ratio << " vel_CC: " << vel_CC[c] <<endl;                              
       }
+      nCells += bound_ptr.size();
     }
     
     //__________________________________
@@ -220,16 +282,16 @@ int  set_inletVelocity_BC(const Patch* patch,
         }
 //        std::cout << "        " << c <<  " z " << z  << " z-d " << z-d << " ratio " << ratio << " vel_CC: " << vel_CC[c] <<endl;
       }
+      nCells += bound_ptr.size();
     }else{
       ostringstream warn;
       warn << "ERROR ICE::set_inletVelocity_BC  This type of boundary condition has not been implemented ("
            << bc_kind << ")\n" << endl; 
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    nCells += bound_ptr.size();
     
     //__________________________________
-    //  Additon of a 'kick' or variance to the mean velocity profile
+    //  Addition of a 'kick' or variance to the mean velocity profile
     //  This matches the Turbulent Kinetic Energy profile of 1/sqrt(C_u) * u_star^2 ( 1- Z/height)^2
     //   where:
     //          C_mu:     empirical constant
@@ -245,7 +307,7 @@ int  set_inletVelocity_BC(const Patch* patch,
     //             two-dimensional flows", Atmospheric Environment Vol. 31, No. 6
     //             pp 839-850, 1997.
     
-    if (VB->addVariance ){
+    if (VB->addVariance && inletVel_v->addVariance ){  // global and local on/off switch
       MTRand mTwister;
       
       double gridHeight =  VB->gridMax(vDir); 
@@ -268,23 +330,23 @@ int  set_inletVelocity_BC(const Patch* patch,
         
         const double variance = 0.66666 * TKE;
         
-
-//        if( c.z() == 10){
-//          std::cout << z << ", vel_CC.x, " << vel_CC[c].x() << ", velPlusKick, " << mTwister.randNorm(vel_CC[c].x(), variance) << ", TKE, " << TKE << endl;
-//        }
-        
         //__________________________________
         // from the random number compute the new velocity knowing the mean velcity and variance
         vel_CC[c].x( mTwister.randNorm( vel_CC[c].x(), variance ) );
         vel_CC[c].y( mTwister.randNorm( vel_CC[c].y(), variance ) );
         vel_CC[c].z( mTwister.randNorm( vel_CC[c].z(), variance ) );
                 
-        // Clamp edge/corner values 
+        // Clamp edge/c orner values 
         if(z < d || z > gridHeight ){
           vel_CC[c] = Vector(0,0,0);
         }
+        
+        //if( c.z() == 10){
+        //  std::cout <<"         "<< c << ", vel_CC.x, " << vel_CC[c].x() << ", velPlusKick, " << mTwister.randNorm(vel_CC[c].x(), variance) << ", TKE, " << TKE << endl;
+        //}
+        
       }
-    }
+    }  // add variance
   }
 
   return nCells; 
