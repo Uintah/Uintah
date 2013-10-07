@@ -45,6 +45,7 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/ModelMaker.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/SimulationState.h>
@@ -2077,15 +2078,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                           DataWarehouse*, 
                           DataWarehouse* new_dw)
 {
- //__________________________________
- //  dump patch limits to screen
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    cout_norm<< "patch low and high index: "<<patch->getID()<<
-          patch->getExtraCellLowIndex()  << 
-          patch->getExtraCellHighIndex() << endl;
-  }
-
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
   
@@ -2106,8 +2098,9 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << d_myworld->myrank() << " Doing Initialize on patch " << patch->getID() 
-         << "\t\t\t\t ICE \tL-" <<L_indx<< endl;
+
+    printTask(patches, patch, cout_doing, "Doing ICE::actuallyInitialize" );
+    
     int numMatls    = d_sharedState->getNumICEMatls();
     int numALLMatls = d_sharedState->getNumMatls();
     Vector grav     = getGravity();
@@ -2275,12 +2268,10 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
                                           DataWarehouse* /*old_dw*/,
                                           DataWarehouse* new_dw)
 { 
-  const Level* level = getLevel(patches);
-  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << d_myworld->myrank() << " Doing initialize_hydrostaticAdj on patch "
-               << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
+
+    printTask(patches, patch, cout_doing, "Doing ICE::initializeSubTask_hydrostaticAdj" );
    
     Ghost::GhostType  gn = Ghost::None;
     int numMatls = d_sharedState->getNumICEMatls();
@@ -2333,8 +2324,7 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << " ---------------------------------------------- L-"<< levelIndex<< endl;
-    cout_doing << d_myworld->myrank() << " Doing computeThermoTransportProperties on patch "
-               << patch->getID() << "\t ICE \tL-" <<levelIndex<< endl;
+    printTask(patches, patch, cout_doing, "Doing ICE::computeThermoTransportProperties" );
    
     int numMatls = d_sharedState->getNumICEMatls();
     
@@ -2402,8 +2392,9 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << d_myworld->myrank() << " Doing calc_equilibration_pressure on patch "<<patch->getID()
-               << "\t\t ICE \tL-" <<L_indx<< endl;
+
+    printTask(patches, patch, cout_doing, "Doing ICE::computeEquilibrationPressure" );
+    
     double    converg_coeff = 15;              
     double    convergence_crit = converg_coeff * DBL_EPSILON;
     double    sum=0., tmp;
@@ -2711,13 +2702,10 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
                                       DataWarehouse* old_dw, 
                                       DataWarehouse* new_dw)
 {
-  const Level* level = getLevel(patches);
-  int L_indx = level->getIndex();
-  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << d_myworld->myrank() << " Doing computeEquilPressure_1_matl on patch "<<patch->getID()
-               << "\t\t ICE \tL-" <<L_indx<< endl;
+
+    printTask(patches, patch, cout_doing, "Doing ICE::computeEquilPressure_1_matl" );
 
     CCVariable<double> vol_frac, sp_vol_new; 
     CCVariable<double> speedSound, f_theta, kappa;
@@ -2828,9 +2816,8 @@ void ICE::computeTempFC(const ProcessorGroup*,
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << d_myworld->myrank() << " Doing compute_FC_Temp on patch " 
-              << patch->getID() << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
-            
+    printTask(patches, patch, cout_doing, "Doing ICE::computeTemp_FCVel" );            
+    
     int numMatls = d_sharedState->getNumMatls();
     Ghost::GhostType  gac = Ghost::AroundCells; 
     
@@ -2965,9 +2952,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
   
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
-    
-    cout_doing << d_myworld->myrank() << " Doing computeVel_FC on patch " 
-           << patch->getID() << "\t\t\t ICE \tL-"<<level->getIndex()<< endl;
+    printTask(patches, patch, cout_doing, "Doing ICE::computeVel_FCVel" );
 
     int numMatls = d_sharedState->getNumMatls();
     
@@ -3101,8 +3086,7 @@ void ICE::updateVel_FC(const ProcessorGroup*,
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << d_myworld->myrank() << " Doing updateVel_FC on patch " 
-           << patch->getID() << "\t\t\t\tICE \tL-"<<level->getIndex()<< endl;
+    printTask(patches, patch, cout_doing, "Doing ICE::updateVel_FCVel" );
 
     int numMatls = d_sharedState->getNumMatls();
     
@@ -3317,8 +3301,8 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << d_myworld->myrank() << " Doing Add_exchange_contribution_to_FC_vel on patch " <<
-      patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
+    
+    printTask(patches, patch, cout_doing, "Doing ICE::addExchangeContributionToFCVel" );
  
     // change the definition of parent(old/new)DW
     // when implicit
@@ -3451,8 +3435,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
-    cout_doing << d_myworld->myrank() << " Doing explicit delPress on patch " << patch->getID() 
-         <<  "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
+
+    printTask(patches, patch, cout_doing, "Doing ICE::computeDelPressAndUpdatePressCC" );
 
     int numMatls  = d_sharedState->getNumMatls();
     delt_vartype delT;
@@ -3636,13 +3620,11 @@ void ICE::computePressFC(const ProcessorGroup*,
                       DataWarehouse*,
                       DataWarehouse* new_dw)
 {
-  const Level* level = getLevel(patches);
-  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    cout_doing << d_myworld->myrank() << " Doing press_face_MM on patch " << patch->getID() 
-         << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
+    
+    printTask(patches, patch, cout_doing, "Doing press_face_MM" );
+    
     Ghost::GhostType  gac = Ghost::AroundCells;
     
     constCCVariable<double> press_CC;
@@ -3690,12 +3672,10 @@ void ICE::zeroModelSources(const ProcessorGroup*,
                             DataWarehouse* /*old_dw*/,
                             DataWarehouse* new_dw)
 {
-  const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << d_myworld->myrank() << " Doing zeroModelSources on patch " 
-               << patch->getID() << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
+    printTask(patches, patch, cout_doing, "Doing ICE:zeroModelSources" );
       
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -3743,7 +3723,8 @@ void ICE::updateVolumeFraction(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+    printTask(patches, patch, cout_doing, "Doing updateVolumeFraction" );  
+      
     Ghost::GhostType  gn = Ghost::None;
     int numALLMatls = d_sharedState->getNumMatls();
     CCVariable<double> sumKappa;
@@ -3799,12 +3780,9 @@ void ICE::viscousShearStress(const ProcessorGroup*,
                              DataWarehouse* old_dw, 
                              DataWarehouse* new_dw)
 {
-  const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
-    cout_doing << d_myworld->myrank() << " Doing accumulate_momentum_source_sinks_MM on patch " <<
-      patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
+    printTask(patches, patch, cout_doing, "Doing viscousShearStress" );
       
     IntVector right, left, top, bottom, front, back;
  
@@ -3938,8 +3916,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing << d_myworld->myrank() << " Doing accumulate_momentum_source_sinks_MM on patch " <<
-      patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
+    printTask(patches, patch, cout_doing, "Doing ICE::accumulateMomentumSourceSinks" );
       
     IntVector right, left, top, bottom, front, back;
 
@@ -4040,9 +4017,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << d_myworld->myrank() 
-               << " Doing accumulate_energy_source_sinks on patch " 
-               << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
+    printTask(patches, patch, cout_doing, "Doing ICE::accumulateEnergySourceSinks" );
 
     int numMatls = d_sharedState->getNumMatls();
 
@@ -4171,8 +4146,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing << d_myworld->myrank() << " Doing Lagrangian mass, momentum and energy on patch " <<
-      patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
+    printTask(patches, patch, cout_doing, "Doing ICE::computeLagrangianValues" );
 
     int numALLMatls = d_sharedState->getNumMatls();
     Vector  dx = patch->dCell();
@@ -4320,8 +4294,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing << d_myworld->myrank() << " Doing computeLagrangianSpecificVolume " <<
-      patch->getID() << "\t\t ICE \tL-" <<level->getIndex()<< endl;
+    printTask(patches, patch, cout_doing, "Doing ICE::computeLagrangianSpecificVolume" );
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
@@ -4509,12 +4482,11 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
                                              DataWarehouse* old_dw, 
                                              DataWarehouse* new_dw)
 {
-  const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing << d_myworld->myrank() << " Doing computeLagrangian_Transported_Vars on patch " 
-               << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
+    printTask(patches, patch, cout_doing, "Doing ICE::computeLagrangian_Transported_Vars" );
+    
     Ghost::GhostType  gn  = Ghost::None;
     int numMatls = d_sharedState->getNumICEMatls();
     
@@ -4585,8 +4557,8 @@ void ICE::addExchangeToMomentumAndEnergy_1matl(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << d_myworld->myrank() << " Doing doCCMomExchange_1matl on patch "<< patch->getID()
-               <<"\t\t\t ICE \tL-" <<level->getIndex()<< endl;
+
+    printTask(patches, patch, cout_doing, "Doing ICE::addExchangeToMomentumAndEnergy_1matl" );
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
@@ -4710,8 +4682,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << d_myworld->myrank() << " Doing doCCMomExchange on patch "<< patch->getID()
-               <<"\t\t\t ICE \tL-" <<level->getIndex()<< endl;
+
+    printTask(patches, patch, cout_doing, "Doing ICE::addExchangeToMomentumAndEnergy" );
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     int numICEMatls = d_sharedState->getNumICEMatls();
@@ -5053,8 +5025,8 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << d_myworld->myrank() << " Doing maxMach_on_Lodi_BC_Faces " <<
-      patch->getID() << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
+
+    printTask(patches, patch, cout_doing, "Doing ICE::::maxMach_on_Lodi_BC_Faces" );
       
     Ghost::GhostType  gn = Ghost::None;
     int numAllMatls = d_sharedState->getNumMatls();
@@ -5124,17 +5096,15 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
                                  DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
-  int L_indx = level->getIndex();
-
+  
   // the advection calculations care about the position of the old dw subcycle
   double AMR_subCycleProgressVar = getSubCycleProgress(old_dw);
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
- 
-    cout_doing << d_myworld->myrank() << " Doing Advect and Advance in Time on patch " 
-               << patch->getID() << "\t\t ICE \tL-" <<L_indx
-               << " progressVar " << AMR_subCycleProgressVar << endl;
+
+    printTask(patches, patch, cout_doing, "Doing ICE::advectAndAdvanceInTime" );
+    cout_doing << " progressVar " << AMR_subCycleProgressVar << endl;
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
@@ -5289,9 +5259,8 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
 
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
- 
-    cout_doing << d_myworld->myrank() << " Doing conservedtoPrimitive_Vars patch " 
-               << patch->getID() << "\t\t ICE \tL-" <<L_indx<< endl;
+    
+    printTask(patches, patch, cout_doing, "Doing ICE::conservedtoPrimitive_Vars" );
 
     Vector dx = patch->dCell();
     double invvol = 1.0/(dx.x()*dx.y()*dx.z());
@@ -5407,7 +5376,7 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       setSpecificVolBC(sp_vol_CC, "SpecificVol", false,rho_CC,vol_frac,
                        patch,d_sharedState, indx);     
       delete_CustomBCs(d_BC_globalVars, BC_localVars );
-                               
+
       //__________________________________
       // Compute Auxilary quantities
       for(CellIterator iter = patch->getExtraCellIterator();
@@ -5463,8 +5432,8 @@ void ICE::TestConservation(const ProcessorGroup*,
   for(int p=0; p<patches->size(); p++)  {
     const Patch* patch = patches->get(p);
     
-    cout_doing << d_myworld->myrank() << " Doing TestConservation on patch " 
-               << patch->getID() << "\t\t\t ICE \tL-"<<level->getIndex()<< endl;      
+    printTask(patches, patch, cout_doing, "Doing ICE::TestConservation" );
+         
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
 
@@ -5637,8 +5606,8 @@ void ICE::TestConservation(const ProcessorGroup*,
  Notes:     press_hydro = rho_micro_CC[SURROUNDING_MAT] * grav * some_distance
 _______________________________________________________________________ */
 void ICE::hydrostaticPressureAdjustment(const Patch* patch,
-                                const CCVariable<double>& rho_micro_CC,
-                                CCVariable<double>& press_CC)
+                                        const CCVariable<double>& rho_micro_CC,
+                                        CCVariable<double>& press_CC)
 {
   Vector gravity = getGravity();
   // find the upper and lower point of the domain.
