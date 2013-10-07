@@ -29,6 +29,7 @@
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/AMR.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -62,7 +63,7 @@ static DebugStream cout_dbg("IMPICE_DBG",false);
  Function~  ICE::scheduleSetupMatrix--
 _____________________________________________________________________*/
 void ICE::scheduleSetupMatrix(  SchedulerP& sched,
-                                const LevelP&,
+                                const LevelP& level,
                                 const PatchSet* patches,
                                 const MaterialSubset* one_matl,
                                 const MaterialSet* all_matls)
@@ -71,14 +72,14 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-  int levelIndex = getLevel(patches)->getIndex();
+  
   const MaterialSubset* press_matl = one_matl;
   
   Task::WhichDW whichDW = Task::OldDW;
   //__________________________________
   //  Form the matrix
-  cout_doing << d_myworld->myrank()<< " ICE::scheduleSetupMatrix" 
-            << "\t\t\t\t\tL-" << levelIndex<< endl;
+  printSchedule(level,cout_doing,"ICE::scheduleSetupMatrix");            
+            
   t = scinew Task("ICE::setupMatrix", this, &ICE::setupMatrix);
   t->requires( Task::ParentOldDW, lb->delTLabel, getLevel(patches));
   t->requires( whichDW,   lb->sp_volX_FCLabel,    gac,1);        
@@ -109,11 +110,9 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-  const Level* level = getLevel(patches);
-  int levelIndex = level->getIndex();
- 
-  cout_doing << d_myworld->myrank()<< " ICE::scheduleSetupRHS" 
-             << "\t\t\t\t\t\tL-" << levelIndex<< endl;
+
+  printSchedule(patches,cout_doing,"ICE::scheduleSetupRHS");
+  
   t = scinew Task("ICE::setupRHS", this, 
                   &ICE::setupRHS, insideOuterIterLoop,computes_or_modifies);
  
@@ -171,8 +170,9 @@ void ICE::scheduleCompute_maxRHS(SchedulerP& sched,
                                  const LevelP& level,
                                  const MaterialSubset* one_matl,
                                  const MaterialSet* allMatls){ 
-  cout_doing << d_myworld->myrank()<< " ICE::scheduleCompute_maxRHS" 
-             << "\t\t\t\t\tL-" << level->getIndex()<< endl;
+
+  printSchedule(level,cout_doing,"ICE::scheduleCompute_maxRHS");
+  
   Task* t;
   t = scinew Task("ICE::compute_maxRHS", this, &ICE::compute_maxRHS);
   
@@ -200,8 +200,8 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet. 
   //__________________________________
   // update the pressure
-  cout_doing << d_myworld->myrank()<<" ICE::scheduleUpdatePressure" 
-             << "\t\t\t\t\tL-" <<level->getIndex()<<endl;
+  printSchedule(level,cout_doing,"ICE::scheduleUpdatePressure");
+  
   t = scinew Task("ICE::updatePressure", this, &ICE::updatePressure);
   
   t->requires( Task::ParentOldDW, lb->delTLabel, getLevel(patches));
@@ -238,10 +238,8 @@ void ICE::scheduleRecomputeVel_FC(SchedulerP& sched,
                                  bool recursion)
 { 
   Task* t = 0;
-  int levelIndex = getLevel(patches)->getIndex();
-
-  cout_doing << d_myworld->myrank()<< " ICE::Implicit scheduleRecomputeVel_FC" 
-             << "\t\t\t\tL-"<< levelIndex<<endl;
+  printSchedule(patches,cout_doing,"ICE::scheduleRecomputeVel_FC");
+  
   t = scinew Task("ICE::scheduleUpdateVel_FC",
             this, &ICE::updateVel_FC, recursion);
            
@@ -282,7 +280,7 @@ void ICE::scheduleRecomputeVel_FC(SchedulerP& sched,
  Note:      This task is scheduled outside the iteration loop
 _____________________________________________________________________*/
 void ICE::scheduleComputeDel_P(  SchedulerP& sched,
-                                 const LevelP&,
+                                 const LevelP& level,
                                  const PatchSet* patches,           
                                  const MaterialSubset* one_matl,    
                                  const MaterialSubset* press_matl,  
@@ -291,11 +289,12 @@ void ICE::scheduleComputeDel_P(  SchedulerP& sched,
   Task* t;
   Ghost::GhostType  gn  = Ghost::None;
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-  int levelIndex = getLevel(patches)->getIndex();
+  
   //__________________________________
   // update the pressure
-  cout_doing << d_myworld->myrank()<< " ICE::scheduleComputeDel_P" 
-             << "\t\t\t\t\tL-"<< levelIndex<<endl;
+
+  printSchedule(level,cout_doing,"ICE::scheduleComputeDel_P");
+  
   t = scinew Task("ICE::scheduleComputeDel_P", this, &ICE::computeDel_P);
  
   t->requires(Task::NewDW, lb->sum_imp_delPLabel,    press_matl, oims, gn);     
@@ -322,8 +321,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
                                           const MaterialSubset* mpm_matls,
                                           const MaterialSet* all_matls)
 {
-  cout_doing << d_myworld->myrank()
-              <<" ICE::scheduleImplicitPressureSolve" << endl;
+  printSchedule(level,cout_doing,"ICE::scheduleImplicitPressureSolve");
 
   // if we're here, we're compiling the outer taskgraph.  Then we should compile the inner one too.
   d_recompileSubsched = true;
@@ -425,9 +423,8 @@ void ICE::setupMatrix(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing<< d_myworld->myrank()<<" Doing setupMatrix on patch "
-              << patch->getID() <<"\t\t\t\t ICE \tL-" 
-              << level->getIndex()<<endl;
+
+    printTask(patches, patch, cout_doing, "Doing ICE::setupMatrix" );
               
     DataWarehouse* whichDW = old_dw;
 
@@ -551,9 +548,8 @@ void ICE::setupRHS(const ProcessorGroup*,
       
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing<< d_myworld->myrank()<<" Doing setupRHS on patch "
-              << patch->getID() <<"\t\t\t\t ICE \tL-"
-              << level->getIndex()<<endl;
+    
+    printTask(patches, patch, cout_doing, "Doing ICE::setupRHS" );
     // define parent_new/old_dw 
     
     DataWarehouse* pNewDW;
@@ -738,9 +734,8 @@ void ICE::compute_maxRHS(const ProcessorGroup*,
       
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing<< d_myworld->myrank()<<" Doing maxRHS on patch "
-              << patch->getID() <<"\t\t\t\t ICE \tL-"
-              << level->getIndex()<<endl;
+              
+    printTask(patches, patch, cout_doing, "Doing ICE::compute_maxRHS" );
     
     Vector dx  = patch->dCell();
     double vol = dx.x()*dx.y()*dx.z();
@@ -782,14 +777,11 @@ void ICE::updatePressure(const ProcessorGroup*,
                          const MaterialSubset* ,                        
                          DataWarehouse* old_dw,                         
                          DataWarehouse* new_dw)                         
-{
-  const Level* level = getLevel(patches);
- 
+{ 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing<< d_myworld->myrank()<<" Doing updatePressure on patch "
-              << patch->getID() <<"\t\t\t ICE \tL-" 
-              << level->getIndex()<<endl;
+    
+    printTask(patches, patch, cout_doing, "Doing ICE::updatePressure" );
 
    // define parent_dw
     DataWarehouse* parent_new_dw = 
@@ -866,14 +858,11 @@ void ICE::computeDel_P(const ProcessorGroup*,
                          const MaterialSubset* ,                        
                          DataWarehouse*,
                          DataWarehouse* new_dw)                         
-{
-  const Level* level = getLevel(patches);
-  
+{ 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing<< d_myworld->myrank()<<" Doing computeDel_P on patch "
-              << patch->getID() <<"\t\t\t\t ICE \tL-" 
-              << level->getIndex()<<endl;
+    
+    printTask(patches, patch, cout_doing, "Doing ICE::computeDel_P" );
             
     int numMatls  = d_sharedState->getNumMatls(); 
       
