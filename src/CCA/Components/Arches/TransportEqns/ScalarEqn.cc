@@ -764,22 +764,23 @@ ScalarEqn::computeBCs( const Patch* patch,
 //---------------------------------------------------------------------------
 template<class phiType> void
 ScalarEqn::clipPhi( const Patch* p, 
-                       phiType& phi )
+                    phiType& phi )
 {
-  // probably should put these "if"s outside the loop   
-  for (CellIterator iter=p->getCellIterator(0); !iter.done(); iter++){
+  if ( clip.do_low || clip.do_high ){
+    for (CellIterator iter=p->getCellIterator(0); !iter.done(); iter++){
 
-    IntVector c = *iter; 
+      IntVector c = *iter; 
 
-    if ( clip.do_low ) {
-      if ( phi[c] < clip.low+clip.tol ) 
-        phi[c] = clip.low; 
+      if ( clip.do_low ) {
+        if ( phi[c] < clip.low+clip.tol ) 
+          phi[c] = clip.low; 
+      }
+
+      if ( clip.do_high ) { 
+        if (phi[c] > clip.high-clip.tol) 
+          phi[c] = clip.high; 
+      } 
     }
-
-    if ( clip.do_high ) { 
-      if (phi[c] > clip.high-clip.tol) 
-        phi[c] = clip.high; 
-    } 
   }
 }
 
