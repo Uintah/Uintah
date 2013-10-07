@@ -163,24 +163,6 @@ void AlgebraicScalarDiss::computeProp(const ProcessorGroup* pc,
 }
 
 //---------------------------------------------------------------------------
-//Method: Scheduler for Dummy Initialization
-//---------------------------------------------------------------------------
-void AlgebraicScalarDiss::sched_dummyInit( const LevelP& level, SchedulerP& sched )
-{
-}
-
-//---------------------------------------------------------------------------
-//Method: Actually do the Dummy Initialization
-//---------------------------------------------------------------------------
-void AlgebraicScalarDiss::dummyInit( const ProcessorGroup* pc, 
-                                            const PatchSubset* patches, 
-                                            const MaterialSubset* matls, 
-                                            DataWarehouse* old_dw, 
-                                            DataWarehouse* new_dw )
-{
-}
-
-//---------------------------------------------------------------------------
 //Method: Scheduler for Initializing the Property
 //---------------------------------------------------------------------------
 void AlgebraicScalarDiss::sched_initialize( const LevelP& level, SchedulerP& sched )

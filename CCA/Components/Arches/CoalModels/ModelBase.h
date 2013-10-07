@@ -55,19 +55,6 @@ public:
                          DataWarehouse        * old_dw, 
                          DataWarehouse        * new_dw ) = 0;
 
-
-  /** @brief  Schedule dummy initialization for MPMARCHES; the schedule task is the same for all models,
-              but the implementation must be done by each model, since knowledge of the model's data type is required.
-      @see    ExplicitSolver::noSolve() */
-  virtual void sched_dummyInit( const LevelP& level, SchedulerP& sched ) = 0;
-
-  /** @breif  Pure virtual function: actually do the dummy initialization */
-  virtual void dummyInit( const ProcessorGroup * pc, 
-                          const PatchSubset    * patches, 
-                          const MaterialSubset * matls, 
-                          DataWarehouse        * old_dw, 
-                          DataWarehouse        * new_dw ) = 0;
-
   /** @brief  Reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
   // Note I need two of these flags; 1 for scheduling and 1 for actual execution.
   inline void reinitializeLabel(){ 

@@ -147,20 +147,34 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
   if (db_clipping) {
 
-    clip.activated = true; 
+    std::string type = "default"; 
+
+    if ( db_clipping->getAttribute( "type", type )){
+
+      if ( type == "variable_constrained" ){
+
+        //BEN TO ADD INTERFACE
+      
+      }
     
-    db_clipping->getWithDefault("low", clip.low,  -1.e16);
-    db_clipping->getWithDefault("high",clip.high, 1.e16);
-    db_clipping->getWithDefault("tol", clip.tol, 1e-10); 
+    } else { 
 
-    if ( db_clipping->findBlock("low") ) 
-      clip.do_low = true; 
+      clip.activated = true; 
+      
+      db_clipping->getWithDefault("low", clip.low,  -1.e16);
+      db_clipping->getWithDefault("high",clip.high, 1.e16);
+      db_clipping->getWithDefault("tol", clip.tol, 1e-10); 
 
-    if ( db_clipping->findBlock("high") ) 
-      clip.do_high = true;  
+      if ( db_clipping->findBlock("low") ) 
+        clip.do_low = true; 
 
-    if ( !clip.do_low && !clip.do_high ) 
-      throw InvalidValue("Error: A low or high clipping must be specified if the <Clipping> section is activated.", __FILE__, __LINE__);
+      if ( db_clipping->findBlock("high") ) 
+        clip.do_high = true;  
+
+      if ( !clip.do_low && !clip.do_high ) 
+        throw InvalidValue("Error: A low or high clipping must be specified if the <Clipping> section is activated.", __FILE__, __LINE__);
+
+    }
 
   } 
 
@@ -759,6 +773,7 @@ ScalarEqn::computeBCs( const Patch* patch,
 {
   d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
 }
+
 //---------------------------------------------------------------------------
 // Method: Clip the scalar 
 //---------------------------------------------------------------------------
@@ -784,19 +799,7 @@ ScalarEqn::clipPhi( const Patch* p,
   }
 }
 
-//---------------------------------------------------------------------------
-// Method: Schedule dummy initialization
-//---------------------------------------------------------------------------
 void
-ScalarEqn::sched_dummyInit( const LevelP& level, SchedulerP& sched )
-{
-
-}
-void 
-ScalarEqn::dummyInit( const ProcessorGroup* pc, 
-                     const PatchSubset* patches, 
-                     const MaterialSubset* matls, 
-                     DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw )
+ScalarEqn::sched_advClipping( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
 }

@@ -134,20 +134,6 @@ namespace Uintah {
 
       };
 
-      /** @brief Scheduler for computing the various efficiencies */
-      void sched_dummySolve( const LevelP& level, 
-                             SchedulerP& sched ) { 
-
-        // loop through all calculators
-        for ( LOC::iterator i = _my_calculators.begin(); i != _my_calculators.end(); i++ ){ 
-
-          i->second->sched_dummySolve( level, sched ); 
-
-        } 
-
-      };
-
-
     private: 
 
       class Calculator{ 
@@ -174,33 +160,6 @@ namespace Uintah {
           /** @brief Should actually compute the efficiency */            
           virtual void sched_computeEfficiency(  const LevelP& level, 
                                                  SchedulerP& sched )=0;
-
-          void sched_dummySolve( const LevelP& level, 
-                                  SchedulerP& sched )
-          { 
-
-            const std::string name =  "Calculator::dummySolve";
-            Task* tsk = scinew Task( name, this, 
-                &Calculator::dummySolve); 
-
-            const VarLabel* label = VarLabel::find( _id ); 
-            tsk->computes( label ); 
-
-            sched->addTask( tsk, level->eachPatch(), _a_labs->d_sharedState->allArchesMaterials() ); 
-
-          }; 
-
-          void dummySolve( const ProcessorGroup* pc, 
-                           const PatchSubset* patches, 
-                           const MaterialSubset* matls, 
-                           DataWarehouse* old_dw, 
-                           DataWarehouse* new_dw )
-          {
-
-            const VarLabel* my_label = VarLabel::find(_id); 
-            new_dw->put(delt_vartype(0.0), my_label); 
-
-          };
 
         protected: 
           std::string _id; 
@@ -1161,7 +1120,6 @@ namespace Uintah {
 
       const BoundaryCondition* _bcs; 
       ArchesLabel* _a_labs; 
-
 
   }; 
 }
