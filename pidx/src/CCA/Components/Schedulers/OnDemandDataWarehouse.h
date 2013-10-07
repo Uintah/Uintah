@@ -299,7 +299,7 @@ public:
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch);
 #if HAVE_PIDX
-   virtual void emit(PIDXOutputContext&, int vc,char* var_name,
+   virtual void emit(PIDXOutputContext&, int vc, char* var_name,
                      int* offset, int* count,const VarLabel* label, int matlIndex, 
                      const Patch* patch);
 #endif

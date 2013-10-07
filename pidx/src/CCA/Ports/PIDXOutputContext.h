@@ -61,7 +61,7 @@ public:
   MPI_Comm comm;
   
   /* added from test_pidx_writer.c */
-  PIDX_variable *variable;
+  PIDX_variable **variable;
 
   //   private:
   //       OutputContext(const OutputContext&);
