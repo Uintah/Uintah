@@ -208,7 +208,7 @@ Variable::emit( OutputContext& oc,
 
 #if HAVE_PIDX
 void
-Variable::emit(PIDXOutputContext& pc,int vc, char * var_name,int* offset,
+Variable::emit(PIDXOutputContext& pc,int vc, int mc, char * var_name,int* offset,
                 int* count,
                 const IntVector& l,
                 const IntVector& h, const string& compressionModeHint )
@@ -230,22 +230,22 @@ Variable::emit(PIDXOutputContext& pc,int vc, char * var_name,int* offset,
  
   if(writebufferSize>0) {
 
-    pidx_buffer = (double *) malloc((writebufferSize/8)*sizeof(double));
+    //pidx_buffer = (double *) malloc((writebufferSize/8)*sizeof(double));
 
     //    cout << "offsets: " << offset[0] << " " << offset[1] << " " << offset[2] << " "
     //         << offset[3] << " " << offset[4] << endl;
     //    cout << "count: " << count[0] << " " << count[1] << " " << count[2] << " "
     //         << count[3] << " " << count[4] << endl;
-    pidx_buffer = (double*)writebuffer;
+    //pidx_buffer = (double*)writebuffer;
     //    for (unsigned long i = 0; i< writebufferSize/8; i++) {
-      //    cout << "pidx_buffer[ " << i << "] = " << pidx_buffer[i] << endl;
+    //cout << "pidx_buffer[ " << 0 << "] = " << (double)pidx_buffer[0]/*writebuffer[0]*/ << endl;
     //    }
 
-    pc.variable[vc] = PIDX_variable_global_define(pc.idx_ptr, var_name, /*sample_per_variable_buffer[vc]*/ 1, MPI_DOUBLE);
-    PIDX_variable_local_add(pc.idx_ptr, pc.variable[vc], (int*) offset, 
+    pc.variable[vc][mc] = PIDX_variable_global_define(pc.idx_ptr, var_name, /*sample_per_variable_buffer[vc]*/ 1, MPI_DOUBLE);
+    PIDX_variable_local_add(pc.idx_ptr, pc.variable[vc][mc], (int*) offset, 
                                   (int*) count);
-    PIDX_variable_local_layout(pc.idx_ptr, pc.variable[vc], 
-                               pidx_buffer, MPI_DOUBLE);
+    PIDX_variable_local_layout(pc.idx_ptr, pc.variable[vc][mc], 
+                               (double*)writebuffer/*pidx_buffer*/, MPI_DOUBLE);
 
   }
 
