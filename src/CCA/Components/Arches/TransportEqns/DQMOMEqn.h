@@ -131,15 +131,8 @@ public:
                     DataWarehouse* old_dw, 
                     DataWarehouse* new_dw );
 
-  /** @brief  Schedule dummy initialization for MPMArches. */
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-  
-  /** @brief Do dummy initialization for MPMArches. */
-  void dummyInit( const ProcessorGroup* pc, 
-                     const PatchSubset* patches, 
-                     const MaterialSubset* matls, 
-                     DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+  void sched_advClipping( const LevelP& level, SchedulerP& sched, int timeSubStep );
+
 
   // --------------------------------------
   // Access functions:

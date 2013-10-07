@@ -74,11 +74,11 @@ public:
   /** @brief Solve the transport equation */
   virtual void sched_solveTransportEqn( const LevelP&, SchedulerP& sched, int timeSubStep ) = 0;
 
-  /** @brief Dummy init for MPMArches */ 
-  virtual void sched_dummyInit( const LevelP&, SchedulerP& sched ) = 0; 
-
   /** @brief Time averaging */ 
   virtual void sched_timeAve( const LevelP&, SchedulerP& sched, int timeSubStep ) = 0; 
+
+  /** @brief Access to more advanced clipping methods */
+  virtual void sched_advClipping( const LevelP&, SchedulerP& sched, int timeSubStep ) = 0; 
 
   /** @brief Checks that boundary conditions for this variable are set for every 
    * face for every child */ 

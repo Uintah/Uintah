@@ -325,7 +325,7 @@ private:
   }
   
   //---------------------------------------------------------------------------
-  // Method: Schedule dummy initialization
+  // Method: Schedule initialization
   //---------------------------------------------------------------------------
   template <typename sT>
   void Inject<sT>::sched_initialize( const LevelP& level, SchedulerP& sched )
