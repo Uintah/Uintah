@@ -1151,8 +1151,9 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
   task->requires(Task::NewDW,lb->vvel_FCLabel,      /*all_matls*/gac,2);
   task->requires(Task::NewDW,lb->wvel_FCLabel,      /*all_matls*/gac,2);
   
+
   computesRequires_CustomBCs(task, "velFC_Exchange", lb, ice_matls,
-                                d_BC_globalVars);
+                                d_BC_globalVars, recursion);
 
   task->computes(lb->sp_volX_FCLabel);
   task->computes(lb->sp_volY_FCLabel);
@@ -3403,6 +3404,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       customBC_localVars* BC_localVars   = scinew customBC_localVars();
+      BC_localVars->recursiveTask = recursion;
       
       preprocess_CustomBCs("velFC_Exchange",pOldDW, pNewDW, lb,  patch, indx,
                             d_BC_globalVars, BC_localVars);

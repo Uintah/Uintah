@@ -377,7 +377,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->requires( Task::NewDW, lb->sum_imp_delPLabel,   press_matl, oims, gac,1);
     
   computesRequires_CustomBCs(t, "implicitPressureSolve", lb, ice_matls,
-                             d_BC_globalVars);
+                             d_BC_globalVars, true);
 
   //__________________________________
   // ImplicitVel_FC
