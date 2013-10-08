@@ -31,10 +31,11 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
-#include <Core/Grid/Variables/Stencil4.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/Iterator.h>
+#include <Core/Grid/Variables/Stencil4.h>
 
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
@@ -73,12 +74,12 @@ namespace Wasatch {
                                      const std::string& desc,
                                      const int mat_id,
                                      T& bc_value,
-                                     SCIRun::Iterator& bound_ptr,
+                                     Uintah::Iterator& bound_ptr,
                                      std::string& bc_kind,
                                      std::string& bc_face_name,
                                      std::string& bc_functor_name )
   {
-    SCIRun::Iterator nu;
+    Uintah::Iterator nu;
     const Uintah::BoundCondBase* const bc = patch->getArrayBCValues( face, mat_id, desc, bound_ptr, nu, child );
     const Uintah::BoundCond<T>* const new_bcs = dynamic_cast<const Uintah::BoundCond<T>*>(bc);
 
@@ -165,7 +166,7 @@ namespace Wasatch {
         std::string bc_kind = "NotSet";
         std::string bc_name = "none";
         std::string bc_functor_name = "none";        
-        SCIRun::Iterator bound_ptr;
+        Uintah::Iterator bound_ptr;
         const bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind,bc_name,bc_functor_name);
 
         SCIRun::IntVector insideCellDir = patch->faceDirection(face);
@@ -284,7 +285,7 @@ namespace Wasatch {
       const int numChildren = patch->getBCDataArray(face)->getNumberChildren(material);
 
       for( int child = 0; child<numChildren; ++child ){
-        SCIRun::Iterator bound_ptr;
+        Uintah::Iterator bound_ptr;
 
         //
         double bc_value;
@@ -511,7 +512,7 @@ namespace Wasatch {
         std::string bc_kind = "NotSet";
         std::string bc_name = "none";
         std::string bc_functor_name = "none";
-        SCIRun::Iterator bound_ptr;
+        Uintah::Iterator bound_ptr;
         const bool foundIterator = get_iter_bcval_bckind_bcname( patch, face, child, phiName, material, bc_value, bound_ptr, bc_kind, bc_name,bc_functor_name);
         
         if (foundIterator) {
