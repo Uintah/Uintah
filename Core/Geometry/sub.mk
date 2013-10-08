@@ -54,4 +54,9 @@ PSELIBS :=
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(DEFAULT_LIBRARY) $(M_LIBRARY)
 
+# See commit message for while hacking in the MPI_LIBRARY is necessary.
+ifeq ($(IS_OSX),yes)
+  LIBS += $(MPI_LIBRARY)
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
