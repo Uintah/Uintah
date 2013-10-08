@@ -47,6 +47,7 @@
 
 
 using namespace Uintah;
+using namespace SCIRun;
 using namespace std;
 
 #ifdef _WIN32

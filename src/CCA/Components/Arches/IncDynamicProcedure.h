@@ -63,12 +63,11 @@ WARNING
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <iostream>
-using namespace std;
 
 namespace Uintah {
+
 class PhysicalConstants;
 class BoundaryCondition;
-
 
 class IncDynamicProcedure: public TurbulenceModel {
 
@@ -120,7 +119,7 @@ public:
   ////////////////////////////////////////////////////////////////////////
   // Get the Smagorinsky model constant
   double getSmagorinskyConst() const {
-    cerr << "There is no Smagorinsky constant in IncDynamic Procedure" << endl;
+    std::cerr << "There is no Smagorinsky constant in IncDynamic Procedure" << endl;
     exit(0);
     return 0;
   }

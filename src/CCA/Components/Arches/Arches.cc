@@ -164,8 +164,11 @@
 #include <fstream>
 
 using std::endl;
-
 using std::string;
+using std::ifstream;
+using std::make_pair;
+using std::cout;
+
 using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);

@@ -60,7 +60,7 @@ CostModelForecaster::addContribution( DetailedTask *task, double cost )
   {
     const Patch* patch=patches->get(p);
 
-    execTimes[patch->getID()]+=patch->getNumExtraCells()*cost_per_cell;
+    d_execTimes[patch->getID()]+=patch->getNumExtraCells()*cost_per_cell;
   }
 }
 
@@ -86,8 +86,8 @@ void CostModelForecaster::outputError(const GridP grid)
       if(d_lb->getPatchwiseProcessorAssignment(patch)!=d_myworld->myrank())
         continue;
 
-      //cout << d_myworld->myrank() << " patch:" << patch->getID() << " exectTime: " << execTimes[patch->getID()] << " cost: " << costs[l][p] << endl;
-      double error=(execTimes[patch->getID()]-costs[l][p])/(execTimes[patch->getID()]+costs[l][p]);
+      //cout << d_myworld->myrank() << " patch:" << patch->getID() << " exectTime: " << d_execTimes[patch->getID()] << " cost: " << costs[l][p] << endl;
+      double error=(d_execTimes[patch->getID()]-costs[l][p])/(d_execTimes[patch->getID()]+costs[l][p]);
       IntVector low(patch->getCellLowIndex()), high(patch->getCellHighIndex());
       if(stats2.active())
         cout << "PROFILESTATS: " << iter << " " << fabs(error) << " " << l << " " 
@@ -144,7 +144,7 @@ void CostModelForecaster::collectPatchInfo(const GridP grid, vector<PatchInfo> &
       if(owner==d_myworld->myrank())
       {
         // add to patch list
-        PatchInfo pinfo(num_particles[l][p],patch->getNumCells(),patch->getNumExtraCells()-patch->getNumCells(),execTimes[patch->getID()]);
+        PatchInfo pinfo(num_particles[l][p],patch->getNumCells(),patch->getNumExtraCells()-patch->getNumCells(),d_execTimes[patch->getID()]);
         patchList.push_back(pinfo);
       }
     }
@@ -407,7 +407,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   
   if(d_myworld->myrank()==0 && stats.active())
     cout << "Update: patchCost: " << d_patchCost << " cellCost: " << d_cellCost << " d_extraCellCost: " << d_extraCellCost << " particleCost: " << d_particleCost << endl;
-  execTimes.clear();
+  d_execTimes.clear();
 }
 
 void

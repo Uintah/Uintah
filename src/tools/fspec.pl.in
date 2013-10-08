@@ -82,25 +82,48 @@ LINE: while(<FILE>){
 	
     }
     print OUT ");\n\n";
-    print OUT "static $ret fort_$fn(";
+    print OUT "static $ret fort_$fn( ";
 
     $sep="";
     foreach $a (@args){
 	print OUT $sep;
-	$sep=",\n$spacing";
+	$sep=",\n$spacing ";
 	($type, $tmpltype, $name) = &parsearg($a);
-	if($tmpltype ne ""){
-	    print OUT "$type<$tmpltype>& $name";
+
+	# If it is not a simple type, then it is a Uintah type and must use "Uintah::" to 
+        # specify the namespace it comes from.
+
+	if(!&simpletype($type)){
+	    $namespace="Uintah::";
 	} else {
-	    print OUT "$type& $name";
+	    $namespace="";
+        }
+
+	# Cut the type into pieces based on a ' '.  If there is a space, then it means that
+        # the type has 'const ' at the beginning.  Handle this special case so that the
+        # type is rebuilt and used  correctly below with the $namespace.
+
+        my @pieces = split(' ',$type);
+
+	if( $#pieces == 1 ){
+	    $const="const ";
+	    $type=@pieces[1];
+	} else {
+	    $const="";
+        }
+
+	if($tmpltype ne ""){
+	    print OUT "$const$namespace$type<$tmpltype> & $name";
+	} else {
+	    print OUT "$namespace$type & $name";
 	}
     }
-    print OUT ")\n{\n";
+    print OUT " )\n{\n";
     foreach $a (@args) {
 	($type, $tmpltype, $name) = &parsearg($a);
 	if(&knownvartype($type)){
-	    print OUT "  IntVector $name\_low = $name.getWindow()->getOffset();\n";
-	    print OUT "  IntVector $name\_high = $name.getWindow()->getData()->size() + $name\_low - IntVector(1, 1, 1);\n";
+	    print OUT "  Uintah::IntVector $name\_low = $name.getWindow()->getOffset();\n";
+	    print OUT "  Uintah::IntVector $name\_high = $name.getWindow()->getData()->size() + $name\_low - Uintah::IntVector(1, 1, 1);\n";
 	    if($fortran_underscore){
 		foreach $d ("x", "y", "z") {
 		    print OUT "  int $name\_low_$d = $name\_low.$d();\n";
