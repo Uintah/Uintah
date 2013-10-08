@@ -47,7 +47,7 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
- 	 <Disabledmomdt/>
+ 	
       <Y-Velocity>v</Y-Velocity>
       <Y-Momentum>y-mom</Y-Momentum>
       <Z-Velocity>w</Z-Velocity>
@@ -112,8 +112,8 @@
     <save label="tau_zz"/>
     <save label="y-mom_rhs_partial"/>
     <save label="z-mom_rhs_partial"/>
-    <save label="y-mom_rhs_full"/>
-    <save label="z-mom_rhs_full"/>
+    <save label="y-mom_rhs"/>
+    <save label="z-mom_rhs"/>
 
   </DataArchiver> 
 

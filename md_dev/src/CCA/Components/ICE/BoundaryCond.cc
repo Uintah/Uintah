@@ -966,7 +966,8 @@ void setBC(CCVariable<Vector>& var_CC,
         else if ( localVars->set_inletVel_BCs ) {
           nCells += set_inletVelocity_BC( patch, face, var_CC, desc,
                                           bound_ptr, bc_kind, bc_value,
-                                          globalVars->inletVel_var_basket );
+                                          globalVars->inletVel_var_basket,
+                                          localVars->inletVel_v );
         }
         //__________________________________
         //  debugging

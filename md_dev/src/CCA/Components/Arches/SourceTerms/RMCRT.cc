@@ -16,7 +16,6 @@ static DebugStream dbg("RMCRT", false);
           TO DO:
           
   - fix coarsen operator      
-  - pull in _archesLevelIndex from arches, don't compute it locally
   
   - Don't like how _matlSet is being defined.
   
@@ -60,7 +59,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   //Declare the source type: 
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
 
-//  _archesLevelIndex      = -9;
+  _archesLevelIndex      = -9;
   _prop_calculator       = 0;
   _using_prop_calculator = 0; 
   _RMCRT                 = 0;
@@ -72,7 +71,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   
   //__________________________________
   //  define the materialSet
-  int archIndex = 0;
+  int archIndex = 0;                // HARDWIRED
   _matl = _sharedState->getArchesMaterial(archIndex)->getDWIndex();
   
   _matlSet = scinew MaterialSet();
@@ -102,7 +101,7 @@ RMCRT_Radiation::~RMCRT_Radiation()
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
+RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 {
 
   _ps = inputdb; 
@@ -147,9 +146,10 @@ RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
 
   //__________________________________
   //for particles: 
-  _ps->getWithDefault( "abskp_label", _abskp_label_name, "abskp" ); 
-  _ps->getWithDefault( "psize_label", _size_label_name, "length");
-  _ps->getWithDefault( "ptemperature_label", _pT_label_name, "temperature"); 
+  _ps->getWithDefault( "abskp_label",        _abskp_label_name, "abskp" ); 
+  _ps->getWithDefault( "psize_label",        _size_label_name,  "length");
+  _ps->getWithDefault( "ptemperature_label", _pT_label_name,    "temperature"); 
+  
   //get the number of quadrature nodes and store it locally 
   _nQn_part = 0;
   if ( _ps->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") ){
@@ -157,17 +157,20 @@ RMCRT_Radiation::problemSetup(const ProblemSpecP& inputdb)
   }
 
   //__________________________________
-  //
+  //  
   _prop_calculator = scinew RadPropertyCalculator(); 
   _using_prop_calculator = _prop_calculator->problemSetup( rmcrt_ps ); 
 }
 
 //______________________________________________________________________
-//  Additional call made in problem setup
+//  We need this additiional call to problemSetup
+//  so the reaction models can create the  VarLabel
 //______________________________________________________________________
 void 
-RMCRT_Radiation::extraSetup()
+RMCRT_Radiation::extraSetup( GridP& grid )
 { 
+
+  // determing the temperature label
   _tempLabel = _labels->getVarlabelByRole(ArchesLabel::TEMPERATURE);
   proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName()
             << "   abskg label name:       " << _abskgLabel->getName() << endl;
@@ -176,6 +179,7 @@ RMCRT_Radiation::extraSetup()
     throw ProblemSetupException("Error: No temperature label found.",__FILE__,__LINE__); 
   } 
   
+  // create RMCRT and register the labels
   _RMCRT = scinew Ray();
 
   _RMCRT->registerVarLabels(_matl, 
@@ -187,11 +191,34 @@ RMCRT_Radiation::extraSetup()
 
   ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
   _RMCRT->problemSetup( _ps, rmcrt_ps, _sharedState);
+  
+  //__________________________________
+  //  Bulletproofing: 
+  // dx must get smaller as level-index increases
+  // Arches is always computed on the finest level
+  int maxLevels = grid->numLevels();
+  _archesLevelIndex = maxLevels - 1;
+  
+  if( maxLevels > 1) {
+    Vector dx_prev = grid->getLevel(0)->dCell();
+    
+    for (int L = 1; L < maxLevels; L++) {
+      Vector dx = grid->getLevel(L)->dCell();
+      
+      Vector ratio = dx/dx_prev;
+      if( ratio.x() > 1 || ratio.y() > 1 || ratio.z() > 1){
+        ostringstream warn;
+        warn << "RMCRT: ERROR Level-"<< L << " cell spacing is not smaller than Level-"<< L-1 << ratio;
+        throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
+      }
+      dx_prev = dx;
+    }
+  }
 }
 
 
 //---------------------------------------------------------------------------
-// Method: Schedule the calculation of the source term 
+// Method: Schedule the calculation of the source term (divQ)
 //
 //  See: CCA/Components/Models/Radiation/RMCRT/Ray.cc
 //       for the actual tasks that are scheduled.
@@ -201,12 +228,10 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
                                       SchedulerP& sched, 
                                       int timeSubStep )
 { 
-  // HACK This should be pulled in from arches, not computed here.
   GridP grid = level->getGrid();
-  int archesLevelIndex = grid->numLevels()-1; // this is the finest level
 
   // only sched on RK step 0 and on arches level
-  if ( timeSubStep != 0  || level->getIndex() != archesLevelIndex) {  
+  if ( timeSubStep != 0  || level->getIndex() != _archesLevelIndex) {  
     return;
   } 
 
@@ -216,7 +241,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   // move data on non-arches level to the new_dw for simplicity
   // do this on all timesteps
   for (int L = 0; L < maxLevels; L++) {
-    if( L != archesLevelIndex ){
+    if( L != _archesLevelIndex ){
       const LevelP& level = grid->getLevel(L);
       _RMCRT->sched_CarryForward_Var ( level, sched, _cellTypeLabel );
     }
@@ -239,7 +264,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
   if( _whichAlgo == dataOnion ){
-    const LevelP& fineLevel = grid->getLevel(archesLevelIndex);
+    const LevelP& fineLevel = grid->getLevel(_archesLevelIndex);
     Task::WhichDW temp_dw = Task::OldDW;
     
     // modify Radiative properties on the finest level
@@ -259,6 +284,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const LevelP& level = grid->getLevel(l);
       const bool modifies_abskg   = false;
       const bool modifies_sigmaT4 = false;
+      
       _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4, _radiation_calc_freq );
       _RMCRT->sched_setBoundaryConditions( level, sched, notUsed, _radiation_calc_freq, backoutTemp );
     }
@@ -277,9 +303,9 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   //______________________________________________________________________
   //   2 - L E V E L   A P P R O A C H
   //  RMCRT is performed on the coarse level
-  // and the results are interpolated to the fine (arches) level
+  //  and the results are interpolated to the fine (arches) level
   if( _whichAlgo == coarseLevel ){
-    const LevelP& fineLevel = grid->getLevel(archesLevelIndex);
+    const LevelP& fineLevel = grid->getLevel(_archesLevelIndex);
     Task::WhichDW temp_dw = Task::OldDW;
    
     // compute Radiative properties and sigmaT4 on the finest level
@@ -528,10 +554,8 @@ void
 RMCRT_Radiation::sched_initialize( const LevelP& level, 
                                    SchedulerP& sched )
 {
-  // HACK archesLevelIndex should be pulled in from arches, not computed here.
   GridP grid = level->getGrid();
   int maxLevels = grid->numLevels();
-  int archesLevelIndex = maxLevels-1; // this is the index of the finest level  
 
   //__________________________________
   //  Additional bulletproofing, this belongs in problem setup
@@ -542,57 +566,27 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   //__________________________________
   //  schedule the tasks
   for (int L=0; L< maxLevels; ++L){
-  
-    if( L != archesLevelIndex ){
-   
-      string taskname = "RMCRT_Radiation::sched_initialize"; 
-      Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
+    string taskname = "RMCRT_Radiation::sched_initialize"; 
+    Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
 
-      LevelP level = grid->getLevel(L);
-      printSchedule(level,dbg,taskname);
-
-      for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
-           iter != _extra_local_labels.end(); iter++){
-
-        tsk->computes(*iter); 
-
-      }
-      
-      tsk->computes( _cellTypeLabel );
-      sched->addTask(tsk, level->eachPatch(), _matlSet);
-    } else { 
-      string taskname = "RMCRT_Radiation::sched_initialize"; 
-      Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
-
-      LevelP level = grid->getLevel(L);
-      printSchedule(level,dbg,taskname);
-
+    LevelP level = grid->getLevel(L);
+    printSchedule(level,dbg,taskname);
+               
+    if( L == _archesLevelIndex ) {
       tsk->computes(_src_label);
-
-      for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
-           iter != _extra_local_labels.end(); iter++){
-
-        tsk->computes(*iter); 
-
-      }
-      
-      sched->addTask(tsk, level->eachPatch(), _matlSet);
-    } 
-
-  // THIS IS THE RIGHT WAY TO INITIALIZE cellType
-  // The problem is _bc is not defined at this point in Arches::problemSetup
-  #if 0 
-    //__________________________________
-    // cellType initialization
-    const PatchSet* patches = level->eachPatch();
-    if ( _bc->isUsingNewBC() ) {
-      _bc->sched_cellTypeInit__NEW( sched, patches, _matlSet );
     } else {
-      _bc->sched_cellTypeInit(sched, patches, _matlSet);
-    }
-   #endif
+      tsk->computes( _cellTypeLabel );
+    } 
+    
+    //__________________________________
+    //  all levels
+    tsk->computes( _sigmaT4Label );
+    tsk->computes( _abskgLabel  );
+    tsk->computes( _absorpLabel );
+    tsk->computes( _abskpLabel  );
+    
+    sched->addTask(tsk, level->eachPatch(), _matlSet);
   }
-
 }
 //______________________________________________________________________
 //
@@ -603,30 +597,35 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
                              DataWarehouse* , 
                              DataWarehouse* new_dw )
 {
+  const int L_indx = getLevel(patches)->getIndex();
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing RMCRT_Radiation::initialize");
-
-
-//    CCVariable<int> cellType;        // HACK UNTIL WE KNOW WHAT TO DO
-//    new_dw->allocateAndPut( cellType,    _cellTypeLabel,    _matl, patch );
-//    cellType.initialize( 0 ); 
-
-    CCVariable<double> src;
-
-    new_dw->allocateAndPut( src, _src_label, _matl, patch ); 
-
-    src.initialize(0.0); 
-
-    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
-         iter != _extra_local_labels.end(); iter++){
-
-      CCVariable<double> temp_var; 
-      new_dw->allocateAndPut(temp_var, *iter, _matl, patch ); 
-      temp_var.initialize(0.0);
-      
+    
+    if( L_indx == _archesLevelIndex ){    // arches level
+      CCVariable<double> src;
+      new_dw->allocateAndPut( src, _src_label, _matl, patch ); 
+      src.initialize(0.0); 
+    }else{                                // other levels
+      CCVariable<int> cellType;        
+      new_dw->allocateAndPut( cellType,    _cellTypeLabel,    _matl, patch );
+      cellType.initialize( 0 );           // HACK UNTIL WE KNOW WHAT TO DO
     }
+    
+    //__________________________________
+    // all levels
+    CCVariable<double> sigmaT4, abskg, absorp, abskp;
+    new_dw->allocateAndPut(sigmaT4, _sigmaT4Label, _matl, patch );
+    new_dw->allocateAndPut(abskg,   _abskgLabel,   _matl, patch );
+    new_dw->allocateAndPut(absorp,  _absorpLabel,  _matl, patch );
+    new_dw->allocateAndPut(abskp,   _abskpLabel,   _matl, patch );
+    
+    sigmaT4.initialize( 0.0 );
+    abskg.initialize( 0.0 );
+    absorp.initialize( 0.0 );
+    abskp.initialize( 0.0 );
+    
   }
 }
 

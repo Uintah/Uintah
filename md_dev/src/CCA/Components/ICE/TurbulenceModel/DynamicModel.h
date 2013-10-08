@@ -28,7 +28,6 @@
 #include <CCA/Components/ICE/TurbulenceModel/Turbulence.h>
 #include <CCA/Components/ICE/TurbulenceModel/SmagorinskyModel.h>
 #include <Core/Containers/StaticArray.h>
-#include <cmath>
 
 namespace Uintah {
 
@@ -41,7 +40,8 @@ namespace Uintah {
     virtual ~DynamicModel();
     
     virtual void computeTurbViscosity(DataWarehouse* new_dw,
-                                      const Patch* patch,                       
+                                      const Patch* patch,
+                                      const ICELabel* lb,               
                                       constCCVariable<Vector>& vel_CC,         
                                       constSFCXVariable<double>& uvel_FC,      
                                       constSFCYVariable<double>& vvel_FC,      
@@ -58,7 +58,8 @@ namespace Uintah {
   private:
     
     void computeSmagCoeff(DataWarehouse* new_dw,
-                          const Patch* patch,                                
+                          const Patch* patch,
+                          const ICELabel* lb,                          
                           constCCVariable<Vector>& vel_CC,                  
                           constSFCXVariable<double>& uvel_FC,               
                           constSFCYVariable<double>& vvel_FC,               

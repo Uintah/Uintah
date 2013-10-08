@@ -24,8 +24,6 @@
 //        in the local destructor
 //     c) Add your input file details in problemSetup
 //     d) Add actual calculation of property in computeProp. 
-//     e) Make sure that you dummyInit any new variables that require OldDW 
-//        values.
 //     f) Make sure that _before_table_lookup is properly set for this property. 
 //   7) Please clean up unused code from this template in your final version
 //   8) Please add comments to this list as you see fit to help the next person
@@ -66,13 +64,6 @@ namespace Uintah{
                        DataWarehouse* old_dw, 
                        DataWarehouse* new_dw, 
                        int time_substep );
-
-      void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-      void dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw );
 
       void sched_initialize( const LevelP& level, SchedulerP& sched );
       void initialize( const ProcessorGroup* pc, 
@@ -240,52 +231,6 @@ namespace Uintah{
     }
   }
   
-  //---------------------------------------------------------------------------
-  //Method: Scheduler for Dummy Initialization
-  //---------------------------------------------------------------------------
-  template <TEMP_PARAMS>
-  void CLASSNAME<TEMP_PARAMS>::sched_dummyInit( const LevelP& level, SchedulerP& sched )
-  {
-
-    std::string taskname = "CLASSNAME::dummyInit"; 
-
-    Task* tsk = scinew Task(taskname, this, &CLASSNAME::dummyInit);
-    tsk->computes(_prop_label); 
-    tsk->requires( Task::OldDW, _prop_label, Ghost::None, 0 ); 
-
-    sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
-
-  }
-
-  //---------------------------------------------------------------------------
-  //Method: Actually do the Dummy Initialization
-  //---------------------------------------------------------------------------
-  template <TEMP_PARAMS>
-  void CLASSNAME<TEMP_PARAMS>::dummyInit( const ProcessorGroup* pc, 
-                                              const PatchSubset* patches, 
-                                              const MaterialSubset* matls, 
-                                              DataWarehouse* old_dw, 
-                                              DataWarehouse* new_dw )
-  {
-    //patch loop
-    for (int p=0; p < patches->size(); p++){
-  
-      const Patch* patch = patches->get(p);
-      int archIndex = 0;
-      int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
-
-      pT prop; 
-      constpT old_prop; 
-
-      new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
-      old_dw->get( old_prop, _prop_label, matlIndex, patch, Ghost::None, 0); 
-
-      //prop.initialize(0.0); <--- Careful, don't reinitialize if you don't want to 
-      prop.copyData( old_prop );
-  
-    }
-  }
-
   //---------------------------------------------------------------------------
   //Method: Scheduler for Initializing the Property
   //---------------------------------------------------------------------------

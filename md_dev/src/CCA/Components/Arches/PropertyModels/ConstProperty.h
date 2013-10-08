@@ -39,13 +39,6 @@ namespace Uintah{
                        DataWarehouse* new_dw, 
                        int time_substep );
 
-      void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-      void dummyInit( const ProcessorGroup* pc, 
-                      const PatchSubset* patches, 
-                      const MaterialSubset* matls, 
-                      DataWarehouse* old_dw, 
-                      DataWarehouse* new_dw );
-
       void sched_initialize( const LevelP& level, SchedulerP& sched );
       void initialize( const ProcessorGroup* pc, 
                        const PatchSubset* patches, 
@@ -177,46 +170,6 @@ namespace Uintah{
     }
   }
   
-  template <typename pT, typename constpT>
-  void ConstProperty<pT, constpT>::sched_dummyInit( const LevelP& level, SchedulerP& sched )
-  {
-
-    std::string taskname = "ConstProperty::dummyInit"; 
-
-    Task* tsk = scinew Task(taskname, this, &ConstProperty::dummyInit);
-    tsk->computes(_prop_label); 
-    tsk->requires( Task::OldDW, _prop_label, Ghost::None, 0 ); 
-
-    sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
-
-  }
-
-  template <typename pT, typename constpT>
-  void ConstProperty<pT, constpT>::dummyInit( const ProcessorGroup* pc, 
-                                              const PatchSubset* patches, 
-                                              const MaterialSubset* matls, 
-                                              DataWarehouse* old_dw, 
-                                              DataWarehouse* new_dw )
-  {
-    //patch loop
-    for (int p=0; p < patches->size(); p++){
-  
-      const Patch* patch = patches->get(p);
-      int archIndex = 0;
-      int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
-
-      pT prop; 
-      constpT old_prop; 
-
-      new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
-      old_dw->get( old_prop, _prop_label, matlIndex, patch, Ghost::None, 0); 
-
-      prop.initialize(0.0); 
-      prop.copyData( old_prop );
-  
-    }
-  }
-
   template <typename pT, typename constpT>
   void ConstProperty<pT, constpT>::sched_initialize( const LevelP& level, SchedulerP& sched )
   {

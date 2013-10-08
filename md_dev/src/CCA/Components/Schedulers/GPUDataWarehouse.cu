@@ -30,150 +30,193 @@
 
 namespace Uintah {
 
+//______________________________________________________________________
+//
 HOST_DEVICE void
-GPUDataWarehouse::get(GPUGridVariableBase &var, char const* name, int patchID, int maltIndex)
+GPUDataWarehouse::get(const GPUGridVariableBase &var, char const* name, int patchID, int maltIndex)
+{
+  GPUDataWarehouse::dataItem* item=getItem(name, patchID, maltIndex);
+  if (item) var.setArray3(item->var_offset, item->var_size, item->var_ptr);
+  else printf("ERROR:\nGPUDataWarehouse::get( %s ) unknown variable from GPUDataWarehouse",name);
+}
+
+HOST_DEVICE void
+GPUDataWarehouse::getModifiable(GPUGridVariableBase &var, char const* name, int patchID, int maltIndex)
+{
+  GPUDataWarehouse::dataItem* item=getItem(name, patchID, maltIndex);
+  if (item) var.setArray3(item->var_offset, item->var_size, item->var_ptr);
+  else printf("ERROR:\nGPUDataWarehouse::getModifiable( %s )  unknown variable from GPUDataWarehouse",name);
+}
+
+HOST_DEVICE GPUDataWarehouse::dataItem* 
+GPUDataWarehouse::getItem(char const* name, int patchID, int maltIndex)
 {
 #ifdef __CUDA_ARCH__
-__shared__ int3 offset;
-__shared__ int3 size;
-__shared__ void* ptr;
-__syncthreads();  //sync before get
-int numThreads = blockDim.x*blockDim.y*blockDim.z;
-int blockID = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
-int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
-int i=threadID;
-char const *s1 = name;
-//if (d_debug && threadID == 0 && blockID==0) {
-//  printf("device getting %s from DW 0x%x", name, (unsigned int)this);
-//  printf("size (%d vars)\n", numItems);
-//}
-while(i<numItems){
-  int strmatch=0;
-  char *s2 = &(d_varDB[i].label[0]);
-  while (!(strmatch = *(unsigned char *) s1 - *(unsigned char *) s2) && *s2) ++s1, ++s2; //strcmp
-  if (strmatch==0 && d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex){
-    offset = d_varDB[i].var_offset;
-    size= d_varDB[i].var_size;
-    ptr = d_varDB[i].var_ptr;
+  __shared__ int index;
+  int numThreads = blockDim.x*blockDim.y*blockDim.z;
+  int blockID = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
+  int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+  int i=threadID;
+  char const *s1 = name;
+  __syncthreads();
+  index = -1;
+  
+  if (d_debug && threadID == 0 && blockID==0) {
+    printf("device getting item %s from DW 0x%x", name, (unsigned int)this);
+    printf("size (%d vars)\n", numItems);
   }
-  i=i+numThreads;
-}
-//sync before return;
-__syncthreads();
-var.setArray3(offset, size, ptr);
-if (d_debug && threadID == 1 && blockID==0) { // printf from GPU only support two variables...
-  printf("device got %s (patch: %d) ", name, patchID);
-  printf("loc 0x%x ", ptr);
-  printf("from GPUDW 0x%x on ", device_copy);
-  printf("device %d\n", device_id);
-}
 
-#else
-// cpu code
-int i= 0;
-while(i<numItems){
-  if (!strncmp(d_varDB[i].label, name, MAX_NAME) &&  d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex) {
-    var.setArray3(d_varDB[i].var_offset, d_varDB[i].var_size , d_varDB[i].var_ptr);
-    break;
+  __syncthreads();  //sync before get
+  while(i<numItems){
+    int strmatch=0;
+    char *s2 = &(d_varDB[i].label[0]);
+    while (!(strmatch = *(unsigned char *) s1 - *(unsigned char *) s2) && *s2) ++s1, ++s2; //strcmp
+
+    if (strmatch==0 && d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex){
+      index = i;
+    }
+    i=i+numThreads;
   }
-  i++;
-}
-if (i==numItems) {
-  printf("host get unknown variable on GPUDataWarehouse");
-  exit(-1);
-}
-//if (d_debug) printf("host got %s loc 0x%x from GPUDW 0x%x on device %d\n", name, d_varDB[i].var_ptr, device_copy, device_id);
+  //sync before return;
+  __syncthreads();
+  if (index==-1) return NULL;
+  else return &d_varDB[index];
+#else
+  //__________________________________
+  // cpu code
+  int i= 0;
+  while(i<numItems){
+    if (!strncmp(d_varDB[i].label, name, MAX_NAME) &&  d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex) {
+      break;
+    }
+    i++;
+  }
+
+  if (i==numItems) {
+    printf("ERROR:\nGPUDataWarehouse::get( %s ) host get unknown variable from GPUDataWarehouse",name);
+    exit(-1);
+  }
+
+  if (d_debug){
+    printf("host got %s loc 0x%x from GPUDW 0x%x on device %d\n", name, d_varDB[i].var_ptr, device_copy, device_id);
+  }
+  return &d_varDB[i];
 #endif
 }
-
+//______________________________________________________________________
+//
 HOST_DEVICE void 
 GPUDataWarehouse::put(GPUGridVariableBase &var, char const* name, int patchID, int maltIndex, bool overWrite)
 {
-#ifdef __CUDA_ARCH__
-  //Should not put from device side as all memory allocation should be done on CPU side through CUDAMalloc()
+#ifdef __CUDA_ARCH__  // need to limit output
+  printf("ERROR:\nGPUDataWarehouse::put( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with CUDAMalloc\n",name); 
+  exit(-1); 
 #else
+  
+  //__________________________________
   //cpu code 
   if (numItems==MAX_ITEM) {
     printf("out of GPUDataWarehouse space");
     exit(-1);
   }
+  
   int i=numItems;
   numItems++; 
   strncpy(d_varDB[i].label, name, MAX_NAME);
-  d_varDB[i].domainID = patchID;
+  d_varDB[i].domainID  = patchID;
   d_varDB[i].matlIndex = maltIndex;
   var.getArray3(d_varDB[i].var_offset, d_varDB[i].var_size, d_varDB[i].var_ptr);
-  if (d_debug) printf("host put %s (patch: %d) loc 0x%x into GPUDW 0x%x on device %d\n", name, patchID, d_varDB[i].var_ptr, device_copy, device_id);
+  
+  if (d_debug){
+    printf("host put %s (patch: %d) loc 0x%x into GPUDW 0x%x on device %d, size [%d,%d,%d]\n", name, patchID, d_varDB[i].var_ptr, device_copy, device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
+  }
   d_dirty=true;
 #endif
 }
 
+//______________________________________________________________________
+//
 HOST_DEVICE void 
 GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* name, int patchID, int maltIndex, int3 low, int3 high)
 {
-#ifdef __CUDA_ARCH__
-  //Should not put from device side as all memory allocation should be done on CPU side through CUDAMalloc()
+#ifdef __CUDA_ARCH__  // need to limit output
+  printf("ERROR:\nGPUDataWarehouse::allocateAndPut( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with CUDAMalloc\n",name);
+  exit(-1);
 #else
+  //__________________________________
+  //  cpu code
   cudaError_t retVal;
-  int3 size=make_int3(high.x-low.x, high.y-low.y, high.z-low.z);
-  int3 offset=low;
-  void* addr=NULL;
+  int3 size   = make_int3(high.x-low.x, high.y-low.y, high.z-low.z);
+  int3 offset = low;
+  void* addr  = NULL;
+  
   var.setArray3(offset, size, addr);
   CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device_id));
+  
   if (d_debug) {
     printf("cuda Malloc for %s, size %ld from (%d,%d,%d) to (%d,%d,%d) " , name, var.getMemSize(), 
             low.x, low.y, low.z, high.x, high.y, high.z);
   }
+  
   CUDA_RT_SAFE_CALL( retVal = cudaMalloc(&addr, var.getMemSize()) );
+  
   if (d_debug) {
     printf(" at 0x%x on device %d\n" , addr ,device_id);
   }
+  
   var.setArray3(offset, size, addr);
   put(var, name, patchID, maltIndex);
 #endif
 }
-
+//______________________________________________________________________
+//
 HOST_DEVICE bool
 GPUDataWarehouse::exist(char const* name, int patchID, int maltIndex)
 {
 #ifdef __CUDA_ARCH__
   printf("exist() is only for framework code\n");
 #else
-int i= 0;
-while(i<numItems){
-  if (!strncmp(d_varDB[i].label, name, MAX_NAME) &&  d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex) {
-    return true;
+  //__________________________________
+  //  cpu code
+  int i= 0;
+  while(i<numItems){
+    if (!strncmp(d_varDB[i].label, name, MAX_NAME) &&  d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex) {
+      return true;
+    }
+    i++;
   }
-  i++;
-}
 #endif 
 return false;
 }
-
+//______________________________________________________________________
+//
 HOST_DEVICE bool
 GPUDataWarehouse::remove(char const* name, int patchID, int maltIndex)
 {
 #ifdef __CUDA_ARCH__
   printf("remove() is only for framework code\n");
 #else
-int i= 0;
-while(i<numItems){
-  if (!strncmp(d_varDB[i].label, name, MAX_NAME) &&  d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex) {
-    cudaError_t retVal;
-    CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
-    if (d_debug) printf("cuda Free for %s at 0x%x on device %d\n" , d_varDB[i].label, d_varDB[i].var_ptr, device_id );
-    d_varDB[i].label[0] = NULL; //leave a hole in the flat array, not deleted.
-    d_dirty=true;
+  int i= 0;
+  while(i<numItems){
+    if (!strncmp(d_varDB[i].label, name, MAX_NAME) &&  d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex) {
+      cudaError_t retVal;
+      CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
+
+      if (d_debug){
+        printf("cuda Free for %s at 0x%x on device %d\n" , d_varDB[i].label, d_varDB[i].var_ptr, device_id );
+      }
+
+      d_varDB[i].label[0] = NULL; //leave a hole in the flat array, not deleted.
+      d_dirty=true;
+    }
+    i++;
   }
-  i++;
-}
 #endif 
-return false;
+  return false;
 }
 
-
-
-
+//______________________________________________________________________
+//
 HOST_DEVICE void
 GPUDataWarehouse::init_device(int id)
 {
@@ -184,10 +227,17 @@ GPUDataWarehouse::init_device(int id)
   device_id = id;
   CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device_id));
   CUDA_RT_SAFE_CALL( retVal = cudaMalloc((void**)&device_copy, sizeof(GPUDataWarehouse)));
-   if(d_debug) printf("Init GPUDW in-device copy %d bytes to 0x%x on device %d\n", sizeof(GPUDataWarehouse), device_copy, device_id);
+  
+  if(d_debug){
+    printf("Init GPUDW in-device copy %d bytes to 0x%x on device %d\n", sizeof(GPUDataWarehouse), device_copy, device_id);
+  }
+  
   d_dirty=true;
 #endif 
 }
+
+//______________________________________________________________________
+//
 HOST_DEVICE void
 GPUDataWarehouse::syncto_device()
 {
@@ -195,7 +245,7 @@ GPUDataWarehouse::syncto_device()
   //no meaning in device method
 #else
   if (!device_copy) {
-    printf("error: no device copy\n");
+    printf("ERROR:\nGPUDataWarehouse::syncto_device()\nNo device copy\n");
     exit(-1);
   }
   //TODO: only sync the difference
@@ -203,6 +253,7 @@ GPUDataWarehouse::syncto_device()
     cudaError_t retVal;
     CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device_id));
     CUDA_RT_SAFE_CALL (retVal = cudaMemcpy(device_copy,this, sizeof(GPUDataWarehouse), cudaMemcpyHostToDevice));
+    
     if (d_debug) {
       printf("sync GPUDW 0x%x to device %d\n", device_copy, device_id);
     }
@@ -211,6 +262,8 @@ GPUDataWarehouse::syncto_device()
 #endif
 }
 
+//______________________________________________________________________
+//
 HOST_DEVICE void
 GPUDataWarehouse::clear() 
 {
@@ -218,22 +271,29 @@ GPUDataWarehouse::clear()
   //no meaning in device method
 #else
 
-cudaError_t retVal;
-CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device_id));
-for (int i=0; i<numItems; i++) {
-  if (d_varDB[i].label[0] != NULL){
-    CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
-    if (d_debug) printf("cuda Free for %s at 0x%x on device %d\n" , d_varDB[i].label, d_varDB[i].var_ptr, device_id );
+  cudaError_t retVal;
+  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device_id));
+  for (int i=0; i<numItems; i++) {
+    if (d_varDB[i].label[0] != NULL){
+      CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
+      
+      if (d_debug){
+        printf("cuda Free for %s at 0x%x on device %d\n" , d_varDB[i].label, d_varDB[i].var_ptr, device_id );
+      }
+    }
   }
-}
 
-numItems=0;
-if (device_copy) {
-  CUDA_RT_SAFE_CALL(retVal =  cudaFree(device_copy));
-  if(d_debug) printf("Delete GPUDW in-device copy at 0x%x on device %d \n",  device_copy, device_id);
-}
+  numItems=0;
+  if (device_copy) {
+    CUDA_RT_SAFE_CALL(retVal =  cudaFree(device_copy));
+    if(d_debug){
+      printf("Delete GPUDW in-device copy at 0x%x on device %d \n",  device_copy, device_id);
+    }
+  }
 #endif
 }
+//______________________________________________________________________
+//
 
 
 }

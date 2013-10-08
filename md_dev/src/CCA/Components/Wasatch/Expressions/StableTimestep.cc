@@ -88,17 +88,17 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
   if (doX_) {
     x2SInterp_ = opDB.retrieve_operator<X2SOpT>();
     gradXOp_   = opDB.retrieve_operator<GradXT>();
-    invDx_ = std::abs( gradXOp_->get_plus_coef() );
+    invDx_ = std::abs( gradXOp_->coefs().get_coef(1) ); //high coefficient
   }
   if (doY_) {
     y2SInterp_ = opDB.retrieve_operator<Y2SOpT>();
     gradYOp_   = opDB.retrieve_operator<GradYT>();
-    invDy_ = std::abs( gradYOp_->get_plus_coef() );
+    invDy_ = std::abs( gradYOp_->coefs().get_coef(1) ); //high coefficient
   }
   if (doZ_) {
     z2SInterp_ = opDB.retrieve_operator<Z2SOpT>();
     gradZOp_   = opDB.retrieve_operator<GradZT>();
-    invDz_ = std::abs( gradZOp_->get_plus_coef() );
+    invDz_ = std::abs( gradZOp_->coefs().get_coef(1) ); //high coefficient
   }
 }
 

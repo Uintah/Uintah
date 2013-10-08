@@ -39,7 +39,7 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
- 	 <Disabledmomdt/>
+ 	
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
       <Z-Velocity>w</Z-Velocity>
@@ -94,7 +94,7 @@
   <Grid>
       <BoundaryConditions>
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
-      <Face side="z-">
+      <Face side="z-" name="z-">
 
         <BCType id="all" var="Dirichlet" label="x-mom">
           <value> 0.0 </value>
@@ -110,7 +110,7 @@
 
       </Face>
       
-      <Face side="z+">
+      <Face side="z+" name="z+">
 
         <BCType id="all" var="Neumann" label="x-mom">
           <value> 0.0 </value>
@@ -126,7 +126,7 @@
 
       </Face>
       
-      <Face side="x-">
+      <Face side="x-" name="x-">
       
         <BCType id="all" var="Dirichlet" label="x-mom">
           <value> 0.0 </value>
@@ -142,7 +142,7 @@
                         
       </Face>
       
-      <Face side="x+">
+      <Face side="x+" name="x+">
       
         <BCType id="all" var="Dirichlet" label="x-mom">
           <value> 0.0 </value>

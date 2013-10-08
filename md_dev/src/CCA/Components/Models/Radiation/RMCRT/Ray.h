@@ -480,7 +480,10 @@ namespace Uintah{
                        DataWarehouse*,
                        DataWarehouse* new_dw);
     //______________________________________________________________________
-    //    Carry Foward tasks                     
+    //    Carry Foward tasks       
+    bool doCarryForward( const int timestep,
+                         const int radCalc_freq);
+                        
     void carryForward_Var ( const ProcessorGroup*,
                             const PatchSubset* ,
                             const MaterialSubset*,

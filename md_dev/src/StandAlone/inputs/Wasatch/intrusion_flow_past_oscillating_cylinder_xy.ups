@@ -110,7 +110,7 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
- 	 <Disabledmomdt/>
+ 	
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
       <Y-Velocity>v</Y-Velocity>
@@ -181,7 +181,7 @@
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_full">
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs">
           <value> 0.0 </value>
         </BCType>                                               
 
@@ -233,7 +233,7 @@
           <value> 0.0 </value>
         </BCType>     
         
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_full">
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs">
           <value> 0.0 </value>
         </BCType>        
                         
@@ -259,7 +259,7 @@
           <value> 0.0 </value>
         </BCType>     
         
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_full">
+        <BCType id="all" var="Dirichlet" label="y-mom_rhs">
           <value> 0.0 </value>
         </BCType>     
                         

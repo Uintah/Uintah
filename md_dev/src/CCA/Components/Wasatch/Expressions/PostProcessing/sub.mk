@@ -33,4 +33,5 @@ SRCS     +=                          \
 	$(SRCDIR)/InterpolateExpression.cc \
   $(SRCDIR)/VelocityMagnitude.cc     \
   $(SRCDIR)/KineticEnergy.cc         \
+  $(SRCDIR)/ContinuityResidual.cc    \
   $(SRCDIR)/Vorticity.cc

@@ -123,8 +123,8 @@ namespace Wasatch {
   enum BndTypeEnum
   {
     WALL,
-    VELOCITYINLET,
-    PRESSURE,
+    VELOCITY,
+    OPEN,
     OUTFLOW,
     USER,     // user controls all bcs!
     INVALID
@@ -148,7 +148,6 @@ namespace Wasatch {
   enum BCValueTypeEnum
   {
     DOUBLE_TYPE,
-    VECTOR_TYPE,
     FUNCTOR_TYPE,
     INVALID_TYPE
   };
@@ -167,7 +166,6 @@ namespace Wasatch {
     std::string      varName;     // mame of the variable on which we want to apply a BC
     std::string      functorName; // name of the functor applied as bc
     double           value;       // boundary value for this variable
-    SpatialOps::structured::Numeric3Vec<double> vecValue;
     BndCondTypeEnum  bcType;      // bc type: DIRICHLET, NEUMANN
     BCValueTypeEnum  bcValType;   // value type: DOUBLE, VECTOR, FUNCTOR
     
@@ -177,7 +175,6 @@ namespace Wasatch {
       return (   l.varName == varName
               && l.functorName == functorName
               && l.value == value
-              && l.vecValue == vecValue
               && l.bcType == bcType
               && l.bcValType == bcValType);
     };
@@ -195,6 +192,11 @@ namespace Wasatch {
            << "  type:  " << bcType << endl
            << "  value: " << value << endl;
     };
+    
+    bool is_functor() const
+    {
+      return (bcValType == FUNCTOR_TYPE);
+    };
   };
 
   //****************************************************************************
@@ -208,17 +210,17 @@ namespace Wasatch {
   //****************************************************************************
   struct BndSpec
   {
-    std::string              bndName;      // name of the boundary condition
+    std::string              name;     // name of the boundary condition
     Uintah::Patch::FaceType  face;        // x-minus, x-plus, y-minus, y-plus, z-minus, z-plus
-    BndTypeEnum              bndType;       // Wall, inlet, etc...
+    BndTypeEnum              type;     // Wall, inlet, etc...
     std::vector<int>         patchIDs;    // list of patch IDs that this bc lives on
     std::vector<BndCondSpec> bcSpecVec;
 
     // returns true if this Boundary has parts of it on patchID
-    bool find_patchid(const int& patchID) const
+    bool has_patch(const int& patchID) const
     {
       return std::find(patchIDs.begin(), patchIDs.end(), patchID) != patchIDs.end();
-    }
+    };
     
     // find the BCSpec associated with a given variable name
     const BndCondSpec* find(const std::string& varName) const
@@ -229,17 +231,41 @@ namespace Wasatch {
       } else {
         return NULL;
       }
-    }
+    };
+    
+    // find the BCSpec associated with a given variable name
+    const BndCondSpec* find(const std::string& varName)
+    {
+      std::vector<BndCondSpec>::iterator it = std::find(bcSpecVec.begin(), bcSpecVec.end(), varName);
+      if (it != bcSpecVec.end()) {
+        return &(*it);
+      } else {
+        return NULL;
+      }
+    };
+    
+    // check whether this boundary has any bcs specified for varName
+    bool has_field(const std::string& varName) const
+    {
+      std::vector<BndCondSpec>::const_iterator it = std::find(bcSpecVec.begin(), bcSpecVec.end(), varName);
+      if (it != bcSpecVec.end()) {
+        return true;
+      } else {
+        return false;
+      }
+    };
     
     void print() const
     {
       using namespace std;
-      cout << "Boundary: " << bndName << " face: " << face << " BndType: " << bndType << endl;
+      cout << "Boundary: " << name << " face: " << face << " BndType: " << type << endl;
       for (vector<BndCondSpec>::const_iterator it=bcSpecVec.begin(); it != bcSpecVec.end(); ++it) {
         (*it).print();
       }
     };
   };
+  
+  typedef std::map <std::string, BndSpec> BndMapT;
   
   //****************************************************************************
   /**
@@ -252,9 +278,11 @@ namespace Wasatch {
   //****************************************************************************
   struct BoundaryIterators
   {
-    std::vector<SpatialOps::structured::IntVec> extraBndCells;     // iterator for extra cells
-    std::vector<SpatialOps::structured::IntVec> extraPlusBndCells; // iterator for extra cells
-    std::vector<SpatialOps::structured::IntVec> interiorBndCells;  // iterator for interior cells
+    std::vector<SpatialOps::structured::IntVec> extraBndCells;        // iterator for extra cells
+    std::vector<SpatialOps::structured::IntVec> extraPlusBndCells;    // iterator for extra cells
+    std::vector<SpatialOps::structured::IntVec> interiorBndCells;     // iterator for interior cells
+    std::vector<SpatialOps::structured::IntVec> interiorEdgeCells;    // iterator for interior cells
+    Uintah::Iterator extraBndCellsUintah;                             // We still need the Unitah iterator
   };
   
   //****************************************************************************
@@ -372,22 +400,24 @@ namespace Wasatch {
     typedef SpatialOps::structured::IntVec             IntVecT;            // SpatialOps IntVec
     typedef std::map <int, BoundaryIterators         > patchIDBndItrMapT; // temporary map that stores boundary iterators per patch id
     typedef std::map <std::string, patchIDBndItrMapT > MaskMapT;
-    typedef std::map <std::string, BndSpec           > BndMapT;
+    typedef std::map <std::string, std::vector<IntVecT> >           EdgeCellsMapT;   // for logical domain boundaries, 1 set of corner cells per boundary, regardless of patcIDs
     
     const Uintah::PatchSet*    const localPatches_;
-    const Uintah::MaterialSet* const materials_;
-    const PatchInfoMap&        patchInfoMap_;
-    const BCFunctorMap&        bcFunctorMap_;
-    GraphCategories&           grafCat_;
+    const Uintah::MaterialSet* const materials_   ;
+    const PatchInfoMap&        patchInfoMap_      ;
+    const BCFunctorMap&        bcFunctorMap_      ;
+    GraphCategories&           grafCat_           ;
     
     // This map stores the iterators associated with each boundary condition name.
     // The iterators are stored in a map keyed by patch ID. a single iterator will be associated
     // with each boundary (aka child)
-    MaskMapT                   bcNamePatchIDMaskMap_;
+    MaskMapT                   bndNamePatchIDMaskMap_;
     
     // bndNameBndSpecMap_ stores BndSpec information for each of the specified boundaries. This
     // map is indexed by the (unique) boundary name.
     BndMapT                    bndNameBndSpecMap_;
+    
+    EdgeCellsMapT            bndNameEdgeCellsMap_;
 
     template<typename FieldT>
     const std::vector<IntVecT>* get_extra_bnd_mask( const BndSpec& myBndSpec,
@@ -397,18 +427,27 @@ namespace Wasatch {
     const std::vector<IntVecT>* get_interior_bnd_mask( const BndSpec& myBndSpec,
                                                       const int& patchID ) const;
     
-    void add_boundary_iterator( const BoundaryIterators& myIters,
-                               const std::string& bndName,
-                               const int& patchID );
+    Uintah::Iterator& get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
+                                                 const int& patchID );
     
-    void add_boundary_condition( const std::string&     bndName,
-                                const BndCondSpec& bcSpec );
+    const std::vector<IntVecT>* get_edge_mask( const BndSpec& myBndSpec,
+                                                  const int& patchID ) const;
     
-    void add_physical_boundary_type( const std::string&      bndName,
-                                    Uintah::Patch::FaceType face,
-                                    const BndTypeEnum& physicalBCType,
-                                    const int               patchID );
+    // Add boundary iterator (mask) for boundary "bndName" and patch "patchID"
+    void add_boundary_mask( const BoundaryIterators& myIters,
+                            const std::string& bndName,
+                            const int& patchID );
     
+    // Add a new boundary to the list of boundaries specified for this problem. If the boundary
+    // already exists, this means that this boundary is shared by several patches. In that case,
+    // add the new patchID to the list of patches that this boundary lives on
+    void add_boundary( const std::string&      bndName,
+                       Uintah::Patch::FaceType face,
+                       const BndTypeEnum& bndType,
+                       const int               patchID );
+    
+    // Parse boundary conditions specified through the input file. This function does NOT need
+    // an input file since Uintah already parsed and processed most of this information.
     void parse_boundary_conditions();
     
     // apply a boundary condition on a field given another one. here, the srcVarName designates the
@@ -423,7 +462,7 @@ namespace Wasatch {
              const PatchInfoMap& patchInfoMap,
              GraphCategories& grafCat,
              const BCFunctorMap& bcFunctorMap );
-    
+        
     ~BCHelper();
     
     /**
@@ -469,7 +508,38 @@ namespace Wasatch {
                                           const std::string& functorName,
                                           const BndCondTypeEnum newBCType );
     
+    /**
+     *  \brief Adds a boundary condition on a specified boundary
+     */
+    void add_boundary_condition( const std::string& bndName,
+                                 const BndCondSpec& bcSpec   );
+
+    /**
+     *  \brief Adds a boundary condition on ALL boundaries
+     */
+    void add_boundary_condition( const BndCondSpec& bcSpec   );
     
+
+    // The necessary evils of the pressure expression.
+    /**
+     *  \brief This passes the BCHelper to ALL pressure expressions in the factory (per patch that is)
+     */
+    void synchronize_pressure_expression();
+
+    /**
+     *  \brief This function updates the pressure coefficient matrix for boundary conditions
+     */
+    void update_pressure_matrix( Uintah::CCVariable<Uintah::Stencil4>& pMatrix,
+                                 const Uintah::Patch* patch );
+
+    /**
+     *  \brief This function applies the boundary conditions on the pressure. The pressure is a special
+     * expression in that modifiers can't work with it directly since we have to schedule the hypre
+     * solver first and then apply the BCs
+     */
+    void apply_pressure_bc( SVolField& pressureField,
+                              const Uintah::Patch* patch );
+
     /**
      *  \brief Key member function that applies a boundary condition on a given expression.
      *
@@ -486,6 +556,12 @@ namespace Wasatch {
     void apply_boundary_condition( const Expr::Tag& varTag,
                                   const Category& taskCat,
                                   bool setOnExtraOnly=false );
+    
+    /**
+     *  \brief Retrieve a reference to the boundary and boundary condition information stored in this
+     *  BCHelper
+     */
+    BndMapT& get_boundary_information();
     
     /**
      *  \brief Print boundary conditions summary.

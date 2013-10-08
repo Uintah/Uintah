@@ -29,7 +29,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 
 
-static SCIRun::DebugStream cout_BC_CC("ICE_BC_CC", false);
+static SCIRun::DebugStream BC_CC("ICE_BC_CC", false);
 namespace Uintah {
 /* ______________________________________________________________________
  Purpose~   -returns (true) if the inletVel BC is specified on any face,
@@ -104,41 +104,85 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
     inlet_ps -> get( "maxHeight",             maxHeight   );
     Vector lo = b.min().asVector();
     VB->maxHeight = maxHeight - lo[ VB->verticalDir ];
+    
+    //__________________________________
+    //  Add variance to the velocity profile
+    ProblemSpecP var_ps = inlet_ps->findBlock("variance");
+    if (var_ps) {
+      VB->addVariance = true;
+      var_ps -> get( "C_mu", VB->C_mu   );
+      var_ps -> get( "frictionVel", VB->u_star   );
+    }
   }
   return usingBC;
 }
 
-//______________________________________________________________________ 
-void  preprocess_inletVelocity_BCs(const string& where,
-                                   bool& set_BCs)
+/* ______________________________________________________________________ 
+ Function~  addRequires_Sine--   
+ ______________________________________________________________________  */
+void addRequires_inletVel(Task* t, 
+                          const string& where,
+                          ICELabel* lb,
+                          const MaterialSubset* ice_matls,
+                          const bool recursive)
 {
-  set_BCs = false; 
-  //__________________________________
-  //    Equilibrium pressure
-  if(where == "EqPress"){
-    set_BCs = false; 
-  }
-  //__________________________________
-  //    Explicit and semi-implicit update pressure
-  if(where == "update_press_CC"){
-    set_BCs = false; 
-  }
+  BC_CC<< "Doing addRequires_inletVel: \t\t" <<t->getName()
+            << " " << where << endl;
+  
+  Ghost::GhostType  gn  = Ghost::None;
+
+  //std::cout << " addRequires_inletVel: " << recursive <<  " where: " << where << endl;
+  
   if(where == "implicitPressureSolve"){
-    set_BCs = false;
+    t->requires(Task::OldDW, lb->vel_CCLabel, ice_matls, gn);
   }
-   
-  if(where == "imp_update_press_CC"){
-    set_BCs = false;
+  else if(where == "velFC_Exchange"){
+    
+    //__________________________________
+    // define parent data warehouse
+    Task::WhichDW pOldDW = Task::OldDW;
+    if(recursive) {
+      pOldDW  = Task::ParentOldDW;
+    }
+  
+    t->requires(pOldDW, lb->vel_CCLabel, ice_matls, gn);
   }
-  //__________________________________
-  //    cc_ Exchange
-  if(where == "CC_Exchange"){
+}
+
+//______________________________________________________________________ 
+void  preprocess_inletVelocity_BCs(DataWarehouse* old_dw,
+                                   ICELabel* lb,
+                                   const int indx,
+                                   const Patch* patch,
+                                   const string& where,
+                                   bool& set_BCs,
+                                   const bool recursive,
+                                   inletVel_vars* inletVel_v)
+{
+  set_BCs = false;
+  
+  //std::cout << " preprocess_inletVelocity_BCs: " << where << " recursive: " << recursive << endl;
+  
+  if(where == "velFC_Exchange"){
     set_BCs = true;
+    
+    // change the definition of parent(old)DW
+    // when implicit
+    DataWarehouse* pOldDW = old_dw;
+    if(recursive) {
+      pOldDW  = old_dw->getOtherDataWarehouse(Task::ParentOldDW); 
+    }
+    
+    pOldDW->get(inletVel_v->vel_CC, lb->vel_CCLabel, indx, patch,Ghost::None,0);
   }
-  //__________________________________
-  //    Advection
-  if(where == "Advection"){
+  
+  if( where == "CC_Exchange" ) {
     set_BCs = true;
+    inletVel_v->addVariance = false;    // local on/off switch
+  }
+  if( where == "Advection" ){
+    set_BCs = true;
+    inletVel_v->addVariance = true;
   }
 }
 /*_________________________________________________________________
@@ -151,7 +195,8 @@ int  set_inletVelocity_BC(const Patch* patch,
                           Iterator& bound_ptr,
                           const string& bc_kind,
                           const Vector& bc_value,
-                          inletVel_variable_basket* VB )
+                          inletVel_variable_basket* VB,
+                          inletVel_vars* inletVel_v )
 {
   int nCells = 0;
   
@@ -201,8 +246,10 @@ int  set_inletVelocity_BC(const Patch* patch,
         if( h < d || h > gridHeight ){
           vel_CC[c] = Vector(0,0,0);
         }
-        //std::cout << "        " << c <<  " h " << h  << " h/height  " << ratio << " vel_CC: " << vel_CC[c] <<endl;                               
+        
+        // std::cout << "        " << c <<  " h " << h  << " h/height  " << ratio << " vel_CC: " << vel_CC[c] <<endl;                              
       }
+      nCells += bound_ptr.size();
     }
     
     //__________________________________
@@ -233,16 +280,73 @@ int  set_inletVelocity_BC(const Patch* patch,
         if(z < d || z > gridMax){
           vel_CC[c] = Vector(0,0,0);
         }
-
 //        std::cout << "        " << c <<  " z " << z  << " z-d " << z-d << " ratio " << ratio << " vel_CC: " << vel_CC[c] <<endl;
       }
+      nCells += bound_ptr.size();
     }else{
       ostringstream warn;
       warn << "ERROR ICE::set_inletVelocity_BC  This type of boundary condition has not been implemented ("
            << bc_kind << ")\n" << endl; 
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    nCells += bound_ptr.size();
+    
+    //__________________________________
+    //  Addition of a 'kick' or variance to the mean velocity profile
+    //  This matches the Turbulent Kinetic Energy profile of 1/sqrt(C_u) * u_star^2 ( 1- Z/height)^2
+    //   where:
+    //          C_mu:     empirical constant
+    //          u_star:  frictionVelocity
+    //          Z:       height above the ground
+    //          height:  Boundar layer height, assumed to be the domain height
+    //
+    //   TKE = 1/2 * (sigma.x^2 + sigma.y^2 + sigma.z^2)
+    //    where sigma.x^2 = (1/N-1) * sum( u_mean - u)^2
+    //
+    //%  Reference: Castro, I, Apsley, D. "Flow and dispersion over topography;
+    //             A comparison between numerical and Laboratory Data for 
+    //             two-dimensional flows", Atmospheric Environment Vol. 31, No. 6
+    //             pp 839-850, 1997.
+    
+    if (VB->addVariance && inletVel_v->addVariance ){  // global and local on/off switch
+      MTRand mTwister;
+      
+      double gridHeight =  VB->gridMax(vDir); 
+      double d          =  VB->gridMin(vDir);
+      double inv_Cmu    = 1.0/VB->C_mu;
+      double u_star2    = VB->u_star * VB->u_star;
+      
+      for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
+        IntVector c = *bound_ptr;
+        
+        Point here = level->getCellPosition(c);
+        double z   = here.asVector()[vDir] ;
+        
+        double ratio = (z - d)/gridHeight;
+        
+        double TKE = inv_Cmu * u_star2 * pow( (1 - ratio),2 );
+        
+        // Assume that the TKE is evenly distrubuted between all three components of velocity
+        // 1/2 * (sigma.x^2 + sigma.y^2 + sigma.z^2) = 3/2 * sigma^2
+        
+        const double variance = 0.66666 * TKE;
+        
+        //__________________________________
+        // from the random number compute the new velocity knowing the mean velcity and variance
+        vel_CC[c].x( mTwister.randNorm( vel_CC[c].x(), variance ) );
+        vel_CC[c].y( mTwister.randNorm( vel_CC[c].y(), variance ) );
+        vel_CC[c].z( mTwister.randNorm( vel_CC[c].z(), variance ) );
+                
+        // Clamp edge/c orner values 
+        if(z < d || z > gridHeight ){
+          vel_CC[c] = Vector(0,0,0);
+        }
+        
+        //if( c.z() == 10){
+        //  std::cout <<"         "<< c << ", vel_CC.x, " << vel_CC[c].x() << ", velPlusKick, " << mTwister.randNorm(vel_CC[c].x(), variance) << ", TKE, " << TKE << endl;
+        //}
+        
+      }
+    }  // add variance
   }
 
   return nCells; 

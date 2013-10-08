@@ -154,8 +154,9 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= cond( *weightsAndDerivs_[0] != 0.0 , - (*weightsAndDerivs_[1] + *weightsAndDerivs_[5]) / *weightsAndDerivs_[2] * (initialMoment_ - *phi_) )
-                 ( 0.0 );  
+  double small = 1.0e-10;
+  result <<= cond(  *weightsAndDerivs_[2] <= small || *weightsAndDerivs_[2] >= 1.0-small, 0.0 )
+                 ( - (*weightsAndDerivs_[1] + *weightsAndDerivs_[5]) / *weightsAndDerivs_[2] * (initialMoment_ - *phi_));  
 }
 
 #endif

@@ -157,27 +157,6 @@ void NormScalarVariance::computeProp(const ProcessorGroup* pc,
   }
 }
 
-
-//add in dummy stuff? or is this gone for good?
-
-//---------------------------------------------------------------------------
-//Method: Scheduler for Dummy Initialization
-//---------------------------------------------------------------------------
-void NormScalarVariance::sched_dummyInit( const LevelP& level, SchedulerP& sched )
-{
-}
-
-//---------------------------------------------------------------------------
-//Method: Actually do the Dummy Initialization
-//---------------------------------------------------------------------------
-void NormScalarVariance::dummyInit( const ProcessorGroup* pc, 
-                                    const PatchSubset* patches, 
-                                    const MaterialSubset* matls, 
-                                    DataWarehouse* old_dw, 
-                                    DataWarehouse* new_dw )
-{
-}
-
 //---------------------------------------------------------------------------
 //Method: Scheduler for Initializing the Property
 //---------------------------------------------------------------------------

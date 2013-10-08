@@ -87,7 +87,7 @@ namespace Wasatch{
                                const bool isConstDensity,
                                const Expr::Tag bodyForceTag,                              
                                const Expr::Tag srcTermTag,
-                               GraphHelper& graphHelper,
+                               GraphCategories& grafCat,
                                Uintah::ProblemSpecP params,
                                TurbulenceParameters turbulenceParams,
                                const bool hasEmbeddedGeometry,
@@ -107,6 +107,9 @@ namespace Wasatch{
                    const bool hasEmbeddedGeometry,
                    Uintah::SolverInterface& linSolver );
 
+    void verify_boundary_conditions(BCHelper& bcHelper,
+                                    GraphCategories& graphCat);
+    
     /**
      *  \brief apply the boundary conditions on the initial condition
      *         associated with this transport equation
@@ -140,9 +143,10 @@ namespace Wasatch{
     const bool isTurbulent_;
     const Expr::Tag thisVelTag_, densityTag_;
     Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_, convTermWeakID_;
-    std::string thisMomName_;
+    std::string   thisMomName_;
     Expr::TagList velTags_;  ///< TagList for the velocity expressions
-    Expr::TagList momTags_; ///< TagList for the momentum expressions
+    Expr::TagList momTags_;  ///< TagList for the momentum expressions
+    Expr::Tag     thisVolFracTag_;
 
   };
 

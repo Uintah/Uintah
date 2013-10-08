@@ -55,23 +55,22 @@ namespace Uintah {
       HOST_DEVICE size_t getMemSize() const {
         return d_size.x*d_size.y*d_size.z*sizeof(T);
       }
-      HOST_DEVICE void setOffsetSizePtr(const int3& offset, const int3& size, void* &ptr){
+    protected:
+      HOST_DEVICE GPUArray3(){};
+      HOST_DEVICE void setOffsetSizePtr(const int3& offset, const int3& size, void* &ptr) const {
         d_offset = offset;
         d_size = size;
         d_data = (T*) ptr;
       }
-      HOST_DEVICE void getOffsetSizePtr(int3& offset, int3& size, void* &ptr){
+      HOST_DEVICE void getOffsetSizePtr(int3& offset, int3& size, void* &ptr) const{
         offset = d_offset;
         size = d_size;
         ptr = (void*) d_data;
       }
-    protected:
-      HOST_DEVICE GPUArray3(){};
     private:
-      T*    d_data;
-      
-      int3  d_offset;  //offset from gobal index to local index
-      int3  d_size;    //size of local storage 
+      mutable T*    d_data;
+      mutable int3  d_offset;  //offset from gobal index to local index
+      mutable int3  d_size;    //size of local storage 
       /* global high=d_offset+d_data 
          global low =d_offset */
 
@@ -80,20 +79,21 @@ namespace Uintah {
   };
 
   class GPUGridVariableBase {
-    friend class GPUDataWarehouse;
+    friend class GPUDataWarehouse; //allow Datawarehouse set/get Array3
     public:
       HOST_DEVICE ~GPUGridVariableBase() {}
       HOST_DEVICE  virtual size_t getMemSize() = 0;
     protected:
       HOST_DEVICE GPUGridVariableBase() {}
     private:
-      HOST_DEVICE  virtual void setArray3(const int3& offset, const int3& size, void* &ptr) = 0;
-      HOST_DEVICE  virtual void getArray3(int3& offset, int3& size, void* &ptr) = 0;
+      HOST_DEVICE  virtual void setArray3(const int3& offset, const int3& size, void* &ptr) const = 0;
+      HOST_DEVICE  virtual void getArray3(int3& offset, int3& size, void* &ptr) const = 0;
       HOST_DEVICE GPUGridVariableBase& operator=(const GPUGridVariableBase&);
       HOST_DEVICE GPUGridVariableBase(const GPUGridVariableBase&);
   };
 
   template<class T> class GPUGridVariable: public GPUGridVariableBase, public GPUArray3<T> {
+    friend class UnifiedScheduler; //allow Scheduler access 
     public:
       HOST_DEVICE GPUGridVariable() {}
       HOST_DEVICE virtual ~GPUGridVariable() {}
@@ -101,10 +101,10 @@ namespace Uintah {
         return GPUArray3<T>::getMemSize();
       }
     private:
-      HOST_DEVICE virtual void setArray3(const int3& offset, const int3& size, void* &ptr) {
+      HOST_DEVICE virtual void setArray3(const int3& offset, const int3& size, void* &ptr) const {
         GPUArray3<T>::setOffsetSizePtr(offset, size, ptr);
       }
-      HOST_DEVICE virtual void getArray3(int3& offset, int3& size, void* &ptr) {
+      HOST_DEVICE virtual void getArray3(int3& offset, int3& size, void* &ptr) const {
         GPUArray3<T>::getOffsetSizePtr(offset, size, ptr);
       }
   };

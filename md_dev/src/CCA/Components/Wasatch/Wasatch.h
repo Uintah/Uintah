@@ -160,7 +160,8 @@ namespace Wasatch{
   public:
 
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-
+    typedef std::map< int, BCHelper* > BCHelperMapT;
+    
     Wasatch( const Uintah::ProcessorGroup* myworld );
 
     ~Wasatch();
@@ -267,7 +268,7 @@ namespace Wasatch{
     Uintah::ProblemSpecP wasatchSpec_;
 
     BCFunctorMap bcFunctorMap_;
-    BCHelper* bcHelper_;
+    BCHelperMapT bcHelperMap_;
 
     /**
      *  a container of information for constructing ExprLib graphs.

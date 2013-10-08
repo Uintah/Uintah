@@ -1,6 +1,6 @@
 #! /bin/bash
-declare -a varnames=(x-mom y-mom x-mom_convFlux_x x-mom_convFlux_y y-mom_convFlux_x y-mom_convFlux_y tau_xx tau_yy x-mom_rhs_partial y-mom_rhs_partial x-mom_rhs_full 
-y-mom_rhs_full XSVOL YSVOL XXVOL YXVOL XYVOL YYVOL)
+declare -a varnames=(x-mom y-mom x-mom_convFlux_x x-mom_convFlux_y y-mom_convFlux_x y-mom_convFlux_y tau_xx tau_yy x-mom_rhs_partial y-mom_rhs_partial x-mom_rhs
+y-mom_rhs XSVOL YSVOL XXVOL YXVOL XYVOL YYVOL)
 udanames=(32x32 64x64 128x128 256x256 512x512)
 dx="_dx_"
 tstep="_timestep_1.txt"

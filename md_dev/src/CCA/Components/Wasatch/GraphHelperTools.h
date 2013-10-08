@@ -62,7 +62,8 @@ namespace Wasatch{
   enum Category{
     INITIALIZATION,	///< Tasks associated with simulation initialization
     TIMESTEP_SELECTION, ///< Tasks associated with choosing the size of the timestep
-    ADVANCE_SOLUTION    ///< Tasks associated with advancing the solution forward in time
+    ADVANCE_SOLUTION,    ///< Tasks associated with advancing the solution forward in time
+    POSTPROCESSING
   };
 
   /**

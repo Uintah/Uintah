@@ -169,6 +169,7 @@ namespace Wasatch{
     ZVolFields   zVolFields_;    ///< A vector of the z-volume fields being solved by this time integrator.
 
     GraphHelper* const solnGraphHelper_;
+    GraphHelper* const postProcGraphHelper_;      
     CoordHelper* const coordHelper_;   ///< provides ability to obtain coordinate values on any field type.
       
     const TimeIntegrator timeInt_; ///< Multistage time integrator coefs
@@ -218,7 +219,7 @@ namespace Wasatch{
      *                   expressions in each transport equation.
      */
     TimeStepper( Uintah::SimulationStateP sharedState,
-                 GraphHelper& solnGraphHelper,
+                 GraphCategories& grafCat,
                  const TimeIntegrator timeInt);
 
     ~TimeStepper();

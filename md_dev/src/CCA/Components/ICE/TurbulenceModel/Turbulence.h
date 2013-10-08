@@ -26,7 +26,6 @@
 #define _TURBULENCE_H
 
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
@@ -52,6 +51,7 @@ namespace Uintah {
 
     virtual void computeTurbViscosity(DataWarehouse* new_dw,
                                       const Patch* patch,
+                                      const ICELabel* lb,
                                       constCCVariable<Vector>& vel_CC,
                                       constSFCXVariable<double>& uvel_FC,
                                       constSFCYVariable<double>& vvel_FC,
@@ -73,11 +73,14 @@ namespace Uintah {
                  ICELabel* lb,
                  SimulationStateP&  d_sharedState,
                  CCVariable<double>& tot_viscosity);
-  protected:
 
+    template<class T>
+    void setZeroNeumannBC_CC( const Patch* patch,
+                              CCVariable<T>& var,
+                              const int NGC);
+  protected:
     SimulationStateP d_sharedState;
     double d_filter_width;
-    
     
     struct FilterScalar {
       string name;

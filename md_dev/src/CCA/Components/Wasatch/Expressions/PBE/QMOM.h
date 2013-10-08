@@ -168,7 +168,6 @@ QMOM<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  using namespace SCIRun;
   // the results vector is organized as follows:
   // (w0, a0, w1, a1, et...)
   typedef std::vector<FieldT*> ResultsVec;

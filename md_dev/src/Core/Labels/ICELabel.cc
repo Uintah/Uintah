@@ -145,7 +145,13 @@ ICELabel::ICELabel()
   //__________________________________  
   // Misc labels
   machLabel           = VarLabel::create("mach",       CC_double); 
-  scratchLabel        = VarLabel::create("scratch",    CC_double);
+  scratch0Label        = VarLabel::create("scratch0",    CC_double);
+  scratch1Label        = VarLabel::create("scratch1",    CC_double);
+  scratch2Label        = VarLabel::create("scratch2",    CC_double);
+  scratch3Label        = VarLabel::create("scratch3",    CC_double);
+  scratch4Label        = VarLabel::create("scratch4",    CC_double);
+  scratch5Label        = VarLabel::create("scratch5",    CC_double);
+
   scratchVecLabel     = VarLabel::create("scratchVec", CC_Vector);
   scratch_FCXLabel    = VarLabel::create("scratch_FCX",SFCX_double);
   scratch_FCYLabel    = VarLabel::create("scratch_FCY",SFCY_double);
@@ -340,7 +346,12 @@ ICELabel::~ICELabel()
     // Misc labels
     VarLabel::destroy(IveBeenHereLabel);
     VarLabel::destroy(machLabel);
-    VarLabel::destroy(scratchLabel);
+    VarLabel::destroy(scratch0Label);
+    VarLabel::destroy(scratch1Label);
+    VarLabel::destroy(scratch2Label);
+    VarLabel::destroy(scratch3Label);
+    VarLabel::destroy(scratch4Label);
+    VarLabel::destroy(scratch5Label);    
     VarLabel::destroy(scratchVecLabel);
     VarLabel::destroy(scratch_FCXLabel);
     VarLabel::destroy(scratch_FCYLabel);

@@ -80,30 +80,27 @@ apply_to_field( FieldT& src,
       const IntVec extent = ws.extent() - unitNormal_[face]*ws.glob_dim() + unitNormal_[face];
       const IntVec baseOffset = ws.offset() + (unitNormal_[face]*ws.glob_dim() - unitNormal_[face] )* zo[direc];
       
-      const MemoryWindow wd( ws.glob_dim(),
-                            baseOffset,
-                            extent,
-                            ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
+      const MemoryWindow wd( ws.glob_dim(), baseOffset, extent );
       
       const MemoryWindow ws1( ws.glob_dim(),
                              baseOffset + unitNormal_[face] * pm[direc],
-                             extent,
-                             ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
+                             extent );
       
       const MemoryWindow ws2( ws.glob_dim(),
                              baseOffset  + unitNormal_[face] * pm[direc] * 2,
-                             extent,
-                             ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
+                             extent );
       
-      FieldT d  ( wd,  &src[0], ExternalStorage);
-      FieldT s1 ( ws1, &src[0], ExternalStorage);
-      FieldT s2 ( ws2, &src[0], ExternalStorage);
-      d <<= 2.0 * s1 - s2;
-      
-      if (doMinMaxCheck) {
-        d <<= cond( d < min, min )
-                  ( d > max, max )
-                  ( d );
+      FieldT d( wd, src );
+      const FieldT s1( ws1, src );
+      const FieldT s2( ws2, src );
+
+      if( doMinMaxCheck ){
+        d <<= cond( (2.0 * s1 - s2) < min, min )
+                  ( (2.0 * s1 - s2) > max, max )
+                  (  2.0 * s1 - s2 );
+      }
+      else{
+        d <<= 2.0 * s1 - s2;
       }
       
     }

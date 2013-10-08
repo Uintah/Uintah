@@ -63,7 +63,7 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
- <Disabledmomdt/>
+
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
       <Y-Velocity>v</Y-Velocity>
@@ -122,8 +122,8 @@
     <save label="tau_yx"/>
     <save label="x-mom_rhs_partial"/>
     <save label="y-mom_rhs_partial"/>        
-    <save label="x-mom_rhs_full"/>
-    <save label="y-mom_rhs_full"/>            
+    <save label="x-mom_rhs"/>
+    <save label="y-mom_rhs"/>            
     <save label="x-mom_convFlux_x"/>
     <save label="x-mom_convFlux_y"/>
     <save label="y-mom_convFlux_x"/>        
