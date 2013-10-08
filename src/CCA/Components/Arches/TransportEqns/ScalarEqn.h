@@ -130,6 +130,12 @@ public:
   }
 
   void sched_advClipping( const LevelP& level, SchedulerP& sched, int timeSubStep );
+  void advClipping( const ProcessorGroup* pc, 
+                    const PatchSubset* patches, 
+                    const MaterialSubset* matls, 
+                    DataWarehouse* old_dw, 
+                    DataWarehouse* new_dw,
+                    int timeSubStep );
 
   /** @brief Clip values of phi that are too high or too low (after RK time averaging). */
   template<class phiType>
