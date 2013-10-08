@@ -50,24 +50,68 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
                       Task::WhichDW which_celltype_dw,
                       const int radCalc_freq)
 {
-  // bail if not doing a radiation step
-  // equivalent to CPU rayTrace conditional: if ( doCarryForward( timestep, radCalc_freq) )
+  const Level* level = getLevel(patches);
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( (timestep%radCalc_freq != 0) && (timestep != 1) ) {
+  if ( doCarryForward( timestep, radCalc_freq) ) {
     return;
   }
 
-  const Level* level = getLevel(patches);
-
+  //__________________________________
   // Determine the size of the domain.
   IntVector domainLo, domainHi;
   IntVector domainLo_EC, domainHi_EC;
   level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
   level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
 
-  const uint3 dev_domainLo = make_uint3(domainLo_EC.x(), domainLo_EC.y(), domainLo_EC.z());
-  const uint3 dev_domainHi = make_uint3(domainHi_EC.x(), domainHi_EC.y(), domainHi_EC.z());
+  const int3 dev_domainLo = make_int3(domainLo_EC.x(), domainLo_EC.y(), domainLo_EC.z());
+  const int3 dev_domainHi = make_int3(domainHi_EC.x(), domainHi_EC.y(), domainHi_EC.z());
 
+  
+  //__________________________________
+  //  
+  GPUDataWarehouse* old_gdw = old_dw->getGPUDW()->getdevice_ptr();
+  GPUDataWarehouse* new_gdw = new_dw->getGPUDW()->getdevice_ptr();
+  
+  GPUDataWarehouse* abskg_gdw    = new_dw->getOtherDataWarehouse(which_abskg_dw)->getGPUDW();
+  GPUDataWarehouse* sigmaT4_gdw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw)->getGPUDW();
+  GPUDataWarehouse* celltype_gdw = new_dw->getOtherDataWarehouse(which_celltype_dw)->getGPUDW();
+  
+  //__________________________________
+  //  varLabel name struct
+  varLabelNames labelNames;
+  labelNames.abskg     = d_abskgLabel->getName().c_str();    // cuda doesn't support C++ strings
+  labelNames.sigmaT4   = d_sigmaT4_label->getName().c_str();
+  labelNames.divQ      = d_divQLabel->getName().c_str();
+  labelNames.celltype  = d_cellTypeLabel->getName().c_str();
+  labelNames.VRFlux    = d_VRFluxLabel->getName().c_str();
+  labelNames.boundFlux = d_boundFluxLabel->getName().c_str();
+  labelNames.radVolQ   = d_radiationVolqLabel->getName().c_str();
+  
+  
+  //__________________________________
+  //  RMCRT_flags
+  RMCRT_flags RT_flags;
+  RT_flags.modifies_divQ = modifies_divQ;
+  
+  RT_flags.virtRad            = _virtRad;
+  RT_flags.solveDivQ          = _solveDivQ;
+  RT_flags.allowReflect       = _allowReflect;
+  RT_flags.solveBoundaryFlux  = _solveBoundaryFlux;
+  RT_flags.isSeedRandom       = _isSeedRandom;
+  RT_flags.CCRays             = _CCRays;
+  
+  RT_flags.sigma      = _sigma;;    
+  RT_flags.sigmaScat  = _sigmaScat; 
+  RT_flags.threshold  = _Threshold;
+  
+  RT_flags.nDivQRays = _nDivQRays;   
+  RT_flags.nRadRays  = _nRadRays;    
+  RT_flags.nFluxRays = _nFluxRays;
+  
+  double start=clock();  
+  
+  //______________________________________________________________________
+  //
   // patch loop
   int numPatches = patches->size();
   for (int p = 0; p < numPatches; ++p) {
@@ -76,21 +120,22 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     printTask(patches, patch, dbggpu, "Doing Ray::rayTraceGPU");
 
     // Calculate the memory block size
-    const IntVector nec = patch->getExtraCells();
     const IntVector low = patch->getCellLowIndex();
     const IntVector high = patch->getCellHighIndex();
-    const IntVector size = high - low;
+    const IntVector patchSize = high - low;
 
-    const int xdim = size.x();
-    const int ydim = size.y();
-    const int zdim = size.z();
+    const int xdim = patchSize.x();
+    const int ydim = patchSize.y();
+    const int zdim = patchSize.z();
 
     // get the cell spacing and convert patch extents to CUDA vector type
+    patchParams patchP;
     const Vector dx = patch->dCell();
-    const double3 cellSpacing = make_double3(dx.x(), dx.y(), dx.z());
-    const uint3 dev_patchLo = make_uint3(low.x(), low.y(), low.z());
-    const uint3 dev_patchHi = make_uint3(high.x(), high.y(), high.z());
-    const uint3 dev_patchSize = make_uint3(xdim, ydim, zdim);
+    patchP.dx     = make_double3(dx.x(), dx.y(), dx.z());
+    patchP.lo     = make_int3(low.x(), low.y(), low.z());
+    patchP.hi     = make_int3(high.x(), high.y(), high.z());
+    patchP.ID     = patch->getID();
+    patchP.nCells = make_int3(xdim, ydim, zdim);
 
     // define dimesions of the thread grid to be launched
     int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
@@ -99,23 +144,46 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     dim3 dimGrid(xblocks, yblocks, 1);
 
     // setup random number generator states on the device, 1 for each thread
-    curandState* globalDevRandStates;
+    curandState* randNumStates;
     int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
-    CUDA_RT_SAFE_CALL( cudaMalloc((void**)&globalDevRandStates, numStates * sizeof(curandState)) );
+    CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );
 
-
+    
+    RT_flags.nRaySteps = 0;
+    //__________________________________
     // set up and launch kernel
-
-    launchRayTraceKernel(dimGrid, dimBlock,
-                         patch->getID(), d_matl,
-                         dev_patchLo, dev_patchHi, dev_patchSize,
-                         dev_domainLo, dev_domainHi, cellSpacing,
-                         globalDevRandStates, (cudaStream_t*)stream,
-                         _virtRad, _isSeedRandom, _CCRays, _nDivQRays, _viewAng, _Threshold,
-                         old_dw->getGPUDW()->getdevice_ptr(), new_dw->getGPUDW()->getdevice_ptr());
-
+cout << " Here " << endl;
+    launchRayTraceKernel(dimGrid, 
+                         dimBlock,
+                         d_matl,
+                         patchP,
+                         dev_domainLo, 
+                         dev_domainHi, 
+                         randNumStates, 
+                         (cudaStream_t*)stream,
+                         RT_flags,
+                         labelNames,
+                         abskg_gdw, 
+                         sigmaT4_gdw, 
+                         celltype_gdw, 
+                         old_gdw, 
+                         new_gdw);
+cout << " there " << endl;
     // free device-side RNG states
-    CUDA_RT_SAFE_CALL( cudaFree(globalDevRandStates) );
-
+    CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
+    
+    //__________________________________
+    //
+    double end =clock();
+    double efficiency = RT_flags.nRaySteps/((end-start)/ CLOCKS_PER_SEC);
+    
+    if (patch->getGridIndex() == 0) {
+      cout<< endl;
+      cout << " RMCRT REPORT: Patch 0" << endl;
+      cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms
+      cout << " Size: " << RT_flags.nRaySteps << endl;
+      cout << " Efficiency: " << efficiency << " steps per sec" << endl;
+      cout << endl;
+    }
   }  //end patch loop
 }  // end GPU ray trace method

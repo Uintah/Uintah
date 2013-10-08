@@ -202,7 +202,8 @@
 
       <PrecipitationBulkDiffusionCoefficient spec = "OPTIONAL NO_DATA"
                                              attribute1="Diff_Coef REQUIRED DOUBLE"
-                                             attribute2="Molec_Vol REQUIRED DOUBLE">                                  
+                                             attribute2="Molec_Vol REQUIRED DOUBLE"
+                                             attribute3="S_Min OPTIONAL DOUBLE">
         <Supersaturation spec = "REQUIRED NO_DATA">                                      
           <NameTag spec="REQUIRED"/>
         </Supersaturation >
@@ -229,7 +230,8 @@
       </CylindricalDiffusionCoefficient>
       
       <KineticGrowthCoefficient spec = "OPTIONAL NO_DATA"
-                         attribute1="K_A REQUIRED DOUBLE">
+                                attribute1="K_A REQUIRED DOUBLE"
+                                attribute2="S_Max OPTIONAL DOUBLE">
         <Supersaturation spec = "REQUIRED NO_DATA">                                      
           <NameTag spec="REQUIRED"/>
         </Supersaturation>
@@ -261,7 +263,8 @@
                                              attribute1="Molar_Vol REQUIRED DOUBLE"
                                              attribute2="Surf_Eng OPTIONAL DOUBLE"
                                              attribute3="Temperature REQUIRED DOUBLE"
-                                             attribute4="Diff_Coef REQUIRED DOUBLE">
+                                             attribute4="Diff_Coef REQUIRED DOUBLE"
+                                             attribute5="S_Ratio REQUIRED DOUBLE">
         <Supersaturation spec = "REQUIRED NO_DATA">                                   
           <NameTag spec="REQUIRED"/>
         </Supersaturation>
@@ -351,7 +354,8 @@
         </EnergyDissipation>  
       </TurbulentAggregationCoefficient>
       
-      <MultiEnvMixingModel spec = "OPTIONAL NO_DATA">
+      <MultiEnvMixingModel spec = "OPTIONAL NO_DATA"
+                           attribute1 = "MaxDt REQUIRED DOUBLE">
         <MixtureFraction spec = "REQUIRED NO_DATA" > 
           <NameTag spec	= "REQUIRED"/>
         </MixtureFraction>      
@@ -722,8 +726,8 @@
     <MomentumEquations  spec="OPTIONAL NO_DATA">
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
       <DisablePressureSolve   spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->   
-      <Disabledmomdt          spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->
-      <CalculateKE            spec="OPTIONAL NO_DATA"
+      <ComputeMassResidual    spec="OPTIONAL NO_DATA" />
+      <ComputeKE            spec="OPTIONAL NO_DATA"
                               attribute1="total OPTIONAL BOOLEAN"
                               attribute2="output OPTIONAL BOOLEAN" />
       <X-Velocity             spec="OPTIONAL STRING" />
@@ -979,6 +983,16 @@
       </BirthExpression>      
       
       <!-- ================================================================================== -->            
+      <!-- Dissolution Expression - requires that ostwald ripening is on-->
+      <Dissolution spec="OPTIONAL NO_DATA">
+        <CriticalRadius   spec="REQUIRED DOUBLE"/>
+        <DeathCoefficient spec="OPTIONAL DOUBLE"/>
+        <Supersaturation  spec="REQUIRED NO_DATA">
+          <NameTag   spec="REQUIRED"/>        
+        </Supersaturation> 
+      </Dissolution>
+      
+      <!-- ================================================================================== -->            
       <!-- Aggregation Expression -->
       <AggregationExpression spec = "MULTIPLE NO_DATA">
         <AggregationModel spec = "REQUIRED STRING 'CONSTANT, BROWNIAN, HYDRODYNAMIC'"/>
@@ -1075,7 +1089,7 @@
     </AttachDependency>
 
     <FieldClipping      spec="MULTIPLE NO_DATA"
-                        attribute1="tasklist REQUIRED STRING 'initialization,advance_solution'">
+                        attribute1="tasklist REQUIRED STRING 'initialization,advance_solution,post_processing'">
       <FieldExpression  spec="MULTIPLE NO_DATA"
                         attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
                         attribute2="min  REQUIRED DOUBLE"

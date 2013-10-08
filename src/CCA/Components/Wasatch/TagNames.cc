@@ -74,7 +74,10 @@ namespace Wasatch{
   
   // predictor related variables
   star("_*"), 
-  doubleStar("_**")
+  doubleStar("_**"),
+  
+  // postprocessing
+  continuityresidual( "ContinuityResidual", Expr::STATE_NONE )
   
   {}
   

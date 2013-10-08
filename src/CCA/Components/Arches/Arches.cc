@@ -130,7 +130,6 @@
 #define CREATE_WASATCH_MOM_SPEC { \
   const std::string viscName = d_lab->d_viscosityCTSLabel->getName(); \
   Uintah::ProblemSpecP momSpec = params->findBlock("Wasatch")->appendChild("MomentumEquations"); \
-  momSpec->appendChild("Disabledmomdt"); \
   momSpec->appendChild("DisablePressureSolve"); \
   momSpec->appendElement("X-Velocity",d_lab->d_uVelocitySPBCLabel->getName()); \
   momSpec->appendElement("Y-Velocity",d_lab->d_vVelocitySPBCLabel->getName()); \
@@ -924,7 +923,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   for (SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); iter++){
 
     SourceTermBase* src = iter->second;
-    src->extraSetup();
+    src->extraSetup(grid);
 
   }
 

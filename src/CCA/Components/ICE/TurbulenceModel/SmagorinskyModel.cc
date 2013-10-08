@@ -23,15 +23,14 @@
  */
 
 
-#include <CCA/Components/ICE/TurbulenceModel/SmagorinskyModel.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/TurbulenceModel/SmagorinskyModel.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Math/CubeRoot.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;
@@ -61,6 +60,7 @@ Smagorinsky_Model::~Smagorinsky_Model()
   -----------------------------------------------------------------------  */
 void Smagorinsky_Model::computeTurbViscosity(DataWarehouse* new_dw,
                                             const Patch* patch,
+                                            const ICELabel*,         // for debugging
                                             constCCVariable<Vector>& /*vel_CC*/,
                                             constSFCXVariable<double>& uvel_FC,
                                             constSFCYVariable<double>& vvel_FC,
@@ -86,8 +86,7 @@ void Smagorinsky_Model::computeTurbViscosity(DataWarehouse* new_dw,
     SIJ[comp].initialize(0.0);
   }
    
-  computeStrainRate(patch, uvel_FC, vvel_FC, wvel_FC, indx, d_sharedState, new_dw,
-                    SIJ);
+  computeStrainRate(patch, uvel_FC, vvel_FC, wvel_FC, indx, d_sharedState, new_dw, SIJ);
 
   //__________________________________
   //  At patch boundaries you need to extend
@@ -126,7 +125,7 @@ void Smagorinsky_Model::computeStrainRate(const Patch* patch,
   //  At patch boundaries you need to extend
   // the computational footprint by twe cells in ghostCells
   int NGC =2;  // number of ghostCells
-  for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {
+  for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++) {
     IntVector c = *iter;
     int i = c.x();
     int j = c.y();
@@ -141,21 +140,17 @@ void Smagorinsky_Model::computeStrainRate(const Patch* patch,
     SIJ[1][c] = (vvel_FC[top]   - vvel_FC[c])/delY;
     SIJ[2][c] = (wvel_FC[front] - wvel_FC[c])/delZ;
     
-    SIJ[3][c] = 0.5 * ((uvel_FC[right] - uvel_FC[c])/delY 
-                       + (vvel_FC[top] - vvel_FC[c])/delX);
-    SIJ[4][c] = 0.5 * ((uvel_FC[right] - uvel_FC[c])/delZ 
-                     + (wvel_FC[front] - wvel_FC[c])/delX);
-    SIJ[5][c] = 0.5 * ((vvel_FC[top] - vvel_FC[c])/delZ 
-                   + (wvel_FC[front] - wvel_FC[c])/delY);
+    SIJ[3][c] = 0.5 * ((uvel_FC[right] - uvel_FC[c])/delY + (vvel_FC[top]   - vvel_FC[c])/delX);
+    SIJ[4][c] = 0.5 * ((uvel_FC[right] - uvel_FC[c])/delZ + (wvel_FC[front] - wvel_FC[c])/delX);
+    SIJ[5][c] = 0.5 * ((vvel_FC[top]   - vvel_FC[c])/delZ + (wvel_FC[front] - wvel_FC[c])/delY);
   }
   
   for (int comp = 0; comp < 6; comp ++ ) {
-    setBC(SIJ[comp],"zeroNeumann",patch, d_sharedState, indx, new_dw);
-  } 
- 
+    setZeroNeumannBC_CC( patch, SIJ[comp], NGC);
+  }
 }
   
-//__________________________________
+//______________________________________________________________________
 //
 void Smagorinsky_Model::scheduleComputeVariance(SchedulerP& sched,
                                                 const PatchSet* patches,
@@ -173,7 +168,7 @@ void Smagorinsky_Model::scheduleComputeVariance(SchedulerP& sched,
     }
   }
 }
-//__________________________________
+//______________________________________________________________________
 //
 void Smagorinsky_Model::computeVariance(const ProcessorGroup*, 
                                         const PatchSubset* patches,
@@ -208,9 +203,9 @@ void Smagorinsky_Model::computeVariance(const ProcessorGroup*,
         //   0.5*(f[c+IntVector(1,0,0)]-f[c-IntVector(1,0,0)])
         // do the same for x,y,z
         
-        Vector df(0.5*(f[c+IntVector(1,0,0)]-f[c-IntVector(1,0,0)]),
-                  0.5*(f[c+IntVector(0,1,0)]-f[c-IntVector(0,1,0)]),
-                  0.5*(f[c+IntVector(0,0,1)]-f[c-IntVector(0,0,1)]));
+        Vector df( 0.5*( f[c+IntVector(1,0,0)] - f[c-IntVector(1,0,0)] ),
+                   0.5*( f[c+IntVector(0,1,0)] - f[c-IntVector(0,1,0)] ),
+                   0.5*( f[c+IntVector(0,0,1)] - f[c-IntVector(0,0,1)] ));
         df *= inv_dx;
         fvar[c] = scale * df.length2();
       }

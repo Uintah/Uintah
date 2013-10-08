@@ -23,6 +23,7 @@
  */
 
 #include <sci_defs/cuda_defs.h>
+#include <Core/Geometry/GPUVector.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 // linker support for device code not ready yet, need to include the whole source...
@@ -45,10 +46,10 @@ __global__ void unifiedSchedulerTestKernel(int patchID,
                                            GPUDataWarehouse *old_gpudw,
                                            GPUDataWarehouse *new_gpudw) {
 
-  GPUGridVariable<double> phi;
+  const GPUGridVariable<double> phi;
   GPUGridVariable<double> newphi;
   old_gpudw->get(phi, "phi", patchID, matlIndex);
-  new_gpudw->get(newphi, "phi", patchID, matlIndex);
+  new_gpudw->getModifiable(newphi, "phi", patchID, matlIndex);
 
   // calculate the thread indices
   int i = blockDim.x * blockIdx.x + threadIdx.x + domainLow.x;

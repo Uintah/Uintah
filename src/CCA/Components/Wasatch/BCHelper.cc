@@ -37,6 +37,7 @@
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
+#include <CCA/Components/Wasatch/Expressions/Pressure.h>
 
 //-- ExprLib Includes --//
 #include <expression/ExprLib.h>
@@ -58,14 +59,15 @@ namespace Wasatch {
     else                                     return UNSUPPORTED;
   }
 
-  BndTypeEnum select_bnd_type_enum( const std::string& bcTypeStr )
+  BndTypeEnum select_bnd_type_enum( const std::string& bndTypeStr )
   {
-    if      ( bcTypeStr == "Wall" )          return WALL;
-    else if ( bcTypeStr == "VelocityInlet" ) return VELOCITYINLET;
-    else if ( bcTypeStr == "Pressure" )      return PRESSURE;
-    else if ( bcTypeStr == "Outflow" )       return OUTFLOW;
-    else if ( bcTypeStr == "None" )          return USER;
-    else                                     return INVALID;
+    if      ( bndTypeStr == "Wall"     )  return WALL;
+    else if ( bndTypeStr == "Velocity" )  return VELOCITY;
+    else if ( bndTypeStr == "Open"     )  return OPEN;
+    else if ( bndTypeStr == "Outflow"  )  return OUTFLOW;
+    else if ( bndTypeStr == "None"
+              || bndTypeStr == "User"  )  return USER;
+    else                                  return INVALID;
   }
 
   const std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum )
@@ -83,17 +85,17 @@ namespace Wasatch {
     }
   }
 
-  const std::string bnd_type_enum_to_string( const BndTypeEnum bcTypeEnum )
+  const std::string bnd_type_enum_to_string( const BndTypeEnum bndTypeEnum )
   {
-    switch (bcTypeEnum) {
+    switch (bndTypeEnum) {
       case WALL:
         return "Wall";
         break;
-      case VELOCITYINLET:
-        return "VelocityInlet";
+      case VELOCITY:
+        return "Velocity";
         break;
-      case PRESSURE:
-        return "Pressure";
+      case OPEN:
+        return "Open";
         break;
       case OUTFLOW:
         return "Outflow";
@@ -108,9 +110,9 @@ namespace Wasatch {
   }
 
   template<typename OST>
-  OST& operator<<( OST& os, const BndTypeEnum bcTypeEnum )
+  OST& operator<<( OST& os, const BndTypeEnum bndTypeEnum )
   {
-    os << bnd_type_enum_to_string(bcTypeEnum);
+    os << bnd_type_enum_to_string(bndTypeEnum);
     return os;
   }
   
@@ -187,38 +189,38 @@ namespace Wasatch {
         switch (face) {
           case Uintah::Patch::xminus: {
             const typename OpT::DirichletX* const op = opdb.retrieve_operator<typename OpT::DirichletX>();
-            cg = op->get_minus_coef();
-            ci = op->get_plus_coef();
+            cg = op->coefs().get_coef(0); //low coefficient
+            ci = op->coefs().get_coef(1); //high coefficient
             break;
           }
           case Uintah::Patch::xplus: {
             const typename OpT::DirichletX* const op = opdb.retrieve_operator<typename OpT::DirichletX>();
-            cg = op->get_plus_coef();
-            ci = op->get_minus_coef();
+            cg = op->coefs().get_coef(1); //high coefficient
+            ci = op->coefs().get_coef(0); //low coefficient
             break;
           }
           case Uintah::Patch::yminus: {
             const typename OpT::DirichletY* const op = opdb.retrieve_operator<typename OpT::DirichletY>();
-            cg = op->get_minus_coef();
-            ci = op->get_plus_coef();
+            cg = op->coefs().get_coef(0); //low coefficient
+            ci = op->coefs().get_coef(1); //high coefficient
             break;
           }
           case Uintah::Patch::yplus: {
             const typename OpT::DirichletY* const op = opdb.retrieve_operator<typename OpT::DirichletY>();
-            cg = op->get_plus_coef();
-            ci = op->get_minus_coef();
+            cg = op->coefs().get_coef(1); //high coefficient
+            ci = op->coefs().get_coef(0); //low coefficient
             break;
           }
           case Uintah::Patch::zminus: {
             const typename OpT::DirichletZ* const op = opdb.retrieve_operator<typename OpT::DirichletZ>();
-            cg = op->get_minus_coef();
-            ci = op->get_plus_coef();
+            cg = op->coefs().get_coef(1); //low coefficient
+            ci = op->coefs().get_coef(0); //high coefficient
             break;
           }
           case Uintah::Patch::zplus: {
             const typename OpT::DirichletZ* const op = opdb.retrieve_operator<typename OpT::DirichletZ>();
-            cg = op->get_plus_coef();
-            ci = op->get_minus_coef();
+            cg = op->coefs().get_coef(1); //high coefficient
+            ci = op->coefs().get_coef(0); //low coefficient
             break;
           }
 
@@ -239,38 +241,38 @@ namespace Wasatch {
         switch (face) {
           case Uintah::Patch::xminus: {
             const typename OpT::NeumannX* const op = opdb.retrieve_operator<typename OpT::NeumannX>();
-            cg = op->get_minus_coef();
-            ci = op->get_plus_coef();
+            cg = op->coefs().get_coef(0); //low coefficient
+            ci = op->coefs().get_coef(1); //high coefficient
             break;
           }
           case Uintah::Patch::xplus: {
             const typename OpT::NeumannX* const op = opdb.retrieve_operator<typename OpT::NeumannX>();
-            cg = op->get_plus_coef();
-            ci = op->get_minus_coef();
+            cg = op->coefs().get_coef(1); //high coefficient
+            ci = op->coefs().get_coef(0); //low coefficient
             break;
           }
           case Uintah::Patch::yminus: {
             const typename OpT::NeumannY* const op = opdb.retrieve_operator<typename OpT::NeumannY>();
-            cg = op->get_minus_coef();
-            ci = op->get_plus_coef();
+            cg = op->coefs().get_coef(0); //low coefficient
+            ci = op->coefs().get_coef(1); //high coefficient
             break;
           }
           case Uintah::Patch::yplus: {
             const typename OpT::NeumannY* const op = opdb.retrieve_operator<typename OpT::NeumannY>();
-            cg = op->get_plus_coef();
-            ci = op->get_minus_coef();
+            cg = op->coefs().get_coef(1); //high coefficient
+            ci = op->coefs().get_coef(0); //low coefficient
             break;
           }
           case Uintah::Patch::zminus: {
             const typename OpT::NeumannZ* const op = opdb.retrieve_operator<typename OpT::NeumannZ>();
-            cg = op->get_minus_coef();
-            ci = op->get_plus_coef();
+            cg = op->coefs().get_coef(0); //low coefficient
+            ci = op->coefs().get_coef(1); //high coefficient
             break;
           }
           case Uintah::Patch::zplus: {
             const typename OpT::NeumannZ* const op = opdb.retrieve_operator<typename OpT::NeumannZ>();
-            cg = op->get_plus_coef();
-            ci = op->get_minus_coef();
+            cg = op->coefs().get_coef(1); //high coefficient
+            ci = op->coefs().get_coef(0); //low coefficient
             break;
           }
           default:
@@ -309,21 +311,67 @@ namespace Wasatch {
                                            Uintah::Iterator& bndIter,
                                            BoundaryIterators& myBndIters)
   {
-    namespace SS = SpatialOps::structured;
-        
+    namespace SS = SpatialOps::structured;    
+    typedef SpatialOps::structured::IntVec IntVecT;
+    
     std::vector<SS::IntVec>& extraBndSOIter    = myBndIters.extraBndCells;
     std::vector<SS::IntVec>& intBndSOIter      = myBndIters.interiorBndCells;
     std::vector<SS::IntVec>& extraPlusBndCells = myBndIters.extraPlusBndCells;
+
+    std::vector<SS::IntVec>& intEdgeSOIter    = myBndIters.interiorEdgeCells;
+
+   
+    bool plusEdge[3];
+    bool minusEdge[3];
+
+    minusEdge[0] = patch->getBCType(Uintah::Patch::xminus) != Uintah::Patch::Neighbor;
+    plusEdge[0] =  patch->getBCType(Uintah::Patch::xplus) != Uintah::Patch::Neighbor;
+    minusEdge[1] = patch->getBCType(Uintah::Patch::yminus) != Uintah::Patch::Neighbor;
+    plusEdge[1] =  patch->getBCType(Uintah::Patch::yplus) != Uintah::Patch::Neighbor;
+    minusEdge[2] = patch->getBCType(Uintah::Patch::zminus) != Uintah::Patch::Neighbor;
+    plusEdge[2] =  patch->getBCType(Uintah::Patch::zplus) != Uintah::Patch::Neighbor;
+
+    int i, j;
+    switch (face) {
+      case Uintah::Patch::xminus:
+      case Uintah::Patch::xplus: i=1; j=2; break;
+      case Uintah::Patch::yminus:
+      case Uintah::Patch::yplus: i=0; j=2; break;
+      case Uintah::Patch::zminus:
+      case Uintah::Patch::zplus: i=0; j=1; break;
+      default:
+        break;
+    }            
+    
+    // save pointer to the Uintah iterator. This will be needed for expression that require access to the
+    // native uintah iterators, such as the pressure expression.
+    myBndIters.extraBndCellsUintah = bndIter;
     
     // MAJOR WARNING HERE - WHEN WE MOVE TO RUNTIME GHOST CELLS, WE NEED TO USE THE APPROPRIATE PATCH OFFSET
     const Uintah::IntVector patchCellOffset = patch->getExtraCellLowIndex(1);
+    
     Uintah::IntVector unitNormal = patch->faceDirection(face); // this is needed to construct interior cells
     Uintah::IntVector bcPointIJK;
-
+    
+    Uintah::IntVector edgePoint;
+    Uintah::IntVector idxHi = patch->getCellHighIndex() - IntVector(1,1,1);// - patchCellOffset;
+    Uintah::IntVector idxLo = patch->getCellLowIndex();
     for( bndIter.reset(); !bndIter.done(); bndIter++ )
     {
       bcPointIJK = *bndIter - patchCellOffset;
       extraBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
+      
+      edgePoint = *bndIter - unitNormal;
+      if( ((edgePoint[i] == idxHi[i]) && plusEdge[i]  ) ||
+          ((edgePoint[j] == idxHi[j]) && plusEdge[j]  ) ||
+          ((edgePoint[i] == idxLo[i]) && minusEdge[i] ) ||
+          ((edgePoint[j] == idxLo[j]) && minusEdge[j] ) )
+      {
+        edgePoint -= patchCellOffset;
+        intEdgeSOIter.push_back( IntVecT(bcPointIJK[0], bcPointIJK[1], bcPointIJK[2]) );
+      }
+
+      
       bcPointIJK -= unitNormal;
       intBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
     }
@@ -367,42 +415,53 @@ namespace Wasatch {
   
   //------------------------------------------------------------------------------------------------
   
-  void BCHelper::add_boundary_condition( const std::string&     bcName,
+  void BCHelper::add_boundary_condition( const std::string& bndName,
                                          const BndCondSpec& bcSpec )
   {
     using namespace std;
-    if ( bndNameBndSpecMap_.find(bcName) != bndNameBndSpecMap_.end() ) {
-      BndSpec& existingBCSpec = (*bndNameBndSpecMap_.find(bcName)).second;
+    if ( bndNameBndSpecMap_.find(bndName) != bndNameBndSpecMap_.end() ) {
+      BndSpec& existingBCSpec = (*bndNameBndSpecMap_.find(bndName)).second;
       vector<BndCondSpec>& bcSpecVec = existingBCSpec.bcSpecVec;
       vector<BndCondSpec>::iterator it = std::find(bcSpecVec.begin(), bcSpecVec.end(), bcSpec);
       if ( it == bcSpecVec.end() ) {
-        DBGBC << "adding bc " << bcSpec.varName << " on " << bcName << " \n";
+        DBGBC << "adding bc " << bcSpec.varName << " on " << bndName << " \n";
         bcSpecVec.push_back(bcSpec);
       } else {
-        DBGBC << "bc " << bcSpec.varName << " already exists on " << bcName << ". skipping \n";
+        DBGBC << "bc " << bcSpec.varName << " already exists on " << bndName << ". skipping \n";
       }
     } else {
-      DBGBC << " ERROR! boundary face " << bcName << " does not exist!!! \n";
+      DBGBC << " ERROR! boundary face " << bndName << " does not exist!!! \n";
     }
   }
 
   //------------------------------------------------------------------------------------------------
   
-  void BCHelper::add_physical_boundary_type( const std::string&      bcfaceName,
-                                             Uintah::Patch::FaceType face,
-                                             const BndTypeEnum& physicalBCType,
-                                             const int               patchID )
+  void BCHelper::add_boundary_condition( const BndCondSpec& bcSpec )
   {
-    DBGBC << "adding physical boundary " << bcfaceName << " of type " << physicalBCType << " on patch " << patchID << std::endl;
-    if ( bndNameBndSpecMap_.find(bcfaceName) != bndNameBndSpecMap_.end() ) {
+    using namespace std;
+    BOOST_FOREACH( BndMapT::value_type& bndPair, bndNameBndSpecMap_)
+    {
+      add_boundary_condition(bndPair.first, bcSpec);
+    }
+  }
+
+  //------------------------------------------------------------------------------------------------
+  
+  void BCHelper::add_boundary( const std::string&      bndName,
+                                Uintah::Patch::FaceType face,
+                                const BndTypeEnum&      bndType,
+                                const int               patchID )
+  {
+    DBGBC << "adding boundary " << bndName << " of type " << bndType << " on patch " << patchID << std::endl;
+    if ( bndNameBndSpecMap_.find(bndName) != bndNameBndSpecMap_.end() ) {
       DBGBC << " adding to existing \n";
-      BndSpec& existingBCSpec = (*bndNameBndSpecMap_.find(bcfaceName)).second;
-      existingBCSpec.patchIDs.push_back(patchID);
+      BndSpec& existingBndSpec = (*bndNameBndSpecMap_.find(bndName)).second;
+      existingBndSpec.patchIDs.push_back(patchID);
     } else {
       DBGBC << " adding new \n";
-      // if this is the first time that we are adding this variable, then create the necessary info to store this
-      BndSpec myPhysBCSpec = {bcfaceName, face, physicalBCType, std::vector<int>(1, patchID) };
-      bndNameBndSpecMap_.insert( BndMapT::value_type(bcfaceName, myPhysBCSpec) );
+      // this is the first time that we are adding this boundary. create the necessary info to store this
+      BndSpec myBndSpec = {bndName, face, bndType, std::vector<int>(1, patchID) };
+      bndNameBndSpecMap_.insert( BndMapT::value_type(bndName, myBndSpec) );
     }
   }
   
@@ -414,7 +473,7 @@ namespace Wasatch {
                                                    const BndCondTypeEnum newBCType )
   {
     namespace SS = SpatialOps::structured;
-    BndCondSpec newBCSpec = {newVarName, "none", newValue,SS::Numeric3Vec<double>(0,0,0), newBCType, DOUBLE_TYPE};
+    BndCondSpec newBCSpec = {newVarName, "none", newValue, newBCType, DOUBLE_TYPE};
     add_auxiliary_boundary_condition(srcVarName, newBCSpec);
   }
   
@@ -426,7 +485,7 @@ namespace Wasatch {
                                                    const BndCondTypeEnum newBCType )
   {
     namespace SS = SpatialOps::structured;
-    BndCondSpec newBCSpec = {newVarName, functorName, 0.0, SS::Numeric3Vec<double>(0,0,0), newBCType, FUNCTOR_TYPE};
+    BndCondSpec newBCSpec = {newVarName, functorName, 0.0, newBCType, FUNCTOR_TYPE};
     add_auxiliary_boundary_condition(srcVarName, newBCSpec);
   }
 
@@ -441,27 +500,43 @@ namespace Wasatch {
       BndSpec& myBndSpec = bndSpecPair.second;
       const BndCondSpec* myBndCondSpec = myBndSpec.find(srcVarName);
       if (myBndCondSpec) {
-        add_boundary_condition(myBndSpec.bndName, bcSpec);
+        add_boundary_condition(myBndSpec.name, bcSpec);
       }
     }
   }
 
   //------------------------------------------------------------------------------------------------
   
-  void BCHelper::add_boundary_iterator( const BoundaryIterators& myIters,
-                                        const std::string& bcName,
-                                        const int& patchID )
+  void BCHelper::add_boundary_mask( const BoundaryIterators& myIters,
+                                    const std::string& bndName,
+                                    const int& patchID )
   {
     using namespace std;
-    if ( bcNamePatchIDMaskMap_.find(bcName) != bcNamePatchIDMaskMap_.end() ) {
-      DBGBC << "BC " << bcName << " already exists in list of Iterators. Adding new iterator for " << bcName << " on patchID " << patchID << std::endl;
-      (*bcNamePatchIDMaskMap_.find(bcName)).second.insert(pair<int, BoundaryIterators>(patchID, myIters));
+    if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
+      DBGBC << "BC " << bndName << " already exists in list of Iterators. Adding new iterator for " << bndName << " on patchID " << patchID << std::endl;
+      (*bndNamePatchIDMaskMap_.find(bndName)).second.insert(pair<int, BoundaryIterators>(patchID, myIters));
     } else {
-      DBGBC << "BC " << bcName << " does NOT Exist in list of Iterators. Adding new iterator for " << bcName << " on patchID " << patchID << std::endl;
+      DBGBC << "BC " << bndName << " does NOT Exist in list of Iterators. Adding new iterator for " << bndName << " on patchID " << patchID << std::endl;
       patchIDBndItrMapT patchIDIterMap;
       patchIDIterMap.insert(pair<int, BoundaryIterators>(patchID, myIters));
-      bcNamePatchIDMaskMap_.insert( pair< string, patchIDBndItrMapT >(bcName, patchIDIterMap ) );
+      bndNamePatchIDMaskMap_.insert( pair< string, patchIDBndItrMapT >(bndName, patchIDIterMap ) );
     }
+  }
+
+  //------------------------------------------------------------------------------------------------
+
+  const std::vector<SpatialOps::structured::IntVec>*
+  BCHelper::get_edge_mask( const BndSpec& myBndSpec, const int& patchID ) const
+  {
+    const std::string bndName = myBndSpec.name;
+    if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
+      const patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      if ( myMap.find(patchID) != myMap.end() ) {
+        const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
+        return &(myIters.interiorEdgeCells);
+      }
+    }
+    return NULL;
   }
 
   //------------------------------------------------------------------------------------------------
@@ -471,11 +546,11 @@ namespace Wasatch {
   BCHelper::get_extra_bnd_mask( const BndSpec& myBndSpec,
                                const int& patchID ) const
   {
-    const std::string bcName = myBndSpec.bndName;
+    const std::string bndName = myBndSpec.name;
     const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);
     const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
-    if ( bcNamePatchIDMaskMap_.find(bcName) != bcNamePatchIDMaskMap_.end() ) {
-      const patchIDBndItrMapT& myMap = (*bcNamePatchIDMaskMap_.find(bcName)).second;
+    if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
+      const patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
       if ( myMap.find(patchID) != myMap.end() ) {
         const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
         if (isStagNorm && isPlusSide) {
@@ -484,9 +559,8 @@ namespace Wasatch {
           return &(myIters.extraBndCells);
         }
       }
-    } else {
-      return NULL;
     }
+    return NULL;
   }
 
   //------------------------------------------------------------------------------------------------
@@ -496,12 +570,12 @@ namespace Wasatch {
   BCHelper::get_interior_bnd_mask( const BndSpec& myBndSpec,
                                   const int& patchID ) const
   {
-    const std::string bcName = myBndSpec.bndName;
+    const std::string bndName = myBndSpec.name;
     const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);
     const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
     
-    if ( bcNamePatchIDMaskMap_.find(bcName) != bcNamePatchIDMaskMap_.end() ) {
-      const patchIDBndItrMapT& myMap = (*bcNamePatchIDMaskMap_.find(bcName)).second;
+    if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
+      const patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
       if ( myMap.find(patchID) != myMap.end() ) {
         const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
         if (isStagNorm && isPlusSide) {
@@ -510,17 +584,38 @@ namespace Wasatch {
           return &(myIters.interiorBndCells);
         }
       }
-    } else {
-      return NULL;
     }
+    return NULL;
   }
-
+  //------------------------------------------------------------------------------------------------
+  
+  Uintah::Iterator&
+  BCHelper::get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
+                                      const int& patchID )
+  {
+    const std::string bndName = myBndSpec.name;
+    
+    if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
+      patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      if ( myMap.find(patchID) != myMap.end() ) {
+        BoundaryIterators& myIters = (*myMap.find(patchID)).second;
+        return myIters.extraBndCellsUintah;
+      }
+    }
+    
+    std::ostringstream msg;
+    msg << "ERROR: It looks like you were trying to grab a boundary iterator that doesn't exist! "
+    << "This could be caused by requesting an iterator for a boundary/patch combination that is inconsistent with your input. "
+    << "Otherwise, this is likely a major bug that needs to be addressed by a core Wasatch developer." << std::endl;
+    throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+  }
+  
   //------------------------------------------------------------------------------------------------
   
   void BCHelper::print() const
   {
-    BOOST_FOREACH( const BndMapT::value_type& bcNameBCSpecPair, bndNameBndSpecMap_ ){
-      bcNameBCSpecPair.second.print();
+    BOOST_FOREACH( const BndMapT::value_type& bndNameBCSpecPair, bndNameBndSpecMap_ ){
+      bndNameBCSpecPair.second.print();
     }
   }
   
@@ -546,7 +641,7 @@ namespace Wasatch {
             
             const int patchID = patch->getID();
             DBGBC << "Patch ID = " << patchID << std::endl;
-                        
+            
             std::vector<Uintah::Patch::FaceType> bndFaces;
             patch->getBoundaryFaces(bndFaces);
             std::vector<Uintah::Patch::FaceType>::const_iterator faceIterator = bndFaces.begin();
@@ -575,19 +670,19 @@ namespace Wasatch {
                 // The BCDataArray stores information related to its children as BCGeomBase objects.
                 // Each child is associated with a BCGeomBase object. Grab that
                 Uintah::BCGeomBase* thisGeom = bcDataArray->getChild(materialID,chid);
-                const std::string bcName = thisGeom->getBCName();
-                if (bcName.compare("NotSet")==0) {
+                const std::string bndName = thisGeom->getBCName();
+                if (bndName.compare("NotSet")==0) {
                   std::ostringstream msg;
                   msg << "ERROR: It looks like you have not set a name for one of your boundary conditions! "
                       << "You MUST specify a name for your <Face> spec boundary condition. Please revise your input file." << std::endl;
                   throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
                 }
-                DBGBC << " bc name = " << bcName << std::endl;                
-
-                BndTypeEnum physicalBCType = select_bnd_type_enum(thisGeom->getBCType());
-                add_physical_boundary_type( bcName, face, physicalBCType, patchID);
-                DBGBC << " bc name = " << bcName << std::endl
-                          << " physical bc type = " << physicalBCType << std::endl;
+                DBGBC << " boundary name = " << bndName << std::endl;
+                DBGBC << " geom bndtype  = " << thisGeom->getBndType() << std::endl;
+                BndTypeEnum bndType = select_bnd_type_enum(thisGeom->getBndType());
+                add_boundary( bndName, face, bndType, patchID );
+                DBGBC << " bc name = " << bndName << std::endl
+                      << " boundary type type = " << bndType << std::endl;
                 
                 //__________________________________________________________________________________
                 Uintah::Iterator bndIter; // allocate iterator
@@ -596,7 +691,7 @@ namespace Wasatch {
                 
                 BoundaryIterators myIters;
                 pack_uintah_iterator_as_spatialops(face, patch, bndIter, myIters); // convert the Uintah iterator to a SpatialOps-friendly mask
-                add_boundary_iterator( myIters, bcName, patchID );
+                add_boundary_mask( myIters, bndName, patchID );
                 
                 //__________________________________________________________________________________
                 // Now, each BCGeomObject has BCData associated with it. This BCData contains the list
@@ -612,8 +707,7 @@ namespace Wasatch {
                   DBGBC << " bc variable = " << varName << std::endl
                         << " bc type = "     << atomBCTypeEnum << std::endl;
                   
-                  double doubleVal=0;
-                  SpatialOps::structured::Numeric3Vec<double> vecVal(0.0, 0.0, 0.0);
+                  double doubleVal=0.0;
                   std::string functorName="none";
                   BCValueTypeEnum bcValType=INVALID_TYPE;
                   
@@ -626,16 +720,6 @@ namespace Wasatch {
                       break;
                     }
                       
-                    case Uintah::BoundCondBase::VECTOR_TYPE: {
-                      const Uintah::BoundCond<Uintah::Vector>* const new_bc = dynamic_cast<const Uintah::BoundCond<Uintah::Vector>*>(bndCondBase);
-                      Uintah::Vector uintahVecVal = new_bc->getValue();
-                      vecVal[0] = uintahVecVal.x();
-                      vecVal[1] = uintahVecVal.y();
-                      vecVal[2] = uintahVecVal.z();
-                      bcValType = VECTOR_TYPE;
-                      break;
-                    }
-                      
                     case Uintah::BoundCondBase::STRING_TYPE: {
                       const Uintah::BoundCond<std::string>* const new_bc = dynamic_cast<const Uintah::BoundCond<std::string>*>(bndCondBase);
                       functorName = new_bc->getValue();
@@ -643,23 +727,21 @@ namespace Wasatch {
                       DBGBC << " functor name = " << functorName << std::endl;                      
                       break;
                     }
-                      
+                    case Uintah::BoundCondBase::VECTOR_TYPE: {
+                      // do nothing here... this is added for WARCHES support
+                      break;
+                    }
                     default:
                     {
                       std::ostringstream msg;
-                      msg << "ERROR: It looks like you have specified an unsupported datatype value for boundary " << bcName << ". "
+                      msg << "ERROR: It looks like you have specified an unsupported datatype value for boundary " << bndName << ". "
                       << "Supported datatypes are: double, vector, and string (i.e. functor name)." << std::endl;
                       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
                     }
                       break;
                   }
-                  
-                  //const BoundarySpec thisBndSpec = {face, patch->getID(), bcName, varName, functorName, doubleVal, vecVal, atomBCTypeEnum, USER, bcValType};
-                  //add_boundary_condition(thisBndSpec);
-                  
-                  // NEW STUFF
-                  const BndCondSpec bndCondSpecNew = {varName, functorName, doubleVal, vecVal, atomBCTypeEnum, bcValType};
-                  add_boundary_condition(bcName, bndCondSpecNew);
+                  const BndCondSpec bndCondSpec = {varName, functorName, doubleVal, atomBCTypeEnum, bcValType};
+                  add_boundary_condition(bndName, bndCondSpec);
                 }
               } // boundary child loop (note, a boundary child is what Wasatch thinks of as a boundary condition
             } // boundary faces loop
@@ -667,11 +749,18 @@ namespace Wasatch {
         } // patch subset loop
       } // material loop
     } // material subset loop
-    print();
+    //print();
+  }
+
+  //------------------------------------------------------------------------------------------------
+  
+  BndMapT& BCHelper::get_boundary_information()
+  {
+    return bndNameBndSpecMap_;
   }
   
   //------------------------------------------------------------------------------------------------
-
+  
   template <typename FieldT>
   void BCHelper::apply_boundary_condition( const Expr::Tag& varTag,
                                            const Category& taskCat,
@@ -694,10 +783,14 @@ namespace Wasatch {
     // will just expose the dependencies advertised by the functor but will
     // accomplish nothing else because that functor doesn't have any bc points
     // associated with it.    
-    BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() ) {
-      BOOST_FOREACH( const int im, matSubSet->getVector() ) {
-        BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() ) {
-          BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
+    BOOST_FOREACH( const Uintah::MaterialSubset* matSubSet, materials_->getVector() )
+    {
+      BOOST_FOREACH( const int im, matSubSet->getVector() )
+      {
+        BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() )
+        {
+          BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
+          {
             const int patchID = patch->getID();
             BCFunctorMap::const_iterator iter = bcFunctorMap_.begin();
             while ( iter != bcFunctorMap_.end() ) {
@@ -724,34 +817,37 @@ namespace Wasatch {
     {
       const BndSpec& myBndSpec = bndSpecPair.second;
       const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(fieldName);
+      
       if (myBndCondSpec) {        
-        BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() ) {
-          BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
+        BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() )
+        {
+          BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() )
+          {
             const int patchID = patch->getID();
-
-            //_____________________________________________________________________________________
-            // get the patch info from which we can get the operators database
-            const PatchInfoMap::const_iterator ipi = patchInfoMap_.find( patchID );
-            assert( ipi != patchInfoMap_.end() );
-            const SpatialOps::OperatorDatabase& opdb = *(ipi->second.operators);
-            
             //_____________________________________________________________________________________
             // check if we have this patchID in the list of patchIDs
-            if (myBndSpec.find_patchid(patchID)) {              
+            if (myBndSpec.has_patch(patchID))
+            {
+              //____________________________________________________________________________________
+              // get the patch info from which we can get the operators database
+              const PatchInfoMap::const_iterator ipi = patchInfoMap_.find( patchID );
+              assert( ipi != patchInfoMap_.end() );
+              const SpatialOps::OperatorDatabase& opdb = *(ipi->second.operators);
+
+              //____________________________________________________________________________________
               // create unique names for the modifier expressions
               const string strPatchID = number_to_string(patchID);
               
               Expr::Tag modTag;
               Expr::ExpressionBuilder* builder = NULL;
               
-              // create constant bc expressions. These are not created from the input file.
-              if( myBndCondSpec->bcValType != FUNCTOR_TYPE ){ // constant bc
-                modTag = Expr::Tag( fieldName + "_bc_" + myBndSpec.bndName + "_patch_" + strPatchID, Expr::STATE_NONE );
+              // create bc expressions. These are not created from the input file.
+              if( myBndCondSpec->is_functor() ) { // functor bc
+                modTag = Expr::Tag( myBndCondSpec->functorName, Expr::STATE_NONE );
+              } else { // constant bc
+                modTag = Expr::Tag( fieldName + "_bc_" + myBndSpec.name + "_patch_" + strPatchID, Expr::STATE_NONE );
                 builder = new typename ConstantBC<FieldT>::Builder( modTag, myBndCondSpec->value );
                 factory.register_expression( builder, true );
-              }
-              else{ // expression bc
-                modTag = Expr::Tag( myBndCondSpec->functorName, Expr::STATE_NONE );
               }
               
               // attach the modifier expression to the target expression
@@ -761,7 +857,7 @@ namespace Wasatch {
               BoundaryConditionBase<FieldT>& modExpr =
               dynamic_cast<BoundaryConditionBase<FieldT>&>( factory.retrieve_modifier_expression( modTag, patchID, false ) );
               
-              // this is needed for bc expressions that require global uintah indexing, e.g. TurbulentInletBC
+              // the following is needed for bc expressions that require global uintah indexing, e.g. TurbulentInletBC
               const SCIRun::IntVector sciPatchCellOffset = patch->getExtraCellLowIndex(1);
               const IntVecT patchCellOffset(sciPatchCellOffset.x(), sciPatchCellOffset.y(), sciPatchCellOffset.z());
               modExpr.set_patch_cell_offset(patchCellOffset);
@@ -775,10 +871,144 @@ namespace Wasatch {
               double ci, cg;
               get_bcop_coefs<FieldT>(opdb, myBndSpec, *myBndCondSpec, ci, cg, setOnExtraOnly);
 
+              // get the unit normal
+              const Uintah::IntVector uNorm = patch->getFaceDirection(myBndSpec.face);
+              const IntVecT unitNormal( uNorm.x(), uNorm.y(), uNorm.z() );
+              modExpr.set_boundary_normal(unitNormal);
+              
               modExpr.set_ghost_coef( cg );
               modExpr.set_ghost_points( get_extra_bnd_mask<FieldT>(myBndSpec, patchID) );
               modExpr.set_interior_coef( ci );
-              modExpr.set_interior_points( get_interior_bnd_mask<FieldT>(myBndSpec,patchID) );              
+              modExpr.set_interior_points( get_interior_bnd_mask<FieldT>(myBndSpec,patchID) );
+              //modExpr.set_interior_edge_points( get_edge_mask(myBndSpec,patchID) );
+            }
+          }
+        }
+      }
+    }
+  }
+  //------------------------------------------------------------------------------------------------
+  
+  void BCHelper::synchronize_pressure_expression()
+  {
+    Expr::ExpressionFactory& factory = *(grafCat_[ADVANCE_SOLUTION]->exprFactory);
+    if (!factory.have_entry( pressure_tag() )) return;
+    BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() ) {
+      // loop over every patch in the patch subset
+      BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
+        const int patchID = patch->getID();
+        // go through the patch ids and pass the bchelper to the pressure expression
+        Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
+        pexpr.set_bchelper(this); // add the bchelper class to the pressure expression on ALL patches
+      }
+    }
+  }
+
+  //------------------------------------------------------------------------------------------------
+  
+  void BCHelper::update_pressure_matrix( Uintah::CCVariable<Uintah::Stencil4>& pMatrix,
+                                        const Uintah::Patch* patch )
+  {
+    const int patchID = patch->getID();
+    const Uintah::Vector spacing = patch->dCell();
+    const double dx = spacing[0];
+    const double dy = spacing[1];
+    const double dz = spacing[2];
+    const double dx2 = dx*dx;
+    const double dy2 = dy*dy;
+    const double dz2 = dz*dz;
+    
+    BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
+    {
+      const BndSpec& myBndSpec = bndSpecPair.second;
+      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pressure_tag().name());
+      const Uintah::IntVector unitNormal = patch->getFaceDirection(myBndSpec.face);
+//      if (myBndCondSpec) {
+        //_____________________________________________________________________________________
+        // check if we have this patchID in the list of patchIDs
+        if (myBndSpec.has_patch(patchID))
+        {
+          Uintah::Iterator& bndMask = get_uintah_extra_bnd_mask(myBndSpec,patchID);
+          
+          double sign = (myBndSpec.type == OUTFLOW || myBndSpec.type == OPEN) ? 1.0 : -1.0;
+          if (myBndCondSpec) {
+            if (myBndCondSpec->bcType == DIRICHLET) {
+              sign = 1.0;
+            }
+          }
+          
+          for( bndMask.reset(); !bndMask.done(); ++bndMask ) {
+            Uintah::Stencil4& coefs = pMatrix[*bndMask - unitNormal];
+            switch(myBndSpec.face){
+              case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p += sign/dx2; break;
+              case Uintah::Patch::xplus :                coefs.p += sign/dx2; break;
+              case Uintah::Patch::yminus: coefs.s = 0.0; coefs.p += sign/dy2; break;
+              case Uintah::Patch::yplus :                coefs.p += sign/dy2; break;
+              case Uintah::Patch::zminus: coefs.b = 0.0; coefs.p += sign/dz2; break;
+              case Uintah::Patch::zplus :                coefs.p += sign/dz2; break;
+              default:                                                        break;
+            }
+          }
+          
+//        }
+      }
+    }
+  }
+  //------------------------------------------------------------------------------------------------
+  
+  void BCHelper::apply_pressure_bc( SVolField& pressureField,
+                                   const Uintah::Patch* patch )
+  {
+    typedef std::vector<SpatialOps::structured::IntVec> MaskT;
+    
+    const int patchID = patch->getID();
+
+    const Uintah::Vector res = patch->dCell();
+    const double dx = res[0];
+    const double dy = res[1];
+    const double dz = res[2];
+
+    BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
+    {
+      const BndSpec& myBndSpec = bndSpecPair.second;
+      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pressure_tag().name());
+      
+      double spacing = 1.0;
+      switch( myBndSpec.face ){
+        case Uintah::Patch::xminus: case Uintah::Patch::xplus :  spacing = dx;  break;
+        case Uintah::Patch::yminus: case Uintah::Patch::yplus :  spacing = dy;  break;
+        case Uintah::Patch::zminus: case Uintah::Patch::zplus :  spacing = dz;  break;
+        default:                                                                break;
+      } // switch
+      
+      if (myBndCondSpec) {
+        //_____________________________________________________________________________________
+        // check if we have this patchID in the list of patchIDs
+        if (myBndSpec.has_patch(patchID))
+        {
+          const MaskT* iBndMask = get_interior_bnd_mask<SVolField>(myBndSpec,patchID);
+          const MaskT* eBndMask = get_extra_bnd_mask<SVolField>(myBndSpec,patchID);
+          MaskT::const_iterator ii = iBndMask->begin();
+          MaskT::const_iterator ig = eBndMask->begin();
+          if(!iBndMask || !eBndMask) return;
+          if (myBndSpec.type == OUTFLOW || myBndSpec.type == OPEN) {
+            for (; ii != iBndMask->end(); ++ii, ++ig) {
+              pressureField(*ig) = -pressureField(*ii);
+            }
+          } else {
+            switch (myBndCondSpec->bcType) {
+              case DIRICHLET:
+                for (; ii != iBndMask->end(); ++ii, ++ig) {
+                  pressureField(*ig) = 2.0*myBndCondSpec->value - pressureField(*ii);
+                }
+                break;
+              case NEUMANN:
+                for (; ii != iBndMask->end(); ++ii, ++ig) {
+                  pressureField(*ig) = spacing * myBndCondSpec->value + pressureField(*ii);
+                }
+                break;
+              default:
+                break;
             }
           }
         }
@@ -787,7 +1017,7 @@ namespace Wasatch {
   }
   
   //------------------------------------------------------------------------------------------------
-  
+
   //==========================================================================
   // Explicit template instantiation for supported versions of this class
   #include <spatialops/structured/FVStaggered.h>

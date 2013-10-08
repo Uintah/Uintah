@@ -42,7 +42,7 @@ else
         $(M_LIBRARY)                      \
         $(MPI_LIBRARY)                    \
         $(F_LIBRARY)                      \
-        $(BLAS_LIBRARY) $(LAPACK_LIBRARY) \
+        $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
         $(THREAD_LIBRARY)                 \
 	$(TEEM_LIBRARY) $(PNG_LIBRARY)    \
         $(Z_LIBRARY)

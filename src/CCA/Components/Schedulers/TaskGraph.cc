@@ -839,14 +839,14 @@ void CompTable::remembercomp(Data* newData, const ProcessorGroup* pg)
   if(newData->comp->deptype != Task::Modifies && !newData->comp->var->typeDescription()->isReductionVariable()){
     if(data.lookup(newData)){
       cout << "Multiple compute found:\n";
-      cout << "matl: " << newData->matl << "\n";
+      cout << "  matl: " << newData->matl << "\n";
       if (newData->patch)
-        cout << "patch: " << *newData->patch << "\n";
-      cout << *newData->comp << "\n";
-      cout << *newData->task << "\n";
-      cout << "It was originally computed by the following task(s):\n";
+        cout << "  patch: " << *newData->patch << "\n";
+      cout << "  " << *newData->comp << "\n";
+      cout << "  " << *newData->task << "\n\n";
+      cout << "  It was originally computed by the following task(s):\n";
       for(Data* old = data.lookup(newData); old != 0; old = data.nextMatch(newData, old)){
-        cout << *old->task << endl;
+        cout << "  "<< *old->task << endl;
         //old->comp->task->displayAll(cout);
       }
       SCI_THROW(InternalError("Multiple computes for variable: "+newData->comp->var->getName(), __FILE__, __LINE__));

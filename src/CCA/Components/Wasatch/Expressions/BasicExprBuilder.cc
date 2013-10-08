@@ -453,28 +453,35 @@ namespace Wasatch{
   {
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
     Expr::ExpressionBuilder* builder = NULL;
-    
+
+    const double kB = 1.3806488e-23;
+    const double nA = 6.023e23;
+    const double R = 8.314;
+
     if (params->findBlock("PrecipitationBulkDiffusionCoefficient") ) {
-      double coef, MolecularVolume, DiffusionCoefficient;
+      double coef, molecularVolume, diffusionCoefficient, sMin;
       Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationBulkDiffusionCoefficient");
-      coefParams -> getAttribute("Molec_Vol",MolecularVolume);
-      coefParams -> getAttribute("Diff_Coef",DiffusionCoefficient);
-      coef = MolecularVolume*DiffusionCoefficient;
+      coefParams -> getAttribute("Molec_Vol",molecularVolume);
+      coefParams -> getAttribute("Diff_Coef",diffusionCoefficient);
+      sMin = 0.0;
+      if (coefParams->getAttribute("S_Min", sMin) )
+        coefParams->getAttribute("S_Min", sMin);
+      coef = molecularVolume*diffusionCoefficient;
       Expr::Tag sBarTag;
       if (coefParams->findBlock("SBar") ) 
         sBarTag = parse_nametag( coefParams->findBlock("SBar")->findBlock("NameTag") );
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       const Expr::Tag eqTag  = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
       typedef typename PrecipitationBulkDiffusionCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, eqTag, sBarTag, coef);
+      builder = scinew Builder(tag, saturationTag, eqTag, sBarTag, coef, sMin);
     }
     
     else if (params->findBlock("CylindricalDiffusionCoefficient") ) {
-      double coef, MolecularVolume, DiffusionCoefficient;
+      double coef, molecularVolume, diffusionCoefficient;
       Uintah::ProblemSpecP coefParams = params->findBlock("CylindricalDiffusionCoefficient");
-      coefParams -> getAttribute("Molec_Vol",MolecularVolume);
-      coefParams -> getAttribute("Diff_Coef",DiffusionCoefficient);
-      coef = MolecularVolume*DiffusionCoefficient* 7.0/6.0/log(0.5);
+      coefParams -> getAttribute("Molec_Vol",molecularVolume);
+      coefParams -> getAttribute("Diff_Coef",diffusionCoefficient);
+      coef = molecularVolume*diffusionCoefficient* 7.0/6.0/log(0.5);
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       const Expr::Tag eqTag  = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
       Expr::Tag sBarTag;
@@ -485,27 +492,29 @@ namespace Wasatch{
     }
     
     else if (params->findBlock("KineticGrowthCoefficient") ) {
-      double coef;
+      double coef, sMax;
       Uintah::ProblemSpecP coefParams = params->findBlock("KineticGrowthCoefficient");
       coefParams -> getAttribute("K_A",coef);
+      sMax = 1e10;
+      if( coefParams->getAttribute("S_Max",sMax) )
+        coefParams->getAttribute("S_Max",sMax);
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       Expr::Tag sBarTag;
       if (coefParams->findBlock("SBar") ) 
         sBarTag = parse_nametag( coefParams->findBlock("SBar")->findBlock("NameTag") );
       typedef typename KineticGrowthCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, saturationTag, sBarTag, coef);
+      builder = scinew Builder( tag, saturationTag, sBarTag, coef, sMax);
     }
     
     else if (params->findBlock("PrecipitationMonosurfaceCoefficient") ) {
-      double coef, expcoef, MolecularDiameter, DiffusionCoefficient, SurfaceEnergy , T;
-      const double K_B = 1.3806488e-23;
+      double coef, expcoef, molecularDiameter, diffusionCoefficient, surfaceEnergy , T;
       Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationMonosurfaceCoefficient");
-      coefParams -> getAttribute("Molec_D",MolecularDiameter);
-      coefParams -> getAttribute("Diff_Coef",DiffusionCoefficient);
-      coefParams -> getAttribute("Surf_Eng", SurfaceEnergy);
+      coefParams -> getAttribute("Molec_D",molecularDiameter);
+      coefParams -> getAttribute("Diff_Coef",diffusionCoefficient);
+      coefParams -> getAttribute("Surf_Eng", surfaceEnergy);
       coefParams -> getAttribute("Temperature",T);
-      coef = DiffusionCoefficient * PI / MolecularDiameter / MolecularDiameter /MolecularDiameter;
-      expcoef = - SurfaceEnergy * SurfaceEnergy * MolecularDiameter * MolecularDiameter * PI / K_B / K_B / T / T;
+      coef = diffusionCoefficient * PI / molecularDiameter / molecularDiameter /molecularDiameter;
+      expcoef = - surfaceEnergy * surfaceEnergy * molecularDiameter * molecularDiameter * PI / kB / kB / T / T;
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       typedef typename PrecipitationMonosurfaceCoefficient<FieldT>::Builder Builder;
       builder = scinew Builder(tag, saturationTag, coef, expcoef);
@@ -513,43 +522,42 @@ namespace Wasatch{
     
     else if (params->findBlock("PrecipitationClassicNucleationCoefficient") ) {
       double expcoef, SurfaceEnergy, MolecularVolume, T;
-      const double K_B = 1.3806488e-23;
-      const double N_A = 6.023e23;
       Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationClassicNucleationCoefficient");
       coefParams -> getAttribute("Molec_Vol",MolecularVolume);
       coefParams -> getAttribute("Surf_Eng",SurfaceEnergy);
       coefParams -> getAttribute("Temperature",T);
-      expcoef = -16 * PI / 3 * SurfaceEnergy * SurfaceEnergy * SurfaceEnergy / K_B / K_B / K_B / T / T / T * MolecularVolume * MolecularVolume / N_A / N_A;
+      expcoef = -16 * PI / 3 * SurfaceEnergy * SurfaceEnergy * SurfaceEnergy / kB / kB / kB / T / T / T * MolecularVolume * MolecularVolume / nA / nA;
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       typedef typename PrecipitationClassicNucleationCoefficient<FieldT>::Builder Builder;
       builder = scinew Builder(tag, saturationTag, expcoef);
     }
     
     else if (params->findBlock("HomogeneousNucleationCoefficient") ) {
-      double MolecularVolume, T, D;
-      double SurfaceEnergy = 1.0;
+      double molecularVolume, T, D, sRatio;
+      double surfaceEnergy = 1.0;
       Uintah::ProblemSpecP coefParams = params->findBlock("HomogeneousNucleationCoefficient");
-      coefParams -> getAttribute("Molar_Vol",MolecularVolume);
-      if (coefParams->getAttribute("Surf_Eng",SurfaceEnergy) )
-        coefParams -> getAttribute("Surf_Eng",SurfaceEnergy);
+      coefParams -> getAttribute("Molar_Vol",molecularVolume);
+      if (coefParams->getAttribute("Surf_Eng",surfaceEnergy) )
+        coefParams -> getAttribute("Surf_Eng",surfaceEnergy);
       coefParams -> getAttribute("Temperature",T);
       coefParams -> getAttribute("Diff_Coef",D);
-      MolecularVolume = MolecularVolume/6.02214129e23; //convert molar to molecular volume in this term
+      coefParams -> getAttribute("S_Ratio", sRatio);
+      molecularVolume = molecularVolume/6.02214129e23; //convert molar to molecular volume in this term
       Expr::Tag surfaceEngTag;
       if ( coefParams->findBlock("SurfaceEnergy") )
         surfaceEngTag = parse_nametag( coefParams->findBlock("SurfaceEnergy")->findBlock("NameTag") );
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       const Expr::Tag eqConcTag = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
       typedef typename HomogeneousNucleationCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, eqConcTag,  surfaceEngTag, MolecularVolume, SurfaceEnergy, T, D);
+      builder = scinew Builder(tag, saturationTag, eqConcTag,  surfaceEngTag, molecularVolume, surfaceEnergy, T, D, sRatio);
     }
     
     else if (params->findBlock("PrecipitationSimpleRStarValue") ) {
-      double RKnot, coef, CFCoef;
+      double rknot, coef, cfCoef;
       Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationSimpleRStarValue");
-      coefParams -> getAttribute("R0", RKnot);
-      coefParams -> getAttribute("Conversion_Fac", CFCoef);
-      coef = RKnot*CFCoef;
+      coefParams -> getAttribute("R0", rknot);
+      coefParams -> getAttribute("Conversion_Fac", cfCoef);
+      coef = rknot*cfCoef;
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       const Expr::Tag surfaceEngTag; //dummy tag since this uses same function as classic rStar
       typedef typename PrecipitationRCritical<FieldT>::Builder Builder;
@@ -557,18 +565,17 @@ namespace Wasatch{
     }
     
     else if (params->findBlock("PrecipitationClassicRStarValue") ) {
-      double SurfaceEnergy, MolecularVolume, T, CFCoef, coef;
-      const double R = 8.314;
+      double surfaceEnergy, molecularVolume, T, cfCoef, coef;
       Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationClassicRStarValue");
-      coefParams -> getAttribute("Surf_Eng", SurfaceEnergy);
-      coefParams -> getAttribute("Conversion_Fac", CFCoef);
+      coefParams -> getAttribute("Surf_Eng", surfaceEnergy);
+      coefParams -> getAttribute("Conversion_Fac", cfCoef);
       coefParams -> getAttribute("Temperature", T);
-      coefParams -> getAttribute("Molec_Vol",MolecularVolume);
-      coef = 2.0*SurfaceEnergy*MolecularVolume/R/T*CFCoef;
+      coefParams -> getAttribute("Molec_Vol",molecularVolume);
+      coef = 2.0*surfaceEnergy*molecularVolume/R/T*cfCoef;
       Expr::Tag surfaceEngTag;
       if (coefParams->findBlock("SurfaceEnergy") ) {
         surfaceEngTag = parse_nametag( coefParams->findBlock("SurfaceEnergy")->findBlock("NameTag") ) ;
-        coef = 2.0*MolecularVolume/R/T*CFCoef;  //calcualte coefficient without the surface energy
+        coef = 2.0*molecularVolume/R/T*cfCoef;  //calcualte coefficient without the surface energy
       }
       
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
@@ -578,30 +585,27 @@ namespace Wasatch{
     }
     
     else if(params->findBlock("CriticalSurfaceEnergy") ) {
-      double BulkSurfaceEnergy, T, MolarVolume, coef, tolmanL;
-      const double R = 8.314;
-      const double N_A = 6.023e23;
+      double bulkSurfaceEnergy, T, molarVolume, coef, tolmanL;
       Uintah::ProblemSpecP coefParams = params->findBlock("CriticalSurfaceEnergy");
       coefParams -> getAttribute("Temperature",T);
-      coefParams -> getAttribute("Bulk_Surf_Eng",BulkSurfaceEnergy);
-      coefParams -> getAttribute("Molar_Vol",MolarVolume);
+      coefParams -> getAttribute("Bulk_Surf_Eng",bulkSurfaceEnergy);
+      coefParams -> getAttribute("Molar_Vol",molarVolume);
       coefParams -> getWithDefault("TolmanLength",tolmanL,0.2);
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
-      double r1 = pow(3.0*MolarVolume/N_A/4.0/PI,1.0/3.0); //convert molar vol to molec radius
-      coef = 4.0 * tolmanL * R * T*BulkSurfaceEnergy* r1/MolarVolume;
+      double r1 = pow(3.0*molarVolume/nA/4.0/PI,1.0/3.0); //convert molar vol to molec radius
+      coef = 4.0 * tolmanL * R * T*bulkSurfaceEnergy* r1/molarVolume;
       typedef typename CriticalSurfaceEnergy<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, BulkSurfaceEnergy, coef);
+      builder = scinew Builder(tag, saturationTag, bulkSurfaceEnergy, coef);
     }
     
     else if (params->findBlock("BrownianAggregationCoefficient") ) {
-      const double K_B = 1.3806488e-23;
       double T, coef;
       Uintah::ProblemSpecP coefParams = params->findBlock("BrownianAggregationCoefficient");
       coefParams -> getAttribute("Temperature", T);
       double ConvFac = 1.0;
       if (coefParams->getAttribute("Conversion_Fac", ConvFac) )
         coefParams->getAttribute("Conversion_Fac", ConvFac);
-      coef = 2.0 * K_B * T / 3.0 * ConvFac ;
+      coef = 2.0 * kB * T / 3.0 * ConvFac ;
       const Expr::Tag densityTag = parse_nametag( coefParams->findBlock("Density")->findBlock("NameTag") );
       typedef typename BrownianAggregationCoefficient<FieldT>::Builder Builder;
       builder = scinew Builder(tag, densityTag, coef);
@@ -612,10 +616,10 @@ namespace Wasatch{
       const Expr::Tag kinematicViscosityTag = parse_nametag( coefParams->findBlock("KinematicViscosity")->findBlock("NameTag") );
       const Expr::Tag energyDissipationTag = parse_nametag( coefParams->findBlock("EnergyDissipation")->findBlock("NameTag") );
       double coef;
-      double ConvFac = 1.0;
-      if (coefParams->getAttribute("Conversion_Fac", ConvFac) )
-        coefParams->getAttribute("Conversion_Fac", ConvFac);
-      coef = (4.0 / 3.0) * sqrt(3.0 * PI / 10.0) * ConvFac;
+      double convFac = 1.0;
+      if (coefParams->getAttribute("Conversion_Fac", convFac) )
+        coefParams->getAttribute("Conversion_Fac", convFac);
+      coef = (4.0 / 3.0) * sqrt(3.0 * PI / 10.0) * convFac;
       typedef typename TurbulentAggregationCoefficient<FieldT>::Builder Builder;
       builder = scinew Builder(tag, kinematicViscosityTag, energyDissipationTag, coef);
     }
@@ -664,9 +668,10 @@ namespace Wasatch{
     
     else if (params->findBlock("MultiEnvMixingModel") ) {
       std::stringstream wID;
-      std::string baseName;
-      std::string stateType;
+      std::string baseName, stateType;
+      double maxDt;
       Uintah::ProblemSpecP multiEnvParams = params->findBlock("MultiEnvMixingModel");
+      multiEnvParams -> getAttribute("MaxDt",maxDt);
       Expr::TagList multiEnvWeightsTags;
       params->findBlock("NameTag")->getAttribute("name",baseName);
       params->findBlock("NameTag")->getAttribute("state",stateType);
@@ -687,19 +692,18 @@ namespace Wasatch{
       const Expr::Tag mixFracTag = parse_nametag( multiEnvParams->findBlock("MixtureFraction")->findBlock("NameTag") );
       const Expr::Tag scalarVarTag = parse_nametag( multiEnvParams->findBlock("ScalarVariance")->findBlock("NameTag") );
       const Expr::Tag scalarDissTag = parse_nametag( multiEnvParams->findBlock("ScalarDissipation")->findBlock("NameTag") );
-      builder = scinew typename MultiEnvMixingModel<FieldT>::Builder(multiEnvWeightsTags, mixFracTag, scalarVarTag, scalarDissTag);
+      builder = scinew typename MultiEnvMixingModel<FieldT>::Builder(multiEnvWeightsTags, mixFracTag, scalarVarTag, scalarDissTag, maxDt);
     }
     
     else if (params->findBlock("PrecipitationSource") ) {
       //this loops over all possible non-convective/non-diffusive rhs terms and creates a taglist
       Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationSource");
-      std::vector<double> Molec_Volumes;
+      std::vector<double> molecVolumes;
       Expr::TagList sourceTagList;
       Expr::Tag sourceTag;
       Expr::Tag midEnvWeightTag; //tag for central weight
       double molecVol;
-      std::string modelType;
-      std::string basePhiName;
+      std::string modelType, basePhiName;
       
       const Expr::Tag etaScaleTag = parse_nametag( coefParams->findBlock("EtaScale")->findBlock("NameTag") );
       const Expr::Tag densityTag = parse_nametag( coefParams->findBlock("Density")->findBlock("NameTag") );
@@ -708,36 +712,38 @@ namespace Wasatch{
         midEnvWeightTag = parse_nametag( coefParams->findBlock("MultiEnvWeight")->findBlock("NameTag") );
       }
       
-      for ( Uintah::ProblemSpecP momentParams=wasatchParams->findBlock("MomentTransportEquation");
+      for( Uintah::ProblemSpecP momentParams=wasatchParams->findBlock("MomentTransportEquation");
            momentParams != 0;
-           momentParams = momentParams->findNextBlock("MomentTransportEquation") ) {
+           momentParams = momentParams->findNextBlock("MomentTransportEquation") ){
         momentParams->get("MolecVol", molecVol);
         momentParams->get("PopulationName", basePhiName);
         
-        for (Uintah::ProblemSpecP growthParams=momentParams->findBlock("GrowthExpression");
+        for( Uintah::ProblemSpecP growthParams=momentParams->findBlock("GrowthExpression");
              growthParams != 0;
-             growthParams = growthParams->findNextBlock("GrowthExpression") ) {
-          Molec_Volumes.push_back(molecVol);
+             growthParams = growthParams->findNextBlock("GrowthExpression") ){
+          molecVolumes.push_back(molecVol);
           growthParams->get("GrowthModel", modelType);
           sourceTag = Expr::Tag( "m_" + basePhiName + "_3_growth_" + modelType, Expr::STATE_NONE);
           sourceTagList.push_back(sourceTag);
-          if (growthParams->findBlock("OstwaldRipening") ){
-            Molec_Volumes.push_back(molecVol);
-            sourceTag = Expr::Tag( "m_" + basePhiName + "_3_Ostwald_Ripening", Expr::STATE_NONE);
-            sourceTagList.push_back(sourceTag);
-          }
         }
-        for (Uintah::ProblemSpecP birthParams=momentParams->findBlock("BirthExpression");
+        for( Uintah::ProblemSpecP birthParams=momentParams->findBlock("BirthExpression");
              birthParams != 0;
-             birthParams = birthParams->findNextBlock("BirthExpression") ) {
-          Molec_Volumes.push_back(molecVol);
+             birthParams = birthParams->findNextBlock("BirthExpression") ){
+          molecVolumes.push_back(molecVol);
           birthParams->get("BirthModel", modelType);
           sourceTag = Expr::Tag("m_" + basePhiName + "_3_birth_" + modelType, Expr::STATE_NONE);
           sourceTagList.push_back(sourceTag);
         }
+        for( Uintah::ProblemSpecP deathParams=momentParams->findBlock("Dissolution");
+            deathParams != 0;
+            deathParams = deathParams->findNextBlock("Dissolution") ){
+          molecVolumes.push_back(molecVol);
+          sourceTag = Expr::Tag( "m_" + basePhiName + "_3_death", Expr::STATE_NONE);
+          sourceTagList.push_back(sourceTag);
+        }
       }
       typedef typename PrecipitationSource<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, sourceTagList, etaScaleTag, densityTag, midEnvWeightTag, Molec_Volumes);
+      builder = scinew Builder(tag, sourceTagList, etaScaleTag, densityTag, midEnvWeightTag, molecVolumes);
     }
     return builder;
   }

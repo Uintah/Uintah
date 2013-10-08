@@ -33,7 +33,7 @@
 
 namespace Uintah {
   class DataWarehouse;
-
+ 
   //_____________________________________________________________
   // This struct contains misc. variables that are needed by the 
   // the different custom boundary conditions and are considered global
@@ -97,9 +97,14 @@ namespace Uintah {
       set_MMS_BCs       = false;
       set_Sine_BCs      = false;
       set_inletVel_BCs  = false;
+      recursiveTask     = false;
     };
     
     ~customBC_localVars() {};
+    
+    // are tasks recursive
+    bool recursiveTask;
+    
     // LODI boundary condtions
     bool setLodiBcs;
     Lodi_vars* lv;
@@ -118,6 +123,7 @@ namespace Uintah {
     
     // powerLawProfile or logLawProfile inlet velocity profile
     bool set_inletVel_BCs;
+    inletVel_vars* inletVel_v;
   };  
 
   //______________________________________________________________________
@@ -127,7 +133,8 @@ namespace Uintah {
                                    const string& where,                      
                                    ICELabel* lb,                             
                                    const MaterialSubset* ice_matls,          
-                                   customBC_globalVars* global);        
+                                   customBC_globalVars* global,
+                                   const bool recursiveTask = false);        
  
    void preprocess_CustomBCs(const string& where,
                              DataWarehouse* old_dw,                    

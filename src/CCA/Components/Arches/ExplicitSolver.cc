@@ -572,9 +572,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         // get the ID of the momentum RHS
         Wasatch::GraphHelper* const gh = wasatch.graph_categories()[Wasatch::ADVANCE_SOLUTION];
         
-        gh->rootIDs.erase(gh->exprFactory->get_id(Expr::Tag(d_lab->d_uMomLabel->getName()+ "_rhs_full",Expr::STATE_NONE) ) );
-        gh->rootIDs.erase(gh->exprFactory->get_id(Expr::Tag(d_lab->d_vMomLabel->getName()+ "_rhs_full",Expr::STATE_NONE) ) );
-        gh->rootIDs.erase(gh->exprFactory->get_id(Expr::Tag(d_lab->d_wMomLabel->getName()+ "_rhs_full",Expr::STATE_NONE) ) );
+        gh->rootIDs.erase(gh->exprFactory->get_id(Expr::Tag(d_lab->d_uMomLabel->getName()+ "_rhs",Expr::STATE_NONE) ) );
+        gh->rootIDs.erase(gh->exprFactory->get_id(Expr::Tag(d_lab->d_vMomLabel->getName()+ "_rhs",Expr::STATE_NONE) ) );
+        gh->rootIDs.erase(gh->exprFactory->get_id(Expr::Tag(d_lab->d_wMomLabel->getName()+ "_rhs",Expr::STATE_NONE) ) );
                 
         // manually insert the root ids for the wasatch momentum partial rhs.
         // the wasatch rhs_partial expressions are used to construct the provisional arches

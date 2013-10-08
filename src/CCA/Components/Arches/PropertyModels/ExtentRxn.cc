@@ -142,54 +142,6 @@ void ExtentRxn::computeProp(const ProcessorGroup* pc,
 }
 
 //---------------------------------------------------------------------------
-//Method: Scheduler for Dummy Initialization
-//---------------------------------------------------------------------------
-void ExtentRxn::sched_dummyInit( const LevelP& level, SchedulerP& sched )
-{
-
-  std::string taskname = "ExtentRxn::dummyInit"; 
-
-  Task* tsk = scinew Task(taskname, this, &ExtentRxn::dummyInit);
-  tsk->computes(_prop_label); 
-  tsk->computes(_strip_label); 
-  tsk->requires( Task::OldDW, _prop_label, Ghost::None, 0 ); 
-
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
-
-}
-
-//---------------------------------------------------------------------------
-//Method: Actually do the Dummy Initialization
-//---------------------------------------------------------------------------
-void ExtentRxn::dummyInit( const ProcessorGroup* pc, 
-                                            const PatchSubset* patches, 
-                                            const MaterialSubset* matls, 
-                                            DataWarehouse* old_dw, 
-                                            DataWarehouse* new_dw )
-{
-  //patch loop
-  for (int p=0; p < patches->size(); p++){
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> prop; 
-    constCCVariable<double> old_prop; 
-    CCVariable<double> strip; 
-
-    new_dw->allocateAndPut( prop, _prop_label, matlIndex, patch ); 
-    old_dw->get( old_prop, _prop_label, matlIndex, patch, Ghost::None, 0); 
-    new_dw->allocateAndPut( strip, _strip_label, matlIndex, patch );
-    strip.initialize(0.0); 
-
-    //prop.initialize(0.0); <--- Careful, don't reinitialize if you don't want to 
-    prop.copyData( old_prop );
-
-  }
-}
-
-//---------------------------------------------------------------------------
 //Method: Scheduler for Initializing the Property
 //---------------------------------------------------------------------------
 void ExtentRxn::sched_initialize( const LevelP& level, SchedulerP& sched )

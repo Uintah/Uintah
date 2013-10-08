@@ -32,6 +32,7 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/Operators/Operators.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
+#include <CCA/Components/Wasatch/BCHelper.h>
 
 //-- Uintah Includes --//
 #include <Core/Grid/Variables/VarLabel.h>
@@ -77,7 +78,6 @@ class Pressure
  : public Expr::Expression<SVolField>
 {
   const Expr::Tag fxt_, fyt_, fzt_, pSourcet_, timestept_, currenttimet_, volfract_;
-  const Expr::Tag dudtt_, dvdtt_, dwdtt_;
 
   const bool doX_, doY_, doZ_;
   bool didAllocateMatrix_;
@@ -106,10 +106,6 @@ class Pressure
   const YVolField* fy_;
   const ZVolField* fz_;
 
-  const XVolField* dxmomdt_;
-  const YVolField* dymomdt_;
-  const ZVolField* dzmomdt_;
-
   // build interpolant operators
   typedef OperatorTypeBuilder< Interpolant, XVolField, SpatialOps::structured::SSurfXField >::type  FxInterp;
   typedef OperatorTypeBuilder< Interpolant, YVolField, SpatialOps::structured::SSurfYField >::type  FyInterp;
@@ -129,15 +125,13 @@ class Pressure
   typedef Uintah::CCVariable<Uintah::Stencil4> MatType;
   MatType matrix_;
   const Uintah::Patch* patch_;
+  BCHelper* bcHelper_;
 
   Pressure( const std::string& pressureName,
             const std::string& pressureRHSName,
             const Expr::Tag& fxtag,
             const Expr::Tag& fytag,
             const Expr::Tag& fztag,
-            const Expr::Tag& dudttag,
-            const Expr::Tag& dvdttag,
-            const Expr::Tag& dwdttag,
             const Expr::Tag& pSourceTag,
             const Expr::Tag& timesteptag,
             const Expr::Tag& volfractag,
@@ -153,7 +147,6 @@ public:
   class Builder : public Expr::ExpressionBuilder
   {
     const Expr::Tag fxt_, fyt_, fzt_, psrct_, timestept_, volfract_;
-    const Expr::Tag dudtt_, dvdtt_, dwdtt_;
     
     const bool hasMovingGeometry_;
     const bool userefpressure_;
@@ -167,9 +160,6 @@ public:
              const Expr::Tag& fxtag,
              const Expr::Tag& fytag,
              const Expr::Tag& fztag,
-             const Expr::Tag& dudttag,
-             const Expr::Tag& dvdttag,
-             const Expr::Tag& dwdttag,
              const Expr::Tag& pSourceTag,
              const Expr::Tag& timesteptag,
              const Expr::Tag& volfractag,
@@ -218,6 +208,7 @@ public:
 
   void set_patch( const Uintah::Patch* const patch ){ patch_ = const_cast<Uintah::Patch*> (patch); }
   
+  void set_bchelper(BCHelper* bcHelper) { bcHelper_ = bcHelper;}
   /**
    *  \brief set the RKStage for the current pressure evaluation. We need this to
              reduce the number of pressure-solve iterations in the 2nd and 3rd

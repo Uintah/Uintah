@@ -37,6 +37,7 @@
 #include <CCA/Components/Wasatch/Expressions/PBE/MultiEnvAveMoment.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/OstwaldRipening.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/AggregationEfficiency.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/Dissolution.h>
 
 #include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
@@ -95,7 +96,9 @@ namespace Wasatch {
         // register a moment closure expression
         const Expr::Tag momentClosureTag( basePhiName + "_" + twoPreviousMomentOrderStr.str(), Expr::STATE_N );
         typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
-        factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-2));
+        
+        if (!factory.have_entry( momentClosureTag ) )
+          factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-2));
       }
       typedef typename Growth<FieldT>::Builder growth;
       builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
@@ -108,7 +111,9 @@ namespace Wasatch {
         // register a moment closure expression
         const Expr::Tag momentClosureTag( basePhiName + "_" + nextMomentOrderStr.str(), Expr::STATE_N );
         typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
-        factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder+1));
+        
+        if (!factory.have_entry( momentClosureTag ) )
+          factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder+1));
       }
       typedef typename Growth<FieldT>::Builder growth;
       builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
@@ -120,7 +125,9 @@ namespace Wasatch {
       if (momentOrder == 0) { //register closure expr
         const Expr::Tag momentClosureTag( basePhiName + "_" + previousMomentOrderStr.str(), Expr::STATE_N );
         typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
-        factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-1));
+        
+        if (!factory.have_entry( momentClosureTag ) )
+          factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder-1));
       }
       typedef typename Growth<FieldT>::Builder growth;
       builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
@@ -226,7 +233,36 @@ namespace Wasatch {
     birthTags.push_back(birthTag);
     factory.register_expression( builder );
   }
-
+  
+  //------------------------------------------------------------------
+  
+  template<typename FieldT>
+  void setup_death_expression( Uintah::ProblemSpecP deathParams,
+                               const std::string& PopulationName,
+                               const std::string& thisPhiName,
+                               const double momentOrder,
+                               const Expr::TagList& weightsTagList,
+                               const Expr::TagList& abscissaeTagList,
+                               Expr::TagList& deathTags,
+                               Expr::ExpressionFactory& factory)
+  {
+    Expr::Tag ostwaldTag, deathTag, superSatTag;
+    Expr::ExpressionBuilder* builder = NULL;
+    ostwaldTag = Expr::Tag( "SBar_" + PopulationName , Expr::STATE_N );
+    deathTag = Expr::Tag(thisPhiName + "_death", Expr::STATE_NONE ); 
+    
+    double rCutoff, deathCoefficient;
+    deathParams->get("CriticalRadius", rCutoff);
+    deathParams->getWithDefault("DeathCoefficient", deathCoefficient, 1.0);
+    Uintah::ProblemSpecP nameTagParam = deathParams->findBlock("Supersaturation")->findBlock("NameTag");
+    superSatTag = parse_nametag( nameTagParam );
+    
+    typedef typename Dissolution<FieldT>::Builder death;
+    builder = scinew death(deathTag, weightsTagList, abscissaeTagList, ostwaldTag, superSatTag, rCutoff, momentOrder, deathCoefficient);
+    deathTags.push_back(deathTag);
+    factory.register_expression( builder );
+  }
+  
   //------------------------------------------------------------------
   
   template<typename FieldT>
@@ -434,6 +470,20 @@ namespace Wasatch {
                                        thisPhiName,
                                        momentOrder,
                                        nEqs,
+                                       rhsTags,
+                                       factory);
+    }
+    
+    //_________________
+    // Death
+    if ( params->findBlock("Dissolution") ) {
+      Uintah::ProblemSpecP deathParams = params->findBlock("Dissolution");
+      setup_death_expression <FieldT>( deathParams,
+                                       PopulationName,
+                                       thisPhiName,
+                                       momentOrder,
+                                       weightsTags,
+                                       abscissaeTags,
                                        rhsTags,
                                        factory);
     }

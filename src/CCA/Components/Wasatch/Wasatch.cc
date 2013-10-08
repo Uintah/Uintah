@@ -121,6 +121,7 @@ namespace Wasatch{
     graphCategories_[ INITIALIZATION     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ TIMESTEP_SELECTION ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ ADVANCE_SOLUTION   ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
+    graphCategories_[ POSTPROCESSING     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
 
     icCoordHelper_  = new CoordHelper( *(graphCategories_[INITIALIZATION]->exprFactory) );
 
@@ -156,7 +157,9 @@ namespace Wasatch{
       delete igc->second;
     }
     
-    delete bcHelper_;
+    for (BCHelperMapT::iterator it=bcHelperMap_.begin(); it != bcHelperMap_.end(); ++it) {
+      delete it->second;
+    }
   }
 
   //--------------------------------------------------------------------
@@ -252,7 +255,7 @@ namespace Wasatch{
     const bool isYPeriodic = (periodicityVector.y() == 1) ? true : false;
     const bool isZPeriodic = (periodicityVector.z() == 1) ? true : false;
 
-#     ifdef WASATCH_IN_ARCHES
+#   ifdef WASATCH_IN_ARCHES
     // we are only allowing for a single extra cell :(
     // make sure that extra cell and periodicity are consistent
     bool isPeriodic = periodicityVector.x() == 1 || periodicityVector.y() == 1 || periodicityVector.z() == 1;
@@ -266,7 +269,7 @@ namespace Wasatch{
       << endl;
       throw std::runtime_error( msg.str() );
     }
-#     else
+#   else
     if( foundExtraCells ){
       msg << endl
       << "  Specification of 'extraCells' is forbidden in Wasatch. The number of extraCells is automatically determined." << endl
@@ -274,7 +277,7 @@ namespace Wasatch{
       << endl;
       throw std::runtime_error( msg.str() );
     }
-#     endif
+#   endif
         
     extraCells = Uintah::IntVector( (isXPeriodic) ? 0 : 1,
                                     (isYPeriodic) ? 0 : 1,
@@ -284,7 +287,7 @@ namespace Wasatch{
 
   //--------------------------------------------------------------------
   
-  void process_bc_face_names( Uintah::ProblemSpecP bcProbSpec )
+  void assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
   {
     if (!bcProbSpec) return;
     int i=0;
@@ -312,15 +315,16 @@ namespace Wasatch{
               fndInc = true;
           }
           // rename this face
+          std::cout << "WARNING: I found a duplicate face label " << faceName;
           faceName = faceName + "_" + number_to_string(j);
-          std::cout << "WARNING: I found a duplicate face label " << faceName << " in your Boundary condition specification. I will rename it to " << faceName << std::endl;
+          std::cout << " in your Boundary condition specification. I will rename it to " << faceName << std::endl;
           faceSpec->replaceAttributeValue("name", faceName);
         }
       }
       faceNameSet.insert(faceName);
     }
   }
-  
+
   //--------------------------------------------------------------------
 
   
@@ -346,7 +350,7 @@ namespace Wasatch{
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
     if ( params->findBlock("Grid") ) {
       Uintah::ProblemSpecP bcProbSpec = params->findBlock("Grid")->findBlock("BoundaryConditions");
-      process_bc_face_names( bcProbSpec );
+      assign_unique_boundary_names( bcProbSpec );
     }
     
     sharedState_ = sharedState;
@@ -389,7 +393,7 @@ namespace Wasatch{
     if (bcParams) {
       for( Uintah::ProblemSpecP faceBCParams=bcParams->findBlock("Face");
           faceBCParams != 0;
-          faceBCParams=faceBCParams->findNextBlock("BCType") ){
+          faceBCParams=faceBCParams->findNextBlock("Face") ){
         
         for( Uintah::ProblemSpecP bcTypeParams=faceBCParams->findBlock("BCType");
             bcTypeParams != 0;
@@ -646,7 +650,7 @@ namespace Wasatch{
     }
     
     if( buildTimeIntegrator_ ){
-      timeStepper_ = scinew TimeStepper( sharedState_, *graphCategories_[ ADVANCE_SOLUTION ], timeInt );
+      timeStepper_ = scinew TimeStepper( sharedState_, graphCategories_, timeInt );
     }    
     
     //
@@ -712,7 +716,8 @@ namespace Wasatch{
 
     Expr::ExpressionFactory& exprFactory = *icGraphHelper->exprFactory;
 
-    bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+    //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+    bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
     //_______________________________________
     // set the time
@@ -738,8 +743,9 @@ namespace Wasatch{
         //______________________________________________________
         // set up initial boundary conditions on this transport equation
         try{
+          transEq->verify_boundary_conditions( *bcHelperMap_[level->getID()], graphCategories_);
           proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_initial_boundary_conditions( *icGraphHelper, *bcHelper_);
+          transEq->setup_initial_boundary_conditions( *icGraphHelper, *bcHelperMap_[level->getID()]);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -892,8 +898,8 @@ namespace Wasatch{
 
     if( isRestarting_ ){
       setup_patchinfo_map( level, sched );
-      bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
-      isRestarting_ = false;
+      //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+      bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     }
     
     for( int iStage=1; iStage<=nRKStages_; iStage++ ){
@@ -926,8 +932,9 @@ namespace Wasatch{
         //______________________________________________________
         // set up boundary conditions on this transport equation
         try{
+          if( isRestarting_ ) transEq->verify_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_boundary_conditions(*advSolGraphHelper, *bcHelper_);
+          transEq->setup_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
@@ -944,13 +951,36 @@ namespace Wasatch{
       }
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
-      
+
       //
       // process clipping on fields
       //
-      process_field_clipping( wasatchSpec_, graphCategories_, localPatches );      
+      process_field_clipping( wasatchSpec_, graphCategories_, localPatches );
+      
+      // post processing
+      GraphHelper* const postProcGH = graphCategories_[ POSTPROCESSING ];
+      Expr::ExpressionFactory& postProcFactory = *postProcGH->exprFactory;
+      if( !postProcGH->rootIDs.empty() )
+      {
+        TaskInterface* const task = scinew TaskInterface( postProcGH->rootIDs,
+                                                         "postprocessing",
+                                                          postProcFactory,
+                                                          level, sched,
+                                                          allPatches,
+                                                          materials_,
+                                                          patchInfoMap_,
+                                                          iStage, lockedFields_ );
+        task->schedule(iStage);
+        taskInterfaceList_.push_back( task );
+      }
+      proc0cout << "Wasatch: done creating post-processing task(s)" << std::endl;
+      
+      // pass the bc Helper to pressure expressions on all patches
+      bcHelperMap_[level->getID()]->synchronize_pressure_expression();
     }
 
+    if (isRestarting_) isRestarting_ = false;
+    
     // ensure that any "CARRY_FORWARD" variable has an initialization provided for it.
     if( buildTimeIntegrator_ ) { // make sure that we have a timestepper created - this is needed for wasatch-in-arches
       const Expr::ExpressionFactory* const icFactory = graphCategories_[INITIALIZATION]->exprFactory;

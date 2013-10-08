@@ -64,7 +64,16 @@
     <NameTag name="xvelcc" state="STATE_N" />
     <NameTag name="yvelcc" state="STATE_N" />
   </ForceOnGraph>
-    
+  
+  
+    <BCExpression type="XVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="x-outflowbc" state="STATE_NONE" />
+      <OutflowBC>
+         <NameTag name="u" state="STATE_NONE" />
+       </OutflowBC>
+    </BCExpression>
+  
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="x-mom" state="STATE_N" />
@@ -107,7 +116,7 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
- 	 <Disabledmomdt/>
+ 	
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
       <Y-Velocity>v</Y-Velocity>
@@ -148,14 +157,14 @@
     <initTime>0.0</initTime>
     <delt_min>0.001</delt_min>
     <delt_max>0.001</delt_max>
-    <max_Timesteps> 4 </max_Timesteps>            
+<!--     <max_Timesteps> 4 </max_Timesteps>             -->
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
     <filebase>exponential-vortex-test.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.001"/>
     <compression>gzip</compression>
@@ -171,6 +180,54 @@
   </DataArchiver> 
 
   <Grid>
+  	<BoundaryConditions>
+      <Face side="x-" name="inlet">
+        <BCType id="all" var="Dirichlet" label="x-mom">
+          <value> 1 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="u">
+          <value> 1 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="v">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs">
+          <value> 0.0 </value>
+        </BCType>
+
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+          <value> 0.0 </value>
+        </BCType>
+        
+      </Face>
+      
+      <Face side="x+">
+
+        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+          <value> x-outflowbc </value>
+        </BCType>
+        
+        <BCType id="all" var="Neumann" label="y-mom">
+          <value> 0.0 </value>
+        </BCType>        
+        <BCType id="all" var="Neumann" label="v">
+          <value> 0.0 </value>
+        </BCType>        
+
+        <BCType id="all" var="OutletBC" label="pressure">
+          <value> 0.0 </value>
+        </BCType>                       
+        
+      </Face>
+  	
+  	</BoundaryConditions>
       <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
@@ -178,7 +235,7 @@
         <resolution>[64,64,2]</resolution>
         <patches>[2,2,1]</patches>
       </Box>
-      <periodic>[1,1,1]</periodic>
+      <periodic>[0,1,1]</periodic>
     </Level>
   </Grid>
 

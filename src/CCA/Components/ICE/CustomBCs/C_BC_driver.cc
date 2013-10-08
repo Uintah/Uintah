@@ -37,19 +37,23 @@ void computesRequires_CustomBCs(Task* t,
                                 const string& where,
                                 ICELabel* lb,
                                 const MaterialSubset* ice_matls,
-                                customBC_globalVars* basket)
+                                customBC_globalVars* globalVars,
+                                const bool recursiveTask)
 {   
-  if(basket->usingLodi){             // LODI         
-    addRequires_Lodi( t, where,  lb, ice_matls, basket->Lodi_var_basket);
+  if(globalVars->usingLodi){             // LODI         
+    addRequires_Lodi( t, where,  lb, ice_matls, globalVars->Lodi_var_basket);
   }
-  if(basket->usingMicroSlipBCs){     // MicroSlip          
-    addRequires_MicroSlip( t, where,  lb, ice_matls, basket->Slip_var_basket);
+  if(globalVars->usingMicroSlipBCs){     // MicroSlip          
+    addRequires_MicroSlip( t, where,  lb, ice_matls, globalVars->Slip_var_basket);
   }
-  if(basket->using_MMS_BCs){         // method of manufactured solutions         
+  if(globalVars->using_MMS_BCs){         // method of manufactured solutions         
     addRequires_MMS( t, where,  lb, ice_matls);
   }
-  if(basket->using_Sine_BCs){         // method of manufactured solutions         
+  if(globalVars->using_Sine_BCs){         // method of manufactured solutions         
     addRequires_Sine( t, where,  lb, ice_matls);
+  }
+  if(globalVars->using_inletVel_BCs){               
+    addRequires_inletVel( t, where,  lb, ice_matls, recursiveTask);
   }      
 }
 //______________________________________________________________________
@@ -116,7 +120,11 @@ void preprocess_CustomBCs(const string& where,
   //__________________________________
   //  inletVelocity conditions
   if( globalVars->using_inletVel_BCs ){
-    preprocess_inletVelocity_BCs(  where, localVars->set_inletVel_BCs);        
+    localVars->inletVel_v = scinew inletVel_vars();
+    preprocess_inletVelocity_BCs(  old_dw, lb, indx, patch, where, 
+                                   localVars->set_inletVel_BCs,
+                                   localVars->recursiveTask,
+                                   localVars->inletVel_v );        
   }       
 }
 
@@ -145,6 +153,12 @@ void delete_CustomBCs(customBC_globalVars* global,
     if( local->sine_v ) {
       delete local->sine_v;
     } 
+  }
+  
+  if( global->using_inletVel_BCs ){
+    if(local->inletVel_v ){
+      delete local->inletVel_v;
+    }
   }
   
   delete local;

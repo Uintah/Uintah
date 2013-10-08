@@ -1104,6 +1104,7 @@ namespace Uintah {
     out << task.getTask()->getName();
     const PatchSubset* patches = task.getPatches();
     if (patches) {
+    
       out << ", on patch";
       if (patches->size() > 1) {
         out << "es";

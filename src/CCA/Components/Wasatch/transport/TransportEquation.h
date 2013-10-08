@@ -105,20 +105,22 @@ namespace Wasatch{
      */
     const std::string& solution_variable_name() const{ return solnVarName_; }
 
-    const Expr::Tag solution_variable_tag() const{ return Expr::Tag(solnVarName_, Expr::STATE_N); }
+    Expr::Tag solution_variable_tag() const{ return Expr::Tag(solnVarName_, Expr::STATE_N); }
 
-    const Expr::Tag rhs_tag() const{ return Expr::Tag(solnVarName_ + "_rhs", Expr::STATE_NONE); }
+    Expr::Tag rhs_tag() const { return Expr::Tag(solnVarName_ + "_rhs", Expr::STATE_NONE); }
+    
+    std::string rhs_name() const{ return solnVarName_ + "_rhs"; }
     /**
      *  \brief Obtain the staggered location of the solution variable that is
      *  governed by this transport equation.
      */
-    const Direction staggered_location() const{ return stagLoc_; }
+    Direction staggered_location() const{ return stagLoc_; }
 
     /**
      *  \brief Obtain the name (i.e. string) staggered location of the solution
      *  variable that is governed by this transport equation.
      */
-    const std::string dir_name() const {
+    std::string dir_name() const {
       switch (stagLoc_) {
       case XDIR:
         return "x";
@@ -134,6 +136,9 @@ namespace Wasatch{
 
     Expr::ExpressionID get_rhs_id() const{ return rhsExprID_; }
 
+    virtual void verify_boundary_conditions( BCHelper& bcHelper,
+                                             GraphCategories& graphCat)=0;
+    
     /**
      *  Set up the boundary condition on initial conditions evaluators for this
      *  TransportEquation. Each derived class must implement this

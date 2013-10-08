@@ -85,7 +85,7 @@
 
     <!-- Momentum transport equations -->
     <MomentumEquations>
- 	 <Disabledmomdt/>
+ 	
       <X-Velocity>u</X-Velocity>
       <X-Momentum>x-mom</X-Momentum>
       <Z-Velocity>w</Z-Velocity>
@@ -144,81 +144,32 @@
   <Grid>
       <BoundaryConditions>
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
-      <Face side="x-">
-     
-        <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 0.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="z-mom">
-          <value> 0.0 </value>
-        </BCType>
-                
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>        
-
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_full">
-          <value> 0.0 </value>
-        </BCType>        
-
-      </Face>
-      
-      <Face side="x+">
-
-        <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 0.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="z-mom">
-          <value> 0.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>                       
-
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_full">
-          <value> 0.0 </value>
-        </BCType>        
-                        
-      </Face>
-      
-      <Face side="z-">        
-      
-        <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 0.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="z-mom">
-          <value> 0.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>        
-
-        <BCType id="all" var="Dirichlet" label="z-mom_rhs_full">
-          <value> 0.0 </value>
-        </BCType>        
-
-      </Face>
-      
+      <Face side="x-" type="Wall"/>
+      <Face side="x+" type="Wall"/>
+      <Face side="z-" type="Wall"/>
       <Face side="z+">
       
         <BCType id="all" var="Dirichlet" label="x-mom">
           <value> 1 </value>
         </BCType>
-        
+
+        <BCType id="all" var="Dirichlet" label="u">
+          <value> 1 </value>
+        </BCType>
+
         <BCType id="all" var="Dirichlet" label="z-mom">
           <value> 0.0 </value>
         </BCType>
-        
+
+        <BCType id="all" var="Dirichlet" label="w">
+          <value> 0.0 </value>
+        </BCType>
+
         <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>     
 
-        <BCType id="all" var="Dirichlet" label="z-mom_rhs_full">
+        <BCType id="all" var="Dirichlet" label="z-mom_rhs">
           <value> 0.0 </value>
         </BCType>        
                                    

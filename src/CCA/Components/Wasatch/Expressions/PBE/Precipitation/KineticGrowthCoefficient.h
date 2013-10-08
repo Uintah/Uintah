@@ -39,7 +39,7 @@
  *
  *  \brief calculates the expression containing the coefficient used in a
  *  precipitation reaction with kinetic limited growth at small supersaturations
- *  \f$ g_0 = K_A (S - 1) \f$ or \f$ (S - \bar{S} ) \f$ here \f$ K_A \f$ is a fitted coefficient
+ *  \f$ g_0 = K_A (S - 1)^2 \f$ or \f$ (S - \bar{S} )^2 \f$ here \f$ K_A \f$ is a fitted coefficient
  *  \f$ g(r) = 1 \f$
  *
  */
@@ -48,13 +48,14 @@ class KineticGrowthCoefficient
 : public Expr::Expression<FieldT>
 {
   const Expr::Tag superSatTag_, sBarTag_;
-  const double growthCoefVal_;
+  const double growthCoefVal_, sMax_;
   const FieldT* superSat_; //field from table of supersaturation
   const FieldT* sBar_;     //S bar calculatino for ostwald ripening
   
   KineticGrowthCoefficient( const Expr::Tag& superSatTag,
                             const Expr::Tag& sBarTag,
-                            const double growthCoefVal );
+                            const double growthCoefVal,
+                            const double sMax);
   
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -63,23 +64,25 @@ public:
     Builder( const Expr::Tag& result,
              const Expr::Tag& superSatTag,
              const Expr::Tag& sBarTag,
-             const double growthCoefVal )
+             const double growthCoefVal,
+             const double sMax)
     : ExpressionBuilder(result),
     supersatt_    (superSatTag),
     sbart_        (sBarTag),
-    growthcoefval_(growthCoefVal)
+    growthcoefval_(growthCoefVal),
+    smax_         (sMax)
     {}
     
     ~Builder(){}
     
     Expr::ExpressionBase* build() const
     {
-      return new KineticGrowthCoefficient<FieldT>( supersatt_, sbart_, growthcoefval_ );
+      return new KineticGrowthCoefficient<FieldT>( supersatt_, sbart_, growthcoefval_, smax_ );
     }
     
   private:
     const Expr::Tag supersatt_, sbart_;
-    const double growthcoefval_;
+    const double growthcoefval_, smax_;
   };
   
   ~KineticGrowthCoefficient();
@@ -101,11 +104,13 @@ template< typename FieldT >
 KineticGrowthCoefficient<FieldT>::
 KineticGrowthCoefficient( const Expr::Tag& superSatTag,
                           const Expr::Tag& sBarTag,
-                          const double growthCoefVal )
+                          const double growthCoefVal,
+                          const double sMax)
 : Expr::Expression<FieldT>(),
   superSatTag_  (superSatTag),
   sBarTag_      (sBarTag),
-  growthCoefVal_(growthCoefVal)
+  growthCoefVal_(growthCoefVal),
+  sMax_         (sMax)
 {
   this->set_gpu_runnable( true );
 }
@@ -152,9 +157,11 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   if ( sBarTag_ != Expr::Tag() ) {
-    result <<= growthCoefVal_  * ( *superSat_ - *sBar_ );  
+    result <<= cond( *superSat_ < sMax_ , growthCoefVal_  * ( *superSat_ - *sBar_ ) * ( *superSat_ - *sBar_ )  )
+                   (0.0);  
   } else {
-    result <<= growthCoefVal_ * ( *superSat_ - 1.0);  
+    result <<= cond( *superSat_ < sMax_ , growthCoefVal_ * ( *superSat_ - 1.0) * ( *superSat_ - 1.0) )
+                   (0.0);  
   }
 }
 

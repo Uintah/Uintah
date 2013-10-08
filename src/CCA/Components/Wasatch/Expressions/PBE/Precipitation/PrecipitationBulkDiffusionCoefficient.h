@@ -48,7 +48,7 @@ class PrecipitationBulkDiffusionCoefficient
 : public Expr::Expression<FieldT>
 {
   const Expr::Tag superSatTag_, eqConcTag_, sBarTag_;
-  const double growthCoefVal_;
+  const double growthCoefVal_, sMin_;
   const FieldT* superSat_; //field from table of supersaturation
   const FieldT* eqConc_;   //field form table of equilibrium concentration
   const FieldT* sBar_;     //S Bar term for ostwald ripening
@@ -56,7 +56,8 @@ class PrecipitationBulkDiffusionCoefficient
   PrecipitationBulkDiffusionCoefficient( const Expr::Tag& superSatTag,
                                          const Expr::Tag& eqConcTag,
                                          const Expr::Tag& sBarTag,
-                                         const double growthCoefVal );
+                                         const double growthCoefVal,
+                                         const double sMin);
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -66,24 +67,26 @@ public:
             const Expr::Tag& superSatTag,
             const Expr::Tag& eqConcTag,
             const Expr::Tag& sBarTag,
-            const double growthCoefVal)
+            const double growthCoefVal,
+            const double sMin)
     : ExpressionBuilder(result),
       supersatt_(superSatTag),
       eqconct_(eqConcTag),
       sbart_(sBarTag),
-      growthcoefval_(growthCoefVal)
+      growthcoefval_(growthCoefVal),
+      smin_(sMin)
     {}
 
     ~Builder(){}
 
     Expr::ExpressionBase* build() const
     {
-      return new PrecipitationBulkDiffusionCoefficient<FieldT>( supersatt_, eqconct_, sbart_, growthcoefval_ );
+      return new PrecipitationBulkDiffusionCoefficient<FieldT>( supersatt_, eqconct_, sbart_, growthcoefval_, smin_ );
     }
 
   private:
     const Expr::Tag supersatt_, eqconct_, sbart_;
-    const double growthcoefval_;
+    const double growthcoefval_, smin_;
   };
 
   ~PrecipitationBulkDiffusionCoefficient();
@@ -109,12 +112,14 @@ PrecipitationBulkDiffusionCoefficient<FieldT>::
 PrecipitationBulkDiffusionCoefficient( const Expr::Tag& superSatTag,
                                        const Expr::Tag& eqConcTag,
                                        const Expr::Tag& sBarTag,
-                                       const double growthCoefVal )
+                                       const double growthCoefVal,
+                                       const double sMin)
 : Expr::Expression<FieldT>(),
   superSatTag_(superSatTag),
   eqConcTag_(eqConcTag),
   sBarTag_(sBarTag),
-  growthCoefVal_(growthCoefVal)
+  growthCoefVal_(growthCoefVal),
+  sMin_(sMin)
 {
   this->set_gpu_runnable( true );
 }
@@ -164,10 +169,12 @@ evaluate()
   FieldT& result = this->value();
   
   if ( sBarTag_ != Expr::Tag() ) {
-    result <<= growthCoefVal_ * *eqConc_ * ( *superSat_ - *sBar_);
+    result <<= cond( *superSat_ > sMin_, growthCoefVal_ * *eqConc_ * ( *superSat_ - *sBar_) )
+                   (0.0);
   } else {
-    result <<= growthCoefVal_ * *eqConc_ * ( *superSat_ - 1.0 );  // this is g0  
-  }
+    result <<= cond( *superSat_ > sMin_, growthCoefVal_ * *eqConc_ * ( *superSat_ - 1.0 ) )
+                   (0.0);
+  }         
 }
 
 //--------------------------------------------------------------------

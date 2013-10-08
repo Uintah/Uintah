@@ -129,15 +129,7 @@ public:
     d_timeIntegrator = timeIntegrator; 
   }
 
-  /** @brief Schedule dummy initialization for MPMArches */
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-  
-  /** @brief Do dummy initialization for MPMArches */
-  void dummyInit( const ProcessorGroup* pc, 
-                     const PatchSubset* patches, 
-                     const MaterialSubset* matls, 
-                     DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+  void sched_advClipping( const LevelP& level, SchedulerP& sched, int timeSubStep );
 
   /** @brief Clip values of phi that are too high or too low (after RK time averaging). */
   template<class phiType>

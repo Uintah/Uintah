@@ -77,7 +77,7 @@
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
       <NameTag name="NewBirth" state="STATE_N"/>
-      <HomogeneousNucleationCoefficient Molar_Vol="3.693e-5" Surf_Eng="0.04" Temperature="298" Diff_Coef="1.0e-9">
+      <HomogeneousNucleationCoefficient Molar_Vol="3.693e-5" Surf_Eng="0.04" Temperature="298" Diff_Coef="1.0e-9" S_Ratio="1">
         <Supersaturation >
           <NameTag name="S" state="STATE_N" />  
         </Supersaturation> 

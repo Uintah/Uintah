@@ -377,11 +377,10 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   }
   
   // get the bctype - mainly used by wasatch:
-  std::string wasatchBCType;
   if (values.find("type") != values.end()){
-    std::string wasatchBCType = values["type"];
-    BCR_dbg << "Setting bc type to: " << wasatchBCType << endl;
-    bcGeom->setBCType( wasatchBCType );
+    std::string bndType = values["type"];
+    BCR_dbg << "Setting bc type to: " << bndType << endl;
+    bcGeom->setBndType( bndType );
   }
 
 
