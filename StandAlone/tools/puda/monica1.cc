@@ -99,7 +99,7 @@ Uintah::monica1( DataArchive * da, CommandLineFlags & clf )
    cout << "Max pressure for timestep was:\t" << pressure << endl;
 
    outfile.precision(15);
-   outfile << t << " " << pressure << endl; 
+   outfile << time << " " << pressure << endl; 
 
   }
   cout << "Max pressure overall was:\t" << maxPressure << endl;
