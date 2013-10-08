@@ -5,63 +5,63 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="hypre"/>
   <Wasatch>
       <TimeIntegrator> FE </TimeIntegrator>
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="vel_magnitude" state="STATE_N" />
+      <NameTag name="vel_magnitude" state="STATE_N"/>
       <VelocityMagnitude>
       <XVelocity>
-        <NameTag name="u" state="STATE_NONE" />
+        <NameTag name="u" state="STATE_NONE"/>
       </XVelocity>
       <YVelocity>
-        <NameTag name="v" state="STATE_NONE" />
+        <NameTag name="v" state="STATE_NONE"/>
       </YVelocity>
       <ZVelocity>
-        <NameTag name="w" state="STATE_NONE" />
+        <NameTag name="w" state="STATE_NONE"/>
       </ZVelocity>
       </VelocityMagnitude>
     </PostProcessingExpression>
     
     <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="vel_magnitude" state="STATE_N" />
+      <NameTag name="vel_magnitude" state="STATE_N"/>
     </ForceOnGraph>
 
     <Density>
       <IsConstant>true</IsConstant>
-      <NameTag name="density" state="STATE_NONE" />
+      <NameTag name="density" state="STATE_NONE"/>
     </Density>
 
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_N" />
+       <NameTag name="x-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_N" />
+       <NameTag name="y-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="ZVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="z-mom" state="STATE_N" />
+       <NameTag name="z-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                        
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity" state="STATE_NONE"/>
       <Constant>0.001</Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="density" state="STATE_NONE" />
+      <NameTag name="density" state="STATE_NONE"/>
       <Constant>1.0</Constant>
     </BasicExpression>
 
@@ -75,7 +75,7 @@
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity" state="STATE_NONE"/>
       </Viscosity>
       
       <Pressure>
@@ -114,7 +114,7 @@
     <filebase>lid-driven-cavity-3D-Re1000.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.0001"/>
+    <checkpoint cycle="2" interval="0.0001"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>
@@ -135,39 +135,14 @@
       <Face side="y-" type="Wall"/>        
       
       <Face side="y+">
-      
-        <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 1.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="y-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="z-mom">
-          <value> 1.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="u">
-          <value> 1.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="v">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="w">
-          <value> 1.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>     
-        
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs">
-          <value> 0.0 </value>
-        </BCType>        
-                                   
+        <BCType var="Dirichlet" label="x-mom" value="1.0" id="all"/>
+        <BCType var="Dirichlet" label="z-mom" value="1.0" id="all"/>        
+        <BCType var="Dirichlet" label="u" value="1.0" id="all"/>
+        <BCType var="Dirichlet" label="w" value="1.0" id="all"/>        
+        <BCType var="Dirichlet" label="y-mom" value="0.0" id="all"/>
+        <BCType var="Dirichlet" label="v" value="0.0" id="all"/>        
+        <BCType var="Dirichlet" label="y-mom_rhs_partial" value="0.0" id="all"/>
+        <BCType var="Dirichlet" label="y-mom_rhs" value="0.0" id="all"/>
       </Face>
 
       <Face side="z-" type="Wall">        

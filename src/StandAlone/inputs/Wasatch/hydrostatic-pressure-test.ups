@@ -5,49 +5,49 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="hypre"/>
   <Wasatch>
       <TimeIntegrator> FE </TimeIntegrator>
 
     <BasicExpression type="ZVOL">
        <TaskList>advance_solution</TaskList>
-       <NameTag name="gravity" state="STATE_NONE" />
+       <NameTag name="gravity" state="STATE_NONE"/>
        <Constant>-9.81</Constant>
     </BasicExpression>
 
     <Density>
       <IsConstant>true</IsConstant>
-      <NameTag name="density" state="STATE_NONE" />
+      <NameTag name="density" state="STATE_NONE"/>
     </Density>
 
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_N" />
+       <NameTag name="x-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_N" />
+       <NameTag name="y-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="ZVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="z-mom" state="STATE_N" />
+       <NameTag name="z-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                    
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity" state="STATE_NONE"/>
       <Constant>0.001</Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="density" state="STATE_NONE" />
+      <NameTag name="density" state="STATE_NONE"/>
       <Constant>1.0</Constant>
     </BasicExpression>
 
@@ -62,10 +62,10 @@
       <Z-Momentum>z-mom</Z-Momentum>
       <BodyForce>
             <Direction>Z</Direction>
-            <NameTag name="gravity" state="STATE_NONE" />
+            <NameTag name="gravity" state="STATE_NONE"/>
       </BodyForce>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity" state="STATE_NONE"/>
       </Viscosity>
       
       <Pressure>
@@ -103,7 +103,7 @@
     <filebase>hydrostatic_pressure.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.0001"/>
+    <checkpoint cycle="2" interval="0.0001"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>
@@ -118,19 +118,19 @@
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
       <Face side="x-">
      
-        <BCType id="all" var="Dirichlet" label="x-mom">
+        <BCType var="Dirichlet" label="x-mom" id="all">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom">
+        <BCType var="Dirichlet" label="y-mom" id="all">
           <value> 0.0 </value>
         </BCType>
                 
-        <BCType id="all" var="Dirichlet" label="z-mom">
+        <BCType var="Dirichlet" label="z-mom" id="all">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+        <BCType var="Dirichlet" label="x-mom_rhs_partial" id="all">
           <value> 0.0 </value>
         </BCType>        
 
@@ -138,19 +138,19 @@
       
       <Face side="x+">
 
-        <BCType id="all" var="Dirichlet" label="x-mom">
+        <BCType var="Dirichlet" label="x-mom" id="all">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom">
+        <BCType var="Dirichlet" label="y-mom" id="all">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="z-mom">
+        <BCType var="Dirichlet" label="z-mom" id="all">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+        <BCType var="Dirichlet" label="x-mom_rhs_partial" id="all">
           <value> 0.0 </value>
         </BCType>                       
                         
@@ -158,19 +158,19 @@
       
       <Face side="y-">        
       
-        <BCType id="all" var="Dirichlet" label="x-mom">
+        <BCType var="Dirichlet" label="x-mom" id="all">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom">
+        <BCType var="Dirichlet" label="y-mom" id="all">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="z-mom">
+        <BCType var="Dirichlet" label="z-mom" id="all">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+        <BCType var="Dirichlet" label="y-mom_rhs_partial" id="all">
           <value> 0.0 </value>
         </BCType>        
 
@@ -178,19 +178,19 @@
       
       <Face side="y+">
       
-        <BCType id="all" var="Dirichlet" label="x-mom">
+        <BCType var="Dirichlet" label="x-mom" id="all">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom">
+        <BCType var="Dirichlet" label="y-mom" id="all">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="z-mom">
+        <BCType var="Dirichlet" label="z-mom" id="all">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+        <BCType var="Dirichlet" label="y-mom_rhs_partial" id="all">
           <value> 0.0</value>
         </BCType>     
 
@@ -198,19 +198,19 @@
 
       <Face side="z-">
      
-        <BCType id="all" var="Dirichlet" label="x-mom">
+        <BCType var="Dirichlet" label="x-mom" id="all">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom">
+        <BCType var="Dirichlet" label="y-mom" id="all">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Dirichlet" label="z-mom">
+        <BCType var="Dirichlet" label="z-mom" id="all">
           <value> 0.0 </value>
         </BCType>
                 
-        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
+        <BCType var="Dirichlet" label="z-mom_rhs_partial" id="all">
           <value> 0.0 </value>
         </BCType>        
 
@@ -218,19 +218,19 @@
       
       <Face side="z+">
 
-        <BCType id="all" var="Dirichlet" label="x-mom">
+        <BCType var="Dirichlet" label="x-mom" id="all">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom">
+        <BCType var="Dirichlet" label="y-mom" id="all">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Dirichlet" label="z-mom">
+        <BCType var="Dirichlet" label="z-mom" id="all">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
+        <BCType var="Dirichlet" label="z-mom_rhs_partial" id="all">
           <value> 0.0 </value>
         </BCType>                       
                         

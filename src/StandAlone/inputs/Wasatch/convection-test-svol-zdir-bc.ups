@@ -14,97 +14,97 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_central" state="STATE_N" />
+      <NameTag name="phi_central" state="STATE_N"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="ZSVOL" state="STATE_NONE" />
+         <NameTag name="ZSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_upwind" state="STATE_N" />
+      <NameTag name="phi_upwind" state="STATE_N"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="ZSVOL" state="STATE_NONE" />
+         <NameTag name="ZSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_superbee" state="STATE_N" />
+      <NameTag name="phi_superbee" state="STATE_N"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="ZSVOL" state="STATE_NONE" />
+         <NameTag name="ZSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_charm" state="STATE_N" />
+      <NameTag name="phi_charm" state="STATE_N"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="ZSVOL" state="STATE_NONE" />
+         <NameTag name="ZSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_koren" state="STATE_N" />
+      <NameTag name="phi_koren" state="STATE_N"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="ZSVOL" state="STATE_NONE" />
+         <NameTag name="ZSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_mc" state="STATE_N" />
+      <NameTag name="phi_mc" state="STATE_N"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="ZSVOL" state="STATE_NONE" />
+         <NameTag name="ZSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_ospre" state="STATE_N" />
+      <NameTag name="phi_ospre" state="STATE_N"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="ZSVOL" state="STATE_NONE" />
+         <NameTag name="ZSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_smart" state="STATE_N" />
+      <NameTag name="phi_smart" state="STATE_N"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="ZSVOL" state="STATE_NONE" />
+         <NameTag name="ZSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_vanleer" state="STATE_N" />
+      <NameTag name="phi_vanleer" state="STATE_N"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="ZSVOL" state="STATE_NONE" />
+         <NameTag name="ZSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_hcus" state="STATE_N" />
+      <NameTag name="phi_hcus" state="STATE_N"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="ZSVOL" state="STATE_NONE" />
+         <NameTag name="ZSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_minmod" state="STATE_N" />
+      <NameTag name="phi_minmod" state="STATE_N"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="ZSVOL" state="STATE_NONE" />
+         <NameTag name="ZSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_hquick" state="STATE_N" />
+      <NameTag name="phi_hquick" state="STATE_N"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="ZSVOL" state="STATE_NONE" />
+         <NameTag name="ZSVOL" state="STATE_NONE"/>
        </SineFunction>
     </BasicExpression>
 
@@ -112,9 +112,9 @@
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="ZVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="advective-velocity-z" state="STATE_N" />
+      <NameTag name="advective-velocity-z" state="STATE_N"/>
       <ParabolicFunction a="-4.0" b="4.0" c="0.0">
-         <NameTag name="YZVOL" state="STATE_NONE" />
+         <NameTag name="YZVOL" state="STATE_NONE"/>
        </ParabolicFunction>
     </BasicExpression>
     <!-- Build a non-staggered scalar transport equation -->
@@ -330,7 +330,7 @@
     <filebase>convection_test_svol_zdir_bc.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.0001"/>
+    <checkpoint cycle="2" interval="0.0001"/>
     <compression>gzip</compression>
     <save label="phi_central"/>
     <save label="phi_upwind"/>
@@ -352,78 +352,78 @@
       
       <!-- BOUNDARY CONDITIONS -->
       <Face side="z-">
-        <BCType id="all" var="Dirichlet" label="phi_central">
+        <BCType var="Dirichlet" label="phi_central" id="all">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="phi_upwind">
+        <BCType var="Dirichlet" label="phi_upwind" id="all">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="phi_superbee">
+        <BCType var="Dirichlet" label="phi_superbee" id="all">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="phi_charm">
+        <BCType var="Dirichlet" label="phi_charm" id="all">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="phi_koren">
+        <BCType var="Dirichlet" label="phi_koren" id="all">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="phi_mc">
+        <BCType var="Dirichlet" label="phi_mc" id="all">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="phi_ospre">
+        <BCType var="Dirichlet" label="phi_ospre" id="all">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="phi_smart">
+        <BCType var="Dirichlet" label="phi_smart" id="all">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="phi_vanleer">
+        <BCType var="Dirichlet" label="phi_vanleer" id="all">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="phi_hcus">
+        <BCType var="Dirichlet" label="phi_hcus" id="all">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="phi_minmod">
+        <BCType var="Dirichlet" label="phi_minmod" id="all">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="phi_hquick">
+        <BCType var="Dirichlet" label="phi_hquick" id="all">
           <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType id="all" var="Neumann" label="phi_central">
+        <BCType var="Neumann" label="phi_central" id="all">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" var="Neumann" label="phi_upwind">
+        <BCType var="Neumann" label="phi_upwind" id="all">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" var="Neumann" label="phi_superbee">
+        <BCType var="Neumann" label="phi_superbee" id="all">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" var="Neumann" label="phi_charm">
+        <BCType var="Neumann" label="phi_charm" id="all">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" var="Neumann" label="phi_koren">
+        <BCType var="Neumann" label="phi_koren" id="all">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" var="Neumann" label="phi_mc">
+        <BCType var="Neumann" label="phi_mc" id="all">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" var="Neumann" label="phi_ospre">
+        <BCType var="Neumann" label="phi_ospre" id="all">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" var="Neumann" label="phi_smart">
+        <BCType var="Neumann" label="phi_smart" id="all">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" var="Neumann" label="phi_vanleer">
+        <BCType var="Neumann" label="phi_vanleer" id="all">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" var="Neumann" label="phi_hcus">
+        <BCType var="Neumann" label="phi_hcus" id="all">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" var="Neumann" label="phi_minmod">
+        <BCType var="Neumann" label="phi_minmod" id="all">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" var="Neumann" label="phi_hquick">
+        <BCType var="Neumann" label="phi_hquick" id="all">
           <value> 0.0 </value>
         </BCType>
       </Face>
