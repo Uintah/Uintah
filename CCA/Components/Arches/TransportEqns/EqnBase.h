@@ -192,12 +192,15 @@ public:
   // Clipping:
   struct ClipInfo{ 
 
+    enum TYPE { STANDARD, CONSTRAINED };  ///< Type of variable constraint
+    TYPE my_type;                   ///< The actual type
     bool activated;                 ///< Clipping on/off for this scalar
     bool do_low;                    ///< Do clipping on a min 
     bool do_high;                   ///< Do clipping on a max
     double low;                     ///< Low clipping value
     double high;                    ///< High clipping value
     double tol;                     ///< Tolerance value for the min and max
+    string constraining_var;        ///< Used for contraining the variable 
 
   }; 
 

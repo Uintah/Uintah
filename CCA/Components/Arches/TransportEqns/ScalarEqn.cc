@@ -142,6 +142,7 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   clip.activated = false;
   clip.do_low  = false; 
   clip.do_high = false; 
+  clip.my_type = ClipInfo::STANDARD;
 
   ProblemSpecP db_clipping = db->findBlock("Clipping");
 
@@ -153,7 +154,11 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
       if ( type == "variable_constrained" ){
 
-        //BEN TO ADD INTERFACE
+        clip.my_type = ClipInfo::CONSTRAINED;
+
+        db_clipping->findBlock("constraint")->getAttribute("label", clip.constraining_var );
+
+        //BEN TO ADD ADDITIONAL INTERFACE ....
       
       }
     
@@ -802,4 +807,71 @@ ScalarEqn::clipPhi( const Patch* p,
 void
 ScalarEqn::sched_advClipping( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
+
+  if ( clip.my_type != ClipInfo::STANDARD ){
+
+    string taskname = "ScalarEqn::advClipping";
+
+    Task* tsk = scinew Task(taskname, this, &ScalarEqn::advClipping, timeSubStep);
+    printSchedule(level,dbg, taskname);
+
+    if ( clip.my_type == ClipInfo::CONSTRAINED ){
+      const VarLabel* constraint_label = VarLabel::find( clip.constraining_var );
+      if ( constraint_label == 0 ) { 
+        throw InvalidValue("Error: For Clipping on equation: "+d_eqnName+" -- Cannot find the constraining variable: "+clip.constraining_var, __FILE__, __LINE__);
+      }
+      tsk->requires(Task::NewDW, constraint_label, Ghost::None, 0);
+    }
+ 
+    tsk->modifies(d_transportVarLabel);
+
+    sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+
+  }
+}
+
+void 
+ScalarEqn::advClipping( const ProcessorGroup* pc, 
+                    const PatchSubset* patches, 
+                    const MaterialSubset* matls, 
+                    DataWarehouse* old_dw, 
+                    DataWarehouse* new_dw,
+                    int timeSubStep )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    Ghost::GhostType  gn  = Ghost::None;
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> scalar; 
+    new_dw->getModifiable( scalar, d_transportVarLabel, matlIndex, patch ); 
+
+    // --- clipping as constrained by another variable -- // 
+    if ( clip.my_type == ClipInfo::CONSTRAINED ){
+
+      const VarLabel* constraint_label = VarLabel::find( clip.constraining_var );
+      constCCVariable<double> cs;  //(for "constraining scalar")
+      new_dw->get( cs, constraint_label, matlIndex, patch, Ghost::None, 0 );
+
+      for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
+
+        IntVector c = *iter; 
+        //BEN TO CLIP HERE
+        //example: 
+        if ( cs[c] > .5 ){
+          scalar[c] = 1.0;
+        }
+      }
+    
+    }
+
+    //----BOUNDARY CONDITIONS
+    //    must update BCs for next substep
+    computeBCs( patch, d_eqnName, scalar );
+
+  }
 }
