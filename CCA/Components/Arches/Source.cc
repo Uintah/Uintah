@@ -26,20 +26,22 @@
 #include <CCA/Components/Arches/Discretization.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
-using namespace Uintah;
 
-#include <CCA/Components/Arches/fortran/mascal_scalar_fort.h>
 #ifdef divergenceconstraint
-#include <CCA/Components/Arches/fortran/pressrcpred_var_fort.h>
+#  include <CCA/Components/Arches/fortran/pressrcpred_var_fort.h>
 #else
-#include <CCA/Components/Arches/fortran/pressrcpred_fort.h>
+#  include <CCA/Components/Arches/fortran/pressrcpred_fort.h>
 #endif
+
 #include <CCA/Components/Arches/fortran/add_mm_enth_src_fort.h>
 #include <CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
+#include <CCA/Components/Arches/fortran/mascal_scalar_fort.h>
 #include <CCA/Components/Arches/fortran/scalsrc_fort.h>
 #include <CCA/Components/Arches/fortran/uvelsrc_fort.h>
 #include <CCA/Components/Arches/fortran/vvelsrc_fort.h>
 #include <CCA/Components/Arches/fortran/wvelsrc_fort.h>
+
+using namespace Uintah;
 
 //****************************************************************************
 // Constructor for Source

@@ -6,9 +6,6 @@
 #include <cmath>    
 #include <cstring> 
 
-using namespace std;
-
-
 /** @details  This StandAlone class is used to calculate thermaldynamic
   *           properties of water (only for liquid water and steams but 
   *           not for ice). The Temperature range is from 273.16K to 1200K 
