@@ -121,7 +121,11 @@ CTAGS := ctags
 ################################################################################
 # 'uintah' target is defined in StandAlone/sub.mk
 #
-all:: prereqs packmaker $(ALLTARGETS) uintah verify_zlib
+all:: prereqs packmaker $(ALLTARGETS) uintah
+
+ifeq ($(IS_STATIC_BUILD),no)
+  all:: verify_zlib
+endif
 #
 ################################################################################
 
@@ -255,8 +259,9 @@ $(VCSOLUTION): $(ALLVCPROJECTS)
 
 #########################################################################################################
 # Targets for zlib verification
+ifeq ($(IS_STATIC_BUILD),no)
 verify_zlib : sus
-ifneq ($(IS_OSX),yes)
+  ifneq ($(IS_OSX),yes)
 	@num_libs=`ldd lib/*.so StandAlone/sus | grep libz[\.] | cut -f3 -d" " | sort -u | wc | awk '{print $$1}'`; \
          if test "$$num_libs" -ne 1; then                                                                       \
             echo "";                                                                                            \
@@ -269,7 +274,7 @@ ifneq ($(IS_OSX),yes)
             echo "";                                                                                            \
             exit 1;                                                                                             \
          fi
-else
+  else
 	@num_libs=`otool -L lib/*.dylib StandAlone/sus | grep libz[\.] | cut -f1 -d" " | sort -u | wc | awk '{print $$1}'`; \
          if test "$$num_libs" -ne 1; then                                                                       \
             echo "";                                                                                            \
@@ -282,6 +287,7 @@ else
             echo "";                                                                                            \
             exit 1;                                                                                             \
          fi
+  endif
 endif
 
 #########################################################################################################
