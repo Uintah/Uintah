@@ -1431,7 +1431,7 @@ Tag::validateAttribute( xmlAttr * attr )
 
   if( !attribute ) {
     string errorInfo = getErrorInfo( attr->parent );
-    throw ProblemSetupException( "Error, attribute ('" + attrName + "') not found for " + getCompleteName() + "\n" +
+    throw ProblemSetupException( "Error, attribute ('" + attrName + "') not part of spec for tag " + getCompleteName() + "\n" +
                                  errorInfo, __FILE__, __LINE__ );
   }
 
