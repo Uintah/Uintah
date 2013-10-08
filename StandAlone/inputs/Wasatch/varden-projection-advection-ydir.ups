@@ -5,22 +5,22 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="hypre"/>
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
 
     
     <Density>
       <IsConstant>false</IsConstant>
-      <NameTag name="density" state="CARRY_FORWARD" />
+      <NameTag name="density" state="CARRY_FORWARD"/>
     </Density>
     
     <!-- Set the initial condition expression for mixture fraction -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f" state="STATE_NONE" />
+      <NameTag name="f" state="STATE_NONE"/>
       <GaussianFunction amplitude="1.0" deviation="1.0" mean="0.0" baseline="0.0">
-        <NameTag name="YSVOL" state="STATE_NONE" />
+        <NameTag name="YSVOL" state="STATE_NONE"/>
       </GaussianFunction> 
     </BasicExpression>
     
@@ -30,12 +30,12 @@
       <TaskList>initialization</TaskList>
       
       <IndependentVariable>
-        <NameTag name="f" state="STATE_NONE" />
+        <NameTag name="f" state="STATE_NONE"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       
       <ExtractDensity>
-        <NameTag name="density" state="STATE_NONE" />
+        <NameTag name="density" state="STATE_NONE"/>
       </ExtractDensity>
 
     </TabProps>
@@ -46,16 +46,16 @@
       <TaskList>advance_solution</TaskList>
       
       <IndependentVariable>
-        <NameTag name="f" state="STATE_NONE" />
+        <NameTag name="f" state="STATE_NONE"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       
       <ExtractDensity>
-        <NameTag name="density" state="CARRY_FORWARD" />
+        <NameTag name="density" state="CARRY_FORWARD"/>
         <DensityWeightedIVar>
-          <NameTag name="rhof" state="STATE_N" />
+          <NameTag name="rhof" state="STATE_N"/>
           <RelatedIVar>
-            <NameTag name="f" state="STATE_NONE" />
+            <NameTag name="f" state="STATE_NONE"/>
           </RelatedIVar>
         </DensityWeightedIVar>
       </ExtractDensity>
@@ -65,7 +65,7 @@
     <!-- Set the initial condition expression for y-velocity -->
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="v" state="STATE_NONE" />
+       <NameTag name="v" state="STATE_NONE"/>
        <Constant>1.0</Constant>
     </BasicExpression>
     
@@ -88,18 +88,18 @@
     </TransportEquation>   
     
     <ForceOnGraph tasklist="advance_solution">
-        <NameTag name="f" state="STATE_NONE" />
+        <NameTag name="f" state="STATE_NONE"/>
     </ForceOnGraph>
     
     <FieldClipping tasklist="advance_solution">
-      <FieldExpression type ="SVOL" min="0.0" max="1.0">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
         <NameTag name="f" state="STATE_NONE"/>        
       </FieldExpression>                    
     </FieldClipping>
       
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity" state="STATE_NONE"/>
       <Constant>0.0</Constant>
     </BasicExpression>
         
@@ -109,7 +109,7 @@
       <Y-Momentum>y-mom</Y-Momentum>
          
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity" state="STATE_NONE"/>
       </Viscosity>
       
       <Pressure>
@@ -146,7 +146,7 @@
     <filebase>PPtest.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.001"/>
+    <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
     <save label="density"/>
     <save label="y-mom"/>
@@ -167,31 +167,31 @@
 
       <Face side="y-">
 
-        <BCType id="all" var="Dirichlet" label="pressure">
+        <BCType var="Dirichlet" label="pressure" id="all">
           <value> 0.0 </value>
         </BCType>                       
 
-        <BCType id="all" var="Neumann" label="y-mom">
+        <BCType var="Neumann" label="y-mom" id="all">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Neumann" label="v">
+        <BCType var="Neumann" label="v" id="all">
           <value> 0.0 </value>
         </BCType>          
                 
-        <BCType id="all" var="Neumann" label="rhof">
+        <BCType var="Neumann" label="rhof" id="all">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Neumann" label="f">
+        <BCType var="Neumann" label="f" id="all">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Neumann" label="density">
+        <BCType var="Neumann" label="density" id="all">
           <value> 0.0 </value>
         </BCType>
                 
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+        <BCType var="Dirichlet" label="y-mom_rhs_partial" id="all">
           <value> 0.0 </value>
         </BCType>      
 
@@ -199,31 +199,31 @@
 
       <Face side="y+">
 
-        <BCType id="all" var="Dirichlet" label="pressure">
+        <BCType var="Dirichlet" label="pressure" id="all">
           <value> 0.0 </value>
         </BCType>                       
 
-        <BCType id="all" var="Neumann" label="y-mom">
+        <BCType var="Neumann" label="y-mom" id="all">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Neumann" label="v">
+        <BCType var="Neumann" label="v" id="all">
           <value> 0.0 </value>
         </BCType>          
         
-        <BCType id="all" var="Neumann" label="rhof">
+        <BCType var="Neumann" label="rhof" id="all">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Neumann" label="f">
+        <BCType var="Neumann" label="f" id="all">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Neumann" label="density">
+        <BCType var="Neumann" label="density" id="all">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+        <BCType var="Dirichlet" label="y-mom_rhs_partial" id="all">
           <value> 0.0 </value>
         </BCType>      
 

@@ -95,15 +95,15 @@
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
       <Face side="x-">
 
-        <BCType id="all" var="Dirichlet" label="x-mom">
+        <BCType  var="Dirichlet" label="x-mom">
           <value> 1.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom">
+        <BCType  var="Dirichlet" label="y-mom">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
+        <BCType  var="Dirichlet" label="x-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>                                               
 
@@ -111,27 +111,27 @@
       
       <Face side="x+">
 
-        <BCType id="all" var="Neumann" label="x-mom">
+        <BCType  var="Neumann" label="x-mom">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Neumann" label="y-mom">
+        <BCType  var="Neumann" label="y-mom">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType id="all" var="Neumann" label="pressure">
+        <BCType  var="Neumann" label="pressure">
           <value> 0.0 </value>
         </BCType>                       
         
-        <BCType id="all" var="Neumann" label="x-mom_rhs_partial">
+        <BCType  var="Neumann" label="x-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>      
 
-        <BCType id="all" var="Neumann" label="x-mom_convFlux_x">
+        <BCType  var="Neumann" label="x-mom_convFlux_x">
           <value> 0.0 </value>
         </BCType>      
         
-        <BCType id="all" var="Neumann" label="tau_xx">
+        <BCType  var="Neumann" label="tau_xx">
           <value> 0.0 </value>
         </BCType>                                                                 
         
@@ -139,15 +139,15 @@
       
       <Face side="y-">
       
-        <BCType id="all" var="Dirichlet" label="x-mom">
+        <BCType  var="Dirichlet" label="x-mom">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom">
+        <BCType  var="Dirichlet" label="y-mom">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+        <BCType  var="Dirichlet" label="y-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>        
                         
@@ -155,15 +155,15 @@
       
       <Face side="y+">
       
-        <BCType id="all" var="Dirichlet" label="x-mom">
+        <BCType  var="Dirichlet" label="x-mom">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom">
+        <BCType  var="Dirichlet" label="y-mom">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
+        <BCType  var="Dirichlet" label="y-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>     
                         

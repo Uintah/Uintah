@@ -5,81 +5,81 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="hypre"/>
   <Wasatch>
       <TimeIntegrator> FE </TimeIntegrator>
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="vorticity_y" state="STATE_N" />
+      <NameTag name="vorticity_y" state="STATE_N"/>
       <Vorticity>
       <Component>Y</Component>
       <Vel1>
-        <NameTag name="u" state="STATE_NONE" />
+        <NameTag name="u" state="STATE_NONE"/>
       </Vel1>
       <Vel2>
-        <NameTag name="w" state="STATE_NONE" />
+        <NameTag name="w" state="STATE_NONE"/>
       </Vel2>
       </Vorticity>
     </PostProcessingExpression>
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="vel_magnitude" state="STATE_N" />
+      <NameTag name="vel_magnitude" state="STATE_N"/>
       <VelocityMagnitude>
       <XVelocity>
-        <NameTag name="u" state="STATE_NONE" />
+        <NameTag name="u" state="STATE_NONE"/>
       </XVelocity>
       <ZVelocity>
-        <NameTag name="w" state="STATE_NONE" />
+        <NameTag name="w" state="STATE_NONE"/>
       </ZVelocity>
       </VelocityMagnitude>
     </PostProcessingExpression>
     
     <ForceOnGraph tasklist="advance_solution">
-     <NameTag name="vorticity_y" state="STATE_N" />
-     <NameTag name="vel_magnitude" state="STATE_N" />
+     <NameTag name="vorticity_y" state="STATE_N"/>
+     <NameTag name="vel_magnitude" state="STATE_N"/>
     </ForceOnGraph>
 
     <Density>
       <IsConstant>true</IsConstant>
-      <NameTag name="density" state="STATE_NONE" />
+      <NameTag name="density" state="STATE_NONE"/>
     </Density>
 
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_N" />
+       <NameTag name="x-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="ZVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="z-mom" state="STATE_N" />
+       <NameTag name="z-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                    
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="viscosity" state="STATE_N" />
+      <NameTag name="viscosity" state="STATE_N"/>
       <Constant>0.001</Constant>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity" state="STATE_NONE"/>
       <Constant>0.001</Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="density" state="STATE_N" />
+      <NameTag name="density" state="STATE_N"/>
       <Constant>1.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="density" state="STATE_NONE" />
+      <NameTag name="density" state="STATE_NONE"/>
       <Constant>1.0</Constant>
     </BasicExpression>
 
@@ -91,7 +91,7 @@
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity" state="STATE_NONE"/>
       </Viscosity>
       
       <Pressure>
@@ -129,7 +129,7 @@
     <filebase>lid-driven-cavity-xz-Re1000.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.0001"/>
+    <checkpoint cycle="2" interval="0.0001"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="z-mom"/>
@@ -142,40 +142,20 @@
   </DataArchiver> 
 
   <Grid>
-      <BoundaryConditions>
+  	<BoundaryConditions>
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
       <Face side="x-" type="Wall"/>
       <Face side="x+" type="Wall"/>
       <Face side="z-" type="Wall"/>
-      <Face side="z+">
       
-        <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 1 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="u">
-          <value> 1 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="z-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="w">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>     
-
-        <BCType id="all" var="Dirichlet" label="z-mom_rhs">
-          <value> 0.0 </value>
-        </BCType>        
-                                   
+      <Face side="z+">
+        <BCType var="Dirichlet" label="x-mom" value="1.0" id="all"/>
+        <BCType var="Dirichlet" label="u" value="1.0" id="all"/>
+        <BCType var="Dirichlet" label="z-mom" value="0.0" id="all"/>
+        <BCType var="Dirichlet" label="z-mom_rhs_partial" value="0.0" id="all"/>
+        <BCType var="Dirichlet" label="z-mom_rhs" value="0.0" id="all"/>
       </Face>
-
-      </BoundaryConditions>
+    </BoundaryConditions>
       <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
