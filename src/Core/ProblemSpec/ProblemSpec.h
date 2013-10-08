@@ -213,6 +213,16 @@ WARNING
      // then 'result' is not modified.
      bool getAttribute(const std::string& attribute, std::vector<std::string>& result) const;
 
+     //////////
+     // passes back the vector value associated with value of this node's
+     // attribute into result
+     bool getAttribute(const std::string& name, std::vector<double>& value) const;
+
+     //////////
+     // passes back the vector value associated with value of this node's
+     // attribute into result
+     bool getAttribute(const std::string& name, Vector& value) const;
+
       //////////
       // passes back the double value associated with value of this node's
       // attributes into result
