@@ -32,6 +32,7 @@ SRCDIR := CCA/Components/Arches/Radiation
 
 SRCS += \
         $(SRCDIR)/RadiationSolver.cc  \
+				$(SRCDIR)/RadPropertyCalculator.cc \
         $(SRCDIR)/DORadiationModel.cc
 
 ifeq ($(HAVE_PETSC),yes)
@@ -56,6 +57,7 @@ $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdomsrc_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdomflux_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdombmcalc_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdomvolq_fort.h
+$(SRCDIR)/RadPropertyCalculator.$(OBJEXT): $(SRCDIR)/fortran/hottel_fort.h
 
 
 

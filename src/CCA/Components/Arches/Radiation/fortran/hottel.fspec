@@ -1,0 +1,1 @@
+void hottel( IntVector idxlo, IntVector idxhi, CCVariable<double> abskg );
