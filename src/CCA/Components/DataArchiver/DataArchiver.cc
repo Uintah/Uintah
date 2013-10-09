@@ -1996,229 +1996,230 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	      << " Number of variables = " << number_of_variables 
 	      << endl;
     }
+  }
+  d_outputLock.unlock(); 
 
     
 #if HAVE_PIDX
-    if (pidx_io == true) {
-           
-      start_time = MPI_Wtime();
-      string idxFilename(dir.getName());
-      idxFilename = idxFilename + ".idx";
-      double ***pidx_buffer;
-      
-      //std::cerr<<"Creating PIDXOutputContext..." << idxFilename << endl;
-      PIDXOutputContext  pc(idxFilename, timeStep,globalExtents,d_myworld->getComm());
-      
-            
-      MPI_Comm_rank(d_myworld->getComm(), &rank);
-      
-      vc = 0;
-      v_offset = (int *) malloc(5 * sizeof(int));
-      v_count = (int *) malloc(5 * sizeof(int));
-      
-      
-      
-      int var_counter = 0;
-      for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
-
-	//const VarLabel* var = saveIter->label_;
-	//string type = var->typeDescription()->getName().c_str();
-	//cout << "type = " << type << endl;
-	
-	map<int, MaterialSetP>::iterator iter = saveIter->matlSet_.end();
-	const MaterialSubset* var_matls = 0;
-
-	if (level) {
-	  iter = saveIter->matlSet_.find(level->getIndex());
-	  if (iter == saveIter->matlSet_.end())
-	    iter = saveIter->matlSet_.find(level->getIndex() - level->getGrid()->numLevels());
-	  if (iter == saveIter->matlSet_.end())
-	    iter = saveIter->matlSet_.find(ALL_LEVELS);
-	  if (iter != saveIter->matlSet_.end()) {
-	    var_matls = iter->second.get_rep()->getUnion();
-	  }
-	}
-	else { // checkpoint reductions
-	  map<int, MaterialSetP>::iterator liter;
-	  for (liter = saveIter->matlSet_.begin(); liter != saveIter->matlSet_.end(); liter++) {
-	    var_matls = saveIter->getMaterialSet(liter->first)->getUnion();
-	    break;
-	  }
-	}
-	if (var_matls == 0)
-	  continue;
-	
-	number_of_materials[var_counter++]=var_matls->size();
-      }
-      
-      
-      for(int i = 0 ; i < number_of_variables ; i++){
-	if (rank == 0)
-	  //cout << "["<< number_of_variables << "] number of Materials for variable "<< i << " = " << number_of_materials[i] << endl;
-	total_number_materials = number_of_materials[i];
-      }
-      
-      pc.variable = (PIDX_variable**) malloc(sizeof (PIDX_variable*) * number_of_variables);
-      memset(pc.variable, 0, sizeof (PIDX_variable*) * number_of_variables);
-      for(int i = 0 ; i < number_of_variables ; i++){
-	pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable) * number_of_materials[i]);
-	memset(pc.variable[i], 0, sizeof (PIDX_variable) * number_of_materials[i]);
-      }
-      pidx_buffer = (double***)malloc(sizeof(double**) * number_of_variables);
-      memset(pidx_buffer, 0, sizeof(double**) * number_of_variables);
-      for(int i = 0 ; i < number_of_variables ; i++){
-	pidx_buffer[i] = (double**)malloc(sizeof(double*) * number_of_materials[i]);
-	memset(pidx_buffer[i], 0, sizeof(double*) * number_of_materials[i]);
-      }
-      
-      
-      
-      
-      for(saveIter = saveLabels.begin(), vc=0; saveIter!= saveLabels.end(); saveIter++, vc++) {
-
-	const VarLabel* var = saveIter->label_;
-	//IntVector vhi, vlow, vrange;
-	//vlow = var->getCellLowIndex();
-	//vhi = var->getCellHighIndex();
-	// check to see if we need to save on this level
-	// check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
-	// find the materials to output on that level
-	map<int, MaterialSetP>::iterator iter = saveIter->matlSet_.end();
-	const MaterialSubset* var_matls = 0;
-
-	if (level) {
-	  iter = saveIter->matlSet_.find(level->getIndex());
-	  if (iter == saveIter->matlSet_.end())
-	    iter = saveIter->matlSet_.find(level->getIndex() - level->getGrid()->numLevels());
-	  if (iter == saveIter->matlSet_.end())
-	    iter = saveIter->matlSet_.find(ALL_LEVELS);
-	  if (iter != saveIter->matlSet_.end()) {
-	    var_matls = iter->second.get_rep()->getUnion();
-	  }
-	}
-	else { // checkpoint reductions
-	  map<int, MaterialSetP>::iterator liter;
-	  for (liter = saveIter->matlSet_.begin(); liter != saveIter->matlSet_.end(); liter++) {
-	    var_matls = saveIter->getMaterialSet(liter->first)->getUnion();
-	    break;
-	  }
-	}
-	if (var_matls == 0)
-	  continue;
-
-	//if (var->getBoundaryLayer() != IntVector(0,0,0))
-	//      pdElem->appendElement("boundaryLayer", var->getBoundaryLayer());
-
-	/*
-	dbg << ", variable: " << var->getName() << ", materials: ";
-	for(int m=0;m<var_matls->size();m++){
-	  if(m != 0)
-	    dbg << ", ";
-	  dbg << var_matls->get(m);
-	}
-	*/
-
-	// loop through patches and materials
-	
-	for(int m=0;m<var_matls->size();m++){
-	  int matlIndex = var_matls->get(m);
+  if (pidx_io == true) {
 	  
-	  for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++){
-	    
-	    const Patch* patch;
-	    int patchID;
-	    IntVector hiE, lowE;
-	    if (type == CHECKPOINT_REDUCTION) {
-	      // to consolidate into this function, force patch = 0
-	      patch = 0;
-	      patchID = -1;
+    start_time = MPI_Wtime();
+    string idxFilename(dir.getName());
+    idxFilename = idxFilename + ".idx";
+    double ***pidx_buffer;
+    
+    //std::cerr<<"Creating PIDXOutputContext..." << idxFilename << endl;
+    PIDXOutputContext  pc(idxFilename, timeStep,globalExtents,d_myworld->getComm());
+    
+	  
+    MPI_Comm_rank(d_myworld->getComm(), &rank);
+    
+    vc = 0;
+    v_offset = (int *) malloc(5 * sizeof(int));
+    v_count = (int *) malloc(5 * sizeof(int));
+    
+    
+    
+    int var_counter = 0;
+    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
 
-	    } else {
-	      patch = patches->get(p);
-	      patchID = patch->getID();
-
-	      IntVector hi, low, range;
-	      
-	      low = patch->getCellLowIndex();
-	      hi = patch->getCellHighIndex();
-	      hiE = patch->getExtraCellHighIndex();
-	      lowE = patch->getExtraCellLowIndex();
-  #if 0
-	      std::cout << "ELSE: Patch info: \nPatch number " << p << "\n";
-	      std::cout << "Patch extent " << low.x() << ", " << low.y() << ", " << low.z() << " " << hi.x() << ", " << hi.y() << ", " << hi.z() << "\n";
-	      std::cout << " X" << rank << " [" << x1 << ", " << p << " ]\n";
-	      std::cout << " X" << ", " << " ]\n";
-  #endif
-	      
-	      v_offset[0] = lowE.x() + 1;
-	      v_offset[1] = lowE.y() + 1;
-	      v_offset[2] = lowE.z() + 1;
-	      v_offset[3] = 0;
-	      v_offset[4] = 0;
-	      v_count[0] = hiE.x() - lowE.x() + 0;
-	      v_count[1] = hiE.y() - lowE.y() + 0;
-	      v_count[2] = hiE.z() - lowE.z() + 0;
-	      v_count[3] = 1;
-	      v_count[4] = 1;
-	      pidx_buffer[vc][m] = (double*)malloc(sizeof(double) * (v_count[0] * v_count[1] * v_count[2]));
-	      memset(pidx_buffer[vc][m], 0, sizeof(double*) * (v_count[0] * v_count[1] * v_count[2]));
-	    }
-	    /*
-	    if(rank == 0)
-	    cout <<"["<< vc << "] Timestep = " << timeStep 
-	      << " Global Volume = " << globalExtents[0] << "," << globalExtents[1]
-	      << "," << globalExtents[2] << "," 
-	      << " Local Volume [O] = " << v_offset[0] << "," << v_offset[1]
-	      << "," << v_offset[2] << "," << v_offset[3] << ", " << v_offset[4]
-	      << " Local Volume [C]= " << v_count[0] << "," << v_count[1]
-	      << "," << v_count[2] << "," << v_count[3] << "," << v_count[4] << endl;
-	    */
-	    new_dw->emit(pc, vc, pidx_buffer[vc][m], (char*) var->getName().c_str(),v_offset,v_count,var, matlIndex, patch);
-	    //if(vc == 1)
-	    //for(int le = 0 ; le < v_count[0] * v_count[1] * v_count[2] ; le++)
-	    //  std::cout << "["<< vc << "] Value at " << le << " = " << pidx_buffer[vc][m][le] << endl;
-	    pc.variable[vc][m] = PIDX_variable_global_define(pc.idx_ptr, (char*) var->getName().c_str(), /*sample_per_variable_buffer[vc]*/ 1, MPI_DOUBLE);
-	    PIDX_variable_local_add(pc.idx_ptr, pc.variable[vc][m], (int*) v_offset, (int*) v_count);
-	    PIDX_variable_local_layout(pc.idx_ptr, pc.variable[vc][m], (double*)pidx_buffer[vc][m], MPI_DOUBLE);
-	    
-	  } //  Patches
-	}   //  Materials
-      }     //  Variables
-      PIDX_write(pc.idx_ptr);
-      PIDX_close(pc.idx_ptr);
+      //const VarLabel* var = saveIter->label_;
+      //string type = var->typeDescription()->getName().c_str();
+      //cout << "type = " << type << endl;
       
-      for(int i = 0 ; i < number_of_variables ; i++){
-	for(int j = 0 ; j < number_of_materials[i] ; j++){
-	  free(pidx_buffer[i][j]);
-	  pidx_buffer[i][j] = 0;
+      map<int, MaterialSetP>::iterator iter = saveIter->matlSet_.end();
+      const MaterialSubset* var_matls = 0;
+
+      if (level) {
+	iter = saveIter->matlSet_.find(level->getIndex());
+	if (iter == saveIter->matlSet_.end())
+	  iter = saveIter->matlSet_.find(level->getIndex() - level->getGrid()->numLevels());
+	if (iter == saveIter->matlSet_.end())
+	  iter = saveIter->matlSet_.find(ALL_LEVELS);
+	if (iter != saveIter->matlSet_.end()) {
+	  var_matls = iter->second.get_rep()->getUnion();
 	}
-	free(pidx_buffer[i]);
-	pidx_buffer[i] = 0;
       }
-      free(pidx_buffer);
-      pidx_buffer = 0;
-      free(v_offset);
-      v_offset = 0;
-      free(v_count);
-      v_count = 0;
+      else { // checkpoint reductions
+	map<int, MaterialSetP>::iterator liter;
+	for (liter = saveIter->matlSet_.begin(); liter != saveIter->matlSet_.end(); liter++) {
+	  var_matls = saveIter->getMaterialSet(liter->first)->getUnion();
+	  break;
+	}
+      }
+      if (var_matls == 0)
+	continue;
       
-      end_time = MPI_Wtime();
-      io_time = end_time - start_time;
-      
-      MPI_Allreduce(&io_time,&max_time, 1,MPI_DOUBLE,MPI_MAX, 
-		    d_myworld->getComm() );
-      if (io_time == max_time)
-	cout << "Timestep = " << timeStep 
-	      << " Global Volume = " << globalExtents[0] << "," << globalExtents[1]
-	      << "," << globalExtents[2] << "," 
-	      << " Throughput = " 
-	      << (globalExtents[0]*globalExtents[1]*globalExtents[2]*number_of_variables*sizeof(double))/(1024.*1024.*max_time) << " MiB/sec " << " Max Time = " << max_time  
-	      << " Number of variables = " << number_of_variables 
-	      << endl;
+      number_of_materials[var_counter++]=var_matls->size();
     }
+    
+    
+    for(int i = 0 ; i < number_of_variables ; i++){
+      if (rank == 0)
+	//cout << "["<< number_of_variables << "] number of Materials for variable "<< i << " = " << number_of_materials[i] << endl;
+      total_number_materials = number_of_materials[i];
+    }
+    
+    pc.variable = (PIDX_variable**) malloc(sizeof (PIDX_variable*) * number_of_variables);
+    memset(pc.variable, 0, sizeof (PIDX_variable*) * number_of_variables);
+    for(int i = 0 ; i < number_of_variables ; i++){
+      pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable) * number_of_materials[i]);
+      memset(pc.variable[i], 0, sizeof (PIDX_variable) * number_of_materials[i]);
+    }
+    pidx_buffer = (double***)malloc(sizeof(double**) * number_of_variables);
+    memset(pidx_buffer, 0, sizeof(double**) * number_of_variables);
+    for(int i = 0 ; i < number_of_variables ; i++){
+      pidx_buffer[i] = (double**)malloc(sizeof(double*) * number_of_materials[i]);
+      memset(pidx_buffer[i], 0, sizeof(double*) * number_of_materials[i]);
+    }
+    
+    
+    
+    
+    for(saveIter = saveLabels.begin(), vc=0; saveIter!= saveLabels.end(); saveIter++, vc++) {
+
+      const VarLabel* var = saveIter->label_;
+      //IntVector vhi, vlow, vrange;
+      //vlow = var->getCellLowIndex();
+      //vhi = var->getCellHighIndex();
+      // check to see if we need to save on this level
+      // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
+      // find the materials to output on that level
+      map<int, MaterialSetP>::iterator iter = saveIter->matlSet_.end();
+      const MaterialSubset* var_matls = 0;
+
+      if (level) {
+	iter = saveIter->matlSet_.find(level->getIndex());
+	if (iter == saveIter->matlSet_.end())
+	  iter = saveIter->matlSet_.find(level->getIndex() - level->getGrid()->numLevels());
+	if (iter == saveIter->matlSet_.end())
+	  iter = saveIter->matlSet_.find(ALL_LEVELS);
+	if (iter != saveIter->matlSet_.end()) {
+	  var_matls = iter->second.get_rep()->getUnion();
+	}
+      }
+      else { // checkpoint reductions
+	map<int, MaterialSetP>::iterator liter;
+	for (liter = saveIter->matlSet_.begin(); liter != saveIter->matlSet_.end(); liter++) {
+	  var_matls = saveIter->getMaterialSet(liter->first)->getUnion();
+	  break;
+	}
+      }
+      if (var_matls == 0)
+	continue;
+
+      //if (var->getBoundaryLayer() != IntVector(0,0,0))
+      //      pdElem->appendElement("boundaryLayer", var->getBoundaryLayer());
+
+      /*
+      dbg << ", variable: " << var->getName() << ", materials: ";
+      for(int m=0;m<var_matls->size();m++){
+	if(m != 0)
+	  dbg << ", ";
+	dbg << var_matls->get(m);
+      }
+      */
+
+      // loop through patches and materials
+      
+      for(int m=0;m<var_matls->size();m++){
+	int matlIndex = var_matls->get(m);
+	
+	for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++){
+	  
+	  const Patch* patch;
+	  int patchID;
+	  IntVector hiE, lowE;
+	  if (type == CHECKPOINT_REDUCTION) {
+	    // to consolidate into this function, force patch = 0
+	    patch = 0;
+	    patchID = -1;
+
+	  } else {
+	    patch = patches->get(p);
+	    patchID = patch->getID();
+
+	    IntVector hi, low, range;
+	    
+	    low = patch->getCellLowIndex();
+	    hi = patch->getCellHighIndex();
+	    hiE = patch->getExtraCellHighIndex();
+	    lowE = patch->getExtraCellLowIndex();
+#if 0
+	    std::cout << "ELSE: Patch info: \nPatch number " << p << "\n";
+	    std::cout << "Patch extent " << low.x() << ", " << low.y() << ", " << low.z() << " " << hi.x() << ", " << hi.y() << ", " << hi.z() << "\n";
+	    std::cout << " X" << rank << " [" << x1 << ", " << p << " ]\n";
+	    std::cout << " X" << ", " << " ]\n";
 #endif
+	    
+	    v_offset[0] = lowE.x() + 1;
+	    v_offset[1] = lowE.y() + 1;
+	    v_offset[2] = lowE.z() + 1;
+	    v_offset[3] = 0;
+	    v_offset[4] = 0;
+	    v_count[0] = hiE.x() - lowE.x() + 0;
+	    v_count[1] = hiE.y() - lowE.y() + 0;
+	    v_count[2] = hiE.z() - lowE.z() + 0;
+	    v_count[3] = 1;
+	    v_count[4] = 1;
+	    pidx_buffer[vc][m] = (double*)malloc(sizeof(double) * (v_count[0] * v_count[1] * v_count[2]));
+	    memset(pidx_buffer[vc][m], 0, sizeof(double*) * (v_count[0] * v_count[1] * v_count[2]));
+	  }
+	  /*
+	  if(rank == 0)
+	  cout <<"["<< vc << "] Timestep = " << timeStep 
+	    << " Global Volume = " << globalExtents[0] << "," << globalExtents[1]
+	    << "," << globalExtents[2] << "," 
+	    << " Local Volume [O] = " << v_offset[0] << "," << v_offset[1]
+	    << "," << v_offset[2] << "," << v_offset[3] << ", " << v_offset[4]
+	    << " Local Volume [C]= " << v_count[0] << "," << v_count[1]
+	    << "," << v_count[2] << "," << v_count[3] << "," << v_count[4] << endl;
+	  */
+	  new_dw->emit(pc, vc, pidx_buffer[vc][m], (char*) var->getName().c_str(),v_offset,v_count,var, matlIndex, patch);
+	  //if(vc == 1)
+	  //for(int le = 0 ; le < v_count[0] * v_count[1] * v_count[2] ; le++)
+	  //  std::cout << "["<< vc << "] Value at " << le << " = " << pidx_buffer[vc][m][le] << endl;
+	  pc.variable[vc][m] = PIDX_variable_global_define(pc.idx_ptr, (char*) var->getName().c_str(), /*sample_per_variable_buffer[vc]*/ 1, MPI_DOUBLE);
+	  PIDX_variable_local_add(pc.idx_ptr, pc.variable[vc][m], (int*) v_offset, (int*) v_count);
+	  PIDX_variable_local_layout(pc.idx_ptr, pc.variable[vc][m], (double*)pidx_buffer[vc][m], MPI_DOUBLE);
+	  
+	} //  Patches
+      }   //  Materials
+    }     //  Variables
+    PIDX_write(pc.idx_ptr);
+    PIDX_close(pc.idx_ptr);
+    
+    for(int i = 0 ; i < number_of_variables ; i++){
+      for(int j = 0 ; j < number_of_materials[i] ; j++){
+	free(pidx_buffer[i][j]);
+	pidx_buffer[i][j] = 0;
+      }
+      free(pidx_buffer[i]);
+      pidx_buffer[i] = 0;
+    }
+    free(pidx_buffer);
+    pidx_buffer = 0;
+    free(v_offset);
+    v_offset = 0;
+    free(v_count);
+    v_count = 0;
+    
+    end_time = MPI_Wtime();
+    io_time = end_time - start_time;
+    
+    MPI_Allreduce(&io_time,&max_time, 1,MPI_DOUBLE,MPI_MAX, 
+		  d_myworld->getComm() );
+    if (io_time == max_time)
+      cout << "Timestep = " << timeStep 
+	    << " Global Volume = " << globalExtents[0] << "," << globalExtents[1]
+	    << "," << globalExtents[2] << "," 
+	    << " Throughput = " 
+	    << (globalExtents[0]*globalExtents[1]*globalExtents[2]*number_of_variables*sizeof(double))/(1024.*1024.*max_time) << " MiB/sec " << " Max Time = " << max_time  
+	    << " Number of variables = " << number_of_variables 
+	    << endl;
   }
-  d_outputLock.unlock(); 
+#endif
+  
   d_sharedState->outputTime += Time::currentSeconds()-start;
 
 } // end output()
