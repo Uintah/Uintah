@@ -41,7 +41,7 @@ namespace Uintah {
   //_____________________________________________________________
   // This struct contains misc. global variables that are needed
   // by most setBC routines.
-  struct mms_variable_basket{
+  struct mms_globalVars{
     double A;
     double viscosity;
     double gamma;
@@ -49,8 +49,8 @@ namespace Uintah {
     string whichMMS;
   };    
   //____________________________________________________________
-  // This struct contains all of the additional variables needed by setBC.
-  struct mms_vars{
+  // This struct contains all of the additional local variables needed by setBC.
+  struct mms_localVars{
     constCCVariable<double> press_CC;
     constCCVariable<double> rho_CC;
     string where;
@@ -60,7 +60,7 @@ namespace Uintah {
   
   
   bool read_MMS_BC_inputs(const ProblemSpecP&,
-                          mms_variable_basket* mms_vb);
+                          mms_globalVars* mms_vb);
                   
   void addRequires_MMS(Task* t, 
                        const string& where,
@@ -74,7 +74,7 @@ namespace Uintah {
                            const Patch* patch,
                            const string& where,
                            bool& setMMS_BCs,
-                           mms_vars* mss_v);
+                           mms_localVars* lv);
                            
   int  set_MMS_Velocity_BC(const Patch* patch,
                            const Patch::FaceType face,
@@ -83,16 +83,16 @@ namespace Uintah {
                            Iterator& bound_ptr,
                            const string& bc_kind,
                            SimulationStateP& sharedState,
-                           mms_variable_basket* mms_var_basket,
-                           mms_vars* mms_v);
+                           mms_globalVars* gv,
+                           mms_localVars* lv);
                            
   int  set_MMS_Temperature_BC(const Patch* patch,
                               const Patch::FaceType face,
                               CCVariable<double>& temp_CC,
                               Iterator& bound_ptr,
                               const string& bc_kind,
-                              mms_variable_basket* mms_var_basket,
-                              mms_vars* mms_v);
+                              mms_globalVars* gv,
+                              mms_localVars* lv);
                               
   int  set_MMS_press_BC(const Patch* patch,
                         const Patch::FaceType face,
@@ -100,8 +100,8 @@ namespace Uintah {
                         Iterator& bound_ptr,
                         const string& bc_kind,
                         SimulationStateP& sharedState,
-                        mms_variable_basket* mms_var_basket,
-                        mms_vars* mms_v);  
+                        mms_globalVars* gv,
+                        mms_localVars* lv);  
                         
                         
 /*______________________________________________________________________ 
@@ -115,8 +115,8 @@ int set_MMS_BCs_FC( const Patch* patch,
                       Iterator& bound_ptr,
                       const Vector& dx,
                       SimulationStateP& sharedState,
-                      mms_variable_basket* mms_var_basket,
-                      mms_vars* mms_v)
+                      mms_globalVars* gv,
+                      mms_localVars* lv)
 {
   //cout<< "Doing set_MMS_BCs_FC: \t\t" << whichVel
   //          << " face " << face << endl;
@@ -139,10 +139,10 @@ int set_MMS_BCs_FC( const Patch* patch,
   
   //__________________________________
   // 
-  double nu = mms_var_basket->viscosity;
-  double A =  mms_var_basket->A;
+  double nu = gv->viscosity;
+  double A =  gv->A;
   double t  = sharedState->getElapsedTime();
-  t += mms_v->delT;
+  t += lv->delT;
     
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
     IntVector c = *bound_ptr - oneCell;

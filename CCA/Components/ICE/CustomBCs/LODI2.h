@@ -40,12 +40,12 @@
 namespace Uintah {
 
   //_____________________________________________________________
-  // This struct contains misc. variables that are carried around
+  // This struct contains misc. global variables that are carried around
   // press_infinity:  user input
   // sigma:           user input constant
   // iceMatl_indx:    user input, ice material index.
   
-  struct Lodi_variable_basket{
+  struct Lodi_globalVars{
     double press_infinity;  
     double sigma;
     int iceMatl_indx;
@@ -55,10 +55,10 @@ namespace Uintah {
     double  Li_scale;
   };    
   //____________________________________________________________
-  // This struct contains the additional variables required to 
+  // This struct contains the additional (local) variables required to 
   // apply the Lodi Temperature, density and velocity BC.
-  struct Lodi_vars{                
-    Lodi_vars() : Li(6) {}  
+  struct Lodi_localVars{                
+    Lodi_localVars() : Li(6) {}  
     constCCVariable<double> speedSound;
     constCCVariable<double> gamma;   
     constCCVariable<double> rho_CC;
@@ -79,7 +79,7 @@ namespace Uintah {
                       const string& where,
                       ICELabel* lb,
                       const MaterialSubset* ice_matls,
-                      Lodi_variable_basket* lv);
+                      Lodi_globalVars* lv);
                       
   void preprocess_Lodi_BCs(DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
@@ -89,13 +89,13 @@ namespace Uintah {
                           const int indx,
                           SimulationStateP& sharedState,
                           bool& setLodiBcs,
-                          Lodi_vars* lv,
-                          Lodi_variable_basket* lvb);
+                          Lodi_localVars* lv,
+                          Lodi_globalVars* lvb);
                            
 
   bool read_LODI_BC_inputs(const ProblemSpecP&,
                            SimulationStateP& sharedState,
-                           Lodi_variable_basket*);
+                           Lodi_globalVars*);
                                                
   VarLabel* getMaxMach_face_VarLabel( Patch::FaceType face);                                           
                                                              
@@ -117,7 +117,7 @@ namespace Uintah {
                  DataWarehouse* new_dw,
                  SimulationStateP& sharedState,
                  const int indx,
-                 const Lodi_variable_basket* user_inputs, 
+                 const Lodi_globalVars* user_inputs, 
                  const bool recursiveTasks);
 
   void getBoundaryEdges(const Patch* patch,
@@ -129,20 +129,20 @@ namespace Uintah {
   int FaceDensity_LODI(const Patch* patch,
                        const Patch::FaceType face,
                        CCVariable<double>& rho_CC,
-                       Lodi_vars* lv,
+                       Lodi_localVars* lv,
                        const Vector& dx);
                   
   int FaceVel_LODI(const Patch* patch,
                    Patch::FaceType face,                 
                    CCVariable<Vector>& vel_CC,           
-                   Lodi_vars* lv,
+                   Lodi_localVars* lv,
                    const Vector& dx,
                    SimulationStateP& sharedState);
                     
   int FaceTemp_LODI(const Patch* patch,
                     const Patch::FaceType face,
                     CCVariable<double>& temp_CC,
-                    Lodi_vars* lv, 
+                    Lodi_localVars* lv, 
                     const Vector& dx,
                     SimulationStateP& sharedState);
                
@@ -151,7 +151,7 @@ namespace Uintah {
                       SCIRun::StaticArray<CCVariable<double> >& rho_micro,
                       SimulationStateP& sharedState, 
                       Patch::FaceType face,
-                      Lodi_vars* lv);
+                      Lodi_localVars* lv);
 
                           
 } // End namespace Uintah
