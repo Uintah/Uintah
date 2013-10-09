@@ -93,7 +93,7 @@ public:
   void emit(OutputContext&, const IntVector& l, const IntVector& h,
             const std::string& compressionModeHint);
 #if HAVE_PIDX
-  void emit(PIDXOutputContext&,int vc, int mc, char* var_name, int* offset, int* count,
+  void emit(PIDXOutputContext&,int vc, int mc, double* buffer, char* var_name, int* offset, int* count,
             const IntVector& l, const IntVector& h,
             const std::string& compressionModeHint);
 #endif

@@ -2166,7 +2166,7 @@ OnDemandDataWarehouse::emit(OutputContext& oc,
 
 #if HAVE_PIDX
 void 
-OnDemandDataWarehouse::emit(PIDXOutputContext& pc,int vc, char* var_name,
+OnDemandDataWarehouse::emit(PIDXOutputContext& pc,int vc, double* buffer, char* var_name,
                             int* v_offset, int* v_count,
                             const VarLabel* label,
                             int matlIndex, 
@@ -2234,7 +2234,7 @@ OnDemandDataWarehouse::emit(PIDXOutputContext& pc,int vc, char* var_name,
   if (var == NULL) {
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__));
   }
-  var->emit(pc,vc,matlIndex, var_name,v_offset,v_count,l, h, label->getCompressionMode());
+  var->emit(pc,vc,matlIndex, buffer, var_name,v_offset,v_count,l, h, label->getCompressionMode());
 }
 
 #endif
