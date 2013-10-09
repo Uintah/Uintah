@@ -217,35 +217,36 @@
   <Grid>
 
       <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
 
       <Face side="x-">
 
-        <BCType var="Dirichlet" label="pressure" id="all">
+        <BCType var="Dirichlet" label="pressure">
           <value> 0.0 </value>
         </BCType>                       
 
-        <BCType var="Dirichlet" label="x-mom" id="all">
+        <BCType var="Dirichlet" label="x-mom">
           <value> mms-left-mom </value>
         </BCType>
 
-        <BCType var="Dirichlet" label="u" id="all">
+        <BCType var="Dirichlet" label="u">
           <value> mms-left-vel </value>
         </BCType>          
    
-        <BCType var="Dirichlet" label="rhof" id="all">
+        <BCType var="Dirichlet" label="rhof">
           <value> mms-bc-rhof </value>
         </BCType>
 
-        <BCType var="Dirichlet" label="f" id="all">
+        <BCType var="Dirichlet" label="f">
           <value> mms-bc-f </value>
         </BCType>
 
-        <BCType var="Dirichlet" label="density" id="all">
+        <BCType var="Dirichlet" label="density">
           <value> mms-bc-rho </value>
         </BCType>
                         
-        <BCType var="Dirichlet" label="x-mom_rhs_partial" id="all">
+        <BCType var="Dirichlet" label="x-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>      
 
@@ -253,31 +254,31 @@
 
       <Face side="x+">
 
-        <BCType var="Dirichlet" label="pressure" id="all">
+        <BCType var="Dirichlet" label="pressure">
           <value> 0.0 </value>
         </BCType>                       
 
-        <BCType var="Dirichlet" label="x-mom" id="all">
+        <BCType var="Dirichlet" label="x-mom">
           <value> mms-right-mom </value>
         </BCType>
 
-        <BCType var="Dirichlet" label="u" id="all">
+        <BCType var="Dirichlet" label="u">
           <value>mms-right-vel</value>          
         </BCType>          
         
-        <BCType var="Dirichlet" label="rhof" id="all">
+        <BCType var="Dirichlet" label="rhof">
           <value>mms-bc-rhof</value>          
         </BCType>
 
-        <BCType var="Dirichlet" label="f" id="all">
+        <BCType var="Dirichlet" label="f">
           <value>mms-bc-f</value>          
         </BCType>
 
-        <BCType var="Dirichlet" label="density" id="all">
+        <BCType var="Dirichlet" label="density">
           <value>mms-bc-rho</value>          
         </BCType>
 
-        <BCType var="Dirichlet" label="x-mom_rhs_partial" id="all">
+        <BCType var="Dirichlet" label="x-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>      
 

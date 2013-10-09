@@ -143,20 +143,21 @@
   <Grid>
 
   	<BoundaryConditions>      
+      <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS -->
       <Face side="z-">
-        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a" value="10.0" id="all"/>
-        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-b" value="5.0" id="all"/>
-        <BCType var="Dirichlet" label="phi-dirichlet-neumann" value="10.0" id="all"/>
-        <BCType var="Neumann" label="phi-neumann-dirichlet" value="-1.0" id="all"/>
-        <BCType var="Neumann" label="phi-neumann-neumann" value="1.0" id="all"/>
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a" value="10.0"/>
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-b" value="5.0"/>
+        <BCType var="Dirichlet" label="phi-dirichlet-neumann" value="10.0"/>
+        <BCType var="Neumann" label="phi-neumann-dirichlet" value="-1.0"/>
+        <BCType var="Neumann" label="phi-neumann-neumann" value="1.0"/>
       </Face>
       <Face side="z+">
-        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a" value="5.0" id="all"/>
-        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-b" value="10.0" id="all"/>
-        <BCType var="Neumann" label="phi-dirichlet-neumann" value="1.0" id="all"/>
-        <BCType var="Dirichlet" label="phi-neumann-dirichlet" value="10.0" id="all"/>
-        <BCType var="Neumann" label="phi-neumann-neumann" value="1.0" id="all"/>
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a" value="5.0"/>
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-b" value="10.0"/>
+        <BCType var="Neumann" label="phi-dirichlet-neumann" value="1.0"/>
+        <BCType var="Dirichlet" label="phi-neumann-dirichlet" value="10.0"/>
+        <BCType var="Neumann" label="phi-neumann-neumann" value="1.0"/>
       </Face>            
     </BoundaryConditions>
 

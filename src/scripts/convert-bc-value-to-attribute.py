@@ -101,6 +101,7 @@ def convert_bc_value(fname):
     # check if this file has boundary conditions
     if (root.find('Grid')).find('BoundaryConditions') is None:
         hasBCs=False
+        return
 
     hasValue = True
     for face in root.iter('Face'):
@@ -108,6 +109,7 @@ def convert_bc_value(fname):
             
             if bc.find('value') is None:
                 hasValue=False
+                continue
 
             #count the number of children
             count = 0

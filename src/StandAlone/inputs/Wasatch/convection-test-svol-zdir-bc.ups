@@ -350,80 +350,81 @@
 
       <BoundaryConditions>
       
+      <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS -->
       <Face side="z-">
-        <BCType var="Dirichlet" label="phi_central" id="all">
+        <BCType var="Dirichlet" label="phi_central">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="Dirichlet" label="phi_upwind" id="all">
+        <BCType var="Dirichlet" label="phi_upwind">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="Dirichlet" label="phi_superbee" id="all">
+        <BCType var="Dirichlet" label="phi_superbee">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="Dirichlet" label="phi_charm" id="all">
+        <BCType var="Dirichlet" label="phi_charm">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="Dirichlet" label="phi_koren" id="all">
+        <BCType var="Dirichlet" label="phi_koren">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="Dirichlet" label="phi_mc" id="all">
+        <BCType var="Dirichlet" label="phi_mc">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="Dirichlet" label="phi_ospre" id="all">
+        <BCType var="Dirichlet" label="phi_ospre">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="Dirichlet" label="phi_smart" id="all">
+        <BCType var="Dirichlet" label="phi_smart">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="Dirichlet" label="phi_vanleer" id="all">
+        <BCType var="Dirichlet" label="phi_vanleer">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="Dirichlet" label="phi_hcus" id="all">
+        <BCType var="Dirichlet" label="phi_hcus">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="Dirichlet" label="phi_minmod" id="all">
+        <BCType var="Dirichlet" label="phi_minmod">
           <value> 1.0 </value>
         </BCType>
-        <BCType var="Dirichlet" label="phi_hquick" id="all">
+        <BCType var="Dirichlet" label="phi_hquick">
           <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType var="Neumann" label="phi_central" id="all">
+        <BCType var="Neumann" label="phi_central">
           <value> 0.0 </value>
         </BCType>
-        <BCType var="Neumann" label="phi_upwind" id="all">
+        <BCType var="Neumann" label="phi_upwind">
           <value> 0.0 </value>
         </BCType>
-        <BCType var="Neumann" label="phi_superbee" id="all">
+        <BCType var="Neumann" label="phi_superbee">
           <value> 0.0 </value>
         </BCType>
-        <BCType var="Neumann" label="phi_charm" id="all">
+        <BCType var="Neumann" label="phi_charm">
           <value> 0.0 </value>
         </BCType>
-        <BCType var="Neumann" label="phi_koren" id="all">
+        <BCType var="Neumann" label="phi_koren">
           <value> 0.0 </value>
         </BCType>
-        <BCType var="Neumann" label="phi_mc" id="all">
+        <BCType var="Neumann" label="phi_mc">
           <value> 0.0 </value>
         </BCType>
-        <BCType var="Neumann" label="phi_ospre" id="all">
+        <BCType var="Neumann" label="phi_ospre">
           <value> 0.0 </value>
         </BCType>
-        <BCType var="Neumann" label="phi_smart" id="all">
+        <BCType var="Neumann" label="phi_smart">
           <value> 0.0 </value>
         </BCType>
-        <BCType var="Neumann" label="phi_vanleer" id="all">
+        <BCType var="Neumann" label="phi_vanleer">
           <value> 0.0 </value>
         </BCType>
-        <BCType var="Neumann" label="phi_hcus" id="all">
+        <BCType var="Neumann" label="phi_hcus">
           <value> 0.0 </value>
         </BCType>
-        <BCType var="Neumann" label="phi_minmod" id="all">
+        <BCType var="Neumann" label="phi_minmod">
           <value> 0.0 </value>
         </BCType>
-        <BCType var="Neumann" label="phi_hquick" id="all">
+        <BCType var="Neumann" label="phi_hquick">
           <value> 0.0 </value>
         </BCType>
       </Face>

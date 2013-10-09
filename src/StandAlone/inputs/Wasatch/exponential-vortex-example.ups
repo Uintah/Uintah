@@ -181,28 +181,29 @@
 
   <Grid>
   	<BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
       <Face side="x-" name="inlet">
-        <BCType var="Dirichlet" label="x-mom" id="all">
+        <BCType var="Dirichlet" label="x-mom">
           <value> 1 </value>
         </BCType>
 
-        <BCType var="Dirichlet" label="y-mom" id="all">
+        <BCType var="Dirichlet" label="y-mom">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType var="Dirichlet" label="u" id="all">
+        <BCType var="Dirichlet" label="u">
           <value> 1 </value>
         </BCType>
 
-        <BCType var="Dirichlet" label="v" id="all">
+        <BCType var="Dirichlet" label="v">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType var="Dirichlet" label="x-mom_rhs" id="all">
+        <BCType var="Dirichlet" label="x-mom_rhs">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType var="Dirichlet" label="x-mom_rhs_partial" id="all">
+        <BCType var="Dirichlet" label="x-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>
         
@@ -210,18 +211,18 @@
       
       <Face side="x+">
 
-        <BCType var="Dirichlet" label="x-mom_rhs_partial" id="all">
+        <BCType var="Dirichlet" label="x-mom_rhs_partial">
           <value> x-outflowbc </value>
         </BCType>
         
-        <BCType var="Neumann" label="y-mom" id="all">
+        <BCType var="Neumann" label="y-mom">
           <value> 0.0 </value>
         </BCType>        
-        <BCType var="Neumann" label="v" id="all">
+        <BCType var="Neumann" label="v">
           <value> 0.0 </value>
         </BCType>        
 
-        <BCType var="OutletBC" label="pressure" id="all">
+        <BCType var="OutletBC" label="pressure">
           <value> 0.0 </value>
         </BCType>                       
         
