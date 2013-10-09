@@ -38897,8 +38897,17 @@ _sci_includes=''
 
 
 
-        #
+        # Test a number of petsc library options if the above didn't work
         if test "$HAVE_PETSC" != "yes"; then
+           test_libs[0]="petsc"                       # standard single petsc lib
+           test_libs[1]="craypetsc_intel_real"        # cray petsc-real - for DOD Open Research Systems
+           test_libs[2]="craypetsc_intel_complex"     # cray petsc-complex - for DOD Open Research Systems
+
+           num_libs=${#test_libs[*]}
+
+           for (( num=0; num<$num_libs; num++ ));
+           do
+               the_libs=${test_libs[$num]}
 
 ##
 ## SCI_TRY_LINK (PETSC):  petsc library and header
@@ -38936,11 +38945,11 @@ _sci_includes=''
 ## arg 2 : petsc library and header
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc
-## arg 5 : petsc
+## arg 5 : $the_libs
 ## arg 6 : $_sci_lib_dir
 ## arg 7 : $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
-## arg 9 : required
+## arg 9 : optional
 ##
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -38957,8 +38966,8 @@ if test 9 != 9; then
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for petsc library and header (required)" >&5
-$as_echo_n "checking for petsc library and header (required)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for petsc library and header (optional)" >&5
+$as_echo_n "checking for petsc library and header (optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -38966,9 +38975,9 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
+if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for petsc library and header must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for petsc library and header must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -39013,10 +39022,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "petsc"; then
+if test -n "$the_libs"; then
 
    found_framework=no
-   for lib in petsc; do
+   for lib in $the_libs; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -39101,7 +39110,7 @@ $as_echo "$as_me: WARNING: The path given $the_path is not a valid directory... 
    done
 fi
 
-if test "required" = "specific"; then
+if test "optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
   ### Determine if there is only one item in $_sci_lib_dir (I don't know of a better way to do this.)
   __sci_pass=false
@@ -39259,7 +39268,7 @@ eval INC_PETSC_H=''
 eval HAVE_PETSC_H="no"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: not found" >&5
 $as_echo "not found" >&6; }
-if test "required" != "optional"; then
+if test "optional" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -39298,7 +39307,7 @@ fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 
-if test "required" = "specific"; then
+if test "optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
   for i in "" petsc.h; do
@@ -39308,7 +39317,7 @@ if test "required" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" petsc; do
+  for i in "" $the_libs; do
     if test -z "$i"; then
        continue
     fi
@@ -39337,8 +39346,14 @@ _sci_includes=''
 ##
 
 
+               # bail if a suitable library is found
+               if test "$HAVE_PETSC" = "yes"; then
+                  break
+               fi
+           done
         fi
 
+        # report error message
         if test "$HAVE_PETSC" != "yes" ; then
           as_fn_error $? "Could not find PETSc..." "$LINENO" 5
         fi
