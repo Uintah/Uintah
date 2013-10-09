@@ -467,7 +467,9 @@
     
     <!--__________________________________-->
     <BoundaryConditions     spec="OPTIONAL NO_DATA">
-
+      
+      <DefaultMaterial spec="OPTIONAL STRING"/>
+      
        <!-- angle in degrees for ellipse -->
       <Face                 spec="MULTIPLE NO_DATA"
                               attribute1="annulus       OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
