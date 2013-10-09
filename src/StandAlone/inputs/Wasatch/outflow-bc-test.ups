@@ -151,80 +151,26 @@
       
       <DefaultMaterial>all</DefaultMaterial>
       <Face circle="x-" origin="0 0.5 0.5" radius="0.0625" name="circle-inlet">
-
-        <BCType var="Dirichlet" label="x-mom">
-          <value> 1.0 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="y-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="z-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="u">
-          <value> 1.0 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="v">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="w">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="x-mom_rhs">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="x-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>
-      
+        <BCType label="x-mom" var="Dirichlet" value="1.0"/>
+        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
+        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
+        <BCType label="u" var="Dirichlet" value="1.0"/>
+        <BCType label="v" var="Dirichlet" value="0.0"/>
+        <BCType label="w" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
       </Face>
-
       <Face side="x-" name="inlet">
-        <BCType var="Dirichlet" label="x-mom">
-          <value> 0.35 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="y-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="z-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="u">
-          <value> 0.35 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="v">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="w">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="x-mom_rhs">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="x-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Neumann" label="pressure">
-          <value> 0.0 </value>
-        </BCType>
-        
+        <BCType label="x-mom" var="Dirichlet" value="0.35"/>
+        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
+        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
+        <BCType label="u" var="Dirichlet" value="0.35"/>
+        <BCType label="v" var="Dirichlet" value="0.0"/>
+        <BCType label="w" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
+        <BCType label="pressure" var="Neumann" value="0.0"/>
       </Face>
-      
       <Face side="x+" name="outlet" type="Outflow"/>
 
       <Face side="y-" name="ym-pressure" type="Open"/>

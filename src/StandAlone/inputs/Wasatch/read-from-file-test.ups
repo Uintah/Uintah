@@ -73,36 +73,24 @@
       <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS FOR NON-STAGGERED SCALAR -->
       <Face side="x-">
-        <BCType var="Neumann" label="phi-scalar">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
       </Face>
       <Face side="x+">
-        <BCType var="Neumann" label="phi-scalar">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
       </Face>
       <Face side="y-">
-        <BCType var="Neumann" label="phi-scalar">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
       </Face>
       <Face side="y+">
-        <BCType var="Neumann" label="phi-scalar">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
       </Face>
       <Face side="z-">
-        <BCType var="Neumann" label="phi-scalar">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
       </Face>
       <Face side="z+">
-        <BCType var="Neumann" label="phi-scalar">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
       </Face>
-    </BoundaryConditions>
+      </BoundaryConditions>
 
     <Level>
       <Box label="1">

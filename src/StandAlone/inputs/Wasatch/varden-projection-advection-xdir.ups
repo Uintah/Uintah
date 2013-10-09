@@ -166,69 +166,23 @@
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
 
       <Face side="x-">
-
-        <BCType var="Dirichlet" label="pressure">
-          <value> 0.0 </value>
-        </BCType>                       
-
-        <BCType var="Neumann" label="x-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Neumann" label="u">
-          <value> 0.0 </value>
-        </BCType>          
-                
-        <BCType var="Neumann" label="rhof">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Neumann" label="f">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Neumann" label="density">
-          <value> 0.0 </value>
-        </BCType>
-                
-        <BCType var="Dirichlet" label="x-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>      
-
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom" var="Neumann" value="0.0"/>
+        <BCType label="u" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
       </Face>
-
       <Face side="x+">
-
-        <BCType var="Dirichlet" label="pressure">
-          <value> 0.0 </value>
-        </BCType>                       
-
-        <BCType var="Neumann" label="x-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Neumann" label="u">
-          <value> 0.0 </value>
-        </BCType>          
-        
-        <BCType var="Neumann" label="rhof">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Neumann" label="f">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Neumann" label="density">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType var="Dirichlet" label="x-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>      
-
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom" var="Neumann" value="0.0"/>
+        <BCType label="u" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
       </Face>
-
       </BoundaryConditions>  
 
       <Level>

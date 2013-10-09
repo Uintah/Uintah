@@ -401,7 +401,10 @@ namespace Wasatch{
           
           std::string functorName;
           
-          bcTypeParams->get( "value", functorName );
+          Uintah::ProblemSpecP valSpec = bcTypeParams->findBlock("value");
+          if   (valSpec) bcTypeParams->get( "value", functorName );
+          else           bcTypeParams->getAttribute("value",functorName);
+          
           Uintah::ProblemSpec::InputType theInputType = bcTypeParams->getInputType(functorName);
           // if the value of this bc is of type string, then it is a functor. add to the list of functors
           if ( theInputType == Uintah::ProblemSpec::STRING_TYPE ) {

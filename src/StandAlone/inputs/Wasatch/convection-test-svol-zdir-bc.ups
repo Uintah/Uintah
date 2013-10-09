@@ -353,82 +353,34 @@
       <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS -->
       <Face side="z-">
-        <BCType var="Dirichlet" label="phi_central">
-          <value> 1.0 </value>
-        </BCType>
-        <BCType var="Dirichlet" label="phi_upwind">
-          <value> 1.0 </value>
-        </BCType>
-        <BCType var="Dirichlet" label="phi_superbee">
-          <value> 1.0 </value>
-        </BCType>
-        <BCType var="Dirichlet" label="phi_charm">
-          <value> 1.0 </value>
-        </BCType>
-        <BCType var="Dirichlet" label="phi_koren">
-          <value> 1.0 </value>
-        </BCType>
-        <BCType var="Dirichlet" label="phi_mc">
-          <value> 1.0 </value>
-        </BCType>
-        <BCType var="Dirichlet" label="phi_ospre">
-          <value> 1.0 </value>
-        </BCType>
-        <BCType var="Dirichlet" label="phi_smart">
-          <value> 1.0 </value>
-        </BCType>
-        <BCType var="Dirichlet" label="phi_vanleer">
-          <value> 1.0 </value>
-        </BCType>
-        <BCType var="Dirichlet" label="phi_hcus">
-          <value> 1.0 </value>
-        </BCType>
-        <BCType var="Dirichlet" label="phi_minmod">
-          <value> 1.0 </value>
-        </BCType>
-        <BCType var="Dirichlet" label="phi_hquick">
-          <value> 1.0 </value>
-        </BCType>
+        <BCType label="phi_central" var="Dirichlet" value="1.0"/>
+        <BCType label="phi_upwind" var="Dirichlet" value="1.0"/>
+        <BCType label="phi_superbee" var="Dirichlet" value="1.0"/>
+        <BCType label="phi_charm" var="Dirichlet" value="1.0"/>
+        <BCType label="phi_koren" var="Dirichlet" value="1.0"/>
+        <BCType label="phi_mc" var="Dirichlet" value="1.0"/>
+        <BCType label="phi_ospre" var="Dirichlet" value="1.0"/>
+        <BCType label="phi_smart" var="Dirichlet" value="1.0"/>
+        <BCType label="phi_vanleer" var="Dirichlet" value="1.0"/>
+        <BCType label="phi_hcus" var="Dirichlet" value="1.0"/>
+        <BCType label="phi_minmod" var="Dirichlet" value="1.0"/>
+        <BCType label="phi_hquick" var="Dirichlet" value="1.0"/>
       </Face>
       <Face side="z+">
-        <BCType var="Neumann" label="phi_central">
-          <value> 0.0 </value>
-        </BCType>
-        <BCType var="Neumann" label="phi_upwind">
-          <value> 0.0 </value>
-        </BCType>
-        <BCType var="Neumann" label="phi_superbee">
-          <value> 0.0 </value>
-        </BCType>
-        <BCType var="Neumann" label="phi_charm">
-          <value> 0.0 </value>
-        </BCType>
-        <BCType var="Neumann" label="phi_koren">
-          <value> 0.0 </value>
-        </BCType>
-        <BCType var="Neumann" label="phi_mc">
-          <value> 0.0 </value>
-        </BCType>
-        <BCType var="Neumann" label="phi_ospre">
-          <value> 0.0 </value>
-        </BCType>
-        <BCType var="Neumann" label="phi_smart">
-          <value> 0.0 </value>
-        </BCType>
-        <BCType var="Neumann" label="phi_vanleer">
-          <value> 0.0 </value>
-        </BCType>
-        <BCType var="Neumann" label="phi_hcus">
-          <value> 0.0 </value>
-        </BCType>
-        <BCType var="Neumann" label="phi_minmod">
-          <value> 0.0 </value>
-        </BCType>
-        <BCType var="Neumann" label="phi_hquick">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi_central" var="Neumann" value="0.0"/>
+        <BCType label="phi_upwind" var="Neumann" value="0.0"/>
+        <BCType label="phi_superbee" var="Neumann" value="0.0"/>
+        <BCType label="phi_charm" var="Neumann" value="0.0"/>
+        <BCType label="phi_koren" var="Neumann" value="0.0"/>
+        <BCType label="phi_mc" var="Neumann" value="0.0"/>
+        <BCType label="phi_ospre" var="Neumann" value="0.0"/>
+        <BCType label="phi_smart" var="Neumann" value="0.0"/>
+        <BCType label="phi_vanleer" var="Neumann" value="0.0"/>
+        <BCType label="phi_hcus" var="Neumann" value="0.0"/>
+        <BCType label="phi_minmod" var="Neumann" value="0.0"/>
+        <BCType label="phi_hquick" var="Neumann" value="0.0"/>
       </Face>
-     </BoundaryConditions>
+      </BoundaryConditions>
 
     <Level>
       <Box label="1">

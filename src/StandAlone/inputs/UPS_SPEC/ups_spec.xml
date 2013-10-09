@@ -468,7 +468,7 @@
     <!--__________________________________-->
     <BoundaryConditions     spec="OPTIONAL NO_DATA">
       
-      <DefaultMaterial spec="OPTIONAL STRING"/>
+      <DefaultMaterial spec="OPTIONAL STRING '0,1,2,3,4,5,6,all'"/>
       
        <!-- angle in degrees for ellipse -->
       <Face                 spec="MULTIPLE NO_DATA"

@@ -119,6 +119,7 @@ def convert_bc_value(fname):
             if count == 1 and hasValue:
                 temp = et.SubElement(face, 'temp', bc.attrib)
                 val = bc.find('value').text
+                val = val.strip()
                 face.remove(bc)
                 temp.set('value',val)    
                 temp.tail = '\n'
