@@ -9,6 +9,11 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#ifdef HAVE_RADPROPS
+#  include <radprops/AbsCoeffGas.h>
+#  include <radprops/RadiativeSpecies.h>
+#  include <radprops/Particles.h>
+#endif
 
 #include <CCA/Components/Arches/Radiation/fortran/hottel_fort.h>
 
