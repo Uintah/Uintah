@@ -47,7 +47,7 @@ static DebugStream cout_doing("ICE_BC_CC", false);
             -reads input parameters thar are need by the setBC routines
  ______________________________________________________________________  */
 bool read_Sine_BC_inputs(const ProblemSpecP& prob_spec,
-                        sine_variable_basket* sine_vb)
+                        sine_globalVars* gv)
 {
   //__________________________________
   // search the BoundaryConditions problem spec
@@ -83,17 +83,17 @@ bool read_Sine_BC_inputs(const ProblemSpecP& prob_spec,
       string warn="ERROR:\n Inputs:Boundary Conditions: Cannot find SINE_BC block";
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
-    sine->require("omega", sine_vb->omega);
-    sine->require("A",     sine_vb->A);
-    sine->require("reference_pressure", sine_vb->p_ref);
-    sine->require("reference_velocity",sine_vb->vel_ref);
+    sine->require("omega", gv->omega);
+    sine->require("A",     gv->A);
+    sine->require("reference_pressure", gv->p_ref);
+    sine->require("reference_velocity",gv->vel_ref);
     
     ProblemSpecP mat_ps= 
       prob_spec->findBlockWithOutAttribute("MaterialProperties");
     ProblemSpecP ice_ps= mat_ps->findBlock("ICE")->findBlock("material");
 
-    ice_ps->require("gamma",        sine_vb->gamma);
-    ice_ps->require("specific_heat",sine_vb->cv);
+    ice_ps->require("gamma",        gv->gamma);
+    ice_ps->require("specific_heat",gv->cv);
   }
   return usingSine;
 }
@@ -134,16 +134,16 @@ void  preprocess_Sine_BCs(DataWarehouse* new_dw,
                           const Patch* patch,
                           const string& where,
                           bool& setSine_BCs,
-                          sine_vars* sine_v)
+                          sine_localVars* lv)
 {
   Ghost::GhostType  gn  = Ghost::None;
   setSine_BCs = false; 
-  sine_v->where = where;
+  lv->where = where;
   //__________________________________
   //    Equilibrium pressure
   if(where == "EqPress"){
     setSine_BCs = true; 
-    sine_v->delT = 0.0;  // Don't include delt at this point in the timestep
+    lv->delT = 0.0;  // Don't include delt at this point in the timestep
   }
   //__________________________________
   //    Explicit and semi-implicit update pressure
@@ -161,15 +161,15 @@ void  preprocess_Sine_BCs(DataWarehouse* new_dw,
   //    cc_ Exchange
   if(where == "CC_Exchange"){
     setSine_BCs = true;
-    new_dw->get(sine_v->press_CC, lb->press_CCLabel, 0, patch,gn,0);
-    new_dw->get(sine_v->rho_CC,   lb->rho_CCLabel,   0, patch,gn,0);
+    new_dw->get(lv->press_CC, lb->press_CCLabel, 0, patch,gn,0);
+    new_dw->get(lv->rho_CC,   lb->rho_CCLabel,   0, patch,gn,0);
   }
   //__________________________________
   //    Advection
   if(where == "Advection"){
     setSine_BCs = true;
-    new_dw->get(sine_v->press_CC, lb->press_CCLabel, 0, patch,gn,0);
-    new_dw->get(sine_v->rho_CC,   lb->rho_CCLabel,   0, patch,gn,0);
+    new_dw->get(lv->press_CC, lb->press_CCLabel, 0, patch,gn,0);
+    new_dw->get(lv->rho_CC,   lb->rho_CCLabel,   0, patch,gn,0);
   }
 }
 /*_________________________________________________________________
@@ -183,8 +183,8 @@ int  set_Sine_Velocity_BC(const Patch* patch,
                           Iterator& bound_ptr,
                           const string& bc_kind,
                           SimulationStateP& sharedState,
-                          sine_variable_basket* sine_var_basket,
-                          sine_vars* sine_v)                     
+                          sine_globalVars* gv,
+                          sine_localVars* lv)                     
 
 {
   int nCells = 0;
@@ -192,15 +192,15 @@ int  set_Sine_Velocity_BC(const Patch* patch,
     cout_doing << "    Vel_CC (Sine) \t\t" <<patch->getFaceName(face)<< endl;
     
     // bulletproofing
-    if (!sine_var_basket || !sine_v){
+    if (!gv || !lv){
       throw InternalError("set_Sine_velocity_BC", __FILE__, __LINE__);
     }
     
-    double A       = sine_var_basket->A;
-    double omega   = sine_var_basket->omega; 
-    Vector vel_ref = sine_var_basket->vel_ref;           
+    double A       = gv->A;
+    double omega   = gv->omega; 
+    Vector vel_ref = gv->vel_ref;           
     double t       = sharedState->getElapsedTime(); 
-    t += sine_v->delT;
+    t += lv->delT;
     double change  = A * sin(omega*t);
     
     Vector smallNum(1e-100);
@@ -228,21 +228,21 @@ int set_Sine_Temperature_BC(const Patch* patch,
                             CCVariable<double>& temp_CC,
                             Iterator& bound_ptr,
                             const string& bc_kind,
-                            sine_variable_basket* sine_var_basket,
-                            sine_vars* sine_v)  
+                            sine_globalVars* gv,
+                            sine_localVars* lv)  
 {
   int nCells = 0;
   if (bc_kind == "Sine") {
     cout_doing << "    Temp_CC (Sine) \t\t" <<patch->getFaceName(face)<< endl;
 
     // bulletproofing
-    if (!sine_var_basket || !sine_v){
+    if (!gv || !lv){
       throw InternalError("set_Sine_Temperature_BC", __FILE__, __LINE__);
     }
-    double cv    = sine_var_basket->cv;
-    double gamma = sine_var_basket->gamma;
-    constCCVariable<double> press_CC = sine_v->press_CC;
-    constCCVariable<double> rho_CC   = sine_v->rho_CC;
+    double cv    = gv->cv;
+    double gamma = gv->gamma;
+    constCCVariable<double> press_CC = lv->press_CC;
+    constCCVariable<double> rho_CC   = lv->rho_CC;
                                                                             
     for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  
       IntVector c = *bound_ptr;                                             
@@ -263,22 +263,22 @@ int set_Sine_press_BC(const Patch* patch,
                       Iterator& bound_ptr,
                       const string& bc_kind,
                       SimulationStateP& sharedState,
-                      sine_variable_basket* sine_var_basket,
-                      sine_vars* sine_v)  
+                      sine_globalVars* gv,
+                      sine_localVars* lv)  
 {
   cout_doing << "    press_CC (Sine) \t\t" <<patch->getFaceName(face)<< endl;
 
   // bulletproofing
-  if (!sine_var_basket || !sine_v){
-    throw InternalError("set_Sine_press_BC: sine_vars = null", __FILE__, __LINE__);
+  if (!gv || !lv){
+    throw InternalError("set_Sine_press_BC: lvars = null", __FILE__, __LINE__);
   }
   
   int nCells   = 0;      
-  double A     =  sine_var_basket->A;
-  double omega =  sine_var_basket->omega;   
-  double p_ref =  sine_var_basket->p_ref;                               
+  double A     =  gv->A;
+  double omega =  gv->omega;   
+  double p_ref =  gv->p_ref;                               
   double t     =  sharedState->getElapsedTime();               
-  t += sine_v->delT;  // delT is either 0 or delT 
+  t += lv->delT;  // delT is either 0 or delT 
   double change = A * sin(omega*t);                               
 
   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  

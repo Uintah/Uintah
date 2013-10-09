@@ -606,7 +606,7 @@ void setBC(CCVariable<double>& press_CC,
        && isNotInitialTimestep  && localVars->setLodiBcs){
        
        nCells_LODI[face] += 
-       FacePress_LODI(patch, press_CC, rho_micro, sharedState,face, localVars->lv);
+       FacePress_LODI(patch, press_CC, rho_micro, sharedState,face, localVars->lodi);
     }
   }
 
@@ -653,16 +653,16 @@ void setBC(CCVariable<double>& press_CC,
         else if (bc_kind == "MMS_1" && localVars->set_MMS_BCs) {
           nCells += set_MMS_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
                                       sharedState, 
-                                      globalVars->mms_var_basket,
-                                      localVars->mms_v);
+                                      globalVars->mms,
+                                      localVars->mms);
         }                    
         //__________________________________
         //  Sine
         else if (bc_kind == "Sine" && localVars->set_Sine_BCs) {
           nCells += set_Sine_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
                                        sharedState, 
-                                       globalVars->sine_var_basket,
-                                       localVars->sine_v);
+                                       globalVars->sine,
+                                       localVars->sine);
         }
         
         
@@ -741,12 +741,11 @@ void setBC(CCVariable<double>& var_CC,
     bool is_tempBC_lodi=  patch->haveBC(face,mat_id,"LODI","Temperature");  
     bool is_rhoBC_lodi =  patch->haveBC(face,mat_id,"LODI","Density");
     
-    Lodi_vars* lv = localVars->lv;
     if( desc == "Temperature"  && is_tempBC_lodi  && isNotInitialTimestep && localVars->setLodiBcs ){
-      nCells_LODI[face] += FaceTemp_LODI(patch, face, var_CC, lv, cell_dx, sharedState);
+      nCells_LODI[face] += FaceTemp_LODI(patch, face, var_CC, localVars->lodi, cell_dx, sharedState);
     }   
     else if (desc == "Density"  && is_rhoBC_lodi  && isNotInitialTimestep && localVars->setLodiBcs){
-      nCells_LODI[face] += FaceDensity_LODI(patch, face, var_CC, lv, cell_dx);
+      nCells_LODI[face] += FaceDensity_LODI(patch, face, var_CC, localVars->lodi, cell_dx);
     }
   }
   //__________________________________
@@ -790,19 +789,19 @@ void setBC(CCVariable<double>& var_CC,
         if ( desc == "Temperature" && localVars->setMicroSlipBcs) {
           nCells += set_MicroSlipTemperature_BC( patch,face,var_CC,
                                                  bound_ptr, bc_kind, bc_value,
-                                                 localVars->sv);
+                                                 localVars->slip );
         }
         else if ( desc == "Temperature" && localVars->set_MMS_BCs) {
           nCells += set_MMS_Temperature_BC(patch, face, var_CC, 
                                              bound_ptr, bc_kind, 
-                                             globalVars->mms_var_basket,
-                                             localVars->mms_v);
+                                             globalVars->mms,
+                                             localVars->mms);
         }
         else if ( desc == "Temperature" && localVars->set_Sine_BCs) {
           nCells += set_Sine_Temperature_BC( patch, face, var_CC, 
                                              bound_ptr, bc_kind, 
-                                             globalVars->sine_var_basket,
-                                             localVars->sine_v);
+                                             globalVars->sine,
+                                             localVars->sine);
         }
         //__________________________________
         // Temperature and Gravity and ICE Matls
@@ -897,12 +896,10 @@ void setBC(CCVariable<Vector>& var_CC,
     Patch::FaceType face = *iter;
     bool is_velBC_lodi   = patch->haveBC(face,mat_id,"LODI","Velocity");
     
-    Lodi_vars* lv = localVars->lv;
-    
     if( desc == "Velocity"      && is_velBC_lodi 
         && isNotInitialTimestep && localVars->setLodiBcs) {
         
-      nCells_LODI[face] += FaceVel_LODI( patch, face, var_CC, lv, cell_dx, sharedState);
+      nCells_LODI[face] += FaceVel_LODI( patch, face, var_CC, localVars->lodi, cell_dx, sharedState);
     }
   }
   //__________________________________
@@ -949,25 +946,25 @@ void setBC(CCVariable<Vector>& var_CC,
         else if ( localVars->setMicroSlipBcs ) {
           nCells += set_MicroSlipVelocity_BC( patch,face,var_CC,desc,
                                               bound_ptr, bc_kind, bc_value,
-                                              localVars->sv);
+                                              localVars->slip );
         }
         else if ( localVars->set_MMS_BCs ) {
           nCells += set_MMS_Velocity_BC( patch, face, var_CC, desc,
                                          bound_ptr, bc_kind, sharedState,
-                                         globalVars->mms_var_basket,
-                                         localVars->mms_v);
+                                         globalVars->mms,
+                                         localVars->mms);
         }
         else if ( localVars->set_Sine_BCs ) {
           nCells += set_Sine_Velocity_BC( patch, face, var_CC, desc,
                                           bound_ptr, bc_kind, sharedState,
-                                          globalVars->sine_var_basket,
-                                          localVars->sine_v);
+                                          globalVars->sine,
+                                          localVars->sine );
         }
         else if ( localVars->set_inletVel_BCs ) {
           nCells += set_inletVelocity_BC( patch, face, var_CC, desc,
                                           bound_ptr, bc_kind, bc_value,
-                                          globalVars->inletVel_var_basket,
-                                          localVars->inletVel_v );
+                                          globalVars->inletVel,
+                                          localVars->inletVel );
         }
         //__________________________________
         //  debugging

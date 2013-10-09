@@ -284,23 +284,23 @@ void setBC(T& vel_FC,
           else if(bc_kind == "MMS_1"){
             nCells+= set_MMS_BCs_FC<T>(patch, face, vel_FC, bound_ptr,
                                         cell_dx, sharedState,
-                                        globalVars->mms_var_basket,
-                                        localVars->mms_v);
+                                        globalVars->mms,
+                                        localVars->mms);
           }
           //__________________________________
           // Custom BCs
           else if(bc_kind == "Sine"){
             nCells+= set_Sine_BCs_FC<T>(patch, face, vel_FC, bound_ptr, sharedState,
-                                        globalVars->sine_var_basket,
-                                        localVars->sine_v);
+                                        globalVars->sine,
+                                        localVars->sine);
           }
           //__________________________________
           // Custom BCs
           else if( (bc_kind == "powerLawProfile" || bc_kind == "logWindProfile") ){
             nCells+= set_inletVelocity_BCs_FC<T>(patch, face, vel_FC, 
                                                  bound_ptr, bc_kind, value,
-                                                 localVars->inletVel_v,
-                                                 globalVars->inletVel_var_basket);
+                                                 localVars->inletVel,
+                                                 globalVars->inletVel);
           }       
 
           //__________________________________

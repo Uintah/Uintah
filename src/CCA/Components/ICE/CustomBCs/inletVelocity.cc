@@ -36,7 +36,7 @@ namespace Uintah {
             -reads input parameters needed setBC routines
  ______________________________________________________________________  */
 bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
-                             inletVel_variable_basket* VB,
+                             inletVel_globalVars* global,
                              GridP& grid)
 {
   //__________________________________
@@ -79,7 +79,7 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
   if(usingBC ){
   
     // set default values
-    VB->vonKarman = 0.4;
+    global->vonKarman = 0.4;
    
     ProblemSpecP inlet_ps = bc_ps->findBlock("inletVelocity");
     if (!inlet_ps) {
@@ -90,28 +90,28 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
 
     BBox b;
     grid->getInteriorSpatialRange(b);
-    VB->gridMin = b.min();
-    VB->gridMax = b.max();
+    global->gridMin = b.min();
+    global->gridMax = b.max();
     
-    inlet_ps -> get( "roughness",             VB->roughness   );
-    inlet_ps -> get( "vonKarmanConstant",     VB->vonKarman   );
-    inlet_ps -> get( "exponent",              VB->exponent    ); 
-    inlet_ps -> require( "verticalDirection", VB->verticalDir );
+    inlet_ps -> get( "roughness",             global->roughness   );
+    inlet_ps -> get( "vonKarmanConstant",     global->vonKarman   );
+    inlet_ps -> get( "exponent",              global->exponent    ); 
+    inlet_ps -> require( "verticalDirection", global->verticalDir );
     
     Vector tmp = b.max() - b.min();
-    double maxHeight = tmp[ VB->verticalDir ];   // default value
+    double maxHeight = tmp[ global->verticalDir ];   // default value
     
     inlet_ps -> get( "maxHeight",             maxHeight   );
     Vector lo = b.min().asVector();
-    VB->maxHeight = maxHeight - lo[ VB->verticalDir ];
+    global->maxHeight = maxHeight - lo[ global->verticalDir ];
     
     //__________________________________
     //  Add variance to the velocity profile
     ProblemSpecP var_ps = inlet_ps->findBlock("variance");
     if (var_ps) {
-      VB->addVariance = true;
-      var_ps -> get( "C_mu", VB->C_mu   );
-      var_ps -> get( "frictionVel", VB->u_star   );
+      global->addVariance = true;
+      var_ps -> get( "C_mu", global->C_mu   );
+      var_ps -> get( "frictionVel", global->u_star   );
     }
   }
   return usingBC;
@@ -157,7 +157,7 @@ void  preprocess_inletVelocity_BCs(DataWarehouse* old_dw,
                                    const string& where,
                                    bool& set_BCs,
                                    const bool recursive,
-                                   inletVel_vars* inletVel_v)
+                                   inletVel_localVars* local)
 {
   set_BCs = false;
   
@@ -173,16 +173,16 @@ void  preprocess_inletVelocity_BCs(DataWarehouse* old_dw,
       pOldDW  = old_dw->getOtherDataWarehouse(Task::ParentOldDW); 
     }
     
-    pOldDW->get(inletVel_v->vel_CC, lb->vel_CCLabel, indx, patch,Ghost::None,0);
+    pOldDW->get(local->vel_CC, lb->vel_CCLabel, indx, patch,Ghost::None,0);
   }
   
   if( where == "CC_Exchange" ) {
     set_BCs = true;
-    inletVel_v->addVariance = false;    // local on/off switch
+    local->addVariance = false;    // local on/off switch
   }
   if( where == "Advection" ){
     set_BCs = true;
-    inletVel_v->addVariance = true;
+    local->addVariance = true;
   }
 }
 /*_________________________________________________________________
@@ -195,8 +195,8 @@ int  set_inletVelocity_BC(const Patch* patch,
                           Iterator& bound_ptr,
                           const string& bc_kind,
                           const Vector& bc_value,
-                          inletVel_variable_basket* VB,
-                          inletVel_vars* inletVel_v )
+                          inletVel_globalVars* global,
+                          inletVel_localVars* local )
 {
   int nCells = 0;
   
@@ -204,24 +204,24 @@ int  set_inletVelocity_BC(const Patch* patch,
     //cout_BC_CC << "    Vel_CC (" << bc_kind << ") \t\t" <<patch->getFaceName(face)<< endl;
 
     // bulletproofing
-    if (!VB ){
+    if (!global ){
       throw InternalError("set_inletVelocity_BC", __FILE__, __LINE__);
     }
     const Level* level = patch->getLevel();
     
     int nDir = patch->getFaceAxes(face)[0];  //normal velocity direction
-    int vDir = VB->verticalDir;              // vertical direction
+    int vDir = global->verticalDir;              // vertical direction
     
 
     //__________________________________
     // compute the velocity in the normal direction
     // u = U_infinity * pow( h/height )^n
     if( bc_kind == "powerLawProfile" ){
-      double d          =  VB->gridMin(vDir);
-      double gridHeight =  VB->gridMax(vDir);
-      double height     =  VB->maxHeight;
+      double d          =  global->gridMin(vDir);
+      double gridHeight =  global->gridMax(vDir);
+      double height     =  global->maxHeight;
       Vector U_infinity =  bc_value;
-      double n          =  VB->exponent;
+      double n          =  global->exponent;
       
       //std::cout << "     height: " << height << " exponent: " << n << " U_infinity: " << U_infinity 
       //     << " nDir: " << nDir << " vDir: " << vDir << endl;
@@ -256,11 +256,11 @@ int  set_inletVelocity_BC(const Patch* patch,
     //   u = U_star * (1/vonKarman) * ln( (z-d)/roughness)
     else if( bc_kind == "logWindProfile" ){
     
-      double inv_K       = 1.0/VB->vonKarman;
-      double d           = VB->gridMin(vDir);  // origin
-      double gridMax     = VB->gridMax(vDir);
+      double inv_K       = 1.0/global->vonKarman;
+      double d           = global->gridMin(vDir);  // origin
+      double gridMax     = global->gridMax(vDir);
       Vector frictionVel = bc_value;
-      double roughness   = VB->roughness;
+      double roughness   = global->roughness;
       
 //      std::cout << "     d: " << d << " frictionVel: " << frictionVel << " roughness: " << roughness 
 //                << " nDir: " << nDir << " vDir: " << vDir << endl;
@@ -307,13 +307,13 @@ int  set_inletVelocity_BC(const Patch* patch,
     //             two-dimensional flows", Atmospheric Environment Vol. 31, No. 6
     //             pp 839-850, 1997.
     
-    if (VB->addVariance && inletVel_v->addVariance ){  // global and local on/off switch
+    if (global->addVariance && local->addVariance ){  // global and local on/off switch
       MTRand mTwister;
       
-      double gridHeight =  VB->gridMax(vDir); 
-      double d          =  VB->gridMin(vDir);
-      double inv_Cmu    = 1.0/VB->C_mu;
-      double u_star2    = VB->u_star * VB->u_star;
+      double gridHeight =  global->gridMax(vDir); 
+      double d          =  global->gridMin(vDir);
+      double inv_Cmu    = 1.0/global->C_mu;
+      double u_star2    = global->u_star * global->u_star;
       
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
         IntVector c = *bound_ptr;

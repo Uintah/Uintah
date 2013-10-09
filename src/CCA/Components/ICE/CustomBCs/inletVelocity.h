@@ -42,36 +42,36 @@ namespace Uintah {
   //_____________________________________________________________
   // This struct contains misc. global variables that are needed
   // by most setBC routines.
-  struct inletVel_variable_basket{
+  struct inletVel_globalVars{
     int    verticalDir;       // which direction is vertical [0,1,2]
     
     // log law profile
-    double roughness;              // aerodynamic roughness
-    double vonKarman;              // vonKarman constant 
+    double roughness;             // aerodynamic roughness
+    double vonKarman;             // vonKarman constant 
     
     // powerlaw profile
     double exponent;
-    double maxHeight;              // max height of velocity profile before it's set to u_infinity
+    double maxHeight;             // max height of velocity profile before it's set to u_infinity
     
     Point gridMin;
     Point gridMax;
     
     // variance
     bool addVariance;             // add variance to the inlet velocity profile
-    double C_mu;                   // constant
+    double C_mu;                  // constant
     double u_star;                // roughnes
     
   }; 
   //____________________________________________________________
-  // This struct contains all of the additional local variables needed by setBC.
-  struct inletVel_vars{
+  // This struct contains additional local variables needed by setBC.
+  struct inletVel_localVars{
     constCCVariable<Vector> vel_CC;
     bool addVariance;
   };
   
   //____________________________________________________________
   bool read_inletVel_BC_inputs(const ProblemSpecP&,
-                               inletVel_variable_basket* vb,
+                               inletVel_globalVars* global,
                                GridP& grid);
  
   void addRequires_inletVel(Task* t, 
@@ -87,7 +87,7 @@ namespace Uintah {
                                       const string& where,
                                       bool& set_BCs,
                                       const bool recursive,
-                                      inletVel_vars* inletVel_v);
+                                      inletVel_localVars* local);
                            
   int set_inletVelocity_BC(const Patch* patch,
                            const Patch::FaceType face,
@@ -96,8 +96,8 @@ namespace Uintah {
                            Iterator& bound_ptr,
                            const string& bc_kind,
                            const Vector& bc_value,
-                           inletVel_variable_basket* inlet_var_basket,
-                           inletVel_vars* inletVel_v );
+                           inletVel_globalVars* global,
+                           inletVel_localVars* local );
 
 /*______________________________________________________________________ 
  Purpose~   Sets the face center velocity boundary conditions
@@ -109,8 +109,8 @@ namespace Uintah {
                                Iterator& bound_ptr,
                                const string& bc_kind,
                                const double& bc_value,
-                               inletVel_vars* inletVel_v,
-                               inletVel_variable_basket* VB )
+                               inletVel_localVars* lv,
+                               inletVel_globalVars* gv )
 {
 
   coutBC_FC<< "Doing set_inletVelocity_BCs_FC: \t\t" 
@@ -125,18 +125,18 @@ namespace Uintah {
   } 
 
   const Level* level = patch->getLevel();
-  int vDir = VB->verticalDir;              // vertical direction
+  int vDir = gv->verticalDir;              // vertical direction
   int pDir = patch->getFaceAxes(face)[0];  // principal direction
-  double d          = VB->gridMin(vDir);
-  double gridHeight =  VB->gridMax(vDir);
+  double d          = gv->gridMin(vDir);
+  double gridHeight = gv->gridMax(vDir);
 
   //__________________________________
   // 
   if( bc_kind == "powerLawProfile" ){
   
-    double height     =  VB->maxHeight;      
+    double height     =  gv->maxHeight;      
     double U_infinity = bc_value;
-    double n          = VB->exponent;
+    double n          = gv->exponent;
   
     for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
       IntVector c = *bound_ptr - oneCell;
@@ -164,9 +164,9 @@ namespace Uintah {
   //
   else if( bc_kind == "logWindProfile" ){
   
-    double inv_K       = 1.0/VB->vonKarman;
+    double inv_K       = 1.0/gv->vonKarman;
     double frictionVel = bc_value;
-    double roughness   = VB->roughness;
+    double roughness   = gv->roughness;
 
     for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
       IntVector c = *bound_ptr - oneCell;
@@ -193,9 +193,9 @@ namespace Uintah {
   //______________________________________________________________________
   //  Addition of a 'kick' or variance to the mean velocity profile
   //  This matches the Turbulent Kinetic Energy profile of 1/sqrt(C_u) * u_star^2 ( 1- Z/height)^2
-  if ( VB->addVariance) {
+  if ( gv->addVariance) {
     
-    constCCVariable<Vector> vel_CC = inletVel_v->vel_CC;
+    constCCVariable<Vector> vel_CC = lv->vel_CC;
     
     for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
       IntVector c = *bound_ptr;
