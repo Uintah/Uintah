@@ -77,38 +77,21 @@
       
       <DefaultMaterial>all</DefaultMaterial>
       <Face rectangle="x-" lower="0 0.0625 -1" upper="0 0.1875 1" name="blagui">
-        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a">
-          <value>powerlaw-inlet</value>
-        </BCType>
+        <BCType label="phi-dirichlet-dirichlet-a" var="Dirichlet" value="powerlaw-inlet"/>
       </Face>
-
       <Face side="x-" name="blagui">
-        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-dirichlet-dirichlet-a" var="Dirichlet" value="0.0"/>
       </Face>
-      
       <Face side="x+" name="paspas">
-        <BCType var="Neumann" label="phi-dirichlet-dirichlet-a">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-dirichlet-dirichlet-a" var="Neumann" value="0.0"/>
       </Face>
-      
-      
-      
-       <Face side="y-" name="blagui">
-        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a">
-          <value> 0.1 </value>
-        </BCType>
+      <Face side="y-" name="blagui">
+        <BCType label="phi-dirichlet-dirichlet-a" var="Dirichlet" value="0.1"/>
       </Face>
-      
       <Face side="y+" name="paspas">
-        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a">
-          <value> 0.1 </value>
-        </BCType>
+        <BCType label="phi-dirichlet-dirichlet-a" var="Dirichlet" value="0.1"/>
       </Face>
-
-    </BoundaryConditions>
+      </BoundaryConditions>
 
     <Level>
       <Box label="1">

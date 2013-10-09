@@ -77,36 +77,24 @@
       <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS -->
       <Face side="x-">
-        <BCType var="Dirichlet" label="rxn_extent">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="rxn_extent" var="Dirichlet" value="0.0"/>
       </Face>
       <Face side="x+">
-        <BCType var="Neumann" label="rxn_extent">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="rxn_extent" var="Neumann" value="0.0"/>
       </Face>
       <Face side="y-">
-        <BCType var="Dirichlet" label="rxn_extent">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="rxn_extent" var="Dirichlet" value="0.0"/>
       </Face>
       <Face side="y+">
-        <BCType var="Dirichlet" label="rxn_extent">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="rxn_extent" var="Dirichlet" value="0.0"/>
       </Face>
       <Face side="z-">
-        <BCType var="Dirichlet" label="rxn_extent">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="rxn_extent" var="Dirichlet" value="0.0"/>
       </Face>
       <Face side="z+">
-        <BCType var="Dirichlet" label="rxn_extent">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="rxn_extent" var="Dirichlet" value="0.0"/>
       </Face>
-    </BoundaryConditions>
+      </BoundaryConditions>
     <Level>
       <Box label="1">
         <lower>[0, 0, 0]</lower>
