@@ -3406,19 +3406,34 @@ else
                       ,
                       optional)
 
-        # 
+        # Test a number of petsc library options if the above didn't work
         if test "$HAVE_PETSC" != "yes"; then
-                SCI_TRY_LINK(PETSC,
-                     petsc library and header,
-                     petsc.h,
-                     $_sci_inc,
-                     petsc,
-                     $_sci_lib_dir,
-                     $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
-                     ,
-                     required)
+           test_libs[[0]]="petsc"                       # standard single petsc lib
+           test_libs[[1]]="craypetsc_intel_real"        # cray petsc-real - for DOD Open Research Systems 
+           test_libs[[2]]="craypetsc_intel_complex"     # cray petsc-complex - for DOD Open Research Systems 
+                                                                  
+           num_libs=${#test_libs[*]}
+
+           for (( num=0; num<$num_libs; num++ ));
+           do
+               the_libs=${test_libs[[$num]]}
+               SCI_TRY_LINK(PETSC,
+                            petsc library and header,
+                            petsc.h,
+                            $_sci_inc,
+                            $the_libs,
+                            $_sci_lib_dir,
+                            $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                            ,
+                            optional)
+               # bail if a suitable library is found
+               if test "$HAVE_PETSC" = "yes"; then
+                  break
+               fi
+           done 
         fi
 
+        # report error message
         if test "$HAVE_PETSC" != "yes" ; then
           AC_MSG_ERROR(Could not find PETSc...)
         fi
