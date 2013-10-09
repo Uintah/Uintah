@@ -20,7 +20,7 @@ namespace Uintah {
   // std::cout << "gextent[0] = " << gextent[0] << " gextent[1] = " << gextent[1] <<
   //   "gextent[2] = " << gextent[2] << " gextent[3] = " << gextent[3] <<
   //   "gextent[4] = " << gextent[4] << std::endl;
-  idx_ptr = PIDX_create(comm, (timestep-1), filename.c_str(), 15, 32, 3, 1,gextent,1);
+  idx_ptr = PIDX_create(comm, (timestep-1), filename.c_str(), 15, 128, 3, 1,gextent,1);
 // std::cout<<"Test C : Calling PIDX\n";
 // PIDX_create((char*)filename, comm, 15, 256, 3, gextent);
 // std::cout<<"Return Value\n" << returnV;
