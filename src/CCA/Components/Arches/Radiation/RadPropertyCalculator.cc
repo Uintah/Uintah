@@ -264,7 +264,7 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
   
 }
     
-RadPropertyCalculator::RadPropsInterface::computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species,  constCCVariable<double>& mixT, CCVariable<double>& abskg)
+void RadPropertyCalculator::RadPropsInterface::computeProps( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species,  constCCVariable<double>& mixT, CCVariable<double>& abskg)
 { 
 
   int N = species.size(); 
