@@ -45,17 +45,17 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
 {
   map<string,string> bc_attr;
   child->getAttributes(bc_attr);
-
-  // Check to see if "id" is defined
-  if (bc_attr.find("id") == bc_attr.end()) 
-    SCI_THROW(ProblemSetupException("id is not specified in the BCType tag", __FILE__, __LINE__));
-  
-  if (bc_attr["id"] != "all"){
-    std::istringstream ss(bc_attr["id"]);
-    ss >> mat_id;
-  }else{
-    mat_id = -1;  
-  }
+//
+//  // Check to see if "id" is defined
+//  if (bc_attr.find("id") == bc_attr.end()) 
+//    SCI_THROW(ProblemSetupException("id is not specified in the BCType tag", __FILE__, __LINE__));
+//  
+//  if (bc_attr["id"] != "all"){
+//    std::istringstream ss(bc_attr["id"]);
+//    ss >> mat_id;
+//  }else{
+//    mat_id = -1;  
+//  }
 
   //  std::cout << "mat_id = " << mat_id << std::endl;
   // Determine whether or not things are a scalar, Vector or a NoValue, i.e.

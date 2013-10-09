@@ -406,6 +406,10 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
   // off from the side class resulting in a difference class.  The difference
   // class represents the region of the side minus any circles/rectangle.  
 
+  string defaultMat="";
+  ProblemSpecP defaultMatSpec = bc_ps->findBlock("DefaultMaterial");
+  if(defaultMatSpec) bc_ps->get("DefaultMaterial", defaultMat);
+  
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");
       face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
 
@@ -424,8 +428,21 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     for (ProblemSpecP child = face_ps->findBlock("BCType"); child != 0;
         child = child->findNextBlock("BCType")) {
       int mat_id;
+      
+      map<string,string> bc_attr;
+      child->getAttributes(bc_attr);
+      bool foundMatlID = ( bc_attr.find("id") != bc_attr.end() );
+      
+      if (!foundMatlID) {
+        if (defaultMat == "") SCI_THROW(ProblemSetupException("ERROR: No material id was specified in the BCType tag and I could not find a DefaulMaterial to use! Please revise your input file.", __FILE__, __LINE__));
+        else                  mat_id = (defaultMat == "all") ? -1 : atoi(defaultMat.c_str());
+      } else {
+        string id = bc_attr["id"];
+        mat_id = (id == "all") ? -1 : atoi(id.c_str());
+      }
+      
       BoundCondBase* bc;
-      BoundCondFactory::create(child,bc,mat_id, face_label);
+      BoundCondFactory::create(child, bc, mat_id, face_label);
       BCR_dbg << "Inserting into mat_id = " << mat_id << " bc = " 
               <<  bc->getBCVariable() << " bctype = " 
               <<  bc->getBCType()
