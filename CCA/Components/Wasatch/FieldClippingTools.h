@@ -95,7 +95,6 @@ namespace Wasatch{
   operator()( FieldT& f ) const
   {
     using namespace SpatialOps;
-    std::cout << "clipping........\n";
     f <<= cond( f < min_, min_ )
               ( f > max_, max_ )
               ( f );    
