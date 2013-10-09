@@ -1665,15 +1665,15 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 
   double start = Time::currentSeconds();
 
-  bool uda_io = true;
-  bool pidx_io =  false;
+  bool uda_io = false;
+  bool pidx_io =  true;
   double start_time = 0., end_time = 0., io_time = 0., max_time = 0. ;
   int rank;
 
   int fd;
   char* filename;
   long cur=0;
-  int x1;
+  
   int vc = 0;
   int *v_offset; 
   int *v_count; 
@@ -1738,7 +1738,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
   tname << "t" << setw(5) << setfill('0') << timeStep;
 
   Dir tdir = dir.getSubdir(tname.str());
-  
+  //std::cout << "Dir Name = " << dir.getName() << endl;
   string xmlFilename;
   string dataFilebase;
   string dataFilename;
@@ -1789,12 +1789,12 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 
   
   // Open the data file
-  filename = (char*) dataFilename.c_str();
+  
   vector<SaveItem>::iterator saveIter;
   int globalExtents[5];
-  globalExtents[0] = chighIndex[0] - clowIndex[0];
-  globalExtents[1] = chighIndex[1] - clowIndex[1];
-  globalExtents[2] = chighIndex[2] - clowIndex[2];
+  globalExtents[0] = chighIndex[0] - clowIndex[0] ;
+  globalExtents[1] = chighIndex[1] - clowIndex[1] ;
+  globalExtents[2] = chighIndex[2] - clowIndex[2] ;
   globalExtents[3] = globalExtents[4] = 1;
   
   
@@ -1806,6 +1806,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     if (uda_io == true) {
       
       start_time = MPI_Wtime();
+      filename = (char*) dataFilename.c_str();
       ProblemSpecP doc; 
 
       // file-opening flags
@@ -1847,7 +1848,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	throw ErrnoException("DataArchiver::output (open call)", errno, __FILE__, __LINE__);
       }
       
-      for(saveIter = saveLabels.begin(), x1=0; saveIter!= saveLabels.end(); saveIter++, x1++) {
+      for(saveIter = saveLabels.begin();  saveIter!= saveLabels.end(); saveIter++) {
 
 	const VarLabel* var = saveIter->label_;
 	// check to see if we need to save on this level
@@ -1999,14 +2000,16 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     
 #if HAVE_PIDX
     if (pidx_io == true) {
-      
+           
       start_time = MPI_Wtime();
-      string idxFilename(filename);
+      string idxFilename(dir.getName());
       idxFilename = idxFilename + ".idx";
+      double ***pidx_buffer;
       
       //std::cerr<<"Creating PIDXOutputContext..." << idxFilename << endl;
       PIDXOutputContext  pc(idxFilename, timeStep,globalExtents,d_myworld->getComm());
       
+            
       MPI_Comm_rank(d_myworld->getComm(), &rank);
       
       vc = 0;
@@ -2051,7 +2054,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
       
       for(int i = 0 ; i < number_of_variables ; i++){
 	if (rank == 0)
-	  cout << "["<< number_of_variables << "] number of Materials for variable "<< i << " = " << number_of_materials[i] << endl;
+	  //cout << "["<< number_of_variables << "] number of Materials for variable "<< i << " = " << number_of_materials[i] << endl;
 	total_number_materials = number_of_materials[i];
       }
       
@@ -2061,10 +2064,17 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable) * number_of_materials[i]);
 	memset(pc.variable[i], 0, sizeof (PIDX_variable) * number_of_materials[i]);
       }
+      pidx_buffer = (double***)malloc(sizeof(double**) * number_of_variables);
+      memset(pidx_buffer, 0, sizeof(double**) * number_of_variables);
+      for(int i = 0 ; i < number_of_variables ; i++){
+	pidx_buffer[i] = (double**)malloc(sizeof(double*) * number_of_materials[i]);
+	memset(pidx_buffer[i], 0, sizeof(double*) * number_of_materials[i]);
+      }
       
       
       
-      for(saveIter = saveLabels.begin(), x1=0; saveIter!= saveLabels.end(); saveIter++, x1++) {
+      
+      for(saveIter = saveLabels.begin(), vc=0; saveIter!= saveLabels.end(); saveIter++, vc++) {
 
 	const VarLabel* var = saveIter->label_;
 	//IntVector vhi, vlow, vrange;
@@ -2095,7 +2105,9 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	}
 	if (var_matls == 0)
 	  continue;
-      
+
+	//if (var->getBoundaryLayer() != IntVector(0,0,0))
+	//      pdElem->appendElement("boundaryLayer", var->getBoundaryLayer());
 
 	/*
 	dbg << ", variable: " << var->getName() << ", materials: ";
@@ -2115,6 +2127,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	    
 	    const Patch* patch;
 	    int patchID;
+	    IntVector hiE, lowE;
 	    if (type == CHECKPOINT_REDUCTION) {
 	      // to consolidate into this function, force patch = 0
 	      patch = 0;
@@ -2125,8 +2138,11 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	      patchID = patch->getID();
 
 	      IntVector hi, low, range;
+	      
 	      low = patch->getCellLowIndex();
 	      hi = patch->getCellHighIndex();
+	      hiE = patch->getExtraCellHighIndex();
+	      lowE = patch->getExtraCellLowIndex();
   #if 0
 	      std::cout << "ELSE: Patch info: \nPatch number " << p << "\n";
 	      std::cout << "Patch extent " << low.x() << ", " << low.y() << ", " << low.z() << " " << hi.x() << ", " << hi.y() << ", " << hi.z() << "\n";
@@ -2134,33 +2150,58 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	      std::cout << " X" << ", " << " ]\n";
   #endif
 	      
-	      v_offset[0] = low.x();
-	      v_offset[1] = low.y();
-	      v_offset[2] = low.z();
+	      v_offset[0] = lowE.x() + 1;
+	      v_offset[1] = lowE.y() + 1;
+	      v_offset[2] = lowE.z() + 1;
 	      v_offset[3] = 0;
 	      v_offset[4] = 0;
-	      v_count[0] = hi.x() - low.x() + 1;
-	      v_count[1] = hi.y() - low.y() + 1;
-	      v_count[2] = hi.z() - low.z() + 1;
+	      v_count[0] = hiE.x() - lowE.x() + 0;
+	      v_count[1] = hiE.y() - lowE.y() + 0;
+	      v_count[2] = hiE.z() - lowE.z() + 0;
 	      v_count[3] = 1;
 	      v_count[4] = 1;
+	      pidx_buffer[vc][m] = (double*)malloc(sizeof(double) * (v_count[0] * v_count[1] * v_count[2]));
+	      memset(pidx_buffer[vc][m], 0, sizeof(double*) * (v_count[0] * v_count[1] * v_count[2]));
 	    }
-		
-	    // add info for this variable to the current xml file
-	      
-	    // Variables may not exist when we get here due to something whacky with weird AMR stuff...
-	    //            std::cerr<<"Creating PIDXOutputContext...\n";
-	    //  This appears to be redundant
-	    //  PIDXOutputContext pc(filename, d_myworld->getComm());
-	    //            cout << "DataArchiver call to emit" << endl;
-	    new_dw->emit(pc, vc, (char*) var->getName().c_str(),v_offset,v_count,var, 
-		  matlIndex, patch);
-	    vc++;
+	    /*
+	    if(rank == 0)
+	    cout <<"["<< vc << "] Timestep = " << timeStep 
+	      << " Global Volume = " << globalExtents[0] << "," << globalExtents[1]
+	      << "," << globalExtents[2] << "," 
+	      << " Local Volume [O] = " << v_offset[0] << "," << v_offset[1]
+	      << "," << v_offset[2] << "," << v_offset[3] << ", " << v_offset[4]
+	      << " Local Volume [C]= " << v_count[0] << "," << v_count[1]
+	      << "," << v_count[2] << "," << v_count[3] << "," << v_count[4] << endl;
+	    */
+	    new_dw->emit(pc, vc, pidx_buffer[vc][m], (char*) var->getName().c_str(),v_offset,v_count,var, matlIndex, patch);
+	    //if(vc == 1)
+	    //for(int le = 0 ; le < v_count[0] * v_count[1] * v_count[2] ; le++)
+	    //  std::cout << "["<< vc << "] Value at " << le << " = " << pidx_buffer[vc][m][le] << endl;
+	    pc.variable[vc][m] = PIDX_variable_global_define(pc.idx_ptr, (char*) var->getName().c_str(), /*sample_per_variable_buffer[vc]*/ 1, MPI_DOUBLE);
+	    PIDX_variable_local_add(pc.idx_ptr, pc.variable[vc][m], (int*) v_offset, (int*) v_count);
+	    PIDX_variable_local_layout(pc.idx_ptr, pc.variable[vc][m], (double*)pidx_buffer[vc][m], MPI_DOUBLE);
+	    
 	  } //  Patches
 	}   //  Materials
       }     //  Variables
       PIDX_write(pc.idx_ptr);
       PIDX_close(pc.idx_ptr);
+      
+      for(int i = 0 ; i < number_of_variables ; i++){
+	for(int j = 0 ; j < number_of_materials[i] ; j++){
+	  free(pidx_buffer[i][j]);
+	  pidx_buffer[i][j] = 0;
+	}
+	free(pidx_buffer[i]);
+	pidx_buffer[i] = 0;
+      }
+      free(pidx_buffer);
+      pidx_buffer = 0;
+      free(v_offset);
+      v_offset = 0;
+      free(v_count);
+      v_count = 0;
+      
       end_time = MPI_Wtime();
       io_time = end_time - start_time;
       
