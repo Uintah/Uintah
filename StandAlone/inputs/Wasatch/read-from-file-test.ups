@@ -70,34 +70,35 @@
   <Grid>
   
      <BoundaryConditions>      
+      <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS FOR NON-STAGGERED SCALAR -->
       <Face side="x-">
-        <BCType var="Neumann" label="phi-scalar" id="all">
+        <BCType var="Neumann" label="phi-scalar">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="x+">
-        <BCType var="Neumann" label="phi-scalar" id="all">
+        <BCType var="Neumann" label="phi-scalar">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="y-">
-        <BCType var="Neumann" label="phi-scalar" id="all">
+        <BCType var="Neumann" label="phi-scalar">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType var="Neumann" label="phi-scalar" id="all">
+        <BCType var="Neumann" label="phi-scalar">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType var="Neumann" label="phi-scalar" id="all">
+        <BCType var="Neumann" label="phi-scalar">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType var="Neumann" label="phi-scalar" id="all">
+        <BCType var="Neumann" label="phi-scalar">
           <value> 0.0 </value>
         </BCType>
       </Face>

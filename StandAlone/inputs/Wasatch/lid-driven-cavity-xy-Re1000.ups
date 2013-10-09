@@ -143,16 +143,17 @@
 
   <Grid>
       <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
       <Face side="x-" type="Wall"/>
       <Face side="x+" type="Wall"/>
       <Face side="y-" type="Wall"/>
       <Face side="y+">
-        <BCType id="all" var="Dirichlet" label="x-mom" value="1.0"/>
-        <BCType id="all" var="Dirichlet" label="u" value="1.0"/>
-        <BCType id="all" var="Dirichlet" label="y-mom" value="0.0"/>
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial" value="0.0"/>
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs" value="0.0"/>
+        <BCType var="Dirichlet" label="x-mom" value="1.0"/>
+        <BCType var="Dirichlet" label="u" value="1.0"/>
+        <BCType var="Dirichlet" label="y-mom" value="0.0"/>
+        <BCType var="Dirichlet" label="y-mom_rhs_partial" value="0.0"/>
+        <BCType var="Dirichlet" label="y-mom_rhs" value="0.0"/>
       </Face>
 
       </BoundaryConditions>

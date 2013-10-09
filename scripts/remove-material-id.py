@@ -31,6 +31,23 @@ def help():
   print 'usage: remove-material-id.py -i <inputfile> -d <directory> -m <materialID>'
   print 'The material id (-m) argument is optional. If not specified, it will default to all.'
 
+# Function that indents elements in a xml tree. 
+# Thanks to: http://effbot.org/zone/element-lib.htm#prettyprint
+def indent(elem, level=0):
+    i = "\n" + level*"  "
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "  "
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+        for elem in elem:
+            indent(elem, level+1)
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
+
 # Commandline argument parser
 def main(argv):
   inputfile = ''
@@ -69,12 +86,15 @@ def main(argv):
 def remove_material_id(fname, defmat):
   print 'now processing: ', fname
   print 'using default material: ', defmat
+  
   tree = et.parse(fname)
   root = tree.getroot()
   hasBCs = True
+  needsSave = False
   # check if this file has boundary conditions
   if (root.find('Grid')).find('BoundaryConditions') is None:
       hasBCs=False
+      return
   
   if hasBCs is True:
       bcSpec = (root.find('Grid')).find('BoundaryConditions')
@@ -82,16 +102,22 @@ def remove_material_id(fname, defmat):
       defaultMatSpec.text = defmat
       defaultMatSpec.tail = '\n'
       bcSpec.insert(0,defaultMatSpec)
+      indent(defaultMatSpec,3)
 
-  hasID = True
+  hasID = False
   for face in root.iter('Face'):
     for bc in face.iter('BCType'):
       if bc.get('id') is None:
-        hasID=False
+        hasID = False
+      else:
+        hasID = True
+        if needsSave == False:
+          needsSave = True
       if hasID:
         del bc.attrib['id']            
-  # only write the file when it has boundary conditions
-  if hasID is True:
+        
+  # only write the file when it has ids specified
+  if needsSave == True:
     tree.write(fname,pretty_print=True)
     print '  done!'  
 

@@ -15,20 +15,20 @@
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-dirichlet-dirichlet-a" state="STATE_N" />
+      <NameTag name="phi-dirichlet-dirichlet-a" state="STATE_N"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     
     <BCExpression type="SVOL">
       <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="powerlaw-inlet" state="STATE_NONE" />
+      <NameTag name="powerlaw-inlet" state="STATE_NONE"/>
       <PowerLawFunction x0="0.125" PhiCenter="1" HalfHeight="0.0625" n="10.0">
-         <NameTag name="YSVOL" state="STATE_NONE" />
+         <NameTag name="YSVOL" state="STATE_NONE"/>
        </PowerLawFunction>
     </BCExpression>
     
     <ForceOnGraph tasklist="initialization advance_solution">
-      <NameTag name="YSVOL" state="STATE_NONE" />
+      <NameTag name="YSVOL" state="STATE_NONE"/>
     </ForceOnGraph>
 
     <!-- Build a cell-centered scalar transport equation -->
@@ -66,7 +66,7 @@
     <filebase>powerlaw-bc-example.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.00001"/>
+    <checkpoint cycle="2" interval="0.00001"/>
     <compression>gzip</compression>
     <save label="phi-dirichlet-dirichlet-a"/>
     <save label="phi-dirichlet-dirichlet-a_rhs"/>    
@@ -75,20 +75,21 @@
   <Grid>
       <BoundaryConditions>
       
+      <DefaultMaterial>all</DefaultMaterial>
       <Face rectangle="x-" lower="0 0.0625 -1" upper="0 0.1875 1" name="blagui">
-        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a">
           <value>powerlaw-inlet</value>
         </BCType>
       </Face>
 
       <Face side="x-" name="blagui">
-        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a">
           <value> 0.0 </value>
         </BCType>
       </Face>
       
       <Face side="x+" name="paspas">
-        <BCType id="all" var="Neumann" label="phi-dirichlet-dirichlet-a">
+        <BCType var="Neumann" label="phi-dirichlet-dirichlet-a">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -96,13 +97,13 @@
       
       
        <Face side="y-" name="blagui">
-        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a">
           <value> 0.1 </value>
         </BCType>
       </Face>
       
       <Face side="y+" name="paspas">
-        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a">
           <value> 0.1 </value>
         </BCType>
       </Face>

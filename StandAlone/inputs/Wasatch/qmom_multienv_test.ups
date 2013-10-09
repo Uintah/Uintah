@@ -1,4 +1,5 @@
-<!-- @version: --><Uintah_specification>
+<!-- @version: -->
+<Uintah_specification>
 
   <Meta>
     <title>QMOM Batch</title>
@@ -73,34 +74,35 @@
 
   <Grid>
     <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS -->
       <Face side="x-">
-        <BCType var="Dirichlet" label="rxn_extent" id="all">
+        <BCType var="Dirichlet" label="rxn_extent">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="x+">
-        <BCType var="Neumann" label="rxn_extent" id="all">
+        <BCType var="Neumann" label="rxn_extent">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="y-">
-        <BCType var="Dirichlet" label="rxn_extent" id="all">
+        <BCType var="Dirichlet" label="rxn_extent">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType var="Dirichlet" label="rxn_extent" id="all">
+        <BCType var="Dirichlet" label="rxn_extent">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType var="Dirichlet" label="rxn_extent" id="all">
+        <BCType var="Dirichlet" label="rxn_extent">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType var="Dirichlet" label="rxn_extent" id="all">
+        <BCType var="Dirichlet" label="rxn_extent">
           <value> 0.0 </value>
         </BCType>
       </Face>

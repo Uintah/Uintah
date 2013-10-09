@@ -93,18 +93,19 @@
 
   <Grid>
       <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
       <Face side="z-" name="z-">
 
-        <BCType var="Dirichlet" label="x-mom" id="all">
+        <BCType var="Dirichlet" label="x-mom">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType var="Dirichlet" label="z-mom" id="all">
+        <BCType var="Dirichlet" label="z-mom">
           <value> 1.0 </value>
         </BCType>
         
-        <BCType var="Dirichlet" label="z-mom_rhs_partial" id="all">
+        <BCType var="Dirichlet" label="z-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>                                               
 
@@ -112,15 +113,15 @@
       
       <Face side="z+" name="z+">
 
-        <BCType var="Neumann" label="x-mom" id="all">
+        <BCType var="Neumann" label="x-mom">
           <value> 0.0 </value>
         </BCType>
 
-        <BCType var="Dirichlet" label="pressure" id="all">
+        <BCType var="Dirichlet" label="pressure">
           <value> 0.0 </value>
         </BCType>                       
         
-        <BCType var="Dirichlet" label="z-mom_rhs_partial" id="all">
+        <BCType var="Dirichlet" label="z-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>      
 
@@ -128,15 +129,15 @@
       
       <Face side="x-" name="x-">
       
-        <BCType var="Dirichlet" label="x-mom" id="all">
+        <BCType var="Dirichlet" label="x-mom">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType var="Dirichlet" label="z-mom" id="all">
+        <BCType var="Dirichlet" label="z-mom">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType var="Dirichlet" label="x-mom_rhs_partial" id="all">
+        <BCType var="Dirichlet" label="x-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>        
                         
@@ -144,15 +145,15 @@
       
       <Face side="x+" name="x+">
       
-        <BCType var="Dirichlet" label="x-mom" id="all">
+        <BCType var="Dirichlet" label="x-mom">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType var="Dirichlet" label="z-mom" id="all">
+        <BCType var="Dirichlet" label="z-mom">
           <value> 0.0 </value>
         </BCType>
         
-        <BCType var="Dirichlet" label="x-mom_rhs_partial" id="all">
+        <BCType var="Dirichlet" label="x-mom_rhs_partial">
           <value> 0.0 </value>
         </BCType>     
                         
