@@ -591,11 +591,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 
                 SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
                 a_src.problemSetup( found_src_db );
-                cout << "**************************" << endl;
-                cout << " ***********************" << endl;
-                cout << "      " << srcname << "      " << endl;
-                cout << " ***********************" << endl;
-                cout << "**************************" << endl;
 
                 //Add any table lookup species to the table lookup list:                                      
                 std::vector<std::string> tbl_lookup = a_src.get_tablelookup_species();                        

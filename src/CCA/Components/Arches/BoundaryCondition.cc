@@ -1,3 +1,8 @@
+                cout << "**************************" << endl;
+                cout << " ***********************" << endl;
+                cout << "      " << srcname << "      " << endl;
+                cout << " ***********************" << endl;
+                cout << "**************************" << endl;
 /*
  * The MIT License
  *
@@ -4032,7 +4037,6 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           for ( StringVec::iterator iv_iter = iv_var_names.begin(); iv_iter != iv_var_names.end(); iv_iter++){
 
             string curr_iv = *iv_iter; 
-            cout << curr_iv << endl;
 
             for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0; 
                 db_BCType2 = db_BCType2->findNextBlock("BCType") ){
