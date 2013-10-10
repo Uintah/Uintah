@@ -133,7 +133,12 @@ RadPropertyCalculator::HottelSarofim::HottelSarofim() {};
 RadPropertyCalculator::HottelSarofim::~HottelSarofim() {};
     
 bool RadPropertyCalculator::HottelSarofim::problemSetup( const ProblemSpecP& db ) {
-  
+ if ( db->findBlock( "hottel_sarofim" ) ){
+
+              ProblemSpecP db_h = db->findBlock( "hottel_sarofim" );
+              db_h->getWithDefault("opl",d_opl, 0.18);
+            }
+ 
   bool property_on = true; 
 
   return property_on; 
@@ -148,8 +153,14 @@ void RadPropertyCalculator::HottelSarofim::computeProps(
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
 
-  fort_hottel( idxLo, idxHi, abskg );
+double d_opl = 0.18;
 
+
+
+
+ fort_hottel(idxLo, idxHi, mixT,
+                       species[0], species[1], VolFractionBC,
+                       d_opl, species[2], abskg);
   
 }
 
@@ -160,6 +171,10 @@ void RadPropertyCalculator::HottelSarofim::computePropsWithParticles( const Patc
   throw InvalidValue( "Error: No particle properties implemented for constant radiation properties.",__FILE__,__LINE__);
 
 }
+
+
+
+
 
 /// --------------------------------------
 //  RADPROPS
