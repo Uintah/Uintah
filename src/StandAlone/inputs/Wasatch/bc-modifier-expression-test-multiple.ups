@@ -88,15 +88,6 @@
       <BoundaryConditions>
       
       <DefaultMaterial>all</DefaultMaterial>
-      <!-- BOUNDARY CONDITIONS -->
-<!-- 
-      <Face circle="x-" origin="0 0.125 0.005" radius="0.0625">
-        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
-          <value> 10.0 </value>
-          <functor_name>parabolic-inlet</functor_name>
-        </BCType>
-      </Face>
- -->
       <Face rectangle="x-" lower="0 0.0625 -1" upper="0 0.1875 1">
         <BCType label="phi-dirichlet-dirichlet-a" var="Dirichlet" value="parabolic-inlet"/>
       </Face>
@@ -106,55 +97,6 @@
       <Face side="x+">
         <BCType label="phi-dirichlet-dirichlet-a" var="Dirichlet" value="parabolic-inlet"/>
       </Face>
-      <!-- 
-      BOUNDARY CONDITIONS
-      <Face side="x-">
-        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-b">
-          <value> 5.0 </value>
-        </BCType>
-      </Face>
-      <Face side="x+">
-        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-b">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-            
-      BOUNDARY CONDITIONS
-      <Face side="x-">
-        <BCType id="all" var="Dirichlet" label="phi-dirichlet-neumann">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-      <Face side="x+">
-        <BCType id="all" var="Neumann" label="phi-dirichlet-neumann">
-          <value> 1.0 </value>
-        </BCType>
-      </Face>
-
-      BOUNDARY CONDITIONS
-      <Face side="x-">
-        <BCType id="all" var="Neumann" label="phi-neumann-dirichlet">
-          <value> -1.0 </value>
-        </BCType>
-      </Face>
-      <Face side="x+">
-        <BCType id="all" var="Dirichlet" label="phi-neumann-dirichlet">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-
-      BOUNDARY CONDITIONS
-      <Face side="x-">
-        <BCType id="all" var="Neumann" label="phi-neumann-neumann">
-          <value> 1.0 </value>
-        </BCType>
-      </Face>
-      <Face side="x+">
-        <BCType id="all" var="Neumann" label="phi-neumann-neumann">
-          <value> 1.0 </value>
-        </BCType>
-      </Face>
- -->
 
     </BoundaryConditions>
 
