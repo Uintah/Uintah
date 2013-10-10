@@ -891,17 +891,20 @@ namespace Wasatch{
           break;
         case VELOCITY:
         {
-          if (myBndSpec.find(thisVelTag_.name()) ) {
-            const BndCondSpec* velBCSpec = myBndSpec.find(thisVelTag_.name());
-            BndCondSpec momBCSpec = *velBCSpec;
-            momBCSpec.varName = solution_variable_name();
-            bcHelper.add_boundary_condition(bndName, momBCSpec);
-          }          
-          BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
-          bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
-          
-          BndCondSpec rhsFullBCSpec = {rhs_name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
-          bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+          // tsaad: please keep the commented code below. This should process velocity BCs and infer momentum bcs from those
+//          if (myBndSpec.find(thisVelTag_.name()) ) {
+//            const BndCondSpec* velBCSpec = myBndSpec.find(thisVelTag_.name());
+//            BndCondSpec momBCSpec = *velBCSpec;
+//            momBCSpec.varName = solution_variable_name();
+//            bcHelper.add_boundary_condition(bndName, momBCSpec);
+//          }
+          if (isNormal) {
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
+            
+            BndCondSpec rhsFullBCSpec = {rhs_name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+          }
           
           BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);

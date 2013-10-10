@@ -141,33 +141,30 @@
     <save label="vel_magnitude"/>        
   </DataArchiver> 
 
-  <Grid>
-      <BoundaryConditions>
-      <DefaultMaterial>all</DefaultMaterial>
-      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
-      <Face side="y-" type="Wall"/>
-      <Face side="y+" type="Wall"/>
-      <Face side="z-" type="Wall"/>      
-      <Face side="z+">
-        <BCType var="Dirichlet" label="y-mom" value="1.0"/>
-        <BCType var="Dirichlet" label="v" value="1.0"/>
-        <BCType var="Dirichlet" label="z-mom" value="0.0"/>
-        <BCType var="Dirichlet" label="w" value="0.0"/>        
-        <BCType var="Dirichlet" label="z-mom_rhs_partial" value="0.0"/>
-        <BCType var="Dirichlet" label="z-mom_rhs" value="0.0"/>
-      </Face>
-      
-      </BoundaryConditions>
-      <Level>
-      <Box label="1">
-        <lower>[0,0,0]</lower>
-        <upper>[0.01,1,1]</upper>
-        <resolution>[2,64,64]</resolution>
-        <!--extraCells>[1,1,0]</extraCells-->
-        <patches>[1,2,2]</patches>
-      </Box>
-      <periodic>[1,0,0]</periodic>
-    </Level>
-  </Grid>
+	<Grid>
+		<BoundaryConditions>
+			<DefaultMaterial>all</DefaultMaterial>
+			<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+			<Face side="y-" type="Wall"/>
+			<Face side="y+" type="Wall"/>
+			<Face side="z-" type="Wall"/>
+			<Face side="z+" type="Velocity">
+				<BCType var="Dirichlet" label="y-mom" value="1.0"/>
+				<BCType var="Dirichlet" label="v" value="1.0"/>
+				<BCType var="Dirichlet" label="z-mom" value="0.0"/>
+				<BCType var="Dirichlet" label="w" value="0.0"/>
+			</Face>
+		</BoundaryConditions>
+		<Level>
+			<Box label="1">
+				<lower>[0,0,0]</lower>
+				<upper>[0.01,1,1]</upper>
+				<resolution>[2,64,64]</resolution>
+				<!--extraCells>[1,1,0]</extraCells-->
+				<patches>[1,2,2]</patches>
+			</Box>
+			<periodic>[1,0,0]</periodic>
+		</Level>
+	</Grid>
 
 </Uintah_specification>

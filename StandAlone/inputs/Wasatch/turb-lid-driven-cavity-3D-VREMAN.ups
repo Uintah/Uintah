@@ -131,48 +131,34 @@
     <save label="vel_magnitude"/>        
   </DataArchiver> 
 
-  <Grid>
-      <BoundaryConditions>
-      <DefaultMaterial>all</DefaultMaterial>
-      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
-      <Face side="x-" type="Wall">
-      </Face>
-      
-      <Face side="x+" type="Wall">
-      </Face>
-      
-      <Face side="y-" type="Wall">        
-      </Face>
-      
-      <Face side="y+">
-        <BCType var="Dirichlet" label="x-mom" value="1.0"/>
-        <BCType var="Dirichlet" label="z-mom" value="1.0"/>
-        <BCType var="Dirichlet" label="u" value="1.0"/>
-        <BCType var="Dirichlet" label="w" value="1.0"/>        
-        <BCType var="Dirichlet" label="y-mom" value="0.0"/>
-        <BCType var="Dirichlet" label="v" value="0.0"/>        
-        <BCType var="Dirichlet" label="y-mom_rhs_partial" value="0.0"/>
-        <BCType var="Dirichlet" label="y-mom_rhs" value="0.0"/>
-      </Face>
-
-      <Face side="z-" type="Wall">        
-      </Face>
-      
-      <Face side="z+" type="Wall">
-      </Face>
-
-
-      </BoundaryConditions>
-      <Level>
-      <Box label="1">
-        <lower>[0,0,0]</lower>
-        <upper>[1,1,1]</upper>
-        <resolution>[32,32,32]</resolution>
-        <!--extraCells>[1,1,0]</extraCells-->
-        <patches>[2,2,2]</patches>
-      </Box>
-      <periodic>[0,0,0]</periodic>
-    </Level>
-  </Grid>
+	<Grid>
+		<BoundaryConditions>
+			<DefaultMaterial>all</DefaultMaterial>
+			<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+			<Face side="x-" type="Wall"/>
+			<Face side="x+" type="Wall"/>
+			<Face side="y-" type="Wall"/>
+			<Face side="y+" type="Velocity">
+				<BCType var="Dirichlet" label="x-mom" value="1.0"/>
+				<BCType var="Dirichlet" label="z-mom" value="1.0"/>
+				<BCType var="Dirichlet" label="u" value="1.0"/>
+				<BCType var="Dirichlet" label="w" value="1.0"/>
+				<BCType var="Dirichlet" label="y-mom" value="0.0"/>
+				<BCType var="Dirichlet" label="v" value="0.0"/>
+			</Face>
+			<Face side="z-" type="Wall"/>
+			<Face side="z+" type="Wall"/>
+		</BoundaryConditions>
+		<Level>
+			<Box label="1">
+				<lower>[0,0,0]</lower>
+				<upper>[1,1,1]</upper>
+				<resolution>[32,32,32]</resolution>
+				<!--extraCells>[1,1,0]</extraCells-->
+				<patches>[2,2,2]</patches>
+			</Box>
+			<periodic>[0,0,0]</periodic>
+		</Level>
+	</Grid>
 
 </Uintah_specification>
