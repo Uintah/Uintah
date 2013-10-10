@@ -178,13 +178,25 @@ namespace Uintah {
                                           double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
                                           const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp );
           std::vector<std::string> get_sp(){
-            std::vector<std::string> void_vec; 
-            return void_vec; 
+           
+  _the_species.push_back(_co2_name);
+  _the_species.push_back(_h2o_name);
+  _the_species.push_back(_soot_name);
+
+   return _the_species;
+
           };
           const bool does_scattering(){ return false; }; 
 
         private: 
-          double _value; 
+          double _value;
+
+          std::string _co2_name;
+          std::string _h2o_name;
+          std::string _soot_name;
+          double d_opl; // optical length; 
+          std::vector<std::string> _the_species;
+ 
       }; 
 
 #ifdef HAVE_RADPROPS
