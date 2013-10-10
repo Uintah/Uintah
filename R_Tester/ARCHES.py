@@ -54,7 +54,6 @@ NIGHTLYTESTS = [
    ("methane_explicit_table"      , "methane_explicit_table.ups"                  , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("methane8patch"               , "methane8patch.ups"                           , 8   , "Linux"  , ["exactComparison"]) , 
    ("methanePetscRadSolver"       , methanePetscRadSolver_ups                     , 8   , "Linux"  , ["exactComparison"]) ,
-#   ("methane_RCCE"                , "methane_RCCE.ups"                            , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("methane_rmcrt_const_props"   , "RMCRT/methane_rmcrt_const_props.ups"         , 4 ,   "Linux"  , ["exactComparison", "no_restart"]) ,
    ("dqmom_test_1"                , "DQMOM_regression/dqmom_test_1.ups"           , 1.1 , "Linux"  , ["exactComparison"]) , 
@@ -80,6 +79,7 @@ NIGHTLYTESTS = [
    ("scalar_var_1eqn"             , "scalar_variance_1eqn.ups"                    , 4   , "Linux"  , ["exactComparison", "no_restart"]),
    ("scalar_var_2eqn"             , "scalar_variance_2eqn.ups"                    , 4   , "Linux"  , ["exactComparison", "no_restart"]),
 #   ("coal_channel"                , "Coal/coal_channel.ups"                       , 1.1 , "Linux"  , ["exactComparison", "no_restart"])
+#   ("methane_RCCE"                , "methane_RCCE.ups"                            , 1.1 , "Linux"  , ["exactComparison"]) ,
 ]
 
 # Tests that are run during local regression testing
@@ -106,7 +106,6 @@ LOCALTESTS = [
    ("dqmom_test_4"               , "DQMOM_regression/dqmom_test_4.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
    ("dqmom_test_5"               , "DQMOM_regression/dqmom_test_5.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
    ("methane_jet"                , "ClassicMixingTables/ups/methane_jet.ups"     , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
-#   ("methane_RCCE"               , "methane_RCCE.ups"                            , 1.1 , "All "  , ["exactComparison"]) ,
    ("acidbase_jet"               , "ClassicMixingTables/ups/acidbase_jet.ups"    , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
    ("acidbase_jet_2D"            , "ClassicMixingTables/ups/acidbase_jet_2D.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
    ("1DTableTest"                , "ClassicMixingTables/ups/1DTableTest.ups"     , 1.1 , "All"  , ["exactComparison", "no_restart"]) ,
@@ -124,9 +123,18 @@ LOCALTESTS = [
    ("scalar_var_1eqn"            , "scalar_variance_1eqn.ups"                    , 4   , "All"  , ["exactComparison", "no_restart"]),
    ("scalar_var_2eqn"            , "scalar_variance_2eqn.ups"                    , 4   , "All"  , ["exactComparison", "no_restart"]),
 #   ("coal_channel"               , "Coal/coal_channel.ups"                       , 1.1 , "All"  , ["exactComparison", "no_restart"])
+#   ("methane_RCCE"               , "methane_RCCE.ups"                            , 1.1 , "All "  , ["exactComparison"]) ,
 ]
 
-DEBUGTESTS = []
+NEWTESTS = [
+   ("constantMMS__NEW"            , "mms/constantMMS__NEW.ups"                    , 1.1 , "All"  , ["exactComparison"]) , 
+   ("almgrenMMS__NEW"             , "mms/almgrenMMS__NEW.ups"                     , 1.1 , "All"  , ["exactComparison"]) , 
+   ("isotropic-turbulence-decay__NEW"  , "periodicTurb/isotropic-turbulence-decay__NEW.ups" , 1.1 , "All"  , ["exactComparison", "no_restart"]) , 
+   ("helium_1m__NEW"              , "helium_1m__NEW.ups"                          , 1.1 , "All"  , ["exactComparison"]) , 
+   ("methane_fire__NEW"           , "methane_fire__NEW.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
+   ("methane_fire_8patch__NEW"    , "methane_fire_8patch__NEW.ups"                , 8   , "All"  , ["exactComparison"]) , 
+   ("methane_fire_8patch_petscrad__NEW" , "methane_fire_8patch_petscrad__NEW.ups" , 8   , "All"  , ["exactComparison"]) ,
+]
 
 SCALARTESTS = [
    ("xplus_scalar_test"          , "ScalarTests/xplus_scalar_test.ups"           , 6   , "All"  , ["exactComparison", "no_restart"]) , 
@@ -153,11 +161,10 @@ RMCRTTESTS = [
   ("methane_rmcrt_const_props"   , "RMCRT/methane_rmcrt_const_props.ups"         , 4 ,   "ALL"  , ["exactComparison"])
 ]
 
-
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS RMCRTTESTS DEBUGTESTS SCALARTESTS DQMONTESTS NIGHTLYTESTS
+#LIST: LOCALTESTS RMCRTTESTS NEWTESTS SCALARTESTS DQMOMTESTS NIGHTLYTESTS
 #__________________________________
 
   
@@ -165,14 +172,14 @@ RMCRTTESTS = [
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = LOCALTESTS
-  elif me == "DEBUGTESTS":
-    TESTS = DEBUGTESTS
+  elif me == "NEWTESTS":
+    TESTS = NEWTESTS
   elif me == "RMCRTTESTS":
     TESTS = RMCRTTESTS
   elif me == "SCALARTESTS":
     TESTS = SCALARTESTS
-  elif me == "DQMONTESTS":
-    TESTS = DQMONTESTS
+  elif me == "DQMOMTESTS":
+    TESTS = DQMOMTESTS
   elif me == "NIGHTLYTESTS":
     TESTS = NIGHTLYTESTS
   else:
