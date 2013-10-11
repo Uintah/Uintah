@@ -225,7 +225,7 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
 
   if( volfract_ != Expr::Tag() ) volfrac_ = &svfm.field_ref( volfract_ );
 
-  const Expr::FieldMgrSelector<double>::type& doublefm = fml.field_manager<double>();
+  const Expr::FieldMgrSelector<TimeField>::type& doublefm = fml.field_manager<TimeField>();
   timestep_    = &doublefm.field_ref( timestept_    );
   currenttime_ = &doublefm.field_ref( currenttimet_ );
 }
@@ -320,7 +320,7 @@ Pressure::evaluate()
   SVolField& rhs = *results[1];
 
   std::ostringstream strs;
-  strs << "_t_"<< *currenttime_ << "s_rkstage_"<< rkStage_ << "_patch";
+  strs << "_t_"<< (*currenttime_)[0] << "s_rkstage_"<< rkStage_ << "_patch";
 
   solverParams_.setOutputFileName( "_WASATCH" + strs.str() );
 

@@ -44,65 +44,42 @@ typedef Uintah::Reductions::Sum<double> ReductionSumOpT;
  is used.
  */
 class ReductionBase
- : public Expr::Expression<double>
+ : public Expr::Expression<SpatialOps::structured::SingleValueField>
 {
+  typedef Uintah::ReductionVariable<double, ReductionMinOpT > UintahReduceMin;
+  typedef Uintah::ReductionVariable<double, ReductionMaxOpT > UintahReduceMax;
+  typedef Uintah::ReductionVariable<double, ReductionSumOpT > UintahReduceSum;
 
 protected:
   const Expr::Tag srcTag_;               // Expr::Tag for the source field on which a reduction is to be applied
   std::vector<Uintah::VarLabel*> rkRedVarLbls_; // these are the reduction varlabels, for each RK stage
   Uintah::VarLabel *thisVarLabel_;       // varlabel for the current perpatch expression
-  ReductionEnum reductionName_;          // enum that provides simple switch option
-  bool printVar_;                        // specify whether you want the reduction var printed or not
+  const ReductionEnum reductionName_;          // enum that provides simple switch option
+  const bool printVar_;                        // specify whether you want the reduction var printed or not
   
   void
   populate_reduction_variable( const Uintah::ProcessorGroup* const pg,
-                              const Uintah::PatchSubset* const patches,
-                              const Uintah::MaterialSubset* const materials,
-                              Uintah::DataWarehouse* const oldDW,
-                              Uintah::DataWarehouse* const newDW,
-                              const int RKStage);
+                               const Uintah::PatchSubset* const patches,
+                               const Uintah::MaterialSubset* const materials,
+                               Uintah::DataWarehouse* const oldDW,
+                               Uintah::DataWarehouse* const newDW,
+                               const int RKStage );
   
   void
   get_reduction_variable( const Uintah::ProcessorGroup* const pg,
-                         const Uintah::PatchSubset* const patches,
-                         const Uintah::MaterialSubset* const materials,
-                         Uintah::DataWarehouse* const oldDW,
-                         Uintah::DataWarehouse* const newDW,
-                         const int RKStage);
+                          const Uintah::PatchSubset* const patches,
+                          const Uintah::MaterialSubset* const materials,
+                          Uintah::DataWarehouse* const oldDW,
+                          Uintah::DataWarehouse* const newDW,
+                          const int RKStage );
 
   ReductionBase( const Expr::Tag& resultTag,
                  const Expr::Tag& srcTag,
-                 ReductionEnum reductionName,
-                 bool printVar=false);
+                 const ReductionEnum reductionName,
+                 const bool printVar=false);
   
 public:
   
-  //--------------------------------------------------------------------
-  class Builder : public Expr::ExpressionBuilder
-  {
-  public:
-    /**
-     *  @brief Build a Reduction expression
-     *  @param resultTag The tag for the value that this expression computes.
-     *  @param srcTag The tag of the source field on which we want to apply reduction.
-     *  @param reductionVarLabel The Uintah::VarLabel of the Uintah::ReductionVariable<>.
-     *  @param reductionName An enum designating the type of reduction operation. put here for ease of use.
-     *  @param printVar A boolean that specifies whether you want the reduced variable output to the cout stream.
-     */
-    Builder( const Expr::Tag& resultTag,
-             const Expr::Tag& srcTag,
-             ReductionEnum reductionName,
-             bool printVar=false);
-
-    Expr::ExpressionBase* build() const;
-
-  private:
-    const Expr::Tag resultTag_, srcTag_;
-    ReductionEnum reductionName_;
-    bool printVar_;
-  };
-  //--------------------------------------------------------------------
-
   ~ReductionBase();
   
   /**
@@ -110,7 +87,7 @@ public:
        that variable must be done at every Runge-Kutta stage
    *
    */
-  static std::map<Expr::Tag, bool > reductionTagList;
+  static std::map<Expr::Tag, bool > reductionTagList;  // jcs should not be public.
 
   /**
    *  \brief Schedules a Uintah task that populates a reduction variable and

@@ -113,7 +113,7 @@ public:
  */
 template< typename Vel1T, typename Vel2T, typename Vel3T >
 class TotalKineticEnergy
-: public Expr::Expression<double>//public ReductionBase
+: public Expr::Expression<SpatialOps::structured::SingleValueField>
 {
   
 private:

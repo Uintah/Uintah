@@ -29,7 +29,7 @@
 namespace Wasatch{
 
   SetCurrentTime::SetCurrentTime()
-    : Expr::Expression<double>(),
+    : Expr::Expression<SpatialOps::structured::SingleValueField>(),
       rkStage_( 0 ),
       deltat_ ( 0.0 ),
       simTime_( 0.0 )
@@ -45,17 +45,18 @@ namespace Wasatch{
   void
   SetCurrentTime::evaluate()
   {
+    using namespace SpatialOps;
     assert( deltat_  >= 0.0 );
     assert( simTime_ >= 0.0 );
 
-    typedef std::vector<double*>& DoubleVec;
-    DoubleVec results = this->get_value_vec();
-    *results[0] = simTime_;
-    *results[1] = deltat_;
-    if( rkStage_ == 2 ) *results[0] += deltat_;
+    typedef std::vector<SpatialOps::structured::SingleValueField*> Vec;
+    Vec& results = this->get_value_vec();
+    *results[0] <<= simTime_;
+    *results[1] <<= deltat_;
+    if( rkStage_ == 2 ) *results[0] <<= *results[0] + deltat_;
     if( rkStage_ == 3 ) {
-      *results[0] += 0.5*deltat_;
-      *results[1]  = 0.5*deltat_;
+      *results[0] <<= *results[0] + 0.5*deltat_;
+      *results[1] <<= 0.5*deltat_;
     }
   }
 

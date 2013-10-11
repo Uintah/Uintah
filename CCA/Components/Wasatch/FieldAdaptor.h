@@ -141,6 +141,14 @@ namespace Wasatch{
                        deviceIndex );
   }
 
+  template<>
+  inline SpatialOps::structured::SingleValueField*
+  wrap_uintah_field_as_spatialops<SpatialOps::structured::SingleValueField,Uintah::PerPatch<double*> >(
+      Uintah::PerPatch<double*>& uintahVar,
+      const Uintah::Patch* const patch,
+      const SpatialOps::MemoryType mtype,
+      const unsigned short int deviceIndex );
+
   /**
    *  \ingroup WasatchParser
    *  \brief translate a string describing a field type to the FieldTypes enum.
@@ -159,7 +167,7 @@ namespace Wasatch{
    */
   template<typename FieldT> struct SelectUintahFieldType;
 
-  template<> struct SelectUintahFieldType<double>{
+  template<> struct SelectUintahFieldType<SpatialOps::structured::SingleValueField>{
     typedef Uintah::PerPatch<double> type;
     typedef Uintah::PerPatch<double> const_type;
   };
@@ -255,7 +263,9 @@ namespace Wasatch{
     return 1;
   }
 
-  template<> inline int get_n_ghost<double>(){ return 0; };
+  template<> inline int get_n_ghost<SpatialOps::structured::SingleValueField>(){
+    return 0;
+  };
 
   /**
    *  \ingroup WasatchFields
@@ -273,7 +283,7 @@ namespace Wasatch{
   }
 
   template<>
-  inline Uintah::IntVector get_uintah_ghost_descriptor<double>()
+  inline Uintah::IntVector get_uintah_ghost_descriptor<SpatialOps::structured::SingleValueField>()
   {
     return Uintah::IntVector(0,0,0);
   }

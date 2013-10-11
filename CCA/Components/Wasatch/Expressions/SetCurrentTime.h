@@ -38,7 +38,7 @@ namespace Wasatch{
  *         time.  May be needed for time-varying BCs, etc.
  */
 class SetCurrentTime
- : public Expr::Expression<double>
+ : public Expr::Expression<SpatialOps::structured::SingleValueField>
 {
   int rkStage_;
   double deltat_, simTime_;
@@ -46,7 +46,6 @@ class SetCurrentTime
   SetCurrentTime();
 
 public:
-  int rkStage;
 
   class Builder : public Expr::ExpressionBuilder
   {
@@ -60,7 +59,6 @@ public:
 
   void advertise_dependents( Expr::ExprDeps& exprDeps ){}
   void bind_fields( const Expr::FieldManagerList& fml ){}
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB ){}
   void evaluate();
   void set_integrator_stage( const int rkStage ){rkStage_ = rkStage;}
   void set_deltat( const double deltat ) {deltat_ = deltat;}

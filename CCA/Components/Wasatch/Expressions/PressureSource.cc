@@ -76,25 +76,22 @@ void PressureSource::advertise_dependents( Expr::ExprDeps& exprDeps )
 void PressureSource::bind_fields( const Expr::FieldManagerList& fml )
 {
   const Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
-  const Expr::FieldMgrSelector<double   >::type& tsfm     = fml.field_manager<double>();
+  const Expr::FieldMgrSelector<TimeField>::type& tsfm     = fml.field_manager<TimeField>();
   
   if (!isConstDensity_) {
     const Expr::FieldMgrSelector<XVolField>::type& xVolFM  = fml.field_manager<XVolField>();
     const Expr::FieldMgrSelector<YVolField>::type& yVolFM  = fml.field_manager<YVolField>();
     const Expr::FieldMgrSelector<ZVolField>::type& zVolFM  = fml.field_manager<ZVolField>(); 
     
-    if( doX_ )  
-    {
+    if( doX_ ){
       xMom_  = &xVolFM.field_ref( xMomt_ );
       uStar_  = &xVolFM.field_ref( xVelStart_ );
     }
-    if( doY_ )    
-    {
+    if( doY_ ){
       yMom_ = &yVolFM.field_ref( yMomt_ );
       vStar_ = &yVolFM.field_ref( yVelStart_ );
     }
-    if( doZ_ )   
-    {
+    if( doZ_ ){
       zMom_ = &zVolFM.field_ref( zMomt_ );
       wStar_ = &zVolFM.field_ref( zVelStart_ );
     }
@@ -108,7 +105,6 @@ void PressureSource::bind_fields( const Expr::FieldManagerList& fml )
   dens_ = &scalarFM.field_ref( denst_ );
   
   timestep_ = &tsfm.field_ref( timestept_ );  
-  
 }
 
 //------------------------------------------------------------------
@@ -153,7 +149,7 @@ void PressureSource::evaluate()
           ( (*divXOp_)( (*xFInterpOp_)(*xMom_) ) - (1.0 - alpha) * (*divXOp_) ( (*s2XFInterpOp_)(*densStar_) * (*xFInterpOp_)(*uStar_) )
           + (*divYOp_)( (*yFInterpOp_)(*yMom_) ) - (1.0 - alpha) * (*divYOp_) ( (*s2YFInterpOp_)(*densStar_) * (*yFInterpOp_)(*vStar_) )
           + (*divZOp_)( (*zFInterpOp_)(*zMom_) ) - (1.0 - alpha) * (*divZOp_) ( (*s2ZFInterpOp_)(*densStar_) * (*zFInterpOp_)(*wStar_) )
-          + alpha * ((*dens2Star_ - *dens_)/(2 * *timestep_))
+          + alpha * ((*dens2Star_ - *dens_)/(2. * *timestep_))
           ) / *timestep_;
     }
     else{
@@ -176,7 +172,7 @@ void PressureSource::evaluate()
         result <<= result + (*divZOp_)( (*zFInterpOp_)(*zMom_) ) - (1.0 - alpha) * (*divZOp_) ( (*s2ZFInterpOp_)(*densStar_) * (*zFInterpOp_)(*wStar_) );
       }
 
-      result <<= ( result + alpha * ((*dens2Star_ - *dens_)/(2 * *timestep_))) / *timestep_;  // P_src = P_src + alpha * (drho/dt)^(n+1)
+      result <<= ( result + alpha * ((*dens2Star_ - *dens_)/(2. * *timestep_))) / *timestep_;  // P_src = P_src + alpha * (drho/dt)^(n+1)
     } // 1D, 2D cases
 
   }

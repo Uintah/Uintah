@@ -43,9 +43,12 @@ template< typename FieldT >
 class VarDensMMSDensity
 : public BoundaryConditionBase<FieldT>
 {
-  VarDensMMSDensity( const Expr::Tag& indepVarTag ) :
-  indepVarTag_ (indepVarTag)
-  {}
+  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  VarDensMMSDensity( const Expr::Tag& indepVarTag )
+  : indepVarTag_ (indepVarTag)
+  {
+    this->set_gpu_runnable(false);
+  }
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -69,11 +72,11 @@ public:
   ~VarDensMMSDensity(){}
   void advertise_dependents( Expr::ExprDeps& exprDeps ){  exprDeps.requires_expression( indepVarTag_ );}
   void bind_fields( const Expr::FieldManagerList& fml ){
-    t_    = &fml.template field_manager<double>().field_ref( indepVarTag_ );
+    t_    = &fml.template field_manager<TimeField>().field_ref( indepVarTag_ );
   }
   void evaluate();
 private:
-  const double* t_;
+  const TimeField* t_;
   const Expr::Tag indepVarTag_;
 };
 
@@ -95,7 +98,9 @@ evaluate()
   FieldT& f = this->value();
   const double ci = this->ci_;
   const double cg = this->cg_;
-  const double bcValue = -1 / ( (5/(exp(1125/( *t_ + 10)) * (2 * *t_ + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125 / (*t_ + 10)) * (2 * *t_ + 5)));
+  const double t = (*t_)[0];
+
+  const double bcValue = -1 / ( (5/(exp(1125/( t + 10)) * (2 * t + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125 / (t + 10)) * (2 * t + 5)));
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
     std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
     std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
