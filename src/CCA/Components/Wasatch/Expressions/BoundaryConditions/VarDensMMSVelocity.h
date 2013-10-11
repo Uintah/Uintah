@@ -47,6 +47,7 @@ template< typename FieldT >
 class VarDensMMSVelocity
 : public BoundaryConditionBase<FieldT>
 {
+  typedef typename SpatialOps::structured::SingleValueField TimeField;
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -74,15 +75,17 @@ public:
   
   ~VarDensMMSVelocity(){}
   void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( indepVarTag_ );}
-  void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<double>( indepVarTag_ );}
+  void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<TimeField>( indepVarTag_ );}
   void evaluate();
 private:
   VarDensMMSVelocity( const Expr::Tag& indepVarTag,
-                      const SpatialOps::structured::BCSide side ) :
-  indepVarTag_ (indepVarTag),
-  side_ (side)
-  {}  
-  const double* t_;
+                      const SpatialOps::structured::BCSide side )
+  : indepVarTag_ (indepVarTag),
+    side_ (side)
+  {
+    this->set_gpu_runnable(false);
+  }
+  const TimeField* t_;
   const Expr::Tag indepVarTag_;
   const SpatialOps::structured::BCSide side_;
 };
@@ -107,20 +110,20 @@ evaluate()
   FieldT& f = this->value();
   const double ci = this->ci_;
   const double cg = this->cg_;
-  
+  const double t = (*t_)[0];  // this breaks GPU
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
     std::vector<SS::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
     std::vector<SS::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     if (this->isStaggered_) {
       if (side_== SS::PLUS_SIDE) {
-        const double bcValue = ( ((-5 * *t_)/( *t_ * *t_ + 1)) * sin(10 * PI / (*t_ + 10) ) );
+        const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(10 * PI / (t + 10) ) );
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
           f(*ii) = ( bcValue - ci*f(*ig) ) / cg;
         }
       } else if (side_ == SS::MINUS_SIDE) {
-        const double bcValue = ( ((-5 * *t_)/( *t_ * *t_ + 1)) * sin(-10 * PI / (*t_ + 10) ) );
+        const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(-10 * PI / (t + 10) ) );
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
           f(*ii) = ( bcValue - ci*f(*ii) ) / cg;
@@ -128,12 +131,12 @@ evaluate()
       }
     } else {
       if (side_== SS::PLUS_SIDE) {
-        const double bcValue = ( ((-5 * *t_)/( *t_ * *t_ + 1)) * sin(10 * PI / (*t_ + 10) ) );        
+        const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(10 * PI / (t + 10) ) );
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
         }
       } else if (side_ == SS::MINUS_SIDE) {
-        const double bcValue = ( ((-5 * *t_)/( *t_ * *t_ + 1)) * sin(-10 * PI / (*t_ + 10) ) );        
+        const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(-10 * PI / (t + 10) ) );
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
         }

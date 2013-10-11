@@ -26,7 +26,7 @@ template< typename FieldT >
 class VelEst
   : public Expr::Expression<FieldT>
 {  
-
+  typedef SpatialOps::structured::SingleValueField TimeField;
   typedef SpatialOps::structured::FaceTypes<FieldT> FaceTypes;
   typedef typename FaceTypes::XFace XFace; ///< The type of field for the x-face of FieldT.
   typedef typename FaceTypes::YFace YFace; ///< The type of field for the y-face of FieldT.
@@ -63,7 +63,7 @@ class VelEst
   const ZFace *tauzi_;
   const FieldT *vel_, *convTerm_;
   const SVolField *density_, *pressure_, *visc_;
-  const double *tStep_; 
+  const TimeField *tStep_;
 
   const Expr::Tag velt_, convTermt_, densityt_, visct_, tauxit_, tauyit_, tauzit_, pressuret_, tStept_;
   const bool is3d_;

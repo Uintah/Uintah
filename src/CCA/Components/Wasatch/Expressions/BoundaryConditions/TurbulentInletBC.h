@@ -35,6 +35,7 @@ template< typename FieldT >
 class TurbulentInletBC
 : public BoundaryConditionBase<FieldT>
 {
+  typedef typename SpatialOps::structured::SingleValueField TimeField;
   TurbulentInletBC( const std::string inputFileName,
                     const std::string velDir,
                     const int period,
@@ -73,8 +74,8 @@ public:
   
 private:
   // member variables
-  const double *t_;
-  const double *dt_;
+  const TimeField *t_;
+  const TimeField *dt_;
   const Expr::Tag timeTag_, timestepTag_;
   const std::string velDir_;  
   const int period_;
@@ -173,7 +174,7 @@ template< typename FieldT >
 void
 TurbulentInletBC<FieldT>::bind_fields(const Expr::FieldManagerList& fml)
 {
-  const typename Expr::FieldMgrSelector<double>::type& fm = fml.template field_manager<double>();
+  const typename Expr::FieldMgrSelector<TimeField>::type& fm = fml.template field_manager<TimeField>();
   t_  = &fm.field_ref( timeTag_     );
   dt_ = &fm.field_ref( timestepTag_ );
 }
@@ -185,14 +186,14 @@ int
 TurbulentInletBC<FieldT>::calculate_time_index() {
   
   // floor - get the number of dxs into the data
-  int tindex =(int) std::floor(*t_/dx_);
+  int tindex =(int) std::floor((*t_)[0]/dx_);
   
   while (tindex >= NT_- 1) {
     tindex -= (NT_-1);
   }
 
   // coordinate relative to the current turbulent data interval
-  coord_ = *t_ - tindex*dx_;
+  coord_ = (*t_)[0] - tindex*dx_;
 
   // OPTIONAL: make sure we match the data point at the begining of new turbulent data
   //if (coord_ < *dt_) coord_ = 0.0;

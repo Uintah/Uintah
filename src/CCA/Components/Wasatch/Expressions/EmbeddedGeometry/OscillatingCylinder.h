@@ -64,15 +64,16 @@ public:
   void evaluate();
   
 private:
+  typedef SpatialOps::structured::SingleValueField TimeField;
   
-  OscillatingCylinder(const std::string axis,
-                      const std::vector<double>& origin,  // origin on the minus face perpendicular to axis
-                      const std::vector<double>& oscillatingdir,
-                      const double insideValue,
-                      const double outsideValue,
-                      const double radius,
-                      const double frequency,
-                      const double amplitude);
+  OscillatingCylinder( const std::string axis,
+                       const std::vector<double>& origin,  // origin on the minus face perpendicular to axis
+                       const std::vector<double>& oscillatingdir,
+                       const double insideValue,
+                       const double outsideValue,
+                       const double radius,
+                       const double frequency,
+                       const double amplitude );
   Expr::Tag tag1_, tag2_;
   const std::vector<double> origin_;
   const std::vector<double> oscillatingdir_;
@@ -80,7 +81,7 @@ private:
   const double frequency_, amplitude_;
   const SVolField* field1_;
   const SVolField* field2_;
-  const double* t_;
-  Expr::Tag timet_;
+  const TimeField* t_;
+  const Expr::Tag timet_;
 };
 #endif

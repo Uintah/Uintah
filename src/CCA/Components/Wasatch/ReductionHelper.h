@@ -119,14 +119,14 @@ namespace Wasatch {
                        const Expr::Tag& resultTag,
                        const Expr::Tag& srcTag,
                        const bool printVar=false,
-                       const bool reduceOnAllRKStages=false);
+                       const bool reduceOnAllRKStages=false );
     
     void schedule_tasks( const Uintah::LevelP& level,
                          Uintah::SchedulerP sched,
                          const Uintah::MaterialSet* const materials,
                          const Expr::ExpressionTree::TreePtr tree,
                          const int patchID,
-                         const int rkStage);// do we really need the rkstage here? maybe in the future...
+                         const int rkStage );// do we really need the rkstage here? maybe in the future...
   private:
 
     ReductionHelper();

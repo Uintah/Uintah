@@ -46,6 +46,7 @@
 template< typename ValT >
 class VelocityX : public Expr::Expression<ValT>
 {
+  typedef typename SpatialOps::structured::SingleValueField TimeField;
 public:
 
   /**
@@ -82,7 +83,7 @@ private:
   const Expr::Tag xTag_, yTag_, tTag_;
   const ValT* x_;
   const ValT* y_;
-  const double* t_;
+  const TimeField* t_;
 };
 
 //====================================================================
@@ -105,6 +106,7 @@ private:
 template< typename ValT >
 class VelocityY : public Expr::Expression<ValT>
 {
+  typedef typename SpatialOps::structured::SingleValueField TimeField;
 public:
 
   /**
@@ -141,7 +143,7 @@ private:
   const Expr::Tag xTag_, yTag_, tTag_;
   const ValT* x_;
   const ValT* y_;
-  const double* t_;
+  const TimeField* t_;
 };
 
 //====================================================================
@@ -168,6 +170,7 @@ private:
 template< typename ValT >
 class GradPX : public Expr::Expression<ValT>
 {
+  typedef typename SpatialOps::structured::SingleValueField TimeField;
 public:
 
   /**
@@ -204,7 +207,7 @@ private:
   const Expr::Tag xTag_, yTag_, tTag_;
   const ValT* x_;
   const ValT* y_;
-  const double* t_;
+  const TimeField* t_;
 };
 
 //====================================================================
@@ -231,6 +234,7 @@ private:
 template< typename ValT >
 class GradPY : public Expr::Expression<ValT>
 {
+  typedef typename SpatialOps::structured::SingleValueField TimeField;
 public:
 
   /**
@@ -267,7 +271,7 @@ private:
   const Expr::Tag xTag_, yTag_, tTag_;
   const ValT* x_;
   const ValT* y_;
-  const double* t_;
+  const TimeField* t_;
 };
 
 /**

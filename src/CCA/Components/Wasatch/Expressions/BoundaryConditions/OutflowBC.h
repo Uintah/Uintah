@@ -32,17 +32,18 @@ template< typename FieldT >
 class OutflowBC
 : public BoundaryConditionBase<FieldT>
 {
-  OutflowBC( const Expr::Tag& velTag ) :
-  velTag_ (velTag)
-  {}
+  OutflowBC( const Expr::Tag& velTag ) : velTag_ (velTag)
+  {
+    this->set_gpu_runnable(false);
+  }
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& velTag ) :
-    ExpressionBuilder(resultTag),
-    velTag_ (velTag)
+             const Expr::Tag& velTag )
+    : ExpressionBuilder(resultTag),
+      velTag_ (velTag)
     {}
     Expr::ExpressionBase* build() const{ return new OutflowBC(velTag_); }
   private:
@@ -50,6 +51,7 @@ public:
   };
   
   ~OutflowBC(){}
+
   void advertise_dependents( Expr::ExprDeps& exprDeps )
   {
     exprDeps.requires_expression( velTag_ );
@@ -61,7 +63,7 @@ public:
   {
     u_ = &fml.template field_ref<FieldT>( velTag_ );
     const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
-    dt_ = &fml.template field_ref<double>( tagNames.timestep );
+    dt_ = &fml.template field_ref<SpatialOps::structured::SingleValueField>( tagNames.timestep );
   }
 
   void evaluate()
@@ -76,6 +78,8 @@ public:
       const IntVec& offset = this->bndNormal_;
       const double sign = (offset[0] >=0 && offset[1] >= 0 && offset[2] >= 0) ? 1.0 : -1.0;
       
+      const double dt = (*dt_)[0];  // jcs we should be using this directly in nebo assignments rather than pulling it out if we want GPU execution
+
       if(this->isStaggered_) {
         for( ; ii != (this->vecInteriorPts_)->end(); ++ii, ++ig ){
           const double ub  = (*u_)(*ii);            // boundary cell
@@ -86,11 +90,11 @@ public:
           //const double uii = (*u_)(*ii - offset*2); // interior cell
           //const double fii = f(*ii - offset*2);
           if ( sign*ub > 0.0 ) { // u.n > 0, flow out
-            f(*ii) = (1.0/ *dt_)*( -ub + ui ) + fi; // first order one sided difference
+            f(*ii) = (1.0/ dt)*( -ub + ui ) + fi; // first order one sided difference
             // uncomment the line below to use second-order one-sided difference
-            //f(*ii) = (1.0/ *dt_)*( -ub + 4.0/3.0*ui - 1.0/3.0*uii) + 4.0/3.0*fi - 1.0/3.0*fii;
+            //f(*ii) = (1.0/ dt)*( -ub + 4.0/3.0*ui - 1.0/3.0*uii) + 4.0/3.0*fi - 1.0/3.0*fii;
           } else { // u.n <= 0.0, flow in
-            f(*ii) = -(1.0/ *dt_) * ub;
+            f(*ii) = -(1.0/ dt) * ub;
           }
         }
       
@@ -98,7 +102,7 @@ public:
           std::vector<IntVec>::const_iterator ic = (this->interiorEdgePoints_)->begin(); // ii is the interior flat index
           for (; ic != (this->interiorEdgePoints_)->end(); ++ic) {
             const double ub  = (*u_)(*ic);            // boundary cell
-            f(*ic) = -(1.0/ *dt_) * ub;
+            f(*ic) = -(1.0/ dt) * ub;
           }          
         }
         
@@ -114,7 +118,7 @@ public:
   
 private:
   const FieldT* u_;
-  const double* dt_;
+  const SpatialOps::structured::SingleValueField* dt_;
   const Expr::Tag velTag_;
 };
 

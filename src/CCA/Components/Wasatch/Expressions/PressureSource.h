@@ -42,6 +42,8 @@ class PressureSource : public Expr::Expression<SVolField>
   typedef FaceTypes::YFace YFace; ///< The type of field for the y-face of SVolField.
   typedef FaceTypes::ZFace ZFace; ///< The type of field for the z-face of SVolField.
 
+  typedef SpatialOps::structured::SingleValueField TimeField;
+
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, XFace >::type XFaceInterpT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, YFace >::type YFaceInterpT;
   typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, ZFace >::type ZFaceInterpT;
@@ -60,9 +62,9 @@ class PressureSource : public Expr::Expression<SVolField>
   const ZVolField *zMom_, *wStar_;
   const SVolField *dens_, *densStar_, *dens2Star_;
   const SVolField *dil_;
+  const TimeField* timestep_;
   
   const bool isConstDensity_, doX_, doY_, doZ_;
-  const double* timestep_;
   
   const Expr::Tag xMomt_, yMomt_, zMomt_;
   const Expr::Tag xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_, dilt_, timestept_;

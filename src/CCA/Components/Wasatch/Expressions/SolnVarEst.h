@@ -25,11 +25,12 @@ template< typename FieldT >
 class SolnVarEst 
   : public Expr::Expression<FieldT>
 {  
+  typedef SpatialOps::structured::SingleValueField TimeField;
 
   const FieldT *solnVarOld_, *solnVarRHS_;
 
   const Expr::Tag solnVarOldt_, solnVarRHSt_, tStept_;
-  const double *tStep_; 
+  const TimeField *tStep_;
 
   
   SolnVarEst( const Expr::Tag& solnVarOldTag,

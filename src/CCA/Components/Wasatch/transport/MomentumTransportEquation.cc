@@ -824,7 +824,7 @@ namespace Wasatch{
           factory.register_expression(scinew typename TotalKineticEnergy<XVolField,YVolField,ZVolField>::Builder( tkeTempTag,
                                                                                                                  velTags_[0],velTags_[1],velTags_[2] ),true);
           
-          ReductionHelper::self().add_variable<double, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE, false);
+          ReductionHelper::self().add_variable<SpatialOps::structured::SingleValueField, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE, false);
         }
       } else if (!factory.have_entry( TagNames::self().kineticEnergy )) { // calculate local, pointwise kinetic energy
         const Expr::ExpressionID keID = factory.register_expression(scinew typename KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder( TagNames::self().kineticEnergy,

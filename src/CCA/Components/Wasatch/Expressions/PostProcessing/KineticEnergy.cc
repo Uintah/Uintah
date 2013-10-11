@@ -84,9 +84,9 @@ evaluate()
 template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
 KineticEnergy<FieldT,Vel1T,Vel2T,Vel3T>::
 Builder::Builder( const Expr::Tag& result,
-                 const Expr::Tag& vel1tag,
-                 const Expr::Tag& vel2tag,
-                 const Expr::Tag& vel3tag )
+                  const Expr::Tag& vel1tag,
+                  const Expr::Tag& vel2tag,
+                  const Expr::Tag& vel3tag )
 : ExpressionBuilder(result),
   v1t_( vel1tag ), v2t_( vel2tag ), v3t_( vel3tag )
 {}
@@ -112,11 +112,11 @@ KineticEnergy<FieldT,Vel1T,Vel2T,Vel3T>::Builder::build() const
 
 template< typename Vel1T, typename Vel2T, typename Vel3T >
 TotalKineticEnergy<Vel1T,Vel2T,Vel3T>::
-TotalKineticEnergy(const Expr::Tag& resultTag,
-                   const Expr::Tag& vel1tag,
-                  const Expr::Tag& vel2tag,
-                  const Expr::Tag& vel3tag )
-: Expr::Expression<double>(),
+TotalKineticEnergy( const Expr::Tag& resultTag,
+                    const Expr::Tag& vel1tag,
+                    const Expr::Tag& vel2tag,
+                    const Expr::Tag& vel3tag )
+: Expr::Expression<SpatialOps::structured::SingleValueField>(),
   vel1t_( vel1tag ),
   vel2t_( vel2tag ),
   vel3t_( vel3tag ),
@@ -168,17 +168,19 @@ TotalKineticEnergy<Vel1T,Vel2T,Vel3T>::
 evaluate()
 {
   using namespace SpatialOps;
-  double& tKE = this->value();
-  tKE = 0.0;
+  SpatialOps::structured::SingleValueField& tKE = this->value();
   
   if (is3d_) {
-    tKE = field_sum_interior(*vel1_ * *vel1_) + field_sum_interior(*vel2_ * *vel2_) + field_sum_interior(*vel3_ * *vel3_);
+    tKE <<= 0.5 * ( field_sum_interior(*vel1_ * *vel1_)
+                  + field_sum_interior(*vel2_ * *vel2_)
+                  + field_sum_interior(*vel3_ * *vel3_) );
   } else {
-    if( vel1t_ != Expr::Tag() ) tKE = tKE + field_sum_interior(*vel1_ * *vel1_);
-    if( vel2t_ != Expr::Tag() ) tKE = tKE + field_sum_interior(*vel2_ * *vel2_);
-    if( vel3t_ != Expr::Tag() ) tKE = tKE + field_sum_interior(*vel3_ * *vel3_);
+    tKE <<= 0.0;
+    if( vel1t_ != Expr::Tag() ) tKE <<= tKE + field_sum_interior(*vel1_ * *vel1_);
+    if( vel2t_ != Expr::Tag() ) tKE <<= tKE + field_sum_interior(*vel2_ * *vel2_);
+    if( vel3t_ != Expr::Tag() ) tKE <<= tKE + field_sum_interior(*vel3_ * *vel3_);
+    tKE <<= 0.5*tKE;
   }
-  tKE *= 0.5;
 }
 
 //--------------------------------------------------------------------
@@ -186,9 +188,9 @@ evaluate()
 template< typename Vel1T, typename Vel2T, typename Vel3T >
 TotalKineticEnergy<Vel1T,Vel2T,Vel3T>::
 Builder::Builder( const Expr::Tag& result,
-                 const Expr::Tag& vel1Tag,
-                 const Expr::Tag& vel2Tag,
-                 const Expr::Tag& vel3Tag )
+                  const Expr::Tag& vel1Tag,
+                  const Expr::Tag& vel2Tag,
+                  const Expr::Tag& vel3Tag )
 : ExpressionBuilder(result),
   resultTag_(result),
   v1t_( vel1Tag ),

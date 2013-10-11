@@ -41,8 +41,9 @@ OscillatingCylinder( const std::string axis,
   outsidevalue_(outsideValue),
   radius_(radius),
   frequency_(frequency),
-  amplitude_(amplitude)
-  {
+  amplitude_(amplitude),
+  timet_( "time", Expr::STATE_NONE )
+{
   if ( axis == "X" ) {
     tag1_ = Expr::Tag("YSVOL", Expr::STATE_NONE);
     tag2_ = Expr::Tag("ZSVOL", Expr::STATE_NONE);
@@ -53,9 +54,8 @@ OscillatingCylinder( const std::string axis,
     tag1_ = Expr::Tag("XSVOL", Expr::STATE_NONE);
     tag2_ = Expr::Tag("YSVOL", Expr::STATE_NONE);
   }
-  timet_ = Expr::Tag("time", Expr::STATE_NONE );
 
-  this->set_gpu_runnable( true );
+  this->set_gpu_runnable( false );
 }
 
 //--------------------------------------------------------------------
@@ -81,7 +81,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   field2_ = &fm.field_ref( tag2_ );
   
   // get the time tag
-  t_ = &fml.field_ref<double>( timet_ );
+  t_ = &fml.field_ref<TimeField>( timet_ );
 }
 
 //--------------------------------------------------------------------
@@ -91,8 +91,9 @@ OscillatingCylinder::
 evaluate()
 {
   using namespace SpatialOps;
-  const double orig0 = origin_[0] + oscillatingdir_[0]*amplitude_*sin(frequency_ * *t_);
-  const double orig1 = origin_[1] + oscillatingdir_[1]*amplitude_*sin(frequency_ * *t_);
+  // jcs need to fold all of this into cond before it is GPU runnable.
+  const double orig0 = origin_[0] + oscillatingdir_[0]*amplitude_*sin(frequency_ * (*t_)[0] );
+  const double orig1 = origin_[1] + oscillatingdir_[1]*amplitude_*sin(frequency_ * (*t_)[0] );
   SVolField& result = this->value();
   result <<= cond( (*field1_ - orig0) * (*field1_ - orig0) + (*field2_ - orig1)*(*field2_ - orig1) - radius_*radius_ <= 0,
                   insidevalue_)
