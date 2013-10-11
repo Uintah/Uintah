@@ -131,8 +131,8 @@ Dissolution( const Expr::TagList& weightsTagList,
   abscissaeTagList_(abscissaeTagList),
   sBarTag_(sBarTag),
   superSatTag_(superSatTag),
-  rMin_(rMin),
   momentOrder_(momentOrder),
+  rMin_(rMin),
   deathCoef_(deathCoef)
 {}
 
