@@ -5,7 +5,7 @@
     <title>DQMOM_coal</title>
   </Meta>
 
-  <SimulationComponent type="mpmarches"/>
+  <SimulationComponent type="arches"/>
 
   <Solver type="hypre"/>
   <Time>
@@ -91,8 +91,7 @@
     <save label = "adiabaticenthalpy"   table_lookup = "true"/>
     <save label = "N2"          table_lookup = "true"/>
     <save label = "mixture_molecular_weight" table_lookup = "true"/>
-    <!--checkpoint cycle = "2" walltimeStart = "0.001" walltimeInterval = "0.02"/--> <!-- checkpoint every 1 hour -->
-    <checkpoint cycle="2" interval="0.02"/>
+    <checkpoint cycle="2" interval="0.005"/>
     <outputDoubleAsFloat/>
     <compression>gzip</compression>
   </DataArchiver>
