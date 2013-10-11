@@ -217,7 +217,8 @@
       
       <CylindricalDiffusionCoefficient spec = "OPTIONAL NO_DATA"
                                        attribute1="Diff_Coef REQUIRED DOUBLE"
-                                       attribute2="Molec_Vol REQUIRED DOUBLE">
+                                       attribute2="Molec_Vol REQUIRED DOUBLE"
+                                       attribute3="S_Min OPTIONAL DOUBLE">
         <Supersaturation spec = "REQUIRED NO_DATA">                                      
           <NameTag spec="REQUIRED"/>
         </Supersaturation>
@@ -231,7 +232,8 @@
       
       <KineticGrowthCoefficient spec = "OPTIONAL NO_DATA"
                                 attribute1="K_A REQUIRED DOUBLE"
-                                attribute2="S_Max OPTIONAL DOUBLE">
+                                attribute2="S_Max OPTIONAL DOUBLE"
+                                attribute3="S_Min OPTIONAL DOUBLE">
         <Supersaturation spec = "REQUIRED NO_DATA">                                      
           <NameTag spec="REQUIRED"/>
         </Supersaturation>
