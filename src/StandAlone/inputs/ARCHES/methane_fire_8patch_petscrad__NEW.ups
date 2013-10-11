@@ -10,18 +10,17 @@
   <Solver type="hypre"/>
 
   <Time>
-    <maxTime>2.5</maxTime>
+    <maxTime>1.0</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
-    <max_Timesteps>51</max_Timesteps>
   </Time>
 
   <DataArchiver>
     <filebase>methane_fire_8patch_petscrad.uda</filebase>
-    <outputTimestepInterval>2</outputTimestepInterval>
-    <outputInitTimestep/>
+    <outputInterval>0.1</outputInterval>
+    <save label="cellType"/>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
     <save label="CCVelocity"/>
@@ -35,7 +34,9 @@
     <save label="CO2" table_lookup="true"/>
     <save label="velocityDivergence"/>
     <save label="continuityResidual"/>
-    <checkpoint cycle="2" interval="0.01"/>
+    <save label="abskg"/>
+    <save label="soot"/>
+    <checkpoint cycle="2" interval="0.2"/>
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -44,7 +45,7 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[3,3,3]</upper>
-        <resolution>[30,30,30]</resolution>
+        <resolution>[10,10,10]</resolution>
         <extraCells>[1,1,1]</extraCells>
         <patches>[2,2,2]</patches>
       </Box>
@@ -192,7 +193,7 @@
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <conv_scheme>super_bee</conv_scheme>
+          <conv_scheme>upwind</conv_scheme>
           <determines_properties/>
           <initialization type="constant">
             <constant>.0</constant>
@@ -218,13 +219,14 @@
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
+            <soot_label>soot</soot_label>
             <DORadiationModel>
               <opl>3.0</opl>
               <LinearSolver type="petsc">
                 <res_tol>1.0e-10</res_tol>
                 <ksptype>gmres</ksptype>
                 <pctype>jacobi</pctype>
-                <max_iter>75</max_iter>
+                <max_iter>275</max_iter>
               </LinearSolver>
             </DORadiationModel>
           </src>
@@ -240,13 +242,23 @@
           <noisy_hl_warning/>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
+        <model type="empirical_soot" label="soot">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <carbon_content_fuel>0.75</carbon_content_fuel>
+          <carbon_content_ox>0.0</carbon_content_ox>
+          <E_st>0.08</E_st>
+          <temperature_label>temperature</temperature_label>
+          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
+        </model>
         <model type="scalsim_variance" label="scalar_var">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
           <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
           <density_label>density</density_label>
-          <variance_coefficient>0.01</variance_coefficient> <!-- Warning: not a good default value --> 
+          <variance_coefficient>0.14</variance_coefficient>
         </model>
       </PropertyModels>
 
