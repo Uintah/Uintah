@@ -487,7 +487,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   const Expr::Tag timeStepTag( "timestep", Expr::STATE_NONE );
   if( !(solngh->exprFactory->have_entry( timeTag )) ) {
     // register placeholder expressions for time and timestep
-    typedef Expr::PlaceHolder<double>  TimeT;
+    typedef Expr::PlaceHolder<SpatialOps::structured::SingleValueField>  TimeT;
     solngh->exprFactory->register_expression( new TimeT::Builder(timeTag) );
     solngh->exprFactory->register_expression( new TimeT::Builder(timeStepTag) );    
   }
