@@ -54,6 +54,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/P_Alpha.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SoilFoam.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Water.h>
+#include <CCA/Components/MPM/ConstitutiveModel/TH_Water.h>
 #include <CCA/Components/MPM/ConstitutiveModel/UCNH.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/NonLocalDruckerPrager.h>
@@ -154,6 +155,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "water")
     return(scinew Water(child,flags));
+
+  else if (mat_type ==  "TH_water")
+    return(scinew TH_Water(child,flags));
 
   else if (mat_type == "comp_neo_hook_plastic")
     return(scinew UCNH(child,flags,true,false));

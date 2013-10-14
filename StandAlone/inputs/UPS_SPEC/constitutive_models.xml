@@ -6,7 +6,7 @@
                                                                         elastic_plastic, hypo_elastic, elastic_plastic_hp,
                                                                         ideal_gas, membrane, murnaghanMPM, mw_visco_elastic, rigid, shell_CNH,
                                                                         trans_iso_hyper, visco_plastic,
-                                                                        visco_scram, visco_trans_iso_hyper, water, kayenta, hypo_elastic_fortran, diamm, cnh_mms,
+                                                                        visco_scram, visco_trans_iso_hyper, water, TH_water, kayenta, hypo_elastic_fortran, diamm, cnh_mms,
                                                                         cnh_damage, cnhp_damage, UCNH, program_burn,jwlpp_mpm, p_alpha, nonlocal_drucker_prager, Arenisca, arena, camclay'">
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
@@ -14,8 +14,14 @@
     <alpha0                        spec="OPTIONAL DOUBLE" />
     <Pe                            spec="OPTIONAL DOUBLE" />
     <Ps                            spec="OPTIONAL DOUBLE" />
+    <a                             spec="OPTIONAL DOUBLE" />
     <b                             spec="OPTIONAL DOUBLE" />
+    <co                            spec="OPTIONAL DOUBLE" />
     <B                             spec="OPTIONAL DOUBLE" />
+    <ko                            spec="OPTIONAL DOUBLE" />
+    <To                            spec="OPTIONAL DOUBLE" />
+    <vo                            spec="OPTIONAL DOUBLE" />
+    <L                             spec="OPTIONAL DOUBLE" />
     <Beta                          spec="OPTIONAL DOUBLE" />
     <bulk_modulus                  spec="OPTIONAL DOUBLE" />
     <bulkPrime                     spec="OPTIONAL DOUBLE" />

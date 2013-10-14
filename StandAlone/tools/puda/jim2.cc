@@ -92,19 +92,18 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
         if(pset->numParticles() > 0){
           ParticleSubset::iterator piter = pset->begin();
           for(;piter != pset->end(); piter++){
-            double vel_mag = value_vel[*piter].length();
+            double vel_mag_sq = value_vel[*piter].length2();
             mean_vel+=value_vel[*piter]*value_mass[*piter];
-            KE+=value_mass[*piter]*vel_mag*vel_mag;
+            KE+=value_mass[*piter]*vel_mag_sq;
             total_mass+=value_mass[*piter];
           } // for
         }  //if
       }  // for patches
     mean_vel/=total_mass;
-    double mean_vel_mag = mean_vel.length();
     KE*=.5;
 
    outfile.precision(15);
-   outfile << time << " " << mean_vel_mag << " " << total_mass << " " << KE << endl; 
+   outfile << time << " " << mean_vel.y() << " " << total_mass << " " << KE << endl; 
 
   }
 } // end jim2()
