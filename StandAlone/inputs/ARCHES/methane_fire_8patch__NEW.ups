@@ -180,7 +180,6 @@
   </PhysicalConstants>
 
   <CFD>
-<!-- ARCHES specification -->
     <ARCHES>
 
       <TimeIntegrator>
