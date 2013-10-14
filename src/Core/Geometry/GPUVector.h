@@ -27,44 +27,48 @@
 
 class Int3 : public int3 {
   public:
+    HOST_DEVICE Int3() {}
     HOST_DEVICE int& operator[](const int &i) {
               return (&x)[i];
     }
     HOST_DEVICE const int& operator[](const int &i) const {
               return (&x)[i];
     }
-    HOST_DEVICE Int3(const int3& copy){(int3)*this=copy;};
+    HOST_DEVICE Int3(const int3& copy):int3(copy) {}
 };
 
 class uInt3 : public uint3 {
   public:
+    HOST_DEVICE uInt3() {}
     HOST_DEVICE unsigned int& operator[](const int &i) {
               return (&x)[i];
     }
     HOST_DEVICE const unsigned int& operator[](const int &i) const {
               return (&x)[i];
     }
-    HOST_DEVICE uInt3(const uint3& copy){(uint3)*this=copy;};
+    HOST_DEVICE uInt3(const uint3& copy):uint3(copy) {}
 };
 
 class Float3 : public float3 {
   public:
+    HOST_DEVICE Float3() {}
     HOST_DEVICE float& operator[](const int &i) {
               return (&x)[i];
     }
     HOST_DEVICE const float& operator[](const int &i) const {
               return (&x)[i];
     }
-    HOST_DEVICE Float3(const float3& copy){(float3)*this=copy;};
+    HOST_DEVICE Float3(const float3& copy):float3(copy) {}
 };
 
 class Double3 : public double3 {
   public:
+    HOST_DEVICE Double3() {}
     HOST_DEVICE double& operator[](const int &i) {
               return (&x)[i];
     }
     HOST_DEVICE const double& operator[](const int &i) const {
               return (&x)[i];
     }
-    HOST_DEVICE Double3(const double3& copy){(double3)*this=copy;};
+    HOST_DEVICE Double3(const double3& copy):double3(copy) {}
 };
