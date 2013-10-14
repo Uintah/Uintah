@@ -50,6 +50,9 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
                       Task::WhichDW which_celltype_dw,
                       const int radCalc_freq)
 {
+
+  cout << " top RayTraceGPU: " << endl;
+  
   const Level* level = getLevel(patches);
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   if ( doCarryForward( timestep, radCalc_freq) ) {
@@ -72,21 +75,29 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
   GPUDataWarehouse* old_gdw = old_dw->getGPUDW()->getdevice_ptr();
   GPUDataWarehouse* new_gdw = new_dw->getGPUDW()->getdevice_ptr();
   
-  GPUDataWarehouse* abskg_gdw    = new_dw->getOtherDataWarehouse(which_abskg_dw)->getGPUDW();
-  GPUDataWarehouse* sigmaT4_gdw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw)->getGPUDW();
-  GPUDataWarehouse* celltype_gdw = new_dw->getOtherDataWarehouse(which_celltype_dw)->getGPUDW();
+  GPUDataWarehouse* abskg_gdw    = new_dw->getOtherDataWarehouse(which_abskg_dw)->getGPUDW()->getdevice_ptr();
+  GPUDataWarehouse* sigmaT4_gdw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw)->getGPUDW()->getdevice_ptr();
+  GPUDataWarehouse* celltype_gdw = new_dw->getOtherDataWarehouse(which_celltype_dw)->getGPUDW()->getdevice_ptr();
   
   //__________________________________
   //  varLabel name struct
   varLabelNames labelNames;
-  labelNames.abskg     = d_abskgLabel->getName().c_str();    // cuda doesn't support C++ strings
+#if 0
+  labelNames->abskg     = d_abskgLabel->getName().c_str();    // cuda doesn't support C++ strings
   labelNames.sigmaT4   = d_sigmaT4_label->getName().c_str();
   labelNames.divQ      = d_divQLabel->getName().c_str();
   labelNames.celltype  = d_cellTypeLabel->getName().c_str();
   labelNames.VRFlux    = d_VRFluxLabel->getName().c_str();
   labelNames.boundFlux = d_boundFluxLabel->getName().c_str();
   labelNames.radVolQ   = d_radiationVolqLabel->getName().c_str();
-  
+#endif  
+  cout << " abskg:   " << d_abskgLabel->getName() << endl;
+  cout << " sigmaT4: " << d_sigmaT4_label->getName() << endl;
+  cout << " divQ:    " <<d_divQLabel->getName() << endl;
+  cout << " cellType:" <<d_cellTypeLabel->getName() << endl;
+  cout << " VRFlux:  " << d_VRFluxLabel->getName() << endl;
+  cout << " boundFlux: " << d_boundFluxLabel->getName() << endl;
+  cout << " radVolQ:   " << d_radiationVolqLabel->getName() << endl;
   
   //__________________________________
   //  RMCRT_flags
@@ -152,7 +163,6 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
     RT_flags.nRaySteps = 0;
     //__________________________________
     // set up and launch kernel
-cout << " Here " << endl;
     launchRayTraceKernel(dimGrid, 
                          dimBlock,
                          d_matl,
@@ -168,7 +178,7 @@ cout << " Here " << endl;
                          celltype_gdw, 
                          old_gdw, 
                          new_gdw);
-cout << " there " << endl;
+
     // free device-side RNG states
     CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
     
