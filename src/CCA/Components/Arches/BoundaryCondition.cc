@@ -124,6 +124,7 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   index_map[2][0] = 1;
   index_map[2][1] = 2; 
   index_map[2][2] = 0; 
+
 }
 
 
@@ -212,6 +213,11 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       _intrusionBC->problemSetup( db_new_intrusion ); 
 
     } 
+
+    d_no_corner_recirc = false;
+    if ( db->findBlock("suppress_corner_recirculation" )){ 
+      d_no_corner_recirc = true; 
+    }
 
     //-------------------------------------------------------------------
     // Flow Inlets:
@@ -5565,164 +5571,91 @@ BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
 
               case Patch::xminus:
 
-                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+                if ( d_no_corner_recirc ){
 
-                  IntVector c   = *bound_ptr; 
-                  IntVector cp  = *bound_ptr - insideCellDir; 
-                  IntVector cpp = cp - insideCellDir; 
+                  outletPressureMinus( insideCellDir, bound_ptr, idxLo, idxHi, 
+                                       2, 1, sign, uvel, old_uvel, 
+                                       zminus, zplus, yminus, yplus ); 
 
-                  if ( (zminus && (c.z() == idxLo.z())) ||
-                       (zplus  && (c.z() == idxHi.z())) ||
-                       (yminus && (c.y() == idxLo.y())) ||
-                       (yplus  && (c.y() == idxHi.y())) ){ 
+                } else {
 
-                    uvel[cp] = zero; 
+                  outletPressureMinus( insideCellDir, bound_ptr, sign, uvel, old_uvel );
 
-                  } else {
-
-                    if ( sign * old_uvel[cp] < negsmall ) { 
-                      uvel[cp] = uvel[cpp]; 
-                    } else {
-                      uvel[cp] = zero; 
-                    }
-                    uvel[c] = uvel[cp]; 
-                  }
                 }
                 break; 
 
               case Patch::xplus:
 
-                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+                if ( d_no_corner_recirc ){
 
-                  IntVector c   = *bound_ptr; 
-                  IntVector cp  = *bound_ptr - insideCellDir; 
-                  IntVector cm  = c + insideCellDir; 
+                  outletPressurePlus(  insideCellDir, bound_ptr, idxLo, idxHi, 
+                                       2, 1, sign, uvel, old_uvel, 
+                                       zminus, zplus, yminus, yplus ); 
 
-                  if ( (zminus && (c.z() == idxLo.z())) ||
-                       (zplus  && (c.z() == idxHi.z())) ||
-                       (yminus && (c.y() == idxLo.y())) ||
-                       (yplus  && (c.y() == idxHi.y())) ){ 
+                } else {
 
-                    uvel[c] = zero; 
-
-                  } else {
-
-                    if ( sign * old_uvel[c] > possmall ) { 
-                      uvel[c] = uvel[cp]; 
-                    } else {
-                      uvel[c] = zero; 
-                    }
-                    uvel[cm] = uvel[c]; 
-                  }
+                  outletPressurePlus( insideCellDir, bound_ptr, sign, uvel, old_uvel );
 
                 }
                 break; 
 
               case Patch::yminus:
 
-                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+                if ( d_no_corner_recirc ){
 
-                  IntVector c   = *bound_ptr; 
-                  IntVector cp  = *bound_ptr - insideCellDir; 
-                  IntVector cpp = cp - insideCellDir; 
+                  outletPressureMinus( insideCellDir, bound_ptr, idxLo, idxHi, 
+                                       2, 0, sign, vvel, old_vvel, 
+                                       zminus, zplus, xminus, xplus ); 
 
-                  if ( (zminus && (c.z() == idxLo.z())) ||
-                       (zplus  && (c.z() == idxHi.z())) ||
-                       (xminus && (c.x() == idxLo.x())) ||
-                       (xplus  && (c.x() == idxHi.x())) ){ 
+                } else {
 
-                    vvel[cp] = zero; 
+                  outletPressureMinus( insideCellDir, bound_ptr, sign, vvel, old_vvel );
 
-                  } else {
-
-                    if ( sign * old_vvel[cp] < negsmall ) { 
-                      vvel[cp] = vvel[cpp]; 
-                    } else {
-                      vvel[cp] = zero; 
-                    }
-                    vvel[c] = vvel[cp]; 
-                  }
                 }
                 break; 
 
               case Patch::yplus: 
 
-                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+                if ( d_no_corner_recirc ){
 
-                  IntVector c   = *bound_ptr; 
-                  IntVector cp  = *bound_ptr - insideCellDir; 
-                  IntVector cm  = c + insideCellDir; 
+                  outletPressurePlus(  insideCellDir, bound_ptr, idxLo, idxHi, 
+                                       2, 0, sign, vvel, old_vvel, 
+                                       zminus, zplus, xminus, xplus ); 
 
-                  if ( (zminus && (c.z() == idxLo.z())) ||
-                       (zplus  && (c.z() == idxHi.z())) ||
-                       (xminus && (c.x() == idxLo.x())) ||
-                       (xplus  && (c.x() == idxHi.x())) ){ 
+                } else {
 
-                    vvel[c] = zero; 
+                  outletPressurePlus( insideCellDir, bound_ptr, sign, vvel, old_vvel );
 
-                  } else {
-
-                    if ( sign * old_vvel[c] > possmall ) { 
-                      vvel[c] = vvel[cp]; 
-                    } else {
-                      vvel[c] = zero; 
-                    }
-                    vvel[cm] = vvel[c]; 
-                  }
                 }
                 break; 
 
               case Patch::zminus: 
 
-                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+                if ( d_no_corner_recirc ){
 
-                  IntVector c   = *bound_ptr; 
-                  IntVector cp  = *bound_ptr - insideCellDir; 
-                  IntVector cpp = cp - insideCellDir; 
+                  outletPressureMinus( insideCellDir, bound_ptr, idxLo, idxHi, 
+                                       0, 1, sign, wvel, old_wvel, 
+                                       xminus, xplus, yminus, yplus ); 
 
-                  if ( (xminus && (c.x() == idxLo.x())) ||
-                       (xplus  && (c.x() == idxHi.x())) ||
-                       (yminus && (c.y() == idxLo.y())) ||
-                       (yplus  && (c.y() == idxHi.y())) ){ 
+                } else {
 
-                    wvel[cp] = zero; 
+                  outletPressureMinus( insideCellDir, bound_ptr, sign, wvel, old_wvel );
 
-                  } else {
-
-                    if ( sign * old_wvel[cp] < negsmall ) { 
-                      wvel[cp] = wvel[cpp]; 
-                    } else {
-                      wvel[cp] = zero; 
-                    }
-                    wvel[c] = wvel[cp]; 
-                  }
                 }
                 break; 
 
               case Patch::zplus:
 
-                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+                if ( d_no_corner_recirc ){
 
-                  IntVector c   = *bound_ptr; 
-                  IntVector cp  = *bound_ptr - insideCellDir; 
-                  IntVector cm  = c + insideCellDir; 
+                  outletPressurePlus(  insideCellDir, bound_ptr, idxLo, idxHi, 
+                                       0, 1, sign, wvel, old_wvel, 
+                                       xminus, xplus, yminus, yplus ); 
 
-                  if ( (xminus && (c.x() == idxLo.x())) ||
-                       (xplus  && (c.x() == idxHi.x())) ||
-                       (yminus && (c.y() == idxLo.y())) ||
-                       (yplus  && (c.y() == idxHi.y())) ){ 
+                } else {
 
-                    wvel[c] = zero; 
+                  outletPressurePlus( insideCellDir, bound_ptr, sign, wvel, old_wvel );
 
-                  } else {
-
-                    if ( sign * old_wvel[c] > possmall ) { 
-                      wvel[c] = wvel[cp]; 
-                    } else {
-                      wvel[c] = zero; 
-                    }
-                    wvel[cm] = wvel[c]; 
-                  }
                 }
                 break; 
 

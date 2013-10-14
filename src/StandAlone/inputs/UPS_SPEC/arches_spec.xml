@@ -398,6 +398,10 @@
 
       <BoundaryConditions               spec="OPTIONAL NO_DATA" > 
 
+        <suppress_corner_recirculation  spec="OPTIONAL NO_DATA"/> <!-- This flag zeros out corner velocity cells to try 
+                                                                       to discourage artificial recirculation caused by 
+                                                                       pressure and outlet boundaries. Default = false. --> 
+
         <intrusions                 spec="OPTIONAL NO_DATA">
          <!-- NOTES: --> 
          <!-- velocity components are specified using simple [u,v,w] labels and NOT uVelocitySPBC, etc... --> 

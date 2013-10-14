@@ -906,6 +906,46 @@ namespace Uintah {
 
     private:
 
+      bool d_no_corner_recirc; 
+
+      /** @brief A method for applying the outlet/pressure BC on minus faces. **/
+      template <class velType, class oldVelType> void 
+      outletPressureMinus( IntVector insideCellDir, 
+                           Iterator bound_ptr, 
+                           double const sign, velType& vel, 
+                           oldVelType& old_vel );
+
+      /** @brief A method for applying the outlet/pressure BC on plus faces. **/
+      template <class velType, class oldVelType> void 
+      outletPressurePlus(  IntVector insideCellDir, 
+                           Iterator bound_ptr, 
+                           double const sign, velType& vel, 
+                           oldVelType& old_vel );
+
+      /** @brief A method for applying the outlet/pressure BC on minus faces. 
+                 This method has Stas' corner constraint. **/
+      template <class velType, class oldVelType> void 
+      outletPressureMinus( IntVector insideCellDir, 
+                           Iterator bound_ptr, 
+                           IntVector idxLo, IntVector idxHi, 
+                           const int t1, const int t2, 
+                           double const sign, velType& vel, 
+                           oldVelType& old_vel, 
+                           const bool mF1, const bool pF1, 
+                           const bool mF2, const bool pF2 );
+
+      /** @brief A method for applying the outlet/pressure BC on plus faces. 
+                 This method has Stas' corner constraint. **/
+      template <class velType, class oldVelType> void 
+      outletPressurePlus( IntVector insideCellDir, 
+                          Iterator bound_ptr, 
+                          IntVector idxLo, IntVector idxHi, 
+                          const int t1, const int t2, 
+                          double const sign, velType& vel, 
+                          oldVelType& old_vel,
+                          const bool mF1, const bool pF1, 
+                          const bool mF2, const bool pF2 );
+
       /** @brief Fix a stencil direction to a specified value **/ 
       void fix_stencil_value( CCVariable<Stencil7>& stencil,  
           DIRECTION dir, double value, IntVector c ){
@@ -1362,6 +1402,131 @@ BoundaryCondition::delPForOutletPressure__NEW( const Patch* patch,
       }
     }
   }
+}
+
+template <class velType, class oldVelType> void 
+BoundaryCondition::outletPressureMinus( IntVector insideCellDir, 
+                                        Iterator bound_ptr, 
+                                        double const sign, velType& vel, 
+                                        oldVelType& old_vel )
+{
+
+  double const negsmall = -1.0E-10;
+  double const zero     = 0.0E0; 
+  for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+    IntVector c = *bound_ptr; 
+    IntVector cp  = c - insideCellDir; 
+    IntVector cpp = cp - insideCellDir; 
+
+    if ( sign * old_vel[cp] < negsmall ) { 
+      vel[cp] = vel[cpp]; 
+    } else {
+      vel[cp] = zero; 
+    }
+    vel[c] = vel[cp]; 
+  }
+}
+template <class velType, class oldVelType> void 
+BoundaryCondition::outletPressurePlus( IntVector insideCellDir, 
+                                       Iterator bound_ptr, 
+                                       double const sign, velType& vel, 
+                                       oldVelType& old_vel )
+{
+
+  double possmall =  1.0E-10;
+  double zero     = 0.0E0; 
+  for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+    IntVector c = *bound_ptr; 
+    IntVector cp  = c - insideCellDir; 
+    IntVector cm  = c + insideCellDir; 
+    
+    if ( sign * old_vel[c] > possmall ) { 
+      vel[c] = vel[cp]; 
+    } else {
+      vel[c] = zero; 
+    }
+    vel[cm] = vel[c]; 
+  }
+}
+
+template <class velType, class oldVelType> void 
+BoundaryCondition::outletPressureMinus( IntVector insideCellDir, 
+                                        Iterator bound_ptr, 
+                                        IntVector idxLo, IntVector idxHi, 
+                                        const int t1, const int t2, 
+                                        double const sign, velType& vel, 
+                                        oldVelType& old_vel, 
+                                        const bool mF1, const bool pF1, 
+                                        const bool mF2, const bool pF2 )
+{
+
+  double const negsmall = -1.0E-10;
+  double const zero     = 0.0E0; 
+
+  for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+    IntVector c = *bound_ptr; 
+    IntVector cp  = c - insideCellDir; 
+    IntVector cpp = cp - insideCellDir; 
+
+
+    if ( (mF1 && (c[t1] == idxLo[t1])) ||
+         (pF1 && (c[t1] == idxHi[t1])) ||
+         (mF2 && (c[t2] == idxLo[t2])) ||
+         (pF2 && (c[t2] == idxHi[t2])) ){ 
+
+      vel[cp] = zero; 
+
+    } else { 
+
+      if ( sign * old_vel[cp] < negsmall ) { 
+        vel[cp] = vel[cpp]; 
+      } else {
+        vel[cp] = zero; 
+      }
+      vel[c] = vel[cp]; 
+    }
+  }
+}
+template <class velType, class oldVelType> void 
+BoundaryCondition::outletPressurePlus( IntVector insideCellDir, 
+                                       Iterator bound_ptr, 
+                                       IntVector idxLo, IntVector idxHi, 
+                                       const int t1, const int t2, 
+                                       double const sign, velType& vel, 
+                                       oldVelType& old_vel,
+                                       const bool mF1, const bool pF1, 
+                                       const bool mF2, const bool pF2 )
+{
+
+  double possmall =  1.0E-10;
+  double zero     = 0.0E0; 
+  for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+    IntVector c = *bound_ptr; 
+    IntVector cp  = c - insideCellDir; 
+    IntVector cm  = c + insideCellDir; 
+
+    if ( (mF1 && (c[t1] == idxLo[t1])) ||
+         (pF1 && (c[t1] == idxHi[t1])) ||
+         (mF2 && (c[t2] == idxLo[t2])) ||
+         (pF2 && (c[t2] == idxHi[t2])) ){ 
+
+      vel[c] = zero; 
+
+    } else { 
+    
+      if ( sign * old_vel[c] > possmall ) { 
+        vel[c] = vel[cp]; 
+      } else {
+        vel[c] = zero; 
+      }
+      vel[cm] = vel[c]; 
+    }
+  }
+
 }
 
 } // End namespace Uintah

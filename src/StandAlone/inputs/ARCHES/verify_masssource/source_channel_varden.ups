@@ -252,6 +252,7 @@
       </Properties>
 
       <BoundaryConditions>
+        <suppress_corner_recirculation/>
         <use_new_bcs/>
       </BoundaryConditions>
 
