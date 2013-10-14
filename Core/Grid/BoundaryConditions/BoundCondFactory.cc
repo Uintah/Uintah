@@ -25,6 +25,7 @@
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
@@ -75,7 +76,7 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
   }
 
   if (!valuePS && !attrPS) {
-    std::cout << "WARNING: It looks like you specified no value for BC " + bc_attr["label"] + ". This may be okay if your component allows you to for certain types of boundaries such as symmetry and zeroNeumann.";
+    proc0cout << "WARNING: It looks like you specified no value for BC " + bc_attr["label"] + ". This may be okay if your component allows you to for certain types of boundaries such as symmetry and zeroNeumann.";
   }
 
   if (attrPS) {
