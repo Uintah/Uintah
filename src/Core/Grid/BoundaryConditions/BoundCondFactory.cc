@@ -29,6 +29,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/Parallel.h>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -76,7 +77,7 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
   }
 
   if (!valuePS && !attrPS) {
-    proc0cout << "WARNING: It looks like you specified no value for BC " + bc_attr["label"] + ". This may be okay if your component allows you to for certain types of boundaries such as symmetry and zeroNeumann.";
+    proc0cout << "WARNING: It looks like you specified no value for BC " + bc_attr["label"] + ". This may be okay if your component allows you to for certain types of boundaries such as symmetry and zeroNeumann.\n";
   }
 
   if (attrPS) {

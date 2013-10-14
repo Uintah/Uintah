@@ -478,8 +478,10 @@ ColdFlow::getState( const ProcessorGroup* pc,
             which_bc.push_back(ColdFlow::NEUMANN); 
           } else if (bc_kind == "FromFile") { 
             which_bc.push_back(ColdFlow::FROMFILE);
-          } else
-            throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
+          } else {
+            cout << " For face: " << face << endl;
+            throw InvalidValue( "Error: BC type not supported for property calculation on face.", __FILE__, __LINE__ ); 
+          }
 
         }
 

@@ -14,24 +14,26 @@
     <delt_min>0.00001</delt_min>
     <delt_max>0.1</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
+    <max_Timesteps>   50          </max_Timesteps>
   </Time>
 
   <DataArchiver>
     <filebase>mpmpipe_test.uda</filebase>
-    <outputInterval>0.1</outputInterval>
+    <outputTimestepInterval>5</outputTimestepInterval>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>
-    <save label="scalarSP"/>
-    <save label="densityCP"/>
+    <save label="CCVelocity"/>
+    <save label="mixture_fraction"/>
+    <save label="density" table_lookup="true"/>
     <save label="viscosityCTS"/>
     <save label="velocityDivergence"/>
     <save label="continuityResidual"/>
     <save label="filterdrhodt"/>
     <save label="cellType"/>
-    <checkpoint cycle="2" interval="0.2"/>
+    <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -78,46 +80,96 @@
   <Grid>
     <BoundaryConditions>
       <Face side="x-">
-        <BCType id="all" var="Dirichlet" label="Velocity">
+        <BCType id="1" var="WallBC" label="bottom-wall">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="1" label="mixture_fraction" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="Temperature">
+        <BCType id="0" var="Dirichlet" label="Temperature">
+          <value> 298.0 </value>
+        </BCType>
+      </Face>
+      <Face circle="x-" origin="0.0 1.5 1.5" radius="0.5">
+        <BCType id="1" label="the-inlet" var="MassFlowInlet">
+          <value>0.351</value>
+        </BCType>
+        <BCType id="1" label="mixture_fraction" var="Dirichlet">
+          <value>1.0</value>
+        </BCType>
+        <BCType id="0" var="Dirichlet" label="Velocity">
+          <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id="0" var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="x+">
-        <BCType id="all" var="Dirichlet" label="Velocity">
+        <BCType id="1" var="OutletBC" label="top-outlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="1" var="Neumann" label="mixture_fraction">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="Temperature">
+        <BCType id="0" var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="y-">
-        <BCType id="all" var="Dirichlet" label="Velocity">
+        <BCType id="1" var="PressureBC" label="top-outlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="1" var="Neumann" label="mixture_fraction">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="Temperature">
+        <BCType id="0" var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType id="all" var="Dirichlet" label="Velocity">
+        <BCType id="1" var="PressureBC" label="top-outlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="1" var="Neumann" label="mixture_fraction">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id="all" var="Dirichlet" label="Temperature">
+        <BCType id="0" var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType id="all" var="symmetry" label="Symmetric"> </BCType>
-        <BCType id="all" var="Dirichlet" label="Temperature">
+        <BCType id="1" var="PressureBC" label="top-outlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="1" var="Neumann" label="mixture_fraction">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" var="symmetry" label="Symmetric"> </BCType>
+        <BCType id="0" var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType id="all" var="symmetry" label="Symmetric"> </BCType>
-        <BCType id="all" var="Dirichlet" label="Temperature">
+        <BCType id="1" var="PressureBC" label="top-outlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="1" var="Neumann" label="mixture_fraction">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" var="symmetry" label="Symmetric"> </BCType>
+        <BCType id="0" var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
@@ -157,70 +209,38 @@
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
       </Turbulence>
 
+      <TransportEqns>
+        <Eqn label="mixture_fraction" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <determines_properties/>
+          <initialization type="constant">
+            <constant>.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+      </TransportEqns>
+
       <Properties>
-        <use_mixing_model>false</use_mixing_model>
-        <ColdFlowMixingModel>
-          <Stream>
-            <density>0.133</density>
+        <ColdFlow>
+          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
+          <Stream_1>
+            <density>.133</density>
             <temperature>298</temperature>
-          </Stream>
-          <Stream>
-            <density>1.184344</density>
+          </Stream_1>
+          <Stream_2>
+            <density>1.18434</density>
             <temperature>298</temperature>
-          </Stream>
-        </ColdFlowMixingModel>
+          </Stream_2>
+        </ColdFlow>
       </Properties>
 
       <BoundaryConditions>
-        <FlowInlet>
-          <Flow_rate>0.10</Flow_rate>
-          <mixture_fraction>1.0</mixture_fraction>
-          <geom_object>
-            <cylinder label="inlet">
-              <bottom>[-5,1.5,1.5]</bottom>
-              <top>[0,1.5,1.5]</top>
-              <radius> .5 </radius>
-            </cylinder>
-          </geom_object>
-        </FlowInlet>
-        <WallBC>
-          <geom_object>
-            <box label="botWall">
-              <min>[-1,-1,-1]</min>
-              <max>[0,4,4]</max>
-            </box>
-          </geom_object>
-        </WallBC>
-        <PressureBC>
-          <mixture_fraction>0.0</mixture_fraction>
-          <geom_object>
-            <box label="posY_xzWall">
-              <min>[0,3,-1]</min>
-              <max>[3,4,4]</max>
-            </box>
-            <box label="zeroY_xzWall">
-              <min>[0,-1,-1]</min>
-              <max>[3,0,4]</max>
-            </box>
-            <box label="posZ_xyWall">
-              <min>[0,-1,3]</min>
-              <max>[3,4,4]</max>
-            </box>
-            <box label="zeroZ_xyWall">
-              <min>[0,-1,-1]</min>
-              <max>[3,4,0]</max>
-            </box>
-          </geom_object>
-        </PressureBC>
-        <OutletBC>
-          <mixture_fraction>0.0</mixture_fraction>
-          <geom_object>
-            <box label="topWall">
-              <min>[3,-1,-1]</min>
-              <max>[4,4,4]</max>
-            </box>
-          </geom_object>
-        </OutletBC>
+        <use_new_bcs/>
         <intrusions>
           <intrusion label="pipe wall">
             <geom_object>
@@ -234,9 +254,11 @@
       </BoundaryConditions>
 
       <ExplicitSolver>
+
         <initial_dt>0.05</initial_dt>
         <variable_dt>true</variable_dt>
         <restartOnNegativeDensityGuess>true</restartOnNegativeDensityGuess>
+
         <PressureSolver>
           <Parameters>
             <tolerance>     1.0e-9 </tolerance>
@@ -249,10 +271,6 @@
         <MomentumSolver>
           <convection_scheme>upwind</convection_scheme>
         </MomentumSolver>
-
-        <MixtureFractionSolver>
-          <convection_scheme>central-upwind</convection_scheme>
-        </MixtureFractionSolver>
 
       </ExplicitSolver>
     </ARCHES>
