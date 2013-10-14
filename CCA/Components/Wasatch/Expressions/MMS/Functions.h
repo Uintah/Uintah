@@ -1484,7 +1484,7 @@ build() const
  *  \brief The source term for continuity equation in the MMS applied on pressure projection method.
  *         This is forced on the continuity equation by the manufactured solutions.
  *
- ** Note that rho0 and rho1 are hardcoded in this class for a specific NonReacting mixing model table of H2 (fuel) and O2 (oxidizer) at 300K
+ ** Note that rho0 and rho1 are being passed to this class from the input file. They need to be consistant with their values in the table being used by the MMS test case. Right now the defualt one is usinga specific NonReacting mixing model table of H2 (fuel) and O2 (oxidizer) at 300K
  *
  */
 template< typename FieldT >
@@ -1626,7 +1626,7 @@ evaluate()
               - 5/(rho1_ * exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5))
              )
        )
-   ) / *timestep_;
+   );
 }
 
 //--------------------------------------------------------------------
@@ -1659,5 +1659,123 @@ build() const
 
 //--------------------------------------------------------------------
 
+/**
+ *  \class VarDensMMSPressureContSrc
+ *  \author Amir Biglari
+ *  \date October, 2013
+ *  \brief The source term for pressure source equation in the MMS applied on pressure projection method.
+ *         This is forced on the pressure source equation by the continuity source term caused by the manufactured solutions.
+ *
+ ** Note 
+ *
+ */
+template< typename FieldT >
+class VarDensMMSPressureContSrc : public Expr::Expression<FieldT>
+{
+  
+public:
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    /**
+     * @param result          Tag of the resulting expression.
+     * @param continutySrcTag Tag of the continuty source term.
+     * @param timestepTag     Tag of time step.
+     */
+    Builder( const Expr::Tag& result,
+             const Expr::Tag continutySrcTag,
+             const Expr::Tag& timestepTag );
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const Expr::Tag continutySrcTag_, timestepTag_;
+  };
+  
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+  
+private:
+  
+  VarDensMMSPressureContSrc( const Expr::Tag continutySrcTag,
+                             const Expr::Tag& timestepTag);
+  typedef typename SpatialOps::structured::SingleValueField TimeField;
+  const Expr::Tag continutySrcTag_, timestepTag_;
+  const FieldT* continutySrc_;
+  const TimeField* timestep_;
+};
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+VarDensMMSPressureContSrc<FieldT>::
+VarDensMMSPressureContSrc( const Expr::Tag continutySrcTag,
+                           const Expr::Tag& timestepTag)
+: Expr::Expression<FieldT>(),
+continutySrcTag_( continutySrcTag ),
+timestepTag_    ( timestepTag     )
+{
+  this->set_gpu_runnable( true );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+VarDensMMSPressureContSrc<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( continutySrcTag_ );
+  exprDeps.requires_expression( timestepTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+VarDensMMSPressureContSrc<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  continutySrc_ = &fml.template field_manager<FieldT>().field_ref( continutySrcTag_ );
+  
+  const typename Expr::FieldMgrSelector<TimeField>::type& dfm = fml.field_manager<TimeField>();
+  timestep_ = &dfm.field_ref( timestepTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+VarDensMMSPressureContSrc<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+    
+  result <<= *continutySrc_ / *timestep_;
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+VarDensMMSPressureContSrc<FieldT>::Builder::
+Builder( const Expr::Tag& result,
+         const Expr::Tag continutySrcTag,
+         const Expr::Tag& timestepTag )
+: ExpressionBuilder(result),
+continutySrcTag_( continutySrcTag ),
+timestepTag_    ( timestepTag     )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+VarDensMMSPressureContSrc<FieldT>::Builder::
+build() const
+{
+  return new VarDensMMSPressureContSrc<FieldT>( continutySrcTag_, timestepTag_ );
+}
+
+//--------------------------------------------------------------------
 
 #endif // Wasatch_MMS_Functions

@@ -29,6 +29,7 @@
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/TagNames.h>
+#include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/Expressions/TimeDerivative.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumPartialRHS.h>
@@ -52,6 +53,7 @@
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/ContinuityResidual.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/drhodtNP1.h>
 
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
@@ -687,7 +689,14 @@ namespace Wasatch{
         else
           np1MomTags.push_back(Expr::Tag());
         
-        Expr::ExpressionID contID = postProcFactory.register_expression( new ContResT(contTag, Expr::Tag(), np1MomTags) );
+        Expr::Tag drhodtTag = Expr::Tag();
+        if (!isConstDensity_)
+        {
+          drhodtTag = Expr::Tag( "drhodt", Expr::STATE_NP1);
+          typedef Expr::PlaceHolder<SVolField>  FieldExpr;
+          postProcFactory.register_expression( new typename FieldExpr::Builder(drhodtTag),true );
+        }
+        Expr::ExpressionID contID = postProcFactory.register_expression( new ContResT(contTag, drhodtTag, np1MomTags) );
         postProcGH.rootIDs.insert(contID);
       }
     }
@@ -726,8 +735,27 @@ namespace Wasatch{
     
     //__________________
     // Pressure source term
+    
     if (!isConstDensity) {
-      // calculating velocity at the next time step    
+      // calculating drhodt needed for the post processing
+      if (computeContinuityResidual)
+      {
+        Expr::Tag drhodtTag = Expr::Tag( "drhodt", Expr::STATE_NONE);
+        Expr::Tag densStarTag  = Expr::Tag(densTag.name() + tagNames.star, Expr::CARRY_FORWARD);
+        Expr::Tag dens2StarTag = Expr::Tag(densTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD);
+        Expr::TagList velStarTags = Expr::TagList();
+        set_vel_star_tags( velTags_, velStarTags );
+        
+        // registering the expressiong for drhodt
+        Expr::ExpressionID drhodtID = factory.register_expression( new typename drhodtNP1::Builder( drhodtTag, velStarTags, densTag, densStarTag, dens2StarTag, tagNames.timestep));
+//        Expr::TagList drhodtTagList;
+//        drhodtTagList.push_back(drhodtTag);
+//        force_expressions_on_graph(drhodtTagList, &graphHelper);
+        graphHelper.rootIDs.insert( drhodtID );
+        graphHelper.forcedIDs.insert( drhodtID );
+      }
+      
+      // calculating velocity at the next time step
       Expr::Tag thisVelStarTag = Expr::Tag( thisVelTag_.name() + tagNames.star, Expr::STATE_NONE);
       Expr::Tag convTermWeak   = Expr::Tag( thisVelTag_.name() + "_weak_convective_term", Expr::STATE_NONE);
       if( !factory.have_entry( thisVelStarTag ) ){
@@ -739,6 +767,7 @@ namespace Wasatch{
         factory.cleave_from_parents ( convTermWeakID_ );
         factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, convTermWeak, tauTags, densTag, viscTag, oldPressureTag, tagNames.timestep ));
       }
+      
     }
     
     Expr::Tag pSourceTag = Expr::Tag( "pressure-source-term", Expr::STATE_NONE);

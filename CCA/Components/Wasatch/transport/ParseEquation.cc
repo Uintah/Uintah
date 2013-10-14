@@ -278,6 +278,7 @@ namespace Wasatch{
   //==================================================================
   
   void parse_var_dens_mms( Uintah::ProblemSpecP varDensMMSParams,
+                           const bool computeContinuityResidual,
                            GraphCategories& gc) {
     std::string solnVarName;
     double rho0=1.29985, rho1=0.081889, D=0.0658;
@@ -297,12 +298,20 @@ namespace Wasatch{
     slngraphHelper->exprFactory->attach_dependency_to_expression(MMSSourceTag, solnVarRHSTag);
     slngraphHelper->exprFactory->attach_dependency_to_expression(MMSSourceTag, solnVarRHSStarTag);
     
-    const Expr::Tag varDensMMSContSrc = Expr::Tag( "continuity_src", Expr::STATE_NONE);
+    const Expr::Tag varDensMMSContSrc = Expr::Tag( "mms_continuity_src", Expr::STATE_NONE);
+    const Expr::Tag varDensMMSPressureContSrc = Expr::Tag( "mms_pressure_continuity_src", Expr::STATE_NONE);
     const Expr::Tag pSourceTag = Expr::Tag( "pressure-source-term", Expr::STATE_NONE);
    
     slngraphHelper->exprFactory->register_expression( new VarDensMMSContinuitySrc<SVolField>::Builder( varDensMMSContSrc, rho0, rho1, tagNames.xsvolcoord, tagNames.time, tagNames.timestep));
+    slngraphHelper->exprFactory->register_expression( new VarDensMMSPressureContSrc<SVolField>::Builder( varDensMMSPressureContSrc, varDensMMSContSrc, tagNames.timestep));
     
-    slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSContSrc, pSourceTag);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSPressureContSrc, pSourceTag);
+    
+    if (computeContinuityResidual)
+    {
+      const Expr::Tag drhodtTag = Expr::Tag( "drhodt", Expr::STATE_NONE);
+      slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSContSrc, drhodtTag);
+    }
   }
     
   //==================================================================
