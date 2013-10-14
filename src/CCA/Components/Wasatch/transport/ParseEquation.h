@@ -145,10 +145,14 @@ namespace Wasatch{
    *  \param varDensMMSParams The XML block from the input file specifying the
    *         parameters of the MMS. This will be <VariableDensityMMS>.
    *
+   *  \param computeContinuityResidual a boolean showing wether the continuity
+   *         residual is being calculated or not
+   *
    *  \param gc The GraphCategories.
    */
   void parse_var_dens_mms( Uintah::ProblemSpecP varDensMMSParams,
-                          GraphCategories& gc);
+                           const bool computeContinuityResidual,
+                           GraphCategories& gc);
   
   /**
    *  \brief Build moment transport equations specified by "params"

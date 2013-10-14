@@ -678,7 +678,8 @@ namespace Wasatch{
     //
     Uintah::ProblemSpecP VarDensMMSParams = wasatchSpec_->findBlock("VariableDensityMMS");
     if (VarDensMMSParams) {
-      parse_var_dens_mms(VarDensMMSParams, graphCategories_);
+      const bool computeContinuityResidual = momEqnParams->findBlock("ComputeMassResidual");
+      parse_var_dens_mms(VarDensMMSParams, computeContinuityResidual, graphCategories_);
     }
     
     //
