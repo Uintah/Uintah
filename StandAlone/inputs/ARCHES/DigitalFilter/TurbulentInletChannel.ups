@@ -163,9 +163,10 @@
         </ColdFlow>
       </Properties>
 
-<BoundaryConditions>
-  <use_new_bcs/>
-</BoundaryConditions>
+      <BoundaryConditions>
+        <suppress_corner_recirculation/>
+        <use_new_bcs/>
+      </BoundaryConditions>
 
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
