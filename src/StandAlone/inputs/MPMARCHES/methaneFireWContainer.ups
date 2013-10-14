@@ -36,6 +36,7 @@
     <save label="H2O" table_lookup="true"/>
     <save label="CO2" table_lookup="true"/>
     <save label="density" table_lookup="true"/>
+    <save label="temperature" table_lookup="true"/>
 <!-- radiation -->
     <save label="radiationSRC"/>
     <save label="radiationFluxE"/>
@@ -327,6 +328,7 @@
 
       <Properties>
         <ClassicTable>
+          <enthalpy_label>enthalpy</enthalpy_label>
           <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic_new.mix.gz</inputfile>
           <standard_equilibrium f_label="mixture_fraction"
                                 hl_label="heat_loss"
@@ -364,7 +366,7 @@
 
   <Multimaterial>
     <fluidThermalConductivity>0.03</fluidThermalConductivity>
-    <heatExchange>false</heatExchange>
+    <heatExchange>true</heatExchange>
     <turbulentPrandtNo>0.7</turbulentPrandtNo>
     <fluidHeatCapacity>1007.</fluidHeatCapacity>
     <IfCutCell>false</IfCutCell>
