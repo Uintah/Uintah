@@ -46,6 +46,7 @@ HOST_DEVICE struct varLabelNames{
   const char* radVolQ;
 };
 
+
 HOST_DEVICE struct patchParams{
   double3 dx;             // cell spacing
   int3 lo;               // cell low index not including extra or ghost cells
@@ -102,9 +103,9 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                patchParams patch,
                                const int3 domainLo,
                                const int3 domainHi,
-                               curandState* randNumStates,
+                               curandState randNumStates,
                                RMCRT_flags RT_flags,
-                               varLabelNames labelNames,
+                               varLabelNames* labelNames,
                                GPUDataWarehouse* abskg_gdw,
                                GPUDataWarehouse* sigmaT4_gdw,
                                GPUDataWarehouse* celltype_gdw,
@@ -136,8 +137,8 @@ __device__ void reflect(double& fs,
                         bool& sign,
                         double& ray_direction);
                                                           
-__device__ void updateSumIDevice ( const double3& ray_direction,
-                                   const double3& ray_location,
+__device__ void updateSumIDevice ( double3& ray_direction,
+                                   double3& ray_location,
                                    const int3& origin,
                                    const double3& Dx,
                                    const GPUGridVariable<double>&  sigmaT4OverPi,
@@ -162,6 +163,13 @@ __device__ double randDevice(curandState* randNumStates);
 __device__ unsigned int hashDevice(unsigned int a);
 
 
+//______________________________________________________________________
+//  Hacks until I have the [] operators
+__device__ double getElement(const double3& var, const int& face);
+__device__ int getElement(   const int3& var,    const int& face);
+
+__device__ void updateElement( int3& var,    const int& me,    const int& face);
+__device__ void updateElement( double3& var, const double& me, const int& face);
 
 
 //______________________________________________________________________
