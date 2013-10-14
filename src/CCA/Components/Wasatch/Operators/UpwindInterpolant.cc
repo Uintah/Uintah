@@ -80,7 +80,6 @@ apply_to_field( const SrcT& src, DestT& dest )
   typedef s2detail::ExtentsAndOffsets<SrcT,DestT> Extents;
 
   const MemoryWindow& ws = src.window_with_ghost();
-  const BoundaryCellInfo& bcs = src.boundary_info();
   const MemoryWindow ws1( ws.glob_dim(),
                           ws.offset() + Extents::Src1Offset::int_vec(),
                           ws.extent() + Extents::Src1Extent::int_vec()  );

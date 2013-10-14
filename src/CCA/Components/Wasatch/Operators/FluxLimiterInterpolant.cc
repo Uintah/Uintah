@@ -203,7 +203,6 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
   typename PhiFaceT::value_type* velVals = const_cast<typename PhiFaceT::value_type*>( advectiveVelocity_->field_values(advelMemType,advelDevIdx) );
 
   const BoundaryCellInfo& bcs = src.boundary_info();
-  const BoundaryCellInfo& bcd = dest.boundary_info();
   const GhostData& gdd = dest.get_ghost_data();
   assert( gdd == advectiveVelocity_->get_ghost_data() );
 
@@ -284,10 +283,8 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest )
   const IntVec& extent = wsrc.extent() - unitNormal_*wsrc.glob_dim() + unitNormal_;
   IntVec destExtent = wdest.extent() - unitNormal_*wdest.glob_dim() + unitNormal_;
   
-  const GhostData&  ghostSrc =  src.get_ghost_data();
   const GhostData& ghostDest = dest.get_ghost_data();
   const BoundaryCellInfo& bcSrc = src.boundary_info();
-  const BoundaryCellInfo& bcDest = dest.boundary_info();
 
   // start with patch boundaries
   for (int direc=0; direc<2; direc++) {
