@@ -124,8 +124,6 @@ namespace Uintah {
     /// the side and stored as a difference bc.  This operation only happens
     /// if there are more than one bc specified for a given face.  
     void combineBCS();
-
-    void combineBCS_NEW();
     
     void bulletProofing();
 
