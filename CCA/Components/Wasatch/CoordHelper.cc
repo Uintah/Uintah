@@ -168,8 +168,8 @@ namespace Wasatch{
       for( int j=lo[1]; j<hi[1]; ++j ){
         for( int i=lo[0]; i<hi[0]; ++i ){
           const IntVector index(i,j,k);
-          const SCIRun::Vector xyz = patch->getCellPosition(index).vector();
-          field[index] = xyz[idir] + shift[idir];  // jcs note that this is inefficient.
+          const SCIRun::Point xyz( patch->getCellPosition(index) );
+          field[index] = xyz(idir) + shift[idir];  // jcs note that this is inefficient.
         }
       }
     }
