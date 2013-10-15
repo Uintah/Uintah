@@ -122,6 +122,8 @@
                                         need_applies_to="type empirical_soot"/> <!-- default of "absorpIN" --> 
           <mixture_fraction_label       spec="OPTIONAL STRING"
                                         need_applies_to="type empirical_soot, scalsim_variance"/> <!-- default of "mixture_fraction" --> 
+          <soot_label                   spec="OPTIONAL STRING"
+                                        need_applies_to="type cc_constant"/> <!-- default of "soot" --> 
 
           <!-- Heat loss --> 
           <enthalpy_label               spec="REQUIRED STRING"
@@ -887,16 +889,16 @@
               <VROrientation             spec="OPTIONAL VECTOR"/>
               <VRLocationsMin            spec="OPTIONAL VECTOR 'positive'"/>
               <VRLocationsMax            spec="OPTIONAL VECTOR 'positive'"/>
-              <nRadRays                 spec="OPTIONAL INTEGER 'positive'"/>        
-              <nFluxRays              spec="OPTIONAL INTEGER 'positive'"/>        
+              <nRadRays                  spec="OPTIONAL INTEGER 'positive'"/>        
+              <nFluxRays                 spec="OPTIONAL INTEGER 'positive'"/>        
               <halo                      spec="OPTIONAL VECTOR 'positive'"/>
               <allowReflect              spec="OPTIONAL BOOLEAN"/>
               <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
               <applyFilter               spec="OPTIONAL BOOLEAN"/>
-              <ignore_BC_bulletproofing spec="OPTIONAL BOOLEAN"/>
+              <ignore_BC_bulletproofing  spec="OPTIONAL BOOLEAN"/>
  
  
-              <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon, radprops'">
+              <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon, radprops, hottel_sarofim'">
                 <min                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
                 <max                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
                 <abskg                   spec="REQUIRED DOUBLE" need_applies_to="type constant" />

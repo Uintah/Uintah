@@ -158,7 +158,7 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 
   //__________________________________
   //  
-  _prop_calculator = scinew RadPropertyCalculator(); 
+  _prop_calculator = scinew RadPropertyCalculator();
   _using_prop_calculator = _prop_calculator->problemSetup( rmcrt_ps ); 
 }
 

@@ -133,14 +133,15 @@ RadPropertyCalculator::HottelSarofim::HottelSarofim() {};
 RadPropertyCalculator::HottelSarofim::~HottelSarofim() {};
     
 bool RadPropertyCalculator::HottelSarofim::problemSetup( const ProblemSpecP& db ) {
- if ( db->findBlock( "hottel_sarofim" ) ){
+  bool property_on = true;
 
-              ProblemSpecP db_h = db->findBlock( "hottel_sarofim" );
-              db_h->getWithDefault("opl",d_opl, 0.18);
-            }
- 
-  bool property_on = true; 
+    ProblemSpecP db_h = db;
+    db_h->getWithDefault("opl",d_opl, 0.19);
+    db_h->getWithDefault("co2_name",_co2_name,"CO2");
+    db_h->getWithDefault("h2o_name",_h2o_name,"H2O");
+    db_h->getWithDefault("soot_name",_soot_name,"soot");
 
+    
   return property_on; 
 }
     
@@ -153,7 +154,7 @@ void RadPropertyCalculator::HottelSarofim::computeProps(
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
 
-double d_opl = 0.18;
+//double d_opl = 0.18;
 
 
 
@@ -172,9 +173,16 @@ void RadPropertyCalculator::HottelSarofim::computePropsWithParticles( const Patc
 
 }
 
+vector<std::string> RadPropertyCalculator::HottelSarofim::get_sp(){
+  _the_species.push_back(_co2_name);
+  _the_species.push_back(_h2o_name);
+  _the_species.push_back(_soot_name);
 
+   return _the_species;
 
+}
 
+const bool RadPropertyCalculator::HottelSarofim::does_scattering(){ return false; } 
 
 /// --------------------------------------
 //  RADPROPS
