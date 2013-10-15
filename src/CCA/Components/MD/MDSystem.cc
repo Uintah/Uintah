@@ -70,7 +70,7 @@ MDSystem::MDSystem(ProblemSpecP& ps,
   } else {
     // Read in non orthorhombic unit cell
   }
-  this->calcCellVolume();
+  calcCellVolume();
   d_inverseCell = d_unitCell.Inverse();
 
   // Determine the total number of cells in the system so we can map dimensions
@@ -84,15 +84,16 @@ MDSystem::MDSystem(ProblemSpecP& ps,
   ProblemSpecP root_ps = ps->getRootNode();
   root_ps->findBlock("Grid")->findBlock("Level")->findBlock("Box")->require("resolution", resolution);
   root_ps->findBlock("MD")->findBlock("Nonbonded")->require("cutoffRadius", cutoffRadius);
-  Vector normalized = Vector(cutoffRadius,cutoffRadius,cutoffRadius) / (d_box/resolution.asVector());
+  Vector normalized = Vector(cutoffRadius, cutoffRadius, cutoffRadius) / (d_box / resolution.asVector());
   IntVector maxDimValues(ceil(normalized.x()), ceil(normalized.y()), ceil(normalized.z()));
   d_numGhostCells = max(maxDimValues.x(), maxDimValues.y(), maxDimValues.z());
+//  d_numGhostCells = 14;
 
 //  int numAtomTypes = 1; //shared_state->getNumMatls();
 //  std::vector<size_t> tempAtomTypeList(numAtomTypes);
 //  d_atomTypeList = tempAtomTypeList;
   //d_atomTypeList.resize(shared_state->getNumMatls());
-  d_atomTypeList.resize(1); // Hard coded for our simple Material case
+  d_atomTypeList.resize(1);  // Hard coded for our simple Material case
   // Not so easy to do.
 //  const MaterialSet* materialList = shared_state->allMaterials();
 //  size_t numberMaterials = materialList->size();
@@ -109,15 +110,16 @@ MDSystem::MDSystem(ProblemSpecP& ps,
 
   d_boxChanged = true;
   d_cellVolume = 0.0;
-  this->calcCellVolume();
+  calcCellVolume();
 }
 
 void MDSystem::calcCellVolume()
 {
   if (d_orthorhombic) {
-    d_cellVolume = d_unitCell(0,0)*d_unitCell(1,1)*d_unitCell(2,2);
+    d_cellVolume = d_unitCell(0, 0) * d_unitCell(1, 1) * d_unitCell(2, 2);
     return;
   }
+
   Vector A, B, C;
   A[0] = d_unitCell(0, 0);
   A[1] = d_unitCell(0, 1);
@@ -130,5 +132,6 @@ void MDSystem::calcCellVolume()
   C[2] = d_unitCell(2, 2);
 
   d_cellVolume = Dot(Cross(A, B), C);
+
   return;
 }

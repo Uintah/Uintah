@@ -173,15 +173,13 @@ void SPME::initialize(const ProcessorGroup* pg,
   // ------------------------------------------------------------------------
   // Allocate and map the SPME patches
   Vector kReal = d_kLimits.asVector();
-
-  size_t numPatches = patches->size();
-
   Vector systemCellExtent = (d_system->getCellExtent()).asVector();
 
   int splineSupport = d_interpolatingSpline.getSupport();
   IntVector plusGhostExtents(splineSupport, splineSupport, splineSupport);
   IntVector minusGhostExtents(0,0,0);
 
+  size_t numPatches = patches->size();
   for(size_t p = 0; p < numPatches; ++p) {
 
     const Patch* patch = patches->get(p);
@@ -1040,48 +1038,56 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
   // grab local Q grid
   SimpleGrid<dblcomplex>* Q_patchLocal = spmePatch->getQ();
   IntVector patchOffset = spmePatch->getGlobalOffset();
-//  IntVector patchExtent = spmePatch->getLocalExtents();
+//    IntVector patchExtent = spmePatch->getLocalExtents();
   IntVector patchExtent = Q_patchLocal->getExtentWithGhost();
+
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); ++iter) {
     particleIndex pidx = *iter;
 
     const SimpleGrid<double> chargeMap = (*gridMap)[pidx].getChargeGrid();
     double charge = charges[pidx];
 
-    IntVector       QAnchor = chargeMap.getOffset();  // Location of the 0,0,0 origin for the charge map grid
+    IntVector QAnchor = chargeMap.getOffset();         // Location of the 0,0,0 origin for the charge map grid
     IntVector supportExtent = chargeMap.getExtents();  // Extents of the charge map grid
-
-    IntVector Base=QAnchor-patchOffset;
+    IntVector Base = QAnchor - patchOffset;
 
     int x_Base = Base[0];
     int y_Base = Base[1];
     int z_Base = Base[2];
+
     int xExtent = supportExtent[0];
     int yExtent = supportExtent[1];
     int zExtent = supportExtent[2];
 
-
     for (int xmask = 0; xmask < xExtent; ++xmask) {
       int x_anchor = x_Base + xmask;
-      if (x_anchor > patchExtent.x()) {
-        std::cerr << " Error:  x_anchor exceeds patch Extent in mapChargeToGrid"
-                  << " xBase: " << x_Base << " xMask: " << xmask << " xAnchor: " << x_anchor
-                  << " xPatchExtent: " << patchExtent.x() << endl;
-      }
+
       for (int ymask = 0; ymask < yExtent; ++ymask) {
         int y_anchor = y_Base + ymask;
-        if (y_anchor > patchExtent.y()) {
-          std::cerr << " Error:  y_anchor exceeds patch Extent in mapChargeToGrid"
-                    << " yBase: " << y_Base << " yMask: " << ymask << " yAnchor: " << y_anchor
-                    << " yPatchExtent: " << patchExtent.y() << endl;
-        }
+
         for (int zmask = 0; zmask < zExtent; ++zmask) {
           int z_anchor = z_Base + zmask;
-          if (z_anchor > patchExtent.z()) {
-            std::cerr << " Error:  z_anchor exceeds patch Extent in mapChargeToGrid"
-                      << " zBase: " << z_Base << " zMask: " << zmask << " zAnchor: " << z_anchor
-                      << " zPatchExtent: " << patchExtent.z() << endl;
+
+          //--------------------------< DEBUG >--------------------------------
+          if (spme_dbg.active()) {
+            if (x_anchor > patchExtent.x()) {
+              std::cerr << " Error:  x_anchor exceeds patch Extent in mapChargeToGrid"
+                        << " xBase: " << x_Base << " xMask: " << xmask << " xAnchor: " << x_anchor
+                        << " xPatchExtent: " << patchExtent.x() << endl;
+            }
+            if (y_anchor > patchExtent.y()) {
+              std::cerr << " Error:  y_anchor exceeds patch Extent in mapChargeToGrid"
+                        << " yBase: " << y_Base << " yMask: " << ymask << " yAnchor: " << y_anchor
+                        << " yPatchExtent: " << patchExtent.y() << endl;
+            }
+            if (z_anchor > patchExtent.z()) {
+              std::cerr << " Error:  z_anchor exceeds patch Extent in mapChargeToGrid"
+                        << " zBase: " << z_Base << " zMask: " << zmask << " zAnchor: " << z_anchor
+                        << " zPatchExtent: " << patchExtent.z() << endl;
+            }
           }
+          //--------------------------< DEBUG >--------------------------------
+
           // Local patch has no wrapping, we have ghost cells to write into
           dblcomplex val = charge * chargeMap(xmask, ymask, zmask);
           (*Q_patchLocal)(x_anchor, y_anchor, z_anchor) += val;
@@ -1139,6 +1145,7 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
   IntVector patchOffset = spmePatch->getGlobalOffset();
 //  IntVector patchExtent = spmePatch->getLocalExtents();
   IntVector patchExtent = Q_patchLocal->getExtentWithGhost();
+
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); ++iter) {
     particleIndex pidx = *iter;
 
@@ -1146,10 +1153,9 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
     double charge = charges[pidx];
 
     SCIRun::Vector newForce = Vector(0, 0, 0);
-    IntVector       QAnchor = forceMap.getOffset();  // Location of the 0,0,0 origin for the force map grid
+    IntVector QAnchor = forceMap.getOffset();         // Location of the 0,0,0 origin for the force map grid
     IntVector supportExtent = forceMap.getExtents();  // Extents of the force map grid
-
-    IntVector Base=QAnchor-patchOffset;
+    IntVector Base = QAnchor - patchOffset;
 
     int x_Base = Base[0];
     int y_Base = Base[1];
@@ -1161,26 +1167,34 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
 
     for (int xmask = 0; xmask < xExtent; ++xmask) {
       int x_anchor = x_Base + xmask;
-      if (x_anchor > patchExtent.x()) {
-        std::cerr << " Error:  x_anchor exceeds patch Extent in mapForceFromGrid"
-                  << " xBase: " << x_Base << " xMask: " << xmask << " xAnchor: " << x_anchor
-                  << " xPatchExtent: " << patchExtent.x();
-      }
+
       for (int ymask = 0; ymask < yExtent; ++ymask) {
         int y_anchor = y_Base + ymask;
-        if (y_anchor > patchExtent.y()) {
-          std::cerr << " Error:  y_anchor exceeds patch Extent in mapForceFromGrid"
-                    << " yBase: " << y_Base << " yMask: " << ymask << " yAnchor: " << y_anchor
-                    << " yPatchExtent: " << patchExtent.y();
-        }
+
         for (int zmask = 0; zmask < zExtent; ++zmask) {
           int z_anchor = z_Base + zmask;
-          if (z_anchor > patchExtent.z()) {
-            std::cerr << " Error:  z_anchor exceeds patch Extent in mapForceFromGrid"
-                      << " zBase: " << z_Base << " zMask: " << zmask << " zAnchor: " << z_anchor
-                      << " zPatchExtent: " << patchExtent.z();
+
+          //--------------------------< DEBUG >--------------------------------
+          if (spme_dbg.active()) {
+            if (x_anchor > patchExtent.x()) {
+              std::cerr << " Error:  x_anchor exceeds patch Extent in mapForceFromGrid"
+                        << " xBase: " << x_Base << " xMask: " << xmask << " xAnchor: " << x_anchor
+                        << " xPatchExtent: " << patchExtent.x();
+            }
+            if (y_anchor > patchExtent.y()) {
+              std::cerr << " Error:  y_anchor exceeds patch Extent in mapForceFromGrid"
+                        << " yBase: " << y_Base << " yMask: " << ymask << " yAnchor: " << y_anchor
+                        << " yPatchExtent: " << patchExtent.y();
+            }
+            if (z_anchor > patchExtent.z()) {
+              std::cerr << " Error:  z_anchor exceeds patch Extent in mapForceFromGrid"
+                        << " zBase: " << z_Base << " zMask: " << zmask << " zAnchor: " << z_anchor
+                        << " zPatchExtent: " << patchExtent.z();
+            }
           }
-        // Local grid should have appropriate ghost cells, so no wrapping necessary.
+          //--------------------------< DEBUG >--------------------------------
+
+          // Local grid should have appropriate ghost cells, so no wrapping necessary.
           double QReal = std::real((*Q_patchLocal)(x_anchor, y_anchor, z_anchor));
           newForce += forceMap(xmask, ymask, zmask) * QReal * charge * d_inverseUnitCell;
         }
