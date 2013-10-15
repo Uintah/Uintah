@@ -34,34 +34,42 @@ using namespace Uintah;
 using namespace SCIRun;
 
 SendState::SendState()
+: d_lock("SendState Lock")
 {
 }
 
 SendState::~SendState()
 {
+  d_lock.writeLock();
   for( maptype::iterator iter = sendSubsets.begin(); iter != sendSubsets.end();iter++) {
     if( iter->second->removeReference() ) {
       delete iter->second;
     }
   }
+  d_lock.writeUnlock();
 }
 
 ParticleSubset*
 SendState::find_sendset(int dest, const Patch* patch, int matlIndex,
                         IntVector low, IntVector high, int dwid /* =0 */) const
 {
+  d_lock.readLock();
+  ParticleSubset* ret;
   maptype::const_iterator iter = sendSubsets.find( make_pair( PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest) );
 
   if( iter == sendSubsets.end() ) {
-    return 0;
+    ret=NULL;
   }
-  return iter->second;
+  ret=iter->second;
+  d_lock.readUnlock();
+  return ret;
 }
 
 void
 SendState::add_sendset(ParticleSubset* sendset, int dest, const Patch* patch, 
                        int matlIndex, IntVector low, IntVector high, int dwid /*=0*/)
 {
+  d_lock.writeLock();
   maptype::iterator iter = 
     sendSubsets.find(make_pair(PSPatchMatlGhostRange(patch,matlIndex,low,high,dwid), dest));
   if( iter != sendSubsets.end() ) {
@@ -70,19 +78,24 @@ SendState::add_sendset(ParticleSubset* sendset, int dest, const Patch* patch,
   }
   sendSubsets[make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest)]=sendset;
   sendset->addReference();
+  d_lock.writeUnlock();
 }
 
 void
 SendState::reset()
 {
+  d_lock.writeLock();
   sendSubsets.clear();
+  d_lock.writeUnlock();
 }
 
 void
 SendState::print() 
 {
+  d_lock.readLock();
   for (maptype::iterator iter = sendSubsets.begin(); iter != sendSubsets.end(); iter++) {
     cout << Parallel::getMPIRank() << ' ' << *(iter->second) << " src/dest: " 
          << iter->first.second << "\n";
   }
+  d_lock.readUnlock();
 }
