@@ -199,12 +199,12 @@ namespace Wasatch{
         const Expr::Tag fieldStateNONE( iof, Expr::STATE_NONE );
         if( tree->has_field(fieldStateN) ){
           if( tree->has_expression(tree->get_id(fieldStateN)) ){
-            tree->set_expr_is_persistent( fieldStateN, true, *fml_ );
+            tree->set_expr_is_persistent( fieldStateN, *fml_ );
           }
         }
         if( tree->has_field(fieldStateNONE) ){
           if( tree->has_expression(tree->get_id(fieldStateNONE)) ){
-            tree->set_expr_is_persistent( fieldStateNONE, true, *fml_ );
+            tree->set_expr_is_persistent( fieldStateNONE, *fml_ );
           }
         }
 
