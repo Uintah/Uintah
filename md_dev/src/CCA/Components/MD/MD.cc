@@ -447,12 +447,13 @@ void MD::initialize(const ProcessorGroup* pg,
       CCVariable<int> subSchedulerDependency;
 
       // eventually we'll need to use PFS for this
-      vector<Atom> localAtoms;
+      std::vector<Atom> localAtoms;
       for (unsigned int i = 0; i < numAtoms; ++i) {
-        Vector reducedCoordinates = ((d_atomList[i].coords).asVector() * systemInverseCell);
-
-        IntVector cellCoordinates((reducedCoordinates * totalSystemExtent.asVector()).asPoint());
-        if (containsAtom(low, high, cellCoordinates)) {
+//        Vector reducedCoordinates = ((d_atomList[i].coords).asVector() * systemInverseCell);
+//        IntVector cellCoordinates((reducedCoordinates * totalSystemExtent.asVector()).asPoint());
+        // TODO make sure this is correct before deleting the above lines
+        IntVector ptIndex =  patch->getLevel()->getCellIndex(d_atomList[i].coords);
+        if (containsAtom(low, high, ptIndex)) {
           localAtoms.push_back(d_atomList[i]);
         }
       }
