@@ -284,6 +284,56 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
 //
 void DDT1::problemSetup_BulletProofing(ProblemSpecP& ps)
 {
+
+  //__________________________________
+  // The user can't specify a timestepInterval
+  // and a interval for dynamic output
+  bool usingOutputTimestepInterval = false;
+  bool usingChkPtTimestepInterval  = false;
+  int notUsedI;
+  ProblemSpecP p = ps->findBlock( "DataArchiver" );
+ 
+  if( p->get( "outputTimestepInterval", notUsedI ) ){
+    usingOutputTimestepInterval = true;
+  }
+
+  ProblemSpecP checkpoint = p->findBlock( "checkpoint" );
+  if( checkpoint != 0 ) {
+    map<string, string> attributes;
+    
+    attributes.clear();
+    checkpoint->getAttributes(attributes);
+
+    string attrib = attributes["timestepInterval"];
+    if ( attrib != "" ){
+      usingChkPtTimestepInterval = true;
+    }
+  }
+
+  ProblemSpecP adj_ps = d_params->findBlockWithOutAttribute( "adjust_IO_intervals" );
+  
+  if(adj_ps){
+    ProblemSpecP PS_ps = adj_ps->findBlockWithOutAttribute( "PressureSwitch" );
+    ProblemSpecP DS_ps = adj_ps->findBlockWithOutAttribute( "DetonationDetected" );
+
+    if( PS_ps || DS_ps ){
+
+      if( usingOutputTimestepInterval || usingChkPtTimestepInterval ){
+        ostringstream msg;
+        msg << "\n ERROR:Model:DDT1: <adjust_IO_intervals>  You cannot specify: \n"
+            << "      DataArchiver:outputTimestepInterval && adjust_IO_intervals:newOutputInterval \n"
+            << "      Checkpoint:TimestepInterval && adjust_IO_intervals:newCheckPointInterval \n"
+            << " you must be consistent";     
+        
+        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+      }
+    }
+  }
+
+
+
+  //__________________________________
+  //
   ProblemSpecP root = ps->getRootNode();
   ProblemSpecP amr_ps = root->findBlock("AMR"); 
   if(amr_ps){     
