@@ -31,6 +31,8 @@
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <cstring>
+
 namespace Uintah {
 /**************************************
 
@@ -92,6 +94,18 @@ WARNING
         totsize=sizeof(T);
         ptr=(void*)&value;
       }
+
+      virtual size_t getDataSize() const {
+        return sizeof(T);
+      }
+
+      virtual bool copyOut(void* dst) const {
+        void* src = (void*)(&value);
+        size_t numBytes = getDataSize();
+        void* retVal = std::memcpy(dst, src, numBytes);
+        return (retVal == dst) ? true : false;
+      }
+
    private:
       static TypeDescription* td;
       T value;

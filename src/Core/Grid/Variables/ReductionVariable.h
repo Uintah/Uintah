@@ -37,6 +37,7 @@
 
 #include <iosfwd>
 #include <iostream>
+#include <cstring>
 
 
 namespace Uintah {
@@ -114,6 +115,17 @@ WARNING
       elems="1";
       totsize = sizeof(T);
       ptr = 0;
+    }
+
+    virtual size_t getDataSize() const {
+      return sizeof(T);
+    }
+
+    virtual bool copyOut(void* dst) const {
+      void* src = (void*)(&value);
+      size_t numBytes = getDataSize();
+      void* retVal = std::memcpy(dst, src, numBytes);
+      return (retVal == dst) ? true : false;
     }
 
     //! Sets the value to a harmless value that will have no impact

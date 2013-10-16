@@ -49,6 +49,7 @@
 #include <unistd.h>
 #endif
 #include <iostream>
+#include <cstring>
 
 
 namespace Uintah {
@@ -56,7 +57,7 @@ namespace Uintah {
   using SCIRun::InternalError;
 
   class ProcessorGroup;
-class TypeDescription;
+  class TypeDescription;
 
 /**************************************
 
@@ -89,6 +90,7 @@ WARNING
 template<class T>
 class ParticleVariable : public ParticleVariableBase {
   friend class constVariable<ParticleVariableBase, ParticleVariable<T>, T, particleIndex>;
+
 public:
   ParticleVariable();
   virtual ~ParticleVariable();
@@ -189,6 +191,18 @@ public:
     totsize = getParticleSubset()->numParticles()*sizeof(T);
     ptr = getBasePointer();
   }
+
+  virtual size_t getDataSize() const {
+    return getParticleSubset()->numParticles() * sizeof(T);
+  }
+
+  virtual bool copyOut(void* dst) const {
+    void* src = (void*)this->getBasePointer();
+    size_t numBytes = getDataSize();
+    void* retVal = std::memcpy(dst, src, numBytes);
+    return (retVal == dst) ? true : false;
+  }
+
 protected:
   static TypeDescription* td;
   ParticleVariable(const ParticleVariable<T>&);

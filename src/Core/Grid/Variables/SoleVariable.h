@@ -36,6 +36,7 @@
 
 #include <iosfwd>
 #include <iostream>
+#include <cstring>
 
 
 namespace Uintah {
@@ -98,6 +99,17 @@ WARNING
       elems="1";
       totsize = sizeof(T);
       ptr=(void*)&value;
+    }
+
+    virtual size_t getDataSize() const {
+      return sizeof(T);
+    }
+
+    virtual bool copyOut(void* dst) const {
+      void* src = (void*)(&value);
+      size_t numBytes = getDataSize();
+      void* retVal = std::memcpy(dst, src, numBytes);
+      return (retVal == dst) ? true : false;
     }
 
   private:
