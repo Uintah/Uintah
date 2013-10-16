@@ -2791,7 +2791,9 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
           Iterator bound_ptr;
           bool foundIterator = false;
 
-          if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
+          if ( bc_iter->second.type == VELOCITY_INLET || 
+               bc_iter->second.type == TURBULENT_INLET ||
+               bc_iter->second.type == STABL ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
           } else if ( bc_iter->second.type == VELOCITY_FILE ) { 
@@ -3980,6 +3982,38 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
   if ( db_bc ) { 
     for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0; 
           db_face = db_face->findNextBlock("Face") ){
+
+      string which_face; 
+      int v_index=999;
+      if ( db_face->getAttribute("side", which_face)){
+        db_face->getAttribute("side",which_face); 
+      } else if ( db_face->getAttribute( "circle", which_face)){
+        db_face->getAttribute("circle",which_face); 
+      } else if ( db_face->getAttribute( "rectangle", which_face)){ 
+        db_face->getAttribute("rectangle",which_face); 
+      } else if ( db_face->getAttribute( "annulus", which_face)){ 
+        db_face->getAttribute("annulus",which_face); 
+      } else if ( db_face->getAttribute( "ellipse", which_face)){ 
+        db_face->getAttribute("ellipse",which_face); 
+      }
+
+      //avoid the "or" in case I want to add more logic 
+      //re: the face normal. 
+      if ( which_face =="x-"){ 
+        v_index = 0;
+      } else if ( which_face =="x+"){
+        v_index = 0;
+      } else if ( which_face =="y-"){ 
+        v_index = 1;
+      } else if ( which_face =="y+"){
+        v_index = 1;
+      } else if ( which_face =="z-"){ 
+        v_index = 2;
+      } else if ( which_face =="z+"){ 
+        v_index = 2;
+      } else { 
+        throw InvalidValue("Error: Could not identify the boundary face direction.", __FILE__, __LINE__);
+      }
       
       for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0; 
           db_BCType = db_BCType->findNextBlock("BCType") ){
@@ -4095,16 +4129,18 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           my_info.type = STABL; 
           db_BCType->require("roughness",my_info.zo); 
           db_BCType->require("freestream_h",my_info.zh); 
-          db_BCType->require("value",my_info.u_inf);  // Using <value> as the infinite velocity
+          db_BCType->require("value",my_info.velocity);  // Using <value> as the infinite velocity
           db_BCType->getWithDefault("k",my_info.k,0.41);
 
           my_info.kappa = pow( my_info.k / log( my_info.zh / my_info.zo ), 2.0); 
-          my_info.ustar = pow( (my_info.kappa * pow(my_info.u_inf,2.0)), 0.5 ); 
+          my_info.ustar = pow( (my_info.kappa * pow(my_info.velocity[v_index],2.0)), 0.5 ); 
+
           if ( dir_grav < 3 ){ 
             my_info.dir_gravity = dir_grav; 
           } else { 
             throw InvalidValue("Error: You must have a gravity direction specified to use the StABL BC.", __FILE__, __LINE__);
           } 
+
           found_bc = true; 
 
         } else if ( type == "PressureBC" ){
@@ -4710,7 +4746,9 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
           string face_name; 
           getBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_kind, face_name ); 
 
-          if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
+          if ( bc_iter->second.type == VELOCITY_INLET || 
+               bc_iter->second.type == TURBULENT_INLET ||
+               bc_iter->second.type == STABL ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
           } else if ( bc_iter->second.type == VELOCITY_FILE ) { 
@@ -5011,26 +5049,28 @@ void BoundaryCondition::setStABL( const Patch* patch, const Patch::FaceType& fac
 {
 
   IntVector insideCellDir = patch->faceDirection(face);
+  Vector Dx = patch->dCell(); 
 
   switch ( face ) {
    case Patch::xminus :
-
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
        Point p = patch->getCellPosition(c);
-       double vel = 0.0; 
-       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+       double vel = 0;
+       if ( p(bcinfo->dir_gravity) > 0.0 ){ 
          vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       } else { 
+         vel = bcinfo->ustar / bcinfo->k * log( ( p(bcinfo->dir_gravity)+Dx[0] ) / bcinfo->zo ); 
        }
 
        uVel[c]  = vel;
        uVel[cp] = vel;
 
-       vVel[c] = 0.0; 
-       wVel[c] = 0.0; 
+       vVel[c] = bcinfo->velocity[1]; 
+       wVel[c] = bcinfo->velocity[2]; 
      }
 
      break; 
@@ -5041,16 +5081,18 @@ void BoundaryCondition::setStABL( const Patch* patch, const Patch::FaceType& fac
        IntVector cp = *bound_ptr - insideCellDir; 
 
        Point p = patch->getCellPosition(c);
-       double vel = 0.0; 
-       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+       double vel = 0;
+       if ( p(bcinfo->dir_gravity) > 0.0 ){ 
          vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       } else { 
+         vel = bcinfo->ustar / bcinfo->k * log( ( p(bcinfo->dir_gravity)+Dx[0] ) / bcinfo->zo ); 
        }
 
        uVel[c]  = -vel;
        uVel[cp] = -vel;
 
-       vVel[c] = 0.0; 
-       wVel[c] = 0.0; 
+       vVel[c] = bcinfo->velocity[1]; 
+       wVel[c] = bcinfo->velocity[2]; 
 
      }
      break; 
@@ -5061,16 +5103,18 @@ void BoundaryCondition::setStABL( const Patch* patch, const Patch::FaceType& fac
        IntVector cp = *bound_ptr - insideCellDir; 
 
        Point p = patch->getCellPosition(c);
-       double vel = 0.0; 
-       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+       double vel = 0;
+       if ( p(bcinfo->dir_gravity) > 0.0 ){ 
          vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       } else { 
+         vel = bcinfo->ustar / bcinfo->k * log( ( p(bcinfo->dir_gravity)+Dx[1] ) / bcinfo->zo ); 
        }
 
        vVel[c]  = vel;
        vVel[cp] = vel;
 
-       uVel[c] = 0.0; 
-       wVel[c] = 0.0; 
+       uVel[c] = bcinfo->velocity[0]; 
+       wVel[c] = bcinfo->velocity[2]; 
 
 
      }
@@ -5082,17 +5126,18 @@ void BoundaryCondition::setStABL( const Patch* patch, const Patch::FaceType& fac
        IntVector cp = *bound_ptr - insideCellDir; 
 
        Point p = patch->getCellPosition(c);
-       double vel = 0.0; 
-       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+       double vel = 0;
+       if ( p(bcinfo->dir_gravity) > 0.0 ){ 
          vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       } else { 
+         vel = bcinfo->ustar / bcinfo->k * log( ( p(bcinfo->dir_gravity)+Dx[1] ) / bcinfo->zo ); 
        }
 
        vVel[c]  = -vel;
        vVel[cp] = -vel;
 
-       uVel[c] = 0.0; 
-       wVel[c] = 0.0; 
-
+       uVel[c] = bcinfo->velocity[0]; 
+       wVel[c] = bcinfo->velocity[2]; 
 
      }
      break; 
@@ -5103,16 +5148,18 @@ void BoundaryCondition::setStABL( const Patch* patch, const Patch::FaceType& fac
        IntVector cp = *bound_ptr - insideCellDir; 
 
        Point p = patch->getCellPosition(c);
-       double vel = 0.0; 
-       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+       double vel = 0;
+       if ( p(bcinfo->dir_gravity) > 0.0 ){ 
          vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       } else { 
+         vel = bcinfo->ustar / bcinfo->k * log( ( p(bcinfo->dir_gravity)+Dx[2] ) / bcinfo->zo ); 
        }
 
        wVel[c]  = vel;
        wVel[cp] = vel;
 
-       uVel[c] = 0.0; 
-       vVel[c] = 0.0; 
+       uVel[c] = bcinfo->velocity[0]; 
+       vVel[c] = bcinfo->velocity[1]; 
 
 
      }
@@ -5124,16 +5171,18 @@ void BoundaryCondition::setStABL( const Patch* patch, const Patch::FaceType& fac
        IntVector cp = *bound_ptr - insideCellDir; 
 
        Point p = patch->getCellPosition(c);
-       double vel = 0.0; 
-       if ( p(bcinfo->dir_gravity) > 0.00 ){ 
+       double vel = 0;
+       if ( p(bcinfo->dir_gravity) > 0.0 ){ 
          vel = bcinfo->ustar / bcinfo->k * log( p(bcinfo->dir_gravity) / bcinfo->zo ); 
+       } else { 
+         vel = bcinfo->ustar / bcinfo->k * log( ( p(bcinfo->dir_gravity)+Dx[2] ) / bcinfo->zo ); 
        }
 
        wVel[c]  = -vel;
        wVel[cp] = -vel;
 
-       uVel[c] = 0.0; 
-       vVel[c] = 0.0; 
+       uVel[c] = bcinfo->velocity[0]; 
+       vVel[c] = bcinfo->velocity[1]; 
 
      }
      break; 
