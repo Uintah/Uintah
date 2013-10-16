@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1557,7 +1557,6 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask)
       //   one stream and one event per variable per H2D copy (numPatches * numMatls)
       int numPatches = patches->size();
       int numMatls = matls->size();
-      int device = dtask->getDeviceNum();
 
       int dwIndex = comp->mapDataWarehouse();
       OnDemandDataWarehouseP dw = dws[dwIndex];
@@ -1614,8 +1613,6 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask)
       //   one stream and one event per variable per H2D copy (numPatches * numMatls)
       int numPatches = patches->size();
       int numMatls = matls->size();
-      int device = dtask->getDeviceNum();
-
 
       int dwIndex = comp->mapDataWarehouse();
       OnDemandDataWarehouseP dw = dws[dwIndex];
@@ -1773,13 +1770,11 @@ cudaStream_t* UnifiedScheduler::getCudaStream(int device)
 cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
 {
   cudaError_t retVal;
-  std::set<double*>::iterator iter;
+  std::set<void*>::iterator iter;
 
+  // unregister the page-locked host requires memory
   for (iter = pinnedHostPtrs.begin(); iter != pinnedHostPtrs.end(); iter++) {
-
-    // unregister the page-locked host requires memory
-    double* ptr = *iter;
-    CUDA_RT_SAFE_CALL(retVal = cudaHostUnregister(ptr));
+    CUDA_RT_SAFE_CALL(retVal = cudaHostUnregister(*iter));
   }
   pinnedHostPtrs.clear();
   return retVal;

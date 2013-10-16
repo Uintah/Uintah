@@ -77,7 +77,10 @@ WARNING
       virtual RefCounted* getRefCounted();
       virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
                                void*& ptr) const = 0;
+      virtual size_t getDataSize() const = 0;
+      virtual bool copyOut(void* dst) const = 0;
       virtual void setBenignValue() = 0;
+
    protected:
       ReductionVariableBase(const ReductionVariableBase&);
       ReductionVariableBase();

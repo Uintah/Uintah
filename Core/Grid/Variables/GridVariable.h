@@ -42,6 +42,7 @@
 #ifndef _WIN32
 #  include <unistd.h>
 #endif
+#include <cstring>
 
 namespace Uintah {
 
@@ -79,6 +80,7 @@ WARNING
 
   template<class T> 
   class GridVariable : public GridVariableBase, public Array3<T> {
+
   public:
     GridVariable() {}
     virtual ~GridVariable() {}
@@ -109,6 +111,7 @@ WARNING
     // Insert Documentation Here:
     void copyPatch(const GridVariable<T>& src,
                    const IntVector& lowIndex, const IntVector& highIndex);
+
     virtual void copyPatch(const GridVariableBase* src,
                            const IntVector& lowIndex,
                            const IntVector& highIndex)
@@ -116,6 +119,7 @@ WARNING
     
     void copyData(const GridVariable<T>& src)
       { copyPatch(src, src.getLowIndex(), src.getHighIndex()); }
+
     virtual void copyData(const GridVariableBase* src)
       { copyPatch(src, src->getLow(), src->getHigh()); }
     
@@ -123,9 +127,11 @@ WARNING
 
     virtual void getSizes(IntVector& low, IntVector& high,
                           IntVector& siz) const;
+
     virtual void getSizes(IntVector& low, IntVector& high,
                           IntVector& dataLow, IntVector& siz,
                           IntVector& strides) const;
+
     virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
                              void*& ptr) const {
       IntVector siz = this->size();
@@ -135,7 +141,21 @@ WARNING
       totsize=siz.x()*siz.y()*siz.z()*sizeof(T);
       ptr = (void*)this->getPointer();
     }
+
+    virtual size_t getDataSize() const {
+      IntVector siz = this->size();
+      return siz.x() * siz.y() * siz.z() * sizeof(T);
+    }
+
+    virtual bool copyOut(void* dst) const {
+      void* src = (void*)this->getPointer();
+      size_t numBytes = getDataSize();
+      void* retVal = std::memcpy(dst, src, numBytes);
+      return (retVal == dst) ? true : false;
+    }
+
     virtual IntVector getLow() const {  return this->getLowIndex(); }
+
     virtual IntVector getHigh() const { return this->getHighIndex(); }
 
     virtual void emitNormal(std::ostream& out, const IntVector& l, const IntVector& h,
