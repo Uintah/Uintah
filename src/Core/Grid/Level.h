@@ -183,6 +183,9 @@ public:
   Vector dCell() const {
     return d_dcell;
   }
+  void setdCell(Vector spacing) {
+    d_dcell = spacing;
+  }
   Point getAnchor() const {
     return d_anchor;
   }
