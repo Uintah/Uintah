@@ -114,7 +114,7 @@ void MD::problemSetup(const ProblemSpecP& params,
     Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
 
     d_subScheduler = sched->createSubScheduler();
-    d_subScheduler->initialize(3, 1);
+    d_subScheduler->initialize(3,1);
     d_subScheduler->clearMappings();
     d_subScheduler->mapDataWarehouse(Task::ParentOldDW, 0);
     d_subScheduler->mapDataWarehouse(Task::ParentNewDW, 1);
@@ -231,7 +231,7 @@ void MD::scheduleNonbondedInitialize(SchedulerP& sched,
   // This is during the initial timestep... no OldDW exists
   task->requires(Task::NewDW, d_lb->pXLabel, Ghost::None, 0);
 
-  // initialize reduction variable; van der Waals energy
+   // initialize reduction variable; van der Waals energy
   task->computes(d_lb->vdwEnergyLabel);
   task->computes(d_lb->nonbondedDependencyLabel);
 
@@ -371,8 +371,8 @@ void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
 
   // particle variables
   task->requires(Task::OldDW, d_lb->pElectrostaticsForceLabel, Ghost::None, 0);
-  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::Ghost::None, 0);
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost::Ghost::None, 0);
+  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost:: Ghost::None, 0);
+  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
 
   task->computes(d_lb->pElectrostaticsForceLabel_preReloc);
   task->computes(d_lb->pChargeLabel_preReloc);
@@ -521,13 +521,13 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
   new_dw->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
 
   proc0cout << std::endl;
-  proc0cout << "-----------------------------------------------------" << std::endl;
-  proc0cout << "Total Energy   = " << std::setprecision(16) << vdwEnergy << std::endl;
-  proc0cout << "-----------------------------------------------------" << std::endl;
+  proc0cout << "-----------------------------------------------------"           << std::endl;
+  proc0cout << "Total Energy   = " << std::setprecision(16) << vdwEnergy         << std::endl;
+  proc0cout << "-----------------------------------------------------"           << std::endl;
   proc0cout << "Fourier Energy = " << std::setprecision(16) << spmeFourierEnergy << std::endl;
-  proc0cout << "-----------------------------------------------------" << std::endl;
+  proc0cout << "-----------------------------------------------------"           << std::endl;
   proc0cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
-  proc0cout << "-----------------------------------------------------" << std::endl;
+  proc0cout << "-----------------------------------------------------"           << std::endl;
   proc0cout << std::endl;
 
   new_dw->put(delt_vartype(1), d_sharedState->get_delt_label(), getLevel(patches));
@@ -779,25 +779,13 @@ void MD::extractCoordinates()
     //FIXME This is hacky!! Fix for generic case of wrapping arbitrary coordinates into arbitrary unit cells using
     //  reduced coordinate transformation!  -- JBH 5/9/13
     Vector box = d_system->getBox();
-    if (x < 0) {
-      x += box.x();
-    }
-    if (y < 0) {
-      y += box.y();
-    }
-    if (z < 0) {
-      z += box.z();
-    }
+    if (x < 0) { x += box.x(); }
+    if (y < 0) { y += box.y(); }
+    if (z < 0) { z += box.z(); }
 
-    if (x >= box.x()) {
-      x -= box.x();
-    }
-    if (y >= box.y()) {
-      y -= box.y();
-    }
-    if (z >= box.z()) {
-      z -= box.z();
-    }
+    if (x >= box.x()) { x -= box.x(); }
+    if (y >= box.y()) { y -= box.y(); }
+    if (z >= box.z()) { z -= box.z(); }
 
     Atom atom(Point(x, y, z), charge);
 
