@@ -74,6 +74,7 @@ static DebugStream affinity("CPUAffinity", true);
 
 #ifdef HAVE_CUDA
 static DebugStream gpu_stats("GPUStats", false);
+static DebugStream use_single_device("SingleDevice", false);
 #endif
 
 UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
@@ -1391,7 +1392,13 @@ int UnifiedScheduler::getAviableThreadNum()
 void UnifiedScheduler::gpuInitialize(bool reset)
 {
   cudaError_t retVal;
-  CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices_));
+
+  if (use_single_device.active()) {
+    numDevices_ = 1;
+  } else {
+    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices_));
+  }
+
   if (reset){
     for (int i=0; i< numDevices_ ; i++) {
       CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
