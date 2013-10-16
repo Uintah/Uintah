@@ -121,20 +121,6 @@ public:
                  const bool with_energy_exch, 
                  const bool modify_ref_den );
 
-
-  /** @brief A temporary solution to deal with boundary conditions on properties until Properties.cc is eliminated */ 
-  void oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type );
-
-  /** @brief Dummy initialization as required by MPMArches */
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-
-  /** @brief Dummy initialization as required by MPMArches */
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls, 
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
-
   /** @brief Load table into memory */ 
   void loadMixingTable(gzFile &fp, const string & inputfile );
 

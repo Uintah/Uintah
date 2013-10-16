@@ -316,16 +316,6 @@ Properties::computeInletProperties(const InletStream& inStream,
   else if (dynamic_cast<const StandardTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
   }
-#if HAVE_TABPROPS
-  else if ( mixModel == "TabProps"){
-    d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
-  }
-#endif 
-  else if ( mixModel == "ClassicTable"){
-    d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
-  } else if ( mixModel == "ColdFlow" ) {
-    d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
-  }
   else {
     throw InvalidValue("Mixing Model not supported", __FILE__, __LINE__);
   }
@@ -2129,11 +2119,6 @@ Properties::sched_reComputeProps_new( const LevelP& level,
   d_mixingRxnTable->sched_getState( level, sched, time_labels, initialize, d_calcEnthalpy, modify_ref_den ); 
 }
 
-void 
-Properties::sched_doTPDummyInit( const LevelP& level, SchedulerP& sched )
-{
-  d_mixingRxnTable->sched_dummyInit( level, sched ); 
-}
 void 
 Properties::addLookupSpecies( ){
 

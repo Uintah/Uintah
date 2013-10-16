@@ -94,6 +94,9 @@
         <BCType id="1" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
+        <BCType id="1" label="scalar_var" var="Neumann">
+          <value>0.0</value>
+        </BCType>
         <BCType id="1" label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -112,6 +115,9 @@
           <value>1.0</value>
         </BCType>
         <BCType id="1" label="heat_loss" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="1" label="scalar_var" var="Dirichlet">
           <value>0.0</value>
         </BCType>
         <BCType id="1" label="enthalpy" var="Tabulated">
@@ -134,6 +140,9 @@
         <BCType id="1" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
+        <BCType id="1" label="scalar_var" var="Neumann">
+          <value>0.0</value>
+        </BCType>
         <BCType id="1" label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -152,6 +161,9 @@
           <value>0.0</value>
         </BCType>
         <BCType id="1" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="1" label="scalar_var" var="Neumann">
           <value>0.0</value>
         </BCType>
         <BCType id="1" label="enthalpy" var="Neumann">
@@ -174,6 +186,9 @@
         <BCType id="1" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
+        <BCType id="1" label="scalar_var" var="Neumann">
+          <value>0.0</value>
+        </BCType>
         <BCType id="1" label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -194,6 +209,9 @@
         <BCType id="1" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
+        <BCType id="1" label="scalar_var" var="Neumann">
+          <value>0.0</value>
+        </BCType>
         <BCType id="1" label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -210,6 +228,9 @@
           <value>0.0</value>
         </BCType>
         <BCType id="1" label="heat_loss" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="1" label="scalar_var" var="Neumann">
           <value>0.0</value>
         </BCType>
         <BCType id="1" label="enthalpy" var="Neumann">
