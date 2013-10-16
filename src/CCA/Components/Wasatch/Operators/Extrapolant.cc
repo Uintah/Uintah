@@ -29,8 +29,6 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <spatialops/structured/stencil/Stencil2.h>
-
 //--------------------------------------------------------------------
 
 template< typename FieldT >

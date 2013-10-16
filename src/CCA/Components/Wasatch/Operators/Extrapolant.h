@@ -38,8 +38,7 @@
 #include <vector>
 #include <limits>
 
-#include <spatialops/SpatialOpsDefs.h>
-#include <spatialops/structured/stencil/Stencil2.h>
+#include <spatialops/structured/IntVec.h>
 
 #ifndef DBLMAX
 #define DBLMAX std::numeric_limits<double>::max()
