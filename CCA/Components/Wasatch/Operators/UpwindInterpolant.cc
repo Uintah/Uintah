@@ -26,12 +26,11 @@
 #include "OperatorTypes.h"
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 
+#include <spatialops/NeboStencilBuilder.h>
+
 #include <cmath>
 #include <sstream>
 #include <stdexcept>
-
-#include <spatialops/SpatialOpsDefs.h>
-#include <spatialops/structured/stencil/Stencil2.h>
 
 //--------------------------------------------------------------------
 
@@ -77,22 +76,32 @@ apply_to_field( const SrcT& src, DestT& dest )
 {
   using namespace SpatialOps;
   using namespace SpatialOps::structured;
-  typedef s2detail::ExtentsAndOffsets<SrcT,DestT> Extents;
+
+  typedef typename OperatorTypeBuilder<Interpolant,SrcT,DestT>::type::PointCollectionType StencilPts;
+  typedef typename StencilPts::Point HighStPt;
+  typedef typename StencilPts::Collection::Point LowStPt;
+
+  typedef IndexTriplet<0,0,0>           S1Offset;
+  typedef LowStPt                       S1Extent;
+  typedef typename LowStPt::Negate      S2Offset;
+  typedef S1Extent                      S2Extent;
+  typedef typename S1Extent::Negate     DOffset;
+  typedef S1Extent                      DExtent;
 
   const MemoryWindow& ws = src.window_with_ghost();
   const MemoryWindow ws1( ws.glob_dim(),
-                          ws.offset() + Extents::Src1Offset::int_vec(),
-                          ws.extent() + Extents::Src1Extent::int_vec()  );
+                          ws.offset() + S1Offset::int_vec(),
+                          ws.extent() + S1Extent::int_vec() );
 
   const MemoryWindow ws2( ws.glob_dim(),
-                          ws.offset() + Extents::Src2Offset::int_vec(),
-                          ws.extent() + Extents::Src2Extent::int_vec()  );
+                          ws.offset() + S2Offset::int_vec(),
+                          ws.extent() + S2Extent::int_vec() );
 
   const MemoryWindow& wdest = dest.window_with_ghost();
   const BoundaryCellInfo& bcd = dest.boundary_info();
   const MemoryWindow wd( wdest.glob_dim(),
-                         wdest.offset() + Extents::DestOffset::int_vec(),
-                         wdest.extent() + Extents::DestExtent::int_vec()  );
+                         wdest.offset() + DOffset::int_vec(),
+                         wdest.extent() + S1Extent::int_vec()  );
 
 //# ifndef NDEBUG
 //  assert( ws1.extent() == ws2.extent() && ws1.extent() == wd.extent() );
