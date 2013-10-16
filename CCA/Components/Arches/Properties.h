@@ -202,9 +202,7 @@ public:
                                  const bool initialize, 
                                  const bool modify_ref_den ); 
 
-  void sched_doTPDummyInit( const LevelP&, SchedulerP& );
-
-	void doTableMatching(); 
+  void doTableMatching(); 
 
 protected :
 
