@@ -752,7 +752,6 @@ namespace Uintah {
         //Stabilized Atmospheric BL
         double zo; 
         double zh; 
-        double u_inf; 
         double k; 
         double kappa; 
         double ustar; 
