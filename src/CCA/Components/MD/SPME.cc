@@ -1038,7 +1038,6 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
   // grab local Q grid
   SimpleGrid<dblcomplex>* Q_patchLocal = spmePatch->getQ();
   IntVector patchOffset = spmePatch->getGlobalOffset();
-//    IntVector patchExtent = spmePatch->getLocalExtents();
   IntVector patchExtent = Q_patchLocal->getExtentWithGhost();
 
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); ++iter) {
@@ -1143,7 +1142,6 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
 {
   SimpleGrid<std::complex<double> >* Q_patchLocal = spmePatch->getQ();
   IntVector patchOffset = spmePatch->getGlobalOffset();
-//  IntVector patchExtent = spmePatch->getLocalExtents();
   IntVector patchExtent = Q_patchLocal->getExtentWithGhost();
 
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); ++iter) {
