@@ -59,8 +59,9 @@ SendState::find_sendset(int dest, const Patch* patch, int matlIndex,
 
   if( iter == sendSubsets.end() ) {
     ret=NULL;
+  } else {
+    ret=iter->second;
   }
-  ret=iter->second;
   d_lock.readUnlock();
   return ret;
 }
