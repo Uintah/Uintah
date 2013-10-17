@@ -94,6 +94,17 @@ WARNING
       return this->rep_.getPointer();
     }
 
+    virtual const TypeDescription* virtualGetTypeDescription() const
+    { return this->rep_.virtualGetTypeDescription(); }
+
+    virtual size_t getDataSize() const {
+      return this->rep_.getDataSize();
+    }
+
+    virtual bool copyOut(void* dst) const {
+      return this->rep_.copyOut(dst);
+    }
+
     operator const Array3<T>&() const
     { return this->rep_; }
 
