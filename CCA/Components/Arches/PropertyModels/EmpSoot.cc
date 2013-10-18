@@ -104,33 +104,27 @@ void EmpSoot::sched_computeProp( const LevelP& level, SchedulerP& sched, int tim
     throw InvalidValue("Error: Cannot find absorp label in the emperical soot function with name: "+_absorp_label_name,__FILE__,__LINE__);
   }
   
-  if ( !(_has_been_computed) ) {
-
-    if ( time_substep == 0 ) {
-      
-      tsk->computes( _absorp_label ); 
-
-      tsk->requires( Task::OldDW, _T_label,   gn, 0 ); 
-      tsk->requires( Task::OldDW, _den_label, gn, 0 ); 
-      tsk->requires( Task::OldDW, _f_label,   gn, 0 ); 
-      
-    } else {
-
-      tsk->modifies( _absorp_label ); 
-
-      tsk->requires( Task::NewDW, _T_label,   gn, 0 ); 
-      tsk->requires( Task::NewDW, _den_label, gn, 0 ); 
-      tsk->requires( Task::NewDW, _f_label,   gn, 0 ); 
-
-    }
-
-    tsk->modifies( _prop_label ); 
+  if ( time_substep == 0 ) {
     
-    sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+    tsk->computes( _absorp_label ); 
+
+    tsk->requires( Task::OldDW, _T_label,   gn, 0 ); 
+    tsk->requires( Task::OldDW, _den_label, gn, 0 ); 
+    tsk->requires( Task::OldDW, _f_label,   gn, 0 ); 
     
-    _has_been_computed = true; 
+  } else {
+
+    tsk->modifies( _absorp_label ); 
+
+    tsk->requires( Task::NewDW, _T_label,   gn, 0 ); 
+    tsk->requires( Task::NewDW, _den_label, gn, 0 ); 
+    tsk->requires( Task::NewDW, _f_label,   gn, 0 ); 
 
   }
+
+  tsk->modifies( _prop_label ); 
+  sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+    
 }
 
 //---------------------------------------------------------------------------

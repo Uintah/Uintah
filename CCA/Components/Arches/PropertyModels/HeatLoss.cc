@@ -139,7 +139,6 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
   } 
 
   sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
-	_has_been_computed = true; 
 
 }
 
