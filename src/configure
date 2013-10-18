@@ -26795,10 +26795,11 @@ if test "$with_mkl"; then
        as_fn_error $? "We recommend that you don't use MKL on a Mac... use the default vecLib instead." "$LINENO" 5
        ;;
      *)
-       test_libs[0]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
-       test_libs[1]="mkl mkl_core mkl_intel_lp64"
-       test_libs[2]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
-       test_libs[3]="mkl_core mkl_intel_lp64 mkl_intel_thread iomp5" # works on Navy DSRC Haise/Kilrain (IBM iDataPlex)
+       test_libs[0]="mkl_intel_lp64 mkl_sequential mkl_core pthread" # Line for Utah's Ember computer (10/18/2013)
+       test_libs[1]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
+       test_libs[2]="mkl mkl_core mkl_intel_lp64"
+       test_libs[3]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
+       test_libs[4]="mkl_core mkl_intel_lp64 mkl_intel_thread iomp5" # works on Navy DSRC Haise/Kilrain (IBM iDataPlex)
 
        num_libs=${#test_libs[*]}
 
@@ -38460,7 +38461,7 @@ $as_echo "$as_me: WARNING: Looking for PETSc arch: $PETSC_ARCH" >&2;}
 
 
 ##
-## SCI_TRY_LINK (PETSC):  petsc libraries and headers
+## SCI_TRY_LINK (PETSC):  petsc libraries and headers - first try
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -38492,7 +38493,7 @@ $as_echo "$as_me: WARNING: Looking for PETSc arch: $PETSC_ARCH" >&2;}
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : PETSC
-## arg 2 : petsc libraries and headers
+## arg 2 : petsc libraries and headers - first try
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc
 ## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts petscksp
@@ -38512,12 +38513,12 @@ $as_echo "$as_me: WARNING: Looking for PETSc arch: $PETSC_ARCH" >&2;}
 ##      HAVE_PETSC_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers - first try.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for petsc libraries and headers (optional)" >&5
-$as_echo_n "checking for petsc libraries and headers (optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for petsc libraries and headers - first try (optional)" >&5
+$as_echo_n "checking for petsc libraries and headers - first try (optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -38527,7 +38528,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for petsc libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for petsc libraries and headers - first try must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -38892,7 +38893,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (PETSC):  petsc libraries and headers
+## END of SCI_TRY_LINK (PETSC):  petsc libraries and headers - first try
 ##
 
 
@@ -38910,7 +38911,7 @@ _sci_includes=''
                the_libs=${test_libs[$num]}
 
 ##
-## SCI_TRY_LINK (PETSC):  petsc library and header
+## SCI_TRY_LINK (PETSC):  petsc library and header - $num try
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -38942,7 +38943,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : PETSC
-## arg 2 : petsc library and header
+## arg 2 : petsc library and header - $num try
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc
 ## arg 5 : $the_libs
@@ -38962,12 +38963,12 @@ _sci_includes=''
 ##      HAVE_PETSC_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for petsc library and header.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for petsc library and header - $num try.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for petsc library and header (optional)" >&5
-$as_echo_n "checking for petsc library and header (optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for petsc library and header - $num try (optional)" >&5
+$as_echo_n "checking for petsc library and header - $num try (optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -38977,7 +38978,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for petsc library and header must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for petsc library and header - $num try must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -39342,7 +39343,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (PETSC):  petsc library and header
+## END of SCI_TRY_LINK (PETSC):  petsc library and header - $num try
 ##
 
 

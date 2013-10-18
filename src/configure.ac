@@ -2809,10 +2809,11 @@ if test "$with_mkl"; then
        AC_MSG_ERROR(We recommend that you don't use MKL on a Mac... use the default vecLib instead.)
        ;;
      *)
-       test_libs[[0]]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
-       test_libs[[1]]="mkl mkl_core mkl_intel_lp64"
-       test_libs[[2]]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
-       test_libs[[3]]="mkl_core mkl_intel_lp64 mkl_intel_thread iomp5" # works on Navy DSRC Haise/Kilrain (IBM iDataPlex)
+       test_libs[[0]]="mkl_intel_lp64 mkl_sequential mkl_core pthread" # Line for Utah's Ember computer (10/18/2013)
+       test_libs[[1]]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
+       test_libs[[2]]="mkl mkl_core mkl_intel_lp64"
+       test_libs[[3]]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
+       test_libs[[4]]="mkl_core mkl_intel_lp64 mkl_intel_thread iomp5" # works on Navy DSRC Haise/Kilrain (IBM iDataPlex)
 
        num_libs=${#test_libs[*]}
 
@@ -3397,7 +3398,7 @@ else
         fi
 
         SCI_TRY_LINK( PETSC,
-                      petsc libraries and headers,
+                      petsc libraries and headers - first try,
                       petsc.h,
                       $_sci_inc,
                       petsc petscvec petscmat petscdm petscsnes petscts petscksp,
@@ -3418,7 +3419,7 @@ else
            do
                the_libs=${test_libs[[$num]]}
                SCI_TRY_LINK(PETSC,
-                            petsc library and header,
+                            petsc library and header - $num try,
                             petsc.h,
                             $_sci_inc,
                             $the_libs,
