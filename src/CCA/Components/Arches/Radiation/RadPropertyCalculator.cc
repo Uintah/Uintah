@@ -132,40 +132,36 @@ void RadPropertyCalculator::BurnsChriston::computePropsWithParticles( const Patc
 RadPropertyCalculator::HottelSarofim::HottelSarofim() {};
 RadPropertyCalculator::HottelSarofim::~HottelSarofim() {};
     
-bool RadPropertyCalculator::HottelSarofim::problemSetup( const ProblemSpecP& db ) {
+bool 
+RadPropertyCalculator::HottelSarofim::problemSetup( const ProblemSpecP& db ) {
+
+  ProblemSpecP db_h = db;
+  db_h->require("opl",d_opl);
+  db_h->getWithDefault("co2_name",_co2_name,"CO2");
+  db_h->getWithDefault("h2o_name",_h2o_name,"H2O");
+  db_h->getWithDefault("soot_name",_soot_name,"soot");
+
   bool property_on = true;
-
-    ProblemSpecP db_h = db;
-    db_h->getWithDefault("opl",d_opl, 0.19);
-    db_h->getWithDefault("co2_name",_co2_name,"CO2");
-    db_h->getWithDefault("h2o_name",_h2o_name,"H2O");
-    db_h->getWithDefault("soot_name",_soot_name,"soot");
-
-    
   return property_on; 
+
 }
     
-void RadPropertyCalculator::HottelSarofim::computeProps( 
-
-    const Patch* patch, constCCVariable<double>& VolFractionBC, 
-    RadCalcSpeciesList species, constCCVariable<double>& mixT, 
-    CCVariable<double>& abskg ){ 
+void 
+RadPropertyCalculator::HottelSarofim::computeProps( const Patch* patch, 
+    constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
+    constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
 
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
 
-//double d_opl = 0.18;
+  fort_hottel(idxLo, idxHi, mixT,
+              species[0], species[1], VolFractionBC,
+              d_opl, species[2], abskg);
 
-
-
-
- fort_hottel(idxLo, idxHi, mixT,
-                       species[0], species[1], VolFractionBC,
-                       d_opl, species[2], abskg);
-  
 }
 
-void RadPropertyCalculator::HottelSarofim::computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
+void 
+RadPropertyCalculator::HottelSarofim::computePropsWithParticles( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
                                 double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
                                 const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp ){
 
@@ -173,16 +169,18 @@ void RadPropertyCalculator::HottelSarofim::computePropsWithParticles( const Patc
 
 }
 
-vector<std::string> RadPropertyCalculator::HottelSarofim::get_sp(){
+vector<std::string> 
+RadPropertyCalculator::HottelSarofim::get_sp(){
+
   _the_species.push_back(_co2_name);
   _the_species.push_back(_h2o_name);
   _the_species.push_back(_soot_name);
-
    return _the_species;
 
 }
 
-const bool RadPropertyCalculator::HottelSarofim::does_scattering(){ return false; } 
+const bool 
+RadPropertyCalculator::HottelSarofim::does_scattering(){ return false; } 
 
 /// --------------------------------------
 //  RADPROPS

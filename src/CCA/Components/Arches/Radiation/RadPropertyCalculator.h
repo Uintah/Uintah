@@ -181,14 +181,12 @@ namespace Uintah {
           const bool does_scattering(); 
 
         private: 
-          double _value;
 
-          //std::string _species_name;
-          std::string _co2_name;
-          std::string _h2o_name;
-          std::string _soot_name;
-          double d_opl; // optical length; 
-          std::vector<std::string> _the_species;
+          std::vector<std::string> _the_species;     ///< list of species
+          std::string _co2_name;                     ///< table name
+          std::string _h2o_name;                     ///< table name 
+          std::string _soot_name;                    ///< property name
+          double d_opl;                              ///< optical length; 
  
       }; 
 
