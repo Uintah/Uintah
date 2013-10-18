@@ -77,7 +77,9 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
   }
 
   if (!valuePS && !attrPS) {
-    proc0cout << "WARNING: It looks like you specified no value for BC " + bc_attr["label"] + ". This may be okay if your component allows you to for certain types of boundaries such as symmetry and zeroNeumann.\n";
+    if (bc_attr["label"] != "symmetry" || bc_attr["label"] != "zeroNeumann") {
+      proc0cout << "WARNING: It looks like you specified no value for BC " + bc_attr["label"] + ". This may be okay if your component allows you to for certain types of boundaries such as symmetry and zeroNeumann.\n";
+    }
   }
 
   if (attrPS) {
