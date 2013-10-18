@@ -43,7 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
-
+#include <stdio.h>
 #ifdef _WIN32
 typedef long ssize_t;
 #endif
