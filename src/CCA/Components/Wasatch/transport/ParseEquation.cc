@@ -300,12 +300,11 @@ namespace Wasatch{
     
     const Expr::Tag varDensMMSContSrc = Expr::Tag( "mms_continuity_src", Expr::STATE_NONE);
     const Expr::Tag varDensMMSPressureContSrc = Expr::Tag( "mms_pressure_continuity_src", Expr::STATE_NONE);
-    const Expr::Tag pSourceTag = Expr::Tag( "pressure-source-term", Expr::STATE_NONE);
    
     slngraphHelper->exprFactory->register_expression( new VarDensMMSContinuitySrc<SVolField>::Builder( varDensMMSContSrc, rho0, rho1, tagNames.xsvolcoord, tagNames.time, tagNames.timestep));
     slngraphHelper->exprFactory->register_expression( new VarDensMMSPressureContSrc<SVolField>::Builder( varDensMMSPressureContSrc, varDensMMSContSrc, tagNames.timestep));
     
-    slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSPressureContSrc, pSourceTag);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSPressureContSrc, tagNames.pressuresrc);
     
     if (computeContinuityResidual)
     {

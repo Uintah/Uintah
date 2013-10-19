@@ -75,6 +75,9 @@ namespace Wasatch{
   // predictor related variables
   star("_*"), 
   doubleStar("_**"),
+  pressuresrc ( "pressure_src", Expr::STATE_NONE ),
+  drhodt      ( "drhodt", Expr::STATE_NONE       ),
+  drhodtnp1   ( "drhodt", Expr::STATE_NP1        ),
   
   // postprocessing
   continuityresidual( "ContinuityResidual", Expr::STATE_NONE )

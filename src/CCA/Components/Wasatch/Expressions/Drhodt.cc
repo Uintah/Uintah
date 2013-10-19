@@ -1,10 +1,10 @@
-#include <CCA/Components/Wasatch/Expressions/PostProcessing/drhodtNP1.h>
+#include <CCA/Components/Wasatch/Expressions/Drhodt.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
-drhodtNP1::drhodtNP1( const Expr::TagList& velStarTags,
+Drhodt::Drhodt( const Expr::TagList& velStarTags,
                       const Expr::Tag densTag,
                       const Expr::Tag densStarTag,
                       const Expr::Tag dens2StarTag,
@@ -26,12 +26,12 @@ drhodtNP1::drhodtNP1( const Expr::TagList& velStarTags,
 
 //------------------------------------------------------------------
 
-drhodtNP1::~drhodtNP1()
+Drhodt::~Drhodt()
 {}
 
 //------------------------------------------------------------------
 
-void drhodtNP1::advertise_dependents( Expr::ExprDeps& exprDeps )
+void Drhodt::advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   if( doX_ )
   {
@@ -54,7 +54,7 @@ void drhodtNP1::advertise_dependents( Expr::ExprDeps& exprDeps )
 
 //------------------------------------------------------------------
 
-void drhodtNP1::bind_fields( const Expr::FieldManagerList& fml )
+void Drhodt::bind_fields( const Expr::FieldManagerList& fml )
 {
   const Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
   const Expr::FieldMgrSelector<TimeField>::type& tsfm     = fml.field_manager<TimeField>();
@@ -85,7 +85,7 @@ void drhodtNP1::bind_fields( const Expr::FieldManagerList& fml )
 
 //------------------------------------------------------------------
 
-void drhodtNP1::bind_operators( const SpatialOps::OperatorDatabase& opDB )
+void Drhodt::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   if( doX_ ){
     divXOp_       = opDB.retrieve_operator<DivXT>();
@@ -106,7 +106,7 @@ void drhodtNP1::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 //------------------------------------------------------------------
 
-void drhodtNP1::evaluate()
+void Drhodt::evaluate()
 {
   using namespace SpatialOps;
   SVolField& result = this->value();
@@ -147,7 +147,7 @@ void drhodtNP1::evaluate()
 
 //------------------------------------------------------------------
 
-drhodtNP1::Builder::Builder( const Expr::Tag& result,
+Drhodt::Builder::Builder( const Expr::Tag& result,
                              const Expr::TagList& velStarTags,
                              const Expr::Tag densTag,
                              const Expr::Tag densStarTag,
@@ -164,9 +164,9 @@ drhodtNP1::Builder::Builder( const Expr::Tag& result,
 //------------------------------------------------------------------
 
 Expr::ExpressionBase*
-drhodtNP1::Builder::build() const
+Drhodt::Builder::build() const
 {
-  return new drhodtNP1( velStarTs_, denst_, densStart_, dens2Start_, tstpt_);
+  return new Drhodt( velStarTs_, denst_, densStart_, dens2Start_, tstpt_);
 }
 //------------------------------------------------------------------
 

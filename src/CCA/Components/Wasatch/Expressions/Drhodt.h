@@ -1,5 +1,5 @@
-#ifndef drhodtNP1_Expr_h
-#define drhodtNP1_Expr_h
+#ifndef Drhodt_Expr_h
+#define Drhodt_Expr_h
 
 #include <map>
 
@@ -12,8 +12,8 @@
 
 /**
  *  \ingroup WasatchExpressions
- *  \class  drhodtNP1
- *  \author Amir Biglari
+ *  \class  Drhodt
+ *  \author Amir Biglari, Tony Saad
  *  \date	Octtober, 2013
  *
  *  \brief Reproduces the model that we use in the pressure source term to calculate
@@ -23,12 +23,10 @@
  *         differencing in time, u at n+1 is estimated using the weak form of the 
  *         momentum equation with a forward Euler method and density is obtained  
  *         from the estimations of the scalars in their conservative form obtained 
- *         with a forward Euler method as well
- *  
- *  Note 
+ *         with a forward Euler method as well.
  *
  */
-class drhodtNP1 : public Expr::Expression<SVolField>
+class Drhodt : public Expr::Expression<SVolField>
 {  
   
   typedef SpatialOps::structured::FaceTypes<SVolField> FaceTypes;
@@ -71,7 +69,7 @@ class drhodtNP1 : public Expr::Expression<SVolField>
   const Scalar2ZFInterpT* s2ZFInterpOp_;
   
   
-  drhodtNP1( const Expr::TagList& velStarTags,
+  Drhodt( const Expr::TagList& velStarTags,
              const Expr::Tag densTag,
              const Expr::Tag densStarTag,
              const Expr::Tag dens2StarTag,
@@ -120,7 +118,7 @@ public:
     const Expr::Tag denst_, densStart_, dens2Start_, tstpt_;
   };
   
-  ~drhodtNP1();
+  ~Drhodt();
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
@@ -128,4 +126,4 @@ public:
   
 };
 
-#endif // drhodtNP1_Expr_h
+#endif // Drhodt_Expr_h

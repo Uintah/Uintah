@@ -53,7 +53,7 @@
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/ContinuityResidual.h>
-#include <CCA/Components/Wasatch/Expressions/PostProcessing/drhodtNP1.h>
+#include <CCA/Components/Wasatch/Expressions/Drhodt.h>
 
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
@@ -692,7 +692,7 @@ namespace Wasatch{
         Expr::Tag drhodtTag = Expr::Tag();
         if (!isConstDensity_)
         {
-          drhodtTag = Expr::Tag( "drhodt", Expr::STATE_NP1);
+          drhodtTag = tagNames.drhodtnp1;
           typedef Expr::PlaceHolder<SVolField>  FieldExpr;
           postProcFactory.register_expression( new typename FieldExpr::Builder(drhodtTag),true );
         }
@@ -740,14 +740,14 @@ namespace Wasatch{
       // calculating drhodt needed for the post processing
       if (computeContinuityResidual)
       {
-        Expr::Tag drhodtTag = Expr::Tag( "drhodt", Expr::STATE_NONE);
+        //Expr::Tag drhodtTag = Expr::Tag( "drhodt", Expr::STATE_NONE);
         Expr::Tag densStarTag  = Expr::Tag(densTag.name() + tagNames.star, Expr::CARRY_FORWARD);
         Expr::Tag dens2StarTag = Expr::Tag(densTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD);
         Expr::TagList velStarTags = Expr::TagList();
         set_vel_star_tags( velTags_, velStarTags );
         
         // registering the expressiong for drhodt
-        Expr::ExpressionID drhodtID = factory.register_expression( new typename drhodtNP1::Builder( drhodtTag, velStarTags, densTag, densStarTag, dens2StarTag, tagNames.timestep));
+        Expr::ExpressionID drhodtID = factory.register_expression( new typename Drhodt::Builder( tagNames.drhodt, velStarTags, densTag, densStarTag, dens2StarTag, tagNames.timestep));
 //        Expr::TagList drhodtTagList;
 //        drhodtTagList.push_back(drhodtTag);
 //        force_expressions_on_graph(drhodtTagList, &graphHelper);
@@ -770,8 +770,7 @@ namespace Wasatch{
       
     }
     
-    Expr::Tag pSourceTag = Expr::Tag( "pressure-source-term", Expr::STATE_NONE);
-    if( !factory.have_entry( pSourceTag ) ){
+    if( !factory.have_entry( tagNames.pressuresrc ) ){
       Expr::Tag densStarTag = Expr::Tag(densTag.name() + tagNames.star, Expr::CARRY_FORWARD);
       Expr::Tag dens2StarTag = Expr::Tag(densTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD);
       Expr::TagList velStarTags = Expr::TagList();
@@ -780,7 +779,7 @@ namespace Wasatch{
       set_mom_tags( params, momTags_ );
       
       // registering the expressiong for pressure source term
-      factory.register_expression( new typename PressureSource::Builder( pSourceTag, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag, dilTag, tagNames.timestep));
+      factory.register_expression( new typename PressureSource::Builder( tagNames.pressuresrc, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag, dilTag, tagNames.timestep));
     }
     
     
@@ -825,7 +824,7 @@ namespace Wasatch{
         ptags.push_back( pressure_tag() );
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
         const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
-                                                                                        pSourceTag, tagNames.timestep, volFracTag, 
+                                                                                        tagNames.pressuresrc, tagNames.timestep, volFracTag,
                                                                                         hasMovingGeometry, usePressureRefPoint, refPressureValue, 
                                                                                         refPressureLocation, use3DLaplacian,
                                                                                         *solverParams_, linSolver);
