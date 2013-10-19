@@ -53,7 +53,8 @@ CUDA_ENABLED_SRCS =       \
      SolnVarEst           \
      Strain               \
      WeakConvectiveTerm   \
-     VelEst
+     VelEst     \
+  Drhodt
 
 ifeq ($(HAVE_CUDA),yes)
 
@@ -156,5 +157,8 @@ ifeq ($(HAVE_CUDA),yes)
 
   $(OBJTOP_ABS)/$(SRCDIR)/VelEst.cu : $(SRCTOP_ABS)/$(SRCDIR)/VelEst.cc
 	cp $< $@
-  
+
+  $(OBJTOP_ABS)/$(SRCDIR)/Drhodt.cu : $(SRCTOP_ABS)/$(SRCDIR)/Drhodt.cc
+	cp $< $@
+
 endif
