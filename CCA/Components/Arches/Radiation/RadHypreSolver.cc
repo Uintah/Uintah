@@ -383,6 +383,8 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
   int num_iterations;
   int n_pre, n_post, skip;
   double sum_b, iprod, final_res_norm;
+  sum_b = 0.0;
+
 
   /*Calculating initial norm*/
   if ( print_all_info ){ 

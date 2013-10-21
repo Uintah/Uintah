@@ -84,7 +84,6 @@ using namespace Uintah;
 #include <CCA/Components/Arches/fortran/mm_explicit_fort.h>
 #include <CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
 #include <CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
-#include <CCA/Components/Arches/fortran/get_ramping_factor_fort.h>
 
 //****************************************************************************
 // Constructor for BoundaryCondition
@@ -5609,9 +5608,6 @@ BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
           if ( foundIterator ) {
 
             bound_ptr.reset();
-            double negsmall = -1.0E-10;
-            double possmall =  1.0E-10;
-            double zero     = 0.0E0; 
             double sign        = 1.0;
 
             if ( bc_iter->second.type == PRESSURE ) { 

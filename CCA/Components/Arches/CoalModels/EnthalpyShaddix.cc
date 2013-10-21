@@ -271,7 +271,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
 */
 
   //getting the table: 
-  MixingRxnModel* mixing_table = d_props->getMixRxnModel(); 
+  //MixingRxnModel* mixing_table = d_props->getMixRxnModel(); 
   //string test="Hc0"; 
   //double value = mixing_table->getDoubleTableConstant( test );
 
@@ -673,7 +673,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         // Newton's method
         // Initial guess
         double Tguess = 283.0;
-        double Tguess_old;
+        double Tguess_old = 283.0;
         int icount = 0;
         double d_tol = 0.1;
         double delta = 1;
