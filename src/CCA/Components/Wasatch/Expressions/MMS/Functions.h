@@ -484,8 +484,6 @@ build() const
 
 //--------------------------------------------------------------------
 
-//--------------------------------------------------------------------
-
 /**
  *  \class StepFunction
  *  \author Tony Saad
@@ -608,6 +606,167 @@ StepFunction<FieldT>::Builder::
 build() const
 {
   return new StepFunction<FieldT>( indepVarTag_, transitionPoint_, lowValue_, highValue_);
+}
+
+//--------------------------------------------------------------------
+
+/**
+ *  \class RayleighTaylor
+ *  \author Tony Saad
+ *  \date October, 2013
+ *  \brief Implements a stepfunction with a perturbed interface that can used to initialize a 
+ Rayleigh-Taylor instability simulation. The formula used is:
+ if y < y0 + A * sin(2*pi*f*x1) * sin(2*pi*f*x2): result = lowValue
+ else                                             result = highValue
+ */
+template< typename FieldT >
+class RayleighTaylor : public Expr::Expression<FieldT>
+{
+public:
+  
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    /**
+     * @param result Tag of the resulting expression.
+     * @param indepVarTag   Tag of the independent variable.
+     * @param x1Tag Tag of the x1 coordinate.
+     * @param x2Tag Tag of the x2 coordinate.
+     * @param transitionPoint Location where the RayleighTaylor switches values. This is the independent variable location.
+     * @param lowValue  Value of the step function for independentVar <  transitionPoint.
+     * @param highValue	Value of the step function for independentVar >= transitionPoint.
+     * @param frequency Frequency of the interface perturbation, given as a multiple of 2*Pi.
+     * @param amplitude	Amplitude of the perturbation.
+     */
+    Builder(const Expr::Tag& result,
+            const Expr::Tag& indepVarTag,
+            const Expr::Tag& x1Tag,
+            const Expr::Tag& x2Tag,
+            const double transitionPoint=0.1,
+            const double lowValue = 1.0,
+            const double highValue = 0.0,
+            const double frequency=2.0*PI,
+            const double amplitude=1.0);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const Expr::Tag indepVarTag_, x1Tag_, x2Tag_;
+    const double trans_, lo_, hi_, f_, amp_;
+  };
+  
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+  
+private:
+  
+  RayleighTaylor( const Expr::Tag& indepVarTag,
+                  const Expr::Tag& x1Tag,
+                  const Expr::Tag& x2Tag,
+                  const double transitionPoint,
+                  const double lowValue,
+                  const double highValue,
+                  const double frequency=2.0*PI,
+                  const double amplitude=1.0);
+  const Expr::Tag indepVarTag_, x1Tag_, x2Tag_;
+  const double trans_, lo_, hi_, f_, amp_;
+  const FieldT *indepVar_, *x1_, *x2_;
+};
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+RayleighTaylor<FieldT>::
+RayleighTaylor( const Expr::Tag& indepVarTag,
+                const Expr::Tag& x1Tag,
+                const Expr::Tag& x2Tag,
+                const double transitionPoint,
+                const double lowValue,
+                const double highValue,
+                const double frequency,
+                const double amplitude)
+: Expr::Expression<FieldT>(),
+indepVarTag_(indepVarTag),
+x1Tag_(x1Tag),
+x2Tag_(x2Tag),
+trans_(transitionPoint),
+lo_(lowValue),
+hi_(highValue),
+f_(frequency),
+amp_(amplitude)
+{
+  this->set_gpu_runnable( true );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+RayleighTaylor<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( indepVarTag_ );
+  exprDeps.requires_expression( x1Tag_       );
+  exprDeps.requires_expression( x2Tag_       );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+RayleighTaylor<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  indepVar_ = &fm.field_ref( indepVarTag_ );
+  x1_ = &fm.field_ref( x1Tag_ );
+  x2_ = &fm.field_ref( x2Tag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+RayleighTaylor<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  result <<= cond( *indepVar_ < trans_ + amp_ * sin(2*PI*f_ * *x1_) * sin(2*PI*f_ * *x2_), lo_ )
+                 ( hi_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+RayleighTaylor<FieldT>::Builder::
+Builder( const Expr::Tag& result,
+        const Expr::Tag& indepVarTag,
+        const Expr::Tag& x1Tag,
+        const Expr::Tag& x2Tag,
+        const double transitionPoint,
+        const double lowValue,
+        const double highValue,
+        const double frequency,
+        const double amplitude )
+: ExpressionBuilder(result),
+indepVarTag_(indepVarTag),
+x1Tag_(x1Tag),
+x2Tag_(x2Tag),
+trans_(transitionPoint),
+lo_(lowValue),
+hi_(highValue),
+f_(frequency),
+amp_(amplitude)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+RayleighTaylor<FieldT>::Builder::
+build() const
+{
+  return new RayleighTaylor<FieldT>( indepVarTag_, x1Tag_, x2Tag_, trans_, lo_, hi_, f_, amp_);
 }
 
 //--------------------------------------------------------------------

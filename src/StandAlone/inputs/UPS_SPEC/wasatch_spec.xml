@@ -35,7 +35,8 @@
                                        SineFunction,GaussianFunction,DoubleTanhFunction,
                                        StepFunction,PlusProfile,SineTime,ExprAlgebra,Cylinder,
                                        WallDistanceFunction,ReadFromFile,RandomField,
-                                       ExponentialVortex,LambsDipole,TimeDerivative)" >
+                                       ExponentialVortex,LambsDipole,TimeDerivative,
+                                       RayleighTaylor)" >
                                        
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
@@ -67,6 +68,22 @@
                             attribute3="highValue REQUIRED DOUBLE">
         <NameTag            spec="REQUIRED"/>
       </StepFunction>
+      
+
+      <!-- Generates an initial condition for RayleighTaylor Instability with transition point, 
+           lowValue (value when x <= transition point), and HighValue (value when x > transition point) !-->
+      <!-- THE FREQUENCY IS A Multiple of 2*Pi !-->           
+      <RayleighTaylor       spec="OPTIONAL NO_DATA"
+                            attribute1="transitionPoint REQUIRED DOUBLE"
+                            attribute2="lowValue REQUIRED DOUBLE"
+                            attribute3="highValue REQUIRED DOUBLE"
+                            attribute4="x1 REQUIRED STRING"
+                            attribute5="x2 REQUIRED STRING"
+                            attribute6="frequency REQUIRED DOUBLE"
+                            attribute7="amplitude REQUIRED DOUBLE">                            
+        <NameTag            spec="REQUIRED"/>        
+      </RayleighTaylor>
+      
 
       <!-- Plus Profile makes a + sign as the initial condition with HighValue on + area and LowValue everywhere else!-->
       <PlusProfile       spec="OPTIONAL NO_DATA"
