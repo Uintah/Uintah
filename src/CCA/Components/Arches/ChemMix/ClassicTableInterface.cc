@@ -553,11 +553,11 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           if ( bc_kind == "FromFile" ){ 
             foundIterator = 
               getIteratorBCValue<std::string>( patch, face, child, variable_name, matlIndex, bc_s_value, bound_ptr ); 
-            if ( foundIterator ) counter++; 
+            counter++; 
           } else {
             foundIterator = 
               getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr ); 
-            if ( foundIterator ) counter++; 
+           counter++; 
           } 
         }
 

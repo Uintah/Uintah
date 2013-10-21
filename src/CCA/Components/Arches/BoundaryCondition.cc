@@ -4256,7 +4256,9 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
           Iterator bound_ptr;
           bool foundIterator = false; 
 
-          if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == TURBULENT_INLET ){ 
+          if ( bc_iter->second.type == VELOCITY_INLET 
+               || bc_iter->second.type == TURBULENT_INLET 
+               || bc_iter->second.type == STABL ){ 
             foundIterator = 
               getIteratorBCValueBCKind<Vector>( patch, face, child, bc_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind); 
           } else if ( bc_iter->second.type == VELOCITY_FILE ) { 
