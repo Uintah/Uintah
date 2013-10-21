@@ -495,12 +495,12 @@ inline tBox3<T> tBox3<T>::bounding_box(const std::vector<tPoint3<T> > &v)
 	value_type max_x = p.x(), max_y = p.y(), max_z = p.z();
 	for (unsigned i = 1; i < v.size(); i++) {
 		p = v[i];
-		min_x = min(min_x, p.x());
-		min_y = min(min_y, p.y());
-		min_z = min(min_z, p.z());
-		max_x = max(max_x, p.x());
-		max_y = max(max_y, p.y());
-		max_z = max(max_z, p.z());
+		min_x = std::min(min_x, p.x());
+		min_y = std::min(min_y, p.y());
+		min_z = std::min(min_z, p.z());
+		max_x = std::max(max_x, p.x());
+		max_y = std::max(max_y, p.y());
+		max_z = std::max(max_z, p.z());
 	}
 	return tBox3(min_x, min_y, min_z,
                max_x, max_y, max_z);

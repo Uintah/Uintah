@@ -455,7 +455,7 @@ public:
   BasicBox(BoxP box)
     : SB(typename SB::Region(box->getLow(), box->getHigh()), box->getVolume()),
       available_(true)
-  { init(box); }
+  { this->init(box); }
 
   BoxP getBox() const
   { return this->getBoxes()[0]; }
@@ -518,7 +518,7 @@ public:
 	       typename SB::Region region, Volume totalVolume)
     : SB(region, totalVolume), isActive_( false ), basicBoxes_(basicBoxes), 
       activeSubSuperBoxMaxValue_(0), parent_(0)
-  { init(basicBoxes_); }
+  { this->init(basicBoxes_); }
 
   template <class BoxPIterator>
   static CB* makeCompositeBox(typename SBS::BoxHashMap& boxMap,

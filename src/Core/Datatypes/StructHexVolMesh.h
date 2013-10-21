@@ -392,8 +392,8 @@ StructHexVolMesh<Basis>::get_bounding_box() const
   BBox result;
 
   typename LatVolMesh<Basis>::Node::iterator ni, nie;
-  begin(ni);
-  end(nie);
+  this->begin(ni);
+  this->end(nie);
   while (ni != nie)
   {
     Point p;
@@ -410,8 +410,8 @@ void
 StructHexVolMesh<Basis>::transform(const Transform &t)
 {
   typename LatVolMesh<Basis>::Node::iterator i, ie;
-  begin(i);
-  end(ie);
+  this->begin(i);
+  this->end(ie);
 
   while (i != ie)
   {
@@ -637,8 +637,8 @@ StructHexVolMesh<Basis>::locate(typename LatVolMesh<Basis>::Node::index_type &no
   else
   {  // do exhaustive search.
     typename LatVolMesh<Basis>::Node::iterator ni, nie;
-    begin(ni);
-    end(nie);
+    this->begin(ni);
+    this->end(nie);
     if (ni == nie) { return false; }
 
     double min_dist = (p - points_((*ni).i_, (*ni).j_, (*ni).k_)).length2();
@@ -874,7 +874,10 @@ StructHexVolMesh<Basis>::compute_grid()
   if (bb.valid())
   {
     // Cubed root of number of cells to get a subdivision ballpark.
-    typename LatVolMesh<Basis>::Cell::size_type csize;  size(csize);
+    typename LatVolMesh<Basis>::Cell::size_type csize;
+
+    this->size(csize);
+
     const int s = (int)(ceil(pow((double)csize , (1.0/3.0)))) / 2 + 1;
     const Vector cell_epsilon = bb.diagonal() * (1.0e-4 / s);
     bb.extend(bb.min() - cell_epsilon*2);
@@ -885,10 +888,10 @@ StructHexVolMesh<Basis>::compute_grid()
     BBox box;
     typename LatVolMesh<Basis>::Node::array_type nodes;
     typename LatVolMesh<Basis>::Cell::iterator ci, cie;
-    begin(ci); end(cie);
+    this->begin(ci); this->end(cie);
     while(ci != cie)
     {
-      get_nodes(nodes, *ci);
+      this->get_nodes(nodes, *ci);
 
       box.reset();
       for (unsigned int i = 0; i < nodes.size(); i++)

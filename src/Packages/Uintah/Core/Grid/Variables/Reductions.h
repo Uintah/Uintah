@@ -27,10 +27,10 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-
 #ifndef UINTAH_HOMEBREW_Reductions_H
 #define UINTAH_HOMEBREW_Reductions_H
+
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
 namespace Uintah {
    /**************************************

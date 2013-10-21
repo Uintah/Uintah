@@ -42,7 +42,6 @@ SUBDIRS := \
         $(SRCDIR)/puda        \
         $(SRCDIR)/radiusMaker \
         $(SRCDIR)/tracker     \
-        $(SRCDIR)/uda2nrrd    \
 
 ifeq ($(BUILD_VISIT),yes)
   SUBDIRS += $(SRCDIR)/uda2vis

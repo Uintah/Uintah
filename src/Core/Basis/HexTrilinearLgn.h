@@ -177,7 +177,7 @@ public:
 		  const T& value, const ElemData &cd) const  
   {      
     initial_guess(pEB, value, cd, coords);
-    if (get_iterative(pEB, coords, value, cd))
+    if (this->get_iterative(pEB, coords, value, cd))
       return check_coords(coords);
     return false;
   }

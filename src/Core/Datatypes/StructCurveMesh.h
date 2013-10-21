@@ -351,8 +351,8 @@ StructCurveMesh<Basis>::get_bounding_box() const
   BBox result;
 
   typename ScanlineMesh<Basis>::Node::iterator i, ie;
-  begin(i);
-  end(ie);
+  this->begin(i);
+  this->end(ie);
 
   while (i != ie) {
     result.extend(points_[*i]);
@@ -368,8 +368,8 @@ void
 StructCurveMesh<Basis>::transform(const Transform &t)
 {
   typename ScanlineMesh<Basis>::Node::iterator i, ie;
-  begin(i);
-  end(ie);
+  this->begin(i);
+  this->end(ie);
 
   while (i != ie) {
     points_[*i] = t.project(points_[*i]);
@@ -386,9 +386,9 @@ StructCurveMesh<Basis>::get_cord_length() const
   double result = 0.0;
 
   typename ScanlineMesh<Basis>::Node::iterator i, i1, ie;
-  begin(i);
-  begin(i1);
-  end(ie);
+  this->begin(i);
+  this->begin(i1);
+  this->end(ie);
 
   while (i1 != ie)
   {
@@ -435,8 +435,8 @@ bool
 StructCurveMesh<Basis>::locate(typename ScanlineMesh<Basis>::Node::index_type &idx, const Point &p) const
 {
   typename ScanlineMesh<Basis>::Node::iterator ni, nie;
-  begin(ni);
-  end(nie);
+  this->begin(ni);
+  this->end(nie);
 
   idx = *ni;
 
@@ -473,8 +473,8 @@ StructCurveMesh<Basis>::locate(typename ScanlineMesh<Basis>::Edge::index_type &i
   double dist1, dist2, dist3, dist4;
   Point n1,n2,q;
 
-  begin(ei);
-  end(eie);
+  this->begin(ei);
+  this->end(eie);
 
   if (ei==eie)
     return false;

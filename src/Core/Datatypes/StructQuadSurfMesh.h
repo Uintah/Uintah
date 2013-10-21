@@ -430,8 +430,8 @@ StructQuadSurfMesh<Basis>::get_bounding_box() const
   BBox result;
 
   typename ImageMesh<Basis>::Node::iterator ni, nie;
-  begin(ni);
-  end(nie);
+  this->begin(ni);
+  this->end(nie);
   while (ni != nie)
   {
     Point p;
@@ -448,8 +448,8 @@ void
 StructQuadSurfMesh<Basis>::transform(const Transform &t)
 {
   typename ImageMesh<Basis>::Node::iterator i, ie;
-  begin(i);
-  end(ie);
+  this->begin(i);
+  this->end(ie);
 
   while (i != ie) {
     points_((*i).i_,(*i).j_) = t.project(points_((*i).i_,(*i).j_));
@@ -543,8 +543,8 @@ StructQuadSurfMesh<Basis>::locate(
   else
   {  // do exhaustive search.
     typename ImageMesh<Basis>::Node::iterator ni, nie;
-    begin(ni);
-    end(nie);
+    this->begin(ni);
+    this->end(nie);
     if (ni == nie) { return false; }
 
     double min_dist = (p-points_((*ni).i_, (*ni).j_)).length2();
@@ -574,8 +574,8 @@ StructQuadSurfMesh<Basis>::locate(
 {
   typename ImageMesh<Basis>::Edge::iterator bi, ei;
   typename ImageMesh<Basis>::Node::array_type nodes;
-  begin(bi);
-  end(ei);
+  this->begin(bi);
+  this->end(ei);
   loc = 0;
 
   bool found = false;
@@ -730,8 +730,8 @@ StructQuadSurfMesh<Basis>::locate(
 {
   if (this->basis_.polynomial_order() > 1) return elem_locate(face, *this, p);
   typename ImageMesh<Basis>::Face::iterator bi, ei;
-  begin(bi);
-  end(ei);
+  this->begin(bi);
+  this->end(ei);
 
   while (bi != ei) {
     if( inside3_p( *bi, p ) ) {
@@ -796,11 +796,11 @@ StructQuadSurfMesh<Basis>::compute_normals()
   // Computing normal per face.
   typename ImageMesh<Basis>::Node::array_type nodes(4);
   typename ImageMesh<Basis>::Face::iterator iter, iter_end;
-  begin(iter);
-  end(iter_end);
+  this->begin(iter);
+  this->end(iter_end);
   while (iter != iter_end)
   {
-    get_nodes(nodes, *iter);
+    this->get_nodes(nodes, *iter);
 
     Point p0, p1, p2, p3;
     get_point(p0, nodes[0]);
@@ -824,8 +824,8 @@ StructQuadSurfMesh<Basis>::compute_normals()
 
   //Averaging the normals.
   typename ImageMesh<Basis>::Node::iterator nif_iter, nif_iter_end;
-  begin( nif_iter );
-  end( nif_iter_end );
+  this->begin( nif_iter );
+  this->end( nif_iter_end );
 
   while (nif_iter != nif_iter_end)
   {

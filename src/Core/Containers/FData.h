@@ -88,22 +88,22 @@ public:
   virtual ~FData3d();
   
   const value_type &operator[](typename Msh::Cell::index_type idx) const
-  { return operator()(idx.k_,idx.j_,idx.i_); } 
+  { return this->operator()(idx.k_,idx.j_,idx.i_); } 
   const value_type &operator[](typename Msh::Face::index_type idx) const
-  { return operator()(0, 0, idx); }
+  { return this->operator()(0, 0, idx); }
   const value_type &operator[](typename Msh::Edge::index_type idx) const
-  { return operator()(0, 0, idx); }    
+  { return this->operator()(0, 0, idx); }    
   const value_type &operator[](typename Msh::Node::index_type idx) const
-  { return operator()(idx.k_,idx.j_,idx.i_); }    
+  { return this->operator()(idx.k_,idx.j_,idx.i_); }    
 
   value_type &operator[](typename Msh::Cell::index_type idx)
-  { return operator()(idx.k_,idx.j_,idx.i_); } 
+  { return this->operator()(idx.k_,idx.j_,idx.i_); } 
   value_type &operator[](typename Msh::Face::index_type idx)
-  { return operator()(0, 0, idx); }
+  { return this->operator()(0, 0, idx); }
   value_type &operator[](typename Msh::Edge::index_type idx)
-  { return operator()(0, 0, idx); }    
+  { return this->operator()(0, 0, idx); }    
   value_type &operator[](typename Msh::Node::index_type idx)
-  { return operator()(idx.k_,idx.j_,idx.i_); }    
+  { return this->operator()(idx.k_,idx.j_,idx.i_); }    
 
   void resize(const typename Msh::Node::size_type &size) 
   { Array3<Data>::resize(size.k_, size.j_, size.i_); }
@@ -229,22 +229,22 @@ public:
   virtual ~FData2d();
   
   const value_type &operator[](typename Msh::Cell::index_type idx) const
-  { return operator()(0, idx); } 
+  { return this->operator()(0, idx); } 
   const value_type &operator[](typename Msh::Face::index_type idx) const
-  { return operator()(idx.j_, idx.i_); }
+  { return this->operator()(idx.j_, idx.i_); }
   const value_type &operator[](typename Msh::Edge::index_type idx) const
-  { return operator()(0, idx); }
+  { return this->operator()(0, idx); }
   const value_type &operator[](typename Msh::Node::index_type idx) const
-  { return operator()(idx.j_, idx.i_); }
+  { return this->operator()(idx.j_, idx.i_); }
 
   value_type &operator[](typename Msh::Cell::index_type idx)
-  { return operator()(0, idx); } 
+  { return this->operator()(0, idx); } 
   value_type &operator[](typename Msh::Face::index_type idx)
-  { return operator()(idx.j_, idx.i_); }
+  { return this->operator()(idx.j_, idx.i_); }
   value_type &operator[](typename Msh::Edge::index_type idx)
-  { return operator()(0, idx); }
+  { return this->operator()(0, idx); }
   value_type &operator[](typename Msh::Node::index_type idx)
-  { return operator()(idx.j_, idx.i_); }
+  { return this->operator()(idx.j_, idx.i_); }
 
   void resize(const typename Msh::Node::size_type &size)
   { Array2<Data>::resize(size.j_, size.i_); }
