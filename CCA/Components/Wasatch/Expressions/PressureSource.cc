@@ -113,19 +113,16 @@ void PressureSource::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   if (!isConstDensity_) {
     if( doX_ ){
-      divXOp_       = opDB.retrieve_operator<DivXT>();
-      xFInterpOp_   = opDB.retrieve_operator<XFaceInterpT>();
-      s2XFInterpOp_ = opDB.retrieve_operator<Scalar2XFInterpT>();
+      gradXOp_       = opDB.retrieve_operator<GradXT>();
+      s2XInterpOp_ = opDB.retrieve_operator<S2XInterpOpT>();
     }
     if( doY_ ){
-      divYOp_       = opDB.retrieve_operator<DivYT>();
-      yFInterpOp_   = opDB.retrieve_operator<YFaceInterpT>();
-      s2YFInterpOp_ = opDB.retrieve_operator<Scalar2YFInterpT>();
+      gradYOp_       = opDB.retrieve_operator<GradYT>();
+      s2YInterpOp_ = opDB.retrieve_operator<S2YInterpOpT>();
     }
     if( doZ_ ){
-      divZOp_       = opDB.retrieve_operator<DivZT>();
-      zFInterpOp_   = opDB.retrieve_operator<ZFaceInterpT>();
-      s2ZFInterpOp_ = opDB.retrieve_operator<Scalar2ZFInterpT>();
+      gradZOp_       = opDB.retrieve_operator<GradZT>();
+      s2ZInterpOp_ = opDB.retrieve_operator<S2ZInterpOpT>();
     }
   }
 }
@@ -146,9 +143,9 @@ void PressureSource::evaluate()
 
     if( doX_ && doY_ && doZ_ ){ // for 3D cases, inline the whole thing
       result <<=
-          ( (*divXOp_)( (*xFInterpOp_)(*xMom_) ) - (1.0 - alpha) * (*divXOp_) ( (*s2XFInterpOp_)(*densStar_) * (*xFInterpOp_)(*uStar_) )
-          + (*divYOp_)( (*yFInterpOp_)(*yMom_) ) - (1.0 - alpha) * (*divYOp_) ( (*s2YFInterpOp_)(*densStar_) * (*yFInterpOp_)(*vStar_) )
-          + (*divZOp_)( (*zFInterpOp_)(*zMom_) ) - (1.0 - alpha) * (*divZOp_) ( (*s2ZFInterpOp_)(*densStar_) * (*zFInterpOp_)(*wStar_) )
+          ( (*gradXOp_)(*xMom_) - (1.0 - alpha) * (*gradXOp_) ( (*s2XInterpOp_)(*densStar_) * *uStar_ )
+          + (*gradYOp_)(*yMom_) - (1.0 - alpha) * (*gradYOp_) ( (*s2YInterpOp_)(*densStar_) * *vStar_ )
+          + (*gradZOp_)(*zMom_) - (1.0 - alpha) * (*gradZOp_) ( (*s2ZInterpOp_)(*densStar_) * *wStar_ )
           + alpha * ((*dens2Star_ - *dens_)/(2. * *timestep_))
           ) / *timestep_;
     }
@@ -156,7 +153,7 @@ void PressureSource::evaluate()
       // for 1D and 2D cases, we are not as efficient - add terms as needed...
       if( doX_ ){
         // P_src = nabla.(rho*u)^n - (1-alpha) * nabla.(rho*u)^(n+1)
-        result <<= (*divXOp_)( (*xFInterpOp_)(*xMom_) ) - (1.0 - alpha) * (*divXOp_) ( (*s2XFInterpOp_)(*densStar_) * (*xFInterpOp_)(*uStar_) );
+        result <<= (*gradXOp_)(*xMom_) - (1.0 - alpha) * (*gradXOp_) ( (*s2XInterpOp_)(*densStar_) * *uStar_ );
       }
       else{
         result <<= 0.0;
@@ -164,12 +161,12 @@ void PressureSource::evaluate()
 
       if( doY_ ){
         // P_src = P_src + nabla.(rho*v)^n - (1-alpha) * nabla.(rho*v)^(n+1)
-        result <<= result + (*divYOp_)( (*yFInterpOp_)(*yMom_) ) - (1.0 - alpha) * (*divYOp_) ( (*s2YFInterpOp_)(*densStar_) * (*yFInterpOp_)(*vStar_) );
+        result <<= result + (*gradYOp_)(*yMom_) - (1.0 - alpha) * (*gradYOp_) ( (*s2YInterpOp_)(*densStar_) * *vStar_ );
       }
 
       if( doZ_ ){
         // P_src = P_src + nabla.(rho*w)^n - (1-alpha) * nabla.(rho*w)^(n+1)
-        result <<= result + (*divZOp_)( (*zFInterpOp_)(*zMom_) ) - (1.0 - alpha) * (*divZOp_) ( (*s2ZFInterpOp_)(*densStar_) * (*zFInterpOp_)(*wStar_) );
+        result <<= result + (*gradZOp_)(*zMom_) - (1.0 - alpha) * (*gradZOp_) ( (*s2ZInterpOp_)(*densStar_) * *wStar_ );
       }
 
       result <<= ( result + alpha * ((*dens2Star_ - *dens_)/(2. * *timestep_))) / *timestep_;  // P_src = P_src + alpha * (drho/dt)^(n+1)
