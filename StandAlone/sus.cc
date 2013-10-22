@@ -121,7 +121,7 @@ using namespace std;
 
 // If we are using MPICH version 1, 
 // we must call MPI_Init() before parsing args
-#if defined(HAVE_MPICH) && !defined(MPICH2)
+#if defined(HAVE_MPICH) && (MPI_VERSION < 2)
 #  define HAVE_MPICH_OLD
 #endif
 
