@@ -91,8 +91,16 @@ namespace Uintah {
       }
     };
   public:
-    enum FILTER_TYPE {KALMAN,MEMORY};
-    ProfileDriver(const ProcessorGroup* myworld, FILTER_TYPE type, LoadBalancer *lb) : d_lb(lb), d_myworld(myworld), d_timestepWindow(20), timesteps(0), r(4.5e-5) ,phi(.01), d_type(type){updateAlpha();};
+
+    enum FILTER_TYPE { KALMAN, MEMORY };
+
+    ProfileDriver( const ProcessorGroup * myworld,
+                   FILTER_TYPE            type,
+                   LoadBalancer         * lb) : 
+      d_lb(lb), d_myworld(myworld), d_timestepWindow(20), d_timesteps(0),
+      d_r(4.5e-5), d_phi(.01), d_type(type)
+    { updateAlpha(); }
+
     void setMinPatchSize(const std::vector<IntVector> &min_patch_size);
     //add the contribution for region r on level l
     void addContribution(const PatchSubset* patches, double cost);
@@ -108,22 +116,26 @@ namespace Uintah {
     void initializeWeights(const Grid* oldgrid, const Grid* newgrid);
     //resets all counters to zero
     void reset();
-    //returns true if profiling data exists
-    bool hasData() {return timesteps>0;}
+
+    // Returns true if profiling data exists.
+    bool hasData() { return d_timesteps > 0; }
+
   private:
-    LoadBalancer *d_lb;
-    const void updateAlpha() { d_alpha=2.0/(d_timestepWindow+1); }
-    const ProcessorGroup* d_myworld;
+    void updateAlpha() { d_alpha=2.0/(d_timestepWindow+1); }
+
+    LoadBalancer         * d_lb;
+    const ProcessorGroup * d_myworld;
             
-    int d_timestepWindow;
-    double d_alpha;
+    int                    d_timestepWindow;
+    double                 d_alpha;
     std::vector<IntVector> d_minPatchSize;
-    std::vector<int> d_minPatchSizeVolume;
+    std::vector<int>       d_minPatchSizeVolume;
 
     std::vector<std::map<IntVector, Contribution> > costs;
-    int timesteps;
-    double r;
-    double phi;
+
+    int         d_timesteps;
+    double      d_r;
+    double      d_phi;
     FILTER_TYPE d_type;
   };
 } // End namespace Uintah

@@ -143,24 +143,25 @@ public:
 
   virtual void setDQMOMSolver(DQMOM* dqmomSolver) = 0;
 
-  virtual void setInitVelConditionInterface( const Patch* patch, 
-                                     SFCXVariable<double>& uvel, 
-                                     SFCYVariable<double>& vvel, 
-                                     SFCZVariable<double>& wvel ) = 0;
-
-  virtual void checkMomBCs( SchedulerP& sched,
-                             const PatchSet* patches,
-                             const MaterialSet* matls) = 0;
+  virtual void setInitVelConditionInterface( const Patch          * patch, 
+                                             SFCXVariable<double> & uvel, 
+                                             SFCYVariable<double> & vvel, 
+                                             SFCZVariable<double> & wvel ) = 0;
   
-  inline void set_use_wasatch_mom_rhs(const bool useWasatchMomRHS) { d_useWasatchMomRHS = useWasatchMomRHS;}
-  inline const bool get_use_wasatch_mom_rhs() { return d_useWasatchMomRHS;}
+  virtual void checkMomBCs( SchedulerP& sched,
+                            const PatchSet* patches,
+                            const MaterialSet* matls) = 0;
+  
+  inline void set_use_wasatch_mom_rhs(const bool useWasatchMomRHS) { d_useWasatchMomRHS = useWasatchMomRHS; }
+  inline bool get_use_wasatch_mom_rhs() { return d_useWasatchMomRHS; }
 
 protected:
-   const ProcessorGroup* d_myworld;
-   string d_timeIntegratorType;
-   // enthalpy solver
-   EnthalpySolver* d_enthalpySolver;
-   bool d_useWasatchMomRHS;
+   const ProcessorGroup * d_myworld;
+   string                 d_timeIntegratorType;
+
+   EnthalpySolver       * d_enthalpySolver;
+   bool                   d_useWasatchMomRHS;
+
 private:
 
 }; // End class NonlinearSolver

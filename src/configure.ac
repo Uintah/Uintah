@@ -2809,6 +2809,7 @@ if test "$with_mkl"; then
        AC_MSG_ERROR(We recommend that you don't use MKL on a Mac... use the default vecLib instead.)
        ;;
      *)
+       unset test_libs
        test_libs[[0]]="mkl_intel_lp64 mkl_sequential mkl_core pthread" # Line for Utah's Ember computer (10/18/2013)
        test_libs[[1]]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
        test_libs[[2]]="mkl mkl_core mkl_intel_lp64"
@@ -3409,6 +3410,7 @@ else
 
         # Test a number of petsc library options if the above didn't work
         if test "$HAVE_PETSC" != "yes"; then
+           unset test_libs
            test_libs[[0]]="petsc"                       # standard single petsc lib
            test_libs[[1]]="craypetsc_intel_real"        # cray petsc-real - for DOD Open Research Systems 
            test_libs[[2]]="craypetsc_intel_complex"     # cray petsc-complex - for DOD Open Research Systems 
