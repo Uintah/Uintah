@@ -491,13 +491,22 @@
       <!-- Momentum profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDensMMSMomentum  spec="OPTIONAL NO_DATA"
                            attribute1="side REQUIRED STRING 'PLUS,MINUS'">
-      </VarDensMMSMomentum> 
+        <rho0    spec="OPTIONAL DOUBLE"/>
+        <rho1    spec="OPTIONAL DOUBLE"/>
+      </VarDensMMSMomentum>
 
       <!-- Scalar solution variable profile on the boundaries with respect to time for the variable density MMS !-->
-      <VarDensMMSSolnVar  spec="OPTIONAL NO_DATA"/>
+      <VarDensMMSSolnVar  spec="OPTIONAL NO_DATA">
+        <rho0    spec="OPTIONAL DOUBLE"/>
+        <rho1    spec="OPTIONAL DOUBLE"/>
+      </VarDensMMSSolnVar>
        
       <!-- Density profile on the boundaries with respect to time for the variable density MMS !-->
-      <VarDensMMSDensity  spec="OPTIONAL NO_DATA"/>
+      <VarDensMMSDensity  spec="OPTIONAL NO_DATA">
+        <rho0    spec="OPTIONAL DOUBLE"/>
+        <rho1    spec="OPTIONAL DOUBLE"/>
+      </VarDensMMSDensity>
+
 
       <!-- Mixture Fraction profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDensMMSMixtureFraction  spec="OPTIONAL NO_DATA"/>

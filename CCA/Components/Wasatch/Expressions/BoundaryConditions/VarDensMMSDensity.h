@@ -44,8 +44,12 @@ class VarDensMMSDensity
 : public BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::structured::SingleValueField TimeField;
-  VarDensMMSDensity( const Expr::Tag& indepVarTag )
-  : indepVarTag_ (indepVarTag)
+  VarDensMMSDensity( const Expr::Tag& indepVarTag,
+                     const double rho0,
+                     const double rho1 )
+  : indepVarTag_ (indepVarTag),
+    rho0_ (rho0),
+    rho1_ (rho1)
   {
     this->set_gpu_runnable(false);
   }
@@ -60,13 +64,18 @@ public:
      *  \param indepVarTag the Expr::Tag for holding the time variable.
      */
     Builder( const Expr::Tag& resultTag,
-             const Expr::Tag& indepVarTag) :
+             const Expr::Tag& indepVarTag,
+             const double rho0,
+             const double rho1) :
     ExpressionBuilder(resultTag),
-    indepVarTag_ (indepVarTag)
+    indepVarTag_ (indepVarTag),
+    rho0_ (rho0),
+    rho1_ (rho1)
     {}
-    Expr::ExpressionBase* build() const{ return new VarDensMMSDensity(indepVarTag_); }
+    Expr::ExpressionBase* build() const{ return new VarDensMMSDensity(indepVarTag_, rho0_, rho1_); }
   private:
     const Expr::Tag indepVarTag_;
+    const double rho0_, rho1_;
   };
   
   ~VarDensMMSDensity(){}
@@ -78,6 +87,7 @@ public:
 private:
   const TimeField* t_;
   const Expr::Tag indepVarTag_;
+  const double rho0_, rho1_;
 };
 
 // ###################################################################
@@ -100,7 +110,7 @@ evaluate()
   const double cg = this->cg_;
   const double t = (*t_)[0];
 
-  const double bcValue = -1 / ( (5/(exp(1125/( t + 10)) * (2 * t + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125 / (t + 10)) * (2 * t + 5)));
+  const double bcValue = -1 / ( (5/(exp(1125/( t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125 / (t + 10)) * (2 * t + 5)));
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
     std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
     std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index

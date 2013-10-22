@@ -277,7 +277,8 @@ namespace Wasatch{
 
   //==================================================================
   
-  void parse_var_dens_mms( Uintah::ProblemSpecP varDensMMSParams,
+  void parse_var_dens_mms( Uintah::ProblemSpecP wasatchParams,
+                           Uintah::ProblemSpecP varDensMMSParams,
                            const bool computeContinuityResidual,
                            GraphCategories& gc) {
     std::string solnVarName;
@@ -285,6 +286,47 @@ namespace Wasatch{
     varDensMMSParams->get("scalar",solnVarName);
     varDensMMSParams->get("rho1",rho1);
     varDensMMSParams->get("rho0",rho0);
+
+    for( Uintah::ProblemSpecP bcExprParams = wasatchParams->findBlock("BCExpression");
+        bcExprParams != 0;
+        bcExprParams = bcExprParams->findNextBlock("BCExpression") ) {
+      
+      if (bcExprParams->findBlock("VarDensMMSMomentum")) {
+        double bcRho0=1.29985, bcRho1=0.081889;
+        Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDensMMSMomentum");
+        valParams->get("rho0",bcRho0);
+        valParams->get("rho1",bcRho1);
+        if (rho0!=bcRho0 || rho1!=bcRho1) {
+          std::ostringstream msg;
+          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDensMMSMomentum\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDensMMSMomentum\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
+          throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
+        }
+      }
+      
+      else if (bcExprParams->findBlock("VarDensMMSDensity")) {
+        double bcRho0=1.29985, bcRho1=0.081889;
+        Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDensMMSDensity");
+        valParams->get("rho0",bcRho0);
+        valParams->get("rho1",bcRho1);
+        if (rho0!=bcRho0 || rho1!=bcRho1) {
+          std::ostringstream msg;
+          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDensMMSDensity\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDensMMSDensity\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
+          throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
+        }
+      }
+      
+      else if (bcExprParams->findBlock("VarDensMMSSolnVar")) {
+        double bcRho0=1.29985, bcRho1=0.081889;
+        Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDensMMSSolnVar");
+        valParams->get("rho0",bcRho0);
+        valParams->get("rho1",bcRho1);
+        if (rho0!=bcRho0 || rho1!=bcRho1) {
+          std::ostringstream msg;
+          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDensMMSSolnVar\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDensMMSSolnVar\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
+          throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
+        }
+      }
+    }
     varDensMMSParams->get("D",D);
     const TagNames& tagNames = TagNames::self();
 
