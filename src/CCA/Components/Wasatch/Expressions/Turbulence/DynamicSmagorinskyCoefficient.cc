@@ -27,6 +27,7 @@
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
+#include <spatialops/Nebo.h>
 
 #define ALLOCATE_TENSOR_FIELD(T) \
 {\
@@ -59,7 +60,9 @@ DynamicSmagorinskyCoefficient( const Expr::TagList& velTags,
   rhot_           ( rhoTag      ),
   isConstDensity_ (isConstDensity),
   doExtraFiltering_(false)
-{}
+{
+  this->set_gpu_runnable(true);
+}
 
 //--------------------------------------------------------------------
 
@@ -135,7 +138,7 @@ evaluate()
   SpatFldPtr<SVolField> rhoHat = SpatialFieldStore::get<SVolField>( dynSmagConst );
   SpatFldPtr<SVolField> invRhoHat = SpatialFieldStore::get<SVolField>( dynSmagConst );
   if (!isConstDensity_) {
-    boxFilterOp_->apply_to_field( *rho_, *rhoHat );
+    *rhoHat <<= (*boxFilterOp_)( *rho_ );
     // pay attention to this. may require fine tuning.
     exOp_->apply_to_field(*rhoHat, 0.0);
     *invRhoHat <<= cond( *rhoHat<=2*eps, 1.0/ *rho_ )
@@ -148,9 +151,9 @@ evaluate()
   SpatFldPtr<XVolField> uhat = SpatialFieldStore::get<XVolField>( dynSmagConst );
   SpatFldPtr<YVolField> vhat = SpatialFieldStore::get<YVolField>( dynSmagConst );
   SpatFldPtr<ZVolField> what = SpatialFieldStore::get<ZVolField>( dynSmagConst );
-  xBoxFilterOp_->apply_to_field( *vel1_, *uhat );
-  yBoxFilterOp_->apply_to_field( *vel2_, *vhat );
-  zBoxFilterOp_->apply_to_field( *vel3_, *what );
+  *uhat <<= (*xBoxFilterOp_)( *vel1_ );
+  *vhat <<= (*yBoxFilterOp_)( *vel2_ );
+  *what <<= (*zBoxFilterOp_)( *vel3_ );
   
   // extrapolate filtered, staggered, velocities from the interior.
   xexOp_->apply_to_field(*uhat);
@@ -160,22 +163,23 @@ evaluate()
   //----------------------------------------------------------------------------
   // CALCULATE cell centered velocities
   //----------------------------------------------------------------------------
-  SVolVecT velcc;
-  ALLOCATE_VECTOR_FIELD(velcc); // allocate cell centered velocity field
+  SVolVecT rhoVelCC;
+  ALLOCATE_VECTOR_FIELD(rhoVelCC); // allocate cell centered velocity field
   
-  vel1InterpOp_->apply_to_field( *vel1_, *velcc[0] );  // u cell centered
-  vel2InterpOp_->apply_to_field( *vel2_, *velcc[1] );  // v cell centered
-  vel3InterpOp_->apply_to_field( *vel3_, *velcc[2] );  // w cell centered
-  
-  if (!isConstDensity_) {
-    for (int i=0; i<3; i++) {
-      *velcc[i] <<= *rho_ * *velcc[i]; // velcc is now = rho * velcc
-    }
+  if( isConstDensity_ ){
+    *rhoVelCC[0] <<= (*vel1InterpOp_)( *vel1_);  // u cell centered
+    *rhoVelCC[1] <<= (*vel2InterpOp_)( *vel2_);  // v cell centered
+    *rhoVelCC[2] <<= (*vel3InterpOp_)( *vel3_);  // w cell centered
+  }
+  else{
+    *rhoVelCC[0] <<= *rho_ * (*vel1InterpOp_)( *vel1_);  // u cell centered
+    *rhoVelCC[1] <<= *rho_ * (*vel2InterpOp_)( *vel2_);  // v cell centered
+    *rhoVelCC[2] <<= *rho_ * (*vel3InterpOp_)( *vel3_);  // w cell centered
   }
 
   // extrapolate cell centered velocities to ghost cells
   for (int i=0; i<3; i++) {
-    exOp_->apply_to_field(*velcc[i]);
+    exOp_->apply_to_field(*rhoVelCC[i]);
   }
 
   //----------------------------------------------------------------------------
@@ -183,11 +187,11 @@ evaluate()
   //----------------------------------------------------------------------------
   // NOTE: since cell centered velocities have already been extrapolated to ghost cells
   // we should have valid test-filtered data at the interior.
-  SVolVecT velcchat;
-  ALLOCATE_VECTOR_FIELD(velcchat);
+  SVolVecT rhoVelCCHat;
+  ALLOCATE_VECTOR_FIELD(rhoVelCCHat);
   for (int i=0; i<3; i++) {
-    velcchat.push_back(SpatialFieldStore::get<SVolField>( dynSmagConst )); // allocate spatial field pointer
-    boxFilterOp_->apply_to_field( *velcc[i], *velcchat[i] );
+    rhoVelCCHat.push_back(SpatialFieldStore::get<SVolField>( dynSmagConst )); // allocate spatial field pointer
+    *rhoVelCCHat[i] <<= (*boxFilterOp_)( *rhoVelCC[i] );
   }
 
   //----------------------------------------------------------------------------
@@ -199,15 +203,13 @@ evaluate()
   // uu = uiujhat[0][0], uv = uiujhat[0][1], uw = uiujhat[0][2]
   // vv = uiujhat[1][0], vw = uiujhat[1][1]
   // ww = uiujhat[2][0]  
-  SpatFldPtr<SVolField> tmp   = SpatialFieldStore::get<SVolField>( dynSmagConst );
   int jmin=0;
-  for (int i=0; i<3; i++) {
-    for (int j=jmin; j<3; j++) {
-      *tmp <<= *velcc[i] * *velcc[j];
-      //exOp_->apply_to_field(*tmp); // we may need this...
-      boxFilterOp_->apply_to_field(*tmp, *uiujhat[i][j - jmin]);
+  for( int i=0; i<3; ++i ){
+    for( int j=jmin; j<3; ++j ){
+      //exOp_->apply_to_field(*rhoVelCC[i] * *rhoVelCC[j]); // we may need this...
+      *uiujhat[i][j-jmin] <<= (*boxFilterOp_)( *rhoVelCC[i] * *rhoVelCC[j] ) ;
     }
-    jmin++;
+    ++jmin;
   }
 
   //----------------------------------------------------------------------------
@@ -219,12 +221,23 @@ evaluate()
   // L22 = Lij[1][0], L23 = Lij[1][1]
   // L33 = Lij[2][0]
   jmin=0;
-  for (int i=0; i<3; i++) {
-    for (int j=jmin; j<3; j++) {
-      *Lij[i][j-jmin] <<= cond( isConstDensity_, *uiujhat[i][j-jmin] - *velcchat[i] * *velcchat[j] )
-                              ( *uiujhat[i][j-jmin] - *invRhoHat * *velcchat[i] * *velcchat[j] );
+  for( int i=0; i<3; ++i ){
+    for( int j=jmin; j<3; ++j ){
+      if( isConstDensity_ ){
+        *Lij[i][j-jmin] <<= *uiujhat[i][j-jmin] - *rhoVelCCHat[i] * *rhoVelCCHat[j];
+      }
+      else{
+        *Lij[i][j-jmin] <<= *uiujhat[i][j-jmin] - *invRhoHat * *rhoVelCCHat[i] * *rhoVelCCHat[j];
+      }
     }
-    jmin++;
+    ++jmin;
+  }
+
+  // release uiujhat since it is no longer needed.  It is now invalid.
+  BOOST_FOREACH( SVolVecT& fvec, uiujhat ){
+    BOOST_FOREACH( SVolPtr& f, fvec ){
+      f.detach();
+    }
   }
 
   //----------------------------------------------------------------------------
@@ -237,14 +250,18 @@ evaluate()
   // Shat33 = Shatij[2][0]
   calculate_strain_tensor_components(strTsrMag,*uhat,*vhat,*what,*Shatij[0][0],*Shatij[0][1],*Shatij[0][2],*Shatij[1][0],*Shatij[1][1],*Shatij[2][0]);
   
-  if(!isConstDensity_) strTsrMag <<= *rhoHat * strTsrMag;
+  // release some temporary fields
+  uhat.detach(); vhat.detach(); what.detach();
+
+  if( !isConstDensity_ ) strTsrMag <<= *rhoHat * strTsrMag;
+
   jmin=0;
-  for (int i=0; i<3; i++) {
-    for (int j=jmin; j<3; j++) {
+  for( int i=0; i<3; ++i ){
+    for( int j=jmin; j<3; ++j ){
       // now multiply S by Filter{S_ij}
       *Shatij[i][j-jmin] <<= strTsrMag * *Shatij[i][j-jmin];
     }
-    jmin++;
+    ++jmin;
   }
   // we now have: Shatij = Filter(rho) * Filter(S) * Filter(Sij). This is the second term in the Mij tensor
   
@@ -265,15 +282,22 @@ evaluate()
   exOp_->apply_to_field(strTsrMag, 0.0);
   
   jmin=0;
-  for (int i=0; i<3; i++) {
-    for (int j=jmin; j<3; j++) {      
-      exOp_->apply_to_field(*Sij[i][j-jmin]);
-      // now multiply \bar{S} by \bar{S_ij} and test filter them
-      *tmp <<= strTsrMag * *Sij[i][j-jmin];
-      if (!isConstDensity_) *tmp <<= *rho_ * *tmp;
-      boxFilterOp_->apply_to_field(*tmp, *Sij[i][j-jmin]);
+  {
+    SpatFldPtr<SVolField> tmp = SpatialFieldStore::get<SVolField>( strTsrMag );
+    for( int i=0; i<3; ++i ){
+      for( int j=jmin; j<3; ++j ){
+        exOp_->apply_to_field(*Sij[i][j-jmin]);
+        *tmp <<= strTsrMag * *Sij[i][j-jmin];
+        // now multiply \bar{S} by \bar{S_ij} and test filter them
+        if( isConstDensity_ ){
+          *Sij[i][j-jmin] <<= (*boxFilterOp_)( *tmp );
+        }
+        else{
+          *Sij[i][j-jmin] <<= (*boxFilterOp_)( *rho_ * *tmp );
+        }
+      }
+      ++jmin;
     }
-    jmin++;
   }
   // note that we now have S_ij = \FILTER { rho |\bar{S}| \bar{S_ij} } (see wasatch documentation for notation).
   
@@ -294,13 +318,26 @@ evaluate()
   // M33 = Mij[2][0]
   ALLOCATE_TENSOR_FIELD(Mij);
   jmin=0;
-  for (int i=0; i<3; i++) {
-    for (int j=jmin; j<3; j++) {
+  for( int i=0; i<3; ++i ){
+    for( int j=jmin; j<3; ++j ){
       *Mij[i][j-jmin] <<= *Sij[i][j-jmin] - filRatio * *Shatij[i][j-jmin];
     }
-    jmin++;
+    ++jmin;
   }
   
+  // release Shatij - it is no longer valid!
+  BOOST_FOREACH( SVolVecT& fvec, Shatij ){
+    BOOST_FOREACH( SVolPtr& f, fvec ){
+      f.detach();
+    }
+  }
+  // release Sij - it is no longer valid!
+  BOOST_FOREACH( SVolVecT& fvec, Sij ){
+    BOOST_FOREACH( SVolPtr& f, fvec ){
+      f.detach();
+    }
+  }
+
   //----------------------------------------------------------------------------
   // CALCULATE the dynamic constant!
   //----------------------------------------------------------------------------
@@ -315,12 +352,20 @@ evaluate()
                    + *Lij[1][1] * *Mij[1][1] // L23 * M23
                    );
   
+  BOOST_FOREACH( SVolVecT& fvec, Lij ){
+    BOOST_FOREACH( SVolPtr& f, fvec ){
+      f.detach();
+    }
+  }
+
+
   // filtering the numerator and denominator here requires an MPI communication
   // at patch boundaries for it to work. We could potentially split this expression
   // and cleave things... but I don't think this is worth the effort at all...
-  if (doExtraFiltering_) {
+  if( doExtraFiltering_ ){
+    SpatFldPtr<SVolField> tmp = SpatialFieldStore::get<SVolField>( *LM );
     exOp_->apply_to_field(*LM, 0.0);
-    boxFilterOp_->apply_to_field(*LM,*tmp);
+    *tmp <<= (*boxFilterOp_)(*LM);
     *LM <<= *tmp;
   }
   
@@ -335,9 +380,10 @@ evaluate()
                    + *Mij[1][1] * *Mij[1][1] // M23 * M23
                    );
 
-  if (doExtraFiltering_) {
+  if( doExtraFiltering_ ){
+    SpatFldPtr<SVolField> tmp = SpatialFieldStore::get<SVolField>( *MM );
     exOp_->apply_to_field(*MM, 0.0);
-    boxFilterOp_->apply_to_field(*MM,*tmp);
+    *tmp <<= (*boxFilterOp_)(*MM);
     *MM <<= *tmp;
   }
   
