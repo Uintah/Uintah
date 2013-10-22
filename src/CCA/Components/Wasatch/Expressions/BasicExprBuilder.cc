@@ -959,9 +959,11 @@ namespace Wasatch{
 
     else if ( params->findBlock("VarDensMMSMomentum") ){
       std::string side;
+      double rho0=1.29985, rho1=0.081889;
       Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSMomentum");
       valParams->getAttribute("side",side);
-      
+      valParams->get("rho0",rho0);
+      valParams->get("rho1",rho1);
       typedef VarDensMMSMomentum<FieldT> VarDensMMSMomExpr;
       SpatialOps::structured::BCSide bcSide;
       if      (side == "PLUS" ) bcSide = SpatialOps::structured::PLUS_SIDE;
@@ -973,7 +975,7 @@ namespace Wasatch{
         << " is not supported in VarDensMMSMomentum expression." << std::endl;
         throw std::invalid_argument( msg.str() );
       }
-      builder = scinew typename VarDensMMSMomExpr::Builder( tag, tagNames.time, bcSide );
+      builder = scinew typename VarDensMMSMomExpr::Builder( tag, tagNames.time, rho0, rho1, bcSide );
     }
 
     else if ( params->findBlock("VarDensMMSMixtureFraction") ){
@@ -983,15 +985,23 @@ namespace Wasatch{
     }
 
     else if ( params->findBlock("VarDensMMSDensity") ){
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSDensity");      
+      double rho0=1.29985, rho1=0.081889;
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSDensity");
+      valParams->get("rho0",rho0);
+      valParams->get("rho1",rho1);
+
       typedef VarDensMMSDensity<FieldT> VarDensMMSDensityExpr;
-      builder = scinew typename VarDensMMSDensityExpr::Builder( tag, tagNames.time );
+      builder = scinew typename VarDensMMSDensityExpr::Builder( tag, tagNames.time, rho0, rho1 );
     }
 
     else if ( params->findBlock("VarDensMMSSolnVar") ){
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSSolnVar");      
+      double rho0=1.29985, rho1=0.081889;
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSSolnVar");
+      valParams->get("rho0",rho0);
+      valParams->get("rho1",rho1);
+
       typedef VarDensMMSSolnVar<FieldT> VarDensMMSSolnVarExpr;
-      builder = scinew typename VarDensMMSSolnVarExpr::Builder( tag, tagNames.time );
+      builder = scinew typename VarDensMMSSolnVarExpr::Builder( tag, tagNames.time, rho0, rho1 );
     }
     
     else if ( params->findBlock("TurbulentInlet") ) {

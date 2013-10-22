@@ -62,14 +62,19 @@ public:
      */
     Builder( const Expr::Tag& resultTag,
              const Expr::Tag& indepVarTag,
+             const double rho0,
+             const double rho1,
              const SpatialOps::structured::BCSide side )
     : ExpressionBuilder(resultTag),
       indepVarTag_ (indepVarTag),
-      side_   (side   )
+      rho0_( rho0 ),
+      rho1_( rho1 ),
+      side_( side )
     {}
-    Expr::ExpressionBase* build() const{ return new VarDensMMSMomentum(indepVarTag_, side_); }
+    Expr::ExpressionBase* build() const{ return new VarDensMMSMomentum(indepVarTag_, rho0_, rho1_, side_); }
   private:
     const Expr::Tag indepVarTag_;
+    const double rho0_, rho1_;
     const SpatialOps::structured::BCSide side_;
   };
   
@@ -78,14 +83,20 @@ public:
   void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<TimeField>( indepVarTag_ ); }
   void evaluate();
 private:
-  VarDensMMSMomentum( const Expr::Tag& indepVarTag, const SpatialOps::structured::BCSide side )
+  VarDensMMSMomentum( const Expr::Tag& indepVarTag,
+                      const double rho0,
+                      const double rho1,
+                      const SpatialOps::structured::BCSide side )
    : indepVarTag_( indepVarTag ),
+     rho0_( rho0 ),
+     rho1_( rho1 ),
      side_( side )
   {
     this->set_gpu_runnable(false);
   }
   const TimeField* t_;
   const Expr::Tag indepVarTag_;
+  const double rho0_, rho1_;
   const SpatialOps::structured::BCSide side_;
 };
 
@@ -115,13 +126,13 @@ evaluate()
     std::vector<SS::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     if (this->isStaggered_) {
       if (side_==SS::PLUS_SIDE) {
-        const double bcValue = (5 * t * sin((30 * PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125/(t + 10))*(2 * t + 5))));
+        const double bcValue = (5 * t * sin((30 * PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
           f(*ii) = ( bcValue - ci*f(*ig) ) / cg;
         }
       } else if (side_ == SS::MINUS_SIDE) {
-        const double bcValue = (5 * t * sin((-30 * PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125/(t + 10))*(2 * t + 5))));
+        const double bcValue = (5 * t * sin((-30 * PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
           f(*ii) = ( bcValue - ci*f(*ii) ) / cg;
@@ -129,12 +140,12 @@ evaluate()
       }
     } else {
       if (side_==SS::PLUS_SIDE) {
-        const double bcValue = (5 * t * sin((30 * PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125/(t + 10))*(2 * t + 5))));
+        const double bcValue = (5 * t * sin((30 * PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
         }
       } else if (side_ == SS::MINUS_SIDE) {
-        const double bcValue = (5 * t * sin((-30 * PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/1.29985 - 5/(0.081889 * exp(1125/(t + 10))*(2 * t + 5))));
+        const double bcValue = (5 * t * sin((-30 * PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
         }
