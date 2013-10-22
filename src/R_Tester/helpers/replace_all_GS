@@ -1,7 +1,14 @@
 #!/bin/csh -f
 #______________________________________________________________________
 # This script is a gui for replacing the gold standards
+set tmp = (`which dialog` `which awk`)
 
+if ( $status ) then
+  echo " ERROR: Could not find one of the commands"
+  echo "    dialog"
+  echo "    awk"
+  exit(0)
+endif
 #__________________________________
 # bulletproofing
 @ numFiles = `find . -maxdepth 1 -name "*-short.log" | wc -w`
@@ -47,7 +54,7 @@ end
 label begin
 #__________________________________
 # open dialog box for user to select which tests to replace
-set choices = (`/usr/bin/dialog --stdout --separate-output --checklist "The following regression tests have failed.  Please select the tests which you'd like to replace" 20 50 40 $failedTestList`)
+set choices = (`dialog --stdout --separate-output --checklist "The following regression tests have failed.  Please select the tests which you'd like to replace" 20 50 40 $failedTestList`)
 if( $status != 0 ) then
   echo "cancel selected"
   exit
@@ -55,7 +62,7 @@ endif
 
 #__________________________________
 # which part of the gold standards to replace
-set opts = (`/usr/bin/dialog --stdout --separate-output --checklist "Select what you want to replace" 20 55 40 "uda" "" off, "checkpoints" "" off, "memory" "" off, "performance" "" off, "inputFile" "" off, "logs" "clear memory/performance logs" off, "all" "" on`)
+set opts = (`dialog --stdout --separate-output --checklist "Select what you want to replace" 20 55 40 "uda" "" off, "checkpoints" "" off, "memory" "" off, "performance" "" off, "inputFile" "" off, "logs" "clear memory/performance logs" off, "all" "" on`)
 
 if( $status != 0 ) then
   echo "cancel selected"
