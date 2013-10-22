@@ -86,10 +86,10 @@ WARNING
     /**
      *  \author Tony Saad
      *  \date   August 29, 2013
-     *  \brief  Returns an BoundCondValueTypeEnum that designates the data type associated with the 
-     value of this boundary condition.
+     *  \brief  Returns a BoundCondValueTypeEnum that designates the data type associated with the 
+     *          value of this boundary condition.
      */
-    const BoundCondValueTypeEnum getValueType() const { return d_value_type; };
+    BoundCondValueTypeEnum getValueType() const { return d_value_type; }
     
   protected:
     string d_variable;          // Pressure, Density, etc

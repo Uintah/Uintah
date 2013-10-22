@@ -293,13 +293,14 @@ void ProfileDriver::outputError(const GridP currentGrid)
 void ProfileDriver::finalizeContributions(const GridP currentGrid)
 {
   //if(d_myworld->myrank()==0)
-  //  cout << "Finalizing Contributions in cost profiler on timestep: " << timesteps << endl;
+  //  cout << "Finalizing Contributions in cost profiler on timestep: " << d_timesteps << "\n";
+
   if(stats.active())
   {
     outputError(currentGrid);
   }
    
-  timesteps++;
+  d_timesteps++;
   //for each level
   for(int l=0;l<(int)costs.size();l++)
   {
@@ -318,7 +319,7 @@ void ProfileDriver::finalizeContributions(const GridP currentGrid)
       else
         data.timestep++;  //this keeps track of how long it has been since the data has been updated on this processor
 
-      if(timesteps<=2)
+      if( d_timesteps <= 2 )
       {
         //first couple timesteps should be set to last timestep to initialize the system
           //the first couple timesteps are not representative of the actual cost as extra things
@@ -337,8 +338,9 @@ void ProfileDriver::finalizeContributions(const GridP currentGrid)
         }
         else //TYPE IS KALMAN
         {
-          double m=data.p+phi;
-          double k=m/(m+r);
+          double m = data.p + d_phi;
+          double k = m / ( m + d_r );
+
           //cout << setprecision(12);
           data.p=(1-k)*m;  //computing covariance
         //cout << "m: " << m << " k:" << k << " p:" << data.p << endl;
@@ -403,7 +405,7 @@ void ProfileDriver::getWeights(int l, const vector<Region> &regions, vector<doub
 
 void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
 {
-  if(timesteps==0)
+  if( d_timesteps == 0 )
     return;
 
   //for each level
@@ -593,11 +595,12 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     } //end region iteration
   }// end levels iteration
 }
-void ProfileDriver::reset()
+
+void
+ProfileDriver::reset()
 {
-  for(int i=0;i<(int)costs.size();i++)
-  {
+  for( int i=0;i<(int)costs.size();i++ ) {
     costs[i].clear();
   }
-  timesteps=0;
+  d_timesteps = 0;
 }
