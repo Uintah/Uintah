@@ -230,9 +230,12 @@ uniform_sample_triangle(Point &p, const Point &p0,
 
 
 void
-uniform_sample_tetrahedra(Point &p, const Point &p0, const Point &p1,
-                          const Point &p2, const Point &p3,
-                          MusilRNG &rng)
+uniform_sample_tetrahedra(       Point     & p,
+                           const Point     & p0,
+                           const Point     & p1,
+                           const Point     & p2,
+                           const Point     & p3,
+                                 MusilRNG  & rng )
 {
   double t = rng();
   double u = rng();
@@ -261,7 +264,7 @@ uniform_sample_tetrahedra(Point &p, const Point &p0, const Point &p1,
 
   // Convert to Barycentric and compute new point.
   const double a = 1.0 - t - u - v;
-  p = (p0.vector()*a + p1.vector()*t + p2.vector()*u + p3.vector()*v).point();
+  p = ( p0*a + p1*t + p2*u + p3*v ).point();
 }
 
 
