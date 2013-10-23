@@ -77,14 +77,17 @@ public:
   inline Point operator-() const;
   inline double& operator()(int idx);
   inline double operator()(int idx) const;
+
   inline void addscaled(const Point& p, const double scale);  // this += p * w;
-  inline void x(const double);
+
   inline double x() const;
-  inline void y(const double);
   inline double y() const;
-  inline void z(const double);
   inline double z() const;
-  inline const Vector &vector() const;
+
+  inline void x( const double );
+  inline void y( const double );
+  inline void z( const double );
+
   inline Vector &asVector() const;
     
   SCISHARE string get_string() const;
@@ -289,11 +292,6 @@ inline void Point::z(const double d)
 inline double Point::z() const
 {
     return z_;
-}
-
-inline const Vector &Point::vector() const
-{
-    return (const Vector &)(*this);
 }
 
 inline Vector &Point::asVector() const
