@@ -77,7 +77,7 @@ namespace Wasatch{
    *    \frac{\partial \phi}{\partial t} =
    *     \frac{1}{\rho}\left[
    *     - \phi \frac{\partial \rho}{\partial t}
-   *     - \nabla\cdot\phi\vec{u}
+   *     - \nabla\cdot\rho\phi\vec{u}
    *     - \nabla\cdot\vec{J}_\phi
    *     + s_\phi
    *    \right]
