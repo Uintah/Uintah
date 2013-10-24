@@ -1,4 +1,5 @@
 #include <CCA/Components/Wasatch/Expressions/PressureSource.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
@@ -10,14 +11,13 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
                                 const bool isConstDensity,
                                 const Expr::Tag densTag,
                                 const Expr::Tag densStarTag,
-                                const Expr::Tag dens2StarTag,
-                                const Expr::Tag dilTag,
-                                const Expr::Tag timestepTag )
+                                const Expr::Tag dens2StarTag )
 : Expr::Expression<SVolField>(),
   isConstDensity_( isConstDensity ),
   doX_      ( momTags[0]!=Expr::Tag() ),
   doY_      ( momTags[1]!=Expr::Tag() ),
   doZ_      ( momTags[2]!=Expr::Tag() ),
+  is3d_     ( doX_ && doY_ && doZ_    ),
   xMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[0]     ),
   yMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[1]     ),
   zMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[2]     ),
@@ -27,8 +27,8 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
   denst_      ( densTag  ),
   densStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : densStarTag    ),
   dens2Start_ ( densStarTag==Expr::Tag() ? Expr::Tag() : dens2StarTag   ),
-  dilt_       ( isConstDensity ? dilTag  : Expr::Tag() ),
-  timestept_  ( timestepTag )
+  dilt_       ( Wasatch::TagNames::self().dilatation ),
+  timestept_  ( Wasatch::TagNames::self().timestep )
 {
   set_gpu_runnable( true );
 }
@@ -132,69 +132,80 @@ void PressureSource::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 void PressureSource::evaluate()
 {
   using namespace SpatialOps;
-  SVolField& result = this->value();
+  typedef std::vector<SVolField*> SVolFieldVec;
+  SVolFieldVec& results = this->get_value_vec();
+  
+  SVolField& psrc   = *results[0];
+  SVolField& drhodt = *results[1];
+  SVolField& alpha  = *results[2];
+  SVolField& beta   = *results[3];
+  SVolField& divmomstar   = *results[4];
+  SVolField& drhodtstar   = *results[5];
   
   if (isConstDensity_ ){
-    result <<= *dens_ * *dil_ / *timestep_;
-  }
-  else{ // variable density
-
-    const double alpha = 0.1;   // the continuity equation weighting factor
-
-    if( doX_ && doY_ && doZ_ ){ // for 3D cases, inline the whole thing
-      result <<=
-          ( (*gradXOp_)(*xMom_) - (1.0 - alpha) * (*gradXOp_) ( (*s2XInterpOp_)(*densStar_) * *uStar_ )
-          + (*gradYOp_)(*yMom_) - (1.0 - alpha) * (*gradYOp_) ( (*s2YInterpOp_)(*densStar_) * *vStar_ )
-          + (*gradZOp_)(*zMom_) - (1.0 - alpha) * (*gradZOp_) ( (*s2ZInterpOp_)(*densStar_) * *wStar_ )
-          + alpha * ((*dens2Star_ - *dens_)/(2. * *timestep_))
-          ) / *timestep_;
+    
+    psrc <<= *dens_ * *dil_ / *timestep_;
+    
+  } else { // variable density
+    
+    drhodtstar <<= (*dens2Star_ - *dens_)/(2. * *timestep_);
+    
+    if (is3d_) {
+      divmomstar <<=   (*gradXOp_) ( (*s2XInterpOp_)(*densStar_) * (*uStar_) )
+                     + (*gradYOp_) ( (*s2YInterpOp_)(*densStar_) * (*vStar_) )
+                     + (*gradZOp_) ( (*s2ZInterpOp_)(*densStar_) * (*wStar_) );
+    } else {
+      if(doX_) divmomstar <<=              (*gradXOp_) ( (*s2XInterpOp_)(*densStar_) * (*uStar_) );
+      else     divmomstar <<= 0.0;
+      if(doY_) divmomstar <<= divmomstar + (*gradYOp_) ( (*s2YInterpOp_)(*densStar_) * (*vStar_) );
+      if(doZ_) divmomstar <<= divmomstar + (*gradZOp_) ( (*s2ZInterpOp_)(*densStar_) * (*wStar_) );
     }
-    else{
+    
+    // beta is the ratio of drhodt to div(mom*)
+    beta  <<= cond (abs(drhodtstar - divmomstar) <= 1e-10, 1.0)
+                   (abs(divmomstar) <= 1e-12, 2.0)
+                   (abs(drhodtstar/divmomstar));
+    
+//    alpha <<= cond( beta != beta, 0.0 )
+//                  ( 1.0/(beta + 1.0)  );
+    
+//    alpha <<= cond( beta != beta, 0.0 )
+//                  ( exp(log(0.5)*(pow(beta,2))) ); // Increase the value of the exponent to get closer to a step function
+
+    alpha <<= 0.1; // use this for the moment until we figure out the proper model for alpha
+
+    drhodt <<= alpha * drhodtstar - (1.0 - alpha) * divmomstar;
+    
+    if( is3d_ ){ // for 3D cases, inline the whole thing
+      psrc <<=    (*gradXOp_)(*xMom_) + (*gradYOp_)(*yMom_) + (*gradZOp_)(*zMom_) ;
+    } else {
       // for 1D and 2D cases, we are not as efficient - add terms as needed...
-      if( doX_ ){
-        // P_src = nabla.(rho*u)^n - (1-alpha) * nabla.(rho*u)^(n+1)
-        result <<= (*gradXOp_)(*xMom_) - (1.0 - alpha) * (*gradXOp_) ( (*s2XInterpOp_)(*densStar_) * *uStar_ );
-      }
-      else{
-        result <<= 0.0;
-      }
-
-      if( doY_ ){
-        // P_src = P_src + nabla.(rho*v)^n - (1-alpha) * nabla.(rho*v)^(n+1)
-        result <<= result + (*gradYOp_)(*yMom_) - (1.0 - alpha) * (*gradYOp_) ( (*s2YInterpOp_)(*densStar_) * *vStar_ );
-      }
-
-      if( doZ_ ){
-        // P_src = P_src + nabla.(rho*w)^n - (1-alpha) * nabla.(rho*w)^(n+1)
-        result <<= result + (*gradZOp_)(*zMom_) - (1.0 - alpha) * (*gradZOp_) ( (*s2ZInterpOp_)(*densStar_) * *wStar_ );
-      }
-
-      result <<= ( result + alpha * ((*dens2Star_ - *dens_)/(2. * *timestep_))) / *timestep_;  // P_src = P_src + alpha * (drho/dt)^(n+1)
+      if( doX_ ) psrc <<=        (*gradXOp_)( (*xMom_) );
+      else       psrc <<= 0.0;
+      if( doY_ ) psrc <<= psrc + (*gradYOp_)( (*yMom_) );
+      if( doZ_ ) psrc <<= psrc + (*gradZOp_)( (*zMom_) );
     } // 1D, 2D cases
-
-  }
+    
+    psrc <<= (psrc + drhodt)/ *timestep_;  // P_src = ( div(mom) + drhodt ) / dt
+  } // Variable density
 }
 
 //------------------------------------------------------------------
 
-PressureSource::Builder::Builder( const Expr::Tag& result,
+PressureSource::Builder::Builder( const Expr::TagList& results,
                                   const Expr::TagList& momTags,
                                   const Expr::TagList& velStarTags,
                                   const bool isConstDensity,
                                   const Expr::Tag densTag,
                                   const Expr::Tag densStarTag,
-                                  const Expr::Tag dens2StarTag,
-                                  const Expr::Tag dilTag,
-                                  const Expr::Tag timestepTag )
-: ExpressionBuilder(result),
+                                  const Expr::Tag dens2StarTag )
+: ExpressionBuilder(results),
   isConstDens_( isConstDensity ),
   momTs_      ( densStarTag==Expr::Tag() ? Expr::TagList() : momTags     ),
   velStarTs_  ( densStarTag==Expr::Tag() ? Expr::TagList() : velStarTags ),
   denst_     ( densTag      ),
   densStart_ ( densStarTag  ),
-  dens2Start_( dens2StarTag ),
-  dilt_( isConstDensity ? dilTag  : Expr::Tag() ),
-  tstpt_( timestepTag )
+  dens2Start_( dens2StarTag )
 {}
 
 //------------------------------------------------------------------
@@ -202,7 +213,7 @@ PressureSource::Builder::Builder( const Expr::Tag& result,
 Expr::ExpressionBase*
 PressureSource::Builder::build() const
 {
-  return new PressureSource( momTs_, velStarTs_, isConstDens_, denst_, densStart_, dens2Start_, dilt_, tstpt_);
+  return new PressureSource( momTs_, velStarTs_, isConstDens_, denst_, densStart_, dens2Start_ );
 }
 //------------------------------------------------------------------
 

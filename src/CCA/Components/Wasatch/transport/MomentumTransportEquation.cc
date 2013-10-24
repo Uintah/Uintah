@@ -737,24 +737,6 @@ namespace Wasatch{
     // Pressure source term
     
     if (!isConstDensity) {
-      // calculating drhodt needed for the post processing
-      if (computeContinuityResidual)
-      {
-        //Expr::Tag drhodtTag = Expr::Tag( "drhodt", Expr::STATE_NONE);
-        Expr::Tag densStarTag  = Expr::Tag(densTag.name() + tagNames.star, Expr::CARRY_FORWARD);
-        Expr::Tag dens2StarTag = Expr::Tag(densTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD);
-        Expr::TagList velStarTags = Expr::TagList();
-        set_vel_star_tags( velTags_, velStarTags );
-        
-        // registering the expressiong for drhodt
-        Expr::ExpressionID drhodtID = factory.register_expression( new typename Drhodt::Builder( tagNames.drhodt, velStarTags, densTag, densStarTag, dens2StarTag, tagNames.timestep));
-//        Expr::TagList drhodtTagList;
-//        drhodtTagList.push_back(drhodtTag);
-//        force_expressions_on_graph(drhodtTagList, &graphHelper);
-        graphHelper.rootIDs.insert( drhodtID );
-        graphHelper.forcedIDs.insert( drhodtID );
-      }
-      
       // calculating velocity at the next time step
       Expr::Tag thisVelStarTag = Expr::Tag( thisVelTag_.name() + tagNames.star, Expr::STATE_NONE);
       Expr::Tag convTermWeak   = Expr::Tag( thisVelTag_.name() + "_weak_convective_term", Expr::STATE_NONE);
@@ -763,7 +745,6 @@ namespace Wasatch{
         oldPressure.add_variable<SVolField>( ADVANCE_SOLUTION, pressure_tag() );
         const Expr::Tag oldPressureTag = Expr::Tag (pressure_tag().name() + "_old", Expr::STATE_NONE);
         convTermWeakID_ = factory.register_expression( new typename WeakConvectiveTerm<FieldT>::Builder( convTermWeak, thisVelTag_, velTags_));
-//        factory.cleave_from_children( convTermWeakID_ );
         factory.cleave_from_parents ( convTermWeakID_ );
         factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, convTermWeak, tauTags, densTag, viscTag, oldPressureTag, tagNames.timestep ));
       }
@@ -779,7 +760,14 @@ namespace Wasatch{
       set_mom_tags( params, momTags_ );
       
       // registering the expressiong for pressure source term
-      factory.register_expression( new typename PressureSource::Builder( tagNames.pressuresrc, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag, dilTag, tagNames.timestep));
+      Expr::TagList psrcTagList;
+      psrcTagList.push_back(tagNames.pressuresrc);
+      psrcTagList.push_back(tagNames.drhodt);
+      psrcTagList.push_back(tagNames.vardenalpha);
+      psrcTagList.push_back(tagNames.vardenbeta);
+      psrcTagList.push_back(tagNames.divmomstar);
+      psrcTagList.push_back(tagNames.drhodtstar);
+      factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag));
     }
     
     

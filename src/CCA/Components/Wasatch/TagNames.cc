@@ -76,6 +76,10 @@ namespace Wasatch{
   star("_*"), 
   doubleStar("_**"),
   pressuresrc ( "pressure_src", Expr::STATE_NONE ),
+  vardenalpha ( "varden_alpha", Expr::STATE_NONE ),
+  vardenbeta ( "varden_beta", Expr::STATE_NONE ),
+  divmomstar ( "divmom_*", Expr::STATE_NONE ),
+  drhodtstar ( "drhodt_*", Expr::STATE_NONE ),  
   drhodt      ( "drhodt", Expr::STATE_NONE       ),
   drhodtnp1   ( "drhodt", Expr::STATE_NP1        ),
   
