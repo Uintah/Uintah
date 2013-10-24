@@ -105,60 +105,46 @@ public:
 
     /**
      *  \brief Constructs a builder for a ScalarRHS object.
-     *
-     *  \param fieldInfo the FieldTagInfo object that holds
-     *         information for the various expressions that form the
-     *         RHS.
-     *
+     *  \param fieldInfo the FieldTagInfo object that holds information for the
+     *   various expressions that form the RHS.
      *  \param densityTag density tag for cases that we have constant density and a source term.
-     *
      *  \param isConstDensity a boolean o show if density is constant or not.
+     *  \param isStrongForm true (default) for the strong form of the governing equation, false otherwise.
+     *  \param drhodtTag the Tag for the expression that computes the density time derivative.
      */
     Builder( const Expr::Tag& result,
              const FieldTagInfo& fieldInfo,
              const Expr::Tag& densityTag,
-             const Expr::Tag& volFracTag,
-             const Expr::Tag& xAreaFracTag,
-             const Expr::Tag& yAreaFracTag,
-             const Expr::Tag& zAreaFracTag,
-             const bool isConstDensity );
+             const bool isConstDensity,
+             const bool isStrongForm=true,
+             const Expr::Tag drhodtTag=Expr::Tag() );
 
     /**
      *  \brief Constructs a builder for a ScalarRHS object. This is being
-     *         used by ScalarTransportEqu.
-     *
+     *         used by ScalarTransportEquation.
      *  \param result the value of this expression
-     *
-     *  \param fieldInfo the FieldTagInfo object that holds
-     *         information for the various expressions that form the
-     *         RHS.
-     *
+     *  \param fieldInfo the FieldTagInfo object that holds information for the
+     *   various expressions that form the RHS.
      *  \param srcTags extra source terms to attach to this RHS.
-     *
-     *  \param densityTag density tag for cases that we have contsant density and a source term.
-     *
-     *  \param isConstDensity a boolean o show if density is constant or not.
+     *  \param densityTag density tag for cases that we have constant density and a source term.
+     *  \param isConstDensity a boolean to show if density is constant or not.
+     *  \param isStrongForm true (default) for the strong form of the governing equation, false otherwise.
+     *  \param drhodtTag the Tag for the expression that computes the density time derivative.
      */
     Builder( const Expr::Tag& result,
              const FieldTagInfo& fieldInfo,
              const std::vector<Expr::Tag>& srcTags,
              const Expr::Tag& densityTag,
-             const Expr::Tag& volFracTag,
-             const Expr::Tag& xAreaFracTag,
-             const Expr::Tag& yAreaFracTag,
-             const Expr::Tag& zAreaFracTag,
-             const bool isConstDensity );
+             const bool isConstDensity,
+             const bool isStrongForm=true,
+             const Expr::Tag drhodtTag=Expr::Tag() );
     virtual ~Builder(){}
     virtual Expr::ExpressionBase* build() const;
   protected:
     const FieldTagInfo info_;
     const std::vector<Expr::Tag> srcT_;
-    const Expr::Tag volfracT_;
-    const Expr::Tag xareafracT_;
-    const Expr::Tag yareafracT_;
-    const Expr::Tag zareafracT_;
-    const Expr::Tag densityT_;
-    const bool isConstDensity_;
+    const Expr::Tag densityT_, drhodtTag_;
+    const bool isConstDensity_, isStrongForm_;
   };
 
   virtual void evaluate();
@@ -189,8 +175,13 @@ protected:
   const YVolToYFluxInterpT* yAreaFracInterpOp_;
   const ZVolToZFluxInterpT* zAreaFracInterpOp_;
 
-  const bool isConstDensity_;
+  const bool isConstDensity_, strongForm_;
   const DensityInterpT* densityInterpOp_;
+
+  // things requried for weak form:
+  const Expr::Tag phiTag_, drhodtTag_;;
+  const FieldT    *phi_;
+  const SVolField *drhodt_;
 
   std::vector<Expr::Tag> srcTags_;
 
@@ -207,17 +198,12 @@ protected:
 
   void nullify_fields();
 
-  static Expr::Tag resolve_field_tag( const FieldSelector field,
-                                      const FieldTagInfo& info );
-
   ScalarRHS( const FieldTagInfo& fieldTags,
              const std::vector<Expr::Tag>& srcTags,
-             const Expr::Tag densityTag,
-             const Expr::Tag volFracTag,
-             const Expr::Tag xAreaFracTag,
-             const Expr::Tag yAreaFracTag,
-             const Expr::Tag zAreaFracTag,
-             const bool  isConstDensity );
+             const Expr::Tag& densityTag,
+             const Expr::Tag& drhodtTag,
+             const bool isConstDensity,
+             const bool isStrongForm = true );
 
   virtual ~ScalarRHS();
 };

@@ -705,7 +705,6 @@ namespace Wasatch{
   void setup_convective_flux_expression( const std::string dir,
                                          const Expr::Tag solnVarTag,
                                          Expr::Tag convFluxTag,
-                                         const Expr::Tag volFracTag,
                                          const ConvInterpMethods convMethod,
                                          const Expr::Tag advVelocityTag,
                                          const std::string suffix,
@@ -742,7 +741,7 @@ namespace Wasatch{
             typename OperatorTypeBuilder<Interpolant,FieldT,   XFace>::type, // scalar interp type
             typename OperatorTypeBuilder<Interpolant,XVolField,XFace>::type  // velocity interp type
             >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, volFracTag );
+        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
       }
       else if( dir=="Y" ){
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION USING " << interpMethod << std::endl;
@@ -752,7 +751,7 @@ namespace Wasatch{
             typename OperatorTypeBuilder<Interpolant,FieldT,   YFace>::type, // scalar interp type
             typename OperatorTypeBuilder<Interpolant,YVolField,YFace>::type  // velocity interp type
             >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, volFracTag );
+        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
       }
       else if( dir=="Z") {
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION USING " << interpMethod << std::endl;
@@ -762,7 +761,7 @@ namespace Wasatch{
             typename OperatorTypeBuilder<Interpolant,FieldT,   ZFace>::type, // scalar interp type
             typename OperatorTypeBuilder<Interpolant,ZVolField,ZFace>::type  // velocity interp type
             >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, volFracTag );
+        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
       }
 
       if( builder == NULL ){
@@ -775,9 +774,9 @@ namespace Wasatch{
     }
 
     FieldSelector fs;
-    if      ( dir=="X" ) fs = CONVECTIVE_FLUX_X;
-    else if ( dir=="Y" ) fs = CONVECTIVE_FLUX_Y;
-    else if ( dir=="Z" ) fs = CONVECTIVE_FLUX_Z;
+    if     ( dir=="X" ) fs = CONVECTIVE_FLUX_X;
+    else if( dir=="Y" ) fs = CONVECTIVE_FLUX_Y;
+    else if( dir=="Z" ) fs = CONVECTIVE_FLUX_Z;
     else{
       std::ostringstream msg;
       msg << "Invalid direction selection for convective flux expression on " << solnVarTag.name() << std::endl;
@@ -789,7 +788,6 @@ namespace Wasatch{
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
                                          const Expr::Tag solnVarTag,
-                                         const Expr::Tag volFracTag,
                                          const std::string suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info )
@@ -815,7 +813,7 @@ namespace Wasatch{
     if( nameTagParam ) convFluxTag = parse_nametag( nameTagParam );
 
     setup_convective_flux_expression<FieldT>( dir,
-                                              solnVarTag, convFluxTag, volFracTag,
+                                              solnVarTag, convFluxTag,
                                               get_conv_interp_method(interpMethod),
                                               advVelocityCorrectedTag,
                                               suffix,
@@ -1025,7 +1023,6 @@ namespace Wasatch{
         const std::string dir,                                  \
         const Expr::Tag solnVarTag,                             \
         Expr::Tag convFluxTag,                                  \
-        const Expr::Tag volFracTag,                             \
         const ConvInterpMethods convMethod,                     \
         const Expr::Tag advVelocityTag,                         \
         const std::string suffix,                                \
@@ -1035,7 +1032,6 @@ namespace Wasatch{
     template void setup_convective_flux_expression<FIELDT>(     \
         Uintah::ProblemSpecP convFluxParams,                    \
         const Expr::Tag solnVarName,                            \
-        const Expr::Tag volFracTag,                             \
         const std::string suffix,                                \
         Expr::ExpressionFactory& factory,                       \
         FieldTagInfo& info );

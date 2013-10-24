@@ -272,21 +272,20 @@ namespace Wasatch{
         const Expr::Tag solnVarStarTag( solnVarName + tagNames.star, Expr::STATE_NONE );
         const Expr::Tag densityStarTag( densityTag.name() + tagNames.star, Expr::CARRY_FORWARD );
         factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, solnVarStarTag, densityStarTag)); 
+        infoStar[PRIMITIVE_VARIABLE] = primVarStarTag;
       }
     }
 
+    info[PRIMITIVE_VARIABLE] = primVarTag;
+
     //_____________
     // volume fraction for embedded boundaries Terms
-    Expr::Tag volFracTag   = Expr::Tag();
-    Expr::Tag xAreaFracTag = Expr::Tag();
-    Expr::Tag yAreaFracTag = Expr::Tag();
-    Expr::Tag zAreaFracTag = Expr::Tag();
     if( hasEmbeddedGeometry ){
       VolFractionNames& vNames = VolFractionNames::self();
-      volFracTag = vNames.svol_frac_tag();
-      xAreaFracTag = vNames.xvol_frac_tag();
-      yAreaFracTag = vNames.yvol_frac_tag();
-      zAreaFracTag = vNames.zvol_frac_tag();
+      info[VOLUME_FRAC] = vNames.svol_frac_tag();
+      info[AREA_FRAC_X] = vNames.xvol_frac_tag();
+      info[AREA_FRAC_Y] = vNames.yvol_frac_tag();
+      info[AREA_FRAC_Z] = vNames.zvol_frac_tag();
     }
     
     //_____________
@@ -331,9 +330,9 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
         convFluxParams != 0;
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
-      setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, volFracTag, "", factory, info );
+      setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, "", factory, info );
       if( !isConstDensity ){
-        setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, volFracTag, tagNames.star, factory, infoStar );
+        setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, tagNames.star, factory, infoStar );
       }
     }
 
@@ -351,20 +350,14 @@ namespace Wasatch{
 
     //_____________
     // Right Hand Side
-    if( isStrong ){
-      const Expr::Tag rhsTag( solnVarName+"_rhs", Expr::STATE_NONE );
-      if( !isConstDensity && hasConvection_ ){
-        const Expr::Tag rhsStarTag( solnVarName + "_rhs" + tagNames.star, Expr::STATE_NONE );
-        const Expr::Tag densityStarTag( densityTag.name() + tagNames.star, Expr::CARRY_FORWARD );
-        factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsStarTag, infoStar, srcTags, densityStarTag, volFracTag, xAreaFracTag, yAreaFracTag, zAreaFracTag, isConstDensity) );
-      }
-      return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag, info, srcTags, densityTag, volFracTag, xAreaFracTag, yAreaFracTag, zAreaFracTag, isConstDensity) );    
+    typedef typename ScalarRHS<FieldT>::Builder RHSBuilder;
+    const Expr::Tag rhsTag( solnVarName+"_rhs", Expr::STATE_NONE );
+    if( !isConstDensity && hasConvection_ ){
+      const Expr::Tag rhsStarTag( solnVarName + "_rhs" + tagNames.star, Expr::STATE_NONE );
+      const Expr::Tag densityStarTag( densityTag.name() + tagNames.star, Expr::CARRY_FORWARD );
+      factory.register_expression( scinew RHSBuilder(rhsStarTag, infoStar, srcTags, densityStarTag, isConstDensity, isStrong, tagNames.drhodtstar ) );
     }
-    else{
-      std::ostringstream msg;
-      msg << "ERROR: This part is not written for weak form yet." << endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }
+    return factory.register_expression( scinew RHSBuilder(rhsTag, info, srcTags, densityTag, isConstDensity, isStrong, tagNames.drhodt ) );
   }
 
   //------------------------------------------------------------------

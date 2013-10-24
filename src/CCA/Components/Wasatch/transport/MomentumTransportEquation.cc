@@ -689,8 +689,7 @@ namespace Wasatch{
           np1MomTags.push_back(Expr::Tag());
         
         Expr::Tag drhodtTag = Expr::Tag();
-        if (!isConstDensity_)
-        {
+        if( !isConstDensity_ ){
           drhodtTag = tagNames.drhodtnp1;
           typedef Expr::PlaceHolder<SVolField>  FieldExpr;
           postProcFactory.register_expression( new typename FieldExpr::Builder(drhodtTag),true );
