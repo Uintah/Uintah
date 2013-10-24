@@ -260,7 +260,7 @@ namespace Wasatch{
     solnVarTag = Expr::Tag( solnVarName, Expr::STATE_N );
 
     if( isConstDensity || !isStrong ){
-      primVarTag = solnVarTag;
+      primVarTag = solnVarTag; // we are solving for the primitive variable
     }
     else{
       const std::string primVarName = get_primvar_name( params );
@@ -305,28 +305,22 @@ namespace Wasatch{
     
     //_________________
     // Diffusive Fluxes
-    if( !isConstDensity && !hasConvection_ ){
+    if( !isConstDensity ){
       for( Uintah::ProblemSpecP diffFluxParams=params->findBlock("DiffusiveFluxExpression");
            diffFluxParams != 0;
-           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") ){
-
-        setup_diffusive_flux_expression<FieldT>( diffFluxParams, densityTag, primVarTag, isStrong, turbDiffTag, "", factory, info );
-      }
-    }
-    else if( !isConstDensity && hasConvection_ ){
-      for( Uintah::ProblemSpecP diffFluxParams=params->findBlock("DiffusiveFluxExpression");
-          diffFluxParams != 0;
-          diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") ){
-        
-        setup_diffusive_flux_expression<FieldT>( diffFluxParams, densityTag, primVarTag, isStrong, turbDiffTag, "", factory, info );
-        setup_diffusive_flux_expression<FieldT>( diffFluxParams, densityTag, primVarTag, isStrong, turbDiffTag, tagNames.star, factory, infoStar );
+           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") )
+      {
+        setup_diffusive_flux_expression<FieldT>( diffFluxParams, densityTag, primVarTag, turbDiffTag, "", factory, info );
+        if( hasConvection_ ){
+          setup_diffusive_flux_expression<FieldT>( diffFluxParams, densityTag, primVarTag, turbDiffTag, tagNames.star, factory, infoStar );
+        }
       }
     }
     else{ // constant density
       for( Uintah::ProblemSpecP diffVelParams=params->findBlock("DiffusiveFluxExpression");
           diffVelParams != 0;
-          diffVelParams=diffVelParams->findNextBlock("DiffusiveFluxExpression") ){
-
+          diffVelParams=diffVelParams->findNextBlock("DiffusiveFluxExpression") )
+      {
         setup_diffusive_velocity_expression<FieldT>( diffVelParams, primVarTag, turbDiffTag, factory, info );
       }
     }
@@ -334,21 +328,13 @@ namespace Wasatch{
 
     //__________________
     // Convective Fluxes
-    if( isStrong ){
-      for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
-          convFluxParams != 0;
-          convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
-        setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, volFracTag, "", factory, info );
-        if( !isConstDensity ){
-          setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, volFracTag, tagNames.star, factory, infoStar );
-        }        
+    for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
+        convFluxParams != 0;
+        convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
+      setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, volFracTag, "", factory, info );
+      if( !isConstDensity ){
+        setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, volFracTag, tagNames.star, factory, infoStar );
       }
-    }
-    else{
-      // Here we should use convective flux for scalaRHS in weak form
-      std::ostringstream msg;
-      msg << "ERROR: This part is not written for weak form yet." << endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
 
     //_____________
@@ -375,7 +361,6 @@ namespace Wasatch{
       return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag, info, srcTags, densityTag, volFracTag, xAreaFracTag, yAreaFracTag, zAreaFracTag, isConstDensity) );    
     }
     else{
-      // Here we should use diffusive flux for scalaRHS in weak form
       std::ostringstream msg;
       msg << "ERROR: This part is not written for weak form yet." << endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
