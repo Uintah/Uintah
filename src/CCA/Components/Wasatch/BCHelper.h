@@ -90,7 +90,7 @@ namespace Wasatch {
    *  @date   Sept 2013
    *
    *  @brief  Enum that specifies the types of boundary-conditions supported in Wasatch.
-   While it all boils down to setting a Dirichlet or Neumnann condition on the boundary.
+   We support Dirichlet and Neumnann condition on the boundary.
    */
   //****************************************************************************
   enum BndCondTypeEnum
@@ -118,15 +118,21 @@ namespace Wasatch {
    They can be thought of as physical, user-friendly boundaries types. These types, specified
    in the input file, will be used to make logical decisions on the sanity of boundary conditions
    specified by the user. They are also used to infer auxiliary boundary conditions.
+   
+   The boundary type is specified by the user through the input file, for example:
+   <Face side="x+" name="outlet" type="Outflow"/>
+   All types specified in the input file are Capitalized (first letter only).
+   If the user doesn't specify a type, then Wasatch will assume that the boundary type is USER, i.e.
+   the user specifies bcs on any quantity as long as Wasatch applies a bc on that quantity.
    */
   //****************************************************************************
   enum BndTypeEnum
   {
-    WALL,
-    VELOCITY,
-    OPEN,
-    OUTFLOW,
-    USER,     // user controls all bcs!
+    WALL,     ///< Stationary wall BC. Zero velocity (and momentum).
+    VELOCITY, ///< Velocity specification: can be used for inlets or moving walls.
+    OPEN,     ///< OPEN boundary condition. a bit complicated to explain but namely mimics a boundary open to the atmosphere.
+    OUTFLOW,  ///< OUTFLOW boundary condition. encourages the flow to exit and reduces reflections.
+    USER,     ///< User specified bc. The user can specify BCs on any quantity they desire, as long as Wasatch calls apply_boundary_condition on that quantity.
     INVALID
   };
   
