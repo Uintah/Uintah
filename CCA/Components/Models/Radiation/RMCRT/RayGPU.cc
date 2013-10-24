@@ -22,11 +22,13 @@
  * IN THE SOFTWARE.
  */
 
+#include <sci_defs/cuda_defs.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+#ifdef HAVE_CUDA
 #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
+#endif
 #include <Core/Grid/DbgOutput.h>
 
-#include <sci_defs/cuda_defs.h>
 
 #define BLOCKSIZE 16
 
@@ -51,8 +53,8 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
                       Task::WhichDW which_celltype_dw,
                       const int radCalc_freq)
 {
-
   if (event==Task::GPU) {
+#ifdef HAVE_CUDA
   cout << " top RayTraceGPU: " << endl;
   
   const Level* level = getLevel(patches);
@@ -198,5 +200,8 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
       cout << endl;
     }
   }  //end patch loop
+#endif
   } //end GPU task code
+
+
 }  // end GPU ray trace method

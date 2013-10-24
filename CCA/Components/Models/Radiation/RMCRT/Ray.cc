@@ -581,14 +581,15 @@ Ray::sched_rayTrace( const LevelP& level,
                      const int radCalc_freq )
 {
   std::string taskname = "Ray::rayTrace";
-#ifdef HAVE_CUDA
-  Task* tsk = scinew Task( taskname, this, &Ray::rayTraceGPU,
+  Task *tsk;
+  if (Parallel::usingDevice()) {
+    tsk = scinew Task( taskname, this, &Ray::rayTraceGPU,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
-  tsk->usesDevice(true);
-#else
-  Task* tsk = scinew Task( taskname, this, &Ray::rayTrace,
+    tsk->usesDevice(true);
+  } else {
+    tsk = scinew Task( taskname, this, &Ray::rayTrace,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
-#endif
+  }
 
   printSchedule(level,dbg,taskname);
 

@@ -259,7 +259,6 @@ namespace Uintah{
                      Task::WhichDW which_celltype_dw,
                      const int radCalc_freq );
 
-#ifdef HAVE_CUDA
       //______________________________________________________________________
       void rayTraceGPU( Task::CallBackEvent event,
                         const ProcessorGroup* pg,
@@ -273,7 +272,6 @@ namespace Uintah{
                         Task::WhichDW which_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw,
                         const int radCalc_freq);
-#endif
 
       //__________________________________
       void rayTrace_dataOnion( const ProcessorGroup* pc, 
