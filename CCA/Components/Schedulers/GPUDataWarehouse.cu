@@ -33,23 +33,35 @@ namespace Uintah {
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::get(const GPUGridVariableBase &var, char const* name, int patchID, int maltIndex)
+GPUDataWarehouse::get(const GPUGridVariableBase &var, char const* name, int patchID, int matlIndex)
 {
-  GPUDataWarehouse::dataItem* item=getItem(name, patchID, maltIndex);
-  if (item) var.setArray3(item->var_offset, item->var_size, item->var_ptr);
-  else printf("ERROR:\nGPUDataWarehouse::get( %s ) unknown variable from GPUDataWarehouse",name);
+  GPUDataWarehouse::dataItem* item=getItem(name, patchID, matlIndex);
+  if (item){
+    var.setArray3(item->var_offset, item->var_size, item->var_ptr);
+  }else{
+    printf("ERROR: GPUDataWarehouse::get( %s patchID: %i, matl: %i )  unknown variable\n",name, patchID, matlIndex);
+    exit (-1);
+  }
 }
 
+//______________________________________________________________________
+//
 HOST_DEVICE void
-GPUDataWarehouse::getModifiable(GPUGridVariableBase &var, char const* name, int patchID, int maltIndex)
+GPUDataWarehouse::getModifiable(GPUGridVariableBase &var, char const* name, int patchID, int matlIndex)
 {
-  GPUDataWarehouse::dataItem* item=getItem(name, patchID, maltIndex);
-  if (item) var.setArray3(item->var_offset, item->var_size, item->var_ptr);
-  else printf("ERROR:\nGPUDataWarehouse::getModifiable( %s )  unknown variable from GPUDataWarehouse",name);
+  GPUDataWarehouse::dataItem* item=getItem(name, patchID, matlIndex);
+  if (item) {
+    var.setArray3(item->var_offset, item->var_size, item->var_ptr);
+  }else{
+    printf("ERROR: GPUDataWarehouse::getModifiable( %s patchID: %i, matl: %i )  unknown variable\n",name, patchID, matlIndex);
+    exit (-1);
+  }
 }
 
+//______________________________________________________________________
+//
 HOST_DEVICE GPUDataWarehouse::dataItem* 
-GPUDataWarehouse::getItem(char const* name, int patchID, int maltIndex)
+GPUDataWarehouse::getItem(char const* name, int patchID, int matlIndex)
 {
 #ifdef __CUDA_ARCH__
   __shared__ int index;
@@ -72,7 +84,7 @@ GPUDataWarehouse::getItem(char const* name, int patchID, int maltIndex)
     char *s2 = &(d_varDB[i].label[0]);
     while (!(strmatch = *(unsigned char *) s1 - *(unsigned char *) s2) && *s2) ++s1, ++s2; //strcmp
 
-    if (strmatch==0 && d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex){
+    if (strmatch==0 && d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==matlIndex){
       index = i;
     }
     i=i+numThreads;
@@ -86,7 +98,7 @@ GPUDataWarehouse::getItem(char const* name, int patchID, int maltIndex)
   // cpu code
   int i= 0;
   while(i<numItems){
-    if (!strncmp(d_varDB[i].label, name, MAX_NAME) &&  d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex) {
+    if (!strncmp(d_varDB[i].label, name, MAX_NAME) &&  d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==matlIndex) {
       break;
     }
     i++;
