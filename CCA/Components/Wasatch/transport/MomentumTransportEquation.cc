@@ -751,8 +751,8 @@ namespace Wasatch{
     }
     
     if( !factory.have_entry( tagNames.pressuresrc ) ){
-      Expr::Tag densStarTag = Expr::Tag(densTag.name() + tagNames.star, Expr::CARRY_FORWARD);
-      Expr::Tag dens2StarTag = Expr::Tag(densTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD);
+      const Expr::Tag densStarTag  = Expr::Tag( densTag.name() + tagNames.star,       Expr::CARRY_FORWARD );
+      const Expr::Tag dens2StarTag = Expr::Tag( densTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD );
       Expr::TagList velStarTags = Expr::TagList();
       
       set_vel_star_tags( velTags_, velStarTags );

@@ -154,7 +154,6 @@ namespace Wasatch{
     if( !isConstDensity_ ){
       bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
     }
-            
   }
 
   //------------------------------------------------------------------
@@ -185,8 +184,6 @@ namespace Wasatch{
       
       bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
     }
-    
-    
   }
 
   //------------------------------------------------------------------
@@ -270,9 +267,9 @@ namespace Wasatch{
       primVarTag = Expr::Tag( primVarName, Expr::STATE_NONE );
 
       factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag, solnVarTag, densityTag));
-      if (!isConstDensity && hasConvection_) {
-        const Expr::Tag primVarStarTag (primVarTag.name() + tagNames.star, Expr::STATE_NONE);
-        const Expr::Tag solnVarStarTag (solnVarName + tagNames.star, Expr::STATE_NONE);
+      if( !isConstDensity && hasConvection_ ){
+        const Expr::Tag primVarStarTag( primVarTag.name() + tagNames.star, Expr::STATE_NONE );
+        const Expr::Tag solnVarStarTag( solnVarName + tagNames.star, Expr::STATE_NONE );
         const Expr::Tag densityStarTag( densityTag.name() + tagNames.star, Expr::CARRY_FORWARD );
         factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, solnVarStarTag, densityStarTag)); 
       }
@@ -325,7 +322,7 @@ namespace Wasatch{
         setup_diffusive_flux_expression<FieldT>( diffFluxParams, densityTag, primVarTag, isStrong, turbDiffTag, tagNames.star, factory, infoStar );
       }
     }
-    else{
+    else{ // constant density
       for( Uintah::ProblemSpecP diffVelParams=params->findBlock("DiffusiveFluxExpression");
           diffVelParams != 0;
           diffVelParams=diffVelParams->findNextBlock("DiffusiveFluxExpression") ){
@@ -338,24 +335,17 @@ namespace Wasatch{
     //__________________
     // Convective Fluxes
     if( isStrong ){
-      if( isConstDensity ){
-        for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
-             convFluxParams != 0;
-             convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
-          setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, volFracTag, "",factory, info );
-        }
-      }
-      else{
-        for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
-            convFluxParams != 0;
-            convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
-          setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, volFracTag, "", factory, info );
+      for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
+          convFluxParams != 0;
+          convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
+        setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, volFracTag, "", factory, info );
+        if( !isConstDensity ){
           setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, volFracTag, tagNames.star, factory, infoStar );
         }        
       }
     }
     else{
-      // Here we shoulld use diffusive flux for scalaRHS in weak form
+      // Here we should use convective flux for scalaRHS in weak form
       std::ostringstream msg;
       msg << "ERROR: This part is not written for weak form yet." << endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
