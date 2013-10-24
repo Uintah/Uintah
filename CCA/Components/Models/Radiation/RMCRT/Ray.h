@@ -169,7 +169,6 @@ namespace Uintah{
       //           -x      +x       -y       +y     -z     +z
       enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};
       
-      double _pi;
       double _Threshold;
       double _sigma;
       double _sigmaT4_thld;                  // threshold values for determining the extents of ROI
