@@ -101,6 +101,8 @@ namespace Wasatch{
     star, doubleStar;
     const Expr::Tag
     pressuresrc,
+    vardenalpha, vardenbeta,
+    divmomstar, drhodtstar,
     drhodt,drhodtnp1;
     
     // postprocessing-related tags
