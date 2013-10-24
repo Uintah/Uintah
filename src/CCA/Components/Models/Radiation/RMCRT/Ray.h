@@ -262,7 +262,8 @@ namespace Uintah{
 
 #ifdef HAVE_CUDA
       //______________________________________________________________________
-      void rayTraceGPU( const ProcessorGroup* pg,
+      void rayTraceGPU( Task::CallBackEvent event,
+                        const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,

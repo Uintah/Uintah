@@ -278,7 +278,8 @@ void UnifiedScheduler::initiateTask(DetailedTask * task,
 
 void UnifiedScheduler::runTask(DetailedTask * task,
                                int iteration,
-                               int t_id /*=0*/)
+                               int t_id /*=0*/,
+                               Task::CallBackEvent event)
 {
   TAU_PROFILE("UnifiedScheduler::runTask()", " ", TAU_USER);
 
@@ -299,7 +300,7 @@ void UnifiedScheduler::runTask(DetailedTask * task,
   }
   //const char* tag = AllocatorSetDefaultTag(task->getTask()->getName());
 
-  task->doit(d_myworld, dws, plain_old_dws);
+  task->doit(d_myworld, dws, plain_old_dws, event);
   //AllocatorSetDefaultTag(tag);
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
@@ -328,14 +329,12 @@ void UnifiedScheduler::runTask(DetailedTask * task,
   }
   dlbLock.unlock();
 
-  // For GPU tasks, we will call postMPISends() and done() from execute().
-  // This will be after we know a particular task has all D2H copies have completed.
-  if (!task->getTask()->usesDevice()) {
+  // For CPU and postGPU task runs, post MPI sends and call task->done;
+  if (event==Task::CPU || event==Task::postGPU) {
     if (Uintah::Parallel::usingMPI()) {
       postMPISends(task, iteration, t_id);
     }
     task->done(dws);  // should this be timed with taskstart? - BJW
-  }
   double teststart = Time::currentSeconds();
 
   // sendsLock.lock(); // Dd... could do better?
@@ -356,6 +355,7 @@ void UnifiedScheduler::runTask(DetailedTask * task,
     parentScheduler->mpi_info_.totalsend += mpi_info_.totalsend;
     parentScheduler->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
     parentScheduler->mpi_info_.totalreduce += mpi_info_.totalreduce;
+  }
   }
 
 }  // end runTask()
@@ -411,7 +411,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   if (!Uintah::Parallel::usingMPI() && !Uintah::Parallel::usingDevice()) {
     for (int i = 0; i < ntasks; i++) {
       DetailedTask* dtask = dts->getTask(i);
-      runTask(dtask, iteration, -1);
+      runTask(dtask, iteration, -1, Task::CPU);
     }
     finalizeTimestep();
     return;
@@ -884,6 +884,19 @@ void UnifiedScheduler::runTasks(int t_id)
           readyTask = dts->getNextCompletionPendingDeviceTask();
           havework = true;
           gpuPending = true;
+          numTasksDone++;
+          if (taskorder.active()) {
+            if (d_myworld->myrank() == d_myworld->size() / 2) {
+              cerrLock.lock();
+              taskorder << d_myworld->myrank() << " Running task static order: " << readyTask->getSaticOrder() << " , scheduled order: "
+                      << numTasksDone << endl;
+              cerrLock.unlock();
+            }
+          }
+          phaseTasksDone[readyTask->getTask()->d_phase]++;
+          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
+            currphase++;
+          }
           break;
         }
       }
@@ -942,31 +955,18 @@ void UnifiedScheduler::runTasks(int t_id)
         }
         dts->addInitiallyReadyDeviceTask(readyTask);
       } else if (gpuRunReady) {
-        runTask(readyTask, currentIteration, t_id);
+        runTask(readyTask, currentIteration, t_id, Task::GPU);
         postD2HCopies(readyTask);
         dts->addCompletionPendingDeviceTask(readyTask);
       } else if (gpuPending) {
+        // run post GPU part of task 
+        runTask(readyTask, currentIteration, t_id, Task::postGPU);
         // recycle this task's D2H copies streams and events
         reclaimStreams(readyTask);
-        postMPISends(readyTask, currentIteration, t_id);
-        numTasksDone++;
-        if (taskorder.active()){
-          if (d_myworld->myrank() == d_myworld->size()/2) {
-            cerrLock.lock();
-            taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " , scheduled order: "
-                << numTasksDone << endl;
-            cerrLock.unlock();
-          }
-        }
-        phaseTasksDone[readyTask->getTask()->d_phase]++;
-        while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
-          currphase++;
-        }
-        readyTask->done(dws);
       }
 #endif
       else {
-        runTask(readyTask, currentIteration, t_id);
+        runTask(readyTask, currentIteration, t_id, Task::CPU);
         printTaskLevels(d_myworld, taskLevel_dbg, readyTask);
       }
     } else if (pendingMPIMsgs > 0) {

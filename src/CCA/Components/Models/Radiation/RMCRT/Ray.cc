@@ -584,9 +584,9 @@ Ray::sched_rayTrace( const LevelP& level,
 {
   std::string taskname = "Ray::rayTrace";
 #ifdef HAVE_CUDA
-  std::string gputaskname = "Ray::rayTraceGPU";
-  Task* tsk = scinew Task( &Ray::rayTraceGPU, gputaskname, taskname, this, &Ray::rayTrace,
+  Task* tsk = scinew Task( taskname, this, &Ray::rayTraceGPU,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+  tsk->usesDevice(true);
 #else
   Task* tsk = scinew Task( taskname, this, &Ray::rayTrace,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
