@@ -170,6 +170,13 @@ namespace Wasatch{
 
     ~ScalarTransportEquation();
 
+    /**
+     *  \brief Used to check the validity of the boundary conditions specified by the user at a given
+     boundary and also to infer/add new BCs on the type of boundary. 
+     Example: at a stationary impermeable wall, we can immediately infer zero-velocity boundary 
+     conditions and check whether the user has specified any velocity BCs at that boundary.
+     See examples in the momentum transport equation.
+     */
     void verify_boundary_conditions(BCHelper& bcHelper,
                                     GraphCategories& graphCat){}
     
