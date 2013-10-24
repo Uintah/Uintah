@@ -75,35 +75,33 @@ class ProcessorGroup;
  ****************************************/
 
 class Task {
-
+ 
+  public: 
+  enum CallBackEvent {
+      CPU,   //<- normal CPU task, happens when a GPU enabled task runs on CPU
+      preGPU, // <- pre GPU kernel callback, happens before CPU->GPU copy (reserved, not implemented yet... )
+      GPU,    //<-  GPU kernel callback, happens after dw: CPU->GPU copy, kernel launch should be queued in this callback
+      postGPU //<- post GPU kernel callback, happens after dw: GPU->CPU copy but before MPI sends.
+    };
+ 
   protected:
 
-    // base CPU Action class
+    // base Action class
     class ActionBase {
       public:
         virtual ~ActionBase();
-        virtual void doit(const ProcessorGroup* pg,
+        virtual void doit(CallBackEvent event,
+                          const ProcessorGroup* pg,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
-                          DataWarehouse* toDW) = 0;
-    };
-
-    // base Device Action class
-    class ActionDeviceBase {
-      public:
-        virtual ~ActionDeviceBase();
-        virtual void doitDevice(const ProcessorGroup* pg,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* fromDW,
-                                DataWarehouse* toDW,
-                                void* stream) = 0;
+                          DataWarehouse* toDW,
+                          void*  stream) = 0;
     };
 
   private:
 
-    // begin CPU Action constructors
+    // begin old CPU only Action constructors
     template<class T>
     class Action : public ActionBase {
 
@@ -130,11 +128,13 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(const ProcessorGroup* pg,
+        virtual void doit(CallBackEvent event,
+                          const ProcessorGroup* pg,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
-                          DataWarehouse* toDW)
+                          DataWarehouse* toDW,
+                          void* stream)
         {
           (ptr->*pmf)(pg, patches, matls, fromDW, toDW);
         }
@@ -170,11 +170,13 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(const ProcessorGroup* pg,
+        virtual void doit(CallBackEvent event,
+                          const ProcessorGroup* pg,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
-                          DataWarehouse* toDW)
+                          DataWarehouse* toDW,
+                          void *stream)
         {
           (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1);
         }
@@ -214,11 +216,13 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(const ProcessorGroup* pg,
+        virtual void doit(CallBackEvent event,
+                          const ProcessorGroup* pg,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
-                          DataWarehouse* toDW)
+                          DataWarehouse* toDW,
+                          void *stream)
         {
           (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2);
         }
@@ -262,11 +266,13 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(const ProcessorGroup* pg,
+        virtual void doit(CallBackEvent event,
+                          const ProcessorGroup* pg,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
-                          DataWarehouse* toDW)
+                          DataWarehouse* toDW,
+                          void* stream)
         {
           (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3);
         }
@@ -314,11 +320,13 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(const ProcessorGroup* pg,
+        virtual void doit(CallBackEvent event,
+                          const ProcessorGroup* pg,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
-                          DataWarehouse* toDW)
+                          DataWarehouse* toDW,
+                          void *stream)
         {
           (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4);
         }
@@ -370,22 +378,25 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doit(const ProcessorGroup* pg,
+        virtual void doit(CallBackEvent event,
+                          const ProcessorGroup* pg,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
-                          DataWarehouse* toDW)
+                          DataWarehouse* toDW,
+                          void* stream)
         {
           (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
         }
     };  // end Action5
-    // end CPU Action constructors
+    // end old CPU only Action constructors
 
     // begin Device Action constructors
     template<class T>
-    class ActionDevice : public ActionDeviceBase {
+    class ActionDevice : public ActionBase {
         T* ptr;
-        void (T::*pmfdevice)(const ProcessorGroup* pg,
+        void (T::*pmf)(CallBackEvent event,
+                             const ProcessorGroup* pg,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
                              DataWarehouse* fromDW,
@@ -394,13 +405,14 @@ class Task {
       public:
         // class ActionDevice
         ActionDevice(T* ptr,
-                     void (T::*pmfdevice)(const ProcessorGroup* pg,
+                     void (T::*pmf)(CallBackEvent event,
+                                          const ProcessorGroup* pg,
                                           const PatchSubset* patches,
                                           const MaterialSubset* matls,
                                           DataWarehouse* fromDW,
                                           DataWarehouse* toDW,
                                           void* stream))
-            : ptr(ptr), pmfdevice(pmfdevice)
+            : ptr(ptr), pmf(pmf)
         {
         }
         virtual ~ActionDevice()
@@ -409,21 +421,23 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doitDevice(const ProcessorGroup* pg,
+        virtual void doit(CallBackEvent event,
+                                const ProcessorGroup* pg,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
                                 void* stream)
         {
-          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, stream);
+          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, stream);
         }
     };  // end class ActionDevice
 
     template<class T, class Arg1>
-    class ActionDevice1 : public ActionDeviceBase {
+    class ActionDevice1 : public ActionBase {
         T* ptr;
-        void (T::*pmfdevice)(const ProcessorGroup* pg,
+        void (T::*pmf)(CallBackEvent event,
+                             const ProcessorGroup* pg,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
                              DataWarehouse* fromDW,
@@ -434,7 +448,8 @@ class Task {
       public:
         // class ActionDevice1
         ActionDevice1(T* ptr,
-                      void (T::*pmfdevice)(const ProcessorGroup* pg,
+                      void (T::*pmf)(CallBackEvent event,
+                                           const ProcessorGroup* pg,
                                            const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            DataWarehouse* fromDW,
@@ -442,7 +457,7 @@ class Task {
                                            void* stream,
                                            Arg1 arg1),
                       Arg1 arg1)
-            : ptr(ptr), pmfdevice(pmfdevice), arg1(arg1)
+            : ptr(ptr), pmf(pmf), arg1(arg1)
         {
         }
         virtual ~ActionDevice1()
@@ -451,21 +466,23 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doitDevice(const ProcessorGroup* pg,
+        virtual void doit(CallBackEvent event,
+                                const ProcessorGroup* pg,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
                                 void* stream)
         {
-          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, stream, arg1);
+          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, stream, arg1);
         }
     };  // end class ActionDevice1
 
     template<class T, class Arg1, class Arg2>
-    class ActionDevice2 : public ActionDeviceBase {
+    class ActionDevice2 : public ActionBase {
         T* ptr;
-        void (T::*pmfdevice)(const ProcessorGroup* pg,
+        void (T::*pmf)(CallBackEvent event,
+                             const ProcessorGroup* pg,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
                              DataWarehouse* fromDW,
@@ -478,7 +495,8 @@ class Task {
       public:
         // class ActionDevice2
         ActionDevice2(T* ptr,
-                      void (T::*pmfdevice)(const ProcessorGroup* pg,
+                      void (T::*pmf)(CallBackEvent event,
+                                           const ProcessorGroup* pg,
                                            const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            DataWarehouse* fromDW,
@@ -488,7 +506,7 @@ class Task {
                                            Arg2 arg2),
                       Arg1 arg1,
                       Arg2 arg2)
-            : ptr(ptr), pmfdevice(pmfdevice), arg1(arg1), arg2(arg2)
+            : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2)
         {
         }
         virtual ~ActionDevice2()
@@ -497,21 +515,23 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doitDevice(const ProcessorGroup* pg,
+        virtual void doit(CallBackEvent event,
+                                const ProcessorGroup* pg,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
                                 void* stream)
         {
-          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, stream, arg1, arg2);
+          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, stream, arg1, arg2);
         }
     };  // end class ActionDevice2
 
     template<class T, class Arg1, class Arg2, class Arg3>
-    class ActionDevice3 : public ActionDeviceBase {
+    class ActionDevice3 : public ActionBase {
         T* ptr;
-        void (T::*pmfdevice)(const ProcessorGroup* pg,
+        void (T::*pmf)(CallBackEvent event,
+                             const ProcessorGroup* pg,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
                              DataWarehouse* fromDW,
@@ -526,7 +546,8 @@ class Task {
       public:
         // class ActionDevice3
         ActionDevice3(T* ptr,
-                      void (T::*pmfdevice)(const ProcessorGroup* pg,
+                      void (T::*pmf)(CallBackEvent event,
+                                           const ProcessorGroup* pg,
                                            const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            DataWarehouse* fromDW,
@@ -538,7 +559,7 @@ class Task {
                       Arg1 arg1,
                       Arg2 arg2,
                       Arg3 arg3)
-            : ptr(ptr), pmfdevice(pmfdevice), arg1(arg1), arg2(arg2), arg3(arg3)
+            : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3)
         {
         }
         virtual ~ActionDevice3()
@@ -547,21 +568,23 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doitDevice(const ProcessorGroup* pg,
+        virtual void doit(CallBackEvent event,
+                                const ProcessorGroup* pg,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
                                 void* stream)
         {
-          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, stream, arg1, arg2, arg3);
+          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, stream, arg1, arg2, arg3);
         }
     };  // end class ActionDevice3
 
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
-    class ActionDevice4 : public ActionDeviceBase {
+    class ActionDevice4 : public ActionBase {
         T* ptr;
-        void (T::*pmfdevice)(const ProcessorGroup* pg,
+        void (T::*pmf)(CallBackEvent event,
+                             const ProcessorGroup* pg,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
                              DataWarehouse* fromDW,
@@ -578,7 +601,8 @@ class Task {
       public:
         // class ActionDevice4
         ActionDevice4(T* ptr,
-                      void (T::*pmfdevice)(const ProcessorGroup* pg,
+                      void (T::*pmf)(CallBackEvent event,
+                                           const ProcessorGroup* pg,
                                            const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            DataWarehouse* fromDW,
@@ -592,7 +616,7 @@ class Task {
                       Arg2 arg2,
                       Arg3 arg3,
                       Arg4 arg4)
-            : ptr(ptr), pmfdevice(pmfdevice), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4)
+            : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4)
         {
         }
         virtual ~ActionDevice4()
@@ -601,21 +625,23 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doitDevice(const ProcessorGroup* pg,
+        virtual void doit(CallBackEvent event,
+                                const ProcessorGroup* pg,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
                                 void* stream)
         {
-          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, stream, arg1, arg2, arg3, arg4);
+          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, stream, arg1, arg2, arg3, arg4);
         }
     };  // end class ActionDevice4
 
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-    class ActionDevice5 : public ActionDeviceBase {
+    class ActionDevice5 : public ActionBase {
         T* ptr;
-        void (T::*pmfdevice)(const ProcessorGroup* pg,
+        void (T::*pmf)(CallBackEvent event,
+                             const ProcessorGroup* pg,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
                              DataWarehouse* fromDW,
@@ -634,7 +660,8 @@ class Task {
       public:
         // class ActionDevice5
         ActionDevice5(T* ptr,
-                      void (T::*pmfdevice)(const ProcessorGroup* pg,
+                      void (T::*pmf)(CallBackEvent event,
+                                           const ProcessorGroup* pg,
                                            const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            DataWarehouse* fromDW,
@@ -650,7 +677,7 @@ class Task {
                       Arg3 arg3,
                       Arg4 arg4,
                       Arg5 arg5)
-            : ptr(ptr), pmfdevice(pmfdevice), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4), arg5(arg5)
+            : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4), arg5(arg5)
         {
         }
         virtual ~ActionDevice5()
@@ -659,14 +686,15 @@ class Task {
 
         //////////
         // Insert Documentation Here:
-        virtual void doitDevice(const ProcessorGroup* pg,
+        virtual void doit(CallBackEvent event,
+                                const ProcessorGroup* pg,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
                                 void* stream)
         {
-          (ptr->*pmfdevice)(pg, patches, matls, fromDW, toDW, stream, arg1, arg2, arg3, arg4, arg5);
+          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, stream, arg1, arg2, arg3, arg4, arg5);
         }
     };  // end class ActionDevice5
     // end Device Action constructors
@@ -685,17 +713,19 @@ class Task {
     enum TaskType {
       Normal, Reduction, InitialSend, OncePerProc,  // make sure to pass a PerProcessorPatchSet to the addTask function
       Output
-    };
+    };  
+    
+
 
     Task(const std::string& taskName,
          TaskType type)
-        : d_taskName(taskName), d_taskNameDevice(""), d_action(0), d_actionDevice(NULL)
+        : d_taskName(taskName), d_action(0)
     {
       d_tasktype = type;
       initialize();
     }
 
-    // begin CPU Task constructors
+    // begin CPU only Task constructors
     template<class T>
     Task(const std::string& taskName,
          T* ptr,
@@ -704,7 +734,7 @@ class Task {
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW))
-        : d_taskName(taskName), d_taskNameDevice(""), d_action(scinew Action<T>(ptr, pmf)), d_actionDevice(NULL)
+        : d_taskName(taskName), d_action(scinew Action<T>(ptr, pmf))
     {
       d_tasktype = Normal;
       initialize();
@@ -720,7 +750,7 @@ class Task {
                         DataWarehouse* toDW,
                         Arg1 arg1),
          Arg1 arg1)
-        : d_taskName(taskName), d_taskNameDevice(""), d_action(scinew Action1<T, Arg1>(ptr, pmf, arg1)), d_actionDevice(NULL)
+        : d_taskName(taskName), d_action(scinew Action1<T, Arg1>(ptr, pmf, arg1))
     {
       d_tasktype = Normal;
       initialize();
@@ -740,9 +770,7 @@ class Task {
          Arg2 arg2)
         :
           d_taskName(taskName),
-            d_taskNameDevice(""),
-            d_action(scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2)),
-            d_actionDevice(NULL)
+            d_action(scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2))
     {
       d_tasktype = Normal;
       initialize();
@@ -764,9 +792,7 @@ class Task {
          Arg3 arg3)
         :
           d_taskName(taskName),
-            d_taskNameDevice(""),
-            d_action(scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3)),
-            d_actionDevice(NULL)
+            d_action(scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
     {
       d_tasktype = Normal;
       initialize();
@@ -790,9 +816,7 @@ class Task {
          Arg4 arg4)
         :
           d_taskName(taskName),
-            d_taskNameDevice(""),
-            d_action(scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4)),
-            d_actionDevice(NULL)
+            d_action(scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
     {
       d_tasktype = Normal;
       initialize();
@@ -818,122 +842,87 @@ class Task {
          Arg5 arg5)
         :
           d_taskName(taskName),
-            d_taskNameDevice(""),
-            d_action(scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5)),
-            d_actionDevice(NULL)
+            d_action(scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
     {
       d_tasktype = Normal;
       initialize();
     }
-    // end CPU Task constructors
+    // end CPU only Task constructors
 
     // begin Device Task constructors
     template<class T>
-    Task(void (T::*pmfdevice)(const ProcessorGroup* pg,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* fromDW,
-                              DataWarehouse* toDW,
-                              void* stream),
-         const std::string& taskNameDevice,
+    Task(
          const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW))
-        :
-          d_taskName(taskName),
-            d_taskNameDevice(taskNameDevice),
-            d_action(scinew Action<T>(ptr, pmf)),
-            d_actionDevice(scinew ActionDevice<T>(ptr, pmfdevice))
-    {
-      initialize();
-      d_tasktype = Normal;
-      d_usesDevice = Parallel::usingDevice() && d_actionDevice;
-    }
-
-    template<class T, class Arg1>
-    Task(void (T::*pmfdevice)(const ProcessorGroup* pg,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* fromDW,
-                              DataWarehouse* toDW,
-                              void* stream,
-                              Arg1 arg1),
-         const std::string& taskNameDevice,
-         const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(const ProcessorGroup* pg,
+         void (T::*pmf)(CallBackEvent event,
+                        const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
+                        void* stream))
+        :
+          d_taskName(taskName),
+            d_action(scinew ActionDevice<T>(ptr, pmf))
+    {
+      initialize();
+      d_tasktype = Normal;
+    }
+
+    template<class T, class Arg1>
+    Task(
+         const std::string& taskName,
+         T* ptr,
+         void (T::*pmf)(CallBackEvent event,
+                        const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        void *stream,
                         Arg1 arg1),
          void* stream,
          Arg1 arg1)
         :
           d_taskName(taskName),
-            d_taskNameDevice(taskNameDevice),
-            d_action(scinew Action1<T, Arg1>(ptr, pmf, arg1)),
-            d_actionDevice(scinew ActionDevice1<T, Arg1>(ptr, pmfdevice, arg1))
+            d_action(scinew ActionDevice1<T, Arg1>(ptr, pmf, arg1))
     {
       initialize();
       d_tasktype = Normal;
-      d_usesDevice = Parallel::usingDevice() && d_actionDevice;
     }
 
     template<class T, class Arg1, class Arg2>
-    Task(void (T::*pmfdevice)(const ProcessorGroup* pg,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* fromDW,
-                              DataWarehouse* toDW,
-                              void* stream,
-                              Arg1 arg1,
-                              Arg2 arg2),
-         const std::string& taskNameDevice,
-         const std::string& taskName,
+    Task(const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(const ProcessorGroup* pg,
+         void (T::*pmf)(CallBackEvent event,
+                        const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
+                        void *stream,
                         Arg1 arg1,
                         Arg2 arg2),
          Arg1 arg1,
          Arg2 arg2)
         :
           d_taskName(taskName),
-            d_taskNameDevice(taskNameDevice),
-            d_action(scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2)),
-            d_actionDevice(scinew ActionDevice2<T, Arg1, Arg2>(ptr, pmfdevice, arg1, arg2))
+            d_action(scinew ActionDevice2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2))
     {
       initialize();
       d_tasktype = Normal;
-      d_usesDevice = Parallel::usingDevice() && d_actionDevice;
     }
 
     template<class T, class Arg1, class Arg2, class Arg3>
-    Task(void (T::*pmfdevice)(const ProcessorGroup* pg,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* fromDW,
-                              DataWarehouse* toDW,
-                              void* stream,
-                              Arg1 arg1,
-                              Arg2 arg2,
-                              Arg3 arg3),
-         const std::string& taskNameDevice,
-         const std::string& taskName,
+    Task(const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(const ProcessorGroup* pg,
+         void (T::*pmf)(CallBackEvent event,
+                        const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
+                        void *stream,
                         Arg1 arg1,
                         Arg2 arg2,
                         Arg3 arg3),
@@ -942,34 +931,22 @@ class Task {
          Arg3 arg3)
         :
           d_taskName(taskName),
-            d_taskNameDevice(taskNameDevice),
-            d_action(scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3)),
-            d_actionDevice(scinew ActionDevice3<T, Arg1, Arg2, Arg3>(ptr, pmfdevice, arg1, arg2, arg3))
+            d_action(scinew ActionDevice3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
     {
       initialize();
       d_tasktype = Normal;
-      d_usesDevice = Parallel::usingDevice() && d_actionDevice;
     }
 
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
-    Task(void (T::*pmfdevice)(const ProcessorGroup* pg,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* fromDW,
-                              DataWarehouse* toDW,
-                              void* stream,
-                              Arg1 arg1,
-                              Arg2 arg2,
-                              Arg3 arg3,
-                              Arg4 arg4),
-         const std::string& taskNameDevice,
-         const std::string& taskName,
+    Task(const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(const ProcessorGroup* pg,
+         void (T::*pmf)(CallBackEvent event,
+                        const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
+                        void *stream,
                         Arg1 arg1,
                         Arg2 arg2,
                         Arg3 arg3,
@@ -980,35 +957,22 @@ class Task {
          Arg4 arg4)
         :
           d_taskName(taskName),
-            d_taskNameDevice(taskNameDevice),
-            d_action(scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4)),
-            d_actionDevice(scinew ActionDevice4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmfdevice, arg1, arg2, arg3, arg4))
+            d_action(scinew ActionDevice4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
     {
       initialize();
       d_tasktype = Normal;
-      d_usesDevice = Parallel::usingDevice() && d_actionDevice;
     }
 
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-    Task(void (T::*pmfdevice)(const ProcessorGroup* pg,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* fromDW,
-                              DataWarehouse* toDW,
-                              void* stream,
-                              Arg1 arg1,
-                              Arg2 arg2,
-                              Arg3 arg3,
-                              Arg4 arg4,
-                              Arg5 arg5),
-         const std::string& taskNameDevice,
-         const std::string& taskName,
+    Task(const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(const ProcessorGroup* pg,
+         void (T::*pmf)(CallBackEvent event,
+                        const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
+                        void *stream,
                         Arg1 arg1,
                         Arg2 arg2,
                         Arg3 arg3,
@@ -1021,13 +985,10 @@ class Task {
          Arg5 arg5)
         :
           d_taskName(taskName),
-            d_taskNameDevice(taskNameDevice),
-            d_action(scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5)),
-            d_actionDevice(scinew ActionDevice5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmfdevice, arg1, arg2, arg3, arg4, arg5))
+            d_action(scinew ActionDevice5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
     {
       initialize();
       d_tasktype = Normal;
-      d_usesDevice = Parallel::usingDevice() && d_actionDevice;
     }
     // end Device Task constructors
 
@@ -1072,7 +1033,7 @@ class Task {
       OtherGridDomain  // for when we copy data to new grid after a regrid.
     };
 
-    //////////
+   //////////
     // Most general case
     void requires(WhichDW,
                   const VarLabel*,
@@ -1271,22 +1232,16 @@ class Task {
 
     //////////
     // Tells the task to actually execute the function assigned to it.
-    virtual void doit(const ProcessorGroup* pg,
+    virtual void doit(CallBackEvent event,
+                      const ProcessorGroup* pg,
                       const PatchSubset*,
                       const MaterialSubset*,
-                      vector<DataWarehouseP>& dws);
-
-    //////////
-    // Tells the task to actually execute the function assigned to it on the specified device.
-    virtual void doitDevice(const ProcessorGroup* pg,
-                            const PatchSubset*,
-                            const MaterialSubset*,
-                            vector<DataWarehouseP>& dws,
-                            void* stream);
+                      vector<DataWarehouseP>& dws,
+                      void *stream);
 
     inline const string& getName() const
     {
-      return (d_usesDevice ? d_taskNameDevice : d_taskName);
+      return d_taskName;
     }
 
     inline const PatchSet* getPatchSet() const
@@ -1491,11 +1446,9 @@ class Task {
     //////////
     // Insert Documentation Here:
     std::string d_taskName;
-    std::string d_taskNameDevice;
 
   protected:
     ActionBase* d_action;
-    ActionDeviceBase* d_actionDevice;
 
   private:
     Dependency* comp_head;

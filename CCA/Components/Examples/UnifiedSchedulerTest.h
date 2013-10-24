@@ -28,6 +28,7 @@
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Task.h>
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 
 #include <sci_defs/cuda_defs.h>
@@ -104,11 +105,13 @@ namespace Uintah {
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
 
-      void timeAdvanceCPU(const ProcessorGroup* pg,
+      void timeAdvanceUnified(Task::CallBackEvent event,
+                          const ProcessorGroup* pg,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
+                          DataWarehouse* new_dw,
+                          void* stream);
 
       void timeAdvance1DP(const ProcessorGroup*,
                           const PatchSubset* patches,
@@ -121,13 +124,6 @@ namespace Uintah {
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
-
-      void timeAdvanceGPU(const ProcessorGroup* pg,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw,
-                          void* stream);
 
       UnifiedSchedulerTest(const UnifiedSchedulerTest& gst);
 

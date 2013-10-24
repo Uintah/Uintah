@@ -38,7 +38,8 @@ static DebugStream dbggpu("RAYGPU", false);
 //---------------------------------------------------------------------------
 // Method: The GPU ray tracer - setup for ray trace kernel
 //---------------------------------------------------------------------------
-void Ray::rayTraceGPU(const ProcessorGroup* pg,
+void Ray::rayTraceGPU(Task::CallBackEvent event,
+                      const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
@@ -51,6 +52,7 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
                       const int radCalc_freq)
 {
 
+  if (event==Task::GPU) {
   cout << " top RayTraceGPU: " << endl;
   
   const Level* level = getLevel(patches);
@@ -196,4 +198,5 @@ void Ray::rayTraceGPU(const ProcessorGroup* pg,
       cout << endl;
     }
   }  //end patch loop
+  } //end GPU task code
 }  // end GPU ray trace method
