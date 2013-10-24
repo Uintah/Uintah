@@ -723,15 +723,13 @@ namespace Wasatch{
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
 
-    Expr::Tag solnVarCorrectedTag;
     if( convFluxTag == Expr::Tag() ){
       convFluxTag = Expr::Tag( solnVarTag.name() + "_convective_flux_" + dir + suffix, Expr::STATE_NONE );
       // make new Tag for solnVar by adding the appropriate suffix ( "_*" or nothing ). This
       // is because we need the ScalarRHS at time step n+1 for our pressure projection method
-      if (suffix=="")
-        solnVarCorrectedTag = Expr::Tag(solnVarTag.name(), Expr::STATE_N);
-      else
-        solnVarCorrectedTag = Expr::Tag(solnVarTag.name() + suffix, Expr::STATE_NONE);
+      Expr::Tag solnVarCorrectedTag;
+      if (suffix=="") solnVarCorrectedTag = Expr::Tag(solnVarTag.name(),        Expr::STATE_N   );
+      else            solnVarCorrectedTag = Expr::Tag(solnVarTag.name()+suffix, Expr::STATE_NONE);
 
       Expr::ExpressionBuilder* builder = NULL;
 
@@ -867,7 +865,6 @@ namespace Wasatch{
   void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
                                         const Expr::Tag densityTag,
                                         const Expr::Tag primVarTag,
-                                        const bool isStrong,
                                         const Expr::Tag turbDiffTag,  
                                         const std::string suffix,
                                         Expr::ExpressionFactory& factory,
@@ -1011,7 +1008,6 @@ namespace Wasatch{
        Uintah::ProblemSpecP diffFluxParams,                     \
        const Expr::Tag densityTag,                              \
        const Expr::Tag primVarTag,                              \
-       const bool isStrong,                                     \
        const Expr::Tag turbDiffTag,                             \
        const std::string suffix,                                \
        Expr::ExpressionFactory& factory,                        \

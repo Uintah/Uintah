@@ -192,7 +192,6 @@ namespace Wasatch{
   void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
                                         const Expr::Tag densityTag,
                                         const Expr::Tag primVarTag,
-                                        const bool isStrong,
                                         const Expr::Tag turbDiffTag, 
                                         const std::string suffix,
                                         Expr::ExpressionFactory& factory,
