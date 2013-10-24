@@ -260,7 +260,7 @@ namespace Wasatch{
     // make sure that extra cell and periodicity are consistent
     bool isPeriodic = periodicityVector.x() == 1 || periodicityVector.y() == 1 || periodicityVector.z() == 1;
     
-    std::cout << "periodicity = " << isPeriodic << std::endl;
+    proc0cout << "periodicity = " << isPeriodic << std::endl;
     
     if( !foundExtraCells && !isPeriodic ){
       msg << endl
