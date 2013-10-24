@@ -614,8 +614,8 @@ namespace Wasatch{
     EquationAdaptors adaptors;
     EqnTimestepAdaptorBase* adaptor = NULL;
     TransportEquation* momtranseq = NULL;
-
-    std::cout << "Parsing moment transport equations\n";
+    
+    proc0cout << "Parsing moment transport equations\n";
     GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION];
     GraphHelper* const icGraphHelper   = gc[INITIALIZATION  ];
     Expr::TagList transportedMomentTags;
