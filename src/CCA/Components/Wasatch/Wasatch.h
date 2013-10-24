@@ -27,8 +27,8 @@
 
    \mainpage
 
-   \author James C. Sutherland
-   \date June, 2010
+   \author James C. Sutherland, Tony Saad
+   \date June, 2010 - present
 
    Wasatch is a Uintah component that interfaces to the Expression
    library and SpatialOps library to facilitate more rapid

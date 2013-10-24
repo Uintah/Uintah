@@ -121,7 +121,7 @@ public:
              const Expr::Tag& xAreaFracTag,
              const Expr::Tag& yAreaFracTag,
              const Expr::Tag& zAreaFracTag,
-             const bool isConstDensity);
+             const bool isConstDensity );
 
     /**
      *  \brief Constructs a builder for a ScalarRHS object. This is being
