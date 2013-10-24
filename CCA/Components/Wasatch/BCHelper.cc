@@ -878,6 +878,7 @@ namespace Wasatch {
               modExpr.set_ghost_points( get_extra_bnd_mask<FieldT>(myBndSpec, patchID) );
               modExpr.set_interior_coef( ci );
               modExpr.set_interior_points( get_interior_bnd_mask<FieldT>(myBndSpec,patchID) );
+              // do not delete this. this could be needed for some outflow/open boundary conditions
               //modExpr.set_interior_edge_points( get_edge_mask(myBndSpec,patchID) );
             }
           }
