@@ -15,17 +15,9 @@
   <Wasatch>
 
     <Density>
-      <IsConstant>true</IsConstant>
-      <NameTag name="rho" state="STATE_NONE" /> 
+      <Constant value="1.0" name="rho"/> 
     </Density>
 
-    <!-- Set a constant density to be used by the source term -->
-    <BasicExpression type="SVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="rho" state="STATE_NONE" />
-      <Constant> 1.0 </Constant>      
-    </BasicExpression>
-    
     <!-- Set the initial condition expression for phi1 -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
