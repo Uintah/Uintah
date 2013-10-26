@@ -172,11 +172,11 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
   for( std::vector<Expr::Tag>::const_iterator isrc=srcTags_.begin(); isrc!=srcTags_.end(); ++isrc ){
     if( isrc->context() != Expr::INVALID_CONTEXT ) {
       srcTerm_.push_back( &scalarFM.field_ref( *isrc ) );
-      if (isConstDensity_){
-        rho_ = &sVolFM.field_ref( densityTag_ );
-      }
     }
   }
+
+  if( isConstDensity_ && (srcTerm_.size()>0 || !strongForm_) )
+    rho_ = &sVolFM.field_ref( densityTag_ );
 
   if( !strongForm_ ){
     phi_    = &fml.field_ref<FieldT>( phiTag_ );
@@ -201,7 +201,7 @@ void ScalarRHS<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
     if( doZDir_ )  exprDeps.requires_expression( diffTagZ_ );
   }
 
-  if( haveVolFrac_   ) exprDeps.requires_expression( volFracTag_   );
+  if( haveVolFrac_              ) exprDeps.requires_expression( volFracTag_   );
   if( doXDir_ && haveXAreaFrac_ ) exprDeps.requires_expression( xAreaFracTag_ );
   if( doYDir_ && haveYAreaFrac_ ) exprDeps.requires_expression( yAreaFracTag_ );
   if( doZDir_ && haveZAreaFrac_ ) exprDeps.requires_expression( zAreaFracTag_ );
@@ -209,14 +209,15 @@ void ScalarRHS<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
   for( std::vector<Expr::Tag>::const_iterator isrc=srcTags_.begin(); isrc!=srcTags_.end(); ++isrc ){
     if( isrc->context() != Expr::INVALID_CONTEXT ){
       exprDeps.requires_expression( *isrc );
-      if ( isConstDensity_ )
-        exprDeps.requires_expression( densityTag_ );
+      if( isConstDensity_ ) exprDeps.requires_expression( densityTag_ );
     }
   }
 
+
   if( !strongForm_ ){
-    exprDeps.requires_expression( drhodtTag_ );
-    exprDeps.requires_expression( phiTag_    );
+    exprDeps.requires_expression( densityTag_ );
+    exprDeps.requires_expression( drhodtTag_  );
+    exprDeps.requires_expression( phiTag_     );
   }
 }
 
@@ -256,52 +257,27 @@ void ScalarRHS<FieldT>::evaluate()
   if( doXDir_ && doYDir_ && doZDir_ && haveConvection_ && haveDiffusion_ ){
     // inline everything
     if( haveXAreaFrac_ ){ // previous error checking enforces that y and z area fractions are also present
-      if( strongForm_ )
-        rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * ( *xConvFlux_ + *xDiffFlux_ ) )
-                -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * ( *yConvFlux_ + *yDiffFlux_ ) )
-                -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * ( *zConvFlux_ + *zDiffFlux_ ) );
-      else
-        rhs <<= - *rho_ * (*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xConvFlux_ ) - (*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xDiffFlux_ )
-                - *rho_ * (*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yConvFlux_ ) - (*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yDiffFlux_ )
-                - *rho_ * (*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zConvFlux_ ) - (*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zDiffFlux_ );
+      rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * ( *xConvFlux_ + *xDiffFlux_ ) )
+              -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * ( *yConvFlux_ + *yDiffFlux_ ) )
+              -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * ( *zConvFlux_ + *zDiffFlux_ ) );
     }
     else{
-      if( strongForm_ )
         rhs <<= -(*divOpX_)( *xConvFlux_ + *xDiffFlux_ )
                 -(*divOpY_)( *yConvFlux_ + *yDiffFlux_ )
                 -(*divOpZ_)( *zConvFlux_ + *zDiffFlux_ );
-      else
-        rhs <<= - *rho_ * (*divOpX_)(*xConvFlux_) - (*divOpX_)(*xDiffFlux_)
-                - *rho_ * (*divOpY_)(*yConvFlux_) - (*divOpY_)(*yDiffFlux_)
-                - *rho_ * (*divOpZ_)(*zConvFlux_) - (*divOpZ_)(*zDiffFlux_);
     }
   }
   else{
     // handle 2D and 1D cases - not quite as efficient since we won't be
     // running as many production scale calculations in these configurations
-
     if( doXDir_ ){
       if( haveConvection_ && haveDiffusion_ ){
-        if( haveXAreaFrac_ ){
-          if( strongForm_ ) rhs <<= -      (*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * (*xConvFlux_ + *xDiffFlux_) );
-          else              rhs <<= -*rho_*(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xConvFlux_ )
-                                    -      (*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xDiffFlux_);
-        }
-        else{
-          if( strongForm_ ) rhs <<= -      (*divOpX_)(*xConvFlux_ + *xDiffFlux_);
-          else              rhs <<= -*rho_*(*divOpX_)(*xConvFlux_)
-                                    -      (*divOpX_)(*xDiffFlux_);
-        }
+        if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * (*xConvFlux_ + *xDiffFlux_) );
+        else                 rhs <<= -(*divOpX_)( *xConvFlux_ + *xDiffFlux_ );
       }
       else if( haveConvection_ ){
-        if( haveXAreaFrac_ ){
-          if( strongForm_ ) rhs <<=          -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xConvFlux_ );
-          else              rhs <<= - *rho_ * (*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xConvFlux_ );
-        }
-        else{
-          if( strongForm_ ) rhs <<=         -(*divOpX_)( *xConvFlux_ );
-          else              rhs <<= -*rho_ * (*divOpX_)( *xConvFlux_ );
-        }
+        if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xConvFlux_ );
+        else                 rhs <<= -(*divOpX_)( *xConvFlux_ );
       }
       else if( haveDiffusion_ ){
         if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xDiffFlux_ );
@@ -314,63 +290,31 @@ void ScalarRHS<FieldT>::evaluate()
 
     if( doYDir_ ){
       if( haveConvection_ && haveDiffusion_ ){
-        if( haveYAreaFrac_ ){
-          if( strongForm_ ) rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * (*yConvFlux_ + *yDiffFlux_) );
-          else              rhs <<= rhs - *rho_*(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yConvFlux_ )
-                                        -       (*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yDiffFlux_);
-        }
-        else{
-          if( strongForm_ ) rhs <<= rhs -(*divOpY_)( *yConvFlux_ + *yDiffFlux_ );
-          else              rhs <<= rhs - *rho_*(*divOpY_)(*yConvFlux_) - (*divOpY_)(*yDiffFlux_);
-
-        }
+        if( haveYAreaFrac_ ) rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * (*yConvFlux_ + *yDiffFlux_) );
+        else                 rhs <<= rhs -(*divOpY_)( *yConvFlux_ + *yDiffFlux_ );
       }
       else if( haveConvection_ ){
-        if( haveYAreaFrac_ ){
-          if( strongForm_ ) rhs <<= rhs -      (*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yConvFlux_ );
-          else              rhs <<= rhs -*rho_*(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yConvFlux_ );
-        }
-        else{
-          if( strongForm_ ) rhs <<= rhs -      (*divOpY_)( *yConvFlux_ );
-          else              rhs <<= rhs -*rho_*(*divOpY_)( *yConvFlux_ );
-        }
+        if( haveYAreaFrac_ ) rhs <<= rhs - (*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yConvFlux_ );
+        else                 rhs <<= rhs - (*divOpY_)( *yConvFlux_ );
       }
       else if( haveDiffusion_ ){
-        if( haveYAreaFrac_ )
-          rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yDiffFlux_ );
-        else
-          rhs <<= rhs -(*divOpY_)( *yDiffFlux_ );
+        if( haveYAreaFrac_ ) rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yDiffFlux_ );
+        else                 rhs <<= rhs -(*divOpY_)( *yDiffFlux_ );
       }
     }
 
     if( doZDir_ ){
       if( haveConvection_ && haveDiffusion_ ){
-        if( haveZAreaFrac_ ){
-          if( strongForm_ ) rhs <<= rhs -      (*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * (*zConvFlux_ + *zDiffFlux_) );
-          else              rhs <<= rhs -*rho_*(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zConvFlux_ )
-                                        -      (*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zDiffFlux_ );
-        }
-        else{
-          if( strongForm_ ) rhs <<= rhs -(*divOpZ_)( *zConvFlux_ + *zDiffFlux_ );
-          else              rhs <<= rhs -*rho_*(*divOpZ_)(*zConvFlux_)
-                                        -      (*divOpZ_)(*zDiffFlux_);
-        }
+        if( haveZAreaFrac_ ) rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * (*zConvFlux_ + *zDiffFlux_) );
+        else                 rhs <<= rhs -(*divOpZ_)( *zConvFlux_ + *zDiffFlux_ );
       }
       else if( haveConvection_ ){
-        if( haveZAreaFrac_ ){
-          if( strongForm_ ) rhs <<= rhs -      (*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zConvFlux_ );
-          else              rhs <<= rhs -*rho_*(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zConvFlux_ );
-        }
-        else{
-          if( strongForm_ ) rhs <<= rhs -      (*divOpZ_)( *zConvFlux_ );
-          else              rhs <<= rhs -*rho_*(*divOpZ_)( *zConvFlux_ );
-        }
+        if( haveZAreaFrac_ ) rhs <<= rhs - (*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zConvFlux_ );
+        else                 rhs <<= rhs - (*divOpZ_)( *zConvFlux_ );
       }
       else if( haveDiffusion_ ){
-        if( haveZAreaFrac_ )
-          rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zDiffFlux_ );
-        else
-          rhs <<= rhs -(*divOpZ_)( *zDiffFlux_ );
+        if( haveZAreaFrac_ ) rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zDiffFlux_ );
+        else                 rhs <<= rhs -(*divOpZ_)( *zDiffFlux_ );
       }
     }
   } // 2D and 1D cases
@@ -379,20 +323,19 @@ void ScalarRHS<FieldT>::evaluate()
   // because we don't have a great way to inline all of this yet.
   typename SrcVec::const_iterator isrc;
   for( isrc=srcTerm_.begin(); isrc!=srcTerm_.end(); ++isrc ) {
+    // for constant density cases, scale by density
     if( isConstDensity_ ){
-      const double densVal = (*rho_)[0];
-      if (haveVolFrac_) rhs <<= rhs + (**isrc / densVal ) * (*volFracInterpOp_)(*volfrac_);
-      else              rhs <<= rhs + (**isrc / densVal );
+      if( haveVolFrac_ )  rhs <<= rhs + **isrc * (*volFracInterpOp_)(*volfrac_) / *rho_;
+      else                rhs <<= rhs + **isrc / *rho_;
     }
     else{
-      if ( haveVolFrac_ )  rhs <<= rhs + **isrc * (*volFracInterpOp_)(*volfrac_);
-      else                 rhs <<= rhs + **isrc;
+      if( haveVolFrac_ )  rhs <<= rhs + **isrc * (*volFracInterpOp_)(*volfrac_);
+      else                rhs <<= rhs + **isrc;
     }
   }
 
-  if( !strongForm_ ){
-    rhs <<= ( rhs - *phi_ * *drhodt_ ) / *rho_;
-  }
+  // for weak form (variable density) cases, augment with drhodt term and scale by density
+  if( !strongForm_ && !isConstDensity_ ) rhs <<= ( rhs - *phi_ * *drhodt_ ) / *rho_;
 }
 
 //------------------------------------------------------------------
