@@ -388,6 +388,37 @@ namespace Wasatch{
 #    endif
     }
 
+    //
+    // extract the density tag for scalar transport equations and momentum equations
+    // and perform error handling
+    //
+    Expr::Tag densityTag = Expr::Tag();
+    bool isConstDensity = true;
+    {
+      Uintah::ProblemSpecP momEqnParams   = wasatchSpec_->findBlock("MomentumEquations");
+      Uintah::ProblemSpecP densityParams  = wasatchSpec_->findBlock("Density");
+      Uintah::ProblemSpecP transEqnParams = wasatchSpec_->findBlock("TransportEquation");
+      if( transEqnParams || momEqnParams ){
+        if( !densityParams ) {
+          std::ostringstream msg;
+          msg << "ERROR: You must include a 'Density' block in your input file when solving transport equations" << endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        if( densityParams->findBlock("NameTag") ){
+          densityTag = parse_nametag( densityParams->findBlock("NameTag") );
+          isConstDensity = false;
+        }
+        else{
+          double densVal = 1.0; std::string densName;
+          Uintah::ProblemSpecP constDensParam = densityParams->findBlock("Constant");
+          constDensParam->getAttribute( "value", densVal );
+          constDensParam->getAttribute( "name", densName );
+          densityTag = Expr::Tag( densName, Expr::STATE_NONE );
+          graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
+        }
+      }
+    }
+
     // PARSE BC FUNCTORS
     Uintah::ProblemSpecP bcParams = params->findBlock("Grid")->findBlock("BoundaryConditions");
     if (bcParams) {
@@ -446,8 +477,6 @@ namespace Wasatch{
         bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
       }
 
-      Uintah::ProblemSpecP densityParams  = wasatchSpec_->findBlock("Density");
-      Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
       BCFunctorMap::mapped_type functorSet;
       BCFunctorMap::key_type functorName = densityTag.name()+TagNames::self().star+"_bc";
       BCFunctorMap::key_type phiName     = densityTag.name()+TagNames::self().star;
@@ -512,37 +541,6 @@ namespace Wasatch{
     struct TurbulenceParameters turbParams = {1.0,0.1,NOTURBULENCE};
     parse_turbulence_input(turbulenceModelParams, turbParams);
     
-    //
-    // extract the density tag for scalar transport equations and momentum equations
-    // and perform error handling
-    //
-    Uintah::ProblemSpecP momEqnParams   = wasatchSpec_->findBlock("MomentumEquations");
-    Uintah::ProblemSpecP densityParams  = wasatchSpec_->findBlock("Density");
-    Uintah::ProblemSpecP transEqnParams = wasatchSpec_->findBlock("TransportEquation");
-
-    Expr::Tag densityTag = Expr::Tag();
-    bool isConstDensity = true;
-
-    if( transEqnParams || momEqnParams ){
-      if( !densityParams ) {
-        std::ostringstream msg;
-        msg << "ERROR: You must include a 'Density' block in your input file when solving transport equations" << endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-      if( densityParams->findBlock("NameTag") ){
-        densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-        isConstDensity = false;
-      }
-      else{
-        double densVal = 1.0; std::string densName;
-        Uintah::ProblemSpecP constDensParam = densityParams->findBlock("Constant");
-        constDensParam->getAttribute( "value", densVal );
-        constDensParam->getAttribute( "name", densName );
-        densityTag = Expr::Tag( densName, Expr::STATE_NONE );
-        graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
-      }
-    }
-
     //
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
@@ -675,7 +673,7 @@ namespace Wasatch{
     //
     Uintah::ProblemSpecP VarDensMMSParams = wasatchSpec_->findBlock("VariableDensityMMS");
     if (VarDensMMSParams) {
-      const bool computeContinuityResidual = momEqnParams->findBlock("ComputeMassResidual");
+      const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
         parse_var_dens_mms(wasatchSpec_, VarDensMMSParams, computeContinuityResidual, graphCategories_);
 
     }
