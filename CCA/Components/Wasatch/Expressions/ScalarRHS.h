@@ -55,16 +55,40 @@
  *  diffusive fluxes and/or source terms.  This will then calculate
  *  the full RHS for use with the time integrator.
  *
- *  Note: In the case that we are solving a scalar transport equation with
- *        constant density we move out the density by devision from all
- *        terms except the source term. For the source term in this case we
- *        divide the specified source term expression by density here in
- *        ScalarRHS.
- *        So, you should be careful with the cases that source terms are
- *        NOT defined in the INPUT FILE but they will be added to the RHS
- *        automatically during the solution process and they are almost
- *        impossible to track (e.g. in ODT solver)
+ *  The general form of the ScalarRHS is assumed to be:
+ *  \f[
+ *    -\frac{\partial \alpha_x \rho \phi u_x}{\partial x}
+ *    -\frac{\partial \alpha_y \rho \phi u_y}{\partial y}
+ *    -\frac{\partial \alpha_z \rho \phi u_z}{\partial z}
+ *    -\frac{\partial \alpha_x J_{\phi_x}}{\partial x}
+ *    -\frac{\partial \alpha_y J_{\phi_y}}{\partial y}
+ *    -\frac{\partial \alpha_z J_{\phi_z}}{\partial z}
+ *    + \alpha_V s_\phi
+ *  \f]
+ *  where \f$\alpha_i\f$ are area fractions and \f$\alpha_V\f$ is a volume fraction.
  *
+ *  This implementation also accommodates constant density
+ *  \f[
+ *    \frac{\partial \phi}{\partial t} =
+ *     \frac{1}{\rho} \left[
+ *     - \nabla\cdot \phi \vec{u}
+ *     - \nabla\cdot\vec{V}^d_\phi
+ *     + \frac{1}{\rho} s_\phi
+ *    \right]
+ *  \f]
+ *  and weak forms
+ *  \f[
+ *    \frac{\partial \phi}{\partial t} =
+ *     \frac{1}{\rho}\left[
+ *     - \phi \frac{\partial \rho}{\partial t}
+ *     - \nabla\cdot\rho\phi\vec{u}
+ *     - \nabla\cdot\vec{J}_\phi
+ *     + s_\phi
+ *    \right]
+ *  \f]
+ *  of the RHS, both with and without embedded boundaries.  Note that we retain
+ *  the density in the convective flux out of convenience so that the entire RHS
+ *  can be divided by the density later on.
  */
 template< typename FieldT >
 class ScalarRHS : public Expr::Expression<FieldT>

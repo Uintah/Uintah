@@ -53,8 +53,6 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
-  //------------------------------------------------------------------
-
   template< typename FieldT >
   ScalarTransportEquation<FieldT>::
   ScalarTransportEquation( const std::string solnVarName,
@@ -74,7 +72,8 @@ namespace Wasatch{
     // defining the primary variable ans solution variable tags regarding to the type of
     // the equations that we are solving and throwing appropriate error messages regarding
     // to the input file arguments.
-    params->get("StrongForm",isStrong_);
+    isStrong_ = true;
+    if( params->findBlock("StrongForm") )  params->get("StrongForm",isStrong_);
 
     const bool existPrimVar = params->findBlock("PrimitiveVariable");
     solnVarTag_ = Expr::Tag( solnVarName, Expr::STATE_N );
@@ -323,7 +322,6 @@ namespace Wasatch{
         setup_diffusive_velocity_expression<FieldT>( diffVelParams, primVarTag, turbDiffTag, factory, info );
       }
     }
-
 
     //__________________
     // Convective Fluxes

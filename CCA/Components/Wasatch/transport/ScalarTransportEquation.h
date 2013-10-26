@@ -64,15 +64,7 @@ namespace Wasatch{
    *
    *  The other supported forms of the equation are:
    *
-   *  - Constant density form:
-   *  \f[
-   *    \frac{\partial \phi}{\partial t} =
-   *    - \nabla\cdot \phi \vec{u}
-   *    - \frac{1}{\rho}\nabla\cdot\vec{J}_\phi
-   *    + \frac{1}{\rho} s_\phi
-   *  \f]
-   *
-   *  - Variable density weak form:
+   *  - Constant density and variable density weak form:
    *  \f[
    *    \frac{\partial \phi}{\partial t} =
    *     \frac{1}{\rho}\left[
