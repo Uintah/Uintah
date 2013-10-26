@@ -131,7 +131,6 @@ namespace Wasatch{
     // multiply the initial condition by the volume fraction for embedded geometries
     if( hasEmbeddedGeometry_ ) {
 
-      std::cout << "attaching modifier expression on " << phiTag << std::endl;
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
       Expr::TagList theTagList;
@@ -166,7 +165,6 @@ namespace Wasatch{
     const Category taskCat = ADVANCE_SOLUTION;
     bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );    
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, false );
-    
     
     if( !isConstDensity_ ){
       // set bcs for solnVar_*
