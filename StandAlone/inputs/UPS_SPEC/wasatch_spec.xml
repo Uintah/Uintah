@@ -5,9 +5,9 @@
         Re-opening the Uintah CommonTags block to add in some tags
         that are used by the Wastach component.
     -->
-    <NameTag              spec="OPTIONAL NO_DATA"
-                            attribute1="name REQUIRED STRING"
-                            attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD'" />
+    <NameTag  spec="OPTIONAL NO_DATA"
+              attribute1="name REQUIRED STRING"
+              attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD'" />
 
    <!-- Geometry Expression provides support for creating special embedded geometries through wasatch-->
    <GeometryExpression  spec="MULTIPLE NO_DATA"
@@ -51,10 +51,10 @@
       
       <!-- parabolic function: a x^2 + b x + c !-->
       <ParabolicFunction  spec="OPTIONAL NO_DATA"
-                            attribute1="a REQUIRED DOUBLE"
-                            attribute2="b REQUIRED DOUBLE"
-                            attribute3="c REQUIRED DOUBLE">
-        <NameTag            spec="REQUIRED"/>
+                          attribute1="a REQUIRED DOUBLE"
+                          attribute2="b REQUIRED DOUBLE"
+                          attribute3="c REQUIRED DOUBLE">
+        <NameTag          spec="REQUIRED"/>
       </ParabolicFunction>
       
       <!-- sinetime: a x^2 + b x + c !-->
@@ -63,10 +63,10 @@
 
       <!-- Step Function with transition point, lowValue (value when x <= transition point), and HighValue (value when x > transition point) !-->
       <StepFunction       spec="OPTIONAL NO_DATA"
-                            attribute1="transitionPoint REQUIRED DOUBLE"
-                            attribute2="lowValue REQUIRED DOUBLE"
-                            attribute3="highValue REQUIRED DOUBLE">
-        <NameTag            spec="REQUIRED"/>
+                          attribute1="transitionPoint REQUIRED DOUBLE"
+                          attribute2="lowValue REQUIRED DOUBLE"
+                          attribute3="highValue REQUIRED DOUBLE">
+        <NameTag          spec="REQUIRED"/>
       </StepFunction>
       
 
@@ -87,69 +87,69 @@
 
       <!-- Plus Profile makes a + sign as the initial condition with HighValue on + area and LowValue everywhere else!-->
       <PlusProfile       spec="OPTIONAL NO_DATA"
-                           attribute1="xStart REQUIRED DOUBLE"
-                           attribute2="yStart REQUIRED DOUBLE"
-                           attribute3="xWidth REQUIRED DOUBLE"
-                           attribute4="yWidth REQUIRED DOUBLE"
-                           attribute5="lowValue REQUIRED DOUBLE"
-                           attribute6="highValue REQUIRED DOUBLE">
-        <Coordinate1      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
+                         attribute1="xStart REQUIRED DOUBLE"
+                         attribute2="yStart REQUIRED DOUBLE"
+                         attribute3="xWidth REQUIRED DOUBLE"
+                         attribute4="yWidth REQUIRED DOUBLE"
+                         attribute5="lowValue REQUIRED DOUBLE"
+                         attribute6="highValue REQUIRED DOUBLE">
+        <Coordinate1     spec="REQUIRED NO_DATA">
+          <NameTag       spec="REQUIRED"/>
         </Coordinate1>
-        <Coordinate2      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
+        <Coordinate2     spec="REQUIRED NO_DATA">
+          <NameTag       spec="REQUIRED"/>
         </Coordinate2>
       </PlusProfile>
                   
       <!-- Sine function with frequency, amplitude, and offset !-->
       <SineFunction       spec="OPTIONAL NO_DATA"
-                            attribute1="amplitude REQUIRED DOUBLE"
-                            attribute2="frequency REQUIRED DOUBLE"
-                            attribute3="offset REQUIRED DOUBLE">
-        <NameTag            spec="REQUIRED"/>
+                          attribute1="amplitude REQUIRED DOUBLE"
+                          attribute2="frequency REQUIRED DOUBLE"
+                          attribute3="offset REQUIRED DOUBLE">
+        <NameTag          spec="REQUIRED"/>
       </SineFunction>
       
       <!-- double hyperbolic tangent !-->
       <DoubleTanhFunction spec="OPTIONAL NO_DATA"
-                            attribute1="amplitude REQUIRED DOUBLE"
-                            attribute2="width REQUIRED DOUBLE"
-                            attribute3="midpointUp REQUIRED DOUBLE"
-                            attribute4="midpointDown REQUIRED DOUBLE">
-        <NameTag            spec="REQUIRED"/>
+                          attribute1="amplitude REQUIRED DOUBLE"
+                          attribute2="width REQUIRED DOUBLE"
+                          attribute3="midpointUp REQUIRED DOUBLE"
+                          attribute4="midpointDown REQUIRED DOUBLE">
+        <NameTag          spec="REQUIRED"/>
       </DoubleTanhFunction>
       
       <!-- Gaussian distribution !-->
-      <GaussianFunction   spec="OPTIONAL NO_DATA"
-                            attribute1="amplitude REQUIRED DOUBLE"
-                            attribute2="deviation REQUIRED DOUBLE"
-                            attribute3="mean REQUIRED DOUBLE"
-                            attribute4="baseline REQUIRED DOUBLE">
-        <NameTag            spec="REQUIRED"/>
+      <GaussianFunction spec="OPTIONAL NO_DATA"
+                        attribute1="amplitude REQUIRED DOUBLE"
+                        attribute2="deviation REQUIRED DOUBLE"
+                        attribute3="mean REQUIRED DOUBLE"
+                        attribute4="baseline REQUIRED DOUBLE">
+        <NameTag        spec="REQUIRED"/>
       </GaussianFunction>
       
       <!-- Algebraic Operations Function - sum, product, difference between expressions !-->
       <ExprAlgebra   spec="OPTIONAL NO_DATA"
-                       attribute1="algebraicOperation REQUIRED STRING 'SUM, DIFFERENCE, PRODUCT'">
-      <NameTag                  spec="MULTIPLE" />
+                     attribute1="algebraicOperation REQUIRED STRING 'SUM, DIFFERENCE, PRODUCT'">
+      <NameTag       spec="MULTIPLE" />
       </ExprAlgebra>
       
       <!-- creates a circular cylinder "patch" in the domain. this can be used for initialization of scalars for example  !-->
-      <Cylinder   spec="OPTIONAL NO_DATA"
-                    attribute1="radius       REQUIRED DOUBLE"
-                    attribute2="insideValue  REQUIRED DOUBLE"
-                    attribute3="outsideValue REQUIRED DOUBLE">
-        <Origin           spec="REQUIRED VECTOR" />                            
-        <Coordinate1      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
+      <Cylinder       spec="OPTIONAL NO_DATA"
+                      attribute1="radius       REQUIRED DOUBLE"
+                      attribute2="insideValue  REQUIRED DOUBLE"
+                      attribute3="outsideValue REQUIRED DOUBLE">
+        <Origin       spec="REQUIRED VECTOR" />                            
+        <Coordinate1  spec="REQUIRED NO_DATA">
+          <NameTag    spec="REQUIRED"/>
         </Coordinate1>
-        <Coordinate2      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
+        <Coordinate2  spec="REQUIRED NO_DATA">
+          <NameTag    spec="REQUIRED"/>
         </Coordinate2>
       </Cylinder>
 
       
       <WallDistanceFunction     spec="OPTIONAL NO_DATA">
-        <NameTag                        spec="REQUIRED" />
+        <NameTag                spec="REQUIRED" />
       </WallDistanceFunction>
       
       <ReadFromFile     spec="OPTIONAL NO_DATA">
@@ -164,14 +164,14 @@
       </RandomField>
       
       <!-- Creates an exponential vortex for testing outflow boundary conditions!-->
-      <ExponentialVortex       spec="OPTIONAL NO_DATA"
-                           attribute1="x0 REQUIRED DOUBLE"
-                           attribute2="y0 REQUIRED DOUBLE"
-                           attribute3="G REQUIRED DOUBLE"
-                           attribute4="R REQUIRED DOUBLE"
-                           attribute5="U REQUIRED DOUBLE"
-                           attribute6="V REQUIRED DOUBLE"                           
-                           attribute7="velocityComponent REQUIRED STRING 'X1, X2'">
+      <ExponentialVortex  spec="OPTIONAL NO_DATA"
+                          attribute1="x0 REQUIRED DOUBLE"
+                          attribute2="y0 REQUIRED DOUBLE"
+                          attribute3="G REQUIRED DOUBLE"
+                          attribute4="R REQUIRED DOUBLE"
+                          attribute5="U REQUIRED DOUBLE"
+                          attribute6="V REQUIRED DOUBLE"                           
+                          attribute7="velocityComponent REQUIRED STRING 'X1, X2'">
         <Coordinate1      spec="REQUIRED NO_DATA">
           <NameTag        spec="REQUIRED"/>
         </Coordinate1>
@@ -182,22 +182,22 @@
             
       <!-- Creates an exponential vortex for testing outflow boundary conditions!-->
       <LambsDipole       spec="OPTIONAL NO_DATA"
-                           attribute1="x0 REQUIRED DOUBLE"
-                           attribute2="y0 REQUIRED DOUBLE"
-                           attribute3="G REQUIRED DOUBLE"                           
-                           attribute4="R REQUIRED DOUBLE"
-                           attribute5="U REQUIRED DOUBLE"
-                           attribute6="velocityComponent REQUIRED STRING 'X1, X2'">
-        <Coordinate1      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
+                         attribute1="x0 REQUIRED DOUBLE"
+                         attribute2="y0 REQUIRED DOUBLE"
+                         attribute3="G REQUIRED DOUBLE"                           
+                         attribute4="R REQUIRED DOUBLE"
+                         attribute5="U REQUIRED DOUBLE"
+                         attribute6="velocityComponent REQUIRED STRING 'X1, X2'">
+        <Coordinate1     spec="REQUIRED NO_DATA">
+          <NameTag       spec="REQUIRED"/>
         </Coordinate1>
-        <Coordinate2      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
+        <Coordinate2     spec="REQUIRED NO_DATA">
+          <NameTag       spec="REQUIRED"/>
         </Coordinate2>
       </LambsDipole>
       
       <!-- creates a time derivative expression. -->
-      <TimeDerivative     spec="OPTIONAL NO_DATA">
+      <TimeDerivative   spec="OPTIONAL NO_DATA">
       	<NameTag        spec="REQUIRED"/>  <!-- NameTag of the source field -->
       </TimeDerivative>
 
@@ -207,99 +207,99 @@
     <!-- PrecipitationBasicExpression is used to create basic expressions specifically
          tuned for precipitation physics. These correspond to growth and nucleation 
          coefficients among other things -->
-    <PrecipitationBasicExpression     spec="MULTIPLE NO_DATA"
-                            attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD PrecipitationBulkDiffusionCoefficient, PrecipitationMonosurfaceCoefficient, 
-                            PrecipitationClassicNucleationCoefficient, PrecipitationClassicRStarValue, PrecipitationSimpleRStarValue,
-                            PrecipitationSource, PrecipitateEffectiveViscosity, ParticleVolumeFraction, BrownianAggregationCoefficient,
-                            TurbulentAggregationCoefficient, MultiEnvMixingModel, CylindricalDiffusionCoefficient, KineticGrowthCoefficient,
-                            HomogeneousNucleationCoefficient, CriticalSurfaceEnergy)">  
-      <TaskList                         spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
-      <NameTag                          spec="REQUIRED" />
+    <PrecipitationBasicExpression spec="MULTIPLE NO_DATA"
+                  attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
+                  children1="ONE_OF(CHILD PrecipitationBulkDiffusionCoefficient, PrecipitationMonosurfaceCoefficient, 
+                  PrecipitationClassicNucleationCoefficient, PrecipitationClassicRStarValue, PrecipitationSimpleRStarValue,
+                  PrecipitationSource, PrecipitateEffectiveViscosity, ParticleVolumeFraction, BrownianAggregationCoefficient,
+                  TurbulentAggregationCoefficient, MultiEnvMixingModel, CylindricalDiffusionCoefficient, KineticGrowthCoefficient,
+                  HomogeneousNucleationCoefficient, CriticalSurfaceEnergy)">  
+      <TaskList   spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
+      <NameTag    spec="REQUIRED" />
 
       <PrecipitationBulkDiffusionCoefficient spec = "OPTIONAL NO_DATA"
-                                             attribute1="Diff_Coef REQUIRED DOUBLE"
-                                             attribute2="Molec_Vol REQUIRED DOUBLE"
-                                             attribute3="S_Min OPTIONAL DOUBLE">
-        <Supersaturation spec = "REQUIRED NO_DATA">                                      
-          <NameTag spec="REQUIRED"/>
+                                   attribute1="Diff_Coef REQUIRED DOUBLE"
+                                   attribute2="Molec_Vol REQUIRED DOUBLE"
+                                   attribute3="S_Min OPTIONAL DOUBLE">
+        <Supersaturation           spec = "REQUIRED NO_DATA">                                      
+          <NameTag                 spec="REQUIRED"/>
         </Supersaturation >
-        <EquilibriumConcentration spec = "REQUIRED NO_DATA">
-          <NameTag spec="REQUIRED"/>
+        <EquilibriumConcentration  spec = "REQUIRED NO_DATA">
+          <NameTag                 spec="REQUIRED"/>
         </EquilibriumConcentration>
-        <SBar spec = "OPTIONAL NO_DATA">
-          <NameTag spec="REQUIRED"/>
+        <SBar                      spec = "OPTIONAL NO_DATA">
+          <NameTag                 spec="REQUIRED"/>
         </SBar>
       </PrecipitationBulkDiffusionCoefficient>
       
       <CylindricalDiffusionCoefficient spec = "OPTIONAL NO_DATA"
-                                       attribute1="Diff_Coef REQUIRED DOUBLE"
-                                       attribute2="Molec_Vol REQUIRED DOUBLE"
-                                       attribute3="S_Min OPTIONAL DOUBLE">
-        <Supersaturation spec = "REQUIRED NO_DATA">                                      
-          <NameTag spec="REQUIRED"/>
+                                    attribute1="Diff_Coef REQUIRED DOUBLE"
+                                    attribute2="Molec_Vol REQUIRED DOUBLE"
+                                    attribute3="S_Min OPTIONAL DOUBLE">
+        <Supersaturation            spec = "REQUIRED NO_DATA">                                      
+          <NameTag                  spec="REQUIRED"/>
         </Supersaturation>
-        <EquilibriumConcentration spec = "REQUIRED NO_DATA">
-          <NameTag spec="REQUIRED"/>
+        <EquilibriumConcentration   spec = "REQUIRED NO_DATA">
+          <NameTag                  spec="REQUIRED"/>
         </EquilibriumConcentration>
-        <SBar spec = "OPTIONAL NO_DATA">
-          <NameTag spec="REQUIRED"/>
+        <SBar                       spec = "OPTIONAL NO_DATA">
+          <NameTag                  spec="REQUIRED"/>
         </SBar>
       </CylindricalDiffusionCoefficient>
       
       <KineticGrowthCoefficient spec = "OPTIONAL NO_DATA"
-                                attribute1="K_A REQUIRED DOUBLE"
-                                attribute2="S_Max OPTIONAL DOUBLE"
-                                attribute3="S_Min OPTIONAL DOUBLE">
-        <Supersaturation spec = "REQUIRED NO_DATA">                                      
-          <NameTag spec="REQUIRED"/>
+                          attribute1="K_A REQUIRED DOUBLE"
+                          attribute2="S_Max OPTIONAL DOUBLE"
+                          attribute3="S_Min OPTIONAL DOUBLE">
+        <Supersaturation  spec = "REQUIRED NO_DATA">                                      
+          <NameTag        spec="REQUIRED"/>
         </Supersaturation>
-        <SBar spec = "OPTIONAL NO_DATA">
-          <NameTag spec="REQUIRED"/>
+        <SBar             spec = "OPTIONAL NO_DATA">
+          <NameTag        spec="REQUIRED"/>
         </SBar>
       </KineticGrowthCoefficient>                                                                     
       
       <PrecipitationMonosurfaceCoefficient spec = "OPTIONAL NO_DATA"
-                                             attribute1="Diff_Coef REQUIRED DOUBLE"
-                                             attribute2="Molec_D REQUIRED DOUBLE"
-                                             attribute3="Surf_Eng REQUIRED DOUBLE"
-                                             attribute4="Temperature REQUIRED DOUBLE">
+                         attribute1="Diff_Coef REQUIRED DOUBLE"
+                         attribute2="Molec_D REQUIRED DOUBLE"
+                         attribute3="Surf_Eng REQUIRED DOUBLE"
+                         attribute4="Temperature REQUIRED DOUBLE">
         <Supersaturation spec = "REQUIRED NO_DATA">                                      
-          <NameTag spec="REQUIRED"/>
+          <NameTag       spec="REQUIRED"/>
         </Supersaturation>
       </PrecipitationMonosurfaceCoefficient>
       
       <PrecipitationClassicNucleationCoefficient spec = "OPTIONAL NO_DATA"
-                                             attribute1="Molec_Vol REQUIRED DOUBLE"
-                                             attribute2="Surf_Eng REQUIRED DOUBLE"
-                                             attribute3="Temperature REQUIRED DOUBLE">
-        <Supersaturation spec = "REQUIRED NO_DATA">                                   
-          <NameTag spec="REQUIRED"/>
+                          attribute1="Molec_Vol REQUIRED DOUBLE"
+                          attribute2="Surf_Eng REQUIRED DOUBLE"
+                          attribute3="Temperature REQUIRED DOUBLE">
+        <Supersaturation  spec = "REQUIRED NO_DATA">                                   
+          <NameTag        spec="REQUIRED"/>
         </Supersaturation>
       </PrecipitationClassicNucleationCoefficient>     
       
       <HomogeneousNucleationCoefficient spec = "OPTIONAL NO_DATA"
-                                             attribute1="Molar_Vol REQUIRED DOUBLE"
-                                             attribute2="Surf_Eng OPTIONAL DOUBLE"
-                                             attribute3="Temperature REQUIRED DOUBLE"
-                                             attribute4="Diff_Coef REQUIRED DOUBLE"
-                                             attribute5="S_Ratio REQUIRED DOUBLE">
-        <Supersaturation spec = "REQUIRED NO_DATA">                                   
-          <NameTag spec="REQUIRED"/>
+                                        attribute1="Molar_Vol REQUIRED DOUBLE"
+                                        attribute2="Surf_Eng OPTIONAL DOUBLE"
+                                        attribute3="Temperature REQUIRED DOUBLE"
+                                        attribute4="Diff_Coef REQUIRED DOUBLE"
+                                        attribute5="S_Ratio REQUIRED DOUBLE">
+        <Supersaturation                spec = "REQUIRED NO_DATA">                                   
+          <NameTag                      spec="REQUIRED"/>
         </Supersaturation>
-        <EquilibriumConcentration spec="REQUIRED NO_DATA">
-          <NameTag spec="REQUIRED"/>
+        <EquilibriumConcentration       spec="REQUIRED NO_DATA">
+          <NameTag                      spec="REQUIRED"/>
         </EquilibriumConcentration>  
-        <SurfaceEnergy spec="OPTIONAL NO_DATA">
-          <NameTag spec="REQUIRED"/>
+        <SurfaceEnergy                  spec="OPTIONAL NO_DATA">
+          <NameTag                      spec="REQUIRED"/>
         </SurfaceEnergy>  
       </HomogeneousNucleationCoefficient> 
       
       <PrecipitationSimpleRStarValue spec = "OPTIONAL NO_DATA"
-                        attribute1 = "R_0 REQUIRED DOUBLE"
-                        attribute2 = "Conversion_Fac REQUIRED DOUBLE">
-        <Supersaturation spec = "REQUIRED NO_DATA">                                    
-          <NameTag spec="REQUIRED"/>
+                                     attribute1 = "R_0 REQUIRED DOUBLE"
+                                     attribute2 = "Conversion_Fac REQUIRED DOUBLE">
+        <Supersaturation             spec = "REQUIRED NO_DATA">                                    
+          <NameTag                   spec="REQUIRED"/>
         </Supersaturation>
       </PrecipitationSimpleRStarValue>
       
@@ -308,11 +308,11 @@
                                       attribute2 = "Molec_Vol REQUIRED DOUBLE"
                                       attribute3 = "Temperature REQUIRED DOUBLE" 
                                       attribute4 = "Conversion_Fac REQUIRED DOUBLE">
-        <Supersaturation spec = "REQUIRED NO_DATA">                                     
-          <NameTag spec="REQUIRED"/>
-        </Supersaturation>
-        <SurfaceEnergy spec="OPTIONAL NO_DATA">
-          <NameTag spec="REQUIRED"/>
+        <Supersaturation              spec = "REQUIRED NO_DATA">                                     
+          <NameTag                    spec="REQUIRED"/>
+        </Supersaturation>            
+        <SurfaceEnergy                spec="OPTIONAL NO_DATA">
+          <NameTag                    spec="REQUIRED"/>
         </SurfaceEnergy>  
       </PrecipitationClassicRStarValue>
       
@@ -320,21 +320,21 @@
                              attribute1 = "Bulk_Surf_Eng REQUIRED DOUBLE"
                              attribute2 = "Temperature REQUIRED DOUBLE"
                              attribute3 = "Molar_Vol REQUIRED DOUBLE">
-        <Supersaturation spec = "REQUIRED NO_DATA">                                     
-          <NameTag spec="REQUIRED"/>
-        </Supersaturation>
-        <TolmanLength spec="OPTIONAL DOUBLE"/>
+        <Supersaturation     spec = "REQUIRED NO_DATA">                                     
+          <NameTag           spec="REQUIRED"/>
+        </Supersaturation>   
+        <TolmanLength        spec="OPTIONAL DOUBLE"/>
       </CriticalSurfaceEnergy>                                              
       
       <PrecipitationSource spec = "OPTIONAL NO_DATA" >
-        <EtaScale spec = "REQUIRED NO_DATA" >
-          <NameTag spec="REQUIRED"/>
+        <EtaScale          spec = "REQUIRED NO_DATA" >
+          <NameTag         spec="REQUIRED"/>
         </EtaScale>
-        <Density spec = "REQUIRED NO_DATA" >
-          <NameTag spec="REQUIRED"/>
-        </Density>
-        <MultiEnvWeight spec = "OPTIONAL NO_DATA" >
-          <NameTag spec = "REQUIRED" />
+        <Density           spec = "REQUIRED NO_DATA" >
+          <NameTag         spec="REQUIRED"/>
+        </Density>         
+        <MultiEnvWeight    spec = "OPTIONAL NO_DATA" >
+          <NameTag         spec = "REQUIRED" />
         </MultiEnvWeight>  
       </PrecipitationSource> 
       
@@ -343,46 +343,46 @@
                                      attribute2 = "Power REQUIRED DOUBLE"
                                      attribute3 = "BaseViscosity REQUIRED DOUBLE"
                                      attribute4 = "MinStrain REQUIRED DOUBLE">
-        <VolumeFraction spec = "REQUIRED NO_DATA">
-          <NameTag spec = "REQUIRED"/>
-        </VolumeFraction>
-        <StrainMagnitude spec = "REQUIRED NO_DATA">
-          <NameTag spec = "REQUIRED"/>
+        <VolumeFraction              spec = "REQUIRED NO_DATA">
+          <NameTag                   spec = "REQUIRED"/>
+        </VolumeFraction>           
+        <StrainMagnitude             spec = "REQUIRED NO_DATA">
+          <NameTag                   spec = "REQUIRED"/>
         </StrainMagnitude>  
       </PrecipitateEffectiveViscosity>
        
       <ParticleVolumeFraction spec = "OPTIONAL NO_DATA">
-        <Conversion_Fac spec = "REQUIRED DOUBLE" />
+        <Conversion_Fac       spec = "REQUIRED DOUBLE" />
       </ParticleVolumeFraction>  
       
       <BrownianAggregationCoefficient spec = "OPTIONAL NO_DATA"
                                       attribute1 = "Temperature REQUIRED DOUBLE"
                                       attribute2 = "Conversion_Fac OPTIONAL DOUBLE">
-        <Density spec = "REQUIRED NO_DATA">
-          <NameTag spec = "REQUIRED" />
+        <Density                      spec = "REQUIRED NO_DATA">
+          <NameTag                    spec = "REQUIRED" />
         </Density>                                
       </BrownianAggregationCoefficient>
       
       <TurbulentAggregationCoefficient spec	= "OPTIONAL NO_DATA"
                                        attribute1 = "Conversion_Fac OPTIONAL DOUBLE">
-        <KinematicViscosity spec = "REQUIRED NO_DATA" >
-          <NameTag spec = "REQUIRED" />
+        <KinematicViscosity            spec = "REQUIRED NO_DATA" >
+          <NameTag                     spec = "REQUIRED" />
         </KinematicViscosity>
-        <EnergyDissipation spec = "REQUIRED NO_DATA" >
-          <NameTag spec = "REQUIRED" />
+        <EnergyDissipation             spec = "REQUIRED NO_DATA" >
+          <NameTag                     spec = "REQUIRED" />
         </EnergyDissipation>  
       </TurbulentAggregationCoefficient>
       
       <MultiEnvMixingModel spec = "OPTIONAL NO_DATA"
                            attribute1 = "MaxDt REQUIRED DOUBLE">
-        <MixtureFraction spec = "REQUIRED NO_DATA" > 
-          <NameTag spec	= "REQUIRED"/>
+        <MixtureFraction   spec = "REQUIRED NO_DATA" > 
+          <NameTag         spec = "REQUIRED"/>
         </MixtureFraction>      
-        <ScalarVariance spec = "REQUIRED NO_DATA" > 
-          <NameTag spec	= "REQUIRED"/>
+        <ScalarVariance    spec = "REQUIRED NO_DATA" > 
+          <NameTag         spec = "REQUIRED"/>
         </ScalarVariance>
         <ScalarDissipation spec="REQUIRED NO_DATA" >
-          <NameTag spec = "REQUIRED"/>
+          <NameTag         spec = "REQUIRED"/>
         </ScalarDissipation>
       </MultiEnvMixingModel>
       
@@ -410,8 +410,8 @@
       </VelocityMagnitude>
 
       <!-- KineticEnergy -->
-      <KineticEnergy spec="OPTIONAL NO_DATA"
-                     attribute1="total OPTIONAL BOOLEAN">
+      <KineticEnergy     spec="OPTIONAL NO_DATA"
+                         attribute1="total OPTIONAL BOOLEAN">
         <XVelocity       spec="OPTIONAL NO_DATA">
           <NameTag       spec="REQUIRED"/>
         </XVelocity>
@@ -463,15 +463,15 @@
       <!-- parabolic function: a x^2 + b x + c !-->
       <ParabolicFunction  spec="OPTIONAL NO_DATA"
                           attribute1="type  REQUIRED STRING 'GENERAL, CENTERED'">
-				<Centered spec="OPTIONAL NO_DATA" need_applies_to="type CENTERED"
-                  attribute1="x0 REQUIRED DOUBLE"
-                  attribute2="f0 REQUIRED DOUBLE"
-                  attribute3="h REQUIRED DOUBLE"/>
-				<General  spec="OPTIONAL NO_DATA" need_applies_to="type GENERAL"
-                  attribute1="a REQUIRED DOUBLE"
-                  attribute2="b REQUIRED DOUBLE"
-                  attribute3="c REQUIRED DOUBLE"/>                          
-        <NameTag  spec="REQUIRED"/>
+				<Centered         spec="OPTIONAL NO_DATA" need_applies_to="type CENTERED"
+                          attribute1="x0 REQUIRED DOUBLE"
+                          attribute2="f0 REQUIRED DOUBLE"
+                          attribute3="h REQUIRED DOUBLE"/>
+				<General          spec="OPTIONAL NO_DATA" need_applies_to="type GENERAL"
+                          attribute1="a REQUIRED DOUBLE"
+                          attribute2="b REQUIRED DOUBLE"
+                          attribute3="c REQUIRED DOUBLE"/>                          
+        <NameTag          spec="REQUIRED"/>
       </ParabolicFunction>      
       
       <!-- powerlaw function: phi = phi_center(1 - x/R)^(1/n) !-->
@@ -491,20 +491,20 @@
       <!-- Momentum profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDensMMSMomentum  spec="OPTIONAL NO_DATA"
                            attribute1="side REQUIRED STRING 'PLUS,MINUS'">
-        <rho0    spec="OPTIONAL DOUBLE"/>
-        <rho1    spec="OPTIONAL DOUBLE"/>
+        <rho0              spec="OPTIONAL DOUBLE"/>
+        <rho1              spec="OPTIONAL DOUBLE"/>
       </VarDensMMSMomentum>
 
       <!-- Scalar solution variable profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDensMMSSolnVar  spec="OPTIONAL NO_DATA">
-        <rho0    spec="OPTIONAL DOUBLE"/>
-        <rho1    spec="OPTIONAL DOUBLE"/>
+        <rho0             spec="OPTIONAL DOUBLE"/>
+        <rho1             spec="OPTIONAL DOUBLE"/>
       </VarDensMMSSolnVar>
        
       <!-- Density profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDensMMSDensity  spec="OPTIONAL NO_DATA">
-        <rho0    spec="OPTIONAL DOUBLE"/>
-        <rho1    spec="OPTIONAL DOUBLE"/>
+        <rho0             spec="OPTIONAL DOUBLE"/>
+        <rho1             spec="OPTIONAL DOUBLE"/>
       </VarDensMMSDensity>
 
 
@@ -514,15 +514,20 @@
     </BCExpression>
 
     <!-- Spec for initializing moments -->
-    <MomentInitialization      spec="MULTIPLE NO_DATA">
+    <MomentInitialization  spec="MULTIPLE NO_DATA">
       <!-- this is for example ACC, Aragonite... the solution variables will be m_PopulationName_0, m_PopulationName_1... -->
-      <PopulationName           spec="REQUIRED STRING" /> 
-      <Values                   spec="REQUIRED MULTIPLE_DOUBLES"/>
+      <PopulationName      spec="REQUIRED STRING" /> 
+      <Values              spec="REQUIRED MULTIPLE_DOUBLES"/>
     </MomentInitialization>
     
   </CommonTags>
 
-  <Wasatch                      spec="OPTIONAL NO_DATA">
+  <!--
+  ==========================================================
+                   WASATCH SPEC STARTS HERE
+  ==========================================================
+  -->
+  <Wasatch spec="OPTIONAL NO_DATA">
 
 		<TurbulentInlet  spec="OPTIONAL NO_DATA"
 										 attribute1="period OPTIONAL INTEGER"
@@ -965,15 +970,15 @@
       <!-- ================================================================================== -->            
       <!-- GROWTH EXPRESSION -->
       <!-- of the form G = alpha * g0 * g(r)-->
-      <GrowthExpression spec="MULTIPLE NO_DATA">
+      <GrowthExpression     spec="MULTIPLE NO_DATA">
                             
-        <GrowthModel     spec="REQUIRED STRING 'CONSTANT, MONOSURFACE, BULK_DIFFUSION, KINETIC'"/> <!-- dictates g(r) -->
+        <GrowthModel        spec="REQUIRED STRING 'CONSTANT, MONOSURFACE, BULK_DIFFUSION, KINETIC'"/> <!-- dictates g(r) -->
 
         <PreGrowthCoefficient spec="OPTIONAL DOUBLE" />  <!-- will default to 1 if not specified, dictates alpha -->
 
         <!-- specify an expression for the growth coefficient if non is specified growth rate = constant-->        
-        <GrowthCoefficientExpression   spec="OPTIONAL NO_DATA">  <!-- dictates g0 form -->
-          <NameTag              spec="REQUIRED" />
+        <GrowthCoefficientExpression  spec="OPTIONAL NO_DATA">  <!-- dictates g0 form -->
+          <NameTag                    spec="REQUIRED" />
         </GrowthCoefficientExpression> 
         
       </GrowthExpression>
@@ -981,7 +986,7 @@
       <!-- Ostwald Ripening -->
       <!-- this calculates \bar{S} once, to use in growth coefficients -->
       <!-- expression name is "SBar_PopulationName" state="STATE_N"-->
-      <OstwaldRipening spec = "OPTIONAL NO_DATA" >  
+      <OstwaldRipening    spec = "OPTIONAL NO_DATA" >  
         <MolecularVolume  spec="REQUIRED DOUBLE" />
         <SurfaceEnergy    spec="REQUIRED DOUBLE" />
         <Temperature      spec="REQUIRED DOUBLE" />
@@ -994,20 +999,20 @@
       <!-- BIRTH EXPRESSION -->
       <!-- of the form B = J * B0 * b(rstar) -->
       <BirthExpression spec="MULTIPLE NO_DATA" children1="ONE_OF(CHILD ConstantRStar, RStarExpression)">  <!-- note fix xml reqmts -->
-        <BirthModel spec="REQUIRED STRING 'POINT, UNIFORM, NORMAL'"/> <!-- dictates b(rstar) -->
+        <BirthModel    spec="REQUIRED STRING 'POINT, UNIFORM, NORMAL'"/> <!-- dictates b(rstar) -->
         
         <!-- specify birth coefficient defualt to 1 if not set, dictaes J-->
         <PreBirthCoefficient spec="OPTIONAL DOUBLE" />
         
         <!-- specify an expression for the birth rate, B0 -->
         <BirthCoefficientExpression spec="OPTIONAL NO_DATA">
-          <NameTag spec="REQUIRED"/>
+          <NameTag                  spec="REQUIRED"/>
         </BirthCoefficientExpression>
         
         <ConstantRStar spec="OPTIONAL DOUBLE"/>
         
         <RStarExpression spec="OPTIONAL NO_DATA">
-          <NameTag spec="REQUIRED"/>
+          <NameTag       spec="REQUIRED"/>
         </RStarExpression>  
         
         <StandardDeviation spec="OPTIONAL DOUBLE" />  <!-- Required for normal or uniform, std dev of norm, 1/2 width for uniform -->
@@ -1015,35 +1020,35 @@
       
       <!-- ================================================================================== -->            
       <!-- Dissolution Expression - requires that ostwald ripening is on-->
-      <Dissolution spec="OPTIONAL NO_DATA">
+      <Dissolution        spec="OPTIONAL NO_DATA">
         <CriticalRadius   spec="REQUIRED DOUBLE"/>
         <DeathCoefficient spec="OPTIONAL DOUBLE"/>
         <Supersaturation  spec="REQUIRED NO_DATA">
-          <NameTag   spec="REQUIRED"/>        
+          <NameTag        spec="REQUIRED"/>        
         </Supersaturation> 
       </Dissolution>
       
       <!-- ================================================================================== -->            
       <!-- Aggregation Expression -->
-      <AggregationExpression spec = "MULTIPLE NO_DATA">
-        <AggregationModel spec = "REQUIRED STRING 'CONSTANT, BROWNIAN, HYDRODYNAMIC'"/>
+      <AggregationExpression   spec = "MULTIPLE NO_DATA">
+        <AggregationModel      spec = "REQUIRED STRING 'CONSTANT, BROWNIAN, HYDRODYNAMIC'"/>
         <EfficiencyCoefficient spec = "OPTIONAL DOUBLE" />
         
         <AggregationCoefficientExpression spec="OPTIONAL NO_DATA">
           <NameTag spec="REQUIRED"/>
         </AggregationCoefficientExpression>
         <!-- make growth & size dependent efficiency kernel-->
-        <SizeDependentEfficiency spec="OPTIONAL NO_DATA">
-          <GrowthModel     spec="REQUIRED STRING 'CONSTANT, MONOSURFACE, BULK_DIFFUSION, KINETIC'"/>
-          <GrowthCoefficientExpression   spec="REQUIRED NO_DATA">  <!-- use the same tag here used in growth tags-->
-            <NameTag              spec="REQUIRED" />
+        <SizeDependentEfficiency        spec="OPTIONAL NO_DATA">
+          <GrowthModel                  spec="REQUIRED STRING 'CONSTANT, MONOSURFACE, BULK_DIFFUSION, KINETIC'"/>
+          <GrowthCoefficientExpression  spec="REQUIRED NO_DATA">  <!-- use the same tag here used in growth tags-->
+            <NameTag                    spec="REQUIRED" />
           </GrowthCoefficientExpression> 
-          <LengthParam spec="OPTIONAL DOUBLE" />
-          <Density spec="REQUIRED NO_DATA">
-            <NameTag spec="REQUIRED"/>
+          <LengthParam                  spec="OPTIONAL DOUBLE" />
+          <Density                      spec="REQUIRED NO_DATA">
+            <NameTag                    spec="REQUIRED"/>
           </Density>  
-          <EnergyDissipation spec="REQUIRED NO_DATA">
-            <NameTag spec="REQUIRED"/>
+          <EnergyDissipation            spec="REQUIRED NO_DATA">
+            <NameTag                    spec="REQUIRED"/>
           </EnergyDissipation>  
         </SizeDependentEfficiency>  
       </AggregationExpression>
@@ -1099,7 +1104,8 @@
       <NameTag          spec="MULTIPLE" />
     </ForceOnGraph>
 
-    <Cleave spec="MULTIPLE NO_DATA" attribute1="from REQUIRED STRING 'PARENTS,CHILDREN'">
+    <Cleave    spec="MULTIPLE NO_DATA"
+               attribute1="from REQUIRED STRING 'PARENTS,CHILDREN'">
       <NameTag spec="MULTIPLE" />
     </Cleave>
 
@@ -1126,7 +1132,7 @@
                         attribute2="min  REQUIRED DOUBLE"
                         attribute3="max  REQUIRED DOUBLE">
         <!-- specify an expression for the diffusive flux -->
-        <NameTag                spec="REQUIRED" />        
+        <NameTag        spec="REQUIRED" />        
       </FieldExpression>                    
     </FieldClipping>
 
