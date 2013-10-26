@@ -9,8 +9,7 @@
   <Wasatch>
 
     <Density>
-      <IsConstant>true</IsConstant>
-      <NameTag name="density" state="STATE_NONE" />
+      <Constant value="1" name="density" />
     </Density>
     
     <PostProcessingExpression type="SVOL">

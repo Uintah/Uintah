@@ -652,9 +652,12 @@
     <!-- Here we can specify wether we have constant density or variable density and -->
     <!-- in the case of variable density we should also define a tag for density.    -->
     <!-- =========================================================================== -->
-    <Density      spec="OPTIONAL NO_DATA">
-      <IsConstant spec="REQUIRED BOOLEAN"/>
-      <NameTag    spec="OPTIONAL" />
+    <Density    spec="OPTIONAL NO_DATA"
+                children1="ONE_OF(CHILD Constant, NameTag)">
+      <Constant spec="OPTIONAL NO_DATA"
+                attribute1="value REQUIRED DOUBLE"
+                attribute2="name REQUIRED STRING" />          
+      <NameTag  spec="OPTIONAL" />
     </Density>    
     
     <!-- ============================ -->
@@ -669,7 +672,7 @@
       <!-- primitive variable and we should just pass the primitive variable into diffusive terms. In these cases -->
       <!-- we separate density from primitive variable in this way -->
       <SolutionVariable   spec="REQUIRED STRING" />
-      <StrongForm         spec="REQUIRED BOOLEAN"/>
+      <StrongForm         spec="REQUIRED BOOLEAN"/>  <!-- defaults to true -->
       <PrimitiveVariable  spec="OPTIONAL STRING" />
 
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />

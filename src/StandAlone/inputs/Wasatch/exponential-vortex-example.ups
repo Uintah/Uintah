@@ -9,8 +9,7 @@
   <Wasatch>
 
     <Density>
-      <IsConstant>true</IsConstant>
-      <NameTag name="density" state="STATE_NONE"/>
+      <Constant value="1.0" name="density"/>
     </Density>
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
@@ -99,19 +98,11 @@
 		   </Coordinate2>		   
        </ExponentialVortex>
     </BasicExpression>
-    
-
 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="viscosity" state="STATE_NONE"/>
       <Constant>0.001</Constant>
-    </BasicExpression>
-
-    <BasicExpression type="SVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="density" state="STATE_NONE"/>
-      <Constant>1.0</Constant>
     </BasicExpression>
 
     <!-- Momentum transport equations -->
