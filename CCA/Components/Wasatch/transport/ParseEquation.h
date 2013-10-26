@@ -209,7 +209,6 @@ namespace Wasatch{
    * \param solnVarTag the solution variable tag
    * \param convFluxTag the convective flux tag - leave empty to assemble a
    *        flux, populate it to use a flux expression that already exists.
-   * \param volFracTag the volume fraction (optional, can leave empty)
    * \param convMethod the upwind method to use
    * \param advVelocityTag the advecting velocity, which lives at staggered cell centers
    * \param suffix a string containing the "_*" suffix or not, according to wether we 
@@ -231,7 +230,6 @@ namespace Wasatch{
    * \brief Register convective flux calculation for the given scalar quantity
    * \param convFluxParams Parser block "ConvectiveFluxExpression"
    * \param solnVarTag the solution variable to be advected
-   * \param volFracTag volume fraction tag - okay if empty for no volume fraction specification
    * \param suffix a string containing the "_*" suffix or not, according to wether we 
    *        want to calculate the convection term at time step "n+1" or the current time step 
    * \param factory the factory to register the resulting expression on
