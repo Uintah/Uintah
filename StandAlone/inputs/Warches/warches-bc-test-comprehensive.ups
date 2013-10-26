@@ -119,8 +119,7 @@
      <Wasatch>
 
     <Density>
-      <IsConstant>true</IsConstant>
-      <NameTag name="densityCP" state="STATE_NONE"/>      
+      <NameTag name="densityCP" state="STATE_NONE"/>     
     </Density>
  </Wasatch>
   <CFD>

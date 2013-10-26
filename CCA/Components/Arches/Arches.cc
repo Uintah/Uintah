@@ -497,18 +497,23 @@ Arches::problemSetup(const ProblemSpecP& params,
   // pulling out from tables
   //
   Uintah::ProblemSpecP densitySpec = params->findBlock("Wasatch")->findBlock("Density");
-  bool isConstDensity = false;
-  Expr::Tag densityTag = Expr::Tag();
   
-  if (densitySpec) {
-    densitySpec->get("IsConstant",isConstDensity);
-    densityTag = Wasatch::parse_nametag( densitySpec->findBlock("NameTag") );
+  if( densitySpec ){
+    Expr::Tag densityTag = Expr::Tag();
+    if( densitySpec->findBlock("NameTag") ){
+      densityTag = Wasatch::parse_nametag( densitySpec->findBlock("NameTag") );
+    }
+    else{
+      std::string densName;
+      densitySpec->findBlock("Constant")->getAttribute( "name", densName );
+      densityTag = Expr::Tag( densName, Expr::STATE_NONE );
+    }
     
     if( !(solngh->exprFactory->have_entry( densityTag )) ) {
       // register placeholder expressions for density field
       solngh->exprFactory->register_expression( new SVolExprT::Builder(densityTag) );
     }
-    
+
     if( !(initgh->exprFactory->have_entry( densityTag )) ) {
       initgh->exprFactory->register_expression( new SVolExprT::Builder(densityTag) );
     }
