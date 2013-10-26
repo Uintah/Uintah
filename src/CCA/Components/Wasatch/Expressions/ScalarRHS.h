@@ -67,7 +67,7 @@
  *  \f]
  *  where \f$\alpha_i\f$ are area fractions and \f$\alpha_V\f$ is a volume fraction.
  *
- *  This implementation also accommodates constant density
+ *  This implementation also accommodates constant density form of the RHS:
  *  \f[
  *    \frac{\partial \phi}{\partial t} =
  *     \frac{1}{\rho} \left[
@@ -76,7 +76,9 @@
  *     + \frac{1}{\rho} s_\phi
  *    \right]
  *  \f]
- *  and weak forms
+ *  where $\f\vec{V}^d_\phi = \frac{\vec{J}_\phi}{\rho}\f$ is the diffusion velocity.
+ *
+ *  It also supports the weak form of the RHS:
  *  \f[
  *    \frac{\partial \phi}{\partial t} =
  *     \frac{1}{\rho}\left[
@@ -86,9 +88,7 @@
  *     + s_\phi
  *    \right]
  *  \f]
- *  of the RHS, both with and without embedded boundaries.  Note that we retain
- *  the density in the convective flux out of convenience so that the entire RHS
- *  can be divided by the density later on.
+ *  both with and without embedded boundaries.
  */
 template< typename FieldT >
 class ScalarRHS : public Expr::Expression<FieldT>
