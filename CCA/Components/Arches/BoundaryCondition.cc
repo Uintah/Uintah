@@ -65,21 +65,10 @@
 #include <sstream>
 #include <stdlib.h>
 
-
 using namespace std;
 using namespace Uintah;
 
-#include <CCA/Components/Arches/fortran/celltypeInit_fort.h>
-#include <CCA/Components/Arches/fortran/areain_fort.h>
-#include <CCA/Components/Arches/fortran/profscalar_fort.h>
-#include <CCA/Components/Arches/fortran/inlbcs_fort.h>
-#include <CCA/Components/Arches/fortran/bcscalar_fort.h>
-#include <CCA/Components/Arches/fortran/bcuvel_fort.h>
-#include <CCA/Components/Arches/fortran/bcvvel_fort.h>
-#include <CCA/Components/Arches/fortran/bcwvel_fort.h>
 #include <CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
-#include <CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
-#include <CCA/Components/Arches/fortran/mmwallbc_fort.h>
 #include <CCA/Components/Arches/fortran/mm_computevel_fort.h>
 #include <CCA/Components/Arches/fortran/mm_explicit_fort.h>
 #include <CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
@@ -91,16 +80,10 @@ using namespace Uintah;
 BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
                                      const MPMArchesLabel* MAlb,
                                      PhysicalConstants* phys_const,
-                                     Properties* props,
-                                     bool calcReactScalar,
-                                     bool calcEnthalpy,
-                                     bool calcVariance):
+                                     Properties* props ):
                                      d_lab(label), d_MAlab(MAlb),
                                      d_physicalConsts(phys_const), 
-                                     d_props(props),
-                                     d_reactingScalarSolve(calcReactScalar),
-                                     d_enthalpySolve(calcEnthalpy),
-                                     d_calcVariance(calcVariance)
+                                     d_props(props)
 {
 
   MM_CUTOFF_VOID_FRAC = 0.5;
@@ -341,280 +324,6 @@ BoundaryCondition::copy_stencil7(DataWarehouse* new_dw,
   }
 }
 
-
-// for multimaterial
-//****************************************************************************
-// schedule the initialization of mm wall cell types
-//****************************************************************************
-void 
-BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls,
-                                            bool fixCellType)
-{
-  // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::mmWallCellTypeInit",
-                          this,
-                          &BoundaryCondition::mmWallCellTypeInit,
-                          fixCellType);
-  
-  
-
-  // New DW warehouse variables to calculate cell types if we are
-  // recalculating cell types and resetting void fractions
-
-  //  double time = d_lab->d_sharedState->getElapsedTime();
-  bool recalculateCellType = false;
-  int dwnumber = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-  
-  if (dwnumber < 2 || !fixCellType){
-    recalculateCellType = true;
-  }
-
-  Ghost::GhostType  gn = Ghost::None;
-  tsk->requires(Task::OldDW, d_lab->d_mmgasVolFracLabel,   gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_mmcellTypeLabel,     gn, 0);
-  tsk->requires(Task::OldDW, d_MAlab->mmCellType_MPMLabel, gn, 0);
-  
-  if (d_cutCells)
-    tsk->requires(Task::OldDW, d_MAlab->mmCellType_CutCellLabel, gn, 0);
-
-  if (recalculateCellType) {
-
-    tsk->requires(Task::NewDW, d_MAlab->void_frac_CCLabel, gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel,     gn, 0);
-
-    tsk->computes(d_lab->d_mmgasVolFracLabel);
-    tsk->computes(d_lab->d_mmcellTypeLabel);
-    tsk->computes(d_MAlab->mmCellType_MPMLabel);
-
-    if (d_cutCells){
-      tsk->computes(d_MAlab->mmCellType_CutCellLabel);
-    }
-    tsk->modifies(d_MAlab->void_frac_MPM_CCLabel);
-    if (d_cutCells){
-      tsk->modifies(d_MAlab->void_frac_CutCell_CCLabel);
-    }
-  }
-  else {
-
-    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, gn, 0);
-    tsk->computes(d_lab->d_mmgasVolFracLabel);
-    tsk->computes(d_lab->d_mmcellTypeLabel);
-    tsk->computes(d_MAlab->mmCellType_MPMLabel);
-    if (d_cutCells){
-      tsk->computes(d_MAlab->mmCellType_CutCellLabel);
-    }
-  }
-  sched->addTask(tsk, patches, matls);
-}
-
-//****************************************************************************
-// Actual initialization of celltype
-//****************************************************************************
-void 
-BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset*,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw,
-                                      bool fixCellType)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    
-    bool recalculateCellType = false;
-    int dwnumber = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-    if (dwnumber < 2 || !fixCellType){
-      recalculateCellType = true;
-    }
-    
-    // New DW void fraction to decide cell types and reset void fractions
-
-    constCCVariable<double> voidFrac;
-    constCCVariable<int> cellType;
-
-    CCVariable<double> mmGasVolFrac;
-    CCVariable<int> mmCellType;
-    CCVariable<int> mmCellTypeMPM;
-    CCVariable<int> mmCellTypeCutCell;
-    CCVariable<double> voidFracMPM;
-    CCVariable<double> voidFracCutCell;
-
-    constCCVariable<double> oldGasVolFrac;
-    constCCVariable<int> mmCellTypeOld;
-    constCCVariable<int> mmCellTypeMPMOld;
-    constCCVariable<int> mmCellTypeCutCellOld;
-    constCCVariable<double> voidFracMPMOld;
-    constCCVariable<double> voidFracCutCellOld;
-    
-    
-    Ghost::GhostType  gn = Ghost::None;
-    old_dw->get(oldGasVolFrac,    d_lab->d_mmgasVolFracLabel,   indx, patch,gn, 0);
-    old_dw->get(mmCellTypeOld,    d_lab->d_mmcellTypeLabel,     indx, patch,gn, 0);
-    old_dw->get(mmCellTypeMPMOld, d_MAlab->mmCellType_MPMLabel, indx, patch,gn, 0);
-    if (d_cutCells){
-      old_dw->get(mmCellTypeCutCellOld, d_MAlab->mmCellType_CutCellLabel, indx, patch,gn, 0);
-    }
-
-    if (recalculateCellType) {
-      new_dw->get(voidFrac, d_MAlab->void_frac_CCLabel, indx, patch,gn, 0);
-      old_dw->get(cellType, d_lab->d_cellTypeLabel,     indx, patch,gn, 0);
-
-      new_dw->allocateAndPut(mmGasVolFrac,  d_lab->d_mmgasVolFracLabel,   indx, patch);
-      new_dw->allocateAndPut(mmCellType,    d_lab->d_mmcellTypeLabel,     indx, patch);
-      new_dw->allocateAndPut(mmCellTypeMPM, d_MAlab->mmCellType_MPMLabel, indx, patch);
-      if (d_cutCells){
-        new_dw->allocateAndPut(mmCellTypeCutCell, d_MAlab->mmCellType_CutCellLabel, indx, patch);
-      }
-
-      new_dw->getModifiable(voidFracMPM, d_MAlab->void_frac_MPM_CCLabel, indx, patch);
-      if (d_cutCells){
-        new_dw->getModifiable(voidFracCutCell, d_MAlab->void_frac_CutCell_CCLabel, indx, patch);
-      }
-    }
-    else {
-      old_dw->get(cellType,                 d_lab->d_cellTypeLabel,       indx, patch,gn, 0);
-      new_dw->allocateAndPut(mmGasVolFrac,  d_lab->d_mmgasVolFracLabel,   indx, patch);
-      new_dw->allocateAndPut(mmCellType,    d_lab->d_mmcellTypeLabel,     indx, patch);
-      new_dw->allocateAndPut(mmCellTypeMPM, d_MAlab->mmCellType_MPMLabel, indx, patch);
-      if (d_cutCells){
-        new_dw->allocateAndPut(mmCellTypeCutCell, d_MAlab->mmCellType_CutCellLabel, indx, patch);
-      }
-    }
-
-    IntVector domLo = mmCellType.getFortLowIndex();
-    IntVector domHi = mmCellType.getFortHighIndex();
-    IntVector idxLo = domLo;
-    IntVector idxHi = domHi;
-
-    if (recalculateCellType) {
-
-      mmGasVolFrac.copyData(voidFrac);
-      mmCellType.copyData(cellType);
-      mmCellTypeMPM.copyData(cellType);
-      if (d_cutCells){
-        mmCellTypeCutCell.copyData(cellType);
-      }
-      // resets old mmwall type back to flow field and sets cells with void fraction
-      // of less than .5 to mmWall
-
-      if ( _using_new_intrusion ) {
-        for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-          for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-            for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-              IntVector currCell(colX, colY, colZ);
-
-              if (cellType[currCell] == INTRUSION ) {
-                mmGasVolFrac[currCell] = 0.0;
-                voidFracMPM[currCell] = 0.0;
-              }
-              else {
-                mmGasVolFrac[currCell] = 1.0;
-                voidFracMPM[currCell] = 1.0;
-              }
-            }
-          }
-        }
-      }
-      else {
-        int flow_field_type = -1; 
-        fort_mmcelltypeinit(idxLo, idxHi, mmGasVolFrac, mmCellType, d_mmWallID,
-                                  flow_field_type, MM_CUTOFF_VOID_FRAC);  
-
-        fort_mmcelltypeinit(idxLo, idxHi, voidFracMPM, mmCellTypeMPM, d_mmWallID,
-                                  flow_field_type, MM_CUTOFF_VOID_FRAC);  
-        if (d_cutCells)
-          fort_mmcelltypeinit(idxLo, idxHi, voidFracCutCell, mmCellTypeCutCell, d_mmWallID,
-                              flow_field_type, MM_CUTOFF_VOID_FRAC);  
-      }
-    }
-    else {
-      mmGasVolFrac.copyData(oldGasVolFrac);
-      mmCellType.copyData(mmCellTypeOld);
-      mmCellTypeMPM.copyData(mmCellTypeMPMOld);
-      if (d_cutCells){
-        mmCellTypeCutCell.copyData(mmCellTypeCutCellOld);
-      }
-    }
-  }  
-}
-
-// for multimaterial
-//****************************************************************************
-// schedule the initialization of mm wall cell types for the very first
-// time step
-//****************************************************************************
-void 
-BoundaryCondition::sched_mmWallCellTypeInit_first(SchedulerP& sched, 
-                                                  const PatchSet* patches,
-                                                  const MaterialSet* matls)
-{
-  // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::mmWallCellTypeInit_first",
-                          this,
-                          &BoundaryCondition::mmWallCellTypeInit_first);
-  
-  Ghost::GhostType  gn = Ghost::None;
-  tsk->requires(Task::NewDW, d_MAlab->void_frac_CCLabel, gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,     gn, 0);
-  tsk->computes(d_lab->d_mmcellTypeLabel);
-  tsk->modifies(d_lab->d_mmgasVolFracLabel);
-  
-  sched->addTask(tsk, patches, matls);
-}
-
-//****************************************************************************
-// Actual initialization of celltype
-//****************************************************************************
-void 
-BoundaryCondition::mmWallCellTypeInit_first(const ProcessorGroup*,
-                                            const PatchSubset* patches,
-                                            const MaterialSubset*,
-                                            DataWarehouse* ,
-                                            DataWarehouse* new_dw)        
-{
-  for (int p = 0; p < patches->size(); p++) {
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    
-    constCCVariable<int> cellType;
-    constCCVariable<double> voidFrac;
-    CCVariable<int> mmcellType;
-    CCVariable<double> mmvoidFrac;
-    
-    Ghost::GhostType  gn = Ghost::None;
-    new_dw->get(cellType,              d_lab->d_cellTypeLabel,      indx, patch, gn, 0);
-    new_dw->get(voidFrac,              d_MAlab->void_frac_CCLabel,  indx, patch, gn, 0);
-    new_dw->allocateAndPut(mmcellType, d_lab->d_mmcellTypeLabel,    indx, patch);
-    new_dw->getModifiable(mmvoidFrac,  d_lab->d_mmgasVolFracLabel,  indx, patch);
-    mmcellType.copyData(cellType);
-    mmvoidFrac.copyData(voidFrac);
-        
-    IntVector domLo = mmcellType.getFortLowIndex();
-    IntVector domHi = mmcellType.getFortHighIndex();
-    IntVector idxLo = domLo;
-    IntVector idxHi = domHi;
-
-    // resets old mmwall type back to flow field and sets cells with void fraction
-    // of less than .01 to mmWall
-
-    int flow = -1; 
-    fort_mmcelltypeinit(idxLo, idxHi, mmvoidFrac, mmcellType, d_mmWallID,
-                        flow, MM_CUTOFF_VOID_FRAC);
-
-    // allocateAndPut instead:
-    /* new_dw->put(mmcellType, d_lab->d_mmcellTypeLabel, indx, patch); */;
-    // save in arches label
-    // allocateAndPut instead:
-    /* new_dw->put(mmvoidFrac, d_lab->d_mmgasVolFracLabel, indx, patch); */;
-  }  
-}
-
 //______________________________________________________________________
 //  Set the boundary conditions on the pressure stencil.
 // This will change when we move to the UCF based boundary conditions
@@ -656,55 +365,6 @@ BoundaryCondition::pressureBC(const Patch* patch,
   zeroStencilDirection( patch, matl_index, sign, A, sub_types ); 
 
 }
-
-//****************************************************************************
-// Actually compute the scalar bcs
-//****************************************************************************
-void 
-BoundaryCondition::scalarBC(const Patch* patch,
-                            ArchesVariables* vars,
-                            ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-
-  // Get the wall boundary and flow field codes
-  int wall_celltypeval = wallCellType();
-
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-
-  //fortran call
-  fort_bcscalar(idxLo, idxHi,
-                vars->scalarCoeff[Arches::AE],
-                vars->scalarCoeff[Arches::AW],
-                vars->scalarCoeff[Arches::AN],
-                vars->scalarCoeff[Arches::AS],
-                vars->scalarCoeff[Arches::AT],
-                vars->scalarCoeff[Arches::AB],
-                vars->scalarNonlinearSrc, vars->scalarLinearSrc,
-                vars->scalarConvectCoeff[Arches::AE],
-                vars->scalarConvectCoeff[Arches::AW],
-                vars->scalarConvectCoeff[Arches::AN],
-                vars->scalarConvectCoeff[Arches::AS],
-                vars->scalarConvectCoeff[Arches::AT],
-                vars->scalarConvectCoeff[Arches::AB],
-                vars->scalarDiffusionCoeff[Arches::AE],
-                vars->scalarDiffusionCoeff[Arches::AW],
-                vars->scalarDiffusionCoeff[Arches::AN], 
-                vars->scalarDiffusionCoeff[Arches::AS],
-                vars->scalarDiffusionCoeff[Arches::AT],
-                vars->scalarDiffusionCoeff[Arches::AB],
-                constvars->cellType, wall_celltypeval,
-                xminus, xplus, yminus, yplus, zminus, zplus);
-}
-
 
 void
 BoundaryCondition::mmWallTemperatureBC(const Patch* patch,
@@ -1027,52 +687,6 @@ BoundaryCondition::mmpressureBC(DataWarehouse* new_dw,
 }
 
 //______________________________________________________________________
-// applies multimaterial bc's for scalars and pressure
-void
-BoundaryCondition::mmscalarWallBC( const Patch* patch,
-                                   CellInformation*,
-                                   ArchesVariables* vars,
-                                   ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-  //fortran call
-  fort_mmwallbc(idxLo, idxHi,
-                      vars->scalarConvectCoeff[Arches::AE], vars->scalarConvectCoeff[Arches::AW],
-                      vars->scalarConvectCoeff[Arches::AN], vars->scalarConvectCoeff[Arches::AS],
-                      vars->scalarConvectCoeff[Arches::AT], vars->scalarConvectCoeff[Arches::AB],
-                      vars->scalarNonlinearSrc, vars->scalarLinearSrc,
-                      constvars->cellType, d_mmWallID);
-  fort_mmwallbc(idxLo, idxHi,
-                      vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
-                      vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS],
-                      vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
-                      vars->scalarNonlinearSrc, vars->scalarLinearSrc,
-                      constvars->cellType, d_mmWallID);
-}
-
-//______________________________________________________________________
-// applies multimaterial bc's for enthalpy
-void
-BoundaryCondition::mmEnthalpyWallBC( const Patch* patch,
-                                     CellInformation*,
-                                     ArchesVariables* vars,
-                                     ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-  //fortran call
-  fort_mmwallbc(idxLo, idxHi,
-                vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
-                vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS],
-                vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
-                vars->scalarNonlinearSrc, vars->scalarLinearSrc,
-                constvars->cellType, d_mmWallID);
-}
-
-//______________________________________________________________________
 //
 void
 BoundaryCondition::calculateVelocityPred_mm(const Patch* patch,
@@ -1218,98 +832,6 @@ BoundaryCondition::calculateVelRhoHat_mm(const Patch* patch,
                        delta_t, ioff, joff, koff,
                        constvars->cellType,
                        d_mmWallID);
-}
-
-//****************************************************************************
-// Scalar Solve for Multimaterial
-//****************************************************************************
-void 
-BoundaryCondition::scalarLisolve_mm(const Patch* patch,
-                                    double delta_t,
-                                    ArchesVariables* vars,
-                                    ArchesConstVariables* constvars,
-                                    CellInformation* cellinfo)
-{
-  // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-
-
-  fort_mm_explicit(idxLo, idxHi, vars->scalar, constvars->old_scalar,
-                   constvars->scalarCoeff[Arches::AE], 
-                   constvars->scalarCoeff[Arches::AW], 
-                   constvars->scalarCoeff[Arches::AN], 
-                   constvars->scalarCoeff[Arches::AS], 
-                   constvars->scalarCoeff[Arches::AT], 
-                   constvars->scalarCoeff[Arches::AB], 
-                   constvars->scalarCoeff[Arches::AP], 
-                   constvars->scalarNonlinearSrc, constvars->density_guess,
-                   cellinfo->sew, cellinfo->sns, cellinfo->stb, 
-                   delta_t,
-                   constvars->cellType, d_mmWallID);
-
-}
-
-//****************************************************************************
-// Enthalpy Solve for Multimaterial
-//****************************************************************************
-void 
-BoundaryCondition::enthalpyLisolve_mm(const Patch* patch,
-                                      double delta_t,
-                                      ArchesVariables* vars,
-                                      ArchesConstVariables* constvars,
-                                      CellInformation* cellinfo)
-{
-  // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-
-  fort_mm_explicit_oldvalue(idxLo, idxHi, vars->enthalpy, constvars->old_enthalpy,
-                            constvars->scalarCoeff[Arches::AE], 
-                            constvars->scalarCoeff[Arches::AW], 
-                            constvars->scalarCoeff[Arches::AN], 
-                            constvars->scalarCoeff[Arches::AS], 
-                            constvars->scalarCoeff[Arches::AT], 
-                            constvars->scalarCoeff[Arches::AB], 
-                            constvars->scalarCoeff[Arches::AP], 
-                            constvars->scalarNonlinearSrc, constvars->density_guess,
-                            cellinfo->sew, cellinfo->sns, cellinfo->stb, 
-                            delta_t,
-                            constvars->cellType, d_mmWallID);
-
-}
-
-//****************************************************************************
-// Set zero gradient for scalar for outlet and pressure BC
-//****************************************************************************
-void 
-BoundaryCondition::scalarOutletPressureBC(const Patch* patch,
-                                          ArchesVariables* vars,
-                                          ArchesConstVariables* constvars)
-                                          
-{  
-  int outlet_celltypeval = outletCellType();
-  int pressure_celltypeval = pressureCellType();
-  
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  
-  Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-  
-  for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-    Patch::FaceType face = *itr;
-    IntVector offset = patch->faceDirection(face);
-    
-    for(CellIterator iter=patch->getFaceIterator(face, MEC); !iter.done();iter++) {
-      IntVector c = *iter;
-      IntVector intCell = c - offset;    // interiorCell
-      
-      if ((constvars->cellType[c] == outlet_celltypeval)||
-          (constvars->cellType[c] == pressure_celltypeval)){
-        vars->scalar[c]= vars->scalar[intCell];
-      }
-    }
-  }
 }
 
 //****************************************************************************
@@ -3055,13 +2577,6 @@ BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
 
   }
 
-  // Energy
-  if ( d_enthalpySolve ){ 
-
-    tsk->modifies( d_lab->d_enthalpySPLabel ); 
-
-  }
-
   sched->addTask(tsk, patches, matls);
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3088,7 +2603,6 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
     SFCXVariable<double> uRhoHat; 
     SFCYVariable<double> vRhoHat; 
     SFCZVariable<double> wRhoHat; 
-    CCVariable<double> enthalpy; 
     constCCVariable<double> density; 
 
     new_dw->getModifiable( uVelocity, d_lab->d_uVelocitySPBCLabel, matl_index, patch ); 
@@ -3097,8 +2611,6 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
     new_dw->getModifiable( uRhoHat, d_lab->d_uVelRhoHatLabel, matl_index, patch ); 
     new_dw->getModifiable( vRhoHat, d_lab->d_vVelRhoHatLabel, matl_index, patch ); 
     new_dw->getModifiable( wRhoHat, d_lab->d_wVelRhoHatLabel, matl_index, patch ); 
-    if ( d_enthalpySolve )
-      new_dw->getModifiable( enthalpy, d_lab->d_enthalpySPLabel, matl_index, patch ); 
     new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
 
     MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 

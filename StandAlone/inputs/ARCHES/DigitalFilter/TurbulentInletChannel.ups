@@ -22,7 +22,6 @@
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
     <save label="CCVelocity"/>
-    <save label="scalarSP"/>
     <save label="densityCP"/>
     <save label="viscosityCTS"/>
     <save label="cellType"/>
@@ -132,9 +131,7 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-      <Turbulence model="compdynamicprocedure">
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-      </Turbulence>
+      <Turbulence model="compdynamicprocedure"/>
 
       <!--Properties>
       
@@ -199,10 +196,6 @@
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
-        <MixtureFractionSolver>
-          <convection_scheme>central-upwind</convection_scheme>
-        </MixtureFractionSolver>
 
       </ExplicitSolver>
     </ARCHES>

@@ -1,4 +1,4 @@
-/*
+/* 
  * The MIT License
  *
  * Copyright (c) 1997-2012 The University of Utah
@@ -115,9 +115,6 @@ ArchesLabel::ArchesLabel()
   // Viscosity Labels
   d_viscosityCTSLabel           = VarLabel::create("viscosityCTS",            CC_double);
   d_turbViscosLabel             = VarLabel::create("turb_viscosity",          CC_double);
-  d_scalarDiffusivityLabel      = VarLabel::create("scalarDiffusivity",       CC_double);
-  d_enthalpyDiffusivityLabel    = VarLabel::create("enthalpyDiffusivity",     CC_double);
-  d_reactScalarDiffusivityLabel = VarLabel::create("reactScalarDiffusivity",  CC_double);
   
   // Pressure Labels
   d_pressurePSLabel    = VarLabel::create("pressurePS", CC_double);
@@ -145,33 +142,16 @@ ArchesLabel::ArchesLabel()
   d_refPressurePred_label =  VarLabel::create("refPressurePredLabel", sum_variable); //ref pressure only used in the pressure solver
   d_refPressure_label     =  VarLabel::create("refPressureLabel",     sum_variable);
 
-  // Scalar 
-  d_scalarSPLabel    =  VarLabel::create("scalarSP",    CC_double);
-  d_scalarTempLabel  =  VarLabel::create("scalarTemp",  CC_double);
-  d_scalarFELabel    =  VarLabel::create("scalarFE",    CC_double);
 
   // scalar variance
   d_scalarVarSPLabel  = VarLabel::create("scalarVarSP",  CC_double);
-  d_scalarDissSPLabel = VarLabel::create("scalarDissSP", CC_double);
   
   // Scalar Coef
   d_scalCoefSBLMLabel = VarLabel::create("scalCoefSBLM",CC_double);
 
-  // New Scalar Coefs
-  d_scalarTotCoefLabel  = VarLabel::create("scalarTotCoef",  CC_double); 
 
   // Scalar Non Linear Src
   d_scalNonLinSrcSBLMLabel = VarLabel::create("scalNonLinSrcSBLM",CC_double);
-
-  // reactive scalar
-  d_reactscalarSPLabel    =  VarLabel::create("reactscalarSP",    CC_double);
-  d_reactscalarTempLabel  =  VarLabel::create("reactscalarTemp",  CC_double);
-  d_reactscalarFELabel    =  VarLabel::create("reactscalarFE",    CC_double);
-
-  // Reactscalar Coef
-  d_reactscalCoefSBLMLabel = VarLabel::create("reactscalCoefSBLM",  CC_double);
-  // Reactscalar Non Linear Src
-  d_reactscalNonLinSrcSBLMLabel = VarLabel::create("reactscalNonLinSrcSBLM",CC_double);
 
   // Cell Centered data after interpolation (for use in visualization and turbulence models)
   d_CCVelocityLabel   =  VarLabel::create("CCVelocity",      CC_Vector);
@@ -184,7 +164,6 @@ ArchesLabel::ArchesLabel()
   d_mmgasVolFracLabel = VarLabel::create("mmgasVolFrac",  CC_double);
 
   // for reacting flows
-  d_normalizedScalarVarLabel = VarLabel::create("normalizedScalarVar",CC_double);
   d_dummyTLabel    =  VarLabel::create("dummyT",    CC_double);
   d_tempINLabel    =  VarLabel::create("tempIN",    CC_double);
   d_tempFxLabel    =  VarLabel::create("tempFxLabel", SFCX_double); 
@@ -242,7 +221,6 @@ ArchesLabel::ArchesLabel()
   d_scalDiffCoefLabel       =  VarLabel::create("scalDiffCoef",       CC_double);
   d_scalDiffCoefSrcLabel    =  VarLabel::create("scalDiffCoefSrc",    CC_double);
   d_enthDiffCoefLabel       =  VarLabel::create("enthDiffCoef",       CC_double);
-  d_reactscalDiffCoefLabel  =  VarLabel::create("reactscalDiffCoef",  CC_double);
 
 #ifdef WASATCH_IN_ARCHES
   d_uVelRhoHatRHSPartLabel =  VarLabel::create("Umom_rhs_partial",     SFCX_double);
@@ -261,12 +239,6 @@ ArchesLabel::ArchesLabel()
 
   d_pressurePredLabel = VarLabel::create("pressurePred",    CC_double);
 
-  // enthalpy labels
-  d_enthalpySPLabel    =  VarLabel::create("enthalpySP",    CC_double);
-  d_enthalpyTempLabel  =  VarLabel::create("enthalpyTemp",  CC_double);
-  d_enthalpyFELabel    =  VarLabel::create("enthalpyFE",    CC_double);
-  d_enthalpyRXNLabel   =  VarLabel::create("enthalpyRXN",   CC_double);
- 
   // Enthalpy Coef
   d_enthCoefSBLMLabel = VarLabel::create("enthCoefSBLM",      CC_double);
   // Enthalpy Non Linear Src
@@ -288,15 +260,12 @@ ArchesLabel::ArchesLabel()
   d_radiationFluxBINLabel = VarLabel::create("radiationFluxBIN",  CC_double);
   d_radiationVolqINLabel = VarLabel::create("radiationVolqIN",  CC_double);
 
-  d_reactscalarSRCINLabel = VarLabel::create("reactscalarSRCIN",  CC_double);    
-
   //__________________________________
   // Scalesimilarity
   d_stressTensorCompLabel  =  VarLabel::create("stressTensorComp",  CC_double ); 
   
   d_strainTensorCompLabel  =  VarLabel::create("strainTensorComp",  CC_double);
   d_LIJCompLabel           =  VarLabel::create("LIJComp",           CC_double);
-  d_scalarFluxCompLabel    = VarLabel::create("scalarFluxComp",     CC_double);
   
   //__________________________________
   // Dynamic procedure
@@ -439,21 +408,11 @@ ArchesLabel::ArchesLabel()
   d_filterRhoELabel   =  VarLabel::create("filterRhoE",   CC_double );
   d_filterRhoRFLabel  =  VarLabel::create("filterRhoRF",  CC_double );
  
-  d_scalarGradientCompLabel             =  VarLabel::create("scalarGradientComp",             CC_double);
   d_filterScalarGradientCompLabel       =  VarLabel::create("filterScalarGradientComp",       CC_double);
-  d_enthalpyGradientCompLabel           =  VarLabel::create("enthalpyGradientComp",           CC_double);
   d_filterEnthalpyGradientCompLabel     =  VarLabel::create("filterEnthalpyGradientComp",     CC_double);
-  d_reactScalarGradientCompLabel        =  VarLabel::create("reactScalarGradientComp",        CC_double);
   d_filterReactScalarGradientCompLabel  =  VarLabel::create("filterReactScalarGradientComp",  CC_double);
   d_filterStrainTensorCompLabel         =  VarLabel::create("filterStrainTensorComp",         CC_double);
   d_filterVolumeLabel                   =  VarLabel::create("filterVolume",                   CC_double);
-
-  d_scalarNumeratorLabel         =  VarLabel::create("scalarNumerator",         CC_double);
-  d_scalarDenominatorLabel       =  VarLabel::create("scalarDenominator",       CC_double);
-  d_enthalpyNumeratorLabel       =  VarLabel::create("enthalpyNumerator",       CC_double);
-  d_enthalpyDenominatorLabel     =  VarLabel::create("enthalpyDenominator",     CC_double);
-  d_reactScalarNumeratorLabel    =  VarLabel::create("reactScalarNumerator",    CC_double);
-  d_reactScalarDenominatorLabel  =  VarLabel::create("reactScalarDenominator",  CC_double);
 
   d_ShFLabel   =  VarLabel::create("ShF",   CC_double);
   d_ShELabel   =  VarLabel::create("ShE",   CC_double);
@@ -473,8 +432,6 @@ ArchesLabel::ArchesLabel()
   d_so2RateLabel = VarLabel::create("so2Rate",  CC_double);
 
   //Artificial source terms
-  d_scalarBoundarySrcLabel    =  VarLabel::create("scalarBoundarySrc",    CC_double);
-  d_enthalpyBoundarySrcLabel  =  VarLabel::create("enthalpyBoundarySrc",  CC_double);
   d_umomBoundarySrcLabel      =  VarLabel::create("umomBoundarySrc",      SFCX_double);
   d_vmomBoundarySrcLabel      =  VarLabel::create("vmomBoundarySrc",      SFCY_double);
   d_wmomBoundarySrcLabel      =  VarLabel::create("wmomBoundarySrc",      SFCZ_double);
@@ -539,9 +496,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_filterdrhodtLabel);
   VarLabel::destroy(d_viscosityCTSLabel);
   VarLabel::destroy(d_turbViscosLabel); 
-  VarLabel::destroy(d_scalarDiffusivityLabel);
-  VarLabel::destroy(d_enthalpyDiffusivityLabel);
-  VarLabel::destroy(d_reactScalarDiffusivityLabel);
   VarLabel::destroy(d_pressurePSLabel);
   VarLabel::destroy(d_pressureGuessLabel);
   VarLabel::destroy(d_pressureExtraProjectionLabel);
@@ -553,19 +507,9 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_uMomLabel);
   VarLabel::destroy(d_vMomLabel);
   VarLabel::destroy(d_wMomLabel);
-  VarLabel::destroy(d_scalarSPLabel);
-  VarLabel::destroy(d_scalarTempLabel);
-  VarLabel::destroy(d_scalarFELabel);
   VarLabel::destroy(d_scalarVarSPLabel);
-  VarLabel::destroy(d_scalarDissSPLabel);
   VarLabel::destroy(d_scalCoefSBLMLabel);
-  VarLabel::destroy(d_scalarTotCoefLabel);
   VarLabel::destroy(d_scalNonLinSrcSBLMLabel);
-  VarLabel::destroy(d_reactscalarSPLabel);
-  VarLabel::destroy(d_reactscalarTempLabel);
-  VarLabel::destroy(d_reactscalarFELabel);
-  VarLabel::destroy(d_reactscalCoefSBLMLabel);
-  VarLabel::destroy(d_reactscalNonLinSrcSBLMLabel);
   VarLabel::destroy(d_refDensity_label);
   VarLabel::destroy(d_refDensityPred_label);
   VarLabel::destroy(d_refPressurePred_label);
@@ -579,7 +523,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_cpINLabel);
   VarLabel::destroy(d_co2INLabel);
   VarLabel::destroy(d_h2oINLabel);
-  VarLabel::destroy(d_normalizedScalarVarLabel);
   VarLabel::destroy(d_heatLossLabel);
 
   VarLabel::destroy(d_h2sINLabel);
@@ -619,7 +562,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_scalDiffCoefLabel);
   VarLabel::destroy(d_scalDiffCoefSrcLabel);
   VarLabel::destroy(d_enthDiffCoefLabel);
-  VarLabel::destroy(d_reactscalDiffCoefLabel);
   VarLabel::destroy(d_uVelRhoHatLabel);
   VarLabel::destroy(d_vVelRhoHatLabel);
   VarLabel::destroy(d_wVelRhoHatLabel);
@@ -627,10 +569,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_vVelRhoHat_CCLabel);
   VarLabel::destroy(d_wVelRhoHat_CCLabel);
   VarLabel::destroy(d_pressurePredLabel);
-  VarLabel::destroy(d_enthalpySPLabel);
-  VarLabel::destroy(d_enthalpyTempLabel);
-  VarLabel::destroy(d_enthalpyFELabel);
-  VarLabel::destroy(d_enthalpyRXNLabel);
   VarLabel::destroy(d_enthCoefSBLMLabel);
   VarLabel::destroy(d_enthNonLinSrcSBLMLabel);
   VarLabel::destroy(d_absorpINLabel);
@@ -644,7 +582,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_radiationFluxTINLabel);
   VarLabel::destroy(d_radiationFluxBINLabel);
   VarLabel::destroy(d_radiationVolqINLabel);
-  VarLabel::destroy(d_reactscalarSRCINLabel);
   
  // Runge-Kutta 3d order properties labels
   VarLabel::destroy(d_refDensityInterm_label);
@@ -655,7 +592,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_stressTensorCompLabel); 
   VarLabel::destroy(d_strainTensorCompLabel);
   VarLabel::destroy(d_LIJCompLabel);
-  VarLabel::destroy(d_scalarFluxCompLabel);
   VarLabel::destroy(d_velocityDivergenceLabel);
   VarLabel::destroy(d_vorticityXLabel);
   VarLabel::destroy(d_vorticityYLabel);
@@ -702,20 +638,11 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_filterRhoFLabel);
   VarLabel::destroy(d_filterRhoELabel);
   VarLabel::destroy(d_filterRhoRFLabel);
-  VarLabel::destroy(d_scalarGradientCompLabel);
   VarLabel::destroy(d_filterScalarGradientCompLabel);
-  VarLabel::destroy(d_enthalpyGradientCompLabel);
   VarLabel::destroy(d_filterEnthalpyGradientCompLabel);
-  VarLabel::destroy(d_reactScalarGradientCompLabel);
   VarLabel::destroy(d_filterReactScalarGradientCompLabel);
   VarLabel::destroy(d_filterStrainTensorCompLabel);
   VarLabel::destroy(d_filterVolumeLabel); 
-  VarLabel::destroy(d_scalarNumeratorLabel); 
-  VarLabel::destroy(d_scalarDenominatorLabel); 
-  VarLabel::destroy(d_enthalpyNumeratorLabel); 
-  VarLabel::destroy(d_enthalpyDenominatorLabel); 
-  VarLabel::destroy(d_reactScalarNumeratorLabel); 
-  VarLabel::destroy(d_reactScalarDenominatorLabel); 
   VarLabel::destroy(d_ShFLabel);
   VarLabel::destroy(d_ShELabel);
   VarLabel::destroy(d_ShRFLabel);
@@ -770,8 +697,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_totalgradpmmsExactSolPredLabel);
   VarLabel::destroy(d_totalgradpmmsExactSolIntermLabel);
 
-  VarLabel::destroy(d_scalarBoundarySrcLabel);
-  VarLabel::destroy(d_enthalpyBoundarySrcLabel);
   VarLabel::destroy(d_umomBoundarySrcLabel);
   VarLabel::destroy(d_vmomBoundarySrcLabel);
   VarLabel::destroy(d_wmomBoundarySrcLabel);

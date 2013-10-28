@@ -75,7 +75,6 @@ class ScaleSimilarityModel;
 class Properties;
 class BoundaryCondition;
 class PhysicalConstants;
-class EnthalpySolver;
 class PartVel;
 class DQMOM;
 class EfficiencyCalculator; 
@@ -91,9 +90,6 @@ public:
                  TurbulenceModel* turbModel,
                  ScaleSimilarityModel* scaleSimilarityModel,
                  PhysicalConstants* physConst,
-                 bool calcScalar,
-                 bool calcEnthalpy,
-                 bool calcVariance,
                  const ProcessorGroup* myworld,
                  SolverInterface* hypreSolver);
 
@@ -151,11 +147,6 @@ public:
                             const MaterialSet* matls,
                             const TimeIntegratorLabel* timelabels);
 
-  void sched_saveFECopies(SchedulerP&,
-                          const PatchSet* patches,
-                          const MaterialSet* matls,
-                          const TimeIntegratorLabel* timelabels);
-
   void sched_computeDensityLag(SchedulerP&,
                                const PatchSet* patches,
                                const MaterialSet* matls,
@@ -183,23 +174,6 @@ public:
                                 const MaterialSet* matls,
                                 const TimeIntegratorLabel* timelabels);
 
-  void sched_syncRhoF(SchedulerP&,
-                      const PatchSet* patches,
-                      const MaterialSet* matls,
-                      const TimeIntegratorLabel* timelabels);
-
-  void sched_computeMMSError(SchedulerP&,
-                             const PatchSet* patches,
-                             const MaterialSet* matls,
-                             const TimeIntegratorLabel* timelabels);
-
-  /** @brief This is a temporary function to allow us to avoid having to specify 
-   * <MixtureFractionSolver> in the input file. **/ 
-  void sched_allocateDummyScalar( SchedulerP& sched, 
-                                   const PatchSet* patches, 
-                                   const MaterialSet* matls, 
-                                   int timesubstep );
-
   inline double recomputeTimestep(double current_dt) {
     return current_dt/2;
   }
@@ -210,12 +184,6 @@ public:
 
   inline double getAdiabaticAirEnthalpy() const{
     return d_H_air;
-  }
-  inline void setMMS(bool doMMS) {
-    d_doMMS=doMMS;
-  }
-  inline bool getMMS() const {
-    return d_doMMS;
   }
   inline void setNumSourceBoundaries(int numSourceBoundaries){
     d_numSourceBoundaries = numSourceBoundaries;
@@ -289,13 +257,6 @@ private:
                       DataWarehouse* new_dw,
                       const TimeIntegratorLabel* timelabels);
 
-  void saveFECopies(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels);
-
   void computeDensityLag(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
@@ -333,26 +294,6 @@ private:
                       DataWarehouse* new_dw,
                       const TimeIntegratorLabel* timelabels);
 
-  void syncRhoF(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels);
-
-  void computeMMSError(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels);
-
-  void allocateDummyScalar(const ProcessorGroup* pc,
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw,
-                           int timesubstep );
 
   void setPartVel( PartVel* partVel ) {
     d_partVel = partVel; };
@@ -377,9 +318,6 @@ private:
   ScaleSimilarityModel* d_scaleSimilarityModel;
   bool d_mixedModel;
 
-  bool d_calScalar;
-  bool d_calcVariance;
-
   MomentumSolver* d_momSolver;             ///< Momentum solver 
   PhysicalConstants* d_physicalConsts;     ///< Physical constants
   WallModelDriver* d_wall_ht_models;       ///< Heat transfer models for walls
@@ -390,12 +328,10 @@ private:
   bool nosolve_timelabels_allocated;
 
   bool d_3d_periodic;
-  bool d_dynScalarModel;
   int d_turbModelCalcFreq;
   bool d_turbModelRKsteps;
   int d_turbCounter;
   double d_H_air;
-  bool d_doMMS;
   bool d_restart_on_negative_density_guess;
   bool d_noisyDensityGuess;
   string d_mms;

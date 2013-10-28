@@ -109,15 +109,6 @@ public:
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars);
 
-  ////////////////////////////////////////////////////////////////////////
-  // Set stencil weights. (Scalars)
-  // It uses second order hybrid differencing for computing
-  // coefficients
-  void calculateScalarCoeff(const Patch* patch,
-                            CellInformation* cellinfo,
-                            ArchesVariables* vars,
-                            ArchesConstVariables* constvars,
-                            int conv_scheme);
   template<class T>
   void compute_Ap(CellIterator iter,
                   CCVariable<Stencil7>& A,
@@ -139,25 +130,6 @@ public:
   void calculatePressDiagonal(const Patch* patch, 
                               ArchesVariables* vars);
 
-  ////////////////////////////////////////////////////////////////////////
-  // Documentation here
-  void calculateScalarDiagonal(const Patch* patch,
-                               ArchesVariables* vars);
-  void calculateScalarDiagonal__new(const Patch* patch,
-                               ArchesVariables* vars);
-
-  ////////////////////////////////////////////////////////////////////////
-  // Documentation here
-  void calculateScalarFluxLimitedConvection(const Patch* patch,
-                                            CellInformation* cellinfo,
-                                            ArchesVariables* vars,
-                                            ArchesConstVariables* constvars,
-                                            const int wall_celltypeval,
-                                            int limiter_type,
-                                            int boundary_limiter_type,
-                                            bool central_limiter);
-
-
   inline void setFilter(Filter* filter) {
     d_filter = filter;
   }
@@ -166,12 +138,6 @@ public:
     d_turbPrNo = turbPrNo;
   }
 
-  inline void setMMS(bool doMMS) {
-    d_doMMS=doMMS;
-  }
-  inline bool getMMS() const {
-    return d_doMMS;
-  }
 protected:
 
 private:
@@ -187,7 +153,6 @@ private:
 
       Filter* d_filter;
       double d_turbPrNo;
-      bool d_doMMS;
 }; // end class Discretization
 
 } // End namespace Uintah

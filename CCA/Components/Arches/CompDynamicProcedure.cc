@@ -96,36 +96,6 @@ CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
   problemSetupCommon( params ); 
   ProblemSpecP db = params->findBlock("Turbulence");
-  if (d_calcVariance) {
-
-    proc0cout << "Scale similarity type model with Favre filter will be used"<<endl;
-    proc0cout << "to model variance" << endl;
-
-    db->require("variance_coefficient",d_CFVar); // const reqd by variance eqn
-    db->getWithDefault("mixture_fraction_label",d_mix_frac_label_name, "scalarSP"); 
-    d_mf_label = VarLabel::find( d_mix_frac_label_name );
-    proc0cout << "Using " << *d_mf_label << " to compute scalar variance." << endl;
-
-    db->getWithDefault("filter_variance_limit_scalar",d_filter_var_limit_scalar,true);
-    if( d_filter_var_limit_scalar) {
-      proc0cout << "Scalar for variance limit will be Favre filtered" << endl;
-    }
-    else {
-      proc0cout << "WARNING! Scalar for variance limit will NOT be filtered" << endl;
-      proc0cout << "possibly causing high variance values" << endl;
-    }
-  }
-
-  // actually, Shmidt number, not Prandtl number
-  d_turbPrNo = 0.0;
-  if (db->findBlock("turbulentPrandtlNumber")) {
-    db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
-  }
-
-  db->getWithDefault("dynamicScalarModel",d_dynScalarModel,false);
-  if (d_dynScalarModel){
-    d_turbPrNo = 1.0; 
-  }
 
   db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
 
@@ -161,15 +131,6 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
     tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gn); 
 
-    //__________________________________
-    if (d_dynScalarModel) {
-      if (d_calcScalar){
-        tsk->requires(Task::NewDW, d_mf_label,      gac, 1);
-      }
-      if (d_calcEnthalpy){
-        tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,    gac, 1);
-      }
-    }
 
     int mmWallID = d_boundaryCondition->getMMWallId();
     if (mmWallID > 0)
@@ -181,24 +142,12 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
       tsk->computes(d_lab->d_filterRhoVLabel);
       tsk->computes(d_lab->d_filterRhoWLabel);
       tsk->computes(d_lab->d_filterRhoLabel);
-      if (d_dynScalarModel) {
-        if (d_calcScalar)
-          tsk->computes(d_lab->d_filterRhoFLabel);
-        if (d_calcEnthalpy)
-          tsk->computes(d_lab->d_filterRhoELabel);
-      }
     }
     else {
       tsk->modifies(d_lab->d_filterRhoULabel);
       tsk->modifies(d_lab->d_filterRhoVLabel);
       tsk->modifies(d_lab->d_filterRhoWLabel);
       tsk->modifies(d_lab->d_filterRhoLabel);
-      if (d_dynScalarModel) {
-        if (d_calcScalar)
-          tsk->modifies(d_lab->d_filterRhoFLabel);
-        if (d_calcEnthalpy)
-          tsk->modifies(d_lab->d_filterRhoELabel);
-      }
     }  
 
     sched->addTask(tsk, patches, matls);
@@ -225,16 +174,6 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel,     gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        tsk->requires(Task::NewDW, d_mf_label,   gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoFLabel, gac, 1);
-      }
-      if (d_calcEnthalpy) {
-        tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoELabel, gac, 1);
-      }
-    }
 
     // Computes
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -242,40 +181,11 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
           d_lab->d_symTensorMatl, oams);
       tsk->computes(d_lab->d_filterStrainTensorCompLabel,
           d_lab->d_symTensorMatl, oams);
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          tsk->computes(d_lab->d_scalarGradientCompLabel,
-              d_lab->d_vectorMatl, oams);
-          tsk->computes(d_lab->d_filterScalarGradientCompLabel,
-              d_lab->d_vectorMatl, oams);
-        }
-        if (d_calcEnthalpy) {
-          tsk->computes(d_lab->d_enthalpyGradientCompLabel,
-              d_lab->d_vectorMatl, oams);
-          tsk->computes(d_lab->d_filterEnthalpyGradientCompLabel,
-              d_lab->d_vectorMatl, oams);
-        }
-      }  
-    }
-    else {
+    } else {
       tsk->modifies(d_lab->d_strainTensorCompLabel,
           d_lab->d_symTensorMatl, oams);
       tsk->modifies(d_lab->d_filterStrainTensorCompLabel,
           d_lab->d_symTensorMatl, oams);
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          tsk->modifies(d_lab->d_scalarGradientCompLabel,
-              d_lab->d_vectorMatl, oams);
-          tsk->modifies(d_lab->d_filterScalarGradientCompLabel,
-              d_lab->d_vectorMatl, oams);
-        }
-        if (d_calcEnthalpy) {
-          tsk->modifies(d_lab->d_enthalpyGradientCompLabel,
-              d_lab->d_vectorMatl, oams);
-          tsk->modifies(d_lab->d_filterEnthalpyGradientCompLabel,
-              d_lab->d_vectorMatl, oams);
-        }
-      }  
     }  
     sched->addTask(tsk, patches, matls);
   }
@@ -306,56 +216,16 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_filterStrainTensorCompLabel,
         d_lab->d_symTensorMatl, oams,gac, 1);
 
-    //__________________________________
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        tsk->requires(Task::NewDW, d_mf_label,   gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoFLabel, gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_scalarGradientCompLabel,
-            d_lab->d_vectorMatl, oams, gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterScalarGradientCompLabel,
-            d_lab->d_vectorMatl, oams, gac, 1);
-      }
-      if (d_calcEnthalpy) {
-        tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,  gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoELabel,  gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_enthalpyGradientCompLabel,
-            d_lab->d_vectorMatl, oams, gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_filterEnthalpyGradientCompLabel,
-            d_lab->d_vectorMatl, oams, gac, 1);
-      }
-    }  
-
     // Computes
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       tsk->computes(d_lab->d_strainMagnitudeLabel);
       tsk->computes(d_lab->d_strainMagnitudeMLLabel);
       tsk->computes(d_lab->d_strainMagnitudeMMLabel);
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          tsk->computes(d_lab->d_scalarNumeratorLabel);
-          tsk->computes(d_lab->d_scalarDenominatorLabel);
-        }
-        if (d_calcEnthalpy) {
-          tsk->computes(d_lab->d_enthalpyNumeratorLabel);
-          tsk->computes(d_lab->d_enthalpyDenominatorLabel);
-        }
-      }      
     }
     else {
       tsk->modifies(d_lab->d_strainMagnitudeLabel);
       tsk->modifies(d_lab->d_strainMagnitudeMLLabel);
       tsk->modifies(d_lab->d_strainMagnitudeMMLabel);
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          tsk->modifies(d_lab->d_scalarNumeratorLabel);
-          tsk->modifies(d_lab->d_scalarDenominatorLabel);
-        }
-        if (d_calcEnthalpy) {
-          tsk->modifies(d_lab->d_enthalpyNumeratorLabel);
-          tsk->modifies(d_lab->d_enthalpyDenominatorLabel);
-        }
-      }      
     }
 
     sched->addTask(tsk, patches, matls);
@@ -382,17 +252,6 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gn); 
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
 
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        tsk->requires(Task::NewDW, d_lab->d_scalarNumeratorLabel,    gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_scalarDenominatorLabel,  gac, 1);
-      }
-      if (d_calcEnthalpy) {
-        tsk->requires(Task::NewDW, d_lab->d_enthalpyNumeratorLabel,     gac, 1);
-        tsk->requires(Task::NewDW, d_lab->d_enthalpyDenominatorLabel,   gac, 1);
-      }
-    }      
-
     // for multimaterial
     if (d_MAlab){
       tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
@@ -401,36 +260,12 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     // Computes
     tsk->modifies(d_lab->d_viscosityCTSLabel);
     tsk->modifies(d_lab->d_turbViscosLabel); 
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        tsk->modifies(d_lab->d_scalarDiffusivityLabel);
-      }
-      if (d_calcEnthalpy) {
-        tsk->modifies(d_lab->d_enthalpyDiffusivityLabel);
-      }
-    }      
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       tsk->computes(d_lab->d_CsLabel);
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          tsk->computes(d_lab->d_ShFLabel);
-        }
-        if (d_calcEnthalpy) {
-          tsk->computes(d_lab->d_ShELabel);
-        }
-      }      
     }
     else {
       tsk->modifies(d_lab->d_CsLabel);
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          tsk->modifies(d_lab->d_ShFLabel);
-        }
-        if (d_calcEnthalpy) {
-          tsk->modifies(d_lab->d_ShELabel);
-        }
-      }      
     }
 
     sched->addTask(tsk, patches, matls);
@@ -458,8 +293,6 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     constSFCYVariable<double> vVel;
     constSFCZVariable<double> wVel;
     constCCVariable<double> density;
-    constCCVariable<double> scalar;
-    constCCVariable<double> enthalpy;
     constCCVariable<int> cellType;
     constCCVariable<double> filterVolume; 
 
@@ -477,15 +310,6 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     new_dw->get(density, d_lab->d_densityCPLabel,  indx, patch, gac, 2);
     new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, Ghost::None, 0); 
 
-    if (d_dynScalarModel) {
-      if (d_calcScalar){
-        new_dw->get(scalar,       d_mf_label,     indx, patch, gac, 1);
-      }
-      if (d_calcEnthalpy){
-        new_dw->get(enthalpy,     d_lab->d_enthalpySPLabel,   indx, patch, gac, 1);
-      }
-    }
-
     new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 2);
 
 
@@ -502,35 +326,17 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
       new_dw->allocateAndPut(filterRhoW, d_lab->d_filterRhoWLabel, indx, patch);
       new_dw->allocateAndPut(filterRho,  d_lab->d_filterRhoLabel,  indx, patch);
 
-      if (d_dynScalarModel) {
-        if (d_calcScalar)
-          new_dw->allocateAndPut(filterRhoF,  d_lab->d_filterRhoFLabel, indx, patch);
-        if (d_calcEnthalpy)
-          new_dw->allocateAndPut(filterRhoE,  d_lab->d_filterRhoELabel, indx, patch);
-      }
     }
     else {
       new_dw->getModifiable(filterRhoU, d_lab->d_filterRhoULabel, indx, patch);
       new_dw->getModifiable(filterRhoV, d_lab->d_filterRhoVLabel, indx, patch);
       new_dw->getModifiable(filterRhoW, d_lab->d_filterRhoWLabel, indx, patch);
       new_dw->getModifiable(filterRho,  d_lab->d_filterRhoLabel,  indx, patch);
-      if (d_dynScalarModel) {
-        if (d_calcScalar)
-          new_dw->getModifiable(filterRhoF, d_lab->d_filterRhoFLabel, indx, patch);
-        if (d_calcEnthalpy)
-          new_dw->getModifiable(filterRhoE, d_lab->d_filterRhoELabel, indx, patch);
-      }
     }
     filterRhoU.initialize(0.0);
     filterRhoV.initialize(0.0);
     filterRhoW.initialize(0.0);
     filterRho.initialize(0.0);
-    if (d_dynScalarModel) {
-      if (d_calcScalar)
-        filterRhoF.initialize(0.0);
-      if (d_calcEnthalpy)
-        filterRhoE.initialize(0.0);
-    }
 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -751,21 +557,6 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     int endX = idxHi.x();
     if (xplus) endX--;
 
-    for (int colZ = startZ; colZ < endZ; colZ ++) {
-      for (int colY = startY; colY < endY; colY ++) {
-        for (int colX = startX; colX < endX; colX ++) {
-          IntVector currCell(colX, colY, colZ);
-
-          if (d_dynScalarModel) {
-            if (d_calcScalar)
-              rhoF[currCell] = density[currCell]*scalar[currCell];
-            if (d_calcEnthalpy)
-              rhoE[currCell] = density[currCell]*enthalpy[currCell];
-          }
-        }
-      }
-    }
-
     filterRho.copy(density, patch->getExtraCellLowIndex(),
         patch->getExtraCellHighIndex());
     d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, density, filterVolume, cellType, filterRho); 
@@ -790,12 +581,6 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
           }
         }
       }
-    }
-    if (d_dynScalarModel) {
-      if (d_calcScalar)
-        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoF, filterVolume, cellType, filterRhoF);
-      if (d_calcEnthalpy)
-        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoE, filterVolume, cellType, filterRhoE);
     }
   }
 }
@@ -822,8 +607,6 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     constSFCXVariable<double> filterRhoU;
     constSFCYVariable<double> filterRhoV;
     constSFCZVariable<double> filterRhoW;
-    constCCVariable<double> scalar;
-    constCCVariable<double> enthalpy;
     constCCVariable<double> filterRho;
     constCCVariable<double> filterRhoF;
     constCCVariable<double> filterRhoE;
@@ -840,16 +623,6 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     new_dw->get(filterRhoV, d_lab->d_filterRhoVLabel,     indx, patch, gaf, 1);
     new_dw->get(filterRhoW, d_lab->d_filterRhoWLabel,     indx, patch, gaf, 1);
     new_dw->get(filterRho,  d_lab->d_filterRhoLabel,      indx, patch, gac, 1);
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        new_dw->get(scalar,     d_mf_label,   indx, patch, gac, 1);
-        new_dw->get(filterRhoF, d_lab->d_filterRhoFLabel, indx, patch, gac, 1);
-      }
-      if (d_calcEnthalpy) {
-        new_dw->get(enthalpy,   d_lab->d_enthalpySPLabel, indx, patch, gac, 1);
-        new_dw->get(filterRhoE, d_lab->d_filterRhoELabel, indx, patch, gac, 1);
-      }
-    }
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -871,47 +644,6 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
       }
       SIJ[ii].initialize(0.0);
       filterSIJ[ii].initialize(0.0);
-    }
-    StencilMatrix<CCVariable<double> > scalarGrad;    //vector
-    StencilMatrix<CCVariable<double> > filterScalarGrad;    //vector
-    StencilMatrix<CCVariable<double> > enthalpyGrad;    //vector
-    StencilMatrix<CCVariable<double> > filterEnthalpyGrad;    //vector
-    for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-        if (d_dynScalarModel) {
-          if (d_calcScalar) {
-            new_dw->allocateAndPut(scalarGrad[ii],      d_lab->d_scalarGradientCompLabel,       ii, patch);
-            new_dw->allocateAndPut(filterScalarGrad[ii],d_lab->d_filterScalarGradientCompLabel, ii, patch);
-          }
-          if (d_calcEnthalpy) {
-            new_dw->allocateAndPut(enthalpyGrad[ii],       d_lab->d_enthalpyGradientCompLabel,       ii, patch);
-            new_dw->allocateAndPut(filterEnthalpyGrad[ii], d_lab->d_filterEnthalpyGradientCompLabel, ii, patch);
-          }
-        }
-      }
-      else {
-        if (d_dynScalarModel) {
-          if (d_calcScalar) {
-            new_dw->getModifiable(scalarGrad[ii],      d_lab->d_scalarGradientCompLabel,       ii, patch);
-            new_dw->getModifiable(filterScalarGrad[ii],d_lab->d_filterScalarGradientCompLabel, ii, patch);
-          }
-          if (d_calcEnthalpy) {
-            new_dw->getModifiable(enthalpyGrad[ii],      d_lab->d_enthalpyGradientCompLabel,      ii, patch);
-            new_dw->getModifiable(filterEnthalpyGrad[ii],d_lab->d_filterEnthalpyGradientCompLabel, ii, patch);
-          }
-        }
-      }
-      //__________________________________
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          scalarGrad[ii].initialize(0.0);
-          filterScalarGrad[ii].initialize(0.0);
-        }
-        if (d_calcEnthalpy) {
-          enthalpyGrad[ii].initialize(0.0);
-          filterEnthalpyGrad[ii].initialize(0.0);
-        }
-      }
     }
 
     IntVector indexLow = patch->getFortranCellLowIndex();
@@ -1087,90 +819,6 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
           (filterSIJ[5])[currCell] = 0.5*((fvtp-fvbp)/stbcur + 
               (fwnp-fwsp)/snscur);
 
-          double scalarxp, scalarxm, scalaryp;
-          double scalarym, scalarzp, scalarzm;
-          double fscalarxp, fscalarxm, fscalaryp;
-          double fscalarym, fscalarzp, fscalarzm;
-          double enthalpyxp, enthalpyxm, enthalpyyp;
-          double enthalpyym, enthalpyzp, enthalpyzm;
-          double fenthalpyxp, fenthalpyxm, fenthalpyyp;
-          double fenthalpyym, fenthalpyzp, fenthalpyzm;
-
-          if (d_dynScalarModel) {
-            if (d_calcScalar) {
-
-              // colX,coly,colZ component cancels out when computing derivative,
-              // so it has been ommited
-              scalarxm = 0.5*scalar[IntVector(colX-1,colY,colZ)];
-              scalarxp = 0.5*scalar[IntVector(colX+1,colY,colZ)];
-              scalarym = 0.5*scalar[IntVector(colX,colY-1,colZ)];
-              scalaryp = 0.5*scalar[IntVector(colX,colY+1,colZ)];
-              scalarzm = 0.5*scalar[IntVector(colX,colY,colZ-1)];
-              scalarzp = 0.5*scalar[IntVector(colX,colY,colZ+1)];
-
-              (scalarGrad[0])[currCell] = (scalarxp-scalarxm)/sewcur;
-              (scalarGrad[1])[currCell] = (scalaryp-scalarym)/snscur;
-              (scalarGrad[2])[currCell] = (scalarzp-scalarzm)/stbcur;
-
-
-              // colX,coly,colZ component cancels out when computing derivative,
-              // so it has been ommited
-              fscalarxm = 0.5*(filterRhoF[IntVector(colX-1,colY,colZ)]/
-                  filterRho[IntVector(colX-1,colY,colZ)]);
-              fscalarxp = 0.5*(filterRhoF[IntVector(colX+1,colY,colZ)]/
-                  filterRho[IntVector(colX+1,colY,colZ)]);
-              fscalarym = 0.5*(filterRhoF[IntVector(colX,colY-1,colZ)]/
-                  filterRho[IntVector(colX,colY-1,colZ)]);
-              fscalaryp = 0.5*(filterRhoF[IntVector(colX,colY+1,colZ)]/
-                  filterRho[IntVector(colX,colY+1,colZ)]);
-              fscalarzm = 0.5*(filterRhoF[IntVector(colX,colY,colZ-1)]/
-                  filterRho[IntVector(colX,colY,colZ-1)]);
-              fscalarzp = 0.5*(filterRhoF[IntVector(colX,colY,colZ+1)]/
-                  filterRho[IntVector(colX,colY,colZ+1)]);
-
-              (filterScalarGrad[0])[currCell] = (fscalarxp-fscalarxm)/sewcur;
-              (filterScalarGrad[1])[currCell] = (fscalaryp-fscalarym)/snscur;
-              (filterScalarGrad[2])[currCell] = (fscalarzp-fscalarzm)/stbcur;
-            }
-            if (d_calcEnthalpy) {
-
-              // colX,coly,colZ component cancels out when computing derivative,
-              // so it has been ommited
-              enthalpyxm = 0.5*enthalpy[IntVector(colX-1,colY,colZ)];
-              enthalpyxp = 0.5*enthalpy[IntVector(colX+1,colY,colZ)];
-              enthalpyym = 0.5*enthalpy[IntVector(colX,colY-1,colZ)];
-              enthalpyyp = 0.5*enthalpy[IntVector(colX,colY+1,colZ)];
-              enthalpyzm = 0.5*enthalpy[IntVector(colX,colY,colZ-1)];
-              enthalpyzp = 0.5*enthalpy[IntVector(colX,colY,colZ+1)];
-
-              (enthalpyGrad[0])[currCell] = (enthalpyxp-enthalpyxm)/sewcur;
-              (enthalpyGrad[1])[currCell] = (enthalpyyp-enthalpyym)/snscur;
-              (enthalpyGrad[2])[currCell] = (enthalpyzp-enthalpyzm)/stbcur;
-
-
-              // colX,coly,colZ component cancels out when computing derivative,
-              // so it has been ommited
-              fenthalpyxm = 0.5*(filterRhoE[IntVector(colX-1,colY,colZ)]/
-                  filterRho[IntVector(colX-1,colY,colZ)]);
-              fenthalpyxp = 0.5*(filterRhoE[IntVector(colX+1,colY,colZ)]/
-                  filterRho[IntVector(colX+1,colY,colZ)]);
-              fenthalpyym = 0.5*(filterRhoE[IntVector(colX,colY-1,colZ)]/
-                  filterRho[IntVector(colX,colY-1,colZ)]);
-              fenthalpyyp = 0.5*(filterRhoE[IntVector(colX,colY+1,colZ)]/
-                  filterRho[IntVector(colX,colY+1,colZ)]);
-              fenthalpyzm = 0.5*(filterRhoE[IntVector(colX,colY,colZ-1)]/
-                  filterRho[IntVector(colX,colY,colZ-1)]);
-              fenthalpyzp = 0.5*(filterRhoE[IntVector(colX,colY,colZ+1)]/
-                  filterRho[IntVector(colX,colY,colZ+1)]);
-
-              (filterEnthalpyGrad[0])[currCell] = (fenthalpyxp-fenthalpyxm)/
-                sewcur;
-              (filterEnthalpyGrad[1])[currCell] = (fenthalpyyp-fenthalpyym)/
-                snscur;
-              (filterEnthalpyGrad[2])[currCell] = (fenthalpyzp-fenthalpyzm)/
-                stbcur;
-            }
-          }
         }
       }
     }
@@ -1199,8 +847,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     // Variables
     constCCVariable<Vector> ccVel;
     constCCVariable<double> den;
-    constCCVariable<double> scalar;
-    constCCVariable<double> enthalpy;
     constCCVariable<double> filterRho;
     constCCVariable<double> filterRhoF;
     constCCVariable<double> filterRhoE;
@@ -1217,16 +863,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     new_dw->get(den,       d_lab->d_densityCPLabel,      indx, patch, gac, 1);
     new_dw->get(filterRho, d_lab->d_filterRhoLabel,      indx, patch, gac, 1);
 
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        new_dw->get(scalar,     d_mf_label,   indx, patch, gac, 1);
-        new_dw->get(filterRhoF, d_lab->d_filterRhoFLabel, indx, patch, gac, 1);
-      }
-      if (d_calcEnthalpy) {
-        new_dw->get(enthalpy,   d_lab->d_enthalpySPLabel, indx, patch, gac, 1);
-        new_dw->get(filterRhoE, d_lab->d_filterRhoELabel, indx, patch, gac, 1);
-      }
-    }  
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -1244,23 +880,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       new_dw->get(SHATIJ[ii], d_lab->d_filterStrainTensorCompLabel,ii, patch, gac, 1);
     }
 
-    StencilMatrix<constCCVariable<double> > scalarGrad; //vector
-    StencilMatrix<constCCVariable<double> > filterScalarGrad; //vector
-    StencilMatrix<constCCVariable<double> > enthalpyGrad; //vector
-    StencilMatrix<constCCVariable<double> > filterEnthalpyGrad; //vector
-    for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          new_dw->get(scalarGrad[ii],      d_lab->d_scalarGradientCompLabel,      ii, patch, gac, 1);
-          new_dw->get(filterScalarGrad[ii],d_lab->d_filterScalarGradientCompLabel,ii, patch, gac, 1);
-        }
-        if (d_calcEnthalpy) {
-          new_dw->get(enthalpyGrad[ii],      d_lab->d_enthalpyGradientCompLabel,      ii, patch, gac, 1);
-          new_dw->get(filterEnthalpyGrad[ii],d_lab->d_filterEnthalpyGradientCompLabel,ii, patch, gac, 1);
-        }
-      }  
-    }
-
     StencilMatrix<Array3<double> > betaIJ;    //6 point tensor
     StencilMatrix<Array3<double> > betaHATIJ; //6 point tensor
     //  0-> 11, 1->22, 2->33, 3 ->12, 4->13, 5->23
@@ -1271,48 +890,13 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       betaHATIJ[ii].initialize(0.0);
     }  // allocate stress tensor coeffs
 
-    StencilMatrix<Array3<double> > scalarBeta;  //vector
-    StencilMatrix<Array3<double> > scalarBetaHat; //vector
-    StencilMatrix<Array3<double> > enthalpyBeta;  //vector
-    StencilMatrix<Array3<double> > enthalpyBetaHat; //vector
-    for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          scalarBeta[ii].resize(idxLo, idxHi);
-          scalarBeta[ii].initialize(0.0);
-          scalarBetaHat[ii].resize(idxLo, idxHi);
-          scalarBetaHat[ii].initialize(0.0);
-        }
-        if (d_calcEnthalpy) {
-          enthalpyBeta[ii].resize(idxLo, idxHi);
-          enthalpyBeta[ii].initialize(0.0);
-          enthalpyBetaHat[ii].resize(idxLo, idxHi);
-          enthalpyBetaHat[ii].initialize(0.0);
-        }
-      }  
-    }
-
     CCVariable<double> IsImag;
     CCVariable<double> MLI;
     CCVariable<double> MMI;
-    CCVariable<double> scalarNum;
-    CCVariable<double> scalarDenom;
-    CCVariable<double> enthalpyNum;
-    CCVariable<double> enthalpyDenom;
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(IsImag, d_lab->d_strainMagnitudeLabel,   indx, patch);
       new_dw->allocateAndPut(MLI,    d_lab->d_strainMagnitudeMLLabel, indx, patch);
       new_dw->allocateAndPut(MMI,    d_lab->d_strainMagnitudeMMLabel, indx, patch);
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          new_dw->allocateAndPut(scalarNum,  d_lab->d_scalarNumeratorLabel,   indx, patch);
-          new_dw->allocateAndPut(scalarDenom,d_lab->d_scalarDenominatorLabel, indx, patch);
-        }
-        if (d_calcEnthalpy) {
-          new_dw->allocateAndPut(enthalpyNum,  d_lab->d_enthalpyNumeratorLabel, indx, patch);
-          new_dw->allocateAndPut(enthalpyDenom,d_lab->d_enthalpyDenominatorLabel, indx, patch);
-        }
-      }
     }
     else {
       new_dw->getModifiable(IsImag, 
@@ -1321,35 +905,10 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           d_lab->d_strainMagnitudeMLLabel, indx, patch);
       new_dw->getModifiable(MMI, 
           d_lab->d_strainMagnitudeMMLabel, indx, patch);
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          new_dw->getModifiable(scalarNum, 
-              d_lab->d_scalarNumeratorLabel, indx, patch);
-          new_dw->getModifiable(scalarDenom, 
-              d_lab->d_scalarDenominatorLabel, indx, patch);
-        }
-        if (d_calcEnthalpy) {
-          new_dw->getModifiable(enthalpyNum, 
-              d_lab->d_enthalpyNumeratorLabel, indx, patch);
-          new_dw->getModifiable(enthalpyDenom, 
-              d_lab->d_enthalpyDenominatorLabel, indx, patch);
-        }
-      }  
     }
     IsImag.initialize(0.0);
     MLI.initialize(0.0);
     MMI.initialize(0.0);
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        scalarNum.initialize(0.0);
-        scalarDenom.initialize(0.0);
-      }
-      if (d_calcEnthalpy) {
-        enthalpyNum.initialize(0.0);
-        enthalpyDenom.initialize(0.0);
-      }
-    }  
-
 
     // compute test filtered velocities, density and product 
     // (den*u*u, den*u*v, den*u*w, den*v*v,
@@ -1386,24 +945,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     Array3<double> rhoRFU;
     Array3<double> rhoRFV;
     Array3<double> rhoRFW;
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        rhoFU.resize(idxLo, idxHi);
-        rhoFU.initialize(0.0);
-        rhoFV.resize(idxLo, idxHi);
-        rhoFV.initialize(0.0);
-        rhoFW.resize(idxLo, idxHi);
-        rhoFW.initialize(0.0);
-      }
-      if (d_calcEnthalpy) {
-        rhoEU.resize(idxLo, idxHi);
-        rhoEU.initialize(0.0);
-        rhoEV.resize(idxLo, idxHi);
-        rhoEV.initialize(0.0);
-        rhoEW.resize(idxLo, idxHi);
-        rhoEW.initialize(0.0);
-      }
-    }  
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -1467,27 +1008,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           rhoV[currCell] = den_cur*vvel_cur;
           rhoW[currCell] = den_cur*wvel_cur;
 
-          double scalar_cur,enthalpy_cur;
-          if (d_dynScalarModel) {
-            if (d_calcScalar) {
-              scalar_cur = scalar[currCell];
-              (scalarBeta[0])[currCell] = den_cur*isi_cur*(scalarGrad[0])[currCell];
-              (scalarBeta[1])[currCell] = den_cur*isi_cur*(scalarGrad[1])[currCell];
-              (scalarBeta[2])[currCell] = den_cur*isi_cur*(scalarGrad[2])[currCell];
-              rhoFU[currCell] = den_cur*scalar_cur*uvel_cur;
-              rhoFV[currCell] = den_cur*scalar_cur*vvel_cur;
-              rhoFW[currCell] = den_cur*scalar_cur*wvel_cur;
-            }
-            if (d_calcEnthalpy) {
-              enthalpy_cur = enthalpy[currCell];
-              (enthalpyBeta[0])[currCell] = den_cur*isi_cur*(enthalpyGrad[0])[currCell];
-              (enthalpyBeta[1])[currCell] = den_cur*isi_cur*(enthalpyGrad[1])[currCell];
-              (enthalpyBeta[2])[currCell] = den_cur*isi_cur*(enthalpyGrad[2])[currCell];
-              rhoEU[currCell] = den_cur*enthalpy_cur*uvel_cur;
-              rhoEV[currCell] = den_cur*enthalpy_cur*vvel_cur;
-              rhoEW[currCell] = den_cur*enthalpy_cur*wvel_cur;
-            }
-          }  
         }
       }
     }
@@ -1520,24 +1040,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     Array3<double> filterRhoRFU;
     Array3<double> filterRhoRFV;
     Array3<double> filterRhoRFW;
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        filterRhoFU.resize(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-        filterRhoFU.initialize(0.0);
-        filterRhoFV.resize(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-        filterRhoFV.initialize(0.0);
-        filterRhoFW.resize(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-        filterRhoFW.initialize(0.0);
-      }
-      if (d_calcEnthalpy) {
-        filterRhoEU.resize(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-        filterRhoEU.initialize(0.0);
-        filterRhoEV.resize(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-        filterRhoEV.initialize(0.0);
-        filterRhoEW.resize(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-        filterRhoEW.initialize(0.0);
-      }
-    }  
 
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
@@ -1556,25 +1058,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
       d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, betaIJ[ii], filterVolume, cellType, betaHATIJ[ii]);
     }
-
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoFU, filterVolume, cellType, filterRhoFU);
-        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoFV, filterVolume, cellType, filterRhoFV);
-        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoFW, filterVolume, cellType, filterRhoFW);
-        for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-          d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, scalarBeta[ii], filterVolume, cellType, scalarBetaHat[ii]);
-        }
-      }
-      if (d_calcEnthalpy) {
-        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoEU, filterVolume, cellType, filterRhoEU);
-        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoEV, filterVolume, cellType, filterRhoEV);
-        d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoEW, filterVolume, cellType, filterRhoEW);
-        for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-          d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, enthalpyBeta[ii], filterVolume, cellType, enthalpyBetaHat[ii]);
-        }
-      }
-    }  
 
     string msg = "Time for the Filter operation in Turbulence Model: ";
     if (Uintah::Parallel::getNumThreads() > 1) {
@@ -1674,66 +1157,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                 MIJ4cur*MIJ4cur +
                 MIJ5cur*MIJ5cur );
 
-          double filterRhoFcur, scalarLX, scalarLY, scalarLZ;
-          double scalarMX, scalarMY, scalarMZ;
-          double filterRhoEcur, enthalpyLX, enthalpyLY, enthalpyLZ;
-          double enthalpyMX, enthalpyMY, enthalpyMZ;
-          if (d_dynScalarModel) {
-            if (d_calcScalar) {
-              filterRhoFcur = filterRhoF[currCell];
-              scalarLX =  filter*filter*
-                ((scalarBetaHat[0])[currCell]-
-                 2.0*2.0*filterDencur*IshatIcur*
-                 (filterScalarGrad[0])[currCell]);
-              scalarLY =  filter*filter*
-                ((scalarBetaHat[1])[currCell]-
-                 2.0*2.0*filterDencur*IshatIcur*
-                 (filterScalarGrad[1])[currCell]);
-              scalarLZ =  filter*filter*
-                ((scalarBetaHat[2])[currCell]-
-                 2.0*2.0*filterDencur*IshatIcur*
-                 (filterScalarGrad[2])[currCell]);
-              scalarMX = filterRhoFU[currCell] -
-                filterRhoFcur*filterRhoUcur/filterDencur;
-              scalarMY = filterRhoFV[currCell] -
-                filterRhoFcur*filterRhoVcur/filterDencur;
-              scalarMZ = filterRhoFW[currCell] -
-                filterRhoFcur*filterRhoWcur/filterDencur;
-              scalarNum[currCell] = scalarLX*scalarLX +
-                scalarLY*scalarLY +
-                scalarLZ*scalarLZ;
-              scalarDenom[currCell] = scalarMX*scalarLX +
-                scalarMY*scalarLY +
-                scalarMZ*scalarLZ;
-            }
-            if (d_calcEnthalpy) {
-              filterRhoEcur = filterRhoE[currCell];
-              enthalpyLX =  filter*filter*
-                ((enthalpyBetaHat[0])[currCell]-
-                 2.0*2.0*filterDencur*IshatIcur*
-                 (filterEnthalpyGrad[0])[currCell]);
-              enthalpyLY =  filter*filter*
-                ((enthalpyBetaHat[1])[currCell]-
-                 2.0*2.0*filterDencur*IshatIcur*
-                 (filterEnthalpyGrad[1])[currCell]);
-              enthalpyLZ =  filter*filter*
-                ((enthalpyBetaHat[2])[currCell]-
-                 2.0*2.0*filterDencur*IshatIcur*
-                 (filterEnthalpyGrad[2])[currCell]);
-              enthalpyMX = filterRhoEU[currCell] -
-                filterRhoEcur*filterRhoUcur/filterDencur;
-              enthalpyMY = filterRhoEV[currCell] -
-                filterRhoEcur*filterRhoVcur/filterDencur;
-              enthalpyMZ = filterRhoEW[currCell] -
-                filterRhoEcur*filterRhoWcur/filterDencur;
-              enthalpyNum[currCell] = enthalpyLX*enthalpyLX +
-                enthalpyLY*enthalpyLY +
-                enthalpyLZ*enthalpyLZ;
-              enthalpyDenom[currCell] = enthalpyMX*enthalpyLX +
-                enthalpyMY*enthalpyLY +
-                enthalpyMZ*enthalpyLZ;
-            }
-          }  
         }
       }
     }
@@ -1763,10 +1186,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     constCCVariable<double> IsI;
     constCCVariable<double> MLI;
     constCCVariable<double> MMI;
-    constCCVariable<double> scalarNum;
-    constCCVariable<double> scalarDenom;
-    constCCVariable<double> enthalpyNum;
-    constCCVariable<double> enthalpyDenom;
     CCVariable<double> Cs; //smag coeff 
     CCVariable<double> ShF; //Shmidt number 
     CCVariable<double> ShE; //Shmidt number 
@@ -1776,51 +1195,17 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     constCCVariable<int> cellType;
     CCVariable<double> viscosity;
     CCVariable<double> turbViscosity; 
-    CCVariable<double> scalardiff;
-    CCVariable<double> enthalpydiff;
     constCCVariable<double> filterVolume; 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, indx, patch);
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          new_dw->allocateAndPut(ShF, d_lab->d_ShFLabel, indx, patch);
-        }
-        if (d_calcEnthalpy) {
-          new_dw->allocateAndPut(ShE, d_lab->d_ShELabel, indx, patch);
-        }
-      }      
     }
     else {
       new_dw->getModifiable(Cs, d_lab->d_CsLabel, indx, patch);
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          new_dw->getModifiable(ShF, d_lab->d_ShFLabel, indx, patch);
-        }
-        if (d_calcEnthalpy) {
-          new_dw->getModifiable(ShE, d_lab->d_ShELabel, indx, patch);
-        }
-      }      
     }
     Cs.initialize(0.0);
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        ShF.initialize(0.0);
-      }
-      if (d_calcEnthalpy) {
-        ShE.initialize(0.0);
-      }
-    }      
 
     new_dw->getModifiable(viscosity,         d_lab->d_viscosityCTSLabel,        indx, patch);
     new_dw->getModifiable(turbViscosity,            d_lab->d_turbViscosLabel,              indx, patch);
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        new_dw->getModifiable(scalardiff,    d_lab->d_scalarDiffusivityLabel,   indx, patch);
-      }
-      if (d_calcEnthalpy) {
-        new_dw->getModifiable(enthalpydiff,  d_lab->d_enthalpyDiffusivityLabel, indx, patch);
-      }
-    } 
 
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1830,18 +1215,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     new_dw->get(MLI, d_lab->d_strainMagnitudeMLLabel, indx, patch, gac, 1);
     new_dw->get(MMI, d_lab->d_strainMagnitudeMMLabel, indx, patch, gac, 1);
     new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, gn, 0); 
-
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        new_dw->get(scalarNum,   d_lab->d_scalarNumeratorLabel,  indx, patch, gac, 1);
-        new_dw->get(scalarDenom, d_lab->d_scalarDenominatorLabel,indx, patch, gac, 1);
-      }
-      if (d_calcEnthalpy) {
-        new_dw->get(enthalpyNum,   d_lab->d_enthalpyNumeratorLabel,  indx, patch, gac, 1);
-        new_dw->get(enthalpyDenom, d_lab->d_enthalpyDenominatorLabel,indx, patch, gac, 1);
-      }
-    }      
-
     new_dw->get(den, d_lab->d_densityCPLabel, indx, patch,gac, 1);
 
     if (d_MAlab){
@@ -1868,39 +1241,11 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     MLHatI.initialize(0.0);
     Array3<double> MMHatI(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex()); // magnitude of test filter strain rate
     MLHatI.initialize(0.0);
-    Array3<double> scalarNumHat;
-    Array3<double> scalarDenomHat;
-    Array3<double> enthalpyNumHat;
-    Array3<double> enthalpyDenomHat;
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        scalarNumHat.resize(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-        scalarNumHat.initialize(0.0);
-        scalarDenomHat.resize(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-        scalarDenomHat.initialize(0.0);
-      }
-      if (d_calcEnthalpy) {
-        enthalpyNumHat.resize(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-        enthalpyNumHat.initialize(0.0);
-        enthalpyDenomHat.resize(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-        enthalpyDenomHat.initialize(0.0);
-      }
-    }      
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
 
     d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, MLI, filterVolume, cellType, MLHatI);
     d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, MMI, filterVolume, cellType, MMHatI);
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, scalarNum,   filterVolume, cellType, scalarNumHat);
-        d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, scalarDenom, filterVolume, cellType, scalarDenomHat);
-      }
-      if (d_calcEnthalpy) {
-        d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, enthalpyNum,   filterVolume, cellType, enthalpyNumHat);
-        d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, enthalpyDenom, filterVolume, cellType, enthalpyDenomHat);
-      }
-    }      
 
     CCVariable<double> tempCs;
     tempCs.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
@@ -1908,16 +1253,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     CCVariable<double> tempShF;
     CCVariable<double> tempShE;
     CCVariable<double> tempShRF;
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        tempShF.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-        tempShF.initialize(0.0);
-      }
-      if (d_calcEnthalpy) {
-        tempShE.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-        tempShE.initialize(0.0);
-      }
-    }      
     //     calculate the local Smagorinsky coefficient
     //     perform "clipping" in case MLij is negative...
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
@@ -1932,28 +1267,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             value = MLHatI[currCell]/MMHatI[currCell];
           tempCs[currCell] = value;
 
-          // It makes more sence to compute inverse Sh numbers here
-          double scalar_value;
-          double enthalpy_value;
-          if (d_dynScalarModel) {
-            if (d_calcScalar) {
-              if ((scalarNumHat[currCell] < 1.0e-7)||
-                  (scalarDenomHat[currCell] < 1.0e-10))
-                scalar_value = 0.0;
-              else
-                scalar_value = scalarDenomHat[currCell]/scalarNumHat[currCell];
-              tempShF[currCell] = scalar_value;
-            }
-            if (d_calcEnthalpy) {
-              if ((enthalpyNumHat[currCell] < 1.0e-7/scalarNumHat[currCell]*enthalpyNumHat[currCell])||
-                  (enthalpyDenomHat[currCell] < 1.0e-10))
-                enthalpy_value = 0.0;
-              else
-                enthalpy_value = enthalpyDenomHat[currCell]/
-                  enthalpyNumHat[currCell];
-              tempShE[currCell] = enthalpy_value;
-            }
-          }      
         }
       }
     }
@@ -1962,28 +1275,10 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       // filtering for periodic case is not implemented 
       // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
       d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, tempCs, filterVolume, cellType, Cs);
-      if (d_dynScalarModel) {
-        if (d_calcScalar) {
-          d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, tempShF, filterVolume, cellType, ShF);
-        }
-        if (d_calcEnthalpy) {
-          d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, tempShE, filterVolume, cellType,  ShE);
-        }
-      }      
     }
     else
       Cs.copy(tempCs, tempCs.getLowIndex(),
           tempCs.getHighIndex());
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        ShF.copy(tempShF, tempShF.getLowIndex(),
-            tempShF.getHighIndex());
-      }
-      if (d_calcEnthalpy) {
-        ShE.copy(tempShE, tempShE.getLowIndex(),
-            tempShE.getHighIndex());
-      }
-    }      
 
     double factor = 1.0;
 #if 0
@@ -2013,22 +1308,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 
             turbViscosity[currCell] = viscosity[currCell] - viscos*voidFraction[currCell]; 
 
-            if (d_dynScalarModel) {
-              if (d_calcScalar) {
-                ShF[currCell] = Min(ShF[currCell],10.0);
-                scalardiff[currCell] = filter * filter *
-                  IsI[currCell] * den[currCell] *
-                  ShF[currCell] + viscos*
-                  voidFraction[currCell]/laminarPrNo;
-              }
-              if (d_calcEnthalpy) {
-                ShE[currCell] = Min(ShE[currCell],10.0);
-                enthalpydiff[currCell] = filter * filter *
-                  IsI[currCell] * den[currCell] *
-                  ShE[currCell] + viscos*
-                  voidFraction[currCell]/laminarPrNo;
-              }
-            }      
           }
         }
       }
@@ -2050,20 +1329,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 
             turbViscosity[currCell] = viscosity[currCell] - viscos; 
 
-            if (d_dynScalarModel) {
-              if (d_calcScalar) {
-                ShF[currCell] = Min(ShF[currCell],10.0);
-                scalardiff[currCell] = filter * filter *
-                  IsI[currCell] * den[currCell] *
-                  ShF[currCell] + viscos/laminarPrNo;
-              }
-              if (d_calcEnthalpy) {
-                ShE[currCell] = Min(ShE[currCell],10.0);
-                enthalpydiff[currCell] = filter * filter *
-                  IsI[currCell] * den[currCell] *
-                  ShE[currCell] + viscos/laminarPrNo;
-              }
-            }      
           }
         }
       }
@@ -2087,14 +1352,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                             *den[currCell]/den[IntVector(colX,colY,colZ)];
-            if (d_dynScalarModel) {
-              if (d_calcScalar) {
-                scalardiff[currCell] = scalardiff[IntVector(colX,colY,colZ)];
-              }
-              if (d_calcEnthalpy) {
-                enthalpydiff[currCell] = enthalpydiff[IntVector(colX,colY,colZ)];
-              }
-            }
           }          
         }
       }
@@ -2109,14 +1366,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
-            if (d_dynScalarModel) {
-              if (d_calcScalar) {
-                scalardiff[currCell] = scalardiff[IntVector(colX,colY,colZ)];
-              }
-              if (d_calcEnthalpy) {
-                enthalpydiff[currCell] = enthalpydiff[IntVector(colX,colY,colZ)];
-              }
-            }
           }          
         }
       }
@@ -2131,14 +1380,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
-            if (d_dynScalarModel) {
-              if (d_calcScalar) {
-                scalardiff[currCell] = scalardiff[IntVector(colX,colY,colZ)];
-              }
-              if (d_calcEnthalpy) {
-                enthalpydiff[currCell] = enthalpydiff[IntVector(colX,colY,colZ)];
-              }
-            }
           }          
         }
       }
@@ -2153,14 +1394,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
-            if (d_dynScalarModel) {
-              if (d_calcScalar) {
-                scalardiff[currCell] = scalardiff[IntVector(colX,colY,colZ)];
-              }
-              if (d_calcEnthalpy) {
-                enthalpydiff[currCell] = enthalpydiff[IntVector(colX,colY,colZ)];
-              }
-            }
           }          
         }
       }
@@ -2175,14 +1408,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
-            if (d_dynScalarModel) {
-              if (d_calcScalar) {
-                scalardiff[currCell] = scalardiff[IntVector(colX,colY,colZ)];
-              }
-              if (d_calcEnthalpy) {
-                enthalpydiff[currCell] = enthalpydiff[IntVector(colX,colY,colZ)];
-              }
-            }
           }          
         }
       }
@@ -2197,478 +1422,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             turbViscosity[currCell] = turbViscosity[IntVector(colX,colY,colZ)];
             //          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
             //                    *den[currCell]/den[IntVector(colX,colY,colZ)];
-            if (d_dynScalarModel) {
-              if (d_calcScalar) {
-                scalardiff[currCell] = scalardiff[IntVector(colX,colY,colZ)];
-              }
-              if (d_calcEnthalpy) {
-                enthalpydiff[currCell] = enthalpydiff[IntVector(colX,colY,colZ)];
-              }
-            }
           }          
-        }
-      }
-    }
-
-  }
-}
-
-//______________________________________________________________________
-  void 
-CompDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched, 
-                                                  const PatchSet* patches,
-                                                  const MaterialSet* matls,
-                                                  const TimeIntegratorLabel* timelabels)
-{
-  string taskname =  "CompDynamicProcedure::computeScalarVaraince" +
-    timelabels->integrator_step_name;
-    
-  Task* tsk = scinew Task(taskname, this,
-      &CompDynamicProcedure::computeScalarVariance,
-      timelabels);
-
-
-  // Requires, only the scalar corresponding to matlindex = 0 is
-  //           required. For multiple scalars this will be put in a loop
-
-  Ghost::GhostType  gac = Ghost::AroundCells;
-
-  tsk->requires(Task::NewDW, d_mf_label,              gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,  gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, Ghost::None, 0); 
-
-  int mmWallID = d_boundaryCondition->getMMWallId();
-  if (mmWallID > 0)
-    tsk->requires(Task::OldDW, d_lab->d_refDensity_label);
-
-  // Computes
-  if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
-    tsk->computes(d_lab->d_scalarVarSPLabel);
-    tsk->computes(d_lab->d_normalizedScalarVarLabel);
-  }
-  else {
-    tsk->modifies(d_lab->d_scalarVarSPLabel);
-    tsk->modifies(d_lab->d_normalizedScalarVarLabel);
-  }
-
-  sched->addTask(tsk, patches, matls);
-}
-
-//______________________________________________________________________
-//
-  void 
-CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
-                                            const PatchSubset* patches,
-                                            const MaterialSubset*,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw,
-                                            const TimeIntegratorLabel* timelabels)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    // Variables
-    constCCVariable<double> scalar;
-    constCCVariable<double> density;
-    CCVariable<double> scalarVar;
-    CCVariable<double> normalizedScalarVar;
-    constCCVariable<double> filterVolume;
-    new_dw->get(filterVolume, d_lab->d_filterVolumeLabel, indx, patch, Ghost::None, 0); 
-    // Get the velocity, density and viscosity from the old data warehouse
-
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(scalar, d_mf_label, indx,  patch, gac, 1);
-
-    new_dw->get(density, d_lab->d_densityCPLabel, indx, patch, gac, 1);
-
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)) {
-      new_dw->allocateAndPut(scalarVar,           d_lab->d_scalarVarSPLabel,         indx, patch);
-      new_dw->allocateAndPut(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, indx,patch);
-    }
-    else {
-      new_dw->getModifiable(scalarVar,           d_lab->d_scalarVarSPLabel,         indx,patch);
-      new_dw->getModifiable(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, indx,patch);
-    }
-    scalarVar.initialize(0.0);
-    normalizedScalarVar.initialize(0.0);
-
-    constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
-
-
-    IntVector idxLo = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
-    IntVector idxHi = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
-    Array3<double> rhoPhi(idxLo, idxHi);
-    Array3<double> rhoPhiSqr(idxLo, idxHi);
-    rhoPhi.initialize(0.0);
-    rhoPhiSqr.initialize(0.0);
-
-    for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          rhoPhi[currCell] = density[currCell]*scalar[currCell];
-          rhoPhiSqr[currCell] = density[currCell]*
-            scalar[currCell]*scalar[currCell];
-
-        }
-      }
-    }
-
-    Array3<double> filterRho(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-    Array3<double> filterRhoPhi(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-    Array3<double> filterRhoPhiSqr(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-    filterRho.initialize(0.0);
-    filterRhoPhi.initialize(0.0);
-    filterRhoPhiSqr.initialize(0.0);
-
-    IntVector indexLow = patch->getFortranCellLowIndex();
-    IntVector indexHigh = patch->getFortranCellHighIndex();
-
-    d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, density, filterVolume, cellType, filterRho);
-    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoPhi, filterVolume, cellType, filterRhoPhi);
-    d_filter->applyFilter_noPetsc<Array3<double> >(pc, patch, rhoPhiSqr, filterVolume, cellType, filterRhoPhiSqr);
-
-    // making filterRho nonzero 
-    sum_vartype den_ref_var;
-    int mmWallID = d_boundaryCondition->getMMWallId();
-    if (mmWallID > 0) {
-      old_dw->get(den_ref_var, d_lab->d_refDensity_label);
-    }
-
-    double small = 1.0e-10;
-    double var_limit = 0.0;
-    double filterPhi = 0.0;
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-
-          if ((mmWallID > 0)&&(filterRho[currCell] < 1.0e-15)) {
-            filterRho[currCell]=den_ref_var;
-          }
-
-          // compute scalar variance
-          filterPhi = filterRhoPhi[currCell]/filterRho[currCell];
-          scalarVar[currCell] = d_CFVar*
-            (filterRhoPhiSqr[currCell]/filterRho[currCell]-
-             filterPhi*filterPhi);
-
-          // now, check variance bounds and normalize
-          if (d_filter_var_limit_scalar)
-            var_limit = filterPhi * (1.0 - filterPhi);
-          else
-            var_limit = scalar[currCell] * (1.0 - scalar[currCell]);
-
-          if(scalarVar[currCell] < small)
-            scalarVar[currCell] = 0.0;
-          if(scalarVar[currCell] > var_limit)
-            scalarVar[currCell] = var_limit;
-
-          normalizedScalarVar[currCell] = scalarVar[currCell]/(var_limit+small);
-        }
-      }
-    }
-
-    // boundary conditions
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    int outlet_celltypeval = d_boundaryCondition->outletCellType();
-    int pressure_celltypeval = d_boundaryCondition->pressureCellType();
-    if (xminus) {
-      int colX = indexLow.x();
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          IntVector currCell(colX-1, colY, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-              (cellType[currCell] == pressure_celltypeval))
-            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
-              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-              normalizedScalarVar[currCell] = 
-                normalizedScalarVar[IntVector(colX,colY,colZ)];
-
-            }
-        }
-      }
-    }
-
-    if (xplus) {
-      int colX = indexHigh.x();
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          IntVector currCell(colX+1, colY, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-              (cellType[currCell] == pressure_celltypeval))
-            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
-              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-              normalizedScalarVar[currCell] = 
-                normalizedScalarVar[IntVector(colX,colY,colZ)];
-            }
-        }
-      }
-    }
-    if (yminus) {
-      int colY = indexLow.y();
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY-1, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-              (cellType[currCell] == pressure_celltypeval))
-            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
-              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-              normalizedScalarVar[currCell] = 
-                normalizedScalarVar[IntVector(colX,colY,colZ)];
-            }
-        }
-      }
-    }
-    if (yplus) {
-      int colY = indexHigh.y();
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY+1, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-              (cellType[currCell] == pressure_celltypeval))
-            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
-              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-              normalizedScalarVar[currCell] = 
-                normalizedScalarVar[IntVector(colX,colY,colZ)];
-            }
-        }
-      }
-    }
-    if (zminus) {
-      int colZ = indexLow.z();
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ-1);
-          if ((cellType[currCell] == outlet_celltypeval)||
-              (cellType[currCell] == pressure_celltypeval))
-            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
-              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-              normalizedScalarVar[currCell] = 
-                normalizedScalarVar[IntVector(colX,colY,colZ)];
-            }
-        }
-      }
-    }
-    if (zplus) {
-      int colZ = indexHigh.z();
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ+1);
-          if ((cellType[currCell] == outlet_celltypeval)||
-              (cellType[currCell] == pressure_celltypeval))
-            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
-              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-              normalizedScalarVar[currCell] = 
-                normalizedScalarVar[IntVector(colX,colY,colZ)];
-            }
-        }
-      }
-    }
-
-  }
-}
-//****************************************************************************
-// Schedule recomputation of the turbulence sub model 
-//****************************************************************************
-  void 
-CompDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched, 
-                                                     const PatchSet* patches,
-                                                     const MaterialSet* matls,
-                                                     const TimeIntegratorLabel* timelabels)
-{
-  string taskname =  "CompDynamicProcedure::computeScalarDissipation" +
-    timelabels->integrator_step_name;
-    
-  Task* tsk = scinew Task(taskname, this,
-                         &CompDynamicProcedure::computeScalarDissipation,
-                         timelabels);
-
-
-  // Requires, only the scalar corresponding to matlindex = 0 is
-  //           required. For multiple scalars this will be put in a loop
-  // assuming scalar dissipation is computed before turbulent viscosity calculation 
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  tsk->requires(Task::NewDW, d_mf_label,  gac, 1);
-
-  if (d_dynScalarModel){
-    tsk->requires(Task::NewDW, d_lab->d_scalarDiffusivityLabel, gac, 1);
-  }else{
-    tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,      gac, 1);
-  }
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,            gac, 1);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
-
-  // Computes
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-    tsk->computes(d_lab->d_scalarDissSPLabel);
-  }else{
-    tsk->modifies(d_lab->d_scalarDissSPLabel);
-  }
-  sched->addTask(tsk, patches, matls);
-}
-
-//______________________________________________________________________
-//
-  void 
-CompDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
-                                               const PatchSubset* patches,
-                                               const MaterialSubset*,
-                                               DataWarehouse*,
-                                               DataWarehouse* new_dw,
-                                               const TimeIntegratorLabel* timelabels)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    // Variables
-    constCCVariable<double> viscosity;
-    constCCVariable<double> scalar;
-    CCVariable<double> scalarDiss;  // dissipation..chi
-
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(scalar, d_mf_label, indx, patch, gac, 1);
-
-    if (d_dynScalarModel){
-      new_dw->get(viscosity, d_lab->d_scalarDiffusivityLabel, indx, patch, gac, 1);
-    }else{
-      new_dw->get(viscosity, d_lab->d_viscosityCTSLabel,      indx, patch, gac, 1);
-    }
-
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel, indx, patch);
-    }else{
-      new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,  indx, patch);
-    }
-    scalarDiss.initialize(0.0);
-
-    constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
-
-    // Get the PerPatch CellInformation data
-    PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-
-    // compatible with fortran index
-    IntVector idxLo = patch->getFortranCellLowIndex();
-    IntVector idxHi = patch->getFortranCellHighIndex();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          double scale = 0.5*(scalar[currCell]+
-              scalar[IntVector(colX+1,colY,colZ)]);
-          double scalw = 0.5*(scalar[currCell]+
-              scalar[IntVector(colX-1,colY,colZ)]);
-          double scaln = 0.5*(scalar[currCell]+
-              scalar[IntVector(colX,colY+1,colZ)]);
-          double scals = 0.5*(scalar[currCell]+
-              scalar[IntVector(colX,colY-1,colZ)]);
-          double scalt = 0.5*(scalar[currCell]+
-              scalar[IntVector(colX,colY,colZ+1)]);
-          double scalb = 0.5*(scalar[currCell]+
-              scalar[IntVector(colX,colY,colZ-1)]);
-          double dfdx = (scale-scalw)/cellinfo->sew[colX];
-          double dfdy = (scaln-scals)/cellinfo->sns[colY];
-          double dfdz = (scalt-scalb)/cellinfo->stb[colZ];
-          scalarDiss[currCell] = viscosity[currCell]*
-            (dfdx*dfdx + dfdy*dfdy + dfdz*dfdz)/
-            d_turbPrNo; 
-        }
-      }
-    }
-
-
-    // boundary conditions
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    int outlet_celltypeval   = d_boundaryCondition->outletCellType();
-    int pressure_celltypeval = d_boundaryCondition->pressureCellType();
-
-    if (xminus) {
-      int colX = idxLo.x();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-          IntVector currCell(colX-1, colY, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-              (cellType[currCell] == pressure_celltypeval))
-            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-        }
-      }
-    }
-    if (xplus) {
-      int colX = idxHi.x();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-          IntVector currCell(colX+1, colY, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-              (cellType[currCell] == pressure_celltypeval))
-            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-        }
-      }
-    }
-    if (yminus) {
-      int colY = idxLo.y();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector currCell(colX, colY-1, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-              (cellType[currCell] == pressure_celltypeval))
-            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-        }
-      }
-    }
-    if (yplus) {
-      int colY = idxHi.y();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector currCell(colX, colY+1, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-              (cellType[currCell] == pressure_celltypeval))
-            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-        }
-      }
-    }
-    if (zminus) {
-      int colZ = idxLo.z();
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ-1);
-          if ((cellType[currCell] == outlet_celltypeval)||
-              (cellType[currCell] == pressure_celltypeval))
-            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-        }
-      }
-    }
-    if (zplus) {
-      int colZ = idxHi.z();
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ+1);
-          if ((cellType[currCell] == outlet_celltypeval)||
-              (cellType[currCell] == pressure_celltypeval))
-            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
         }
       }
     }

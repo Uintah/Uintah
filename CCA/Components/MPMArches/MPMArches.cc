@@ -1090,12 +1090,6 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
 
   scheduleComputeVoidFrac(sched, patches, arches_matls, mpm_matls, all_matls);
 
-  // compute celltypeinit for both MPM and cutcells (if applicable).  We do this
-  // even though we have already chosen one of these two, because we want to see
-  // the difference in the celltypes that we get from the two methods.
-
-  d_arches->getBoundaryCondition()->sched_mmWallCellTypeInit(sched, patches, arches_matls, fixCellType);
-
   // for explicit calculation, exchange will be at the beginning
 
   scheduleMomExchange(sched, patches, arches_matls, mpm_matls, all_matls);

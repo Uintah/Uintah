@@ -105,24 +105,6 @@ public:
                                          const TimeIntegratorLabel* timelabels);
 
 
-
-  // GROUP: Schedule Action :
-  ///////////////////////////////////////////////////////////////////////
-  // Schedule the computation of Turbulence Model data
-  //    [in] 
-  //        data User data needed for solve 
-  virtual void sched_computeScalarVariance(SchedulerP&,
-                                           const PatchSet* patches,
-                                           const MaterialSet* matls,
-                                           const TimeIntegratorLabel* timelabels);
-                                           
-  virtual void sched_computeScalarDissipation(SchedulerP&,
-                                              const PatchSet* patches,
-                                              const MaterialSet* matls,
-                                              const TimeIntegratorLabel* timelabels);
-  // GROUP: Access Methods :
-  ///////////////////////////////////////////////////////////////////////
-  // Get the molecular viscosity
   double getMolecularViscosity() const; 
 
   ////////////////////////////////////////////////////////////////////////
@@ -131,15 +113,6 @@ public:
     return d_CF;
   }
   inline void set3dPeriodic(bool periodic) {}
-  inline double getTurbulentPrandtlNumber() const {
-    return d_turbPrNo;
-  }
-  inline void setTurbulentPrandtlNumber(double turbPrNo) {
-    d_turbPrNo = turbPrNo;
-  }
-  inline bool getDynScalarModel() const {
-    return false;
-  }
 
 protected:
       PhysicalConstants* d_physicalConsts;
@@ -163,24 +136,6 @@ private:
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw,
                              const TimeIntegratorLabel* timelabels);
-
-  ///////////////////////////////////////////////////////////////////////
-  // Actually Calculate the subgrid scale variance
-  //    [in] 
-  //        documentation here
-  void computeScalarVariance(const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw,
-                             const TimeIntegratorLabel* timelabels);
-                             
-  void computeScalarDissipation(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
-                                const TimeIntegratorLabel* timelabels);
 
  protected:
       double d_CF; //model constant

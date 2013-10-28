@@ -30,8 +30,6 @@
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/Mixing/Stream.h>
-#include <CCA/Components/Arches/Mixing/InletStream.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/LevelP.h>
 
@@ -41,7 +39,9 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
-#include   <vector>
+#include <vector>
+#include <ostream>
+#include <fstream>
 
 #include <CCA/Components/Arches/DigitalFilter/DigitalFilterInlet.h>
 
@@ -85,8 +85,6 @@ namespace Uintah {
   class VarLabel;
   class PhysicalConstants;
   class Properties;
-  class Stream;
-  class InletStream;
   class ArchesLabel;
   class MPMArchesLabel;
   class ProcessorGroup;
@@ -332,10 +330,8 @@ namespace Uintah {
       BoundaryCondition(const ArchesLabel* label, 
           const MPMArchesLabel* MAlb,
           PhysicalConstants* phys_const, 
-          Properties* props,
-          bool calcReactScalar, 
-          bool calcEnthalpy, 
-          bool calcVariance);
+          Properties* props);
+         
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -425,19 +421,6 @@ namespace Uintah {
             V& A,  T& AP, T& AE, T& AW,
             T& AN, T& AS, T& AT, T& AB);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Initialize multimaterial wall cell types
-      void sched_mmWallCellTypeInit( SchedulerP&, 
-          const PatchSet* patches,
-          const MaterialSet* matls, 
-          bool fixCellType);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Initialize multimaterial wall cell types for first time step
-      void sched_mmWallCellTypeInit_first( SchedulerP&, 
-          const PatchSet* patches,
-          const MaterialSet* matls);
-
       void computeInletAreaBCSource(const ProcessorGroup*,
           const PatchSubset* patches,
           const MaterialSubset*,
@@ -450,30 +433,6 @@ namespace Uintah {
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Actually compute scalar BC terms
-      void scalarBC(const Patch* patch,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Initialize multi-material wall celltyping and void fraction 
-      // calculation
-      void mmWallCellTypeInit(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw,
-          bool fixCellType);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Initialize multi-material wall celltyping and void fraction 
-      // calculation for first time step
-      void mmWallCellTypeInit_first(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw);
       // for computing intrusion bc's
       void intrusionTemperatureBC(const Patch* patch,
           constCCVariable<int>& cellType,
@@ -523,17 +482,6 @@ namespace Uintah {
           const Patch* patch,
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
-      // applies multimaterial bc's for scalars and pressure
-      void mmscalarWallBC( const Patch* patch,
-          CellInformation*, 
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars);
-
-      // applies multimaterial bc's for enthalpy
-      void mmEnthalpyWallBC( const Patch* patch,
-          CellInformation* cellinfo,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Calculate uhat for multimaterial case (only for nonintrusion cells)
@@ -546,22 +494,6 @@ namespace Uintah {
       void calculateVelocityPred_mm(const Patch* patch,
           double delta_t,
           CellInformation* cellinfo,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars);
-
-      void scalarLisolve_mm(const Patch*,
-          double delta_t,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars,
-          CellInformation* cellinfo);
-
-      void enthalpyLisolve_mm(const Patch*,
-          double delta_t,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars,
-          CellInformation* cellinfo);
-      // New boundary conditions
-      void scalarOutletPressureBC(const Patch* patch,
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
@@ -589,13 +521,6 @@ namespace Uintah {
           const double delta_t,
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
-
-      inline void setMMS(bool doMMS) {
-        d_doMMS=doMMS;
-      }
-      inline bool getMMS() const {
-        return d_doMMS;
-      }
 
       //boundary source term methods
       void sched_computeScalarSourceTerm(SchedulerP& sched,
@@ -889,11 +814,6 @@ namespace Uintah {
       // mass flow
       double d_uvwout;
       double d_overallMB;
-      // for reacting scalar
-      bool d_reactingScalarSolve;
-      // for enthalpy solve 
-      bool d_enthalpySolve;
-      bool d_calcVariance;
 
       string d_mms;
       double d_airDensity, d_heDensity;
@@ -906,7 +826,6 @@ namespace Uintah {
       double amp;
 
       double d_turbPrNo;
-      bool d_doMMS;
       bool d_slip; 
       double d_csmag_wall; 
 

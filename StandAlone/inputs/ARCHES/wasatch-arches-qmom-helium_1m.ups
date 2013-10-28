@@ -287,9 +287,7 @@
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
-            <Turbulence model="compdynamicprocedure">
-                <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-            </Turbulence>
+            <Turbulence model="compdynamicprocedure"/>
 
             <Properties>
                 <use_mixing_model>false</use_mixing_model>
@@ -381,10 +379,6 @@
                 <MomentumSolver>
                     <convection_scheme>central</convection_scheme>
                 </MomentumSolver>
-
-                <MixtureFractionSolver>
-                    <convection_scheme>central-upwind</convection_scheme>
-                </MixtureFractionSolver>
 
             </ExplicitSolver>
 
