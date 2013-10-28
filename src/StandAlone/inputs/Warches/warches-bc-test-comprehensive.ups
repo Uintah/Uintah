@@ -147,30 +147,20 @@
           </Clipping>
         </Eqn>
       </TransportEqns>
+
       <Properties>
-        <ColdFlow>
-          <mixture_fraction_label>mixture_fraction_sb</mixture_fraction_label>
-          <Stream_1>
-            <density>1.0</density>
-            <temperature>298</temperature>
-          </Stream_1>
-          <Stream_2>
-            <density>1.0</density>
-            <temperature>298</temperature>
-          </Stream_2>
-        </ColdFlow>
+        <ConstantProps>
+          <density>1.0</density>
+          <temperature>298</temperature>
+        </ConstantProps>
       </Properties>
 
       <BoundaryConditions>
-        <use_new_bcs/>
             <wall_csmag>0.0</wall_csmag>
             <suppress_corner_recirculation/>
       </BoundaryConditions>
 
       <ExplicitSolver>
-
-        <initial_dt>0.05</initial_dt>
-        <variable_dt>true</variable_dt>
 
         <PressureSolver>
           <Parameters>
