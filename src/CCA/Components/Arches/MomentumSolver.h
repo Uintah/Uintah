@@ -165,9 +165,6 @@ public:
   inline void setDiscretizationFilter(Filter* filter) {
     d_discretize->setFilter(filter);
   }
-  inline void setMMS(bool doMMS) {
-    d_doMMS=doMMS;
-  }
   inline void setMomentumCoupling(bool doMC) {
     d_momentum_coupling = doMC;
   }
@@ -253,7 +250,6 @@ private:
   bool d_3d_periodic;
   bool d_filter_divergence_constraint;
   bool d_mixedModel;
-  bool d_doMMS;
   vector<string> d_new_sources;
   bool d_useWasatchMomRHS;
 

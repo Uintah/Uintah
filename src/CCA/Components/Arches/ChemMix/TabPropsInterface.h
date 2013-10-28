@@ -98,18 +98,15 @@ public:
 
   /** @brief Gets the thermochemical state for a patch
       @param initialize         Tells the method to allocateAndPut
-      @param with_energy_exch   Tells the method that energy exchange is on
       @param modify_ref_den     Tells the method to modify the reference density */
   void sched_getState( const LevelP& level,
                        SchedulerP& sched,
                        const TimeIntegratorLabel* time_labels,
                        const bool initialize,
-                       const bool with_energy_exch,
                        const bool modify_ref_den );
 
   /** @brief Gets the thermochemical state for a patch
       @param initialize         Tells the method to allocateAndPut
-      @param with_energy_exch   Tells the method that energy exchange is on
       @param modify_ref_den     Tells the method to modify the reference density */
   void getState( const ProcessorGroup* pc,
                  const PatchSubset* patches,
@@ -118,12 +115,8 @@ public:
                  DataWarehouse* new_dw,
                  const TimeIntegratorLabel* time_labels,
                  const bool initialize,
-                 const bool with_energy_exch,
                  const bool modify_ref_den );
 
-
-  /** @brief A temporary solution to deal with boundary conditions on properties until Properties.cc is eliminated */
-  void oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type );
 
   /** @brief      Returns a single dependent variable, given a vector of independent variable values
       @param dv   The name of the dependent variable to look up in the table

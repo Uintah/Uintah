@@ -129,9 +129,7 @@
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
-      <Turbulence model="compdynamicprocedure">
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-      </Turbulence>
+      <Turbulence model="compdynamicprocedure"/>
 
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">

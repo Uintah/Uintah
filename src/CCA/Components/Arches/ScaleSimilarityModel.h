@@ -95,20 +95,6 @@ public:
                                             const MaterialSet* matls,
                                             const TimeIntegratorLabel* timelabels);
 
-   // GROUP: Schedule Action :
-   ///////////////////////////////////////////////////////////////////////
-   // Schedule the computation of Turbulence Model data
-   //    [in] 
-   //        data User data needed for solve 
-   virtual void sched_computeScalarVariance(SchedulerP&,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls,
-                                            const TimeIntegratorLabel* timelabels);
-
-   virtual void sched_computeScalarDissipation(SchedulerP&,
-                                               const PatchSet* patches,
-                                               const MaterialSet* matls,
-                                               const TimeIntegratorLabel* timelabels);
    ///////////////////////////////////////////////////////////////////////
    // Get the molecular viscosity
    double getMolecularViscosity() const; 
@@ -167,24 +153,6 @@ private:
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw,
                               const TimeIntegratorLabel* timelabels);
-
-   ///////////////////////////////////////////////////////////////////////
-   // Actually Calculate the subgrid scale variance
-   //    [in] 
-   //        documentation here
-   void computeScalarVariance(const ProcessorGroup*,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw,
-                              const TimeIntegratorLabel* timelabels);
-
-   void computeScalarDissipation(const ProcessorGroup*,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* matls,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw,
-                                 const TimeIntegratorLabel* timelabels);
 
 private:
       double d_CF; //model constant

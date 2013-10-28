@@ -156,11 +156,6 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 
   d_source = scinew Source(d_physicalConsts);
   
-  d_discretize->setMMS(d_doMMS);
-  if (d_doMMS){
-    d_source->problemSetup(db);
-  }
-
   // New Source terms (ala the new transport eqn):
   if (db->findBlock("src")){
     string srcname; 
@@ -173,8 +168,6 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   }
 
   d_rhsSolver = scinew RHSSolver();
-  d_rhsSolver->setMMS(d_doMMS);
-
   d_mixedModel=d_turbModel->getMixedModel();
 }
 
@@ -476,17 +469,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 2);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 2);
   
-  // required for computing div constraint
 //#ifdef divergenceconstraint
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-  if (!(this->get_use_wasatch_mom_rhs())) {
-    if (timelabels->multiple_steps){
-      tsk->requires(Task::NewDW, d_lab->d_scalarTempLabel,    gac, 1);
-    }else{
-      tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel,      gac, 1);
-    }
-  }
-//#endif // WASATCH_IN_ARCHES
 
   if (d_mixedModel) {
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
@@ -522,12 +505,6 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     tsk->modifies(d_lab->d_umomBoundarySrcLabel);
     tsk->modifies(d_lab->d_vmomBoundarySrcLabel);
     tsk->modifies(d_lab->d_wmomBoundarySrcLabel);
-
-    if (d_doMMS) {
-      tsk->modifies(d_lab->d_uFmmsLabel);
-      tsk->modifies(d_lab->d_vFmmsLabel);
-      tsk->modifies(d_lab->d_wFmmsLabel);
-    }
 
     // Adding new sources from factory:
     SourceTermFactory& factor = SourceTermFactory::self(); 
@@ -617,12 +594,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
     constCCVariable<double> old_divergence;
     if (!(this->get_use_wasatch_mom_rhs())) {
-      if (timelabels->multiple_steps){
-        new_dw->get(constVelocityVars.scalar, d_lab->d_scalarTempLabel,indx, patch, gac, 1);
-      }else{
-        old_dw->get(constVelocityVars.scalar, d_lab->d_scalarSPLabel,  indx, patch, gac, 1);
-      }
-
       // boundary source terms 
       new_dw->getModifiable(velocityVars.umomBoundarySrc,
                                                d_lab->d_umomBoundarySrcLabel, indx, patch);
@@ -692,15 +663,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       velocityVars.wVelRhoHat.copy(constVelocityVars.old_wVelocity,
                                    velocityVars.wVelRhoHat.getLowIndex(),
                                    velocityVars.wVelRhoHat.getHighIndex());
-
-      if (d_doMMS){
-        new_dw->getModifiable(velocityVars.uFmms, d_lab->d_uFmmsLabel, indx, patch);
-        new_dw->getModifiable(velocityVars.vFmms, d_lab->d_vFmmsLabel, indx, patch);
-        new_dw->getModifiable(velocityVars.wFmms, d_lab->d_wFmmsLabel, indx, patch);
-        velocityVars.uFmms.initialize(0.0);
-        velocityVars.vFmms.initialize(0.0);
-        velocityVars.wFmms.initialize(0.0);
-      }
 
       //__________________________________
       //  compute coefficients

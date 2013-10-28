@@ -290,10 +290,7 @@
         </Sources>
       </TransportEqns>
 
-      <Turbulence model="compdynamicprocedure">
-        <variance_coefficient>0.1</variance_coefficient>
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-      </Turbulence>
+      <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
         <ClassicTable>

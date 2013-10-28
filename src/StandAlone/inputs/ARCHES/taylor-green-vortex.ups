@@ -77,7 +77,6 @@
       </TransportEqns>
 
       <Properties>
-        <use_mixing_model>false</use_mixing_model>
         <ColdFlow>
           <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
           <Stream_1>
@@ -109,10 +108,6 @@
             <c>1.5708</c>
           </initialization>
         </MomentumSolver>
-
-        <MixtureFractionSolver>
-          <convection_scheme>central-upwind</convection_scheme>
-        </MixtureFractionSolver>
 
       </ExplicitSolver>
     </ARCHES>

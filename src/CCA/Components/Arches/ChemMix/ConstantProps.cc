@@ -94,13 +94,12 @@ ConstantProps::sched_getState( const LevelP& level,
     SchedulerP& sched, 
     const TimeIntegratorLabel* time_labels, 
     const bool initialize_me,
-    const bool with_energy_exch, 
     const bool modify_ref_den )
 {
   string taskname = "ConstantProps::getState"; 
   Ghost::GhostType  gn = Ghost::None;
 
-  Task* tsk = scinew Task(taskname, this, &ConstantProps::getState, time_labels, initialize_me, with_energy_exch, modify_ref_den );
+  Task* tsk = scinew Task(taskname, this, &ConstantProps::getState, time_labels, initialize_me, modify_ref_den );
 
   if ( initialize_me ) {
 
@@ -145,7 +144,6 @@ ConstantProps::getState( const ProcessorGroup* pc,
     DataWarehouse* new_dw, 
     const TimeIntegratorLabel* time_labels, 
     const bool initialize_me, 
-    const bool with_energy_exch, 
     const bool modify_ref_den )
 {
   for (int p=0; p < patches->size(); p++){
@@ -261,32 +259,6 @@ ConstantProps::getState( const ProcessorGroup* pc,
       new_dw->put(sum_vartype(den_ref),time_labels->ref_density);
     }
   }
-}
-
-void ConstantProps::oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type )
-{
-}
-
-//--------------------------------------------------------------------------- 
-// schedule Dummy Init
-//--------------------------------------------------------------------------- 
-  void 
-ConstantProps::sched_dummyInit( const LevelP& level, 
-    SchedulerP& sched )
-
-{
-}
-
-//--------------------------------------------------------------------------- 
-// Dummy Init
-//--------------------------------------------------------------------------- 
-  void 
-ConstantProps::dummyInit( const ProcessorGroup* pc, 
-    const PatchSubset* patches, 
-    const MaterialSubset* matls, 
-    DataWarehouse* old_dw, 
-    DataWarehouse* new_dw )
-{
 }
 
 double ConstantProps::getTableValue( std::vector<double> iv, std::string variable )

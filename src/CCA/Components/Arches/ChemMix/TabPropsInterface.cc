@@ -173,14 +173,13 @@ TabPropsInterface::sched_getState( const LevelP& level,
                                    SchedulerP& sched, 
                                    const TimeIntegratorLabel* time_labels, 
                                    const bool initialize_me,
-                                   const bool with_energy_exch, 
                                    const bool modify_ref_den )
 
 {
   string taskname = "TabPropsInterface::getState"; 
   Ghost::GhostType  gn = Ghost::None;
 
-  Task* tsk = scinew Task(taskname, this, &TabPropsInterface::getState, time_labels, initialize_me, with_energy_exch, modify_ref_den );
+  Task* tsk = scinew Task(taskname, this, &TabPropsInterface::getState, time_labels, initialize_me, modify_ref_den );
 
   // independent variables :: these must have been computed previously 
   for ( MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ) {
@@ -248,7 +247,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
                              DataWarehouse* new_dw, 
                              const TimeIntegratorLabel* time_labels, 
                              const bool initialize_me, 
-                             const bool with_energy_exch, 
                              const bool modify_ref_den )
 {
   for (int p=0; p < patches->size(); p++){

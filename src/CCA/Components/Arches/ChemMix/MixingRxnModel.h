@@ -27,9 +27,6 @@
 #ifndef Uintah_Component_Arches_MixingRxnModel_h
 #define Uintah_Component_Arches_MixingRxnModel_h
 
-#include <CCA/Components/Arches/Mixing/InletStream.h>
-#include <CCA/Components/Arches/Mixing/Stream.h>
-
 // Uintah includes
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -71,7 +68,7 @@
 namespace Uintah {
 
   // setenv SCI_DEBUG TABLE_DEBUG:+ 
-  static DebugStream cout_tabledbg("TABLE_DEBUG",false);
+  static SCIRun::DebugStream cout_tabledbg("TABLE_DEBUG",false);
 
   class ArchesLabel; 
   class TimeIntegratorLabel; 
@@ -103,7 +100,6 @@ namespace Uintah {
         SchedulerP& sched, 
         const TimeIntegratorLabel* time_labels, 
         const bool initialize,
-        const bool with_energy_exch,
         const bool modify_ref_den ) = 0;
 
     /** @brief Provides access for models, algorithms, etc. to add additional table lookup variables. */

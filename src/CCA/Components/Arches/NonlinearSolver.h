@@ -122,10 +122,6 @@ public:
 
   virtual bool restartableTimesteps() = 0;
 
-  virtual void setMMS(bool doMMS) = 0;
-
-  virtual bool getMMS() const = 0;
-  
   virtual MomentumSolver* get_momentum_solver() = 0;
 
   virtual void setPartVel(PartVel* partVel) = 0; 

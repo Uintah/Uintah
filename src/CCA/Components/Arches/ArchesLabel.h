@@ -122,10 +122,6 @@ namespace Uintah {
       // for old_dw in computeTurbModel
       const VarLabel* d_viscosityCTSLabel;
       const VarLabel* d_turbViscosLabel; 
-      const VarLabel* d_scalarDiffusivityLabel;
-      const VarLabel* d_enthalpyDiffusivityLabel;
-      const VarLabel* d_reactScalarDiffusivityLabel;
-
 
       // Pressure Labels
 
@@ -156,21 +152,9 @@ namespace Uintah {
       // WMom Labels
       const VarLabel* d_wMomLabel;
 
-      // Scalar Labels
-      //computed for old_dw in paramInit
-      // computed for new_dw in setInitialGuess
-
-      const VarLabel* d_scalarSPLabel;
-      const VarLabel* d_scalarTempLabel;
-      const VarLabel* d_scalarFELabel;
-
-      // Scalar variance labels
 
       // computed for new_dw in Smagorinsky Model
       const VarLabel* d_scalarVarSPLabel;
-
-      // computed for new_dw in Smagorinsky Model for flamelet
-      const VarLabel* d_scalarDissSPLabel;
 
       // Scalar Coef
       const VarLabel* d_scalCoefSBLMLabel;
@@ -180,30 +164,8 @@ namespace Uintah {
       const VarLabel* d_scalDiffCoefSrcLabel;
       const VarLabel* d_enthDiffCoefLabel;
 
-      // new scalar coeffs:
-      const VarLabel* d_scalarTotCoefLabel; 
-
       // Scalar NonLinear Src
       const VarLabel* d_scalNonLinSrcSBLMLabel;
-
-
-      // reactive scalars
-      const VarLabel* d_reactscalarSPLabel;
-      const VarLabel* d_reactscalarTempLabel;
-      const VarLabel* d_reactscalarFELabel;
-
-      // Reactscalar variance labels
-      // computed for new_dw in Smagorinsky Model
-      const VarLabel* d_reactscalarVarSPLabel;
-
-      // Reactscalar Coef
-      const VarLabel* d_reactscalCoefSBLMLabel;
-
-      // Reactscalar Diffusion Coef
-      const VarLabel* d_reactscalDiffCoefLabel;
-      
-      // Reactscalar NonLinear Src
-      const VarLabel* d_reactscalNonLinSrcSBLMLabel;
 
       // labels for scalesimilaritymodels
 
@@ -219,8 +181,6 @@ namespace Uintah {
       const VarLabel* d_cbetaIJCompLabel;
       const VarLabel* d_LIJCompLabel;
 
-      const VarLabel* d_scalarFluxCompLabel;
-      
       // labels for dynamic procedure
       const VarLabel* d_strainMagnitudeLabel;
       const VarLabel* d_strainMagnitudeMLLabel;
@@ -258,7 +218,6 @@ namespace Uintah {
       const VarLabel* d_cpINLabel;
       const VarLabel* d_co2INLabel;
       const VarLabel* d_h2oINLabel;
-      const VarLabel* d_normalizedScalarVarLabel;
       const VarLabel* d_heatLossLabel;
 
       const VarLabel* d_h2sINLabel;
@@ -318,15 +277,6 @@ namespace Uintah {
 
       const VarLabel* d_pressurePredLabel;
 
-      // for enthalpy equation
-      const VarLabel* d_enthalpySPLabel;
-      const VarLabel* d_enthalpyTempLabel;
-      const VarLabel* d_enthalpyFELabel;
-      
-      // for validation
-      const VarLabel* d_enthalpyRXNLabel;
-
-
       // Enthalpy Coef
       const VarLabel* d_enthCoefSBLMLabel;
 
@@ -352,10 +302,6 @@ namespace Uintah {
       const VarLabel* d_radiationFluxBINLabel;
       const VarLabel* d_radiationVolqINLabel;
  
-      // reactive scalar source term from properties
-      const VarLabel* d_reactscalarSRCINLabel;
-      
-
       // runge-kutta 3d order properties labels
       const VarLabel* d_refDensityInterm_label;
       const VarLabel* d_refPressureInterm_label;
@@ -452,20 +398,11 @@ namespace Uintah {
       const VarLabel* d_filterRhoFLabel;
       const VarLabel* d_filterRhoELabel;
       const VarLabel* d_filterRhoRFLabel;
-      const VarLabel* d_scalarGradientCompLabel;
       const VarLabel* d_filterScalarGradientCompLabel;
-      const VarLabel* d_enthalpyGradientCompLabel;
       const VarLabel* d_filterEnthalpyGradientCompLabel;
-      const VarLabel* d_reactScalarGradientCompLabel;
       const VarLabel* d_filterReactScalarGradientCompLabel;
       const VarLabel* d_filterStrainTensorCompLabel;
       const VarLabel* d_filterVolumeLabel; 
-      const VarLabel* d_scalarNumeratorLabel; 
-      const VarLabel* d_scalarDenominatorLabel; 
-      const VarLabel* d_enthalpyNumeratorLabel; 
-      const VarLabel* d_enthalpyDenominatorLabel; 
-      const VarLabel* d_reactScalarNumeratorLabel; 
-      const VarLabel* d_reactScalarDenominatorLabel; 
       const VarLabel* d_ShFLabel;
       const VarLabel* d_ShELabel;
       const VarLabel* d_ShRFLabel;
@@ -483,8 +420,6 @@ namespace Uintah {
       const VarLabel* d_so2RateLabel;
 
       //source term labels for intrusion (non-zero) boundary conditions
-      const VarLabel* d_scalarBoundarySrcLabel;
-      const VarLabel* d_enthalpyBoundarySrcLabel;
       const VarLabel* d_umomBoundarySrcLabel;
       const VarLabel* d_vmomBoundarySrcLabel;
       const VarLabel* d_wmomBoundarySrcLabel;

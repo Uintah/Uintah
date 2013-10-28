@@ -311,14 +311,9 @@
         </model> 
       </PropertyModels> 
 
-      <Turbulence model="compdynamicprocedure">
-        <variance_coefficient>0.1</variance_coefficient>
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-        <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
-      </Turbulence>
+      <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
-          <use_mixing_model>true</use_mixing_model>
           <ClassicTable>
             <enthalpy_label>enthalpy</enthalpy_label>
             <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
@@ -345,10 +340,6 @@
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
-        <MixtureFractionSolver>
-          <convection_scheme>central-upwind</convection_scheme>
-        </MixtureFractionSolver>
 
         <newEnthalpySolver/>
 

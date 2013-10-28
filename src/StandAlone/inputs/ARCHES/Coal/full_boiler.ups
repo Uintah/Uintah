@@ -9585,12 +9585,9 @@
 
       </TransportEqns>
 
-      <Turbulence model="compdynamicprocedure">
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-      </Turbulence>
+      <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
-        <use_mixing_model>false</use_mixing_model>
         <ClassicTable>
           <enthalpy_label>enthalpy</enthalpy_label>
 <!--NOT_ADIABATIC/-->
@@ -10026,10 +10023,6 @@
           <src label="coal_gas_momentum">
           </src>
         </MomentumSolver>
-
-        <MixtureFractionSolver>
-          <convection_scheme>central-upwind</convection_scheme>
-        </MixtureFractionSolver>
 
 <!-- current direction for the new enthalpy solver -->
         <newEnthalpySolver/>

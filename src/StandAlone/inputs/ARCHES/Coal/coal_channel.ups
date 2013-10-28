@@ -964,12 +964,9 @@
       </PropertyModels>
 
       <!-- compdynamicprocedure is the best-->
-      <Turbulence model="compdynamicprocedure">
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-      </Turbulence>
+      <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
-        <use_mixing_model>false</use_mixing_model>
         <ClassicTable>
           <enthalpy_label>enthalpy</enthalpy_label>   <!-- NON Adiabatic case-->
           <inputfile>inputs/ARCHES/ClassicMixingTables/coal/DQMOM_coal.mix.gz</inputfile>
@@ -1266,11 +1263,6 @@
           <src label="coal_gas_momentum"/>
         </MomentumSolver>
 
-        <MixtureFractionSolver>  <!-- do we need this solver???-->
-          <convection_scheme>central-upwind</convection_scheme>
-          <initial_value>0.1</initial_value>
-        </MixtureFractionSolver>
-        <newEnthalpySolver/>
       </ExplicitSolver>
     </ARCHES>
   </CFD>

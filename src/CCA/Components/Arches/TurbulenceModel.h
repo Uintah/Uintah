@@ -103,21 +103,7 @@ public:
       }
 
       virtual void set3dPeriodic(bool periodic) = 0;
-      virtual double getTurbulentPrandtlNumber() const = 0;
-      virtual void setTurbulentPrandtlNumber(double turbPrNo) = 0;
-      virtual bool getDynScalarModel() const = 0;
 
-      inline void setCombustionSpecifics(bool calcScalar,
-                                         bool calcEnthalpy,
-                                         bool calcReactingScalar) {
-        d_calcScalar = calcScalar;
-        d_calcEnthalpy = calcEnthalpy;
-        d_calcReactingScalar = calcReactingScalar;
-      }
-
-      inline void modelVariance(bool calcVariance) {
-        d_calcVariance = calcVariance;
-      }
       inline void setMixedModel(bool mixedModel) {
         d_mixedModel = mixedModel;
       }
@@ -135,23 +121,12 @@ public:
                                                const MaterialSet* matls,
                                                const TimeIntegratorLabel* timelabels) = 0;
 
-
-      virtual void sched_computeScalarVariance(SchedulerP&,
-                                               const PatchSet* patches,
-                                               const MaterialSet* matls,
-                                               const TimeIntegratorLabel* timelabels) = 0;
-                                               
-      virtual void sched_computeScalarDissipation(SchedulerP&,
-                                                  const PatchSet* patches,
-                                                  const MaterialSet* matls,
-                                                  const TimeIntegratorLabel* timelabels) = 0;
  protected:
 
       const ArchesLabel* d_lab;
       const MPMArchesLabel* d_MAlab;
 
       Filter* d_filter;
-      bool d_calcScalar, d_calcEnthalpy, d_calcReactingScalar;
       bool d_calcVariance;
       std::string d_mix_frac_label_name; 
       const VarLabel* d_mf_label;

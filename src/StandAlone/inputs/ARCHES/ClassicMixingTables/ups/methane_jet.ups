@@ -23,7 +23,7 @@
     <save label="passive_scalar"/>
 <!-- Table Variables -->
 <!-- iv's -->
-    <save label="scalarVarSP"/>
+    <save label="normalizedScalarVar"/>
     <save label="mixture_fraction"/>
     <save label="heat_loss"/>
 <!-- dv's -->
@@ -276,15 +276,19 @@
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
+        <model type="scalsim_variance" label="normalizedScalarVar">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
+          <density_label>density</density_label>
+          <variance_coefficient>0.1</variance_coefficient>
+        </model>
       </PropertyModels>
 
-      <Turbulence model="compdynamicprocedure">
-        <variance_coefficient>0.1</variance_coefficient>
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-      </Turbulence>
+      <Turbulence model="compdynamicprocedure"/> 
 
       <Properties>
-        <use_mixing_model>true</use_mixing_model>
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
           <standard_flamelet f_label="mixture_fraction" hl_label="heat_loss" var_label="normalizedScalarVar"/>
@@ -311,11 +315,6 @@
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
-        <MixtureFractionSolver>
-          <convection_scheme>flux_limited</convection_scheme>
-          <limiter_type>upwind</limiter_type>
-        </MixtureFractionSolver>
 
       </ExplicitSolver>
     </ARCHES>
