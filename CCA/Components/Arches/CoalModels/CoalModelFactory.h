@@ -185,6 +185,7 @@ private:
   string s_LengthName;
   VarLabel* d_Length_ICLabel;
   VarLabel* d_Length_GasLabel;
+  const VarLabel* d_gas_temperature_label; 
 
   string s_RawCoalName;
   VarLabel* d_RawCoal_ICLabel;

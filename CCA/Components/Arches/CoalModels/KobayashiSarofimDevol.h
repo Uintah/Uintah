@@ -91,6 +91,7 @@ private:
   const VarLabel* d_char_mass_label;
   const VarLabel* d_weight_label;
   const VarLabel* d_particle_temperature_label;
+  const VarLabel* d_gas_temperature_label;
 
   double A1;        ///< Pre-exponential factors for devolatilization rate constants
   double A2;        ///< Pre-exponential factors for devolatilization rate constants

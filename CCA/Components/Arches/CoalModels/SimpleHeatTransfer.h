@@ -154,6 +154,8 @@ private:
 
   const VarLabel* d_abskp;  ///< Label for thermal conductivity (of the particles, I think???)
 
+  const VarLabel* d_gas_temperature_label; 
+
   double visc;
   double yelem[5];              ///< Fractions of each element in coal (C, H, N, O, S respectively)
   vector<double>  ash_mass_init;         ///< Initial ash mass

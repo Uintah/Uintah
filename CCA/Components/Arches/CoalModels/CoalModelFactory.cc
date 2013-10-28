@@ -106,6 +106,9 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
     b_coupled_physics = false;
 
   } else {
+
+    //labels seem suspicious (ie, they aren't being requested from DW)...this needs to be examined. 
+    throw ProblemSetupException("Error: It isn't clear that the coalParticleCalculation option in your UPS is working.",__FILE__,__LINE__);
     
     // Coupled or separable physics calculations?
     string calculation_type;
@@ -329,7 +332,7 @@ CoalModelFactory::coalParticleCalculation(  const ProcessorGroup  * pc,
       old_dw->get( length_wa, d_Length_ICLabel, matlIndex, patch, gn, 0 );
 
       constCCVariable<double> gas_temperature;
-      old_dw->get( gas_temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
+      old_dw->get( gas_temperature, d_gas_temperature_label, matlIndex, patch, gac, 1 );
 
       CCVariable<double> length_model;
       if( new_dw->exists( d_Length_ICLabel, matlIndex, patch ) ) {
