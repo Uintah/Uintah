@@ -692,7 +692,7 @@
             <co2_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of CO2, default = CO2 --> 
             <h2o_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of H2O, default = H2O --> 
             <T_label                    spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of temperature, default = temperature -->  
-            <soot_label                 spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of absorbtion coefficient, default = absorpIN (old Arches variable) --> 
+            <soot_label                 spec="REQUIRED STRING"  need_applies_to="type do_radiation" /> <!-- string label of absorbtion coefficient, default = absorpIN (old Arches variable) --> 
             <psize_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation rmcrt_radiation" /> <!-- string label of the particle size --> 
             <ptemperature_label         spec="OPTIONAL STRING"  need_applies_to="type do_radiation rmcrt_radiation" /> <!-- string label of the particle size --> 
             <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >
