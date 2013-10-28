@@ -724,9 +724,6 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   }
 //#endif // WASATCH_IN_ARCHES
   tsk->computes(d_lab->d_densityCPLabel);
-  tsk->computes(d_lab->d_umomBoundarySrcLabel);
-  tsk->computes(d_lab->d_vmomBoundarySrcLabel);
-  tsk->computes(d_lab->d_wmomBoundarySrcLabel);
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
   if (!(this->get_use_wasatch_mom_rhs())) tsk->computes(d_lab->d_viscosityCTSLabel);
 //#endif // WASATCH_IN_ARCHES
@@ -741,10 +738,6 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
 
   //__________________________________
   tsk->computes(d_lab->d_densityTempLabel);
-
-  //Helper variable
-  tsk->computes(d_lab->d_zerosrcVarLabel);
-
   sched->addTask(tsk, patches, matls);
 }
 
@@ -1257,17 +1250,6 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->allocateAndPut(turb_viscosity_new, d_lab->d_turbViscosLabel, indx, patch);
     turb_viscosity_new.copyData(turb_viscosity); // copy old into new
 
-    SFCXVariable<double> umomBoundarySrc;
-    SFCYVariable<double> vmomBoundarySrc;
-    SFCZVariable<double> wmomBoundarySrc;
-
-    new_dw->allocateAndPut(umomBoundarySrc,     d_lab->d_umomBoundarySrcLabel,    indx, patch);
-    new_dw->allocateAndPut(vmomBoundarySrc,     d_lab->d_vmomBoundarySrcLabel,    indx, patch);
-    new_dw->allocateAndPut(wmomBoundarySrc,     d_lab->d_wmomBoundarySrcLabel,    indx, patch);
-
-    umomBoundarySrc.initialize(0.0);
-    vmomBoundarySrc.initialize(0.0);
-    wmomBoundarySrc.initialize(0.0);
   }
 }
 

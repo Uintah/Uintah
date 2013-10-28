@@ -152,23 +152,7 @@ namespace Uintah {
       // WMom Labels
       const VarLabel* d_wMomLabel;
 
-
-      // computed for new_dw in Smagorinsky Model
-      const VarLabel* d_scalarVarSPLabel;
-
-      // Scalar Coef
-      const VarLabel* d_scalCoefSBLMLabel;
-
-      // scalar diffusion coeffs, required for divergence constraint
-      const VarLabel* d_scalDiffCoefLabel;
-      const VarLabel* d_scalDiffCoefSrcLabel;
-      const VarLabel* d_enthDiffCoefLabel;
-
-      // Scalar NonLinear Src
-      const VarLabel* d_scalNonLinSrcSBLMLabel;
-
       // labels for scalesimilaritymodels
-
       const VarLabel* d_stressTensorCompLabel;
       const VarLabel* d_stressSFCXdivLabel;
       const VarLabel* d_stressSFCYdivLabel;
@@ -213,11 +197,6 @@ namespace Uintah {
       const VarLabel* d_densityMicroLabel;
       const VarLabel* d_densityMicroINLabel;
       const VarLabel* d_pressPlusHydroLabel;
-      // predicted
-
-      // for outlet bc
-      const VarLabel* d_uvwoutLabel;
-      // pred-corr labels
 
       // labels for pressure solver
       const VarLabel* d_uVelRhoHatLabel;
@@ -235,12 +214,6 @@ namespace Uintah {
       const VarLabel* d_wVelRhoHat_CCLabel;
 
       const VarLabel* d_pressurePredLabel;
-
-      // Enthalpy Coef
-      const VarLabel* d_enthCoefSBLMLabel;
-
-      // Enthalpy NonLinear Src
-      const VarLabel* d_enthNonLinSrcSBLMLabel;
 
       // for radiation
       const VarLabel* d_fvtfiveINLabel;
@@ -275,7 +248,6 @@ namespace Uintah {
       const VarLabel* d_velocityDivergenceBCLabel;
       const VarLabel* d_continuityResidualLabel;
 
-      const VarLabel* d_ScalarClippedLabel;
       const VarLabel* d_negativeDensityGuess_label;
       const VarLabel* d_negativeDensityGuessPred_label;
       const VarLabel* d_negativeDensityGuessInterm_label;
@@ -307,18 +279,6 @@ namespace Uintah {
       const VarLabel* d_ShFLabel;
       const VarLabel* d_ShELabel;
       const VarLabel* d_ShRFLabel;
-
-      //Helper variable
-      const VarLabel* d_zerosrcVarLabel;
-
-      //rate Labels
-      const VarLabel* d_co2RateLabel;
-      const VarLabel* d_so2RateLabel;
-
-      //source term labels for intrusion (non-zero) boundary conditions
-      const VarLabel* d_umomBoundarySrcLabel;
-      const VarLabel* d_vmomBoundarySrcLabel;
-      const VarLabel* d_wmomBoundarySrcLabel;
 
       // DQMOM Variables:
 

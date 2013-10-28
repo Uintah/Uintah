@@ -500,11 +500,6 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
   if (!(this->get_use_wasatch_mom_rhs())) {
-    
-   // build linear matrix vel hat 
-    tsk->modifies(d_lab->d_umomBoundarySrcLabel);
-    tsk->modifies(d_lab->d_vmomBoundarySrcLabel);
-    tsk->modifies(d_lab->d_wmomBoundarySrcLabel);
 
     // Adding new sources from factory:
     SourceTermFactory& factor = SourceTermFactory::self(); 
@@ -593,15 +588,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
     constCCVariable<double> old_divergence;
-    if (!(this->get_use_wasatch_mom_rhs())) {
-      // boundary source terms 
-      new_dw->getModifiable(velocityVars.umomBoundarySrc,
-                                               d_lab->d_umomBoundarySrcLabel, indx, patch);
-      new_dw->getModifiable(velocityVars.vmomBoundarySrc,
-                                               d_lab->d_vmomBoundarySrcLabel, indx, patch);
-      new_dw->getModifiable(velocityVars.wmomBoundarySrc,
-                                               d_lab->d_wmomBoundarySrcLabel, indx, patch);
-    }
 //#endif // WASATCH_IN_ARCHES
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
