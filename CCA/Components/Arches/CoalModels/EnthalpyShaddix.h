@@ -172,6 +172,7 @@ private:
   const VarLabel* d_abskg_label;
 
   const VarLabel* d_gas_temperature_label;    ///< Gas temperature label
+  const VarLabel* d_gas_cp_label;             ///< Gas specific heat label
 
   Properties* d_props; 
 

@@ -246,14 +246,6 @@ ClassicTableInterface::sched_getState( const LevelP& level,
       tsk->computes( i->second ); 
     }
 
-    if (!d_coldflow) { 
-      // other dependent vars:
-      tsk->computes( d_lab->d_cpINLabel ); 
-      tsk->computes( d_lab->d_co2INLabel ); 
-      tsk->computes( d_lab->d_h2oINLabel ); 
-      tsk->computes( d_lab->d_sootFVINLabel ); 
-    }
-
     if (d_MAlab)
       tsk->computes( d_lab->d_densityMicroLabel ); 
 
@@ -261,14 +253,6 @@ ClassicTableInterface::sched_getState( const LevelP& level,
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
       tsk->modifies( i->second ); 
-    }
-
-    if (!d_coldflow) { 
-      // other dependent vars:
-      tsk->modifies( d_lab->d_cpINLabel ); 
-      tsk->modifies( d_lab->d_co2INLabel ); 
-      tsk->modifies( d_lab->d_h2oINLabel ); 
-      tsk->modifies( d_lab->d_sootFVINLabel ); 
     }
 
     if (d_MAlab)
@@ -333,10 +317,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     }
 
     // dependent variables:
-    CCVariable<double> arches_cp; 
-    CCVariable<double> arches_co2; 
-    CCVariable<double> arches_h2o; 
-    CCVariable<double> arches_soot; 
     CCVariable<double> mpmarches_denmicro; 
 
     DepVarMap depend_storage; 
@@ -357,22 +337,9 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
       }
 
-      if (!d_coldflow) { 
-        new_dw->allocateAndPut( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
-        new_dw->allocateAndPut( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
-        new_dw->allocateAndPut( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
-        new_dw->allocateAndPut( arches_soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
-      }
       if (d_MAlab) {
         new_dw->allocateAndPut( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
         mpmarches_denmicro.initialize(0.0);
-      }
-
-      if ( !d_coldflow ) { 
-        arches_cp.initialize(0.0); 
-        arches_co2.initialize(0.0); 
-        arches_h2o.initialize(0.0);
-        arches_soot.initialize(0.0); 
       }
 
     } else { 
@@ -392,12 +359,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       }
 
       // others:
-      if (!d_coldflow) { 
-        new_dw->getModifiable( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
-        new_dw->getModifiable( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
-        new_dw->getModifiable( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
-        new_dw->getModifiable( arches_soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
-      }
       if (d_MAlab) 
         new_dw->getModifiable( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
     }
@@ -478,18 +439,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           if (d_MAlab)
             mpmarches_denmicro[c] = table_value; 
-
-        } else if (i->first == "specificheat" && !d_coldflow) {
-
-          arches_cp[c] = table_value; 
-
-        } else if (i->first == "CO2" && !d_coldflow) {
-
-          arches_co2[c] = table_value; 
-
-        } else if (i->first == "H2O" && !d_coldflow) {
-
-          arches_h2o[c] = table_value; 
 
         }
 
@@ -614,12 +563,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
               if (d_MAlab)
                 mpmarches_denmicro[c] = ghost_value; 
 
-            } else if (i->first == "specificheat" && !d_coldflow) {
-              arches_cp[c] = table_value; 
-            } else if (i->first == "CO2" && !d_coldflow) {
-              arches_co2[c] = table_value; 
-            } else if (i->first == "H2O" && !d_coldflow) {
-              arches_h2o[c] = table_value; 
             }
           }
           iv.resize(0);

@@ -209,45 +209,6 @@ namespace Uintah {
       const VarLabel* d_mmcellTypeLabel;
       const VarLabel* d_mmgasVolFracLabel;
 
-      // for reacting flows
-      const VarLabel* d_tempFxLabel; 
-      const VarLabel* d_tempFyLabel;
-      const VarLabel* d_tempFzLabel; 
-      const VarLabel* d_cpINLabel;
-      const VarLabel* d_co2INLabel;
-      const VarLabel* d_h2oINLabel;
-      const VarLabel* d_heatLossLabel;
-
-      const VarLabel* d_h2sINLabel;
-      const VarLabel* d_so2INLabel;
-      const VarLabel* d_so3INLabel;
-      const VarLabel* d_sulfurINLabel;
-
-      const VarLabel* d_mixMWLabel; 
-
-      const VarLabel* d_s2INLabel;
-      const VarLabel* d_shINLabel;
-      const VarLabel* d_soINLabel;
-      const VarLabel* d_hso2INLabel;
-
-      const VarLabel* d_hosoINLabel;
-      const VarLabel* d_hoso2INLabel;
-      const VarLabel* d_snINLabel;
-      const VarLabel* d_csINLabel;
-
-      const VarLabel* d_ocsINLabel;
-      const VarLabel* d_hsoINLabel;
-      const VarLabel* d_hosINLabel;
-      const VarLabel* d_hsohINLabel;
-
-      const VarLabel* d_h2soINLabel;
-      const VarLabel* d_hoshoINLabel;
-      const VarLabel* d_hs2INLabel;
-      const VarLabel* d_h2s2INLabel;
-
-      const VarLabel* d_coINLabel;
-      const VarLabel* d_c2h2INLabel;
-      const VarLabel* d_ch4INLabel;
       const VarLabel* d_denRefArrayLabel;
       const VarLabel* d_densityMicroLabel;
       const VarLabel* d_densityMicroINLabel;
@@ -289,7 +250,6 @@ namespace Uintah {
       const VarLabel* d_qrgINLabel;
       const VarLabel* d_qrsINLabel;
       const VarLabel* d_absorpINLabel;
-      const VarLabel* d_sootFVINLabel;
       const VarLabel* d_abskgINLabel;
       const VarLabel* d_radiationSRCINLabel;
       const VarLabel* d_radiationFluxEINLabel;

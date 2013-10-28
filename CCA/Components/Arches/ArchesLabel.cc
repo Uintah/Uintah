@@ -163,39 +163,6 @@ ArchesLabel::ArchesLabel()
   // Label for void fraction, after correction for wall cells using cutoff
   d_mmgasVolFracLabel = VarLabel::create("mmgasVolFrac",  CC_double);
 
-  // for reacting flows
-  d_tempFxLabel    =  VarLabel::create("tempFxLabel", SFCX_double); 
-  d_tempFyLabel    =  VarLabel::create("tempFyLabel", SFCY_double); 
-  d_tempFzLabel    =  VarLabel::create("tempFzLabel", SFCZ_double); 
-  d_cpINLabel      =  VarLabel::create("cpIN",      CC_double);
-  d_co2INLabel     =  VarLabel::create("co2IN",     CC_double);
-  d_heatLossLabel  =  VarLabel::create("heatLoss",  CC_double);
-  d_h2oINLabel     =  VarLabel::create("h2oIN",     CC_double);
-  d_h2sINLabel     =  VarLabel::create("h2sIN",     CC_double);
-  d_so2INLabel     =  VarLabel::create("so2IN",     CC_double);
-  d_so3INLabel     =  VarLabel::create("so3IN",     CC_double);
-  d_sulfurINLabel  =  VarLabel::create("sulfurIN",  CC_double);
-  d_s2INLabel      =  VarLabel::create("s2IN",      CC_double);
-  d_shINLabel      =  VarLabel::create("shIN",      CC_double);
-  d_soINLabel      =  VarLabel::create("soIN",      CC_double);
-  d_hso2INLabel    =  VarLabel::create("hso2IN",    CC_double);
-  d_hosoINLabel    =  VarLabel::create("hosoIN",    CC_double);
-  d_hoso2INLabel   =  VarLabel::create("hoso2IN",   CC_double);
-  d_snINLabel      =  VarLabel::create("snIN",      CC_double);
-  d_csINLabel      =  VarLabel::create("csIN",      CC_double);
-  d_ocsINLabel     =  VarLabel::create("ocsIN",     CC_double);
-  d_hsoINLabel     =  VarLabel::create("hsoIN",     CC_double);
-  d_hosINLabel     =  VarLabel::create("hosIN",     CC_double);
-  d_hsohINLabel    =  VarLabel::create("hsohIN",    CC_double);
-  d_h2soINLabel    =  VarLabel::create("h2soIN",    CC_double);
-  d_hoshoINLabel   =  VarLabel::create("hoshoIN",   CC_double);
-  d_hs2INLabel     =  VarLabel::create("hs2IN",     CC_double);
-  d_h2s2INLabel    =  VarLabel::create("h2s2IN",    CC_double);
-  d_coINLabel      =  VarLabel::create("coIN",      CC_double);
-  d_c2h2INLabel    =  VarLabel::create("c2h2IN",    CC_double);
-  d_ch4INLabel     =  VarLabel::create("ch4IN",     CC_double);
-  d_mixMWLabel     =  VarLabel::create("mixMW",     CC_double); 
-
   // Array containing the reference density multiplied by the void fraction
   // used for correct reference density subtraction in the multimaterial
   // case
@@ -245,7 +212,6 @@ ArchesLabel::ArchesLabel()
   //__________________________________
   // Radiation
   d_absorpINLabel   =  VarLabel::create("absorpIN",   CC_double);
-  d_sootFVINLabel   =  VarLabel::create("sootFVIN",   CC_double);
   d_abskgINLabel    =  VarLabel::create("abskgIN",    CC_double);
 
   d_radiationSRCINLabel = VarLabel::create("radiationSRCIN",  CC_double);
@@ -516,40 +482,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_mmcellTypeLabel);
   VarLabel::destroy(d_mmgasVolFracLabel);
 
-  VarLabel::destroy(d_cpINLabel);
-  VarLabel::destroy(d_co2INLabel);
-  VarLabel::destroy(d_h2oINLabel);
-  VarLabel::destroy(d_heatLossLabel);
-
-  VarLabel::destroy(d_h2sINLabel);
-  VarLabel::destroy(d_so2INLabel);
-  VarLabel::destroy(d_so3INLabel);
-  VarLabel::destroy(d_sulfurINLabel);
-
-  VarLabel::destroy(d_s2INLabel);
-  VarLabel::destroy(d_shINLabel);
-  VarLabel::destroy(d_soINLabel);
-  VarLabel::destroy(d_hso2INLabel);
-
-  VarLabel::destroy(d_hosoINLabel);
-  VarLabel::destroy(d_hoso2INLabel);
-  VarLabel::destroy(d_snINLabel);
-  VarLabel::destroy(d_csINLabel);
-
-  VarLabel::destroy(d_ocsINLabel);
-  VarLabel::destroy(d_hsoINLabel);
-  VarLabel::destroy(d_hosINLabel);
-  VarLabel::destroy(d_hsohINLabel);
-
-  VarLabel::destroy(d_h2soINLabel);
-  VarLabel::destroy(d_hoshoINLabel);
-  VarLabel::destroy(d_hs2INLabel);
-  VarLabel::destroy(d_h2s2INLabel);
-
-  VarLabel::destroy(d_coINLabel);
-  VarLabel::destroy(d_c2h2INLabel);
-  VarLabel::destroy(d_ch4INLabel);
-  VarLabel::destroy(d_mixMWLabel); 
   VarLabel::destroy(d_denRefArrayLabel);
   VarLabel::destroy(d_densityMicroLabel);
   VarLabel::destroy(d_densityMicroINLabel);
@@ -569,7 +501,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_enthNonLinSrcSBLMLabel);
   VarLabel::destroy(d_absorpINLabel);
   VarLabel::destroy(d_abskgINLabel);
-  VarLabel::destroy(d_sootFVINLabel);
   VarLabel::destroy(d_radiationSRCINLabel);
   VarLabel::destroy(d_radiationFluxEINLabel);
   VarLabel::destroy(d_radiationFluxWINLabel);
@@ -697,10 +628,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_vmomBoundarySrcLabel);
   VarLabel::destroy(d_wmomBoundarySrcLabel);
   
-  VarLabel::destroy(d_tempFxLabel);
-  VarLabel::destroy(d_tempFyLabel);
-  VarLabel::destroy(d_tempFzLabel);
-
   VarLabel::destroy(d_areaFractionLabel); 
   VarLabel::destroy(d_areaFractionFXLabel); 
   VarLabel::destroy(d_areaFractionFYLabel); 
