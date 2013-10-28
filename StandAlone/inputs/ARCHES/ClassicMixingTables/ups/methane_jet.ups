@@ -255,6 +255,7 @@
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
+            <soot_label>soot</soot_label>
             <DORadiationModel>
               <opl>3.0</opl>
               <LinearSolver type="hypre">
@@ -283,6 +284,12 @@
           <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
           <density_label>density</density_label>
           <variance_coefficient>0.1</variance_coefficient>
+        </model>
+        <model type="cc_constant" label="soot">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <constant>0.0</constant>
         </model>
       </PropertyModels>
 

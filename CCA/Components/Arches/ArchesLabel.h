@@ -301,8 +301,6 @@ namespace Uintah {
       const VarLabel* d_areaFractionFZLabel; 
       const VarLabel* d_volFractionLabel; 
 
-      const VarLabel* d_varianceLabel;
-      
       std::vector<std::string> model_req_species;
 
       inline void add_species( std::string s ) { 

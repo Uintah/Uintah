@@ -298,11 +298,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_CsLabel);
   VarLabel::destroy(d_cellInfoLabel);
   VarLabel::destroy(d_cellTypeLabel);
-  VarLabel::destroy(d_totalflowINLabel);
-  VarLabel::destroy(d_totalflowOUTLabel);
-  VarLabel::destroy(d_netflowOUTBCLabel);
-  VarLabel::destroy(d_totalAreaOUTLabel);
-  VarLabel::destroy(d_denAccumLabel);
   VarLabel::destroy(d_densityCPLabel);
   VarLabel::destroy(d_densityGuessLabel);
   VarLabel::destroy(d_densityTempLabel);

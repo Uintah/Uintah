@@ -106,7 +106,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "h2o_label", _h2o_label_name, "H2O" ); 
   db->getWithDefault( "T_label", _T_label_name, "temperature" ); 
   db->getWithDefault( "abskp_label", _abskp_label_name, "abskp" ); 
-  db->getWithDefault( "soot_label",  _soot_label_name, "sootFVIN" ); 
+  db->require( "soot_label",  _soot_label_name ); 
   db->getWithDefault( "psize_label", _size_label_name, "length");
   db->getWithDefault( "ptemperature_label", _pT_label_name, "temperature"); 
 
