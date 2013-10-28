@@ -45,7 +45,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <dirent.h>
-#include <fstream.h>
+#include <fstream>
 
 using namespace std;
 using namespace Uintah;
