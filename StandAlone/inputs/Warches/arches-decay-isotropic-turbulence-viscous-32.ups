@@ -103,8 +103,6 @@
     </BoundaryConditions>
 
       <ExplicitSolver>
-        <initial_dt>                   1           </initial_dt>
-        <variable_dt>               true        </variable_dt>
         <kineticEnergy_fromFC>true    </kineticEnergy_fromFC>
         <PressureSolver>
           <normalize_pressure>true    </normalize_pressure>
