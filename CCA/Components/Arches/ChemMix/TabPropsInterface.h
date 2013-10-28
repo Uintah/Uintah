@@ -136,16 +136,6 @@ public:
     return result = d_statetbl.query(  spline, &iv[0] );
   };
 
-  /** @brief Dummy initialization as required by MPMArches */
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-
-  /** @brief Dummy initialization as required by MPMArches */
-  void dummyInit( const ProcessorGroup* pc,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw );
-
   /** @brief Gets the Spline information for TabProps.  Spline info is used because it is more efficient that passing strings */
   void getSplineInfo();
   /** @brief Gets the Spline information for TabProps.  This is specific to the enthalpy vars */

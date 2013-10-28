@@ -45,6 +45,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <dirent.h>
+#include <fstream.h>
 
 using namespace std;
 using namespace Uintah;
@@ -117,41 +118,35 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   for ( unsigned int i = 0; i < d_allIndepVarNames.size(); ++i ){
 
     //put the right labels in the label map
-    string varName = d_allIndepVarNames[i];  
+    string var_name = d_allIndepVarNames[i];  
 
-    // !! need to add support for variance !!
-    if (varName == "heat_loss" || varName == "HeatLoss") {
+    const VarLabel* the_label = 0;  
+    the_label = VarLabel::find( var_name ); 
 
-      cout_tabledbg << " Heat loss being inserted into the indep. var map. " << endl;
+    if ( the_label == 0 ) {
 
-      //commented out during cleanup.  This entire class needs overhaul. 
-      //d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel));
+      throw InvalidValue( "Error: Could not locate the label for a table parameter: "+var_name, __FILE__, __LINE__); 
 
-    } else if ( varName == "scalar_variance" || varName == "MixtureFractionVariance" ) {
+    } else { 
 
-      cout_tabledbg << " Scalar variance being inserted into the indep. var map. " << endl;
+      d_ivVarMap.insert( make_pair(var_name, the_label) );
 
-      d_ivVarMap.insert(make_pair(varName, d_lab->d_normalizedScalarVarLabel));
-
-    } else if ( varName == "DissipationRate") {
-
-      cout_tabledbg << " Scalar dissipation rate being inserted into the indep. var map. " << endl;
-
-      // dissipation rate comes from a property model 
-      PropertyModelFactory& prop_factory = PropertyModelFactory::self(); 
-      PropertyModelBase& prop = prop_factory.retrieve_property_model( "scalar_dissipation_rate");
-      d_ivVarMap.insert( make_pair( varName, prop.getPropLabel()) );
-
-    } else {
-
-      cout_tabledbg << " Variable: " << varName << " being inserted into the indep. var map"<< endl; 
-
-      // then it must be a mixture fraction 
+      // if this parameter is a transported, then density guess must be true.  
       EqnFactory& eqn_factory = EqnFactory::self();
-      EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( varName );
-      d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel()));
 
-    }
+      if ( eqn_factory.find_scalar_eqn( var_name ) ){ 
+        EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( var_name );
+
+        //check if it uses a density guess (which it should) 
+        //if it isn't set properly, then do it automagically for the user
+        if (!eqn.getDensityGuessBool()){ 
+          proc0cout << " Warning: For equation named " << var_name << endl 
+            << "     Density guess must be used for this equation because it determines properties." << endl
+            << "     Automatically setting density guess = true. " << endl;
+          eqn.setDensityGuessBool( true ); 
+        }
+      }
+    } 
   }
 
   proc0cout << "  Matching sucessful!" << endl;
@@ -453,89 +448,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 }
 
 //--------------------------------------------------------------------------- 
-// Old Table Hack -- to be removed with Properties.cc
-//--------------------------------------------------------------------------- 
-void 
-TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type )
-{
-
-  cout_tabledbg << " In method TabPropsInterface::OldTableHack " << endl;
-
-  //This is a temporary hack to get the table stuff working with the new interface
-  std::vector<double> iv(d_allIndepVarNames.size());
-
-  for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++){
-
-    if ( (d_allIndepVarNames[i] == "mixture_fraction") || (d_allIndepVarNames[i] == "coal_gas_mix_frac") || (d_allIndepVarNames[i] == "MixtureFraction")){
-      iv[i] = inStream.d_mixVars[0]; 
-    } else if (d_allIndepVarNames[i] == "mixture_fraction_variance") {
-      iv[i] = 0.0;
-    } else if (d_allIndepVarNames[i] == "mixture_fraction_2") {
-      iv[i] = inStream.d_f2; // set below if there is one...just want to make sure it is initialized properly
-    } else if (d_allIndepVarNames[i] == "mixture_fraction_variance_2") {
-      iv[i] = 0.0; 
-    } else if (d_allIndepVarNames[i] == "heat_loss" || d_allIndepVarNames[i] == "HeatLoss") {
-      iv[i] = inStream.d_heatloss; 
-      if (!calcEnthalpy) {
-        iv[i] = 0.0; // override any user input because case is adiabatic
-      }
-    }
-  }
-
-  _iv_transform->transform( iv, 0.0 ); 
-
-  double f                 = 0.0; 
-  double adiab_enthalpy    = 0.0; 
-  double current_heat_loss = 0.0;
-  double init_enthalpy     = 0.0; 
-
-  f  = inStream.d_mixVars[0]; 
-
-  if (calcEnthalpy) {
-
-    // non-adiabatic case
-    double enthalpy          = 0.0; 
-    double sensible_enthalpy = 0.0; 
-
-    sensible_enthalpy = getSingleState( "sensibleenthalpy", iv ); 
-    adiab_enthalpy    = getSingleState( "adiabaticenthalpy", iv ); 
-
-    enthalpy          = inStream.d_enthalpy; 
-
-    if ( inStream.d_initEnthalpy || ((abs(adiab_enthalpy - enthalpy)/abs(adiab_enthalpy) < 1.0e-4 ) && f < 1.0e-4) ) {
-
-      current_heat_loss = inStream.d_heatloss; 
-
-      init_enthalpy = adiab_enthalpy - current_heat_loss * sensible_enthalpy; 
-
-    } else {
-
-      throw ProblemSetupException("ERROR! I shouldn't be in this part of the code.", __FILE__, __LINE__); 
-
-    }
-  } else {
-
-    // adiabatic case
-    init_enthalpy = 0.0;
-    current_heat_loss = 0.0; 
-
-  }
-
-  outStream.d_density     = getSingleState( "density", iv ); 
-  if (!d_coldflow) { 
-    outStream.d_temperature = getSingleState( "temperature", iv ); 
-    //outStream.d_cp          = getSingleState( "heat_capacity", iv ); 
-    outStream.d_cp          = getSingleState( "specificheat", iv ); 
-    outStream.d_h2o         = getSingleState( "H2O", iv); 
-    outStream.d_co2         = getSingleState( "CO2", iv);
-    outStream.d_heatLoss    = current_heat_loss; 
-    if (inStream.d_initEnthalpy) outStream.d_enthalpy = init_enthalpy; 
-  }
-
-  cout_tabledbg << " Leaving method TabPropsInterface::OldTableHack " << endl;
-}
-
-//--------------------------------------------------------------------------- 
 // Get Spline information
 //--------------------------------------------------------------------------- 
 void 
@@ -577,61 +489,6 @@ TabPropsInterface::getEnthalpySplineInfo()
 
 }
 
-//--------------------------------------------------------------------------- 
-// schedule Dummy Init
-//--------------------------------------------------------------------------- 
-void 
-TabPropsInterface::sched_dummyInit( const LevelP& level, 
-                                    SchedulerP& sched )
-
-{
-  string taskname = "TabPropsInterface::dummyInit"; 
-  //Ghost::GhostType  gn = Ghost::None;
-
-  Task* tsk = scinew Task(taskname, this, &TabPropsInterface::dummyInit ); 
-
-  // dependent variables
-  for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
-      tsk->computes( i->second ); 
-      tsk->requires( Task::OldDW, i->second, Ghost::None, 0 ); 
-  }
-
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
-}
-
-//--------------------------------------------------------------------------- 
-// Dummy Init
-//--------------------------------------------------------------------------- 
-void 
-TabPropsInterface::dummyInit( const ProcessorGroup* pc, 
-                              const PatchSubset* patches, 
-                              const MaterialSubset* matls, 
-                              DataWarehouse* old_dw, 
-                              DataWarehouse* new_dw )
-{
-  for (int p=0; p < patches->size(); p++){
-
-    //Ghost::GhostType gn = Ghost::None; 
-    const Patch* patch = patches->get(p); 
-    int archIndex = 0; 
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-
-    // dependent variables:
-    for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
-    
-      cout_tabledbg << " In TabProps::dummyInit, getting " << i->first << " for initializing. " << endl;
-      CCVariable<double> the_var;
-      new_dw->allocateAndPut( the_var, i->second, matlIndex, patch ); 
-      the_var.initialize(0.0);
-      constCCVariable<double> old_var; 
-      old_dw->get(old_var, i->second, matlIndex, patch, Ghost::None, 0 ); 
-
-      the_var.copyData( old_var ); 
-      
-    }
-  }
-}
 //-----------------------------------------------------------------------------------
 //
 double TabPropsInterface::getTableValue( std::vector<double> iv, std::string variable )
