@@ -553,7 +553,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     if (yplus) indexHighV += IntVector(0,1,0); 
     if (zplus) indexHighW += IntVector(0,0,1); 
 
-    int flowID = d_boundaryCondition->flowCellType();
+    int flowID = -1;
     int mmWallID = d_boundaryCondition->getMMWallId();
     for (int colZ = indexLowU.z(); colZ <= indexHighU.z(); colZ ++) {
       for (int colY = indexLowU.y(); colY <= indexHighU.y(); colY ++) {

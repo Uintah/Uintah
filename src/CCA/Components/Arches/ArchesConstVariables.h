@@ -76,7 +76,6 @@ namespace Uintah {
       constCCVariable<double> viscosity;
       constCCVariable<double> scalar;
       constCCVariable<double> diffusivity;
-      constCCVariable<double> drhodf;
       StencilMatrix<constCCVariable<double> > scalarDiffusionCoeff; //7 pt stl
       constCCVariable<double> scalarDiffNonlinearSrc;
       

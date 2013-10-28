@@ -114,12 +114,9 @@ namespace Uintah {
       const VarLabel* d_densityCPLabel;
       const VarLabel* d_densityGuessLabel;
       const VarLabel* d_densityTempLabel;
-      const VarLabel* d_densityOldOldLabel;
 
       // filtered drhodt
       const VarLabel* d_filterdrhodtLabel;
-      // for computing divergence constraint
-      const VarLabel* d_drhodfCPLabel;
 
       // Viscosity Labels
       // for old_dw in computeTurbModel
@@ -318,9 +315,6 @@ namespace Uintah {
       const VarLabel* d_uVelRhoHat_CCLabel;
       const VarLabel* d_vVelRhoHat_CCLabel;
       const VarLabel* d_wVelRhoHat_CCLabel;
-
-      // divergence constraint
-      const VarLabel* d_divConstraintLabel;
 
       const VarLabel* d_pressurePredLabel;
 

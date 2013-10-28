@@ -389,7 +389,6 @@ Properties::sched_reComputeProps(SchedulerP& sched,
   }
   
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->computes(d_lab->d_drhodfCPLabel);
     
     tsk->computes(d_lab->d_dummyTLabel);
     if (d_reactingFlow) {
@@ -449,7 +448,6 @@ Properties::sched_reComputeProps(SchedulerP& sched,
 
   }
   else {
-    tsk->modifies(d_lab->d_drhodfCPLabel);
 
     tsk->modifies(d_lab->d_dummyTLabel);
     if (d_reactingFlow) {
@@ -568,7 +566,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> heatLoss;
     CCVariable<double> enthalpyRXN;
     CCVariable<double> reactscalarSRC;
-    CCVariable<double> drhodf;
     CCVariable<double> absorption;
     CCVariable<double> sootFV;
     CCVariable<double> fvtfive;
@@ -649,7 +646,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     
     //__________________________________
     if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
-      new_dw->allocateAndPut(drhodf, d_lab->d_drhodfCPLabel, indx, patch);
 
       new_dw->allocateAndPut(dummytemperature, d_lab->d_dummyTLabel, indx, patch);
       if (d_reactingFlow) {
@@ -712,7 +708,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
     }
     else {
-      new_dw->getModifiable(drhodf, d_lab->d_drhodfCPLabel, indx, patch);
 
       new_dw->getModifiable(dummytemperature, d_lab->d_dummyTLabel, indx, patch);
       if (d_reactingFlow) {
@@ -773,7 +768,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       }
 
     }
-    drhodf.initialize(0.0);
     
     dummytemperature.initialize(0.0);
     if (d_reactingFlow) {
@@ -906,7 +900,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
   TAU_PROFILE_STOP(mixing);
 
           double local_den = outStream.getDensity();
-          drhodf[currCell] = outStream.getdrhodf();
 
           if (d_co_output) {
             co[currCell] = outStream.getCO();
@@ -1944,7 +1937,6 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   tsk->requires(parent_old_dw, d_lab->d_oldDeltaTLabel);
-  tsk->requires(parent_old_dw, d_lab->d_densityOldOldLabel, gn,0);
 
   tsk->requires(Task::NewDW   , d_lab->d_densityCPLabel    , gn , 0);
   tsk->requires(parent_old_dw , d_lab->d_densityCPLabel    , gn , 0);
@@ -1954,7 +1946,6 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
     tsk->computes(d_lab->d_filterdrhodtLabel);
     tsk->computes(d_lab->d_oldDeltaTLabel);
-    tsk->computes(d_lab->d_densityOldOldLabel);
   }
   else{
     tsk->modifies(d_lab->d_filterdrhodtLabel);
@@ -2011,22 +2002,15 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     constCCVariable<double> old_old_density;
     CCVariable<double> drhodt;
     CCVariable<double> filterdrhodt;
-    CCVariable<double> density_oldold;
     constCCVariable<double> filterVolume; 
     constCCVariable<int> cellType; 
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  ga = Ghost::AroundCells; 
     
     parent_old_dw->get(old_density,     d_lab->d_densityCPLabel,     indx, patch,gn, 0);
-    parent_old_dw->get(old_old_density, d_lab->d_densityOldOldLabel, indx, patch,gn, 0);
 
     new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, ga, 1 ); 
     new_dw->get( filterVolume, d_lab->d_filterVolumeLabel, indx, patch, ga, 1 ); 
-    
-    if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
-      new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, indx, patch);
-      density_oldold.copyData(old_density);
-    }
 
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);

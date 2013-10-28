@@ -778,7 +778,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_nlSolver->set_use_wasatch_mom_rhs(d_useWasatchMomRHS);
 #endif
   
-  d_nlSolver->setExtraProjection(d_extraProjection);
   d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db,sharedState);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
@@ -1025,74 +1024,54 @@ Arches::scheduleInitialize(const LevelP& level,
   const PatchSet* patches= level->eachPatch();
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
-  // schedule the initialization of parameters
-  // require : None
-  // compute : [u,v,w]VelocityIN, pressureIN, scalarIN, densityIN,
-  //           viscosityIN
+  //Initialize several parameters
   sched_paramInit(level, sched);
 
+  //Check for hand-off momentum BCs and perform mapping
   d_nlSolver->checkMomBCs( sched, patches, matls ); 
 
+  //Sets initial condition to momentum only (for constant density). 
+  //Note this should be moved into the momentum standard initialization. 
   if (d_set_initial_condition) {
     sched_readCCInitialCondition(level, sched);
     sched_interpInitialConditionToStaggeredGrid(level, sched);
   }
+  if (d_set_init_vel_condition) {
+    sched_readUVWInitialCondition(level, sched);
+  }  
 
   //mms initial condition
   if (d_doMMS) {
     sched_mmsInitialCondition(level, sched);
   }
-  
-  if (d_set_init_vel_condition) {
-    sched_readUVWInitialCondition(level, sched);
-  }  
+ 
+  //initialize cell type
+  d_boundaryCondition->sched_cellTypeInit__NEW( sched, level, patches, matls );
 
-  // schedule init of cell type
-  // require : NONE
-  // compute : cellType
-
-  if ( d_boundaryCondition->isUsingNewBC() ) {
-    d_boundaryCondition->sched_cellTypeInit__NEW( sched, level, patches, matls );
-  } else {
-    d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
-  }
-  //
   // compute the cell area fraction
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls, 0, true );
+
+  // setup intrusion cell type 
   d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, false );
-  //AF must be called again to account for intrusions
+
+  //AF must be called again to account for intrusions (can this be the ONLY call?) 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls, 1, true ); 
 
   // base initialization of all scalars
   sched_scalarInit(level, sched);
 
-  // computing flow inlet areas
-  if (d_boundaryCondition->getInletBC()){
-    d_boundaryCondition->sched_calculateArea(sched, patches, matls);
-  }
-  // Set the profile (output Varlabel have SP appended to them)
-  // require : densityIN,[u,v,w]VelocityIN
-  // compute : densitySP, [u,v,w]VelocitySP, scalarSP
-  d_boundaryCondition->sched_setProfile(sched, patches, matls);
-
-  // if multimaterial, update celltype for mm intrusions for exact
-  // initialization.
-  // require: voidFrac_CC, cellType
-  // compute: mmcellType, mmgasVolFrac
-
+  // needed(?)
 #ifdef ExactMPMArchesInitialize
   if (d_MAlab)
     d_boundaryCondition->sched_mmWallCellTypeInit_first(sched, patches, matls);
 #endif
 
+  //pass some periodic stuff around.
   IntVector periodic_vector = level->getPeriodicBoundaries();
   bool d_3d_periodic = (periodic_vector == IntVector(1,1,1));
   d_turbModel->set3dPeriodic(d_3d_periodic);
   d_props->set3dPeriodic(d_3d_periodic);
-  // Compute props (output Varlabel have CP appended to them)
-  // require : densitySP
-  // require scalarSP
-  // compute : densityCP
+
   init_timelabel = scinew TimeIntegratorLabel(d_lab,
                                                 TimeIntegratorStepType::FE);
   init_timelabel_allocated = true;
@@ -1121,22 +1100,24 @@ Arches::scheduleInitialize(const LevelP& level,
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den );
   }
 
-  if ( d_boundaryCondition->isUsingNewBC() ) {
-    d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
-    //d_boundaryCondition->printBCInfo();
-    d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
-    d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls );
-  }
+  //Setup BC areas
+  d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
 
-  d_boundaryCondition->sched_initInletBC(sched, patches, matls);
+  //For debugging
+  //d_boundaryCondition->printBCInfo();
+  
+  //Setup initial inlet velocities 
+  d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
+
+  //Set the initial profiles
+  d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls );
+
+  //Setup the intrusions. 
   d_boundaryCondition->sched_setupNewIntrusions( sched, patches, matls );
 
   sched_getCCVelocities(level, sched);
-  // Compute Turb subscale model (output Varlabel have CTS appended to them)
-  // require : densityCP, viscosityIN, [u,v,w]VelocitySP
-  // compute : viscosityCTS
 
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
+#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
   if (!d_useWasatchMomRHS) {
     if (!d_MAlab) {
       
@@ -1149,7 +1130,8 @@ Arches::scheduleInitialize(const LevelP& level,
       
     }
   }
-//#endif // WASATCH_IN_ARCHES
+#endif // WASATCH_IN_ARCHES
+
   //______________________
   //Data Analysis
   if(d_analysisModules.size() != 0){
@@ -1227,8 +1209,7 @@ Arches::sched_paramInit(const LevelP& level,
                         SchedulerP& sched)
 {
     // primitive variable initialization
-    Task* tsk = scinew Task( "Arches::paramInit",
-                       this, &Arches::paramInit);
+    Task* tsk = scinew Task( "Arches::paramInit", this, &Arches::paramInit);
 
     printSchedule(level,dbg,"Arches::paramInit");
 
@@ -1831,10 +1812,8 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     const PatchSet* patches= level->eachPatch();
     const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
-    if ( d_boundaryCondition->isUsingNewBC() ) {
-      d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
-      d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
-    }
+    d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
+    d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
 
     EqnFactory& eqnFactory = EqnFactory::self();
     EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
@@ -1877,15 +1856,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
     const PatchSet* patches= level->eachPatch();
     const MaterialSet* matls = d_sharedState->allArchesMaterials();
-
-    if (d_newBC_on_Restart) {
-
-      //Reapply BC in case there was a modification to input.xml in the uda.
-      if (d_boundaryCondition->getInletBC()){
-        d_boundaryCondition->sched_calculateArea(sched, patches, matls);
-      }
-      d_boundaryCondition->sched_setProfile(sched, patches, matls);
-    }
 
     d_doingRestart = false;
     d_lab->recompile_taskgraph = true;

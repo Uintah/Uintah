@@ -34,7 +34,6 @@
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/CellInformation.h>
 #include <CCA/Components/Arches/CellInformationP.h>
-#include <CCA/Components/Arches/EnthalpySolver.h>
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
@@ -196,18 +195,10 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   d_arches->getBoundaryCondition()->setIfFixTemp(d_fixTemp);
   d_arches->getBoundaryCondition()->setCutCells(d_useCutCell);
 
-  if (d_arches->checkSolveEnthalpy()) {
-    d_radiation = d_arches->getNonlinearSolver()->getEnthalpySolver()->checkRadiation();
-    if (d_radiation) 
-      d_DORad = d_arches->getNonlinearSolver()->getEnthalpySolver()->checkDORadiation();
-    else
-      d_DORad = false;
-  }
-  else {
-    d_DORad = false;
-    d_radiation = false;
-  }
-  
+  //how is this used? 
+  d_DORad = false; 
+  d_radiation = false; 
+
   //__________________________________
   //  create analysis modules
   // call problemSetup  
@@ -2929,7 +2920,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     // Begin loop to calculate gas-solid exchange terms for each
     // solid material with the gas phase
 
-    int ffieldid = d_arches->getBoundaryCondition()->flowCellType();
+    int ffieldid = -1;
     int mmwallid = d_arches->getBoundaryCondition()->getMMWallId();
 
     double viscos = d_arches->getTurbulenceModel()->getMolecularViscosity();
@@ -4065,7 +4056,7 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     // Begin loop to calculate gas-solid exchange terms for each
     // solid material with the gas phase
 
-    int ffieldid = d_arches->getBoundaryCondition()->flowCellType();
+    int ffieldid = -1;
     int mmwallid = d_arches->getBoundaryCondition()->getMMWallId();
 
     // csmag = d_arches->getTurbulenceModel()->getSmagorinskyConst();
