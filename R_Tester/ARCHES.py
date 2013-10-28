@@ -12,11 +12,6 @@ if the_dir == "" :
 else :
   the_dir = the_dir + "/ARCHES"
 
-methanePetscRadSolver_ups = modUPS( the_dir,                 \
-                            "methane_explicit_table.ups",    \
-                            ["<patches>[2,2,2]</patches>",   \
-                             "<LinearSolver type=\"petsc\">"] )
-                           
 #______________________________________________________________________                            
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
@@ -54,13 +49,6 @@ NIGHTLYTESTS = [
    ("methane_fire__NEW"           , "methane_fire__NEW.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
    ("methane_fire_8patch__NEW"    , "methane_fire_8patch__NEW.ups"                , 8   , "All"  , ["exactComparison"]) , 
    ("methane_fire_8patch_petscrad__NEW" , "methane_fire_8patch_petscrad__NEW.ups" , 8   , "All"  , ["exactComparison"]) ,
-   ("constantMMS"                 , "mms/constantMMS.ups"                         , 1.1 , "Linux"  , ["exactComparison"]) , 
-   ("almgrenMMS"                  , "mms/almgrenMMS.ups"                          , 1.1 , "Linux"  , ["exactComparison"]) , 
-   ("isotropic-turbulence-decay"  , "periodicTurb/isotropic-turbulence-decay.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]) , 
-   ("helium_RT"                   , "helium_RT.ups"                               , 1.1 , "Linux"  , ["exactComparison"]) , 
-   ("methane_explicit_table"      , "methane_explicit_table.ups"                  , 1.1 , "Linux"  , ["exactComparison"]) , 
-   ("methane8patch"               , "methane8patch.ups"                           , 8   , "Linux"  , ["exactComparison"]) , 
-   ("methanePetscRadSolver"       , methanePetscRadSolver_ups                     , 8   , "Linux"  , ["exactComparison"]) ,
    ("rmcrt_bm1_1L"                , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "Linux"  , ["exactComparison"]) ,
    ("methane_rmcrt_const_props"   , "RMCRT/methane_rmcrt_const_props.ups"         , 4 ,   "Linux"  , ["exactComparison", "no_restart"]) ,
    ("dqmom_test_1"                , "DQMOM_regression/dqmom_test_1.ups"           , 1.1 , "Linux"  , ["exactComparison"]) , 
@@ -100,13 +88,6 @@ LOCALTESTS = [
    ("methane_fire_8patch_petscrad__NEW" , "methane_fire_8patch_petscrad__NEW.ups" , 8   , "All"  , ["exactComparison"]) ,
    ("rmcrt_bm1_1L"               , "RMCRT/rmcrt_bm1_1L.ups"                      , 1.1 , "All"   , ["exactComparison"]) ,
    ("methane_rmcrt_const_props"  , "RMCRT/methane_rmcrt_const_props.ups"         , 4 ,   "All"   , ["exactComparison", "no_restart"]) ,
-   ("constantMMS"                , "mms/constantMMS.ups"                         , 1.1 , "All"   , ["exactComparison"]) , 
-   ("almgrenMMS"                 , "mms/almgrenMMS.ups"                          , 1.1 , "All"   , ["exactComparison"]) , 
-   ("isotropic-turbulence-decay" , "periodicTurb/isotropic-turbulence-decay.ups" , 1.1 , "All"   , ["exactComparison", "no_restart"]) , 
-   ("helium_RT"                  , "helium_RT.ups"                               , 1.1 , "All"   , ["exactComparison"]) , 
-   ("methane_explicit_table"     , "methane_explicit_table.ups"                  , 1.1 , "All"   , ["exactComparison"]) , 
-   ("methane8patch"              , "methane8patch.ups"                           , 8   , "All"   , ["exactComparison"]) , 
-   ("methanePetscRadSolver"      , methanePetscRadSolver_ups                     , 8   , "All"   , ["exactComparison"]) ,
    ("dqmom_test_1"               , "DQMOM_regression/dqmom_test_1.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
    ("dqmom_test_2"               , "DQMOM_regression/dqmom_test_2.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
    ("dqmom_test_3"               , "DQMOM_regression/dqmom_test_3.ups"           , 1.1 , "All"   , ["exactComparison"]) , 
