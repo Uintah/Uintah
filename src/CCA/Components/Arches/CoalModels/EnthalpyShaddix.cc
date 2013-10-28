@@ -386,7 +386,12 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
   tsk->requires(Task::NewDW, iQuad->second, Ghost::None, 0);
   tsk->requires( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_cpINLabel, Ghost::None, 0);
+
+  d_gas_cp_label = VarLabel::find( "specificheat" ); 
+  if ( d_gas_cp_label == 0 ){ 
+    throw InvalidValue("Error: Unable to find gas specific heat label.",__FILE__,__LINE__);
+  }
+  tsk->requires(Task::OldDW, d_gas_cp_label, Ghost::None, 0);
  
   if ( d_radiation ) {
     tsk->requires(Task::OldDW, d_abskg_label,  Ghost::None, 0);   
@@ -564,7 +569,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> den;
     old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 ); 
     constCCVariable<double> cpg;
-    old_dw->get(cpg, d_fieldLabels->d_cpINLabel, matlIndex, patch, gn, 0 );
+    old_dw->get(cpg, d_gas_cp_label, matlIndex, patch, gn, 0 );
 
     constCCVariable<double> abskgIN;
     constCCVariable<double> radiationVolqIN;
