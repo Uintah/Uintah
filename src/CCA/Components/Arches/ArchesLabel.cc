@@ -97,14 +97,6 @@ ArchesLabel::ArchesLabel()
   // Cell type
   d_cellTypeLabel = VarLabel::create("cellType", 
                                   CCVariable<int>::getTypeDescription());
-  // labels for inlet and outlet flow rates
-  d_totalflowINLabel   =  VarLabel::create("totalflowIN",   sum_variable); //gone
-  d_totalflowOUTLabel  =  VarLabel::create("totalflowOUT",  sum_variable); //gone
-  d_netflowOUTBCLabel  =  VarLabel::create("netflowOUTBC",  sum_variable); //gone
-  d_totalAreaOUTLabel  =  VarLabel::create("totalAreaOUT",  sum_variable); //gone
-  d_denAccumLabel      =  VarLabel::create("denAccum",      sum_variable); //not used anywhere that I can tell 
-
-
   // Density Labels
   d_densityCPLabel      =  VarLabel::create("densityCP",      CC_double);
   d_densityGuessLabel   =  VarLabel::create("densityGuess",   CC_double);
@@ -275,92 +267,6 @@ ArchesLabel::ArchesLabel()
   d_kineticEnergyLabel             =  VarLabel::create("kineticEnergy",             CC_double);
   d_totalKineticEnergyLabel        =  VarLabel::create("totalKineticEnergy",        sum_variable); //only computes if turned on from input file 
 
-// scalar mms and gradP Ln error
-// ** warning...the L2 error here is not complete
-//              the values are (exact-comput.)^2
-//              You must post process the squareroot
-//              because of the summation. 
-//              Alternatively, one could add an 
-//              additional reduction var. and do this inline
-//              with the code.
-  d_smmsLnErrorLabel              =  VarLabel::create("smmsLnError",              CC_double); //MMS error is only computed if doMMS is true
-  d_totalsmmsLnErrorLabel         =  VarLabel::create("totalsmmsLnError",         sum_variable);
-  d_totalsmmsLnErrorPredLabel     =  VarLabel::create("totalsmmsLnErrorPred",     sum_variable);
-  d_totalsmmsLnErrorIntermLabel   =  VarLabel::create("totalsmmsLnErrorInterm",   sum_variable);
-  d_totalsmmsExactSolLabel        =  VarLabel::create("totalsmmsExactSol",        sum_variable);
-  d_totalsmmsExactSolPredLabel    =  VarLabel::create("totalsmmsExactSolPred",    sum_variable);
-  d_totalsmmsExactSolIntermLabel  =  VarLabel::create("totalsmmsExactSolInterm",  sum_variable);
-
-  d_gradpmmsLnErrorLabel              =  VarLabel::create("gradpmmsLnError",              CC_double);
-  d_totalgradpmmsLnErrorLabel         =  VarLabel::create("totalgradpmmsLnError",         sum_variable);
-  d_totalgradpmmsLnErrorPredLabel     =  VarLabel::create("totalgradpmmsLnErrorPred",     sum_variable);
-  d_totalgradpmmsLnErrorIntermLabel   =  VarLabel::create("totalgradpmmsLnErrorInterm",   sum_variable);
-  d_totalgradpmmsExactSolLabel        =  VarLabel::create("totalgradpmmsExactSol",        sum_variable);
-  d_totalgradpmmsExactSolPredLabel    =  VarLabel::create("totalgradpmmsExactSolPred",    sum_variable);
-  d_totalgradpmmsExactSolIntermLabel  =  VarLabel::create("totalgradpmmsExactSolInterm",  sum_variable);
-
-// u mms L2 error
-// ** warning...the L2 error here is not complete
-//              the values are (exact-comput.)^2
-//              You must post process the squareroot
-//              because of the summation. 
-//              Alternatively, one could add an 
-//              additional reduction var. and do this inline
-//              with the code.
-  d_ummsLnErrorLabel              =  VarLabel::create("ummsLnError",              SFCX_double);
-  d_totalummsLnErrorLabel         =  VarLabel::create("totalummsLnError",         sum_variable);
-  d_totalummsLnErrorPredLabel     =  VarLabel::create("totalummsLnErrorPred",     sum_variable);
-  d_totalummsLnErrorIntermLabel   =  VarLabel::create("totalummsLnErrorInterm",   sum_variable);
-  d_totalummsExactSolLabel        =  VarLabel::create("totalummsExactSol",        sum_variable);
-  d_totalummsExactSolPredLabel    =  VarLabel::create("totalummsExactSolPred",    sum_variable);
-  d_totalummsExactSolIntermLabel  =  VarLabel::create("totalummsExactSolInterm",  sum_variable);
-
-// v mms Ln error
-// ** warning...the Ln error here is not complete
-//              the values are (exact-comput.)^2
-//              You must post process the squareroot
-//              because of the summation. 
-//              Alternatively, one could add an 
-//              additional reduction var. and do this inline
-//              with the code.
-  d_vmmsLnErrorLabel              =  VarLabel::create("vmmsLnError",              SFCY_double);
-  d_totalvmmsLnErrorLabel         =  VarLabel::create("totalvmmsLnError",         sum_variable);
-  d_totalvmmsLnErrorPredLabel     =  VarLabel::create("totalvmmsLnErrorPred",     sum_variable);
-  d_totalvmmsLnErrorIntermLabel   =  VarLabel::create("totalvmmsLnErrorInterm",   sum_variable);
-  d_totalvmmsExactSolLabel        =  VarLabel::create("totalvmmsExactSol",        sum_variable);
-  d_totalvmmsExactSolPredLabel    =  VarLabel::create("totalvmmsExactSolPred",    sum_variable);
-  d_totalvmmsExactSolIntermLabel  =  VarLabel::create("totalvmmsExactSolInterm",  sum_variable);
-
-
-// w mms Ln error
-// ** warning...the Ln error here is not complete
-//              the values are (exact-comput.)^2
-//              You must post process the squareroot
-//              because of the summation. 
-//              Alternatively, one could add an 
-//              additional reduction var. and do this inline
-//              with the code.
-  d_wmmsLnErrorLabel              =  VarLabel::create("wmmsLnError",              SFCZ_double);
-  d_totalwmmsLnErrorLabel         =  VarLabel::create("totalwmmsLnError",         sum_variable);
-  d_totalwmmsLnErrorPredLabel     =  VarLabel::create("totalwmmsLnErrorPred",     sum_variable);
-  d_totalwmmsLnErrorIntermLabel   =  VarLabel::create("totalwmmsLnErrorInterm",   sum_variable);
-  d_totalwmmsExactSolLabel        =  VarLabel::create("totalwmmsExactSol",        sum_variable);
-  d_totalwmmsExactSolPredLabel    =  VarLabel::create("totalwmmsExactSolPred",    sum_variable);
-  d_totalwmmsExactSolIntermLabel  =  VarLabel::create("totalwmmsExactSolInterm",  sum_variable);
-
-// mass balance labels for RK
-  d_totalflowINPredLabel     =  VarLabel::create("totalflowINPred",     sum_variable);
-  d_totalflowOUTPredLabel    =  VarLabel::create("totalflowOUTPred",    sum_variable);
-  d_denAccumPredLabel        =  VarLabel::create("denAccumPred",        sum_variable);
-  d_netflowOUTBCPredLabel    =  VarLabel::create("netflowOUTBCPred",    sum_variable);
-  d_totalAreaOUTPredLabel    =  VarLabel::create("totalAreaOUTPred",    sum_variable);
-  d_totalflowINIntermLabel   =  VarLabel::create("totalflowINInterm",   sum_variable);
-  d_totalflowOUTIntermLabel  =  VarLabel::create("totalflowOUTInterm",  sum_variable);
-  d_denAccumIntermLabel      =  VarLabel::create("denAccumInterm",      sum_variable);
-  d_netflowOUTBCIntermLabel  =  VarLabel::create("netflowOUTBCInterm",  sum_variable);
-  d_totalAreaOUTIntermLabel  =  VarLabel::create("totalAreaOUTInterm",  sum_variable);
-
-
   d_oldDeltaTLabel = VarLabel::create("oldDeltaT",
                                        delt_vartype::getTypeDescription());
 // test filtered terms for variable density dynamic Smagorinsky model
@@ -381,12 +287,6 @@ ArchesLabel::ArchesLabel()
   d_ShFLabel   =  VarLabel::create("ShF",   CC_double);
   d_ShELabel   =  VarLabel::create("ShE",   CC_double);
   d_ShRFLabel  =  VarLabel::create("ShRF",  CC_double);
-
-  
-  //MMS labels
-  d_uFmmsLabel  =  VarLabel::create("uFmms",  SFCX_double);
-  d_vFmmsLabel  =  VarLabel::create("vFmms",  SFCY_double);
-  d_wFmmsLabel  =  VarLabel::create("wFmms",  SFCZ_double);
 
   //A helper variable 
   d_zerosrcVarLabel = VarLabel::create("zerosrcVar",  CC_double);
@@ -543,18 +443,6 @@ ArchesLabel::~ArchesLabel()
 // kinetic energy
   VarLabel::destroy(d_kineticEnergyLabel); 
   VarLabel::destroy(d_totalKineticEnergyLabel); 
-// mass balance labels for RK
-  VarLabel::destroy(d_totalflowINPredLabel);
-  VarLabel::destroy(d_totalflowOUTPredLabel);
-  VarLabel::destroy(d_denAccumPredLabel);
-  VarLabel::destroy(d_netflowOUTBCPredLabel);
-  VarLabel::destroy(d_totalAreaOUTPredLabel);
-  VarLabel::destroy(d_totalflowINIntermLabel);
-  VarLabel::destroy(d_totalflowOUTIntermLabel);
-  VarLabel::destroy(d_denAccumIntermLabel);
-  VarLabel::destroy(d_netflowOUTBCIntermLabel);
-  VarLabel::destroy(d_totalAreaOUTIntermLabel);
-               
   VarLabel::destroy(d_oldDeltaTLabel);
 
 // test filtered terms for variable density dynamic Smagorinsky model
@@ -574,55 +462,11 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_ShELabel);
   VarLabel::destroy(d_ShRFLabel);
 
-  //mms variabels
-  VarLabel::destroy(d_uFmmsLabel);
-  VarLabel::destroy(d_vFmmsLabel);
-  VarLabel::destroy(d_wFmmsLabel);
 
   VarLabel::destroy(d_zerosrcVarLabel);
 
   VarLabel::destroy(d_co2RateLabel);
   VarLabel::destroy(d_so2RateLabel);
-
-  VarLabel::destroy(d_ummsLnErrorLabel);
-  VarLabel::destroy(d_totalummsLnErrorLabel);
-  VarLabel::destroy(d_totalummsLnErrorPredLabel);
-  VarLabel::destroy(d_totalummsLnErrorIntermLabel);
-  VarLabel::destroy(d_totalummsExactSolLabel);
-  VarLabel::destroy(d_totalummsExactSolPredLabel);
-  VarLabel::destroy(d_totalummsExactSolIntermLabel);
-
-  VarLabel::destroy(d_vmmsLnErrorLabel);
-  VarLabel::destroy(d_totalvmmsLnErrorLabel);
-  VarLabel::destroy(d_totalvmmsLnErrorPredLabel);
-  VarLabel::destroy(d_totalvmmsLnErrorIntermLabel);
-  VarLabel::destroy(d_totalvmmsExactSolLabel);
-  VarLabel::destroy(d_totalvmmsExactSolPredLabel);
-  VarLabel::destroy(d_totalvmmsExactSolIntermLabel);
-
-  VarLabel::destroy(d_wmmsLnErrorLabel);
-  VarLabel::destroy(d_totalwmmsLnErrorLabel);
-  VarLabel::destroy(d_totalwmmsLnErrorPredLabel);
-  VarLabel::destroy(d_totalwmmsLnErrorIntermLabel);
-  VarLabel::destroy(d_totalwmmsExactSolLabel);
-  VarLabel::destroy(d_totalwmmsExactSolPredLabel);
-  VarLabel::destroy(d_totalwmmsExactSolIntermLabel);
-
-  VarLabel::destroy(d_smmsLnErrorLabel);
-  VarLabel::destroy(d_totalsmmsLnErrorLabel);
-  VarLabel::destroy(d_totalsmmsLnErrorPredLabel);
-  VarLabel::destroy(d_totalsmmsLnErrorIntermLabel);
-  VarLabel::destroy(d_totalsmmsExactSolLabel);
-  VarLabel::destroy(d_totalsmmsExactSolPredLabel);
-  VarLabel::destroy(d_totalsmmsExactSolIntermLabel);
-
-  VarLabel::destroy(d_gradpmmsLnErrorLabel);
-  VarLabel::destroy(d_totalgradpmmsLnErrorLabel);
-  VarLabel::destroy(d_totalgradpmmsLnErrorPredLabel);
-  VarLabel::destroy(d_totalgradpmmsLnErrorIntermLabel);
-  VarLabel::destroy(d_totalgradpmmsExactSolLabel);
-  VarLabel::destroy(d_totalgradpmmsExactSolPredLabel);
-  VarLabel::destroy(d_totalgradpmmsExactSolIntermLabel);
 
   VarLabel::destroy(d_umomBoundarySrcLabel);
   VarLabel::destroy(d_vmomBoundarySrcLabel);
