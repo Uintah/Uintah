@@ -217,9 +217,6 @@ public:
   inline bool getMMS() const {
     return d_doMMS;
   }
-  inline void setExtraProjection(bool extraProjection) {
-    d_extraProjection=extraProjection;
-  }
   inline void setNumSourceBoundaries(int numSourceBoundaries){
     d_numSourceBoundaries = numSourceBoundaries;
   }
@@ -381,11 +378,9 @@ private:
   bool d_mixedModel;
 
   bool d_calScalar;
-  bool d_enthalpySolve;
   bool d_calcVariance;
 
   MomentumSolver* d_momSolver;             ///< Momentum solver 
-  ScalarSolver* d_scalarSolver;            ///< Old scalar solver
   PhysicalConstants* d_physicalConsts;     ///< Physical constants
   WallModelDriver* d_wall_ht_models;       ///< Heat transfer models for walls
 
@@ -409,7 +404,6 @@ private:
   Vector d_gravity;
   double d_viscosity;
 
-  bool d_extraProjection;
   bool d_KE_fromFC;
   double d_maxDensityLag;
 

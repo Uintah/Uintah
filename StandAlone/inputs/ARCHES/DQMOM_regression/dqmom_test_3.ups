@@ -248,17 +248,10 @@
       </Turbulence>
 
       <Properties>
-        <use_mixing_model>false</use_mixing_model>
-        <ColdFlowMixingModel>
-          <Stream>
-            <density>1.00</density>
-            <temperature>298</temperature>
-          </Stream>
-          <Stream>
-            <density>1.00</density>
-            <temperature>298</temperature>
-          </Stream>
-        </ColdFlowMixingModel>
+        <ConstantProps>
+          <density>1.0</density>
+          <temperature>298.0</temperature>
+        </ConstantProps>
       </Properties>
 
 <!--

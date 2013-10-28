@@ -205,61 +205,6 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                 cellinfo->fac4ns, cellinfo->n_shift, cellinfo->s_shift,
                 idxLoW, idxHiW);
 }
-
-//****************************************************************************
-// Divergence computation
-//****************************************************************************
-void 
-Discretization::computeDivergence(const ProcessorGroup* pc,
-                                  const Patch* patch,
-                                  DataWarehouse* new_dw,
-                                  ArchesVariables* vars,
-                                  ArchesConstVariables* constvars,
-                                  const bool filter_divergence,
-                                  const bool periodic) 
-{
-  CCVariable<double> unfiltered_divergence;
-  new_dw->allocateTemporary(unfiltered_divergence, patch);
-  constCCVariable<double>& scalar = constvars->scalar;
-  
-  for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
-    IntVector c = *iter;
-    
-    IntVector E  = c + IntVector(1,0,0);   IntVector W  = c - IntVector(1,0,0); 
-    IntVector N  = c + IntVector(0,1,0);   IntVector S  = c - IntVector(0,1,0);
-    IntVector T  = c + IntVector(0,0,1);   IntVector B  = c - IntVector(0,0,1);
-    const double density = constvars->new_density[c];
-    
-    if (density > 0.0){
-      unfiltered_divergence[c] = -constvars->drhodf[c]*
-      ((constvars->scalarDiffusionCoeff[Arches::AE])[c] * scalar[E] +
-       (constvars->scalarDiffusionCoeff[Arches::AW])[c] * scalar[W] +
-       (constvars->scalarDiffusionCoeff[Arches::AS])[c] * scalar[S] +
-       (constvars->scalarDiffusionCoeff[Arches::AN])[c] * scalar[N] +
-       (constvars->scalarDiffusionCoeff[Arches::AB])[c] * scalar[B] +
-       (constvars->scalarDiffusionCoeff[Arches::AT])[c] * scalar[T] +
-       constvars->scalarDiffNonlinearSrc[c] - (constvars->scalarDiffusionCoeff[Arches::AP])[c]* scalar[c])/(density * density);
-    }else{
-      unfiltered_divergence[c] = 0.0;
-    }
-  }
-
-  if ((filter_divergence)&&(!(periodic))) {
-  // filtering for periodic case is not implemented 
-  // if it needs to be then unfiltered_divergence will require 1 layer of boundary cells to be computed
-      
-    // To turn this back on: This function needs two things: 
-    //                       1) The filter volume (which currently isn't in ArchesVariables 
-    //                       2) The cell Type
-    //d_filter->applyFilter_noPetsc<CCVariable<double> >(pc, patch, unfiltered_divergence, constvars->filterVolume, constvars->cellType, vars->divergence);
-    throw InvalidValue("Error: Filtered divergence constraint isnt functional.", __FILE__, __LINE__);
-
-  }else{
-    vars->divergence.copy(unfiltered_divergence,
-                          unfiltered_divergence.getLowIndex(),
-                          unfiltered_divergence.getHighIndex());
-  }
-}
   
 //****************************************************************************
 // Scalar stencil weights

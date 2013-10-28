@@ -42,7 +42,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/CompDynamicProcedure.cc      \
         $(SRCDIR)/Discretization.cc            \
         $(SRCDIR)/DQMOM.cc                     \
-        $(SRCDIR)/EnthalpySolver.cc            \
         $(SRCDIR)/ExplicitSolver.cc            \
         $(SRCDIR)/ExplicitTimeInt.cc           \
         $(SRCDIR)/IncDynamicProcedure.cc       \
@@ -54,7 +53,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/PressureSolverV2.cc          \
         $(SRCDIR)/Properties.cc                \
         $(SRCDIR)/RHSSolver.cc                 \
-        $(SRCDIR)/ScalarSolver.cc              \
         $(SRCDIR)/ScaleSimilarityModel.cc      \
         $(SRCDIR)/SmagorinskyModel.cc          \
         $(SRCDIR)/Source.cc                    \
@@ -143,9 +141,6 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/areain_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/bcscalar_fort.h
-$(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/bcuvel_fort.h
-$(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/bcvvel_fort.h
-$(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/bcwvel_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/celltypeInit_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/inlbcs_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mmbcvelocity_fort.h

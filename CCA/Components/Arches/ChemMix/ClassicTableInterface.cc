@@ -246,7 +246,6 @@ ClassicTableInterface::sched_getState( const LevelP& level,
       tsk->computes( i->second ); 
     }
 
-    tsk->computes( d_lab->d_drhodfCPLabel ); // I don't think this is used anywhere...maybe in coldflow? 
     if (!d_coldflow) { 
       // other dependent vars:
       tsk->computes( d_lab->d_tempINLabel ); // lame ... fix me
@@ -265,7 +264,6 @@ ClassicTableInterface::sched_getState( const LevelP& level,
       tsk->modifies( i->second ); 
     }
 
-    tsk->modifies( d_lab->d_drhodfCPLabel ); // I don't think this is used anywhere...maybe in coldflow? 
     if (!d_coldflow) { 
       // other dependent vars:
       tsk->modifies( d_lab->d_tempINLabel );     // lame .... fix me
@@ -363,10 +361,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
       }
 
-      // others: 
-      CCVariable<double> drho_df; 
-
-      new_dw->allocateAndPut( drho_df, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
       if (!d_coldflow) { 
         new_dw->allocateAndPut( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
         new_dw->allocateAndPut( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
@@ -379,7 +373,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         mpmarches_denmicro.initialize(0.0);
       }
 
-      drho_df.initialize(0.0);  // this variable might not be actually used anywhere and may just be polution  
       if ( !d_coldflow ) { 
         arches_temperature.initialize(0.0); 
         arches_cp.initialize(0.0); 
@@ -405,8 +398,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       }
 
       // others:
-      CCVariable<double> drho_dw; 
-      new_dw->getModifiable( drho_dw, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
       if (!d_coldflow) { 
         new_dw->getModifiable( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
         new_dw->getModifiable( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 

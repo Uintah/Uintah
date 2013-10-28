@@ -109,9 +109,7 @@ ArchesLabel::ArchesLabel()
   d_densityCPLabel      =  VarLabel::create("densityCP",      CC_double);
   d_densityGuessLabel   =  VarLabel::create("densityGuess",   CC_double);
   d_densityTempLabel    =  VarLabel::create("densityTemp",    CC_double);
-  d_densityOldOldLabel  =  VarLabel::create("densityOldOld",  CC_double);
   d_filterdrhodtLabel   =  VarLabel::create("filterdrhodt",   CC_double);
-  d_drhodfCPLabel       =  VarLabel::create("drhodfCP",       CC_double);
 
   
   // Viscosity Labels
@@ -261,8 +259,6 @@ ArchesLabel::ArchesLabel()
   d_vVelRhoHat_CCLabel  =  VarLabel::create("vvelRhoHat_CC",  CC_double );
   d_wVelRhoHat_CCLabel  =  VarLabel::create("wvelRhoHat_CC",  CC_double );
 
-  // div constraint
-  d_divConstraintLabel = VarLabel::create("divConstraint",  CC_double);
   d_pressurePredLabel = VarLabel::create("pressurePred",    CC_double);
 
   // enthalpy labels
@@ -540,9 +536,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_densityCPLabel);
   VarLabel::destroy(d_densityGuessLabel);
   VarLabel::destroy(d_densityTempLabel);
-  VarLabel::destroy(d_densityOldOldLabel);
   VarLabel::destroy(d_filterdrhodtLabel);
-  VarLabel::destroy(d_drhodfCPLabel);
   VarLabel::destroy(d_viscosityCTSLabel);
   VarLabel::destroy(d_turbViscosLabel); 
   VarLabel::destroy(d_scalarDiffusivityLabel);
@@ -632,7 +626,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_uVelRhoHat_CCLabel);
   VarLabel::destroy(d_vVelRhoHat_CCLabel);
   VarLabel::destroy(d_wVelRhoHat_CCLabel);
-  VarLabel::destroy(d_divConstraintLabel); 
   VarLabel::destroy(d_pressurePredLabel);
   VarLabel::destroy(d_enthalpySPLabel);
   VarLabel::destroy(d_enthalpyTempLabel);

@@ -158,14 +158,6 @@ public:
                                             bool central_limiter);
 
 
-  void computeDivergence(const ProcessorGroup*,
-                         const Patch* patch,
-                         DataWarehouse* new_dw,
-                         ArchesVariables* vars,
-                         ArchesConstVariables* constvars,
-                         const bool filter_divergence,
-                         const bool periodic);
-
   inline void setFilter(Filter* filter) {
     d_filter = filter;
   }
