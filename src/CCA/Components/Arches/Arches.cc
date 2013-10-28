@@ -288,8 +288,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (db->findBlock("ExplicitSolver")){
     nlSolver = "explicit";
     db->findBlock("ExplicitSolver")->getWithDefault("extraProjection",     d_extraProjection,false);
-    db->findBlock("ExplicitSolver")->require("initial_dt", d_init_dt);
-    db->findBlock("ExplicitSolver")->require("variable_dt", d_variableTimeStep);
   }
 
   // physical constant
@@ -1383,7 +1381,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
         indexHigh = indexHigh + IntVector(0,0,1);
       }
 
-      double delta_t = d_init_dt; // max value allowed
+      double delta_t = 1.0e-5;
       double small_num = 1e-30;
       double delta_t2 = delta_t;
 
@@ -1488,18 +1486,14 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
       }
 
 
-      if (d_variableTimeStep) {
-        delta_t = delta_t2;
-      }
-      else {
-        proc0cout << " Courant condition for time step: " << delta_t2 << endl;
-      }
-
-      //    proc0cout << "time step used: " << delta_t << endl;
+      delta_t = delta_t2; 
       new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label(), level);
+
     }
   } else {  // if not on the arches level
+
     new_dw->put(delt_vartype(9e99),  d_sharedState->get_delt_label(),level);
+
   }
 }
 

@@ -335,9 +335,7 @@ private:
   Wasatch::Wasatch* const d_wasatch;
 # endif // WASATCH_IN_ARCHES
 
-  double d_init_dt; // The initial dt from input file.
   double d_init_mix_frac; // The initial value of mixture fraction in the domain (for paramInit)
-  bool d_variableTimeStep;
   string d_whichTurbModel;
   bool d_mixedModel;
   bool d_with_mpmarches;
