@@ -164,8 +164,6 @@ ArchesLabel::ArchesLabel()
   d_mmgasVolFracLabel = VarLabel::create("mmgasVolFrac",  CC_double);
 
   // for reacting flows
-  d_dummyTLabel    =  VarLabel::create("dummyT",    CC_double);
-  d_tempINLabel    =  VarLabel::create("tempIN",    CC_double);
   d_tempFxLabel    =  VarLabel::create("tempFxLabel", SFCX_double); 
   d_tempFyLabel    =  VarLabel::create("tempFyLabel", SFCY_double); 
   d_tempFzLabel    =  VarLabel::create("tempFzLabel", SFCZ_double); 
@@ -518,8 +516,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_mmcellTypeLabel);
   VarLabel::destroy(d_mmgasVolFracLabel);
 
-  VarLabel::destroy(d_dummyTLabel);
-  VarLabel::destroy(d_tempINLabel);
   VarLabel::destroy(d_cpINLabel);
   VarLabel::destroy(d_co2INLabel);
   VarLabel::destroy(d_h2oINLabel);

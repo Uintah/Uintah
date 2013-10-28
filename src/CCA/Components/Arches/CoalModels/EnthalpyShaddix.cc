@@ -394,7 +394,11 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
   }
 
   // always require the gas-phase temperature
-  tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::None, 0);
+  d_gas_temperature_label = VarLabel::find( "temperature" ); 
+  if ( d_gas_temperature_label == 0 ){ 
+    throw InvalidValue("Error: Unable to find gas temperature label.",__FILE__,__LINE__);
+  }
+  tsk->requires(Task::OldDW, d_gas_temperature_label, Ghost::None, 0);
 
   const VarLabel* d_specificheat_label = VarLabel::find("specificheat");
   tsk->requires(Task::OldDW, d_specificheat_label, Ghost::None, 0 );
@@ -581,7 +585,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> chargas_source;
     constCCVariable<double> surface_rate;
 
-    old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gn, 0 );
+    old_dw->get( temperature, d_gas_temperature_label, matlIndex, patch, gn, 0 );
     old_dw->get( w_particle_enthalpy, d_particle_enthalpy_label, matlIndex, patch, gn, 0 );
     old_dw->get( w_particle_length, d_particle_length_label, matlIndex, patch, gn, 0 );
     old_dw->get( w_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );

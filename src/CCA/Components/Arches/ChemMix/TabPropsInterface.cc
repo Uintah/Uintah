@@ -197,7 +197,6 @@ TabPropsInterface::sched_getState( const LevelP& level,
 
     if (!d_coldflow) { 
     // other dependent vars:
-      tsk->computes( d_lab->d_tempINLabel ); // lame ... fix me
       tsk->computes( d_lab->d_cpINLabel ); 
       tsk->computes( d_lab->d_co2INLabel ); 
       tsk->computes( d_lab->d_h2oINLabel ); 
@@ -215,7 +214,6 @@ TabPropsInterface::sched_getState( const LevelP& level,
 
     if (!d_coldflow) { 
       // other dependent vars:
-      tsk->modifies( d_lab->d_tempINLabel );     // lame .... fix me
       tsk->modifies( d_lab->d_cpINLabel ); 
       tsk->modifies( d_lab->d_co2INLabel ); 
       tsk->modifies( d_lab->d_h2oINLabel ); 
@@ -274,7 +272,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
     }
 
     // dependent variables:
-    CCVariable<double> arches_temperature; 
     CCVariable<double> arches_cp; 
     CCVariable<double> arches_co2; 
     CCVariable<double> arches_h2o; 
@@ -300,7 +297,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       }
 
       if (!d_coldflow) { 
-        new_dw->allocateAndPut( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
         new_dw->allocateAndPut( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
         new_dw->allocateAndPut( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
         new_dw->allocateAndPut( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
@@ -312,7 +308,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       }
 
       if ( !d_coldflow ) { 
-        arches_temperature.initialize(0.0); 
         arches_cp.initialize(0.0); 
         arches_co2.initialize(0.0); 
         arches_h2o.initialize(0.0);
@@ -337,7 +332,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
       // others:
       if (!d_coldflow) { 
-        new_dw->getModifiable( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
         new_dw->getModifiable( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
         new_dw->getModifiable( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
         new_dw->getModifiable( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
@@ -374,8 +368,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           arches_density[c] = table_value; 
           if (d_MAlab)
             mpmarches_denmicro[c] = table_value; 
-        } else if (i->first == "temperature" && !d_coldflow) {
-          arches_temperature[c] = table_value; 
         } else if (i->first == "specificheat" && !d_coldflow) {
           arches_cp[c] = table_value; 
         } else if (i->first == "CO2" && !d_coldflow) {
@@ -478,8 +470,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
               //arches_density[c] = ghost_value; 
               if (d_MAlab)
                 mpmarches_denmicro[c] = table_value; 
-            } else if (i->first == "temperature" && !d_coldflow) {
-              arches_temperature[c] = table_value; 
             } else if (i->first == "specificheat" && !d_coldflow) {
               arches_cp[c] = table_value; 
             } else if (i->first == "CO2" && !d_coldflow) {

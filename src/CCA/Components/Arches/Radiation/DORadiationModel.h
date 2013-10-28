@@ -109,23 +109,23 @@ public:
                                   ArchesConstVariables* constvars, 
                                   int wall_type);
 
-      //__________________________________
-      //  This task is called by enthalpy solver
-      //  and it computes div_q
-      virtual void sched_computeSource( const LevelP& level, 
-                                SchedulerP& sched, 
-                                const MaterialSet* matls,
-                                const TimeIntegratorLabel* timelabels,
-                                const bool isFirstIntegrationStep );
-                                       
-      virtual void computeSource( const ProcessorGroup* pc, 
-                          const PatchSubset* patches, 
-                          const MaterialSubset* matls, 
-                          DataWarehouse* old_dw, 
-                          DataWarehouse* new_dw,
-                          const TimeIntegratorLabel* timelabels,  
-                          bool isFirstIntegrationStep );
-
+//      //__________________________________
+//      //  This task is called by enthalpy solver
+//      //  and it computes div_q
+//      virtual void sched_computeSource( const LevelP& level, 
+//                                SchedulerP& sched, 
+//                                const MaterialSet* matls,
+//                                const TimeIntegratorLabel* timelabels,
+//                                const bool isFirstIntegrationStep );
+//                                       
+//      virtual void computeSource( const ProcessorGroup* pc, 
+//                          const PatchSubset* patches, 
+//                          const MaterialSubset* matls, 
+//                          DataWarehouse* old_dw, 
+//                          DataWarehouse* new_dw,
+//                          const TimeIntegratorLabel* timelabels,  
+//                          bool isFirstIntegrationStep );
+//
 protected: 
 
       /// For other analytical properties.

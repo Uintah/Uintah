@@ -210,8 +210,6 @@ namespace Uintah {
       const VarLabel* d_mmgasVolFracLabel;
 
       // for reacting flows
-      const VarLabel* d_dummyTLabel;
-      const VarLabel* d_tempINLabel;
       const VarLabel* d_tempFxLabel; 
       const VarLabel* d_tempFyLabel;
       const VarLabel* d_tempFzLabel; 

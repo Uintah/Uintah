@@ -3606,7 +3606,11 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
 
   t->requires(Task::NewDW, d_Alab->d_mmcellTypeLabel,      
       arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
-  t->requires(Task::OldDW, d_Alab->d_tempINLabel,      
+  const VarLabel* gas_t_label = VarLabel::find( "temperature" ); 
+  if ( gas_t_label == 0 ){ 
+    throw InvalidValue("Error: Unable to find gas temperature label.",__FILE__,__LINE__);
+  }
+  t->requires(Task::OldDW, gas_t_label,      
       arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
   t->requires(Task::NewDW,  d_Alab->d_mmgasVolFracLabel,   
       arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
@@ -3901,7 +3905,11 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     new_dw->get(cellType, d_Alab->d_mmcellTypeLabel, 
         matlIndex, patch, Ghost::AroundCells, numGhostCellsG);
 
-    old_dw->get(tempGas, d_Alab->d_tempINLabel,   
+    const VarLabel* gas_t_label = VarLabel::find( "temperature" ); 
+    if ( gas_t_label == 0 ){ 
+      throw InvalidValue("Error: Unable to find gas temperature label.",__FILE__,__LINE__);
+    }
+    old_dw->get(tempGas, gas_t_label,   
         matlIndex, patch, Ghost::AroundCells, numGhostCellsG);
 
     new_dw->get(gas_fraction_cc, d_Alab->d_mmgasVolFracLabel, matlIndex, 
