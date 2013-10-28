@@ -289,63 +289,6 @@ namespace Uintah {
       const VarLabel* d_kineticEnergyLabel;
       const VarLabel* d_totalKineticEnergyLabel;
       
-      // scalar mms Ln error
-      const VarLabel* d_smmsLnErrorLabel;
-      const VarLabel* d_totalsmmsLnErrorLabel;
-      const VarLabel* d_totalsmmsLnErrorPredLabel;
-      const VarLabel* d_totalsmmsLnErrorIntermLabel;
-      const VarLabel* d_totalsmmsExactSolLabel;
-      const VarLabel* d_totalsmmsExactSolPredLabel;
-      const VarLabel* d_totalsmmsExactSolIntermLabel;
-      
-      // grad P mms Ln error
-      const VarLabel* d_gradpmmsLnErrorLabel;
-      const VarLabel* d_totalgradpmmsLnErrorLabel;
-      const VarLabel* d_totalgradpmmsLnErrorPredLabel;
-      const VarLabel* d_totalgradpmmsLnErrorIntermLabel;
-      const VarLabel* d_totalgradpmmsExactSolLabel;
-      const VarLabel* d_totalgradpmmsExactSolPredLabel;
-      const VarLabel* d_totalgradpmmsExactSolIntermLabel;
-      
-      // u mms Ln error
-      const VarLabel* d_ummsLnErrorLabel;
-      const VarLabel* d_totalummsLnErrorLabel;
-      const VarLabel* d_totalummsLnErrorPredLabel;
-      const VarLabel* d_totalummsLnErrorIntermLabel;
-      const VarLabel* d_totalummsExactSolLabel;
-      const VarLabel* d_totalummsExactSolPredLabel;
-      const VarLabel* d_totalummsExactSolIntermLabel;
-      
-      // v mms Ln error
-      const VarLabel* d_vmmsLnErrorLabel;
-      const VarLabel* d_totalvmmsLnErrorLabel;
-      const VarLabel* d_totalvmmsLnErrorPredLabel;
-      const VarLabel* d_totalvmmsLnErrorIntermLabel;
-      const VarLabel* d_totalvmmsExactSolLabel;
-      const VarLabel* d_totalvmmsExactSolPredLabel;
-      const VarLabel* d_totalvmmsExactSolIntermLabel;
-
-      // w mms Ln error
-      const VarLabel* d_wmmsLnErrorLabel;
-      const VarLabel* d_totalwmmsLnErrorLabel;
-      const VarLabel* d_totalwmmsLnErrorPredLabel;
-      const VarLabel* d_totalwmmsLnErrorIntermLabel;
-      const VarLabel* d_totalwmmsExactSolLabel;
-      const VarLabel* d_totalwmmsExactSolPredLabel;
-      const VarLabel* d_totalwmmsExactSolIntermLabel;
-
-      // mass balance labels for RK
-      const VarLabel* d_totalflowINPredLabel;
-      const VarLabel* d_totalflowOUTPredLabel;
-      const VarLabel* d_denAccumPredLabel;
-      const VarLabel* d_netflowOUTBCPredLabel;
-      const VarLabel* d_totalAreaOUTPredLabel;
-      const VarLabel* d_totalflowINIntermLabel;
-      const VarLabel* d_totalflowOUTIntermLabel;
-      const VarLabel* d_denAccumIntermLabel;
-      const VarLabel* d_netflowOUTBCIntermLabel;
-      const VarLabel* d_totalAreaOUTIntermLabel;
- 
       const VarLabel* d_oldDeltaTLabel;
        
        // test filtered terms for variable density dynamic Smagorinsky model
@@ -365,11 +308,6 @@ namespace Uintah {
       const VarLabel* d_ShELabel;
       const VarLabel* d_ShRFLabel;
 
-      //mms force term labels
-      const VarLabel* d_uFmmsLabel;
-      const VarLabel* d_vFmmsLabel;
-      const VarLabel* d_wFmmsLabel;
-      
       //Helper variable
       const VarLabel* d_zerosrcVarLabel;
 

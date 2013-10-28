@@ -426,12 +426,10 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           } else { 
             table_value = temp_table_value; 
           } 
-
         }
 
         table_value *= eps_vol[c]; 
         (*i->second.var)[c] = table_value;
-
 
         if (i->first == "density") {
 
