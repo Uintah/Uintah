@@ -1161,10 +1161,6 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_mmgasVolFracLabel);
     }
 
-    tsk->computes(d_lab->d_umomBoundarySrcLabel);
-    tsk->computes(d_lab->d_vmomBoundarySrcLabel);
-    tsk->computes(d_lab->d_wmomBoundarySrcLabel);
-
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
 
@@ -1214,18 +1210,6 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> turb_viscosity; 
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
-
-    SFCXVariable<double> umomBoundarySrc;
-    SFCYVariable<double> vmomBoundarySrc;
-    SFCZVariable<double> wmomBoundarySrc;
-
-    new_dw->allocateAndPut(umomBoundarySrc,     d_lab->d_umomBoundarySrcLabel,     indx, patch);
-    new_dw->allocateAndPut(vmomBoundarySrc,     d_lab->d_vmomBoundarySrcLabel,     indx, patch);
-    new_dw->allocateAndPut(wmomBoundarySrc,     d_lab->d_wmomBoundarySrcLabel,     indx, patch);
-
-    umomBoundarySrc.initialize(0.0);
-    vmomBoundarySrc.initialize(0.0);
-    wmomBoundarySrc.initialize(0.0);
 
     CCVariable<double> ke; 
     new_dw->allocateAndPut( ke, d_lab->d_kineticEnergyLabel, indx, patch ); 
