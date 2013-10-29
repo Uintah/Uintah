@@ -15,11 +15,12 @@
     <delt_min>0.00001</delt_min>
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
+    <max_Timesteps>35</max_Timesteps>
   </Time>
 
   <DataArchiver>
     <filebase>methane_fire_8patch.uda</filebase>
-    <outputInterval>0.1</outputInterval>
+    <outputTimestepInterval>2</outputTimestepInterval>
     <save label="cellType"/>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
@@ -36,7 +37,7 @@
     <save label="continuityResidual"/>
     <save label="abskg"/>
     <save label="soot"/>
-    <checkpoint cycle="2" interval="0.2"/>
+    <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>
 
