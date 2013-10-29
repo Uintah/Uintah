@@ -199,7 +199,6 @@
 <!-- TIME INTEGRATOR: Specifics of Explicit Solver including Pressure -->
       <ExplicitSolver>
         <initial_dt> 0.01 </initial_dt>
-        <variable_dt> true </variable_dt>
         <restartOnNegativeDensityGuess> false </restartOnNegativeDensityGuess>
         <PressureSolver>
           <Parameters>
@@ -286,7 +285,6 @@
 <!-- BOUNDARY Specification -->
       <BoundaryConditions>
         <suppress_corner_recirculation/>
-        <use_new_bcs/>
       </BoundaryConditions>
 
     </ARCHES>
