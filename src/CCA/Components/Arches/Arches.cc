@@ -1569,9 +1569,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   if (d_doingRestart) {
 
-    const PatchSet* patches= level->eachPatch();
-    const MaterialSet* matls = d_sharedState->allArchesMaterials();
-
     d_doingRestart = false;
     d_lab->recompile_taskgraph = true;
 

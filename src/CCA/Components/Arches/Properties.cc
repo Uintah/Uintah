@@ -284,7 +284,6 @@ Properties::averageRKProps( const ProcessorGroup*,
     factor_old = timelabels->factor_old;
     factor_new = timelabels->factor_new;
     factor_divide = timelabels->factor_divide;
-    double epsilon = 1.0e-15;
 
     IntVector indexLow  = patch->getExtraCellLowIndex();
     IntVector indexHigh = patch->getExtraCellHighIndex();
