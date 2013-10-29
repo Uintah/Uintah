@@ -133,36 +133,15 @@
 
       <Turbulence model="compdynamicprocedure"/>
 
-      <!--Properties>
-      
-        <ColdFlowMixingModel>
-          <Stream>
-            <density>       1.05       </density>
-            <temperature>   298         </temperature>
-          </Stream>
-          <Stream>
-            <density>       1.05    </density>
-            <temperature>   298         </temperature>
-          </Stream>
-        </ColdFlowMixingModel>
-      </Properties-->
       <Properties>
-        <ColdFlow>
-          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
-          <Stream_1>
-            <density>1.18</density>
-            <temperature>298</temperature>
-          </Stream_1>
-          <Stream_2>
-            <density>1.18</density>
-            <temperature>298</temperature>
-          </Stream_2>
-        </ColdFlow>
+        <ConstantProps>
+          <density>1.18</density>
+          <temperature>298</temperature>
+        </ConstantProps>
       </Properties>
 
       <BoundaryConditions>
         <suppress_corner_recirculation/>
-        <use_new_bcs/>
       </BoundaryConditions>
 
       <TransportEqns>
@@ -182,7 +161,6 @@
 <!--__________________________________-->
       <ExplicitSolver>
         <initial_dt>0.05</initial_dt>
-        <variable_dt>true</variable_dt>
         <PressureSolver>
           <Parameters>
             <tolerance>     1.0e-10  </tolerance>
