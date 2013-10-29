@@ -101,7 +101,7 @@
                 <opl>               0.01       </opl>
                 <randomSeed>        false      </randomSeed>
                 <abskg>             999        </abskg>
-                <NoOfRays>          10         </NoOfRays>
+                <nDivQRays>          10         </nDivQRays>
                 <Threshold>         0.05       </Threshold>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
                 <property_calculator type="radprops">
@@ -147,7 +147,6 @@
 
       <ExplicitSolver>
         <initial_dt>1</initial_dt>
-        <variable_dt>true</variable_dt>
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
