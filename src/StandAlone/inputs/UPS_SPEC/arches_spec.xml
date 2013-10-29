@@ -474,6 +474,11 @@
 
       <ExplicitSolver                   spec="REQUIRED NO_DATA" >
 
+        <initial_dt                     spec="OPTIONAL DOUBLE 'positive'"/>  <!-- Sets the initial timestep of the simulation.  Note that this value will 
+                                                                                  be superceded if the CFL condition determines a smaller timestep as determined
+                                                                                  from the BC's and initial condition.  --> 
+                                               
+
         <print_total_ke 								spec="OPTIONAL NO_DATA" />  <!-- prints the total kinetic energy to STDIO --> 
         <extraProjection                spec="OPTIONAL BOOLEAN" /> 
 
