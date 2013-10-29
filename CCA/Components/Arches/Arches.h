@@ -335,12 +335,12 @@ private:
   Wasatch::Wasatch* const d_wasatch;
 # endif // WASATCH_IN_ARCHES
 
-  double d_init_mix_frac; // The initial value of mixture fraction in the domain (for paramInit)
   string d_whichTurbModel;
   bool d_mixedModel;
   bool d_with_mpmarches;
   bool d_extraProjection;
   bool d_useWasatchMomRHS;
+  double d_initial_dt; 
 
   ScaleSimilarityModel* d_scaleSimilarityModel;
   PhysicalConstants* d_physicalConsts;

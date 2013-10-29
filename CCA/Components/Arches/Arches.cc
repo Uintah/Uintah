@@ -204,7 +204,6 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   d_with_mpmarches                 =  false;
   d_do_dummy_solve                 =  false; 
   d_doAMR                          = doAMR;
-  d_init_mix_frac                  = 0.0; 
   d_useWasatchMomRHS               = false;
 }
 
@@ -288,6 +287,9 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (db->findBlock("ExplicitSolver")){
     nlSolver = "explicit";
     db->findBlock("ExplicitSolver")->getWithDefault("extraProjection",     d_extraProjection,false);
+
+    db->findBlock("ExplicitSolver")->getWithDefault("initial_dt", d_initial_dt, 1.0);
+
   }
 
   // physical constant
@@ -1381,7 +1383,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
         indexHigh = indexHigh + IntVector(0,0,1);
       }
 
-      double delta_t = 1.0e-5;
+      double delta_t = d_initial_dt;
       double small_num = 1e-30;
       double delta_t2 = delta_t;
 
