@@ -56,8 +56,6 @@ ArchesLabel::ArchesLabel()
   const TypeDescription* SFCZ_double = SFCZVariable<double>::getTypeDescription();
 
   const TypeDescription* sum_variable = sum_vartype::getTypeDescription();
-  const TypeDescription* max_variable = max_vartype::getTypeDescription();
-  const TypeDescription* min_variable = min_vartype::getTypeDescription();
 
   // Seven point stencil
   int numberStencilComponents = 7;
