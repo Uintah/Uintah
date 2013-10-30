@@ -35,6 +35,7 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Mutex.h>
 
 #include <cstring>
@@ -208,8 +209,8 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   for (int i = 0; i < numThreads_; i++) {
     UnifiedSchedulerWorker * worker = scinew UnifiedSchedulerWorker(this, i);
     t_worker[i] = worker;
-    sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i);
-    Thread * t = scinew Thread(worker, name);
+    sprintf(name, "Task Compute Thread ID: %d", i);
+    Thread* t = scinew Thread(worker, name);
     t_thread[i] = t;
 //    t->detach();
   }
@@ -238,12 +239,13 @@ SchedulerP UnifiedScheduler::createSubScheduler()
 
   char name[1024];
 
-  // Create the UnifiedWorkerThreads for the subscheduler here
+  // Create UnifiedWorker threads for the subscheduler
+  ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0); // 0 is main/parent thread group
   for (int i = 0; i < newsched->numThreads_; i++) {
     UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(newsched, i + numThreads_);
     newsched->t_worker[i] = worker;
-    sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i + numThreads_);
-    Thread * t = scinew Thread(worker, name);
+    sprintf(name, "Task Compute Thread ID: %d", i + numThreads_);
+    Thread* t = scinew Thread(worker, name, subGroup);
     newsched->t_thread[i] = t;
   }
 
@@ -1861,7 +1863,7 @@ void UnifiedSchedulerWorker::run()
     if (d_quit) {
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Worker " << d_rank << "-" << d_id << "quiting   " << "\n";
+        taskdbg << "Worker " << d_rank << "-" << d_id << " quitting   " << "\n";
         cerrLock.unlock();
       }
       return;
