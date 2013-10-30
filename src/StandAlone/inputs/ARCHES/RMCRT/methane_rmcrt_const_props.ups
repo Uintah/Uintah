@@ -311,7 +311,6 @@
 
       <ExplicitSolver>
         <initial_dt>0.05</initial_dt>
-        <variable_dt>true</variable_dt>
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
