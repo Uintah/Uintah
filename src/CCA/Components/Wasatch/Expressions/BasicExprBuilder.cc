@@ -265,6 +265,25 @@ namespace Wasatch{
       builder = scinew Builder( tag, xTag, yTag, xStart, yStart, xWidth, yWidth, lowValue, highValue );
     }
 
+    else if ( params->findBlock("RayleighTaylor") ) {
+      Uintah::ProblemSpecP valParams = params->findBlock("RayleighTaylor");
+      double transitionPoint, lowValue, highValue, frequency, amplitude;
+      std::string x1, x2;
+      valParams->getAttribute("transitionPoint",transitionPoint);
+      valParams->getAttribute("lowValue",lowValue);
+      valParams->getAttribute("highValue",highValue);
+      valParams->getAttribute("frequency",frequency);
+      valParams->getAttribute("amplitude",amplitude);
+      
+      valParams->getAttribute("x1",x1);
+      valParams->getAttribute("x2",x2);
+      const Expr::Tag x1Tag(x1,Expr::STATE_NONE);
+      const Expr::Tag x2Tag(x2,Expr::STATE_NONE);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename RayleighTaylor<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, indepVarTag, x1Tag, x2Tag, transitionPoint, lowValue, highValue, frequency, amplitude );
+    }
+
     else if ( params->findBlock("VarDensMMSSourceTerm") ) {
       Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSSourceTerm");
       double D, rho0, rho1;
