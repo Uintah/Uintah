@@ -221,8 +221,6 @@
        </Sources> 
       </TransportEqns>
 
-      <Turbulence model="none"/>
-
       <Properties>
         <ColdFlow>
           <mixture_fraction_label>mixture_f</mixture_fraction_label>
@@ -240,7 +238,6 @@
       <ExplicitSolver>
 
         <initial_dt>0.05</initial_dt>
-        <variable_dt>true</variable_dt>
 
         <PressureSolver>
           <Parameters>
