@@ -31,6 +31,7 @@
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Box.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MiscMath.h>
@@ -46,6 +47,7 @@
 using namespace Uintah;
 
 extern SCIRun::Mutex cerrLock;
+extern SCIRun::Mutex coutLock;
 
 static DebugStream analytic_dbg("AnalyticNonbondedDbg", false);
 
@@ -213,6 +215,16 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
       }
 
     }  // end materials loop
+
+    coutLock.lock();
+    std::cout.setf(std::ios_base::left);
+    std::cout << std::setw(30) << Thread::self()->getThreadName();
+    std::cout << "Uintah thread ID: " << Thread::self()->myid()
+              << "  Thread group: " << Thread::self()->getThreadGroup()
+              << "  Patch: " << patch->getID()
+              << "  VDW-Energy: " << vdwEnergy << std::endl;
+    coutLock.unlock();
+
   }  // end patch loop
 
   // global reduction on vdwEnergy

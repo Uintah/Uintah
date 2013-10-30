@@ -60,6 +60,7 @@
 using namespace Uintah;
 
 extern SCIRun::Mutex cerrLock;
+extern SCIRun::Mutex coutLock;
 
 static DebugStream spme_cout("SPMECout", false);
 static DebugStream spme_dbg("SPMEDBG", false);
@@ -724,6 +725,14 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
       }
     }
 //    }  // end AtomType loop
+    coutLock.lock();
+    std::cout.setf(std::ios_base::left);
+    std::cout << std::setw(30) << Thread::self()->getThreadName();
+    std::cout << "Uintah thread ID: " << std::setw(4) << Thread::self()->myid()
+              << "Thread group: " <<  std::setw(10) <<Thread::self()->getThreadGroup()
+              << "Patch: " <<  std::setw(4) <<patch->getID()
+              << "Fourier-Energy: " << spmeFourierEnergy << std::endl;
+    coutLock.unlock();
   }  // end SPME Patch loop
 
   // put updated values for reduction variables into the DW
