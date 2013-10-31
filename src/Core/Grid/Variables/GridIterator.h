@@ -69,7 +69,7 @@ namespace Uintah {
    ****************************************/
 
   class GridIterator : public BaseIterator {
-    friend ostream& operator<<( ostream& out,  const GridIterator& c );
+    friend std::ostream& operator<<( std::ostream& out,  const GridIterator& c );
     public:
     inline ~GridIterator() {}
 
@@ -186,13 +186,13 @@ namespace Uintah {
       return *this;
     }
 
-    ostream& put(std::ostream& out) const
+    std::ostream& put(std::ostream& out) const
     {
       out << *this;
       return out;
     }
 
-    ostream& limits(std::ostream& out) const
+    std::ostream& limits(std::ostream& out) const
     {
       out << begin() << " " << end() - IntVector(1,1,1);
       return out;

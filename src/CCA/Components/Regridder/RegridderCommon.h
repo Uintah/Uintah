@@ -33,8 +33,6 @@
 #include <Core/Geometry/IntVector.h>
 #include <vector>
 
-using std::vector;
-
 namespace Uintah {
 
 class DataWarehouse;

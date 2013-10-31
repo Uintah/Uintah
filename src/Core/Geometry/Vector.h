@@ -47,8 +47,6 @@
 #include <Core/Geometry/share.h>
 
 namespace SCIRun {
-using std::string;
-
 
 class Piostream;
 class Point;
@@ -141,10 +139,10 @@ public:
 
   void rotz90(const int);
     
-  string get_string() const;
+  std::string get_string() const;
 
   //! support dynamic compilation
-  static const string& get_h_file_path();
+  static const std::string& get_h_file_path();
 
   friend class Point;
   friend class Transform;

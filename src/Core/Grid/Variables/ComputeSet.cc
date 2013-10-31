@@ -29,6 +29,7 @@
 
 
 using namespace Uintah;
+using std::ostream;
 
 namespace Uintah {
 

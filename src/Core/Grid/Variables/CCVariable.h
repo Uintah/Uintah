@@ -35,8 +35,6 @@
 
 namespace Uintah {
 
-  using SCIRun::InternalError;
-
   class TypeDescription;
 
   /**************************************

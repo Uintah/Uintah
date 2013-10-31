@@ -56,8 +56,6 @@
 
 namespace Uintah {
 
-  using SCIRun::Vector;
-  using SCIRun::Point;
   using SCIRun::IntVector;
 
   class NodeIterator;
@@ -1263,7 +1261,7 @@ WARNING
       /**
        * Returns the cell spacing Vector(dx,dy,dz)
        */
-      inline Vector dCell() const
+      inline SCIRun::Vector dCell() const
       {
         // This will need to change for stretched grids
         return getLevel()->dCell();
@@ -1285,7 +1283,7 @@ WARNING
       /**
        * Returns the domain coordinates of the node idx
        */
-      inline Point getNodePosition(const IntVector& idx) const 
+      inline SCIRun::Point getNodePosition(const IntVector& idx) const
       {
         return getLevel()->getNodePosition(idx);
       }
@@ -1293,7 +1291,7 @@ WARNING
       /**
        * Returns the domain coordinates of the cell idx
        */
-      inline Point getCellPosition(const IntVector& idx) const 
+      inline SCIRun::Point getCellPosition(const IntVector& idx) const
       {
         return getLevel()->getCellPosition(idx);
       }
@@ -1301,7 +1299,7 @@ WARNING
       /**
        * Returns the cell index of the coordinate pos
        */
-      inline IntVector getCellIndex(const Point& pos) const 
+      inline IntVector getCellIndex(const SCIRun::Point& pos) const
       {
         return getLevel()->getCellIndex(pos);
       }
@@ -1311,18 +1309,18 @@ WARNING
       /**
        * Returns the 8 nodes found around the point pos
        */
-      void findCellNodes(const Point& pos, IntVector ni[8]) const;
+      void findCellNodes(const SCIRun::Point& pos, IntVector ni[8]) const;
 
       /**
        * Returns the 27 nodes found around the point pos
        */
-      void findCellNodes27(const Point& pos, IntVector ni[27]) const;
+      void findCellNodes27(const SCIRun::Point& pos, IntVector ni[27]) const;
 
       /**
        * Returns true if the point p is contained within the patch
        * including extra cells
        */
-      inline bool containsPointInExtraCells(const Point& p) const {
+      inline bool containsPointInExtraCells(const SCIRun::Point& p) const {
         IntVector l(getExtraCellLowIndex());
         IntVector h(getExtraCellHighIndex());
         IntVector c=getLevel()->getCellIndex(p);          
@@ -1332,7 +1330,7 @@ WARNING
        * Returns true if the point p is contained within the patch
        * excluding extra cells
        */
-      inline bool containsPoint(const Point& p) const {
+      inline bool containsPoint(const SCIRun::Point& p) const {
         IntVector l(getCellLowIndex());
         IntVector h(getCellHighIndex());
         IntVector c=getLevel()->getCellIndex(p);          
@@ -1353,7 +1351,7 @@ WARNING
       /**
        * Returns the cell that contains the point pos
        */
-      inline bool findCell(const Point& pos, IntVector& ci) const
+      inline bool findCell(const SCIRun::Point& pos, IntVector& ci) const
       {
         ci=getLevel()->getCellIndex(pos);
         return containsCell(ci);
@@ -1434,10 +1432,10 @@ WARNING
        * Returns the closest node to the point pos.  This node
        * is not guarenteed to be owned by this patch.
        */
-      inline IntVector findClosestNode(const Point& pos) const
+      inline IntVector findClosestNode(const SCIRun::Point& pos) const
       {
         IntVector idx = getLevel()->getCellIndex(pos);
-        Point cellP = getLevel()->getCellPosition(idx);
+        SCIRun::Point cellP = getLevel()->getCellPosition(idx);
         for(int i=0;i<3;++i) {
           if( pos(i)>cellP(i) ) {
             idx[i]++;
@@ -1574,12 +1572,12 @@ WARNING
       /**
        * Returns the position of the node idx in domain coordinates.
        */
-      Point nodePosition(const IntVector& idx) const;
+      SCIRun::Point nodePosition(const IntVector& idx) const;
 
       /**
        * Returns the position of the cell idx in domain coordinates.
        */
-      Point cellPosition(const IntVector& idx) const;
+      SCIRun::Point cellPosition(const IntVector& idx) const;
 
       /**
        * Returns the next face.  Alternativly the ++ operator also 
@@ -1757,7 +1755,7 @@ WARNING
        * Returns the offset between the virtual patch and the real patch 
        * in domain coordinates.
        */
-      Vector getVirtualOffsetVector() const
+      SCIRun::Vector getVirtualOffsetVector() const
       { return cellPosition(getCellLowIndex()) -
         cellPosition(getRealPatch()->getCellLowIndex()); 
       }     
