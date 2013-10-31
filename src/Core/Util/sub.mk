@@ -49,8 +49,12 @@ SRCS += \
 
 SRCS += $(REFCOUNT_IMPL)
 
+ifeq ($(HAVE_CUDA),yes)
+  SRCS += $(SRCDIR)/GPU.cu
+endif
+
 PSELIBS := Core/Containers Core/Exceptions Core/Thread
 
-LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(SOCKET_LIBRARY)
+LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(SOCKET_LIBRARY) $(CUDA_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
