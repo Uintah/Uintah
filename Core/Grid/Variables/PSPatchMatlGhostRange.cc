@@ -46,7 +46,7 @@ bool PSPatchMatlGhostRange::operator<(const PSPatchMatlGhostRange& other) const
 }
 namespace Uintah
 {
-  ostream& operator<<(ostream &out, const PSPatchMatlGhostRange &pmg)
+  std::ostream& operator<<(std::ostream &out, const PSPatchMatlGhostRange &pmg)
   {
     out << "Patch: " << *pmg.patch_ << " ";
     out << "Matl: " << pmg.matl_ << " ";

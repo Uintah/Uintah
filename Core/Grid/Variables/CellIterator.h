@@ -35,7 +35,6 @@
 namespace Uintah {
 
 using SCIRun::IntVector;
- using std::ostream;
 
 /**************************************
 
@@ -171,7 +170,7 @@ WARNING
        d_done=d_s.x() >= d_e.x() || d_s.y() >= d_e.y() || d_s.z() >= d_e.z();
      }
 
-     ostream& limits(ostream& out) const
+     std::ostream& limits(std::ostream& out) const
      {
        out << begin() << " " << end() - IntVector(1,1,1);
        return out;
@@ -184,7 +183,7 @@ WARNING
        return scinew CellIterator(*this);
      }
 
-     ostream& put(ostream& out) const
+     std::ostream& put(std::ostream& out) const
      {
        out << *this;
        return out;

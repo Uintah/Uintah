@@ -1,6 +1,8 @@
 #ifndef RGCOMMON
 #define RGCOMMON
 
+#include <list>
+
 int rank, num_procs;
 class Sphere
 {
@@ -141,7 +143,7 @@ void gatherPatches(vector<Region> &patches, vector<Region> &global_patches)
 
 void splitPatches(vector<Region> &patches, vector<Region> &split_patches, double p)
 {
-  list<Region> to_split_patches(patches.begin(),patches.end());
+  std::list<Region> to_split_patches(patches.begin(),patches.end());
   split_patches.clear();
   long long vol=0;
   for(size_t i=0;i<patches.size();i++)

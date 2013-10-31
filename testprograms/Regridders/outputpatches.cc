@@ -9,9 +9,9 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Patch.h>
 
-using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
+using std::endl; using std::cout;
 
 #include "mpi.h"
 #include <testprograms/Regridders/TiledRegridder.h>
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
   std::vector<Region> patches;
   std::vector<CCVariable<int> * > flags;
   std::vector<IntVector> gflags;
-  std::vector<list<IntVector> > lflags;
+  std::vector<std::list<IntVector> > lflags;
 
   int total_patches=num_patches.x()*num_patches.y()*num_patches.z();
   int div=total_patches/num_procs;
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
   int num_flags=getTotalNumFlags(gflags);
   int fflags=num_flags*rr[0]*rr[1]*rr[2];
 
-  ofstream fout;
+  std::ofstream fout;
   fout.open("flags");
   outputFlags(gflags,fout);
   fout.close();
