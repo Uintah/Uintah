@@ -98,19 +98,14 @@ namespace Uintah{
   template <typename pT, typename constpT>
   void ConstProperty<pT, constpT>::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep )
   {
+
     std::string taskname = "ConstProperty::computeProp"; 
     Task* tsk = scinew Task( taskname, this, &ConstProperty::computeProp, time_substep ); 
 
-    if ( !(_has_been_computed) ) {
+    tsk->modifies( _prop_label ); 
 
-      tsk->modifies( _prop_label ); 
+    sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
 
-      if ( !(_has_been_computed ) ) 
-        sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
-      
-      _has_been_computed = true; 
-
-    }
   }
 
   template <typename pT, typename constpT>
@@ -130,43 +125,9 @@ namespace Uintah{
 
       pT prop; 
       new_dw->getModifiable( prop, _prop_label, matlIndex, patch ); 
-      if ( time_substep == 0 ){ 
-        prop.initialize(0.0);
-      }
 
-      // DEVELOPER'S NOTE:
-      // One could in this case just initialize to the constant but we use a loop
-      // to make this example a little more comprehensive. 
-      // PLEASE NOTE the bulletproofing below.  Any new property model should have 
-      // similar bulletproofing.   
-      //
+      prop.initialize(_constant);
 
-      CellIterator iter = patch->getCellIterator(); 
-      if ( typeid(pT) == typeid(SFCXVariable<double>) )
-        iter = patch->getSFCXIterator(); 
-      else if ( typeid(pT) == typeid(SFCYVariable<double>) )
-        iter = patch->getSFCYIterator(); 
-      else if ( typeid(pT) == typeid(SFCZVariable<double>) )
-        iter = patch->getSFCZIterator(); 
-      else if ( typeid(pT) == typeid(CCVariable<double>) )
-        iter = patch->getCellIterator(); 
-      else {
-        // Bulletproofing
-        proc0cout << " While attempting to compute: ConstProperty.h " << endl;
-        proc0cout << " Encountered a type mismatch error.  The current code cannot handle" << endl;
-        proc0cout << " a type other than one of the following: " << endl;
-        proc0cout << " 1) CCVariable<double> " << endl;
-        proc0cout << " 2) SFCXVariable<double> " << endl;
-        proc0cout << " 3) SFCYVariable<double> " << endl;
-        proc0cout << " 4) SFCZVariable<double> " << endl;
-        throw InvalidValue( "Please check the builder (probably in Arches.cc) and try again. ", __FILE__, __LINE__); 
-      }
-
-      for (iter.begin(); !iter.done(); iter++){
-
-        prop[*iter] = _constant; 
-
-      }
     }
   }
   
