@@ -43,7 +43,9 @@
 #include <Core/Util/FileUtils.h> // for testFilesystem()
 
 using namespace SCIRun;
-using namespace std;
+using std::stringstream;
+using std::cout;
+using std::endl;
 
 ///////////////////////////////////////////////////
 
@@ -172,7 +174,7 @@ main( int argc, char* argv[] )
 
       for( int proc = 1; proc < procs; proc++ ) { // Get all the other procs names.
         char hnMessage[ HOST_NAME_SIZE ];
-        fill(&hnMessage[0],&hnMessage[HOST_NAME_SIZE],'\0');
+        std::fill(&hnMessage[0],&hnMessage[HOST_NAME_SIZE],'\0');
         MPI_Status status;
 
         MPI_Recv( &hnMessage, HOST_NAME_SIZE, MPI_CHAR, proc, 0, MPI_COMM_WORLD, &status );
