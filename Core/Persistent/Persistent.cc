@@ -257,9 +257,9 @@ Piostream::begin_class(const string& classname, int current_version)
   {
     err = true;
     reporter_->error("File too new.  " + classname + " has version " +
-                     to_string(version) +
+                     SCIRun::to_string(version) +
                      ", but this scirun build is at version " +
-                     to_string(current_version) + ".");
+                     SCIRun::to_string(current_version) + ".");
   }
 
   return version;
@@ -558,8 +558,8 @@ auto_istream(const string& filename, ProgressReporter *pr)
   if (version > Piostream::PERSISTENT_VERSION)
   {
     const string errmsg = "File '" + filename + "' has version " +
-      to_string(version) + ", this build only supports up to version " +
-      to_string(Piostream::PERSISTENT_VERSION) + ".";
+      SCIRun::to_string(version) + ", this build only supports up to version " +
+      SCIRun::to_string(Piostream::PERSISTENT_VERSION) + ".";
     if (pr) pr->error(errmsg);
     else cerr << "ERROR - " + errmsg;
     return 0;

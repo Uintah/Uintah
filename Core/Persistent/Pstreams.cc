@@ -163,7 +163,7 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
     fp_ = fdopen (fd, "rb");
     if (!fp_)
     {
-      reporter_->error("Error opening socket " + to_string(fd) +
+      reporter_->error("Error opening socket " + SCIRun::to_string(fd) +
                        " for reading.");
       err = true;
       return;
@@ -200,7 +200,7 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
     fp_ = fdopen(fd, "wb");
     if (!fp_)
     {
-      reporter_->error("Error opening socket " + to_string(fd) +
+      reporter_->error("Error opening socket " + SCIRun::to_string(fd) +
                        " for writing.");
       err = true;
       return;
@@ -1008,9 +1008,9 @@ TextPiostream::begin_class(const string& classname, int current_version)
   {
     err = true;
     reporter_->error("File too new.  " + classname + " has version " +
-                     to_string(version) +
+                     SCIRun::to_string(version) +
                      ", but this scirun build is at version " +
-                     to_string(current_version) + ".");
+                     SCIRun::to_string(current_version) + ".");
   }
 
   return version;
@@ -1752,7 +1752,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
     fp_ = fdopen (fd, "rb");
     if (!fp_)
     {
-      reporter_->error("Error opening socket: " + to_string(fd) +
+      reporter_->error("Error opening socket: " + SCIRun::to_string(fd) +
                        " for reading.");
       err = true;
       return;
@@ -1762,7 +1762,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
     if (chars_read != 12)
     {
       reporter_->error("Error reading header from socket: " + 
-                       to_string(fd) + ".");
+          SCIRun::to_string(fd) + ".");
       err = true;
       return;
     }
@@ -1773,7 +1773,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
     fp_=fdopen(fd, "wb");
     if (!fp_)
     {
-      reporter_->error("Error opening socket: " + to_string(fd) +
+      reporter_->error("Error opening socket: " + SCIRun::to_string(fd) +
                        " for writing.");
       err = true;
       return;
@@ -1794,7 +1794,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
       size_t wrote = fwrite(hdr, sizeof(char), 16, fp_);
       if (wrote != 16)
       {
-	reporter_->error("Error writing header to: " + to_string(fd) + ".");
+	reporter_->error("Error writing header to: " + SCIRun::to_string(fd) + ".");
 	err = true;
 	return;
       }
@@ -1808,7 +1808,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
       if (wrote != 12)
       {
 	reporter_->error("Error writing header to socket: " +
-                         to_string(fd) + ".");
+	                 SCIRun::to_string(fd) + ".");
 	err = true;
 	return;
       }
