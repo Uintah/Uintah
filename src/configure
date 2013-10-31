@@ -40857,7 +40857,7 @@ fi
 # check we can also link via C++ compiler
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for linking nvcc compiled object code via C++ compiler" >&5
 $as_echo_n "checking for linking nvcc compiled object code via C++ compiler... " >&6; }
-$CXX $NVCC_LIBS -o $_file_base_name $_file_base_name.o
+$CXX -o $_file_base_name $_file_base_name.o $NVCC_LIBS
 
 if test -f $_file_base_name; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5

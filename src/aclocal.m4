@@ -822,7 +822,7 @@ fi
 
 # check we can also link via C++ compiler
 AC_MSG_CHECKING([for linking nvcc compiled object code via C++ compiler])
-$CXX $NVCC_LIBS -o $_file_base_name $_file_base_name.o
+$CXX -o $_file_base_name $_file_base_name.o $NVCC_LIBS
 
 if test -f $_file_base_name; then
   AC_MSG_RESULT([yes])
