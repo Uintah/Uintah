@@ -287,7 +287,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (db->findBlock("ExplicitSolver")){
     nlSolver = "explicit";
     db->findBlock("ExplicitSolver")->getWithDefault("extraProjection",     d_extraProjection,false);
-
+    d_underflow = false; 
+    if ( db->findBlock("ExplicitSolver")->findBlock("scalarUnderflowCheck") ) d_underflow = true; 
     db->findBlock("ExplicitSolver")->getWithDefault("initial_dt", d_initial_dt, 1.0);
 
   }
