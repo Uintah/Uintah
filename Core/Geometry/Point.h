@@ -87,7 +87,8 @@ public:
   inline void z( const double );
 
   inline Vector &asVector() const;
-    
+  inline Vector toVector() const;
+
   SCISHARE std::string get_string() const;
 
   //! support dynamic compilation
@@ -295,6 +296,11 @@ inline double Point::z() const
 inline Vector &Point::asVector() const
 {
     return (Vector &)(*this);
+}
+
+inline Vector Point::toVector() const
+{
+  return Vector(x_,y_,z_);
 }
 
 inline Point Min(const Point& p1, const Point& p2)

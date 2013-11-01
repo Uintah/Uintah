@@ -122,9 +122,9 @@ BCDataArray* BCDataArray::clone()
 void BCDataArray::determineIteratorLimits(Patch::FaceType face,
                                           const Patch* patch)
 {
-  IntVector lpts,hpts;
+  SCIRun::IntVector lpts,hpts;
   patch->getFaceCells(face,-1,lpts,hpts);
-  vector<Point> test_pts;
+  std::vector<Point> test_pts;
 
   for (CellIterator candidatePoints(lpts,hpts); !candidatePoints.done();
        candidatePoints++) {
@@ -132,26 +132,28 @@ void BCDataArray::determineIteratorLimits(Patch::FaceType face,
     patch->findNodesFromCell(*candidatePoints,nodes);
     Point pts[8];
     Vector p( 0.0, 0.0, 0.0 );
-    for (int i = 0; i < 8; i++)
+
+    for (int i = 0; i < 8; i++) 
       pts[i] = patch->getLevel()->getNodePosition(nodes[i]);
+    
     if (face == Patch::xminus)
-      p = (pts[0].asVector()+pts[1].asVector()+pts[2].asVector()
-           +pts[3].asVector())/4.;
+      p = (pts[0].toVector()+pts[1].toVector()+pts[2].toVector()
+           +pts[3].toVector())/4.;
     if (face == Patch::xplus)
-      p = (pts[4].asVector()+pts[5].asVector()+pts[6].asVector()
-           +pts[7].asVector())/4.;
+      p = (pts[4].toVector()+pts[5].toVector()+pts[6].toVector()
+           +pts[7].toVector())/4.;
     if (face == Patch::yminus)
-      p = (pts[0].asVector()+pts[1].asVector()+pts[4].asVector()
-           +pts[5].asVector())/4.;
+      p = (pts[0].toVector()+pts[1].toVector()+pts[4].toVector()
+           +pts[5].toVector())/4.;
     if (face == Patch::yplus)
-      p = (pts[2].asVector()+pts[3].asVector()+pts[6].asVector()
-           +pts[7].asVector())/4.;
+      p = (pts[2].toVector()+pts[3].toVector()+pts[6].toVector()
+           +pts[7].toVector())/4.;
     if (face == Patch::zminus)
-      p = (pts[0].asVector()+pts[2].asVector()+pts[4].asVector()
-           +pts[6].asVector())/4.;
+      p = (pts[0].toVector()+pts[2].toVector()+pts[4].toVector()
+           +pts[6].toVector())/4.;
     if (face == Patch::zplus)
-      p = (pts[1].asVector()+pts[3].asVector()+pts[5].asVector()
-           +pts[7].asVector())/4.;
+      p = (pts[1].toVector()+pts[3].toVector()+pts[5].toVector()
+           +pts[7].toVector())/4.;
 
     test_pts.push_back(Point(p.x(),p.y(),p.z()));
   }
