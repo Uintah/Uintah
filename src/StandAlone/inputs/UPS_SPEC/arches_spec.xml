@@ -48,7 +48,8 @@
 
 
           <!-- constant property model and scalar dissipation rate model --> 
-          <constant                     spec="OPTIONAL DOUBLE"/>
+          <constant                     spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type cc_constant, scalar_diss"/>
 
           <!-- extent of reaction model --> 
           <scalar_label                 spec="OPTIONAL STRING"/>
@@ -124,8 +125,6 @@
                                         need_applies_to="type empirical_soot"/> <!-- default of "absorpIN" --> 
           <mixture_fraction_label       spec="OPTIONAL STRING"
                                         need_applies_to="type empirical_soot, scalsim_variance"/> <!-- default of "mixture_fraction" --> 
-          <soot_label                   spec="OPTIONAL STRING"
-                                        need_applies_to="type cc_constant"/> <!-- default of "soot" --> 
 
           <!-- Heat loss --> 
           <enthalpy_label               spec="REQUIRED STRING"
