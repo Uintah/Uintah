@@ -23,8 +23,8 @@ namespace Uintah {
 #ifdef HAVE_PETSC  
   bool PetscLinearSolve(Mat& A, 
                         Vec& B, Vec& X, Vec& U,
-                        const string pcType,
-                        const string solverType,
+                        const std::string pcType,
+                        const std::string solverType,
                         const int overlap,
                         const int fill,
                         const double residual,
@@ -35,10 +35,10 @@ namespace Uintah {
                              
   void PetscLocalToGlobalMapping(const PatchSet* perproc_patches,
                                  const PatchSubset* mypatches,
-                                 vector<int>& numCells,
+                                 std::vector<int>& numCells,
                                  int& totalCells,
-                                 map<const Patch*, int>& petscGlobalStart,
-                                 map<const Patch*, Array3<int> >& petscLocalToGlobal,
+                                 std::map<const Patch*, int>& petscGlobalStart,
+                                 std::map<const Patch*, Array3<int> >& petscLocalToGlobal,
                                  const ProcessorGroup* myworld);
                                  
   //______________________________________________________________________
@@ -47,7 +47,7 @@ namespace Uintah {
   void  PetscToUintah_Vector(const Patch* patch, 
                               T& var, 
                               Vec X, 
-                              map<const Patch*, Array3<int> > petscLocalToGlobal)
+                              std::map<const Patch*, Array3<int> > petscLocalToGlobal)
   {
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
