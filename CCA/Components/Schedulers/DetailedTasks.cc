@@ -214,13 +214,13 @@ DetailedTask::DetailedTask(Task* task,
 {
   if (patches) {
     // patches and matls must be sorted
-    ASSERT(is_sorted(patches->getVector().begin(), patches->getVector().end(),
+    ASSERT(std::is_sorted(patches->getVector().begin(), patches->getVector().end(),
             Patch::Compare()));
     patches->addReference();
   }
   if (matls) {
     // patches and matls must be sorted
-    ASSERT(is_sorted(matls->getVector().begin(), matls->getVector().end()));
+    ASSERT(std::is_sorted(matls->getVector().begin(), matls->getVector().end()));
     matls->addReference();
   }
 #ifdef HAVE_CUDA
