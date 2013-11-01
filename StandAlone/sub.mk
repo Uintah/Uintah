@@ -44,7 +44,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 COMPONENTS      = CCA/Components
 CA              = CCA/Components/Arches
 ifeq ($(BUILD_ARCHES),yes)
-  ARCHES_SUB_LIBS = $(CA)/Mixing $(CA)/fortran 
+  ARCHES_SUB_LIBS = $(CA)/fortran 
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
   endif
