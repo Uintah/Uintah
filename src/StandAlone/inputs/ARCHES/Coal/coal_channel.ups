@@ -919,6 +919,7 @@
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
             <abskp_label>Julien_abskp</abskp_label>
+            <soot_label>soot</soot_label>
             <DORadiationModel>
               <opl>0.432</opl>
               <LinearSolver type="hypre">
@@ -960,6 +961,12 @@
           <constant>0</constant>
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
+        </model>
+        <model type="cc_constant" label="soot">
+          <initialization type ="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <soot_label>soot</soot_label>
         </model>
       </PropertyModels>
 
@@ -1226,25 +1233,11 @@
 
 
       <BoundaryConditions>
-        <use_new_bcs/>
-        <!--intrusions>
-          <intrusion label="test">
-            <geom_object>
-              <parallelepiped label="p1">
-                <p1>[0.1,0.0,-0.04374]</p1>
-                <p2>[0.15,0.0,-0.04374]</p2>
-                <p3>[0.1,0.102873,0.065423]</p3>
-                <p4>[0.1,-0.04367,-0.00259]</p4>
-              </parallelepiped>
-            </geom_object>
-          </intrusion>
-        </intrusions-->
 
       </BoundaryConditions>
 
       <ExplicitSolver>
         <initial_dt>0.005</initial_dt>
-        <variable_dt>true</variable_dt>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
         <PressureSolver>
           <Parameters>

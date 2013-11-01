@@ -5,7 +5,7 @@
     <title>DQMOM_coal</title>
   </Meta>
 
-  <SimulationComponent type="mpmarches"/>
+  <SimulationComponent type="arches"/>
 
   <Solver type="hypre"/>
   <Time>
@@ -89,32 +89,7 @@
     <compression>gzip</compression>
   </DataArchiver>
 
-  <MPM>
-    <time_integrator>explicit</time_integrator>
-    <interpolator>linear</interpolator>
-  </MPM>
-  <MaterialProperties>
-    <MPM>
-      <material name="Composite Cylinder">
-        <density>   2489.0   </density>
-        <constitutive_model type="comp_mooney_rivlin">
-          <he_constant_1>5.0</he_constant_1>
-          <he_constant_2>1.0</he_constant_2>
-          <he_PR>.49</he_PR>
-        </constitutive_model>
-        <thermal_conductivity>  0.4494           </thermal_conductivity>
-        <specific_heat>         940.36           </specific_heat>
-        <!-- NO GEOMETRY OBJECT NEEDED FOR THIS CASE -->
-      </material>
-      <contact>
-        <type>null</type>
-        <vel_fields>              [0,0,0]         </vel_fields>
-        <mu> 0.0 </mu>
-      </contact>
-    </MPM>
-  </MaterialProperties>
   <Grid>
-
     <BoundaryConditions>
       <Face side="x-" name="x- face">
         <BCType id="1" label="x- wall" var="WallBC">
@@ -5420,7 +5395,7 @@
         <upper>[2.0,0.84,1.0]</upper>
         <resolution>[200,84,100]</resolution>
         <extraCells>[1,1,1]</extraCells>
-        <patches>[1,1,1]</patches>
+        <patches>[3,2,2]</patches>
       </Box>
     </Level>
   </Grid>
@@ -5527,6 +5502,7 @@
           <src label="divQ" type="do_radiation">
             <calc_frequency>50</calc_frequency>
             <abskp_label>Julien_abskp</abskp_label>
+            <soot_label>soot</soot_label>
             <DORadiationModel>
               <opl>0.432</opl>
               <LinearSolver type="hypre">
@@ -5569,16 +5545,21 @@
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
+
+        <model type="cc_constant" label="soot">
+          <initialization type ="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <soot_label>soot</soot_label>
+        </model>
       </PropertyModels>
 
 
       <!-- compdynamicprocedure is the best-->
       <Turbulence model="compdynamicprocedure">
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
       </Turbulence>
 
       <Properties>
-        <use_mixing_model>false</use_mixing_model>
         <ClassicTable>
           <enthalpy_label>enthalpy</enthalpy_label>   <!-- NON Adiabatic case-->
           <inputfile>inputs/ARCHES/ClassicMixingTables/coal/simon5hi.mix.gz</inputfile>
@@ -5812,7 +5793,6 @@
       </DQMOM>
 
       <BoundaryConditions>
-        <use_new_bcs/>
         <intrusions>
           <intrusion label="windbox_ym">
             <constant_temperature T="1200.0"/>
@@ -6031,7 +6011,6 @@
 
       <ExplicitSolver>
         <initial_dt>0.0003</initial_dt>
-        <variable_dt>true</variable_dt>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
         <PressureSolver>
           <Parameters>
@@ -6050,13 +6029,7 @@
           <src label="coal_gas_momentum">
           </src>
         </MomentumSolver>
-
-        <MixtureFractionSolver>  <!-- do we need this solver???-->
-          <convection_scheme>central-upwind</convection_scheme>
-          <initial_value>0.1</initial_value>
-        </MixtureFractionSolver>
-        <newEnthalpySolver/>
-      </ExplicitSolver>
+     </ExplicitSolver>
     </ARCHES>
   </CFD>
 
