@@ -112,7 +112,7 @@ public:
                               ) = 0;
 
 
-  const string& getTimeIntegratorType() const
+  const std::string& getTimeIntegratorType() const
   {
     return d_timeIntegratorType;
   }
@@ -142,7 +142,7 @@ public:
 
 protected:
    const ProcessorGroup * d_myworld;
-   string                 d_timeIntegratorType;
+   std::string            d_timeIntegratorType;
 
    EnthalpySolver       * d_enthalpySolver;
    bool                   d_useWasatchMomRHS;

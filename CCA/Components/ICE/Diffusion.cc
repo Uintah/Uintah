@@ -36,7 +36,8 @@
 #include <typeinfo>
 #include <Core/Util/DebugStream.h>
 using namespace Uintah;
-using std::cout;
+using namespace std;
+
 namespace Uintah {
 /* ---------------------------------------------------------------------
  Function~  scalarDiffusionOperator--

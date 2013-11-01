@@ -30,8 +30,8 @@ public:
   HeatTransfer( std::string modelName, 
                 SimulationStateP& shared_state, 
                 ArchesLabel* fieldLabels,
-                vector<std::string> reqICLabelNames, 
-                vector<std::string> reqScalarLabelNames, 
+                std::vector<std::string> reqICLabelNames,
+                std::vector<std::string> reqScalarLabelNames,
                 int qn );
 
   ~HeatTransfer();
@@ -82,7 +82,7 @@ public:
   // Access methods
 
   /** @brief  Return a string containing the model type ("HeatTransfer") */
-  inline string getType() {
+  inline std::string getType() {
     return "HeatTransfer"; }
 
   /** @brief  Access function for radiation flag (on/off) */

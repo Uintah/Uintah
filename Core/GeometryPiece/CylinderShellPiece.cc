@@ -32,6 +32,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
+using namespace std;
 
 const string CylinderShellPiece::TYPE_NAME = "cylinder_shell";
 

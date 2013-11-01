@@ -31,6 +31,7 @@
 #include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
+using namespace std;
 
 WallShearStressFactory::WallShearStressFactory()
 {

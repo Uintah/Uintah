@@ -28,7 +28,8 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
 
-using namespace Uintah;
+using namespace std;
+
 namespace Uintah {
 //__________________________________
 // Function~  add the computes and requires for each of the custom BC

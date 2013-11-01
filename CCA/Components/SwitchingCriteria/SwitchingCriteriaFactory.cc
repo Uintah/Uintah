@@ -36,11 +36,8 @@
 
 #include <iostream>
 #include <string>
-using std::cerr;
-using std::endl;
-using std::string;
-using std::map;
 
+using namespace std;
 using namespace Uintah;
 
 SwitchingCriteria* SwitchingCriteriaFactory::create(ProblemSpecP& ps,

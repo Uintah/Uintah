@@ -36,8 +36,7 @@
 #include <algorithm>
 
 using namespace Uintah;
-using std::vector;
-using std::find;
+using namespace std;
 
 #define HEAT
 //#undef HEAT

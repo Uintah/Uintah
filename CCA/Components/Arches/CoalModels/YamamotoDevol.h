@@ -37,11 +37,11 @@ class YamamotoDevolBuilder: public ModelBuilder
 {
 public: 
   YamamotoDevolBuilder( const std::string          & modelName,
-                                const vector<std::string>  & reqICLabelNames,
-                                const vector<std::string>  & reqScalarLabelNames,
-                                ArchesLabel          * fieldLabels,
-                                SimulationStateP           & sharedState,
-                                int qn );
+                        const std::vector<std::string>  & reqICLabelNames,
+                        const std::vector<std::string>  & reqScalarLabelNames,
+                        ArchesLabel          * fieldLabels,
+                        SimulationStateP           & sharedState,
+                        int qn );
 
   ~YamamotoDevolBuilder(); 
 
@@ -58,11 +58,11 @@ class YamamotoDevol: public Devolatilization {
 public: 
 
   YamamotoDevol( std::string modelName, 
-                         SimulationStateP& shared_state, 
-                         ArchesLabel* fieldLabels,
-                         vector<std::string> reqICLabelNames, 
-                         vector<std::string> reqScalarLabelNames,
-                         int qn );
+                 SimulationStateP& shared_state,
+                 ArchesLabel* fieldLabels,
+                 std::vector<std::string> reqICLabelNames,
+                 std::vector<std::string> reqScalarLabelNames,
+                 int qn );
 
   ~YamamotoDevol();
 
@@ -98,7 +98,7 @@ private:
 
   const VarLabel* d_gas_temperature_label;
 
-  vector<double>  rc_mass_init;
+  std::vector<double>  rc_mass_init;
   double Av;
   double Ev;
   double Yv;

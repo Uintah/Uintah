@@ -28,6 +28,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <string>
 
+ using namespace std;
 using namespace Uintah;
 
 DevStressModel* DevStressModelFactory::create(ProblemSpecP& ps)

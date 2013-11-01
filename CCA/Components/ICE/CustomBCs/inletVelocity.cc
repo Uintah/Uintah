@@ -28,6 +28,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/CellIterator.h>
 
+using namespace std;
 
 static SCIRun::DebugStream BC_CC("ICE_BC_CC", false);
 namespace Uintah {

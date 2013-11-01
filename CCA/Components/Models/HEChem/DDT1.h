@@ -217,7 +217,7 @@ WARNING
     MaterialSubset* d_one_matl;
    
 
-    string fromMaterial, toMaterial, burnMaterial;
+    std::string fromMaterial, toMaterial, burnMaterial;
     // Detonation Model
     double d_G;
     double d_b;

@@ -14,6 +14,7 @@
 extern SCIRun::Mutex coutLock; // Debug: Used to sync cout so it is readable (when output by  multiple threads)
 
 using namespace Uintah; 
+using namespace std;
 
 //_________________________________________
 IntrusionBC::IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props, int WALL ) : 
@@ -415,7 +416,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
     typedef std::vector<std::string> StringVec; 
     typedef std::map<std::string, double> StringDoubleMap;
 
-    vector<double> iv; 
+    std::vector<double> iv;
 
     for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
 

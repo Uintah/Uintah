@@ -34,9 +34,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-using std::cerr;
-using std::cout;
-using std::endl;
+using namespace std;
 
 const string FileGeometryPiece::TYPE_NAME = "file";
 

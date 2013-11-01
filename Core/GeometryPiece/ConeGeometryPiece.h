@@ -94,7 +94,7 @@ WARNING
                       double botRad);
     
     
-    static const string TYPE_NAME;
+    static const std::string TYPE_NAME;
     virtual std::string getType() const { return TYPE_NAME; }
 
     virtual GeometryPieceP clone() const;

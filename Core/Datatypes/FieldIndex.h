@@ -41,10 +41,9 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/TypeName.h>
 #include <vector>
+#include <string>
 
 namespace SCIRun {
-
-using std::vector;
 
 //! Base type for index types.
 template <class T>
@@ -106,15 +105,15 @@ struct CellIndex : public FieldIndexBase<T> {
 // the following operators only exist to get the generic interpolate to compile
 // 
 template <class T>
-vector<CellIndex<T> >
-operator*(const vector<CellIndex<T> >& r, double &) {
+std::vector<CellIndex<T> >
+operator*(const std::vector<CellIndex<T> >& r, double &) {
   ASSERTFAIL("FieldIndex.h Bogus operator");
   return r;
 }
 
 template <class T>
-vector<CellIndex<T> >
-operator+=(const vector<CellIndex<T> >& l, const vector<CellIndex<T> >& r) {
+std::vector<CellIndex<T> >
+operator+=(const std::vector<CellIndex<T> >& l, const std::vector<CellIndex<T> >& r) {
   ASSERTFAIL("FieldIndex.h Bogus operator");
   return l;
 }
@@ -180,31 +179,31 @@ void Pio(Piostream& stream, FieldIndexBase<T>& data)
   Pio(stream, data.index_);
 }
 
-template <class T> const string find_type_name(NodeIndex<T> *)
+template <class T> const std::string find_type_name(NodeIndex<T> *)
 {
-  static const string name =
-    string("NodeIndex") + FTNS + find_type_name((T *)0) + FTNE;
+  static const std::string name =
+    std::string("NodeIndex") + FTNS + find_type_name((T *)0) + FTNE;
   return name;
 }
 
-template <class T> const string find_type_name(EdgeIndex<T> *)
+template <class T> const std::string find_type_name(EdgeIndex<T> *)
 {
-  static const string name =
-    string("EdgeIndex") + FTNS + find_type_name((T *)0) + FTNE;
+  static const std::string name =
+    std::string("EdgeIndex") + FTNS + find_type_name((T *)0) + FTNE;
   return name;
 }
 
-template <class T> const string find_type_name(FaceIndex<T> *)
+template <class T> const std::string find_type_name(FaceIndex<T> *)
 {
-  static const string name =
-    string("FaceIndex") + FTNS + find_type_name((T *)0) + FTNE;
+  static const std::string name =
+    std::string("FaceIndex") + FTNS + find_type_name((T *)0) + FTNE;
   return name;
 }
 
-template <class T> const string find_type_name(CellIndex<T> *)
+template <class T> const std::string find_type_name(CellIndex<T> *)
 {
-  static const string name =
-    string("CellIndex") + FTNS + find_type_name((T *)0) + FTNE;
+  static const std::string name =
+    std::string("CellIndex") + FTNS + find_type_name((T *)0) + FTNE;
   return name;
 }
 

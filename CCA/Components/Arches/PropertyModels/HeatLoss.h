@@ -56,7 +56,7 @@ public:
 
 
   /** @brief get the bounds on heat loss from another source (table) **/ 
-  void set_hl_bounds( vector<double> bounds ){ 
+  void set_hl_bounds( std::vector<double> bounds ){
     _low_hl  = bounds[0];
     _high_hl = bounds[1]; 
   }; 

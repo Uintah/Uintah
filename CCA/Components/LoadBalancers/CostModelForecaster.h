@@ -123,7 +123,7 @@ namespace Uintah {
               return -1;
           }
         }
-        static string type(int index)
+        static std::string type(int index)
         {
           switch(index)
           {
@@ -153,7 +153,7 @@ namespace Uintah {
       std::vector<double>     d_x;
   };
       
-  ostream& operator<<(ostream& out, const CostModelForecaster::PatchInfo &pi);
+  std::ostream& operator<<(std::ostream& out, const CostModelForecaster::PatchInfo &pi);
 
 } // End namespace Uintah
 

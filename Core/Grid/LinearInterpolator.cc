@@ -26,7 +26,8 @@
 #include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
-    
+using namespace std;
+
 LinearInterpolator::LinearInterpolator()
 {
   d_size = 8;

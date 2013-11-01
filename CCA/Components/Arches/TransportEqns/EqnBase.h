@@ -44,7 +44,7 @@ class EqnBase{
 
 public:
 
-  EqnBase( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName );
+  EqnBase( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, std::string eqnName );
 
   virtual ~EqnBase();
 
@@ -99,7 +99,7 @@ public:
 
   /** @brief Apply boundary conditions */
   // probably want to make this is a template
-  template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi );
+  template <class phiType> void computeBCs( const Patch* patch, std::string varName, phiType& phi );
 
   /** @brief Set the initial value of the transported variable to some function */
   template <class phiType> void initializationFunction( const Patch* patch, phiType& phi, constCCVariable<double>& eps_v ); 
@@ -140,7 +140,7 @@ public:
     return d_eqnName; };
   
   /** @brief Return a string containing the name of the initialization function being used (e.g. "constant") */ 
-  inline const string getInitFcn(){
+  inline const std::string getInitFcn(){
     return d_initFunction; }; 
 
   /** @brief Return the scaling constant for the given equation. */
@@ -158,13 +158,13 @@ public:
   };
 
   /** @brief Return a list of all sources associated with this transport equation */ 
-  inline const vector<SourceContainer> getSourcesList(){
+  inline const std::vector<SourceContainer> getSourcesList(){
     return d_sources; };
 
   /** @brief Compute the boundary conditions for this transport equation object */
   template<class phiType> void
   computeBCsSpecial( const Patch* patch, 
-                       string varName,
+                       std::string varName,
                        phiType& phi )
   {
     d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
@@ -200,7 +200,7 @@ public:
     double low;                     ///< Low clipping value
     double high;                    ///< High clipping value
     double tol;                     ///< Tolerance value for the min and max
-    string constraining_var;        ///< Used for contraining the variable 
+    std::string constraining_var;        ///< Used for contraining the variable
 
   }; 
 
@@ -211,7 +211,7 @@ protected:
   template<class T> 
   struct FaceData {
     // 0 = e, 1=w, 2=n, 3=s, 4=t, 5=b
-    //vector<T> values_[6];
+    //std::vector<T> values_[6];
     T p; 
     T e; 
     T w; 
@@ -281,7 +281,7 @@ protected:
   bool d_use_density_guess;         ///< Tells the solver to use the guessed density rather than the new density from the table
                                     ///<  Also, if true, the the equation is solved BEFORE the properties are computed. 
 
-  vector<SourceContainer> d_sources;  ///< List of source terms for this eqn
+  std::vector<SourceContainer> d_sources;  ///< List of source terms for this eqn
   double d_mol_diff;                  ///< Molecular Diffusivity
   bool d_use_constant_D;              ///< Switch for using constant D or not. 
   bool _table_init;                   ///< Requires a table lookup for initialization 
@@ -299,31 +299,31 @@ private:
 template <class phiType, class constPhiType>  
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight, constCCVariable<double>& eps_v  ) 
 {
-  string msg = "initializing scalar equation ";
+  std::string msg = "initializing scalar equation ";
   if (Uintah::Parallel::getNumThreads() > 1 ) {
-    proc0thread0cout << msg << d_eqnName << endl;
+    proc0thread0cout << msg << d_eqnName << std::endl;
   } else {
-    proc0cout << msg << d_eqnName << endl;
+    proc0cout << msg << d_eqnName << std::endl;
   }
 
   // Initialization function bullet proofing 
   if( d_initFunction == "step" || d_initFunction == "env_step" ) {
     if( d_step_dir == "y" ) {
 #ifndef YDIM
-      proc0cout << "WARNING: YDIM not turned on (compiled) with this version of the code, " << endl;
-      proc0cout << "but you specified a step function that steps in the y-direction. " << endl;
-      proc0cout << "To get this to work, made sure YDIM is defined in ScalarEqn.h" << endl;
-      proc0cout << "Cannot initialize your scalar in y-dim with step function" << endl;
+      proc0cout << "WARNING: YDIM not turned on (compiled) with this version of the code, " << std::endl;
+                << "but you specified a step function that steps in the y-direction. " << std::endl;
+                << "To get this to work, made sure YDIM is defined in ScalarEqn.h" << std::endl;
+                << "Cannot initialize your scalar in y-dim with step function" << std::endl;
       throw InvalidValue("Exiting...", __FILE__, __LINE__);
 #endif
       // otherwise do nothing
 
     } else if( d_step_dir == "z" ) {
 #ifndef ZDIM
-      proc0cout << "WARNING: ZDIM not turned on (compiled) with this version of the code, " << endl;
-      proc0cout << "but you specified a step function that steps in the z-direction. " << endl;
-      proc0cout << "To get this to work, made sure ZDIM is defined in ScalarEqn.h" << endl;
-      proc0cout << "Cannot initialize your scalar in y-dim with step function" << endl;
+      proc0cout << "WARNING: ZDIM not turned on (compiled) with this version of the code, " << std::endl;
+                << "but you specified a step function that steps in the z-direction. " << std::endl;
+                << "To get this to work, made sure ZDIM is defined in ScalarEqn.h" << std::endl;
+                << "Cannot initialize your scalar in y-dim with step function" << std::endl;
       throw InvalidValue("Exiting...", __FILE__, __LINE__);
 #endif
       // otherwise do nothing
@@ -413,31 +413,31 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 template <class phiType>  
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCVariable<double>& eps_v ) 
 {
-  string msg = "initializing scalar equation ";
+  std::string msg = "initializing scalar equation ";
   if (Uintah::Parallel::getNumThreads() > 1 ) {
-    proc0thread0cout << msg << d_eqnName << endl;
+    proc0thread0cout << msg << d_eqnName << std::endl;
   } else {
-    proc0cout << msg << d_eqnName << endl;
+    proc0cout << msg << d_eqnName << std::endl;
   }
 
   // Initialization function bullet proofing 
   if( d_initFunction == "step" || d_initFunction == "env_step" ) {
     if( d_step_dir == "y" ) {
 #ifndef YDIM
-      proc0cout << "WARNING: YDIM not turned on (compiled) with this version of the code, " << endl;
-      proc0cout << "but you specified a step function that steps in the y-direction. " << endl;
-      proc0cout << "To get this to work, made sure YDIM is defined in ScalarEqn.h" << endl;
-      proc0cout << "Cannot initialize your scalar in y-dim with step function" << endl;
+      proc0cout << "WARNING: YDIM not turned on (compiled) with this version of the code, " << std::endl;
+                << "but you specified a step function that steps in the y-direction. " << std::endl;
+                << "To get this to work, made sure YDIM is defined in ScalarEqn.h" << std::endl;
+                << "Cannot initialize your scalar in y-dim with step function" << std::endl;
       throw InvalidValue("Exiting...", __FILE__, __LINE__);
 #endif
       // otherwise do nothing
 
     } else if( d_step_dir == "z" ) {
 #ifndef ZDIM
-      proc0cout << "WARNING: ZDIM not turned on (compiled) with this version of the code, " << endl;
-      proc0cout << "but you specified a step function that steps in the z-direction. " << endl;
-      proc0cout << "To get this to work, made sure ZDIM is defined in ScalarEqn.h" << endl;
-      proc0cout << "Cannot initialize your scalar in y-dim with step function" << endl;
+      proc0cout << "WARNING: ZDIM not turned on (compiled) with this version of the code, " << std::endl;
+                << "but you specified a step function that steps in the z-direction. " << std::endl;
+                << "To get this to work, made sure ZDIM is defined in ScalarEqn.h" << std::endl;
+                << "Cannot initialize your scalar in y-dim with step function" << std::endl;
       throw InvalidValue("Exiting...", __FILE__, __LINE__);
 #endif
       // otherwise do nothing

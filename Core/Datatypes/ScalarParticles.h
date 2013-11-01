@@ -41,8 +41,6 @@
 #include <vector>
 
 namespace Uintah {
-  using std::vector;
-  using namespace SCIRun;
 
 /**************************************
 
@@ -83,7 +81,7 @@ public:
   ScalarParticles();
   //////////
   // Constructor
-  ScalarParticles(const vector<ShareAssignParticleVariable<double> >& scalars,
+  ScalarParticles(const std::vector<ShareAssignParticleVariable<double> >& scalars,
 		  PSet* pset);
 
   // GROUP: Destructors
@@ -94,7 +92,7 @@ public:
   // GROUP: Access
   //////////
   // return the Scalars
-  vector<ShareAssignParticleVariable<double> >& get(){ return scalars; }
+  std::vector<ShareAssignParticleVariable<double> >& get(){ return scalars; }
   PSet* getParticleSet(){ return psetH.get_rep(); }
 
   // GROUP: Modify
@@ -103,13 +101,13 @@ public:
   void Set(PSetHandle psh){ psetH = psh;}
   //////////  
   // Set the Scalars
-  void Set(vector<ShareAssignParticleVariable<double> >& s){ scalars = s; }
+  void Set(std::vector<ShareAssignParticleVariable<double> >& s){ scalars = s; }
   //////////
   // Are these particles from a new archive?
 
   void AddVar( const ParticleVariable<double>& parts );
 
-  void SetName( string vname ) { _varname = vname; }
+  void SetName( std::string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
 	       
 
@@ -128,9 +126,9 @@ protected:
 
 private:
   PSetHandle psetH;
-  string _varname;
+  std::string _varname;
   int _matIndex;
-  vector<ShareAssignParticleVariable<double> >  scalars;
+  std::vector<ShareAssignParticleVariable<double> >  scalars;
 
 };
 

@@ -38,19 +38,19 @@
 #include <climits>
 
 using namespace SCIRun;
+using namespace std;
 
 namespace SCIRun {
 
-using std::string;
 
 #if !defined(STATIC_BUILD)
-template<> const string find_type_name(long64*)
+template<> const string find_type_name(Uintah::long64*)
 {
   static const string name = "long64";
   return name;
 }
 
-const TypeDescription* get_type_description(long64*)
+const TypeDescription* get_type_description(Uintah::long64*)
 {
   static TypeDescription* td = 0;
   if(!td){

@@ -51,14 +51,14 @@ namespace Uintah {
   public:
     DependencyException(const Task* task, const VarLabel* label,
 			int matlIndex, const Patch* patch,
-			string has, string needs,
+			std::string has, std::string needs,
                         const char* file, int line);
     DependencyException(const DependencyException& copy);
     virtual ~DependencyException() {}
 
-    static string
+    static std::string
     makeMessage(const Task* task, const VarLabel* label, int matlIndex,
-		const Patch* patch, string has, string needs);
+		const Patch* patch, std::string has, std::string needs);
      
     virtual const char* message() const;
     virtual const char* type() const;
@@ -69,7 +69,7 @@ namespace Uintah {
     const VarLabel* label_;
     int matlIndex_;
     const Patch* patch_;
-    string d_msg;
+    std::string d_msg;
   };
 
 } // End namespace Uintah

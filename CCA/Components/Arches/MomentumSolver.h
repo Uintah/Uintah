@@ -250,7 +250,7 @@ private:
   bool d_3d_periodic;
   bool d_filter_divergence_constraint;
   bool d_mixedModel;
-  vector<string> d_new_sources;
+  std::vector<std::string> d_new_sources;
   bool d_useWasatchMomRHS;
 
   const VarLabel* _u_mom; 
@@ -363,7 +363,7 @@ private:
           for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0; 
                 db_face = db_face->findNextBlock("Face") ){
 
-            string which_face; 
+            std::string which_face;
             int v_index=999;
             if ( db_face->getAttribute("side", which_face)){
               db_face->getAttribute("side",which_face); 

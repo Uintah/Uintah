@@ -36,8 +36,6 @@
 
 namespace SCIRun {
 
-using std::string;
-
 //! Class for describing unit geometry of ConstantBasis 
 class ConstantBasisUnitElement {
 public: 
@@ -112,7 +110,7 @@ public:
   {
   }
 
-  static  const string type_name(int n = -1);
+  static  const std::string type_name(int n = -1);
   virtual void io (Piostream& str);
 };
 

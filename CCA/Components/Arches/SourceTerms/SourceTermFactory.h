@@ -99,7 +99,7 @@ private:
   SourceTermFactory();
   ~SourceTermFactory();
 
-  vector<SourceContainer> _active_sources;  ///< The list of all active source with associated weights.
+  std::vector<SourceContainer> _active_sources;  ///< The list of all active source with associated weights.
 
 }; // class SourceTermFactory
 }  //Namespace Uintah

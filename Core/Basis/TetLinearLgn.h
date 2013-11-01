@@ -35,8 +35,6 @@
 
 namespace SCIRun {
 
-using std::string;
-
 //! Class for describing unit geometry of TetLinearLgn 
 class TetLinearLgnUnitElement {
 public:

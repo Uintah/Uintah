@@ -213,7 +213,7 @@ namespace Uintah {
     virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched,
                                     const MaterialSet* matls);
 
-    virtual string getName();
+    virtual std::string getName();
 
     void allocateHypreMatrices(DataWarehouse* new_dw);
 

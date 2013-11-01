@@ -58,7 +58,7 @@ private:
   template <class T> void gen_io(T&, const char *);
 
 public:
-  BinaryPiostream(const string& filename, Direction dir,
+  BinaryPiostream(const std::string& filename, Direction dir,
                   const int& v = -1, ProgressReporter *pr = 0);
   BinaryPiostream(int fd, Direction dir, const int& v = -1,
                   ProgressReporter *pr = 0);
@@ -77,7 +77,7 @@ public:
   virtual void io(unsigned long long&);
   virtual void io(double&);
   virtual void io(float&);
-  virtual void io(string& str);
+  virtual void io(std::string& str);
 
   virtual bool supports_block_io() { return (version() > 1); }
   virtual bool block_io(void*, size_t, size_t);
@@ -91,7 +91,7 @@ private:
   template <class T> void gen_io(T&, const char *);
 
 public:
-  BinarySwapPiostream(const string& filename, Direction d,
+  BinarySwapPiostream(const std::string& filename, Direction d,
                       const int& v = -1, ProgressReporter *pr = 0);
   BinarySwapPiostream(int fd, Direction dir, const int& v = -1,
                       ProgressReporter *pr = 0);
@@ -121,18 +121,18 @@ private:
 
   void expect(char);
   virtual void emit_pointer(int&, int&);
-  void io(int, string& str);
+  void io(int, std::string& str);
 protected:
   virtual void reset_post_header();
 public:
-  TextPiostream(const string& filename, Direction dir,
+  TextPiostream(const std::string& filename, Direction dir,
                 ProgressReporter *pr = 0);
   TextPiostream(std::istream *strm, ProgressReporter *pr = 0);
   TextPiostream(std::ostream *strm, ProgressReporter *pr = 0);
   virtual ~TextPiostream();
 
-  virtual string peek_class();
-  virtual int begin_class(const string& name, int);
+  virtual std::string peek_class();
+  virtual int begin_class(const std::string& name, int);
   virtual void end_class();
   virtual void begin_cheap_delim();
   virtual void end_cheap_delim();
@@ -151,7 +151,7 @@ public:
   virtual void io(unsigned long long&);
   virtual void io(double&);
   virtual void io(float&);
-  virtual void io(string& str);
+  virtual void io(std::string& str);
 };
 
 
@@ -166,7 +166,7 @@ private:
 protected:
   virtual void reset_post_header();
 public:
-  FastPiostream(const string& filename, Direction dir,
+  FastPiostream(const std::string& filename, Direction dir,
                 ProgressReporter *pr = 0);
   FastPiostream(int fd, Direction dir,
                 ProgressReporter *pr = 0);
@@ -186,7 +186,7 @@ public:
   virtual void io(unsigned long long&);
   virtual void io(double&);
   virtual void io(float&);
-  virtual void io(string& str);
+  virtual void io(std::string& str);
 
   virtual bool supports_block_io() { return true; }
   virtual bool block_io(void*, size_t, size_t);

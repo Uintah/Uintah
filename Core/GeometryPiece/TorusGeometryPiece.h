@@ -87,7 +87,7 @@ WARNING
     TorusGeometryPiece(const Point& center, 
                        const double minor,
                        const double major,
-                       const string axis,
+                       const std::string axis,
                        const double theta);
     
     //////////
@@ -95,7 +95,7 @@ WARNING
     //
     virtual ~TorusGeometryPiece();
     
-    static const string TYPE_NAME;
+    static const std::string TYPE_NAME;
     virtual std::string getType() const { return TYPE_NAME; }
 
     /// Make a clone
@@ -137,7 +137,7 @@ WARNING
     inline Point center() const {return d_center;}
     inline double major_radius() const {return d_major_radius;}
     inline double minor_radius() const {return d_minor_radius;}
-    inline string axis() const {return d_axis;}
+    inline std::string axis() const {return d_axis;}
 
   protected:
     
@@ -150,7 +150,7 @@ WARNING
     Point d_center;
     double d_major_radius;
     double d_minor_radius;
-    string d_axis;
+    std::string d_axis;
     double d_theta;
   };
 } // End namespace Uintah

@@ -27,7 +27,6 @@
 
 #include <Core/Grid/BoundaryConditions/BCData.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Variables/Iterator.h>
 #include <Core/Grid/Variables/BaseIterator.h>
@@ -51,9 +50,7 @@ namespace Uintah {
 
   */
 
-  using SCIRun::IntVector;
   using SCIRun::Point;
-  using std::vector;
    
 
   class BCGeomBase {
@@ -102,24 +99,24 @@ namespace Uintah {
     /// iterators.
     virtual void determineIteratorLimits(Patch::FaceType face, 
                                          const Patch* patch, 
-                                         vector<Point>& test_pts);
+                                         std::vector<Point>& test_pts);
     
     /// Print out the iterators for the boundary.
     void printLimits() const;
 
     /// Get the name for this boundary specification
-    string getBCName(){ return d_bcname; }; 
+    std::string getBCName(){ return d_bcname; };
     void setBCName( std::string bcname ){ d_bcname = bcname; }; 
 
     /// Get the name for this boundary specification
-    string getBndType(){ return d_bndtype; };
+    std::string getBndType(){ return d_bndtype; };
     void setBndType( std::string bndType ){ d_bndtype = bndType; };
 
   protected:
     Iterator d_cells;
     Iterator d_nodes;
-    string   d_bcname;
-    string   d_bndtype;
+    std::string   d_bcname;
+    std::string   d_bndtype;
   };
 
   template<class T> class cmp_type {

@@ -27,7 +27,7 @@ namespace Uintah{
   public: 
     
     SecondMFMoment( std::string srcName, SimulationStateP& shared_state, 
-                                  vector<std::string> reqLabelNames, std::string type );
+                                  std::vector<std::string> reqLabelNames, std::string type );
     
     ~SecondMFMoment();
     /** @brief Interface for the inputfile and set constants */ 
@@ -56,7 +56,7 @@ namespace Uintah{
       
     public: 
       
-      Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
+      Builder( std::string name, std::vector<std::string> required_label_names, SimulationStateP& shared_state )
       : _name(name), 
       _shared_state(shared_state), 
       _required_label_names(required_label_names)
@@ -70,7 +70,7 @@ namespace Uintah{
       
       std::string _name; 
       SimulationStateP& _shared_state; 
-      vector<std::string> _required_label_names; 
+      std::vector<std::string> _required_label_names;
       std::string _type;
       
     }; // class Builder 

@@ -32,8 +32,8 @@ class ShaddixHeatTransferBuilder: public ModelBuilder
 {
 public: 
   ShaddixHeatTransferBuilder( const std::string          & modelName,
-                             const vector<std::string>  & reqICLabelNames,
-                             const vector<std::string>  & reqScalarLabelNames,
+                             const std::vector<std::string>  & reqICLabelNames,
+                             const std::vector<std::string>  & reqScalarLabelNames,
                              ArchesLabel          * fieldLabels,
                              SimulationStateP           & sharedState,
                              int qn );
@@ -58,8 +58,8 @@ public:
   ShaddixHeatTransfer( std::string modelName, 
                 SimulationStateP& shared_state, 
                 ArchesLabel* fieldLabels,
-                vector<std::string> reqICLabelNames, 
-                vector<std::string> reqScalarLabelNames, 
+                std::vector<std::string> reqICLabelNames,
+                std::vector<std::string> reqScalarLabelNames,
                 int qn );
 
   ~ShaddixHeatTransfer();
@@ -169,7 +169,7 @@ private:
 
   double visc;
   double yelem[5];              ///< Fractions of each element in coal (C, H, N, O, S respectively)
-  vector<double>  ash_mass_init;         ///< Initial ash mass
+  std::vector<double>  ash_mass_init;         ///< Initial ash mass
   double rhop;                  ///< Density of particle 
 
   double Pr;

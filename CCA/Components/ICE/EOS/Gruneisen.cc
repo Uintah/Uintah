@@ -31,6 +31,7 @@
 #include <iomanip>
 
 using namespace Uintah;
+using namespace std;
 
 Gruneisen::Gruneisen(ProblemSpecP& ps)
 {

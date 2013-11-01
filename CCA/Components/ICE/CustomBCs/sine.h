@@ -55,7 +55,7 @@ namespace Uintah {
   struct sine_localVars{
     constCCVariable<double> press_CC;
     constCCVariable<double> rho_CC;
-    string where;
+    std::string where;
     double delT;
   };
   //____________________________________________________________
@@ -63,7 +63,7 @@ namespace Uintah {
                           sine_globalVars* sine_vb);
                   
   void addRequires_Sine(Task* t, 
-                        const string& where,
+                        const std::string& where,
                         ICELabel* lb,
                         const MaterialSubset* ice_matls);
                        
@@ -72,16 +72,16 @@ namespace Uintah {
                             ICELabel* lb,
                             const int indx,
                             const Patch* patch,
-                            const string& where,
+                            const std::string& where,
                             bool& setSine_BCs,
                             sine_localVars* lv);
                            
   int set_Sine_Velocity_BC(const Patch* patch,
                             const Patch::FaceType face,
                             CCVariable<Vector>& vel_CC,
-                            const string& var_desc,
+                            const std::string& var_desc,
                             Iterator& bound_ptr,
-                            const string& bc_kind,
+                            const std::string& bc_kind,
                             SimulationStateP& sharedState,
                             sine_globalVars* gv,
                             sine_localVars* lv);
@@ -90,7 +90,7 @@ namespace Uintah {
                                const Patch::FaceType face,
                                CCVariable<double>& temp_CC,
                                Iterator& bound_ptr,
-                               const string& bc_kind,
+                               const std::string& bc_kind,
                                sine_globalVars* gv,
                                sine_localVars* lv);
                               
@@ -98,7 +98,7 @@ namespace Uintah {
                          const Patch::FaceType face,
                          CCVariable<double>& press_CC,
                          Iterator& bound_ptr,
-                         const string& bc_kind,
+                         const std::string& bc_kind,
                          SimulationStateP& sharedState,
                          sine_globalVars* gv,
                          sine_localVars* lv);  

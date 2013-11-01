@@ -334,8 +334,8 @@ private:
   double d_H_air;
   bool d_restart_on_negative_density_guess;
   bool d_noisyDensityGuess;
-  string d_mms;
-  string d_mmsErrorType;
+  std::string d_mms;
+  std::string d_mmsErrorType;
   double d_airDensity, d_heDensity;
   Vector d_gravity;
   double d_viscosity;

@@ -37,6 +37,7 @@
 #include <cstdlib>
 
 using namespace Uintah;
+using namespace std;
 
 const string& 
 Short27::get_h_file_path() {

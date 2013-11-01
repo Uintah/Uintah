@@ -50,7 +50,7 @@ namespace Uintah {
       ICELabel* lb;
       double AMR_subCycleProgressVar;
       int indx;
-      string desc;
+      std::string desc;
       const Patch* patch;
       const Level* level;
       bool doRefluxing;
@@ -113,8 +113,8 @@ namespace Uintah {
   }; 
   
   //__________________________________
-  void  warning_restartTimestep( vector<IntVector> badCells,
-                                 vector<fflux> badOutFlux,
+  void  warning_restartTimestep( std::vector<IntVector> badCells,
+                                 std::vector<fflux> badOutFlux,
                                  const double vol,
                                  const int indx,
                                  const Patch* patch,

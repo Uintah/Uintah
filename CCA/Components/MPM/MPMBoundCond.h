@@ -40,13 +40,13 @@ using namespace SCIRun;
     MPMBoundCond();
     ~MPMBoundCond();
 
-    void setBoundaryCondition(const Patch* patch,int dwi, const string& type,
+    void setBoundaryCondition(const Patch* patch,int dwi, const std::string& type,
                               NCVariable<Vector>& variable,
-                              string interp_type="linear");
+                              std::string interp_type="linear");
 
-    void setBoundaryCondition(const Patch* patch,int dwi, const string& type,
+    void setBoundaryCondition(const Patch* patch,int dwi, const std::string& type,
                               NCVariable<double>& variable,
-                              string interp_type="linear");
+                              std::string interp_type="linear");
 
   private:
 

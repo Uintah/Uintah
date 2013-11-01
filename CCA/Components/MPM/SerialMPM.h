@@ -201,7 +201,7 @@ protected:
                           DataWarehouse* new_dw,
                           const Matrix3& val);
 
-  void printParticleLabels(vector<const VarLabel*> label,DataWarehouse* dw,
+  void printParticleLabels(std::vector<const VarLabel*> label,DataWarehouse* dw,
                           int dwi, const Patch* patch);
 
   void scheduleInitializePressureBCs(const LevelP& level, SchedulerP&);
@@ -519,15 +519,15 @@ protected:
   bool needRecompile(double time, double dt,
                      const GridP& grid);
 
-  void readPrescribedDeformations(string filename);
+  void readPrescribedDeformations(std::string filename);
 
-  void readInsertParticlesFile(string filename);
+  void readInsertParticlesFile(std::string filename);
   
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
                    
   inline void computeVelocityGradient(Matrix3& velGrad,
-                                    vector<IntVector>& ni,
-                                    vector<Vector>& d_S,
+                                    std::vector<IntVector>& ni,
+                                    std::vector<Vector>& d_S,
                                     const double* oodx,
                                     constNCVariable<Vector>& gVelocity)
   {
@@ -544,9 +544,9 @@ protected:
 
 
   inline void computeAxiSymVelocityGradient(Matrix3& velGrad,
-                                           vector<IntVector>& ni,
-                                           vector<Vector>& d_S,
-                                           vector<double>& S,
+                                           std::vector<IntVector>& ni,
+                                           std::vector<Vector>& d_S,
+                                           std::vector<double>& S,
                                            const double* oodx,
                                            constNCVariable<Vector>& gVelocity,
                                            const Point& px)

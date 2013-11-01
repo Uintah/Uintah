@@ -32,13 +32,14 @@
 using namespace Uintah;
 using namespace SCIRun;
 
+using std::cout;
 
 VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
 					       long particleID, int matlIndex,
 					       const std::string& extramsg,
                                                const char* file, int line)
 {
-  ostringstream s;
+  std::ostringstream s;
   s << "A VariableNotFoundInGrid exception was thrown.\n"
     << file << ":" << line << "\n";
 
@@ -86,7 +87,7 @@ VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
 					       const std::string& extramsg,
                                                const char* file, int line)
 {
-  ostringstream s;
+  std::ostringstream s;
   s << "Variable not found: " << varname;
   if(extramsg != "")
     s << " (" << extramsg << ")";

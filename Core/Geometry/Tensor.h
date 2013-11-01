@@ -78,7 +78,7 @@ public:
   Tensor operator*(const double) const;
   Vector operator*(const Vector) const;
 
-  static string type_name(int i = -1);
+  static std::string type_name(int i = -1);
   
   double mat_[3][3];
   void build_mat_from_eigens();
@@ -102,7 +102,7 @@ public:
 			  double v1, double v2, double v3);
 
   //! support dynamic compilation
-  static const string& get_h_file_path();
+  static const std::string& get_h_file_path();
 
   SCISHARE friend void Pio(Piostream&, Tensor&);
 };

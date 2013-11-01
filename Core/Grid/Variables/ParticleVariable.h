@@ -170,13 +170,13 @@ public:
   virtual void packsizeMPI(int* bufpos,
                            const ProcessorGroup* pg,
                            ParticleSubset* pset);
-  virtual void emitNormal(ostream& out, const IntVector& l,
+  virtual void emitNormal(std::ostream& out, const IntVector& l,
                           const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat);
-  virtual bool emitRLE(ostream& out, const IntVector& l, const IntVector& h,
+  virtual bool emitRLE(std::ostream& out, const IntVector& l, const IntVector& h,
                        ProblemSpecP varnode);
   
-  virtual void readNormal(istream& in, bool swapBytes);
-  virtual void readRLE(istream& in, bool swapBytes, int nByteMode);
+  virtual void readNormal(std::istream& in, bool swapBytes);
+  virtual void readRLE(std::istream& in, bool swapBytes, int nByteMode);
   
   virtual void* getBasePointer() const;
   virtual const TypeDescription* virtualGetTypeDescription() const;
@@ -381,16 +381,16 @@ private:
   // specialization for T=Point
   template <>
    void ParticleVariable<Point>::gather(ParticleSubset* pset,
-                                       const vector<ParticleSubset*> &subsets,
-                                       const vector<ParticleVariableBase*> &srcs,
-                                       const vector<const Patch*>& srcPatches,
+                                       const std::vector<ParticleSubset*> &subsets,
+                                       const std::vector<ParticleVariableBase*> &srcs,
+                                       const std::vector<const Patch*>& srcPatches,
                                        particleIndex extra);
 
   template<class T>
     void ParticleVariable<T>::gather(ParticleSubset* pset,
-                                     const vector<ParticleSubset*> &subsets,
-                                     const vector<ParticleVariableBase*> &srcs,
-                                     const vector<const Patch*>& /*srcPatches*/,
+                                     const std::vector<ParticleSubset*> &subsets,
+                                     const std::vector<ParticleVariableBase*> &srcs,
+                                     const std::vector<const Patch*>& /*srcPatches*/,
                                      particleIndex extra)
   { gather(pset, subsets, srcs, extra); }
 
@@ -517,12 +517,12 @@ template<class T>
   // Specialized in ParticleVariable_special.cc
   template<>
    void
-  ParticleVariable<double>::emitNormal(ostream& out, const IntVector&,
+  ParticleVariable<double>::emitNormal(std::ostream& out, const IntVector&,
                                   const IntVector&, ProblemSpecP varnode, bool outputDoubleAsFloat );
 
   template<class T>
   void
-  ParticleVariable<T>::emitNormal(ostream& out, const IntVector&,
+  ParticleVariable<T>::emitNormal(std::ostream& out, const IntVector&,
                                   const IntVector&, ProblemSpecP varnode, bool /*outputDoubleAsFloat*/ )
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
@@ -552,7 +552,7 @@ template<class T>
 
   template<class T>
   bool
-  ParticleVariable<T>::emitRLE(ostream& out, const IntVector& /*l*/,
+  ParticleVariable<T>::emitRLE(std::ostream& out, const IntVector& /*l*/,
                                const IntVector& /*h*/, ProblemSpecP varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
@@ -575,7 +575,7 @@ template<class T>
   
   template<class T>
   void
-  ParticleVariable<T>::readNormal(istream& in, bool swapBytes)
+  ParticleVariable<T>::readNormal(std::istream& in, bool swapBytes)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
     if(!td->isFlat()) {
@@ -605,7 +605,7 @@ template<class T>
 
   template<class T>
   void
-  ParticleVariable<T>::readRLE(istream& in, bool swapBytes, int nByteMode)
+  ParticleVariable<T>::readRLE(std::istream& in, bool swapBytes, int nByteMode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
     if(!td->isFlat()) {

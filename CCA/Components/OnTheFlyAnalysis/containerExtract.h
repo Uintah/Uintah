@@ -123,11 +123,11 @@ namespace Uintah {
       };
 
       struct container {
-        string name;  
-        vector<extractVarLabel*> vls;
-        vector<GeometryPieceP> geomObjs;
-        vector<IntVector> containerPoints;
-        vector<extractCell*> extractCells; 
+        std::string name;
+        std::vector<extractVarLabel*> vls;
+        std::vector<GeometryPieceP> geomObjs;
+        std::vector<IntVector> containerPoints;
+        std::vector<extractCell*> extractCells;
       };
 
        friend std::ostream& operator<<(std::ostream& ostr, const extractCell& exc) {
@@ -139,9 +139,9 @@ namespace Uintah {
       double d_writeFreq; 
       double d_startTime;
       double d_stopTime;
-      vector<VarLabel*> d_varLabels;
+      std::vector<VarLabel*> d_varLabels;
       SimulationStateP d_sharedState;
-      vector<container*> d_containers;
+      std::vector<container*> d_containers;
       Output* d_dataArchiver;
       ProblemSpecP d_prob_spec;
       const Material* d_matl;
@@ -159,9 +159,9 @@ namespace Uintah {
           DataWarehouse*,
           DataWarehouse* new_dw);
 
-      void createFile(string& filename, extractCell& e);
+      void createFile(std::string& filename, extractCell& e);
 
-      void createDirectory(string& lineName, string& levelIndex);
+      void createDirectory(std::string& lineName, std::string& levelIndex);
 
 
 

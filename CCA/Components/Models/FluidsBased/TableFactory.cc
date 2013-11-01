@@ -28,6 +28,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 
 using namespace Uintah;
+using std::string;
 
 TableInterface* TableFactory::readTable(const ProblemSpecP& params,
                                         const std::string& name)

@@ -40,9 +40,6 @@ namespace Uintah {
 
   using SCIRun::InternalError;
 
-  using std::vector;
-  using std::ostringstream;
-
   /**************************************
 
     CLASS
@@ -91,7 +88,7 @@ namespace Uintah {
           : items(size)
           {
           }
-        ComputeSubset(const vector<T>& items)
+        ComputeSubset(const std::vector<T>& items)
           : items(items)
           {
           }
@@ -132,7 +129,7 @@ namespace Uintah {
         void sort();
         bool is_sorted() const;
 
-        const vector<T>& getVector() const 
+        const std::vector<T>& getVector() const
         { return items; }
 
         bool equals(const ComputeSubset<T>* s2) const
@@ -196,7 +193,7 @@ namespace Uintah {
           difference(const constHandle< ComputeSubset<T> >& A,
               const constHandle< ComputeSubset<T> >& B);
         
-        vector<T> items;
+        std::vector<T> items;
 
         ComputeSubset(const ComputeSubset&);
         ComputeSubset& operator=(const ComputeSubset&);
@@ -209,13 +206,13 @@ namespace Uintah {
         ~ComputeSet();
 
         // adds all unique elements of vector in one subset
-        void addAll_unique(const vector<T>&);
+        void addAll_unique(const std::vector<T>&);
         
         // adds all elements of vector in one subset
-        void addAll(const vector<T>&);
+        void addAll(const std::vector<T>&);
 
         // adds each element of vector as a separate individual subset
-        void addEach(const vector<T>&);
+        void addEach(const std::vector<T>&);
 
         // adds one element as a new subset
         void add(const T&);
@@ -231,7 +228,7 @@ namespace Uintah {
         }
       
       /// Returns the vector of subsets managed by this set
-        const vector<ComputeSubset<T>*>& getVector() const
+        const std::vector<ComputeSubset<T>*>& getVector() const
         { return set; }
       
         const ComputeSubset<T>* getSubset(int idx) const {
@@ -241,7 +238,7 @@ namespace Uintah {
         void createEmptySubsets(int size);
         int totalsize() const;
       private:
-        vector<ComputeSubset<T>*> set;
+        std::vector<ComputeSubset<T>*> set;
         mutable ComputeSubset<T>* un;
 
         ComputeSet(const ComputeSet&);
@@ -276,7 +273,7 @@ namespace Uintah {
     }
 
   template<class T>
-    void ComputeSet<T>::addAll(const vector<T>& sub)
+    void ComputeSet<T>::addAll(const std::vector<T>& sub)
     {
       ASSERT(!un);
       ComputeSubset<T>* subset = scinew ComputeSubset<T>(sub);
@@ -286,10 +283,10 @@ namespace Uintah {
     }
 
   template<class T>
-    void ComputeSet<T>::addAll_unique(const vector<T>& sub)
+    void ComputeSet<T>::addAll_unique(const std::vector<T>& sub)
     {
        // Only insert unique entries into the set
-      vector<T> sub_unique;
+      std::vector<T> sub_unique;
       sub_unique.push_back(sub[0]);
 
       for(int i=1;i<(int)sub.size();i++){
@@ -306,7 +303,7 @@ namespace Uintah {
     }
 
   template<class T>
-    void ComputeSet<T>::addEach(const vector<T>& sub)
+    void ComputeSet<T>::addEach(const std::vector<T>& sub)
     {
       ASSERT(!un);
       for(int i=0;i<(int)sub.size();i++){

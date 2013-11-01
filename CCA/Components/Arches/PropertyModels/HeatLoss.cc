@@ -3,6 +3,7 @@
 #include <CCA/Components/Arches/Properties.h>
 
 using namespace Uintah; 
+using namespace std;
 
 //---------------------------------------------------------------------------
 //Method: Constructor

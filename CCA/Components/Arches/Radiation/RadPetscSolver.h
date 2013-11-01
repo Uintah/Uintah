@@ -132,8 +132,8 @@ private:
       int o_nz;
 
 
-      string d_pcType;
-      string d_kspType;
+      std::string d_pcType;
+      std::string d_kspType;
       int d_overlap;
       int d_fill;
       int d_maxSweeps;
@@ -142,8 +142,8 @@ private:
       const ProcessorGroup* d_myworld;
       
 #ifdef HAVE_PETSC
-   map<const Patch*, int> d_petscGlobalStart;
-   map<const Patch*, Array3<int> > d_petscLocalToGlobal;
+   std::map<const Patch*, int> d_petscGlobalStart;
+   std::map<const Patch*, Array3<int> > d_petscLocalToGlobal;
    Mat A;
    Vec d_x, d_b, d_u;
 #endif

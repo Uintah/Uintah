@@ -124,7 +124,7 @@ protected:
                           DataWarehouse* new_dw);
 
   
-  void printParticleLabels(vector<const VarLabel*> label,
+  void printParticleLabels(std::vector<const VarLabel*> label,
                            DataWarehouse* dw,
                            int dwi, 
                            const Patch* patch);
@@ -391,7 +391,7 @@ protected:
   const VarLabel* pDbgLabel;        // debugging labels
   const VarLabel* gSumSLabel;                   
                                    
-  vector<MPMPhysicalBC*> d_physicalBCs;
+  std::vector<MPMPhysicalBC*> d_physicalBCs;
   IntegratorType d_integrator;
 
 private:
@@ -444,11 +444,11 @@ private:
       marks[5]=0;
     }
   };
-  map<const Patch*,faceMarks> faceMarks_map[2];         
+  std::map<const Patch*,faceMarks> faceMarks_map[2];
          
   inline void computeVelocityGradient(Matrix3& velGrad,
-                                    vector<IntVector>& ni,
-                                    vector<Vector>& d_S,
+                                    std::vector<IntVector>& ni,
+                                    std::vector<Vector>& d_S,
                                     const double* oodx,
                                     constNCVariable<Vector>& gVelocity)
   {

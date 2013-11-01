@@ -119,8 +119,8 @@ public:
 
   }; 
 
-  typedef std::map<string, DepVarCont >       DepVarMap;
-  typedef std::map<string, int >               IndexMap; 
+  typedef std::map<std::string, DepVarCont >       DepVarMap;
+  typedef std::map<std::string, int >               IndexMap;
 
 	void tableMatching(){}; 
 
@@ -138,12 +138,12 @@ private:
   
   IntVector d_ijk_den_ref;                ///< Reference density location
 
-  vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
+  std::vector<std::string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
 
   std::string d_cold_flow_mixfrac; 
 
-  std::map<string, double> species_s1; 
-  std::map<string, double> species_s2; 
+  std::map<std::string, double> species_s1;
+  std::map<std::string, double> species_s2;
 
 }; // end class ColdFlow
   

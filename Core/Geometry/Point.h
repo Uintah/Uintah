@@ -45,8 +45,6 @@
 #include   <iosfwd>
 
 namespace SCIRun {
-
-using std::string;
     
 class TypeDescription;
 class RigorousTest;
@@ -90,10 +88,10 @@ public:
 
   inline Vector &asVector() const;
     
-  SCISHARE string get_string() const;
+  SCISHARE std::string get_string() const;
 
   //! support dynamic compilation
-  static const string& get_h_file_path();
+  static const std::string& get_h_file_path();
     
   friend class Vector;
   friend inline double Dot(const Point&, const Point&);

@@ -27,7 +27,6 @@
 #define Packages_Uintah_CCA_Components_Examples_ExamplesLabel_h
 
 #include <vector>
-using std::vector;
 
 
 namespace Uintah {
@@ -81,8 +80,8 @@ namespace Uintah {
     const VarLabel* pParticleIDLabel;
     const VarLabel* pParticleIDLabel_preReloc;
 
-    vector<vector<const VarLabel*> > d_particleState;
-    vector<vector<const VarLabel*> > d_particleState_preReloc;
+    std::vector<std::vector<const VarLabel*> > d_particleState;
+    std::vector<std::vector<const VarLabel*> > d_particleState_preReloc;
     ExamplesLabel();
     ~ExamplesLabel();
   };

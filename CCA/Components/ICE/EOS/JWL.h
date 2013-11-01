@@ -76,7 +76,7 @@ WARNING
                                      double& dp_de);
 
         virtual void computeTempCC(const Patch* patch,
-                                   const string& comp_domain,
+                                   const std::string& comp_domain,
                                    const CCVariable<double>& press, 
                                    const CCVariable<double>&,
                                    const CCVariable<double>& cv,

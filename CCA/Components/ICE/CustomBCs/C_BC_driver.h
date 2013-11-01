@@ -131,13 +131,13 @@ namespace Uintah {
   //
   
    void computesRequires_CustomBCs(Task* t, 
-                                   const string& where,                      
+                                   const std::string& where,
                                    ICELabel* lb,                             
                                    const MaterialSubset* ice_matls,          
                                    customBC_globalVars* global,
                                    const bool recursiveTask = false);        
  
-   void preprocess_CustomBCs(const string& where,
+   void preprocess_CustomBCs(const std::string& where,
                              DataWarehouse* old_dw,                    
                              DataWarehouse* new_dw,                    
                              ICELabel* lb,                             

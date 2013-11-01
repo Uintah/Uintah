@@ -69,7 +69,7 @@ WARNING
 
    class UdaReducer : public SimulationInterface, public UintahParallelComponent {
    public:
-     UdaReducer(const ProcessorGroup* myworld, string udaDir);
+     UdaReducer(const ProcessorGroup* myworld, std::string udaDir);
      
      virtual ~UdaReducer();
      
@@ -115,7 +115,7 @@ WARNING
 			 DataWarehouse* /*old_dw*/,
 			 DataWarehouse* new_dw);
 
-     string udaDir_;
+     std::string udaDir_;
      DataArchive* dataArchive_;
      std::vector<int> timesteps_;
      std::vector<double> times_;

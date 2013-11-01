@@ -32,11 +32,11 @@ class CharOxidationShaddixBuilder: public ModelBuilder
 {
 public: 
   CharOxidationShaddixBuilder( const std::string          & modelName,
-                             const vector<std::string>  & reqICLabelNames,
-                             const vector<std::string>  & reqScalarLabelNames,
-                             ArchesLabel          * fieldLabels,
-                             SimulationStateP           & sharedState,
-                             int qn );
+                               const std::vector<std::string>  & reqICLabelNames,
+                               const std::vector<std::string>  & reqScalarLabelNames,
+                               ArchesLabel          * fieldLabels,
+                               SimulationStateP           & sharedState,
+                               int qn );
 
   ~CharOxidationShaddixBuilder(); 
 
@@ -53,11 +53,11 @@ class CharOxidationShaddix: public CharOxidation {
 public: 
 
   CharOxidationShaddix( std::string modelName, 
-                SimulationStateP& shared_state, 
-                ArchesLabel* fieldLabels,
-                vector<std::string> reqICLabelNames, 
-                vector<std::string> reqScalarLabelNames, 
-                int qn );
+                        SimulationStateP& shared_state,
+                        ArchesLabel* fieldLabels,
+                        std::vector<std::string> reqICLabelNames,
+                        std::vector<std::string> reqScalarLabelNames,
+                        int qn );
 
   ~CharOxidationShaddix();
 
@@ -84,7 +84,7 @@ public:
 
   /** @brief Schedule the calculation of the source term */ 
   void sched_computeModel( const LevelP& level, SchedulerP& sched, 
-                            int timeSubStep );
+                           int timeSubStep );
 
   /** @brief Actually compute the source term */ 
   void computeModel( const ProcessorGroup* pc, 

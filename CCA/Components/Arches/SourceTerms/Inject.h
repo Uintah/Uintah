@@ -58,7 +58,7 @@ public:
   enum ITYPE {CONSTANT, FROMFILE};
 
   Inject<sT>( std::string srcName, SimulationStateP& shared_state, 
-                       vector<std::string> reqLabelNames, std::string type );
+                       std::vector<std::string> reqLabelNames, std::string type );
 
   ~Inject<sT>();
   /** @brief Interface for the inputfile and set constants */ 
@@ -87,7 +87,7 @@ public:
 
     public: 
 
-      Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
+      Builder( std::string name, std::vector<std::string> required_label_names, SimulationStateP& shared_state )
         : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){
           _type = "inject_src"; 
         };
@@ -101,7 +101,7 @@ public:
       std::string _name; 
       std::string _type; 
       SimulationStateP& _shared_state; 
-      vector<std::string> _required_label_names; 
+      std::vector<std::string> _required_label_names;
 
 
   }; // Builder
@@ -122,7 +122,7 @@ private:
 
   template <typename sT>
   Inject<sT>::Inject( std::string src_name, SimulationStateP& shared_state,
-                              vector<std::string> req_label_names, std::string type ) 
+                              std::vector<std::string> req_label_names, std::string type )
   : SourceTermBase(src_name, shared_state, req_label_names, type)
   {
     _label_sched_init = false; 
@@ -175,7 +175,7 @@ private:
       gzFile file = gzopen( file_name.c_str(), "r" ); 
 
       if ( file == NULL ) { 
-        proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
+        proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << std::endl;
         throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
       }
 
@@ -197,7 +197,7 @@ private:
 
       if ( !found_file ){ 
         std::stringstream err_msg; 
-        err_msg << "Error: Unable to find input file for inject source term: " << _src_name << " Check this file for errors: \n" << file_name << endl;
+        err_msg << "Error: Unable to find input file for inject source term: " << _src_name << " Check this file for errors: \n" << file_name << std::endl;
         throw ProblemSetupException( err_msg.str(), __FILE__, __LINE__);
       } 
 
@@ -276,13 +276,13 @@ private:
         CellIterator iter = patch->getSFCZIterator(); 
       else if ( typeid(sT) != typeid(CCVariable<double> ) ) {
         // Bulletproofing
-        proc0cout << " While attempting to compute: Inject.h " << endl;
-        proc0cout << " Encountered a type mismatch error.  The current code cannot handle" << endl;
-        proc0cout << " a type other than one of the following: " << endl;
-        proc0cout << " 1) CCVariable<double> " << endl;
-        proc0cout << " 2) SFCXVariable<double> " << endl;
-        proc0cout << " 3) SFCYVariable<double> " << endl;
-        proc0cout << " 4) SFCZVariable<double> " << endl;
+        proc0cout << " While attempting to compute: Inject.h " << std::endl
+                  << " Encountered a type mismatch error.  The current code cannot handle" << std::endl
+                  << " a type other than one of the following: " << std::endl
+                  << " 1) CCVariable<double> " << std::endl
+                  << " 2) SFCXVariable<double> " << std::endl
+                  << " 3) SFCYVariable<double> " << std::endl
+                  << " 4) SFCZVariable<double> " << std::endl;
         throw InvalidValue( "Please check the builder (probably in Arches.cc) and try again. ", __FILE__, __LINE__); 
       }
 
@@ -330,7 +330,7 @@ private:
   template <typename sT>
   void Inject<sT>::sched_initialize( const LevelP& level, SchedulerP& sched )
   {
-    string taskname = "Inject::initialize"; 
+    std::string taskname = "Inject::initialize";
   
     Task* tsk = scinew Task(taskname, this, &Inject::initialize);
   
@@ -379,7 +379,7 @@ private:
   
     gzFile file = gzopen( file_name.c_str(), "r" ); 
     if ( file == NULL ) { 
-      proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
+      proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << std::endl;
       throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
     }
   

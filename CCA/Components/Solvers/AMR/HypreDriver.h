@@ -145,9 +145,9 @@ namespace Uintah {
     
     // Utilities, HYPRE data printouts
     bool         isConvertable(const HypreInterface& to);
-    virtual void printMatrix(const string& fileName = "Matrix") = 0;
-    virtual void printRHS(const string& fileName = "RHS") = 0;
-    virtual void printSolution(const string& fileName = "X") = 0;
+    virtual void printMatrix(const std::string& fileName = "Matrix") = 0;
+    virtual void printRHS(const std::string& fileName = "RHS") = 0;
+    virtual void printSolution(const std::string& fileName = "X") = 0;
 
     // Generic solve functions
     template<class Types>

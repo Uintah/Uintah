@@ -39,18 +39,17 @@
 
 #include <Core/Exceptions/Exception.h>
 #include <string>
-using std::string;
 
 namespace SCIRun {
 class GuiException : public Exception {
 public:
-  GuiException(string msg) : msg_(msg) { stacktrace_ = 0; }
+  GuiException(std::string msg) : msg_(msg) { stacktrace_ = 0; }
   virtual ~GuiException() {};
   virtual const char* message() const { return msg_.c_str(); }
   virtual const char* type() const { return "GuiException"; }
 protected:
 private:
-  string msg_;
+  std::string msg_;
   GuiException& operator=(const GuiException);
 };
 } // End namespace SCIRun

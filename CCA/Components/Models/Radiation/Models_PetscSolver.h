@@ -124,8 +124,8 @@ public:
 protected:
 
 private:
-  string d_precondType;
-  string d_solverType;
+  std::string d_precondType;
+  std::string d_solverType;
   int d_maxIter;
   double d_tolerance;
   bool d_shrad;
@@ -140,8 +140,8 @@ private:
   int d_fill;
   const ProcessorGroup* d_myworld;
 #ifdef HAVE_PETSC
-   map<const Patch*, int> d_petscGlobalStart;
-   map<const Patch*, Array3<int> > d_petscLocalToGlobal;
+   std::map<const Patch*, int> d_petscGlobalStart;
+   std::map<const Patch*, Array3<int> > d_petscLocalToGlobal;
    Mat A;
    Vec d_x, d_b, d_u;
 #endif

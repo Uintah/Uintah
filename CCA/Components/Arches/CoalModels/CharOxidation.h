@@ -28,8 +28,8 @@ public:
   CharOxidation( std::string modelName, 
                          SimulationStateP& shared_state, 
                          ArchesLabel* fieldLabels,
-                         vector<std::string> reqICLabelNames, 
-                         vector<std::string> reqScalarLabelNames,
+                         std::vector<std::string> reqICLabelNames,
+                         std::vector<std::string> reqScalarLabelNames,
                          int qn );
 
   virtual ~CharOxidation();
@@ -56,7 +56,7 @@ public:
   // Access methods
 
   /** @brief  Return a string containing the model type ("CharOxidation") */
-  inline string getType() {
+  inline std::string getType() {
     return "CharOxidation"; }
 
   /** @brief  Return the VarLabel for the model term for char */

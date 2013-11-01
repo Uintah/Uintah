@@ -114,7 +114,7 @@ namespace Uintah {
       BoundaryCondition();
 
       typedef std::map<std::string, constCCVariable<double> > HelperMap; 
-      typedef std::vector<string> HelperVec;  
+      typedef std::vector<std::string> HelperVec;
                         
                         /** @brief Stuct for hold face centered offsets relative to the cell centered boundary index. */
                         struct FaceOffSets { 
@@ -263,7 +263,7 @@ namespace Uintah {
         Iterator bound_ptr, Vector value, 
         double swirl_no, Vector swirl_cent );
 
-      void setVelFromInput__NEW( const Patch* patch, const Patch::FaceType& face, string face_name, 
+      void setVelFromInput__NEW( const Patch* patch, const Patch::FaceType& face, std::string face_name,
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
         Iterator bound_iter, std::string file_name );
 
@@ -416,7 +416,7 @@ namespace Uintah {
       template<class V, class T> void
         copy_stencil7(DataWarehouse* new_dw,
             const Patch* patch,
-            const string& whichWay,
+            const std::string& whichWay,
             CellIterator iter,
             V& A,  T& AP, T& AE, T& AW,
             T& AN, T& AS, T& AT, T& AB);
@@ -590,7 +590,7 @@ namespace Uintah {
             std::cout << "velocity components: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl; 
             std::cout << "mass flow rate: " << bc_iter->second.mass_flow_rate << std::endl;
             std::cout << "file name: " << bc_iter->second.filename << std::endl;
-            std::cout << "swirl no: " << bc_iter->second.swirl_no << " and centroid = " << bc_iter->second.swirl_cent << endl;
+            std::cout << "swirl no: " << bc_iter->second.swirl_no << " and centroid = " << bc_iter->second.swirl_cent << std::endl;
             std::cout << "enthalpy: " << bc_iter->second.enthalpy << std::endl;
             std::cout << "density: " << bc_iter->second.density << std::endl;
             std::cout << "area: " << bc_iter->second.total_area_label << std::endl;
@@ -815,7 +815,7 @@ namespace Uintah {
       double d_uvwout;
       double d_overallMB;
 
-      string d_mms;
+      std::string d_mms;
       double d_airDensity, d_heDensity;
       Vector d_gravity;
       double d_viscosity;
@@ -830,11 +830,11 @@ namespace Uintah {
       double d_csmag_wall; 
 
       struct d_extraScalarBC {
-        string d_scalar_name;
+        std::string d_scalar_name;
         double d_scalarBC_value;
         int d_BC_ID; 
       };
-      vector<d_extraScalarBC*> d_extraScalarBCs; 
+      std::vector<d_extraScalarBC*> d_extraScalarBCs;
 
       BoundaryCondition_new* d_newBC; 
 
@@ -883,8 +883,8 @@ BoundaryCondition::zeroGradientBC( const Patch* patch,
                                    std::vector<BC_TYPE>& types )
 
 {
-  vector<Patch::FaceType>::const_iterator bf_iter;
-  vector<Patch::FaceType> bf;
+  std::vector<Patch::FaceType>::const_iterator bf_iter;
+  std::vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
 
   for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
@@ -904,7 +904,7 @@ BoundaryCondition::zeroGradientBC( const Patch* patch,
 
            double bc_value = 0;
            Vector bc_v_value(0,0,0); 
-           string bc_kind = "NotSet";
+           std::string bc_kind = "NotSet";
            Iterator bound_ptr;
            bool foundIterator = false; 
 
@@ -940,8 +940,8 @@ BoundaryCondition::zeroStencilDirection( const Patch* patch,
                                          std::vector<BC_TYPE>& types )
 
 {
-  vector<Patch::FaceType>::const_iterator bf_iter;
-  vector<Patch::FaceType> bf;
+  std::vector<Patch::FaceType>::const_iterator bf_iter;
+  std::vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
 
   for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
@@ -961,7 +961,7 @@ BoundaryCondition::zeroStencilDirection( const Patch* patch,
 
            double bc_value = 0;
            Vector bc_v_value(0,0,0); 
-           string bc_kind = "NotSet";
+           std::string bc_kind = "NotSet";
            Iterator bound_ptr;
            bool foundIterator = false; 
 
@@ -1002,8 +1002,8 @@ BoundaryCondition::delPForOutletPressure__NEW( const Patch* patch,
                                                constCCVariable<double>& density )
 {
 
-  vector<Patch::FaceType>::const_iterator bf_iter;
-  vector<Patch::FaceType> bf;
+  std::vector<Patch::FaceType>::const_iterator bf_iter;
+  std::vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); 
 
@@ -1026,7 +1026,7 @@ BoundaryCondition::delPForOutletPressure__NEW( const Patch* patch,
           for (int child = 0; child < numChildren; child++){
 
             double bc_value = 0;
-            string bc_kind = "NotSet";
+            std::string bc_kind = "NotSet";
             Iterator bound_ptr;
 
             // No need to check for vector since this is an outlet or pressure

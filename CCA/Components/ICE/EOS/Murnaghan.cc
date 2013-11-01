@@ -31,6 +31,7 @@
 #include <iomanip>
 
 using namespace Uintah;
+using namespace std;
 
 Murnaghan::Murnaghan(ProblemSpecP& ps)
 {

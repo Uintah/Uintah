@@ -116,7 +116,7 @@ public:
                  const bool modify_ref_den );
 
   /** @brief Load table into memory */ 
-  void loadMixingTable(gzFile &fp, const string & inputfile );
+  void loadMixingTable(gzFile &fp, const std::string & inputfile );
 
   enum BoundaryType { DIRICHLET, NEUMANN, FROMFILE };
 
@@ -140,22 +140,22 @@ public:
   /** @brief A base class for Interpolation */
   class Interp_class {
 
-	public:
+  public:
 
-		Interp_class() : d_interpLock("ClassicTable Interp_class lock"){};
-		virtual ~Interp_class() {};
-	
-		virtual inline double find_val( std::vector<double> iv, int var_index) {return 0;};
-	
-	protected:
+    Interp_class() : d_interpLock("ClassicTable Interp_class lock"){};
+    virtual ~Interp_class() {};
 
-		std::vector<int>  d_allIndepVarNo;
-		std::vector<double> table_vals;
-		std::vector<std::vector<double> >  table2;
-		std::vector< std::vector <double> >  indep;
-		std::vector< std::vector <double > >  ind_1;
-		std::vector<int> lo_index;
-		std::vector<int> hi_index;
+    virtual inline double find_val( std::vector<double> iv, int var_index) {return 0;};
+
+  protected:
+
+    std::vector<int>  d_allIndepVarNo;
+    std::vector<double> table_vals;
+    std::vector<std::vector<double> >  table2;
+    std::vector< std::vector <double> >  indep;
+    std::vector< std::vector <double > >  ind_1;
+    std::vector<int> lo_index;
+    std::vector<int> hi_index;
 
     SCIRun::Mutex d_interpLock; // For synchronization in find_val() functions
 
@@ -491,9 +491,9 @@ public:
 			indep = indep_headers;
 			ind_1 = i1;
 			table2 = table;
-			table_vals = vector<double>(16);
-			lo_index = vector<int>(4);
-			hi_index = vector<int>(4);
+			table_vals = std::vector<double>(16);
+			lo_index = std::vector<int>(4);
+			hi_index = std::vector<int>(4);
 		};
 
 		~Interp4(){};
@@ -620,7 +620,7 @@ public:
 		InterpN(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
 						std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1, int d_indepvarscount) {
 
-		  multiples = vector<int>(d_indepvarscount);
+		  multiples = std::vector<int>(d_indepvarscount);
 		  multtemp = 0;
 		  for (int i = 0; i < d_indepvarscount; i++) {
 			  multtemp = 1;
@@ -631,10 +631,10 @@ public:
 		  }
   	
 		  int npts = (int)pow(2.0,d_indepvarscount);
-		  value_pop = vector< vector <bool> > (npts);
+		  value_pop = std::vector< std::vector <bool> > (npts);
 		
 		  for (int i =0; i < npts; i++) {
-			  value_pop[i] = vector<bool>(d_indepvarscount );
+			  value_pop[i] = std::vector<bool>(d_indepvarscount );
 		  }
 		
 		  //bool matrix for use in lookup
@@ -788,8 +788,8 @@ public:
 	
   //*******************************************end interp classes//
   
-  typedef std::map<string, DepVarCont >       DepVarMap;
-  typedef std::map<string, int >               IndexMap; 
+  typedef std::map<std::string, DepVarCont >       DepVarMap;
+  typedef std::map<std::string, int >               IndexMap;
 
 	/** @brief Return a table lookup for a variable given the independent variable space. **/ 
   double getTableValue( std::vector<double>, std::string ); 
@@ -822,9 +822,9 @@ public:
     }
 
     if ( index == -1 ) {
-      ostringstream exception;
+      std::ostringstream exception;
       exception << "Error: The variable " << name << " was not found in the table." << "\n" << 
-        "Please check your input file and try again. " << endl;
+        "Please check your input file and try again. " << std::endl;
       throw InternalError(exception.str(),__FILE__,__LINE__);
     }
 
@@ -833,7 +833,7 @@ public:
 
 private:
 
-	Interp_class * ND_interp;
+  Interp_class * ND_interp;
 	
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
 
@@ -850,7 +850,7 @@ private:
   int d_indepvarscount;     ///< Number of independent variables
   int d_varscount;          ///< Total dependent variables
 
-  string d_enthalpy_name; 
+  std::string d_enthalpy_name;
   const VarLabel* d_enthalpy_label; 
 
   IndexMap d_depVarIndexMap;                      ///< Reference to the integer location of the variable
@@ -859,21 +859,21 @@ private:
   mutable CrowdMonitor d_enthalpyVarIndexMapLock; ///< Multiple reader, single writer lock (pthread_rwlock_t wrapper) for d_enthalpyVarIndexMap
 
   std::vector<int>    d_allIndepVarNum;         ///< Vector storing the grid size for the Independent variables
-  std::vector<string> d_allDepVarUnits;         ///< Units for the dependent variables
-  std::vector<string> d_allUserDepVarNames;     ///< Vector storing all independent variable names requested in input file
+  std::vector<std::string> d_allDepVarUnits;         ///< Units for the dependent variables
+  std::vector<std::string> d_allUserDepVarNames;     ///< Vector storing all independent variable names requested in input file
 
   BoundaryCondition_new* _boundary_condition; 
 
-  void checkForConstants(gzFile &fp, const string & inputfile );
+  void checkForConstants(gzFile &fp, const std::string & inputfile );
 
   //previous Arches specific variables: 
-  std::vector <std::vector<double> > i1;
-  std::vector <std::vector<double> > table;
-  std::vector <std::vector<double> > indep_headers;
+  std::vector<std::vector<double> > i1;
+  std::vector<std::vector<double> > table;
+  std::vector<std::vector<double> > indep_headers;
 
   /// A dependent variable wrapper
   struct ADepVar {
-    string name; 
+    std::string name;
     CCVariable<double> data; 
   };
 

@@ -31,7 +31,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 
-using std::vector;
+using namespace std;
 
 namespace Uintah {
 

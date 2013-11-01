@@ -41,8 +41,7 @@
 
 using namespace SCIRun;
 using namespace Uintah;
-using std::endl;
-
+using namespace std;
 
 // export SCI_DEBUG="BCDA_DBG:+"
 static DebugStream BCDA_dbg("BCDA_DBG",false);

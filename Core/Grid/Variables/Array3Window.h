@@ -34,9 +34,6 @@
 // test the range and throw a more informative exception
 // instead of testing one index's range
 #include <Core/Exceptions/InternalError.h>
-#include <iostream>
-#include <sstream>
-using std::ostringstream;
 #endif
 
 /**************************************

@@ -66,7 +66,7 @@ public:
     return _prop_type; }; 
 
   /** @brief Returns a vector of extra labels stored for this specific property **/ 
-  inline const vector<const VarLabel*> getExtraLocalLabels(){
+  inline const std::vector<const VarLabel*> getExtraLocalLabels(){
     return _extra_local_labels; }; 
 
   /** @brief A method for cleaning up property values **/ 
@@ -117,11 +117,11 @@ protected:
 template <class phiT > 
 void PropertyModelBase::base_initialize( const Patch* patch, phiT& phi ){
 
-  string msg = "Initializing property models. ";
+  std::string msg = "Initializing property models. ";
   if (Uintah::Parallel::getNumThreads() > 1 ) {
-    proc0thread0cout << msg << endl;
+    proc0thread0cout << msg << std::endl;
   } else {
-    proc0cout << msg << endl;
+    proc0cout << msg << std::endl;
   }
   
   if ( _init_type == "constant" ) {
@@ -129,7 +129,7 @@ void PropertyModelBase::base_initialize( const Patch* patch, phiT& phi ){
     phi.initialize( _const_init ); 
 
   } else {
-    proc0cout << " For property model: " << _prop_name << endl;
+    proc0cout << " For property model: " << _prop_name << std::endl;
     throw InvalidValue("Initialization type for property model not recognized or supported!", __FILE__, __LINE__); 
   }
 }

@@ -7,6 +7,7 @@
 //===========================================================================
 
 using namespace Uintah;
+using namespace std;
 
 PropertyModelFactory::PropertyModelFactory()
 {}

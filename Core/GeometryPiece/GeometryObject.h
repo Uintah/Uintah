@@ -43,9 +43,6 @@ namespace Uintah {
 class GeometryPiece;
 
 using namespace SCIRun;
-using std::string;
-using std::list;
-using std::map;
 
 /**************************************
 	
@@ -85,13 +82,13 @@ public:
   };
   struct DataItem
   {
-    string name;
+    std::string name;
     DataType type;
-    DataItem(string name, DataType datatype) : name(name), type(datatype) {};
+    DataItem(std::string name, DataType datatype) : name(name), type(datatype) {};
   };
   //////////
   // Insert Documentation Here:
-  GeometryObject(GeometryPieceP piece, ProblemSpecP&,list<DataItem>& data);
+  GeometryObject(GeometryPieceP piece, ProblemSpecP&,std::list<DataItem>& data);
 
   //////////
   // Insert Documentation Here:
@@ -105,7 +102,7 @@ public:
     return d_piece;
   }
 
-  double getInitialData_double(const string& data_string) {
+  double getInitialData_double(const std::string& data_string) {
     if(d_double_data.find(data_string)==d_double_data.end())
     {
       std::stringstream msg;
@@ -115,7 +112,7 @@ public:
     return d_double_data[data_string];
   }
   
-  int getInitialData_int(const string& data_string) {
+  int getInitialData_int(const std::string& data_string) {
     if(d_int_data.find(data_string)==d_int_data.end())
     {
       std::stringstream msg;
@@ -125,7 +122,7 @@ public:
     return d_int_data[data_string];
   }
   
-  Uintah::Point getInitialData_Point(const string& data_string) {
+  Uintah::Point getInitialData_Point(const std::string& data_string) {
     if(d_point_data.find(data_string)==d_point_data.end())
     {
       std::stringstream msg;
@@ -135,7 +132,7 @@ public:
     return d_point_data[data_string];
   }
   
-  Uintah::Vector getInitialData_Vector(const string& data_string) {
+  Uintah::Vector getInitialData_Vector(const std::string& data_string) {
     if(d_vector_data.find(data_string)==d_vector_data.end())
     {
       std::stringstream msg;
@@ -145,7 +142,7 @@ public:
     return d_vector_data[data_string];
   }
   
-  Uintah::IntVector getInitialData_IntVector(const string& data_string) {
+  Uintah::IntVector getInitialData_IntVector(const std::string& data_string) {
     if(d_intvector_data.find(data_string)==d_intvector_data.end())
     {
       std::stringstream msg;
@@ -157,11 +154,11 @@ public:
 
 private:
   GeometryPieceP     d_piece;
-  map<string,int>    d_int_data;
-  map<string,double> d_double_data;
-  map<string,Uintah::Vector> d_vector_data;
-  map<string,Uintah::IntVector> d_intvector_data;
-  map<string,Uintah::Point>  d_point_data;
+  std::map<std::string,int>    d_int_data;
+  std::map<std::string,double> d_double_data;
+  std::map<std::string,Uintah::Vector> d_vector_data;
+  std::map<std::string,Uintah::IntVector> d_intvector_data;
+  std::map<std::string,Uintah::Point>  d_point_data;
 
 };
 

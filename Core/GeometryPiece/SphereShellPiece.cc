@@ -37,6 +37,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
+using namespace std;
 
 const string SphereShellPiece::TYPE_NAME = "sphere_shell";
 

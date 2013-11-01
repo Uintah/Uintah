@@ -30,8 +30,7 @@
 
 using namespace SCIRun;
 using namespace Uintah;
-
-using std::vector;
+using namespace std;
 
 const string IntersectionGeometryPiece::TYPE_NAME = "intersection";
 
