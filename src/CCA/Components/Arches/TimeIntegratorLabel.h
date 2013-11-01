@@ -85,7 +85,7 @@ namespace Uintah {
     // PROGRAMMER:  if you added a variable
     // make sure you initialize it in initializeVars()
     // and catch it in catchUninitializedVars ()
-    string integrator_step_name;     
+    std::string integrator_step_name;
     int integrator_step_number;      
     bool multiple_steps;             
     bool integrator_last_step;

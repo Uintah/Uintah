@@ -27,7 +27,8 @@
 #include <Core/Util/DebugStream.h>
 using namespace Uintah;
 using namespace SCIRun;
-   
+using namespace std;
+
 void
 CostProfiler::setMinPatchSize( const vector<IntVector> & min_patch_size )
 {

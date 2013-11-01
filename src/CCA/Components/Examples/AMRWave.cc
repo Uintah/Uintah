@@ -39,6 +39,7 @@
 // Possible bad interpolation
 
 using namespace Uintah;
+using namespace std;
 
 DebugStream amrwave("AMRWave", false);
 

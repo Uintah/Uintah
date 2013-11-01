@@ -31,7 +31,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-using std::ifstream;
+using namespace std;
 
 const string NullGeometryPiece::TYPE_NAME = "null";
 

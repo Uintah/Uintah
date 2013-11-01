@@ -114,8 +114,8 @@ namespace Uintah {
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
                                    ParticleSubset* addset,
-                                   map<const VarLabel*, 
-                                     ParticleVariableBase*>* newState,
+                                   std::map<const VarLabel*,
+                                   ParticleVariableBase*>* newState,
                                    ParticleSubset* delset,
                                    DataWarehouse* old_dw);
 

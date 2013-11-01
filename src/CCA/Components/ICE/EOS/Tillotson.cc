@@ -31,6 +31,7 @@
 #include <iomanip>
 
 using namespace Uintah;
+using namespace std;
 
 Tillotson::Tillotson(ProblemSpecP& ps)
 {

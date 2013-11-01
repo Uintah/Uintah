@@ -48,9 +48,7 @@
 #include <iostream>
 
 using namespace Uintah;
-using std::vector;
-using std::cerr;
-using std::ofstream;
+using namespace std;
 
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
                                  MPMFlags* flags)

@@ -103,7 +103,7 @@ WARNING
    double getCharLengthTangential() const;
    double getCohesiveNormalStrength() const;
    double getCohesiveTangentialStrength() const;
-   string getCohesiveFilename() const;
+   std::string getCohesiveFilename() const;
    bool getDoRotation() const;
 
    void computeRotationMatrix(Matrix3& Rotation, Matrix3& Rotation_tang,
@@ -119,7 +119,7 @@ WARNING
    double d_sig_max;
    double d_tau_max;
    bool d_do_rotation;
-   string d_cz_filename;
+   std::string d_cz_filename;
 
    // Prevent copying of this class
    // copy constructor

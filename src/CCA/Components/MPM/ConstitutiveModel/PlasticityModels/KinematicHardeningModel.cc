@@ -25,6 +25,7 @@
 
 #include "KinematicHardeningModel.h"
 
+using namespace std;
 using namespace Uintah;
 
 KinematicHardeningModel::KinematicHardeningModel()

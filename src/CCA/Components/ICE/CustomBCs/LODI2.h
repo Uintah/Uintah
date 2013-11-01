@@ -49,7 +49,7 @@ namespace Uintah {
     double press_infinity;  
     double sigma;
     int iceMatl_indx;
-    vector<Patch::FaceType> LodiFaces;
+    std::vector<Patch::FaceType> LodiFaces;
     bool saveLiTerms;
     Vector d_gravity;
     double  Li_scale;
@@ -76,7 +76,7 @@ namespace Uintah {
   };
   
   void addRequires_Lodi(Task* t, 
-                      const string& where,
+                      const std::string& where,
                       ICELabel* lb,
                       const MaterialSubset* ice_matls,
                       Lodi_globalVars* lv);
@@ -85,7 +85,7 @@ namespace Uintah {
                           DataWarehouse* new_dw,
                           ICELabel* lb,
                           const Patch* patch,
-                          const string& where,
+                          const std::string& where,
                           const int indx,
                           SimulationStateP& sharedState,
                           bool& setLodiBcs,
@@ -101,7 +101,7 @@ namespace Uintah {
                                                              
   void Lodi_maxMach_patchSubset(const LevelP& level,
                                  SimulationStateP& sharedState,
-                                 vector<PatchSubset*> &);
+                                 std::vector<PatchSubset*> &);
                                   
   bool is_LODI_face(const Patch* patch,
                     Patch::FaceType face,
@@ -122,7 +122,7 @@ namespace Uintah {
 
   void getBoundaryEdges(const Patch* patch,
                         const Patch::FaceType face,
-                        vector<Patch::FaceType>& face0);
+                        std::vector<Patch::FaceType>& face0);
                                  
   int remainingVectorComponent(int dir1, int dir2);
   

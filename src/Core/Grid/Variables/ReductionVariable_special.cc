@@ -34,6 +34,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
+using namespace std;
 
 namespace Uintah { // <- This is necessary for IBM SP AIX xlC Compiler
 

@@ -85,7 +85,7 @@ namespace Uintah {
       double sumVolFrac;
       double press_new;
       double delPress;
-      vector<EqPress_dbgMatl> matl;
+      std::vector<EqPress_dbgMatl> matl;
     };
 
     
@@ -222,7 +222,7 @@ namespace Uintah {
                                              const PatchSet* patch_set,
                                              const MaterialSubset* ice_matlsub,
                                              const MaterialSet* ice_matls,
-                                             const string& where);
+                                             const std::string& where);
                              
       void scheduleTestConservation(SchedulerP&, 
                                     const PatchSet*,
@@ -243,7 +243,7 @@ namespace Uintah {
                               const MaterialSubset*,             
                               const MaterialSet*,
                               bool insideOuterIterLoop,
-                              const string& computes_or_modifies);
+                              const std::string& computes_or_modifies);
                                
       void scheduleCompute_maxRHS(SchedulerP& sched,
                                   const LevelP& level,
@@ -616,7 +616,7 @@ namespace Uintah {
                     DataWarehouse* old_dw,                           
                     DataWarehouse* new_dw,
                     bool insideOuterIterLoop,
-                    string computes_or_modifies);
+                    std::string computes_or_modifies);
                     
       void compute_maxRHS(const ProcessorGroup*,
                           const PatchSubset* patches,
@@ -731,30 +731,30 @@ namespace Uintah {
       void printData( int indx,
                       const  Patch* patch,
                       int include_GC,
-                      const string& message1,
-                      const string& message2, 
+                      const std::string& message1,
+                      const std::string& message2,
                       const  CCVariable<int>& q_CC);
                    
       void printData( int indx,
                       const  Patch* patch,
                       int include_GC,
-                      const string& message1,
-                      const string& message2, 
+                      const std::string& message1,
+                      const std::string& message2,
                       const  CCVariable<double>& q_CC); 
 
       void printVector( int indx,
                         const  Patch* patch,
                         int include_GC,
-                        const string& message1,
-                        const string& message2, 
+                        const std::string& message1,
+                        const std::string& message2,
                         int component, 
                         const CCVariable<Vector>& q_CC);
 
       void printStencil( int matl,
                          const Patch* patch,                 
                          int include_EC,                     
-                         const string&    message1,          
-                         const string&    message2,          
+                         const std::string&    message1,
+                         const std::string&    message2,
                          const CCVariable<Stencil7>& q_CC);   
                      
       void adjust_dbg_indices( const int include_EC,
@@ -765,18 +765,18 @@ namespace Uintah {
                                IntVector& high);               
       
       void createDirs( const Patch* patch,
-                        const string& desc, 
-                        string& path);
+                        const std::string& desc,
+                        std::string& path);
       
-      void find_gnuplot_origin_And_dx(const string variableType,
+      void find_gnuplot_origin_And_dx(const std::string variableType,
                                      const Patch*,
                                      IntVector&,
                                      IntVector&,
                                      double *,
                                      double *);
 
-      void readData(const Patch* patch, int include_GC, const string& filename,
-                  const string& var_name, CCVariable<double>& q_CC);
+      void readData(const Patch* patch, int include_GC, const std::string& filename,
+                  const std::string& var_name, CCVariable<double>& q_CC);
                  
       void hydrostaticPressureAdjustment(const Patch* patch, 
                       const CCVariable<double>& rho_micro_CC, 
@@ -816,7 +816,7 @@ namespace Uintah {
       // debugging variables
       int d_dbgVar1;
       int d_dbgVar2;
-      vector<IntVector>d_dbgIndices;
+      std::vector<IntVector>d_dbgIndices;
      
       // flags
       bool d_doAMR;
@@ -834,8 +834,8 @@ namespace Uintah {
       double d_outer_iter_tolerance;
       
       // ADD HEAT VARIABLES
-      vector<int>    d_add_heat_matls;
-      vector<double> d_add_heat_coeff;
+      std::vector<int>    d_add_heat_matls;
+      std::vector<double> d_add_heat_coeff;
       double         d_add_heat_t_start, d_add_heat_t_final;
       bool           d_add_heat;
       
@@ -888,38 +888,38 @@ namespace Uintah {
        void printData_FC(int indx,
                       const  Patch* patch,
                       int include_GC,
-                      const string& message1,
-                      const string& message2, 
+                      const std::string& message1,
+                      const std::string& message2,
                       const SFCXVariable<double>& q_FC);
                     
        void printData_FC(int indx,
                       const  Patch* patch,
                       int include_GC,
-                      const string& message1,
-                      const string& message2, 
+                      const std::string& message1,
+                      const std::string& message2,
                       const SFCYVariable<double>& q_FC);
                     
        void printData_FC(int indx, 
                       const  Patch* patch,
                       int include_GC,
-                      const string& message1,
-                      const string& message2, 
+                      const std::string& message1,
+                      const std::string& message2,
                       const SFCZVariable<double>& q_FC);
                                 
        template <class T>
        void printData_driver( int indx,
                               const  Patch* patch,
                               int include_GC,
-                              const string& message1,
-                              const string& message2,
-                              const string& variableType, 
+                              const std::string& message1,
+                              const std::string& message2,
+                              const std::string& variableType,
                               const  T& q_CC);
                               
       void printVector_driver( int indx,
                                const  Patch* patch,
                                int include_GC,
-                               const string& message1,
-                               const string& message2, 
+                               const std::string& message1,
+                               const std::string& message2,
                                int component, 
                                const CCVariable<Vector>& q_CC);
                               
@@ -927,14 +927,14 @@ namespace Uintah {
        void symmetryTest_driver( int indx,
                                  const  Patch* patch,
                                  const IntVector& cellShift,
-                                 const string& message1,
-                                 const string& message2, 
+                                 const std::string& message1,
+                                 const std::string& message2,
                                  const  T& q_CC);
                
        void symmetryTest_Vector( int indx,
                                  const  Patch* patch,
-                                 const string& message1,
-                                 const string& message2, 
+                                 const std::string& message1,
+                                 const std::string& message2,
                                  const CCVariable<Vector>& q_CC);
                                  
       ICELabel* lb; 
@@ -964,11 +964,11 @@ namespace Uintah {
       bool   d_dbgGnuPlot;
       bool   d_dbgTime_to_printData;
       bool   d_dbgSymmetryTest;
-      vector<IntVector> d_dbgBeginIndx;
-      vector<IntVector> d_dbgEndIndx;
+      std::vector<IntVector> d_dbgBeginIndx;
+      std::vector<IntVector> d_dbgEndIndx;
       IntVector d_dbgSymPlanes;
-      vector<int> d_dbgMatls;
-      vector<int> d_dbgLevel; 
+      std::vector<int> d_dbgMatls;
+      std::vector<int> d_dbgLevel;
       int d_dbgSigFigs;
       
       //__________________________________

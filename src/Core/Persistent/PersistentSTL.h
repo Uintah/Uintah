@@ -41,11 +41,6 @@
 
 namespace SCIRun {
 
-using std::map;
-using std::vector;
-using std::list;
-using std::pair;
-
 #define MAP_VERSION 1
 
 #include <Core/Persistent/share.h>
@@ -54,28 +49,28 @@ using std::pair;
 // Persistent IO for maps
 template <class Key, class Data>
 void
-Pio(Piostream& stream, map<Key, Data>& data );
+Pio(Piostream& stream, std::map<Key, Data>& data );
 
 //////////
 // Persistent IO of vector containers
 template <class T>
-void Pio(Piostream& stream, vector<T>& data);
+void Pio(Piostream& stream, std::vector<T>& data);
 
 template<class T,class S>
 void 
-Pio( Piostream &stream, pair<T,S>& pair);
+Pio( Piostream &stream, std::pair<T,S>& pair);
 
 //////////
 // Persistent io for maps
 template <class Key, class Data>
 inline void
-Pio(Piostream& stream, map<Key, Data>& data) {
+Pio(Piostream& stream, std::map<Key, Data>& data) {
 
 #ifdef __GNUG__
 #else
 #endif
 
-  typename map<Key, Data>::iterator iter;
+  typename std::map<Key, Data>::iterator iter;
   int i, n;
   Key k;
   Data d;
@@ -122,29 +117,29 @@ Pio(Piostream& stream, map<Key, Data>& data) {
 #define STLVECTOR_VERSION 2
 
 template <> 
-void Pio(Piostream& stream, vector<bool>& data);
+void Pio(Piostream& stream, std::vector<bool>& data);
 
 
 // Optimize these four, heavily used in the field classes.
 template <>
-SCISHARE void Pio(Piostream& stream, vector<char>& data);
+SCISHARE void Pio(Piostream& stream, std::vector<char>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, vector<unsigned char>& data);
+SCISHARE void Pio(Piostream& stream, std::vector<unsigned char>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, vector<short>& data);
+SCISHARE void Pio(Piostream& stream, std::vector<short>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, vector<unsigned short>& data);
+SCISHARE void Pio(Piostream& stream, std::vector<unsigned short>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, vector<int>& data);
+SCISHARE void Pio(Piostream& stream, std::vector<int>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, vector<unsigned int>& data);
+SCISHARE void Pio(Piostream& stream, std::vector<unsigned int>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, vector<float>& data);
+SCISHARE void Pio(Piostream& stream, std::vector<float>& data);
 template <>
-SCISHARE void Pio(Piostream& stream, vector<double>& data);
+SCISHARE void Pio(Piostream& stream, std::vector<double>& data);
 
 template <class T> 
-void Pio(Piostream& stream, vector<T>& data)
+void Pio(Piostream& stream, std::vector<T>& data)
 { 
   if (stream.reading() && stream.peek_class() == "Array1")
   {
@@ -176,7 +171,7 @@ void Pio(Piostream& stream, vector<T>& data)
 #define STLLIST_VERSION 1
 
 template <class T> 
-void Pio(Piostream& stream, list<T>& data)
+void Pio(Piostream& stream, std::list<T>& data)
 { 
   stream.begin_cheap_delim();
   
@@ -187,7 +182,7 @@ void Pio(Piostream& stream, list<T>& data)
     data.resize(size);
   }
   
-  typename list<T>::iterator ii;
+  typename std::list<T>::iterator ii;
   for (ii=data.begin(); ii!=data.end(); ii++)
     Pio(stream, *ii);
      
@@ -200,7 +195,7 @@ void Pio(Piostream& stream, list<T>& data)
 #define STLPAIR_VERSION 1
 
 template <class T,class S> 
-void Pio(Piostream& stream, pair<T,S>& data)
+void Pio(Piostream& stream, std::pair<T,S>& data)
 { 
   
   stream.begin_class("STLPair", STLPAIR_VERSION);

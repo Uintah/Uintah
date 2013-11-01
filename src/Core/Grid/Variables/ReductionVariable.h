@@ -110,7 +110,8 @@ WARNING
     virtual void getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op);
     virtual void getMPIData(std::vector<char>& buf, int& index);
     virtual void putMPIData(std::vector<char>& buf, int& index);
-    virtual void getSizeInfo(string& elems, unsigned long& totsize,
+    virtual void getSizeInfo(std::string& elems,
+                             unsigned long& totsize,
                              void*& ptr) const {
       elems="1";
       totsize = sizeof(T);

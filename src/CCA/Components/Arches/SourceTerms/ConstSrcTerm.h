@@ -12,7 +12,7 @@ class ConstSrcTerm: public SourceTermBase {
 public: 
 
   ConstSrcTerm( std::string srcName, SimulationStateP& shared_state, 
-                vector<std::string> reqLabelNames, std::string type );
+                std::vector<std::string> reqLabelNames, std::string type );
 
   ~ConstSrcTerm();
   /** @brief Interface for the inputfile and set constants */ 
@@ -41,7 +41,7 @@ public:
 
     public: 
 
-      Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
+      Builder( std::string name, std::vector<std::string> required_label_names, SimulationStateP& shared_state )
         : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){ 
           _type = "constant_src"; 
         };
@@ -54,7 +54,7 @@ public:
 
       std::string _name; 
       SimulationStateP& _shared_state; 
-      vector<std::string> _required_label_names; 
+      std::vector<std::string> _required_label_names;
 
   }; // class Builder 
 

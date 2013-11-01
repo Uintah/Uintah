@@ -47,6 +47,7 @@
 using SCIRun::Point;
 using SCIRun::Vector;
 using SCIRun::DebugStream;
+using namespace std;
 
 static DebugStream dbg("RegridderTest", false);
 

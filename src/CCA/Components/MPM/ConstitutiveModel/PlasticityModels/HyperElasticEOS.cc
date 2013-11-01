@@ -29,6 +29,7 @@
 #include <cmath>
 
 using namespace Uintah;
+using namespace std;
 
 HyperElasticEOS::HyperElasticEOS()
 {

@@ -46,6 +46,8 @@ using namespace SCIRun;
 using std::stringstream;
 using std::cout;
 using std::endl;
+using std::vector;
+using std::string;
 
 ///////////////////////////////////////////////////
 

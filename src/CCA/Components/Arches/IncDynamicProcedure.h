@@ -107,7 +107,7 @@ public:
   ////////////////////////////////////////////////////////////////////////
   // Get the Smagorinsky model constant
   double getSmagorinskyConst() const {
-    std::cerr << "There is no Smagorinsky constant in IncDynamic Procedure" << endl;
+    std::cerr << "There is no Smagorinsky constant in IncDynamic Procedure" << std::endl;
     exit(0);
     return 0;
   }

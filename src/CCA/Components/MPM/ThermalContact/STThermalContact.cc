@@ -34,6 +34,7 @@
 #include <Core/Containers/StaticArray.h>
 #include <vector>
 
+using namespace std;
 using namespace Uintah;
 
 STThermalContact::STThermalContact(ProblemSpecP&,SimulationStateP& d_sS,

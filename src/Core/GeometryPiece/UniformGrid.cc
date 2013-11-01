@@ -28,6 +28,7 @@
 #include <map>
 
 using namespace Uintah;
+using namespace std;
 
 
 Tri::Tri(Point& p1, Point& p2, Point& p3)

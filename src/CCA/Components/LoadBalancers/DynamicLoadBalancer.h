@@ -119,7 +119,7 @@ namespace Uintah {
     //! different number of procs than were saved to disk
     virtual void restartInitialize( DataArchive* archive, int time_index,
                                     ProblemSpecP& pspec,
-                                    string tsurl, const GridP& grid );
+                                    std::string tsurl, const GridP& grid );
    
   //cost profiling functions
     //update the contribution for this patch
@@ -133,9 +133,9 @@ namespace Uintah {
     void resetCostForecaster() {d_costForecaster->reset();}
     
     // Helper for assignPatchesFactor.  Collects each patch's particles
-    void collectParticles(const Grid* grid, vector<vector<int> >& num_particles);
+    void collectParticles(const Grid* grid, std::vector<std::vector<int> >& num_particles);
     // same, but can be called after a regrid when patches have not been load balanced yet
-    void collectParticlesForRegrid(const Grid* oldGrid, const vector<vector<Region> >& newGridRegions,  vector<vector<int> >& particles);
+    void collectParticlesForRegrid(const Grid* oldGrid, const std::vector<std::vector<Region> >& newGridRegions,  std::vector<std::vector<int> >& particles);
 
 
   private:
@@ -148,7 +148,7 @@ namespace Uintah {
       double_int(): val(0), loc(-1) {}
     };
 
-    vector<IntVector> d_minPatchSize;
+    std::vector<IntVector> d_minPatchSize;
     CostForecasterBase *d_costForecaster;
     enum { static_lb, cyclic_lb, random_lb, patch_factor_lb, zoltan_sfc_lb };
 
@@ -165,10 +165,10 @@ namespace Uintah {
 
     // calls space-filling curve on level, and stores results in pre-allocated output
     void useSFC(const LevelP& level, int* output);
-    bool thresholdExceeded(const std::vector<vector<double> >& patch_costs);
+    bool thresholdExceeded(const std::vector<std::vector<double> >& patch_costs);
 
     //Assign costs to a list of patches
-    void getCosts(const Grid* grid, vector<vector<double> >&costs);
+    void getCosts(const Grid* grid, std::vector<std::vector<double> >&costs);
 
     std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
     std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
@@ -207,8 +207,8 @@ namespace Uintah {
 #if defined( HAVE_ZOLTAN )    
     // Zoltan global vars
     Zoltan * zz;
-    string d_zoltanAlgorithm;  //This will be the algorithm that zoltan will use (HSFC, RCB, etc)
-    string d_zoltanIMBTol;     //This will be the amount of imalance should be acceptable
+    std::string d_zoltanAlgorithm;  //This will be the algorithm that zoltan will use (HSFC, RCB, etc)
+    std::string d_zoltanIMBTol;     //This will be the amount of imalance should be acceptable
 #endif
   };
 } // End namespace Uintah

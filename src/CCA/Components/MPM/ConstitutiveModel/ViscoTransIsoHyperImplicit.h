@@ -51,7 +51,7 @@ namespace Uintah {
          // Create datatype for storing model parameters
           bool d_useModifiedEOS; 
           double d_active;
-          string d_StrainEnergy;
+          std::string d_StrainEnergy;
           public:
           struct CMData {   //______________________________modified here
                 double Bulk;

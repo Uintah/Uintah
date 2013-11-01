@@ -45,6 +45,7 @@
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
+using std::string;
 using namespace Uintah;
 
 HyprePrecondBase::HyprePrecondBase(const Priorities& priority) :

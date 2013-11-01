@@ -34,37 +34,37 @@ namespace Uintah {
   class FieldDumper 
   {
   protected:
-    FieldDumper(DataArchive * da, string basedir);
+    FieldDumper(DataArchive * da, std::string basedir);
     
-    string dirName(double tval, int iset) const;
-    string createDirectory();
+    std::string dirName(double tval, int iset) const;
+    std::string createDirectory();
     
   public:
     virtual ~FieldDumper();
     
     // extension for the output directory
-    virtual string directoryExt() const = 0;
+    virtual std::string directoryExt() const = 0;
     
     // add a new field
-    virtual void addField(string fieldname, const Uintah::TypeDescription * type) = 0;
+    virtual void addField(std::string fieldname, const Uintah::TypeDescription * type) = 0;
     
     // dump a single step
     class Step {
     protected:
-      Step(string tsdir, int timestep, double time, int index, bool nocreate=false);
+      Step(std::string tsdir, int timestep, double time, int index, bool nocreate=false);
       
-      string fileName(string variable_name, string extension="") const;
-      string fileName(string variable_name, int materialNum, string extension="") const;
+      std::string fileName(std::string variable_name, std::string extension="") const;
+      std::string fileName(std::string variable_name, int materialNum, std::string extension="") const;
       
     public:
       virtual ~Step();
       
-      virtual string infostr() const = 0;
+      virtual std::string infostr() const = 0;
       virtual void storeGrid() = 0;
-      virtual void storeField(string fieldname, const Uintah::TypeDescription * type) = 0;
+      virtual void storeField(std::string fieldname, const Uintah::TypeDescription * type) = 0;
       
     public: // FIXME: 
-      string tsdir_;
+      std::string tsdir_;
       int    timestep_;
       double time_;
       int index_;
@@ -75,13 +75,13 @@ namespace Uintah {
     DataArchive * archive() const { return this->da_; }
     
   private:
-    static string mat_string(int mval);
-    static string time_string(double tval);
-    static string step_string(int istep);
+    static std::string mat_string(int mval);
+    static std::string time_string(double tval);
+    static std::string step_string(int istep);
     
   private:
     DataArchive* da_;
-    string       basedir_;
+    std::string       basedir_;
   };
 }
 

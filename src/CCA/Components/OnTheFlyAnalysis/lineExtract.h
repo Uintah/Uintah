@@ -107,9 +107,9 @@ WARNING
                     DataWarehouse*,
                     DataWarehouse* new_dw);
                     
-    void createFile(string& filename, FILE*& fp);
+    void createFile(std::string& filename, FILE*& fp);
     
-    void createDirectory(string& lineName, string& levelIndex);
+    void createDirectory(std::string& lineName, std::string& levelIndex);
                     
     
     // general labels
@@ -122,7 +122,7 @@ WARNING
     lineExtractLabel* ps_lb;
 
     struct line{
-      string  name;  
+      std::string  name;
       Point   startPt;
       Point   endPt;
       double  stepSize;
@@ -136,15 +136,15 @@ WARNING
     double d_writeFreq; 
     double d_startTime;
     double d_stopTime;
-    vector<VarLabel*> d_varLabels;
-    vector<int> d_varMatl;
+    std::vector<VarLabel*> d_varLabels;
+    std::vector<int> d_varMatl;
     SimulationStateP d_sharedState;
-    vector<line*> d_lines;
+    std::vector<line*> d_lines;
     Output* d_dataArchiver;
     ProblemSpecP d_prob_spec;
     const Material* d_matl;
     MaterialSet* d_matl_set;
-    std::set<string> d_isDirCreated;
+    std::set<std::string> d_isDirCreated;
     
     MaterialSubset* d_zero_matl;
     

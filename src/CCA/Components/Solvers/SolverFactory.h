@@ -72,7 +72,7 @@ namespace Uintah {
     
       static SolverInterface* create(ProblemSpecP& ps,
                                      const ProcessorGroup* world,
-                                     string cmdline);
+                                     std::string cmdline);
 
     };
 } // End namespace Uintah

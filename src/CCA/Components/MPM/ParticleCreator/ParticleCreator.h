@@ -62,7 +62,7 @@ namespace Uintah {
                                             particleIndex numParticles,
                                             CCVariable<short int>& cellNAPID,
                                             const Patch*,DataWarehouse* new_dw,
-                                            vector<GeometryObject*>&);
+                                            std::vector<GeometryObject*>&);
 
 
     virtual ParticleSubset* allocateVariables(particleIndex numParticles,
@@ -76,8 +76,8 @@ namespace Uintah {
 
     virtual particleIndex countAndCreateParticles(const Patch*,
                                                   GeometryObject* obj);
-    vector<const VarLabel* > returnParticleState();
-    vector<const VarLabel* > returnParticleStatePreReloc();
+    std::vector<const VarLabel* > returnParticleState();
+    std::vector<const VarLabel* > returnParticleStatePreReloc();
 
   protected:
 
@@ -86,7 +86,7 @@ namespace Uintah {
 
 
     virtual void initializeParticle(const Patch* patch,
-                                    vector<GeometryObject*>::const_iterator obj,
+                                    std::vector<GeometryObject*>::const_iterator obj,
                                     MPMMaterial* matl,
                                     Point p, IntVector cell_idx,
                                     particleIndex i,
@@ -131,18 +131,18 @@ namespace Uintah {
     bool d_artificial_viscosity;
     bool d_computeScaleFactor;
 
-    vector<const VarLabel* > particle_state, particle_state_preReloc;
-    typedef map<pair<const Patch*,GeometryObject*>,vector<Point> > geompoints;
+    std::vector<const VarLabel* > particle_state, particle_state_preReloc;
+    typedef std::map<std::pair<const Patch*,GeometryObject*>,std::vector<Point> > geompoints;
     geompoints d_object_points;
-    typedef map<pair<const Patch*,GeometryObject*>,vector<double> > geomvols;
+    typedef std::map<std::pair<const Patch*,GeometryObject*>,std::vector<double> > geomvols;
     geomvols d_object_vols;
     geomvols d_object_temps;
     geomvols d_object_colors;
-    typedef map<pair<const Patch*,GeometryObject*>,vector<Vector> > geomvecs;
+    typedef std::map<std::pair<const Patch*,GeometryObject*>,std::vector<Vector> > geomvecs;
     geomvecs d_object_forces;
     geomvecs d_object_fibers;  
     geomvecs d_object_velocity; // gcd add
-    typedef map<pair<const Patch*,GeometryObject*>,vector<Matrix3> > geomMat3s;
+    typedef std::map<std::pair<const Patch*,GeometryObject*>,std::vector<Matrix3> > geomMat3s;
     geomMat3s d_object_size;  
     
     mutable CrowdMonitor   d_lock;

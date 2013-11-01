@@ -32,11 +32,11 @@ class ArchesLabel;
 class KobayashiSarofimDevolBuilder: public ModelBuilder 
 {
 public: 
-  KobayashiSarofimDevolBuilder( const std::string          & modelName,
-                                const vector<std::string>  & reqICLabelNames,
-                                const vector<std::string>  & reqScalarLabelNames,
-                                ArchesLabel          * fieldLabels,
-                                SimulationStateP           & sharedState,
+  KobayashiSarofimDevolBuilder( const std::string               & modelName,
+                                const std::vector<std::string>  & reqICLabelNames,
+                                const std::vector<std::string>  & reqScalarLabelNames,
+                                ArchesLabel                     * fieldLabels,
+                                SimulationStateP                & sharedState,
                                 int qn );
 
   ~KobayashiSarofimDevolBuilder(); 
@@ -56,8 +56,8 @@ public:
   KobayashiSarofimDevol( std::string modelName, 
                          SimulationStateP& shared_state, 
                          ArchesLabel* fieldLabels,
-                         vector<std::string> reqICLabelNames, 
-                         vector<std::string> reqScalarLabelNames,
+                         std::vector<std::string> reqICLabelNames,
+                         std::vector<std::string> reqScalarLabelNames,
                          int qn );
 
   ~KobayashiSarofimDevol();

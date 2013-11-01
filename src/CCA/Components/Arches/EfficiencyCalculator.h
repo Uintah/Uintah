@@ -224,7 +224,7 @@ namespace Uintah {
 
             ProblemSpecP params = db; 
         
-            string species_label; 
+            std::string species_label;
             if ( db->findBlock("scalar") ){
               db->findBlock("scalar")->getAttribute("label",species_label); 
               _phi_label = VarLabel::find( species_label );
@@ -345,8 +345,8 @@ namespace Uintah {
 
                 if ( bc_iter->second.type != BoundaryCondition::WALL ){ 
 
-                  vector<Patch::FaceType>::const_iterator bf_iter;
-                  vector<Patch::FaceType> bf;
+                  std::vector<Patch::FaceType>::const_iterator bf_iter;
+                  std::vector<Patch::FaceType> bf;
                   patch->getBoundaryFaces(bf);
 
                   for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++){
@@ -365,8 +365,8 @@ namespace Uintah {
                       std::string bc_s_value = "NA";
 
                       Iterator bound_ptr;
-                      string bc_kind = "NotSet"; 
-                      string face_name; 
+                      std::string bc_kind = "NotSet";
+                      std::string face_name;
                       getBCKind( patch, face, child, bc_iter->second.name, indx, bc_kind, face_name ); 
 
                       bool foundIterator = "false"; 
@@ -861,8 +861,8 @@ namespace Uintah {
                 if ( bc_iter->second.type == BoundaryCondition::OUTLET || 
                      bc_iter->second.type == BoundaryCondition::PRESSURE ){ 
 
-                  vector<Patch::FaceType>::const_iterator bf_iter;
-                  vector<Patch::FaceType> bf;
+                  std::vector<Patch::FaceType>::const_iterator bf_iter;
+                  std::vector<Patch::FaceType> bf;
                   patch->getBoundaryFaces(bf);
 
                   for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++){
@@ -880,7 +880,7 @@ namespace Uintah {
                       double bc_value = 0;
                       //int norm = getNormal( face ); 
                       
-                      string bc_kind = "NotSet";
+                      std::string bc_kind = "NotSet";
                       Iterator bound_ptr;
 
                       bool foundIterator = 

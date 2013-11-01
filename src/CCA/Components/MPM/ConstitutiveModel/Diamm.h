@@ -49,8 +49,8 @@ namespace Uintah {
     double rinit[100];
     double UI[190];
 
-    vector<const VarLabel*> ISVLabels;
-    vector<const VarLabel*> ISVLabels_preReloc;
+    std::vector<const VarLabel*> ISVLabels;
+    std::vector<const VarLabel*> ISVLabels_preReloc;
     int d_NINSV;
 
   private:

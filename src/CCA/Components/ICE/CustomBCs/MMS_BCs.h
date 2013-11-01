@@ -46,14 +46,14 @@ namespace Uintah {
     double viscosity;
     double gamma;
     double cv;
-    string whichMMS;
+    std::string whichMMS;
   };    
   //____________________________________________________________
   // This struct contains all of the additional local variables needed by setBC.
   struct mms_localVars{
     constCCVariable<double> press_CC;
     constCCVariable<double> rho_CC;
-    string where;
+    std::string where;
     double delT;
   };
   //____________________________________________________________
@@ -63,7 +63,7 @@ namespace Uintah {
                           mms_globalVars* mms_vb);
                   
   void addRequires_MMS(Task* t, 
-                       const string& where,
+                       const std::string& where,
                        ICELabel* lb,
                        const MaterialSubset* ice_matls);
                        
@@ -72,16 +72,16 @@ namespace Uintah {
                            ICELabel* lb,
                            const int indx,
                            const Patch* patch,
-                           const string& where,
+                           const std::string& where,
                            bool& setMMS_BCs,
                            mms_localVars* lv);
                            
   int  set_MMS_Velocity_BC(const Patch* patch,
                            const Patch::FaceType face,
                            CCVariable<Vector>& vel_CC,
-                           const string& var_desc,
+                           const std::string& var_desc,
                            Iterator& bound_ptr,
-                           const string& bc_kind,
+                           const std::string& bc_kind,
                            SimulationStateP& sharedState,
                            mms_globalVars* gv,
                            mms_localVars* lv);
@@ -90,7 +90,7 @@ namespace Uintah {
                               const Patch::FaceType face,
                               CCVariable<double>& temp_CC,
                               Iterator& bound_ptr,
-                              const string& bc_kind,
+                              const std::string& bc_kind,
                               mms_globalVars* gv,
                               mms_localVars* lv);
                               
@@ -98,7 +98,7 @@ namespace Uintah {
                         const Patch::FaceType face,
                         CCVariable<double>& press_CC,
                         Iterator& bound_ptr,
-                        const string& bc_kind,
+                        const std::string& bc_kind,
                         SimulationStateP& sharedState,
                         mms_globalVars* gv,
                         mms_localVars* lv);  

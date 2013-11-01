@@ -38,7 +38,6 @@ namespace Uintah {
   using SCIRun::Vector;
   using SCIRun::IntVector;
   using SCIRun::Point;
-  using std::vector;
 
   class ParticleInterpolator {
     
@@ -50,30 +49,30 @@ namespace Uintah {
     virtual ParticleInterpolator* clone(const Patch*) = 0;
     
     virtual void findCellAndWeights(const Point& p,
-                                    vector<IntVector>& ni, 
-                                    vector<double>& S,
+                                    std::vector<IntVector>& ni,
+                                    std::vector<double>& S,
                                     const Matrix3& size, 
                                     const Matrix3& defgrad) = 0;
                                     
 
                                     
     virtual void findCellAndShapeDerivatives(const Point& pos,
-                                             vector<IntVector>& ni,
-                                             vector<Vector>& d_S,
+                                             std::vector<IntVector>& ni,
+                                             std::vector<Vector>& d_S,
                                              const Matrix3& size, 
                                              const Matrix3& defgrad=Matrix3(0)) = 0;
                                              
     virtual void findCellAndWeightsAndShapeDerivatives(const Point& pos,
-                                                       vector<IntVector>& ni,
-                                                       vector<double>& S,
-                                                       vector<Vector>& d_S,
+                                                       std::vector<IntVector>& ni,
+                                                       std::vector<double>& S,
+                                                       std::vector<Vector>& d_S,
                                                        const Matrix3& size,
                                                        const Matrix3& defgrad) = 0;
 
    //__________________________________
    //  Needed for AMRMPM
-    virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni,
-                                    vector<double>& S,
+    virtual void findCellAndWeights(const Point& p,std::vector<IntVector>& ni,
+                                    std::vector<double>& S,
                                     constNCVariable<Stencil7>& zoi,
                                     constNCVariable<Stencil7>& zoi_fine,
                                     const bool& getFiner,
@@ -82,15 +81,15 @@ namespace Uintah {
                                     const Patch* patch) {};
                                     
     virtual void findCellAndWeights_CFI(const Point& pos,
-                                        vector<IntVector>& ni,
-                                        vector<double>& S,
+                                        std::vector<IntVector>& ni,
+                                        std::vector<double>& S,
                                         constNCVariable<Stencil7>& zoi) {};
                                     
     virtual void findCellAndWeightsAndShapeDerivatives_CFI(
                                             const Point& pos,
-                                            vector<IntVector>& CFI_ni,
-                                            vector<double>& S,
-                                            vector<Vector>& d_S,
+                                            std::vector<IntVector>& CFI_ni,
+                                            std::vector<double>& S,
+                                            std::vector<Vector>& d_S,
                                             constNCVariable<Stencil7>& zoi) {};
     virtual int size() = 0;
   };

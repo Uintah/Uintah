@@ -63,14 +63,14 @@ namespace Uintah {
       // to have this all in one place
       FldDumper(bool bin) : bin_(bin), os_(0) {}
     
-      void setstrm(ostream * os) { os_ = os; }
+      void setstrm(std::ostream * os) { os_ = os; }
       void unsetstrm() { os_ = 0; }
     
-      void textfld(string v, int width=80) {
+      void textfld(std::string v, int width=80) {
         *os_ << std::setw(width) << std::setiosflags(std::ios::left) << v;
       }
       
-      void textfld(string v, int width, int binwidth) {
+      void textfld(std::string v, int width, int binwidth) {
         if(bin_)
           *os_ << std::setw(binwidth)  << std::setiosflags(std::ios::left) << v;
         else
@@ -120,8 +120,8 @@ namespace Uintah {
         numfld((float)v);
       }
     
-      bool      bin_;
-      ostream * os_;
+      bool           bin_;
+      std::ostream * os_;
     };
 
     struct Data {
@@ -132,38 +132,38 @@ namespace Uintah {
       {}
       
       DataArchive * da_;
-      string        dir_;
+      std::string   dir_;
       FldDumper   * dumper_;
       bool          onemesh_, withpart_;
       const FieldSelection & fselect_;
     };
   
   public:
-    EnsightDumper(DataArchive* da, string basedir, 
+    EnsightDumper(DataArchive* da, std::string basedir,
                   const EnsightOpts & opts, const FieldSelection & fselect);
     ~EnsightDumper();
     
-    string directoryExt() const { return "ensight"; }
-    void   addField(string fieldname, const Uintah::TypeDescription * type);
+    std::string directoryExt() const { return "ensight"; }
+    void   addField(std::string fieldname, const Uintah::TypeDescription * type);
   
     class Step : public FieldDumper::Step {
       friend class EnsightDumper;
     private:
-      Step(Data * data, string tsdir, int timestep, double time, int index, int fileindex);
+      Step(Data * data, std::string tsdir, int timestep, double time, int index, int fileindex);
       
     public:
-      string infostr() const { return stepdesc_; }
+      std::string infostr() const { return stepdesc_; }
       void   storeGrid ();
-      void   storeField(string filename, const Uintah::TypeDescription * type);
+      void   storeField(std::string filename, const Uintah::TypeDescription * type);
     
     private:
-      void storePartField(string filename, const Uintah::TypeDescription * type);
-      void storeGridField(string filename, const Uintah::TypeDescription * type);
+      void storePartField(std::string filename, const Uintah::TypeDescription * type);
+      void storeGridField(std::string filename, const Uintah::TypeDescription * type);
     
     private:
-      int    fileindex_;
-      string stepdname_;
-      string stepdesc_;
+      int         fileindex_;
+      std::string stepdname_;
+      std::string stepdesc_;
     
     private:
       Data    * data_;
@@ -180,7 +180,7 @@ namespace Uintah {
     int           nsteps_;
     std::ofstream casestrm_;
     int           tscol_;
-    ostringstream tsstrm_;
+    std::ostringstream tsstrm_;
     FldDumper     flddumper_;
     Data          data_;
   };

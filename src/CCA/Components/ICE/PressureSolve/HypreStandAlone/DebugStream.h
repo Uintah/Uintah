@@ -29,7 +29,6 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-using std::string;
 
 class DebugStream;
 class DebugBuf;

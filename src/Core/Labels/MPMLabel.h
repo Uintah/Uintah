@@ -30,7 +30,6 @@
 
 namespace Uintah {
 
-using std::vector;
   class VarLabel;
 
     class MPMLabel {

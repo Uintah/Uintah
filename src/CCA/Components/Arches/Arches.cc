@@ -165,7 +165,9 @@
 
 using std::endl;
 using std::string;
+using std::vector;
 using std::ifstream;
+using std::ostringstream;
 using std::make_pair;
 using std::cout;
 

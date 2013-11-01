@@ -126,9 +126,9 @@ namespace Uintah {
     virtual void getSolution_CC(const int matl);
 
     // HYPRE data printouts
-    virtual void printMatrix(const string& fileName = "output");
-    virtual void printRHS(const string& fileName = "output_b");
-    virtual void printSolution(const string& fileName = "output_x");
+    virtual void printMatrix(const std::string& fileName = "output");
+    virtual void printRHS(const std::string& fileName = "output_b");
+    virtual void printSolution(const std::string& fileName = "output_x");
 
    
   private:

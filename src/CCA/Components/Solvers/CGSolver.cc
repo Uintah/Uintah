@@ -48,7 +48,7 @@
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
-using std::cout;
+using namespace std;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output

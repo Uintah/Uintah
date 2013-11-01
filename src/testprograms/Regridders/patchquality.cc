@@ -11,7 +11,7 @@
 
 using namespace SCIRun;
 using namespace Uintah;
-using std::endl; using std::cout;
+using std::endl; using std::cout; using std::vector;
 
 #include "mpi.h"
 #include <testprograms/Regridders/TiledRegridder.h>

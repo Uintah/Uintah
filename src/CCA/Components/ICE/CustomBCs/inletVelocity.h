@@ -75,7 +75,7 @@ namespace Uintah {
                                GridP& grid);
  
   void addRequires_inletVel(Task* t, 
-                            const string& where,
+                            const std::string& where,
                             ICELabel* lb,
                             const MaterialSubset* ice_matls,
                             const bool recursive);
@@ -84,7 +84,7 @@ namespace Uintah {
                                       ICELabel* lb,
                                       const int indx,
                                       const Patch* patch,
-                                      const string& where,
+                                      const std::string& where,
                                       bool& set_BCs,
                                       const bool recursive,
                                       inletVel_localVars* local);
@@ -92,9 +92,9 @@ namespace Uintah {
   int set_inletVelocity_BC(const Patch* patch,
                            const Patch::FaceType face,
                            CCVariable<Vector>& vel_CC,
-                           const string& var_desc,
+                           const std::string& var_desc,
                            Iterator& bound_ptr,
-                           const string& bc_kind,
+                           const std::string& bc_kind,
                            const Vector& bc_value,
                            inletVel_globalVars* global,
                            inletVel_localVars* local );
@@ -107,14 +107,14 @@ namespace Uintah {
                                const Patch::FaceType face,
                                T& vel_FC,
                                Iterator& bound_ptr,
-                               const string& bc_kind,
+                               const std::string& bc_kind,
                                const double& bc_value,
                                inletVel_localVars* lv,
                                inletVel_globalVars* gv )
 {
 
   coutBC_FC<< "Doing set_inletVelocity_BCs_FC: \t\t" 
-            << "("<< bc_kind << ") \t\t" <<patch->getFaceName(face)<< endl;
+            << "("<< bc_kind << ") \t\t" <<patch->getFaceName(face)<< std::endl;
   //__________________________________
   // on (x,y,z)minus faces move in one cell
   IntVector oneCell(0,0,0);
@@ -157,7 +157,7 @@ namespace Uintah {
          vel_FC[c] = 0;
        }
   
-     //std::cout << "        " << c <<  " h " << h  << " h/height  " << (h - d)/height << " vel_FC: " << vel_FC[c] <<endl;
+     //std::cout << "        " << c <<  " h " << h  << " h/height  " << (h - d)/height << " vel_FC: " << vel_FC[c] <<std::endl;
     }
   }
   //__________________________________
@@ -182,12 +182,12 @@ namespace Uintah {
         vel_FC[c] = 0;
       }
       
-//    std::cout << "        " << c <<  " z " << z  << " h/height  " << ratio << " vel_FC: " << vel_FC[c] <<endl;
+//    std::cout << "        " << c <<  " z " << z  << " h/height  " << ratio << " vel_FC: " << vel_FC[c] <<std::endl;
     }
   }else{
-    ostringstream warn;
+    std::ostringstream warn;
     warn << "ERROR ICE::set_inletVelocity_BCs_FC  This type of boundary condition has not been implemented ("
-         << bc_kind << ")\n" << endl; 
+         << bc_kind << ")\n" << std::endl;
     throw InternalError(warn.str(), __FILE__, __LINE__);
   }
   //______________________________________________________________________
@@ -212,7 +212,7 @@ namespace Uintah {
       }
       
       //if( cc.z() == 10){
-      //  std::cout << "cc: " << cc << " c " << c << ", vel_CC.x, " << vel_CC[c].x()<< " vel_FC: " << vel_FC[cc] <<endl;
+      //  std::cout << "cc: " << cc << " c " << c << ", vel_CC.x, " << vel_CC[c].x()<< " vel_FC: " << vel_FC[cc] <<std::endl;
       //}
     }
   }  

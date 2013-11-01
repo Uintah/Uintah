@@ -83,13 +83,13 @@ WARNING
 
 	 //////////
 	 // Construct a box from a min/max point
-	 NullGeometryPiece(const string& file_name);
+	 NullGeometryPiece(const std::string& file_name);
 	 
 	 //////////
 	 // Destructor
 	 virtual ~NullGeometryPiece();
 
-         static const string TYPE_NAME;
+         static const std::string TYPE_NAME;
          virtual std::string getType() const { return TYPE_NAME; }
 
 	 /// Make a clone

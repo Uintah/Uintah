@@ -125,8 +125,8 @@ WARNING
     const VarLabel* phi_label;
     const VarLabel* pi_label;
     double r0;
-    string initial_condition;
-    string integration;
+    std::string initial_condition;
+    std::string integration;
     SimulationStateP sharedState_;
     SimpleMaterial* mymat_;
     Step rk4steps[4];

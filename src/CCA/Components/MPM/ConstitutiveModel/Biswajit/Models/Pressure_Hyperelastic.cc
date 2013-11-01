@@ -28,6 +28,7 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <cmath>
 
+using namespace std;
 using namespace Uintah;
 using namespace UintahBB;
 

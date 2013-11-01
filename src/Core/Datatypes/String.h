@@ -72,7 +72,7 @@ public:
   inline std::string getstring();
 
   //! Persistent representation...
-  virtual string type_name() { return "String"; }
+  virtual std::string type_name() { return "String"; }
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   

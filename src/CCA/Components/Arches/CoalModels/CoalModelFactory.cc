@@ -10,6 +10,7 @@
 
 //===========================================================================
 
+using namespace std;
 using namespace Uintah;
 
 CoalModelFactory::CoalModelFactory()

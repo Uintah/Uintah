@@ -33,6 +33,7 @@
 #include <iostream>
 
 using std::endl;
+using std::vector;
 
 using namespace SCIRun;
 using namespace Uintah;

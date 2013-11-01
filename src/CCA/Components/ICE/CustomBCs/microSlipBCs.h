@@ -62,7 +62,7 @@ namespace Uintah {
                                 slip_globalVars* gv);
                                  
   void addRequires_MicroSlip(Task* t, 
-                             const string& where,
+                             const std::string& where,
                              ICELabel* lb,
                              const MaterialSubset* ice_matls,
                              slip_globalVars* sv);
@@ -71,7 +71,7 @@ namespace Uintah {
                                 DataWarehouse* new_dw,
                                 ICELabel* lb,
                                 const Patch* patch,
-                                const string& where,
+                                const std::string& where,
                                 const int indx,
                                 SimulationStateP& sharedState,
                                 bool& setSlipBcs,
@@ -85,9 +85,9 @@ namespace Uintah {
   int set_MicroSlipVelocity_BC(const Patch* patch,
                               const Patch::FaceType face,
                               CCVariable<Vector>& vel_CC,
-                              const string& var_desc,
+                              const std::string& var_desc,
                               Iterator& bound_ptr,
-                              const string& bc_kind,
+                              const std::string& bc_kind,
                               const Vector wall_velocity,
                               slip_localVars* lv);
 
@@ -95,7 +95,7 @@ namespace Uintah {
                               const Patch::FaceType face,
                               CCVariable<double>& temp_CC,
                               Iterator& bound_ptr,
-                              const string& bc_kind,
+                              const std::string& bc_kind,
                               const double wall_temperature,
                               slip_localVars* lv);                          
 } // End namespace Uintah

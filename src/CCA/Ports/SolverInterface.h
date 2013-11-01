@@ -82,7 +82,7 @@ namespace Uintah {
       outputFileName=s;
     }
     
-    void getOutputFileName(vector<string>& fname) const {
+    void getOutputFileName(std::vector<std::string>& fname) const {
       fname.push_back( "A" + outputFileName );
       fname.push_back( "b" + outputFileName );
       fname.push_back( "x" + outputFileName );
@@ -127,7 +127,7 @@ namespace Uintah {
                                       const MaterialSet* matls);
 #endif
 
-    virtual string getName()=0;
+    virtual std::string getName()=0;
   
   private: 
     SolverInterface(const SolverInterface&);

@@ -100,13 +100,15 @@ namespace Uintah {
     //! different number of procs than were saved to disk
     virtual void restartInitialize( DataArchive* archive, int time_index,
                                     ProblemSpecP& pspec,
-                                    string tsurl, const GridP& grid );
+                                    std::string tsurl, const GridP& grid );
    
     //Collects each patch's particles
-    void collectParticles(const Grid* grid, vector<vector<int> >& num_particles);
+    void collectParticles(const Grid* grid, std::vector<std::vector<int> >& num_particles);
     
     // same, but can be called after a regrid when patches have not been load balanced yet
-    void collectParticlesForRegrid(const Grid* oldGrid, const vector<vector<Region> >& newGridRegions,  vector<vector<int> >& particles);
+    void collectParticlesForRegrid(const Grid* oldGrid,
+                                   const std::vector<std::vector<Region> >& newGridRegions,
+                                   std::vector<std::vector<int> >& particles );
 
 
   private:
@@ -119,7 +121,7 @@ namespace Uintah {
       double_int(): val(0), loc(-1) {}
     };
 
-    vector<IntVector> d_minPatchSize;
+    std::vector<IntVector> d_minPatchSize;
     enum { static_lb, cyclic_lb, random_lb, patch_factor_lb, zoltan_sfc_lb };
 
     ParticleLoadBalancer(const ParticleLoadBalancer&);
@@ -131,22 +133,22 @@ namespace Uintah {
     bool loadBalanceGrid(const GridP& grid, bool force);
 
     //gets the cell costs and particle costs for each patch
-    void getCosts(const Grid* grid, vector<vector<double> > &particleCosts, vector<vector<double> > &cellCosts);
+    void getCosts(const Grid* grid, std::vector<std::vector<double> > &particleCosts, std::vector<std::vector<double> > &cellCosts);
 
     //sets processor "assignments" for "patches" based on the "patchCosts" and "previousProcCosts"
-    void assignPatches( const vector<double> &previousProcCosts, const vector<double> &patchCosts, vector<int> &patches, vector<int> &assignments );
+    void assignPatches( const std::vector<double> &previousProcCosts, const std::vector<double> &patchCosts, std::vector<int> &patches, std::vector<int> &assignments );
 
     // calls space-filling curve on level, and stores results in pre-allocated output
     void useSFC(const LevelP& level, int* output);
     
     //compute the percent improvement of the assignments in d_tempAssignment vs d_processorAssignment for the given cost array
-    double computePercentImprovement(const vector<vector<double> >& costs, double &avg, double &max);
+    double computePercentImprovement(const std::vector<std::vector<double> >& costs, double &avg, double &max);
 
     //compute the load imbalance of d_processorAssignment given the costs vector
-    double computeImbalance(const vector<vector<double> >& costs);
+    double computeImbalance(const std::vector<std::vector<double> >& costs);
 
     //given the two cost arrays determine if the new load balance is better than the previous
-    bool thresholdExceeded(const std::vector<vector<double> >& cellCosts, const std::vector<vector<double> >& particleCosts);
+    bool thresholdExceeded(const std::vector<std::vector<double> >& cellCosts, const std::vector<std::vector<double> >& particleCosts);
 
     std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
     std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on

@@ -39,6 +39,7 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
+using namespace std;
 using namespace Uintah;
 //______________________________________________________________________
 //  Preliminary

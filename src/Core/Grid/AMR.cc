@@ -26,7 +26,7 @@
 #include <Core/Math/MinMax.h>
 
 using namespace SCIRun;
-using std::cout;
+using namespace std;
 
 namespace Uintah {
 

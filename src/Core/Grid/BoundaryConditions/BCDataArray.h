@@ -55,9 +55,6 @@ namespace Uintah {
 
 */
 
-  using std::vector;
-  using std::map;
-
    class BCDataArray {
    public:
 
@@ -78,7 +75,8 @@ namespace Uintah {
 
      /// Get the boundary condition data for a given material and a given
      /// type for a given child.
-     const BoundCondBase* getBoundCondData(int mat_id,const string type, 
+     const BoundCondBase* getBoundCondData(int mat_id,
+                                           const std::string type,
                                            int ichild) const;
 
      /// Determine the iterator limits.
@@ -108,7 +106,7 @@ namespace Uintah {
      
      /// The map is for the mat_id.  -1 is for mat_id = "all", 0, for 
      /// mat_id = "0", etc.
-     typedef map<int,vector<BCGeomBase*> > bcDataArrayType;         
+     typedef std::map<int,std::vector<BCGeomBase*> > bcDataArrayType;
    private:
      bcDataArrayType d_BCDataArray;
      friend class Patch;

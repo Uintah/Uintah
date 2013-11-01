@@ -97,8 +97,8 @@ namespace Uintah {
     double d_hugeJ;
     // weibull parameter set
     WeibParameters wdist;
-    vector<const VarLabel*> ISVLabels;
-    vector<const VarLabel*> ISVLabels_preReloc;
+    std::vector<const VarLabel*> ISVLabels;
+    std::vector<const VarLabel*> ISVLabels_preReloc;
     const VarLabel* peakI1IDistLabel;
     const VarLabel* peakI1IDistLabel_preReloc;
     const VarLabel* pLocalizedLabel;  

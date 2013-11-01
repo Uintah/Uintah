@@ -153,7 +153,7 @@ WARNING
     MaterialSubset* d_one_matl;
    
 
-    string fromMaterial, toMaterial;
+    std::string fromMaterial, toMaterial;
     double d_G;
     double d_b;
     double d_E0;

@@ -34,7 +34,7 @@ public:
   typedef std::map<int, constCCVariable<double> > PcStorage;         
 
   PCTransport( std::string srcName, SimulationStateP& shared_state, 
-                vector<std::string> reqLabelNames, std::string type );
+                std::vector<std::string> reqLabelNames, std::string type );
   ~PCTransport();
 
   void problemSetup(const ProblemSpecP& db);
@@ -58,7 +58,7 @@ public:
 
     public: 
 
-      Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
+      Builder( std::string name, std::vector<std::string> required_label_names, SimulationStateP& shared_state )
         : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){
           _type="pctransport";
         };
@@ -71,7 +71,7 @@ public:
 
       std::string _name; 
       SimulationStateP& _shared_state; 
-      vector<std::string> _required_label_names; 
+      std::vector<std::string> _required_label_names;
 
   }; // class Builder 
 
@@ -80,7 +80,7 @@ private:
   std::string _pc_scal_file; 
   std::string _pc_st_scal_file; 
   std::string _svm_base_name;
-  vector<std::string> _svm_models; 
+  std::vector<std::string> _svm_models;
   std::map<int, std::string> _pc_info; 
   std::map<int, const VarLabel*> _pc_labels; 
 

@@ -44,19 +44,15 @@
 #include <Core/Persistent/share.h>
 namespace SCIRun {
 
-using std::string;
-using std::map;
-using std::pair;
-
 class Persistent;
 
 //----------------------------------------------------------------------
 struct SCISHARE PersistentTypeID {
-  string type;
-  string parent;
+  std::string type;
+  std::string parent;
   Persistent* (*maker)();
-  PersistentTypeID(const string& type, 
-		   const string& parent,
+  PersistentTypeID(const std::string& type,
+		   const std::string& parent,
 		   Persistent* (*maker)(), 
 		   Persistent* (*bc_maker1)() = 0, 
 		   Persistent* (*bc_maker2)() = 0);
@@ -70,9 +66,9 @@ class SCISHARE Piostream {
   
 public:
 
-  typedef map<Persistent*, int>			MapPersistentInt;
-  typedef map<int, Persistent*>			MapIntPersistent;
-  typedef map<string, PersistentTypeID*>	MapStringPersistentTypeID;
+  typedef std::map<Persistent*, int>                MapPersistentInt;
+  typedef std::map<int, Persistent*>                MapIntPersistent;
+  typedef std::map<std::string, PersistentTypeID*>  MapStringPersistentTypeID;
 
   enum Direction {
     Read,
@@ -88,7 +84,7 @@ public:
   void flag_error() { err = 1; }
   
 protected:
-  Piostream(Direction, int, const string &, ProgressReporter *pr);
+  Piostream(Direction, int, const std::string &, ProgressReporter *pr);
 
   Direction dir;
   int version_;
@@ -101,24 +97,24 @@ protected:
   int current_pointer_id;
 
   bool have_peekname_;
-  string peekname_;
+  std::string peekname_;
 
   ProgressReporter *reporter_;
   bool own_reporter_;
   bool backwards_compat_id_;
   virtual void emit_pointer(int& have_data, int& pointer_id);
   static bool readHeader(ProgressReporter *pr,
-                         const string& filename, char* hdr,
+                         const std::string& filename, char* hdr,
 			 const char* type, int& version, int& endian);
 
   virtual void reset_post_header() = 0;
 public:
-  string file_name;
+  std::string file_name;
 
   virtual ~Piostream();
 
-  virtual string peek_class();
-  virtual int begin_class(const string& name, int current_version);
+  virtual std::string peek_class();
+  virtual int begin_class(const std::string& name, int current_version);
   virtual void end_class();
   virtual void begin_cheap_delim();
   virtual void end_cheap_delim();
@@ -137,7 +133,7 @@ public:
   virtual void io(unsigned long long&) = 0;
   virtual void io(double&) = 0;
   virtual void io(float&) = 0;
-  virtual void io(string& str) = 0;
+  virtual void io(std::string& str) = 0;
 
   void io(Persistent*&, const PersistentTypeID&);
 
@@ -151,15 +147,15 @@ public:
   // Returns true if bkock_io was supported (even on error).
   virtual bool block_io(void*, size_t, size_t) { return false; }
 
-  SCISHARE friend Piostream* auto_istream(const string& filename,
+  SCISHARE friend Piostream* auto_istream(const std::string& filename,
                                  ProgressReporter *pr);
-  SCISHARE friend Piostream* auto_ostream(const string& filename, const string& type,
+  SCISHARE friend Piostream* auto_ostream(const std::string& filename, const std::string& type,
                                  ProgressReporter *pr);
 };
 
-  SCISHARE Piostream* auto_istream(const string& filename,
+  SCISHARE Piostream* auto_istream(const std::string& filename,
                                    ProgressReporter *pr = 0);
-  SCISHARE Piostream* auto_ostream(const string& filename, const string& type,
+  SCISHARE Piostream* auto_ostream(const std::string& filename, const std::string& type,
                                    ProgressReporter *pr = 0);
 
 
@@ -185,7 +181,7 @@ inline void Pio(Piostream& stream, long long& data) { stream.io(data); }
 inline void Pio(Piostream& stream, unsigned long long& data) { stream.io(data); }
 inline void Pio(Piostream& stream, double& data) { stream.io(data); }
 inline void Pio(Piostream& stream, float& data) { stream.io(data); }
-inline void Pio(Piostream& stream, string& data) { stream.io(data); }
+inline void Pio(Piostream& stream, std::string& data) { stream.io(data); }
 inline void Pio(Piostream& stream, Persistent& data) { data.io(stream); }
 
 

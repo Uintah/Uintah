@@ -31,6 +31,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
+using namespace std;
 
 const string TorusGeometryPiece::TYPE_NAME = "torus";
 

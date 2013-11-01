@@ -74,7 +74,7 @@ namespace Uintah {
     
     int getTimeIndex( int timestep, double elapTime);
     
-    vector<double> getVelocityVector( int t, int j, int k );
+    std::vector<double> getVelocityVector( int t, int j, int k );
     
     void findOffsetVector(const Patch* patch, const Patch::FaceType& face, 
                                 Iterator bound_ptr );
@@ -88,11 +88,11 @@ namespace Uintah {
     int NT, jSize, kSize; //time and spatial table dimensions
     
     //final velocities
-    vector<double> uFluct;
-    vector<double> vFluct;
-    vector<double> wFluct;
+    std::vector<double> uFluct;
+    std::vector<double> vFluct;
+    std::vector<double> wFluct;
     
-    vector<int> minC; //store indicies of lowest corner value of bounding box aroudn inlet
+    std::vector<int> minC; //store indicies of lowest corner value of bounding box aroudn inlet
     
   }; //end class DigitalFilterInlet
   

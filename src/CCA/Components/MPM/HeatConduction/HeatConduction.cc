@@ -36,6 +36,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Util/DebugStream.h>
 
+using namespace std;
 using namespace Uintah;
 
 #define EROSION

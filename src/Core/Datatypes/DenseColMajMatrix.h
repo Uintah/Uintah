@@ -46,8 +46,6 @@
 
 namespace SCIRun {
 
-using std::vector;
-
 class SCISHARE DenseColMajMatrix : public Matrix
 {
   double*  dataptr_;
@@ -98,8 +96,8 @@ public:
   bool    solve(ColumnMatrix&, int overwrite=0);
   bool    solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
 		int overwrite=0);
-  bool    solve(vector<double>& sol, int overwrite=0);
-  bool    solve(const vector<double>& rhs, vector<double>& lhs,
+  bool    solve(std::vector<double>& sol, int overwrite=0);
+  bool    solve(const std::vector<double>& rhs, std::vector<double>& lhs,
 		int overwrite=0);
 #endif
 

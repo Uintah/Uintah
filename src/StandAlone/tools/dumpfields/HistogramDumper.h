@@ -56,27 +56,27 @@ namespace Uintah {
   class HistogramDumper : public FieldDumper 
   {
   public:
-    HistogramDumper(DataArchive* da, string basedir, HistogramOpts opts,
+    HistogramDumper(DataArchive* da, std::string basedir, HistogramOpts opts,
                     const FieldSelection & fselect);
     
-    string directoryExt() const { return "hist"; }
-    void addField(string /*fieldname*/, const Uintah::TypeDescription * /*theType*/) {}
+    std::string directoryExt() const { return "hist"; }
+    void addField(std::string /*fieldname*/, const Uintah::TypeDescription * /*theType*/) {}
   
     class Step : public FieldDumper::Step {
     public:
-      Step(DataArchive * da, string outdir, int timestep, double time, int index, 
+      Step(DataArchive * da, std::string outdir, int timestep, double time, int index,
            const HistogramOpts & opts, const FieldSelection & fselect);
     
       void storeGrid () {}
-      void storeField(string fieldname, const Uintah::TypeDescription * type);
+      void storeField(std::string fieldname, const Uintah::TypeDescription * type);
     
-      string infostr() const { return stepdname_; }
+      std::string infostr() const { return stepdname_; }
     
     private:
-      string stepdname_;
+      std::string stepdname_;
       
       DataArchive* da_;
-      string       basedir_;
+      std::string       basedir_;
       
       const HistogramOpts &  opts_;
       const FieldSelection & fselect_;

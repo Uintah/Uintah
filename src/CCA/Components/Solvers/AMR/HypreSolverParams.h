@@ -69,8 +69,8 @@ namespace Uintah {
     ~HypreSolverParams(void) {}
 
     // Parameters common for all Hypre Solvers
-    string solverTitle;        // String corresponding to solver type
-    string precondTitle;       // String corresponding to preconditioner type
+    std::string solverTitle;   // String corresponding to solver type
+    std::string precondTitle;  // String corresponding to preconditioner type
     double tolerance;          // Residual tolerance for solver
     int    maxIterations;      // Maximum # iterations allowed
     int    logging;            // Log Hypre solver (using Hypre options)

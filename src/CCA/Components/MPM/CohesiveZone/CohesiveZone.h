@@ -60,7 +60,7 @@ namespace Uintah {
                                             particleIndex numParticles,
                                             CCVariable<short int>& cellNAPID,
                                             const Patch*,DataWarehouse* new_dw,
-                                            const string filename);
+                                            const std::string filename);
 
     virtual ParticleSubset* allocateVariables(particleIndex numParticles,
                                               int dwi, const Patch* patch,
@@ -68,7 +68,7 @@ namespace Uintah {
 
     virtual void registerPermanentCohesiveZoneState(CZMaterial* czmat);
 
-    virtual particleIndex countCohesiveZones(const Patch*, const string fname);
+    virtual particleIndex countCohesiveZones(const Patch*, const std::string fname);
 
     void scheduleInitialize(const LevelP& level, SchedulerP& sched,
                             CZMaterial* czmat);
@@ -79,8 +79,8 @@ namespace Uintah {
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw);
 
-    vector<const VarLabel* > returnCohesiveZoneState();
-    vector<const VarLabel* > returnCohesiveZoneStatePreReloc();
+    std::vector<const VarLabel* > returnCohesiveZoneState();
+    std::vector<const VarLabel* > returnCohesiveZoneStatePreReloc();
 
   protected:
 
@@ -96,7 +96,7 @@ namespace Uintah {
     MPMFlags* d_flags;
     SimulationStateP d_sharedState;
 
-    vector<const VarLabel* > d_cz_state, d_cz_state_preReloc;
+    std::vector<const VarLabel* > d_cz_state, d_cz_state_preReloc;
   };
 
 } // End of namespace Uintah

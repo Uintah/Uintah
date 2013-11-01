@@ -89,7 +89,7 @@ public:
   double getMolecularViscosity() const; 
 
   double getSmagorinskyConst() const {
-    std::cerr << "There is no Smagorinsky constant in CompDynamic Procedure" << endl;
+    std::cerr << "There is no Smagorinsky constant in CompDynamic Procedure" << std::endl;
     exit(0);
     return 0;
   }

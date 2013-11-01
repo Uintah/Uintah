@@ -34,7 +34,7 @@ class CCScalarEqnBuilder: public EqnBuilder
 public:
   CCScalarEqnBuilder( ArchesLabel* fieldLabels, 
                       ExplicitTimeInt* timeIntegrator, 
-                      string eqnName );
+                      std::string eqnName );
   ~CCScalarEqnBuilder();
 
   EqnBase* build(); 
@@ -52,7 +52,7 @@ public EqnBase{
 
 public: 
 
-  ScalarEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName );
+  ScalarEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, std::string eqnName );
 
   ~ScalarEqn();
 
@@ -99,7 +99,7 @@ public:
   void sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep);
 
   /** @brief Apply boundary conditions */
-  template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi );
+  template <class phiType> void computeBCs( const Patch* patch, std::string varName, phiType& phi );
 
   /** @brief Schedule the cleanup after this equation. */ 
   void sched_cleanUp( const LevelP&, SchedulerP& sched ); 

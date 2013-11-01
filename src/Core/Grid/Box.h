@@ -27,12 +27,11 @@
 #define UINTAH_GRID_BOX_H
 
 #include <Core/Geometry/Point.h>
+#include <iosfwd>
 #include <deque>
-#include   <iosfwd>
 
 namespace Uintah {
 
-using std::deque;
 using namespace SCIRun;
 
 /**************************************
@@ -114,8 +113,8 @@ using namespace SCIRun;
          return d_lower.x() >= d_upper.x() || d_lower.y() >= d_upper.y() || d_lower.z() >= d_upper.z();
       }
 
-       static deque<Box> difference(const Box& b1, const Box& b2);
-       static deque<Box> difference(deque<Box>& boxSet1, deque<Box>& boxSet2);
+       static std::deque<Box> difference(const Box& b1, const Box& b2);
+       static std::deque<Box> difference(std::deque<Box>& boxSet1, std::deque<Box>& boxSet2);
 
        friend std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
 

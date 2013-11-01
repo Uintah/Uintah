@@ -46,7 +46,7 @@ namespace Uintah {
   private:
     // Create datatype for storing model parameters
     // Crack propagation criterion
-    string crackPropagationCriterion;
+    std::string crackPropagationCriterion;
     // Parameters in the empirical criterion
     // (KI/KIc)^p+(KII/KIIc)^q=1 for crack initialization (KIIc=r*KIc)
     double p,q,r;
@@ -59,7 +59,7 @@ namespace Uintah {
       double alpha; // Coefficient of thermal expansion for thermal stress
       // Fracture toughness at various velocities
       // in the format Vector(Vc,KIc,KIIc)
-      vector<Vector> Kc; 
+      std::vector<Vector> Kc;
     };
 
   private:
@@ -137,7 +137,7 @@ namespace Uintah {
 
     // Convert J-integral into stress intensity factors
     // for hypoelastic materials (for FRACTURE) 
-    virtual void ConvertJToK(const MPMMaterial* matl, const string& stressState,
+    virtual void ConvertJToK(const MPMMaterial* matl, const std::string& stressState,
                     const Vector& J, const double& C, const Vector& V,Vector& SIF);
 
     // Detect if crack propagates and the propagation direction (for FRACTURE) 

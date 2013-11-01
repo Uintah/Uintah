@@ -39,8 +39,8 @@ class ModelBuilder
 {
 public:
   ModelBuilder( const std::string   & model_name, 
-                vector<std::string>   icLabelNames, 
-                vector<std::string>   scalarLabelNames, 
+                std::vector<std::string>   icLabelNames,
+                std::vector<std::string>   scalarLabelNames,
                 ArchesLabel   * fieldLabels,
                 SimulationStateP    & sharedState,
                 int                   qn ) : 
@@ -59,8 +59,8 @@ public:
   virtual ModelBase* build() = 0;
 protected: 
   std::string        d_modelName;
-  vector<string>     d_icLabels;
-  vector<string>     d_scalarLabels;
+  std::vector<std::string>     d_icLabels;
+  std::vector<std::string>     d_scalarLabels;
   ArchesLabel* d_fieldLabels;
   SimulationStateP & d_sharedState; 
   int                d_quadNode; 
@@ -155,7 +155,7 @@ public:
     return heatmodels_; };
 
         /** @brief      Get the initial composition vector for the coal particles */
-        vector<double> getInitialCoalComposition() {
+        std::vector<double> getInitialCoalComposition() {
                 return yelem; };
 
   /** @brief  Set the ArchesLabel class so that CoalModelFactory can use field labels from Arches */
@@ -178,40 +178,40 @@ private:
   bool b_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
   bool d_unweighted;
 
-  vector<double> yelem;                 ///< Vector containing initial composition of coal particle
+  std::vector<double> yelem;                 ///< Vector containing initial composition of coal particle
   ArchesLabel* d_fieldLabels;
   
   // If using coupled physics, specific internal coordinates are needed.
-  string s_LengthName;
+  std::string s_LengthName;
   VarLabel* d_Length_ICLabel;
   VarLabel* d_Length_GasLabel;
   const VarLabel* d_gas_temperature_label; 
 
-  string s_RawCoalName;
+  std::string s_RawCoalName;
   VarLabel* d_RawCoal_ICLabel;
   VarLabel* d_RawCoal_GasLabel;
 
-  string s_CharName;
+  std::string s_CharName;
   VarLabel* d_Char_ICLabel;
   VarLabel* d_Char_GasLabel;
 
   bool b_useParticleTemperature;
-  string s_ParticleTemperatureName;
+  std::string s_ParticleTemperatureName;
   VarLabel* d_ParticleTemperature_ICLabel;
   VarLabel* d_ParticleTemperature_GasLabel;
 
   bool b_useParticleEnthalpy;
-  string s_ParticleEnthalpyName;
+  std::string s_ParticleEnthalpyName;
   VarLabel* d_ParticleEnthalpy_ICLabel;
   VarLabel* d_ParticleEnthalpy_GasLabel;
 
   bool b_useMoisture;
-  string s_MoistureName;
+  std::string s_MoistureName;
   VarLabel* d_Moisture_ICLabel;
   VarLabel* d_Moisture_GasLabel;
 
   bool b_useAsh;
-  string s_AshName;
+  std::string s_AshName;
   VarLabel* d_Ash_ICLabel;
   VarLabel* d_Ash_GasLabel;
 

@@ -27,7 +27,7 @@ class DQMOMEqnBuilderBase
 public:
   DQMOMEqnBuilderBase( ArchesLabel* fieldLabels, 
                        ExplicitTimeInt* timeIntegrator,
-                       string eqnName ) : 
+                       std::string eqnName ) :
                        d_fieldLabels(fieldLabels), 
                        d_eqnName(eqnName), 
                        d_timeIntegrator(timeIntegrator) {};
@@ -38,7 +38,7 @@ public:
 
 protected: 
   ArchesLabel* d_fieldLabels; 
-  string d_eqnName; 
+  std::string d_eqnName;
   ExplicitTimeInt* d_timeIntegrator; 
 }; // class DQMOMEqnBuilder
 

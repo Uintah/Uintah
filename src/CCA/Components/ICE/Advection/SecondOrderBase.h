@@ -145,10 +145,10 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
   //__________________________________
   // Iterate over the coarsefine interface faces
   // use one-sided first order differencing to compute the gradient
- vector<Patch::FaceType>  faces;
+ std::vector<Patch::FaceType>  faces;
  patch->getCoarseFaces(faces);
  
- vector<Patch::FaceType>::const_iterator f_iter;   
+ std::vector<Patch::FaceType>::const_iterator f_iter;
  
   for (f_iter  = faces.begin(); f_iter != faces.end(); ++f_iter){
     Patch::FaceType face = *f_iter;
@@ -256,13 +256,13 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
 
   //__________________________________
   //Coarse fine interface faces
-  vector<Patch::FaceType>  faces;
+  std::vector<Patch::FaceType>  faces;
   patch->getCoarseFaces(faces);
   IntVector cl = patch->getExtraCellLowIndex();
   IntVector ch = patch->getExtraCellHighIndex() - IntVector(1,1,1);
   Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
   
-  vector<Patch::FaceType>::const_iterator f_iter;   
+  std::vector<Patch::FaceType>::const_iterator f_iter;
   for (f_iter  = faces.begin(); f_iter != faces.end(); ++f_iter){
     Patch::FaceType face = *f_iter; 
   
@@ -423,7 +423,7 @@ void SecondOrderBase::limitedGradient(const CCVariable<T>& q_CC,
   if(d_smokeOnOff){
     ostringstream fname;
     fname<<"limiter/"<<counter<< ".dat";
-    string filename = fname.str();
+    std::string filename = fname.str();
     
     fp = fopen(filename.c_str(), "w");
     counter +=1;

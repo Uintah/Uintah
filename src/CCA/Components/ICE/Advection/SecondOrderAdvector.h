@@ -137,7 +137,7 @@ namespace Uintah {
       template<class T>
         void q_FC_fluxes(const CCVariable<T>& q_CC,
                          const CCVariable<facedata<T> >& q_OAFS,
-                         const string& desc,
+                         const std::string& desc,
                          advectVarBasket* vb);
          
   };  

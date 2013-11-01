@@ -81,7 +81,7 @@ WARNING
 			LoadBalancer* lb,
 			const LevelP& level,
 			const VarLabel* old_posLabel,
-                        const std::vector<vector<const VarLabel*> >& old_labels,
+                        const std::vector<std::vector<const VarLabel*> >& old_labels,
 			const VarLabel* new_posLabel,
 			const std::vector<std::vector<const VarLabel*> >& new_labels,
 			const VarLabel* particleIDLabel,

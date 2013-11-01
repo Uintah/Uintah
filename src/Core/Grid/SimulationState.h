@@ -225,11 +225,11 @@ public:
   int* getActiveDims() { return d_activeDims; }
   void setDimensionality(bool x, bool y, bool z);
 
-  vector<vector<const VarLabel* > > d_particleState;
-  vector<vector<const VarLabel* > > d_particleState_preReloc;
+  std::vector<std::vector<const VarLabel* > > d_particleState;
+  std::vector<std::vector<const VarLabel* > > d_particleState_preReloc;
 
-  vector<vector<const VarLabel* > > d_cohesiveZoneState;
-  vector<vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
+  std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState;
+  std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
 
   bool d_switchState;
   double d_prev_delt;

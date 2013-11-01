@@ -50,9 +50,6 @@
 
 namespace SCIRun {
 
-using std::string;
-using std::vector;
-
 
 template <class Basis>
 class PointCloudMesh : public Mesh
@@ -74,21 +71,21 @@ public:
     typedef EdgeIndex<under_type>       index_type;
     typedef EdgeIterator<under_type>    iterator;
     typedef EdgeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };
 
   struct Face {
     typedef FaceIndex<under_type>       index_type;
     typedef FaceIterator<under_type>    iterator;
     typedef FaceIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };
 
   struct Cell {
     typedef CellIndex<under_type>       index_type;
     typedef CellIterator<under_type>    iterator;
     typedef CellIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>          array_type;
   };
 
   typedef Node Elem;
@@ -127,7 +124,7 @@ public:
   virtual PointCloudMesh *clone() { return new PointCloudMesh(*this); }
   virtual ~PointCloudMesh() {}
 
-  bool get_dim(vector<unsigned int>&) const { return false;  }
+  bool get_dim(std::vector<unsigned int>&) const { return false;  }
 
   void begin(typename Node::iterator &) const;
   void begin(typename Edge::iterator &) const;
@@ -231,7 +228,7 @@ public:
   { points_[i] = p; }
   void get_normal(Vector &, typename Node::index_type) const
   { ASSERTFAIL("This mesh type does not have node normals."); }
-  void get_normal(Vector &, vector<double> &, typename Elem::index_type,
+  void get_normal(Vector &, std::vector<double> &, typename Elem::index_type,
                   unsigned int)
   { ASSERTFAIL("This mesh type does not have element normals."); }
 
@@ -257,19 +254,19 @@ public:
 
   Basis& get_basis() { return basis_; }
 
-  void pwl_approx_edge(vector<vector<double> > &,
+  void pwl_approx_edge(std::vector<std::vector<double> > &,
                        typename Elem::index_type,
                        unsigned,
                        unsigned) const
   {}
 
-  void pwl_approx_face(vector<vector<vector<double> > > &,
+  void pwl_approx_face(std::vector<std::vector<std::vector<double> > > &,
                        typename Elem::index_type,
                        unsigned,
                        unsigned div_per_unit) const
   {}
 
-  bool get_coords(vector<double> &coords,
+  bool get_coords(std::vector<double> &coords,
                   const Point &p,
                   typename Elem::index_type idx) const
   {
@@ -278,16 +275,16 @@ public:
     return true;
   }
 
-  void interpolate(Point &pt, const vector<double> &coords,
+  void interpolate(Point &pt, const std::vector<double> &coords,
                    typename Node::index_type idx) const
   {
     get_center(pt, idx);
   }
 
   // get the Jacobian matrix
-  void derivate(const vector<double> &coords,
+  void derivate(const std::vector<double> &coords,
                 typename Elem::index_type idx,
-                vector<Point> &J) const
+                std::vector<Point> &J) const
   {
     J.resize(1);
     J[0].x(0.0L);
@@ -308,7 +305,7 @@ public:
 
 private:
   //! the nodes
-  vector<Point> points_;
+  std::vector<Point> points_;
 
   //! basis fns
   Basis         basis_;
@@ -344,8 +341,8 @@ template <class Basis>
 void
 PointCloudMesh<Basis>::transform(const Transform &t)
 {
-  vector<Point>::iterator itr = points_.begin();
-  vector<Point>::iterator eitr = points_.end();
+  std::vector<Point>::iterator itr = points_.begin();
+  std::vector<Point>::iterator eitr = points_.end();
   while (itr != eitr)
   {
     *itr = t.project(*itr);

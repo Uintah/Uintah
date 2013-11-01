@@ -34,7 +34,8 @@
 #include <typeinfo>
 #include <Core/Util/DebugStream.h>
 
-using namespace Uintah;
+using namespace std;
+
 namespace Uintah {
 //__________________________________
 //  To turn on couts

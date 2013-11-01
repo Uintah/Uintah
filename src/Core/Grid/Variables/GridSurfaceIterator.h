@@ -34,7 +34,6 @@
 namespace Uintah {
 
 using SCIRun::IntVector;
- using std::ostream;
 
 /**************************************
 
@@ -211,7 +210,7 @@ WARNING
        d_done= d_curFace==NULLFACE || d_iter.done();
      }
 
-     ostream& limits(ostream& out) const
+     std::ostream& limits(std::ostream& out) const
      {
        out << begin() << " " << end() - IntVector(1,1,1);
        return out;
@@ -225,7 +224,7 @@ WARNING
        return scinew GridSurfaceIterator(*this);
      }
 
-     ostream& put(std::ostream& out) const
+     std::ostream& put(std::ostream& out) const
      {
        out << *this;
        return out;

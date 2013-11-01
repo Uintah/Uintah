@@ -31,9 +31,7 @@
 using namespace Uintah;
 using namespace SCIRun;
 
-
-
-ConvergenceFailure::ConvergenceFailure(const string& message,
+ConvergenceFailure::ConvergenceFailure(const std::string& message,
 				       int numiterations,
 				       double final_residual,
 				       double target_residual,

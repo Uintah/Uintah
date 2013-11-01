@@ -44,8 +44,8 @@
 #include <Core/Math/LinAlg.h>
 #include <iostream>
 #include <cstring>
-using std::endl;
-using std::cerr;
+
+using namespace std;
 
 namespace SCIRun {
 

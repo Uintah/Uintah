@@ -34,10 +34,8 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-using std::cerr;
-using std::ifstream;
-using std::ofstream;
 
+using namespace std;
 using namespace UintahBB;
 using namespace Uintah;
 

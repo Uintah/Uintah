@@ -32,6 +32,7 @@
 #include <Core/Malloc/Allocator.h>
 
 using std::vector;
+
 namespace Uintah {
 
 using namespace SCIRun;

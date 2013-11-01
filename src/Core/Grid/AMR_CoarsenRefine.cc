@@ -31,6 +31,7 @@
 #include <Core/Util/DebugStream.h>
 
 using SCIRun::IntVector;
+using namespace std;
 
 namespace Uintah {
 

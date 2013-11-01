@@ -2,6 +2,7 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 
 using namespace Uintah; 
+using namespace std;
 
 //---------------------------------------------------------------------------
 //Method: Constructor
