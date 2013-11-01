@@ -34,7 +34,10 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-using namespace std;
+
+using std::map;         using std::ostringstream;
+using std::vector;      using std::string;
+using std::ostream;
 
 static DebugStream dbg("VarLabel", false);
 
