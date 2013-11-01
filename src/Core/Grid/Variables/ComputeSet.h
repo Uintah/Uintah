@@ -426,7 +426,7 @@ namespace Uintah {
       for(int i=1;i<s2->size();i++){
         T el = s2->get(i);
         if(!compareElems(el2, el)) {
-          ostringstream msgstr;
+          std::ostringstream msgstr;
           msgstr << "Set not sorted: " << el2 << ", " << el;
           SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__)); 
         }
@@ -504,7 +504,7 @@ namespace Uintah {
       for(int i=1;i<s2->size();i++){
         T el = s2->get(i);
         if(!compareElems(el2, el)) {
-          ostringstream msgstr;
+          std::ostringstream msgstr;
           msgstr << "Set not sorted: " << el2 << ", " << el;
           SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__)); 
         }
@@ -588,7 +588,7 @@ namespace Uintah {
       for(int i=1;i<s2->size();i++){
         T el = s2->get(i);
         if(!compareElems(el2, el)) {
-          ostringstream msgstr;
+          std::ostringstream msgstr;
           msgstr << "Set not sorted: " << el2 << ", " << el;
           SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__)); 
         }
