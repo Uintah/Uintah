@@ -966,7 +966,7 @@
           <initialization type ="constant">
             <constant>0.0</constant>
           </initialization>
-          <soot_label>soot</soot_label>
+          <constant>0.0</constant>
         </model>
       </PropertyModels>
 
