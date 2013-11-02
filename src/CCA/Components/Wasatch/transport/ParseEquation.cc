@@ -47,7 +47,7 @@
 #include <CCA/Components/Wasatch/Expressions/StableTimestep.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
-
+#include <CCA/Components/Wasatch/Expressions/MMS/VardenMMS.h>
 //-- Uintah includes --//
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
