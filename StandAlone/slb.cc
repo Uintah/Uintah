@@ -96,7 +96,7 @@ void bisect(const string& div, int num, int factor,
   else if(div[num] == 'z')
     index=2;
   else {
-    throw InternalError("bad bisection axis: "+div[num], __FILE__, __LINE__);
+    throw InternalError(string("bad bisection axis: ")+div[num], __FILE__, __LINE__);
   }
 
   if(factor == -1){
