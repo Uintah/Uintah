@@ -53,7 +53,7 @@ namespace std {
     }
     return true;
   }
-  
+
   template <class Iter>
   bool is_sorted(Iter begin, Iter end)
   {
