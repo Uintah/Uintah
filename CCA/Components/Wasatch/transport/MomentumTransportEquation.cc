@@ -1040,7 +1040,7 @@ namespace Wasatch{
 
     if (!isConstDensity_) {
       // set bcs for density
-      const Expr::Tag densTag( densityTag_.name(), Expr::STATE_NONE );
+      const Expr::Tag densTag( densityTag_.name(), Expr::CARRY_FORWARD );
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
