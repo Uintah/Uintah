@@ -496,7 +496,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   d_BC_globalVars->using_Sine_BCs =
         read_Sine_BC_inputs(prob_spec,       d_BC_globalVars->sine);
   d_BC_globalVars->using_inletVel_BCs =
-        read_inletVel_BC_inputs(prob_spec,   d_BC_globalVars->inletVel, grid);
+        read_inletVel_BC_inputs(prob_spec,   sharedState, d_BC_globalVars->inletVel, grid);
         
   //__________________________________
   //  boundary condition warnings

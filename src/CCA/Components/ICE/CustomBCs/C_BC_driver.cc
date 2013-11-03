@@ -125,6 +125,7 @@ void preprocess_CustomBCs(const string& where,
     preprocess_inletVelocity_BCs(  old_dw, lb, indx, patch, where, 
                                    lv->set_inletVel_BCs,
                                    lv->recursiveTask,
+                                   gv->inletVel,
                                    lv->inletVel );        
   }       
 }
