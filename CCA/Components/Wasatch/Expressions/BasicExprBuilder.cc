@@ -64,17 +64,10 @@
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 
 // BC Expressions Includes
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/ConstantBC.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/LinearBC.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/ParabolicBC.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/PowerLawBC.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/TurbulentInletBC.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSDensity.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSMixtureFraction.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSVelocity.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSMomentum.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSSolnVar.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VardenMMSBCs.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
