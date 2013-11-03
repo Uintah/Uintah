@@ -37,6 +37,7 @@ namespace Uintah {
             -reads input parameters needed setBC routines
  ______________________________________________________________________  */
 bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
+                             SimulationStateP& sharedState,
                              inletVel_globalVars* global,
                              GridP& grid)
 {
@@ -87,8 +88,34 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
       string warn="ERROR:\n Inputs:Boundary Conditions: Cannot find inletVelocity_BC block";
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
+    
+    //__________________________________
+    //  Find the material associated with this BC
+    Material* matl = sharedState->parseAndLookupMaterial(inlet_ps, "material");
+    global->iceMatl_indx = matl->getDWIndex();
+    
+    int numICEMatls = sharedState->getNumICEMatls();
+    bool foundMatl = false;
+    ostringstream indicies;
+    
+    for(int m = 0; m < numICEMatls; m++){
+      ICEMaterial* matl = sharedState->getICEMaterial( m );
+      int indx = matl->getDWIndex();
+      indicies << " " << indx ;
+      if(indx == global->iceMatl_indx){
+        foundMatl = true;
+      }
+    }
+    
+    if(foundMatl==false){
+      ostringstream warn;                                                                                              
+      warn << "ERROR:\n Inputs: inletVelocity Boundary Conditions: The ice_material_index: "<< global->iceMatl_indx<< " is not "    
+           << "\n an ICE material: " << indicies.str() << endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    //__________________________________
     // computational domain
-
     BBox b;
     grid->getInteriorSpatialRange(b);
     global->gridMin = b.min();
@@ -108,6 +135,7 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
     
     //__________________________________
     //  Add variance to the velocity profile
+    global->addVariance = false;
     ProblemSpecP var_ps = inlet_ps->findBlock("variance");
     if (var_ps) {
       global->addVariance = true;
@@ -119,7 +147,7 @@ bool read_inletVel_BC_inputs(const ProblemSpecP& prob_spec,
 }
 
 /* ______________________________________________________________________ 
- Function~  addRequires_Sine--   
+ Function~  addRequires--   
  ______________________________________________________________________  */
 void addRequires_inletVel(Task* t, 
                           const string& where,
@@ -158,8 +186,13 @@ void  preprocess_inletVelocity_BCs(DataWarehouse* old_dw,
                                    const string& where,
                                    bool& set_BCs,
                                    const bool recursive,
-                                   inletVel_localVars* local)
+                                   inletVel_globalVars* global,
+                                   inletVel_localVars* local )
 {
+  if( indx != global->iceMatl_indx ){
+    return;
+  }
+  
   set_BCs = false;
   
   //std::cout << " preprocess_inletVelocity_BCs: " << where << " recursive: " << recursive << endl;
@@ -310,7 +343,7 @@ int  set_inletVelocity_BC(const Patch* patch,
     
     if (global->addVariance && local->addVariance ){  // global and local on/off switch
       MTRand mTwister;
-      
+
       double gridHeight =  global->gridMax(vDir); 
       double d          =  global->gridMin(vDir);
       double inv_Cmu    = 1.0/global->C_mu;

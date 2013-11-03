@@ -28,11 +28,13 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Labels/ICELabel.h>
 #include <Core/Exceptions/InternalError.h>
+
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MersenneTwister.h>
-#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Util/DebugStream.h>
 
 
@@ -43,7 +45,8 @@ namespace Uintah {
   // This struct contains misc. global variables that are needed
   // by most setBC routines.
   struct inletVel_globalVars{
-    int    verticalDir;       // which direction is vertical [0,1,2]
+    int    verticalDir;           // which direction is vertical [0,1,2]
+    int    iceMatl_indx;
     
     // log law profile
     double roughness;             // aerodynamic roughness
@@ -71,6 +74,7 @@ namespace Uintah {
   
   //____________________________________________________________
   bool read_inletVel_BC_inputs(const ProblemSpecP&,
+                               SimulationStateP& sharedState,
                                inletVel_globalVars* global,
                                GridP& grid);
  
@@ -87,7 +91,8 @@ namespace Uintah {
                                       const std::string& where,
                                       bool& set_BCs,
                                       const bool recursive,
-                                      inletVel_localVars* local);
+                                      inletVel_globalVars* global,
+                                      inletVel_localVars* local );
                            
   int set_inletVelocity_BC(const Patch* patch,
                            const Patch::FaceType face,
