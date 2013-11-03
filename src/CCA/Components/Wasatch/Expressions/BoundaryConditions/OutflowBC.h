@@ -26,6 +26,7 @@
 #define OutflowBC_Expr_h
 
 #include <expression/Expression.h>
+#include "BoundaryConditionBase.h"
 #include <CCA/Components/Wasatch/TagNames.h>
 
 template< typename FieldT >
@@ -52,69 +53,9 @@ public:
   
   ~OutflowBC(){}
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps )
-  {
-    exprDeps.requires_expression( velTag_ );
-    const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
-    exprDeps.requires_expression( tagNames.timestep );
-  }
-  
-  void bind_fields( const Expr::FieldManagerList& fml )
-  {
-    u_ = &fml.template field_ref<FieldT>( velTag_ );
-    const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
-    dt_ = &fml.template field_ref<SpatialOps::structured::SingleValueField>( tagNames.timestep );
-  }
-
-  void evaluate()
-  {
-    using namespace SpatialOps;
-    using namespace SpatialOps::structured;
-    FieldT& f = this->value();
-
-    if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-      std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
-      std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
-      const IntVec& offset = this->bndNormal_;
-      const double sign = (offset[0] >=0 && offset[1] >= 0 && offset[2] >= 0) ? 1.0 : -1.0;
-      
-      const double dt = (*dt_)[0];  // jcs we should be using this directly in nebo assignments rather than pulling it out if we want GPU execution
-
-      if(this->isStaggered_) {
-        for( ; ii != (this->vecInteriorPts_)->end(); ++ii, ++ig ){
-          const double ub  = (*u_)(*ii);            // boundary cell
-          const double ui  = (*u_)(*ii - offset);   // interior cell
-          const double fi  = f(*ii - offset);
-          
-          // uncomment the following two lines if you want to use second order one-sided difference
-          //const double uii = (*u_)(*ii - offset*2); // interior cell
-          //const double fii = f(*ii - offset*2);
-          if ( sign*ub > 0.0 ) { // u.n > 0, flow out
-            f(*ii) = (1.0/ dt)*( -ub + ui ) + fi; // first order one sided difference
-            // uncomment the line below to use second-order one-sided difference
-            //f(*ii) = (1.0/ dt)*( -ub + 4.0/3.0*ui - 1.0/3.0*uii) + 4.0/3.0*fi - 1.0/3.0*fii;
-          } else { // u.n <= 0.0, flow in
-            f(*ii) = -(1.0/ dt) * ub;
-          }
-        }
-      
-        if (this->interiorEdgePoints_) {
-          std::vector<IntVec>::const_iterator ic = (this->interiorEdgePoints_)->begin(); // ii is the interior flat index
-          for (; ic != (this->interiorEdgePoints_)->end(); ++ic) {
-            const double ub  = (*u_)(*ic);            // boundary cell
-            f(*ic) = -(1.0/ dt) * ub;
-          }          
-        }
-        
-      } else {
-        std::ostringstream msg;
-        msg << "ERROR: You cannot use the OutflowBC boundary expression with non staggered fields!"
-            << " This boundary condition can only be applied on the momentum partial RHS." << std::endl;
-        std::cout << msg.str() << std::endl;
-        throw std::runtime_error(msg.str());
-      }
-    }
-  }
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
   
 private:
   const FieldT* u_;

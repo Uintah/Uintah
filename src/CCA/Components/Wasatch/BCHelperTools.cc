@@ -50,8 +50,7 @@
 #include "Operators/OperatorTypes.h"
 #include "FieldTypes.h"
 #include "BCHelperTools.h"
-#include "Expressions/BoundaryConditions/ConstantBC.h"
-#include "Expressions/BoundaryConditions/ParabolicBC.h"
+#include "Expressions/BoundaryConditions/BoundaryConditions.h"
 #include "Expressions/BoundaryConditions/BoundaryConditionBase.h"
 
 //#define WASATCH_BC_DIAGNOSTICS

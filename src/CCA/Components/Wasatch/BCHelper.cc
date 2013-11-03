@@ -46,8 +46,7 @@
 //-- Wasatch Includes --//
 #include "FieldTypes.h"
 #include "ParseTools.h"
-#include "Expressions/BoundaryConditions/ConstantBC.h"
-#include "Expressions/BoundaryConditions/ParabolicBC.h"
+#include "Expressions/BoundaryConditions/BoundaryConditions.h"
 #include "Expressions/BoundaryConditions/BoundaryConditionBase.h"
 
 namespace Wasatch {
