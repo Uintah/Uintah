@@ -27,7 +27,16 @@
 #ifndef __CUDA_ARCH__
 #include <string.h>
 #endif
-#include <Core/Util/GPU.h>
+//#include <Core/Util/GPU.h>
+
+// This belongs in GPU.h
+__device__ bool isThread0_Blk0(){
+  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
+  int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+  
+  bool test = (blockID == 0 && threadID == 0);
+  return test;
+}
 
 namespace Uintah {
 
@@ -47,13 +56,13 @@ GPUDataWarehouse::get(const GPUGridVariableBase &var, char const* name, int patc
     
     int i=threadID;
     while(i<d_numItems){
-      printf( "\t Available Labels: %s\n", d_varDB[i].label );
+      printf( "   Available Labels: %s\n", d_varDB[i].label );
       i=i+numThreads;
     }
-    //if( isThread0_Blk0() ) {
-      printf("\t ERROR: GPUDataWarehouse::get( %s patchID: %i, matl: %i )  unknown variable\n",name, patchID, matlIndex);
+    if( isThread0_Blk0() ) {
+      printf("  ERROR: GPUDataWarehouse::get( %s patchID: %i, matl: %i )  unknown variable\n\n",name, patchID, matlIndex);
       assert(0);
-    //}
+    }
 
 #else
     printf("\t ERROR: GPUDataWarehouse::get( %s patchID: %i, matl: %i )  unknown variable\n",name, patchID, matlIndex);
@@ -77,16 +86,16 @@ GPUDataWarehouse::getModifiable(GPUGridVariableBase &var, char const* name, int 
     
     int i=threadID;
     while(i<d_numItems){
-      printf( "\t Available Labels: %s\n", d_varDB[i].label );
+      printf( "  Available Labels: %s\n", d_varDB[i].label );
       i=i+numThreads;
     }
-    //if( isThread0_Blk0() ) {
-      printf("\t ERROR: GPUDataWarehouse::getModifiable( %s patchID: %i, matl: %i )  unknown variable\n",name, patchID, matlIndex);
+    if( isThread0_Blk0() ) {
+      printf("  ERROR: GPUDataWarehouse::getModifiable( %s patchID: %i, matl: %i )  unknown variable\n\n",name, patchID, matlIndex);
       assert(0);
-    //}
+    }
 
 #else
-    printf("\t ERROR: GPUDataWarehouse::getModifiable( %s patchID: %i, matl: %i )  unknown variable\n",name, patchID, matlIndex);
+    printf("  ERROR: GPUDataWarehouse::getModifiable( %s patchID: %i, matl: %i )  unknown variable\n",name, patchID, matlIndex);
 #endif
   }
 }
