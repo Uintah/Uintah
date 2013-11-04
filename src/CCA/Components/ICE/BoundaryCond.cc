@@ -1154,13 +1154,13 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
   int numAllMatls = sharedState->getNumMatls();
   
   // If a face is periodic then is_press_BC_set = true
-  map<string,bool> is_press_BC_set;
-  is_press_BC_set["x-"] = (periodic.x() ==1) ? true:false;
-  is_press_BC_set["x+"] = (periodic.x() ==1) ? true:false;
-  is_press_BC_set["y-"] = (periodic.y() ==1) ? true:false;
-  is_press_BC_set["y+"] = (periodic.y() ==1) ? true:false;
-  is_press_BC_set["z-"] = (periodic.z() ==1) ? true:false;
-  is_press_BC_set["z+"] = (periodic.z() ==1) ? true:false;
+  map<string,int> is_press_BC_set;
+  is_press_BC_set["x-"] = (periodic.x() ==1) ? 1:0;
+  is_press_BC_set["x+"] = (periodic.x() ==1) ? 1:0;
+  is_press_BC_set["y-"] = (periodic.y() ==1) ? 1:0;
+  is_press_BC_set["y+"] = (periodic.y() ==1) ? 1:0;
+  is_press_BC_set["z-"] = (periodic.z() ==1) ? 1:0;
+  is_press_BC_set["z+"] = (periodic.z() ==1) ? 1:0;
   
   // loop over all faces
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
@@ -1227,7 +1227,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
       
       // All passed tests on this face set the flags to true
       if(bc_type["label"] == "Pressure" || bc_type["label"] == "Symmetric"){
-        is_press_BC_set[face["side"]] = true;
+        is_press_BC_set[face["side"]]  +=1;
       }
       isBC_set[bc_type["label"]] = true;
     }  // BCType loop
@@ -1252,15 +1252,15 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //Has the pressure BC been set on faces that are not periodic
-  for( map<string,bool>::iterator iter  = is_press_BC_set.begin();iter !=  is_press_BC_set.end(); iter++ ){
+  for( map<string,int>::iterator iter  = is_press_BC_set.begin();iter !=  is_press_BC_set.end(); iter++ ){
     string face = (*iter).first;
-    bool isSet  = (*iter).second;
-    
-    if(isSet == false){
+    int isSet  = (*iter).second;
+
+    if(isSet != 1){
       ostringstream warn;
       warn <<"\n__________________________________\n"   
          << "INPUT FILE ERROR: \n"
-         << "The pressure boundary condition has not been set \n"
+         << "The pressure boundary condition has not been set OR has been set more than once \n"
          << "Face:  " << face <<  endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
