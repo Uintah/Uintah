@@ -6,6 +6,7 @@
        
        
 set size = "640x960"  # size of a single image
+set tile_geom = "1x2"  # 1x2 is top bottom, 2x1 is side by side
 
 set dir1 = "200^3"    #path to jpgs that you want on the left half
 set dir2 = "300^3"    #path to jpgs that you want on the right half
@@ -15,7 +16,7 @@ set fname = "combined"
 foreach T ( $dir1/*.jpg )
  set num = `basename $T .jpg`
  echo "working on jpg # " $num
- montage -geometry $size $dir1/$num.jpg $dir2/$num.jpg $fname.$num.jpg
+ montage -tile $tile_geom -geometry $size $dir1/$num.jpg $dir2/$num.jpg $fname.$num.jpg
 end
 
 
