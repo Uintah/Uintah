@@ -946,16 +946,16 @@ namespace Wasatch{
         }
       }
       
+      //
+      // process clipping on fields - must be done AFTER all bcs are applied
+      //
+      process_field_clipping( wasatchSpec_, graphCategories_, localPatches );
+
       if( buildTimeIntegrator_ ){
         create_timestepper_on_patches( allPatches, materials_, level, sched, iStage );
       }
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
-
-      //
-      // process clipping on fields
-      //
-      process_field_clipping( wasatchSpec_, graphCategories_, localPatches );
       
       // post processing
       GraphHelper* const postProcGH = graphCategories_[ POSTPROCESSING ];
