@@ -357,6 +357,7 @@ namespace Wasatch {
     Uintah::IntVector edgePoint;
     const Uintah::IntVector idxHi = patch->getCellHighIndex() - IntVector(1,1,1);// - patchCellOffset;
     const Uintah::IntVector idxLo = patch->getCellLowIndex();
+
     for( bndIter.reset(); !bndIter.done(); ++bndIter ){
       bcPointIJK = *bndIter - patchCellOffset;
       extraBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
@@ -679,7 +680,7 @@ namespace Wasatch {
                 BndTypeEnum bndType = select_bnd_type_enum(thisGeom->getBndType());
                 add_boundary( bndName, face, bndType, patchID );
                 DBGBC << " bc name = " << bndName << std::endl
-                      << " boundary type type = " << bndType << std::endl;
+                      << " boundary type = " << bndType << std::endl;
                 
                 //__________________________________________________________________________________
                 Uintah::Iterator bndIter; // allocate iterator
@@ -687,6 +688,7 @@ namespace Wasatch {
                 bcDataArray->getCellFaceIterator(materialID, bndIter, chid);
                 
                 BoundaryIterators myIters;
+                DBGBC << " Size of uintah iterator for boundary: " << bndName << " = " << bndIter.size() << std::endl;
                 pack_uintah_iterator_as_spatialops(face, patch, bndIter, myIters); // convert the Uintah iterator to a SpatialOps-friendly mask
                 add_boundary_mask( myIters, bndName, patchID );
                 
@@ -796,8 +798,8 @@ namespace Wasatch {
                 // get the functor set associated with this field
                 BCFunctorMap::mapped_type::const_iterator functorIter = (*iter).second.begin();
                 while( functorIter != (*iter).second.end() ){
-                  DBGBC << "attaching dummy modifier..." << endl;
                   const string& functorName = *functorIter;
+                  DBGBC << "attaching dummy modifier " << functorName << " on field " << varTag << endl;                  
                   const Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
                   factory.attach_modifier_expression( modTag, varTag, patchID, true );
                   ++functorIter;
