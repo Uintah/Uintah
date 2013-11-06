@@ -102,18 +102,6 @@ public:
                                            const MaterialSet* matls,
                                            const TimeIntegratorLabel* timelabels);
 
-  virtual void sched_computeScalarVariance(SchedulerP&, 
-                                           const PatchSet* patches,
-                                           const MaterialSet* matls,
-                                           const TimeIntegratorLabel* timelabels);
-
-  virtual void sched_computeScalarDissipation(SchedulerP&,
-                                              const PatchSet* patches,
-                                              const MaterialSet* matls,
-                                              const TimeIntegratorLabel* timelabels);
-
-  // GROUP: Access Methods :
-  ///////////////////////////////////////////////////////////////////////
   // Get the molecular viscosity
   double getMolecularViscosity() const; 
 
@@ -126,15 +114,6 @@ public:
   }
   inline void set3dPeriodic(bool periodic) {
     d_3d_periodic = periodic;
-  }
-  inline double getTurbulentPrandtlNumber() const {
-    return d_turbPrNo;
-  }
-  inline void setTurbulentPrandtlNumber(double turbPrNo) {
-    d_turbPrNo = turbPrNo;
-  }
-  inline bool getDynScalarModel() const {
-    return false;
   }
 
 protected:
@@ -177,26 +156,7 @@ private:
                           const TimeIntegratorLabel* timelabels);
 
 
-  ///////////////////////////////////////////////////////////////////////
-  // Actually Calculate the subgrid scale variance
-  //    [in] 
-  //        documentation here
-  void computeScalarVariance(const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw,
-                             const TimeIntegratorLabel* timelabels);
-                             
-  void computeScalarDissipation(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw,
-                                const TimeIntegratorLabel* timelabels);
-
  protected:
-  double d_CFVar; // model constant for mixture fraction variance
   double d_turbPrNo; // turbulent prandtl number
   bool d_filter_cs_squared; //option for filtering Cs^2 in IncDynamic Procedure
   bool d_3d_periodic;

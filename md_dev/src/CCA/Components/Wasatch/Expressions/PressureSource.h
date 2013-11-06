@@ -61,7 +61,7 @@ class PressureSource : public Expr::Expression<SVolField>
   const SVolField *dens_, *densStar_, *dens2Star_;
   const SVolField *dil_;
   
-  const bool isConstDensity_, doX_, doY_, doZ_;
+  const bool isConstDensity_, doX_, doY_, doZ_, is3d_;
   const double* timestep_;
   
   const Expr::Tag xMomt_, yMomt_, zMomt_;
@@ -83,9 +83,7 @@ class PressureSource : public Expr::Expression<SVolField>
                   const bool isConstDensity,
                   const Expr::Tag densTag,
                   const Expr::Tag densStarTag,
-                  const Expr::Tag dens2StarTag,
-                  const Expr::Tag dilTag,
-                  const Expr::Tag timestepTag);
+                  const Expr::Tag dens2StarTag );
 public:
   
   /**
@@ -118,15 +116,13 @@ public:
      *
      *  \param timestepTag a tag to hold the timestep value.
      */
-    Builder( const Expr::Tag& result,
+    Builder( const Expr::TagList& results,
              const Expr::TagList& momTags,
              const Expr::TagList& velStarTags,
              const bool isConstDensity,
              const Expr::Tag densTag,
              const Expr::Tag densStarTag,
-             const Expr::Tag dens2StarTag,
-             const Expr::Tag dilTag,
-             const Expr::Tag timestepTag );
+             const Expr::Tag dens2StarTag );
     
     ~Builder(){}
     
@@ -135,7 +131,7 @@ public:
   private:
     const bool isConstDens_;
     const Expr::TagList momTs_, velStarTs_;
-    const Expr::Tag denst_, densStart_, dens2Start_, dilt_, tstpt_;
+    const Expr::Tag denst_, densStart_, dens2Start_;
   };
   
   ~PressureSource();

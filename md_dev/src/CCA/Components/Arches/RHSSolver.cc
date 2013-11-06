@@ -42,8 +42,6 @@
 using namespace Uintah;
 using namespace std;
 
-#include <CCA/Components/Arches/fortran/explicit_scalar_fort.h>
-
 //****************************************************************************
 // Default constructor for RHSSolver
 //****************************************************************************
@@ -196,109 +194,6 @@ RHSSolver::calculateVelocity(const Patch* patch,
       vars->wVelRhoHat[c] = delta_t*(press_CC[adj] - press_CC[c])/cellinfo->dzpb[k]/rho_ave + vars->wVelRhoHat[c];  
   }
 }
-
-//****************************************************************************
-// Scalar Solve
-//****************************************************************************
-void 
-RHSSolver::scalarLisolve(const ProcessorGroup*,
-                          const Patch* patch,
-                          double delta_t,
-                          ArchesVariables* vars,
-                          ArchesConstVariables* constvars,
-                          CellInformation* cellinfo)
-{
-  // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-
-    fort_explicit_scalar(idxLo, idxHi, vars->scalar, constvars->old_scalar,
-                  constvars->scalarCoeff[Arches::AE], 
-                  constvars->scalarCoeff[Arches::AW], 
-                  constvars->scalarCoeff[Arches::AN], 
-                  constvars->scalarCoeff[Arches::AS], 
-                  constvars->scalarCoeff[Arches::AT], 
-                  constvars->scalarCoeff[Arches::AB], 
-                  constvars->scalarCoeff[Arches::AP], 
-                  constvars->scalarNonlinearSrc, constvars->density_guess,
-                  cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
-
-}
-//------------------------------------------------------
-// Explicit update of any cell centered scalar
-void 
-RHSSolver::scalarExplicitUpdate(const ProcessorGroup*,
-                              const Patch* patch,
-                              double delta_t,
-                              ArchesVariables* vars,
-                              ArchesConstVariables* constvars,
-                              CellInformation* cellinfo, 
-                              bool doingMM, int intrusionVal)
-{
-  CellIterator iter = patch->getCellIterator();
-  explicitUpdate<constCCVariable<Stencil7>,CCVariable<double>,constCCVariable<double> >(iter,
-                                                            constvars->scalarTotCoef, 
-                                                            constvars->scalarNonlinearSrc, 
-                                                            constvars->density_guess, 
-                                                            constvars->old_scalar, 
-                                                            vars->scalar, 
-                                                            constvars->cellType,
-                                                            cellinfo, 
-                                                            delta_t, doingMM, intrusionVal);
-}
-//--------------------------------------------------------
-// Generic explicit solver
-// Solves Ax = b for an explicit scheme. 
-// 
-template<class T_mtrx, class T_varmod, class T_varconst> void
-RHSSolver::explicitUpdate(CellIterator iter, 
-                          T_mtrx& A,
-                          T_varconst source, 
-                          constCCVariable<double> old_den, 
-                          T_varconst old_phi,
-                          T_varmod& new_phi,  
-                          constCCVariable<int>  cellType,
-                          CellInformation* cellinfo,
-                          double delta_t, 
-                          bool doingMM, int intrusionVal)
-{
-  if (!doingMM) {
-    for (; !iter.done(); iter++) {
-      IntVector curr = *iter;
-
-      double vol = cellinfo->sew[curr.x()]*cellinfo->sns[curr.y()]*cellinfo->stb[curr.z()];
-      double apo = old_den[curr]*vol/delta_t;
-      double rhs = A[curr].e*old_phi[curr+IntVector(1,0,0)] + 
-                   A[curr].w*old_phi[curr-IntVector(1,0,0)] + 
-                   A[curr].n*old_phi[curr+IntVector(0,1,0)] + 
-                   A[curr].s*old_phi[curr-IntVector(0,1,0)] + 
-                   A[curr].t*old_phi[curr+IntVector(0,0,1)] + 
-                   A[curr].b*old_phi[curr-IntVector(0,0,1)] +
-                   source[curr] - A[curr].p*old_phi[curr];
-
-      new_phi[curr] = rhs/apo;
-    } 
-  } else {
-    for (; !iter.done(); iter++) {
-      IntVector curr = *iter;
-
-      double vol = cellinfo->sew[curr.x()]*cellinfo->sns[curr.y()]*cellinfo->stb[curr.z()];
-      double apo = old_den[curr]*vol/delta_t;
-      double rhs = A[curr].e*old_phi[curr+IntVector(1,0,0)] + 
-                   A[curr].w*old_phi[curr-IntVector(1,0,0)] + 
-                   A[curr].n*old_phi[curr+IntVector(0,1,0)] + 
-                   A[curr].s*old_phi[curr-IntVector(0,1,0)] + 
-                   A[curr].t*old_phi[curr+IntVector(0,0,1)] + 
-                   A[curr].b*old_phi[curr-IntVector(0,0,1)] +
-                   source[curr] - A[curr].p*old_phi[curr];
-
-      new_phi[curr] = rhs/apo;
-
-      if (cellType[curr] == intrusionVal) 
-        new_phi[curr] = 0.0; 
-    } 
-  } 
-}
 //______________________________________________________________________
 // Generic explicit solver
 // Solves Ax = b for an explicit scheme. 
@@ -342,34 +237,3 @@ RHSSolver::explicitUpdate_stencilMatrix(CellIterator iter,
 
   } 
 }
-
-
-//****************************************************************************
-// Enthalpy Solve
-//****************************************************************************
-
-void 
-RHSSolver::enthalpyLisolve(const ProcessorGroup*,
-                          const Patch* patch,
-                          double delta_t,
-                          ArchesVariables* vars,
-                          ArchesConstVariables* constvars,
-                          CellInformation* cellinfo)
-{
-  // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-
-    fort_explicit_scalar(idxLo, idxHi, vars->enthalpy, constvars->old_enthalpy,
-                  constvars->scalarCoeff[Arches::AE], 
-                  constvars->scalarCoeff[Arches::AW], 
-                  constvars->scalarCoeff[Arches::AN], 
-                  constvars->scalarCoeff[Arches::AS], 
-                  constvars->scalarCoeff[Arches::AT], 
-                  constvars->scalarCoeff[Arches::AB], 
-                  constvars->scalarCoeff[Arches::AP], 
-                  constvars->scalarNonlinearSrc, constvars->density_guess,
-                  cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
-     
-}
-

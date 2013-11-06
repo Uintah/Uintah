@@ -190,13 +190,12 @@ ColdFlow::sched_getState( const LevelP& level,
     SchedulerP& sched, 
     const TimeIntegratorLabel* time_labels, 
     const bool initialize_me,
-    const bool with_energy_exch, 
     const bool modify_ref_den )
 {
   string taskname = "ColdFlow::getState"; 
   Ghost::GhostType  gn = Ghost::None;
 
-  Task* tsk = scinew Task(taskname, this, &ColdFlow::getState, time_labels, initialize_me, with_energy_exch, modify_ref_den );
+  Task* tsk = scinew Task(taskname, this, &ColdFlow::getState, time_labels, initialize_me, modify_ref_den );
 
   // independent variables :: these must have been computed previously 
   for ( MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ) {
@@ -211,7 +210,6 @@ ColdFlow::sched_getState( const LevelP& level,
       tsk->computes( i->second ); 
     }
 
-    tsk->computes( d_lab->d_drhodfCPLabel ); // I don't think this is used anywhere...maybe in coldflow? 
 
     if (d_MAlab)
       tsk->computes( d_lab->d_densityMicroLabel ); 
@@ -221,8 +219,6 @@ ColdFlow::sched_getState( const LevelP& level,
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
       tsk->modifies( i->second ); 
     }
-
-    tsk->modifies( d_lab->d_drhodfCPLabel ); // I don't think this is used anywhere...maybe in coldflow? 
 
     if (d_MAlab)
       tsk->modifies( d_lab->d_densityMicroLabel ); 
@@ -256,7 +252,6 @@ ColdFlow::getState( const ProcessorGroup* pc,
     DataWarehouse* new_dw, 
     const TimeIntegratorLabel* time_labels, 
     const bool initialize_me, 
-    const bool with_energy_exch, 
     const bool modify_ref_den )
 {
   for (int p=0; p < patches->size(); p++){
@@ -300,17 +295,10 @@ ColdFlow::getState( const ProcessorGroup* pc,
 
       }
 
-      // others: 
-      CCVariable<double> drho_df; 
-
-      new_dw->allocateAndPut( drho_df, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
-
       if (d_MAlab) {
         new_dw->allocateAndPut( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
         mpmarches_denmicro.initialize(0.0);
       }
-
-      drho_df.initialize(0.0);  // this variable might not be actually used anywhere and may just be polution  
 
     } else { 
 
@@ -324,10 +312,6 @@ ColdFlow::getState( const ProcessorGroup* pc,
         depend_storage.insert( make_pair( i->first, storage ));
 
       }
-
-      // others:
-      CCVariable<double> drho_dw; 
-      new_dw->getModifiable( drho_dw, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
 
       if (d_MAlab) 
         new_dw->getModifiable( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 

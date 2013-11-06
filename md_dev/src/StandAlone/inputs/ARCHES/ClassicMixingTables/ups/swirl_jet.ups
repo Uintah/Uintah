@@ -228,14 +228,9 @@
 
       </TransportEqns>
 
-      <Turbulence model="compdynamicprocedure">
-        <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
-        <variance_coefficient>0.1</variance_coefficient>
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-      </Turbulence>
+      <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
-        <use_mixing_model>true</use_mixing_model>
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
         </ClassicTable>
@@ -260,27 +255,6 @@
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
-        <MixtureFractionSolver>
-          <convection_scheme>flux_limited</convection_scheme>
-          <limiter_type>upwind</limiter_type>
-        </MixtureFractionSolver>
-
-        <EnthalpySolver>
-          <convection_scheme>central-upwind</convection_scheme>
-          <radiationCalcFreq>5</radiationCalcFreq>
-          <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
-          <DORadiationModel>
-            <opl>3.0</opl>
-            <const_wall_temperature/>
-            <LinearSolver type="hypre">
-              <res_tol>1.0e-10</res_tol>
-              <ksptype>gmres</ksptype>
-              <pctype>jacobi</pctype>
-              <max_iter>75</max_iter>
-            </LinearSolver>
-          </DORadiationModel>
-        </EnthalpySolver>
 
       </ExplicitSolver>
     </ARCHES>

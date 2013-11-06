@@ -152,15 +152,12 @@
 
             <!-- turn off turbulence model by setting the coefficient to zero (cf=0)-->
             <Turbulence model="smagorinsky">
-              <variance_coefficient>0.1</variance_coefficient>
               <cf>0.0</cf>
               <fac_mesh>1.0</fac_mesh>
               <filterl>0.000001</filterl>
-              <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
             </Turbulence>
 
             <Properties>
-                <use_mixing_model>false</use_mixing_model>
                 <ColdFlow>
                     <mixture_fraction_label>MixtureFraction</mixture_fraction_label>
                         <Stream_1> 
@@ -195,10 +192,6 @@
                 <MomentumSolver>
                     <convection_scheme>central</convection_scheme>
                 </MomentumSolver>
-
-                <MixtureFractionSolver>
-                    <convection_scheme>central-upwind</convection_scheme>
-                </MixtureFractionSolver>
 
             </ExplicitSolver>
 

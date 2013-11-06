@@ -91,15 +91,6 @@ public:
   // Interface for Set up of the problem specification database
   virtual void problemSetup(const ProblemSpecP& db,SimulationStateP&) = 0;
 
-  // GROUP: Access Functions:
-
-  // GROUP: Access Functions
-  ///////////////////////////////////////////////////////////////////////
-    
-  EnthalpySolver* getEnthalpySolver() const
-  {
-    return d_enthalpySolver;
-  }
 
   virtual void sched_interpolateFromFCToCC(SchedulerP&, 
                                            const PatchSet* patches,
@@ -131,13 +122,7 @@ public:
 
   virtual bool restartableTimesteps() = 0;
 
-  virtual void setMMS(bool doMMS) = 0;
-
-  virtual bool getMMS() const = 0;
-  
   virtual MomentumSolver* get_momentum_solver() = 0;
-
-  virtual void setExtraProjection(bool extraProjection) = 0;
 
   virtual void setPartVel(PartVel* partVel) = 0; 
 

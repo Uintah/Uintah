@@ -58,8 +58,6 @@ static DebugStream dbg_BC("RAY_BC", false);
 //---------------------------------------------------------------------------
 Ray::Ray()
 {
-  _pi = acos(-1); 
-
   d_sigmaT4_label        = VarLabel::create( "sigmaT4",          CCVariable<double>::getTypeDescription() );
   d_mag_grad_abskgLabel  = VarLabel::create( "mag_grad_abskg",   CCVariable<double>::getTypeDescription() );
   d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<double>::getTypeDescription() );
@@ -264,19 +262,19 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //� The calculated rotations must be adjusted if the x and y components of the normal vector
   //� are in the 3rd or 4th quadrants due to the constraints on arccos
   if (orient[0] < 0 && orient[1] < 0)       // quadrant 3
-    psiRot = (_pi/2 + psiRot);
+    psiRot = (M_PI/2 + psiRot);
 
   if (orient[0] > 0 && orient[1] < 0)       // quadrant 4
-    psiRot = (2*_pi - psiRot);
+    psiRot = (2*M_PI - psiRot);
 
   _VR.psiRot = psiRot;
   //  phiRot is always  0. There will never be a need for a rotation about the x axis.� All
   //  possible rotations can be accomplished using the other two.
   _VR.phiRot = 0;
 
-  double deltaTheta = _viewAng/360*_pi;       // divides view angle by two and converts to radians
+  double deltaTheta = _viewAng/360*M_PI;       // divides view angle by two and converts to radians
   double range      = 1 - cos(deltaTheta);    // cos(0) to cos(deltaTheta) gives the range of possible vals
-  _VR.sldAngl       = 2*_pi*range;            // the solid angle that the radiometer can view  
+  _VR.sldAngl       = 2*M_PI*range;            // the solid angle that the radiometer can view  
   _VR.deltaTheta = deltaTheta;
   _VR.range      = range;
   
@@ -324,7 +322,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     }
   }
 
-  _sigma_over_pi = _sigma/_pi;
+  _sigma_over_pi = _sigma/M_PI;
 
   //__________________________________
   // BC bulletproofing  
@@ -583,14 +581,15 @@ Ray::sched_rayTrace( const LevelP& level,
                      const int radCalc_freq )
 {
   std::string taskname = "Ray::rayTrace";
-#ifdef HAVE_CUDA
-  std::string gputaskname = "Ray::rayTraceGPU";
-  Task* tsk = scinew Task( &Ray::rayTraceGPU, gputaskname, taskname, this, &Ray::rayTrace,
+  Task *tsk;
+  if (Parallel::usingDevice()) {
+    tsk = scinew Task( taskname, this, &Ray::rayTraceGPU,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
-#else
-  Task* tsk = scinew Task( taskname, this, &Ray::rayTrace,
+    tsk->usesDevice(true);
+  } else {
+    tsk = scinew Task( taskname, this, &Ray::rayTrace,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
-#endif
+  }
 
   printSchedule(level,dbg,taskname);
 
@@ -866,7 +865,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           //__________________________________
           //  Compute Net Flux to the boundary
           int face = UintahFace[RayFace];            
-          boundFlux[origin][ face ] = sumProjI * 2 *_pi/_nFluxRays;
+          boundFlux[origin][ face ] = sumProjI * 2 *M_PI/_nFluxRays;
 
           if(_benchmark==5){
             fprintf(f, "%lf \n",boundFlux[origin][ face ]);
@@ -910,10 +909,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
       
       //__________________________________
       //  Compute divQ
-      divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/_nDivQRays) );
+      divQ[origin] = 4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/_nDivQRays) );
 
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
-      radiationVolq[origin] = 4.0 * _pi * abskg[origin] *  (sumI/_nDivQRays) ; 
+      radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/_nDivQRays) ; 
 
     }  // end cell iterator
   }  // end of if(_solveDivQ)
@@ -1166,10 +1165,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
       //__________________________________
       //  Compute divQ
-      divQ_fine[origin] = 4.0 * _pi * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/_nDivQRays) );
+      divQ_fine[origin] = 4.0 * M_PI * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/_nDivQRays) );
       
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
-      radiationVolq_fine[origin] = 4.0 * _pi * abskg_fine[origin] *  (sumI/_nDivQRays) ;
+      radiationVolq_fine[origin] = 4.0 * M_PI * abskg_fine[origin] *  (sumI/_nDivQRays) ;
 
       //dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/_nDivQRays) << endl;
     }  // end cell iterator
@@ -1407,7 +1406,7 @@ void Ray::rayDirection_VR( MTRand& mTwister,
   
   // Generate two uniformly-distributed-over-the-solid-angle random numbers
   // Used in determining the ray direction
-  double phi = 2 * _pi * mTwister.randDblExc(); //azimuthal angle.� Range of 0 to 2pi
+  double phi = 2 * M_PI * mTwister.randDblExc(); //azimuthal angle.� Range of 0 to 2pi
     
   // This guarantees that the polar angle of the ray is within the delta_theta
   double VRTheta = acos(cos(deltaTheta)+range*mTwister.randDblExc());

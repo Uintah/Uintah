@@ -9,9 +9,7 @@
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
 
-    
     <Density>
-      <IsConstant>false</IsConstant>
       <NameTag name="density" state="CARRY_FORWARD" />
     </Density>
     

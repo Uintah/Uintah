@@ -114,13 +114,9 @@
 
       </TransportEqns>
 
-      <Turbulence model="compdynamicprocedure">
-        <variance_coefficient>0.1</variance_coefficient>
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-      </Turbulence>
+      <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
-        <use_mixing_model>false</use_mixing_model>
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/MixTable1D.mix.gz</inputfile>
           <cold_flow>true</cold_flow>
@@ -194,11 +190,6 @@
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
-        <MixtureFractionSolver>
-          <convection_scheme>flux_limited</convection_scheme>
-          <limiter_type>upwind</limiter_type>
-        </MixtureFractionSolver>
 
       </ExplicitSolver>
     </ARCHES>

@@ -96,6 +96,8 @@ private:
   const VarLabel* d_weight_label;
   const VarLabel* d_particle_temperature_label;
 
+  const VarLabel* d_gas_temperature_label;
+
   vector<double>  rc_mass_init;
   double Av;
   double Ev;

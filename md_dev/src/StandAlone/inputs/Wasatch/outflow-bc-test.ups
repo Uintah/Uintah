@@ -5,12 +5,11 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="hypre"/>
   <Wasatch>
   
     <Density>
-      <IsConstant>true</IsConstant>
-      <NameTag name="density" state="STATE_NONE" />
+      <Constant value="1.0" name="density"/>
     </Density>
     
     <TimeIntegrator>FE</TimeIntegrator>    
@@ -18,32 +17,26 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_N" />
+       <NameTag name="x-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_N" />
+       <NameTag name="y-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="ZVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="z-mom" state="STATE_N" />
+       <NameTag name="z-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity" state="STATE_NONE"/>
       <Constant>0.0</Constant>
-    </BasicExpression>
-
-    <BasicExpression type="SVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="density" state="STATE_NONE" />
-      <Constant>1.0</Constant>
     </BasicExpression>
 
 <!-- 
@@ -98,7 +91,7 @@
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>      
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity" state="STATE_NONE"/>
       </Viscosity>
       
       <Pressure>
@@ -131,7 +124,7 @@
     <filebase>outflow-bc-test-firstorder.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "1e-4"/>
+    <checkpoint cycle="2" interval="1e-4"/>
     <save label="x-mom"/>
     <save label="x-mom_rhs"/>    
     <save label="y-mom"/>
@@ -149,81 +142,28 @@
   <Grid>
       <BoundaryConditions>
       
-      <Face circle = "x-" origin = "0 0.5 0.5" radius = "0.0625" name="circle-inlet">
-
-        <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 1.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="y-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="z-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="u">
-          <value> 1.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="v">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="w">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>
-      
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face circle="x-" origin="0 0.5 0.5" radius="0.0625" name="circle-inlet">
+        <BCType label="x-mom" var="Dirichlet" value="1.0"/>
+        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
+        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
+        <BCType label="u" var="Dirichlet" value="1.0"/>
+        <BCType label="v" var="Dirichlet" value="0.0"/>
+        <BCType label="w" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
       </Face>
-
       <Face side="x-" name="inlet">
-        <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 0.35 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="y-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="z-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="u">
-          <value> 0.35 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="v">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="w">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Neumann" label="pressure">
-          <value> 0.0 </value>
-        </BCType>
-        
+        <BCType label="x-mom" var="Dirichlet" value="0.35"/>
+        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
+        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
+        <BCType label="u" var="Dirichlet" value="0.35"/>
+        <BCType label="v" var="Dirichlet" value="0.0"/>
+        <BCType label="w" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
+        <BCType label="pressure" var="Neumann" value="0.0"/>
       </Face>
-      
       <Face side="x+" name="outlet" type="Outflow"/>
 
       <Face side="y-" name="ym-pressure" type="Open"/>

@@ -174,8 +174,8 @@ namespace Wasatch{
      */
     virtual Expr::ExpressionID initial_condition( Expr::ExpressionFactory& exprFactory ) = 0;
 
-    bool has_embedded_geometry() { return hasEmbeddedGeometry_; }
-    bool is_constant_density()   { return isConstDensity_; }
+    bool has_embedded_geometry() const { return hasEmbeddedGeometry_; }
+    bool is_constant_density()   const { return isConstDensity_; }
     
   protected:
     const std::string  solnVarName_;      ///< Name of the solution variable for this TransportEquation.

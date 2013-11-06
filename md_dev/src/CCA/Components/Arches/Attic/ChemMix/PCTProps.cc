@@ -107,7 +107,6 @@ PCTProps::sched_getState( const LevelP& level,
       tsk->computes( i->second ); 
     }
 
-    tsk->computes( d_lab->d_drhodfCPLabel ); // I don't think this is used anywhere...maybe in coldflow? 
     if (d_MAlab)
       tsk->computes( d_lab->d_densityMicroLabel ); 
 
@@ -117,7 +116,6 @@ PCTProps::sched_getState( const LevelP& level,
       tsk->modifies( i->second ); 
     }
 
-    tsk->modifies( d_lab->d_drhodfCPLabel ); // I don't think this is used anywhere...maybe in coldflow? 
     if (d_MAlab)
       tsk->modifies( d_lab->d_densityMicroLabel ); 
 
@@ -172,21 +170,13 @@ PCTProps::getState( const ProcessorGroup* pc,
 
     if ( initialize_me ) {
 
-      // others: 
-      CCVariable<double> drho_df; 
-      new_dw->allocateAndPut( drho_df, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
       if (d_MAlab) {
         new_dw->allocateAndPut( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
         mpmarches_denmicro.initialize(0.0);
       }
 
-      drho_df.initialize(0.0);  // this variable might not be actually used anywhere and may just be polution  
-
     } else { 
 
-      // others:
-      CCVariable<double> drho_dw; 
-      new_dw->getModifiable( drho_dw, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
       if (d_MAlab) 
         new_dw->getModifiable( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
     }

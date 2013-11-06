@@ -38,7 +38,6 @@
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-
 namespace Wasatch{
 
   /**
@@ -53,85 +52,53 @@ namespace Wasatch{
    *
    *  \f[
    *    \frac{\partial \rho \phi}{\partial t} =
-   *    - \frac{\partial \rho \phi u_x }{\partial x}
-   *    - \frac{\partial \rho \phi u_y }{\partial y}
-   *    - \frac{\partial \rho \phi u_z }{\partial z}
-   *    - \frac{\partial J_{\phi,x}}{\partial x}
-   *    - \frac{\partial J_{\phi,y}}{\partial y}
-   *    - \frac{\partial J_{\phi,z}}{\partial z}
+   *    - \nabla\cdot\rho\phi\vec{u}
+   *    - \nabla\cdot\vec{J}_\phi
    *    + s_\phi
    *  \f]
    *
    *  Any or all of the terms in the RHS above may be activated
    *  through the input file. Also, it can be define in input file
-   *  wether we have a constant or variable density and strong or
+   *  whether we have a constant or variable density and strong or
    *  weak form of this equation.
    *
-   *  The other forms of the equation are:
+   *  The other supported forms of the equation are:
    *
-   *  constant density strong form:
+   *  - Constant density and variable density weak form:
    *  \f[
    *    \frac{\partial \phi}{\partial t} =
-   *    - \frac{\partial \phi u_x }{\partial x}
-   *    - \frac{\partial \phi u_y }{\partial y}
-   *    - \frac{\partial \phi u_z }{\partial z}
-   *    - \frac{\partial V_{\phi,x}}{\partial x}
-   *    - \frac{\partial V_{\phi,y}}{\partial y}
-   *    - \frac{\partial V_{\phi,z}}{\partial z}
-   *    + (1 / \rho) * s_\phi
+   *     \frac{1}{\rho}\left[
+   *     - \phi \frac{\partial \rho}{\partial t}
+   *     - \nabla\cdot\rho\phi\vec{u}
+   *     - \nabla\cdot\vec{J}_\phi
+   *     + s_\phi
+   *    \right]
    *  \f]
-   *
-   *  constant density weak form:
-   *  \f[
-   *    \frac{\partial \phi}{\partial t} =
-   *    - u_x * \frac{\partial \phi}{\partial x}
-   *    - u_y * \frac{\partial \phi}{\partial y}
-   *    - u_z * \frac{\partial \phi}{\partial z}
-   *    - \frac{\partial V_{\phi,x}}{\partial x}
-   *    - \frac{\partial V_{\phi,y}}{\partial y}
-   *    - \frac{\partial V_{\phi,z}}{\partial z}
-   *    + (1 / \rho) * s_\phi
-   *  \f]
-   *
-   *  variable density weak form:
-   *  \f[
-   *    \frac{\partial \phi}{\partial t} =
-   *    - u_x * \frac{\partial \phi}{\partial x}
-   *    - u_y * \frac{\partial \phi}{\partial y}
-   *    - u_z * \frac{\partial \phi}{\partial z}
-   *    - (1 / \rho) * \frac{\partial J_{\phi,x}}{\partial x}
-   *    - (1 / \rho) * \frac{\partial J_{\phi,y}}{\partial y}
-   *    - (1 / \rho) * \frac{\partial J_{\phi,z}}{\partial z}
-   *    + (1 / \rho) * s_\phi
-   *  \f]
+   *   Note that in this form, \f$\frac{\partial \rho}{\partial t}\f$ is retained
+   *   and the strong form of the convective flux is also retained.  The model
+   *   for \f$\frac{\partial \rho}{\partial t}\f$ being used in the pressure
+   *   Poisson equation is used here.
    *
    *  \par Notes & Restrictions
    *
-   *  - In the above equations "J" represents the diffusive flux which
-   *    is equal to \f$\rho * \Gamma_\phi \nabla \phi \f$, while "V"
-   *    shows the diffusive velocity which is equal to \f$\Gamma_\phi
-   *    \Gamma_\phi \nabla \phi \f$.
+   *  - In the above equations, the diffusive flux is assumed to have the form
+   *    \f[ \vec{J}_\phi = -\rho \Gamma_\phi \nabla \phi. \f]
+   *    This can also be written in terms of a diffusive velocity,
+   *    \f[ \vec{V}_\phi = \frac{\vec{J}}{\rho}. \f]
+   *    The user must provide an expression or a constant value for
+   *    \f$\Gamma_\phi\f$.  See the DiffusiveFlux and DiffusiveFlux2 classes
+   *    for further details.
    *
-   *  - Currently, only basic forms for the scalar diffusive flux are
-   *    supported.  Specifically, either an expression for the
-   *    diffusion coefficient, \f$\Gamma_\phi\f$ is required or the
-   *    diffusion coefficient must be a constant value.  See
-   *    DiffusiveFlux and DiffusiveFlux2 classes.
+   *  - Source terms, \f$s_\phi\f$, can only be added if the expression to
+   *    evaluate them has been constructed elsewhere.
    *
-   *  - Source terms can only be added if the expression to evaluate
-   *    them has been constructed elsewhere.
-   *
-   *  - In the case that we are solving a scalar transport equation with
-   *    constant density we move out the density by division from all
-   *    terms except the source term. For the source term in this case we
-   *    devide the specified source term expression by density here in
-   *    ScalarRHS.
-   *    So, you should be carfule with the cases that source terms are
-   *    NOT defined in the INPUT FILE but they will be added to the RHS
-   *    automatically during the solution process and they are almost
-   *    impossible to track (e.g. in ODT solver).
-   *
-   *  \todo Need to hook in parser support for boundary and initial conditions.
+   *  - When solving constant density or weak forms of the scalar transport
+   *    equation, the source term(s) must be divided by \f$\rho\f$.  This is
+   *    handled for all source terms that this transport equation is made aware
+   *    of at construction.  However, if source terms are added to the RHS then
+   *    they need to be scaled by density in the case where the weak or constant
+   *    density form of the equation is being solved!  This is NOT done
+   *    automatically.
    */
   template<typename FieldT>
   class ScalarTransportEquation : public Wasatch::TransportEquation
@@ -170,14 +137,22 @@ namespace Wasatch{
 
     ~ScalarTransportEquation();
 
-    void verify_boundary_conditions(BCHelper& bcHelper,
-                                    GraphCategories& graphCat){}
+    /**
+     *  \brief Used to check the validity of the boundary conditions specified
+     *   by the user at a given boundary and also to infer/add new BCs on the
+     *   type of boundary.  Example: at a stationary impermeable wall, we can
+     *   immediately infer zero-velocity boundary conditions and check whether
+     *   the user has specified any velocity BCs at that boundary. See examples
+     *   in the momentum transport equation.
+     */
+    void verify_boundary_conditions( BCHelper& bcHelper,
+                                     GraphCategories& graphCat ){}
     
     /**
      *  \brief setup the boundary conditions associated with this transport equation
      */
     void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                           BCHelper& bcHelper );
+                                            BCHelper& bcHelper );
 
     /**
      *  \brief setup the boundary conditions associated with this transport equation
@@ -233,6 +208,8 @@ namespace Wasatch{
      *         equation. Scope should be within the TransportEquation tag.
      */
     static std::string get_primvar_name( Uintah::ProblemSpecP params );
+
+    bool is_weak_form() const{ return !isStrong_; }
 
   private:
     const Expr::Tag densityTag_;

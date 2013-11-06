@@ -11,16 +11,8 @@
      <TimeIntegrator>RK3SSP</TimeIntegrator>
      
      <Density>
-      <IsConstant>true</IsConstant>
-      <NameTag name="rho" state="STATE_NONE" /> 
+      <Constant value="1.0" name="density"/>
     </Density>
-
-    <!-- Set a constant density to be used by the source term -->
-    <BasicExpression type="SVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="rho" state="STATE_NONE" />
-      <Constant> 1.0 </Constant>      
-    </BasicExpression>
 
     <!-- Set the initial condition for the cell centered scalar scalar phi -->
     <BasicExpression type="SVOL">

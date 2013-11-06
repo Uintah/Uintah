@@ -112,7 +112,6 @@ namespace Uintah {
   class MPMArchesLabel;
   class ArchesLabel;
   class TimeIntegratorLabel;
-  class ExtraScalarSolver;
   class ExplicitTimeInt;
   class PartVel;
   class DQMOM;
@@ -192,8 +191,6 @@ public:
                                                            SchedulerP&);
   virtual void sched_getCCVelocities(const LevelP& level,
                                      SchedulerP&);
-  virtual void sched_mmsInitialCondition(const LevelP& level,
-                                         SchedulerP&);
   virtual void sched_weightInit( const LevelP& level,
                                 SchedulerP& );
   virtual void sched_weightedAbsInit( const LevelP& level,
@@ -209,13 +206,6 @@ public:
   virtual void scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/,
                                        Uintah::SchedulerP& /*scheduler*/,
                                        bool, bool);
-
-  // GROUP: Access Functions :
-  ///////////////////////////////////////////////////////////////////////
-    // Boolean to see whether or not Enthalpy is solved for
-  inline bool checkSolveEnthalpy() const{
-    return d_calcEnthalpy;
-  }
 
   // for multimaterial
   void setMPMArchesLabel(const MPMArchesLabel* MAlb){
@@ -302,12 +292,6 @@ private:
                        DataWarehouse* ,
                        DataWarehouse* new_dw);
 
-  void mmsInitialCondition(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse* ,
-                           DataWarehouse* new_dw);
-
   void weightInit( const ProcessorGroup*,
                   const PatchSubset* patches,
                   const MaterialSubset*,
@@ -355,12 +339,7 @@ private:
   double d_init_mix_frac; // The initial value of mixture fraction in the domain (for paramInit)
   bool d_variableTimeStep;
   string d_whichTurbModel;
-  bool d_calcScalar;
-  bool d_calcReactingScalar;
-  bool d_calcEnthalpy;
-  bool d_calcVariance;
   bool d_mixedModel;
-  bool d_doMMS;
   bool d_with_mpmarches;
   bool d_extraProjection;
   bool d_useWasatchMomRHS;
@@ -394,11 +373,6 @@ private:
   bool init_timelabel_allocated;
   bool d_dynScalarModel;
   bool d_underflow;
-  string d_mms;
-  //linear mms
-  double d_cu,d_cv,d_cw,d_cp,d_phi0,d_esphi0;
-  //sine mms
-  double d_amp;
 
   // Variables----
   vector<string> d_scalarEqnNames;

@@ -165,11 +165,9 @@
       </TransportEqns>
 
       <Turbulence model="smagorinsky">
-        <variance_coefficient>0.1</variance_coefficient>
         <cf>0.0</cf> <!-- turn off turbulence model --> 
         <fac_mesh>1.0</fac_mesh>
         <filterl>0.000001</filterl>
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
       </Turbulence>
 
       <Properties>
@@ -207,10 +205,6 @@
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
-        <MixtureFractionSolver>
-          <convection_scheme>central-upwind</convection_scheme>
-        </MixtureFractionSolver>
 
       </ExplicitSolver>
 

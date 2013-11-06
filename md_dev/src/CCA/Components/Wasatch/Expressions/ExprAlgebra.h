@@ -171,21 +171,20 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  if (!isModifierExpr_) {
-    result <<= 0.0;
-    if (algebraicOperation_ == PRODUCT) result <<= 1.0;
+  if( !isModifierExpr_ ){
+    if( algebraicOperation_ == PRODUCT ) result <<= 1.0;
+    else                                 result <<= 0.0;
   }
   
   typename std::vector<const FieldT*>::const_iterator srcFieldsIter = srcFields_.begin();
   while (srcFieldsIter != srcFields_.end()) {
     switch( algebraicOperation_ ){
-      case( SUM       ) : result <<= result + **srcFieldsIter;  break;
-      case( DIFFERENCE) : result <<= result - **srcFieldsIter;  break;
-      case( PRODUCT   ) : result <<= result * **srcFieldsIter;  break;
+      case SUM       : result <<= result + **srcFieldsIter;  break;
+      case DIFFERENCE: result <<= result - **srcFieldsIter;  break;
+      case PRODUCT   : result <<= result * **srcFieldsIter;  break;
     }
     ++srcFieldsIter;
   }
-  
 }
 
 //--------------------------------------------------------------------

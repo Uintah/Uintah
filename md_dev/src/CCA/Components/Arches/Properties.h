@@ -87,9 +87,6 @@ public:
   Properties(ArchesLabel* label, \
              const MPMArchesLabel* MAlb,
              PhysicalConstants* phys_const, 
-             bool calcReactingScalar,
-             bool calcEnthalpy, 
-             bool calcVariance, 
              const ProcessorGroup* myworld);
 
   // GROUP: Destructors :
@@ -104,32 +101,6 @@ public:
 
   void problemSetup(const ProblemSpecP& params);
 
-  // GROUP: Compute properties 
-  ///////////////////////////////////////////////////////////////////////
-  // Compute properties for inlet/outlet streams
-
-  void computeInletProperties(const InletStream& inStream,
-                              Stream& outStream, const string bc_type);
-
-  // GROUP: Schedule Action :
-  ///////////////////////////////////////////////////////////////////////
-  // Schedule the recomputation of proprties
-
-  void sched_reComputeProps(SchedulerP&, 
-                            const PatchSet* patches,
-                            const MaterialSet* matls,
-                            const TimeIntegratorLabel* timelabels,
-                            bool modify_density, 
-                            bool initialize);
-
-  ///////////////////////////////////////////////////////////////////////
-  // Schedule the computation of proprties for the first actual time 
-  // step in an MPMArches run
-
-  void sched_computePropsFirst_mm(SchedulerP&, 
-                                  const PatchSet* patches,
-                                  const MaterialSet* matls);
-
   ///////////////////////////////////////////////////////////////////////
   // Schedule the computation of density reference array here
 
@@ -141,8 +112,7 @@ public:
   void sched_averageRKProps(SchedulerP&, 
                             const PatchSet* patches,
                             const MaterialSet* matls,
-                            const TimeIntegratorLabel* timelabels, 
-                            const bool calcScalar );
+                            const TimeIntegratorLabel* timelabels );
 
   void sched_saveTempDensity(SchedulerP&, 
                             const PatchSet* patches,
@@ -210,28 +180,6 @@ protected :
 
 private:
   
-  // GROUP: Actual Action Methods :
-  ///////////////////////////////////////////////////////////////////////
-  // Carry out actual recomputation of properties
-
-  void reComputeProps(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels,
-                      bool modify_density,
-                      bool initialize);
-
-  ///////////////////////////////////////////////////////////////////////
-  // Carry out actual computation of properties for the first actual
-  // time step in an MPMArches run
-
-  void computePropsFirst_mm(const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw);
 
   ///////////////////////////////////////////////////////////////////////
   // Carry out actual computation of density reference array
@@ -248,8 +196,7 @@ private:
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels, 
-                      const bool calcScalar);
+                      const TimeIntegratorLabel* timelabels );
 
   void saveTempDensity(const ProcessorGroup*,
                       const PatchSubset* patches,
@@ -290,9 +237,6 @@ private:
 
       bool d_reactingFlow;
       PhysicalConstants* d_physicalConsts;
-      bool d_calcReactingScalar;
-      bool d_calcEnthalpy;
-      bool d_calcVariance;
       bool d_radiationCalc;
       bool d_DORadiationCalc;
 
@@ -306,7 +250,6 @@ private:
       double d_opl;
       IntVector d_denRef;
       
-      MixingModel* d_mixingModel;
       MixingRxnModel* d_mixingRxnTable;
 
       BoundaryCondition* d_bc;

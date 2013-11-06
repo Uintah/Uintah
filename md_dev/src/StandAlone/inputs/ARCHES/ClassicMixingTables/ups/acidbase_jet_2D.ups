@@ -169,24 +169,16 @@
           <convection_scheme> central </convection_scheme>
         </MomentumSolver>
 
-        <MixtureFractionSolver>
-          <convection_scheme> flux_limited </convection_scheme>
-          <limiter_type> superbee </limiter_type>
-        </MixtureFractionSolver>
-
       </ExplicitSolver>
 <!-- TURBULENCE Specification -->
       <Turbulence model="smagorinsky">
-        <variance_coefficient> 0.1 </variance_coefficient>
         <cf> 0.17 </cf>
         <fac_mesh> 1.0 </fac_mesh>
         <filterl> 0.000001 </filterl>
-        <turbulentPrandtlNumber> 0.4 </turbulentPrandtlNumber>
       </Turbulence>
 
 <!-- TABLE and Properties -->
       <Properties>
-        <use_mixing_model> false </use_mixing_model>
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/AcidBaseTable2D.mix.gz</inputfile>
           <cold_flow> true </cold_flow>

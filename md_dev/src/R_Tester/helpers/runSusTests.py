@@ -645,7 +645,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   else:
     replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
   
-  replace_msg = "%s\n\tTo replace multiple tests that have failed run:\n\t    %s/replace_all_GS\n" % (replace_msg,startpath)
+  replace_msg = "%s\n\tTo replace multiple tests that have failed run:\n\t    cd %s \n\t    ./replace_all_GS\n" % (replace_msg,startpath)
   
   return_code = 0
   if rc == 35072 or rc == 36608 :

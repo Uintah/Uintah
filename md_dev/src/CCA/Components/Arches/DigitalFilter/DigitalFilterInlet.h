@@ -29,8 +29,6 @@
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/Mixing/Stream.h>
-#include <CCA/Components/Arches/Mixing/InletStream.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/LevelP.h>
 
@@ -54,8 +52,6 @@ namespace Uintah {
   class VarLabel;
   class PhysicalConstants;
   class Properties;
-  class Stream;
-  class InletStream;
   class ArchesLabel;
   class MPMArchesLabel;
   class ProcessorGroup;

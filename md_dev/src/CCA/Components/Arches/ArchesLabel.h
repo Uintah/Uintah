@@ -114,21 +114,14 @@ namespace Uintah {
       const VarLabel* d_densityCPLabel;
       const VarLabel* d_densityGuessLabel;
       const VarLabel* d_densityTempLabel;
-      const VarLabel* d_densityOldOldLabel;
 
       // filtered drhodt
       const VarLabel* d_filterdrhodtLabel;
-      // for computing divergence constraint
-      const VarLabel* d_drhodfCPLabel;
 
       // Viscosity Labels
       // for old_dw in computeTurbModel
       const VarLabel* d_viscosityCTSLabel;
       const VarLabel* d_turbViscosLabel; 
-      const VarLabel* d_scalarDiffusivityLabel;
-      const VarLabel* d_enthalpyDiffusivityLabel;
-      const VarLabel* d_reactScalarDiffusivityLabel;
-
 
       // Pressure Labels
 
@@ -159,57 +152,7 @@ namespace Uintah {
       // WMom Labels
       const VarLabel* d_wMomLabel;
 
-      // Scalar Labels
-      //computed for old_dw in paramInit
-      // computed for new_dw in setInitialGuess
-
-      const VarLabel* d_scalarSPLabel;
-      const VarLabel* d_scalarTempLabel;
-      const VarLabel* d_scalarFELabel;
-
-      // Scalar variance labels
-
-      // computed for new_dw in Smagorinsky Model
-      const VarLabel* d_scalarVarSPLabel;
-
-      // computed for new_dw in Smagorinsky Model for flamelet
-      const VarLabel* d_scalarDissSPLabel;
-
-      // Scalar Coef
-      const VarLabel* d_scalCoefSBLMLabel;
-
-      // scalar diffusion coeffs, required for divergence constraint
-      const VarLabel* d_scalDiffCoefLabel;
-      const VarLabel* d_scalDiffCoefSrcLabel;
-      const VarLabel* d_enthDiffCoefLabel;
-
-      // new scalar coeffs:
-      const VarLabel* d_scalarTotCoefLabel; 
-
-      // Scalar NonLinear Src
-      const VarLabel* d_scalNonLinSrcSBLMLabel;
-
-
-      // reactive scalars
-      const VarLabel* d_reactscalarSPLabel;
-      const VarLabel* d_reactscalarTempLabel;
-      const VarLabel* d_reactscalarFELabel;
-
-      // Reactscalar variance labels
-      // computed for new_dw in Smagorinsky Model
-      const VarLabel* d_reactscalarVarSPLabel;
-
-      // Reactscalar Coef
-      const VarLabel* d_reactscalCoefSBLMLabel;
-
-      // Reactscalar Diffusion Coef
-      const VarLabel* d_reactscalDiffCoefLabel;
-      
-      // Reactscalar NonLinear Src
-      const VarLabel* d_reactscalNonLinSrcSBLMLabel;
-
       // labels for scalesimilaritymodels
-
       const VarLabel* d_stressTensorCompLabel;
       const VarLabel* d_stressSFCXdivLabel;
       const VarLabel* d_stressSFCYdivLabel;
@@ -222,8 +165,6 @@ namespace Uintah {
       const VarLabel* d_cbetaIJCompLabel;
       const VarLabel* d_LIJCompLabel;
 
-      const VarLabel* d_scalarFluxCompLabel;
-      
       // labels for dynamic procedure
       const VarLabel* d_strainMagnitudeLabel;
       const VarLabel* d_strainMagnitudeMLLabel;
@@ -252,57 +193,10 @@ namespace Uintah {
       const VarLabel* d_mmcellTypeLabel;
       const VarLabel* d_mmgasVolFracLabel;
 
-      // for reacting flows
-      const VarLabel* d_dummyTLabel;
-      const VarLabel* d_tempINLabel;
-      const VarLabel* d_tempFxLabel; 
-      const VarLabel* d_tempFyLabel;
-      const VarLabel* d_tempFzLabel; 
-      const VarLabel* d_cpINLabel;
-      const VarLabel* d_co2INLabel;
-      const VarLabel* d_h2oINLabel;
-      const VarLabel* d_normalizedScalarVarLabel;
-      const VarLabel* d_heatLossLabel;
-
-      const VarLabel* d_h2sINLabel;
-      const VarLabel* d_so2INLabel;
-      const VarLabel* d_so3INLabel;
-      const VarLabel* d_sulfurINLabel;
-
-      const VarLabel* d_mixMWLabel; 
-
-      const VarLabel* d_s2INLabel;
-      const VarLabel* d_shINLabel;
-      const VarLabel* d_soINLabel;
-      const VarLabel* d_hso2INLabel;
-
-      const VarLabel* d_hosoINLabel;
-      const VarLabel* d_hoso2INLabel;
-      const VarLabel* d_snINLabel;
-      const VarLabel* d_csINLabel;
-
-      const VarLabel* d_ocsINLabel;
-      const VarLabel* d_hsoINLabel;
-      const VarLabel* d_hosINLabel;
-      const VarLabel* d_hsohINLabel;
-
-      const VarLabel* d_h2soINLabel;
-      const VarLabel* d_hoshoINLabel;
-      const VarLabel* d_hs2INLabel;
-      const VarLabel* d_h2s2INLabel;
-
-      const VarLabel* d_coINLabel;
-      const VarLabel* d_c2h2INLabel;
-      const VarLabel* d_ch4INLabel;
       const VarLabel* d_denRefArrayLabel;
       const VarLabel* d_densityMicroLabel;
       const VarLabel* d_densityMicroINLabel;
       const VarLabel* d_pressPlusHydroLabel;
-      // predicted
-
-      // for outlet bc
-      const VarLabel* d_uvwoutLabel;
-      // pred-corr labels
 
       // labels for pressure solver
       const VarLabel* d_uVelRhoHatLabel;
@@ -319,25 +213,7 @@ namespace Uintah {
       const VarLabel* d_vVelRhoHat_CCLabel;
       const VarLabel* d_wVelRhoHat_CCLabel;
 
-      // divergence constraint
-      const VarLabel* d_divConstraintLabel;
-
       const VarLabel* d_pressurePredLabel;
-
-      // for enthalpy equation
-      const VarLabel* d_enthalpySPLabel;
-      const VarLabel* d_enthalpyTempLabel;
-      const VarLabel* d_enthalpyFELabel;
-      
-      // for validation
-      const VarLabel* d_enthalpyRXNLabel;
-
-
-      // Enthalpy Coef
-      const VarLabel* d_enthCoefSBLMLabel;
-
-      // Enthalpy NonLinear Src
-      const VarLabel* d_enthNonLinSrcSBLMLabel;
 
       // for radiation
       const VarLabel* d_fvtfiveINLabel;
@@ -347,7 +223,6 @@ namespace Uintah {
       const VarLabel* d_qrgINLabel;
       const VarLabel* d_qrsINLabel;
       const VarLabel* d_absorpINLabel;
-      const VarLabel* d_sootFVINLabel;
       const VarLabel* d_abskgINLabel;
       const VarLabel* d_radiationSRCINLabel;
       const VarLabel* d_radiationFluxEINLabel;
@@ -358,10 +233,6 @@ namespace Uintah {
       const VarLabel* d_radiationFluxBINLabel;
       const VarLabel* d_radiationVolqINLabel;
  
-      // reactive scalar source term from properties
-      const VarLabel* d_reactscalarSRCINLabel;
-      
-
       // runge-kutta 3d order properties labels
       const VarLabel* d_refDensityInterm_label;
       const VarLabel* d_refPressureInterm_label;
@@ -377,7 +248,6 @@ namespace Uintah {
       const VarLabel* d_velocityDivergenceBCLabel;
       const VarLabel* d_continuityResidualLabel;
 
-      const VarLabel* d_ScalarClippedLabel;
       const VarLabel* d_negativeDensityGuess_label;
       const VarLabel* d_negativeDensityGuessPred_label;
       const VarLabel* d_negativeDensityGuessInterm_label;
@@ -391,63 +261,6 @@ namespace Uintah {
       const VarLabel* d_kineticEnergyLabel;
       const VarLabel* d_totalKineticEnergyLabel;
       
-      // scalar mms Ln error
-      const VarLabel* d_smmsLnErrorLabel;
-      const VarLabel* d_totalsmmsLnErrorLabel;
-      const VarLabel* d_totalsmmsLnErrorPredLabel;
-      const VarLabel* d_totalsmmsLnErrorIntermLabel;
-      const VarLabel* d_totalsmmsExactSolLabel;
-      const VarLabel* d_totalsmmsExactSolPredLabel;
-      const VarLabel* d_totalsmmsExactSolIntermLabel;
-      
-      // grad P mms Ln error
-      const VarLabel* d_gradpmmsLnErrorLabel;
-      const VarLabel* d_totalgradpmmsLnErrorLabel;
-      const VarLabel* d_totalgradpmmsLnErrorPredLabel;
-      const VarLabel* d_totalgradpmmsLnErrorIntermLabel;
-      const VarLabel* d_totalgradpmmsExactSolLabel;
-      const VarLabel* d_totalgradpmmsExactSolPredLabel;
-      const VarLabel* d_totalgradpmmsExactSolIntermLabel;
-      
-      // u mms Ln error
-      const VarLabel* d_ummsLnErrorLabel;
-      const VarLabel* d_totalummsLnErrorLabel;
-      const VarLabel* d_totalummsLnErrorPredLabel;
-      const VarLabel* d_totalummsLnErrorIntermLabel;
-      const VarLabel* d_totalummsExactSolLabel;
-      const VarLabel* d_totalummsExactSolPredLabel;
-      const VarLabel* d_totalummsExactSolIntermLabel;
-      
-      // v mms Ln error
-      const VarLabel* d_vmmsLnErrorLabel;
-      const VarLabel* d_totalvmmsLnErrorLabel;
-      const VarLabel* d_totalvmmsLnErrorPredLabel;
-      const VarLabel* d_totalvmmsLnErrorIntermLabel;
-      const VarLabel* d_totalvmmsExactSolLabel;
-      const VarLabel* d_totalvmmsExactSolPredLabel;
-      const VarLabel* d_totalvmmsExactSolIntermLabel;
-
-      // w mms Ln error
-      const VarLabel* d_wmmsLnErrorLabel;
-      const VarLabel* d_totalwmmsLnErrorLabel;
-      const VarLabel* d_totalwmmsLnErrorPredLabel;
-      const VarLabel* d_totalwmmsLnErrorIntermLabel;
-      const VarLabel* d_totalwmmsExactSolLabel;
-      const VarLabel* d_totalwmmsExactSolPredLabel;
-      const VarLabel* d_totalwmmsExactSolIntermLabel;
-
-      // mass balance labels for RK
-      const VarLabel* d_totalflowINPredLabel;
-      const VarLabel* d_totalflowOUTPredLabel;
-      const VarLabel* d_denAccumPredLabel;
-      const VarLabel* d_netflowOUTBCPredLabel;
-      const VarLabel* d_totalAreaOUTPredLabel;
-      const VarLabel* d_totalflowINIntermLabel;
-      const VarLabel* d_totalflowOUTIntermLabel;
-      const VarLabel* d_denAccumIntermLabel;
-      const VarLabel* d_netflowOUTBCIntermLabel;
-      const VarLabel* d_totalAreaOUTIntermLabel;
- 
       const VarLabel* d_oldDeltaTLabel;
        
        // test filtered terms for variable density dynamic Smagorinsky model
@@ -458,42 +271,14 @@ namespace Uintah {
       const VarLabel* d_filterRhoFLabel;
       const VarLabel* d_filterRhoELabel;
       const VarLabel* d_filterRhoRFLabel;
-      const VarLabel* d_scalarGradientCompLabel;
       const VarLabel* d_filterScalarGradientCompLabel;
-      const VarLabel* d_enthalpyGradientCompLabel;
       const VarLabel* d_filterEnthalpyGradientCompLabel;
-      const VarLabel* d_reactScalarGradientCompLabel;
       const VarLabel* d_filterReactScalarGradientCompLabel;
       const VarLabel* d_filterStrainTensorCompLabel;
       const VarLabel* d_filterVolumeLabel; 
-      const VarLabel* d_scalarNumeratorLabel; 
-      const VarLabel* d_scalarDenominatorLabel; 
-      const VarLabel* d_enthalpyNumeratorLabel; 
-      const VarLabel* d_enthalpyDenominatorLabel; 
-      const VarLabel* d_reactScalarNumeratorLabel; 
-      const VarLabel* d_reactScalarDenominatorLabel; 
       const VarLabel* d_ShFLabel;
       const VarLabel* d_ShELabel;
       const VarLabel* d_ShRFLabel;
-
-      //mms force term labels
-      const VarLabel* d_uFmmsLabel;
-      const VarLabel* d_vFmmsLabel;
-      const VarLabel* d_wFmmsLabel;
-      
-      //Helper variable
-      const VarLabel* d_zerosrcVarLabel;
-
-      //rate Labels
-      const VarLabel* d_co2RateLabel;
-      const VarLabel* d_so2RateLabel;
-
-      //source term labels for intrusion (non-zero) boundary conditions
-      const VarLabel* d_scalarBoundarySrcLabel;
-      const VarLabel* d_enthalpyBoundarySrcLabel;
-      const VarLabel* d_umomBoundarySrcLabel;
-      const VarLabel* d_vmomBoundarySrcLabel;
-      const VarLabel* d_wmomBoundarySrcLabel;
 
       // DQMOM Variables:
 
@@ -516,8 +301,6 @@ namespace Uintah {
       const VarLabel* d_areaFractionFZLabel; 
       const VarLabel* d_volFractionLabel; 
 
-      const VarLabel* d_varianceLabel;
-      
       std::vector<std::string> model_req_species;
 
       inline void add_species( std::string s ) { 

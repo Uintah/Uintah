@@ -102,6 +102,7 @@ private:
   const VarLabel* d_char_mass_label;
   const VarLabel* d_raw_coal_mass_label;        ///< Label for raw coal mass
   const VarLabel* d_particle_temperature_label; ///< Label for particle temperature
+  const VarLabel* d_gas_temperature_label;      ///< label for the gas temperature 
   const VarLabel* d_particle_length_label;      ///< Label for particle length
   const VarLabel* d_weight_label;               ///< Weight label
  

@@ -29,6 +29,7 @@
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/TagNames.h>
+#include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/Expressions/TimeDerivative.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumPartialRHS.h>
@@ -561,7 +562,7 @@ namespace Wasatch{
   {
     const Expr::Tag momTag = mom_tag( momName );
     const Expr::Tag rhsFullTag( momTag.name() + "_rhs", Expr::STATE_NONE );
-    bool  enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
+    const bool enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
     
     Expr::Tag volFracTag = Expr::Tag();
     Direction stagLoc = get_staggered_location<FieldT>();
@@ -578,7 +579,7 @@ namespace Wasatch{
         break;
       default:
         break;
-    }    
+    }
     return factory.register_expression( new typename MomRHS<FieldT>::Builder( rhsFullTag, (enablePressureSolve ? pressure_tag() : Expr::Tag()), rhs_part_tag(momTag) , volFracTag ) );
   }
 
@@ -632,6 +633,8 @@ namespace Wasatch{
     doMom[1] = params->get( "Y-Momentum", ymomname );
     doMom[2] = params->get( "Z-Momentum", zmomname );
 
+    const bool enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
+    
     //_____________
     // volume fractions for embedded boundaries Terms
     VolFractionNames& vNames = VolFractionNames::self();
@@ -639,7 +642,7 @@ namespace Wasatch{
     Expr::Tag xAreaFracTag = ( this->has_embedded_geometry() && doMom[0] ) ? vNames.xvol_frac_tag() : Expr::Tag();
     Expr::Tag yAreaFracTag = ( this->has_embedded_geometry() && doMom[1] ) ? vNames.yvol_frac_tag() : Expr::Tag();
     Expr::Tag zAreaFracTag = ( this->has_embedded_geometry() && doMom[2] ) ? vNames.zvol_frac_tag() : Expr::Tag();
-    switch (stagLoc_) {
+    switch( stagLoc_ ){
       case XDIR: thisVolFracTag_ = xAreaFracTag; break;
       case YDIR: thisVolFracTag_ = yAreaFracTag; break;
       case ZDIR: thisVolFracTag_ = zAreaFracTag; break;
@@ -687,7 +690,13 @@ namespace Wasatch{
         else
           np1MomTags.push_back(Expr::Tag());
         
-        Expr::ExpressionID contID = postProcFactory.register_expression( new ContResT(contTag, Expr::Tag(), np1MomTags) );
+        Expr::Tag drhodtTag = Expr::Tag();
+        if( !isConstDensity_ ){
+          drhodtTag = tagNames.drhodtnp1;
+          typedef Expr::PlaceHolder<SVolField>  FieldExpr;
+          postProcFactory.register_expression( new typename FieldExpr::Builder(drhodtTag),true );
+        }
+        Expr::ExpressionID contID = postProcFactory.register_expression( new ContResT(contTag, drhodtTag, np1MomTags) );
         postProcGH.rootIDs.insert(contID);
       }
     }
@@ -703,7 +712,7 @@ namespace Wasatch{
     // check if the flow is viscous
     const Expr::Tag viscTag = (isViscous_) ? parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
     
-    bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
+    const bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
     const Expr::Tag turbViscTag = tagNames.turbulentviscosity;
     if ( isTurbulent_ && isViscous_ && enableTurbulenceModel ) {
       register_turbulence_expressions(turbulenceParams, factory, velTags_, densTag, is_constant_density() );
@@ -726,32 +735,39 @@ namespace Wasatch{
     
     //__________________
     // Pressure source term
+    
     if (!isConstDensity) {
-      // calculating velocity at the next time step    
-      Expr::Tag thisVelStarTag = Expr::Tag( thisVelTag_.name() + tagNames.star, Expr::STATE_NONE);
-      Expr::Tag convTermWeak   = Expr::Tag( thisVelTag_.name() + "_weak_convective_term", Expr::STATE_NONE);
+      // calculating velocity at the next time step
+      const Expr::Tag thisVelStarTag = Expr::Tag( thisVelTag_.name() + tagNames.star, Expr::STATE_NONE);
+      const Expr::Tag convTermWeak   = Expr::Tag( thisVelTag_.name() + "_weak_convective_term", Expr::STATE_NONE);
       if( !factory.have_entry( thisVelStarTag ) ){
         OldVariable& oldPressure = OldVariable::self();
-        oldPressure.add_variable<SVolField>( ADVANCE_SOLUTION, pressure_tag() );
+        if( enablePressureSolve ) oldPressure.add_variable<SVolField>( ADVANCE_SOLUTION, pressure_tag() );
         const Expr::Tag oldPressureTag = Expr::Tag (pressure_tag().name() + "_old", Expr::STATE_NONE);
         convTermWeakID_ = factory.register_expression( new typename WeakConvectiveTerm<FieldT>::Builder( convTermWeak, thisVelTag_, velTags_));
-//        factory.cleave_from_children( convTermWeakID_ );
         factory.cleave_from_parents ( convTermWeakID_ );
         factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, convTermWeak, tauTags, densTag, viscTag, oldPressureTag, tagNames.timestep ));
       }
+      
     }
     
-    Expr::Tag pSourceTag = Expr::Tag( "pressure-source-term", Expr::STATE_NONE);
-    if( !factory.have_entry( pSourceTag ) ){
-      Expr::Tag densStarTag = Expr::Tag(densTag.name() + tagNames.star, Expr::CARRY_FORWARD);
-      Expr::Tag dens2StarTag = Expr::Tag(densTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD);
+    if( !factory.have_entry( tagNames.pressuresrc ) ){
+      const Expr::Tag densStarTag  = Expr::Tag( densTag.name() + tagNames.star,       Expr::CARRY_FORWARD );
+      const Expr::Tag dens2StarTag = Expr::Tag( densTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD );
       Expr::TagList velStarTags = Expr::TagList();
       
       set_vel_star_tags( velTags_, velStarTags );
       set_mom_tags( params, momTags_ );
       
       // registering the expressiong for pressure source term
-      factory.register_expression( new typename PressureSource::Builder( pSourceTag, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag, dilTag, tagNames.timestep));
+      Expr::TagList psrcTagList;
+      psrcTagList.push_back(tagNames.pressuresrc);
+      psrcTagList.push_back(tagNames.drhodt);
+      psrcTagList.push_back(tagNames.vardenalpha);
+      psrcTagList.push_back(tagNames.vardenbeta);
+      psrcTagList.push_back(tagNames.divmomstar);
+      psrcTagList.push_back(tagNames.drhodtstar);
+      factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag));
     }
     
     
@@ -761,9 +777,7 @@ namespace Wasatch{
     
     //__________________
     // pressure
-    bool enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
-
-    if (enablePressureSolve) {
+    if( enablePressureSolve ){
       if( !factory.have_entry( pressure_tag() ) ){
         Uintah::ProblemSpecP pressureParams = params->findBlock( "Pressure" );
         
@@ -796,7 +810,7 @@ namespace Wasatch{
         ptags.push_back( pressure_tag() );
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
         const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
-                                                                                        pSourceTag, tagNames.timestep, volFracTag, 
+                                                                                        tagNames.pressuresrc, tagNames.timestep, volFracTag,
                                                                                         hasMovingGeometry, usePressureRefPoint, refPressureValue, 
                                                                                         refPressureLocation, use3DLaplacian,
                                                                                         *solverParams_, linSolver);
@@ -824,11 +838,12 @@ namespace Wasatch{
           factory.register_expression(scinew typename TotalKineticEnergy<XVolField,YVolField,ZVolField>::Builder( tkeTempTag,
                                                                                                                  velTags_[0],velTags_[1],velTags_[2] ),true);
           
-          ReductionHelper::self().add_variable<double, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE, false);
+          ReductionHelper::self().add_variable<SpatialOps::structured::SingleValueField, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE, false);
         }
       } else if (!factory.have_entry( TagNames::self().kineticEnergy )) { // calculate local, pointwise kinetic energy
-        const Expr::ExpressionID keID = factory.register_expression(scinew typename KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder( TagNames::self().kineticEnergy,
-                                                                                                                                                      velTags_[0],velTags_[1],velTags_[2] ), true);
+        const Expr::ExpressionID keID = factory.register_expression(
+            scinew typename KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder(
+                TagNames::self().kineticEnergy, velTags_[0],velTags_[1],velTags_[2] ), true);
         graphHelper.rootIDs.insert( keID );
       }
     }
@@ -864,8 +879,8 @@ namespace Wasatch{
         case WALL:
         {
           // first check if the user specified boundary conditions at the wall
-          if ( myBndSpec.has_field(thisVelTag_.name()) || myBndSpec.has_field(thisMomName_) ||
-               myBndSpec.has_field(rhs_name()) || myBndSpec.has_field(thisMomName_ + "_rhs_part") ) {
+          if( myBndSpec.has_field(thisVelTag_.name()) || myBndSpec.has_field(thisMomName_) ||
+              myBndSpec.has_field(rhs_name()) || myBndSpec.has_field(thisMomName_ + "_rhs_part") ){
             std::ostringstream msg;
             msg << "ERROR: You cannot specify any momentum-related boundary conditions at a stationary wall. "
             << "This error occured while trying to analyze boundary " << bndName
@@ -887,26 +902,29 @@ namespace Wasatch{
             bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
           }
           
-        }
           break;
+        }
         case VELOCITY:
         {
-          if (myBndSpec.find(thisVelTag_.name()) ) {
-            const BndCondSpec* velBCSpec = myBndSpec.find(thisVelTag_.name());
-            BndCondSpec momBCSpec = *velBCSpec;
-            momBCSpec.varName = solution_variable_name();
-            bcHelper.add_boundary_condition(bndName, momBCSpec);
-          }          
-          BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
-          bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
-          
-          BndCondSpec rhsFullBCSpec = {rhs_name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
-          bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+          // tsaad: please keep the commented code below. This should process velocity BCs and infer momentum bcs from those
+//          if (myBndSpec.find(thisVelTag_.name()) ) {
+//            const BndCondSpec* velBCSpec = myBndSpec.find(thisVelTag_.name());
+//            BndCondSpec momBCSpec = *velBCSpec;
+//            momBCSpec.varName = solution_variable_name();
+//            bcHelper.add_boundary_condition(bndName, momBCSpec);
+//          }
+          if (isNormal) {
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
+            
+            BndCondSpec rhsFullBCSpec = {rhs_name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+          }
           
           BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
-        }
           break;
+        }
         case OUTFLOW:
         {
           if(isNormal) {
@@ -929,8 +947,8 @@ namespace Wasatch{
 
           BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
-        }
           break;
+        }
         case OPEN:
         {
           if (isNormal) {
@@ -953,13 +971,13 @@ namespace Wasatch{
 
           BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
-        }
           break;
+        }
         case USER:
         {
           // prase through the list of user specified BCs that are relevant to this transport equation
-        }
           break;
+        }
           
         default:
           break;
