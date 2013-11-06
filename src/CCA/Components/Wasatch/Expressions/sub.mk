@@ -93,7 +93,8 @@ SUBDIRS := \
         $(SRCDIR)/MMS              \
         $(SRCDIR)/PBE              \
         $(SRCDIR)/PostProcessing   \
-        $(SRCDIR)/Turbulence       
+        $(SRCDIR)/BoundaryConditions   \
+        $(SRCDIR)/Turbulence
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

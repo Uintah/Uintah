@@ -36,10 +36,6 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <sstream>
-
-using std::string;
-using std::vector;
 
 #include <Core/Util/share.h>
 
@@ -60,49 +56,49 @@ SCISHARE void InsertStringInFile( char* filename, const char* match, const char*
 
 
 SCISHARE std::map<int,char*>* GetFilenamesEndingWith(const char* dir, 
-                                                     string ext);
+                                                     std::string ext);
 
-SCISHARE vector<string> GetFilenamesStartingWith(const string & dir,
-                                                 const string & prefix);
+SCISHARE std::vector<std::string> GetFilenamesStartingWith(const std::string & dir,
+                                                 const std::string & prefix);
 
-SCISHARE std::pair<string, string> split_filename( const string & fname );
+SCISHARE std::pair<std::string, std::string> split_filename( const std::string & fname );
 
-SCISHARE string findFileInPath( const string &filename, 
-                                const string &path );
+SCISHARE std::string findFileInPath( const std::string &filename,
+                                const std::string &path );
 
-SCISHARE bool getInfo( const string & filename );  // prints out size, type, timestamp, etc about the file. Returns false if file does not exist.
-SCISHARE bool validFile( const string & filename );
-SCISHARE bool validDir( const string & filename );
-SCISHARE bool isSymLink( const string & filename );
+SCISHARE bool getInfo( const std::string & filename );  // prints out size, type, timestamp, etc about the file. Returns false if file does not exist.
+SCISHARE bool validFile( const std::string & filename );
+SCISHARE bool validDir( const std::string & filename );
+SCISHARE bool isSymLink( const std::string & filename );
 
 // Creates a temp file (in directoryPath), writes to it, checks the
 // resulting files size, and then deletes it...  Informational
 // messages about the test are returned in the 'error_stream'.  A
 // 'procNumber' of -1 means you are not running MPI... otherwise pass
 // in the processor's rank.
-SCISHARE bool testFilesystem( const string & directoryPath,
+SCISHARE bool testFilesystem( const std::string & directoryPath,
                               std::stringstream & error_stream,
                               int procNumber = -1 );
 
-SCISHARE string autocomplete( const string & instr );
-SCISHARE string canonicalize( const string & filename );
-SCISHARE string substituteTilde(const string &dirstr);
+SCISHARE std::string autocomplete( const std::string & instr );
+SCISHARE std::string canonicalize( const std::string & filename );
+SCISHARE std::string substituteTilde(const std::string &dirstr);
 
 // Replaces '/' with '\' or vice-versa between unix and windows paths
-SCISHARE void convertToWindowsPath( string & unixPath );
-SCISHARE void convertToUnixPath( string & winPath );
+SCISHARE void convertToWindowsPath( std::string & unixPath );
+SCISHARE void convertToUnixPath( std::string & winPath );
 
 // System copy, move, and delete commands.  The strings are not
 // references since windows has to convert '/' to '\\', and we do that
-// in the same string
-SCISHARE int copyFile( const string & src, const string & dest );
-SCISHARE int moveFile( const string & src, const string & dest );
-SCISHARE int deleteFile( const string & filename);
-SCISHARE int copyDir( const string & src, const string & dest);
-SCISHARE int deleteDir( const string & filename);
+// in the same std::string
+SCISHARE int copyFile( const std::string & src, const std::string & dest );
+SCISHARE int moveFile( const std::string & src, const std::string & dest );
+SCISHARE int deleteFile( const std::string & filename);
+SCISHARE int copyDir( const std::string & src, const std::string & dest);
+SCISHARE int deleteDir( const std::string & filename);
 
 // Replaces the existing extension of the filename with the value of ext
-SCISHARE string changeExtension( const string & filename, const string &ext );
+SCISHARE std::string changeExtension( const std::string & filename, const std::string &ext );
 
 } // End namespace SCIRun
 

@@ -120,7 +120,7 @@ namespace Uintah {
   //__________________________________
   //    SPECIFC VOLUME
    void setSpecificVolBC(CCVariable<double>& sp_vol,
-                                 const string& kind,
+                                 const std::string& kind,
                                  const bool isMassSp_vol,
                                  constCCVariable<double> rho_CC,
                                  constCCVariable<double> vol_frac,
@@ -140,8 +140,8 @@ namespace Uintah {
   
   template<class T> 
   void setBC(T& variable, 
-             const  string& kind,
-             const string& comp,    
+             const std::string& kind,
+             const std::string& comp,
              const Patch* patch,    
              const int mat_id);
 
@@ -156,7 +156,7 @@ namespace Uintah {
                         T& vel_FC,                        
                         Iterator& bound_ptr,                  
                         double& value,          
-                        const string& whichVel);
+                        const std::string& whichVel);
   
   void ImplicitMatrixBC(CCVariable<Stencil7>& var, const Patch* patch);
   
@@ -204,21 +204,21 @@ namespace Uintah {
  ---------------------------------------------------------------------  */
  template<class T> 
 void setBC(T& vel_FC, 
-           const string& desc,
+           const std::string& desc,
            const Patch* patch,    
            const int mat_id,
            SimulationStateP& sharedState,
            customBC_globalVars* globalVars,
            customBC_localVars*  localVars)      
 {
-  cout_BC_FC << "--------setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<endl;
+  cout_BC_FC << "--------setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<std::endl;
   Vector cell_dx = patch->dCell();
-  string whichVel = "unknown";  
+  std::string whichVel = "unknown";
   
   //__________________________________
   // Iterate over the faces encompassing the domain
-  vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
+  std::vector<Patch::FaceType>::const_iterator iter;
+  std::vector<Patch::FaceType> bf;
 
   patch->getBoundaryFaces(bf);
 
@@ -233,7 +233,7 @@ void setBC(T& vel_FC,
          (faceDir.z() == 1 &&  (typeid(T) == typeid(SFCZVariable<double>)) ) ){
     
       int nCells = 0;
-      string bc_kind = "NotSet";
+      std::string bc_kind = "NotSet";
       
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
       for (int child = 0;  child < numChildren; child++) {
@@ -284,23 +284,23 @@ void setBC(T& vel_FC,
           else if(bc_kind == "MMS_1"){
             nCells+= set_MMS_BCs_FC<T>(patch, face, vel_FC, bound_ptr,
                                         cell_dx, sharedState,
-                                        globalVars->mms_var_basket,
-                                        localVars->mms_v);
+                                        globalVars->mms,
+                                        localVars->mms);
           }
           //__________________________________
           // Custom BCs
           else if(bc_kind == "Sine"){
             nCells+= set_Sine_BCs_FC<T>(patch, face, vel_FC, bound_ptr, sharedState,
-                                        globalVars->sine_var_basket,
-                                        localVars->sine_v);
+                                        globalVars->sine,
+                                        localVars->sine);
           }
           //__________________________________
           // Custom BCs
           else if( (bc_kind == "powerLawProfile" || bc_kind == "logWindProfile") ){
             nCells+= set_inletVelocity_BCs_FC<T>(patch, face, vel_FC, 
                                                  bound_ptr, bc_kind, value,
-                                                 localVars->inletVel_v,
-                                                 globalVars->inletVel_var_basket);
+                                                 localVars->inletVel,
+                                                 globalVars->inletVel);
           }       
 
           //__________________________________
@@ -310,22 +310,22 @@ void setBC(T& vel_FC,
             BC_dbg <<whichVel<<" Face: "<< patch->getFaceName(face) <<"\t numCellsTouched " << nCells
                  <<"\t child " << child  <<" NumChildren "<<numChildren 
                  <<"\t BC kind "<< bc_kind <<" \tBC value "<< value
-                 <<"\t bound_ptr= " << bound_ptr<< endl;
+                 <<"\t bound_ptr= " << bound_ptr<< std::endl;
           }              
         }  // Children loop
       }
       cout_BC_FC << patch->getFaceName(face) << " \t " << whichVel << " \t" << bc_kind << "\t faceDir: " << faceDir << " numChildren: " << numChildren 
-                 << " nCells: " << nCells << endl;
+                 << " nCells: " << nCells << std::endl;
       //__________________________________
       //  bulletproofing
       Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
       int nFaceCells = numFaceCells(patch,  type, face);
       
       if(nCells != nFaceCells && (bc_kind != "LODI" && bc_kind != "Neumann")){
-        ostringstream warn;
+        std::ostringstream warn;
         warn << "ERROR ICE: Boundary conditions were not set for ("<< whichVel << ", " 
              << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-             << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells << ") " << endl;
+             << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells << ") " << std::endl;
         throw InternalError(warn.str(), __FILE__, __LINE__);
       }
     }  // found iterator
@@ -339,19 +339,19 @@ void setBC(T& vel_FC,
 template <class T>
 void set_CFI_BC( CCVariable<T>& q_CC, const Patch* patch)        
 { 
-  cout_BC_CC << "-------- set_CFI_BC "<< endl; 
+  cout_BC_CC << "-------- set_CFI_BC "<< std::endl;
   //__________________________________
   // On the fine levels at the coarse fine interface 
   BC_dbg << *patch << " ";
   patch->printPatchBCs(BC_dbg);
 
   if(patch->hasCoarseFaces() ){  
-    BC_dbg << " BC at coarse/Fine interfaces " << endl;
+    BC_dbg << " BC at coarse/Fine interfaces " << std::endl;
     //__________________________________
     // Iterate over coarsefine interface faces
-    vector<Patch::FaceType> cf;
+    std::vector<Patch::FaceType> cf;
     patch->getCoarseFaces(cf);
-    vector<Patch::FaceType>::const_iterator iter;  
+    std::vector<Patch::FaceType>::const_iterator iter;
     for (iter  = cf.begin(); iter != cf.end(); ++iter){
       Patch::FaceType face = *iter;
       

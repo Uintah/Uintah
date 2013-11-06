@@ -31,11 +31,6 @@
 
 namespace Uintah {
 
-
-using std::vector;
-using std::ofstream;
-using std::set;
-
 class Task;
 class DetailedTask;
 class SchedulerWorker;
@@ -82,8 +77,8 @@ WARNING
     virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep();}
     
     
-    void initiateTask( DetailedTask          * task,
-			       bool only_old_recvs, int abort_point, int iteration);
+    void initiateTask( DetailedTask * task,
+                       bool only_old_recvs, int abort_point, int iteration);
 
     void runTask( DetailedTask* task, int iteration, int t_id);
     
@@ -99,9 +94,9 @@ WARNING
 
     void runTasks(int t_id);
     
-    ConditionVariable     d_nextsignal;
+    ConditionVariable      d_nextsignal;
     Mutex                  d_nextmutex;   //conditional wait mutex
-    SchedulerWorker*            t_worker[MAX_THREADS];  //workers
+    SchedulerWorker*       t_worker[MAX_THREADS];  //workers
     Thread*                t_thread[MAX_THREADS]; 
     Mutex                  dlbLock;   //load balancer lock
     Mutex                  schedulerLock; //scheduler lock
@@ -114,13 +109,13 @@ WARNING
     int ntasks;
     int currphase;
     int numPhase;
-    vector<int> phaseTasks;
-    vector<int> phaseTasksDone;
-    vector<DetailedTask *> phaseSyncTask;
+    std::vector<int> phaseTasks;
+    std::vector<int> phaseTasksDone;
+    std::vector<DetailedTask *> phaseSyncTask;
     bool abort;
     int abort_point;
-    set< DetailedTask * > pending_tasks;
-    vector<int> histogram;
+    std::set< DetailedTask * > pending_tasks;
+    std::vector<int> histogram;
 
     
   private:

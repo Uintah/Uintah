@@ -123,6 +123,7 @@ DEBUGTESTS = [
   ]
 
 NIGHTLYTESTS = [
+  ("clip-with-intrusions-test",           "clip-with-intrusions-test.ups",    4,  "Linux",  ["exactComparison","no_restart"] ),
   ("reduction-test",       "reduction-test.ups",  4,  "Linux",  ["exactComparison","no_restart"] ),
   ("lid-drive-cavity-xy-Re1000-adaptive",       liddrivencavityXYRe1000adaptive_ups,  4,  "All",  ["exactComparison","no_restart"] ),
   ("decay-isotropic-turbulence-dsmag32",       "TurbulenceVerification/"+decayIsotropicTurbulenceDSmag32_ups,  8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
@@ -227,7 +228,8 @@ INTRUSIONTESTS=[
   ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         
   ("intrusion_flow_past_objects_xy",           "intrusion_flow_past_objects_xy.ups",    16,  "All",  ["exactComparison","no_restart"] ),                         
   ("intrusion_flow_over_icse",                 "intrusion_flow_over_icse.ups",          16,  "All",  ["exactComparison","no_restart"] ),                         
-  ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] )
+  ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ),
+  ("clip-with-intrusions-test",           "clip-with-intrusions-test.ups",    4,  "All",  ["exactComparison","no_restart"] )
 ]
 
 PROJECTIONTESTS=[

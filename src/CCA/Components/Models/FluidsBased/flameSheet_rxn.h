@@ -35,7 +35,6 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
-#include <map>
 #include <vector>
 
 namespace Uintah {
@@ -150,11 +149,11 @@ WARNING
     class Scalar {
     public:
       int index;
-      string name;
+      std::string name;
       VarLabel* scalar_CCLabel;
       VarLabel* scalar_source_CCLabel;
       VarLabel* sum_scalar_fLabel;
-      vector<Region*> regions;
+      std::vector<Region*> regions;
     };
 
     Scalar* d_scalar;

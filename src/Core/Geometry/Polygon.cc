@@ -25,7 +25,7 @@
 #include <Core/Geometry/Polygon.h>
 #include <iostream>
 
-using std::ostream;
+using namespace std;
 
 namespace SCIRun {
 

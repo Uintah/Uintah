@@ -30,7 +30,7 @@
 
 using namespace SCIRun;
 using namespace Uintah;
-
+using namespace std;
     
 GIMPInterpolator::GIMPInterpolator()
 {

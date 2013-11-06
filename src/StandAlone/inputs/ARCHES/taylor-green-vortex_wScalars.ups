@@ -105,29 +105,14 @@
 
       </TransportEqns>
 
-      <Turbulence model="smagorinsky">
-        <cf>0.0</cf>
-        <fac_mesh>1.0</fac_mesh>
-        <filterl>0.000001</filterl>
-      </Turbulence>
-
       <Properties>
-        <use_mixing_model>false</use_mixing_model>
-        <ColdFlowMixingModel>
-          <Stream>
-            <density>1.00</density>
-            <temperature>298</temperature>
-          </Stream>
-          <Stream>
-            <density>1.00</density>
-            <temperature>298</temperature>
-          </Stream>
-        </ColdFlowMixingModel>
+        <ConstantProps>
+          <density>1.0</density>
+          <temperature>298.0</temperature>
+        </ConstantProps>
       </Properties>
 
       <ExplicitSolver>
-        <initial_dt>1</initial_dt>
-        <variable_dt>true</variable_dt>
         <PressureSolver>
           <normalize_pressure>true</normalize_pressure>
           <Parameters>

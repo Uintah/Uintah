@@ -35,6 +35,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
 
+using namespace std;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output

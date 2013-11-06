@@ -119,10 +119,10 @@ WARNING
                    Vector& norm,
                    int& p_dir);
 
-    void createFile(string& filename, FILE*& fp);
+    void createFile(std::string& filename, FILE*& fp);
     
     void bulletProofing( GridP& grid,
-                         const string& side,            
+                         const std::string& side,
                          const Point& start,            
                          const Point& end );
         

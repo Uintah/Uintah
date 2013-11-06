@@ -95,7 +95,7 @@ namespace Uintah {
   class DataArchive {
     private:
 
-    map<string, VarLabel*> createdVarLabels_;
+    std::map<std::string, VarLabel*> createdVarLabels_;
       // what we need to store on a per-variable basis
       // everything else can be retrieved from a higher level
       struct DataFileInfo {

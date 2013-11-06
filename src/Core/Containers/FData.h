@@ -45,9 +45,6 @@
 
 namespace SCIRun {
 
-using std::string;
-
-
 template <class Data, class Msh>
 class FData3d : public Array3<Data> {
 public:
@@ -95,7 +92,7 @@ public:
 
   unsigned int size() const { return this->dim1() * this->dim2() * this->dim3(); }
 
-  static const string type_name(int n = -1);
+  static const std::string type_name(int n = -1);
   const TypeDescription* get_type_description(int n) const;
 };
 
@@ -107,13 +104,13 @@ FData3d<Data, Msh>::~FData3d()
 
   
 template <class Data, class Msh>
-const string
+const std::string
 FData3d<Data, Msh>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 2);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNM +type_name(2) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNM +type_name(2) + FTNE;
     return name;
   }
   else if (n == 0)
@@ -136,9 +133,9 @@ FData3d<Data, Msh>::get_type_description(int n) const
 {
   ASSERT((n >= -1) && n <= 2);
 
-  static string name(type_name(0));
-  static string namesp("SCIRun");
-  static string path(__FILE__);
+  static std::string name(type_name(0));
+  static std::string namesp("SCIRun");
+  static std::string path(__FILE__);
   const TypeDescription *sub1 = SCIRun::get_type_description((Data*)0);
   const TypeDescription *sub2 = SCIRun::get_type_description((Msh*)0);
 
@@ -171,9 +168,9 @@ template <class Data, class Msh>
 const TypeDescription* 
 get_type_description(FData3d<Data, Msh>*)
 {
-  static string name(FData3d<Data, Msh>::type_name(0));
-  static string namesp("SCIRun");
-  static string path(__FILE__);
+  static std::string name(FData3d<Data, Msh>::type_name(0));
+  static std::string namesp("SCIRun");
+  static std::string path(__FILE__);
   const TypeDescription *sub1 = SCIRun::get_type_description((Data*)0);
   const TypeDescription *sub2 = SCIRun::get_type_description((Msh*)0);
 
@@ -236,7 +233,7 @@ public:
 
   unsigned int size() const { return this->dim1() * this->dim2(); }
 
-  static const string type_name(int n = -1);
+  static const std::string type_name(int n = -1);
 };
 
 
@@ -247,13 +244,13 @@ FData2d<Data, Msh>::~FData2d()
 
 
 template <class Data, class Msh>
-const string
+std::string
 FData2d<Data, Msh>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 2);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNM +type_name(2) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNM +type_name(2) + FTNE;
     return name;
   }
   else if (n == 0)
@@ -274,9 +271,9 @@ template <class Data, class Msh>
 const TypeDescription* 
 get_type_description(FData2d<Data, Msh>*)
 {
-  static string name(FData2d<Data, Msh>::type_name(0));
-  static string namesp("SCIRun");
-  static string path(__FILE__);
+  static std::string name(FData2d<Data, Msh>::type_name(0));
+  static std::string namesp("SCIRun");
+  static std::string path(__FILE__);
   const TypeDescription *sub1 = SCIRun::get_type_description((Data*)0);
   const TypeDescription *sub2 = SCIRun::get_type_description((Msh*)0);
 

@@ -50,7 +50,7 @@ public:
                    ArchesLabel* labels, 
                    MPMArchesLabel* MAlab, 
                    BoundaryCondition* bc, 
-                   vector<std::string> reqLabelNames, 
+                   std::vector<std::string> reqLabelNames,
                    const ProcessorGroup* my_world, 
                    std::string type );
                    
@@ -87,7 +87,7 @@ public:
     public: 
 
       Builder( std::string name, 
-               vector<std::string> required_label_names, 
+               std::vector<std::string> required_label_names,
                ArchesLabel* labels, 
                BoundaryCondition* bc, 
                const ProcessorGroup* my_world ) 
@@ -112,7 +112,7 @@ public:
       MPMArchesLabel*     _MAlab;
       BoundaryCondition*  _bc; 
       const ProcessorGroup* _my_world; 
-      vector<std::string> _required_label_names;
+      std::vector<std::string> _required_label_names;
 
   }; // class Builder 
   //______________________________________________________________________

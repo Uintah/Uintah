@@ -126,7 +126,7 @@ namespace Uintah {
 
     double YieldFunction(Matrix3& stress, const double& alpha, double&k_o,const double& eta,const double& eta_nl, const int& hardening_type);
 
-    double alpha_nl(const Point& x, Point& s,const vector<double>& l_nl);
+    double alpha_nl(const Point& x, Point& s,const std::vector<double>& l_nl);
 
     void EvaluateNonLocalAverage(double& dlambda_nl,double& V_alpha, ParticleVariable<double>& pdlambda, constParticleVariable<Point>& px, NCVariable<double>& gdlambda,NCVariable<double>& gmat,const Patch*& patch, particleIndex& idx, const double& l_nonlocal);
 

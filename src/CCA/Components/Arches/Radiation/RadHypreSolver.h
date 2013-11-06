@@ -132,9 +132,9 @@ public:
 protected:
 
 private:
-  string d_pcType;
-  string d_kspType;
-  string d_kspFix;
+  std::string d_pcType;
+  std::string d_kspType;
+  std::string d_kspFix;
   int d_overlap;
   int d_fill;
   int d_maxSweeps;
@@ -152,8 +152,8 @@ private:
 
   double *d_value;
   const ProcessorGroup* d_myworld;
-  map<const Patch*, int> d_petscGlobalStart;
-  map<const Patch*, Array3<int> > d_petscLocalToGlobal;
+  std::map<const Patch*, int> d_petscGlobalStart;
+  std::map<const Patch*, Array3<int> > d_petscLocalToGlobal;
   HYPRE_StructMatrix d_A;
   HYPRE_StructVector d_x, d_b;
   HYPRE_StructGrid d_grid;

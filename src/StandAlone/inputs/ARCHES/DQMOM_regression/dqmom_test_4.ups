@@ -248,7 +248,6 @@
 -->
       <ExplicitSolver>
         <initial_dt>1</initial_dt>
-        <variable_dt>true</variable_dt>
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>

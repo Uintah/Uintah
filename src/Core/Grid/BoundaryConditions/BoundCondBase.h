@@ -28,7 +28,6 @@
 #include <string>
 
 namespace Uintah {
-using std::string;
    
 /**************************************
 
@@ -79,8 +78,8 @@ WARNING
     BoundCondBase() {};
     virtual ~BoundCondBase() {};
     virtual BoundCondBase* clone() = 0;
-    const string getBCVariable() const { return d_variable; };
-    const string getBCType() const { return d_type; };
+    const std::string getBCVariable() const { return d_variable; };
+    const std::string getBCType() const { return d_type; };
     const std::string getBCFaceName() const { return d_face_label; };
     
     /**
@@ -92,8 +91,8 @@ WARNING
     const BoundCondValueTypeEnum getValueType() const { return d_value_type; };
     
   protected:
-    string d_variable;          // Pressure, Density, etc
-    string d_type;              // Dirichlet, Neumann, etc
+    std::string d_variable;          // Pressure, Density, etc
+    std::string d_type;              // Dirichlet, Neumann, etc
     std::string d_face_label;   // holds the user specified name of the bc face: left-wall, ox-inlet,...
     BoundCondValueTypeEnum d_value_type;        // int, double, string, vector, unknown
   };

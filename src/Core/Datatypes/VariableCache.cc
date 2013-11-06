@@ -52,6 +52,7 @@
 
 using namespace SCIRun;
 using namespace Uintah;
+using namespace std;
 
 
 // Tells you if the variable has been cached.

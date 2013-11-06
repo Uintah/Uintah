@@ -28,3 +28,9 @@
 # Makefile fragment for this subdirectory 
 
 SRCDIR := CCA/Components/Wasatch/Expressions/BoundaryConditions
+
+SRCS	+=                             \
+	$(SRCDIR)/BoundaryConditions.cc \
+	$(SRCDIR)/PressureBC.cc   \
+	$(SRCDIR)/OutflowBC.cc  \
+	$(SRCDIR)/VardenMMSBCs.cc  

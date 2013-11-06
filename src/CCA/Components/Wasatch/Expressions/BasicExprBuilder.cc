@@ -35,6 +35,7 @@
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/TaylorVortex.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
+#include <CCA/Components/Wasatch/Expressions/MMS/VardenMMS.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/TimeDerivative.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/WallDistance.h>
@@ -63,17 +64,10 @@
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 
 // BC Expressions Includes
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/ConstantBC.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/LinearBC.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/ParabolicBC.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/PowerLawBC.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/TurbulentInletBC.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSDensity.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSMixtureFraction.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSVelocity.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSMomentum.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VarDensMMSSolnVar.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VardenMMSBCs.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -263,6 +257,25 @@ namespace Wasatch{
       const Expr::Tag yTag = parse_nametag( valParams->findBlock("Coordinate2")->findBlock("NameTag") );
       typedef typename PlusProfile<FieldT>::Builder Builder;
       builder = scinew Builder( tag, xTag, yTag, xStart, yStart, xWidth, yWidth, lowValue, highValue );
+    }
+
+    else if ( params->findBlock("RayleighTaylor") ) {
+      Uintah::ProblemSpecP valParams = params->findBlock("RayleighTaylor");
+      double transitionPoint, lowValue, highValue, frequency, amplitude;
+      std::string x1, x2;
+      valParams->getAttribute("transitionPoint",transitionPoint);
+      valParams->getAttribute("lowValue",lowValue);
+      valParams->getAttribute("highValue",highValue);
+      valParams->getAttribute("frequency",frequency);
+      valParams->getAttribute("amplitude",amplitude);
+      
+      valParams->getAttribute("x1",x1);
+      valParams->getAttribute("x2",x2);
+      const Expr::Tag x1Tag(x1,Expr::STATE_NONE);
+      const Expr::Tag x2Tag(x2,Expr::STATE_NONE);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename RayleighTaylor<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, indepVarTag, x1Tag, x2Tag, transitionPoint, lowValue, highValue, frequency, amplitude );
     }
 
     else if ( params->findBlock("VarDensMMSSourceTerm") ) {

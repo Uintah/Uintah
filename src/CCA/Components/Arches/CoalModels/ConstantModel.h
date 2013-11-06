@@ -20,8 +20,8 @@ class ConstantModelBuilder: public ModelBuilder
 {
 public: 
   ConstantModelBuilder( const std::string          & modelName, 
-                        const vector<std::string>  & reqICLabelNames,
-                        const vector<std::string>  & reqScalarLabelNames,
+                        const std::vector<std::string>  & reqICLabelNames,
+                        const std::vector<std::string>  & reqScalarLabelNames,
                         ArchesLabel          * fieldLabels,
                         SimulationStateP           & sharedState,
                         int qn );
@@ -41,8 +41,8 @@ public:
   ConstantModel( std::string modelName, 
                  SimulationStateP& shared_state, 
                  ArchesLabel* fieldLabels,
-                 vector<std::string> reqICLabelNames, 
-                 vector<std::string> reqScalarLabelNames,
+                 std::vector<std::string> reqICLabelNames,
+                 std::vector<std::string> reqScalarLabelNames,
                  int qn );
 
   ~ConstantModel();
@@ -81,7 +81,7 @@ public:
   ///////////////////////////////////////////////
   // Access methods
 
-  inline string getType() {
+  inline std::string getType() {
     return "Constant"; }
 
 

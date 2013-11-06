@@ -68,7 +68,7 @@ namespace Uintah {
   {
     if ((d_internalExtents != gridIn.d_internalExtents) || (d_gridOffset != gridIn.d_gridOffset)
         || (d_numGhostCells != gridIn.d_numGhostCells) || (d_internalOrigin != gridIn.d_internalOrigin)) {
-      ostringstream ostr;
+      std::ostringstream ostr;
       ostr << "Uintah::MD SimpleGrids differ in extent, offset or number of ghost cells.";
       throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
     } else {
@@ -84,7 +84,7 @@ namespace Uintah {
       newGrid += gridIn;
       return newGrid;
     } else {
-      ostringstream ostr;
+      std::ostringstream ostr;
       ostr << "SimpleGrid operator+ error:  Grids are not registered with one another.";
       throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
     }
@@ -98,7 +98,7 @@ namespace Uintah {
       newGrid -= gridIn;
       return newGrid;
     } else {
-      ostringstream ostr;
+      std::ostringstream ostr;
       ostr << "SimpleGrid operator- error:  Grids are not registered with one another.";
       throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
     }
@@ -112,7 +112,7 @@ namespace Uintah {
       newGrid *= gridIn;
       return newGrid;
     } else {
-      ostringstream ostr;
+      std::ostringstream ostr;
       ostr << "SimpleGrid operator* error:  Grids are not registered with one another.";
       throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
     }

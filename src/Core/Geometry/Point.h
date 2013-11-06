@@ -45,8 +45,6 @@
 #include   <iosfwd>
 
 namespace SCIRun {
-
-using std::string;
     
 class TypeDescription;
 class RigorousTest;
@@ -89,11 +87,12 @@ public:
   inline void z( const double );
 
   inline Vector &asVector() const;
-    
-  SCISHARE string get_string() const;
+  inline Vector toVector() const;
+
+  SCISHARE std::string get_string() const;
 
   //! support dynamic compilation
-  static const string& get_h_file_path();
+  static const std::string& get_h_file_path();
     
   friend class Vector;
   friend inline double Dot(const Point&, const Point&);
@@ -297,6 +296,11 @@ inline double Point::z() const
 inline Vector &Point::asVector() const
 {
     return (Vector &)(*this);
+}
+
+inline Vector Point::toVector() const
+{
+  return Vector(x_,y_,z_);
 }
 
 inline Point Min(const Point& p1, const Point& p2)

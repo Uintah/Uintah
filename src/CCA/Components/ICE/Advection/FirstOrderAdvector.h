@@ -120,7 +120,7 @@ namespace Uintah {
                                                
     template<class T>
       void q_FC_fluxes(const CCVariable<T>& q_CC, 
-                       const string& desc,
+                       const std::string& desc,
                        advectVarBasket* vb);
   };
 

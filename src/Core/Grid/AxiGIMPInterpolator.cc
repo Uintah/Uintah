@@ -30,6 +30,7 @@
 
 using namespace SCIRun;
 using namespace Uintah;
+using namespace std;
 
 AxiGIMPInterpolator::AxiGIMPInterpolator()
 {
@@ -53,10 +54,10 @@ AxiGIMPInterpolator* AxiGIMPInterpolator::clone(const Patch* patch)
 }
 
 void AxiGIMPInterpolator::findCellAndWeights(const Point& pos,
-                                            vector<IntVector>& ni, 
-                                            vector<double>& S,
-                                            const Matrix3& size,
-                                            const Matrix3& defgrad)
+                                             vector<IntVector>& ni,
+                                             vector<double>& S,
+                                             const Matrix3& size,
+                                             const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   double L =  d_patch->getLevel()->dCell().x();

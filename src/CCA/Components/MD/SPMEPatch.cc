@@ -122,7 +122,7 @@ void SPMEPatch::verifyChargeMapAllocation(const int dataSize, const int globalAt
   if (dataSize <= currentVectorSize) { return; }
   int newVectorSize = currentVectorSize * 2;
   while (dataSize < newVectorSize) { newVectorSize *= 2; }
-  vector<SPMEMapPoint> tempStorage = d_chargeMapVector[globalAtomTypeIndex];
+  std::vector<SPMEMapPoint> tempStorage = d_chargeMapVector[globalAtomTypeIndex];
 //  d_chargeMapVector[globalAtomTypeIndex].reserve(static_cast<size_t> (newVectorSize));
   // Not sure we need the insert?
   d_chargeMapVector[globalAtomTypeIndex].insert(d_chargeMapVector[globalAtomTypeIndex].begin(),tempStorage.begin(),tempStorage.end());

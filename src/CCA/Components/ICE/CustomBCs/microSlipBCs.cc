@@ -50,7 +50,7 @@ static DebugStream cout_dbg("SLIP_DBG_COUT", false);
             -reads input parameters 
  ______________________________________________________________________  */
 bool read_MicroSlip_BC_inputs(const ProblemSpecP& prob_spec,
-                              Slip_variable_basket* svb)
+                              slip_globalVars* svb)
 {
   //__________________________________
   // search the BoundaryConditions problem spec
@@ -109,7 +109,7 @@ void addRequires_MicroSlip(Task* t,
                            const string& where,
                            ICELabel* lb,
                            const MaterialSubset* ice_matls,
-                           Slip_variable_basket* var_basket)
+                           slip_globalVars* var_basket)
 {
   cout_doing<< "Doing addRequires_microSlip: \t\t" <<t->getName()
             << " " << where << endl;
@@ -159,7 +159,7 @@ ____________________________________________________________________*/
 void meanFreePath(DataWarehouse* new_dw,
                   const Patch* patch,
                   SimulationStateP& sharedState,
-                  Slip_vars* sv)                              
+                  slip_localVars* sv)                              
 {
   cout_doing << "meanFreePath" << endl;
    new_dw->allocateTemporary(sv->lamda,patch);
@@ -200,8 +200,8 @@ void  preprocess_MicroSlip_BCs(DataWarehouse* old_dw,
                                const int /*indx*/,
                                SimulationStateP& sharedState,
                                bool& setMicroSlipBcs,
-                               Slip_vars* sv,
-                               Slip_variable_basket* var_basket)
+                               slip_localVars* lv,
+                               slip_globalVars* gv)
 {
   
   Ghost::GhostType  gn  = Ghost::None;
@@ -215,42 +215,42 @@ void  preprocess_MicroSlip_BCs(DataWarehouse* old_dw,
   if(where == "velFC_Exchange"){
 #if 0
     setMicroSlipBcs = true;
-    old_dw->get(sv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
-    old_dw->get(sv->vel_CC,     lb->vel_CCLabel,        indx,patch,gn,0);
-    old_dw->get(sv->Temp_CC,    lb->temp_CCLabel,       indx,patch,gn,0);
-    new_dw->get(sv->viscosity,  lb->viscosityLabel,     indx,patch,gn,0);
-    new_dw->get(sv->press_CC,   lb->press_CCLabel,      0,   patch,gn,0);
+    old_dw->get(lv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
+    old_dw->get(lv->vel_CC,     lb->vel_CCLabel,        indx,patch,gn,0);
+    old_dw->get(lv->Temp_CC,    lb->temp_CCLabel,       indx,patch,gn,0);
+    new_dw->get(lv->viscosity,  lb->viscosityLabel,     indx,patch,gn,0);
+    new_dw->get(lv->press_CC,   lb->press_CCLabel,      0,   patch,gn,0);
 #endif
   }
   //__________________________________
   //    cc_ Exchange
   if(where == "CC_Exchange"){
     setMicroSlipBcs = true;
-    new_dw->get(sv->rho_CC,     lb->rho_CCLabel,         indx,patch,gn,0);
-    new_dw->get(sv->vel_CC,     lb->vel_CC_XchangeLabel, indx,patch,gn,0);
-    new_dw->get(sv->Temp_CC,    lb->temp_CC_XchangeLabel,indx,patch,gn,0);
-    new_dw->get(sv->viscosity,  lb->viscosityLabel,      indx,patch,gn,0);
-    new_dw->get(sv->gamma,      lb->gammaLabel,          indx,patch,gn,0);
-    new_dw->get(sv->press_CC,   lb->press_CCLabel,       0,   patch,gn,0);
+    new_dw->get(lv->rho_CC,     lb->rho_CCLabel,         indx,patch,gn,0);
+    new_dw->get(lv->vel_CC,     lb->vel_CC_XchangeLabel, indx,patch,gn,0);
+    new_dw->get(lv->Temp_CC,    lb->temp_CC_XchangeLabel,indx,patch,gn,0);
+    new_dw->get(lv->viscosity,  lb->viscosityLabel,      indx,patch,gn,0);
+    new_dw->get(lv->gamma,      lb->gammaLabel,          indx,patch,gn,0);
+    new_dw->get(lv->press_CC,   lb->press_CCLabel,       0,   patch,gn,0);
   }
   //__________________________________
   //    Advection
   if(where == "Advection"){
     setMicroSlipBcs = true;
-    new_dw->get(sv->rho_CC,    lb->rho_CCLabel,        indx,patch,gn,0); 
-    new_dw->get(sv->vel_CC,    lb->vel_CCLabel,        indx,patch,gn,0);
-    new_dw->get(sv->Temp_CC,   lb->temp_CCLabel,       indx,patch,gn,0);
-    new_dw->get(sv->viscosity, lb->viscosityLabel,     indx,patch,gn,0); 
-    new_dw->get(sv->gamma,     lb->gammaLabel,         indx,patch,gn,0); 
-    new_dw->get(sv->press_CC,  lb->press_CCLabel,      0,   patch,gn,0); 
+    new_dw->get(lv->rho_CC,    lb->rho_CCLabel,        indx,patch,gn,0); 
+    new_dw->get(lv->vel_CC,    lb->vel_CCLabel,        indx,patch,gn,0);
+    new_dw->get(lv->Temp_CC,   lb->temp_CCLabel,       indx,patch,gn,0);
+    new_dw->get(lv->viscosity, lb->viscosityLabel,     indx,patch,gn,0); 
+    new_dw->get(lv->gamma,     lb->gammaLabel,         indx,patch,gn,0); 
+    new_dw->get(lv->press_CC,  lb->press_CCLabel,      0,   patch,gn,0); 
   }
   //__________________________________
   //  compute the mean free path
   if(setMicroSlipBcs) {
     cout_doing << "preprocess_microSlip_BCs on patch "<<patch->getID()<< endl;
-    sv->alpha_momentum    = var_basket->alpha_momentum;
-    sv->alpha_temperature = var_basket->alpha_temperature;
-    meanFreePath(new_dw, patch, sharedState, sv);
+    lv->alpha_momentum    = gv->alpha_momentum;
+    lv->alpha_temperature = gv->alpha_temperature;
+    meanFreePath(new_dw, patch, sharedState, lv);
   }
 }
 /* ______________________________________________________________________ 
@@ -290,7 +290,7 @@ int set_MicroSlipVelocity_BC(const Patch* patch,
                               Iterator& bound_ptr,
                               const string& bc_kind,
                               const Vector wall_vel,
-                              Slip_vars* sv)                     
+                              slip_localVars* lv)                     
 
 {
   int nCells = 0;
@@ -300,16 +300,16 @@ int set_MicroSlipVelocity_BC(const Patch* patch,
                << " wall Velocity " << wall_vel << endl;
     
     // bulletproofing
-    if (!sv){
-      throw InternalError("set_MicroSlipTemperature_BC: MicroSlip_vars = null", __FILE__, __LINE__);
+    if (!lv){
+      throw InternalError("set_MicroSlipTemperature_BC: Microslip_localVars = null", __FILE__, __LINE__);
     }
 
 
     // define shortcuts
-    //CCVariable<double>& lamda  = sv->lamda;
-    constCCVariable<double> viscosity = sv->viscosity;
-    constCCVariable<double> press_CC  = sv->press_CC;
-    constCCVariable<double> rho_CC    = sv->rho_CC;
+    //CCVariable<double>& lamda  = lv->lamda;
+    constCCVariable<double> viscosity = lv->viscosity;
+    constCCVariable<double> press_CC  = lv->press_CC;
+    constCCVariable<double> rho_CC    = lv->rho_CC;
     
     IntVector offset = patch->faceDirection(face);
     IntVector axes = patch->getFaceAxes(face);
@@ -319,7 +319,7 @@ int set_MicroSlipVelocity_BC(const Patch* patch,
     
     //Vector DX = patch->dCell();
     //double dx = DX[P_dir];
-    //double alpha_momentum = sv->alpha_momentum;
+    //double alpha_momentum = lv->alpha_momentum;
 
 
     cout_dbg << "____________________velocity";
@@ -334,7 +334,7 @@ int set_MicroSlipVelocity_BC(const Patch* patch,
         // normal direction velocity
         vel_CC[c] = wall_vel; 
 
-        // transverse velocities    // Jennifer-- put equations here
+        // tranlverse velocities    // Jennifer-- put equations here
         //double gradient_1 = 0;        
         //double gradient_2 = 0;
         //vel_CC[c][dir1] = ???????;
@@ -353,7 +353,7 @@ int set_MicroSlipVelocity_BC(const Patch* patch,
         // normal direction velocity
         vel_CC[c] = wall_vel; 
 
-        // transverse velocities    // Jennifer-- put equations here
+        // tranlverse velocities    // Jennifer-- put equations here
         //double gradient_1 = 0;        
         //double gradient_2 = 0;  // Tangential gradients MAY be a problem 
                                 // with mult-patch problem.
@@ -376,7 +376,7 @@ int  set_MicroSlipTemperature_BC(const Patch* patch,
                                  Iterator& bound_ptr,
                                  const string& bc_kind,
                                  const double wall_temp,
-                                 Slip_vars* sv)  
+                                 slip_localVars* lv)  
 {
   int nCells = 0;
   if (bc_kind == "slip") {
@@ -384,21 +384,21 @@ int  set_MicroSlipTemperature_BC(const Patch* patch,
                << " wall Temperature " << wall_temp << endl; 
 
     // bulletproofing
-    if (!sv){
-      throw InternalError("set_MicroSlipTemperature_BC: Slip_vars = null", __FILE__, __LINE__);
+    if (!lv){
+      throw InternalError("set_MicroSlipTemperature_BC: slip_localVars = null", __FILE__, __LINE__);
     } 
     // shortcuts  
-    //constCCVariable<double>& gamma     = sv->gamma;
-    //constCCVariable<double>& viscosity = sv->viscosity;
-    //CCVariable<double>& lamda          = sv->lamda;
-    constCCVariable<double>& Temp_CC  = sv->Temp_CC;
+    //constCCVariable<double>& gamma     = lv->gamma;
+    //constCCVariable<double>& viscosity = lv->viscosity;
+    //CCVariable<double>& lamda          = lv->lamda;
+    constCCVariable<double>& Temp_CC  = lv->Temp_CC;
 
     IntVector axes = patch->getFaceAxes(face);
     //int P_dir = axes[0];  // principal direction
     //
     //Vector DX = patch->dCell();
     //double dx = DX[P_dir];
-    //double alpha_temperature = sv->alpha_temperature;
+    //double alpha_temperature = lv->alpha_temperature;
     //double gas_constant = 1.0;   // Need to do something here
     IntVector offset = patch->faceDirection(face);
     cout_dbg << "\n____________________Temp"<< endl;

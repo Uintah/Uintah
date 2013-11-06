@@ -27,6 +27,16 @@
 #ifndef __CUDA_ARCH__
 #include <string.h>
 #endif
+//#include <Core/Util/GPU.h>
+
+// This belongs in GPU.h
+__device__ bool isThread0_Blk0(){
+  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
+  int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+  
+  bool test = (blockID == 0 && threadID == 0);
+  return test;
+}
 
 namespace Uintah {
 
@@ -38,8 +48,25 @@ GPUDataWarehouse::get(const GPUGridVariableBase &var, char const* name, int patc
   GPUDataWarehouse::dataItem* item=getItem(name, patchID, matlIndex);
   if (item){
     var.setArray3(item->var_offset, item->var_size, item->var_ptr);
-  }else{
-    printf("ERROR: GPUDataWarehouse::get( %s patchID: %i, matl: %i )  unknown variable\n",name, patchID, matlIndex);
+  }else{    
+#ifdef __CUDA_ARCH__
+    int numThreads = blockDim.x*blockDim.y*blockDim.z;
+    int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+    
+    
+    int i=threadID;
+    while(i<d_numItems){
+      printf( "   Available Labels: %s\n", d_varDB[i].label );
+      i=i+numThreads;
+    }
+    if( isThread0_Blk0() ) {
+      printf("  ERROR: GPUDataWarehouse::get( %s patchID: %i, matl: %i )  unknown variable\n\n",name, patchID, matlIndex);
+      assert(0);
+    }
+
+#else
+    printf("\t ERROR: GPUDataWarehouse::get( %s patchID: %i, matl: %i )  unknown variable\n",name, patchID, matlIndex);
+#endif
   }
 }
 
@@ -52,7 +79,24 @@ GPUDataWarehouse::getModifiable(GPUGridVariableBase &var, char const* name, int 
   if (item) {
     var.setArray3(item->var_offset, item->var_size, item->var_ptr);
   }else{
-    printf("ERROR: GPUDataWarehouse::getModifiable( %s patchID: %i, matl: %i )  unknown variable\n",name, patchID, matlIndex);
+#ifdef __CUDA_ARCH__
+    int numThreads = blockDim.x*blockDim.y*blockDim.z;
+    int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+    
+    
+    int i=threadID;
+    while(i<d_numItems){
+      printf( "  Available Labels: %s\n", d_varDB[i].label );
+      i=i+numThreads;
+    }
+    if( isThread0_Blk0() ) {
+      printf("  ERROR: GPUDataWarehouse::getModifiable( %s patchID: %i, matl: %i )  unknown variable\n\n",name, patchID, matlIndex);
+      assert(0);
+    }
+
+#else
+    printf("  ERROR: GPUDataWarehouse::getModifiable( %s patchID: %i, matl: %i )  unknown variable\n",name, patchID, matlIndex);
+#endif
   }
 }
 

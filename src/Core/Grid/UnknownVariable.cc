@@ -30,6 +30,7 @@
 #include <iostream>
 
 using namespace Uintah;
+using namespace std;
 
 UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
                                  const Patch* patch, int matlIndex,

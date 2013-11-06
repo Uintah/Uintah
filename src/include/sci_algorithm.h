@@ -34,7 +34,7 @@
 
 #include <algorithm>
 
-#if !defined(REDSTORM) && (defined(__digital__) || defined(_AIX) || defined(__APPLE__) \
+#if !defined(REDSTORM) && (defined(__digital__) || defined(_AIX) \
    || defined(__ECC) || defined(_MSC_VER) || HAVE_EXT_ALGORITHM ) // forget about using extension library
 // AIX and DEC don't have this...X
 namespace std {
@@ -53,7 +53,7 @@ namespace std {
     }
     return true;
   }
-  
+
   template <class Iter>
   bool is_sorted(Iter begin, Iter end)
   {

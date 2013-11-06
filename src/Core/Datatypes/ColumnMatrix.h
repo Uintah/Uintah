@@ -97,7 +97,7 @@ public:
 
 
   int solve(ColumnMatrix&);
-  int solve(vector<double>& sol);
+  int solve(std::vector<double>& sol);
   double sumOfCol(int);
 
   DenseMatrix exterior(const ColumnMatrix &) const;
@@ -111,7 +111,7 @@ public:
   virtual void print(std::ostream&) const;
   
   // Persistent representation...
-  virtual string type_name() { return "ColumnMatrix"; }
+  virtual std::string type_name() { return "ColumnMatrix"; }
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 

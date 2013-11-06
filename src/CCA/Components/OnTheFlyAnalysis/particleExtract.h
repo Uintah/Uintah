@@ -112,9 +112,9 @@ WARNING
                     DataWarehouse*,
                     DataWarehouse* new_dw);
                     
-    void createFile(string& filename, FILE*& fp);
+    void createFile(std::string& filename, FILE*& fp);
     
-    void createDirectory(string& lineName, string& levelIndex);
+    void createDirectory(std::string& lineName, std::string& levelIndex);
     
     bool doMPMOnLevel(int level, int numLevels);
                     
@@ -136,14 +136,14 @@ WARNING
     double d_startTime;
     double d_stopTime;
     double d_colorThreshold;
-    vector<VarLabel*> d_varLabels;
+    std::vector<VarLabel*> d_varLabels;
     SimulationStateP d_sharedState;
     Output* d_dataArchiver;
     ProblemSpecP d_prob_spec;
     const Material* d_matl;
     MaterialSet* d_matl_set;
     MaterialSubset* d_matl_subset;
-    std::set<string> d_isDirCreated;
+    std::set<std::string> d_isDirCreated;
         
   };
 }

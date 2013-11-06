@@ -38,6 +38,8 @@
 #include <Core/Util/Assert.h>
 #include <Core/Datatypes/PropertyManager.h>
 
+using namespace std;
+
 namespace SCIRun {
 
 

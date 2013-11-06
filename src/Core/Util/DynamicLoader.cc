@@ -717,7 +717,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   if(status != 0)
   {
     pr->remark("DynamicLoader::compile_so() syscal error " +
-	       to_string(status) + ": command was '" + command + "'.");
+               SCIRun::to_string(status) + ": command was '" + command + "'.");
     result = false;
   }
   pipe = fopen(string(otf_dir() + "/" + info.filename_ + "log").c_str(), "r");

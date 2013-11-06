@@ -28,6 +28,7 @@
 #include <iostream>
 
 using namespace Uintah;
+using namespace std;
 
 
 GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,

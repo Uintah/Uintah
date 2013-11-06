@@ -33,7 +33,6 @@
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <vector>
-#include <string>
 #include <cmath>
 
 namespace Uintah {
@@ -157,7 +156,7 @@ namespace Uintah {
     ImplicitHeatConduction(const ImplicitHeatConduction&);
     ImplicitHeatConduction& operator=(const ImplicitHeatConduction&);
 
-    void findNeighbors(IntVector n,vector<int>& neigh, Array3<int>& l2g);
+    void findNeighbors(IntVector n,std::vector<int>& neigh, Array3<int>& l2g);
 
     inline bool compare(double num1, double num2) {
       double EPSILON=1.e-16;

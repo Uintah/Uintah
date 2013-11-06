@@ -118,7 +118,7 @@ public:
 
    virtual void override(const ReductionVariableBase&, const VarLabel*,
 			 const Level* level = 0, int matIndex = -1);
-   virtual void print(ostream& intout, const VarLabel* label,
+   virtual void print(std::ostream& intout, const VarLabel* label,
 		      const Level* level, int matlIndex = -1);
 
    // Sole Variables
@@ -323,7 +323,7 @@ public:
    virtual void restartTimestep();
    virtual void setRestarted() { hasRestarted_ = true; }
 
-   void logMemoryUse(ostream& out, unsigned long& total, const std::string& tag);
+   void logMemoryUse(std::ostream& out, unsigned long& total, const std::string& tag);
 
    // must be called by the thread that will run the test
    void pushRunningTask(const Task* task, std::vector<OnDemandDataWarehouseP>* dws);

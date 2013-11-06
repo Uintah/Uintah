@@ -38,23 +38,23 @@ void printSchedule( const PatchSet       * patches,
 
 void printSchedule( const LevelP        & level,
                     SCIRun::DebugStream & dbg,
-                    const string        & where );
+                    const std::string   & where );
 
 void printTask( const PatchSubset   * patches,
                 const Patch         * patch,
                 SCIRun::DebugStream & dbg,
-                const string        & where );
+                const std::string   & where );
                 
 void printTask( const PatchSubset   * patches,
                 SCIRun::DebugStream & dbg,
-                const string        & where );
+                const std::string   & where );
 
 void printTask( const Patch         * patch,
                 SCIRun::DebugStream & dbg,
-                const string        & where );
+                const std::string   & where );
                 
 void printTask( SCIRun::DebugStream & dbg,
-                const string        & where );
+                const std::string   & where );
 
 } // End namespace Uintah
 

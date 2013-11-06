@@ -41,7 +41,7 @@ VelocityX( const Expr::Tag& xtag,
   : Expr::Expression<ValT>(),
     a_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {
-  this->set_gpu_runnable( false );  // not GPU ready because of the time transfer that doesn't yet work.
+  this->set_gpu_runnable(true);
 }
 
 //--------------------------------------------------------------------
@@ -67,7 +67,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
 
-  t_ = &fml.template field_ref<double>( tTag_ );
+  t_ = &fml.template field_ref<TimeField>( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -126,7 +126,7 @@ VelocityY( const Expr::Tag& xtag,
   : Expr::Expression<ValT>(),
     a_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {
-  this->set_gpu_runnable( false );  // not GPU ready because of the time transfer that doesn't yet work.
+  this->set_gpu_runnable( true );
 }
 
 //--------------------------------------------------------------------
@@ -152,7 +152,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
 
-  t_ = &fml.template field_ref<double>( tTag_ );
+  t_ = &fml.template field_ref<TimeField>( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -211,7 +211,7 @@ GradPX( const Expr::Tag& xtag,
   : Expr::Expression<ValT>(),
     a_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {
-  this->set_gpu_runnable( false );  // not GPU ready because of the time transfer that doesn't yet work.
+  this->set_gpu_runnable( true );
 }
 
 //--------------------------------------------------------------------
@@ -237,7 +237,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
 
-  t_ = &fml.template field_ref<double>( tTag_ );
+  t_ = &fml.template field_ref<TimeField>( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -296,7 +296,7 @@ GradPY( const Expr::Tag& xtag,
   : Expr::Expression<ValT>(),
     a_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {
-  this->set_gpu_runnable( false );  // not GPU ready because of the time transfer that doesn't yet work.
+  this->set_gpu_runnable( true );
 }
 
 //--------------------------------------------------------------------
@@ -322,7 +322,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
 
-  t_ = &fml.template field_ref<double>( tTag_ );
+  t_ = &fml.template field_ref<TimeField>( tTag_ );
 }
 
 //--------------------------------------------------------------------

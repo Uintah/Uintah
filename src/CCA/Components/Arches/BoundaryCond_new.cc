@@ -124,8 +124,15 @@ BoundaryCondition_new::setupTabulatedBC( ProblemSpecP& db, std::string eqn_name,
       }
 
       if ( has_tabulated_bc ){ 
+
+        std::string face_name="NA";
+        db_face->getAttribute("name", face_name);
+
         std::vector<double> iv;
         std::vector<string> allIndepVarNames = table->getAllIndepVars(); 
+
+        int totalIVs = allIndepVarNames.size(); 
+        int counter=0;
 
         //Fill the independent variable vector 
         for ( int i = 0; i < (int) allIndepVarNames.size(); i++ ){
@@ -152,8 +159,16 @@ BoundaryCondition_new::setupTabulatedBC( ProblemSpecP& db, std::string eqn_name,
               db_BCType->require("value",value);
               iv.push_back(value); 
 
+              counter++; 
+
             } 
           }
+        }
+
+        if ( counter != totalIVs ){
+          stringstream msg; 
+          msg << "Error: For BC face named: " << face_name << " the Tabulated option for a variable was used but there are missing IVs boundary specs.";  
+          throw ProblemSetupException( msg.str(), __FILE__, __LINE__);
         }
 
         //Get any inerts
@@ -187,8 +202,6 @@ BoundaryCondition_new::setupTabulatedBC( ProblemSpecP& db, std::string eqn_name,
           }
         }
 
-        std::string face_name = "NA";
-        db_face->getAttribute("name", face_name ); 
         DoubleMap bc_name_to_value;
 
         for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0; 

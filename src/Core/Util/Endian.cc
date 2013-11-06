@@ -72,12 +72,12 @@ bool isLittleEndian()
 }
  
 
-string endianness()
+std::string endianness()
 {
   if( isBigEndian() ){
-    return string("big_endian");
+    return std::string("big_endian");
   } else {
-    return string("little_endian");
+    return std::string("little_endian");
   }
 }
 

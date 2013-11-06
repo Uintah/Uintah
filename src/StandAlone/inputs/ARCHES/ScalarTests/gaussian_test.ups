@@ -184,14 +184,9 @@
         </ColdFlow>
       </Properties>
 
-      <BoundaryConditions>
-        <use_new_bcs/>
-      </BoundaryConditions>
-
       <ExplicitSolver>
 
         <initial_dt>0.05</initial_dt>
-        <variable_dt>true</variable_dt>
 
         <PressureSolver>
           <Parameters>

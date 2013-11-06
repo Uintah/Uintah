@@ -39,8 +39,7 @@
 #include <vector>
 
 namespace Uintah {
-using std::vector;
-using namespace SCIRun;
+
 /**************************************
 
 CLASS
@@ -72,9 +71,9 @@ WARNING
   
 ****************************************/
 class PSet;
-typedef LockingHandle<PSet> PSetHandle;
+typedef SCIRun::LockingHandle<PSet> PSetHandle;
 
-class PSet : public Datatype {
+class PSet : public SCIRun::Datatype {
  public:
 
   // GROUP: Constructors:
@@ -83,9 +82,9 @@ class PSet : public Datatype {
   PSet();
   //////////
   // Constructor
-  PSet( const vector <ShareAssignParticleVariable<Point> >& positions,
-	const vector <ShareAssignParticleVariable<long64> >& ids,
-	const vector <const Patch *> patches,
+  PSet( const std::vector <ShareAssignParticleVariable<Point> >& positions,
+	const std::vector <ShareAssignParticleVariable<long64> >& ids,
+	const std::vector <const Patch *> patches,
 	void* callbackClass);
   // GROUP: Destructors
   //////////
@@ -94,15 +93,15 @@ class PSet : public Datatype {
   // GROUP: Access
   //////////
   // return the locations
-  vector<ShareAssignParticleVariable<Point> >&  get_positions()
+  std::vector<ShareAssignParticleVariable<Point> >&  get_positions()
   { return positions;}
   //////////
   // return the ids
-  vector<ShareAssignParticleVariable<long64> >&  get_ids()
+  std::vector<ShareAssignParticleVariable<long64> >&  get_ids()
   { return particle_ids;}
   //////////
   // return the patches
-  vector<const Patch*>&  getPatches(){ return patches; }
+  std::vector<const Patch*>&  getPatches(){ return patches; }
   //////////
   // return the grid level
   LevelP getLevel(){ return _level; }
@@ -130,8 +129,8 @@ class PSet : public Datatype {
   void SetCallbackClass( void* cbc){ cbClass = cbc; }
  
   // Persistant representation
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream&);
+  static SCIRun::PersistentTypeID type_id;
 
  protected:
   bool have_bounds;
@@ -147,9 +146,9 @@ class PSet : public Datatype {
   GridP _grid;
   LevelP _level;
 
-  vector< ShareAssignParticleVariable<Point> >  positions;
-  vector< ShareAssignParticleVariable<long64> >  particle_ids;
-  vector< const Patch* >  patches;
+  std::vector< ShareAssignParticleVariable<Point> >  positions;
+  std::vector< ShareAssignParticleVariable<long64> >  particle_ids;
+  std::vector< const Patch* >  patches;
 };
 
 } // End namespace Uintah

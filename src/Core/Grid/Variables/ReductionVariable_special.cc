@@ -31,6 +31,7 @@
 #include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD_OR_LATER
 using namespace Uintah;
 using namespace SCIRun;
+using namespace std;
 
 typedef std::complex<double> dblcomplex;
 

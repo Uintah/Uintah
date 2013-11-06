@@ -51,6 +51,8 @@
 #include <Core/Grid/Variables/Reductions.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
+namespace SS = SpatialOps::structured;
+
 namespace Wasatch {
 
   //==================================================================
@@ -83,7 +85,7 @@ namespace Wasatch {
                                  const Expr::Tag& resultTag,
                                  const Expr::Tag& srcTag,
                                  const bool printVar,
-                                 const bool reduceOnAllRKStages)
+                                 const bool reduceOnAllRKStages )
   {
     reduceOnAllRKStages_ = reduceOnAllRKStages;
     std::cout << "adding reduction variable " << resultTag << std::endl;
@@ -252,9 +254,9 @@ namespace Wasatch {
         case PERPATCH :
         {
           switch (redEnum) {
-            case ReduceMin: self().add_variable<double, ReductionMinOpT>(cat, resultTag, srcTag, printVar, perStage); break;
-            case ReduceMax: self().add_variable<double, ReductionMaxOpT>(cat, resultTag, srcTag, printVar, perStage); break;
-            case ReduceSum: self().add_variable<double, ReductionSumOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceMin: self().add_variable<SS::SingleValueField, ReductionMinOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceMax: self().add_variable<SS::SingleValueField, ReductionMaxOpT>(cat, resultTag, srcTag, printVar, perStage); break;
+            case ReduceSum: self().add_variable<SS::SingleValueField, ReductionSumOpT>(cat, resultTag, srcTag, printVar, perStage); break;
             default:
             {
               std::ostringstream msg;
@@ -282,7 +284,7 @@ namespace Wasatch {
                                    const Uintah::MaterialSet* const materials,
                                    const Expr::ExpressionTree::TreePtr tree,
                                    const int patchID,
-                                   const int rkStage)
+                                   const int rkStage )
   {
     // go through reduction variables that are computed in this Wasatch Task
     // and insert a Uintah task immediately after.
@@ -304,14 +306,14 @@ namespace Wasatch {
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
 
-#define DECLARE_REDUCTION_VARIANTS(VOL) \
-template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Min<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false, const bool reduceOnAllRKStages=false); \
-template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Max<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false, const bool reduceOnAllRKStages=false); \
-template void Wasatch::ReductionHelper::add_variable< VOL, Uintah::Reductions::Sum<double> >( const Category category, const Expr::Tag& resultTag, const Expr::Tag& srcTag, const bool printVar=false, const bool reduceOnAllRKStages=false);
+#define DECLARE_REDUCTION_VARIANTS(T) \
+template void Wasatch::ReductionHelper::add_variable<T,ReductionMinOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool ); \
+template void Wasatch::ReductionHelper::add_variable<T,ReductionMaxOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool ); \
+template void Wasatch::ReductionHelper::add_variable<T,ReductionSumOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool );
 
-DECLARE_REDUCTION_VARIANTS(double);
-DECLARE_REDUCTION_VARIANTS(SVolField);
-DECLARE_REDUCTION_VARIANTS(XVolField);
-DECLARE_REDUCTION_VARIANTS(YVolField);
-DECLARE_REDUCTION_VARIANTS(ZVolField);
+DECLARE_REDUCTION_VARIANTS(SS::SingleValueField)
+DECLARE_REDUCTION_VARIANTS(SVolField)
+DECLARE_REDUCTION_VARIANTS(XVolField)
+DECLARE_REDUCTION_VARIANTS(YVolField)
+DECLARE_REDUCTION_VARIANTS(ZVolField)
 //====================================================================

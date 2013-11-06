@@ -53,7 +53,7 @@ namespace Uintah{
         enum DIRECTION { PLUS_X, MINUS_X, PLUS_Y, MINUS_Y, PLUS_Z, MINUS_Z }; 
 
         IntrusionInlet<sT>( std::string srcName, SimulationStateP& shared_state, 
-            vector<std::string> reqLabelNames, std::string type );
+            std::vector<std::string> reqLabelNames, std::string type );
         ~IntrusionInlet<sT>();
 
         void problemSetup(const ProblemSpecP& db);
@@ -77,7 +77,7 @@ namespace Uintah{
 
             public: 
 
-              Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
+              Builder( std::string name, std::vector<std::string> required_label_names, SimulationStateP& shared_state )
                 : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){
                   _type = "intrusion_inlet"; 
                 };
@@ -91,7 +91,7 @@ namespace Uintah{
               std::string _name; 
               std::string _type; 
               SimulationStateP& _shared_state; 
-              vector<std::string> _required_label_names; 
+              std::vector<std::string> _required_label_names;
 
           }; // class Builder 
 
@@ -118,7 +118,7 @@ namespace Uintah{
   //---------------------------------------------------------------------------
   template<typename sT>
     IntrusionInlet<sT>::IntrusionInlet( std::string src_name, SimulationStateP& shared_state,
-        vector<std::string> req_label_names, std::string type ) 
+        std::vector<std::string> req_label_names, std::string type )
     : SourceTermBase( src_name, shared_state, req_label_names, type )
     {
       _label_sched_init = false; 
@@ -165,7 +165,7 @@ namespace Uintah{
 
       }
 
-      proc0cout << "Total number of intrusion inlets = " << num_intrusions << endl;
+      proc0cout << "Total number of intrusion inlets = " << num_intrusions << std::endl;
 
       //db->require( "mix_frac", _mix_frac ); 
       //db->require( "heat_loss", _heat_loss ); 
@@ -260,13 +260,13 @@ namespace Uintah{
             typeid(sT) != typeid(SFCYVariable<double>) &&
             typeid(sT) != typeid(SFCZVariable<double>) ){
           // Bulletproofing
-          proc0cout << " While attempting to compute: IntrusionInlet.h " << endl;
-          proc0cout << " Encountered a type mismatch error.  The current code cannot handle" << endl;
-          proc0cout << " a type other than one of the following: " << endl;
-          proc0cout << " 1) CCVariable<double> " << endl;
-          proc0cout << " 2) SFCXVariable<double> " << endl;
-          proc0cout << " 3) SFCYVariable<double> " << endl;
-          proc0cout << " 4) SFCZVariable<double> " << endl;
+          proc0cout << " While attempting to compute: IntrusionInlet.h " << std::endl
+                    << " Encountered a type mismatch error.  The current code cannot handle" << std::endl
+                    << " a type other than one of the following: " << std::endl
+                    << " 1) CCVariable<double> " << std::endl
+                    << " 2) SFCXVariable<double> " << std::endl
+                    << " 3) SFCYVariable<double> " << std::endl
+                    << " 4) SFCZVariable<double> " << std::endl;
           throw InvalidValue( "Please check the builder (probably in Arches.cc) and try again. ", __FILE__, __LINE__); 
         }
 
@@ -337,7 +337,7 @@ namespace Uintah{
   template <typename sT>
     void IntrusionInlet<sT>::sched_initialize( const LevelP& level, SchedulerP& sched )
     {
-      string taskname = "IntrusionInlet::initialize"; 
+    std::string taskname = "IntrusionInlet::initialize";
 
       Task* tsk = scinew Task(taskname, this, &IntrusionInlet::initialize);
 

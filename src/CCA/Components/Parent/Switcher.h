@@ -32,13 +32,11 @@
 
 #include <map>
 #include <set>
-using std::map;
-using std::set;
 
 namespace Uintah {
   class Switcher : public UintahParallelComponent, public SimulationInterface {
   public:
-    Switcher( const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR, const string & uda );
+    Switcher( const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR, const std::string & uda );
     virtual ~Switcher();
 
     virtual void problemSetup(const ProblemSpecP& params, 
@@ -107,7 +105,7 @@ namespace Uintah {
     // since tasks are scheduled per-level, we can't turn the switch flag off
     // until they all are done, and since we need to turn it off during compilation,
     // we need to keep track of which levels we've switched
-    vector<bool> d_doSwitching;
+    std::vector<bool> d_doSwitching;
 
     bool d_restarting;
 
@@ -118,24 +116,24 @@ namespace Uintah {
     unsigned int d_componentIndex;
     
     struct initVars{
-      vector<string>            varNames;
-      vector<string>            matlSetNames;
-      vector<const MaterialSet*> matls;
-      vector<int>               levels;
-      vector<VarLabel*>         varLabels;
+      std::vector<std::string>            varNames;
+      std::vector<std::string>            matlSetNames;
+      std::vector<const MaterialSet*> matls;
+      std::vector<int>               levels;
+      std::vector<VarLabel*>         varLabels;
     };
     
-    map<int, initVars*> d_initVars;
+    std::map<int, initVars*> d_initVars;
     
-    set<const VarLabel*, VarLabel::Compare> d_computedVars;
+    std::set<const VarLabel*, VarLabel::Compare> d_computedVars;
     
 
-    vector<string>          d_in_file;                  // contains the name of all the subcomponent inputfiles
-    vector<string>          d_carryOverVars;
-    vector<VarLabel*>       d_carryOverVarLabels;
-    vector<MaterialSubset*> d_carryOverVarMatls;
-    vector<bool>            d_carryOverFinestLevelOnly; // either all levels or finest only
-    vector<vector<bool> >   d_doCarryOverVarPerLevel;   // size to numlevels
+    std::vector<std::string>          d_in_file;                  // contains the name of all the subcomponent inputfiles
+    std::vector<std::string>          d_carryOverVars;
+    std::vector<VarLabel*>            d_carryOverVarLabels;
+    std::vector<MaterialSubset*>      d_carryOverVarMatls;
+    std::vector<bool>                 d_carryOverFinestLevelOnly; // either all levels or finest only
+    std::vector<std::vector<bool> >   d_doCarryOverVarPerLevel;   // size to numlevels
 
     Switcher(const Switcher&);
     Switcher& operator=(const Switcher&);

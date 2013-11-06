@@ -34,11 +34,9 @@
  
 #include <Core/Grid/Task.h>
 
-#include <vector>
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 namespace Uintah {
-using std::vector;
 
   class OnDemandDataWarehouse;
   class Task;

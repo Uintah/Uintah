@@ -45,8 +45,7 @@
 
 #include   <iostream>
 
-using std::istream;
-using std::ostream;
+using namespace std;
 
 #include <cstdio>
 
@@ -69,7 +68,6 @@ Tensor::Tensor() : have_eigens_(0)
   mat_[2][0] = 0.0;
   mat_[2][1] = 0.0;
   mat_[2][2] = 0.0;
-  
 }
 
 Tensor::Tensor(const Tensor& copy)

@@ -3,7 +3,6 @@
 #include <ostream>
 #include <fstream>
 #include <iomanip>
-using namespace std;
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
@@ -13,6 +12,7 @@ using namespace std;
 
 using namespace SCIRun;
 using namespace Uintah;
+using std::endl; using std::cout; using std::vector;
 
 #include "mpi.h"
 #include <testprograms/Regridders/TiledRegridder.h>
@@ -81,10 +81,10 @@ int main(int argc, char **argv)
   //cout << "rad: " << rad << endl;
 
   //create coarse patch set
-  vector<Region> patches;
-  vector<CCVariable<int> * > flags;
-  vector<IntVector> gflags;
-  vector<list<IntVector> > lflags;
+  std::vector<Region> patches;
+  std::vector<CCVariable<int> * > flags;
+  std::vector<IntVector> gflags;
+  std::vector<std::list<IntVector> > lflags;
 
   int total_patches=num_patches.x()*num_patches.y()*num_patches.z();
   int div=total_patches/num_procs;
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
     }
   }
 
-  ofstream fout;
+  std::ofstream fout;
   
   vector<Region> fine_patches,global_patches;
 
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
   GBRv1Regridder gbrv1(.85,rr,rank,num_procs);
   GBRv2Regridder gbrv2(.85,rr,rank,num_procs);
 
-  cout << setprecision(20);
+  cout << std::setprecision(20);
   clock_t start;
   double time;
 #if 1

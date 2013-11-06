@@ -66,8 +66,6 @@ POSSIBLE REVISIONS
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
-#include <vector>
-
 namespace Uintah {
 class MixingModel;
 class MixingRxnTable;
@@ -156,7 +154,7 @@ public:
   inline double getCarbonContent(double f) const{
     return d_carbon_fuel*f+d_carbon_air*(1.0-f);
   }
-  inline const string getMixingModelType(){
+  inline const std::string getMixingModelType(){
     return mixModel; 
   }
   inline MixingRxnModel* getMixRxnModel(){
@@ -172,9 +170,7 @@ public:
                                  const bool initialize, 
                                  const bool modify_ref_den ); 
 
-  void sched_doTPDummyInit( const LevelP&, SchedulerP& );
-
-	void doTableMatching(); 
+  void doTableMatching(); 
 
 protected :
 
@@ -268,7 +264,7 @@ private:
       // for doing adiabatic gas with non-adiabatic particles
       bool d_adiabGas_nonadiabPart;
 
-      string mixModel; 
+      std::string mixModel;
 
 }; // end class Properties
 } // End namespace Uintah

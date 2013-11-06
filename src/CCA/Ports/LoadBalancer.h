@@ -49,7 +49,7 @@ namespace Uintah {
   class DataArchive;
   class DetailedTask;
 
-  typedef vector<SCIRun::IntVector> SizeList;
+  typedef std::vector<SCIRun::IntVector> SizeList;
 /****************************************
 
 CLASS

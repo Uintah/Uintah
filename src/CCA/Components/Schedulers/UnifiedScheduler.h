@@ -33,8 +33,6 @@
 
 namespace Uintah {
 
-using std::ofstream;
-
 class Task;
 class DetailedTask;
 class UnifiedSchedulerWorker;

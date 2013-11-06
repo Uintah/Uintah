@@ -131,12 +131,12 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_conservationTest->onOff = false;
 
   d_customInitialize_basket  = scinew customInitialize_basket();
-  d_BC_globalVars                      = scinew customBC_globalVars();
-  d_BC_globalVars->Lodi_var_basket     =  scinew Lodi_variable_basket();
-  d_BC_globalVars->Slip_var_basket     =  scinew Slip_variable_basket();
-  d_BC_globalVars->mms_var_basket      =  scinew mms_variable_basket();
-  d_BC_globalVars->sine_var_basket     =  scinew sine_variable_basket();
-  d_BC_globalVars->inletVel_var_basket =  scinew inletVel_variable_basket();
+  d_BC_globalVars           = scinew customBC_globalVars();            
+  d_BC_globalVars->lodi     =  scinew Lodi_globalVars();               
+  d_BC_globalVars->slip     =  scinew slip_globalVars();               
+  d_BC_globalVars->mms      =  scinew mms_globalVars();                
+  d_BC_globalVars->sine     =  scinew sine_globalVars();               
+  d_BC_globalVars->inletVel =  scinew inletVel_globalVars();           
   d_press_matl    = 0;
   d_press_matlSet = 0;
 }
@@ -150,11 +150,11 @@ ICE::~ICE()
 #endif
 
   delete d_customInitialize_basket;
-  delete d_BC_globalVars->Lodi_var_basket;
-  delete d_BC_globalVars->Slip_var_basket;
-  delete d_BC_globalVars->mms_var_basket;
-  delete d_BC_globalVars->sine_var_basket;
-  delete d_BC_globalVars->inletVel_var_basket;
+  delete d_BC_globalVars->lodi;
+  delete d_BC_globalVars->slip;
+  delete d_BC_globalVars->mms;
+  delete d_BC_globalVars->sine;
+  delete d_BC_globalVars->inletVel;
   delete d_BC_globalVars;
   delete d_conservationTest;
   delete lb;
@@ -488,15 +488,15 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   d_BC_globalVars->sharedState  = sharedState;
   
   d_BC_globalVars->usingLodi = 
-        read_LODI_BC_inputs(prob_spec,       sharedState, d_BC_globalVars->Lodi_var_basket);
+        read_LODI_BC_inputs(prob_spec,       sharedState, d_BC_globalVars->lodi);
   d_BC_globalVars->usingMicroSlipBCs =
-        read_MicroSlip_BC_inputs(prob_spec,  d_BC_globalVars->Slip_var_basket);
+        read_MicroSlip_BC_inputs(prob_spec,  d_BC_globalVars->slip);
   d_BC_globalVars->using_MMS_BCs =
-        read_MMS_BC_inputs(prob_spec,        d_BC_globalVars->mms_var_basket);
+        read_MMS_BC_inputs(prob_spec,        d_BC_globalVars->mms);
   d_BC_globalVars->using_Sine_BCs =
-        read_Sine_BC_inputs(prob_spec,       d_BC_globalVars->sine_var_basket);
+        read_Sine_BC_inputs(prob_spec,       d_BC_globalVars->sine);
   d_BC_globalVars->using_inletVel_BCs =
-        read_inletVel_BC_inputs(prob_spec,   d_BC_globalVars->inletVel_var_basket, grid);
+        read_inletVel_BC_inputs(prob_spec,   sharedState, d_BC_globalVars->inletVel, grid);
         
   //__________________________________
   //  boundary condition warnings
@@ -1643,8 +1643,8 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
     //  add computes for maxMach
     vector<Patch::FaceType>::iterator f ;
          
-    for( f = d_BC_globalVars->Lodi_var_basket->LodiFaces.begin();
-         f!= d_BC_globalVars->Lodi_var_basket->LodiFaces.end(); ++f) {
+    for( f = d_BC_globalVars->lodi->LodiFaces.begin();
+         f!= d_BC_globalVars->lodi->LodiFaces.end(); ++f) {
          
       VarLabel* V_Label = getMaxMach_face_VarLabel(*f);
       task->computes(V_Label, ice_matls->getUnion());
@@ -5052,8 +5052,8 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
     // can't do reduction variables with patch subsets yet.
     vector<Patch::FaceType>::iterator f ;
     
-    for( f = d_BC_globalVars->Lodi_var_basket->LodiFaces.begin();
-         f !=d_BC_globalVars->Lodi_var_basket->LodiFaces.end(); ++f) {
+    for( f = d_BC_globalVars->lodi->LodiFaces.begin();
+         f !=d_BC_globalVars->lodi->LodiFaces.end(); ++f) {
       Patch::FaceType face = *f;
       //__________________________________
       // compute maxMach number on this lodi face

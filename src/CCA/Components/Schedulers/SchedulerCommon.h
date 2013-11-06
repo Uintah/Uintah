@@ -243,7 +243,7 @@ WARNING
     * output the task name and the level it's executing on.
     * and each of the patches
     */
-    void printTask( ostream& out, DetailedTask* task );
+    void printTask( std::ostream& out, DetailedTask* task );
     
     /**
     *  Output the task name and the level it's executing on

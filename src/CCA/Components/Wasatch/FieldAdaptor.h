@@ -114,32 +114,28 @@ namespace Wasatch{
     const SCIRun::IntVector fieldOffset = uintahVar.getWindow()->getOffset();
     const SCIRun::IntVector fieldExtent = highIx - lowIx;
 
-
     const SS::IntVec   size( fieldSize[0],   fieldSize[1],   fieldSize[2]   );
     const SS::IntVec extent( fieldExtent[0], fieldExtent[1], fieldExtent[2] );
     const SS::IntVec offset( lowIx[0]-fieldOffset[0], lowIx[1]-fieldOffset[1], lowIx[2]-fieldOffset[2] );
-//
-//    std::cout << "Patch [" << patch->getID() << "] size: " << patch->getExtraCellHighIndex(0) - patch->getExtraCellLowIndex(0)
-//                  << "  hi: " << highIx
-//                  << "  lo: " << lowIx
-//                  << "  s : " << fieldSize
-//                  << "  os: " << fieldOffset
-//                  << std::endl
-//                  << "         size: " << size
-//                  << " offset: " << offset
-//                  << " extent: " << extent
-//                  << std::endl;
 
     SS::IntVec bcMinus, bcPlus;
     get_bc_logicals( patch, bcMinus, bcPlus );
     return new FieldT( SpatialOps::structured::MemoryWindow( size, offset, extent ),
                        SS::BoundaryCellInfo::build<FieldT>(bcPlus),
                        SS::GhostData(1),  /* for now, we hard-code one ghost cell */
-                       const_cast<typename FieldT::AtomicT*>( uintahVar.getPointer() ),
+                       const_cast<typename FieldT::value_type*>( uintahVar.getPointer() ),
                        SpatialOps::structured::ExternalStorage,
                        mtype,
                        deviceIndex );
   }
+
+  template<>
+  inline SpatialOps::structured::SingleValueField*
+  wrap_uintah_field_as_spatialops<SpatialOps::structured::SingleValueField,Uintah::PerPatch<double*> >(
+      Uintah::PerPatch<double*>& uintahVar,
+      const Uintah::Patch* const patch,
+      const SpatialOps::MemoryType mtype,
+      const unsigned short int deviceIndex );
 
   /**
    *  \ingroup WasatchParser
@@ -159,7 +155,7 @@ namespace Wasatch{
    */
   template<typename FieldT> struct SelectUintahFieldType;
 
-  template<> struct SelectUintahFieldType<double>{
+  template<> struct SelectUintahFieldType<SpatialOps::structured::SingleValueField>{
     typedef Uintah::PerPatch<double> type;
     typedef Uintah::PerPatch<double> const_type;
   };
@@ -255,7 +251,9 @@ namespace Wasatch{
     return 1;
   }
 
-  template<> inline int get_n_ghost<double>(){ return 0; };
+  template<> inline int get_n_ghost<SpatialOps::structured::SingleValueField>(){
+    return 0;
+  };
 
   /**
    *  \ingroup WasatchFields
@@ -273,7 +271,7 @@ namespace Wasatch{
   }
 
   template<>
-  inline Uintah::IntVector get_uintah_ghost_descriptor<double>()
+  inline Uintah::IntVector get_uintah_ghost_descriptor<SpatialOps::structured::SingleValueField>()
   {
     return Uintah::IntVector(0,0,0);
   }

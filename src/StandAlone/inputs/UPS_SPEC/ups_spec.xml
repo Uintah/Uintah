@@ -544,6 +544,7 @@
       </microSlip>
 
       <inletVelocity        spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'powerLawProfile, logWindProfile'">
+        <material           spec="REQUIRED STRING"/>
         <roughness          spec="REQUIRED DOUBLE 'positive'" need_applies_to="type logWindProfile" />
         <exponent           spec="REQUIRED DOUBLE 'positive'" need_applies_to="type powerLawProfile" /> 
         <verticalDirection  spec="REQUIRED INTEGER '0,2'" />

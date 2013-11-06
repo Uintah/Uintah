@@ -35,11 +35,11 @@ class XDragModelBuilder: public ModelBuilder
 {
 public: 
   XDragModelBuilder( const std::string          & modelName, 
-                        const vector<std::string>  & reqICLabelNames,
-                        const vector<std::string>  & reqScalarLabelNames,
-                        ArchesLabel          * fieldLabels,
-                        SimulationStateP           & sharedState,
-                        int qn );
+                     const std::vector<std::string>  & reqICLabelNames,
+                     const std::vector<std::string>  & reqScalarLabelNames,
+                     ArchesLabel          * fieldLabels,
+                     SimulationStateP           & sharedState,
+                     int qn );
   ~XDragModelBuilder(); 
 
   ModelBase* build(); 
@@ -54,11 +54,11 @@ class XDragModel: public ModelBase {
 public: 
 
   XDragModel( std::string modelName, 
-                 SimulationStateP& shared_state, 
-                 ArchesLabel* fieldLabels,
-                 vector<std::string> reqICLabelNames, 
-                 vector<std::string> reqScalarLabelNames,
-                 int qn );
+              SimulationStateP& shared_state,
+              ArchesLabel* fieldLabels,
+              std::vector<std::string> reqICLabelNames,
+              std::vector<std::string> reqScalarLabelNames,
+              int qn );
 
   ~XDragModel();
 
@@ -96,7 +96,7 @@ public:
   ///////////////////////////////////////////////
   // Access methods
 
-  inline string getType() {
+  inline std::string getType() {
     return "Velocity"; }
 
 

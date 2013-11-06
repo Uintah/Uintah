@@ -46,7 +46,6 @@
 
 namespace SCIRun {
 
-using std::vector;
 
 class SCISHARE DenseMatrix : public Matrix {
   double** data;
@@ -99,8 +98,8 @@ public:
   int     solve(ColumnMatrix&, int overwrite=0);
   int     solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
 		int overwrite=0);
-  int     solve(vector<double>& sol, int overwrite=0);
-  int     solve(const vector<double>& rhs, vector<double>& lhs,
+  int     solve(std::vector<double>& sol, int overwrite=0);
+  int     solve(const std::vector<double>& rhs, std::vector<double>& lhs,
 		int overwrite=0);
 
   //! fast accessors

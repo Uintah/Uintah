@@ -50,7 +50,7 @@ class DORadiation: public SourceTermBase {
 public: 
 
   DORadiation( std::string srcName, ArchesLabel* labels, MPMArchesLabel* MAlab, BoundaryCondition* bc, 
-                vector<std::string> reqLabelNames, const ProcessorGroup* my_world, std::string type );
+                std::vector<std::string> reqLabelNames, const ProcessorGroup* my_world, std::string type );
   ~DORadiation();
 
   void problemSetup(const ProblemSpecP& db);
@@ -74,7 +74,7 @@ public:
 
     public: 
 
-      Builder( std::string name, vector<std::string> required_label_names, ArchesLabel* labels, 
+      Builder( std::string name, std::vector<std::string> required_label_names, ArchesLabel* labels,
           BoundaryCondition* bc, const ProcessorGroup* my_world ) 
         : _name(name), _labels(labels), _bc(bc), _my_world(my_world), _required_label_names(required_label_names){
           _type = "do_radiation"; 
@@ -92,7 +92,7 @@ public:
       MPMArchesLabel* _MAlab;
       BoundaryCondition* _bc; 
       const ProcessorGroup* _my_world; 
-      vector<std::string> _required_label_names; 
+      std::vector<std::string> _required_label_names;
 
   }; // class Builder 
 

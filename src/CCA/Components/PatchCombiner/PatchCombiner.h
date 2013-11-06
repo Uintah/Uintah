@@ -67,7 +67,7 @@ WARNING
 
    class PatchCombiner : public SimulationInterface, public UintahParallelComponent {
    public:
-     PatchCombiner(const ProcessorGroup* myworld, string udaDir);
+     PatchCombiner(const ProcessorGroup* myworld, std::string udaDir);
      
      virtual ~PatchCombiner();
      
@@ -127,7 +127,7 @@ WARNING
 			  DataWarehouse* new_dw,
 			  VarLabel* label);
 
-     string udaDir_;
+     std::string udaDir_;
      DataArchive* dataArchive_;
      const ProcessorGroup* world_;
      std::vector<int> timesteps_;

@@ -42,7 +42,7 @@
 #include <fstream>
 #include <iostream>
 
-using std::cerr;
+using namespace std;
 using namespace Uintah;
 
 // _________________this is a transversely isotropic hyperelastic material [JW]

@@ -22,12 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <Core/Geometry/IntVector.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Util/TypeDescription.h>
 #include <iostream>
-using std::ostream;
+
+using namespace std;
 
 namespace SCIRun{
 

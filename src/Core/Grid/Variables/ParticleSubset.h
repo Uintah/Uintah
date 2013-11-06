@@ -32,8 +32,6 @@
 #include <vector>
 #include <iostream>
 
-
-using std::ostream;
 using SCIRun::IntVector;
 
 namespace Uintah {
@@ -174,7 +172,7 @@ WARNING
       return neighbor_subsets;
     }
     
-    friend ostream& operator<<(ostream& out, Uintah::ParticleSubset& pset);
+    friend std::ostream& operator<<(std::ostream& out, Uintah::ParticleSubset& pset);
 
    private:
     //////////

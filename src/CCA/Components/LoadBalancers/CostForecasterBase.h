@@ -63,13 +63,13 @@ namespace Uintah {
   class CostForecasterBase {
   public:
     virtual ~CostForecasterBase() {};
-    virtual void setMinPatchSize(const vector<IntVector> &min_patch_size) {};
+    virtual void setMinPatchSize(const std::vector<IntVector> &min_patch_size) {};
     //add the contribution for region r on level l
     virtual void addContribution(DetailedTask *task, double cost) {};
     //finalize the contributions for this timestep
     virtual void finalizeContributions(const GridP currentGrid) {};
     //compute the weights for all patches in the grid.  Particles are provided in the num_particles vectors.
-    virtual void getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs) = 0;
+    virtual void getWeights(const Grid* grid, std::vector<std::vector<int> > num_particles, std::vector<std::vector<double> >&costs) = 0;
     //sets the decay rate for the exponential average
     virtual void setTimestepWindow(int window) {};
     //initializes the regions in the new level that are not in the old level

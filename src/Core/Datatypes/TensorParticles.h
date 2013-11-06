@@ -42,7 +42,7 @@
 #include   <vector>
 
 namespace Uintah {
-using std::vector;
+
 using namespace SCIRun;
 
 /**************************************
@@ -84,7 +84,7 @@ public:
   TensorParticles();
   //////////
   // Constructor
-  TensorParticles(const vector<ShareAssignParticleVariable<Matrix3> >& tensors,
+  TensorParticles(const std::vector<ShareAssignParticleVariable<Matrix3> >& tensors,
 		  PSet* pset);
 
   // GROUP: Destructors
@@ -95,7 +95,7 @@ public:
   // GROUP: Access
   //////////
   // return the Tensors
-  vector<ShareAssignParticleVariable<Matrix3> >& get(){ return tensors; }
+  std::vector<ShareAssignParticleVariable<Matrix3> >& get(){ return tensors; }
   PSet* getParticleSet(){ return psetH.get_rep(); }
 
   // GROUP: Modify
@@ -104,18 +104,18 @@ public:
   void Set(PSetHandle psh){ psetH = psh;}
   //////////  
   // Set the Tensors
-  void Set(vector<ShareAssignParticleVariable<Matrix3> >& s){ tensors = s; }
+  void Set(std::vector<ShareAssignParticleVariable<Matrix3> >& s){ tensors = s; }
 
   void AddVar( const ParticleVariable<Matrix3>& parts );
 
 
-  void SetName( string vname ) { _varname = vname; }
+  void SetName( std::string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
 	       
 
   // Persistant representation
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream&);
+  static SCIRun::PersistentTypeID type_id;
 
   void get_minmax(double& v0, double& v1);
   void get_bounds(Point& p0, Point& p1){ psetH->get_bounds(p0,p1);}
@@ -129,9 +129,9 @@ protected:
 private:
   PSetHandle psetH;
   LevelP level;
-  string _varname;
+  std::string _varname;
   int _matIndex;
-  vector<ShareAssignParticleVariable<Matrix3> >  tensors;
+  std::vector<ShareAssignParticleVariable<Matrix3> >  tensors;
 };
 
 } // End namespace Uintah

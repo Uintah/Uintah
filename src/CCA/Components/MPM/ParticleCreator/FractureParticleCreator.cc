@@ -33,7 +33,7 @@
 #include <CCA/Ports/DataWarehouse.h>
 
 using namespace Uintah;
-using std::vector;
+using namespace std;
 
 FractureParticleCreator::FractureParticleCreator(MPMMaterial* matl,
                                                  MPMFlags* flags)

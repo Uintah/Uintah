@@ -65,8 +65,8 @@ void  conservationTest(const Patch* patch,
   // computational domain
   T sum_fluxes(zero);
 
-  vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
+  std::vector<Patch::FaceType>::const_iterator iter;
+  std::vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
 
   for (iter  = bf.begin(); iter != bf.end(); ++iter){

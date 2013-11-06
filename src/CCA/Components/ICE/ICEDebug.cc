@@ -44,10 +44,7 @@
 #ifndef _WIN32
 #include <dirent.h>
 #endif
-using std::ifstream;
-using std::cerr;
-using std::cout;
-using std::endl;
+using namespace std;
 using namespace Uintah;
 
 //__________________________________

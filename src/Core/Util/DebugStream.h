@@ -70,11 +70,6 @@
 
 namespace SCIRun {
 
-    using std::streambuf;
-    using std::ostream;
-    using std::string;
-
-    
     class DebugStream;
     class DebugBuf;
 
@@ -83,7 +78,7 @@ namespace SCIRun {
     // For use with DebugStream.  This class overrides the overflow
     // operator.  Each time overflow is called it checks to see where
     // to direct the output to. 
-    class DebugBuf:public streambuf{
+    class DebugBuf:public std::streambuf{
     private:
     public:
       DebugBuf();
@@ -97,10 +92,10 @@ namespace SCIRun {
     ///////////////////
     // class DebugStream
     // A general purpose debugging ostream.
-    class SCISHARE DebugStream: public ostream{
+    class SCISHARE DebugStream: public std::ostream{
     private:
       // identifies me uniquely
-      string name;
+      std::string name;
       // my default action (used if nothing is specified in SCI_DEBUG)
       bool defaulton;
       // the buffer that is used for output redirection
@@ -108,16 +103,16 @@ namespace SCIRun {
       // if false, all input is ignored
       bool isactive;
       // check the environment variable
-      void checkenv(string);
+      void checkenv(std::string);
             
     public:
       DebugStream();
-      DebugStream(const string& name, bool defaulton = true);
+      DebugStream(const std::string& name, bool defaulton = true);
       ~DebugStream();
       bool active() {return isactive;};
       void setActive(bool active) { isactive = active; };
       // the ostream that output should be redirected to. cout by default.
-      ostream *outstream;
+      std::ostream *outstream;
     };
     
 } // End namespace SCIRun

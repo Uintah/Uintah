@@ -29,20 +29,13 @@
 #if !defined(Locate_h)
 #define Locate_h
 
-#include <vector>
 #include <cmath>
-
-#include <iostream>
-#include <fstream>
+#include <vector>
 
 #include <Core/Geometry/Point.h>
-
 #include <Core/Basis/share.h>
 
 namespace SCIRun {
-
-  using std::cerr;
-  using std::endl;
 
   template<class T>
     inline T InverseMatrix3x3(const T *p, T *q) 

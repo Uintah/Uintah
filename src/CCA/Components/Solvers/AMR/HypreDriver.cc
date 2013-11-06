@@ -47,7 +47,10 @@
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
+
+using namespace std;
 using namespace Uintah;
+
 //__________________________________
 //  To turn on normal output
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"

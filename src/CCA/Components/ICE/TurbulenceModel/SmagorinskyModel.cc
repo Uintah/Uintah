@@ -34,6 +34,8 @@
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;
+using namespace std;
+
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
 Smagorinsky_Model::Smagorinsky_Model(ProblemSpecP& ps,

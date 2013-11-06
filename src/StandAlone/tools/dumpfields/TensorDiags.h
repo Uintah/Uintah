@@ -69,7 +69,7 @@ namespace Uintah {
   TensorDiag const * createTensorDiag (const Uintah::TypeDescription * fldtype, int idiag,
                                        const TensorDiag * preop=0);
   
-  void describeTensorDiags(ostream & os);
+  void describeTensorDiags(std::ostream & os);
   
   // list of requested tensor diagnostics
   std::list<const Uintah::TensorDiag*> createTensorDiags(const Uintah::TypeDescription * fldtype, 

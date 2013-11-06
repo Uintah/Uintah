@@ -50,7 +50,7 @@ namespace Uintah {
                                Task::WhichDW which_guess_dw,
                                const SolverParameters* params,
                                bool modifies_hypre = false);
-    virtual string getName();
+    virtual std::string getName();
   private:
   };
 }

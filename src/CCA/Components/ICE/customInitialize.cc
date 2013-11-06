@@ -28,6 +28,8 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 
+using namespace std;
+
 using namespace Uintah;
 namespace Uintah {
 /*_____________________________________________________________________ 

@@ -77,10 +77,10 @@ namespace Uintah {
   public:
 
     // Useful typedefs
-    typedef std::map<string, const VarLabel* >           VarMap;
-    typedef std::map<string, CCVariable<double>* >       CCMap; 
-    typedef std::map<string, double >                    doubleMap; 
-    typedef std::map<string, doubleMap>                  InertMasterMap; 
+    typedef std::map<std::string, const VarLabel* >           VarMap;
+    typedef std::map<std::string, CCVariable<double>* >       CCMap;
+    typedef std::map<std::string, double >                    doubleMap;
+    typedef std::map<std::string, doubleMap>                  InertMasterMap;
     struct ConstVarContainer {
 
       constCCVariable<double> var; 
@@ -103,7 +103,7 @@ namespace Uintah {
         const bool modify_ref_den ) = 0;
 
     /** @brief Provides access for models, algorithms, etc. to add additional table lookup variables. */
-    void addAdditionalDV( std::vector<string>& vars );
+    void addAdditionalDV( std::vector<std::string>& vars );
 
     /** @brief Needed for the old properties method until it goes away */ 
     virtual void oldTableHack( const InletStream&, Stream&, bool, const std::string ) = 0; 
@@ -134,15 +134,15 @@ namespace Uintah {
     inline const VarMap getDVVars(){ return d_dvVarMap; }; 
 
     /** @brief Return a string list of all independent variable names in order */ 
-    inline std::vector<string>& getAllIndepVars(){ return d_allIndepVarNames; }; 
+    inline std::vector<std::string>& getAllIndepVars(){ return d_allIndepVarNames; };
 
     /** @brief Return a string list of dependent variables names in the order they were read */ 
-    inline std::vector<string>& getAllDepVars(){ return d_allDepVarNames; };
+    inline std::vector<std::string>& getAllDepVars(){ return d_allDepVarNames; };
   
     /** @brief Returns a <string, double> map of KEY constants found in the table */ 
     inline doubleMap& getAllConstants(){ return d_constants; };
 
-    inline double getDoubleTableConstant(const string key ){
+    inline double getDoubleTableConstant(const std::string key ){
       
       doubleMap::iterator iter = d_constants.find(key);
 
@@ -160,7 +160,7 @@ namespace Uintah {
     inline bool doesPostMix(){ return d_does_post_mixing; }; 
   
     /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
-    inline void insertIntoMap( const string var_name ){
+    inline void insertIntoMap( const std::string var_name ){
 
       VarMap::iterator i = d_dvVarMap.find( var_name ); 
 
@@ -170,7 +170,7 @@ namespace Uintah {
 
         d_dvVarMap.insert( std::make_pair( var_name, the_label ) ); 
 
-        proc0cout << "    ---> " << var_name << endl; 
+        proc0cout << "    ---> " << var_name << std::endl;
 
       } 
       return; 
@@ -212,7 +212,7 @@ namespace Uintah {
         virtual double get_adiabatic_enthalpy( std::vector<double>& iv, double inert ) = 0; 
 
         /** @brief Get the heat loss upper and lower bounds **/ 
-        virtual const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> size ) = 0;  
+        virtual const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> size ) = 0;
 
         /** @brief Check to see if this table deals with heat loss **/ 
         virtual bool has_heat_loss() = 0; 
@@ -246,9 +246,9 @@ namespace Uintah {
 
         bool has_heat_loss(){ return false; };
 
-        const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> size )
+        const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> size )
         {
-          vector<double> hl_bounds; 
+          std::vector<double> hl_bounds;
           hl_bounds.push_back(-1.0);
           hl_bounds.push_back(1.0);
           return hl_bounds; 
@@ -263,7 +263,7 @@ namespace Uintah {
       //(3) heat loss
 
       public: 
-        SingleMF( std::map<string, double>& keys, MixingRxnModel* const model);
+        SingleMF( std::map<std::string, double>& keys, MixingRxnModel* const model);
         ~SingleMF(); 
 
         bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
@@ -309,20 +309,20 @@ namespace Uintah {
 
             }
             if ( _f_index == -1 ) {
-              proc0cout << "Warning: Could not match mixture fraction label to table variables!" << endl;
+              proc0cout << "Warning: Could not match mixture fraction label to table variables!" << std::endl;
               sf_transform = false; 
             }
             if ( _var_index == -1 ) {
-              proc0cout << "Warning: Could not match variance label to table variables!" << endl;
+              proc0cout << "Warning: Could not match variance label to table variables!" << std::endl;
               sf_transform = false; 
             }
             if ( _hl_index == -1 ) {
-              proc0cout << "Warning: Could not match heat loss label to table variables!" << endl;
+              proc0cout << "Warning: Could not match heat loss label to table variables!" << std::endl;
               sf_transform = false; 
             }
           } 
 
-          vector<double> my_ivs;
+          std::vector<double> my_ivs;
           my_ivs.push_back(1);
           my_ivs.push_back(0);
           my_ivs.push_back(0); 
@@ -355,9 +355,9 @@ namespace Uintah {
           return iv[0]*_H_fuel + ( 1.0 - iv[0] )*_H_ox;
         };
 
-        const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> const size )
+        const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> const size )
         {
-          vector<double> hl_bounds; 
+          std::vector<double> hl_bounds;
 
           hl_bounds.push_back(iv_grids[1][0]);
           hl_bounds.push_back(iv_grids[1][size[2]-1]);
@@ -367,9 +367,9 @@ namespace Uintah {
 
       private: 
 
-        string _f_name; 
-        string _var_name; 
-        string _hl_name; 
+        std::string _f_name;
+        std::string _var_name;
+        std::string _hl_name;
 
         std::map<std::string,double> _keys;
 
@@ -387,7 +387,7 @@ namespace Uintah {
     class CoalTransform : public TransformBase {
 
       public: 
-        CoalTransform( std::map<string,double>& keys, MixingRxnModel* const model ); 
+        CoalTransform( std::map<std::string,double>& keys, MixingRxnModel* const model );
         ~CoalTransform(); 
 
         bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
@@ -449,23 +449,23 @@ namespace Uintah {
             }
             coal_table_on = true; 
             if ( _fp_index == -1 ) {
-              proc0cout << "Warning: Could not match PRIMARY mixture fraction label to table variables!" << endl;
+              proc0cout << "Warning: Could not match PRIMARY mixture fraction label to table variables!" << std::endl;
               coal_table_on = false; 
             }
             if ( _eta_index == -1 ) {
-              proc0cout << "Warning: Could not match ETA mixture fraction label to table variables!" << endl;
+              proc0cout << "Warning: Could not match ETA mixture fraction label to table variables!" << std::endl;
               coal_table_on = false; 
             }
             if ( !_is_acidbase ){ 
               if ( _hl_index == -1 ) {
-                proc0cout << "Warning: Could not match heat loss label to table variables!" << endl;
+                proc0cout << "Warning: Could not match heat loss label to table variables!" << std::endl;
                 coal_table_on = false; 
               }
             } 
 
             if ( !_is_acidbase ){ 
 
-              vector<double> my_ivs;
+              std::vector<double> my_ivs;
               my_ivs.push_back(0);
               my_ivs.push_back(0);
               my_ivs.push_back(1); 
@@ -521,9 +521,9 @@ namespace Uintah {
 
         };
 
-        const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> const size )
+        const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> const size )
         {
-          vector<double> hl_bounds; 
+          std::vector<double> hl_bounds;
           hl_bounds.push_back(iv_grids[0][0]);
           hl_bounds.push_back(iv_grids[0][size[1]-1]);
 
@@ -557,7 +557,7 @@ namespace Uintah {
     class AcidBase: public TransformBase {
 
       public: 
-        AcidBase( std::map<string,double>& keys, MixingRxnModel* const model ); 
+        AcidBase( std::map<std::string,double>& keys, MixingRxnModel* const model );
         ~AcidBase(); 
 
         bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
@@ -603,11 +603,11 @@ namespace Uintah {
             acid_base_table_on = true; 
 
             if ( _fp_index == -1 ) {
-              proc0cout << "Warning: Could not match PRIMARY mixture fraction label to table variables!" << endl;
+              proc0cout << "Warning: Could not match PRIMARY mixture fraction label to table variables!" << std::endl;
               acid_base_table_on = false; 
             }
             if ( _eta_index == -1 ) {
-              proc0cout << "Warning: Could not match ETA mixture fraction label to table variables!" << endl;
+              proc0cout << "Warning: Could not match ETA mixture fraction label to table variables!" << std::endl;
               acid_base_table_on = false; 
             }
           } 
@@ -645,7 +645,7 @@ namespace Uintah {
 
         };
 
-        const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> const size )
+        const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> const size )
         {
           throw InvalidValue("Error: No ability to return heat loss bounds for the acid base transform",__FILE__,__LINE__); 
         };  
@@ -669,7 +669,7 @@ namespace Uintah {
     class RCCETransform : public TransformBase {
 
       public: 
-        RCCETransform( std::map<string, double>& keys, MixingRxnModel* const model ); 
+        RCCETransform( std::map<std::string, double>& keys, MixingRxnModel* const model );
         ~RCCETransform(); 
 
         bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
@@ -722,15 +722,15 @@ namespace Uintah {
             rcce_table_on = true; 
 
             if ( _fp_index == -1 ) {
-              proc0cout << "Warning: Could not match Fp mixture fraction label to table variables!" << endl;
+              proc0cout << "Warning: Could not match Fp mixture fraction label to table variables!" << std::endl;
               rcce_table_on = false; 
             }
             if ( _xi_index == -1 ) {
-              proc0cout << "Warning: Could not match Xi mixture fraction label to table variables!" << endl;
+              proc0cout << "Warning: Could not match Xi mixture fraction label to table variables!" << std::endl;
               rcce_table_on = false; 
             }
             if ( _hl_index == -1 ) {
-              proc0cout << "Warning: Could not match heat loss label to table variables!" << endl;
+              proc0cout << "Warning: Could not match heat loss label to table variables!" << std::endl;
               rcce_table_on = false; 
             }
 
@@ -755,7 +755,7 @@ namespace Uintah {
 
             }
 
-            vector<double> my_ivs;
+            std::vector<double> my_ivs;
             my_ivs.push_back(0);
             my_ivs.push_back(0);
             my_ivs.push_back(1); 
@@ -770,15 +770,15 @@ namespace Uintah {
             rcce_table_on = true; 
 
             if ( _eta_index == -1 ) {
-              proc0cout << "Warning: Could not match Eta mixture fraction label to table variables!" << endl;
+              proc0cout << "Warning: Could not match Eta mixture fraction label to table variables!" << std::endl;
               rcce_table_on = false; 
             }
             if ( _xi_index == -1 ) {
-              proc0cout << "Warning: Could not match Xi mixture fraction label to table variables!" << endl;
+              proc0cout << "Warning: Could not match Xi mixture fraction label to table variables!" << std::endl;
               rcce_table_on = false; 
             }
             if ( _hl_index == -1 ) {
-              proc0cout << "Warning: Could not match heat loss label to table variables!" << endl;
+              proc0cout << "Warning: Could not match heat loss label to table variables!" << std::endl;
               rcce_table_on = false; 
             }
 
@@ -858,9 +858,9 @@ namespace Uintah {
 
         };
 
-        const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> const size )
+        const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> const size )
         {
-          vector<double> hl_bounds; 
+          std::vector<double> hl_bounds;
           hl_bounds.push_back(iv_grids[0][0]);
           hl_bounds.push_back(iv_grids[0][size[1]-1]);
 
@@ -899,7 +899,7 @@ namespace Uintah {
     class InertMixing : public TransformBase {
 
       public: 
-        InertMixing( std::map<string, double>& keys, MixingRxnModel* const model ); 
+        InertMixing( std::map<std::string, double>& keys, MixingRxnModel* const model );
         ~InertMixing(); 
 
         bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
@@ -937,20 +937,20 @@ namespace Uintah {
             }
             transform_on = true; 
             if ( _eta_index == -1 ) {
-              proc0cout << "Warning: Could not match Eta mixture fraction label to table variables!" << endl;
+              proc0cout << "Warning: Could not match Eta mixture fraction label to table variables!" << std::endl;
               transform_on = false; 
             }
             if ( _fp_index == -1 ) {
-              proc0cout << "Warning: Could not match Fp mixture fraction label to table variables!" << endl;
+              proc0cout << "Warning: Could not match Fp mixture fraction label to table variables!" << std::endl;
               transform_on = false; 
             }
             if ( _hl_index == -1 ){ 
-              proc0cout << "Warning: Could not match heat loss label to table variables!" << endl;
+              proc0cout << "Warning: Could not match heat loss label to table variables!" << std::endl;
               transform_on = false; 
             } 
           } 
 
-          vector<double> my_ivs;
+          std::vector<double> my_ivs;
           my_ivs.push_back(0);
           my_ivs.push_back(0);
           my_ivs.push_back(1); 
@@ -1019,9 +1019,9 @@ namespace Uintah {
 
         bool inline has_heat_loss(){ return true; }; 
 
-        const vector<double> get_hl_bounds( vector<vector<double> > const iv_grids, vector<int> const size )
+        const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> const size )
         {
-          vector<double> hl_bounds; 
+          std::vector<double> hl_bounds;
           hl_bounds.push_back(iv_grids[0][0]);
           hl_bounds.push_back(iv_grids[0][size[1]-1]);
 
@@ -1121,27 +1121,19 @@ namespace Uintah {
 
     std::string d_fp_label;                 ///< Primary mixture fraction name for a coal table
     std::string d_eta_label;                ///< Eta mixture fraction name for a coal table
-    std::vector<string> d_allIndepVarNames; ///< Vector storing all independent variable names from table file
-    std::vector<string> d_allDepVarNames;   ///< Vector storing all dependent variable names from the table file
+    std::vector<std::string> d_allIndepVarNames; ///< Vector storing all independent variable names from table file
+    std::vector<std::string> d_allDepVarNames;   ///< Vector storing all dependent variable names from the table file
 
     /** @brief Insert a varLabel into the map where the varlabel has been created elsewhere */ 
-    inline void insertExisitingLabelIntoMap( const string var_name ){ 
-
+    inline void insertExisitingLabelIntoMap( const std::string var_name ){
       VarMap::iterator i = d_dvVarMap.find( var_name ); 
-
       if ( i == d_dvVarMap.end() ) {
-
         const VarLabel* the_label = VarLabel::find(var_name); 
-
         i = d_dvVarMap.insert( make_pair( var_name, the_label ) ).first; 
-
-        proc0cout << " creating a label for  ---> " << var_name << endl; 
-
+        proc0cout << " creating a label for  ---> " << var_name << std::endl;
       } 
       return; 
-
     } 
-
   }; // end class MixingRxnModel
 } // end namespace Uintah
 

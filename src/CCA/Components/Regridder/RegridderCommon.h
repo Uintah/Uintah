@@ -33,15 +33,13 @@
 #include <Core/Geometry/IntVector.h>
 #include <vector>
 
-using std::vector;
-
 namespace Uintah {
 
 class DataWarehouse;
 class Patch;
 class VarLabel;
 
-typedef vector<SCIRun::IntVector> SizeList;
+typedef std::vector<SCIRun::IntVector> SizeList;
 
 /**************************************
 
@@ -164,12 +162,12 @@ WARNING
     IntVector d_minBoundaryCells; //! min # of cells to be between levels' boundaries
     FilterType d_filterType;
 
-    vector< CCVariable<int>* > d_flaggedCells;
-    vector< CCVariable<int>* > d_dilatedCellsStability;
-    vector< CCVariable<int>* > d_dilatedCellsRegrid;
-    vector< CCVariable<int>* > d_dilatedCellsDeleted;
+    std::vector< CCVariable<int>* > d_flaggedCells;
+    std::vector< CCVariable<int>* > d_dilatedCellsStability;
+    std::vector< CCVariable<int>* > d_dilatedCellsRegrid;
+    std::vector< CCVariable<int>* > d_dilatedCellsDeleted;
 
-    map<IntVector,CCVariable<int>* > filters;
+    std::map<IntVector,CCVariable<int>* > filters;
     CCVariable<int> d_patchFilter;
 
     int d_maxLevels;
@@ -180,9 +178,9 @@ WARNING
     const VarLabel* d_dilatedCellsRegridLabel;
     const VarLabel* d_dilatedCellsDeletionLabel;
 
-    vector<int> d_numStability;
-    vector<int> d_numRegrid;
-    vector<int> d_numDeleted;
+    std::vector<int> d_numStability;
+    std::vector<int> d_numRegrid;
+    std::vector<int> d_numDeleted;
 
     bool d_newGrid;
     int d_lastRegridTimestep;         //The last time the full regridder was called (grid may not change)

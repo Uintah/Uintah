@@ -40,7 +40,7 @@ namespace Uintah {
                                             CCVariable<short int>& cellNAPID,
                                             const Patch*, 
                                             DataWarehouse* new_dw,
-                                            vector<GeometryObject*>&);
+                                            std::vector<GeometryObject*>&);
 
     virtual particleIndex countParticles(const Patch*,
                                          std::vector<GeometryObject*>&) ;

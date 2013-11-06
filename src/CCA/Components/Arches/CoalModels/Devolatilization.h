@@ -27,11 +27,11 @@ class Devolatilization: public ModelBase {
 public: 
 
   Devolatilization( std::string modelName, 
-                         SimulationStateP& shared_state, 
-                         ArchesLabel* fieldLabels,
-                         vector<std::string> reqICLabelNames, 
-                         vector<std::string> reqScalarLabelNames,
-                         int qn );
+                    SimulationStateP& shared_state,
+                    ArchesLabel* fieldLabels,
+                    std::vector<std::string> reqICLabelNames,
+                    std::vector<std::string> reqScalarLabelNames,
+                    int qn );
 
   virtual ~Devolatilization();
 
@@ -54,7 +54,7 @@ public:
                  DataWarehouse        * new_dw );
 
   /** @brief  Return a string containing the model type ("Devolatilization") */
-  inline string getType() {
+  inline std::string getType() {
     return "Devolatilization"; }
 
   /** @brief  Return the VarLabel for the model term for char */

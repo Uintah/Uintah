@@ -37,6 +37,7 @@
 #include <iostream>
 
 using namespace Uintah;
+using namespace std;
 
 SolverInterface* SolverFactory::create(ProblemSpecP& ps,
                                        const ProcessorGroup* world,

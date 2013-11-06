@@ -123,7 +123,7 @@ namespace Uintah {
               return -1;
           }
         }
-        static string type(int index)
+        static std::string type(int index)
         {
           switch(index)
           {
@@ -141,16 +141,19 @@ namespace Uintah {
           }
         }
       };
+
     private:
-      DynamicLoadBalancer *d_lb;
-      const ProcessorGroup* d_myworld;
-      int d_timestepWindow;
-      map<int,double> execTimes;
+
       void collectPatchInfo(const GridP currentGrid, std::vector<PatchInfo> &patch_info);
-      std::vector<double> d_x;
+
+      DynamicLoadBalancer   * d_lb;
+      const ProcessorGroup  * d_myworld;
+      int                     d_timestepWindow;
+      std::map<int,double>    d_execTimes;
+      std::vector<double>     d_x;
   };
       
-  ostream& operator<<(ostream& out, const CostModelForecaster::PatchInfo &pi);
+  std::ostream& operator<<(std::ostream& out, const CostModelForecaster::PatchInfo &pi);
 
 } // End namespace Uintah
 

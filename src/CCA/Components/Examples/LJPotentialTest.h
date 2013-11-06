@@ -173,7 +173,7 @@ namespace Uintah {
       const VarLabel* vdwEnergyLabel;
 
       // fields specific to non-bonded interaction (LJ Potential)
-      string coordinateFile_;
+      std::string coordinateFile_;
       unsigned int numAtoms_;
       double cutoffRadius_;  // the short ranged cut off distances (in Angstroms)
       Vector box_;  // the size of simulation
@@ -182,7 +182,7 @@ namespace Uintah {
 
       // neighborList[i] contains the index of all atoms located within a short ranged cut off from atom "i"
       std::vector<Point> atomList;
-      std::vector<vector<int> > neighborList;
+      std::vector<std::vector<int> > neighborList;
 
       // copy constructor and operator=
       LJPotentialTest(const LJPotentialTest&);

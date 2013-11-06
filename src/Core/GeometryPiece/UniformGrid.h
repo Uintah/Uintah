@@ -35,9 +35,6 @@
 #include <vector>
 #include <list>
 
-using std::vector;
-using std::list;
-
 namespace Uintah {
 
 using namespace SCIRun;
@@ -80,7 +77,7 @@ WARNING
    ~Tri();
    Point centroid();
    Point vertex(int i);
-   list<Tri> makeTriList(vector<IntVector>& tris, vector<Point>& pts);
+   std::list<Tri> makeTriList(std::vector<IntVector>& tris, std::vector<Point>& pts);
    bool inside(Point& p);
    Plane plane();
  private:
@@ -96,11 +93,11 @@ WARNING
    UniformGrid& operator=(const UniformGrid&);
    UniformGrid(const UniformGrid&);
    IntVector cellID(Point point);
-   void buildUniformGrid(list<Tri>& polygons);
+   void buildUniformGrid(std::list<Tri>& polygons);
    void countIntersections(const Point& ray, int& crossings);
       
  private:
-   Array3<list<Tri> > d_grid;
+   Array3<std::list<Tri> > d_grid;
    Box d_bound_box;
    Vector d_max_min;
  };

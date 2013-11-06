@@ -85,10 +85,6 @@ namespace Uintah {
 */
 /////////////////////////////////////////////////////////////////////////////
 	
-  using std::vector;
-  using std::string;
-  using std::list;
-
   class FileGeometryPiece : public SmoothGeomPiece {
     
   public:
@@ -101,13 +97,13 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     /*! Construct a box from a min/max point */
     //////////////////////////////////////////////////////////////////////
-    FileGeometryPiece(const string& file_name);
+    FileGeometryPiece(const std::string& file_name);
     
     //////////
     // Destructor
     virtual ~FileGeometryPiece();
 
-    static const string TYPE_NAME;
+    static const std::string TYPE_NAME;
     virtual std::string getType() const { return TYPE_NAME; }
 
     /// Make a clone
@@ -127,13 +123,13 @@ namespace Uintah {
 
   private:
  
-    Box                 d_box;
-    string              d_file_name;
-    string              d_file_format;
-    list<string>        d_vars;
-    bool                d_usePFS;
+    Box                    d_box;
+    std::string            d_file_name;
+    std::string            d_file_format;
+    std::list<std::string> d_vars;
+    bool                   d_usePFS;
     
-    void checkFileType(std::ifstream & source, string& fileType, string& filename);
+    void checkFileType(std::ifstream & source, std::string& fileType, std::string& filename);
     
     bool read_line(std::istream & is, Point & xmin, Point & xmax);
     void read_bbox(std::istream & source, Point & lowpt, Point & highpt) const;

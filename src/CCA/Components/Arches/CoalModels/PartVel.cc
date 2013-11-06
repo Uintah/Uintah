@@ -12,6 +12,7 @@
 //===========================================================================
 
 using namespace Uintah;
+using namespace std;
 
 PartVel::PartVel(ArchesLabel* fieldLabels ) : 
 d_fieldLabels(fieldLabels)

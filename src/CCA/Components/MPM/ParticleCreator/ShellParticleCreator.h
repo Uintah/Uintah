@@ -83,7 +83,7 @@ WARNING
                                             CCVariable<short int>& cellNAPID,
                                             const Patch*, 
                                             DataWarehouse* new_dw,
-                                            vector<GeometryObject*>&);
+                                            std::vector<GeometryObject*>&);
 
     /////////////////////////////////////////////////////////////////////////
     //

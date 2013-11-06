@@ -34,7 +34,7 @@ class CCScalarEqnBuilder: public EqnBuilder
 public:
   CCScalarEqnBuilder( ArchesLabel* fieldLabels, 
                       ExplicitTimeInt* timeIntegrator, 
-                      string eqnName );
+                      std::string eqnName );
   ~CCScalarEqnBuilder();
 
   EqnBase* build(); 
@@ -52,7 +52,7 @@ public EqnBase{
 
 public: 
 
-  ScalarEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName );
+  ScalarEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, std::string eqnName );
 
   ~ScalarEqn();
 
@@ -99,7 +99,7 @@ public:
   void sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep);
 
   /** @brief Apply boundary conditions */
-  template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi );
+  template <class phiType> void computeBCs( const Patch* patch, std::string varName, phiType& phi );
 
   /** @brief Schedule the cleanup after this equation. */ 
   void sched_cleanUp( const LevelP&, SchedulerP& sched ); 
@@ -130,6 +130,12 @@ public:
   }
 
   void sched_advClipping( const LevelP& level, SchedulerP& sched, int timeSubStep );
+  void advClipping( const ProcessorGroup* pc, 
+                    const PatchSubset* patches, 
+                    const MaterialSubset* matls, 
+                    DataWarehouse* old_dw, 
+                    DataWarehouse* new_dw,
+                    int timeSubStep );
 
   /** @brief Clip values of phi that are too high or too low (after RK time averaging). */
   template<class phiType>

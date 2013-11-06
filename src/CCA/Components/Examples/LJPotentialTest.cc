@@ -129,7 +129,7 @@ void LJPotentialTest::problemSetup(const ProblemSpecP& params,
 
   // for neighbor indices
   for (unsigned int i = 0; i < numAtoms_; i++) {
-    neighborList.push_back(vector<int>(0));
+    neighborList.push_back(std::vector<int>(0));
   }
 
   // create neighbor list for each atom in the system
@@ -239,12 +239,12 @@ void LJPotentialTest::extractCoordinates()
   std::ifstream inputFile;
   inputFile.open(coordinateFile_.c_str());
   if (!inputFile.is_open()) {
-    string message = "\tCannot open input file: " + coordinateFile_;
+    std::string message = "\tCannot open input file: " + coordinateFile_;
     throw ProblemSetupException(message, __FILE__, __LINE__);
   }
 
   // do file IO to extract atom coordinates
-  string line;
+  std::string line;
   unsigned int numRead;
   for (unsigned int i = 0; i < numAtoms_; i++) {
     // get the atom coordinates
@@ -252,7 +252,7 @@ void LJPotentialTest::extractCoordinates()
     double x, y, z;
     numRead = sscanf(line.c_str(), "%lf %lf %lf", &x, &y, &z);
     if (numRead != 3) {
-      string message = "\tMalformed input file. Should have [x,y,z] coordinates per line: ";
+      std::string message = "\tMalformed input file. Should have [x,y,z] coordinates per line: ";
       throw ProblemSetupException(message, __FILE__, __LINE__);
     }
     Point pnt(x, y, z);
@@ -344,7 +344,7 @@ void LJPotentialTest::initialize(const ProcessorGroup* /* pg */,
       ParticleVariable<long64> pids;
 
       // eventually we'll need to use PFS for this
-      vector<Point> localAtoms;
+      std::vector<Point> localAtoms;
       for (unsigned int i = 0; i < numAtoms_; i++) {
         if (containsAtom(low, high, atomList[i])) {
           localAtoms.push_back(atomList[i]);

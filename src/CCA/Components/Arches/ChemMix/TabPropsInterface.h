@@ -121,7 +121,7 @@ public:
   /** @brief      Returns a single dependent variable, given a vector of independent variable values
       @param dv   The name of the dependent variable to look up in the table
       @param iv   The vector of indepenent variable values */
-  inline double getSingleState( string dv, vector<double> iv ) {
+  inline double getSingleState( std::string dv, std::vector<double> iv ) {
     double result = 0.0;
     //cout_tabledbg << "From your table, looking up: " << dv << endl;
     return result = d_statetbl.query(  dv, &iv[0] );
@@ -130,21 +130,11 @@ public:
   /** @brief          Returns a single dependent variable, given a vector of independent variable values
       @param spline   The spline information for the dep. var.
       @param iv       The vector of indepenent variable values */
-  inline double getSingleState( const InterpT* spline, std::string dv, vector<double> iv ) {
+  inline double getSingleState( const InterpT* spline, std::string dv, std::vector<double> iv ) {
     double result = 0.0;
     //cout_tabledbg << "From your table, looking up a variable using spline information: " << dv << endl;
     return result = d_statetbl.query(  spline, &iv[0] );
   };
-
-  /** @brief Dummy initialization as required by MPMArches */
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-
-  /** @brief Dummy initialization as required by MPMArches */
-  void dummyInit( const ProcessorGroup* pc,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw );
 
   /** @brief Gets the Spline information for TabProps.  Spline info is used because it is more efficient that passing strings */
   void getSplineInfo();
@@ -162,7 +152,7 @@ public:
 
   };
 
-  typedef std::map<string, DepVarCont >       DepVarMap;
+  typedef std::map<std::string, DepVarCont >       DepVarMap;
 
 	void tableMatching(){};
 
@@ -188,7 +178,7 @@ private:
   IntVector d_ijk_den_ref;                ///< Reference density location
 
 
-  vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
+  std::vector<std::string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
 
   StateTable d_statetbl;                  ///< StateTable object to represent the table data
   SplineMap  d_depVarSpline;              ///< Map of spline information for each dependent var
@@ -197,21 +187,16 @@ private:
 
   /// A dependent variable wrapper
   struct ADepVar {
-    string name;
+    std::string name;
     CCVariable<double> data;
   };
 
   /** @brief  Helper for filling the spline map */
-  inline void insertIntoSplineMap( const string var_name, const InterpT* spline ){
-
+  inline void insertIntoSplineMap( const std::string var_name, const InterpT* spline ){
     SplineMap::iterator i = d_depVarSpline.find( var_name );
-
     if ( i == d_depVarSpline.end() ) {
-
-      cout_tabledbg << "Inserting " << var_name << " spline information into storage." << endl;
-
+      cout_tabledbg << "Inserting " << var_name << " spline information into storage." << std::endl;
       i = d_depVarSpline.insert( make_pair( var_name, spline ) ).first;
-
     }
     return;
   };

@@ -81,10 +81,10 @@ public:
   void evaluate();
 
 private:
-
+  typedef typename SpatialOps::structured::SingleValueField TimeField;
   SineTime( const Expr::Tag& tTag );
   const Expr::Tag tTag_;
-  const double* t_;
+  const TimeField* t_;
 };
 
 //====================================================================
@@ -116,7 +116,7 @@ void
 SineTime<ValT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  t_ = &fml.template field_ref<double>( tTag_ );
+  t_ = &fml.field_ref<TimeField>( tTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -441,8 +441,11 @@ evaluate()
     y   = Uintah::getDouble(inputFile);
     z   = Uintah::getDouble(inputFile);
     val = Uintah::getDouble(inputFile);  
-    const bool contains_value = x >= (xMin - eps) && x <= (xMax + eps) && y >= (yMin - eps) && y <= (yMax + eps) && z >= (zMin - eps) && z <= (zMax + eps);
-    if (contains_value && phiiter != phi.interior_end()) { // this assumes that the list of data in the input file is ordered according to x, y, z locations...      
+    const bool containsValue = x >= (xMin - eps) && x <= (xMax + eps)
+                            && y >= (yMin - eps) && y <= (yMax + eps)
+                            && z >= (zMin - eps) && z <= (zMax + eps);
+    if( containsValue && phiiter != phi.interior_end() ){
+      // this assumes that the list of data in the input file is ordered according to x, y, z locations...
       *phiiter = val;
       ++phiiter;
 //      size++;
@@ -478,8 +481,6 @@ build() const
 {
   return new ReadFromFileExpression<FieldT>( xtag_, ytag_, ztag_, filename_ );
 }
-
-//--------------------------------------------------------------------
 
 //--------------------------------------------------------------------
 
@@ -605,6 +606,167 @@ StepFunction<FieldT>::Builder::
 build() const
 {
   return new StepFunction<FieldT>( indepVarTag_, transitionPoint_, lowValue_, highValue_);
+}
+
+//--------------------------------------------------------------------
+
+/**
+ *  \class RayleighTaylor
+ *  \author Tony Saad
+ *  \date October, 2013
+ *  \brief Implements a stepfunction with a perturbed interface that can used to initialize a 
+ Rayleigh-Taylor instability simulation. The formula used is:
+ if y < y0 + A * sin(2*pi*f*x1) * sin(2*pi*f*x2): result = lowValue
+ else                                             result = highValue
+ */
+template< typename FieldT >
+class RayleighTaylor : public Expr::Expression<FieldT>
+{
+public:
+  
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    /**
+     * @param result Tag of the resulting expression.
+     * @param indepVarTag   Tag of the independent variable.
+     * @param x1Tag Tag of the x1 coordinate.
+     * @param x2Tag Tag of the x2 coordinate.
+     * @param transitionPoint Location where the RayleighTaylor switches values. This is the independent variable location.
+     * @param lowValue  Value of the step function for independentVar <  transitionPoint.
+     * @param highValue	Value of the step function for independentVar >= transitionPoint.
+     * @param frequency Frequency of the interface perturbation, given as a multiple of 2*Pi.
+     * @param amplitude	Amplitude of the perturbation.
+     */
+    Builder(const Expr::Tag& result,
+            const Expr::Tag& indepVarTag,
+            const Expr::Tag& x1Tag,
+            const Expr::Tag& x2Tag,
+            const double transitionPoint=0.1,
+            const double lowValue = 1.0,
+            const double highValue = 0.0,
+            const double frequency=2.0*PI,
+            const double amplitude=1.0);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const Expr::Tag indepVarTag_, x1Tag_, x2Tag_;
+    const double trans_, lo_, hi_, f_, amp_;
+  };
+  
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+  
+private:
+  
+  RayleighTaylor( const Expr::Tag& indepVarTag,
+                  const Expr::Tag& x1Tag,
+                  const Expr::Tag& x2Tag,
+                  const double transitionPoint,
+                  const double lowValue,
+                  const double highValue,
+                  const double frequency=2.0*PI,
+                  const double amplitude=1.0);
+  const Expr::Tag indepVarTag_, x1Tag_, x2Tag_;
+  const double trans_, lo_, hi_, f_, amp_;
+  const FieldT *indepVar_, *x1_, *x2_;
+};
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+RayleighTaylor<FieldT>::
+RayleighTaylor( const Expr::Tag& indepVarTag,
+                const Expr::Tag& x1Tag,
+                const Expr::Tag& x2Tag,
+                const double transitionPoint,
+                const double lowValue,
+                const double highValue,
+                const double frequency,
+                const double amplitude)
+: Expr::Expression<FieldT>(),
+indepVarTag_(indepVarTag),
+x1Tag_(x1Tag),
+x2Tag_(x2Tag),
+trans_(transitionPoint),
+lo_(lowValue),
+hi_(highValue),
+f_(frequency),
+amp_(amplitude)
+{
+  this->set_gpu_runnable( true );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+RayleighTaylor<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( indepVarTag_ );
+  exprDeps.requires_expression( x1Tag_       );
+  exprDeps.requires_expression( x2Tag_       );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+RayleighTaylor<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  indepVar_ = &fm.field_ref( indepVarTag_ );
+  x1_ = &fm.field_ref( x1Tag_ );
+  x2_ = &fm.field_ref( x2Tag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+RayleighTaylor<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  result <<= cond( *indepVar_ < trans_ + amp_ * sin(2*PI*f_ * *x1_) * sin(2*PI*f_ * *x2_), lo_ )
+                 ( hi_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+RayleighTaylor<FieldT>::Builder::
+Builder( const Expr::Tag& result,
+        const Expr::Tag& indepVarTag,
+        const Expr::Tag& x1Tag,
+        const Expr::Tag& x2Tag,
+        const double transitionPoint,
+        const double lowValue,
+        const double highValue,
+        const double frequency,
+        const double amplitude )
+: ExpressionBuilder(result),
+indepVarTag_(indepVarTag),
+x1Tag_(x1Tag),
+x2Tag_(x2Tag),
+trans_(transitionPoint),
+lo_(lowValue),
+hi_(highValue),
+f_(frequency),
+amp_(amplitude)
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+RayleighTaylor<FieldT>::Builder::
+build() const
+{
+  return new RayleighTaylor<FieldT>( indepVarTag_, x1Tag_, x2Tag_, trans_, lo_, hi_, f_, amp_);
 }
 
 //--------------------------------------------------------------------
@@ -1292,368 +1454,7 @@ build() const
   return new LambsDipole<FieldT>( xTag_, yTag_, x0_, y0_, G_, R_, U_, velocityComponent_);
 }
 
-//--------------------------------------------------------------------
-
-/**
- *  \class VarDensMMSSourceTerm
- *  \author Amir Biglari
- *  \date November, 2012
- *  \brief A source term for a method of manufactured solution applied on pressure projection method
- *
- *  In this study the manufactured solution for velocity is defined as:
- *
- *  \f$ u = -\frac{5t}{t^2+1} \sin{\frac{2\pi x}{3t+30}} \f$
- *
- *  The manufactured solution for mixture fraction is defined as:
- *
- *  \f$ f = \frac{5}{2t+5} \exp{-\frac{5x^2}{10+t}} \f$
- *
- *  And the density functionality with respect to mixture fraction is based on non-reacting mixing model:
- *
- *  \f$ \frac{1}{\rho}=\frac{f}{\rho_1}+\frac{1-f}{\rho_0} \f$
- *
- */
-template< typename FieldT >
-class VarDensMMSSourceTerm : public Expr::Expression<FieldT>
-{
-  
-public:
-  struct Builder : public Expr::ExpressionBuilder
-  {
-    /**
-     * @param result Tag of the resulting expression.
-     * @param xTag   Tag of the first coordinate.
-     * @param tTag   Tag of time.
-     * @param D      a double containing the diffusivity constant.
-     * @param rho0   a double holding the density value at f=0.
-     * @param rho1   a double holding the density value at f=1.
-     */
-    Builder( const Expr::Tag& result,
-             const Expr::Tag& xTag,
-             const Expr::Tag& tTag,
-             const double D,
-             const double rho0,
-             const double rho1 );
-    ~Builder(){}
-    Expr::ExpressionBase* build() const;
-  private:
-    const double d_, rho0_, rho1_;
-    const Expr::Tag xTag_, tTag_;
-  };
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void evaluate();
-  
-private:
-  
-  VarDensMMSSourceTerm( const Expr::Tag& xTag,
-                        const Expr::Tag& tTag,
-                        const double D,
-                        const double rho0,
-                        const double rho1 );
-  const double d_, rho0_, rho1_;
-  const Expr::Tag xTag_, tTag_;
-  const FieldT* x_;
-  const double* t_;
-};
 
 //--------------------------------------------------------------------
-
-template<typename FieldT>
-VarDensMMSSourceTerm<FieldT>::
-VarDensMMSSourceTerm( const Expr::Tag& xTag,
-                      const Expr::Tag& tTag,
-                      const double D,
-                      const double rho0,
-                      const double rho1 )
-: Expr::Expression<FieldT>(),
-  d_   ( D    ),
-  rho0_( rho0 ),
-  rho1_( rho1 ),
-  xTag_( xTag ),
-  tTag_( tTag )
-{
-  this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-VarDensMMSSourceTerm<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( tTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-VarDensMMSSourceTerm<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  x_ = &fml.template field_manager<FieldT>().field_ref( xTag_ );
-  t_ = &fml.template field_manager<double>().field_ref( tTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-VarDensMMSSourceTerm<FieldT>::
-evaluate()
-{
-  using namespace SpatialOps;
-  FieldT& result = this->value();
-  
-  result <<=
-    (
-        ( 5 * rho0_ * (rho1_ * rho1_) * exp( (5 * (*x_ * *x_))/(*t_ + 10))
-            * ( 1500 * d_ - 120 * *t_ + 75 * (*t_ * *t_) * (*x_ * *x_)
-                + 30 * (*t_ * *t_ * *t_) * (*x_ * *x_) + 750 * d_ * *t_
-                + 1560 * d_ * (*t_ * *t_) + 750 * d_ * (*t_ * *t_ * *t_)
-                + 60 * d_ * (*t_ * *t_ * *t_ * *t_) - 1500 * d_ * (*x_ * *x_)
-                + 30 * *t_ * (*x_ * *x_) - 606 * (*t_ * *t_) - 120 * (*t_ * *t_ * *t_)
-                - 6 * (*t_ * *t_ * *t_ * *t_) + 75 * (*x_ * *x_)
-                + 7500 * *t_ * *x_ * sin((2 * PI * *x_)/(3 * (*t_ + 10)))
-                - 250 * PI * (*t_ * *t_) * cos((2 * PI * *x_)/(3*(*t_ + 10)))
-                - 20 * PI * (*t_ * *t_ * *t_)*cos((2 * PI * *x_)/(3*(*t_ + 10)))
-                - 1500 * d_ * (*t_ * *t_) * (*x_ * *x_)
-                - 600 * d_ * (*t_ * *t_ * *t_) * (*x_ * *x_)
-                + 3750 * (*t_ * *t_) * *x_ * sin((2 * PI * *x_)/(3 * (*t_ + 10)))
-                + 300 * (*t_ * *t_ * *t_) * *x_ * sin((2 * PI * *x_)/(3*(*t_ + 10)))
-                - 500 * PI * *t_ * cos((2 * PI * *x_)/(3 * (*t_ + 10)))
-                - 600 * d_ * *t_ * (*x_ * *x_) - 600
-              )
-         )/3
-         +
-         ( 250 * rho0_ * rho1_ * (rho0_ - rho1_) * (*t_ + 10) * (3 * d_ + 3 * d_ * (*t_ * *t_)
-           - PI * *t_ * cos(
-               (2 * PI * *x_)/(3 * (*t_ + 10))))
-         )/ 3
-     )
-     /
-     (
-         ( (*t_ * *t_) + 1)*((*t_ + 10) * (*t_ + 10))
-         *
-         (
-            (5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (*x_ * *x_))/(*t_ + 10)) + 2 * rho1_ * *t_ * exp((5 * (*x_ * *x_))/(*t_ + 10)))
-           *(5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (*x_ * *x_))/(*t_ + 10)) + 2 * rho1_ * *t_ * exp((5 * (*x_ * *x_))/(*t_ + 10)))
-         )
-     );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-VarDensMMSSourceTerm<FieldT>::Builder::
-Builder( const Expr::Tag& result,
-         const Expr::Tag& xTag,
-         const Expr::Tag& tTag,
-         const double D,
-         const double rho0,
-         const double rho1  )
-: ExpressionBuilder(result),
-  d_   ( D    ),
-  rho0_( rho0 ),
-  rho1_( rho1 ),
-  xTag_( xTag ),
-  tTag_( tTag )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-Expr::ExpressionBase*
-VarDensMMSSourceTerm<FieldT>::Builder::
-build() const
-{
-  return new VarDensMMSSourceTerm<FieldT>( xTag_, tTag_, d_, rho0_, rho1_ );
-}
-
-//--------------------------------------------------------------------
-
-/**
- *  \class VarDensMMSContinuitySrc
- *  \author Amir Biglari
- *  \date March, 2013
- *  \brief The source term for continuity equation in the MMS applied on pressure projection method.
- *         This is forced on the continuity equation by the manufactured solutions.
- *
- ** Note that rho0 and rho1 are hardcoded in this class for a specific NonReacting mixing model table of H2 (fuel) and O2 (oxidizer) at 300K
- *
- */
-template< typename FieldT >
-class VarDensMMSContinuitySrc : public Expr::Expression<FieldT>
-{
-  
-public:
-  struct Builder : public Expr::ExpressionBuilder
-  {
-    /**
-     * @param result      Tag of the resulting expression.
-     * @param xTag        Tag of the first coordinate.
-     * @param tTag        Tag of time.
-     * @param timestepTag Tag of time step.
-     */
-    Builder( const Expr::Tag& result,
-             const double rho0,
-             const double rho1,
-             const Expr::Tag& xTag,
-             const Expr::Tag& tTag,
-             const Expr::Tag& timestepTag );
-    ~Builder(){}
-    Expr::ExpressionBase* build() const;
-  private:
-    const double rho0_, rho1_;
-    const Expr::Tag xTag_, tTag_, timestepTag_;
-  };
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void evaluate();
-  
-private:
-  
-  VarDensMMSContinuitySrc( const double rho0,
-                           const double rho1,
-                           const Expr::Tag& xTag,
-                           const Expr::Tag& tTag,
-                           const Expr::Tag& timestepTag);
-  const double rho0_, rho1_;
-  const Expr::Tag xTag_, tTag_, timestepTag_;
-  const FieldT* x_;
-  const double *t_, *timestep_;
-};
-
-//--------------------------------------------------------------------
-
-template<typename FieldT>
-VarDensMMSContinuitySrc<FieldT>::
-VarDensMMSContinuitySrc( const double rho0,
-                         const double rho1,
-                         const Expr::Tag& xTag,
-                         const Expr::Tag& tTag,
-                         const Expr::Tag& timestepTag)
-: Expr::Expression<FieldT>(),
-  rho0_( rho0 ),
-  rho1_( rho1 ),
-  xTag_( xTag ),
-  tTag_( tTag ),
-  timestepTag_( timestepTag )
-{
-  this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-VarDensMMSContinuitySrc<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( tTag_ );
-  exprDeps.requires_expression( timestepTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-VarDensMMSContinuitySrc<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  x_ = &fml.template field_manager<FieldT>().field_ref( xTag_ );
-
-  const typename Expr::FieldMgrSelector<double>::type& dfm = fml.field_manager<double>();
-  t_        = &dfm.field_ref( tTag_        );
-  timestep_ = &dfm.field_ref( timestepTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-VarDensMMSContinuitySrc<FieldT>::
-evaluate()
-{
-  using namespace SpatialOps;
-  FieldT& result = this->value();
-  
-  const double alpha = 0.1;   // the continuity equation weighting factor 
-  const double t = *t_ + *timestep_;  /// this is being added at timestep n+1
-
-  result <<= alpha *
-    (
-      (
-          ( 10/( exp((5 * (*x_ * *x_))/( t + 10)) * ((2 * t + 5) * (2 * t + 5)) )
-          - (25 * (*x_ * *x_))/(exp(( 5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5) * ((t + 10) * (t + 10)) )
-          ) / rho0_
-          - 10/( rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * ((2 * t + 5) * (2 * t + 5)) )
-          + (25 * (*x_ * *x_)) / (rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5) * ((t + 10) * (t + 10)) )
-       )
-       /
-       (
-          ( (5 / (exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_
-           - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5))
-          )
-          *
-          ((5 / (exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)))
-       )
-       -
-       ( 5 * t * sin((2 * PI * *x_)/(3 * t + 30)) *
-           ((50 * *x_) / (rho0_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5) * (t + 10)) - (50 * *x_)/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5) * (t + 10)))
-       )
-       /
-       ( ( (t * t) + 1)
-           * ( ((5/(exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)))
-             * ((5/(exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)))
-             )
-       )
-       -
-       ( 10 * PI * t * cos((2 * PI * *x_)/(3 * t + 30)))
-       /
-       ( (3 * t + 30) * ((t * t) + 1)
-           * ( (5/(exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5)) - 1)/rho0_
-              - 5/(rho1_ * exp((5 * (*x_ * *x_))/(t + 10)) * (2 * t + 5))
-             )
-       )
-   ) / *timestep_;
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-VarDensMMSContinuitySrc<FieldT>::Builder::
-Builder( const Expr::Tag& result,
-         const double rho0,
-         const double rho1,
-         const Expr::Tag& xTag,
-         const Expr::Tag& tTag,
-         const Expr::Tag& timestepTag )
-: ExpressionBuilder(result),
-  rho0_( rho0 ),
-  rho1_( rho1 ),
-  xTag_( xTag ),
-  tTag_( tTag ),
-  timestepTag_( timestepTag )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-Expr::ExpressionBase*
-VarDensMMSContinuitySrc<FieldT>::Builder::
-build() const
-{
-  return new VarDensMMSContinuitySrc<FieldT>( rho0_, rho1_, xTag_, tTag_, timestepTag_ );
-}
-
-//--------------------------------------------------------------------
-
 
 #endif // Wasatch_MMS_Functions

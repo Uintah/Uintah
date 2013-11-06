@@ -32,9 +32,6 @@
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 
 namespace Uintah {
-using std::map;
-using std::string;
-using std::vector;
 
 
 /**************************************
@@ -73,7 +70,7 @@ WARNING
     bool operator==(const BCData&);
     bool operator<(const BCData&) const;
     void setBCValues(BoundCondBase* bc);
-    const BoundCondBase* getBCValues(const string& type) const;
+    const BoundCondBase* getBCValues(const std::string& type) const;
     
     /**
      *  \author Tony Saad
@@ -84,18 +81,18 @@ WARNING
      and BoundCondBase. This boundary specification corresponds to all the spec within a given
      <Face> xml tag in the input file.
      */
-    const vector<BoundCondBase*>& getBCData() const;
+    const std::vector<BoundCondBase*>& getBCData() const;
     
     void print() const;
-    bool find(const string& type) const;
-    bool find(const string& bc_type,const string& bc_variable) const;
+    bool find(const std::string& type) const;
+    bool find(const std::string& bc_type,const std::string& bc_variable) const;
     void combine(BCData& from);
     
    private:
       // The map is for the name of the
     // bc type and then the actual bc data, i.e. 
     // "Velocity", VelocityBoundCond
-    vector<BoundCondBase*>  d_BCData;
+    std::vector<BoundCondBase*>  d_BCData;
 
     
   };

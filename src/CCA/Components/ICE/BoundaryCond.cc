@@ -606,7 +606,7 @@ void setBC(CCVariable<double>& press_CC,
        && isNotInitialTimestep  && localVars->setLodiBcs){
        
        nCells_LODI[face] += 
-       FacePress_LODI(patch, press_CC, rho_micro, sharedState,face, localVars->lv);
+       FacePress_LODI(patch, press_CC, rho_micro, sharedState,face, localVars->lodi);
     }
   }
 
@@ -653,16 +653,16 @@ void setBC(CCVariable<double>& press_CC,
         else if (bc_kind == "MMS_1" && localVars->set_MMS_BCs) {
           nCells += set_MMS_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
                                       sharedState, 
-                                      globalVars->mms_var_basket,
-                                      localVars->mms_v);
+                                      globalVars->mms,
+                                      localVars->mms);
         }                    
         //__________________________________
         //  Sine
         else if (bc_kind == "Sine" && localVars->set_Sine_BCs) {
           nCells += set_Sine_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
                                        sharedState, 
-                                       globalVars->sine_var_basket,
-                                       localVars->sine_v);
+                                       globalVars->sine,
+                                       localVars->sine);
         }
         
         
@@ -741,12 +741,11 @@ void setBC(CCVariable<double>& var_CC,
     bool is_tempBC_lodi=  patch->haveBC(face,mat_id,"LODI","Temperature");  
     bool is_rhoBC_lodi =  patch->haveBC(face,mat_id,"LODI","Density");
     
-    Lodi_vars* lv = localVars->lv;
     if( desc == "Temperature"  && is_tempBC_lodi  && isNotInitialTimestep && localVars->setLodiBcs ){
-      nCells_LODI[face] += FaceTemp_LODI(patch, face, var_CC, lv, cell_dx, sharedState);
+      nCells_LODI[face] += FaceTemp_LODI(patch, face, var_CC, localVars->lodi, cell_dx, sharedState);
     }   
     else if (desc == "Density"  && is_rhoBC_lodi  && isNotInitialTimestep && localVars->setLodiBcs){
-      nCells_LODI[face] += FaceDensity_LODI(patch, face, var_CC, lv, cell_dx);
+      nCells_LODI[face] += FaceDensity_LODI(patch, face, var_CC, localVars->lodi, cell_dx);
     }
   }
   //__________________________________
@@ -790,19 +789,19 @@ void setBC(CCVariable<double>& var_CC,
         if ( desc == "Temperature" && localVars->setMicroSlipBcs) {
           nCells += set_MicroSlipTemperature_BC( patch,face,var_CC,
                                                  bound_ptr, bc_kind, bc_value,
-                                                 localVars->sv);
+                                                 localVars->slip );
         }
         else if ( desc == "Temperature" && localVars->set_MMS_BCs) {
           nCells += set_MMS_Temperature_BC(patch, face, var_CC, 
                                              bound_ptr, bc_kind, 
-                                             globalVars->mms_var_basket,
-                                             localVars->mms_v);
+                                             globalVars->mms,
+                                             localVars->mms);
         }
         else if ( desc == "Temperature" && localVars->set_Sine_BCs) {
           nCells += set_Sine_Temperature_BC( patch, face, var_CC, 
                                              bound_ptr, bc_kind, 
-                                             globalVars->sine_var_basket,
-                                             localVars->sine_v);
+                                             globalVars->sine,
+                                             localVars->sine);
         }
         //__________________________________
         // Temperature and Gravity and ICE Matls
@@ -897,12 +896,10 @@ void setBC(CCVariable<Vector>& var_CC,
     Patch::FaceType face = *iter;
     bool is_velBC_lodi   = patch->haveBC(face,mat_id,"LODI","Velocity");
     
-    Lodi_vars* lv = localVars->lv;
-    
     if( desc == "Velocity"      && is_velBC_lodi 
         && isNotInitialTimestep && localVars->setLodiBcs) {
         
-      nCells_LODI[face] += FaceVel_LODI( patch, face, var_CC, lv, cell_dx, sharedState);
+      nCells_LODI[face] += FaceVel_LODI( patch, face, var_CC, localVars->lodi, cell_dx, sharedState);
     }
   }
   //__________________________________
@@ -949,25 +946,25 @@ void setBC(CCVariable<Vector>& var_CC,
         else if ( localVars->setMicroSlipBcs ) {
           nCells += set_MicroSlipVelocity_BC( patch,face,var_CC,desc,
                                               bound_ptr, bc_kind, bc_value,
-                                              localVars->sv);
+                                              localVars->slip );
         }
         else if ( localVars->set_MMS_BCs ) {
           nCells += set_MMS_Velocity_BC( patch, face, var_CC, desc,
                                          bound_ptr, bc_kind, sharedState,
-                                         globalVars->mms_var_basket,
-                                         localVars->mms_v);
+                                         globalVars->mms,
+                                         localVars->mms);
         }
         else if ( localVars->set_Sine_BCs ) {
           nCells += set_Sine_Velocity_BC( patch, face, var_CC, desc,
                                           bound_ptr, bc_kind, sharedState,
-                                          globalVars->sine_var_basket,
-                                          localVars->sine_v);
+                                          globalVars->sine,
+                                          localVars->sine );
         }
         else if ( localVars->set_inletVel_BCs ) {
           nCells += set_inletVelocity_BC( patch, face, var_CC, desc,
                                           bound_ptr, bc_kind, bc_value,
-                                          globalVars->inletVel_var_basket,
-                                          localVars->inletVel_v );
+                                          globalVars->inletVel,
+                                          localVars->inletVel );
         }
         //__________________________________
         //  debugging
@@ -1157,13 +1154,13 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
   int numAllMatls = sharedState->getNumMatls();
   
   // If a face is periodic then is_press_BC_set = true
-  map<string,bool> is_press_BC_set;
-  is_press_BC_set["x-"] = (periodic.x() ==1) ? true:false;
-  is_press_BC_set["x+"] = (periodic.x() ==1) ? true:false;
-  is_press_BC_set["y-"] = (periodic.y() ==1) ? true:false;
-  is_press_BC_set["y+"] = (periodic.y() ==1) ? true:false;
-  is_press_BC_set["z-"] = (periodic.z() ==1) ? true:false;
-  is_press_BC_set["z+"] = (periodic.z() ==1) ? true:false;
+  map<string,int> is_press_BC_set;
+  is_press_BC_set["x-"] = (periodic.x() ==1) ? 1:0;
+  is_press_BC_set["x+"] = (periodic.x() ==1) ? 1:0;
+  is_press_BC_set["y-"] = (periodic.y() ==1) ? 1:0;
+  is_press_BC_set["y+"] = (periodic.y() ==1) ? 1:0;
+  is_press_BC_set["z-"] = (periodic.z() ==1) ? 1:0;
+  is_press_BC_set["z+"] = (periodic.z() ==1) ? 1:0;
   
   // loop over all faces
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
@@ -1230,7 +1227,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
       
       // All passed tests on this face set the flags to true
       if(bc_type["label"] == "Pressure" || bc_type["label"] == "Symmetric"){
-        is_press_BC_set[face["side"]] = true;
+        is_press_BC_set[face["side"]]  +=1;
       }
       isBC_set[bc_type["label"]] = true;
     }  // BCType loop
@@ -1255,15 +1252,15 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //Has the pressure BC been set on faces that are not periodic
-  for( map<string,bool>::iterator iter  = is_press_BC_set.begin();iter !=  is_press_BC_set.end(); iter++ ){
+  for( map<string,int>::iterator iter  = is_press_BC_set.begin();iter !=  is_press_BC_set.end(); iter++ ){
     string face = (*iter).first;
-    bool isSet  = (*iter).second;
-    
-    if(isSet == false){
+    int isSet  = (*iter).second;
+
+    if(isSet != 1){
       ostringstream warn;
       warn <<"\n__________________________________\n"   
          << "INPUT FILE ERROR: \n"
-         << "The pressure boundary condition has not been set \n"
+         << "The pressure boundary condition has not been set OR has been set more than once \n"
          << "Face:  " << face <<  endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }

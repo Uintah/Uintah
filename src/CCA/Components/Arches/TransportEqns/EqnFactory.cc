@@ -46,7 +46,7 @@ EqnFactory::register_scalar_eqn( const std::string name, EqnBuilder* builder )
     i = builders_.insert( std::make_pair(name,builder) ).first;
   }
   else{
-    string errmsg = "ERROR: Arches: EqnBuilder: A duplicate EqnBuilder object was loaded on equation\n";
+    std::string errmsg = "ERROR: Arches: EqnBuilder: A duplicate EqnBuilder object was loaded on equation\n";
     errmsg += "\t\t " + name + ". This is forbidden.\n";
     throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
@@ -64,7 +64,7 @@ EqnFactory::retrieve_scalar_eqn( const std::string name )
   const BuildMap::iterator ibuilder = builders_.find( name );
 
   if( ibuilder == builders_.end() ){
-    string errmsg = "ERROR: Arches: EqnBuilder: No registered " + name + " transport eqn!\n";
+    std::string errmsg = "ERROR: Arches: EqnBuilder: No registered " + name + " transport eqn!\n";
     throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 

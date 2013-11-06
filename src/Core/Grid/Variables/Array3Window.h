@@ -34,9 +34,6 @@
 // test the range and throw a more informative exception
 // instead of testing one index's range
 #include <Core/Exceptions/InternalError.h>
-#include <iostream>
-#include <sstream>
-using std::ostringstream;
 #endif
 
 /**************************************
@@ -108,7 +105,7 @@ namespace Uintah {
           if (idx.y() < lowIndex.y() || idx.y() >= highIndex.y()) bad = true;
           if (idx.z() < lowIndex.z() || idx.z() >= highIndex.z()) bad = true;
           if (bad) {
-            ostringstream ostr;
+            std::ostringstream ostr;
             ostr << "Index not in range of window (on get): index: " << idx << " window low " 
                  << lowIndex << " window high " << highIndex;
             throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
@@ -212,7 +209,7 @@ namespace Uintah {
           if (high.y() < 0 || high.y() > data->size().y()) bad = true;
           if (high.z() < 0 || high.z() > data->size().z()) bad = true;;
           if (bad) {
-            ostringstream ostr;
+            std::ostringstream ostr;
             ostr << "Data not in range of new window: data size: " << data->size() << " window low " 
                  << lowIndex << " window high " << highIndex;
             throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);

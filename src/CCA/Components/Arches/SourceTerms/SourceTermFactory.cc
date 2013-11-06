@@ -30,6 +30,7 @@
 //===========================================================================
 
 using namespace Uintah;
+using namespace std;
 
 SourceTermFactory::SourceTermFactory()
 {}
@@ -118,7 +119,7 @@ void SourceTermFactory::commonSrcProblemSetup( const ProblemSpecP& db )
     //which sources are turned on for this equation
     //only add them if they haven't already been added. 
     bool add_me = true; 
-    for ( vector<SourceContainer>::iterator iter = _active_sources.begin(); iter != _active_sources.end(); iter++ ){ 
+    for ( vector<SourceContainer>::iterator iter = _active_sources.begin(); iter != _active_sources.end(); iter++ ){
       if ( iter->name == this_src.name ){ 
         add_me = false; 
       } 

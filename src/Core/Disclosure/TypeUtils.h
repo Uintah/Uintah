@@ -120,12 +120,10 @@ typedef std::complex<double> dblcomplex;
 #if !defined( STATIC_BUILD )
 
 namespace SCIRun {
-  using std::string;
-  using Uintah::long64;
 
-  template<>  const string find_type_name(long64*);
+  template<>  const std::string find_type_name(Uintah::long64*);
 
-   const TypeDescription* get_type_description(long64*);
+   const TypeDescription* get_type_description(Uintah::long64*);
 
 } // namespace SCIRun 
 #endif // STATIC_BUILD

@@ -29,6 +29,7 @@
 #include <CCA/Ports/Scheduler.h>
 
 
+using namespace std;
 using namespace Uintah;
 static DebugStream dbg("SWITCHER", false);
 

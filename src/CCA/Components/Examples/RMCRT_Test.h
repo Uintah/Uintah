@@ -148,10 +148,10 @@ WARNING
     std::vector<GeometryPieceP>  d_intrusion_geom;
     
     struct useOldUdaData{
-      string udaName;
-      string cellTypeName;
-      string temperatureName;
-      string abskgName;
+      std::string udaName;
+      std::string cellTypeName;
+      std::string temperatureName;
+      std::string abskgName;
       unsigned int timestep;
       int matl;
     };

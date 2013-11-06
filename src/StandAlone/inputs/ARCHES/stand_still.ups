@@ -23,7 +23,6 @@
     <outputInterval>0.01</outputInterval>
     <save label="totalKineticEnergy"/>
     <save label="pressurePS"/>
-    <save label="scalarSP"/>
     <save label="CCVelocity"/>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
@@ -64,35 +63,19 @@
 
 
       <Turbulence model="smagorinsky">
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
         <cf>0.0</cf>
         <fac_mesh>1.0</fac_mesh>
         <filterl>0.000001</filterl>
-        <var_const>0.1</var_const>
       </Turbulence>
 
       <Properties>
-        <use_mixing_model>false</use_mixing_model>
-        <ColdFlowMixingModel>
-          <Stream>
-            <density>1.00</density>
-            <temperature>298</temperature>
-          </Stream>
-          <Stream>
-            <density>1.00</density>
-            <temperature>298</temperature>
-          </Stream>
-        </ColdFlowMixingModel>
+        <ConstantProps>
+          <density>1.0</density>
+          <temperature>298.0</temperature>
+        </ConstantProps>
       </Properties>
 
-<!--
-      <BoundaryConditions>
-      </BoundaryConditions>
-
--->
       <ExplicitSolver>
-        <initial_dt>1</initial_dt>
-        <variable_dt>true</variable_dt>
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
@@ -101,14 +84,6 @@
             <maxiterations>    75     </maxiterations>
             <skip>              1     </skip>
           </Parameters>
-<!--
-          <Parameters>
-            <tolerance>       1.0e-9</tolerance>
-            <solver>        cg    </solver>
-            <preconditioner>pfmg  </preconditioner>
-            <maxiterations>      75    </maxiterations>
-          </Parameters>
--->
         </PressureSolver>
 
         <MomentumSolver>
