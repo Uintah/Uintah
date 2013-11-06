@@ -127,7 +127,6 @@ ShaddixHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
       // if it isn't an internal coordinate or a scalar, it's required explicitly
       // ( see comments in Arches::registerModels() for details )
       if( role_name == "gas_temperature" ) {
-        // tempIN will be required explicitly
       } else if ( role_name == "particle_length" 
                || role_name == "raw_coal_mass"
                || role_name == "char_mass"
@@ -324,7 +323,11 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
   tsk->requires(Task::NewDW, iQuad->second, Ghost::None, 0);
   tsk->requires( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_fieldLabels->d_cpINLabel, Ghost::None, 0);
+  d_gas_cp_label = VarLabel::find( "specificheat" ); 
+  if ( d_gas_cp_label == 0 ){ 
+    throw InvalidValue("Error: Unable to find gas specific heat label.",__FILE__,__LINE__);
+  }
+  tsk->requires(Task::OldDW, d_gas_cp_label, Ghost::None, 0);
 
 /* 
   if(_radiation){
@@ -340,7 +343,11 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
   }
 
   // always require the gas-phase temperature
-  tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::None, 0);
+  d_gas_temperature_label = VarLabel::find( "temperature" ); 
+  if ( d_gas_temperature_label == 0 ){ 
+    throw InvalidValue("Error: Unable to find gas temperature label.",__FILE__,__LINE__);
+  }
+  tsk->requires(Task::OldDW, d_gas_temperature_label, Ghost::None, 0);
 
   const VarLabel* d_specificheat_label = VarLabel::find("specificheat");
   tsk->requires(Task::OldDW, d_specificheat_label, Ghost::None, 0 );
@@ -509,7 +516,7 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> den;
     old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 ); 
     constCCVariable<double> cpg;
-    old_dw->get(cpg, d_fieldLabels->d_cpINLabel, matlIndex, patch, gn, 0 );
+    old_dw->get(cpg, d_gas_cp_label, matlIndex, patch, gn, 0 );
 
     //constCCVariable<double> radiationSRCIN;
     constCCVariable<double> abskgIN;
@@ -533,7 +540,7 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> chargas_source;
     constCCVariable<double> surface_rate;
 
-    old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gn, 0 );
+    old_dw->get( temperature, d_gas_temperature_label, matlIndex, patch, gn, 0 );
     old_dw->get( w_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
     old_dw->get( w_particle_length, d_particle_length_label, matlIndex, patch, gn, 0 );
     old_dw->get( w_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );

@@ -66,14 +66,9 @@ Task::ActionBase::~ActionBase()
 {
 }
 
-Task::ActionDeviceBase::~ActionDeviceBase()
-{
-}
-
 Task::~Task()
 {
   delete d_action;
-  delete d_actionDevice;
 
   Dependency* dep = req_head;
   while(dep){
@@ -837,29 +832,17 @@ getOtherLevelPatchSubset(Task::PatchDomainSpec dom, int level_offset,
 
 //__________________________________
 void
-Task::doit(const ProcessorGroup* pg,
+Task::doit(CallBackEvent event,
+           const ProcessorGroup* pg,
 	         const PatchSubset* patches,
 	         const MaterialSubset* matls,
-	         vector<DataWarehouseP>& dws)
+	         vector<DataWarehouseP>& dws,
+           void *stream)
 {
   DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
   DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
   if(d_action) {
-    d_action->doit(pg, patches, matls, fromDW, toDW);
-  }
-}
-
-void
-Task::doitDevice(const ProcessorGroup* pg,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      vector<DataWarehouseP>& dws,
-                      void* stream)
-{
-  DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
-  DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
-  if(d_actionDevice) {
-    d_actionDevice->doitDevice(pg, patches, matls, fromDW, toDW, stream);
+    d_action->doit(event, pg, patches, matls, fromDW, toDW, stream);
   }
 }
 

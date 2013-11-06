@@ -243,241 +243,6 @@ DORadiationModel::computeOrdinatesOPL() {
    //           fort_rordrtn(d_sn, ord, oxi, omu, oeta, wt);
 }
 
-//______________________________________________________________________
-//  This is the main task called by Enthalpysolver
-void
-DORadiationModel::sched_computeSource( const LevelP& level, 
-                                       SchedulerP& sched, 
-                                       const MaterialSet* matls,
-                                       const TimeIntegratorLabel* timelabels, 
-                                       const bool isFirstIntegrationStep )
-{
-
-  if(d_perproc_patches && d_perproc_patches->removeReference())
-    delete d_perproc_patches;
-    
-  LoadBalancer* lb  = sched->getLoadBalancer();
-  d_perproc_patches = lb->getPerProcessorPatchSet(level);
-  d_perproc_patches->addReference();
-  
-  string taskname =  "DORadiation::sched_computeSource";      
-                       
-  Task* tsk = scinew Task(taskname, this,
-                        &DORadiationModel::computeSource,
-                        timelabels, isFirstIntegrationStep);
-  
-  
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gn = Ghost::None;
-  
-  Task::WhichDW which_dw = Task::NewDW;
-  if (isFirstIntegrationStep) {
-    which_dw = Task::OldDW;
-  }
-  
-  tsk->requires(which_dw,      d_lab->d_tempINLabel,   gac, 1);
-  tsk->requires(which_dw,      d_lab->d_cpINLabel,     gn,  0);
-  tsk->requires(which_dw,      d_lab->d_co2INLabel,    gn,  0);
-  tsk->requires(which_dw,      d_lab->d_h2oINLabel,    gn,  0);
-  tsk->requires(which_dw,      d_lab->d_sootFVINLabel, gn,  0);
-  
-  tsk->requires(Task::NewDW,   d_lab->d_cellInfoLabel, gn);
-  tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel, gac, 1);
-
-  if (isFirstIntegrationStep ) {
-
-    tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,    gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,  gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_radiationFluxWINLabel,  gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_radiationFluxNINLabel,  gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_radiationFluxSINLabel,  gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_radiationFluxTINLabel,  gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_radiationFluxBINLabel,  gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_radiationVolqINLabel,   gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,           gn, 0);
-
-    tsk->computes(d_lab->d_abskgINLabel);
-    tsk->computes(d_lab->d_radiationSRCINLabel);
-    tsk->computes(d_lab->d_radiationFluxEINLabel);
-    tsk->computes(d_lab->d_radiationFluxWINLabel);
-    tsk->computes(d_lab->d_radiationFluxNINLabel);
-    tsk->computes(d_lab->d_radiationFluxSINLabel);
-    tsk->computes(d_lab->d_radiationFluxTINLabel);
-    tsk->computes(d_lab->d_radiationFluxBINLabel);
-    tsk->modifies(d_lab->d_radiationVolqINLabel);
-  } else {
-    tsk->modifies(d_lab->d_abskgINLabel);
-    tsk->modifies(d_lab->d_radiationSRCINLabel);
-    tsk->modifies(d_lab->d_radiationFluxEINLabel);
-    tsk->modifies(d_lab->d_radiationFluxWINLabel);
-    tsk->modifies(d_lab->d_radiationFluxNINLabel);
-    tsk->modifies(d_lab->d_radiationFluxSINLabel);
-    tsk->modifies(d_lab->d_radiationFluxTINLabel);
-    tsk->modifies(d_lab->d_radiationFluxBINLabel);
-    tsk->modifies(d_lab->d_radiationVolqINLabel);
-  }
-  
-  //__________________________________
-  if(d_use_abskp){
-    tsk->requires(Task::OldDW, d_abskpLabel,   gn, 0);
-  }
-  
-  if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
-    tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, gn, 0);
-  }
-  
-  sched->addTask(tsk, d_perproc_patches , matls);
-}
-
-//______________________________________________________________________
-//
-void
-DORadiationModel::computeSource( const ProcessorGroup* pc, 
-                                 const PatchSubset* patches, 
-                                 const MaterialSubset* matls, 
-                                 DataWarehouse* old_dw, 
-                                 DataWarehouse* new_dw, 
-                                 const TimeIntegratorLabel* timelabels,
-                                 bool isFirstIntegrationStep )
-{
-
-
-  int radCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-
-  int archIndex = 0; // only one arches material
-  int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-  
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,dbg,"DORadiation::computeSource");
-    
-
-    // Get the PerPatch CellInformation data
-    PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
-     DataWarehouse* which_dw = new_dw;
-    if (isFirstIntegrationStep){
-      which_dw = old_dw;
-    }
-
-    d_linearSolver->matrixCreate( d_perproc_patches, patches);
-
-    ArchesVariables      radVars;
-    ArchesConstVariables constRadVars;
-    
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn = Ghost::None;
-    
-    // all integrator steps:
-    which_dw->get(constRadVars.co2,     d_lab->d_co2INLabel,    indx, patch, gn,  0);
-    which_dw->get(constRadVars.h2o,     d_lab->d_h2oINLabel,    indx, patch, gn,  0);
-    which_dw->get(constRadVars.sootFV,  d_lab->d_sootFVINLabel, indx, patch, gn,  0);
-    new_dw->get(  constRadVars.cellType,d_lab->d_cellTypeLabel, indx, patch, gac, 1);
-    
-    radVars.ESRCG.allocate(patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL),
-                           patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL));
-
-    //__________________________________
-    //  abskp
-    radVars.ABSKP.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
-    if(d_use_abskp){
-      old_dw->copyOut(radVars.ABSKP, d_abskpLabel,indx, patch, gn, 0);
-    } else {
-      radVars.ABSKP.initialize(0.0);
-    }
-    
-    
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      old_dw->getCopy(radVars.temperature, d_lab->d_tempINLabel, indx, patch, gac, 1);
-    }
-    else {
-      new_dw->getCopy(radVars.temperature, d_lab->d_tempINLabel, indx, patch, gac, 1);
-    }
-
-    if ( isFirstIntegrationStep ){
-      new_dw->allocateAndPut(radVars.qfluxe, d_lab->d_radiationFluxEINLabel, indx, patch);
-      old_dw->copyOut(       radVars.qfluxe, d_lab->d_radiationFluxEINLabel, indx, patch, gn, 0);
-
-      new_dw->allocateAndPut(radVars.qfluxw, d_lab->d_radiationFluxWINLabel, indx, patch);
-      old_dw->copyOut(       radVars.qfluxw, d_lab->d_radiationFluxWINLabel, indx, patch, gn, 0);
-
-      new_dw->allocateAndPut(radVars.qfluxn, d_lab->d_radiationFluxNINLabel, indx, patch);
-      old_dw->copyOut(       radVars.qfluxn, d_lab->d_radiationFluxNINLabel, indx, patch, gn, 0);
-
-      new_dw->allocateAndPut(radVars.qfluxs, d_lab->d_radiationFluxSINLabel, indx, patch);
-      old_dw->copyOut(       radVars.qfluxs, d_lab->d_radiationFluxSINLabel, indx, patch, gn, 0);
-
-      new_dw->allocateAndPut(radVars.qfluxt, d_lab->d_radiationFluxTINLabel, indx, patch);
-      old_dw->copyOut(       radVars.qfluxt, d_lab->d_radiationFluxTINLabel, indx, patch, gn, 0);
-
-      new_dw->allocateAndPut(radVars.qfluxb, d_lab->d_radiationFluxBINLabel, indx, patch);
-      old_dw->copyOut(       radVars.qfluxb, d_lab->d_radiationFluxBINLabel, indx, patch, gn, 0);
-      
-      new_dw->allocateAndPut(radVars.src,    d_lab->d_radiationSRCINLabel,   indx, patch);
-      old_dw->copyOut(       radVars.src,    d_lab->d_radiationSRCINLabel,   indx, patch, gn, 0);
-
-      new_dw->allocateAndPut(radVars.ABSKG,  d_lab->d_abskgINLabel,          indx, patch);
-      old_dw->copyOut(       radVars.ABSKG,  d_lab->d_abskgINLabel,          indx, patch, gn, 0);
-      
-      new_dw->getModifiable( radVars.volq,   d_lab->d_radiationVolqINLabel,  indx, patch);
-
-    } else {         // after first step
-      new_dw->getModifiable(radVars.qfluxe, d_lab->d_radiationFluxEINLabel, indx, patch);
-      new_dw->getModifiable(radVars.qfluxw, d_lab->d_radiationFluxWINLabel, indx, patch);
-      new_dw->getModifiable(radVars.qfluxn, d_lab->d_radiationFluxNINLabel, indx, patch);
-      new_dw->getModifiable(radVars.qfluxs, d_lab->d_radiationFluxSINLabel, indx, patch);
-      new_dw->getModifiable(radVars.qfluxt, d_lab->d_radiationFluxTINLabel, indx, patch);
-      new_dw->getModifiable(radVars.qfluxb, d_lab->d_radiationFluxBINLabel, indx, patch);
-      new_dw->getModifiable(radVars.volq,   d_lab->d_radiationVolqINLabel,  indx, patch);
-      new_dw->getModifiable(radVars.src,    d_lab->d_radiationSRCINLabel,   indx, patch);
-      new_dw->getModifiable(radVars.ABSKG,  d_lab->d_abskgINLabel,          indx, patch);
-    }
-
-    //__________________________________
-    //Radiation calculation
-
-    bool first_step = isFirstIntegrationStep;
-
-    if ( radCounter%d_radCalcFreq == 0){
-      if (  (first_step  && !timelabels->recursion )
-           ||(!first_step && d_radRKsteps)
-           ||(timelabels->recursion && d_radImpsteps) ) {
-              
-        radVars.src.initialize(0.0);
-        radVars.qfluxe.initialize(0.0);
-        radVars.qfluxw.initialize(0.0);
-        radVars.qfluxn.initialize(0.0);
-        radVars.qfluxs.initialize(0.0);
-        radVars.qfluxt.initialize(0.0);
-        radVars.qfluxb.initialize(0.0);
-        radVars.ABSKG.initialize(0.0);
-        radVars.ESRCG.initialize(0.0);
-
-        computeRadiationProps(pc, patch, cellinfo, &radVars, &constRadVars);
-
-        // apply boundary conditons
-        boundarycondition(    pc, patch, cellinfo, &radVars, &constRadVars);
-
-
-        if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
-          bool d_energyEx = true;
-          constCCVariable<double> solidTemp;
-          new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, indx, patch, gn, 0);
-
-          d_boundaryCondition->mmWallTemperatureBC(patch, constRadVars.cellType,
-                                                   solidTemp, radVars.temperature,
-                                                   d_energyEx);
-        }
-
-        int wall = d_boundaryCondition->wallCellType();
-        intensitysolve(pc, patch, cellinfo, &radVars, &constRadVars, wall );
-      }
-    }
-  }
-}
-
 
 //****************************************************************************
 //  Actually compute the properties here
@@ -863,17 +628,237 @@ DORadiationModel::ConstantProperties::~ConstantProperties(){};
 DORadiationModel::BurnsChriston::BurnsChriston(){};
 DORadiationModel::BurnsChriston::~BurnsChriston(){};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// //______________________________________________________________________
+// //  This is the main task called by Enthalpysolver
+// void
+// DORadiationModel::sched_computeSource( const LevelP& level, 
+//                                        SchedulerP& sched, 
+//                                        const MaterialSet* matls,
+//                                        const TimeIntegratorLabel* timelabels, 
+//                                        const bool isFirstIntegrationStep )
+// {
+// 
+//   if(d_perproc_patches && d_perproc_patches->removeReference())
+//     delete d_perproc_patches;
+//     
+//   LoadBalancer* lb  = sched->getLoadBalancer();
+//   d_perproc_patches = lb->getPerProcessorPatchSet(level);
+//   d_perproc_patches->addReference();
+//   
+//   string taskname =  "DORadiation::sched_computeSource";      
+//                        
+//   Task* tsk = scinew Task(taskname, this,
+//                         &DORadiationModel::computeSource,
+//                         timelabels, isFirstIntegrationStep);
+//   
+//   
+//   Ghost::GhostType  gac = Ghost::AroundCells;
+//   Ghost::GhostType  gn = Ghost::None;
+//   
+//   Task::WhichDW which_dw = Task::NewDW;
+//   if (isFirstIntegrationStep) {
+//     which_dw = Task::OldDW;
+//   }
+//   
+//   tsk->requires(which_dw,      d_lab->d_tempINLabel,   gac, 1);
+//   tsk->requires(which_dw,      d_lab->d_cpINLabel,     gn,  0);
+//   tsk->requires(which_dw,      d_lab->d_co2INLabel,    gn,  0);
+//   tsk->requires(which_dw,      d_lab->d_h2oINLabel,    gn,  0);
+//   tsk->requires(which_dw,      d_lab->d_sootFVINLabel, gn,  0);
+//   
+//   tsk->requires(Task::NewDW,   d_lab->d_cellInfoLabel, gn);
+//   tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel, gac, 1);
+// 
+//   if (isFirstIntegrationStep ) {
+// 
+//     tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,    gn, 0);
+//     tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,  gn, 0);
+//     tsk->requires(Task::OldDW, d_lab->d_radiationFluxWINLabel,  gn, 0);
+//     tsk->requires(Task::OldDW, d_lab->d_radiationFluxNINLabel,  gn, 0);
+//     tsk->requires(Task::OldDW, d_lab->d_radiationFluxSINLabel,  gn, 0);
+//     tsk->requires(Task::OldDW, d_lab->d_radiationFluxTINLabel,  gn, 0);
+//     tsk->requires(Task::OldDW, d_lab->d_radiationFluxBINLabel,  gn, 0);
+//     tsk->requires(Task::OldDW, d_lab->d_radiationVolqINLabel,   gn, 0);
+//     tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,           gn, 0);
+// 
+//     tsk->computes(d_lab->d_abskgINLabel);
+//     tsk->computes(d_lab->d_radiationSRCINLabel);
+//     tsk->computes(d_lab->d_radiationFluxEINLabel);
+//     tsk->computes(d_lab->d_radiationFluxWINLabel);
+//     tsk->computes(d_lab->d_radiationFluxNINLabel);
+//     tsk->computes(d_lab->d_radiationFluxSINLabel);
+//     tsk->computes(d_lab->d_radiationFluxTINLabel);
+//     tsk->computes(d_lab->d_radiationFluxBINLabel);
+//     tsk->modifies(d_lab->d_radiationVolqINLabel);
+//   } else {
+//     tsk->modifies(d_lab->d_abskgINLabel);
+//     tsk->modifies(d_lab->d_radiationSRCINLabel);
+//     tsk->modifies(d_lab->d_radiationFluxEINLabel);
+//     tsk->modifies(d_lab->d_radiationFluxWINLabel);
+//     tsk->modifies(d_lab->d_radiationFluxNINLabel);
+//     tsk->modifies(d_lab->d_radiationFluxSINLabel);
+//     tsk->modifies(d_lab->d_radiationFluxTINLabel);
+//     tsk->modifies(d_lab->d_radiationFluxBINLabel);
+//     tsk->modifies(d_lab->d_radiationVolqINLabel);
+//   }
+//   
+//   //__________________________________
+//   if(d_use_abskp){
+//     tsk->requires(Task::OldDW, d_abskpLabel,   gn, 0);
+//   }
+//   
+//   if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
+//     tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, gn, 0);
+//   }
+//   
+//   sched->addTask(tsk, d_perproc_patches , matls);
+// }
+// 
+// //______________________________________________________________________
+// //
+// void
+// DORadiationModel::computeSource( const ProcessorGroup* pc, 
+//                                  const PatchSubset* patches, 
+//                                  const MaterialSubset* matls, 
+//                                  DataWarehouse* old_dw, 
+//                                  DataWarehouse* new_dw, 
+//                                  const TimeIntegratorLabel* timelabels,
+//                                  bool isFirstIntegrationStep )
+// {
+// 
+// 
+//   int radCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+// 
+//   int archIndex = 0; // only one arches material
+//   int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+//   
+//   for(int p=0;p<patches->size();p++){
+//     const Patch* patch = patches->get(p);
+//     printTask(patches, patch,dbg,"DORadiation::computeSource");
+//     
+// 
+//     // Get the PerPatch CellInformation data
+//     PerPatch<CellInformationP> cellInfoP;
+//     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
+//     CellInformation* cellinfo = cellInfoP.get().get_rep();
+//     
+//      DataWarehouse* which_dw = new_dw;
+//     if (isFirstIntegrationStep){
+//       which_dw = old_dw;
+//     }
+// 
+//     d_linearSolver->matrixCreate( d_perproc_patches, patches);
+// 
+//     ArchesVariables      radVars;
+//     ArchesConstVariables constRadVars;
+//     
+//     Ghost::GhostType  gac = Ghost::AroundCells;
+//     Ghost::GhostType  gn = Ghost::None;
+//     
+//     // all integrator steps:
+//     which_dw->get(constRadVars.co2,     d_lab->d_co2INLabel,    indx, patch, gn,  0);
+//     which_dw->get(constRadVars.h2o,     d_lab->d_h2oINLabel,    indx, patch, gn,  0);
+//     which_dw->get(constRadVars.sootFV,  d_lab->d_sootFVINLabel, indx, patch, gn,  0);
+//     new_dw->get(  constRadVars.cellType,d_lab->d_cellTypeLabel, indx, patch, gac, 1);
+//     
+//     radVars.ESRCG.allocate(patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL),
+//                            patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL));
+// 
+//     //__________________________________
+//     //  abskp
+//     radVars.ABSKP.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+//     if(d_use_abskp){
+//       old_dw->copyOut(radVars.ABSKP, d_abskpLabel,indx, patch, gn, 0);
+//     } else {
+//       radVars.ABSKP.initialize(0.0);
+//     }
+//     
+//     
+//     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+//       old_dw->getCopy(radVars.temperature, d_lab->d_tempINLabel, indx, patch, gac, 1);
+//     }
+//     else {
+//       new_dw->getCopy(radVars.temperature, d_lab->d_tempINLabel, indx, patch, gac, 1);
+//     }
+// 
+//     if ( isFirstIntegrationStep ){
+//       new_dw->allocateAndPut(radVars.qfluxe, d_lab->d_radiationFluxEINLabel, indx, patch);
+//       old_dw->copyOut(       radVars.qfluxe, d_lab->d_radiationFluxEINLabel, indx, patch, gn, 0);
+// 
+//       new_dw->allocateAndPut(radVars.qfluxw, d_lab->d_radiationFluxWINLabel, indx, patch);
+//       old_dw->copyOut(       radVars.qfluxw, d_lab->d_radiationFluxWINLabel, indx, patch, gn, 0);
+// 
+//       new_dw->allocateAndPut(radVars.qfluxn, d_lab->d_radiationFluxNINLabel, indx, patch);
+//       old_dw->copyOut(       radVars.qfluxn, d_lab->d_radiationFluxNINLabel, indx, patch, gn, 0);
+// 
+//       new_dw->allocateAndPut(radVars.qfluxs, d_lab->d_radiationFluxSINLabel, indx, patch);
+//       old_dw->copyOut(       radVars.qfluxs, d_lab->d_radiationFluxSINLabel, indx, patch, gn, 0);
+// 
+//       new_dw->allocateAndPut(radVars.qfluxt, d_lab->d_radiationFluxTINLabel, indx, patch);
+//       old_dw->copyOut(       radVars.qfluxt, d_lab->d_radiationFluxTINLabel, indx, patch, gn, 0);
+// 
+//       new_dw->allocateAndPut(radVars.qfluxb, d_lab->d_radiationFluxBINLabel, indx, patch);
+//       old_dw->copyOut(       radVars.qfluxb, d_lab->d_radiationFluxBINLabel, indx, patch, gn, 0);
+//       
+//       new_dw->allocateAndPut(radVars.src,    d_lab->d_radiationSRCINLabel,   indx, patch);
+//       old_dw->copyOut(       radVars.src,    d_lab->d_radiationSRCINLabel,   indx, patch, gn, 0);
+// 
+//       new_dw->allocateAndPut(radVars.ABSKG,  d_lab->d_abskgINLabel,          indx, patch);
+//       old_dw->copyOut(       radVars.ABSKG,  d_lab->d_abskgINLabel,          indx, patch, gn, 0);
+//       
+//       new_dw->getModifiable( radVars.volq,   d_lab->d_radiationVolqINLabel,  indx, patch);
+// 
+//     } else {         // after first step
+//       new_dw->getModifiable(radVars.qfluxe, d_lab->d_radiationFluxEINLabel, indx, patch);
+//       new_dw->getModifiable(radVars.qfluxw, d_lab->d_radiationFluxWINLabel, indx, patch);
+//       new_dw->getModifiable(radVars.qfluxn, d_lab->d_radiationFluxNINLabel, indx, patch);
+//       new_dw->getModifiable(radVars.qfluxs, d_lab->d_radiationFluxSINLabel, indx, patch);
+//       new_dw->getModifiable(radVars.qfluxt, d_lab->d_radiationFluxTINLabel, indx, patch);
+//       new_dw->getModifiable(radVars.qfluxb, d_lab->d_radiationFluxBINLabel, indx, patch);
+//       new_dw->getModifiable(radVars.volq,   d_lab->d_radiationVolqINLabel,  indx, patch);
+//       new_dw->getModifiable(radVars.src,    d_lab->d_radiationSRCINLabel,   indx, patch);
+//       new_dw->getModifiable(radVars.ABSKG,  d_lab->d_abskgINLabel,          indx, patch);
+//     }
+// 
+//     //__________________________________
+//     //Radiation calculation
+// 
+//     bool first_step = isFirstIntegrationStep;
+// 
+//     if ( radCounter%d_radCalcFreq == 0){
+//       if (  (first_step  && !timelabels->recursion )
+//            ||(!first_step && d_radRKsteps)
+//            ||(timelabels->recursion && d_radImpsteps) ) {
+//               
+//         radVars.src.initialize(0.0);
+//         radVars.qfluxe.initialize(0.0);
+//         radVars.qfluxw.initialize(0.0);
+//         radVars.qfluxn.initialize(0.0);
+//         radVars.qfluxs.initialize(0.0);
+//         radVars.qfluxt.initialize(0.0);
+//         radVars.qfluxb.initialize(0.0);
+//         radVars.ABSKG.initialize(0.0);
+//         radVars.ESRCG.initialize(0.0);
+// 
+//         computeRadiationProps(pc, patch, cellinfo, &radVars, &constRadVars);
+// 
+//         // apply boundary conditons
+//         boundarycondition(    pc, patch, cellinfo, &radVars, &constRadVars);
+// 
+// 
+//         if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
+//           bool d_energyEx = true;
+//           constCCVariable<double> solidTemp;
+//           new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, indx, patch, gn, 0);
+// 
+//           d_boundaryCondition->mmWallTemperatureBC(patch, constRadVars.cellType,
+//                                                    solidTemp, radVars.temperature,
+//                                                    d_energyEx);
+//         }
+// 
+//         int wall = d_boundaryCondition->wallCellType();
+//         intensitysolve(pc, patch, cellinfo, &radVars, &constRadVars, wall );
+//       }
+//     }
+//   }
+// }

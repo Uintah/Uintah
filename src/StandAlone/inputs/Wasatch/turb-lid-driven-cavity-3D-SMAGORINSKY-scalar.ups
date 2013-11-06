@@ -5,7 +5,7 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="hypre"/>
   <Wasatch>
       <TimeIntegrator> FE </TimeIntegrator>
 
@@ -17,23 +17,23 @@
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="vel_magnitude" state="STATE_N" />
+      <NameTag name="vel_magnitude" state="STATE_N"/>
       <VelocityMagnitude>
       <XVelocity>
-        <NameTag name="u" state="STATE_NONE" />
+        <NameTag name="u" state="STATE_NONE"/>
       </XVelocity>
       <YVelocity>
-        <NameTag name="v" state="STATE_NONE" />
+        <NameTag name="v" state="STATE_NONE"/>
       </YVelocity>
       <ZVelocity>
-        <NameTag name="w" state="STATE_NONE" />
+        <NameTag name="w" state="STATE_NONE"/>
       </ZVelocity>
       </VelocityMagnitude>
     </PostProcessingExpression>
     
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="xvelcc" state="STATE_N" />
+      <NameTag name="xvelcc" state="STATE_N"/>
       <InterpolateExpression type="XVOL">
           <NameTag name="u" state="STATE_NONE"/>
       </InterpolateExpression>
@@ -41,7 +41,7 @@
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="yvelcc" state="STATE_N" />
+      <NameTag name="yvelcc" state="STATE_N"/>
       <InterpolateExpression type="YVOL">
           <NameTag name="v" state="STATE_NONE"/>
       </InterpolateExpression>
@@ -49,34 +49,33 @@
   
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="zvelcc" state="STATE_N" />
+      <NameTag name="zvelcc" state="STATE_N"/>
       <InterpolateExpression type="ZVOL">
           <NameTag name="w" state="STATE_NONE"/>
       </InterpolateExpression>
     </PostProcessingExpression>
 
     <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="vel_magnitude" state="STATE_N" />
-      <NameTag name="xvelcc" state="STATE_N" />
-      <NameTag name="yvelcc" state="STATE_N" />
-      <NameTag name="zvelcc" state="STATE_N" />
+      <NameTag name="vel_magnitude" state="STATE_N"/>
+      <NameTag name="xvelcc" state="STATE_N"/>
+      <NameTag name="yvelcc" state="STATE_N"/>
+      <NameTag name="zvelcc" state="STATE_N"/>
     </ForceOnGraph>
 
     <Density>
-      <IsConstant>true</IsConstant>
-      <NameTag name="density" state="STATE_NONE" />
+      <Constant value="1.0" name="density"/>
     </Density>
 
     <!-- Set the initial condition expression for mixture fraction -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f" state="STATE_N" />
+      <NameTag name="f" state="STATE_N"/>
       <PlusProfile xStart="0.45" yStart="0.45" xWidth="0.1" yWidth="0.1" lowValue="0.0" highValue="1.0">
         <Coordinate1>
-          <NameTag name="XSVOL" state="STATE_NONE" />
+          <NameTag name="XSVOL" state="STATE_NONE"/>
         </Coordinate1>
         <Coordinate2>
-          <NameTag name="YSVOL" state="STATE_NONE" />
+          <NameTag name="YSVOL" state="STATE_NONE"/>
         </Coordinate2>
       </PlusProfile>
     </BasicExpression>
@@ -84,32 +83,26 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_N" />
+       <NameTag name="x-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_N" />
+       <NameTag name="y-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="ZVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="z-mom" state="STATE_N" />
+       <NameTag name="z-mom" state="STATE_N"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                        
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity" state="STATE_NONE"/>
       <Constant>0.0001</Constant>
-    </BasicExpression>
-
-    <BasicExpression type="SVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="density" state="STATE_NONE" />
-      <Constant>1.0</Constant>
     </BasicExpression>
 
     <!-- Build a scalar transport equation for mixture fraction -->
@@ -160,7 +153,7 @@
     </TransportEquation>  
 
     <FieldClipping tasklist="advance_solution">
-      <FieldExpression type ="SVOL" min="0.0" max="1.0">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
         <NameTag name="f" state="STATE_N"/>        
       </FieldExpression>                    
     </FieldClipping>
@@ -175,7 +168,7 @@
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity" state="STATE_NONE"/>
       </Viscosity>
       
       <Pressure>
@@ -214,7 +207,7 @@
     <filebase>turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.0001"/>
+    <checkpoint cycle="2" interval="0.0001"/>
     <compression>gzip</compression>
     <!-- save label="x-mom"/ -->
     <!-- save label="y-mom"/ -->
@@ -232,91 +225,45 @@
     <save label="vel_magnitude"/>        
   </DataArchiver> 
 
-  <Grid>
-      <BoundaryConditions>
-      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
-      <Face side="x-" type="Wall">
-        <BCType id="all" var="Dirichlet" label="f">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-      
-      <Face side="x+" type="Wall">
-        <BCType id="all" var="Dirichlet" label="f">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-      
-      <Face side="y-" type="Wall">        
-        <BCType id="all" var="Dirichlet" label="f">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-      
-      <Face side="y+">
-      
-        <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> 1.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="y-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="z-mom">
-          <value> 0.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>     
-
-        <BCType id="all" var="Dirichlet" label="u">
-          <value> 1.0 </value>
-        </BCType>
-        
-        <BCType id="all" var="Dirichlet" label="v">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="w">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="f">
-          <value> 0.0 </value>
-        </BCType>
-                
-        <BCType id="all" var="Dirichlet" label="y-mom_rhs">
-          <value> 0.0 </value>
-        </BCType>        
-                                   
-      </Face>
-
-      <Face side="z-" type="Wall">        
-        <BCType id="all" var="Dirichlet" label="f">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-      
-      <Face side="z+" type="Wall">
-        <BCType id="all" var="Dirichlet" label="f">
-          <value> 0.0 </value>
-        </BCType>
-      </Face>
-
-
-      </BoundaryConditions>
-      <Level>
-      <Box label="1">
-        <lower>[0,0,0]</lower>
-        <upper>[1,1,1]</upper>
-        <resolution>[32,32,32]</resolution>
-        <!--extraCells>[1,1,0]</extraCells-->
-        <patches>[2,2,2]</patches>
-      </Box>
-      <periodic>[0,0,0]</periodic>
-    </Level>
-  </Grid>
+	<Grid>
+		<BoundaryConditions>
+			<DefaultMaterial>all</DefaultMaterial>
+			<!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+			<Face side="x-" type="Wall">
+				<BCType var="Dirichlet" label="f" value="0.0"/>
+			</Face>
+			<Face side="x+" type="Wall">
+				<BCType var="Dirichlet" label="f" value="0.0"/>
+			</Face>
+			<Face side="y-" type="Wall">
+				<BCType var="Dirichlet" label="f" value="0.0"/>
+			</Face>
+			<Face side="y+" type="Velocity">
+				<BCType var="Dirichlet" label="x-mom" value="1.0"/>
+				<BCType var="Dirichlet" label="z-mom" value="0.0"/>
+				<BCType var="Dirichlet" label="u" value="1.0"/>
+				<BCType var="Dirichlet" label="w" value="0.0"/>
+				<BCType var="Dirichlet" label="y-mom" value="0.0"/>
+				<BCType var="Dirichlet" label="v" value="0.0"/>
+				<BCType var="Dirichlet" label="f" value="0.0"/>
+			</Face>
+			<Face side="z-" type="Wall">
+				<BCType var="Dirichlet" label="f" value="0.0"/>
+			</Face>
+			<Face side="z+" type="Wall">
+				<BCType var="Dirichlet" label="f" value="0.0"/>
+			</Face>
+		</BoundaryConditions>
+		<Level>
+			<Box label="1">
+				<lower>[0,0,0]</lower>
+				<upper>[1,1,1]</upper>
+				<resolution>[32,32,32]</resolution>
+				<!--extraCells>[1,1,0]</extraCells-->
+				<patches>[2,2,2]</patches>
+			</Box>
+			<periodic>[0,0,0]</periodic>
+		</Level>
+	</Grid>
 
 </Uintah_specification>

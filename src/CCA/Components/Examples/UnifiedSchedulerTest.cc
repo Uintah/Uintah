@@ -95,12 +95,11 @@ void UnifiedSchedulerTest::scheduleComputeStableTimestep(const LevelP& level,
 void UnifiedSchedulerTest::scheduleTimeAdvance(const LevelP& level,
                                                SchedulerP& sched)
 {
-  Task* task = scinew Task(&UnifiedSchedulerTest::timeAdvanceGPU, "UnifiedSchedulerTest::timeAdvanceGPU",
-                           "UnifiedSchedulerTest::timeAdvanceCPU", this, &UnifiedSchedulerTest::timeAdvanceCPU);
+  Task* task = scinew Task("UnifiedSchedulerTest::timeAdvanceUnified", this, &UnifiedSchedulerTest::timeAdvanceUnified);
 //  Task* task = scinew Task("GPUSchedulerTest::timeAdvanceCPU", this, &GPUSchedulerTest::timeAdvanceCPU);
 //  Task* task = scinew Task("GPUSchedulerTest::timeAdvance1DP", this, &GPUSchedulerTest::timeAdvance1DP);
 //  Task* task = scinew Task("GPUSchedulerTest::timeAdvance3DP", this, &GPUSchedulerTest::timeAdvance3DP);
-
+  task->usesDevice(true);
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
   task->computes(residual_label);
@@ -160,49 +159,107 @@ void UnifiedSchedulerTest::initialize(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //
-void UnifiedSchedulerTest::timeAdvanceCPU(const ProcessorGroup* pg,
+void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event, 
+                                          const ProcessorGroup* pg,
                                           const PatchSubset* patches,
                                           const MaterialSubset* matls,
                                           DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw)
+                                          DataWarehouse* new_dw,
+                                          void *stream) 
 {
-  int matl = 0;
+  /**When Task is scheduled to CPU*/
+  if (event == Task::CPU) {
+    int matl = 0;
 
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    constNCVariable<double> phi;
+    for (int p = 0; p < patches->size(); p++) {
+      const Patch* patch = patches->get(p);
+      constNCVariable<double> phi;
 
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
-    NCVariable<double> newphi;
+      old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
+      NCVariable<double> newphi;
 
-    new_dw->allocateAndPut(newphi, phi_label, matl, patch);
-    newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
+      new_dw->allocateAndPut(newphi, phi_label, matl, patch);
+      newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
 
-    double residual = 0;
-    IntVector l = patch->getNodeLowIndex();
-    IntVector h = patch->getNodeHighIndex();
+      double residual = 0;
+      IntVector l = patch->getNodeLowIndex();
+      IntVector h = patch->getNodeHighIndex();
 
-    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
-    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+      l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
+              patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+              patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+      h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
+              patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+              patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
-    //__________________________________
-    //  Stencil
-    for (NodeIterator iter(l, h); !iter.done(); iter++) {
-      IntVector n = *iter;
+      //__________________________________
+      //  Stencil
+      for (NodeIterator iter(l, h); !iter.done(); iter++) {
+        IntVector n = *iter;
 
-      newphi[n] = (1. / 6)
-                  * (phi[n + IntVector(1, 0, 0)] + phi[n + IntVector(-1, 0, 0)] + phi[n + IntVector(0, 1, 0)]
-                     + phi[n + IntVector(0, -1, 0)] + phi[n + IntVector(0, 0, 1)] + phi[n + IntVector(0, 0, -1)]);
+        newphi[n] = (1. / 6)
+                * (phi[n + IntVector(1, 0, 0)] + phi[n + IntVector(-1, 0, 0)] + phi[n + IntVector(0, 1, 0)]
+                + phi[n + IntVector(0, -1, 0)] + phi[n + IntVector(0, 0, 1)] + phi[n + IntVector(0, 0, -1)]);
 
-      double diff = newphi[n] - phi[n];
-      residual += diff * diff;
+        double diff = newphi[n] - phi[n];
+        residual += diff * diff;
+      }
+      new_dw->put(sum_vartype(residual), residual_label);
     }
-    new_dw->put(sum_vartype(residual), residual_label);
-  }
+  }  //end CPU
+
+  /**When Task is scheduled to GPU*/
+  if (event == Task::GPU) {
+    // Do time steps
+    int matl = 0;
+
+    int numPatches = patches->size();
+    for (int p = 0; p < numPatches; p++) {
+      const Patch* patch = patches->get(p);
+      double residual = 0;
+
+      // Calculate the memory block size
+      IntVector l = patch->getNodeLowIndex();
+      IntVector h = patch->getNodeHighIndex();
+
+      l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
+              patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+              patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+      h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
+              patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+              patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+
+      IntVector s = h - l;
+      int xdim = s.x(), ydim = s.y();
+
+      // Domain extents used by the kernel to prevent out of bounds accesses.
+      uint3 domainLow = make_uint3(l.x(), l.y(), l.z());
+      uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
+
+      // Set up number of thread blocks in X and Y directions accounting for dimensions not divisible by 8
+      int xBlocks = ((xdim % 8) == 0) ? (xdim / 8) : ((xdim / 8) + 1);
+      int yBlocks = ((ydim % 8) == 0) ? (ydim / 8) : ((ydim / 8) + 1);
+      dim3 dimGrid(xBlocks, yBlocks, 1); // grid dimensions (blocks per grid))
+
+      int tpbX = 8;
+      int tpbY = 8;
+      int tpbZ = 1;
+      dim3 dimBlock(tpbX, tpbY, tpbZ); // block dimensions (threads per block)
+
+      // setup and launch kernel
+      launchUnifiedSchedulerTestKernel(dimGrid,
+              dimBlock,
+              (cudaStream_t *) stream,
+              patch->getID(),
+              matl,
+              domainLow,
+              domainHigh,
+              old_dw->getGPUDW()->getdevice_ptr(),
+              new_dw->getGPUDW()->getdevice_ptr());
+
+      new_dw->put(sum_vartype(residual), residual_label);
+    } // end patch for loop
+  } //end GPU
 }
 
 //______________________________________________________________________
@@ -347,66 +404,5 @@ void UnifiedSchedulerTest::timeAdvance3DP(const ProcessorGroup*,
       }
     }
     new_dw->put(sum_vartype(residual), residual_label);
-  }  // end patch for loop
-}
-
-//______________________________________________________________________
-//
-void UnifiedSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
-                                          const PatchSubset* patches,
-                                          const MaterialSubset* matls,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw,
-                                          void*  stream)
-{
-  // Do time steps
-  int matl = 0;
-
-  int numPatches = patches->size();
-  for (int p = 0; p < numPatches; p++) {
-    const Patch* patch = patches->get(p);
-    double residual = 0;
-
-    // Calculate the memory block size
-    IntVector l = patch->getNodeLowIndex();
-    IntVector h = patch->getNodeHighIndex();
-
-    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
-    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
-
-    IntVector s = h-l;
-    int xdim = s.x(), ydim = s.y();
-
-    // Domain extents used by the kernel to prevent out of bounds accesses.
-    uint3 domainLow = make_uint3(l.x(), l.y(), l.z());
-    uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
-
-    // Set up number of thread blocks in X and Y directions accounting for dimensions not divisible by 8
-    int xBlocks = ((xdim % 8) == 0) ? (xdim / 8) : ((xdim / 8) + 1);
-    int yBlocks = ((ydim % 8) == 0) ? (ydim / 8) : ((ydim / 8) + 1);
-    dim3 dimGrid(xBlocks, yBlocks, 1);  // grid dimensions (blocks per grid))
-
-    int tpbX = 8;
-    int tpbY = 8;
-    int tpbZ = 1;
-    dim3 dimBlock(tpbX, tpbY, tpbZ);  // block dimensions (threads per block)
-
-    // setup and launch kernel
-    launchUnifiedSchedulerTestKernel(dimGrid,
-                                     dimBlock,
-                                     (cudaStream_t *) stream,
-                                     patch->getID(),
-                                     matl,
-                                     domainLow,
-                                     domainHigh,
-                                     old_dw->getGPUDW()->getdevice_ptr(),
-                                     new_dw->getGPUDW()->getdevice_ptr());
-
-    new_dw->put(sum_vartype(residual), residual_label);
-
   }  // end patch for loop
 }

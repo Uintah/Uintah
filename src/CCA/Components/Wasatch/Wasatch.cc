@@ -260,7 +260,7 @@ namespace Wasatch{
     // make sure that extra cell and periodicity are consistent
     bool isPeriodic = periodicityVector.x() == 1 || periodicityVector.y() == 1 || periodicityVector.z() == 1;
     
-    std::cout << "periodicity = " << isPeriodic << std::endl;
+    proc0cout << "periodicity = " << isPeriodic << std::endl;
     
     if( !foundExtraCells && !isPeriodic ){
       msg << endl
@@ -388,6 +388,37 @@ namespace Wasatch{
 #    endif
     }
 
+    //
+    // extract the density tag for scalar transport equations and momentum equations
+    // and perform error handling
+    //
+    Expr::Tag densityTag = Expr::Tag();
+    bool isConstDensity = true;
+    {
+      Uintah::ProblemSpecP momEqnParams   = wasatchSpec_->findBlock("MomentumEquations");
+      Uintah::ProblemSpecP densityParams  = wasatchSpec_->findBlock("Density");
+      Uintah::ProblemSpecP transEqnParams = wasatchSpec_->findBlock("TransportEquation");
+      if( transEqnParams || momEqnParams ){
+        if( !densityParams ) {
+          std::ostringstream msg;
+          msg << "ERROR: You must include a 'Density' block in your input file when solving transport equations" << endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        if( densityParams->findBlock("NameTag") ){
+          densityTag = parse_nametag( densityParams->findBlock("NameTag") );
+          isConstDensity = false;
+        }
+        else{
+          double densVal = 1.0; std::string densName;
+          Uintah::ProblemSpecP constDensParam = densityParams->findBlock("Constant");
+          constDensParam->getAttribute( "value", densVal );
+          constDensParam->getAttribute( "name", densName );
+          densityTag = Expr::Tag( densName, Expr::STATE_NONE );
+          graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
+        }
+      }
+    }
+
     // PARSE BC FUNCTORS
     Uintah::ProblemSpecP bcParams = params->findBlock("Grid")->findBlock("BoundaryConditions");
     if (bcParams) {
@@ -401,7 +432,10 @@ namespace Wasatch{
           
           std::string functorName;
           
-          bcTypeParams->get( "value", functorName );
+          Uintah::ProblemSpecP valSpec = bcTypeParams->findBlock("value");
+          if   (valSpec) bcTypeParams->get( "value", functorName );
+          else           bcTypeParams->getAttribute("value",functorName);
+          
           Uintah::ProblemSpec::InputType theInputType = bcTypeParams->getInputType(functorName);
           // if the value of this bc is of type string, then it is a functor. add to the list of functors
           if ( theInputType == Uintah::ProblemSpec::STRING_TYPE ) {
@@ -426,11 +460,14 @@ namespace Wasatch{
     }
     
     // Here we add the functors name of the "*" stage variables BC to the functormap
-    if (wasatchSpec_->findBlock("MomentumEquations") && wasatchSpec_->findBlock("Density") && wasatchSpec_->findBlock("TransportEquation")) {
-
+    if( wasatchSpec_->findBlock("MomentumEquations") &&
+        wasatchSpec_->findBlock("Density") &&
+        wasatchSpec_->findBlock("TransportEquation") )
+    {
       for( Uintah::ProblemSpecP transEqnParams=wasatchSpec_->findBlock("TransportEquation");
           transEqnParams != 0;
-          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
+          transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
+      {
         std::string solnVarName;
         transEqnParams->get("SolutionVariable",solnVarName);
         BCFunctorMap::mapped_type functorSet;
@@ -440,21 +477,19 @@ namespace Wasatch{
         bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
       }
 
-      Uintah::ProblemSpecP densityParams  = wasatchSpec_->findBlock("Density");
-      Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
       BCFunctorMap::mapped_type functorSet;
       BCFunctorMap::key_type functorName = densityTag.name()+TagNames::self().star+"_bc";
       BCFunctorMap::key_type phiName     = densityTag.name()+TagNames::self().star;
       functorSet.insert(functorName);
       bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
-      
     }
 
     // PARSE IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
     for( Uintah::ProblemSpecP saveLabelParams=archiverParams->findBlock("save");
         saveLabelParams != 0;
-        saveLabelParams=saveLabelParams->findNextBlock("save") ){
+        saveLabelParams=saveLabelParams->findNextBlock("save") )
+    {
       std::string saveTheLabel;
       saveLabelParams->getAttribute("label",saveTheLabel);
       lockedFields_.insert(saveTheLabel);
@@ -472,7 +507,8 @@ namespace Wasatch{
     linSolver_ = dynamic_cast<Uintah::SolverInterface*>(getPort("solver"));
     if(!linSolver_) {
       throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
-    } else if (linSolver_) {
+    }
+    else if (linSolver_) {
       proc0cout << "Detected solver: " << linSolver_->getName() << std::endl;
       const bool needPressureSolve = wasatchSpec_->findBlock("MomentumEquations") && !(wasatchSpec_->findBlock("MomentumEquations")->findBlock("DisablePressureSolve"));
       if ( (linSolver_->getName()).compare("hypre") != 0 && needPressureSolve) {
@@ -505,44 +541,6 @@ namespace Wasatch{
     struct TurbulenceParameters turbParams = {1.0,0.1,NOTURBULENCE};
     parse_turbulence_input(turbulenceModelParams, turbParams);
     
-    //
-    // extract the density tag for scalar transport equations and momentum equations
-    // and perform error handling
-    //
-    Uintah::ProblemSpecP momEqnParams   = wasatchSpec_->findBlock("MomentumEquations");
-    Uintah::ProblemSpecP densityParams  = wasatchSpec_->findBlock("Density");
-    bool existSrcTerm=false;
-
-    for( Uintah::ProblemSpecP transEqnParams=wasatchSpec_->findBlock("TransportEquation");
-        transEqnParams != 0;
-        transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
-      existSrcTerm = (existSrcTerm || transEqnParams->findBlock("SourceTermExpression") );
-    }
-    Uintah::ProblemSpecP transEqnParams = wasatchSpec_->findBlock("TransportEquation");
-
-    Expr::Tag densityTag = Expr::Tag();
-    bool isConstDensity = true;
-
-    if (transEqnParams || momEqnParams) {
-      if( !densityParams ) {
-        std::ostringstream msg;
-        msg << "ERROR: You must include a 'Density' block in your input file when solving transport equations" << endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-      const bool existDensity = densityParams->findBlock("NameTag");
-      if (existDensity) densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-      densityParams->get("IsConstant",isConstDensity);
-
-      if( !isConstDensity || existSrcTerm || momEqnParams) {
-        if( !existDensity ) {
-          std::ostringstream msg;
-          msg << "ERROR: For variable density cases or when source terms exist in transport equations (scalar, momentum, etc...), the density expression tag" << endl
-              << "       must be provided in the <Density> block" << endl;
-          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-        }
-      }
-    }
-
     //
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
@@ -675,7 +673,9 @@ namespace Wasatch{
     //
     Uintah::ProblemSpecP VarDensMMSParams = wasatchSpec_->findBlock("VariableDensityMMS");
     if (VarDensMMSParams) {
-      parse_var_dens_mms(VarDensMMSParams, graphCategories_);
+      const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
+        parse_var_dens_mms(wasatchSpec_, VarDensMMSParams, computeContinuityResidual, graphCategories_);
+
     }
     
     //
@@ -699,10 +699,10 @@ namespace Wasatch{
 
     setup_patchinfo_map( level, sched );
 
-    const Uintah::PatchSet* const allPatches = get_patchset( USE_FOR_TASKS, level, sched );
+    const Uintah::PatchSet* const allPatches   = get_patchset( USE_FOR_TASKS, level, sched );
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
     
-#ifndef WASATCH_IN_ARCHES // this is a bit annoying... when warches is turned on, disable any linearsolver calls from Wasatch
+#   ifndef WASATCH_IN_ARCHES // this is a bit annoying... when warches is turned on, disable any linearsolver calls from Wasatch
     if( linSolver_ ) {
       linSolver_->scheduleInitialize( level, sched, 
                                       sharedState_->allMaterials() );
@@ -710,7 +710,7 @@ namespace Wasatch{
       sched->overrideVariableBehavior("hypre_solver_label",false,false,
                                       false,true,true);
     }
-#endif
+#   endif
 
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 

@@ -8,8 +8,12 @@
    <Solver type="hypre" />
   <Wasatch>
     <Density>
+<<<<<<< .working
       <IsConstant>true</IsConstant>
       <NameTag name="density" state="STATE_NONE" />
+=======
+      <Constant value="1.0" name="density"/>
+>>>>>>> .merge-right.r51170
     </Density>
     <TimeIntegrator>FE</TimeIntegrator>
     <Turbulence model="VREMAN">
@@ -48,12 +52,15 @@
       <Constant>1.983e-5</Constant>
     </BasicExpression>
 
+<<<<<<< .working
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="density" state="STATE_NONE" />
       <Constant>1.0</Constant>
     </BasicExpression>
 
+=======
+>>>>>>> .merge-right.r51170
     <!-- Momentum transport equations -->
     <MomentumEquations>
          

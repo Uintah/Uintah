@@ -106,11 +106,9 @@
       </TransportEqns>
 
       <Turbulence model="smagorinsky">
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
         <cf>0.0</cf>
         <fac_mesh>1.0</fac_mesh>
         <filterl>0.000001</filterl>
-        <var_const>0.1</var_const>
       </Turbulence>
 
       <Properties>
@@ -127,11 +125,6 @@
         </ColdFlowMixingModel>
       </Properties>
 
-<!--
-      <BoundaryConditions>
-      </BoundaryConditions>
-
--->
       <ExplicitSolver>
         <initial_dt>1</initial_dt>
         <variable_dt>true</variable_dt>
@@ -151,10 +144,6 @@
             <c>1.5708</c>
           </initialization>
         </MomentumSolver>
-
-        <MixtureFractionSolver>
-          <convection_scheme>central-upwind</convection_scheme>
-        </MixtureFractionSolver>
 
       </ExplicitSolver>
     </ARCHES>

@@ -31,7 +31,7 @@ namespace Wasatch{
   
   TagNames::TagNames() :
   
-  time    ( "time", Expr::STATE_NONE     ),
+  time    ( "time",     Expr::STATE_NONE ),
   timestep( "timestep", Expr::STATE_NONE ),
   stableTimestep( "StableDT", Expr::STATE_NONE ),
   
@@ -49,32 +49,39 @@ namespace Wasatch{
   zzvolcoord( "ZZVOL", Expr::STATE_NONE ),
   
   // energy related variables
-  kineticEnergy      ("KineticEnergy",   Expr::STATE_NONE  ),
-  totalKineticEnergy ("TotalKineticEnergy", Expr::STATE_NONE),
+  kineticEnergy      ("KineticEnergy",      Expr::STATE_NONE ),
+  totalKineticEnergy ("TotalKineticEnergy", Expr::STATE_NONE ),
   
   // momentum related variables
-  pressure  ("pressure",   Expr::STATE_NONE  ),
-  dilatation("dilatation", Expr::STATE_NONE),
-  tauxx("tau_xx", Expr::STATE_NONE),
-  tauxy("tau_xy", Expr::STATE_NONE),
-  tauxz("tau_xz", Expr::STATE_NONE),
-  tauyx("tau_yx", Expr::STATE_NONE),
-  tauyy("tau_yy", Expr::STATE_NONE),
-  tauyz("tau_yz", Expr::STATE_NONE),
-  tauzx("tau_zx", Expr::STATE_NONE),
-  tauzy("tau_zy", Expr::STATE_NONE),
-  tauzz("tau_zz", Expr::STATE_NONE),
+  pressure  ( "pressure",   Expr::STATE_NONE ),
+  dilatation( "dilatation", Expr::STATE_NONE ),
+  tauxx     (  "tau_xx",    Expr::STATE_NONE ),
+  tauxy     (  "tau_xy",    Expr::STATE_NONE ),
+  tauxz     (  "tau_xz",    Expr::STATE_NONE ),
+  tauyx     (  "tau_yx",    Expr::STATE_NONE ),
+  tauyy     (  "tau_yy",    Expr::STATE_NONE ),
+  tauyz     (  "tau_yz",    Expr::STATE_NONE ),
+  tauzx     (  "tau_zx",    Expr::STATE_NONE ),
+  tauzy     (  "tau_zy",    Expr::STATE_NONE ),
+  tauzz     (  "tau_zz",    Expr::STATE_NONE ),
   
   // turbulence related
-  turbulentviscosity( "TurbulentViscosity", Expr::STATE_NONE            ),
-  straintensormag   ( "StrainTensorMagnitude", Expr::STATE_NONE         ),
-  vremantensormag   ( "VremanTensorMagnitude", Expr::STATE_NONE         ),
-  waletensormag     ( "WaleTensorMagnitude", Expr::STATE_NONE           ),
+  turbulentviscosity( "TurbulentViscosity",            Expr::STATE_NONE ),
+  straintensormag   ( "StrainTensorMagnitude",         Expr::STATE_NONE ),
+  vremantensormag   ( "VremanTensorMagnitude",         Expr::STATE_NONE ),
+  waletensormag     ( "WaleTensorMagnitude",           Expr::STATE_NONE ),
   dynamicsmagcoef   ( "DynamicSmagorinskyCoefficient", Expr::STATE_NONE ),
   
   // predictor related variables
   star("_*"), 
   doubleStar("_**"),
+  pressuresrc( "pressure_src", Expr::STATE_NONE ),
+  vardenalpha( "varden_alpha", Expr::STATE_NONE ),
+  vardenbeta ( "varden_beta",  Expr::STATE_NONE ),
+  divmomstar ( "divmom_*",     Expr::STATE_NONE ),
+  drhodtstar ( "drhodt_*",     Expr::STATE_NONE ),
+  drhodt     ( "drhodt",       Expr::STATE_NONE ),
+  drhodtnp1  ( "drhodt",       Expr::STATE_NP1  ),
   
   // postprocessing
   continuityresidual( "ContinuityResidual", Expr::STATE_NONE )

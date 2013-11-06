@@ -30,15 +30,15 @@ from helpers.modUPS import modUPS
 #______________________________________________________________________
 
 NIGHTLYTESTS = [  
-                  ("mpmpipe_test"          , "mpmpipe_test.ups"          , 8   , "Linux" , ["exactComparison"]) , 
-                  ("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "Linux" , ["exactComparison", "no_restart"]), 
+#                  ("mpmpipe_test"          , "mpmpipe_test.ups"          , 8   , "Linux" , ["exactComparison"]) , 
+#                  ("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "Linux" , ["exactComparison", "no_restart"]), 
 #                  ("hot_block"             , "hot_block.ups"             , 1.1 , "Linux" , ["exactComparison", "no_restart"]),
                   ("intrusion_test"        , "intrusion_test.ups"        , 1.1 , "Linux" , ["exactComparison", "no_restart"])
                ]
                
 LOCALTESTS =   [  
-                  ("mpmpipe_test"          , "mpmpipe_test.ups"          , 8   , "All" , ["exactComparison"]) , 
-                  ("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "All" , ["exactComparison", "no_restart"]), 
+#                  ("mpmpipe_test"          , "mpmpipe_test.ups"          , 8   , "All" , ["exactComparison"]) , 
+#                  ("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "All" , ["exactComparison", "no_restart"]), 
 #                  ("hot_block"             , "hot_block.ups"             , 1.1 , "All" , ["exactComparison", "no_restart"]),
                   ("intrusion_test"        , "intrusion_test.ups"        , 1.1 , "All" , ["exactComparison", "no_restart"])
                ]  

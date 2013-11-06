@@ -242,7 +242,8 @@ DetailedTask::~DetailedTask()
 
 void DetailedTask::doit(const ProcessorGroup* pg,
                         vector<OnDemandDataWarehouseP>& oddws,
-                        vector<DataWarehouseP>& dws)
+                        vector<DataWarehouseP>& dws,
+                        Task::CallBackEvent event/*=Task::CPU*/)
 {
   TAU_PROFILE("DetailedTask::doit", " ", TAU_USER);
   if (mixedDebug.active()) {
@@ -270,12 +271,12 @@ void DetailedTask::doit(const ProcessorGroup* pg,
   if (task->usesDevice()) {
     cudaError_t retVal;
     CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(deviceNum_));
-    task->doitDevice(pg, patches, matls, dws, d_cudaStream);
+    task->doit(event, pg, patches, matls, dws, d_cudaStream);
   } else {
-    task->doit(pg, patches, matls, dws);
+    task->doit(event, pg, patches, matls, dws, NULL);
   }
 #else
-  task->doit(pg, patches, matls, dws);
+  task->doit(event, pg, patches, matls, dws, NULL);
 #endif
 
   for (int i = 0; i < (int)dws.size(); i++) {

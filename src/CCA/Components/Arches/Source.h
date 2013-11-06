@@ -119,54 +119,6 @@ public:
                                ArchesVariables* vars,
                                ArchesConstVariables* constvars);
 
-  ////////////////////////////////////////////////////////////////////////
-  // Set source terms. Will need more parameters...like velocity and
-  // scalars
-  void calculateScalarSource(const ProcessorGroup* pc,
-                             const Patch* patch,
-                             double delta_t, 
-                             CellInformation* cellinfo,
-                             ArchesVariables* vars,
-                             ArchesConstVariables* constvars);
- 
-  void calculateScalarSource__new(const ProcessorGroup* pc,
-                              const Patch* patch,
-                              double delta_t,
-                              CellInformation* cellinfo,
-                              ArchesVariables* vars,
-                              ArchesConstVariables* constvars); 
-
-  void addOtherScalarSource( const ProcessorGroup* pc, 
-                             const Patch* patch, 
-                             CellInformation* cellinfo, 
-                             ArchesVariables* vars );
-
-  void calculateExtraScalarSource(const ProcessorGroup* pc,
-                             const Patch* patch,
-                             double delta_t, 
-                             CellInformation* cellinfo,
-                             ArchesVariables* vars,
-                             ArchesConstVariables* constvars);
-
-  void addReactiveScalarSource(const ProcessorGroup*,
-                               const Patch* patch,
-                               double delta_t,
-                               CellInformation* cellinfo,
-                               ArchesVariables* vars,
-                               ArchesConstVariables* constvars);
-
-  void calculateEnthalpySource(const ProcessorGroup* pc,
-                             const Patch* patch,
-                             double delta_t, 
-                             CellInformation* cellinfo,
-                             ArchesVariables* vars,
-                             ArchesConstVariables* constvars);
-
-  void computeEnthalpyRadThinSrc(const ProcessorGroup* pc,
-                                 const Patch* patch,
-                                 CellInformation* cellinfo,
-                                 ArchesVariables* vars,
-                                 ArchesConstVariables* constvars);
   template<class T>
   void compute_massSource(CellIterator iter,
                            const T& vel,
@@ -179,31 +131,6 @@ public:
                            ArchesConstVariables* constvars);
 
   ////////////////////////////////////////////////////////////////////////
-  // Set source terms. Will need more parameters...like velocity and
-  // scalars
-  void modifyScalarMassSource(const ProcessorGroup* pc,
-                              const Patch* patch,
-                              double delta_t, 
-                              ArchesVariables* vars,
-                              ArchesConstVariables* constvars,
-                              int conv_scheme);
-
-  void modifyScalarMassSource__new(const ProcessorGroup* pc,
-                              const Patch* patch,
-                              double delta_t, 
-                              ArchesVariables* vars,
-                              ArchesConstVariables* constvars,
-                              int conv_scheme);
-
-  void modifyEnthalpyMassSource(const ProcessorGroup* pc,
-                              const Patch* patch,
-                              double delta_t, 
-                              ArchesVariables* vars,
-                              ArchesConstVariables* constvars,
-                              int conv_scheme);
-
-
-  ////////////////////////////////////////////////////////////////////////
   // Add multimaterial source term
   void computemmMomentumSource(const ProcessorGroup* pc,
                                const Patch* patch,
@@ -211,11 +138,6 @@ public:
                                ArchesVariables* vars,
                                ArchesConstVariables* constvars);
 
-  void addMMEnthalpySource(const ProcessorGroup* pc,
-                        const Patch* patch,
-                        CellInformation* cellinfo,
-                        ArchesVariables* vars,
-                        ArchesConstVariables* constvars);
                                    
 private:
 

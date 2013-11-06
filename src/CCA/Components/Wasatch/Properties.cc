@@ -366,7 +366,7 @@ namespace Wasatch{
           etaStarTags .push_back( Expr::Tag( tag.name() + tagNames.star,       Expr::STATE_NONE ) );
           eta2StarTags.push_back( Expr::Tag( tag.name() + tagNames.doubleStar, Expr::STATE_NONE ) );
         }
-        
+
         // register the expression for density at RK time stage
         densityStarTag = Expr::Tag(densityTag.name() + tagNames.star, Expr::CARRY_FORWARD);
         const Expr::ExpressionID densStar = gh.exprFactory->register_expression( scinew DensCalc( densityStarTag, interp->clone(), rhoEtaStarTags, etaStarTags, ivarStarTags ) );
@@ -422,8 +422,7 @@ namespace Wasatch{
        */
       Uintah::ProblemSpecP transEqnParams  = params->findBlock("TransportEquation");      
       Uintah::ProblemSpecP momEqnParams  = params->findBlock("MomentumEquations");      
-      bool isConstDensity;
-      densityParams->get("IsConstant",isConstDensity);
+      const bool isConstDensity = densityParams->findBlock("Constant");
 
       Expr::TagList solnVarStarTags=Expr::TagList();
       Expr::TagList solnVar2StarTags=Expr::TagList();

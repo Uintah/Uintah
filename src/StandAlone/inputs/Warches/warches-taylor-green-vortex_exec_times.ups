@@ -103,8 +103,7 @@
      <Wasatch>
 
     <Density>
-      <IsConstant>true</IsConstant>
-      <NameTag name="densityCP" state="STATE_NONE"/>
+      <Constant name="rho-wasatch" value="1.0" />     
     </Density>
 
     </Wasatch>

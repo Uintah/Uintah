@@ -6,7 +6,9 @@
   </Wasatch>
 
   <CFD>
+
     <ARCHES                             spec="OPTIONAL NO_DATA" >
+
       <set_initial_vel_condition        spec="OPTIONAL NO_DATA"
                                         attribute1="inputfile REQUIRED STRING"/>
           
@@ -193,25 +195,6 @@
 
       </EfficiencyCalculator>
 
-
-
-      <MMS                              spec="OPTIONAL NO_DATA"
-                                          attribute1="whichMMS REQUIRED STRING 'constantMMS, almgrenMMS'" 
-                                          children1="ONE_OF(CHILD constantMMS, almgrenMMS)">
-        <mmsErrorType                   spec="REQUIRED STRING 'Linf, L2'" />  
-        <constantMMS                    spec="OPTIONAL NO_DATA" need_applies_to="whichMMS constantMMS" >
-          <cu                           spec="REQUIRED DOUBLE" />
-          <cv                           spec="REQUIRED DOUBLE" />
-          <cw                           spec="REQUIRED DOUBLE" />
-          <cp                           spec="REQUIRED DOUBLE" />
-          <phi0                         spec="REQUIRED DOUBLE" />
-        </constantMMS>
-        <almgrenMMS                     spec="OPTIONAL NO_DATA" need_applies_to="whichMMS almgrenMMS" >
-          <amplitude                    spec="REQUIRED DOUBLE" />
-          <viscosity                    spec="REQUIRED DOUBLE" />
-        </almgrenMMS>
-      </MMS>
-      
       <Coal_Properties                  spec="OPTIONAL NO_DATA">
         <C                              spec="REQUIRED DOUBLE" />
         <H                              spec="REQUIRED DOUBLE" />
@@ -228,43 +211,22 @@
                                         attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, 
                                                                            smagorinsky, none'" >
 
-        <variance_coefficient           spec="OPTIONAL DOUBLE" />
-        <mixture_fraction_label         spec="OPTIONAL STRING" /> <!-- for matching scalar with its label for variance calculation --> 
         <!--smagorinsky -->
         <cf                             spec="OPTIONAL DOUBLE 'positive'" />  
         <fac_mesh                       spec="OPTIONAL DOUBLE 'positive'" />
         <filterl                        spec="OPTIONAL DOUBLE 'positive'" />
         <!--dyn. smagorinsky -->
-        <dynamicScalarModel             spec="OPTIONAL BOOLEAN" />
-        <filter_variance_limit_scalar   spec="OPTIONAL BOOLEAN" />
         <filter_cs_squared              spec="OPTIONAL BOOLEAN" />
         <!-- going to leave complocal out based on the 'this model is a mess' comment-->
-        <turbulentPrandtlNumber         spec="OPTIONAL DOUBLE 'positive'" /> <!--currently set to default in code to 0.4-->
-
-        <var_const                      spec="OPTIONAL DOUBLE" /> <!-- FIXME: What is this? Does it have a range? -->
         <use_new_filter                 spec="OPTIONAL NO_DATA"/> <!-- Don't adjust filter weights near boundaries --> 
       </Turbulence>
 
       <Properties                       spec="REQUIRED NO_DATA"
-                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps, ClassicTable, ColdFlow, ConstantProps)" >
+                                          children1="ONE_OF(CHILD TabProps, ClassicTable, ColdFlow, ConstantProps)" >
 
-        <use_mixing_model               spec="OPTIONAL BOOLEAN" /> <!-- default is false --> 
-        <empirical_soot                 spec="OPTIONAL BOOLEAN" />
         <filter_drhodt                  spec="OPTIONAL BOOLEAN" />
         <first_order_drhodt             spec="OPTIONAL BOOLEAN" />
         <inverse_density_average        spec="OPTIONAL BOOLEAN" />
-        <mixture_fraction_label         spec="OPTIONAL STRING" />
-        <independent_variable           spec="MULTIPLE NO_DATA" 
-                                            attribute1="active OPTIONAL STRING 'yes, true, no, false'"
-                                            attribute2="name   REQUIRED STRING"
-                                            attribute3="value  OPTIONAL DOUBLE" /> <!-- Default value for "active" is true, default value for "value" is 0; 
-                                                                                        You can put as many independent variable tags as you want -->
-        <ColdFlowMixingModel            spec="OPTIONAL NO_DATA" >
-          <Stream                       spec="MULTIPLE NO_DATA" >
-            <density                    spec="REQUIRED DOUBLE 'positive'" />
-            <temperature                spec="REQUIRED DOUBLE 'positive'" />
-          </Stream>
-        </ColdFlowMixingModel>
 
         <ColdFlow                       spec="OPTIONAL NO_DATA" >
           <mixture_fraction_label       spec="REQUIRED STRING"/>
@@ -298,17 +260,6 @@
             </stream> 
           </post_mix>
         </ColdFlow>
-
-        <NewStaticMixingTable           spec="OPTIONAL NO_DATA" >
-          <co_output                    spec="OPTIONAL BOOLEAN" />
-          <inputfile                    spec="REQUIRED STRING" />
-          <soot_precursors              spec="OPTIONAL BOOLEAN" />
-          <sulfur_chem                  spec="OPTIONAL BOOLEAN" />
-          <tabulated_soot               spec="OPTIONAL BOOLEAN" />
-          <loud_heatloss_warning        spec="OPTIONAL BOOLEAN" />
-        </NewStaticMixingTable>
-
-        <optically_thin_model_opl      spec="OPTIONAL DOUBLE" />
 
         <TabProps                       spec="OPTIONAL NO_DATA" >
           <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
@@ -391,9 +342,6 @@
           <temperature_label_name     spec="OPTIONAL STRING"/> <!-- default = temperature -->
         </ConstantProps>
 
-        <emperical_soot               spec="OPTIONAL BOOLEAN" />
-        <soot_factor                  spec="OPTIONAL DOUBLE '0,100'"/>
-
       </Properties>
 
       <BoundaryConditions               spec="OPTIONAL NO_DATA" > 
@@ -474,47 +422,6 @@
           <turbulence_intensity         spec="REQUIRED DOUBLE"/>
         </TurbulentInlet>
 
-        <ramping_inlet_flowrate         spec="OPTIONAL BOOLEAN" />
-        <FlowInlet                      spec="MULTIPLE NO_DATA" >
-          <velocity_type                spec="OPTIONAL STRING 'flat, function, vector, file, geometry'"/>
-          <scalar_type                  spec="OPTIONAL STRING 'flat, function, file, geometry'"/>
-  
-          <vel_vector                   spec="OPTIONAL DOUBLE"/>
-          <vel_filename                 spec="OPTIONAL STRING"/>
-          <scalar_filename              spec="OPTIONAL STRING"/>
-          <vel_function                 spec="OPTIONAL STRING"/>
-          <scalar_function              spec="OPTIONAL STRING"/>
-          <swirl_cent                   spec="OPTIONAL VECTOR"/>
-          <swirl_no                     spec="OPTIONAL DOUBLE 'positive'"/>
-
-          <name                         spec="OPTIONAL STRING" />
-          <Flow_rate                    spec="OPTIONAL DOUBLE" />
-          <InletVelocity                spec="OPTIONAL DOUBLE" />
-          <mixture_fraction             spec="REQUIRED DOUBLE" />
-          <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
-          <heat_loss                    spec="OPTIONAL DOUBLE" />
-          <geom_object />
-        </FlowInlet>
-
-        <PressureBC                     spec="OPTIONAL NO_DATA" >
-          <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
-          <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
-          <heat_loss                    spec="OPTIONAL DOUBLE" />
-          <geom_object/>
-        </PressureBC>
-
-        <OutletBC                       spec="OPTIONAL NO_DATA" >
-          <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
-          <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
-          <heat_loss                    spec="OPTIONAL DOUBLE" />
-          <geom_object/>
-        </OutletBC>
-
-        <WallBC                         spec="OPTIONAL NO_DATA" >
-          <geom_object/>
-        </WallBC>
-      </BoundaryConditions>
-
       <WallHT                           spec="OPTIONAL NO_DATA">
         <temperature_label              spec="OPTIONAL STRING"/> <!-- tabluated name for temperature.  Default: temperature --> 
         <model                          spec="MULTIPLE NO_DATA"
@@ -558,56 +465,18 @@
 
         </model>
       </WallHT>
+      </BoundaryConditions> 
 
       <ExplicitSolver                   spec="REQUIRED NO_DATA" >
 
         <initial_dt                     spec="REQUIRED DOUBLE 'positive'" />
         <variable_dt                    spec="REQUIRED BOOLEAN" />
         <print_total_ke 								spec="OPTIONAL NO_DATA" />  <!-- prints the total kinetic energy to STDIO --> 
-        <scalarUnderflowCheck           spec="OPTIONAL BOOLEAN" /> 
         <extraProjection                spec="OPTIONAL BOOLEAN" /> 
-        <newEnthalpySolver              spec="OPTIONAL NO_DATA" /> <!-- DEVELOPER SWITCH --> 
-        <EnthalpySolver                 spec="OPTIONAL NO_DATA" >
-          <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'" />
-          <limiter_type                 spec="OPTIONAL STRING 'minmod, superbee, vanLeer, upwind, none'"/>
-          <boundary_limiter_type        spec="OPTIONAL STRING 'central-upwind, upwind'" />
-          <central_limiter              spec="OPTIONAL BOOLEAN" /> <!-- unrecognized option -->
-          <radiationCalcFreq            spec="OPTIONAL INTEGER" />
-          <radCalcForAllRKSteps         spec="OPTIONAL BOOLEAN" />
-          <radCalcForAllImplicitSteps   spec="OPTIONAL BOOLEAN" />
-          <src                          spec="MULTIPLE NO_DATA" 
-                                        attribute1="label REQUIRED STRING" />
-
-          <DORadiationModel             spec="OPTIONAL NO_DATA" >
-            <opl                        spec="REQUIRED DOUBLE" />
-            <ordinates                  spec="OPTIONAL INTEGER" />
-            <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />
-            <const_wall_temperature     spec="OPTIONAL NO_DATA" /> <!-- sets all solid wall temperatures to 293.0K --> 
-            <print_all_info             spec="OPTIONAL NO_DATA" /> <!-- if this tag is present, do a little more work in the radiation solver to print some extra information (initial norm, sum(RHS) ). Default is false. --> 
-            <LinearSolver               spec="OPTIONAL NO_DATA" 
-                                        attribute1="type REQUIRED STRING 'hypre, petsc'">
-              <res_tol                  spec="REQUIRED DOUBLE" />
-              <ksptype                  spec="REQUIRED STRING 'gmres, cg'" />
-              <pctype                   spec="REQUIRED STRING 'jacobi, blockjacobi'" />
-              <max_iter                 spec="REQUIRED INTEGER" />
-            </LinearSolver>
-            <spherical_harmonics        spec="OPTIONAL BOOLEAN" />
-          </DORadiationModel>
-        </EnthalpySolver>
 
         <kineticEnergy_fromFC           spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what does this default to? -->
 
         <maxDensityLag                  spec="OPTIONAL DOUBLE" />
-
-        <MixtureFractionSolver          spec="OPTIONAL NO_DATA" >
-          <initial_value                spec="OPTIONAL DOUBLE" />
-          <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'"/>
-          <limiter_type                 spec="OPTIONAL STRING 'minmod, superbee, vanLeer, upwind, none'"/>
-          <boundary_limiter_type        spec="OPTIONAL STRING 'central-upwind, upwind'" />
-          <central_limiter              spec="OPTIONAL BOOLEAN" /> <!-- unrecognized option -->
-          <src                          spec="MULTIPLE NO_DATA" 
-                                        attribute1="label REQUIRED STRING"/>
-        </MixtureFractionSolver>
 
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
           <use_wasatch_momentum_rhs spec="OPTIONAL NO_DATA" />
@@ -817,7 +686,7 @@
             <co2_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of CO2, default = CO2 --> 
             <h2o_label                  spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of H2O, default = H2O --> 
             <T_label                    spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of temperature, default = temperature -->  
-            <soot_label                 spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of absorbtion coefficient, default = absorpIN (old Arches variable) --> 
+            <soot_label                 spec="REQUIRED STRING"  need_applies_to="type do_radiation" /> <!-- string label of absorbtion coefficient, default = absorpIN (old Arches variable) --> 
             <psize_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation rmcrt_radiation" /> <!-- string label of the particle size --> 
             <ptemperature_label         spec="OPTIONAL STRING"  need_applies_to="type do_radiation rmcrt_radiation" /> <!-- string label of the particle size --> 
             <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >

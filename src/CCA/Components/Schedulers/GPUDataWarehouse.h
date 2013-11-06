@@ -37,7 +37,7 @@ namespace Uintah {
 
 class GPUDataWarehouse{
 public:
-  GPUDataWarehouse(){numItems=0;device_copy=0;d_debug=false;d_dirty=true;};
+  GPUDataWarehouse(){d_numItems=0;d_device_copy=0;d_debug=false;d_dirty=true;};
   virtual ~GPUDataWarehouse(){};
   HOST_DEVICE void get(const GPUGridVariableBase &var, char const* label, int patchID, int maltID);
   HOST_DEVICE void getModifiable(GPUGridVariableBase &var, char const* label, int patchID, int maltID);
@@ -48,11 +48,11 @@ public:
   HOST_DEVICE void init_device(int id);
   HOST_DEVICE void syncto_device(); 
   HOST_DEVICE void clear();
-  HOST_DEVICE GPUDataWarehouse* getdevice_ptr(){return device_copy;};
+  HOST_DEVICE GPUDataWarehouse* getdevice_ptr(){return d_device_copy;};
   HOST_DEVICE void setDebug(bool s){d_debug=s;}
   
 private:
-  int numItems;
+  int d_numItems;
   struct dataItem {   // flat array
     char       label[MAX_NAME];
     int        domainID;
@@ -64,8 +64,8 @@ private:
   bool d_dirty;
   dataItem d_varDB[MAX_ITEM];
   dataItem d_levelDB[MAX_LVITEM];
-  GPUDataWarehouse*  device_copy;  //in-device copy location
-  int device_id;
+  GPUDataWarehouse*  d_device_copy;  //in-device copy location
+  int d_device_id;
   bool d_debug;
   HOST_DEVICE dataItem* getItem(char const* label, int patchID, int maltID);
 };

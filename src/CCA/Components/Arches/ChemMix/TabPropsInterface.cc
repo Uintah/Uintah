@@ -124,7 +124,8 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
       cout_tabledbg << " Heat loss being inserted into the indep. var map. " << endl;
 
-      d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel));
+      //commented out during cleanup.  This entire class needs overhaul. 
+      //d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel));
 
     } else if ( varName == "scalar_variance" || varName == "MixtureFractionVariance" ) {
 
@@ -173,14 +174,13 @@ TabPropsInterface::sched_getState( const LevelP& level,
                                    SchedulerP& sched, 
                                    const TimeIntegratorLabel* time_labels, 
                                    const bool initialize_me,
-                                   const bool with_energy_exch, 
                                    const bool modify_ref_den )
 
 {
   string taskname = "TabPropsInterface::getState"; 
   Ghost::GhostType  gn = Ghost::None;
 
-  Task* tsk = scinew Task(taskname, this, &TabPropsInterface::getState, time_labels, initialize_me, with_energy_exch, modify_ref_den );
+  Task* tsk = scinew Task(taskname, this, &TabPropsInterface::getState, time_labels, initialize_me, modify_ref_den );
 
   // independent variables :: these must have been computed previously 
   for ( MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ) {
@@ -196,16 +196,6 @@ TabPropsInterface::sched_getState( const LevelP& level,
       tsk->computes( i->second ); 
     }
 
-    tsk->computes( d_lab->d_drhodfCPLabel ); // I don't think this is used anywhere...maybe in coldflow? 
-    if (!d_coldflow) { 
-    // other dependent vars:
-      tsk->computes( d_lab->d_tempINLabel ); // lame ... fix me
-      tsk->computes( d_lab->d_cpINLabel ); 
-      tsk->computes( d_lab->d_co2INLabel ); 
-      tsk->computes( d_lab->d_h2oINLabel ); 
-      tsk->computes( d_lab->d_sootFVINLabel ); 
-    }
-
     if (d_MAlab)
       tsk->computes( d_lab->d_densityMicroLabel ); 
 
@@ -213,16 +203,6 @@ TabPropsInterface::sched_getState( const LevelP& level,
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
       tsk->modifies( i->second ); 
-    }
-
-    tsk->modifies( d_lab->d_drhodfCPLabel ); // I don't think this is used anywhere...maybe in coldflow? 
-    if (!d_coldflow) { 
-      // other dependent vars:
-      tsk->modifies( d_lab->d_tempINLabel );     // lame .... fix me
-      tsk->modifies( d_lab->d_cpINLabel ); 
-      tsk->modifies( d_lab->d_co2INLabel ); 
-      tsk->modifies( d_lab->d_h2oINLabel ); 
-      tsk->modifies( d_lab->d_sootFVINLabel ); 
     }
 
     if (d_MAlab)
@@ -250,7 +230,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
                              DataWarehouse* new_dw, 
                              const TimeIntegratorLabel* time_labels, 
                              const bool initialize_me, 
-                             const bool with_energy_exch, 
                              const bool modify_ref_den )
 {
   for (int p=0; p < patches->size(); p++){
@@ -278,11 +257,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
     }
 
     // dependent variables:
-    CCVariable<double> arches_temperature; 
-    CCVariable<double> arches_cp; 
-    CCVariable<double> arches_co2; 
-    CCVariable<double> arches_h2o; 
-    CCVariable<double> arches_soot; 
     CCVariable<double> mpmarches_denmicro; 
 
     DepVarMap depend_storage; 
@@ -303,29 +277,9 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
       }
 
-      // others: 
-      CCVariable<double> drho_df; 
-
-      new_dw->allocateAndPut( drho_df, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
-      if (!d_coldflow) { 
-        new_dw->allocateAndPut( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
-        new_dw->allocateAndPut( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
-        new_dw->allocateAndPut( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
-        new_dw->allocateAndPut( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
-        new_dw->allocateAndPut( arches_soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
-      }
       if (d_MAlab) {
         new_dw->allocateAndPut( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
         mpmarches_denmicro.initialize(0.0);
-      }
-
-      drho_df.initialize(0.0);  // this variable might not be actually used anywhere and may just be polution  
-      if ( !d_coldflow ) { 
-        arches_temperature.initialize(0.0); 
-        arches_cp.initialize(0.0); 
-        arches_co2.initialize(0.0); 
-        arches_h2o.initialize(0.0);
-        arches_soot.initialize(0.0); 
       }
 
     } else { 
@@ -344,16 +298,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
       }
 
-      // others:
-      CCVariable<double> drho_dw; 
-      new_dw->getModifiable( drho_dw, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
-      if (!d_coldflow) { 
-        new_dw->getModifiable( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
-        new_dw->getModifiable( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
-        new_dw->getModifiable( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
-        new_dw->getModifiable( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
-        new_dw->getModifiable( arches_soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
-      }
       if (d_MAlab) 
         new_dw->getModifiable( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
     }
@@ -385,14 +329,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           arches_density[c] = table_value; 
           if (d_MAlab)
             mpmarches_denmicro[c] = table_value; 
-        } else if (i->first == "temperature" && !d_coldflow) {
-          arches_temperature[c] = table_value; 
-        } else if (i->first == "specificheat" && !d_coldflow) {
-          arches_cp[c] = table_value; 
-        } else if (i->first == "CO2" && !d_coldflow) {
-          arches_co2[c] = table_value; 
-        } else if (i->first == "H2O" && !d_coldflow) {
-          arches_h2o[c] = table_value; 
         }
 
       }
@@ -489,14 +425,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
               //arches_density[c] = ghost_value; 
               if (d_MAlab)
                 mpmarches_denmicro[c] = table_value; 
-            } else if (i->first == "temperature" && !d_coldflow) {
-              arches_temperature[c] = table_value; 
-            } else if (i->first == "specificheat" && !d_coldflow) {
-              arches_cp[c] = table_value; 
-            } else if (i->first == "CO2" && !d_coldflow) {
-              arches_co2[c] = table_value; 
-            } else if (i->first == "H2O" && !d_coldflow) {
-              arches_h2o[c] = table_value; 
             }
           }
           iv.clear(); 

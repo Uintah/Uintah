@@ -276,17 +276,9 @@
  
       </PropertyModels>
 
-      <Turbulence model="compdynamicprocedure">
-        <mixture_fraction_label> mixture_fraction </mixture_fraction_label>
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-      </Turbulence>
+      <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
-        <use_mixing_model>false</use_mixing_model>
-        <!--ClassicTable>
-          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
-        </ClassicTable-->
-
         <ColdFlow>
           <mixture_fraction_label> mixture_fraction </mixture_fraction_label>
           <Stream_1>
@@ -320,11 +312,6 @@
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
-
-        <MixtureFractionSolver>
-          <convection_scheme>flux_limited</convection_scheme>
-          <limiter_type>superbee</limiter_type>
-        </MixtureFractionSolver>
 
       </ExplicitSolver>
     </ARCHES>

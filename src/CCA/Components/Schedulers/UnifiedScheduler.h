@@ -86,7 +86,7 @@ WARNING
     
     void initiateTask( DetailedTask * task, bool only_old_recvs, int abort_point, int iteration);
 
-    void runTask( DetailedTask* task, int iteration, int t_id);
+    void runTask( DetailedTask* task, int iteration, int t_id, Task::CallBackEvent event);
 
     void runTasks(int t_id);
     

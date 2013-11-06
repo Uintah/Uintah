@@ -169,7 +169,6 @@ namespace Uintah{
       //           -x      +x       -y       +y     -z     +z
       enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};
       
-      double _pi;
       double _Threshold;
       double _sigma;
       double _sigmaT4_thld;                  // threshold values for determining the extents of ROI
@@ -260,9 +259,9 @@ namespace Uintah{
                      Task::WhichDW which_celltype_dw,
                      const int radCalc_freq );
 
-#ifdef HAVE_CUDA
       //______________________________________________________________________
-      void rayTraceGPU( const ProcessorGroup* pg,
+      void rayTraceGPU( Task::CallBackEvent event,
+                        const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,
@@ -273,7 +272,6 @@ namespace Uintah{
                         Task::WhichDW which_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw,
                         const int radCalc_freq);
-#endif
 
       //__________________________________
       void rayTrace_dataOnion( const ProcessorGroup* pc, 

@@ -166,7 +166,6 @@ namespace Wasatch{
       setup_convective_flux_expression<FieldT>( "X",
                                                 Expr::Tag(thisPhiName,Expr::STATE_N),
                                                 Expr::Tag(), // convective flux (empty to build it)
-                                                Expr::Tag(), // volume fraction
                                                 CENTRAL,
                                                 parse_nametag( params->findBlock("X-Velocity" )->findBlock( "NameTag" ) ),
                                                 "",
@@ -175,7 +174,6 @@ namespace Wasatch{
       setup_convective_flux_expression<FieldT>( "Y",
                                                 Expr::Tag(thisPhiName,Expr::STATE_N),
                                                 Expr::Tag(), // convective flux (empty to build it)
-                                                Expr::Tag(), // volume fraction
                                                 CENTRAL,
                                                 parse_nametag( params->findBlock("Y-Velocity" )->findBlock( "NameTag" ) ),
                                                 "",
@@ -184,7 +182,6 @@ namespace Wasatch{
       setup_convective_flux_expression<FieldT>( "Z",
                                                 Expr::Tag(thisPhiName,Expr::STATE_N),
                                                 Expr::Tag(), // convective flux (empty to build it)
-                                                Expr::Tag(), // volume fraction
                                                 CENTRAL,
                                                 parse_nametag( params->findBlock("Z-Velocity" )->findBlock( "NameTag" ) ),
                                                 "",
@@ -231,14 +228,10 @@ namespace Wasatch{
     }
     else{
       const Expr::Tag densT = Expr::Tag();
-      const Expr::Tag emptyTag = Expr::Tag();
       const bool tempConstDens = false;
       return factory.register_expression(
           scinew typename ScalarRHS<FieldT>::Builder( Expr::Tag( thisPhiName + "_rhs", Expr::STATE_NONE ),
-                                                      info,
-                                                      densT,
-                                                      emptyTag, emptyTag, emptyTag, emptyTag,
-                                                      tempConstDens) );
+                                                      info, densT, tempConstDens) );
     }
   }
 

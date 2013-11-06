@@ -309,7 +309,7 @@ namespace Wasatch {
   void pack_uintah_iterator_as_spatialops( const Uintah::Patch::FaceType& face,
                                            const Uintah::Patch* const patch,
                                            Uintah::Iterator& bndIter,
-                                           BoundaryIterators& myBndIters)
+                                           BoundaryIterators& myBndIters )
   {
     namespace SS = SpatialOps::structured;    
     typedef SpatialOps::structured::IntVec IntVecT;
@@ -317,21 +317,19 @@ namespace Wasatch {
     std::vector<SS::IntVec>& extraBndSOIter    = myBndIters.extraBndCells;
     std::vector<SS::IntVec>& intBndSOIter      = myBndIters.interiorBndCells;
     std::vector<SS::IntVec>& extraPlusBndCells = myBndIters.extraPlusBndCells;
-
-    std::vector<SS::IntVec>& intEdgeSOIter    = myBndIters.interiorEdgeCells;
-
+    std::vector<SS::IntVec>& intEdgeSOIter     = myBndIters.interiorEdgeCells;
    
     bool plusEdge[3];
     bool minusEdge[3];
 
     minusEdge[0] = patch->getBCType(Uintah::Patch::xminus) != Uintah::Patch::Neighbor;
-    plusEdge[0] =  patch->getBCType(Uintah::Patch::xplus) != Uintah::Patch::Neighbor;
+    plusEdge [0] = patch->getBCType(Uintah::Patch::xplus ) != Uintah::Patch::Neighbor;
     minusEdge[1] = patch->getBCType(Uintah::Patch::yminus) != Uintah::Patch::Neighbor;
-    plusEdge[1] =  patch->getBCType(Uintah::Patch::yplus) != Uintah::Patch::Neighbor;
+    plusEdge [1] = patch->getBCType(Uintah::Patch::yplus ) != Uintah::Patch::Neighbor;
     minusEdge[2] = patch->getBCType(Uintah::Patch::zminus) != Uintah::Patch::Neighbor;
-    plusEdge[2] =  patch->getBCType(Uintah::Patch::zplus) != Uintah::Patch::Neighbor;
+    plusEdge [2] = patch->getBCType(Uintah::Patch::zplus ) != Uintah::Patch::Neighbor;
 
-    int i, j;
+    int i=-1, j=-1;
     switch (face) {
       case Uintah::Patch::xminus:
       case Uintah::Patch::xplus: i=1; j=2; break;
@@ -339,8 +337,12 @@ namespace Wasatch {
       case Uintah::Patch::yplus: i=0; j=2; break;
       case Uintah::Patch::zminus:
       case Uintah::Patch::zplus: i=0; j=1; break;
-      default:
-        break;
+      default:{
+        std::ostringstream msg;
+        msg << "ERROR: invalid face specification encountered\n"
+            << "\n\t" << __FILE__ << " : " << __LINE__ << std::endl;
+        throw std::runtime_error( msg.str() );
+      }
     }            
     
     // save pointer to the Uintah iterator. This will be needed for expression that require access to the
@@ -354,10 +356,9 @@ namespace Wasatch {
     Uintah::IntVector bcPointIJK;
     
     Uintah::IntVector edgePoint;
-    Uintah::IntVector idxHi = patch->getCellHighIndex() - IntVector(1,1,1);// - patchCellOffset;
-    Uintah::IntVector idxLo = patch->getCellLowIndex();
-    for( bndIter.reset(); !bndIter.done(); bndIter++ )
-    {
+    const Uintah::IntVector idxHi = patch->getCellHighIndex() - IntVector(1,1,1);// - patchCellOffset;
+    const Uintah::IntVector idxLo = patch->getCellLowIndex();
+    for( bndIter.reset(); !bndIter.done(); ++bndIter ){
       bcPointIJK = *bndIter - patchCellOffset;
       extraBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
       
@@ -370,16 +371,13 @@ namespace Wasatch {
         edgePoint -= patchCellOffset;
         intEdgeSOIter.push_back( IntVecT(bcPointIJK[0], bcPointIJK[1], bcPointIJK[2]) );
       }
-
-      
       bcPointIJK -= unitNormal;
       intBndSOIter.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
     }
     
     // if we are on a plus face, we will most likely need a plus-face iterator for staggered fields
-    if (face == Uintah::Patch::xplus || face == Uintah::Patch::yplus || face == Uintah::Patch::zplus )
-    {
-      for( bndIter.reset(); !bndIter.done(); bndIter++ ) {
+    if (face == Uintah::Patch::xplus || face == Uintah::Patch::yplus || face == Uintah::Patch::zplus ){
+      for( bndIter.reset(); !bndIter.done(); ++bndIter ){
         bcPointIJK = *bndIter - patchCellOffset + unitNormal;
         extraPlusBndCells.push_back(SS::IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
       }
@@ -880,6 +878,7 @@ namespace Wasatch {
               modExpr.set_ghost_points( get_extra_bnd_mask<FieldT>(myBndSpec, patchID) );
               modExpr.set_interior_coef( ci );
               modExpr.set_interior_points( get_interior_bnd_mask<FieldT>(myBndSpec,patchID) );
+              // do not delete this. this could be needed for some outflow/open boundary conditions
               //modExpr.set_interior_edge_points( get_edge_mask(myBndSpec,patchID) );
             }
           }

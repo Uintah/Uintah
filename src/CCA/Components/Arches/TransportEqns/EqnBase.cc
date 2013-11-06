@@ -8,6 +8,8 @@
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
+#include <ostream>
+#include <fstream>
 
 using namespace std;
 using namespace Uintah;

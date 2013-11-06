@@ -380,16 +380,12 @@ namespace Wasatch {
 
     //_____________
     // volume fraction for embedded boundaries Terms
-    Expr::Tag volFracTag   = Expr::Tag();
-    Expr::Tag xAreaFracTag = Expr::Tag();
-    Expr::Tag yAreaFracTag = Expr::Tag();
-    Expr::Tag zAreaFracTag = Expr::Tag();
-    if (hasEmbeddedGeometry) {
+    if( hasEmbeddedGeometry ){
       VolFractionNames& vNames = VolFractionNames::self();
-      volFracTag = vNames.svol_frac_tag();
-      xAreaFracTag = vNames.xvol_frac_tag();
-      yAreaFracTag = vNames.yvol_frac_tag();
-      zAreaFracTag = vNames.zvol_frac_tag();
+      info[VOLUME_FRAC] = vNames.svol_frac_tag();
+      info[AREA_FRAC_X] = vNames.xvol_frac_tag();
+      info[AREA_FRAC_Y] = vNames.yvol_frac_tag();
+      info[AREA_FRAC_Z] = vNames.zvol_frac_tag();
     }
     
     //____________
@@ -518,7 +514,7 @@ namespace Wasatch {
     for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
         convFluxParams != 0;
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
-      setup_convective_flux_expression<FieldT>( convFluxParams, thisPhiTag, volFracTag, "", factory, info );
+      setup_convective_flux_expression<FieldT>( convFluxParams, thisPhiTag, "", factory, info );
     }
 
     //
@@ -530,9 +526,7 @@ namespace Wasatch {
     const Expr::Tag densT = Expr::Tag();
     const bool tempConstDens = false;
     const Expr::Tag rhsTag( thisPhiName + "_rhs", Expr::STATE_NONE );
-    return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag,info,rhsTags,densT,
-                                                                                   volFracTag,xAreaFracTag,yAreaFracTag,
-                                                                                   zAreaFracTag,tempConstDens ));
+    return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag,info,rhsTags,densT,tempConstDens ));
   }
 
   //------------------------------------------------------------------

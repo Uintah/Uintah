@@ -35,13 +35,18 @@
  *  \brief Use this enum to populate information in the FieldTagInfo type.
  */
 enum FieldSelector{
-  CONVECTIVE_FLUX_X,
-  CONVECTIVE_FLUX_Y,
-  CONVECTIVE_FLUX_Z,
-  DIFFUSIVE_FLUX_X,
-  DIFFUSIVE_FLUX_Y,
-  DIFFUSIVE_FLUX_Z,
-  SOURCE_TERM
+  PRIMITIVE_VARIABLE,  ///< when solving a PDE for rho*phi, this is phi.
+  CONVECTIVE_FLUX_X,   ///< convective flux in the x-direction
+  CONVECTIVE_FLUX_Y,   ///< convective flux in the y-direction
+  CONVECTIVE_FLUX_Z,   ///< convective flux in the z-direction
+  DIFFUSIVE_FLUX_X,    ///< diffusive flux in the x-direction
+  DIFFUSIVE_FLUX_Y,    ///< diffusive flux in the y-direction
+  DIFFUSIVE_FLUX_Z,    ///< diffusive flux in the z-direction
+  SOURCE_TERM,         ///< the source term
+  VOLUME_FRAC,         ///< for cases with embedded boundaries, this supplies the volume fraction field
+  AREA_FRAC_X,         ///< for cases with embedded boundaries, this supplies the x-area-fraction field
+  AREA_FRAC_Y,         ///< for cases with embedded boundaries, this supplies the y-area-fraction field
+  AREA_FRAC_Z          ///< for cases with embedded boundaries, this supplies the z-area-fraction field
 };
 
 /**

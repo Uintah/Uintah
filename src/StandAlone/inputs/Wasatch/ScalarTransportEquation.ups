@@ -9,7 +9,7 @@
   <Wasatch>
 
     <Density>
-      <IsConstant>true</IsConstant>
+      <Constant value="1.0" name="rho"/>
     </Density>
 
     <!-- Set the initial condition for non-staggered scalar -->

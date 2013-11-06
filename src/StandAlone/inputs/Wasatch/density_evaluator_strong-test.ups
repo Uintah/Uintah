@@ -9,7 +9,6 @@
   <Wasatch>
     
     <Density>
-      <IsConstant>false</IsConstant>
       <NameTag name="rho" state="CARRY_FORWARD" /> 
     </Density>
     

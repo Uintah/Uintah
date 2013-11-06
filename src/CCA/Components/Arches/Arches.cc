@@ -189,9 +189,6 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   d_boundaryCondition     =  0;
   d_nlSolver              =  0;
   d_physicalConsts        =  0;
-  d_calcReactingScalar    =  0;
-  d_calcScalar            =  0;
-  d_calcEnthalpy          =  0;
   d_doingRestart          =  false;
 
   nofTimeSteps                     =  0;
@@ -201,12 +198,10 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   DQMOMEqnFactory&  dqmomfactory   =  DQMOMEqnFactory::self();
   dqmomfactory.set_quad_nodes(0);
   d_doDQMOM                        =  false;
-  d_doMMS                          =  false;
   d_with_mpmarches                 =  false;
   d_do_dummy_solve                 =  false; 
   d_doAMR                          = doAMR;
   d_init_mix_frac                  = 0.0; 
-  d_calcVariance                   = false;
   d_useWasatchMomRHS               = false;
 }
 
@@ -273,14 +268,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   else
     d_newBC_on_Restart = false;
 
-  // not sure, do we need to reduce and put in datawarehouse
-  if (db->findBlock("ExplicitSolver")){
-    if (db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver")){
-      d_calcScalar = true;
-      db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver")->getWithDefault("initial_value",d_init_mix_frac,0.0);
-    }
-  }
-
   if (db->findBlock("set_initial_condition")) {
     d_set_initial_condition = true;
     db->findBlock("set_initial_condition")->getAttribute("inputfile",d_init_inputfile);
@@ -291,55 +278,15 @@ Arches::problemSetup(const ProblemSpecP& params,
     db->findBlock("set_initial_vel_condition")->getAttribute("inputfile",d_init_vel_inputfile);
   }  
 
-  if (d_calcScalar) {
-    if (d_calcReactingScalar) {
-      throw InvalidValue("Transport of reacting scalar is being phased out.  Please email j.thornock@utah.edu if you have questions.", __FILE__, __LINE__);
-      d_calcReactingScalar = false;
-    }
-
-    if (db->findBlock("ExplicitSolver")){
-      if (db->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")) {
-        d_calcEnthalpy = true;
-      }
-    }
-    // Moved model_mixture_fraction_variance to properties
-    db->findBlock("Properties")->getWithDefault("use_mixing_model", d_calcVariance, false);
-
-    // db->require("model_mixture_fraction_variance", d_calcVariance);
-  }
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",  d_lab->recompile_taskgraph,false);
 
   string nlSolver;
   if (db->findBlock("ExplicitSolver")){
     nlSolver = "explicit";
-    db->findBlock("ExplicitSolver")->getWithDefault("scalarUnderflowCheck",d_underflow,false);
     db->findBlock("ExplicitSolver")->getWithDefault("extraProjection",     d_extraProjection,false);
     db->findBlock("ExplicitSolver")->require("initial_dt", d_init_dt);
     db->findBlock("ExplicitSolver")->require("variable_dt", d_variableTimeStep);
-  }
-
-  if(db->findBlock("MMS")) {
-    d_doMMS = true;
-    ProblemSpecP db_mms = db->findBlock("MMS");
-    if( !db_mms->getAttribute( "whichMMS", d_mms ) ) {
-      throw ProblemSetupException( "whichMMS not specified", __FILE__, __LINE__);
-    }
-    if (d_mms == "constantMMS") {
-      ProblemSpecP db_mms0 = db_mms->findBlock("constantMMS");
-      db_mms0->getWithDefault("cu",d_cu,0.0);
-      db_mms0->getWithDefault("cv",d_cv,0.0);
-      db_mms0->getWithDefault("cw",d_cw,0.0);
-      db_mms0->getWithDefault("cp",d_cp,0.0);
-      db_mms0->getWithDefault("phi0",d_phi0,0.0);
-    }
-    else if (d_mms == "almgrenMMS") {
-      ProblemSpecP db_mms3 = db_mms->findBlock("almgrenMMS");
-      db_mms3->require("amplitude",d_amp);
-    }
-    else {
-      throw InvalidValue("current MMS not supported: " + d_mms, __FILE__, __LINE__);
-    }
   }
 
   // physical constant
@@ -494,18 +441,23 @@ Arches::problemSetup(const ProblemSpecP& params,
   // pulling out from tables
   //
   Uintah::ProblemSpecP densitySpec = params->findBlock("Wasatch")->findBlock("Density");
-  bool isConstDensity = false;
-  Expr::Tag densityTag = Expr::Tag();
   
-  if (densitySpec) {
-    densitySpec->get("IsConstant",isConstDensity);
-    densityTag = Wasatch::parse_nametag( densitySpec->findBlock("NameTag") );
+  if( densitySpec ){
+    Expr::Tag densityTag = Expr::Tag();
+    if( densitySpec->findBlock("NameTag") ){
+      densityTag = Wasatch::parse_nametag( densitySpec->findBlock("NameTag") );
+    }
+    else{
+      std::string densName;
+      densitySpec->findBlock("Constant")->getAttribute( "name", densName );
+      densityTag = Expr::Tag( densName, Expr::STATE_NONE );
+    }
     
     if( !(solngh->exprFactory->have_entry( densityTag )) ) {
       // register placeholder expressions for density field
       solngh->exprFactory->register_expression( new SVolExprT::Builder(densityTag) );
     }
-    
+
     if( !(initgh->exprFactory->have_entry( densityTag )) ) {
       initgh->exprFactory->register_expression( new SVolExprT::Builder(densityTag) );
     }
@@ -634,9 +586,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   // read properties
   // d_MAlab = multimaterial arches common labels
-  d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts,
-                              d_calcReactingScalar,
-                              d_calcEnthalpy, d_calcVariance, d_myworld);
+  d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts, d_myworld);
 
   d_props->problemSetup(db);
 
@@ -699,11 +649,9 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   // read boundary condition information
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
-                                                 d_props, d_calcReactingScalar,
-                                                 d_calcEnthalpy, d_calcVariance);
+                                                 d_props );
 
   // send params, boundary type defined at the level of Grid
-  d_boundaryCondition->setMMS(d_doMMS);
   d_boundaryCondition->problemSetup(db);
 
   d_whichTurbModel = "none"; 
@@ -729,15 +677,8 @@ Arches::problemSetup(const ProblemSpecP& params,
     proc0cout << "\n Notice: No Turbulence model found. \n" << endl;
   }
 
-  d_turbModel->modelVariance(d_calcVariance);
   d_turbModel->problemSetup(db);
     
-  d_dynScalarModel = d_turbModel->getDynScalarModel();
-  if (d_dynScalarModel){
-    d_turbModel->setCombustionSpecifics(d_calcScalar, d_calcEnthalpy,
-                                        d_calcReactingScalar);
-  }
-
   d_turbModel->setMixedModel(d_mixedModel);
   if (d_mixedModel) {
     d_scaleSimilarityModel=scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
@@ -761,9 +702,6 @@ Arches::problemSetup(const ProblemSpecP& params,
                                        d_boundaryCondition,
                                        d_turbModel, d_scaleSimilarityModel,
                                        d_physicalConsts,
-                                       d_calcScalar,
-                                       d_calcEnthalpy,
-                                       d_calcVariance,
                                        d_myworld,
                                        hypreSolver);
 
@@ -775,8 +713,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_nlSolver->set_use_wasatch_mom_rhs(d_useWasatchMomRHS);
 #endif
   
-  d_nlSolver->setExtraProjection(d_extraProjection);
-  d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db,sharedState);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
   //__________________
@@ -1022,74 +958,43 @@ Arches::scheduleInitialize(const LevelP& level,
   const PatchSet* patches= level->eachPatch();
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
-  // schedule the initialization of parameters
-  // require : None
-  // compute : [u,v,w]VelocityIN, pressureIN, scalarIN, densityIN,
-  //           viscosityIN
+  //Initialize several parameters
   sched_paramInit(level, sched);
 
+  //Check for hand-off momentum BCs and perform mapping
   d_nlSolver->checkMomBCs( sched, patches, matls ); 
 
+  //Sets initial condition to momentum only (for constant density). 
+  //Note this should be moved into the momentum standard initialization. 
   if (d_set_initial_condition) {
     sched_readCCInitialCondition(level, sched);
     sched_interpInitialConditionToStaggeredGrid(level, sched);
   }
-
-  //mms initial condition
-  if (d_doMMS) {
-    sched_mmsInitialCondition(level, sched);
-  }
-  
   if (d_set_init_vel_condition) {
     sched_readUVWInitialCondition(level, sched);
   }  
 
-  // schedule init of cell type
-  // require : NONE
-  // compute : cellType
+  //initialize cell type
+  d_boundaryCondition->sched_cellTypeInit__NEW( sched, level, patches, matls );
 
-  if ( d_boundaryCondition->isUsingNewBC() ) {
-    d_boundaryCondition->sched_cellTypeInit__NEW( sched, level, patches, matls );
-  } else {
-    d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
-  }
-  //
   // compute the cell area fraction
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls, 0, true );
+
+  // setup intrusion cell type 
   d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls, false );
-  //AF must be called again to account for intrusions
+
+  //AF must be called again to account for intrusions (can this be the ONLY call?) 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls, 1, true ); 
 
   // base initialization of all scalars
   sched_scalarInit(level, sched);
 
-  // computing flow inlet areas
-  if (d_boundaryCondition->getInletBC()){
-    d_boundaryCondition->sched_calculateArea(sched, patches, matls);
-  }
-  // Set the profile (output Varlabel have SP appended to them)
-  // require : densityIN,[u,v,w]VelocityIN
-  // compute : densitySP, [u,v,w]VelocitySP, scalarSP
-  d_boundaryCondition->sched_setProfile(sched, patches, matls);
-
-  // if multimaterial, update celltype for mm intrusions for exact
-  // initialization.
-  // require: voidFrac_CC, cellType
-  // compute: mmcellType, mmgasVolFrac
-
-#ifdef ExactMPMArchesInitialize
-  if (d_MAlab)
-    d_boundaryCondition->sched_mmWallCellTypeInit_first(sched, patches, matls);
-#endif
-
+  //pass some periodic stuff around.
   IntVector periodic_vector = level->getPeriodicBoundaries();
   bool d_3d_periodic = (periodic_vector == IntVector(1,1,1));
   d_turbModel->set3dPeriodic(d_3d_periodic);
   d_props->set3dPeriodic(d_3d_periodic);
-  // Compute props (output Varlabel have CP appended to them)
-  // require : densitySP
-  // require scalarSP
-  // compute : densityCP
+
   init_timelabel = scinew TimeIntegratorLabel(d_lab,
                                                 TimeIntegratorStepType::FE);
   init_timelabel_allocated = true;
@@ -1106,34 +1011,30 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   // Table Lookup
-  string mixmodel = d_props->getMixingModelType();
-  if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" 
-      && mixmodel != "ColdFlow" && mixmodel != "ConstantProps")
-    d_props->sched_reComputeProps(sched, patches, matls,
-                                init_timelabel, true, true);
-  else {
-    bool initialize_it = true;
-    bool modify_ref_den = true;
-    d_props->doTableMatching();
-    d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den );
-  }
+  bool initialize_it = true;
+  bool modify_ref_den = true;
+  d_props->doTableMatching();
+  d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den );
+  
 
-  if ( d_boundaryCondition->isUsingNewBC() ) {
-    d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
-    //d_boundaryCondition->printBCInfo();
-    d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
-    d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls );
-  }
+  //Setup BC areas
+  d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
 
-  d_boundaryCondition->sched_initInletBC(sched, patches, matls);
+  //For debugging
+  //d_boundaryCondition->printBCInfo();
+  
+  //Setup initial inlet velocities 
+  d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
+
+  //Set the initial profiles
+  d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls );
+
+  //Setup the intrusions. 
   d_boundaryCondition->sched_setupNewIntrusions( sched, patches, matls );
 
   sched_getCCVelocities(level, sched);
-  // Compute Turb subscale model (output Varlabel have CTS appended to them)
-  // require : densityCP, viscosityIN, [u,v,w]VelocitySP
-  // compute : viscosityCTS
 
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
+#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
   if (!d_useWasatchMomRHS) {
     if (!d_MAlab) {
       
@@ -1146,7 +1047,8 @@ Arches::scheduleInitialize(const LevelP& level,
       
     }
   }
-//#endif // WASATCH_IN_ARCHES
+#endif // WASATCH_IN_ARCHES
+
   //______________________
   //Data Analysis
   if(d_analysisModules.size() != 0){
@@ -1224,8 +1126,7 @@ Arches::sched_paramInit(const LevelP& level,
                         SchedulerP& sched)
 {
     // primitive variable initialization
-    Task* tsk = scinew Task( "Arches::paramInit",
-                       this, &Arches::paramInit);
+    Task* tsk = scinew Task( "Arches::paramInit", this, &Arches::paramInit);
 
     printSchedule(level,dbg,"Arches::paramInit");
 
@@ -1249,64 +1150,18 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_pressureIntermLabel);
     }
 
-    tsk->computes(d_lab->d_scalarSPLabel); // only work for 1 scalar
-
-    if (d_calcVariance) {
-      tsk->computes(d_lab->d_scalarVarSPLabel); // only work for 1 scalarVar
-      tsk->computes(d_lab->d_normalizedScalarVarLabel); // only work for 1 scalarVar
-      tsk->computes(d_lab->d_scalarDissSPLabel); // only work for 1 scalarVar
-    }
-
-    if (d_calcReactingScalar){
-      tsk->computes(d_lab->d_reactscalarSPLabel);
-    }
-
-    if (d_calcEnthalpy) {
-      tsk->computes(d_lab->d_enthalpySPLabel);
-      tsk->computes(d_lab->d_radiationSRCINLabel);
-      tsk->computes(d_lab->d_radiationFluxEINLabel);
-      tsk->computes(d_lab->d_radiationFluxWINLabel);
-      tsk->computes(d_lab->d_radiationFluxNINLabel);
-      tsk->computes(d_lab->d_radiationFluxSINLabel);
-      tsk->computes(d_lab->d_radiationFluxTINLabel);
-      tsk->computes(d_lab->d_radiationFluxBINLabel);
-      tsk->computes(d_lab->d_radiationVolqINLabel);
-      tsk->computes(d_lab->d_abskgINLabel);
-    }
-
     tsk->computes(d_lab->d_densityCPLabel);
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
   if (!d_useWasatchMomRHS)
     tsk->computes(d_lab->d_viscosityCTSLabel);
 //#endif
     tsk->computes(d_lab->d_turbViscosLabel);
-    if (d_dynScalarModel) {
-      tsk->computes(d_lab->d_scalarDiffusivityLabel);
-      if (d_calcEnthalpy){
-        tsk->computes(d_lab->d_enthalpyDiffusivityLabel);
-      }
-      if (d_calcReactingScalar){
-        tsk->computes(d_lab->d_reactScalarDiffusivityLabel);
-      }
-    }
     tsk->computes(d_lab->d_oldDeltaTLabel);
     // for reacting flows save temperature and co2
     if (d_MAlab) {
       tsk->computes(d_lab->d_pressPlusHydroLabel);
       tsk->computes(d_lab->d_mmgasVolFracLabel);
     }
-
-    if (d_doMMS) {
-      tsk->computes(d_lab->d_uFmmsLabel);
-      tsk->computes(d_lab->d_vFmmsLabel);
-      tsk->computes(d_lab->d_wFmmsLabel);
-    }
-
-    tsk->computes(d_lab->d_scalarBoundarySrcLabel);
-    tsk->computes(d_lab->d_enthalpyBoundarySrcLabel);
-    tsk->computes(d_lab->d_umomBoundarySrcLabel);
-    tsk->computes(d_lab->d_vmomBoundarySrcLabel);
-    tsk->computes(d_lab->d_wmomBoundarySrcLabel);
 
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
@@ -1321,10 +1176,9 @@ Arches::paramInit(const ProcessorGroup* pg,
                   DataWarehouse* old_dw,
                   DataWarehouse* new_dw)
 {
-    double old_delta_t = 0.0;
-    new_dw->put(delt_vartype(old_delta_t), d_lab->d_oldDeltaTLabel,getLevel(patches));
+  double old_delta_t = 0.0;
+  new_dw->put(delt_vartype(old_delta_t), d_lab->d_oldDeltaTLabel,getLevel(patches));
 
-  // ....but will only compute for computational domain
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -1353,60 +1207,16 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> pressureExtraProjection;
     CCVariable<double> pressurePred;
     CCVariable<double> pressureInterm;
-    CCVariable<double> scalar;
-    CCVariable<double> scalarVar_new;
-    CCVariable<double> normalizedScalarVar_new;
-    CCVariable<double> scalarDiss_new;
-    CCVariable<double> enthalpy;
     CCVariable<double> density;
     CCVariable<double> viscosity;
     CCVariable<double> turb_viscosity; 
-    CCVariable<double> scalarDiffusivity;
-    CCVariable<double> enthalpyDiffusivity;
-    CCVariable<double> reactScalarDiffusivity;
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
-
-    CCVariable<double> scalarBoundarySrc;
-    CCVariable<double> enthalpyBoundarySrc;
-    SFCXVariable<double> umomBoundarySrc;
-    SFCYVariable<double> vmomBoundarySrc;
-    SFCZVariable<double> wmomBoundarySrc;
-
-    new_dw->allocateAndPut(scalarBoundarySrc,   d_lab->d_scalarBoundarySrcLabel,   indx, patch);
-    new_dw->allocateAndPut(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel, indx, patch);
-    new_dw->allocateAndPut(umomBoundarySrc,     d_lab->d_umomBoundarySrcLabel,     indx, patch);
-    new_dw->allocateAndPut(vmomBoundarySrc,     d_lab->d_vmomBoundarySrcLabel,     indx, patch);
-    new_dw->allocateAndPut(wmomBoundarySrc,     d_lab->d_wmomBoundarySrcLabel,     indx, patch);
-
-    scalarBoundarySrc.initialize(0.0);
-    enthalpyBoundarySrc.initialize(0.0);
-    umomBoundarySrc.initialize(0.0);
-    vmomBoundarySrc.initialize(0.0);
-    wmomBoundarySrc.initialize(0.0);
 
     CCVariable<double> ke; 
     new_dw->allocateAndPut( ke, d_lab->d_kineticEnergyLabel, indx, patch ); 
     ke.initialize(0.0); 
     new_dw->put( sum_vartype(0.0), d_lab->d_totalKineticEnergyLabel ); 
-
-    // Variables for mms analysis
-    if (d_doMMS){
-      //Force terms of convection + diffusion
-      // These will be used in the MMS scirun module
-      //  to get error convergence
-      SFCXVariable<double> uFmms;
-      SFCYVariable<double> vFmms;
-      SFCZVariable<double> wFmms;
-
-      new_dw->allocateAndPut(uFmms, d_lab->d_uFmmsLabel, indx, patch);
-      new_dw->allocateAndPut(vFmms, d_lab->d_vFmmsLabel, indx, patch);
-      new_dw->allocateAndPut(wFmms, d_lab->d_wFmmsLabel, indx, patch);
-
-      uFmms.initialize(0.0);
-      vFmms.initialize(0.0);
-      wFmms.initialize(0.0);
-    }
 
     new_dw->allocateAndPut(ccVelocity, d_lab->d_CCVelocityLabel, indx, patch);
     ccVelocity.initialize(Vector(0.,0.,0.));
@@ -1439,79 +1249,11 @@ Arches::paramInit(const ProcessorGroup* pg,
       mmgasVolFrac.initialize(1.0);
     }
 
-    new_dw->allocateAndPut(scalar, d_lab->d_scalarSPLabel, indx, patch);
-
-    if (d_calcVariance) {
-      new_dw->allocateAndPut(scalarVar_new, d_lab->d_scalarVarSPLabel, indx, patch);
-      scalarVar_new.initialize(0.0);
-      new_dw->allocateAndPut(normalizedScalarVar_new, d_lab->d_normalizedScalarVarLabel, indx, patch);
-      normalizedScalarVar_new.initialize(0.0);
-      new_dw->allocateAndPut(scalarDiss_new, d_lab->d_scalarDissSPLabel, indx, patch);
-      scalarDiss_new.initialize(0.0);
-    }
-
-    CCVariable<double> reactscalar;
-    if (d_calcReactingScalar) {
-      new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarSPLabel,indx, patch);
-      reactscalar.initialize(0.0);
-    }
-
-    if (d_calcEnthalpy) {
-      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
-      enthalpy.initialize(0.0);
-
-      CCVariable<double> qfluxe;
-      CCVariable<double> qfluxw;
-      CCVariable<double> qfluxn;
-      CCVariable<double> qfluxs;
-      CCVariable<double> qfluxt;
-      CCVariable<double> qfluxb;
-      CCVariable<double> volq;
-      CCVariable<double> abskg;
-      CCVariable<double> radEnthalpySrc;;
-
-      new_dw->allocateAndPut(radEnthalpySrc, d_lab->d_radiationSRCINLabel,indx, patch);
-      radEnthalpySrc.initialize(0.0);
-
-      new_dw->allocateAndPut(qfluxe, d_lab->d_radiationFluxEINLabel,indx, patch);
-      qfluxe.initialize(0.0);
-
-      new_dw->allocateAndPut(qfluxw, d_lab->d_radiationFluxWINLabel,indx, patch);
-      qfluxw.initialize(0.0);
-
-      new_dw->allocateAndPut(qfluxn, d_lab->d_radiationFluxNINLabel,indx, patch);
-      qfluxn.initialize(0.0);
-
-      new_dw->allocateAndPut(qfluxs, d_lab->d_radiationFluxSINLabel,indx, patch);
-      qfluxs.initialize(0.0);
-
-      new_dw->allocateAndPut(qfluxt, d_lab->d_radiationFluxTINLabel,indx, patch);
-      qfluxt.initialize(0.0);
-
-      new_dw->allocateAndPut(qfluxb, d_lab->d_radiationFluxBINLabel,indx, patch);
-      qfluxb.initialize(0.0);
-
-      new_dw->allocateAndPut(volq, d_lab->d_radiationVolqINLabel,indx, patch);
-      volq.initialize(0.0);
-
-      new_dw->allocateAndPut(abskg,   d_lab->d_abskgINLabel,        indx, patch);
-      abskg.initialize(0.0);
-
-    }
     new_dw->allocateAndPut(density,   d_lab->d_densityCPLabel,    indx, patch);
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
     if (!d_useWasatchMomRHS) new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
 //#endif // WASATCH_IN_ARCHES
     new_dw->allocateAndPut(turb_viscosity,    d_lab->d_turbViscosLabel,       indx, patch);
-    if (d_dynScalarModel) {
-      new_dw->allocateAndPut(scalarDiffusivity,     d_lab->d_scalarDiffusivityLabel,     indx, patch);
-      if (d_calcEnthalpy){
-        new_dw->allocateAndPut(enthalpyDiffusivity,   d_lab->d_enthalpyDiffusivityLabel,   indx, patch);
-      }
-      if (d_calcReactingScalar){
-        new_dw->allocateAndPut(reactScalarDiffusivity,d_lab->d_reactScalarDiffusivityLabel,indx, patch);
-      }
-    }
 
     uVelocity.initialize(0.0);
     vVelocity.initialize(0.0);
@@ -1523,43 +1265,6 @@ Arches::paramInit(const ProcessorGroup* pg,
     if (!d_useWasatchMomRHS) viscosity.initialize(visVal);
 //#endif // WASATCH_IN_ARCHES
     turb_viscosity.initialize(0.0);
-
-    if (d_dynScalarModel) {
-      scalarDiffusivity.initialize(visVal/0.4);
-      if (d_calcEnthalpy){
-        enthalpyDiffusivity.initialize(visVal/0.4);
-      }
-      if (d_calcReactingScalar){
-        reactScalarDiffusivity.initialize(visVal/0.4);
-      }
-    }
-
-    scalar.initialize(0.0);
-    if (d_init_mix_frac > 0.0) {
-      //somewhat ugly...
-      InletStream ffState;
-      Stream calculatedStream;
-      double init_enthalpy  = 0.0;
-      ffState.d_initEnthalpy = true;
-      ffState.d_scalarDisp   = 0.0;
-      ffState.d_mixVarVariance.push_back(0.0);
-      ffState.d_mixVars.push_back(d_init_mix_frac);
-
-      string bc_type = "scalar_init";
-      d_props->computeInletProperties( ffState, calculatedStream, bc_type );
-
-      init_enthalpy = calculatedStream.getEnthalpy();
-      if ( d_calcEnthalpy ){ 
-        enthalpy.initialize(init_enthalpy); 
-      }
-
-      for (CellIterator iter=patch->getCellIterator();
-           !iter.done(); iter++){
-
-        scalar[*iter] = d_init_mix_frac;
-
-      }
-    }
 
     //----- momentum initial condition
     d_nlSolver->setInitVelConditionInterface( patch, uVelocity, vVelocity, wVelocity );
@@ -1828,10 +1533,8 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     const PatchSet* patches= level->eachPatch();
     const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
-    if ( d_boundaryCondition->isUsingNewBC() ) {
-      d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
-      d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
-    }
+    d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
+    d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls, d_doingRestart );
 
     EqnFactory& eqnFactory = EqnFactory::self();
     EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
@@ -1874,15 +1577,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
     const PatchSet* patches= level->eachPatch();
     const MaterialSet* matls = d_sharedState->allArchesMaterials();
-
-    if (d_newBC_on_Restart) {
-
-      //Reapply BC in case there was a modification to input.xml in the uda.
-      if (d_boundaryCondition->getInletBC()){
-        d_boundaryCondition->sched_calculateArea(sched, patches, matls);
-      }
-      d_boundaryCondition->sched_setProfile(sched, patches, matls);
-    }
 
     d_doingRestart = false;
     d_lab->recompile_taskgraph = true;
@@ -2487,124 +2181,6 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
   }
   proc0cout << endl;
 }
-
-// ****************************************************************************
-// schedule reading of initial condition for velocity and pressure
-// ****************************************************************************
-void
-Arches::sched_mmsInitialCondition(const LevelP& level,
-                                  SchedulerP& sched)
-{
-  // primitive variable initialization
-  Task* tsk = scinew Task( "Arches::mmsInitialCondition",
-                          this, &Arches::mmsInitialCondition);
-
-  printSchedule(level,dbg,"Arches::mmsInitialCondition");
-
-  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_pressurePSLabel);
-  tsk->modifies(d_lab->d_scalarSPLabel);
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
-
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-}
-
-// ****************************************************************************
-// Actual read
-// ****************************************************************************
-void
-Arches::mmsInitialCondition(const ProcessorGroup* ,
-                            const PatchSubset* patches,
-                            const MaterialSubset*,
-                            DataWarehouse* ,
-                            DataWarehouse* new_dw)
-{
-
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    SFCXVariable<double> uVelocity;
-    SFCYVariable<double> vVelocity;
-    SFCZVariable<double> wVelocity;
-    CCVariable<double> pressure;
-    CCVariable<double> scalar;
-
-    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(pressure,  d_lab->d_pressurePSLabel,    indx, patch);
-    new_dw->getModifiable(scalar,    d_lab->d_scalarSPLabel,      indx, patch);
-
-    PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-    double pi = acos(-1.0);
-
-    //CELL centered variables
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector currCell = *iter;
-
-      if (d_mms == "constantMMS") {
-        pressure[*iter] = d_cp;
-        scalar[*iter]   = d_phi0;
-      } else if (d_mms == "almgrenMMS") {
-        pressure[*iter] = -d_amp*d_amp/4 * (cos(4.0*pi*cellinfo->xx[currCell.x()])
-                          + cos(4.0*pi*cellinfo->yy[currCell.y()]));
-        scalar[*iter]   = 0.0;
-      }
-    }
-
-    //X-FACE centered variables
-    for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
-      IntVector currCell = *iter;
-
-      if (d_mms == "constantMMS") {
-        uVelocity[*iter] = d_cu;
-      } else if (d_mms == "almgrenMMS") {
-        // for mms in x-y plane
-        uVelocity[*iter] = 1 - d_amp * cos(2.0*pi*cellinfo->xu[currCell.x()])
-                           * sin(2.0*pi*cellinfo->yy[currCell.y()]);
-      }
-    }
-
-    //Y-FACE centered variables
-    for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){
-      IntVector currCell = *iter;
-
-      if (d_mms == "constantMMS") {
-        vVelocity[*iter] = d_cv;
-      } else if (d_mms == "almgrenMMS") {
-        // for mms in x-y plane
-        vVelocity[*iter] = 1 + d_amp * sin(2.0*pi*cellinfo->xx[currCell.x()])
-                              * cos(2.0*pi*cellinfo->yv[currCell.y()]);
-
-      }
-    }
-
-    //Z-FACE centered variables
-    for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){
-
-      if (d_mms == "constantMMS") {
-        wVelocity[*iter] = d_cw;
-      } else if (d_mms == "almgrenMMS") {
-        // for mms in x-y plane
-        wVelocity[*iter] =  0.0;
-      }
-    }
-
-    // Previously, we had the boundaries initialized here (below this comment).  I have removed
-    // this since a) it seemed incorrect and b) because it would fit better
-    // where BC's were applied.  Note that b) implies that we have a better
-    // BC abstraction.
-    // -Jeremy
-
-  }
-}
-
 
 // ****************************************************************************
 // schedule interpolation of initial condition for velocity to staggered

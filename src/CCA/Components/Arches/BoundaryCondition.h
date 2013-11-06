@@ -30,8 +30,6 @@
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/Mixing/Stream.h>
-#include <CCA/Components/Arches/Mixing/InletStream.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Grid/LevelP.h>
 
@@ -41,7 +39,9 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
-#include   <vector>
+#include <vector>
+#include <ostream>
+#include <fstream>
 
 #include <CCA/Components/Arches/DigitalFilter/DigitalFilterInlet.h>
 
@@ -85,8 +85,6 @@ namespace Uintah {
   class VarLabel;
   class PhysicalConstants;
   class Properties;
-  class Stream;
-  class InletStream;
   class ArchesLabel;
   class MPMArchesLabel;
   class ProcessorGroup;
@@ -269,13 +267,6 @@ namespace Uintah {
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
         Iterator bound_iter, std::string file_name );
 
-      void setEnthalpy__NEW( const Patch* patch, const Patch::FaceType& face, 
-        CCVariable<double>& enthalpy, HelperMap ivGridVarMap, HelperVec ivNames,
-        Iterator bound_ptr );
-
-      void setEnthalpyFromInput__NEW( const Patch* patch, const Patch::FaceType& face, 
-        CCVariable<double>& enthalpy, HelperMap ivGridVarMap, HelperVec ivNames, Iterator bound_ptr );
-
       void velocityOutletPressureBC__NEW( const Patch* patch, 
                                                 int  matl_index, 
                                           SFCXVariable<double>& uvel, 
@@ -339,10 +330,8 @@ namespace Uintah {
       BoundaryCondition(const ArchesLabel* label, 
           const MPMArchesLabel* MAlb,
           PhysicalConstants* phys_const, 
-          Properties* props,
-          bool calcReactScalar, 
-          bool calcEnthalpy, 
-          bool calcVariance);
+          Properties* props);
+         
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -354,80 +343,30 @@ namespace Uintah {
       // Details here
       void problemSetup(const ProblemSpecP& params);
 
-      // GROUP: Access functions
-
-      bool getWallBC() { 
-        return d_wallBoundary; 
-      }
-
-      bool getInletBC() { 
-        return d_inletBoundary; 
-      }
-
-      bool getPressureBC() { 
-        return d_pressureBoundary; 
-      }
-
-      bool getOutletBC() { 
-        return d_outletBoundary; 
-      }
-
-      bool anyArchesPhysicalBC() { 
-        return ((d_wallBoundary)||(d_inletBoundary)||(d_pressureBoundary)||(d_outletBoundary)); 
-      }
-
-      ////////////////////////////////////////////////////////////////////////
-      // Get the number of inlets (primary + secondary)
-      int getNumInlets() { 
-        return d_numInlets; 
-      }
-
       ////////////////////////////////////////////////////////////////////////
       // mm Wall boundary ID
       int getMMWallId() const {
-        if ( d_use_new_bcs ) {
-          return INTRUSION; 
-        } else { 
-          return d_mmWallID; 
-        }
-      }
-
-      ////////////////////////////////////////////////////////////////////////
-      // flowfield cell id
-      inline int flowCellType() const {
-        return d_flowfieldCellTypeVal;
-        //return -1; 
+        return INTRUSION; 
       }
 
       ////////////////////////////////////////////////////////////////////////
       // Wall boundary ID
       inline int wallCellType() const { 
-        if ( d_use_new_bcs ) { 
-          return WALL; 
-        } else { 
-          return WALL; //wall_celltypeval; 
-        } 
+        return WALL; 
       }
 
       ////////////////////////////////////////////////////////////////////////
       // Pressure boundary ID
       inline int pressureCellType() const {
-        if ( d_use_new_bcs ) { 
-          return PRESSURE; 
-        } else { 
-          return PRESSURE; //pressure_celltypeval; 
-        } 
+        return PRESSURE; 
       }
 
       ////////////////////////////////////////////////////////////////////////
       // Outlet boundary ID
       inline int outletCellType() const { 
-        if ( d_use_new_bcs ) { 
-          return OUTLET; 
-        } else { 
-          return OUTLET; //outlet_celltypeval; 
-        } 
+        return OUTLET; 
       }
+
       ////////////////////////////////////////////////////////////////////////
       // sets boolean for energy exchange between solid and fluid
       void setIfCalcEnergyExchange(bool calcEnergyExchange){
@@ -464,21 +403,7 @@ namespace Uintah {
         return d_cutCells;
       }      
 
-      // GROUP:  Schedule tasks :
-      ////////////////////////////////////////////////////////////////////////
-      // Initialize cell types
-      void sched_cellTypeInit(SchedulerP&, 
-          const PatchSet* patches,
-          const MaterialSet* matls);
-
       void sched_computeInletAreaBCSource(SchedulerP& sched, 
-          const PatchSet* patches,
-          const MaterialSet* matls);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Initialize inlet area
-      // Details here
-      void sched_calculateArea(SchedulerP&, 
           const PatchSet* patches,
           const MaterialSet* matls);
 
@@ -488,21 +413,6 @@ namespace Uintah {
           const PatchSet* patches,
           const MaterialSet* matls);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Schedule Set Profile BCS
-      // initializes velocities, scalars and properties at the bndry
-      // assigns flat velocity profiles for primary and secondary inlets
-      // Also sets flat profiles for density
-      // ** WARNING ** Properties profile not done yet
-      void sched_setProfile(SchedulerP&, 
-          const PatchSet* patches,
-          const MaterialSet* matls);
-
-      void sched_initInletBC(SchedulerP&, 
-          const PatchSet* patches,
-          const MaterialSet* matls);
-
-
       template<class V, class T> void
         copy_stencil7(DataWarehouse* new_dw,
             const Patch* patch,
@@ -511,48 +421,11 @@ namespace Uintah {
             V& A,  T& AP, T& AE, T& AW,
             T& AN, T& AS, T& AT, T& AB);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Initialize multimaterial wall cell types
-      void sched_mmWallCellTypeInit( SchedulerP&, 
-          const PatchSet* patches,
-          const MaterialSet* matls, 
-          bool fixCellType);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Initialize multimaterial wall cell types for first time step
-      void sched_mmWallCellTypeInit_first( SchedulerP&, 
-          const PatchSet* patches,
-          const MaterialSet* matls);
-
-      // GROUP:  Actual Computations :
-      ////////////////////////////////////////////////////////////////////////
-      // Initialize celltyping
-      void cellTypeInit(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw);
-      ////////////////////////////////////////////////////////////////////////
-      // computing inlet areas
-      // Details here
-      void computeInletFlowArea(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw);
-
       void computeInletAreaBCSource(const ProcessorGroup*,
           const PatchSubset* patches,
           const MaterialSubset*,
           DataWarehouse* old_dw,
           DataWarehouse* new_dw);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Actually compute velocity BC terms
-      void velocityBC(const Patch* patch,
-          CellInformation* cellinfo,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars);
 
       /** @brief Applies boundary conditions to A matrix for boundary conditions */
       void pressureBC(const Patch* patch,
@@ -560,35 +433,6 @@ namespace Uintah {
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Actually compute scalar BC terms
-      void scalarBC(const Patch* patch,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars);
-
-      void scalarBC__new(const Patch* patch,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars);
-
-
-      ////////////////////////////////////////////////////////////////////////
-      // Initialize multi-material wall celltyping and void fraction 
-      // calculation
-      void mmWallCellTypeInit(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw,
-          bool fixCellType);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Initialize multi-material wall celltyping and void fraction 
-      // calculation for first time step
-      void mmWallCellTypeInit_first(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw);
       // for computing intrusion bc's
       void intrusionTemperatureBC(const Patch* patch,
           constCCVariable<int>& cellType,
@@ -638,17 +482,6 @@ namespace Uintah {
           const Patch* patch,
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
-      // applies multimaterial bc's for scalars and pressure
-      void mmscalarWallBC( const Patch* patch,
-          CellInformation*, 
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars);
-
-      // applies multimaterial bc's for enthalpy
-      void mmEnthalpyWallBC( const Patch* patch,
-          CellInformation* cellinfo,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Calculate uhat for multimaterial case (only for nonintrusion cells)
@@ -661,22 +494,6 @@ namespace Uintah {
       void calculateVelocityPred_mm(const Patch* patch,
           double delta_t,
           CellInformation* cellinfo,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars);
-
-      void scalarLisolve_mm(const Patch*,
-          double delta_t,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars,
-          CellInformation* cellinfo);
-
-      void enthalpyLisolve_mm(const Patch*,
-          double delta_t,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars,
-          CellInformation* cellinfo);
-      // New boundary conditions
-      void scalarOutletPressureBC(const Patch* patch,
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
@@ -704,17 +521,6 @@ namespace Uintah {
           const double delta_t,
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
-
-      void sched_setInletFlowRates(SchedulerP& sched,
-          const PatchSet* patches,
-          const MaterialSet* matls);
-
-      inline void setMMS(bool doMMS) {
-        d_doMMS=doMMS;
-      }
-      inline bool getMMS() const {
-        return d_doMMS;
-      }
 
       //boundary source term methods
       void sched_computeScalarSourceTerm(SchedulerP& sched,
@@ -797,9 +603,6 @@ namespace Uintah {
       typedef std::map<BC_TYPE, std::string> BCNameMap;
       typedef std::map<int, BCInfo>      BCInfoMap;
 
-      /** @brief Using the new BC mechanism? */
-      inline bool isUsingNewBC(){ return d_use_new_bcs; }; 
-
       /** @brief Interface to the intrusion temperature method */ 
       void sched_setIntrusionTemperature( SchedulerP& sched, 
                                           const PatchSet* patches,
@@ -813,7 +616,6 @@ namespace Uintah {
       void setupBCs( ProblemSpecP& db ); 
 
       BCNameMap d_bc_type_to_string;                        ///< Matches the BC integer ID with the string name
-      bool d_use_new_bcs;                                   ///< Turn on/off the new BC mech. 
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute u velocity BC terms
@@ -858,27 +660,6 @@ namespace Uintah {
           DataWarehouse* old_dw,
           DataWarehouse* new_dw);
 
-
-      ////////////////////////////////////////////////////////////////////////
-      // Actually set the velocity, density and props flat profile
-      void setProfile(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw);
-
-      void initInletBC(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw);
-
-      void setInletFlowRates(const ProcessorGroup*,
-          const PatchSubset* patches,
-          const MaterialSubset* matls,
-          DataWarehouse* old_dw,
-          DataWarehouse* new_dw);
-
       void setAreaFraction( const ProcessorGroup*,
           const PatchSubset* patches,
           const MaterialSubset*,
@@ -886,23 +667,6 @@ namespace Uintah {
           DataWarehouse* new_dw, 
           const int timesubstep, 
           const bool reinitialize );
-
-      void setFlatProfV( const Patch* patch, 
-          SFCXVariable<double>& u, SFCYVariable<double>& v, SFCZVariable<double>& w, 
-          const CCVariable<int>& cellType, const double area, const int inlet_type, 
-          const double flow_rate, const double inlet_vel, const double density, 
-          const bool xminus, const bool xplus, 
-          const bool yminus, const bool yplus, 
-          const bool zminus, const bool zplus, 
-          double& actual_flow_rate ); 
-
-      void setFlatProfS( const Patch* patch, 
-          CCVariable<double>& scalar, 
-          double value, 
-          const CCVariable<int>& cellType, const double area, const int inlet_type, 
-          const bool xminus, const bool xplus, 
-          const bool yminus, const bool yplus, 
-          const bool zminus, const bool zplus );
 
     private:
 
@@ -952,94 +716,6 @@ namespace Uintah {
 
         //note that stencil.p = sum(off_diagonals) - sp 
 
-      };
-
-      //-------------------------------------------------------------------
-      // Flow Inlets
-      //
-      class FlowInlet {
-
-        public:
-
-          FlowInlet();
-          FlowInlet(const FlowInlet& copy);
-          FlowInlet(int cellID, bool calcVariance, bool reactingScalarSolve);
-          ~FlowInlet();
-          FlowInlet& operator=(const FlowInlet& copy);
-
-          enum InletVelType { VEL_FLAT_PROFILE, VEL_FUNCTION, VEL_VECTOR, VEL_FILE_INPUT };
-          enum InletScalarType { SCALAR_FLAT_PROFILE, SCALAR_FUNCTION, SCALAR_FILE_INPUT };
-
-          InletVelType d_inletVelType; 
-          InletScalarType d_inletScalarType; 
-
-          int d_cellTypeID;          // define enum for cell type
-          bool d_calcVariance;
-          bool d_reactingScalarSolve;
-          // inputs
-          double flowRate;           
-          double inletVel;           
-          Vector d_velocity_vector; 
-          double fcr;
-          double fsr;
-          bool d_ramping_inlet_flowrate;
-          InletStream streamMixturefraction;
-          // calculated values
-          Stream calcStream;
-          // stores the geometry information, read from problem specs
-          std::vector<GeometryPieceP> d_geomPiece;
-          void problemSetup(ProblemSpecP& params);
-          // reduction variable label to get area
-          VarLabel* d_area_label;
-          VarLabel* d_flowRate_label;
-          string d_inlet_name; 
-          double swirl_no; 
-          Vector swirl_cent; 
-          bool do_swirl; 
-      };
-
-      ////////////////////////////////////////////////////////////////////////
-      // PressureInlet
-      struct PressureInlet {
-        int d_cellTypeID;
-        bool d_calcVariance;
-        bool d_reactingScalarSolve;
-        InletStream streamMixturefraction;
-        Stream calcStream;
-        double area;
-        // stores the geometry information, read from problem specs
-        std::vector<GeometryPieceP> d_geomPiece;
-        PressureInlet(int cellID, bool calcVariance, bool reactingScalarSolve);
-        ~PressureInlet() {}
-        void problemSetup(ProblemSpecP& params);
-      };
-
-      ////////////////////////////////////////////////////////////////////////
-      // FlowOutlet
-      struct FlowOutlet {
-        int d_cellTypeID;
-        bool d_calcVariance;
-        bool d_reactingScalarSolve;
-        InletStream streamMixturefraction;
-        Stream calcStream;
-        double area;
-        // stores the geometry information, read from problem specs
-        std::vector<GeometryPieceP> d_geomPiece;
-        FlowOutlet(int cellID, bool calcVariance, bool reactingScalarSolve);
-        ~FlowOutlet() {}
-        void problemSetup(ProblemSpecP& params);
-      };
-
-      ////////////////////////////////////////////////////////////////////////
-      // Wall Boundary
-      struct WallBdry {
-        int d_cellTypeID;
-        double area;
-        // stores the geometry information, read from problem specs
-        std::vector<GeometryPieceP> d_geomPiece;
-        WallBdry(int cellID);
-        ~WallBdry() {}
-        void problemSetup(ProblemSpecP& params);
       };
 
       void computeScalarSourceTerm(const ProcessorGroup*,
@@ -1099,26 +775,6 @@ namespace Uintah {
       // mass flow
       double d_uvwout;
       double d_overallMB;
-      // for reacting scalar
-      bool d_reactingScalarSolve;
-      // for enthalpy solve 
-      bool d_enthalpySolve;
-      bool d_calcVariance;
-      // variable labels
-      int d_flowfieldCellTypeVal;
-
-      bool d_wallBoundary;
-      WallBdry* d_wallBdry;
-
-      bool d_inletBoundary;
-      int d_numInlets;
-      std::vector<FlowInlet* > d_flowInlets;
-
-      bool d_pressureBoundary;
-      PressureInlet* d_pressureBC;
-
-      bool d_outletBoundary;
-      FlowOutlet* d_outletBC;
 
       string d_mms;
       double d_airDensity, d_heDensity;
@@ -1131,7 +787,6 @@ namespace Uintah {
       double amp;
 
       double d_turbPrNo;
-      bool d_doMMS;
       bool d_slip; 
       double d_csmag_wall; 
 

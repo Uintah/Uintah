@@ -258,10 +258,13 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
   tsk->requires(Task::OldDW, d_weight_label, gn, 0);
 
   // require gas temperature
-  tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
+  d_gas_temperature_label = VarLabel::find( "temperature" ); 
+  if ( d_gas_temperature_label == 0 ){ 
+    throw InvalidValue("Error: Unable to find gas temperature label.",__FILE__,__LINE__);
+  }
+  tsk->requires(Task::OldDW, d_gas_temperature_label, Ghost::AroundCells, 1);
 
   // For each required variable, determine what role it plays
-  // - "gas_temperature" - require the "tempIN" label
   // - "particle_temperature" - look in DQMOMEqnFactory
   // - "raw_coal_mass" - look in DQMOMEqnFactory
 
@@ -388,7 +391,7 @@ BadHawkDevol::computeModel( const ProcessorGroup * pc,
     if (compute_part_temp) {
       old_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
     } else {
-      old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
+      old_dw->get( temperature, d_gas_temperature_label, matlIndex, patch, gac, 1 );
     }
     
     constCCVariable<double> wa_raw_coal_mass;

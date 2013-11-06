@@ -29,11 +29,11 @@ if [ "$OS" = "Linux" ]; then
   #
   #  machine specific variables
   if [ "$MACHINE" == "rt" ]; then    
-    COMMON="      --with-boost=/usr/installed/boost/1.50  \\
+    COMMON="      --with-boost=/usr/  \\
      --enable-wasatch_3p \\
      --enable-ray-scatter \\
      USE_WASATCH=yes \\"
-#    COMMON="\\"  
+ 
     ENV="     CC=gcc \\
      CXX=g++ \\
      F77=gfortran"

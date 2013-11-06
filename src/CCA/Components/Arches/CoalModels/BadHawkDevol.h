@@ -92,6 +92,7 @@ private:
   const VarLabel* d_raw_coal_mass_label;
   const VarLabel* d_weight_label;
   const VarLabel* d_particle_temperature_label;
+  const VarLabel* d_gas_temperature_label; 
 
   double A1;
   double A2;
