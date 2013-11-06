@@ -27,19 +27,20 @@
 //#define AG_HACK  
 
 
-
 #include <TauProfilerForSCIRun.h>
+
 #include <CCA/Components/Regridder/TiledRegridder.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Variables/CellIterator.h>
 #include <CCA/Ports/LoadBalancer.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/InternalError.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Util/DebugStream.h>
+
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Grid.h>
 #include <Core/Grid/PatchBVH/PatchBVH.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
+#include <Core/Util/DebugStream.h>
 using namespace Uintah;
 
 #include <iomanip>

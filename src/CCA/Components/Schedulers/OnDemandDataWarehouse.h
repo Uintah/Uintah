@@ -344,6 +344,7 @@ public:
    static bool d_combineMemory;
 
    friend class SchedulerCommon;
+   friend class UnifiedScheduler;
 
 private:
    enum AccessType {

@@ -34,7 +34,6 @@
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/Examples/Wave.h>
-#include <CCA/Components/Examples/LJPotentialTest.h>
 #include <CCA/Components/ICE/AMRICE.h>
 #include <CCA/Components/ICE/ICE.h>
 #include <CCA/Components/ICE/impAMRICE.h>
@@ -232,9 +231,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
     return scinew ParticleTest1(world);
   } 
-  if (sim_comp == "ljpotentialtest" || sim_comp == "LJPOTENTIALTEST") {
-    return scinew LJPotentialTest(world);
-  }
   if (sim_comp == "solvertest" || sim_comp == "SOLVERTEST") {
     return scinew SolverTest1(world);
   } 
@@ -248,7 +244,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     return scinew UdaReducer(world, uda);
   }
   // TODO this needs to be updated
-  throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
+  throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, md, "
                               "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -benchmark.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"
                               "Make sure that the requested component is supported in this build.", __FILE__, __LINE__);

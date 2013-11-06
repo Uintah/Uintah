@@ -205,6 +205,7 @@
         </ColdFlow>
       </Properties>
       <BoundaryConditions>
+        <suppress_corner_recirculation/>
       </BoundaryConditions>
       <ExplicitSolver>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>

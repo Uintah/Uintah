@@ -123,6 +123,10 @@ WARNING
 
       virtual int size() = 0;
 
+      virtual size_t getDataSize() const = 0;
+
+      virtual bool copyOut(void* dst) const = 0;
+
       //////////
       // Insert Documentation Here:
       ParticleSubset* getParticleSubset() const {

@@ -39,5 +39,10 @@ SRCS += \
 PSELIBS :=
 LIBS    := $(Z_LIBRARY) $(GPERFTOOLS_LIBRARY)
 
+# See commit message for while hacking in the MPI_LIBRARY is necessary.
+ifeq ($(IS_OSX),yes)
+  LIBS += $(MPI_LIBRARY)
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

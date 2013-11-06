@@ -107,7 +107,7 @@ Vector::normal() const
 {
    Vector v(*this);
    v.normalize();
-   return v;			//
+   return v;			// 
 }
 
 ostream& operator<<( ostream& os, const Vector& v )

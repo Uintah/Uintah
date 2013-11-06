@@ -5,20 +5,20 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="hypre"/>
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
 
     <Density>
-      <NameTag name="density" state="CARRY_FORWARD" />
+      <NameTag name="density" state="CARRY_FORWARD"/>
     </Density>
     
     <!-- Set the initial condition expression for mixture fraction -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f" state="STATE_NONE" />
+      <NameTag name="f" state="STATE_NONE"/>
       <GaussianFunction amplitude="1.0" deviation="1.0" mean="0.0" baseline="0.0">
-        <NameTag name="ZSVOL" state="STATE_NONE" />
+        <NameTag name="ZSVOL" state="STATE_NONE"/>
       </GaussianFunction> 
     </BasicExpression>
     
@@ -28,12 +28,12 @@
       <TaskList>initialization</TaskList>
       
       <IndependentVariable>
-        <NameTag name="f" state="STATE_NONE" />
+        <NameTag name="f" state="STATE_NONE"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       
       <ExtractDensity>
-        <NameTag name="density" state="STATE_NONE" />
+        <NameTag name="density" state="STATE_NONE"/>
       </ExtractDensity>
 
     </TabProps>
@@ -44,16 +44,16 @@
       <TaskList>advance_solution</TaskList>
       
       <IndependentVariable>
-        <NameTag name="f" state="STATE_NONE" />
+        <NameTag name="f" state="STATE_NONE"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       
       <ExtractDensity>
-        <NameTag name="density" state="CARRY_FORWARD" />
+        <NameTag name="density" state="CARRY_FORWARD"/>
         <DensityWeightedIVar>
-          <NameTag name="rhof" state="STATE_N" />
+          <NameTag name="rhof" state="STATE_N"/>
           <RelatedIVar>
-            <NameTag name="f" state="STATE_NONE" />
+            <NameTag name="f" state="STATE_NONE"/>
           </RelatedIVar>
         </DensityWeightedIVar>
       </ExtractDensity>
@@ -63,7 +63,7 @@
     <!-- Set the initial condition expression for z-velocity -->
     <BasicExpression type="ZVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="w" state="STATE_NONE" />
+       <NameTag name="w" state="STATE_NONE"/>
        <Constant>1.0</Constant>
     </BasicExpression>
     
@@ -86,18 +86,18 @@
     </TransportEquation>   
     
     <ForceOnGraph tasklist="advance_solution">
-        <NameTag name="f" state="STATE_NONE" />
+        <NameTag name="f" state="STATE_NONE"/>
     </ForceOnGraph>
     
     <FieldClipping tasklist="advance_solution">
-      <FieldExpression type ="SVOL" min="0.0" max="1.0">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
         <NameTag name="f" state="STATE_NONE"/>        
       </FieldExpression>                    
     </FieldClipping>
       
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity" state="STATE_NONE"/>
       <Constant>0.0</Constant>
     </BasicExpression>
         
@@ -107,7 +107,7 @@
       <Z-Momentum>z-mom</Z-Momentum>
          
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity" state="STATE_NONE"/>
       </Viscosity>
       
       <Pressure>
@@ -144,7 +144,7 @@
     <filebase>varden-projection-advection-zdir.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.001"/>
+    <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
     <save label="density"/>
     <save label="z-mom"/>
@@ -155,78 +155,33 @@
     <save label="rhof"/>
     <save label="pressure"/>
     <save label="pressure_old"/>
-    <save label="pressure-source-term"/>
+    <save label="pressure_src"/>
   </DataArchiver> 
 
   <Grid>
 
       <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
 
       <Face side="z-">
-
-        <BCType id="all" var="Dirichlet" label="pressure">
-          <value> 0.0 </value>
-        </BCType>                       
-
-        <BCType id="all" var="Neumann" label="z-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Neumann" label="w">
-          <value> 0.0 </value>
-        </BCType>          
-                
-        <BCType id="all" var="Neumann" label="rhof">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Neumann" label="f">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Neumann" label="density">
-          <value> 0.0 </value>
-        </BCType>
-                
-        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>      
-
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="z-mom" var="Neumann" value="0.0"/>
+        <BCType label="w" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>
+        <BCType label="z-mom_rhs_partial" var="Dirichlet" value="0.0"/>
       </Face>
-
       <Face side="z+">
-
-        <BCType id="all" var="Dirichlet" label="pressure">
-          <value> 0.0 </value>
-        </BCType>                       
-
-        <BCType id="all" var="Neumann" label="z-mom">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Neumann" label="w">
-          <value> 0.0 </value>
-        </BCType>          
-        
-        <BCType id="all" var="Neumann" label="rhof">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Neumann" label="f">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Neumann" label="density">
-          <value> 0.0 </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="z-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>      
-
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="z-mom" var="Neumann" value="0.0"/>
+        <BCType label="w" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>
+        <BCType label="z-mom_rhs_partial" var="Dirichlet" value="0.0"/>
       </Face>
-
       </BoundaryConditions>  
 
       <Level>

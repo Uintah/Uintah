@@ -61,17 +61,19 @@ WARNING
 ****************************************/
 
    class SoleVariableBase : public Variable {
+
    public:
       
       virtual ~SoleVariableBase();
 
-      
       virtual void copyPointer(Variable&) = 0;
       virtual SoleVariableBase* clone() const = 0; 
       virtual const TypeDescription* virtualGetTypeDescription() const;
       virtual RefCounted* getRefCounted();
       virtual void getSizeInfo(std::string& elems,unsigned long& totsize,
                                void*& ptr) const = 0;
+      virtual size_t getDataSize() const = 0;
+      virtual bool copyOut(void* dst) const = 0;
       virtual void emitNormal(std::ostream& out, const IntVector& l,
                               const IntVector& h, ProblemSpecP varnode, 
                               bool outputDoubleAsFloat );

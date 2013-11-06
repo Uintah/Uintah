@@ -48,8 +48,6 @@
 #include <Core/Parallel/Parallel.h>
 #include <stdio.h>
 
-
-
 using namespace std;
 using namespace Uintah;
 
@@ -463,6 +461,9 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         Iterator nu;
         Iterator bound_ptr; 
 
+        int totalIVs = d_allIndepVarNames.size(); 
+        int counter = 0; 
+
         // look to make sure every variable has a BC set:
         // stuff the bc values into a container for use later
         for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
@@ -479,11 +480,18 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           if ( bc_kind == "FromFile" ){ 
             foundIterator = 
               getIteratorBCValue<std::string>( patch, face, child, variable_name, matlIndex, bc_s_value, bound_ptr ); 
+            counter++; 
           } else {
             foundIterator = 
               getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr ); 
+           counter++; 
           } 
+        }
 
+        if ( counter != totalIVs ){
+          stringstream msg; 
+          msg << "Error: For face " << face << " there are missing IVs in the boundary specification." << endl;
+          throw InvalidValue( msg.str(), __FILE__, __LINE__); 
         }
 
         // now use the last bound_ptr to loop over all boundary cells: 
@@ -661,135 +669,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
   }
 }
 
-
-//--------------------------------------------------------------------------- 
-// Old Table Hack -- to be removed with Properties.cc
-//--------------------------------------------------------------------------- 
-  void 
-ClassicTableInterface::oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type )
-{
-
-  cout_tabledbg << " In method ClassicTableInterface::OldTableHack " << endl;
-
-  //This is a temporary hack to get the table stuff working with the new interface
-  std::vector<double> iv(d_allIndepVarNames.size());
-
-  for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++){
-
-    if ( (d_allIndepVarNames[i] == "mixture_fraction") || (d_allIndepVarNames[i] == "coal_gas_mix_frac") || (d_allIndepVarNames[i] == "MixtureFraction")){
-      iv[i] = inStream.d_mixVars[0]; 
-    } else if (d_allIndepVarNames[i] == "mixture_fraction_variance") {
-      iv[i] = 0.0;
-    } else if (d_allIndepVarNames[i] == "mixture_fraction_2") {
-      iv[i] = inStream.d_f2; // set below if there is one...just want to make sure it is initialized properly
-    } else if (d_allIndepVarNames[i] == "mixture_fraction_variance_2") {
-      iv[i] = 0.0; 
-    } else if (d_allIndepVarNames[i] == "heat_loss" || d_allIndepVarNames[i] == "HeatLoss") {
-      iv[i] = inStream.d_heatloss; 
-      if (!calcEnthalpy) {
-        iv[i] = 0.0; // override any user input because case is adiabatic
-      }
-    }
-  }
-
-  if ( d_does_post_mixing && d_has_transform ) { 
-    throw ProblemSetupException("ERROR! I shouldn't be in this part of the code.", __FILE__, __LINE__); 
-  } else { 
-    _iv_transform->transform( iv, 0.0 ); 
-  }
-
-  double f                 = 0.0; 
-  double adiab_enthalpy    = 0.0; 
-  double current_heat_loss = 0.0;
-  double init_enthalpy     = 0.0; 
-
-  f  = inStream.d_mixVars[0]; 
-
-  if (calcEnthalpy) {
-
-    // non-adiabatic case
-    double enthalpy          = 0.0; 
-    double sensible_enthalpy = 0.0; 
-
-    IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
-//    sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
-		sensible_enthalpy    = ND_interp->find_val( iv, i_index->second );
-		
-    i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
-//    adiab_enthalpy = tableLookUp( iv, i_index->second ); 
-		adiab_enthalpy = ND_interp->find_val( iv, i_index->second );
-
-    enthalpy          = inStream.d_enthalpy; 
-
-    if ( inStream.d_initEnthalpy || ((abs(adiab_enthalpy - enthalpy)/abs(adiab_enthalpy) < 1.0e-4 ) && f < 1.0e-4) ) {
-
-      current_heat_loss = inStream.d_heatloss; 
-
-      init_enthalpy = adiab_enthalpy - current_heat_loss * sensible_enthalpy; 
-
-    } else {
-
-      throw ProblemSetupException("ERROR! I shouldn't be in this part of the code.", __FILE__, __LINE__); 
-
-    }
-  } else {
-
-    // adiabatic case
-    init_enthalpy = 0.0;
-    current_heat_loss = 0.0; 
-
-  }
-
-  IndexMap::iterator i_index = d_depVarIndexMap.find( "density" );
-  //  outStream.d_density = tableLookUp( iv, i_index->second ); 
-	outStream.d_density = ND_interp->find_val( iv, i_index->second );
-	
-  if (!d_coldflow) { 
-    i_index = d_depVarIndexMap.find( "temperature" );
-   // outStream.d_temperature = tableLookUp( iv, i_index->second ); 
-		outStream.d_temperature = ND_interp->find_val( iv, i_index->second );
-		
-    i_index = d_depVarIndexMap.find( "specificheat" );
-    // outStream.d_cp          = tableLookUp( iv, i_index->second ); 
-		outStream.d_cp          = ND_interp->find_val( iv, i_index->second ); 
-		
-    i_index = d_depVarIndexMap.find( "H2O" );
-    // outStream.d_h2o         = tableLookUp( iv, i_index->second );
-		outStream.d_h2o         = ND_interp->find_val( iv, i_index->second );
-	 	
-    i_index = d_depVarIndexMap.find( "CO2" );
-    //outStream.d_co2         = tableLookUp( iv, i_index->second ); 
-		outStream.d_co2         = ND_interp->find_val( iv, i_index->second ); 
-		
-    outStream.d_heatLoss    = current_heat_loss; 
-    if (inStream.d_initEnthalpy) outStream.d_enthalpy = init_enthalpy; 
-  }
-
-  cout_tabledbg << " Leaving method ClassicTableInterface::OldTableHack " << endl;
-}
-
-//--------------------------------------------------------------------------- 
-// schedule Dummy Init
-//--------------------------------------------------------------------------- 
-  void 
-ClassicTableInterface::sched_dummyInit( const LevelP& level, 
-    SchedulerP& sched )
-
-{
-}
-
-//--------------------------------------------------------------------------- 
-// Dummy Init
-//--------------------------------------------------------------------------- 
-  void 
-ClassicTableInterface::dummyInit( const ProcessorGroup* pc, 
-    const PatchSubset* patches, 
-    const MaterialSubset* matls, 
-    DataWarehouse* old_dw, 
-    DataWarehouse* new_dw )
-{
-}
-
 //-------------------------------------
   void 
 ClassicTableInterface::getIndexInfo()
@@ -834,12 +713,8 @@ ClassicTableInterface::getEnthalpyIndexInfo()
 }
 
 //-------------------------------------
-
-
-
-//-----------------------------------------
-  void
-  ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
+void
+ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
 {
 
   proc0cout << " Preparing to read the table inputfile:   " << inputfile << "\n";
@@ -1059,6 +934,7 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
 }
 
+//---------------------------
 void ClassicTableInterface::checkForConstants(gzFile &fp, const string & inputfile ) { 
 
   proc0cout << "\n Looking for constants in the header... " << endl;
@@ -1117,8 +993,4 @@ void ClassicTableInterface::checkForConstants(gzFile &fp, const string & inputfi
 
     }
   }
-
-
 }
-//---------------------
-

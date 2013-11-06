@@ -277,13 +277,56 @@ namespace Wasatch{
 
   //==================================================================
   
-  void parse_var_dens_mms( Uintah::ProblemSpecP varDensMMSParams,
+  void parse_var_dens_mms( Uintah::ProblemSpecP wasatchParams,
+                           Uintah::ProblemSpecP varDensMMSParams,
+                           const bool computeContinuityResidual,
                            GraphCategories& gc) {
     std::string solnVarName;
     double rho0=1.29985, rho1=0.081889, D=0.0658;
     varDensMMSParams->get("scalar",solnVarName);
     varDensMMSParams->get("rho1",rho1);
     varDensMMSParams->get("rho0",rho0);
+
+    for( Uintah::ProblemSpecP bcExprParams = wasatchParams->findBlock("BCExpression");
+        bcExprParams != 0;
+        bcExprParams = bcExprParams->findNextBlock("BCExpression") ) {
+      
+      if (bcExprParams->findBlock("VarDensMMSMomentum")) {
+        double bcRho0=1.29985, bcRho1=0.081889;
+        Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDensMMSMomentum");
+        valParams->get("rho0",bcRho0);
+        valParams->get("rho1",bcRho1);
+        if (rho0!=bcRho0 || rho1!=bcRho1) {
+          std::ostringstream msg;
+          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDensMMSMomentum\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDensMMSMomentum\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
+          throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
+        }
+      }
+      
+      else if (bcExprParams->findBlock("VarDensMMSDensity")) {
+        double bcRho0=1.29985, bcRho1=0.081889;
+        Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDensMMSDensity");
+        valParams->get("rho0",bcRho0);
+        valParams->get("rho1",bcRho1);
+        if (rho0!=bcRho0 || rho1!=bcRho1) {
+          std::ostringstream msg;
+          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDensMMSDensity\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDensMMSDensity\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
+          throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
+        }
+      }
+      
+      else if (bcExprParams->findBlock("VarDensMMSSolnVar")) {
+        double bcRho0=1.29985, bcRho1=0.081889;
+        Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDensMMSSolnVar");
+        valParams->get("rho0",bcRho0);
+        valParams->get("rho1",bcRho1);
+        if (rho0!=bcRho0 || rho1!=bcRho1) {
+          std::ostringstream msg;
+          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDensMMSSolnVar\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDensMMSSolnVar\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
+          throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
+        }
+      }
+    }
     varDensMMSParams->get("D",D);
     const TagNames& tagNames = TagNames::self();
 
@@ -297,12 +340,19 @@ namespace Wasatch{
     slngraphHelper->exprFactory->attach_dependency_to_expression(MMSSourceTag, solnVarRHSTag);
     slngraphHelper->exprFactory->attach_dependency_to_expression(MMSSourceTag, solnVarRHSStarTag);
     
-    const Expr::Tag varDensMMSContSrc = Expr::Tag( "continuity_src", Expr::STATE_NONE);
-    const Expr::Tag pSourceTag = Expr::Tag( "pressure-source-term", Expr::STATE_NONE);
+    const Expr::Tag varDensMMSContSrc = Expr::Tag( "mms_continuity_src", Expr::STATE_NONE);
+    const Expr::Tag varDensMMSPressureContSrc = Expr::Tag( "mms_pressure_continuity_src", Expr::STATE_NONE);
    
     slngraphHelper->exprFactory->register_expression( new VarDensMMSContinuitySrc<SVolField>::Builder( varDensMMSContSrc, rho0, rho1, tagNames.xsvolcoord, tagNames.time, tagNames.timestep));
+    slngraphHelper->exprFactory->register_expression( new VarDensMMSPressureContSrc<SVolField>::Builder( varDensMMSPressureContSrc, varDensMMSContSrc, tagNames.timestep));
     
-    slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSContSrc, pSourceTag);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSPressureContSrc, tagNames.pressuresrc);
+    
+    if (computeContinuityResidual)
+    {
+      const Expr::Tag drhodtTag = Expr::Tag( "drhodt", Expr::STATE_NONE);
+      slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSContSrc, drhodtTag);
+    }
   }
     
   //==================================================================

@@ -923,7 +923,6 @@ Matrix3::eigen(SCIRun::Vector& eval, Matrix3& evec)
 
 }
 namespace Uintah {
-
   MPI_Datatype makeMPI_Matrix3()
   {
     ASSERTEQ(sizeof(Matrix3), sizeof(double)*9);

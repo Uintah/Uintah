@@ -61,6 +61,7 @@ public:
   void evaluate();
   
 private:
+  typedef typename SpatialOps::structured::SingleValueField TimeField;
   
   TimeDerivative( const Expr::Tag& newVarTag,
                  const Expr::Tag& oldVarTag,
@@ -70,7 +71,7 @@ private:
   const Expr::Tag timesteptag_;
   const ValT* newvar_;
   const ValT* oldvar_;
-  const double* dt_;
+  const TimeField* dt_;
 };
 
 //====================================================================
@@ -80,12 +81,12 @@ private:
 template<typename ValT>
 TimeDerivative<ValT>::
 TimeDerivative( const Expr::Tag& newVarTag,
-               const Expr::Tag& oldVarTag,
-               const Expr::Tag& timestepTag )
+                const Expr::Tag& oldVarTag,
+                const Expr::Tag& timestepTag )
 : Expr::Expression<ValT>(),
-newvartag_  ( newVarTag ),
-oldvartag_  ( oldVarTag ),
-timesteptag_( timestepTag )
+  newvartag_  ( newVarTag ),
+  oldvartag_  ( oldVarTag ),
+  timesteptag_( timestepTag )
 {}
 
 //--------------------------------------------------------------------
@@ -110,7 +111,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   const typename Expr::FieldMgrSelector<ValT>::type& valtfm = fml.template field_manager<ValT>();
   newvar_ = &valtfm.field_ref( newvartag_ );
   oldvar_ = &valtfm.field_ref( oldvartag_ );
-  dt_     = &fml.template field_ref<double>( timesteptag_ );
+  dt_     = &fml.template field_ref<TimeField>( timesteptag_ );
 }
 
 //--------------------------------------------------------------------
@@ -134,9 +135,9 @@ Builder( const Expr::Tag& result,
         const Expr::Tag& oldVarTag,
         const Expr::Tag& timestepTag )
 : ExpressionBuilder(result),
-newvartag_  ( newVarTag ),
-oldvartag_  ( oldVarTag ),
-timesteptag_( timestepTag )
+  newvartag_  ( newVarTag ),
+  oldvartag_  ( oldVarTag ),
+  timesteptag_( timestepTag )
 {}
 
 //--------------------------------------------------------------------

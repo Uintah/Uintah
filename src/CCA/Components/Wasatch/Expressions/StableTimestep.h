@@ -16,7 +16,7 @@
  *
  */
 class StableTimestep
- : public Expr::Expression<double>
+ : public Expr::Expression<SpatialOps::structured::SingleValueField>
 {
   const Expr::Tag rhoTag_, viscTag_, uTag_, vTag_, wTag_;
   double invDx_, invDy_, invDz_; // 1/dx, 1/dy, 1/dz

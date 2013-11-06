@@ -39,7 +39,7 @@
 #include <vector>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 
-#include <spatialops/SpatialOpsConfigure.h>
+#include <spatialops/SpatialOpsConfigure.h>  // defines ENABLE_THREADS if SpatialOps is built multithreaded
 #ifdef ENABLE_THREADS
 #include <boost/thread/mutex.hpp>
 #endif

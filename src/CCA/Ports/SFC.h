@@ -38,8 +38,7 @@
 #include <Core/Thread/Time.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
-using namespace SCIRun;
-using namespace Uintah;
+
 namespace Uintah{
 
 #ifdef _TIMESFC_
@@ -1109,7 +1108,7 @@ void SFC<LOCS>::Parallel()
             Parallel3<DIM,BITS>();
             break;
     default:
-            throw InternalError("Invalid Merge Mode",__FILE__,__LINE__);
+            throw SCIRun::InternalError("Invalid Merge Mode",__FILE__,__LINE__);
   }
 }
 
@@ -3832,7 +3831,7 @@ void SFC<LOCS>::SetRefinementsByDelta(LOCS *delta)
 {
   if(dimensions[0]==INT_MAX && dimensions[1]==INT_MAX && dimensions[2]==INT_MAX)
   {
-    throw InternalError("SFC Dimensions not set",__FILE__,__LINE__);
+    throw SCIRun::InternalError("SFC Dimensions not set",__FILE__,__LINE__);
   }
   refinements=(int)ceil(log(dimensions[0]/delta[0])/log(2.0));
   for(int d=1;d<dim;d++)

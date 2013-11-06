@@ -42,20 +42,18 @@
 
 namespace Uintah {
 
-   using namespace SCIRun;
-
-   class InvalidValue : public Exception {
-   public:
-      InvalidValue(const std::string&, const char* file, int line);
-      InvalidValue(const InvalidValue&);
-      virtual ~InvalidValue();
-      virtual const char* message() const;
-      virtual const char* type() const;
-   protected:
-   private:
-      std::string d_msg;
-      InvalidValue& operator=(const InvalidValue&);
-   };
+  class InvalidValue : public SCIRun::Exception {
+  public:
+    InvalidValue(const std::string&, const char* file, int line);
+    InvalidValue(const InvalidValue&);
+    virtual ~InvalidValue();
+    virtual const char* message() const;
+    virtual const char* type() const;
+  protected:
+  private:
+    std::string d_msg;
+    InvalidValue& operator=(const InvalidValue&);
+  };
 
 } // End namespace Uintah
 

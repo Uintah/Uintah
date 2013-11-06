@@ -185,8 +185,6 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
   
   using namespace SpatialOps;
   using namespace SpatialOps::structured;
-
-  build_src_fields(src);
   
   const MemoryWindow& wdest = dest.window_with_ghost(); // used for velocity & interpolated phi
   IntVec destExtent = wdest.extent() - unitNormal_*3 - unitNormal_ * (hasPlusBoundary_ ? 1 : 0);
@@ -203,15 +201,17 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
   typename PhiFaceT::value_type* velVals = const_cast<typename PhiFaceT::value_type*>( advectiveVelocity_->field_values(advelMemType,advelDevIdx) );
 
   const BoundaryCellInfo& bcs = src.boundary_info();
-  const BoundaryCellInfo& bcd = dest.boundary_info();
   const GhostData& gdd = dest.get_ghost_data();
   assert( gdd == advectiveVelocity_->get_ghost_data() );
 
   PhiVolT          d( wd, bcs, gdd, destVals, ExternalStorage,     dMemType,     dDevIdx );
   const PhiVolT aVel( wd, bcs, gdd,  velVals, ExternalStorage, advelMemType, advelDevIdx );
 
-  const PhiVolT& vfracmm = *srcFields_[0];
-  const PhiVolT& vfracpp = *srcFields_[3];
+  std::vector<PhiVolT> srcFields;
+  build_src_fields( src, srcFields );
+
+  const PhiVolT& vfracmm = srcFields[0];
+  const PhiVolT& vfracpp = srcFields[3];
   
   d <<= cond( aVel > 0.0 && vfracmm == 0.0, 0.0 )
             ( aVel < 0.0 && vfracpp == 0.0, 0.0 )
@@ -223,12 +223,13 @@ apply_embedded_boundaries( const PhiVolT &src, PhiFaceT &dest ) const {
 template< typename PhiVolT, typename PhiFaceT >
 void
 FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
-build_src_fields( const PhiVolT& src ) const
+build_src_fields( const PhiVolT& src,
+                  std::vector<PhiVolT>& srcFields ) const
 {
   using namespace SpatialOps;
   using namespace SpatialOps::structured;
   
-  srcFields_.clear();
+  srcFields.clear();
 
   // build source fields
   const MemoryWindow& wsrc = src.window_with_ghost();
@@ -242,10 +243,8 @@ build_src_fields( const PhiVolT& src ) const
     const MemoryWindow srcwin( wsrc.glob_dim(),
                                wsrc.offset() + unitNormal_*i,
                                wsrc.extent() - unitNormal_*3 );
-    
-    const PhiVolT * field = new PhiVolT( srcwin, src );
-    
-    srcFields_.push_back( PhiVolTPtr(field) );
+
+    srcFields.push_back( PhiVolT( srcwin, src ) );
   }
 }
 
@@ -284,10 +283,8 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest )
   const IntVec& extent = wsrc.extent() - unitNormal_*wsrc.glob_dim() + unitNormal_;
   IntVec destExtent = wdest.extent() - unitNormal_*wdest.glob_dim() + unitNormal_;
   
-  const GhostData&  ghostSrc =  src.get_ghost_data();
   const GhostData& ghostDest = dest.get_ghost_data();
   const BoundaryCellInfo& bcSrc = src.boundary_info();
-  const BoundaryCellInfo& bcDest = dest.boundary_info();
 
   // start with patch boundaries
   for (int direc=0; direc<2; direc++) {
@@ -346,12 +343,13 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest )
   
   // build the source fields - these correspond to windows into minus-minus,
   // minus, plus, and plus-plus with respect to destination (face).
-  build_src_fields(src);
+  std::vector<PhiVolT> srcFields;
+  build_src_fields(src,srcFields);
   
-  const PhiVolT& smm = *srcFields_[0];
-  const PhiVolT& sm  = *srcFields_[1];
-  const PhiVolT& sp  = *srcFields_[2];
-  const PhiVolT& spp = *srcFields_[3];
+  const PhiVolT& smm = srcFields[0];
+  const PhiVolT& sm  = srcFields[1];
+  const PhiVolT& sp  = srcFields[2];
+  const PhiVolT& spp = srcFields[3];
   
   SpatFldPtr<PhiVolT> rm = SpatialFieldStore::get<PhiVolT>( sm );
   *rm <<= (sm-smm)/(sp-sm);

@@ -490,10 +490,13 @@ namespace Wasatch{
     }
     
     else if (params->findBlock("CylindricalDiffusionCoefficient") ) {
-      double coef, molecularVolume, diffusionCoefficient;
+      double coef, molecularVolume, diffusionCoefficient, sMin;
       Uintah::ProblemSpecP coefParams = params->findBlock("CylindricalDiffusionCoefficient");
       coefParams -> getAttribute("Molec_Vol",molecularVolume);
       coefParams -> getAttribute("Diff_Coef",diffusionCoefficient);
+      sMin = 0.0;
+      if (coefParams->getAttribute("S_Min", sMin) )
+        coefParams->getAttribute("S_Min", sMin);
       coef = molecularVolume*diffusionCoefficient* 7.0/6.0/log(0.5);
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       const Expr::Tag eqTag  = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
@@ -501,22 +504,25 @@ namespace Wasatch{
       if (coefParams->findBlock("SBar") ) 
         sBarTag = parse_nametag( coefParams->findBlock("SBar")->findBlock("NameTag") );
       typedef typename CylindricalDiffusionCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, saturationTag, eqTag, sBarTag, coef);
+      builder = scinew Builder( tag, saturationTag, eqTag, sBarTag, coef, sMin);
     }
     
     else if (params->findBlock("KineticGrowthCoefficient") ) {
-      double coef, sMax;
+      double coef, sMax, sMin;
       Uintah::ProblemSpecP coefParams = params->findBlock("KineticGrowthCoefficient");
       coefParams -> getAttribute("K_A",coef);
+      sMin = 0.0;
       sMax = 1e10;
       if( coefParams->getAttribute("S_Max",sMax) )
         coefParams->getAttribute("S_Max",sMax);
+      if( coefParams->getAttribute("S_Min",sMin) )
+        coefParams->getAttribute("S_Min",sMin);
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       Expr::Tag sBarTag;
       if (coefParams->findBlock("SBar") ) 
         sBarTag = parse_nametag( coefParams->findBlock("SBar")->findBlock("NameTag") );
       typedef typename KineticGrowthCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, saturationTag, sBarTag, coef, sMax);
+      builder = scinew Builder( tag, saturationTag, sBarTag, coef, sMax, sMin);
     }
     
     else if (params->findBlock("PrecipitationMonosurfaceCoefficient") ) {
@@ -966,9 +972,11 @@ namespace Wasatch{
 
     else if ( params->findBlock("VarDensMMSMomentum") ){
       std::string side;
+      double rho0=1.29985, rho1=0.081889;
       Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSMomentum");
       valParams->getAttribute("side",side);
-      
+      valParams->get("rho0",rho0);
+      valParams->get("rho1",rho1);
       typedef VarDensMMSMomentum<FieldT> VarDensMMSMomExpr;
       SpatialOps::structured::BCSide bcSide;
       if      (side == "PLUS" ) bcSide = SpatialOps::structured::PLUS_SIDE;
@@ -980,7 +988,7 @@ namespace Wasatch{
         << " is not supported in VarDensMMSMomentum expression." << std::endl;
         throw std::invalid_argument( msg.str() );
       }
-      builder = scinew typename VarDensMMSMomExpr::Builder( tag, tagNames.time, bcSide );
+      builder = scinew typename VarDensMMSMomExpr::Builder( tag, tagNames.time, rho0, rho1, bcSide );
     }
 
     else if ( params->findBlock("VarDensMMSMixtureFraction") ){
@@ -990,15 +998,23 @@ namespace Wasatch{
     }
 
     else if ( params->findBlock("VarDensMMSDensity") ){
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSDensity");      
+      double rho0=1.29985, rho1=0.081889;
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSDensity");
+      valParams->get("rho0",rho0);
+      valParams->get("rho1",rho1);
+
       typedef VarDensMMSDensity<FieldT> VarDensMMSDensityExpr;
-      builder = scinew typename VarDensMMSDensityExpr::Builder( tag, tagNames.time );
+      builder = scinew typename VarDensMMSDensityExpr::Builder( tag, tagNames.time, rho0, rho1 );
     }
 
     else if ( params->findBlock("VarDensMMSSolnVar") ){
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSSolnVar");      
+      double rho0=1.29985, rho1=0.081889;
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSSolnVar");
+      valParams->get("rho0",rho0);
+      valParams->get("rho1",rho1);
+
       typedef VarDensMMSSolnVar<FieldT> VarDensMMSSolnVarExpr;
-      builder = scinew typename VarDensMMSSolnVarExpr::Builder( tag, tagNames.time );
+      builder = scinew typename VarDensMMSSolnVarExpr::Builder( tag, tagNames.time, rho0, rho1 );
     }
     
     else if ( params->findBlock("TurbulentInlet") ) {

@@ -25,6 +25,7 @@
 
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Disclosure/TypeDescription.h>
+
 #include <Core/Util/FancyAssert.h>
 #include <Core/Containers/LinearArray3.h>
 #include <Core/Geometry/Point.h>

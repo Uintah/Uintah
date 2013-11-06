@@ -58,10 +58,6 @@ ifeq ($(BUILD_MPM),yes)
   endif
 endif
 
-ifeq ($(BUILD_MD),yes)
-  MD_LIB            = CCA/Components/MD
-endif
-
 ifeq ($(BUILD_ICE),yes)
   ICE_LIB            = CCA/Components/ICE
 endif
@@ -92,7 +88,6 @@ ifeq ($(IS_STATIC_BUILD),yes)
     $(ARCHES_SUB_LIBS)                  \
     $(MPMARCHES_LIB)                    \
     $(MPM_LIB)                          \
-    $(MD_LIB)                           \
     $(ICE_LIB)                          \
     $(MPMICE_LIB)                       \
     $(WASATCH_LIB)                      \
@@ -164,7 +159,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
-	      $(PAPI_LIBRARY) $(FFTW_LIBRARY)
+	  $(PAPI_LIBRARY) 
 else
   LIBS := $(MPI_LIBRARY) $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
           $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)               \
@@ -172,8 +167,7 @@ else
           $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
           $(TEEM_LIBRARY) $(PNG_LIBRARY) \
           $(BOOST_LIBRARY) $(CUDA_LIBRARY) \
-          $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY) \
-          $(FFTW_LIBRARY)
+          $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

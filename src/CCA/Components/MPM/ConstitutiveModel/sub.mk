@@ -52,13 +52,14 @@ SRCS   += \
         $(SRCDIR)/ShellMaterial.cc              \
         $(SRCDIR)/ElasticPlasticHP.cc           \
         $(SRCDIR)/Water.cc                      \
+        $(SRCDIR)/TH_Water.cc                   \
         $(SRCDIR)/ViscoPlastic.cc               \
         $(SRCDIR)/MurnaghanMPM.cc               \
         $(SRCDIR)/ProgramBurn.cc                \
         $(SRCDIR)/JWLppMPM.cc                   \
         $(SRCDIR)/UCNH.cc                       \
         $(SRCDIR)/P_Alpha.cc                    \
-        $(SRCDIR)/SoilFoam.cc	             \
+        $(SRCDIR)/SoilFoam.cc	                \
         $(SRCDIR)/NonLocalDruckerPrager.cc      \
         $(SRCDIR)/Arenisca.cc
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -180,7 +180,7 @@ WARNING
     int           currentDevice_;
 
     std::vector<std::queue<cudaStream_t*> >  idleStreams;
-    std::set<double*>  pinnedHostPtrs;
+    std::set<void*>  pinnedHostPtrs;
 
     // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)
     mutable CrowdMonitor idleStreamsLock_;

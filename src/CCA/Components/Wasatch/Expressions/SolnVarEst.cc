@@ -39,12 +39,12 @@ void SolnVarEst<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
 template< typename FieldT >
 void SolnVarEst<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldMgrSelector<FieldT>::type& FM  = fml.field_manager<FieldT>();
-  const typename Expr::FieldMgrSelector<double>::type& tFM = fml.field_manager<double>();
+  const typename Expr::FieldMgrSelector<FieldT>::type& FM = fml.field_manager<FieldT>();
   
   solnVarOld_ = &FM.field_ref ( solnVarOldt_ );    
   solnVarRHS_ = &FM.field_ref ( solnVarRHSt_ );    
-  tStep_      = &tFM.field_ref( tStept_      );
+
+  tStep_ = &fml.field_ref<TimeField>( tStept_ );
 }
 
 //------------------------------------------------------------------

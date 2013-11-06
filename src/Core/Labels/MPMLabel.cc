@@ -223,6 +223,9 @@ MPMLabel::MPMLabel()
   
   gAccelerationLabel = VarLabel::create( "g.acceleration",
 			NCVariable<Vector>::getTypeDescription() );
+
+  gColorLabel = VarLabel::create( "g.color",
+			NCVariable<double>::getTypeDescription() );
   
   gMassLabel = VarLabel::create( "g.mass",
 			NCVariable<double>::getTypeDescription() );
@@ -725,6 +728,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pPartitionUnityLabel);
 
   VarLabel::destroy(gAccelerationLabel);
+  VarLabel::destroy(gColorLabel);
   VarLabel::destroy(gMassLabel);
   VarLabel::destroy(gMassAllLabel);
   VarLabel::destroy(gVelocityLabel);

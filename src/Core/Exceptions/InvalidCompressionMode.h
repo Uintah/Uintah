@@ -40,9 +40,8 @@
 #include <string>
 
 namespace Uintah {
-  using namespace SCIRun;
 
-  class InvalidCompressionMode : public Exception {
+  class InvalidCompressionMode : public SCIRun::Exception {
   public:
     InvalidCompressionMode(const std::string& invalidmode,
 			   const std::string& vartype,

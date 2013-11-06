@@ -83,6 +83,7 @@ namespace Uintah {
     maptype sendSubsets;
     SendState(const SendState&);
     SendState& operator=(const SendState&);
+    mutable CrowdMonitor d_lock;
 
    };
 } // End namespace Uintah

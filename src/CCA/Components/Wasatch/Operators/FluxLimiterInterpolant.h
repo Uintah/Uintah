@@ -86,10 +86,7 @@ private:
   Wasatch::ConvInterpMethods limiterType_;
   
   SpatialOps::structured::IntVec unitNormal_;
-  
-  typedef typename SpatialOps::SpatFldPtr<const PhiVolT> PhiVolTPtr;
-  mutable std::vector<PhiVolTPtr> srcFields_;
-  
+
   // boundary information
   bool hasPlusBoundary_, hasMinusBoundary_;
   
@@ -97,8 +94,8 @@ private:
   boost::mutex mutex_;
 # endif
 
-  void build_src_fields( const PhiVolT& src ) const;
-  
+  void build_src_fields( const PhiVolT& src, std::vector<PhiVolT>& ) const;
+
 public:
   
   typedef typename PhiVolT::Location   SrcLocation;

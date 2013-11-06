@@ -108,6 +108,7 @@ namespace Uintah {
       const VarLabel* pScaleFactorLabel_preReloc;
       
       const VarLabel* gLambdaDotLabel;
+      const VarLabel* gColorLabel;
       const VarLabel* gMassLabel;
       const VarLabel* gMassAllLabel;
       const VarLabel* gAccelerationLabel;

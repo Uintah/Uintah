@@ -41,6 +41,7 @@ SRCS += \
         $(SRCDIR)/fixradval.F \
         $(SRCDIR)/radarray.F \
         $(SRCDIR)/radcoef.F \
+        $(SRCDIR)/hottel.F \
         $(SRCDIR)/radcal.F \
         $(SRCDIR)/radwsgg.F \
         $(SRCDIR)/rdombmcalc.F \
@@ -56,6 +57,7 @@ SRCS += \
 $(SRCDIR)/radarray.$(OBJEXT): $(SRCDIR)/radarray_fort.h
 $(SRCDIR)/radcal.$(OBJEXT): $(SRCDIR)/radcal_fort.h
 $(SRCDIR)/radcoef.$(OBJEXT): $(SRCDIR)/radcoef_fort.h
+$(SRCDIR)/hottel.$(OBJEXT): $(SRCDIR)/hottel_fort.h
 $(SRCDIR)/radwsgg.$(OBJEXT): $(SRCDIR)/radwsgg_fort.h
 $(SRCDIR)/rordr.$(OBJEXT): $(SRCDIR)/rordr_fort.h
 $(SRCDIR)/rordrss.$(OBJEXT): $(SRCDIR)/rordrss_fort.h

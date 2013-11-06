@@ -107,17 +107,7 @@ public:
                  const bool initialize, 
                  const bool modify_ref_den );
 
-  /** @brief Dummy initialization as required by MPMArches */
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
-
-  /** @brief Dummy initialization as required by MPMArches */
-  void dummyInit( const ProcessorGroup* pc, 
-                  const PatchSubset* patches, 
-                  const MaterialSubset* matls, 
-                  DataWarehouse* old_dw, 
-                  DataWarehouse* new_dw );
-
-        /** @brief Compute cold flow density and temperature for simple two stream mixing */ 
+  /** @brief Compute cold flow density and temperature for simple two stream mixing */ 
   double coldFlowMixing( std::vector<double>& iv, int pos );
 
   enum BoundaryType { DIRICHLET, NEUMANN, FROMFILE };
@@ -131,9 +121,6 @@ public:
 
   typedef std::map<std::string, DepVarCont >       DepVarMap;
   typedef std::map<std::string, int >               IndexMap;
-
-  /** @brief A temporary solution to deal with boundary conditions on properties until Properties.cc is eliminated */ 
-  void oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type );
 
 	void tableMatching(){}; 
 

@@ -132,6 +132,16 @@ WARNING
     virtual const TypeDescription* virtualGetTypeDescription() const
     { return this->rep_.virtualGetTypeDescription(); }
 
+    // used to get size info of the underlying data; this is for host-->device variable copy
+    virtual size_t getDataSize() const {
+      return this->rep_.getDataSize();
+    }
+
+    // used to copy Variables to contiguous buffer prior to bulk host-->device copy
+    virtual bool copyOut(void* dst) const {
+      return this->rep_.copyOut(dst);
+    }
+
   protected:
     Variable rep_;
   };

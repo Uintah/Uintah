@@ -34,13 +34,10 @@
 // EqualElementSequencer version with the EqualIntervalSequencer
 
 namespace SCIRun {
-  using namespace Uintah;
 
   // specialize for the Matrix3 class
   template<>
-  class DefaultRunLengthSequencer<Matrix3>
-    : public EqualIntervalSequencer<Matrix3>
-  { };
+  class DefaultRunLengthSequencer<Uintah::Matrix3> : public EqualIntervalSequencer<Uintah::Matrix3> { };
 
 }
 
