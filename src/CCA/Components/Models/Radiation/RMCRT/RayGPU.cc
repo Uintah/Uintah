@@ -94,7 +94,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   labelNames.VRFlux    = d_VRFluxLabel->getName().c_str();
   labelNames.boundFlux = d_boundFluxLabel->getName().c_str();
   labelNames.radVolQ   = d_radiationVolqLabel->getName().c_str();
-#endif  
+  
   cout << " abskg:   " << d_abskgLabel->getName() << endl;
   cout << " sigmaT4: " << d_sigmaT4_label->getName() << endl;
   cout << " divQ:    " <<d_divQLabel->getName() << endl;
@@ -102,6 +102,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   cout << " VRFlux:  " << d_VRFluxLabel->getName() << endl;
   cout << " boundFlux: " << d_boundFluxLabel->getName() << endl;
   cout << " radVolQ:   " << d_radiationVolqLabel->getName() << endl;
+#endif
   
   //__________________________________
   //  RMCRT_flags
@@ -161,10 +162,11 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     // setup random number generator states on the device, 1 for each thread
     curandState* randNumStates;
     int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
-    CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );
+    /*`CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );      TESTING`*/
 
     
     RT_flags.nRaySteps = 0;
+
     //__________________________________
     // set up and launch kernel
     launchRayTraceKernel(dimGrid, 
@@ -184,7 +186,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
                          new_gdw);
 
     // free device-side RNG states
-    CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
+    /*`CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );      TESTING`*/
     
     //__________________________________
     //

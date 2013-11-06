@@ -235,6 +235,7 @@ namespace Uintah{
       const VarLabel* d_absorpLabel;
       const VarLabel* d_temperatureLabel;
       const VarLabel* d_cellTypeLabel; 
+      const VarLabel* d_DcellTypeLabel;            //HACK
       const VarLabel* d_divQLabel;
       const VarLabel* d_VRFluxLabel;
       const VarLabel* d_divQFiltLabel;
