@@ -128,8 +128,8 @@ DataArchiver::~DataArchiver()
 }
 
 void
-DataArchiver::problemSetup(const ProblemSpecP& params,
-                           SimulationState* state)
+DataArchiver::problemSetup( const ProblemSpecP    & params,
+                                  SimulationState * state )
 {
    dbg << "Doing ProblemSetup \t\t\t\tDataArchiver"<< endl;
    
@@ -538,9 +538,12 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
 
 // to be called after problemSetup and initializeOutput get called
 void
-DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
-                           int timestep, double time, bool fromScratch,
-                           bool removeOldDir)
+DataArchiver::restartSetup( Dir    & restartFromDir,
+                            int      startTimestep,
+                            int      timestep,
+                            double   time,
+                            bool     fromScratch,
+                            bool     removeOldDir )
 {
   d_outputInitTimestep = false;
   if( d_writeMeta && !fromScratch ) {
@@ -654,7 +657,7 @@ DataArchiver::combinePatchSetup(Dir& fromDir)
           throw InternalError("global variable name attribute not found", __FILE__, __LINE__);
 
         // this isn't the most efficient, but i don't think it matters
-        // to much for this initialization code
+        // too much for this initialization code
         list<SaveNameItem>::iterator it = d_saveLabelNames.begin();
         while (it != d_saveLabelNames.end()) {
           if ((*it).labelName == varname) {

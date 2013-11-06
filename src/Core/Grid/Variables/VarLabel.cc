@@ -42,14 +42,14 @@ using std::ostream;
 static DebugStream dbg("VarLabel", false);
 
 static map<string, VarLabel*> allLabels;
-string VarLabel::defaultCompressionMode = "none";
+string VarLabel::d_defaultCompressionMode = "none";
 static Mutex lock("VarLabel create/destroy lock");
 
 VarLabel*
-VarLabel::create(const string& name,
-                 const Uintah::TypeDescription* td,
-                 const IntVector& boundaryLayer /*= IntVector(0,0,0) */,
-                 VarType vartype /*= Normal*/)
+VarLabel::create( const string                  & name,
+                  const Uintah::TypeDescription * td,
+                  const IntVector               & boundaryLayer /* = IntVector(0,0,0) */,
+                        VarType                   vartype       /* = Normal */ )
 {
   VarLabel* label = 0;
   lock.lock();
@@ -73,7 +73,7 @@ VarLabel::create(const string& name,
   else {
     label = scinew VarLabel(name, td, boundaryLayer, vartype);
     allLabels[name]=label;
-    dbg << "Creating VarLabel: " << label->d_name << " address = " << label << std::endl;
+    dbg << "Created VarLabel: " << label->d_name << " [address = " << label << "\n";
   }
   label->addReference();
   lock.unlock(); 
@@ -91,7 +91,7 @@ VarLabel::destroy(const VarLabel* label)
     if(iter != allLabels.end() && iter->second == label)
       allLabels.erase(iter); 
       
-    dbg << "Deleting VarLabel: " << label->d_name << std::endl;  
+    dbg << "Deleting VarLabel: " << label->d_name << "\n";  
     lock.unlock();
     delete label;
     
@@ -101,8 +101,10 @@ VarLabel::destroy(const VarLabel* label)
   return false;
 }
 
-VarLabel::VarLabel(const std::string& name, const Uintah::TypeDescription* td,
-                   const IntVector& boundaryLayer, VarType vartype)
+VarLabel::VarLabel( const string                  & name,
+                    const Uintah::TypeDescription * td,
+                    const IntVector               & boundaryLayer,
+                          VarType                   vartype )
   : d_name(name), d_td(td), d_boundaryLayer(boundaryLayer),
     d_vartype(vartype), d_compressionMode("default"),
     d_allowMultipleComputes(false)
@@ -117,8 +119,9 @@ void
 VarLabel::printAll()
 {
   map<string, VarLabel*>::iterator iter = allLabels.begin();
-  for (; iter != allLabels.end(); iter++)
-    std::cerr << (*iter).second->d_name << std::endl;
+  for (; iter != allLabels.end(); iter++) {
+    std::cerr << (*iter).second->d_name << "\n";
+  }
 }
 
 VarLabel*
