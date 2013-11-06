@@ -406,6 +406,10 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
   // off from the side class resulting in a difference class.  The difference
   // class represents the region of the side minus any circles/rectangle.  
 
+  string defaultMat="";
+  ProblemSpecP defaultMatSpec = bc_ps->findBlock("DefaultMaterial");
+  if(defaultMatSpec) bc_ps->get("DefaultMaterial", defaultMat);
+  
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");
       face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
 
@@ -424,8 +428,21 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     for (ProblemSpecP child = face_ps->findBlock("BCType"); child != 0;
         child = child->findNextBlock("BCType")) {
       int mat_id;
+      
+      map<string,string> bc_attr;
+      child->getAttributes(bc_attr);
+      bool foundMatlID = ( bc_attr.find("id") != bc_attr.end() );
+      
+      if (!foundMatlID) {
+        if (defaultMat == "") SCI_THROW(ProblemSetupException("ERROR: No material id was specified in the BCType tag and I could not find a DefaulMaterial to use! Please revise your input file.", __FILE__, __LINE__));
+        else                  mat_id = (defaultMat == "all") ? -1 : atoi(defaultMat.c_str());
+      } else {
+        string id = bc_attr["id"];
+        mat_id = (id == "all") ? -1 : atoi(id.c_str());
+      }
+      
       BoundCondBase* bc;
-      BoundCondFactory::create(child,bc,mat_id, face_label);
+      BoundCondFactory::create(child, bc, mat_id, face_label);
       BCR_dbg << "Inserting into mat_id = " << mat_id << " bc = " 
               <<  bc->getBCVariable() << " bctype = " 
               <<  bc->getBCType()
@@ -580,7 +597,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
 
   bulletProofing();
 
-  combineBCS_NEW();
+  combineBCS();
 
   BCR_dbg << endl << "After combineBCS() . . ." << endl << endl;
   for (Patch::FaceType face = Patch::startFace; 
@@ -599,167 +616,7 @@ const BCDataArray BoundCondReader::getBCDataArray(Patch::FaceType& face) const
 }
 
 
-
 void BoundCondReader::combineBCS()
-{
-  for (Patch::FaceType face = Patch::startFace; 
-       face <= Patch::endFace; face=Patch::nextFace(face)) {
-    BCR_dbg << endl << "Working on Face = " << face << endl;
-    BCR_dbg << endl << "Original inputs" << endl;
-
-    BCDataArray rearranged;
-    BCDataArray& original = d_BCReaderData[face];
-
-    original.print();
-    BCR_dbg << endl;
-
-    BCDataArray::bcDataArrayType::const_iterator mat_id_itr;
-    for (mat_id_itr = original.d_BCDataArray.begin(); 
-         mat_id_itr != original.d_BCDataArray.end(); 
-         ++mat_id_itr) {
-      int mat_id = mat_id_itr->first;
-
-      BCR_dbg << "Mat ID = " << mat_id << endl;
-
-
-      // Find all of the BCData types that are in a given BCDataArray
-      vector<BCGeomBase*>::const_iterator vec_itr;
-      map<BCData,vector<BCGeomBase*> > bcdata_bcgeom;
-      for (vec_itr = mat_id_itr->second.begin(); 
-           vec_itr != mat_id_itr->second.end(); ++vec_itr) {
-        BCData bc_data;
-        (*vec_itr)->getBCData(bc_data);
-        bcdata_bcgeom[bc_data].push_back((*vec_itr)->clone());
-      }
-        
-      map<BCData,vector<BCGeomBase*> >::iterator bcd_itr;
-      for (bcd_itr = bcdata_bcgeom.begin(); bcd_itr != bcdata_bcgeom.end(); 
-           ++bcd_itr) {
-
-        BCR_dbg << "Printing out the bcd types" << endl;
-        bcd_itr->first.print();
-
-        
-        if (count_if(bcd_itr->second.begin(),
-                     bcd_itr->second.end(),
-                     cmp_type<SideBCData>()) == 1 && 
-            bcd_itr->second.size() == 1) {
-          BCGeomBase* bc = bcd_itr->second[0];
-          rearranged.addBCData(mat_id,bc->clone());
-        } else {
-          // Find the child that is the "side" bc
-          BCGeomBase* side_bc = NULL;
-          vector<BCGeomBase*>::const_iterator index;
-          index = find_if(bcd_itr->second.begin(),
-                          bcd_itr->second.end(),
-                          cmp_type<SideBCData>());
-        
-          
-          if (index != bcd_itr->second.end()) {
-            BCR_dbg << "Found the side bc data" << endl;
-            side_bc = (*index)->clone();
-          } else {
-            BCR_dbg << "Didnt' find the side bc data" << endl;
-
-            index = find_if(original.d_BCDataArray[-1].begin(),
-                            original.d_BCDataArray[-1].end(),
-                            cmp_type<SideBCData>());
-
-            if (index != d_BCReaderData[face].d_BCDataArray[-1].end()){
-              BCR_dbg << "Using the 'all' case" << endl;
-              side_bc = (*index)->clone();
-            }
-          }
-          
-          // Create a unionbcdata for all the remaining bcs and remove the 
-          // sidebcdata.  
-          UnionBCData* union_bc = scinew UnionBCData();
-          for (vector<BCGeomBase*>::const_iterator i = bcd_itr->second.begin();
-               i != bcd_itr->second.end(); ++i)
-            union_bc->child.push_back((*i)->clone());
-          vector<BCGeomBase*>::iterator itr, new_end = 
-            remove_if(union_bc->child.begin(),
-                      union_bc->child.end(),
-                      cmp_type<SideBCData>());
-          
-          BCR_dbg << endl << "Before deleting" << endl;
-          for_each(union_bc->child.begin(),
-                   union_bc->child.end(),
-                   Uintah::print);
-
-          
-          for(itr = new_end; itr != union_bc->child.end(); ++itr)
-            delete *itr;
-          union_bc->child.erase(new_end,union_bc->child.end());
-
-          BCR_dbg << endl << "After deleting" << endl;
-
-          for_each(union_bc->child.begin(),union_bc->child.end(),
-                   Uintah::print);
-
-          
-          // Create a differencebcdata for the side and the unionbc
-          DifferenceBCData* difference_bc = 
-            scinew DifferenceBCData(side_bc,union_bc);
-          rearranged.addBCData(mat_id,difference_bc->clone());
-          
-          // Take the individual bcs and add them to the rearranged list.
-          // These are found in the union_bcs (doesn't have the SideDataBC).
-          vector<BCGeomBase*>::const_iterator it;
-          for (it = union_bc->child.begin(); 
-               it != union_bc->child.end(); ++it) 
-            rearranged.addBCData(mat_id,(*it)->clone());
-
-          BCR_dbg << endl << "Printing out BCGeomBase types in rearranged" 
-                  << endl;
-          BCR_dbg << "mat_id = " << mat_id << endl;
-
-          for_each(rearranged.d_BCDataArray[mat_id].begin(),
-                   rearranged.d_BCDataArray[mat_id].end(),
-                   Uintah::print);
-
-          delete side_bc;
-          delete union_bc;
-          delete difference_bc;
-        }
-      }
-      // Delete the bcdata_bcgeom stuff
-      for (bcd_itr = bcdata_bcgeom.begin(); bcd_itr != bcdata_bcgeom.end();
-           ++bcd_itr) {
-        for (vec_itr=bcd_itr->second.begin();vec_itr != bcd_itr->second.end();
-             ++vec_itr)
-          delete *vec_itr;
-        bcd_itr->second.clear();
-      }
-      bcdata_bcgeom.clear();
-      
-    }
-
-    BCR_dbg << endl << "Printing out rearranged list" << endl;
-    rearranged.print();
-
-    // Reassign the rearranged data
-    d_BCReaderData[face] = rearranged;
-    
-    BCR_dbg << endl << "Printing out rearranged from d_BCReaderData list" 
-            << endl;
-
-    d_BCReaderData[face].print();
-
-  }
-
-
-  BCR_dbg << endl << "Printing out in combineBCS()" << endl;
-  for (Patch::FaceType face = Patch::startFace; 
-       face <= Patch::endFace; face=Patch::nextFace(face)) {
-    BCR_dbg << "After Face . . .  " << face << endl;
-    d_BCReaderData[face].print();
-  } 
-
-
-}
-
-void BoundCondReader::combineBCS_NEW()
 {
   for (Patch::FaceType face = Patch::startFace; 
        face <= Patch::endFace; face=Patch::nextFace(face)) {
@@ -820,7 +677,8 @@ void BoundCondReader::combineBCS_NEW()
           diff_bc = scinew DifferenceBCData(side_bc,other_bc);
 
           diff_bc->setBCName( side_bc->getBCName() ); //make sure the new piece has the right name
-
+          diff_bc->setBndType( side_bc->getBndType() ); //make sure the new piece has the correct boundary type
+          
           rearranged.addBCData(mat_id,diff_bc->clone());
           rearranged.addBCData(mat_id,other_bc->clone());
           delete diff_bc;
@@ -840,6 +698,7 @@ void BoundCondReader::combineBCS_NEW()
           diff_bc = scinew DifferenceBCData(side_bc,union_bc->clone());
 
           diff_bc->setBCName( side_bc->getBCName() ); //make sure the new piece has the right name
+          diff_bc->setBndType( side_bc->getBndType() ); //make sure the new piece has the correct boundary type
 
           rearranged.addBCData(mat_id,diff_bc->clone());
           delete side_bc;

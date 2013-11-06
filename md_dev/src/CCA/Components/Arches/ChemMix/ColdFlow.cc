@@ -440,6 +440,9 @@ ColdFlow::getState( const ProcessorGroup* pc,
         double bc_value = 0.0; 
         std::string bc_s_value = "NA"; 
 
+        int totalIVs = d_allIndepVarNames.size(); 
+        int counter = 0; 
+
         // look to make sure every variable has a BC set:
         for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
@@ -451,9 +454,11 @@ ColdFlow::getState( const ProcessorGroup* pc,
           if ( bc_kind == "FromFile" ){ 
             foundIterator = 
               getIteratorBCValue<std::string>( patch, face, child, variable_name, matlIndex, bc_s_value, bound_ptr ); 
+            counter++; 
           } else {
             foundIterator = 
               getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr ); 
+            counter++; 
           } 
 
           if ( bc_kind == "Dirichlet" ) {
@@ -462,9 +467,16 @@ ColdFlow::getState( const ProcessorGroup* pc,
             which_bc.push_back(ColdFlow::NEUMANN); 
           } else if (bc_kind == "FromFile") { 
             which_bc.push_back(ColdFlow::FROMFILE);
-          } else
-            throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
+          } else {
+            cout << " For face: " << face << endl;
+            throw InvalidValue( "Error: BC type not supported for property calculation on face.", __FILE__, __LINE__ ); 
+          }
+        }
 
+        if ( counter != totalIVs ){
+          stringstream msg; 
+          msg << "Error: For face " << face << " there are missing IVs in the boundary specification." << endl;
+          throw InvalidValue( msg.str(), __FILE__, __LINE__); 
         }
 
         // now use the last bound_ptr to loop over all boundary cells: 
@@ -557,72 +569,6 @@ ColdFlow::getState( const ProcessorGroup* pc,
 
       }
       new_dw->put(sum_vartype(den_ref),time_labels->ref_density);
-    }
-  }
-}
-
-void ColdFlow::oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type )
-{
-  std::vector<double> iv(1);
-  iv[0] = inStream.d_mixVars[0]; 
-  int pos = 0; //for density
-  double density = coldFlowMixing( iv, pos ); 
-  outStream.d_density = 1.0 / density; 
-
-}
-
-//--------------------------------------------------------------------------- 
-// schedule Dummy Init
-//--------------------------------------------------------------------------- 
-  void 
-ColdFlow::sched_dummyInit( const LevelP& level, 
-    SchedulerP& sched )
-
-{
-  string taskname = "ColdFlow::dummyInit"; 
-  //Ghost::GhostType  gn = Ghost::None;
-
-  Task* tsk = scinew Task(taskname, this, &ColdFlow::dummyInit ); 
-
-  // dependent variables
-  for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
-    tsk->computes( i->second ); 
-    tsk->requires( Task::OldDW, i->second, Ghost::None, 0 ); 
-  }
-
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
-}
-
-//--------------------------------------------------------------------------- 
-// Dummy Init
-//--------------------------------------------------------------------------- 
-  void 
-ColdFlow::dummyInit( const ProcessorGroup* pc, 
-    const PatchSubset* patches, 
-    const MaterialSubset* matls, 
-    DataWarehouse* old_dw, 
-    DataWarehouse* new_dw )
-{
-  for (int p=0; p < patches->size(); p++){
-
-    //Ghost::GhostType gn = Ghost::None; 
-    const Patch* patch = patches->get(p); 
-    int archIndex = 0; 
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-
-    // dependent variables:
-    for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
-
-      cout_tabledbg << " In ColdFlow::dummyInit, getting " << i->first << " for initializing. " << endl;
-      CCVariable<double> the_var;
-      new_dw->allocateAndPut( the_var, i->second, matlIndex, patch ); 
-      the_var.initialize(0.0);
-      constCCVariable<double> old_var; 
-      old_dw->get(old_var, i->second, matlIndex, patch, Ghost::None, 0 ); 
-
-      the_var.copyData( old_var ); 
-
     }
   }
 }

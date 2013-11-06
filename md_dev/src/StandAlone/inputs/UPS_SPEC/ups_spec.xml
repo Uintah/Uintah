@@ -358,10 +358,11 @@
     </geom_object>
       
     <SimulationComponent          spec="REQUIRED NO_DATA"
-                                    attribute1="type REQUIRED STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice, amrmpm, wasatch, md, reduce_uda,
-                                                                      advectslabs, advectslabsgpu, gpuschedulertest, unifiedschedulertest, poissongpu1,
+                                    attribute1="type REQUIRED STRING 'arches, burger, ice, impm, mpm, mpmarches, 
+                                                                      mpmf, mpmice, amrmpm, wasatch, md, reduce_uda,
+                                                                      advectslabs, advectslabsgpu, unifiedschedulertest, poissongpu1,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, reduce_uda, combine_patches, 
-                                                                      rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test, particletest, ljpotentialtest'" >
+                                                                      rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test particletest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
                                   attribute1="var   REQUIRED STRING"
@@ -466,7 +467,9 @@
     
     <!--__________________________________-->
     <BoundaryConditions     spec="OPTIONAL NO_DATA">
-
+      
+      <DefaultMaterial spec="OPTIONAL STRING '0,1,2,3,4,5,6,all'"/>
+      
        <!-- angle in degrees for ellipse -->
       <Face                 spec="MULTIPLE NO_DATA"
                               attribute1="annulus       OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
@@ -487,16 +490,15 @@
                               attribute16="type         OPTIONAL STRING 'Wall, Velocity, Outflow, Open, User'">
                               
         <BCType             spec="MULTIPLE NO_DATA"
-                              attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
+                              attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, 
                                                                      VelocityInlet, StABL, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet, Swirl, FromFile,
                                                                      TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                               attribute3="label     REQUIRED STRING "
-                              attribute4="type      OPTIONAL STRING 'int'" >
+                              attribute4="type      OPTIONAL STRING 'int'" 
+                              attribute5="value     OPTIONAL STRING" >
                                                                 
-          <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom 
-                                                                     MassFlowInlet Swirl VelocityInlet, TurbulentInlet, StABL, Tabulated, 
-                                                                     FromFile, VelocityFileInput, powerLawProfile, logWindProfile" />
+          <value            spec="OPTIONAL STRING"/>
 
           <inputfile        spec="REQUIRED STRING"  need_applies_to="var TurbulentInlet" />
           
@@ -822,7 +824,7 @@
 
   <!--  MD            -->
   <include href="md_spec.xml" section="MD" />
-  
+
   <!--______________________________________________________________________-->
   <!--                 EXAMPLES                                             -->
   
@@ -858,16 +860,6 @@
     <doOutput                 spec="OPTIONAL INTEGER" />
     <doGhostCells             spec="OPTIONAL INTEGER" />
   </ParticleTest1>
-  
-  <!--  Lennard Jones Potential Test Component -->
-  <LJPotentialTest            spec="OPTIONAL NO_DATA" >
-    <coordinateFile           spec="REQUIRED STRING" />
-    <numAtoms                 spec="REQUIRED INTEGER"/>
-    <boxSize                  spec="REQUIRED VECTOR" />
-    <cutoffRadius             spec="REQUIRED DOUBLE" />
-    <R12                      spec="REQUIRED DOUBLE" />
-    <R6                       spec="REQUIRED DOUBLE" />
-  </LJPotentialTest>  
   
   <!--  Wave  Component -->
   <Wave                       spec="OPTIONAL NO_DATA" >

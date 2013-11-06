@@ -15,35 +15,35 @@
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-dirichlet-dirichlet-a" state="STATE_N" />
+      <NameTag name="phi-dirichlet-dirichlet-a" state="STATE_N"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-dirichlet-dirichlet-b" state="STATE_N" />
+      <NameTag name="phi-dirichlet-dirichlet-b" state="STATE_N"/>
       <Constant>0.0</Constant>
     </BasicExpression>
 
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-dirichlet-neumann" state="STATE_N" />
+      <NameTag name="phi-dirichlet-neumann" state="STATE_N"/>
       <Constant>0.0</Constant>
     </BasicExpression>
 
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-neumann-dirichlet" state="STATE_N" />
+      <NameTag name="phi-neumann-dirichlet" state="STATE_N"/>
       <Constant>0.0</Constant>
     </BasicExpression>
 
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-neumann-neumann" state="STATE_N" />
+      <NameTag name="phi-neumann-neumann" state="STATE_N"/>
       <Constant>0.0</Constant>
     </BasicExpression>
 
@@ -129,7 +129,7 @@
     <filebase>bc-test-svol-ydir.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.00001"/>
+    <checkpoint cycle="2" interval="0.00001"/>
     <compression>gzip</compression>
     <save label="phi-dirichlet-dirichlet-a"/>
     <save label="phi-dirichlet-dirichlet-b"/>
@@ -139,68 +139,23 @@
   </DataArchiver> 
 
   <Grid>
-      <BoundaryConditions>
-      
+  	<BoundaryConditions>      
+      <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS -->
       <Face side="y-">
-        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
-          <value> 10.0 </value>
-        </BCType>
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a" value="10.0"/>
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-b" value="5.0"/>
+        <BCType var="Dirichlet" label="phi-dirichlet-neumann" value="10.0"/>
+        <BCType var="Neumann" label="phi-neumann-dirichlet" value="-1.0"/>
+        <BCType var="Neumann" label="phi-neumann-neumann" value="1.0"/>
       </Face>
       <Face side="y+">
-        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-a">
-          <value> 5.0 </value>
-        </BCType>
-      </Face>
-
-      <!-- BOUNDARY CONDITIONS -->
-      <Face side="y-">
-        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-b">
-          <value> 5.0 </value>
-        </BCType>
-      </Face>
-      <Face side="y+">
-        <BCType id="all" var="Dirichlet" label="phi-dirichlet-dirichlet-b">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-            
-      <!-- BOUNDARY CONDITIONS -->
-      <Face side="y-">
-        <BCType id="all" var="Dirichlet" label="phi-dirichlet-neumann">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-      <Face side="y+">
-        <BCType id="all" var="Neumann" label="phi-dirichlet-neumann">
-          <value> 1.0 </value>
-        </BCType>
-      </Face>
-
-      <!-- BOUNDARY CONDITIONS -->
-      <Face side="y-">
-        <BCType id="all" var="Neumann" label="phi-neumann-dirichlet">
-          <value> -1.0 </value>
-        </BCType>
-      </Face>
-      <Face side="y+">
-        <BCType id="all" var="Dirichlet" label="phi-neumann-dirichlet">
-          <value> 10.0 </value>
-        </BCType>
-      </Face>
-
-      <!-- BOUNDARY CONDITIONS -->
-      <Face side="y-">
-        <BCType id="all" var="Neumann" label="phi-neumann-neumann">
-          <value> 1.0 </value>
-        </BCType>
-      </Face>
-      <Face side="y+">
-        <BCType id="all" var="Neumann" label="phi-neumann-neumann">
-          <value> 1.0 </value>
-        </BCType>
-      </Face>
-
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-a" value="5.0"/>
+        <BCType var="Dirichlet" label="phi-dirichlet-dirichlet-b" value="10.0"/>
+        <BCType var="Neumann" label="phi-dirichlet-neumann" value="1.0"/>
+        <BCType var="Dirichlet" label="phi-neumann-dirichlet" value="10.0"/>
+        <BCType var="Neumann" label="phi-neumann-neumann" value="1.0"/>
+      </Face>            
     </BoundaryConditions>
 
     <Level>

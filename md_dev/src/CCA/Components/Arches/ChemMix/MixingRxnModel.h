@@ -105,13 +105,6 @@ namespace Uintah {
     /** @brief Provides access for models, algorithms, etc. to add additional table lookup variables. */
     void addAdditionalDV( std::vector<std::string>& vars );
 
-    /** @brief Needed for the old properties method until it goes away */ 
-    virtual void oldTableHack( const InletStream&, Stream&, bool, const std::string ) = 0; 
-
-    /** @brief Needed for dumb MPMArches */ 
-    virtual void sched_dummyInit( const LevelP& level, 
-        SchedulerP& sched ) = 0;
-
     /** @brief Returns the value of a single variable given the iv vector 
      * This will be useful for other classes to have access to */
     virtual double getTableValue( std::vector<double>, std::string ) = 0; 

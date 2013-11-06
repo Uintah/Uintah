@@ -352,35 +352,35 @@ SCI_ARG_WITH(spatialops,
   [with_spatialops="$withval"
    sci_required_spatialops=yes],
   [with_spatialops=""])
-
+  
 SCI_ARG_WITH(exprlib,
   AC_HELP_STRING(--with-exprlib=DIR,
                  Use the ExprLib library in DIR),
   [with_exprlib="$withval"
    sci_required_exprlib=yes],
   [with_exprlib=""])
-
+  
 SCI_ARG_WITH(tabprops,
   AC_HELP_STRING(--with-tabprops=DIR,
                  Use the TabProps library in DIR),
   [with_tabprops="$withval"
    sci_required_tabprops=yes],
   [with_tabprops=""])
-
+  
 SCI_ARG_WITH(radprops,
   AC_HELP_STRING(--with-radprops=DIR,
                  Use the RadProps library in DIR),
   [with_radprops="$withval"
    sci_required_radprops=yes],
   [with_radprops=""])
-
+  
 SCI_ARG_WITH(zoltan,
   AC_HELP_STRING(--with-zoltan=DIR,
                  Use the Zoltan installation in DIR),
   [with_zoltan="$withval"
    sci_required_zoltan=yes],
   [with_zoltan=""])
-
+  
 SCI_ARG_WITH(tau,
   AC_HELP_STRING(--with-tau=<tau-makefile>,
                  Specify a Tau Makefile),
@@ -394,14 +394,14 @@ SCI_ARG_WITH(papi,
   [with_papi="$withval"
    sci_required_papi=yes],
   [with_papi=""])
-  
+
 SCI_ARG_WITH(fftw,
   AC_HELP_STRING(--with-fftw=DIR,
                  Use the FFTW installation in DIR),
   [with_fftw="$withval"
    sci_required_fftw=yes],
   [with_fftw=""])
-  
+    
 SCI_ARG_WITH(gperftools,
   AC_HELP_STRING(--with-gperftools=DIR,
                  Use the Google Perftools installation in DIR),
@@ -703,14 +703,9 @@ case $host in
     IS_OSX="yes"
     DEF_OSX="#define IS_OSX 1"
 
-    # New Mac Clang compiler does not support the -faltivec flag...
+    # New Mac Clang comiler does not support the -faltivec flag...
     altivec="-faltivec"
     $CC --version | grep -q -i clang > /dev/null 2>&1
-    if test $? = 0; then
-      altivec="" 
-    fi
-    # New Mac gcc47 compiler also does not support the -faltivec flag...
-    $CC --version | grep -q -i gcc47 > /dev/null 2>&1
     if test $? = 0; then
       altivec="" 
     fi
@@ -2826,10 +2821,12 @@ if test "$with_mkl"; then
        AC_MSG_ERROR(We recommend that you don't use MKL on a Mac... use the default vecLib instead.)
        ;;
      *)
-       test_libs[[0]]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
-       test_libs[[1]]="mkl mkl_core mkl_intel_lp64"
-       test_libs[[2]]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
-       test_libs[[3]]="mkl_core mkl_intel_lp64 mkl_intel_thread iomp5" # works on Navy DSRC Haise/Killrain (IBM iDataPlex)
+       unset test_libs
+       test_libs[[0]]="mkl_intel_lp64 mkl_sequential mkl_core pthread" # Line for Utah's Ember computer (10/18/2013)
+       test_libs[[1]]="mkl mkl_core mkl_intel_lp64 guide" # Newer version of MKL doesn't have libguide, so need two separate checks...
+       test_libs[[2]]="mkl mkl_core mkl_intel_lp64"
+       test_libs[[3]]="mkl_core mkl_intel_thread iomp5 pthread" # works on Yellowstone computer
+       test_libs[[4]]="mkl_core mkl_intel_lp64 mkl_intel_thread iomp5" # works on Navy DSRC Haise/Kilrain (IBM iDataPlex)
 
        num_libs=${#test_libs[*]}
 
@@ -3414,7 +3411,7 @@ else
         fi
 
         SCI_TRY_LINK( PETSC,
-                      petsc libraries and headers,
+                      petsc libraries and headers - first try,
                       petsc.h,
                       $_sci_inc,
                       petsc petscvec petscmat petscdm petscsnes petscts petscksp,
@@ -3423,19 +3420,35 @@ else
                       ,
                       optional)
 
-        # 
+        # Test a number of petsc library options if the above didn't work
         if test "$HAVE_PETSC" != "yes"; then
-                SCI_TRY_LINK(PETSC,
-                     petsc library and header,
-                     petsc.h,
-                     $_sci_inc,
-                     petsc,
-                     $_sci_lib_dir,
-                     $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
-                     ,
-                     required)
+           unset test_libs
+           test_libs[[0]]="petsc"                       # standard single petsc lib
+           test_libs[[1]]="craypetsc_intel_real"        # cray petsc-real - for DOD Open Research Systems 
+           test_libs[[2]]="craypetsc_intel_complex"     # cray petsc-complex - for DOD Open Research Systems 
+                                                                  
+           num_libs=${#test_libs[*]}
+
+           for (( num=0; num<$num_libs; num++ ));
+           do
+               the_libs=${test_libs[[$num]]}
+               SCI_TRY_LINK(PETSC,
+                            petsc library and header - $num try,
+                            petsc.h,
+                            $_sci_inc,
+                            $the_libs,
+                            $_sci_lib_dir,
+                            $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                            ,
+                            optional)
+               # bail if a suitable library is found
+               if test "$HAVE_PETSC" = "yes"; then
+                  break
+               fi
+           done 
         fi
 
+        # report error message
         if test "$HAVE_PETSC" != "yes" ; then
           AC_MSG_ERROR(Could not find PETSc...)
         fi

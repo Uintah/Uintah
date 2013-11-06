@@ -1183,7 +1183,6 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
 
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
-        cerr << "after pressure stab "          << endl;
         cerr << "matl = "  << matl              << endl;
         cerr << "F_old = " << pDefGrad[idx]     << endl;
         cerr << "F_inc = " << pDefGradInc       << endl;

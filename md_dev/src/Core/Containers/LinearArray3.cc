@@ -29,7 +29,7 @@
 
 #include <complex>
 
-using namespace Uintah;
+using namespace SCIRun;
 
 template<class T>
 LinearArray3<T>::LinearArray3()

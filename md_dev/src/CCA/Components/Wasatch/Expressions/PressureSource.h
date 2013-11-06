@@ -42,41 +42,34 @@ class PressureSource : public Expr::Expression<SVolField>
   typedef FaceTypes::YFace YFace; ///< The type of field for the y-face of SVolField.
   typedef FaceTypes::ZFace ZFace; ///< The type of field for the z-face of SVolField.
 
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, XFace >::type XFaceInterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, YFace >::type YFaceInterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, ZFace >::type ZFaceInterpT;
+  typedef SpatialOps::structured::SingleValueField TimeField;
+
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XVolField >::type S2XInterpOpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YVolField >::type S2YInterpOpT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZVolField >::type S2ZInterpOpT;
   
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, XFace >::type Scalar2XFInterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, YFace >::type Scalar2YFInterpT;
-  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, ZFace >::type Scalar2ZFInterpT;
-  
-  typedef SpatialOps::structured::BasicOpTypes<SVolField> OpTypes;
-  typedef OpTypes::DivX DivXT; ///< Divergence operator (surface integral) in the x-direction
-  typedef OpTypes::DivY DivYT; ///< Divergence operator (surface integral) in the y-direction
-  typedef OpTypes::DivZ DivZT; ///< Divergence operator (surface integral) in the z-direction
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
+  typedef SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
   
   const XVolField *xMom_, *uStar_;
   const YVolField *yMom_, *vStar_;
   const ZVolField *zMom_, *wStar_;
   const SVolField *dens_, *densStar_, *dens2Star_;
   const SVolField *dil_;
+  const TimeField* timestep_;
   
   const bool isConstDensity_, doX_, doY_, doZ_, is3d_;
-  const double* timestep_;
   
   const Expr::Tag xMomt_, yMomt_, zMomt_;
   const Expr::Tag xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_, dilt_, timestept_;
   
-  const DivXT* divXOp_;
-  const DivYT* divYOp_;
-  const DivZT* divZOp_;
-  const XFaceInterpT* xFInterpOp_;
-  const YFaceInterpT* yFInterpOp_;
-  const ZFaceInterpT* zFInterpOp_;
-  const Scalar2XFInterpT* s2XFInterpOp_;
-  const Scalar2YFInterpT* s2YFInterpOp_;
-  const Scalar2ZFInterpT* s2ZFInterpOp_;
-  
+  const GradXT* gradXOp_;
+  const GradYT* gradYOp_;
+  const GradZT* gradZOp_;
+  const S2XInterpOpT* s2XInterpOp_;
+  const S2YInterpOpT* s2YInterpOp_;
+  const S2ZInterpOpT* s2ZInterpOp_;  
   
   PressureSource( const Expr::TagList& momTags,
                   const Expr::TagList& velStarTags,

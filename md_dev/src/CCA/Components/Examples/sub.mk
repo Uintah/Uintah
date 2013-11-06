@@ -41,7 +41,6 @@ SRCS     += \
         $(SRCDIR)/Burger.cc            \
         $(SRCDIR)/HeatEquation.cc      \
         $(SRCDIR)/ParticleTest1.cc     \
-        $(SRCDIR)/LJPotentialTest.cc   \
         $(SRCDIR)/Interpolator.cc      \
         $(SRCDIR)/ExamplesLabel.cc     \
         $(SRCDIR)/RegridderTest.cc     \
@@ -77,7 +76,6 @@ PSELIBS := \
         Core/Exceptions       \
         Core/Disclosure       \
         Core/Math             \
-        Core/Thread           \
         Core/Parallel
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(CUDA_LIBRARY)

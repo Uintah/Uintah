@@ -65,6 +65,9 @@ namespace Uintah {
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
+    string defaultMat="";
+    ProblemSpecP defMatSpec = bc_ps->findBlock("DefaultMaterial");
+    if (defMatSpec) bc_ps->get("DefaultMaterial", defaultMat);
     
     // loop over all faces and determine if a BC has been set
     for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0;
@@ -79,9 +82,17 @@ namespace Uintah {
         map<string,string> bc_type;
         bc_iter->getAttributes(bc_type);
         
-        // was the matl specified?
-        string id = bc_type["id"];
-        int matlIndx = atoi(id.c_str());
+        bool foundMatlID = ( bc_type.find("id") != bc_type.end() );
+        int matlIndx;
+        string id;
+
+        if (!foundMatlID) {
+          if (defaultMat == "") SCI_THROW(ProblemSetupException("ERROR: No material id was specified in the BCType tag and I could not find a DefaulMaterial to use! Please revise your input file.", __FILE__, __LINE__));
+          else                  matlIndx = (defaultMat == "all") ? -1 : atoi(defaultMat.c_str());
+        } else {
+          id = bc_type["id"];
+          matlIndx = (id == "all") ? -1 : atoi(id.c_str());
+        }
         
         bool foundMatl = false;
         if( id == "all" || matls->contains(matlIndx)){

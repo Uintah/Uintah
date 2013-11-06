@@ -188,42 +188,37 @@ evaluate()
   //       phi_low is a low order interpolant (e.g. Upwind)
   //       phi_high is a high order interpolant (e.g. central)
   
-  // interpolated velocity scalar volume faces
-  SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore::get<VelFaceT>( result );
-  
-  // flux limiter function. This lives on scalar volume faces
-  SpatialOps::SpatFldPtr<PhiFaceT> psi = SpatialOps::SpatialFieldStore::get<PhiFaceT>( result );
-  
-  // low order interpolant for phi (e.g. upwind). This lives on scalar volume faces
-  SpatialOps::SpatFldPtr<PhiFaceT> phiLow = SpatialOps::SpatialFieldStore::get<PhiFaceT>( result );
-  
   // high order interpolant for phi (e.g. second order). This lives on scalar volume faces
   SpatialOps::SpatFldPtr<PhiFaceT> phiHi = SpatialOps::SpatialFieldStore::get<PhiFaceT>( result );
-  
-  // move the velocity from staggered volume to phi faces
-  velInterpOp_->apply_to_field( *vel_, *velInterp );
-  
-  // flux limiter function calculation. only calculate for flux limiters
-  if (!isCentral_) {
+
+  // second order interpolant - for central and other flux limiters
+  phiInterpHiOp_->apply_to_field( *phi_, *phiHi );
+
+  // result
+  if ( isCentral_ ){
+    result <<= *phiHi * (*velInterpOp_)(*vel_);
+  }
+  else{
+    // flux limiter function calculation. only calculate for flux limiters
+    SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore::get<VelFaceT>( result );
+    *velInterp <<= (*velInterpOp_)(*vel_);
+
+    // psi is the flux limiter function. This lives on scalar volume faces
+    SpatialOps::SpatFldPtr<PhiFaceT> psi = SpatialOps::SpatialFieldStore::get<PhiFaceT>( result );
     psiInterpOp_->set_advective_velocity( *velInterp );
     psiInterpOp_->set_flux_limiter_type( limiterType_ );
     psiInterpOp_->apply_to_field( *phi_, *psi);
+
     if (hasEmbeddedBoundary_) psiInterpOp_->apply_embedded_boundaries( *volFrac_, *psi);
-  }
   
-  // upwind interpolant. needed for upwind and flux limiters. do not calculate if we're using central
-  if (!isCentral_) {
+    // low order interpolant for phi (e.g. upwind). This lives on scalar volume faces
+    SpatialOps::SpatFldPtr<PhiFaceT> phiLow = SpatialOps::SpatialFieldStore::get<PhiFaceT>( result );
+
     phiInterpLowOp_->set_advective_velocity( *velInterp );
     phiInterpLowOp_->apply_to_field( *phi_, *phiLow );
+
+    result <<= (*phiLow - *psi * (*phiLow - *phiHi) ) * *velInterp;
   }
-  
-  // second order interpolant - for central and other flux limiters
-  phiInterpHiOp_->apply_to_field( *phi_, *phiHi );
-  
-  // result
-  if ( isCentral_ ) result <<= *phiHi;
-  else              result <<= *phiLow - *psi * (*phiLow - *phiHi);
-  result <<= result * *velInterp;
 }
 
 //--------------------------------------------------------------------

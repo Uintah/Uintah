@@ -15,7 +15,7 @@
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-scalar" state="STATE_N" />
+      <NameTag name="phi-scalar" state="STATE_N"/>
       <ReadFromFile>
         <FileName>inputs/Wasatch/read-from-file-test-init.dat.gz</FileName>
       </ReadFromFile>
@@ -63,45 +63,34 @@
     <filebase>read_from_file.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "1" interval = "0.1"/>
-    <save label="phi-scalar" />
+    <checkpoint cycle="1" interval="0.1"/>
+    <save label="phi-scalar"/>
   </DataArchiver> 
 
   <Grid>
   
      <BoundaryConditions>      
+      <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS FOR NON-STAGGERED SCALAR -->
       <Face side="x-">
-        <BCType id="all" var="Neumann" label="phi-scalar">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
       </Face>
       <Face side="x+">
-        <BCType id="all" var="Neumann" label="phi-scalar">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
       </Face>
       <Face side="y-">
-        <BCType id="all" var="Neumann" label="phi-scalar">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
       </Face>
       <Face side="y+">
-        <BCType id="all" var="Neumann" label="phi-scalar">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
       </Face>
       <Face side="z-">
-        <BCType id="all" var="Neumann" label="phi-scalar">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
       </Face>
       <Face side="z+">
-        <BCType id="all" var="Neumann" label="phi-scalar">
-          <value> 0.0 </value>
-        </BCType>
+        <BCType label="phi-scalar" var="Neumann" value="0.0"/>
       </Face>
-    </BoundaryConditions>
+      </BoundaryConditions>
 
     <Level>
       <Box label="1">

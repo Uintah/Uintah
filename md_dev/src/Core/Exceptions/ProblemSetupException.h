@@ -43,19 +43,18 @@
 
 namespace Uintah {
 
-   using namespace SCIRun;
+  class ProblemSetupException : public SCIRun::Exception {
+  public:
+    ProblemSetupException(const std::string& msg, const char* file, int line, bool ignoreWait=false);
+    ProblemSetupException(const ProblemSetupException&);
+    virtual ~ProblemSetupException();
+    virtual const char* message() const;
+    virtual const char* type() const;
+  private:
+    std::string d_msg;
+    ProblemSetupException& operator=(const ProblemSetupException&);
+  };
 
-   class ProblemSetupException : public Exception {
-   public:
-      ProblemSetupException(const std::string& msg, const char* file, int line, bool ignoreWait=false);
-      ProblemSetupException(const ProblemSetupException&);
-      virtual ~ProblemSetupException();
-      virtual const char* message() const;
-      virtual const char* type() const;
-   private:
-      std::string d_msg;
-      ProblemSetupException& operator=(const ProblemSetupException&);
-   };
 } // End namespace Uintah
 
 #endif

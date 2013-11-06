@@ -88,6 +88,13 @@ WARNING
     virtual void getSizeInfo(string& elems, unsigned long& totsize,
                              void*& ptr) const = 0;
     */
+
+    // used to get size info of the underlying data; this is for host-->device variable copy
+    virtual size_t getDataSize() const = 0;
+
+    // used to copy Variables to contiguous buffer prior to bulk host-->device copy
+    virtual bool copyOut(void* dst) const = 0;
+
   protected:
     constVariableBase() {}
     constVariableBase(const constVariableBase&) {}

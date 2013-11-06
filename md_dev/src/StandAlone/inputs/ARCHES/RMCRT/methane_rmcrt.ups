@@ -408,6 +408,7 @@
       </Properties>
 
       <BoundaryConditions>
+        <suppress_corner_recirculation/>
       </BoundaryConditions>
 
       <ExplicitSolver>

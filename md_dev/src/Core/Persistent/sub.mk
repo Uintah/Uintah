@@ -40,5 +40,10 @@ SRCS     += $(SRCDIR)/Persistent.cc     \
 PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Util
 LIBS := $(TEEM_LIBRARY) $(Z_LIBRARY)
 
+# See commit message for while hacking in the MPI_LIBRARY is necessary.
+ifeq ($(IS_OSX),yes)
+  LIBS += $(MPI_LIBRARY)
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

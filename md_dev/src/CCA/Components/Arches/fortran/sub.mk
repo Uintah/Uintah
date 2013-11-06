@@ -52,8 +52,7 @@ SRCS += \
         $(SRCDIR)/vvelsrc.F \
         $(SRCDIR)/wallbc.F \
         $(SRCDIR)/wvelcoef.F \
-        $(SRCDIR)/wvelsrc.F \
-        $(SRCDIR)/get_ramping_factor.F
+        $(SRCDIR)/wvelsrc.F 
 
 PSELIBS := 
 
@@ -83,5 +82,4 @@ $(SRCDIR)/vvelsrc.$(OBJEXT): $(SRCDIR)/vvelsrc_fort.h
 $(SRCDIR)/wallbc.$(OBJEXT): $(SRCDIR)/wallbc_fort.h
 $(SRCDIR)/wvelcoef.$(OBJEXT): $(SRCDIR)/wvelcoef_fort.h
 $(SRCDIR)/wvelsrc.$(OBJEXT): $(SRCDIR)/wvelsrc_fort.h
-$(SRCDIR)/get_ramping_factor.$(OBJEXT): $(SRCDIR)/get_ramping_factor_fort.h
 

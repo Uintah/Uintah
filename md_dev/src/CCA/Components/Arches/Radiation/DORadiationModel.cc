@@ -50,13 +50,9 @@
 #include <cmath>
 #include <sci_defs/hypre_defs.h>
 
-
 #ifdef HAVE_HYPRE
-#include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
+#  include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #endif
-
-using namespace std;
-using namespace Uintah;
 
 #include <CCA/Components/Arches/Radiation/fortran/rordr_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/radarray_fort.h>
@@ -67,7 +63,12 @@ using namespace Uintah;
 #include <CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
+
+using namespace std;
+using namespace Uintah;
+
 static DebugStream dbg("ARCHES_RADIATION",false);
+
 //****************************************************************************
 // Default constructor for DORadiationModel
 //****************************************************************************

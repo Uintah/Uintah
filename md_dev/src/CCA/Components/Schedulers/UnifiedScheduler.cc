@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2013 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,7 +35,6 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Mutex.h>
 
 #include <cstring>
@@ -71,10 +70,11 @@ static DebugStream dbgst("SendTiming", false);
 static DebugStream timeout("UnifiedScheduler.timings", false);
 static DebugStream queuelength("QueueLength", false);
 static DebugStream threaddbg("UnifiedThreadDBG", false);
-static DebugStream affinity("CPUAffinity", false);
+static DebugStream affinity("CPUAffinity", true);
 
 #ifdef HAVE_CUDA
 static DebugStream gpu_stats("GPUStats", false);
+static DebugStream use_single_device("SingleDevice", false);
 #endif
 
 UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
@@ -177,7 +177,7 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
     cout << "\tUsing \"" << taskQueueAlg << "\" Algorithm" << endl;
   }
 
-  numThreads_ = Uintah::Parallel::getNumThreads();
+  numThreads_ = Uintah::Parallel::getNumThreads() - 1;
   if (numThreads_ < 1 && (Uintah::Parallel::usingMPI() || Uintah::Parallel::usingDevice())) {
     if (d_myworld->myrank() == 0) {
       cerr << "Error: no thread number specified" << endl;
@@ -196,9 +196,8 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
     if (numThreads_ < 0) {
       cout << "\tUsing Unified Scheduler without threads (Single-Processor mode)" << endl;
     } else {
-      cout << "\tWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, "
-           << "not all tasks are thread safe yet." << endl
-           << "\tCreating " << numThreads_ << " threads for task execution." << endl;
+      cout << "\tWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, " << "not all tasks are thread safe yet." << endl
+           << "\tCreating " << numThreads_ << " thread(s) for task execution." << endl;
     }
   }
 
@@ -210,55 +209,27 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   for (int i = 0; i < numThreads_; i++) {
     UnifiedSchedulerWorker * worker = scinew UnifiedSchedulerWorker(this, i);
     t_worker[i] = worker;
-    sprintf(name, "Task Compute Thread ID: %d", i);
-    Thread* t = scinew Thread(worker, name);
+    sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i);
+    Thread * t = scinew Thread(worker, name);
     t_thread[i] = t;
-//    t->detach();
+    //t->detach();
   }
 
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
-
-  // TODO we need to turn this back on when we have a way of coordinating access to cores shared by threads from different groups
-//  if (affinity.active()) {
-//    Thread::self()->set_affinity(0);  // bind main thread to cpu 0
-//  }
+  if (affinity.active()) {
+    Thread::self()->set_affinity(0);  // bind main thread to cpu 0
+  }
 }
 
 SchedulerP UnifiedScheduler::createSubScheduler()
 {
-  UnifiedScheduler* subsched = scinew UnifiedScheduler(d_myworld, m_outPort, this);
+  UnifiedScheduler* newsched = scinew UnifiedScheduler(d_myworld, m_outPort, this);
+  newsched->d_sharedState = d_sharedState;
   UintahParallelPort* lbp = getPort("load balancer");
-  subsched->attachPort("load balancer", lbp);
-  subsched->d_sharedState = d_sharedState;
-
-  // create subscheduler task execution threads
-  subsched->numThreads_ = Uintah::Parallel::getNumThreads();
-
-  std::cout << std::endl
-            << "\tUsing EXPERIMENTAL Multi-threaded sub-scheduler" << std::endl
-            << "\tCreating " << subsched->numThreads_
-            << " subscheduler threads for task execution."
-            << std::endl << std::endl;
-
-  char name[1024];
-
-  // Create UnifiedWorker threads for the subscheduler
-  ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0); // 0 is main/parent thread group
-  for (int i = 0; i < subsched->numThreads_; i++) {
-    UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(subsched, i + subsched->numThreads_);
-    subsched->t_worker[i] = worker;
-    sprintf(name, "Task Compute Thread ID: %d", i + subsched->numThreads_);
-    Thread* t = scinew Thread(worker, name, subGroup);
-    subsched->t_thread[i] = t;
-  }
-
-  // TODO we need to turn this back on when we have a way of coordinating access to cores shared by threads from different groups
-//  if (affinity.active()) {
-//    Thread::self()->set_affinity(0);  // bind main thread to cpu 0
-//  }
-
-  return subsched;
+  newsched->attachPort("load balancer", lbp);
+  newsched->d_sharedState = d_sharedState;
+  return newsched;
 }
 
 void UnifiedScheduler::verifyChecksum()
@@ -505,7 +476,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   }
 
   // control loop for all tasks of task graph*/
-//  runTasks(0);
+  runTasks(0);
 
 #ifdef HAVE_CUDA  
   // Free up all the pointer maps for device and pinned host pointers
@@ -1421,7 +1392,13 @@ int UnifiedScheduler::getAviableThreadNum()
 void UnifiedScheduler::gpuInitialize(bool reset)
 {
   cudaError_t retVal;
-  CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices_));
+
+  if (use_single_device.active()) {
+    numDevices_ = 1;
+  } else {
+    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices_));
+  }
+
   if (reset){
     for (int i=0; i< numDevices_ ; i++) {
       CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
@@ -1587,7 +1564,6 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask)
       //   one stream and one event per variable per H2D copy (numPatches * numMatls)
       int numPatches = patches->size();
       int numMatls = matls->size();
-      int device = dtask->getDeviceNum();
 
       int dwIndex = comp->mapDataWarehouse();
       OnDemandDataWarehouseP dw = dws[dwIndex];
@@ -1644,8 +1620,6 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask)
       //   one stream and one event per variable per H2D copy (numPatches * numMatls)
       int numPatches = patches->size();
       int numMatls = matls->size();
-      int device = dtask->getDeviceNum();
-
 
       int dwIndex = comp->mapDataWarehouse();
       OnDemandDataWarehouseP dw = dws[dwIndex];
@@ -1803,13 +1777,11 @@ cudaStream_t* UnifiedScheduler::getCudaStream(int device)
 cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
 {
   cudaError_t retVal;
-  std::set<double*>::iterator iter;
+  std::set<void*>::iterator iter;
 
+  // unregister the page-locked host requires memory
   for (iter = pinnedHostPtrs.begin(); iter != pinnedHostPtrs.end(); iter++) {
-
-    // unregister the page-locked host requires memory
-    double* ptr = *iter;
-    CUDA_RT_SAFE_CALL(retVal = cudaHostUnregister(ptr));
+    CUDA_RT_SAFE_CALL(retVal = cudaHostUnregister(*iter));
   }
   pinnedHostPtrs.clear();
   return retVal;
@@ -1847,16 +1819,15 @@ UnifiedSchedulerWorker::UnifiedSchedulerWorker(UnifiedScheduler* scheduler,
 
 void UnifiedSchedulerWorker::run()
 {
-  Thread::self()->set_myid(d_id + 1);
+  if (threaddbg.active()) {
+    cerrLock.lock();
+    threaddbg << "Binding thread ID " << d_id + 1 << " to CPU core " << d_id + 1 << endl;
+    cerrLock.unlock();
+  }
 
-  // TODO we need to turn this back on when we have a way of coordinating access to cores shared by threads from different groups
+  Thread::self()->set_myid(d_id + 1);
   if (affinity.active()) {
-    if (threaddbg.active()) {
-      cerrLock.lock();
-      threaddbg << "Binding thread ID " << d_id + 1 << " to CPU core " << d_id << endl;
-      cerrLock.unlock();
-    }
-    Thread::self()->set_affinity(d_id);
+    Thread::self()->set_affinity(d_id + 1);
   }
 
   while (true) {
@@ -1867,7 +1838,7 @@ void UnifiedSchedulerWorker::run()
     if (d_quit) {
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Worker " << d_rank << "-" << d_id << " quitting   " << "\n";
+        taskdbg << "Worker " << d_rank << "-" << d_id << "quiting   " << "\n";
         cerrLock.unlock();
       }
       return;

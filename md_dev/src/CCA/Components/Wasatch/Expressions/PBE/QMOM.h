@@ -30,7 +30,12 @@
 #include <expression/Expression.h>
 #include <cmath>
 
-//#define WASATCH_QMOM_DIAGNOSTICS
+#include <Core/Util/DebugStream.h>
+
+//set up a debug stream for qmom without ifdef compiler commands
+static SCIRun::DebugStream dbgqmom("WASATCH_QMOM_DBG", false);  //qmom debugging
+#define dbg_qmom_on dbgqmom.active() && Uintah::Parallel::getMPIRank() == 0
+#define dbg_qmom  if( dbg_qmom_on ) dbgqmom
 
 // declare lapack eigenvalue solver
 extern "C"{
@@ -220,7 +225,7 @@ evaluate()
     // call the product_difference algorithm. This is where all the magic happens.
     const bool status = product_difference(knownMomentsIterators);
     
-    if (!status) {
+    if (!status) { 
       std::ostringstream errorMsg;
       errorMsg << std::endl << "ERROR QMOM: Product-Difference algorithm failed eigenvalue solve." << std::endl;
       throw std::runtime_error( errorMsg.str() );
@@ -236,19 +241,7 @@ evaluate()
         *resultsIterators[matLoc + 1] = 1.0;  //prevent div by 0 in other functions
       }
     }
-
-    // verify that the weights and abscissae are stored properly in the resultsiterators
-#ifdef WASATCH_QMOM_DIAGNOSTICS
-      for (int i=0; i<nEnvironments; i++) {
-        int matLoc = 2*i;
-        printf("w[%i] = %.12f ",i,*resultsIterators[matLoc]);
-        printf("a[%i] = %.12f ",i,*resultsIterators[matLoc+1]);
-      }
-      printf("\n");
-      printf("__________________________________________________");
-      printf("\n");
-#endif
-      
+    
     //__________
     // increment iterators
     ++sampleIterator;
@@ -258,7 +251,7 @@ evaluate()
     }
   } // end interior points loop
   
-  if(nonRealizablePoints_ > 0) std::cout << "WARNING QMOM: I found " << nonRealizablePoints_ << " nonrealizable points." << std::endl;
+  if(nonRealizablePoints_ > 0) dbg_qmom << "WARNING QMOM: I found " << nonRealizablePoints_ << " nonrealizable points." << std::endl;
 }
 
 //--------------------------------------------------------------------
@@ -292,26 +285,10 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
     }
   }
   
-#ifdef WASATCH_QMOM_DIAGNOSTICS
-  for (int iRow=0; iRow<nMoments_; iRow++) {
-    for (int jCol=0; jCol<nMoments_+1; jCol++) {
-      printf("p[%i][%i] = %f \t \t",iRow,jCol,pmatrix_[iRow][jCol]);
-    }
-    printf("\n");
-  }
-#endif
-  
   alpha_[0]=0.0;
   for (int jCol=1; jCol<nMoments_; ++jCol)
     alpha_[jCol] = pmatrix_[0][jCol+1]/(pmatrix_[0][jCol]*pmatrix_[0][jCol-1]);
   
-#ifdef WASATCH_QMOM_DIAGNOSTICS
-  for (int iRow=0; iRow<nMoments_; iRow++) {
-    printf("alpha[%i] = %f \t \t",iRow,alpha_[iRow]);
-  }
-  printf("\n");
-#endif
-
   //_________________________
   // construct a and b arrays
   bool needsReduction = false;
@@ -327,16 +304,17 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
       reduceBy = nEnvironments - jCol -1;
       nReducedMoments = nMoments_ - 2*reduceBy;
       if ( !realizable_ ) {
-        std::ostringstream errorMsg;
-        errorMsg << std::endl << "ERROR QMOM: Negative number detected while constructing the b auxiliary vector while processing the QMOM expression." << std::endl << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
         std::cout << knownMomentsTagList_ << std::endl; //if there is an error display which set of equations failed (in case there are multiple polymorphs)
         for (int i = 0; i<nMoments_; i++) printf("M[%i] = %.16f \n", i, *knownMomentsIterator[i]);
+        std::ostringstream errorMsg;
+        errorMsg << std::endl << "ERROR QMOM: Negative number detected while constructing the b auxiliary vector while processing the QMOM expression." << std::endl << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
         throw std::runtime_error( errorMsg.str() );
       } else {
         nonRealizablePoints_++;
-#ifdef WASATCH_QMOM_DIAGNOSTICS
-        std::cout << "WARNING QMOM: Negative number detected in b auxiliary vector, decreasing number of moments from " << nMoments_ << " to " << nReducedMoments <<" and recalculating." << std::endl;
-#endif
+
+        //display warning if moment reduction occurs
+ //       dbg_qmom << "WARNING QMOM: Negative number detected in b auxiliary vector, decreasing number of moments from " << nMoments_ << " to " << nReducedMoments <<" and recalculating." << std::endl;
+
         if (nReducedMoments < 1) {
           std::ostringstream errorMsg;
           errorMsg << std::endl << "ERROR QMOM: Cannot reduce the number of moments to 0. Existing..." << std::endl;
@@ -349,18 +327,7 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
   }
   // fill in the last entry for a
   a_[nEnvironments-1] = alpha_[2*(nEnvironments-1) + 1] + alpha_[2*(nEnvironments-1)];
-
-#ifdef WASATCH_QMOM_DIAGNOSTICS
-  for (int iRow=0; iRow<nEnvironments; iRow++) {
-    printf("a[%i] = %f \t \t",iRow,a_[iRow]);
-  }
-  printf("\n");
-  for (int iRow=0; iRow<nEnvironments; iRow++) {
-    printf("b[%i] = %f \t \t",iRow,b_[iRow]);
-  }
-  printf("\n");
-#endif
-
+  
   //___________________
   //initialize the JMatrix and the eigenvalues and eigenvectors to 0
   std::fill(jMatrix_.begin(), jMatrix_.end(),0.0);
@@ -379,13 +346,6 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
     jMatrix_[iRow + 1 + iRow*nEnvironments] = b_[iRow];
   }
   jMatrix_[nEnvironments*nEnvironments-1] = a_[nEnvironments - 1];
-  
-#ifdef WASATCH_QMOM_DIAGNOSTICS
-  for (int iRow=0; iRow<nEnvironments*nEnvironments; iRow++) {
-    printf("J[%i] = %f \t \t",iRow,jMatrix_[iRow]);
-  }
-  printf("\n");
-#endif
 
   //__________
   // Eigenvalue solve
@@ -402,13 +362,6 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
   dsyev_( &jobz, &matType, &n, &jMatrix_[0], &lda, &eigenValues_[0], &work_[0], &lwork, &info );
   
   bool status = ( info>0 || info<0 )? false : true;
-  
-#ifdef WASATCH_QMOM_DIAGNOSTICS
-  for (int iRow=0; iRow<nEnvironments; iRow++) {
-    printf("Eigenvalue[%i] = %.12f \t \t",iRow,eigenValues_[iRow]);
-  }
-  printf("\n");
-#endif
 
   //__________
   // calculate the weights. The abscissae are stored in eigenValues_
@@ -417,7 +370,49 @@ product_difference(const std::vector<typename FieldT::const_interior_iterator>& 
     const int matLoc = i*nEnvironments;
     weights_[i] = jMatrix_[matLoc]*jMatrix_[matLoc]*m0;
   }
-
+  
+  //isolate the debug stream statements to only print when an error occurs
+  if (!status) {
+    //p matrix
+    for (int iRow=0; iRow<nMoments_; iRow++) {
+      for (int jCol=0; jCol<nMoments_+1; jCol++) {
+        dbg_qmom << "p[" << iRow << "][" << jCol << "] = " << pmatrix_[iRow][jCol] << "  ";
+      }
+      dbg_qmom << std::endl;
+    }
+    
+    //display the alpha vector
+    for (int iRow=0; iRow<nMoments_; iRow++) {
+      dbg_qmom << "alpha[" << iRow << "] = " << alpha_[iRow] << "  ";
+    }
+    dbg_qmom << std::endl;
+    
+    //display the a & b vectors
+    for (int iRow=0; iRow<nEnvironments; iRow++) {
+      dbg_qmom << "a[" << iRow << "] = " << a_[iRow] << "  ";
+    }
+    dbg_qmom << std::endl;
+    for (int iRow=0; iRow<nEnvironments; iRow++) {
+      dbg_qmom << "b[" << iRow << "] = " << b_[iRow] << "  "; 
+    }
+    dbg_qmom << std::endl;
+    
+    //display the J vector
+    for (int iRow=0; iRow<nEnvironments*nEnvironments; iRow++) {
+      dbg_qmom << "J[" << iRow << "] = " << jMatrix_[iRow] << "  ";
+    }
+    dbg_qmom << std::endl;
+    
+    //display the eigenvaleus after solve
+    for (int iRow=0; iRow<nEnvironments; iRow++) {
+      dbg_qmom << "Eigenvalue[" << iRow << "] = " << eigenValues_[iRow] << "  ";
+    }
+    dbg_qmom << std::endl;
+    
+    if (realizable_)
+      dbg_qmom << "WARNING QMOM: Negative number detected in b auxiliary vector, decreasing number of moments from " << nMoments_ << " to " << nReducedMoments <<" and recalculating." << std::endl;
+  }
+  
   return status;
 }
 

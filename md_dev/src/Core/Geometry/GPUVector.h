@@ -24,71 +24,51 @@
 
 
 #include <sci_defs/cuda_defs.h>
-typedef union Int3{
-  int3 vector;
-  int array[3];
-  HOST_DEVICE Int3(const int3& copy):vector(copy){}
-  HOST_DEVICE Int3& operator=(const int3& copy){
-    vector=copy;
-    return *this;
-  }
-  HOST_DEVICE int& operator[](const int& i){
-    return array[i];
-  }
-  HOST_DEVICE operator int3() {
-    return vector;
-  }
-} Int3;
 
+class Int3 : public int3 {
+  public:
+    HOST_DEVICE Int3() {}
+    HOST_DEVICE int& operator[](const int &i) {
+              return (&x)[i];
+    }
+    HOST_DEVICE const int& operator[](const int &i) const {
+              return (&x)[i];
+    }
+    HOST_DEVICE Int3(const int3& copy):int3(copy) {}
+};
 
-typedef union uInt3{
-  uint3 vector;
-  unsigned int array[3];
-  HOST_DEVICE uInt3(const uint3& copy):vector(copy){}
-  HOST_DEVICE uInt3& operator=(const uint3& copy){
-    vector=copy;
-    return *this;
-  }
-  HOST_DEVICE unsigned int& operator[](const int& i){
-    return array[i];
-  }
-  HOST_DEVICE operator uint3() {
-    return vector;
-  }
-} uInt3;
+class uInt3 : public uint3 {
+  public:
+    HOST_DEVICE uInt3() {}
+    HOST_DEVICE unsigned int& operator[](const int &i) {
+              return (&x)[i];
+    }
+    HOST_DEVICE const unsigned int& operator[](const int &i) const {
+              return (&x)[i];
+    }
+    HOST_DEVICE uInt3(const uint3& copy):uint3(copy) {}
+};
 
+class Float3 : public float3 {
+  public:
+    HOST_DEVICE Float3() {}
+    HOST_DEVICE float& operator[](const int &i) {
+              return (&x)[i];
+    }
+    HOST_DEVICE const float& operator[](const int &i) const {
+              return (&x)[i];
+    }
+    HOST_DEVICE Float3(const float3& copy):float3(copy) {}
+};
 
-typedef union Double3{
-  double3 vector;
-  double array[3];
-  HOST_DEVICE Double3(const double3& copy):vector(copy){}
-  HOST_DEVICE Double3& operator=(const double3& copy){
-    vector=copy;
-    return *this;
-  }
-  HOST_DEVICE double& operator[](const int& i){
-    return array[i];
-  }
-  HOST_DEVICE operator double3() {
-    return vector;
-  }
-} Double3;
-
-
-typedef union Float3{
-  float3 vector;
-  float array[3];
-  HOST_DEVICE Float3(const float3& copy):vector(copy){}
-  HOST_DEVICE Float3& operator=(const float3& copy){
-    vector=copy;
-    return *this;
-  }
-  HOST_DEVICE float& operator[](const int& i){
-    return array[i];
-  }
-  HOST_DEVICE operator float3() {
-    return vector;
-  }
-} Float3;
-
-
+class Double3 : public double3 {
+  public:
+    HOST_DEVICE Double3() {}
+    HOST_DEVICE double& operator[](const int &i) {
+              return (&x)[i];
+    }
+    HOST_DEVICE const double& operator[](const int &i) const {
+              return (&x)[i];
+    }
+    HOST_DEVICE Double3(const double3& copy):double3(copy) {}
+};

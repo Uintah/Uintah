@@ -64,7 +64,7 @@ void VelEst<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
   const typename Expr::FieldMgrSelector<XFace>::type& xFaceFM      = fml.field_manager<XFace>();
   const typename Expr::FieldMgrSelector<YFace>::type& yFaceFM      = fml.field_manager<YFace>();
   const typename Expr::FieldMgrSelector<ZFace>::type& zFaceFM      = fml.field_manager<ZFace>();
-  const typename Expr::FieldMgrSelector<double>::type& tFM         = fml.field_manager<double>();
+  const typename Expr::FieldMgrSelector<TimeField>::type& tFM      = fml.field_manager<TimeField>();
   
   vel_      = &fm.field_ref ( velt_ );    
   convTerm_ = &fm.field_ref ( convTermt_ );    
@@ -145,14 +145,14 @@ VelEst<FieldT>::Builder::Builder( const Expr::Tag& result,
                                   const Expr::Tag viscTag,
                                   const Expr::Tag pressureTag,
                                   const Expr::Tag timeStepTag )
-    : ExpressionBuilder(result),
-      tauts_    ( tauTags     ),
-      velt_     ( velTag      ),
-      convTermt_( convTermTag ),
-      densityt_ ( densityTag  ),
-      visct_    ( viscTag     ),
-      pt_       ( pressureTag ),
-      tstpt_    ( timeStepTag )
+: ExpressionBuilder(result),
+  tauts_    ( tauTags     ),
+  velt_     ( velTag      ),
+  convTermt_( convTermTag ),
+  densityt_ ( densityTag  ),
+  visct_    ( viscTag     ),
+  pt_       ( pressureTag ),
+  tstpt_    ( timeStepTag )
 {}
 
 //------------------------------------------------------------------

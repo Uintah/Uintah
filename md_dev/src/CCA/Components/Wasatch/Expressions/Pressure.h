@@ -77,6 +77,8 @@ Expr::Tag pressure_tag();
 class Pressure
  : public Expr::Expression<SVolField>
 {
+  typedef SpatialOps::structured::SingleValueField TimeField;
+
   const Expr::Tag fxt_, fyt_, fzt_, pSourcet_, timestept_, currenttimet_, volfract_;
 
   const bool doX_, doY_, doZ_;
@@ -97,8 +99,8 @@ class Pressure
   const Uintah::VarLabel* prhsLabel_;
   
   const SVolField* pSource_;
-  const double* timestep_;
-  const double* currenttime_;
+  const TimeField* timestep_;
+  const TimeField* currenttime_;
 
   const SVolField* volfrac_;
   

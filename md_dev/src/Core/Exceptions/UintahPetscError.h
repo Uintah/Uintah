@@ -41,8 +41,8 @@
 #include <string>
 
 namespace Uintah {
-  using namespace SCIRun;
-  class UintahPetscError : public Exception {
+
+  class UintahPetscError : public SCIRun::Exception {
   public:
     UintahPetscError(int petsc_code, const std::string&, const char* file, int line);
     UintahPetscError(const UintahPetscError&);

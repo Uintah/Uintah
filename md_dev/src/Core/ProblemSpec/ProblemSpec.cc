@@ -1420,6 +1420,55 @@ ProblemSpec::getAttribute(const string& attribute, string& result) const
 //______________________________________________________________________
 //
 bool
+ProblemSpec::getAttribute(const string& name, vector<double>& value) const
+{
+  vector<string> stringValues;
+  if(!getAttribute(name, stringValues)) {
+    return false;
+  }
+  for(vector<string>::const_iterator vit(stringValues.begin());
+      vit!=stringValues.end();vit++) {
+    const string v(*vit);
+    checkForInputError( v, FLOAT_TYPE );
+    value.push_back( atof(v.c_str()) );
+  }  
+  return true;
+}
+
+//______________________________________________________________________
+//
+bool
+ProblemSpec::getAttribute(const string& name, Vector& value) const
+{
+  string stringValue;
+  if(!getAttribute(name, stringValue)) {
+    return false;
+  }
+  // Parse out the [num,num,num]
+  // Now pull apart the stringValue
+  string::size_type i1 = stringValue.find("[");
+  string::size_type i2 = stringValue.find_first_of(",");
+  string::size_type i3 = stringValue.find_last_of(",");
+  string::size_type i4 = stringValue.find("]");
+  
+  string x_val(stringValue,i1+1,i2-i1-1);
+  string y_val(stringValue,i2+1,i3-i2-1);
+  string z_val(stringValue,i3+1,i4-i3-1);
+  
+  checkForInputError( x_val, FLOAT_TYPE );
+  checkForInputError( y_val, FLOAT_TYPE );
+  checkForInputError( z_val, FLOAT_TYPE );
+  
+  value.x(atof(x_val.c_str()));
+  value.y(atof(y_val.c_str()));
+  value.z(atof(z_val.c_str()));
+
+  return true;
+}
+
+//______________________________________________________________________
+//
+bool
 ProblemSpec::getAttribute(const string& name, double &value) const
 {
   string stringValue;

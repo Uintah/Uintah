@@ -157,7 +157,7 @@
 
       <BoundaryConditions>
             <wall_csmag>0.0</wall_csmag>
-
+            <suppress_corner_recirculation/>
       </BoundaryConditions>
 
       <ExplicitSolver>

@@ -61,6 +61,7 @@ WARNING
 ****************************************/
 
   class GridVariableBase : public Variable {
+
   public:
     virtual ~GridVariableBase() {}
       
@@ -79,9 +80,15 @@ WARNING
 
     virtual void getSizes(IntVector& low, IntVector& high,
                           IntVector& siz) const = 0;
+
     virtual void getSizes(IntVector& low, IntVector& high,
-                            IntVector& dataLow, IntVector& siz,
-                            IntVector& strides) const = 0;
+                          IntVector& dataLow, IntVector& siz,
+                          IntVector& strides) const = 0;
+
+    virtual size_t getDataSize() const = 0;
+
+    virtual bool copyOut(void* dst) const = 0;
+
     //////////
     // Insert Documentation Here:
     virtual void copyPatch(const GridVariableBase* src,
@@ -100,6 +107,7 @@ WARNING
   protected:
     GridVariableBase() {}
     GridVariableBase(const GridVariableBase&);
+
   private:
     GridVariableBase& operator=(const GridVariableBase&);    
   };

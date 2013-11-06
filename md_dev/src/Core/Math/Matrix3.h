@@ -90,7 +90,6 @@ namespace Uintah {
 
     // multiply Matrix3 by a constant: Mat * 3  
     inline Matrix3 operator * (const double value) const;
-
     // multiply constant by Matrix3:   3 * Mat
      friend Matrix3 operator * (double c, const Matrix3 &m3);
 
@@ -108,15 +107,12 @@ namespace Uintah {
 
     // modify by dividing right hand side
     inline void operator /= (const Matrix3 &m3);
-
+    
     // add two Matrix3s
     inline Matrix3 operator + (const Matrix3 &m3) const;
 
     // multiply two Matrix3s
     inline Matrix3 operator * (const Matrix3 &m3) const;
-
-    // divide two Matrix3s
-//    inline Matrix3 operator / (const Matrix3 &m3) const;
 
     // multiply Vector by Matrix3
     inline Vector operator * (const Vector& V) const;  
@@ -145,7 +141,7 @@ namespace Uintah {
     inline bool solveCramer(Vector& rhs, Vector& x) const;
 
     //Inverse
-    Matrix3 Inverse() const;
+     Matrix3 Inverse() const;
 
     //Trace
     inline double Trace() const;
@@ -488,7 +484,7 @@ namespace Uintah {
 
   inline void Matrix3::operator += (const Matrix3 &m3)
     {
-      // += operator
+      // += operator 
 
       for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
@@ -500,7 +496,7 @@ namespace Uintah {
 
   inline void Matrix3::operator -= (const Matrix3 &m3)
     {
-      // -= operator
+      // -= operator 
 
       for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
@@ -524,12 +520,7 @@ namespace Uintah {
       mat3[2][1] = mat3[2][0] * m3(0,1) + mat3[2][1] * m3(1,1) + mat3[2][2] * m3(2,1);
       mat3[2][2] = mat3[2][0] * m3(0,2) + mat3[2][1] * m3(1,2) + mat3[2][2] * m3(2,2);
     }
-
-  inline void Matrix3::operator /= (const Matrix3 &m3)
-    {
-      (*this) * m3.Inverse();
-    }
-
+  
   inline void Matrix3::operator /= (const double value)
     {
       // Divide each component of the Matrix3 by the value

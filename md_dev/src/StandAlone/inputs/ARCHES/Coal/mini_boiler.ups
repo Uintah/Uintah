@@ -34,8 +34,8 @@
     <save label="coal_gas_mix_frac_RHS"/>
     <save label="coal_gas_mix_frac_Fdiff"/>
     <save label="coal_gas_mix_frac_Fconv"/>
-    <save label = "new_radiationVolq"/>
-    <save label = "new_abskg"/>
+    <save label = "radiationVolq"/>
+    <save label = "abskg"/>
     <save label = "divQ"/>
     <save label = "enthalpy"/>
     <save label = "length_qn0_icv" />
@@ -5501,7 +5501,7 @@
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>50</calc_frequency>
-            <abskp_label>abskp</abskp_label>
+            <abskp_label>Julien_abskp</abskp_label>
             <soot_label>soot</soot_label>
             <DORadiationModel>
               <opl>0.432</opl>
@@ -5512,7 +5512,6 @@
                 <max_iter>1500</max_iter>
               </LinearSolver>
               <ordinates>4</ordinates>
-              <wall_abskg>1.0</wall_abskg>
             </DORadiationModel>
           </src>
 
@@ -5535,7 +5534,7 @@
       </TransportEqns>
 
       <PropertyModels>
-        <model label="abskp" type="absorption_coefficient">
+        <model label="Julien_abskp" type="particle_absorption_coefficient">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
@@ -5565,7 +5564,7 @@
           <enthalpy_label>enthalpy</enthalpy_label>   <!-- NON Adiabatic case-->
           <inputfile>inputs/ARCHES/ClassicMixingTables/coal/simon5hi.mix.gz</inputfile>
           <hl_scalar_init>0.885</hl_scalar_init>
-          <coal fp_label="mixture_fraction_2" eta_label="coal_gas_mix_frac"/>
+          <coal fp_label="mixture_fraction_2" eta_label="coal_gas_mix_frac" hl_label="heat_loss"/>
         </ClassicTable>
       </Properties>
 
@@ -5637,9 +5636,9 @@
           <scaling_const>1e7</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <Clipping>
-            <low>-1.0</low>
-            <high>10.0</high>
-            <small>1e-9</small>
+            <low>0.0</low>
+            <high>1.0</high>
+            <tol>1e-9</tol>
           </Clipping>
           <conv_scheme>roe_minmod</conv_scheme>
         </Weights>
@@ -5655,10 +5654,10 @@
             <env_constant qn="2" value="100e-6">
             </env_constant>
           </initialization>
-          <Clipping>
+          <!--Clipping>
             <low>3.99</low>
             <high>10.01</high>
-          </Clipping>
+          </Clipping-->
           <scaling_const>1e-5</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
@@ -5678,10 +5677,6 @@
           </initialization>
           <model label="devol" />
           <scaling_const>1.0e-10</scaling_const>
-          <Clipping>
-            <low>0.0</low>
-            <high>10.0</high>
-          </Clipping>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
@@ -5699,10 +5694,6 @@
           </initialization>
           <model label="char" />
           <scaling_const>1.0e-10</scaling_const>
-          <Clipping>
-            <low>-10.0</low>
-            <high>10.0</high>
-          </Clipping>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
@@ -5720,10 +5711,6 @@
             </env_constant>
           </initialization>
           <model label="heat" />
-          <!--Clipping>
-              <low>0.3</low>
-              <high>3.0</high>
-              </Clipping-->
           <scaling_const>1e-4</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
@@ -5741,10 +5728,6 @@
             <env_constant qn="2" value="10.0">
             </env_constant>
           </initialization>
-          <Clipping>
-            <low>-50.0</low>
-            <high>100.0</high>
-          </Clipping>
           <scaling_const>1.0</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
@@ -5761,10 +5744,6 @@
             <env_constant qn="2" value="0.0">
             </env_constant>
           </initialization>
-          <Clipping>
-            <low>-50.0</low>
-            <high>100.0</high>
-          </Clipping>
           <scaling_const>1.0</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
@@ -5782,10 +5761,6 @@
             <env_constant qn="2" value="0.0">
             </env_constant>
           </initialization>
-          <Clipping>
-            <low>-50.0</low>
-            <high>100.0</high>
-          </Clipping>
           <scaling_const>1.0</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
