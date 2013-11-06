@@ -152,7 +152,7 @@ namespace Uintah {
     int to;
 
     //scratch pad to store wait times for debugging
-    static std::map<string,double> waittimes;
+    static std::map<std::string,double> waittimes;
   private:
     volatile bool received_;
     volatile bool madeMPIRequest_;
@@ -371,7 +371,7 @@ namespace Uintah {
 
     DetailedTask* getOldDWSendTask(int proc);
 
-    void logMemoryUse(ostream& out, unsigned long& total, const std::string& tag);
+    void logMemoryUse(std::ostream& out, unsigned long& total, const std::string& tag);
 
     void initTimestep();
     
@@ -479,10 +479,10 @@ namespace Uintah {
     // to run.  I implemented this using topological sort order as the priority
     // but that probably isn't a good way to do unless you make it a breadth
     // first topological order.
-    //typedef priority_queue<DetailedTask*, vector<DetailedTask*>, TaskNumberCompare> TaskQueue;    
+    //typedef priority_queue<DetailedTask*, std::vector<DetailedTask*>, TaskNumberCompare> TaskQueue;
     QueueAlg taskPriorityAlg_;
     typedef std::queue<DetailedTask*> TaskQueue;
-    typedef std::priority_queue<DetailedTask*, vector<DetailedTask*>, DetailedTaskPriorityComparison> TaskPQueue;
+    typedef std::priority_queue<DetailedTask*, std::vector<DetailedTask*>, DetailedTaskPriorityComparison> TaskPQueue;
     
     TaskQueue   readyTasks_;
     TaskQueue   initiallyReadyTasks_;

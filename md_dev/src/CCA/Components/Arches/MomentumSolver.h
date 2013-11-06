@@ -250,7 +250,7 @@ private:
   bool d_3d_periodic;
   bool d_filter_divergence_constraint;
   bool d_mixedModel;
-  vector<string> d_new_sources;
+  std::vector<std::string> d_new_sources;
   bool d_useWasatchMomRHS;
 
   const VarLabel* _u_mom; 
@@ -363,8 +363,37 @@ private:
           for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0; 
                 db_face = db_face->findNextBlock("Face") ){
 
-            std::string which_face = "NA"; 
-            db_face->getAttribute("side",which_face); 
+            std::string which_face;
+            int v_index=999;
+            if ( db_face->getAttribute("side", which_face)){
+              db_face->getAttribute("side",which_face); 
+            } else if ( db_face->getAttribute( "circle", which_face)){
+              db_face->getAttribute("circle",which_face); 
+            } else if ( db_face->getAttribute( "rectangle", which_face)){ 
+              db_face->getAttribute("rectangle",which_face); 
+            } else if ( db_face->getAttribute( "annulus", which_face)){ 
+              db_face->getAttribute("annulus",which_face); 
+            } else if ( db_face->getAttribute( "ellipse", which_face)){ 
+              db_face->getAttribute("ellipse",which_face); 
+            }
+
+            //avoid the "or" in case I want to add more logic 
+            //re: the face normal. 
+            if ( which_face =="x-"){ 
+              v_index = 0;
+            } else if ( which_face =="x+"){
+              v_index = 0;
+            } else if ( which_face =="y-"){ 
+              v_index = 1;
+            } else if ( which_face =="y+"){
+              v_index = 1;
+            } else if ( which_face =="z-"){ 
+              v_index = 2;
+            } else if ( which_face =="z+"){ 
+              v_index = 2;
+            } else { 
+              throw InvalidValue("Error: Could not identify the boundary face direction.", __FILE__, __LINE__);
+            }
 
             for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0; 
                 db_BCType = db_BCType->findNextBlock("BCType") ){
@@ -384,7 +413,7 @@ private:
                   db_BCType->getWithDefault("k",_k,0.41);
 
                   _kappa = pow( _k / log( _zh / _zo ), 2.0); 
-                  _ustar = pow( (_kappa * pow(_u_inf,2.0)), 0.5 ); 
+                  _ustar = pow( (_kappa * pow(_u_inf[v_index],2.0)), 0.5 ); 
 
                   if ( which_face == "x-" ){ 
                     _do_u = true; 
@@ -457,7 +486,7 @@ private:
       double _zh; 
       double _k; 
       double _kappa; 
-      double _u_inf; 
+      Vector _u_inf; 
       double _ustar; 
       double _sign; 
       bool _do_u; 

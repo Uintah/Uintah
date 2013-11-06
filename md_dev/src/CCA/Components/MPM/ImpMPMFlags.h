@@ -62,7 +62,7 @@ namespace Uintah {
     int d_num_iters_to_increase_delT;
     double d_delT_decrease_factor;
     double d_delT_increase_factor;
-    string d_solver_type;
+    std::string d_solver_type;
     bool d_temp_solve;
     bool d_interpolateParticleTempToGridEveryStep;
 

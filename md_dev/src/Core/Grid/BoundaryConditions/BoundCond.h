@@ -31,7 +31,7 @@
 #include <string>
 
 namespace Uintah {
-using std::string;
+
  using namespace SCIRun;
    
 /**************************************
@@ -72,7 +72,11 @@ WARNING
  public:
    BoundCond() {};
 
-   BoundCond(string var_name, string type, T value, const std::string face_label, const BoundCondBase::BoundCondValueTypeEnum val_type)
+   BoundCond( const std::string var_name,
+              const std::string type,
+              const T value,
+              const std::string face_label,
+              const BoundCondBase::BoundCondValueTypeEnum val_type)
      {
        d_variable     = var_name;
        d_type         = type;
@@ -99,7 +103,7 @@ WARNING
 
  public:
 
-   BoundCond(string var_name,string type)
+   BoundCond(std::string var_name,std::string type)
      {
        d_variable = var_name;
        d_type = type;
@@ -108,7 +112,7 @@ WARNING
        d_value_type = BoundCondBase::UNKNOWN_TYPE;
      };
 
-   BoundCond(string var_name)
+   BoundCond(std::string var_name)
      {
        d_variable = var_name;
        d_type = "";

@@ -45,11 +45,9 @@
 #include <vector>
 
 namespace SCIRun {
-  using std::vector;
-
 
 template<class T> class Ring {
-    vector<T> data;
+    std::vector<T> data;
     int head_;
     int tail_;
     int size_;

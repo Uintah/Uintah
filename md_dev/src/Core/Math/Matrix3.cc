@@ -50,10 +50,7 @@
 #endif
 
 using namespace Uintah;
-
-using std::cerr;
-using std::endl;
-using std::ostream;
+using namespace std;
 using SCIRun::Vector;
 
 const string& 

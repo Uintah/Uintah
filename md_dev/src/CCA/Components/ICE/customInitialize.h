@@ -33,9 +33,9 @@ namespace Uintah {
   
  // multiple vortices
   struct vortices{   
-    vector<Point> origin;
-    vector<double> strength;
-    vector<double> radius;
+    std::vector<Point> origin;
+    std::vector<double> strength;
+    std::vector<double> radius;
     ~vortices() {};
   };
   
@@ -67,7 +67,7 @@ namespace Uintah {
     gaussTemp*    gaussTemp_inputs;
     counterflow*  counterflow_inputs;
     bool          doesComputePressure;
-    string which;
+    std::string   which;
   };
   void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
                                         customInitialize_basket* cib,

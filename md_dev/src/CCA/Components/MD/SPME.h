@@ -278,7 +278,7 @@ namespace Uintah {
        * @param
        * @return
        */
-      vector<double> calculateOrdinalSpline(const int orderMinusOne,
+      std::vector<double> calculateOrdinalSpline(const int orderMinusOne,
                                             const int splineOrder);
 
       /**

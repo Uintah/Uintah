@@ -25,7 +25,7 @@
 
 #include <Core/Grid/Variables/GridSurfaceIterator.h>
 
-
+using std::ostream;
 
 namespace Uintah {
 

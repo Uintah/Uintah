@@ -45,7 +45,7 @@
 #include <iostream>
 
 namespace Uintah {
-using std::string;
+
 using SCIRun::Thread;
 using SCIRun::ThreadGroup;
 using SCIRun::Semaphore;

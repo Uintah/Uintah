@@ -335,14 +335,12 @@ private:
   Wasatch::Wasatch* const d_wasatch;
 # endif // WASATCH_IN_ARCHES
 
-  double d_init_dt; // The initial dt from input file.
-  double d_init_mix_frac; // The initial value of mixture fraction in the domain (for paramInit)
-  bool d_variableTimeStep;
-  string d_whichTurbModel;
+  std::string d_whichTurbModel;
   bool d_mixedModel;
   bool d_with_mpmarches;
   bool d_extraProjection;
   bool d_useWasatchMomRHS;
+  double d_initial_dt; 
 
   ScaleSimilarityModel* d_scaleSimilarityModel;
   PhysicalConstants* d_physicalConsts;
@@ -359,7 +357,7 @@ private:
 
   const MPMArchesLabel* d_MAlab;
 
-  string d_timeIntegratorType;
+  std::string d_timeIntegratorType;
 
   std::vector<AnalysisModule*> d_analysisModules;
 
@@ -375,7 +373,7 @@ private:
   bool d_underflow;
 
   // Variables----
-  vector<string> d_scalarEqnNames;
+  std::vector<std::string> d_scalarEqnNames;
   bool d_doDQMOM; // do we need this as a private member?
   std::string d_which_dqmom;
   int d_tOrder;

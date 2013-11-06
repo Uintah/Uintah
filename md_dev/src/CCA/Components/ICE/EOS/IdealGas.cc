@@ -28,6 +28,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
+using namespace std;
 
 IdealGas::IdealGas(ProblemSpecP& )
 {

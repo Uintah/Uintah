@@ -53,7 +53,7 @@ bool compareQueries( Level::selectType &q1, Level::selectType &q2)
     bool found=false;
     for(Level::selectType::iterator iter2=q2.begin(); iter2!=q2.end(); iter2++)
     {
-      if(compareEqual(*iter1,*iter2)==true);
+      if(compareEqual(*iter1,*iter2)==true)
           found=true;
     }
     if(!found)

@@ -867,7 +867,7 @@ void SPME::calculateCGrid(SimpleGrid<double>& CGrid,
 {
   if (spme_dbg.active()) {
     // sanity check
-    proc0thread0cout << "System Volume: " << d_systemVolume << endl;
+    proc0thread0cout << "System Volume: " << d_systemVolume << std::endl;
   }
 
   std::vector<double> mp1(d_kLimits.x());
@@ -1081,17 +1081,17 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
             if (x_anchor > patchExtent.x()) {
               std::cerr << " Error:  x_anchor exceeds patch Extent in mapChargeToGrid"
                         << " xBase: " << x_Base << " xMask: " << xmask << " xAnchor: " << x_anchor
-                        << " xPatchExtent: " << patchExtent.x() << endl;
+                        << " xPatchExtent: " << patchExtent.x() << std::endl;
             }
             if (y_anchor > patchExtent.y()) {
               std::cerr << " Error:  y_anchor exceeds patch Extent in mapChargeToGrid"
                         << " yBase: " << y_Base << " yMask: " << ymask << " yAnchor: " << y_anchor
-                        << " yPatchExtent: " << patchExtent.y() << endl;
+                        << " yPatchExtent: " << patchExtent.y() << std::endl;
             }
             if (z_anchor > patchExtent.z()) {
               std::cerr << " Error:  z_anchor exceeds patch Extent in mapChargeToGrid"
                         << " zBase: " << z_Base << " zMask: " << zmask << " zAnchor: " << z_anchor
-                        << " zPatchExtent: " << patchExtent.z() << endl;
+                        << " zPatchExtent: " << patchExtent.z() << std::endl;
             }
           }
           //--------------------------< DEBUG >--------------------------------
@@ -1211,7 +1211,7 @@ void SPME::mapForceFromGrid(SPMEPatch* spmePatch,
     if (spme_dbg.active()) {
       if (pidx < 5) {
         cerrLock.lock();
-        std::cerr << " Force Check (" << pidx << "): " << newForce << endl;
+        std::cerr << " Force Check (" << pidx << "): " << newForce << std::endl;
         pforcenew[pidx] = newForce;
         cerrLock.unlock();
       }

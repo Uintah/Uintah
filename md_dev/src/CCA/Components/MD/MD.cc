@@ -757,12 +757,12 @@ void MD::extractCoordinates()
   std::ifstream inputFile;
   inputFile.open(d_coordinateFile.c_str());
   if (!inputFile.is_open()) {
-    string message = "\tCannot open input file: " + d_coordinateFile;
+    std::string message = "\tCannot open input file: " + d_coordinateFile;
     throw ProblemSetupException(message, __FILE__, __LINE__);
   }
 
   // do file IO to extract atom coordinates and charge
-  string line;
+  std::string line;
   unsigned int numRead;
   unsigned int numAtoms = d_system->getNumAtoms();
   for (unsigned int i = 0; i < numAtoms; ++i) {
@@ -772,7 +772,7 @@ void MD::extractCoordinates()
     double charge;
     numRead = sscanf(line.c_str(), "%lf %lf %lf %lf", &x, &y, &z, &charge);
     if (numRead != 4) {
-      string message = "\tMalformed input file. Should have [x,y,z] coordinates and [charge] per line: ";
+      std::string message = "\tMalformed input file. Should have [x,y,z] coordinates and [charge] per line: ";
       throw ProblemSetupException(message, __FILE__, __LINE__);
     }
 

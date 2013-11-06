@@ -47,29 +47,54 @@ namespace Wasatch{
    */
   template< typename FieldT >
   class MinMaxClip
+  : public Expr::Expression<FieldT>
   {
-    const double min_;
-    const double max_;
+  private:
+    const Expr::Tag volFracTag_;
+    const double min_, max_;
+    const bool hasVolFrac_;
+    const FieldT* volFrac_;
     
   public:
+    MinMaxClip( const Expr::Tag& volFracTag,
+                const double min,
+                const double max ) :
+    volFracTag_(volFracTag),
+    min_(min),
+    max_(max),
+    hasVolFrac_(volFracTag != Expr::Tag())
+    {}
     
-    /**
-     *  @param min The minimum acceptable value for this field.
-     *
-     *  @param max The maximum acceptable value for this field.
-     *     
-     */
-    MinMaxClip( const double min,
-               const double max );
+    class Builder : public Expr::ExpressionBuilder
+    {
+    public:
+      /**
+       * @param result Tag of the resulting expression.
+       * @param bcValue   constant boundary condition value.
+       * @param cghost ghost coefficient. This is usually provided by an operator.
+       * @param flatGhostPoints  flat indices of the ghost points in which BC is being set.
+       * @param cinterior interior coefficient. This is usually provided by an operator.
+       * @param flatInteriorPoints  flat indices of the interior points that are used to set the ghost value.
+       */
+      Builder( const Expr::Tag& resultTag,
+              const Expr::Tag& volFracTag,
+              const double min,
+              const double max) :
+      ExpressionBuilder(resultTag),
+      volFracTag_(volFracTag),
+      min_(min),
+      max_(max)
+      {}
+      Expr::ExpressionBase* build() const{ return new MinMaxClip(volFracTag_, min_, max_); }
+    private:
+      const Expr::Tag volFracTag_;
+      const double min_, max_;
+    };
     
     ~MinMaxClip(){}
-    
-    /**
-     *  Applies the clipping.
-     *
-     *  @param f The field that we want to apply the clip on.
-     */
-    inline void operator()( FieldT& f ) const;
+    void advertise_dependents( Expr::ExprDeps& exprDeps );
+    void bind_fields( const Expr::FieldManagerList& fml );
+    void evaluate();
   };
   
   
@@ -79,29 +104,46 @@ namespace Wasatch{
   //                         Implementation
   //
   // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-  template< typename FieldT >
-  MinMaxClip<FieldT>::
-  MinMaxClip( const double min, const double max )
-  : min_( min ),
-    max_( max )
-  {}
   
   //------------------------------------------------------------------
   
   template< typename FieldT >
   void
   MinMaxClip<FieldT>::
-  operator()( FieldT& f ) const
+  advertise_dependents( Expr::ExprDeps& exprDeps )
   {
-    using namespace SpatialOps;
-    std::cout << "clipping........\n";
-    f <<= cond( f < min_, min_ )
-              ( f > max_, max_ )
-              ( f );    
+    if (hasVolFrac_) exprDeps.requires_expression( volFracTag_ );
   }
 
   //------------------------------------------------------------------
+
+  template< typename FieldT >
+  void MinMaxClip<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
+  {
+    if (hasVolFrac_) {
+      const typename Expr::FieldMgrSelector<FieldT>::type& fm  = fml.field_manager<FieldT>();
+      volFrac_      = &fm.field_ref ( volFracTag_ );
+    }
+  }
+  
+  //------------------------------------------------------------------
+  
+  template< typename FieldT >
+  void MinMaxClip<FieldT>::evaluate()
+  {
+    using namespace SpatialOps;
+    FieldT& f = this->value();
+    if (hasVolFrac_) {
+      f <<= *volFrac_ * cond( f < min_, min_ )
+                ( f > max_, max_ )
+                ( f );
+    } else {
+      f <<= cond( f < min_, min_ )
+                ( f > max_, max_ )
+                ( f );
+    }
+  }
+
 
   // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //
@@ -116,7 +158,8 @@ namespace Wasatch{
             const Category& cat,
             const Expr::Tag& fieldTag,
             const double min,
-            const double max) 
+            const double max,
+            const Expr::Tag& volFracTag)
   {
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     
@@ -124,20 +167,19 @@ namespace Wasatch{
       const Expr::ExpressionID expID = factory.get_id(fieldTag);
       graphHelper.rootIDs.insert(expID);
     }
-
+    
     for( int ip=0; ip<localPatches->size(); ++ip ){
       // get the patch subset
       const Uintah::PatchSubset* const patches = localPatches->getSubset(ip);
-      
       // loop over every patch in the patch subset
       for( int ipss=0; ipss<patches->size(); ++ipss ){
-        
         // get a pointer to the current patch
         const Uintah::Patch* const patch = patches->get(ipss);
-
-        Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( fieldTag, patch->getID(), false ) );
-        MinMaxClip<FieldT> clipper(min,max);
-        phiExpr.process_after_evaluate(fieldTag.name(),clipper);
+        const std::string strPatchID = number_to_string(patch->getID());
+        const Expr::Tag modTag( fieldTag.name() + "_clipper_patch_" + strPatchID , Expr::STATE_NONE );
+        Expr::ExpressionBuilder* builder = new typename MinMaxClip<FieldT>::Builder( modTag, volFracTag, min, max );
+        factory.register_expression( builder, true );
+        factory.attach_modifier_expression(modTag, fieldTag, patch->getID(), true);
       }
     }
   }
@@ -148,6 +190,19 @@ namespace Wasatch{
                          GraphCategories& gc,
                          const Uintah::PatchSet* const localPatches)
   {
+    Expr::Tag svolFracTag;
+    Expr::Tag xvolFracTag;
+    Expr::Tag yvolFracTag;
+    Expr::Tag zvolFracTag;
+    const bool hasVolFrac = parser->findBlock("EmbeddedGeometry");
+    VolFractionNames& vNames = VolFractionNames::self();
+    if (hasVolFrac) {
+      svolFracTag = vNames.svol_frac_tag();
+      xvolFracTag = vNames.xvol_frac_tag();
+      yvolFracTag = vNames.yvol_frac_tag();
+      zvolFracTag = vNames.zvol_frac_tag();
+    }
+
     //___________________________________
     // parse and clip expressions
     for( Uintah::ProblemSpecP clipParams = parser->findBlock("FieldClipping");
@@ -180,10 +235,10 @@ namespace Wasatch{
         const Expr::Tag fieldTag = parse_nametag( fieldParams->findBlock("NameTag") );
         
         switch( get_field_type(fieldType) ){
-          case SVOL : clip_expr< SVolField >( localPatches,*graphHelper, cat, fieldTag, min, max );  break;
-          case XVOL : clip_expr< XVolField >( localPatches,*graphHelper, cat, fieldTag, min, max );  break;
-          case YVOL : clip_expr< YVolField >( localPatches,*graphHelper, cat, fieldTag, min, max );  break;
-          case ZVOL : clip_expr< ZVolField >( localPatches,*graphHelper, cat, fieldTag, min, max );  break;
+          case SVOL : clip_expr< SVolField >( localPatches, *graphHelper, cat, fieldTag, min, max, svolFracTag );  break;
+          case XVOL : clip_expr< XVolField >( localPatches, *graphHelper, cat, fieldTag, min, max, xvolFracTag );  break;
+          case YVOL : clip_expr< YVolField >( localPatches, *graphHelper, cat, fieldTag, min, max, yvolFracTag );  break;
+          case ZVOL : clip_expr< ZVolField >( localPatches, *graphHelper, cat, fieldTag, min, max, zvolFracTag );  break;
           default:
             std::ostringstream msg;
             msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;

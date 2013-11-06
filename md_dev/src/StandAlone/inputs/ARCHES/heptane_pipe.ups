@@ -288,7 +288,7 @@
       </Properties>
 
       <BoundaryConditions>
-        <use_new_bcs/>
+        <suppress_corner_recirculation/>
         <intrusions>
           <intrusion label="flare">
             <geom_object>
@@ -325,8 +325,6 @@
       </BoundaryConditions>
 
       <ExplicitSolver>
-        <initial_dt>0.05</initial_dt>
-        <variable_dt>true</variable_dt>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
         <PressureSolver>
           <Parameters>

@@ -43,71 +43,71 @@
 namespace SCIRun {
 
 bool
-string_to_int(const string &str, int &result)
+string_to_int(const std::string &str, int &result)
 {
   return sscanf(str.c_str(), "%d", &result) == 1;
 }
 
 bool
-string_to_double(const string &str, double &result)
+string_to_double(const std::string &str, double &result)
 {
   return sscanf(str.c_str(), "%lf", &result) == 1;
 }
 
 bool
-string_to_unsigned_long(const string &str, unsigned long &result)
+string_to_unsigned_long(const std::string &str, unsigned long &result)
 {
   return sscanf(str.c_str(), "%lu", &result) == 1;
 }
 
 
-string
+std::string
 to_string(int val)
 {
   char s[50];
   sprintf(s, "%d", val);
-  return string(s);
+  return std::string(s);
 }
 
-string
+std::string
 to_string(unsigned int val)
 {
   char s[50];
   sprintf(s, "%u", val);
-  return string(s);
+  return std::string(s);
 }
 
-string
+std::string
 to_string(unsigned long val)
 {
   char s[50];
   sprintf(s, "%lu", val);
-  return string(s);
+  return std::string(s);
 }
 
-string
+std::string
 to_string(double val)
 {
   char s[50];
   sprintf(s, "%g", val);
-  return string(s);
+  return std::string(s);
 }
 
-string
-basename(const string &path)
+std::string
+basename(const std::string &path)
 {
   return path.substr(path.rfind('/')+1);
 }
 
-string
-pathname(const string &path)
+std::string
+pathname(const std::string &path)
 {
   return path.substr(0, path.rfind('/')+1);
 }
 
 
 char *
-ccast_unsafe(const string &str)
+ccast_unsafe(const std::string &str)
 {
   char *result = const_cast<char *>(str.c_str());
   ASSERT(result);
@@ -116,7 +116,7 @@ ccast_unsafe(const string &str)
 
 static
 bool
-is_separator( char ch, vector<char> separators )
+is_separator( char ch, std::vector<char> separators )
 {
   for( unsigned int pos = 0; pos < separators.size(); pos++ ) {
     if( ch == separators[ pos ] ) {
@@ -126,10 +126,10 @@ is_separator( char ch, vector<char> separators )
   return false;
 }
 
-string
-concatStrings( const vector<string> strings )
+std::string
+concatStrings( const std::vector<std::string> strings )
 {
-  string result;
+  std::string result;
   for( unsigned int pos = 0; pos < strings.size(); pos++ ) {
     result += strings[pos];
     if( pos != (strings.size()-1) ) {
@@ -139,10 +139,10 @@ concatStrings( const vector<string> strings )
   return result;
 }
 
-vector<string>
-split_string(const std::string& str, const vector<char> & separators)
+std::vector<std::string>
+split_string(const std::string& str, const std::vector<char> & separators)
 {
-  vector<string> result;
+  std::vector<std::string> result;
   unsigned int begin = 0;
 
   bool validDataFound = false;
@@ -172,11 +172,11 @@ split_string(const std::string& str, const vector<char> & separators)
 
 /////////
 // C++ify a string, turn newlines into \n, use \t, \r, \\ \", etc.
-string
-string_Cify(const string &str)
+std::string
+string_Cify(const std::string &str)
 {
-  string result("");
-  for (string::size_type i = 0; i < str.size(); i++)
+  std::string result("");
+  for (std::string::size_type i = 0; i < str.size(); i++)
   {
     switch(str[i])
     {
@@ -214,9 +214,9 @@ string_Cify(const string &str)
 
 // Remove leading and trailing white space (blanks, tabs, \n, \r) from string.
 void
-collapse( string & str )
+collapse( std::string & str )
 {
-  string orig = str;
+  std::string orig = str;
 
   str = "";
   
@@ -246,42 +246,42 @@ collapse( string & str )
 
 // replaces all occurances of 'substr' in 'str' with 'replacement'
 void
-replace_substring( string & str,
-                   const string & substr, 
-                   const string & replacement )
+replace_substring( std::string & str,
+                   const std::string & substr,
+                   const std::string & replacement )
 {
-  string::size_type pos;
+  std::string::size_type pos;
   do {
     pos = str.find(substr);
-    if (pos != string::npos)
+    if (pos != std::string::npos)
       str = str.replace(str.begin()+pos, 
                         str.begin()+pos+substr.length(), 
                         replacement);
-  } while (pos != string::npos);
+  } while (pos != std::string::npos);
 }
 
 
 bool
-ends_with(const string &str, const string &substr)
+ends_with(const std::string &str, const std::string &substr)
 {
   return str.rfind(substr) == str.size()-substr.size();
 }  
 
 
-string
-string_toupper( const string & str ) 
+std::string
+string_toupper( const std::string & str )
 {
-  string temp = str;
+  std::string temp = str;
   for (unsigned int i = 0; i < temp.length(); ++i) {
     temp[i] = toupper(str[i]);
   }
   return temp;
 }
 
-string
-string_tolower( const string & str ) 
+std::string
+string_tolower( const std::string & str )
 {
-  string temp = str;
+  std::string temp = str;
   for (unsigned int i = 0; i < temp.length(); ++i) {
     temp[i] = tolower(str[i]);
   }
@@ -289,12 +289,12 @@ string_tolower( const string & str )
 }
 
 unsigned int
-count_substrs( const string & str, const string & substr )
+count_substrs( const std::string & str, const std::string & substr )
 {
   unsigned int num = 0;
   size_t       loc = 0;
 
-  while( (loc = str.find(substr, loc)) != string::npos ) {
+  while( (loc = str.find(substr, loc)) != std::string::npos ) {
     loc++;
     num++;
   }

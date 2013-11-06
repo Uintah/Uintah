@@ -39,7 +39,7 @@ class SourceTermBase{
 public: 
 
   SourceTermBase( std::string srcName, SimulationStateP& sharedState, 
-                  vector<std::string> reqLabelNames, std::string type );
+                  std::vector<std::string> reqLabelNames, std::string type );
   virtual ~SourceTermBase();
 
   /** @brief Indicates the var type of source this is **/ 
@@ -78,7 +78,7 @@ public:
     return _src_label; };
 
   /** @brief Returns a list of any extra local labels this source may compute **/ 
-  inline const vector<const VarLabel*> getExtraLocalLabels(){
+  inline const std::vector<const VarLabel*> getExtraLocalLabels(){
     return _extra_local_labels; }; 
 
 	/** @brief Return the grid type of source (CC, FCX, etc... ) **/
@@ -114,11 +114,11 @@ protected:
   const VarLabel* _src_label;                        ///< Source varlabel
   bool _label_sched_init;                            ///< Boolean to clarify if a "computes" or "requires" is needed
   SimulationStateP& _shared_state;                   ///< Local copy of sharedState
-  vector<std::string> _required_labels;              ///< Vector of required labels
-  vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
-	vector<std::string> _table_lookup_species;         ///< List of table lookup species
+  std::vector<std::string> _required_labels;              ///< Vector of required labels
+  std::vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
+  std::vector<std::string> _table_lookup_species;         ///< List of table lookup species
   MY_GRID_TYPE _source_grid_type;                    ///< Source grid type
-  vector<std::string> _wasatch_expr_names;           ///< List of wasatch exprs to be used as sources
+  std::vector<std::string> _wasatch_expr_names;           ///< List of wasatch exprs to be used as sources
 
 
 

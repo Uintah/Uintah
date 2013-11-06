@@ -48,8 +48,6 @@
 
 namespace SCIRun {
 
-using std::string;
-
 template <class Basis>
 class ScanlineMesh : public Mesh
 {
@@ -69,21 +67,21 @@ public:
     typedef EdgeIndex<under_type>       index_type;
     typedef EdgeIterator<under_type>    iterator;
     typedef EdgeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };
 
   struct Face {
     typedef FaceIndex<under_type>       index_type;
     typedef FaceIterator<under_type>    iterator;
     typedef FaceIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };
 
   struct Cell {
     typedef CellIndex<under_type>       index_type;
     typedef CellIterator<under_type>    iterator;
     typedef CellIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };
 
   typedef Edge Elem;
@@ -145,9 +143,9 @@ public:
 
   //! get the mesh statistics
   unsigned get_min_i() const { return min_i_; }
-  bool get_min(vector<unsigned int>&) const;
+  bool get_min(std::vector<unsigned int>&) const;
   unsigned get_ni() const { return ni_; }
-  bool get_dim(vector<unsigned int>&) const;
+  bool get_dim(std::vector<unsigned int>&) const;
   Vector diagonal() const;
   virtual BBox get_bounding_box() const;
   virtual void transform(const Transform &t);
@@ -155,9 +153,9 @@ public:
 
   //! set the mesh statistics
   void set_min_i(unsigned i) {min_i_ = i; }
-  void set_min(vector<unsigned int> mins);
+  void set_min(std::vector<unsigned int> mins);
   void set_ni(unsigned i) { ni_ = i; }
-  void set_dim(vector<unsigned int> dims);
+  void set_dim(std::vector<unsigned int> dims);
 
   void begin(typename Node::iterator &) const;
   void begin(typename Edge::iterator &) const;
@@ -264,7 +262,7 @@ public:
   void get_point(Point &p, typename Node::index_type i) const { get_center(p, i); }
   void get_normal(Vector &, typename Node::index_type) const
   { ASSERTFAIL("This mesh type does not have node normals."); }
-  void get_normal(Vector &, vector<double> &, typename Elem::index_type,
+  void get_normal(Vector &, std::vector<double> &, typename Elem::index_type,
                   unsigned int)
   { ASSERTFAIL("This mesh type does not have element normals."); }
 
@@ -284,7 +282,7 @@ public:
 
  //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
-  void pwl_approx_edge(vector<vector<double> > &coords,
+  void pwl_approx_edge(std::vector<std::vector<double> > &coords,
                        typename Elem::index_type ci,
                        unsigned,
                        unsigned div_per_unit) const
@@ -296,7 +294,7 @@ public:
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
-  void pwl_approx_face(vector<vector<vector<double> > > &coords,
+  void pwl_approx_face(std::vector<std::vector<std::vector<double> > > &coords,
                        typename Elem::index_type ci,
                        typename Face::index_type fi,
                        unsigned div_per_unit) const
@@ -304,7 +302,7 @@ public:
     ASSERTFAIL("ScanlineMesh has no faces");
   }
 
-  bool get_coords(vector<double> &coords,
+  bool get_coords(std::vector<double> &coords,
                   const Point &p,
                   typename Elem::index_type idx) const
   {
@@ -312,7 +310,7 @@ public:
     return basis_.get_coords(coords, p, ed);
   }
 
-  void interpolate(Point &pt, const vector<double> &coords,
+  void interpolate(Point &pt, const std::vector<double> &coords,
                    typename Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
@@ -320,9 +318,9 @@ public:
   }
 
   // get the Jacobian matrix
-  void derivate(const vector<double> &coords,
+  void derivate(const std::vector<double> &coords,
                 typename Elem::index_type idx,
-                vector<Point> &J) const
+                std::vector<Point> &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
@@ -414,7 +412,7 @@ ScanlineMesh<Basis>::get_canonical_transform(Transform &t)
 
 template <class Basis>
 bool
-ScanlineMesh<Basis>::get_min(vector<unsigned int> &array ) const
+ScanlineMesh<Basis>::get_min(std::vector<unsigned int> &array ) const
 {
   array.resize(1);
   array.clear();
@@ -427,7 +425,7 @@ ScanlineMesh<Basis>::get_min(vector<unsigned int> &array ) const
 
 template <class Basis>
 bool
-ScanlineMesh<Basis>::get_dim(vector<unsigned int> &array) const
+ScanlineMesh<Basis>::get_dim(std::vector<unsigned int> &array) const
 {
   array.resize(1);
   array.clear();
@@ -440,7 +438,7 @@ ScanlineMesh<Basis>::get_dim(vector<unsigned int> &array) const
 
 template <class Basis>
 void
-ScanlineMesh<Basis>::set_min(vector<unsigned int> min)
+ScanlineMesh<Basis>::set_min(std::vector<unsigned int> min)
 {
   min_i_ = min[0];
 }
@@ -448,7 +446,7 @@ ScanlineMesh<Basis>::set_min(vector<unsigned int> min)
 
 template <class Basis>
 void
-ScanlineMesh<Basis>::set_dim(vector<unsigned int> dim)
+ScanlineMesh<Basis>::set_dim(std::vector<unsigned int> dim)
 {
   ni_ = dim[0];
 }
@@ -551,7 +549,7 @@ ScanlineMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
   if (locate(idx, p))
   {
     get_nodes(l,idx);
-    vector<double> coords(1);
+    std::vector<double> coords(1);
     if (get_coords(coords, p, idx))
     {
       basis_.get_weights(coords, w);

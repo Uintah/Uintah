@@ -42,7 +42,7 @@
 #include <CCA/Components/Wasatch/Expressions/Turbulence/DynamicSmagorinskyCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BCCopier.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/OutflowBC.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/PressureBC.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
@@ -1040,7 +1040,7 @@ namespace Wasatch{
 
     if (!isConstDensity_) {
       // set bcs for density
-      const Expr::Tag densTag( densityTag_.name(), Expr::STATE_NONE );
+      const Expr::Tag densTag( densityTag_.name(), Expr::CARRY_FORWARD );
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*

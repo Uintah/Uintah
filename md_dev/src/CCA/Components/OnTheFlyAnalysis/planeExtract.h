@@ -109,14 +109,14 @@ WARNING
                      DataWarehouse*,
                      DataWarehouse* new_dw );
                     
-    void createFile( const string& filename, 
+    void createFile( const std::string& filename,
                      const VarLabel* varLabel,
                      const int matl,
                      FILE*& fp );
     
-    void createDirectory( string& planeName, 
-                          string& timestep, 
-                          string& levelIndex );
+    void createDirectory( std::string& planeName,
+                          std::string& timestep,
+                          std::string& levelIndex );
                           
     template <class Tvar>      /* double */
     void writeDataD( DataWarehouse*  new_dw,
@@ -174,7 +174,7 @@ WARNING
     planeExtractLabel* ps_lb;
    
     struct plane{
-      string  name;  
+      std::string  name;
       Point   startPt;
       Point   endPt;
       PlaneType planeType;
@@ -187,14 +187,14 @@ WARNING
     double d_startTime;
     double d_stopTime;
     
-    vector<VarLabel*> d_varLabels;
-    vector<int> d_varMatl;
+    std::vector<VarLabel*> d_varLabels;
+    std::vector<int> d_varMatl;
     
     SimulationStateP d_sharedState;
-    vector<plane*>   d_planes;
+    std::vector<plane*>   d_planes;
     Output*          d_dataArchiver;
     ProblemSpecP     d_prob_spec;
-    std::set<string> d_isDirCreated;
+    std::set<std::string> d_isDirCreated;
     
     MaterialSet*     d_matl_set;
     MaterialSubset* d_zero_matl;

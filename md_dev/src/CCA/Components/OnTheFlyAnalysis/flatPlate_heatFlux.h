@@ -129,7 +129,7 @@ WARNING
     const Material* d_matl;
     MaterialSet* d_matl_set;
     const MaterialSubset* d_matl_sub;
-    vector<plane*> d_plane;
+    std::vector<plane*> d_plane;
     Vector d_oneOrZero;
     Point d_corner_pt[4];
   };

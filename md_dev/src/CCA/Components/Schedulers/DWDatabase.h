@@ -49,11 +49,6 @@
 
 namespace Uintah {
 
-using std::vector;
-using std::iostream;
-using std::ostringstream;
-using SCIRun::FastHashTable;
-
    /**************************************
      
      CLASS
@@ -97,10 +92,10 @@ using SCIRun::FastHashTable;
    void get(const VarLabel* label, int matlindex, const DomainType* dom,
 	    Variable& var) const;
    void getlist( const VarLabel* label, int matlIndex, const DomainType* dom,
-       vector<Variable*>& varlist ) const;
+                 std::vector<Variable*>& varlist ) const;
    inline Variable* get(const VarLabel* label, int matlindex,
 		const DomainType* dom) const;
-   void print(ostream&, int rank) const;
+   void print(std::ostream&, int rank) const;
    void cleanForeign();
 
    // Scrub counter manipulator functions -- when the scrub count goes to
@@ -119,12 +114,12 @@ using SCIRun::FastHashTable;
    
    // add means increment the scrub count instead of setting it.  This is for when a DW
    // can act as a CoarseOldDW as well as an OldDW
-   void initializeScrubs(int dwid, const FastHashTable<ScrubItem>* scrubcounts, bool add);
+   void initializeScrubs(int dwid, const SCIRun::FastHashTable<ScrubItem>* scrubcounts, bool add);
 
-   void logMemoryUse(ostream& out, unsigned long& total,
+   void logMemoryUse(std::ostream& out, unsigned long& total,
 		     const std::string& tag, int dwid);
 
-   void getVarLabelMatlTriples(vector<VarLabelMatl<DomainType> >& vars) const;
+   void getVarLabelMatlTriples(std::vector<VarLabelMatl<DomainType> >& vars) const;
 
 
 private:
@@ -255,7 +250,7 @@ DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const Domain
 
 template<class DomainType>
 void
-DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem>* scrubcounts, bool add)
+DWDatabase<DomainType>::initializeScrubs(int dwid, const SCIRun::FastHashTable<ScrubItem>* scrubcounts, bool add)
 {
   // loop over each variable, probing the scrubcount map. Set the
   // scrubcount appropriately.  if the variable has no entry in
@@ -385,7 +380,7 @@ void
 DWDatabase<DomainType>::getlist( const VarLabel* label,
 				      int matlIndex,
 				      const DomainType* dom,
-				      vector<Variable*>& varlist ) const
+				      std::vector<Variable*>& varlist ) const
 {
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
   std::pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret = vars.equal_range(v);
@@ -413,7 +408,7 @@ void DWDatabase<DomainType>::print(std::ostream& out, int rank) const
 
 template<class DomainType>
 void
-DWDatabase<DomainType>::logMemoryUse(ostream& out, unsigned long& total, const std::string& tag, int dwid)
+DWDatabase<DomainType>::logMemoryUse(std::ostream& out, unsigned long& total, const std::string& tag, int dwid)
 {
   for(typename varDBtype::const_iterator variter = vars.begin();
       variter != vars.end(); variter++){
@@ -421,7 +416,7 @@ DWDatabase<DomainType>::logMemoryUse(ostream& out, unsigned long& total, const s
     if(var){
       VarLabelMatl<DomainType> vlm = variter->first;
       const VarLabel* label = vlm.label_;
-      string elems;
+      std::string elems;
       unsigned long totsize;
       void* ptr;
       var->getSizeInfo(elems, totsize, ptr);
@@ -434,7 +429,7 @@ DWDatabase<DomainType>::logMemoryUse(ostream& out, unsigned long& total, const s
 
 template<class DomainType>
 void
-DWDatabase<DomainType>::getVarLabelMatlTriples( vector<VarLabelMatl<DomainType> >& v ) const
+DWDatabase<DomainType>::getVarLabelMatlTriples( std::vector<VarLabelMatl<DomainType> >& v ) const
 {
   for(typename varDBtype::const_iterator variter = vars.begin();
       variter != vars.end(); variter++){

@@ -224,7 +224,7 @@ namespace Uintah {
 
             ProblemSpecP params = db; 
         
-            string species_label; 
+            std::string species_label;
             if ( db->findBlock("scalar") ){
               db->findBlock("scalar")->getAttribute("label",species_label); 
               _phi_label = VarLabel::find( species_label );
@@ -345,8 +345,8 @@ namespace Uintah {
 
                 if ( bc_iter->second.type != BoundaryCondition::WALL ){ 
 
-                  vector<Patch::FaceType>::const_iterator bf_iter;
-                  vector<Patch::FaceType> bf;
+                  std::vector<Patch::FaceType>::const_iterator bf_iter;
+                  std::vector<Patch::FaceType> bf;
                   patch->getBoundaryFaces(bf);
 
                   for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++){
@@ -365,8 +365,8 @@ namespace Uintah {
                       std::string bc_s_value = "NA";
 
                       Iterator bound_ptr;
-                      string bc_kind = "NotSet"; 
-                      string face_name; 
+                      std::string bc_kind = "NotSet";
+                      std::string face_name;
                       getBCKind( patch, face, child, bc_iter->second.name, indx, bc_kind, face_name ); 
 
                       bool foundIterator = "false"; 
@@ -607,8 +607,11 @@ namespace Uintah {
         private: 
 
           template<typename UT>
-          const double inline get_minus_in_flux( UT& u, constCCVariable<double>& rho, const IntVector c, 
-              const IntVector inside_dir, const int norm ){ 
+          double inline get_minus_in_flux( UT                      & u,
+                                           constCCVariable<double> & rho,
+                                           const IntVector         & c, 
+                                           const IntVector         & inside_dir,
+                                           const int                 norm ){ 
 
             IntVector cp = c - inside_dir; 
 
@@ -619,11 +622,14 @@ namespace Uintah {
 
             return flux; 
 
-          };
+          }
 
           template<typename UT>
-          const double inline get_minus_out_flux( UT& u, constCCVariable<double>& rho, const IntVector c, 
-              const IntVector inside_dir, const int norm ){ 
+          double inline get_minus_out_flux( UT                      & u,
+                                            constCCVariable<double> & rho,
+                                            const IntVector         & c, 
+                                            const IntVector         & inside_dir,
+                                            const int                 norm ){ 
 
             IntVector cp = c - inside_dir; 
 
@@ -634,11 +640,14 @@ namespace Uintah {
 
             return flux; 
 
-          };
+          }
 
           template<typename UT>
-          const double inline get_plus_in_flux( UT& u, constCCVariable<double>& rho, const IntVector c, 
-              const IntVector inside_dir, const int norm ){ 
+          double inline get_plus_in_flux( UT                      & u,
+                                          constCCVariable<double> & rho,
+                                          const IntVector         & c, 
+                                          const IntVector         & inside_dir,
+                                          const int                  norm ){  
 
             IntVector cp = c - inside_dir; 
 
@@ -649,12 +658,15 @@ namespace Uintah {
 
             return flux; 
 
-          };
+          }
 
           template<typename UT>
-          const double inline get_plus_out_flux( UT& u, constCCVariable<double>& rho, const IntVector c, 
-              const IntVector inside_dir, const int norm ){ 
-
+          double inline get_plus_out_flux( UT                      & u,
+                                           constCCVariable<double> & rho,
+                                           const IntVector         & c, 
+                                           const IntVector         & inside_dir, 
+                                           const int                 norm ){ 
+            
             IntVector cp = c - inside_dir; 
 
             const double rho_f = 0.5 * ( rho[c] + rho[cp] ); 
@@ -664,7 +676,7 @@ namespace Uintah {
 
             return flux; 
 
-          };
+          }
 
           const VarLabel* _IN_label; 
           const VarLabel* _OUT_label; 
@@ -674,7 +686,7 @@ namespace Uintah {
 
           const BoundaryCondition* _bcs; 
 
-          bool _no_species; 
+          bool   _no_species; 
 
           double _A;
           double _C; 
@@ -723,14 +735,14 @@ namespace Uintah {
             _denominator_label = VarLabel::create( _id+"_denominator", sum_vartype::getTypeDescription() ); 
             _efficiency_label = VarLabel::create(  _id, min_vartype::getTypeDescription() ); 
           
-          }; 
+          }
           ~CombustionEfficiency(){
           
             VarLabel::destroy( _numerator_label ); 
             VarLabel::destroy( _denominator_label ); 
             VarLabel::destroy( _efficiency_label ); 
 
-          }; 
+          }
 
           bool problemSetup( const ProblemSpecP& db ){
 
@@ -769,7 +781,7 @@ namespace Uintah {
 
             return true; 
           
-          }; 
+          }
 
           /** @brief Should compute any summation over boundaries */ 
           void sched_computeReductionVars( const LevelP& level, 
@@ -801,7 +813,7 @@ namespace Uintah {
 
             sched->addTask( tsk, level->eachPatch(), _a_labs->d_sharedState->allArchesMaterials() ); 
           
-          };
+          }
 
           void computeReductionVars( const ProcessorGroup* pc, 
                                      const PatchSubset* patches, 
@@ -849,8 +861,8 @@ namespace Uintah {
                 if ( bc_iter->second.type == BoundaryCondition::OUTLET || 
                      bc_iter->second.type == BoundaryCondition::PRESSURE ){ 
 
-                  vector<Patch::FaceType>::const_iterator bf_iter;
-                  vector<Patch::FaceType> bf;
+                  std::vector<Patch::FaceType>::const_iterator bf_iter;
+                  std::vector<Patch::FaceType> bf;
                   patch->getBoundaryFaces(bf);
 
                   for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++){
@@ -868,7 +880,7 @@ namespace Uintah {
                       double bc_value = 0;
                       //int norm = getNormal( face ); 
                       
-                      string bc_kind = "NotSet";
+                      std::string bc_kind = "NotSet";
                       Iterator bound_ptr;
 
                       bool foundIterator = 
@@ -1013,7 +1025,7 @@ namespace Uintah {
 
             }
           
-          }; 
+          }
 
           /** @brief Should actually compute the efficiency */            
           void sched_computeEfficiency( const LevelP& level, 
@@ -1031,7 +1043,7 @@ namespace Uintah {
 
             sched->addTask( tsk, level->eachPatch(), _a_labs->d_sharedState->allArchesMaterials() ); 
           
-          };
+          }
 
           void computeEfficiency(  const ProcessorGroup* pc, 
                                    const PatchSubset* patches, 
@@ -1059,13 +1071,15 @@ namespace Uintah {
   
             new_dw->put( delt_vartype( combustion_efficiency ), _efficiency_label ); 
 
-          }; 
+          }
 
         private: 
 
           template<typename UT>
-          const double inline get_minus_flux( UT& u, constCCVariable<double>& rho, const IntVector c, 
-              const IntVector inside_dir ){ 
+          double inline get_minus_flux( UT                      & u,
+                                        constCCVariable<double> & rho,
+                                        const IntVector         & c, 
+                                        const IntVector         & inside_dir ){ 
 
             IntVector cp = c - inside_dir; 
             IntVector cm = c + inside_dir; 
@@ -1076,12 +1090,13 @@ namespace Uintah {
             const double flux = rho_f * u_f; 
 
             return flux; 
-
-          };
+          }
 
           template<typename UT>
-          const double inline get_plus_flux( UT& u, constCCVariable<double>& rho, const IntVector c, 
-              const IntVector inside_dir ){ 
+          double inline get_plus_flux( UT                      & u,
+                                       constCCVariable<double> & rho,
+                                       const IntVector         & c, 
+                                       const IntVector         & inside_dir ){
 
             IntVector cp = c - inside_dir; 
             IntVector cm = c + inside_dir; 
@@ -1092,14 +1107,13 @@ namespace Uintah {
             const double flux = rho_f * u_f; 
 
             return flux; 
-
-          };
+          }
 
           std::string _mf_id_1; 
           std::string _mf_id_2; 
 
-          int _num_mf; 
-          double _phi_at_feq1; 
+          int         _num_mf; 
+          double      _phi_at_feq1; 
 
           const VarLabel* _numerator_label; 
           const VarLabel* _denominator_label; 
@@ -1110,7 +1124,7 @@ namespace Uintah {
 
           const BoundaryCondition* _bcs; 
 
-      }; 
+      };
 
 
       //__________________________________________________
@@ -1118,8 +1132,8 @@ namespace Uintah {
       typedef std::map<std::string, Calculator*> LOC; // List Of Calculators
       LOC _my_calculators; 
 
-      const BoundaryCondition* _bcs; 
-      ArchesLabel* _a_labs; 
+      const BoundaryCondition * _bcs; 
+      ArchesLabel             * _a_labs; 
 
   }; 
 }

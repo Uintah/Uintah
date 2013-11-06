@@ -152,7 +152,7 @@ WARNING
     class Scalar {
     public:
       int index;
-      string name;
+      std::string name;
       // labels for this particular scalar
       VarLabel* scalar_CCLabel;
       VarLabel* scalar_src_CCLabel;
@@ -161,7 +161,7 @@ WARNING
       VarLabel* scaledVarianceLabel;
       VarLabel* sum_scalar_fLabel;
       
-      vector<Region*> regions;
+      std::vector<Region*> regions;
       double diff_coeff;
     };
 
@@ -173,18 +173,18 @@ WARNING
     
     SimulationStateP sharedState;
     Output* dataArchiver;
-    vector<Vector> d_probePts;
-    vector<string> d_probePtsNames;
+    std::vector<Vector> d_probePts;
+    std::vector<std::string> d_probePtsNames;
     bool d_usingProbePts;
     double d_probeFreq;
 
     TableInterface* table;
     struct TableValue {
-      string name;
+      std::string name;
       int index;
       VarLabel* label;
     };
-    vector<TableValue*> tablevalues;
+    std::vector<TableValue*> tablevalues;
 
     int d_density_index;
     int d_gamma_index;

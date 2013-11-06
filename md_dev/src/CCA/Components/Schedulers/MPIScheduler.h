@@ -43,9 +43,6 @@ namespace Uintah {
 
 static DebugStream mpi_stats("MPIStats",false);
 
-using std::vector;
-using std::ofstream;
-
 class Task;
 
 struct mpi_timing_info_s {
@@ -144,8 +141,8 @@ WARNING
 
         if(d_myworld->myrank()==0)
         {
-          mpi_stats << "MPIStats: Num Messages (avg): " << total_messages/(float)d_myworld->size() << " (max):" << max_messages << endl;
-          mpi_stats << "MPIStats: Message Volume (avg): " << total_volume/(float)d_myworld->size() << " (max):" << max_volume << endl;
+          mpi_stats << "MPIStats: Num Messages (avg): " << total_messages/(float)d_myworld->size() << " (max):" << max_messages << std::endl;
+          mpi_stats << "MPIStats: Message Volume (avg): " << total_volume/(float)d_myworld->size() << " (max):" << max_volume << std::endl;
         }
       }
     }
@@ -173,10 +170,10 @@ WARNING
     CommRecMPI            sends_;
     CommRecMPI            recvs_;
 
-    double           d_lasttime;
+    double                      d_lasttime;
     std::vector<const char*>    d_labels;
-    std::vector<double>   d_times;
-    ofstream         timingStats, avgStats, maxStats;
+    std::vector<double>         d_times;
+    std::ofstream               timingStats, avgStats, maxStats;
 
     void emitTime(const char* label);
     void emitTime(const char* label, double time);

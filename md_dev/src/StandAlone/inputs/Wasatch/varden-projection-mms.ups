@@ -5,12 +5,12 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="hypre"/>
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
 
     <Density>
-      <NameTag name="density" state="CARRY_FORWARD" />
+      <NameTag name="density" state="CARRY_FORWARD"/>
     </Density>
     
     <!-- Setup the parameters for variable density MMS -->
@@ -21,9 +21,9 @@
     <!-- Set the initial condition expression for mixture fraction -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f" state="STATE_NONE" />
+      <NameTag name="f" state="STATE_NONE"/>
       <GaussianFunction amplitude="1.0" deviation="1.0" mean="0.0" baseline="0.0">
-        <NameTag name="XSVOL" state="STATE_NONE" />
+        <NameTag name="XSVOL" state="STATE_NONE"/>
       </GaussianFunction> 
     </BasicExpression>
         
@@ -33,12 +33,12 @@
       <TaskList>initialization</TaskList>
       
       <IndependentVariable>
-        <NameTag name="f" state="STATE_NONE" />
+        <NameTag name="f" state="STATE_NONE"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       
       <ExtractDensity>
-        <NameTag name="density" state="STATE_NONE" />
+        <NameTag name="density" state="STATE_NONE"/>
       </ExtractDensity>
       
     </TabProps>
@@ -49,16 +49,16 @@
       <TaskList>advance_solution</TaskList>
       
       <IndependentVariable>
-        <NameTag name="f" state="STATE_NONE" />
+        <NameTag name="f" state="STATE_NONE"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       
       <ExtractDensity>
-        <NameTag name="density" state="CARRY_FORWARD" />
+        <NameTag name="density" state="CARRY_FORWARD"/>
         <DensityWeightedIVar>
-          <NameTag name="rhof" state="STATE_N" />
+          <NameTag name="rhof" state="STATE_N"/>
           <RelatedIVar>
-            <NameTag name="f" state="STATE_NONE" />
+            <NameTag name="f" state="STATE_NONE"/>
           </RelatedIVar>
         </DensityWeightedIVar>
       </ExtractDensity>
@@ -69,54 +69,72 @@
     <!-- Set the initial condition expression for x-velocity -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="u" state="STATE_NONE" />
+       <NameTag name="u" state="STATE_NONE"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BCExpression type="XVOL">
       <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="mms-right-vel" state="STATE_NONE" />
+      <NameTag name="mms-right-vel" state="STATE_NONE"/>
       <VarDensMMSVelocity side="PLUS">
       </VarDensMMSVelocity>
     </BCExpression>
 
     <BCExpression type="XVOL">
       <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="mms-left-vel" state="STATE_NONE" />
+      <NameTag name="mms-left-vel" state="STATE_NONE"/>
       <VarDensMMSVelocity side="MINUS">
       </VarDensMMSVelocity>
     </BCExpression>
                 
     <BCExpression type="XVOL">
       <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="mms-right-mom" state="STATE_NONE" />
+      <NameTag name="mms-right-mom" state="STATE_NONE"/>
       <VarDensMMSMomentum side="PLUS">
       </VarDensMMSMomentum>
     </BCExpression>
 
     <BCExpression type="XVOL">
       <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="mms-left-mom" state="STATE_NONE" />
+      <NameTag name="mms-left-mom" state="STATE_NONE"/>
       <VarDensMMSMomentum side="MINUS">
       </VarDensMMSMomentum>
     </BCExpression>
         
     <BCExpression type="SVOL">
       <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="mms-bc-rhof" state="STATE_NONE" />
-      <VarDensMMSSolnVar></VarDensMMSSolnVar>
+      <NameTag name="mms-bc-rhof_plus" state="STATE_NONE"/>
+      <VarDensMMSSolnVar/>
     </BCExpression>
 
     <BCExpression type="SVOL">
       <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="mms-bc-f" state="STATE_NONE" />
-      <VarDensMMSMixtureFraction></VarDensMMSMixtureFraction>
+      <NameTag name="mms-bc-rhof_minus" state="STATE_NONE"/>
+      <VarDensMMSSolnVar/>
     </BCExpression>
 
     <BCExpression type="SVOL">
       <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="mms-bc-rho" state="STATE_NONE" />
-      <VarDensMMSDensity></VarDensMMSDensity>
+      <NameTag name="mms-bc-f_plus" state="STATE_NONE"/>
+      <VarDensMMSMixtureFraction/>
+    </BCExpression>
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="mms-bc-f_minus" state="STATE_NONE"/>
+      <VarDensMMSMixtureFraction/>
+    </BCExpression>
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="mms-bc-rho_minus" state="STATE_NONE"/>
+      <VarDensMMSDensity/>
+    </BCExpression>
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="mms-bc-rho_plus" state="STATE_NONE"/>
+      <VarDensMMSDensity/>
     </BCExpression>
                 
     <!-- Build a scalar transport equation for mixture fraction -->
@@ -142,7 +160,7 @@
     </TransportEquation>   
     
     <FieldClipping tasklist="advance_solution">
-      <FieldExpression type ="SVOL" min="0.0" max="1.0">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
         <NameTag name="f" state="STATE_NONE"/>        
       </FieldExpression>                    
     </FieldClipping>
@@ -150,7 +168,7 @@
       
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity" state="STATE_NONE"/>
       <Constant>0.0179</Constant>
     </BasicExpression>
         
@@ -160,7 +178,7 @@
       <X-Momentum>x-mom</X-Momentum>
          
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity" state="STATE_NONE"/>
       </Viscosity>
       
       <Pressure>
@@ -193,10 +211,10 @@
 
 
   <DataArchiver>
-    <filebase>MMS.uda</filebase>
+    <filebase>varden-projection-mms.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.001"/>
+    <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
     <save label="density"/>
     <save label="u_*"/>
@@ -209,78 +227,37 @@
     <save label="f"/>
     <save label="rhof"/>
     <save label="pressure"/>
-    <save label="pressure-source-term"/>
+    <save label="pressure_src"/>
   </DataArchiver> 
 
   <Grid>
 
       <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
 
       <Face side="x-">
-
-        <BCType id="all" var="Dirichlet" label="pressure">
-          <value> 0.0 </value>
-        </BCType>                       
-
-        <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> mms-left-mom </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="u">
-          <value> mms-left-vel </value>
-        </BCType>          
-   
-        <BCType id="all" var="Dirichlet" label="rhof">
-          <value> mms-bc-rhof </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="f">
-          <value> mms-bc-f </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="density">
-          <value> mms-bc-rho </value>
-        </BCType>
-                        
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>      
-
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom" var="Dirichlet" value="mms-left-mom"/>
+        <BCType label="u" var="Dirichlet" value="mms-left-vel"/>
+        <BCType label="rhof" var="Dirichlet" value="mms-bc-rhof_minus"/>
+        <BCType label="rhof_rhs" var="Dirichlet" value="0.0"/>        
+        <BCType label="f" var="Dirichlet" value="mms-bc-f_minus"/>
+        <BCType label="density" var="Dirichlet" value="mms-bc-rho_minus"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>        
       </Face>
-
       <Face side="x+">
-
-        <BCType id="all" var="Dirichlet" label="pressure">
-          <value> 0.0 </value>
-        </BCType>                       
-
-        <BCType id="all" var="Dirichlet" label="x-mom">
-          <value> mms-right-mom </value>
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="u">
-          <value>mms-right-vel</value>          
-        </BCType>          
-        
-        <BCType id="all" var="Dirichlet" label="rhof">
-          <value>mms-bc-rhof</value>          
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="f">
-          <value>mms-bc-f</value>          
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="density">
-          <value>mms-bc-rho</value>          
-        </BCType>
-
-        <BCType id="all" var="Dirichlet" label="x-mom_rhs_partial">
-          <value> 0.0 </value>
-        </BCType>      
-
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom" var="Dirichlet" value="mms-right-mom"/>
+        <BCType label="u" var="Dirichlet" value="mms-right-vel"/>
+        <BCType label="rhof" var="Dirichlet" value="mms-bc-rhof_plus"/>
+        <BCType label="rhof_rhs" var="Dirichlet" value="0.0"/>        
+        <BCType label="f" var="Dirichlet" value="mms-bc-f_plus"/>
+        <BCType label="density" var="Dirichlet" value="mms-bc-rho_plus"/>
+        <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom_rhs" var="Dirichlet" value="0.0"/>        
       </Face>
-
       </BoundaryConditions>  
 
       <Level>

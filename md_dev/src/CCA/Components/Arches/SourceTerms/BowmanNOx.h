@@ -36,7 +36,7 @@ class BowmanNOx: public SourceTermBase {
 public: 
 
   BowmanNOx( std::string srcName, ArchesLabel* field_labels, 
-                vector<std::string> reqLabelNames, std::string type );
+                std::vector<std::string> reqLabelNames, std::string type );
 
   ~BowmanNOx();
   /** @brief Interface for the inputfile and set constants */ 
@@ -64,7 +64,7 @@ public:
 
     public: 
 
-      Builder( std::string name, vector<std::string> required_label_names, ArchesLabel* field_labels ) 
+      Builder( std::string name, std::vector<std::string> required_label_names, ArchesLabel* field_labels )
         : _name(name), _field_labels(field_labels), _required_label_names(required_label_names){
           _type = "bowman_nox"; 
         };
@@ -78,7 +78,7 @@ public:
       std::string _name; 
       std::string _type; 
       ArchesLabel* _field_labels; 
-      vector<std::string> _required_label_names; 
+      std::vector<std::string> _required_label_names;
 
   }; // Builder
 

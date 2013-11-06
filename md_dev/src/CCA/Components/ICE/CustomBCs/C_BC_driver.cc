@@ -28,7 +28,8 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
 
-using namespace Uintah;
+using namespace std;
+
 namespace Uintah {
 //__________________________________
 // Function~  add the computes and requires for each of the custom BC
@@ -37,22 +38,22 @@ void computesRequires_CustomBCs(Task* t,
                                 const string& where,
                                 ICELabel* lb,
                                 const MaterialSubset* ice_matls,
-                                customBC_globalVars* globalVars,
+                                customBC_globalVars* gv,
                                 const bool recursiveTask)
 {   
-  if(globalVars->usingLodi){             // LODI         
-    addRequires_Lodi( t, where,  lb, ice_matls, globalVars->Lodi_var_basket);
+  if( gv->usingLodi ){             // LODI         
+    addRequires_Lodi( t, where,  lb, ice_matls, gv->lodi);
   }
-  if(globalVars->usingMicroSlipBCs){     // MicroSlip          
-    addRequires_MicroSlip( t, where,  lb, ice_matls, globalVars->Slip_var_basket);
+  if( gv->usingMicroSlipBCs ){     // MicroSlip          
+    addRequires_MicroSlip( t, where,  lb, ice_matls, gv->slip);
   }
-  if(globalVars->using_MMS_BCs){         // method of manufactured solutions         
+  if( gv->using_MMS_BCs ){         // method of manufactured solutions         
     addRequires_MMS( t, where,  lb, ice_matls);
   }
-  if(globalVars->using_Sine_BCs){         // method of manufactured solutions         
+  if( gv->using_Sine_BCs ){         // method of manufactured solutions         
     addRequires_Sine( t, where,  lb, ice_matls);
   }
-  if(globalVars->using_inletVel_BCs){               
+  if( gv->using_inletVel_BCs ){               
     addRequires_inletVel( t, where,  lb, ice_matls, recursiveTask);
   }      
 }
@@ -66,102 +67,103 @@ void preprocess_CustomBCs(const string& where,
                           ICELabel* lb,
                           const Patch* patch,
                           const int indx,
-                          customBC_globalVars* globalVars,
-                          customBC_localVars* localVars)
+                          customBC_globalVars* gv,
+                          customBC_localVars* lv)
 {
   delt_vartype delT;
   const Level* level = patch->getLevel();
-  old_dw->get(delT, globalVars->sharedState->get_delt_label(),level);
+  old_dw->get(delT, gv->sharedState->get_delt_label(),level);
    
   //__________________________________
   //   LODI
-  if( globalVars->usingLodi ){  
-    localVars->lv = scinew Lodi_vars();
+  if( gv->usingLodi ){  
+    lv->lodi = scinew Lodi_localVars();
     
     preprocess_Lodi_BCs( old_dw, new_dw, lb, patch, where,
                        indx,  
-                       globalVars->sharedState,
-                       localVars->setLodiBcs,
-                       localVars->lv, 
-                       globalVars->Lodi_var_basket);        
+                       gv->sharedState,
+                       lv->setLodiBcs,
+                       lv->lodi, 
+                       gv->lodi);        
   }
   //__________________________________
   //  micro slip boundary conditions
-  if( globalVars->usingMicroSlipBCs ){  
-    localVars->sv = scinew Slip_vars();
+  if( gv->usingMicroSlipBCs ){  
+    lv->slip = scinew slip_localVars();
     
     preprocess_MicroSlip_BCs( old_dw, new_dw, lb, patch, where,
                               indx,  
-                              globalVars->sharedState,
-                              localVars->setMicroSlipBcs,
-                              localVars->sv, 
-                              globalVars->Slip_var_basket);        
+                              gv->sharedState,
+                              lv->setMicroSlipBcs,
+                              lv->slip, 
+                              gv->slip);        
   }
   //__________________________________
   //  method of manufactured solutions boundary conditions
-  if( globalVars->using_MMS_BCs ){  
-    localVars->mms_v = scinew mms_vars();
-    localVars->mms_v->delT = (double)delT;
+  if( gv->using_MMS_BCs ){  
+    lv->mms = scinew mms_localVars();
+    lv->mms->delT = (double)delT;
     preprocess_MMS_BCs( new_dw,old_dw, lb,indx,patch, where,
-                        localVars->set_MMS_BCs, 
-                        localVars->mms_v);        
+                        lv->set_MMS_BCs, 
+                        lv->mms);        
   }
   //__________________________________
   //  Sine boundary conditions
-  if( globalVars->using_Sine_BCs ){  
-    localVars->sine_v = scinew sine_vars();
-    localVars->sine_v->delT = (double)delT;
-    globalVars->sine_var_basket->delT= (double)delT;
+  if( gv->using_Sine_BCs ){  
+    lv->sine = scinew sine_localVars();
+    lv->sine->delT = (double)delT;
+    gv->sine->delT= (double)delT;
     preprocess_Sine_BCs( new_dw,old_dw, lb,indx,patch, where,
-                        localVars->set_Sine_BCs, 
-                        localVars->sine_v);        
+                        lv->set_Sine_BCs, 
+                        lv->sine);        
   }  
   
   //__________________________________
   //  inletVelocity conditions
-  if( globalVars->using_inletVel_BCs ){
-    localVars->inletVel_v = scinew inletVel_vars();
+  if( gv->using_inletVel_BCs ){
+    lv->inletVel = scinew inletVel_localVars();
     preprocess_inletVelocity_BCs(  old_dw, lb, indx, patch, where, 
-                                   localVars->set_inletVel_BCs,
-                                   localVars->recursiveTask,
-                                   localVars->inletVel_v );        
+                                   lv->set_inletVel_BCs,
+                                   lv->recursiveTask,
+                                   gv->inletVel,
+                                   lv->inletVel );        
   }       
 }
 
 //______________________________________________________________________
 // Function:   delete_CustomBCs
 //______________________________________________________________________
-void delete_CustomBCs(customBC_globalVars* global,
-                      customBC_localVars* local)
+void delete_CustomBCs(customBC_globalVars* gv,
+                      customBC_localVars* lv)
 {
-  if( global->usingLodi ){  
-    if( local->lv ) {
-      delete local->lv;
+  if( gv->usingLodi ){  
+    if( lv->lodi ) {
+      delete lv->lodi;
     }
   }
-  if( global->usingMicroSlipBCs ){  
-    if( local->sv ) {
-      delete local->sv;
+  if( gv->usingMicroSlipBCs ){  
+    if( lv->slip ) {
+      delete lv->slip;
     }
   }
-  if( global->using_MMS_BCs ){
-    if(local->mms_v) {
-      delete local->mms_v;
+  if( gv->using_MMS_BCs ){
+    if(lv->mms) {
+      delete lv->mms;
     } 
   }
-  if( global->using_Sine_BCs ){
-    if( local->sine_v ) {
-      delete local->sine_v;
+  if( gv->using_Sine_BCs ){
+    if( lv->sine ) {
+      delete lv->sine;
     } 
   }
   
-  if( global->using_inletVel_BCs ){
-    if(local->inletVel_v ){
-      delete local->inletVel_v;
+  if( gv->using_inletVel_BCs ){
+    if(lv->inletVel ){
+      delete lv->inletVel;
     }
   }
   
-  delete local;
+  delete lv;
 }
 
 

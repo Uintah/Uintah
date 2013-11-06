@@ -135,7 +135,7 @@ void DifferenceBCData::print()
 
 void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
                                                const Patch* patch,
-                                               vector<Point>& test_pts)
+                                               std::vector<Point>& test_pts)
 {
 
 #if 0

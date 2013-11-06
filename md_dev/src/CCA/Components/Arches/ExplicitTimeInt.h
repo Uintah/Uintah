@@ -31,7 +31,7 @@ public:
                               phiT& phi, 
                               constphiT& RHS, 
                               double dt, double time, 
-                              const string eqnName,
+                              const std::string eqnName,
                               const bool wasatch_update=false);
    /** @brief A template forward Euler update for a single 
                variable for a single patch */ 
@@ -41,7 +41,7 @@ public:
                               constCCVariable<double>& new_den, 
                               constphiT& RHS, 
                               double dt, double time,
-                              const string eqnName );
+                              const std::string eqnName );
   
     /** @brief A template for time averaging using a Runge-kutta form without explicit density and no clipping */  
     template <class phiT, class constphiT>
@@ -151,7 +151,7 @@ private:
                                              phiT& phi, 
                                              constphiT& RHS, 
                                              double dt, double time, 
-                                             const string eqnName,
+                                             const std::string eqnName,
                                              const bool wasatch_update)
   {
     
@@ -167,11 +167,11 @@ private:
     }
     
 #ifdef VERIFY_TIMEINT
-    cout << "**********************************************************************" << endl;
-    cout << endl;
-    cout << "NOTICE! Using time integrator verification procedure." << endl;
-    cout << "current equation: " << eqnName << endl; 
-    cout << endl;
+    std::cout << "**********************************************************************" << std::endl;
+    std::cout << std::endl;
+    std::cout << "NOTICE! Using time integrator verification procedure." << std::endl;
+    std::cout << "current equation: " << eqnName << std::endl;
+    std::cout << std::endl;
 
     // This is a verfication test on the time integrator only (no spatial error)
     double pi = acos(-1.0); 
@@ -198,18 +198,18 @@ private:
                                              constCCVariable<double>& new_den, 
                                              constphiT& RHS, 
                                              double dt, double time, 
-                                             const string eqnName )
+                                             const std::string eqnName )
  
   {
 
 
 #ifdef VERIFY_TIMEINT
-    cout << "**********************************************************************" << endl;
-    cout << endl;
-    cout << "NOTICE! Using time integrator verification procedure." << endl;
-    cout << "current equation: " << eqnName << endl; 
-    cout << "current time: " << time << endl;
-    cout << endl;
+    std::cout << "**********************************************************************" << std::endl;
+    std::cout << std::endl;
+    std::cout << "NOTICE! Using time integrator verification procedure." << std::endl;
+    std::cout << "current equation: " << eqnName << std::endl;
+    std::cout << "current time: " << time << std::endl;
+    std::cout << std::endl;
 
     // This is a verfication test on the time integrator only (no spatial error)
     double pi = acos(-1.0); 
@@ -318,15 +318,15 @@ private:
     }
     error = d_LinfError / d_LinfSol; //normalize
 
-    cout << "Error from time integration = " << error << endl;
-    cout << endl;
-    cout << "**********************************************************************" << endl;
+    std::cout << "Error from time integration = " << error << std::endl;
+    std::cout << std::endl;
+    std::cout << "**********************************************************************" << std::endl;
 #endif  
 
   }
 
 
-//---------------------------------------------------------------------------
+//---------------------std::endl--------------------------------------------------
 // Time averaging W/O density
 //---------------------------------------------------------------------------
 // ----RK AVERAGING
@@ -388,9 +388,9 @@ private:
     }
     error = d_LinfError / d_LinfSol; //normalize
 
-    cout << "Error from time integration = " << error << endl;
-    cout << endl;
-    cout << "**********************************************************************" << endl;
+    std::cout << "Error from time integration = " << error << std::endl;
+    std::cout << std::endl;
+    std::cout << "**********************************************************************" << std::endl;
 #endif  
 
   }

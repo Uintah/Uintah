@@ -33,6 +33,8 @@
 #include <iostream>
 
 using namespace Uintah;
+using namespace std;
+
 /*_____________________________________________________________________
 Reference:  "W.B. VanderHeyden and B.A. Kashiwa, "Compatible Fluxes for
             van Leer Advection", JCP, 146, 1-28, 1998

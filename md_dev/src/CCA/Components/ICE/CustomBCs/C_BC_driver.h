@@ -41,11 +41,11 @@ namespace Uintah {
   struct customBC_globalVars {
 
     customBC_globalVars() {
-      Lodi_var_basket     = NULL;
-      Slip_var_basket     = NULL;
-      mms_var_basket      = NULL;
-      sine_var_basket     = NULL;
-      inletVel_var_basket = NULL;
+      lodi              = NULL;
+      slip              = NULL;
+      mms               = NULL;
+      sine              = NULL;
+      inletVel          = NULL;
 
       usingLodi         = false;
       usingMicroSlipBCs = false;
@@ -58,23 +58,23 @@ namespace Uintah {
     ~customBC_globalVars() {};
     // LODI boundary condtions
     bool usingLodi;
-    Lodi_variable_basket* Lodi_var_basket;
+    Lodi_globalVars* lodi;
     
     // Micro slip boundary conditions
     bool usingMicroSlipBCs;
-    Slip_variable_basket* Slip_var_basket;
+    slip_globalVars* slip;
     
     // method of manufactured Solution BCs
     bool using_MMS_BCs;
-    mms_variable_basket* mms_var_basket;
+    mms_globalVars* mms;
     
     // Sine boundary conditions
     bool using_Sine_BCs;
-    sine_variable_basket* sine_var_basket;
+    sine_globalVars* sine;
     
     // powerLawProfile or logLawProfile inlet velocity profile
     bool using_inletVel_BCs;
-    inletVel_variable_basket* inletVel_var_basket;
+    inletVel_globalVars* inletVel;
     
     SimulationStateP sharedState;
     Vector d_gravity;
@@ -87,10 +87,11 @@ namespace Uintah {
 
     customBC_localVars() {
       
-      lv          = NULL;
-      sv          = NULL;
-      mms_v       = NULL;
-      sine_v      = NULL;
+      lodi        = NULL;
+      slip        = NULL;
+      mms         = NULL;
+      sine        = NULL;
+      inletVel    = NULL;
       
       setLodiBcs        = false;
       setMicroSlipBcs   = false;
@@ -107,36 +108,36 @@ namespace Uintah {
     
     // LODI boundary condtions
     bool setLodiBcs;
-    Lodi_vars* lv;
+    Lodi_localVars* lodi;
     
     // Micro slip boundary conditions
     bool setMicroSlipBcs;
-    Slip_vars* sv;
+    slip_localVars* slip;
     
     // method of manufactured Solution BCs
     bool set_MMS_BCs;
-    mms_vars* mms_v;
+    mms_localVars* mms;
     
     // Sine boundary conditions
     bool set_Sine_BCs;
-    sine_vars* sine_v;
+    sine_localVars* sine;
     
     // powerLawProfile or logLawProfile inlet velocity profile
     bool set_inletVel_BCs;
-    inletVel_vars* inletVel_v;
+    inletVel_localVars* inletVel;
   };  
 
   //______________________________________________________________________
   //
   
    void computesRequires_CustomBCs(Task* t, 
-                                   const string& where,                      
+                                   const std::string& where,
                                    ICELabel* lb,                             
                                    const MaterialSubset* ice_matls,          
                                    customBC_globalVars* global,
                                    const bool recursiveTask = false);        
  
-   void preprocess_CustomBCs(const string& where,
+   void preprocess_CustomBCs(const std::string& where,
                              DataWarehouse* old_dw,                    
                              DataWarehouse* new_dw,                    
                              ICELabel* lb,                             

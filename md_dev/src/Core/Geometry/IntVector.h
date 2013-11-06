@@ -216,7 +216,7 @@ public:
   friend inline IntVector Abs(const IntVector& v);
 
    //! support dynamic compilation
-  static const string& get_h_file_path();
+  static const std::string& get_h_file_path();
 
  SCISHARE friend void Pio( Piostream&, IntVector& );
 

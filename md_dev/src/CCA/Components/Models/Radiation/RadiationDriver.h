@@ -224,7 +224,7 @@ class RadiationDriver : public ModelInterface {
   bool d_doRadCalc;
   bool d_useTableValues;
   bool d_hasAbsorbingSolid;
-  string d_table_or_ice_temp_density;
+  std::string d_table_or_ice_temp_density;
   
   const PatchSet* d_perproc_patches;
 
@@ -237,7 +237,7 @@ class RadiationDriver : public ModelInterface {
   const ProcessorGroup* d_myworld;
   SimulationStateP d_sharedState;
 
-  vector<GeometryPieceP> d_geom_pieces;
+  std::vector<GeometryPieceP> d_geom_pieces;
 
   void initialize(const ProcessorGroup*,
                   const PatchSubset* patches,

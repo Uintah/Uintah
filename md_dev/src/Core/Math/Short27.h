@@ -32,6 +32,7 @@
 
 #include <cmath>
 #include <iosfwd>
+#include <string>
 #include <vector>
 
 namespace SCIRun {
@@ -41,7 +42,6 @@ namespace SCIRun {
 #include <Core/Math/TntJama/tnt.h>
 
 namespace Uintah {
-using namespace SCIRun;
 
 class Short27 {
 
@@ -56,7 +56,7 @@ class Short27 {
   // access operator
   inline short operator[] (int i) const;
   inline short & operator[] (int i);
-  static const string& get_h_file_path();
+  static const std::string& get_h_file_path();
 };
 
 inline Short27::Short27()
@@ -76,7 +76,7 @@ inline short Short27::operator [] (int i) const
   return s[i];
 }
 
-inline short &Short27::operator [] (int i)
+inline short & Short27::operator [] (int i)
 {
   // Access the i component
   return s[i];
@@ -86,13 +86,13 @@ inline short &Short27::operator [] (int i)
 
 // Added for compatibility with core types
 #include <Core/Datatypes/TypeName.h>
-#include <string>
+
 namespace SCIRun {
-  using namespace Uintah;
- void swapbytes( Uintah::Short27& s );
-template<>  const string find_type_name(Short27*);
- const TypeDescription* get_type_description(Short27*);
- void Pio( Piostream&, Uintah::Short27& );
+
+              void                    swapbytes( Uintah::Short27 & s );
+  template<>  const std::string       find_type_name( Uintah::Short27 * );
+              const TypeDescription * get_type_description( Uintah::Short27 * );
+              void                    Pio( Piostream &, Uintah::Short27 & );
 
 } // namespace SCIRun
 

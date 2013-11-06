@@ -31,13 +31,6 @@
 
 namespace Uintah {
 
-
-using std::vector;
-using std::map;
-using std::queue;
-using std::set;
-using std::ofstream;
-
 class Task;
 class DetailedTask;
 class GPUTaskWorker;
@@ -182,19 +175,15 @@ WARNING
       }
     };
 
-    map<VarLabelMatl<Patch>, GPUGridVariable> deviceRequiresPtrs; // simply uses cudaFree on these device allocations
-
-    map<VarLabelMatl<Patch>, GPUGridVariable> deviceComputesPtrs; // simply uses cudaFree on these device allocations
-
-    map<VarLabelMatl<Patch>, GPUGridVariable> hostRequiresPtrs;   // unregister all requires host pointers that were page-locked
-
-    map<VarLabelMatl<Patch>, GPUGridVariable> hostComputesPtrs;   // unregister all computes host pointers that were page-locked
+    std::map<VarLabelMatl<Patch>, GPUGridVariable> deviceRequiresPtrs; // simply uses cudaFree on these device allocations
+    std::map<VarLabelMatl<Patch>, GPUGridVariable> deviceComputesPtrs; // simply uses cudaFree on these device allocations
+    std::map<VarLabelMatl<Patch>, GPUGridVariable> hostRequiresPtrs;   // unregister all requires host pointers that were page-locked
+    std::map<VarLabelMatl<Patch>, GPUGridVariable> hostComputesPtrs;   // unregister all computes host pointers that were page-locked
 
     set<double*> pinnedHostPtrs;
 
-    vector<queue<cudaStream_t*> >  idleStreams;
-
-    vector<queue<cudaEvent_t*> >   idleEvents;
+    std::vector<queue<cudaStream_t*> >  idleStreams;
+    std::vector<queue<cudaEvent_t*> >   idleEvents;
 
   };
 

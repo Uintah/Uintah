@@ -23,13 +23,11 @@
         <save label = "uVelocitySPBC"/>
         <save label = "vVelocitySPBC"/>
         <save label = "wVelocitySPBC"/>
-        <save label = "scalarSP"/>
         <save label = "densityCP"/>
         <save label = "viscosityCTS"/>
         <save label = "cellType"/>
         <save label = "temperature" table_lookup="true"/>
         <save label = "MixtureFraction"/>
-        <save label = "pr_no"/>
         <save label = "laminar_viscosity"/>
 
         <checkpoint cycle = "2" walltimeStart = "0" walltimeInterval = "1800"/>
@@ -171,15 +169,7 @@
                 </ColdFlow> 
             </Properties>
 
-            <BoundaryConditions>
-              <use_new_bcs/>
-            </BoundaryConditions>
-
-
             <ExplicitSolver>
-
-            <initial_dt>0.05</initial_dt>
-            <variable_dt>true</variable_dt>
                 <PressureSolver>
                     <Parameters>
                         <tolerance>1.0e-10</tolerance>

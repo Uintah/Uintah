@@ -87,15 +87,15 @@ inline void Pio(Piostream& stream, Float& d) {Pio(stream,d.val_);}
 inline void Pio(Piostream& stream, Double& d){Pio(stream,d.val_);}
 inline void Pio(Piostream& stream, LongLong& d){Pio(stream,d.val_);}
 
-inline const string find_type_name(Char*)  {return find_type_name((char *)0);}
-inline const string find_type_name(UChar*) {return find_type_name((unsigned char *)0);}
-inline const string find_type_name(Short*) {return find_type_name((short *)0);}
-inline const string find_type_name(UShort*){return find_type_name((unsigned short *)0);}
-inline const string find_type_name(Int*)   {return find_type_name((int *)0);}
-inline const string find_type_name(UInt*)  {return find_type_name((unsigned int *)0);}
-inline const string find_type_name(Float*) {return find_type_name((float *)0);}
-inline const string find_type_name(Double*){return find_type_name((double *)0);}
-inline const string find_type_name(LongLong*){return find_type_name((double *)0);}
+inline const std::string find_type_name(Char*)  {return find_type_name((char *)0);}
+inline const std::string find_type_name(UChar*) {return find_type_name((unsigned char *)0);}
+inline const std::string find_type_name(Short*) {return find_type_name((short *)0);}
+inline const std::string find_type_name(UShort*){return find_type_name((unsigned short *)0);}
+inline const std::string find_type_name(Int*)   {return find_type_name((int *)0);}
+inline const std::string find_type_name(UInt*)  {return find_type_name((unsigned int *)0);}
+inline const std::string find_type_name(Float*) {return find_type_name((float *)0);}
+inline const std::string find_type_name(Double*){return find_type_name((double *)0);}
+inline const std::string find_type_name(LongLong*){return find_type_name((double *)0);}
 
 template<class T> bool is_scalar() { return false; }
 template<> inline bool is_scalar<char>() { return true; }

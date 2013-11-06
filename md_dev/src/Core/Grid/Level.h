@@ -286,8 +286,8 @@ private:
   IntVector d_idxHigh;
   IntVector d_idxSize;
   IntVector d_gridSize;
-  vector<int> d_gridStarts;
-  vector<Patch*> d_gridPatches;
+  std::vector<int> d_gridStarts;
+  std::vector<Patch*> d_gridPatches;
 
   // For stretched frids
   bool d_stretched;
@@ -306,7 +306,7 @@ private:
     }
   };
 
-  typedef std::map<std::pair<IntVector, IntVector>, vector<const Patch*>, IntVectorCompare> selectCache;
+  typedef std::map<std::pair<IntVector, IntVector>, std::vector<const Patch*>, IntVectorCompare> selectCache;
   mutable selectCache d_selectCache; // we like const Levels in most places :) 
   PatchBVH* d_bvh;
   mutable CrowdMonitor    d_cachelock;

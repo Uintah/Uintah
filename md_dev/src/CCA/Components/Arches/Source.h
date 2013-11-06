@@ -142,7 +142,7 @@ public:
 private:
 
   PhysicalConstants* d_physicalConsts;
-  string d_mms;
+  std::string d_mms;
   double d_airDensity, d_heDensity;
   Vector d_gravity;
   double d_viscosity;

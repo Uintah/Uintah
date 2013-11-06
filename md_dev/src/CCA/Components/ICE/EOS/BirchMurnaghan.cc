@@ -32,6 +32,7 @@
 #include <iomanip>
 
 using namespace Uintah;
+using namespace std;
 
 BirchMurnaghan::BirchMurnaghan(ProblemSpecP& ps)
 {

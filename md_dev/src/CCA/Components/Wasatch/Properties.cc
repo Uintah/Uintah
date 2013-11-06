@@ -75,9 +75,10 @@ namespace Wasatch{
     if( pParams ){
 
       const Uintah::ProblemSpecP refIxParams = pParams->findBlock("RefractiveIndex");
-      std::complex<double> refIx;
-      refIxParams->getAttribute( "real", refIx.real() );
-      refIxParams->getAttribute( "imag", refIx.imag() );
+      double preal=0, pimag=0;
+      refIxParams->getAttribute( "real", preal );
+      refIxParams->getAttribute( "imag", pimag );
+      const std::complex<double> refIx( preal, pimag );
 
       ParticleRadProp propSelection;
       const std::string prop = pParams->findBlock("RadCoefType")->getNodeValue();

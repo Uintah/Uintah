@@ -38,6 +38,7 @@
 
 #include <sci_comp_warn_fixes.h>
 
+using namespace std;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output

@@ -38,7 +38,7 @@ namespace Uintah {
     virtual void registerPermanentParticleState(MPMMaterial* matl);
 
     virtual void initializeParticle(const Patch* patch,
-                                    vector<GeometryObject*>::const_iterator obj, 
+                                    std::vector<GeometryObject*>::const_iterator obj,
                                     MPMMaterial* matl,
                                     Point p, IntVector cell_idx,
                                     particleIndex i,
@@ -54,8 +54,6 @@ namespace Uintah {
     ParticleVariable<Vector> pacceleration;
     ParticleVariable<double> pvolumeold;
     ParticleVariable<double> pExternalHeatFlux;
-    
-
  
   };
 

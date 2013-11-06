@@ -35,6 +35,7 @@
 #include   <fstream>
 
 using namespace Uintah;
+using namespace std;
 
 
 #define INSIDE_NEW

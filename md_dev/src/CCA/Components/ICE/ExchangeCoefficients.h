@@ -45,12 +45,12 @@ namespace Uintah {
     bool convective();
     int conv_fluid_matlindex();
     int conv_solid_matlindex();
-    vector<double> K_mom();
-    vector<double> K_heat();
-    string d_heatExchCoeffModel;
+    std::vector<double> K_mom();
+    std::vector<double> K_heat();
+    std::string d_heatExchCoeffModel;
     
   private:
-    vector<double> d_K_mom, d_K_heat;
+    std::vector<double> d_K_mom, d_K_heat;
     bool d_convective;
     int d_conv_fluid_matlindex;
     int d_conv_solid_matlindex;

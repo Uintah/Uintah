@@ -32,8 +32,6 @@
 
 namespace Uintah {
 
-using std::string;
-
 class Variable;
 
 /**************************************
@@ -94,11 +92,11 @@ public:
     Other
   };
 
-  TypeDescription(Type type, const string& name,
+  TypeDescription(Type type, const std::string& name,
                   bool isFlat, MPI_Datatype (*make_mpitype)());
-  TypeDescription(Type type, const string& name,
+  TypeDescription(Type type, const std::string& name,
                   bool isFlat, MPI_Datatype mpitype);
-  TypeDescription(Type type, const string& name,
+  TypeDescription(Type type, const std::string& name,
                   Variable* (*maker)(),
                   const TypeDescription* subtype);
      
@@ -111,8 +109,8 @@ public:
   const TypeDescription* getSubType() const {
     return d_subtype;
   }
-  string getName() const;
-  string getFileName() const;
+  std::string getName() const;
+  std::string getFileName() const;
 
   bool isFlat() const {
     return d_isFlat;
@@ -124,7 +122,7 @@ public:
     Register(const TypeDescription*);
     ~Register();
   };
-  static const TypeDescription* lookupType(const string&);
+  static const TypeDescription* lookupType(const std::string&);
 
   Variable* createInstance() const;
 
@@ -135,7 +133,7 @@ public:
 private:
   Type d_type;
   const TypeDescription* d_subtype;
-  string d_name;
+  std::string d_name;
   bool d_isFlat;
   mutable MPI_Datatype d_mpitype;
   MPI_Datatype (*d_mpitypemaker)();

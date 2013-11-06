@@ -1286,8 +1286,6 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       factor = (time+0.000001)*0.5;
 #endif
 
-    // Laminar Pr number is taken to be 0.7, shouldn't make much difference
-    double laminarPrNo = 0.7;
     if (d_MAlab) {
 
       for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {

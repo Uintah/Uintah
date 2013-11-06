@@ -5,7 +5,6 @@
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <map>
-#include <vector>
 #include <string>
 
 //---------------------------------------------------------------------------
@@ -27,7 +26,7 @@ class EqnBuilder
 public:
   EqnBuilder( ArchesLabel* fieldLabels, 
               ExplicitTimeInt* timeIntegrator,
-              string eqnName ) : 
+              std::string eqnName ) :
               d_fieldLabels(fieldLabels), 
               d_timeIntegrator(timeIntegrator),
               d_eqnName(eqnName) {};
@@ -38,7 +37,7 @@ public:
 protected: 
   ArchesLabel* d_fieldLabels; 
   ExplicitTimeInt* d_timeIntegrator;
-  string d_eqnName; 
+  std::string d_eqnName;
 }; // class EqnBuilder
 
 // End builder 

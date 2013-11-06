@@ -50,7 +50,6 @@ namespace Uintah {
   */
 
   using namespace SCIRun;
-  using std::vector;
  
   class SideBCData : public BCGeomBase {
 
@@ -88,7 +87,7 @@ namespace Uintah {
     /// Determine the cell and node centered iterators
     virtual void determineIteratorLimits(Patch::FaceType face,
                                          const Patch* patch, 
-                                         vector<Point>& test_pts);
+                                         std::vector<Point>& test_pts);
 
     
     

@@ -61,7 +61,7 @@ template<class T>
 }
 
 // find the normalized distance between the coarse and the fine cell cell-center
- void normalizedDistance_CC(const int refineRatio,vector<double>& norm_dist);
+ void normalizedDistance_CC(const int refineRatio,std::vector<double>& norm_dist);
 
 
 /*___________________________________________________________________
@@ -113,9 +113,9 @@ template<class T>
                            CCVariable<T>& q_FineLevel)
 {
   // compute the normalized distance between the fine and coarse cell centers
-  vector<double> norm_dist_x(refineRatio.x());
-  vector<double> norm_dist_y(refineRatio.y());
-  vector<double> norm_dist_z(refineRatio.z());
+  std::vector<double> norm_dist_x(refineRatio.x());
+  std::vector<double> norm_dist_y(refineRatio.y());
+  std::vector<double> norm_dist_z(refineRatio.z());
   normalizedDistance_CC(refineRatio.x(),norm_dist_x);
   normalizedDistance_CC(refineRatio.y(),norm_dist_y);
   normalizedDistance_CC(refineRatio.z(),norm_dist_z);
@@ -251,9 +251,9 @@ template<class T>
   gridHi -= SCIRun::IntVector(1,1,1);
 
   // compute the normalized distance between the fine and coarse cell centers
-  vector<double> norm_dist_x(refineRatio.x());
-  vector<double> norm_dist_y(refineRatio.y());
-  vector<double> norm_dist_z(refineRatio.z());
+  std::vector<double> norm_dist_x(refineRatio.x());
+  std::vector<double> norm_dist_y(refineRatio.y());
+  std::vector<double> norm_dist_z(refineRatio.z());
   normalizedDistance_CC(refineRatio.x(),norm_dist_x);
   normalizedDistance_CC(refineRatio.y(),norm_dist_y);
   normalizedDistance_CC(refineRatio.z(),norm_dist_z);
@@ -314,7 +314,7 @@ template<class T>
     w(0,2) = w0_x * w2_y; w(1,2) = w1_x * w2_y; w(2,2) = w2_x * w2_y;
     //  Q_CL(-1, 1,k)      Q_CL(0, 1,k)          Q_CL(1, 1,k)
 
-    vector<T> q_XY_Plane(3);
+    std::vector<T> q_XY_Plane(3);
 
     int k = -2;
     // loop over the three X-Y planes
@@ -444,12 +444,12 @@ template<class T>
   int p_dir = dir[0];                                    // normal direction
   int y = dir[1];             // Orthogonal to the patch face
   int z = dir[2];
-  string name = finePatch->getFaceName(patchFace);
+  std::string name = finePatch->getFaceName(patchFace);
 
   //__________________________________
   // compute the normalized distance between the fine and coarse cell centers
-  vector<double> norm_dist_y(refineRatio[y]);
-  vector<double> norm_dist_z(refineRatio[z]);
+  std::vector<double> norm_dist_y(refineRatio[y]);
+  std::vector<double> norm_dist_z(refineRatio[z]);
 
   normalizedDistance_CC(refineRatio[y],norm_dist_y);
   normalizedDistance_CC(refineRatio[z],norm_dist_z);
@@ -461,7 +461,7 @@ template<class T>
 
   //__________________________________
   // define the offsets for the CC data on the coarse Level
-  vector<SCIRun::IntVector> offset(9);
+  std::vector<SCIRun::IntVector> offset(9);
   int counter = 0;
 
   for(int j = -1; j <=1; j++){
@@ -756,7 +756,7 @@ template<class T>
                          const Level* fineLevel,
                          const Patch* finePatch,
                          Patch::FaceType patchFace,
-                         const string& testDomain)
+                         const std::string& testDomain)
 {
   ASSERT( testDomain == "wholeDomain" || testDomain == "CFI");
 
@@ -774,8 +774,8 @@ template<class T>
   }
 
   SCIRun::IntVector refineRatio(fineLevel->getRefinementRatio());
-  std::cout << "testInterpolators:Interpolation Order = " <<orderOfInterpolation << " " << testDomain<<endl;
-  std::cout << "------------------------------------" <<  finePatch->getFaceName(patchFace) << endl;
+  std::cout << "testInterpolators:Interpolation Order = " <<orderOfInterpolation << " " << testDomain<<std::endl;
+  std::cout << "------------------------------------" <<  finePatch->getFaceName(patchFace) << std::endl;
 
   for(int t=0; t<= 6; t++){
     CCVariable<T> q_CoarseLevel, q_FineLevel;

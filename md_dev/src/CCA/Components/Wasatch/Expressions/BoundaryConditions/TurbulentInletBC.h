@@ -35,6 +35,7 @@ template< typename FieldT >
 class TurbulentInletBC
 : public BoundaryConditionBase<FieldT>
 {
+  typedef typename SpatialOps::structured::SingleValueField TimeField;
   TurbulentInletBC( const std::string inputFileName,
                     const std::string velDir,
                     const int period,
@@ -73,8 +74,8 @@ public:
   
 private:
   // member variables
-  const double *t_;
-  const double *dt_;
+  const TimeField *t_;
+  const TimeField *dt_;
   const Expr::Tag timeTag_, timestepTag_;
   const std::string velDir_;  
   const int period_;
@@ -108,18 +109,15 @@ TurbulentInletBC( const std::string inputFileName,
     period_(period),
     timePeriod_(timePeriod)
 {
-  using namespace std;
-  using namespace Uintah;
-  
-  ifstream ifs( inputFileName.c_str() );
+  std::ifstream ifs( inputFileName.c_str() );
 
   if( !ifs ) {
-    proc0cout << "Error opening file for Turbulent Inlet: " << inputFileName << endl;
-    throw ProblemSetupException("Unable to open the given input file: " + inputFileName, __FILE__, __LINE__);
+    proc0cout << "Error opening file for Turbulent Inlet: " << inputFileName << std::endl;
+    throw Uintah::ProblemSetupException("Unable to open the given input file: " + inputFileName, __FILE__, __LINE__);
   }
   
   std::string face;
-  getValue(ifs,face);
+  Uintah::getValue(ifs,face);
   if (face.compare("x-")==0 || face.compare("x+") ==0) {
     iComponent_ = 1;
     jComponent_ = 2;
@@ -131,27 +129,27 @@ TurbulentInletBC( const std::string inputFileName,
     jComponent_ = 1;
   }
   
-  getValue(ifs, NT_);
-  getValue(ifs, jSize_);
-  getValue(ifs, kSize_);
+  Uintah::getValue(ifs, NT_);
+  Uintah::getValue(ifs, jSize_);
+  Uintah::getValue(ifs, kSize_);
   minC_.resize(3);
-  getValue(ifs,minC_[0]);
-  getValue(ifs,minC_[1]);
-  getValue(ifs,minC_[2]);
+  Uintah::getValue(ifs,minC_[0]);
+  Uintah::getValue(ifs,minC_[1]);
+  Uintah::getValue(ifs,minC_[2]);
   int nPts;
-  getValue(ifs,nPts);
-  getValue(ifs,dx_);
+  Uintah::getValue(ifs,nPts);
+  Uintah::getValue(ifs,dx_);
   
-  fluct_.resize(NT_,vector< vector<double> >(jSize_,vector<double>(kSize_)));
+  fluct_.resize(NT_,std::vector< std::vector<double> >(jSize_,std::vector<double>(kSize_)));
   int t,j,k;
   double u,v,w;
   for (int n = 0; n<nPts; n++) {
-    getValue(ifs,t);
-    getValue(ifs,j);
-    getValue(ifs,k);
-    getValue(ifs,u);
-    getValue(ifs,v);
-    getValue(ifs,w);
+    Uintah::getValue(ifs,t);
+    Uintah::getValue(ifs,j);
+    Uintah::getValue(ifs,k);
+    Uintah::getValue(ifs,u);
+    Uintah::getValue(ifs,v);
+    Uintah::getValue(ifs,w);
     fluct_[t][j][k] = (velDir_.compare("X")==0) ? u : (velDir_.compare("Y")==0 ? v : w);
   }
   firsttimestep_ = true;
@@ -173,7 +171,7 @@ template< typename FieldT >
 void
 TurbulentInletBC<FieldT>::bind_fields(const Expr::FieldManagerList& fml)
 {
-  const typename Expr::FieldMgrSelector<double>::type& fm = fml.template field_manager<double>();
+  const typename Expr::FieldMgrSelector<TimeField>::type& fm = fml.template field_manager<TimeField>();
   t_  = &fm.field_ref( timeTag_     );
   dt_ = &fm.field_ref( timestepTag_ );
 }
@@ -185,14 +183,14 @@ int
 TurbulentInletBC<FieldT>::calculate_time_index() {
   
   // floor - get the number of dxs into the data
-  int tindex =(int) std::floor(*t_/dx_);
+  int tindex =(int) std::floor((*t_)[0]/dx_);
   
   while (tindex >= NT_- 1) {
     tindex -= (NT_-1);
   }
 
   // coordinate relative to the current turbulent data interval
-  coord_ = *t_ - tindex*dx_;
+  coord_ = (*t_)[0] - tindex*dx_;
 
   // OPTIONAL: make sure we match the data point at the begining of new turbulent data
   //if (coord_ < *dt_) coord_ = 0.0;

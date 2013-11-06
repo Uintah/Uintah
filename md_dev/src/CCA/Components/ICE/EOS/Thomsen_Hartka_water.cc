@@ -28,6 +28,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
+using namespace std;
 
 Thomsen_Hartka_water::Thomsen_Hartka_water(ProblemSpecP& ps)
 {

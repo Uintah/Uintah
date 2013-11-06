@@ -175,14 +175,14 @@ WARNING
     class Scalar {
     public:
       int index;
-      string name;
+      std::string name;
       // labels for this particular scalar
       VarLabel* scalar_CCLabel;
       VarLabel* scalar_source_CCLabel;
       VarLabel* mag_grad_scalarLabel;
       VarLabel* diffusionCoefLabel;
       
-      vector<Region*> regions;
+      std::vector<Region*> regions;
       double diff_coeff;
       double refineCriteria;
       int  initialize_diffusion_knob;

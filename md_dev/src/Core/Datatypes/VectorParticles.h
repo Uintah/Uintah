@@ -42,7 +42,7 @@
 #include <vector>
 
 namespace Uintah {
-  using std::vector;
+
   using namespace SCIRun;
 
 /**************************************
@@ -84,7 +84,7 @@ public:
   VectorParticles();
   //////////
   // Constructor
-  VectorParticles(const vector<ShareAssignParticleVariable<Vector> >& vectors,
+  VectorParticles(const std::vector<ShareAssignParticleVariable<Vector> >& vectors,
 		  PSet* pset);
 
   // GROUP: Destructors
@@ -95,7 +95,7 @@ public:
   // GROUP: Access
   //////////
   // return the Vectors
-  vector<ShareAssignParticleVariable<Vector> >& get(){ return vectors; }
+  std::vector<ShareAssignParticleVariable<Vector> >& get(){ return vectors; }
   PSet* getParticleSet(){ return psetH.get_rep(); }
 
   // GROUP: Modify
@@ -104,12 +104,12 @@ public:
   void Set(PSetHandle psh){ psetH = psh;}
   //////////  
   // Set the Vectors
-  void Set(vector<ShareAssignParticleVariable<Vector> >& s){ vectors = s; }
+  void Set(std::vector<ShareAssignParticleVariable<Vector> >& s){ vectors = s; }
 
   void AddVar( const ParticleVariable<Vector>& parts );
 
 
-  void SetName( string vname ) { _varname = vname; }
+  void SetName( std::string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
 	       
 
@@ -128,9 +128,9 @@ protected:
 
 private:
   PSetHandle psetH;
-  string _varname;
+  std::string _varname;
   int _matIndex;
-  vector<ShareAssignParticleVariable<Vector> >  vectors;
+  std::vector<ShareAssignParticleVariable<Vector> >  vectors;
 };
 
 } // End namespace Uintah

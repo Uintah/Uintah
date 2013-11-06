@@ -38,6 +38,7 @@
 #include <CCA/Components/Arches/fortran/wvelsrc_fort.h>
 
 using namespace Uintah;
+using namespace std;
 
 //****************************************************************************
 // Constructor for Source

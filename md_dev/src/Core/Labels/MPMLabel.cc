@@ -34,8 +34,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 using namespace Uintah;
-using std::cerr;
-using std::endl;
+using namespace std;
 
 
 MPMLabel::MPMLabel()

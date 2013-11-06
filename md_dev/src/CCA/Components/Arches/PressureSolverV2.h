@@ -155,7 +155,7 @@ private:
                              const MaterialSet* matls,
                              const TimeIntegratorLabel* timelabels,
                              bool extraProjection,
-                             string& pressLabel);
+                             std::string& pressLabel);
 
   void  set_BC_RefPress ( const ProcessorGroup* pg,
                           const PatchSubset* patches,
@@ -164,7 +164,7 @@ private:
                           DataWarehouse* new_dw,
                           const VarLabel* pressLabel,
                           const VarLabel* refPressLabel,
-                          const string integratorPhase );
+                          const std::string integratorPhase );
 
   //______________________________________________________________________
   //  normalizePress:
@@ -172,7 +172,7 @@ private:
   void sched_normalizePress(SchedulerP& sched,
                             const PatchSet* patches,
                             const MaterialSet* matls,
-                            const string& pressLabel,
+                            const std::string& pressLabel,
                             const TimeIntegratorLabel* timelabels);
                             
   void normalizePress ( const ProcessorGroup* pg,
@@ -224,7 +224,7 @@ private:
   SolverInterface* d_hypreSolver;
   SolverParameters* d_hypreSolver_parameters;
 
-  vector<std::string> d_new_sources; 
+  std::vector<std::string> d_new_sources;
   
   
 }; // End class PressureSolver

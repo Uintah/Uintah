@@ -81,7 +81,7 @@ namespace Uintah{
         oldPhiT& oldPhi, constCCVariable<double>& mu_t,
         constCCVariable<double>& D_mol, constCCVariable<double>& rho,  
         constCCVariable<Vector>& areaFraction, 
-        constCCVariable<double>& prNo, int mat_id, string varName );
+        constCCVariable<double>& prNo, int mat_id, std::string varName );
 
       /** @brief Computes the diffusion term for a scalar:
        * \f$ \int_{S} \rho \Gamma \nabla \phi \cdot dS \f$ 
@@ -92,7 +92,7 @@ namespace Uintah{
         oldPhiT& oldPhi, constCCVariable<double>& mu_t,
         double D_mol, constCCVariable<double>& rho,  
         constCCVariable<Vector>& areaFraction, 
-        constCCVariable<double>& prNo, int mat_id, string varName );
+        constCCVariable<double>& prNo, int mat_id, std::string varName );
 
       /** @brief Computes the diffusion term for a scalar:
        * \f$ \int_{S} \Gamma \nabla \phi \cdot dS \f$
@@ -101,7 +101,7 @@ namespace Uintah{
         computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, 
         constCCVariable<double>& gamma, 
         double molecular_diff, constCCVariable<Vector>& areaFraction, 
-        double const_prNo, int mat_id, string varName );
+        double const_prNo, int mat_id, std::string varName );
 
       //---------------------------------------------------------------------------
       // Custom Data Managers
@@ -161,7 +161,7 @@ namespace Uintah{
 
       /** @brief Returns an iterator for all cell touching a domain boundary */ 
       inline CellIterator getInteriorBoundaryCellIterator( const Patch* p, 
-          const vector<Patch::FaceType>::const_iterator bf_iter ) const 
+          const std::vector<Patch::FaceType>::const_iterator bf_iter ) const
       {
 
         Patch::FaceType face = *bf_iter; 
@@ -554,8 +554,8 @@ namespace Uintah{
             }
 
             //--------------- Boundaries
-            vector<Patch::FaceType> bf;
-            vector<Patch::FaceType>::const_iterator bf_iter;
+            std::vector<Patch::FaceType> bf;
+            std::vector<Patch::FaceType>::const_iterator bf_iter;
             p->getBoundaryFaces(bf);
 
             // Loop over all boundary faces on this patch
@@ -664,8 +664,8 @@ namespace Uintah{
             }
 
             //--------------- Boundaries
-            vector<Patch::FaceType> bf;
-            vector<Patch::FaceType>::const_iterator bf_iter;
+            std::vector<Patch::FaceType> bf;
+            std::vector<Patch::FaceType>::const_iterator bf_iter;
             p->getBoundaryFaces(bf);
 
             // Loop over all boundary faces on this patch
@@ -771,8 +771,8 @@ namespace Uintah{
             }
 
             //--------------- Boundaries
-            vector<Patch::FaceType> bf;
-            vector<Patch::FaceType>::const_iterator bf_iter;
+            std::vector<Patch::FaceType> bf;
+            std::vector<Patch::FaceType>::const_iterator bf_iter;
             p->getBoundaryFaces(bf);
 
             // Loop over all boundary faces on this patch
@@ -1503,7 +1503,7 @@ namespace Uintah{
   template<class T> 
     struct FaceData {
       // 0 = e, 1=w, 2=n, 3=s, 4=t, 5=b
-      //vector<T> values_[6];
+      //std::vector<T> values_[6];
       T p; 
       T e; 
       T w; 
@@ -1694,7 +1694,7 @@ namespace Uintah{
         oldPhiT& oldPhi, constCCVariable<double>& mu_t,
         constCCVariable<double>& D_mol, constCCVariable<double>& rho, 
         constCCVariable<Vector>& areaFraction, constCCVariable<double>& prNo, 
-        int mat_id, string varName )
+        int mat_id, std::string varName )
     {
 
       Vector Dx = p->dCell(); //assuming uniform grid
@@ -1780,7 +1780,7 @@ namespace Uintah{
         oldPhiT& oldPhi, constCCVariable<double>& mu_t,
         double D_mol, constCCVariable<double>& rho, 
         constCCVariable<Vector>& areaFraction, constCCVariable<double>& prNo, 
-        int mat_id, string varName )
+        int mat_id, std::string varName )
     {
 
       Vector Dx = p->dCell(); //assuming uniform grid
@@ -1900,7 +1900,7 @@ namespace Uintah{
     Discretization_new::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, 
         constCCVariable<double>& gamma, double molecular_diff, 
         constCCVariable<Vector>& areaFraction, double const_prNo, 
-        int mat_id, string varName )
+        int mat_id, std::string varName )
     {
 
       Vector Dx = p->dCell(); //assuming uniform grid

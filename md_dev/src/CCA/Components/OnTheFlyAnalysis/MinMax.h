@@ -105,11 +105,11 @@ GENERAL INFORMATION
                     DataWarehouse*,
                     DataWarehouse* new_dw);
                     
-    void createFile(string& filename, 
+    void createFile(std::string& filename,
                     FILE*& fp,
-                    string& levelIndex);
+                    std::string& levelIndex);
     
-    void createDirectory(string& lineName, string& levelIndex);
+    void createDirectory(std::string& lineName, std::string& levelIndex);
 
     template <class Tvar, class Ttype>
     void findMinMax( DataWarehouse*  new_dw,
@@ -142,7 +142,7 @@ GENERAL INFORMATION
       int level;
     };
     
-    vector<varProperties> d_analyzeVars;
+    std::vector<varProperties> d_analyzeVars;
     
     SimulationStateP d_sharedState;
     Output* d_dataArchiver;
@@ -150,7 +150,7 @@ GENERAL INFORMATION
     
     const Material*  d_matl;
     MaterialSet*     d_matl_set;
-    std::set<string> d_isDirCreated;
+    std::set<std::string> d_isDirCreated;
     MaterialSubset*  d_zero_matl;
     PatchSet*        d_zeroPatch;
     

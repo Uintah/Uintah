@@ -66,7 +66,7 @@
 
 //#define PRINTSYSTEM
 
-using std::cout;
+using namespace std;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output

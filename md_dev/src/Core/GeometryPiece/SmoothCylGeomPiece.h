@@ -110,7 +110,7 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     virtual ~SmoothCylGeomPiece();
 
-    static const string TYPE_NAME;
+    static const std::string TYPE_NAME;
     virtual std::string getType() const { return TYPE_NAME; }
 
     /// Make a clone
@@ -154,8 +154,8 @@ namespace Uintah {
     int d_numRadial;
     int d_numAxial;
     int d_numAngular;
-    string d_discretization;
-    string d_fileName;
+    std::string d_discretization;
+    std::string d_fileName;
 
   };
 } // End namespace Uintah

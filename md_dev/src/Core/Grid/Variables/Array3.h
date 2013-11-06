@@ -44,9 +44,6 @@ typedef long ssize_t;
 
 namespace Uintah {
 
-  using std::ostream;
-  using std::istream;
-  using std::endl;
 
   /**************************************
 
@@ -347,7 +344,7 @@ namespace Uintah {
         return d_window->get3DPointer();
       }
 
-      inline void write(ostream& out, const IntVector& l, const IntVector& h, bool /*outputDoubleAsFloat*/ )
+      inline void write(std::ostream& out, const IntVector& l, const IntVector& h, bool /*outputDoubleAsFloat*/ )
       {
         // This could be optimized...
         ssize_t linesize = (ssize_t)(sizeof(T)*(h.x()-l.x()));
@@ -358,7 +355,7 @@ namespace Uintah {
         }
       }
 
-      inline void read(istream& in, bool swapBytes)
+      inline void read(std::istream& in, bool swapBytes)
       {
         // This could be optimized...
         IntVector l(getLowIndex());
@@ -377,6 +374,7 @@ namespace Uintah {
       }
 
       void print(std::ostream& out) const {
+        using std::endl;
         IntVector l = d_window->getLowIndex();
         IntVector h = d_window->getHighIndex();
         out << "Variable from " << l << " to " << h << '\n';
@@ -481,7 +479,7 @@ namespace Uintah {
 
   // return true iff no reallocation is needed
   template <>
-    inline void Array3<double>::write(ostream& out, const IntVector& l, const IntVector& h, bool outputDoubleAsFloat)
+    inline void Array3<double>::write(std::ostream& out, const IntVector& l, const IntVector& h, bool outputDoubleAsFloat)
     {
       // This could be optimized...
       if (outputDoubleAsFloat) {

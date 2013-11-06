@@ -135,31 +135,10 @@
 <!-- ARCHES specification -->
     <ARCHES>
 
-      <MMS whichMMS="constantMMS">
-        <mmsErrorType>Linf</mmsErrorType>
-        <constantMMS>
-          <cu>1.0</cu>
-          <cv>11.0</cv>
-          <cw>.1</cw>
-          <cp>100</cp>
-          <phi0>0.3</phi0>
-          <esphi0>0.0</esphi0>
-        </constantMMS>
-      </MMS>
-
 <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-
-
-      <Turbulence model="smagorinsky">
-        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-        <cf>0.0</cf>
-        <fac_mesh>1.0</fac_mesh>
-        <filterl>0.000001</filterl>
-        <var_const>0.1</var_const>
-      </Turbulence>
 
       <TransportEqns>
 <!-- this scalar variable tests the step function initialization mechanism 
@@ -363,14 +342,7 @@
         </ConstantProps>
       </Properties>
 
-<!--
-      <BoundaryConditions>
-      </BoundaryConditions>
-
--->
       <ExplicitSolver>
-        <initial_dt>1</initial_dt>
-        <variable_dt>true</variable_dt>
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
@@ -385,6 +357,9 @@
 
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
+          <initialization type="almgren">
+            <plane>x-y</plane>
+          </initialization>
         </MomentumSolver>
 
       </ExplicitSolver>

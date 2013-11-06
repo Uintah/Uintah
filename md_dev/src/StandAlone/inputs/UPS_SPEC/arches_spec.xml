@@ -48,7 +48,8 @@
 
 
           <!-- constant property model and scalar dissipation rate model --> 
-          <constant                     spec="OPTIONAL DOUBLE"/>
+          <constant                     spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type cc_constant, scalar_diss"/>
 
           <!-- extent of reaction model --> 
           <scalar_label                 spec="OPTIONAL STRING"/>
@@ -411,7 +412,6 @@
          </intrusion>
         </intrusions>
 
-        <use_new_bcs                    spec="OPTIONAL NO_DATA"/> <!-- use the new boundary conditions as specified in the <Grid><BoundaryCondition> section --> 
         <wall_slip                      spec="OPTIONAL NO_DATA"/> <!-- Use a slip wall BC --> 
         <wall_csmag                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- Constant coefficient for the wall closure model.  default = 0.17. Set to zero for laminar conditions. --> 
         
@@ -469,10 +469,14 @@
 
       <ExplicitSolver                   spec="REQUIRED NO_DATA" >
 
-        <initial_dt                     spec="REQUIRED DOUBLE 'positive'" />
-        <variable_dt                    spec="REQUIRED BOOLEAN" />
+        <initial_dt                     spec="OPTIONAL DOUBLE 'positive'"/>  <!-- Sets the initial timestep of the simulation.  Note that this value will 
+                                                                                  be superceded if the CFL condition determines a smaller timestep as determined
+                                                                                  from the BC's and initial condition.  --> 
+                                               
+
         <print_total_ke 								spec="OPTIONAL NO_DATA" />  <!-- prints the total kinetic energy to STDIO --> 
         <extraProjection                spec="OPTIONAL BOOLEAN" /> 
+        <scalarUnderflowCheck           spec="OPTIONAL NO_DATA" />  <!-- Uses dt = 0.5*rho/div(rhoU)*dx for timestep. Note: only used positive (outbound) div -->  
 
         <kineticEnergy_fromFC           spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what does this default to? -->
 

@@ -44,8 +44,7 @@
 #include <string>
 
 namespace SCIRun {
-    
-using std::vector;
+
 
 /**************************************
 
@@ -78,8 +77,8 @@ using std::vector;
 
 
 class Polygon {
-  vector<Point> vertices;
-  vector<Point> texcoords;
+  std::vector<Point> vertices;
+  std::vector<Point> texcoords;
 public:
 
   // GROUP:  Constructors:
@@ -93,9 +92,9 @@ public:
 
   //////////
   // Constructor
-  // takes a std:vector of Points that are a counter clockwise
+  // takes a std:std::vector of Points that are a counter clockwise
   // ordering of the vertices.
-  Polygon(const vector<Point>& v, const vector<Point>& t);
+  Polygon(const std::vector<Point>& v, const std::vector<Point>& t);
   //////////
   // Copy Constructor
   Polygon(const Polygon&);
@@ -131,7 +130,7 @@ public:
 
   //////////
   // string method:
-  string get_string() const;
+  std::string get_string() const;
 
 private:
   //////////

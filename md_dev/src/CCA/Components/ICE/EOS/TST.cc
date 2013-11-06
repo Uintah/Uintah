@@ -30,6 +30,7 @@
 #include <iostream>
 #include <iomanip>
 using namespace Uintah;
+using namespace std;
 
 
 TST::TST(ProblemSpecP& ps){

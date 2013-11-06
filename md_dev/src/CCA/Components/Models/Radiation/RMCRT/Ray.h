@@ -160,7 +160,7 @@ namespace Uintah{
                             
     template< class T >                        
     void setBC(CCVariable<T>& Q_CC,
-               const string& desc,
+               const std::string& desc,
                const Patch* patch,          
                const int mat_id);
 
@@ -221,10 +221,10 @@ namespace Uintah{
       VR_variables _VR;
       
       // Boundary flux constant variables  (consider using array container when C++ 11 is used)
-      map <int,IntVector> _dirIndexOrder;
-      map <int,IntVector> _dirSignSwap;
-      map <int,IntVector> _locationIndexOrder;
-      map <int,IntVector> _locationShift;
+      std::map <int,IntVector> _dirIndexOrder;
+      std::map <int,IntVector> _dirSignSwap;
+      std::map <int,IntVector> _locationIndexOrder;
+      std::map <int,IntVector> _locationShift;
 
       Ghost::GhostType d_gn;
       Ghost::GhostType d_gac;
@@ -301,7 +301,7 @@ namespace Uintah{
       void  updateSumI_ML ( Vector& ray_direction, 
                             Vector& ray_location,
                             const IntVector& origin,
-                            const vector<Vector>& Dx,
+                            const std::vector<Vector>& Dx,
                             const BBox& domain_BB,
                             const int maxLevels,
                             const Level* fineLevel,
@@ -309,8 +309,8 @@ namespace Uintah{
                             double DzDx[],
                             const IntVector& fineLevel_ROI_Lo,
                             const IntVector& fineLevel_ROI_Hi,
-                            vector<IntVector>& regionLo,
-                            vector<IntVector>& regionHi,
+                            std::vector<IntVector>& regionLo,
+                            std::vector<IntVector>& regionHi,
                             StaticArray< constCCVariable<double> >& sigmaT4Pi,
                             StaticArray< constCCVariable<double> >& abskg,
                             unsigned long int& size,
@@ -324,8 +324,8 @@ namespace Uintah{
                         DataWarehouse* new_dw,
                         IntVector& fineLevel_ROI_Lo,
                         IntVector& fineLevel_ROI_Hi,
-                        vector<IntVector>& regionLo,
-                        vector<IntVector>& regionHi);
+                        std::vector<IntVector>& regionLo,
+                        std::vector<IntVector>& regionHi);
 
       //----------------------------------------
       void initProperties( const ProcessorGroup* pc, 
@@ -428,7 +428,7 @@ namespace Uintah{
       /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
       bool has_a_boundary(const IntVector &c,
                           constCCVariable<int> &celltype,
-                          vector<int> &boundaryFaces);
+                          std::vector<int> &boundaryFaces);
     //______________________________________________________________________
     //   Boundary Conditions
 

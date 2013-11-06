@@ -87,7 +87,7 @@ namespace Uintah {
                                const SolverParameters* params,
                                bool modifies_hypre = false);
                                
-    virtual string getName();
+    virtual std::string getName();
     
     private:
   };

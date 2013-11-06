@@ -27,8 +27,8 @@ class DragModelBuilder: public ModelBuilder
 {
 public: 
   DragModelBuilder( const std::string          & modelName, 
-                    const vector<std::string>  & reqICLabelNames,
-                    const vector<std::string>  & reqScalarLabelNames,
+                    const std::vector<std::string>  & reqICLabelNames,
+                    const std::vector<std::string>  & reqScalarLabelNames,
                     ArchesLabel          * fieldLabels,
                     SimulationStateP           & sharedState,
                     int qn );
@@ -50,8 +50,8 @@ public:
   DragModel( std::string modelName, 
              SimulationStateP& shared_state, 
              ArchesLabel* fieldLabels,
-             vector<std::string> reqICLabelNames, 
-             vector<std::string> reqScalarLabelNames,
+             std::vector<std::string> reqICLabelNames,
+             std::vector<std::string> reqScalarLabelNames,
              int qn );
 
   ~DragModel();
@@ -77,7 +77,7 @@ public:
 
   /** @brief Schedule the calculation of the source term */ 
   void sched_computeModel( const LevelP& level, SchedulerP& sched, 
-                            int timeSubStep );
+                           int timeSubStep );
   
   /** @brief Actually compute the source term */ 
   void computeModel( const ProcessorGroup* pc, 
@@ -89,12 +89,12 @@ public:
   //////////////////////////////////////////////////
   // Access functions
 
-  inline string getType() {
+  inline std::string getType() {
     return "Drag"; }
 
 private:
 
-  map<string, string> LabelToRoleMap;
+  std::map<std::string, std::string> LabelToRoleMap;
 
   const VarLabel* d_particle_length_label;
   const VarLabel* d_particle_velocity_label;

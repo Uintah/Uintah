@@ -80,7 +80,7 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     virtual ~CylinderShellPiece();
 
-    static const string TYPE_NAME;    
+    static const std::string TYPE_NAME;
     std::string getType() const { return TYPE_NAME; }
 
     /// Make a clone

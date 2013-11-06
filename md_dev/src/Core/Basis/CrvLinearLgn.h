@@ -316,7 +316,7 @@ public:
     return 0.;
   }
   
-  static  const string type_name(int n = -1);
+  static std::string type_name(int n = -1);
 
   virtual void io (Piostream& str);
 };
@@ -338,7 +338,7 @@ const TypeDescription* get_type_description(CrvLinearLgn<T> *)
 }
 
 template <class T>
-const std::string
+std::string
 CrvLinearLgn<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);

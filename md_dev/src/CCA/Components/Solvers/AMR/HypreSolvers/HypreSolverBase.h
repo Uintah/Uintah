@@ -120,7 +120,7 @@ namespace Uintah {
                                   HypreDriver* driver,
                                   HyprePrecondBase* precond);
   SolverType       getSolverType(const std::string& solverTitle);
-  ostream&         operator << (ostream& os, const SolverType& solverType);
+  std::ostream&    operator << (std::ostream& os, const SolverType& solverType);
 
 } // end namespace Uintah
 

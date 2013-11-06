@@ -19,7 +19,7 @@
 #include <fstream>
 #include <iostream>
 
-using std::cerr;
+using namespace std;
 using namespace Uintah;
 
 CNH_MMS::CNH_MMS(ProblemSpecP& ps, MPMFlags* Mflag)

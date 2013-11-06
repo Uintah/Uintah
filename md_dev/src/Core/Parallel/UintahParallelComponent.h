@@ -30,9 +30,9 @@
 #include <vector>
 
 namespace Uintah {
-   using std::string;
-   class UintahParallelPort;
-   class ProcessorGroup;
+
+  class UintahParallelPort;
+  class ProcessorGroup;
 
 /**************************************
 
@@ -67,14 +67,14 @@ WARNING
 	 PortRecord(UintahParallelPort* conn);
 	 std::vector<UintahParallelPort*> connections;
       };
-      std::map<string, PortRecord*> portmap;
+      std::map<std::string, PortRecord*> portmap;
    public:
       UintahParallelComponent(const ProcessorGroup* myworld);
       virtual ~UintahParallelComponent();
       
       //////////
       // Insert Documentation Here:
-      void attachPort(const string& name, UintahParallelPort* port);
+      void attachPort(const std::string& name, UintahParallelPort* port);
       
       UintahParallelPort* getPort(const std::string& name);
       UintahParallelPort* getPort(const std::string& name, unsigned int i);

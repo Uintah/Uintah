@@ -31,10 +31,6 @@
 
 namespace Uintah {
 
-
-using std::vector;
-using std::ofstream;
-
 class Task;
 class DetailedTask;
 class TaskWorker;

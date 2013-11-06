@@ -417,15 +417,15 @@ namespace Uintah {
       SchedulerP d_subScheduler;           //!< Subscheduler for SPME::calculate() convergence loop
       bool d_recompileSubscheduler;        //!< Whether or not the subscheduler taskgraph needs recompilation
 
-      string d_coordinateFile;             //!< Name of file with coordinates and charges of all atoms
+      std::string d_coordinateFile;             //!< Name of file with coordinates and charges of all atoms
       std::vector<Atom> d_atomList;        //!< Individual atom neighbor list
 
       Electrostatics* d_electrostatics;    //!< The simulation Electrostatics instance
       NonBonded* d_nonbonded;              //!< The simulation NonBonded instance
       MDSystem* d_system;                  //!< The global MD system
 
-      vector<const VarLabel*> d_particleState;            //!< Atom (particle) state prior to relocation
-      vector<const VarLabel*> d_particleState_preReloc;   //!< For atom (particle) relocation
+      std::vector<const VarLabel*> d_particleState;            //!< Atom (particle) state prior to relocation
+      std::vector<const VarLabel*> d_particleState_preReloc;   //!< For atom (particle) relocation
 
       // copy constructor and assignment operator (privatized on purpose)
       MD(const MD&);

@@ -26,7 +26,8 @@
 #include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
-    
+using std::vector;
+
 AxiLinearInterpolator::AxiLinearInterpolator()
 {
   d_size = 8;

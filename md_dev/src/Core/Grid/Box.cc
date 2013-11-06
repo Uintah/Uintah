@@ -26,9 +26,8 @@
 #include <Core/Grid/Box.h>
 #include <iostream>
 
-#include <deque>
-
 using namespace Uintah;
+using std::deque;
 
 
 // A 'Box' is specified by two (3D) points.  However, all components (x,y,z) of the fist point (p1) must be less

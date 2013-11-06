@@ -39,7 +39,7 @@
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentViscosity.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
-#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BCCopier.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
 
 //-- Uintah includes --//

@@ -30,6 +30,8 @@
 #include <string>
 #include <algorithm>
 
+namespace SS = SpatialOps::structured;
+
 namespace Wasatch{
 
   typedef std::map<std::string,FieldTypes> StringMap;
@@ -81,8 +83,8 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   void get_bc_logicals( const Uintah::Patch* const patch,
-                        SpatialOps::structured::IntVec& bcMinus,
-                        SpatialOps::structured::IntVec& bcPlus )
+                        SS::IntVec& bcMinus,
+                        SS::IntVec& bcPlus )
   {
     for( int i=0; i<3; ++i ){
       bcMinus[i] = 1;
@@ -106,7 +108,6 @@ namespace Wasatch{
   get_memory_window_for_uintah_field( const Uintah::Patch* const patch,
                                       const bool withoutGhost)
   {
-    namespace SS = SpatialOps::structured;
     SS::IntVec bcMinus, bcPlus;
     get_bc_logicals( patch, bcMinus, bcPlus );
 
@@ -125,36 +126,46 @@ namespace Wasatch{
     return SS::MemoryWindow( glob, offset, extent );
   }
 
+  template<>
+  SpatialOps::structured::MemoryWindow
+  get_memory_window_for_uintah_field<SS::SingleValueField>( const Uintah::Patch* const patch,
+                                                            const bool withoutGhost )
+  {
+    const int nGhost = withoutGhost ? 0 : get_n_ghost<SS::SingleValueField>();
+    return SS::MemoryWindow( SS::IntVec(1,1,1), SS::IntVec(0,0,0), SS::IntVec(nGhost,nGhost,nGhost) );
+  }
+
+
   //------------------------------------------------------------------
 
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::SVolField  >(){ return Uintah::Ghost::AroundCells; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::SSurfXField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::SSurfYField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::SSurfZField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SVolField  >(){ return Uintah::Ghost::AroundCells; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SSurfXField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SSurfYField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SSurfZField>(){ return Uintah::Ghost::AroundFaces; }
 
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::XVolField  >(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::XSurfXField>(){ return Uintah::Ghost::AroundCells; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::XSurfYField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::XSurfZField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::XVolField  >(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::XSurfXField>(){ return Uintah::Ghost::AroundCells; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::XSurfYField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::XSurfZField>(){ return Uintah::Ghost::AroundFaces; }
 
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::YVolField  >(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::YSurfXField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::YSurfYField>(){ return Uintah::Ghost::AroundCells; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::YSurfZField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::YVolField  >(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::YSurfXField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::YSurfYField>(){ return Uintah::Ghost::AroundCells; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::YSurfZField>(){ return Uintah::Ghost::AroundFaces; }
 
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::ZVolField  >(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::ZSurfXField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::ZSurfYField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::ZSurfZField>(){ return Uintah::Ghost::AroundCells; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::ZVolField  >(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::ZSurfXField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::ZSurfYField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::ZSurfZField>(){ return Uintah::Ghost::AroundCells; }
 
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<double>(){ return Uintah::Ghost::None; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SingleValueField>(){ return Uintah::Ghost::None; }
   //------------------------------------------------------------------
 
   // macro shortcuts for explicit template instantiation
 #define declare_method( FIELDT )                                                \
-  template SpatialOps::structured::MemoryWindow                                 \
+  template SS::MemoryWindow                                 \
   get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const,       \
-                                              const bool withoutGhost);         \
+                                              const bool withoutGhost );        \
   template Uintah::Ghost::GhostType get_uintah_ghost_type<FIELDT>();
 
 #define declare_variants( VOLT )                \
@@ -163,10 +174,11 @@ namespace Wasatch{
   declare_method( FaceTypes<VOLT>::YFace );     \
   declare_method( FaceTypes<VOLT>::ZFace );
 
-  declare_variants( SpatialOps::structured::SVolField );
-  declare_variants( SpatialOps::structured::XVolField );
-  declare_variants( SpatialOps::structured::YVolField );
-  declare_variants( SpatialOps::structured::ZVolField );
+  declare_method( SS::SingleValueField );
+  declare_variants( SS::SVolField );
+  declare_variants( SS::XVolField );
+  declare_variants( SS::YVolField );
+  declare_variants( SS::ZVolField );
 
   //------------------------------------------------------------------
 

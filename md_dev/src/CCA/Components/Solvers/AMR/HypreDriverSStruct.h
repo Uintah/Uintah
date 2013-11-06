@@ -128,9 +128,9 @@ namespace Uintah {
     const HYPRE_SStructVector& getX(void) const { return _HX; }  // Solution
 
     //---------- Common for all var types ----------
-    virtual void printMatrix(const string& fileName = "output");
-    virtual void printRHS(const string& fileName = "output_b");
-    virtual void printSolution(const string& fileName = "output_x");
+    virtual void printMatrix(const std::string& fileName = "output");
+    virtual void printRHS(const std::string& fileName = "output_b");
+    virtual void printSolution(const std::string& fileName = "output_x");
     virtual void gatherSolutionVector(void);
     void printDataStatus(void);
 

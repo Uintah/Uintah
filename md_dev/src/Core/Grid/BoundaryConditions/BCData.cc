@@ -36,6 +36,8 @@ using namespace Uintah;
 using namespace SCIRun;
 using std::cerr;
 using std::endl;
+using std::vector;
+using std::string;
 
 // export SCI_DEBUG="BCDA_DBG:+"
 static DebugStream BCData_dbg("BCDATA_DBG",false);

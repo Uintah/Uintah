@@ -34,13 +34,13 @@ namespace Uintah {
 
 struct FileInfo : public RefCounted {
   
-  std::map<string, FILE *> files;       // filename is the key
+  std::map<std::string, FILE *> files;       // filename is the key
   
   // constructor computes the values
   FileInfo() {};
   
   ~FileInfo(){
-    std::map<string, FILE *>::iterator it;
+    std::map<std::string, FILE *>::iterator it;
     
     for ( it=files.begin() ; it != files.end(); it++ ){
       //std::cout << " closing file " << (*it).first << std::endl;

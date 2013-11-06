@@ -83,14 +83,14 @@ namespace Uintah {
     double d_filter_width;
     
     struct FilterScalar {
-      string name;
+      std::string name;
       double scale;
       const VarLabel* scalar;
       const VarLabel* scalarVariance;
       Material* matl;
       MaterialSet* matl_set;
     };
-    vector<FilterScalar*> filterScalars;
+    std::vector<FilterScalar*> filterScalars;
     
   };// End class Turbulence
 

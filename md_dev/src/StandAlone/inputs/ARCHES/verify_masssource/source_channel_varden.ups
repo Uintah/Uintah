@@ -205,11 +205,8 @@
         </ColdFlow>
       </Properties>
       <BoundaryConditions>
-        <use_new_bcs/>
       </BoundaryConditions>
       <ExplicitSolver>
-        <initial_dt>0.02</initial_dt>
-        <variable_dt>true</variable_dt>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
         <PressureSolver>
           <Parameters>

@@ -35,10 +35,8 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-using std::cerr;
-using std::ifstream;
-using std::ofstream;
 
+using namespace std;
 using namespace Uintah;
 
 ParticleCreator* ParticleCreatorFactory::create(ProblemSpecP& ps, 

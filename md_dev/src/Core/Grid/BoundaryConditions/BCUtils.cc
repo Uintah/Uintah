@@ -24,6 +24,8 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 
+using namespace std;
+
 namespace Uintah {
   
   //______________________________________________________________________

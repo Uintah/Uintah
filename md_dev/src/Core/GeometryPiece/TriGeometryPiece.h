@@ -37,7 +37,6 @@
 
 namespace Uintah {
 
-using std::vector;
 using namespace SCIRun;
 
 /**************************************
@@ -92,7 +91,7 @@ WARNING
          // Destructor
          virtual ~TriGeometryPiece();
 
-         static const string TYPE_NAME;
+         static const std::string TYPE_NAME;
          virtual std::string getType() const { return TYPE_NAME; }
 
          virtual GeometryPieceP clone() const;
@@ -114,18 +113,18 @@ WARNING
 
          virtual void outputHelper( ProblemSpecP & ps ) const;
          
-         void readPoints(const string& file);
-         void readTri(const string& file);
+         void readPoints(const std::string& file);
+         void readTri(const std::string& file);
          void makePlanes();
          void makeTriBoxes();
          void insideTriangle(Point& p, int i, int& NCS, int& NES) const;
          
          std::string d_file;
          Box d_box;
-         vector<Point>     d_points;
-         vector<IntVector> d_tri;
-         vector<Plane>     d_planes;
-         vector<Box>       d_boxes;
+         std::vector<Point>     d_points;
+         std::vector<IntVector> d_tri;
+         std::vector<Plane>     d_planes;
+         std::vector<Box>       d_boxes;
 
          UniformGrid* d_grid;
          

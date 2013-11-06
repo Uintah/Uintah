@@ -36,8 +36,7 @@
 using namespace Uintah;
 
 using namespace SCIRun;
-using std::map;
-using std::vector;
+using namespace std;
 
 static Mutex tdLock("TypeDescription::getMPIType lock");
 static CrowdMonitor tpLock("TypeDescription type lock"); 

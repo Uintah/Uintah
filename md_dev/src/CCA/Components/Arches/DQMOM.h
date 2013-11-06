@@ -104,7 +104,7 @@ public:
 
   /** @brief              Populate the map containing labels for each moment 
       @param allMoments   Vector containing all moment indices specified by user in <Moment> blocks within <DQMOM> block */
-  void populateMomentsMap( vector<MomentVector> allMoments );
+  void populateMomentsMap( std::vector<MomentVector> allMoments );
 
   /** @brief Schedule creation of linear solver object, creation of AX=B system, and solution of linear system. 
   */
@@ -146,46 +146,46 @@ public:
 private:
 
   void constructLinearSystem( LU              &A,
-                              vector<double>  &B,
-                              vector<double>  &weights,
-                              vector<double>  &weightedAbscissas,
-                              vector<double>  &models,
+                              std::vector<double>  &B,
+                              std::vector<double>  &weights,
+                              std::vector<double>  &weightedAbscissas,
+                              std::vector<double>  &models,
                               int              verbosity=0);
 
   void constructLinearSystem( DenseMatrix*    &AA,
                               ColumnMatrix*   &BB,
-                              vector<double>  &weights,
-                              vector<double>  &weightedAbscissas,
-                              vector<double>  &models,
+                              std::vector<double>  &weights,
+                              std::vector<double>  &weightedAbscissas,
+                              std::vector<double>  &models,
                               int              verbosity=0);
 
   void constructAopt( DenseMatrix*   &AA,
-                      vector<double> &Abscissas);
+                      std::vector<double> &Abscissas);
 
   void constructAopt_unw( DenseMatrix*   &AA,
-                          vector<double> &Abscissas);
+                          std::vector<double> &Abscissas);
 
   void constructBopt( ColumnMatrix*  &BB,
-                      vector<double> &weights,
-                      vector<double> &Abscissas,
-                      vector<double> &models);
+                      std::vector<double> &weights,
+                      std::vector<double> &Abscissas,
+                      std::vector<double> &models);
 
   void constructBopt_unw( ColumnMatrix*  &BB,
-                          vector<double> &Abscissas,
-                          vector<double> &models);
+                          std::vector<double> &Abscissas,
+                          std::vector<double> &models);
     
   void construct_Simplest_XX( ColumnMatrix*  &XX,
-                           vector<double> &models);
+                           std::vector<double> &models);
 
 
-  vector<string> InternalCoordinateEqnNames;
+  std::vector<std::string> InternalCoordinateEqnNames;
   
-  vector<MomentVector> momentIndexes; ///< Vector containing all moment indices
+  std::vector<MomentVector> momentIndexes; ///< Vector containing all moment indices
 
   std::vector<DQMOMEqn* > weightEqns;           ///< Weight equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
   std::vector<DQMOMEqn* > weightedAbscissaEqns; ///< Weighted abscissa equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
 
-  vector< vector<ModelBase*> > weightedAbscissaModels;
+  std::vector< std::vector<ModelBase*> > weightedAbscissaModels;
 
   ArchesLabel* d_fieldLabels; 
   
@@ -199,8 +199,8 @@ private:
   double d_maxConditionNumber;
   double d_w_small;
   double d_weight_scaling_constant;
-  vector<double> d_weighted_abscissa_scaling_constants;
-  vector<double> d_opt_abscissas;
+  std::vector<double> d_weighted_abscissa_scaling_constants;
+  std::vector<double> d_opt_abscissas;
   DenseMatrix* AAopt;
 
   const VarLabel* d_normBLabel; 
@@ -227,7 +227,7 @@ private:
 
   struct constCCVarWrapper_withModels {
     constCCVariable<double> data;
-    vector<constCCVarWrapperTypeDef> models;
+    std::vector<constCCVarWrapperTypeDef> models;
   };
 
 #if defined(VERIFY_LINEAR_SOLVER)
@@ -237,12 +237,12 @@ private:
   */
   void verifyLinearSolver();
 
-  string vls_file_A;      ///< Name of file containing A (matrix)
-  string vls_file_X;      ///< Name of file containing X (solution)
-  string vls_file_B;      ///< Name of file containing B (RHS)
-  string vls_file_R;      ///< Name of file containing R (residual)
-  string vls_file_normR;  ///< Name of file containing normR (residual normalized by B)
-  string vls_file_norms;  ///< Name of file containing norms (X, residuals)
+  std::string vls_file_A;      ///< Name of file containing A (matrix)
+  std::string vls_file_X;      ///< Name of file containing X (solution)
+  std::string vls_file_B;      ///< Name of file containing B (RHS)
+  std::string vls_file_R;      ///< Name of file containing R (residual)
+  std::string vls_file_normR;  ///< Name of file containing normR (residual normalized by B)
+  std::string vls_file_norms;  ///< Name of file containing norms (X, residuals)
 
   int vls_dimension;      ///< Dimension of problem
   double vls_tol;         ///< Tolerance for comparisons
@@ -257,10 +257,10 @@ private:
   */
   void verifyABConstruction();
 
-  string vab_file_A;      ///< Name of file containing A
-  string vab_file_B;      ///< Name of file containing B
-  string vab_file_inputs; ///< Name of file contianing weight and weighted abscissa inputs
-  string vab_file_moments;///< Name of file containing moment indices
+  std::string vab_file_A;      ///< Name of file containing A
+  std::string vab_file_B;      ///< Name of file containing B
+  std::string vab_file_inputs; ///< Name of file contianing weight and weighted abscissa inputs
+  std::string vab_file_moments;///< Name of file containing moment indices
 
   int vab_dimension;      ///< Dimension of the problem
   int vab_N, vab_N_xi;    ///< Number of environments, internal coordinates of the problem
@@ -272,7 +272,7 @@ private:
 #if defined(VERIFY_LINEAR_SOLVER) || defined(VERIFY_AB_CONSTRUCTION)
   /** @brief  Compares the elements of two vectors; if elements are not within tolerance,
               prints a message. */
-  void compare(vector<double> vector1, vector<double> vector2, double tolerance);
+  void compare(std::vector<double> vector1, std::vector<double> vector2, double tolerance);
   void compare(ColumnMatrix* &vector1, ColumnMatrix* &vector2, int dimension, double tolerance);
 
   /** @brief  Compares the elements of two matrices; if elements are not within tolerance,
@@ -285,23 +285,23 @@ private:
   void compare(double x1, double x2, double tolerance);
 
   /** @brief  Take input divided up by white space, tokenize it, and put it into a vector of strings. */
-  void tokenizeInput( const string& str,
-                      vector<string>& tokens,
-                      const string& delimiters = " " );
+  void tokenizeInput( const std::string& str,
+                      std::vector<std::string>& tokens,
+                      const std::string& delimiters = " " );
 
   /** @brief  Read a matrix from a file */
-  void getMatrixFromFile( LU& matrix, string filename );
-  void getMatrixFromFile( DenseMatrix* &matrix, int dimension, string filename );
+  void getMatrixFromFile( LU& matrix, std::string filename );
+  void getMatrixFromFile( DenseMatrix* &matrix, int dimension, std::string filename );
 
   /** @brief  Read a vector from a file */
-  void getVectorFromFile( vector<double>& vec, string filename );
-  void getVectorFromFile( ColumnMatrix* &vec, int dimension, string filename );
+  void getVectorFromFile( std::vector<double>& vec, std::string filename );
+  void getVectorFromFile( ColumnMatrix* &vec, int dimension, std::string filename );
 
   /** @brief   Read a vector from an already-open filestream */
-  void getVectorFromFile( vector<double>& vec, ifstream& filestream );
+  void getVectorFromFile( std::vector<double>& vec, ifstream& filestream );
   
   /** @brief  Read moment indices from a file */
-  void getMomentsFromFile( vector<MomentVector>& moments, string filename );
+  void getMomentsFromFile( std::vector<MomentVector>& moments, std::string filename );
 
 #endif
 

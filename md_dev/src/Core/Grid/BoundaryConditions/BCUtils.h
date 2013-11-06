@@ -31,7 +31,7 @@
 
 namespace Uintah {
   
-  void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const MaterialSubset* matls);
+  void is_BC_specified(const ProblemSpecP& prob_spec, std::string variable, const MaterialSubset* matls);
   
   
   /* ---------------------------------------------------------------------
@@ -43,13 +43,13 @@ namespace Uintah {
    ---------------------------------------------------------------------  */
   template <class T>
   bool getIteratorBCValueBCKind( const Patch* patch,
-                                const Patch::FaceType face,
-                                const int child,
-                                const string& desc,
-                                const int mat_id,
-                                T& bc_value,
-                                Iterator& bound_ptr,
-                                string& bc_kind)
+                                 const Patch::FaceType face,
+                                 const int child,
+                                 const std::string& desc,
+                                 const int mat_id,
+                                 T& bc_value,
+                                 Iterator& bound_ptr,
+                                 std::string& bc_kind)
   {
     bc_value=T(-9);
     bc_kind="NotSet";
@@ -85,7 +85,7 @@ namespace Uintah {
     // Symmetry
     if( !foundBC ){
       bc = bcd->getBoundCondData(mat_id,"Symmetric",child);
-      string test =(bc) ? bc->getBCType() : "NotSet";
+      std::string test =(bc) ? bc->getBCType() : "NotSet";
       
       if (test == "symmetry") {
         bc_kind  = "symmetry";
@@ -114,7 +114,7 @@ namespace Uintah {
   bool getIteratorBCValue( const Patch* patch,
                           const Patch::FaceType face,
                           const int child,
-                          const string& desc,
+                          const std::string& desc,
                           const int mat_id,
                           T& bc_value,
                           Iterator& bound_ptr )
@@ -165,7 +165,7 @@ namespace Uintah {
   bool getBCValue( const Patch* patch,
                   const Patch::FaceType face,
                   const int child,
-                  const string& desc,
+                  const std::string& desc,
                   const int mat_id,
                   T& bc_value )
   {
@@ -193,12 +193,12 @@ namespace Uintah {
   
   void
   getBCKind( const Patch* patch,
-            const Patch::FaceType face,
-            const int child,
-            const string& desc,
-            const int mat_id,
-            std::string& bc_kind,
-            std::string& face_label );
+             const Patch::FaceType face,
+             const int child,
+             const std::string& desc,
+             const int mat_id,
+             std::string& bc_kind,
+             std::string& face_label );
   
   //______________________________________________________________________
   //  Neumann BC:  CCVariable

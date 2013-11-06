@@ -1236,10 +1236,10 @@ class Task {
                       const ProcessorGroup* pg,
                       const PatchSubset*,
                       const MaterialSubset*,
-                      vector<DataWarehouseP>& dws,
+                      std::vector<DataWarehouseP>& dws,
                       void *stream);
 
-    inline const string& getName() const
+    inline const std::string& getName() const
     {
       return d_taskName;
     }
@@ -1419,7 +1419,7 @@ class Task {
 
     int mapDataWarehouse(WhichDW dw) const;
     DataWarehouse* mapDataWarehouse(WhichDW dw,
-                                    vector<DataWarehouseP>& dws) const;
+                                    std::vector<DataWarehouseP>& dws) const;
 
     int getSortedOrder() const
     {

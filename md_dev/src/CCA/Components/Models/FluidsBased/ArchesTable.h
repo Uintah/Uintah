@@ -31,7 +31,6 @@
 
 namespace Uintah {
 
-  using std::stringstream;
 
 /****************************************
 
@@ -67,23 +66,23 @@ WARNING
     virtual ~ArchesTable();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-    virtual void addIndependentVariable(const string&);
-    virtual int addDependentVariable(const string&);
+    virtual void addIndependentVariable(const std::string&);
+    virtual int addDependentVariable(const std::string&);
     
     virtual void setup(const bool cerrSwitch);
     
     virtual void interpolate(int index, CCVariable<double>& result,
                              const CellIterator&,
-                             vector<constCCVariable<double> >& independents);
-    virtual double interpolate(int index, vector<double>& independents);
+                             std::vector<constCCVariable<double> >& independents);
+    virtual double interpolate(int index, std::vector<double>& independents);
 
   private:
 
     struct InterpAxis {
       InterpAxis(int size, int stride);
       InterpAxis(const InterpAxis* copy, int newStride);
-      vector<double> weights;
-      vector<long> offset;
+      std::vector<double> weights;
+      std::vector<long> offset;
       bool uniform;
       double dx;
       int useCount;
@@ -92,9 +91,9 @@ WARNING
     };
 
     struct Ind {
-      string name;
+      std::string name;
     };
-    vector<Ind*> inds;
+    std::vector<Ind*> inds;
 
     struct Expr {
       char op;
@@ -106,7 +105,7 @@ WARNING
         : op('d'), child1(0), child2(0), var(var)
       {
       }
-      Expr(const string& id)
+      Expr(const std::string& id)
         : op('i'), child1(0), child2(0), id(id)
       {
       }
@@ -118,7 +117,7 @@ WARNING
       Expr* child2;
       int var;
       double constant;
-      string id;
+      std::string id;
       ~Expr() {
         if(child1)
           delete child1;
@@ -129,7 +128,7 @@ WARNING
 
     struct Dep {
       void outputProblemSpec(ProblemSpecP& ps);
-      string name;
+      std::string name;
       enum Type {
         ConstantValue,
         DerivedValue,
@@ -137,39 +136,39 @@ WARNING
       } type;
       double constantValue;
       double* data;
-      string expr_string;
+      std::string expr_string;
       Expr* expression;
-      vector<Ind*> myinds;
-      vector<InterpAxis*> axes;
+      std::vector<Ind*> myinds;
+      std::vector<InterpAxis*> axes;
       Dep(Type type) : type(type) { data = 0; expression = 0; }
       ~Dep();
       void addAxis(InterpAxis*);
     };
-    vector<Dep*> deps;
+    std::vector<Dep*> deps;
 
-    Expr* parse_addsub(string::iterator&  begin, string::iterator& end);
-    Expr* parse_muldiv(string::iterator&  begin, string::iterator& end);
-    Expr* parse_sign(string::iterator&  begin, string::iterator& end);
-    Expr* parse_idorconstant(string::iterator&  begin, string::iterator& end);
-    void evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
+    Expr* parse_addsub(std::string::iterator&  begin, std::string::iterator& end);
+    Expr* parse_muldiv(std::string::iterator&  begin, std::string::iterator& end);
+    Expr* parse_sign(std::string::iterator&  begin, std::string::iterator& end);
+    Expr* parse_idorconstant(std::string::iterator&  begin, std::string::iterator& end);
+    void evaluate(Expr* expr, std::vector<InterpAxis*>& out_axes,
                   double* data, int size);
-    void checkAxes(const vector<InterpAxis*>& a, const vector<InterpAxis*>& b,
-                   vector<InterpAxis*>& out_axes);
+    void checkAxes(const std::vector<InterpAxis*>& a, const std::vector<InterpAxis*>& b,
+                   std::vector<InterpAxis*>& out_axes);
 
-    string filename_;
+    std::string filename_;
     bool   file_read_;
 
     struct DefaultValue {
       void outputProblemSpec(ProblemSpecP& ps) {
-        stringstream ss;
+        std::stringstream ss;
         ss << value;
         ProblemSpecP dv_ps = ps->appendElement("defaultValue",ss.str());
         dv_ps->setAttribute("name",name);
       };
-      string name;
+      std::string name;
       double value;
     };
-    vector<DefaultValue*> defaults;
+    std::vector<DefaultValue*> defaults;
 
   };
 } // End namespace Uintah

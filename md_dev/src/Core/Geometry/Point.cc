@@ -44,10 +44,7 @@
 #include <iostream>
 #include <cstdio>
 
-using std::cerr;
-using std::endl;
-using std::istream;
-using std::ostream;
+using namespace std;
 
 namespace SCIRun {
 

@@ -140,8 +140,8 @@ TURBULENCETESTS=[
 BCTESTS=[
   ("bc-test-xy-inlet-outlet-pressure" , "warches-bc-test-xy-inlet-outlet-pressure.ups",  6,  "All",  ["exactComparison"] ),
   ("bc-test-xz-inlet-outlet-pressure" , "warches-bc-test-xz-inlet-outlet-pressure.ups",  6,  "All",  ["exactComparison"] ),
-  ("bc-test-yx-inlet-outlet-pressure" , "warches-bc-test-yx-inlet-outlet-pressure.ups",  6,  "All",  ["exactComparison"] ),  
-  ("bc-test-comprehensive" , "warches-bc-test-comprehensive.ups",  16,  "All",  ["exactComparison"] )
+  ("bc-test-yx-inlet-outlet-pressure" , "warches-bc-test-yx-inlet-outlet-pressure.ups",  6,  "All",  ["exactComparison"] )  
+#  ("bc-test-comprehensive" , "warches-bc-test-comprehensive.ups",  16,  "All",  ["exactComparison"] )
 ]
 # Tests that are run during local regression testing
 LOCALTESTS = VISCOUSTESTS + TURBULENCETESTS + BCTESTS

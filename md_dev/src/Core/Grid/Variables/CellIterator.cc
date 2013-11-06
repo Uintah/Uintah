@@ -31,7 +31,7 @@ using namespace Uintah;
 
 namespace Uintah
 {
-  ostream& operator<<(ostream& out, const CellIterator& c)
+  std::ostream& operator<<(std::ostream& out, const CellIterator& c)
   {
     out << "[CellIterator at " << *c << " of " << c.end() << ']';
     return out;

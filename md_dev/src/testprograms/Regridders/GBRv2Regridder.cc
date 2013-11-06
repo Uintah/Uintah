@@ -24,7 +24,8 @@
 
 #include <testprograms/Regridders/GBRv2Regridder.h>
 
-using namespace std;
+using std::vector;
+using std::cerr;
 
 namespace Uintah {
 
@@ -227,7 +228,7 @@ void GBRv2Regridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
                     cerr << "Error message" << ": '" << message << "'\n";
                   
                     task=request_to_task_[indicies_[c]];
-                    cerr << "Task status:" << task->status_ << " patch:" << task->patch_ << endl;
+                    cerr << "Task status:" << task->status_ << " patch:" << task->patch_ << std::endl;
                   }
                 }
                 cerr << "Entering infinite loop so debugger can be attached\n";
@@ -257,7 +258,7 @@ void GBRv2Regridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
         //no tasks on the immediate_q, tasks are on the taq_q
         if(tags_.size() + free_tag_end_ - free_tag_start_ < 2) //this if might not be needed 
         {
-          cout << "Error not enough tags\n";
+          std::cerr << "Error not enough tags\n";
           exit(0);
         }
       }

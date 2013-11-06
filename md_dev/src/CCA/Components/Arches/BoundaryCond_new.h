@@ -27,7 +27,7 @@ public:
   //** END WARNING!!! **//
 
   typedef std::map<IntVector, double> CellToValueMap; 
-  typedef std::map<Patch*, vector<CellToValueMap> > PatchToBCValueMap; 
+  typedef std::map<Patch*, std::vector<CellToValueMap> > PatchToBCValueMap;
   typedef std::map< std::string, const VarLabel* > LabelMap; 
   typedef std::map< std::string, double  > DoubleMap; 
   typedef std::map< std::string, DoubleMap > MapDoubleMap;
@@ -58,14 +58,14 @@ public:
   void setScalarValueBC(const ProcessorGroup*,
                         const Patch* patch,
                         CCVariable<double>& scalar, 
-                        string varname );
+                        std::string varname );
   /** @brief This method set the boundary values of a vector to a 
    * value such that the interpolation or gradient computed between the 
    * interior cell and boundary cell match the boundary condition. */ 
   void setVectorValueBC( const ProcessorGroup*,
     const Patch* patch,
     CCVariable<Vector>& vec, 
-    string varname );
+    std::string varname );
   /** @brief This method set the boundary values of a vector to a 
    * value such that the interpolation or gradient computed between the 
    * interior cell and boundary cell match the boundary condition. This is 
@@ -73,7 +73,7 @@ public:
   void setVectorValueBC( const ProcessorGroup*,
     const Patch* patch,
     CCVariable<Vector>& vec, constCCVariable<Vector>& const_vec, 
-    string varname );
+    std::string varname );
 
   /** @brief Sets the area fraction for each minus face according to the boundaries */
   void setAreaFraction( 
@@ -81,7 +81,7 @@ public:
     CCVariable<Vector>& areaFraction, 
     CCVariable<double>& volFraction, 
     constCCVariable<int>& pcell, 
-    vector<int> wallType, 
+    std::vector<int> wallType,
     const int flowType );
 
   /** @brief Compute the volume weights for the filter cell **/

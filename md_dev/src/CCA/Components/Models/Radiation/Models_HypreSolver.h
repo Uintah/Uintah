@@ -130,8 +130,8 @@ public:
 protected:
 
 private:
-  string d_precondType;
-  string d_solverType;
+  std::string d_precondType;
+  std::string d_solverType;
   int d_maxIter;
   double d_tolerance;
   bool d_shrad;

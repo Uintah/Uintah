@@ -2,7 +2,6 @@
 #include <iostream>
 #include <ostream>
 #include <fstream>
-using namespace std;
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
@@ -12,6 +11,7 @@ using namespace std;
 
 using namespace SCIRun;
 using namespace Uintah;
+using std::endl; using std::cout; using std::vector;
 
 #include "mpi.h"
 #include <testprograms/Regridders/TiledRegridder.h>
@@ -65,10 +65,10 @@ int main(int argc, char **argv)
     //cout << "rad: " << rad << endl;
 
     //create coarse patch set
-    vector<Region> patches;
-    vector<CCVariable<int> * > flags;
-    vector<IntVector> gflags;
-    vector<list<IntVector> > lflags;
+    std::vector<Region> patches;
+    std::vector<CCVariable<int> * > flags;
+    std::vector<IntVector> gflags;
+    std::vector<std::list<IntVector> > lflags;
 
     int total_patches=num_patches.x()*num_patches.y()*num_patches.z();
     int div=total_patches/num_procs;
@@ -145,7 +145,7 @@ int main(int argc, char **argv)
           (*f)[*iter]=0;
       }
     }
-    ofstream fout;
+    std::ofstream fout;
 #if 0
     fout.open("flags");
     outputFlags(gflags,fout);

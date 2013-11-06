@@ -400,7 +400,7 @@ namespace Uintah{
             gzFile file = gzopen( inputfile.c_str(), "r" );
 
             if ( file == NULL ) { 
-              proc0cout << "Error opening file: " << inputfile << " for intrusion boundary conditions. Errno: " << errno << endl;
+              proc0cout << "Error opening file: " << inputfile << " for intrusion boundary conditions. Errno: " << errno << std::endl;
               throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
             }
 
@@ -468,7 +468,7 @@ namespace Uintah{
           
             gzFile file = gzopen( file_name.c_str(), "r" ); 
             if ( file == NULL ) { 
-              proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
+              proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << std::endl;
               throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
             }
           
@@ -719,7 +719,7 @@ namespace Uintah{
             int total_variables; 
 
             if ( file == NULL ) { 
-              proc0cout << "Error opening file: " << _file_reference << " for intrusion boundary conditions. Errno: " << errno << endl;
+              proc0cout << "Error opening file: " << _file_reference << " for intrusion boundary conditions. Errno: " << errno << std::endl;
               throw ProblemSetupException("Unable to open the given input file: " + _file_reference, __FILE__, __LINE__);
             }
 
@@ -885,7 +885,7 @@ namespace Uintah{
           
             gzFile file = gzopen( file_name.c_str(), "r" ); 
             if ( file == NULL ) { 
-              proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
+              proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << std::endl;
               throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
             }
           
@@ -1174,27 +1174,27 @@ namespace Uintah{
         BCIterator::iterator iMAP = intrusion.bc_face_iterator.find( p );
         if ( iMAP == intrusion.bc_face_iterator.end() ) {
 
-          std::cout << "For patch = " << p << " ... no FACE iterator found for geometry " << endl;
+          std::cout << "For patch = " << p << " ... no FACE iterator found for geometry " << std::endl;
 
 
         } else { 
 
           for ( std::vector<IntVector>::iterator iVEC = iMAP->second.begin(); iVEC != iMAP->second.end(); iVEC++ ){ 
             IntVector v = *iVEC; 
-            std::cout << " For patch = " << p << " found a face interator at: " << v[0] << " " << v[1] << " " << v[2] << endl;
+            std::cout << " For patch = " << p << " found a face interator at: " << v[0] << " " << v[1] << " " << v[2] << std::endl;
           } 
         } 
         BCIterator::iterator iMAP2 = intrusion.interior_cell_iterator.find( p );
         if ( iMAP2 == intrusion.interior_cell_iterator.end() ) {
 
-          std::cout << "For patch = " << p << " ... no INTERIOR iterator found for geometry " << endl;
+          std::cout << "For patch = " << p << " ... no INTERIOR iterator found for geometry " << std::endl;
 
 
         } else { 
 
           for ( std::vector<IntVector>::iterator iVEC = iMAP2->second.begin(); iVEC != iMAP2->second.end(); iVEC++ ){ 
             IntVector v = *iVEC; 
-            std::cout << " For patch = " << p << " found a INTERIOR interator at: " << v[0] << " " << v[1] << " " << v[2] << endl;
+            std::cout << " For patch = " << p << " found a INTERIOR interator at: " << v[0] << " " << v[1] << " " << v[2] << std::endl;
           } 
         } 
       } 

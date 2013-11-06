@@ -164,8 +164,13 @@
 #include <fstream>
 
 using std::endl;
-
 using std::string;
+using std::vector;
+using std::ifstream;
+using std::ostringstream;
+using std::make_pair;
+using std::cout;
+
 using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
@@ -201,7 +206,6 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   d_with_mpmarches                 =  false;
   d_do_dummy_solve                 =  false; 
   d_doAMR                          = doAMR;
-  d_init_mix_frac                  = 0.0; 
   d_useWasatchMomRHS               = false;
 }
 
@@ -285,8 +289,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (db->findBlock("ExplicitSolver")){
     nlSolver = "explicit";
     db->findBlock("ExplicitSolver")->getWithDefault("extraProjection",     d_extraProjection,false);
-    db->findBlock("ExplicitSolver")->require("initial_dt", d_init_dt);
-    db->findBlock("ExplicitSolver")->require("variable_dt", d_variableTimeStep);
+    d_underflow = false; 
+    if ( db->findBlock("ExplicitSolver")->findBlock("scalarUnderflowCheck") ) d_underflow = true; 
+    db->findBlock("ExplicitSolver")->getWithDefault("initial_dt", d_initial_dt, 1.0);
+
   }
 
   // physical constant
@@ -431,7 +437,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   const Expr::Tag timeStepTag( "timestep", Expr::STATE_NONE );
   if( !(solngh->exprFactory->have_entry( timeTag )) ) {
     // register placeholder expressions for time and timestep
-    typedef Expr::PlaceHolder<double>  TimeT;
+    typedef Expr::PlaceHolder<SpatialOps::structured::SingleValueField>  TimeT;
     solngh->exprFactory->register_expression( new TimeT::Builder(timeTag) );
     solngh->exprFactory->register_expression( new TimeT::Builder(timeStepTag) );    
   }
@@ -540,11 +546,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 
                 SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
                 a_src.problemSetup( found_src_db );
-                cout << "**************************" << endl;
-                cout << " ***********************" << endl;
-                cout << "      " << srcname << "      " << endl;
-                cout << " ***********************" << endl;
-                cout << "**************************" << endl;
 
                 //Add any table lookup species to the table lookup list:                                      
                 std::vector<std::string> tbl_lookup = a_src.get_tablelookup_species();                        
@@ -1385,7 +1386,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
         indexHigh = indexHigh + IntVector(0,0,1);
       }
 
-      double delta_t = d_init_dt; // max value allowed
+      double delta_t = d_initial_dt;
       double small_num = 1e-30;
       double delta_t2 = delta_t;
 
@@ -1490,18 +1491,14 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
       }
 
 
-      if (d_variableTimeStep) {
-        delta_t = delta_t2;
-      }
-      else {
-        proc0cout << " Courant condition for time step: " << delta_t2 << endl;
-      }
-
-      //    proc0cout << "time step used: " << delta_t << endl;
+      delta_t = delta_t2; 
       new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label(), level);
+
     }
   } else {  // if not on the arches level
+
     new_dw->put(delt_vartype(9e99),  d_sharedState->get_delt_label(),level);
+
   }
 }
 
@@ -1574,9 +1571,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   }
 
   if (d_doingRestart) {
-
-    const PatchSet* patches= level->eachPatch();
-    const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
     d_doingRestart = false;
     d_lab->recompile_taskgraph = true;

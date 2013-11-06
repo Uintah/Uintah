@@ -43,6 +43,7 @@
 // TODO - optimize?
 
 using namespace Uintah;
+using namespace std;
 
 static DebugStream wave("Wave", false);
 

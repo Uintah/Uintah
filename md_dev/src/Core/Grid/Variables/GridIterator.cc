@@ -29,8 +29,8 @@
 
 namespace Uintah {
 
-ostream&
-operator<<( ostream& out, const GridIterator& c )
+std::ostream&
+operator<<( std::ostream& out, const GridIterator& c )
 {
   if(c.done()){
     out << "[GridIterator at end or the size is 0]";

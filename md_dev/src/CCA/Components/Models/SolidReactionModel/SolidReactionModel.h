@@ -121,8 +121,8 @@ namespace Uintah {
         RateModel    *rateModel;     // f(a)
         const Material* reactant;
         const Material* product;
-        string fromMaterial;
-        string toMaterial;
+        std::string fromMaterial;
+        std::string toMaterial;
         double d_E0;                 // Enthalpy change for reaction in J/kg
        
         ICELabel *Ilb;               // Used to get handles on temperature, pressure, etc.

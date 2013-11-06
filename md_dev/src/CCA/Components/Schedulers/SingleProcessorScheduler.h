@@ -29,11 +29,9 @@
 #include <CCA/Ports/DataWarehouseP.h>
  
 #include <Core/Grid/Task.h>
-#include <vector>
 #include <map>
 
 namespace Uintah {
-  using std::vector;
 
   class OnDemandDataWarehouse;
   class Task;

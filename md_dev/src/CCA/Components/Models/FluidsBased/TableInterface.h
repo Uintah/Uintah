@@ -64,15 +64,15 @@ WARNING
     virtual ~TableInterface();
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
-    virtual void addIndependentVariable(const string&) = 0;
-    virtual int addDependentVariable(const string&) = 0;
+    virtual void addIndependentVariable(const std::string&) = 0;
+    virtual int addDependentVariable(const std::string&) = 0;
     
     virtual void setup(const bool cerrSwitch) = 0;
     
     virtual void interpolate(int index, CCVariable<double>& result,
                              const CellIterator&,
-                             vector<constCCVariable<double> >& independents) = 0;
-    virtual double interpolate(int index, vector<double>& independents) = 0;
+                             std::vector<constCCVariable<double> >& independents) = 0;
+    virtual double interpolate(int index, std::vector<double>& independents) = 0;
 
   private:
   };

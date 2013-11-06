@@ -904,7 +904,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
     ASSERT(low == num_runs - 1);
     std::ostringstream index_str;
     index_str << index << " >= " << group_end_index;
-    throw InternalError(string("RunLengthEncoder<T>::seek (index out of bounds, ") + index_str.str() + ")",
+    throw InternalError(std::string("RunLengthEncoder<T>::seek (index out of bounds, ") + index_str.str() + ")",
                         __FILE__, __LINE__);
   }
 

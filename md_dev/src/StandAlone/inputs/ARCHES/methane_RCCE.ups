@@ -9,35 +9,35 @@
 
   <Solver type="hypre"/>
   <Time>
-    <maxTime>5</maxTime>
+    <maxTime>1.0</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
-    <max_Timesteps>21</max_Timesteps>
   </Time>
 
   <DataArchiver>
     <filebase>methane_RCCE.uda</filebase>
-    <outputTimestepInterval>5</outputTimestepInterval>
-    <outputInitTimestep/>
-    <save label="totalKineticEnergy"/>
-    <save label="CCVelocity"/>
-    <save label="enthalpy"/>
+    <outputInterval>0.1</outputInterval>
     <save label="cellType"/>
-    <save label="comb_eff"/>
-
-    <!-- table --> 
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="CCVelocity"/>
+    <save label="viscosityCTS"/>
+    <save label="div_q"/>
+    <save label="scalar_var"/>
     <save label="mixture_fraction"/>
     <save label="mixture_fraction_2"/>
     <save label="heat_loss"/>
-    <save label="CO2"         table_lookup ="true"/>
-    <save label="H2O"         table_lookup ="true"/>
-    <save label="density"     table_lookup ="true"/>
-    <save label="temperature" table_lookup ="true"/>
-    <save label="C*H4"        table_lookup ="true"/>
-
-    <checkpoint cycle="2" interval="0.05"/>
+    <save label="density"/>
+    <save label="temperature" table_lookup="true"/>
+    <save label="C*H4" table_lookup="true"/>
+    <save label="CO2" table_lookup="true"/>
+    <save label="velocityDivergence"/>
+    <save label="continuityResidual"/>
+    <save label="abskg"/>
+    <save label="soot"/>
+    <checkpoint cycle="2" interval="0.2"/>
     <compression>gzip</compression>
   </DataArchiver>
 
@@ -200,7 +200,7 @@
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <conv_scheme>super_bee</conv_scheme>
+          <conv_scheme>upwind</conv_scheme>
           <determines_properties/>
           <initialization type="constant">
             <constant>0.0</constant>
@@ -215,7 +215,7 @@
         <Eqn label="mixture_fraction_2" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <conv_scheme>super_bee</conv_scheme>
+          <conv_scheme>upwind</conv_scheme>
           <determines_properties/>
           <initialization type="constant">
             <constant>0.0</constant>
@@ -232,7 +232,7 @@
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <conv_scheme>super_bee</conv_scheme>
+          <conv_scheme>upwind</conv_scheme>
           <determines_properties/>
           <initialization type="tabulated">
             <depend_varname>adiabaticenthalpy</depend_varname>
@@ -276,10 +276,11 @@
           <src label="div_q" type="do_radiation">
             <calc_frequency>10</calc_frequency>
             <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
+            <soot_label>soot</soot_label>
             <DORadiationModel>
               <opl>3.0</opl>
               <LinearSolver type="hypre">
-                <res_tol>1.0e-7</res_tol>
+                <res_tol>1.0e-10</res_tol>
                 <ksptype>gmres</ksptype>
                 <pctype>jacobi</pctype>
                 <max_iter>275</max_iter>
@@ -305,20 +306,34 @@
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
+        <model type="empirical_soot" label="soot">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <carbon_content_fuel>0.75</carbon_content_fuel>
+          <carbon_content_ox>0.0</carbon_content_ox>
+          <E_st>0.08</E_st>
+          <temperature_label>temperature</temperature_label>
+          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
+        </model>
+        <model type="scalsim_variance" label="scalar_var">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
+          <density_label>density</density_label>
+          <variance_coefficient>0.14</variance_coefficient> <!-- Warning: not a good default value --> 
+        </model>
       </PropertyModels>
 
       <BoundaryConditions>
-        <use_new_bcs/>
+        <suppress_corner_recirculation/>
       </BoundaryConditions>
 
       <ExplicitSolver>
-
-        <initial_dt>0.05</initial_dt>
-        <variable_dt>true</variable_dt>
-
         <PressureSolver>
           <Parameters>
-            <tolerance>     1.0e-9</tolerance>
+            <tolerance>     1.0e-10</tolerance>
             <solver>        cg    </solver>
             <preconditioner>pfmg  </preconditioner>
             <maxiterations> 75    </maxiterations>
@@ -329,10 +344,6 @@
         <MomentumSolver>
           <convection_scheme>upwind</convection_scheme>
         </MomentumSolver>
-
-        <MixtureFractionSolver>
-          <convection_scheme>central-upwind</convection_scheme>
-        </MixtureFractionSolver>
 
       </ExplicitSolver>
     </ARCHES>
