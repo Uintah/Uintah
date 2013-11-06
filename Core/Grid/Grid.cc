@@ -700,14 +700,33 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           }
         }
         
-        IntVector lowCell  = level->getCellIndex(lower+Vector(1.e-14,1.e-14,1.e-14));
-        IntVector highCell = level->getCellIndex(upper+Vector(1.e-14,1.e-14,1.e-14));
+        double epsilon = 1.e-10;
+
+        // These lines of code need to add a small epsilon to a number.  If the number
+        // is very large, then adding a fixed epsilon does not do anything (as there
+        // would not be enough precision to account for this).  Therefore, we use the
+        // following 'magic' (multiply by '1+epsilon').  In all cases except when the
+        // number is 0, multiplying by (1 + epsilon) has the desired effect... However,
+        // when the number is 0 this doesn't work, so we have the extra '+epsilon'.
+        //
+        // For example: (Numbers are simplified for illustrative purposes and may not
+        //               be actually large enough to exhibit the actual behavior.)
+        //
+        //        1 + 0.000000001 =>        1.000000001  (This works correctly!)
+        // 99999999 + 0.000000001 => 99999999            (This returns the 'wrong' answer!)
+
+        IntVector lowCell  = level->getCellIndex(lower+Vector(lower.x()*(1+epsilon)+epsilon,
+                                                              lower.y()*(1+epsilon)+epsilon,
+                                                              lower.z()*(1+epsilon)+epsilon));
+        IntVector highCell = level->getCellIndex(upper+Vector(upper.x()*(1+epsilon)+epsilon,
+                                                              upper.y()*(1+epsilon)+epsilon,
+                                                              upper.z()*(1+epsilon)+epsilon));
         Point lower2 = level->getNodePosition(lowCell);
         Point upper2 = level->getNodePosition(highCell);
         double diff_lower = (lower2-lower).length();
         double diff_upper = (upper2-upper).length();
         
-        if(diff_lower > 1.e-14) {
+        if(diff_lower > epsilon) {
           cerr << "lower=" << lower << '\n';
           cerr << "lowCell =" << lowCell << '\n';
           cerr << "highCell =" << highCell << '\n';
@@ -716,7 +735,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           
           throw ProblemSetupException("Box lower corner does not coincide with grid", __FILE__, __LINE__);
         }
-        if(diff_upper > 1.e-14){
+        if(diff_upper > epsilon){
           cerr << "upper=" << upper << '\n';
           cerr << "lowCell =" << lowCell << '\n';
           cerr << "highCell =" << highCell << '\n';

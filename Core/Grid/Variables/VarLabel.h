@@ -33,8 +33,6 @@
 
 namespace Uintah {
 
-  using SCIRun::IntVector;
-
   class TypeDescription;
   class Patch;
 
@@ -73,27 +71,26 @@ namespace Uintah {
       PositionVariable
     };
 
-
     // Ensure the uniqueness of VarLabel names (same name, same object).
-    static VarLabel* create(const std::string&, const TypeDescription*,
-                            const IntVector& boundaryLayer = IntVector(0,0,0),
-                            VarType vartype = Normal);
+    static VarLabel* create( const std::string       & name,
+                             const TypeDescription   * type_description,
+                             const SCIRun::IntVector & boundaryLayer = SCIRun::IntVector(0,0,0),
+                                   VarType             vartype = Normal );
 
-    static bool destroy(const VarLabel* label);
+    static bool destroy( const VarLabel * label );
 
-    inline const std::string& getName() const {
-      return d_name;
-    }
-    std::string getFullName(int matlIndex, const Patch* patch) const;
+    inline const std::string & getName() const { return d_name;  }
+    std::string getFullName( int matlIndex, const Patch * patch ) const;
+
     bool isPositionVariable() const {
       return d_vartype == PositionVariable;
     }
 
-    const TypeDescription* typeDescription() const {
+    const TypeDescription * typeDescription() const {
       return d_td;
     }
 
-    IntVector getBoundaryLayer() const {
+    SCIRun::IntVector getBoundaryLayer() const {
       return d_boundaryLayer;
     }
 
@@ -132,37 +129,38 @@ namespace Uintah {
     
     const std::string& getCompressionMode() const {
       return (d_compressionMode == "default") ?
-        defaultCompressionMode : d_compressionMode;
+        d_defaultCompressionMode : d_compressionMode;
     }
      
-    static void setDefaultCompressionMode(std::string compressionMode)
-      { defaultCompressionMode = compressionMode; }
+    static void setDefaultCompressionMode( const std::string & compressionMode ) {
+      d_defaultCompressionMode = compressionMode;
+    }
 
     static void printAll(); // for debugging
      
     std::string d_name;
 
-     friend std::ostream & operator<<( std::ostream & out, const Uintah::VarLabel & vl );
+    friend std::ostream & operator<<( std::ostream & out, const Uintah::VarLabel & vl );
 
   private:
     // You must use VarLabel::create.
     VarLabel(const std::string&, const TypeDescription*,
-             const IntVector& boundaryLayer, VarType vartype);
+             const SCIRun::IntVector& boundaryLayer, VarType vartype);
     // You must use destroy.
     ~VarLabel();   
      
-    const TypeDescription* d_td;
-    IntVector              d_boundaryLayer;
-    VarType                d_vartype;
-    mutable std::string                 d_compressionMode;
-    static std::string defaultCompressionMode;
-    
+    const   TypeDescription   * d_td;
+            SCIRun::IntVector   d_boundaryLayer;
+            VarType             d_vartype;
+    mutable std::string         d_compressionMode;
+    static  std::string         d_defaultCompressionMode;
+
     // Allow a variable of this label to be computed multiple
     // times in a TaskGraph without complaining.
-    bool                   d_allowMultipleComputes;
+    bool                        d_allowMultipleComputes;
      
-    VarLabel(const VarLabel&);
-    VarLabel& operator=(const VarLabel&);
+    VarLabel( const VarLabel & );
+    VarLabel & operator=( const VarLabel & );
   };
 } // End namespace Uintah
 

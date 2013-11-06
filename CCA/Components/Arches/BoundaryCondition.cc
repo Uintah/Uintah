@@ -1911,10 +1911,32 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
   d_bc_type_to_string.insert( std::make_pair( STABL          , "StABL" ) ); 
   d_bc_type_to_string.insert( std::make_pair( WALL           , "WallBC" ) );
 
+
+  // qwerty
+  map<string, bool> faces_found;
+  faces_found["x+"] = false;
+  faces_found["x-"] = false;
+  faces_found["y+"] = false;
+  faces_found["y-"] = false;
+  faces_found["z+"] = false;
+  faces_found["z-"] = false;
+
   // Now actually look for the boundary types
   if ( db_bc ) { 
-    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0; 
+    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0;
           db_face = db_face->findNextBlock("Face") ){
+
+      string face_name;
+      db_face->getAttribute("side", face_name);
+      if( face_name != "" ) { // Is "" if not a 'side'. (eg. a 'circle')
+        if( faces_found[face_name] == true ) {
+          throw ProblemSetupException("BoundaryCondtion face " + face_name + " specified more than once...",
+                                      __FILE__, __LINE__);
+        }
+        else {
+          faces_found[face_name] = true;
+        }
+      }
 
       string which_face; 
       int v_index=999;
@@ -2091,6 +2113,15 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         }
 
       }
+    }
+    if( faces_found["x+"] == false ||
+        faces_found["x-"] == false ||
+        faces_found["y+"] == false ||
+        faces_found["y-"] == false ||
+        faces_found["z+"] == false ||
+        faces_found["z-"] == false ) {
+      throw ProblemSetupException( "BoundaryCondtion: Not all faces 'x+, x-, y+, etc' specified... ", 
+                                   __FILE__, __LINE__);
     }
   }
 }
