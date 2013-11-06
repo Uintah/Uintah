@@ -178,7 +178,7 @@ namespace Uintah {
         static bool overlaps(const ComputeSubset<T>* s1,
             const ComputeSubset<T>* s2);
 
-        static bool compareElems(T e1, T e2);
+        static bool compareElems(const T e1, const T e2);
       private:
         
         // May pass back Handles to same sets that came in.
@@ -386,7 +386,7 @@ namespace Uintah {
         const Patch* e2);
 
   template<class T>
-    bool ComputeSubset<T>::compareElems(T e1, T e2)
+    bool ComputeSubset<T>::compareElems(const T e1, const T e2)
     { return e1 < e2; }
 
   //compute the interesection between s1 and s2
@@ -660,13 +660,10 @@ namespace Uintah {
   template<class T>
     bool ComputeSubset<T>::is_sorted() const
     {
-      T cur = get(0);
-      for(int i=1;i<size();i++){
-        T next = get(i);
-        if(!compareElems(cur, next)) {
+      for(int i=1;i<size();++i){
+        if(!compareElems(get(i-1),get(i))) {
           return false;
         }
-        cur=next;
       }
       return true;
     }
