@@ -71,7 +71,7 @@ class DensityCalculator
   typedef std::vector<double> DoubleVec;
 
   /*
-   * rhoEtaIncEta and reIEta mean "rhoeta included eta" and are using to show a
+   * rhoEta and reIEta mean "rhoeta included eta" and are using to show a
    * subset of the eta's which can be weighted by density.
    *
    * rhoetaExEta and reEEta mean "rhoeta excluded eta" and are using to show a
