@@ -141,35 +141,22 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   //______________________________________________________________________
   //         S O L V E   D I V Q
   //______________________________________________________________________
-  
-  if( threadID==0 && blockID == 0){
-    printf("%i    Before solveDivQ\n", tidX);
-  }
-  
-
   if( RT_flags.solveDivQ ){
-  
     // GPU equivalent of GridIterator loop - calculate sets of rays per thread
     if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
       #pragma unroll
-      for (int z = patch.lo.z; z <= patch.lo.z; z++) { // loop through z slices
-      
-          printf("      Inside Z patch loop thread: %d,%d,%d\n", tidX,tidY, z);
+      for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
       
         // calculate the index for individual threads
         int idx = INDEX3D( nCells.x, nCells.y, tidX, tidY,z );
 
         int3 origin = make_int3(tidX, tidY, z);  // for each thread
         double sumI = 0;
-if(origin.x == 0 && origin.y == 0 && origin.z ==0){
+        
         //__________________________________
         // ray loop
         #pragma unroll
         for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
-        
-/*`==========TESTING==========*/
-          printf("%i,%i        iRay %i \n",iRay,threadID, blockID);
-/*===========TESTING==========`*/
         
           double3 direction_vector = findRayDirectionDevice( randNumStates, RT_flags.isSeedRandom, origin, iRay, tidX );
           
@@ -177,8 +164,7 @@ if(origin.x == 0 && origin.y == 0 && origin.z ==0){
          
           updateSumIDevice( direction_vector, ray_location, origin, patch.dx,  sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
         } //Ray loop
-
-        
+ 
         //__________________________________
         //  Compute divQ
         divQ[origin] = 4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/RT_flags.nDivQRays) );
@@ -187,9 +173,9 @@ if(origin.x == 0 && origin.y == 0 && origin.z ==0){
         radiationVolQ[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/RT_flags.nDivQRays) ;
         
 /*`==========TESTING==========*/
-          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolQ: %g  abskg: %g,    sigmaT4: %g \n", 
+          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n", 
                     origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[origin], sigmaT4OverPi[origin]);
-}
+
 /*===========TESTING==========`*/
       }  // end z-slice loop
     }  // end domain boundary check
@@ -315,6 +301,7 @@ __device__ void updateSumIDevice ( double3& ray_direction,
                                    RMCRT_flags RT_flags)
 
 {
+
 /*`==========TESTING==========*/
   printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
 /*===========TESTING==========`*/  
@@ -363,7 +350,8 @@ __device__ void updateSumIDevice ( double3& ray_direction,
 
   //+++++++Begin ray tracing+++++++++++++++++++
   //Threshold while loop
-//  while (intensity > RT_flags.threshold){
+  while ( intensity > RT_flags.threshold ){
+
     DIR face = NONE;
     
     while (in_domain){
@@ -419,7 +407,8 @@ __device__ void updateSumIDevice ( double3& ray_direction,
       ray_location.z = ray_location.z + (disMin  * ray_direction.z);
       
 /*`==========TESTING==========*/
-//if(origin.x == 0 && origin.y == 0 && origin.z ==0){
+#if 1
+if(origin.x == 0 && origin.y == 0 && origin.z ==0){
     printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z);
     printf( " face %d ", face ); 
     printf( "tMax [%g,%g,%g] ",tMax.x,tMax.y, tMax.z);
@@ -429,7 +418,8 @@ __device__ void updateSumIDevice ( double3& ray_direction,
    
     printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
     printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %g\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur] );
-//} 
+} 
+#endif
 
 /*===========TESTING==========`*/
       //in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
@@ -501,10 +491,22 @@ __device__ void updateSumIDevice ( double3& ray_direction,
     sumI += wallEmissivity * sigmaT4OverPi[cur] * intensity;
 
     intensity = intensity * fs;
+    
 
     // when a ray reaches the end of the domain, we force it to terminate. 
     if( !RT_flags.allowReflect ) intensity = 0;
 
+
+/*`==========TESTING==========*/
+#if 1
+if(origin.x == 0 && origin.y == 0 && origin.z ==0 ){
+    printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i \n", 
+            cur.x, cur.y, cur.z, intensity,  exp(-optical_thickness), fs,RT_flags.allowReflect );
+    
+} 
+__syncthreads();
+#endif 
+/*===========TESTING==========`*/
 
 #if 0
     //__________________________________
@@ -514,7 +516,7 @@ __device__ void updateSumIDevice ( double3& ray_direction,
       ++nReflect;
     }
 #endif
-//  }  // threshold while loop.
+  }  // threshold while loop.
 } // end of updateSumI function
 
 
@@ -578,10 +580,13 @@ __device__ void updateElement( int3& var, const int& me, const int& face)
   switch (face) {
     case 0 :
       var.x = me;
+      break;
     case 1 :
       var.y = me;
+      break;
     case 2 :
       var.z = me;
+      break;
     default :
   }
 }
@@ -592,10 +597,13 @@ __device__ void updateElement( double3& var, const double& me, const int& face)
   switch (face) {
     case 0 :
       var.x = me;
+      break;
     case 1 :
       var.y = me;
+      break;
     case 2 :
       var.z = me;
+      break;
     default :
   }
 }

@@ -29,9 +29,8 @@
 #endif
 #include <Core/Grid/DbgOutput.h>
 
-
 #define BLOCKSIZE 16
-
+//#define PRINTF            // if using printf statements to debug
 using namespace Uintah;
 using namespace std;
 
@@ -62,6 +61,15 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   if ( doCarryForward( timestep, radCalc_freq) ) {
     return;
   }
+
+  //__________________________________
+  //  increase the size of the printbuffer on the device
+#ifdef PRINTF
+  size_t size;
+  cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize);
+  cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size );
+  printf(" Increasing the size of the print buffer to %d bytes\n", (int)10 * size );
+#endif
 
   //__________________________________
   // Determine the size of the domain.
@@ -164,7 +172,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
     /*`CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );      TESTING`*/
 
-    
     RT_flags.nRaySteps = 0;
 
     //__________________________________
