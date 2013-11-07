@@ -390,8 +390,6 @@ Ray::sched_initProperties( const LevelP& level,
     tsk->modifies( d_temperatureLabel );
     tsk->modifies( d_abskgLabel );
     tsk->modifies( d_cellTypeLabel );
-    tsk->computes( d_DcellTypeLabel );  //HACK
-
 
     sched->addTask( tsk, level->eachPatch(), d_matlSet ); 
   }
@@ -425,20 +423,6 @@ Ray::initProperties( const ProcessorGroup* pc,
 
     new_dw->getModifiable( abskg,    d_abskgLabel,     d_matl, patch );  
     abskg.initialize  ( 0.0 ); 
-    
-    
-/*`==========TESTING==========*/
-  // remove this hack after GPUGridVariable<int> is supported
-    CCVariable<int> cellType;
-    CCVariable<double> DcellType;
-    new_dw->getModifiable( cellType,  d_cellTypeLabel,  d_matl, patch );
-    new_dw->allocateAndPut(DcellType, d_DcellTypeLabel, d_matl, patch);
-    for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){
-      IntVector c = *iter;
-      DcellType[c] = (double) cellType[c];
-    } 
-/*===========TESTING==========`*/
-    
     
     IntVector pLow;
     IntVector pHigh;
@@ -925,7 +909,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
       IntVector origin = *iter; 
 
       double sumI = 0;
-      
+
       // ray loop
       for (int iRay=0; iRay < _nDivQRays; iRay++){
         
@@ -944,7 +928,12 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
       radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/_nDivQRays) ; 
-
+/*`==========TESTING==========*/
+#ifdef DEBUG
+          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n", 
+                    origin.x(), origin.y(), origin.z(), sumI,divQ[origin], radiationVolq[origin],abskg[origin], sigmaT4OverPi[origin]);
+#endif
+/*===========TESTING==========`*/
     }  // end cell iterator
   }  // end of if(_solveDivQ)
   
@@ -1621,6 +1610,10 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   tsk->modifies( d_sigmaT4_label ); 
   tsk->modifies( d_abskgLabel );
   tsk->modifies( d_cellTypeLabel );
+  
+/*`==========TESTING==========*/
+  tsk->computes( d_DcellTypeLabel );  //HACK 
+/*===========TESTING==========`*/
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
@@ -1698,6 +1691,16 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       setBC(abskg,    d_abskgLabel->getName(),       patch, d_matl);
       setBC(temp,     d_temperatureLabel->getName(), patch, d_matl);
       setBC(cellType, d_cellTypeLabel->getName(),    patch, d_matl);
+      
+/*`==========TESTING==========*/
+  // remove this hack after GPUGridVariable<int> is supported
+    CCVariable<double> DcellType;
+    new_dw->allocateAndPut(DcellType, d_DcellTypeLabel, d_matl, patch);
+    for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){
+      IntVector c = *iter;
+      DcellType[c] = (double) cellType[c];
+    } 
+/*===========TESTING==========`*/
 
 
       //__________________________________
@@ -2178,9 +2181,11 @@ void Ray::updateSumI ( Vector& ray_direction,
                        MTRand& mTwister)
 
 {
+/*`==========TESTING==========*/
 #ifdef DEBUG
   printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
-#endif
+#endif 
+/*===========TESTING==========`*/
   
   IntVector cur = origin;
   IntVector prevCell = cur;
@@ -2222,8 +2227,8 @@ void Ray::updateSumI ( Vector& ray_direction,
 
    //+++++++Begin ray tracing+++++++++++++++++++
    //Threshold while loop
-   while (intensity > _Threshold){
-
+   while ( intensity > _Threshold ){
+    
      DIR face = NONE;
 
      while (in_domain){
@@ -2260,7 +2265,7 @@ void Ray::updateSumI ( Vector& ray_direction,
   
  /*`==========TESTING==========*/
 #ifdef DEBUG
-//if(origin.x == 0 && origin.y == 0 && origin.z ==0){
+if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
     printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
     printf( " face %d ", face ); 
     printf( "tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
@@ -2269,8 +2274,8 @@ void Ray::updateSumI ( Vector& ray_direction,
     printf( "disMin %g \n",disMin ); 
    
     printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
-    printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g \n",abskg[cur],       sigmaT4OverPi[cur]);
-//} 
+    printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[cur], sigmaT4OverPi[cur], celltype[cur]);
+} 
 #endif
 /*===========TESTING==========`*/           
 //cout << "cur " << cur << " face " << face << " tmax " << tMax << " rayLoc " << ray_location << 
@@ -2342,8 +2347,17 @@ void Ray::updateSumI ( Vector& ray_direction,
      intensity = intensity * fs;
      
      // when a ray reaches the end of the domain, we force it to terminate. 
-     if(!_allowReflect) intensity = 0;                                 
-     
+     if(!_allowReflect) intensity = 0;
+                                 
+/*`==========TESTING==========*/
+#ifdef DEBUG
+if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
+    printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n", 
+           cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, _allowReflect );
+    
+} 
+#endif 
+/*===========TESTING==========`*/     
      //__________________________________
      //  Reflections
      if ( (intensity > _Threshold) && _allowReflect){
