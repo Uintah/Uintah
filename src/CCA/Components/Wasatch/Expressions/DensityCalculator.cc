@@ -170,7 +170,7 @@ DensityCalculator<FieldT>::nonlinear_solver( double& rho,
   using namespace std;
   const size_t neq = rhoEta.size();
   unsigned int itCounter = 0;
-  const unsigned int maxIter = 20;
+  const unsigned int maxIter = 5;
   
   orderedIvars_.clear();
   orderedIvars_ = theta;
@@ -199,6 +199,8 @@ DensityCalculator<FieldT>::nonlinear_solver( double& rho,
     delta_[i] = 1e-6 * eta[i] + 1e-11;
   }
 
+  const std::vector<std::pair<double,double> > bounds = eval.get_bounds();
+
   do{
     ++itCounter;
 
@@ -215,7 +217,8 @@ DensityCalculator<FieldT>::nonlinear_solver( double& rho,
 
     // Loop over different etas to construct the linear system
     for( size_t k=0; k<neq; ++k ){
-
+//#define USE_OLD_SOLVER
+#ifdef USE_OLD_SOLVER
       for( size_t i=0; i<neq; ++i ) {
         if( k==i ) etaTmp_[i] = eta[k] + delta_[k];
         else       etaTmp_[i] = eta[i];
@@ -233,6 +236,14 @@ DensityCalculator<FieldT>::nonlinear_solver( double& rho,
       for( size_t i=0; i<neq; ++i ) {
         jac_[i + k*neq] = (( etaTmp_[i] - rhoEta[i]/rhoplus ) - ( eta[i] - rhoEta[i]/rho )) / delta_[k];
       }
+#else
+      g_[k] = -( rho*eta[k] - rhoEta[k] );
+      for( size_t i=0; i<neq; ++i ){
+        // jcs could move the density derivative evaluation outside the loop and save it off.  Otherwise, this is a lot of duplicate calculation...
+        const double der = eval.derivative( &orderedIvars_[0], i );
+        jac_[i+k*neq] = eta[i] * der + rho;
+      }
+#endif
     } // linear system construction
 
     // Solve the linear system
@@ -248,13 +259,15 @@ DensityCalculator<FieldT>::nonlinear_solver( double& rho,
     relErr = 0.0;
     for( size_t i=0; i<neq; ++i ){
       eta[i] += g_[i];
-      relErr += std::abs( g_[i]/(std::abs(eta[i])+rtol) );
+      eta[i] = std::max( std::min( bounds[i].second,  eta[i] ), bounds[i].first );
+      relErr += std::abs( 2*g_[i]/(bounds[i].second+bounds[i].first) );
     }
+    relErr /= neq;
 
   } while( relErr>rtol && itCounter < maxIter );
 
   if( itCounter >= maxIter ){
-//    std::cout << itCounter << setprecision(15) << " problems!  " << rho << " , " << relErr << ", " << g_[0] << ", " << eta[0] <<", "<< rhoEta[0] << std::endl;
+//    std::cout << " problems!  " << rho << " , " << relErr << ", " << g_[0] << ", " << eta[0] <<", "<< rhoEta[0] << std::endl;
     return false;
   }
   //    std::cout << "converged in " << itCounter << " iterations.  eta=" << eta[0] << ", rhoeta=" << rho*eta[0] << ", rho=" << rho << std::endl;
