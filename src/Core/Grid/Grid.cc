@@ -715,12 +715,12 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         //        1 + 0.000000001 =>        1.000000001  (This works correctly!)
         // 99999999 + 0.000000001 => 99999999            (This returns the 'wrong' answer!)
 
-        IntVector lowCell  = level->getCellIndex(lower+Vector(lower.x()*(1+epsilon)+epsilon,
-                                                              lower.y()*(1+epsilon)+epsilon,
-                                                              lower.z()*(1+epsilon)+epsilon));
-        IntVector highCell = level->getCellIndex(upper+Vector(upper.x()*(1+epsilon)+epsilon,
-                                                              upper.y()*(1+epsilon)+epsilon,
-                                                              upper.z()*(1+epsilon)+epsilon));
+        IntVector lowCell  = level->getCellIndex(lower+Vector(lower.x()*epsilon+epsilon,
+                                                              lower.y()*epsilon+epsilon,
+                                                              lower.z()*epsilon+epsilon));
+        IntVector highCell = level->getCellIndex(upper+Vector(upper.x()*epsilon+epsilon,
+                                                              upper.y()*epsilon+epsilon,
+                                                              upper.z()*epsilon+epsilon));
         Point lower2 = level->getNodePosition(lowCell);
         Point upper2 = level->getNodePosition(highCell);
         double diff_lower = (lower2-lower).length();
