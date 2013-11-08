@@ -55,6 +55,7 @@
 #ifdef DEBUG
 #include <Core/Util/FancyAssert.h>
 #endif
+
 #define IV_ZERO IntVector(0,0,0)
 
 using namespace Uintah;
@@ -360,7 +361,7 @@ void SPME::calculate(const ProcessorGroup* pg,
     //  execute the tasks
     subscheduler->execute();
 
-    checkConvergence();
+    converged = checkConvergence();
     numIterations++;
   }
 
