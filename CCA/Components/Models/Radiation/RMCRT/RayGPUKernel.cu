@@ -40,7 +40,6 @@
 //  To Do
 //  - fix seed in random number generator
 //  - Figure out how to initialize variables.
-//  - Start using [] operators for int3
 //  - add BoundaryFlux and cellType variables
 //  - 
 
@@ -54,8 +53,8 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                dim3 dimBlock,
                                int matl,
                                patchParams patch,
-                               const int3 domainLo,
-                               const int3 domainHi,
+                               const Int3 domainLo,
+                               const Int3 domainHi,
                                curandState* randNumStates,
                                RMCRT_flags RT_flags,
                                varLabelNames labelNames,
@@ -577,8 +576,8 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    dim3 dimBlock,
                                    int matlIndex,
                                    patchParams patch,
-                                   const int3 domainLo,
-                                   const int3 domainHi,
+                                   const Int3 domainLo,
+                                   const Int3 domainHi,
                                    curandState* globalDevRandStates,
                                    cudaStream_t* stream,
                                    RMCRT_flags RT_flags,
