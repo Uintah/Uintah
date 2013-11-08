@@ -132,7 +132,6 @@ namespace Wasatch{
   
   class EqnTimestepAdaptorBase;
   class TimeStepper;
-  class CoordHelper;
   class TaskInterface;
 
   /**
@@ -262,6 +261,7 @@ namespace Wasatch{
     bool buildWasatchMaterial_;  ///< used for Wasatch-Arches coupling
     bool isRestarting_;
     int nRKStages_;
+    bool isPeriodic_;
     std::set<std::string> lockedFields_;   ///< prevent the ExpressionTree from reclaiming memory on these fields.
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;
@@ -278,8 +278,6 @@ namespace Wasatch{
     GraphCategories graphCategories_;
 
     PatchInfoMap patchInfoMap_; ///< Information about each patch
-
-    CoordHelper *icCoordHelper_;
 
     TimeStepper* timeStepper_;  ///< The TimeStepper used to advance equations registered here.
 

@@ -82,6 +82,7 @@ SRCS += \
         $(SRCDIR)/StableTimestep.cc       \
         $(SRCDIR)/Reduction.cc            \
         $(SRCDIR)/ReductionBase.cc        \
+        $(SRCDIR)/Coordinate.cc          \
         $(SRCDIR)/TabPropsHeatLossEvaluator.cc
 
 #
