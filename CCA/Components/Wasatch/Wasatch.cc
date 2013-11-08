@@ -721,10 +721,7 @@ namespace Wasatch{
     
     //_______________________________________
     // set the time
-    Expr::TagList timeTags;
-    timeTags.push_back( TagNames::self().time     );
-    timeTags.push_back( TagNames::self().timestep );
-    const Expr::Tag timeTag = TagNames::self().time;
+    const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().timestep ) );
     exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
 
     //_____________________________________________
@@ -1026,15 +1023,13 @@ namespace Wasatch{
     //_____________________________________________________________
     // create an expression to set the current time as a field that
     // will be available to all expressions if needed.
-    const Expr::Tag timeTag = TagNames::self().time;
     Expr::ExpressionID timeID;
     if( rkStage==1 ){
-      Expr::TagList timeTags;
-      timeTags.push_back( TagNames::self().time     );
-      timeTags.push_back( TagNames::self().timestep );
-      const Expr::Tag timeTag = TagNames::self().time;
+      const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().timestep ) );
       timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
-    } else {
+    }
+    else{
+      const Expr::Tag timeTag = TagNames::self().time;
       timeID = exprFactory.get_id(timeTag);
     }
 
