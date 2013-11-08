@@ -128,7 +128,8 @@ namespace Wasatch{
                                    GraphHelper* const graphHelper );
   
   void check_periodicity_extra_cells( const Uintah::ProblemSpecP& params,
-                                     Uintah::IntVector& extraCells );
+                                     Uintah::IntVector& extraCells,
+                                     bool& isPeriodic);
   
   class EqnTimestepAdaptorBase;
   class TimeStepper;

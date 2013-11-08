@@ -331,7 +331,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   // should pass the entire uintah input file params.
 
   Uintah::IntVector extraCells;
-  Wasatch::check_periodicity_extra_cells( params, extraCells);
+  bool isPeriodic;
+  Wasatch::check_periodicity_extra_cells( params, extraCells, isPeriodic);
 
   Wasatch::GraphHelper* const solngh = d_wasatch->graph_categories()[Wasatch::ADVANCE_SOLUTION];
   Wasatch::GraphHelper* const initgh = d_wasatch->graph_categories()[Wasatch::INITIALIZATION];
