@@ -228,8 +228,8 @@ INTRUSIONTESTS=[
   ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         
   ("intrusion_flow_past_objects_xy",           "intrusion_flow_past_objects_xy.ups",    16,  "All",  ["exactComparison","no_restart"] ),                         
   ("intrusion_flow_over_icse",                 "intrusion_flow_over_icse.ups",          16,  "All",  ["exactComparison","no_restart"] ),                         
-  ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ),
-  ("clip-with-intrusions-test",           "clip-with-intrusions-test.ups",    4,  "All",  ["exactComparison","no_restart"] )
+  ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] )
+#   ("clip-with-intrusions-test",           "clip-with-intrusions-test.ups",    4,  "All",  ["exactComparison","no_restart"] )
 ]
 
 PROJECTIONTESTS=[

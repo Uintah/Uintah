@@ -45,6 +45,7 @@
 //-- SpatialOps includes --//
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/Expressions/StableTimestep.h>
+#include <CCA/Components/Wasatch/CoordinateHelper.h>
 
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/FVStaggeredBCTools.h>
@@ -62,7 +63,6 @@
 //-- Wasatch includes --//
 #include "Wasatch.h"
 #include "WasatchMaterial.h"
-#include "CoordHelper.h"
 #include "FieldAdaptor.h"
 #include "TagNames.h"
 #include "TaskInterface.h"
@@ -91,7 +91,8 @@ namespace Wasatch{
     : Uintah::UintahParallelComponent( myworld ),
       buildTimeIntegrator_ ( true ),
       buildWasatchMaterial_( true ),
-      nRKStages_(1)
+      nRKStages_(1),
+      isPeriodic_( true )
   {
     proc0cout << std::endl
               << "-------------------------------------------------------------" << std::endl
@@ -106,7 +107,6 @@ namespace Wasatch{
               << std::endl;
 
     materials_     = NULL;
-    icCoordHelper_ = NULL;
     timeStepper_   = NULL;
     linSolver_     = NULL;
 
@@ -122,8 +122,6 @@ namespace Wasatch{
     graphCategories_[ TIMESTEP_SELECTION ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ ADVANCE_SOLUTION   ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ POSTPROCESSING     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
-
-    icCoordHelper_  = new CoordHelper( *(graphCategories_[INITIALIZATION]->exprFactory) );
 
     OldVariable::self().sync_with_wasatch( this );
     ReductionHelper::self().sync_with_wasatch( this );
@@ -149,7 +147,6 @@ namespace Wasatch{
       delete i->second;
     }
 
-    delete icCoordHelper_;
     if (buildTimeIntegrator_) delete timeStepper_;
 
     for( GraphCategories::iterator igc=graphCategories_.begin(); igc!=graphCategories_.end(); ++igc ){
@@ -196,7 +193,8 @@ namespace Wasatch{
   //--------------------------------------------------------------------
   
   void check_periodicity_extra_cells( const Uintah::ProblemSpecP& params,
-                                      Uintah::IntVector& extraCells )
+                                      Uintah::IntVector& extraCells,
+                                      bool& isPeriodic)
   {
     // disallow different periodicities on multiple levels
     std::vector<Uintah::IntVector> levelPeriodicityVectors;
@@ -251,15 +249,13 @@ namespace Wasatch{
     }
     
     Uintah::IntVector periodicityVector = levelPeriodicityVectors[0];
-    const bool isXPeriodic = (periodicityVector.x() == 1) ? true : false;
-    const bool isYPeriodic = (periodicityVector.y() == 1) ? true : false;
-    const bool isZPeriodic = (periodicityVector.z() == 1) ? true : false;
-
+    const bool isXPeriodic = periodicityVector.x() == 1;
+    const bool isYPeriodic = periodicityVector.y() == 1;
+    const bool isZPeriodic = periodicityVector.z() == 1;
+    isPeriodic = isXPeriodic || isYPeriodic || isZPeriodic;
 #   ifdef WASATCH_IN_ARCHES
     // we are only allowing for a single extra cell :(
     // make sure that extra cell and periodicity are consistent
-    bool isPeriodic = periodicityVector.x() == 1 || periodicityVector.y() == 1 || periodicityVector.z() == 1;
-    
     proc0cout << "periodicity = " << isPeriodic << std::endl;
     
     if( !foundExtraCells && !isPeriodic ){
@@ -333,7 +329,7 @@ namespace Wasatch{
                            Uintah::SimulationStateP& state)
   {
     Uintah::IntVector extraCells;
-    check_periodicity_extra_cells( params, extraCells);    
+    check_periodicity_extra_cells( params, extraCells, isPeriodic_);
     grid->setExtraCells(extraCells);
   }
   
@@ -388,6 +384,9 @@ namespace Wasatch{
 #    endif
     }
 
+    // register expressions that calculate coordinates
+    register_coordinate_expressions(graphCategories_, isPeriodic_);
+    
     //
     // extract the density tag for scalar transport equations and momentum equations
     // and perform error handling
@@ -763,15 +762,11 @@ namespace Wasatch{
                                                           materials_,
                                                           patchInfoMap_,
                                                           1, lockedFields_ );
-
-        // set coordinate values as required by the IC graph.
-        icCoordHelper_->create_task( sched, allPatches, materials_ );
-
         //_______________________________________________________
         // create the TaskInterface and schedule this task for
         // execution.  Note that field dependencies are assigned
         // within the TaskInterface object.
-        task->schedule( icCoordHelper_->field_tags(), 1 );
+        task->schedule();
         taskInterfaceList_.push_back( task );
       }
       catch( std::exception& err ){
