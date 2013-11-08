@@ -133,9 +133,8 @@ namespace Wasatch{
 
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
-      Expr::TagList theTagList;
       VolFractionNames& vNames = VolFractionNames::self();
-      theTagList.push_back( vNames.svol_frac_tag() );
+      const Expr::TagList theTagList = tag_list( vNames.svol_frac_tag() );
       Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
       factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
                                                                    theTagList,

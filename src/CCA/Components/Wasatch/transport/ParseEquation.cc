@@ -228,15 +228,13 @@ namespace Wasatch{
   //==================================================================
   
   void parse_poisson_equation( Uintah::ProblemSpecP poissonEqParams,
-                              GraphCategories& gc,
+                               GraphCategories& gc,
                                Uintah::SolverInterface& linSolver,
                                Uintah::SimulationStateP& sharedState) {
     std::string slnVariableName;
     poissonEqParams->get("SolutionVariable", slnVariableName);
-    Expr::TagList poissontags;
-    const Expr::Tag poissonVariableTag(slnVariableName, Expr::STATE_N);    
-    poissontags.push_back( poissonVariableTag );
-    poissontags.push_back( Expr::Tag( poissonVariableTag.name() + "_rhs_poisson_expr", pressure_tag().context() ) );
+    const Expr::Tag poissonVariableTag(slnVariableName, Expr::STATE_N);
+    const Expr::TagList poissontags( tag_list( poissonVariableTag, Expr::Tag( poissonVariableTag.name() + "_rhs_poisson_expr", pressure_tag().context() ) ) );
     const Expr::Tag rhsTag = parse_nametag( poissonEqParams->findBlock("PoissonRHS")->findBlock("NameTag"));    
     bool useRefPoint = false;
     double refValue = 0.0;
