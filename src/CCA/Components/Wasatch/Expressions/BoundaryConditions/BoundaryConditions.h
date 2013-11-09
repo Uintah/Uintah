@@ -238,7 +238,7 @@ private:
 /**
  *  \class 	BCCopier
  *  \ingroup 	Expressions
- *  \author 	Tony Saad
+ *  \author 	Amir Biglari
  *  \date    September, 2012
  *
  *  \brief Provides a mechanism to copy boundary values from one field to another.
@@ -255,9 +255,9 @@ public:
   {
   public:
     Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& srcTag )
+             const Expr::Tag& srcTag )
     : ExpressionBuilder(resultTag),
-    srcTag_ (srcTag)
+      srcTag_ (srcTag)
     {}
     Expr::ExpressionBase* build() const{ return new BCCopier(srcTag_); }
   private:

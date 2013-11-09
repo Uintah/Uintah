@@ -6,7 +6,7 @@
 
 template< typename FieldT >
 DensityCalculator<FieldT>::
-DensityCalculator( const InterpT* const evaluator,
+DensityCalculator( const InterpT& evaluator,
                    const Expr::TagList& rhoEtaTags,
                    const Expr::TagList& etaTags,
                    const Expr::TagList& orderedIvarTags )
@@ -40,12 +40,8 @@ void
 DensityCalculator<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  BOOST_FOREACH( const Expr::Tag& tag, rhoEtaTags_ ){
-    exprDeps.requires_expression( tag );
-  }
-  BOOST_FOREACH( const Expr::Tag& tag, thetaTags_ ){
-    exprDeps.requires_expression( tag );
-  }
+  BOOST_FOREACH( const Expr::Tag& tag, rhoEtaTags_ ) exprDeps.requires_expression( tag );
+  BOOST_FOREACH( const Expr::Tag& tag, thetaTags_  ) exprDeps.requires_expression( tag );
 }
 
 //--------------------------------------------------------------------
@@ -105,7 +101,7 @@ evaluate()
     }
 
     // calculate the result
-    const bool converged = nonlinear_solver( *irho , etaPoint_, thetaPoint_, rhoEtaPoint_, etaIndex_, *evaluator_, 1e-9 );
+    const bool converged = nonlinear_solver( *irho , etaPoint_, thetaPoint_, rhoEtaPoint_, etaIndex_, evaluator_, 1e-9 );
     if( !converged )  ++convergeFailed;
 
     // increment all iterators to the next grid point
@@ -123,7 +119,7 @@ evaluate()
 template< typename FieldT >
 DensityCalculator<FieldT>::
 Builder::Builder( const Expr::Tag& result,
-                  const InterpT* const densEvaluator,
+                  const InterpT& densEvaluator,
                   const Expr::TagList& rhoEtaTags,
                   const Expr::TagList& etaTags,
                   const Expr::TagList& orderedEtaTags )
@@ -131,7 +127,7 @@ Builder::Builder( const Expr::Tag& result,
   rhoEtaTs_    ( rhoEtaTags     ),
   etaTs_       ( etaTags        ),
   orderedIvarTs_( orderedEtaTags ),
-  interp_      ( densEvaluator  )
+  interp_       ( densEvaluator.clone() )
 {}
 
 //--------------------------------------------------------------------
@@ -141,7 +137,7 @@ Expr::ExpressionBase*
 DensityCalculator<FieldT>::
 Builder::build() const
 {
-  return new DensityCalculator<FieldT>( interp_, rhoEtaTs_, etaTs_, orderedIvarTs_);
+  return new DensityCalculator<FieldT>( *interp_, rhoEtaTs_, etaTs_, orderedIvarTs_);
 }
 
 //====================================================================

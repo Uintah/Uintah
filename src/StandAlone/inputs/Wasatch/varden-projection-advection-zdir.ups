@@ -32,9 +32,10 @@
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       
-      <ExtractDensity>
+      <ExtractVariable>
+        <NameInTable>Density</NameInTable>
         <NameTag name="density" state="STATE_NONE"/>
-      </ExtractDensity>
+      </ExtractVariable>
 
     </TabProps>
     
