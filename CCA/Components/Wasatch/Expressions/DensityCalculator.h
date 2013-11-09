@@ -80,7 +80,7 @@ class DensityCalculator
   const Expr::TagList rhoEtaTags_, etaTags_, orderedIvarTags_;
   Expr::TagList thetaTags_;
 
-  const InterpT* const evaluator_; ///< calculates \f$\rho=\mathcal{G}(\eta_1,\eta_2,\ldots,\eta_{n_\eta})\f$.
+  const InterpT& evaluator_; ///< calculates \f$\rho=\mathcal{G}(\eta_1,\eta_2,\ldots,\eta_{n_\eta})\f$.
 
   IndepVarVec rhoEta_;      ///< density-weighted independent variables
   IndepVarVec theta_;       ///< non-density-weighted independent variables
@@ -101,7 +101,7 @@ class DensityCalculator
   DoubleVec delta_, etaTmp_;
   std::vector<int> ipiv_;  ///< integer work array for linear solver
 
-  DensityCalculator( const InterpT* const evaluator,          ///< evaluate rho given etas & thetas
+  DensityCalculator( const InterpT& evaluator,                ///< evaluate rho given etas & thetas
                      const Expr::TagList& rhoEtaTags,         ///< rho*eta tag
                      const Expr::TagList& etaTags,            ///< Tags for eta
                      const Expr::TagList& orderedIvarTags );  ///< Tag for all of the etas & thetas in the correct order
@@ -131,11 +131,11 @@ public:
      *   variables that are not density weighted that we include in the analysis.
      */
     Builder( const Expr::Tag& result,
-             const InterpT* const densEvaluator,
+             const InterpT& densEvaluator,
              const Expr::TagList& rhoEtaTags,
              const Expr::TagList& etaTags,
              const Expr::TagList& orderedIvarTags );
-
+    ~Builder(){ delete interp_; }
     Expr::ExpressionBase* build() const;
   };
 
