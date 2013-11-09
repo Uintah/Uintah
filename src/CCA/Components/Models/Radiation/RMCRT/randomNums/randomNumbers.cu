@@ -1,3 +1,28 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2013 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -11,14 +36,6 @@
 
 #define BLKWIDTH 32
 
-#define CUDA_CALL(x) do { if((x)!=cudaSuccess) { \
-    printf("Error at %s:%d\n",__FILE__,__LINE__);\
-    return EXIT_FAILURE;}} while(0)
-
-#define CURAND_CALL(x) do { if((x)!=CURAND_STATUS_SUCCESS) { \
-    printf("Error at %s:%d\n",__FILE__,__LINE__);\
-    return EXIT_FAILURE;}} while(0)
-
 
 //______________________________________________________________________
 //
@@ -28,47 +45,31 @@
 //
 //______________________________________________________________________
 
-
-
 //______________________________________________________________________
 //
-inline int RoundDown(double d)
+inline int RoundUp(double d)
 {
-   if(d<0){
-    int i=-(int)-d;
-    if((double)i == d)
-      return i;
-    else
-      return i-1;
+  if(d>=0){
+    if((d-(int)d) == 0){
+      return (int)d;
+    } else{
+      return (int)(d+1);
+    }
   } else {
     return (int)d;
   }
 }
 //______________________________________________________________________
 //
-inline int RoundUp(double d)
-{
-    if(d>=0){
-        if((d-(int)d) == 0)
-            return (int)d;
-        else
-            return (int)(d+1);
-    } else {
-        return (int)d;
-    }
-}
-//______________________________________________________________________
-//
 void stopwatch( char message[], time_t start)
- 
 {    
-    double secs;
-    time_t stop;                 /* timing variables             */
-            
-    stop = time(NULL);
-    secs = difftime(stop, start);               
-    fprintf(stdout,"    %.f [s] %s  \n",secs, message);       
- }
+  double secs;
+  time_t stop;                 /* timing variables             */
+
+  stop = time(NULL);
+  secs = difftime(stop, start);               
+  fprintf(stdout,"    %.f [s] %s  \n",secs, message);       
+}
 //______________________________________________________________________
 //  CPU based random number generations
 void randCPU( double *M, int nRandNums)
@@ -149,20 +150,26 @@ __device__ double randDevice(curandState* globalState)
 //    Returns an random number  
 __device__ double randDblExcDevice(curandState* globalState)
 {
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    curandState localState = globalState[tid];
-    
-    double val = curand_uniform_double(&localState);
-    
-    globalState[tid] = localState;
-    return ( (double)val + 0.5 ) * (1.0/4294967296.0);
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  curandState localState = globalState[tid];
+  double val = curand_uniform(&localState);
+  globalState[tid] = localState;
+  return val;
 }
 
+//______________________________________________________________________
+//
+__global__ void setup_kernel(curandState* randNumStates)
+{
+   int tidX = threadIdx.x + blockIdx.x * blockDim.x;
+   /* Each thread gets same seed, a different sequence number, no offset */
+   curand_init(1234, tidX, 0, &randNumStates[tidX]);
+}
 //______________________________________________________________________
 //    Kernel:  
 __global__ void randNumKernel( curandState* randNumStates, double* M, double* N, int nRandNums )
 {
-
+  int tID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
   int tx  = threadIdx.x;
   int ty  = threadIdx.y;
   int row = blockIdx.y * BLKWIDTH + tx;
@@ -171,7 +178,7 @@ __global__ void randNumKernel( curandState* randNumStates, double* M, double* N,
   
   for (int k = 0; k < nRandNums; ++k){
     M[k] = randDblExcDevice( randNumStates );
-    N[k] = randDevice( randNumStates );
+    N[k] = randDblDevice( randNumStates );
   }
 }
 
@@ -225,14 +232,14 @@ void randDeviceGPU( double *M, double *N,int nRandNums)
   dim3 dimBlock(BLKWIDTH, BLKWIDTH, 1);
   dim3 dimGrid( xBlocks,  yBlocks,  1);
   
-  
   // setup random number generator states on the device, 1 for each thread
   curandState* randNumStates;
   int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
   cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState));
-  
+
   //__________________________________
   //  Global Memory Kernel
+  setup_kernel<<<dimGrid, dimBlock>>>( randNumStates );
   randNumKernel<<<dimGrid, dimBlock>>>( randNumStates, Md, Nd, nRandNums );
   
   //__________________________________
@@ -251,7 +258,7 @@ int main( int argc, char** argv)
 
 //  for(int power = 4; power<8; ++power) { 
 //    int nRandNums = pow(10,power);
-    int nRandNums = 10000;   
+    int nRandNums = 4;   
     fprintf(stdout,"__________________________________\n");
     fprintf(stdout," nRand %d  \n", nRandNums);
     
@@ -286,6 +293,7 @@ int main( int argc, char** argv)
     
     for (int i = 0; i< nRandNums; i++){
       fprintf( fp, "%i, %16.15E, %16.15E, %16.15E,  %16.15E\n",i, rand_CPU[i], rand_hostGPU[i], rand_devGPU_M[i], rand_devGPU_N[i] );
+      printf(      "%i, %16.15E, %16.15E, %16.15E,  %16.15E\n",i, rand_CPU[i], rand_hostGPU[i], rand_devGPU_M[i], rand_devGPU_N[i] );
     }
     fclose(fp);
     
