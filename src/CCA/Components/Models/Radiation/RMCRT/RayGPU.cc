@@ -31,6 +31,7 @@
 
 #define BLOCKSIZE 16
 //#define PRINTF            // if using printf statements to debug
+
 using namespace Uintah;
 using namespace std;
 
@@ -161,7 +162,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     patchP.ID     = patch->getID();
     patchP.nCells = make_int3(xdim, ydim, zdim);
 
-    // define dimesions of the thread grid to be launched
+    // define dimensions of the thread grid to be launched
     int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
     int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
     dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);

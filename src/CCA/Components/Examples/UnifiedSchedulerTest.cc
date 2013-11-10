@@ -39,13 +39,14 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <sci_defs/cuda_defs.h>
 
+#define BLOCKSIZE 8
+
 using namespace std;
 using namespace Uintah;
 
 UnifiedSchedulerTest::UnifiedSchedulerTest(const ProcessorGroup* myworld) :
     UintahParallelComponent(myworld)
 {
-
   phi_label = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
   residual_label = VarLabel::create("residual", sum_vartype::getTypeDescription());
 }
@@ -99,6 +100,7 @@ void UnifiedSchedulerTest::scheduleTimeAdvance(const LevelP& level,
 //  Task* task = scinew Task("GPUSchedulerTest::timeAdvanceCPU", this, &GPUSchedulerTest::timeAdvanceCPU);
 //  Task* task = scinew Task("GPUSchedulerTest::timeAdvance1DP", this, &GPUSchedulerTest::timeAdvance1DP);
 //  Task* task = scinew Task("GPUSchedulerTest::timeAdvance3DP", this, &GPUSchedulerTest::timeAdvance3DP);
+
   task->usesDevice(true);
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
@@ -159,15 +161,15 @@ void UnifiedSchedulerTest::initialize(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //
-void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event, 
-                                          const ProcessorGroup* pg,
-                                          const PatchSubset* patches,
-                                          const MaterialSubset* matls,
-                                          DataWarehouse* old_dw,
-                                          DataWarehouse* new_dw,
-                                          void *stream) 
+void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
+                                              const ProcessorGroup* pg,
+                                              const PatchSubset* patches,
+                                              const MaterialSubset* matls,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw,
+                                              void *stream)
 {
-  /**When Task is scheduled to CPU*/
+  // When Task is scheduled to CPU
   if (event == Task::CPU) {
     int matl = 0;
 
@@ -208,7 +210,7 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
     }
   }  //end CPU
 
-  /**When Task is scheduled to GPU*/
+  // When Task is scheduled to GPU
   if (event == Task::GPU) {
     // Do time steps
     int matl = 0;
@@ -236,28 +238,28 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
       uint3 domainLow = make_uint3(l.x(), l.y(), l.z());
       uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
 
-      // Set up number of thread blocks in X and Y directions accounting for dimensions not divisible by 8
-      int xBlocks = ((xdim % 8) == 0) ? (xdim / 8) : ((xdim / 8) + 1);
-      int yBlocks = ((ydim % 8) == 0) ? (ydim / 8) : ((ydim / 8) + 1);
-      dim3 dimGrid(xBlocks, yBlocks, 1); // grid dimensions (blocks per grid))
-
-      int tpbX = 8;
-      int tpbY = 8;
-      int tpbZ = 1;
-      dim3 dimBlock(tpbX, tpbY, tpbZ); // block dimensions (threads per block)
+      // define dimensions of the thread grid to be launched
+      int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
+      int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
+      dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
+      dim3 dimGrid(xblocks, yblocks, 1);
 
       // setup and launch kernel
+      GPUDataWarehouse* old_gpudw = old_dw->getGPUDW()->getdevice_ptr();
+      GPUDataWarehouse* new_gpudw = new_dw->getGPUDW()->getdevice_ptr();
+
       launchUnifiedSchedulerTestKernel(dimGrid,
-              dimBlock,
-              (cudaStream_t *) stream,
-              patch->getID(),
-              matl,
-              domainLow,
-              domainHigh,
-              old_dw->getGPUDW()->getdevice_ptr(),
-              new_dw->getGPUDW()->getdevice_ptr());
+                                       dimBlock,
+                                       (cudaStream_t*) stream,
+                                       patch->getID(),
+                                       matl,
+                                       domainLow,
+                                       domainHigh,
+                                       old_gpudw,
+                                       new_gpudw);
 
       new_dw->put(sum_vartype(residual), residual_label);
+
     } // end patch for loop
   } //end GPU
 }
