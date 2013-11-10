@@ -441,7 +441,6 @@ namespace Wasatch{
             
             std::string phiName;
             bcTypeParams->getAttribute("label",phiName);
-            std::cout << "functor applies to " << phiName << std::endl;
             
             BCFunctorMap::iterator iter = bcFunctorMap_.find(phiName);
             // check if we already have an entry for phiname
