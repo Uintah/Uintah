@@ -21,6 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 #include <CCA/Components/Examples/UnifiedSchedulerTest.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
@@ -129,7 +130,7 @@ void UnifiedSchedulerTest::computeStableTimestep(const ProcessorGroup* pg,
 void UnifiedSchedulerTest::initialize(const ProcessorGroup* pg,
                                       const PatchSubset* patches,
                                       const MaterialSubset* matls,
-                                      DataWarehouse* old_dw,
+                                      DataWarehouse* /*old_dw*/,
                                       DataWarehouse* new_dw)
 {
   int matl = 0;
@@ -167,7 +168,7 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
                                               const MaterialSubset* matls,
                                               DataWarehouse* old_dw,
                                               DataWarehouse* new_dw,
-                                              void *stream)
+                                              void* stream)
 {
   // When Task is scheduled to CPU
   if (event == Task::CPU) {
