@@ -1510,8 +1510,8 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Post H2D copy of " << req->var->getName() << " , size= " << numbytes << " from " << h_reqData
-                            << " to " << device_var.getPointer() << " , use stream " << dtask->getCUDAStream() << std::endl;
+                  gpu_stats << "Post H2D copy of " << req->var->getName() << ", size = " << numbytes << " from " << h_reqData
+                            << " to " << device_var.getPointer() << ", using stream " << dtask->getCUDAStream() << std::endl;
                 }
                 cerrLock.unlock();
               }
@@ -1581,7 +1581,7 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
                                              make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()));
               if (gpu_stats.active()) {
                 cerrLock.lock();
-                gpu_stats << "allocated device copy of " << comp->var->getName() << " ,size= " << device_var.getMemSize() << " at "
+                gpu_stats << "allocated device copy of " << comp->var->getName() << ", size = " << device_var.getMemSize() << " at "
                           << device_var.getPointer() << " on device " << dtask->getDeviceNum() << endl;
                 cerrLock.unlock();
               }
@@ -1677,8 +1677,8 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
                 }
                 if (gpu_stats.active()) {
                   cerrLock.lock();
-                  gpu_stats << "post D2H copy of " << comp->var->getName() << " ,size= " << device_var.getMemSize() << " to "
-                            << h_compData << " from " << device_ptr << " , use stream " << dtask->getCUDAStream() << std::endl;
+                  gpu_stats << "post D2H copy of " << comp->var->getName() << ", size = " << device_var.getMemSize() << " to "
+                            << h_compData << " from " << device_ptr << ", using stream " << dtask->getCUDAStream() << std::endl;
                   cerrLock.unlock();
                 }
                 CUDA_RT_SAFE_CALL(
@@ -1764,7 +1764,7 @@ cudaStream_t* UnifiedScheduler::getCudaStream(int device)
     CUDA_RT_SAFE_CALL( retVal = cudaStreamCreate(&(*stream)));
     if (gpu_stats.active()) {
       cerrLock.lock();
-      gpu_stats << "created cuda stream " << stream << " on device " << device << endl;
+      gpu_stats << "created CUDA stream " << stream << " on device " << device << std::endl;
       cerrLock.unlock();
     }
   }
