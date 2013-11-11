@@ -35,6 +35,7 @@ namespace Uintah {
   template<class T> class GPUArray3 {
 
     public:
+
       HOST_DEVICE virtual ~GPUArray3(){};
 
       HOST_DEVICE const T& operator[](const int3& idx) const { //get data from global index
