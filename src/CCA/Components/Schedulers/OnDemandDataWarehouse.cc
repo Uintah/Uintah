@@ -58,7 +58,6 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <Core/Parallel/BufferInfo.h>
-#include <CCA/Ports/Scheduler.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -75,8 +74,9 @@ using namespace Uintah;
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern SCIRun::Mutex       cerrLock;
+extern SCIRun::Mutex cerrLock;
 extern DebugStream mixedDebug;
+extern DebugStream use_single_device;
 
 static DebugStream dbg( "OnDemandDataWarehouse", false );
 static DebugStream gpudbg( "GPUDataWarehouse", false );
@@ -119,18 +119,26 @@ OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
   restart = false;
   hasRestarted_ = false;
   aborted = false;
+
 #ifdef HAVE_CUDA
   int numDevices;
   cudaError_t retVal;
-  CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
-  for (int i=0; i< numDevices; i++ ){
-    GPUDataWarehouse * gpuDW;
+
+  if (!use_single_device.active()) {
+    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+  } else {
+    numDevices = 1;
+  }
+
+  for (int i=0; i<numDevices; i++ ) {
+    GPUDataWarehouse* gpuDW;
     gpuDW = new GPUDataWarehouse();
     gpuDW->setDebug(gpudbg.active());
     gpuDW->init_device(i);
     d_gpuDWs.push_back(gpuDW);
   }
 #endif
+
 }
 //______________________________________________________________________
 //
@@ -179,12 +187,14 @@ void OnDemandDataWarehouse::clear()
   d_lvlock.writeLock();
   d_levelDB.clear();
   d_lvlock.writeUnlock();
+
 #ifdef HAVE_CUDA
-  for (int i=0; i<d_gpuDWs.size(); i++) {
+  for (size_t i=0; i<d_gpuDWs.size(); i++) {
     d_gpuDWs[i]->clear();
     delete d_gpuDWs[i];
   }
 #endif
+
 }
 //__________________________________
 //
