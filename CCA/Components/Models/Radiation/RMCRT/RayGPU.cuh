@@ -34,7 +34,9 @@
 #include <string>
 
 namespace Uintah {
+
 using namespace std;
+using namespace SCIRun;
 
 
 HOST_DEVICE struct varLabelNames{

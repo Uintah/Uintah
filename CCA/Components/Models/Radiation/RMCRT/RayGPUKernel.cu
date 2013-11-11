@@ -35,7 +35,6 @@
 
 #define DEBUG
 
-
 //__________________________________
 //  To Do
 //  - fix seed in random number generator
@@ -45,6 +44,8 @@
 
 
 namespace Uintah {
+
+using namespace SCIRun;
 
 //---------------------------------------------------------------------------
 // Kernel: The GPU ray tracer kernel
