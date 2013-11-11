@@ -140,21 +140,22 @@ __device__ double randDevice(curandState* globalState)
 
   int tid = threadIdx.x + blockIdx.x * blockDim.x;
   curandState localState = globalState[tid];
-  double val = curand(&localState);
+  double val = curand_uniform_double(&localState);
   globalState[tid] = localState;
-  return (double)val * (1.0/4294967295.0);
+  return val;
 }
 
 
 //______________________________________________________________________
-//    Returns an random number  
+//    Returns an random number  excluding 0 & 1.0.  See MersenneTwister.h
+//
 __device__ double randDblExcDevice(curandState* globalState)
 {
   int tid = threadIdx.x + blockIdx.x * blockDim.x;
   curandState localState = globalState[tid];
-  double val = curand_uniform(&localState);
+  double val = curand(&localState);
   globalState[tid] = localState;
-  return val;
+  return ( double(val) + 0.5 ) * (1.0/4294967296.0);
 }
 
 //______________________________________________________________________
@@ -178,7 +179,7 @@ __global__ void randNumKernel( curandState* randNumStates, double* M, double* N,
   
   for (int k = 0; k < nRandNums; ++k){
     M[k] = randDblExcDevice( randNumStates );
-    N[k] = randDblDevice( randNumStates );
+    N[k] = randDevice( randNumStates );
   }
 }
 
@@ -239,16 +240,26 @@ void randDeviceGPU( double *M, double *N,int nRandNums)
 
   //__________________________________
   //  Global Memory Kernel
+  time_t start = time(NULL);
   setup_kernel<<<dimGrid, dimBlock>>>( randNumStates );
+  stopwatch("  randDeviceGPU setup_kernel: ", start);
+  
+  start = time(NULL);
   randNumKernel<<<dimGrid, dimBlock>>>( randNumStates, Md, Nd, nRandNums );
+  stopwatch("  randDeviceGPU randNumKernel: ", start);
   
   //__________________________________
   //   copy from device memory and free memory
+  start = time(NULL);
   cudaMemcpy( M, Md, size, cudaMemcpyDeviceToHost );
   cudaMemcpy( N, Nd, size, cudaMemcpyDeviceToHost );
+  stopwatch(" randDeviceGPU memcopy: ", start);
+  
+  start = time(NULL);
   cudaFree( Md );
   cudaFree( Nd );
   cudaFree(randNumStates) ;
+  stopwatch("  randDeviceGPU free memory: ", start);
 }
 
 
@@ -258,7 +269,7 @@ int main( int argc, char** argv)
 
 //  for(int power = 4; power<8; ++power) { 
 //    int nRandNums = pow(10,power);
-    int nRandNums = 4;   
+    int nRandNums = 512;   
     fprintf(stdout,"__________________________________\n");
     fprintf(stdout," nRand %d  \n", nRandNums);
     
@@ -284,7 +295,7 @@ int main( int argc, char** argv)
      
     start = time(NULL);    
     randDeviceGPU( rand_devGPU_M, rand_devGPU_N, nRandNums);
-    stopwatch(" randHostGPU: ", start);
+    stopwatch(" randDeviceGPU: ", start);
     
     //__________________________________
     //  Output data
@@ -293,7 +304,7 @@ int main( int argc, char** argv)
     
     for (int i = 0; i< nRandNums; i++){
       fprintf( fp, "%i, %16.15E, %16.15E, %16.15E,  %16.15E\n",i, rand_CPU[i], rand_hostGPU[i], rand_devGPU_M[i], rand_devGPU_N[i] );
-      printf(      "%i, %16.15E, %16.15E, %16.15E,  %16.15E\n",i, rand_CPU[i], rand_hostGPU[i], rand_devGPU_M[i], rand_devGPU_N[i] );
+      //printf(      "%i, %16.15E, %16.15E, %16.15E,  %16.15E\n",i, rand_CPU[i], rand_hostGPU[i], rand_devGPU_M[i], rand_devGPU_N[i] );
     }
     fclose(fp);
     
