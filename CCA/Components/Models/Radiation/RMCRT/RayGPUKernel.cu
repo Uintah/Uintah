@@ -28,6 +28,7 @@
 // linker support for device code not ready yet, need to include the whole source...
 #include <CCA/Components/Schedulers/GPUDataWarehouse.cu>
 #include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Grid/Variables/GPUStencil7.h>
 #include <sci_defs/cuda_defs.h>
 #include <curand.h>
 #include <curand_kernel.h>
