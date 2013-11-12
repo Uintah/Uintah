@@ -440,7 +440,7 @@ GPUDataWarehouse::clear()
       CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
       
       if (d_debug){
-        printf("cudaFree for \"%s\" at 0x%x on device %d\n" , d_varDB[i].label, d_varDB[i].var_ptr, d_device_id );
+        printf("cudaFree for \"%s\" at 0x%x on device %d\n", d_varDB[i].label, d_varDB[i].var_ptr, d_device_id );
       }
     }
   }
@@ -449,7 +449,7 @@ GPUDataWarehouse::clear()
   if ( d_device_copy ) {
     CUDA_RT_SAFE_CALL(retVal =  cudaFree( d_device_copy ));
     if(d_debug){
-      printf("Delete GPUDW on-device copy at 0x%x on device %d \n",  d_device_copy, d_device_id);
+      printf("Delete GPUDW copy at 0x%x on device %d \n",  d_device_copy, d_device_id);
     }
   }
 #endif
