@@ -54,12 +54,11 @@
 using std::endl;
 using std::flush;
 
-#ifndef TabProps_BSPLINE
 // jcs for some reason the serialization doesn't work without this:
 Interp1D i1d;
 Interp2D i2d;
 Interp3D i3d;
-#endif
+
 
 namespace Wasatch{
 
@@ -97,10 +96,10 @@ namespace Wasatch{
       typedef ParticleRadProps<SpatialOps::structured::SVolField>::Builder ParticleProps;
       gh.exprFactory->register_expression(
           scinew ParticleProps( propSelection,
-                             parse_nametag( pParams->findBlock("NameTag") ),
-                             parse_nametag( pParams->findBlock("Temperature"   )->findBlock("NameTag")),
-                             parse_nametag( pParams->findBlock("ParticleRadius")->findBlock("NameTag")),
-                             refIx ) );
+                                parse_nametag( pParams->findBlock("NameTag") ),
+                                parse_nametag( pParams->findBlock("Temperature"   )->findBlock("NameTag")),
+                                parse_nametag( pParams->findBlock("ParticleRadius")->findBlock("NameTag")),
+                                refIx ) );
     }
 
     //___________________________________________________________
@@ -131,8 +130,87 @@ namespace Wasatch{
     }
     typedef RadPropsEvaluator<SpatialOps::structured::SVolField>::Builder RadPropsExpr;
     gh.exprFactory->register_expression( scinew RadPropsExpr( parse_nametag(ggParams->findBlock("NameTag")),
-                                                           parse_nametag(ggParams->findBlock("Temperature")->findBlock("NameTag")),
-                                                           spMap,fileName) );
+                                                              parse_nametag(ggParams->findBlock("Temperature")->findBlock("NameTag")),
+                                                              spMap,fileName) );
+  }
+
+  //====================================================================
+
+  enum DensityEvaluationLevel
+  {
+    NORMAL,
+    STAR,
+    STARSTAR
+  };
+
+  Expr::ExpressionID
+  parse_density_solver( const Uintah::ProblemSpecP& params,
+                        const StateTable& table,
+                        Expr::Tag densityTag,
+                        const DensityEvaluationLevel densLevel,
+                        GraphHelper& gh )
+  {
+    Expr::ExpressionID densCalcID;  // BE SURE TO POPULATE THIS BELOW!
+
+    const std::string densTableName = "Density";
+    if( !table.has_depvar(densTableName) ){
+      throw Uintah::ProblemSetupException( "Table has no density entry in it, but density was requested through your input file!", __FILE__, __LINE__ );
+    }
+    const InterpT* const densInterp = table.find_entry( densTableName );
+
+    Expr::ExpressionFactory& factory = *gh.exprFactory;
+
+    std::string tagNameAppend;
+    switch (densLevel){
+      case NORMAL    : tagNameAppend="";                          break;
+      case STAR      : tagNameAppend=TagNames::self().star;       break;
+      case STARSTAR  : tagNameAppend=TagNames::self().doubleStar; break;
+    }
+
+    densityTag.name() += tagNameAppend;
+
+    if( params->findBlock("ModelBasedOnMixtureFraction") ){
+
+      const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFraction");
+      Expr::Tag rhofTag = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
+      if( densLevel != NORMAL ) rhofTag.context() = Expr::STATE_NONE;
+      rhofTag.name() += tagNameAppend;
+
+      typedef DensFromMixfrac<SVolField>::Builder DensCalc;
+      densCalcID = factory.register_expression( scinew DensCalc( *densInterp, densityTag, rhofTag ) );
+
+    }
+    else if( params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss") ){
+
+      if( !table.has_depvar("Enthalpy") ){
+        throw Uintah::ProblemSetupException( "Table has no enthalpy entry in it, but enthalpy is required for the heat loss class of models!", __FILE__, __LINE__ );
+      }
+      const InterpT* const enthInterp = table.find_entry("Enthalpy");
+
+      const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss");
+      Expr::Tag hTag       = parse_nametag( modelParams->findBlock("Enthalpy")->findBlock("NameTag") );
+      Expr::Tag rhofTag    = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
+      Expr::Tag rhohTag    = parse_nametag( modelParams->findBlock("DensityWeightedEnthalpy")->findBlock("NameTag") );
+      Expr::Tag heatLossTag= parse_nametag( modelParams->findBlock("HeatLoss")->findBlock("NameTag") );
+
+      // modify name & context when we are calculating density at newer time
+      // levels since this will be using STATE_NONE information as opposed to
+      // potentially STATE_N information.
+      if( densLevel != NORMAL ){
+        rhofTag.context()     = Expr::STATE_NONE;
+        rhohTag.context()     = Expr::STATE_NONE;
+        heatLossTag.context() = Expr::STATE_NONE;
+        hTag.name()        += tagNameAppend;
+        rhofTag.name()     += tagNameAppend;
+        rhohTag.name()     += tagNameAppend;
+        heatLossTag.name() += tagNameAppend;
+      }
+
+      typedef DensHeatLossMixfrac<SVolField>::Builder DensCalc;
+      densCalcID = factory.register_expression( scinew DensCalc( densityTag, heatLossTag, hTag, rhofTag, rhohTag, *densInterp, *enthInterp ) );
+
+    }
+    return densCalcID;
   }
 
   //====================================================================
@@ -301,84 +379,15 @@ namespace Wasatch{
     // create an expression specifically for density.
     const Uintah::ProblemSpecP densityParams = params->findBlock("ExtractDensity");
     if( densityParams ){
-      Expr::TagList rhoEtaTags, etaTags;
-      for( Uintah::ProblemSpecP rhoEtaParams = densityParams->findBlock("DensityWeightedIVar");
-          rhoEtaParams != 0;
-          rhoEtaParams = rhoEtaParams->findNextBlock("DensityWeightedIVar") ){
-        const Expr::Tag rhoEtaTag = parse_nametag( rhoEtaParams->findBlock("NameTag") );
-        rhoEtaTags.push_back( rhoEtaTag );
-        Uintah::ProblemSpecP etaParams = rhoEtaParams->findBlock("RelatedIVar");
-        const Expr::Tag etaTag = parse_nametag( etaParams->findBlock("NameTag") );
-        etaTags.push_back( etaTag );
-      }
-
-
-      //_______________________________________
-      // extract density variable information
-      const std::string dvarTableName = "Density";
-      if( !table.has_depvar(dvarTableName) ){
-        std::ostringstream msg;
-        msg << "Table '" << fileName
-            << "' has no density entry in it, but density was requested through your input file!"
-            << std::endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-      const InterpT* const interp = table.find_entry( dvarTableName );
-
-      //_____________________________________
-      // register the expression for density
       const Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-      typedef DensityCalculator<SpatialOps::structured::SVolField>::Builder DensCalc;
-      gh.exprFactory->register_expression( scinew DensCalc( densityTag, *interp, rhoEtaTags,
-                                                            etaTags, ivarNames ) );
-
-      //_________________________________________________________________________________________
-      // preparing the input arguments of the expression for density at the next RK time stages if they are needed to be estimated
-      Expr::Tag densityStarTag = Expr::Tag();
-      Expr::TagList rhoEtaStarTags, ivarStarTags, etaStarTags;
-
-      Expr::Tag density2StarTag = Expr::Tag();
-      Expr::TagList rhoEta2StarTags, ivar2StarTags, eta2StarTags;
-
-      //============================================================
-      // Note that it is currently assumed that we solve transport 
-      // equation for non density weighted independent variables as
-      // well, so, we have them in SolnVarTags/SolnVarStarTags and we 
-      // should be able to update them for the next RK time stage
-      //============================================================
-      
-      // This calculations should only take place for variable density cases when we have both momentum and scalar transport equations
-      //___________________________________
-      // estimate the density field at RK stage "*" and "**"
-      if( doDenstPlus && cat==ADVANCE_SOLUTION ){
-        // Here the soln variables in density weighted form will be separated to generate rhoEta at the "*" stage
-        const TagNames& tagNames = TagNames::self();
-        BOOST_FOREACH( const Expr::Tag& tag, rhoEtaTags ){
-          rhoEtaStarTags .push_back( Expr::Tag( tag.name() + tagNames.star,       Expr::STATE_NONE ) );
-          rhoEta2StarTags.push_back( Expr::Tag( tag.name() + tagNames.doubleStar, Expr::STATE_NONE ) );
-        }
-        BOOST_FOREACH( const Expr::Tag& tag, ivarNames ){
-          ivarStarTags. push_back( Expr::Tag( tag.name() + tagNames.star,       Expr::STATE_NONE ) );
-          ivar2StarTags.push_back( Expr::Tag( tag.name() + tagNames.doubleStar, Expr::STATE_NONE ) );
-        }
-        BOOST_FOREACH( const Expr::Tag& tag, etaTags ){
-          etaStarTags .push_back( Expr::Tag( tag.name() + tagNames.star,       Expr::STATE_NONE ) );
-          eta2StarTags.push_back( Expr::Tag( tag.name() + tagNames.doubleStar, Expr::STATE_NONE ) );
-        }
-
-        // register the expression for density at RK time stage
-        densityStarTag = Expr::Tag(densityTag.name() + tagNames.star, Expr::CARRY_FORWARD);
-        const Expr::ExpressionID densStar = gh.exprFactory->register_expression( scinew DensCalc( densityStarTag, *interp, rhoEtaStarTags, etaStarTags, ivarStarTags ) );
-        gh.exprFactory->cleave_from_children ( densStar );
-
-        // register the expression for density at RK time stage
-        density2StarTag = Expr::Tag(densityTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD);
-        const Expr::ExpressionID dens2Star = gh.exprFactory->register_expression( scinew DensCalc( density2StarTag, *interp, rhoEta2StarTags, eta2StarTags, ivar2StarTags ) );
-        gh.exprFactory->cleave_from_children ( dens2Star );
-        
-      } // density predictor
-
-    } // density
+      parse_density_solver( densityParams, table, densityTag, NORMAL, gh );
+      if( doDenstPlus ){
+        const Expr::ExpressionID id1 = parse_density_solver( densityParams, table, densityTag, STAR,     gh );
+        const Expr::ExpressionID id2 = parse_density_solver( densityParams, table, densityTag, STARSTAR, gh );
+        gh.exprFactory->cleave_from_children( id1 );
+        gh.exprFactory->cleave_from_children( id2 );
+      }
+    }
 
   }
   //====================================================================
@@ -398,15 +407,6 @@ namespace Wasatch{
       parse_radprops( radPropsParams, *gc[ADVANCE_SOLUTION] );
     }
 
-    if (tabPropsParams) {
-      if (tabPropsParams->findBlock("ExtractDensity") && !densityParams) {
-        std::ostringstream msg;
-        msg << "ERROR: You need a tag for density when you want to extract it using TabProps." << endl
-            << "       Please include the \"Density\" block in wasatch in your input file." << endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-    }
-
     for( Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
          tabPropsParams != 0;
          tabPropsParams = tabPropsParams->findNextBlock("TabProps") ){
@@ -419,14 +419,14 @@ namespace Wasatch{
        * to estimate their values at "*" RK stage to be able to estimate the value
        * of density at this RK stage
        */
-      Uintah::ProblemSpecP transEqnParams  = params->findBlock("TransportEquation");      
+      Uintah::ProblemSpecP transEqnParams= params->findBlock("TransportEquation");
       Uintah::ProblemSpecP momEqnParams  = params->findBlock("MomentumEquations");      
       const bool isConstDensity = densityParams->findBlock("Constant");
 
       Expr::TagList solnVarStarTags=Expr::TagList();
       Expr::TagList solnVar2StarTags=Expr::TagList();
       const bool doDenstPlus = momEqnParams && transEqnParams && !isConstDensity;
-      if (doDenstPlus && cat==ADVANCE_SOLUTION) {
+      if( doDenstPlus && cat==ADVANCE_SOLUTION ){
         std::string solnVarName;
         
         Expr::Tag solnVarTag, solnVarRHSTag, solnVarStarTag;

@@ -51,12 +51,11 @@
       
       <ExtractDensity>
         <NameTag name="density" state="CARRY_FORWARD"/>
-        <DensityWeightedIVar>
+        <ModelBasedOnMixtureFraction>
+          <DensityWeightedMixtureFraction>
           <NameTag name="rhof" state="STATE_N"/>
-          <RelatedIVar>
-            <NameTag name="f" state="STATE_NONE"/>
-          </RelatedIVar>
-        </DensityWeightedIVar>
+          </DensityWeightedMixtureFraction>       
+        </ModelBasedOnMixtureFraction>
       </ExtractDensity>
       
     </TabProps>  
@@ -77,7 +76,7 @@
       <PrimitiveVariable>f</PrimitiveVariable>
       
       <ConvectiveFluxExpression>
-        <Method>CENTRAL</Method> 
+        <Method>UPWIND</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
             <NameTag name="w" state="STATE_NONE"/>

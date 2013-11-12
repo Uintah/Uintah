@@ -896,14 +896,47 @@
       </HeatLoss>
 
       <!-- A special case to extract density from this TabProps file -->
-      <ExtractDensity         spec="OPTIONAL NO_DATA">
-        <NameTag              spec="REQUIRED" />
-        <DensityWeightedIVar  spec="MULTIPLE NO_DATA">
-          <NameTag            spec="REQUIRED" />
-          <RelatedIVar        spec="REQUIRED NO_DATA">
+      <ExtractDensity spec="OPTIONAL NO_DATA"
+                      children1="ONE_OF( CHILD
+                                         ModelBasedOnMixtureFraction,
+                                         ModelBasedOnMixtureFractionAndHeatLoss
+                                       )"
+                      children2="ONE_OF( CHILD NameTag)">
+        
+        <!-- name for the density: -->       
+        <NameTag      spec="REQUIRED" />
+        
+        <!-- 
+          Use this for adiabatic equilibrium and adiabatic flame-sheet models as well
+          as nonreacting (stream mixing) models.  Here, it is assumed that the
+          density-weighted mixture fraction is being transported. 
+        -->
+        <ModelBasedOnMixtureFraction spec="OPTIONAL NO_DATA">
+          <DensityWeightedMixtureFraction spec="REQUIRED NO_DATA">
             <NameTag          spec="REQUIRED" />
-          </RelatedIVar>
-        </DensityWeightedIVar>
+          </DensityWeightedMixtureFraction>
+        </ModelBasedOnMixtureFraction>
+        
+        <!-- 
+          Use this for equilibrium and flame-sheet models with heat loss. Here, it is
+          assumed that the density-weighted mixture fraction and the density-weighted
+          enthalpy are being transported.
+        -->
+        <ModelBasedOnMixtureFractionAndHeatLoss spec="OPTIONAL NO_DATA">
+          <DensityWeightedMixtureFraction spec="REQUIRED NO_DATA">
+            <NameTag                      spec="REQUIRED" />
+          </DensityWeightedMixtureFraction>
+          <DensityWeightedEnthalpy        spec="REQUIRED NO_DATA" >
+            <NameTag                      spec="REQUIRED" />
+          </DensityWeightedEnthalpy>
+          <Enthalpy                       spec="REQUIRED NO_DATA">
+            <NameTag                      spec="REQUIRED" />
+          </Enthalpy>
+          <HeatLoss                       spec="REQUIRED NO_DATA">
+            <NameTag                      spec="REQUIRED" />
+          </HeatLoss>
+        </ModelBasedOnMixtureFractionAndHeatLoss>
+
       </ExtractDensity>
       
     </TabProps>
