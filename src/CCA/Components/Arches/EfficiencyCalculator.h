@@ -600,7 +600,7 @@ namespace Uintah {
             new_dw->get( out, _OUT_label ); 
             new_dw->get( accum, _ACCUM_label );
 
-            double residual = in - out + accum; 
+            double residual = out - in + accum; 
   
             new_dw->put( delt_vartype( residual ), _residual_label ); 
 

@@ -3560,7 +3560,9 @@ BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
                 break; 
 
               default: 
-                throw InvalidValue("Error: Face type not recognized: " + face, __FILE__, __LINE__); 
+                std::stringstream msg; 
+                msg << "Error: Face type not recognized: " << face << std::endl;
+                throw InvalidValue(msg.str(), __FILE__, __LINE__); 
                 break; 
             }
           }
