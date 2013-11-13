@@ -867,6 +867,29 @@
 
 
     <!--
+      This does two things:
+        1. register an expression for calculating the density from the
+           mixture fraction for initialization.
+        2. register an expression for calculating the density from the
+           density-weighted mixture fraction for time-advancement.
+      It is assumed that there are two streams that are mixing but not reacting.
+      Currently, the only property available for calculation is the density.
+    -->
+    <TwoStreamMixing    spec="OPTIONAL NO_DATA">
+      <Density0         spec="REQUIRED DOUBLE"/>  <!-- density at mixture fraction 0 -->
+      <Density1         spec="REQUIRED DOUBLE"/>  <!-- density at mixture fraction 1 -->
+      <Density          spec="REQUIRED NO_DATA">
+        <NameTag        spec="REQUIRED"/>
+      </Density>
+      <MixtureFraction  spec="REQUIRED NO_DATA">
+        <NameTag        spec="REQUIRED"/>
+      </MixtureFraction>
+      <DensityWeightedMixtureFraction spec="REQUIRED NO_DATA">
+        <NameTag        spec="REQUIRED"/>
+      </DensityWeightedMixtureFraction>
+    </TwoStreamMixing>
+    
+    <!--
         Tabular property specification.  Use this to specify property
         evaluation from a TabProps file.
       -->

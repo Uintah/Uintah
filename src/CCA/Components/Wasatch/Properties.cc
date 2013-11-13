@@ -393,6 +393,87 @@ namespace Wasatch{
   //====================================================================
 
   void
+  parse_twostream_mixing( Uintah::ProblemSpecP params,
+                          GraphCategories& gc )
+  {
+    const Expr::Tag fTag    = parse_nametag( params->findBlock("MixtureFraction")->findBlock("NameTag") );
+    const Expr::Tag rhofTag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
+    const Expr::Tag rhoTag  = parse_nametag( params->findBlock("Density")->findBlock("NameTag") );
+    double rho0, rho1;
+    params->findBlock("Density0")->get(rho0);
+    params->findBlock("Density1")->get(rho1);
+
+    // initial conditions for density
+    {
+      const Expr::Tag icRhoTag     ( rhoTag.name(),                             Expr::STATE_NONE );
+      const Expr::Tag icRhoStarTag ( rhoTag.name()+TagNames::self().star,       Expr::STATE_NONE );
+      const Expr::Tag icRhoStar2Tag( rhoTag.name()+TagNames::self().doubleStar, Expr::STATE_NONE );
+
+      typedef TwoStreamDensFromMixfr<SVolField>::Builder ICDensExpr;
+      GraphHelper& gh = *gc[INITIALIZATION];
+      gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoTag,     fTag,rho0,rho1) ) );
+      gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStarTag, fTag,rho0,rho1) ) );
+      gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStar2Tag,fTag,rho0,rho1) ) );
+    }
+
+    typedef TwoStreamMixingDensity<SVolField>::Builder DensExpr;
+    gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoTag,rhofTag,rho0,rho1) );
+
+    const TagNames& names = TagNames::self();
+
+    Expr::Tag rhoStar ( rhoTag .name()+names.star, rhoTag.context() );
+    Expr::Tag rhofStar( rhofTag.name()+names.star, Expr::STATE_NONE );
+    const Expr::ExpressionID id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoStar,rhofStar,rho0,rho1) );
+
+    rhoStar .name() = rhoTag.name()  + names.doubleStar;
+    rhofStar.name() = rhofTag.name() + names.doubleStar;
+    const Expr::ExpressionID id2 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoStar,rhofStar,rho0,rho1) );
+
+    gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id1);
+    gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id2);
+  }
+
+  //====================================================================
+
+  void setup_scalar_predictors( Uintah::ProblemSpecP params,
+                                GraphHelper& solnGraphHelper )
+  {
+    /* Check to see if we have scalar transport equation already set up and the
+     * problem is variable density, so we can obtain solution variables in order
+     * to estimate their values at "*" RK stage to be able to estimate the value
+     * of density at this RK stage
+     */
+    const TagNames& tagNames = TagNames::self();
+
+    for( Uintah::ProblemSpecP transEqnParams= params->findBlock("TransportEquation");
+        transEqnParams != 0;
+        transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
+    {
+      std::string solnVarName;
+      transEqnParams->get( "SolutionVariable", solnVarName );
+
+      // Here we get the variables needed for calculations at the stage "*"
+      const Expr::Tag solnVarTag    ( solnVarName,               Expr::STATE_N    );
+      const Expr::Tag solnVarRHSTag ( solnVarName+"_rhs",        Expr::STATE_NONE );
+      const Expr::Tag solnVarStarTag( solnVarName+tagNames.star, Expr::STATE_NONE );
+
+      if( !solnGraphHelper.exprFactory->have_entry( solnVarStarTag ) ){
+        solnGraphHelper.exprFactory->register_expression( scinew SolnVarEst<SVolField>::Builder( solnVarStarTag, solnVarTag, solnVarRHSTag, tagNames.timestep ));
+      }
+
+      // Here we get the variables needed for calculations at the stage "**"
+      const Expr::Tag solnVarRHSStarTag( solnVarName+"_rhs"+tagNames.star, Expr::STATE_NONE );
+      const Expr::Tag solnVar2StarTag  ( solnVarName+tagNames.doubleStar,  Expr::STATE_NONE );
+
+      if( !solnGraphHelper.exprFactory->have_entry( solnVar2StarTag ) ){
+        solnGraphHelper.exprFactory->register_expression( scinew SolnVarEst<SVolField>::Builder( solnVar2StarTag, solnVarStarTag, solnVarRHSStarTag, tagNames.timestep ));
+      }
+    }
+  }
+
+  //====================================================================
+
+  void
   setup_property_evaluation( Uintah::ProblemSpecP& params,
                              GraphCategories& gc )
   {
@@ -402,63 +483,31 @@ namespace Wasatch{
     Uintah::ProblemSpecP densityParams  = params->findBlock("Density");
     Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
     Uintah::ProblemSpecP radPropsParams = params->findBlock("RadProps");
+    Uintah::ProblemSpecP twoStreamParams= params->findBlock("TwoStreamMixing");
 
     if( radPropsParams ){
       parse_radprops( radPropsParams, *gc[ADVANCE_SOLUTION] );
     }
 
+    if( twoStreamParams ){
+      parse_twostream_mixing( twoStreamParams, gc );
+    }
+
+    const bool isConstDensity = densityParams->findBlock("Constant");
+    const bool doDenstPlus = !isConstDensity
+                           && params->findBlock("MomentumEquations")
+                           && params->findBlock("TransportEquation");
+
+    // TabProps
     for( Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
          tabPropsParams != 0;
-         tabPropsParams = tabPropsParams->findNextBlock("TabProps") ){
-
-      // determine which task list this goes on
+         tabPropsParams = tabPropsParams->findNextBlock("TabProps") )
+    {
       const Category cat = parse_tasklist( tabPropsParams,false);
-
-      /* Check to see if we have scalar transport equation already set up and the
-       * problem is variable density, so we can obtain solution variables in order
-       * to estimate their values at "*" RK stage to be able to estimate the value
-       * of density at this RK stage
-       */
-      Uintah::ProblemSpecP transEqnParams= params->findBlock("TransportEquation");
-      Uintah::ProblemSpecP momEqnParams  = params->findBlock("MomentumEquations");      
-      const bool isConstDensity = densityParams->findBlock("Constant");
-
-      Expr::TagList solnVarStarTags=Expr::TagList();
-      Expr::TagList solnVar2StarTags=Expr::TagList();
-      const bool doDenstPlus = momEqnParams && transEqnParams && !isConstDensity;
-      if( doDenstPlus && cat==ADVANCE_SOLUTION ){
-        std::string solnVarName;
-        
-        Expr::Tag solnVarTag, solnVarRHSTag, solnVarStarTag;
-        Expr::Tag solnVarRHSStarTag, solnVar2StarTag;
-        const TagNames& tagNames = TagNames::self();
-        
-        for( ; transEqnParams != 0; transEqnParams=transEqnParams->findNextBlock("TransportEquation") ) {
-          transEqnParams->get( "SolutionVariable", solnVarName );
-          
-          // Here we get the variables needed for calculations at the stage "*" 
-          solnVarTag = Expr::Tag( solnVarName, Expr::STATE_N );
-          solnVarRHSTag = Expr::Tag( solnVarName+"_rhs", Expr::STATE_NONE);
-          solnVarStarTag =  Expr::Tag( solnVarName+tagNames.star, Expr::STATE_NONE) ;
-
-          if( !gc[ADVANCE_SOLUTION]->exprFactory->have_entry( solnVarStarTag ) ){
-            gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew SolnVarEst<SVolField>::Builder( solnVarStarTag, solnVarTag, solnVarRHSTag, tagNames.timestep ));
-          }
-          solnVarStarTags.push_back( solnVarStarTag );          
-          
-          // Here we get the variables needed for calculations at the stage "**" 
-          solnVarRHSStarTag = Expr::Tag( solnVarName+"_rhs"+tagNames.star, Expr::STATE_NONE);
-          solnVar2StarTag =  Expr::Tag( solnVarName+tagNames.doubleStar, Expr::STATE_NONE) ;
-          
-          if( !gc[ADVANCE_SOLUTION]->exprFactory->have_entry( solnVar2StarTag ) ){
-            gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew SolnVarEst<SVolField>::Builder( solnVar2StarTag, solnVarStarTag, solnVarRHSStarTag, tagNames.timestep ));
-          }
-          solnVar2StarTags.push_back( solnVar2StarTag );          
-          
-        }
-      }
       parse_tabprops( tabPropsParams, *gc[cat], cat, doDenstPlus );
     }
+
+    if( doDenstPlus ) setup_scalar_predictors( params, *gc[ADVANCE_SOLUTION] );
   }
 
   //====================================================================
