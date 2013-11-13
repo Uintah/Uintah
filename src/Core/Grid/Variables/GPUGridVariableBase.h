@@ -34,7 +34,7 @@ namespace Uintah {
 
 class GPUGridVariableBase : public GPUVariable {
 
-  friend class GPUDataWarehouse; // allow DataWarehouse set/get Array3
+  friend class GPUDataWarehouse; // allow DataWarehouse set/get data members
 
   public:
     HOST_DEVICE virtual ~GPUGridVariableBase() {}

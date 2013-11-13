@@ -39,7 +39,7 @@ class GPUReductionVariable : public GPUReductionVariableBase {
 
   public:
 
-    HOST_DEVICE GPUReductionVariable() {d_data = NULL; d_size = 0;}
+    HOST_DEVICE GPUReductionVariable() {d_data = NULL; d_numElems = 0;}
     HOST_DEVICE virtual ~GPUReductionVariable() {}
 
     HOST_DEVICE virtual size_t getMemSize() {
@@ -53,16 +53,16 @@ class GPUReductionVariable : public GPUReductionVariableBase {
   private:
 
     mutable T* d_data;
-    mutable size_t d_size;
+    mutable size_t d_numElems;
 
-    HOST_DEVICE virtual void setData(const size_t& size, void* &ptr) const {
+    HOST_DEVICE virtual void setData(const size_t& numElems, void* &ptr) const {
       d_data = (T*)ptr;
-      d_size = size;
+      d_numElems = numElems;
     }
 
-    HOST_DEVICE virtual void getData(size_t& size, void* &ptr) const {
+    HOST_DEVICE virtual void getData(size_t& numElems, void* &ptr) const {
       ptr = (void*)d_data;
-      size = d_size;
+      numElems = d_numElems;
     }
 
     HOST_DEVICE GPUReductionVariable& operator=(const GPUReductionVariable&);

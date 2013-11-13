@@ -1437,6 +1437,9 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
     for (int i = 0; i < numPatches; i++) {
       for (int j = 0; j < numMatls; j++) {
 
+        int matlID = matls->get(j);
+        int patchID = patches->get(i)->getID();
+
         TypeDescription::Type type = req->var->typeDescription()->getType();
         switch (type) {
           case TypeDescription::CCVariable :
@@ -1496,8 +1499,7 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
               IntVector high = offset + size;
               int3 lo = make_int3(low.x(), low.y(), low.z());
               int3 hi = make_int3(high.x(), high.y(), high.z());
-              int matlID = matls->get(j);
-              int patchID = patches->get(i)->getID();
+
               dw->getGPUDW()->allocateAndPut(device_var, req->var->getName().c_str(), patchID, matlID, lo, hi);
 
               // pin/page-lock host memory for H2D cudaMemcpyAsync
@@ -1533,8 +1535,8 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
 
             // check if the variable already exists on the GPU
             GPUReductionVariable<void*> device_var;
-            if (dw->getGPUDW()->exist(req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j))) {
-              dw->getGPUDW()->get(device_var, req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j));
+            if (dw->getGPUDW()->exist(req->var->getName().c_str(), patchID, matlID)) {
+              dw->getGPUDW()->get(device_var, req->var->getName().c_str(), patchID, matlID);
               device_ptr = device_var.getPointer();
               device_bytes = device_var.getMemSize();
               // if the size is the same, assume the variable already exists on the GPU... no H2D copy
@@ -1549,16 +1551,15 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
                 }
                 continue;
               } else {
-                dw->getGPUDW()->remove(req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j));
+                dw->getGPUDW()->remove(req->var->getName().c_str(), patchID, matlID);
               }
             }
 
             // critical section - prepare and async copy the requires variable data to the device
             h2dRequiresLock_.writeLock();
             {
-              int matlID = matls->get(j);
-              int patchID = patches->get(i)->getID();
-              dw->getGPUDW()->allocateAndPut(device_var, req->var->getName().c_str(), patchID, matlID);
+              int numElems = 1; // baked in for now: simple reductions on single value
+              dw->getGPUDW()->allocateAndPut(device_var, req->var->getName().c_str(), patchID, matlID, numElems);
 
               // pin/page-lock host memory for H2D cudaMemcpyAsync
               // cudaHostRegisterPortable flag so pinned mem will be considered pinned by all CUDA contexts
@@ -1621,6 +1622,9 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
     for (int i = 0; i < numPatches; ++i) {
       for (int j = 0; j < numMatls; ++j) {
 
+        int matlID = matls->get(j);
+        int patchID = patches->get(i)->getID();
+
         TypeDescription::Type type = comp->var->typeDescription()->getType();
         switch (type) {
           case TypeDescription::CCVariable :
@@ -1637,12 +1641,16 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
             d2hComputesLock_.writeLock();
             {
               GPUGridVariable<void*> device_var;
-              dw->getGPUDW()->allocateAndPut(device_var, comp->var->getName().c_str(), patches->get(i)->getID(), matls->get(j),
+              int patchID = patches->get(i)->getID();
+              int matlID = matls->get(j);
+              dw->getGPUDW()->allocateAndPut(device_var, comp->var->getName().c_str(), patchID, matlID,
                                              make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()));
               if (gpu_stats.active()) {
                 cerrLock.lock();
-                gpu_stats << "allocated device copy of \"" << comp->var->getName() << "\", size = " << device_var.getMemSize() << " at "
-                          << device_var.getPointer() << " on device " << dtask->getDeviceNum() << endl;
+                {
+                  gpu_stats << "allocated device copy of \"" << comp->var->getName() << "\", size = " << device_var.getMemSize()
+                            << " at " << device_var.getPointer() << " on device " << dtask->getDeviceNum() << endl;
+                }
                 cerrLock.unlock();
               }
             }
@@ -1656,11 +1664,14 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
             d2hComputesLock_.writeLock();
             {
               GPUReductionVariable<void*> device_var;
-              dw->getGPUDW()->allocateAndPut(device_var, comp->var->getName().c_str(), patches->get(i)->getID(), matls->get(j));
+              int numElems = 1; // baked in for now: simple reductions on single value
+              dw->getGPUDW()->allocateAndPut(device_var, comp->var->getName().c_str(), patchID, matlID, numElems);
               if (gpu_stats.active()) {
                 cerrLock.lock();
-                gpu_stats << "allocated device copy of \"" << comp->var->getName() << "\", size = " << device_var.getMemSize() << " at "
-                          << device_var.getPointer() << " on device " << dtask->getDeviceNum() << endl;
+                {
+                  gpu_stats << "allocated device copy of \"" << comp->var->getName() << "\", size = " << device_var.getMemSize()
+                            << " at " << device_var.getPointer() << " on device " << dtask->getDeviceNum() << endl;
+                }
                 cerrLock.unlock();
               }
             }
@@ -1714,6 +1725,9 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
     for (int i = 0; i < numPatches; i++) {
       for (int j = 0; j < numMatls; j++) {
 
+        int matlID = matls->get(j);
+        int patchID = patches->get(i)->getID();
+
         TypeDescription::Type type = comp->var->typeDescription()->getType();
         switch (type) {
           case TypeDescription::CCVariable :
@@ -1732,7 +1746,7 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
             d2hComputesLock_.writeLock();
             {
               GPUGridVariable<void*> device_var;
-              dw->getGPUDW()->get(device_var, comp->var->getName().c_str(), patches->get(i)->getID(), matls->get(j));
+              dw->getGPUDW()->get(device_var, comp->var->getName().c_str(), patchID, matlID);
               int3 device_offset;
               int3 device_size;
               device_var.getArray3(device_offset, device_size, device_ptr);
@@ -1751,8 +1765,10 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
                 }
                 if (gpu_stats.active()) {
                   cerrLock.lock();
-                  gpu_stats << "post D2H copy of \"" << comp->var->getName() << "\", size = " << device_var.getMemSize() << " to "
-                            << host_ptr << " from " << device_ptr << ", using stream " << dtask->getCUDAStream() << std::endl;
+                  {
+                    gpu_stats << "post D2H copy of \"" << comp->var->getName() << "\", size = " << device_var.getMemSize() << " to "
+                              << host_ptr << " from " << device_ptr << ", using stream " << dtask->getCUDAStream() << std::endl;
+                  }
                   cerrLock.unlock();
                 }
                 CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, device_bytes, cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
@@ -1771,13 +1787,14 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
           case TypeDescription::ReductionVariable : {
 
             ReductionVariableBase* reductionVar = dynamic_cast<ReductionVariableBase*>(comp->var->typeDescription()->createInstance());
+            dw->put(*reductionVar, comp->var, patches->get(i)->getLevel(), matlID);
             host_ptr = reductionVar->getBasePointer();
             host_bytes = reductionVar->getDataSize();
 
             d2hComputesLock_.writeLock();
             {
               GPUReductionVariable<void*> device_var;
-              dw->getGPUDW()->get(device_var, comp->var->getName().c_str(), patches->get(i)->getID(), matls->get(j));
+              dw->getGPUDW()->get(device_var, comp->var->getName().c_str(), patchID, matlID);
               device_ptr = device_var.getPointer();
               device_bytes = device_var.getMemSize();
 
@@ -1794,8 +1811,10 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
                 }
                 if (gpu_stats.active()) {
                   cerrLock.lock();
-                  gpu_stats << "post D2H copy of \"" << comp->var->getName() << "\", size = " << device_var.getMemSize() << " to "
-                            << host_ptr << " from " << device_ptr << ", using stream " << dtask->getCUDAStream() << std::endl;
+                  {
+                    gpu_stats << "post D2H copy of \"" << comp->var->getName() << "\", size = " << device_var.getMemSize() << " to "
+                              << host_ptr << " from " << device_ptr << ", using stream " << dtask->getCUDAStream() << std::endl;
+                  }
                   cerrLock.unlock();
                 }
                 CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, device_bytes, cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
