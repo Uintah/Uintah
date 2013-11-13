@@ -548,7 +548,9 @@ namespace Uintah {
                             }
                             break; 
                           default: 
-                            throw InvalidValue("Error: Face type not recognized: " + face, __FILE__, __LINE__); 
+                            std::ostringstream msg; 
+                            msg << "Error: Face type not recognized: " << face << std::endl;
+                            throw InvalidValue(msg.str(), __FILE__, __LINE__); 
                             break; 
                         } 
                       }
@@ -1011,7 +1013,9 @@ namespace Uintah {
                             }
                             break; 
                           default: 
-                            throw InvalidValue("Error: Face type not recognized: " + face, __FILE__, __LINE__); 
+                            std::ostringstream msg; 
+                            msg << "Error: Face type not recognized: " << face << std::endl;
+                            throw InvalidValue(msg.str(), __FILE__, __LINE__); 
                             break; 
                         } 
                       }
