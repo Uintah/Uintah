@@ -543,7 +543,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
 }
 
 void
-Properties::sched_reComputeProps_new( const LevelP& level,
+Properties::sched_computeProps( const LevelP& level,
                                       SchedulerP& sched,
                                       const TimeIntegratorLabel* time_labels, 
                                       const bool initialize, 

@@ -421,7 +421,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     bool initialize_it  = false;
     bool modify_ref_den = true;
     if ( curr_level == 0 ) initialize_it = true;
-    d_props->sched_reComputeProps_new( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
+    d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
 
@@ -538,7 +538,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
       bool initialize_it  = false;
       bool modify_ref_den = false;
-      d_props->sched_reComputeProps_new( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
+      d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
 
       // Property models after table lookup
       for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();

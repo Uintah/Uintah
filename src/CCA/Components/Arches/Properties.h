@@ -164,11 +164,11 @@ public:
   void addLookupSpecies( ); 
 
   //for the new table:
-  void sched_reComputeProps_new( const LevelP&,
-                                 SchedulerP&,
-                                 const TimeIntegratorLabel* timelabels,
-                                 const bool initialize, 
-                                 const bool modify_ref_den ); 
+  void sched_computeProps( const LevelP&,
+                           SchedulerP&,
+                           const TimeIntegratorLabel* timelabels,
+                           const bool initialize, 
+                           const bool modify_ref_den ); 
 
   void doTableMatching(); 
 
