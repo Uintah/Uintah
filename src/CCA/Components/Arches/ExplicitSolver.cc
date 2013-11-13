@@ -354,8 +354,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
           DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-          // last time sub-step: so cleanup.
-          dqmom_eqn->sched_cleanUp( level, sched );
           //also get the abscissa values
           dqmom_eqn->sched_getUnscaledValues( level, sched );
         }

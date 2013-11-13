@@ -109,16 +109,6 @@ public:
   /** @brief Time averaging method required by base class. This method is empty (not needed) at the moment */
   void sched_timeAve( const LevelP& level, SchedulerP& sched, int timeSubStep ){};
 
-  /** @brief Actually clean up after the equation. This just reinitializes 
-             source term booleans so that the code can determine if the source
-             term label should be allocated or just retrieved from the data 
-             warehouse. */ 
-  void cleanUp( const ProcessorGroup* pc, 
-                const PatchSubset* patches, 
-                const MaterialSubset* matls, 
-                DataWarehouse* old_dw, 
-                DataWarehouse* new_dw  ); 
-
   /** @brief  Schedule computation of unweighted and unscaled values of DQMOM scalars */
   void sched_getUnscaledValues( const LevelP& level, SchedulerP& sched );
   
