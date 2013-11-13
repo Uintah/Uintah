@@ -310,7 +310,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         iprop != all_prop_models.end(); iprop++){
 
       PropertyModelBase* prop_model = iprop->second;
-      prop_model->cleanUp();
 
       if ( curr_level == 0 )
         prop_model->sched_timeStepInit( level, sched ); 
@@ -513,8 +512,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     // averaging for RKSSP
     if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
+
       d_props->sched_averageRKProps(sched, patches, matls,
                                     d_timeIntegratorLabels[curr_level]);
+
       d_props->sched_saveTempDensity(sched, patches, matls,
                                      d_timeIntegratorLabels[curr_level]);
 
@@ -558,11 +559,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         sched_checkDensityLag(sched, patches, matls,
                               d_timeIntegratorLabels[curr_level],
                               true);
+
       d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
                                             d_timeIntegratorLabels[curr_level] );
+
     }
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
+
     d_boundaryCondition->sched_setIntrusionDensity( sched, patches, matls ); 
 
     if ( d_wall_ht_models != 0 ){ 
