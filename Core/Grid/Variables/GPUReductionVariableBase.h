@@ -34,7 +34,7 @@ namespace Uintah {
 
 class GPUReductionVariableBase : public GPUVariable {
 
-  friend class GPUDataWarehouse;  // allow DataWarehouse set/get Array3
+  friend class GPUDataWarehouse;  // allow DataWarehouse set/get data members
 
   public:
     HOST_DEVICE virtual ~GPUReductionVariableBase() {}
@@ -44,8 +44,8 @@ class GPUReductionVariableBase : public GPUVariable {
     HOST_DEVICE GPUReductionVariableBase() {}
 
   private:
-    HOST_DEVICE virtual void setData(const size_t& size, void* &ptr) const = 0;
-    HOST_DEVICE virtual void getData(size_t& size, void* &ptr) const = 0;
+    HOST_DEVICE virtual void setData(const size_t& numElems, void* &ptr) const = 0;
+    HOST_DEVICE virtual void getData(size_t& numElems, void* &ptr) const = 0;
     HOST_DEVICE GPUReductionVariableBase& operator=(const GPUReductionVariableBase&);
     HOST_DEVICE GPUReductionVariableBase(const GPUReductionVariableBase&);
 };

@@ -36,10 +36,10 @@
 
 namespace Uintah {
 
-class GPUDataWarehouse{
+class GPUDataWarehouse {
 
 public:
-  GPUDataWarehouse(){d_numItems=0;d_device_copy=0;d_debug=false;d_dirty=true;};
+  GPUDataWarehouse(){d_numItems=0; d_device_copy=NULL; d_device_id=0; d_debug=true; d_dirty=true;};
   virtual ~GPUDataWarehouse(){};
 
   HOST_DEVICE void get(const GPUGridVariableBase& var, char const* label, int patchID, int matlID);
@@ -50,7 +50,7 @@ public:
   HOST_DEVICE void get(const GPUReductionVariableBase& var, char const* label, int patchID, int matlID);
   HOST_DEVICE void getModifiable(GPUReductionVariableBase& var, char const* label, int patchID, int matlID);
   HOST_DEVICE void put(GPUReductionVariableBase& var, char const* label, int patchID, int matlID, bool overWrite=false);
-  HOST_DEVICE void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlID);
+  HOST_DEVICE void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlID, int numElems);
 
   HOST_DEVICE bool exist(char const* name, int patchID, int matlID);
   HOST_DEVICE bool remove(char const* name, int patchID, int matlID);
