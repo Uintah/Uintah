@@ -53,30 +53,25 @@ void ExtentRxn::sched_computeProp( const LevelP& level, SchedulerP& sched, int t
   std::string taskname = "ExtentRxn::computeProp"; 
   Task* tsk = scinew Task( taskname, this, &ExtentRxn::computeProp, time_substep ); 
 
-  if ( !(_has_been_computed) ) {
-
-    if ( time_substep == 0 ) {
-      
-      tsk->computes( _prop_label ); 
-      tsk->computes( _strip_label ); 
-
-    } else {
-
-      tsk->modifies( _prop_label ); 
-      tsk->modifies( _strip_label );
-
-    }
-
-    const VarLabel* the_label = VarLabel::find(_mixture_fraction_name); 
-    tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
-    the_label = VarLabel::find(_scalar_name);
-    tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
-
-    sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+  if ( time_substep == 0 ) {
     
-    _has_been_computed = true; 
+    tsk->computes( _prop_label ); 
+    tsk->computes( _strip_label ); 
+
+  } else {
+
+    tsk->modifies( _prop_label ); 
+    tsk->modifies( _strip_label );
 
   }
+
+  const VarLabel* the_label = VarLabel::find(_mixture_fraction_name); 
+  tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
+  the_label = VarLabel::find(_scalar_name);
+  tsk->requires( Task::NewDW, the_label, Ghost::None, 0 ); 
+
+  sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+    
 }
 
 //---------------------------------------------------------------------------

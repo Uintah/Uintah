@@ -293,11 +293,12 @@ Properties::averageRKProps( const ProcessorGroup*,
         for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
           IntVector currCell(colX, colY, colZ);
           
-          // The following if statement is to eliminate Kumar's zero block density problem
           if (new_density[currCell] > 0.0) {
+
             double predicted_density;
+
             if (old_density[currCell] > 0.0) {
-              //            predicted_density = rho1_density[currCell];
+              //predicted_density = rho1_density[currCell];
               if (d_inverse_density_average)
                 predicted_density = 1.0/((factor_old/old_density[currCell] + factor_new/new_density[currCell])/factor_divide);
               else
@@ -309,6 +310,7 @@ Properties::averageRKProps( const ProcessorGroup*,
             
             density_guess[currCell] = predicted_density;
           }
+
         }
       }
     }

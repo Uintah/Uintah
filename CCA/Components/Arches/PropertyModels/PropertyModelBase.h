@@ -69,9 +69,6 @@ public:
   inline const std::vector<const VarLabel*> getExtraLocalLabels(){
     return _extra_local_labels; }; 
 
-  /** @brief A method for cleaning up property values **/ 
-  inline void cleanUp() { _has_been_computed = false; };
-
   /** @brief Returns the boolean to indicate if the model is to be evaluated before or after the table lookup **/
   inline bool beforeTableLookUp() { return _before_table_lookup; }; 
 
@@ -99,7 +96,6 @@ protected:
   
   const VarLabel* _prop_label;                        ///< Property varlabel
 
-  bool _has_been_computed;                            ///< To determine if the property has been computed (to avoid computing twice)
   bool _before_table_lookup;                          ///< To determine if the property model is evaluated before the table look up or after. 
 
   SimulationStateP& _shared_state;                    ///< Uintah shared state
