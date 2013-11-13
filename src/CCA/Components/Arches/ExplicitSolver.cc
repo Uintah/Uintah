@@ -375,7 +375,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         // schedule DQMOM moment calculation
         d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
       }
-
     }
 
     SourceTermFactory& src_factory = SourceTermFactory::self();
