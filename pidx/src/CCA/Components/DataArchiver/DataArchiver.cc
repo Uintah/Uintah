@@ -477,6 +477,7 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
       d_writeMeta = true;
    }
 
+   
    if (d_writeMeta) {
 
      string svn_diff_file = string( sci_getenv("SCIRUN_OBJDIR") ) + "/svn_diff.txt";
@@ -510,9 +511,9 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
       //     If so, we will need to write our own (simple) file reader and writer
       //     routine.
 
-      cout << "Saving original .ups file in UDA...\n";
-      Dir ups_location( pathname( params->getFile() ) );
-      ups_location.copy( basename( params->getFile() ), d_dir );
+      //cout << "Saving original .ups file in UDA...\n";
+      //Dir ups_location( pathname( params->getFile() ) );
+      //ups_location.copy( basename( params->getFile() ), d_dir );
 
       //
       /////////////////////////////////////////////////////////
@@ -529,6 +530,7 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
    else {
       d_checkpointsDir = d_dir.getSubdir("checkpoints");
    }
+   
 } // end initializeOutput()
 
 
@@ -910,6 +912,7 @@ DataArchiver::finalizeTimestep(double time, double delt,
   // on the initialization timestep (because there will be new computes on subsequent timestep)
   // or if there is a component switch or a new level in the grid
   // - BJW
+#if 1  
   if (((delt != 0 || d_outputInitTimestep) && !wereSavesAndCheckpointsInitialized) || 
       addMaterial !=0 || d_sharedState->d_switchState || grid->numLevels() != d_numLevelsInOutput) {
       /* skip the initialization timestep (normally, anyway) for this
@@ -1000,6 +1003,7 @@ DataArchiver::finalizeTimestep(double time, double delt,
     
     scheduleOutputTimestep(d_checkpointLabels,  grid, sched, true);
   }
+#endif
 }
 
 
@@ -1021,8 +1025,10 @@ DataArchiver::beginOutputTimestep( double time, double delt,
     if(time+delt >= d_nextOutputTime) {
       // output timestep
       d_isOutputTimestep = true;
+      
       outputTimestep(d_dir, d_saveLabels, time, delt, grid,
                      &d_lastTimestepLocation);
+                     
     }
     else {
       d_isOutputTimestep = false;
@@ -1032,8 +1038,10 @@ DataArchiver::beginOutputTimestep( double time, double delt,
     if(timestep >= d_nextOutputTimestep) {
       // output timestep
       d_isOutputTimestep = true;
+      
       outputTimestep(d_dir, d_saveLabels, time, delt, grid,
                      &d_lastTimestepLocation);
+                     
     }
     else {
       d_isOutputTimestep = false;
@@ -1052,9 +1060,11 @@ DataArchiver::beginOutputTimestep( double time, double delt,
     d_isCheckpointTimestep=true;
 
     string timestepDir;
+    
     outputTimestep(d_checkpointsDir, d_checkpointLabels, time, delt,
                    grid, &timestepDir,
                    d_checkpointReductionLabels.size() > 0);
+    
     
     string iname = d_checkpointsDir.getName()+"/index.xml";
 
@@ -1067,8 +1077,9 @@ DataArchiver::beginOutputTimestep( double time, double delt,
       string ibackup_name = d_checkpointsDir.getName()+"/index_backup.xml";
       index->output(ibackup_name.c_str());
     }
-
+    
     d_checkpointTimestepDirs.push_back(timestepDir);
+    
     if ((int)d_checkpointTimestepDirs.size() > d_checkpointCycle) {
       if (d_writeMeta) {
         // remove reference to outdated checkpoint directory from the
@@ -1100,11 +1111,13 @@ DataArchiver::beginOutputTimestep( double time, double delt,
       }
       d_checkpointTimestepDirs.pop_front();
     }
-    //if (d_writeMeta)
-    //index->releaseDocument();
+    
+  if(d_writeMeta)
+    index->releaseDocument();
   } else {
     d_isCheckpointTimestep=false;
   }
+  
   dbg << "end beginOutputTimestep()\n";
 } // end beginOutputTimestep
 
@@ -2018,14 +2031,17 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     v_offset = (int *) malloc(5 * sizeof(int));
     v_count = (int *) malloc(5 * sizeof(int));
     
+      
     
     
     int var_counter = 0;
     for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
 
-      //const VarLabel* var = saveIter->label_;
-      //string type = var->typeDescription()->getName().c_str();
-      //cout << "type = " << type << endl;
+      const VarLabel* var = saveIter->label_;
+      string type = var->typeDescription()->getName().c_str();
+      //if (strstr(type.c_str(), "Vector") != NULL)
+	//cout << "type = " << type << endl;
+      
       
       map<int, MaterialSetP>::iterator iter = saveIter->matlSet_.end();
       const MaterialSubset* var_matls = 0;
@@ -2111,17 +2127,22 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
       //if (var->getBoundaryLayer() != IntVector(0,0,0))
       //      pdElem->appendElement("boundaryLayer", var->getBoundaryLayer());
 
-      /*
-      dbg << ", variable: " << var->getName() << ", materials: ";
-      for(int m=0;m<var_matls->size();m++){
-	if(m != 0)
-	  dbg << ", ";
-	dbg << var_matls->get(m);
-      }
-      */
+      //
+      //dbg << ", variable: " << var->getName() << ", materials: ";
+      //for(int m=0;m<var_matls->size();m++){
+	//if(m != 0)
+	  //dbg << ", ";
+	//dbg << var_matls->get(m);
+      //}
+      
 
       // loop through patches and materials
-      
+      string type1 = var->typeDescription()->getName().c_str();
+      int sample_per_variable = 1;
+      if (strstr(type1.c_str(), "Vector") != NULL) {
+	sample_per_variable = 3;
+	//cout << "type = " << type1 << endl;
+      }
       for(int m=0;m<var_matls->size();m++){
 	int matlIndex = var_matls->get(m);
 	
@@ -2162,9 +2183,10 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	    v_count[2] = hiE.z() - lowE.z() + 0;
 	    v_count[3] = 1;
 	    v_count[4] = 1;
-	    pidx_buffer[vc][m] = (double*)malloc(sizeof(double) * (v_count[0] * v_count[1] * v_count[2]));
-	    memset(pidx_buffer[vc][m], 0, sizeof(double*) * (v_count[0] * v_count[1] * v_count[2]));
+	    pidx_buffer[vc][m] = (double*)malloc(sizeof(double) * (v_count[0] * v_count[1] * v_count[2]) * sample_per_variable);
+	    memset(pidx_buffer[vc][m], 0, sizeof(double*) * (v_count[0] * v_count[1] * v_count[2]) * sample_per_variable);
 	  }
+	  //
 	  /*
 	  if(rank == 0)
 	  cout <<"["<< vc << "] Timestep = " << timeStep 
@@ -2175,11 +2197,15 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	    << " Local Volume [C]= " << v_count[0] << "," << v_count[1]
 	    << "," << v_count[2] << "," << v_count[3] << "," << v_count[4] << endl;
 	  */
-	  new_dw->emit(pc, vc, pidx_buffer[vc][m], (char*) var->getName().c_str(),v_offset,v_count,var, matlIndex, patch);
+	  //
+	  string var_mat_name = var->getName() + "_m" + to_string(m);
+	  //std::cout << "Variable Material Name " << var_mat_name << endl;
+	  new_dw->emit(pc, vc, pidx_buffer[vc][m], /*(char*) var->getName().c_str()*/(char*)var_mat_name.c_str(),v_offset,v_count,var, matlIndex, patch);
 	  //if(vc == 1)
 	  //for(int le = 0 ; le < v_count[0] * v_count[1] * v_count[2] ; le++)
 	  //  std::cout << "["<< vc << "] Value at " << le << " = " << pidx_buffer[vc][m][le] << endl;
-	  pc.variable[vc][m] = PIDX_variable_global_define(pc.idx_ptr, (char*) var->getName().c_str(), /*sample_per_variable_buffer[vc]*/ 1, MPI_DOUBLE);
+	  
+	  pc.variable[vc][m] = PIDX_variable_global_define(pc.idx_ptr, /*(char*) var->getName()*/(char*)var_mat_name.c_str(),  sample_per_variable, MPI_DOUBLE);
 	  PIDX_variable_local_add(pc.idx_ptr, pc.variable[vc][m], (int*) v_offset, (int*) v_count);
 	  PIDX_variable_local_layout(pc.idx_ptr, pc.variable[vc][m], (double*)pidx_buffer[vc][m], MPI_DOUBLE);
 	  
