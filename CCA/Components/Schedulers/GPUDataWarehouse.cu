@@ -224,7 +224,7 @@ GPUDataWarehouse::get(const GPUReductionVariableBase& var, char const* name, int
 {
   GPUDataWarehouse::dataItem* item = getItem(name, patchID, matlID);
   if (item){
-    var.setData(item->numVals, item->var_ptr);
+    var.setData(item->num_elems, item->var_ptr);
   }else{
 #ifdef __CUDA_ARCH__
     int numThreads = blockDim.x*blockDim.y*blockDim.z;
@@ -252,8 +252,8 @@ GPUDataWarehouse::getModifiable(GPUReductionVariableBase& var, char const* name,
 {
   GPUDataWarehouse::dataItem* item = getItem(name, patchID, matlID);
   if (item) {
-    var.setData(item->numVals, item->var_ptr);
-  }else{
+    var.setData(item->num_elems, item->var_ptr);
+  } else {
 #ifdef __CUDA_ARCH__
     int numThreads = blockDim.x*blockDim.y*blockDim.z;
     int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
@@ -296,10 +296,10 @@ GPUDataWarehouse::put(GPUReductionVariableBase& var, char const* name, int patch
   d_varDB[i].domainID  = patchID;
   d_varDB[i].matlIndex = maltIndex;
 
-  var.getData(d_varDB[i].numVals, d_varDB[i].var_ptr);
+  var.getData(d_varDB[i].num_elems, d_varDB[i].var_ptr);
 
   if (d_debug){
-    printf("host put \"%s\" (patch: %d) loc 0x%x into GPUDW 0x%x on device %d, size %d\n", name, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].numVals);
+    printf("host put \"%s\" (patch: %d) loc 0x%x into GPUDW 0x%x on device %d, size %d\n", name, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].num_elems);
   }
   d_dirty=true;
 #endif

@@ -61,23 +61,26 @@ public:
   HOST_DEVICE void setDebug(bool s){d_debug=s;}
   
 private:
+
   int d_numItems;
+
   struct dataItem {   // flat array
     char       label[MAX_NAME];
     int        domainID;
     int        matlIndex;
     int3       var_offset;  
     int3       var_size;
-    size_t     numVals;
+    size_t     num_elems;
     void*      var_ptr;
   };
 
   bool d_dirty;
   dataItem d_varDB[MAX_ITEM];
   dataItem d_levelDB[MAX_LVITEM];
-  GPUDataWarehouse*  d_device_copy;  //in-device copy location
+  GPUDataWarehouse*  d_device_copy;  // in-device copy location
   int d_device_id;
   bool d_debug;
+
   HOST_DEVICE dataItem* getItem(char const* label, int patchID, int matlID);
 };
 
