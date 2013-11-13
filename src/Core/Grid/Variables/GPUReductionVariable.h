@@ -39,7 +39,7 @@ class GPUReductionVariable : public GPUReductionVariableBase {
 
   public:
 
-    HOST_DEVICE GPUReductionVariable() {d_data = NULL; d_size = NULL;}
+    HOST_DEVICE GPUReductionVariable() {d_data = NULL; d_size = 0;}
     HOST_DEVICE virtual ~GPUReductionVariable() {}
 
     HOST_DEVICE virtual size_t getMemSize() {

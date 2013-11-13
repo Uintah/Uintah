@@ -118,6 +118,10 @@ WARNING
       ptr = 0;
     }
 
+    virtual void* getBasePointer() const {
+      return (void*)&value;
+    }
+
     virtual size_t getDataSize() const {
       return sizeof(T);
     }

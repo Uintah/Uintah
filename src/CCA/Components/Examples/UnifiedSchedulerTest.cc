@@ -219,7 +219,6 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
     int numPatches = patches->size();
     for (int p = 0; p < numPatches; p++) {
       const Patch* patch = patches->get(p);
-      double residual = 0;
 
       // Calculate the memory block size
       IntVector l = patch->getNodeLowIndex();
@@ -259,7 +258,8 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
                                        old_gpudw,
                                        new_gpudw);
 
-      new_dw->put(sum_vartype(residual), residual_label);
+      // residual is automatically "put" with the D2H copy of the GPUReductionVariable
+      // new_dw->put(sum_vartype(residual), residual_label);
 
     } // end patch for loop
   } //end GPU
