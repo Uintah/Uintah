@@ -229,5 +229,109 @@ public:
   void evaluate();
 };
 
+/**
+ *  \class TwoStreamMixingDensity
+ *  \author James C. Sutherland
+ *  \date   November, 2013
+ *
+ *  \brief Computes the density from the density-weighted mixture fraction given.
+ *
+ *  Given the density of two streams 0 and 1, where the mixture fraction
+ *  indicates the relative amount of stream 1 present (f=1 being  pure stream 1),
+ *  the density is given as
+ *  \f[
+ *  \frac{1}{\rho} = \frac{f}{\rho_1} + \frac{1-f}{\rho_0}
+ *  \f]
+ *  This expression calculates \f$\rho\f$ from \f$\rho f\f$ and the above equation.
+ *  Assuming that we know the product \f$(\rho f)\f$, we want to solve for the roots of
+ *  \f[
+ *   (\rho f) = \frac{f}{\frac{f}{\rho_1} + \frac{1-f}{\rho_0}}
+ *  \f]
+ *  Letting \f$\alpha\equiv\rho f\f$, we find that
+ *  \f[
+ *  f = \frac{\alpha}{\rho_0}\left[1+\frac{\alpha}{\rho_0}-\frac{\alpha}{\rho_1}\right]^{-1}
+ *  \f]
+ *  This expression first calculates \f$f\f$ and then uses that to calculate \f$\rho\f$
+ */
+template< typename FieldT >
+class TwoStreamMixingDensity : public Expr::Expression<FieldT>
+{
+  const double rho0_, rho1_;
+  const Expr::Tag rhofTag_, mixfrTag_;
+  const FieldT* rhof_;
+  TwoStreamMixingDensity( const Expr::Tag& rhofTag,
+                          const double rho0,
+                          const double rho1  );
+public:
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    /**
+     *  @brief Build a TwoStreamMixingDensity expression
+     *  @param resultTag the tag for the value that this expression computes
+     */
+    Builder( const Expr::Tag& resultTag,
+             const Expr::Tag& rhofTag,
+             const double rho0,
+             const double rho1 );
+
+    Expr::ExpressionBase* build() const{ return new TwoStreamMixingDensity<FieldT>(rhofTag_,rho0_,rho1_); }
+
+  private:
+    const double rho0_, rho1_;
+    const Expr::Tag rhofTag_;
+  };
+
+  ~TwoStreamMixingDensity(){}
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+};
+
+/**
+ *  \class TwoStreamDensFromMixfr
+ *  \author James C. Sutherland
+ *  \date November, 2013
+ *  \brief Given the mixture fraction, calculate the density as \f$\rho=\left(\frac{f}{\rho_1}+\frac{1-f}{\rho_0}\right)^{-1}\f$,
+ *  where \f$\rho_0\f$ corresponds to the density when \f$f=0\f$.
+ */
+template< typename FieldT >
+class TwoStreamDensFromMixfr : public Expr::Expression<FieldT>
+{
+  const double rho0_, rho1_;
+  const Expr::Tag mixfrTag_;
+  const FieldT* mixfr_;
+
+  TwoStreamDensFromMixfr( const Expr::Tag& mixfrTag,
+                          const double rho0,
+                          const double rho1 );
+public:
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    /**
+     *  @brief Build a TwoStreamDensFromMixfr expression
+     *  @param resultTag the tag for the value that this expression computes
+     */
+    Builder( const Expr::Tag& resultTag,
+             const Expr::Tag& mixfrTag,
+             const double rho0,
+             const double rho1 );
+
+    Expr::ExpressionBase* build() const{ return new TwoStreamDensFromMixfr<FieldT>(mixfrTag_,rho0_,rho1_); }
+
+  private:
+    const double rho0_, rho1_;
+    const Expr::Tag mixfrTag_;
+  };
+
+  ~TwoStreamDensFromMixfr(){}
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+};
+
+
+
 
 #endif // DensityCalculator_Expr_h

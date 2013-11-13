@@ -160,6 +160,7 @@ NIGHTLYTESTS = [
   ("varden-projection-advection-xdir",              "varden-projection-advection-xdir.ups",   3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-projection-advection-ydir",              "varden-projection-advection-ydir.ups",   3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-projection-advection-zdir",              "varden-projection-advection-zdir.ups",   3,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("varden-projection-advection-xdir-analytic-dens","varden-projection-advection-xdir-analytic-dens.ups", 3, "Linux", ["exactComparison","no_restart","do_not_validate"] ),
   ("channel-flow-xy-xminus-pressure-outlet",   "channel-flow-xy-xminus-pressure-outlet.ups",   6,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("channel-flow-xy-xplus-pressure-outlet",    "channel-flow-xy-xplus-pressure-outlet.ups",    6,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("channel-flow-xz-zminus-pressure-outlet",   "channel-flow-xz-zminus-pressure-outlet.ups",   6,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
@@ -266,7 +267,8 @@ VARDENTESTS=[
   ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "All",  ["exactComparison","no_restart"] ),         
   ("varden-projection-advection-xdir",              "varden-projection-advection-xdir.ups",   3,  "All",  ["exactComparison","no_restart"] ),         
   ("varden-projection-advection-ydir",              "varden-projection-advection-ydir.ups",   3,  "All",  ["exactComparison","no_restart"] ),         
-  ("varden-projection-advection-zdir",              "varden-projection-advection-zdir.ups",   3,  "All",  ["exactComparison","no_restart"] )        
+  ("varden-projection-advection-zdir",              "varden-projection-advection-zdir.ups",   3,  "All",  ["exactComparison","no_restart"] ),
+  ("varden-projection-advection-xdir-analytic-dens","varden-projection-advection-xdir-analytic-dens.ups", 3, "All", ["exactComparison","no_restart"] )        
 ]
 
 MISCTESTS=[

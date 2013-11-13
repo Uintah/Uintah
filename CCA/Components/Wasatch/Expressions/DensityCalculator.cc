@@ -381,8 +381,138 @@ Builder::build() const
 
 //====================================================================
 
+
+
+template< typename FieldT >
+TwoStreamMixingDensity<FieldT>::
+TwoStreamMixingDensity( const Expr::Tag& rhofTag,
+                        const double rho0,
+                        const double rho1 )
+  : Expr::Expression<FieldT>(),
+    rho0_(rho0), rho1_(rho1),
+    rhofTag_( rhofTag )
+{
+  this->set_gpu_runnable(true);
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+TwoStreamMixingDensity<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( rhofTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+TwoStreamMixingDensity<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  rhof_ = &fml.template field_ref< FieldT >( rhofTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+TwoStreamMixingDensity<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  const FieldT& rf = *rhof_;
+  const double tmp = (1/rho0_ - 1/rho1_);
+
+  // first calculate the mixture fraction:
+  result <<= (rf/rho0_) / (1.0+rf*tmp);
+
+  // now use that to get the density:
+  result <<= 1.0 / ( result/rho1_ + (1.0-result)/rho0_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+TwoStreamMixingDensity<FieldT>::
+Builder::Builder( const Expr::Tag& resultTag,
+                  const Expr::Tag& rhofTag,
+                  const double rho0,
+                  const double rho1 )
+  : ExpressionBuilder( resultTag ),
+    rho0_(rho0), rho1_(rho1),
+    rhofTag_( rhofTag )
+{}
+
+//====================================================================
+
+
+template< typename FieldT >
+TwoStreamDensFromMixfr<FieldT>::
+TwoStreamDensFromMixfr( const Expr::Tag& mixfrTag,
+                        const double rho0,
+                        const double rho1 )
+  : Expr::Expression<FieldT>(),
+    rho0_(rho0), rho1_(rho1),
+    mixfrTag_( mixfrTag )
+{
+  this->set_gpu_runnable(true);
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+TwoStreamDensFromMixfr<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( mixfrTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+TwoStreamDensFromMixfr<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  mixfr_ = &fml.template field_ref< FieldT >( mixfrTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+TwoStreamDensFromMixfr<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  const FieldT& f = *mixfr_;
+  result <<= 1.0 / ( f/rho1_ + (1.0-f)/rho0_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+TwoStreamDensFromMixfr<FieldT>::
+Builder::Builder( const Expr::Tag& resultTag,
+                  const Expr::Tag& mixfrTag,
+                  const double rho0,
+                  const double rho1 )
+  : ExpressionBuilder( resultTag ),
+    rho0_(rho0), rho1_(rho1),
+    mixfrTag_( mixfrTag )
+{}
+
+//====================================================================
+
 // explicit template instantiation
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-template class DensFromMixfrac    <SpatialOps::structured::SVolField>;
-template class DensHeatLossMixfrac<SpatialOps::structured::SVolField>;
-
+template class DensFromMixfrac       <SpatialOps::structured::SVolField>;
+template class DensHeatLossMixfrac   <SpatialOps::structured::SVolField>;
+template class TwoStreamDensFromMixfr<SpatialOps::structured::SVolField>;
+template class TwoStreamMixingDensity<SpatialOps::structured::SVolField>;
