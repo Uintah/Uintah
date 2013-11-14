@@ -184,9 +184,11 @@ evaluate()
   
   for (size_t i = 0; i < nSources_; i++) {
     if (envWeightTag_ != Expr::Tag () ) {
-      result <<= result + 4.0/3.0*PI * molecVols_[i] * **sourceIterator * *density_ * *envWeight_ / *etaScale_;
+      result <<= cond( *etaScale_ > 0.0, result + 4.0/3.0*PI * molecVols_[i] * **sourceIterator * *density_ * *envWeight_ / *etaScale_ )
+                     (0.0);
     } else {
-      result <<= result + 4.0/3.0*PI * molecVols_[i] * **sourceIterator * *density_ / *etaScale_;
+      result <<= cond( *etaScale_ > 0.0, result + 4.0/3.0*PI * molecVols_[i] * **sourceIterator * *density_ / *etaScale_ )
+                     (0.0);
     }
     ++sourceIterator;
   }
