@@ -7,6 +7,11 @@
   <SimulationComponent type="wasatch"/>  
 
   <Wasatch>    
+  
+    <Density>
+      <Constant value="1" name="rho"/>
+    </Density>
+
     <BasicExpression type="SVOL"> 
       <TaskList> advance_solution </TaskList>
       <NameTag name="dissipation" state="STATE_N" />
