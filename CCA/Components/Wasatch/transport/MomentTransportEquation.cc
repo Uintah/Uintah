@@ -395,11 +395,11 @@ namespace Wasatch {
       std::string baseName;
       std::string stateType;
       std::stringstream wID;
-      const int numEnv = 3;
-      //create the tag list for the multi env weights
+      const int numMixingEnv = 3;
+      //create the tag list for the multi environment weights
       params->findBlock("MultiEnvMixingModel")->findBlock("NameTag")->getAttribute("name",baseName);
       params->findBlock("MultiEnvMixingModel")->findBlock("NameTag")->getAttribute("state",stateType);
-      for (int i=0; i<numEnv; i++) {
+      for (int i=0; i<numMixingEnv; i++) {
         wID.str(std::string());
         wID << i;
         if ( stateType == "STATE_NONE" ) {
