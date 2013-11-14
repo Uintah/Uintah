@@ -48,6 +48,8 @@ TabPropsHeatLossEvaluator<FieldT>::
 ~TabPropsHeatLossEvaluator()
 {
   delete enthEval_;
+  delete adEnthEval_;
+  delete sensEnthEval_;
 }
 
 //--------------------------------------------------------------------
@@ -126,9 +128,9 @@ evaluate()
 template< typename FieldT >
 TabPropsHeatLossEvaluator<FieldT>::
 Builder::Builder( const Expr::Tag& result,
-                  const InterpT* const adEnthInterp,
-                  const InterpT* const sensEnthInterp,
-                  const InterpT* const enthInterp,
+                  const InterpT& adEnthInterp,
+                  const InterpT& sensEnthInterp,
+                  const InterpT& enthInterp,
                   const size_t hlIx,
                   const Expr::TagList& ivarNames )
   : ExpressionBuilder(result),
@@ -146,7 +148,12 @@ Expr::ExpressionBase*
 TabPropsHeatLossEvaluator<FieldT>::
 Builder::build() const
 {
-  return new TabPropsHeatLossEvaluator<FieldT>( adEnthInterp_, sensEnthInterp_, enthInterp_, hlIx_, ivarNames_ );
+  return new TabPropsHeatLossEvaluator<FieldT>(
+      adEnthInterp_.clone(),
+      sensEnthInterp_.clone(),
+      enthInterp_.clone(),
+      hlIx_,
+      ivarNames_ );
 }
 
 //===================================================================

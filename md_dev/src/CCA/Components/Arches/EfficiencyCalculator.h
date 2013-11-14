@@ -548,7 +548,9 @@ namespace Uintah {
                             }
                             break; 
                           default: 
-                            throw InvalidValue("Error: Face type not recognized: " + face, __FILE__, __LINE__); 
+                            std::ostringstream msg; 
+                            msg << "Error: Face type not recognized: " << face << std::endl;
+                            throw InvalidValue(msg.str(), __FILE__, __LINE__); 
                             break; 
                         } 
                       }
@@ -598,7 +600,7 @@ namespace Uintah {
             new_dw->get( out, _OUT_label ); 
             new_dw->get( accum, _ACCUM_label );
 
-            double residual = in - out + accum; 
+            double residual = out - in + accum; 
   
             new_dw->put( delt_vartype( residual ), _residual_label ); 
 
@@ -1011,7 +1013,9 @@ namespace Uintah {
                             }
                             break; 
                           default: 
-                            throw InvalidValue("Error: Face type not recognized: " + face, __FILE__, __LINE__); 
+                            std::ostringstream msg; 
+                            msg << "Error: Face type not recognized: " << face << std::endl;
+                            throw InvalidValue(msg.str(), __FILE__, __LINE__); 
                             break; 
                         } 
                       }

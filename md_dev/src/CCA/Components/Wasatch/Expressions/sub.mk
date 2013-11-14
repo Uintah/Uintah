@@ -53,6 +53,7 @@ CUDA_ENABLED_SRCS =       \
      SolnVarEst           \
      Strain               \
      WeakConvectiveTerm   \
+     ExprAlgebra          \
      VelEst
 
 ifeq ($(HAVE_CUDA),yes)
@@ -82,6 +83,7 @@ SRCS += \
         $(SRCDIR)/StableTimestep.cc       \
         $(SRCDIR)/Reduction.cc            \
         $(SRCDIR)/ReductionBase.cc        \
+        $(SRCDIR)/Coordinate.cc          \
         $(SRCDIR)/TabPropsHeatLossEvaluator.cc
 
 #
@@ -156,6 +158,9 @@ ifeq ($(HAVE_CUDA),yes)
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/VelEst.cu : $(SRCTOP_ABS)/$(SRCDIR)/VelEst.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/ExprAlgebra.cu : $(SRCTOP_ABS)/$(SRCDIR)/ExprAlgebra.cc
 	cp $< $@
 
 endif

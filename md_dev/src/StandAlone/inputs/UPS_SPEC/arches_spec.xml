@@ -742,7 +742,6 @@
             <!-- RMCRT -->
             <RMCRT                       spec="OPTIONAL NO_DATA" need_applies_to="type rmcrt_radiation" >
               <!-- <include href="Models.xml" section="Models/RMCRT" />          Dav -->
-              <opl                       spec="OPTIONAL DOUBLE  'positive'"/>
               <randomSeed                spec="OPTIONAL BOOLEAN"/>
               <Temperature               spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->
               <abskg                     spec="OPTIONAL DOUBLE  'positive'"/>                   
@@ -782,6 +781,10 @@
                   <complex_ir_real       spec="REQUIRED DOUBLE 'positive'"/> <!-- Real part of the complex index of refraction --> 
                   <complex_ir_imag       spec="REQUIRED DOUBLE 'negative'"/> <!-- Imaginary part of the complex index of refraction --> 
                 </particles>
+                <opl                     spec="REQUIRED DOUBLE 'positive'" need_applies_to="type hottel_sarofim"/> <!-- Optical Path Length --> 
+                <co2_name                spec="OPTIONAL STRING" need_applies_to="type hottel_sarofim"/> <!-- Default = CO2 --> 
+                <h2o_name                spec="OPTIONAL STRING" need_applies_to="type hottel_sarofim"/> <!-- Default = H2O --> 
+                <soot_name               spec="OPTIONAL STRING" need_applies_to="type hottel_sarofim"/> <!-- Default = soot --> 
               </property_calculator> 
               
 

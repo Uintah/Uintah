@@ -43,9 +43,9 @@ namespace Uintah {
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::get(const GPUGridVariableBase &var, char const* name, int patchID, int matlIndex)
+GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* name, int patchID, int matlIndex)
 {
-  GPUDataWarehouse::dataItem* item=getItem(name, patchID, matlIndex);
+  GPUDataWarehouse::dataItem* item = getItem(name, patchID, matlIndex);
   if (item){
     var.setArray3(item->var_offset, item->var_size, item->var_ptr);
   }else{    
@@ -53,19 +53,18 @@ GPUDataWarehouse::get(const GPUGridVariableBase &var, char const* name, int patc
     int numThreads = blockDim.x*blockDim.y*blockDim.z;
     int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
     
-    
     int i=threadID;
     while(i<d_numItems){
-      printf( "   Available Labels: %s\n", d_varDB[i].label );
+      printf( "   Available labels: \"%s\"\n", d_varDB[i].label );
       i=i+numThreads;
     }
     if( isThread0_Blk0() ) {
-      printf("  ERROR: GPUDataWarehouse::get( %s patchID: %i, matl: %i )  unknown variable\n\n",name, patchID, matlIndex);
+      printf("  ERROR: GPUDataWarehouse::get( \"%s\", patchID: %i, matl: %i )  unknown variable\n\n", name, patchID, matlIndex);
       assert(0);
     }
 
 #else
-    printf("\t ERROR: GPUDataWarehouse::get( %s patchID: %i, matl: %i )  unknown variable\n",name, patchID, matlIndex);
+    printf("\t ERROR: GPUDataWarehouse::get( \"%s\", patchID: %i, matl: %i )  unknown variable\n", name, patchID, matlIndex);
 #endif
   }
 }
@@ -73,7 +72,7 @@ GPUDataWarehouse::get(const GPUGridVariableBase &var, char const* name, int patc
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::getModifiable(GPUGridVariableBase &var, char const* name, int patchID, int matlIndex)
+GPUDataWarehouse::getModifiable(GPUGridVariableBase& var, char const* name, int patchID, int matlIndex)
 {
   GPUDataWarehouse::dataItem* item=getItem(name, patchID, matlIndex);
   if (item) {
@@ -86,16 +85,16 @@ GPUDataWarehouse::getModifiable(GPUGridVariableBase &var, char const* name, int 
     
     int i=threadID;
     while(i<d_numItems){
-      printf( "  Available Labels: %s\n", d_varDB[i].label );
+      printf( "  Available Labels: \"%s\"\n", d_varDB[i].label );
       i=i+numThreads;
     }
     if( isThread0_Blk0() ) {
-      printf("  ERROR: GPUDataWarehouse::getModifiable( %s patchID: %i, matl: %i )  unknown variable\n\n",name, patchID, matlIndex);
+      printf("  ERROR: GPUDataWarehouse::getModifiable( \"%s\", patchID: %i, matl: %i )  unknown variable\n\n", name, patchID, matlIndex);
       assert(0);
     }
 
 #else
-    printf("  ERROR: GPUDataWarehouse::getModifiable( %s patchID: %i, matl: %i )  unknown variable\n",name, patchID, matlIndex);
+    printf("  ERROR: GPUDataWarehouse::getModifiable( \"%s\", patchID: %i, matl: %i )  unknown variable\n", name, patchID, matlIndex);
 #endif
   }
 }
@@ -111,20 +110,24 @@ GPUDataWarehouse::getItem(char const* name, int patchID, int matlIndex)
   int blockID = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
   int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
   int i=threadID;
-  char const *s1 = name;
+  char const* s1 = name;
   __syncthreads();
   index = -1;
   
   if (d_debug && threadID == 0 && blockID==0) {
-    printf("device getting item %s from DW 0x%x", name, this);
+    printf("device getting item \"%s\" from GPUDW 0x%x", name, this);
     printf("size (%d vars)\n Available labels:", d_numItems);
   }
 
-  __syncthreads();  //sync before get
+  //sync before get
+  __syncthreads();
+
   while(i<d_numItems){
     int strmatch=0;
-    char *s2 = &(d_varDB[i].label[0]);
-    while (!(strmatch = *(unsigned char *) s1 - *(unsigned char *) s2) && *s2) ++s1, ++s2; //strcmp
+    char* s2 = &(d_varDB[i].label[0]);
+    while (!(strmatch = *(unsigned char *) s1 - *(unsigned char *) s2) && *s2) { //strcmp
+      ++s1, ++s2;
+    }
 
     if (strmatch==0 && d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==matlIndex){
       index = i;
@@ -133,8 +136,12 @@ GPUDataWarehouse::getItem(char const* name, int patchID, int matlIndex)
   }
   //sync before return;
   __syncthreads();
-  if (index==-1) return NULL;
-  else return &d_varDB[index];
+
+  if (index==-1) {
+    return NULL;
+  } else {
+    return &d_varDB[index];
+  }
 #else
   //__________________________________
   // cpu code
@@ -147,23 +154,24 @@ GPUDataWarehouse::getItem(char const* name, int patchID, int matlIndex)
   }
 
   if (i==d_numItems) {
-    printf("ERROR:\nGPUDataWarehouse::get( %s ) host get unknown variable from GPUDataWarehouse",name);
+    printf("ERROR:\nGPUDataWarehouse::get( %s ) host get unknown variable from GPUDataWarehouse", name);
     exit(-1);
   }
 
   if (d_debug){
-    printf("host got %s loc 0x%x from GPUDW 0x%x on device %u\n", name, d_varDB[i].var_ptr, d_device_copy, d_device_id);
+    printf("host got \"%s\" loc 0x%x from GPUDW 0x%x on device %u\n", name, d_varDB[i].var_ptr, d_device_copy, d_device_id);
   }
   return &d_varDB[i];
 #endif
 }
+
 //______________________________________________________________________
 //
 HOST_DEVICE void 
-GPUDataWarehouse::put(GPUGridVariableBase &var, char const* name, int patchID, int maltIndex, bool overWrite)
+GPUDataWarehouse::put(GPUGridVariableBase &var, char const* name, int patchID, int matlIndex, bool overWrite)
 {
 #ifdef __CUDA_ARCH__  // need to limit output
-  printf("ERROR:\nGPUDataWarehouse::put( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with CUDAMalloc\n",name); 
+  printf("ERROR:\nGPUDataWarehouse::put( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc\n",name);
 #else
   
   //__________________________________
@@ -177,11 +185,11 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, char const* name, int patchID, i
   d_numItems++; 
   strncpy(d_varDB[i].label, name, MAX_NAME);
   d_varDB[i].domainID  = patchID;
-  d_varDB[i].matlIndex = maltIndex;
+  d_varDB[i].matlIndex = matlIndex;
   var.getArray3(d_varDB[i].var_offset, d_varDB[i].var_size, d_varDB[i].var_ptr);
   
   if (d_debug){
-    printf("host put %s (patch: %d) loc 0x%x into GPUDW 0x%x on device %d, size [%d,%d,%d]\n", name, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
+    printf("host put \"%s\" (patch: %d) loc 0x%x into GPUDW 0x%x on device %d, size [%d,%d,%d]\n", name, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
   }
   d_dirty=true;
 #endif
@@ -190,10 +198,10 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, char const* name, int patchID, i
 //______________________________________________________________________
 //
 HOST_DEVICE void 
-GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* name, int patchID, int maltIndex, int3 low, int3 high)
+GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* name, int patchID, int matlIndex, int3 low, int3 high)
 {
 #ifdef __CUDA_ARCH__  // need to limit output
-  printf("ERROR:\nGPUDataWarehouse::allocateAndPut( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with CUDAMalloc\n",name);
+  printf("ERROR:\nGPUDataWarehouse::allocateAndPut( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc\n",name);
 #else
   //__________________________________
   //  cpu code
@@ -203,27 +211,142 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* name, int
   void* addr  = NULL;
   
   var.setArray3(offset, size, addr);
-  CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(d_device_id));
-  
-  if (d_debug) {
-    printf("cuda Malloc for %s, size %ld from (%d,%d,%d) to (%d,%d,%d) " , name, var.getMemSize(), 
-            low.x, low.y, low.z, high.x, high.y, high.z);
-  }
-  
+  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(d_device_id) );
   CUDA_RT_SAFE_CALL( retVal = cudaMalloc(&addr, var.getMemSize()) );
   
-  if (d_debug) {
-    printf(" at 0x%x on device %d\n" , addr ,d_device_id);
+  if (d_debug && retVal == cudaSuccess) {
+    printf("cudaMalloc for \"%s\", size %ld from (%d,%d,%d) to (%d,%d,%d) ", name, var.getMemSize(),
+            low.x, low.y, low.z, high.x, high.y, high.z);
+    printf(" at 0x%x on device %d\n", addr, d_device_id);
   }
   
   var.setArray3(offset, size, addr);
-  put(var, name, patchID, maltIndex);
+  put(var, name, patchID, matlIndex);
+
 #endif
 }
+
+//______________________________________________________________________
+//
+HOST_DEVICE void
+GPUDataWarehouse::get(const GPUReductionVariableBase& var, char const* name, int patchID, int matlID)
+{
+  GPUDataWarehouse::dataItem* item = getItem(name, patchID, matlID);
+  if (item){
+    var.setData(item->num_elems, item->var_ptr);
+  }else{
+#ifdef __CUDA_ARCH__
+    int numThreads = blockDim.x*blockDim.y*blockDim.z;
+    int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+
+    int i=threadID;
+    while(i<d_numItems){
+      printf( "   Available labels: \"%s\"\n", d_varDB[i].label );
+      i=i+numThreads;
+    }
+    if( isThread0_Blk0() ) {
+      printf("  ERROR: GPUDataWarehouse::get( \"%s\", patchID: %i, matl: %i )  unknown variable\n\n", name, patchID, matlID);
+      assert(0);
+    }
+
+#else
+    printf("\t ERROR: GPUDataWarehouse::get( \"%s\", patchID: %i, matl: %i )  unknown variable\n", name, patchID, matlID);
+#endif
+  }
+}
+
+//______________________________________________________________________
+//
+HOST_DEVICE void
+GPUDataWarehouse::getModifiable(GPUReductionVariableBase& var, char const* name, int patchID, int matlID)
+{
+  GPUDataWarehouse::dataItem* item = getItem(name, patchID, -1 /* matlID */);
+  if (item) {
+    var.setData(item->num_elems, item->var_ptr);
+  } else {
+#ifdef __CUDA_ARCH__
+    int numThreads = blockDim.x*blockDim.y*blockDim.z;
+    int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+
+
+    int i=threadID;
+    while(i<d_numItems){
+      printf( "  Available Labels: \"%s\"\n", d_varDB[i].label );
+      i=i+numThreads;
+    }
+    if( isThread0_Blk0() ) {
+      printf("  ERROR: GPUDataWarehouse::getModifiable( \"%s\", patchID: %i, matl: %i )  unknown variable\n\n", name, patchID, matlID);
+      assert(0);
+    }
+
+#else
+    printf("  ERROR: GPUDataWarehouse::getModifiable( \"%s\", patchID: %i, matl: %i )  unknown variable\n", name, patchID, matlID);
+#endif
+  }
+}
+
+//______________________________________________________________________
+//
+HOST_DEVICE void
+GPUDataWarehouse::put(GPUReductionVariableBase& var, char const* name, int patchID, int matlIndex, bool overWrite)
+{
+#ifdef __CUDA_ARCH__  // need to limit output
+  printf("ERROR:\nGPUDataWarehouse::put( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc\n", name);
+#else
+
+  //__________________________________
+  //cpu code
+  if (d_numItems==MAX_ITEM) {
+    printf("out of GPUDataWarehouse space");
+    exit(-1);
+  }
+
+  int i=d_numItems;
+  d_numItems++;
+  strncpy(d_varDB[i].label, name, MAX_NAME);
+  d_varDB[i].domainID  = patchID;
+  d_varDB[i].matlIndex = -1; // matlIndex;
+
+  var.getData(d_varDB[i].num_elems, d_varDB[i].var_ptr);
+
+  if (d_debug){
+    printf("host put \"%s\" (patch: %d) loc 0x%x into GPUDW 0x%x on device %d, size %d\n", name, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].num_elems);
+  }
+  d_dirty=true;
+#endif
+}
+
+//______________________________________________________________________
+//
+HOST_DEVICE void
+GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* name, int patchID, int matlID, int numElems)
+{
+#ifdef __CUDA_ARCH__  // need to limit output
+  printf("ERROR:\nGPUDataWarehouse::allocateAndPut( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc()\n",name);
+#else
+  //__________________________________
+  //  cpu code
+  cudaError_t retVal;
+  size_t numVals = numElems;
+  void* addr  = NULL;
+
+  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(d_device_id) );
+  CUDA_RT_SAFE_CALL( retVal = cudaMalloc(&addr, var.getMemSize()) );
+
+  if (d_debug && retVal == cudaSuccess) {
+    printf("cudaMalloc for \"%s\", size %ld", name, var.getMemSize());
+    printf(" at 0x%x on device %d\n", addr, d_device_id);
+  }
+
+  var.setData(numVals, addr);
+  put(var, name, patchID, matlID);
+#endif
+}
+
 //______________________________________________________________________
 //
 HOST_DEVICE bool
-GPUDataWarehouse::exist(char const* name, int patchID, int maltIndex)
+GPUDataWarehouse::exist(char const* name, int patchID, int matlID)
 {
 #ifdef __CUDA_ARCH__
   printf("exist() is only for framework code\n");
@@ -232,7 +355,7 @@ GPUDataWarehouse::exist(char const* name, int patchID, int maltIndex)
   //  cpu code
   int i= 0;
   while(i<d_numItems){
-    if (!strncmp(d_varDB[i].label, name, MAX_NAME) &&  d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex) {
+    if (!strncmp(d_varDB[i].label, name, MAX_NAME) &&  d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==matlID) {
       return true;
     }
     i++;
@@ -240,25 +363,26 @@ GPUDataWarehouse::exist(char const* name, int patchID, int maltIndex)
 #endif 
 return false;
 }
+
 //______________________________________________________________________
 //
 HOST_DEVICE bool
-GPUDataWarehouse::remove(char const* name, int patchID, int maltIndex)
+GPUDataWarehouse::remove(char const* name, int patchID, int matlID)
 {
 #ifdef __CUDA_ARCH__
   printf("remove() is only for framework code\n");
 #else
   int i= 0;
   while(i<d_numItems){
-    if (!strncmp(d_varDB[i].label, name, MAX_NAME) &&  d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==maltIndex) {
+    if (!strncmp(d_varDB[i].label, name, MAX_NAME) &&  d_varDB[i].domainID==patchID && d_varDB[i].matlIndex==matlID) {
       cudaError_t retVal;
       CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
 
       if (d_debug){
-        printf("cuda Free for %s at 0x%x on device %d\n" , d_varDB[i].label, d_varDB[i].var_ptr, d_device_id );
+        printf("cuda Free for \"%s\" at 0x%x on device %d\n" , d_varDB[i].label, d_varDB[i].var_ptr, d_device_id );
       }
 
-      d_varDB[i].label[0] = NULL; //leave a hole in the flat array, not deleted.
+      d_varDB[i].label[0] = NULL; // leave a hole in the flat array, not deleted.
       d_dirty=true;
     }
     i++;
@@ -273,7 +397,7 @@ HOST_DEVICE void
 GPUDataWarehouse::init_device(int id)
 {
 #ifdef __CUDA_ARCH__
-  //no meaning in device method
+  // no meaning in device method
 #else
   cudaError_t retVal;
   d_device_id = id;
@@ -281,7 +405,7 @@ GPUDataWarehouse::init_device(int id)
   CUDA_RT_SAFE_CALL( retVal = cudaMalloc((void**)&d_device_copy, sizeof(GPUDataWarehouse)));
   
   if(d_debug){
-    printf("Init GPUDW in-device copy %d bytes to 0x%x on device %u\n", sizeof(GPUDataWarehouse), d_device_copy, d_device_id);
+    printf("Init GPUDW on-device copy %d bytes to 0x%x on device %u\n", sizeof(GPUDataWarehouse), d_device_copy, d_device_id);
   }
   
   d_dirty=true;
@@ -294,13 +418,13 @@ HOST_DEVICE void
 GPUDataWarehouse::syncto_device()
 {
 #ifdef __CUDA_ARCH__
-  //no meaning in device method
+  // no meaning in device method
 #else
   if (!d_device_copy) {
     printf("ERROR:\nGPUDataWarehouse::syncto_device()\nNo device copy\n");
     exit(-1);
   }
-  //TODO: only sync the difference
+  // TODO: only sync the difference
   if (d_dirty){
     cudaError_t retVal;
     CUDA_RT_SAFE_CALL(retVal = cudaSetDevice( d_device_id ));
@@ -320,7 +444,7 @@ HOST_DEVICE void
 GPUDataWarehouse::clear() 
 {
 #ifdef __CUDA_ARCH__
-  //no meaning in device method
+  // no meaning in device method
 #else
 
   cudaError_t retVal;
@@ -330,7 +454,7 @@ GPUDataWarehouse::clear()
       CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
       
       if (d_debug){
-        printf("cuda Free for %s at 0x%x on device %d\n" , d_varDB[i].label, d_varDB[i].var_ptr, d_device_id );
+        printf("cudaFree for \"%s\" at 0x%x on device %d\n", d_varDB[i].label, d_varDB[i].var_ptr, d_device_id );
       }
     }
   }
@@ -339,7 +463,7 @@ GPUDataWarehouse::clear()
   if ( d_device_copy ) {
     CUDA_RT_SAFE_CALL(retVal =  cudaFree( d_device_copy ));
     if(d_debug){
-      printf("Delete GPUDW in-device copy at 0x%x on device %d \n",  d_device_copy, d_device_id);
+      printf("Delete GPUDW on-device copy at 0x%x on device %d \n",  d_device_copy, d_device_id);
     }
   }
 #endif

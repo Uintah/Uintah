@@ -331,7 +331,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   // should pass the entire uintah input file params.
 
   Uintah::IntVector extraCells;
-  Wasatch::check_periodicity_extra_cells( params, extraCells);
+  bool isPeriodic;
+  Wasatch::check_periodicity_extra_cells( params, extraCells, isPeriodic);
 
   Wasatch::GraphHelper* const solngh = d_wasatch->graph_categories()[Wasatch::ADVANCE_SOLUTION];
   Wasatch::GraphHelper* const initgh = d_wasatch->graph_categories()[Wasatch::INITIALIZATION];
@@ -1015,7 +1016,7 @@ Arches::scheduleInitialize(const LevelP& level,
   bool initialize_it = true;
   bool modify_ref_den = true;
   d_props->doTableMatching();
-  d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den );
+  d_props->sched_computeProps( level, sched, init_timelabel, initialize_it, modify_ref_den );
   
 
   //Setup BC areas

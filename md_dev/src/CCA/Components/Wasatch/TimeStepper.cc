@@ -25,7 +25,6 @@
 //-- Wasatch Includes --//
 #include "TimeStepper.h"
 #include "TaskInterface.h"
-#include "CoordHelper.h"
 #include "TagNames.h"
 #include <CCA/Components/Wasatch/Expressions/SetCurrentTime.h>
 
@@ -142,7 +141,6 @@ namespace Wasatch{
     : sharedState_        ( sharedState ),
       solnGraphHelper_    ( grafCat[ADVANCE_SOLUTION] ),
       postProcGraphHelper_( grafCat[POSTPROCESSING] ),
-      coordHelper_        ( new CoordHelper( *(solnGraphHelper_->exprFactory) ) ),
       timeInt_            ( timeInt )
   {}
 
@@ -150,7 +148,6 @@ namespace Wasatch{
 
   TimeStepper::~TimeStepper()
   {
-    delete coordHelper_;
     for( std::list<TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
       delete *i;
     }
@@ -210,7 +207,7 @@ namespace Wasatch{
                                 patchInfoMap,
                                 1, persistentFields );
       taskInterfaceList_.push_back( timeTask );
-      timeTask->schedule( coordHelper_->field_tags(), rkStage );
+      timeTask->schedule( rkStage );
     }
 
     //_________________________________________________________________
@@ -230,8 +227,7 @@ namespace Wasatch{
                                                      rkStage, persistentFields );
 
       taskInterfaceList_.push_back( rhsTask );
-      if(rkStage==1) coordHelper_->create_task( sched, patches, materials );
-      rhsTask->schedule( coordHelper_->field_tags(), rkStage ); // must be scheduled after coordHelper_
+      rhsTask->schedule( rkStage ); // must be scheduled after coordHelper_
     }
     catch( std::exception& e ){
       std::ostringstream msg;

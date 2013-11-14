@@ -34,7 +34,6 @@ SRCDIR := CCA/Components/Wasatch
 SRCS +=                                              \
         $(SRCDIR)/BCHelperTools.cc                   \
         $(SRCDIR)/ConvectiveInterpolationMethods.cc  \
-        $(SRCDIR)/CoordHelper.cc                     \
         $(SRCDIR)/FieldAdaptor.cc                    \
         $(SRCDIR)/GraphHelperTools.cc                \
         $(SRCDIR)/OldVariable.cc                     \
@@ -45,7 +44,8 @@ SRCS +=                                              \
         $(SRCDIR)/TaskInterface.cc                   \
         $(SRCDIR)/TimeStepper.cc                     \
         $(SRCDIR)/BCHelper.cc                        \
-        $(SRCDIR)/Wasatch.cc 
+        $(SRCDIR)/CoordinateHelper.cc                \
+        $(SRCDIR)/Wasatch.cc
 
 PSELIBS :=                        \
         CCA/Components/Schedulers \

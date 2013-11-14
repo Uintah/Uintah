@@ -75,7 +75,7 @@ static DebugStream affinity("CPUAffinity", false);
 
 #ifdef HAVE_CUDA
 static DebugStream gpu_stats("GPUStats", false);
-static DebugStream use_single_device("SingleDevice", false);
+DebugStream use_single_device("SingleDevice", false);
 #endif
 
 UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
@@ -1436,306 +1436,436 @@ void UnifiedScheduler::gpuInitialize(bool reset)
   currentDevice_ = 0;
 }
 
-void UnifiedScheduler::postH2DCopies(DetailedTask* dtask)
-{
+void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
 
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::initiateH2DRequiresCopies");
-  TAU_PROFILE("UnifiedScheduler::initiateH2DRequiresCopies()", " ", TAU_USER);
+  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postH2DCopies");
+  TAU_PROFILE("UnifiedScheduler::postH2DCopies()", " ", TAU_USER);
 
-  // determine which variables it will require
   cudaError_t retVal;
   int device = dtask->getDeviceNum();
   CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
   const Task* task = dtask->getTask();
+
+  // determine variables the specified task requires
   for (const Task::Dependency* req = task->getRequires(); req != 0; req = req->next) {
     constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->getMaterials());
 
-    // for now, we're only interested in grid variables
-    TypeDescription::Type type = req->var->typeDescription()->getType();
-    if (type == TypeDescription::CCVariable || type == TypeDescription::NCVariable || type == TypeDescription::SFCXVariable
-        || type == TypeDescription::SFCYVariable || type == TypeDescription::SFCZVariable) {
+    int dwIndex = req->mapDataWarehouse();
+    OnDemandDataWarehouseP dw = dws[dwIndex];
 
-      // this is so we can allocate persistent events and streams to distribute when needed
-      //   one stream and one event per variable per H2D copy (numPatches * numMatls)
-      int numPatches = patches->size();
-      int numMatls = matls->size();
+    void* host_ptr = NULL;    // host base pointer to raw data
+    void* device_ptr = NULL;  // device base pointer to raw data
+    size_t host_bytes = 0;    // raw byte count to copy to the device
+    size_t device_bytes = 0;  // raw byte count to copy to the host
 
-      int dwIndex = req->mapDataWarehouse();
-      OnDemandDataWarehouseP dw = dws[dwIndex];
-      IntVector size;
-      IntVector offset;
-      double* h_reqData = NULL;
+    int numPatches = patches->size();
+    int numMatls = matls->size();
+    for (int i = 0; i < numPatches; i++) {
+      for (int j = 0; j < numMatls; j++) {
 
-      for (int i = 0; i < numPatches; i++) {
-        for (int j = 0; j < numMatls; j++) {
-          // a fix for when INF ghost cells are requested such as in RMCRT
-          //  e.g. tsk->requires(abskg_dw, d_abskgLabel, gac, SHRT_MAX);
-          bool uses_SHRT_MAX = (req->numGhostCells == SHRT_MAX);
-          if (type == TypeDescription::CCVariable) {
-            constCCVariable<double> ccVar;
+        int matlID = matls->get(j);
+        int patchID = patches->get(i)->getID();
+
+        TypeDescription::Type type = req->var->typeDescription()->getType();
+        switch (type) {
+          case TypeDescription::CCVariable :
+          case TypeDescription::NCVariable :
+          case TypeDescription::SFCXVariable :
+          case TypeDescription::SFCYVariable :
+          case TypeDescription::SFCZVariable : {
+
+            GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(req->var->typeDescription()->createInstance());
+            IntVector low, high, offset, size, strides;
+
+            // check for case when INF ghost cells are requested such as in RMCRT
+            bool uses_SHRT_MAX = (req->numGhostCells == SHRT_MAX);
             if (uses_SHRT_MAX) {
               const Level* level = getLevel(dtask->getPatches());
               IntVector domainLo_EC, domainHi_EC;
               level->findCellIndexRange(domainLo_EC, domainHi_EC);  // including extraCells
-              dw->getRegion(ccVar, req->var, matls->get(j), level, domainLo_EC, domainHi_EC, true);
+              dw->getRegion(*gridVar, req->var, matls->get(j), level, domainLo_EC, domainHi_EC, true);
+              gridVar->getSizes(domainLo_EC, domainHi_EC, offset, size, strides);
+              host_ptr = gridVar->getBasePointer();
+              host_bytes = gridVar->getDataSize();
             } else {
-              dw->get(ccVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
+              dw->getGridVar(*gridVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
+              gridVar->getSizes(low, high, offset, size, strides);
+              host_ptr = gridVar->getBasePointer();
+              host_bytes = gridVar->getDataSize();
             }
-            ccVar.getWindow()->getData()->addReference();
-            h_reqData = (double*)ccVar.getWindow()->getData()->getPointer();
-            size = ccVar.getWindow()->getData()->size();
-            offset = ccVar.getWindow()->getOffset();
 
-          } else if (type == TypeDescription::NCVariable) {
-            constNCVariable<double> ncVar;
-            dw->get(ncVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
-            ncVar.getWindow()->getData()->addReference();
-            h_reqData = (double*)ncVar.getWindow()->getData()->getPointer();
-            size = ncVar.getWindow()->getData()->size();
-            offset = ncVar.getWindow()->getOffset();
+            // check if the variable already exists on the GPU
+            GPUGridVariable<void*> device_var;
+            if (dw->getGPUDW()->exist(req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j))) {
+              dw->getGPUDW()->get(device_var, req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j));
+              int3 device_offset;
+              int3 device_size;
+              device_var.getArray3(device_offset, device_size, device_ptr);
+              // if the extents and offsets are the same, then the variable already exists on the GPU... no H2D copy
+              if (device_offset.x == offset.x() && device_offset.y == offset.y() && device_offset.z == offset.z()
+                  && device_size.x == size.x() && device_size.y == size.y() && device_size.z == size.z()) {
+                // report the above fact
+                if (gpu_stats.active()) {
+                  cerrLock.lock();
+                  {
+                    gpu_stats << "GridVariable: " << req->var->getName() << " already exists, skipping H2D copy..." << std::endl;
+                  }
+                  cerrLock.unlock();
+                }
+                continue;
+              } else {
+                dw->getGPUDW()->remove(req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j));
+              }
+            }
 
-          } else if (type == TypeDescription::SFCXVariable) {
-            constSFCXVariable<double> sfcxVar;
-            dw->get(sfcxVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
-            h_reqData = (double*)sfcxVar.getWindow()->getData()->getPointer();
-            size = sfcxVar.getWindow()->getData()->size();
-            offset = sfcxVar.getWindow()->getOffset();
+            // critical section - prepare and async copy the requires variable to the device
+            h2dRequiresLock_.writeLock();
+            {
+              IntVector low = offset;
+              IntVector high = offset + size;
+              int3 lo = make_int3(low.x(), low.y(), low.z());
+              int3 hi = make_int3(high.x(), high.y(), high.z());
 
-          } else if (type == TypeDescription::SFCYVariable) {
-            constSFCYVariable<double> sfcyVar;
-            dw->get(sfcyVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
-            h_reqData = (double*)sfcyVar.getWindow()->getData()->getPointer();
-            size = sfcyVar.getWindow()->getData()->size();
-            offset = sfcyVar.getWindow()->getOffset();
+              dw->getGPUDW()->allocateAndPut(device_var, req->var->getName().c_str(), patchID, matlID, lo, hi);
 
-          } else if (type == TypeDescription::SFCZVariable) {
-            constSFCZVariable<double> sfczVar;
-            dw->get(sfczVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
-            h_reqData = (double*)sfczVar.getWindow()->getData()->getPointer();
-            size = sfczVar.getWindow()->getData()->size();
-            offset = sfczVar.getWindow()->getOffset();
-
-          }
-
-          // copy the requires variable data to the device
-          GPUGridVariable<double> device_var;
-          if (dw->getGPUDW()->exist(req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j))){
-            dw->getGPUDW()->get(device_var, req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j));
-            int3 device_offset;
-            int3 device_size;
-            void *device_ptr;
-            device_var.getArray3(device_offset, device_size, device_ptr);
-            if (device_offset.x == offset.x() && device_offset.y == offset.y() && device_offset.y == offset.y() &&
-                device_size.x == size.x() &&  device_size.y == size.y()  && device_size.z == size.z() ) {
+              // pin/page-lock host memory for H2D cudaMemcpyAsync
+              // cudaHostRegisterPortable flag so pinned mem will be considered pinned by all CUDA contexts
+              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
+              if (!pinned) {
+                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
+                if (retVal == cudaSuccess) {
+                  pinnedHostPtrs.insert(host_ptr);
+                }
+              }
               if (gpu_stats.active()) {
                 cerrLock.lock();
-                gpu_stats << "skip H2D copy of " << req->var->getName() << endl;
+                {
+                  gpu_stats << "Post H2D copy of " << req->var->getName() << ", size = " << host_bytes << " from " << host_ptr
+                            << " to " << device_var.getPointer() << ", using stream " << dtask->getCUDAStream() << std::endl;
+                }
                 cerrLock.unlock();
               }
-              continue;
-            } else {
-                dw->getGPUDW()->remove(req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j));
+              cudaStream_t stream = *(dtask->getCUDAStream());
+              CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_var.getPointer(), host_ptr, host_bytes, cudaMemcpyHostToDevice, stream));
             }
-          }
-          h2dRequiresLock_.writeLock();
-          IntVector low = offset;
-          IntVector high = offset + size;
-          dw->getGPUDW()->allocateAndPut(device_var, req->var->getName().c_str(), patches->get(i)->getID(), matls->get(j), 
-                  make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()));
-          const bool pinned = (*(pinnedHostPtrs.find(h_reqData)) == h_reqData);
-          if (!pinned) {
-            // pin/page-lock host memory for asynchronous host-to-device copy
-            // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
-            retVal = cudaHostRegister(h_reqData, size.x()*size.y()*size.z()*sizeof(double), cudaHostRegisterPortable);
-            if (retVal == cudaSuccess) {
-              pinnedHostPtrs.insert(h_reqData);
+            h2dRequiresLock_.writeUnlock();
+
+          }  // end GridVariable switch case
+            break;
+
+          case TypeDescription::ReductionVariable : {
+
+            ReductionVariableBase* reductionVar = dynamic_cast<ReductionVariableBase*>(req->var->typeDescription()->createInstance());
+            host_ptr = reductionVar->getBasePointer();
+            host_bytes = reductionVar->getDataSize();
+
+            // check if the variable already exists on the GPU
+            GPUReductionVariable<void*> device_var;
+            if (dw->getGPUDW()->exist(req->var->getName().c_str(), patchID, matlID)) {
+              dw->getGPUDW()->get(device_var, req->var->getName().c_str(), patchID, matlID);
+              device_ptr = device_var.getPointer();
+              device_bytes = device_var.getMemSize();
+              // if the size is the same, assume the variable already exists on the GPU... no H2D copy
+              if (host_bytes == device_bytes) {
+                // report the above fact
+                if (gpu_stats.active()) {
+                  cerrLock.lock();
+                  {
+                    gpu_stats << "ReductionVariable: \"" << req->var->getName() << "\" already exists, skipping H2D copy..." << std::endl;
+                  }
+                  cerrLock.unlock();
+                }
+                continue;
+              } else {
+                dw->getGPUDW()->remove(req->var->getName().c_str(), patchID, matlID);
+              }
             }
-          }
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            gpu_stats << "post H2D copy of " << req->var->getName() << " ,size= "<< size.x()*size.y()*size.z()*sizeof(double) 
-                  << " from "<< h_reqData << " to " << device_var.getPointer() << " , use stream " <<   dtask->getCUDAStream() << endl;
-            cerrLock.unlock();
-          }
-          CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_var.getPointer(), h_reqData, 
-                  device_var.getMemSize(), cudaMemcpyHostToDevice, *(dtask->getCUDAStream())));
-          h2dRequiresLock_.writeUnlock();
-        }
-      }
-    } else {
-       SCI_THROW(InternalError("Cannot copy unsupported variable types to GPU:" +
-                            req->var->getName(), __FILE__, __LINE__));
-    }
-  }
+
+            // critical section - prepare and async copy the requires variable data to the device
+            h2dRequiresLock_.writeLock();
+            {
+              int numElems = 1; // baked in for now: simple reductions on single value
+              dw->getGPUDW()->allocateAndPut(device_var, req->var->getName().c_str(), patchID, matlID, numElems);
+
+              // pin/page-lock host memory for H2D cudaMemcpyAsync
+              // cudaHostRegisterPortable flag so pinned mem will be considered pinned by all CUDA contexts
+              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
+              if (!pinned) {
+                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
+                if (retVal == cudaSuccess) {
+                  pinnedHostPtrs.insert(host_ptr);
+                }
+              }
+              if (gpu_stats.active()) {
+                cerrLock.lock();
+                {
+                  gpu_stats << "Post H2D copy of \"" << req->var->getName() << "\", size = " << host_bytes << " from " << host_ptr
+                            << " to " << device_var.getPointer() << ", using stream " << dtask->getCUDAStream() << std::endl;
+                }
+                cerrLock.unlock();
+              }
+              cudaStream_t stream = *(dtask->getCUDAStream());
+              CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_var.getPointer(), host_ptr, host_bytes, cudaMemcpyHostToDevice, stream));
+            }
+            h2dRequiresLock_.writeUnlock();
+
+          }  // end ReductionVariable switch case
+            break;
+
+          case TypeDescription::ParticleVariable : {
+            SCI_THROW(InternalError("Copying ParticleVariables to GPU not yet supported:" + req->var->getName(), __FILE__, __LINE__));
+          }  // end ParticleVariable switch case
+            break;
+
+          default : {
+            SCI_THROW(InternalError("Cannot copy unsupported variable types to GPU:" + req->var->getName(), __FILE__, __LINE__));
+
+          }  // end default switch case
+
+        }  // end switch
+      }  // end matl loop
+    }  // end patch loop
+  }  // end requires gathering loop
+
 }
 
-void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask)
-{
+void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
 
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::initiateH2DComputesCopies");
-  TAU_PROFILE("UnifiedScheduler::initiateH2DComputesCopies()", " ", TAU_USER);
+  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::preallocateDeviceMemory");
+  TAU_PROFILE("UnifiedScheduler::preallocateDeviceMemory()", " ", TAU_USER);
 
-  // determine which variables it will require
+  // determine variables the specified task will compute
   const Task* task = dtask->getTask();
   for (const Task::Dependency* comp = task->getComputes(); comp != 0; comp = comp->next) {
     constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(dtask->getMaterials());
 
-    // for now, we're only interested in grid variables
-    TypeDescription::Type type = comp->var->typeDescription()->getType();
-    if (type == TypeDescription::CCVariable || type == TypeDescription::NCVariable || type == TypeDescription::SFCXVariable
-        || type == TypeDescription::SFCYVariable || type == TypeDescription::SFCZVariable) {
+    int dwIndex = comp->mapDataWarehouse();
+    OnDemandDataWarehouseP dw = dws[dwIndex];
 
-      // this is so we can allocate persistent events and streams to distribute when needed
-      //   one stream and one event per variable per H2D copy (numPatches * numMatls)
-      int numPatches = patches->size();
-      int numMatls = matls->size();
+    int numPatches = patches->size();
+    int numMatls = matls->size();
+    for (int i = 0; i < numPatches; ++i) {
+      for (int j = 0; j < numMatls; ++j) {
 
-      int dwIndex = comp->mapDataWarehouse();
-      OnDemandDataWarehouseP dw = dws[dwIndex];
-      IntVector low;
-      IntVector high;
+        int matlID = matls->get(j);
+        int patchID = patches->get(i)->getID();
 
-      for (int i = 0; i < numPatches; i++) {
-        for (int j = 0; j < numMatls; j++) {
-          IntVector lowOffset, highOffset;
-          Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
-          Patch::getGhostOffsets(type, comp->gtype, comp->numGhostCells, lowOffset, highOffset);
-          patches->get(i)->computeExtents(basis, comp->var->getBoundaryLayer(), lowOffset, highOffset, low, high);
-          
-          d2hComputesLock_.writeLock();
-          GPUGridVariable<double> device_var;
-          dw->getGPUDW()->allocateAndPut(device_var, comp->var->getName().c_str(), patches->get(i)->getID(), matls->get(j), 
-                  make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()));
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            gpu_stats << "allocated device copy of " << comp->var->getName() << " ,size= "<< device_var.getMemSize() 
-                  << " at " << device_var.getPointer() << " on device " <<   dtask->getDeviceNum() << endl;
-            cerrLock.unlock();
-          }
-          d2hComputesLock_.writeUnlock();
-        }
-      }
-    }
-  }
+        TypeDescription::Type type = comp->var->typeDescription()->getType();
+        switch (type) {
+          case TypeDescription::CCVariable :
+          case TypeDescription::NCVariable :
+          case TypeDescription::SFCXVariable :
+          case TypeDescription::SFCYVariable :
+          case TypeDescription::SFCZVariable : {
+
+            IntVector low, high, lowOffset, highOffset;
+            Patch::VariableBasis basis = Patch::translateTypeToBasis(type, false);
+            Patch::getGhostOffsets(type, comp->gtype, comp->numGhostCells, lowOffset, highOffset);
+            patches->get(i)->computeExtents(basis, comp->var->getBoundaryLayer(), lowOffset, highOffset, low, high);
+
+            d2hComputesLock_.writeLock();
+            {
+              GPUGridVariable<void*> device_var;
+              int patchID = patches->get(i)->getID();
+              int matlID = matls->get(j);
+              dw->getGPUDW()->allocateAndPut(device_var, comp->var->getName().c_str(), patchID, matlID,
+                                             make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()));
+              if (gpu_stats.active()) {
+                cerrLock.lock();
+                {
+                  gpu_stats << "allocated device copy of \"" << comp->var->getName() << "\", size = " << device_var.getMemSize()
+                            << " at " << device_var.getPointer() << " on device " << dtask->getDeviceNum() << endl;
+                }
+                cerrLock.unlock();
+              }
+            }
+            d2hComputesLock_.writeUnlock();
+
+          }  // end GridVariable switch case
+            break;
+
+          case TypeDescription::ReductionVariable : {
+
+            d2hComputesLock_.writeLock();
+            {
+              GPUReductionVariable<void*> device_var;
+              int numElems = 1; // baked in for now: simple reductions on single value
+              dw->getGPUDW()->allocateAndPut(device_var, comp->var->getName().c_str(), patchID, matlID, numElems);
+              if (gpu_stats.active()) {
+                cerrLock.lock();
+                {
+                  gpu_stats << "allocated device copy of \"" << comp->var->getName() << "\", size = " << device_var.getMemSize()
+                            << " at " << device_var.getPointer() << " on device " << dtask->getDeviceNum() << endl;
+                }
+                cerrLock.unlock();
+              }
+            }
+            d2hComputesLock_.writeUnlock();
+
+          }  // end ReductionVariable switch case
+            break;
+
+          case TypeDescription::ParticleVariable : {
+            SCI_THROW(
+                InternalError("Allocating device memory for ParticleVariables not yet supported: " + comp->var->getName(), __FILE__, __LINE__));
+          }  // end ParticleVariable switch case
+            break;
+
+          default : {
+            SCI_THROW(InternalError("Cannot allocate device space for unsupported variable types: " + comp->var->getName(), __FILE__, __LINE__));
+          }  // end default switch case
+
+        }  // end switch
+      }  // end matl loop
+    }  // end patch loop
+  }  // end requires gathering loop
+
 }
 
+void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
 
+  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postD2HCopies");
+  TAU_PROFILE("UnifiedScheduler::postD2HCopies()", " ", TAU_USER);
 
-void UnifiedScheduler::postD2HCopies(DetailedTask* dtask)
-{
-
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::initiateH2DComputesCopies");
-  TAU_PROFILE("UnifiedScheduler::initiateH2DComputesCopies()", " ", TAU_USER);
-
-  const Task* task = dtask->getTask();
   cudaError_t retVal;
   int device = dtask->getDeviceNum();
   CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(device));
-  // determine which variables it will require
+  const Task* task = dtask->getTask();
+
+  // determine which computes variables to copy back to the host
   for (const Task::Dependency* comp = task->getComputes(); comp != 0; comp = comp->next) {
     constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(dtask->getMaterials());
 
-    // for now, we're only interested in grid variables
-    TypeDescription::Type type = comp->var->typeDescription()->getType();
-    if (type == TypeDescription::CCVariable || type == TypeDescription::NCVariable || type == TypeDescription::SFCXVariable
-        || type == TypeDescription::SFCYVariable || type == TypeDescription::SFCZVariable) {
+    int dwIndex = comp->mapDataWarehouse();
+    OnDemandDataWarehouseP dw = dws[dwIndex];
+    IntVector low, high, offset, size, strides;
+    void* host_ptr = NULL;    // host base pointer to raw data
+    void* device_ptr = NULL;  // device base pointer to raw data
+    size_t host_bytes = 0;    // raw byte count to copy to the device
+    size_t device_bytes = 0;  // raw byte count to copy to the host
 
-      // this is so we can allocate persistent events and streams to distribute when needed
-      //   one stream and one event per variable per H2D copy (numPatches * numMatls)
-      int numPatches = patches->size();
-      int numMatls = matls->size();
+    int numPatches = patches->size();
+    int numMatls = matls->size();
+    for (int i = 0; i < numPatches; i++) {
+      for (int j = 0; j < numMatls; j++) {
 
-      int dwIndex = comp->mapDataWarehouse();
-      OnDemandDataWarehouseP dw = dws[dwIndex];
-      IntVector size;
-      IntVector offset;
-      double* h_compData = NULL;
+        int matlID = matls->get(j);
+        int patchID = patches->get(i)->getID();
 
-      for (int i = 0; i < numPatches; i++) {
-        for (int j = 0; j < numMatls; j++) {
+        TypeDescription::Type type = comp->var->typeDescription()->getType();
+        switch (type) {
+          case TypeDescription::CCVariable :
+          case TypeDescription::NCVariable :
+          case TypeDescription::SFCXVariable :
+          case TypeDescription::SFCYVariable :
+          case TypeDescription::SFCZVariable : {
 
-          // get the host memory that will be copied to the device
-          if (type == TypeDescription::CCVariable) {
-            CCVariable<double> ccVar;
-            dw->allocateAndPut(ccVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
-            ccVar.getWindow()->getData()->addReference();
-            h_compData = (double*)ccVar.getWindow()->getData()->getPointer();
-            size = ccVar.getWindow()->getData()->size();
-            offset = ccVar.getWindow()->getOffset();
+            GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(comp->var->typeDescription()->createInstance());
+            dw->allocateAndPut(*gridVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
+            gridVar->getSizes(low, high, offset, size, strides);
+            host_ptr = gridVar->getBasePointer();
+            host_bytes = gridVar->getDataSize();
 
-          } else if (type == TypeDescription::NCVariable) {
-            NCVariable<double> ncVar;
-            dw->allocateAndPut(ncVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
-            ncVar.getWindow()->getData()->addReference();
-            h_compData = (double*)ncVar.getWindow()->getData()->getPointer();
-            size = ncVar.getWindow()->getData()->size();
-            offset = ncVar.getWindow()->getOffset();
+            // copy the computes data back to the host
+            d2hComputesLock_.writeLock();
+            {
+              GPUGridVariable<void*> device_var;
+              dw->getGPUDW()->get(device_var, comp->var->getName().c_str(), patchID, matlID);
+              int3 device_offset;
+              int3 device_size;
+              device_var.getArray3(device_offset, device_size, device_ptr);
 
-          } else if (type == TypeDescription::SFCXVariable) {
-            SFCXVariable<double> sfcxVar;
-            dw->allocateAndPut(sfcxVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
-            h_compData = (double*)sfcxVar.getWindow()->getData()->getPointer();
-            size = sfcxVar.getWindow()->getData()->size();
-            offset = sfcxVar.getWindow()->getOffset();
-
-          } else if (type == TypeDescription::SFCYVariable) {
-            SFCYVariable<double> sfcyVar;
-            dw->allocateAndPut(sfcyVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
-            h_compData = (double*)sfcyVar.getWindow()->getData()->getPointer();
-            size = sfcyVar.getWindow()->getData()->size();
-            offset = sfcyVar.getWindow()->getOffset();
-
-          } else if (type == TypeDescription::SFCZVariable) {
-            SFCZVariable<double> sfczVar;
-            dw->allocateAndPut(sfczVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
-            h_compData = (double*)sfczVar.getWindow()->getData()->getPointer();
-            size = sfczVar.getWindow()->getData()->size();
-            offset = sfczVar.getWindow()->getOffset();
-          }
-
-          // copy the computes  data to the device
-          d2hComputesLock_.writeLock();
-          GPUGridVariable<double> device_var;
-          dw->getGPUDW()->get(device_var, comp->var->getName().c_str(), patches->get(i)->getID(), matls->get(j));
-          int3 device_offset;
-          int3 device_size;
-          void* device_ptr;
-          device_var.getArray3(device_offset, device_size, device_ptr);
-
-          // if offset and size is equal to CPU DW, directly copy back to CPU var memory;
-          if (device_offset.x == offset.x() && device_offset.y == offset.y() && device_offset.y == offset.y() &&
-              device_size.x == size.x() &&  device_size.y == size.y()  && device_size.z == size.z() ) {
-          const bool pinned = (*(pinnedHostPtrs.find(h_compData)) == h_compData);
-          if (!pinned) {
-            // pin/page-lock host memory for asynchronous host-to-device copy
-            // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
-            retVal = cudaHostRegister(h_compData, size.x()*size.y()*size.z()*sizeof(double), cudaHostRegisterPortable);
-            if (retVal == cudaSuccess) {
-              pinnedHostPtrs.insert(h_compData);
+              // if offset and size is equal to CPU DW, directly copy back to CPU var memory;
+              if (device_offset.x == offset.x() && device_offset.y == offset.y() && device_offset.y == offset.y()
+                  && device_size.x == size.x() && device_size.y == size.y() && device_size.z == size.z()) {
+                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
+                if (!pinned) {
+                  // pin/page-lock host memory for asynchronous host-to-device copy
+                  // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
+                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
+                  if (retVal == cudaSuccess) {
+                    pinnedHostPtrs.insert(host_ptr);
+                  }
+                }
+                if (gpu_stats.active()) {
+                  cerrLock.lock();
+                  {
+                    gpu_stats << "post D2H copy of \"" << comp->var->getName() << "\", size = " << device_var.getMemSize() << " to "
+                              << host_ptr << " from " << device_ptr << ", using stream " << dtask->getCUDAStream() << std::endl;
+                  }
+                  cerrLock.unlock();
+                }
+                CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, device_bytes, cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
+                if (retVal == cudaErrorLaunchFailure) {
+                  SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
+                } else {
+                  CUDA_RT_SAFE_CALL(retVal);
+                }
+              }
+              d2hComputesLock_.writeUnlock();
             }
-          }
-          if (gpu_stats.active()) {
-            cerrLock.lock();
-            gpu_stats << "post D2H copy of " << comp->var->getName() << " ,size= "<< device_var.getMemSize() 
-                  << " to "<< h_compData << " from " << device_ptr << " , use stream " <<   dtask->getCUDAStream() << endl;
-            cerrLock.unlock();
-          }
-          retVal = cudaMemcpyAsync(h_compData, device_ptr, 
-                  device_var.getMemSize(), cudaMemcpyDeviceToHost, *dtask->getCUDAStream());
-           if (retVal ==  cudaErrorLaunchFailure) 
-               SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
-           else CUDA_RT_SAFE_CALL(retVal);
-        //  h2dComputesCopy(dtask, comp->var, matls->get(j), patches->get(i), size, h_compData, d_compData);
-          // check if preallocated size is correct
-          d2hComputesLock_.writeUnlock();
-          } else {
-            //need  selective copy back to CPU memory.
-               SCI_THROW(InternalError("Cannot copy unmatched size variable from CPU to host:" +
-                            comp->var->getName(), __FILE__, __LINE__));
-          }
+
+          }  // end GridVariable switch case
+            break;
+
+          case TypeDescription::ReductionVariable : {
+
+            ReductionVariableBase* reductionVar = dynamic_cast<ReductionVariableBase*>(comp->var->typeDescription()->createInstance());
+            dw->put(*reductionVar, comp->var, patches->get(i)->getLevel(), matlID);
+            host_ptr = reductionVar->getBasePointer();
+            host_bytes = reductionVar->getDataSize();
+
+            d2hComputesLock_.writeLock();
+            {
+              GPUReductionVariable<void*> device_var;
+              dw->getGPUDW()->get(device_var, comp->var->getName().c_str(), patchID, matlID);
+              device_ptr = device_var.getPointer();
+              device_bytes = device_var.getMemSize();
+
+              // if size is equal to CPU DW, directly copy back to CPU var memory;
+              if (host_bytes == device_bytes) {
+                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
+                if (!pinned) {
+                  // pin/page-lock host memory for asynchronous host-to-device copy
+                  // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
+                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
+                  if (retVal == cudaSuccess) {
+                    pinnedHostPtrs.insert(host_ptr);
+                  }
+                }
+                if (gpu_stats.active()) {
+                  cerrLock.lock();
+                  {
+                    gpu_stats << "post D2H copy of \"" << comp->var->getName() << "\", size = " << device_var.getMemSize() << " to "
+                              << host_ptr << " from " << device_ptr << ", using stream " << dtask->getCUDAStream() << std::endl;
+                  }
+                  cerrLock.unlock();
+                }
+                CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, device_bytes, cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
+                if (retVal == cudaErrorLaunchFailure) {
+                  SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
+                } else {
+                  CUDA_RT_SAFE_CALL(retVal);
+                }
+              }
+              d2hComputesLock_.writeUnlock();
+            }
+
+          }  // end ReductionVariable switch case
+            break;
+
+          case TypeDescription::ParticleVariable : {
+            SCI_THROW(
+                InternalError("Copying ParticleVariables to GPU not yet supported:" + comp->var->getName(), __FILE__, __LINE__));
+          }  // end ParticleVariable switch case
+            break;
+
+          default : {
+            SCI_THROW(InternalError("Cannot copy unmatched size variable from CPU to host:" + comp->var->getName(), __FILE__, __LINE__));
+          }  // end default switch case
         }
       }
     }
@@ -1791,7 +1921,7 @@ cudaStream_t* UnifiedScheduler::getCudaStream(int device)
     CUDA_RT_SAFE_CALL( retVal = cudaStreamCreate(&(*stream)));
     if (gpu_stats.active()) {
       cerrLock.lock();
-      gpu_stats << "created cuda stream " << stream << " on device " << device << endl;
+      gpu_stats << "created CUDA stream " << stream << " on device " << device << std::endl;
       cerrLock.unlock();
     }
   }

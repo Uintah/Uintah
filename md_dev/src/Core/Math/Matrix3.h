@@ -748,7 +748,9 @@ namespace Uintah {
 // Added for compatibility with core types
 #include <Core/Datatypes/TypeName.h>
 #include <string>
+
 namespace SCIRun {
+
   class TypeDescription;
   class Piostream;
 

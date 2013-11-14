@@ -1077,9 +1077,7 @@ namespace Wasatch{
       // register expression to calculate the momentum initial condition from the initial conditions on
       // velocity and density in the cases that we are initializing velocity in the input file
       typedef ExprAlgebra<FieldT> ExprAlgbr;
-      Expr::TagList theTagList;
-      theTagList.push_back(thisVelTag_);
-      theTagList.push_back(interpolatedDensityTag);
+      const Expr::TagList theTagList( tag_list( thisVelTag_, interpolatedDensityTag ) );
       icFactory.register_expression( new typename ExprAlgbr::Builder( solution_variable_tag(),
                                                                       theTagList,
                                                                       ExprAlgbr::PRODUCT ) );
@@ -1089,8 +1087,7 @@ namespace Wasatch{
     if (hasEmbeddedGeometry_) {      
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
-      Expr::TagList theTagList;
-      theTagList.push_back(thisVolFracTag_);
+      const Expr::TagList theTagList( tag_list( thisVolFracTag_ ) );
       //theTagList.push_back(mom_tag(thisMomName_));
       Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
       icFactory.register_expression( new typename ExprAlgbr::Builder(modifierTag,

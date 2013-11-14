@@ -70,23 +70,18 @@ void CLASSNAME::sched_computeProp( const LevelP& level, SchedulerP& sched, int t
   std::string taskname = "CLASSNAME::computeProp"; 
   Task* tsk = scinew Task( taskname, this, &CLASSNAME::computeProp, time_substep ); 
 
-  if ( !(_has_been_computed) ) {
-
-    if ( time_substep == 0 ) {
-      
-      tsk->computes( _prop_label ); 
-
-    } else {
-
-      tsk->modifies( _prop_label ); 
-
-    }
-
-    sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+  if ( time_substep == 0 ) {
     
-    _has_been_computed = true; 
+    tsk->computes( _prop_label ); 
+
+  } else {
+
+    tsk->modifies( _prop_label ); 
 
   }
+
+  sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+    
 }
 
 //---------------------------------------------------------------------------

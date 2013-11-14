@@ -32,9 +32,10 @@
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       
-      <ExtractDensity>
+      <ExtractVariable>
+        <NameInTable>Density</NameInTable>
         <NameTag name="density" state="STATE_NONE"/>
-      </ExtractDensity>
+      </ExtractVariable>
 
     </TabProps>
     
@@ -50,12 +51,11 @@
       
       <ExtractDensity>
         <NameTag name="density" state="CARRY_FORWARD"/>
-        <DensityWeightedIVar>
+        <ModelBasedOnMixtureFraction>
+          <DensityWeightedMixtureFraction>
           <NameTag name="rhof" state="STATE_N"/>
-          <RelatedIVar>
-            <NameTag name="f" state="STATE_NONE"/>
-          </RelatedIVar>
-        </DensityWeightedIVar>
+          </DensityWeightedMixtureFraction>       
+        </ModelBasedOnMixtureFraction>
       </ExtractDensity>
       
     </TabProps>  
@@ -76,7 +76,7 @@
       <PrimitiveVariable>f</PrimitiveVariable>
       
       <ConvectiveFluxExpression>
-        <Method>CENTRAL</Method> 
+        <Method>UPWIND</Method> 
         <Direction>X</Direction>
         <AdvectiveVelocity>
             <NameTag name="u" state="STATE_NONE"/>
@@ -188,7 +188,7 @@
         <lower>[-15,0,0]</lower>
         <upper>[15,1,1]</upper>
         <resolution>[256,2,2]</resolution>
-        <patches>[9,1,1]</patches>
+        <patches>[3,1,1]</patches>
       </Box>
       <periodic>[0,1,1]</periodic>
     </Level>

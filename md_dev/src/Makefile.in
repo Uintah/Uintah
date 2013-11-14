@@ -290,6 +290,22 @@ verify_zlib : sus
   endif
 endif
 
+#
+# This make target will run ldd (linux) / otool (OSX) to display which
+# compression library(s) (libz) is being linked against.  It is only used
+# for debugging purposes.
+#
+show_zlib :
+ifeq ($(IS_STATIC_BUILD),no)
+  ifneq ($(IS_OSX),yes)
+	@ldd lib/*.so StandAlone/sus | grep libz[\.] 
+  else
+	@otool -L lib/*.dylib StandAlone/sus | grep libz[\.]
+  endif
+else
+	@echo "This is a static build... can't determine which libz was linked against."
+endif
+
 #########################################################################################################
 # Targets for regression testing...
 

@@ -22,10 +22,15 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef UINTAH_GPUVECTOR_H
+#define UINTAH_GPUVECTOR_H
 
 #include <sci_defs/cuda_defs.h>
 
+namespace SCIRun {
+
 class Int3 : public int3 {
+
   public:
     HOST_DEVICE Int3() {}
     HOST_DEVICE int& operator[](const int &i) {
@@ -72,3 +77,7 @@ class Double3 : public double3 {
     }
     HOST_DEVICE Double3(const double3& copy):double3(copy) {}
 };
+
+} // end namespace SCIRun
+
+#endif

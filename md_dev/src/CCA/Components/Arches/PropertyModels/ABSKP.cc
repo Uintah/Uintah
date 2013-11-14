@@ -40,22 +40,17 @@ void ABSKP::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_
   std::string taskname = "ABSKP::computeProp"; 
   Task* tsk = scinew Task( taskname, this, &ABSKP::computeProp, time_substep ); 
 
-  if ( !(_has_been_computed) ) {
+  tsk->modifies( _prop_label ); 
 
-    tsk->modifies( _prop_label ); 
-
-    CoalModelFactory& modelFactory = CoalModelFactory::self();
-    heatmodels_ = modelFactory.retrieve_heattransfer_models();
-    for( HeatTransferModelMap::iterator iModel = heatmodels_.begin(); iModel != heatmodels_.end(); ++iModel ) {
-      const VarLabel* tempabskpLabel = iModel->second->getabskpLabel();
-      tsk->requires( Task::OldDW, tempabskpLabel, Ghost::None, 0 );
-    }
-
-    sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
-    
-    _has_been_computed = true; 
-
+  CoalModelFactory& modelFactory = CoalModelFactory::self();
+  heatmodels_ = modelFactory.retrieve_heattransfer_models();
+  for( HeatTransferModelMap::iterator iModel = heatmodels_.begin(); iModel != heatmodels_.end(); ++iModel ) {
+    const VarLabel* tempabskpLabel = iModel->second->getabskpLabel();
+    tsk->requires( Task::OldDW, tempabskpLabel, Ghost::None, 0 );
   }
+
+  sched->addTask( tsk, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+
 }
 
 //---------------------------------------------------------------------------
