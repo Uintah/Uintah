@@ -492,8 +492,9 @@ namespace Wasatch{
     if( twoStreamParams ){
       parse_twostream_mixing( twoStreamParams, gc );
     }
-
-    const bool isConstDensity = densityParams->findBlock("Constant");
+    
+    // if no density block was specified, then assume we have constant density...
+    const bool isConstDensity = (densityParams) ? densityParams->findBlock("Constant") : true;
     const bool doDenstPlus = !isConstDensity
                            && params->findBlock("MomentumEquations")
                            && params->findBlock("TransportEquation");
