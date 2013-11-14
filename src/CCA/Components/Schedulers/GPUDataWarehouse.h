@@ -28,6 +28,7 @@
 
 #include <sci_defs/cuda_defs.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
+#include <Core/Grid/Variables/GPUParticleVariable.h>
 #include <Core/Grid/Variables/GPUReductionVariable.h>
 
 #define MAX_ITEM 100
@@ -39,19 +40,33 @@ namespace Uintah {
 class GPUDataWarehouse {
 
 public:
-  GPUDataWarehouse(){d_numItems=0; d_device_copy=NULL; d_device_id=0; d_debug=true; d_dirty=true;};
-  virtual ~GPUDataWarehouse(){};
 
+  GPUDataWarehouse(){d_numItems=0; d_device_copy=NULL; d_device_id=0; d_debug=true; d_dirty=true;};
+  virtual ~GPUDataWarehouse() {};
+
+  //______________________________________________________________________
+  // GPU GridVariable methods
   HOST_DEVICE void get(const GPUGridVariableBase& var, char const* label, int patchID, int matlID);
   HOST_DEVICE void getModifiable(GPUGridVariableBase& var, char const* label, int patchID, int matlID);
   HOST_DEVICE void put(GPUGridVariableBase& var, char const* label, int patchID, int matlID, bool overWrite=false);
   HOST_DEVICE void allocateAndPut(GPUGridVariableBase& var, char const* label, int patchID, int matlID, int3 low, int3 high);
 
+  //______________________________________________________________________
+  // GPU Particle Variable methods
+  HOST_DEVICE void get(const GPUParticleVariableBase& var, char const* label, int patchID, int matlID);
+  HOST_DEVICE void getModifiable(GPUParticleVariableBase& var, char const* label, int patchID, int matlID);
+  HOST_DEVICE void put(GPUParticleVariableBase& var, char const* label, int patchID, int matlID, bool overWrite=false);
+  HOST_DEVICE void allocateAndPut(GPUParticleVariableBase& var, char const* label, int patchID, int matlID, size_t numElems);
+
+  //______________________________________________________________________
+  // GPU Reduction Variable methods
   HOST_DEVICE void get(const GPUReductionVariableBase& var, char const* label, int patchID, int matlID);
   HOST_DEVICE void getModifiable(GPUReductionVariableBase& var, char const* label, int patchID, int matlID);
   HOST_DEVICE void put(GPUReductionVariableBase& var, char const* label, int patchID, int matlID, bool overWrite=false);
   HOST_DEVICE void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlID, int numElems);
 
+  //______________________________________________________________________
+  // GPU DataWarehouse support methods
   HOST_DEVICE bool exist(char const* name, int patchID, int matlID);
   HOST_DEVICE bool remove(char const* name, int patchID, int matlID);
   HOST_DEVICE void init_device(int id);
