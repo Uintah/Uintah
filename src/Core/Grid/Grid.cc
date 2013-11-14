@@ -700,28 +700,30 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           }
         }
         
-        IntVector lowCell  = level->getCellIndex(lower+Vector(1.e-14,1.e-14,1.e-14));
-        IntVector highCell = level->getCellIndex(upper+Vector(1.e-14,1.e-14,1.e-14));
+        double epsilon = 1.e-14;
+        IntVector lowCell  = level->getCellIndex(lower+Vector(epsilon,epsilon,epsilon));
+        IntVector highCell = level->getCellIndex(upper+Vector(epsilon,epsilon,epsilon));
+
         Point lower2 = level->getNodePosition(lowCell);
         Point upper2 = level->getNodePosition(highCell);
         double diff_lower = (lower2-lower).length();
         double diff_upper = (upper2-upper).length();
         
-        if(diff_lower > 1.e-14) {
-          cerr << "lower=" << lower << '\n';
-          cerr << "lowCell =" << lowCell << '\n';
-          cerr << "highCell =" << highCell << '\n';
-          cerr << "lower2=" << lower2 << '\n';
-          cerr << "diff=" << diff_lower << '\n';
-          
+        if(diff_lower > epsilon) {
+          cerr << "lower=" << lower << '\n'
+               << "lowCell =" << lowCell << '\n'
+               << "highCell =" << highCell << '\n'
+               << "lower2=" << lower2 << '\n'
+               << "diff=" << diff_lower << '\n';
+
           throw ProblemSetupException("Box lower corner does not coincide with grid", __FILE__, __LINE__);
         }
-        if(diff_upper > 1.e-14){
-          cerr << "upper=" << upper << '\n';
-          cerr << "lowCell =" << lowCell << '\n';
-          cerr << "highCell =" << highCell << '\n';
-          cerr << "upper2=" << upper2 << '\n';
-          cerr << "diff=" << diff_upper << '\n';
+        if(diff_upper > epsilon){
+          cerr << "upper=" << upper << '\n'
+               << "lowCell =" << lowCell << '\n'
+               << "highCell =" << highCell << '\n'
+               << "upper2=" << upper2 << '\n'
+               << "diff=" << diff_upper << '\n';
           throw ProblemSetupException("Box upper corner does not coincide with grid", __FILE__, __LINE__);
         }
 

@@ -2,149 +2,6 @@
 
 #include <boost/foreach.hpp>
 
-//-------------------------------------------------------------------
-
-template< typename FieldT >
-DensityCalculator<FieldT>::
-DensityCalculator( const InterpT* const evaluator,
-                   const Expr::TagList& rhoEtaTags,
-                   const Expr::TagList& etaTags,
-                   const Expr::TagList& orderedIvarTags )
-: Expr::Expression<FieldT>(),
-  rhoEtaTags_     ( rhoEtaTags      ),
-  etaTags_        ( etaTags         ),
-  orderedIvarTags_( orderedIvarTags ),
-  evaluator_      ( evaluator       )
-{
-  etaIndex_.clear();
-  size_t counter=0;
-  BOOST_FOREACH( const Expr::Tag& ivarTag, orderedIvarTags_ ){
-    const typename Expr::TagList::const_iterator ii = std::find( etaTags_.begin(), etaTags_.end(), ivarTag );
-    if( ii != etaTags_.end() ) etaIndex_.push_back( counter );
-    else                       thetaTags_.push_back( ivarTag );
-    ++counter;
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-DensityCalculator<FieldT>::
-~DensityCalculator()
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-DensityCalculator<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  BOOST_FOREACH( const Expr::Tag& tag, rhoEtaTags_ ){
-    exprDeps.requires_expression( tag );
-  }
-  BOOST_FOREACH( const Expr::Tag& tag, thetaTags_ ){
-    exprDeps.requires_expression( tag );
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-DensityCalculator<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-
-  rhoEta_.clear();
-  BOOST_FOREACH( const Expr::Tag& tag, rhoEtaTags_ ){
-    rhoEta_.push_back( &fm.field_ref( tag ) );
-  }
-
-  theta_.clear();
-  BOOST_FOREACH( const Expr::Tag& tag, thetaTags_ ){
-    theta_.push_back( &fm.field_ref( tag ) );
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-DensityCalculator<FieldT>::
-evaluate()
-{
-  FieldT& rho = this->value();
-
-  thetaIters_.clear();
-  rhoEtaIters_.clear();
-
-  for( typename IndepVarVec::iterator i=theta_.begin(); i!=theta_.end(); ++i ){
-    thetaIters_.push_back( (*i)->begin() );
-  }
-  for( typename IndepVarVec::const_iterator i=rhoEta_.begin(); i!=rhoEta_.end(); ++i ){
-    rhoEtaIters_.push_back( (*i)->begin() );
-  }
-
-  unsigned int convergeFailed=0;
-
-  // loop over grid points.
-  for( typename FieldT::iterator irho= rho.begin(); irho!=rho.end(); ++irho ){
-
-    // extract indep vars at this grid point
-    etaPoint_.clear();
-    rhoEtaPoint_.clear();
-    for( typename ConstIter::const_iterator i=rhoEtaIters_.begin(); i!=rhoEtaIters_.end(); ++i ){
-      rhoEtaPoint_.push_back( **i );
-      etaPoint_.push_back( **i / (*irho + 1e-11) );
-    }
-    thetaPoint_.clear();
-    for( typename ConstIter::const_iterator i=thetaIters_.begin(); i!=thetaIters_.end(); ++i ){
-      thetaPoint_.push_back( **i );
-    }
-
-    // calculate the result
-    const bool converged = nonlinear_solver( *irho , etaPoint_, thetaPoint_, rhoEtaPoint_, etaIndex_, *evaluator_, 1e-9 );
-    if( !converged )  ++convergeFailed;
-
-    // increment all iterators to the next grid point
-    for( typename ConstIter::iterator i=rhoEtaIters_.begin(); i!=rhoEtaIters_.end(); ++i )  ++(*i);
-    for( typename ConstIter::iterator i=thetaIters_.begin();  i!=thetaIters_.end();  ++i )  ++(*i);
-
-  } // grid loop
-
-  if( convergeFailed > 0 )
-    std::cout << convergeFailed << " of " << rho.window_with_ghost().local_npts() << " points failed to converge on density solver" << std::endl;
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-DensityCalculator<FieldT>::
-Builder::Builder( const Expr::Tag& result,
-                  const InterpT* const densEvaluator,
-                  const Expr::TagList& rhoEtaTags,
-                  const Expr::TagList& etaTags,
-                  const Expr::TagList& orderedEtaTags )
-: ExpressionBuilder(result),
-  rhoEtaTs_    ( rhoEtaTags     ),
-  etaTs_       ( etaTags        ),
-  orderedIvarTs_( orderedEtaTags ),
-  interp_      ( densEvaluator  )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-Expr::ExpressionBase*
-DensityCalculator<FieldT>::
-Builder::build() const
-{
-  return new DensityCalculator<FieldT>( interp_, rhoEtaTs_, etaTs_, orderedIvarTs_);
-}
-
-//====================================================================
 
 extern "C"{
   void dgesv_( const int* n,    // # of equations
@@ -157,114 +14,505 @@ extern "C"{
                int* info );
 }
 
-template< typename FieldT >
-bool
-DensityCalculator<FieldT>::nonlinear_solver( double& rho,
-                                             std::vector<double>& eta,
-                                             const std::vector<double>& theta,
-                                             const std::vector<double>& rhoEta,
-                                             const std::vector<size_t>& etaIndex,
-                                             const InterpT& eval,
-                                             const double rtol )
+//-------------------------------------------------------------------
+
+DensityCalculatorBase::
+DensityCalculatorBase( const int neq,
+                       const double rtol,
+                       const size_t maxIter )
+: neq_    ( neq     ),
+  rtol_   ( rtol    ),
+  maxIter_( maxIter )
 {
-  using namespace std;
-  const size_t neq = rhoEta.size();
-  unsigned int itCounter = 0;
-  const unsigned int maxIter = 20;
-  
-  orderedIvars_.clear();
-  orderedIvars_ = theta;
+  jac_ .resize( neq_*neq_ );
+  res_ .resize( neq_      );
+  ipiv_.resize( neq_      );
+}
 
-  if( neq==0 ){
-    // no solve required - just a straight function evaluation.
-    rho = eval.value( orderedIvars_ );
-    return true;
-  }
-  else{
-    // Create the ordered eta vector
-    for( size_t i=0; i<etaIndex.size(); ++i ) {
-      orderedIvars_.insert( orderedIvars_.begin()+etaIndex[i], eta[i] );
-    }
-  }
+DensityCalculatorBase::~DensityCalculatorBase(){}
 
-  jac_   .resize(neq*neq);  // vector for the jacobian matrix
-  g_     .resize(neq    );  // vector for the rhs functions in non-linear solver
-  delta_ .resize(neq    );  // finite difference vector
-  etaTmp_.resize(neq    );  // work array for assembling the jacobian
-  ipiv_  .resize(neq    );  // work array for linear solver
-
-  double relErr=0.0;
-
-  for( size_t i=0; i<neq; ++i ){
-    delta_[i] = 1e-6 * eta[i] + 1e-11;
-  }
+bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
+                                   DoubleVec& soln )
+{
+  int niter = 0;
+  double relErr = 0.0;
 
   do{
-    ++itCounter;
-
-    // update the ordered eta vector with the current values of eta.
-    // jcs note that we could move this to the bottom of the loop, but
-    // it results in slightly different answers and diffs regression tests.
-    // Really, it should be at the bottom since otherwise we don't get
-    // the benefit of the final iteration...
-    for( size_t i=0; i<etaIndex.size(); ++i ) {
-      orderedIvars_[ etaIndex[i] ] = eta[i];
-    }
-
-    rho = eval.value( orderedIvars_ );
-
-    // Loop over different etas to construct the linear system
-    for( size_t k=0; k<neq; ++k ){
-
-      for( size_t i=0; i<neq; ++i ) {
-        if( k==i ) etaTmp_[i] = eta[k] + delta_[k];
-        else       etaTmp_[i] = eta[i];
-      }
-
-      // update the ordered eta vector with the modified eta vector
-      for( size_t i=0; i<etaIndex.size(); ++i ) {
-        orderedIvars_[ etaIndex[i] ] = etaTmp_[i];
-      }
-
-      const double rhoplus = eval.value( &orderedIvars_[0] );
-
-      // Calculating the rhs vector components
-      g_[k] = -( eta[k] - (rhoEta[k] / rho));
-      for( size_t i=0; i<neq; ++i ) {
-        jac_[i + k*neq] = (( etaTmp_[i] - rhoEta[i]/rhoplus ) - ( eta[i] - rhoEta[i]/rho )) / delta_[k];
-      }
-    } // linear system construction
-
-    // Solve the linear system
-    const int one=1; int info;
-
-    const int numEqns = neq;
-    // Solving J * delta = g
-    // note that on entry, g is the rhs and on exit, g is the solution (delta).
-    dgesv_( &numEqns, &one, &jac_[0], &numEqns, &ipiv_[0], &g_[0], &numEqns, &info );
-    assert( info==0 );
-
-    // relative error calculations
+    calc_jacobian_and_res( passThrough, soln, jac_, res_ );
+    switch( neq_ ){
+      case 1: // avoid the overhead of the general equation solver for this trivial case.
+        res_[0] /= jac_[0];  // put the displacement from Newton's method in the residual.
+        break;
+      default:
+        // Solving J * delta = rhs  (note the missing minus sign, which is handled in the update below)
+        // note that on entry, res_ is the rhs and on exit, it is the solution (delta).
+        const int one=1; int info;
+        dgesv_( &neq_, &one, &jac_[0], &neq_, &ipiv_[0], &res_[0], &neq_, &info );
+        assert( info==0 );
+        break;
+    } // switch
     relErr = 0.0;
-    for( size_t i=0; i<neq; ++i ){
-      eta[i] += g_[i];
-      relErr += std::abs( g_[i]/(std::abs(eta[i])+rtol) );
+    for( size_t i=0; i<neq_; ++i ){
+      soln[i] -= res_[i];
+      relErr += std::abs( res_[i]/get_normalization_factor(i) );
+      // clip the solution to the valid range
+      const std::pair<double,double> bounds = get_bounds(i);
+      soln[i] = std::max( std::min( bounds.second, soln[i] ), bounds.first );
     }
-
-  } while( relErr>rtol && itCounter < maxIter );
-
-  if( itCounter >= maxIter ){
-//    std::cout << itCounter << setprecision(15) << " problems!  " << rho << " , " << relErr << ", " << g_[0] << ", " << eta[0] <<", "<< rhoEta[0] << std::endl;
-    return false;
-  }
-  //    std::cout << "converged in " << itCounter << " iterations.  eta=" << eta[0] << ", rhoeta=" << rho*eta[0] << ", rho=" << rho << std::endl;
-
-  return true;
+    ++niter;
+//    if( niter>2 )
+//      std::cout << "\t" << res_[0];
+  } while( relErr > rtol_ && niter < maxIter_ );
+//if(niter>2)
+//  std::cout << "\n -> converged in " << niter << " iterations  (" << soln[0] << ")\n";
+  return niter < maxIter_;
 }
+
+
+//===================================================================
+
+
+template< typename FieldT >
+DensFromMixfrac<FieldT>::
+DensFromMixfrac( const InterpT& rhoEval,
+                 const Expr::Tag& rhoFTag )
+  : Expr::Expression<FieldT>(),
+    DensityCalculatorBase( 1, 1e-6, 5 ),
+    rhoEval_( rhoEval ),
+    rhoFTag_( rhoFTag ),
+    bounds_( rhoEval.get_bounds()[0] )
+{
+  this->set_gpu_runnable(false);
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+DensFromMixfrac<FieldT>::
+~DensFromMixfrac()
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+DensFromMixfrac<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( rhoFTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+DensFromMixfrac<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  rhoF_ = &fm.field_ref( rhoFTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+DensFromMixfrac<FieldT>::
+evaluate()
+{
+  FieldT& rho = this->value();
+
+  typename FieldT::const_iterator irhoF = rhoF_->begin();
+  typename FieldT::iterator irho = rho.begin();
+  const typename FieldT::iterator irhoe = rho.end();
+  size_t nbad = 0;
+  DoubleVec soln(1), vals(1);
+  for( ; irho!=irhoe; ++irho, ++irhoF ){
+    vals[0] = *irhoF;
+    soln[0] = *irhoF / *irho;   // initial guess for the mixture fraction
+    const bool converged = this->solve( vals, soln );  // soln contains the mixture fraction
+    if( !converged ) ++nbad;
+    *irho = *irhoF / soln[0];
+  }
+  if( nbad>0 ){
+    std::cout << "\tConvergence failed at " << nbad << " points.\n";
+  }
+}
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+void
+DensFromMixfrac<FieldT>::
+calc_jacobian_and_res( const DensityCalculatorBase::DoubleVec& passThrough,
+                       const DensityCalculatorBase::DoubleVec& soln,
+                       DensityCalculatorBase::DoubleVec& jac,
+                       DensityCalculatorBase::DoubleVec& res )
+{
+  const double rhoF = passThrough[0];
+  const double& f = soln[0];
+  const double rhoCalc = rhoEval_.value( &f );
+  jac[0] = rhoCalc + f * rhoEval_.derivative( &f, 0 );
+  res[0] = f * rhoCalc - rhoF;
+}
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+double
+DensFromMixfrac<FieldT>::get_normalization_factor( const unsigned i ) const
+{
+  return 0.5; // nominal value for mixture fraction
+}
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+std::pair<double,double>
+DensFromMixfrac<FieldT>::get_bounds( const unsigned i ) const
+{
+  return bounds_;
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+DensFromMixfrac<FieldT>::
+Builder::Builder( const InterpT& rhoEval,
+                  const Expr::Tag& resultTag,
+                  const Expr::Tag& rhoFTag  )
+  : ExpressionBuilder( resultTag ),
+    rhoEval_( rhoEval.clone() ),
+    rhoFTag_( rhoFTag )
+{
+  if( resultTag.context() != Expr::CARRY_FORWARD ){
+    std::ostringstream msg;
+    msg << "ERROR: Density must have CARRY_FORWARD context so that an initial guess is available\n\t"
+        << __FILE__ << " : " << __LINE__ << std::endl;
+    throw std::runtime_error( msg.str() );
+  }
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+DensFromMixfrac<FieldT>::
+Builder::build() const
+{
+  return new DensFromMixfrac<FieldT>( *rhoEval_, rhoFTag_ );
+}
+
+
+
+//===================================================================
+
+template< typename FieldT >
+DensHeatLossMixfrac<FieldT>::
+DensHeatLossMixfrac( const Expr::Tag& hTag,
+                     const Expr::Tag& rhofTag,
+                     const Expr::Tag& rhohTag,
+                     const InterpT& densEvaluator,
+                     const InterpT& enthEvaluator )
+  : Expr::Expression<FieldT>(),
+    DensityCalculatorBase( 2, 1e-6, 5 ),
+    hTag_   ( hTag    ),
+    rhofTag_( rhofTag ),
+    rhohTag_( rhohTag ),
+    densEval_( densEvaluator ),
+    enthEval_( enthEvaluator ),
+    bounds_( densEvaluator.get_bounds() )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+DensHeatLossMixfrac<FieldT>::
+~DensHeatLossMixfrac()
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+DensHeatLossMixfrac<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( hTag_    );
+  exprDeps.requires_expression( rhofTag_ );
+  exprDeps.requires_expression( rhohTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+DensHeatLossMixfrac<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
+  rhof_ = &fm.field_ref( rhofTag_ );
+  rhoh_ = &fm.field_ref( rhohTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+DensHeatLossMixfrac<FieldT>::
+evaluate()
+{
+  typename Expr::Expression<FieldT>::ValVec& result  = this->get_value_vec();
+  FieldT& density = *result[0];
+  FieldT& gamma   = *result[1];
+
+  typename FieldT::const_iterator irhof = rhof_->begin();
+  typename FieldT::const_iterator irhoh = rhoh_->begin();
+  typename FieldT::iterator irho = density.begin();
+  typename FieldT::iterator igam = gamma.begin();
+  const typename FieldT::iterator irhoe = density.end();
+
+  DoubleVec soln(2), vals(2);
+  for( ; irho!=irhoe; ++irho, ++igam, ++irhof, ++irhoh ){
+    vals[0] = *irhof;
+    vals[1] = *irhoh;
+    soln[0] = *irhof / *irho;
+    soln[1] = *igam;          // jcs this would require that gamma is CARRY_FORWARD.
+    this->solve( vals, soln );
+    *irho = *irhof / soln[0]; // set solution for density
+    *igam = soln[1];          // heat loss
+  }
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+DensHeatLossMixfrac<FieldT>::
+calc_jacobian_and_res( const DensityCalculatorBase::DoubleVec& passThrough,
+                       const DensityCalculatorBase::DoubleVec& soln,
+                       DensityCalculatorBase::DoubleVec& jac,
+                       DensityCalculatorBase::DoubleVec& res )
+{
+  const double& rhof = passThrough[0];
+  const double& rhoh = passThrough[1];
+  const double& f    = soln[0];
+  const double& gam  = soln[1];
+
+  // evaluate density and enthalpy given the current guess for f and gamma.
+  const double rho = densEval_.value( soln );
+  const double h   = enthEval_.value( soln );
+
+  // evaluate the residual function
+  res[0] = f * rho - rhof;
+  res[1] = rho * h - rhoh;
+
+  // evaluate derivative for use in the jacobian matrix
+  const double drhodf   = densEval_.derivative( soln, 0 );
+  const double drhodgam = densEval_.derivative( soln, 1 );
+  const double dhdf     = enthEval_.derivative( soln, 0 );
+  const double dhdgam   = enthEval_.derivative( soln, 1 );
+
+  jac[0] = rho + f * drhodf;
+  jac[1] = f * drhodgam;
+  jac[2] = rho*dhdf   + h*drhodf;
+  jac[3] = rho*dhdgam + h*drhodgam;
+}
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+double
+DensHeatLossMixfrac<FieldT>::get_normalization_factor( const unsigned i ) const
+{
+  return 0.5; // nominal value for mixture fraction and heat loss (which range [0,1] and [-1,1] respectively).
+}
+
+//--------------------------------------------------------------------
+
+template<typename FieldT>
+std::pair<double,double>
+DensHeatLossMixfrac<FieldT>::get_bounds( const unsigned i ) const
+{
+  return bounds_[i];
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+DensHeatLossMixfrac<FieldT>::
+Builder::Builder( const Expr::Tag& rhoTag,
+                  const Expr::Tag& gammaTag,
+                  const Expr::Tag& hTag,
+                  const Expr::Tag& rhofTag,
+                  const Expr::Tag& rhohTag,
+                  const InterpT& densEvaluator,
+                  const InterpT& enthEvaluator )
+  : ExpressionBuilder( tag_list(rhoTag,gammaTag) ),
+    hTag_   ( hTag    ),
+    rhofTag_( rhofTag ),
+    rhohTag_( rhohTag ),
+    densEval_( densEvaluator.clone() ),
+    enthEval_( enthEvaluator.clone() )
+{
+  if( rhoTag.context() != Expr::CARRY_FORWARD ){
+    std::ostringstream msg;
+    msg << "ERROR: Density must have CARRY_FORWARD context so that an initial guess is available\n\t"
+        << __FILE__ << " : " << __LINE__ << std::endl;
+    throw std::runtime_error( msg.str() );
+  }
+  if( hTag.context() != Expr::CARRY_FORWARD ){
+    std::ostringstream msg;
+    msg << "ERROR: Heat loss must have CARRY_FORWARD context so that an initial guess is available\n\t"
+        << __FILE__ << " : " << __LINE__ << std::endl;
+    throw std::runtime_error( msg.str() );
+  }
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+DensHeatLossMixfrac<FieldT>::
+Builder::build() const
+{
+  return new DensHeatLossMixfrac<FieldT>( hTag_, rhofTag_,rhohTag_,*densEval_,*enthEval_ );
+}
+
+//====================================================================
+
+
+
+template< typename FieldT >
+TwoStreamMixingDensity<FieldT>::
+TwoStreamMixingDensity( const Expr::Tag& rhofTag,
+                        const double rho0,
+                        const double rho1 )
+  : Expr::Expression<FieldT>(),
+    rho0_(rho0), rho1_(rho1),
+    rhofTag_( rhofTag )
+{
+  this->set_gpu_runnable(true);
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+TwoStreamMixingDensity<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( rhofTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+TwoStreamMixingDensity<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  rhof_ = &fml.template field_ref< FieldT >( rhofTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+TwoStreamMixingDensity<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  const FieldT& rf = *rhof_;
+  const double tmp = (1/rho0_ - 1/rho1_);
+
+  // first calculate the mixture fraction:
+  result <<= (rf/rho0_) / (1.0+rf*tmp);
+
+  // now use that to get the density:
+  result <<= 1.0 / ( result/rho1_ + (1.0-result)/rho0_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+TwoStreamMixingDensity<FieldT>::
+Builder::Builder( const Expr::Tag& resultTag,
+                  const Expr::Tag& rhofTag,
+                  const double rho0,
+                  const double rho1 )
+  : ExpressionBuilder( resultTag ),
+    rho0_(rho0), rho1_(rho1),
+    rhofTag_( rhofTag )
+{}
+
+//====================================================================
+
+
+template< typename FieldT >
+TwoStreamDensFromMixfr<FieldT>::
+TwoStreamDensFromMixfr( const Expr::Tag& mixfrTag,
+                        const double rho0,
+                        const double rho1 )
+  : Expr::Expression<FieldT>(),
+    rho0_(rho0), rho1_(rho1),
+    mixfrTag_( mixfrTag )
+{
+  this->set_gpu_runnable(true);
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+TwoStreamDensFromMixfr<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( mixfrTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+TwoStreamDensFromMixfr<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  mixfr_ = &fml.template field_ref< FieldT >( mixfrTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+TwoStreamDensFromMixfr<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  const FieldT& f = *mixfr_;
+  result <<= 1.0 / ( f/rho1_ + (1.0-f)/rho0_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+TwoStreamDensFromMixfr<FieldT>::
+Builder::Builder( const Expr::Tag& resultTag,
+                  const Expr::Tag& mixfrTag,
+                  const double rho0,
+                  const double rho1 )
+  : ExpressionBuilder( resultTag ),
+    rho0_(rho0), rho1_(rho1),
+    mixfrTag_( mixfrTag )
+{}
 
 //====================================================================
 
 // explicit template instantiation
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-template class DensityCalculator<SpatialOps::structured::SVolField>;
-
+template class DensFromMixfrac       <SpatialOps::structured::SVolField>;
+template class DensHeatLossMixfrac   <SpatialOps::structured::SVolField>;
+template class TwoStreamDensFromMixfr<SpatialOps::structured::SVolField>;
+template class TwoStreamMixingDensity<SpatialOps::structured::SVolField>;

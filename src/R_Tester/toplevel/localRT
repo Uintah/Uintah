@@ -12,6 +12,15 @@ if( $status != 0 ) then
   exit
 endif
 
+#remove quotations from options variable
+set opts = `echo $opts | tr -d '"'`
+
+if ( $opts != "1" && $opts != "2" ) then
+  echo "ERROR: localRT  there's a problem with the dialog options"
+  echo  "       Now exiting"
+  exit
+endif
+
 if ( $opts == "1" ) then
   echo "make gold_standards" 
   make gold_standards
@@ -22,4 +31,6 @@ if ( $opts == "2" ) then
   make runLocalRT
   set rc = $status
 endif
+
+
 exit($rc)

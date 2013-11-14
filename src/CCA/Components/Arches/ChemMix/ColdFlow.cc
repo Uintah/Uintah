@@ -512,17 +512,19 @@ ColdFlow::getState( const ProcessorGroup* pc,
               table_value *= eps_vol[c]; 
 
               if (i->first == "density") {
-                //double ghost_value = 2.0*table_value - arches_density[cp1];
-                //arches_density[c] = ghost_value; 
+
                 if ( table_value > 0.0 ){ 
-                  (*i->second.var)[c] = 1.0/table_value;
-                  arches_density[c] = 1.0/table_value; 
+                  double ghost_value = 2.0/table_value - arches_density[cp1]; 
+                  (*i->second.var)[c] = ghost_value;
+                  arches_density[c] = ghost_value; 
                 } else { 
                   (*i->second.var)[c] = 0.0;
                   arches_density[c] = 0.0; 
                 } 
+
                 if (d_MAlab)
                   mpmarches_denmicro[c] = 1.0/table_value; 
+
               } else if ( i->first == "temperature") { 
                 (*i->second.var)[c] = table_value;
               }

@@ -46,16 +46,14 @@ template< typename FieldT >
 class TabPropsEvaluator
  : public Expr::Expression<FieldT>
 {
-  typedef std::vector<      FieldT*>  FieldVec;
   typedef std::vector<const FieldT*>  IndepVarVec;
-  typedef std::vector<const InterpT*> Evaluators;
 
   const Expr::TagList indepVarNames_;
+  const InterpT& evaluator_;
 
   IndepVarVec indepVars_;
-  Evaluators  evaluators_;
 
-  TabPropsEvaluator( const InterpT* const interp,
+  TabPropsEvaluator( const InterpT& interp,
                      const Expr::TagList& ivarNames );
 
 public:
@@ -65,9 +63,9 @@ public:
     const Expr::TagList ivarNames_;
   public:
     Builder( const Expr::Tag& result,
-             const InterpT* interp,
+             const InterpT& interp,
              const Expr::TagList& ivarNames );
-    ~Builder(){}
+    ~Builder(){ delete interp_; }
     Expr::ExpressionBase* build() const;
   };
 
@@ -90,24 +88,19 @@ public:
 
 template< typename FieldT >
 TabPropsEvaluator<FieldT>::
-TabPropsEvaluator( const InterpT* const interp,
+TabPropsEvaluator( const InterpT& interp,
                    const Expr::TagList& ivarNames )
   : Expr::Expression<FieldT>(),
-    indepVarNames_( ivarNames )
-{
-  evaluators_.push_back( interp );
-}
+    indepVarNames_( ivarNames ),
+    evaluator_( interp )
+{}
 
 //--------------------------------------------------------------------
 
 template< typename FieldT >
 TabPropsEvaluator<FieldT>::
 ~TabPropsEvaluator()
-{
-  for( Evaluators::iterator ieval=evaluators_.begin(); ieval!=evaluators_.end(); ++ieval ){
-    delete *ieval;
-  }
-}
+{}
 
 //--------------------------------------------------------------------
 
@@ -144,46 +137,30 @@ void
 TabPropsEvaluator<FieldT>::
 evaluate()
 {
-  FieldVec& results = this->get_value_vec();
+  FieldT& result = this->value();
 
-  typedef std::vector< typename FieldT::      iterator > DVarIter;
   typedef std::vector< typename FieldT::const_iterator > IVarIter;
-
-  DVarIter dvarIters;
   IVarIter ivarIters;
-
-  for( typename FieldVec::iterator i=results.begin(); i!=results.end(); ++i ){
-    dvarIters.push_back( (*i)->begin() );
-  }
   for( typename IndepVarVec::const_iterator i=indepVars_.begin(); i!=indepVars_.end(); ++i ){
     ivarIters.push_back( (*i)->begin() );
   }
 
-  std::vector<double> ivarsPoint;
+  std::vector<double> ivarsPoint(indepVars_.size(),0.0);
 
-  // loop over grid points.  iii is a dummy variable.
-  for( typename FieldT::const_iterator iii=results[0]->begin(); iii!=results[0]->end(); ++iii ){
+  // loop over grid points
+  for( typename FieldT::iterator iresult=result.begin(); iresult!=result.end(); ++iresult ){
 
-    // loop over fields to be evaluated
-    typename DVarIter::iterator iresult = dvarIters.begin();
-    for( typename Evaluators::const_iterator ieval=evaluators_.begin(); ieval!=evaluators_.end(); ++ieval, ++iresult ){
-
-      // extract indep vars at this grid point
-      ivarsPoint.clear();
-      for( typename IVarIter::const_iterator i=ivarIters.begin(); i!=ivarIters.end(); ++i ){
-        ivarsPoint.push_back( **i );
-      }
-
-      // calculate the result
-      **iresult = (*ieval)->value(ivarsPoint );
-
+    // extract indep vars at this grid point
+    for( size_t i=0; i<ivarIters.size(); ++i ){
+      ivarsPoint[i] = *ivarIters[i];
     }
+
+    // calculate the result
+    *iresult = evaluator_.value(ivarsPoint );
 
     // increment all iterators to the next grid point
     for( typename IVarIter::iterator i=ivarIters.begin(); i!=ivarIters.end(); ++i )  ++(*i);
-    for( typename DVarIter::iterator i=dvarIters.begin(); i!=dvarIters.end(); ++i )  ++(*i);
-
-  } // grid loop
+  }
 }
 
 //--------------------------------------------------------------------
@@ -191,10 +168,10 @@ evaluate()
 template< typename FieldT >
 TabPropsEvaluator<FieldT>::
 Builder::Builder( const Expr::Tag& result,
-                  const InterpT* const interp,
+                  const InterpT& interp,
                   const Expr::TagList& ivarNames )
   : ExpressionBuilder(result),
-    interp_   ( interp    ),
+    interp_   ( interp.clone() ),
     ivarNames_( ivarNames )
 {}
 
@@ -205,7 +182,7 @@ Expr::ExpressionBase*
 TabPropsEvaluator<FieldT>::
 Builder::build() const
 {
-  return new TabPropsEvaluator<FieldT>( interp_, ivarNames_ );
+  return new TabPropsEvaluator<FieldT>( *interp_, ivarNames_ );
 }
 
 #endif // TabPropsEvaluator_Expr_h

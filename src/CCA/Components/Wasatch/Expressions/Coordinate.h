@@ -22,62 +22,76 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Coordinate_Expr_h
-#define Coordinate_Expr_h
+#ifndef Coordinates_h
+#define Coordinates_h
 
-#include <CCA/Components/Wasatch/CoordHelper.h>
+//-- ExprLib Includes --//
+#include <expression/Expression.h>
 
-#include <expression/PlaceHolderExpr.h>
+//-- Wasatch Includes --//
+#include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/Operators/Operators.h>
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 namespace Wasatch{
-
-  // note that this is in the Wasatch namespace since it is tied to
-  // Uintah through the CoordHelper class.
-
+  
   /**
-   *  \class 	Coordinate
-   *  \author 	James C. Sutherland
-   *  \ingroup	Expressions
+   *  \class 	 Coordinates
+   *  \ingroup Expressions
+   *  \ingroup	WasatchCore
+   *  \author 	Tony Saad, James C. Sutherland
+   *  \date 	  November, 2013
    *
-   *  \brief shell expression to cause coordinates to be set.  Useful
-   *         for initialization, MMS, etc.
+   *  \brief Expression to compute coordinates.
    *
-   *  \tparam FieldT the type of field to set for this coordinate
+   *  NOTE: this expression BREAKS WITH CONVENTION!  Notably, it has
+   *  uintah tenticles that reach into it, and mixes SpatialOps and
+   *  Uintah constructs.  This is because we don't (currently) have a
+   *  robust interface to deal with parallel linear solves through the
+   *  expression library, but Uintah has a reasonably robust interface.
+   *
+   *  This expression does play well with expression graphs, however.
+   *  There are only a few places where Uintah reaches in.
+   *
+   *  Because of the hackery going on here, this expression is placed in
+   *  the Wasatch namespace.  This should reinforce the concept that it
+   *  is not intended for external use.
    */
-  template< typename FieldT >
-  class Coordinate
-    : public Expr::PlaceHolder<FieldT>
+  template< typename FieldT>
+  class Coordinates
+  : public Expr::Expression<FieldT>
   {
-    Coordinate( CoordHelper& coordHelper,
-                const Direction dir )
-      : Expr::PlaceHolder<FieldT>()
-    {
-      coordHelper.requires_coordinate<FieldT>( dir );
-    }
-
+    const Uintah::Patch* patch_;
+    int idir_; // x = 0, y = 1, z = 2
+    SCIRun::Vector shift_; // shift spacing by -dx/2 for staggered fields
+    Coordinates(const int idir);
+    
   public:
+    
     class Builder : public Expr::ExpressionBuilder
     {
-    public:
-      /**
-       *  \brief Build a Coordinate expression.
-       *  \param result the coordinate calculated by this expression
-       *  \param coordHelper - the CoordHelper object.
-       *  \param dir - the Direction to set for this coordinate (e.g. x, y, z)
-       */
-      Builder( const Expr::Tag& result, CoordHelper& coordHelper, const Direction dir )
-        : ExpressionBuilder(result),
-          coordHelper_( coordHelper ),
-          dir_( dir )
-      {}
-      Expr::ExpressionBase* build() const{ return new Coordinate<FieldT>(coordHelper_,dir_); }
     private:
-      CoordHelper& coordHelper_;
-      const Direction dir_;
+      int idir_;
+    public:
+      Builder( const Expr::Tag& result );
+      ~Builder(){}
+      Expr::ExpressionBase* build() const;
     };
-    ~Coordinate(){}
+    
+    ~Coordinates();
+    
+    
+    /**
+     *  \brief Save pointer to the patch associated with this expression. This
+     *          is needed to set boundary conditions and extract other mesh info.
+     */
+    void set_patch( const Uintah::Patch* const patch );
+    
+    void advertise_dependents( Expr::ExprDeps& exprDeps );
+    void bind_fields( const Expr::FieldManagerList& fml );
+    void evaluate();
+    
   };
-
 } // namespace Wasatch
 
-#endif // Coordinate_Expr_h
+#endif // Coordinates_h

@@ -68,16 +68,16 @@ class TabPropsHeatLossEvaluator
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const InterpT* const adEnthInterp_;
-    const InterpT* const sensEnthInterp_;
-    const InterpT* const enthInterp_;
+    const InterpT& adEnthInterp_;
+    const InterpT& sensEnthInterp_;
+    const InterpT& enthInterp_;
     const size_t hlIx_;
     const Expr::TagList ivarNames_;
   public:
     Builder( const Expr::Tag& result,
-             const InterpT* const adEnthInterp,
-             const InterpT* const sensEnthInterp,
-             const InterpT* const enthInterp,
+             const InterpT& adEnthInterp,
+             const InterpT& sensEnthInterp,
+             const InterpT& enthInterp,
              const size_t hlIx,
              const Expr::TagList& ivarNames );
     ~Builder(){}

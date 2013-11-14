@@ -32,19 +32,19 @@
 namespace Uintah {
 //______________________________________________________________________
 //
-// @brief A kernel that applies the stencil used in timeAdvance(...)
-// @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
-// @param domainHigh a three component vector that gives the highest non-ghost layer cell of the domain as (x,y,z)
-// @param domainSize a three component vector that gives the size of the domain including ghost nodes
-// @param ghostLayers the number of layers of ghost cells
-// @param phi pointer to the source phi allocated on the device
-// @param newphi pointer to the sink phi allocated on the device
+// @brief A GPU kernel for the Jacobi iterations in the Poisson 1-material solver
+// @param patchID the patch this kernel will operate over
+// @param matlIndex the material associated with the specified patchID
+// @param domainLow a three component vector that gives the lower corner of the work area as (x,y,z)
+// @param domainHigh a three component vector that gives the highest corner of the work area as (x,y,z)
+// @param old_gpudw the old GPU DataWarehouse
+// @param new_gpudw the new GPU DataWarehouse
 __global__ void unifiedSchedulerTestKernel(int patchID,
                                            int matlIndex,
                                            uint3 domainLow,
                                            uint3 domainHigh,
-                                           GPUDataWarehouse *old_gpudw,
-                                           GPUDataWarehouse *new_gpudw) {
+                                           GPUDataWarehouse* old_gpudw,
+                                           GPUDataWarehouse* new_gpudw) {
 
   const GPUGridVariable<double> phi;
   GPUGridVariable<double> newphi;
@@ -55,7 +55,7 @@ __global__ void unifiedSchedulerTestKernel(int patchID,
   int i = blockDim.x * blockIdx.x + threadIdx.x + domainLow.x;
   int j = blockDim.y * blockIdx.y + threadIdx.y + domainLow.y;
 
-  // If the threads are within the bounds of the ghost layers
+  // If the threads are within the bounds of the patch
   //  the algorithm is allowed to stream along the z direction
   //  applying the stencil to a line of cells.  The z direction
   //  is streamed because it allows access of x and y elements

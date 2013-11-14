@@ -324,20 +324,6 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 void 
 DQMOMEqn::sched_cleanUp( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "DQMOMEqn::cleanUp";
-  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::cleanUp);
-
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
-}
-//---------------------------------------------------------------------------
-// Method: Actually clean up. 
-//---------------------------------------------------------------------------
-void DQMOMEqn::cleanUp( const ProcessorGroup* pc, 
-                        const PatchSubset* patches, 
-                        const MaterialSubset* matls, 
-                        DataWarehouse* old_dw, 
-                        DataWarehouse* new_dw )
-{
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the evaluation of the transport equation. 

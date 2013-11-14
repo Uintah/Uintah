@@ -39,6 +39,7 @@ namespace SCIRun {
   class TypeDescription;
   class Piostream;
 }
+
 #include <Core/Math/TntJama/tnt.h>
 
 namespace Uintah {

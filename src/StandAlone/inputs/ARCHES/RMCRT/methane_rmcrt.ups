@@ -324,6 +324,7 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
+        <!-- enthalpy using RMCRT --> 
         <Eqn label="enthalpy" type = "CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -333,9 +334,21 @@
           </initialization>
           <src label="divQ" ><weight>-1 </weight> </src>        
         </Eqn>
-    <!--
+        <!-- enthalpy using DO --> 
+        <Eqn label="enthalpy_do" type = "CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <initialization type="tabulated">
+            <depend_varname>adiabaticenthalpy</depend_varname>
+          </initialization>
+          <src label="divQ_do" >
+            <weight>1</weight> 
+          </src>        
+        </Eqn>
         <Sources>
-          <src label="divQ" type="do_radiation">
+          <!-- define a DO radiation model for comparison --> 
+          <src label="divQ_do" type="do_radiation">
             <calc_frequency>10</calc_frequency>
             <soot_label>soot</soot_label>
             <abskp_label>absorpIN</abskp_label>
@@ -349,14 +362,10 @@
               </LinearSolver>
             </DORadiationModel>
           </src>
-        </Sources>
-        -->
-        <Sources>
           <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>1</calc_frequency>
             
             <RMCRT>
-                <opl>               0.01       </opl>
                 <randomSeed>        false      </randomSeed>
                 <abskg>             999        </abskg>
                 <nDivQRays>          5         </nDivQRays>

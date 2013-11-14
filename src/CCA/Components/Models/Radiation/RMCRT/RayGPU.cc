@@ -29,8 +29,8 @@
 #endif
 #include <Core/Grid/DbgOutput.h>
 
-
 #define BLOCKSIZE 16
+//#define PRINTF            // if using printf statements to debug
 
 using namespace Uintah;
 using namespace std;
@@ -64,14 +64,23 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   }
 
   //__________________________________
+  //  increase the size of the printbuffer on the device
+#ifdef PRINTF
+  size_t size;
+  cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize);
+  cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size );
+  printf(" Increasing the size of the print buffer to %d bytes\n", (int)10 * size );
+#endif
+
+  //__________________________________
   // Determine the size of the domain.
   IntVector domainLo, domainHi;
   IntVector domainLo_EC, domainHi_EC;
   level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
   level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
 
-  const int3 dev_domainLo = make_int3(domainLo_EC.x(), domainLo_EC.y(), domainLo_EC.z());
-  const int3 dev_domainHi = make_int3(domainHi_EC.x(), domainHi_EC.y(), domainHi_EC.z());
+  const Int3 dev_domainLo = make_int3(domainLo_EC.x(), domainLo_EC.y(), domainLo_EC.z());
+  const Int3 dev_domainHi = make_int3(domainHi_EC.x(), domainHi_EC.y(), domainHi_EC.z());
 
   
   //__________________________________
@@ -94,7 +103,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   labelNames.VRFlux    = d_VRFluxLabel->getName().c_str();
   labelNames.boundFlux = d_boundFluxLabel->getName().c_str();
   labelNames.radVolQ   = d_radiationVolqLabel->getName().c_str();
-#endif  
+  
   cout << " abskg:   " << d_abskgLabel->getName() << endl;
   cout << " sigmaT4: " << d_sigmaT4_label->getName() << endl;
   cout << " divQ:    " <<d_divQLabel->getName() << endl;
@@ -102,6 +111,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   cout << " VRFlux:  " << d_VRFluxLabel->getName() << endl;
   cout << " boundFlux: " << d_boundFluxLabel->getName() << endl;
   cout << " radVolQ:   " << d_radiationVolqLabel->getName() << endl;
+#endif
   
   //__________________________________
   //  RMCRT_flags
@@ -152,7 +162,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     patchP.ID     = patch->getID();
     patchP.nCells = make_int3(xdim, ydim, zdim);
 
-    // define dimesions of the thread grid to be launched
+    // define dimensions of the thread grid to be launched
     int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
     int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
     dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
@@ -161,10 +171,10 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     // setup random number generator states on the device, 1 for each thread
     curandState* randNumStates;
     int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
-    CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );
+    /*`CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );      TESTING`*/
 
-    
     RT_flags.nRaySteps = 0;
+
     //__________________________________
     // set up and launch kernel
     launchRayTraceKernel(dimGrid, 
@@ -184,7 +194,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
                          new_gdw);
 
     // free device-side RNG states
-    CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
+    /*`CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );      TESTING`*/
     
     //__________________________________
     //

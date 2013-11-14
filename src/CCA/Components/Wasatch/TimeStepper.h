@@ -113,7 +113,6 @@ namespace Wasatch{
     }
   };
 
-  class CoordHelper;
   class TaskInterface;
 
   /**
@@ -170,8 +169,7 @@ namespace Wasatch{
 
     GraphHelper* const solnGraphHelper_;
     GraphHelper* const postProcGraphHelper_;      
-    CoordHelper* const coordHelper_;   ///< provides ability to obtain coordinate values on any field type.
-      
+    
     const TimeIntegrator timeInt_; ///< Multistage time integrator coefs
 
     std::vector< Uintah::VarLabel* > createdVarLabels_;   ///< a list of all VarLabel objects created (so we can delete them later)

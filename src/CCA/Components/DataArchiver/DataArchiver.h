@@ -94,11 +94,14 @@ using SCIRun::Mutex;
        //! files up to the specified timestep from restartFromDir if
        //! fromScratch is false and will set time and timestep variables
        //! appropriately to continue smoothly from that timestep.
-       //! If timestep is negative, then all timesteps will getg copied
+       //! If timestep is negative, then all timesteps will get copied
        //! if they are to be copied at all (fromScratch is false).
-       virtual void restartSetup(Dir& restartFromDir, int startTimestep,
-           int timestep, double time, bool fromScratch,
-           bool removeOldDir);
+       virtual void restartSetup( Dir    & restartFromDir,
+                                  int      startTimestep,
+                                  int      timestep,
+                                  double   time,
+                                  bool     fromScratch,
+                                  bool     removeOldDir );
 
        //! Call this when doing a combine_patches run after calling
        //! problemSetup.  It will copy the data files over and make it ignore
@@ -250,19 +253,26 @@ using SCIRun::Mutex;
        void createIndexXML(Dir& dir);
 
        //! helper for restartSetup - adds the restart field to index.xml
-       void addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
-           int timestep);
+       void addRestartStamp( ProblemSpecP   indexDoc,
+                             Dir          & fromDir,
+                             int            timestep );
 
        //! helper for restartSetup - copies the timestep directories AND
        //! timestep entries in index.xml
-       void copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
-           int maxTimestep, bool removeOld,
-           bool areCheckpoints = false);
+       void copyTimesteps( Dir  & fromDir,
+                           Dir  & toDir,
+                           int    startTimestep,
+                           int    maxTimestep,
+                           bool   removeOld,
+                           bool   areCheckpoints = false );
 
        //! helper for restartSetup - copies the reduction dat files to 
        //! new uda dir (from startTimestep to maxTimestep)
-       void copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
-           int maxTimestep, bool removeOld);
+       void copyDatFiles( Dir & fromDir,
+                          Dir & toDir,
+                          int   startTimestep,
+                          int   maxTimestep,
+                          bool  removeOld );
 
        //! add saved global (reduction) variables to index.xml
        void indexAddGlobals();

@@ -96,7 +96,7 @@ namespace Uintah {
       void initialize(const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
+                      DataWarehouse* /*old_dw*/,
                       DataWarehouse* new_dw);
 
       void computeStableTimestep(const ProcessorGroup* pg,

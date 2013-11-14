@@ -89,6 +89,10 @@ fi
 
 selectedCompTests=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 61 15 $list`
 
+#remove quotations
+selectedCompTests=`echo $selectedCompTests | tr -d '"'`
+
+
 if [ $? != 0 ] ; then
   echo "Cancel selected..." > /dev/stderr
   exit 1
@@ -118,6 +122,9 @@ for componentTest in $selectedCompTests; do
     done
 
     declare -a selectedSubset=(`dialog --stdout --separate-output --checklist " [$componentTest] Select ONE set of tests to run" 20 61 15 $list`)
+
+    #remove quotations from options variable
+    selectedSubset=`echo $selectedSubset | tr -d '"'`
 
     if [ ${#selectedSubset[@]} == 0 ] ; then                                                                
       echo ""> /dev/stderr
