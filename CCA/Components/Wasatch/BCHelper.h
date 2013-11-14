@@ -67,7 +67,7 @@ static SCIRun::DebugStream dbgbc("WASATCH_BC", false);
 namespace Wasatch {
   
   // !!! ACHTUNG !!!
-  // !!! READ THE NOMENCLATURE CONVECTION BEFORE PROCEEDING WITH THIS CLASS !!!
+  // !!! READ THE NOMENCLATURE ASSUMPTIONS BEFORE PROCEEDING WITH THIS CLASS !!!
   /* 
      Hi. This class is based on the following assumptions:
    1. We distinguish between boundaries and boundary conditions. 
