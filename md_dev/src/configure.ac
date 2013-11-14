@@ -709,6 +709,11 @@ case $host in
     if test $? = 0; then
       altivec="" 
     fi
+    # New Mac gcc47 compiler also does not support the -faltivec flag...
+    $CC --version | grep -q -i gcc47 > /dev/null 2>&1
+    if test $? = 0; then
+      altivec="" 
+    fi
     ;;
   *-aix*)
     NUM_CPUS=4
