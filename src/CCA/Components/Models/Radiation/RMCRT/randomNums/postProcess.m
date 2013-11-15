@@ -16,6 +16,6 @@ plot( i, randCPU,'+',      "markersize", 2,
       i, randDevGPU_M,'x', "markersize", 2,
       i, randDevGPU_N,'*', "markersize", 2);
       
-legend( {'MT CPU', 'hostGPU', 'devGPU(M)', 'devGPU(N)'}, "location", "eastoutside");
+legend( {'CPU', 'hostCPU', 'GPU dblExc', 'GPU dblInc'}, "location", "eastoutside");
 legend boxon;
 pause
