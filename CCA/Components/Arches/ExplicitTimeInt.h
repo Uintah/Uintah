@@ -234,11 +234,11 @@ private:
 #endif
 
       // phi^{t+\Delta t} = ((rho*phi)^{t} + RHS) / rho^{t + \Delta t} 
-      double rho_ox = .5;
-      double rho_f = 1.18; 
-      double rho_guess = rho_ox + phi[c]*(1-rho_ox/rho_f); 
-      phi[c] = phi[c] / rho_guess; 
-      //phi[c] = phi[c] / new_den[c]; 
+      //double rho_ox = .5;
+      //double rho_f = 1.18; 
+      //double rho_guess = rho_ox + phi[c]*(1-rho_ox/rho_f); 
+      //phi[c] = phi[c] / rho_guess; 
+      phi[c] = phi[c] / new_den[c]; 
 
       double small = 1e-16; 
       if (new_den[c] < small) 
