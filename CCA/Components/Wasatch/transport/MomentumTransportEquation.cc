@@ -563,16 +563,13 @@ namespace Wasatch{
                              GraphCategories& gc,
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
-                             const bool hasEmbeddedGeometry,
-                             const bool hasMovingGeometry,
                              Uintah::SolverInterface& linSolver,
                              Uintah::SimulationStateP sharedState)
     : TransportEquation( gc,
                          momName,
                          params,
                          get_staggered_location<FieldT>(),
-                         isConstDensity,
-                         hasEmbeddedGeometry ),
+                         isConstDensity ),
       isViscous_       ( params->findBlock("Viscosity") ? true : false ),
       isTurbulent_     ( turbulenceParams.turbModelName != NOTURBULENCE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
@@ -599,17 +596,8 @@ namespace Wasatch{
     
     //_____________
     // volume fractions for embedded boundaries Terms
-    const VolFractionNames& vNames = VolFractionNames::self();
-    const Expr::Tag volFracTag =     has_embedded_geometry()               ? vNames.svol_frac_tag() : Expr::Tag();
-    const Expr::Tag xAreaFracTag = ( has_embedded_geometry() && doMom[0] ) ? vNames.xvol_frac_tag() : Expr::Tag();
-    const Expr::Tag yAreaFracTag = ( has_embedded_geometry() && doMom[1] ) ? vNames.yvol_frac_tag() : Expr::Tag();
-    const Expr::Tag zAreaFracTag = ( has_embedded_geometry() && doMom[2] ) ? vNames.zvol_frac_tag() : Expr::Tag();
-    switch( stagLoc_ ){
-      case XDIR: thisVolFracTag_ = xAreaFracTag; break;
-      case YDIR: thisVolFracTag_ = yAreaFracTag; break;
-      case ZDIR: thisVolFracTag_ = zAreaFracTag; break;
-      default:   thisVolFracTag_ = Expr::Tag();  break;
-    }        
+    const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+    thisVolFracTag_ = vNames.vol_frac_tag<FieldT>();
     
     //__________________
     // convective fluxes
@@ -763,8 +751,8 @@ namespace Wasatch{
         ptags.push_back( pressure_tag() );
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
         const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
-                                                                                        tagNames.pressuresrc, tagNames.timestep, volFracTag,
-                                                                                        hasMovingGeometry, usePressureRefPoint, refPressureValue, 
+                                                                                        tagNames.pressuresrc, tagNames.timestep, vNames.vol_frac_tag<SVolField>(),
+                                                                                        vNames.has_moving_geometry(), usePressureRefPoint, refPressureValue,
                                                                                         refPressureLocation, use3DLaplacian,
                                                                                         *solverParams_, linSolver);
         pressureID_ = factory.register_expression( pbuilder );
@@ -822,16 +810,9 @@ namespace Wasatch{
   {
     const bool enablePressureSolve = !(params_->findBlock("DisablePressureSolve"));
 
-    Expr::Tag volFracTag = Expr::Tag();
-    if( hasEmbeddedGeometry_ ){
-      const VolFractionNames& vNames = VolFractionNames::self();
-      switch (stagLoc_) {
-        case XDIR: volFracTag = vNames.xvol_frac_tag(); break;
-        case YDIR: volFracTag = vNames.yvol_frac_tag(); break;
-        case ZDIR: volFracTag = vNames.zvol_frac_tag(); break;
-        default: break;
-      }
-    }
+    const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+    Expr::Tag volFracTag = vNames.vol_frac_tag<FieldT>();
+
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     typedef typename MomRHS<FieldT>::Builder RHS;
     return factory.register_expression( scinew RHS( rhsTag_,
@@ -1065,7 +1046,8 @@ namespace Wasatch{
     }
 
     // multiply the initial condition by the volume fraction for embedded geometries
-    if( hasEmbeddedGeometry_ ){
+    const EmbeddedGeometryHelper& geomHelper = EmbeddedGeometryHelper::self();
+    if( geomHelper.has_embedded_geometry() ){
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
       const Expr::TagList theTagList( tag_list( thisVolFracTag_ ) );

@@ -44,19 +44,62 @@
 
 namespace Wasatch{
   
-  VolFractionNames::VolFractionNames() :
-    svolfrac_("svolFraction"),
-    xvolfrac_("xvolFraction"),
-    yvolfrac_("yvolFraction"),
-    zvolfrac_("zvolFraction")
+  EmbeddedGeometryHelper::EmbeddedGeometryHelper() :
+    svolfrac_(""),
+    xvolfrac_(""),
+    yvolfrac_(""),
+    zvolfrac_(""),
+    hasEmbeddedGeometry_( false ),
+    hasMovingGeometry_  ( false ),
+    doneSetup_          ( false )
   {}
   
   //------------------------------------------------------------------
-  
-  VolFractionNames&
-  VolFractionNames::self()
+
+  template<>
+  Expr::Tag
+  EmbeddedGeometryHelper::vol_frac_tag<SVolField>() const
   {
-    static VolFractionNames s;
+    check_state();
+    return (svolfrac_=="") ? Expr::Tag() : Expr::Tag(svolfrac_,Expr::STATE_NONE);
+  }
+
+  //------------------------------------------------------------------
+  
+  template<>
+  Expr::Tag
+  EmbeddedGeometryHelper::vol_frac_tag<XVolField>() const
+  {
+    check_state();
+    return (xvolfrac_=="") ? Expr::Tag() : Expr::Tag(xvolfrac_,Expr::STATE_NONE);
+  }
+
+  //------------------------------------------------------------------
+  
+  template<>
+  Expr::Tag
+  EmbeddedGeometryHelper::vol_frac_tag<YVolField>() const
+  {
+    check_state();
+    return (yvolfrac_=="") ? Expr::Tag() : Expr::Tag(yvolfrac_,Expr::STATE_NONE);
+  }
+
+  //------------------------------------------------------------------
+  
+  template<>
+  Expr::Tag  
+  EmbeddedGeometryHelper::vol_frac_tag<ZVolField>() const
+  {
+    check_state();
+    return (zvolfrac_=="") ? Expr::Tag() : Expr::Tag(zvolfrac_,Expr::STATE_NONE);
+  }
+
+  //------------------------------------------------------------------
+
+  EmbeddedGeometryHelper&
+  EmbeddedGeometryHelper::self()
+  {
+    static EmbeddedGeometryHelper s;
     return s;
   }
 
@@ -66,9 +109,12 @@ namespace Wasatch{
   parse_embedded_geometry( Uintah::ProblemSpecP parser,
                            GraphCategories& gc )
   {
+    EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+    vNames.set_state(true);    
+    vNames.set_vol_frac_names("","","","");
+    
     if( parser->findBlock("EmbeddedGeometry") ){
-      
-      VolFractionNames& vNames = VolFractionNames::self();
+      vNames.set_has_embedded_geometry(true);
       
       Expr::ExpressionBuilder* volFracBuilder = NULL;
       Expr::ExpressionBuilder* volFracBuilderInit = NULL;
@@ -81,6 +127,7 @@ namespace Wasatch{
       bool inverted = geomParams->findBlock("Inverted");
       
       bool movingGeom = geomParams->findBlock("MovingGeometry");
+      vNames.set_has_moving_geometry(movingGeom);
 
       // check if we have external volume fractions
       if ( geomParams->findBlock("External") ) {
@@ -90,14 +137,14 @@ namespace Wasatch{
         externalParams->get("XVolFraction",xvolfracname);
         externalParams->get("YVolFraction",yvolfracname);
         externalParams->get("ZVolFraction",zvolfracname);
-        vNames.set_svol_frac_name(svolfracname);
-        vNames.set_xvol_frac_name(xvolfracname);
-        vNames.set_yvol_frac_name(yvolfracname);
-        vNames.set_zvol_frac_name(zvolfracname);
+        vNames.set_vol_frac_names(svolfracname, xvolfracname, yvolfracname, zvolfracname);
         // volume fraction expressions have been specified external and should
         // be registered outside, therefore, we return from this call.
         return;
       }
+      
+      // if no external geometry has been specified, then we parse user-specified intrusions
+      vNames.set_vol_frac_names("svolFraction", "xvolFraction", "yvolFraction", "zvolFraction");
       
       Uintah::ProblemSpecP geomExprParams = geomParams->findBlock("GeometryExpression");      
       if (geomExprParams) {        
@@ -118,8 +165,8 @@ namespace Wasatch{
           std::string axis;
           valParams->get("Axis",axis);
           typedef OscillatingCylinder::Builder Builder;
-          volFracBuilderInit = scinew Builder( vNames.svol_frac_tag(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
-          if (movingGeom) volFracBuilder = scinew Builder( vNames.svol_frac_tag(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
+          volFracBuilderInit = scinew Builder( vNames.vol_frac_tag<SVolField>(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
+          if (movingGeom) volFracBuilder = scinew Builder( vNames.vol_frac_tag<SVolField>(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
         }
         
       } else {
@@ -132,8 +179,8 @@ namespace Wasatch{
           Uintah::GeometryPieceFactory::create(intrusionParams->findBlock("geom_object"),geomObjects);
         }
         typedef GeometryPieceWrapper::Builder svolfracBuilder;        
-        volFracBuilderInit = scinew svolfracBuilder( vNames.svol_frac_tag(), geomObjects, inverted );
-        if (movingGeom) volFracBuilder = scinew svolfracBuilder( vNames.svol_frac_tag(), geomObjects, inverted );
+        volFracBuilderInit = scinew svolfracBuilder( vNames.vol_frac_tag<SVolField>(), geomObjects, inverted );
+        if (movingGeom) volFracBuilder = scinew svolfracBuilder( vNames.vol_frac_tag<SVolField>(), geomObjects, inverted );
       }
       
       // register the volume fractions
@@ -145,28 +192,28 @@ namespace Wasatch{
       typedef AreaFraction<YVolField>::Builder yvolfracBuilder;
       typedef AreaFraction<ZVolField>::Builder zvolfracBuilder;
       
-      initgh->exprFactory->register_expression( scinew xvolfracBuilder( vNames.xvol_frac_tag(), vNames.svol_frac_tag() ) );
-      initgh->exprFactory->register_expression( scinew yvolfracBuilder( vNames.yvol_frac_tag(), vNames.svol_frac_tag() ) );
-      initgh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.zvol_frac_tag(), vNames.svol_frac_tag() ) );
+      initgh->exprFactory->register_expression( scinew xvolfracBuilder( vNames.vol_frac_tag<XVolField>(), vNames.vol_frac_tag<SVolField>() ) );
+      initgh->exprFactory->register_expression( scinew yvolfracBuilder( vNames.vol_frac_tag<YVolField>(), vNames.vol_frac_tag<SVolField>() ) );
+      initgh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.vol_frac_tag<ZVolField>(), vNames.vol_frac_tag<SVolField>() ) );
 
       if (movingGeom) {
         // when the geometry is moving, then recalculate volume fractions at every timestep
-        solngh->exprFactory->register_expression( scinew xvolfracBuilder( vNames.xvol_frac_tag(), vNames.svol_frac_tag() ) );
-        solngh->exprFactory->register_expression( scinew yvolfracBuilder( vNames.yvol_frac_tag(), vNames.svol_frac_tag() ) );
-        solngh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.zvol_frac_tag(), vNames.svol_frac_tag() ) );
+        solngh->exprFactory->register_expression( scinew xvolfracBuilder( vNames.vol_frac_tag<XVolField>(), vNames.vol_frac_tag<SVolField>() ) );
+        solngh->exprFactory->register_expression( scinew yvolfracBuilder( vNames.vol_frac_tag<YVolField>(), vNames.vol_frac_tag<SVolField>() ) );
+        solngh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.vol_frac_tag<ZVolField>(), vNames.vol_frac_tag<SVolField>() ) );
       } else {
         // when the geometry is not moving, copy the volume fractions from the previous timestep
         OldVariable& oldVar = OldVariable::self();
-        oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, vNames.svol_frac_tag(), true);
-        oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, vNames.xvol_frac_tag(), true);
-        oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, vNames.yvol_frac_tag(), true);
-        oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, vNames.zvol_frac_tag(), true);
+        oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, vNames.vol_frac_tag<SVolField>(), true);
+        oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, vNames.vol_frac_tag<XVolField>(), true);
+        oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, vNames.vol_frac_tag<YVolField>(), true);
+        oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, vNames.vol_frac_tag<ZVolField>(), true);
       }
       
       // force on initial conditions graph
-      initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.xvol_frac_tag() ) );
-      initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.yvol_frac_tag() ) );
-      initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.zvol_frac_tag() ) );
+      initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.vol_frac_tag<XVolField>() ) );
+      initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.vol_frac_tag<YVolField>() ) );
+      initgh->rootIDs.insert( initgh->exprFactory->get_id( vNames.vol_frac_tag<ZVolField>() ) );
     }
   }
   

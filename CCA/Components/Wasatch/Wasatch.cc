@@ -548,7 +548,7 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP transEqnParams=wasatchSpec_->findBlock("TransportEquation");
          transEqnParams != 0;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
-      adaptors_.push_back( parse_equation( transEqnParams, turbParams, hasEmbeddedGeometry, densityTag, isConstDensity, graphCategories_ ) );
+      adaptors_.push_back( parse_equation( transEqnParams, turbParams, densityTag, isConstDensity, graphCategories_ ) );
     }
 
     //
@@ -586,8 +586,6 @@ namespace Wasatch{
                                                                       turbParams,
                                                                       useAdaptiveDt,
                                                                       isConstDensity,
-                                                                      hasEmbeddedGeometry,
-                                                                      hasMovingBoundaries,
                                                                       densityTag,
                                                                       graphCategories_,
                                                                       *linSolver_,
@@ -615,7 +613,7 @@ namespace Wasatch{
         //For the Multi-Environment mixing model, the entire Wasatch Block must be passed to find values for initial moments
         const EquationAdaptors adaptors =
             parse_moment_transport_equations( momEqnParams, wasatchSpec_, isConstDensity,
-                                              hasEmbeddedGeometry, graphCategories_ );
+                                              graphCategories_ );
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){

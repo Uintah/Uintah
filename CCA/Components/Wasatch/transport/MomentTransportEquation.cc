@@ -365,15 +365,13 @@ namespace Wasatch {
                            GraphCategories& gc,
                            const double momentOrder,
                            const bool isConstDensity,
-                           const bool hasEmbeddedGeometry,
                            Uintah::ProblemSpecP params,
                            const double initialMoment )
   : Wasatch::TransportEquation( gc,
                                 get_soln_var_name(params,momentOrder),
                                 params,
                                 get_staggered_location<FieldT>(),
-                                isConstDensity,
-                                hasEmbeddedGeometry ),
+                                isConstDensity ),
    populationName_ ( get_population_name(params) ),
    baseSolnVarName_( "m_" + populationName_ ),
    momentOrder_    ( momentOrder ),
@@ -448,7 +446,8 @@ namespace Wasatch {
     
     
     // multiply the initial condition by the volume fraction for embedded geometries
-    if (hasEmbeddedGeometry_) {
+    const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+    if (vNames.has_embedded_geometry()) {
       
       const Expr::Tag& phiTag = solution_variable_tag();
       
@@ -456,8 +455,7 @@ namespace Wasatch {
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
       Expr::TagList theTagList;
-      const VolFractionNames& vNames = VolFractionNames::self();
-      theTagList.push_back( vNames.svol_frac_tag() );
+      theTagList.push_back( vNames.vol_frac_tag<FieldT>() );
       Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
       factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
                                                                    theTagList,
