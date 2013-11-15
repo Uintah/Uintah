@@ -127,9 +127,9 @@ namespace Wasatch{
   {
     if( params_->findBlock( "DoDiffusion") ){
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-      setup_diffusive_velocity_expression<FieldT>( solnVarName_, "X", factory, info );
-      setup_diffusive_velocity_expression<FieldT>( solnVarName_, "Y", factory, info );
-      setup_diffusive_velocity_expression<FieldT>( solnVarName_, "Z", factory, info );
+      setup_diffusive_velocity_expression<FieldT>( "X", solnVarName_, factory, info );
+      setup_diffusive_velocity_expression<FieldT>( "Y", solnVarName_, factory, info );
+      setup_diffusive_velocity_expression<FieldT>( "Z", solnVarName_, factory, info );
     }
   }
 
