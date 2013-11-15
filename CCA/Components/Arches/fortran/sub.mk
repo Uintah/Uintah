@@ -39,8 +39,6 @@ SRCS += \
         $(SRCDIR)/fixval.F \
         $(SRCDIR)/fixval_trans.F \
         $(SRCDIR)/mm_computevel.F\
-        $(SRCDIR)/mm_explicit.F\
-        $(SRCDIR)/mm_explicit_oldvalue.F\
         $(SRCDIR)/mm_explicit_vel.F\
         $(SRCDIR)/mmbcvelocity.F \
         $(SRCDIR)/prescoef_var.F \
@@ -68,8 +66,6 @@ $(SRCDIR)/bcvvel.$(OBJEXT): $(SRCDIR)/bcvvel_fort.h
 $(SRCDIR)/bcwvel.$(OBJEXT): $(SRCDIR)/bcwvel_fort.h
 $(SRCDIR)/cellg.$(OBJEXT): $(SRCDIR)/cellg_fort.h
 $(SRCDIR)/mm_computevel.$(OBJEXT): $(SRCDIR)/mm_computevel_fort.h
-$(SRCDIR)/mm_explicit.$(OBJEXT): $(SRCDIR)/mm_explicit_fort.h
-$(SRCDIR)/mm_explicit_oldvalue.$(OBJEXT): $(SRCDIR)/mm_explicit_oldvalue_fort.h
 $(SRCDIR)/mm_explicit_vel.$(OBJEXT): $(SRCDIR)/mm_explicit_vel_fort.h
 $(SRCDIR)/mmbcvelocity.$(OBJEXT): $(SRCDIR)/mmbcvelocity_fort.h
 $(SRCDIR)/prescoef_var.$(OBJEXT): $(SRCDIR)/prescoef_var_fort.h

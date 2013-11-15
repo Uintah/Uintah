@@ -334,14 +334,8 @@ BoundaryCondition::pressureBC(const Patch* patch,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars)
 {
-  // shortcuts
-  int wall_BC = wallCellType();
-  int pressure_BC = pressureCellType();
-  int outlet_BC = outletCellType();
-  // int symmetry_celltypeval = -3;
   
   CCVariable<Stencil7>& A = vars->pressCoeff;
-  constCCVariable<int>& cellType = constvars->cellType;
   
   std::vector<BC_TYPE> add_types; 
   add_types.push_back( OUTLET ); 
@@ -845,7 +839,7 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
                                     double time_shift)
 {
   double time = d_lab->d_sharedState->getElapsedTime();
-  double current_time = time + time_shift;
+  //double current_time = time + time_shift;
   Vector Dx = patch->dCell(); 
 
   // Get the low and high index for the patch and the variables
