@@ -58,7 +58,6 @@ namespace Wasatch{
   ScalarTransportEquation( const std::string solnVarName,
                            Uintah::ProblemSpecP params,
                            GraphCategories& gc,
-                           const bool hasEmbeddedGeometry,
                            const Expr::Tag densityTag,
                            const bool isConstDensity,
                            const TurbulenceParameters& turbulenceParams )
@@ -66,8 +65,7 @@ namespace Wasatch{
                                   solnVarName,
                                   params,
                                   get_staggered_location<FieldT>(),
-                                  isConstDensity,
-                                  hasEmbeddedGeometry ),
+                                  isConstDensity ),
       densityTag_( densityTag )
   {
     //_____________
@@ -232,12 +230,13 @@ namespace Wasatch{
         const Expr::Tag primVarStarTag( primVarTag_.name() + tagNames.star, Expr::STATE_NONE );
         const Expr::Tag solnVarStarTag( solnVarName_       + tagNames.star, Expr::STATE_NONE );
         infoStar_[PRIMITIVE_VARIABLE] = primVarStarTag;
-        if( hasEmbeddedGeometry_ ){
-          VolFractionNames& vNames = VolFractionNames::self();
-          infoStar_[VOLUME_FRAC] = vNames.svol_frac_tag();
-          infoStar_[AREA_FRAC_X] = vNames.xvol_frac_tag();
-          infoStar_[AREA_FRAC_Y] = vNames.yvol_frac_tag();
-          infoStar_[AREA_FRAC_Z] = vNames.zvol_frac_tag();
+        
+        EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+        if( vNames.has_embedded_geometry() ){
+          infoStar_[VOLUME_FRAC] = vNames.vol_frac_tag<SVolField>();
+          infoStar_[AREA_FRAC_X] = vNames.vol_frac_tag<XVolField>();
+          infoStar_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
+          infoStar_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
         }
         factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, solnVarStarTag, densityStarTag ) );
         factory.register_expression( scinew RHSBuilder( rhsStarTag, infoStar_, srcTags, densityStarTag, isConstDensity_, isStrong_, tagNames.drhodtstar ) );
@@ -260,12 +259,12 @@ namespace Wasatch{
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
     
     // multiply the initial condition by the volume fraction for embedded geometries
-    if( hasEmbeddedGeometry_ ) {
+    const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+    if( vNames.has_embedded_geometry() ) {
 
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
-      const VolFractionNames& vNames = VolFractionNames::self();
-      const Expr::TagList theTagList = tag_list( vNames.svol_frac_tag() );
+      const Expr::TagList theTagList = tag_list( vNames.vol_frac_tag<SVolField>() );
       Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
       factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
                                                                    theTagList,

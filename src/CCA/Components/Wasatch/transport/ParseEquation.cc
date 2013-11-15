@@ -101,7 +101,6 @@ namespace Wasatch{
 
   EqnTimestepAdaptorBase* parse_equation( Uintah::ProblemSpecP params,
                                           TurbulenceParameters turbParams,
-                                          const bool hasEmbeddedGeometry,
                                           const Expr::Tag densityTag,
                                           const bool isConstDensity,
                                           GraphCategories& gc )
@@ -126,7 +125,6 @@ namespace Wasatch{
         transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_solnvar_name( params ),
                                           params,
                                           gc,
-                                          hasEmbeddedGeometry,
                                           densityTag,
                                           isConstDensity,
                                           turbParams );
@@ -349,8 +347,6 @@ namespace Wasatch{
                             const TurbulenceParameters turbParams,
                             const bool useAdaptiveDt,
                             const bool isConstDensity,
-                            const bool hasEmbeddedGeometry,
-                            const bool hasMovingGeometry,
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
                             Uintah::SolverInterface& linSolver, Uintah::SimulationStateP& sharedState )
@@ -421,8 +417,6 @@ namespace Wasatch{
                                                          gc,
                                                          params,
                                                          turbParams,
-                                                         hasEmbeddedGeometry,
-                                                         hasMovingGeometry,
                                                          linSolver, sharedState );
       adaptors.push_back( scinew EqnTimestepAdaptor<XVolField>(momtranseq) );
     }
@@ -439,8 +433,6 @@ namespace Wasatch{
                                                          gc,
                                                          params,
                                                          turbParams,
-                                                         hasEmbeddedGeometry,
-                                                         hasMovingGeometry,
                                                          linSolver,sharedState );
       adaptors.push_back( scinew EqnTimestepAdaptor<YVolField>(momtranseq) );
     }
@@ -457,8 +449,6 @@ namespace Wasatch{
                                                          gc,
                                                          params,
                                                          turbParams,
-                                                         hasEmbeddedGeometry,
-                                                         hasMovingGeometry,
                                                          linSolver,sharedState );
       adaptors.push_back( scinew EqnTimestepAdaptor<ZVolField>(momtranseq) );
     }
@@ -531,7 +521,6 @@ namespace Wasatch{
   parse_moment_transport_equations( Uintah::ProblemSpecP params,
                                     Uintah::ProblemSpecP wasatchParams,
                                     const bool isConstDensity,
-                                    const bool hasEmbeddedGeometry,
                                     GraphCategories& gc )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
@@ -580,7 +569,6 @@ namespace Wasatch{
                                                          gc,
                                                          momentID,
                                                          isConstDensity,
-                                                         hasEmbeddedGeometry,
                                                          params,
                                                          initialMoments[iMom] );
 

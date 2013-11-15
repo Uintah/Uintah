@@ -103,14 +103,12 @@ namespace Wasatch{
      * @param params the parser information for this TransportEquation
      * @param stagLoc the direction that this equation is staggered
      * @param isConstDensity flag for constant density
-     * @param hasEmbeddedGeometry flag for embedded geometry
      */
     TransportEquation( GraphCategories& gc,
                        const std::string solnVarName,
                        Uintah::ProblemSpecP params,
                        const Direction stagLoc,
-                       const bool isConstDensity,
-                       const bool hasEmbeddedGeometry );
+                       const bool isConstDensity );
 
     virtual ~TransportEquation(){}
 
@@ -197,7 +195,6 @@ namespace Wasatch{
      */
     virtual Expr::ExpressionID initial_condition( Expr::ExpressionFactory& exprFactory ) = 0;
 
-    inline bool has_embedded_geometry() const { return hasEmbeddedGeometry_; }
     inline bool is_constant_density()   const { return isConstDensity_; }
     
   protected:
@@ -207,7 +204,7 @@ namespace Wasatch{
     const Expr::Tag solnVarTag_;          ///< Tag for the solution variable (at STATE_N)
     const Expr::Tag rhsTag_;              ///< Tag for the rhs
     const Direction stagLoc_;             ///< staggered direction for this equation
-    const bool isConstDensity_, hasEmbeddedGeometry_;
+    const bool isConstDensity_;
     Expr::ExpressionID rhsExprID_;  ///< The label for the rhs expression for this TransportEquation.
     Expr::Tag turbDiffTag_;
   };

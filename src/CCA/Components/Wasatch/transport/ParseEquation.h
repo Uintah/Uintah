@@ -93,7 +93,6 @@ namespace Wasatch{
   EqnTimestepAdaptorBase*
   parse_equation( Uintah::ProblemSpecP params,
                   TurbulenceParameters turbParams,
-                  const bool hasEmbeddedGeometry,
                   const Expr::Tag densityTag,
                   const bool isConstDensity,
                   GraphCategories& gc );
@@ -128,8 +127,6 @@ namespace Wasatch{
                             const TurbulenceParameters turbParams,
                             const bool useAdaptiveDt,
                             const bool isConstDensity,
-                            const bool hasEmbeddedGeometry,
-                            const bool hasMovingGeometry,
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
                             Uintah::SolverInterface& linSolver,
@@ -175,7 +172,6 @@ namespace Wasatch{
   std::vector<EqnTimestepAdaptorBase*> parse_moment_transport_equations( Uintah::ProblemSpecP params,
                                                                          Uintah::ProblemSpecP wasatchParams,
                                                                          const bool isConstDensity,
-                                                                         const bool hasEmbeddedGeometry,
                                                                          GraphCategories& gc);
 
 

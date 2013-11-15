@@ -42,16 +42,14 @@ namespace Wasatch{
                      const std::string solnVarName,
                      Uintah::ProblemSpecP params,
                      const Direction stagLoc,
-                     const bool isConstDensity,
-                     const bool hasEmbeddedGeometry )
+                     const bool isConstDensity )
   : params_             ( params ),
     gc_                 ( gc ),
     solnVarName_        ( solnVarName ),
     solnVarTag_         ( solnVarName, Expr::STATE_N ),
     rhsTag_             ( solnVarName+"_rhs", Expr::STATE_NONE ),
     stagLoc_            ( stagLoc ),
-    isConstDensity_     ( isConstDensity ),
-    hasEmbeddedGeometry_(hasEmbeddedGeometry )
+    isConstDensity_     ( isConstDensity )
   {
 //    setup();  // build all expressions required for this TransportEquation
   }
@@ -63,12 +61,13 @@ namespace Wasatch{
     FieldTagInfo tagInfo;
     Expr::TagList sourceTags;
 
-    if( hasEmbeddedGeometry_ ){
-      VolFractionNames& vNames = VolFractionNames::self();
-      tagInfo[VOLUME_FRAC] = vNames.svol_frac_tag();
-      tagInfo[AREA_FRAC_X] = vNames.xvol_frac_tag();
-      tagInfo[AREA_FRAC_Y] = vNames.yvol_frac_tag();
-      tagInfo[AREA_FRAC_Z] = vNames.zvol_frac_tag();
+    EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+    if( vNames.has_embedded_geometry() ){
+      EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+      tagInfo[VOLUME_FRAC] = vNames.vol_frac_tag<SVolField>();
+      tagInfo[AREA_FRAC_X] = vNames.vol_frac_tag<XVolField>();
+      tagInfo[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
+      tagInfo[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
     }
 
     setup_diffusive_flux ( tagInfo );

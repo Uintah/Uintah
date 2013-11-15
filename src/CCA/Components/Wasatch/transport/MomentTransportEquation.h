@@ -92,7 +92,6 @@ namespace Wasatch{
                              GraphCategories& gc,
                              const double momentOrder,
                              const bool isConstDensity,
-                             const bool hasEmbeddedGeometry,
                              Uintah::ProblemSpecP params,
                              const double initialMoment );
 

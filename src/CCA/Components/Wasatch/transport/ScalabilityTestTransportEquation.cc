@@ -106,8 +106,7 @@ namespace Wasatch{
                                 thisPhiName,
                                 params,
                                 get_staggered_location<FieldT>(),
-                                true,   // always constant density
-                                false ) // no embedded geometry
+                                true)   // always constant density
   {
     setup();
   }

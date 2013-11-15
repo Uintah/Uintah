@@ -29,6 +29,7 @@
 #include <expression/Expression.h>
 
 #include <CCA/Components/Wasatch/GraphHelperTools.h>
+#include <Core/Exceptions/InvalidState.h>
 
 /**
  *  \file BasicExprBuilder.h
@@ -40,28 +41,47 @@ namespace Expr{
 
 namespace Wasatch{
   
-  class VolFractionNames
+  class EmbeddedGeometryHelper
   {
   public:
-    
     /**
-     *  Access the VolumeFraction names and tags.
+     *  Access the volume fraction names and tags.
      */
-    static VolFractionNames& self();
+    static EmbeddedGeometryHelper& self();
     
-    Expr::Tag svol_frac_tag() const{return Expr::Tag(svolfrac_,Expr::STATE_NONE);}
-    Expr::Tag xvol_frac_tag() const{return Expr::Tag(xvolfrac_,Expr::STATE_NONE);}
-    Expr::Tag yvol_frac_tag() const{return Expr::Tag(yvolfrac_,Expr::STATE_NONE);}
-    Expr::Tag zvol_frac_tag() const{return Expr::Tag(zvolfrac_,Expr::STATE_NONE);}
+    template <typename FieldT>
+    Expr::Tag vol_frac_tag() const;
     
-    void set_svol_frac_name(const std::string svolfrac){svolfrac_ = svolfrac;}
-    void set_xvol_frac_name(const std::string xvolfrac){xvolfrac_ = xvolfrac;}
-    void set_yvol_frac_name(const std::string yvolfrac){yvolfrac_ = yvolfrac;}
-    void set_zvol_frac_name(const std::string zvolfrac){zvolfrac_ = zvolfrac;}
+    void set_vol_frac_names(const std::string& svolfrac, const std::string& xvolfrac, const std::string& yvolfrac, const std::string& zvolfrac)
+    {
+      svolfrac_ = svolfrac;
+      xvolfrac_ = xvolfrac;
+      yvolfrac_ = yvolfrac;
+      zvolfrac_ = zvolfrac;
+    }
+    
+    void set_has_moving_geometry(const bool hasMovingGeometry)   { hasMovingGeometry_ = hasMovingGeometry; }
+    bool has_moving_geometry() const { return hasMovingGeometry_; }
+    
+    void set_has_embedded_geometry( const bool hasEmbeddedGeometry) { hasEmbeddedGeometry_ = hasEmbeddedGeometry; }
+    bool has_embedded_geometry() const { return hasEmbeddedGeometry_;}
+    
+    void set_state( const bool done ) { doneSetup_ = done; }
     
   private:
     std::string svolfrac_, xvolfrac_,yvolfrac_,zvolfrac_;
-    VolFractionNames();
+    bool hasEmbeddedGeometry_, hasMovingGeometry_, doneSetup_;
+    EmbeddedGeometryHelper();
+    
+    void check_state() const
+    {
+      if (!doneSetup_) {
+        std::ostringstream msg;
+        msg << "ERROR: Trying to access embedded geometry information before it was parsed." << std::endl;
+        throw SCIRun::InvalidState( msg.str(), __FILE__, __LINE__ );
+      }
+    }
+
   };
 
   /**
