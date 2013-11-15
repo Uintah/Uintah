@@ -395,6 +395,8 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   tsk->requires(Task::NewDW   , d_lab->d_filterVolumeLabel , ga , 1);
   tsk->requires(Task::NewDW   , d_lab->d_cellTypeLabel     , ga , 1);
 
+  tsk->requires(Task::NewDW, VarLabel::find("mixture_fraction"), gn, 0); 
+
   if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
     tsk->computes(d_lab->d_filterdrhodtLabel);
     tsk->computes(d_lab->d_oldDeltaTLabel);
@@ -452,6 +454,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     constCCVariable<double> new_density;
     constCCVariable<double> old_density;
     constCCVariable<double> old_old_density;
+    constCCVariable<double> mf; 
     CCVariable<double> drhodt;
     CCVariable<double> filterdrhodt;
     constCCVariable<double> filterVolume; 
@@ -463,6 +466,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
 
     new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, ga, 1 ); 
     new_dw->get( filterVolume, d_lab->d_filterVolumeLabel, indx, patch, ga, 1 ); 
+    new_dw->get( mf, VarLabel::find("mixture_fraction"), indx, patch, gn, 0); 
 
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
@@ -494,8 +498,12 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
             IntVector currcell(ii,jj,kk);
 
             double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
-            drhodt[currcell] = (new_density[currcell] -
-                                old_density[currcell])*vol/delta_t;
+            double rho_f = 1.18; 
+            double rho_ox = 0.5; 
+            double newnewrho = mf[currcell]/rho_ox + (1.0 - mf[currcell])/rho_f; 
+            //drhodt[currcell] = (new_density[currcell] -
+            //                    old_density[currcell])*vol/delta_t;
+            drhodt[currcell] = (newnewrho - old_density[currcell]*vol/delta_t); 
           }
         }
       }
@@ -511,10 +519,13 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
             IntVector currcell(ii,jj,kk);
 
             double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
-            drhodt[currcell] = (new_factor*new_density[currcell] -
-                                old_factor*old_density[currcell] +
-                                old_old_density[currcell])*vol /
-                               (old_delta_t*factor);
+            //drhodt[currcell] = (new_factor*new_density[currcell] -
+            //                    old_factor*old_density[currcell] +
+            //                    old_old_density[currcell])*vol /
+            //                   (old_delta_t*factor);
+            double rho_f = 1.18; 
+            double rho_ox = 0.5; 
+            double newnewrho = mf[currcell]/rho_f + (1.0 - mf[currcell])/rho_ox; 
           }
         }
       }
