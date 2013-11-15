@@ -68,7 +68,7 @@ protected:
 private:
   const int neq_;        ///< number of equations to solve
   const double rtol_;    ///< relative error tolerance
-  const size_t maxIter_; ///< maximum number of iterations
+  const unsigned maxIter_; ///< maximum number of iterations
   DoubleVec jac_, res_;
   std::vector<int> ipiv_;  ///< integer work array for linear solver
 };
@@ -88,11 +88,10 @@ private:
 template< typename FieldT >
 class DensFromMixfrac : public Expr::Expression<FieldT>, protected DensityCalculatorBase
 {
-  const Expr::Tag mixFracTag_, rhoFTag_;
-  const FieldT* mixFrac_;
-  const FieldT* rhoF_;
   const InterpT& rhoEval_;
+  const Expr::Tag rhoFTag_;
   const std::pair<double,double> bounds_;
+  const FieldT* rhoF_;
 
   DensFromMixfrac( const InterpT& rhoEval,
                    const Expr::Tag& rhoFTag );

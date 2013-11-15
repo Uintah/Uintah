@@ -413,10 +413,7 @@ namespace Wasatch{
   {
     typedef typename StrainHelper<FaceFieldT>::Vel1T Vel1T;  // type of velocity component 1
     typedef typename StrainHelper<FaceFieldT>::Vel2T Vel2T;  // type of velocity component 2
-    typedef SVolField                                ViscT;  // type of viscosity
-
     typedef typename Strain< FaceFieldT, Vel1T, Vel2T >::Builder StrainT;
-
     return factory.register_expression( scinew StrainT( strainTag, vel1Tag, vel2Tag, dilTag ) );
   }
 

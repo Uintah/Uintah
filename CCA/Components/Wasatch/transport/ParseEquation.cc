@@ -173,8 +173,7 @@ namespace Wasatch{
     int nEqs = 1;
     params->get( "NumberOfEquations", nEqs );
 
-    GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION];
-    GraphHelper* const icGraphHelper   = gc[INITIALIZATION  ];
+    GraphHelper* const icGraphHelper = gc[INITIALIZATION];
 
     for( int iEq=0; iEq<nEqs; iEq++ ){
 
@@ -715,7 +714,6 @@ namespace Wasatch{
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info )
   {
-    typedef OpTypes<FieldT> Ops;
     Expr::Tag convFluxTag, advVelocityTag, advVelocityCorrectedTag;
 
     std::string dir, interpMethod;
