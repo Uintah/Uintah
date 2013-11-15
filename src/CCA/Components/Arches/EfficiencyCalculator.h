@@ -361,7 +361,7 @@ namespace Uintah {
                     sum_accum += (rho[c] - old_rho[c])/dt * vol; 
 
                   if ( !_no_source ){ 
-                    sum_source += source[c];
+                    sum_source += source[c] * vol;
                   }
 
                 }
@@ -375,7 +375,7 @@ namespace Uintah {
                     sum_accum += (rho[c] * (_C-_A*phi[c]) - old_rho[c] * (_C-_A*old_phi[c])) / dt * vol;  
 
                   if ( !_no_source ){ 
-                    sum_source += source[c];
+                    sum_source += source[c] * vol;
                   }
 
                 }
