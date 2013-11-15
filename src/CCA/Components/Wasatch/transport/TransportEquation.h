@@ -115,15 +115,25 @@ namespace Wasatch{
     virtual ~TransportEquation(){}
 
     /**
-     *  \brief Obtain the name of the solution variable for thisa transport equation.
+     *  \brief Obtain the name of the solution variable for this transport equation.
      */
     inline const std::string& solution_variable_name() const{ return solnVarName_; }
 
+    /**
+     *  \brief Obtain the tag of the solution variable for this transport equation.
+     */
     inline const Expr::Tag& solution_variable_tag() const{ return solnVarTag_; }
 
+    /**
+     *  \brief Obtain the rhs tag of the solution variable for this transport equation.
+     */
     inline const Expr::Tag& rhs_tag() const { return rhsTag_; }
-    
+
+    /**
+     *  \brief Obtain the rhs name of the solution variable for this transport equation.
+     */
     inline std::string rhs_name() const{ return rhsTag_.name(); }
+    
     /**
      *  \brief Obtain the staggered location of the solution variable that is
      *  governed by this transport equation.
@@ -141,6 +151,14 @@ namespace Wasatch{
      */
     Expr::ExpressionID get_rhs_id() const;
 
+    /**
+     *  \brief Used to check the validity of the boundary conditions specified
+     *   by the user at a given boundary and also to infer/add new BCs on the
+     *   type of boundary.  Example: at a stationary impermeable wall, we can
+     *   immediately infer zero-velocity boundary conditions and check whether
+     *   the user has specified any velocity BCs at that boundary. See examples
+     *   in the momentum transport equation.
+     */
     virtual void verify_boundary_conditions( BCHelper& bcHelper,
                                              GraphCategories& graphCat)=0;
     
