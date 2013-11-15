@@ -39,8 +39,6 @@ SRCS += \
         $(SRCDIR)/fixval.F \
         $(SRCDIR)/fixval_trans.F \
         $(SRCDIR)/mm_computevel.F\
-        $(SRCDIR)/mm_explicit.F\
-        $(SRCDIR)/mm_explicit_oldvalue.F\
         $(SRCDIR)/mm_explicit_vel.F\
         $(SRCDIR)/mmbcvelocity.F \
         $(SRCDIR)/prescoef_var.F \
