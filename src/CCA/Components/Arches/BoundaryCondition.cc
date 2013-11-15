@@ -70,8 +70,6 @@ using namespace Uintah;
 
 #include <CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <CCA/Components/Arches/fortran/mm_computevel_fort.h>
-#include <CCA/Components/Arches/fortran/mm_explicit_fort.h>
-#include <CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
 #include <CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
 
 //****************************************************************************
