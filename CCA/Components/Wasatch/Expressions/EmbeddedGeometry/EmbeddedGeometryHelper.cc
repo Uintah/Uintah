@@ -66,7 +66,7 @@ namespace Wasatch{
   parse_embedded_geometry( Uintah::ProblemSpecP parser,
                            GraphCategories& gc )
   {
-    if (parser->findBlock("EmbeddedGeometry")) {
+    if( parser->findBlock("EmbeddedGeometry") ){
       
       VolFractionNames& vNames = VolFractionNames::self();
       
@@ -90,7 +90,6 @@ namespace Wasatch{
         externalParams->get("XVolFraction",xvolfracname);
         externalParams->get("YVolFraction",yvolfracname);
         externalParams->get("ZVolFraction",zvolfracname);
-        VolFractionNames& vNames = VolFractionNames::self();
         vNames.set_svol_frac_name(svolfracname);
         vNames.set_xvol_frac_name(xvolfracname);
         vNames.set_yvol_frac_name(yvolfracname);

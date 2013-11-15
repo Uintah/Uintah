@@ -94,8 +94,9 @@ namespace Wasatch{
      *  Note that the static member method get_rhs_expr_id can be useful to
      *  obtain the appropriate input arguments here.
      */
-    ScalabilityTestTransportEquation( const std::string thisPhiName,
-                                      const Expr::ExpressionID id );
+    ScalabilityTestTransportEquation( GraphCategories& gc,
+                                      const std::string thisPhiName,
+                                      Uintah::ProblemSpecP params );
 
     ~ScalabilityTestTransportEquation();
 
@@ -120,28 +121,15 @@ namespace Wasatch{
      */
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
 
-    /**
-     * \brief Parse the input file to determine the rhs expression id.
-     *        Also registers convective flux, diffusive velocity, and
-     *        source term expressions.
-     *
-     *  \param thisPhiName the name of the solution variable for this
-     *         equation.
-     *
-     *  \param factory The Expr::ExpressionFactory object that
-     *         terms associated with the RHS of this transport
-     *         equation should be registered on.
-     *
-     *  \param params The Uintah::ProblemSpec XML description for this
-     *         equation.  Scope should be within the ScalabilityTest tag.
-     */
-    static Expr::ExpressionID get_rhs_expr_id( const std::string thisPhiName,
-                                               Expr::ExpressionFactory& factory,
-                                               Uintah::ProblemSpecP params );
+  protected:
+    void setup_diffusive_flux( FieldTagInfo& );
+    void setup_convective_flux( FieldTagInfo& );
+    void setup_source_terms( FieldTagInfo&, Expr::TagList& );
+    Expr::ExpressionID setup_rhs( FieldTagInfo&,
+                                  const Expr::TagList& srcTags  );
   private:
 
   };
-
 
   template< typename FieldT >
   void setup_diffusive_velocity_expression( const std::string dir,

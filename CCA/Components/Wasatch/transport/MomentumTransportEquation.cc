@@ -290,9 +290,13 @@ namespace Wasatch{
 
   //==================================================================
 
+  Expr::Tag rhs_part_tag( const std::string& momName )
+  {
+    return Expr::Tag( momName + "_rhs_partial", Expr::STATE_NONE );
+  }
   Expr::Tag rhs_part_tag( const Expr::Tag& momTag )
   {
-    return Expr::Tag( momTag.name() + "_rhs_partial", Expr::STATE_NONE );
+    return rhs_part_tag( momTag.name() );
   }
 
   
@@ -331,18 +335,18 @@ namespace Wasatch{
   //==================================================================
   
   void set_mom_tags( Uintah::ProblemSpecP params,
-                    Expr::TagList& momTags )
+                     Expr::TagList& momTags )
   {
     std::string xmomname, ymomname, zmomname;
     Uintah::ProblemSpecP doxmom,doymom,dozmom;
     doxmom = params->get( "X-Momentum", xmomname );
     doymom = params->get( "Y-Momentum", ymomname );
     dozmom = params->get( "Z-Momentum", zmomname );
-    if( doxmom ) momTags.push_back( Expr::Tag(xmomname, Expr::STATE_N) );
+    if( doxmom ) momTags.push_back( mom_tag(xmomname) );
     else         momTags.push_back( Expr::Tag() );
-    if( doymom ) momTags.push_back( Expr::Tag(ymomname, Expr::STATE_N) );
+    if( doymom ) momTags.push_back( mom_tag(ymomname) );
     else         momTags.push_back( Expr::Tag() );
-    if( dozmom ) momTags.push_back( Expr::Tag(zmomname, Expr::STATE_N) );
+    if( dozmom ) momTags.push_back( mom_tag(zmomname) );
     else         momTags.push_back( Expr::Tag() );
   }
   
@@ -548,40 +552,6 @@ namespace Wasatch{
     }
     return isNormal;
   }
-  //==================================================================
-
-  template< typename FieldT >
-  Expr::ExpressionID
-  MomentumTransportEquation<FieldT>::
-  get_mom_rhs_id( Expr::ExpressionFactory& factory,
-                  const std::string velName,
-                  const std::string momName,
-                  Uintah::ProblemSpecP params,
-                  const bool hasEmbeddedGeometry,
-                  Uintah::SolverInterface& linSolver )
-  {
-    const Expr::Tag momTag = mom_tag( momName );
-    const Expr::Tag rhsFullTag( momTag.name() + "_rhs", Expr::STATE_NONE );
-    const bool enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
-    
-    Expr::Tag volFracTag = Expr::Tag();
-    Direction stagLoc = get_staggered_location<FieldT>();
-    VolFractionNames& vNames = VolFractionNames::self();
-    switch (stagLoc) {
-      case XDIR:
-        if (hasEmbeddedGeometry) volFracTag = vNames.xvol_frac_tag();
-        break;
-      case YDIR:
-        if (hasEmbeddedGeometry) volFracTag = vNames.yvol_frac_tag();
-        break;
-      case ZDIR:
-        if (hasEmbeddedGeometry) volFracTag = vNames.zvol_frac_tag();
-        break;
-      default:
-        break;
-    }
-    return factory.register_expression( new typename MomRHS<FieldT>::Builder( rhsFullTag, (enablePressureSolve ? pressure_tag() : Expr::Tag()), rhs_part_tag(momTag) , volFracTag ) );
-  }
 
   //==================================================================
 
@@ -593,22 +563,20 @@ namespace Wasatch{
                              const bool isConstDensity,
                              const Expr::Tag bodyForceTag,
                              const Expr::Tag srcTermTag,
-                             GraphCategories& grafCat,
+                             GraphCategories& gc,
                              Uintah::ProblemSpecP params,
                              TurbulenceParameters turbulenceParams,
                              const bool hasEmbeddedGeometry,
                              const bool hasMovingGeometry,
-                             const Expr::ExpressionID rhsID,
                              Uintah::SolverInterface& linSolver,
                              Uintah::SimulationStateP sharedState)
-    : TransportEquation( momName,
-                         rhsID,
+    : TransportEquation( gc,
+                         momName,
+                         params,
                          get_staggered_location<FieldT>(),
                          isConstDensity,
-                         hasEmbeddedGeometry,
-                         params ),
+                         hasEmbeddedGeometry ),
       isViscous_       ( params->findBlock("Viscosity") ? true : false ),
-      isConstDensity_  ( isConstDensity                       ),
       isTurbulent_     ( turbulenceParams.turbModelName != NOTURBULENCE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
       densityTag_      ( densTag                              ),
@@ -619,11 +587,8 @@ namespace Wasatch{
     solverParams_ = NULL;
     set_vel_tags( params, velTags_ );
 
-    GraphHelper& graphHelper   = *(grafCat[ADVANCE_SOLUTION  ]);
+    GraphHelper& graphHelper   = *(gc[ADVANCE_SOLUTION  ]);
     Expr::ExpressionFactory& factory = *(graphHelper.exprFactory);
-
-    thisMomName_ = momName;
-    const Expr::Tag thisMomTag = mom_tag( thisMomName_ );
     
     const TagNames& tagNames = TagNames::self();
     
@@ -637,11 +602,11 @@ namespace Wasatch{
     
     //_____________
     // volume fractions for embedded boundaries Terms
-    VolFractionNames& vNames = VolFractionNames::self();
-    Expr::Tag volFracTag =     this->has_embedded_geometry()               ? vNames.svol_frac_tag() : Expr::Tag();
-    Expr::Tag xAreaFracTag = ( this->has_embedded_geometry() && doMom[0] ) ? vNames.xvol_frac_tag() : Expr::Tag();
-    Expr::Tag yAreaFracTag = ( this->has_embedded_geometry() && doMom[1] ) ? vNames.yvol_frac_tag() : Expr::Tag();
-    Expr::Tag zAreaFracTag = ( this->has_embedded_geometry() && doMom[2] ) ? vNames.zvol_frac_tag() : Expr::Tag();
+    const VolFractionNames& vNames = VolFractionNames::self();
+    const Expr::Tag volFracTag =     has_embedded_geometry()               ? vNames.svol_frac_tag() : Expr::Tag();
+    const Expr::Tag xAreaFracTag = ( has_embedded_geometry() && doMom[0] ) ? vNames.xvol_frac_tag() : Expr::Tag();
+    const Expr::Tag yAreaFracTag = ( has_embedded_geometry() && doMom[1] ) ? vNames.yvol_frac_tag() : Expr::Tag();
+    const Expr::Tag zAreaFracTag = ( has_embedded_geometry() && doMom[2] ) ? vNames.zvol_frac_tag() : Expr::Tag();
     switch( stagLoc_ ){
       case XDIR: thisVolFracTag_ = xAreaFracTag; break;
       case YDIR: thisVolFracTag_ = yAreaFracTag; break;
@@ -652,7 +617,7 @@ namespace Wasatch{
     //__________________
     // convective fluxes
     Expr::TagList cfTags; // these tags will be filled by register_convective_fluxes
-    normalConvFluxID_ = register_convective_fluxes<FieldT>(doMom, velTags_, cfTags, thisMomTag, factory);
+    normalConvFluxID_ = register_convective_fluxes<FieldT>(doMom, velTags_, cfTags, solnVarTag_, factory);
 
     //__________________
     // dilatation - needed by pressure source term and strain tensor
@@ -662,34 +627,27 @@ namespace Wasatch{
       // if dilatation expression has not been registered, then register it
       factory.register_expression( new Dilatation(dilTag, velTags_) );
     }
-    
+
     //__________________
     // dilatation - needed by pressure source term and strain tensor
-    bool computeContinuityResidual = params->findBlock("ComputeMassResidual");
-    if (computeContinuityResidual)
-    {
-      GraphHelper& postProcGH   = *(grafCat[POSTPROCESSING]);
+    const bool computeContinuityResidual = params->findBlock("ComputeMassResidual");
+    if( computeContinuityResidual ){
+      GraphHelper& postProcGH   = *(gc[POSTPROCESSING]);
       Expr::ExpressionFactory& postProcFactory = *(postProcGH.exprFactory);
-      
+
       const Expr::Tag contTag = tagNames.continuityresidual;
-      
+
       if( !postProcFactory.have_entry( contTag ) ){
         typedef typename ContinuityResidual<SVolField,XVolField,YVolField,ZVolField>::Builder ContResT;
         // if dilatation expression has not been registered, then register it
         Expr::TagList np1MomTags;
-        if(doMom[0])
-          np1MomTags.push_back(Expr::Tag("x-mom",Expr::STATE_NP1));
-        else
-          np1MomTags.push_back(Expr::Tag());
-        if(doMom[1])
-          np1MomTags.push_back(Expr::Tag("y-mom",Expr::STATE_NP1));
-        else
-          np1MomTags.push_back(Expr::Tag());
-        if(doMom[2])
-          np1MomTags.push_back(Expr::Tag("z-mom",Expr::STATE_NP1));
-        else
-          np1MomTags.push_back(Expr::Tag());
-        
+        if(doMom[0]) np1MomTags.push_back(Expr::Tag("x-mom",Expr::STATE_NP1));
+        else         np1MomTags.push_back(Expr::Tag());
+        if(doMom[1]) np1MomTags.push_back(Expr::Tag("y-mom",Expr::STATE_NP1));
+        else         np1MomTags.push_back(Expr::Tag());
+        if(doMom[2]) np1MomTags.push_back(Expr::Tag("z-mom",Expr::STATE_NP1));
+        else         np1MomTags.push_back(Expr::Tag());
+
         Expr::Tag drhodtTag = Expr::Tag();
         if( !isConstDensity_ ){
           drhodtTag = tagNames.drhodtnp1;
@@ -714,7 +672,7 @@ namespace Wasatch{
     
     const bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
     const Expr::Tag turbViscTag = tagNames.turbulentviscosity;
-    if ( isTurbulent_ && isViscous_ && enableTurbulenceModel ) {
+    if( isTurbulent_ && isViscous_ && enableTurbulenceModel ){
       register_turbulence_expressions(turbulenceParams, factory, velTags_, densTag, is_constant_density() );
       factory.attach_dependency_to_expression(turbViscTag, viscTag);
     }
@@ -726,7 +684,7 @@ namespace Wasatch{
     // register expression to calculate the partial RHS (absent
     // pressure gradient) for use in the projection
     const Expr::ExpressionID momRHSPartID = factory.register_expression(
-        new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( thisMomTag ),
+        new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( solnVarTag_ ),
                                                   cfTags[0] , cfTags[1] , cfTags[2] , viscTag,
                                                   tauTags[0], tauTags[1], tauTags[2], densityTag_,
                                                   bodyForceTag, srcTermTag,
@@ -736,7 +694,7 @@ namespace Wasatch{
     //__________________
     // Pressure source term
     
-    if (!isConstDensity) {
+    if( !isConstDensity ){
       // calculating velocity at the next time step
       const Expr::Tag thisVelStarTag = Expr::Tag( thisVelTag_.name() + tagNames.star, Expr::STATE_NONE);
       const Expr::Tag convTermWeak   = Expr::Tag( thisVelTag_.name() + "_weak_convective_term", Expr::STATE_NONE);
@@ -748,7 +706,6 @@ namespace Wasatch{
         factory.cleave_from_parents ( convTermWeakID_ );
         factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, convTermWeak, tauTags, densTag, viscTag, oldPressureTag, tagNames.timestep ));
       }
-      
     }
     
     if( !factory.have_entry( tagNames.pressuresrc ) ){
@@ -759,7 +716,7 @@ namespace Wasatch{
       set_vel_star_tags( velTags_, velStarTags );
       set_mom_tags( params, momTags_ );
       
-      // registering the expressiong for pressure source term
+      // register the expression for pressure source term
       Expr::TagList psrcTagList;
       psrcTagList.push_back(tagNames.pressuresrc);
       psrcTagList.push_back(tagNames.drhodt);
@@ -767,13 +724,12 @@ namespace Wasatch{
       psrcTagList.push_back(tagNames.vardenbeta);
       psrcTagList.push_back(tagNames.divmomstar);
       psrcTagList.push_back(tagNames.drhodtstar);
-      factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag));
+      factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag) );
     }
-    
     
     //__________________
     // calculate velocity at the current time step    
-    factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( thisVelTag_, thisMomTag, densityTag_, thisVolFracTag_ ));
+    factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( thisVelTag_, solnVarTag_, densityTag_, thisVolFracTag_ ) );
     
     //__________________
     // pressure
@@ -802,9 +758,9 @@ namespace Wasatch{
         
         // if pressure expression has not be registered, then register it
         Expr::Tag fxt, fyt, fzt;
-        if( doMom[0] )  fxt = Expr::Tag( xmomname + "_rhs_partial", Expr::STATE_NONE );
-        if( doMom[1] )  fyt = Expr::Tag( ymomname + "_rhs_partial", Expr::STATE_NONE );
-        if( doMom[2] )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );
+        if( doMom[0] )  fxt = rhs_part_tag( xmomname );
+        if( doMom[1] )  fyt = rhs_part_tag( ymomname );
+        if( doMom[2] )  fzt = rhs_part_tag( zmomname );
 
         Expr::TagList ptags;
         ptags.push_back( pressure_tag() );
@@ -848,9 +804,10 @@ namespace Wasatch{
       }
     }
 
+    setup();
   }
 
-  //==================================================================
+  //-----------------------------------------------------------------
 
   template< typename FieldT >
   MomentumTransportEquation<FieldT>::
@@ -859,7 +816,34 @@ namespace Wasatch{
     delete solverParams_;
   }
 
-  //==================================================================
+  //-----------------------------------------------------------------
+
+  template< typename FieldT >
+  Expr::ExpressionID  MomentumTransportEquation<FieldT>::
+  setup_rhs( FieldTagInfo&,
+             const Expr::TagList& srcTags )
+  {
+    const bool enablePressureSolve = !(params_->findBlock("DisablePressureSolve"));
+
+    Expr::Tag volFracTag = Expr::Tag();
+    if( hasEmbeddedGeometry_ ){
+      const VolFractionNames& vNames = VolFractionNames::self();
+      switch (stagLoc_) {
+        case XDIR: volFracTag = vNames.xvol_frac_tag(); break;
+        case YDIR: volFracTag = vNames.yvol_frac_tag(); break;
+        case ZDIR: volFracTag = vNames.zvol_frac_tag(); break;
+        default: break;
+      }
+    }
+    Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+    typedef typename MomRHS<FieldT>::Builder RHS;
+    return factory.register_expression( scinew RHS( rhsTag_,
+                                                    (enablePressureSolve ? pressure_tag() : Expr::Tag()),
+                                                    rhs_part_tag(solnVarTag_),
+                                                    volFracTag ) );
+  }
+
+  //-----------------------------------------------------------------
 
   template< typename FieldT >
   void MomentumTransportEquation<FieldT>::
@@ -879,8 +863,8 @@ namespace Wasatch{
         case WALL:
         {
           // first check if the user specified boundary conditions at the wall
-          if( myBndSpec.has_field(thisVelTag_.name()) || myBndSpec.has_field(thisMomName_) ||
-              myBndSpec.has_field(rhs_name()) || myBndSpec.has_field(thisMomName_ + "_rhs_part") ){
+          if( myBndSpec.has_field(thisVelTag_.name()) || myBndSpec.has_field(solnVarName_) ||
+              myBndSpec.has_field(rhs_name()) || myBndSpec.has_field(solnVarName_ + "_rhs_part") ){
             std::ostringstream msg;
             msg << "ERROR: You cannot specify any momentum-related boundary conditions at a stationary wall. "
             << "This error occured while trying to analyze boundary " << bndName
@@ -895,7 +879,7 @@ namespace Wasatch{
           bcHelper.add_boundary_condition(bndName, velBCSpec);          
 
           if (isNormal) {
-            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(solnVarName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
             
             BndCondSpec rhsFullBCSpec = {rhs_name(), "none" ,0.0,DIRICHLET,DOUBLE_TYPE};
@@ -914,7 +898,7 @@ namespace Wasatch{
 //            bcHelper.add_boundary_condition(bndName, momBCSpec);
 //          }
           if (isNormal) {
-            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(solnVarName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
             
             BndCondSpec rhsFullBCSpec = {rhs_name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
@@ -933,14 +917,14 @@ namespace Wasatch{
             typedef typename OutflowBC<FieldT>::Builder Builder;
             //bcHelper.register_functor_expression( scinew Builder( outBCTag, thisVelTag_ ), ADVANCE_SOLUTION );
             advSlnFactory.register_expression( scinew Builder( outBCTag, thisVelTag_ ) );            
-            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),outBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(solnVarName_))).name(),outBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
           } else {
             BndCondSpec rhsFullBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
           }
           // after the correction has been made, up
-          BndCondSpec momBCSpec = {thisMomName_, "none", 0.0, NEUMANN, DOUBLE_TYPE};
+          BndCondSpec momBCSpec = {solnVarName_, "none", 0.0, NEUMANN, DOUBLE_TYPE};
           BndCondSpec velBCSpec = {thisVelTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, momBCSpec);
           bcHelper.add_boundary_condition(bndName, velBCSpec);
@@ -957,14 +941,14 @@ namespace Wasatch{
             typedef typename PressureBC<FieldT>::Builder Builder;
             //bcHelper.register_functor_expression( scinew Builder( atmBCTag, thisVelTag_ ), ADVANCE_SOLUTION );
             advSlnFactory.register_expression( scinew Builder( atmBCTag, thisVelTag_ ) );
-            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(thisMomName_))).name(),atmBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
+            BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(solnVarName_))).name(),atmBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
           } else {
             BndCondSpec rhsFullBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
           }
 
-          BndCondSpec momBCSpec = {thisMomName_, "none", 0.0, NEUMANN, DOUBLE_TYPE};
+          BndCondSpec momBCSpec = {solnVarName_, "none", 0.0, NEUMANN, DOUBLE_TYPE};
           BndCondSpec velBCSpec = {thisVelTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, momBCSpec);
           bcHelper.add_boundary_condition(bndName, velBCSpec);
@@ -1034,7 +1018,7 @@ namespace Wasatch{
     // set bcs for velocity
     bcHelper.apply_boundary_condition<FieldT>( thisVelTag_, taskCat );
     // set bcs for partial rhs
-    bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(mom_tag(thisMomName_)), taskCat, true);
+    bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(mom_tag(solnVarName_)), taskCat, true);
     // set bcs for partial full rhs
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true);
 
@@ -1084,16 +1068,15 @@ namespace Wasatch{
     }
 
     // multiply the initial condition by the volume fraction for embedded geometries
-    if (hasEmbeddedGeometry_) {      
+    if( hasEmbeddedGeometry_ ){
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
       const Expr::TagList theTagList( tag_list( thisVolFracTag_ ) );
-      //theTagList.push_back(mom_tag(thisMomName_));
-      Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
-      icFactory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
-                                                                     theTagList,
-                                                                     ExprAlgbr::PRODUCT,
-                                                                     true) );
+      Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE );
+      icFactory.register_expression( new typename ExprAlgbr::Builder( modifierTag,
+                                                                      theTagList,
+                                                                      ExprAlgbr::PRODUCT,
+                                                                      true ) );
       icFactory.attach_modifier_expression( modifierTag, solution_variable_tag() );
     }
 

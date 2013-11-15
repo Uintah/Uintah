@@ -338,7 +338,7 @@ namespace Wasatch{
   template<typename FieldT>
   void
   TimeStepper::add_equation( const std::string& solnVarName,
-                             Expr::ExpressionID rhsID )
+                             const Expr::ExpressionID& rhsID )
   {
     const std::string rhsName = solnGraphHelper_->exprFactory->get_labels(rhsID)[0].name();
     const Uintah::TypeDescription* typeDesc = get_uintah_field_type_descriptor<FieldT>();
@@ -386,9 +386,9 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
-  template void TimeStepper::add_equation<SpatialOps::structured::SVolField>( const std::string&, Expr::ExpressionID );
-  template void TimeStepper::add_equation<SpatialOps::structured::XVolField>( const std::string&, Expr::ExpressionID );
-  template void TimeStepper::add_equation<SpatialOps::structured::YVolField>( const std::string&, Expr::ExpressionID );
-  template void TimeStepper::add_equation<SpatialOps::structured::ZVolField>( const std::string&, Expr::ExpressionID );
+  template void TimeStepper::add_equation<SpatialOps::structured::SVolField>( const std::string&, const Expr::ExpressionID& );
+  template void TimeStepper::add_equation<SpatialOps::structured::XVolField>( const std::string&, const Expr::ExpressionID& );
+  template void TimeStepper::add_equation<SpatialOps::structured::YVolField>( const std::string&, const Expr::ExpressionID& );
+  template void TimeStepper::add_equation<SpatialOps::structured::ZVolField>( const std::string&, const Expr::ExpressionID& );
 
 } // namespace Wasatch

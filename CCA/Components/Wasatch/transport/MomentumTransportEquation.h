@@ -44,16 +44,16 @@ namespace Wasatch{
   template< typename FaceFieldT >
   Expr::ExpressionID
   setup_strain( const Expr::Tag& strainTag,
-               const Expr::Tag& vel1Tag,
-               const Expr::Tag& vel2Tag,
-               const Expr::Tag& dilTag,
-               Expr::ExpressionFactory& factory );
+                const Expr::Tag& vel1Tag,
+                const Expr::Tag& vel2Tag,
+                const Expr::Tag& dilTag,
+                Expr::ExpressionFactory& factory );
 
-  void register_turbulence_expressions (const TurbulenceParameters& turbParams,
+  void register_turbulence_expressions( const TurbulenceParameters& turbParams,
                                         Expr::ExpressionFactory& factory,
                                         const Expr::TagList& velTags,
                                         const Expr::Tag densTag,
-                                        const bool isConstDensity);
+                                        const bool isConstDensity );
   /**
    *  \ingroup WasatchCore
    *  \class MomentumTransportEquation
@@ -92,20 +92,10 @@ namespace Wasatch{
                                TurbulenceParameters turbulenceParams,
                                const bool hasEmbeddedGeometry,
                                const bool hasMovingGeometry,
-                               const Expr::ExpressionID rhsID,
                                Uintah::SolverInterface& linSolver,
-                               Uintah::SimulationStateP sharedState);
-
+                               Uintah::SimulationStateP sharedState );
 
     ~MomentumTransportEquation();
-
-    static Expr::ExpressionID
-    get_mom_rhs_id( Expr::ExpressionFactory& factory,
-                   const std::string velName,
-                   const std::string momName,
-                   Uintah::ProblemSpecP params,
-                   const bool hasEmbeddedGeometry,
-                   Uintah::SolverInterface& linSolver );
 
     void verify_boundary_conditions(BCHelper& bcHelper,
                                     GraphCategories& graphCat);
@@ -135,15 +125,21 @@ namespace Wasatch{
      */
     static std::string get_phi_name( Uintah::ProblemSpecP params );
 
+  protected:
+
+    void setup_diffusive_flux( FieldTagInfo& ){}
+    void setup_convective_flux( FieldTagInfo& ){}
+    void setup_source_terms( FieldTagInfo&, Expr::TagList& ){}
+    Expr::ExpressionID setup_rhs( FieldTagInfo&,
+                                  const Expr::TagList& srcTags  );
+
   private:
 
-    const bool isViscous_, isConstDensity_;
+    const bool isViscous_, isTurbulent_;
+    const Expr::Tag thisVelTag_, densityTag_;
     Uintah::SolverParameters* solverParams_;
     
-    const bool isTurbulent_;
-    const Expr::Tag thisVelTag_, densityTag_;
     Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_, convTermWeakID_;
-    std::string   thisMomName_;
     Expr::TagList velTags_;  ///< TagList for the velocity expressions
     Expr::TagList momTags_;  ///< TagList for the momentum expressions
     Expr::Tag     thisVolFracTag_;
