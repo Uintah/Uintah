@@ -343,190 +343,18 @@ namespace Wasatch {
   std::string
   get_population_name( Uintah::ProblemSpecP params )
   {
-    std::string phiName;
-    params->get("PopulationName",phiName);
-    return phiName;
+    std::string name;
+    params->get("PopulationName",name);
+    return name;
   }
 
-  //------------------------------------------------------------------
-
-  template<typename FieldT>
-  Expr::ExpressionID
-  MomentTransportEquation<FieldT>::
-  get_moment_rhs_id(Expr::ExpressionFactory& factory,
-                    Uintah::ProblemSpecP params,
-                    const bool hasEmbeddedGeometry,
-                    Expr::TagList& weightsTags,
-                    Expr::TagList& abscissaeTags,
-                    const double momentOrder,
-                    const double initialMoment)
+  std::string
+  get_soln_var_name( Uintah::ProblemSpecP params,
+                     const double momentOrder )
   {
     std::stringstream momentOrderStr;
     momentOrderStr << momentOrder;
-    const std::string PopulationName = get_population_name(params);
-    int nEnv = 1;
-    params->get( "NumberOfEnvironments", nEnv );
-    const int nEqs = 2*nEnv;
-
-    const std::string basePhiName = "m_" + PopulationName;
-    const std::string thisPhiName = "m_" + PopulationName + "_" + momentOrderStr.str();
-    const Expr::Tag thisPhiTag    = Expr::Tag( thisPhiName, Expr::STATE_N );
-
-    //____________
-    // start setting up the right-hand-side terms: these include expressions
-    // for growth, nucleation, birth, death, and any other fancy source terms
-    Expr::TagList rhsTags;
-    FieldTagInfo info;
-
-    //_____________
-    // volume fraction for embedded boundaries Terms
-    if( hasEmbeddedGeometry ){
-      VolFractionNames& vNames = VolFractionNames::self();
-      info[VOLUME_FRAC] = vNames.svol_frac_tag();
-      info[AREA_FRAC_X] = vNames.xvol_frac_tag();
-      info[AREA_FRAC_Y] = vNames.yvol_frac_tag();
-      info[AREA_FRAC_Z] = vNames.zvol_frac_tag();
-    }
-    
-    //____________
-    //Multi Environment Mixing 
-    if( params->findBlock("MultiEnvMixingModel") ){
-      Expr::TagList multiEnvWeightsTags;
-      std::string baseName;
-      std::string stateType;
-      std::stringstream wID;
-      const int numMixingEnv = 3;
-      //create the tag list for the multi environment weights
-      params->findBlock("MultiEnvMixingModel")->findBlock("NameTag")->getAttribute("name",baseName);
-      params->findBlock("MultiEnvMixingModel")->findBlock("NameTag")->getAttribute("state",stateType);
-      for (int i=0; i<numMixingEnv; i++) {
-        wID.str(std::string());
-        wID << i;
-        if ( stateType == "STATE_NONE" ) {
-          multiEnvWeightsTags.push_back(Expr::Tag("w_" + baseName + "_" + wID.str(), Expr::STATE_NONE) );
-          multiEnvWeightsTags.push_back(Expr::Tag("dwdt_" + baseName + "_" + wID.str(), Expr::STATE_NONE) );
-        } else if (stateType == "STATE_N" ) {
-          multiEnvWeightsTags.push_back(Expr::Tag("w_" + baseName + "_" + wID.str(), Expr::STATE_N) );
-          multiEnvWeightsTags.push_back(Expr::Tag("dwdt_" + baseName + "_" + wID.str(), Expr::STATE_N) );
-        }
-      }
-      
-      //register source term from mixing
-      Expr::Tag mixingSourceTag = Expr::Tag( thisPhiName + "_mixing_source", Expr::STATE_NONE);
-      typedef typename MultiEnvSource<FieldT>::Builder MixSource;
-      Expr::ExpressionBuilder* builder = NULL;
-      builder = scinew MixSource( mixingSourceTag, multiEnvWeightsTags, thisPhiTag, initialMoment); 
-      factory.register_expression(builder);
-      rhsTags.push_back(mixingSourceTag);
-      
-      //register averaged moment 
-      Expr::Tag aveMomentTag = Expr::Tag( thisPhiName + "_ave", Expr::STATE_NONE);
-      typedef typename MultiEnvAveMoment<FieldT>::Builder AveMoment;
-      Expr::ExpressionBuilder* builder2 = NULL;
-      builder2 = scinew AveMoment( aveMomentTag, multiEnvWeightsTags, thisPhiTag, initialMoment); 
-      factory.register_expression(builder2);
-    }
-    
-    //____________
-    // Growth
-    for( Uintah::ProblemSpecP growthParams=params->findBlock("GrowthExpression");
-        growthParams != 0;
-        growthParams=growthParams->findNextBlock("GrowthExpression") ){
-      setup_growth_expression <FieldT>( growthParams,
-                                        basePhiName,
-                                        thisPhiName,
-                                        momentOrder,
-                                        nEqs,
-                                        rhsTags,
-                                        weightsTags,
-                                        abscissaeTags,
-                                        factory);
-    }
-    
-    //_________________
-    // Ostwald Ripening
-    if (momentOrder == 0) { //only register sBar once
-      if ( params->findBlock("OstwaldRipening") ) {
-        Uintah::ProblemSpecP ostwaldParams = params->findBlock("OstwaldRipening");
-        setup_ostwald_expression <FieldT>( ostwaldParams,
-                                           PopulationName,
-                                           weightsTags,
-                                           abscissaeTags,
-                                           factory);
-      }
-    }
-
-    //_________________
-    // Birth
-    for( Uintah::ProblemSpecP birthParams=params->findBlock("BirthExpression");
-        birthParams != 0;
-        birthParams = birthParams->findNextBlock("BirthExpression") ){
-      setup_birth_expression <FieldT>( birthParams,
-                                       basePhiName,
-                                       thisPhiName,
-                                       momentOrder,
-                                       nEqs,
-                                       rhsTags,
-                                       factory);
-    }
-    
-    //_________________
-    // Death
-    if ( params->findBlock("Dissolution") ) {
-      Uintah::ProblemSpecP deathParams = params->findBlock("Dissolution");
-      setup_death_expression <FieldT>( deathParams,
-                                       PopulationName,
-                                       thisPhiName,
-                                       momentOrder,
-                                       weightsTags,
-                                       abscissaeTags,
-                                       rhsTags,
-                                       factory);
-    }
-    
-    //_________________
-    // Aggregation
-    for( Uintah::ProblemSpecP aggParams=params->findBlock("AggregationExpression");
-        aggParams != 0;
-        aggParams = aggParams->findNextBlock("AggregationExpression") ){
-      setup_aggregation_expression <FieldT>( aggParams,
-                                             thisPhiName,
-                                             PopulationName,
-                                             momentOrder,
-                                             nEnv,
-                                             rhsTags,
-                                             weightsTags,
-                                             abscissaeTags,
-                                             factory);
-    }
-
-    //_________________
-    // Diffusive Fluxes
-    for( Uintah::ProblemSpecP diffFluxParams=params->findBlock("DiffusiveFluxExpression");
-        diffFluxParams != 0;
-        diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") ){
-      Expr::Tag turbDiffTag = Expr::Tag();
-      setup_diffusive_velocity_expression<FieldT>( diffFluxParams, thisPhiTag, turbDiffTag, factory, info );
-    }
-
-    //__________________
-    // Convective Fluxes
-    for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
-        convFluxParams != 0;
-        convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
-      setup_convective_flux_expression<FieldT>( convFluxParams, thisPhiTag, "", factory, info );
-    }
-
-    //
-    // Because of the forms that the ScalarRHS expression builders are defined,
-    // we need a density tag and a boolean variable to be passed into this expression
-    // builder. So we just define an empty tag and a false boolean to be passed into
-    // the builder of ScalarRHS in order to prevent any errors in ScalarRHS
-
-    const Expr::Tag densT = Expr::Tag();
-    const bool tempConstDens = false;
-    const Expr::Tag rhsTag( thisPhiName + "_rhs", Expr::STATE_NONE );
-    return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag,info,rhsTags,densT,tempConstDens ));
+    return std::string("m_" + get_population_name(params)+ "_" + momentOrderStr.str());
   }
 
   //------------------------------------------------------------------
@@ -534,16 +362,63 @@ namespace Wasatch {
   template< typename FieldT >
   MomentTransportEquation<FieldT>::
   MomentTransportEquation( const std::string thisPhiName,
-                          const Expr::ExpressionID rhsID,
-                          const bool isConstDensity,
-                          const bool hasEmbeddedGeometry,
-                          Uintah::ProblemSpecP params)
-  : Wasatch::TransportEquation( thisPhiName, rhsID,
+                           GraphCategories& gc,
+                           const double momentOrder,
+                           const bool isConstDensity,
+                           const bool hasEmbeddedGeometry,
+                           Uintah::ProblemSpecP params,
+                           const double initialMoment )
+  : Wasatch::TransportEquation( gc,
+                                get_soln_var_name(params,momentOrder),
+                                params,
                                 get_staggered_location<FieldT>(),
                                 isConstDensity,
-                                hasEmbeddedGeometry,
-                                params)
-  {}
+                                hasEmbeddedGeometry ),
+   populationName_ ( get_population_name(params) ),
+   baseSolnVarName_( "m_" + populationName_ ),
+   momentOrder_    ( momentOrder ),
+   initialMoment_  ( initialMoment )
+  {
+    // jcs need to ensure tha this is executed before the base class calls setup()...
+    params->get( "NumberOfEnvironments", nEnv_ );
+    nEqn_ = 2*nEnv_;
+
+    const bool realizableQMOM = params->findBlock("RealizableQMOM");
+
+    Expr::TagList weightsAndAbscissaeTags;
+    //
+    // fill in the weights and abscissae tags
+    //
+    for( unsigned i=0; i<nEnv_; ++i ){
+      std::stringstream envID;
+      envID << i;
+      weightsAndAbscissaeTags.push_back(Expr::Tag("w_" + populationName_ + "_" + envID.str(), Expr::STATE_NONE) );
+      weightsAndAbscissaeTags.push_back(Expr::Tag("a_" + populationName_ + "_" + envID.str(), Expr::STATE_NONE) );
+      weightsTags_  .push_back(Expr::Tag("w_" + populationName_ + "_" + envID.str(), Expr::STATE_NONE) );
+      abscissaeTags_.push_back(Expr::Tag("a_" + populationName_ + "_" + envID.str(), Expr::STATE_NONE) );
+    }
+
+    if( momentOrder_ == 0 ){ // only register the qmom expression once
+      //
+      // construct the transported moments taglist. This will be used
+      // to register the qmom expression
+      //
+      Expr::TagList transportedMomentTags;
+      for( unsigned iEq=0; iEq<nEqn_; ++iEq ){
+        std::stringstream strMomID;
+        const double momentOrder = (double) iEq;
+        strMomID << momentOrder;
+        const std::string phiName = "m_" + populationName_ + "_" + strMomID.str();
+        transportedMomentTags.push_back( Expr::Tag(phiName,Expr::STATE_N) );
+      }
+      typedef typename QMOM<FieldT>::Builder QMOMExpr;
+      Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+      factory.register_expression( scinew QMOMExpr( weightsAndAbscissaeTags, transportedMomentTags, realizableQMOM) );
+    }
+
+    setup();
+
+  }
 
   //------------------------------------------------------------------
 
@@ -558,9 +433,7 @@ namespace Wasatch {
   MomentTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
-    Expr::Tag phiTag = Expr::Tag( this->solution_variable_name(),
-                                 Expr::STATE_N );
-    return icFactory.get_id( phiTag );
+    return icFactory.get_id( solution_variable_tag() );
   }
 
   //------------------------------------------------------------------
@@ -577,14 +450,13 @@ namespace Wasatch {
     // multiply the initial condition by the volume fraction for embedded geometries
     if (hasEmbeddedGeometry_) {
       
-      Expr::Tag phiTag = Expr::Tag( this->solution_variable_name(),
-                                   Expr::STATE_N );
+      const Expr::Tag& phiTag = solution_variable_tag();
       
       std::cout << "attaching modifier expression on " << phiTag << std::endl;
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
       Expr::TagList theTagList;
-      VolFractionNames& vNames = VolFractionNames::self();
+      const VolFractionNames& vNames = VolFractionNames::self();
       theTagList.push_back( vNames.svol_frac_tag() );
       Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
       factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
@@ -612,6 +484,143 @@ namespace Wasatch {
   {
     const Category taskCat = ADVANCE_SOLUTION;
     bcHelper.apply_boundary_condition<FieldT>(this->solution_variable_tag(), taskCat);
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT >
+  void
+  MomentTransportEquation<FieldT>::setup_diffusive_flux( FieldTagInfo& info )
+  {
+    Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+    for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFluxExpression");
+        diffFluxParams != 0;
+        diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") )
+    {
+      const Expr::Tag turbDiffTag = Expr::Tag();
+      setup_diffusive_velocity_expression<FieldT>( diffFluxParams, solnVarTag_, turbDiffTag, factory, info );
+    }
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT >
+  void
+  MomentTransportEquation<FieldT>::setup_convective_flux( FieldTagInfo& info )
+  {
+    Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+    for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFluxExpression");
+         convFluxParams != 0;
+         convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") )
+    {
+       setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag_, "", factory, info );
+     }
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT >
+  void
+  MomentTransportEquation<FieldT>::setup_source_terms( FieldTagInfo& info, Expr::TagList& rhsTags )
+  {
+    Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+
+    //____________
+    //Multi Environment Mixing
+    if( params_->findBlock("MultiEnvMixingModel") ){
+      Expr::TagList multiEnvWeightsTags;
+      const int numMixingEnv = 3;
+      //create the tag list for the multi env weights
+      const Expr::Tag baseTag = parse_nametag( params_->findBlock("MultiEnvMixingModel")->findBlock("NameTag") );
+      for( int i=0; i<numMixingEnv; ++i ){
+        std::stringstream wID;
+        wID << i;
+        multiEnvWeightsTags.push_back( Expr::Tag("w_"    + baseTag.name() + "_" + wID.str(), baseTag.context() ) );
+        multiEnvWeightsTags.push_back( Expr::Tag("dwdt_" + baseTag.name() + "_" + wID.str(), baseTag.context() ) );
+      }
+
+      //register source term from mixing
+      const Expr::Tag mixingSourceTag( solnVarName_ + "_mixing_source", Expr::STATE_NONE);
+      typedef typename MultiEnvSource<FieldT>::Builder MixSource;
+      factory.register_expression( scinew MixSource( mixingSourceTag, multiEnvWeightsTags, solnVarTag_, initialMoment_ ) );
+      rhsTags.push_back( mixingSourceTag );
+
+      //register averaged moment
+      const Expr::Tag aveMomentTag( solnVarName_ + "_ave", Expr::STATE_NONE );
+      typedef typename MultiEnvAveMoment<FieldT>::Builder AveMoment;
+      factory.register_expression( scinew AveMoment( aveMomentTag, multiEnvWeightsTags, solnVarTag_, initialMoment_ ) );
+    }
+
+    //____________
+    // Growth
+    for( Uintah::ProblemSpecP growthParams=params_->findBlock("GrowthExpression");
+        growthParams != 0;
+        growthParams=growthParams->findNextBlock("GrowthExpression") )
+    {
+      setup_growth_expression <FieldT>( growthParams, baseSolnVarName_, solnVarName_,
+                                        momentOrder_, nEqn_,            rhsTags,
+                                        weightsTags_, abscissaeTags_,   factory );
+    }
+
+    //_________________
+    // Ostwald Ripening
+    if( momentOrder_ == 0 ){ // only register sBar once
+      if ( params_->findBlock("OstwaldRipening") ) {
+        Uintah::ProblemSpecP ostwaldParams = params_->findBlock("OstwaldRipening");
+        setup_ostwald_expression <FieldT>( ostwaldParams, populationName_,
+                                           weightsTags_,  abscissaeTags_,
+                                           factory );
+      }
+    }
+
+    //_________________
+    // Birth
+    for( Uintah::ProblemSpecP birthParams=params_->findBlock("BirthExpression");
+        birthParams != 0;
+        birthParams = birthParams->findNextBlock("BirthExpression") )
+    {
+      setup_birth_expression <FieldT>( birthParams,  baseSolnVarName_, solnVarName_,
+                                       momentOrder_, nEqn_,            rhsTags,
+                                       factory );
+    }
+
+    //_________________
+    // Death
+    if ( params_->findBlock("Dissolution") ) {
+      Uintah::ProblemSpecP deathParams = params_->findBlock("Dissolution");
+      setup_death_expression <FieldT>( deathParams,  populationName_, solnVarName_,
+                                       momentOrder_, weightsTags_,    abscissaeTags_,
+                                       rhsTags,      factory );
+    }
+
+    //_________________
+    // Aggregation
+    for( Uintah::ProblemSpecP aggParams=params_->findBlock("AggregationExpression");
+        aggParams != 0;
+        aggParams = aggParams->findNextBlock("AggregationExpression") )
+    {
+      setup_aggregation_expression <FieldT>( aggParams,    solnVarName_,   populationName_,
+                                             momentOrder_, nEnv_,          rhsTags,
+                                             weightsTags_, abscissaeTags_, factory );
+    }
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT >
+  Expr::ExpressionID
+  MomentTransportEquation<FieldT>::setup_rhs( FieldTagInfo& info,
+                                              const Expr::TagList& srcTags )
+  {
+    Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+
+    // Because of the forms that the ScalarRHS expression builders are defined,
+    // we need a density tag and a boolean variable to be passed into this expression
+    // builder. So we just define an empty tag and a false boolean to be passed into
+    // the builder of ScalarRHS in order to prevent any errors in ScalarRHS
+    const Expr::Tag densT = Expr::Tag();
+    const bool tempConstDens = false;
+    return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag_,info,srcTags,densT,tempConstDens) );
   }
 
   //------------------------------------------------------------------

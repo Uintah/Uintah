@@ -49,10 +49,10 @@ namespace Wasatch{
      */
     static VolFractionNames& self();
     
-    Expr::Tag svol_frac_tag() {return Expr::Tag(svolfrac_,Expr::STATE_NONE);}
-    Expr::Tag xvol_frac_tag() {return Expr::Tag(xvolfrac_,Expr::STATE_NONE);}
-    Expr::Tag yvol_frac_tag() {return Expr::Tag(yvolfrac_,Expr::STATE_NONE);}
-    Expr::Tag zvol_frac_tag() {return Expr::Tag(zvolfrac_,Expr::STATE_NONE);}
+    Expr::Tag svol_frac_tag() const{return Expr::Tag(svolfrac_,Expr::STATE_NONE);}
+    Expr::Tag xvol_frac_tag() const{return Expr::Tag(xvolfrac_,Expr::STATE_NONE);}
+    Expr::Tag yvol_frac_tag() const{return Expr::Tag(yvolfrac_,Expr::STATE_NONE);}
+    Expr::Tag zvol_frac_tag() const{return Expr::Tag(zvolfrac_,Expr::STATE_NONE);}
     
     void set_svol_frac_name(const std::string svolfrac){svolfrac_ = svolfrac;}
     void set_xvol_frac_name(const std::string xvolfrac){xvolfrac_ = xvolfrac;}

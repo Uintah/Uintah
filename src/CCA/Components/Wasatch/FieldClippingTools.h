@@ -195,7 +195,7 @@ namespace Wasatch{
     Expr::Tag yvolFracTag;
     Expr::Tag zvolFracTag;
     const bool hasVolFrac = parser->findBlock("EmbeddedGeometry");
-    VolFractionNames& vNames = VolFractionNames::self();
+    const VolFractionNames& vNames = VolFractionNames::self();
     if (hasVolFrac) {
       svolFracTag = vNames.svol_frac_tag();
       xvolFracTag = vNames.xvol_frac_tag();

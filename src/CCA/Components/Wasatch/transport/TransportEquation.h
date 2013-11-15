@@ -35,11 +35,13 @@
 
 //-- Uintah framework includes --//
 #include <Core/Grid/Patch.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/PatchInfo.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
+#include <CCA/Components/Wasatch/Expressions/RHSTerms.h>
 
 namespace Wasatch{
 
@@ -53,88 +55,91 @@ namespace Wasatch{
    *  \date   April, 2011
    *  \brief  Base class for defining a transport equation.
    */
-  class TransportEquation
-  {
+  class TransportEquation{
+
+  protected:
+
+    void setup();
+
+    /**
+     * Setup the expression(s) to calculate the diffusive fluxes as applicable,
+     * populating the FieldTagInfo object supplied with the appropriate
+     * diffusive flux tag(s).
+     */
+    virtual void setup_diffusive_flux( FieldTagInfo& ) = 0;
+
+    /**
+     * Setup the expression(s) to calculate the convective fluxes as applicable,
+     * populating the FieldTagInfo object supplied with the appropriate
+     * convective flux tag(s).
+     */
+    virtual void setup_convective_flux( FieldTagInfo& ) = 0;
+
+    /**
+     * Setup the expression to calculate the source term as applicable,
+     * populating the FieldTagInfo object supplied with the appropriate source
+     * term tag.
+     *
+     * Tags for additional source terms may be populated on the supplied TagList.
+     */
+    virtual void setup_source_terms( FieldTagInfo&, Expr::TagList& ) = 0;
+
+    /**
+     * Setup the RHS expression for this transport equation, returning the
+     * ExpressionID associated with it.
+     *
+     * @param info the FieldTagInfo describing terms that are active for the RHS
+     * @param srcTags additional source terms for the RHS
+     */
+    virtual Expr::ExpressionID setup_rhs( FieldTagInfo& info,
+                                          const Expr::TagList& srcTags ) = 0;
+
   public:
 
-
     /**
-     *  \brief Construct a TransportEquation
-     *
-     *  \param solutionVarName The name of the solution variable that
-     *         this TransportEquation describes
-     *
-     *  \param rhsExprID The ExpressionID for the RHS expression.
+     * @brief Construct a TransportEquation
+     * @param gc the GraphCategories object from Wasatch
+     * @param solnVarName the name of the solution variable for this equation
+     * @param params the parser information for this TransportEquation
+     * @param stagLoc the direction that this equation is staggered
+     * @param isConstDensity flag for constant density
+     * @param hasEmbeddedGeometry flag for embedded geometry
      */
-    TransportEquation( const std::string solutionVarName,
-                       const Expr::ExpressionID rhsExprID )
-      : solnVarName_( solutionVarName ),
-        rhsExprID_( rhsExprID ),
-        stagLoc_( NODIR ),
-        isConstDensity_( true ),
-        hasEmbeddedGeometry_ (true)
-    {}
-
-    /**
-     *  \brief Construct a TransportEquation
-     *
-     *  \param solutionVarName The name of the solution variable that this
-     *         TransportEquation describes
-     *
-     *  \param rhsExprID The ExpressionID for the RHS expression.
-     *
-     *  \param stagLoc the staggered location.
-     */
-    TransportEquation( const std::string solutionVarName,
-                       const Expr::ExpressionID rhsExprID,
+    TransportEquation( GraphCategories& gc,
+                       const std::string solnVarName,
+                       Uintah::ProblemSpecP params,
                        const Direction stagLoc,
-                       const bool isConstDensity=true,
-                       const bool hasEmbeddedGeometry = false,
-                       Uintah::ProblemSpecP eqnParams=NULL)
-      : solnVarName_        ( solutionVarName ),
-        rhsExprID_          ( rhsExprID ),
-        stagLoc_            ( stagLoc ),
-        isConstDensity_     ( isConstDensity),
-        hasEmbeddedGeometry_(hasEmbeddedGeometry)
-    {}
+                       const bool isConstDensity,
+                       const bool hasEmbeddedGeometry );
 
     virtual ~TransportEquation(){}
 
     /**
      *  \brief Obtain the name of the solution variable for thisa transport equation.
      */
-    const std::string& solution_variable_name() const{ return solnVarName_; }
+    inline const std::string& solution_variable_name() const{ return solnVarName_; }
 
-    Expr::Tag solution_variable_tag() const{ return Expr::Tag(solnVarName_, Expr::STATE_N); }
+    inline const Expr::Tag& solution_variable_tag() const{ return solnVarTag_; }
 
-    Expr::Tag rhs_tag() const { return Expr::Tag(solnVarName_ + "_rhs", Expr::STATE_NONE); }
+    inline const Expr::Tag& rhs_tag() const { return rhsTag_; }
     
-    std::string rhs_name() const{ return solnVarName_ + "_rhs"; }
+    inline std::string rhs_name() const{ return rhsTag_.name(); }
     /**
      *  \brief Obtain the staggered location of the solution variable that is
      *  governed by this transport equation.
      */
-    Direction staggered_location() const{ return stagLoc_; }
+    inline Direction staggered_location() const{ return stagLoc_; }
 
     /**
      *  \brief Obtain the name (i.e. string) staggered location of the solution
      *  variable that is governed by this transport equation.
      */
-    std::string dir_name() const {
-      switch (stagLoc_) {
-      case XDIR:
-        return "x";
-      case YDIR:
-        return "y";
-      case ZDIR:
-        return "z";
-      case NODIR:
-      default:
-        return "";
-      }
-    }
+    std::string dir_name() const;
 
-    Expr::ExpressionID get_rhs_id() const{ return rhsExprID_; }
+    /**
+     * @return the ExpressionID for the RHS expression associated with this TransportEquation
+     */
+    Expr::ExpressionID get_rhs_id() const;
 
     virtual void verify_boundary_conditions( BCHelper& bcHelper,
                                              GraphCategories& graphCat)=0;
@@ -174,14 +179,19 @@ namespace Wasatch{
      */
     virtual Expr::ExpressionID initial_condition( Expr::ExpressionFactory& exprFactory ) = 0;
 
-    bool has_embedded_geometry() const { return hasEmbeddedGeometry_; }
-    bool is_constant_density()   const { return isConstDensity_; }
+    inline bool has_embedded_geometry() const { return hasEmbeddedGeometry_; }
+    inline bool is_constant_density()   const { return isConstDensity_; }
     
   protected:
+    Uintah::ProblemSpecP params_;
+    GraphCategories& gc_;
     const std::string  solnVarName_;      ///< Name of the solution variable for this TransportEquation.
-    const Expr::ExpressionID rhsExprID_;  ///< The label for the rhs expression for this TransportEquation.
+    const Expr::Tag solnVarTag_;          ///< Tag for the solution variable (at STATE_N)
+    const Expr::Tag rhsTag_;              ///< Tag for the rhs
     const Direction stagLoc_;             ///< staggered direction for this equation
     const bool isConstDensity_, hasEmbeddedGeometry_;
+    Expr::ExpressionID rhsExprID_;  ///< The label for the rhs expression for this TransportEquation.
+    Expr::Tag turbDiffTag_;
   };
 
 } // namespace Wasatch
