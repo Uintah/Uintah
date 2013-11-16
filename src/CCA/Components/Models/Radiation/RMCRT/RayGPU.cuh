@@ -89,7 +89,6 @@ void launchRayTraceKernel(dim3 dimGrid,
                           patchParams patch,
                           const Int3 domainLo,
                           const Int3 domainHi,
-                          curandState* randNumStates,
                           cudaStream_t* stream,
                           RMCRT_flags RT_flags,                               
                           varLabelNames labelNames,
@@ -165,23 +164,9 @@ __device__ double randDevice(curandState* randNumStates);
 
 __device__ unsigned int hashDevice(unsigned int a);
 
-
+#if 1
 //______________________________________________________________________
 //
-// returns a - b
-inline HOST_DEVICE Double3 operator-(const Double3 & a, const Double3 & b) {
-  return make_double3(a.x-b.x, a.y-b.y, a.z-b.z);
-}
-//__________________________________
-//  returns a + b
-inline HOST_DEVICE Double3 operator+(const Double3 & a, const Double3 & b) {
-  return make_double3(a.x+b.x, a.y+b.y, a.z+b.z);
-}
-//__________________________________
-//  return -a
-inline HOST_DEVICE Double3 operator-(const Double3 & a) {
-  return make_double3(-a.x,-a.y,-a.z);
-}
 //__________________________________
 //  returns Double3 * scalar
 inline HOST_DEVICE Double3 operator*(const Double3 & a, double b) {
@@ -203,45 +188,7 @@ inline HOST_DEVICE Double3 operator/(const Double3 & a, double b) {
 inline HOST_DEVICE Double3 operator/(double a, const Double3& b){
   return make_double3(a/b.x, a/b.y, a/b.z);
 }
-
-//______________________________________________________________________
-//
-// returns a - b
-inline HOST_DEVICE Int3 operator-(const Int3 & a, const Int3 & b) {
-  return make_int3(a.x-b.x, a.y-b.y, a.z-b.z);
-}
-//__________________________________
-//  returns a + b
-inline HOST_DEVICE Int3 operator+(const Int3 & a, const Int3 & b) {
-  return make_int3(a.x+b.x, a.y+b.y, a.z+b.z);
-}
-//__________________________________
-//  return -a
-inline HOST_DEVICE Int3 operator-(const Int3 & a) {
-  return make_int3(-a.x,-a.y,-a.z);
-}
-//__________________________________
-//  returns Int3 * scalar
-inline HOST_DEVICE Int3 operator*(const Int3 & a, int b) {
-  return make_int3(a.x*b, a.y*b, a.z*b);
-}
-//__________________________________
-//  returns Int3 * scalar
-inline HOST_DEVICE Int3 operator*(int b, const Int3 & a) {
-  return make_int3(a.x*b, a.y*b, a.z*b);
-}
-//__________________________________
-//  returns Int3/scalar
-inline HOST_DEVICE Int3 operator/(const Int3 & a, int b) {
-  b = 1.0f / b;
-  return a*b;
-}
-//__________________________________
-//  returns scalar/Int3
-inline HOST_DEVICE Int3 operator/(int a, const Int3& b){
-  return make_int3(a/b.x, a/b.y, a/b.z);
-}
-
+#endif
 
 } //end namespace Uintah
 

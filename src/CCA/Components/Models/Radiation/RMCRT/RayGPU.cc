@@ -24,13 +24,15 @@
 
 #include <sci_defs/cuda_defs.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
-#ifdef HAVE_CUDA
-#include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
-#endif
 #include <Core/Grid/DbgOutput.h>
+#ifdef HAVE_CUDA
+  #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
+#endif
+
 
 #define BLOCKSIZE 16
 //#define PRINTF            // if using printf statements to debug
+
 
 using namespace Uintah;
 using namespace std;
@@ -168,11 +170,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
     dim3 dimGrid(xblocks, yblocks, 1);
 
-    // setup random number generator states on the device, 1 for each thread
-    curandState* randNumStates;
-    int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
-    /*`CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );      TESTING`*/
-
     RT_flags.nRaySteps = 0;
 
     //__________________________________
@@ -182,8 +179,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
                          d_matl,
                          patchP,
                          dev_domainLo, 
-                         dev_domainHi, 
-                         randNumStates, 
+                         dev_domainHi,
                          (cudaStream_t*)stream,
                          RT_flags,
                          labelNames,
@@ -192,10 +188,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
                          celltype_gdw, 
                          old_gdw, 
                          new_gdw);
-
-    // free device-side RNG states
-    /*`CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );      TESTING`*/
-    
+                         
     //__________________________________
     //
     double end =clock();
