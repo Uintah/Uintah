@@ -30,6 +30,9 @@
       <interpolateParticleTempToGridEveryStep spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
       <time_integrator                    spec="OPTIONAL STRING 'explicit, fracture, implicit'" /> <!-- FIXME: is 'fracture' valid? -->
       <interpolator                       spec="OPTIONAL STRING 'linear, gimp, cpdi, 3rdorderBS, 4thorderBS'" /> <!-- Default is linear -->
+      <!-- controls maximum linear dimension of particle in cell units befor particle -->
+      <!-- resizing and possible numerical fracture, default is 1.5-->
+      <cpdi_lcrit                         spec="OPTIONAL DOUBLE 'positive'"/> 
       <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_subcycles_for_F            spec="OPTIONAL INTEGER"/>

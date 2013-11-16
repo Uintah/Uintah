@@ -273,8 +273,8 @@ ArchesHeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
     flux = new_flux;
     //    cout << "flux = " << flux << endl;
   } else if (d_surfaceType == "sphere") {
-    SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
-    Vector normal = gp->radialDirection(px);
+    //SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
+    //Vector normal = gp->radialDirection(px);
     flux = fluxPerParticle;
   } else {
     throw ParameterNotFound("** ERROR ** Unknown surface specified for heatflux BC",

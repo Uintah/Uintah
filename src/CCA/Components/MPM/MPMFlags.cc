@@ -179,6 +179,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   }
 
   mpm_flag_ps->get("interpolator", d_interpolator_type);
+  mpm_flag_ps->getWithDefault("cpdi_lcrit", d_cpdi_lcrit, 1.e10);
   mpm_flag_ps->get("AMR", d_AMR);
   mpm_flag_ps->get("axisymmetric", d_axisymmetric);
   mpm_flag_ps->get("withColor",  d_with_color);
@@ -323,6 +324,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
       d_interpolator = scinew axiCpdiInterpolator();
     } else{
       d_interpolator = scinew cpdiInterpolator();
+      d_interpolator->setLcrit(d_cpdi_lcrit);
     }
   }
 #if 0
@@ -388,6 +390,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("time_integrator", d_integrator_type);
 
   ps->appendElement("interpolator", d_interpolator_type);
+  ps->appendElement("cpdi_lcrit", d_cpdi_lcrit);
   ps->appendElement("AMR", d_AMR);
   ps->appendElement("axisymmetric", d_axisymmetric);
   ps->appendElement("withColor",  d_with_color);

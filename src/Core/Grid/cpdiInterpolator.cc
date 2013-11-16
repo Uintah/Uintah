@@ -36,12 +36,21 @@ cpdiInterpolator::cpdiInterpolator()
 {
   d_size = 64;
   d_patch = 0;
+  d_lcrit = 1.e10;
 }
 
 cpdiInterpolator::cpdiInterpolator(const Patch* patch)
 {
   d_size = 64;
   d_patch = patch;
+  d_lcrit = 1.e10;
+}
+
+cpdiInterpolator::cpdiInterpolator(const Patch* patch, const double lcrit)
+{
+  d_size = 64;
+  d_patch = patch;
+  d_lcrit = lcrit;
 }
     
 cpdiInterpolator::~cpdiInterpolator()
@@ -50,7 +59,7 @@ cpdiInterpolator::~cpdiInterpolator()
 
 cpdiInterpolator* cpdiInterpolator::clone(const Patch* patch)
 {
-  return scinew cpdiInterpolator(patch);
+  return scinew cpdiInterpolator(patch, d_lcrit);
 }
     
 void cpdiInterpolator::findCellAndWeights(const Point& pos,
@@ -63,6 +72,69 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
 
   Matrix3 dsize=defgrad*size;
   vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
+#if 0
+  relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+  relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+  relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+  relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+#endif
+  relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+
+  double lcrit = d_lcrit;
+  double lcritsq = lcrit*lcrit;
+  Vector la = relative_node_location[6];
+  Vector lb = relative_node_location[5];
+  Vector lc = relative_node_location[7];
+  Vector ld = relative_node_location[4];
+
+  if(la.length2()>lcritsq){
+    la = la*(lcrit/la.length());
+  }
+  if(lb.length2()>lcritsq){
+    lb = lb*(lcrit/lb.length());
+  }
+  if(lc.length2()>lcritsq){
+    lc = lc*(lcrit/lc.length());
+  }
+  if(ld.length2()>lcritsq){
+    ld = ld*(lcrit/ld.length());
+  }
+
+//  cout << "dsize_before = " << dsize << endl;
+
+  dsize(0,0)=.5*(la.x()+lb.x()-lc.x()-ld.x());
+  dsize(1,0)=.5*(la.y()+lb.y()-lc.y()-ld.y());
+  dsize(2,0)=.5*(la.z()+lb.z()-lc.z()-ld.z());
+
+  dsize(0,1)=.5*(la.x()-lb.x()+lc.x()-ld.x());
+  dsize(1,1)=.5*(la.y()-lb.y()+lc.y()-ld.y());
+  dsize(2,1)=.5*(la.z()-lb.z()+lc.z()-ld.z());
+
+  dsize(0,2)=.5*(la.x()+lb.x()+lc.x()+ld.x());
+  dsize(1,2)=.5*(la.y()+lb.y()+lc.y()+ld.y());
+  dsize(2,2)=.5*(la.z()+lb.z()+lc.z()+ld.z());
+
+//  cout << "dsize_after = " << dsize << endl;
+
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)-dsize(1,2),
                                    -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
@@ -162,6 +234,65 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
 
   Matrix3 dsize=defgrad*size;
   vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
+#if 0
+  relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+  relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+  relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+  relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+#endif
+  relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+
+  double lcrit = d_lcrit;
+  double lcritsq = lcrit*lcrit;
+  Vector la = relative_node_location[6];
+  Vector lb = relative_node_location[5];
+  Vector lc = relative_node_location[7];
+  Vector ld = relative_node_location[4];
+
+  if(la.length2()>lcritsq){
+    la = la*(lcrit/la.length());
+  }
+  if(lb.length2()>lcritsq){
+    lb = lb*(lcrit/lb.length());
+  }
+  if(lc.length2()>lcritsq){
+    lc = lc*(lcrit/lc.length());
+  }
+  if(ld.length2()>lcritsq){
+    ld = ld*(lcrit/ld.length());
+  }
+
+  dsize(0,0)=.5*(la.x()+lb.x()-lc.x()-ld.x());
+  dsize(1,0)=.5*(la.y()+lb.y()-lc.y()-ld.y());
+  dsize(2,0)=.5*(la.z()+lb.z()-lc.z()-ld.z());
+
+  dsize(0,1)=.5*(la.x()-lb.x()+lc.x()-ld.x());
+  dsize(1,1)=.5*(la.y()-lb.y()+lc.y()-ld.y());
+  dsize(2,1)=.5*(la.z()-lb.z()+lc.z()-ld.z());
+
+  dsize(0,2)=.5*(la.x()+lb.x()+lc.x()+ld.x());
+  dsize(1,2)=.5*(la.y()+lb.y()+lc.y()+ld.y());
+  dsize(2,2)=.5*(la.z()+lb.z()+lc.z()+ld.z());
+
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)-dsize(1,2),
                                    -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
@@ -326,6 +457,64 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   Matrix3 dsize=defgrad*size;
 
   vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
+#if 0
+  relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+  relative_node_location[1]=Vector( dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
+  relative_node_location[2]=Vector( dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+  relative_node_location[3]=Vector(-dsize(0,0)+dsize(0,1)-dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)-dsize(2,2))*0.5;
+#endif
+  relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[5]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)-dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)-dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[6]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                    dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                    dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                                   -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                                   -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+  double lcrit = d_lcrit;
+  double lcritsq = lcrit*lcrit;
+  Vector la = relative_node_location[6];
+  Vector lb = relative_node_location[5];
+  Vector lc = relative_node_location[7];
+  Vector ld = relative_node_location[4];
+
+  if(la.length2()>lcritsq){
+    la = la*(lcrit/la.length());
+  }
+  if(lb.length2()>lcritsq){
+    lb = lb*(lcrit/lb.length());
+  }
+  if(lc.length2()>lcritsq){
+    lc = lc*(lcrit/lc.length());
+  }
+  if(ld.length2()>lcritsq){
+    ld = ld*(lcrit/ld.length());
+  }
+
+  dsize(0,0)=.5*(la.x()+lb.x()-lc.x()-ld.x());
+  dsize(1,0)=.5*(la.y()+lb.y()-lc.y()-ld.y());
+  dsize(2,0)=.5*(la.z()+lb.z()-lc.z()-ld.z());
+
+  dsize(0,1)=.5*(la.x()-lb.x()+lc.x()-ld.x());
+  dsize(1,1)=.5*(la.y()-lb.y()+lc.y()-ld.y());
+  dsize(2,1)=.5*(la.z()-lb.z()+lc.z()-ld.z());
+
+  dsize(0,2)=.5*(la.x()+lb.x()+lc.x()+ld.x());
+  dsize(1,2)=.5*(la.y()+lb.y()+lc.y()+ld.y());
+  dsize(2,2)=.5*(la.z()+lb.z()+lc.z()+ld.z());
+
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)-dsize(1,2),
                                    -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.5;
@@ -350,6 +539,7 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   relative_node_location[7]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)+dsize(1,1)+dsize(1,2),
                                    -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.5;
+
   Vector current_corner_pos;
   double fx;
   double fy;

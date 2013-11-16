@@ -47,6 +47,8 @@ namespace Uintah {
     virtual ~ParticleInterpolator() {};
     
     virtual ParticleInterpolator* clone(const Patch*) = 0;
+
+    virtual void setLcrit(double d_cpdi_lcrit){};
     
     virtual void findCellAndWeights(const Point& p,
                                     std::vector<IntVector>& ni,
