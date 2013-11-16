@@ -37,6 +37,7 @@ namespace Uintah {
     
     cpdiInterpolator();
     cpdiInterpolator(const Patch* patch);
+    cpdiInterpolator(const Patch* patch, const double lcrit);
     virtual ~cpdiInterpolator();
     
     virtual cpdiInterpolator* clone(const Patch*);
@@ -55,11 +56,15 @@ namespace Uintah {
                                                        const Matrix3& size,
                                                        const Matrix3& defgrad);
     virtual int size();
+
+    virtual void setLcrit(double lcrit){
+      d_lcrit = lcrit;
+    }
     
   private:
     const Patch* d_patch;
     int d_size;
-    
+    double d_lcrit;
   };
 }
 
