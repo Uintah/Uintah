@@ -34,11 +34,10 @@
 #include <curand_kernel.h>
 
 
-#define DEBUG
+//#define DEBUG
 
 //__________________________________
 //  To Do
-//  - fix seed in random number generator
 //  - Figure out how to initialize variables.
 //  - add BoundaryFlux and cellType variables
 //  - 
@@ -67,7 +66,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                GPUDataWarehouse* new_gdw)
 {
 
-  int blockID = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
+  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
   int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
   
   if(blockID == 0 && threadID == 0){
@@ -198,28 +197,23 @@ __device__ Double3 findRayDirectionDevice(curandState* randNumStates,
                                           const int iRay,
                                           const int tidX)
 {
-#if 0
-  if( isSeedRandom == false ){
-   // mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
-   curand_init( hashDevice(tidX), tidX, 0, &randNumStates[tidX] );        // TODD FIX THIS
-  }
-
   // Random Points On Sphere
   double plusMinus_one = 2 * randDblExcDevice( randNumStates ) - 1;
   double r = sqrt(1 - plusMinus_one * plusMinus_one);             // Radius of circle at z
   double theta = 2 * M_PI * randDblExcDevice( randNumStates );    // Uniform betwen 0-2Pi
 
   Double3 dirVector;
-  dirVector.x = r*cos(theta);                     // Convert to cartesian
+  dirVector.x = r*cos(theta);   // Convert to cartesian coordinates
   dirVector.y = r*sin(theta);
   dirVector.z = plusMinus_one;
-
-#endif  
+  
 /*`==========TESTING==========*/
+#ifdef DEBUG
   Double3 dirVector;
   dirVector.x = 1.;
   dirVector.y = 1.;
   dirVector.z = 1.; 
+#endif
 /*===========TESTING==========`*/
   
   
@@ -254,13 +248,12 @@ __device__ void findStepSizeDevice(int step[],
                                    bool sign[],
                                    const Double3& inv_direction_vector){
   // get new step and sign
-  for ( int d= 0; d<3; d++){
+  for ( int d= 0; d<3; d++ ){
   
     if (inv_direction_vector[d]>0){
       step[d] = 1;
       sign[d] = 1;
-    }
-    else{
+    }else{
       step[d] = -1;
       sign[d] = 0;
     }
@@ -305,17 +298,20 @@ __device__ void updateSumIDevice ( Double3& ray_direction,
 
 {
 
-/*`==========TESTING==========*/
-  printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
-/*===========TESTING==========`*/  
+ 
   Int3 cur = origin;
   Int3 prevCell = cur;
   // Step and sign for ray marching
   int step[3];                                          // Gives +1 or -1 based on sign    
   bool sign[3];                                                                            
                                                                                            
-  Double3 inv_ray_direction = 1.0/ray_direction;
-
+  Double3 inv_ray_direction = Double3(1.0)/ray_direction;
+/*`==========TESTING==========*/
+#ifdef DEBUG
+  printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
+  printf("        inv_ray_dir [%g,%g,%g]\n", inv_ray_direction.x,inv_ray_direction.y,inv_ray_direction.z);
+#endif
+/*===========TESTING==========`*/  
 
   findStepSizeDevice(step, sign, inv_ray_direction);
   Double3 D_DxRatio = make_double3(1, Dx.y/Dx.x, Dx.z/Dx.x );
@@ -390,7 +386,7 @@ __device__ void updateSumIDevice ( Double3& ray_direction,
       ray_location.z = ray_location.z + (disMin  * ray_direction.z);
       
 /*`==========TESTING==========*/
-#if 1
+#ifdef DEBUG
 if(origin.x == 0 && origin.y == 0 && origin.z ==0){
     printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z);
     printf( " face %d ", face ); 
@@ -481,7 +477,7 @@ if(origin.x == 0 && origin.y == 0 && origin.z ==0){
 
 
 /*`==========TESTING==========*/
-#if 1
+#ifdef DEBUG
 if(origin.x == 0 && origin.y == 0 && origin.z ==0 ){
     printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i \n", 
             cur.x, cur.y, cur.z, intensity,  exp(-optical_thickness), fs,RT_flags.allowReflect );
@@ -522,39 +518,40 @@ __device__ bool containsCellDevice(const Int3& domainLo,
 }
 
 //---------------------------------------------------------------------------
-// Device Function:
+// Returns random number between 0 & 1.0 including 0 & 1.0
+// See src/Core/Math/MersenneTwister.h for equation 
 //---------------------------------------------------------------------------
 __device__ double randDevice(curandState* globalState)
 {
-#if 0
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    curandState localState = globalState[tid];
-    double val = curand(&localState);
-    globalState[tid] = localState;
-#endif
-    
-/*`==========TESTING==========*/
-    return 0.5;        
-    //return (double)val * (1.0/4294967295.0); 
-/*===========TESTING==========`*/
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  curandState localState = globalState[tid];
+  double val = curand(&localState);
+  globalState[tid] = localState;
+  
+#ifdef DEBUG  
+  return 0.5;
+#else
+  return (double)val * (1.0/4294967295.0);
+#endif  
+  
+  
 }
 
 //---------------------------------------------------------------------------
-// Device Function:
+// Returns random number between 0 & 1.0 excluding 0 & 1.0 
+// See src/Core/Math/MersenneTwister.h for equation 
 //---------------------------------------------------------------------------
 __device__ double randDblExcDevice(curandState* globalState)
 {
-#if 0
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    curandState localState = globalState[tid];
-    double val = curand_uniform(&localState);
-    globalState[tid] = localState;
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  curandState localState = globalState[tid];
+  double val = curand(&localState);
+  globalState[tid] = localState;
+#ifdef DEBUG  
+  return 0.5;
+#else
+  return ( (double)val + 0.5 ) * (1.0/4294967296.0);
 #endif
-
-/*`==========TESTING==========*/
-    return 0.5;
-    //return ( (double)val + 0.5 ) * (1.0/4294967296.0); 
-/*===========TESTING==========`*/
 }
 
 //---------------------------------------------------------------------------
@@ -573,6 +570,15 @@ __device__ unsigned int hashDevice(unsigned int a)
 }
 
 //______________________________________________________________________
+//  Each thread gets same seed, a different sequence number, no offset 
+//  This will create repeatable results.
+__global__ void setupRandNum_kernel(curandState* randNumStates)
+{
+  int tID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+  curand_init(1234, tID, 0, &randNumStates[tID]);
+}
+
+//______________________________________________________________________
 
 __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    dim3 dimBlock,
@@ -580,7 +586,6 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    patchParams patch,
                                    const Int3 domainLo,
                                    const Int3 domainHi,
-                                   curandState* globalDevRandStates,
                                    cudaStream_t* stream,
                                    RMCRT_flags RT_flags,
                                    varLabelNames labelNames,
@@ -591,13 +596,21 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    GPUDataWarehouse* new_gdw)
 {
 
+  // setup random number generator states on the device, 1 for each thread
+  curandState* randNumStates;
+  int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
+  CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );
+  
+  
+  setupRandNum_kernel<<< dimGrid, dimBlock>>>( randNumStates );
+  
   rayTraceKernel<<< dimGrid, dimBlock, 0, *stream >>>(dimGrid, 
                                                       dimBlock, 
                                                       matlIndex,
                                                       patch,
                                                       domainLo, 
                                                       domainHi,
-                                                      globalDevRandStates,
+                                                      randNumStates,
                                                       RT_flags,
                                                       labelNames,
                                                       abskg_gdw,
@@ -605,6 +618,8 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                                       celltype_gdw,
                                                       old_gdw,
                                                       new_gdw);
+    // free device-side RNG states
+    CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
 }
 
 } //end namespace Uintah
