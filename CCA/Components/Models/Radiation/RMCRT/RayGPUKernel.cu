@@ -76,7 +76,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   
   const GPUGridVariable<double> sigmaT4OverPi;
   const GPUGridVariable<double> abskg;              // Need to use getRegion() to get the data
-  const GPUGridVariable<double> celltype;
+  const GPUGridVariable<int> celltype;
 
   GPUGridVariable<double> divQ;
   GPUGridVariable<double> VRFlux;
@@ -85,7 +85,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
  
   abskg_gdw->get(   abskg   ,       "abskg" ,   patch.ID, matl );  
   sigmaT4_gdw->get( sigmaT4OverPi , "sigmaT4",  patch.ID, matl );
-  celltype_gdw->get( celltype ,     "DcellType", patch.ID, matl );
+  celltype_gdw->get( celltype ,     "cellType", patch.ID, matl );
 
   if( RT_flags.modifies_divQ ){
     new_gdw->getModifiable( divQ,         "divQ",          patch.ID, matl );
@@ -209,7 +209,6 @@ __device__ Double3 findRayDirectionDevice(curandState* randNumStates,
   
 /*`==========TESTING==========*/
 #ifdef DEBUG
-  Double3 dirVector;
   dirVector.x = 1.;
   dirVector.y = 1.;
   dirVector.z = 1.; 
@@ -291,7 +290,7 @@ __device__ void updateSumIDevice ( Double3& ray_direction,
                                    const Double3& Dx,
                                    const GPUGridVariable<double>& sigmaT4OverPi,
                                    const GPUGridVariable<double>& abskg,
-                                   const GPUGridVariable<double>& celltype,
+                                   const GPUGridVariable<int>& celltype,
                                    double& sumI,
                                    curandState* randNumStates,
                                    RMCRT_flags RT_flags)
@@ -305,7 +304,7 @@ __device__ void updateSumIDevice ( Double3& ray_direction,
   int step[3];                                          // Gives +1 or -1 based on sign    
   bool sign[3];                                                                            
                                                                                            
-  Double3 inv_ray_direction = Double3(1.0)/ray_direction;
+  Double3 inv_ray_direction = 1.0/ray_direction;
 /*`==========TESTING==========*/
 #ifdef DEBUG
   printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
@@ -396,18 +395,12 @@ if(origin.x == 0 && origin.y == 0 && origin.z ==0){
     printf( "disMin %g \n",disMin ); 
    
     printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
-    printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %g\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur] );
+    printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur] );
 } 
 #endif
 
 /*===========TESTING==========`*/
-      //in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
-
-      if( (celltype[cur] + 1 < 10 * DBL_EPSILON) ) {
-        in_domain = true;
-      }else{
-        in_domain = false;
-      } 
+      in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
     
       optical_thickness += Dx.x * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
       // were adjusted by DyDx  or DzDx, this line is now correct for noncubic domains.

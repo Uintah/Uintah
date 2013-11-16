@@ -71,7 +71,6 @@ Ray::Ray()
   d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
   d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
   d_cellTypeLabel        = VarLabel::create( "cellType",         CCVariable<int>::getTypeDescription() );
-  d_DcellTypeLabel       = VarLabel::create( "DcellType",        CCVariable<double>::getTypeDescription() );  //HACK
   d_radiationVolqLabel   = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
    
   d_matlSet       = 0;
@@ -133,7 +132,6 @@ Ray::~Ray()
   VarLabel::destroy( d_divQFiltLabel );
   VarLabel::destroy( d_boundFluxFiltLabel );
   VarLabel::destroy( d_cellTypeLabel );
-  VarLabel::destroy( d_DcellTypeLabel );         //HACK
   VarLabel::destroy( d_radiationVolqLabel );
 
   if(d_matlSet && d_matlSet->removeReference()) {
@@ -597,14 +595,7 @@ Ray::sched_rayTrace( const LevelP& level,
   Ghost::GhostType  gac  = Ghost::AroundCells;
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
-  
-/*`==========TESTING==========*/
-  if (Parallel::usingDevice()) {
-    tsk->requires( celltype_dw , d_DcellTypeLabel , gac, SHRT_MAX);  // HACK
-  } else {
-    tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
-  } 
-/*===========TESTING==========`*/
+  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
     
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
@@ -1610,10 +1601,6 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   tsk->modifies( d_sigmaT4_label ); 
   tsk->modifies( d_abskgLabel );
   tsk->modifies( d_cellTypeLabel );
-  
-/*`==========TESTING==========*/
-  tsk->computes( d_DcellTypeLabel );  //HACK 
-/*===========TESTING==========`*/
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
@@ -1691,17 +1678,6 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       setBC(abskg,    d_abskgLabel->getName(),       patch, d_matl);
       setBC(temp,     d_temperatureLabel->getName(), patch, d_matl);
       setBC(cellType, d_cellTypeLabel->getName(),    patch, d_matl);
-      
-/*`==========TESTING==========*/
-  // remove this hack after GPUGridVariable<int> is supported
-    CCVariable<double> DcellType;
-    new_dw->allocateAndPut(DcellType, d_DcellTypeLabel, d_matl, patch);
-    for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){
-      IntVector c = *iter;
-      DcellType[c] = (double) cellType[c];
-    } 
-/*===========TESTING==========`*/
-
 
       //__________________________________
       // loop over boundary faces and compute sigma T^4
