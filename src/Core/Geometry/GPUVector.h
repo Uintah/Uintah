@@ -29,17 +29,17 @@
 
 namespace SCIRun {
 
-class Int3 : public int3 {
+class gpuIntVector : public int3 {
 
   public:
-    HOST_DEVICE Int3() {}
+    HOST_DEVICE gpuIntVector() {}
     HOST_DEVICE int& operator[](const int &i) {
               return (&x)[i];
     }
     HOST_DEVICE const int& operator[](const int &i) const {
               return (&x)[i];
     }
-    HOST_DEVICE Int3(const int3& copy):int3(copy) {}
+    HOST_DEVICE gpuIntVector(const int3& copy):int3(copy) {}
 };
 
 class uInt3 : public uint3 {
@@ -66,16 +66,16 @@ class Float3 : public float3 {
     HOST_DEVICE Float3(const float3& copy):float3(copy) {}
 };
 
-class Double3 : public double3 {
+class gpuVector : public double3 {
   public:
-    HOST_DEVICE Double3() {}
+    HOST_DEVICE gpuVector() {}
     HOST_DEVICE double& operator[](const int &i) {
               return (&x)[i];
     }
     HOST_DEVICE const double& operator[](const int &i) const {
               return (&x)[i];
     }
-    HOST_DEVICE Double3(const double3& copy):double3(copy) {}
+    HOST_DEVICE gpuVector(const double3& copy):double3(copy) {}
 };
 
 } // end namespace SCIRun

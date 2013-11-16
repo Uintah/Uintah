@@ -51,11 +51,11 @@ HOST_DEVICE struct varLabelNames{
 
 
 HOST_DEVICE struct patchParams{
-  Double3 dx;             // cell spacing
-  Int3 lo;                // cell low index not including extra or ghost cells
-  Int3 hi;                // cell high index not including extra or ghost cells
-  Int3 nCells;            // number of cells in each dir
-  int ID;                 // patch ID
+  gpuVector dx;             // cell spacing
+  gpuIntVector lo;          // cell low index not including extra or ghost cells
+  gpuIntVector hi;          // cell high index not including extra or ghost cells
+  gpuIntVector nCells;      // number of cells in each dir
+  int ID;                   // patch ID
 };
 
 HOST_DEVICE struct RMCRT_flags{
@@ -87,8 +87,8 @@ void launchRayTraceKernel(dim3 dimGrid,
                           dim3 dimBlock,
                           int matlIndex,
                           patchParams patch,
-                          const Int3 domainLo,
-                          const Int3 domainHi,
+                          const gpuIntVector domainLo,
+                          const gpuIntVector domainHi,
                           cudaStream_t* stream,
                           RMCRT_flags RT_flags,                               
                           varLabelNames labelNames,
@@ -103,8 +103,8 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                dim3 dimBlock,
                                int matlIndex,
                                patchParams patch,
-                               const Int3 domainLo,
-                               const Int3 domainHi,
+                               const gpuIntVector domainLo,
+                               const gpuIntVector domainHi,
                                curandState randNumStates,
                                RMCRT_flags RT_flags,
                                varLabelNames* labelNames,
@@ -114,35 +114,35 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                GPUDataWarehouse* old_gdw,
                                GPUDataWarehouse* new_gdw);
                                
-__device__ Double3 findRayDirectionDevice(curandState* randNumStates,
+__device__ gpuVector findRayDirectionDevice(curandState* randNumStates,
                                           const bool isSeedRandom,
-                                          const Int3 origin,
+                                          const gpuIntVector origin,
                                           const int iRay,
                                           const int tidX);
                                     
-__device__ Double3 rayLocationDevice( curandState* randNumStates,
-                                      const Int3 origin,
+__device__ gpuVector rayLocationDevice( curandState* randNumStates,
+                                      const gpuIntVector origin,
                                       const double DyDx, 
                                       const double DzDx,
                                       const bool useCCRays);
 
 __device__ void findStepSizeDevice(int step[],
                                    bool sign[],
-                                   const Double3& inv_direction_vector);
+                                   const gpuVector& inv_direction_vector);
                                  
 __device__ void reflect(double& fs,
-                        Int3& cur,
-                        Int3& prevCell,
+                        gpuIntVector& cur,
+                        gpuIntVector& prevCell,
                         const double abskg,
                         bool& in_domain,
                         int& step,
                         bool& sign,
                         double& ray_direction);
                                                           
-__device__ void updateSumIDevice ( Double3& ray_direction,
-                                   Double3& ray_location,
-                                   const Int3& origin,
-                                   const Double3& Dx,
+__device__ void updateSumIDevice ( gpuVector& ray_direction,
+                                   gpuVector& ray_location,
+                                   const gpuIntVector& origin,
+                                   const gpuVector& Dx,
                                    const GPUGridVariable<double>&  sigmaT4OverPi,
                                    const GPUGridVariable<double>& abskg,
                                    const GPUGridVariable<int>& celltype,
@@ -150,9 +150,9 @@ __device__ void updateSumIDevice ( Double3& ray_direction,
                                    curandState* randNumStates,
                                    RMCRT_flags RT_flags);
 
-__device__ bool containsCellDevice(const Int3& domainLow,
-                                   const Int3& domainHigh,
-                                   const Int3& cell,
+__device__ bool containsCellDevice(const gpuIntVector& domainLow,
+                                   const gpuIntVector& domainHigh,
+                                   const gpuIntVector& cell,
                                    const int& face);
 
 
@@ -168,24 +168,24 @@ __device__ unsigned int hashDevice(unsigned int a);
 //______________________________________________________________________
 //
 //__________________________________
-//  returns Double3 * scalar
-inline HOST_DEVICE Double3 operator*(const Double3 & a, double b) {
+//  returns gpuVector * scalar
+inline HOST_DEVICE gpuVector operator*(const gpuVector & a, double b) {
   return make_double3(a.x*b, a.y*b, a.z*b);
 }
 //__________________________________
-//  returns Double3 * scalar
-inline HOST_DEVICE Double3 operator*(double b, const Double3 & a) {
+//  returns gpuVector * scalar
+inline HOST_DEVICE gpuVector operator*(double b, const gpuVector & a) {
   return make_double3(a.x*b, a.y*b, a.z*b);
 }
 //__________________________________
-//  returns Double3/scalar
-inline HOST_DEVICE Double3 operator/(const Double3 & a, double b) {
+//  returns gpuVector/scalar
+inline HOST_DEVICE gpuVector operator/(const gpuVector & a, double b) {
   b = 1.0f / b;
   return a*b;
 }
 //__________________________________
-//  returns scalar/Double3
-inline HOST_DEVICE Double3 operator/(double a, const Double3& b){
+//  returns scalar/gpuVector
+inline HOST_DEVICE gpuVector operator/(double a, const gpuVector& b){
   return make_double3(a/b.x, a/b.y, a/b.z);
 }
 #endif
