@@ -44,4 +44,4 @@ RMCRT.m -bm $bm -L $L -o "$out_z" -uda $uda -pDir 3
 
 paste $out_x $out_y $out_z > $out
 
-exit(0)
+exit

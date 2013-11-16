@@ -73,17 +73,18 @@ for($i = 0; $i<=$#tests; $i++){
   #print Dumper($test);         #debugging
 }
 $num_of_tests=$#tests;
-
 #__________________________________
 # make a symbolic link to the post processing command
 # Note Debian doesn't have the --skip-dot option
 for ($i=0;$i<=$num_of_tests;$i++){
    if( $postProc_cmd[$i] ne ''){
     my @stripped_cmd = split(/ /,$postProc_cmd[$i]);  # remove command options
-    my $cmd = `which --skip-dot $stripped_cmd[0] >&/dev/null`;
-    system("ln -fs $cmd >&/dev/null");
+    my $cmd = `which --skip-dot $stripped_cmd[0] > /dev/null 2>&1`;
+    system("ln -fs $cmd > /dev/null 2>&1");
   }
 }
+
+
 
 #__________________________________
 # Read in all of the replacement patterns 
@@ -178,7 +179,6 @@ while ($line=<tstFile>){
   }
 }
 close(tstFile);
-
 #__________________________________
 # Globally, replace lines in the main ups file before each test.
 @replacementPatterns = (@global_replaceLines);
@@ -270,7 +270,7 @@ for ($i=0;$i<=$num_of_tests;$i++){
   print "Launching: $sus_cmd[$i] $test_ups\n";
   $now = time();
 
-  @args = ("$sus_cmd[$i]","$test_ups",">& $test_output");
+  @args = ("$sus_cmd[$i]","$test_ups","> $test_output 2>&1");
   system("@args")==0 or die("ERROR(run_tests.pl): @args failed: $?");
 
   #__________________________________
