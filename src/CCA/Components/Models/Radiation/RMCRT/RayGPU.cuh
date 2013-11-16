@@ -145,7 +145,7 @@ __device__ void updateSumIDevice ( Double3& ray_direction,
                                    const Double3& Dx,
                                    const GPUGridVariable<double>&  sigmaT4OverPi,
                                    const GPUGridVariable<double>& abskg,
-                                   const GPUGridVariable<double>& celltype,
+                                   const GPUGridVariable<int>& celltype,
                                    double& sumI,
                                    curandState* randNumStates,
                                    RMCRT_flags RT_flags);
