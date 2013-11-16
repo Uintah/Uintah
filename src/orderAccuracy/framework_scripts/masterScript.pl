@@ -176,25 +176,25 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      chdir($fw_path);
      system("cp -f $upsFile $tstFile $otherFiles $testing_path");
      
-     system("echo $here_path $postProcessCmd_path> $testing_path/scriptPath");
+     system("echo $here_path $postProcessCmd_path> $testing_path/scriptPath 2>&1");
      
           
      chdir($testing_path);
-     
+
      # make a symbolic link to sus
      my $sus = `which sus`;
-     system("ln -s $sus >&/dev/null");
-     
+     system("ln -s $sus > /dev/null 2>&1");
+
      # make any symbolic Links needed by that component
      my $j = 0;
      foreach $j (@symLinks) {
        if( $j gt "" && $j ne "."){
-         system("ln -s $j >&/dev/null");
+         system("ln -s $j > /dev/null 2>&1");
        }
      }
      
      # clean out any comment in the TST file
-     system("xmlstarlet c14n --without-comments $tstFile > $tstFile.clean");
+     system("xmlstarlet c14n --without-comments $tstFile > $tstFile.clean 2>&1");
      $tstFile = "$tstFile.clean";
      
      
@@ -203,7 +203,7 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      print "\n\nLaunching: run_tests.pl $testing_path/$tstFile\n\n";
      my @args = (" $scripts_path/run_tests.pl","$testing_path/$tstFile", "$fw_path");
      system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n");
-     
+
      chdir("..");
    }
    chdir("..");

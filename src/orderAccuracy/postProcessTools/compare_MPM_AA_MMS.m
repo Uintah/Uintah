@@ -72,17 +72,18 @@ end
 
 %________________________________
 % do the Uintah utilities exist
-[s0, r0]=unix('puda >& /dev/null');
+[s0, r0]=unix('puda > /dev/null 2>&1');
 
 if( s0 ~=0  )
   disp('Cannot execute uintah utilites puda');
   disp('  a) make sure you are in the right directory, and');
   disp('  b) the utilitie (puda) have been compiled');
+  quit(-1);
 end
 
 %________________________________
 %  extract the physical time
-c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda);
+c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" > tmp 2>&1',uda);
 [status0, result0]=unix(c0);
 physicalTime  = load('tmp');
 
@@ -92,7 +93,7 @@ endif
 
 %__________________________________
 % compute error
-c1 = sprintf('puda -timesteplow %i -AA_MMS_%i %s  >& tmp',ts-1,MMS,uda);
+c1 = sprintf('puda -timesteplow %i -AA_MMS_%i %s  > tmp 2>&1',ts-1,MMS,uda);
 [s1, r1] = unix(c1);
 
 data = load('L_norms'); 
