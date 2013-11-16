@@ -54,8 +54,8 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                dim3 dimBlock,
                                int matl,
                                patchParams patch,
-                               const Int3 domainLo,
-                               const Int3 domainHi,
+                               const gpuIntVector domainLo,
+                               const gpuIntVector domainHi,
                                curandState* randNumStates,
                                RMCRT_flags RT_flags,
                                varLabelNames labelNames,
@@ -124,7 +124,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 
   // Get the extents of the data block in which the variables reside.
   // This is essentially the stride in the index calculations.
-  Int3 nCells = patch.nCells;
+  gpuIntVector nCells = patch.nCells;
   
   double DyDx = patch.dx.y/patch.dx.x;
   double DzDx = patch.dx.z/patch.dx.x;
@@ -154,7 +154,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
         // calculate the index for individual threads
         int idx = INDEX3D( nCells.x, nCells.y, tidX, tidY,z );
 
-        Int3 origin = make_int3(tidX, tidY, z);  // for each thread
+        gpuIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         double sumI = 0;
         
         //__________________________________
@@ -162,9 +162,9 @@ __global__ void rayTraceKernel(dim3 dimGrid,
         #pragma unroll
         for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
         
-          Double3 direction_vector = findRayDirectionDevice( randNumStates, RT_flags.isSeedRandom, origin, iRay, tidX );
+          gpuVector direction_vector = findRayDirectionDevice( randNumStates, RT_flags.isSeedRandom, origin, iRay, tidX );
           
-          Double3 ray_location = rayLocationDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
+          gpuVector ray_location = rayLocationDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
          
           updateSumIDevice( direction_vector, ray_location, origin, patch.dx,  sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
         } //Ray loop
@@ -191,9 +191,9 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 //______________________________________________________________________
 //
 //______________________________________________________________________
-__device__ Double3 findRayDirectionDevice(curandState* randNumStates,
+__device__ gpuVector findRayDirectionDevice(curandState* randNumStates,
                                           const bool isSeedRandom,
-                                          const Int3 origin,
+                                          const gpuIntVector origin,
                                           const int iRay,
                                           const int tidX)
 {
@@ -202,7 +202,7 @@ __device__ Double3 findRayDirectionDevice(curandState* randNumStates,
   double r = sqrt(1 - plusMinus_one * plusMinus_one);             // Radius of circle at z
   double theta = 2 * M_PI * randDblExcDevice( randNumStates );    // Uniform betwen 0-2Pi
 
-  Double3 dirVector;
+  gpuVector dirVector;
   dirVector.x = r*cos(theta);   // Convert to cartesian coordinates
   dirVector.y = r*sin(theta);
   dirVector.z = plusMinus_one;
@@ -221,13 +221,13 @@ __device__ Double3 findRayDirectionDevice(curandState* randNumStates,
 
 //______________________________________________________________________
 //
-__device__ Double3 rayLocationDevice( curandState* randNumStates,
-                                      const Int3 origin,
+__device__ gpuVector rayLocationDevice( curandState* randNumStates,
+                                      const gpuIntVector origin,
                                       const double DyDx, 
                                       const double DzDx,
                                       const bool useCCRays)
 {
-  Double3 location;
+  gpuVector location;
   if( useCCRays == false ){
     location.x =   origin.x +  randDevice( randNumStates ) ;
     location.y =   origin.y +  randDevice( randNumStates ) * DyDx ;
@@ -245,7 +245,7 @@ __device__ Double3 rayLocationDevice( curandState* randNumStates,
 //
 __device__ void findStepSizeDevice(int step[],
                                    bool sign[],
-                                   const Double3& inv_direction_vector){
+                                   const gpuVector& inv_direction_vector){
   // get new step and sign
   for ( int d= 0; d<3; d++ ){
   
@@ -263,8 +263,8 @@ __device__ void findStepSizeDevice(int step[],
 //______________________________________________________________________
 //
 __device__ void reflect(double& fs,
-                         Int3& cur,
-                         Int3& prevCell,
+                         gpuIntVector& cur,
+                         gpuIntVector& prevCell,
                          const double abskg,
                          bool& in_domain,
                          int& step,
@@ -284,10 +284,10 @@ __device__ void reflect(double& fs,
 }
 
 //______________________________________________________________________
-__device__ void updateSumIDevice ( Double3& ray_direction,
-                                   Double3& ray_location,
-                                   const Int3& origin,
-                                   const Double3& Dx,
+__device__ void updateSumIDevice ( gpuVector& ray_direction,
+                                   gpuVector& ray_location,
+                                   const gpuIntVector& origin,
+                                   const gpuVector& Dx,
                                    const GPUGridVariable<double>& sigmaT4OverPi,
                                    const GPUGridVariable<double>& abskg,
                                    const GPUGridVariable<int>& celltype,
@@ -298,13 +298,13 @@ __device__ void updateSumIDevice ( Double3& ray_direction,
 {
 
  
-  Int3 cur = origin;
-  Int3 prevCell = cur;
+  gpuIntVector cur = origin;
+  gpuIntVector prevCell = cur;
   // Step and sign for ray marching
   int step[3];                                          // Gives +1 or -1 based on sign    
   bool sign[3];                                                                            
                                                                                            
-  Double3 inv_ray_direction = 1.0/ray_direction;
+  gpuVector inv_ray_direction = 1.0/ray_direction;
 /*`==========TESTING==========*/
 #ifdef DEBUG
   printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
@@ -313,15 +313,15 @@ __device__ void updateSumIDevice ( Double3& ray_direction,
 /*===========TESTING==========`*/  
 
   findStepSizeDevice(step, sign, inv_ray_direction);
-  Double3 D_DxRatio = make_double3(1, Dx.y/Dx.x, Dx.z/Dx.x );
+  gpuVector D_DxRatio = make_double3(1, Dx.y/Dx.x, Dx.z/Dx.x );
 
-  Double3 tMax;         // (mixing bools, ints and doubles)
+  gpuVector tMax;         // (mixing bools, ints and doubles)
   tMax.x = (origin.x + sign[0]               - ray_location.x) * inv_ray_direction.x ; 
   tMax.y = (origin.y + sign[1] * D_DxRatio.y - ray_location.y) * inv_ray_direction.y ; 
   tMax.z = (origin.z + sign[2] * D_DxRatio.z - ray_location.z) * inv_ray_direction.z ; 
 
   //Length of t to traverse one cell
-  Double3 tDelta; 
+  gpuVector tDelta; 
   tDelta.x = abs( inv_ray_direction.x );
   tDelta.y = abs( inv_ray_direction.y ) * D_DxRatio.y;
   tDelta.z = abs( inv_ray_direction.z ) * D_DxRatio.z;                                      
@@ -493,9 +493,9 @@ __syncthreads();
 //---------------------------------------------------------------------------
 // Device Function:
 //---------------------------------------------------------------------------
-__device__ bool containsCellDevice(const Int3& domainLo,
-                                   const Int3& domainHi,
-                                   const Int3& cell,
+__device__ bool containsCellDevice(const gpuIntVector& domainLo,
+                                   const gpuIntVector& domainHi,
+                                   const gpuIntVector& cell,
                                    const int& face)
 {
   switch (face) {
@@ -577,8 +577,8 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    dim3 dimBlock,
                                    int matlIndex,
                                    patchParams patch,
-                                   const Int3 domainLo,
-                                   const Int3 domainHi,
+                                   const gpuIntVector domainLo,
+                                   const gpuIntVector domainHi,
                                    cudaStream_t* stream,
                                    RMCRT_flags RT_flags,
                                    varLabelNames labelNames,

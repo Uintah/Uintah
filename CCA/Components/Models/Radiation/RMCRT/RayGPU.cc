@@ -81,8 +81,8 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
   level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
 
-  const Int3 dev_domainLo = make_int3(domainLo_EC.x(), domainLo_EC.y(), domainLo_EC.z());
-  const Int3 dev_domainHi = make_int3(domainHi_EC.x(), domainHi_EC.y(), domainHi_EC.z());
+  const gpuIntVector dev_domainLo = make_int3(domainLo_EC.x(), domainLo_EC.y(), domainLo_EC.z());
+  const gpuIntVector dev_domainHi = make_int3(domainHi_EC.x(), domainHi_EC.y(), domainHi_EC.z());
 
   
   //__________________________________
