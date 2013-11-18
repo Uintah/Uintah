@@ -33,6 +33,7 @@
 #  Perl Dependencies:  
 #    libxml-simple-perl
 #    libxml-dumper-perl
+#    xmlstarlet
 #
 #______________________________________________________________________
 
@@ -98,6 +99,7 @@ system("which sus") == 0               || die("\nCannot find the command sus $@"
 system("which octave")  == 0           || die("\nCannot find the command octave $@");
 system("which gnuplot") == 0           || die("\nCannot find the command gnuplot $@");
 system("which mpirun")  == 0           || die("\nCannot find the command mpirun $@");
+system("which xmlstarlet")  == 0       || die("\nCannot find the command xmlstarlet $@");
 system("which replace_XML_line")  == 0 || die("\nCannot find the command replace_XML_line $@");
 system("which replace_XML_value") == 0 || die("\nCannot find the command replace_XML_value $@");
 system("which findReplace")       == 0 || die("\nCannot find the command findReplace $@");
@@ -177,7 +179,6 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      system("cp -f $upsFile $tstFile $otherFiles $testing_path");
      
      system("echo $here_path $postProcessCmd_path> $testing_path/scriptPath 2>&1");
-     
           
      chdir($testing_path);
 
