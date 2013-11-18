@@ -43,6 +43,21 @@ use Data::Dumper;
 use File::Path;
 use Cwd;
 
+#__________________________________
+# bulletproofing
+my @modules = qw(XML::Simple Data::Dumper File::Path );
+
+for(@modules) {
+  eval "use $_";
+  if ($@) {
+    print "\n\nError: Could not find the perl module ($_)\n";
+    print " Now exiting\n";
+    exit
+  }
+}
+#______________________________________________________________________
+
+
 my $simple = XML::Simple->new(ForceArray=>1, suppressempty => "");
 
 if( $#ARGV == -1){
