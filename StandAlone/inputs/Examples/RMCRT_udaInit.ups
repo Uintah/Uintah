@@ -101,7 +101,7 @@
   
   <!-- initialize abskg and temperature using a previously run uda -->
   <initalizeUsingUda>
-    <uda_name>  inputs/Examples/restartUda_RT </uda_name>
+    <uda_name>  inputs/Examples/restartUda_RT.uda </uda_name>
     <timestep>               1000             </timestep>                   
     <abskg_varName>          abskg            </abskg_varName>              
     <temperature_varName>    temperature      </temperature_varName>        
