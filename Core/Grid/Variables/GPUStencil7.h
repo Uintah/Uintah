@@ -48,6 +48,15 @@ namespace Uintah {
       CHECK_RANGE(index, 0, 7);
       return (&w)[index];
     }
+    HOST_DEVICE void initialize(double a){
+      w = a;
+      e = a;
+      s = a;
+      n = a; 
+      b = a; 
+      t = a;
+      p = a;
+    }
   };
 
 }

@@ -39,8 +39,9 @@
 //__________________________________
 //  To Do
 //  - Figure out how to initialize variables.
-//  - add BoundaryFlux and cellType variables
-//  - 
+//  - dynamic block size?
+//  - use labelNames
+//  - add BoundaryFlux code
 
 
 namespace Uintah {
@@ -80,7 +81,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 
   GPUGridVariable<double> divQ;
   GPUGridVariable<double> VRFlux;
-  GPUGridVariable<Stencil7> boundFlux;
+  GPUGridVariable<GPUStencil7> boundFlux;
   GPUGridVariable<double> radiationVolQ;
  
   abskg_gdw->get(   abskg   ,       "abskg" ,   patch.ID, matl );  
@@ -90,31 +91,19 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   if( RT_flags.modifies_divQ ){
     new_gdw->getModifiable( divQ,         "divQ",          patch.ID, matl );
     new_gdw->getModifiable( VRFlux,       "VRFlux",        patch.ID, matl );
-/*`    new_gdw->getModifiable( boundFlux,    "boundFlux",     patch.ID, matl );      TESTING`*/
+    new_gdw->getModifiable( boundFlux,    "boundFlux",     patch.ID, matl );
     new_gdw->getModifiable( radiationVolQ,"radiationVolq", patch.ID, matl );
   }else{
     new_gdw->get( divQ,         "divQ",          patch.ID, matl );         // these should be allocateAntPut() calls
     new_gdw->get( VRFlux,       "VRFlux",        patch.ID, matl );
-/*`    new_gdw->get( boundFlux,    "boundFlux",     patch.ID, matl );      TESTING`*/
+    new_gdw->get( boundFlux,    "boundFlux",     patch.ID, matl );
     new_gdw->get( radiationVolQ,"radiationVolq", patch.ID, matl );
     
- #if 0
+#if 0
        // Not sure how to initialize variables on GPU
     divQ.initialize( 0.0 ); 
     VRFlux.initialize( 0.0 );
     radiationVolq.initialize( 0.0 );
-
-    for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
-      IntVector origin = *iter;
-
-      boundFlux[origin].p = 0.0;
-      boundFlux[origin].w = 0.0;
-      boundFlux[origin].e = 0.0;
-      boundFlux[origin].s = 0.0;
-      boundFlux[origin].n = 0.0;
-      boundFlux[origin].b = 0.0;
-      boundFlux[origin].t = 0.0;
-    }
 #endif
   }
 
@@ -139,6 +128,18 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   //          B O U N D A R Y F L U X
   //______________________________________________________________________
   if( RT_flags.solveBoundaryFlux ){
+  
+  
+      // GPU equivalent of GridIterator loop - calculate sets of rays per thread
+    if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
+      #pragma unroll
+      for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
+      
+        gpuIntVector origin = make_int3(tidX, tidY, z);  // for each thread
+        
+        boundFlux[origin].initialize(0.0);
+      }
+    }
   }
   
   
@@ -156,6 +157,9 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 
         gpuIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         double sumI = 0;
+        
+        
+        boundFlux[origin].initialize(0.0);
         
         //__________________________________
         // ray loop
@@ -540,6 +544,7 @@ __device__ double randDblExcDevice(curandState* globalState)
   curandState localState = globalState[tid];
   double val = curand(&localState);
   globalState[tid] = localState;
+  
 #ifdef DEBUG  
   return 0.5;
 #else
