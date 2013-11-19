@@ -2269,7 +2269,11 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
          tDelta    = Abs(inv_ray_direction) * D_DxRatio;
          tMax_prev = 0;
          curLength = 0;  // allow for multiple scattering events per ray
-         
+/*`==========TESTING==========*/
+#ifdef DEBUG         
+printf( "%i, %i, %i, tmax: %g, %g, %g  tDelta: %g, %g, %g \n", cur.x(), cur.y(), cur.z(), tMax.x(), tMax.y(), tMax.z(), tDelta.x(), tDelta.y() , tDelta.z());         
+#endif 
+/*===========TESTING==========`*/
          //if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
        }
 #endif
