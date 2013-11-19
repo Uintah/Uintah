@@ -39,7 +39,7 @@ using namespace std;
 using namespace SCIRun;
 
 
-HOST_DEVICE struct varLabelNames{
+struct varLabelNames{
   const char* divQ;
   const char* abskg;
   const char* sigmaT4;
@@ -50,7 +50,7 @@ HOST_DEVICE struct varLabelNames{
 };
 
 
-HOST_DEVICE struct patchParams{
+struct patchParams{
   gpuVector dx;             // cell spacing
   gpuIntVector lo;          // cell low index not including extra or ghost cells
   gpuIntVector hi;          // cell high index not including extra or ghost cells
@@ -58,7 +58,7 @@ HOST_DEVICE struct patchParams{
   int ID;                   // patch ID
 };
 
-HOST_DEVICE struct RMCRT_flags{
+struct RMCRT_flags{
   bool modifies_divQ;
   bool virtRad;
   bool solveDivQ;
@@ -114,11 +114,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                GPUDataWarehouse* old_gdw,
                                GPUDataWarehouse* new_gdw);
                                
-__device__ gpuVector findRayDirectionDevice(curandState* randNumStates,
-                                          const bool isSeedRandom,
-                                          const gpuIntVector origin,
-                                          const int iRay,
-                                          const int tidX);
+__device__ gpuVector findRayDirectionDevice( curandState* randNumStates );
                                     
 __device__ gpuVector rayLocationDevice( curandState* randNumStates,
                                       const gpuIntVector origin,
@@ -177,6 +173,13 @@ inline HOST_DEVICE gpuVector operator*(const gpuVector & a, double b) {
 inline HOST_DEVICE gpuVector operator*(double b, const gpuVector & a) {
   return make_double3(a.x*b, a.y*b, a.z*b);
 }
+
+//__________________________________
+//  returns gpuVector * gpuVector
+inline HOST_DEVICE gpuVector operator*(const gpuVector& a, const gpuVector& b) {
+  return make_double3(a.x*b.x, a.y*b.y, a.z*b.z);
+}
+
 //__________________________________
 //  returns gpuVector/scalar
 inline HOST_DEVICE gpuVector operator/(const gpuVector & a, double b) {
@@ -188,6 +191,17 @@ inline HOST_DEVICE gpuVector operator/(const gpuVector & a, double b) {
 inline HOST_DEVICE gpuVector operator/(double a, const gpuVector& b){
   return make_double3(a/b.x, a/b.y, a/b.z);
 }
+
+//__________________________________
+//  returns abs
+inline HOST_DEVICE gpuVector Abs(const gpuVector& v){
+
+  double x = v.x < 0 ? -v.x:v.x;
+  double y = v.y < 0 ? -v.y:v.y;
+  double z = v.z < 0 ? -v.z:v.z;
+  return make_double3(x,y,z);
+}
+
 #endif
 
 } //end namespace Uintah

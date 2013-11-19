@@ -30,6 +30,7 @@
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/GPUStencil7.h>
 #include <sci_defs/cuda_defs.h>
+#include <sci_defs/uintah_defs.h>
 #include <curand.h>
 #include <curand_kernel.h>
 
@@ -38,10 +39,11 @@
 
 //__________________________________
 //  To Do
-//  - Figure out how to initialize variables.
+//  - Figure out how to initialize array variables.
 //  - dynamic block size?
 //  - use labelNames
 //  - add BoundaryFlux code
+//  - random number for debugging.
 
 
 namespace Uintah {
@@ -166,7 +168,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
         #pragma unroll
         for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
         
-          gpuVector direction_vector = findRayDirectionDevice( randNumStates, RT_flags.isSeedRandom, origin, iRay, tidX );
+          gpuVector direction_vector = findRayDirectionDevice( randNumStates );
           
           gpuVector ray_location = rayLocationDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
          
@@ -195,11 +197,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 //______________________________________________________________________
 //
 //______________________________________________________________________
-__device__ gpuVector findRayDirectionDevice(curandState* randNumStates,
-                                          const bool isSeedRandom,
-                                          const gpuIntVector origin,
-                                          const int iRay,
-                                          const int tidX)
+__device__ gpuVector findRayDirectionDevice( curandState* randNumStates )
 {
   // Random Points On Sphere
   double plusMinus_one = 2 * randDblExcDevice( randNumStates ) - 1;
@@ -325,10 +323,8 @@ __device__ void updateSumIDevice ( gpuVector& ray_direction,
   tMax.z = (origin.z + sign[2] * D_DxRatio.z - ray_location.z) * inv_ray_direction.z ; 
 
   //Length of t to traverse one cell
-  gpuVector tDelta; 
-  tDelta.x = abs( inv_ray_direction.x );
-  tDelta.y = abs( inv_ray_direction.y ) * D_DxRatio.y;
-  tDelta.z = abs( inv_ray_direction.z ) * D_DxRatio.z;                                      
+  gpuVector tDelta;
+  tDelta   = Abs(inv_ray_direction) * D_DxRatio;                              
 
   //Initializes the following values for each ray
   bool in_domain     = true;
@@ -341,12 +337,12 @@ __device__ void updateSumIDevice ( gpuVector& ray_direction,
 
 
 #ifdef RAY_SCATTER
-  double scatCoeff = _sigmaScat;          //[m^-1]  !! HACK !! This needs to come from data warehouse
+  double scatCoeff = RT_flags.sigmaScat;          //[m^-1]  !! HACK !! This needs to come from data warehouse
   if (scatCoeff == 0) scatCoeff = 1e-99;  // avoid division by zero
 
   // Determine the length at which scattering will occur
   // See CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
-  double scatLength = -log( randDblExc(randNumStates) ) / scatCoeff;
+  double scatLength = -log( randDblExcDevice( randNumStates ) ) / scatCoeff;
   double curLength = 0;
 #endif
 
@@ -419,19 +415,21 @@ if(origin.x == 0 && origin.y == 0 && origin.z ==0){
 
       expOpticalThick_prev = expOpticalThick;
 
+
 #ifdef RAY_SCATTER
-      curLength += disMin * Dx.x(); // July 18
+      curLength += disMin * Dx.x;
       if (curLength > scatLength && in_domain){
 
         // get new scatLength for each scattering event
-        scatLength = -log(mTwister.randDblExc() ) / scatCoeff; 
+        scatLength = -log( randDblExcDevice( randNumStates ) ) / scatCoeff; 
 
-        ray_direction     =  findRayDirection( mTwister, _isSeedRandom, cur ); 
-        inv_ray_direction = Vector(1.0)/ray_direction;
+        ray_direction     = findRayDirectionDevice( randNumStates ); 
+        
+        inv_ray_direction = 1.0/ray_direction;
 
         // get new step and sign
         int stepOld = step[face];
-        findStepSize( step, sign, inv_ray_direction);
+        findStepSizeDevice( step, sign, inv_ray_direction);
 
         // if sign[face] changes sign, put ray back into prevCell (back scattering)
         // a sign change only occurs when the product of old and new is negative
@@ -440,14 +438,16 @@ if(origin.x == 0 && origin.y == 0 && origin.z ==0){
         }
 
         // get new tMax (mixing bools, ints and doubles)
-        tMax.x = ( ( cur.x + sign.x               - ray_location.x) * inv_ray_direction.x );
-        tMax.y = ( ( cur.y + sign.y * D_DxRatio.y - ray_location.y) * inv_ray_direction.y );
-        tMax.z = ( ( cur.z + sign.z * D_DxRatio.z - ray_location.z) * inv_ray_direction.z );
+        tMax.x = ( ( cur.x + sign[0]               - ray_location.x) * inv_ray_direction.x );
+        tMax.y = ( ( cur.y + sign[1] * D_DxRatio.y - ray_location.y) * inv_ray_direction.y );
+        tMax.z = ( ( cur.z + sign[2] * D_DxRatio.z - ray_location.z) * inv_ray_direction.z );
 
         // Length of t to traverse one cell
         tDelta    = Abs(inv_ray_direction) * D_DxRatio;
         tMax_prev = 0;
         curLength = 0;  // allow for multiple scattering events per ray
+
+printf( "%i, %i, %i, tmax: %g, %g, %g  tDelta: %g, %g, %g \n", cur.x, cur.y, cur.z, tMax.x, tMax.y, tMax.z, tDelta.x, tDelta.y , tDelta.z );
 
         //if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
       }
