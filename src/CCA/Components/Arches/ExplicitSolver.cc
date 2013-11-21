@@ -635,7 +635,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         // ADD THE FORCE-ON-GRAPH EXPRESSIONS TO THIS TASK. THERE IS A MAJOR LIMITATION HERE:
         // IF ANY OF THE FORCED DEPENDENCIES ARE SHARED WITH ANOTHER TASKINTERFACE, THEN WE WILL
         // GET MULTIPLE COMPUTES ERRORS FROM UINTAH.
-        if ( !( gh->forcedIDs.empty() ) ) scalRHSIDs.insert(gh->forcedIDs.begin(), gh->forcedIDs.end());
+        if ( !( gh->rootIDs.empty() ) ) scalRHSIDs.insert(gh->rootIDs.begin(), gh->rootIDs.end());
         Wasatch::TaskInterface* wasatchRHSTask =
         scinew Wasatch::TaskInterface( scalRHSIDs,
                                       "warches_scalar_rhs_task_stage_" + strRKStage.str(),
