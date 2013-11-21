@@ -205,14 +205,12 @@ Builder::build() const
 
 template< typename FieldT >
 DensHeatLossMixfrac<FieldT>::
-DensHeatLossMixfrac( const Expr::Tag& hTag,
-                     const Expr::Tag& rhofTag,
+DensHeatLossMixfrac( const Expr::Tag& rhofTag,
                      const Expr::Tag& rhohTag,
                      const InterpT& densEvaluator,
                      const InterpT& enthEvaluator )
   : Expr::Expression<FieldT>(),
     DensityCalculatorBase( 2, 1e-6, 5 ),
-    hTag_   ( hTag    ),
     rhofTag_( rhofTag ),
     rhohTag_( rhohTag ),
     densEval_( densEvaluator ),
@@ -234,7 +232,6 @@ void
 DensHeatLossMixfrac<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  exprDeps.requires_expression( hTag_    );
   exprDeps.requires_expression( rhofTag_ );
   exprDeps.requires_expression( rhohTag_ );
 }
@@ -339,13 +336,11 @@ template< typename FieldT >
 DensHeatLossMixfrac<FieldT>::
 Builder::Builder( const Expr::Tag& rhoTag,
                   const Expr::Tag& gammaTag,
-                  const Expr::Tag& hTag,
                   const Expr::Tag& rhofTag,
                   const Expr::Tag& rhohTag,
                   const InterpT& densEvaluator,
                   const InterpT& enthEvaluator )
   : ExpressionBuilder( tag_list(rhoTag,gammaTag) ),
-    hTag_   ( hTag    ),
     rhofTag_( rhofTag ),
     rhohTag_( rhohTag ),
     densEval_( densEvaluator.clone() ),
@@ -357,7 +352,7 @@ Builder::Builder( const Expr::Tag& rhoTag,
         << __FILE__ << " : " << __LINE__ << std::endl;
     throw std::runtime_error( msg.str() );
   }
-  if( hTag.context() != Expr::CARRY_FORWARD ){
+  if( gammaTag.context() != Expr::CARRY_FORWARD ){
     std::ostringstream msg;
     msg << "ERROR: Heat loss must have CARRY_FORWARD context so that an initial guess is available\n\t"
         << __FILE__ << " : " << __LINE__ << std::endl;
@@ -372,7 +367,7 @@ Expr::ExpressionBase*
 DensHeatLossMixfrac<FieldT>::
 Builder::build() const
 {
-  return new DensHeatLossMixfrac<FieldT>( hTag_, rhofTag_,rhohTag_,*densEval_,*enthEval_ );
+  return new DensHeatLossMixfrac<FieldT>( rhofTag_,rhohTag_,*densEval_,*enthEval_ );
 }
 
 //====================================================================
