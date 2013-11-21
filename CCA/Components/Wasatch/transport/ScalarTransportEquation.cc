@@ -60,19 +60,21 @@ namespace Wasatch{
                            GraphCategories& gc,
                            const Expr::Tag densityTag,
                            const bool isConstDensity,
-                           const TurbulenceParameters& turbulenceParams )
+                           const TurbulenceParameters& turbulenceParams,
+                           const bool callSetup )
     : Wasatch::TransportEquation( gc,
                                   solnVarName,
                                   params,
                                   get_staggered_location<FieldT>(),
-                                  isConstDensity ),
-      densityTag_( densityTag )
+                                  isConstDensity,
+                                  hasEmbeddedGeometry ),
+      densityTag_( densityTag ),
+      enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != NOTURBULENCE) )
   {
     //_____________
     // Turbulence
-    const bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
-    if( turbulenceParams.turbModelName != NOTURBULENCE && enableTurbulenceModel ){
-      Expr::Tag turbViscTag = TagNames::self().turbulentviscosity;//Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
+    if( enableTurbulence_ ){
+      Expr::Tag turbViscTag = TagNames::self().turbulentviscosity;
       turbDiffTag_ = turbulent_diffusivity_tag();
 
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
@@ -114,7 +116,7 @@ namespace Wasatch{
     }
     assert( primVarTag_ != Expr::Tag() );
 
-    setup();
+    if( callSetup ) setup();
   }
 
   //------------------------------------------------------------------
@@ -301,7 +303,7 @@ namespace Wasatch{
       const Expr::Tag solnVarStarTag( this->solution_variable_name()+tagNames.star, Expr::STATE_NONE );
       const Expr::Tag solnVarStarBCTag( solnVarStarTag.name()+"_bc",Expr::STATE_NONE);
       Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
-      if (!factory.have_entry(solnVarStarBCTag)){
+      if( !factory.have_entry(solnVarStarBCTag) ){
         factory.register_expression ( new typename BCCopier<SVolField>::Builder(solnVarStarBCTag, Expr::Tag( this->solution_variable_name(),Expr::STATE_N )) );
       }
       
@@ -319,15 +321,12 @@ namespace Wasatch{
   ScalarTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
-    if (isStrong_ && !is_constant_density()) {
+    if( isStrong_ && !is_constant_density() ){
       // register expression to calculate the initial condition of the solution variable from the initial
       // conditions on primitive variable and density in the cases that we are solving for e.g. rho*phi
       typedef ExprAlgebra<SVolField> ExprAlgbr;
-      Expr::TagList theTagList;
-      theTagList.push_back(primVarTag_);
-      theTagList.push_back(Expr::Tag(densityTag_.name(),Expr::STATE_NONE));
       return icFactory.register_expression( new typename ExprAlgbr::Builder( solution_variable_tag(),
-                                                                             theTagList,
+                                                                             tag_list( primVarTag_, Expr::Tag(densityTag_.name(),Expr::STATE_NONE) ),
                                                                              ExprAlgbr::PRODUCT ) );
     }
     return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );

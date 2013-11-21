@@ -53,13 +53,14 @@ namespace Wasatch{
    *  \brief Holds some key parameters for supported turbulence models.
    */
   struct TurbulenceParameters {
+    TurbulenceParameters();
     double turbSchmidt;
     double eddyViscCoef;
     TurbulenceModelsNames turbModelName;
   };
   
-  void parse_turbulence_input(Uintah::ProblemSpecP turbulenceInputParams,
-                              TurbulenceParameters& turbParams);
+  void parse_turbulence_input( Uintah::ProblemSpecP turbulenceInputParams,
+                               TurbulenceParameters& turbParams );
   
 }
 
