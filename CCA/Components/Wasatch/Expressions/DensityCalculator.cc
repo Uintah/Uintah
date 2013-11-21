@@ -48,6 +48,9 @@ bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
         // note that on entry, res_ is the rhs and on exit, it is the solution (delta).
         const int one=1; int info;
         dgesv_( &neq_, &one, &jac_[0], &neq_, &ipiv_[0], &res_[0], &neq_, &info );
+        if( info != 0 ){
+          std::cout << "\nSOLVER FAILED: "<< info << "  " << soln[0] << ", " << soln[1] << std::endl;
+        }
         assert( info==0 );
         break;
     } // switch
@@ -56,7 +59,7 @@ bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
       soln[i] -= res_[i];
       relErr += std::abs( res_[i]/get_normalization_factor(i) );
       // clip the solution to the valid range
-      const std::pair<double,double> bounds = get_bounds(i);
+      const std::pair<double,double>& bounds = get_bounds(i);
       soln[i] = std::max( std::min( bounds.second, soln[i] ), bounds.first );
     }
     ++niter;
@@ -164,7 +167,7 @@ DensFromMixfrac<FieldT>::get_normalization_factor( const unsigned i ) const
 //--------------------------------------------------------------------
 
 template<typename FieldT>
-std::pair<double,double>
+const std::pair<double,double>&
 DensFromMixfrac<FieldT>::get_bounds( const unsigned i ) const
 {
   return bounds_;
@@ -265,15 +268,20 @@ evaluate()
   typename FieldT::iterator igam = gamma.begin();
   const typename FieldT::iterator irhoe = density.end();
 
+  size_t nbad=0;
   DoubleVec soln(2), vals(2);
   for( ; irho!=irhoe; ++irho, ++igam, ++irhof, ++irhoh ){
     vals[0] = *irhof;
     vals[1] = *irhoh;
-    soln[0] = *irhof / *irho;
-    soln[1] = *igam;          // jcs this would require that gamma is CARRY_FORWARD.
-    this->solve( vals, soln );
+    soln[0] = *irhof / *irho; // mixture fraction
+    soln[1] = *igam;          // heat loss
+    const bool converged = this->solve( vals, soln );
+    if( !converged ) ++nbad;
     *irho = *irhof / soln[0]; // set solution for density
     *igam = soln[1];          // heat loss
+  }
+  if( nbad>0 ){
+    std::cout << "\tConvergence failed at " << nbad << " of " << density.window_with_ghost().local_npts() << " points.\n";
   }
 }
 
@@ -292,24 +300,30 @@ calc_jacobian_and_res( const DensityCalculatorBase::DoubleVec& passThrough,
   const double& f    = soln[0];
   //const double& gam  = soln[1];
 
-  // evaluate density and enthalpy given the current guess for f and gamma.
-  const double rho = densEval_.value( soln );
-  const double h   = enthEval_.value( soln );
+  // if we hit the bounds on mixture fraction, we have a degenerate case,
+  // so don't solve for heat loss in that situation.
+  const double tol = 1e-4;
+  const bool atBounds = ( std::abs(f-bounds_[0].first ) < tol ||
+                          std::abs(f-bounds_[0].second) < tol );
 
+  // evaluate density and enthalpy given the current guess for f and gamma.
+  const double rho =                       densEval_.value( soln );
+  const double h   = atBounds ? rhoh/rho : enthEval_.value( soln );
   // evaluate the residual function
   res[0] = f * rho - rhof;
-  res[1] = rho * h - rhoh;
+  res[1] = atBounds ? 0 : rho * h - rhoh;
 
   // evaluate derivative for use in the jacobian matrix
-  const double drhodf   = densEval_.derivative( soln, 0 );
-  const double drhodgam = densEval_.derivative( soln, 1 );
-  const double dhdf     = enthEval_.derivative( soln, 0 );
-  const double dhdgam   = enthEval_.derivative( soln, 1 );
+  const double drhodf   =                densEval_.derivative( soln, 0 );
+  const double drhodgam = atBounds ? 0 : densEval_.derivative( soln, 1 );
+  const double dhdf     = atBounds ? 0 : enthEval_.derivative( soln, 0 );
+  const double dhdgam   = atBounds ? 0 : enthEval_.derivative( soln, 1 );
 
+  // strange ordering because of fortran/c conventions.
   jac[0] = rho + f * drhodf;
-  jac[1] = f * drhodgam;
-  jac[2] = rho*dhdf   + h*drhodf;
-  jac[3] = rho*dhdgam + h*drhodgam;
+  jac[2] = atBounds ? 0 : f * drhodgam;
+  jac[1] = atBounds ? 0 : rho*dhdf   + h*drhodf;
+  jac[3] = atBounds ? 1 : rho*dhdgam + h*drhodgam;
 }
 
 //--------------------------------------------------------------------
@@ -324,7 +338,7 @@ DensHeatLossMixfrac<FieldT>::get_normalization_factor( const unsigned i ) const
 //--------------------------------------------------------------------
 
 template<typename FieldT>
-std::pair<double,double>
+const std::pair<double,double>&
 DensHeatLossMixfrac<FieldT>::get_bounds( const unsigned i ) const
 {
   return bounds_[i];
