@@ -63,7 +63,7 @@ protected:
    */
   virtual double get_normalization_factor( const unsigned i ) const =0;
 
-  virtual std::pair<double,double> get_bounds( const unsigned i ) const =0;
+  virtual const std::pair<double,double>& get_bounds( const unsigned i ) const =0;
 
 private:
   const int neq_;        ///< number of equations to solve
@@ -101,7 +101,7 @@ class DensFromMixfrac : public Expr::Expression<FieldT>, protected DensityCalcul
                               DoubleVec& jac,
                               DoubleVec& res );
   double get_normalization_factor( const unsigned i ) const;
-  std::pair<double,double> get_bounds( const unsigned i ) const;
+  const std::pair<double,double>& get_bounds( const unsigned i ) const;
 
 public:
   /**
@@ -188,7 +188,7 @@ class DensHeatLossMixfrac
                               DoubleVec& jac,
                               DoubleVec& res );
   double get_normalization_factor( const unsigned i ) const;
-  std::pair<double,double> get_bounds( const unsigned i ) const;
+  const std::pair<double,double>& get_bounds( const unsigned i ) const;
 
 public:
     /**
