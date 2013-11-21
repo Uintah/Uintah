@@ -1750,6 +1750,7 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
               int3 device_offset;
               int3 device_size;
               device_var.getArray3(device_offset, device_size, device_ptr);
+              device_bytes = device_var.getMemSize();
 
               // if offset and size is equal to CPU DW, directly copy back to CPU var memory;
               if (device_offset.x == offset.x() && device_offset.y == offset.y() && device_offset.y == offset.y()
