@@ -55,6 +55,7 @@ namespace Wasatch{
   struct TurbulenceParameters {
     TurbulenceParameters();
     double turbSchmidt;
+    double turbPrandtl;
     double eddyViscCoef;
     TurbulenceModelsNames turbModelName;
   };
