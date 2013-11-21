@@ -189,7 +189,7 @@ const bool doX=true, doY=false, doZ=false;
     }
 
     // populate any additional source terms pushed on this equation
-    ScalarTransportEquation::setup_source_terms( info, srcTags );
+    ScalarTransportEquation<SVolField>::setup_source_terms( info, srcTags );
   }
 
   //---------------------------------------------------------------------------
