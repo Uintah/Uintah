@@ -54,6 +54,8 @@ struct patchParams{
   gpuVector dx;             // cell spacing
   gpuIntVector lo;          // cell low index not including extra or ghost cells
   gpuIntVector hi;          // cell high index not including extra or ghost cells
+  gpuIntVector loEC;        // low index including extraCells
+  gpuIntVector hiEC;        // high index including extraCells
   gpuIntVector nCells;      // number of cells in each dir
   int ID;                   // patch ID
 };

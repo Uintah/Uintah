@@ -72,6 +72,11 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
   int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
   
+  // calculate the thread indices
+  int tidX = threadIdx.x + blockIdx.x * blockDim.x + domainLo.x;
+  int tidY = threadIdx.y + blockIdx.y * blockDim.y + domainLo.y;
+  
+   
   if(blockID == 0 && threadID == 0){
     printf("//________________________________rayTraceKernek Modifies: %d\n", RT_flags.modifies_divQ);
     printf("  Top:RayTraceKernel %d,%d\n", threadIdx.x, threadIdx.y );
@@ -101,22 +106,18 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 /*`    new_gdw->get( boundFlux,    "boundFlux",     patch.ID, matl );      TESTING`*/
     new_gdw->get( radiationVolQ,"radiationVolq", patch.ID, matl );
     
- #if 0
-       // Not sure how to initialize variables on GPU
-    divQ.initialize( 0.0 ); 
-    VRFlux.initialize( 0.0 );
-    radiationVolq.initialize( 0.0 );
-
-#endif
+    
+    // Extra Cell Loop
+    if (tidX >= patch.loEC.x && tidY >= patch.loEC.y && tidX < patch.hiEC.x && tidY < patch.hiEC.y) { // patch boundary check
+      #pragma unroll
+      for (int z = patch.loEC.z; z < patch.hiEC.z; z++) { // loop through z slices
+        gpuIntVector c = make_int3(tidX, tidY, z);
+        divQ[c]          = 0.0;
+        VRFlux[c]        = 0.0;
+        radiationVolQ[c] = 0.0;
+      }
+    }
   }
-
-  // calculate the thread indices
-  int tidX = threadIdx.x + blockIdx.x * blockDim.x + domainLo.x;
-  int tidY = threadIdx.y + blockIdx.y * blockDim.y + domainLo.y;
-
-  // Get the extents of the data block in which the variables reside.
-  // This is essentially the stride in the index calculations.
-  gpuIntVector nCells = patch.nCells;
   
   double DyDx = patch.dx.y/patch.dx.x;
   double DzDx = patch.dx.z/patch.dx.x;
@@ -154,9 +155,6 @@ __global__ void rayTraceKernel(dim3 dimGrid,
     if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
       #pragma unroll
       for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
-      
-        // calculate the index for individual threads
-        int idx = INDEX3D( nCells.x, nCells.y, tidX, tidY,z );
 
         gpuIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         double sumI = 0;

@@ -147,9 +147,12 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     printTask(patches, patch, dbggpu, "Doing Ray::rayTraceGPU");
 
     // Calculate the memory block size
-    const IntVector low = patch->getCellLowIndex();
-    const IntVector high = patch->getCellHighIndex();
-    const IntVector patchSize = high - low;
+    const IntVector loEC = patch->getExtraCellLowIndex();
+    const IntVector lo   = patch->getCellLowIndex();
+    
+    const IntVector hiEC = patch->getExtraCellHighIndex();
+    const IntVector hi   = patch->getCellHighIndex();
+    const IntVector patchSize = hiEC - loEC;
 
     const int xdim = patchSize.x();
     const int ydim = patchSize.y();
@@ -159,8 +162,12 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     patchParams patchP;
     const Vector dx = patch->dCell();
     patchP.dx     = make_double3(dx.x(), dx.y(), dx.z());
-    patchP.lo     = make_int3(low.x(), low.y(), low.z());
-    patchP.hi     = make_int3(high.x(), high.y(), high.z());
+    patchP.lo     = make_int3( lo.x(), lo.y(), lo.z() );
+    patchP.hi     = make_int3( hi.x(), hi.y(), hi.z() );
+    
+    patchP.loEC   = make_int3( loEC.x(), loEC.y(),  loEC.z() );
+    patchP.hiEC   = make_int3( hiEC.x(), hiEC.y(),  hiEC.z() );
+    
     patchP.ID     = patch->getID();
     patchP.nCells = make_int3(xdim, ydim, zdim);
 
