@@ -355,6 +355,7 @@ Builder::Builder( const Expr::Tag& rhoTag,
   if( gammaTag.context() != Expr::CARRY_FORWARD ){
     std::ostringstream msg;
     msg << "ERROR: Heat loss must have CARRY_FORWARD context so that an initial guess is available\n\t"
+        << "specified tag: " << gammaTag << "\n\t"
         << __FILE__ << " : " << __LINE__ << std::endl;
     throw std::runtime_error( msg.str() );
   }

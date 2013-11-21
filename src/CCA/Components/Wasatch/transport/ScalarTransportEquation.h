@@ -118,6 +118,10 @@ namespace Wasatch{
      *         it is not needed.
      *
      *  \param isConstDensity true for constant density
+     *  \param turbulenceParams information on turbulence models
+     *  \param callSetup for objects that derive from ScalarTransportEquation,
+     *         this flag should be set to false, and those objects should call
+     *         setup() at the end of their constructor.
      *
      *  Note that the static member methods get_rhs_expr_id,
      *  get_primvar_name and get_solnvar_name can be useful
@@ -128,7 +132,8 @@ namespace Wasatch{
                              GraphCategories& gc,
                              const Expr::Tag densityTag,
                              const bool isConstDensity,
-                             const TurbulenceParameters& turbulenceParams );
+                             const TurbulenceParameters& turbulenceParams,
+                             const bool callSetup=true );
 
     virtual ~ScalarTransportEquation();
 
@@ -187,10 +192,10 @@ namespace Wasatch{
     virtual Expr::ExpressionID setup_rhs( FieldTagInfo&,
                                           const Expr::TagList& srcTags  );
 
-
-  private:
     const Expr::Tag densityTag_;
+    const bool enableTurbulence_;
     Expr::Tag primVarTag_;
+    Expr::Tag turbDiffTag_;
     bool isStrong_;
     FieldTagInfo infoStar_;  // needed to form predicted scalar quantities
   };

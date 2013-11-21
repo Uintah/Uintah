@@ -26,8 +26,16 @@
 
 namespace Wasatch {
 
-  void parse_turbulence_input(Uintah::ProblemSpecP turbulenceInputParams,
-                              TurbulenceParameters& turbParams)
+
+  TurbulenceParameters::TurbulenceParameters()
+  {
+    turbSchmidt  = 1.0;
+    eddyViscCoef = 0.1;
+    turbModelName = NOTURBULENCE;
+  };
+
+  void parse_turbulence_input( Uintah::ProblemSpecP turbulenceInputParams,
+                               TurbulenceParameters& turbParams )
   {
     if (!turbulenceInputParams) return;
     

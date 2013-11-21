@@ -230,7 +230,9 @@ namespace Wasatch{
   void ScalabilityTestTransportEquation<FieldT>::
   setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                                     BCHelper& bcHelper )
-  {}
+  {
+    assert( !bcHelper.get_boundary_information().empty() );
+  }
   
   //------------------------------------------------------------------
   
@@ -238,7 +240,9 @@ namespace Wasatch{
   void ScalabilityTestTransportEquation<FieldT>::
   setup_boundary_conditions( const GraphHelper& graphHelper,
                              BCHelper& bcHelper )
-  {}
+  {
+    assert( !bcHelper.get_boundary_information().empty() );
+  }
 
   //------------------------------------------------------------------
 

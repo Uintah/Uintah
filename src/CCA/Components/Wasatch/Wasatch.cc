@@ -170,7 +170,6 @@ namespace Wasatch{
         ++exprtag ){
       const Expr::ExpressionID exprID = graphHelper->exprFactory->get_id(*exprtag);
       graphHelper->rootIDs.insert( exprID );
-      graphHelper->forcedIDs.insert( exprID );
     }    
   }
   
@@ -183,10 +182,8 @@ namespace Wasatch{
         exprParams != 0;
         exprParams = exprParams->findNextBlock("NameTag") )
     {
-      const Expr::Tag tag = parse_nametag( exprParams );
-      const Expr::ExpressionID exprID = gh->exprFactory->get_id(tag);
+      const Expr::ExpressionID exprID = gh->exprFactory->get_id(parse_nametag(exprParams));
       gh->rootIDs.insert( exprID );
-      gh->forcedIDs.insert( exprID );
     }
   }
 
@@ -536,7 +533,7 @@ namespace Wasatch{
     // get the turbulence params, if any, and parse them.
     //
     Uintah::ProblemSpecP turbulenceModelParams = wasatchSpec_->findBlock("Turbulence");
-    struct TurbulenceParameters turbParams = {1.0,0.1,NOTURBULENCE};
+    TurbulenceParameters turbParams;
     parse_turbulence_input(turbulenceModelParams, turbParams);
     
     //
