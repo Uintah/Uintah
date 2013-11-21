@@ -952,9 +952,6 @@
           <DensityWeightedEnthalpy        spec="REQUIRED NO_DATA" >
             <NameTag                      spec="REQUIRED" />
           </DensityWeightedEnthalpy>
-          <Enthalpy                       spec="REQUIRED NO_DATA">
-            <NameTag                      spec="REQUIRED" />
-          </Enthalpy>
           <HeatLoss                       spec="REQUIRED NO_DATA">
             <NameTag                      spec="REQUIRED" />
           </HeatLoss>

@@ -188,7 +188,6 @@ namespace Wasatch{
       const InterpT* const enthInterp = table.find_entry("Enthalpy");
 
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss");
-      Expr::Tag hTag       = parse_nametag( modelParams->findBlock("Enthalpy")->findBlock("NameTag") );
       Expr::Tag rhofTag    = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
       Expr::Tag rhohTag    = parse_nametag( modelParams->findBlock("DensityWeightedEnthalpy")->findBlock("NameTag") );
       Expr::Tag heatLossTag= parse_nametag( modelParams->findBlock("HeatLoss")->findBlock("NameTag") );
@@ -199,15 +198,13 @@ namespace Wasatch{
       if( densLevel != NORMAL ){
         rhofTag.context()     = Expr::STATE_NONE;
         rhohTag.context()     = Expr::STATE_NONE;
-        heatLossTag.context() = Expr::STATE_NONE;
-        hTag.name()        += tagNameAppend;
         rhofTag.name()     += tagNameAppend;
         rhohTag.name()     += tagNameAppend;
         heatLossTag.name() += tagNameAppend;
       }
 
       typedef DensHeatLossMixfrac<SVolField>::Builder DensCalc;
-      densCalcID = factory.register_expression( scinew DensCalc( densityTag, heatLossTag, hTag, rhofTag, rhohTag, *densInterp, *enthInterp ) );
+      densCalcID = factory.register_expression( scinew DensCalc( densityTag, heatLossTag, rhofTag, rhohTag, *densInterp, *enthInterp ) );
 
     }
     return densCalcID;
