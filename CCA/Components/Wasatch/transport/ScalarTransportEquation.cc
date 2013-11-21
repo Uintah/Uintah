@@ -66,8 +66,7 @@ namespace Wasatch{
                                   solnVarName,
                                   params,
                                   get_staggered_location<FieldT>(),
-                                  isConstDensity,
-                                  hasEmbeddedGeometry ),
+                                  isConstDensity ),
       densityTag_( densityTag ),
       enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != NOTURBULENCE) )
   {
