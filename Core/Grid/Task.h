@@ -78,10 +78,10 @@ class Task {
  
   public: 
   enum CallBackEvent {
-      CPU,   //<- normal CPU task, happens when a GPU enabled task runs on CPU
+      CPU,    // <- normal CPU task, happens when a GPU enabled task runs on CPU
       preGPU, // <- pre GPU kernel callback, happens before CPU->GPU copy (reserved, not implemented yet... )
-      GPU,    //<-  GPU kernel callback, happens after dw: CPU->GPU copy, kernel launch should be queued in this callback
-      postGPU //<- post GPU kernel callback, happens after dw: GPU->CPU copy but before MPI sends.
+      GPU,    // <- GPU kernel callback, happens after dw: CPU->GPU copy, kernel launch should be queued in this callback
+      postGPU // <- post GPU kernel callback, happens after dw: GPU->CPU copy but before MPI sends.
     };
  
   protected:
