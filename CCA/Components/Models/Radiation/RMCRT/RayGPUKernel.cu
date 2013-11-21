@@ -93,19 +93,20 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   if( RT_flags.modifies_divQ ){
     new_gdw->getModifiable( divQ,         "divQ",          patch.ID, matl );
     new_gdw->getModifiable( VRFlux,       "VRFlux",        patch.ID, matl );
-    new_gdw->getModifiable( boundFlux,    "boundFlux",     patch.ID, matl );
+/*`    new_gdw->getModifiable( boundFlux,    "boundFlux",     patch.ID, matl );      TESTING`*/
     new_gdw->getModifiable( radiationVolQ,"radiationVolq", patch.ID, matl );
   }else{
     new_gdw->get( divQ,         "divQ",          patch.ID, matl );         // these should be allocateAntPut() calls
     new_gdw->get( VRFlux,       "VRFlux",        patch.ID, matl );
-    new_gdw->get( boundFlux,    "boundFlux",     patch.ID, matl );
+/*`    new_gdw->get( boundFlux,    "boundFlux",     patch.ID, matl );      TESTING`*/
     new_gdw->get( radiationVolQ,"radiationVolq", patch.ID, matl );
     
-#if 0
+ #if 0
        // Not sure how to initialize variables on GPU
     divQ.initialize( 0.0 ); 
     VRFlux.initialize( 0.0 );
     radiationVolq.initialize( 0.0 );
+
 #endif
   }
 
@@ -159,9 +160,6 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 
         gpuIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         double sumI = 0;
-        
-        
-        boundFlux[origin].initialize(0.0);
         
         //__________________________________
         // ray loop
@@ -524,13 +522,12 @@ __device__ double randDevice(curandState* globalState)
   curandState localState = globalState[tid];
   double val = curand(&localState);
   globalState[tid] = localState;
-  
+
 #ifdef DEBUG  
   return 0.5;
 #else
   return (double)val * (1.0/4294967295.0);
 #endif  
-  
   
 }
 
@@ -544,7 +541,6 @@ __device__ double randDblExcDevice(curandState* globalState)
   curandState localState = globalState[tid];
   double val = curand(&localState);
   globalState[tid] = localState;
-  
 #ifdef DEBUG  
   return 0.5;
 #else
