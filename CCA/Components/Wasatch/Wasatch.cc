@@ -527,7 +527,7 @@ namespace Wasatch{
     //
     create_expressions_from_input( wasatchSpec_, graphCategories_ );
     parse_embedded_geometry(wasatchSpec_,graphCategories_);
-    setup_property_evaluation( wasatchSpec_, graphCategories_ );
+    setup_property_evaluation( wasatchSpec_, graphCategories_, lockedFields_ );
 
     //
     // get the turbulence params, if any, and parse them.
