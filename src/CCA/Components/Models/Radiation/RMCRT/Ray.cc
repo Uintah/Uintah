@@ -600,14 +600,25 @@ Ray::sched_rayTrace( const LevelP& level,
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
     tsk->modifies( d_VRFluxLabel );
-    tsk->modifies( d_boundFluxLabel );
+    /*`tsk->modifies( d_boundFluxLabel );      TESTING`*/
     tsk->modifies( d_radiationVolqLabel );
   } else {
     tsk->computes( d_divQLabel );
     tsk->computes( d_VRFluxLabel );
-    tsk->computes( d_boundFluxLabel );
+    /*`tsk->computes( d_boundFluxLabel );      TESTING`*/
     tsk->computes( d_radiationVolqLabel );
   }
+  
+/*`==========TESTING==========*/              // HACK
+  if ( !Parallel::usingDevice() ) {
+    if( modifies_divQ ){
+      tsk->modifies( d_boundFluxLabel );
+    } else {
+      tsk->computes( d_boundFluxLabel );
+    }
+  } 
+/*===========TESTING==========`*/
+  
   
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
   
@@ -682,7 +693,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
       divQ.initialize( 0.0 ); 
       new_dw->allocateAndPut( VRFlux,    d_VRFluxLabel,    d_matl, patch );
       VRFlux.initialize( 0.0 );
-      new_dw->allocateAndPut( boundFlux,     d_boundFluxLabel,     d_matl, patch );
+      new_dw->allocateAndPut( boundFlux,    d_boundFluxLabel, d_matl, patch );
       new_dw->allocateAndPut( radiationVolq, d_radiationVolqLabel, d_matl, patch );
       radiationVolq.initialize( 0.0 );
      
@@ -2052,8 +2063,16 @@ void Ray::sched_carryForward_rayTrace( const LevelP& level,
   
   tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
   tsk->requires( Task::OldDW, d_VRFluxLabel,         d_gn, 0 );
-  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
+/*`  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );      TESTING`*/ 
   tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
+  
+  
+/*`==========TESTING==========*/
+  if ( !Parallel::usingDevice() ) {
+    tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
+  } 
+/*===========TESTING==========`*/
+  
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );  
 }
@@ -2076,9 +2095,16 @@ void  Ray::carryForward_rayTrace( const ProcessorGroup* pc,
     
     new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls );
     new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls );
-    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );
+/*`    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );      TESTING`*/
     new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls );
-  
+    
+    
+/*`==========TESTING==========*/
+  if ( !Parallel::usingDevice() ) {
+    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );    // HACK
+  } 
+/*===========TESTING==========`*/
+    
     return;
   }
 }
