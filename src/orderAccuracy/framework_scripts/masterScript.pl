@@ -81,8 +81,10 @@ if (! -e $base_path."/framework_scripts" ){
 
 #__________________________________
 # create the base testing directory
-system("/bin/rm -rf order_of_accuracy");
-mkdir("order_of_accuracy") || die "cannot mkdir(order_of_accuracy) $!";
+if (! -e "order_of_accuracy" ){
+  system("/bin/rm -rf order_of_accuracy");
+  mkdir("order_of_accuracy") || die "cannot mkdir(order_of_accuracy) $!";
+}
 chdir("order_of_accuracy");
 my $curr_path = cwd;
 
@@ -126,7 +128,10 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
    chdir($curr_path);
    
    my $component = $components[$c];
-   mkpath($component) || die "cannot mkpath($component) $!";
+   
+   if ( ! -e $component) {
+    mkpath($component) || die "cannot mkpath($component) $!";
+   }
    chdir($component);
    print "----------------------------------------------------------------  $component \n";
          
@@ -169,7 +174,19 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
         chomp($otherFiles);
      }
     
+     #find a unique testname
+     my $count = 0;
+     my $testNameOld = $testName;
+     $testName = "$testName.$count";
+     
+     while( -e $testName){
+       $testName = "$testNameOld.$count";
+       $count +=1;
+     }
+     
      mkpath($testName) || die "ERROR:masterScript.pl:cannot mkpath($testName) $!";
+     
+     
      chdir($testName);
      
      print "\n\n=======================================================================================\n";
