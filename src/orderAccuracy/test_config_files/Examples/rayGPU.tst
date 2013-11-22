@@ -2,7 +2,7 @@
 <upsFile>RMCRT_test_1L.ups</upsFile>
 <gnuplot>
   <script>plotScript.gp</script>s
-  <title>CPU:RMCRT order-of-accuracy \\n 1 timestep (41^3)</title>
+  <title>GPU::RMCRT order-of-accuracy \\n 1 timestep (41^3)</title>
   <ylabel>Error</ylabel>
   <xlabel># of Rays</xlabel>
 </gnuplot>
@@ -17,7 +17,7 @@
 
 <Test>
     <Title>2</Title>
-    <sus_cmd> sus </sus_cmd>
+    <sus_cmd> sus -gpu -nthreads 2 </sus_cmd>
     <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0</postProcess_cmd>
     <x>2</x>
     <replace_lines>
@@ -27,7 +27,7 @@
 
 <Test>
     <Title>4</Title>
-    <sus_cmd> sus </sus_cmd>
+    <sus_cmd> sus -gpu -nthreads 2 </sus_cmd>
     <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0</postProcess_cmd>
     <x>4</x>
     <replace_lines>
@@ -37,7 +37,7 @@
 
 <Test>
     <Title>8</Title>
-    <sus_cmd> sus </sus_cmd>
+    <sus_cmd> sus -gpu -nthreads 2 </sus_cmd>
     <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0</postProcess_cmd>
     <x>8</x>
     <replace_lines>
@@ -47,7 +47,7 @@
 
 <Test>
     <Title>16</Title>
-    <sus_cmd> sus </sus_cmd>
+    <sus_cmd>sus -gpu -nthreads 2 </sus_cmd>
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 0</postProcess_cmd>
     <x>16</x>
     <replace_lines>
@@ -57,7 +57,7 @@
 
 <Test>
     <Title>32</Title>
-    <sus_cmd> sus </sus_cmd>
+    <sus_cmd>sus -gpu -nthreads 2  </sus_cmd>
     <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0</postProcess_cmd>
     <x>32</x>
     <replace_lines>
@@ -67,7 +67,7 @@
 
 <Test>
     <Title>64</Title>
-    <sus_cmd> sus </sus_cmd>
+    <sus_cmd> sus -gpu -nthreads 2 </sus_cmd>
     <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0</postProcess_cmd>
     <x>64</x>
     <replace_lines>
@@ -77,12 +77,32 @@
 
 <Test>
     <Title>128</Title>
-    <sus_cmd> sus </sus_cmd>
+    <sus_cmd> sus -gpu -nthreads 2  </sus_cmd>
     <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0 -plot true</postProcess_cmd>
     <x>128</x>
     <replace_lines>
       <nDivQRays>          128        </nDivQRays>
     </replace_lines>
 </Test>
+<!--
+<Test>
+    <Title>256</Title>
+    <sus_cmd> sus -gpu -nthreads 2  </sus_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0 -plot true</postProcess_cmd>
+    <x>256</x>
+    <replace_lines>
+      <nDivQRays>          256        </nDivQRays>
+    </replace_lines>
+</Test>
 
+<Test>
+    <Title>512</Title>
+    <sus_cmd> sus -gpu -nthreads 2  </sus_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0 -plot true</postProcess_cmd>
+    <x>512</x>
+    <replace_lines>
+      <nDivQRays>          512        </nDivQRays>
+    </replace_lines>
+</Test>
+-->
 </start>
