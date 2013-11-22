@@ -209,6 +209,36 @@ bool applyFilter_noPetsc(const ProcessorGroup* ,
   } 
   return it_worked;
 }
+
+void computeFilterVolume( const Patch* patch, 
+                          constCCVariable<int>& cellType, 
+                          CCVariable<double>& fvol, 
+                          const int filter_width ){ 
+
+  fvol.initialize(0.0); 
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+    IntVector c = *iter; 
+
+    for ( int i = -(filter_width-1)/2; i <= (filter_width-1)/2; i++ ){
+      for ( int j = -(filter_width-1)/2; j <= (filter_width-1)/2; j++ ){
+        for ( int k = -(filter_width-1)/2; k <= (filter_width-1)/2; k++ ){
+
+          IntVector offset = c + IntVector(i,j,k);
+          int fil_off = abs(i) + abs(j) + abs(k); 
+          double my_value = fil_off + 3; 
+
+          if ( cellType[offset] == -1 ){ 
+            fvol[c] += 1.0 / ( pow( 2.0,my_value ));
+          }
+
+        }
+      }
+    }
+  }
+}
+
 //______________________________________________________________________
 protected:
 
