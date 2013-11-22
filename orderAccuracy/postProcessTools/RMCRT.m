@@ -292,10 +292,13 @@ zHalf = resolution(zDir)/2.0;
 
 if(pDir == 1)
   startEnd = sprintf('-istart %i   %i   %i  -iend   %i   %i  %i',0,     yHalf,  zHalf, resolution(xDir)-1, yHalf, zHalf );
+  dir = "X";
 elseif(pDir == 2)
   startEnd = sprintf('-istart %i   %i   %i  -iend   %i  %i   %i',xHalf, 0,      zHalf, xHalf, resolution(yDir)-1, zHalf);
+  dir = "Y"
 elseif(pDir == 3)
   startEnd = sprintf('-istart %i  %i    %i  -iend   %i  %i   %i',xHalf, yHalf,   0,    xHalf, yHalf, resolution(zDir)-1);
+  dir = "Z"
 end
 
 c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o divQ.dat -m %i -uda %s >/dev/null 2>&1','divQ',level,ts-1,startEnd,mat,uda);
@@ -338,14 +341,14 @@ if (strcmp(makePlot,"true"))
   h = figure();
   subplot(2,1,1),plot(x_CC, divQ_sim(:,4), 'b:o;computed;', x_CC, divQ_exact, 'r:+;exact;');
   ylabel('divQ');
-  xlabel('X');
-  title('divQ versus Exact solns');
+  xlabel(dir);
+  title('divQ versus Exact Solution');
   grid on;
 
   subplot(2,1,2),plot(x_CC,d, 'b:+');
   hold on;
-  ylabel('|Deldotq - u_{exact}|'); 
-  xlabel('X');
+  ylabel('|divQ - divQ_{exact}|'); 
+  xlabel(dir);
   grid on;
 
   unix('/bin/rm divQ.ps > /dev/null 2>&1');
@@ -358,8 +361,9 @@ if (strcmp(makePlot,"true"))
   set(FS,'FontSize',12);
   
   orient('portrait');
-  saveas( h, "divQ", "jpg");
-  %pause;
+  fname = sprintf( 'divQ.%s',dir);
+  saveas( h, fname, "jpg");
+  pause;
 end
 
 
