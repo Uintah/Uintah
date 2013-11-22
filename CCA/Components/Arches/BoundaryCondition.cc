@@ -33,6 +33,7 @@
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/IntrusionBC.h>
+#include <CCA/Components/Arches/Filter.h>
 
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
@@ -1763,6 +1764,8 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 
   for (int p = 0; p < patches->size(); p++) {
 
+    Filter* my_filter; 
+
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -1854,7 +1857,8 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 
       d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, wall_type, flowType ); 
 
-      d_newBC->computeFilterVolume( patch, cellType, filterVolume ); 
+      int filter_width = 3; 
+      my_filter->computeFilterVolume( patch, cellType, filterVolume, filter_width ); 
 
 #ifdef WASATCH_IN_ARCHES
       //copy for wasatch-arches: 
@@ -1866,6 +1870,7 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
       }
 #endif 
     }
+    delete my_filter; 
   }
 }
 
