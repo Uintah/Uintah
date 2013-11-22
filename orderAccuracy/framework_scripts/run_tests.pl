@@ -32,6 +32,7 @@
 use XML::Simple;
 use Data::Dumper;
 use Cwd;
+
 # create object
 $simple = new XML::Simple(forcearray => 1, suppressempty => "");
 $tstFile           = $ARGV[0];
@@ -269,10 +270,14 @@ for ($i=0;$i<=$num_of_tests;$i++){
   print statsFile "Command Used : "."$sus_cmd[$i] $test_ups"."\n";
   print "Launching: $sus_cmd[$i] $test_ups\n";
   $now = time();
-
+   
   @args = ("$sus_cmd[$i]","$test_ups","> $test_output 2>&1");
   system("@args")==0 or die("ERROR(run_tests.pl): @args failed: $?");
-
+  
+  $fin = time()-$now;
+  print statsFile "Running Time : ".$fin." [secs]\n";
+  print statsFile "---------------------------------------------\n";
+  
   #__________________________________
   # execute comparison
   if($postProc_cmd[$i] ne ''){
@@ -280,9 +285,7 @@ for ($i=0;$i<=$num_of_tests;$i++){
     @args = ("analyze_results.pl","$tstFile", "$i");
     system("@args")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");
   }
-  $fin = time()-$now;
-  print  statsFile "Running Time : ".$fin."\n";
-  print statsFile "---------------------------------------------\n";
+  
 }  # all tests loop
 
 close(statsFile);
