@@ -1764,7 +1764,8 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
 
   for (int p = 0; p < patches->size(); p++) {
 
-    Filter* my_filter; 
+    bool use_old_filter = false; 
+    Filter* my_filter = scinew Filter(use_old_filter);  
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
