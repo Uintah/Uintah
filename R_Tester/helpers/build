@@ -70,17 +70,14 @@ if [ "$OS" = "Linux" ]; then
   
   if [ "$MACHINE" == "albion" ]; then
     COMMON="      --with-mpi=/usr/local/openmpi \\
-       --with-petsc=/usr/local/petsc \\
        --with-hypre=/usr/local/hypre \\
-       --with-boost=/usr/local/boost \\
        --with-cuda=/usr/local/cuda \\
-       --enable-gencode=20 \\
-       --enable-wasatch_3p \\
-       USE_WASATCH=yes \\"
+       --enable-gencode=30 \\
+       --enable-ray-scatter\\"
 
-    ENV="      CC=gcc \\
-       CXX=g++ \\
-       F77=gfortran"   
+    ENV="      CC=gcc-4.8 \\
+       CXX=g++-4.8 \\
+       F77=gfortran-4.8"   
   fi
 fi
 
