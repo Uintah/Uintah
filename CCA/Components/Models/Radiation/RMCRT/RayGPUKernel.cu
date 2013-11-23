@@ -57,8 +57,6 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                dim3 dimBlock,
                                int matl,
                                patchParams patch,
-                               const gpuIntVector domainLo,
-                               const gpuIntVector domainHi,
                                curandState* randNumStates,
                                RMCRT_flags RT_flags,
                                varLabelNames labelNames,
@@ -73,8 +71,8 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
   
   // calculate the thread indices
-  int tidX = threadIdx.x + blockIdx.x * blockDim.x + domainLo.x;
-  int tidY = threadIdx.y + blockIdx.y * blockDim.y + domainLo.y;
+  int tidX = threadIdx.x + blockIdx.x * blockDim.x + patch.loEC.x;
+  int tidY = threadIdx.y + blockIdx.y * blockDim.y + patch.loEC.y;
   
    
   if(blockID == 0 && threadID == 0){
@@ -119,6 +117,40 @@ __global__ void rayTraceKernel(dim3 dimGrid,
     }
   }
   
+  
+/*`==========TESTING==========*/
+#if 0  
+ //__________________________________
+ // Sanity check code used to test the iterators 
+  // Extra Cell Loop
+  if (threadIdx.y == 2 ) {
+    printf( "outside loops thread[%d, %d] tID[%d, %d]\n",threadIdx.x, threadIdx.y, tidX, tidY);
+  }
+  
+  if (tidX >= patch.loEC.x && tidY >= patch.loEC.y && tidX < patch.hiEC.x && tidY < patch.hiEC.y) { // patch boundary check
+    for (int z = patch.loEC.z; z < patch.hiEC.z; z++) { // loop through z slices
+      gpuIntVector c = make_int3(tidX, tidY, z);
+      divQ[c] = 0;
+
+      if (c.y == 2 && c.z == 2 ) {
+        printf( " EC thread[%d, %d] tID[%d, %d]\n",threadIdx.x, threadIdx.y, tidX, tidY);
+      }
+    }
+  }  
+
+  if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
+    for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
+      gpuIntVector c = make_int3(tidX, tidY, z);
+      if (c.y == 2 && c.z == 2 ) {
+        printf( " int thread[%d, %d] tID[%d, %d]\n",threadIdx.x, threadIdx.y, tidX, tidY);
+      }
+      divQ[c] = c.x + c.y + c.z; 
+    }
+  }
+  return;
+#endif 
+/*===========TESTING==========`*/
+
   double DyDx = patch.dx.y/patch.dx.x;
   double DzDx = patch.dx.z/patch.dx.x;
   
@@ -491,26 +523,6 @@ __syncthreads();
 
 
 //---------------------------------------------------------------------------
-// Device Function:
-//---------------------------------------------------------------------------
-__device__ bool containsCellDevice(const gpuIntVector& domainLo,
-                                   const gpuIntVector& domainHi,
-                                   const gpuIntVector& cell,
-                                   const int& face)
-{
-  switch (face) {
-    case 0 :
-      return domainLo.x <= cell.x && domainHi.x > cell.x;
-    case 1 :
-      return domainLo.y <= cell.y && domainHi.y > cell.y;
-    case 2 :
-      return domainLo.z <= cell.z && domainHi.z > cell.z;
-    default :
-      return false;
-  }
-}
-
-//---------------------------------------------------------------------------
 // Returns random number between 0 & 1.0 including 0 & 1.0
 // See src/Core/Math/MersenneTwister.h for equation 
 //---------------------------------------------------------------------------
@@ -576,8 +588,6 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    dim3 dimBlock,
                                    int matlIndex,
                                    patchParams patch,
-                                   const gpuIntVector domainLo,
-                                   const gpuIntVector domainHi,
                                    cudaStream_t* stream,
                                    RMCRT_flags RT_flags,
                                    varLabelNames labelNames,
@@ -600,8 +610,6 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                                       dimBlock, 
                                                       matlIndex,
                                                       patch,
-                                                      domainLo, 
-                                                      domainHi,
                                                       randNumStates,
                                                       RT_flags,
                                                       labelNames,

@@ -89,8 +89,6 @@ void launchRayTraceKernel(dim3 dimGrid,
                           dim3 dimBlock,
                           int matlIndex,
                           patchParams patch,
-                          const gpuIntVector domainLo,
-                          const gpuIntVector domainHi,
                           cudaStream_t* stream,
                           RMCRT_flags RT_flags,                               
                           varLabelNames labelNames,
@@ -105,8 +103,6 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                dim3 dimBlock,
                                int matlIndex,
                                patchParams patch,
-                               const gpuIntVector domainLo,
-                               const gpuIntVector domainHi,
                                curandState randNumStates,
                                RMCRT_flags RT_flags,
                                varLabelNames* labelNames,
@@ -147,12 +143,6 @@ __device__ void updateSumIDevice ( gpuVector& ray_direction,
                                    double& sumI,
                                    curandState* randNumStates,
                                    RMCRT_flags RT_flags);
-
-__device__ bool containsCellDevice(const gpuIntVector& domainLow,
-                                   const gpuIntVector& domainHigh,
-                                   const gpuIntVector& cell,
-                                   const int& face);
-
 
 __device__ double randDblExcDevice(curandState* randNumStates);
 
