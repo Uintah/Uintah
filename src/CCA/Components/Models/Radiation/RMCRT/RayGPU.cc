@@ -73,17 +73,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size );
   printf(" Increasing the size of the print buffer to %d bytes\n", (int)10 * size );
 #endif
-
-  //__________________________________
-  // Determine the size of the domain.
-  IntVector domainLo, domainHi;
-  IntVector domainLo_EC, domainHi_EC;
-  level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
-  level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
-
-  const gpuIntVector dev_domainLo = make_int3(domainLo_EC.x(), domainLo_EC.y(), domainLo_EC.z());
-  const gpuIntVector dev_domainHi = make_int3(domainHi_EC.x(), domainHi_EC.y(), domainHi_EC.z());
-
   
   //__________________________________
   //  
@@ -177,6 +166,12 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
     dim3 dimGrid(xblocks, yblocks, 1);
 
+#ifdef DEBUG
+    cout << " lowEC: " << loEC << " hiEC " << hiEC << endl;
+    cout << " lo   : " << lo   << " hi:  " << hi << endl;
+    cout << " xdim: " << xdim << " ydim: " << ydim << endl;
+#endif
+
     RT_flags.nRaySteps = 0;
 
     //__________________________________
@@ -185,8 +180,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
                          dimBlock,
                          d_matl,
                          patchP,
-                         dev_domainLo, 
-                         dev_domainHi,
                          (cudaStream_t*)stream,
                          RT_flags,
                          labelNames,
