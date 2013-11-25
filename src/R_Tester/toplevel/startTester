@@ -3,12 +3,11 @@
 # to differentiate among the build names & even directories
 COMPILE="yes"
 DEFAULT_MAIL_TO="uintah-developer@gforge.sci.utah.edu"
-DEFAULT_REMAKE_LOG_TO="dav@cs.utah.edu"
+
 DO_DBG="1"
 DO_OPT="1"
 LOCAL_OR_NIGHTLY_TEST="nightly"
 WHICH_TESTS="NIGHTLYTESTS"
-MAIL_REMAKE_LOG_TO=""
 MONTHLYBACKUP="no"
 NOTESTS="0"
 OS=`uname -s`
@@ -48,33 +47,21 @@ if [ "$MACHINE" == "rt" ]; then
   WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
 fi
 
-if test "$MACHINE" = "blaze"; then
-  COMMON_GROUP="sci"
-  BUILD_DIR=/usr/local/home/csafe-tester/"$OS"
-  TEST_DATA=/usr/local/home/csafe-tester/"$OS"/TestData
-  TEMP_DIR=/usr/local/home/csafe-tester/"$OS"
-  SCRIPT_DIR=/usr/local/home/csafe-tester/scripts
-  CHECKPOINTS=/usr/local/home/csafe-tester/CheckPoints
-  
-  # Where the webpage will be, and init webpage  (SEE above notes)
-  HTMLLOG=/usr/local/home/csafe-tester/public_html/SCIRun.${ID}.html
-  WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/SCIRun.${ID}.html
-fi
 
-if test "$MACHINE" = "albion" -o "$MACHINE" = "kaibab"; then
-  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu"
-  DEFAULT_REMAKE_LOG_TO="ahumphrey@sci.utah.edu"
-  REPLY_TO="ahumphrey@sci.utah.edu"
+if test "$MACHINE" = "albion" ; then
+  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu"
+  REPLY_TO="t.harman@utah.edu"
   COMMON_GROUP="uintah"
-  BUILD_DIR=/home/csafe-tester/"$OS"
-  TEST_DATA=/home/csafe-tester/"$OS"/TestData
-  TEMP_DIR=/home/csafe-tester/"$OS"
-  SCRIPT_DIR=/home/csafe-tester/scripts
-  CHECKPOINTS=/home/csafe-tester/CheckPoints
+  BUILD_DIR=/home/rt/"$OS"
+  TEST_DATA=/home/rt/"$OS"/TestData
+  TEMP_DIR=/home/rt/"$OS"
+  SCRIPT_DIR=/home/rt/scripts
+  CHECKPOINTS=/home/rt/CheckPoints
+  export TEST_COMPONENTS=GPU             # only run gpu tests
   
   # Where the webpage will be, and init webpage.  (SEE above notes)
-  HTMLLOG=/home/csafe-tester/public_html/SCIRun.${ID}.html
-  WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
+  HTMLLOG=/home/rt/public_html/SCIRun.html
+  WEBLOG=NONE
 fi
 
 
@@ -101,7 +88,6 @@ while [ "$#" -gt 0 ]; do
     case "$1" in
     -sendmail)
         SEND_MAIL_TO="$DEFAULT_MAIL_TO"
-        MAIL_REMAKE_LOG_TO="$DEFAULT_REMAKE_LOG_TO"
         ;;
     -sendmailto)
         if [ "$#" -gt 1 ]; then
@@ -212,7 +198,7 @@ if [ -d /usr/var/tmp ]; then
   export TMPDIR
 fi
 
-export BUILD_DIR BUILDROOT TEST_DATA PARALLELISM MAKE_PARALLELISM SEND_MAIL_TO MAIL_REMAKE_LOG_TO REPLY_TO
+export BUILD_DIR BUILDROOT TEST_DATA PARALLELISM MAKE_PARALLELISM SEND_MAIL_TO  REPLY_TO
 
 if [ $VERBOSE = "yes" ]; then
   echo "TIME STAMP: Regression Tester Starting at:"
