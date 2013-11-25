@@ -195,12 +195,12 @@ namespace Wasatch{
     Expr::Tag yvolFracTag;
     Expr::Tag zvolFracTag;
     const bool hasVolFrac = parser->findBlock("EmbeddedGeometry");
-    VolFractionNames& vNames = VolFractionNames::self();
+    const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
     if (hasVolFrac) {
-      svolFracTag = vNames.svol_frac_tag();
-      xvolFracTag = vNames.xvol_frac_tag();
-      yvolFracTag = vNames.yvol_frac_tag();
-      zvolFracTag = vNames.zvol_frac_tag();
+      svolFracTag = vNames.vol_frac_tag<SVolField>();
+      xvolFracTag = vNames.vol_frac_tag<XVolField>();
+      yvolFracTag = vNames.vol_frac_tag<YVolField>();
+      zvolFracTag = vNames.vol_frac_tag<ZVolField>();
     }
 
     //___________________________________

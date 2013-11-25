@@ -135,8 +135,8 @@ evaluate()
   //----------------------------------------------------------------------------
   // CALCULATE the filtered density, if needed. Filter(rho)
   //----------------------------------------------------------------------------
-  SpatFldPtr<SVolField> rhoHat = SpatialFieldStore::get<SVolField>( dynSmagConst );
-  SpatFldPtr<SVolField> invRhoHat = SpatialFieldStore::get<SVolField>( dynSmagConst );
+  SVolFldPtr rhoHat = SpatialFieldStore::get<SVolField>( dynSmagConst );
+  SVolFldPtr invRhoHat = SpatialFieldStore::get<SVolField>( dynSmagConst );
   if (!isConstDensity_) {
     *rhoHat <<= (*boxFilterOp_)( *rho_ );
     // pay attention to this. may require fine tuning.
@@ -283,7 +283,7 @@ evaluate()
   
   jmin=0;
   {
-    SpatFldPtr<SVolField> tmp = SpatialFieldStore::get<SVolField>( strTsrMag );
+    SVolFldPtr tmp = SpatialFieldStore::get<SVolField>( strTsrMag );
     for( int i=0; i<3; ++i ){
       for( int j=jmin; j<3; ++j ){
         exOp_->apply_to_field(*Sij[i][j-jmin]);
@@ -341,7 +341,7 @@ evaluate()
   //----------------------------------------------------------------------------
   // CALCULATE the dynamic constant!
   //----------------------------------------------------------------------------
-  SpatFldPtr<SVolField> LM = SpatialFieldStore::get<SVolField>( dynSmagConst );
+  SVolFldPtr LM = SpatialFieldStore::get<SVolField>( dynSmagConst );
   //  *LM <<= 0.0;
   //  *LM = *L11 * *M11 + *L22 * *M22 + *L33 * *M33 + 2.0 * (*L12 * *M12 + *L13 * *M13  + *L23 * *M23);
   *LM <<=   *Lij[0][0] * *Mij[0][0] // L11 * M11
@@ -363,13 +363,13 @@ evaluate()
   // at patch boundaries for it to work. We could potentially split this expression
   // and cleave things... but I don't think this is worth the effort at all...
   if( doExtraFiltering_ ){
-    SpatFldPtr<SVolField> tmp = SpatialFieldStore::get<SVolField>( *LM );
+    SVolFldPtr tmp = SpatialFieldStore::get<SVolField>( *LM );
     exOp_->apply_to_field(*LM, 0.0);
     *tmp <<= (*boxFilterOp_)(*LM);
     *LM <<= *tmp;
   }
   
-  SpatFldPtr<SVolField> MM = SpatialFieldStore::get<SVolField>( dynSmagConst );
+  SVolFldPtr MM = SpatialFieldStore::get<SVolField>( dynSmagConst );
   //  *MM <<= 0.0;
   //  *MM = *M11 * *M11 + *M22 * *M22 + *M33 * *M33 + 2.0 * (*M12 * *M12 + *M13 * *M13 + *M23 * *M23);
   *MM <<=   *Mij[0][0] * *Mij[0][0] // M11 * M11
@@ -381,7 +381,7 @@ evaluate()
                    );
 
   if( doExtraFiltering_ ){
-    SpatFldPtr<SVolField> tmp = SpatialFieldStore::get<SVolField>( *MM );
+    SVolFldPtr tmp = SpatialFieldStore::get<SVolField>( *MM );
     exOp_->apply_to_field(*MM, 0.0);
     *tmp <<= (*boxFilterOp_)(*MM);
     *MM <<= *tmp;

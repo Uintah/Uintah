@@ -179,9 +179,11 @@ private:
 #endif 
 
     Vector dx = patch->dCell();
+    double vol = dx.x()*dx.y()*dx.z();
+
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
       IntVector c = *iter;
-      double vol = dx.x()*dx.y()*dx.z();
 
 #ifdef VERIFY_TIMEINT
       phi[c] += dt/vol*(RHS_test);
@@ -218,9 +220,11 @@ private:
 
 
     Vector dx = patch->dCell();
+    double vol = dx.x()*dx.y()*dx.z();
+
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
       IntVector c = *iter; 
-      double vol = dx.x()*dx.y()*dx.z();
 
       // (rho*phi)^{t+\Delta t} = (rho*phi)^{t} + RHS
 #ifdef VERIFY_TIMEINT
@@ -230,6 +234,10 @@ private:
 #endif
 
       // phi^{t+\Delta t} = ((rho*phi)^{t} + RHS) / rho^{t + \Delta t} 
+      //double rho_ox = .5;
+      //double rho_f = 1.18; 
+      //double rho_guess = rho_ox + phi[c]*(1-rho_ox/rho_f); 
+      //phi[c] = phi[c] / rho_guess; 
       phi[c] = phi[c] / new_den[c]; 
 
       double small = 1e-16; 

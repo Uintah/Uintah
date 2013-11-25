@@ -62,7 +62,8 @@ endif
 SRCS	+=                             	    			\
 	$(SRCDIR)/ParseEquation.cc 							\
     $(SRCDIR)/ScalabilityTestTransportEquation.cc		\
-	$(SRCDIR)/ScalarTransportEquation.cc
+	$(SRCDIR)/ScalarTransportEquation.cc				\
+	$(SRCDIR)/TransportEquation.cc
 
 ########################################################################
 #

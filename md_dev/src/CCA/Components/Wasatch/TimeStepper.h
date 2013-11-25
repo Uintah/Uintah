@@ -235,7 +235,7 @@ namespace Wasatch{
      */
     template<typename FieldT>
     void add_equation( const std::string& solnVarName,
-                       Expr::ExpressionID rhsID );
+                       const Expr::ExpressionID& rhsID );
 
     /**
      *  \brief schedule the tasks associated with this TimeStepper

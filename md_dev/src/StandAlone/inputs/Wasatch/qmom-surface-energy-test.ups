@@ -8,6 +8,10 @@
 
   <Wasatch>    
 
+    <Density>
+      <Constant value="1" name="rho"/>
+    </Density>
+
     <MomentInitialization>
       <PopulationName>CACO3</PopulationName>
         <Values>

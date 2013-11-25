@@ -99,17 +99,130 @@ namespace Wasatch{
 
   template< typename FieldT >
   ScalabilityTestTransportEquation<FieldT>::
-  ScalabilityTestTransportEquation( const std::string thisPhiName,
-                                    const Expr::ExpressionID rhsID )
-  : Wasatch::TransportEquation( thisPhiName, rhsID,
-                                get_staggered_location<FieldT>() )
+  ScalabilityTestTransportEquation( GraphCategories& gc,
+                                    const std::string thisPhiName,
+                                    Uintah::ProblemSpecP params )
+  : Wasatch::TransportEquation( gc,
+                                thisPhiName,
+                                params,
+                                get_staggered_location<FieldT>(),
+                                true)   // always constant density
+  {
+    setup();
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT >
+  ScalabilityTestTransportEquation<FieldT>::
+  ~ScalabilityTestTransportEquation()
   {}
 
   //------------------------------------------------------------------
 
   template< typename FieldT >
-  ScalabilityTestTransportEquation<FieldT>::~ScalabilityTestTransportEquation()
-  {}
+  void ScalabilityTestTransportEquation<FieldT>::
+  setup_diffusive_flux( FieldTagInfo& info )
+  {
+    if( params_->findBlock( "DoDiffusion") ){
+      Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+      setup_diffusive_velocity_expression<FieldT>( "X", solnVarName_, factory, info );
+      setup_diffusive_velocity_expression<FieldT>( "Y", solnVarName_, factory, info );
+      setup_diffusive_velocity_expression<FieldT>( "Z", solnVarName_, factory, info );
+    }
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT >
+  void ScalabilityTestTransportEquation<FieldT>::
+  setup_convective_flux( FieldTagInfo& info )
+  {
+    if( params_->findBlock("DoConvection") ){
+      const Expr::Tag empty;
+      Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+
+      setup_convective_flux_expression<FieldT>( "X",
+                                                solnVarTag_,
+                                                empty, // convective flux (empty to build it)
+                                                CENTRAL,
+                                                parse_nametag( params_->findBlock("X-Velocity" )->findBlock( "NameTag" ) ),
+                                                "",
+                                                factory,
+                                                info );
+      setup_convective_flux_expression<FieldT>( "Y",
+                                                solnVarTag_,
+                                                empty, // convective flux (empty to build it)
+                                                CENTRAL,
+                                                parse_nametag( params_->findBlock("Y-Velocity" )->findBlock( "NameTag" ) ),
+                                                "",
+                                                factory,
+                                                info );
+      setup_convective_flux_expression<FieldT>( "Z",
+                                                solnVarTag_,
+                                                empty, // convective flux (empty to build it)
+                                                CENTRAL,
+                                                parse_nametag( params_->findBlock("Z-Velocity" )->findBlock( "NameTag" ) ),
+                                                "",
+                                                factory,
+                                                info );
+     }
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT >
+  void ScalabilityTestTransportEquation<FieldT>::
+  setup_source_terms( FieldTagInfo& info, Expr::TagList& sourceTags )
+  {
+    if( params_->findBlock("DoSourceTerm") ){
+      Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+      const Expr::Tag srcTag( solnVarName_ + "_src", Expr::STATE_NONE );
+      info[SOURCE_TERM] = srcTag;
+
+      int nEqs=0;
+      params_->get( "NumberOfEquations", nEqs );
+
+      std::string basePhiName;
+      params_->get( "SolutionVariable", basePhiName );
+      const Expr::Tag basePhiTag ( basePhiName, Expr::STATE_N );
+
+      typedef typename ScalabilityTestSrc<FieldT>::Builder coupledSrcTerm;
+      factory.register_expression( scinew coupledSrcTerm( srcTag, basePhiTag, nEqs) );
+    }
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT >
+  Expr::ExpressionID ScalabilityTestTransportEquation<FieldT>::
+  setup_rhs( FieldTagInfo& info,
+             const Expr::TagList& srcTags  )
+  {
+    Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+    bool monolithic = false;
+    if( params_->findBlock("MonolithicRHS") )  params_->get("MonolithicRHS",monolithic);
+    if( monolithic ){
+      proc0cout << "ScalabilityTestTransportEquation " << solnVarName_ << " MONOLITHIC RHS ACTIVE - diffusion is always on!" << endl;
+      const Expr::Tag dcoefTag( solnVarName_+"DiffCoeff", Expr::STATE_NONE );
+      factory.register_expression( scinew typename Expr::ConstantExpr<FieldT>::Builder( dcoefTag, 1.0 ) );
+      return factory.register_expression(
+          scinew typename MonolithicRHS<FieldT>::
+          Builder( Expr::Tag(solnVarName_+"_rhs", Expr::STATE_NONE),
+                   dcoefTag,
+                   info.find(CONVECTIVE_FLUX_X)->second,
+                   info.find(CONVECTIVE_FLUX_Y)->second,
+                   info.find(CONVECTIVE_FLUX_Z)->second,
+                   solnVarTag_,
+                   info.find(SOURCE_TERM)->second ) );
+    }
+    else{
+      const Expr::Tag densT;
+      const bool tempConstDens = false;
+      return factory.register_expression(
+          scinew typename ScalarRHS<FieldT>::Builder( rhsTag_, info, densT, tempConstDens) );
+    }
+  }
 
   //------------------------------------------------------------------
 
@@ -135,104 +248,6 @@ namespace Wasatch{
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
     return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );
-  }
-
-  //------------------------------------------------------------------
-
-  template<typename FieldT>
-  Expr::ExpressionID
-  ScalabilityTestTransportEquation<FieldT>::
-  get_rhs_expr_id(std::string thisPhiName,
-                  Expr::ExpressionFactory& factory,
-                  Uintah::ProblemSpecP params )
-  {
-    FieldTagInfo info;
-
-    //_________________
-    // Diffusive Velocities
-    bool doDiffusion = true;
-    params->get( "DoDiffusion", doDiffusion);
-    if (doDiffusion) {
-      setup_diffusive_velocity_expression<FieldT>( "X", thisPhiName, factory, info );
-      setup_diffusive_velocity_expression<FieldT>( "Y", thisPhiName, factory, info );
-      setup_diffusive_velocity_expression<FieldT>( "Z", thisPhiName, factory, info );
-    }
-    //__________________
-    // Convective Fluxes
-    bool doConvection = true;
-    params->get( "DoConvection", doConvection);
-    if (doConvection) {
-      // throw Uintah::ProblemSetupException( "convection is disabled for the scalability test", __FILE__, __LINE__ );
-      setup_convective_flux_expression<FieldT>( "X",
-                                                Expr::Tag(thisPhiName,Expr::STATE_N),
-                                                Expr::Tag(), // convective flux (empty to build it)
-                                                CENTRAL,
-                                                parse_nametag( params->findBlock("X-Velocity" )->findBlock( "NameTag" ) ),
-                                                "",
-                                                factory,
-                                                info );
-      setup_convective_flux_expression<FieldT>( "Y",
-                                                Expr::Tag(thisPhiName,Expr::STATE_N),
-                                                Expr::Tag(), // convective flux (empty to build it)
-                                                CENTRAL,
-                                                parse_nametag( params->findBlock("Y-Velocity" )->findBlock( "NameTag" ) ),
-                                                "",
-                                                factory,
-                                                info );
-      setup_convective_flux_expression<FieldT>( "Z",
-                                                Expr::Tag(thisPhiName,Expr::STATE_N),
-                                                Expr::Tag(), // convective flux (empty to build it)
-                                                CENTRAL,
-                                                parse_nametag( params->findBlock("Z-Velocity" )->findBlock( "NameTag" ) ),
-                                                "",
-                                                factory,
-                                                info );
-    }
-    //_____________
-    // Source Terms
-    Expr::Tag srcTag;
-    bool doSrc = true;
-    params->get( "DoSourceTerm", doSrc);
-    if (doSrc) {
-      srcTag = Expr::Tag( thisPhiName + "_src", Expr::STATE_NONE );
-      info[SOURCE_TERM] = srcTag;
-
-      int nEqs=0;
-      params->get( "NumberOfEquations", nEqs );
-
-      std::string basePhiName;
-      params->get( "SolutionVariable", basePhiName );
-      const Expr::Tag basePhiTag ( basePhiName, Expr::STATE_N );
-
-      params->get( "SolutionVariable", basePhiName );
-
-      typedef typename ScalabilityTestSrc<FieldT>::Builder coupledSrcTerm;
-      factory.register_expression( scinew coupledSrcTerm( srcTag, basePhiTag, nEqs) );
-    }
-
-    bool monolithic = false;
-    if( params->findBlock("MonolithicRHS") )  params->get("MonolithicRHS",monolithic);
-    if( monolithic ){
-      proc0cout << "ScalabilityTestTransportEquation " << thisPhiName << " MONOLITHIC RHS ACTIVE - diffusion is always on!" << endl;
-      const Expr::Tag dcoefTag( thisPhiName+"DiffCoeff", Expr::STATE_NONE );
-      factory.register_expression( scinew typename Expr::ConstantExpr<FieldT>::Builder( dcoefTag, 1.0 ) );
-      return factory.register_expression(
-          scinew typename MonolithicRHS<FieldT>::
-          Builder( Expr::Tag(thisPhiName+"_rhs", Expr::STATE_NONE),
-                   dcoefTag,
-                   info[CONVECTIVE_FLUX_X],
-                   info[CONVECTIVE_FLUX_Y],
-                   info[CONVECTIVE_FLUX_Z],
-                   Expr::Tag( thisPhiName, Expr::STATE_N ),
-                   info[SOURCE_TERM] ) );
-    }
-    else{
-      const Expr::Tag densT = Expr::Tag();
-      const bool tempConstDens = false;
-      return factory.register_expression(
-          scinew typename ScalarRHS<FieldT>::Builder( Expr::Tag( thisPhiName + "_rhs", Expr::STATE_NONE ),
-                                                      info, densT, tempConstDens) );
-    }
   }
 
   //------------------------------------------------------------------

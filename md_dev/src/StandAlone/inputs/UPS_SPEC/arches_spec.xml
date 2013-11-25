@@ -186,9 +186,12 @@
 
           <scalar                       spec="OPTIONAL NO_DATA" 
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type mass_balance"/>
+                                        need_applies_to="type mass_balance"/>   <!-- computes the balance on eta.  If not used, it computes the total mass balance --> 
           <one_minus_scalar             spec="OPTIONAL NO_DATA"   
-                                        need_applies_to="type mass_balance"/>
+                                        need_applies_to="type mass_balance"/>   <!-- computes the balance on (1-eta) where eta is the scalar rather than on eta --> 
+          <source                       spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type mass_balance"/>   <!-- consider a mass source term in the balance --> 
 
                                      
 

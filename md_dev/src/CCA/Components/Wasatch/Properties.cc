@@ -481,6 +481,13 @@ namespace Wasatch{
     // extract the density tag in the cases that it is needed
 
     Uintah::ProblemSpecP densityParams  = params->findBlock("Density");
+    
+    if (!densityParams) {
+      std::ostringstream msg;
+      msg << std::endl << "Error: You must specify a <Density> block. Please revise your input file." << std::endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    }
+    
     Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
     Uintah::ProblemSpecP radPropsParams = params->findBlock("RadProps");
     Uintah::ProblemSpecP twoStreamParams= params->findBlock("TwoStreamMixing");

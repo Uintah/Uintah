@@ -206,8 +206,10 @@ namespace Uintah {
             _IN_label    = VarLabel::create( _id+"_in",    sum_vartype::getTypeDescription() ); 
             _OUT_label   = VarLabel::create( _id+"_out",   sum_vartype::getTypeDescription() ); 
             _ACCUM_label = VarLabel::create( _id+"_accum", sum_vartype::getTypeDescription() ); 
+            _SOURCE_label = VarLabel::create( _id+"_source", sum_vartype::getTypeDescription() );
             _residual_label = VarLabel::create(  _id, sum_vartype::getTypeDescription() ); 
             _no_species = false; 
+            _no_source  = false; 
           
           }; 
 
@@ -216,6 +218,7 @@ namespace Uintah {
             VarLabel::destroy( _IN_label ); 
             VarLabel::destroy( _OUT_label ); 
             VarLabel::destroy( _ACCUM_label ); 
+            VarLabel::destroy( _SOURCE_label ); 
             VarLabel::destroy( _residual_label );
 
           }; 
@@ -225,9 +228,16 @@ namespace Uintah {
             ProblemSpecP params = db; 
         
             std::string species_label;
+            std::string source_label; 
+
             if ( db->findBlock("scalar") ){
+
               db->findBlock("scalar")->getAttribute("label",species_label); 
               _phi_label = VarLabel::find( species_label );
+
+              if ( _phi_label == 0 ){ 
+                throw InvalidValue("Error: Cannot find phi label for mass balance calculator.",__FILE__, __LINE__); 
+              } 
 
               if ( db->findBlock("one_minus_scalar") ){
                 _A = 1;
@@ -241,6 +251,18 @@ namespace Uintah {
               _no_species = true; 
             }
 
+            if ( db->findBlock("source") ){ 
+
+              db->findBlock("source")->getAttribute("label",source_label); 
+              _S_label = VarLabel::find( source_label ); 
+
+              if ( _S_label == 0 ){ 
+                throw InvalidValue("Error: Cannot find source label for mass balance calculator.",__FILE__, __LINE__); 
+              } 
+
+            } else { 
+              _no_source = true; 
+            } 
 
             return true; 
           
@@ -257,19 +279,24 @@ namespace Uintah {
             tsk->computes( _IN_label ); 
             tsk->computes( _OUT_label ); 
             tsk->computes( _ACCUM_label ); 
+            tsk->computes( _SOURCE_label ); 
 
             tsk->requires( Task::NewDW, _a_labs->d_densityCPLabel, Ghost::None, 0 ); 
             tsk->requires( Task::OldDW, _a_labs->d_densityCPLabel, Ghost::None, 0 ); 
             tsk->requires( Task::NewDW, _a_labs->d_uVelocitySPBCLabel, Ghost::None, 0 ); 
             tsk->requires( Task::NewDW, _a_labs->d_vVelocitySPBCLabel, Ghost::None, 0 ); 
             tsk->requires( Task::NewDW, _a_labs->d_wVelocitySPBCLabel, Ghost::None, 0 ); 
-            tsk->requires( Task::OldDW,  _a_labs->d_sharedState->get_delt_label(), Ghost::None, 0);
+            tsk->requires( Task::OldDW, _a_labs->d_sharedState->get_delt_label(), Ghost::None, 0);
             tsk->requires( Task::NewDW, _a_labs->d_cellTypeLabel, Ghost::None, 0 );
 
             if ( !_no_species ){
               tsk->requires( Task::NewDW, _phi_label, Ghost::None, 0 ); 
               tsk->requires( Task::OldDW, _phi_label, Ghost::None, 0 ); 
             }
+
+            if ( !_no_source ){ 
+              tsk->requires( Task::NewDW, _S_label, Ghost::None, 0 ); 
+            } 
 
             sched->addTask( tsk, level->eachPatch(), _a_labs->d_sharedState->allArchesMaterials() ); 
           
@@ -294,6 +321,7 @@ namespace Uintah {
               constCCVariable<double> old_rho; 
               constCCVariable<double> phi; 
               constCCVariable<double> old_phi; 
+              constCCVariable<double> source; 
               constCCVariable<int> cell_type; 
 
               new_dw->get( u, _a_labs->d_uVelocitySPBCLabel, indx, patch, Ghost::None, 0 ); 
@@ -312,9 +340,14 @@ namespace Uintah {
                 old_dw->get( old_phi, _phi_label, indx, patch, Ghost::None, 0 ); 
               }
 
+              if ( !_no_source ){ 
+                new_dw->get( source, _S_label, indx, patch, Ghost::None, 0 ); 
+              }
+
               double sum_in    = 0.0;
               double sum_out   = 0.0; 
               double sum_accum = 0.0; 
+              double sum_source = 0.0; 
               Vector Dx = patch->dCell(); 
 
               double vol = Dx.x()* Dx.y()* Dx.z(); 
@@ -327,6 +360,10 @@ namespace Uintah {
                   if ( cell_type[c] == -1 )
                     sum_accum += (rho[c] - old_rho[c])/dt * vol; 
 
+                  if ( !_no_source ){ 
+                    sum_source += source[c] * vol;
+                  }
+
                 }
               } else { 
 
@@ -336,6 +373,10 @@ namespace Uintah {
 
                   if ( cell_type[c] == -1 ) 
                     sum_accum += (rho[c] * (_C-_A*phi[c]) - old_rho[c] * (_C-_A*old_phi[c])) / dt * vol;  
+
+                  if ( !_no_source ){ 
+                    sum_source += source[c] * vol;
+                  }
 
                 }
               }
@@ -562,6 +603,7 @@ namespace Uintah {
               new_dw->put( sum_vartype( sum_in ), _IN_label ); 
               new_dw->put( sum_vartype( sum_out ), _OUT_label ); 
               new_dw->put( sum_vartype( sum_accum ), _ACCUM_label ); 
+              new_dw->put( sum_vartype( sum_source ), _SOURCE_label ); 
 
             }
           
@@ -579,6 +621,7 @@ namespace Uintah {
             tsk->requires( Task::NewDW, _IN_label ); 
             tsk->requires( Task::NewDW, _OUT_label ); 
             tsk->requires( Task::NewDW, _ACCUM_label ); 
+            tsk->requires( Task::NewDW, _SOURCE_label ); 
 
             tsk->computes( _residual_label ); 
 
@@ -596,11 +639,13 @@ namespace Uintah {
             sum_vartype in; 
             sum_vartype out; 
             sum_vartype accum; 
+            sum_vartype source; 
             new_dw->get( in, _IN_label ); 
             new_dw->get( out, _OUT_label ); 
             new_dw->get( accum, _ACCUM_label );
+            new_dw->get( source, _SOURCE_label ); 
 
-            double residual = out - in + accum; 
+            double residual = out - in + accum - source; 
   
             new_dw->put( delt_vartype( residual ), _residual_label ); 
 
@@ -683,12 +728,15 @@ namespace Uintah {
           const VarLabel* _IN_label; 
           const VarLabel* _OUT_label; 
           const VarLabel* _ACCUM_label; 
+          const VarLabel* _SOURCE_label; 
           const VarLabel* _residual_label; 
           const VarLabel* _phi_label; 
+          const VarLabel* _S_label; 
 
           const BoundaryCondition* _bcs; 
 
           bool   _no_species; 
+          bool   _no_source; 
 
           double _A;
           double _C; 

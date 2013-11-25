@@ -657,7 +657,7 @@
     <!-- Here we can specify wether we have constant density or variable density and -->
     <!-- in the case of variable density we should also define a tag for density.    -->
     <!-- =========================================================================== -->
-    <Density    spec="OPTIONAL NO_DATA"
+    <Density    spec="REQUIRED NO_DATA"
                 children1="ONE_OF(CHILD Constant, NameTag)">
       <Constant spec="OPTIONAL NO_DATA"
                 attribute1="value REQUIRED DOUBLE"
@@ -1120,7 +1120,7 @@
             <NameTag        spec="REQUIRED"/> <!-- IF AN EXPRESSION FOR THE VELOCITY WAS SPECIFIED, THEN USE THAT -->
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
-      
+                  
       <!-- ================================================================================== -->            
       <!-- Specification of the diffusive flux -->
       <DiffusiveFluxExpression  spec="MULTIPLE NO_DATA"
