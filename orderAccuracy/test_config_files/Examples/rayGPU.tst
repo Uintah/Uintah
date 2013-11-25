@@ -84,11 +84,11 @@
       <nDivQRays>          128        </nDivQRays>
     </replace_lines>
 </Test>
-<!--
+
 <Test>
     <Title>256</Title>
     <sus_cmd> sus -gpu -nthreads 2  </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0 -plot true</postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0 </postProcess_cmd>
     <x>256</x>
     <replace_lines>
       <nDivQRays>          256        </nDivQRays>
@@ -104,5 +104,5 @@
       <nDivQRays>          512        </nDivQRays>
     </replace_lines>
 </Test>
--->
+
 </start>
