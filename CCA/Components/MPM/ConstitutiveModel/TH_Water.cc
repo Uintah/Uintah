@@ -57,6 +57,16 @@ TH_Water::TH_Water(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("L", d_ID.d_L);
   ps->require("vo",d_ID.d_vo);
   ps->getWithDefault("Pref",d_ID.Pref,101325.);
+
+/*  typical SI values
+   a = 2*10^-7          (K/Pa)
+   b = 2.6              (J/kgK^2)
+   co = 4205.7          (J/kgK)
+   ko = 5*10^-10        (1/Pa)
+   To = 277             (K)
+   L = 8*10^-6          (1/K^2)
+   vo = 1.00008*10^-3   (m^3/kg)
+*/
 }
 
 TH_Water::TH_Water(const TH_Water* cm) : ConstitutiveModel(cm)
@@ -187,8 +197,7 @@ void TH_Water::computeStressTensor(const PatchSubset* patches,
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-    Matrix3 tensorL,Shear;
-    double J;
+    double J,Jold,Jinc;
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     Matrix3 Identity; Identity.Identity();
@@ -229,13 +238,15 @@ void TH_Water::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
-      J = deformationGradient_new[idx].Determinant();
+      J    = deformationGradient_new[idx].Determinant();
+      Jold = deformationGradient[idx].Determinant();
+      Jinc = J/Jold;
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       //Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*0.5;
       //Matrix3 DPrime = D - Identity*onethird*D.Trace();
       // Viscous part of the stress
-      //Shear = DPrime*(2.*viscosity);
+      //Matrix3 Shear = DPrime*(2.*viscosity);
 
       // Get the deformed volume and current density
       double rhoM = rho_orig/J;
@@ -260,6 +271,9 @@ void TH_Water::computeStressTensor(const PatchSubset* patches,
 
       // compute the total stress (volumetric + deviatoric)
       pstress[idx] = Identity*(-(press-d_ID.Pref));// + Shear;
+
+      // Temp increase due to P*dV work
+      pdTdt[idx] = (-press)*(Jinc-1.)*(1./(rhoM*d_co))/delT;
 
       // Compute speed of sound to use in finding delT
 
