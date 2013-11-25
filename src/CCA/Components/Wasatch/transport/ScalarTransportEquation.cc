@@ -57,39 +57,46 @@ namespace Wasatch{
   ScalarTransportEquation<FieldT>::
   ScalarTransportEquation( const std::string solnVarName,
                            Uintah::ProblemSpecP params,
-                           const bool hasEmbeddedGeometry,
+                           GraphCategories& gc,
                            const Expr::Tag densityTag,
                            const bool isConstDensity,
-                           const Expr::ExpressionID rhsID )
-    : Wasatch::TransportEquation( solnVarName, rhsID,
+                           const TurbulenceParameters& turbulenceParams )
+    : Wasatch::TransportEquation( gc,
+                                  solnVarName,
+                                  params,
                                   get_staggered_location<FieldT>(),
-                                  isConstDensity,
-                                  hasEmbeddedGeometry,
-                                  params),
+                                  isConstDensity ),
       densityTag_( densityTag )
   {
+    //_____________
+    // Turbulence
+    const bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
+    if( turbulenceParams.turbModelName != NOTURBULENCE && enableTurbulenceModel ){
+      Expr::Tag turbViscTag = TagNames::self().turbulentviscosity;//Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
+      turbDiffTag_ = turbulent_diffusivity_tag();
 
-    // defining the primary variable ans solution variable tags regarding to the type of
-    // the equations that we are solving and throwing appropriate error messages regarding
-    // to the input file arguments.
+      Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+      if( !factory.have_entry( turbDiffTag_ ) ){
+        typedef typename TurbulentDiffusivity::Builder TurbDiffT;
+        factory.register_expression( scinew TurbDiffT( turbDiffTag_, densityTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
+      }
+    }
+
+    // define the primitive variable and solution variable tags and trap errors
     isStrong_ = true;
     if( params->findBlock("StrongForm") )  params->get("StrongForm",isStrong_);
 
     const bool existPrimVar = params->findBlock("PrimitiveVariable");
-    solnVarTag_ = Expr::Tag( solnVarName, Expr::STATE_N );
 
-    if( is_constant_density() ){
-      primVarTag_ = solnVarTag_;
-
+    if( isConstDensity_ ){
+      primVarTag_ = solution_variable_tag();
       if( existPrimVar ){
         std::ostringstream msg;
         msg << "ERROR: For constant density cases the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-
     }
     else{
-
       if( isStrong_ && !existPrimVar ){
         std::ostringstream msg;
         msg << "ERROR: When you are solving a transport equation with constant density in its strong form, you need to specify your primitive and solution variables separately. Please include the \"PrimitiveVariable\" block in your input file in the \"TransportEquation\" block." << endl;
@@ -104,10 +111,10 @@ namespace Wasatch{
         msg << "ERROR: For solving the transport equations in weak form, the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      else{
-        primVarTag_ = solnVarTag_;
-      }
     }
+    assert( primVarTag_ != Expr::Tag() );
+
+    setup();
   }
 
   //------------------------------------------------------------------
@@ -115,6 +122,129 @@ namespace Wasatch{
   template< typename FieldT >
   ScalarTransportEquation<FieldT>::~ScalarTransportEquation()
   {}
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT >
+  void
+  ScalarTransportEquation<FieldT>::setup_diffusive_flux( FieldTagInfo& info )
+  {
+    // these expressions all get registered on the advance solution graph
+    Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+
+    if( !isConstDensity_ ){
+      for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFluxExpression");
+           diffFluxParams != 0;
+           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") )
+      {
+        setup_diffusive_flux_expression<FieldT>( diffFluxParams,
+                                                 densityTag_,
+                                                 primVarTag_,
+                                                 turbDiffTag_,
+                                                 "",
+                                                 factory,
+                                                 info );
+
+        // if doing convection, we will likely have a pressure solve that requires
+        // predicted scalar values to approximate the density time derivatives
+        if( params_->findBlock("ConvectiveFluxExpression") ){
+          setup_diffusive_flux_expression<FieldT>( diffFluxParams,
+                                                   densityTag_,
+                                                   primVarTag_,
+                                                   turbDiffTag_,
+                                                   TagNames::self().star,
+                                                   factory,
+                                                   infoStar_ );
+        }
+      } // loop over each flux specification
+    }
+    else{ // constant density
+      for( Uintah::ProblemSpecP diffVelParams=params_->findBlock("DiffusiveFluxExpression");
+          diffVelParams != 0;
+          diffVelParams=diffVelParams->findNextBlock("DiffusiveFluxExpression") )
+      {
+        setup_diffusive_velocity_expression<FieldT>( diffVelParams,
+                                                     primVarTag_,
+                                                     turbDiffTag_,
+                                                     factory,
+                                                     info );
+      } // loop over each flux specification
+    }
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT >
+  void
+  ScalarTransportEquation<FieldT>::setup_convective_flux( FieldTagInfo& info )
+  {
+    Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+    const Expr::Tag solnVarTag = solution_variable_tag();
+    for( Uintah::ProblemSpecP convFluxParams=params_->findBlock("ConvectiveFluxExpression");
+        convFluxParams != 0;
+        convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") )
+    {
+      setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, "", factory, info );
+      if( !isConstDensity_ ){
+        setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, TagNames::self().star, factory, infoStar_ );
+      }
+    }
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT >
+  void
+  ScalarTransportEquation<FieldT>::setup_source_terms( FieldTagInfo& info,
+                                                       Expr::TagList& srcTags )
+  {
+    for( Uintah::ProblemSpecP sourceTermParams=params_->findBlock("SourceTermExpression");
+         sourceTermParams != 0;
+         sourceTermParams=sourceTermParams->findNextBlock("SourceTermExpression") )
+    {
+      srcTags.push_back( parse_nametag( sourceTermParams->findBlock("NameTag") ) );
+    }
+  }
+
+  //------------------------------------------------------------------
+
+  template< typename FieldT >
+  Expr::ExpressionID
+  ScalarTransportEquation<FieldT>::setup_rhs( FieldTagInfo& info,
+                                              const Expr::TagList& srcTags )
+  {
+
+    typedef typename ScalarRHS<FieldT>::Builder RHSBuilder;
+    Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
+    const TagNames& tagNames = TagNames::self();
+
+    info[PRIMITIVE_VARIABLE] = primVarTag_;
+
+    if( !isConstDensity_ || !isStrong_ ){
+      factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag_, solnVarTag_, densityTag_) );
+
+      const bool hasConvection_ = params_->findBlock("ConvectiveFluxExpression");
+      if( hasConvection_ ){
+        const Expr::Tag rhsStarTag( solnVarName_ + "_rhs" + tagNames.star, Expr::STATE_NONE );
+        const Expr::Tag densityStarTag( densityTag_.name() + tagNames.star, Expr::CARRY_FORWARD );
+        const Expr::Tag primVarStarTag( primVarTag_.name() + tagNames.star, Expr::STATE_NONE );
+        const Expr::Tag solnVarStarTag( solnVarName_       + tagNames.star, Expr::STATE_NONE );
+        infoStar_[PRIMITIVE_VARIABLE] = primVarStarTag;
+        
+        EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+        if( vNames.has_embedded_geometry() ){
+          infoStar_[VOLUME_FRAC] = vNames.vol_frac_tag<SVolField>();
+          infoStar_[AREA_FRAC_X] = vNames.vol_frac_tag<XVolField>();
+          infoStar_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
+          infoStar_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
+        }
+        factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, solnVarStarTag, densityStarTag ) );
+        factory.register_expression( scinew RHSBuilder( rhsStarTag, infoStar_, srcTags, densityStarTag, isConstDensity_, isStrong_, tagNames.drhodtstar ) );
+      }
+    }
+
+    return factory.register_expression( scinew RHSBuilder( rhsTag_, info, srcTags, densityTag_, isConstDensity_, isStrong_, tagNames.drhodt ) );
+  }
 
   //------------------------------------------------------------------
 
@@ -129,12 +259,12 @@ namespace Wasatch{
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
     
     // multiply the initial condition by the volume fraction for embedded geometries
-    if( hasEmbeddedGeometry_ ) {
+    const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
+    if( vNames.has_embedded_geometry() ) {
 
       //create modifier expression
       typedef ExprAlgebra<FieldT> ExprAlgbr;
-      VolFractionNames& vNames = VolFractionNames::self();
-      const Expr::TagList theTagList = tag_list( vNames.svol_frac_tag() );
+      const Expr::TagList theTagList = tag_list( vNames.vol_frac_tag<SVolField>() );
       Expr::Tag modifierTag = Expr::Tag( this->solution_variable_name() + "_init_cond_modifier", Expr::STATE_NONE);
       factory.register_expression( new typename ExprAlgbr::Builder(modifierTag,
                                                                    theTagList,
@@ -196,7 +326,7 @@ namespace Wasatch{
       Expr::TagList theTagList;
       theTagList.push_back(primVarTag_);
       theTagList.push_back(Expr::Tag(densityTag_.name(),Expr::STATE_NONE));
-      return icFactory.register_expression( new typename ExprAlgbr::Builder( solnVarTag_,
+      return icFactory.register_expression( new typename ExprAlgbr::Builder( solution_variable_tag(),
                                                                              theTagList,
                                                                              ExprAlgbr::PRODUCT ) );
     }
@@ -223,136 +353,6 @@ namespace Wasatch{
     std::string primVarName;
     params->get("PrimitiveVariable",primVarName);
     return primVarName;
-  }
-
-  //------------------------------------------------------------------
-
-  template<typename FieldT>
-  Expr::ExpressionID
-  ScalarTransportEquation<FieldT>::get_rhs_expr_id( const Expr::Tag densityTag,
-                                                    const bool isConstDensity,
-                                                    Expr::ExpressionFactory& factory,
-                                                    Uintah::ProblemSpecP params,
-                                                    const bool hasEmbeddedGeometry,
-                                                    const TurbulenceParameters& turbulenceParams )
-  {
-    FieldTagInfo info;
-    FieldTagInfo infoStar;
-
-    //______________________________________________________________________
-    // Set up the tags for solution variable and primitive variable. Also
-    // get information about the equation format that we are solving
-    // (strong form, weak form, Constant density or variable density).
-    const std::string solnVarName = get_solnvar_name( params );
-    std::string primVarName;
-    const TagNames& tagNames = TagNames::self();
-
-    Expr::Tag primVarTag, solnVarTag;
-    bool isStrong;
-    bool hasConvection_ = params->findBlock("ConvectiveFluxExpression");
-
-    params->get("StrongForm",isStrong);
-
-    solnVarTag = Expr::Tag( solnVarName, Expr::STATE_N );
-
-    if( isConstDensity || !isStrong ){
-      primVarTag = solnVarTag; // we are solving for the primitive variable
-    }
-    else{
-      const std::string primVarName = get_primvar_name( params );
-      primVarTag = Expr::Tag( primVarName, Expr::STATE_NONE );
-
-      factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag, solnVarTag, densityTag));
-      if( !isConstDensity && hasConvection_ ){
-        const Expr::Tag primVarStarTag( primVarTag.name() + tagNames.star, Expr::STATE_NONE );
-        const Expr::Tag solnVarStarTag( solnVarName + tagNames.star, Expr::STATE_NONE );
-        const Expr::Tag densityStarTag( densityTag.name() + tagNames.star, Expr::CARRY_FORWARD );
-        factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, solnVarStarTag, densityStarTag)); 
-        infoStar[PRIMITIVE_VARIABLE] = primVarStarTag;
-      }
-    }
-
-    info[PRIMITIVE_VARIABLE] = primVarTag;
-
-    //_____________
-    // volume fraction for embedded boundaries Terms
-    if( hasEmbeddedGeometry ){
-      VolFractionNames& vNames = VolFractionNames::self();
-      info[VOLUME_FRAC] = vNames.svol_frac_tag();
-      info[AREA_FRAC_X] = vNames.xvol_frac_tag();
-      info[AREA_FRAC_Y] = vNames.yvol_frac_tag();
-      info[AREA_FRAC_Z] = vNames.zvol_frac_tag();
-    }
-    
-    //_____________
-    // Turbulence
-    Expr::Tag turbDiffTag = Expr::Tag();
-    bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
-    if (turbulenceParams.turbModelName != NOTURBULENCE && enableTurbulenceModel ) {
-      Expr::Tag turbViscTag = TagNames::self().turbulentviscosity;//Expr::Tag( "TurbulentViscosity", Expr::STATE_NONE );
-      turbDiffTag = turbulent_diffusivity_tag();//Expr::Tag( "TurbulentDiffusivity", Expr::STATE_NONE );
-      
-      if( !factory.have_entry( turbDiffTag ) ){
-        typedef typename TurbulentDiffusivity::Builder TurbDiffT;
-        factory.register_expression( scinew TurbDiffT(turbDiffTag, densityTag, turbulenceParams.turbSchmidt, turbViscTag ) );
-      }      
-    }
-    
-    //_________________
-    // Diffusive Fluxes
-    if( !isConstDensity ){
-      for( Uintah::ProblemSpecP diffFluxParams=params->findBlock("DiffusiveFluxExpression");
-           diffFluxParams != 0;
-           diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") )
-      {
-        setup_diffusive_flux_expression<FieldT>( diffFluxParams, densityTag, primVarTag, turbDiffTag, "", factory, info );
-        if( hasConvection_ ){
-          setup_diffusive_flux_expression<FieldT>( diffFluxParams, densityTag, primVarTag, turbDiffTag, tagNames.star, factory, infoStar );
-        }
-      }
-    }
-    else{ // constant density
-      for( Uintah::ProblemSpecP diffVelParams=params->findBlock("DiffusiveFluxExpression");
-          diffVelParams != 0;
-          diffVelParams=diffVelParams->findNextBlock("DiffusiveFluxExpression") )
-      {
-        setup_diffusive_velocity_expression<FieldT>( diffVelParams, primVarTag, turbDiffTag, factory, info );
-      }
-    }
-
-    //__________________
-    // Convective Fluxes
-    for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
-        convFluxParams != 0;
-        convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
-      setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, "", factory, info );
-      if( !isConstDensity ){
-        setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, tagNames.star, factory, infoStar );
-      }
-    }
-
-    //_____________
-    // Source Terms
-    std::vector<Expr::Tag> srcTags;
-    for( Uintah::ProblemSpecP sourceTermParams=params->findBlock("SourceTermExpression");
-         sourceTermParams != 0;
-         sourceTermParams=sourceTermParams->findNextBlock("SourceTermExpression") ){
-
-      const Expr::Tag srcTag = parse_nametag( sourceTermParams->findBlock("NameTag") );
-      srcTags.push_back( srcTag );
-
-    }
-
-    //_____________
-    // Right Hand Side
-    typedef typename ScalarRHS<FieldT>::Builder RHSBuilder;
-    const Expr::Tag rhsTag( solnVarName+"_rhs", Expr::STATE_NONE );
-    if( !isConstDensity && hasConvection_ ){
-      const Expr::Tag rhsStarTag( solnVarName + "_rhs" + tagNames.star, Expr::STATE_NONE );
-      const Expr::Tag densityStarTag( densityTag.name() + tagNames.star, Expr::CARRY_FORWARD );
-      factory.register_expression( scinew RHSBuilder(rhsStarTag, infoStar, srcTags, densityStarTag, isConstDensity, isStrong, tagNames.drhodtstar ) );
-    }
-    return factory.register_expression( scinew RHSBuilder(rhsTag, info, srcTags, densityTag, isConstDensity, isStrong, tagNames.drhodt ) );
   }
 
   //------------------------------------------------------------------

@@ -35,9 +35,6 @@
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentDiffusivity.h>
 
-//-- Uintah includes --//
-#include <Core/ProblemSpec/ProblemSpecP.h>
-
 namespace Wasatch{
 
   /**
@@ -122,20 +119,18 @@ namespace Wasatch{
      *
      *  \param isConstDensity true for constant density
      *
-     *  \param id the Expr::ExpressionID for the RHS expression for this ScalarTransportEquation
-     *
      *  Note that the static member methods get_rhs_expr_id,
      *  get_primvar_name and get_solnvar_name can be useful
      *  to obtain the appropriate input arguments here.
      */
     ScalarTransportEquation( const std::string solnVarName,
                              Uintah::ProblemSpecP params,
-                             const bool hasEmbeddedGeometry,
+                             GraphCategories& gc,
                              const Expr::Tag densityTag,
                              const bool isConstDensity,
-                             const Expr::ExpressionID id );
+                             const TurbulenceParameters& turbulenceParams );
 
-    ~ScalarTransportEquation();
+    virtual ~ScalarTransportEquation();
 
     /**
      *  \brief Used to check the validity of the boundary conditions specified
@@ -166,32 +161,6 @@ namespace Wasatch{
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
 
     /**
-     * \brief Parse the input file to determine the rhs expression id.
-     *        Also registers convective flux, diffusive flux, and
-     *        source term expressions.
-     *
-     *  \param densityTag a tag containing density for necessary cases. it will be empty where
-     *         it is not needed.
-     *
-     *  \param factory the Expr::ExpressionFactory object that terms
-     *         associated with the RHS of this transport equation
-     *         should be registered on.
-     *
-     *  \param isConstDensity true for constant density
-     *
-     *  \param params the Uintah::ProblemSpec XML description for this
-     *         equation.  Scope should be within the TransportEquation tag.
-     *
-     *  \param turbulenceParams information on the turbulence models being used
-     */
-    static Expr::ExpressionID get_rhs_expr_id( const Expr::Tag densityTag,
-                                               const bool isConstDensity,
-                                               Expr::ExpressionFactory& factory,
-                                               Uintah::ProblemSpecP params,
-                                               const bool hasEmbeddedGeometry,
-                                               const TurbulenceParameters& turbulenceParams);
-
-    /**
      *  \brief Parse the input file to get the name of the solution
      *         variable for this ScalarTransportEquation
      *
@@ -211,10 +180,19 @@ namespace Wasatch{
 
     bool is_weak_form() const{ return !isStrong_; }
 
+  protected:
+    virtual void setup_diffusive_flux( FieldTagInfo& );
+    virtual void setup_convective_flux( FieldTagInfo& );
+    virtual void setup_source_terms( FieldTagInfo&, Expr::TagList& );
+    virtual Expr::ExpressionID setup_rhs( FieldTagInfo&,
+                                          const Expr::TagList& srcTags  );
+
+
   private:
     const Expr::Tag densityTag_;
-    Expr::Tag primVarTag_, solnVarTag_;
+    Expr::Tag primVarTag_;
     bool isStrong_;
+    FieldTagInfo infoStar_;  // needed to form predicted scalar quantities
   };
 
 } // namespace Wasatch

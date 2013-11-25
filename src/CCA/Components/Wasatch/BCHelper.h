@@ -67,19 +67,21 @@ static SCIRun::DebugStream dbgbc("WASATCH_BC", false);
 namespace Wasatch {
   
   // !!! ACHTUNG !!!
-  // !!! READ THE NOMENCLATURE CONVECTION BEFORE PROCEEDING WITH THIS CLASS !!!
+  // !!! READ THE NOMENCLATURE ASSUMPTIONS BEFORE PROCEEDING WITH THIS CLASS !!!
   /* 
-     Hi. This class is based on the following assumptions. We distinguish between boundaries
-     and boundary conditions. We associate boundaries with physical domain contraints. Boundaries
-     include Walls, Inlets, Velocity inlets, mass flow inlets, outflows, pressure outlets... or
+     Hi. This class is based on the following assumptions:
+   1. We distinguish between boundaries and boundary conditions. 
+   2. We associate boundaries with physical domain contraints. 
+   3. Boundaries include Walls, Inlets, Velocity inlets, mass flow inlets, outflows, pressure outlets... or
      any physically relevant constraint on the flow-field. Boundaries do NOT include DIRICHLET, NEUMANN,
      or ROBIN conditions.
-     We associate boundary conditions with the mathematical specification or mathematical constraints
-     specified on variables at boundaries. Boundary conditions include DIRICHLET, NEUMANN, and ROBIN
+   4. We associate boundary conditions with the mathematical specification or mathematical constraints
+     specified on variables at boundaries. 
+   5. Boundary conditions include DIRICHLET, NEUMANN, and ROBIN
      conditions. 
    */
-  // Nomenclature: Boundary/Bnd/Bound designates a physical boundary
-  //               Boundary Condition/BndCond/BC designates a boundary condition
+  // Nomenclature: Boundary/Bnd/Bound designates a PHYSICAL BOUNDARY
+  //               Boundary Condition/BndCond/BC designates a BOUNDARY CONDITION
 
   typedef std::map<std::string, std::set<std::string> > BCFunctorMap;
 
@@ -90,7 +92,7 @@ namespace Wasatch {
    *  @date   Sept 2013
    *
    *  @brief  Enum that specifies the types of boundary-conditions supported in Wasatch.
-   We support Dirichlet and Neumnann condition on the boundary.
+   We support Dirichlet and Neumnann conditions on the boundary.
    */
   //****************************************************************************
   enum BndCondTypeEnum
@@ -154,7 +156,7 @@ namespace Wasatch {
   enum BCValueTypeEnum
   {
     DOUBLE_TYPE,
-    FUNCTOR_TYPE,
+    FUNCTOR_TYPE, // string
     INVALID_TYPE
   };
   
@@ -173,7 +175,7 @@ namespace Wasatch {
     std::string      functorName; // name of the functor applied as bc
     double           value;       // boundary value for this variable
     BndCondTypeEnum  bcType;      // bc type: DIRICHLET, NEUMANN
-    BCValueTypeEnum  bcValType;   // value type: DOUBLE, VECTOR, FUNCTOR
+    BCValueTypeEnum  bcValType;   // value type: DOUBLE, FUNCTOR
     
     // compare based on ALL the members of this struct
     bool operator==(const BndCondSpec& l) const
@@ -191,6 +193,7 @@ namespace Wasatch {
       return ( varNameNew == varName);
     };
 
+    // print
     void print() const
     {
       using namespace std;
@@ -198,7 +201,8 @@ namespace Wasatch {
            << "  type:  " << bcType << endl
            << "  value: " << value << endl;
     };
-    
+
+    // check if the user is applying a functor in this boundary condition
     bool is_functor() const
     {
       return (bcValType == FUNCTOR_TYPE);
@@ -216,11 +220,12 @@ namespace Wasatch {
   //****************************************************************************
   struct BndSpec
   {
-    std::string              name;     // name of the boundary condition
-    Uintah::Patch::FaceType  face;        // x-minus, x-plus, y-minus, y-plus, z-minus, z-plus
-    BndTypeEnum              type;     // Wall, inlet, etc...
-    std::vector<int>         patchIDs;    // list of patch IDs that this bc lives on
-    std::vector<BndCondSpec> bcSpecVec;
+    std::string              name;      // name of the boundary
+    Uintah::Patch::FaceType  face;      // x-minus, x-plus, y-minus, y-plus, z-minus, z-plus
+    BndTypeEnum              type;      // Wall, inlet, etc...
+    std::vector<int>         patchIDs;  // List of patch IDs that this boundary lives on.
+                                        //Note that a boundary is typically split between several patches.
+    std::vector<BndCondSpec> bcSpecVec; // List of ALL the BCs applied at this boundary
 
     // returns true if this Boundary has parts of it on patchID
     bool has_patch(const int& patchID) const
@@ -239,7 +244,7 @@ namespace Wasatch {
       }
     };
     
-    // find the BCSpec associated with a given variable name
+    // find the BCSpec associated with a given variable name - non-const version
     const BndCondSpec* find(const std::string& varName)
     {
       std::vector<BndCondSpec>::iterator it = std::find(bcSpecVec.begin(), bcSpecVec.end(), varName);
@@ -261,6 +266,7 @@ namespace Wasatch {
       }
     };
     
+    // print information about this boundary
     void print() const
     {
       using namespace std;
@@ -285,7 +291,7 @@ namespace Wasatch {
   struct BoundaryIterators
   {
     std::vector<SpatialOps::structured::IntVec> extraBndCells;        // iterator for extra cells
-    std::vector<SpatialOps::structured::IntVec> extraPlusBndCells;    // iterator for extra cells
+    std::vector<SpatialOps::structured::IntVec> extraPlusBndCells;    // iterator for extra cells on plus faces (staggered fields)
     std::vector<SpatialOps::structured::IntVec> interiorBndCells;     // iterator for interior cells
     std::vector<SpatialOps::structured::IntVec> interiorEdgeCells;    // iterator for interior cells
     Uintah::Iterator extraBndCellsUintah;                             // We still need the Unitah iterator
@@ -364,7 +370,8 @@ namespace Wasatch {
     typedef SpatialOps::structured::OperatorTypeBuilder<Interpolant, SpatialOps::structured::ZSurfZField, SpatialOps::structured::ZVolField >::type DirichletZ;
     typedef SpatialOps::structured::OperatorTypeBuilder<Divergence, SpatialOps::structured::ZSurfZField, SpatialOps::structured::ZVolField >::type NeumannZ;
   };
-  
+
+  //****************************************************************************
   /**
    *  \class   BCHelper
    *  \author  Tony Saad
@@ -399,14 +406,14 @@ namespace Wasatch {
    *  Uintah::BCData object. The Uintah::BCData class contains information about
    *  the boundaries specified by the user.
    */
-  
+  //****************************************************************************
   class BCHelper {
     
   private:
-    typedef SpatialOps::structured::IntVec             IntVecT;            // SpatialOps IntVec
-    typedef std::map <int, BoundaryIterators         > patchIDBndItrMapT; // temporary map that stores boundary iterators per patch id
-    typedef std::map <std::string, patchIDBndItrMapT > MaskMapT;
-    typedef std::map <std::string, std::vector<IntVecT> >           EdgeCellsMapT;   // for logical domain boundaries, 1 set of corner cells per boundary, regardless of patcIDs
+    typedef SpatialOps::structured::IntVec                IntVecT          ;  // SpatialOps IntVec
+    typedef std::map <int, BoundaryIterators            > patchIDBndItrMapT;  // temporary typedef map that stores boundary iterators per patch id: Patch ID -> Bnd Iterators
+    typedef std::map <std::string, patchIDBndItrMapT    > MaskMapT         ;  // boundary name -> (patch ID -> Boundary iterators )
+    typedef std::map <std::string, std::vector<IntVecT> > EdgeCellsMapT    ;  // for logical domain boundaries, 1 set of corner cells per boundary, regardless of patcIDs
     
     const Uintah::PatchSet*    const localPatches_;
     const Uintah::MaterialSet* const materials_   ;

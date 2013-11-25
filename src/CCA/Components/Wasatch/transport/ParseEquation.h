@@ -93,7 +93,6 @@ namespace Wasatch{
   EqnTimestepAdaptorBase*
   parse_equation( Uintah::ProblemSpecP params,
                   TurbulenceParameters turbParams,
-                  const bool hasEmbeddedGeometry,
                   const Expr::Tag densityTag,
                   const bool isConstDensity,
                   GraphCategories& gc );
@@ -123,16 +122,16 @@ namespace Wasatch{
    *  \return an EqnTimestepAdaptorBase object that can be used to
    *          plug this transport equation into a TimeStepper.
    */
-  std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
-                                                                 TurbulenceParameters turbParams,
-                                                                 const bool useAdaptiveDt,
-                                                                 const bool isConstDensity,
-                                                                 const bool hasEmbeddedGeometry,
-                                                                 const bool hasMovingGeometry,
-                                                                 const Expr::Tag densityTag,
-                                                                 GraphCategories& gc,
-                                                                 Uintah::SolverInterface& linSolver,
-                                                                 Uintah::SimulationStateP& sharedState);
+  std::vector<EqnTimestepAdaptorBase*>
+  parse_momentum_equations( Uintah::ProblemSpecP params,
+                            const TurbulenceParameters turbParams,
+                            const bool useAdaptiveDt,
+                            const bool isConstDensity,
+                            const Expr::Tag densityTag,
+                            GraphCategories& gc,
+                            Uintah::SolverInterface& linSolver,
+                            Uintah::SimulationStateP& sharedState );
+
   void parse_poisson_equation( Uintah::ProblemSpecP params,
                                GraphCategories& gc,
                                Uintah::SolverInterface& linSolver,
@@ -173,7 +172,6 @@ namespace Wasatch{
   std::vector<EqnTimestepAdaptorBase*> parse_moment_transport_equations( Uintah::ProblemSpecP params,
                                                                          Uintah::ProblemSpecP wasatchParams,
                                                                          const bool isConstDensity,
-                                                                         const bool hasEmbeddedGeometry,
                                                                          GraphCategories& gc);
 
 

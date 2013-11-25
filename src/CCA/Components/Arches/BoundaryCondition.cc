@@ -70,8 +70,6 @@ using namespace Uintah;
 
 #include <CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <CCA/Components/Arches/fortran/mm_computevel_fort.h>
-#include <CCA/Components/Arches/fortran/mm_explicit_fort.h>
-#include <CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
 #include <CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
 
 //****************************************************************************
@@ -334,14 +332,8 @@ BoundaryCondition::pressureBC(const Patch* patch,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars)
 {
-  // shortcuts
-  int wall_BC = wallCellType();
-  int pressure_BC = pressureCellType();
-  int outlet_BC = outletCellType();
-  // int symmetry_celltypeval = -3;
   
   CCVariable<Stencil7>& A = vars->pressCoeff;
-  constCCVariable<int>& cellType = constvars->cellType;
   
   std::vector<BC_TYPE> add_types; 
   add_types.push_back( OUTLET ); 
@@ -845,7 +837,7 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
                                     double time_shift)
 {
   double time = d_lab->d_sharedState->getElapsedTime();
-  double current_time = time + time_shift;
+  //double current_time = time + time_shift;
   Vector Dx = patch->dCell(); 
 
   // Get the low and high index for the patch and the variables
@@ -2491,44 +2483,34 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
             // so as to compute the average velocity.  As a result, we will just use the first iterator: 
             for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-              if ( density[*bound_ptr] > 1e-10 ){ 
+              switch ( bc_iter->second.type ) {
 
-//                if ( (bc_iter->second).type == MASSFLOW_INLET ) {
-//                  (bc_iter->second).mass_flow_rate = bc_value; 
-//                  (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
-//                                                   ( area * density[*bound_ptr] );
-//                } else if ( (bc_iter->second).type == SWIRL ) { 
-//                    (bc_iter->second).mass_flow_rate = bc_value; 
-//                    (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
-//                                                     ( area * density[*bound_ptr] );
-//                } 
-
-                switch ( bc_iter->second.type ) {
-
-                  case ( VELOCITY_INLET ): 
-                    bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
-                    break;
-                  case (TURBULENT_INLET):
-                    bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
-                    break;
-                  case ( MASSFLOW_INLET ): 
-                    bc_iter->second.mass_flow_rate = bc_value; 
+                case ( VELOCITY_INLET ): 
+                  bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
+                  break;
+                case (TURBULENT_INLET):
+                  bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
+                  break;
+                case ( MASSFLOW_INLET ):
+                  bc_iter->second.mass_flow_rate = bc_value;
+                  if ( bc_iter->second.density > 0.0 ) { 
                     bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
-                                                     ( area * bc_iter->second.density );
-                    break;
-                  case ( SWIRL ):
-                    bc_iter->second.mass_flow_rate = bc_value; 
-                    bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
-                                                     ( area * density[*bound_ptr] ); 
-                    break; 
+                                                   ( area * bc_iter->second.density );
+                  }
+                  break;
+                case ( SWIRL ):
+                  bc_iter->second.mass_flow_rate = bc_value; 
+                  bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
+                                                   ( area * density[*bound_ptr] ); 
+                  break; 
 
-                  case ( STABL ): 
-                    bc_iter->second.mass_flow_rate = 0.0; 
-                    break; 
+                case ( STABL ): 
+                  bc_iter->second.mass_flow_rate = 0.0; 
+                  break; 
 
-                  default: 
-                    break; 
-                }
+                default: 
+                  break; 
+
               }
             }
           }

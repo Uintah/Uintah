@@ -7,6 +7,10 @@
   <SimulationComponent type="wasatch"/>  
 
   <Wasatch>    
+
+    <Density>
+      <Constant value="1.0" name="rho"/>
+    </Density>
   
     <MomentInitialization>
 			<PopulationName>CACO3</PopulationName>

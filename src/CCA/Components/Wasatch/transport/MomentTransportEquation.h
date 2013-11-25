@@ -31,7 +31,6 @@
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/BCHelperTools.h>
-#include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -88,16 +87,16 @@ namespace Wasatch{
      *  \param thisPhiName The name of the solution variable for this ScalarTransportEquation
      *  \param id The Expr::ExpressionID for the RHS expression for this ScalarTransportEquation
      *
-     *  Note that the static member method get_rhs_expr_id can be useful to
-     *  obtain the appropriate input arguments here.
      */
-    MomentTransportEquation(const std::string thisPhiName,
-                            const Expr::ExpressionID id,
-                            const bool isConstDensity,
-                            const bool hasEmbeddedGeometry,                            
-                            Uintah::ProblemSpecP params);
+    MomentTransportEquation( const std::string thisPhiName,
+                             GraphCategories& gc,
+                             const double momentOrder,
+                             const bool isConstDensity,
+                             Uintah::ProblemSpecP params,
+                             const double initialMoment );
 
     ~MomentTransportEquation();
+
     void verify_boundary_conditions(BCHelper& bcHelper,
                                     GraphCategories& graphCat){}
     
@@ -118,37 +117,21 @@ namespace Wasatch{
      */
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
 
-    /**
-     * \brief Parse the input file to determine the rhs expression id.
-     *        Also registers convective flux, diffusive flux, and
-     *        source term expressions.
-     *
-     *  \param factory The Expr::ExpressionFactory object that
-     *         terms associated with the RHS of this transport
-     *         equation should be registered on.
-     *
-     *  \param params The Uintah::ProblemSpec XML description for this
-     *         equation.  Scope should be within the ScalabilityTest tag.
-     */
-    static Expr::ExpressionID  get_moment_rhs_id(Expr::ExpressionFactory& factory,
-                                                  Uintah::ProblemSpecP params,
-                                                  const bool hasEmbeddedGeometry,
-                                                  Expr::TagList& weightsTags,
-                                                  Expr::TagList& abscissaeTags,
-                                                  const double momentOrder,
-                                                  const double initialMoment);
+  protected:
 
-    /**
-     *  \brief Parse the input file to get the name of this ScalarTransportEquation
-     *
-     *  \param params the Uintah::ProblemSpec XML description for this
-     *         equation. Scope should be within the TransportEquation tag.
-     */
-    //static std::string get_phi_name( Uintah::ProblemSpecP params );
+    void setup_diffusive_flux( FieldTagInfo& );
+    void setup_convective_flux( FieldTagInfo& );
+    void setup_source_terms( FieldTagInfo&, Expr::TagList& );
+    Expr::ExpressionID setup_rhs( FieldTagInfo&,
+                                  const Expr::TagList& srcTags  );
 
   private:
-    //Expr::TagList weightsTagList_, abscissaeTagList_, weightsAndAbscissaeTagList_;
-    };
+    const std::string populationName_, baseSolnVarName_;
+    const unsigned momentOrder_;
+    const double initialMoment_;
+    unsigned nEnv_, nEqn_;
+    Expr::TagList weightsTags_, abscissaeTags_;
+  };
 
 } // namespace Wasatch
 #endif // Wasatch_MomentTransportEquation_h

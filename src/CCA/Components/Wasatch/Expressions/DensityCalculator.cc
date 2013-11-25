@@ -34,7 +34,7 @@ DensityCalculatorBase::~DensityCalculatorBase(){}
 bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
                                    DoubleVec& soln )
 {
-  int niter = 0;
+  unsigned niter = 0;
   double relErr = 0.0;
 
   do{
@@ -52,7 +52,7 @@ bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
         break;
     } // switch
     relErr = 0.0;
-    for( size_t i=0; i<neq_; ++i ){
+    for( int i=0; i<neq_; ++i ){
       soln[i] -= res_[i];
       relErr += std::abs( res_[i]/get_normalization_factor(i) );
       // clip the solution to the valid range
@@ -60,11 +60,7 @@ bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
       soln[i] = std::max( std::min( bounds.second, soln[i] ), bounds.first );
     }
     ++niter;
-//    if( niter>2 )
-//      std::cout << "\t" << res_[0];
   } while( relErr > rtol_ && niter < maxIter_ );
-//if(niter>2)
-//  std::cout << "\n -> converged in " << niter << " iterations  (" << soln[0] << ")\n";
   return niter < maxIter_;
 }
 
@@ -297,7 +293,7 @@ calc_jacobian_and_res( const DensityCalculatorBase::DoubleVec& passThrough,
   const double& rhof = passThrough[0];
   const double& rhoh = passThrough[1];
   const double& f    = soln[0];
-  const double& gam  = soln[1];
+  //const double& gam  = soln[1];
 
   // evaluate density and enthalpy given the current guess for f and gamma.
   const double rho = densEval_.value( soln );
