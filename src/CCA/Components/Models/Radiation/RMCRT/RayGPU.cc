@@ -87,7 +87,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   //  varLabel name struct
   varLabelNames labelNames;
 #if 0
-  labelNames->abskg     = d_abskgLabel->getName().c_str();    // cuda doesn't support C++ strings
+  labelNames->abskg    = d_abskgLabel->getName().c_str();    // cuda doesn't support C++ strings
   labelNames.sigmaT4   = d_sigmaT4_label->getName().c_str();
   labelNames.divQ      = d_divQLabel->getName().c_str();
   labelNames.celltype  = d_cellTypeLabel->getName().c_str();
@@ -159,17 +159,25 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     
     patchP.ID     = patch->getID();
     patchP.nCells = make_int3(xdim, ydim, zdim);
-
+    
     // define dimensions of the thread grid to be launched
     int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
     int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
-    dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
+    
+    // if the # cells in a block < BLOCKSIZE^2 reduce block size
+    int blocksize = BLOCKSIZE;
+    if( xblocks == 1 && yblocks == 1 ){
+      blocksize = max(xdim, ydim);
+    }
+    
+    dim3 dimBlock(blocksize, blocksize, 1);
     dim3 dimGrid(xblocks, yblocks, 1);
 
 #ifdef DEBUG
     cout << " lowEC: " << loEC << " hiEC " << hiEC << endl;
     cout << " lo   : " << lo   << " hi:  " << hi << endl;
     cout << " xdim: " << xdim << " ydim: " << ydim << endl;
+    cout << " blocksize: " << blocksize << " xblocks: " << xblocks << " yblocks: " << yblocks << endl;
 #endif
 
     RT_flags.nRaySteps = 0;
