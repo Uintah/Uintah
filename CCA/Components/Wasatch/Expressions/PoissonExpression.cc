@@ -318,7 +318,7 @@ namespace Wasatch {
   Expr::ExpressionBase*
   PoissonExpression::Builder::build() const
   {
-    const Expr::TagList& phitags = get_computed_field_tags();
+    const Expr::TagList& phitags = get_tags();
     //const Expr::Tag& phitag = get_computed_field_tag();
     return new PoissonExpression( phitags[0], phitags[1], phirhst_, userefphi_,
                         refphivalue_, refphilocation_, use3dlaplacian_,

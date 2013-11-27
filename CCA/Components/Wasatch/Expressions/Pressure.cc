@@ -553,7 +553,7 @@ Pressure::Builder::Builder( const Expr::TagList& result,
 Expr::ExpressionBase*
 Pressure::Builder::build() const
 {
-  const Expr::TagList& ptags = get_computed_field_tags();
+  const Expr::TagList& ptags = get_tags();
   return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_,
                        psrct_, timestept_,volfract_,hasMovingGeometry_, userefpressure_,
                        refpressurevalue_, refpressurelocation_, use3dlaplacian_,
