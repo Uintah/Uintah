@@ -94,17 +94,22 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "doDiff", d_doDiff, false);
   
   // algorithmic knobs
-  d_use_density_guess = false; // use the density guess rather than the new density from the table...implies that the equation is updated BEFORE properties are computed. 
   if (db->findBlock("use_density_guess")) {
-
-     d_use_density_guess = true; 
-
+     _stage = 0; 
+  } else { 
+    _stage = 1; 
   }
+
   if ( db->findBlock("determines_properties") ){ 
+    _stage = 0; 
+  } else { 
+    _stage = 1; 
+  }
 
-    d_use_density_guess = true; 
-
-  } 
+  //override the stage
+  if ( db->findBlock("stage")){
+    db->findBlock("stage")->getAttribute("value",_stage); 
+  }
 
   if ( db->findBlock("reinitialize_from") ){ 
 
@@ -266,6 +271,16 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   } 
 
 }
+void
+ScalarEqn::assign_stage_to_sources(){
+
+  SourceTermFactory& factory = SourceTermFactory::self(); 
+  for (vector<SourceContainer>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
+    SourceTermBase& src = factory.retrieve_source_term( iter->name ); 
+    src.set_stage(_stage); 
+  }
+
+}
 //---------------------------------------------------------------------------
 // Method: Schedule clean up. 
 //---------------------------------------------------------------------------
@@ -306,16 +321,12 @@ void
 ScalarEqn::sched_evalTransportEqn( const LevelP& level, 
                                    SchedulerP& sched, int timeSubStep )
 { 
+
   printSchedule(level,dbg,"ScalarEqn::sched_evalTransportEqn");
-  
-  if (timeSubStep == 0)
-    sched_initializeVariables( level, sched );
 
   sched_buildTransportEqn( level, sched, timeSubStep );
 
-  if (d_use_density_guess)
-    sched_solveTransportEqn( level, sched, timeSubStep );
-  // else we have to do it in ExplicitSolver.cc after properties are updated.
+  sched_solveTransportEqn( level, sched, timeSubStep );
 
 }
 //---------------------------------------------------------------------------
@@ -588,10 +599,10 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     //----DIFFUSION
     if ( d_use_constant_D ) { 
       if (d_doDiff)
-        d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, d_mol_diff, den, areaFraction, prNo, matlIndex, d_eqnName ); 
+        d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, d_mol_diff, den, areaFraction, prNo ); 
     } else { 
       if (d_doDiff)
-        d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, D_mol, den, areaFraction, prNo, matlIndex, d_eqnName );
+        d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, D_mol, den, areaFraction, prNo );
     }
 
     //----SUM UP RHS
@@ -623,7 +634,7 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int 
   tsk->modifies(d_transportVarLabel);
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
 
-  if ( d_use_density_guess ){ 
+  if ( _stage == 0 ){ 
     tsk->requires(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
   } else { 
     tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0); 
@@ -669,7 +680,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(phi_at_jp1, d_transportVarLabel, matlIndex, patch);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
 
-    if ( d_use_density_guess ){ 
+    if ( _stage == 0 ){ 
       new_dw->get(new_den, d_fieldLabels->d_densityGuessLabel, matlIndex, patch, gn, 0); 
       new_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
     } else { 

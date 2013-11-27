@@ -27,6 +27,7 @@ WaitForDebugger   SCI_DEBUG     when an exception is thrown halt the program and
 OnDemandDataWarehouse           outputs when a variable is retrieved or put into the data warehouse.
 VarLabel                        List when a VarLabel is created and deleted
 ComponentTimings  SCI_DEBUG     output overall mpi and cpu times
+BCR_dbg           SCI_DEBUG     print out some information regarding the BC setup
 
 
 Schedulers:                     NOTE: These will override the default "Unified Scheduler"

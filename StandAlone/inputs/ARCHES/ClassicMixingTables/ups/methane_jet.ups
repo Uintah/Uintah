@@ -230,7 +230,8 @@
         <Eqn label="passive_scalar" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <conv_scheme>upwind</conv_scheme>
+          <conv_scheme>super_bee</conv_scheme>
+          <stage value="1"/>
           <initialization type="constant">
             <constant>.0</constant>
           </initialization>
@@ -243,7 +244,7 @@
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <conv_scheme>upwind</conv_scheme>
+          <conv_scheme>super_bee</conv_scheme>
           <determines_properties/>
           <initialization type="tabulated">
             <depend_varname>adiabaticenthalpy</depend_varname>

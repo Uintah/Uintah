@@ -160,10 +160,27 @@ namespace Uintah {
       if ( i == d_dvVarMap.end() ) {
 
         const VarLabel* the_label = VarLabel::create( var_name, CCVariable<double>::getTypeDescription() ); 
-
         d_dvVarMap.insert( std::make_pair( var_name, the_label ) ); 
 
-        proc0cout << "    ---> " << var_name << std::endl;
+        proc0cout << "    Adding ---> " << var_name << std::endl;
+
+      } 
+      return; 
+    };
+
+    /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
+    inline void insertOldIntoMap( const std::string var_name ){
+
+      VarMap::iterator i = d_oldDvVarMap.find( var_name ); 
+
+      if ( i == d_oldDvVarMap.end() ) {
+
+        std::string name = var_name+"_old"; 
+
+        const VarLabel* the_old_label = VarLabel::create( name, CCVariable<double>::getTypeDescription() );
+        d_oldDvVarMap.insert( std::make_pair( name, the_old_label ) );
+
+        proc0cout << "    Adding ---> " << name << std::endl;
 
       } 
       return; 
@@ -1094,6 +1111,7 @@ namespace Uintah {
 
 
     VarMap d_dvVarMap;         ///< Dependent variable map
+    VarMap d_oldDvVarMap;      ///< Dependent variable map from previous lookup
     VarMap d_ivVarMap;         ///< Independent variable map
     doubleMap d_constants;     ///< List of constants in table header
     InertMasterMap d_inertMap; ///< List of inert streams for post table lookup mixing

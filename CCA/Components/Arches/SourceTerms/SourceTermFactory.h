@@ -88,8 +88,8 @@ public:
   /** @brief Register all user-defined sources */ 
   void registerUDSources(ProblemSpecP& db, ArchesLabel* lab, BoundaryCondition* bcs, const ProcessorGroup* my_world);
 
-  /** @brief Actually execute the sources */ 
-  void sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep );
+  /** @brief Execute the sources at a given stage */ 
+  void sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep, const int stage );
 
 private:
 

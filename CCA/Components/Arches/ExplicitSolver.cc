@@ -247,6 +247,9 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
   db->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
   db->getWithDefault("maxDensityLag",d_maxDensityLag,0.0);
 
+  d_extra_table_lookup = false; 
+  if ( db->findBlock("extra_table_lookup")) d_extra_table_lookup = true; 
+
   d_props->setFilter(d_turbModel->getFilter());
   d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
 
@@ -299,6 +302,15 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_doDQMOM = true;
   else
     d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
+
+  EqnFactory& eqn_factory = EqnFactory::self();
+  EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
+  for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
+    EqnBase* eqn = iter->second;
+    eqn->sched_initializeVariables(level, sched); 
+
+  }
 
   // --------> START RK LOOP <---------
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
@@ -377,8 +389,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
     }
 
+    // STAGE 0 
+
     SourceTermFactory& src_factory = SourceTermFactory::self();
-    src_factory.sched_computeSources( level, sched, curr_level ); 
+    src_factory.sched_computeSources( level, sched, curr_level, 0 ); 
 
     sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
@@ -388,11 +402,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_checkDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level]);
 
-    EqnFactory& eqn_factory = EqnFactory::self();
-    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
       EqnBase* eqn = iter->second;
+      //these equations use a density guess
+      if ( eqn->get_stage() == 0 )
         eqn->sched_evalTransportEqn( level, sched, curr_level );
+
     }
 
     // Property models needed before table lookup:
@@ -413,13 +429,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     if ( hl_model != 0 )
       hl_model->sched_computeProp( level, sched, curr_level ); 
+    
 
+    //1st TABLE LOOKUP
     bool initialize_it  = false;
     bool modify_ref_den = true;
     if ( curr_level == 0 ) initialize_it = true;
     d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
+
+    // STAGE 1
 
     // Property models needed after table lookup:
     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
@@ -431,11 +451,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
+    // Source terms needed after table lookup: 
+    src_factory.sched_computeSources( level, sched, curr_level, 1 ); 
+
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
       EqnBase* eqn = iter->second;
-      //Transport is constructed above.  Here we only solve if densityGuess is not used.
-      if ( !eqn->getDensityGuessBool() )
-        eqn->sched_solveTransportEqn( level, sched, curr_level );
+      //these equations do not use a density guess
+      if ( eqn->get_stage() == 1 )
+        eqn->sched_evalTransportEqn( level, sched, curr_level );
     }
 
     // Clean up after Scalar equation evaluations
@@ -504,6 +527,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
       EqnBase* eqn = iter->second;
+      if ( eqn->get_stage() < 2 )
         eqn->sched_timeAve( level, sched, curr_level );
     }
 
@@ -534,6 +558,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       if ( hl_model != 0 )
         hl_model->sched_computeProp( level, sched, curr_level ); 
 
+      //TABLE LOOKUP #2
       bool initialize_it  = false;
       bool modify_ref_den = false;
       d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
@@ -547,7 +572,33 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
           prop_model->sched_computeProp( level, sched, curr_level );
 
       }
+    }
 
+    //STAGE 2
+
+    // Source terms needed after second table lookup: 
+    src_factory.sched_computeSources( level, sched, curr_level, 2 ); 
+
+    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+      EqnBase* eqn = iter->second;
+      if ( eqn->get_stage() == 2 )
+        eqn->sched_evalTransportEqn( level, sched, curr_level );
+    }
+
+    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+      EqnBase* eqn = iter->second;
+      if ( eqn->get_stage() == 2 )
+        eqn->sched_timeAve( level, sched, curr_level );
+    }
+
+    if ( d_extra_table_lookup ){ 
+      //TABLE LOOKUP #3
+      initialize_it  = false;
+      modify_ref_den = false;
+      d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
+    }
+
+    if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
 
       sched_computeDensityLag(sched, patches, matls,
                               d_timeIntegratorLabels[curr_level],

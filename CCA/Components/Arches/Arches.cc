@@ -549,16 +549,24 @@ Arches::problemSetup(const ProblemSpecP& params,
                 a_src.problemSetup( found_src_db );
 
                 //Add any table lookup species to the table lookup list:                                      
-                std::vector<std::string> tbl_lookup = a_src.get_tablelookup_species();                        
-                for ( std::vector<std::string>::iterator iter = tbl_lookup.begin(); iter != tbl_lookup.end(); ++iter ){                                           
-                  d_lab->add_species( *iter );
-                }
+                SourceTermBase::TableLookup*  tbl_lookup = a_src.get_tablelookup_species();                        
+                if ( tbl_lookup != NULL )
+                  d_lab->add_species_struct( tbl_lookup ); 
 
               }
             }
           }
         }
       }
+    }
+
+    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
+    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); 
+        ieqn != scalar_eqns.end(); ieqn++){
+
+      EqnBase* eqn = ieqn->second;  
+      eqn->assign_stage_to_sources(); 
+
     }
 
   } else {

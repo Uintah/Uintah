@@ -244,6 +244,13 @@ ClassicTableInterface::sched_getState( const LevelP& level,
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
       tsk->computes( i->second ); 
+      if ( d_lab->d_sharedState->getCurrentTopLevelTimeStep() != 0 ){ 
+        tsk->requires( Task::OldDW, i->second, Ghost::None, 0 ); 
+      }
+    }
+
+    for ( MixingRxnModel::VarMap::iterator i = d_oldDvVarMap.begin(); i != d_oldDvVarMap.end(); ++i ) {
+      tsk->computes( i->second ); 
     }
 
     if (d_MAlab)
@@ -252,6 +259,9 @@ ClassicTableInterface::sched_getState( const LevelP& level,
   } else {
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
+      tsk->modifies( i->second ); 
+    }
+    for ( MixingRxnModel::VarMap::iterator i = d_oldDvVarMap.begin(); i != d_oldDvVarMap.end(); ++i ) {
       tsk->modifies( i->second ); 
     }
 
@@ -335,6 +345,29 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
         depend_storage.insert( make_pair( i->first, storage ));
 
+        std::string name = i->first+"_old"; 
+        VarMap::iterator i_old = d_oldDvVarMap.find(name); 
+
+        if ( i_old != d_oldDvVarMap.end() ){ 
+          if ( old_dw != 0 ){
+
+            //copy from old DW
+            constCCVariable<double> old_t_value; 
+            CCVariable<double> old_tpdt_value; 
+            old_dw->get( old_t_value, i->second, matlIndex, patch, gn, 0 ); 
+            new_dw->allocateAndPut( old_tpdt_value, i_old->second, matlIndex, patch ); 
+
+            old_tpdt_value.copy( old_t_value ); 
+
+          } else { 
+
+            //just allocated it because this is the Arches::Initialize
+            CCVariable<double> old_tpdt_value; 
+            new_dw->allocateAndPut( old_tpdt_value, i_old->second, matlIndex, patch ); 
+            old_tpdt_value.initialize(0.0); 
+
+          }
+        }
       }
 
       if (d_MAlab) {
@@ -355,6 +388,16 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         storage.index = i_index->second; 
 
         depend_storage.insert( make_pair( i->first, storage ));
+
+        std::string name = i->first+"_old"; 
+        VarMap::iterator i_old = d_oldDvVarMap.find(name); 
+
+        if ( i_old != d_oldDvVarMap.end() ){ 
+          //copy current value into old
+          CCVariable<double> old_value; 
+          new_dw->getModifiable( old_value, i_old->second, matlIndex, patch ); 
+          old_value.copy( *storage.var ); 
+        }
 
       }
 
@@ -545,23 +588,16 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             } 
 
             table_value *= eps_vol[c]; 
-            (*i->second.var)[c] = table_value;
+            double ghost_value = 2.0*table_value - (*i->second.var)[cp1];
+            (*i->second.var)[c] = ghost_value; 
+            //(*i->second.var)[c] = table_value;
+            
+            if (d_MAlab)
+              mpmarches_denmicro[c] = ghost_value; 
 
-            if (i->first == "density") {
-              // Two ways of setting density.  Note that the old ARCHES code used the table value directly and not the ghost_value as defined below. 
-              // This gets density = bc value on face:
-              double ghost_value = 2.0*table_value - arches_density[cp1];
+            if (i->first == "density")
               arches_density[c] = ghost_value; 
-              //clunky reassignment of density: 
-              (*i->second.var)[c] = ghost_value;
 
-              // This gets density = bc value in extra cell 
-              //arches_density[c] = table_value; 
-
-              if (d_MAlab)
-                mpmarches_denmicro[c] = ghost_value; 
-
-            }
           }
           iv.resize(0);
         }
@@ -650,9 +686,11 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       }
     }
 
+
     for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
       delete i->second.var;
     }
+
 
     // reference density modification 
     if ( modify_ref_den ) {

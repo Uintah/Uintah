@@ -59,6 +59,8 @@ public:
   void problemSetup(const ProblemSpecP& inputdb, int qn);
   void problemSetup(const ProblemSpecP& inputdb){};
 
+  /** @brief not needed here. **/ 
+  void assign_stage_to_sources(){};
   
   /** @brief Schedule a transport equation to be built and solved */
   void sched_evalTransportEqn( const LevelP&, 

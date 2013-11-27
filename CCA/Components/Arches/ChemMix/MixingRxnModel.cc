@@ -70,6 +70,9 @@ MixingRxnModel::~MixingRxnModel()
   for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
     VarLabel::destroy( i->second ); 
   }
+  for ( VarMap::iterator i = d_oldDvVarMap.begin(); i != d_oldDvVarMap.end(); ++i ){
+    VarLabel::destroy( i->second ); 
+  }
   delete _iv_transform; 
 }
 
@@ -156,7 +159,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
         doubleMap::iterator iter = var_values.find( label ); 
         if ( iter == var_values.end() ){ 
           var_values.insert( std::make_pair( label, value ) );
-          proc0cout << " ---> " << label << ", " << value << std::endl;
+          proc0cout << " Adding ---> " << label << ", " << value << std::endl;
           found_vars = true; 
         }
 

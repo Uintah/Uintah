@@ -210,6 +210,8 @@ bool applyFilter_noPetsc(const ProcessorGroup* ,
   return it_worked;
 }
 
+/** @brief This method computes the weighting factors for the filter 
+ * if the weights are to be renomalized after considering non-flow cells **/ 
 void computeFilterVolume( const Patch* patch, 
                           constCCVariable<int>& cellType, 
                           CCVariable<double>& fvol, 
