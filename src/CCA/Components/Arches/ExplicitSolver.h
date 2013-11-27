@@ -343,6 +343,8 @@ private:
   bool d_KE_fromFC;
   double d_maxDensityLag;
 
+  bool d_extra_table_lookup; 
+
   //linear mms
   double cu, cv, cw, cp, phi0;
   // sine mms

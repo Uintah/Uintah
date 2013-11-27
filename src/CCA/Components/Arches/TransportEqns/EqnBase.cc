@@ -23,7 +23,8 @@ d_use_constant_D(false)
   d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
   d_disc = scinew Discretization_new(); 
   _using_new_intrusion = false; 
-	_table_init = false; 
+  _table_init = false; 
+  _stage = 1;  //uses density after first table lookup  
 }
 
 EqnBase::~EqnBase()

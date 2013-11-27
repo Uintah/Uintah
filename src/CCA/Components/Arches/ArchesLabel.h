@@ -28,6 +28,7 @@
 #define Uintah_Components_Arches_ArchesLabel_h
 
 #include <Core/Grid/SimulationStateP.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Util/Handle.h>
@@ -302,11 +303,29 @@ namespace Uintah {
       const VarLabel* d_volFractionLabel; 
 
       std::vector<std::string> model_req_species;
+      std::vector<std::string> model_req_old_species;
 
       inline void add_species( std::string s ) { 
         model_req_species.push_back( s ); };
 
+      inline void add_species_struct( SourceTermBase::TableLookup* s ) { 
+
+        if ( s->state == SourceTermBase::TableLookup::OLD ){ 
+          std::vector<std::string>::iterator iter = s->species.begin(); 
+          for ( ; iter != s->species.end(); iter++ ){
+            model_req_old_species.push_back(*iter); 
+          }
+        } else { 
+          std::vector<std::string>::iterator iter = s->species.begin(); 
+          for ( ; iter != s->species.end(); iter++ ){
+            model_req_species.push_back(*iter); 
+          }
+        }
+      
+      };
+
       inline std::vector<std::string> get_species( ) { return model_req_species; }; 
+      inline std::vector<std::string> get_old_sepcies( ) { return model_req_old_species; }; 
 
     private: 
 
