@@ -33,7 +33,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/Arches/fortran
 
 SRCS += \
-        $(SRCDIR)/apcal_all.F \
         $(SRCDIR)/arrass.F \
         $(SRCDIR)/cellg.F \
         $(SRCDIR)/fixval.F \
@@ -58,7 +57,6 @@ LIBS := $(F_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-$(SRCDIR)/apcal_all.$(OBJEXT): $(SRCDIR)/apcal_all_fort.h
 $(SRCDIR)/arrass.$(OBJEXT): $(SRCDIR)/arrass_fort.h
 $(SRCDIR)/bcpress.$(OBJEXT): $(SRCDIR)/bcpress_fort.h
 $(SRCDIR)/bcuvel.$(OBJEXT): $(SRCDIR)/bcuvel_fort.h

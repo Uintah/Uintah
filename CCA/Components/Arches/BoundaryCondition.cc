@@ -837,7 +837,7 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
                                     const int matl_index, 
                                     double time_shift)
 {
-  double time = d_lab->d_sharedState->getElapsedTime();
+  //double time = d_lab->d_sharedState->getElapsedTime();
   //double current_time = time + time_shift;
   Vector Dx = patch->dCell(); 
 
