@@ -1647,6 +1647,7 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
             }
             h2dRequiresLock_.writeUnlock();
             break;
+
           }  // end ReductionVariable switch case
 
           case TypeDescription::ParticleVariable : {
@@ -1707,21 +1708,17 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
             Patch::getGhostOffsets(type, comp->gtype, comp->numGhostCells, lowOffset, highOffset);
             patches->get(i)->computeExtents(basis, comp->var->getBoundaryLayer(), lowOffset, highOffset, low, high);
 
-            GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(comp->var->typeDescription()->createInstance());
-            dw->allocateAndPut(*gridVar, comp->var, matlID, patches->get(i), comp->gtype, comp->numGhostCells);
-            IntVector host_low, host_high, host_offset, host_size, host_stride;
-            gridVar->getSizes(host_low, host_high, host_offset, host_size, host_stride);
-            host_bytes = gridVar->getDataSize();
-            dw->scrub(comp->var, matlID, patches->get(i));
-
             d2hComputesLock_.writeLock();
             {
               /*
                * Until better type information support is implemented for GPUGridVariables
-               *   we need to determine the size of a single element in the Arary3Data object to
-               *   know what type of GPUGridVariable to create and use.
+               *   we need to use:
                *
-               *   "host_strides.x()" == sizeof(T)
+               *   std::string name = comp->var->typeDescription()->getSubType()->getName()
+               *
+               *   to determine what sub-type the computes variables consist of in order to
+               *   create the correct type of GPUGridVariable. Can't use info from getSizes()
+               *   as the variable doesn't exist (e.g. allocateAndPut() hasn't been called yet)
                *
                *   This approach currently supports:
                *   ------------------------------------------------------------
@@ -1731,35 +1728,27 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
                *   ------------------------------------------------------------
                */
 
-              switch (host_stride.x()) {
-                case sizeof(int) : {
-                  GPUGridVariable<int> device_var;
-                  dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID,
-                                                 make_int3(low.x(), low.y(), low.z()),
-                                                 make_int3(high.x(), high.y(), high.z()));
-                  device_ptr = device_var.getPointer();
-                  break;
-                }
-                case sizeof(double) : {
-                  GPUGridVariable<double> device_var;
-                  dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID,
-                                                 make_int3(low.x(), low.y(), low.z()),
-                                                 make_int3(high.x(), high.y(), high.z()));
-                  device_ptr = device_var.getPointer();
-                  break;
-                }
-                case sizeof(GPUStencil7) : {
-                  GPUGridVariable<GPUStencil7> device_var;
-                  dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID,
-                                                 make_int3(low.x(), low.y(), low.z()),
-                                                 make_int3(high.x(), high.y(), high.z()));
-                  device_ptr = device_var.getPointer();
-
-                  break;
-                }
-                default : {
-                  SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + compVarName, __FILE__, __LINE__));
-                }
+              std::string name = comp->var->typeDescription()->getSubType()->getName();
+              if (name.compare("int") == 0) {
+                GPUGridVariable<int> device_var;
+                dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID,
+                                               make_int3(low.x(), low.y(), low.z()),
+                                               make_int3(high.x(), high.y(), high.z()));
+                device_ptr = device_var.getPointer();
+              } else if (name.compare("double") == 0) {
+                GPUGridVariable<double> device_var;
+                dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID,
+                                               make_int3(low.x(), low.y(), low.z()),
+                                               make_int3(high.x(), high.y(), high.z()));
+                device_ptr = device_var.getPointer();
+              } else if (name.compare("Stencil7") == 0) {
+                GPUGridVariable<GPUStencil7> device_var;
+                dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID,
+                                               make_int3(low.x(), low.y(), low.z()),
+                                               make_int3(high.x(), high.y(), high.z()));
+                device_ptr = device_var.getPointer();
+              } else {
+                SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + compVarName, __FILE__, __LINE__));
               }
 
               if (gpu_stats.active()) {
@@ -1772,9 +1761,9 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
               }
             }
             d2hComputesLock_.writeUnlock();
+            break;
 
           }  // end GridVariable switch case
-            break;
 
           case TypeDescription::ReductionVariable : {
 
@@ -1794,15 +1783,15 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
               }
             }
             d2hComputesLock_.writeUnlock();
+            break;
 
           }  // end ReductionVariable switch case
-            break;
 
           case TypeDescription::ParticleVariable : {
             SCI_THROW(
                 InternalError("Allocating device memory for ParticleVariables not yet supported: " + compVarName, __FILE__, __LINE__));
-          }  // end ParticleVariable switch case
             break;
+          }  // end ParticleVariable switch case
 
           default : {
             SCI_THROW(InternalError("Cannot allocate device space for unsupported variable types: " + compVarName, __FILE__, __LINE__));
@@ -1935,11 +1924,11 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
                   CUDA_RT_SAFE_CALL(retVal);
                 }
               }
-              d2hComputesLock_.writeUnlock();
             }
+            d2hComputesLock_.writeUnlock();
+            break;
 
           }  // end GridVariable switch case
-            break;
 
           case TypeDescription::ReductionVariable : {
 
@@ -1981,25 +1970,27 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
                   CUDA_RT_SAFE_CALL(retVal);
                 }
               }
-              d2hComputesLock_.writeUnlock();
             }
+            d2hComputesLock_.writeUnlock();
+            break;
 
           }  // end ReductionVariable switch case
-            break;
 
           case TypeDescription::ParticleVariable : {
             SCI_THROW(
                 InternalError("Copying ParticleVariables to GPU not yet supported:" + compVarName, __FILE__, __LINE__));
-          }  // end ParticleVariable switch case
             break;
+          }  // end ParticleVariable switch case
 
           default : {
             SCI_THROW(InternalError("Cannot copy unmatched size variable from CPU to host:" + compVarName, __FILE__, __LINE__));
           }  // end default switch case
-        }
-      }
-    }
-  }
+
+        }  // end switch
+      }  // end matl loop
+    }  // end patch loop
+  }  // end requires gathering loop
+
 }
 
 void UnifiedScheduler::createCudaStreams(int numStreams, int device)
