@@ -528,7 +528,7 @@ __syncthreads();
 //---------------------------------------------------------------------------
 __device__ double randDevice(curandState* globalState)
 {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
   curandState localState = globalState[tid];
   double val = curand(&localState);
   globalState[tid] = localState;
@@ -547,7 +547,8 @@ __device__ double randDevice(curandState* globalState)
 //---------------------------------------------------------------------------
 __device__ double randDblExcDevice(curandState* globalState)
 {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+  
   curandState localState = globalState[tid];
   double val = curand(&localState);
   globalState[tid] = localState;
@@ -556,21 +557,6 @@ __device__ double randDblExcDevice(curandState* globalState)
 #else
   return ( (double)val + 0.5 ) * (1.0/4294967296.0);
 #endif
-}
-
-//---------------------------------------------------------------------------
-// Device Function:
-//---------------------------------------------------------------------------
-__device__ unsigned int hashDevice(unsigned int a)
-{
-    a = (a+0x7ed55d16) + (a<<12);
-    a = (a^0xc761c23c) ^ (a>>19);
-    a = (a+0x165667b1) + (a<<5);
-    a = (a+0xd3a2646c) ^ (a<<9);
-    a = (a+0xfd7046c5) + (a<<3);
-    a = (a^0xb55a4f09) ^ (a>>16);
-
-    return a;
 }
 
 //______________________________________________________________________
