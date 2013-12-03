@@ -233,6 +233,7 @@
         <inverse_density_average        spec="OPTIONAL BOOLEAN" />
 
         <ColdFlow                       spec="OPTIONAL NO_DATA" >
+          <ignore_iv_density_check      spec="OPTIONAL NO_DATA"/>  <!-- don't force an algorithmic change on the transported iv's to use density guess --> 
           <mixture_fraction_label       spec="REQUIRED STRING"/>
           <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature --> 
           <Stream_1                     spec="MULTIPLE NO_DATA">
@@ -266,6 +267,7 @@
         </ColdFlow>
 
         <TabProps                       spec="OPTIONAL NO_DATA" >
+          <ignore_iv_density_check      spec="OPTIONAL NO_DATA"/>  <!-- don't force an algorithmic change on the transported iv's to use density guess --> 
           <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
           <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- used for simple stream mixing (no rxn) --> 
           <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
@@ -278,6 +280,7 @@
         </TabProps>
 
         <ClassicTable                   spec="OPTIONAL NO_DATA">
+          <ignore_iv_density_check      spec="OPTIONAL NO_DATA"/>  <!-- don't force an algorithmic change on the transported iv's to use density guess --> 
           <inputfile                    spec="REQUIRED STRING" />  <!-- table to be opened --> 
           <cold_flow                    spec="OPTIONAL BOOLEAN"/>  <!-- force adiabatic condition --> 
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"/>  <!-- warn when heat loss is clipped to bounds --> 
