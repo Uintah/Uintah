@@ -344,7 +344,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     is_BC_specified(root_ps, d_abskgLabel->getName(),       mss);
     
     Vector periodic;
-    ProblemSpecP grid_ps  = prob_spec->findBlock("Grid");
+    ProblemSpecP grid_ps  = root_ps->findBlock("Grid");
     ProblemSpecP level_ps = grid_ps->findBlock("Level");
     level_ps->getWithDefault("periodic", periodic, Vector(0,0,0));
     
