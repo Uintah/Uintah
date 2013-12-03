@@ -23,7 +23,6 @@
  */
 
 //----- Ray.cc ----------------------------------------------
-#include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 
@@ -343,6 +342,16 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   } else {  
     is_BC_specified(root_ps, d_temperatureLabel->getName(), mss);
     is_BC_specified(root_ps, d_abskgLabel->getName(),       mss);
+    
+    Vector periodic;
+    ProblemSpecP grid_ps  = prob_spec->findBlock("Grid");
+    ProblemSpecP level_ps = grid_ps->findBlock("Level");
+    level_ps->getWithDefault("periodic", periodic, Vector(0,0,0));
+    
+    if (periodic.length() != 0 ){
+      throw ProblemSetupException("\nERROR RMCRT:\nPeriodic boundary conditions are not allowed with Reverse Monte-Carlo Ray Tracing.", __FILE__, __LINE__);
+    }
+    
   }
 }
 
@@ -600,25 +609,14 @@ Ray::sched_rayTrace( const LevelP& level,
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
     tsk->modifies( d_VRFluxLabel );
-    /*`tsk->modifies( d_boundFluxLabel );      TESTING`*/
+    tsk->modifies( d_boundFluxLabel );
     tsk->modifies( d_radiationVolqLabel );
   } else {
     tsk->computes( d_divQLabel );
     tsk->computes( d_VRFluxLabel );
-    /*`tsk->computes( d_boundFluxLabel );      TESTING`*/
+    tsk->computes( d_boundFluxLabel );
     tsk->computes( d_radiationVolqLabel );
   }
-  
-/*`==========TESTING==========*/              // HACK
-  if ( !Parallel::usingDevice() ) {
-    if( modifies_divQ ){
-      tsk->modifies( d_boundFluxLabel );
-    } else {
-      tsk->computes( d_boundFluxLabel );
-    }
-  } 
-/*===========TESTING==========`*/
-  
   
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
   
@@ -2063,16 +2061,8 @@ void Ray::sched_carryForward_rayTrace( const LevelP& level,
   
   tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
   tsk->requires( Task::OldDW, d_VRFluxLabel,         d_gn, 0 );
-/*`  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );      TESTING`*/ 
+  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
   tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
-  
-  
-/*`==========TESTING==========*/
-  if ( !Parallel::usingDevice() ) {
-    tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
-  } 
-/*===========TESTING==========`*/
-  
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );  
 }
@@ -2095,16 +2085,9 @@ void  Ray::carryForward_rayTrace( const ProcessorGroup* pc,
     
     new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls );
     new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls );
-/*`    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );      TESTING`*/
+    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );
     new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls );
-    
-    
-/*`==========TESTING==========*/
-  if ( !Parallel::usingDevice() ) {
-    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );    // HACK
-  } 
-/*===========TESTING==========`*/
-    
+
     return;
   }
 }
@@ -2547,7 +2530,6 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
     }
   }  // threshold while loop.
 }
-
 
 //---------------------------------------------------------------------------
 //
