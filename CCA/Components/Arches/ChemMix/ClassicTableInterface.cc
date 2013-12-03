@@ -145,7 +145,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
         //check if it uses a density guess (which it should) 
         //if it isn't set properly, then do it automagically for the user
-        if (!eqn.getDensityGuessBool()){ 
+        if ( !eqn.getDensityGuessBool() && !ignoreDensityCheck ){ 
           proc0cout << " Warning: For equation named " << var_name << endl 
             << "     Density guess must be used for this equation because it determines properties." << endl
             << "     Automatically setting density guess = true. " << endl;
