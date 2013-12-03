@@ -39,11 +39,11 @@
 
 //__________________________________
 //  To Do
-//  - Figure out how to initialize array variables.
 //  - dynamic block size?
 //  - use labelNames
 //  - add BoundaryFlux code
-//  - random number for debugging.
+//  - random numbers
+//  - Ray steps
 
 
 namespace Uintah {
@@ -96,12 +96,12 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   if( RT_flags.modifies_divQ ){
     new_gdw->getModifiable( divQ,         "divQ",          patch.ID, matl );
     new_gdw->getModifiable( VRFlux,       "VRFlux",        patch.ID, matl );
-/*`    new_gdw->getModifiable( boundFlux,    "boundFlux",     patch.ID, matl );      TESTING`*/
+    new_gdw->getModifiable( boundFlux,    "boundFlux",     patch.ID, matl );
     new_gdw->getModifiable( radiationVolQ,"radiationVolq", patch.ID, matl );
   }else{
     new_gdw->get( divQ,         "divQ",          patch.ID, matl );         // these should be allocateAntPut() calls
     new_gdw->get( VRFlux,       "VRFlux",        patch.ID, matl );
-/*`    new_gdw->get( boundFlux,    "boundFlux",     patch.ID, matl );      TESTING`*/
+    new_gdw->get( boundFlux,    "boundFlux",     patch.ID, matl );
     new_gdw->get( radiationVolQ,"radiationVolq", patch.ID, matl );
     
     
@@ -121,7 +121,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 /*`==========TESTING==========*/
 #if 0  
  //__________________________________
- // Sanity check code used to test the iterators 
+ // Sanity check code used to test the "iterators" 
   // Extra Cell Loop
   if (threadIdx.y == 2 ) {
     printf( "outside loops thread[%d, %d] tID[%d, %d]\n",threadIdx.x, threadIdx.y, tidX, tidY);
@@ -174,6 +174,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
         gpuIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         
         boundFlux[origin].initialize(0.0);
+        
       }
     }
   }
