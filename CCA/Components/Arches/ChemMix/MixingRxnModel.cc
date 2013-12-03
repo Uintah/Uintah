@@ -132,6 +132,10 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
     throw ProblemSetupException( "Could not properly setup independent variable transform based on input.",__FILE__,__LINE__); 
   }
 
+  bool ignoreDensityCheck = false; 
+  if ( db->findBlock("ignore_iv_density_check"))
+    ignoreDensityCheck = true; 
+
   // For inert stream mixing // 
   d_inertMap.clear(); 
   if ( db->findBlock( "post_mix" ) ){ 
@@ -188,7 +192,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
 
         //check if it uses a density guess (which it should) 
         //if it isn't set properly, then do it automagically for the user
-        if (!eqn.getDensityGuessBool()){ 
+        if (!eqn.getDensityGuessBool() && !ignoreDensityCheck ){ 
           proc0cout << " Warning: For equation named " << phi << endl 
             << "     Density guess must be used for this equation because it determines properties." << endl
             << "     Automatically setting density guess = true. " << endl;

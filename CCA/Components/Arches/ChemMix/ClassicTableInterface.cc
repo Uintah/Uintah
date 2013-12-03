@@ -116,6 +116,10 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   cout_tabledbg << " Creating the independent variable map " << endl;
 
+  bool ignoreDensityCheck = false; 
+  if ( db_classic->findBlock("ignore_iv_density_check"))
+    ignoreDensityCheck = true; 
+
   size_t numIvVarNames = d_allIndepVarNames.size();
   for ( unsigned int i = 0; i < numIvVarNames; ++i ){
 
