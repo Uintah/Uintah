@@ -166,8 +166,6 @@ ManifoldRxn::computeSource( const ProcessorGroup* pc,
     double dt = DT; 
     double voldt = vol/dt; 
 
-    std::cout << "Solving source term: " << _src_name << endl;
-
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
