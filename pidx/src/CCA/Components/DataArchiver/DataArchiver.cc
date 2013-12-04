@@ -1678,7 +1678,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 
   double start = Time::currentSeconds();
 
-  bool uda_io = false;
+  bool uda_io = false;//true;
   bool pidx_io =  true;
   double start_time = 0., end_time = 0., io_time = 0., max_time = 0. ;
   int rank;
@@ -1688,8 +1688,10 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
   long cur=0;
   
   int vc = 0;
-  int *v_offset; 
-  int *v_count; 
+  int **v_offset; 
+  int **v_count; 
+  int *p_offset; 
+  int *p_count;
   int number_of_variables, total_number_materials;
   int *number_of_materials;
 
@@ -2020,6 +2022,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     string idxFilename(dir.getName());
     idxFilename = idxFilename + ".idx";
     double ***pidx_buffer;
+    double ****temp_pidx_buffer;
     
     //std::cerr<<"Creating PIDXOutputContext..." << idxFilename << endl;
     PIDXOutputContext  pc(idxFilename, timeStep,globalExtents,d_myworld->getComm());
@@ -2028,9 +2031,19 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     MPI_Comm_rank(d_myworld->getComm(), &rank);
     
     vc = 0;
-    v_offset = (int *) malloc(5 * sizeof(int));
-    v_count = (int *) malloc(5 * sizeof(int));
+    v_offset = (int**) malloc(patches->size() * sizeof(int*));
+    v_count = (int**) malloc(patches->size() * sizeof(int*));
+    for(int i = 0 ; i < patches->size() ; i++)
+    {
+      v_offset[i] = (int *) malloc(5 * sizeof(int));
+      v_count[i] = (int *) malloc(5 * sizeof(int));
+    }
     
+    
+    p_offset = (int *) malloc(5 * sizeof(int));
+    p_count = (int *) malloc(5 * sizeof(int));
+    memset(p_offset, 0, 5 * sizeof(int));
+    memset(p_count, 0, 5 * sizeof(int));
       
     
     
@@ -2087,6 +2100,17 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     for(int i = 0 ; i < number_of_variables ; i++){
       pidx_buffer[i] = (double**)malloc(sizeof(double*) * number_of_materials[i]);
       memset(pidx_buffer[i], 0, sizeof(double*) * number_of_materials[i]);
+    }
+    
+    temp_pidx_buffer = (double****)malloc(sizeof(double***) * number_of_variables);
+    memset(temp_pidx_buffer, 0, sizeof(double***) * number_of_variables);
+    for(int i = 0 ; i < number_of_variables ; i++){
+      temp_pidx_buffer[i] = (double***)malloc(sizeof(double**) * number_of_materials[i]);
+      memset(temp_pidx_buffer[i], 0, sizeof(double**) * number_of_materials[i]);
+      for(int j = 0 ; j < number_of_materials[i] ; j++){
+	temp_pidx_buffer[i][j] = (double**)malloc(sizeof(double*) * patches->size());
+	memset(temp_pidx_buffer[i][j], 0, sizeof(double*) * patches->size());
+      }
     }
     
     
@@ -2173,19 +2197,72 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	    std::cout << " X" << ", " << " ]\n";
 #endif
 	    
-	    v_offset[0] = lowE.x() + 1;
-	    v_offset[1] = lowE.y() + 1;
-	    v_offset[2] = lowE.z() + 1;
-	    v_offset[3] = 0;
-	    v_offset[4] = 0;
-	    v_count[0] = hiE.x() - lowE.x() + 0;
-	    v_count[1] = hiE.y() - lowE.y() + 0;
-	    v_count[2] = hiE.z() - lowE.z() + 0;
-	    v_count[3] = 1;
-	    v_count[4] = 1;
-	    pidx_buffer[vc][m] = (double*)malloc(sizeof(double) * (v_count[0] * v_count[1] * v_count[2]) * sample_per_variable);
-	    memset(pidx_buffer[vc][m], 0, sizeof(double*) * (v_count[0] * v_count[1] * v_count[2]) * sample_per_variable);
+	    v_offset[p][0] = lowE.x() + 1;
+	    v_offset[p][1] = lowE.y() + 1;
+	    v_offset[p][2] = lowE.z() + 1;
+	    v_offset[p][3] = 0;
+	    v_offset[p][4] = 0;
+	    v_count[p][0] = hiE.x() - lowE.x() + 0;
+	    v_count[p][1] = hiE.y() - lowE.y() + 0;
+	    v_count[p][2] = hiE.z() - lowE.z() + 0;
+	    v_count[p][3] = 1;
+	    v_count[p][4] = 1;
+	    
+	    if(p == 0)
+	    {
+	      p_offset[0] = v_offset[p][0];
+	      p_offset[1] = v_offset[p][1];
+	      p_offset[2] = v_offset[p][2];
+	      p_offset[3] = 0;
+	      p_offset[4] = 0;
+	      
+	      p_count[0] = v_count[p][0];
+	      p_count[1] = v_count[p][1];
+	      p_count[2] = v_count[p][2];
+	      p_count[3] = 1;
+	      p_count[4] = 1;
+	      
+	      //if(rank == 0)
+	      //printf("[Init %d] %d: %d %d %d \n", rank, p, v_offset[p][0], v_offset[p][1], v_offset[p][2]);
+	    }
+	    else
+	    {
+	      //if(rank == 0)
+		//printf("[X%d] %d: %d %d %d :: %d %d %d\n", rank, p, v_offset[p][0], v_offset[p][1], v_offset[p][2], v_offset[p-1][0], v_offset[p-1][1], v_offset[p-1][2]);
+	      int r = 0, count1=0, count2=0, count3=0;
+	      for(r = 0 ; r < p ; r++) 
+	      {
+		if (v_offset[p][0] > v_offset[r][0])
+	          count1++;
+	      }
+	      if(count1 == p)
+		p_count[0] = p_count[0] + v_count[p][0];
+	      
+	      for(r = 0 ; r < p ; r++) 
+	      {
+		if (v_offset[p][1] > v_offset[r][1])
+	          count2++;
+	      }
+	      if(count2 == p)
+		p_count[1] = p_count[1] + v_count[p][1];
+	  
+	      for(r = 0 ; r < p ; r++) 
+	      {
+		if (v_offset[p][2] > v_offset[r][2])
+		  count3++;
+	      }
+	      if(count3 == p)
+		p_count[2] = p_count[2] + v_count[p][2];
+	    }
+	    
+	    temp_pidx_buffer[vc][m][p] = (double*)malloc(sizeof(double) * (v_count[p][0] * v_count[p][1] * v_count[p][2]) * sample_per_variable);
+	    memset(temp_pidx_buffer[vc][m][p], 0, sizeof(double*) * (v_count[p][0] * v_count[p][1] * v_count[p][2]) * sample_per_variable);
+	    //std::cout<<"[" << rank << "] " << "Patch ID: " << patchID << " Offset: " << v_offset[p][0] << ", " << v_offset[p][1] << ", " << v_offset[p][2] << " Count: " << v_count[p][0] << ", " << v_count[p][1] << ", " << v_count[p][2] << std::endl;
 	  }
+	  //(char*) var->getName().c_str()
+	  string var_mat_name = var->getName() + "_m" + to_string(m);
+	  new_dw->emit(pc, vc, temp_pidx_buffer[vc][m][p], (char*)var_mat_name.c_str(),v_offset[p],v_count[p],var, matlIndex, patch);
+	
 	  //
 	  /*
 	  if(rank == 0)
@@ -2198,22 +2275,43 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	    << "," << v_count[2] << "," << v_count[3] << "," << v_count[4] << endl;
 	  */
 	  //
-	  string var_mat_name = var->getName() + "_m" + to_string(m);
-	  //std::cout << "Variable Material Name " << var_mat_name << endl;
-	  new_dw->emit(pc, vc, pidx_buffer[vc][m], /*(char*) var->getName().c_str()*/(char*)var_mat_name.c_str(),v_offset,v_count,var, matlIndex, patch);
-	  //if(vc == 1)
-	  //for(int le = 0 ; le < v_count[0] * v_count[1] * v_count[2] ; le++)
-	  //  std::cout << "["<< vc << "] Value at " << le << " = " << pidx_buffer[vc][m][le] << endl;
-	  
-	  pc.variable[vc][m] = PIDX_variable_global_define(pc.idx_ptr, /*(char*) var->getName()*/(char*)var_mat_name.c_str(),  sample_per_variable, MPI_DOUBLE);
-	  PIDX_variable_local_add(pc.idx_ptr, pc.variable[vc][m], (int*) v_offset, (int*) v_count);
-	  PIDX_variable_local_layout(pc.idx_ptr, pc.variable[vc][m], (double*)pidx_buffer[vc][m], MPI_DOUBLE);
-	  
+	 
 	} //  Patches
+	
+	pidx_buffer[vc][m] = (double*)malloc(sizeof(double) * (p_count[0] * p_count[1] * p_count[2]) * sample_per_variable);
+	memset(pidx_buffer[vc][m], 0, sizeof(double*) * (p_count[0] * p_count[1] * p_count[2]) * sample_per_variable);
+	int r, i1, j1, k1, index, send_o, send_c, recv_o;
+	int total_transfer = 0;
+	for (r = 0; r < patches->size(); r++) {
+	  for (k1 = v_offset[r][2]; k1 < (v_offset[r][2] + v_count[r][2] ); k1++)
+	    for (j1 = v_offset[r][1]; j1 < (v_offset[r][1] + v_count[r][1] ); j1++)
+	      for (i1 = v_offset[r][0]; i1 < (v_offset[r][0] + v_count[r][0] ); i1 = i1 + v_count[r][0]) {
+		index = ((v_count[r][0])* (v_count[r][1]) * (k1 - v_offset[r][2])) + ((v_count[r][0]) * (j1 - v_offset[r][1])) + (i1 - v_offset[r][0]);
+		send_o = index * sample_per_variable;
+		send_c = (v_count[r][0]) * sample_per_variable;
+		recv_o = ((p_count[0]) * (p_count[1]) * (k1 - p_offset[2])) +  ((p_count[0])* (j1 - p_offset[1])) + (i1 - p_offset[0]);
+		memcpy(pidx_buffer[vc][m] + (recv_o * sample_per_variable), temp_pidx_buffer[vc][m][r] + send_o, send_c * sizeof (double));
+		//if(rank == 0)
+		  //printf("offset info %d\n", recv_o);
+		total_transfer = total_transfer + send_c;
+		//if(rank == 0)
+		  //printf("[%d] Copy : %f %f\n", recv_o * sample_per_variable, pidx_buffer[vc][m][recv_o * sample_per_variable], temp_pidx_buffer[vc][m][r][send_o]);
+	    }
+	}
+	i1 = 0;
+	//if(rank == 0)
+	  //printf("[%d] : Total Transfers %d\n", rank, total_transfer);
+	  for(i1 = 0 ; i1 < p_count[0] * p_count[1] * p_count[2] ; i1++)
+	    printf("[%d][%d] [%d %d %d] [%d %d %d] Buffer value: %d: %f\n", rank, i1, p_offset[0], p_offset[1], p_offset[2], p_count[0], p_count[1], p_count[2],  i1, pidx_buffer[vc][m][i1]);
+	/*
+	pc.variable[vc][m] = PIDX_variable_global_define(pc.idx_ptr, (char*)var_mat_name.c_str(),  sample_per_variable, MPI_DOUBLE);
+	PIDX_variable_local_add(pc.idx_ptr, pc.variable[vc][m], (int*) p_offset, (int*) p_count);
+	PIDX_variable_local_layout(pc.idx_ptr, pc.variable[vc][m], (double*)pidx_buffer[vc][m], MPI_DOUBLE);
+	*/
       }   //  Materials
     }     //  Variables
-    PIDX_write(pc.idx_ptr);
-    PIDX_close(pc.idx_ptr);
+    //PIDX_write(pc.idx_ptr);
+    //PIDX_close(pc.idx_ptr);
     
     for(int i = 0 ; i < number_of_variables ; i++){
       for(int j = 0 ; j < number_of_materials[i] ; j++){
