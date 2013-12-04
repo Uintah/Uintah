@@ -2169,7 +2169,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
       }
       for(int m=0;m<var_matls->size();m++){
 	int matlIndex = var_matls->get(m);
-	
+	string var_mat_name;
 	for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++){
 	  
 	  const Patch* patch;
@@ -2260,7 +2260,7 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	    //std::cout<<"[" << rank << "] " << "Patch ID: " << patchID << " Offset: " << v_offset[p][0] << ", " << v_offset[p][1] << ", " << v_offset[p][2] << " Count: " << v_count[p][0] << ", " << v_count[p][1] << ", " << v_count[p][2] << std::endl;
 	  }
 	  //(char*) var->getName().c_str()
-	  string var_mat_name = var->getName() + "_m" + to_string(m);
+	  var_mat_name = var->getName() + "_m" + to_string(m);
 	  new_dw->emit(pc, vc, temp_pidx_buffer[vc][m][p], (char*)var_mat_name.c_str(),v_offset[p],v_count[p],var, matlIndex, patch);
 	
 	  //
@@ -2301,17 +2301,17 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 	i1 = 0;
 	//if(rank == 0)
 	  //printf("[%d] : Total Transfers %d\n", rank, total_transfer);
-	  for(i1 = 0 ; i1 < p_count[0] * p_count[1] * p_count[2] ; i1++)
-	    printf("[%d][%d] [%d %d %d] [%d %d %d] Buffer value: %d: %f\n", rank, i1, p_offset[0], p_offset[1], p_offset[2], p_count[0], p_count[1], p_count[2],  i1, pidx_buffer[vc][m][i1]);
-	/*
+	//  for(i1 = 0 ; i1 < p_count[0] * p_count[1] * p_count[2] ; i1++)
+	//    printf("[%d][%d] [%d %d %d] [%d %d %d] Buffer value: %d: %f\n", rank, i1, p_offset[0], p_offset[1], p_offset[2], p_count[0], p_count[1], p_count[2],  i1, pidx_buffer[vc][m][i1]);
+	
 	pc.variable[vc][m] = PIDX_variable_global_define(pc.idx_ptr, (char*)var_mat_name.c_str(),  sample_per_variable, MPI_DOUBLE);
 	PIDX_variable_local_add(pc.idx_ptr, pc.variable[vc][m], (int*) p_offset, (int*) p_count);
 	PIDX_variable_local_layout(pc.idx_ptr, pc.variable[vc][m], (double*)pidx_buffer[vc][m], MPI_DOUBLE);
-	*/
+	
       }   //  Materials
     }     //  Variables
-    //PIDX_write(pc.idx_ptr);
-    //PIDX_close(pc.idx_ptr);
+    PIDX_write(pc.idx_ptr);
+    PIDX_close(pc.idx_ptr);
     
     for(int i = 0 ; i < number_of_variables ; i++){
       for(int j = 0 ; j < number_of_materials[i] ; j++){
