@@ -323,7 +323,8 @@ SCI_ARG_WITH(cuda,
                  Use the CUDA installation in DIR),
   [with_cuda="$withval"
    sci_required_cuda=yes],
-  [with_cuda=""])
+  [with_cuda=""
+   sci_required_cuda=no])
   
 SCI_ARG_WITH(hypre,
   AC_HELP_STRING(--with-hypre=DIR,
@@ -4118,7 +4119,7 @@ if test "$wasatch_3p" = "yes"; then
 
   mkdir -p Wasatch3P
 
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$debug" "$IS_STATIC_BUILD"
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$debug" "$IS_STATIC_BUILD" "$sci_required_cuda"
 
   if test $? != 0; then
      AC_MSG_ERROR( Failed to build Wasatch 3p libraries... )

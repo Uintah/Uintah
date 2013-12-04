@@ -8,6 +8,7 @@
 # $2 - boost location
 # $3 - whether Uintah is being built in debug mode or not...
 # $4 - whether Uintah is being built with static libraries or not ...
+# $5 - whether Uintah is being built with CUDA
 #
 
 BASE_BUILD_DIR=$1
@@ -21,6 +22,12 @@ if test $4 = "yes"; then
   STATIC="-DBoost_USE_STATIC_LIBS=ON"
 else
   STATIC=""
+fi
+
+if test "$5" = "yes"; then
+  CUDA="-DENABLE_CUDA=ON"
+else
+  CUDA=""
 fi
 
 
@@ -102,6 +109,7 @@ run \
 "cmake \
   $DEBUG \
   $STATIC \
+  $CUDA \
   -DENABLE_TESTS=OFF \
   -DENABLE_THREADS=OFF \
   -DBOOST_ROOT=$BOOST_DIR \
