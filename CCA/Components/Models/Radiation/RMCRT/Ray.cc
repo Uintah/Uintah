@@ -1504,10 +1504,9 @@ bool Ray::has_a_boundary(const IntVector &c,
   IntVector adjacentCell = c;
   bool hasBoundary = false;
 
-  adjacentCell = c;
   adjacentCell[0] = c[0] - 1;     // west
 
-  if (celltype[adjacentCell]+1){    // cell type of flow is -1, so when cellType+1 isn't false, we
+  if (celltype[adjacentCell]+1){         // cell type of flow is -1, so when cellType+1 isn't false, we
     boundaryFaces.push_back( WEST );     // know we're at a boundary
     hasBoundary = true;
   }

@@ -174,9 +174,59 @@ __global__ void rayTraceKernel(dim3 dimGrid,
         gpuIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         
         boundFlux[origin].initialize(0.0);
-        
-      }
-    }
+
+        BoundaryFaces boundaryFaces;
+
+        if(RT_flags.benchMark==4 || RT_flags.benchMark==5){
+          boundaryFaces.addFace(5);
+        }
+
+        // which surrounding cells are boundaries
+        boundFlux[origin].p = has_a_boundaryDevice(origin, celltype, boundaryFaces);
+
+        //__________________________________
+        // Loop over boundary faces of the cell and compute incident radiative flux
+        #pragma unroll
+        for( int i = 0; i<boundaryFaces.size(); i++) {
+          
+
+          int RayFace = boundaryFaces.faceArray[i];
+          int UintahFace[6] = {WEST,EAST,SOUTH,NORTH,BOT,TOP};
+          
+          double sumI     = 0;
+          double sumProjI = 0;
+          double sumI_prev= 0;
+
+          //__________________________________
+          // Flux ray loop
+          #pragma unroll
+          for (int iRay=0; iRay < RT_flags.nFluxRays; iRay++){
+
+            gpuVector direction_vector, ray_location; 
+            double cosTheta;
+            #if 0
+            rayDirection_cellFace( mTwister, origin, _dirIndexOrder[RayFace], _dirSignSwap[RayFace], iRay,
+                                   direction_vector, cosTheta );
+                                   
+            rayLocation_cellFace( mTwister, origin, _locationIndexOrder[RayFace], _locationShift[RayFace], 
+                                  DyDx, DzDx, ray_location);            
+            #endif
+            updateSumIDevice( direction_vector, ray_location, origin, patch.dx, sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
+
+            sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
+
+            sumI_prev = sumI;
+
+          } // end of flux ray loop
+
+          //__________________________________
+          //  Compute Net Flux to the boundary
+          int face = UintahFace[RayFace];            
+          boundFlux[origin][ face ] = sumProjI * 2 *M_PI/RT_flags.nFluxRays;
+
+        } // boundary faces loop
+      }  // z slices loop
+    }  // X-Y Thread loop
   }
   
   
@@ -269,6 +319,62 @@ __device__ gpuVector rayLocationDevice( curandState* randNumStates,
     location.z =   origin.z +  0.5 * DzDx ;
   }
   return location;
+}
+
+//______________________________________________________________________
+//
+__device__ bool has_a_boundaryDevice(const gpuIntVector &c, 
+                                     const GPUGridVariable<int>& celltype, 
+                                     BoundaryFaces &boundaryFaces){
+
+  gpuIntVector adj = c;
+  bool hasBoundary = false;
+
+  adj[0] = c[0] - 1;     // west
+
+  if ( celltype[adj]+1 ){              // cell type of flow is -1, so when cellType+1 isn't false, we
+    boundaryFaces.addFace( WEST );     // know we're at a boundary
+    hasBoundary = true;
+  }
+
+  adj[0] += 2;           // east
+
+  if ( celltype[adj]+1 ){
+    boundaryFaces.addFace( EAST );
+    hasBoundary = true;
+  }
+
+  adj[0] -= 1;
+  adj[1] = c[1] - 1;     // south
+
+  if ( celltype[adj]+1 ){
+    boundaryFaces.addFace( SOUTH );
+    hasBoundary = true;
+  }
+
+  adj[1] += 2;           // north
+
+  if ( celltype[adj]+1 ){
+    boundaryFaces.addFace( NORTH );
+    hasBoundary = true;
+  }
+
+  adj[1] -= 1;
+  adj[2] = c[2] - 1;     // bottom
+
+  if ( celltype[adj]+1 ){
+    boundaryFaces.addFace( BOT );
+    hasBoundary = true;
+  }
+
+  adj[2] += 2;           // top
+
+  if ( celltype[adj]+1 ){
+    boundaryFaces.addFace( TOP );
+    hasBoundary = true;
+  }
+
+  return (hasBoundary);
 }
 
 
