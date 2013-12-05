@@ -146,11 +146,14 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
     d_printTotalKE = true; 
   }
 
-
-  if ( db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){                                                                                               ProblemSpecP db_wall_ht = db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" );  
-    d_wall_ht_models = scinew WallModelDriver( d_lab->d_sharedState ); 
-    d_wall_ht_models->problemSetup( db_wall_ht ); 
+  if ( db_parent->findBlock("BoundaryConditions") ){ 
+    if ( db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){
+      ProblemSpecP db_wall_ht = db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" );  
+      d_wall_ht_models = scinew WallModelDriver( d_lab->d_sharedState ); 
+      d_wall_ht_models->problemSetup( db_wall_ht ); 
+    }
   } 
+
 
   d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
                                           d_boundaryCondition,
