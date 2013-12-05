@@ -560,14 +560,14 @@ Arches::problemSetup(const ProblemSpecP& params,
       }
     }
 
-    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
-    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); 
-        ieqn != scalar_eqns.end(); ieqn++){
-
-      EqnBase* eqn = ieqn->second;  
-      eqn->assign_stage_to_sources(); 
-
-    }
+//    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
+//    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); 
+//        ieqn != scalar_eqns.end(); ieqn++){
+//
+//      EqnBase* eqn = ieqn->second;  
+//      eqn->assign_stage_to_sources(); 
+//
+//    }
 
   } else {
 
@@ -622,6 +622,16 @@ Arches::problemSetup(const ProblemSpecP& params,
 
       }
     } 
+  }
+
+  EqnFactory& eqn_factory = EqnFactory::self();
+  EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); 
+      ieqn != scalar_eqns.end(); ieqn++){
+
+    EqnBase* eqn = ieqn->second;  
+    eqn->assign_stage_to_sources(); 
+
   }
 
 #ifdef WASATCH_IN_ARCHES
@@ -895,8 +905,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   // check to make sure that all the scalar variables have BCs set and set intrusions:
-  EqnFactory& eqnFactory = EqnFactory::self();
-  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
   for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
     EqnBase* eqn = ieqn->second;
     eqn->set_intrusion( intrusion_ref );
