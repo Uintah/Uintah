@@ -38,7 +38,6 @@ namespace Uintah {
 using namespace std;
 using namespace SCIRun;
 
-
 struct varLabelNames{
   const char* divQ;
   const char* abskg;
@@ -66,7 +65,6 @@ struct RMCRT_flags{
   bool solveDivQ;
   bool allowReflect;
   bool solveBoundaryFlux;
-  bool isSeedRandom;
   bool CCRays;
   
   double sigma;               // StefanBoltzmann constant
@@ -77,7 +75,29 @@ struct RMCRT_flags{
   int   nRadRays;             // number of rays for virtual radiometer
   int   nFluxRays;            // number of boundary flux rays
   int   nRaySteps;            // number of ray steps taken
+  int   benchMark;            // ID for benchmark tests
   
+};
+
+//__________________________________
+//  Struct for managing the boundary faces
+struct BoundaryFaces{
+  __device__ BoundaryFaces():nFaces(0){}
+  
+  int nFaces;             // number of faces
+  int faceArray[6];       // vector of faces
+  
+  // add Face to array
+  __device__ void addFace(int f){
+    faceArray[nFaces] = f;
+    nFaces ++;    
+  }
+ 
+  
+  // returns the number of faces
+  __device__ int size(){
+    return nFaces;
+  }
 };
 
 
@@ -113,12 +133,19 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                GPUDataWarehouse* new_gdw);
                                
 __device__ gpuVector findRayDirectionDevice( curandState* randNumStates );
-                                    
+
+                            
 __device__ gpuVector rayLocationDevice( curandState* randNumStates,
                                       const gpuIntVector origin,
                                       const double DyDx, 
                                       const double DzDx,
                                       const bool useCCRays);
+
+
+__device__ bool has_a_boundaryDevice(const gpuIntVector &c, 
+                                     const GPUGridVariable<int>& celltype, 
+                                     BoundaryFaces &boundaryFaces);
+
 
 __device__ void findStepSizeDevice(int step[],
                                    bool sign[],
