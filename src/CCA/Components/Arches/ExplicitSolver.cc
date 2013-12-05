@@ -146,8 +146,8 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
     d_printTotalKE = true; 
   }
 
-  if ( db_parent->findBlock( "WallHT" ) ){ 
-    ProblemSpecP db_wall_ht = db_parent->findBlock( "WallHT" ); 
+
+  if ( db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){                                                                                               ProblemSpecP db_wall_ht = db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" );  
     d_wall_ht_models = scinew WallModelDriver( d_lab->d_sharedState ); 
     d_wall_ht_models->problemSetup( db_wall_ht ); 
   } 
