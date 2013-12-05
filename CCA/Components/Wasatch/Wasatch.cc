@@ -904,7 +904,7 @@ namespace Wasatch{
       //    also need to set a flag on the task: task->setType(Task::OncePerProc);
       
       // set up any "old" variables that have been requested.
-      OldVariable::self().setup_tasks( allPatches, materials_, sched );
+      OldVariable::self().setup_tasks( allPatches, materials_, sched, iStage );
 
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT

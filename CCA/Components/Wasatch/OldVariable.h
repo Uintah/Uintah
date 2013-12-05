@@ -101,7 +101,8 @@ namespace Wasatch {
      */
     void setup_tasks( const Uintah::PatchSet* const patches,
                       const Uintah::MaterialSet* const materials,
-                      Uintah::SchedulerP& sched );
+                      Uintah::SchedulerP& sched,
+                      const int rkStage );
 
     /**
      * @brief add a new variable to the list of variables that should have
@@ -133,7 +134,8 @@ namespace Wasatch {
                                 const Uintah::PatchSubset* const patches,
                                 const Uintah::MaterialSubset* const materials,
                                 Uintah::DataWarehouse* const oldDW,
-                                Uintah::DataWarehouse* const newDW );
+                                Uintah::DataWarehouse* const newDW,
+                                const int rkStage);
 
     Wasatch* wasatch_;
     std::list<VarHelperBase*> varHelpers_;
