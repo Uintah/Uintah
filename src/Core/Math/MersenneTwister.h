@@ -89,6 +89,8 @@
 #include <time.h>
 #include <math.h>
 
+//#define DEBUG
+
 class MTRand {
 // Data
 public:
@@ -167,7 +169,13 @@ inline MTRand::MTRand()
 	{ seed(); }
 
 inline double MTRand::rand()
-	{ return double(randInt()) * (1.0/4294967295.0); }
+	{ 
+        #ifdef DEBUG
+          return 0.3;   // fix the random number for debugging purposes
+        #else
+          return double(randInt()) * (1.0/4294967295.0); 
+        #endif
+        }
 
 inline double MTRand::rand( const double& n )
 	{ return rand() * n; }
@@ -179,7 +187,13 @@ inline double MTRand::randExc( const double& n )
 	{ return randExc() * n; }
 
 inline double MTRand::randDblExc()
-	{ return ( double(randInt()) + 0.5 ) * (1.0/4294967296.0); }
+	{ 
+       #ifdef DEBUG
+         return 0.3;    // fix the random number for debugging purposes
+       #else
+         return ( double(randInt()) + 0.5 ) * (1.0/4294967296.0); 
+       #endif
+       }
 
 inline double MTRand::randDblExc( const double& n )
 	{ return randDblExc() * n; }
