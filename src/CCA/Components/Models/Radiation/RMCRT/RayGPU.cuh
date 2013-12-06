@@ -98,6 +98,14 @@ struct BoundaryFaces{
   __device__ int size(){
     return nFaces;
   }
+  
+  // print facesArray
+  __device__ void print(int tid){
+    for(int f=0; f<nFaces; f++){
+      printf("  tid: %i face[%i]: %i\n",tid,f, faceArray[f]);
+    }
+  }
+  
 };
 
 
@@ -134,12 +142,28 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                
 __device__ gpuVector findRayDirectionDevice( curandState* randNumStates );
 
+
+__device__ void rayDirection_cellFaceDevice( curandState* randNumStates,
+                                             const gpuIntVector& origin,
+                                             const gpuIntVector& indexOrder, 
+                                             const gpuIntVector& signOrder,
+                                             const int iRay,
+                                             gpuVector& directionVector,
+                                             double& cosTheta);
                             
 __device__ gpuVector rayLocationDevice( curandState* randNumStates,
                                       const gpuIntVector origin,
                                       const double DyDx, 
                                       const double DzDx,
                                       const bool useCCRays);
+                                      
+__device__ void rayLocation_cellFaceDevice( curandState* randNumStates,
+                                            const gpuIntVector& origin,
+                                            const gpuIntVector &indexOrder, 
+                                            const gpuIntVector &shift, 
+                                            const double &DyDx, 
+                                            const double &DzDx,
+                                            gpuVector& location);
 
 
 __device__ bool has_a_boundaryDevice(const gpuIntVector &c, 

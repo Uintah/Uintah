@@ -165,8 +165,47 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   //______________________________________________________________________
   if( RT_flags.solveBoundaryFlux ){
   
-  
-      // GPU equivalent of GridIterator loop - calculate sets of rays per thread
+    __shared__ int3 dirIndexOrder[6];
+    __shared__ int3 dirSignSwap[6];
+    __shared__ int3 locationIndexOrder[6];
+    __shared__ int3 locationShift[6];
+    
+    //_____________________________________________
+    //   Ordering for Surface Method
+    // This block of code is used to properly place ray origins, and orient ray directions
+    // onto the correct face.  This is necessary, because by default, the rays are placed
+    // and oriented onto a default face, then require adjustment onto the proper face.
+    dirIndexOrder[EAST]   = make_int3(2, 1, 0);
+    dirIndexOrder[WEST]   = make_int3(2, 1, 0);
+    dirIndexOrder[NORTH]  = make_int3(0, 2, 1);
+    dirIndexOrder[SOUTH]  = make_int3(0, 2, 1);
+    dirIndexOrder[TOP]    = make_int3(0, 1, 2);
+    dirIndexOrder[BOT]    = make_int3(0, 1, 2);
+
+    // Ordering is slightly different from 6Flux since here, rays pass through origin cell from the inside faces.
+    dirSignSwap[EAST]     = make_int3(-1, 1,  1);
+    dirSignSwap[WEST]     = make_int3( 1, 1,  1);
+    dirSignSwap[NORTH]    = make_int3( 1, -1, 1);
+    dirSignSwap[SOUTH]    = make_int3( 1, 1,  1);
+    dirSignSwap[TOP]      = make_int3( 1, 1, -1);
+    dirSignSwap[BOT]      = make_int3( 1, 1,  1);
+
+    locationIndexOrder[EAST]  = make_int3(1,0,2);
+    locationIndexOrder[WEST]  = make_int3(1,0,2);
+    locationIndexOrder[NORTH] = make_int3(0,1,2);
+    locationIndexOrder[SOUTH] = make_int3(0,1,2);
+    locationIndexOrder[TOP]   = make_int3(0,2,1);
+    locationIndexOrder[BOT]   = make_int3(0,2,1);
+
+    locationShift[EAST]   = make_int3(1, 0, 0);
+    locationShift[WEST]   = make_int3(0, 0, 0);
+    locationShift[NORTH]  = make_int3(0, 1, 0);
+    locationShift[SOUTH]  = make_int3(0, 0, 0);
+    locationShift[TOP]    = make_int3(0, 0, 1);
+    locationShift[BOT]    = make_int3(0, 0, 0);  
+    
+    //__________________________________
+    // GPU equivalent of GridIterator loop - calculate sets of rays per thread
     if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
       #pragma unroll
       for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
@@ -181,6 +220,11 @@ __global__ void rayTraceKernel(dim3 dimGrid,
           boundaryFaces.addFace(5);
         }
 
+
+        boundaryFaces.addFace(3);
+        boundaryFaces.addFace(4);
+        
+        boundaryFaces.print(threadID);
         // which surrounding cells are boundaries
         boundFlux[origin].p = has_a_boundaryDevice(origin, celltype, boundaryFaces);
 
@@ -204,13 +248,13 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 
             gpuVector direction_vector, ray_location; 
             double cosTheta;
-            #if 0
-            rayDirection_cellFace( mTwister, origin, _dirIndexOrder[RayFace], _dirSignSwap[RayFace], iRay,
+
+            rayDirection_cellFaceDevice( randNumStates, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
                                    direction_vector, cosTheta );
                                    
-            rayLocation_cellFace( mTwister, origin, _locationIndexOrder[RayFace], _locationShift[RayFace], 
+            rayLocation_cellFaceDevice( randNumStates, origin, locationIndexOrder[RayFace], locationShift[RayFace], 
                                   DyDx, DzDx, ray_location);            
-            #endif
+
             updateSumIDevice( direction_vector, ray_location, origin, patch.dx, sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
 
             sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
@@ -301,6 +345,36 @@ __device__ gpuVector findRayDirectionDevice( curandState* randNumStates )
 }
 
 //______________________________________________________________________
+// Compute the Ray direction from a cell face
+__device__ void rayDirection_cellFaceDevice( curandState* randNumStates,
+                                             const gpuIntVector& origin,
+                                             const gpuIntVector& indexOrder, 
+                                             const gpuIntVector& signOrder,
+                                             const int iRay,
+                                             gpuVector& directionVector,
+                                             double& cosTheta)
+{
+
+  // Surface Way to generate a ray direction from the positive z face
+  double phi   = 2 * M_PI * randDevice( randNumStates ); // azimuthal angle.  Range of 0 to 2pi
+  double theta = acos( randDevice( randNumStates ) );      // polar angle for the hemisphere
+  cosTheta = cos( theta );
+  double sinTheta = sin( theta );
+
+  //Convert to Cartesian
+  gpuVector tmp;
+  tmp[0] =  sinTheta * cos( phi );
+  tmp[1] =  sinTheta * sin( phi );
+  tmp[2] =  cosTheta;
+
+  // Put direction vector as coming from correct face,
+  directionVector[0] = tmp[indexOrder[0]] * signOrder[0];
+  directionVector[1] = tmp[indexOrder[1]] * signOrder[1];
+  directionVector[2] = tmp[indexOrder[2]] * signOrder[2];
+}
+
+
+//______________________________________________________________________
 //
 __device__ gpuVector rayLocationDevice( curandState* randNumStates,
                                       const gpuIntVector origin,
@@ -310,15 +384,40 @@ __device__ gpuVector rayLocationDevice( curandState* randNumStates,
 {
   gpuVector location;
   if( useCCRays == false ){
-    location.x =   origin.x +  randDevice( randNumStates ) ;
-    location.y =   origin.y +  randDevice( randNumStates ) * DyDx ;
-    location.z =   origin.z +  randDevice( randNumStates)  * DzDx ;
+    location.x =   (double) origin.x +  randDevice( randNumStates ) ;
+    location.y =   (double) origin.y +  randDevice( randNumStates ) * DyDx ;
+    location.z =   (double) origin.z +  randDevice( randNumStates)  * DzDx ;
   }else{
     location.x =   origin.x +  0.5 ;
     location.y =   origin.y +  0.5 * DyDx ;
     location.z =   origin.z +  0.5 * DzDx ;
   }
   return location;
+}
+
+//______________________________________________________________________
+//  Compute the Ray location from a cell face
+__device__ void rayLocation_cellFaceDevice( curandState* randNumStates,
+                                            const gpuIntVector& origin,
+                                            const gpuIntVector &indexOrder, 
+                                            const gpuIntVector &shift, 
+                                            const double &DyDx, 
+                                            const double &DzDx,
+                                            gpuVector& location)
+{
+  gpuVector tmp;
+  tmp[0] =  randDevice( randNumStates ) ;
+  tmp[1] =  0;
+  tmp[2] =  randDevice( randNumStates ) * DzDx ;
+  
+  // Put point on correct face
+  location[0] = tmp[indexOrder[0]] + (double)shift[0];
+  location[1] = tmp[indexOrder[1]] + (double)shift[1] * DyDx;
+  location[2] = tmp[indexOrder[2]] + (double)shift[2] * DzDx;
+
+  location[0] += (double) origin.x;
+  location[1] += (double) origin.y;
+  location[2] += (double) origin.z;
 }
 
 //______________________________________________________________________
