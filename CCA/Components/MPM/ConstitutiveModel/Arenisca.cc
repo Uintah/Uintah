@@ -100,6 +100,8 @@ porosity).
 #include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <sci_values.h>
+#include <Core/Math/Weibull.h>
+#include <fstream>
 #include <iostream>
 
 using std::cerr;
@@ -222,6 +224,10 @@ Arenisca::Arenisca(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->getWithDefault("T1_rate_dependence",d_cm.T1_rate_dependence, 0.0);
   ps->getWithDefault("T2_rate_dependence",d_cm.T2_rate_dependence, 0.0);
   
+  ps->get("PEAKI1IDIST",wdist.WeibDist);
+  WeibullParser(wdist);
+  cout<<"WeibMed="<<wdist.WeibMed<<endl;
+  
   initializeLocalMPMLabels();
 }
 Arenisca::Arenisca(const Arenisca* cm)
@@ -233,6 +239,16 @@ Arenisca::Arenisca(const Arenisca* cm)
   sqrt_three     = sqrt(3.0);
   one_sqrt_three = 1.0/sqrt_three;
 
+  //Weibull distribution input
+  wdist.WeibMed    = cm->wdist.WeibMed;
+  wdist.WeibMod    = cm->wdist.WeibMod;
+  wdist.WeibRefVol = cm->wdist.WeibRefVol;
+  wdist.WeibSeed   = cm->wdist.WeibSeed;
+  wdist.Perturb    = cm->wdist.Perturb;
+  wdist.WeibDist   = cm->wdist.WeibDist;
+  
+  WeibullParser(wdist);
+   
   d_cm.FSLOPE = cm->d_cm.FSLOPE;
   d_cm.FSLOPE_p = cm->d_cm.FSLOPE_p; // not used
   d_cm.hardening_modulus = cm->d_cm.hardening_modulus;  // not used
@@ -257,6 +273,8 @@ Arenisca::Arenisca(const Arenisca* cm)
 // DESTRUCTOR
 Arenisca::~Arenisca()
 {
+  VarLabel::destroy(peakI1IDistLabel);
+  VarLabel::destroy(peakI1IDistLabel_preReloc);
   VarLabel::destroy(pLocalizedLabel);
   VarLabel::destroy(pLocalizedLabel_preReloc);
   VarLabel::destroy(pAreniscaFlagLabel);
@@ -319,6 +337,14 @@ void Arenisca::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("PEAKI1",d_cm.PEAKI1);
   cm_ps->appendElement("B0",d_cm.B0);
   cm_ps->appendElement("G0",d_cm.G0);
+  //    ________________________________________________________________________
+  //    Uintah Variability Variables
+  cm_ps->appendElement("peakI1IPerturb", wdist.Perturb);
+  cm_ps->appendElement("peakI1IMed", wdist.WeibMed);
+  cm_ps->appendElement("peakI1IMod", wdist.WeibMod);
+  cm_ps->appendElement("peakI1IRefVol", wdist.WeibRefVol);
+  cm_ps->appendElement("peakI1ISeed", wdist.WeibSeed);
+  cm_ps->appendElement("PEAKI1IDIST", wdist.WeibDist);
 }
 
 Arenisca* Arenisca::clone()
@@ -343,8 +369,8 @@ void Arenisca::initializeCMData(const Patch* patch,
 
 #ifdef CSM_PORE_PRESSURE_INITIAL
   ParticleVariable<double>  pdTdt;
-  constParticleVariable<Matrix3> pDefGrad;  //pDefGrad,
-  ParticleVariable<Matrix3> pStress;  
+  constParticleVariable<Matrix3> pDefGrad;
+  ParticleVariable<Matrix3> pStress;
 
   new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
   //new_dw->get(pDefGrad,    lb->pDeformationMeasureLabel, pset);
@@ -368,6 +394,7 @@ void Arenisca::initializeCMData(const Patch* patch,
   ParticleVariable<double>  pScratchDouble1, // Developer tool
                             pScratchDouble2, // Developer tool
                             pPorePressure,   // Plottable fluid pressure
+                            peakI1IDist,     // Holder for particles PEAKI1 value
                             pevp,            // Plastic Volumetric Strain
                             peve,            // Elastic Volumetric Strain
                             pCapX,           // I1 of cap intercept
@@ -386,6 +413,7 @@ void Arenisca::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pScratchDouble1, pScratchDouble1Label, pset);
   new_dw->allocateAndPut(pScratchDouble2, pScratchDouble2Label, pset);
   new_dw->allocateAndPut(pPorePressure,   pPorePressureLabel,   pset);
+  new_dw->allocateAndPut(peakI1IDist,     peakI1IDistLabel,     pset);
   new_dw->allocateAndPut(pep,             pepLabel,             pset);
   new_dw->allocateAndPut(pevp,            pevpLabel,            pset);
   new_dw->allocateAndPut(peve,            peveLabel,            pset);
@@ -406,6 +434,7 @@ void Arenisca::initializeCMData(const Patch* patch,
     pScratchDouble1[*iter] = 0;
     pScratchDouble2[*iter] = 0;
     pPorePressure[*iter] = d_cm.fluid_pressure_initial;
+    peakI1IDist[*iter] = d_cm.PEAKI1;
     pevp[*iter] = 0.0;
     peve[*iter] = 0.0;
     pCapX[*iter] = computeX(0.0);
@@ -418,6 +447,34 @@ void Arenisca::initializeCMData(const Patch* patch,
     pStressQS[*iter].set(0.0);
     pScratchMatrix[*iter].set(0.0);
     pep[*iter].set(0.0);
+  }
+  if ( wdist.Perturb){
+    // Make the seed differ for each patch, otherwise each patch gets the
+    // same set of random #s.
+    int patchID = patch->getID();
+    int patch_div_32 = patchID/32;
+    patchID = patchID%32;
+    unsigned int unique_seed = ((wdist.WeibSeed+patch_div_32+1) << patchID);
+    SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,
+                            unique_seed,wdist.WeibMod);
+    //proc0cout << "Weibull Variables for PEAKI1I: (initialize CMData)\n"
+    //          << "Median:            " << wdist.WeibMed
+    //          << "\nModulus:         " << wdist.WeibMod
+    //          << "\nReference Vol:   " << wdist.WeibRefVol
+    //          << "\nSeed:            " << wdist.WeibSeed
+    //          << "\nPerturb?:        " << wdist.Perturb << std::endl;
+    constParticleVariable<double>pVolume;
+    new_dw->get(pVolume, lb->pVolumeLabel, pset);
+    ParticleSubset::iterator iter = pset->begin();
+    for(;iter != pset->end();iter++){
+      //set value with variability and scale effects
+      peakI1IDist[*iter] = weibGen.rand(pVolume[*iter]);
+      
+      //set value with ONLY scale effects
+      if(wdist.WeibSeed==0)
+        peakI1IDist[*iter]= pow(wdist.WeibRefVol/pVolume[*iter],1./wdist.WeibMod)
+                                *wdist.WeibMed;
+    }
   }
   computeStableTimestep(patch, matl, new_dw);
 }
@@ -604,7 +661,8 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
     delt_vartype                   delT;
     constParticleVariable<int>     pLocalized,
                                    pAreniscaFlag;
-    constParticleVariable<double>  pScratchDouble1,
+    constParticleVariable<double>  peakI1IDist,
+                                   pScratchDouble1,
                                    pScratchDouble2,
                                    pPorePressure,
                                    pmass,           //used for stable timestep
@@ -624,6 +682,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                    pBackStressIso;
 
     old_dw->get(delT,            lb->delTLabel,   getLevel(patches));
+    old_dw->get(peakI1IDist,     peakI1IDistLabel,             pset);
     old_dw->get(pLocalized,      pLocalizedLabel,              pset); //initializeCMData()
     old_dw->get(pAreniscaFlag,   pAreniscaFlagLabel,           pset); //initializeCMData()
     old_dw->get(pScratchDouble1, pScratchDouble1Label,         pset); //initializeCMData()
@@ -662,7 +721,9 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
     ParticleVariable<int>     pLocalized_new,
                               pAreniscaFlag_new;
+    ParticleVariable<double>  peakI1IDist_new;
 
+    new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,   pset);
     new_dw->allocateAndPut(pLocalized_new, pLocalizedLabel_preReloc,   pset);
     new_dw->allocateAndPut(pAreniscaFlag_new,   pAreniscaFlagLabel_preReloc,    pset);
 
@@ -857,7 +918,8 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                           J2_trial_step,
                                           pCapX[idx],
                                           pZeta[idx],
-                                          threeKby2G);
+                                          threeKby2G,
+                                          peakI1IDist[idx]);
 
         // initial assignment for the updated values of plastic strains, volumetric
         // part of the plastic strain, volumetric part of the elastic strain, \kappa,
@@ -868,13 +930,16 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         pKappa_new[idx] = pKappa[idx];
         pZeta_new[idx]  = pZeta[idx];
         pep_new[idx]    = pep[idx];
+        //Weibull Distribution on PEAKI1
+        peakI1IDist_new[idx]=peakI1IDist[idx];
 
         // allocate and assign step values
         double  evp_new_step    = pevp_new[idx],
                 eve_new_step    = peve_new[idx],
                 X_new_step      = pCapX_new[idx],
                 Kappa_new_step  = pKappa_new[idx],
-                Zeta_new_step   = pZeta_new[idx];
+                Zeta_new_step   = pZeta_new[idx],
+                PEAKI1Dist      = peakI1IDist_new[idx]; //Weibull Distribution on PEAKI1
         Matrix3 ep_new_step     = pep_new[idx],
                 stress_new_step = pStress_new[idx];
 
@@ -910,12 +975,12 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
           // distance from the vertex to the cap along the hydrostat.  To provide a
           // a measure in the case of no cap, we also compute the value of stress
           // corresponding to 0.1% volumetric strain.
-          clenI1 = min( bulk/1000 , PEAKI1 - pCapX[idx] );
+          clenI1 = min( bulk/1000 , PEAKI1Dist - pCapX[idx] );
 
           // Similarly, for the deviator, the characteristic length the characteristic
           // length (units of sqrt(J2), Pa), is the value of linear drucker-prager
           // surface at X, or a stress corresponding to 0.1% shear strain.
-          clensqrtJ2 = min( 2*G0/1000 , FSLOPE * (PEAKI1 - pCapX[idx]) );
+          clensqrtJ2 = min( 2*G0/1000 , FSLOPE * (PEAKI1Dist - pCapX[idx]) );
 
           // the general characteristic length (units of I1 and sqrt(J2), Pa)
           clen = sqrt( clenI1*clenI1 + clensqrtJ2*clensqrtJ2 );
@@ -923,8 +988,8 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
           #ifdef JC_DEBUG_PARTICLE // print characteristic length of yeild surface
           if(pParticleID[idx]==JC_DEBUG_PARTICLE){
             cout << " clen=" << clen << ", B0e-3=" << B0/1000
-                 << ", PEAKI1-p0=" << PEAKI1-p0 << ", 2G0e-3=" <<2*G0/1000
-                 << ", FSLOPE*(PEAKI1-p0)=" << FSLOPE*(PEAKI1-p0);
+                 << ", PEAKI1Dist-p0=" << PEAKI1Dist-p0 << ", 2G0e-3=" <<2*G0/1000
+                 << ", FSLOPE*(PEAKI1Dist-p0)=" << FSLOPE*(PEAKI1Dist-p0);
           }
           #endif
 
@@ -992,11 +1057,11 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
             //  4th and list time, num_subcycles is multiplied by 1000
             num_substeps = num_steps * Pow(10,massive_subcycling_counter-1);
 
-            if(num_substeps > 15000){  //T2D: this might change, but keep high for node success
+            if(num_substeps > 100){  //T2D: this might change, but keep high for node success
               cout << "WARNING: $num_subcycles=" << num_substeps
-                   << " exceeds 15000 maximum for pID=" << pParticleID[idx] << endl;
+                   << " exceeds 100 maximum for pID=" << pParticleID[idx] << endl;
 //              #ifndef CSM_FORCE_MASSIVE_SUBCYCLING
-              num_substeps=15000;
+              num_substeps=100;
 //              #endif
             }
 
@@ -1042,6 +1107,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                                                      Kappa_new_substep,
                                                      Zeta_new_substep,
                                                      bulk, // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                                                     PEAKI1Dist,
                                                      pParticleID[idx]);
 
               if(flag_substep!=0) //if flag thrown stop subcycling, end for loop
@@ -1390,6 +1456,7 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
                                       double&  Kappa_new,         // branch point (shifted)
                                       double&  Zeta_new,          // trace of isotropic backstress
                                       double&  bulk,              // bulk modulus for the step !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                                      double&  PEAKI1,
                                       long64   ParticleID)
 {
   // Define and initialize some variables
@@ -1436,7 +1503,7 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
           r_trial = threeKby2G * sqrt(2.0*J2_trial);
 
   // Checking for elastic or plastic step:
-  if( TransformedYieldFunction(r_trial,z_trial,X_old,Beta) <= 0 )
+  if( TransformedYieldFunction(r_trial,z_trial,X_old,Beta,PEAKI1) <= 0 )
   {
     // =========================================================== ELASTIC STEP
     // Update stress to trial stress, and update volumetric elastic strain,
@@ -1486,7 +1553,7 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
             eta_in  = 0.0, // outer bound for plastic scaler
             eta_mid,       // solution for plastic scaler
             eps_eta = 1.0, // convergence measure: eta_out-eta_in
-            TOL = 1.0e-9;  // convergence tolerance on eps_eta
+            TOL = 1.0e-6;  // convergence tolerance on eps_eta
 
     Matrix3 sigma_new0,   // non-hardening return stress
             d_sigma0,     // non-hardening increment stress over step
@@ -1566,7 +1633,7 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
       // Compute non-hardening return, (overwriting r_new, and z_new)
       gfcn = ComputeNonHardeningReturn(r_trial, z_trial, X_new, Beta, r_new, z_new);
 
-      if( TransformedYieldFunction( r_trial,z_trial,X_new,Beta ) <= 0.0 ||
+      if( TransformedYieldFunction( r_trial,z_trial,X_new,Beta,PEAKI1) <= 0.0 ||
           //Sign(dgdz(r_trial,z_trial,X_old,Beta)) != Sign(dgdz(r_trial,z_trial,X_new,Beta))
           Sign(z_trial-z_new0) != Sign(z_trial-z_new)
         )
@@ -1724,7 +1791,8 @@ double Arenisca::YieldFunction(const double& I1,   // Unshifted
                                const double& J2,   // Untransformed
                                const double& X,    // Shifted
                                const double& Zeta, // Trace of backstres
-                               const double& threeKby2G) // (3*K)/(2*G)
+                               const double& threeKby2G, // (3*K)/(2*G)
+                               const double& PEAKI1)
 
 {
   // Calls the transformed yield function with untransformed arguments.
@@ -1744,7 +1812,7 @@ double Arenisca::YieldFunction(const double& I1,   // Unshifted
   R = sqrt(2*J2)*threeKby2G;
   Z = one_sqrt_three*(I1 - Zeta);
   Beta = FSLOPE*threeKby2G*sqrt(6.0);
-  f = TransformedYieldFunction(R,Z,X,Beta);
+  f = TransformedYieldFunction(R,Z,X,Beta,PEAKI1);
 
   //cout << " YieldFxn:I1="<<I1<<", J2="<<J2<<", X="<<X
   //     <<", Zeta="<<Zeta<<", threeKby2G="<<threeKby2G
@@ -1834,7 +1902,7 @@ double Arenisca::ComputeNonHardeningReturn(const double& R,   // Transformed Tri
           Theta = 0.0,
           Theta_in = 0.0,
           Theta_out = 1.570796326794897,
-          TOL = 1.0e-9;
+          TOL = 1.0e-6;
 
    //while (Abs( Sqrt( Pow(X-a*cos(Theta_out),2) + Pow(Y-b*sin(Theta_out),2) ) -
    //            Sqrt( Pow(X-a*cos(Theta_in),2) + Pow(Y-b*sin(Theta_in),2) ) ) > TOL)
@@ -1866,7 +1934,8 @@ double Arenisca::ComputeNonHardeningReturn(const double& R,   // Transformed Tri
 double Arenisca::TransformedYieldFunction(const double& R,   // Transformed Trial Stress
                                                    const double& Z,   // Shifted Trial Stress
                                                    const double& CapX,
-                                                   const double& Beta)
+                                                   const double& Beta,
+                                                   const double& PEAKI1)
 {
   // ===========================================================================
   // MH! START Compute Tranformed Yield Function
@@ -1882,7 +1951,7 @@ double Arenisca::TransformedYieldFunction(const double& R,   // Transformed Tria
 
   double Beta2   = Beta*Beta,
          CapR    = d_cm.CR,
-         ZVertex = d_cm.PEAKI1/sqrt(3),
+         ZVertex = PEAKI1/sqrt(3),
          ZCapX   = CapX/sqrt(3),
          ZKappa,
          RKappa,
@@ -1997,6 +2066,7 @@ void Arenisca::addParticleState(std::vector<const VarLabel*>& from,
 {
   // Push back all the particle variables associated with Arenisca.
   // Important to keep from and to lists in same order!
+  from.push_back(peakI1IDistLabel);
   from.push_back(pLocalizedLabel);
   from.push_back(pAreniscaFlagLabel);
   from.push_back(pScratchDouble1Label);
@@ -2014,6 +2084,7 @@ void Arenisca::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pIotaQSLabel);
   from.push_back(pStressQSLabel);
   from.push_back(pScratchMatrixLabel);
+  to.push_back(  peakI1IDistLabel_preReloc);
   to.push_back(  pLocalizedLabel_preReloc);
   to.push_back(  pAreniscaFlagLabel_preReloc);
   to.push_back(  pScratchDouble1Label_preReloc);
@@ -2044,6 +2115,7 @@ void Arenisca::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
 
   // Other constitutive model and input dependent computes and requires
+  task->computes(peakI1IDistLabel, matlset);
   task->computes(pLocalizedLabel,      matlset);
   task->computes(pAreniscaFlagLabel,   matlset);
   task->computes(pScratchDouble1Label, matlset);
@@ -2072,6 +2144,7 @@ void Arenisca::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
+  task->requires(Task::OldDW, peakI1IDistLabel,     matlset, Ghost::None);
   task->requires(Task::OldDW, pLocalizedLabel,      matlset, Ghost::None);
   task->requires(Task::OldDW, pAreniscaFlagLabel,   matlset, Ghost::None);
   task->requires(Task::OldDW, pScratchDouble1Label, matlset, Ghost::None);
@@ -2090,6 +2163,7 @@ void Arenisca::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pStressQSLabel,       matlset, Ghost::None);
   task->requires(Task::OldDW, pScratchMatrixLabel,  matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pParticleIDLabel, matlset, Ghost::None);
+  task->computes(peakI1IDistLabel_preReloc,     matlset);
   task->computes(pLocalizedLabel_preReloc,      matlset);
   task->computes(pAreniscaFlagLabel_preReloc,   matlset);
   task->computes(pScratchDouble1Label_preReloc, matlset);
@@ -2172,6 +2246,11 @@ double Arenisca::getCompressibility()
 // Initialize all labels of the particle variables associated with Arenisca.
 void Arenisca::initializeLocalMPMLabels()
 {
+  //peakI1Dist
+  peakI1IDistLabel = VarLabel::create("p.peakI1IDist",
+                                      ParticleVariable<double>::getTypeDescription());
+  peakI1IDistLabel_preReloc = VarLabel::create("p.peakI1IDist+",
+                              ParticleVariable<double>::getTypeDescription());
   //pLocalized
   pLocalizedLabel = VarLabel::create("p.localized",
     ParticleVariable<int>::getTypeDescription());
@@ -2512,6 +2591,100 @@ double Arenisca::computedZetadevp(double Zeta, double evp)
     dZetadevp=0;
 
   return dZetadevp;
+}
+
+// Weibull input parser that accepts a structure of input
+// parameters defined as:
+//
+// bool Perturb        'True' for perturbed parameter
+// double WeibMed       Medain distrib. value OR const value
+//                         depending on bool Perturb
+// double WeibMod       Weibull modulus
+// double WeibRefVol    Reference Volume
+// int    WeibSeed      Seed for random number generator
+// std::string WeibDist  String for Distribution
+//
+// the string 'WeibDist' accepts strings of the following form
+// when a perturbed value is desired:
+//
+// --Distribution--|-Median-|-Modulus-|-Reference Vol -|- Seed -|
+// "    weibull,      45e6,      4,        0.0001,          0"
+//
+// or simply a number if no perturbed value is desired.
+void Arenisca::WeibullParser(WeibParameters &iP)
+{
+  // Remove all unneeded characters
+  // only remaining are alphanumeric '.' and ','
+  for ( int i = iP.WeibDist.length()-1; i >= 0; i--) {
+    iP.WeibDist[i] = tolower(iP.WeibDist[i]);
+    if ( !isalnum(iP.WeibDist[i]) &&
+       iP.WeibDist[i] != '.' &&
+       iP.WeibDist[i] != ',' &&
+       iP.WeibDist[i] != '-' &&
+       iP.WeibDist[i] != EOF) {
+         iP.WeibDist.erase(i,1);
+    }
+  } // End for
+  if (iP.WeibDist.substr(0,4) == "weib") {
+    iP.Perturb = true;
+  } else {
+    iP.Perturb = false;
+  }
+  // ######
+  // If perturbation is NOT desired
+  // ######
+  if ( !iP.Perturb ) {
+    bool escape = false;
+    int num_of_e = 0;
+    int num_of_periods = 0;
+    for ( unsigned int i = 0; i < iP.WeibDist.length(); i++) {
+      if ( iP.WeibDist[i] != '.'
+           && iP.WeibDist[i] != 'e'
+           && iP.WeibDist[i] != '-'
+           && !isdigit(iP.WeibDist[i]) ) escape = true;
+      if ( iP.WeibDist[i] == 'e' ) num_of_e += 1;
+      if ( iP.WeibDist[i] == '.' ) num_of_periods += 1;
+      if ( num_of_e > 1 || num_of_periods > 1 || escape ) {
+        std::cerr << "\n\nERROR:\nInput value cannot be parsed. Please\n"
+                     "check your input values.\n" << std::endl;
+        exit (1);
+      }
+    } // end for(int i = 0;....)
+    if ( escape ) exit (1);
+    iP.WeibMed  = atof(iP.WeibDist.c_str());
+  }
+  // ######
+  // If perturbation IS desired
+  // ######
+  if ( iP.Perturb ) {
+    int weibValues[4];
+    int weibValuesCounter = 0;
+    for ( unsigned int r = 0; r < iP.WeibDist.length(); r++) {
+      if ( iP.WeibDist[r] == ',' ) {
+        weibValues[weibValuesCounter] = r;
+        weibValuesCounter += 1;
+      } // end if(iP.WeibDist[r] == ',')
+    } // end for(int r = 0; ...... )
+    if (weibValuesCounter != 4) {
+      std::cerr << "\n\nERROR:\nWeibull perturbed input string must contain\n"
+                   "exactly 4 commas. Verify that your input string is\n"
+                   "of the form 'weibull, 45e6, 4, 0.001, 1'.\n" << std::endl;
+      exit (1);
+    } // end if(weibValuesCounter != 4)
+    std::string weibMedian;
+    std::string weibModulus;
+    std::string weibRefVol;
+    std::string weibSeed;
+    weibMedian  = iP.WeibDist.substr(weibValues[0]+1,weibValues[1]-weibValues[0]-1);
+    weibModulus = iP.WeibDist.substr(weibValues[1]+1,weibValues[2]-weibValues[1]-1);
+    weibRefVol  = iP.WeibDist.substr(weibValues[2]+1,weibValues[3]-weibValues[2]-1);
+    weibSeed    = iP.WeibDist.substr(weibValues[3]+1);
+    iP.WeibMed    = atof(weibMedian.c_str());
+    iP.WeibMod    = atof(weibModulus.c_str());
+    iP.WeibRefVol = atof(weibRefVol.c_str());
+    iP.WeibSeed   = atoi(weibSeed.c_str());
+    //T2D: is this needed? d_cm.PEAKI1=iP.WeibMed;  // Set this here to satisfy KAYENTA_CHK
+  } // End if (iP.Perturb)
 }
 
 #ifdef JC_DEBUG_PARTICLE // Undefine

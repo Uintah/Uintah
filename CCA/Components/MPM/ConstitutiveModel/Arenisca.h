@@ -50,6 +50,17 @@ namespace Uintah {
   class Arenisca : public ConstitutiveModel {
     // Create datatype for storing model parameters
   public:
+    // For usage instructions, see the 'WeibullParser' function
+    // header in Kayenta.cc
+    struct WeibParameters {
+      bool Perturb;           // 'True' for perturbed parameter
+      double WeibMed;         // Medain distrib. value OR const value depending on bool Perturb
+      int    WeibSeed;        // seed for random number generator
+      double WeibMod;         // Weibull modulus
+      double WeibRefVol;      // Reference Volume
+      std::string WeibDist;   // String for Distribution
+    };
+
     struct CMData {
       double FSLOPE;
       double CR;
@@ -105,6 +116,11 @@ namespace Uintah {
     const VarLabel* pScratchMatrixLabel;
     const VarLabel* pScratchMatrixLabel_preReloc;
 
+    // weibull parameter set
+    WeibParameters wdist;
+    const VarLabel* peakI1IDistLabel;
+    const VarLabel* peakI1IDistLabel_preReloc;
+    
   private:
     double one_third,
            two_third,
@@ -157,6 +173,7 @@ namespace Uintah {
                                 double& Kappa_new,
                                 double& Zeta_new,
                                 double& bulk,
+                                double& PEAKI1,
                                 long64 ParticleID);
 
     void computeInvariants(const Matrix3& stress,
@@ -169,7 +186,8 @@ namespace Uintah {
                          const double& J2,
                          const double& X,
                          const double& Zeta,
-                         const double& threeKby2G);
+                         const double& threeKby2G,
+                         const double& PEAKI1);
 
     double ComputeNonHardeningReturn(const double& R,
                                      const double& Z,
@@ -181,7 +199,8 @@ namespace Uintah {
     double TransformedYieldFunction(const double& R,
                                     const double& Z,
                                     const double& X,
-                                    const double& Beta);
+                                    const double& Beta,
+                                    const double& PEAKI1);
 
   public: //Uintah MPM constitutive model specific functions
     ////////////////////////////////////////////////////////////////////////
@@ -250,7 +269,18 @@ namespace Uintah {
                                    double temperature);
 
     virtual double getCompressibility();
-
+    
+    // Weibull input parser that accepts a structure of input
+    // parameters defined as:
+    //
+    // bool Perturb        'True' for perturbed parameter
+    // double WeibMed       Medain distrib. value OR const value
+    //                         depending on bool Perturb
+    // double WeibMod       Weibull modulus
+    // double WeibScale     Scale parameter
+    // std::string WeibDist  String for Distribution
+    virtual void WeibullParser(WeibParameters &iP);
+    
   private:  //Non-Uintah MPM constitutive model class functions
     double computeev0();
 
