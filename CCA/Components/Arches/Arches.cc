@@ -1568,7 +1568,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   // disable Wasatch's time integrator because Arches is handling it.
   d_wasatch->scheduleTimeAdvance( level, sched );
-  d_nlSolver->nonlinearSolve(level, sched, *d_wasatch, d_timeIntegrator );
+  d_nlSolver->nonlinearSolve(level, sched, *d_wasatch, d_timeIntegrator, d_sharedState );
 
 #else 
 
