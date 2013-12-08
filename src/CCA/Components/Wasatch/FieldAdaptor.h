@@ -35,6 +35,8 @@
 #include <Core/Grid/Variables/PerPatch.h>      /* single double per patch */
 #include <Core/Disclosure/TypeDescription.h>
 #include <sci_defs/uintah_defs.h>
+#include <sci_defs/cuda_defs.h>
+
 
 #include <CCA/Components/Wasatch/FieldTypes.h>
 
@@ -90,14 +92,18 @@ namespace Wasatch{
    *  \brief wrap a uintah field to obtain a SpatialOps field,
    *         returning a new pointer.  The caller is responsible for
    *         freeing the memory.
-   *  \param uintahVar - the uintah variable to wrap
-   *  \param patch - the patch that the field is associated with.
+   *  \param uintahVar the uintah variable to wrap
+   *  \param patch the patch that the field is associated with.
+   *  \param mtype specifies the location for the field (GPU,CPU)
+   *  \param deviceIndex in the case of a GPU field, this specifies which GPU it is on
+   *  \param uintahDeviceVar for GPU fields, this is the pointer to the field on the device
    */
   template< typename FieldT, typename UFT >
   inline FieldT* wrap_uintah_field_as_spatialops( UFT& uintahVar,
                                                   const Uintah::Patch* const patch,
                                                   const SpatialOps::MemoryType mtype=SpatialOps::LOCAL_RAM,
-                                                  const unsigned short int deviceIndex=0 )
+                                                  const unsigned short int deviceIndex=0,
+                                                  double* uintahDeviceVar = NULL )
   {
     /*
      * NOTE: before changing things here, look at the line:
@@ -120,13 +126,23 @@ namespace Wasatch{
 
     SS::IntVec bcMinus, bcPlus;
     get_bc_logicals( patch, bcMinus, bcPlus );
-    return new FieldT( SpatialOps::structured::MemoryWindow( size, offset, extent ),
-                       SS::BoundaryCellInfo::build<FieldT>(bcPlus),
-                       SS::GhostData(1),  /* for now, we hard-code one ghost cell */
-                       const_cast<typename FieldT::value_type*>( uintahVar.getPointer() ),
-                       SpatialOps::structured::ExternalStorage,
-                       mtype,
-                       deviceIndex );
+
+    double* fieldValues_ = NULL;
+    if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
+#     ifdef HAVE_CUDA
+      fieldValues_ = const_cast<double*>( uintahDeviceVar );
+#     endif
+    } else{
+      fieldValues_ = const_cast<typename FieldT::value_type*>( uintahVar.getPointer() );
+    }
+
+  return new FieldT( SpatialOps::structured::MemoryWindow( size, offset, extent ),
+                           SS::BoundaryCellInfo::build<FieldT>(bcPlus),
+                           SS::GhostData(1),  /* for now, we hard-code one ghost cell */
+                           fieldValues_,
+                           SpatialOps::structured::ExternalStorage,
+                           mtype,
+                           deviceIndex );
   }
 
   template<>
@@ -135,7 +151,8 @@ namespace Wasatch{
       Uintah::PerPatch<double*>& uintahVar,
       const Uintah::Patch* const patch,
       const SpatialOps::MemoryType mtype,
-      const unsigned short int deviceIndex );
+      const unsigned short int deviceIndex,
+      double* uintahDeviceVar );
 
   /**
    *  \ingroup WasatchParser
