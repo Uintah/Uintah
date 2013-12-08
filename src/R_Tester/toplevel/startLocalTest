@@ -41,7 +41,13 @@ fi
 
 cd "${BUILD_DIR}"
 
-TEST_DATA="${BUILD_DIR}/TestData"
+if ! test ${TEST_DATA:+1}; then
+  TEST_DATA="${BUILD_DIR}/TestData"
+fi
+
+echo "Note: Using GoldStandards in:"
+echo "  $TEST_DATA"
+
 #__________________________________
 #    - generate the symbolic links
 #    - check for the goldStandards
@@ -97,7 +103,8 @@ fi
 # If the env var TEST_COMPONENTS is set, use it instead of asking user for component list...
 if test ${TEST_COMPONENTS:+1}; then
     echo ""
-    echo "Using TEST_COMPONENTS env var for list of components to test: ($TEST_COMPONENTS)"
+    echo "Using TEST_COMPONENTS environment variable for list of components to test:"
+    echo "  $TEST_COMPONENTS"
     selectedCompTests=$TEST_COMPONENTS
     
     let n=0                                          # use the environment variable

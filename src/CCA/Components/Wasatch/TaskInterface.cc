@@ -568,7 +568,7 @@ namespace Wasatch{
           // Pass patch information to the coordinate expressions
           typedef std::map<Expr::Tag, std::string> CoordMapT;
           const CoordMapT& coordMap = CoordinateNames::self().coordinate_map();
-          OldVariable& oldVar = OldVariable::self();
+          // OldVariable& oldVar = OldVariable::self();
           BOOST_FOREACH( const CoordMapT::value_type& coordPair, coordMap )
           {
             const Expr::Tag coordTag = coordPair.first;
