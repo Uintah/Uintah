@@ -281,13 +281,13 @@ ExplicitSolver::checkMomBCs( SchedulerP& sched,
 // ****************************************************************************
 // Schedule non linear solve and carry out some actual operations
 // ****************************************************************************
-int ExplicitSolver::nonlinearSolve( const LevelP     &  level,
-                                    SchedulerP       & sched
-#ifdef WASATCH_IN_ARCHES
-                                    ,
-                                    Wasatch::Wasatch & wasatch, 
-                                    ExplicitTimeInt  * d_timeIntegrator
-#endif // WASATCH_IN_ARCHES
+int ExplicitSolver::nonlinearSolve(const LevelP& level,
+                                   SchedulerP& sched
+#                                  ifdef WASATCH_IN_ARCHES
+                                   , Wasatch::Wasatch& wasatch, 
+                                   ExplicitTimeInt* d_timeIntegrator,
+                                   SimulationStateP& state
+#                                  endif // WASATCH_IN_ARCHES
                                    )
 {
 
@@ -514,14 +514,14 @@ int ExplicitSolver::nonlinearSolve( const LevelP     &  level,
         std::stringstream strRKStage;
         strRKStage << curr_level;
         Wasatch::TaskInterface* wasatchMomRHSTask =
-          scinew Wasatch::TaskInterface( momRootIDs,
-                                         "warches_mom_rhs_partial_task_stage_" + strRKStage.str(),
-                                         *(gh->exprFactory),
-                                         level, sched, patches, matls,
-                                         wasatch.patch_info_map(),
-                                         curr_level+1,
-                                         d_lab->d_sharedState,
-                                         wasatch.locked_fields() );
+        scinew Wasatch::TaskInterface( momRootIDs,
+                                       "warches_mom_rhs_partial_task_stage_" + strRKStage.str(),
+                                       *(gh->exprFactory),
+                                       level, sched, patches, matls,
+                                       wasatch.patch_info_map(),
+                                       curr_level+1,
+                                       state,
+                                       wasatch.locked_fields() );
         wasatch.task_interface_list().push_back( wasatchMomRHSTask );
         wasatchMomRHSTask->schedule( curr_level +1 );
         d_momSolver->sched_computeVelHatWarches( level, sched, curr_level );
@@ -693,15 +693,16 @@ int ExplicitSolver::nonlinearSolve( const LevelP     &  level,
         // IF ANY OF THE FORCED DEPENDENCIES ARE SHARED WITH ANOTHER TASKINTERFACE, THEN WE WILL
         // GET MULTIPLE COMPUTES ERRORS FROM UINTAH.
         if ( !( gh->rootIDs.empty() ) ) scalRHSIDs.insert(gh->rootIDs.begin(), gh->rootIDs.end());
-        Wasatch::TaskInterface * wasatchRHSTask =
-          scinew Wasatch::TaskInterface( scalRHSIDs,
-                                         "warches_scalar_rhs_task_stage_" + strRKStage.str(),
-                                         *(gh->exprFactory),
-                                         level, sched, patches, matls,
-                                         wasatch.patch_info_map(),
-                                         curr_level+1,
-                                         d_lab->d_sharedState,
-                                         ioFieldSet );
+        Wasatch::TaskInterface* wasatchRHSTask =
+        scinew Wasatch::TaskInterface( scalRHSIDs,
+                                      "warches_scalar_rhs_task_stage_" + strRKStage.str(),
+                                      *(gh->exprFactory),
+                                      level, sched, patches, matls,
+                                      wasatch.patch_info_map(),
+                                      curr_level+1,
+                                      state,
+                                      ioFieldSet
+                                      );
         
         // jcs need to build a CoordHelper (or graph the one from wasatch?) - see Wasatch::TimeStepper.cc...
         wasatch.task_interface_list().push_back( wasatchRHSTask );
