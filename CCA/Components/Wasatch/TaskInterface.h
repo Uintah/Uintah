@@ -107,18 +107,18 @@ namespace Wasatch{
      *
      *  This registers fields on the FieldManagerList (which is created if necessary).
      */
-    TaskInterface( const IDSet& roots,
-                   const std::string taskName,
-                   Expr::ExpressionFactory& factory,
-                   const Uintah::LevelP& level,
-                   Uintah::SchedulerP& sched,
-                   const Uintah::PatchSet* const patches,
-                   const Uintah::MaterialSet* const materials,
-                   const PatchInfoMap& info,
-                   const int RKStage,
-                   Uintah::SimulationStateP state,
-                   const std::set<std::string>& ioFieldSet,
-                   const bool lockAllFields=false);
+    TaskInterface( const IDSet                 & roots,
+                   const std::string             taskName,
+                   Expr::ExpressionFactory     & factory,
+                   const Uintah::LevelP        & level,
+                   Uintah::SchedulerP          & sched,
+                   const Uintah::PatchSet      * const patches,
+                   const Uintah::MaterialSet   * const materials,
+                   const PatchInfoMap          & info,
+                   const int                     RKStage,
+                   Uintah::SimulationStateP      state,
+                   const std::set<std::string> & ioFieldSet,
+                   const bool                    lockAllFields = false );
 
     ~TaskInterface();
 

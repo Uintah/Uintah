@@ -22,10 +22,9 @@
  * IN THE SOFTWARE.
  */
 
-#include "VardenMMSBCs.h"
-#ifndef PI
-#define PI 3.1415926535897932384626433832795
-#endif
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/VardenMMSBCs.h>
+
+#include <math.h>
 
 // ###################################################################
 //
@@ -35,8 +34,7 @@
 
 template< typename FieldT >
 void
-VarDensMMSDensity<FieldT>::
-evaluate()
+VarDensMMSDensity<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
@@ -62,8 +60,7 @@ evaluate()
 
 template< typename FieldT >
 void
-VarDensMMSMixtureFraction<FieldT>::
-evaluate()
+VarDensMMSMixtureFraction<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
@@ -90,8 +87,7 @@ evaluate()
 
 template< typename FieldT >
 void
-VarDensMMSMomentum<FieldT>::
-evaluate()
+VarDensMMSMomentum<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   namespace SS = SpatialOps::structured;
@@ -105,13 +101,13 @@ evaluate()
     std::vector<SS::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     if (this->isStaggered_) {
       if (side_==SS::PLUS_SIDE) {
-        const double bcValue = (5 * t * sin((30 * PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
+        const double bcValue = (5 * t * sin((30 * M_PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
           f(*ii) = ( bcValue - ci*f(*ig) ) / cg;
         }
       } else if (side_ == SS::MINUS_SIDE) {
-        const double bcValue = (5 * t * sin((-30 * PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
+        const double bcValue = (5 * t * sin((-30 * M_PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
           f(*ii) = ( bcValue - ci*f(*ii) ) / cg;
@@ -119,12 +115,12 @@ evaluate()
       }
     } else {
       if (side_==SS::PLUS_SIDE) {
-        const double bcValue = (5 * t * sin((30 * PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
+        const double bcValue = (5 * t * sin((30 * M_PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
         }
       } else if (side_ == SS::MINUS_SIDE) {
-        const double bcValue = (5 * t * sin((-30 * PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
+        const double bcValue = (5 * t * sin((-30 * M_PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
         }
@@ -141,8 +137,7 @@ evaluate()
 
 template< typename FieldT >
 void
-VarDensMMSSolnVar<FieldT>::
-evaluate()
+VarDensMMSSolnVar<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
@@ -168,8 +163,7 @@ evaluate()
 
 template< typename FieldT >
 void
-VarDensMMSVelocity<FieldT>::
-evaluate()
+VarDensMMSVelocity<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   namespace SS = SpatialOps::structured;
@@ -184,13 +178,13 @@ evaluate()
     std::vector<SS::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     if (this->isStaggered_) {
       if (side_== SS::PLUS_SIDE) {
-        const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(10 * PI / (t + 10) ) );
+        const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(10 * M_PI / (t + 10) ) );
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
           f(*ii) = ( bcValue - ci*f(*ig) ) / cg;
         }
       } else if (side_ == SS::MINUS_SIDE) {
-        const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(-10 * PI / (t + 10) ) );
+        const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(-10 * M_PI / (t + 10) ) );
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
           f(*ii) = ( bcValue - ci*f(*ii) ) / cg;
@@ -198,12 +192,12 @@ evaluate()
       }
     } else {
       if (side_== SS::PLUS_SIDE) {
-        const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(10 * PI / (t + 10) ) );
+        const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(10 * M_PI / (t + 10) ) );
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
         }
       } else if (side_ == SS::MINUS_SIDE) {
-        const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(-10 * PI / (t + 10) ) );
+        const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(-10 * M_PI / (t + 10) ) );
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
           f(*ig) = ( bcValue - ci*f(*ii) ) / cg;
         }
@@ -213,7 +207,8 @@ evaluate()
 }
 
 //------------------
-#define INSTANTIATE_VARDEN_MMS_BCS(VOLT)          \
+
+#define INSTANTIATE_VARDEN_MMS_BCS( VOLT )        \
   template class VarDensMMSDensity<VOLT>;         \
   template class VarDensMMSMixtureFraction<VOLT>; \
   template class VarDensMMSSolnVar<VOLT>;         \
