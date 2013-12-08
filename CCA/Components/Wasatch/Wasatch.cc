@@ -755,7 +755,9 @@ namespace Wasatch{
                                                           allPatches,
                                                           materials_,
                                                           patchInfoMap_,
-                                                          1, lockedFields_ );
+                                                          1,
+                                                          sharedState_,
+                                                          lockedFields_ );
         //_______________________________________________________
         // create the TaskInterface and schedule this task for
         // execution.  Note that field dependencies are assigned
@@ -839,7 +841,7 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
-                                                        1, lockedFields_ );
+                                                        1, sharedState_, lockedFields_ );
       task->schedule(1);
       taskInterfaceList_.push_back( task );
     }
@@ -955,7 +957,9 @@ namespace Wasatch{
                                                           allPatches,
                                                           materials_,
                                                           patchInfoMap_,
-                                                          iStage, lockedFields_ );
+                                                          iStage,
+                                                          sharedState_,
+                                                          lockedFields_ );
         task->schedule(iStage);
         taskInterfaceList_.push_back( task );
       }

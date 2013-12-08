@@ -881,7 +881,6 @@ class Task {
                         DataWarehouse* toDW,
                         void *stream,
                         Arg1 arg1),
-         void* stream,
          Arg1 arg1)
         :
           d_taskName(taskName),
