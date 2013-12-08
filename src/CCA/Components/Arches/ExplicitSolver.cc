@@ -518,6 +518,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                       level, sched, patches, matls,
                                       wasatch.patch_info_map(),
                                       curr_level+1,
+                                      state,
                                       wasatch.locked_fields() );
         wasatch.task_interface_list().push_back( wasatchMomRHSTask );
         wasatchMomRHSTask->schedule( curr_level +1 );
