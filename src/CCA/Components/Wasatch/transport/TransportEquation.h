@@ -206,7 +206,6 @@ namespace Wasatch{
     const Direction stagLoc_;             ///< staggered direction for this equation
     const bool isConstDensity_;
     Expr::ExpressionID rhsExprID_;  ///< The label for the rhs expression for this TransportEquation.
-    Expr::Tag turbDiffTag_;
   };
 
 } // namespace Wasatch

@@ -47,7 +47,6 @@
 using namespace std;
 using namespace Uintah;
 
-#include <CCA/Components/Arches/fortran/apcal_all_fort.h>
 #ifdef divergenceconstraint
 #include <CCA/Components/Arches/fortran/prescoef_var_fort.h>
 #endif

@@ -70,6 +70,9 @@ MixingRxnModel::~MixingRxnModel()
   for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
     VarLabel::destroy( i->second ); 
   }
+  for ( VarMap::iterator i = d_oldDvVarMap.begin(); i != d_oldDvVarMap.end(); ++i ){
+    VarLabel::destroy( i->second ); 
+  }
   delete _iv_transform; 
 }
 
@@ -129,6 +132,10 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
     throw ProblemSetupException( "Could not properly setup independent variable transform based on input.",__FILE__,__LINE__); 
   }
 
+  bool ignoreDensityCheck = false; 
+  if ( db->findBlock("ignore_iv_density_check"))
+    ignoreDensityCheck = true; 
+
   // For inert stream mixing // 
   d_inertMap.clear(); 
   if ( db->findBlock( "post_mix" ) ){ 
@@ -156,7 +163,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
         doubleMap::iterator iter = var_values.find( label ); 
         if ( iter == var_values.end() ){ 
           var_values.insert( std::make_pair( label, value ) );
-          proc0cout << " ---> " << label << ", " << value << std::endl;
+          proc0cout << " Adding ---> " << label << ", " << value << std::endl;
           found_vars = true; 
         }
 
@@ -185,7 +192,7 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
 
         //check if it uses a density guess (which it should) 
         //if it isn't set properly, then do it automagically for the user
-        if (!eqn.getDensityGuessBool()){ 
+        if (!eqn.getDensityGuessBool() && !ignoreDensityCheck ){ 
           proc0cout << " Warning: For equation named " << phi << endl 
             << "     Density guess must be used for this equation because it determines properties." << endl
             << "     Automatically setting density guess = true. " << endl;

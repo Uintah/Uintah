@@ -36,6 +36,7 @@
 #include "ScalabilityTestTransportEquation.h"
 #include "MomentumTransportEquation.h"
 #include "MomentTransportEquation.h"
+#include "EnthalpyTransportEquation.h"
 
 //-- includes for the expressions built here --//
 #include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
@@ -130,11 +131,24 @@ namespace Wasatch{
                                           turbParams );
         adaptor = scinew EqnTimestepAdaptor< SVolField >( transeqn );
     }
+    else if( eqnLabel == "enthalpy" ){
+      typedef EnthalpyTransportEquation TransEqn;
+      transeqn = scinew TransEqn( ScalarTransportEquation<SVolField>::get_solnvar_name(params),
+                                  params,
+                                  gc,
+                                  densityTag,
+                                  isConstDensity,
+                                  turbParams );
+      adaptor = scinew EqnTimestepAdaptor<SVolField>(transeqn);
+    }
     else {
       std::ostringstream msg;
       msg << "ERROR: No transport equation was specified '" << eqnLabel << "'. Please revise your input file" << std::endl;
       throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
     }
+
+    assert( transeqn != NULL );
+    assert( adaptor  != NULL );
 
     //_____________________________________________________
     // set up initial conditions on this transport equation
@@ -798,9 +812,9 @@ namespace Wasatch{
       const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + suffix, Expr::STATE_NONE);
 
       Expr::ExpressionBuilder* builder = NULL;
-      if( dir=="X" )      builder = build_diff_flux_expr<typename MyOpTypes::GradX>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+      if     ( dir=="X" ) builder = build_diff_flux_expr<typename MyOpTypes::GradX>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
       else if( dir=="Y" ) builder = build_diff_flux_expr<typename MyOpTypes::GradY>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
-      else if( dir=="Z")  builder = build_diff_flux_expr<typename MyOpTypes::GradZ>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+      else if( dir=="Z" ) builder = build_diff_flux_expr<typename MyOpTypes::GradZ>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
 
       if( builder == NULL ){
         std::ostringstream msg;

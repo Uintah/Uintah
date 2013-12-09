@@ -60,7 +60,12 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   # setup variables and paths
   global helperspath
   susdir        = path.normpath(path.join(getcwd(), argv[1]))
-  gold_standard = path.normpath(path.join(getcwd(), argv[3]))
+
+  if 'TEST_DATA' in environ :
+     gold_standard = environ['TEST_DATA']
+  else:
+     gold_standard = path.normpath(path.join(getcwd(), argv[3]))
+     
   helperspath   = "%s/%s" % (path.normpath(path.join(getcwd(), path.dirname(argv[0]))), "helpers")
   toolspath     = path.normpath(path.join(getcwd(), "tools"))
   inputpath     = path.normpath(path.join(getcwd(), inputs_root()))

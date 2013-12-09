@@ -205,7 +205,7 @@ namespace Wasatch{
                                 *(solnGraphHelper_->exprFactory),
                                 level, sched, patches, materials,
                                 patchInfoMap,
-                                1, persistentFields );
+                                1, sharedState_, persistentFields );
       taskInterfaceList_.push_back( timeTask );
       timeTask->schedule( rkStage );
     }
@@ -224,7 +224,7 @@ namespace Wasatch{
                                                      *(solnGraphHelper_->exprFactory),
                                                      level, sched, patches, materials,
                                                      patchInfoMap,
-                                                     rkStage, persistentFields );
+                                                     rkStage, sharedState_, persistentFields );
 
       taskInterfaceList_.push_back( rhsTask );
       rhsTask->schedule( rkStage ); // must be scheduled after coordHelper_

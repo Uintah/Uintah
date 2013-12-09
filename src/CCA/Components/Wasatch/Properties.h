@@ -46,7 +46,8 @@ namespace Wasatch{
    *  \param gh The GraphHelper object to be used when setting properties.
    */
   void setup_property_evaluation( Uintah::ProblemSpecP& params,
-                                  GraphCategories& gc );
+                                  GraphCategories& gc,
+                                  std::set<std::string>& lockedFields );
 
 } // namespace Wasatch
 

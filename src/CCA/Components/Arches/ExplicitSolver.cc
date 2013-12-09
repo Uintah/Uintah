@@ -69,15 +69,16 @@
 #include <CCA/Components/Arches/Filter.h>
 
 #ifdef WASATCH_IN_ARCHES
-#include <CCA/Components/Wasatch/Wasatch.h>
-#include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/transport/TransportEquation.h>
-#include <CCA/Components/Wasatch/transport/ParseEquation.h>
-#include <CCA/Components/Wasatch/GraphHelperTools.h>
-#include <CCA/Components/Wasatch/TaskInterface.h>
-#include <expression/ExprLib.h>
-#include <expression/PlaceHolderExpr.h>
-#include <CCA/Components/Wasatch/TagNames.h>
+#  include <expression/ExprLib.h>
+#  include <expression/PlaceHolderExpr.h>
+
+#  include <CCA/Components/Wasatch/Wasatch.h>
+#  include <CCA/Components/Wasatch/FieldTypes.h>
+#  include <CCA/Components/Wasatch/transport/TransportEquation.h>
+#  include <CCA/Components/Wasatch/transport/ParseEquation.h>
+#  include <CCA/Components/Wasatch/GraphHelperTools.h>
+#  include <CCA/Components/Wasatch/TaskInterface.h>
+#  include <CCA/Components/Wasatch/TagNames.h>
 #endif // WASATCH_IN_ARCHES
 
 
@@ -136,7 +137,7 @@ ExplicitSolver::~ExplicitSolver()
 // Problem Setup
 // ****************************************************************************
 void
-ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
+ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & state )
 {
 
   ProblemSpecP db = params->findBlock("ExplicitSolver");
@@ -146,17 +147,20 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
     d_printTotalKE = true; 
   }
 
-  if ( db_parent->findBlock( "WallHT" ) ){ 
-    ProblemSpecP db_wall_ht = db_parent->findBlock( "WallHT" ); 
-    d_wall_ht_models = scinew WallModelDriver( d_lab->d_sharedState ); 
-    d_wall_ht_models->problemSetup( db_wall_ht ); 
+  if ( db_parent->findBlock("BoundaryConditions") ){ 
+    if ( db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){
+      ProblemSpecP db_wall_ht = db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" );  
+      d_wall_ht_models = scinew WallModelDriver( d_lab->d_sharedState ); 
+      d_wall_ht_models->problemSetup( db_wall_ht ); 
+    }
   } 
 
-  d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
-                                          d_boundaryCondition,
-                                          d_physicalConsts, d_myworld,
-                                          d_hypreSolver);
-  d_pressSolver->problemSetup(db,state);
+
+  d_pressSolver = scinew PressureSolver( d_lab, d_MAlab,
+                                         d_boundaryCondition,
+                                         d_physicalConsts, d_myworld,
+                                         d_hypreSolver );
+  d_pressSolver->problemSetup( db, state );
 
   d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
                                         d_turbModel, d_boundaryCondition,
@@ -247,6 +251,9 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params,SimulationStateP& state)
   db->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
   db->getWithDefault("maxDensityLag",d_maxDensityLag,0.0);
 
+  d_extra_table_lookup = false; 
+  if ( db->findBlock("extra_table_lookup")) d_extra_table_lookup = true; 
+
   d_props->setFilter(d_turbModel->getFilter());
   d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
 
@@ -278,7 +285,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                    SchedulerP& sched
 #                                  ifdef WASATCH_IN_ARCHES
                                    , Wasatch::Wasatch& wasatch, 
-                                   ExplicitTimeInt* d_timeIntegrator
+                                   ExplicitTimeInt* d_timeIntegrator,
+                                   SimulationStateP& state
 #                                  endif // WASATCH_IN_ARCHES
                                    )
 {
@@ -299,6 +307,15 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_doDQMOM = true;
   else
     d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
+
+  EqnFactory& eqn_factory = EqnFactory::self();
+  EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
+  for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
+    EqnBase* eqn = iter->second;
+    eqn->sched_initializeVariables(level, sched); 
+
+  }
 
   // --------> START RK LOOP <---------
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
@@ -377,8 +394,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
     }
 
+    // STAGE 0 
+
     SourceTermFactory& src_factory = SourceTermFactory::self();
-    src_factory.sched_computeSources( level, sched, curr_level ); 
+    src_factory.sched_computeSources( level, sched, curr_level, 0 ); 
 
     sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
@@ -388,11 +407,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_checkDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level]);
 
-    EqnFactory& eqn_factory = EqnFactory::self();
-    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
       EqnBase* eqn = iter->second;
+      //these equations use a density guess
+      if ( eqn->get_stage() == 0 )
         eqn->sched_evalTransportEqn( level, sched, curr_level );
+
     }
 
     // Property models needed before table lookup:
@@ -413,13 +434,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     if ( hl_model != 0 )
       hl_model->sched_computeProp( level, sched, curr_level ); 
+    
 
+    //1st TABLE LOOKUP
     bool initialize_it  = false;
     bool modify_ref_den = true;
     if ( curr_level == 0 ) initialize_it = true;
     d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
 
     d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
+
+    // STAGE 1
 
     // Property models needed after table lookup:
     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
@@ -431,11 +456,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
+    // Source terms needed after table lookup: 
+    src_factory.sched_computeSources( level, sched, curr_level, 1 ); 
+
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
       EqnBase* eqn = iter->second;
-      //Transport is constructed above.  Here we only solve if densityGuess is not used.
-      if ( !eqn->getDensityGuessBool() )
-        eqn->sched_solveTransportEqn( level, sched, curr_level );
+      //these equations do not use a density guess
+      if ( eqn->get_stage() == 1 )
+        eqn->sched_evalTransportEqn( level, sched, curr_level );
     }
 
     // Clean up after Scalar equation evaluations
@@ -487,12 +515,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         strRKStage << curr_level;
         Wasatch::TaskInterface* wasatchMomRHSTask =
         scinew Wasatch::TaskInterface( momRootIDs,
-                                      "warches_mom_rhs_partial_task_stage_" + strRKStage.str(),
-                                      *(gh->exprFactory),
-                                      level, sched, patches, matls,
-                                      wasatch.patch_info_map(),
-                                      curr_level+1,
-                                      wasatch.locked_fields() );
+                                       "warches_mom_rhs_partial_task_stage_" + strRKStage.str(),
+                                       *(gh->exprFactory),
+                                       level, sched, patches, matls,
+                                       wasatch.patch_info_map(),
+                                       curr_level+1,
+                                       state,
+                                       wasatch.locked_fields() );
         wasatch.task_interface_list().push_back( wasatchMomRHSTask );
         wasatchMomRHSTask->schedule( curr_level +1 );
         d_momSolver->sched_computeVelHatWarches( level, sched, curr_level );
@@ -504,6 +533,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
       EqnBase* eqn = iter->second;
+      if ( eqn->get_stage() < 2 )
         eqn->sched_timeAve( level, sched, curr_level );
     }
 
@@ -534,6 +564,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       if ( hl_model != 0 )
         hl_model->sched_computeProp( level, sched, curr_level ); 
 
+      //TABLE LOOKUP #2
       bool initialize_it  = false;
       bool modify_ref_den = false;
       d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
@@ -547,7 +578,33 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
           prop_model->sched_computeProp( level, sched, curr_level );
 
       }
+    }
 
+    //STAGE 2
+
+    // Source terms needed after second table lookup: 
+    src_factory.sched_computeSources( level, sched, curr_level, 2 ); 
+
+    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+      EqnBase* eqn = iter->second;
+      if ( eqn->get_stage() == 2 )
+        eqn->sched_evalTransportEqn( level, sched, curr_level );
+    }
+
+    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+      EqnBase* eqn = iter->second;
+      if ( eqn->get_stage() == 2 )
+        eqn->sched_timeAve( level, sched, curr_level );
+    }
+
+    if ( d_extra_table_lookup ){ 
+      //TABLE LOOKUP #3
+      initialize_it  = false;
+      modify_ref_den = false;
+      d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
+    }
+
+    if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
 
       sched_computeDensityLag(sched, patches, matls,
                               d_timeIntegratorLabels[curr_level],
@@ -635,7 +692,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         // ADD THE FORCE-ON-GRAPH EXPRESSIONS TO THIS TASK. THERE IS A MAJOR LIMITATION HERE:
         // IF ANY OF THE FORCED DEPENDENCIES ARE SHARED WITH ANOTHER TASKINTERFACE, THEN WE WILL
         // GET MULTIPLE COMPUTES ERRORS FROM UINTAH.
-        if ( !( gh->forcedIDs.empty() ) ) scalRHSIDs.insert(gh->forcedIDs.begin(), gh->forcedIDs.end());
+        if ( !( gh->rootIDs.empty() ) ) scalRHSIDs.insert(gh->rootIDs.begin(), gh->rootIDs.end());
         Wasatch::TaskInterface* wasatchRHSTask =
         scinew Wasatch::TaskInterface( scalRHSIDs,
                                       "warches_scalar_rhs_task_stage_" + strRKStage.str(),
@@ -643,6 +700,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                       level, sched, patches, matls,
                                       wasatch.patch_info_map(),
                                       curr_level+1,
+                                      state,
                                       ioFieldSet
                                       );
         

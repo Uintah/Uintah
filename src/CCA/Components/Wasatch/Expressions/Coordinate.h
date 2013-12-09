@@ -1,3 +1,6 @@
+#ifndef Coordinates_h
+#define Coordinates_h
+
 /*
  * The MIT License
  *
@@ -22,9 +25,6 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Coordinates_h
-#define Coordinates_h
-
 //-- ExprLib Includes --//
 #include <expression/Expression.h>
 
@@ -37,10 +37,10 @@ namespace Wasatch{
   
   /**
    *  \class 	 Coordinates
-   *  \ingroup Expressions
-   *  \ingroup	WasatchCore
-   *  \author 	Tony Saad, James C. Sutherland
-   *  \date 	  November, 2013
+   *  \ingroup   Expressions
+   *  \ingroup	 WasatchCore
+   *  \author 	 Tony Saad, James C. Sutherland
+   *  \date 	 November, 2013
    *
    *  \brief Expression to compute coordinates.
    *

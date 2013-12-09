@@ -121,8 +121,9 @@ evaluate()
 
     // extract indep vars at this grid point
     ivarsPoint.clear();
-    for( typename IVarIter::const_iterator i=ivarIters.begin(); i!=ivarIters.end(); ++i ){
+    for( typename IVarIter::iterator i=ivarIters.begin(); i!=ivarIters.end(); ++i ){
       ivarsPoint.push_back( **i );
+      ++(*i);
     }
 
     // for now, we only pull out the effective radiative coefficient

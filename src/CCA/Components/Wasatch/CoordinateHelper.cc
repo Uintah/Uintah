@@ -91,7 +91,7 @@ namespace Wasatch{
       const Expr::Tag coordTag = coordPair.first;
       const string coordFieldT = coordPair.second;
       
-      OldVariable& oldVar = OldVariable::self();
+      // OldVariable& oldVar = OldVariable::self();
       Expr::ExpressionID coordID;
       if (coordFieldT == "SVOL") {
         initgh->exprFactory->register_expression( scinew Coordinates<SVolField>::Builder( coordTag ) );

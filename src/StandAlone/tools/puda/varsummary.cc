@@ -425,7 +425,7 @@ findMinMax( DataArchive         * da,
 
     if( !clf.be_brief ) {
       cout << "\t\t\t\t" << td->getName() << " over " << iter.begin() << " (inclusive) to " 
-           << iter.end() << " (excluive)\n";
+           << iter.end() << " (exclusive)\n";
     }
 
     Ttype min, max;

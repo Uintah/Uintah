@@ -26,8 +26,17 @@
 
 namespace Wasatch {
 
-  void parse_turbulence_input(Uintah::ProblemSpecP turbulenceInputParams,
-                              TurbulenceParameters& turbParams)
+
+  TurbulenceParameters::TurbulenceParameters()
+  {
+    turbSchmidt  = 1.0;
+    turbPrandtl  = 0.7;
+    eddyViscCoef = 0.1;
+    turbModelName = NOTURBULENCE;
+  };
+
+  void parse_turbulence_input( Uintah::ProblemSpecP turbulenceInputParams,
+                               TurbulenceParameters& turbParams )
   {
     if (!turbulenceInputParams) return;
     
@@ -53,6 +62,9 @@ namespace Wasatch {
 
     // get the turbulent Schmidt Number
     turbulenceInputParams->getWithDefault("TurbulentSchmidt",turbParams.turbSchmidt, 1.0);
+
+    // get the turbulent Prandtl number
+    turbulenceInputParams->getWithDefault("TurbulentPrandtl",turbParams.turbPrandtl, 0.7 );
   }
   
 }

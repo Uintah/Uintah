@@ -68,7 +68,7 @@ for ($k = $startLoop; $k<=$endLoop; $k++){
   # bulletproofing
   $postProc_cmd[$k]=~ s/^\s+//;                     # remove leading spaces from command
   my @stripped_cmd = split(/ /,$postProc_cmd[$k]);  # remove command options
-  my $foundCmd = system( "which $stripped_cmd[0] >&/dev/null");
+  my $foundCmd = system( "which $stripped_cmd[0] > /dev/null 2>&1");
 
   if ( ! $foundCmd ==0 ){
     my $mypath = $ENV{"PATH"};
@@ -113,6 +113,6 @@ if ( $gpFile ne "") {
   system("sed", "-i", "s/#ylabel/set ylabel \"$ylabel\"/g", "$gpFile");
  
   print "Now plotting Analysis with $gpFile \n";
-  `gnuplot $gpFile >&gp.out`;
+  system("gnuplot $gpFile > gp.out 2>&1");
 }
 

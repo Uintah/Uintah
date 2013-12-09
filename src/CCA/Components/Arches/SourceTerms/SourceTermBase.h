@@ -84,11 +84,27 @@ public:
 	/** @brief Return the grid type of source (CC, FCX, etc... ) **/
   inline MY_GRID_TYPE getSourceGridType(){ return _source_grid_type; };
 
-  /** brief Return the type of source (constant, do_radation, etc... ) **/ 
+  /** @brief Return the type of source (constant, do_radation, etc... ) **/ 
   inline std::string getSourceType(){ return _type; }; 
 
+  struct TableLookup{ 
+
+    enum STATE { NEW, OLD };
+
+    std::vector<std::string> species; 
+    STATE state; 
+  
+  };
+
+
 	/** @brief Return the list of table lookup species needed for this source term **/ 
-	inline std::vector<std::string> get_tablelookup_species(){ return _table_lookup_species; };  
+	inline TableLookup* get_tablelookup_species(){ return _table_lookup_species; };  
+
+  /** @brief Return an int indicating the stage this source should be executed **/
+  const int stage_compute(){ return _stage; };
+
+  /** @brief Set the stage number **/
+  void set_stage( const int stage );
 
   /** @brief Builder class containing instructions on how to build the property model **/ 
   class Builder { 
@@ -107,17 +123,18 @@ public:
 
 protected:
 
-  std::string _src_name;                             ///< User assigned source name 
-  std::string _init_type;                            ///< Initialization type. 
-  std::string _type;                                 ///< Source type (eg, constant, westbrook dryer, .... )
-  bool _compute_me;                                  ///< To indicate if calculating this source is needed or has already been computed. 
-  const VarLabel* _src_label;                        ///< Source varlabel
-  bool _label_sched_init;                            ///< Boolean to clarify if a "computes" or "requires" is needed
-  SimulationStateP& _shared_state;                   ///< Local copy of sharedState
+  std::string _src_name;                                  ///< User assigned source name 
+  std::string _init_type;                                 ///< Initialization type. 
+  std::string _type;                                      ///< Source type (eg, constant, westbrook dryer, .... )
+  bool _compute_me;                                       ///< To indicate if calculating this source is needed or has already been computed. 
+  const VarLabel* _src_label;                             ///< Source varlabel
+  bool _label_sched_init;                                 ///< Boolean to clarify if a "computes" or "requires" is needed
+  int _stage;                                             ///< At which stage should this be computed: 0) before table lookup 1) after table lookup 2) after RK ave
+  SimulationStateP& _shared_state;                        ///< Local copy of sharedState
   std::vector<std::string> _required_labels;              ///< Vector of required labels
   std::vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
-  std::vector<std::string> _table_lookup_species;         ///< List of table lookup species
-  MY_GRID_TYPE _source_grid_type;                    ///< Source grid type
+  TableLookup* _table_lookup_species;                     ///< List of table lookup species
+  MY_GRID_TYPE _source_grid_type;                         ///< Source grid type
   std::vector<std::string> _wasatch_expr_names;           ///< List of wasatch exprs to be used as sources
 
 

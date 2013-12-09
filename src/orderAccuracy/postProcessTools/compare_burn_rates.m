@@ -68,18 +68,19 @@ end
 
 %________________________________
 % do the Uintah utilities exist
-[s0, r0]=unix('puda >& /dev/null');
-[s1, r1]=unix('lineextract >& /dev/null');
+[s0, r0]=unix('puda > /dev/null 2>&1');
+[s1, r1]=unix('lineextract > /dev/null 2>&1');
 
 if( s0 ~=0 || s1 ~= 0 )
   disp('Cannot execute uintah utilites puda, lineextract');
   disp('  a) make sure you are in the right directory, and');
   disp('  b) the utilities (puda/lineextract) have been compiled');
+  quit(-1);
 end
 
 %________________________________
 %  extract the physical time
-c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda);
+c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" > tmp 2>&1',uda);
 [status0, result0]=unix(c0);
 physicalTime  = load('tmp');
 
@@ -88,7 +89,7 @@ if(ts == 999)  % default
 endif
 %________________________________
 %  extract initial conditions and grid information from the uda file
-c0 = sprintf('puda -gridstats %s >& tmp',uda); unix(c0);
+c0 = sprintf('puda -gridstats %s > tmp 2>&1',uda); unix(c0);
 
 [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp |cut -d":" -f2 | tr -d "[]int"');
 [s,r2] = unix('grep -m1 -w "Domain Length" tmp         |cut -d":" -f2 | tr -d "[]"');
@@ -185,7 +186,7 @@ subplot(2,1,2)
   title('Mass Burn Rate vs Time');
   grid on;
   
-  unix('/bin/rm massBurn.ps >&/dev/null');
+  unix('/bin/rm massBurn.ps > /dev/null 2>&1');
   print('massBurned.ps','-dps', '-FTimes-Roman:14');
 
 % move data to uda
@@ -194,7 +195,7 @@ subplot(2,1,2)
  
 %______________________________________________________________________
 % compute the average pressure inside of the region with gas at every timestep
-c4        = sprintf('puda -jacquie -matl 1 %s >& /dev/null', uda);
+c4        = sprintf('puda -jacquie -matl 1 %s > /dev/null 2>&1', uda);
 [s4, r4]  = unix(c4);
 
 if( s4 ~=0  )
@@ -279,7 +280,7 @@ subplot(2,1,2)
  title('Mass Burn Rate vs Average Pressure');
  grid on;
 
- unix('/bin/rm mbr_ap.ps >&/dev/null');
+ unix('/bin/rm mbr_ap.ps > /dev/null 2>&1');
  print('mbr_ap.ps','-dps', '-FTimes-Roman:14');
   
 
@@ -299,7 +300,7 @@ figure(3)
  title('Average Pressure vs Time');
  grid on;
 
-unix('/bin/rm Time_ap.ps >&/dev/null');
+unix('/bin/rm Time_ap.ps > /dev/null 2>&1');
   print('Time_ap.ps','-dps', '-FTimes-Roman:14');
 
 % move plot to uda file  

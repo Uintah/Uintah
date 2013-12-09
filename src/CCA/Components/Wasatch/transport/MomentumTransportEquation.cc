@@ -1000,7 +1000,7 @@ namespace Wasatch{
     // set bcs for partial full rhs
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true);
 
-    if (!isConstDensity_) {
+    if( !isConstDensity_ ){
       // set bcs for density
       const Expr::Tag densTag( densityTag_.name(), Expr::CARRY_FORWARD );
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);

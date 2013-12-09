@@ -63,7 +63,7 @@ protected:
    */
   virtual double get_normalization_factor( const unsigned i ) const =0;
 
-  virtual std::pair<double,double> get_bounds( const unsigned i ) const =0;
+  virtual const std::pair<double,double>& get_bounds( const unsigned i ) const =0;
 
 private:
   const int neq_;        ///< number of equations to solve
@@ -101,7 +101,7 @@ class DensFromMixfrac : public Expr::Expression<FieldT>, protected DensityCalcul
                               DoubleVec& jac,
                               DoubleVec& res );
   double get_normalization_factor( const unsigned i ) const;
-  std::pair<double,double> get_bounds( const unsigned i ) const;
+  const std::pair<double,double>& get_bounds( const unsigned i ) const;
 
 public:
   /**
@@ -173,13 +173,12 @@ template< typename FieldT >
 class DensHeatLossMixfrac
  : public Expr::Expression<FieldT>, protected DensityCalculatorBase
 {
-  const Expr::Tag hTag_, rhofTag_, rhohTag_;
+  const Expr::Tag rhofTag_, rhohTag_;
   const FieldT *rhoh_, *rhof_;
   const InterpT &densEval_, &enthEval_;
   const std::vector< std::pair<double,double> > bounds_;
 
-  DensHeatLossMixfrac( const Expr::Tag& hTag,
-                       const Expr::Tag& rhofTag,
+  DensHeatLossMixfrac( const Expr::Tag& rhofTag,
                        const Expr::Tag& rhohTag,
                        const InterpT& densEvaluator,
                        const InterpT& enthEvaluator );
@@ -189,7 +188,7 @@ class DensHeatLossMixfrac
                               DoubleVec& jac,
                               DoubleVec& res );
   double get_normalization_factor( const unsigned i ) const;
-  std::pair<double,double> get_bounds( const unsigned i ) const;
+  const std::pair<double,double>& get_bounds( const unsigned i ) const;
 
 public:
     /**
@@ -203,13 +202,11 @@ public:
      *  @brief Build a DensHeatLossMixfrac expression
      *  @param rhoTag the density (calculated here) - should have CARRY_FORWARD context.
      *  @param gammaTag the heat loss parameter (calculated here)
-     *  @param hTag the enthalpy - should have CARRY_FORWARD context.
      *  @param rhofTag the density-weighted mixture fraction
      *  @param rhohTag the density-weighted enthalpy
      */
     Builder( const Expr::Tag& rhoTag,
              const Expr::Tag& gammaTag,
-             const Expr::Tag& hTag,
              const Expr::Tag& rhofTag,
              const Expr::Tag& rhohTag,
              const InterpT& densEvaluator,
@@ -218,7 +215,7 @@ public:
     Expr::ExpressionBase* build() const;
 
   private:
-    const Expr::Tag hTag_, rhofTag_, rhohTag_;
+    const Expr::Tag rhofTag_, rhohTag_;
     const InterpT * const densEval_, * const enthEval_;
   };
 

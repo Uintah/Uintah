@@ -137,30 +137,6 @@ EOF
 #   rm -f "$BUILDROOT"/mail.msg
 fi
 
-#__________________________________
-#
-remake_file=""
-if [ -f "$BUILDROOT"/dbg/remake_failed.log ]; then
-  remake_file="$BUILDROOT"/dbg/remake_failed.log
-elif [ -f  "$BUILDROOT"/opt/remake_failed.log ]; then
-  remake_file="$BUILDROOT"/opt/remake_failed.log
-fi
-
-if [ "$MAIL_REMAKE_LOG_TO" != "" -a "$remake_file" != "" ]; then
-  subject="Failed to compile Uintah on `hostname`"
-
-  cat > "$BUILDROOT"/make_mail.msg <<EOF
-Subject: $subject
-To: $MAIL_REMAKE_LOG_TO
-$remake_file:
-
-EOF
-  cat $remake_file >> "$BUILDROOT"/make_mail.msg
-
-  sendmail "$MAIL_REMAKE_LOG_TO" < "$BUILDROOT"/make_mail.msg
-  rm -f "$BUILDROOT"/make_mail.msg
-fi
-
 cd "$BUILD_DIR"
 
 exit $failed

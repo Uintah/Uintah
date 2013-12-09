@@ -32,6 +32,7 @@
 use XML::Simple;
 use Data::Dumper;
 use Cwd;
+
 # create object
 $simple = new XML::Simple(forcearray => 1, suppressempty => "");
 $tstFile           = $ARGV[0];
@@ -73,17 +74,18 @@ for($i = 0; $i<=$#tests; $i++){
   #print Dumper($test);         #debugging
 }
 $num_of_tests=$#tests;
-
 #__________________________________
 # make a symbolic link to the post processing command
 # Note Debian doesn't have the --skip-dot option
 for ($i=0;$i<=$num_of_tests;$i++){
    if( $postProc_cmd[$i] ne ''){
     my @stripped_cmd = split(/ /,$postProc_cmd[$i]);  # remove command options
-    my $cmd = `which --skip-dot $stripped_cmd[0] >&/dev/null`;
-    system("ln -fs $cmd >&/dev/null");
+    my $cmd = `which --skip-dot $stripped_cmd[0] > /dev/null 2>&1`;
+    system("ln -fs $cmd > /dev/null 2>&1");
   }
 }
+
+
 
 #__________________________________
 # Read in all of the replacement patterns 
@@ -178,7 +180,6 @@ while ($line=<tstFile>){
   }
 }
 close(tstFile);
-
 #__________________________________
 # Globally, replace lines in the main ups file before each test.
 @replacementPatterns = (@global_replaceLines);
@@ -269,10 +270,14 @@ for ($i=0;$i<=$num_of_tests;$i++){
   print statsFile "Command Used : "."$sus_cmd[$i] $test_ups"."\n";
   print "Launching: $sus_cmd[$i] $test_ups\n";
   $now = time();
-
-  @args = ("$sus_cmd[$i]","$test_ups",">& $test_output");
+   
+  @args = ("$sus_cmd[$i]","$test_ups","> $test_output 2>&1");
   system("@args")==0 or die("ERROR(run_tests.pl): @args failed: $?");
-
+  
+  $fin = time()-$now;
+  print statsFile "Running Time : ".$fin." [secs]\n";
+  print statsFile "---------------------------------------------\n";
+  
   #__________________________________
   # execute comparison
   if($postProc_cmd[$i] ne ''){
@@ -280,9 +285,7 @@ for ($i=0;$i<=$num_of_tests;$i++){
     @args = ("analyze_results.pl","$tstFile", "$i");
     system("@args")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");
   }
-  $fin = time()-$now;
-  print  statsFile "Running Time : ".$fin."\n";
-  print statsFile "---------------------------------------------\n";
+  
 }  # all tests loop
 
 close(statsFile);

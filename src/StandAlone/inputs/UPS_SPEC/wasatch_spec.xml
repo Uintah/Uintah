@@ -669,7 +669,7 @@
     <!-- Spec for a TransportEquation -->
     <!-- ============================ -->
     <TransportEquation          spec="MULTIPLE NO_DATA"
-                                attribute1="equation REQUIRED STRING 'generic">
+                                attribute1="equation REQUIRED STRING 'generic, enthalpy">
       
       <!-- An Optional Primitive variable tag: -->
       <!-- Sometimes we transport the solution variable and it is itself our primitive variable, So, we write   --> 
@@ -697,7 +697,8 @@
       <!-- Specification of the diffusive flux -->
       <DiffusiveFluxExpression  spec="MULTIPLE NO_DATA"
                                 children1="ONE_OF(CHILD ConstantDiffusivity, DiffusionCoefficient, NameTag)"
-                                children2="ONE_OF(CHILD Direction)" >
+                                children2="ONE_OF(CHILD Direction)"
+                                need_applies_to="equation generic" >
 
         <Direction                      spec="REQUIRED STRING 'X,Y,Z'" />
 
@@ -713,6 +714,18 @@
         <NameTag  spec="OPTIONAL" />
       </DiffusiveFluxExpression>
             
+      <!-- The enthalpy equation does special treatment for diffusive
+           fluxes, and requires the thermal conductivity and viscosity.
+        -->
+      <ThermalConductivity  spec="REQUIRED NO_DATA" need_applies_to="equation enthalpy">
+        <NameTag            spec="REQUIRED" />
+      </ThermalConductivity>
+      <HeatCapacity         spec="REQUIRED NO_DATA" need_applies_to="equation enthalpy">
+        <NameTag            spec="REQUIRED" />
+      </HeatCapacity>
+      <RadiativeSourceTerm  spec="OPTIONAL NO_DATA" need_applies_to="equation enthalpy">
+        <NameTag            spec="REQUIRED"/>
+      </RadiativeSourceTerm>
       
       <!-- ================================================================================== -->            
       <!-- Specification of the source term -->
@@ -746,10 +759,11 @@
     <!-- Here we can specify wether we want to use the constant Smagorinsky model -->
     <!-- or the dynamic Smagorinsky model in order to obtain turbulent viscosity  -->
     <!-- ======================================================================== -->       
-    <Turbulence              spec="OPTIONAL NO_DATA" 
-                             attribute1="model  REQUIRED STRING 'SMAGORINSKY, WALE, VREMAN, DYNAMIC'">
-      <TurbulentSchmidt        spec="OPTIONAL DOUBLE"/>                                   
-      <EddyViscosityCoefficient   spec="OPTIONAL DOUBLE" need_applies_to="model SMAGORINSKY WALE VREMAN"/>                               
+    <Turbulence                 spec="OPTIONAL NO_DATA" 
+                                attribute1="model  REQUIRED STRING 'SMAGORINSKY, WALE, VREMAN, DYNAMIC'">
+      <TurbulentSchmidt         spec="OPTIONAL DOUBLE"/>
+      <TurbulentPrandtl         spec="OPTIONAL DOUBLE"/>   
+      <EddyViscosityCoefficient spec="OPTIONAL DOUBLE" need_applies_to="model SMAGORINSKY WALE VREMAN"/>                               
     </Turbulence>
 
     <VariableDensityMMS  spec="OPTIONAL NO_DATA">
@@ -759,11 +773,11 @@
       <scalar  spec="REQUIRED STRING"/>
     </VariableDensityMMS>
             
-    <MomentumEquations  spec="OPTIONAL NO_DATA">
+    <MomentumEquations        spec="OPTIONAL NO_DATA">
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
       <DisablePressureSolve   spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->   
       <ComputeMassResidual    spec="OPTIONAL NO_DATA" />
-      <ComputeKE            spec="OPTIONAL NO_DATA"
+      <ComputeKE              spec="OPTIONAL NO_DATA"
                               attribute1="total OPTIONAL BOOLEAN"
                               attribute2="output OPTIONAL BOOLEAN" />
       <X-Velocity             spec="OPTIONAL STRING" />
@@ -952,9 +966,6 @@
           <DensityWeightedEnthalpy        spec="REQUIRED NO_DATA" >
             <NameTag                      spec="REQUIRED" />
           </DensityWeightedEnthalpy>
-          <Enthalpy                       spec="REQUIRED NO_DATA">
-            <NameTag                      spec="REQUIRED" />
-          </Enthalpy>
           <HeatLoss                       spec="REQUIRED NO_DATA">
             <NameTag                      spec="REQUIRED" />
           </HeatLoss>

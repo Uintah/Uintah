@@ -10,6 +10,7 @@
 clear all;
 close all;
 format short e;
+addpath("./")
 
 %______________________________________________________________________
 %______________________________________________________________________
@@ -245,19 +246,20 @@ end
 
 %________________________________
 % do the Uintah utilities exist
-[s0, r0]=unix('puda >& /dev/null');
-[s1, r1]=unix('lineextract >& /dev/null');
+[s0, r0]=unix('puda > /dev/null 2>&1');
+[s1, r1]=unix('lineextract > /dev/null 2>&1');
 
 if( s0 ~=0 || s1 ~= 0 )
   disp('Cannot execute uintah utilites puda, lineextract');
   disp(' a) make sure you are in the right directory, and');
   disp(' b) the utilities (puda/lineextract) have been compiled');
+  quit(-1);
 end
 
 
 %________________________________
 % extract the physical time
-c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda);
+c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" > tmp 2>&1',uda);
 [status0, result0]=unix(c0);
 physicalTime = load('tmp');
 
@@ -267,8 +269,8 @@ end
 %________________________________
 % extract the grid information from the uda file
 % at the right level
-c0 = sprintf('puda -gridstats %s >& tmp',uda); unix(c0);
-c1 = sprintf('sed -n /"Level: index %i"/,/"Total Number of Cells"/{p} tmp >& tmp.clean',level);
+c0 = sprintf('puda -gridstats %s > tmp 2>&1',uda); unix(c0);
+c1 = sprintf('sed -n /"Level: index %i"/,/"Total Number of Cells"/{p} tmp > tmp.clean 2>&1',level);
 unix(c1);
 
 [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp.clean |cut -d":" -f2 | tr -d "[]int"');
@@ -290,13 +292,16 @@ zHalf = resolution(zDir)/2.0;
 
 if(pDir == 1)
   startEnd = sprintf('-istart %i   %i   %i  -iend   %i   %i  %i',0,     yHalf,  zHalf, resolution(xDir)-1, yHalf, zHalf );
+  dir = "X";
 elseif(pDir == 2)
   startEnd = sprintf('-istart %i   %i   %i  -iend   %i  %i   %i',xHalf, 0,      zHalf, xHalf, resolution(yDir)-1, zHalf);
+  dir = "Y"
 elseif(pDir == 3)
   startEnd = sprintf('-istart %i  %i    %i  -iend   %i  %i   %i',xHalf, yHalf,   0,    xHalf, yHalf, resolution(zDir)-1);
+  dir = "Z"
 end
 
-c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o divQ.dat -m %i -uda %s >&/dev/null','divQ',level,ts-1,startEnd,mat,uda);
+c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o divQ.dat -m %i -uda %s >/dev/null 2>&1','divQ',level,ts-1,startEnd,mat,uda);
 [s1, r1] = unix(c1);
 
 divQ_sim = load('divQ.dat');
@@ -333,22 +338,32 @@ unix('/bin/rm divQ.dat tmp tmp.clean');
 %______________________________
 % Plot the results
 if (strcmp(makePlot,"true"))
+  h = figure();
   subplot(2,1,1),plot(x_CC, divQ_sim(:,4), 'b:o;computed;', x_CC, divQ_exact, 'r:+;exact;');
   ylabel('divQ');
-  xlabel('X');
-  title('divQ versus Exact solns');
+  xlabel(dir);
+  title('divQ versus Exact Solution');
   grid on;
 
   subplot(2,1,2),plot(x_CC,d, 'b:+');
   hold on;
-  ylabel('|Deldotq - u_{exact}|'); 
-  xlabel('X');
+  ylabel('|divQ - divQ_{exact}|'); 
+  xlabel(dir);
   grid on;
 
-  unix('/bin/rm divQ.ps >&/dev/null');
-  print('divQ.ps','-dps', '-FTimes-Roman:14');
-  pause
-
+  unix('/bin/rm divQ.ps > /dev/null 2>&1');
+  %print('divQ.ps','-dps', '-FTimes-Roman:14');
+  %pause
+  FN = findall(h,'-property','FontName');
+  set(FN,'FontName','Times');
+  
+  FS = findall(h, '-property','FontSize');
+  set(FS,'FontSize',12);
+  
+  orient('portrait');
+  fname = sprintf( 'divQ.%s',dir);
+  saveas( h, fname, "jpg");
+  pause;
 end
 
 

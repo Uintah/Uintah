@@ -57,6 +57,9 @@ public:
   virtual void problemSetup(const ProblemSpecP& inputdb) = 0;
   virtual void problemSetup(const ProblemSpecP& inputdb, int qn) = 0;
 
+  /** @brief Assign the algorithmic stage to the dependent sources **/ 
+  virtual void assign_stage_to_sources() = 0; 
+
   /** @brief Setup any extra information that may need to occur later (like after the table is setup) **/ 
   void extraProblemSetup( ProblemSpecP& db ); 
 
@@ -147,14 +150,23 @@ public:
   inline double getScalingConstant(){
     return d_scalingConstant; };
 
-  /** @brief Return the density guess boolean */
+  /** @brief Return a bool indicating if the density guess is used for this transport equation */
   inline bool getDensityGuessBool(){
-    return d_use_density_guess; 
+    if ( _stage == 0 ){ 
+      return true; 
+    } else { 
+      return false; 
+    }
   };
 
-  /** @brief Set the density guess bool **/ 
+  /** @brief Set the density guess -- eqn stage = 0 **/ 
   inline void setDensityGuessBool( bool set_point ){ 
-    d_use_density_guess = set_point; 
+    if ( set_point ) _stage = 0; 
+  };
+
+  /** @brief Check for RK bool **/ 
+  inline const int get_stage(){
+    return _stage; 
   };
 
   /** @brief Return a list of all sources associated with this transport equation */ 
@@ -278,8 +290,7 @@ protected:
   double d_scalingConstant;         ///< Value by which to scale values 
   double curr_ssp_time;             ///< Current value of time considering ssp averaging  
   double curr_time;                 ///< "old" time (t)
-  bool d_use_density_guess;         ///< Tells the solver to use the guessed density rather than the new density from the table
-                                    ///<  Also, if true, the the equation is solved BEFORE the properties are computed. 
+  int _stage;                       ///< At which algorithmic stage should this be computed. 
 
   std::vector<SourceContainer> d_sources;  ///< List of source terms for this eqn
   double d_mol_diff;                  ///< Molecular Diffusivity

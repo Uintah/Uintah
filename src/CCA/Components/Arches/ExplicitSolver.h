@@ -106,7 +106,8 @@ public:
                               SchedulerP& sched
 #                             ifdef WASATCH_IN_ARCHES
                               , Wasatch::Wasatch& wasatch,
-                             ExplicitTimeInt* d_timeIntegrator
+                              ExplicitTimeInt* d_timeIntegrator,
+                              SimulationStateP& state
 #                             endif // WASATCH_IN_ARCHES
                              );
 
@@ -342,6 +343,8 @@ private:
 
   bool d_KE_fromFC;
   double d_maxDensityLag;
+
+  bool d_extra_table_lookup; 
 
   //linear mms
   double cu, cv, cw, cp, phi0;

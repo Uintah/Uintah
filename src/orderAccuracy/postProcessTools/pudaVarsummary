@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/csh -f
 #______________________________________________________________________
 # This script runs puda -varsummary on the uda and reports 
 # the min/max for that variable

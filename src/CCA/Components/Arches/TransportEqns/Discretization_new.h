@@ -81,7 +81,7 @@ namespace Uintah{
         oldPhiT& oldPhi, constCCVariable<double>& mu_t,
         constCCVariable<double>& D_mol, constCCVariable<double>& rho,  
         constCCVariable<Vector>& areaFraction, 
-        constCCVariable<double>& prNo, int mat_id, std::string varName );
+        constCCVariable<double>& prNo );
 
       /** @brief Computes the diffusion term for a scalar:
        * \f$ \int_{S} \rho \Gamma \nabla \phi \cdot dS \f$ 
@@ -92,7 +92,18 @@ namespace Uintah{
         oldPhiT& oldPhi, constCCVariable<double>& mu_t,
         double D_mol, constCCVariable<double>& rho,  
         constCCVariable<Vector>& areaFraction, 
-        constCCVariable<double>& prNo, int mat_id, std::string varName );
+        constCCVariable<double>& prNo );
+
+      /** @brief Computes the diffusion term for a scalar:
+       * \f$ \int_{S} \rho \Gamma \nabla \phi \cdot dS \f$ 
+       * for a constant pr number.  This version has a constant
+       * molecular diffusion coefficient */
+      template <class fT, class oldPhiT> void 
+        computeDiff( const Patch* p, fT& Fdiff, 
+        oldPhiT& oldPhi, constCCVariable<double>& mu_t,
+        double D_mol, constCCVariable<double>& rho,  
+        constCCVariable<Vector>& areaFraction, 
+        const double prNo );
 
       /** @brief Computes the diffusion term for a scalar:
        * \f$ \int_{S} \Gamma \nabla \phi \cdot dS \f$
@@ -101,7 +112,7 @@ namespace Uintah{
         computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, 
         constCCVariable<double>& gamma, 
         double molecular_diff, constCCVariable<Vector>& areaFraction, 
-        double const_prNo, int mat_id, std::string varName );
+        double const_prNo );
 
       //---------------------------------------------------------------------------
       // Custom Data Managers
@@ -1693,8 +1704,7 @@ namespace Uintah{
     Discretization_new::computeDiff( const Patch* p, fT& Fdiff, 
         oldPhiT& oldPhi, constCCVariable<double>& mu_t,
         constCCVariable<double>& D_mol, constCCVariable<double>& rho, 
-        constCCVariable<Vector>& areaFraction, constCCVariable<double>& prNo, 
-        int mat_id, std::string varName )
+        constCCVariable<Vector>& areaFraction, constCCVariable<double>& prNo )
     {
 
       Vector Dx = p->dCell(); //assuming uniform grid
@@ -1779,8 +1789,7 @@ namespace Uintah{
     Discretization_new::computeDiff( const Patch* p, fT& Fdiff, 
         oldPhiT& oldPhi, constCCVariable<double>& mu_t,
         double D_mol, constCCVariable<double>& rho, 
-        constCCVariable<Vector>& areaFraction, constCCVariable<double>& prNo, 
-        int mat_id, std::string varName )
+        constCCVariable<Vector>& areaFraction, constCCVariable<double>& prNo )
     {
 
       Vector Dx = p->dCell(); //assuming uniform grid
@@ -1892,6 +1901,128 @@ namespace Uintah{
       }
     }
 
+  //-------------------------------------------------------
+  // Method: Compute the diffusion term
+  // Simple diffusion term: \f$ \int_{S} \rho \Gamma \nabla \phi \cdot dS \f$
+  // This version has a constant Pr/Sc no. 
+  // This version has a density term. 
+  //---------------------------------------------------------------------------
+  template <class fT, class oldPhiT> void 
+    Discretization_new::computeDiff( const Patch* p, fT& Fdiff, 
+        oldPhiT& oldPhi, constCCVariable<double>& mu_t,
+        double D_mol, constCCVariable<double>& rho, 
+        constCCVariable<Vector>& areaFraction, const double prNo )
+    {
+
+      Vector Dx = p->dCell(); //assuming uniform grid
+      
+      for (CellIterator iter = p->getCellIterator(); !iter.done(); iter++){
+
+        IntVector c = *iter; 
+        IntVector coord; 
+
+        FaceData1D face_gamma; 
+        FaceData1D grad_phi; 
+        FaceData1D face_rho; 
+
+        coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+        double dx = Dx.x(); 
+
+        //NOTE: To save declaring too many variables, we stuff
+        // mu_T into gamma and then add in the other bits afterwards
+
+        face_gamma = centralInterp( c, coord, mu_t ); 
+        face_rho   = centralInterp( c, coord, rho   ); 
+        grad_phi   = gradPtoF( c, oldPhi, dx, coord ); 
+
+        face_gamma.plus  = face_rho.plus  * D_mol + face_gamma.plus/prNo; 
+        face_gamma.minus = face_rho.minus * D_mol + face_gamma.minus/prNo;  
+
+        Vector c_af = areaFraction[c]; 
+        Vector cp_af = areaFraction[c + coord]; 
+
+        FaceBoundaryBool check = checkFacesForBoundaries( p, c, coord );
+
+        double plus_flux = 0;
+        double minus_flux = 0;
+
+        if ( check.plus )
+          plus_flux = 0.0;
+        else
+          plus_flux = face_gamma.plus * grad_phi.plus * cp_af.x(); 
+
+        if ( check.minus )
+          minus_flux = 0.0;
+        else 
+          minus_flux = face_gamma.minus * grad_phi.minus * c_af.x(); 
+
+        Fdiff[c] += Dx.y()*Dx.z() * 
+                   ( plus_flux - 
+                     minus_flux ); 
+
+#ifdef YDIM
+        coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+        double dy = Dx.y(); 
+
+        face_gamma = centralInterp( c, coord, mu_t ); 
+        face_rho   = centralInterp( c, coord, rho   ); 
+        grad_phi   = gradPtoF( c, oldPhi, dy, coord ); 
+
+        face_gamma.plus  = face_rho.plus  * D_mol + face_gamma.plus/prNo; 
+        face_gamma.minus = face_rho.minus * D_mol + face_gamma.minus/prNo;  
+
+        cp_af = areaFraction[c + coord]; 
+
+        check = checkFacesForBoundaries( p, c, coord );
+
+        if ( check.plus )
+          plus_flux = 0.0;
+        else
+          plus_flux = face_gamma.plus * grad_phi.plus * cp_af.y(); 
+
+        if ( check.minus )
+          minus_flux = 0.0;
+        else 
+          minus_flux = face_gamma.minus * grad_phi.minus * c_af.y(); 
+
+        Fdiff[c] += Dx.x()*Dx.z() * 
+                   ( plus_flux - 
+                     minus_flux ); 
+#endif
+#ifdef ZDIM
+        coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+        double dz = Dx.z(); 
+
+        face_gamma = centralInterp( c, coord, mu_t ); 
+        face_rho   = centralInterp( c, coord, rho   ); 
+        grad_phi   = gradPtoF( c, oldPhi, dz, coord ); 
+
+        face_gamma.plus  = face_rho.plus  * D_mol + face_gamma.plus/prNo; 
+        face_gamma.minus = face_rho.minus * D_mol + face_gamma.minus/prNo;  
+
+        cp_af = areaFraction[c + coord]; 
+
+        check = checkFacesForBoundaries( p, c, coord );
+
+        if ( check.plus )
+          plus_flux = 0.0;
+        else
+          plus_flux = face_gamma.plus * grad_phi.plus * cp_af.z(); 
+
+        if ( check.minus )
+          minus_flux = 0.0;
+        else 
+          minus_flux = face_gamma.minus * grad_phi.minus * c_af.z(); 
+
+        Fdiff[c] += Dx.x()*Dx.y() * 
+                   ( plus_flux - 
+                     minus_flux ); 
+
+#endif
+
+      }
+    }
+
   //---------------------------------------------------------------------------
   // Method: Compute the diffusion term
   // Simple diffusion term: \f$ \int_{S} \nabla \phi \cdot dS \f$
@@ -1899,8 +2030,7 @@ namespace Uintah{
   template <class fT, class oldPhiT> void 
     Discretization_new::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, 
         constCCVariable<double>& gamma, double molecular_diff, 
-        constCCVariable<Vector>& areaFraction, double const_prNo, 
-        int mat_id, std::string varName )
+        constCCVariable<Vector>& areaFraction, double const_prNo )
     {
 
       Vector Dx = p->dCell(); //assuming uniform grid
