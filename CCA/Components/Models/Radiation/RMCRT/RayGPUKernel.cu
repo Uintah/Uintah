@@ -34,8 +34,9 @@
 #include <curand.h>
 #include <curand_kernel.h>
 
-
-//#define DEBUG
+// TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
+#define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
+//#define FIXED_RANDOM_NUM
 
 //__________________________________
 //  To Do
@@ -164,7 +165,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   //          B O U N D A R Y F L U X
   //______________________________________________________________________
   if( RT_flags.solveBoundaryFlux ){
-  
+
     __shared__ int3 dirIndexOrder[6];
     __shared__ int3 dirSignSwap[6];
     __shared__ int3 locationIndexOrder[6];
@@ -219,12 +220,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
         if(RT_flags.benchMark==4 || RT_flags.benchMark==5){
           boundaryFaces.addFace(5);
         }
-
-
-        boundaryFaces.addFace(3);
-        boundaryFaces.addFace(4);
         
-        boundaryFaces.print(threadID);
         // which surrounding cells are boundaries
         boundFlux[origin].p = has_a_boundaryDevice(origin, celltype, boundaryFaces);
 
@@ -233,7 +229,6 @@ __global__ void rayTraceKernel(dim3 dimGrid,
         #pragma unroll
         for( int i = 0; i<boundaryFaces.size(); i++) {
           
-
           int RayFace = boundaryFaces.faceArray[i];
           int UintahFace[6] = {WEST,EAST,SOUTH,NORTH,BOT,TOP};
           
@@ -267,6 +262,13 @@ __global__ void rayTraceKernel(dim3 dimGrid,
           //  Compute Net Flux to the boundary
           int face = UintahFace[RayFace];            
           boundFlux[origin][ face ] = sumProjI * 2 *M_PI/RT_flags.nFluxRays;
+
+/*`==========TESTING==========*/
+#if DEBUG == 2
+          printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BF: %g\n", 
+                    origin.x, origin.y, origin.z, face, sumProjI, boundFlux[origin][ face ]);
+#endif
+/*===========TESTING==========`*/
 
         } // boundary faces loop
       }  // z slices loop
@@ -306,7 +308,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
         radiationVolQ[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/RT_flags.nDivQRays) ;
         
 /*`==========TESTING==========*/
-#ifdef DEBUG
+#if DEBUG == 1
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n", 
                     origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[origin], sigmaT4OverPi[origin]);
 #endif
@@ -331,16 +333,7 @@ __device__ gpuVector findRayDirectionDevice( curandState* randNumStates )
   dirVector.x = r*cos(theta);   // Convert to cartesian coordinates
   dirVector.y = r*sin(theta);
   dirVector.z = plusMinus_one;
-  
-/*`==========TESTING==========*/
-#ifdef DEBUG
-  dirVector.x = 1.;
-  dirVector.y = 1.;
-  dirVector.z = 1.; 
-#endif
-/*===========TESTING==========`*/
-  
-  
+
   return dirVector;
 }
 
@@ -542,7 +535,7 @@ __device__ void updateSumIDevice ( gpuVector& ray_direction,
                                                                                            
   gpuVector inv_ray_direction = 1.0/ray_direction;
 /*`==========TESTING==========*/
-#ifdef DEBUG
+#if DEBUG == 1
   printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
   printf("        inv_ray_dir [%g,%g,%g]\n", inv_ray_direction.x,inv_ray_direction.y,inv_ray_direction.z);
 #endif
@@ -619,7 +612,7 @@ __device__ void updateSumIDevice ( gpuVector& ray_direction,
       ray_location.z = ray_location.z + (disMin  * ray_direction.z);
       
 /*`==========TESTING==========*/
-#ifdef DEBUG
+#if DEBUG == 1
 if(origin.x == 0 && origin.y == 0 && origin.z ==0){
     printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z);
     printf( " face %d ", face ); 
@@ -681,7 +674,11 @@ if(origin.x == 0 && origin.y == 0 && origin.z ==0){
         tMax_prev = 0;
         curLength = 0;  // allow for multiple scattering events per ray
 
-printf( "%i, %i, %i, tmax: %g, %g, %g  tDelta: %g, %g, %g \n", cur.x, cur.y, cur.z, tMax.x, tMax.y, tMax.z, tDelta.x, tDelta.y , tDelta.z );
+/*`==========TESTING==========*/
+#if DEBUG == 3
+        printf( "%i, %i, %i, tmax: %g, %g, %g  tDelta: %g, %g, %g \n", cur.x, cur.y, cur.z, tMax.x, tMax.y, tMax.z, tDelta.x, tDelta.y , tDelta.z );
+#endif
+/*===========TESTING==========`*/
 
         //if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
       }
@@ -708,7 +705,7 @@ printf( "%i, %i, %i, tmax: %g, %g, %g  tDelta: %g, %g, %g \n", cur.x, cur.y, cur
 
 
 /*`==========TESTING==========*/
-#ifdef DEBUG
+#if DEBUG == 1
 if(origin.x == 0 && origin.y == 0 && origin.z ==0 ){
     printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i \n", 
             cur.x, cur.y, cur.z, intensity,  exp(-optical_thickness), fs,RT_flags.allowReflect );
@@ -739,8 +736,8 @@ __device__ double randDevice(curandState* globalState)
   double val = curand(&localState);
   globalState[tid] = localState;
 
-#ifdef DEBUG  
-  return 0.5;
+#ifdef FIXED_RANDOM_NUM
+  return 0.3;
 #else
   return (double)val * (1.0/4294967295.0);
 #endif  
@@ -758,8 +755,9 @@ __device__ double randDblExcDevice(curandState* globalState)
   curandState localState = globalState[tid];
   double val = curand(&localState);
   globalState[tid] = localState;
-#ifdef DEBUG  
-  return 0.5;
+
+#ifdef FIXED_RANDOM_NUM
+  return 0.3;
 #else
   return ( (double)val + 0.5 ) * (1.0/4294967296.0);
 #endif
