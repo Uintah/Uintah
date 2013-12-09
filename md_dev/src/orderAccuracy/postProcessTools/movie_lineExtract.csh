@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/csh -f
 
 #______________________________________________________________________
 #  This post processing script runs the script movie_lineExtract

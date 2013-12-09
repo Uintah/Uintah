@@ -41,7 +41,9 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Level.h>
 #include <Core/Parallel/Parallel.h>
-
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <sci_defs/cuda_defs.h>
 
 //-- Wasatch includes --//
 #include "TaskInterface.h"
@@ -123,11 +125,13 @@ namespace Wasatch{
     PatchTreeTaskMap patchTreeMap_;
 
     /** \brief main execution driver - the callback function exposed to Uintah. */
-    void execute( const Uintah::ProcessorGroup* const,
+    void execute( Uintah::Task::CallBackEvent event,
+                  const Uintah::ProcessorGroup* const,
                   const Uintah::PatchSubset* const,
                   const Uintah::MaterialSubset* const,
                   Uintah::DataWarehouse* const,
                   Uintah::DataWarehouse* const,
+                  void* stream,  // for GPU tasks, this is the associated stream
                   const int rkStage );
 
   public:
@@ -150,6 +154,7 @@ namespace Wasatch{
                      const Uintah::MaterialSet* const materials,
                      const PatchInfoMap& info,
                      const int rkStage,
+                     Uintah::SimulationStateP state,
                      const std::set<std::string>& ioFieldSet,
                      const bool lockAllFields=false);
 
@@ -170,6 +175,7 @@ namespace Wasatch{
                                     const Uintah::MaterialSet* const materials,
                                     const PatchInfoMap& patchInfoMap,
                                     const int rkStage,
+                                    Uintah::SimulationStateP state,
                                     const std::set<std::string>& ioFieldSet,
                                     const bool lockAllFields)
     : scheduler_( sched ),
@@ -183,7 +189,23 @@ namespace Wasatch{
     hasPressureExpression_ = false;
     hasBeenScheduled_ = false;
 
+#  ifdef HAVE_CUDA
+   const int patchID = treeMap.begin()->first;
+   TreePtr tree      = treeMap.begin()->second;
+   bool isGPUTask = tree->is_homogeneous_task( patchID );
+   // turn off GPU task for the "initialization" task graph
+   if( !( isGPUTask && Uintah::Parallel::usingDevice() ) || ( taskName == "initialization") ) {
+     tree->flip_gpu_runnable( patchID, false );
+     isGPUTask = false;
+   }
+#  endif
+
     Uintah::Task* tsk = scinew Uintah::Task( taskName, this, &TreeTaskExecute::execute, rkStage );
+
+#  ifdef HAVE_CUDA
+   if( isGPUTask && Uintah::Parallel::usingDevice() && taskName != "initialization" && state->getCurrentTopLevelTimeStep() != 0 )
+     tsk->usesDevice(true);
+#  endif
 
     BOOST_FOREACH( TreeMap::value_type& vt, treeMap ){
 
@@ -479,11 +501,13 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   void
-  TreeTaskExecute::execute( const Uintah::ProcessorGroup* const pg,
+  TreeTaskExecute::execute( Uintah::Task::CallBackEvent event,
+                            const Uintah::ProcessorGroup* const pg,
                             const Uintah::PatchSubset* const patches,
                             const Uintah::MaterialSubset* const materials,
                             Uintah::DataWarehouse* const oldDW,
                             Uintah::DataWarehouse* const newDW,
+                            void* stream,
                             const int rkStage )
   {
     //
@@ -501,6 +525,12 @@ namespace Wasatch{
       PatchTreeTaskMap::iterator iptm = patchTreeMap_.find(patchID);
       ASSERT( iptm != patchTreeMap_.end() );
       const TreePtr tree = iptm->second.tree;
+
+#     ifdef HAVE_CUDA
+      // set the stream for the Tree and the underlying expressions in it
+      if( event == Uintah::Task::GPU ) tree->set_cuda_stream( *(cudaStream_t*)stream );
+#     endif
+
       Expr::ExpressionFactory& factory = tree->get_expression_factory();
       const SpatialOps::OperatorDatabase& opdb = *iptm->second.operators;
 
@@ -532,21 +562,20 @@ namespace Wasatch{
               PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( *ptag, patchID, true ) );
               pexpr.set_patch(patches->get(ip));
               pexpr.set_RKStage(rkStage);
-              pexpr.bind_uintah_vars( newDW, patch, material, rkStage );          
             }            
           }    
 
           // Pass patch information to the coordinate expressions
           typedef std::map<Expr::Tag, std::string> CoordMapT;
           const CoordMapT& coordMap = CoordinateNames::self().coordinate_map();
-          OldVariable& oldVar = OldVariable::self();
+          // OldVariable& oldVar = OldVariable::self();
           BOOST_FOREACH( const CoordMapT::value_type& coordPair, coordMap )
           {
             const Expr::Tag coordTag = coordPair.first;
             const std::string coordFieldT = coordPair.second;
-            
+
             if (!(tree->computes_field(coordTag))) continue;
-            
+
             if (coordFieldT == "SVOL")
             {
               Coordinates<SVolField>& coordExpr = dynamic_cast<Coordinates<SVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
@@ -572,11 +601,11 @@ namespace Wasatch{
             {
               Coordinates<ZVolField>& coordExpr = dynamic_cast<Coordinates<ZVolField>&>( factory.retrieve_expression( coordTag, patchID, true ) );
               coordExpr.set_patch(patches->get(ip));
-              // In case we want to copy coordinates instead of recomputing them, uncomment the following line              
+              // In case we want to copy coordinates instead of recomputing them, uncomment the following line
 //              oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true);
             }
           }
-          //
+
 
           tree->bind_fields( *fml_ );
           tree->bind_operators( opdb );
@@ -605,6 +634,7 @@ namespace Wasatch{
                                 const Uintah::MaterialSet* const materials,
                                 const PatchInfoMap& info,
                                 const int rkStage,
+                                Uintah::SimulationStateP state,
                                 const std::set<std::string>& ioFieldSet,
                                 const bool lockAllFields)
   {
@@ -650,7 +680,7 @@ namespace Wasatch{
     BOOST_FOREACH( TreeMap& tl, trLstTrns ){
       execList_.push_back( scinew TreeTaskExecute( tl, tl.begin()->second->name(),
                                                    sched, patches, materials,
-                                                   info, rkStage, ioFieldSet, lockAllFields ) );
+                                                   info, rkStage, state, ioFieldSet, lockAllFields ) );
     }
 
   }

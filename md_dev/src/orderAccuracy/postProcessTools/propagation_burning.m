@@ -55,25 +55,26 @@ end
 
 %________________________________
 % do the Uintah utilities exist
-[s0, r0]=unix('puda >& /dev/null');
-[s1, r1]=unix('lineextract >& /dev/null');
+[s0, r0]=unix('puda > /dev/null 2>&1');
+[s1, r1]=unix('lineextract > /dev/null 2>&1');
 
 if( s0 ~=0 || s1 ~= 0 )
   disp('Cannot execute uintah utilites puda, lineextract');
   disp('  a) make sure you are in the right directory, and');
   disp('  b) the utilities (puda/lineextract) have been compiled');
+  quit(-1);
 end
 
 %________________________________
 %  extract the physical time
-c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda);
+c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" > tmp 2>&1',uda);
 [status0, result0]=unix(c0);
 physicalTime  = load('tmp');
 n_ts = length(physicalTime);
 
 %________________________________
 %  extract grid information from the uda file
-c0 = sprintf('puda -gridstats %s >& tmp',uda); unix(c0);
+c0 = sprintf('puda -gridstats %s > tmp 2>&1',uda); unix(c0);
 
 [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp |cut -d":" -f2 | tr -d "[]int"');
 [s,r2] = unix('grep -m1 -w "Domain Length" tmp         |cut -d":" -f2 | tr -d "[]"');
@@ -116,7 +117,7 @@ end
 fid = fopen('MaxX.dat', 'a');
 
 for ts=1:n_ts
-  c1       = sprintf('lineextract -cellCoords -v burning -timestep %i %s -uda %s -o sim.dat >&/dev/null',ts-1,startEnd,uda);
+  c1       = sprintf('lineextract -cellCoords -v burning -timestep %i %s -uda %s -o sim.dat > /dev/null 2>&1',ts-1,startEnd,uda);
   [s1, r1] = unix(c1);
   
   tmp     = load('sim.dat');
@@ -159,7 +160,7 @@ time_X
   ylabel('maxX')
   title('maxX vs Time')
   grid on;
- unix('/bin/rm Time_MaxX.ps >&/dev/null');
+ unix('/bin/rm Time_MaxX.ps > /dev/null 2>&1');
   print('Time_MaxX.ps','-dps', '-FTimes-Roman:14');
  
   c2 = sprintf('mv Time_MaxX.ps %s.000',uda);
@@ -196,7 +197,7 @@ figure(2);
     title('Instantaneous Velocity vs Time');
     grid on;
 
-unix('/bin/rm InstantaneousTime_Velocity.ps >&/dev/null');
+unix('/bin/rm InstantaneousTime_Velocity.ps > /dev/null 2>&1');
   print('InstantaneousTime_Velocity.ps','-dps', '-FTimes-Roman:14');
   
   c4 = sprintf('mv InstantaneousTime_Velocity.ps %s.000',uda);

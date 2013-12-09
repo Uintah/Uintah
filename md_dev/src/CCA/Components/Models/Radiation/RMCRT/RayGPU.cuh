@@ -38,8 +38,7 @@ namespace Uintah {
 using namespace std;
 using namespace SCIRun;
 
-
-HOST_DEVICE struct varLabelNames{
+struct varLabelNames{
   const char* divQ;
   const char* abskg;
   const char* sigmaT4;
@@ -50,21 +49,22 @@ HOST_DEVICE struct varLabelNames{
 };
 
 
-HOST_DEVICE struct patchParams{
-  Double3 dx;             // cell spacing
-  Int3 lo;                // cell low index not including extra or ghost cells
-  Int3 hi;                // cell high index not including extra or ghost cells
-  Int3 nCells;            // number of cells in each dir
-  int ID;                 // patch ID
+struct patchParams{
+  gpuVector dx;             // cell spacing
+  gpuIntVector lo;          // cell low index not including extra or ghost cells
+  gpuIntVector hi;          // cell high index not including extra or ghost cells
+  gpuIntVector loEC;        // low index including extraCells
+  gpuIntVector hiEC;        // high index including extraCells
+  gpuIntVector nCells;      // number of cells in each dir
+  int ID;                   // patch ID
 };
 
-HOST_DEVICE struct RMCRT_flags{
+struct RMCRT_flags{
   bool modifies_divQ;
   bool virtRad;
   bool solveDivQ;
   bool allowReflect;
   bool solveBoundaryFlux;
-  bool isSeedRandom;
   bool CCRays;
   
   double sigma;               // StefanBoltzmann constant
@@ -75,6 +75,36 @@ HOST_DEVICE struct RMCRT_flags{
   int   nRadRays;             // number of rays for virtual radiometer
   int   nFluxRays;            // number of boundary flux rays
   int   nRaySteps;            // number of ray steps taken
+  int   benchMark;            // ID for benchmark tests
+  
+};
+
+//__________________________________
+//  Struct for managing the boundary faces
+struct BoundaryFaces{
+  __device__ BoundaryFaces():nFaces(0){}
+  
+  int nFaces;             // number of faces
+  int faceArray[6];       // vector of faces
+  
+  // add Face to array
+  __device__ void addFace(int f){
+    faceArray[nFaces] = f;
+    nFaces ++;    
+  }
+ 
+  
+  // returns the number of faces
+  __device__ int size(){
+    return nFaces;
+  }
+  
+  // print facesArray
+  __device__ void print(int tid){
+    for(int f=0; f<nFaces; f++){
+      printf("  tid: %i face[%i]: %i\n",tid,f, faceArray[f]);
+    }
+  }
   
 };
 
@@ -87,9 +117,6 @@ void launchRayTraceKernel(dim3 dimGrid,
                           dim3 dimBlock,
                           int matlIndex,
                           patchParams patch,
-                          const Int3 domainLo,
-                          const Int3 domainHi,
-                          curandState* randNumStates,
                           cudaStream_t* stream,
                           RMCRT_flags RT_flags,                               
                           varLabelNames labelNames,
@@ -104,8 +131,6 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                dim3 dimBlock,
                                int matlIndex,
                                patchParams patch,
-                               const Int3 domainLo,
-                               const Int3 domainHi,
                                curandState randNumStates,
                                RMCRT_flags RT_flags,
                                varLabelNames* labelNames,
@@ -115,47 +140,60 @@ __global__ void rayTraceKernel(dim3 dimGrid,
                                GPUDataWarehouse* old_gdw,
                                GPUDataWarehouse* new_gdw);
                                
-__device__ Double3 findRayDirectionDevice(curandState* randNumStates,
-                                          const bool isSeedRandom,
-                                          const Int3 origin,
-                                          const int iRay,
-                                          const int tidX);
-                                    
-__device__ Double3 rayLocationDevice( curandState* randNumStates,
-                                      const Int3 origin,
+__device__ gpuVector findRayDirectionDevice( curandState* randNumStates );
+
+
+__device__ void rayDirection_cellFaceDevice( curandState* randNumStates,
+                                             const gpuIntVector& origin,
+                                             const gpuIntVector& indexOrder, 
+                                             const gpuIntVector& signOrder,
+                                             const int iRay,
+                                             gpuVector& directionVector,
+                                             double& cosTheta);
+                            
+__device__ gpuVector rayLocationDevice( curandState* randNumStates,
+                                      const gpuIntVector origin,
                                       const double DyDx, 
                                       const double DzDx,
                                       const bool useCCRays);
+                                      
+__device__ void rayLocation_cellFaceDevice( curandState* randNumStates,
+                                            const gpuIntVector& origin,
+                                            const gpuIntVector &indexOrder, 
+                                            const gpuIntVector &shift, 
+                                            const double &DyDx, 
+                                            const double &DzDx,
+                                            gpuVector& location);
+
+
+__device__ bool has_a_boundaryDevice(const gpuIntVector &c, 
+                                     const GPUGridVariable<int>& celltype, 
+                                     BoundaryFaces &boundaryFaces);
+
 
 __device__ void findStepSizeDevice(int step[],
                                    bool sign[],
-                                   const Double3& inv_direction_vector);
+                                   const gpuVector& inv_direction_vector);
                                  
 __device__ void reflect(double& fs,
-                        Int3& cur,
-                        Int3& prevCell,
+                        gpuIntVector& cur,
+                        gpuIntVector& prevCell,
                         const double abskg,
                         bool& in_domain,
                         int& step,
                         bool& sign,
                         double& ray_direction);
                                                           
-__device__ void updateSumIDevice ( Double3& ray_direction,
-                                   Double3& ray_location,
-                                   const Int3& origin,
-                                   const Double3& Dx,
+__device__ void updateSumIDevice ( gpuVector& ray_direction,
+                                   gpuVector& ray_location,
+                                   const gpuIntVector& origin,
+                                   const gpuVector& Dx,
                                    const GPUGridVariable<double>&  sigmaT4OverPi,
                                    const GPUGridVariable<double>& abskg,
-                                   const GPUGridVariable<double>& celltype,
+                                   const GPUGridVariable<int>& celltype,
                                    double& sumI,
                                    curandState* randNumStates,
                                    RMCRT_flags RT_flags);
-
-__device__ bool containsCellDevice(const Int3& domainLow,
-                                   const Int3& domainHigh,
-                                   const Int3& cell,
-                                   const int& face);
-
 
 __device__ double randDblExcDevice(curandState* randNumStates);
 
@@ -165,83 +203,49 @@ __device__ double randDevice(curandState* randNumStates);
 
 __device__ unsigned int hashDevice(unsigned int a);
 
-
+#if 1
 //______________________________________________________________________
 //
-// returns a - b
-inline HOST_DEVICE Double3 operator-(const Double3 & a, const Double3 & b) {
-  return make_double3(a.x-b.x, a.y-b.y, a.z-b.z);
-}
 //__________________________________
-//  returns a + b
-inline HOST_DEVICE Double3 operator+(const Double3 & a, const Double3 & b) {
-  return make_double3(a.x+b.x, a.y+b.y, a.z+b.z);
-}
-//__________________________________
-//  return -a
-inline HOST_DEVICE Double3 operator-(const Double3 & a) {
-  return make_double3(-a.x,-a.y,-a.z);
-}
-//__________________________________
-//  returns Double3 * scalar
-inline HOST_DEVICE Double3 operator*(const Double3 & a, double b) {
+//  returns gpuVector * scalar
+inline HOST_DEVICE gpuVector operator*(const gpuVector & a, double b) {
   return make_double3(a.x*b, a.y*b, a.z*b);
 }
 //__________________________________
-//  returns Double3 * scalar
-inline HOST_DEVICE Double3 operator*(double b, const Double3 & a) {
+//  returns gpuVector * scalar
+inline HOST_DEVICE gpuVector operator*(double b, const gpuVector & a) {
   return make_double3(a.x*b, a.y*b, a.z*b);
 }
+
 //__________________________________
-//  returns Double3/scalar
-inline HOST_DEVICE Double3 operator/(const Double3 & a, double b) {
+//  returns gpuVector * gpuVector
+inline HOST_DEVICE gpuVector operator*(const gpuVector& a, const gpuVector& b) {
+  return make_double3(a.x*b.x, a.y*b.y, a.z*b.z);
+}
+
+//__________________________________
+//  returns gpuVector/scalar
+inline HOST_DEVICE gpuVector operator/(const gpuVector & a, double b) {
   b = 1.0f / b;
   return a*b;
 }
 //__________________________________
-//  returns scalar/Double3
-inline HOST_DEVICE Double3 operator/(double a, const Double3& b){
+//  returns scalar/gpuVector
+inline HOST_DEVICE gpuVector operator/(double a, const gpuVector& b){
   return make_double3(a/b.x, a/b.y, a/b.z);
 }
 
-//______________________________________________________________________
-//
-// returns a - b
-inline HOST_DEVICE Int3 operator-(const Int3 & a, const Int3 & b) {
-  return make_int3(a.x-b.x, a.y-b.y, a.z-b.z);
-}
 //__________________________________
-//  returns a + b
-inline HOST_DEVICE Int3 operator+(const Int3 & a, const Int3 & b) {
-  return make_int3(a.x+b.x, a.y+b.y, a.z+b.z);
-}
-//__________________________________
-//  return -a
-inline HOST_DEVICE Int3 operator-(const Int3 & a) {
-  return make_int3(-a.x,-a.y,-a.z);
-}
-//__________________________________
-//  returns Int3 * scalar
-inline HOST_DEVICE Int3 operator*(const Int3 & a, int b) {
-  return make_int3(a.x*b, a.y*b, a.z*b);
-}
-//__________________________________
-//  returns Int3 * scalar
-inline HOST_DEVICE Int3 operator*(int b, const Int3 & a) {
-  return make_int3(a.x*b, a.y*b, a.z*b);
-}
-//__________________________________
-//  returns Int3/scalar
-inline HOST_DEVICE Int3 operator/(const Int3 & a, int b) {
-  b = 1.0f / b;
-  return a*b;
-}
-//__________________________________
-//  returns scalar/Int3
-inline HOST_DEVICE Int3 operator/(int a, const Int3& b){
-  return make_int3(a/b.x, a/b.y, a/b.z);
+//  returns abs
+inline HOST_DEVICE gpuVector Abs(const gpuVector& v){
+
+  double x = v.x < 0 ? -v.x:v.x;
+  double y = v.y < 0 ? -v.y:v.y;
+  double z = v.z < 0 ? -v.z:v.z;
+  return make_double3(x,y,z);
 }
 
+#endif
 
 } //end namespace Uintah
 

@@ -33,7 +33,9 @@ TabRxnRate::problemSetup(const ProblemSpecP& inputdb)
 
   _source_grid_type = CC_SRC; 
 
-	_table_lookup_species.push_back(_rxn_rate); 
+	_table_lookup_species->species.push_back(_rxn_rate); 
+  _table_lookup_species->state = SourceTermBase::TableLookup::NEW; 
+
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 

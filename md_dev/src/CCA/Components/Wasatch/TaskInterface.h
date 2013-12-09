@@ -30,6 +30,8 @@
 //-- Uintah includes --//
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
 
 //-- Wasatch includes --//
 #include "PatchInfo.h"
@@ -99,22 +101,24 @@ namespace Wasatch{
      *  \param materials the MaterialSet for the materials associated with this task
      *  \param info The PatchInfoMap object.
      *  \param RKStage the stage of the RK integrator (use 1 otherwise)
+     *  \param state information such as time step - required to determine if we are on the first timestep or not.
      *  \param ioFieldSet the fields that are required for output and should not
      *         be managed "externally" so that their memory is not reclaimed.
      *
      *  This registers fields on the FieldManagerList (which is created if necessary).
      */
-    TaskInterface( const IDSet& roots,
-                   const std::string taskName,
-                   Expr::ExpressionFactory& factory,
-                   const Uintah::LevelP& level,
-                   Uintah::SchedulerP& sched,
-                   const Uintah::PatchSet* const patches,
-                   const Uintah::MaterialSet* const materials,
-                   const PatchInfoMap& info,
-                   const int RKStage,
-                   const std::set<std::string>& ioFieldSet,
-                   const bool lockAllFields=false);
+    TaskInterface( const IDSet                 & roots,
+                   const std::string             taskName,
+                   Expr::ExpressionFactory     & factory,
+                   const Uintah::LevelP        & level,
+                   Uintah::SchedulerP          & sched,
+                   const Uintah::PatchSet      * const patches,
+                   const Uintah::MaterialSet   * const materials,
+                   const PatchInfoMap          & info,
+                   const int                     RKStage,
+                   Uintah::SimulationStateP      state,
+                   const std::set<std::string> & ioFieldSet,
+                   const bool                    lockAllFields = false );
 
     ~TaskInterface();
 

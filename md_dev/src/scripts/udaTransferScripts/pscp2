@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 #
 #.......................................................................
 # pscp2 <num Processors> <transfer entire uda (y/n)> < remove remote directory> < localDirectory> <login@Machine>:<remote dir>

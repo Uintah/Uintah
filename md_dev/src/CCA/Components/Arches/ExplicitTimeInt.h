@@ -220,7 +220,7 @@ private:
 
 
     Vector dx = patch->dCell();
-    double vol = dx.x()*dx.y()*dx.z();
+    double dtvol = dt/ (dx.x()*dx.y()*dx.z());
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -228,9 +228,9 @@ private:
 
       // (rho*phi)^{t+\Delta t} = (rho*phi)^{t} + RHS
 #ifdef VERIFY_TIMEINT
-      phi[c] = old_den[c]*phi[c] + dt/vol*(RHS_test);
+      phi[c] = old_den[c]*phi[c] + dtvol*(RHS_test);
 #else
-      phi[c] = old_den[c]*phi[c] + dt/vol*(RHS[c]); 
+      phi[c] = old_den[c]*phi[c] + dtvol*(RHS[c]); 
 #endif
 
       // phi^{t+\Delta t} = ((rho*phi)^{t} + RHS) / rho^{t + \Delta t} 

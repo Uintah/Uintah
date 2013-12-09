@@ -148,7 +148,8 @@ namespace Wasatch{
                         const StateTable& table,
                         Expr::Tag densityTag,
                         const DensityEvaluationLevel densLevel,
-                        GraphHelper& gh )
+                        GraphHelper& gh,
+                        std::set<std::string>& lockedFields )
   {
     Expr::ExpressionID densCalcID;  // BE SURE TO POPULATE THIS BELOW!
 
@@ -188,10 +189,11 @@ namespace Wasatch{
       const InterpT* const enthInterp = table.find_entry("Enthalpy");
 
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss");
-      Expr::Tag hTag       = parse_nametag( modelParams->findBlock("Enthalpy")->findBlock("NameTag") );
       Expr::Tag rhofTag    = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
       Expr::Tag rhohTag    = parse_nametag( modelParams->findBlock("DensityWeightedEnthalpy")->findBlock("NameTag") );
       Expr::Tag heatLossTag= parse_nametag( modelParams->findBlock("HeatLoss")->findBlock("NameTag") );
+
+      lockedFields.insert( heatLossTag.name() ); // ensure that Uintah knows about this field
 
       // modify name & context when we are calculating density at newer time
       // levels since this will be using STATE_NONE information as opposed to
@@ -199,15 +201,13 @@ namespace Wasatch{
       if( densLevel != NORMAL ){
         rhofTag.context()     = Expr::STATE_NONE;
         rhohTag.context()     = Expr::STATE_NONE;
-        heatLossTag.context() = Expr::STATE_NONE;
-        hTag.name()        += tagNameAppend;
         rhofTag.name()     += tagNameAppend;
         rhohTag.name()     += tagNameAppend;
         heatLossTag.name() += tagNameAppend;
       }
 
       typedef DensHeatLossMixfrac<SVolField>::Builder DensCalc;
-      densCalcID = factory.register_expression( scinew DensCalc( densityTag, heatLossTag, hTag, rhofTag, rhohTag, *densInterp, *enthInterp ) );
+      densCalcID = factory.register_expression( scinew DensCalc( densityTag, heatLossTag, rhofTag, rhohTag, *densInterp, *enthInterp ) );
 
     }
     return densCalcID;
@@ -228,7 +228,8 @@ namespace Wasatch{
   void parse_tabprops( Uintah::ProblemSpecP& params,
                        GraphHelper& gh,
                        const Category cat,
-                       const bool doDenstPlus ) 
+                       const bool doDenstPlus,
+                       std::set<std::string>& lockedFields )
   {
     std::string fileName;
     params->get("FileNamePrefix",fileName);
@@ -380,10 +381,10 @@ namespace Wasatch{
     const Uintah::ProblemSpecP densityParams = params->findBlock("ExtractDensity");
     if( densityParams ){
       const Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-      parse_density_solver( densityParams, table, densityTag, NORMAL, gh );
+      parse_density_solver( densityParams, table, densityTag, NORMAL, gh, lockedFields );
       if( doDenstPlus ){
-        const Expr::ExpressionID id1 = parse_density_solver( densityParams, table, densityTag, STAR,     gh );
-        const Expr::ExpressionID id2 = parse_density_solver( densityParams, table, densityTag, STARSTAR, gh );
+        const Expr::ExpressionID id1 = parse_density_solver( densityParams, table, densityTag, STAR,     gh, lockedFields );
+        const Expr::ExpressionID id2 = parse_density_solver( densityParams, table, densityTag, STARSTAR, gh, lockedFields );
         gh.exprFactory->cleave_from_children( id1 );
         gh.exprFactory->cleave_from_children( id2 );
       }
@@ -475,7 +476,8 @@ namespace Wasatch{
 
   void
   setup_property_evaluation( Uintah::ProblemSpecP& params,
-                             GraphCategories& gc )
+                             GraphCategories& gc,
+                             std::set<std::string>& lockedFields )
   {
     //__________________________________________________________________________
     // extract the density tag in the cases that it is needed
@@ -511,7 +513,7 @@ namespace Wasatch{
          tabPropsParams = tabPropsParams->findNextBlock("TabProps") )
     {
       const Category cat = parse_tasklist( tabPropsParams,false);
-      parse_tabprops( tabPropsParams, *gc[cat], cat, doDenstPlus );
+      parse_tabprops( tabPropsParams, *gc[cat], cat, doDenstPlus, lockedFields );
     }
 
     if( doDenstPlus ) setup_scalar_predictors( params, *gc[ADVANCE_SOLUTION] );

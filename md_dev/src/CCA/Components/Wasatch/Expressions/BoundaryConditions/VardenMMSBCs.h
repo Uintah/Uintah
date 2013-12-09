@@ -1,3 +1,6 @@
+#ifndef VardenMMSBCs_h
+#define VardenMMSBCs_h
+
 /*
  * The MIT License
  *
@@ -22,26 +25,25 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef VardenMMSBCs_h
-#define VardenMMSBCs_h
-
 #include <expression/Expression.h>
-#include "BoundaryConditionBase.h"
 #include <spatialops/structured/FVStaggered.h>
+
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
+
 /**
- *  \class 	VarDensMMSDensity
+ *  \class    VarDensMMSDensity
  *  \ingroup  Expressions
  *  \author   Amir Biglari
- *  \date   December, 2012
+ *  \date     December, 2012
  *
  *  \brief Provides an expression for density at the boundaries in the MMS 
  *         that is written for the pressure projection method verification
  *
  *  \tparam FieldT - the type of field for the density.
  */
+
 template< typename FieldT >
-class VarDensMMSDensity
-: public BoundaryConditionBase<FieldT>
+class VarDensMMSDensity : public BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::structured::SingleValueField TimeField;
   VarDensMMSDensity( const Expr::Tag& indepVarTag,
@@ -53,7 +55,9 @@ class VarDensMMSDensity
   {
     this->set_gpu_runnable(false);
   }
+
 public:
+
   class Builder : public Expr::ExpressionBuilder
   {
   public:
@@ -91,10 +95,10 @@ private:
 };
 
 /**
- *  \class 	VarDensMMSMixtureFraction
+ *  \class    VarDensMMSMixtureFraction
  *  \ingroup  Expressions
  *  \author   Amir Biglari
- *  \date   December, 2012
+ *  \date     December, 2012
  *
  *  \brief Provides an expression for mixture fraction at the boundaries in the MMS
  *         that is written for the pressure projection method verification
@@ -143,10 +147,10 @@ private:
 };
 
 /**
- *  \class 	VarDensMMSMomentum
+ *  \class    VarDensMMSMomentum
  *  \ingroup  Expressions
  *  \author   Amir Biglari
- *  \date   December, 2012
+ *  \date     December, 2012
  *
  *  \brief Provides an expression for momentum at the boundaries in the MMS
  *         that is written for the pressure projection method verification
@@ -211,10 +215,10 @@ private:
 };
 
 /**
- *  \class 	VarDensMMSSolnVar
+ *  \class    VarDensMMSSolnVar
  *  \ingroup  Expressions
  *  \author   Amir Biglari
- *  \date   December, 2012
+ *  \date     December, 2012
  *
  *  \brief Provides an expression for solution variable at the boundaries in the MMS
  *         that is written for the pressure projection method verification
@@ -272,10 +276,10 @@ private:
 };
 
 /**
- *  \class 	VarDensMMSVelocity
+ *  \class    VarDensMMSVelocity
  *  \ingroup  Expressions
  *  \author   Amir Biglari
- *  \date   December, 2012
+ *  \date     December, 2012
  *
  *  \brief Provides an expression for velocity at the boundaries in the MMS
  *         that is written for the pressure projection method verification
@@ -328,4 +332,5 @@ private:
   const Expr::Tag indepVarTag_;
   const SpatialOps::structured::BCSide side_;
 };
+
 #endif // Var_Dens_MMS_Density_Expr_h

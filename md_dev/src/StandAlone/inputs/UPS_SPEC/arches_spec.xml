@@ -233,6 +233,7 @@
         <inverse_density_average        spec="OPTIONAL BOOLEAN" />
 
         <ColdFlow                       spec="OPTIONAL NO_DATA" >
+          <ignore_iv_density_check      spec="OPTIONAL NO_DATA"/>  <!-- don't force an algorithmic change on the transported iv's to use density guess --> 
           <mixture_fraction_label       spec="REQUIRED STRING"/>
           <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature --> 
           <Stream_1                     spec="MULTIPLE NO_DATA">
@@ -266,6 +267,7 @@
         </ColdFlow>
 
         <TabProps                       spec="OPTIONAL NO_DATA" >
+          <ignore_iv_density_check      spec="OPTIONAL NO_DATA"/>  <!-- don't force an algorithmic change on the transported iv's to use density guess --> 
           <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
           <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- used for simple stream mixing (no rxn) --> 
           <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
@@ -278,6 +280,7 @@
         </TabProps>
 
         <ClassicTable                   spec="OPTIONAL NO_DATA">
+          <ignore_iv_density_check      spec="OPTIONAL NO_DATA"/>  <!-- don't force an algorithmic change on the transported iv's to use density guess --> 
           <inputfile                    spec="REQUIRED STRING" />  <!-- table to be opened --> 
           <cold_flow                    spec="OPTIONAL BOOLEAN"/>  <!-- force adiabatic condition --> 
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"/>  <!-- warn when heat loss is clipped to bounds --> 
@@ -489,6 +492,8 @@
 
         <maxDensityLag                  spec="OPTIONAL DOUBLE" />
 
+        <extra_table_lookup             spec="OPTIONAL NO_DATA"/> <!-- perform an extra table lookup at Stage 2 of the algorithm --> 
+
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
           <use_wasatch_momentum_rhs spec="OPTIONAL NO_DATA" />
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
@@ -579,6 +584,9 @@
                You don't need to set it again if you don't want to. --> 
           <use_density_guess            spec="OPTIONAL NO_DATA"/> <!-- Uses a guessed density to get \phi^{n+1}, default=false -->
           <determines_properties        spec="OPTIONAL NO_DATA"/> <!-- Forces use_density_guess = true. Has the same effect as <use_density_guess> --> 
+          <stage                        spec="OPTIONAL NO_DATA"
+                                        attribute1="value REQUIRED INTEGER '0,2'"/> <!-- at which algorithmic stage should this be computed. 0=before table lookup, 
+                                                                                           1=after table lookup, 2=after RK averaging (performs a separate RK averaging)--> 
           <!--                                                -->
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"> <!-- Pointer to sources defined elsewhere --> 
@@ -650,7 +658,8 @@
                                                                            wasatch_expr,
                                                                            pc_transport,
                                                                            moment2_mixture_fraction_src,
-                                                                           dissipation_src'">                                                           
+                                                                           dissipation_src,
+                                                                           manifold_rxn'">                                                           
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
@@ -870,6 +879,13 @@
             <velocity                   spec="OPTIONAL DOUBLE"/>
             <density                    spec="OPTIONAL DOUBLE"/>
             <phi                        spec="OPTIONAL DOUBLE"/>
+
+            <!-- manifold rxn --> 
+            <manifold_label             spec="REQUIRED STRING" need_applies_to="type manifold_rxn"/> <!-- label for the manifold variable --> 
+            <conv_scheme                spec="REQUIRED NO_DATA"
+                                        attribute1="type REQUIRED STRING 'super_bee, roe_minmod, upwind, central'"
+                                        need_applies_to="type manifold_rxn"/> <!-- choose a convection scheme --> 
+
                       
           </src>
 
@@ -878,7 +894,7 @@
       </TransportEqns>
 
       <DQMOM                            spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'unweightedAbs, weightedAbs">
+                                        attribute1="type REQUIRED STRING 'unweightedAbs, weightedAbs'">
 
         <!-- Tags for verification of DQMOM AX=B solution procedure -->
         <Verify_Linear_Solver           spec="OPTIONAL NO_DATA">

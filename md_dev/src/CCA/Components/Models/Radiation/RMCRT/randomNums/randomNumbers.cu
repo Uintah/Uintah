@@ -135,23 +135,20 @@ void randHostGPU( double *M, int nRandNums)
 
 //______________________________________________________________________
 //    Returns an random number
-__device__ double randDevice(curandState* globalState)
+__device__ double randDevice(curandState* globalState, const int tid)
 {
-
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
   curandState localState = globalState[tid];
-  double val = curand_uniform_double(&localState);
+  double val = curand(&localState);
   globalState[tid] = localState;
-  return val;
+  return (double)val * (1.0/4294967295.0);
 }
 
 
 //______________________________________________________________________
 //    Returns an random number  excluding 0 & 1.0.  See MersenneTwister.h
 //
-__device__ double randDblExcDevice(curandState* globalState)
+__device__ double randDblExcDevice(curandState* globalState, const int tid)
 {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
   curandState localState = globalState[tid];
   double val = curand(&localState);
   globalState[tid] = localState;
@@ -162,25 +159,19 @@ __device__ double randDblExcDevice(curandState* globalState)
 //
 __global__ void setup_kernel(curandState* randNumStates)
 {
-   int tidX = threadIdx.x + blockIdx.x * blockDim.x;
+   int tID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
    /* Each thread gets same seed, a different sequence number, no offset */
-   curand_init(1234, tidX, 0, &randNumStates[tidX]);
+   curand_init(1234, tID, 0, &randNumStates[tID]);
 }
 //______________________________________________________________________
 //    Kernel:  
 __global__ void randNumKernel( curandState* randNumStates, double* M, double* N, int nRandNums )
 {
   int tID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
-  int tx  = threadIdx.x;
-  int ty  = threadIdx.y;
-  int row = blockIdx.y * BLKWIDTH + tx;
-  int col = blockIdx.x * BLKWIDTH + ty;
-  int c   = row * nRandNums +col;
-  
-  for (int k = 0; k < nRandNums; ++k){
-    M[k] = randDblExcDevice( randNumStates );
-    N[k] = randDevice( randNumStates );
-  }
+//  for (int k = 0; k < nRandNums; ++k){
+    M[tID] = randDblExcDevice( randNumStates, tID);
+    N[tID] = randDevice( randNumStates, tID );
+//  }
 }
 
 //______________________________________________________________________
@@ -301,7 +292,7 @@ int main( int argc, char** argv)
     //  Output data
     FILE *fp;
     fp = fopen("randomNumbers.dat", "w");
-    
+    fprintf( fp, "#CPU, hostCPU, GPU_dblExc, GPU_dblInc\n");
     for (int i = 0; i< nRandNums; i++){
       fprintf( fp, "%i, %16.15E, %16.15E, %16.15E,  %16.15E\n",i, rand_CPU[i], rand_hostGPU[i], rand_devGPU_M[i], rand_devGPU_N[i] );
       //printf(      "%i, %16.15E, %16.15E, %16.15E,  %16.15E\n",i, rand_CPU[i], rand_hostGPU[i], rand_devGPU_M[i], rand_devGPU_N[i] );

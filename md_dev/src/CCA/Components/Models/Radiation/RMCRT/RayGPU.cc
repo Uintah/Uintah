@@ -24,13 +24,15 @@
 
 #include <sci_defs/cuda_defs.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
-#ifdef HAVE_CUDA
-#include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
-#endif
 #include <Core/Grid/DbgOutput.h>
+#ifdef HAVE_CUDA
+  #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
+#endif
+
 
 #define BLOCKSIZE 16
 //#define PRINTF            // if using printf statements to debug
+
 
 using namespace Uintah;
 using namespace std;
@@ -71,17 +73,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size );
   printf(" Increasing the size of the print buffer to %d bytes\n", (int)10 * size );
 #endif
-
-  //__________________________________
-  // Determine the size of the domain.
-  IntVector domainLo, domainHi;
-  IntVector domainLo_EC, domainHi_EC;
-  level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
-  level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
-
-  const Int3 dev_domainLo = make_int3(domainLo_EC.x(), domainLo_EC.y(), domainLo_EC.z());
-  const Int3 dev_domainHi = make_int3(domainHi_EC.x(), domainHi_EC.y(), domainHi_EC.z());
-
   
   //__________________________________
   //  
@@ -96,7 +87,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   //  varLabel name struct
   varLabelNames labelNames;
 #if 0
-  labelNames->abskg     = d_abskgLabel->getName().c_str();    // cuda doesn't support C++ strings
+  labelNames->abskg    = d_abskgLabel->getName().c_str();    // cuda doesn't support C++ strings
   labelNames.sigmaT4   = d_sigmaT4_label->getName().c_str();
   labelNames.divQ      = d_divQLabel->getName().c_str();
   labelNames.celltype  = d_cellTypeLabel->getName().c_str();
@@ -122,7 +113,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   RT_flags.solveDivQ          = _solveDivQ;
   RT_flags.allowReflect       = _allowReflect;
   RT_flags.solveBoundaryFlux  = _solveBoundaryFlux;
-  RT_flags.isSeedRandom       = _isSeedRandom;
+  RT_flags.benchMark          = _benchmark;
   RT_flags.CCRays             = _CCRays;
   
   RT_flags.sigma      = _sigma;;    
@@ -145,9 +136,12 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     printTask(patches, patch, dbggpu, "Doing Ray::rayTraceGPU");
 
     // Calculate the memory block size
-    const IntVector low = patch->getCellLowIndex();
-    const IntVector high = patch->getCellHighIndex();
-    const IntVector patchSize = high - low;
+    const IntVector loEC = patch->getExtraCellLowIndex();
+    const IntVector lo   = patch->getCellLowIndex();
+    
+    const IntVector hiEC = patch->getExtraCellHighIndex();
+    const IntVector hi   = patch->getCellHighIndex();
+    const IntVector patchSize = hiEC - loEC;
 
     const int xdim = patchSize.x();
     const int ydim = patchSize.y();
@@ -157,21 +151,34 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     patchParams patchP;
     const Vector dx = patch->dCell();
     patchP.dx     = make_double3(dx.x(), dx.y(), dx.z());
-    patchP.lo     = make_int3(low.x(), low.y(), low.z());
-    patchP.hi     = make_int3(high.x(), high.y(), high.z());
+    patchP.lo     = make_int3( lo.x(), lo.y(), lo.z() );
+    patchP.hi     = make_int3( hi.x(), hi.y(), hi.z() );
+    
+    patchP.loEC   = make_int3( loEC.x(), loEC.y(),  loEC.z() );
+    patchP.hiEC   = make_int3( hiEC.x(), hiEC.y(),  hiEC.z() );
+    
     patchP.ID     = patch->getID();
     patchP.nCells = make_int3(xdim, ydim, zdim);
-
+    
     // define dimensions of the thread grid to be launched
     int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
     int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
-    dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
+    
+    // if the # cells in a block < BLOCKSIZE^2 reduce block size
+    int blocksize = BLOCKSIZE;
+    if( xblocks == 1 && yblocks == 1 ){
+      blocksize = max(xdim, ydim);
+    }
+    
+    dim3 dimBlock(blocksize, blocksize, 1);
     dim3 dimGrid(xblocks, yblocks, 1);
 
-    // setup random number generator states on the device, 1 for each thread
-    curandState* randNumStates;
-    int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
-    /*`CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );      TESTING`*/
+#ifdef DEBUG
+    cout << " lowEC: " << loEC << " hiEC " << hiEC << endl;
+    cout << " lo   : " << lo   << " hi:  " << hi << endl;
+    cout << " xdim: " << xdim << " ydim: " << ydim << endl;
+    cout << " blocksize: " << blocksize << " xblocks: " << xblocks << " yblocks: " << yblocks << endl;
+#endif
 
     RT_flags.nRaySteps = 0;
 
@@ -181,9 +188,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
                          dimBlock,
                          d_matl,
                          patchP,
-                         dev_domainLo, 
-                         dev_domainHi, 
-                         randNumStates, 
                          (cudaStream_t*)stream,
                          RT_flags,
                          labelNames,
@@ -192,10 +196,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
                          celltype_gdw, 
                          old_gdw, 
                          new_gdw);
-
-    // free device-side RNG states
-    /*`CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );      TESTING`*/
-    
+                         
     //__________________________________
     //
     double end =clock();

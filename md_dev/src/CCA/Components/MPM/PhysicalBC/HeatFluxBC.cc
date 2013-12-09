@@ -247,8 +247,8 @@ HeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
     normal[gp->thicknessDirection()] = 1.0;
     flux = fluxPerParticle;
   } else if (d_surfaceType == "cylinder") {
-    CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
-    Vector normal = gp->radialDirection(px);
+    //CylinderGeometryPiece* gp=dynamic_cast<CylinderGeometryPiece*>(d_surface);
+    //Vector normal = gp->radialDirection(px);
 #if 0
     cout << "theta = " << theta << " theta_n = " << theta_n << endl;
     cout << "flux = " << fluxPerParticle  << " flux_variation = " 
@@ -257,8 +257,8 @@ HeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
 
     flux = fluxPerParticle;
   } else if (d_surfaceType == "sphere") {
-    SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
-    Vector normal = gp->radialDirection(px);
+    //SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
+    //Vector normal = gp->radialDirection(px);
     flux = fluxPerParticle;
   } else {
     throw ParameterNotFound("** ERROR ** Unknown surface specified for heatflux BC",

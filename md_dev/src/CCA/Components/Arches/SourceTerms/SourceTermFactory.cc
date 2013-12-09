@@ -17,6 +17,7 @@
 #include <CCA/Components/Arches/SourceTerms/PCTransport.h>
 #include <CCA/Components/Arches/SourceTerms/SecondMFMoment.h>
 #include <CCA/Components/Arches/SourceTerms/DissipationSource.h>
+#include <CCA/Components/Arches/SourceTerms/ManifoldRxn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
@@ -322,6 +323,10 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
       } else if ( src_type == "dissipation_src" ) {
         SourceTermBase::Builder* srcBuilder = scinew DissipationSource::Builder(src_name, required_varLabels, shared_state );
         factory.register_source_term( src_name, srcBuilder );
+
+      } else if ( src_type == "manifold_rxn" ) { 
+        SourceTermBase::Builder* srcBuilder = scinew ManifoldRxn::Builder(src_name, required_varLabels, shared_state );
+        factory.register_source_term( src_name, srcBuilder );
         
       } else {
         proc0cout << "For source term named: " << src_name << endl;
@@ -372,11 +377,19 @@ void SourceTermFactory::registerSources( ArchesLabel* lab, const bool do_dqmom, 
   }
 }
 
-void SourceTermFactory::sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep )
+void SourceTermFactory::sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep, const int stage )
 { 
   for (vector<SourceContainer>::iterator iter = _active_sources.begin(); iter != _active_sources.end(); iter++){
-    SourceTermBase& temp_src = retrieve_source_term( iter->name ); 
-    temp_src.sched_computeSource( level, sched, timeSubStep );
+
+    SourceTermBase& temp_src = retrieve_source_term( iter->name );
+    const int check = temp_src.stage_compute(); 
+
+    if ( check > 2 ){
+      throw InvalidValue("Error: The following source term has a problem with the stage: "+iter->name, __FILE__, __LINE__);
+    }
+
+    if ( check == stage ){
+      temp_src.sched_computeSource( level, sched, timeSubStep );
+    }
   }
 } 
-

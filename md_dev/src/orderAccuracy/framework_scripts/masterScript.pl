@@ -33,6 +33,7 @@
 #  Perl Dependencies:  
 #    libxml-simple-perl
 #    libxml-dumper-perl
+#    xmlstarlet
 #
 #______________________________________________________________________
 
@@ -41,6 +42,21 @@ use XML::Simple;
 use Data::Dumper;
 use File::Path;
 use Cwd;
+
+#__________________________________
+# bulletproofing
+my @modules = qw(XML::Simple Data::Dumper File::Path );
+
+for(@modules) {
+  eval "use $_";
+  if ($@) {
+    print "\n\nError: Could not find the perl module ($_)\n";
+    print " Now exiting\n";
+    exit
+  }
+}
+#______________________________________________________________________
+
 
 my $simple = XML::Simple->new(ForceArray=>1, suppressempty => "");
 
@@ -65,8 +81,10 @@ if (! -e $base_path."/framework_scripts" ){
 
 #__________________________________
 # create the base testing directory
-system("/bin/rm -rf order_of_accuracy");
-mkdir("order_of_accuracy") || die "cannot mkdir(order_of_accuracy) $!";
+if (! -e "order_of_accuracy" ){
+  system("/bin/rm -rf order_of_accuracy");
+  mkdir("order_of_accuracy") || die "cannot mkdir(order_of_accuracy) $!";
+}
 chdir("order_of_accuracy");
 my $curr_path = cwd;
 
@@ -98,6 +116,7 @@ system("which sus") == 0               || die("\nCannot find the command sus $@"
 system("which octave")  == 0           || die("\nCannot find the command octave $@");
 system("which gnuplot") == 0           || die("\nCannot find the command gnuplot $@");
 system("which mpirun")  == 0           || die("\nCannot find the command mpirun $@");
+system("which xmlstarlet")  == 0       || die("\nCannot find the command xmlstarlet $@");
 system("which replace_XML_line")  == 0 || die("\nCannot find the command replace_XML_line $@");
 system("which replace_XML_value") == 0 || die("\nCannot find the command replace_XML_value $@");
 system("which findReplace")       == 0 || die("\nCannot find the command findReplace $@");
@@ -109,7 +128,10 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
    chdir($curr_path);
    
    my $component = $components[$c];
-   mkpath($component) || die "cannot mkpath($component) $!";
+   
+   if ( ! -e $component) {
+    mkpath($component) || die "cannot mkpath($component) $!";
+   }
    chdir($component);
    print "----------------------------------------------------------------  $component \n";
          
@@ -152,7 +174,19 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
         chomp($otherFiles);
      }
     
+     #find a unique testname
+     my $count = 0;
+     my $testNameOld = $testName;
+     $testName = "$testName.$count";
+     
+     while( -e $testName){
+       $testName = "$testNameOld.$count";
+       $count +=1;
+     }
+     
      mkpath($testName) || die "ERROR:masterScript.pl:cannot mkpath($testName) $!";
+     
+     
      chdir($testName);
      
      print "\n\n=======================================================================================\n";
@@ -176,25 +210,24 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      chdir($fw_path);
      system("cp -f $upsFile $tstFile $otherFiles $testing_path");
      
-     system("echo $here_path $postProcessCmd_path> $testing_path/scriptPath");
-     
+     system("echo $here_path $postProcessCmd_path> $testing_path/scriptPath 2>&1");
           
      chdir($testing_path);
-     
+
      # make a symbolic link to sus
      my $sus = `which sus`;
-     system("ln -s $sus >&/dev/null");
-     
+     system("ln -s $sus > /dev/null 2>&1");
+
      # make any symbolic Links needed by that component
      my $j = 0;
      foreach $j (@symLinks) {
        if( $j gt "" && $j ne "."){
-         system("ln -s $j >&/dev/null");
+         system("ln -s $j > /dev/null 2>&1");
        }
      }
      
      # clean out any comment in the TST file
-     system("xmlstarlet c14n --without-comments $tstFile > $tstFile.clean");
+     system("xmlstarlet c14n --without-comments $tstFile > $tstFile.clean 2>&1");
      $tstFile = "$tstFile.clean";
      
      
@@ -203,7 +236,7 @@ system("which findReplace")       == 0 || die("\nCannot find the command findRep
      print "\n\nLaunching: run_tests.pl $testing_path/$tstFile\n\n";
      my @args = (" $scripts_path/run_tests.pl","$testing_path/$tstFile", "$fw_path");
      system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n");
-     
+
      chdir("..");
    }
    chdir("..");

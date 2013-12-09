@@ -76,11 +76,18 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
     SCI_THROW(ProblemSetupException("Error: It looks like you specified two values for BC " + bc_attr["label"] + ". This is not allowed! You could only specify either a value attribute or a <value> node. Please revise your input file.", __FILE__, __LINE__));
   }
 
-  if (!valuePS && !attrPS) {
-    if (bc_attr["label"] != "symmetry" || bc_attr["label"] != "zeroNeumann") {
-      proc0cout << "WARNING: It looks like you specified no value for BC " + bc_attr["label"] + ". This may be okay if your component allows you to for certain types of boundaries such as symmetry and zeroNeumann.\n";
-    }
-  }
+//
+// TSAAD: ACHTUNG!
+// Due to the fact that different Uintah components deal with parsing the boundary-conditions spec
+// in their own way, it was found that removing the following warning was best to avoid compaints
+// from several developers. Bear in mind that removing this warning places the burden of BC proper-parsing
+// on component developers. I disagree with that, given the limited resource to refactor, this was the best choice that could be made.
+//
+//  if (!valuePS && !attrPS) {
+//    if (bc_attr["label"] != "symmetry" || bc_attr["label"] != "zeroNeumann") { // specific handing for ICE and MPM since they parse BCs differently
+//      proc0cout << "WARNING: It looks like you specified no value for BC " + bc_attr["label"] + ". This may be okay if your component allows you to for certain types of boundaries such as symmetry and zeroNeumann.\n";
+//    }
+//  }
 
   if (attrPS) {
     ProblemSpec::InputType theInputType = child->getInputType(valAttribute);

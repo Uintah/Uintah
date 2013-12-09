@@ -23,7 +23,6 @@
  */
 
 //----- Ray.cc ----------------------------------------------
-#include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 
@@ -71,7 +70,6 @@ Ray::Ray()
   d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
   d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
   d_cellTypeLabel        = VarLabel::create( "cellType",         CCVariable<int>::getTypeDescription() );
-  d_DcellTypeLabel       = VarLabel::create( "DcellType",        CCVariable<double>::getTypeDescription() );  //HACK
   d_radiationVolqLabel   = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
    
   d_matlSet       = 0;
@@ -133,7 +131,6 @@ Ray::~Ray()
   VarLabel::destroy( d_divQFiltLabel );
   VarLabel::destroy( d_boundFluxFiltLabel );
   VarLabel::destroy( d_cellTypeLabel );
-  VarLabel::destroy( d_DcellTypeLabel );         //HACK
   VarLabel::destroy( d_radiationVolqLabel );
 
   if(d_matlSet && d_matlSet->removeReference()) {
@@ -345,6 +342,16 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   } else {  
     is_BC_specified(root_ps, d_temperatureLabel->getName(), mss);
     is_BC_specified(root_ps, d_abskgLabel->getName(),       mss);
+    
+    Vector periodic;
+    ProblemSpecP grid_ps  = root_ps->findBlock("Grid");
+    ProblemSpecP level_ps = grid_ps->findBlock("Level");
+    level_ps->getWithDefault("periodic", periodic, Vector(0,0,0));
+    
+    if (periodic.length() != 0 ){
+      throw ProblemSetupException("\nERROR RMCRT:\nPeriodic boundary conditions are not allowed with Reverse Monte-Carlo Ray Tracing.", __FILE__, __LINE__);
+    }
+    
   }
 }
 
@@ -597,37 +604,19 @@ Ray::sched_rayTrace( const LevelP& level,
   Ghost::GhostType  gac  = Ghost::AroundCells;
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
-  
-/*`==========TESTING==========*/
-  if (Parallel::usingDevice()) {
-    tsk->requires( celltype_dw , d_DcellTypeLabel , gac, SHRT_MAX);  // HACK
-  } else {
-    tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
-  } 
-/*===========TESTING==========`*/
+  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
     
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
     tsk->modifies( d_VRFluxLabel );
-    /*`tsk->modifies( d_boundFluxLabel );      TESTING`*/
+    tsk->modifies( d_boundFluxLabel );
     tsk->modifies( d_radiationVolqLabel );
   } else {
     tsk->computes( d_divQLabel );
     tsk->computes( d_VRFluxLabel );
-    /*`tsk->computes( d_boundFluxLabel );      TESTING`*/
+    tsk->computes( d_boundFluxLabel );
     tsk->computes( d_radiationVolqLabel );
   }
-  
-/*`==========TESTING==========*/              // HACK
-  if ( !Parallel::usingDevice() ) {
-    if( modifies_divQ ){
-      tsk->modifies( d_boundFluxLabel );
-    } else {
-      tsk->computes( d_boundFluxLabel );
-    }
-  } 
-/*===========TESTING==========`*/
-  
   
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
   
@@ -708,14 +697,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
      
       for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
-
-        boundFlux[origin].p = 0.0;
-        boundFlux[origin].w = 0.0;
-        boundFlux[origin].e = 0.0;
-        boundFlux[origin].s = 0.0;
-        boundFlux[origin].n = 0.0;
-        boundFlux[origin].b = 0.0;
-        boundFlux[origin].t = 0.0;
+        boundFlux[origin].initialize(0.0);
       }
    }
     unsigned long int size = 0;                        // current size of PathIndex
@@ -1522,10 +1504,9 @@ bool Ray::has_a_boundary(const IntVector &c,
   IntVector adjacentCell = c;
   bool hasBoundary = false;
 
-  adjacentCell = c;
   adjacentCell[0] = c[0] - 1;     // west
 
-  if (celltype[adjacentCell]+1){    // cell type of flow is -1, so when cellType+1 isn't false, we
+  if (celltype[adjacentCell]+1){         // cell type of flow is -1, so when cellType+1 isn't false, we
     boundaryFaces.push_back( WEST );     // know we're at a boundary
     hasBoundary = true;
   }
@@ -1610,10 +1591,6 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   tsk->modifies( d_sigmaT4_label ); 
   tsk->modifies( d_abskgLabel );
   tsk->modifies( d_cellTypeLabel );
-  
-/*`==========TESTING==========*/
-  tsk->computes( d_DcellTypeLabel );  //HACK 
-/*===========TESTING==========`*/
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
@@ -1691,17 +1668,6 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
       setBC(abskg,    d_abskgLabel->getName(),       patch, d_matl);
       setBC(temp,     d_temperatureLabel->getName(), patch, d_matl);
       setBC(cellType, d_cellTypeLabel->getName(),    patch, d_matl);
-      
-/*`==========TESTING==========*/
-  // remove this hack after GPUGridVariable<int> is supported
-    CCVariable<double> DcellType;
-    new_dw->allocateAndPut(DcellType, d_DcellTypeLabel, d_matl, patch);
-    for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){
-      IntVector c = *iter;
-      DcellType[c] = (double) cellType[c];
-    } 
-/*===========TESTING==========`*/
-
 
       //__________________________________
       // loop over boundary faces and compute sigma T^4
@@ -2094,16 +2060,8 @@ void Ray::sched_carryForward_rayTrace( const LevelP& level,
   
   tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
   tsk->requires( Task::OldDW, d_VRFluxLabel,         d_gn, 0 );
-/*`  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );      TESTING`*/ 
+  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
   tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
-  
-  
-/*`==========TESTING==========*/
-  if ( !Parallel::usingDevice() ) {
-    tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
-  } 
-/*===========TESTING==========`*/
-  
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );  
 }
@@ -2126,16 +2084,9 @@ void  Ray::carryForward_rayTrace( const ProcessorGroup* pc,
     
     new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls );
     new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls );
-/*`    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );      TESTING`*/
+    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );
     new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls );
-    
-    
-/*`==========TESTING==========*/
-  if ( !Parallel::usingDevice() ) {
-    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );    // HACK
-  } 
-/*===========TESTING==========`*/
-    
+
     return;
   }
 }
@@ -2326,7 +2277,11 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
          tDelta    = Abs(inv_ray_direction) * D_DxRatio;
          tMax_prev = 0;
          curLength = 0;  // allow for multiple scattering events per ray
-         
+/*`==========TESTING==========*/
+#ifdef DEBUG         
+printf( "%i, %i, %i, tmax: %g, %g, %g  tDelta: %g, %g, %g \n", cur.x(), cur.y(), cur.z(), tMax.x(), tMax.y(), tMax.z(), tDelta.x(), tDelta.y() , tDelta.z());         
+#endif 
+/*===========TESTING==========`*/
          //if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
        }
 #endif
@@ -2574,7 +2529,6 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
     }
   }  // threshold while loop.
 }
-
 
 //---------------------------------------------------------------------------
 //

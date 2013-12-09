@@ -107,7 +107,8 @@ public:
                               SchedulerP& sched
 #                             ifdef WASATCH_IN_ARCHES
                               , Wasatch::Wasatch& wasatch,
-                              ExplicitTimeInt* d_timeIntegrator
+                              ExplicitTimeInt* d_timeIntegrator,
+                              SimulationStateP& state
 #                             endif // WASATCH_IN_ARCHES
                               ) = 0;
 

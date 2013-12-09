@@ -63,15 +63,15 @@ end
 %________________________________
 % do the Uintah utilities exist
 %unix('setenv LD_LIBRARY /usr/lib')
-[s0, r0]=unix('puda >&/dev/null');
-[s1, r1]=unix('lineextract >&/dev/null');
-[s2, r2]=unix('timeextract >&/dev/null');
-[s3, r3]=unix('which exactRiemann >&/dev/null');
+[s0, r0]=unix('puda > /dev/null 2>&1');
+[s1, r1]=unix('lineextract > /dev/null 2>&1');
+[s2, r2]=unix('timeextract > /dev/null 2>&1');
+[s3, r3]=unix('which exactRiemann > /dev/null 2>&1');
 if( s0 ~=0 || s1 ~= 0 || s2 ~=0 || s3 ~=0)
   disp('Cannot execute Riemann or the Uintah utilites puda, timeextract lineextract or exactRiemann');
   disp('  a) make sure you are in the right directory, and');
   disp('  b) the utilities (puda/lineextract) have been compiled');
-  exit
+  quit(-1);
 end
 
 
@@ -83,7 +83,7 @@ maxLevel = 1;
 
 %________________________________
 % extract the physical time 
-c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda);
+c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" > tmp 2>&1',uda);
 [status0, result0]=unix(c0);
 physicalTime  = load('tmp');
 
@@ -96,7 +96,7 @@ t = physicalTime(ts);
 
 %________________________________
 %  extract initial conditions and grid information from the uda file
-c0 = sprintf('puda -gridstats %s >& tmp',uda); unix(c0);
+c0 = sprintf('puda -gridstats %s > tmp 2>&1',uda); unix(c0);
 [s,r0] = unix('grep -m1 dx: tmp| tr -d "dx:[]"');
 [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp | tr -d "[:alpha:]:[],"');
 [s,r2] = unix('grep -m1 -w "Domain Length" tmp         | tr -d "[:alpha:]:[],"');
@@ -148,7 +148,7 @@ x      = zeros(nrows);
 %__________________________________
 % loop over all the variables and load them into susSol
 for v=1:length(variables)
-  c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o sim.dat -m %i  -uda %s >&/dev/null',variables(v),level,ts-1,startEnd,mat,uda);
+  c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o sim.dat -m %i  -uda %s > /dev/null 2>&1',variables(v),level,ts-1,startEnd,mat,uda);
   [s1, r1] = unix(c1);
   
   if ( strcmp(variables(v),'vel_CC'))         % for vel_CC

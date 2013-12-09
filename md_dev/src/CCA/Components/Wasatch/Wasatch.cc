@@ -170,7 +170,6 @@ namespace Wasatch{
         ++exprtag ){
       const Expr::ExpressionID exprID = graphHelper->exprFactory->get_id(*exprtag);
       graphHelper->rootIDs.insert( exprID );
-      graphHelper->forcedIDs.insert( exprID );
     }    
   }
   
@@ -183,10 +182,8 @@ namespace Wasatch{
         exprParams != 0;
         exprParams = exprParams->findNextBlock("NameTag") )
     {
-      const Expr::Tag tag = parse_nametag( exprParams );
-      const Expr::ExpressionID exprID = gh->exprFactory->get_id(tag);
+      const Expr::ExpressionID exprID = gh->exprFactory->get_id(parse_nametag(exprParams));
       gh->rootIDs.insert( exprID );
-      gh->forcedIDs.insert( exprID );
     }
   }
 
@@ -530,13 +527,13 @@ namespace Wasatch{
     //
     create_expressions_from_input( wasatchSpec_, graphCategories_ );
     parse_embedded_geometry(wasatchSpec_,graphCategories_);
-    setup_property_evaluation( wasatchSpec_, graphCategories_ );
+    setup_property_evaluation( wasatchSpec_, graphCategories_, lockedFields_ );
 
     //
     // get the turbulence params, if any, and parse them.
     //
     Uintah::ProblemSpecP turbulenceModelParams = wasatchSpec_->findBlock("Turbulence");
-    struct TurbulenceParameters turbParams = {1.0,0.1,NOTURBULENCE};
+    TurbulenceParameters turbParams;
     parse_turbulence_input(turbulenceModelParams, turbParams);
     
     //
@@ -758,7 +755,9 @@ namespace Wasatch{
                                                           allPatches,
                                                           materials_,
                                                           patchInfoMap_,
-                                                          1, lockedFields_ );
+                                                          1,
+                                                          sharedState_,
+                                                          lockedFields_ );
         //_______________________________________________________
         // create the TaskInterface and schedule this task for
         // execution.  Note that field dependencies are assigned
@@ -842,7 +841,7 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
-                                                        1, lockedFields_ );
+                                                        1, sharedState_, lockedFields_ );
       task->schedule(1);
       taskInterfaceList_.push_back( task );
     }
@@ -907,7 +906,7 @@ namespace Wasatch{
       //    also need to set a flag on the task: task->setType(Task::OncePerProc);
       
       // set up any "old" variables that have been requested.
-      OldVariable::self().setup_tasks( allPatches, materials_, sched );
+      OldVariable::self().setup_tasks( allPatches, materials_, sched, iStage );
 
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
@@ -958,7 +957,9 @@ namespace Wasatch{
                                                           allPatches,
                                                           materials_,
                                                           patchInfoMap_,
-                                                          iStage, lockedFields_ );
+                                                          iStage,
+                                                          sharedState_,
+                                                          lockedFields_ );
         task->schedule(iStage);
         taskInterfaceList_.push_back( task );
       }

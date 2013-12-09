@@ -317,6 +317,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     }
   }
 }
+
 //---------------------------------------------------------------------------
 // Method: Schedule clean up. 
 // Probably not needed for DQMOM
@@ -587,7 +588,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
   
     //----DIFFUSION
     if (d_doDiff)
-      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, d_mol_diff, areaFraction, d_turbPrNo, matlIndex, d_eqnName );
+      d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, d_mol_diff, areaFraction, d_turbPrNo );
  
     //----SUM UP RHS
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){

@@ -298,14 +298,17 @@ Properties::averageRKProps( const ProcessorGroup*,
             double predicted_density;
 
             if (old_density[currCell] > 0.0) {
+
               //predicted_density = rho1_density[currCell];
               if (d_inverse_density_average)
                 predicted_density = 1.0/((factor_old/old_density[currCell] + factor_new/new_density[currCell])/factor_divide);
               else
                 predicted_density = (factor_old*old_density[currCell] + factor_new*new_density[currCell])/factor_divide;
-            }
-            else {
+
+            } else {
+
               predicted_density = new_density[currCell];
+
             }
             
             density_guess[currCell] = predicted_density;
@@ -575,6 +578,14 @@ Properties::addLookupSpecies( ){
   if ( mixModel == "ClassicTable"  || mixModel == "TabProps" ) { 
     for ( vector<string>::iterator i = sps.begin(); i != sps.end(); i++ ){
       d_mixingRxnTable->insertIntoMap( *i ); 
+    }
+  }
+
+  std::vector<std::string> old_sps; 
+  old_sps = d_lab->model_req_old_species; 
+  if ( mixModel == "ClassicTable"  || mixModel == "TabProps" ) { 
+    for ( vector<string>::iterator i = old_sps.begin(); i != old_sps.end(); i++ ){
+      d_mixingRxnTable->insertOldIntoMap( *i ); 
     }
   }
 }

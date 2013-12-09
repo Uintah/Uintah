@@ -549,10 +549,9 @@ Arches::problemSetup(const ProblemSpecP& params,
                 a_src.problemSetup( found_src_db );
 
                 //Add any table lookup species to the table lookup list:                                      
-                std::vector<std::string> tbl_lookup = a_src.get_tablelookup_species();                        
-                for ( std::vector<std::string>::iterator iter = tbl_lookup.begin(); iter != tbl_lookup.end(); ++iter ){                                           
-                  d_lab->add_species( *iter );
-                }
+                SourceTermBase::TableLookup*  tbl_lookup = a_src.get_tablelookup_species();                        
+                if ( tbl_lookup != NULL )
+                  d_lab->add_species_struct( tbl_lookup ); 
 
               }
             }
@@ -560,6 +559,15 @@ Arches::problemSetup(const ProblemSpecP& params,
         }
       }
     }
+
+//    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
+//    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); 
+//        ieqn != scalar_eqns.end(); ieqn++){
+//
+//      EqnBase* eqn = ieqn->second;  
+//      eqn->assign_stage_to_sources(); 
+//
+//    }
 
   } else {
 
@@ -614,6 +622,16 @@ Arches::problemSetup(const ProblemSpecP& params,
 
       }
     } 
+  }
+
+  EqnFactory& eqn_factory = EqnFactory::self();
+  EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); 
+      ieqn != scalar_eqns.end(); ieqn++){
+
+    EqnBase* eqn = ieqn->second;  
+    eqn->assign_stage_to_sources(); 
+
   }
 
 #ifdef WASATCH_IN_ARCHES
@@ -887,8 +905,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   // check to make sure that all the scalar variables have BCs set and set intrusions:
-  EqnFactory& eqnFactory = EqnFactory::self();
-  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
   for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
     EqnBase* eqn = ieqn->second;
     eqn->set_intrusion( intrusion_ref );
@@ -1552,7 +1568,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   // disable Wasatch's time integrator because Arches is handling it.
   d_wasatch->scheduleTimeAdvance( level, sched );
-  d_nlSolver->nonlinearSolve(level, sched, *d_wasatch, d_timeIntegrator );
+  d_nlSolver->nonlinearSolve(level, sched, *d_wasatch, d_timeIntegrator, d_sharedState );
 
 #else 
 
