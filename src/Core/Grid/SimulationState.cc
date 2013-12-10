@@ -34,6 +34,7 @@
 #include <Core/Grid/SimpleMaterial.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MD/MDMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Wasatch/WasatchMaterial.h>
@@ -88,6 +89,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_ice_matls = 0;
   all_wasatch_matls = 0;  
   all_arches_matls = 0;
+  all_md_matls = 0;
   all_matls = 0;
   orig_all_matls = 0;
   allInOneMatl = 0;
@@ -199,6 +201,18 @@ void SimulationState::registerWasatchMaterial(WasatchMaterial* matl,unsigned int
   registerMaterial(matl,index);
 }
 
+void SimulationState::registerMDMaterial(MDMaterial* matl)
+{
+  md_matls.push_back(matl);
+  registerMaterial(matl);
+}
+
+void SimulationState::registerMDMaterial(MDMaterial* matl,unsigned int index)
+{
+  md_matls.push_back(matl);
+  registerMaterial(matl,index);
+}
+
 void SimulationState::registerSimpleMaterial(SimpleMaterial* matl)
 {
   simple_matls.push_back(matl);
@@ -254,6 +268,16 @@ void SimulationState::finalizeMaterials()
     tmp_wasatch_matls[i] = wasatch_matls[i]->getDWIndex();
   all_wasatch_matls->addAll(tmp_wasatch_matls);
   
+  if (all_md_matls && all_md_matls->removeReference())
+    delete all_mpm_matls;
+  all_md_matls = scinew MaterialSet();
+  all_md_matls->addReference();
+  vector<int> tmp_md_matls(md_matls.size());
+  for( int i=0; i<(int)md_matls.size(); i++ ) {
+    tmp_md_matls[i] = md_matls[i]->getDWIndex();
+  }
+  all_md_matls->addAll(tmp_md_matls);
+
   if (all_matls && all_matls->removeReference())
     delete all_matls;
   all_matls = scinew MaterialSet();
@@ -309,6 +333,9 @@ void SimulationState::clearMaterials()
   if(all_wasatch_matls && all_wasatch_matls->removeReference())
     delete all_wasatch_matls;
 
+  if(all_md_matls && all_md_matls->removeReference())
+    delete all_md_matls;
+
   if (allInOneMatl && allInOneMatl->removeReference()) {
     delete allInOneMatl;
   }
@@ -319,6 +346,7 @@ void SimulationState::clearMaterials()
   arches_matls.clear();
   ice_matls.clear();
   wasatch_matls.clear();
+  md_matls.clear();
   simple_matls.clear();
   named_matls.clear();
   d_particleState.clear();
@@ -332,6 +360,7 @@ void SimulationState::clearMaterials()
   all_arches_matls  = 0;
   all_ice_matls     = 0;
   all_wasatch_matls = 0;
+  all_md_matls      = 0;
   allInOneMatl      = 0;
 }
 
@@ -384,6 +413,12 @@ const MaterialSet* SimulationState::allWasatchMaterials() const
 {
   ASSERT(all_wasatch_matls != 0);
   return all_wasatch_matls;
+}
+
+const MaterialSet* SimulationState::allMDMaterials() const
+{
+  ASSERT(all_md_matls != 0);
+  return all_md_matls;
 }
 
 const MaterialSet* SimulationState::allMaterials() const
