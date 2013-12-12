@@ -30,6 +30,11 @@ print('Choose a plot:')
 print('1. (x)'+myTable.ind_names[0]+' vs. (y) dep. variable with changing: '+myTable.ind_names[1])
 print('2. (x)'+myTable.ind_names[0]+' vs. (y) dep. variable with changing: '+myTable.ind_names[2])
 print('3. (x)'+myTable.ind_names[1]+' vs. (y) dep. variable with changing: '+myTable.ind_names[2])
+print('4. (x)'+myTable.ind_names[1]+' vs. (y) dep. variable with changing: '+myTable.ind_names[0])
+print('5. (x)'+myTable.ind_names[2]+' vs. (y) dep. variable with changing: '+myTable.ind_names[0])
+print('6. (x)'+myTable.ind_names[2]+' vs. (y) dep. variable with changing: '+myTable.ind_names[1])
+
+
 option = raw_input('Option: ')
 
 if ( np.int(option) == 1):
@@ -47,12 +52,34 @@ elif ( np.int(option) == 2):
     i1 = 0
     i2 = 2
     ifix = 1
-else: 
+elif ( np.int(option) == 3): 
     ng1 = raw_input('Num points in '+myTable.ind_names[1]+': ')
     ng2 = raw_input('Num points in '+myTable.ind_names[2]+': ')
     fixval_i = raw_input('Enter a constant '+myTable.ind_names[0]+': ')
     i1 = 1
     i2 = 2
+    ifix = 0
+elif ( np.int(option) == 4):
+    ng2 = raw_input('Num points in:'+myTable.ind_names[0]+': ')
+    ng1 = raw_input('Num points in:'+myTable.ind_names[1]+': ')
+    fixval_i = raw_input('Enter a constant '+myTable.ind_names[2]+':')
+    i1 = 1
+    i2 = 0
+    ifix = 2
+
+elif ( np.int(option) == 5): 
+    ng2 = raw_input('Num points in:'+myTable.ind_names[0]+': ')
+    ng1 = raw_input('Num points in:'+myTable.ind_names[2]+': ')
+    fixval_i = raw_input('Enter a constant '+myTable.ind_names[1]+':')
+    i1 = 2
+    i2 = 0
+    ifix = 1
+elif ( np.int(option) == 6): 
+    ng2 = raw_input('Num points in '+myTable.ind_names[1]+': ')
+    ng1 = raw_input('Num points in '+myTable.ind_names[2]+': ')
+    fixval_i = raw_input('Enter a constant '+myTable.ind_names[0]+': ')
+    i1 = 2
+    i2 = 1
     ifix = 0
     
 fixval = np.float(fixval_i)    
@@ -76,7 +103,13 @@ dx2 = (i2_max-i2_min)/np.float(ng2)
 
 i2V = i2_min
 color=0
+cb=[]
 dcolor = 1.0/np.float(ng2)
+
+ap_x=[]
+ap_y=[]
+ap_c=()
+
 for i in range (0,np.int(ng2)+1):
     plot_me = []
     plot_me_x=[]
@@ -91,21 +124,26 @@ for i in range (0,np.int(ng2)+1):
         plot_me.append(myTable.interpolate(x,iD))
         plot_me_x.append(i1V)
         
-        i1V += dx1
+        ap_x.append(i1V)
+        ap_y.append(myTable.interpolate(x,iD))
+        ap_c = ap_c + (i2V,)
         
-            
-    plt.plot(plot_me_x,plot_me,'--',c='.6')
-    plt.scatter(plot_me_x,plot_me,c=np.str(color),s=40)
+        i1V += dx1
+                
+    plt.plot(plot_me_x,plot_me,'--',c='.6')    
 
     color += dcolor
-    i2V += dx2   
-
+    cb.append(i2V)
+    i2V += dx2       
+    
+cm = plt.cm.get_cmap('Spectral')    
+sc=plt.scatter(ap_x,ap_y,c=ap_c,s=40,cmap=cm)
+mysize = np.size(ap_x)
+plt.colorbar(sc)
 plt.xlabel(myTable.ind_names[i1])
 plt.ylabel(myTable.dep_names[iD]) 
 plt.title(myTable.dep_names[iD]+'=f('+myTable.ind_names[i1]+ ','+myTable.ind_names[i2]+')')       
-plt.grid()   
-print('')
-print('Colors go (low->high), (dark->light) for '+myTable.ind_names[i2]+')') 
+plt.grid()    
 plt.show()
 
 
