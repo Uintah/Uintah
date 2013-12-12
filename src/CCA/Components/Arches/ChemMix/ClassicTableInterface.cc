@@ -294,7 +294,7 @@ ClassicTableInterface::sched_getState( const LevelP& level,
 //--------------------------------------------------------------------------- 
 // get State
 //--------------------------------------------------------------------------- 
-  void 
+void 
 ClassicTableInterface::getState( const ProcessorGroup* pc, 
     const PatchSubset* patches, 
     const MaterialSubset* matls, 
