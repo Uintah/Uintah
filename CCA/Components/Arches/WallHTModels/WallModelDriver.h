@@ -295,16 +295,8 @@ namespace Uintah{
             return q; 
 
           };
-
       };
-
-
-
   }; 
-
-
-
-
 } // namespace Uintah
 
 #endif
