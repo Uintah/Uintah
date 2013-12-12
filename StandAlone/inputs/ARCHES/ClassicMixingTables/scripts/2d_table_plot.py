@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Dec 12 10:45:51 2013
+Created on Thu Dec 12 16:11:23 2013
 
 @author: jeremy
 """
@@ -28,61 +28,20 @@ print('')
 
 print('Choose a plot:')
 print('1. (x)'+myTable.ind_names[0]+' vs. (y) dep. variable with changing: '+myTable.ind_names[1])
-print('2. (x)'+myTable.ind_names[0]+' vs. (y) dep. variable with changing: '+myTable.ind_names[2])
-print('3. (x)'+myTable.ind_names[1]+' vs. (y) dep. variable with changing: '+myTable.ind_names[2])
-print('4. (x)'+myTable.ind_names[1]+' vs. (y) dep. variable with changing: '+myTable.ind_names[0])
-print('5. (x)'+myTable.ind_names[2]+' vs. (y) dep. variable with changing: '+myTable.ind_names[0])
-print('6. (x)'+myTable.ind_names[2]+' vs. (y) dep. variable with changing: '+myTable.ind_names[1])
-
+print('2. (x)'+myTable.ind_names[1]+' vs. (y) dep. variable with changing: '+myTable.ind_names[0])
 
 option = raw_input('Option: ')
 
 if ( np.int(option) == 1):
     ng1 = raw_input('Num points in:'+myTable.ind_names[0]+': ')
     ng2 = raw_input('Num points in:'+myTable.ind_names[1]+': ')
-    fixval_i = raw_input('Enter a constant '+myTable.ind_names[2]+':')
     i1 = 0
     i2 = 1
-    ifix = 2
-
-elif ( np.int(option) == 2): 
-    ng1 = raw_input('Num points in:'+myTable.ind_names[0]+': ')
-    ng2 = raw_input('Num points in:'+myTable.ind_names[2]+': ')
-    fixval_i = raw_input('Enter a constant '+myTable.ind_names[1]+':')
-    i1 = 0
-    i2 = 2
-    ifix = 1
-elif ( np.int(option) == 3): 
-    ng1 = raw_input('Num points in '+myTable.ind_names[1]+': ')
-    ng2 = raw_input('Num points in '+myTable.ind_names[2]+': ')
-    fixval_i = raw_input('Enter a constant '+myTable.ind_names[0]+': ')
-    i1 = 1
-    i2 = 2
-    ifix = 0
-elif ( np.int(option) == 4):
+else:
     ng2 = raw_input('Num points in:'+myTable.ind_names[0]+': ')
     ng1 = raw_input('Num points in:'+myTable.ind_names[1]+': ')
-    fixval_i = raw_input('Enter a constant '+myTable.ind_names[2]+':')
     i1 = 1
-    i2 = 0
-    ifix = 2
-
-elif ( np.int(option) == 5): 
-    ng2 = raw_input('Num points in:'+myTable.ind_names[0]+': ')
-    ng1 = raw_input('Num points in:'+myTable.ind_names[2]+': ')
-    fixval_i = raw_input('Enter a constant '+myTable.ind_names[1]+':')
-    i1 = 2
-    i2 = 0
-    ifix = 1
-elif ( np.int(option) == 6): 
-    ng2 = raw_input('Num points in '+myTable.ind_names[1]+': ')
-    ng1 = raw_input('Num points in '+myTable.ind_names[2]+': ')
-    fixval_i = raw_input('Enter a constant '+myTable.ind_names[0]+': ')
-    i1 = 2
-    i2 = 1
-    ifix = 0
-    
-fixval = np.float(fixval_i)    
+    i2 = 0 
 
 counter = 0        
 for name in myTable.dep_names:
@@ -108,15 +67,16 @@ ap_y=[]
 ap_c=()
 
 for i in range (0,np.int(ng2)+1):
+    
     plot_me = []
     plot_me_x=[]
     i1V = i1_min
+    
     for j in range (0,np.int(ng1)+1):
         
-        x=[0,0,0]
+        x=[0,0]
         x[i1]=i1V
         x[i2]=i2V
-        x[ifix]=fixval
         
         plot_me.append(myTable.interpolate(x,iD))
         plot_me_x.append(i1V)
@@ -127,8 +87,7 @@ for i in range (0,np.int(ng2)+1):
         
         i1V += dx1
                 
-    plt.plot(plot_me_x,plot_me,'--',c='.6')    
-
+    plt.plot(plot_me_x,plot_me,'--',c='.6') 
     i2V += dx2       
     
 cm = plt.cm.get_cmap('Spectral')    
@@ -139,12 +98,3 @@ plt.ylabel(myTable.dep_names[iD])
 plt.title(myTable.dep_names[iD]+'=f('+myTable.ind_names[i1]+ ','+myTable.ind_names[i2]+')')       
 plt.grid()    
 plt.show()
-
-
-
-        
-        
-        
-
-    
- 
