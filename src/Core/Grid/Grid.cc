@@ -24,17 +24,23 @@
 
 
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Parallel/ProcessorGroup.h>
+
 #include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Math/UintahMiscMath.h>
-#include <Core/Math/Primes.h>
-#include <TauProfilerForSCIRun.h>
-#include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Math/Primes.h>
+#include <Core/Math/UintahMiscMath.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Util/FancyAssert.h>
+
+#include <TauProfilerForSCIRun.h>
+
+#include <iomanip>
 #include <iostream>
 #include <sci_values.h>
 
@@ -699,26 +705,55 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
             throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
           }
         }
-        
+        // The following few lines of code add a small epsilon to a number.  If the number
+        // is very large, then adding a fixed epsilon does not do anything (as there
+        // would not be enough precision to account for this).  Therefore, we use the
+        // following 'magic' (multiply by '1+epsilon').  In all cases except when the
+        // number is 0, multiplying by (1 + epsilon) has the desired effect... However,
+        // when the number is 0 this doesn't work, so we have the extra '+epsilon'.
+        //
+        // For example: (Numbers are simplified for illustrative purposes and may not
+        //               be actually large enough to exhibit the actual behavior.)
+        //
+        //        1 + 0.000000001 =>        1.000000001  (This works correctly!)
+        // 99999999 + 0.000000001 => 99999999            (This returns the 'wrong' answer!)
+
         double epsilon = 1.e-14;
-        IntVector lowCell  = level->getCellIndex(lower+Vector(epsilon,epsilon,epsilon));
-        IntVector highCell = level->getCellIndex(upper+Vector(epsilon,epsilon,epsilon));
+
+        Vector ep_v  = Vector( epsilon, epsilon, epsilon );
+        
+        // NEW Version
+        IntVector lowCell  = level->getCellIndex( lower + Vector( fabs(lower.x())*epsilon,
+                                                                  fabs(lower.y())*epsilon,
+                                                                  fabs(lower.z())*epsilon ) + ep_v );
+        IntVector highCell = level->getCellIndex( upper + Vector( fabs(upper.x())*epsilon,
+                                                                  fabs(upper.y())*epsilon,
+                                                                  fabs(upper.z())*epsilon ) + ep_v );
 
         Point lower2 = level->getNodePosition(lowCell);
         Point upper2 = level->getNodePosition(highCell);
         double diff_lower = (lower2-lower).length();
         double diff_upper = (upper2-upper).length();
-        
-        if(diff_lower > epsilon) {
-          cerr << "lower=" << lower << '\n'
-               << "lowCell =" << lowCell << '\n'
-               << "highCell =" << highCell << '\n'
-               << "lower2=" << lower2 << '\n'
-               << "diff=" << diff_lower << '\n';
 
+        double max_component_lower = Abs(Vector(lower)).maxComponent();
+        double max_component_upper = Abs(Vector(upper)).maxComponent();
+
+        if( diff_lower > max_component_lower * epsilon ) {
+          cerr << setprecision(16) << "epsilon: " << epsilon << "\n";
+
+          cerr << "diff_lower: " << diff_lower << "\n";
+          cerr << "max_component_lower: " << max_component_lower << "\n";
+
+          cerr << setprecision(16) << "lower=" << lower << '\n';
+          cerr << setprecision(16) << "lowCell =" << lowCell << '\n';
+          cerr << setprecision(16) << "highCell =" << highCell << '\n';
+          cerr << setprecision(16) << "lower2=" << lower2 << '\n';
+          cerr << setprecision(16) << "diff=" << diff_lower << '\n';
+        
           throw ProblemSetupException("Box lower corner does not coincide with grid", __FILE__, __LINE__);
         }
-        if(diff_upper > epsilon){
+
+        if( diff_upper > max_component_upper * epsilon ){
           cerr << "upper=" << upper << '\n'
                << "lowCell =" << lowCell << '\n'
                << "highCell =" << highCell << '\n'
