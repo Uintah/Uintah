@@ -25,10 +25,28 @@
 #   which needs to be done for all error messages.
 #
 
+######################################################################3
+#
+# Find all the component tests (Each has a python script):
+  
+here="$1"
 
-#__________________________________
-# if the environmental variable TEST_COMPONENTS is set
-# print them out and exit 
+componentTests=`cd $here; ls *.py | grep -v __init__ | sed "s/.py//g" | sed "s,TestScripts/,,g"`
+
+
+test_state_list=""
+list=""
+n="0"
+for comp in $componentTests; do
+  test_state_list="$test_state_list $comp - off,"
+  list="$list $comp"
+  n=$(( $n + 1 ))
+done
+
+
+######################################################################3
+#
+# If the environmental variable TEST_COMPONENTS is set, print them out and exit 
 # 
 
 theseTests=${WHICH_TESTS:="LOCALTESTS"}
@@ -44,21 +62,23 @@ if test ${TEST_COMPONENTS:+1}; then
   exit 0
 fi
 
-here="$1"
-
 #__________________________________
 # bulletproofing
 if test "$TERM" == "dumb" -o "$TERM" == "emacs"; then
   echo > /dev/stderr
   echo "ERROR: `basename $0` requires a fully functional terminal... you have '$TERM'." > /dev/stderr
-  echo "       (Consider setting environment variable TEST_COMPONENTS.)  Goodbye." > /dev/stderr
+  echo "       Consider setting environment variable TEST_COMPONENTS to include:" > /dev/stderr
+  echo "          $list" > /dev/stderr
+  echo "       Goodbye." > /dev/stderr
   echo > /dev/stderr
   exit 1
 fi
 if test "$EMACS" == "t"; then
   echo > /dev/stderr
   echo "ERROR: `basename $0` cannot be run from within emacs..." > /dev/stderr
-  echo "       (Consider setting environment variable TEST_COMPONENTS.)  Goodbye." > /dev/stderr
+  echo "       Consider setting environment variable TEST_COMPONENTS to include:" > /dev/stderr
+  echo "          $list" > /dev/stderr
+  echo "       Goodbye." > /dev/stderr
   echo > /dev/stderr
   exit 1
 fi
@@ -66,16 +86,6 @@ fi
 
 #__________________________________
 # Have the user pick a component
-# find all the component tests which are python scripts
-  
-componentTests=`cd $here; ls *.py | grep -v __init__ | sed "s/.py//g" | sed "s,TestScripts/,,g"`
-
-list=""
-n="0"
-for comp in $componentTests; do
-  list="$list $comp - off,"
-  n=$(( $n + 1 ))
-done
 
 # 'dialog' does not (natively) exist under OSX, so let user know...
 if ! test `which dialog`; then
@@ -87,7 +97,7 @@ if ! test `which dialog`; then
 fi
 
 
-selectedCompTests=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 61 15 $list`
+selectedCompTests=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 61 15 $test_state_list`
 
 #remove quotations
 selectedCompTests=`echo $selectedCompTests | tr -d '"'`
