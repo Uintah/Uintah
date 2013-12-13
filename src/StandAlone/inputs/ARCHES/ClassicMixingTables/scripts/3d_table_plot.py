@@ -103,8 +103,8 @@ dx2 = (i2_max-i2_min)/np.float(ng2)
 
 i2V = i2_min
 
-ap_x=[]
-ap_y=[]
+ap_x=()
+ap_y=()
 ap_c=()
 
 for i in range (0,np.int(ng2)+1):
@@ -118,12 +118,14 @@ for i in range (0,np.int(ng2)+1):
         x[i2]=i2V
         x[ifix]=fixval
         
-        plot_me.append(myTable.interpolate(x,iD))
+        value = myTable.interpolate(x,iD)
+        
+        plot_me.append(value)
         plot_me_x.append(i1V)
         
-        ap_x.append(i1V)
-        ap_y.append(myTable.interpolate(x,iD))
-        ap_c = ap_c + (i2V,)
+        ap_x += (i1V,)
+        ap_y += (value,)
+        ap_c += (i2V,)
         
         i1V += dx1
                 
