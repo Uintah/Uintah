@@ -206,6 +206,13 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   }
 
+  //Automatically adding density_old to the table lookup because this 
+  //is needed for scalars that aren't solved on stage 1: 
+  ChemHelper::TableLookup* extra_lookup = scinew ChemHelper::TableLookup;
+  extra_lookup->lookup.insert(std::make_pair("density",ChemHelper::TableLookup::OLD));
+  d_lab->add_species_struct( extra_lookup );
+  delete extra_lookup; 
+
   proc0cout << "\n --- End Classic Arches table information --- " << endl;
   proc0cout << endl;
 
