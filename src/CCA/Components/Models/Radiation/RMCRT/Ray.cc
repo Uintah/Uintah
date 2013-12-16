@@ -42,8 +42,10 @@
 
 #include <include/sci_defs/uintah_testdefs.h.in>
 
+// TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
+#define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
 
-//#define DEBUG
+
 
 //--------------------------------------------------------------
 //
@@ -863,6 +865,15 @@ Ray::rayTrace( const ProcessorGroup* pc,
           //  Compute Net Flux to the boundary
           int face = UintahFace[RayFace];            
           boundFlux[origin][ face ] = sumProjI * 2 *M_PI/_nFluxRays;
+               
+/*`==========TESTING==========*/
+#if DEBUG == 2
+          printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BF: %g\n", 
+                    origin.x(), origin.y(), origin.z(), face, sumProjI, boundFlux[origin][ face ]);
+#endif
+/*===========TESTING==========`*/
+          
+          
 
           if(_benchmark==5){
             fprintf(f, "%lf \n",boundFlux[origin][ face ]);
@@ -911,7 +922,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
       radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/_nDivQRays) ; 
 /*`==========TESTING==========*/
-#ifdef DEBUG
+#if DEBUG == 1
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n", 
                     origin.x(), origin.y(), origin.z(), sumI,divQ[origin], radiationVolq[origin],abskg[origin], sigmaT4OverPi[origin]);
 #endif
@@ -1347,14 +1358,6 @@ Vector Ray::findRayDirection(MTRand& mTwister,
   direction_vector[0] = r*cos(theta);                     // Convert to cartesian
   direction_vector[1] = r*sin(theta);
   direction_vector[2] = plusMinus_one;
- 
-/*`==========TESTING==========*/
-#ifdef DEBUG
-  direction_vector[0] = 1;
-  direction_vector[1] = 1;
-  direction_vector[2] = 1;
-#endif 
-/*===========TESTING==========`*/ 
   
   return direction_vector;
 }
@@ -2133,7 +2136,7 @@ void Ray::updateSumI ( Vector& ray_direction,
 
 {
 /*`==========TESTING==========*/
-#ifdef DEBUG
+#if DEBUG == 1
   printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
 #endif 
 /*===========TESTING==========`*/
@@ -2215,7 +2218,7 @@ void Ray::updateSumI ( Vector& ray_direction,
        ray_location[2] = ray_location[2] + (disMin  * ray_direction[2]);
   
  /*`==========TESTING==========*/
-#ifdef DEBUG
+#if DEBUG == 1
 if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
     printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
     printf( " face %d ", face ); 
@@ -2278,8 +2281,8 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
          tMax_prev = 0;
          curLength = 0;  // allow for multiple scattering events per ray
 /*`==========TESTING==========*/
-#ifdef DEBUG         
-printf( "%i, %i, %i, tmax: %g, %g, %g  tDelta: %g, %g, %g \n", cur.x(), cur.y(), cur.z(), tMax.x(), tMax.y(), tMax.z(), tDelta.x(), tDelta.y() , tDelta.z());         
+#if DEBUG == 3        
+  printf( "%i, %i, %i, tmax: %g, %g, %g  tDelta: %g, %g, %g \n", cur.x(), cur.y(), cur.z(), tMax.x(), tMax.y(), tMax.z(), tDelta.x(), tDelta.y() , tDelta.z());         
 #endif 
 /*===========TESTING==========`*/
          //if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
@@ -2305,7 +2308,7 @@ printf( "%i, %i, %i, tmax: %g, %g, %g  tDelta: %g, %g, %g \n", cur.x(), cur.y(),
      if(!_allowReflect) intensity = 0;
                                  
 /*`==========TESTING==========*/
-#ifdef DEBUG
+#if DEBUG == 1
 if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
     printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n", 
            cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, _allowReflect );
@@ -2440,7 +2443,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
         L     = level->getIndex();
         onFineLevel = false;
 
-        // NEVER UNCOMMENT EXCEPT FOR DEBUGGING
+        // NEVER UNCOMMENT EXCEPT FOR DEBUGGING, it is EXTREMELY SLOW
         //dbg2 << " Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
       } else if ( jumpCoarsetoCoarserLevel ){
 
@@ -2498,7 +2501,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
 
       expOpticalThick_prev = expOpticalThick;
 
-      // NEVER UNCOMMENT EXCEPT FOR DEBUGGING
+      // NEVER UNCOMMENT EXCEPT FOR DEBUGGING IT IS EXTREMELY SLOW  
       //dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
       //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
       //dbg2 << "    direction " << direction << endl;

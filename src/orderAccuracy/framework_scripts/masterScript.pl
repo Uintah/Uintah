@@ -107,7 +107,7 @@ my $extraScripts_path = $xml->{scripts_path}[0];
 my $orgPath = $ENV{"PATH"};
 my $syspath ="/usr/bin/:/usr/sbin:/bin";
 
-$ENV{"PATH"} = "$postProcessCmd_path:$sus_path:$scripts_path:$extraScripts_path:$syspath:$here_path:.";
+$ENV{"PATH"} = "$syspath:$orgPath:$postProcessCmd_path:$sus_path:$scripts_path:$extraScripts_path:$here_path:.";
 
 # bulletproofing
 print "----------------------   \n";

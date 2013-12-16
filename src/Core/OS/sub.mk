@@ -33,15 +33,25 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/OS
 
 SRCS     += \
-	$(SRCDIR)/Dir.cc \
 	$(SRCDIR)/ProcessInfo.cc 
 
+ifeq ($(HAVE_BOOST),yes)
+   SRCS += $(SRCDIR)/Dir_boost.cc
+else
+   SRCS += $(SRCDIR)/Dir.cc
+endif
 ifneq ($(IS_REDSTORM),yes)
    SRCS += $(SRCDIR)/sock.cc
 endif
 
+
 PSELIBS := Core/Exceptions
-LIBS := $(SOCKET_LIBRARY)
+LIBS := $(SOCKET_LIBRARY) 
+
+ifeq ($(HAVE_BOOST),yes)
+  LIBS := $(LIBS) $(BOOST_LIBRARY) 
+  INCLUDES := $(INCLUDES) $(BOOST_INCLUDE)
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
