@@ -121,21 +121,23 @@ OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
   aborted = false;
 
 #ifdef HAVE_CUDA
-  int numDevices;
-  cudaError_t retVal;
+  if (Uintah::Parallel::usingDevice()) {
+    int numDevices;
+    cudaError_t retVal;
 
-  if (!use_single_device.active()) {
-    CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
-  } else {
-    numDevices = 1;
-  }
+    if (!use_single_device.active()) {
+      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+    } else {
+      numDevices = 1;
+    }
 
-  for (int i=0; i<numDevices; i++ ) {
-    GPUDataWarehouse* gpuDW;
-    gpuDW = new GPUDataWarehouse();
-    gpuDW->setDebug(gpudbg.active());
-    gpuDW->init_device(i);
-    d_gpuDWs.push_back(gpuDW);
+    for (int i = 0; i < numDevices; i++) {
+      GPUDataWarehouse* gpuDW;
+      gpuDW = new GPUDataWarehouse();
+      gpuDW->setDebug(gpudbg.active());
+      gpuDW->init_device(i);
+      d_gpuDWs.push_back(gpuDW);
+    }
   }
 #endif
 
@@ -189,9 +191,11 @@ void OnDemandDataWarehouse::clear()
   d_lvlock.writeUnlock();
 
 #ifdef HAVE_CUDA
-  for (size_t i=0; i<d_gpuDWs.size(); i++) {
-    d_gpuDWs[i]->clear();
-    delete d_gpuDWs[i];
+  if (Uintah::Parallel::usingDevice()) {
+    for (size_t i = 0; i < d_gpuDWs.size(); i++) {
+      d_gpuDWs[i]->clear();
+      delete d_gpuDWs[i];
+    }
   }
 #endif
 
