@@ -2,6 +2,7 @@
 #define Uintah_Component_Arches_SourceTermBase_h
 
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
@@ -87,18 +88,8 @@ public:
   /** @brief Return the type of source (constant, do_radation, etc... ) **/ 
   inline std::string getSourceType(){ return _type; }; 
 
-  struct TableLookup{ 
-
-    enum STATE { NEW, OLD };
-
-    std::vector<std::string> species; 
-    STATE state; 
-  
-  };
-
-
 	/** @brief Return the list of table lookup species needed for this source term **/ 
-	inline TableLookup* get_tablelookup_species(){ return _table_lookup_species; };  
+	inline ChemHelper::TableLookup* get_tablelookup_species(){ return _table_lookup_species; };  
 
   /** @brief Return an int indicating the stage this source should be executed **/
   const int stage_compute(){ return _stage; };
@@ -133,11 +124,9 @@ protected:
   SimulationStateP& _shared_state;                        ///< Local copy of sharedState
   std::vector<std::string> _required_labels;              ///< Vector of required labels
   std::vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
-  TableLookup* _table_lookup_species;                     ///< List of table lookup species
+  ChemHelper::TableLookup* _table_lookup_species;         ///< List of table lookup species
   MY_GRID_TYPE _source_grid_type;                         ///< Source grid type
   std::vector<std::string> _wasatch_expr_names;           ///< List of wasatch exprs to be used as sources
-
-
 
 }; // end SourceTermBase
 }  // end namespace Uintah

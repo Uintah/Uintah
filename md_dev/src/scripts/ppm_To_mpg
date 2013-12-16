@@ -35,6 +35,9 @@ set ans = "n"
 
 #__________________________________
 # Defaults
+
+set EXT = "jpg"
+
 set FONT_DEFAULT = "-font helvetica -pointsize 14"
 
 while ( $ans == "n" || $ans == "N")
@@ -111,33 +114,33 @@ while( $ans == "y" || $ans == "Y" || $redo == "n" )
   set FONT = "$FONT_DEFAULT -fill $fontColor -background $bkgrdColor"
   
   @ num  = `echo $firstFrame | awk -F. '{printf "%i", $2 }'`
-  echo " Now converting $firstFrame to $num.png"
-  convert $firstFrame $num.png
+  echo " Now converting $firstFrame to $num.$EXT"
+  convert $firstFrame $num.$EXT
   
   #__________________________________
   # generate the labels
-  cp 0000.png test.0.png
-  rm -f Label*.png
+  cp 0000.$EXT test.0.$EXT
+  rm -f Label*.$EXT
   
   if ( "$N_title" != "" ) then    
-    convert 0.png $FONT -gravity north -annotate +0+5 "$N_title" test.0.png
+    convert 0.$EXT $FONT -gravity north -annotate +0+5 "$N_title" test.0.$EXT
   endif
   
-  cp test.0.png test.a.png
+  cp test.0.$EXT test.a.$EXT
   
   if ( "$S_title" != "" ) then
-    convert test.0.png $FONT -gravity south -annotate +0+5 "$S_title" test.a.png
+    convert test.0.$EXT $FONT -gravity south -annotate +0+5 "$S_title" test.a.$EXT
   endif
   
   
   echo "Close the popup window to continue"
   
-  display test.a.png
+  display test.a.$EXT
   
   echo "Is this correct? [y]"
   set ans = "n"
   set redo = $<
-  rm test.*.png   
+  rm test.*.$EXT   
 end
 
 #___________________________________________________-
@@ -149,19 +152,19 @@ if( $backup == "y" || $backup == "Y" ) then
 endif
 
 #__________________________________
-#  convert png names to number.png
-echo "Now converting $ext files into png files so ffmpeg can digest them"
+#  convert png names to number.$EXT
+echo "Now converting $ext files into $EXT files so ffmpeg can digest them"
 @ count  = 0
 
 foreach i ( *.*.$ext)
   @ num  = `echo $i | awk -F. '{printf "%i", $2 }'`
-  echo " Now converting $i to $num.png"
-  convert $i -depth 8 $num.png
+  echo " Now converting $i to $num.$EXT"
+  convert $i  $num.$EXT
   
   if ( $count != $num )then
     echo " ERROR: the images are not consecutively numbered"
     echo " Image number is: $num but it should be $count"
-    rm [0-9]*.png
+    rm [0-9]*.$EXT
     exit(0)
   endif
   
@@ -172,54 +175,55 @@ end
 
 
 #__________________________________
-# resize and add labels to all the png files
-set PNG = [0-9]*.png
+# resize and add labels to all the files
+set FILES = [0-9]*.$EXT
 
-foreach T ($PNG:q)
+foreach T ($FILES:q)
  echo "resizing "$T "& adding labels"
- set num = `basename $T .png`
+ set num = `basename $T .$EXT`
  
  # add the titles to the indivdual frames
- cp -f $T $num.0.png
+ cp -f $T $num.0.$EXT
  
  if ( "$N_title" != "" ) then
-  convert $num.png $FONT -gravity north -annotate +0+5 "$N_title" $num.0.png
+  convert $num.$EXT $FONT -gravity north -annotate +0+5 "$N_title" $num.0.$EXT
  endif
  
- cp $num.0.png $num.b.png
+ cp $num.0.$EXT $num.b.$EXT
  
  if ( "$S_title" != "" ) then
-  convert $num.0.png $FONT -gravity south -annotate +0+5 "$S_title" $num.b.png 
+  convert $num.0.$EXT $FONT -gravity south -annotate +0+5 "$S_title" $num.b.$EXT 
  endif
  
- rm $num.png
- rm $num.0.png
+ rm $num.$EXT
+ rm $num.0.$EXT
  
- convert -resize $size $num.b.png -depth 8 $num.a.png 
+ convert -resize $size $num.b.$EXT $num.a.$EXT 
  
- rm $num.b.png
+ rm $num.b.$EXT
 end 
 
 
-rm Label*.png
+rm Label*.$EXT
 #__________________________________
 # make the movies mpg
 echo "___________________________________"
 echo "Now making the movie"
-echo "ffmpeg -qscale 1 -s $size -r $playBackSpeed -i %d.a.png -r 30 $imageName.$movieFormat"
+echo "ffmpeg  -r $playBackSpeed -i %d.a.$EXT -r 30 $imageName.$movieFormat"
 
 rm movie.mpeg
-ffmpeg -qscale 1 -s $size -r $playBackSpeed -i %d.a.png -r 30 $imageName.$movieFormat
-#ffmpeg -mbd rd -flags +trell -cmp 2 -subcmp 2 -g 100 -pass 1/2 -s $size -r $playBackSpeed -i %d.a.png -r 30 movie.mpeg
+ffmpeg -r $playBackSpeed -i %d.a.$EXT -r 30 $imageName.$movieFormat
+
+#ffmpeg -mbd rd -flags +trell -cmp 2 -subcmp 2 -g 100 -pass 1/2 -s $size -r $playBackSpeed -i %d.a.$EXT -r 30 movie.mpeg
 #__________________________________
 echo "__________________________________"
-echo "Do you want to keep the individual titled frames as png? [n]"
+echo "Do you want to keep the individual titled frames as $EXT? [n]"
 set ans = $<
 
-foreach T ($PNG:q)
+foreach T ($FILES:q)
   if( $ans != "y" ) then
-    set num = `basename $T .png`
-    rm $num.a.png 
+    set num = `basename $T .$EXT`
+    rm $num.a.$EXT 
   endif 
 end
 

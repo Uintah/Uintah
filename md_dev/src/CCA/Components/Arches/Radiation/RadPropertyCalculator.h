@@ -49,7 +49,7 @@ namespace Uintah {
 #ifdef HAVE_RADPROPS
             _calculator = scinew RadPropsInterface(); 
 #else
-            throw InvalidValue("Error: You haven't configured with the RadProps library (try configuring with wasatch3p.)",__FILE__,__LINE__);
+            throw InvalidValue("Error: You haven't configured with the RadProps library (try configuring with --enable-wasatch_3p and --with-boost=DIR.)",__FILE__,__LINE__);
 #endif
           } else { 
             throw InvalidValue("Error: Property calculator not recognized.",__FILE__, __LINE__); 

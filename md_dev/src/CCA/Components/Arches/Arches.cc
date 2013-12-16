@@ -78,6 +78,7 @@
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
 #include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
+#include <CCA/Components/Arches/ChemMix/ChemHelper.h>
 
 #include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
 
@@ -549,7 +550,7 @@ Arches::problemSetup(const ProblemSpecP& params,
                 a_src.problemSetup( found_src_db );
 
                 //Add any table lookup species to the table lookup list:                                      
-                SourceTermBase::TableLookup*  tbl_lookup = a_src.get_tablelookup_species();                        
+                ChemHelper::TableLookup*  tbl_lookup = a_src.get_tablelookup_species();                        
                 if ( tbl_lookup != NULL )
                   d_lab->add_species_struct( tbl_lookup ); 
 
@@ -559,15 +560,6 @@ Arches::problemSetup(const ProblemSpecP& params,
         }
       }
     }
-
-//    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
-//    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); 
-//        ieqn != scalar_eqns.end(); ieqn++){
-//
-//      EqnBase* eqn = ieqn->second;  
-//      eqn->assign_stage_to_sources(); 
-//
-//    }
 
   } else {
 

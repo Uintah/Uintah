@@ -45,6 +45,7 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Geometry/Point.h>
@@ -92,9 +93,88 @@ void abort_uncomparable()
 }
 
 //__________________________________
+//    Returns: sqrt( Vector )
 Vector Sqrt(const Vector a)
 {
   return Vector(Sqrt(a.x()), Sqrt(a.y()), Sqrt(a.z()));
+}
+
+//__________________________________
+//     Returns: sqrt( stencil7 )
+inline Stencil7 Sqrt(const Stencil7 a)
+{
+  Stencil7 me;
+
+  for(int i = 0; i<7; i++){
+    me[i] = sqrt( a[i] );
+  }
+  return me;
+}
+//__________________________________
+//    Returns: stencil7 * stencil7
+inline Stencil7 operator*(const Stencil7& a, const Stencil7& b)
+{
+  Stencil7 me;
+
+  for(int i = 0; i<7; i++){
+    me[i] = a[i] *b[i];
+  }
+  return me;
+}
+//__________________________________
+//    Returns: stencil7 / stencil7
+inline Stencil7 operator/(const Stencil7& a, const Stencil7& b)
+{
+  Stencil7 me;
+
+  for(int i = 0; i<7; i++){
+    me[i] = a[i] / b[i];
+  }
+  return me;
+}
+//__________________________________
+//    Returns: stencil7 - stencil7
+inline Stencil7 operator-(const Stencil7& a, const Stencil7& b)
+{
+  Stencil7 me;
+
+  for(int i = 0; i<7; i++){
+    me[i] = a[i] - b[i];
+  }
+  return me;
+}
+//__________________________________
+//    Returns: stencil7 + stencil7 
+inline Stencil7 operator+(const Stencil7& a, const Stencil7& b)
+{
+  Stencil7 me;
+
+  for(int i = 0; i<7; i++){
+    me[i] = a[i] + b[i];
+  }
+  return me;
+}
+//__________________________________
+//    Returns: Max(stencil7)
+inline Stencil7 Max(const Stencil7& a, const Stencil7& b)
+{
+  Stencil7 me;
+
+  for(int i = 0; i<7; i++){
+    me[i] = Max( a[i], b[i] );
+  }
+  return me;
+}
+//__________________________________
+//    Returns: Abs(stencil7)
+inline Stencil7 Abs(const Stencil7& a)
+{
+  Stencil7 me;
+
+  for(int i = 0; i<7; i++){
+    me[i] = Abs( a[i] );
+  }
+  return me;
 }
 
 //__________________________________
@@ -118,14 +198,27 @@ class Norms{
       d_n = n;
       d_L1 = L1;
       d_L2 = L2;
-      d_Linf = Linf;
+      d_Linf = Linf;      
     }
     
-    void printNorms() 
+    void printNorms()             // integers, doubles, Vector
     {
-      d_L1   = d_L1/((T)d_n);
-      d_L2   = Sqrt( d_L2/((T)d_n) );
+      T denom(d_n);
+      d_L1   = d_L1/denom ;
+      d_L2   = Sqrt( d_L2/denom );
       cout << " \t norms: L1 " << d_L1 << " L2: " << d_L2 << " Linf: " << d_Linf<< " n_cells: " << d_n<<endl;
+    }
+    
+    void printNormsS7()           // Stencil7 Variables
+    {
+      T denom;
+      denom.initialize( d_n );      
+      d_L1   = d_L1/denom ;
+      d_L2   = Sqrt( d_L2/denom );
+      cout << " \t norms: L1    " << d_L1 << endl;
+      cout << " \t        L2:   " << d_L2 << endl;
+      cout << " \t        Linf: " << d_Linf<< endl;
+      cout << " \t        n_cells: " << d_n<<endl;
     }
     
     void outputNorms(const double& time,const string& filename) 
@@ -233,8 +326,8 @@ void compareFields(Norms<subtype>* norms,
     // do the work
     n += 1;
     subtype diff = Abs(field1[c] - (*field2)[c]);
-    L1 += diff;
-    L2 += diff * diff;
+    L1 = L1 + diff;
+    L2 = L2 + (diff * diff);
     Linf = Max(Linf, diff);
   }
   
@@ -576,14 +669,19 @@ main(int argc, char** argv)
           string filename = fname.str();
           createFile(filename, t);
           
-          Norms<int>* inorm    = scinew Norms<int>();
-          Norms<double>* dnorm = scinew Norms<double>();
-          Norms<Vector>* vnorm = scinew Norms<Vector>();
-          Vector zero = Vector(0,0,0);
-
-          inorm->setNorms(0,0,0,0);
-          dnorm->setNorms(0,0,0,0);
-          vnorm->setNorms(zero,zero,zero,0);
+          Norms<int>* inorm       = scinew Norms<int>();
+          Norms<double>* dnorm    = scinew Norms<double>();
+          Norms<Vector>* vnorm    = scinew Norms<Vector>();
+          Norms<Stencil7>* s7norm = scinew Norms<Stencil7>();
+          
+          Vector zeroV = Vector(0,0,0);
+          Stencil7 zeroS7;
+          zeroS7.initialize(0.0);
+          
+          inorm->setNorms(0, 0, 0, 0);
+          dnorm->setNorms(0, 0, 0, 0);
+          vnorm->setNorms(  zeroV,  zeroV,  zeroV,  0);
+          s7norm->setNorms( zeroS7, zeroS7, zeroS7, 0 ); 
                     
           Level::const_patchIterator iter;
           for(iter = level1->patchesBegin();iter != level1->patchesEnd(); iter++) {
@@ -604,6 +702,10 @@ main(int argc, char** argv)
                   }               
                   case Uintah::TypeDescription::Vector:{
                     compareFields<CCVariable<Vector>,Vector>(vnorm,da1, da2, var, matl, patch, cellToPatchMap2, t);  
+                    break;
+                  }                  
+                  case Uintah::TypeDescription::Stencil7:{
+                    compareFields<CCVariable<Stencil7>,Stencil7>(s7norm,da1, da2, var, matl, patch, cellToPatchMap2, t);  
                     break;
                   }
                   default:
@@ -685,21 +787,26 @@ main(int argc, char** argv)
           }  // patches
           
           // only one these conditionals true
-          if (inorm->get_n() > 0){     
+          if (inorm->get_n() > 0){        // integers     
             inorm->printNorms(); 
             inorm->outputNorms(time1, filename);      
           }                            
-          if (dnorm->get_n() > 0){     
+          if (dnorm->get_n() > 0){        // doubles
             dnorm->printNorms();
             dnorm->outputNorms(time1, filename);      
           }                            
-          if (vnorm->get_n() > 0){     
+          if (vnorm->get_n() > 0){        //Vector
             vnorm->printNorms();
             vnorm->outputNorms(time1, filename);   
-          }                            
+          }           
+          if (s7norm->get_n() > 0){       //Stencil7
+            s7norm->printNormsS7();
+            s7norm->outputNorms(time1, filename);   
+          }                           
           delete inorm;                
           delete dnorm;                
           delete vnorm;
+          delete s7norm;
 
         }  // matls
       }  // levels

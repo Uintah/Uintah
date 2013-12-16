@@ -41,13 +41,19 @@
 </test>
 -->
 
-<!-- Error versus patch configuration using Burns & Christon benchmark -->
+<!-- Error versus patch configuration using Burns & Christon benchmark
 <test>
   <name>RMCRT_patchConfig</name>
   <ups>RMCRT_test_1L.ups</ups>
   <tst>multiPatches.tst</tst>
 </test>
-
+-->
+<!-- Boundary flux comparison with CPU code using Burns & Christon benchmark -->
+<test>
+  <name>RMCRT_boundFlux</name>
+  <ups>RMCRT_isoScat.ups</ups>
+  <tst>RMCRT_boundFlux.tst</tst>
+</test>
 
 
 </config>
