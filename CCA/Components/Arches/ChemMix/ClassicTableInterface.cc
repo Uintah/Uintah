@@ -255,8 +255,11 @@ ClassicTableInterface::sched_getState( const LevelP& level,
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
       tsk->computes( i->second ); 
-      if ( d_lab->d_sharedState->getCurrentTopLevelTimeStep() != 0 ){ 
-        tsk->requires( Task::OldDW, i->second, Ghost::None, 0 ); 
+      MixingRxnModel::VarMap::iterator check_iter = d_oldDvVarMap.find( i->first + "_old"); 
+      if ( check_iter != d_oldDvVarMap.end() ){
+        if ( d_lab->d_sharedState->getCurrentTopLevelTimeStep() != 0 ){ 
+          tsk->requires( Task::OldDW, i->second, Ghost::None, 0 ); 
+        }
       }
     }
 
