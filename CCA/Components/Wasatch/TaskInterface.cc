@@ -192,7 +192,7 @@ namespace Wasatch{
 #  ifdef HAVE_CUDA
    const int patchID = treeMap.begin()->first;
    TreePtr tree      = treeMap.begin()->second;
-   bool isGPUTask = tree->is_homogeneous_task( patchID );
+   bool isGPUTask = tree->is_homogeneous_gpu( patchID );
    // turn off GPU task for the "initialization" task graph
    if( !( isGPUTask && Uintah::Parallel::usingDevice() ) || ( taskName == "initialization") ) {
      tree->flip_gpu_runnable( patchID, false );
