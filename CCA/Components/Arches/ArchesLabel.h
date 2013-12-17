@@ -321,6 +321,9 @@ namespace Uintah {
 
       };
 
+      inline std::vector<std::string> get_species( ) { return model_req_species; }; 
+      inline std::vector<std::string> get_old_sepcies( ) { return model_req_old_species; }; 
+
     private: 
 
       RLMAP d_r_to_l; 
