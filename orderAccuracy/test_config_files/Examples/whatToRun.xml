@@ -1,7 +1,8 @@
 <config>
 <postProcessCmd_path></postProcessCmd_path>
 
-<symbolicLinks></symbolicLinks>
+<!-- You need this link for the restart uda -->
+<symbolicLinks>/home/todd/builds/Developing/092513SCIRun/src/StandAlone/inputs</symbolicLinks>
 
 <!-- Ray convergence test using Burns & Christon benchmark -->
 <!--
@@ -48,12 +49,24 @@
   <tst>multiPatches.tst</tst>
 </test>
 -->
-<!-- Boundary flux comparison with CPU code using Burns & Christon benchmark -->
+<!-- Boundary flux comparison with CPU code using Burns & Christon benchmark
 <test>
   <name>RMCRT_boundFlux</name>
   <ups>RMCRT_isoScat.ups</ups>
   <tst>RMCRT_boundFlux.tst</tst>
 </test>
-
-
+-->
+<!-- Boundary flux comparison with CPU code using Burns & Christon benchmark
+<test>
+  <name>RMCRT_patchConfig</name>
+  <ups>RMCRT_isoScat.ups</ups>
+  <tst>multiPatches.tst</tst>
+</test>
+-->
+<!-- divQ comparison with CPU code, using the RMCRT_udaInit input file-->
+<test>
+  <name>RMCRT_divQ_cpu_gpu</name>
+  <ups>RMCRT_udaInit.ups</ups>
+  <tst>RMCRT_divQ_cpu_gpu.tst</tst>
+</test>
 </config>
