@@ -212,7 +212,7 @@ public:
     double low;                     ///< Low clipping value
     double high;                    ///< High clipping value
     double tol;                     ///< Tolerance value for the min and max
-    std::string constraining_var;        ///< Used for contraining the variable
+    std::string ind_var;            ///< Used for contraining the variable
 
   }; 
 
