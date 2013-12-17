@@ -630,11 +630,13 @@
             <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
             <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
             <tol                        spec="OPTIONAL DOUBLE"/> <!-- Tolerance on the clipping (low+tol, high-tol) --> 
+<!--            
             <ind_var					          spec="REQUIRED NO_DATA"
-            							              attribute1="label REQUIRED STRING" need_applies_to="type variable_constrained"/> <!-- independent variable for advanced clipping --> 
+            							              attribute1="label REQUIRED STRING" need_applies_to="type variable_constrained"/>
             <clip_dep_file			      	spec="REQUIRED STRING" need_applies_to="type variable_constrained"/>
             <clip_dep_low_file			    spec="REQUIRED STRING" need_applies_to="type variable_constrained"/>            
             <clip_ind_file				      spec="REQUIRED STRING" need_applies_to="type variable_constrained"/>	
+ -->            
           </Clipping>
 
         </Eqn>
