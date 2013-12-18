@@ -42,7 +42,7 @@ RadPropsEvaluator( const Expr::Tag& tempTag,
     greyGas_( new GreyGas(fileName) )
 {
   // obtain the list of species from the file:
-  const std::vector<RadiativeSpecies>& specOrder = greyGas_->speciesGG();
+  const std::vector<RadiativeSpecies>& specOrder = greyGas_->species();
   BOOST_FOREACH( const RadiativeSpecies& sp, specOrder ){
     const RadSpecMap::const_iterator isp = species.find(sp);
     if( isp == species.end() ){
