@@ -1,6 +1,4 @@
 <?xml version="1.0"?>
-<!--______________________________________________________________________-->
-<!-- Example of how to difference two udas  CCVariable<double>            -->
 <Object name="ExpressionList">
     <Object name="Expression">
         <Field name="name" type="string">diffUdas</Field>
