@@ -65,23 +65,23 @@ mkdir local_RT > /dev/null 2>&1
 cd    local_RT
 
 if [ ! -d TestScripts ]; then
-  ln -s ${SRCTOP}/R_Tester TestScripts
+  ln -sf ${SRCTOP}/R_Tester TestScripts
 fi
 
 if [ ! -f replace_all_GS ]; then
-  ln -s ${SRCTOP}/R_Tester/helpers/replace_all_GS replace_all_GS
+  ln -sf ${SRCTOP}/R_Tester/helpers/replace_all_GS replace_all_GS
 fi
 
 if [ ! -d susdir ]; then
-  ln -s ../StandAlone susdir
+  ln -sf ../StandAlone susdir
 fi
 
 if [ ! -d tools ]; then
-  ln -s ${SRCTOP}/tools tools
+  ln -sf ${SRCTOP}/tools tools
 fi
 
 if [ ! -d inputs ]; then
-  ln -s ${SRCTOP}/StandAlone/inputs inputs
+  ln -sf ${SRCTOP}/StandAlone/inputs inputs
 fi
 
 if [ -d goldStandard -o -L goldStandard ]; then
