@@ -2189,7 +2189,9 @@ void Ray::updateSumI ( Vector& ray_direction,
 
        prevCell = cur;
        double disMin = -9;          // Represents ray segment length.
-
+       
+       double abskg_prev = abskg[prevCell];  // optimization
+       double sigmaT4OverPi_prev = sigmaT4OverPi[prevCell];
        //__________________________________
        //  Determine which cell the ray will enter next
        if ( tMax[0] < tMax[1] ){        // X < Y
@@ -2238,7 +2240,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
        in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
 
 
-       optical_thickness += Dx.x() * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
+       optical_thickness += Dx.x() * abskg_prev*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
        // were adjusted by DyDx  or DzDx, this line is now correct for noncubic domains.
        
        nRaySteps++;
@@ -2247,7 +2249,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
        //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
        double expOpticalThick = exp(-optical_thickness);
        
-       sumI += sigmaT4OverPi[prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
+       sumI += sigmaT4OverPi_prev * ( expOpticalThick_prev - expOpticalThick ) * fs;
        
        expOpticalThick_prev = expOpticalThick;
 
