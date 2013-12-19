@@ -59,12 +59,12 @@ endif
 # Non-CUDA Dependent src files... can be specified the old fashioned
 # way:
 #
-SRCS	+=                             	    			\
-	$(SRCDIR)/ParseEquation.cc 							\
-	$(SRCDIR)/EnthalpyTransportEquation.cc				\
-    $(SRCDIR)/ScalabilityTestTransportEquation.cc		\
-	$(SRCDIR)/ScalarTransportEquation.cc				\
-	$(SRCDIR)/TransportEquation.cc
+SRCS +=                                                \
+        $(SRCDIR)/ParseEquation.cc                     \
+        $(SRCDIR)/EnthalpyTransportEquation.cc         \
+        $(SRCDIR)/ScalabilityTestTransportEquation.cc  \
+        $(SRCDIR)/ScalarTransportEquation.cc           \
+        $(SRCDIR)/TransportEquation.cc
 
 ########################################################################
 #
@@ -81,4 +81,4 @@ ifeq ($(HAVE_CUDA),yes)
   $(OBJTOP_ABS)/$(SRCDIR)/MomentumTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentumTransportEquation.cc
 	cp $< $@
 
-endif	
+endif
