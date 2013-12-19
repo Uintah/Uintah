@@ -1,0 +1,12 @@
+README
+------
+
+The include files found in this directory include a Mie Gruneisen equation of state
+based on the works of Daniel J. Steinberg, Stephen Cochran and Michael Guinan.  The 
+parameters are taken from the LLNL report number URCL-MA-106439.  
+
+One thing should be considered before using these material definitions:
+
+The Mie Gruneisen EOS used in the paper contained a volume dependence of the Gruneisen Gamma
+that is not currently utilized in the Uintah Computational Framework, though the parameters have been included in the input files as comment lines
+
