@@ -485,6 +485,7 @@
                                                
 
         <print_total_ke 								spec="OPTIONAL NO_DATA" />  <!-- prints the total kinetic energy to STDIO --> 
+        <max_ke_allowed                 spec="OPTIONAL DOUBLE"/>    <!-- Exit the case if the kinetic energy exceeds this upper threshhold --> 
         <extraProjection                spec="OPTIONAL BOOLEAN" /> 
         <scalarUnderflowCheck           spec="OPTIONAL NO_DATA" />  <!-- Uses dt = 0.5*rho/div(rhoU)*dx for timestep. Note: only used positive (outbound) div -->  
 

@@ -147,6 +147,8 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
     d_printTotalKE = true; 
   }
 
+  db->getWithDefault( "max_ke_allowed", d_ke_limit, 1.0e99 );
+
   if ( db_parent->findBlock("BoundaryConditions") ){ 
     if ( db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){
       ProblemSpecP db_wall_ht = db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" );  
@@ -1994,6 +1996,12 @@ void ExplicitSolver::computeKE( const ProcessorGroup* pc,
 
     if ( sum_ke != sum_ke )
       throw InvalidValue("Error: KE is diverging.",__FILE__,__LINE__);
+
+    if ( sum_ke > d_ke_limit ) { 
+      std::stringstream msg; 
+      msg << "Error: Your KE has exceeded the max threshold allowed of: " << d_ke_limit << endl;
+      throw InvalidValue(msg.str(), __FILE__, __LINE__); 
+    }
 
   }
 }
