@@ -1,0 +1,116 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Basic expression creation</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+
+   <Wasatch>
+
+     <BasicExpression type="SVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="temperature" state="STATE_N" />
+       <Constant>543.21</Constant>
+     </BasicExpression>
+
+     <BasicExpression type="SVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="MyTestVariable" state="STATE_NONE" />
+       <Constant>123.456</Constant>
+     </BasicExpression>
+
+     <BasicExpression type="SVOL">
+       <TaskList>advance_solution</TaskList>
+       <NameTag name="beta" state="STATE_NONE" />
+       <Constant>5.4321</Constant>
+     </BasicExpression>
+
+     <BasicExpression type="SVOL">
+       <TaskList>advance_solution</TaskList>
+       <NameTag name="alpha" state="STATE_NONE" />
+       <Constant>5.4321</Constant>
+     </BasicExpression>
+     
+     <BasicExpression type="SVOL">
+       <TaskList>advance_solution</TaskList>
+       <NameTag name="phi1" state="STATE_NONE" />
+       <Constant>2.3</Constant>
+     </BasicExpression>
+
+     <BasicExpression type="SVOL">
+       <TaskList>advance_solution</TaskList>
+       <NameTag name="phi2" state="STATE_NONE" />
+       <Constant>4.5</Constant>
+     </BasicExpression>
+
+     <!--
+       manually attach alpha to phi1 and phi2 as additive dependencies.
+       This mimics what would be done for an MMS where a source term is attached.
+      -->
+     <AttachDependency tasklist="advance_solution">
+       <Source> <NameTag name="alpha" state="STATE_NONE"/> </Source>   
+       <Target> <NameTag name="phi1"  state="STATE_NONE"/> </Target>   
+     </AttachDependency>
+     <AttachDependency tasklist="advance_solution">
+       <Source> <NameTag name="alpha" state="STATE_NONE"/> </Source>   
+       <Target> <NameTag name="phi2"  state="STATE_NONE"/> </Target>   
+     </AttachDependency>
+
+     <!--
+       Force the calculation of phi1.  Since it isn't associated with a
+       transport equation, it will not be automatically placed on the graph.
+       This forces it on. 
+      -->
+     <ForceOnGraph tasklist="advance_solution">
+       <NameTag name="phi1" state="STATE_NONE"/>
+       <NameTag name="phi2" state="STATE_NONE"/>
+     </ForceOnGraph>
+     
+     <!--
+       Force a cleave of the graph into two separate graphs.
+       This will create two separate Uintah tasks.
+     -->
+     <Cleave from="CHILDREN">
+       <NameTag name="phi1" state="STATE_NONE"/>
+     </Cleave>
+     <!--Cleave from="PARENTS">
+       <NameTag name="beta" state="STATE_NONE"/>
+     </Cleave-->
+
+  </Wasatch>
+
+   <!-- no timestepping -->
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1.0</delt_min>
+    <delt_max>1.0</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>wasatch_test.uda</filebase>
+    <outputInitTimestep />
+    <outputTimestepInterval>10</outputTimestepInterval>
+    <checkpoint cycle = "1" interval = "0.01"/>
+    <!--save label="phi1"/>
+    <save label="phi2"/>
+    <save label="alpha"/-->
+    <!--save label="beta"/-->
+    <compression>gzip</compression>
+  </DataArchiver>
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[9,9,9]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+  </Grid>
+
+</Uintah_specification>
