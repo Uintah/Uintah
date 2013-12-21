@@ -435,8 +435,8 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
        if(fsync(fileno(tmpout)) != 0)
          throw ErrnoException("fsync", errno, __FILE__, __LINE__);
 #elif !defined(_WIN32)
-       if(fdatasync(fileno(tmpout)) != 0)
-         throw ErrnoException("fdatasync", errno, __FILE__, __LINE__);
+       // if(fdatasync(fileno(tmpout)) != 0)
+       //   throw ErrnoException("fdatasync", errno, __FILE__, __LINE__);
 #endif
        if(fclose(tmpout) != 0)
          throw ErrnoException("fclose", errno, __FILE__, __LINE__);
