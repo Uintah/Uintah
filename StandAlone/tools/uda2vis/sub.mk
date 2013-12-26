@@ -35,27 +35,23 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-      Core/Exceptions    \
-      Core/Grid          \
-      Core/Util          \
-      Core/Math          \
-      Core/Disclosure    \
-      Core/ProblemSpec   \
-      Core/Disclosure    \
-      Core/DataArchive   \
-      Core/Parallel      \
-      CCA/Ports          \
+      CCA/Ports         \
       CCA/Components/ProblemSpecification \
       Core/Basis        \
-      Core/Exceptions   \
       Core/Containers   \
+      Core/DataArchive  \
       Core/Datatypes    \
+      Core/Disclosure   \
+      Core/Exceptions   \
       Core/Geometry     \
+      Core/Grid         \
       Core/Math         \
+      Core/Malloc       \
+      Core/Parallel     \
       Core/Persistent   \
+      Core/ProblemSpec  \
       Core/Thread       \
-      Core/Util         \
-
+      Core/Util         
 endif
 
 SRCS := \

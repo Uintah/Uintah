@@ -38,16 +38,19 @@ SUBDIRS := \
         $(SRCDIR)/fsspeed     \
         $(SRCDIR)/pfs         \
         $(SRCDIR)/puda        \
-        $(SRCDIR)/tracker     
+        $(SRCDIR)/tracker     \
+        $(SRCDIR)/uda2vis     
 
 ifeq ($(HAVE_TEEM),yes)
   SUBDIRS += $(SRCDIR)/uda2nrrd \
              $(SRCDIR)/radiusMaker 
 endif 
 
-ifeq ($(BUILD_VISIT),yes)
-  SUBDIRS += $(SRCDIR)/uda2vis
-endif
+# Build the uda2vis regardless as it does depend on VisIt
+# However VisIt depends on it.
+#ifeq ($(BUILD_VISIT),yes)
+#  SUBDIRS += $(SRCDIR)/uda2vis
+#endif
 
 ########################################################
 # compute_Lnorm_udas
