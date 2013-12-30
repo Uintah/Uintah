@@ -226,17 +226,12 @@ ConstitutiveModel* MPMMaterial::getConstitutiveModel() const
   return d_cm;
 }
 
-particleIndex MPMMaterial::countParticles(const Patch* patch)
-{
-  return d_particle_creator->countParticles(patch,d_geom_objs);
-}
-
-void MPMMaterial::createParticles(particleIndex numParticles,
+particleIndex MPMMaterial::createParticles(
                                   CCVariable<short int>& cellNAPID,
                                   const Patch* patch,
                                   DataWarehouse* new_dw)
 {
-  d_particle_creator->createParticles(this,numParticles,cellNAPID,
+  return d_particle_creator->createParticles(this,cellNAPID,
                                       patch,new_dw,d_geom_objs);
 }
 

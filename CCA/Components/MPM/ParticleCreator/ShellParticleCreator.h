@@ -78,8 +78,7 @@ WARNING
     //
     // Actually create particles using geometry
     //
-    virtual ParticleSubset* createParticles(MPMMaterial* matl, 
-                                            particleIndex numParticles,
+    virtual particleIndex createParticles(MPMMaterial* matl, 
                                             CCVariable<short int>& cellNAPID,
                                             const Patch*, 
                                             DataWarehouse* new_dw,
@@ -89,10 +88,9 @@ WARNING
     //
     // Count particles in a patch
     //
-    virtual particleIndex countParticles(const Patch*,
-                                         std::vector<GeometryObject*>&) ;
     virtual particleIndex countAndCreateParticles(const Patch*,
-                                                  GeometryObject* obj) ;
+                                                  GeometryObject* obj, 
+                                                  ObjectVars& vars) ;
 
     /////////////////////////////////////////////////////////////////////////
     //
