@@ -1101,11 +1101,9 @@ void FractureMPM::actuallyInitialize(const ProcessorGroup*,
       //NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
       //cerrLock.unlock();
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      particleIndex numParticles = mpm_matl->countParticles(patch);
+      particleIndex numParticles = mpm_matl->createParticles(cellNAPID, patch, new_dw);
+
       totalParticles+=numParticles;
-
-      mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
-
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                          mpm_matl,
                                                          new_dw);

@@ -58,14 +58,15 @@ ImplicitParticleCreator::initializeParticle(const Patch* patch,
                                             MPMMaterial* matl,
                                             Point p, IntVector cell_idx,
                                             particleIndex i,
-                                            CCVariable<short int>& cellNAPI)
+                                            CCVariable<short int>& cellNAPI,
+                                            ParticleVars& pvars)
 {
 
-  ParticleCreator::initializeParticle(patch,obj,matl,p,cell_idx,i,cellNAPI);
+  ParticleCreator::initializeParticle(patch,obj,matl,p,cell_idx,i,cellNAPI, pvars);
 
-  pacceleration[i] = Vector(0.,0.,0.);
+  pvars.pacceleration[i] = Vector(0.,0.,0.);
 #ifdef HEAT
-  pExternalHeatFlux[i] = 0.;
+  pvars.pExternalHeatFlux[i] = 0.;
 #endif
 }
 
@@ -73,16 +74,17 @@ ImplicitParticleCreator::initializeParticle(const Patch* patch,
 ParticleSubset* 
 ImplicitParticleCreator::allocateVariables(particleIndex numParticles, 
                                            int dwi,const Patch* patch,
-                                           DataWarehouse* new_dw)
+                                           DataWarehouse* new_dw,
+                                           ParticleVars& pvars)
 {
 
   ParticleSubset* subset = ParticleCreator::allocateVariables(numParticles,
                                                               dwi,patch,
-                                                              new_dw);
+                                                              new_dw, pvars);
 
-  new_dw->allocateAndPut(pacceleration, d_lb->pAccelerationLabel, subset);
+  new_dw->allocateAndPut(pvars.pacceleration, d_lb->pAccelerationLabel, subset);
 #ifdef HEAT
-  new_dw->allocateAndPut(pExternalHeatFlux, d_lb->pExternalHeatFluxLabel, 
+  new_dw->allocateAndPut(pvars.pExternalHeatFlux, d_lb->pExternalHeatFluxLabel, 
                          subset);
 #endif
 
