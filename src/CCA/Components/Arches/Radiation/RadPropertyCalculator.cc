@@ -218,7 +218,7 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
     _gg_radprops = scinew GreyGas( inputfile ); 
 
     //get list of species: 
-    _radprops_species = _gg_radprops->speciesGG(); 
+    _radprops_species = _gg_radprops->species();
 
     // mixture molecular weight will always be the first entry 
     // Note that we will assume the table value is the inverse

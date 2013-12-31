@@ -575,7 +575,8 @@ Properties::addLookupSpecies( ){
   std::vector<std::string> sps; 
   sps = d_lab->model_req_species; 
 
-  if ( mixModel == "ClassicTable"  || mixModel == "TabProps" ) { 
+  if ( mixModel == "ClassicTable"  || mixModel == "TabProps" 
+      || "ColdFlow" || "ConstantProps" ) { 
     for ( vector<string>::iterator i = sps.begin(); i != sps.end(); i++ ){
       d_mixingRxnTable->insertIntoMap( *i ); 
     }
@@ -583,7 +584,8 @@ Properties::addLookupSpecies( ){
 
   std::vector<std::string> old_sps; 
   old_sps = d_lab->model_req_old_species; 
-  if ( mixModel == "ClassicTable"  || mixModel == "TabProps" ) { 
+  if ( mixModel == "ClassicTable"  || mixModel == "TabProps" 
+      || "ColdFlow" || "ConstantProps") { 
     for ( vector<string>::iterator i = old_sps.begin(); i != old_sps.end(); i++ ){
       d_mixingRxnTable->insertOldIntoMap( *i ); 
     }

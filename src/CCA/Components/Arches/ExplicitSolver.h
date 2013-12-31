@@ -366,6 +366,7 @@ private:
 
   //Diagnostics
   bool d_printTotalKE; 
+  double d_ke_limit; 
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

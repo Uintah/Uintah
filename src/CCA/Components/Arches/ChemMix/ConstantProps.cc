@@ -76,6 +76,13 @@ ConstantProps::problemSetup( const ProblemSpecP& propertiesParameters )
   insertIntoMap("density");
   insertIntoMap("temperature"); 
 
+  //Automatically adding density_old to the table lookup because this 
+  //is needed for scalars that aren't solved on stage 1: 
+  ChemHelper::TableLookup* extra_lookup = scinew ChemHelper::TableLookup;
+  extra_lookup->lookup.insert(std::make_pair("density",ChemHelper::TableLookup::OLD));
+  d_lab->add_species_struct( extra_lookup );
+  delete extra_lookup; 
+
   proc0cout << "   ------ Using constant density and temperature -------   " << endl;
 
   //setting varlabels to roles: 
@@ -105,6 +112,17 @@ ConstantProps::sched_getState( const LevelP& level,
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
       tsk->computes( i->second ); 
+
+      MixingRxnModel::VarMap::iterator check_iter = d_oldDvVarMap.find( i->first + "_old"); 
+      if ( check_iter != d_oldDvVarMap.end() ){
+        if ( d_lab->d_sharedState->getCurrentTopLevelTimeStep() != 0 ){ 
+          tsk->requires( Task::OldDW, i->second, Ghost::None, 0 ); 
+        }
+      }
+    }
+
+    for ( MixingRxnModel::VarMap::iterator i = d_oldDvVarMap.begin(); i != d_oldDvVarMap.end(); ++i ) {
+      tsk->computes( i->second ); 
     }
 
     if (d_MAlab)
@@ -113,6 +131,9 @@ ConstantProps::sched_getState( const LevelP& level,
   } else {
 
     for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
+      tsk->modifies( i->second ); 
+    }
+    for ( MixingRxnModel::VarMap::iterator i = d_oldDvVarMap.begin(); i != d_oldDvVarMap.end(); ++i ) {
       tsk->modifies( i->second ); 
     }
 
@@ -171,7 +192,29 @@ ConstantProps::getState( const ProcessorGroup* pc,
         (*storage.var).initialize(0.0);
 
         depend_storage.insert( make_pair( i->first, storage ));
+        std::string name = i->first+"_old"; 
+        VarMap::iterator i_old = d_oldDvVarMap.find(name); 
 
+        if ( i_old != d_oldDvVarMap.end() ){ 
+          if ( old_dw != 0 ){
+
+            //copy from old DW
+            constCCVariable<double> old_t_value; 
+            CCVariable<double> old_tpdt_value; 
+            old_dw->get( old_t_value, i->second, matlIndex, patch, gn, 0 ); 
+            new_dw->allocateAndPut( old_tpdt_value, i_old->second, matlIndex, patch ); 
+
+            old_tpdt_value.copy( old_t_value ); 
+
+          } else { 
+
+            //just allocated it because this is the Arches::Initialize
+            CCVariable<double> old_tpdt_value; 
+            new_dw->allocateAndPut( old_tpdt_value, i_old->second, matlIndex, patch ); 
+            old_tpdt_value.initialize(0.0); 
+
+          }
+        }
       }
 
       if (d_MAlab) {
@@ -189,6 +232,16 @@ ConstantProps::getState( const ProcessorGroup* pc,
         new_dw->getModifiable( *storage.var, i->second, matlIndex, patch ); 
 
         depend_storage.insert( make_pair( i->first, storage ));
+
+        std::string name = i->first+"_old"; 
+        VarMap::iterator i_old = d_oldDvVarMap.find(name); 
+
+        if ( i_old != d_oldDvVarMap.end() ){ 
+          //copy current value into old
+          CCVariable<double> old_value; 
+          new_dw->getModifiable( old_value, i_old->second, matlIndex, patch ); 
+          old_value.copy( *storage.var ); 
+        }
 
       }
 

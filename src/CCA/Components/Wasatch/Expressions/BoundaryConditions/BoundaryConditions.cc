@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "BoundaryConditions.h"
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 
 // ###################################################################
 //

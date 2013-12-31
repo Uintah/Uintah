@@ -1855,11 +1855,9 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
         new_dw->allocateAndPut(gDisplacement,lb->gDisplacementLabel,indx,patch);
         gDisplacement.initialize(Vector(0.));
       }
-      particleIndex numParticles = mpm_matl->countParticles(patch);
+      particleIndex numParticles = mpm_matl->createParticles(cellNAPID, patch, new_dw);
+
       totalParticles+=numParticles;
-
-      mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
-
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
 
     }
