@@ -35,17 +35,12 @@ namespace Uintah {
     MembraneParticleCreator(MPMMaterial* matl,MPMFlags* flags);
     virtual ~MembraneParticleCreator();
 
-    virtual ParticleSubset* createParticles(MPMMaterial* matl, 
-                                            particleIndex numParticles,
+    virtual particleIndex createParticles(MPMMaterial* matl, 
                                             CCVariable<short int>& cellNAPID,
                                             const Patch*, 
                                             DataWarehouse* new_dw,
                                             std::vector<GeometryObject*>&);
 
-    virtual particleIndex countParticles(const Patch*,
-                                         std::vector<GeometryObject*>&) ;
-    virtual particleIndex countAndCreateParticles(const Patch*,
-                                                  GeometryObject* obj) ;
 
     virtual void registerPermanentParticleState(MPMMaterial* matl);
 
@@ -56,17 +51,16 @@ namespace Uintah {
     const VarLabel* pTang2Label_preReloc;
     const VarLabel* pNormLabel_preReloc;
 
-
   protected:
+    virtual particleIndex countAndCreateParticles(const Patch*,
+                                                  GeometryObject* obj,
+                                                  ObjectVars& vars) ;
     virtual ParticleSubset* allocateVariables(particleIndex numParticles,
                                               int dwi, const Patch* patch,
-                                              DataWarehouse* new_dw);
+                                              DataWarehouse* new_dw,
+                                              ParticleVars& pvars);
     
 
-    ParticleVariable<Vector> pTang1, pTang2, pNorm;
-
-
-        
   };
 
 

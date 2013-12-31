@@ -42,9 +42,10 @@
 //  To Do
 //  - dynamic block size?
 //  - use labelNames
-//  - add BoundaryFlux code
-//  - random numbers
+//  - investigate the performance with different patch configurations
+//  - deterministic random numbers
 //  - Ray steps
+//  - What's up with data onion and raylocation call?
 
 
 namespace Uintah {
@@ -325,9 +326,10 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 __device__ gpuVector findRayDirectionDevice( curandState* randNumStates )
 {
   // Random Points On Sphere
-  double plusMinus_one = 2 * randDblExcDevice( randNumStates ) - 1;
-  double r = sqrt(1 - plusMinus_one * plusMinus_one);             // Radius of circle at z
-  double theta = 2 * M_PI * randDblExcDevice( randNumStates );    // Uniform betwen 0-2Pi
+  // add fuzz to prevent infs in 1/dirVector calculation
+  double plusMinus_one = 2.0 * randDblExcDevice( randNumStates ) - 1.0 + DBL_EPSILON;
+  double r = sqrt(1.0 - plusMinus_one * plusMinus_one);             // Radius of circle at z
+  double theta = 2.0 * M_PI * randDblExcDevice( randNumStates );    // Uniform betwen 0-2Pi
 
   gpuVector dirVector;
   dirVector.x = r*cos(theta);   // Convert to cartesian coordinates

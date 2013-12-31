@@ -485,6 +485,7 @@
                                                
 
         <print_total_ke 								spec="OPTIONAL NO_DATA" />  <!-- prints the total kinetic energy to STDIO --> 
+        <max_ke_allowed                 spec="OPTIONAL DOUBLE"/>    <!-- Exit the case if the kinetic energy exceeds this upper threshhold --> 
         <extraProjection                spec="OPTIONAL BOOLEAN" /> 
         <scalarUnderflowCheck           spec="OPTIONAL NO_DATA" />  <!-- Uses dt = 0.5*rho/div(rhoU)*dx for timestep. Note: only used positive (outbound) div -->  
 
@@ -630,6 +631,13 @@
             <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
             <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
             <tol                        spec="OPTIONAL DOUBLE"/> <!-- Tolerance on the clipping (low+tol, high-tol) --> 
+<!--            
+            <ind_var					          spec="REQUIRED NO_DATA"
+            							              attribute1="label REQUIRED STRING" need_applies_to="type variable_constrained"/>
+            <clip_dep_file			      	spec="REQUIRED STRING" need_applies_to="type variable_constrained"/>
+            <clip_dep_low_file			    spec="REQUIRED STRING" need_applies_to="type variable_constrained"/>            
+            <clip_ind_file				      spec="REQUIRED STRING" need_applies_to="type variable_constrained"/>	
+ -->            
           </Clipping>
 
         </Eqn>

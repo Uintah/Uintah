@@ -702,8 +702,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
         boundFlux[origin].initialize(0.0);
       }
    }
-    unsigned long int size = 0;                        // current size of PathIndex
-    Vector Dx = patch->dCell();                        // cell spacing
+    unsigned long int size = 0;                   // current size of PathIndex
+    Vector Dx = patch->dCell();                   // cell spacing
     double DyDx = Dx.y() / Dx.x();                //noncubic
     double DzDx = Dx.z() / Dx.x();                //noncubic 
     
@@ -1143,7 +1143,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       radiationVolq_fine.initialize( 0.0 );
     }
 
-    unsigned long int nRaySteps = 0;                             // current size of PathIndex
+    unsigned long int nRaySteps = 0; 
 
     //__________________________________
     //
@@ -1166,7 +1166,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       for (int iRay=0; iRay < _nDivQRays; iRay++){
         
         Vector ray_location;
-        //rayLocation( mTwister, origin, DyDx,  DzDx, _CCRays, ray_location);
+        //rayLocation( mTwister, origin, DyDx,  DzDx, _CCRays, ray_location);            // THIS IS NOT RIGHT!!!!
 
         Vector ray_direction = findRayDirection( mTwister,_isSeedRandom, origin, iRay ); 
                
@@ -1198,7 +1198,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       cout << " Efficiency: " << efficiency << " steps per sec" << endl;
       cout << endl;
     }
-  }  //end finePatch loop
+  }  // end finePatch loop
 }  // end ray trace method
 
 
@@ -1350,12 +1350,12 @@ Vector Ray::findRayDirection(MTRand& mTwister,
   }
 
   // Random Points On Sphere
-  double plusMinus_one = 2 * mTwister.randDblExc() - 1;
-  double r = sqrt(1 - plusMinus_one * plusMinus_one);     // Radius of circle at z
-  double theta = 2 * M_PI * mTwister.randDblExc();        // Uniform betwen 0-2Pi
+  double plusMinus_one = 2.0 * mTwister.randDblExc() - 1.0 + DBL_EPSILON;  // add fuzz to avoid inf in 1/dirVector
+  double r = sqrt(1.0 - plusMinus_one * plusMinus_one);     // Radius of circle at z
+  double theta = 2.0 * M_PI * mTwister.randDblExc();        // Uniform betwen 0-2Pi
 
   Vector direction_vector;
-  direction_vector[0] = r*cos(theta);                     // Convert to cartesian
+  direction_vector[0] = r*cos(theta);                       // Convert to cartesian
   direction_vector[1] = r*sin(theta);
   direction_vector[2] = plusMinus_one;
   
@@ -1420,7 +1420,7 @@ void Ray::rayDirection_VR( MTRand& mTwister,
   
   // Generate two uniformly-distributed-over-the-solid-angle random numbers
   // Used in determining the ray direction
-  double phi = 2 * M_PI * mTwister.randDblExc(); //azimuthal angle.� Range of 0 to 2pi
+  double phi = 2 * M_PI * mTwister.randDblExc(); //azimuthal angle. Range of 0 to 2pi
     
   // This guarantees that the polar angle of the ray is within the delta_theta
   double VRTheta = acos(cos(deltaTheta)+range*mTwister.randDblExc());
@@ -2189,7 +2189,9 @@ void Ray::updateSumI ( Vector& ray_direction,
 
        prevCell = cur;
        double disMin = -9;          // Represents ray segment length.
-
+       
+       double abskg_prev = abskg[prevCell];  // optimization
+       double sigmaT4OverPi_prev = sigmaT4OverPi[prevCell];
        //__________________________________
        //  Determine which cell the ray will enter next
        if ( tMax[0] < tMax[1] ){        // X < Y
@@ -2235,10 +2237,10 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
 //cout << "cur " << cur << " face " << face << " tmax " << tMax << " rayLoc " << ray_location << 
 //        " inv_dir: " << inv_ray_direction << " disMin: " << disMin << endl;
        
-       in_domain = (celltype[cur]==-1);  //cellType of -1 is flow      TESTING
+       in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
 
 
-       optical_thickness += Dx.x() * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
+       optical_thickness += Dx.x() * abskg_prev*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
        // were adjusted by DyDx  or DzDx, this line is now correct for noncubic domains.
        
        nRaySteps++;
@@ -2247,12 +2249,13 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
        //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
        double expOpticalThick = exp(-optical_thickness);
        
-       sumI += sigmaT4OverPi[prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
+       sumI += sigmaT4OverPi_prev * ( expOpticalThick_prev - expOpticalThick ) * fs;
        
        expOpticalThick_prev = expOpticalThick;
 
 #ifdef RAY_SCATTER
-       curLength += disMin * Dx.x(); // July 18
+       curLength += disMin * Dx.x();
+       
        if (curLength > scatLength && in_domain){
 
          // get new scatLength for each scattering event
@@ -2290,8 +2293,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
 #endif
 
      } //end domain while loop.  ++++++++++++++
-
-     //  wall emission 12/15/11
+     
      double wallEmissivity = abskg[cur];
      
      if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one. 
