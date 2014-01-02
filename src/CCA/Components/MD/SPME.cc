@@ -310,45 +310,38 @@ void SPME::calculate(const ProcessorGroup* pg,
   //  parentOldDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
   //  subNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
   //  subNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
-    parentNewDW->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
-    parentNewDW->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
+  parentNewDW->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
+  parentNewDW->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
 
+  // compile task graph (once)
+  subscheduler->initialize(3, 1);
 
+  // prep for the forward FFT
+  scheduleCalculatePreTransform(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
+
+  // Q grid reductions for forward FFT
+  scheduleReduceNodeLocalQ(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
+
+  // Forward transform
+  scheduleTransformRealToFourier(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, level);
+
+  // Do Fourier space calculations on transformed data
+  scheduleCalculateInFourierSpace(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
+
+  // Reverse transform
+  scheduleTransformFourierToReal(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, level);
+
+  // Redistribute force grid
+  scheduleDistributeNodeLocalQ(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
+
+  // compile task graph - only need to do this once for the iterations below
+  subscheduler->compile();
+
+  // now setup for, and do the iterations
   bool converged = false;
   int numIterations = 0;
-  bool recompileSubscheduler = true;
 
   while (!converged && (numIterations < d_maxPolarizableIterations)) {
-
-    // compile task graph (once)
-    if (recompileSubscheduler) {
-
-      subscheduler->initialize(3, 1);
-
-      // prep for the forward FFT
-      scheduleCalculatePreTransform(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
-
-      // Q grid reductions for forward FFT
-      scheduleReduceNodeLocalQ(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
-
-      // Forward transform
-      scheduleTransformRealToFourier(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, level);
-
-      // Do Fourier space calculations on transformed data
-      scheduleCalculateInFourierSpace(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
-
-      // Reverse transform
-      scheduleTransformFourierToReal(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, level);
-
-      // Redistribute force grid
-      scheduleDistributeNodeLocalQ(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
-
-      // compile task graph
-      subscheduler->compile();
-
-      // make sure the above only happens once
-      recompileSubscheduler = false;
-    }
 
     // Need to re-map subNewDW
     subNewDW = subscheduler->get_dw(3);
