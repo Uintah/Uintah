@@ -299,6 +299,8 @@
 
         <planes>
           <plane name="XY_plane"> 
+                <timeStart>   0.00124283   </timeStart>
+                <timeStop>    0.00129687   </timeStop>
                 <startingPt>  [0.4, 0.4, 0]   </startingPt>
                 <endingPt>    [0.6, 0.6, 0]   </endingPt>
           </plane>
