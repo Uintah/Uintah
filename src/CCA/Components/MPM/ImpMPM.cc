@@ -3873,7 +3873,7 @@ void ImpMPM::printParticleCount(const ProcessorGroup* pg,
   if(pg->myrank() == 0){
     sumlong_vartype pcount;
     new_dw->get(pcount, lb->partCountLabel);
-    cerr << "Created " << (long) pcount << " total particles\n";
+    std::cout << "Created " << (long) pcount << " total particles" << std::endl;
   }
 }
 
