@@ -665,6 +665,45 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
       d_initRequiredVars.insert(dep->var);
     }
   }
+
+  // create reduction task if computes included one or more reduction vars
+  for( const Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->next ) {
+    if(dep->var->typeDescription()->isReductionVariable()){
+       int levelidx = dep->reductionLevel?dep->reductionLevel->getIndex():-1;
+       int dw = dep->mapDataWarehouse();
+       if (dep->var->allowsMultipleComputes() ) { 
+         if (dbg.active())
+           dbg << d_myworld->myrank() << " Skipping Reduction task for variable: " 
+             << dep->var->getName() << " on level " << levelidx 
+             << ", DW " << dw << '\n';
+          continue;
+        } 
+        if (dbg.active())
+          dbg << d_myworld->myrank() << "Creating Reduction task for variable: " 
+            << dep->var->getName() << " on level " << levelidx 
+            << ", DW " << dw << '\n';
+        ostringstream taskname;
+        taskname << "Reduction: " << dep->var->getName() 
+          << ", level " << levelidx << ", dw " << dw;
+        Task* newtask = scinew Task(taskname.str(), Task::Reduction);
+        int dwmap[Task::TotalDWs];
+        for(int i=0;i<Task::TotalDWs;i++)
+          dwmap[i]=Task::InvalidDW;
+        dwmap[Task::OldDW] = Task::NoDW;
+        dwmap[Task::NewDW] = dw;
+        newtask->setMapping(dwmap);
+	if (dep->matls != 0) {
+          newtask->modifies(dep->var, dep->reductionLevel, dep->matls, Task::OutOfDomain);
+        }
+        else {
+          for(int m=0;m<task->getMaterialSet()->size();m++) {
+            newtask->modifies(dep->var, dep->reductionLevel, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
+          }
+        }
+	graphs[graphs.size()-1]->addTask(newtask, 0, 0);
+        numTasks_++;
+     }
+  }
 }
 
 void
