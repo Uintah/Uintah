@@ -116,6 +116,7 @@ WARNING
     
     void createDirectory( std::string& planeName,
                           std::string& timestep,
+                          const double now,
                           std::string& levelIndex );
                           
     template <class Tvar>      /* double */
@@ -177,6 +178,8 @@ WARNING
       std::string  name;
       Point   startPt;
       Point   endPt;
+      double  startTime;
+      double  stopTime;
       PlaneType planeType;
       
     };

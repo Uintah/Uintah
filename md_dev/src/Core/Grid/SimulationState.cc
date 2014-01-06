@@ -125,8 +125,9 @@ void SimulationState::registerMaterial(Material* matl)
      max_matl_index = matls.size();
    }
 
-   if(matl->hasName())
+   if(matl->hasName()) {
      named_matls[matl->getName()] = matl;
+   }
 }
 
 void SimulationState::registerMaterial(Material* matl,unsigned int index)

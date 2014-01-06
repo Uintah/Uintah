@@ -249,6 +249,11 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
     Point start, end;
     plane_spec->require("startingPt", start);
     plane_spec->require("endingPt",   end);
+    
+    double p_startTime = d_startTime;
+    double p_stopTime  = d_stopTime;
+    plane_spec->get( "timeStart",p_startTime ); 
+    plane_spec->get( "timeStop",p_stopTime );
     //__________________________________
     // bullet proofing
     // -every plane must have a name
@@ -310,15 +315,28 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
     
     
     // Start time < stop time
-    if(d_startTime > d_stopTime){
+    if(d_startTime > d_stopTime || p_startTime > p_stopTime ){
       throw ProblemSetupException("\n ERROR:planeExtract: startTime > stopTime. \n", __FILE__, __LINE__);
     }
+
+    if( p_startTime < d_startTime ){
+      ostringstream warn;
+      warn << "\n ERROR:planeExtract: Plane ("<< name<< ") startTime:"<< p_startTime <<" < master startTime:"<< d_startTime <<". \n";
+      throw ProblemSetupException( warn.str(), __FILE__, __LINE__);
+    }
     
+    if( p_stopTime > d_stopTime ){
+      ostringstream warn;
+      warn << "\n ERROR:planeExtract: Plane ("<< name<< ") stopTime:"<< p_stopTime <<" > master stopTime:"<< d_stopTime <<". \n";
+      throw ProblemSetupException( warn.str(), __FILE__, __LINE__);
+    }
     // put input variables into the global struct
     plane* p = scinew plane;
     p->name      = name;
     p->startPt   = start;
     p->endPt     = end;
+    p->startTime = p_startTime;
+    p->stopTime  = p_stopTime;
     p->planeType = planeType;
     d_planes.push_back(p);
   }
@@ -444,7 +462,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
     
     int proc = lb->getPatchwiseProcessorAssignment(patch);
     
-    //__________________________________
+    //__________________________________7
     // write data if this processor owns this patch
     // and if it's time to write
     if( proc == pg->myrank() && now >= nextWriteTime){
@@ -457,6 +475,10 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
       // loop over each plane 
       for (unsigned int p =0 ; p < d_planes.size(); p++) {
       
+        if(now < d_planes[p]->startTime || now > d_planes[p]->stopTime){
+          continue;
+        }
+        
         // create the directory structure
         string udaDir = d_dataArchiver->getOutputLocation();
         string dirName = d_planes[p]->name;
@@ -472,7 +494,7 @@ void planeExtract::doAnalysis(const ProcessorGroup* pg,
         string path = planePath + "/" + timestep + "/" + levelIndex;
         
         if( d_isDirCreated.count(path) == 0 ){
-          createDirectory( planePath, timestep, levelIndex );
+          createDirectory( planePath, timestep, now, levelIndex );
           d_isDirCreated.insert( path );
         }
         
@@ -727,7 +749,7 @@ void planeExtract::createFile(const string& filename,
 // create the directory structure   planeName/LevelIndex
 //
 void
-planeExtract::createDirectory(string& planeName, string& timestep, string& levelIndex)
+planeExtract::createDirectory(string& planeName, string& timestep, const double now, string& levelIndex)
 {
   DIR *check = opendir(planeName.c_str());
   if ( check == NULL ) {
@@ -744,6 +766,14 @@ planeExtract::createDirectory(string& planeName, string& timestep, string& level
   if ( check == NULL ) {
     cout << Parallel::getMPIRank() << " planeExtract:Making directory " << path << endl;
     MKDIR( path.c_str(), 0777 );
+    
+    // write out physical time
+    string filename = planeName + "/" + timestep + "/physicalTime";
+    FILE *fp;
+    fp = fopen(filename.c_str(), "w");
+    fprintf( fp, "%16.15E\n",now);
+    fclose(fp);
+    
   } else {
     closedir(check);
   }
