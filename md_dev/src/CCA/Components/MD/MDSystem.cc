@@ -80,14 +80,34 @@ MDSystem::MDSystem(ProblemSpecP& ps,
 
   // Determine number of ghost cells tasks should request for neighbor calculations
   IntVector resolution;
-  double cutoffRadius;
   ProblemSpecP root_ps = ps->getRootNode();
   root_ps->findBlock("Grid")->findBlock("Level")->findBlock("Box")->require("resolution", resolution);
-  root_ps->findBlock("MD")->findBlock("Nonbonded")->require("cutoffRadius", cutoffRadius);
-  Vector normalized = Vector(cutoffRadius, cutoffRadius, cutoffRadius) / (d_box / resolution.asVector());
-  IntVector maxDimValues(ceil(normalized.x()), ceil(normalized.y()), ceil(normalized.z()));
-  d_numGhostCells = max(maxDimValues.x(), maxDimValues.y(), maxDimValues.z());
-//  d_numGhostCells = 14;
+  Vector resInverse = resolution.asVector() * d_inverseCell;
+
+  double nonbondedRadius = -1.0;
+  double electrostaticRadius = -1.0;
+  ProblemSpecP universalCutoff = root_ps->findBlock("MD")->findBlock("MDSystem")->get("cutoffRadius",nonbondedRadius);
+  if (universalCutoff) {  // Same cutoff for nonbonded and electrostatics
+	  Vector normalized = Vector(nonbondedRadius)*resInverse;
+	  IntVector maxDimValues(ceil(normalized.x()),ceil(normalized.y()),ceil(normalized.z()));
+	  d_nonbondedGhostCells = max(maxDimValues.x(), maxDimValues.y(), maxDimValues.z());
+	  d_electrostaticGhostCells = d_nonbondedGhostCells;
+  }
+  else // Cutoff for each component
+  {
+	  // Find ghost cells for nonbonded
+	  root_ps->findBlock("MD")->findBlock("Nonbonded")->require("cutoffRadius", nonbondedRadius);
+	  Vector normalized = Vector(nonbondedRadius) * resInverse;
+	  IntVector maxDimValues(ceil(normalized.x()), ceil(normalized.y()), ceil(normalized.z()));
+	  d_nonbondedGhostCells = max(maxDimValues.x(), maxDimValues.y(), maxDimValues.z());
+
+	  // Find ghost cells for electrostatic
+	  root_ps->findBlock("MD")->findBlock("Electrostatics")->require("cutoffRadius",electrostaticRadius);
+	  normalized = Vector(electrostaticRadius, electrostaticRadius, electrostaticRadius) * resInverse;
+	  maxDimValues= IntVector(ceil(normalized.x()), ceil(normalized.y()), ceil(normalized.z()));
+	  d_electrostaticGhostCells = max(maxDimValues.x(), maxDimValues.y(), maxDimValues.z());
+  }
+
 
 //  int numAtomTypes = 1; //shared_state->getNumMatls();
 //  std::vector<size_t> tempAtomTypeList(numAtomTypes);

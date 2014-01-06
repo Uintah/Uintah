@@ -65,7 +65,7 @@ AnalyticNonBonded::AnalyticNonBonded(MDSystem* system,
                                      const double r12,
                                      const double r6,
                                      const double cutoffRadius) :
-    d_system(system), d_r12(r12), d_r6(r6), d_cutoffRadius(cutoffRadius)
+    d_system(system), d_r12(r12), d_r6(r6), d_nonbondedRadius(cutoffRadius)
 {
   d_nonBondedInteractionType = NonBonded::LJ12_6;
 }
@@ -103,9 +103,9 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
                                   const LevelP& level)
 {
   Vector box = d_system->getBox();
-  double cut_sq = d_cutoffRadius * d_cutoffRadius;
+  double cut_sq = d_nonbondedRadius * d_nonbondedRadius;
   double vdwEnergy = 0;
-  int CUTOFF_RADIUS = d_system->getRequiredGhostCells();
+  int CUTOFF_RADIUS = d_system->getNonbondedGhostCells();
 
   // loop through all patches
   size_t numPatches = patches->size();
@@ -253,7 +253,7 @@ void AnalyticNonBonded::generateNeighborList(ParticleSubset* local_pset,
   double r2;
   Vector box = d_system->getBox();
   Vector reducedCoordinates;
-  double cut_sq = d_cutoffRadius * d_cutoffRadius;
+  double cut_sq = d_nonbondedRadius * d_nonbondedRadius;
 
   for (size_t i = 0; i < localAtoms; ++i) {
     for (size_t j = 0; j < neighborAtoms; ++j) {
@@ -265,8 +265,8 @@ void AnalyticNonBonded::generateNeighborList(ParticleSubset* local_pset,
         reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
 
         // eliminate atoms outside of cutoff radius, add those within as neighbors
-        if ((fabs(reducedCoordinates[0]) < d_cutoffRadius) && (fabs(reducedCoordinates[1]) < d_cutoffRadius)
-            && (fabs(reducedCoordinates[2]) < d_cutoffRadius)) {
+        if ((fabs(reducedCoordinates[0]) < d_nonbondedRadius) && (fabs(reducedCoordinates[1]) < d_nonbondedRadius)
+            && (fabs(reducedCoordinates[2]) < d_nonbondedRadius)) {
 
           double reducedX = reducedCoordinates[0] * reducedCoordinates[0];
           double reducedY = reducedCoordinates[1] * reducedCoordinates[1];

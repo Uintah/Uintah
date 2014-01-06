@@ -67,621 +67,82 @@ extern SCIRun::Mutex coutLock;
 static DebugStream spme_cout("SPMECout", false);
 static DebugStream spme_dbg("SPMEDBG", false);
 
-SPME::SPME() :
-    d_Qlock("node-local Q lock"), d_spmeLock("SPMEPatch data structures lock")
+void SPME::newGenerateChargeMap(const ProcessorGroup* pg,
+                             	const PatchSubset* patches,
+                             	const MaterialSubset* materials,
+                             	DataWarehouse* old_dw,
+                             	DataWarehouse* new_dw)
 {
-
-}
-
-SPME::SPME(MDSystem* system,
-           const double ewaldBeta,
-           const double cutoffRadius,
-           const bool isPolarizable,
-           const double tolerance,
-           const IntVector& kLimits,
-           const int splineOrder,
-           const int maxPolarizableIterations) :
-      d_system(system),
-      d_ewaldBeta(ewaldBeta),
-      d_electrostaticRadius(cutoffRadius),
-      d_polarizable(isPolarizable),
-      d_polarizationTolerance(tolerance),
-      d_kLimits(kLimits),
-      d_maxPolarizableIterations(maxPolarizableIterations),
-      d_Qlock("node-local Q lock"),
-      d_spmeLock("SPME shared data structure lock")
-{
-  d_interpolatingSpline = ShiftedCardinalBSpline(splineOrder);
-  d_electrostaticMethod = Electrostatics::SPME;
-}
-
-SPME::~SPME()
-{
-  // cleanup the memory we have dynamically allocated
-  std::map<int, SPMEPatch*>::iterator SPMEPatchIterator;
-
-  for (SPMEPatchIterator = d_spmePatchMap.begin(); SPMEPatchIterator != d_spmePatchMap.end(); ++SPMEPatchIterator) {
-    SPMEPatch* currSPMEPatch = SPMEPatchIterator->second;
-    delete currSPMEPatch;
-  }
-
-  if (d_Q_nodeLocal) { delete d_Q_nodeLocal; }
-
-  if (d_Q_nodeLocalScratch) { delete d_Q_nodeLocalScratch; }
-
-#ifdef HAVE_FFTW
-
-  fftw_cleanup_threads();
-  fftw_mpi_cleanup();
-  fftw_cleanup();
-
-#endif
-}
-
-
-//-----------------------------------------------------------------------------
-// Interface implementations
-void SPME::initialize(const ProcessorGroup* pg,
-                      const PatchSubset* patches,
-                      const MaterialSubset* materials,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw)
-{
-  // We call SPME::initialize from MD::initialize, or if we've somehow maintained our object across a system change
-
-  // Get useful information from global system descriptor to work with locally.
-  d_unitCell        = d_system->getUnitCell();
-  d_inverseUnitCell = d_system->getInverseCell();
-  d_systemVolume    = d_system->getCellVolume();
-
-  // now the local version of the global Q and Q_scratch arrays
-  IntVector zero(0, 0, 0);
-  d_Q_nodeLocal = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, IV_ZERO, 0);
-  d_Q_nodeLocalScratch = scinew SimpleGrid<dblcomplex>(d_kLimits, zero, IV_ZERO, 0);
-
-  /*
-   * Now do FFTW setup for the global FFTs...
-   *
-   * ptrdiff_t is a type able to represent the result of any valid pointer subtraction operation.
-   * It is a standard C integer type which is (at least) 32 bits wide
-   *   on a 32-bit machine and 64 bits wide on a 64-bit machine.
-   */
-  const ptrdiff_t xdim = d_kLimits(0);
-  const ptrdiff_t ydim = d_kLimits(1);
-  const ptrdiff_t zdim = d_kLimits(2);
-
-  ptrdiff_t alloc_local, local_n, local_start;
-
-  // Must initialize FFTW MPI and threads before FFTW_MPI calls are made
-  fftw_init_threads();
-  fftw_mpi_init();
-
-  // This is the local portion of the global FFT array that will reside on each portion (slab decomposition)
-  alloc_local = fftw_mpi_local_size_3d(xdim, ydim, zdim, pg->getComm(), &local_n, &local_start);
-  d_localFFTData.complexData = fftw_alloc_complex(alloc_local);
-  d_localFFTData.numElements = local_n;
-  d_localFFTData.startAddress = local_start;
-
-  // create the forward and reverse FFT MPI plans
-  fftw_complex* complexData = d_localFFTData.complexData;
-  fftw_plan_with_nthreads(Parallel::getNumThreads());
-  d_forwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_FORWARD, FFTW_MEASURE);
-  d_backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
-
-  // Initially register sole and reduction variables in the DW (initial timestep)
-  new_dw->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
-  new_dw->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
-
-  SoleVariable<double> dependency;
-  new_dw->put(dependency, d_lb->electrostaticsDependencyLabel);
-
-  // ------------------------------------------------------------------------
-  // Allocate and map the SPME patches
-  Vector kReal = d_kLimits.asVector();
-  Vector systemCellExtent = (d_system->getCellExtent()).asVector();
-
-  int splineSupport = d_interpolatingSpline.getSupport();
-  IntVector plusGhostExtents(splineSupport, splineSupport, splineSupport);
-  IntVector minusGhostExtents(0,0,0);
-
-  size_t numPatches = patches->size();
-  for(size_t p = 0; p < numPatches; ++p) {
-
-    const Patch* patch = patches->get(p);
-    Vector patchLowIndex  = (patch->getCellLowIndex()).asVector();
-    Vector patchHighIndex = (patch->getCellHighIndex()).asVector();
-    Vector localCellExtent = patchHighIndex - patchLowIndex;
-
-    double localCellVolumeFraction = (localCellExtent.x() * localCellExtent.y() * localCellExtent.z())
-                                     / (systemCellExtent.x() * systemCellExtent.y() * systemCellExtent.z());
-
-    IntVector patchKLow, patchKHigh;
-    for (size_t index = 0; index < 3; ++index) {
-      patchKLow[index] = floor(kReal[index] * (patchLowIndex[index] / systemCellExtent[index]));
-      patchKHigh[index] = floor(kReal[index] * (patchHighIndex[index] / systemCellExtent[index]));
-    }
-
-    IntVector patchKGridExtents = (patchKHigh - patchKLow); // Number of K grid points in the local patch
-    IntVector patchKGridOffset  = patchKLow;                // Starting indices for K grid in local patch
-
-    // Instantiates an SPMEpatch which pre-allocates memory for all the local variables within an SPMEpatch
-    SPMEPatch* spmePatch = new SPMEPatch(patchKGridExtents, patchKGridOffset, plusGhostExtents, minusGhostExtents,
-                                         patch, localCellVolumeFraction, splineSupport, d_system);
-
-    // Map the current spmePatch into the SPME object.
-    d_spmeLock.writeLock();
-    d_spmePatchMap.insert(SPMEPatchKey(patch->getID(),spmePatch));
-    d_spmeLock.writeUnlock();
-  }
-}
-
-// Note:  Must run SPME->setup() each time there is a new box/K grid mapping (e.g. every step for NPT)
-//          This should be checked for in the system electrostatic driver
-void SPME::setup(const ProcessorGroup* pg,
-                 const PatchSubset*    patches,
-                 const MaterialSubset* materials,
-                 DataWarehouse*        old_dw,
-                 DataWarehouse*        new_dw)
-{
-  size_t numPatches = patches->size();
-  size_t splineSupport = d_interpolatingSpline.getSupport();
-
-  IntVector  plusGhostExtents(splineSupport,splineSupport,splineSupport);
-  IntVector minusGhostExtents(0,0,0);
-
-  for(size_t p = 0; p < numPatches; ++p) {
-
-    const Patch* patch = patches->get(p);
-    SPMEPatch* currentSPMEPatch = d_spmePatchMap.find(patch->getID())->second;
-    SimpleGrid<Matrix3>* stressPrefactor = currentSPMEPatch->getStressPrefactor();
-    IntVector spmePatchExtents = currentSPMEPatch->getLocalExtents();
-    IntVector spmePatchOffset  = currentSPMEPatch->getGlobalOffset();
-
-    calculateStressPrefactor(stressPrefactor, spmePatchExtents, spmePatchOffset);
-    SimpleGrid<double>* fTheta = currentSPMEPatch->getTheta();
-
-    // No ghost cells; internal only
-    SimpleGrid<double> fBGrid(spmePatchExtents, spmePatchOffset, IV_ZERO, 0);
-    SimpleGrid<double> fCGrid(spmePatchExtents, spmePatchOffset, IV_ZERO, 0);
-
-    // A SimpleGrid<double> of B(m1,m2,m3)=|b1(m1)|^2 * |b2(m2)|^2 * |b3(m3)|^2
-    SPME::calculateBGrid(fBGrid, spmePatchExtents, spmePatchOffset);
-
-    // A SimpleGrid<double> of C(m1,m2,m3)=(1/(PI*V))*exp(-PI^2*M^2/Beta^2)/M^2
-    SPME::calculateCGrid(fCGrid, spmePatchExtents, spmePatchOffset);
-
-    // Composite B*C into Theta
-// Stubbing out interface to swap dimensions for FFT efficiency
-//    int systemMaxKDimension = d_system->getMaxKDimensionIndex();
-//    int systemMidKDimension = d_system->getMidDimensionIndex();
-//    int systemMinKDimension = d_system->getMinDimensionIndex();
-    int systemMaxKDimension = 0; // X for now
-    int systemMidKDimension = 1; // Y for now
-    int systemMinKDimension = 2; // Z for now
-    size_t x_extent = spmePatchExtents[systemMaxKDimension];
-    size_t y_extent = spmePatchExtents[systemMidKDimension];
-    size_t z_extent = spmePatchExtents[systemMinKDimension];
-    for (size_t xIndex = 0; xIndex < x_extent; ++xIndex) {
-      for (size_t yIndex = 0; yIndex < y_extent; ++yIndex) {
-        for (size_t zIndex = 0; zIndex < z_extent; ++zIndex) {
-          (*fTheta)(xIndex, yIndex, zIndex) = fBGrid(xIndex, yIndex, zIndex) * fCGrid(xIndex, yIndex, zIndex);
-        }
-      }
-    }
-  }
-  SoleVariable<double> dependency;
-  old_dw->get(dependency, d_lb->electrostaticsDependencyLabel);
-  new_dw->put(dependency, d_lb->electrostaticsDependencyLabel);
-}
-
-void SPME::calculate(const ProcessorGroup* pg,
-                     const PatchSubset* perProcPatches,
-                     const MaterialSubset* materials,
-                     DataWarehouse* parentOldDW,
-                     DataWarehouse* parentNewDW,
-                     SchedulerP& subscheduler,
-                     const LevelP& level,
-                     SimulationStateP& sharedState)
-{
-  // this PatchSet is used for SPME::setup and also many of the subscheduled tasks
-  const PatchSet* patches = level->eachPatch();
-
-  // need the full material set
-  const MaterialSet* allMaterials = sharedState->allMaterials();
-  const MaterialSubset* allMaterialsUnion = allMaterials->getUnion();
-
-  // temporarily turn off parentDW scrubbing
-  DataWarehouse::ScrubMode parentOldDW_scrubmode = parentOldDW->setScrubbing(DataWarehouse::ScrubNone);
-  DataWarehouse::ScrubMode parentNewDW_scrubmode = parentNewDW->setScrubbing(DataWarehouse::ScrubNone);
-
-  GridP grid = level->getGrid();
-  subscheduler->setParentDWs(parentOldDW, parentNewDW);
-  subscheduler->advanceDataWarehouse(grid);
-
-  DataWarehouse* subOldDW = subscheduler->get_dw(2);
-  DataWarehouse* subNewDW = subscheduler->get_dw(3);
-
-  // transfer data from parentOldDW to subDW
-  subNewDW->transferFrom(parentOldDW, d_lb->pXLabel, perProcPatches, allMaterialsUnion);
-  subNewDW->transferFrom(parentOldDW, d_lb->pChargeLabel, perProcPatches, allMaterialsUnion);
-  subNewDW->transferFrom(parentOldDW, d_lb->pParticleIDLabel, perProcPatches, allMaterialsUnion);
-
-  // reduction variables
-  //  sum_vartype spmeFourierEnergy;
-  //  matrix_sum spmeFourierStress;
-  //  parentOldDW->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-  //  parentOldDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
-  //  subNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-  //  subNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
-  parentNewDW->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
-  parentNewDW->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
-
-  // compile task graph (once)
-  subscheduler->initialize(3, 1);
-
-  // prep for the forward FFT
-  scheduleCalculatePreTransform(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
-
-  // Q grid reductions for forward FFT
-  scheduleReduceNodeLocalQ(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
-
-  // Forward transform
-  scheduleTransformRealToFourier(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, level);
-
-  // Do Fourier space calculations on transformed data
-  scheduleCalculateInFourierSpace(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
-
-  // Reverse transform
-  scheduleTransformFourierToReal(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW, level);
-
-  // Redistribute force grid
-  scheduleDistributeNodeLocalQ(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
-
-  // compile task graph - only need to do this once for the iterations below
-  subscheduler->compile();
-
-  // now setup for, and do the iterations
-  bool converged = false;
-  int numIterations = 0;
-
-  while (!converged && (numIterations < d_maxPolarizableIterations)) {
-
-    // Need to re-map subNewDW
-    subNewDW = subscheduler->get_dw(3);
-
-    // move subNewDW to subOldDW
-    subscheduler->advanceDataWarehouse(grid);
-//    subOldDW->setScrubbing(DataWarehouse::ScrubComplete);
-    subNewDW->setScrubbing(DataWarehouse::ScrubNone);
-
-    //  execute the tasks
-    subscheduler->execute();
-
-    converged = checkConvergence();
-    numIterations++;
-  }
-
-  // Need to re-map subNewDW so we're "getting" from the right subDW when forwarding SoleVariables
-  subNewDW = subscheduler->get_dw(3);
-
-  /*
-   * No ParticleVariable products from iterations (read only info from ParentOldDW) so don't need forward these
-   * subNewDW --> parentNewDW, just need to forward the SoleVariables; parentOldDW --> parentNewDW, as the
-   * computes statements specify in MD::scheduleElectrostaticsCalculate
-   */
-
-  // Push Reduction Variables up to the parent DW
-  sum_vartype spmeFourierEnergyNew;
-  matrix_sum spmeFourierStressNew;
-  subNewDW->get(spmeFourierEnergyNew, d_lb->spmeFourierEnergyLabel);
-  subNewDW->get(spmeFourierStressNew, d_lb->spmeFourierStressLabel);
-  parentNewDW->put(spmeFourierEnergyNew, d_lb->spmeFourierEnergyLabel);
-  parentNewDW->put(spmeFourierStressNew, d_lb->spmeFourierStressLabel);
-
-  //  Turn scrubbing back on
-  parentOldDW->setScrubbing(parentOldDW_scrubmode);
-  parentNewDW->setScrubbing(parentNewDW_scrubmode);
-}
-
-void SPME::finalize(const ProcessorGroup* pg,
-                    const PatchSubset* patches,
-                    const MaterialSubset* materials,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw)
-{
-  // Do force spreading
-  SPME::calculatePostTransform(pg, patches, materials, old_dw, new_dw);
-}
-
-void SPME::scheduleCalculatePreTransform(SchedulerP& sched,
-                                         const ProcessorGroup* pg,
-                                         const PatchSet* patches,
-                                         const MaterialSet* materials,
-                                         DataWarehouse* subOldDW,
-                                         DataWarehouse* subNewDW)
-{
-  printSchedule(patches, spme_cout, "SPME::scheduleCalculatePreTransform");
-
-  Task* task = scinew Task("SPME::calculatePreTransform", this, &SPME::calculatePreTransform);
-
-  int CUTOFF_RADIUS = d_system->getElectrostaticGhostCells();
-
-  task->requires(Task::ParentNewDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-  task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
-
-  task->computes(d_lb->subSchedulerDependencyLabel);
-  task->computes(d_lb->pXLabel);
-  task->computes(d_lb->pChargeLabel);
-  task->computes(d_lb->pParticleIDLabel);
-
-  sched->addTask(task, patches, materials);
-}
-
-void SPME::scheduleReduceNodeLocalQ(SchedulerP& sched,
-                                    const ProcessorGroup* pg,
-                                    const PatchSet* patches,
-                                    const MaterialSet* materials,
-                                    DataWarehouse* subOldDW,
-                                    DataWarehouse* subNewDW)
-{
-  printSchedule(patches, spme_cout, "SPME::scheduleReduceNodeLocalQ");
-
-  Task* task = scinew Task("SPME::reduceNodeLocalQ", this, &SPME::reduceNodeLocalQ);
-
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
-  task->modifies(d_lb->subSchedulerDependencyLabel);
-
-  sched->addTask(task, patches, materials);
-}
-
-void SPME::scheduleTransformRealToFourier(SchedulerP& sched,
-                                          const ProcessorGroup* pg,
-                                          const PatchSet* patches,
-                                          const MaterialSet* materials,
-                                          DataWarehouse* subOldDW,
-                                          DataWarehouse* subNewDW,
-                                          const LevelP& level)
-{
-  printSchedule(patches, spme_cout, "SPME::scheduleTransformRealToFourier");
-
-  Task* task = scinew Task("SPME::transformRealToFourier", this, &SPME::transformRealToFourier);
-  task->setType(Task::OncePerProc);
-  task->usesMPI(true);
-
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
-
-  task->modifies(d_lb->subSchedulerDependencyLabel);
-
-  LoadBalancer* loadBal = sched->getLoadBalancer();
-  const PatchSet* perproc_patches = loadBal->getPerProcessorPatchSet(level);
-
-  sched->addTask(task, perproc_patches, materials);
-}
-
-void SPME::scheduleCalculateInFourierSpace(SchedulerP& sched,
-                                           const ProcessorGroup* pg,
-                                           const PatchSet* patches,
-                                           const MaterialSet* materials,
-                                           DataWarehouse* subOldDW,
-                                           DataWarehouse* subNewDW)
-{
-  printSchedule(patches, spme_cout, "SPME::scheduleCalculateInFourierSpace");
-
-  Task* task = scinew Task("SPME::calculateInFourierSpace", this, &SPME::calculateInFourierSpace);
-
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
-
-  task->modifies(d_lb->subSchedulerDependencyLabel);
-  task->computes(d_lb->spmeFourierEnergyLabel);
-  task->computes(d_lb->spmeFourierStressLabel);
-
-  sched->addTask(task, patches, materials);
-}
-
-void SPME::scheduleTransformFourierToReal(SchedulerP& sched,
-                                          const ProcessorGroup* pg,
-                                          const PatchSet* patches,
-                                          const MaterialSet* materials,
-                                          DataWarehouse* subOldDW,
-                                          DataWarehouse* subNewDW,
-                                          const LevelP& level)
-{
-  printSchedule(patches, spme_cout, "SPME::scheduleTransformFourierToReal");
-
-  Task* task = scinew Task("SPME::transformFourierToReal", this, &SPME::transformFourierToReal);
-  task->setType(Task::OncePerProc);
-  task->usesMPI(true);
-
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
-
-  task->modifies(d_lb->subSchedulerDependencyLabel);
-
-  LoadBalancer* loadBal = sched->getLoadBalancer();
-  const PatchSet* perproc_patches =  loadBal->getPerProcessorPatchSet(level);
-
-  sched->addTask(task, perproc_patches, materials);
-}
-
-//void SPME::calculateRealSpacematerials(const ProcessorGroup* pg,
-//                                       const PatchSubset* patches,
-//                                       const MaterialSubset* materials,
-//                                       DataWarehouse* old_dw,
-//                                       DataWarehouse* new_dw,
-//                                       SchedulerP& subscheduler,
-//                                       const LevelP& level)
-//{
-//	// Define useful routine qide constants
-//	const double invRootPI = 1.0/sqrt(d_system->getForcefield->PI());
-//    double  squaredCutoff = d_electrostaticRadius * d_electrostaticRadius;
-//    int     CUTOFF_CELLS = d_system->getElectrostaticGhostCells();
-//
-//
-//    // initialize total energy contribution from this thread
-//    double elecRealEnergy = 0;
-//
-//    // loop through all patches
-//    size_t numPatches = patches->size();
-//    for (size_t p=0; p < numPatches; ++p) {
-//    	const Patch* patch = patches->get(p);
-//
-//    }
-//}
-
-//void SPME::calculateRealSpace(const ProcessorGroup* pg,
-//                              const PatchSubset* patches,
-//                              const MaterialSubset* materials,
-//                              DataWarehouse* old_dw,
-//                              DataWarehouse* new_dw,
-//                              SchedulerP& subscheduler,
-//                              const LevelP& level)
-//{
-//	static const double PI=acos(-1.0);
-//	static const double invRootPI = 1.0/sqrt(PI);
-//
-//	Vector box = d_system->getBox();
-//	double cut_sq = d_electrostaticRadius * d_electrostaticRadius;
-//	double elecRealEnergy = 0;
-//	int CUTOFF_RADIUS = d_system->getElectrostaticGhostCells();
-//
-//	// loop through all patches
-//	size_t numPatches = patches->size();
-//	size_t numMatls = materials->size();
-//	for (size_t p = 0; p < numPatches; ++p) {
-//		const Patch* patch = patches->get(p);
-//		for (size_t m=0; m < numMatls; ++m) {
-//			int matl = materials->get(m);
-//
-//			// get particles within bounds of current patch (interior, no ghost cells)
-//			ParticleSubset* local_pset = old_dw->getParticleSubset(matl, patch);
-//
-//			// get particles within bounds of cutoff radius
-//			ParticleSubset* neighbor_pset = old_dw->getParticleSubset(matl, patch, Ghost::AroundNodes, CUTOFF_RADIUS, d_lb->pXLabel);
-//
-//			// requires variables
-//			// !FIXME - Do we need seperate labels to force sync between elements of electrostatics
-//			constParticleVariable<Point> px_local;
-//			constParticleVariable<Point> px_neighbors;
-//			constParticleVariable<Vector> pforce;
-//			constParticleVariable<double> penergy;
-//			constParticleVariable<long64> pid_local;
-//			constParticleVariable<long64> pid_neighbor;
-//			constParticleVariable<double> charge_local;
-//			constParticleVariable<double> charge_neighbor;
-//			old_dw->get(px_local, d_lb->pXLabel, local_pset);
-//			old_dw->get(px_neighbors, d_lb->pXLabel, neighbor_pset);
-//			old_dw->get(penergy, d_lb->pElectrostaticRealEnergy, local_pset); //!FIXME Add pElectrostaticRealEnergy to MDLabels
-//			//! Not problematic.  We'll always calculate the real-space force before we can calculate the fourier space force.
-//			old_dw->get(pforce, d_lb->pElectrostaticsForceLabel, local_pset);
-//			old_dw->get(pid_local, d_lb->pParticleIDLabel, local_pset);
-//			old_dw->get(pid_neighbor, d_lb->pParticleIDLabel, neighbor_pset);
-//            old_dw->get(charge_local, d_lb->pChargeLabel, local_pset);
-//            old_dw->get(charge_neighbor, d_lb->pChargeLabel, neighbor_pset);
-//
-//			// computes variables
-//			ParticleVariable<Vector> pNewElectrostaticForce;
-//			ParticleVariable<double> pNewRealspaceElectrostaticEnergy;
-//			new_dw->allocateAndPut(pNewElectrostaticForce, d_lb->pElectrostaticsForceLabel_preReloc, local_pset);
-//			new_dw->allocateAndPut(pNewRealspaceElectrostaticEnergy, d_lb->pElectrostaticRealEnergy_preReloc, local_pset); //!FIXME Add pElectrostaticRealEnergy_preReloc to MDLabels
-//
-//		    // Loop over all atoms in system, calculate energy and force
-//			Vector directionVector;
-//			double electrostaticRealspaceEnergy = 0.0;
-//
-//			size_t localAtoms = local_pset->numParticles();
-//			size_t neighborAtoms = neighbor_pset->numParticles();
-//
-//			// loop over all local atoms
-//			for (size_t localIdx = 0; localIdx < localAtoms; ++localIdx) {
-//				// loop over neighboring atoms
-//				long64 pidLocal = pid_local[localIdx];
-//				double Q_local = charge_local[localIdx] * 0.5;
-//                Vector forceOnAtom = Vector(0.0,0.0,0.0);
-//                Matrix3 virialElectrostatic = Matrix(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0);
-//				for (size_t neighborIdx = 0; neighborIdx < neighborAtoms; ++neighborIdx) {
-//					// Check for self-reference
-//					long64 pidNeighbor = pid_neighbor[neighborIdx];
-//					double qNeighbor = charge_neighbor[neighborIdx];
-//					double chargePrefactor = 0.5*qLocal*qNeighbor;
-//					if (pidLocal != pidNeighbor) { // Different atoms
-//						// Form offset vector from i to j
-//                        Vector direction = px_neighbors[neighborIdx] - px_local[localIdx];
-//                        double distance = direction.length();
-//
-//                        if (distance <= d_electrostaticRadius ) {
-//                        	// Form outer product of offset vector
-//                        	Matrix3 distanceOuter(direction.x()*direction.x(),direction.x()*direction.y(),direction.x()*direction.z(),
-//                        	                      direction.y()*direction.x(),direction.y()*direction.y(),direction.y()*direction.z(),
-//                        	                      direction.z()*direction.x(),direction.z()*direction.y(),direction.z()*direction.z());
-//
-//						// Calculate some recurring quantities
-//                        double RInverse = 1.0/distance;
-//                        double ErfBetaR = erf(d_ewaldBeta*distance);
-//                        double dErfBetaR = d_ewaldBeta*exp(-d_ewaldBeta*d_ewaldBeta*distance*distance)*invRootPI;
-//                        //double erfBetaR = erf(d_ewaldBeta*r); //!Fixme Eclipse tells me that this r is defined from inputLiuWsgg.cc in RMCRT/PaulasAttic/StandaloneMCRT/MCRTnongray  WTF?
-//
-//						if (d_system->checkExclusion("excludedMask",pidLocal,pidNeighbor)) { // Neighbor is 1-2 or 1-3 to Local
-//							pNewRealspaceElectrostaticEnergy[localIdx] -= chargePrefactor*ErfBetaR/distance; // Correct energy for principal (bonded/bend) pair
-//// !Fixme -- check signs
-//							double forceCorrectionMagnitude = chargePrefactor*RInverse*(dErfBetaR-ErfBetaR*RInverse);
-//							forceOnAtom -= direction*forceCorrectionMagnitude;
-//							virialElectrostatic -= chargePrefactor*RInverse*RInverse(ErfBetaR*RInverse+2.0*dErfBetaR)*distanceOuter;
-//						}
-//						else if (d_system->checkExclusion("14Mask",pidLocal,pidNeighbor)) { // Neighbor is 1-4 from local; for torsional reductions
-//
-//						}
-//						else {  // Neighbor in range and not bonded to local atom
-//							pNewRealspaceElectrostaticEnergy[localIdx] += chargePrefactor*(1.0-ErfBetaR)*RInverse;
-//							double forceMagnitude =
-//						}
-//
-//					}
-//
-//
-//					if (pid_local[localIdx] != pid_neighbor[neighborIdx]) {
-//
-//						Vector direction=px_neighbors[neighborIdx] - px_local[localIdx];
-//						double distance = direction.length();
-//
-//						if (d_system->ExclusionMask->checkExclusion(pidLocal,pidNeighbor)) { // Subtract energy for bonded interactions
-//							electrostaticRealspaceEnergy -= 0.5*qLocal*qNeighbor*erf(d_ewaldBeta*distance)/distance;
-//							Vector correctedForceTerm = Vector(0.0); //!FIXME Add real force term
-//							pNewElectrostaticForce[localIdx]=pforce[localIdx] - correctedForceTerm;
-//						}
-//						else if (d_system->Mask14->checkExclusion(pidLocal,pidNeighbor)) {
-//                            electrostaticRealspaceEnergy -= 0.0;//!FIXME Implement 1-4 q-mu reduction
-//							Vector correctedForceTerm = Vector(0.0); //!FIXME Add real force term
-//							pNewElectrostaticForce[localIdx]=pforce[localIdx] - correctedForceTerm;
-//						}
-//						else{ // No connectivity
-//							electrostaticRealspaceEnergy += 0.5*qLocal*qNeighbor*erfc(d_ewaldBeta*distance)/distance;
-//						}
-//
-//					}
-//					else { // Same atom, subtract the fourier space self-interaction correction
-//						electrostaticRealspaceEnergy -= d_ewaldBeta*invSqrtPi*qLocal*qLocal;
-//					}
-//				}
-//			}
-//		}
-//	}
-//}
-
-void SPME::scheduleDistributeNodeLocalQ(SchedulerP& sched,
-                                        const ProcessorGroup* pg,
-                                        const PatchSet* patches,
-                                        const MaterialSet* materials,
-                                        DataWarehouse* subOldDW,
-                                        DataWarehouse* subNewDW)
-{
-  printSchedule(patches, spme_cout, "SPME::scheduleDistributeNodeLocalQ");
-
-  Task* task = scinew Task("SPME::distributeNodeLocalQ-force", this, &SPME::distributeNodeLocalQ);
-
-  task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
-  task->modifies(d_lb->subSchedulerDependencyLabel);
-
-  sched->addTask(task, patches, materials);
+	size_t numPatches = patches->size();
+	size_t numMaterials = materials->size();
+
+	// Step through all the patches on this thread
+	for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
+		const Patch* patch = patches->get(patchIndex);
+
+		// Extract SPMEPatch which maps to our current patch
+		SPMEPatch* currentSPMEPatch = d_spmePatchMap.find(patch->getID())->second;
+
+		// Step through all the materials in this patch
+		for (size_t materialIndex = 0; materialIndex < numMaterials; ++materialIndex) {
+			ParticleSubset* atomSubset = old_dw->getParticleSubset(materialIndex, patch);
+			constParticleVariable<Point> atomPositions;
+			constParticleVariable<long64> atomIDs;
+
+			old_dw->get(atomPositions, d_lb->pXLabel, atomSubset);
+			old_dw->get(atomIDs, d_lb->pParticleIDLabel, atomSubset);
+
+			// Verify we have enough memory to hold the charge map for the current atom type
+			currentSPMEPatch->verifyChargeMapAllocation(atomSubset->numParticles(),materialIndex);
+
+			// Pull the location for the SPMEPatch's copy of the charge map for this material type
+			std::vector<SPMEMapPoint>* gridMap = currentSPMEPatch->getChargeMap(materialIndex);
+
+			// begin loop to generate the charge map
+			for (ParticleSubset::iterator atom = atomSubset->begin(); atom != atomSubset->end(); ++atom) {
+                particleIndex atomIndex = *atom;
+
+				particleId ID = atomIDs[atomIndex];
+				Point position = atomPositions[atomIndex];
+
+				Vector atomGridCoordinates = position.asVector() * d_inverseUnitCell;
+				// ^^^ Note:  We may want to replace a matrix/vector multiplication with optimized orthorhombic multiplications
+
+				Vector kReal = d_kLimits.asVector();
+				atomGridCoordinates *= kReal;
+				IntVector atomGridOffset(atomGridCoordinates.asPoint());
+				Vector splineValues = atomGridOffset.asVector() - atomGridCoordinates;
+
+				size_t support = d_interpolatingSpline.getSupport();
+				std::vector<Vector> baseLevel(support), firstDerivative(support), secondDerivative(support);
+
+				d_interpolatingSpline.EvaluateToSecondDerivative(baseLevel,firstDerivative,secondDerivative);
+				SimpleGrid<double> chargeGrid(support, atomGridOffset, IV_ZERO, 0);
+				SimpleGrid<Vector> forceGrid(support, atomGridOffset, IV_ZERO, 0);
+				SimpleGrid<Vector> dipoleGrid(support, atomGridOffset, IV_ZERO, 0);
+
+				for (size_t xIndex = 0; xIndex < support; ++xIndex) {
+				  double dampX = baseLevel[xIndex].x();
+				  for (size_t yIndex = 0; yIndex < support; ++yIndex) {
+					double dampY = baseLevel[yIndex].y();
+					double dampXY = dampX * dampY;
+					for (size_t zIndex = 0; zIndex < support; ++zIndex) {
+					  double dampZ = baseLevel[zIndex].z();
+					  double dampYZ = dampY * dampZ;
+					  double dampXZ = dampX * dampZ;
+					  chargeGrid(xIndex,yIndex,zIndex) = dampX * dampYZ;
+					  forceGrid(xIndex,yIndex,zIndex) = Vector(dampYZ*firstDerivative[xIndex].x()*kReal.x(),
+					                                           dampXZ*firstDerivative[yIndex].y()*kReal.y(),
+					                                           dampXY*firstDerivative[zIndex].z()*kReal.z());
+
+					}
+				  }
+				}
+			SPMEMapPoint currentMapPoint(ID, atomGridOffset, chargeGrid, forceGrid);
+			gridMap->push_back(currentMapPoint);
+			}
+		}
+	}
 }
 
 void SPME::calculatePreTransform(const ProcessorGroup* pg,
@@ -928,7 +389,6 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
 
 //----------------------------------------------------------------------------
 // Setup related routines
-
 void SPME::calculateBGrid(SimpleGrid<double>& BGrid,
                           const IntVector& localExtents,
                           const IntVector& globalOffset) const
@@ -952,9 +412,6 @@ void SPME::calculateBGrid(SimpleGrid<double>& BGrid,
   std::vector<dblcomplex> b1(xExtents);
   std::vector<dblcomplex> b2(yExtents);
   std::vector<dblcomplex> b3(zExtents);
-  //  generateBVector(b1, mf1, globalOffset.x(), localExtents.x());
-  //  generateBVector(b2, mf2, globalOffset.y(), localExtents.y());
-  //  generateBVector(b3, mf3, globalOffset.z(), localExtents.z());
   SPME::generateBVectorChunk(b1, globalOffset[0], localExtents[0], d_kLimits[0]);
   SPME::generateBVectorChunk(b2, globalOffset[1], localExtents[1], d_kLimits[1]);
   SPME::generateBVectorChunk(b3, globalOffset[2], localExtents[2], d_kLimits[2]);
@@ -968,31 +425,31 @@ void SPME::calculateBGrid(SimpleGrid<double>& BGrid,
   }
 }
 
-void SPME::generateBVector(std::vector<dblcomplex>& bVector,
-                           const std::vector<double>& mFractional,
-                           const int initialIndex,
-                           const int localGridExtent) const
-{
-  double PI = acos(-1.0);
-  double twoPI = 2.0 * PI;
-  int n = d_interpolatingSpline.getOrder();
-
-  std::vector<double> zeroAlignedSpline = d_interpolatingSpline.evaluateGridAligned(0);
-  size_t endingIndex = initialIndex + localGridExtent;
-
-  // Formula 4.4 in Essman et al.: A smooth particle mesh Ewald method
-  for (size_t BIndex = initialIndex; BIndex < endingIndex; ++BIndex) {
-    double twoPi_m_over_K = twoPI * mFractional[BIndex];
-    double numerator_term = static_cast<double>(n - 1) * twoPi_m_over_K;
-    dblcomplex numerator = dblcomplex(cos(numerator_term), sin(numerator_term));
-    dblcomplex denominator = 0.0;
-    for (int denomIndex = 0; denomIndex <= n - 2; ++denomIndex) {
-      double denom_term = static_cast<double>(denomIndex) * twoPi_m_over_K;
-      denominator += zeroAlignedSpline[denomIndex + 1] * dblcomplex(cos(denom_term), sin(denom_term));
-    }
-    bVector[BIndex] = numerator / denominator;
-  }
-}
+//void SPME::generateBVector(std::vector<dblcomplex>& bVector,
+//                           const std::vector<double>& mFractional,
+//                           const int initialIndex,
+//                           const int localGridExtent) const
+//{
+//  double PI = acos(-1.0);
+//  double twoPI = 2.0 * PI;
+//  int n = d_interpolatingSpline.getOrder();
+//
+//  std::vector<double> zeroAlignedSpline = d_interpolatingSpline.evaluateGridAligned(0);
+//  size_t endingIndex = initialIndex + localGridExtent;
+//
+//  // Formula 4.4 in Essman et al.: A smooth particle mesh Ewald method
+//  for (size_t BIndex = initialIndex; BIndex < endingIndex; ++BIndex) {
+//    double twoPi_m_over_K = twoPI * mFractional[BIndex];
+//    double numerator_term = static_cast<double>(n - 1) * twoPi_m_over_K;
+//    dblcomplex numerator = dblcomplex(cos(numerator_term), sin(numerator_term));
+//    dblcomplex denominator = 0.0;
+//    for (int denomIndex = 0; denomIndex <= n - 2; ++denomIndex) {
+//      double denom_term = static_cast<double>(denomIndex) * twoPi_m_over_K;
+//      denominator += zeroAlignedSpline[denomIndex + 1] * dblcomplex(cos(denom_term), sin(denom_term));
+//    }
+//    bVector[BIndex] = numerator / denominator;
+//  }
+//}
 
 void SPME::generateBVectorChunk(std::vector<dblcomplex>& bVector,
                                 const int m_initial,
@@ -1203,7 +660,8 @@ void SPME::generateChargeMap(std::vector<SPMEMapPoint>* chargeMap,
 void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
                            const std::vector<SPMEMapPoint>* gridMap,
                            ParticleSubset* pset,
-                           constParticleVariable<double>& charges)
+
+                           constParticleVariable<Point>& dipole)
 {
   // grab local Q grid
   SimpleGrid<dblcomplex>* Q_patchLocal = spmePatch->getQ();
@@ -1215,6 +673,7 @@ void SPME::mapChargeToGrid(SPMEPatch* spmePatch,
 
     const SimpleGrid<double> chargeMap = (*gridMap)[pidx].getChargeGrid();
     double charge = charges[pidx];
+    Vector dipole = dipoles[pidx];
 
     IntVector QAnchor = chargeMap.getOffset();         // Location of the 0,0,0 origin for the charge map grid
     IntVector supportExtent = chargeMap.getExtents();  // Extents of the charge map grid

@@ -56,17 +56,20 @@ NonBonded* NonBondedFactory::create(const ProblemSpecP& ps,
       throw ProblemSetupException("Must specify Non-bonded type in input file ", __FILE__, __LINE__);
     }
   }
+  double cutoffRadius = -1.0;
+  ProblemSpecP universalCutoff = ps->findBlock("MD")->findBlock("MDSystem")->get("cutoffRadius",cutoffRadius);
 
   // Check for specific non-bonded interaction request
   if (type == "LJ12_6" || type == "lj12_6") {
     ProblemSpecP lj12_6_ps = ps->findBlock("MD")->findBlock("Nonbonded");
     double r12;
     double r6;
-    double cutoffRadius;
 
     lj12_6_ps->require("r12", r12);
     lj12_6_ps->require("r6", r6);
-    lj12_6_ps->require("cutoffRadius", cutoffRadius);
+    if (!universalCutoff) {
+    	lj12_6_ps->require("cutoffRadius", cutoffRadius);
+    }
 
     nonbonded = scinew AnalyticNonBonded(system, r12, r6, cutoffRadius);
   } else {

@@ -81,6 +81,7 @@ namespace Uintah {
        */
       SPME(MDSystem* system,
            const double ewaldBeta,
+           const double cutoffRadius,
            const bool polarizable,
            const double polarizationTolerance,
            const IntVector& kLimits,
@@ -164,6 +165,18 @@ namespace Uintah {
 
     private:
 
+      /*
+       * @brief
+       * @param
+       * @return
+       */
+      void calculateRealspace(const ProcessorGroup* pg,
+                              const PatchSubset* patches,
+                              const MaterialSubset* materials,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw,
+                              SchedulerP& subscheduler,
+                              const LevelP& level);
       /**
        * @brief
        * @param
@@ -531,6 +544,7 @@ namespace Uintah {
       Matrix3 d_unitCell;           //!< Unit cell lattice parameters
       Matrix3 d_inverseUnitCell;    //!< Inverse lattice parameters
       double d_systemVolume;        //!< Volume of the unit cell
+      double d_electrostaticRadius; //!< Radius for realspace electrostatic interactions
 
       std::map<int, SPMEPatch*> d_spmePatchMap;  //!< These are the pieces of the K-space grid, map to Uintah patches
 

@@ -209,6 +209,8 @@ void MD::scheduleTimeAdvance(const LevelP& level,
 
   scheduleElectrostaticsCalculate(sched, patches, matls, level);
 
+  // Should probably move the Finalizes into the appropriate clean-up step on MD.  (Destructor?)
+  //   and appropriately modify the finalize routines.  !FIXME
   scheduleNonbondedFinalize(sched, patches, matls, level);
 
   scheduleElectrostaticsFinalize(sched, patches, matls, level);
@@ -264,7 +266,7 @@ void MD::scheduleNonbondedCalculate(SchedulerP& sched,
 
   Task* task = scinew Task("MD::nonbondedCalculate", this, &MD::nonbondedCalculate, level);
 
-  int CUTOFF_RADIUS = d_system->getRequiredGhostCells();
+  int CUTOFF_RADIUS = d_system->getNonbondedGhostCells();
 
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pNonbondedForceLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
@@ -342,7 +344,7 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   task->hasSubScheduler(true);
   task->setType(Task::OncePerProc);
 
-  int CUTOFF_RADIUS = d_system->getRequiredGhostCells();
+  int CUTOFF_RADIUS = d_system->getElectrostaticGhostCells();
 
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
   task->requires(Task::OldDW, d_lb->pChargeLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
@@ -387,6 +389,7 @@ void MD::scheduleUpdatePosition(SchedulerP& sched,
 {
   printSchedule(patches, md_cout, "MD::scheduleUpdatePosition");
 
+  // This should eventually schedule a call of the integrator.  Something like d_Integrator->advanceTimestep()
   Task* task = scinew Task("updatePosition", this, &MD::updatePosition);
 
   task->requires(Task::OldDW, d_lb->pXLabel, Ghost::None, 0);

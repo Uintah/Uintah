@@ -101,7 +101,7 @@ vector<double> ShiftedCardinalBSpline::evaluateInternal(const double X,
 
   /* Generically:
    *              x              n-x
-   *   S (x)  =  ---  S  (x) +   ---  S  (x)
+   *   S (x)  =  ---  S  (x) +   ---  S  (x-1)
    *    n        n-1   n-1       n-1   n-1
    *
    *              1

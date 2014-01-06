@@ -178,6 +178,14 @@ namespace Uintah {
         d_Q_patchLocal = q;
       }
 
+      inline ParticleVariable<Vector>* getDipoles() {
+    	return d_Dipoles_patchLocal;
+      }
+
+      inline void setDipoles(ParticleVariable<Vector>* dipoleVector) {
+    	  d_Dipoles_patchLocal = dipoleVector;
+      }
+
       inline std::vector<SPMEMapPoint>* getChargeMap(const int AtomTypeIndex)
       {
         return (&(d_chargeMapVector[AtomTypeIndex]));
@@ -202,6 +210,7 @@ namespace Uintah {
       SimpleGrid<double>* d_theta;             //!<
       SimpleGrid<Matrix3>* d_stressPrefactor;  //!<
       SimpleGrid<std::complex<double> >* d_Q_patchLocal;    //!<
+      ParticleVariable<Vector>* d_Dipoles_patchLocal;
 
       const Patch* d_patch;                    //!<
 
