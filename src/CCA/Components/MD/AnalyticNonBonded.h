@@ -42,7 +42,6 @@ namespace Uintah {
   class MDSystem;
   class ParticleSubset;
   class MDLabel;
-  class PatchMaterialKey;
 
   /**
    *  @class AnalyticNonBonded

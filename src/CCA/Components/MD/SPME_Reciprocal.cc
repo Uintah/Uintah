@@ -28,7 +28,6 @@
 #include <CCA/Components/MD/MDSystem.h>
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/SimpleGrid.h>
-#include <CCA/Components/MD/PatchMaterialKey.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Parallel/Parallel.h>
