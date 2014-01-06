@@ -6247,8 +6247,12 @@ if test $NUM_CPUS -le 2 ; then
 else
   if test $NUM_CPUS -le 8 ; then
     MAKE_PARALLELISM=2
-  else
+  elif test $NUM_CPUS -le 16 ; then
+    MAKE_PARALLELISM=4
+  elif test $NUM_CPUS -le 32 ; then
     MAKE_PARALLELISM=8
+  else
+    MAKE_PARALLELISM=16
   fi
 fi
 

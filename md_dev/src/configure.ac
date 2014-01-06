@@ -864,15 +864,18 @@ COMPILER_DIR=`dirname $CC_REALLY_IS`
 
 ## MAKE_PARALLELISM is used to tell the compiler how many cpus to use
 ## when linking.  1 is usually a good number to use per link,
-## espcially for smaller number of cpu machines.  I think 4 is
-## sufficient for even nirvana.
+## espcially for smaller number of cpu machines.
 if test $NUM_CPUS -le 2 ; then
   MAKE_PARALLELISM=1
 else
   if test $NUM_CPUS -le 8 ; then
     MAKE_PARALLELISM=2
+  elif test $NUM_CPUS -le 16 ; then
+    MAKE_PARALLELISM=4
+  elif test $NUM_CPUS -le 32 ; then
+    MAKE_PARALLELISM=8    
   else
-    MAKE_PARALLELISM=8
+    MAKE_PARALLELISM=16
   fi
 fi
 

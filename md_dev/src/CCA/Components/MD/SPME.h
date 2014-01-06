@@ -30,7 +30,6 @@
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/MD/SPMEPatch.h>
-#include <CCA/Components/MD/PatchMaterialKey.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Thread/ConditionVariable.h>
@@ -522,6 +521,7 @@ namespace Uintah {
       MDSystem* d_system;                               //!< A handle to the MD simulation system object
       MDLabel* d_lb;                                    //!< A handle on the set of MD specific labels
       double d_ewaldBeta;						                    //!< The Ewald calculation damping coefficient
+      double d_electrostaticRadius;                     //!< Radius for realspace electrostatic interactions
       bool d_polarizable;				                    	  //!< Use polarizable Ewald formulation
       double d_polarizationTolerance;                   //!< Tolerance threshold for polarizable system
       IntVector d_kLimits;                              //!< Number of grid divisions in each direction
@@ -544,7 +544,6 @@ namespace Uintah {
       Matrix3 d_unitCell;           //!< Unit cell lattice parameters
       Matrix3 d_inverseUnitCell;    //!< Inverse lattice parameters
       double d_systemVolume;        //!< Volume of the unit cell
-      double d_electrostaticRadius; //!< Radius for realspace electrostatic interactions
 
       std::map<int, SPMEPatch*> d_spmePatchMap;  //!< These are the pieces of the K-space grid, map to Uintah patches
 

@@ -28,7 +28,6 @@
 #include <CCA/Components/MD/MDSystem.h>
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/SimpleGrid.h>
-#include <CCA/Components/MD/PatchMaterialKey.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Parallel/Parallel.h>
@@ -307,14 +306,14 @@ void SPME::calculate(const ProcessorGroup* pg,
   subNewDW->transferFrom(parentOldDW, d_lb->pParticleIDLabel, perProcPatches, allMaterialsUnion);
 
   // reduction variables
-  //  sum_vartype spmeFourierEnergy;
-  //  matrix_sum spmeFourierStress;
-  //  parentOldDW->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-  //  parentOldDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
-  //  subNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-  //  subNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
-  parentNewDW->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
-  parentNewDW->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
+    sum_vartype spmeFourierEnergy;
+    matrix_sum spmeFourierStress;
+    parentOldDW->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
+    parentOldDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
+    subNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
+    subNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
+//  parentNewDW->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
+//  parentNewDW->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
 
   // compile task graph (once)
   subscheduler->initialize(3, 1);
