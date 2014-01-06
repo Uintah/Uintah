@@ -1637,7 +1637,7 @@ void SerialMPM::printParticleCount(const ProcessorGroup* pg,
   new_dw->get(pcount, lb->partCountLabel);
   
   if(pg->myrank() == 0){
-    cerr << "Created " << (long) pcount << " total particles\n";
+    std::cout << "Created " << (long) pcount << " total particles" << std::endl;
   }
     
   //__________________________________

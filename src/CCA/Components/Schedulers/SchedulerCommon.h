@@ -226,6 +226,9 @@ WARNING
     
     int getMaxLevelOffset() {return maxLevelOffset;}
 
+    typedef std::map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
+    ReductionTasksMap reductionTasks;
+
   protected:
     void finalizeTimestep();
     
