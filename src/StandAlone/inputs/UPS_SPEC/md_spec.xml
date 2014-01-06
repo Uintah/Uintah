@@ -12,13 +12,14 @@
       <orthorhombic             spec="REQUIRED BOOLEAN"/>
       <boxSize                  spec="REQUIRED VECTOR" />
       <ghostcells               spec="REQUIRED INTEGER"/>
+      <cutoffRadius             spec="OPTIONAL DOUBLE 'positive'"/>
     </MDSystem>
     
     <Nonbonded                  spec="REQUIRED NO_DATA"
                                   attribute1="type REQUIRED STRING 'none LJ12_6'">
       <r12                      spec="REQUIRED DOUBLE" />
       <r6                       spec="REQUIRED DOUBLE" />
-      <cutoffRadius             spec="REQUIRED DOUBLE" />
+      <cutoffRadius             spec="OPTIONAL DOUBLE 'positive'" />
     </Nonbonded>
     
     
@@ -30,6 +31,7 @@
       <kLimits                  spec="OPTIONAL VECTOR 'positive'"/>
       <splineOrder              spec="REQUIRED INTEGER"/>
       <maxiterations            spec="OPTIONAL INTEGER 'positive'"/>
+      <cutoffRadius             spec="OPTIONAL DOUBLE 'positive'"/>
     </Electrostatics>
     
   </MD>

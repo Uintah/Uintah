@@ -187,7 +187,14 @@ namespace Uintah {
        * @param
        * @return
        */
-      inline size_t getRequiredGhostCells() const { return d_numGhostCells; }
+      inline size_t getNonbondedGhostCells() const { return d_nonbondedGhostCells; }
+
+      /*
+       * @brief Return number of ghost cells required for electrostatic realspace calculation
+       * @param None
+       * @return size_t: Number of ghost cells required in all directions
+       */
+      inline size_t getElectrostaticGhostCells() const { return d_electrostaticGhostCells; }
 
     private:
 
@@ -210,7 +217,8 @@ namespace Uintah {
       bool d_boxChanged;                //!< Whether or not the system size has changed... create a new box
 
       IntVector d_totalCellExtent;      //!< Number of sub-cells in the global unit cell
-      size_t d_numGhostCells;           //!< Number of ghost cells tasks will request for neighbor calculations
+      size_t d_nonbondedGhostCells;     //!< Number of ghost cells for nonbonded realspace neighbor calculations
+      size_t d_electrostaticGhostCells; //!< Number of ghost cells for electrostatic realspace neighbor calculations
 
       inline size_t max(int a, int b){ return (a > b ? a : b); }
       inline double max(int a, int b, int c) { return (max(max(a,b),c)); }

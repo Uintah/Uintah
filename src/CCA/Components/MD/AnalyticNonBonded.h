@@ -168,7 +168,7 @@ namespace Uintah {
       MDLabel* d_lb;                             //!< A handle on the set of MD specific labels
       double d_r12;						                   //!< The van der Waals repulsive parameter
       double d_r6;				                       //!< The van der Waals dispersion parameter
-      double d_cutoffRadius;                     //!< The short-range cut, in Angstroms
+      double d_nonbondedRadius;                  //!< The short-range cut, in Angstroms
   };
 
 }  // End namespace Uintah

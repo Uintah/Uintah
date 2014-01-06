@@ -57,6 +57,9 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
     }
   }
 
+  double cutoffRadius = -1.0;
+  ProblemSpecP universalCutoff = ps->findBlock("MD")->findBlock("MDSystem")->get("cutoffRadius",cutoffRadius);
+
   // Check for specific electrostatics request
   if (type == "SPME" || type == "spme") {
     ProblemSpecP spme_ps = ps->findBlock("MD")->findBlock("Electrostatics");
@@ -73,8 +76,11 @@ Electrostatics* ElectrostaticsFactory::create(const ProblemSpecP& ps,
     spme_ps->require("kLimits", kLimits);
     spme_ps->require("splineOrder", splineOrder);
     spme_ps->require("maxiterations", maxPolarizableIterations);
+    if (!universalCutoff) {
+    	spme_ps->require("cutoffRadius", cutoffRadius);
+    }
 
-    electrostatics = scinew SPME(system, ewaldBeta, polarizable, polTolerance, kLimits, splineOrder, maxPolarizableIterations);
+    electrostatics = scinew SPME(system, ewaldBeta, cutoffRadius, polarizable, polTolerance, kLimits, splineOrder, maxPolarizableIterations);
 
   } else {
     throw ProblemSetupException("Unknown Electrostatics type", __FILE__, __LINE__);
