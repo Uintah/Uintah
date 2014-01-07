@@ -22,39 +22,45 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_MD_MATERIAL_H
-#define UINTAH_MD_MATERIAL_H
+#ifndef UINTAH_LUCRETIUS_MATERIAL_H
+#define UINTAH_LUCRETIUS_MATERIAL_H
 
-#include <Core/Grid/Material.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Components/MD/MDMaterial.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Geometry/Vector.h>
 
 namespace Uintah {
 
-  using namespace SCIRun;
-
-  class MDMaterial : public Material {
+  class LucretiusMaterial : public MDMaterial {
 
     public:
 
-      MDMaterial();
-      MDMaterial(ProblemSpecP&, SimulationStateP& sharedState);
+      LucretiusMaterial(ProblemSpecP&, SimulationStateP& sharedState);
 
-      virtual ~MDMaterial();
+      virtual ~LucretiusMaterial();
 
-      virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps) = 0;
+      virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
 
-      virtual void calculateForce() = 0;
-      virtual void calculateEnergy() = 0;
-      virtual double getCharge() const = 0;
+      virtual void calculateForce();
+      virtual void calculateEnergy();
+      virtual double getCharge() const;
+      virtual double getPolarizability() const;
+
 
     private:
 
+      SCIRun::Vector d_force;
+      double d_energy;
+      double d_charge;
+      double d_polarizability;
+
       // Prevent copying or assignment
-      MDMaterial(const MDMaterial &material);
-      MDMaterial& operator=(const MDMaterial &material);
+      LucretiusMaterial(const LucretiusMaterial &material);
+      LucretiusMaterial& operator=(const LucretiusMaterial &material);
 
   };
 
 }  // End namespace Uintah
 
-#endif // UINTAH_MD_MATERIAL_H
+#endif // UINTAH_LUCRETIUS_MATERIAL_H

@@ -34,6 +34,8 @@ SRCDIR	:= CCA/Components/MD
 
 SRCS += $(SRCDIR)/MD.cc                         \
         $(SRCDIR)/MDLabel.cc                    \
+        $(SRCDIR)/MDMaterial.cc                 \
+        $(SRCDIR)/LucretiusMaterial.cc          \
         $(SRCDIR)/MDSystem.cc                   \
         $(SRCDIR)/ElectrostaticsFactory.cc      \
         $(SRCDIR)/Electrostatics.cc             \
