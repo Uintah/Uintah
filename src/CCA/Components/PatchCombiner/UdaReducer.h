@@ -29,10 +29,11 @@
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Grid.h>
+#include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/SimulationStateP.h>
-
+#include <Core/Grid/SimpleMaterial.h>
 
 #include <vector>
 
@@ -67,67 +68,80 @@ WARNING
   
 ****************************************/
 
-   class UdaReducer : public SimulationInterface, public UintahParallelComponent {
-   public:
-     UdaReducer(const ProcessorGroup* myworld, std::string udaDir);
-     
-     virtual ~UdaReducer();
-     
-     virtual void problemSetup(const ProblemSpecP& params, 
-                               const ProblemSpecP& restart_prob_spec, 
-                               GridP& grid, SimulationStateP& state);
-     
-     virtual void scheduleInitialize(const LevelP& level,
-				     SchedulerP&);
+  class UdaReducer : public SimulationInterface, public UintahParallelComponent {
+  public:
+    UdaReducer(const ProcessorGroup* myworld, std::string d_udaDir);
 
-     virtual void restartInitialize() {}
-     
-     virtual void scheduleComputeStableTimestep(const LevelP&,
-						SchedulerP&) {}
-     
-     virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP&);
-     
+    virtual ~UdaReducer();
 
-     virtual bool needRecompile(double time, double dt,
-                                const GridP& grid);
-     double getMaxTime();
+    virtual void problemSetup(const ProblemSpecP& params, 
+                              const ProblemSpecP& restart_prob_spec, 
+                              GridP& grid, 
+                              SimulationStateP& state);
 
-     GridP getGrid();
-   private:
-     UdaReducer(const UdaReducer&);
-     UdaReducer& operator=(const UdaReducer&);
+    virtual void scheduleInitialize(const LevelP& level,
+                                    SchedulerP&);
 
-     void initialize(const ProcessorGroup*,
-			 const PatchSubset* patches,
-			 const MaterialSubset* matls,
-			 DataWarehouse* /*old_dw*/,
-			 DataWarehouse* new_dw);
-       
-     void computeDelT(const ProcessorGroup*,
-			 const PatchSubset* patches,
-			 const MaterialSubset* matls,
-			 DataWarehouse* /*old_dw*/,
-			 DataWarehouse* new_dw);
+    virtual void restartInitialize() {}
 
-     void readAndSetVars(const ProcessorGroup*,
-			 const PatchSubset* patches,
-			 const MaterialSubset* matls,
-			 DataWarehouse* /*old_dw*/,
-			 DataWarehouse* new_dw);
+    virtual void scheduleComputeStableTimestep(const LevelP&,
+                                               SchedulerP&) {}
 
-     std::string udaDir_;
-     DataArchive* dataArchive_;
-     std::vector<int> timesteps_;
-     std::vector<double> times_;
-     int timeIndex_;
-     std::vector<int> numMaterials_;
-     GridP oldGrid_;
-     bool gridChanged;
-     LoadBalancer* lb;
-     VarLabel* delt_label;
-     std::vector<VarLabel*> labels_;
-     SimulationStateP d_sharedState;
-   };
+    virtual void scheduleTimeAdvance( const LevelP& level, 
+                                      SchedulerP&);
+
+
+    virtual bool needRecompile(double time, 
+                               double dt,
+                               const GridP& grid);
+    double getMaxTime();
+
+    GridP getGrid();
+  //______________________________________________________________________
+  //  
+  private:
+    UdaReducer(const UdaReducer&);
+    UdaReducer& operator=(const UdaReducer&);
+
+    void initialize(const ProcessorGroup*,
+                    const PatchSubset* patches,     
+                    const MaterialSubset* matls,    
+                    DataWarehouse* /*old_dw*/,      
+                    DataWarehouse* new_dw);         
+
+    void computeDelT(const ProcessorGroup*,
+                     const PatchSubset* patches,    
+                     const MaterialSubset* matls,   
+                     DataWarehouse* /*old_dw*/,     
+                     DataWarehouse* new_dw);        
+
+   void sched_readAndSetVars(const LevelP& level,
+                             SchedulerP& sched);
+
+    void readAndSetVars(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* /*old_dw*/,
+                        DataWarehouse* new_dw);
+
+    std::string d_udaDir;
+    int d_timeIndex;
+    bool d_gridChanged;     
+
+    std::vector<int> d_timesteps;
+    std::vector<int> d_numMatls;
+    std::vector<double> d_times;
+    std::vector<VarLabel*> d_labels;
+
+    GridP d_oldGrid;
+    DataArchive* d_dataArchive;
+
+    LoadBalancer* lb;
+    VarLabel* delt_label;
+    SimulationStateP d_sharedState;
+    const MaterialSet*     d_allMatlSet;
+    const MaterialSubset*  d_allMatlSubset;
+  };
 } // End namespace Uintah
    
 

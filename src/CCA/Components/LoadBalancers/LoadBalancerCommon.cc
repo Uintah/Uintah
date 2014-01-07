@@ -126,14 +126,18 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
         // patch-less task, not execute-once, set to run on all procs
         // once per patch subset (empty or not)
         // at least one example is the multi-level (impAMRICE) pressureSolve
-        for (int i = 0; i < task->getTask()->getPatchSet()->size(); i++)
+        for(set<int>::iterator p=d_neighborProcessors.begin();p!=d_neighborProcessors.end();p++) {
+	  int i=(*p);
           if (patches == task->getTask()->getPatchSet()->getSubset(i)) {
             task->assignResource(i);
+          if( lbDebug.active() ) 
             lbDebug << d_myworld->myrank() << " OncePerProc Task " << *(task->getTask()) << " put on resource "
               << i << "\n";
           }
+	}
       } else {
-        lbDebug << d_myworld->myrank() << " Unknown-type Task " << *(task->getTask()) << " put on resource "
+        if( lbDebug.active() ) 
+          lbDebug << d_myworld->myrank() << " Unknown-type Task " << *(task->getTask()) << " put on resource "
           << 0 << "\n";
         task->assignResource(0);
       }
