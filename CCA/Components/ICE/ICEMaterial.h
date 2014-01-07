@@ -25,9 +25,6 @@
 #ifndef __ICE_MATERIAL_H__
 #define __ICE_MATERIAL_H__
 
-// Do not EVER put a #include for anything in CCA/Components in here.
-// Ask steve for a better way
-
 #include <CCA/Components/ICE/SpecificHeatModel/SpecificHeat.h>
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStress.h>
 
@@ -38,16 +35,10 @@
 
 namespace Uintah {
   using namespace SCIRun;
-  class ICELabel;
   class EquationOfState;
   class GeometryObject;
  
 /**************************************
-     
-CLASS
-   ICEMaterial
-
-   Short description...
 
 GENERAL INFORMATION
 
@@ -58,77 +49,65 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-
-   
-KEYWORDS
-   ICE
-
-DESCRIPTION
-   Long description...
-
-WARNING
-
 ****************************************/
  
- class ICEMaterial : public Material {
- public:
-   ICEMaterial(ProblemSpecP&, 
-               SimulationStateP& sharedState);
-   
-   ~ICEMaterial();
+class ICEMaterial : public Material {
+  public:
+    ICEMaterial(ProblemSpecP&, 
+                SimulationStateP& sharedState);
 
-   virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
-   
-   
-   EquationOfState* getEOS() const;
+    ~ICEMaterial();
 
-   // Get the associated specific heat model.  
-   // If there is none specified, this will return a null (0) pointer
-   SpecificHeat* getSpecificHeatModel() const;
-   
-   double getGamma() const;
-   double getViscosity() const;
-   double getSpeedOfSound() const;
-   bool   isSurroundingMatl() const;
-   bool   getIncludeFlowWork() const;
-   double getSpecificHeat() const;
-   double getThermalConductivity() const;
-   double getInitialDensity() const;
-   double getTinyRho() const;
+    virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
 
-   void initializeCells(CCVariable<double>& rhom,
-                        CCVariable<double>& rhC,
-                        CCVariable<double>& temp, 
-                        CCVariable<double>& ss,
-                        CCVariable<double>& volf,  
-                        CCVariable<Vector>& vCC,
-                        CCVariable<double>& press,
-                        int numMatls,
-                        const Patch* patch, 
-                        DataWarehouse* new_dw);
-   
- private:
-   EquationOfState *d_eos;
-   SpecificHeat    *d_cvModel;   // Specific heat model
 
-   double d_viscosity;
-   double d_gamma;
-   bool d_isSurroundingMatl; // defines which matl is the background matl.
-   bool d_includeFlowWork;
-   double d_specificHeat;
-   double d_thermalConductivity;
-   double d_tiny_rho;
+    EquationOfState* getEOS() const;
 
-   std::vector<GeometryObject*> d_geom_objs;
+    // Get the associated specific heat model.  
+    // If there is none specified, this will return a null (0) pointer
+    SpecificHeat* getSpecificHeatModel() const;
 
-   ICELabel* lb;
-   
-   // Prevent copying of this class
-   // copy constructor
-   ICEMaterial(const ICEMaterial &icem);
-   ICEMaterial& operator=(const ICEMaterial &icem);        
-   
- };
+    double getGamma() const;
+    double getViscosity() const;
+    double getSpeedOfSound() const;
+    bool   isSurroundingMatl() const;
+    bool   getIncludeFlowWork() const;
+    double getSpecificHeat() const;
+    double getThermalConductivity() const;
+    double getInitialDensity() const;
+    double getTinyRho() const;
+
+    void initializeCells(CCVariable<double>& rhom,
+                         CCVariable<double>& rhC,
+                         CCVariable<double>& temp, 
+                         CCVariable<double>& ss,
+                         CCVariable<double>& volf,  
+                         CCVariable<Vector>& vCC,
+                         CCVariable<double>& press,
+                         int numMatls,
+                         const Patch* patch, 
+                         DataWarehouse* new_dw);
+
+  private:
+    EquationOfState *d_eos;
+    SpecificHeat    *d_cvModel;   // Specific heat model
+
+    double d_viscosity;
+    double d_gamma;
+    bool d_isSurroundingMatl; // defines which matl is the background matl.
+    bool d_includeFlowWork;
+    double d_specificHeat;
+    double d_thermalConductivity;
+    double d_tiny_rho;
+
+    std::vector<GeometryObject*> d_geom_objs;
+
+    // Prevent copying of this class
+    // copy constructor
+    ICEMaterial(const ICEMaterial &icem);
+    ICEMaterial& operator=(const ICEMaterial &icem);        
+
+};
 } // End namespace Uintah
 
 #endif // __ICE_MATERIAL_H__
