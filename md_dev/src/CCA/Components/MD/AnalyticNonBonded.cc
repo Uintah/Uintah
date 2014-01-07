@@ -50,6 +50,7 @@ extern SCIRun::Mutex cerrLock;
 extern SCIRun::Mutex coutLock;
 
 static DebugStream analytic_dbg("AnalyticNonbondedDbg", false);
+static DebugStream analytic_cout("AnalyticNonbondedCout", false);
 
 AnalyticNonBonded::AnalyticNonBonded()
 {
@@ -73,9 +74,9 @@ AnalyticNonBonded::AnalyticNonBonded(MDSystem* system,
 //-----------------------------------------------------------------------------
 // Interface implementations
 void AnalyticNonBonded::initialize(const ProcessorGroup* pg,
-                                   const PatchSubset* patches,
+                                   const PatchSubset* perProcPatches,
                                    const MaterialSubset* materials,
-                                   DataWarehouse* old_dw,
+                                   DataWarehouse* /* old_dw */,
                                    DataWarehouse* new_dw)
 {
   // global sum reduction of "vdwEnergy" - van der Waals potential energy
@@ -164,7 +165,10 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
             atomicDistanceVector = px_local[i] - px_neighbors[j];
 
             // this is required for periodic boundary conditions
-            atomicDistanceVector -= (atomicDistanceVector / box).vec_rint() * box;
+            SCIRun::Vector reduced = atomicDistanceVector / box;
+            atomicDistanceVector[0] -= rint(reduced[0]) * box[0];
+            atomicDistanceVector[1] -= rint(reduced[1]) * box[1];
+            atomicDistanceVector[2] -= rint(reduced[1]) * box[2];
 
             r2 = atomicDistanceVector.length2();
 
@@ -216,14 +220,16 @@ void AnalyticNonBonded::calculate(const ProcessorGroup* pg,
 
     }  // end materials loop
 
-    coutLock.lock();
-    std::cout.setf(std::ios_base::left);
-    std::cout << std::setw(30) << Thread::self()->getThreadName();
-    std::cout << "Uintah thread ID: " << Thread::self()->myid()
-              << "  Thread group: " << Thread::self()->getThreadGroup()
-              << "  Patch: " << patch->getID()
-              << "  VDW-Energy: " << vdwEnergy << std::endl;
-    coutLock.unlock();
+    if (analytic_dbg.active()) {
+      coutLock.lock();
+      std::cout.setf(std::ios_base::left);
+      std::cout << std::setw(30) << Thread::self()->getThreadName();
+      std::cout << "Uintah thread ID: " << Thread::self()->myid()
+                << "  Thread group: " << Thread::self()->getThreadGroup()
+                << "  Patch: " << patch->getID()
+                << "  VDW-Energy: " << vdwEnergy << std::endl;
+      coutLock.unlock();
+    }
 
   }  // end patch loop
 
@@ -251,8 +257,8 @@ void AnalyticNonBonded::generateNeighborList(ParticleSubset* local_pset,
   unsigned int neighborAtoms = neighbor_pset->numParticles();
 
   double r2;
-  Vector box = d_system->getBox();
-  Vector reducedCoordinates;
+  SCIRun::Vector box = d_system->getBox();
+  SCIRun::Vector reducedCoordinates;
   double cut_sq = d_nonbondedRadius * d_nonbondedRadius;
 
   for (size_t i = 0; i < localAtoms; ++i) {
@@ -262,7 +268,10 @@ void AnalyticNonBonded::generateNeighborList(ParticleSubset* local_pset,
         reducedCoordinates = px_local[i] - px_neighbors[j];
 
         // this is required for periodic boundary conditions
-        reducedCoordinates -= (reducedCoordinates / box).vec_rint() * box;
+        SCIRun::Vector reduced = reducedCoordinates / box;
+        reducedCoordinates[0] -= rint(reduced[0]) * box[0];
+        reducedCoordinates[1] -= rint(reduced[1]) * box[1];
+        reducedCoordinates[2] -= rint(reduced[1]) * box[2];
 
         // eliminate atoms outside of cutoff radius, add those within as neighbors
         if ((fabs(reducedCoordinates[0]) < d_nonbondedRadius) && (fabs(reducedCoordinates[1]) < d_nonbondedRadius)

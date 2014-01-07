@@ -121,9 +121,9 @@ SPME::~SPME()
 //-----------------------------------------------------------------------------
 // Interface implementations
 void SPME::initialize(const ProcessorGroup* pg,
-                      const PatchSubset* patches,
+                      const PatchSubset* perProcPatches,
                       const MaterialSubset* materials,
-                      DataWarehouse* old_dw,
+                      DataWarehouse* /* old_dw */,
                       DataWarehouse* new_dw)
 {
   // We call SPME::initialize from MD::initialize, or if we've somehow maintained our object across a system change
@@ -183,10 +183,10 @@ void SPME::initialize(const ProcessorGroup* pg,
   IntVector plusGhostExtents(splineSupport, splineSupport, splineSupport);
   IntVector minusGhostExtents(0,0,0);
 
-  size_t numPatches = patches->size();
+  size_t numPatches = perProcPatches->size();
   for(size_t p = 0; p < numPatches; ++p) {
 
-    const Patch* patch = patches->get(p);
+    const Patch* patch = perProcPatches->get(p);
     Vector patchLowIndex  = (patch->getCellLowIndex()).asVector();
     Vector patchHighIndex = (patch->getCellHighIndex()).asVector();
     Vector localCellExtent = patchHighIndex - patchLowIndex;
@@ -306,14 +306,14 @@ void SPME::calculate(const ProcessorGroup* pg,
   subNewDW->transferFrom(parentOldDW, d_lb->pParticleIDLabel, perProcPatches, allMaterialsUnion);
 
   // reduction variables
-    sum_vartype spmeFourierEnergy;
-    matrix_sum spmeFourierStress;
-    parentOldDW->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-    parentOldDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
-    subNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-    subNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
-//  parentNewDW->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
-//  parentNewDW->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
+//    sum_vartype spmeFourierEnergy;
+//    matrix_sum spmeFourierStress;
+//    parentOldDW->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
+//    parentOldDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
+//    subNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
+//    subNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
+  parentNewDW->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
+  parentNewDW->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
 
   // compile task graph (once)
   subscheduler->initialize(3, 1);
@@ -689,6 +689,8 @@ void SPME::calculatePreTransform(const ProcessorGroup* pg,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
 {
+  printTask(patches, spme_cout, "SPME::calculatePreTransform");
+
   size_t numPatches = patches->size();
   size_t numLocalAtomTypes = materials->size();  // Right now we're storing atoms as a material
 
@@ -750,8 +752,9 @@ void SPME::reduceNodeLocalQ(const ProcessorGroup* pg,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw)
 {
-  size_t numPatches = patches->size();
+  printTask(patches, spme_cout, "SPME::reduceNodeLocalQ");
 
+  size_t numPatches = patches->size();
   for (size_t p = 0; p < numPatches; ++p) {
 
     const Patch* patch = patches->get(p);
@@ -809,6 +812,8 @@ void SPME::transformRealToFourier(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
+  printTask(patches, spme_cout, "SPME::transformRealToFourier");
+
   // Do the homebrew MPI_Allreduce on our local Q-grid before we do the forward FFT
   int totalElements = d_kLimits(0) * d_kLimits(1) * d_kLimits(2);
   dblcomplex* sendbuf = d_Q_nodeLocal->getDataPtr();
@@ -833,6 +838,8 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
+  printTask(patches, spme_cout, "SPME::calculateInFourierSpace");
+
   double spmeFourierEnergy = 0.0;
   Matrix3 spmeFourierStress(0.0);
 
@@ -885,14 +892,16 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
       }
     }
 //    }  // end AtomType loop
-    coutLock.lock();
-    std::cout.setf(std::ios_base::left);
-    std::cout << std::setw(30) << Thread::self()->getThreadName();
-    std::cout << "Uintah thread ID: " << std::setw(4) << Thread::self()->myid()
-              << "Thread group: " <<  std::setw(10) <<Thread::self()->getThreadGroup()
-              << "Patch: " <<  std::setw(4) <<patch->getID()
-              << "Fourier-Energy: " << spmeFourierEnergy << std::endl;
-    coutLock.unlock();
+    if (spme_dbg.active()) {
+      coutLock.lock();
+      std::cout.setf(std::ios_base::left);
+      std::cout << std::setw(30) << Thread::self()->getThreadName();
+      std::cout << "Uintah thread ID: " << std::setw(4) << Thread::self()->myid()
+                << "Thread group: " <<  std::setw(10) <<Thread::self()->getThreadGroup()
+                << "Patch: " <<  std::setw(4) <<patch->getID()
+                << "Fourier-Energy: " << spmeFourierEnergy << std::endl;
+      coutLock.unlock();
+    }
   }  // end SPME Patch loop
 
   // put updated values for reduction variables into the DW
@@ -907,6 +916,8 @@ void SPME::transformFourierToReal(const ProcessorGroup* pg,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
+  printTask(patches, spme_cout, "SPME::transformFourierToReal");
+
   // Do the homebrew MPI_Allreduce on our local Q-scratch-grid before we do the reverse FFT
   int totalElements = d_kLimits(0) * d_kLimits(1) * d_kLimits(2);
   dblcomplex* sendbuf = d_Q_nodeLocalScratch->getDataPtr();
@@ -1437,8 +1448,9 @@ void SPME::distributeNodeLocalQ(const ProcessorGroup* pg,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
-  size_t numPatches = patches->size();
+  printTask(patches, spme_cout, "SPME::distributeNodeLocalQ");
 
+  size_t numPatches = patches->size();
   for (size_t p = 0; p < numPatches; ++p) {
     const Patch* patch = patches->get(p);
 

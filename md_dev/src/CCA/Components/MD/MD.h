@@ -121,7 +121,7 @@ namespace Uintah {
        * @return
        */
       void scheduleNonbondedInitialize(SchedulerP& sched,
-                                       const PatchSet* perprocPatches,
+                                       const PatchSet* perProcPatches,
                                        const MaterialSet* matls,
                                        const LevelP& level);
 
@@ -143,7 +143,7 @@ namespace Uintah {
       void scheduleNonbondedCalculate(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls,
-                                      const LevelP level);
+                                      const LevelP& level);
 
       /**
        * @brief
@@ -161,7 +161,7 @@ namespace Uintah {
        * @return
        */
       void scheduleElectrostaticsInitialize(SchedulerP& sched,
-                                            const PatchSet* perprocPatches,
+                                            const PatchSet* perProcPatches,
                                             const MaterialSet* matls,
                                             const LevelP& level);
 
@@ -181,7 +181,7 @@ namespace Uintah {
        * @return
        */
       void scheduleElectrostaticsCalculate(SchedulerP& sched,
-                                           const PatchSet* patches,
+                                           const PatchSet* perProcPatches,
                                            const MaterialSet* matls,
                                            const LevelP& level);
 
