@@ -215,6 +215,7 @@ public:
   void setRegridTimestep(bool ans) { d_isRegridTimestep = ans; }
 
   bool isLockstepAMR() { return d_lockstepAMR; }
+  void setIsLockstepAMR(bool ans) {d_lockstepAMR = ans;}
   
   bool updateOutputInterval() { return d_updateOutputInterval; }
   void updateOutputInterval(bool ans) { d_updateOutputInterval = ans; }
