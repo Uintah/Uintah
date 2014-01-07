@@ -89,9 +89,9 @@ namespace Uintah {
        * @return
        */
       void initialize(const ProcessorGroup* pg,
-                      const PatchSubset* patches,
+                      const PatchSubset* perProcPatches,
                       const MaterialSubset* materials,
-                      DataWarehouse* old_dw,
+                      DataWarehouse* /* old_dw */,
                       DataWarehouse* new_dw);
 
       /**
