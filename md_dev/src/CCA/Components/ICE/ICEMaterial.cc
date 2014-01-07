@@ -36,7 +36,6 @@
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 
-#include <Core/Labels/ICELabel.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -50,7 +49,6 @@ using namespace Uintah;
 ICEMaterial::ICEMaterial(ProblemSpecP& ps,
                          SimulationStateP& sharedState): Material(ps)
 {
-  
   //__________________________________
   //  Create the different Models for this material
   d_eos = EquationOfStateFactory::create(ps);
@@ -89,42 +87,37 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps,
   geom_obj_data.push_back(GeometryObject::DataItem("temperature",GeometryObject::Double));
   geom_obj_data.push_back(GeometryObject::DataItem("pressure",   GeometryObject::Double));
   geom_obj_data.push_back(GeometryObject::DataItem("density",    GeometryObject::Double)); 
-   try{
-       geom_obj_data.push_back(GeometryObject::DataItem("volumeFraction",    GeometryObject::Double));
-       }
-   catch(...)
-   {
-
+  try{
+    geom_obj_data.push_back(GeometryObject::DataItem("volumeFraction", GeometryObject::Double));
    }
+   catch(...)
+   {}
   geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
 
-  for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
-       geom_obj_ps != 0;
+  for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");geom_obj_ps != 0;
        geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-     vector<GeometryPieceP> pieces;
-     GeometryPieceFactory::create(geom_obj_ps, pieces);
+    vector<GeometryPieceP> pieces;
+    GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-     GeometryPieceP mainpiece;
-     if(pieces.size() == 0){
-        throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-     } else if(pieces.size() > 1){
-        mainpiece = scinew UnionGeometryPiece(pieces);
-     } else {
-        mainpiece = pieces[0];
-     }
+    GeometryPieceP mainpiece;
+    if(pieces.size() == 0){
+      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+    } else if(pieces.size() > 1){
+      mainpiece = scinew UnionGeometryPiece(pieces);
+    } else {
+      mainpiece = pieces[0];
+    }
 
-     piece_num++;
-     d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
+    piece_num++;
+    d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
   }
-  lb = scinew ICELabel();
 }
 //__________________________________
 // Destructor
 ICEMaterial::~ICEMaterial()
 {
   delete d_eos;
-  delete lb;
   
   if( d_cvModel ){
     delete d_cvModel;
