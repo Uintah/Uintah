@@ -696,10 +696,9 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( matl );
-      particleIndex numParticles = mpm_matl->countParticles(patch);
-      totalParticles+=numParticles;
-      mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
+      particleIndex numParticles = mpm_matl->createParticles(cellNAPID, patch, new_dw);
 
+      totalParticles+=numParticles;
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                          mpm_matl, new_dw);
       if(!flags->d_doGridReset){

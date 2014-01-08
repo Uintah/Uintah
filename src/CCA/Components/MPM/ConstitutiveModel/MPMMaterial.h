@@ -106,10 +106,8 @@ WARNING
    // Return correct constitutive model pointer for this material
    ConstitutiveModel* getConstitutiveModel() const;
 
-   // Return correct burn model pointer for this material
-   particleIndex countParticles(const Patch* patch);
 
-   void createParticles(particleIndex numParticles,
+   particleIndex createParticles(
                         CCVariable<short int>& cellNAPID,
                         const Patch*,
                         DataWarehouse* new_dw);
