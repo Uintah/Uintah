@@ -51,7 +51,8 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/PoissonExpression.h>
 #include <CCA/Components/Wasatch/Expressions/Coordinate.h>
-
+#include <CCA/Components/Wasatch/TagNames.h>
+#include <CCA/Components/Wasatch/Expressions/RadiationSource.h>
 #include <CCA/Components/Wasatch/ReductionHelper.h>
 #include <CCA/Components/Wasatch/CoordinateHelper.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
@@ -477,6 +478,11 @@ namespace Wasatch{
       pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
       pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
       pexpr.schedule_set_pressure_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );            
+    }
+    
+    if (tree->computes_field(TagNames::self().radiationsource)) {
+      RadiationSource& radExpr = dynamic_cast<RadiationSource&>( factory.retrieve_expression(TagNames::self().radiationsource,patchID,true) );
+      radExpr.schedule_ray_tracing( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
     }
 
     Expr::Tag ptag;

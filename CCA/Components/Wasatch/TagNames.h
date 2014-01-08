@@ -60,9 +60,13 @@ namespace Wasatch{
     xyvolcoord,  yyvolcoord,  zyvolcoord,
     xzvolcoord,  yzvolcoord,  zzvolcoord;
     
+    const Expr::Tag celltype;
+    
     // energy related variables
     const Expr::Tag
     temperature,
+    absorption,
+    radiationsource, radvolq, radvrflux,
     e0, rhoE0,
     enthalpy,
     xHeatFlux, yHeatFlux, zHeatFlux,

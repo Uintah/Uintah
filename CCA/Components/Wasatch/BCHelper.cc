@@ -730,6 +730,10 @@ namespace Wasatch {
                       // do nothing here... this is added for WARCHES support
                       break;
                     }
+                    case Uintah::BoundCondBase::INT_TYPE: {
+                      // do nothing here... this is added for RMCRT support
+                      break;
+                    }                      
                     default:
                     {
                       std::ostringstream msg;
@@ -957,7 +961,7 @@ namespace Wasatch {
   //------------------------------------------------------------------------------------------------
   
   void BCHelper::apply_pressure_bc( SVolField& pressureField,
-                                   const Uintah::Patch* patch )
+                                    const Uintah::Patch* patch )
   {
     typedef std::vector<SpatialOps::structured::IntVec> MaskT;
     

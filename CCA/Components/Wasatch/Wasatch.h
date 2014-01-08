@@ -110,6 +110,7 @@
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Ports/SolverInterface.h>
+#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 
 //-- Wasatch includes --//
 #include "PatchInfo.h"
@@ -121,7 +122,12 @@
 
 namespace Expr{ class ExpressionID; }
 
-namespace Uintah{ class Task; }
+namespace Uintah{
+  class Task;
+  class Ray;
+}
+
+  class CellType;
 
 namespace Wasatch{
   void force_expressions_on_graph( Expr::TagList& exprTagList,
@@ -270,6 +276,8 @@ namespace Wasatch{
 
     BCFunctorMap bcFunctorMap_;
     BCHelperMapT bcHelperMap_;
+    
+    CellType* cellType_;
 
     /**
      *  a container of information for constructing ExprLib graphs.

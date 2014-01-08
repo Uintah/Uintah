@@ -308,7 +308,7 @@ DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainTy
   if (count == 1) {
     typename varDBtype::iterator iter = vars.find(v);
     if (!replace && iter->second.var) 
-      SCI_THROW(InternalError("Put replacing old vars", __FILE__, __LINE__));
+      SCI_THROW(InternalError("A datawarehouse put is attempting to replace the old variable: " + label->getName(), __FILE__, __LINE__));
     else {
       ASSERT(iter->second.var != var);
       if (iter->second.var)

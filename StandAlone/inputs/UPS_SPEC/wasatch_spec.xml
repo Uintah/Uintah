@@ -974,7 +974,16 @@
       </ExtractDensity>
       
     </TabProps>
-
+    
+    <RMCRTBench      spec="OPTIONAL NO_DATA">
+    	<Temperature spec="REQUIRED NO_DATA">
+    		<NameTag spec="REQUIRED"/>
+      </Temperature>
+    	<AbsCoef spec="REQUIRED NO_DATA">
+    		<NameTag spec="REQUIRED"/>
+      </AbsCoef>    
+    </RMCRTBench>
+    
     <!-- Radiative property calculation specification -->
     <RadProps         spec="OPTIONAL NO_DATA">
         
