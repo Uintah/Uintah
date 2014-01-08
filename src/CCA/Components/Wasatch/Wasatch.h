@@ -269,6 +269,7 @@ namespace Wasatch{
     bool isRestarting_;
     int nRKStages_;
     bool isPeriodic_;
+    bool doRadiation_;
     std::set<std::string> lockedFields_;   ///< prevent the ExpressionTree from reclaiming memory on these fields.
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;
