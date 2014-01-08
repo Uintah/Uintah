@@ -673,13 +673,13 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
        int dw = dep->mapDataWarehouse();
        if (dep->var->allowsMultipleComputes() ) { 
          if (dbg.active())
-           dbg << d_myworld->myrank() << " Skipping Reduction task for variable: " 
+           dbg << d_myworld->myrank() << " Skipping Reduction task for multi compute variable: " 
              << dep->var->getName() << " on level " << levelidx 
              << ", DW " << dw << '\n';
           continue;
-        } 
-        if (dbg.active())
-          dbg << d_myworld->myrank() << "Creating Reduction task for variable: " 
+        }
+       if (dbg.active())
+          dbg << d_myworld->myrank() << " Creating Reduction task for variable: " 
             << dep->var->getName() << " on level " << levelidx 
             << ", DW " << dw << '\n';
         ostringstream taskname;
@@ -692,7 +692,7 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
         dwmap[Task::OldDW] = Task::NoDW;
         dwmap[Task::NewDW] = dw;
         newtask->setMapping(dwmap);
-	if (dep->matls != 0) {
+	      if (dep->matls != 0) {
           newtask->modifies(dep->var, dep->reductionLevel, dep->matls, Task::OutOfDomain);
         }
         else {
@@ -700,8 +700,10 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
             newtask->modifies(dep->var, dep->reductionLevel, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
           }
         }
-	graphs[graphs.size()-1]->addTask(newtask, 0, 0);
+        graphs[graphs.size()-1]->addTask(newtask, 0, 0);
+        VarLabelMatl<Level> key(dep->var, dw, dep->reductionLevel);
         numTasks_++;
+        reductionTasks[key]=newtask;
      }
   }
 }
@@ -747,7 +749,10 @@ SchedulerCommon::initialize(int numOldDW /* =1 */, int numNewDW /* =1 */)
   d_initRequiredVars.clear();
   d_computedVars.clear();
   numTasks_ = 0;
+  maxGhost=0;
+  maxLevelOffset=0;
 
+  reductionTasks.clear();
   addTaskGraph(NormalTaskGraph);
 
 }
