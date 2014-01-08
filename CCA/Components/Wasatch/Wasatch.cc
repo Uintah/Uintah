@@ -95,7 +95,8 @@ namespace Wasatch{
       buildTimeIntegrator_ ( true ),
       buildWasatchMaterial_( true ),
       nRKStages_(1),
-      isPeriodic_( true )
+      isPeriodic_( true ),
+      doRadiation_(false)
   {
     proc0cout << std::endl
               << "-------------------------------------------------------------" << std::endl
@@ -679,6 +680,7 @@ namespace Wasatch{
     
     // radiation
     if ( params->findBlock("RMCRT") ) {
+      doRadiation_ = true;
       Uintah::ProblemSpecP radSpec = params->findBlock("RMCRT");
       Uintah::ProblemSpecP radPropsSpec=wasatchSpec_->findBlock("RadProps");
       Uintah::ProblemSpecP RMCRTBenchSpec=wasatchSpec_->findBlock("RMCRTBench");
@@ -812,7 +814,7 @@ namespace Wasatch{
     }
     
     // Compute the cell type only when radiation is present. This may change in the future.
-    if (get_wasatch_spec()->findBlock("RMCRT"))
+    if (doRadiation_)
       cellType_->schedule_compute_celltype(allPatches,materials_,sched);
     
     proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
@@ -952,8 +954,8 @@ namespace Wasatch{
       OldVariable::self().setup_tasks( allPatches, materials_, sched, iStage );
 
       // Compute the cell type only when radiation is present. This may change in the future.
-      if (get_wasatch_spec()->findBlock("RMCRT"))
-          cellType_->schedule_carry_forward(allPatches,materials_,sched);
+      if(doRadiation_)
+        cellType_->schedule_carry_forward(allPatches,materials_,sched);
 
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT

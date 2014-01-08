@@ -200,7 +200,7 @@
         <lower>[-5,-1,-1]</lower>
         <upper>[5,1,1]</upper>
         <resolution>[40,40,40]</resolution>
-        <patches>[1,1,1]</patches>
+        <patches>[2,2,2]</patches>
       </Box>
       <periodic>[0,0,0]</periodic>
     </Level>
