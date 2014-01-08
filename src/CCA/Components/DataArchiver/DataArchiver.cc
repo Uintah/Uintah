@@ -154,13 +154,13 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
    // get output timestep or time interval info
    d_outputInterval = 0;
-   if(!p->get("outputTimestepInterval", d_outputTimestepInterval))
+   if (!p->get("outputTimestepInterval", d_outputTimestepInterval))
      d_outputTimestepInterval = 0;
-   if(!p->get("outputInterval", d_outputInterval)
-      && d_outputTimestepInterval == 0)
+     
+   if ( !p->get("outputInterval", d_outputInterval) && d_outputTimestepInterval == 0 )
      d_outputInterval = 0.0; // default
 
-   if (d_outputInterval != 0.0 && d_outputTimestepInterval != 0)
+   if ( d_outputInterval != 0.0 && d_outputTimestepInterval != 0 )
      throw ProblemSetupException("Use <outputInterval> or <outputTimestepInterval>, not both",
                                  __FILE__, __LINE__);
    
@@ -178,9 +178,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
    ProblemSpecP save = p->findBlock("save");
 
    if( save == 0 ) {
-     if( Uintah::Parallel::getMPIRank() == 0 ) {
-       cout << "\nWARNING: No data will be saved as none was specified to be saved in the .ups file!\n\n";
-     }
+     proc0cout << "\nWARNING: No data will be saved as none was specified to be saved in the .ups file!\n\n";
    }
 
    while( save != 0 ) {
@@ -243,12 +241,12 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
    }     
    
    // get checkpoint information
-   d_checkpointInterval = 0.0;
+   d_checkpointInterval         = 0.0;
    d_checkpointTimestepInterval = 0;
-   d_checkpointWalltimeStart = 0;
+   d_checkpointWalltimeStart    = 0;
    d_checkpointWalltimeInterval = 0;
-   d_checkpointCycle = 2; /* 2 is the smallest number that is safe
-                             (always keeping an older copy for backup) */
+   d_checkpointCycle            = 2; /* 2 is the smallest number that is safe
+                                     (always keeping an older copy for backup) */
                           
    ProblemSpecP checkpoint = p->findBlock("checkpoint");
    if( checkpoint != 0 ) {
@@ -311,9 +309,9 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
    // set up the next output and checkpoint time
    d_nextOutputTime=0.0;
-   d_nextOutputTimestep = d_outputInitTimestep?0:1;
-   d_nextCheckpointTime=d_checkpointInterval; 
-   d_nextCheckpointTimestep=d_checkpointTimestepInterval+1;
+   d_nextOutputTimestep    = d_outputInitTimestep?0:1;
+   d_nextCheckpointTime    = d_checkpointInterval; 
+   d_nextCheckpointTimestep= d_checkpointTimestepInterval+1;
    
    if (d_checkpointWalltimeInterval > 0) {
      d_nextCheckpointWalltime=d_checkpointWalltimeStart + 
@@ -968,10 +966,10 @@ DataArchiver::finalizeTimestep(double time, double delt,
     
     for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
       SaveItem& saveItem = d_saveReductionLabels[i];
-      const VarLabel* var = saveItem.label_;
+      const VarLabel* var = saveItem.label;
 
       map<int, MaterialSetP>::iterator liter;
-      for (liter = saveItem.matlSet_.begin(); liter != saveItem.matlSet_.end(); liter++) {
+      for (liter = saveItem.matlSet.begin(); liter != saveItem.matlSet.end(); liter++) {
         const MaterialSubset* matls = saveItem.getMaterialSet(liter->first)->getUnion();
         t->requires(Task::NewDW, var, matls, true);
         break; // this might break things later, but we'll leave it for now
@@ -992,9 +990,9 @@ DataArchiver::finalizeTimestep(double time, double delt,
     
     for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
       SaveItem& saveItem = d_checkpointReductionLabels[i];
-      const VarLabel* var = saveItem.label_;
+      const VarLabel* var = saveItem.label;
       map<int, MaterialSetP>::iterator liter;
-      for (liter = saveItem.matlSet_.begin(); liter != saveItem.matlSet_.end(); liter++) {
+      for (liter = saveItem.matlSet.begin(); liter != saveItem.matlSet.end(); liter++) {
         const MaterialSubset* matls = saveItem.getMaterialSet(liter->first)->getUnion();
         t->requires(Task::NewDW, var, matls, true);
         break;
@@ -1283,7 +1281,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
           vs = indexDoc->appendChild(variableSection.c_str());
         }
         for (unsigned k = 0; k < savelist[j]->size(); k++) {
-          const VarLabel* var = (*savelist[j])[k].label_;
+          const VarLabel* var = (*savelist[j])[k].label;
           bool found=false;
           for(ProblemSpecP n = vs->getFirstChild(); n != 0; n=n->getNextSibling()){
             if(n->getNodeName() == "variable") {
@@ -1527,17 +1525,19 @@ DataArchiver::scheduleOutputTimestep(vector<DataArchiver::SaveItem>& saveLabels,
       // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
       map<int, MaterialSetP>::iterator iter;
 
-      iter = saveIter->matlSet_.find(level->getIndex());
-      if (iter == saveIter->matlSet_.end())
-        iter = saveIter->matlSet_.find(level->getIndex() - level->getGrid()->numLevels());
-      if (iter == saveIter->matlSet_.end())
-        iter = saveIter->matlSet_.find(ALL_LEVELS);
-      if (iter != saveIter->matlSet_.end()) {
+      iter = saveIter->matlSet.find(level->getIndex());
+      if (iter == saveIter->matlSet.end())
+        iter = saveIter->matlSet.find(level->getIndex() - level->getGrid()->numLevels());
+      
+      if (iter == saveIter->matlSet.end())
+        iter = saveIter->matlSet.find(ALL_LEVELS);
+        
+      if (iter != saveIter->matlSet.end()) {
         
         const MaterialSubset* matls = iter->second.get_rep()->getUnion();
 
         // out of domain really is only there to handle the "all-in-one material", but doesn't break anything else
-        t->requires(Task::NewDW, (*saveIter).label_, matls, Task::OutOfDomain, Ghost::None, 0, true);
+        t->requires(Task::NewDW, (*saveIter).label, matls, Task::OutOfDomain, Ghost::None, 0, true);
         n++;
       }
     }
@@ -1580,7 +1580,7 @@ DataArchiver::indexAddGlobals()
     for (vector<SaveItem>::iterator iter = d_saveReductionLabels.begin();
          iter != d_saveReductionLabels.end(); iter++) {
       SaveItem& saveItem = *iter;
-      const VarLabel* var = saveItem.label_;
+      const VarLabel* var = saveItem.label;
       // FIX - multi-level query
       const MaterialSubset* matls = saveItem.getMaterialSet(ALL_LEVELS)->getUnion();
       for (int m = 0; m < matls->size(); m++) {
@@ -1621,7 +1621,7 @@ DataArchiver::outputReduction(const ProcessorGroup*,
 
   for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
     SaveItem& saveItem = d_saveReductionLabels[i];
-    const VarLabel* var = saveItem.label_;
+    const VarLabel* var = saveItem.label;
     // FIX, see above
     const MaterialSubset* matls = saveItem.getMaterialSet(ALL_LEVELS)->getUnion();
     for (int m = 0; m < matls->size(); m++) {
@@ -1811,26 +1811,26 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
     // loop over variables
     vector<SaveItem>::iterator saveIter;
     for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
-      const VarLabel* var = saveIter->label_;
+      const VarLabel* var = saveIter->label;
       // check to see if we need to save on this level
       // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
       // find the materials to output on that level
-      map<int, MaterialSetP>::iterator iter = saveIter->matlSet_.end();
+      map<int, MaterialSetP>::iterator iter = saveIter->matlSet.end();
       const MaterialSubset* var_matls = 0;
 
       if (level) {
-        iter = saveIter->matlSet_.find(level->getIndex());
-        if (iter == saveIter->matlSet_.end())
-          iter = saveIter->matlSet_.find(level->getIndex() - level->getGrid()->numLevels());
-        if (iter == saveIter->matlSet_.end())
-          iter = saveIter->matlSet_.find(ALL_LEVELS);
-        if (iter != saveIter->matlSet_.end()) {
+        iter = saveIter->matlSet.find(level->getIndex());
+        if (iter == saveIter->matlSet.end())
+          iter = saveIter->matlSet.find(level->getIndex() - level->getGrid()->numLevels());
+        if (iter == saveIter->matlSet.end())
+          iter = saveIter->matlSet.find(ALL_LEVELS);
+        if (iter != saveIter->matlSet.end()) {
           var_matls = iter->second.get_rep()->getUnion();
         }
       }
       else { // checkpoint reductions
         map<int, MaterialSetP>::iterator liter;
-        for (liter = saveIter->matlSet_.begin(); liter != saveIter->matlSet_.end(); liter++) {
+        for (liter = saveIter->matlSet.begin(); liter != saveIter->matlSet.end(); liter++) {
           var_matls = saveIter->getMaterialSet(liter->first)->getUnion();
           break;
         }
@@ -2051,6 +2051,9 @@ DataArchiver::makeVersionedDir()
    
 } // end makeVersionedDir()
 
+
+//______________________________________________________________________
+//
 void
 DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
 {
@@ -2066,6 +2069,7 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
   d_saveLabels.reserve(d_saveLabelNames.size());
   Scheduler::VarLabelMaterialMap* pLabelMatlMap;
   pLabelMatlMap = sched->makeVarLabelMaterialMap();
+  
   for (list<SaveNameItem>::iterator it = d_saveLabelNames.begin();
        it != d_saveLabelNames.end(); it++) {
 
@@ -2075,35 +2079,35 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
     //   to be computed.  Then save it to saveItems.
     VarLabel* var = VarLabel::find((*it).labelName);
     if (var == NULL) {
-      if (initTimestep)
+      if (initTimestep){
         continue;
-      else
-        throw ProblemSetupException((*it).labelName +
-                                    " variable not found to save.", __FILE__, __LINE__);
+      }else{
+        throw ProblemSetupException((*it).labelName +" variable not found to save.", __FILE__, __LINE__);
+      }
     }
-    if ((*it).compressionMode != "")
+    
+    if ((*it).compressionMode != ""){
       var->setCompressionMode((*it).compressionMode);
+    }
       
-    Scheduler::VarLabelMaterialMap::iterator found =
-      pLabelMatlMap->find(var->getName());
+    Scheduler::VarLabelMaterialMap::iterator found = pLabelMatlMap->find(var->getName());
 
     if (found == pLabelMatlMap->end()) {
       if (initTimestep) {
         // ignore this on the init timestep, cuz lots of vars aren't computed on the init timestep
         dbg << "Ignoring var " << it->labelName << " on initialization timestep\n";
         continue;
+      } else {
+        throw ProblemSetupException((*it).labelName + " variable not computed for saving.", __FILE__, __LINE__);
       }
-      else
-        throw ProblemSetupException((*it).labelName +
-                                    " variable not computed for saving.", __FILE__, __LINE__);
     }
-    saveItem.label_ = var;
-    saveItem.matlSet_.clear();
+    saveItem.label = var;
+    saveItem.matlSet.clear();
+    
     for (ConsecutiveRangeSet::iterator iter = (*it).levels.begin(); iter != (*it).levels.end(); iter++) {
 
-      ConsecutiveRangeSet matlsToSave =
-        (ConsecutiveRangeSet((*found).second)).intersected((*it).matls);
-      saveItem.setMaterials(*iter, matlsToSave, prevMatls_, prevMatlSet_);
+      ConsecutiveRangeSet matlsToSave = (ConsecutiveRangeSet((*found).second)).intersected((*it).matls);
+      saveItem.setMaterials(*iter, matlsToSave, d_prevMatls, d_prevMatlSet);
 
       if (((*it).matls != ConsecutiveRangeSet::all) &&
           ((*it).matls != matlsToSave)) {
@@ -2111,13 +2115,14 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
                                     " variable not computed for all materials specified to save.", __FILE__, __LINE__);
       }
     }
-    if (saveItem.label_->typeDescription()->isReductionVariable()) {
+    
+    if (saveItem.label->typeDescription()->isReductionVariable()) {
       d_saveReductionLabels.push_back(saveItem);
-    }
-    else {
+    } else {
       d_saveLabels.push_back(saveItem);
     }
   }
+  
   //d_saveLabelNames.clear();
   delete pLabelMatlMap;
   dbg << "end of initSaveLabels\n";
@@ -2185,12 +2190,12 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
        throw ProblemSetupException(mapIter->first +
                                    " variable not found to checkpoint.", __FILE__, __LINE__);
      
-     saveItem.label_ = var;
-     saveItem.matlSet_.clear();
+     saveItem.label = var;
+     saveItem.matlSet.clear();
      map<int, ConsecutiveRangeSet>::iterator liter;
      for (liter = mapIter->second.begin(); liter != mapIter->second.end(); liter++) {
        
-       saveItem.setMaterials(liter->first, liter->second, prevMatls_, prevMatlSet_);
+       saveItem.setMaterials(liter->first, liter->second, d_prevMatls, d_prevMatlSet);
 
        if (string(var->getName()) == "delT") {
          hasDelT = true;
@@ -2199,10 +2204,10 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
      
      // Skip this variable if the default behavior of variable has been overwritten.
      // For example ignore checkpointing PerPatch<FileInfo> variable
-     bool skipVar = ( notCheckPointVars.count(saveItem.label_->getName() ) > 0 );
+     bool skipVar = ( notCheckPointVars.count(saveItem.label->getName() ) > 0 );
      
      if( !skipVar ) {
-       if ( saveItem.label_->typeDescription()->isReductionVariable() ) {
+       if ( saveItem.label->typeDescription()->isReductionVariable() ) {
          d_checkpointReductionLabels.push_back(saveItem);
        } else {
          d_checkpointLabels.push_back(saveItem);
@@ -2215,17 +2220,20 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
      VarLabel* var = VarLabel::find("delT");
      if (var == NULL)
        throw ProblemSetupException("delT variable not found to checkpoint.", __FILE__, __LINE__);
-     saveItem.label_ = var;
-     saveItem.matlSet_.clear();
+     saveItem.label = var;
+     saveItem.matlSet.clear();
      ConsecutiveRangeSet globalMatl("-1");
-     saveItem.setMaterials(-1,globalMatl, prevMatls_, prevMatlSet_);
-     ASSERT(saveItem.label_->typeDescription()->isReductionVariable());
+     saveItem.setMaterials(-1,globalMatl, d_prevMatls, d_prevMatlSet);
+     ASSERT(saveItem.label->typeDescription()->isReductionVariable());
      d_checkpointReductionLabels.push_back(saveItem);
    }     
 }
 
+//______________________________________________________________________
+//
 void
-DataArchiver::SaveItem::setMaterials(int level, const ConsecutiveRangeSet& matls,
+DataArchiver::SaveItem::setMaterials(int level, 
+                                     const ConsecutiveRangeSet& matls,
                                      ConsecutiveRangeSet& prevMatls,
                                      MaterialSetP& prevMatlSet)
 {
@@ -2233,10 +2241,10 @@ DataArchiver::SaveItem::setMaterials(int level, const ConsecutiveRangeSet& matls
   // SaveItems in a row -- easier than finding all reusable material set, but
   // effective in many common cases.
   if ((prevMatlSet != 0) && (matls == prevMatls)) {
-    matlSet_[level] = prevMatlSet;
+    matlSet[level] = prevMatlSet;
   }
   else {
-    MaterialSetP& m = matlSet_[level];
+    MaterialSetP& m = matlSet[level];
     m = scinew MaterialSet();
     vector<int> matlVec;
     matlVec.reserve(matls.size());
