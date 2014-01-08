@@ -72,19 +72,27 @@ ParticleCreator::~ParticleCreator()
   delete d_lb;
 }
 
-ParticleSubset* 
+particleIndex 
 ParticleCreator::createParticles(MPMMaterial* matl,
-                                 particleIndex numParticles,
                                  CCVariable<short int>& cellNAPID,
                                  const Patch* patch,DataWarehouse* new_dw,
                                  vector<GeometryObject*>& d_geom_objs)
 {
   // Print the physical boundary conditions
   //  printPhysicalBCs();
-  d_lock.writeLock();
+  //d_lock.writeLock();
 
+//  particleIndex numParticles = countParticles(patch, d_geom_objs);
+  ObjectVars vars;
+  ParticleVars pvars;
+  particleIndex numParticles = 0;
+  vector<GeometryObject*>::const_iterator geom;
+  for (geom=d_geom_objs.begin(); geom != d_geom_objs.end(); ++geom){ 
+    numParticles += countAndCreateParticles(patch,*geom, vars);
+  }
+  
   int dwi = matl->getDWIndex();
-  ParticleSubset* subset = allocateVariables(numParticles,dwi,patch,new_dw);
+  ParticleSubset* subset = allocateVariables(numParticles,dwi,patch,new_dw, pvars);
 
   particleIndex start = 0;
   
@@ -126,57 +134,49 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
     // For getting particle volumes (if they exist)
     vector<double>::const_iterator voliter;
-    geomvols::key_type volkey(patch,*obj);
     if (volumes) {
-      if (!volumes->empty()) voliter = d_object_vols[volkey].begin();
+      if (!volumes->empty()) voliter = vars.d_object_vols[*obj].begin();
     }
 
     // For getting particle temps (if they exist)
     vector<double>::const_iterator tempiter;
-    geomvols::key_type tempkey(patch,*obj);
     if (temperatures) {
-      if (!temperatures->empty()) tempiter = d_object_temps[tempkey].begin();
+      if (!temperatures->empty()) tempiter = vars.d_object_temps[*obj].begin();
     }
 
     // For getting particle external forces (if they exist)
     vector<Vector>::const_iterator forceiter;
-    geomvecs::key_type pforcekey(patch,*obj);
     if (pforces) {
-      if (!pforces->empty()) forceiter = d_object_forces[pforcekey].begin();
+      if (!pforces->empty()) forceiter = vars.d_object_forces[*obj].begin();
     }
 
     // For getting particle fiber directions (if they exist)
     vector<Vector>::const_iterator fiberiter;
-    geomvecs::key_type pfiberkey(patch,*obj);
     if (pfiberdirs) {
-      if (!pfiberdirs->empty()) fiberiter = d_object_fibers[pfiberkey].begin();
+      if (!pfiberdirs->empty()) fiberiter = vars.d_object_fibers[*obj].begin();
     }
     
     // For getting particle velocities (if they exist)   // gcd adds
     vector<Vector>::const_iterator velocityiter;
-    geomvecs::key_type pvelocitykey(patch,*obj);
     if (pvelocities) {                             // new change name
       if (!pvelocities->empty()) velocityiter =
-              d_object_velocity[pvelocitykey].begin();  // new change name
+              vars.d_object_velocity[*obj].begin();  // new change name
     }                                                    // end gcd adds
 
     // For getting particle sizes (if they exist)
     vector<Matrix3>::const_iterator sizeiter;
-    geomMat3s::key_type psizekey(patch,*obj);
     if (psizes) {
-      if (!psizes->empty()) sizeiter = d_object_size[psizekey].begin();
+      if (!psizes->empty()) sizeiter = vars.d_object_size[*obj].begin();
     }
 
     // For getting particles colors (if they exist)
     vector<double>::const_iterator coloriter;
-    geomvols::key_type colorkey(patch,*obj);
     if (colors) {
-      if (!colors->empty()) coloriter = d_object_colors[colorkey].begin();
+      if (!colors->empty()) coloriter = vars.d_object_colors[*obj].begin();
     }
 
     vector<Point>::const_iterator itr;
-    geompoints::key_type key(patch,*obj);
-    for(itr=d_object_points[key].begin();itr!=d_object_points[key].end();++itr){
+    for(itr=vars.d_object_points[*obj].begin();itr!=vars.d_object_points[*obj].end();++itr){
       IntVector cell_idx;
       if (!patch->findCell(*itr,cell_idx)) continue;
 
@@ -185,54 +185,54 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       particleIndex pidx = start+count;      
       //cerr << "Point["<<pidx<<"]="<<*itr<<" Cell = "<<cell_idx<<endl;
  
-      initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,cellNAPID);
+      initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,cellNAPID, pvars);
       
       if (volumes) {
         if (!volumes->empty()) {
-          pvolume[pidx] = *voliter;
-          pmass[pidx] = matl->getInitialDensity()*pvolume[pidx];
+          pvars.pvolume[pidx] = *voliter;
+          pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
           ++voliter;
         }
       }
 
       if (temperatures) {
         if (!temperatures->empty()) {
-          ptemperature[pidx] = *tempiter;
+          pvars.ptemperature[pidx] = *tempiter;
           ++tempiter;
         }
       }
 
       if (pforces) {                           
         if (!pforces->empty()) {
-          pexternalforce[pidx] = *forceiter;
+          pvars.pexternalforce[pidx] = *forceiter;
           ++forceiter;
         }
       }
 
       if (pvelocities) {                           // gcd adds and change name 
         if (!pvelocities->empty()) {               // and change name
-          pvelocity[pidx] = *velocityiter;
+          pvars.pvelocity[pidx] = *velocityiter;
           ++velocityiter;
         }
       }                                         // end gcd adds
 
       if (pfiberdirs) {
         if (!pfiberdirs->empty()) {
-          pfiberdir[pidx] = *fiberiter;
+          pvars.pfiberdir[pidx] = *fiberiter;
           ++fiberiter;
         }
       }
 
       if (psizes && d_flags->d_interpolator_type=="cpdi") {
         if (!psizes->empty()) {
-          psize[pidx] = *sizeiter;
+          pvars.psize[pidx] = *sizeiter;
           ++sizeiter;
         }
       }
 
       if (colors) {
         if (!colors->empty()) {
-          pcolor[pidx] = *coloriter;
+          pvars.pcolor[pidx] = *coloriter;
           ++coloriter;
         }
       }
@@ -242,17 +242,18 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       // physical BC pointer
       if (d_useLoadCurves) {
         if (checkForSurface(piece,*itr,dxpp)) {
-          pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp);
+          pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp);
         } else {
-          pLoadCurveID[pidx] = 0;
+          pvars.pLoadCurveID[pidx] = 0;
         }
       }
       count++;
     }
     start += count;
   }
-  d_lock.writeUnlock();
-  return subset;
+  //d_lock.writeUnlock();
+ // return subset;
+  return numParticles;
 }
 
 
@@ -345,43 +346,42 @@ ParticleCreator::applyForceBC(const Vector& dxpp,
 ParticleSubset* 
 ParticleCreator::allocateVariables(particleIndex numParticles, 
                                    int dwi, const Patch* patch,
-                                   DataWarehouse* new_dw)
+                                   DataWarehouse* new_dw,
+                                   ParticleVars& pvars)
 {
-
   ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
                                                         patch);
-  new_dw->allocateAndPut(position,       d_lb->pXLabel,             subset);
-  new_dw->allocateAndPut(pvelocity,      d_lb->pVelocityLabel,      subset); 
-  new_dw->allocateAndPut(pexternalforce, d_lb->pExternalForceLabel, subset);
-  new_dw->allocateAndPut(pmass,          d_lb->pMassLabel,          subset);
-  new_dw->allocateAndPut(pvolume,        d_lb->pVolumeLabel,        subset);
-  new_dw->allocateAndPut(ptemperature,   d_lb->pTemperatureLabel,   subset);
-  new_dw->allocateAndPut(pparticleID,    d_lb->pParticleIDLabel,    subset);
-  new_dw->allocateAndPut(psize,          d_lb->pSizeLabel,          subset);
-  new_dw->allocateAndPut(pfiberdir,      d_lb->pFiberDirLabel,      subset); 
+  new_dw->allocateAndPut(pvars.position,       d_lb->pXLabel,             subset);
+  new_dw->allocateAndPut(pvars.pvelocity,      d_lb->pVelocityLabel,      subset); 
+  new_dw->allocateAndPut(pvars.pexternalforce, d_lb->pExternalForceLabel, subset);
+  new_dw->allocateAndPut(pvars.pmass,          d_lb->pMassLabel,          subset);
+  new_dw->allocateAndPut(pvars.pvolume,        d_lb->pVolumeLabel,        subset);
+  new_dw->allocateAndPut(pvars.ptemperature,   d_lb->pTemperatureLabel,   subset);
+  new_dw->allocateAndPut(pvars.pparticleID,    d_lb->pParticleIDLabel,    subset);
+  new_dw->allocateAndPut(pvars.psize,          d_lb->pSizeLabel,          subset);
+  new_dw->allocateAndPut(pvars.pfiberdir,      d_lb->pFiberDirLabel,      subset); 
   // for thermal stress
-  new_dw->allocateAndPut(ptempPrevious,  d_lb->pTempPreviousLabel,  subset); 
-  new_dw->allocateAndPut(pdisp,          d_lb->pDispLabel,          subset);
+  new_dw->allocateAndPut(pvars.ptempPrevious,  d_lb->pTempPreviousLabel,  subset); 
+  new_dw->allocateAndPut(pvars.pdisp,          d_lb->pDispLabel,          subset);
   if(d_flags->d_integrator_type=="explicit"){
-    new_dw->allocateAndPut(pvelGrad,     d_lb->pVelGradLabel,       subset);
+    new_dw->allocateAndPut(pvars.pvelGrad,     d_lb->pVelGradLabel,       subset);
   }
   
   if (d_useLoadCurves) {
-    new_dw->allocateAndPut(pLoadCurveID, d_lb->pLoadCurveIDLabel,   subset); 
+    new_dw->allocateAndPut(pvars.pLoadCurveID, d_lb->pLoadCurveIDLabel,   subset); 
   }
   if(d_with_color){
-     new_dw->allocateAndPut(pcolor,      d_lb->pColorLabel,         subset);
+     new_dw->allocateAndPut(pvars.pcolor,      d_lb->pColorLabel,         subset);
   }
   if(d_artificial_viscosity){
-     new_dw->allocateAndPut(p_q,         d_lb->p_qLabel,            subset);
+     new_dw->allocateAndPut(pvars.p_q,         d_lb->p_qLabel,            subset);
   }
   return subset;
 }
 
-void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
+void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj, ObjectVars& vars)
 {
 
-  geompoints::key_type key(patch,obj);
   GeometryPieceP piece = obj->getPiece();
   Box b2 = patch->getExtraBox();
   IntVector ppc = obj->getInitialData_IntVector("res");
@@ -436,7 +436,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
             p(0)=p1[0];
             p(1)=p1[1];
             p(2)=p1[2];
-            d_object_points[key].push_back(p);
+            vars.d_object_points[obj].push_back(p);
           }
         }  // z
       }  // y
@@ -478,7 +478,8 @@ ParticleCreator::initializeParticle(const Patch* patch,
                                     Point p,
                                     IntVector cell_idx,
                                     particleIndex i,
-                                    CCVariable<short int>& cellNAPID)
+                                    CCVariable<short int>& cellNAPID,
+                                    ParticleVars& pvars)
 {
   IntVector ppc = (*obj)->getInitialData_IntVector("res");
   Vector dxpp = patch->dCell()/(*obj)->getInitialData_IntVector("res");
@@ -520,61 +521,61 @@ ParticleCreator::initializeParticle(const Patch* patch,
                                       0.,                               0.,1.);
 */
 
-  ptemperature[i] = (*obj)->getInitialData_double("temperature");
+  pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
 
   //MMS
   string mms_type = d_flags->d_mms_type;
   if(!mms_type.empty()) {
     MMS MMSObject;
-    MMSObject.initializeParticleForMMS(position,pvelocity,psize,pdisp,pmass,
-                                       pvolume,p,dxcc,size,patch,d_flags,i);
+    MMSObject.initializeParticleForMMS(pvars.position,pvars.pvelocity,pvars.psize,pvars.pdisp,pvars.pmass,
+                                       pvars.pvolume,p,dxcc,size,patch,d_flags,i);
   }  else {
-    position[i] = p;
+    pvars.position[i] = p;
      if(d_flags->d_axisymmetric){
       // assume unit radian extent in the circumferential direction
-      pvolume[i] = p.x()*
+      pvars.pvolume[i] = p.x()*
                    (size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
      } else {
      // standard voxel volume
-     pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
+     pvars.pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
     }
 
-    psize[i]      = size;
-    pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
+    pvars.psize[i]      = size;
+    pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
     if(d_flags->d_integrator_type=="explicit"){
-      pvelGrad[i] = Matrix3(0.0);
+      pvars.pvelGrad[i] = Matrix3(0.0);
     }
   
     double vol_frac_CC = 1.0;
     try {
      if((*obj)->getInitialData_double("volumeFraction") == -1.0) {    
       vol_frac_CC = 1.0;
-      pmass[i]      = matl->getInitialDensity()*pvolume[i];
+      pvars.pmass[i]      = matl->getInitialDensity()*pvars.pvolume[i];
      } else {
       vol_frac_CC = (*obj)->getInitialData_double("volumeFraction");
-      pmass[i]      = matl->getInitialDensity()*pvolume[i]*vol_frac_CC;
+      pvars.pmass[i]      = matl->getInitialDensity()*pvars.pvolume[i]*vol_frac_CC;
      }
     } catch (...) {
       vol_frac_CC = 1.0;       
-      pmass[i]      = matl->getInitialDensity()*pvolume[i];
+      pvars.pmass[i]      = matl->getInitialDensity()*pvars.pvolume[i];
     }
-    pdisp[i]        = Vector(0.,0.,0.);
+    pvars.pdisp[i]        = Vector(0.,0.,0.);
   }
   
   if(d_with_color){
-    pcolor[i] = (*obj)->getInitialData_double("color");
+    pvars.pcolor[i] = (*obj)->getInitialData_double("color");
   }
   if(d_artificial_viscosity){
-    p_q[i] = 0.;
+    pvars.p_q[i] = 0.;
   }
   
-  ptempPrevious[i]  = ptemperature[i];
+  pvars.ptempPrevious[i]  = pvars.ptemperature[i];
 
   Vector pExtForce(0,0,0);
-  applyForceBC(dxpp, p, pmass[i], pExtForce);
+  applyForceBC(dxpp, p, pvars.pmass[i], pExtForce);
   
-  pexternalforce[i] = pExtForce;
-  pfiberdir[i]      = matl->getConstitutiveModel()->getInitialFiberDir();
+  pvars.pexternalforce[i] = pExtForce;
+  pvars.pfiberdir[i]      = matl->getConstitutiveModel()->getInitialFiberDir();
 
   ASSERT(cell_idx.x() <= 0xffff && 
          cell_idx.y() <= 0xffff && 
@@ -585,37 +586,17 @@ ParticleCreator::initializeParticle(const Patch* patch,
                   ((long64)cell_idx.z() << 48);
                   
   short int& myCellNAPID = cellNAPID[cell_idx];
-  pparticleID[i] = (cellID | (long64) myCellNAPID);
+  pvars.pparticleID[i] = (cellID | (long64) myCellNAPID);
   ASSERT(myCellNAPID < 0x7fff);
   myCellNAPID++;
-}
-
-particleIndex 
-ParticleCreator::countParticles(const Patch* patch,
-                                vector<GeometryObject*>& d_geom_objs)
-{
-  d_lock.writeLock();
-  particleIndex sum = 0;
-  vector<GeometryObject*>::const_iterator geom;
-  for (geom=d_geom_objs.begin(); geom != d_geom_objs.end(); ++geom){ 
-    sum += countAndCreateParticles(patch,*geom);
-  }
-  
-  d_lock.writeUnlock();
-  return sum;
 }
 
 
 particleIndex 
 ParticleCreator::countAndCreateParticles(const Patch* patch, 
-                                         GeometryObject* obj)
+                                         GeometryObject* obj,
+                                         ObjectVars& vars)
 {
-  geompoints::key_type key(patch,obj);
-  geomvols::key_type   volkey(patch,obj);
-  geomvecs::key_type   forcekey(patch,obj);
-  geomvecs::key_type   fiberkey(patch,obj);
-  geomvecs::key_type   pvelocitykey(patch,obj);
-  geomMat3s::key_type  psizekey(patch,obj);
   GeometryPieceP piece = obj->getPiece();
   Box b1 = piece->getBoundingBox();
   Box b2 = patch->getExtraBox();
@@ -654,35 +635,35 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
       p = points->at(ii);
       if (patch->findCell(p,cell_idx)) {
         if (patch->containsPoint(p)) {
-          d_object_points[key].push_back(p);
+          vars.d_object_points[obj].push_back(p);
           
           if (!vols->empty()) {
             double vol = vols->at(ii); 
-            d_object_vols[volkey].push_back(vol);
+            vars.d_object_vols[obj].push_back(vol);
           }
           if (!temps->empty()) {
             double temp = temps->at(ii); 
-            d_object_temps[volkey].push_back(temp);
+            vars.d_object_temps[obj].push_back(temp);
           }
           if (!pforces->empty()) {
             Vector pforce = pforces->at(ii); 
-            d_object_forces[forcekey].push_back(pforce);
+            vars.d_object_forces[obj].push_back(pforce);
           }
           if (!pfiberdirs->empty()) {
             Vector pfiber = pfiberdirs->at(ii); 
-            d_object_fibers[fiberkey].push_back(pfiber);
+            vars.d_object_fibers[obj].push_back(pfiber);
           }
           if (!pvelocities->empty()) {
             Vector pvel = pvelocities->at(ii); 
-            d_object_velocity[pvelocitykey].push_back(pvel);
+            vars.d_object_velocity[obj].push_back(pvel);
           }
           if (!psizes->empty()) {
             Matrix3 psz = psizes->at(ii); 
-            d_object_size[psizekey].push_back(psz);
+            vars.d_object_size[obj].push_back(psz);
           }
           if (!colors->empty()) {
             double color = colors->at(ii); 
-            d_object_colors[volkey].push_back(color);
+            vars.d_object_colors[obj].push_back(color);
           }
         } 
       }  // patch contains cell
@@ -690,10 +671,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     //sgp->deletePoints();
     //sgp->deleteVolume();
   } else {
-    createPoints(patch,obj);
+    createPoints(patch,obj,vars);
   }
   
-  return (particleIndex) d_object_points[key].size();
+  return (particleIndex) vars.d_object_points[obj].size();
 }
 
 vector<const VarLabel* > ParticleCreator::returnParticleState()
@@ -709,7 +690,6 @@ vector<const VarLabel* > ParticleCreator::returnParticleStatePreReloc()
 
 void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 {
-  d_lock.writeLock();
   particle_state.push_back(d_lb->pDispLabel);
   particle_state_preReloc.push_back(d_lb->pDispLabel_preReloc);
 
@@ -775,7 +755,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
   matl->getConstitutiveModel()->addParticleState(particle_state,
                                                  particle_state_preReloc);
-  d_lock.writeUnlock();
 }
 
 int

@@ -58,30 +58,66 @@ namespace Uintah {
     virtual ~ParticleCreator();
 
 
-    virtual ParticleSubset* createParticles(MPMMaterial* matl,
-                                            particleIndex numParticles,
+    virtual particleIndex createParticles(MPMMaterial* matl,
                                             CCVariable<short int>& cellNAPID,
                                             const Patch*,DataWarehouse* new_dw,
                                             vector<GeometryObject*>&);
 
 
-    virtual ParticleSubset* allocateVariables(particleIndex numParticles,
-                                              int dwi, const Patch* patch,
-                                              DataWarehouse* new_dw);
 
     virtual void registerPermanentParticleState(MPMMaterial* matl);
 
-    virtual particleIndex countParticles(const Patch*,
-                                         std::vector<GeometryObject*>&);
+    std::vector<const VarLabel* > returnParticleState();
+    std::vector<const VarLabel* > returnParticleStatePreReloc();
 
-    virtual particleIndex countAndCreateParticles(const Patch*,
-                                                  GeometryObject* obj);
-    vector<const VarLabel* > returnParticleState();
-    vector<const VarLabel* > returnParticleStatePreReloc();
+    
+    typedef std::map<GeometryObject*,std::vector<Point> > geompoints;
+    typedef std::map<GeometryObject*,std::vector<double> > geomvols;
+    typedef std::map<GeometryObject*,std::vector<Vector> > geomvecs;
+    typedef std::map<GeometryObject*,std::vector<Matrix3> > geomMat3s;
+  
+    typedef struct {
+    geompoints d_object_points;
+    geomvols d_object_vols;
+    geomvols d_object_temps;
+    geomvols d_object_colors;
+    geomvecs d_object_forces;
+    geomvecs d_object_fibers;  
+    geomvecs d_object_velocity; // gcd add
+    geomMat3s d_object_size;  
+    } ObjectVars;
+
+    typedef struct {
+    ParticleVariable<Point> position;
+    ParticleVariable<Vector> pvelocity, pexternalforce;
+    ParticleVariable<Matrix3> psize,pvelGrad;
+    ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
+    ParticleVariable<double> pcolor,ptempPrevious,p_q;
+    ParticleVariable<long64> pparticleID;
+    ParticleVariable<Vector> pdisp;
+    ParticleVariable<Vector> pfiberdir; 
+    ParticleVariable<int> pLoadCurveID;
+    ParticleVariable<int> plocalized;
+    // ImplicitParticleCreator
+    ParticleVariable<Vector> pacceleration;
+    ParticleVariable<double> pvolumeold;
+    ParticleVariable<double> pExternalHeatFlux;
+    //MembraneParticleCreator
+    ParticleVariable<Vector> pTang1, pTang2, pNorm;
+    } ParticleVars;
 
   protected:
 
-    void createPoints(const Patch* patch, GeometryObject* obj);
+    virtual ParticleSubset* allocateVariables(particleIndex numParticles,
+                                              int dwi, const Patch* patch,
+                                              DataWarehouse* new_dw,
+                                              ParticleVars& pvars);
+
+    virtual particleIndex countAndCreateParticles(const Patch*,
+                                                  GeometryObject* obj,
+                                                  ObjectVars& vars);
+
+    void createPoints(const Patch* patch, GeometryObject* obj, ObjectVars& vars);
 
 
 
@@ -90,7 +126,8 @@ namespace Uintah {
                                     MPMMaterial* matl,
                                     Point p, IntVector cell_idx,
                                     particleIndex i,
-                                    CCVariable<short int>& cellNAPI);
+                                    CCVariable<short int>& cellNAPI,
+                                    ParticleVars& pvars);
     
     //////////////////////////////////////////////////////////////////////////
     /*! Get the LoadCurveID applicable for this material point */
@@ -112,17 +149,6 @@ namespace Uintah {
                         const Vector dxpp);
     
 
-    ParticleVariable<Point> position;
-    ParticleVariable<Vector> pvelocity, pexternalforce;
-    ParticleVariable<Matrix3> psize,pvelGrad;
-    ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
-    ParticleVariable<double> pcolor,ptempPrevious,p_q;
-    ParticleVariable<long64> pparticleID;
-    ParticleVariable<Vector> pdisp;
-    ParticleVariable<Vector> pfiberdir; 
-
-    ParticleVariable<int> pLoadCurveID;
-
     MPMLabel* d_lb;
     MPMFlags* d_flags;
 
@@ -131,19 +157,8 @@ namespace Uintah {
     bool d_artificial_viscosity;
     bool d_computeScaleFactor;
 
-    vector<const VarLabel* > particle_state, particle_state_preReloc;
-    typedef map<pair<const Patch*,GeometryObject*>,vector<Point> > geompoints;
-    geompoints d_object_points;
-    typedef map<pair<const Patch*,GeometryObject*>,vector<double> > geomvols;
-    geomvols d_object_vols;
-    geomvols d_object_temps;
-    geomvols d_object_colors;
-    typedef map<pair<const Patch*,GeometryObject*>,vector<Vector> > geomvecs;
-    geomvecs d_object_forces;
-    geomvecs d_object_fibers;  
-    geomvecs d_object_velocity; // gcd add
-    typedef map<pair<const Patch*,GeometryObject*>,vector<Matrix3> > geomMat3s;
-    geomMat3s d_object_size;  
+    std::vector<const VarLabel* > particle_state, particle_state_preReloc;
+
     
     mutable CrowdMonitor   d_lock;
   };
