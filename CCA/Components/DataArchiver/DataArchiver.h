@@ -231,9 +231,10 @@ using SCIRun::Mutex;
        //! helper for beginOutputTimestep - creates and writes
        //! the necessary directories and xml files to begin the 
        //! output timestep.
-       void outputTimestep(Dir& dir, std::vector<SaveItem>& saveLabels,
-           double time, double delt, const GridP& grid,
-           std::string* pTimestepDir /* passed back */, bool hasGlobals = false);
+       void outputTimestep(Dir& dir, 
+                           std::vector<SaveItem>& saveLabels,
+                           const GridP& grid,
+                           std::string* pTimestepDir );
 
        //! helper for finalizeTimestep - schedules a task for each var's output
        void scheduleOutputTimestep(std::vector<SaveItem>& saveLabels,

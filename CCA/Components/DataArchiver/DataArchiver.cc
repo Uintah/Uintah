@@ -126,7 +126,8 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
 DataArchiver::~DataArchiver()
 {
 }
-
+//______________________________________________________________________
+//
 void
 DataArchiver::problemSetup( const ProblemSpecP    & params,
                                   SimulationState * state )
@@ -325,7 +326,8 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
    } else 
      d_nextCheckpointWalltime=0;
 }
-
+//______________________________________________________________________
+//
 void
 DataArchiver::initializeOutput(const ProblemSpecP& params) 
 {
@@ -534,6 +536,7 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
 } // end initializeOutput()
 
 
+//______________________________________________________________________
 // to be called after problemSetup and initializeOutput get called
 void
 DataArchiver::restartSetup( Dir    & restartFromDir,
@@ -630,7 +633,7 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
   }
 }
 
-//////////
+//______________________________________________________________________
 // Call this when doing a combine_patches run after calling
 // problemSetup.  It will copy the data files over and make it ignore
 // dumping reduction variables.
@@ -681,6 +684,8 @@ DataArchiver::combinePatchSetup(Dir& fromDir)
    //indexDoc->releaseDocument();
 }
 
+//______________________________________________________________________
+//
 void
 DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
 {
@@ -711,6 +716,8 @@ DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
   //myIndexDoc->releaseDocument();
 }
 
+//______________________________________________________________________
+//
 void
 DataArchiver::addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
                               int timestep)
@@ -731,6 +738,8 @@ DataArchiver::addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
    restartInfo->setAttribute("timestep", timestep_str.str().c_str());   
 }
 
+//______________________________________________________________________
+//
 void
 DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
                             int maxTimestep, bool removeOld,
@@ -810,6 +819,8 @@ DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 
 }
 
+//______________________________________________________________________
+//
 void
 DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
                            int maxTimestep, bool removeOld)
@@ -865,6 +876,8 @@ DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
    //indexDoc->releaseDocument();
 }
 
+//______________________________________________________________________
+//
 void
 DataArchiver::createIndexXML(Dir& dir)
 {
@@ -895,6 +908,9 @@ DataArchiver::createIndexXML(Dir& dir)
    //rootElem->releaseDocument();
 }
 
+
+//______________________________________________________________________
+//
 void
 DataArchiver::finalizeTimestep(double time, double delt,
                                const GridP& grid, SchedulerP& sched,
@@ -1007,6 +1023,8 @@ DataArchiver::finalizeTimestep(double time, double delt,
 }
 
 
+//______________________________________________________________________
+//
 void
 DataArchiver::beginOutputTimestep( double time, double delt,
                                    const GridP& grid )
@@ -1014,7 +1032,7 @@ DataArchiver::beginOutputTimestep( double time, double delt,
   // time should be currentTime+delt
   double currentTime = d_sharedState->getElapsedTime();
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  dbg << "beginOutputTimestep called at time=" << currentTime
+  dbg << "  beginOutputTimestep called at time=" << currentTime
       << " (" << d_nextOutputTime << "), " << d_outputTimestepInterval 
       << " (" << d_nextOutputTimestep << ")\n";
 
@@ -1025,8 +1043,7 @@ DataArchiver::beginOutputTimestep( double time, double delt,
     if(time+delt >= d_nextOutputTime) {
       // output timestep
       d_isOutputTimestep = true;
-      outputTimestep(d_dir, d_saveLabels, time, delt, grid,
-                     &d_lastTimestepLocation);
+      outputTimestep(d_dir, d_saveLabels, grid, &d_lastTimestepLocation);
     }
     else {
       d_isOutputTimestep = false;
@@ -1036,8 +1053,7 @@ DataArchiver::beginOutputTimestep( double time, double delt,
     if(timestep >= d_nextOutputTimestep) {
       // output timestep
       d_isOutputTimestep = true;
-      outputTimestep(d_dir, d_saveLabels, time, delt, grid,
-                     &d_lastTimestepLocation);
+      outputTimestep(d_dir, d_saveLabels, grid, &d_lastTimestepLocation);
     }
     else {
       d_isOutputTimestep = false;
@@ -1056,9 +1072,7 @@ DataArchiver::beginOutputTimestep( double time, double delt,
     d_isCheckpointTimestep=true;
 
     string timestepDir;
-    outputTimestep(d_checkpointsDir, d_checkpointLabels, time, delt,
-                   grid, &timestepDir,
-                   d_checkpointReductionLabels.size() > 0);
+    outputTimestep(d_checkpointsDir, d_checkpointLabels, grid, &timestepDir );
     
     string iname = d_checkpointsDir.getName()+"/index.xml";
 
@@ -1109,16 +1123,16 @@ DataArchiver::beginOutputTimestep( double time, double delt,
   } else {
     d_isCheckpointTimestep=false;
   }
-  dbg << "end beginOutputTimestep()\n";
+  dbg << "  end beginOutputTimestep()\n";
 } // end beginOutputTimestep
 
+//______________________________________________________________________
+//
 void
 DataArchiver::outputTimestep(Dir& baseDir,
                              vector<DataArchiver::SaveItem>&,
-                             double /*time*/, double /*delt*/,
                              const GridP& grid,
-                             string* pTimestepDir /* passed back */,
-                             bool /* hasGlobals  = false */)
+                             string* pTimestepDir )
 {
   dbg << "begin outputTimestep()\n";
 
@@ -1163,6 +1177,9 @@ DataArchiver::outputTimestep(Dir& baseDir,
   //}
 }
 
+
+//______________________________________________________________________
+//
 void
 DataArchiver::reEvaluateOutputTimestep(double /*orig_delt*/, double new_delt)
 {
@@ -1192,6 +1209,8 @@ DataArchiver::reEvaluateOutputTimestep(double /*orig_delt*/, double new_delt)
 #endif
 }
 
+//______________________________________________________________________
+//
 void
 DataArchiver::executedTimestep(double delt, const GridP& grid)
 {
@@ -1502,6 +1521,8 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
   }
 }
 
+//______________________________________________________________________
+//
 void
 DataArchiver::scheduleOutputTimestep(vector<DataArchiver::SaveItem>& saveLabels,
                                      const GridP& grid, SchedulerP& sched,
@@ -1560,6 +1581,8 @@ DataArchiver::getOutputLocation() const
     return d_dir.getName();
 }
 
+//______________________________________________________________________
+//
 void
 DataArchiver::indexAddGlobals()
 {
@@ -1604,6 +1627,8 @@ DataArchiver::indexAddGlobals()
   dbg << "end indexAddGlobals()\n";
 } // end indexAddGlobals()
 
+//______________________________________________________________________
+//
 void
 DataArchiver::outputReduction(const ProcessorGroup*,
                               const PatchSubset* /*pss*/,
@@ -1651,6 +1676,8 @@ DataArchiver::outputReduction(const ProcessorGroup*,
   d_sharedState->outputTime += Time::currentSeconds()-start;
 }
 
+//______________________________________________________________________
+//
 void
 DataArchiver::output(const ProcessorGroup * /*world*/,
                      const PatchSubset    * patches,
@@ -1937,6 +1964,8 @@ DataArchiver::output(const ProcessorGroup * /*world*/,
 
 } // end output()
 
+//______________________________________________________________________
+//
 void
 DataArchiver::makeVersionedDir()
 {
@@ -2061,7 +2090,7 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
 
   // if this is the initTimestep, then don't complain about saving all the vars,
   // just save the ones you can.  They'll most likely be around on the next timestep.
-
+ 
   SaveItem saveItem;
   d_saveReductionLabels.clear();
   d_saveLabels.clear();
@@ -2095,7 +2124,7 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
     if (found == pLabelMatlMap->end()) {
       if (initTimestep) {
         // ignore this on the init timestep, cuz lots of vars aren't computed on the init timestep
-        dbg << "Ignoring var " << it->labelName << " on initialization timestep\n";
+        dbg << "  Ignoring var " << it->labelName << " on initialization timestep\n";
         continue;
       } else {
         throw ProblemSetupException((*it).labelName + " variable not computed for saving.", __FILE__, __LINE__);
@@ -2109,10 +2138,8 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
       ConsecutiveRangeSet matlsToSave = (ConsecutiveRangeSet((*found).second)).intersected((*it).matls);
       saveItem.setMaterials(*iter, matlsToSave, d_prevMatls, d_prevMatlSet);
 
-      if (((*it).matls != ConsecutiveRangeSet::all) &&
-          ((*it).matls != matlsToSave)) {
-        throw ProblemSetupException((*it).labelName +
-                                    " variable not computed for all materials specified to save.", __FILE__, __LINE__);
+      if (((*it).matls != ConsecutiveRangeSet::all) && ((*it).matls != matlsToSave)) {
+        throw ProblemSetupException((*it).labelName + " variable not computed for all materials specified to save.", __FILE__, __LINE__);
       }
     }
     
@@ -2129,10 +2156,13 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
 }
 
 
+
+//______________________________________________________________________
+//
 void
 DataArchiver::initCheckpoints(SchedulerP& sched)
 {
-   dbg << "initCheckpoints called\n";
+   dbg << "DataArchier: initCheckpoints called\n";
    typedef vector<const Task::Dependency*> dep_vector;
    const dep_vector& initreqs = sched->getInitialRequires();
    
@@ -2149,8 +2179,7 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
    typedef map<string, map<int, ConsecutiveRangeSet> > label_type;
    label_type label_map;
 
-   for (dep_vector::const_iterator iter = initreqs.begin();
-        iter != initreqs.end(); iter++) {
+   for (dep_vector::const_iterator iter = initreqs.begin(); iter != initreqs.end(); iter++) {
      const Task::Dependency* dep = *iter;
      
      ConsecutiveRangeSet levels;
@@ -2183,12 +2212,12 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
    d_checkpointLabels.reserve(label_map.size());
    label_type::iterator mapIter;
    bool hasDelT = false;
-   for (mapIter = label_map.begin();
-        mapIter != label_map.end(); mapIter++) {
+   for (mapIter = label_map.begin(); mapIter != label_map.end(); mapIter++) {
      VarLabel* var = VarLabel::find(mapIter->first);
-     if (var == NULL)
-       throw ProblemSetupException(mapIter->first +
-                                   " variable not found to checkpoint.", __FILE__, __LINE__);
+     
+     if (var == NULL){
+       throw ProblemSetupException(mapIter->first + " variable not found to checkpoint.", __FILE__, __LINE__);
+     }
      
      saveItem.label = var;
      saveItem.matlSet.clear();
@@ -2218,8 +2247,10 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
 
    if (!hasDelT) {
      VarLabel* var = VarLabel::find("delT");
-     if (var == NULL)
+     if (var == NULL){
        throw ProblemSetupException("delT variable not found to checkpoint.", __FILE__, __LINE__);
+     }
+     
      saveItem.label = var;
      saveItem.matlSet.clear();
      ConsecutiveRangeSet globalMatl("-1");
@@ -2306,7 +2337,8 @@ DataArchiver::needRecompile(double /*time*/, double /*dt*/,
   return recompile;
 */
 }
-
+//______________________________________________________________________
+//
 string
 DataArchiver::TranslateVariableType( string type, bool isThisCheckpoint )
 {
