@@ -1,0 +1,150 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test TabProps interface for Wasatch</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+  
+  <!--__________________________________ -->
+  <RMCRT>
+    <randomSeed>         false     </randomSeed>
+    <Temperature>       64.804     </Temperature>
+    <abskg>             999        </abskg>
+    <nDivQRays>          3          </nDivQRays>
+    <Threshold>         0.05       </Threshold>
+    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+    <benchmark>         1          </benchmark>    
+    <solveBoundaryFlux> false      </solveBoundaryFlux>
+    <CCRays>            false      </CCRays>
+  </RMCRT>
+
+  <Wasatch>
+
+    <Density>
+      <Constant value="1.0" name="density"/>
+    </Density>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="temperature" state="STATE_NONE" />
+      <Constant>64.804</Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="temperature" state="STATE_NONE" />
+      <Constant>64.804</Constant>
+    </BasicExpression>
+    
+    <RMCRTBench>
+    	<AbsCoef> <NameTag name="AbsCoef" state="STATE_NONE" /> </AbsCoef>    
+    	<Temperature> <NameTag name="temperature" state="STATE_NONE" /> </Temperature>
+    </RMCRTBench>
+
+  </Wasatch>
+
+  <Time>
+    <maxTime>0.02</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>rmcrt-burns-christon.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle = "2" interval = "0.01"/>
+    <compression>gzip</compression>
+    <save label="AbsCoef"/>
+    <save label="temperature"/>    
+    <save label="RadiationSource"/>            
+    <save label="CellType"/>            
+    <save label="sigmaT4"/>
+  </DataArchiver>
+
+  <Grid>
+  
+      <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "temperature"     var = "Dirichlet"> 
+                            <value> 0. </value> 
+        </BCType> 
+        <BCType id = "0"   label = "AbsCoef"     var = "Dirichlet">
+                            <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "CellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "temperature"     var = "Dirichlet">
+                           <value> 0. </value>                
+        </BCType>
+        <BCType id = "0"   label = "AbsCoef"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "CellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "temperature"     var = "Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "AbsCoef"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "CellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType> 
+      </Face>               
+      <Face side = "y+">
+        <BCType id = "0"   label = "temperature"     var = "Dirichlet">
+                            <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "AbsCoef"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "CellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "temperature"     var = "Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "AbsCoef"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "CellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "temperature"     var = "Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "AbsCoef"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "CellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
+    <Level>
+      <Box label="1">
+         <lower>      [0,0,0]     </lower>         
+         <upper>      [1, 1, 1]   </upper>         
+         <resolution> [41,41,41]  </resolution>    
+         <patches>    [1,1,1]     </patches> 
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

@@ -137,7 +137,7 @@ namespace Wasatch{
 
 
   //------------------------------------------------------------------
-
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<int  >(){ return Uintah::Ghost::AroundCells; }
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SVolField  >(){ return Uintah::Ghost::AroundCells; }
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SSurfXField>(){ return Uintah::Ghost::AroundFaces; }
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SS::SSurfYField>(){ return Uintah::Ghost::AroundFaces; }

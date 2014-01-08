@@ -177,6 +177,11 @@ namespace Wasatch{
     typedef Uintah::PerPatch<double> const_type;
   };
 
+  template<> struct SelectUintahFieldType<int>{
+    typedef Uintah::     CCVariable<int>  type;
+    typedef Uintah::constCCVariable<int>  const_type;
+  };
+
   template<> struct SelectUintahFieldType<SpatialOps::structured::SVolField>{
     typedef Uintah::     CCVariable<double>  type;
     typedef Uintah::constCCVariable<double>  const_type;

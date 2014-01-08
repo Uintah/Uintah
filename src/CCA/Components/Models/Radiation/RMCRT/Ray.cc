@@ -543,7 +543,7 @@ Ray::sigmaT4( const ProcessorGroup*,
   if ( doCarryForward( timestep, radCalc_freq) ) {
     printTask( patches, patches->get(0), dbg, "Doing Ray::sigmaT4 carryForward (sigmaT4)" );
     
-    new_dw->transferFrom( old_dw, d_sigmaT4_label, patches, matls );
+    new_dw->transferFrom( old_dw, d_sigmaT4_label, patches, matls, true );
     return;
   }
   
@@ -1033,8 +1033,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   if ( doCarryForward( timestep, radCalc_freq) ) {
     printTask( fineLevel->getPatch(0), dbg, "Coing Ray::rayTrace_dataOnion carryForward ( divQ )" );
     
-    new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls );
-    new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls );    
+    new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, true );
+    new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, true );
     return;
   } 
   
@@ -1824,7 +1824,7 @@ void Ray::refine_Q(const ProcessorGroup*,
   if ( doCarryForward( timestep, radCalc_freq) ) {
     printTask( fineLevel->getPatch(0), dbg, "Doing Ray::refine_Q carryForward ( divQ )" );
     
-    new_dw->transferFrom( old_dw, d_divQLabel, patches, matls );
+    new_dw->transferFrom( old_dw, d_divQLabel, patches, matls, true );
     return;
   }
 
@@ -2085,10 +2085,10 @@ void  Ray::carryForward_rayTrace( const ProcessorGroup* pc,
     const Level* level = getLevel( patches );
     printTask( level->getPatch(0), dbg, "Doing Ray::rayTrace carryForward_rayTrace (divQ, VRFlux, boundFlux, radiationVolq )" );
     
-    new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls );
-    new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls );
-    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );
-    new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls );
+    new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, true );
+    new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls, true );
+    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, true );
+    new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, true );
 
     return;
   }
@@ -2119,7 +2119,7 @@ void Ray::carryForward_Var ( const ProcessorGroup*,
                              DataWarehouse* new_dw,
                              const VarLabel* variable)
 {
-  new_dw->transferFrom(old_dw, variable, patches, matls);
+  new_dw->transferFrom(old_dw, variable, patches, matls, true);
 }
 
 //______________________________________________________________________
