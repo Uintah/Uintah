@@ -189,7 +189,7 @@ using SCIRun::Mutex;
        void updateCheckpointInterval(double inv);
 
        double getOutputInterval(){return d_outputInterval;};
-       double getCheckpointInterval(){return d_checkpointInterval;};
+       double getCheckpointInterval(){return d_checkpointInterval;};       
 
      public:
 
@@ -204,16 +204,17 @@ using SCIRun::Mutex;
 
        class SaveItem {
          public:
-           void setMaterials(int level, const ConsecutiveRangeSet& matls,
-               ConsecutiveRangeSet& prevMatls,
-               MaterialSetP& prevMatlSet);
+           void setMaterials(int level, 
+                             const ConsecutiveRangeSet& matls,
+                             ConsecutiveRangeSet& prevMatls,
+                             MaterialSetP& prevMatlSet);
 
-           MaterialSet* getMaterialSet(int level)
-           { return matlSet_[level].get_rep(); }
+           MaterialSet* getMaterialSet(int level){ 
+             return matlSet[level].get_rep(); 
+           }
 
-           const VarLabel* label_;
-
-           std::map<int, MaterialSetP> matlSet_;
+           const VarLabel* label;
+           std::map<int, MaterialSetP> matlSet;
        };
 
      private:
@@ -329,8 +330,8 @@ using SCIRun::Mutex;
        std::vector< SaveItem > d_saveReductionLabels;
 
        // for efficiency of SaveItem's
-       ConsecutiveRangeSet prevMatls_;
-       MaterialSetP prevMatlSet_;     
+       ConsecutiveRangeSet d_prevMatls;
+       MaterialSetP d_prevMatlSet;     
 
        //! d_checkpointLabelNames is a temporary list containing
        //! the names of labels to save when checkpointing
