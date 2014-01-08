@@ -543,18 +543,15 @@ void TaskGraph::processDependencies(Task* task, Task::Dependency* req,
 void
 TaskGraph::nullSort( vector<Task*>& tasks )
 {
-  GraphSortInfoMap sortinfo;
-  // setupTaskConnections also creates the reduction tasks...
-  setupTaskConnections(sortinfo);
-
   vector<Task*>::iterator iter;
 
   // No longer going to sort them... let the MixedScheduler take care
   // of calling the tasks when all dependencies are satisfied.
   // Sorting the tasks causes problem because now tasks (actually task
   // groups) run in different orders on different MPI processes.
-
+  int n=0;
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+    (*iter)->setSortedOrder(n++);
     tasks.push_back( *iter );
   }
 }
@@ -643,7 +640,8 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
 
   TAU_PROFILE_START(sorttimer);
   vector<Task*> sorted_tasks;
-  topologicalSort(sorted_tasks);
+  //topologicalSort(sorted_tasks);
+  nullSort(sorted_tasks);
   TAU_PROFILE_STOP(sorttimer);
 
   d_reductionTasks.clear();
