@@ -12,7 +12,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+n *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,6 +25,10 @@
 #include <Core/IO/UintahZlibUtil.h>
 
 #include <cstdio>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <cstring>
 
 namespace Uintah {
 
@@ -70,10 +74,52 @@ getToken( gzFile & gzFp )
   return token;
 }
 
+static
+string
+getToken(std::stringstream& stream_file )
+{
+  string token;
+
+  while( true ) {
+
+    // char ch = gzgetc( gzFp );
+    char ch = stream_file.get();
+
+    if( ch == '#' ) { // The input line is commented out.
+      while( ch != '\n' ) { // Skip it.
+        // ch = gzgetc( gzFp );
+        ch = stream_file.get();
+      }
+    }
+
+    if( ch == -1 ) { // end of file reached
+      break;
+    }
+
+    if( ch == '\n' || ch == '\t' || ch == '\r' || ch == ' ' ) { // done reading token
+      if( token.size() > 0 ) {
+        break;
+      }
+      else {
+        continue; // until we get a non-empty token.
+      }
+    }
+    token.push_back( ch );
+  }
+  return token;
+}
+
+
 string
 getString( gzFile & gzFp )
 {
   return getToken( gzFp );
+}
+
+string
+getString(std::stringstream& stream_file )
+{
+  return getToken( stream_file );
 }
 
 double
@@ -85,11 +131,30 @@ getDouble( gzFile & gzFp )
   return out;
 }
 
+
+double
+getDouble(std::stringstream& stream_file )
+{
+  double out;
+  string result = getToken(stream_file );
+  sscanf( result.c_str(), "%lf", &out );
+  return out;
+}
+
 int
 getInt( gzFile & gzFp )
 {
   int out;
   string result = getToken( gzFp );
+  sscanf( result.c_str(), "%d", &out );
+  return out;
+}
+
+int
+getInt(std::stringstream& stream_file )
+{
+  int out;
+  string result = getToken( stream_file );
   sscanf( result.c_str(), "%d", &out );
   return out;
 }
@@ -119,6 +184,106 @@ getLine( gzFile & gzFp )
     line.push_back( ch );
   }
   return line;
+}
+
+string
+getLine(std::stringstream& stream_file )
+{
+  string line;
+
+  while( true ) {
+
+    // char ch = gzgetc( gzFp );
+    char ch = stream_file.get();
+
+    if( ch == '#' ) { // The input line is commented out.
+      while( ch != '\n' ) { // Skip it.
+        //  ch = gzgetc( gzFp );
+        ch = stream_file.get();
+      }
+    }
+
+    if( ch == -1 ) { // end of file reached
+      break;
+    }
+
+    if( ch == '\n' ) { // done reading line
+      break;
+    }
+    line.push_back( ch );
+  }
+  return line;
+}
+
+
+int gzipInflate(const std::string& filename, std::string& uncomp_table_contents)
+{
+
+  std::ifstream table_file(filename.c_str(), std::ios::binary);
+  std::stringstream table_buffer;
+  table_buffer << table_file.rdbuf();
+  std::string compressedBytes = table_buffer.str();
+  table_file.close();
+
+  if ( compressedBytes.size() == 0 ) {  
+    uncomp_table_contents = compressedBytes ;  
+    return 0 ;  
+  }  
+  
+  uncomp_table_contents.clear() ;  
+  
+  unsigned full_length = compressedBytes.size() ;  
+  unsigned half_length = compressedBytes.size() / 2;  
+  
+  unsigned uncompLength = full_length ;  
+  char* uncomp = new char[uncompLength];
+  
+  z_stream strm;  
+  strm.next_in = (Bytef *) compressedBytes.c_str();  
+  strm.avail_in = compressedBytes.size() ;  
+  strm.total_out = 0;  
+  strm.zalloc = Z_NULL;  
+  strm.zfree = Z_NULL;  
+  bool done = false ;  
+  
+  if (inflateInit2(&strm, (16+MAX_WBITS)) != Z_OK) {  
+    delete[] uncomp;  
+    return 0;  
+  }  
+  
+  while (!done) {  
+    // If our output buffer is too small  
+    if (strm.total_out >= uncompLength ) {  
+      // Increase size of output buffer  
+      char* uncomp2 = new char[uncompLength + half_length];  
+      memcpy( uncomp2, uncomp, uncompLength );
+      uncompLength += half_length ;  
+      delete[] uncomp ;  
+      uncomp = uncomp2 ;  
+    }  
+  
+    strm.next_out = (Bytef *) (uncomp + strm.total_out);  
+    strm.avail_out = uncompLength - strm.total_out;  
+  
+    // Inflate another chunk.  
+    int err = inflate (&strm, Z_SYNC_FLUSH);  
+    if (err == Z_STREAM_END) done = true;  
+    else if (err != Z_OK)  {  
+      break;  
+    }  
+  }  
+  
+  if (inflateEnd (&strm) != Z_OK) {  
+    delete [] uncomp;  
+    return 0;  
+  }  
+  
+  for ( size_t i=0; i<strm.total_out; ++i ) {  
+    uncomp_table_contents += uncomp[ i ];  
+  }  
+  delete [] uncomp ;  
+
+  return uncomp_table_contents.size();
 }
 
 } // end namespace Uintah

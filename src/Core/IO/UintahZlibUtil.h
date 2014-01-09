@@ -24,7 +24,7 @@
 
 
 #include <zlib.h>
-
+#include <sstream>
 #include <string>
 
 namespace Uintah {
@@ -34,18 +34,23 @@ namespace Uintah {
 // defined as a contiguous group of characters separated by white
 // space (tabs, spaces, new lines, etc.)
 
-std::string getString( gzFile & gzFp );
+  std::string getString( gzFile & gzFp );
+  std::string getString( std::stringstream &file_stream );
 
-double      getDouble( gzFile & gzFp );
+  double      getDouble( gzFile & gzFp );
+  double      getDouble( std::stringstream &file_stream );
 
-int         getInt(    gzFile & gzFp );
+  int         getInt(    gzFile & gzFp );
+  int         getInt( std::stringstream &file_stream );
 
-// Returns a full line... If the line is a comment it is skipped and
-// the next line is returned.  If the line is empty, an empty string
-// is returned.
+  // Returns a full line... If the line is a comment it is skipped and
+  // the next line is returned.  If the line is empty, an empty string
+  // is returned.
 
-std::string getLine(   gzFile & gzFp );
+  std::string getLine(   gzFile & gzFp );
+  std::string getLine(std::stringstream &file_stream );
 
-
+  int gzipInflate(const std::string& filename,
+                  std::string& uncomp_table_contents);
 
 } // end namespace Uintah
