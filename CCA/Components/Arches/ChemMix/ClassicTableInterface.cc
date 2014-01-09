@@ -43,10 +43,16 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
-#include <stdio.h>
+#include <cstdio>
+#include <zlib.h>
+#include <sstream>
+
+#define OLD_TABLE 1
+#undef OLD_TABLE
 
 using namespace std;
 using namespace Uintah;
@@ -86,16 +92,55 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   // READ TABLE: 
   proc0cout << "----------Mixing Table Information---------------  " << endl;
+
+  unsigned int table_size = 0;
+  char* table_contents;
+  std::string uncomp_table_contents;
+
+  int mpi_rank = Parallel::getMPIRank();
+
+#ifndef OLD_TABLE
+  if (mpi_rank == 0) {
+    table_size = gzipInflate(tableFileName,uncomp_table_contents);
+    table_contents = (char*) uncomp_table_contents.c_str();
+    proc0cout << tableFileName << " is " << table_size << " bytes" << endl;
+  }
+
+  MPI_Bcast(&table_size,1,MPI_INT,0,
+            Parallel::getRootProcessorGroup()->getComm());
+
+  if (mpi_rank != 0) {
+    int receive_table_size = table_size;
+    table_contents = scinew char[table_size];
+  }
+    
+  MPI_Bcast(table_contents, table_size, MPI_CHAR, 0, 
+            Parallel::getRootProcessorGroup()->getComm());
+
+  std::stringstream table_contents_stream;
+  table_contents_stream << table_contents;
+#endif
+
+#ifdef OLD_TABLE
   gzFile gzFp = gzopen(tableFileName.c_str(),"r");
   if( gzFp == NULL ) {
     // If errno is 0, then not enough memory to uncompress file.
     proc0cout << "Error with gz in opening file: " << tableFileName << ". Errno: " << errno << "\n"; 
     throw ProblemSetupException("Unable to open the given input file: " + tableFileName, __FILE__, __LINE__);
   }
+
   loadMixingTable(gzFp, tableFileName );
   gzrewind(gzFp);
   checkForConstants(gzFp, tableFileName );
   gzclose(gzFp);
+#else
+  loadMixingTable(table_contents_stream, tableFileName );
+  table_contents_stream.seekg(0);
+  checkForConstants(table_contents_stream, tableFileName );
+  if (mpi_rank != 0)
+    delete [] table_contents;
+#endif
+  
   proc0cout << "-------------------------------------------------  " << endl;
 
   // Extract independent and dependent variables from input file
@@ -902,6 +947,145 @@ ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
   proc0cout << "Table successfully loaded into memory!" << endl;
 
 }
+
+void
+ClassicTableInterface::loadMixingTable(stringstream& table_stream, 
+                                       const string & inputfile )
+{
+
+  proc0cout << " Preparing to read the table inputfile:   " << inputfile << "\n";
+  d_indepvarscount = getInt( table_stream );
+
+  proc0cout << " Total number of independent variables: " << d_indepvarscount << endl;
+
+  d_allIndepVarNames = vector<std::string>(d_indepvarscount);
+
+  d_allIndepVarNum = vector<int>(d_indepvarscount);
+
+  for (int ii = 0; ii < d_indepvarscount; ii++){
+    std::string varname = getString( table_stream );
+    d_allIndepVarNames[ii] = varname;
+  }
+  for (int ii = 0; ii < d_indepvarscount; ii++){
+    int grid_size = getInt( table_stream );
+    d_allIndepVarNum[ii] = grid_size;
+  }
+
+  d_varscount = getInt( table_stream );
+  proc0cout << " Total dependent variables in table: " << d_varscount << endl;
+
+  d_allDepVarNames = vector<std::string>(d_varscount); 
+  for (int ii = 0; ii < d_varscount; ii++) {
+
+    std::string variable; 
+    variable = getString( table_stream );
+    d_allDepVarNames[ii] = variable ; 
+
+  }
+
+  // Units
+  d_allDepVarUnits = vector<std::string>(d_varscount); 
+  for (int ii = 0; ii < d_varscount; ii++) {
+    std::string units = getString( table_stream );
+    d_allDepVarUnits[ii] =  units ; 
+  }
+  
+  //indep vars grids
+  indep_headers = vector<vector<double> >(d_indepvarscount);  //vector contains 2 -> N dimensions
+  for (int i = 0; i < d_indepvarscount - 1; i++) {
+    indep_headers[i] = vector<double>(d_allIndepVarNum[i+1]);
+  }
+  i1 = vector<vector<double> >(d_allIndepVarNum[d_indepvarscount-1]);
+  for (int i = 0; i < d_allIndepVarNum[d_indepvarscount-1]; i++) {
+	  i1[i] = vector<double>(d_allIndepVarNum[0]);
+  }
+  //assign values (backwards)
+  for (int i = d_indepvarscount-2; i>=0; i--) {
+	  for (int j = 0; j < d_allIndepVarNum[i+1] ; j++) {
+	    double v = getDouble( table_stream );
+	    indep_headers[i][j] = v;
+	  }
+  }
+	
+  int size=1;
+  //ND size
+  for (int i = 0; i < d_indepvarscount; i++) {
+	  size = size*d_allIndepVarNum[i];
+  }
+
+
+  table = vector<vector<double> >(d_varscount); 
+  for ( int i = 0; i < d_varscount; i++ ){ 
+    table[i] = vector<double>(size);
+  }
+
+  int size2 = size/d_allIndepVarNum[d_indepvarscount-1];
+  proc0cout << "Table size " << size << endl;
+  
+  proc0cout << "Reading in the dependent variables: " << endl;
+  bool read_assign = true; 
+	if (d_indepvarscount > 1) {
+	  for (int kk = 0; kk < d_varscount; kk++) {
+	    proc0cout << " loading ---> " << d_allDepVarNames[kk] << endl;
+	
+	    for (int mm = 0; mm < d_allIndepVarNum[d_indepvarscount-1]; mm++) {
+			  if (read_assign) {
+				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
+					  double v = getDouble(table_stream);
+					  i1[mm][i] = v;
+				  }
+			  } else {
+				  //read but don't assign inbetween vals
+				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
+					  double v = getDouble(table_stream);
+					  v += 0.0;
+				  }
+			  }
+			    for (int j=0; j<size2; j++) {
+				    double v = getDouble(table_stream);
+				    table[kk][j + mm*size2] = v;
+				  }
+			  }
+		  if ( read_assign ) { read_assign = false; }
+	  } 
+	} else {
+		for (int kk = 0; kk < d_varscount; kk++) {
+			proc0cout << "loading --->" << d_allDepVarNames[kk] << endl;
+			if (read_assign) {
+				for (int i=0; i<d_allIndepVarNum[0]; i++) {
+					double v = getDouble(table_stream);
+					i1[0][i] = v;
+				}
+			} else { 
+			  for (int i=0; i<d_allIndepVarNum[0]; i++) {
+					double v = getDouble(table_stream);
+					v += 0.0;
+				}	
+			}
+			for (int j=0; j<size; j++) {
+				double v = getDouble(table_stream);
+				table[kk][j] = v;
+			}
+			if (read_assign){read_assign = false;}
+	  }
+	}
+  
+
+	if (d_indepvarscount == 1) {
+		ND_interp = new Interp1(d_allIndepVarNum, table, i1);
+  }	else if (d_indepvarscount == 2) {
+ 	  ND_interp = new Interp2(d_allIndepVarNum, table, indep_headers, i1);
+  } else if (d_indepvarscount == 3) {
+	  ND_interp = new Interp3(d_allIndepVarNum, table, indep_headers, i1);
+  } else if (d_indepvarscount == 4) {
+		ND_interp = new Interp4(d_allIndepVarNum, table, indep_headers, i1);
+	} else {  //IV > 4
+		ND_interp = new InterpN(d_allIndepVarNum, table, indep_headers, i1, d_indepvarscount);
+	}
+	  
+  proc0cout << "Table successfully loaded into memory!" << endl;
+
+}
 //---------------------------
 double 
 ClassicTableInterface::getTableValue( std::vector<double> iv, std::string variable )
@@ -1033,6 +1217,74 @@ void ClassicTableInterface::checkForConstants(gzFile &fp, const string & inputfi
       } else { 
         while ( true ) { 
           ch = gzgetc( fp ); // skipping this line
+          if ( ch == '\n' || ch == '\t' ) { 
+            break; 
+          }
+        }
+      }
+
+    } else {
+
+      look = false; 
+
+    }
+  }
+}
+
+void ClassicTableInterface::checkForConstants(stringstream &table_stream, 
+                                              const string & inputfile ) 
+{ 
+
+  proc0cout << "\n Looking for constants in the header... " << endl;
+
+  bool look = true; 
+  while ( look ){ 
+
+    //    char ch = gzgetc( table_stream ); 
+    char ch = table_stream.get(); 
+
+    if ( ch == '#' ) { 
+
+      //  char key = gzgetc( table_stream );
+      char key = table_stream.get() ;
+
+      if ( key == 'K' ) {
+        for (int i = 0; i < 3; i++ ){
+          //  key = gzgetc( table_stream ); // reading the word KEY and space
+          key = table_stream.get() ; // reading the word KEY and space
+        }
+
+        string name; 
+        while ( true ) {
+          //  key = gzgetc( table_stream ); 
+          key = table_stream.get(); 
+          if ( key == '=' ) { 
+            break; 
+          }
+          name.push_back( key );  // reading in the token's key name
+        }
+
+        string value_s; 
+        while ( true ) { 
+          //  key = gzgetc( table_stream ); 
+          key = table_stream.get(); 
+          if ( key == '\n' || key == '\t' || key == ' ' ) { 
+            break; 
+          }
+          value_s.push_back( key ); // reading in the token's value
+        }
+
+        double value; 
+        sscanf( value_s.c_str(), "%lf", &value );
+
+        proc0cout << " KEY found: " << name << " = " << value << endl;
+
+        d_constants.insert( make_pair( name, value ) ); 
+
+      } else { 
+        while ( true ) { 
+          // ch = gzgetc( table_stream ); // skipping this line
+          ch = table_stream.get(); // skipping this line
           if ( ch == '\n' || ch == '\t' ) { 
             break; 
           }
