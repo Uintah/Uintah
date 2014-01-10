@@ -74,6 +74,8 @@
 #include "Expressions/RadiationSource.h"
 #include "Expressions/SetCurrentTime.h"
 #include "Expressions/NullExpression.h"
+#include "Expressions/MMS/Functions.h"
+
 #include "transport/ParseEquation.h"
 
 #include "transport/TransportEquation.h"
@@ -694,8 +696,21 @@ namespace Wasatch{
         temperatureTag = parse_nametag(greyGasSpec->findBlock("Temperature")->findBlock("NameTag"));
         
       } else if ( RMCRTBenchSpec ) {
-        absorptionCoefTag = parse_nametag(RMCRTBenchSpec->findBlock("AbsCoef")->findBlock("NameTag"));
-        temperatureTag    = parse_nametag(RMCRTBenchSpec->findBlock("Temperature")->findBlock("NameTag"));
+        
+        const TagNames& tagNames = TagNames::self();
+        
+        absorptionCoefTag = tagNames.absorption;
+        temperatureTag    = tagNames.temperature;
+        
+        // check which benchmark we are using:
+        std::string benchName;
+        RMCRTBenchSpec->getAttribute("benchmark", benchName);
+        if (benchName == "BurnsChriston") {
+          // register constant temperature expression:
+          graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression(new Expr::ConstantExpr<SVolField>::Builder(temperatureTag,64.804));
+          // register Burns-Christon trilinear abskg
+          graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression(new BurnsChristonAbskg<SVolField>::Builder(absorptionCoefTag,tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.zsvolcoord));
+        }
       }
       
       const Expr::ExpressionID exprID = graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( new RadiationSource::Builder( tag_list( TagNames::self().radiationsource, TagNames::self().radvolq, TagNames::self().radvrflux ) ,
