@@ -27,6 +27,22 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
+      <NameTag name="AbsCoef" state="STATE_NONE" />
+      <BurnsChristonAbskg/>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="AbsCoef" state="STATE_NONE" />
+      <BurnsChristonAbskg/>
+    </BasicExpression>
+
+    <ForceOnGraph tasklist="initialization">
+      <NameTag name="AbsCoef" state="STATE_NONE" />
+    </ForceOnGraph>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
       <NameTag name="temperature" state="STATE_NONE" />
       <Constant>64.804</Constant>
     </BasicExpression>
@@ -138,8 +154,8 @@
 
     <Level>
       <Box label="1">
-         <lower>      [0,0,0]     </lower>         
-         <upper>      [1, 1, 1]   </upper>         
+         <lower>      [-0.5,-0.5,-0.5]     </lower>         
+         <upper>      [0.5, 0.5, 0.5]   </upper>         
          <resolution> [41,41,41]  </resolution>    
          <patches>    [2,2,2]     </patches> 
       </Box>
