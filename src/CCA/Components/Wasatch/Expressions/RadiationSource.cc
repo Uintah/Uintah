@@ -158,9 +158,6 @@ RadiationSource::schedule_ray_tracing( const Uintah::LevelP& level,
     const LevelP& fineLevel = grid->getLevel(0);
     Uintah::Task::WhichDW temp_dw = Task::NewDW;
 
-    // modify Radiative properties on the finest level
-    RMCRT_->sched_initProperties( fineLevel, sched, _radiation_calc_freq );
-
     RMCRT_->sched_sigmaT4( fineLevel,  sched, temp_dw, 1, includeExtraCells );
     
     for (int l = 0; l < maxLevels; l++) {

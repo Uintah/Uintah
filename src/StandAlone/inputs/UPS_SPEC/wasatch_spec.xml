@@ -36,12 +36,14 @@
                                        StepFunction,PlusProfile,SineTime,ExprAlgebra,Cylinder,
                                        WallDistanceFunction,ReadFromFile,RandomField,
                                        ExponentialVortex,LambsDipole,TimeDerivative,
-                                       RayleighTaylor)" >
+                                       RayleighTaylor, BurnsChristonAbskg)" >
                                        
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
       <Constant           spec="OPTIONAL DOUBLE" />
 
+      <BurnsChristonAbskg spec="OPTIONAL NO_DATA"/>
+      
       <LinearFunction     spec="OPTIONAL NO_DATA"
                             attribute1="slope REQUIRED DOUBLE"      
                             attribute2="intercept REQUIRED DOUBLE" >

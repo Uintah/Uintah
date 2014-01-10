@@ -695,7 +695,6 @@ namespace Wasatch{
         
       } else if ( RMCRTBenchSpec ) {
         absorptionCoefTag = parse_nametag(RMCRTBenchSpec->findBlock("AbsCoef")->findBlock("NameTag"));
-        graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression(new Expr::ConstantExpr<SVolField>::Builder(absorptionCoefTag,0.0));
         temperatureTag    = parse_nametag(RMCRTBenchSpec->findBlock("Temperature")->findBlock("NameTag"));
       }
       
