@@ -207,9 +207,8 @@
             <calc_frequency>1</calc_frequency>
             <RMCRT>
                 <randomSeed>         false     </randomSeed>
-                <abskg>             999        </abskg>
-                <nDivQRays>          2          </nDivQRays>
-                <nFluxRays>          2           </nFluxRays>
+                <nDivQRays>          2         </nDivQRays>
+                <nFluxRays>          2         </nFluxRays>
                 <Threshold>         0.05       </Threshold>
                 <solveBoundaryFlux> true       </solveBoundaryFlux>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
