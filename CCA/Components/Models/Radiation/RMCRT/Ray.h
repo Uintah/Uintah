@@ -106,14 +106,7 @@ namespace Uintah{
                           Task::WhichDW which_divQ_dw,
                           const bool includeEC = true,
                           bool modifies_divQFilt = false);
-
-
-#if 0
-      /** @brief Initializes properties for the algorithm */ 
-      void sched_initProperties( const LevelP&, 
-                                 SchedulerP& sched,
-                                 const int radCalc_freq );
-#endif                                 
+                                 
       /** @brief Set boundary conditions and compute sigmaT4 */
       void  sched_setBoundaryConditions( const LevelP& level, 
                                          SchedulerP& sched,
@@ -282,7 +275,8 @@ namespace Uintah{
                                const int radCalc_freq );
                                
                                
-      /** @brief Update the running total of the incident intensity */
+      //__________________________________
+      // @brief Update the running total of the incident intensity */
       void  updateSumI ( Vector& ray_direction, // can change if scattering occurs
                          Vector& ray_location,
                          const IntVector& origin,
@@ -324,15 +318,6 @@ namespace Uintah{
                         std::vector<IntVector>& regionLo,
                         std::vector<IntVector>& regionHi);
 
-#if 0
-      //----------------------------------------
-      void initProperties( const ProcessorGroup* pc, 
-                           const PatchSubset* patches, 
-                           const MaterialSubset* matls, 
-                           DataWarehouse* old_dw, 
-                           DataWarehouse* new_dw,
-                           const int radCalc_freq ); 
-#endif
       //----------------------------------------
       void sigmaT4( const ProcessorGroup* pc,
                     const PatchSubset* patches,
