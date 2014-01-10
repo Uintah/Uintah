@@ -105,7 +105,8 @@ WARNING
                                  DataWarehouse* old_dw, 
                                  DataWarehouse* new_dw );
 
-                                                    
+    //__________________________________
+    //                                                
     void schedulePseudoCFD(SchedulerP& sched,
                            const PatchSet* patches,
                            const MaterialSet* matls);
@@ -116,8 +117,26 @@ WARNING
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw);
                      
+    //__________________________________
+    // initialize the temperature/abskg/abskp 
+    void sched_initProperties( const LevelP&, 
+                               SchedulerP& sched,
+                               const int radCalc_freq );
+
+    void initProperties( const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset* matls, 
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw,
+                         const int radCalc_freq );
+    //__________________________________
+    //                     
     void areGridsEqual( const GridP& uda_grid, 
                         const GridP& grid );
+    //__________________________________
+    //                      
+    bool doCarryForward( const int timestep,
+                         const int radCalc_freq);
 
    protected:
     const ProcessorGroup* d_myworld;
@@ -138,11 +157,15 @@ WARNING
     
     double   d_initColor;
     double   d_initAbskg;
+    
     int      d_radCalc_freq;
     int      d_matl;
     int      d_wall_cell; 
     int      d_flow_cell;
     int      d_whichAlgo;
+    int      d_benchmark;
+
+    
     enum Algorithm{ dataOnion, coarseLevel}; 
     
     std::vector<GeometryPieceP>  d_intrusion_geom;

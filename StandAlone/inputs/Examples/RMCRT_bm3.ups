@@ -79,7 +79,7 @@
       <Box label = "0">                              
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
-         <resolution> [9,9,9]  </resolution>    
+         <resolution> [9,9,9]     </resolution>    
          <patches>    [1,1,1]     </patches> 
          <extraCells> [1,1,1]     </extraCells>
       </Box>
@@ -99,10 +99,11 @@
   
   
   <!--__________________________________ -->
+  <Temperature>         64.804     </Temperature> 
+  <abskg>               999        </abskg> 
+        
   <RMCRT>
     <randomSeed>         false     </randomSeed>
-    <Temperature>       64.804     </Temperature>
-    <abskg>             999        </abskg>
     <nDivQRays>          3         </nDivQRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>

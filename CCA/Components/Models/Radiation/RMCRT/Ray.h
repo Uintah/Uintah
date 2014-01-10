@@ -108,11 +108,12 @@ namespace Uintah{
                           bool modifies_divQFilt = false);
 
 
+#if 0
       /** @brief Initializes properties for the algorithm */ 
       void sched_initProperties( const LevelP&, 
                                  SchedulerP& sched,
                                  const int radCalc_freq );
-                                 
+#endif                                 
       /** @brief Set boundary conditions and compute sigmaT4 */
       void  sched_setBoundaryConditions( const LevelP& level, 
                                          SchedulerP& sched,
@@ -171,7 +172,8 @@ namespace Uintah{
       
       double _Threshold;
       double _sigma;
-      double _sigmaT4_thld;                  // threshold values for determining the extents of ROI
+      double _sigmaScat;
+      double _sigmaT4_thld;                 // threshold values for determining the extents of ROI
       double _abskg_thld;
       
        
@@ -179,17 +181,12 @@ namespace Uintah{
       int    _nRadRays;                     // number of rays per radiometer used to compute radiative flux
       int    _nFluxRays;                    // number of rays per cell used to compute radiative flux
       int    d_matl;
-      int    d_orderOfInterpolation;         // Order of interpolation for interior fine patch
+      int    d_orderOfInterpolation;        // Order of interpolation for interior fine patch
       
       MaterialSet* d_matlSet;
-      IntVector _halo;                       // number of cells surrounding a coarse patch on coarser levels
+      IntVector _halo;                      // number of cells surrounding a coarse patch on coarser levels
       
       double _sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
-
-
-      double _sigmaScat;
-      double _abskgBench4;
-      int  _benchmark; 
       bool _isSeedRandom;
       bool _solveBoundaryFlux;
       bool _solveDivQ;          
@@ -327,6 +324,7 @@ namespace Uintah{
                         std::vector<IntVector>& regionLo,
                         std::vector<IntVector>& regionHi);
 
+#if 0
       //----------------------------------------
       void initProperties( const ProcessorGroup* pc, 
                            const PatchSubset* patches, 
@@ -334,7 +332,7 @@ namespace Uintah{
                            DataWarehouse* old_dw, 
                            DataWarehouse* new_dw,
                            const int radCalc_freq ); 
-
+#endif
       //----------------------------------------
       void sigmaT4( const ProcessorGroup* pc,
                     const PatchSubset* patches,

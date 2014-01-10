@@ -109,9 +109,11 @@
   </initalizeUsingUda>
 
   <!--__________________________________ -->
+  <Temperature>        999        </Temperature>
+  <abskg>              999        </abskg>  
+  <benchmark>          0          </benchmark>
+  
   <RMCRT>
-    <Temperature>        999        </Temperature>
-    <abskg>              999        </abskg>
     <randomSeed>        false       </randomSeed>
     <nDivQRays>         10          </nDivQRays>
     <Threshold>         0.05        </Threshold>
@@ -120,12 +122,10 @@
     <nFluxRays>         10          </nFluxRays>
     <allowReflect>      true        </allowReflect>
     <ignore_BC_bulletproofing> false </ignore_BC_bulletproofing>
-    <benchmark>         0           </benchmark>
     <CCRays>          false         </CCRays>
     <VirtRadiometer>  false         </VirtRadiometer>
     <nRadRays>        10            </nRadRays>
     <sigmaScat>       1.0           </sigmaScat>
-    <abskgBench4>     1             </abskgBench4>
     <solveDivQ>       true          </solveDivQ>
     <applyFilter>     false         </applyFilter>
   </RMCRT>
