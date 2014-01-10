@@ -51,11 +51,12 @@ namespace Wasatch{
   zzvolcoord( "ZZVOL", Expr::STATE_NONE ),
   
   // energy related variables
-  temperature        ( "Temperature",        Expr::STATE_NONE ),
-  radiationsource    ( "RadiationSource",    Expr::STATE_NONE ),
-  radvolq    ( "radiationVolq",    Expr::STATE_NONE ),
-  radvrflux    ( "VRFlux",    Expr::STATE_NONE ),
-  kineticEnergy      ( "KineticEnergy",      Expr::STATE_NONE ),
+  temperature        ( "Temperature"       , Expr::STATE_NONE ),
+  absorption         ( "AbsCoef"           , Expr::STATE_NONE ),
+  radiationsource    ( "RadiationSource"   , Expr::STATE_NONE ),
+  radvolq            ( "radiationVolq"     , Expr::STATE_NONE ),
+  radvrflux          ( "VRFlux"            , Expr::STATE_NONE ),
+  kineticEnergy      ( "KineticEnergy"     , Expr::STATE_NONE ),
   totalKineticEnergy ( "TotalKineticEnergy", Expr::STATE_NONE ),
   
   
