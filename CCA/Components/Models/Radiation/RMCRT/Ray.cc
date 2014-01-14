@@ -478,6 +478,13 @@ Ray::sched_rayTrace( const LevelP& level,
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
   tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+  
+  // needed for carry Forward
+  tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
+  tsk->requires( Task::OldDW, d_VRFluxLabel,         d_gn, 0 );
+  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
+  tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
+  
     
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
@@ -514,7 +521,14 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
   const Level* level = getLevel(patches);
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  
   if ( doCarryForward( timestep, radCalc_freq) ) {
+    printTask(patches,patches->get(0), dbg,"Doing Ray::rayTrace (carryForward)");
+    bool replaceVar = true;
+    new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, replaceVar );
+    new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls, replaceVar );
+    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, replaceVar );
+    new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, replaceVar );
     return;
   }
   
@@ -859,6 +873,11 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   // finest level:
   tsk->requires(abskg_dw, d_abskgLabel,     gac, SHRT_MAX);
   tsk->requires(sigma_dw, d_sigmaT4_label,  gac, SHRT_MAX);
+  
+  // needed for carry Forward
+  tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
+  tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
+  
   
   if( _whichROI_algo == dynamic ){
     tsk->requires(Task::NewDW, d_ROI_LoCellLabel);
@@ -1922,55 +1941,6 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                            coarsePatch, coarseLevel, fineLevel);        
     }
   }  // course patch loop 
-}
-
-
-//______________________________________________________________________
-//  Carry forward variables that are computed on a radiatiion step
-// create a separate task since the Unified scheduler doesn't support
-// pulling data from the old_dw AND not computing something.
-void Ray::sched_carryForward_rayTrace( const LevelP& level, 
-                                       SchedulerP& sched,
-                                       const int radCalc_freq )
-{
-
-  Task* tsk= scinew Task( "Ray::carryForward_rayTrace", this, 
-                           &Ray::carryForward_rayTrace, radCalc_freq );
-
-
-  printSchedule(level,dbg, "Ray::carryForward_rayTrace");
-  
-  tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
-  tsk->requires( Task::OldDW, d_VRFluxLabel,         d_gn, 0 );
-  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
-  tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
-
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );  
-}
-
-//______________________________________________________________________
-
-void  Ray::carryForward_rayTrace( const ProcessorGroup* pc,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw,
-                                  const int radCalc_freq )
-{ 
-   //__________________________________
-  //  Carry Forward (old_dw -> new_dw)
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
-    const Level* level = getLevel( patches );
-    printTask( level->getPatch(0), dbg, "Doing Ray::rayTrace carryForward_rayTrace (divQ, VRFlux, boundFlux, radiationVolq )" );
-    
-    new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, true );
-    new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls, true );
-    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, true );
-    new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, true );
-
-    return;
-  }
 }
 
 //______________________________________________________________________

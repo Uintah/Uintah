@@ -109,6 +109,8 @@
   <Temperature>       1500       </Temperature>
   <abskg>             1.0        </abskg>  
   <benchmark>         2          </benchmark>
+  <calc_frequency>    1          </calc_frequency>
+
   
   <RMCRT>
     <randomSeed>         false     </randomSeed>
