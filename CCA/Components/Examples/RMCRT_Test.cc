@@ -403,8 +403,6 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
         
         d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
         
-      //  d_RMCRT->sched_carryForward_rayTrace( level, sched, d_radCalc_freq );
-        
         d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq );
       }
     }
