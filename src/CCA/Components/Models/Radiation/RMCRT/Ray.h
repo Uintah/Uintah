@@ -130,17 +130,15 @@ namespace Uintah{
 
       void sched_ROI_Extents ( const LevelP& level, 
                                SchedulerP& scheduler );
+ 
+
       //__________________________________
       //  Carry Forward tasks     
       // transfer a variable from old_dw -> new_dw for convience */   
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
                                     const VarLabel* variable );
-                                    
-      void sched_carryForward_rayTrace( const LevelP& level, 
-                                        SchedulerP& sched,
-                                        const int radCalc_freq );
-      
+
                                
       //__________________________________
       //  Helpers

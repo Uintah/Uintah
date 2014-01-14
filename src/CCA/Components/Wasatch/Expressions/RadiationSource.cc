@@ -174,8 +174,6 @@ RadiationSource::schedule_ray_tracing( const Uintah::LevelP& level,
         Task::WhichDW celltype_dw = Task::NewDW;
 
         RMCRT_->sched_setBoundaryConditions( level, sched, temp_dw, _radiation_calc_freq, false );
-
-        RMCRT_->sched_carryForward_rayTrace( level, sched, _radiation_calc_freq );
         
         RMCRT_->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq );
       }

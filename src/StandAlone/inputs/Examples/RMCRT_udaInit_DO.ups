@@ -147,6 +147,7 @@
   <!--__________________________________ -->
   <Temperature>       999        </Temperature>
   <abskg>             999        </abskg>
+  <calc_frequency>    1          </calc_frequency>
     
   <RMCRT>
     <randomSeed>       true        </randomSeed>

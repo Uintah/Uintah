@@ -112,6 +112,7 @@
   <Temperature>        999        </Temperature>
   <abskg>              999        </abskg>  
   <benchmark>          0          </benchmark>
+  <calc_frequency>    1           </calc_frequency>
   
   <RMCRT>
     <randomSeed>        false       </randomSeed>
