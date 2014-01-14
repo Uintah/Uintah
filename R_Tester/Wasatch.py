@@ -123,6 +123,7 @@ DEBUGTESTS = [
   ]
 
 NIGHTLYTESTS = [
+  ("RMCRT-Burns-Christon", "RMCRT-Burns-Christon.ups",   8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("clip-with-intrusions-test",           "clip-with-intrusions-test.ups",    4,  "Linux",  ["exactComparison","no_restart"] ),
   ("reduction-test",       "reduction-test.ups",  4,  "Linux",  ["exactComparison","no_restart"] ),
   ("lid-drive-cavity-xy-Re1000-adaptive",       liddrivencavityXYRe1000adaptive_ups,  4,  "All",  ["exactComparison","no_restart"] ),
