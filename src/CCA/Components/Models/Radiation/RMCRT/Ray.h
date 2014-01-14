@@ -469,13 +469,6 @@ namespace Uintah{
                             DataWarehouse*,
                             DataWarehouse*,
                             const VarLabel* variable);
-                            
-    void  carryForward_rayTrace( const ProcessorGroup* pc,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* matls,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw,
-                                 const int radCalc_freq );
                         
     //______________________________________________________________________
     //  Helpers
