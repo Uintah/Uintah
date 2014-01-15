@@ -1162,7 +1162,8 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
   is_press_BC_set["z-"] = (periodic.z() ==1) ? 1:0;
   is_press_BC_set["z+"] = (periodic.z() ==1) ? 1:0;
   
-  // loop over all faces
+  // loop over all boundary conditions for a face
+  // This include circles, rectangles, annulus
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
                     face_ps=face_ps->findNextBlock("Face")) {
   
@@ -1175,16 +1176,29 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
                       
     map<string,string> face;
     face_ps->getAttributes(face);
+
+    //loop through the attributes and find  (x-,x+,y-,y+... )
+    string side = "NULL";
     
+    for( map<string,string>::iterator iter = face.begin(); iter !=  face.end(); iter++ ){
+      string me = (*iter).second;
+      if( me =="x-" || me == "x+" ||
+          me =="y-" || me == "y+" ||
+          me =="z-" || me == "z+" ){
+        side = me;
+        continue;
+      }
+    }
+
     // tag each face if it's been specified
-    if(face["side"] == "x-") tagFace_minus.x(1);
-    if(face["side"] == "y-") tagFace_minus.y(1);
-    if(face["side"] == "z-") tagFace_minus.z(1);
-            
-    if(face["side"] == "x+") tagFace_plus.x(1);
-    if(face["side"] == "y+") tagFace_plus.y(1);
-    if(face["side"] == "z+") tagFace_plus.z(1);
-        
+    if(side == "x-") tagFace_minus.x(1);   
+    if(side == "y-") tagFace_minus.y(1);   
+    if(side == "z-") tagFace_minus.z(1);   
+
+    if(side == "x+") tagFace_plus.x(1);    
+    if(side == "y+") tagFace_plus.y(1);    
+    if(side == "z+") tagFace_plus.z(1);
+
     // loop over all BCTypes for that face 
     for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
                      bc_iter = bc_iter->findNextBlock("BCType")){
@@ -1227,7 +1241,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
       
       // All passed tests on this face set the flags to true
       if(bc_type["label"] == "Pressure" || bc_type["label"] == "Symmetric"){
-        is_press_BC_set[face["side"]]  +=1;
+        is_press_BC_set[side]  +=1;
       }
       isBC_set[bc_type["label"]] = true;
     }  // BCType loop
@@ -1248,24 +1262,21 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
     }
-  } //face loop
-
-  //__________________________________
-  //Has the pressure BC been set on faces that are not periodic
-  for( map<string,int>::iterator iter  = is_press_BC_set.begin();iter !=  is_press_BC_set.end(); iter++ ){
-    string face = (*iter).first;
-    int isSet  = (*iter).second;
+    
+    //__________________________________
+    //Has the pressure BC been set on this face;
+    int isSet  = is_press_BC_set.count( side );
 
     if(isSet != 1){
       ostringstream warn;
       warn <<"\n__________________________________\n"   
          << "INPUT FILE ERROR: \n"
          << "The pressure boundary condition has not been set OR has been set more than once \n"
-         << "Face:  " << face <<  endl;
+         << "Face:  " << side <<  endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-  }
-  
+  } //face loop
+
   //__________________________________
   // Has each non-periodic face has been touched?
   if (periodic.length() == 0){
