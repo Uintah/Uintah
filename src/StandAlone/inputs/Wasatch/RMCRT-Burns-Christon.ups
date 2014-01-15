@@ -43,7 +43,9 @@
     <save label="AbsCoef"/>
     <save label="Temperature"/>    
     <save label="RadiationSource"/>            
-    <save label="CellType"/>            
+    <save label="CellType"/>
+    <save label="radiationVolq"/>                
+    <save label="VRFlux"/>    
     <save label="sigmaT4"/>
   </DataArchiver>
 
