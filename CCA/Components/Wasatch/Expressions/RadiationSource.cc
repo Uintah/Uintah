@@ -119,6 +119,12 @@ RadiationSource::RadiationSource( const std::string& radiationSourceName,
       const Uintah::Patch* patch = patches->get(p);
       Uintah::CCVariable<Uintah::Stencil7> boundFlux;
       newDW->allocateAndPut( boundFlux,    Uintah::VarLabel::find("boundFlux"), 0, patch );
+      
+      for (Uintah::CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+        Uintah::IntVector origin = *iter;
+        boundFlux[origin].initialize(0.0);
+      }
+
     }
   }
 
@@ -197,8 +203,7 @@ RadiationSource::declare_uintah_vars( Uintah::Task& task,
                                const Uintah::PatchSubset* const patches,
                                const Uintah::MaterialSubset* const materials,
                                const int RKStage )
-{
-}
+{}
 
 //--------------------------------------------------------------------
 
@@ -207,8 +212,7 @@ RadiationSource::bind_uintah_vars( Uintah::DataWarehouse* const dw,
                            const Uintah::Patch* const patch,
                            const int material,
                            const int RKStage )
-{
-}
+{}
 
 //--------------------------------------------------------------------
 
@@ -235,7 +239,17 @@ RadiationSource::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 void
 RadiationSource::evaluate()
-{}
+{
+  using namespace SpatialOps;
+  namespace SS = SpatialOps::structured;
+  
+  typedef std::vector<SVolField*> SVolFieldVec;
+  SVolFieldVec& results = this->get_value_vec();
+  SVolField& radvolq = *results[1];
+  radvolq <<= 0.0;
+  SVolField& radvrflux = *results[2];
+  radvrflux <<= 0.0;
+}
 
 //--------------------------------------------------------------------
 
