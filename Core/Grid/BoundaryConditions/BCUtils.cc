@@ -49,12 +49,12 @@ namespace Uintah {
     
     map<string,bool> is_BC_set;
     map<string,bool> is_periodic;
-    is_BC_set["x-"] = false;   is_periodic["x-"] = periodic[0];
-    is_BC_set["x+"] = false;   is_periodic["x+"] = periodic[0];
-    is_BC_set["y-"] = false;   is_periodic["y-"] = periodic[1];
-    is_BC_set["y+"] = false;   is_periodic["y+"] = periodic[1];
-    is_BC_set["z-"] = false;   is_periodic["z-"] = periodic[2];
-    is_BC_set["z+"] = false;   is_periodic["z+"] = periodic[2];
+    is_periodic["x-"] = periodic[0];
+    is_periodic["x+"] = periodic[0];
+    is_periodic["y-"] = periodic[1];
+    is_periodic["y+"] = periodic[1];
+    is_periodic["z-"] = periodic[2];
+    is_periodic["z+"] = periodic[2];
     
     ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
     if(!bc_ps) {
@@ -67,7 +67,9 @@ namespace Uintah {
     
     string defaultMat="";
     ProblemSpecP defMatSpec = bc_ps->findBlock("DefaultMaterial");
-    if (defMatSpec) bc_ps->get("DefaultMaterial", defaultMat);
+    if (defMatSpec) { 
+      bc_ps->get("DefaultMaterial", defaultMat);
+    }
     
     // loop over all faces and determine if a BC has been set
     for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0;
@@ -75,6 +77,21 @@ namespace Uintah {
       
       map<string,string> face;
       face_ps->getAttributes(face);
+      
+      //loop through the attributes and find  (x-,x+,y-,y+... )
+      string side = "NULL";
+
+      for( map<string,string>::iterator iter = face.begin(); iter !=  face.end(); iter++ ){
+        string me = (*iter).second;
+
+        if( me =="x-" || me == "x+" ||
+            me =="y-" || me == "y+" ||
+            me =="z-" || me == "z+" ){
+          side = me;
+          is_BC_set[side] = false;
+          continue;
+        }
+      }
       
       // loop over all BCTypes
       for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
@@ -87,8 +104,11 @@ namespace Uintah {
         string id;
 
         if (!foundMatlID) {
-          if (defaultMat == "") SCI_THROW(ProblemSetupException("ERROR: No material id was specified in the BCType tag and I could not find a DefaulMaterial to use! Please revise your input file.", __FILE__, __LINE__));
-          else                  matlIndx = (defaultMat == "all") ? -1 : atoi(defaultMat.c_str());
+          if (defaultMat == "") { 
+            SCI_THROW(ProblemSetupException("ERROR: No material id was specified in the BCType tag and I could not find a DefaulMaterial to use! Please revise your input file.", __FILE__, __LINE__));
+          }else{
+            matlIndx = (defaultMat == "all") ? -1 : atoi(defaultMat.c_str());
+          }
         } else {
           id = bc_type["id"];
           matlIndx = (id == "all") ? -1 : atoi(id.c_str());
@@ -99,29 +119,23 @@ namespace Uintah {
           foundMatl = true;
         }
         
-        if ((bc_type["label"] == variable ||
-             bc_type["label"] == "Symmetric") &&
-            foundMatl ) {
-          is_BC_set[face["side"]] = true;
+        
+        if ((bc_type["label"] == variable || bc_type["label"] == "Symmetric") && foundMatl ) {
+          is_BC_set[side] = true;
         }
       }
-    }
-    
-    //__________________________________
-    //Now check if the variable on this face was set
-    for( map<string,bool>::iterator iter = is_BC_set.begin();iter !=  is_BC_set.end(); iter++ ){
-      string face = (*iter).first;
-      bool isSet = (*iter).second;
-      
-      if (!isSet && !is_periodic[face]){   // BC not set and not periodic
+
+      //__________________________________
+      //Now check if the variable on this face was set
+      if (!is_BC_set[side] && !is_periodic[side]){   // BC not set and not periodic
         ostringstream warn;
         warn <<"\n__________________________________\n"
         << "ERROR: The boundary condition for ( " << variable
-        << " ) was not specified on face (" << face
+        << " ) was not specified on face (" << side
         << ") for  materialSubset " << *matls << endl;
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
-    }
+    }  // face loop
     
     //__________________________________
     // Duplicate periodic BC and normal BCs
