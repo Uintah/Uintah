@@ -891,9 +891,11 @@
       It is assumed that there are two streams that are mixing but not reacting.
       Currently, the only property available for calculation is the density.
     -->
-    <TwoStreamMixing    spec="OPTIONAL NO_DATA">
-      <Density0         spec="REQUIRED DOUBLE"/>  <!-- density at mixture fraction 0 -->
-      <Density1         spec="REQUIRED DOUBLE"/>  <!-- density at mixture fraction 1 -->
+    <TwoStreamMixing    spec="OPTIONAL NO_DATA"
+    										attribute1="rho0 REQUIRED DOUBLE"
+    										attribute2="rho1 REQUIRED DOUBLE">
+			<!-- rho0 = density at mixture fraction 0 -->
+			<!-- rho1 = density at mixture fraction 1 -->
       <Density          spec="REQUIRED NO_DATA">
         <NameTag        spec="REQUIRED"/>
       </Density>

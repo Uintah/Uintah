@@ -401,8 +401,8 @@ namespace Wasatch{
     const Expr::Tag rhofTag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
     const Expr::Tag rhoTag  = parse_nametag( params->findBlock("Density")->findBlock("NameTag") );
     double rho0, rho1;
-    params->findBlock("Density0")->get(rho0);
-    params->findBlock("Density1")->get(rho1);
+    params->getAttribute("rho0",rho0);
+    params->getAttribute("rho1",rho1);
 
     // initial conditions for density
     {
