@@ -31,14 +31,17 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
-template< typename ScalarT, typename FluxT >
-DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag& rhoTag,
-                                              const Expr::Tag& turbDiffTag,
-                                              const Expr::Tag& phiTag,
-                                              const Expr::Tag& coefTag )
+//===================================================================
+
+template< typename FluxT >
+DiffusiveFlux<FluxT>::
+DiffusiveFlux( const Expr::Tag& rhoTag,
+               const Expr::Tag& turbDiffTag,
+               const Expr::Tag& phiTag,
+               const Expr::Tag& coefTag )
   : Expr::Expression<FluxT>(),
-    isConstCoef_( false ),
     isTurbulent_( turbDiffTag != Expr::Tag() ),
+    isConstCoef_( false       ),
     phiTag_     ( phiTag      ),
     coefTag_    ( coefTag     ),
     rhoTag_     ( rhoTag      ),
@@ -48,160 +51,97 @@ DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag& rhoTag,
   this->set_gpu_runnable( true );
 }
 
-//--------------------------------------------------------------------
-
-template< typename ScalarT, typename FluxT >
-DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag& rhoTag,
-                                              const Expr::Tag& turbDiffTag,
-                                              const Expr::Tag& phiTag,
-                                              const double coef )
+template< typename FluxT >
+DiffusiveFlux<FluxT>::
+DiffusiveFlux( const Expr::Tag& rhoTag,
+               const Expr::Tag& turbDiffTag,
+               const Expr::Tag& phiTag,
+               const double coefVal )
   : Expr::Expression<FluxT>(),
+    isTurbulent_( turbDiffTag != Expr::Tag() ),
     isConstCoef_( true        ),
-    isTurbulent_( turbDiffTag != Expr::Tag()    ),
     phiTag_     ( phiTag      ),
-    coefTag_    ( "NULL", Expr::INVALID_CONTEXT ),
+    coefTag_    (             ),
     rhoTag_     ( rhoTag      ),
     turbDiffTag_( turbDiffTag ),
-    coefVal_    ( coef        )
+    coefVal_    ( coefVal     )
 {
   this->set_gpu_runnable( true );
 }
 
 //--------------------------------------------------------------------
 
-template< typename ScalarT, typename FluxT >
-DiffusiveFlux<ScalarT, FluxT>::
+template< typename FluxT >
+DiffusiveFlux<FluxT>::
 ~DiffusiveFlux()
 {}
 
 //--------------------------------------------------------------------
 
-template< typename ScalarT, typename FluxT >
+template< typename FluxT >
 void
-DiffusiveFlux<ScalarT, FluxT>::
+DiffusiveFlux<FluxT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( phiTag_ );
-  if( isTurbulent_  ) exprDeps.requires_expression( turbDiffTag_ );
-  if( !isConstCoef_ ) exprDeps.requires_expression( coefTag_     );
-  exprDeps.requires_expression( rhoTag_  );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ScalarT, typename FluxT >
-void
-DiffusiveFlux<ScalarT, FluxT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  phi_ = &fml.template field_ref<ScalarT  >( phiTag_ );
-  rho_ = &fml.template field_ref<SVolField>( rhoTag_ );
-  if( isTurbulent_  ) turbDiff_ = &fml.template field_ref<SVolField>( turbDiffTag_ );
-  if( !isConstCoef_ ) coef_     = &fml.template field_ref<FluxT    >( coefTag_     );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ScalarT, typename FluxT >
-void
-DiffusiveFlux<ScalarT, FluxT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{
-  gradOp_          = opDB.retrieve_operator<GradT>();
-  sVolInterpOp_ = opDB.retrieve_operator<SVolInterpT>();
-}
-
-//--------------------------------------------------------------------
-
-template< typename ScalarT, typename FluxT >
-void
-DiffusiveFlux<ScalarT, FluxT>::
-evaluate()
-{
-  using namespace SpatialOps;
-  FluxT& result = this->value();  
-  if( isTurbulent_ ) result <<= - (*sVolInterpOp_)(*rho_) * (coefVal_ + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
-  else               result <<= - (*sVolInterpOp_)(*rho_) * coefVal_ * (*gradOp_)(*phi_);
-}
-
-
-//====================================================================
-
-
-template< typename ScalarT, typename FluxT >
-DiffusiveFlux2<ScalarT, FluxT>::
-DiffusiveFlux2( const Expr::Tag& rhoTag,
-                const Expr::Tag& turbDiffTag,
-                const Expr::Tag& phiTag,
-                const Expr::Tag& coefTag )
-  : Expr::Expression<FluxT>(),
-    isTurbulent_( turbDiffTag != Expr::Tag() ),
-    phiTag_     ( phiTag      ),
-    coefTag_    ( coefTag     ),
-    rhoTag_     ( rhoTag      ),
-    turbDiffTag_( turbDiffTag )
-{
-  this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ScalarT, typename FluxT >
-DiffusiveFlux2<ScalarT, FluxT>::
-~DiffusiveFlux2()
-{}
-
-//--------------------------------------------------------------------
-
-template< typename ScalarT, typename FluxT >
-void
-DiffusiveFlux2<ScalarT, FluxT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( phiTag_ );
-  exprDeps.requires_expression( coefTag_ );
   exprDeps.requires_expression( rhoTag_ );
-  if (isTurbulent_) exprDeps.requires_expression( turbDiffTag_ );
+  if(!isConstCoef_ ) exprDeps.requires_expression( coefTag_     );
+  if( isTurbulent_ ) exprDeps.requires_expression( turbDiffTag_ );
 }
 
 //--------------------------------------------------------------------
 
-template< typename ScalarT, typename FluxT >
+template< typename FluxT >
 void
-DiffusiveFlux2<ScalarT, FluxT>::
+DiffusiveFlux<FluxT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const typename Expr::FieldMgrSelector<ScalarT  >::type& scalarFM = fml.template field_manager<ScalarT  >();
-  const typename Expr::FieldMgrSelector<SVolField>::type& svolFM   = fml.template field_manager<SVolField>();
+  const typename Expr::FieldMgrSelector<ScalarT>::type& scalarFM = fml.template field_manager<ScalarT  >();
   phi_  = &scalarFM.field_ref( phiTag_  );
-  coef_ = &scalarFM.field_ref( coefTag_ );
-  rho_ = &svolFM.field_ref( rhoTag_ );
-  if (isTurbulent_) turbDiff_ = &svolFM.field_ref( turbDiffTag_ );
+  rho_  = &scalarFM.field_ref( rhoTag_  );
+  if(!isConstCoef_ ) coef_     = &scalarFM.field_ref( coefTag_ );
+  if( isTurbulent_ ) turbDiff_ = &scalarFM.field_ref( turbDiffTag_ );
 }
 
 //--------------------------------------------------------------------
 
-template< typename ScalarT, typename FluxT >
+template< typename FluxT >
 void
-DiffusiveFlux2<ScalarT, FluxT>::
+DiffusiveFlux<FluxT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  gradOp_       = opDB.retrieve_operator<GradT  >();
-  sVolInterpOp_ = opDB.retrieve_operator<SVolInterpT>();
-  interpOp_     = opDB.retrieve_operator<InterpT>();
+  gradOp_   = opDB.retrieve_operator<GradT  >();
+  interpOp_ = opDB.retrieve_operator<InterpT>();
 }
 
 //--------------------------------------------------------------------
 
-template< typename ScalarT, typename FluxT >
+template< typename FluxT >
 void
-DiffusiveFlux2<ScalarT, FluxT>::
+DiffusiveFlux<FluxT>::
 evaluate()
 {
+  std::cout << "DiffusiveFlux " << isConstCoef_ << " " << isTurbulent_ << " " << coefVal_ << std::endl;
   using namespace SpatialOps;
   FluxT& result = this->value();
-  if( isTurbulent_ ) result <<= - (*sVolInterpOp_)(*rho_) * ((*interpOp_)(*coef_) + (*interpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
-  else               result <<= - (*sVolInterpOp_)(*rho_) * (*interpOp_)(*coef_) * (*gradOp_)(*phi_);
+  if( isTurbulent_ ){
+    if( isConstCoef_ ) result <<= - (*interpOp_)( *rho_ * (coefVal_ + *turbDiff_)) * (*gradOp_)(*phi_);
+    else               result <<= - (*interpOp_)( *rho_ * (*coef_   + *turbDiff_)) * (*gradOp_)(*phi_);
+  }
+  else{
+    if( isConstCoef_ ) result <<= - (*interpOp_)( *rho_ * coefVal_ ) * (*gradOp_)(*phi_);
+    else               result <<= - (*interpOp_)( *rho_ * *coef_   ) * (*gradOp_)(*phi_);
+  }
+}
+
+//--------------------------------------------------------------------
+
+template< typename FluxT >
+Expr::ExpressionBase*
+DiffusiveFlux<FluxT>::Builder::build() const
+{
+  if( coeft_ == Expr::Tag() ) return new DiffusiveFlux<FluxT>( rhot_, turbDifft_, phit_, coefVal_ );
+  else                        return new DiffusiveFlux<FluxT>( rhot_, turbDifft_, phit_, coeft_   );
 }
 
 //--------------------------------------------------------------------
@@ -212,13 +152,10 @@ evaluate()
 //
 #include <spatialops/structured/FVStaggered.h>
 
-#define DECLARE_DIFF_FLUX( VOL )                                                       \
-  template class DiffusiveFlux < VOL, SpatialOps::structured::FaceTypes<VOL>::XFace >; \
-  template class DiffusiveFlux < VOL, SpatialOps::structured::FaceTypes<VOL>::YFace >; \
-  template class DiffusiveFlux < VOL, SpatialOps::structured::FaceTypes<VOL>::ZFace >; \
-  template class DiffusiveFlux2< VOL, SpatialOps::structured::FaceTypes<VOL>::XFace >; \
-  template class DiffusiveFlux2< VOL, SpatialOps::structured::FaceTypes<VOL>::YFace >; \
-  template class DiffusiveFlux2< VOL, SpatialOps::structured::FaceTypes<VOL>::ZFace >;
+#define DECLARE_DIFF_FLUX( VOL )                                                 \
+  template class DiffusiveFlux< SpatialOps::structured::FaceTypes<VOL>::XFace >; \
+  template class DiffusiveFlux< SpatialOps::structured::FaceTypes<VOL>::YFace >; \
+  template class DiffusiveFlux< SpatialOps::structured::FaceTypes<VOL>::ZFace >;
 
 DECLARE_DIFF_FLUX( SpatialOps::structured::SVolField );
 //

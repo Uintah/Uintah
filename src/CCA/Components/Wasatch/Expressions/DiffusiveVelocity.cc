@@ -31,13 +31,18 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>  // jcs need to rework spatialops install structure
 
-template< typename GradT >
-DiffusiveVelocity<GradT>::DiffusiveVelocity( const Expr::Tag& turbDiffTag,
-                                             const Expr::Tag phiTag,
-                                             const Expr::Tag coefTag )
+
+//====================================================================
+
+
+template< typename VelT >
+DiffusiveVelocity<VelT>::
+DiffusiveVelocity( const Expr::Tag& turbDiffTag,
+                    const Expr::Tag& phiTag,
+                    const Expr::Tag& coefTag )
   : Expr::Expression<VelT>(),
-    isConstCoef_( false ),
     isTurbulent_( turbDiffTag != Expr::Tag() ),
+    isConstCoef_( false       ),
     phiTag_     ( phiTag      ),
     coefTag_    ( coefTag     ),
     turbDiffTag_( turbDiffTag ),
@@ -48,155 +53,94 @@ DiffusiveVelocity<GradT>::DiffusiveVelocity( const Expr::Tag& turbDiffTag,
 
 //--------------------------------------------------------------------
 
-template< typename GradT >
-DiffusiveVelocity<GradT>::DiffusiveVelocity( const Expr::Tag& turbDiffTag,
-                                             const Expr::Tag phiTag,
-                                             const double coef )
+template< typename VelT >
+DiffusiveVelocity<VelT>::
+DiffusiveVelocity( const Expr::Tag& turbDiffTag,
+                    const Expr::Tag& phiTag,
+                    const double coefVal )
   : Expr::Expression<VelT>(),
-    isConstCoef_( true ),
-    isTurbulent_( turbDiffTag != Expr::Tag()    ),
-    phiTag_ ( phiTag ),
-    coefTag_( Expr::Tag() ),
+    isTurbulent_( turbDiffTag != Expr::Tag() ),
+    isConstCoef_( true        ),
+    phiTag_     ( phiTag      ),
+    coefTag_    (             ),
     turbDiffTag_( turbDiffTag ),
-    coefVal_( coef )
+    coefVal_    ( coefVal     )
 {
   this->set_gpu_runnable( true );
 }
 
 //--------------------------------------------------------------------
 
-template< typename GradT >
-DiffusiveVelocity<GradT>::
+template< typename VelT >
+DiffusiveVelocity<VelT>::
 ~DiffusiveVelocity()
 {}
 
 //--------------------------------------------------------------------
 
-template< typename GradT >
+template< typename VelT >
 void
-DiffusiveVelocity<GradT>::
+DiffusiveVelocity<VelT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( phiTag_ );
-  if( isTurbulent_  ) exprDeps.requires_expression( turbDiffTag_ );
-  if( !isConstCoef_ ) exprDeps.requires_expression( coefTag_     );
+  if(!isConstCoef_ ) exprDeps.requires_expression( coefTag_     );
+  if( isTurbulent_ ) exprDeps.requires_expression( turbDiffTag_ );
 }
 
 //--------------------------------------------------------------------
 
-template< typename GradT >
+template< typename VelT >
 void
-DiffusiveVelocity<GradT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  phi_ = &fml.template field_ref<ScalarT>( phiTag_ );
-  if( isTurbulent_  ) turbDiff_ = &fml.template field_ref<SVolField>( turbDiffTag_ );
-  if( !isConstCoef_ ) coef_     = &fml.template field_ref<VelT     >( coefTag_     );
-}
-
-//--------------------------------------------------------------------
-
-template< typename GradT >
-void
-DiffusiveVelocity<GradT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{
-  gradOp_ = opDB.retrieve_operator<GradT>();
-  if( isTurbulent_ ) sVolInterpOp_ = opDB.retrieve_operator<SVolInterpT>();
-}
-
-//--------------------------------------------------------------------
-
-template< typename GradT >
-void
-DiffusiveVelocity<GradT>::
-evaluate()
-{
-  using namespace SpatialOps;
-  VelT& result = this->value();
-  if (isTurbulent_)  result <<= - (coefVal_ + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
-  else               result <<= - coefVal_ * (*gradOp_)(*phi_);
-}
-
-
-//====================================================================
-
-
-template< typename GradT, typename InterpT >
-DiffusiveVelocity2<GradT,InterpT>::
-DiffusiveVelocity2( const Expr::Tag& turbDiffTag,
-                    const Expr::Tag& phiTag,
-                    const Expr::Tag& coefTag )
-  : Expr::Expression<VelT>(),
-    isTurbulent_( turbDiffTag != Expr::Tag() ),
-    phiTag_     ( phiTag      ),
-    coefTag_    ( coefTag     ),
-    turbDiffTag_( turbDiffTag )
-
-{
-  this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename GradT, typename InterpT >
-DiffusiveVelocity2<GradT,InterpT>::
-~DiffusiveVelocity2()
-{}
-
-//--------------------------------------------------------------------
-
-template< typename GradT, typename InterpT >
-void
-DiffusiveVelocity2<GradT,InterpT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( phiTag_ );
-  exprDeps.requires_expression( coefTag_ );
-  if (isTurbulent_) exprDeps.requires_expression( turbDiffTag_ );  
-}
-
-//--------------------------------------------------------------------
-
-template< typename GradT, typename InterpT >
-void
-DiffusiveVelocity2<GradT,InterpT>::
+DiffusiveVelocity<VelT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const typename Expr::FieldMgrSelector<ScalarT>::type& scalarFM = fml.template field_manager<ScalarT>();
   phi_  = &scalarFM.field_ref( phiTag_  );
-  coef_ = &scalarFM.field_ref( coefTag_ );
-  if (isTurbulent_) turbDiff_ = &fml.template field_ref<SVolField>( turbDiffTag_ );
+  if(!isConstCoef_ ) coef_     = &scalarFM.field_ref( coefTag_     );
+  if( isTurbulent_ ) turbDiff_ = &scalarFM.field_ref( turbDiffTag_ );
 
 }
 
 //--------------------------------------------------------------------
 
-template< typename GradT, typename InterpT >
+template< typename VelT >
 void
-DiffusiveVelocity2<GradT,InterpT>::
+DiffusiveVelocity<VelT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  gradOp_       = opDB.retrieve_operator<GradT  >();
-  interpOp_     = opDB.retrieve_operator<InterpT>();
-  sVolInterpOp_ = opDB.retrieve_operator<SVolInterpT>();
+  gradOp_       = opDB.retrieve_operator<GradT      >();
+  interpOp_     = opDB.retrieve_operator<InterpT    >();
 }
 
 //--------------------------------------------------------------------
 
-template< typename GradT, typename InterpT >
+template< typename VelT >
 void
-DiffusiveVelocity2<GradT,InterpT>::
+DiffusiveVelocity<VelT>::
 evaluate()
 {
   using namespace SpatialOps;
   VelT& result = this->value();
-  if( isTurbulent_ ) result <<= - ((*interpOp_)(*coef_) + (*sVolInterpOp_)(*turbDiff_)) * (*gradOp_)(*phi_);
-  else               result <<= - (*interpOp_)(*coef_) * (*gradOp_)(*phi_);
+  if( isTurbulent_ ){
+    if( isConstCoef_ ) result <<= - (*interpOp_)( coefVal_ + *turbDiff_ ) * (*gradOp_)(*phi_);
+    else               result <<= - (*interpOp_)( *coef_   + *turbDiff_ ) * (*gradOp_)(*phi_);
+  }
+  else{
+    if( isConstCoef_ ) result <<= - coefVal_             * (*gradOp_)(*phi_);
+    else               result <<= - (*interpOp_)(*coef_) * (*gradOp_)(*phi_);
+  }
 }
 
 //--------------------------------------------------------------------
 
+template< typename VelT >
+Expr::ExpressionBase*
+DiffusiveVelocity<VelT>::Builder::build() const
+{
+  if( coeft_ == Expr::Tag() ) return new DiffusiveVelocity<VelT>( turbDifft_, phit_, coefVal_ );
+  else                        return new DiffusiveVelocity<VelT>( turbDifft_, phit_, coeft_   );
+}
 
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
@@ -204,15 +148,9 @@ evaluate()
 #include <spatialops/structured/FVStaggered.h>
 
 #define DECLARE_DIFF_VELOCITY( VOL )                                                            \
-  template class DiffusiveVelocity< SpatialOps::structured::BasicOpTypes<VOL>::GradX >;         \
-  template class DiffusiveVelocity< SpatialOps::structured::BasicOpTypes<VOL>::GradY >;	        \
-  template class DiffusiveVelocity< SpatialOps::structured::BasicOpTypes<VOL>::GradZ >;	        \
-  template class DiffusiveVelocity2< SpatialOps::structured::BasicOpTypes<VOL>::GradX,	        \
-                                     SpatialOps::structured::BasicOpTypes<VOL>::InterpC2FX >;   \
-  template class DiffusiveVelocity2< SpatialOps::structured::BasicOpTypes<VOL>::GradY,          \
-                                     SpatialOps::structured::BasicOpTypes<VOL>::InterpC2FY >;   \
-  template class DiffusiveVelocity2< SpatialOps::structured::BasicOpTypes<VOL>::GradZ,          \
-                                     SpatialOps::structured::BasicOpTypes<VOL>::InterpC2FZ >;
+  template class DiffusiveVelocity< SpatialOps::structured::FaceTypes<VOL>::XFace >;   \
+  template class DiffusiveVelocity< SpatialOps::structured::FaceTypes<VOL>::YFace >;   \
+  template class DiffusiveVelocity< SpatialOps::structured::FaceTypes<VOL>::ZFace >;
 
 DECLARE_DIFF_VELOCITY( SpatialOps::structured::SVolField );
 //
