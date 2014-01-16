@@ -746,7 +746,7 @@ namespace Wasatch{
 
   //-----------------------------------------------------------------
 
-  template< typename OpT >
+  template< typename FluxT >
   Expr::ExpressionBuilder*
   build_diff_flux_expr( Uintah::ProblemSpecP diffFluxParams,
                         const Expr::Tag& diffFluxTag,
@@ -754,13 +754,11 @@ namespace Wasatch{
                         const Expr::Tag& densityTag,
                         const Expr::Tag& turbDiffTag )
   {
+    typedef typename DiffusiveFlux<FluxT>::Builder Flux;
     
     if( diffFluxParams->findBlock("ConstantDiffusivity") ){
       double coef;
       diffFluxParams->get("ConstantDiffusivity",coef);
-      typedef typename DiffusiveFlux< typename OpT::SrcFieldType,
-                                      typename OpT::DestFieldType
-                                      >::Builder Flux;
       return scinew Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
     }
     else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
@@ -774,9 +772,6 @@ namespace Wasatch{
        *        coefficient...  Arrrgghh.
        */
       const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-      typedef typename DiffusiveFlux2< typename OpT::SrcFieldType,
-                                       typename OpT::DestFieldType
-                                       >::Builder Flux;
       return scinew Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
     }
     return NULL;
@@ -791,7 +786,9 @@ namespace Wasatch{
                                         Expr::ExpressionFactory& factory,
                                         FieldTagInfo& info )
   {
-    typedef OpTypes<FieldT> MyOpTypes;
+    typedef typename FaceTypes<FieldT>::XFace XFaceT;
+    typedef typename FaceTypes<FieldT>::YFace YFaceT;
+    typedef typename FaceTypes<FieldT>::ZFace ZFaceT;
     const std::string& primVarName = primVarTag.name();
     Expr::Tag diffFluxTag;  // we will populate this.
 
@@ -812,9 +809,9 @@ namespace Wasatch{
       const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + suffix, Expr::STATE_NONE);
 
       Expr::ExpressionBuilder* builder = NULL;
-      if     ( dir=="X" ) builder = build_diff_flux_expr<typename MyOpTypes::GradX>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
-      else if( dir=="Y" ) builder = build_diff_flux_expr<typename MyOpTypes::GradY>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
-      else if( dir=="Z" ) builder = build_diff_flux_expr<typename MyOpTypes::GradZ>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+      if     ( dir=="X" ) builder = build_diff_flux_expr<XFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+      else if( dir=="Y" ) builder = build_diff_flux_expr<YFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+      else if( dir=="Z" ) builder = build_diff_flux_expr<ZFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
 
       if( builder == NULL ){
         std::ostringstream msg;
@@ -839,16 +836,16 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
-  template< typename GradT, typename InterpT >
+  template< typename VelT >
   Expr::ExpressionBuilder*
   build_diff_vel_expr( Uintah::ProblemSpecP diffVelParams,
                        const Expr::Tag& diffVelTag,
                        const Expr::Tag& primVarTag,
                        const Expr::Tag& turbDiffTag )
   {
+    typedef typename DiffusiveVelocity<VelT>::Builder Velocity;
     
     if( diffVelParams->findBlock("ConstantDiffusivity") ){
-      typedef typename DiffusiveVelocity<GradT>::Builder Velocity;
       double coef;
       diffVelParams->get("ConstantDiffusivity",coef);
       return scinew Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
@@ -863,7 +860,6 @@ namespace Wasatch{
        *        independent variable is used when calculating the
        *        coefficient...  Arrrgghh.
        */
-      typedef typename DiffusiveVelocity2< GradT, InterpT >::Builder Velocity;
       const Expr::Tag coef = parse_nametag( diffVelParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
       return scinew Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
     }
@@ -877,7 +873,10 @@ namespace Wasatch{
                                             Expr::ExpressionFactory& factory,
                                             FieldTagInfo& info )
   {
-    typedef OpTypes<FieldT> MyOpTypes;
+    typedef typename FaceTypes<FieldT>::XFace XFaceT;
+    typedef typename FaceTypes<FieldT>::YFace YFaceT;
+    typedef typename FaceTypes<FieldT>::ZFace ZFaceT;
+
     const std::string& primVarName = primVarTag.name();
     Expr::Tag diffVelTag;  // we will populate this.
 
@@ -894,9 +893,9 @@ namespace Wasatch{
       diffVelTag = Expr::Tag( primVarName+"_diffVelocity_"+dir, Expr::STATE_NONE );
 
       Expr::ExpressionBuilder* builder = NULL;
-      if( dir=="X" )       builder = build_diff_vel_expr<typename MyOpTypes::GradX,typename MyOpTypes::InterpC2FX>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
-      else if( dir=="Y" )  builder = build_diff_vel_expr<typename MyOpTypes::GradY,typename MyOpTypes::InterpC2FY>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
-      else if( dir=="Z")   builder = build_diff_vel_expr<typename MyOpTypes::GradZ,typename MyOpTypes::InterpC2FZ>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
+      if     ( dir=="X" )  builder = build_diff_vel_expr<XFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
+      else if( dir=="Y" )  builder = build_diff_vel_expr<YFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
+      else if( dir=="Z" )  builder = build_diff_vel_expr<ZFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
  
       if( builder == NULL ){
         std::ostringstream msg;

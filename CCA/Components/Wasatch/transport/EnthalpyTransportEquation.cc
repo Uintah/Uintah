@@ -146,13 +146,12 @@ namespace Wasatch {
   EnthalpyTransportEquation::
   setup_diffusive_flux( FieldTagInfo& info )
   {
-    typedef OpTypes<SVolField> MyOpTypes;
-    typedef DiffusiveVelocity2< MyOpTypes::GradX, MyOpTypes::InterpC2FX >::Builder XFlux;
-    typedef DiffusiveVelocity2< MyOpTypes::GradY, MyOpTypes::InterpC2FY >::Builder YFlux;
-    typedef DiffusiveVelocity2< MyOpTypes::GradZ, MyOpTypes::InterpC2FZ >::Builder ZFlux;
+    typedef DiffusiveVelocity< SpatialOps::structured::SSurfXField >::Builder XFlux;
+    typedef DiffusiveVelocity< SpatialOps::structured::SSurfYField >::Builder YFlux;
+    typedef DiffusiveVelocity< SpatialOps::structured::SSurfZField >::Builder ZFlux;
 
     // jcs how will we determine if we have each direction on???
-const bool doX=true, doY=false, doZ=false;
+    const bool doX=true, doY=true, doZ=true;
 
     const Expr::Tag xDiffFluxTag( solnVarName_+"_x_diff_flux", Expr::STATE_NONE );
     const Expr::Tag yDiffFluxTag( solnVarName_+"_y_diff_flux", Expr::STATE_NONE );

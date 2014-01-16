@@ -54,24 +54,31 @@ namespace Wasatch{
                                             Expr::ExpressionFactory& factory,
                                             FieldTagInfo& info )
   {
-    typedef OpTypes<FieldT> MyOpTypes;
-
-    Expr::Tag diffFluxTag;  // we will populate this.
-
-    diffFluxTag = Expr::Tag( thisPhiName + "_diffFlux_" + dir, Expr::STATE_NONE );
+    const Expr::Tag diffFluxTag( thisPhiName + "_diffFlux_" + dir, Expr::STATE_NONE );
     const Expr::Tag phiTag( thisPhiName, Expr::STATE_N );
 
     Expr::ExpressionBuilder* builder = NULL;
+    FieldSelector fs;
 
     if( dir=="X" ){
-      typedef typename DiffusiveVelocity<typename MyOpTypes::GradX>::Builder Flux;
-      builder = scinew Flux(diffFluxTag,  phiTag, 1.0 );
-    } else if( dir=="Y" ){
-      typedef typename DiffusiveVelocity<typename MyOpTypes::GradY>::Builder Flux;
-      builder = scinew Flux( diffFluxTag, phiTag, 1.0 );
-    } else if( dir=="Z" ){
-      typedef typename DiffusiveVelocity<typename MyOpTypes::GradZ>::Builder Flux;
-      builder = scinew Flux( diffFluxTag, phiTag, 1.0 );
+      typedef typename DiffusiveVelocity<typename FaceTypes<FieldT>::XFace>::Builder XFlux;
+      builder = scinew XFlux( diffFluxTag,  phiTag, 1.0 );
+      fs = DIFFUSIVE_FLUX_X;
+    }
+    else if( dir=="Y" ){
+      typedef typename DiffusiveVelocity<typename FaceTypes<FieldT>::YFace>::Builder YFlux;
+      builder = scinew YFlux( diffFluxTag, phiTag, 1.0 );
+      fs = DIFFUSIVE_FLUX_Y;
+    }
+    else if( dir=="Z" ){
+      typedef typename DiffusiveVelocity<typename FaceTypes<FieldT>::ZFace>::Builder ZFlux;
+      builder = scinew ZFlux( diffFluxTag, phiTag, 1.0 );
+      fs = DIFFUSIVE_FLUX_Z;
+    }
+    else{
+      std::ostringstream msg;
+      msg << "Invalid direction selection for diffusive flux expression" << endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
 
     if( builder == NULL ){
@@ -81,17 +88,6 @@ namespace Wasatch{
     }
 
     factory.register_expression( builder );
-
-    FieldSelector fs;
-    if     ( dir=="X" ) fs=DIFFUSIVE_FLUX_X;
-    else if( dir=="Y" ) fs=DIFFUSIVE_FLUX_Y;
-    else if( dir=="Z" ) fs=DIFFUSIVE_FLUX_Z;
-    else{
-      std::ostringstream msg;
-      msg << "Invalid direction selection for diffusive flux expression" << endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }
-
     info[ fs ] = diffFluxTag;
   }
 
