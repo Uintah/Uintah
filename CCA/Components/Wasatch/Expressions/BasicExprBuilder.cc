@@ -1332,7 +1332,51 @@ namespace Wasatch{
       slnGraphHelper->exprFactory->register_expression( scinew xBuilder(xVelTag, inputFileName, "X", period, timePeriod) );
       slnGraphHelper->exprFactory->register_expression( scinew yBuilder(yVelTag, inputFileName, "Y", period, timePeriod) );
       slnGraphHelper->exprFactory->register_expression( scinew zBuilder(zVelTag, inputFileName, "Z", period, timePeriod) );
-    }    
+    }
+    
+    // This is a special parser for variable density MMS
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("VarDenOscillatingMMS");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("VarDenOscillatingMMS") ) {
+      
+      const TagNames& tagNames = TagNames::self();
+
+      double rho0, rho1, uf, vf, k, w, d;
+      exprParams->getAttribute("rho0",rho0);
+      exprParams->getAttribute("rho1",rho1);
+      exprParams->getAttribute("uf",uf);
+      exprParams->getAttribute("vf",vf);
+      exprParams->getAttribute("k",k);
+      exprParams->getAttribute("w",w);
+      exprParams->getAttribute("d",d);
+      
+      std::string x1, x2;
+      exprParams->getWithDefault("x1",x1,"X");
+      exprParams->getWithDefault("x2",x2,"Y");
+
+      Expr::Tag x1Tag, x2Tag;
+
+      if      (x1 == "X")  x1Tag = tagNames.xsvolcoord;
+      else if (x1 == "Y")  x1Tag = tagNames.ysvolcoord;
+      else if (x1 == "Z")  x1Tag = tagNames.zsvolcoord;
+
+      if      (x2 == "X")  x2Tag = tagNames.xsvolcoord;
+      else if (x2 == "Y")  x2Tag = tagNames.ysvolcoord;
+      else if (x2 == "Z")  x2Tag = tagNames.zsvolcoord;
+      
+      GraphHelper* const initGraphHelper = gc[INITIALIZATION];
+
+      std::string mixFracName;
+      exprParams->get("Scalar", mixFracName);
+      const Expr::Tag mixFracTag( mixFracName, Expr::STATE_NONE );
+      typedef VarDenOscillatingMMSMixFrac<SVolField>::Builder MixFracBuilder;
+      initGraphHelper->exprFactory->register_expression( scinew MixFracBuilder( mixFracTag, x1Tag, x2Tag, tagNames.time, rho0, rho1, w, k, uf, vf ) );
+
+      const Expr::Tag diffCoefTag = parse_nametag(exprParams->findBlock("DiffusionCoefficient")->findBlock("NameTag"));
+      const Expr::Tag densityTag = parse_nametag( parser->findBlock("Density")->findBlock("NameTag") );
+      typedef DiffusiveConstant<SVolField>::Builder diffCoefBuilder;
+      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew diffCoefBuilder( diffCoefTag, densityTag, d ) );
+    }
     
     //___________________________________________________
     // parse and build initial conditions for moment transport

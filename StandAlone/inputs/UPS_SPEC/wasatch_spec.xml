@@ -835,20 +835,24 @@
       <rho1    spec="OPTIONAL DOUBLE"/>                               
       <scalar  spec="REQUIRED STRING"/>
     </VariableDensityMMS>
-            
-    <VariableDensity2DMMS  spec="OPTIONAL NO_DATA"
+
+
+    <VarDenOscillatingMMS  spec="OPTIONAL NO_DATA"
                            attribute1="rho0 REQUIRED DOUBLE"
                            attribute2="rho1 REQUIRED DOUBLE"
-                           attribute3="w  REQUIRED DOUBLE"
-                           attribute4="k  REQUIRED DOUBLE"
-                           attribute5="uf REQUIRED DOUBLE"
-                           attribute6="vf REQUIRED DOUBLE"
-                           attribute7="d  REQUIRED DOUBLE">
-      <DiffusiveConstant       spec="REQUIRED NO_DATA">
+                           attribute3="w    REQUIRED DOUBLE"
+                           attribute4="k    REQUIRED DOUBLE"
+                           attribute5="uf   REQUIRED DOUBLE"
+                           attribute6="vf   REQUIRED DOUBLE"
+                           attribute7="d    REQUIRED DOUBLE"
+                           attribute8="x1   OPTIONAL STRING 'X, Y, Z'"
+                           attribute9="x2   OPTIONAL STRING 'X, Y, Z'">
+      <DiffusionCoefficient spec="REQUIRED NO_DATA"> <!-- This automatically creates an expression for the diffusion coefficient -->
         <NameTag               spec="REQUIRED" />
-      </DiffusiveConstant>
-      <scalar  spec="REQUIRED STRING"/>
-    </VariableDensity2DMMS>
+      </DiffusionCoefficient>
+      <Scalar spec="REQUIRED STRING"/> <!-- input -->      
+      <ConservedScalar  spec="REQUIRED STRING"/> <!-- The conserved scalar is created by the transport equation. just Specify the name here -->
+    </VarDenOscillatingMMS>
 
     <MomentumEquations        spec="OPTIONAL NO_DATA">
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    

@@ -154,6 +154,7 @@ namespace Wasatch{
                            const bool computeContinuityResidual,
                            GraphCategories& gc);
   
+  
   /**
    *  \brief Build 2D mms source terms and parse them properly to the RHS's
    *
@@ -165,10 +166,10 @@ namespace Wasatch{
    *
    *  \param gc The GraphCategories.
    */
-  void parse_var_dens_2d_mms( Uintah::ProblemSpecP wasatchParams,
-                              Uintah::ProblemSpecP varDens2DMMSParams,
-                              const bool computeContinuityResidual,
-                              GraphCategories& gc);
+  void parse_var_den_oscillating_mms( Uintah::ProblemSpecP wasatchParams,
+                                      Uintah::ProblemSpecP varDens2DMMSParams,
+                                      const bool computeContinuityResidual,
+                                      GraphCategories& gc);
 
   /**
    *  \brief Build moment transport equations specified by "params"

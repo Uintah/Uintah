@@ -12,62 +12,35 @@
     <Density>
       <NameTag name="density" state="CARRY_FORWARD"/>
     </Density>
-    
+
     <!-- Setup the parameters for variable density MMS -->
-    <VariableDensity2DMMS rho0="5.0" rho1="1.0" w="2.0" k="2.0" d="0.001" uf="0.5" vf="0.5">
-       <DiffusiveConstant>
+    <VarDenOscillatingMMS rho0="5.0" rho1="1.0" w="2.0" k="2.0" d="0.001" uf="0.5" vf="0.5">
+       <DiffusionCoefficient>
           <NameTag name="diffcoef" state="STATE_NONE"/>
-       </DiffusiveConstant>
-       <scalar>rhof</scalar>    
-    </VariableDensity2DMMS>
-        
+       </DiffusionCoefficient>
+       <Scalar>f</Scalar>    
+       <ConservedScalar>rhof</ConservedScalar>           
+    </VarDenOscillatingMMS>
+
     <TwoStreamMixing rho0="5.0" rho1="1.0">
       <Density><NameTag name="density" state="CARRY_FORWARD"/></Density>
       <MixtureFraction> <NameTag name="f" state="STATE_NONE"/> </MixtureFraction>
       <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_N"/> </DensityWeightedMixtureFraction>
     </TwoStreamMixing>  
-
             
     <!-- Set the initial condition expression for x-velocity -->
-    <ShunnVarden2DMMS type="XVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="u" state="STATE_NONE" />
-      <VelocityX>
-        <Density> <NameTag name="density" state="STATE_NONE"/> </Density>
-        <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
-        <YCoordinate> <NameTag name="YXVOL" state="STATE_NONE"/> </YCoordinate>
-      </VelocityX>
-    </ShunnVarden2DMMS>
-
-    <!-- Set the initial condition expression for y-velocity -->
-    <ShunnVarden2DMMS type="YVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="v" state="STATE_NONE" />
-      <VelocityY>
-        <Density> <NameTag name="density" state="STATE_NONE"/> </Density>
-        <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
-        <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
-      </VelocityY>
-    </ShunnVarden2DMMS>
-
-    <!-- Set the initial condition expression for mixture fraction -->
-    <ShunnVarden2DMMS type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="f" state="STATE_NONE" />
-      <MixtureFraction>
-        <XCoordinate> <NameTag name="XSVOL" state="STATE_NONE"/> </XCoordinate>
-        <YCoordinate> <NameTag name="YSVOL" state="STATE_NONE"/> </YCoordinate>
-      </MixtureFraction>
-    </ShunnVarden2DMMS>
-
-    <!-- create an expression for the diffusion coefficient of -->
-    <ShunnVarden2DMMS type="SVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="diffcoef" state="STATE_NONE" />
-      <DiffusiveConstant>
-        <Density> <NameTag name="density" state="CARRY_FORWARD"/> </Density>
-      </DiffusiveConstant>      
-    </ShunnVarden2DMMS>
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="u" state="STATE_NONE"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="YVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="v" state="STATE_NONE"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
 
     <!-- Build a scalar transport equation for mixture fraction -->
     <TransportEquation equation="generic">
@@ -185,9 +158,9 @@
     <save label="u"/>
     <save label="v"/>
     <save label="diffcoef"/>    
-    <save label="VarDens2DMMSSource"/>
-    <save label="2D_mms_continuity_src"/>
-    <save label="2D_mms_pressure_continuity_src"/>
+    <save label="mms_mixture_fraction_src"/>
+    <save label="mms_continuity_src"/>
+    <save label="mms_pressure_continuity_src"/>
     <save label="f"/>
     <save label="rhof"/>
     <save label="pressure"/>
