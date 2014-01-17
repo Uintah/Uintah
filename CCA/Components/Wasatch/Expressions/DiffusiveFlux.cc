@@ -121,7 +121,6 @@ void
 DiffusiveFlux<FluxT>::
 evaluate()
 {
-  std::cout << "DiffusiveFlux " << isConstCoef_ << " " << isTurbulent_ << " " << coefVal_ << std::endl;
   using namespace SpatialOps;
   FluxT& result = this->value();
   if( isTurbulent_ ){
