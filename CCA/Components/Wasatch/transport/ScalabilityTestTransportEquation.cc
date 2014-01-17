@@ -120,7 +120,10 @@ namespace Wasatch{
   void ScalabilityTestTransportEquation<FieldT>::
   setup_diffusive_flux( FieldTagInfo& info )
   {
-    if( params_->findBlock( "DoDiffusion") ){
+    bool doDiffusion = false;
+    params_->get("DoDiffusion",doDiffusion);
+
+    if( doDiffusion ){
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
       setup_diffusive_velocity_expression<FieldT>( "X", solnVarName_, factory, info );
       setup_diffusive_velocity_expression<FieldT>( "Y", solnVarName_, factory, info );
@@ -134,7 +137,9 @@ namespace Wasatch{
   void ScalabilityTestTransportEquation<FieldT>::
   setup_convective_flux( FieldTagInfo& info )
   {
-    if( params_->findBlock("DoConvection") ){
+    bool doConvection = false;
+    params_->get("DoConvection",doConvection);
+    if(doConvection){
       const Expr::Tag empty;
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
 
@@ -171,7 +176,10 @@ namespace Wasatch{
   void ScalabilityTestTransportEquation<FieldT>::
   setup_source_terms( FieldTagInfo& info, Expr::TagList& sourceTags )
   {
-    if( params_->findBlock("DoSourceTerm") ){
+    bool doSrc = false;
+    params_->get("DoSourceTerm",doSrc);
+
+    if( doSrc ){
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
       const Expr::Tag srcTag( solnVarName_ + "_src", Expr::STATE_NONE );
       info[SOURCE_TERM] = srcTag;
