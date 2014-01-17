@@ -78,12 +78,7 @@
             <NameTag name="v" state="STATE_NONE"/>
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
-
-<!-- 
-      <SourceTermExpression>
-      	<NameTag name="VarDen2DMMSSource" state="STATE_NONE"/>
-      </SourceTermExpression>
- -->
+      
     </TransportEquation>   
     
     <FieldClipping tasklist="advance_solution">
