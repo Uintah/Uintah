@@ -671,13 +671,22 @@ namespace Wasatch{
     parse_cleave_requests    ( wasatchSpec_, graphCategories_ );
     parse_attach_dependencies( wasatchSpec_, graphCategories_ );
     //
-    // get the variable density params, if any, and parse them.
+    // get the variable density mms params, if any, and parse them.
     //
     Uintah::ProblemSpecP VarDensMMSParams = wasatchSpec_->findBlock("VariableDensityMMS");
     if (VarDensMMSParams) {
       const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
         parse_var_dens_mms(wasatchSpec_, VarDensMMSParams, computeContinuityResidual, graphCategories_);
 
+    }
+    //
+    // get the 2D variable density mms params, if any, and parse them.
+    //
+    Uintah::ProblemSpecP VarDens2DMMSParams = wasatchSpec_->findBlock("VariableDensity2DMMS");
+    if (VarDens2DMMSParams) {
+      const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
+      parse_var_dens_2d_mms(wasatchSpec_, VarDens2DMMSParams, computeContinuityResidual, graphCategories_);
+      
     }
     
     // radiation

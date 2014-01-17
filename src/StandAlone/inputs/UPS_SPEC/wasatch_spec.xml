@@ -652,6 +652,67 @@
       </GradPY>
 
     </TaylorVortexMMS>
+
+    <!-- ========================================= -->
+    <!-- Spec for Shunn's Varden 2D MMS types -->
+    
+    <ShunnVarden2DMMS      spec="MULTIPLE NO_DATA"
+      attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
+      children1="ONE_OF(CHILD VelocityX,VelocityY,MixtureFraction,DiffusiveConstant)" >
+      <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
+      <NameTag            spec="REQUIRED" />
+      
+      <!-- Shunn's Varden 2D MMS Velocity field function in x direction -->
+      <VelocityX          spec="OPTIONAL NO_DATA">
+
+        <Density          spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Density>
+        <XCoordinate      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </XCoordinate>
+        <YCoordinate      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </YCoordinate>
+        
+      </VelocityX>
+      
+      <!-- Shunn's Varden 2D MMS Velocity field function in y direction -->
+      <VelocityY          spec="OPTIONAL NO_DATA">
+
+        <Density          spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Density>
+        <XCoordinate      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </XCoordinate>
+        <YCoordinate      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </YCoordinate>
+      </VelocityY>
+            
+      <!-- Shunn's Varden 2D MMS mixture fraction field function  -->
+      <MixtureFraction          spec="OPTIONAL NO_DATA">
+        
+        <XCoordinate      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </XCoordinate>
+        <YCoordinate      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </YCoordinate>
+
+      </MixtureFraction>
+
+      <!-- Shunn's Varden 2D MMS mixture fraction field function  -->
+      <DiffusiveConstant          spec="OPTIONAL NO_DATA">
+        
+        <Density          spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Density>
+        
+      </DiffusiveConstant>
+
+    </ShunnVarden2DMMS>
     <!-- ========================================= -->
     
     <!-- =========================================================================== -->
@@ -775,6 +836,20 @@
       <scalar  spec="REQUIRED STRING"/>
     </VariableDensityMMS>
             
+    <VariableDensity2DMMS  spec="OPTIONAL NO_DATA"
+                           attribute1="rho0 REQUIRED DOUBLE"
+                           attribute2="rho1 REQUIRED DOUBLE"
+                           attribute3="w  REQUIRED DOUBLE"
+                           attribute4="k  REQUIRED DOUBLE"
+                           attribute5="uf REQUIRED DOUBLE"
+                           attribute6="vf REQUIRED DOUBLE"
+                           attribute7="d  REQUIRED DOUBLE">
+      <DiffusiveConstant       spec="REQUIRED NO_DATA">
+        <NameTag               spec="REQUIRED" />
+      </DiffusiveConstant>
+      <scalar  spec="REQUIRED STRING"/>
+    </VariableDensity2DMMS>
+
     <MomentumEquations        spec="OPTIONAL NO_DATA">
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
       <DisablePressureSolve   spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->   

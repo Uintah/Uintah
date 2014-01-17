@@ -29,6 +29,7 @@
 
 SRCDIR := CCA/Components/Wasatch/Expressions/MMS
 
-SRCS	+=                             \
-	$(SRCDIR)/TaylorVortex.cc          \
-	$(SRCDIR)/VardenMMS.cc
+SRCS	+=                              \
+	$(SRCDIR)/TaylorVortex.cc       \
+	$(SRCDIR)/VardenMMS.cc		\
+	$(SRCDIR)/Varden2DMMS.cc
