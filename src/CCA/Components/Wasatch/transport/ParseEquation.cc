@@ -354,17 +354,18 @@ namespace Wasatch{
       slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSContSrc, drhodtTag);
     }
   }
-    
+
   //==================================================================
   
-  void parse_var_dens_2d_mms( Uintah::ProblemSpecP wasatchParams,
-                              Uintah::ProblemSpecP varDens2DMMSParams,
-                              const bool computeContinuityResidual,
-                              GraphCategories& gc) {
+  void parse_var_den_oscillating_mms( Uintah::ProblemSpecP wasatchParams,
+                                      Uintah::ProblemSpecP varDens2DMMSParams,
+                                      const bool computeContinuityResidual,
+                                      GraphCategories& gc)
+  {
     std::string solnVarName;
     double rho0, rho1, d, w, k, uf, vf;
-    const Expr::Tag diffTag = parse_nametag( varDens2DMMSParams->findBlock("DiffusiveConstant")->findBlock("NameTag") );
-    varDens2DMMSParams->get("scalar",solnVarName);
+    const Expr::Tag diffTag = parse_nametag( varDens2DMMSParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
+    varDens2DMMSParams->get("ConservedScalar",solnVarName);
     varDens2DMMSParams->getAttribute("rho0",rho0);
     varDens2DMMSParams->getAttribute("rho1",rho1);
     varDens2DMMSParams->getAttribute("uf",uf);
@@ -377,16 +378,16 @@ namespace Wasatch{
     
     const Expr::Tag solnVarRHSTag = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
     const Expr::Tag solnVarRHSStarTag = Expr::Tag(solnVarName+"_rhs"+tagNames.star,Expr::STATE_NONE);
-    const Expr::Tag MMSSourceTag = Expr::Tag("VarDens2DMMSSource",Expr::STATE_NONE);
+    const Expr::Tag mixFracSrcTag = Expr::Tag("mms_mixture_fraction_src",Expr::STATE_NONE);
     
     GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];
-    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingMixFracSrc<SVolField>::Builder(MMSSourceTag,tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, rho0, rho1, d, w, k, uf, vf));
+    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingMixFracSrc<SVolField>::Builder(mixFracSrcTag, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, rho0, rho1, d, w, k, uf, vf));
     
-    slngraphHelper->exprFactory->attach_dependency_to_expression(MMSSourceTag, solnVarRHSTag);
-    slngraphHelper->exprFactory->attach_dependency_to_expression(MMSSourceTag, solnVarRHSStarTag);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(mixFracSrcTag, solnVarRHSTag);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(mixFracSrcTag, solnVarRHSStarTag);
     
-    const Expr::Tag varDens2DMMSContSrc = Expr::Tag( "2D_mms_continuity_src", Expr::STATE_NONE);
-    const Expr::Tag varDens2DMMSPressureContSrc = Expr::Tag( "2D_mms_pressure_continuity_src", Expr::STATE_NONE);
+    const Expr::Tag contSrcTag = Expr::Tag( "mms_continuity_src", Expr::STATE_NONE);
+    const Expr::Tag pressureContSrcTag = Expr::Tag( "mms_pressure_continuity_src", Expr::STATE_NONE);
     
     Uintah::ProblemSpecP densityParams  = wasatchParams->findBlock("Density");
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
@@ -408,25 +409,25 @@ namespace Wasatch{
     if( dozvel ) velStarTags.push_back( Expr::Tag(zvelname + tagNames.star, Expr::STATE_NONE) );
     else         velStarTags.push_back( Expr::Tag() );
     
-//    double a=1.0, b=1.0;
-//    if (wasatchParams->findBlock("AlphaStudyParams")) {
-//      Uintah::ProblemSpecP alphaParams = wasatchParams->findBlock("AlphaStudyParams");
-//      alphaParams->get("a",a);
-//      alphaParams->get("b",b);
-//    }
-
-    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( varDens2DMMSContSrc, densityTag, densStarTag, dens2StarTag, velStarTags, rho0, rho1,w, k, uf, vf, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, tagNames.timestep));
-    slngraphHelper->exprFactory->register_expression( new VarDensMMSPressureContSrc<SVolField>::Builder( varDens2DMMSPressureContSrc, varDens2DMMSContSrc, tagNames.timestep));
+    //    double a=1.0, b=1.0;
+    //    if (wasatchParams->findBlock("AlphaStudyParams")) {
+    //      Uintah::ProblemSpecP alphaParams = wasatchParams->findBlock("AlphaStudyParams");
+    //      alphaParams->get("a",a);
+    //      alphaParams->get("b",b);
+    //    }
     
-    slngraphHelper->exprFactory->attach_dependency_to_expression(varDens2DMMSPressureContSrc, tagNames.pressuresrc);
+    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( contSrcTag, densityTag, densStarTag, dens2StarTag, velStarTags, rho0, rho1,w, k, uf, vf, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, tagNames.timestep));
+    slngraphHelper->exprFactory->register_expression( new VarDensMMSPressureContSrc<SVolField>::Builder( pressureContSrcTag, contSrcTag, tagNames.timestep));
+    
+    slngraphHelper->exprFactory->attach_dependency_to_expression(pressureContSrcTag, tagNames.pressuresrc);
     
     if (computeContinuityResidual)
     {
       const Expr::Tag drhodtTag = Expr::Tag( "drhodt", Expr::STATE_NONE);
-      slngraphHelper->exprFactory->attach_dependency_to_expression(varDens2DMMSContSrc, drhodtTag);
+      slngraphHelper->exprFactory->attach_dependency_to_expression(contSrcTag, drhodtTag);
     }
   }
-  
+
   //==================================================================
   
   std::vector<EqnTimestepAdaptorBase*>
