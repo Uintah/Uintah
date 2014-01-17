@@ -279,14 +279,14 @@ namespace Wasatch{
       builder = scinew Builder( tag, indepVarTag, x1Tag, x2Tag, transitionPoint, lowValue, highValue, frequency, amplitude );
     }
 
-    else if ( params->findBlock("VarDensMMSSourceTerm") ) {
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSSourceTerm");
+    else if ( params->findBlock("VarDen1DMMSMixFracSrc") ) {
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDen1DMMSMixFracSrc");
       double D, rho0, rho1;
       valParams->getAttribute("D",    D);
       valParams->getAttribute("rho0", rho0);
       valParams->getAttribute("rho1", rho1);
       const Expr::Tag xTag = parse_nametag( valParams->findBlock("Coordinate")->findBlock("NameTag") );
-      typedef typename VarDensMMSSourceTerm<FieldT>::Builder Builder;
+      typedef typename VarDen1DMMSMixFracSrc<FieldT>::Builder Builder;
       builder = scinew Builder( tag, xTag, tagNames.time, D, rho0, rho1 );
     }
     
@@ -1021,12 +1021,12 @@ namespace Wasatch{
       builder = scinew Builder( tag, indepVarTag,x0, phic, R, n);
     }
     
-    else if ( params->findBlock("VarDensMMSVelocity") ){
+    else if ( params->findBlock("VarDenMMSVelocity") ){
       std::string side;
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSVelocity");
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSVelocity");
       valParams->getAttribute("side",side);
       
-      typedef VarDensMMSVelocity<FieldT> VarDensMMSVExpr;
+      typedef VarDen1DMMSVelocity<FieldT> VarDenMMSVExpr;
       SpatialOps::structured::BCSide bcSide;
       if      (side == "PLUS" ) bcSide = SpatialOps::structured::PLUS_SIDE;
       else if (side == "MINUS"  ) bcSide = SpatialOps::structured::MINUS_SIDE;
@@ -1034,20 +1034,20 @@ namespace Wasatch{
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
         << "ERROR: The boundary side " << side
-        << " is not supported in VarDensMMSVelocity expression." << std::endl;
+        << " is not supported in VarDen1DMMSVelocity expression." << std::endl;
         throw std::invalid_argument( msg.str() );
       }
-      builder = scinew typename VarDensMMSVExpr::Builder( tag, tagNames.time, bcSide );
+      builder = scinew typename VarDenMMSVExpr::Builder( tag, tagNames.time, bcSide );
     }
 
-    else if ( params->findBlock("VarDensMMSMomentum") ){
+    else if ( params->findBlock("VarDenMMSMomentum") ){
       std::string side;
       double rho0=1.29985, rho1=0.081889;
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSMomentum");
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSMomentum");
       valParams->getAttribute("side",side);
       valParams->get("rho0",rho0);
       valParams->get("rho1",rho1);
-      typedef VarDensMMSMomentum<FieldT> VarDensMMSMomExpr;
+      typedef VarDen1DMMSMomentum<FieldT> VarDenMMSMomExpr;
       SpatialOps::structured::BCSide bcSide;
       if      (side == "PLUS" ) bcSide = SpatialOps::structured::PLUS_SIDE;
       else if (side == "MINUS"  ) bcSide = SpatialOps::structured::MINUS_SIDE;
@@ -1055,36 +1055,36 @@ namespace Wasatch{
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
         << "ERROR: The boundary side " << side
-        << " is not supported in VarDensMMSMomentum expression." << std::endl;
+        << " is not supported in VarDen1DMMSMomentum expression." << std::endl;
         throw std::invalid_argument( msg.str() );
       }
-      builder = scinew typename VarDensMMSMomExpr::Builder( tag, tagNames.time, rho0, rho1, bcSide );
+      builder = scinew typename VarDenMMSMomExpr::Builder( tag, tagNames.time, rho0, rho1, bcSide );
     }
 
-    else if ( params->findBlock("VarDensMMSMixtureFraction") ){
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSMixtureFraction");      
-      typedef VarDensMMSMixtureFraction<FieldT> VarDensMMSMixtureFractionExpr;
-      builder = scinew typename VarDensMMSMixtureFractionExpr::Builder( tag, tagNames.time );
+    else if ( params->findBlock("VarDenMMSMixtureFraction") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSMixtureFraction");      
+      typedef VarDen1DMMSMixtureFraction<FieldT> VarDen1DMMSMixtureFractionExpr;
+      builder = scinew typename VarDen1DMMSMixtureFractionExpr::Builder( tag, tagNames.time );
     }
 
-    else if ( params->findBlock("VarDensMMSDensity") ){
+    else if ( params->findBlock("VarDenMMSDensity") ){
       double rho0=1.29985, rho1=0.081889;
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSDensity");
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSDensity");
       valParams->get("rho0",rho0);
       valParams->get("rho1",rho1);
 
-      typedef VarDensMMSDensity<FieldT> VarDensMMSDensityExpr;
-      builder = scinew typename VarDensMMSDensityExpr::Builder( tag, tagNames.time, rho0, rho1 );
+      typedef VarDen1DMMSDensity<FieldT> VarDen1DMMSDensityExpr;
+      builder = scinew typename VarDen1DMMSDensityExpr::Builder( tag, tagNames.time, rho0, rho1 );
     }
 
-    else if ( params->findBlock("VarDensMMSSolnVar") ){
+    else if ( params->findBlock("VarDenMMSSolnVar") ){
       double rho0=1.29985, rho1=0.081889;
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSSolnVar");
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSSolnVar");
       valParams->get("rho0",rho0);
       valParams->get("rho1",rho1);
 
-      typedef VarDensMMSSolnVar<FieldT> VarDensMMSSolnVarExpr;
-      builder = scinew typename VarDensMMSSolnVarExpr::Builder( tag, tagNames.time, rho0, rho1 );
+      typedef VarDen1DMMSSolnVar<FieldT> VarDen1DMMSSolnVarExpr;
+      builder = scinew typename VarDen1DMMSSolnVarExpr::Builder( tag, tagNames.time, rho0, rho1 );
     }
     
     else if ( params->findBlock("TurbulentInlet") ) {

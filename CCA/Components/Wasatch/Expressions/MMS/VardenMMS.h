@@ -14,7 +14,7 @@
 //--------------------------------------------------------------------
 
 /**
- *  \class VarDensMMSSourceTerm
+ *  \class VarDen1DMMSMixFracSrc
  *  \author Amir Biglari
  *  \date November, 2012
  *  \brief A source term for a method of manufactured solution applied on pressure projection method
@@ -33,7 +33,7 @@
  *
  */
 template< typename FieldT >
-class VarDensMMSSourceTerm : public Expr::Expression<FieldT>
+class VarDen1DMMSMixFracSrc : public Expr::Expression<FieldT>
 {
   
 public:
@@ -67,7 +67,7 @@ public:
 private:
   typedef SpatialOps::structured::SingleValueField TimeField;
   
-  VarDensMMSSourceTerm( const Expr::Tag& xTag,
+  VarDen1DMMSMixFracSrc( const Expr::Tag& xTag,
                        const Expr::Tag& tTag,
                        const double D,
                        const double rho0,
@@ -79,7 +79,7 @@ private:
 };
 
 /**
- *  \class VarDensMMSContinuitySrc
+ *  \class VarDen1DMMSContinuitySrc
  *  \author Amir Biglari
  *  \date March, 2013
  *  \brief The source term for continuity equation in the MMS applied on pressure projection method.
@@ -89,7 +89,7 @@ private:
  *
  */
 template< typename FieldT >
-class VarDensMMSContinuitySrc : public Expr::Expression<FieldT>
+class VarDen1DMMSContinuitySrc : public Expr::Expression<FieldT>
 {
   
 public:
@@ -121,7 +121,7 @@ public:
 private:
   typedef typename SpatialOps::structured::SingleValueField TimeField;
   
-  VarDensMMSContinuitySrc( const double rho0,
+  VarDen1DMMSContinuitySrc( const double rho0,
                           const double rho1,
                           const Expr::Tag& xTag,
                           const Expr::Tag& tTag,
@@ -135,7 +135,7 @@ private:
 
 
 /**
- *  \class VarDensMMSPressureContSrc
+ *  \class VarDen1DMMSPressureContSrc
  *  \author Amir Biglari
  *  \date October, 2013
  *  \brief The source term for pressure source equation in the MMS applied on pressure projection method.
@@ -145,7 +145,7 @@ private:
  *
  */
 template< typename FieldT >
-class VarDensMMSPressureContSrc : public Expr::Expression<FieldT>
+class VarDen1DMMSPressureContSrc : public Expr::Expression<FieldT>
 {
   
 public:
@@ -171,7 +171,7 @@ public:
   
 private:
   
-  VarDensMMSPressureContSrc( const Expr::Tag continutySrcTag,
+  VarDen1DMMSPressureContSrc( const Expr::Tag continutySrcTag,
                             const Expr::Tag& timestepTag);
   typedef typename SpatialOps::structured::SingleValueField TimeField;
   const Expr::Tag continutySrcTag_, timestepTag_;
