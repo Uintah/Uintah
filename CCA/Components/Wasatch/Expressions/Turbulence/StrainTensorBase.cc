@@ -103,23 +103,6 @@ evaluate()
 
 //--------------------------------------------------------------------
 
-StrainTensorBase::
-Builder::Builder( const Expr::Tag& result,
-                  const Expr::TagList& velTags )
-: ExpressionBuilder(result),
-  velTags_(velTags)
-{}
-
-//--------------------------------------------------------------------
-
-Expr::ExpressionBase*
-StrainTensorBase::Builder::build() const
-{
-  return new StrainTensorBase( velTags_ );
-}
-
-//--------------------------------------------------------------------
-
 void
 StrainTensorBase::
 calculate_strain_tensor_components(SVolField& strTsrMag,
