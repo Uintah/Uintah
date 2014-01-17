@@ -149,7 +149,7 @@ namespace Wasatch{
    *
    *  \param gc The GraphCategories.
    */
-  void parse_var_dens_mms( Uintah::ProblemSpecP wasatchParams,
+  void parse_var_den_mms( Uintah::ProblemSpecP wasatchParams,
                            Uintah::ProblemSpecP varDensMMSParams,
                            const bool computeContinuityResidual,
                            GraphCategories& gc);

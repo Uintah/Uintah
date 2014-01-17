@@ -31,7 +31,7 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 
 /**
- *  \class    VarDensMMSDensity
+ *  \class    VarDen1DMMSDensity
  *  \ingroup  Expressions
  *  \author   Amir Biglari
  *  \date     December, 2012
@@ -43,10 +43,10 @@
  */
 
 template< typename FieldT >
-class VarDensMMSDensity : public BoundaryConditionBase<FieldT>
+class VarDen1DMMSDensity : public BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::structured::SingleValueField TimeField;
-  VarDensMMSDensity( const Expr::Tag& indepVarTag,
+  VarDen1DMMSDensity( const Expr::Tag& indepVarTag,
                      const double rho0,
                      const double rho1 )
   : indepVarTag_ (indepVarTag),
@@ -76,13 +76,13 @@ public:
     rho0_ (rho0),
     rho1_ (rho1)
     {}
-    Expr::ExpressionBase* build() const{ return new VarDensMMSDensity(indepVarTag_, rho0_, rho1_); }
+    Expr::ExpressionBase* build() const{ return new VarDen1DMMSDensity(indepVarTag_, rho0_, rho1_); }
   private:
     const Expr::Tag indepVarTag_;
     const double rho0_, rho1_;
   };
   
-  ~VarDensMMSDensity(){}
+  ~VarDen1DMMSDensity(){}
   void advertise_dependents( Expr::ExprDeps& exprDeps ){  exprDeps.requires_expression( indepVarTag_ );}
   void bind_fields( const Expr::FieldManagerList& fml ){
     t_    = &fml.template field_manager<TimeField>().field_ref( indepVarTag_ );
@@ -95,7 +95,7 @@ private:
 };
 
 /**
- *  \class    VarDensMMSMixtureFraction
+ *  \class    VarDen1DMMSMixtureFraction
  *  \ingroup  Expressions
  *  \author   Amir Biglari
  *  \date     December, 2012
@@ -106,11 +106,11 @@ private:
  *  \tparam FieldT - the type of field for the mixture fraction.
  */
 template< typename FieldT >
-class VarDensMMSMixtureFraction
+class VarDen1DMMSMixtureFraction
 : public BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::structured::SingleValueField TimeField;
-  VarDensMMSMixtureFraction( const Expr::Tag& indepVarTag ) :
+  VarDen1DMMSMixtureFraction( const Expr::Tag& indepVarTag ) :
   indepVarTag_ (indepVarTag)
   {
     this->set_gpu_runnable(false);
@@ -130,12 +130,12 @@ public:
     ExpressionBuilder(resultTag),
     indepVarTag_ (indepVarTag)
     {}
-    Expr::ExpressionBase* build() const{ return new VarDensMMSMixtureFraction(indepVarTag_); }
+    Expr::ExpressionBase* build() const{ return new VarDen1DMMSMixtureFraction(indepVarTag_); }
   private:
     const Expr::Tag indepVarTag_;
   };
   
-  ~VarDensMMSMixtureFraction(){}
+  ~VarDen1DMMSMixtureFraction(){}
   void advertise_dependents( Expr::ExprDeps& exprDeps ){  exprDeps.requires_expression( indepVarTag_ );}
   void bind_fields( const Expr::FieldManagerList& fml ){
     t_    = &fml.template field_manager<TimeField>().field_ref( indepVarTag_ );
@@ -147,7 +147,7 @@ private:
 };
 
 /**
- *  \class    VarDensMMSMomentum
+ *  \class    VarDen1DMMSMomentum
  *  \ingroup  Expressions
  *  \author   Amir Biglari
  *  \date     December, 2012
@@ -158,7 +158,7 @@ private:
  *  \tparam FieldT - the type of field for the momentum.
  */
 template< typename FieldT >
-class VarDensMMSMomentum
+class VarDen1DMMSMomentum
 : public BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::structured::SingleValueField TimeField;
@@ -185,19 +185,19 @@ public:
     rho1_( rho1 ),
     side_( side )
     {}
-    Expr::ExpressionBase* build() const{ return new VarDensMMSMomentum(indepVarTag_, rho0_, rho1_, side_); }
+    Expr::ExpressionBase* build() const{ return new VarDen1DMMSMomentum(indepVarTag_, rho0_, rho1_, side_); }
   private:
     const Expr::Tag indepVarTag_;
     const double rho0_, rho1_;
     const SpatialOps::structured::BCSide side_;
   };
   
-  ~VarDensMMSMomentum(){}
+  ~VarDen1DMMSMomentum(){}
   void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( indepVarTag_ ); }
   void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<TimeField>( indepVarTag_ ); }
   void evaluate();
 private:
-  VarDensMMSMomentum( const Expr::Tag& indepVarTag,
+  VarDen1DMMSMomentum( const Expr::Tag& indepVarTag,
                      const double rho0,
                      const double rho1,
                      const SpatialOps::structured::BCSide side )
@@ -215,7 +215,7 @@ private:
 };
 
 /**
- *  \class    VarDensMMSSolnVar
+ *  \class    VarDen1DMMSSolnVar
  *  \ingroup  Expressions
  *  \author   Amir Biglari
  *  \date     December, 2012
@@ -226,11 +226,11 @@ private:
  *  \tparam FieldT - the type of field for the solution variable.
  */
 template< typename FieldT >
-class VarDensMMSSolnVar
+class VarDen1DMMSSolnVar
 : public BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::structured::SingleValueField TimeField;
-  VarDensMMSSolnVar( const Expr::Tag& indepVarTag,
+  VarDen1DMMSSolnVar( const Expr::Tag& indepVarTag,
                     const double rho0,
                     const double rho1  )
   : indepVarTag_ (indepVarTag),
@@ -258,13 +258,13 @@ public:
     rho0_ (rho0),
     rho1_ (rho1)
     {}
-    Expr::ExpressionBase* build() const{ return new VarDensMMSSolnVar(indepVarTag_, rho0_, rho1_); }
+    Expr::ExpressionBase* build() const{ return new VarDen1DMMSSolnVar(indepVarTag_, rho0_, rho1_); }
   private:
     const Expr::Tag indepVarTag_;
     const double rho0_, rho1_;
   };
   
-  ~VarDensMMSSolnVar(){}
+  ~VarDen1DMMSSolnVar(){}
   void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( indepVarTag_ );}
   void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<TimeField>( indepVarTag_ );
   }
@@ -276,7 +276,7 @@ private:
 };
 
 /**
- *  \class    VarDensMMSVelocity
+ *  \class    VarDen1DMMSVelocity
  *  \ingroup  Expressions
  *  \author   Amir Biglari
  *  \date     December, 2012
@@ -287,7 +287,7 @@ private:
  *  \tparam FieldT - the type of field for the velocity.
  */
 template< typename FieldT >
-class VarDensMMSVelocity
+class VarDen1DMMSVelocity
 : public BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::structured::SingleValueField TimeField;
@@ -310,18 +310,18 @@ public:
     indepVarTag_ (indepVarTag),
     side_ (side)
     {}
-    Expr::ExpressionBase* build() const{ return new VarDensMMSVelocity(indepVarTag_, side_); }
+    Expr::ExpressionBase* build() const{ return new VarDen1DMMSVelocity(indepVarTag_, side_); }
   private:
     const Expr::Tag indepVarTag_;
     const SpatialOps::structured::BCSide side_;
   };
   
-  ~VarDensMMSVelocity(){}
+  ~VarDen1DMMSVelocity(){}
   void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( indepVarTag_ );}
   void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<TimeField>( indepVarTag_ );}
   void evaluate();
 private:
-  VarDensMMSVelocity( const Expr::Tag& indepVarTag,
+  VarDen1DMMSVelocity( const Expr::Tag& indepVarTag,
                      const SpatialOps::structured::BCSide side )
   : indepVarTag_ (indepVarTag),
   side_ (side)

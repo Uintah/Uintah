@@ -81,7 +81,7 @@
 
 <!-- 
       <SourceTermExpression>
-      	<NameTag name="VarDens2DMMSSource" state="STATE_NONE"/>
+      	<NameTag name="VarDen2DMMSSource" state="STATE_NONE"/>
       </SourceTermExpression>
  -->
     </TransportEquation>   
