@@ -92,6 +92,11 @@ namespace Wasatch{
   drhodt     ( "drhodt",       Expr::STATE_NONE ),
   drhodtnp1  ( "drhodt",       Expr::STATE_NP1  ),
   
+  // mms varden
+  mms_mixfracsrc( "mms_mixture_fraction_src", Expr::STATE_NONE ),
+  mms_continuitysrc("mms_continuity_src", Expr::STATE_NONE),
+  mms_pressurecontsrc("mms_pressure_continuity_src", Expr::STATE_NONE),
+  
   // postprocessing
   continuityresidual( "ContinuityResidual", Expr::STATE_NONE )
   

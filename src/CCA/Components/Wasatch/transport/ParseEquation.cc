@@ -330,28 +330,26 @@ namespace Wasatch{
     varDensMMSParams->get("D",D);
     const TagNames& tagNames = TagNames::self();
 
-    const Expr::Tag solnVarRHSTag = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
+    const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
     const Expr::Tag solnVarRHSStarTag = Expr::Tag(solnVarName+"_rhs"+tagNames.star,Expr::STATE_NONE);
-    const Expr::Tag MMSSourceTag = Expr::Tag("VarDensMMSSource",Expr::STATE_NONE);
-        
+    
     GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];    
-    slngraphHelper->exprFactory->register_expression( new VarDensMMSSourceTerm<SVolField>::Builder(MMSSourceTag,tagNames.xsvolcoord, tagNames.time, D, rho0, rho1));
+    slngraphHelper->exprFactory->register_expression( new VarDensMMSSourceTerm<SVolField>::Builder(tagNames.mms_mixfracsrc,tagNames.xsvolcoord, tagNames.time, D, rho0, rho1));
     
-    slngraphHelper->exprFactory->attach_dependency_to_expression(MMSSourceTag, solnVarRHSTag);
-    slngraphHelper->exprFactory->attach_dependency_to_expression(MMSSourceTag, solnVarRHSStarTag);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSTag);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSStarTag);
     
-    const Expr::Tag varDensMMSContSrc = Expr::Tag( "mms_continuity_src", Expr::STATE_NONE);
     const Expr::Tag varDensMMSPressureContSrc = Expr::Tag( "mms_pressure_continuity_src", Expr::STATE_NONE);
    
-    slngraphHelper->exprFactory->register_expression( new VarDensMMSContinuitySrc<SVolField>::Builder( varDensMMSContSrc, rho0, rho1, tagNames.xsvolcoord, tagNames.time, tagNames.timestep));
-    slngraphHelper->exprFactory->register_expression( new VarDensMMSPressureContSrc<SVolField>::Builder( varDensMMSPressureContSrc, varDensMMSContSrc, tagNames.timestep));
+    slngraphHelper->exprFactory->register_expression( new VarDensMMSContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, rho0, rho1, tagNames.xsvolcoord, tagNames.time, tagNames.timestep));
+    slngraphHelper->exprFactory->register_expression( new VarDensMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, tagNames.timestep));
     
-    slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSPressureContSrc, tagNames.pressuresrc);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_pressurecontsrc, tagNames.pressuresrc);
     
     if (computeContinuityResidual)
     {
       const Expr::Tag drhodtTag = Expr::Tag( "drhodt", Expr::STATE_NONE);
-      slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSContSrc, drhodtTag);
+      slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_continuitysrc, drhodtTag);
     }
   }
 
@@ -376,18 +374,14 @@ namespace Wasatch{
     
     const TagNames& tagNames = TagNames::self();
     
-    const Expr::Tag solnVarRHSTag = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
+    const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
     const Expr::Tag solnVarRHSStarTag = Expr::Tag(solnVarName+"_rhs"+tagNames.star,Expr::STATE_NONE);
-    const Expr::Tag mixFracSrcTag = Expr::Tag("mms_mixture_fraction_src",Expr::STATE_NONE);
     
     GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];
-    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingMixFracSrc<SVolField>::Builder(mixFracSrcTag, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, rho0, rho1, d, w, k, uf, vf));
+    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingMixFracSrc<SVolField>::Builder(tagNames.mms_mixfracsrc, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, rho0, rho1, d, w, k, uf, vf));
     
-    slngraphHelper->exprFactory->attach_dependency_to_expression(mixFracSrcTag, solnVarRHSTag);
-    slngraphHelper->exprFactory->attach_dependency_to_expression(mixFracSrcTag, solnVarRHSStarTag);
-    
-    const Expr::Tag contSrcTag = Expr::Tag( "mms_continuity_src", Expr::STATE_NONE);
-    const Expr::Tag pressureContSrcTag = Expr::Tag( "mms_pressure_continuity_src", Expr::STATE_NONE);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSTag);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSStarTag);
     
     Uintah::ProblemSpecP densityParams  = wasatchParams->findBlock("Density");
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
@@ -416,15 +410,15 @@ namespace Wasatch{
     //      alphaParams->get("b",b);
     //    }
     
-    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( contSrcTag, densityTag, densStarTag, dens2StarTag, velStarTags, rho0, rho1,w, k, uf, vf, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, tagNames.timestep));
-    slngraphHelper->exprFactory->register_expression( new VarDensMMSPressureContSrc<SVolField>::Builder( pressureContSrcTag, contSrcTag, tagNames.timestep));
+    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, densityTag, densStarTag, dens2StarTag, velStarTags, rho0, rho1,w, k, uf, vf, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, tagNames.timestep));
+    slngraphHelper->exprFactory->register_expression( new VarDensMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, tagNames.timestep));
     
-    slngraphHelper->exprFactory->attach_dependency_to_expression(pressureContSrcTag, tagNames.pressuresrc);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_pressurecontsrc, tagNames.pressuresrc);
     
     if (computeContinuityResidual)
     {
       const Expr::Tag drhodtTag = Expr::Tag( "drhodt", Expr::STATE_NONE);
-      slngraphHelper->exprFactory->attach_dependency_to_expression(contSrcTag, drhodtTag);
+      slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_continuitysrc, drhodtTag);
     }
   }
 
