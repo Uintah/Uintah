@@ -103,11 +103,17 @@ namespace Wasatch{
     // varden
     const std::string
     star, doubleStar;
+    
     const Expr::Tag
     pressuresrc,
     vardenalpha, vardenbeta,
     divmomstar, drhodtstar,
     drhodt,drhodtnp1;
+    
+    // mms varden
+    const Expr::Tag
+    mms_mixfracsrc, mms_continuitysrc,
+    mms_pressurecontsrc;
     
     // postprocessing-related tags
     const Expr::Tag
