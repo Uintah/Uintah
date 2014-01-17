@@ -1,12 +1,13 @@
 #!/bin/csh
-##########################################
+#______________________________________________________________________
 # Usage:
 #  ppm_To_mpeg <optional file name base>
-##########################################
-
+#  
+#   This script 'glues' together a series of image files into a movie.
+#   The user can resize the movie and/or add labels to the header/footer.
+#
 #__________________________________
 # bulletproofinG
-
 set tmp = (`which display` `which convert` `which composite` `which ffmpeg`)
 
 if ( $status ) then
@@ -18,7 +19,7 @@ if ( $status ) then
   exit(0)
 endif
 
-# check if there was a image frame name specified
+# check if there was a file basename  specified
 set imageName = movie
 if ( $#argv > 0 ) then
   set imageName = $1
@@ -26,19 +27,19 @@ if ( $#argv > 0 ) then
 endif
 
 set firstFrame = "$imageName.0000.*"
-set ext  = `echo $firstFrame | awk -F. '{print $3 }'`
+set orgExt  = `echo $firstFrame | awk -F. '{print $3 }'`
 
 unalias rm
 unalias cp
-
+unalias mv
 set ans = "n"
 
 #__________________________________
 # Defaults
-
-set EXT = "jpg"
-
-set FONT_DEFAULT = "-font helvetica -pointsize 14"
+set EXT = "jpeg"
+set addLabels = "false"
+set doResize  = "true"
+set FONT_DEFAULT = "-font helvetica -pointsize 14"  # for the labels
 
 while ( $ans == "n" || $ans == "N")
   #__________________________________
@@ -47,8 +48,7 @@ while ( $ans == "n" || $ans == "N")
   set backup = $<
   
   set size_default =  `identify -verbose $imageName.0000.* | grep Geometry | cut -d ":" -f2`
-  
-  echo "Enter the size of the movie [$size_default] (note frame size must be a mutiple of 2)"
+  echo "Enter the size of the movie [$size_default] "
   set size = $<
 
   echo  "Play back speed, frames per second [5]"
@@ -57,7 +57,6 @@ while ( $ans == "n" || $ans == "N")
   echo  "Enter movie format [mpeg].  Type ffmpeg -formats for options"
   set movieFormat = $<
 
-
   #__________________________________
   #  apply defaults
   if ( $backup == "" ) then
@@ -65,6 +64,7 @@ while ( $ans == "n" || $ans == "N")
   endif
   if ( $size == "" ) then
     set size = $size_default
+    set doResize = false;
   endif
   if ( $playBackSpeed == "" ) then
     set playBackSpeed = "5"
@@ -85,8 +85,9 @@ while ( $ans == "n" || $ans == "N")
   set ans = $<
 end
 
+
 #__________________________________
-#  Add Titles and show the user a sample image
+#  Add Labels and show the user a sample image
 echo ""
 echo "Do you want to add titles to movie? [n]"
 set ans = $<
@@ -94,8 +95,9 @@ set redo = ""
 set N_title = ""
 set S_title = ""
 
-
 while( $ans == "y" || $ans == "Y" || $redo == "n" )
+  set addLabels = "true"
+  
   echo  "Enter the title for the top of the image"
   set N_title = "$<"
   echo  "Enter the title for the bottom of the movie"
@@ -103,6 +105,7 @@ while( $ans == "y" || $ans == "Y" || $redo == "n" )
   
   echo "white or black font color (w/b) [w]"
   set fontColor = $<
+  
   if ( $fontColor == "" ) then
    set fontColor  = "white"
    set bkgrdColor = "black"
@@ -114,14 +117,10 @@ while( $ans == "y" || $ans == "Y" || $redo == "n" )
   set FONT = "$FONT_DEFAULT -fill $fontColor -background $bkgrdColor"
   
   @ num  = `echo $firstFrame | awk -F. '{printf "%i", $2 }'`
-  echo " Now converting $firstFrame to $num.$EXT"
   convert $firstFrame $num.$EXT
   
   #__________________________________
   # generate the labels
-  cp 0000.$EXT test.0.$EXT
-  rm -f Label*.$EXT
-  
   if ( "$N_title" != "" ) then    
     convert 0.$EXT $FONT -gravity north -annotate +0+5 "$N_title" test.0.$EXT
   endif
@@ -131,7 +130,6 @@ while( $ans == "y" || $ans == "Y" || $redo == "n" )
   if ( "$S_title" != "" ) then
     convert test.0.$EXT $FONT -gravity south -annotate +0+5 "$S_title" test.a.$EXT
   endif
-  
   
   echo "Close the popup window to continue"
   
@@ -151,79 +149,106 @@ if( $backup == "y" || $backup == "Y" ) then
   cp * orgs/.
 endif
 
+
 #__________________________________
-#  convert png names to number.$EXT
-echo "Now converting $ext files into $EXT files so ffmpeg can digest them"
+#  rename
+echo "Now renaming files $orgExt files into $EXT files "
 @ count  = 0
 
-foreach i ( *.*.$ext)
+foreach i ( *.*.$orgExt)
   @ num  = `echo $i | awk -F. '{printf "%i", $2 }'`
-  echo " Now converting $i to $num.$EXT"
-  convert $i  $num.$EXT
-  
+  echo " Now renaming $i to $num.$orgExt"
+  cp $i $num.$orgExt
+
   if ( $count != $num )then
     echo " ERROR: the images are not consecutively numbered"
     echo " Image number is: $num but it should be $count"
     rm [0-9]*.$EXT
     exit(0)
   endif
-  
+
   @ count +=1
-  
 end
 
+#__________________________________
+#  convert files to $EXT format
+@ n = `identify -verbose *.0000.$orgExt | grep -ci $EXT`
 
+if ($n == 0 ) then
+  echo "Now converting $orgExt files into $EXT files "
+  set FILES = [0-9]*.$orgExt
+
+  foreach T ($FILES:q)
+    set num = `basename $T .$orgExt`
+    echo " Now converting $T to $num.$EXT"
+    convert  $T  $num.$EXT
+    /bin/rm $T
+  end
+endif
 
 #__________________________________
-# resize and add labels to all the files
-set FILES = [0-9]*.$EXT
+# add labels 
+if( $addLabels == "true" ) then
+  set FILES = [0-9]*.$EXT
 
-foreach T ($FILES:q)
- echo "resizing "$T "& adding labels"
- set num = `basename $T .$EXT`
- 
- # add the titles to the indivdual frames
- cp -f $T $num.0.$EXT
- 
- if ( "$N_title" != "" ) then
-  convert $num.$EXT $FONT -gravity north -annotate +0+5 "$N_title" $num.0.$EXT
- endif
- 
- cp $num.0.$EXT $num.b.$EXT
- 
- if ( "$S_title" != "" ) then
-  convert $num.0.$EXT $FONT -gravity south -annotate +0+5 "$S_title" $num.b.$EXT 
- endif
- 
- rm $num.$EXT
- rm $num.0.$EXT
- 
- convert -resize $size $num.b.$EXT $num.a.$EXT 
- 
- rm $num.b.$EXT
-end 
+  foreach T ($FILES:q)
+   echo " Now adding labels to "$T
+   set num = `basename $T .$EXT`
 
+   # add the titles to the indivdual frames
+   cp -f $T $num.0.$EXT
 
-rm Label*.$EXT
+   if ( "$N_title" != "" ) then
+    convert $num.$EXT $FONT -gravity north -annotate +0+5 "$N_title" $num.0.$EXT
+   endif
+
+   cp $num.0.$EXT $num.1.$EXT
+
+   if ( "$S_title" != "" ) then
+    convert $num.0.$EXT $FONT -gravity south -annotate +0+5 "$S_title" $num.1.$EXT 
+   endif
+
+   mv $num.1.$EXT $num.$EXT
+   rm $num.0.$EXT 
+  end
+endif
+
 #__________________________________
-# make the movies mpg
+# do Resize
+if( $doResize == "true" ) then
+  set FILES = [0-9]*.$EXT
+
+  foreach T ($FILES:q)
+   echo " Now resizing "$T
+   set num = `basename $T .$EXT`
+   mogrify -resize $size $T
+  end
+   
+endif
+
+#__________________________________
+# make the movies
 echo "___________________________________"
 echo "Now making the movie"
-echo "ffmpeg  -r $playBackSpeed -i %d.a.$EXT -r 30 $imageName.$movieFormat"
+echo "ffmpeg  -r $playBackSpeed -i %d.$EXT -r 30 -qscale 1 $imageName.$movieFormat"
 
 rm movie.mpeg
-ffmpeg -r $playBackSpeed -i %d.a.$EXT -r 30 $imageName.$movieFormat
+ffmpeg -r $playBackSpeed -i %d.$EXT -r 30 -qscale 1 $imageName.$movieFormat
 
 #ffmpeg -mbd rd -flags +trell -cmp 2 -subcmp 2 -g 100 -pass 1/2 -s $size -r $playBackSpeed -i %d.a.$EXT -r 30 movie.mpeg
+
+
 #__________________________________
+#  Backup modifed images
 echo "__________________________________"
 echo "Do you want to keep the individual titled frames as $EXT? [n]"
 set ans = $<
 
+set FILES = [0-9]*.$EXT
 foreach T ($FILES:q)
   if( $ans != "y" ) then
     set num = `basename $T .$EXT`
-    rm $num.a.$EXT 
+    rm $num.$EXT 
   endif 
 end
 
