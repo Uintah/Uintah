@@ -1542,19 +1542,19 @@ case $host in
     # Set -fPIC as necessary...
     #
     if test "$static" != "full"; then
-       # for BG/Q
        if test `uname -m` = "ppc"; then
           CFLAGS="-fPIC $CFLAGS"
           FFLAGS="-fPIC $FFLAGS"
           CXXFLAGS="-fPIC $CXXFLAGS"
-       elif test `uname -m` = "ppc64"; then
+       # for BG/Q XL compilers
+       elif test [`uname -m` = "ppc64" -a $CC != mpicc -a $CC != gcc]; then
           CFLAGS="-qpic $CFLAGS"
           FFLAGS="-qpic $FFLAGS"
           CXXFLAGS="-qpic $CXXFLAGS"
        else
           if test "$enable_64bit" = "yes"; then
-             # for BG/Q
-             if test `uname -m` = "ppc64"; then
+             # for BG/Q XL compilers
+             if test [`uname -m` = "ppc64" -a $CC != mpicc -a $CC != gcc]; then
                CFLAGS="-qpic $CFLAGS"
                FFLAGS="-qpic $FFLAGS"
                CXXFLAGS="-qpic $CXXFLAGS"
