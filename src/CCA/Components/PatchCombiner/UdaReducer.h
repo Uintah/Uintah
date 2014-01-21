@@ -27,6 +27,7 @@
 
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Ports/Output.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Material.h>
@@ -70,7 +71,8 @@ WARNING
 
   class UdaReducer : public SimulationInterface, public UintahParallelComponent {
   public:
-    UdaReducer(const ProcessorGroup* myworld, std::string d_udaDir);
+    UdaReducer(const ProcessorGroup* myworld, 
+               std::string d_udaDir);
 
     virtual ~UdaReducer();
 
@@ -85,7 +87,7 @@ WARNING
     virtual void restartInitialize() {}
 
     virtual void scheduleComputeStableTimestep(const LevelP&,
-                                               SchedulerP&) {}
+                                               SchedulerP&);
 
     virtual void scheduleTimeAdvance( const LevelP& level, 
                                       SchedulerP&);
@@ -94,6 +96,10 @@ WARNING
     virtual bool needRecompile(double time, 
                                double dt,
                                const GridP& grid);
+                               
+    virtual void scheduleFinalizeTimestep(const LevelP& level, 
+                                          SchedulerP&);
+    
     double getMaxTime();
 
     GridP getGrid();
@@ -131,16 +137,18 @@ WARNING
     std::vector<int> d_timesteps;
     std::vector<int> d_numMatls;
     std::vector<double> d_times;
-    std::vector<VarLabel*> d_labels;
+    std::vector<VarLabel*> d_savedLabels;
 
     GridP d_oldGrid;
     DataArchive* d_dataArchive;
-
-    LoadBalancer* lb;
-    VarLabel* delt_label;
+    Output* d_dataArchiver;
+    
+    LoadBalancer* d_lb;
+    const VarLabel* delt_label;
     SimulationStateP d_sharedState;
     const MaterialSet*     d_allMatlSet;
     const MaterialSubset*  d_allMatlSubset;
+    SimpleMaterial*  d_oneMatl;
   };
 } // End namespace Uintah
    
