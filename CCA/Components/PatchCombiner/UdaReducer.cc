@@ -23,15 +23,17 @@
  */
 
 #include <CCA/Components/PatchCombiner/UdaReducer.h>
+#include <CCA/Components/DataArchiver/DataArchiver.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/InternalError.h>
-
+#include <Core/Exceptions/ProblemSetupException.h>
 
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/MaterialSetP.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Util/FileUtils.h>
 
 
 #include <iomanip>
@@ -39,11 +41,21 @@
 using namespace std;
 using namespace Uintah;
 
-UdaReducer::UdaReducer(const ProcessorGroup* world, string udaDir)
+//__________________________________
+//  ToDo
+//  - getPerProcessorePatchSet(level)
+
+
+
+
+//______________________________________________________________________
+//
+UdaReducer::UdaReducer(const ProcessorGroup* world, 
+                       string udaDir)
   : UintahParallelComponent(world), d_udaDir(udaDir), d_dataArchive(0),
     d_timeIndex(0)
 {
-  delt_label = VarLabel::create("delT", delt_vartype::getTypeDescription());
+//  delt_label = VarLabel::create("delT", delt_vartype::getTypeDescription());
 }
 
 UdaReducer::~UdaReducer()
@@ -58,8 +70,8 @@ UdaReducer::~UdaReducer()
   delete d_dataArchive;
   
   VarLabel::destroy(delt_label);
-  for (unsigned int i = 0; i < d_labels.size(); i++){
-    VarLabel::destroy(d_labels[i]);
+  for (unsigned int i = 0; i < d_savedLabels.size(); i++){
+    VarLabel::destroy(d_savedLabels[i]);
   }
 }
 //______________________________________________________________________
@@ -70,11 +82,26 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
                               SimulationStateP& state)
 {
   d_sharedState = state;
-  d_allMatlSet = d_sharedState->allMaterials(); 
-  d_allMatlSubset = d_allMatlSet->getUnion();
+  d_sharedState->setIsLockstepAMR(true);
+  d_sharedState->d_switchState = true;         /// HACK NEED TO CHANGE THIS
+   
+  // This matl is for delT
+  d_oneMatl = scinew SimpleMaterial();
+  d_sharedState->registerSimpleMaterial( d_oneMatl );
   
+  
+  delt_label = d_sharedState->get_delt_label();
+
+  d_dataArchiver = dynamic_cast<Output*>(getPort("output"));
+  if(!d_dataArchiver){
+    throw InternalError("ICE:couldn't get output port", __FILE__, __LINE__);
+  }
+
+  
+  //__________________________________
+  //  Find out the time data for the uda
   d_dataArchive = scinew DataArchive(d_udaDir, d_myworld->myrank(), d_myworld->size());
-  d_dataArchive->queryTimesteps( d_timesteps, d_times );
+  d_dataArchive->queryTimesteps( d_timesteps, d_times );  
   d_dataArchive->turnOffXMLCaching();
 
   // try to add a time to d_times that will get us passed the end of the
@@ -82,34 +109,40 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
   d_times.push_back(10 * d_times[d_times.size() - 1]);
   d_timesteps.push_back(999999999);
 
-  //d_oldGrid = d_dataArchive->queryGrid(d_times[0]);
+  //__________________________________
+  //  define the varLabels
+  vector<string> varNames;
+  vector< const TypeDescription *> typeDescriptions;
+  d_dataArchive->queryVariables( varNames, typeDescriptions );
+  
+  for (unsigned int i = 0; i < varNames.size(); i++) {
+    d_savedLabels.push_back( VarLabel::create( varNames[i], typeDescriptions[i] ) );
+    cout << " label: " << varNames[i] << endl;
+  }
+  cout << " delT: " << delt_label->getName() << endl; 
 }
 //______________________________________________________________________
 //
 void UdaReducer::scheduleInitialize(const LevelP& level, 
                                     SchedulerP& sched)
 {
-  lb = sched->getLoadBalancer();
 
-  vector<string> varNames;
-  vector< const TypeDescription *> typeDescriptions;
+  d_lb = sched->getLoadBalancer();
   
-  d_dataArchive->queryVariables( varNames, typeDescriptions );
-  
-  for (unsigned int i = 0; i < varNames.size(); i++) {
-    d_labels.push_back( VarLabel::create( varNames[i], typeDescriptions[i] ) );
-  }
-  
-  //__________________________________
-  //
+
+
+#if 0
   Task* t = scinew Task("UdaReducer::initialize", this, 
-                         &UdaReducer::initialize);
-   
-//  const MaterialSet* all_matls = d_sharedState->allMaterials();
-//  const MaterialSubset* all_matls_MS = all_matls->getUnion();
+                       &UdaReducer::initialize);
 
   t->computes( delt_label, level.get_rep() );
-  sched->addTask(t, level->eachPatch(), d_allMatlSet);
+  
+  GridP grid = level->getGrid();
+  const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
+  t->setType(Task::OncePerProc);
+  
+  sched->addTask( t, perProcPatches, d_sharedState->allMaterials() );
+#endif
 }
 
 //______________________________________________________________________
@@ -128,7 +161,7 @@ void UdaReducer::initialize(const ProcessorGroup*,
 
 
 //______________________________________________________________________
-//
+//  This task is only called once.
 void
 UdaReducer::scheduleTimeAdvance( const LevelP& level, 
                                  SchedulerP& sched )
@@ -136,6 +169,7 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level,
 
   sched_readAndSetVars( level, sched );
 
+#if 0
   //__________________________________
   //  Advance delT
   Task* t = scinew Task("UdaReducer::computeDelT", this, 
@@ -144,9 +178,10 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level,
   t->computes( delt_label, level.get_rep() );
   
   GridP grid = level->getGrid();
-  const PatchSet* perProcPatches = lb->getPerProcessorPatchSet(grid);
+  const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
   
   sched->addTask( t, perProcPatches,  d_allMatlSet );
+#endif
 }
 
 
@@ -154,65 +189,171 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level,
 //
 void UdaReducer::sched_readAndSetVars(const LevelP& level,
                                       SchedulerP& sched){
-
+  cout <<"__________________________________sched_readAndSetVars: " << endl;
   GridP grid = level->getGrid();
-  const PatchSet* perProcPatches = lb->getPerProcessorPatchSet(grid);
+  const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
+  const PatchSubset* patches = perProcPatches->getSubset(d_myworld->myrank());  
+    
+    
+  Task* t = scinew Task("UdaReducer::readAndSetVars", this, 
+                       &UdaReducer::readAndSetVars);
+                                                  
 
-  // so we can tell the task which matls to use (sharedState doesn't have
-  // any matls defined, so we can't use that).
+///__________________________________
+//  Attempt 3
+#if 0
+  std::vector< Output::SavedLabels2 > savedLabels;
+  savedLabels = d_dataArchiver->getSavedLabels();
+  
+  cout << "  savedLabels.size: " << savedLabels.size() << endl;
+  
+  vector< Output::SavedLabels2 >::iterator iter;
+
+  for(iter = savedLabels.begin(); iter!= savedLabels.end(); iter++) { 
+    const Output::SavedLabels2 me = *iter;
+    
+  
+    cout <<"  " << me.labelName  << " matls " << me.matls << " levels: " << me.levels <<endl;
+    VarLabel* var = VarLabel::find( me.labelName);
+    
+    if (var == NULL) {
+      throw ProblemSetupException( me.labelName +" variable not found to save.", __FILE__, __LINE__);
+    }
+    
+    MaterialSet* matlSet = scinew MaterialSet();
+    // loop over levels
+    
+
+    for (ConsecutiveRangeSet::iterator level = me.levels.begin(); level != me.levels.end(); level++) {
+      cout << "  Levels: " << *level << endl;
+      
+      vector<int> m;
+      
+      if( me.matls != ConsecutiveRangeSet::all ){
+        for (ConsecutiveRangeSet::iterator iter = me.matls.begin(); iter != me.matls.end(); iter++) {
+          m.push_back(*iter);
+        }
+      }
+      
+      matlSet->addAll(m);
+    }
+    cout << "  matlSet: " << *matlSet << endl;
+  } 
+#endif  
+#if 0 
+//______________________________________________________________________
+//  Attempt 2
+  vector< Output::SavedLabels >::iterator saveIter;
+  //const PatchSet* patches = lb->getOutputPerProcessorPatchSet(level);
+
+  for(saveIter = savedLabels.begin(); saveIter!= savedLabels.end(); saveIter++) {
+    // check to see if the input file requested to save on this level.
+    // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
+    
+    const VarLabel* label = (*saveIter).varLabel;
+    map<int, MaterialSetP>::iterator matlSet;
+  
+    matlSet = saveIter->matlSet.find( level->getIndex() );
+    
+    cout <<"  readAndSetVars: " << label->getName() << " MatlSet: " << matlSet->second.get_rep() << endl;
+    
+#if 0    
+    if ( matlSet == saveIter->matlSet.end() ){
+      matlSet = saveIter->matlSet.find(level->getIndex() - level->getGrid()->numLevels());
+    }
+    if ( matlSet == saveIter->matlSet.end() ){
+      matlSet = saveIter->matlSet.find(ALL_LEVELS);
+    }
+#endif
+
+    if ( matlSet != saveIter->matlSet.end() ) {
+
+      const MaterialSubset* matlSubset = matlSet->second.get_rep()->getUnion();
+
+      // out of domain really is only there to handle the "all-in-one material", but doesn't break anything else
+      t->computes( label, matlSubset );
+      cout <<" requires: " << label->getName() << " MatlSubset: " << *matlSubset << endl;
+    }
+  }
+  
+  
+  t->setType(Task::OncePerProc);
+  sched->addTask(t, perProcPatches, d_sharedState->allMaterials() ); 
+#endif  
+  
+    
+  
+  #if 1                 
+
+  // manually determine with matls for scheduling.
+  // The sharedState does not have any materials registered
+  // so you have to do it manually
   MaterialSetP allMatls = scinew MaterialSet();
   allMatls->createEmptySubsets(1);
-  MaterialSubset* allMS = allMatls->getSubset(0);
+  MaterialSubset* allMatlSubset = allMatls->getSubset(0);
 
   MaterialSetP prevMatlSet = 0;
   ConsecutiveRangeSet prevRangeSet;
   
-  
-  Task* t = scinew Task("UdaReducer::readAndSetVars", this, 
-                        &UdaReducer::readAndSetVars);
-  
-  
-  for (unsigned int i = 0; i < d_labels.size(); i++) {
-    VarLabel* label = d_labels[i];
+//  std::vector< Output::SavedLabels > DA_savedLabels;
+//  DA_savedLabels = d_dataArchiver->getSavedLabels();  
 
-    ConsecutiveRangeSet matlsRangeSet;
-    for (int i = 0; i < perProcPatches->getSubset(d_myworld->myrank())->size(); i++) {
-      const Patch* patch = perProcPatches->getSubset(d_myworld->myrank())->get(i);
-      matlsRangeSet = matlsRangeSet.unioned(d_dataArchive->queryMaterials(label->getName(), patch, d_timeIndex));
-    }
+  
+  //__________________________________
+  //  Loop over all saved labels
+  for (unsigned int i = 0; i < d_savedLabels.size(); i++) {
+    VarLabel* label = d_savedLabels[i];
+    string labelName = label->getName();
+
     
-    MaterialSet* matls;;
+    // find the range of matls over these patches
+    ConsecutiveRangeSet matlsRangeSet;
+    
+    for(int p=0;p<patches->size();p++){ 
+      const Patch* patch = patches->get(p);
+
+      ConsecutiveRangeSet matls = d_dataArchive->queryMaterials(labelName, patch, d_timeIndex);
+      matlsRangeSet = matlsRangeSet.unioned(matls);
+      
+    }
+
+    //__________________________________
+    // Computerthe material set and subset 
+    MaterialSet* matlSet;
     if (prevMatlSet != 0 && prevRangeSet == matlsRangeSet) {
-      matls = prevMatlSet.get_rep();
-    }else {
+      matlSet = prevMatlSet.get_rep();
+    } else {
      
-      matls = scinew MaterialSet();
+      matlSet = scinew MaterialSet();
       vector<int> matls_vec;
       matls_vec.reserve(matlsRangeSet.size());
       
       for (ConsecutiveRangeSet::iterator iter = matlsRangeSet.begin(); iter != matlsRangeSet.end(); iter++) {
-        if (!allMS->contains(*iter)) {
-          allMS->add(*iter);
+        if ( !allMatlSubset->contains(*iter) ) {
+          allMatlSubset->add(*iter);
         }
 	 matls_vec.push_back(*iter);
       }
       
-      matls->addAll(matls_vec);
+      matlSet->addAll(matls_vec);
       prevRangeSet = matlsRangeSet;
-      prevMatlSet  = matls;
+      prevMatlSet  = matlSet;
     }
 
-    allMS->sort();
-
-    for (int l = 0; l < grid->numLevels(); l++) {
-      t->computes(label, grid->getLevel(l)->allPatches()->getUnion(), matls->getUnion());
+    allMatlSubset->sort();    
+    
+    //__________________________________
+    // Compute all labels on all levels.  The DataArchiver::output task
+    // will then pick and choose which variables to write.
+    for (int L = 0; L < grid->numLevels(); L++) {
+      LevelP level = grid->getLevel(L);
+      t->computes(label, level->allPatches()->getUnion(), matlSet->getUnion());
     }
-  }
-
-  //cout << d_myworld->myrank() << "  Done Calling DA::QuearyMaterials a bunch of times " << endl;
+  }  // loop savedLabels
 
   t->setType(Task::OncePerProc);
   sched->addTask(t, perProcPatches, allMatls.get_rep());
+#endif
 
 }
 
@@ -228,19 +369,18 @@ void UdaReducer::readAndSetVars(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
+    
     //__________________________________
     //output material indices
-    if(patch->getID() == 0){
-
-      cout << "//__________________________________Material Names:";
-      int numAllMatls = d_sharedState->getNumMatls();
-      cout << " numAllMatls " << numAllMatls << endl;
-      for (int m = 0; m < numAllMatls; m++) {
-        Material* matl = d_sharedState->getMaterial( m );
-        cout <<" " << matl->getDWIndex() << ") " << matl->getName();
-      }
-      cout << "\n";
+    proc0cout << "//__________________________________Material Names:";
+    int numAllMatls = d_sharedState->getNumMatls();
+    proc0cout << " numAllMatls " << numAllMatls << endl;
+    
+    for (int m = 0; m < numAllMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      proc0cout <<" " << matl->getDWIndex() << ") " << matl->getName();
     }
+    proc0cout << "\n";
   }
 
 
@@ -263,9 +403,28 @@ void UdaReducer::readAndSetVars(const ProcessorGroup*,
   proc0cout << "   Incrementing time " << d_timeIndex << " and time " << time << endl;
 
 
-  d_dataArchive->restartInitialize(d_timeIndex, d_oldGrid, new_dw, lb, &time);
+  d_dataArchive->restartInitialize(d_timeIndex, d_oldGrid, new_dw, d_lb, &time);
   d_timeIndex++;
 }
+//______________________________________________________________________
+//
+void UdaReducer::scheduleComputeStableTimestep(const LevelP& level,
+                                               SchedulerP& sched)
+{
+  Task* t = scinew Task("UdaReducer::computeDelT",
+                  this, &UdaReducer::computeDelT);
+           
+  t->computes( delt_label, level.get_rep() );
+  
+  GridP grid = level->getGrid();
+  const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
+  
+  cout << "perProcPatches "<< *perProcPatches << endl;
+  t->setType(Task::OncePerProc);
+  sched->addTask( t, perProcPatches, d_sharedState->allMaterials() );
+   
+}
+
 //______________________________________________________________________
 //
 void UdaReducer::computeDelT(const ProcessorGroup*,
@@ -280,6 +439,8 @@ void UdaReducer::computeDelT(const ProcessorGroup*,
   delt_vartype delt_var = delt;
   new_dw->put(delt_var, delt_label);
 }
+
+
 
 //______________________________________________________________________
 //
@@ -325,7 +486,15 @@ GridP UdaReducer::getGrid()
     d_gridChanged = true;
     proc0cout << "     NEW GRID!!!!\n";
     d_oldGrid = newGrid;
-    lb->possiblyDynamicallyReallocate(newGrid, true);
+    d_lb->possiblyDynamicallyReallocate(newGrid, true);
   }
   return d_oldGrid; 
+}
+
+//______________________________________________________________________
+//
+void UdaReducer::scheduleFinalizeTimestep(const LevelP& level, 
+                                          SchedulerP&)
+{
+  cout << " UdaReducer::scheduleFinalizeTimestep " << endl;
 }
