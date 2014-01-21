@@ -53,14 +53,14 @@ namespace Wasatch{
     static const TagNames& self();
     
     const Expr::Tag time, timestep, stableTimestep;
+
+    const Expr::Tag celltype;
     
     const Expr::Tag
     xsvolcoord,  ysvolcoord,  zsvolcoord,
     xxvolcoord,  yxvolcoord,  zxvolcoord,
     xyvolcoord,  yyvolcoord,  zyvolcoord,
     xzvolcoord,  yzvolcoord,  zzvolcoord;
-    
-    const Expr::Tag celltype;
     
     // energy related variables
     const Expr::Tag
