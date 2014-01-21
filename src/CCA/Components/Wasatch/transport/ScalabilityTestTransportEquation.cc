@@ -129,6 +129,11 @@ namespace Wasatch{
       setup_diffusive_velocity_expression<FieldT>( "Y", solnVarName_, factory, info );
       setup_diffusive_velocity_expression<FieldT>( "Z", solnVarName_, factory, info );
     }
+    else{
+      info[DIFFUSIVE_FLUX_X] = Expr::Tag();
+      info[DIFFUSIVE_FLUX_Y] = Expr::Tag();
+      info[DIFFUSIVE_FLUX_Z] = Expr::Tag();
+    }
   }
 
   //------------------------------------------------------------------
@@ -139,7 +144,7 @@ namespace Wasatch{
   {
     bool doConvection = false;
     params_->get("DoConvection",doConvection);
-    if(doConvection){
+    if( doConvection ){
       const Expr::Tag empty;
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
 
@@ -168,6 +173,11 @@ namespace Wasatch{
                                                 factory,
                                                 info );
      }
+    else{
+      info[CONVECTIVE_FLUX_X] = Expr::Tag();
+      info[CONVECTIVE_FLUX_Y] = Expr::Tag();
+      info[CONVECTIVE_FLUX_Z] = Expr::Tag();
+    }
   }
 
   //------------------------------------------------------------------
@@ -178,11 +188,11 @@ namespace Wasatch{
   {
     bool doSrc = false;
     params_->get("DoSourceTerm",doSrc);
+    Expr::Tag srcTag;
 
     if( doSrc ){
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-      const Expr::Tag srcTag( solnVarName_ + "_src", Expr::STATE_NONE );
-      info[SOURCE_TERM] = srcTag;
+      srcTag = Expr::Tag( solnVarName_ + "_src", Expr::STATE_NONE );
 
       int nEqs=0;
       params_->get( "NumberOfEquations", nEqs );
@@ -194,6 +204,7 @@ namespace Wasatch{
       typedef typename ScalabilityTestSrc<FieldT>::Builder coupledSrcTerm;
       factory.register_expression( scinew coupledSrcTerm( srcTag, basePhiTag, nEqs) );
     }
+    info[SOURCE_TERM] = srcTag;
   }
 
   //------------------------------------------------------------------
