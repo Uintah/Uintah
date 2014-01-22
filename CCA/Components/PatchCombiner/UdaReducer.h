@@ -121,14 +121,20 @@ WARNING
                      DataWarehouse* /*old_dw*/,     
                      DataWarehouse* new_dw);        
 
-   void sched_readAndSetVars(const LevelP& level,
+    void sched_computeLabels(const LevelP& level,
                              SchedulerP& sched);
 
-    void readAndSetVars(const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* /*old_dw*/,
-                        DataWarehouse* new_dw);
+    void computeLabels(const ProcessorGroup*,
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* /*old_dw*/,
+                       DataWarehouse* new_dw);
+
+    void finalizeTimestep(const ProcessorGroup*,
+                          const PatchSubset*,
+                          const MaterialSubset*,
+                          DataWarehouse*,
+                          DataWarehouse* );
 
     std::string d_udaDir;
     int d_timeIndex;

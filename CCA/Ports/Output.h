@@ -25,20 +25,24 @@
 #ifndef UINTAH_HOMEBREW_OUTPUT_H
 #define UINTAH_HOMEBREW_OUTPUT_H
 
-#include <Core/Parallel/UintahParallelPort.h>
-#include <Core/Grid/GridP.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SchedulerP.h>
+#include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Variables/MaterialSetP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/OS/Dir.h>
-#include <string>
+#include <Core/Parallel/UintahParallelPort.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
+#include <string>
 
 namespace Uintah {
 
   using SCIRun::Dir;
-
   class ProcessorGroup;
+
   class Patch;
+  class VarLabel;
 
 /**************************************
 
@@ -88,9 +92,8 @@ class SimulationState;
 			      int timestep, double time, bool fromScratch,
 			      bool removeOldDir) = 0;
     //////////
-    // Call this when doing a combine_patches run after calling
-    // problemSetup.  
-    virtual void combinePatchSetup(Dir& fromDir) = 0;
+    // set timeinfoFlags and 
+    virtual void reduceUdaSetup(Dir& fromDir) = 0;
 
     virtual bool needRecompile(double time, double delt,
 			       const GridP& grid) = 0;
@@ -155,8 +158,11 @@ class SimulationState;
     virtual double getCheckpointInterval()=0;
     //////////
     // Get the directory of the current time step for outputting info.
-    virtual const std::string& getLastTimestepOutputLocation() const = 0;
+    virtual const std::string& getLastTimestepOutputLocation() const = 0;  
+    
   private:
+    
+  
     Output(const Output&);
     Output& operator=(const Output&);
   };
