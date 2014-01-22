@@ -98,38 +98,38 @@ namespace Wasatch{
              const int rkStage,
              const TimeIntegrator& timeInt )
   {
+    const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<FieldT>();
+    const int ng = get_n_ghost<FieldT>();
+
     typedef std::set< TimeStepper::FieldInfo<FieldT> > Fields;
     for( typename Fields::const_iterator ifld=fields.begin(); ifld!=fields.end(); ++ifld ){
 
       typedef typename SelectUintahFieldType<FieldT>::const_type ConstUintahField;
       typedef typename SelectUintahFieldType<FieldT>::type       UintahField;
 
-      const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<FieldT>();
-      const int ng = get_n_ghost<FieldT>();
-
       UintahField phiNew;
+      if( rkStage==1 ) newDW->allocateAndPut( phiNew, ifld->varLabel, material, patch, gt, ng );  // note that these fields do have ghost info.
+      else             newDW->getModifiable ( phiNew, ifld->varLabel, material, patch, gt, ng );
+
       ConstUintahField phiOld, rhs;
-      if (rkStage==1) {
-        newDW->allocateAndPut( phiNew, ifld->varLabel, material, patch, gt, ng );  // note that these fields do have ghost info.
-      } else {
-        newDW->getModifiable( phiNew, ifld->varLabel, material, patch, gt, ng );
-      }
       oldDW->get( phiOld, ifld->varLabel, material, patch, gt, ng );
       newDW->get( rhs,    ifld->rhsLabel, material, patch, gt, ng );
 
       //______________________________________
       // forward Euler or RK3SSP timestep at each point:
-      FieldT* const fnew = wrap_uintah_field_as_spatialops<FieldT>(phiNew,patch);
+      FieldT*       const fnew = wrap_uintah_field_as_spatialops<FieldT>(phiNew,patch);
       const FieldT* const fold = wrap_uintah_field_as_spatialops<FieldT>(phiOld,patch);
-      const FieldT* const frhs = wrap_uintah_field_as_spatialops<FieldT>(rhs,patch);
+      const FieldT* const frhs = wrap_uintah_field_as_spatialops<FieldT>(rhs,   patch);
       using namespace SpatialOps;
       
       const double a = timeInt.alpha[rkStage-1];
       const double b = timeInt.beta[rkStage-1];
             
-      if   (rkStage==1) *fnew <<= *fold + deltat * *frhs; // for the first stage, no need to do an extra multiplication
-      else              *fnew <<= a * *fold + b * (*fnew  + deltat * *frhs);
-      delete fnew; delete fold; delete frhs;
+      if( rkStage==1 ) *fnew <<= *fold + deltat * *frhs; // for the first stage, no need to do an extra multiplication
+      else             *fnew <<= a * *fold + b * (*fnew  + deltat * *frhs);
+
+      // Clean up the spatialops fields we created.
+      delete fnew, fold, frhs;
     }
   }
 
@@ -323,7 +323,7 @@ namespace Wasatch{
 
         //____________________________________________
         // update variables on this material and patch
-				// jcs note that we could do this in parallel
+        // jcs note that we could do this in parallel
         do_update<SO::SVolField>( scalarFields_, patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
         do_update<SO::XVolField>( xVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
         do_update<SO::YVolField>( yVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
