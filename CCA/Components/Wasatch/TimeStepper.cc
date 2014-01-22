@@ -129,7 +129,7 @@ namespace Wasatch{
       else             *fnew <<= a * *fold + b * (*fnew  + deltat * *frhs);
 
       // Clean up the spatialops fields we created.
-      delete fnew, fold, frhs;
+      delete fnew; delete fold; delete frhs;
     }
   }
 
