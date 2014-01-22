@@ -136,13 +136,13 @@ namespace Wasatch{
       fieldValues_ = const_cast<typename FieldT::value_type*>( uintahVar.getPointer() );
     }
 
-  return new FieldT( SpatialOps::structured::MemoryWindow( size, offset, extent ),
-                           SS::BoundaryCellInfo::build<FieldT>(bcPlus),
-                           SS::GhostData(1),  /* for now, we hard-code one ghost cell */
-                           fieldValues_,
-                           SpatialOps::structured::ExternalStorage,
-                           mtype,
-                           deviceIndex );
+    return new FieldT( SpatialOps::structured::MemoryWindow( size, offset, extent ),
+                       SS::BoundaryCellInfo::build<FieldT>(bcPlus),
+                       SS::GhostData(1),  /* for now, we hard-code one ghost cell */
+                       fieldValues_,
+                       SpatialOps::structured::ExternalStorage,
+                       mtype,
+                       deviceIndex );
   }
 
   template<>
