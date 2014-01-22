@@ -53,7 +53,6 @@
 #include <CCA/Components/Solvers/HypreSolver.h>
 #endif
 
-#include <CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <CCA/Components/PatchCombiner/UdaReducer.h>
 #include <CCA/Components/DataArchiver/DataArchiver.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
@@ -185,7 +184,6 @@ usage( const std::string & message,
       cerr << "                           of boxes you are using.\n";
       cerr << "-emit_taskgraphs     : Output taskgraph information\n";
       cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
-      cerr << "-combine_patches     : Give a uda directory as the input file\n";  
       cerr << "-reduce_uda          : Reads <uda-dir>/input.xml file and removes unwanted labels (see FAQ).\n";
       cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";      
       cerr << "-t <timestep>        : Restart timestep (last checkpoint is default,\n\t\t\tyou can use -t 0 for the first checkpoint)\n";
@@ -279,13 +277,12 @@ main( int argc, char *argv[], char *env[] )
   bool   do_AMR=false;
   bool   emit_graphs=false;
   bool   restart=false;
-  bool   combine_patches=false;
   bool   reduce_uda=false;
   bool   do_svnDiff = false;
   bool   do_svnStat = false;
   int    restartTimestep = -1;
   int    udaSuffix = -1;
-  string udaDir; // for restart or combine_patches
+  string udaDir; // for restart
   bool   restartFromScratch = true;
   bool   restartRemoveOldDir = false;
   int    numThreads = 0;
@@ -397,11 +394,8 @@ main( int argc, char *argv[], char *env[] )
     } else if(arg == "-TRACK") {
       track = true;
       track_or_die = true;
-    } else if (arg=="-reduce_uda")
-    {
+    } else if (arg=="-reduce_uda" || arg == "-reduceUda" ) {
       reduce_uda=true;
-    } else if(arg == "-combine_patches") {
-      combine_patches = true;
     } else if( arg == "-arches"  || arg == "-ice"      || arg == "-impm"     || arg == "-mpm"      || arg == "-mpmarches"  ||
                arg == "-mpmice"  || arg == "-poisson1" || arg == "-poisson2" || arg == "-switcher" || arg == "-poisson4" || arg == "-benchmark" ||
                arg == "-mpmf"    || arg == "-rmpm"     || arg == "-smpm"     || arg == "-amrmpm"   || arg == "-smpmice"  ||
@@ -455,9 +449,9 @@ main( int argc, char *argv[], char *env[] )
     TURN_ON_WAIT_FOR_DEBUGGER();
   }
 
-  if (restart || combine_patches || reduce_uda) {
-    // check if state.xml is present
-    // if not do normal
+  //__________________________________
+  //  bulletproofing
+  if ( restart || reduce_uda ) {
     udaDir = filename;
     filename = filename + "/input.xml";
 
@@ -466,7 +460,7 @@ main( int argc, char *argv[], char *env[] )
     // an inconsistency.  Therefore it is just better not to use the sym link in the first place.
     if( isSymLink( udaDir.c_str() ) ) {
       cout << "\n";
-      cout << "Error: " + udaDir + " is a symbolic link.  Please use the full name of the UDA.\n";
+      cout << "ERROR: " + udaDir + " is a symbolic link.  Please use the full name of the UDA.\n";
       cout << "\n";
       Uintah::Parallel::finalizeManager();
       Thread::exitAll( 1 );
@@ -596,15 +590,14 @@ main( int argc, char *argv[], char *env[] )
       ups->get("doAMR",do_AMR);
     }
     
-    // don't do AMR on combine-patches or reduce-uda
-    if (reduce_uda || combine_patches) {
+    if(reduce_uda){
       do_AMR = false;
     }
+    
 
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* ctl = 
-      scinew AMRSimulationController(world, do_AMR, ups);
+    SimulationController* ctl = scinew AMRSimulationController(world, do_AMR, ups);
 
     RegridderCommon* reg = 0;
     if(do_AMR) {
@@ -632,9 +625,9 @@ main( int argc, char *argv[], char *env[] )
     UintahParallelComponent* comp = ComponentFactory::create(ups, world, do_AMR, udaDir);
     SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
 
-    if (combine_patches || reduce_uda) {
-      // the ctl will do nearly the same thing for combinePatches and reduceUda
-      ctl->doCombinePatches(udaDir, reduce_uda); // true for reduce_uda, false for combine_patches
+    // set sim. controller flags for reduce uda
+    if ( reduce_uda ) {
+      ctl->setReduceUdaFlags( udaDir ); 
     }
     
     ctl->attachPort("sim", sim);

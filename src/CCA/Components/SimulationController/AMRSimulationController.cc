@@ -54,7 +54,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Tracker/TrackerClient.h>
 
-#include <CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <CCA/Components/PatchCombiner/UdaReducer.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -153,22 +152,17 @@ AMRSimulationController::run()
 
    calcStartTime();
 
-   if (d_combinePatches) {
-     // combine patches and reduce uda need the same things here
-     Dir combineFromDir(d_fromDir);
-     d_output->combinePatchSetup(combineFromDir);
-
-     // somewhat of a hack, but the patch combiner specifies exact delt's
-     // and should not use a delt factor.
+   //__________________________________
+   //  reduceUda
+   if (d_reduceUda) {
+     Dir fromDir(d_fromDir);
+     d_output->reduceUdaSetup( fromDir );
      d_timeinfo->delt_factor = 1;
-     d_timeinfo->delt_min = 0;
-     if (d_reduceUda){
-       d_timeinfo->maxTime = static_cast<UdaReducer*>(d_sim)->getMaxTime();
-     }else{
-       d_timeinfo->maxTime = static_cast<PatchCombiner*>(d_sim)->getMaxTime();
-     }
-     cout << " MaxTime: " << d_timeinfo->maxTime << endl;
-     d_timeinfo->delt_max = d_timeinfo->maxTime;
+     d_timeinfo->delt_min    = 0;
+     d_timeinfo->delt_max    = 1e99;
+     d_timeinfo->maxTime     = static_cast<UdaReducer*>(d_sim)->getMaxTime();
+     d_timeinfo->max_delt_increase = 1e99;
+     d_timeinfo->max_initial_delt  = 1e99;
    }
 
    // setup, compile, and run the taskgraph for the initialization timestep
@@ -264,8 +258,10 @@ AMRSimulationController::run()
 
      // Yes, I know this is kind of hacky, but this is the only way to get a new grid from UdaReducer
      //   Needs to be done before advanceDataWarehouse
-     if (d_reduceUda) currentGrid = static_cast<UdaReducer*>(d_sim)->getGrid();
-
+     if (d_reduceUda){
+      currentGrid = static_cast<UdaReducer*>(d_sim)->getGrid();
+     }
+     
      // After one step (either timestep or initialization) and correction
      // the delta we can finally, finalize our old timestep, eg. 
      // finalize and advance the Datawarehouse
@@ -513,7 +509,8 @@ AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwStride,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void
 AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwStride, int levelNum, bool rootCycle)
 {
@@ -961,7 +958,8 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
     }
   } while(!success);
 } // end executeTimestep()
-
+//______________________________________________________________________
+//
 void
 AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
                                                         SchedulerP& sched )
@@ -992,7 +990,8 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
   task->usesMPI(true);
   sched->addTask(task, d_lb->getPerProcessorPatchSet(grid), d_sharedState->allMaterials());
 }
-
+//______________________________________________________________________
+//
 void
 AMRSimulationController::reduceSysVar( const ProcessorGroup*,
                                       const PatchSubset* patches,

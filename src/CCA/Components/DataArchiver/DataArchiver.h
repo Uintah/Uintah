@@ -103,10 +103,9 @@ using SCIRun::Mutex;
                                   bool     fromScratch,
                                   bool     removeOldDir );
 
-       //! Call this when doing a combine_patches run after calling
-       //! problemSetup.  It will copy the data files over and make it ignore
+       //! Call this after problemSetup it will copy the data and checkpoint files ignore
        //! dumping reduction variables.
-       virtual void combinePatchSetup(Dir& fromDir);
+       virtual void reduceUdaSetup(Dir& fromDir);
 
        //! Copy a section between udas' index.xml.
        void copySection(Dir& fromDir, Dir& toDir, std::string section);
