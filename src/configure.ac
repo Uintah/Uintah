@@ -2423,6 +2423,9 @@ if test "$with_zlib"; then
   fi
 fi
 
+# account for /lib64, /usr/lib64, etc
+BASE_LIB_PATH(_sci_lib,$with_zlib)
+
 SCI_TRY_LINK(Z,zlib library and header,zlib.h,$_sci_inc,z,$_sci_lib,,,$_sci_optional)
 
 if test "$HAVE_Z" = "yes"; then

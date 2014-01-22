@@ -17178,6 +17178,45 @@ $as_echo "$as_me: WARNING: Zlib is already required - you do not need to specify
   fi
 fi
 
+# account for /lib64, /usr/lib64, etc
+
+##
+## BASE_LIB_PATH:
+##
+## This macro takes the base path of a library and determines
+## if there is a lib32, lib64, or just plain lib that is
+## associated with it.  It sets the full path to the value of
+## the first argument.
+##
+## eg:  if arg 2 is /usr/sci/local, and the machine has a
+## /usr/sci/local/lib64, and configure is in 64 bit mode, then
+## /sur/sci/local/lib64 is set as the value of arg 1.
+##
+## arguments mean:
+## arg 1 : This argument will be written with the result
+## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+##
+## This function assums the enable_64bit variable is in scope
+##
+
+  _new_lib_path=$with_zlib/lib
+
+  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+  if test "$enable_64bit" = "yes"; then
+    _new_lib_path=$with_zlib/lib64
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$with_zlib/lib
+    fi
+  else
+  ## We should look for lib32 (IRIX), then default to lib
+    _new_lib_path=$with_zlib/lib32
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$with_zlib/lib
+    fi
+  fi
+  eval _sci_lib='"$_new_lib_path"'
+
+
 
 ##
 ## SCI_TRY_LINK (Z):  zlib library and header
