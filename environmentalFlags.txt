@@ -11,6 +11,7 @@ ExecTimes         SCI_DEBUG     outputs the time for execution on each task.
                                 To view the top 10 tasks use:
                                 sort -t: -k 2 -k 3 -g -r exectimes.?.? | head
                                 To get a summary of all exectimes files run the script src/scripts/execsummary
+                                (NOTE: this only works with MPI and you must run your input file for more than 10 timesteps)
 
 ReductionTasks    SCI_DEBUG     outputs a message on processor 0 whenever a reduction task occurs.
 RELOCATE_DBG      SCI_DEBUG     prints out debugging information in the code that finds the neighboring
