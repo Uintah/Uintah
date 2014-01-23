@@ -1614,6 +1614,7 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
               CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_ptr, host_ptr, host_bytes, cudaMemcpyHostToDevice, stream));
             }
             h2dRequiresLock_.writeUnlock();
+            delete gridVar;
             break;
 
           }  // end GridVariable switch case
@@ -1673,6 +1674,7 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
               CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_var.getPointer(), host_ptr, host_bytes, cudaMemcpyHostToDevice, stream));
             }
             h2dRequiresLock_.writeUnlock();
+            delete reductionVar;
             break;
 
           }  // end ReductionVariable switch case
@@ -1953,6 +1955,7 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
               }
             }
             d2hComputesLock_.writeUnlock();
+            delete gridVar;
             break;
 
           }  // end GridVariable switch case
@@ -1999,6 +2002,7 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
               }
             }
             d2hComputesLock_.writeUnlock();
+            delete reductionVar;
             break;
 
           }  // end ReductionVariable switch case

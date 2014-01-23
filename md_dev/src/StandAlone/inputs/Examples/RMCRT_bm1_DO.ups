@@ -16,7 +16,7 @@
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 5        </max_Timesteps>
+    <max_Timesteps> 8        </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
 
@@ -142,22 +142,25 @@
       <save label = "mag_grad_sigmaT4" levels="-1"/>
       <save label = "flaggedCells"     levels="-1"/> -->
       
-      <checkpoint cycle = "2" timestepInterval = "2"/>
+      <checkpoint cycle = "2" timestepInterval = "3"/>
   </DataArchiver>
   
   
   <!--__________________________________ -->
+  <Temperature>       64.804        </Temperature>
+  <abskg>             999           </abskg>
+  <benchmark>          1            </benchmark>
+  <calc_frequency>     2            </calc_frequency>
+  
   <RMCRT>
-    <randomSeed>        false      </randomSeed>
-    <Temperature>       64.804     </Temperature>
-    <abskg>             999        </abskg>
+    <randomSeed>        false       </randomSeed>
     <nDivQRays>          3          </nDivQRays>
-    <Threshold>         0.05       </Threshold>
-    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
-    <benchmark>         1          </benchmark>
+    <Threshold>         0.05        </Threshold>
+    <StefanBoltzmann>   5.67051e-8  </StefanBoltzmann>
+    <benchmark>         1           </benchmark>
 
     <algorithm type='dataOnion'>
-      <halo>           [4,4,4]     </halo>
+      <halo>           [4,4,4]      </halo>
            
       <ROI_extents type='patch_based'/>
 <!--       

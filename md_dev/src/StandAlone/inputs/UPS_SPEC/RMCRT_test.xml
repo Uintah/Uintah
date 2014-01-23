@@ -3,6 +3,9 @@
   <include href="Models.xml"  section="Models/RMCRT" />
   
   <calc_frequency           spec="OPTIONAL INTEGER 'positive'"/>
+  <Temperature              spec="OPTIONAL DOUBLE  'positive'"/> 
+  <abskg                    spec="OPTIONAL DOUBLE  'positive'"/>
+  <benchmark                spec="OPTIONAL INTEGER 'positive'"/>
   
   <Intrusion                spec="OPTIONAL NO_DATA">
     <geom_object/>

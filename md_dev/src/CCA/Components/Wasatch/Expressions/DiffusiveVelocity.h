@@ -30,146 +30,18 @@
 //-- SpatialOps includes --//
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
+
 /**
  *  \ingroup WasatchExpressions
  *  \class  DiffusiveVelocity
- *  \author Amir Biglari
- *  \date   Aug, 2011
- *
- *  \brief Calculates a simple diffusive velocity of the form
- *         \f$ V_i = -(\Gamma + \Gamma_T) \frac{\partial \phi}{\partial x_i} \f$
- *         where \f$i=1,2,3\f$ is the coordinate direction.
- *         This requires knowledge of a the velocity field. This
- *         expression is suitable mostly for the cases that we
- *         have constant density or Temperature equation etc. to be
- *         used instead of diffusive flux expression
- *
- *  Note that this requires the diffusion coefficient, \f$\Gamma\f$,
- *  to be evaluated at the same location as \f$V_i\f$ and
- *  \f$\frac{\partial \phi}{\partial x_i}\f$.
- *
- *  \par Template Parameters
- *  <ul>
- *  <li> \b GradT The type of operator used in forming
- *       \f$\frac{\partial \phi}{\partial x}\f$
- *  </ul>
- *
- */
-template< typename GradT >
-class DiffusiveVelocity
-  : public Expr::Expression< typename GradT::DestFieldType >
-{
-  typedef typename GradT::DestFieldType VelT;
-  typedef typename GradT::SrcFieldType  ScalarT;
-
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,VelT>::type  SVolInterpT;
-
-  const bool isConstCoef_, isTurbulent_;
-  const Expr::Tag phiTag_, coefTag_, turbDiffTag_;
-  const double coefVal_;
-
-  const SVolInterpT* sVolInterpOp_;  
-  const GradT*   gradOp_;
-
-  const ScalarT*   phi_;
-  const SVolField* turbDiff_;
-  const VelT*      coef_;
-
-  DiffusiveVelocity( const Expr::Tag& turbDiffTag,
-                     const Expr::Tag phiTag,
-                     const Expr::Tag coefTag );
-
-  DiffusiveVelocity( const Expr::Tag& turbDiffTag,
-                     const Expr::Tag phiTag,
-                     const double coefTag );
-
-public:
-  /**
-   *  \brief Builder for a diffusive velocity \f$ V = -\Gamma \frac{\partial
-   *         \phi}{\partial x} \f$ where \f$\Gamma\f$ is stored at the
-   *         same location as \f$J\f$.
-   */
-  class Builder : public Expr::ExpressionBuilder
-  {
-  public:
-    /**
-     *  \brief Construct a diffusive velocity given expressions for
-     *         \f$\phi\f$, \f$\Gamma_T\f$ and \f$\Gamma\f$
-     *
-     *  \param phiTag  the Expr::Tag for the scalar field
-     *
-     *  \param coefTag the Expr::Tag for the diffusion coefficient
-     *         (located at same points as the diffusive velocity field).
-     *
-     *  \param turbDiffTag the Expr::Tag for the turbulent diffusivity which will be interpolated to FluxT field.
-     */
-    Builder( const Expr::Tag& result,
-             const Expr::Tag& phiTag,
-             const Expr::Tag& coefTag,
-             const Expr::Tag& turbDiffTag = Expr::Tag() )
-      : ExpressionBuilder(result),
-        isConstCoef_( false ),
-        phit_     ( phiTag      ),
-        coeft_    ( coefTag     ),
-        turbDifft_( turbDiffTag ),
-        coef_     ( 0.0         )
-    {}
-
-    /**
-     *  \brief Construct a diffusive velocity given an expression for
-     *         \f$\phi\f$ and \f$\Gamma_T\f$ and a constant value for \f$\Gamma\f$.
-     *
-     *  \param phiTag  the Expr::Tag for the scalar field
-     *
-     *  \param coef the value (constant in space and time) for the
-     *         diffusion coefficient.
-     *
-     *  \param turbDiffTag the Expr::Tag for the turbulent diffusivity which will be interpolated to FluxT field.
-     */
-    Builder( const Expr::Tag& result,
-             const Expr::Tag& phiTag,
-             const double coef,
-             const Expr::Tag& turbDiffTag = Expr::Tag() )
-      : ExpressionBuilder(result),
-        isConstCoef_( true        ),
-        phit_       ( phiTag      ),
-        coeft_      ( Expr::Tag() ),
-        turbDifft_  ( turbDiffTag ),
-        coef_       ( coef        )
-    {}
-    ~Builder(){}
-    Expr::ExpressionBase* build() const
-    {
-      if( isConstCoef_ ) return new DiffusiveVelocity<GradT>( turbDifft_, phit_, coef_  );
-      else               return new DiffusiveVelocity<GradT>( turbDifft_, phit_, coeft_);
-    }
-  private:
-    const bool isConstCoef_;
-    const Expr::Tag phit_, coeft_, turbDifft_;
-    const double coef_;
-  };
-
-  ~DiffusiveVelocity();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-  void evaluate();
-};
-
-
-
-
-/**
- *  \ingroup WasatchExpressions
- *  \class  DiffusiveVelocity2
- *  \author Amir Biglari
+ *  \author Amir Biglari, James C. Sutherland
  *  \date   Aug, 2011
  *
  *  \brief Calculates a generic diffusive velocity, \f$V = -(\Gamma + \Gamma_T)
  *         \frac{\partial \phi}{\partial x}\f$, where \f$\Gamma\f$ is
  *         located at the same location as \f$\phi\f$.
  *
- *  \par Template Parameters
+ *  \tpar VelT the type for the diffusive velocity
  *  <ul>
  *  <li> \b GradT The type of operator used in forming
  *       \f$\frac{\partial \phi}{\partial x}\f$
@@ -178,30 +50,29 @@ public:
  *       of \f$\frac{\partial \phi}{\partial x}\f$
  *  </ul>
  */
-template< typename GradT,
-          typename InterpT >
-class DiffusiveVelocity2
-  : public Expr::Expression< typename GradT::DestFieldType >
+template< typename VelT >
+class DiffusiveVelocity : public Expr::Expression<VelT>
 {
-  typedef typename GradT::DestFieldType VelT;
-  typedef typename GradT::SrcFieldType  ScalarT;
+  typedef typename SpatialOps::structured::VolType<VelT>::VolField ScalarT;
 
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,VelT>::type  SVolInterpT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Gradient,   ScalarT,  VelT>::type  GradT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,ScalarT,  VelT>::type  InterpT;
 
-  const bool isTurbulent_;
+  const bool isTurbulent_, isConstCoef_;
   const Expr::Tag phiTag_, coefTag_, turbDiffTag_;
 
   const GradT* gradOp_;
   const InterpT* interpOp_;
-  const SVolInterpT* sVolInterpOp_;
   
-  const ScalarT* phi_;
-  const ScalarT* coef_;
-  const SVolField* turbDiff_;
+  const ScalarT *phi_, *coef_, *turbDiff_;
+  const double coefVal_;  ///< the value of the diffusion coefficient if constant
 
-  DiffusiveVelocity2( const Expr::Tag& turbDiffTag,
+  DiffusiveVelocity( const Expr::Tag& turbDiffTag,
                       const Expr::Tag& phiTag,
                       const Expr::Tag& coefTag );
+  DiffusiveVelocity( const Expr::Tag& turbDiffTag,
+                      const Expr::Tag& phiTag,
+                      const double coefVal );
 
 public:
   /**
@@ -213,7 +84,7 @@ public:
   {
   public:
     /**
-     *  \brief Construct a DiffusiveVelocity2::Builder object for
+     *  \brief Construct a DiffusiveVelocity::Builder object for
      *         registration with an Expr::ExpressionFactory.
      *
      *  \param phiTag the Expr::Tag for the scalar field.
@@ -228,15 +99,24 @@ public:
              const Expr::Tag& coefTag,
              const Expr::Tag& turbDiffTag = Expr::Tag() )
       : ExpressionBuilder(result),
-        phit_(phiTag), coeft_( coefTag ), turbDifft_( turbDiffTag )
+        phit_(phiTag), coeft_( coefTag ), turbDifft_( turbDiffTag ), coefVal_(0.0)
+    {}
+
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& phiTag,
+             const double coefVal,
+             const Expr::Tag& turbDiffTag = Expr::Tag() )
+      : ExpressionBuilder(result),
+        phit_(phiTag), coeft_(), turbDifft_( turbDiffTag ), coefVal_(coefVal)
     {}
     ~Builder(){}
-    Expr::ExpressionBase* build() const{ return new DiffusiveVelocity2<GradT,InterpT>( turbDifft_, phit_, coeft_ ); }
+    Expr::ExpressionBase* build() const;
   private:
     const Expr::Tag phit_, coeft_, turbDifft_;
+    const double coefVal_;
   };
 
-  ~DiffusiveVelocity2();
+  ~DiffusiveVelocity();
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );

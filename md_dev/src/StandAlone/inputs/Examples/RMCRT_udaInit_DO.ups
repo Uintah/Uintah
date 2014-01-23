@@ -145,10 +145,12 @@
   </initalizeUsingUda>
 
   <!--__________________________________ -->
+  <Temperature>       999        </Temperature>
+  <abskg>             999        </abskg>
+  <calc_frequency>    1          </calc_frequency>
+    
   <RMCRT>
     <randomSeed>       true        </randomSeed>
-    <Temperature>       999        </Temperature>
-    <abskg>             999        </abskg>
     <nDivQRays>          5         </nDivQRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>

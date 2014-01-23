@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -401,8 +401,8 @@ namespace Wasatch{
     const Expr::Tag rhofTag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
     const Expr::Tag rhoTag  = parse_nametag( params->findBlock("Density")->findBlock("NameTag") );
     double rho0, rho1;
-    params->findBlock("Density0")->get(rho0);
-    params->findBlock("Density1")->get(rho1);
+    params->getAttribute("rho0",rho0);
+    params->getAttribute("rho1",rho1);
 
     // initial conditions for density
     {

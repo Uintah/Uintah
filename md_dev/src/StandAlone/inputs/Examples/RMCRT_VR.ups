@@ -115,24 +115,25 @@
       <save label = "VRFlux" />
       <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
-  
-  
+
   <!--__________________________________ -->
+  <Temperature>       64.804        </Temperature>
+  <abskg>             999           </abskg>
+  <benchmark>         1             </benchmark>
+  <calc_frequency>    1          </calc_frequency>
+      
   <RMCRT>
     <randomSeed>        false       </randomSeed>
-    <Temperature>       64.804      </Temperature>
-    <abskg>             999         </abskg>
     <nDivQRays>          3          </nDivQRays>
     <Threshold>         0.05        </Threshold>
     <StefanBoltzmann>   5.67051e-8  </StefanBoltzmann>
-    <benchmark>         1           </benchmark>
     <solveBoundaryFlux> false       </solveBoundaryFlux>
     <CCRays>            false       </CCRays>
     <VirtRadiometer>    true        </VirtRadiometer>
-    <VRViewAngle>180</VRViewAngle>
-    <VROrientation>     [-1,0,0]     </VROrientation>
-    <VRLocationsMin>    [0,0,0]      </VRLocationsMin>
-    <VRLocationsMax>    [20,20,20]   </VRLocationsMax>
+    <VRViewAngle>       180         </VRViewAngle>
+    <VROrientation>     [-1,0,0]    </VROrientation>
+    <VRLocationsMin>    [0,0,0]     </VRLocationsMin>
+    <VRLocationsMax>    [20,20,20]  </VRLocationsMax>
     <nRadRays>          10          </nRadRays>
   </RMCRT>
 </Uintah_specification>

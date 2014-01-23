@@ -71,8 +71,13 @@
 #include "Operators/Operators.h"
 #include "Expressions/BasicExprBuilder.h"
 #include "Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h"
+#include "Expressions/RadiationSource.h"
 #include "Expressions/SetCurrentTime.h"
+#include "Expressions/NullExpression.h"
+#include "Expressions/MMS/Functions.h"
+
 #include "transport/ParseEquation.h"
+
 #include "transport/TransportEquation.h"
 #include "BCHelperTools.h"
 #include "ParseTools.h"
@@ -80,7 +85,7 @@
 #include "OldVariable.h"
 #include "ReductionHelper.h"
 #include "BCHelper.h"
-
+#include "Expressions/CellType.h"
 using std::endl;
 
 namespace Wasatch{
@@ -92,7 +97,8 @@ namespace Wasatch{
       buildTimeIntegrator_ ( true ),
       buildWasatchMaterial_( true ),
       nRKStages_(1),
-      isPeriodic_( true )
+      isPeriodic_( true ),
+      doRadiation_(false)
   {
     proc0cout << std::endl
               << "-------------------------------------------------------------" << std::endl
@@ -110,6 +116,8 @@ namespace Wasatch{
     timeStepper_   = NULL;
     linSolver_     = NULL;
 
+    cellType_ = scinew CellType();
+    
     isRestarting_ = false;
 
     // disable memory windowing on variables.  This will ensure that
@@ -157,6 +165,7 @@ namespace Wasatch{
     for (BCHelperMapT::iterator it=bcHelperMap_.begin(); it != bcHelperMap_.end(); ++it) {
       delete it->second;
     }
+    delete cellType_;
   }
 
   //--------------------------------------------------------------------
@@ -662,15 +671,69 @@ namespace Wasatch{
     parse_cleave_requests    ( wasatchSpec_, graphCategories_ );
     parse_attach_dependencies( wasatchSpec_, graphCategories_ );
     //
-    // get the variable density params, if any, and parse them.
+    // get the variable density mms params, if any, and parse them.
     //
-    Uintah::ProblemSpecP VarDensMMSParams = wasatchSpec_->findBlock("VariableDensityMMS");
-    if (VarDensMMSParams) {
+    Uintah::ProblemSpecP VarDenMMSParams = wasatchSpec_->findBlock("VariableDensityMMS");
+    if (VarDenMMSParams) {
       const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
-        parse_var_dens_mms(wasatchSpec_, VarDensMMSParams, computeContinuityResidual, graphCategories_);
+        parse_var_den_mms(wasatchSpec_, VarDenMMSParams, computeContinuityResidual, graphCategories_);
 
     }
     
+    //
+    // get the 2D variable density mms params, if any, and parse them.
+    //
+    Uintah::ProblemSpecP varDenOscillatingMMSParams = wasatchSpec_->findBlock("VarDenOscillatingMMS");
+    if (varDenOscillatingMMSParams) {
+      const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
+      parse_var_den_oscillating_mms(wasatchSpec_, varDenOscillatingMMSParams, computeContinuityResidual, graphCategories_);
+    }
+
+    // radiation
+    if ( params->findBlock("RMCRT") ) {
+      doRadiation_ = true;
+      Uintah::ProblemSpecP radSpec = params->findBlock("RMCRT");
+      Uintah::ProblemSpecP radPropsSpec=wasatchSpec_->findBlock("RadProps");
+      Uintah::ProblemSpecP RMCRTBenchSpec=wasatchSpec_->findBlock("RMCRTBench");
+
+      Expr::Tag absorptionCoefTag;
+      Expr::Tag temperatureTag;
+      
+      if (radPropsSpec) {
+        Uintah::ProblemSpecP greyGasSpec = radPropsSpec->findBlock("GreyGasAbsCoef");
+        absorptionCoefTag = parse_nametag(greyGasSpec->findBlock("NameTag"));
+        temperatureTag = parse_nametag(greyGasSpec->findBlock("Temperature")->findBlock("NameTag"));
+        
+      } else if ( RMCRTBenchSpec ) {
+        
+        const TagNames& tagNames = TagNames::self();
+        
+        absorptionCoefTag = tagNames.absorption;
+        temperatureTag    = tagNames.temperature;
+        
+        // check which benchmark we are using:
+        std::string benchName;
+        RMCRTBenchSpec->getAttribute("benchmark", benchName);
+        if (benchName == "BurnsChriston") {
+          // register constant temperature expression:
+          graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression(new Expr::ConstantExpr<SVolField>::Builder(temperatureTag,64.804));
+          // register Burns-Christon trilinear abskg
+          graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression(new BurnsChristonAbskg<SVolField>::Builder(absorptionCoefTag,tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.zsvolcoord));
+        }
+      }
+      
+      const Expr::ExpressionID exprID = graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( new RadiationSource::Builder( tag_list( TagNames::self().radiationsource, TagNames::self().radvolq, TagNames::self().radvrflux ) ,
+                                                                                                                                           temperatureTag,
+                                                                                                                                           absorptionCoefTag,
+                                                                                                                                           TagNames::self().celltype,
+                                                                                                                                           radSpec,
+                                                                                                                                           sharedState_
+                                                                                                                                           )
+                                                                                                             );
+      graphCategories_[ADVANCE_SOLUTION]->exprFactory->cleave_from_parents(exprID);
+      graphCategories_[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(exprID);
+      graphCategories_[ADVANCE_SOLUTION]->rootIDs.insert( exprID );
+    }
     //
     // process any reduction variables specified through the input file
     //
@@ -772,6 +835,11 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
     }
+    
+    // Compute the cell type only when radiation is present. This may change in the future.
+    if (doRadiation_)
+      cellType_->schedule_compute_celltype(allPatches,materials_,sched);
+    
     proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
 
@@ -907,6 +975,10 @@ namespace Wasatch{
       
       // set up any "old" variables that have been requested.
       OldVariable::self().setup_tasks( allPatches, materials_, sched, iStage );
+
+      // Compute the cell type only when radiation is present. This may change in the future.
+      if(doRadiation_)
+        cellType_->schedule_carry_forward(allPatches,materials_,sched);
 
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT

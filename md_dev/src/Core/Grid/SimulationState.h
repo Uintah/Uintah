@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -225,6 +225,7 @@ public:
   void setRegridTimestep(bool ans) { d_isRegridTimestep = ans; }
 
   bool isLockstepAMR() { return d_lockstepAMR; }
+  void setIsLockstepAMR(bool ans) {d_lockstepAMR = ans;}
   
   bool updateOutputInterval() { return d_updateOutputInterval; }
   void updateOutputInterval(bool ans) { d_updateOutputInterval = ans; }

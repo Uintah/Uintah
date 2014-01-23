@@ -1454,6 +1454,148 @@ build() const
   return new LambsDipole<FieldT>( xTag_, yTag_, x0_, y0_, G_, R_, U_, velocityComponent_);
 }
 
+//--------------------------------------------------------------------
+
+/**
+ *  \class BurnsChristonAbskg
+ */
+template< typename FieldT >
+class BurnsChristonAbskg
+: public Expr::Expression<FieldT>
+{
+  const Expr::Tag xTag_, yTag_, zTag_;
+  const FieldT* x_;
+  const FieldT* y_;
+  const FieldT* z_;
+  
+  /* declare operators associated with this expression here */
+  
+  BurnsChristonAbskg( const Expr::Tag& xTag,
+                     const Expr::Tag& yTag,
+                     const Expr::Tag& zTag );
+public:
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    /**
+     *  @brief Build a BurnsChristonAbskg expression
+     *  @param resultTag the tag for the value that this expression computes
+     */
+    Builder( const Expr::Tag& resultTag,
+            const Expr::Tag& xTag,
+            const Expr::Tag& yTag,
+            const Expr::Tag& zTag );
+    
+    Expr::ExpressionBase* build() const;
+    
+  private:
+    const Expr::Tag xTag_, yTag_, zTag_;
+  };
+  
+  ~BurnsChristonAbskg();
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
+  void evaluate();
+};
+
+
+
+// ###################################################################
+//
+//                          Implementation
+//
+// ###################################################################
+
+
+
+template< typename FieldT >
+BurnsChristonAbskg<FieldT>::
+BurnsChristonAbskg( const Expr::Tag& xTag,
+                   const Expr::Tag& yTag,
+                   const Expr::Tag& zTag )
+: Expr::Expression<FieldT>(),
+xTag_( xTag ),
+yTag_( yTag ),
+zTag_( zTag )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+BurnsChristonAbskg<FieldT>::
+~BurnsChristonAbskg()
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+BurnsChristonAbskg<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( xTag_ );
+  exprDeps.requires_expression( yTag_ );
+  exprDeps.requires_expression( zTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+BurnsChristonAbskg<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  x_ = &fml.template field_ref< FieldT >( xTag_ );
+  y_ = &fml.template field_ref< FieldT >( yTag_ );
+  z_ = &fml.template field_ref< FieldT >( zTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+BurnsChristonAbskg<FieldT>::
+bind_operators( const SpatialOps::OperatorDatabase& opDB )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+BurnsChristonAbskg<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  result <<= 0.9 * ( 1.0 - 2.0 * abs(*x_) )
+                 * ( 1.0 - 2.0 * abs(*y_) )
+                 * ( 1.0 - 2.0 * abs(*z_) ) + 0.1;
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+BurnsChristonAbskg<FieldT>::
+Builder::Builder( const Expr::Tag& resultTag,
+                 const Expr::Tag& xTag,
+                 const Expr::Tag& yTag,
+                 const Expr::Tag& zTag )
+: ExpressionBuilder( resultTag ),
+xTag_( xTag ),
+yTag_( yTag ),
+zTag_( zTag )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+BurnsChristonAbskg<FieldT>::
+Builder::build() const
+{
+  return new BurnsChristonAbskg<FieldT>( xTag_,yTag_,zTag_ );
+}
 
 //--------------------------------------------------------------------
 

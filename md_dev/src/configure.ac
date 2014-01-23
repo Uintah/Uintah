@@ -1,7 +1,7 @@
 ##
 ## The MIT License
 ##
-## Copyright (c) 1997-2012 The University of Utah
+## Copyright (c) 1997-2014 The University of Utah
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to
@@ -74,7 +74,7 @@ AC_COPYRIGHT(
 ##
 ## The MIT License
 ##
-## Copyright (c) 1997-2012 The University of Utah
+## Copyright (c) 1997-2014 The University of Utah
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to
@@ -1028,8 +1028,8 @@ if test "$optimize" = "no"; then
     AC_MSG_RESULT(no (${no_optimize_flag}) )
   fi
 elif test "$optimize" = "yes"; then
-  extra_cflags="-O2 -DNDEBUG ${extra_cflags}"
-  AC_MSG_RESULT(yes (-O2) )
+    extra_cflags="-O2 -DNDEBUG ${extra_cflags}"
+    AC_MSG_RESULT(yes (-O2) )
 else
   extra_cflags="$optimize -DNDEBUG ${extra_cflags}"
   AC_MSG_RESULT(yes ($optimize) )
@@ -1521,6 +1521,11 @@ case $host in
           FORTRAN_UNDERSCORE=linux
           DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
           ;;        
+        *xlf*)
+          FFLAGS="$FFLAGS"   
+          FORTRAN_UNDERSCORE=linux
+          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
+          ;;        
         *)
           FFLAGS="$FFLAGS $extra_cflags"
           ;;
@@ -1539,6 +1544,14 @@ case $host in
       # pgcc doesn't support -Wall (at least not on ranger.tacc.utexas.edu under pgcc v7.1-2)
       CFLAGS=$CFLAGS
       CXXFLAGS=$CXXFLAGS
+    elif test "$CC" = "bgxlc" -o "$CC" = "bgxlc_r"; then
+        # BG/Q xl compilers don't support -Wall (at least not on mira)
+      CFLAGS=$CFLAGS
+      CXXFLAGS=$CXXFLAGS
+    elif test "$CC" = "mpixlc" -o "$CC" = "mpixlc_r"; then
+        # BG/Q xl mpi wrappers don't support -Wall (at least not on mira)
+      CFLAGS=$CFLAGS
+      CXXFLAGS=$CXXFLAGS
     else
       CFLAGS="$CFLAGS -Wall"
       CXXFLAGS="$CXXFLAGS -Wall"
@@ -1553,11 +1566,23 @@ case $host in
           CFLAGS="-fPIC $CFLAGS"
           FFLAGS="-fPIC $FFLAGS"
           CXXFLAGS="-fPIC $CXXFLAGS"
+       # for BG/Q XL compilers
+       elif test [`uname -m` = "ppc64" -a $CC != mpicc -a $CC != gcc]; then
+          CFLAGS="-qpic $CFLAGS"
+          FFLAGS="-qpic $FFLAGS"
+          CXXFLAGS="-qpic $CXXFLAGS"
        else
           if test "$enable_64bit" = "yes"; then
-             CFLAGS="-fPIC $CFLAGS"
-             FFLAGS="-fPIC $FFLAGS"
-             CXXFLAGS="-fPIC $CXXFLAGS"
+             # for BG/Q XL compilers
+             if test [`uname -m` = "ppc64" -a $CC != mpicc -a $CC != gcc]; then
+               CFLAGS="-qpic $CFLAGS"
+               FFLAGS="-qpic $FFLAGS"
+               CXXFLAGS="-qpic $CXXFLAGS"
+             else
+               CFLAGS="-fPIC $CFLAGS"
+               FFLAGS="-fPIC $FFLAGS"
+               CXXFLAGS="-fPIC $CXXFLAGS"
+             fi
           fi
        fi
     fi
@@ -1664,6 +1689,31 @@ CC_DEPEND_MODE=unknown
 CC_DEPEND_REGEN=unknown
 # Filename extension
 CC_DEPEND_EXT=unknown
+
+# Try -qmakedep (-MF)
+# BG/Q specific dpendency generation
+for flag in -qmakedep; do
+  if test $CC_DEPEND_MODE = unknown; then
+    AC_MSG_CHECKING( 1 - if depend mode flag '$flag' works for '$CXX')
+    rm -f configure-test.o configure-test-dir/configure-test.o
+    ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.d -o configure-test-dir/configure-test.o configure-test-dir/configure-test.cc >/dev/null 2>conftest.out"
+    (eval $ac_try) 2>&5
+    if test -f configure-test-dir/configure-test.d ; then
+      CC_DEPEND_MODE=normal
+      CC_DEPEND_REGEN='-MF $(dir $@)depend.mk'
+      CC_DEPEND_EXT=depend.mk
+    else 
+      AC_MSG_RESULT( no )
+#      echo ""
+#      echo "ac_try: $ac_try"   # <= Turn on to debug DEPEND flag issues...
+#      echo ""
+#      echo "Test results: "
+#      echo ""
+#      cat conftest.out
+#      echo ""
+    fi
+  fi
+done
 
 # Try -MDupdate
 for flag in -MDupdate; do
@@ -2393,6 +2443,9 @@ if test "$with_zlib"; then
   fi
 fi
 
+# account for /lib64, /usr/lib64, etc
+BASE_LIB_PATH(_sci_lib,$with_zlib)
+
 SCI_TRY_LINK(Z,zlib library and header,zlib.h,$_sci_inc,z,$_sci_lib,,,$_sci_optional)
 
 if test "$HAVE_Z" = "yes"; then
@@ -2678,6 +2731,9 @@ if test "$with_fortran" != "no"; then
           ;;
         *gfortran* | *mpif77* )
           SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
+          ;;
+        *xlf* | *bgxlf* )
+          SCI_TRY_LINK(F,fortran libraries,,,xlf90,$_sci_lib,,,$_sci_optional)
           ;;
         *ifort*)
           SCI_TRY_LINK(F,fortran libraries,,,ifcore,$_sci_lib,,,$_sci_optional)

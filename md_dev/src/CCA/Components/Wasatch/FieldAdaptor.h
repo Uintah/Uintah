@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -175,6 +175,11 @@ namespace Wasatch{
   template<> struct SelectUintahFieldType<SpatialOps::structured::SingleValueField>{
     typedef Uintah::PerPatch<double> type;
     typedef Uintah::PerPatch<double> const_type;
+  };
+
+  template<> struct SelectUintahFieldType<int>{
+    typedef Uintah::     CCVariable<int>  type;
+    typedef Uintah::constCCVariable<int>  const_type;
   };
 
   template<> struct SelectUintahFieldType<SpatialOps::structured::SVolField>{

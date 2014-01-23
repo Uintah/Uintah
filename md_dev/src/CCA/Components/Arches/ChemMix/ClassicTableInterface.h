@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,8 +32,8 @@
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/IO/UintahZlibUtil.h>
-
-#include   <string>
+#include <sstream>
+#include <string>
 
 /**
  * @class  ClassicTableInterface
@@ -117,6 +117,8 @@ public:
 
   /** @brief Load table into memory */ 
   void loadMixingTable(gzFile &fp, const std::string & inputfile );
+  void loadMixingTable(std::stringstream& table_stream, 
+                       const std::string & inputfile );
 
   enum BoundaryType { DIRICHLET, NEUMANN, FROMFILE };
 
@@ -865,6 +867,8 @@ private:
   BoundaryCondition_new* _boundary_condition; 
 
   void checkForConstants(gzFile &fp, const std::string & inputfile );
+  void checkForConstants(std::stringstream& table_stream, 
+                         const std::string & inputfile );
 
   //previous Arches specific variables: 
   std::vector<std::vector<double> > i1;

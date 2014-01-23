@@ -83,8 +83,10 @@ SRCS += \
         $(SRCDIR)/StableTimestep.cc       \
         $(SRCDIR)/Reduction.cc            \
         $(SRCDIR)/ReductionBase.cc        \
-        $(SRCDIR)/Coordinate.cc          \
-        $(SRCDIR)/TabPropsHeatLossEvaluator.cc
+        $(SRCDIR)/Coordinate.cc           \
+        $(SRCDIR)/RadiationSource.cc      \
+   $(SRCDIR)/CellType.cc      \
+   $(SRCDIR)/TabPropsHeatLossEvaluator.cc
 
 #
 # Subdirectories to build...

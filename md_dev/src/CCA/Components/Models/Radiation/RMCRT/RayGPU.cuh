@@ -75,8 +75,6 @@ struct RMCRT_flags{
   int   nRadRays;             // number of rays for virtual radiometer
   int   nFluxRays;            // number of boundary flux rays
   int   nRaySteps;            // number of ray steps taken
-  int   benchMark;            // ID for benchmark tests
-  
 };
 
 //__________________________________

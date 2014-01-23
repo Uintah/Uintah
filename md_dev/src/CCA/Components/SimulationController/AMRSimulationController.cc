@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -889,9 +889,8 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
       d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
     
     for(int i=0;i<=totalFine;i++) {
-      //AMRICE has a problem with scrubbing variables to early, getNthProc requires the variables after they would have been scrubbed
-      //dynamic load balancing requires some particle variables for collectParticles that would be scrubbed
-      if (/*(d_doAMR && !d_sharedState->isLockstepAMR()) ||*/ d_lb->getNthProc() > 1 /*|| d_lb->isDynamic()*/ || d_reduceUda)
+      // getNthProc requires the variables after they would have been scrubbed
+      if ( d_lb->getNthProc() > 1 )
         d_scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubNone);
       else {
         d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);

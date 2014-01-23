@@ -103,7 +103,13 @@ RMCRT_Test::~RMCRT_Test ( void )
   dbg << UintahParallelComponent::d_myworld->myrank() << " Doing: RMCRT destructor " << endl;
 
 }
-
+//______________________________________________________________________
+//  Logic for determing when to carry forward
+bool RMCRT_Test::doCarryForward( const int timestep,
+                          const int radCalc_freq){
+  bool test = (timestep%radCalc_freq != 0 && timestep != 1);
+  return test;
+}
 //______________________________________________________________________
 void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec, 
                               const ProblemSpecP& restart_prob_spec, 
@@ -118,12 +124,26 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   //manually manipulate the scheduling of copy data for the shootRay task
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
   sched->overrideVariableBehavior("color",false, false, true, false, false);
-
-   ProblemSpecP me = prob_spec;
-   me->getWithDefault( "calc_frequency",  d_radCalc_freq, 1 );
-
+  
   //__________________________________
-  //  RMCRT
+  // Read in component specific variables
+  ProblemSpecP me = prob_spec;
+  me->getWithDefault( "calc_frequency",  d_radCalc_freq, 1 );
+  me->getWithDefault( "benchmark" ,      d_benchmark,  0 );
+
+  me->require("Temperature",  d_initColor);
+  me->require("abskg",        d_initAbskg);
+
+  // bulletproofing
+  if ( d_benchmark > 5 || d_benchmark < 0  ){
+     ostringstream warn;
+     warn << "ERROR:  Benchmark value ("<< d_benchmark <<") not set correctly." << endl;
+     warn << "Specify a value of 1 through 5 to run a benchmark case, or 0 otherwise." << endl;
+     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+    
+  //__________________________________
+  //  RMCRT variables
   if (prob_spec->findBlock("RMCRT")){
     ProblemSpecP rmcrt_ps = prob_spec->findBlock("RMCRT"); 
     
@@ -134,13 +154,8 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
                                  d_colorLabel,
                                  d_cellTypeLabel, 
                                  d_divQLabel);
-                                 
-    rmcrt_ps->require("Temperature",  d_initColor);
-    rmcrt_ps->require("abskg",        d_initAbskg);
-    
+    proc0cout << "__________________________________ Reading in RMCRT section of ups file" << endl;                                 
     d_RMCRT->problemSetup( prob_spec, rmcrt_ps, d_sharedState );
-    proc0cout << "__________________________________ Reading in RMCRT section of ups file" << endl;
-    
       
     //__________________________________
     //  Read in the dataOnion section
@@ -220,9 +235,8 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   
     bool foundIndex = false;
     int timeIndex = -9;
-    unsigned int size = index.size();
-    for (unsigned int i = 0; i < size; i++) {
-      if( d_old_uda->timestep == index[i] ){
+    for (unsigned int i = 0; i < index.size(); i++) {
+      if( (int) d_old_uda->timestep == index[i] ){
         foundIndex = true;
         timeIndex = i;
       }
@@ -329,7 +343,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     Task::WhichDW temp_dw = Task::NewDW;
     
     // modify Radiative properties on the finest level
-    d_RMCRT->sched_initProperties( fineLevel, sched, d_radCalc_freq);
+    sched_initProperties( fineLevel, sched, d_radCalc_freq);
     
     d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, d_radCalc_freq, false );
  
@@ -369,7 +383,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     Task::WhichDW temp_dw = Task::NewDW;
    
     // modify Radiative properties on the finest level
-    d_RMCRT->sched_initProperties( fineLevel, sched, d_radCalc_freq );
+    sched_initProperties( fineLevel, sched, d_radCalc_freq );
     
     d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, d_radCalc_freq, false );
     
@@ -388,8 +402,6 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
         const bool backoutTemp    = true;
         
         d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
-        
-        d_RMCRT->sched_carryForward_rayTrace( level, sched, d_radCalc_freq );
         
         d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq );
       }
@@ -510,9 +522,8 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
   archive->queryTimesteps(index, times);
   int timeIndex = -9;
   
-  unsigned int size = index.size();
-  for (unsigned int i = 0; i < size; i++) {
-    if( d_old_uda->timestep == index[i] ){
+  for (unsigned int i = 0; i < index.size(); i++) {
+    if( (int) d_old_uda->timestep == index[i] ){
       timeIndex = i;
     }
   }
@@ -607,6 +618,126 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
     d_RMCRT->setBC(abskg,  d_abskgLabel->getName(), patch, d_matl);
   }
   delete archive;
+}
+//______________________________________________________________________
+//  
+void RMCRT_Test::sched_initProperties( const LevelP& level, 
+                                        SchedulerP& sched,
+                                        const int radCalc_freq )
+{
+
+  if( d_benchmark != 0 ){
+    Task* tsk = scinew Task( "RMCRT_Test::initProperties", this, 
+                             &RMCRT_Test::initProperties, radCalc_freq);
+                              
+    printSchedule(level,dbg,"RMCRT_Test::initProperties");
+
+    tsk->modifies( d_colorLabel );
+    tsk->modifies( d_abskgLabel );
+    tsk->modifies( d_cellTypeLabel );
+
+    sched->addTask( tsk, level->eachPatch(), d_sharedState->allMaterials() ); 
+  }
+}
+//______________________________________________________________________
+//  Initialize the properties
+void RMCRT_Test::initProperties( const ProcessorGroup* pc,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw,
+                                 const int radCalc_freq )
+{
+  // Only run if it's time
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  if ( doCarryForward( timestep, radCalc_freq) ) {
+    return;
+  }
+  
+  const Level* level = getLevel(patches);
+
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,dbg,"Doing RMCRT_test::InitProperties");
+
+    CCVariable<double> abskg; 
+    CCVariable<double> absorp;
+
+    new_dw->getModifiable( abskg,    d_abskgLabel,     d_matl, patch );  
+    abskg.initialize  ( 0.0 ); 
+    
+    IntVector pLow;
+    IntVector pHigh;
+    level->findInteriorCellIndexRange(pLow, pHigh);
+
+    int Nx = pHigh[0] - pLow[0];
+    int Ny = pHigh[1] - pLow[1];
+    int Nz = pHigh[2] - pLow[2];
+
+    Vector Dx = patch->dCell(); 
+    
+    BBox L_BB;
+    level->getInteriorSpatialRange(L_BB);                 // edge of computational domain
+    Vector L_length = Abs(L_BB.max() - L_BB.min());
+    
+    //__________________________________
+    //  Benchmark initializations
+    if ( d_benchmark == 1 || d_benchmark == 3 ) {
+  
+      // bulletproofing
+      Vector valid_length(1,1,1);
+      if (L_length != valid_length){
+        ostringstream msg;
+        msg << "\n RMCRT:ERROR: the benchmark problem selected is only valid on the domain \n";
+        msg << valid_length << ".  Your domain is " << L_BB << endl; 
+        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+      }
+    
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
+        IntVector c = *iter;
+        abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (Nx - 1.0) /2.0) * Dx[0]) )
+                        * ( 1.0 - 2.0 * fabs( ( c[1] - (Ny - 1.0) /2.0) * Dx[1]) )
+                        * ( 1.0 - 2.0 * fabs( ( c[2] - (Nz - 1.0) /2.0) * Dx[2]) ) 
+                        + 0.1;                  
+      }     
+    }
+     
+    if ( d_benchmark == 2 ) {              // This section should be simplified/ cleaned up --Todd
+      
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
+        IntVector c = *iter;
+        abskg[c] = 1;
+      }
+    }
+    
+    if( d_benchmark == 3) {
+      CCVariable<double> temp;
+      new_dw->getModifiable(temp, d_colorLabel, d_matl, patch);
+      
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
+        IntVector c = *iter; 
+        temp[c] = 1000 * abskg[c];
+
+      }
+    }
+
+    if( d_benchmark == 4 ) {  // Siegel isotropic scattering
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
+        IntVector c = *iter;
+        abskg[c] = d_initAbskg;
+        
+      }
+    }
+
+    if( d_benchmark == 5 ) {  // Siegel isotropic scattering for specific abskg and sigma_scat
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
+        IntVector c = *iter;
+        abskg[c] = 2;
+        //d_sigmaScat = 8; 
+      }
+    }
+  }
 }
 
 
