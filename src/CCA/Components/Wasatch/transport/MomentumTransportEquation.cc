@@ -976,9 +976,9 @@ namespace Wasatch{
 
       bcHelper.add_auxiliary_boundary_condition( densTag.name(), densStarTag.name(), densStarBCTag.name(), DIRICHLET);
       bcHelper.apply_boundary_condition<SVolField>(densStarTag, taskCat);
-
-      bcHelper.apply_boundary_condition<FieldT>(thisVelTag_, taskCat);
     }
+    
+    bcHelper.apply_boundary_condition<FieldT>(thisVelTag_, taskCat);
   }
 
   //==================================================================
