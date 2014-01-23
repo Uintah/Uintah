@@ -419,6 +419,7 @@ namespace Wasatch{
           constDensParam->getAttribute( "value", densVal );
           constDensParam->getAttribute( "name", densName );
           densityTag = Expr::Tag( densName, Expr::STATE_NONE );
+          graphCategories_[INITIALIZATION]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );          
           graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
         }
       }
