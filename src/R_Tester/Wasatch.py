@@ -123,6 +123,8 @@ DEBUGTESTS = [
   ]
 
 NIGHTLYTESTS = [
+  ("bc-linear-inlet-channel-flow-test",     "bc-linear-inlet-channel-flow-test.ups",             6,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
+  ("bc-parabolic-inlet-channel-flow-test",  "bc-parabolic-inlet-channel-flow-test.ups",             6,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("RMCRT-Burns-Christon", "RMCRT-Burns-Christon.ups",   8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("clip-with-intrusions-test",           "clip-with-intrusions-test.ups",    4,  "Linux",  ["exactComparison","no_restart"] ),
   ("reduction-test",       "reduction-test.ups",  4,  "Linux",  ["exactComparison","no_restart"] ),
@@ -292,6 +294,8 @@ CONVECTIONTESTS=[
 ]
 
 BCTESTS=[
+  ("bc-linear-inlet-channel-flow-test",     "bc-linear-inlet-channel-flow-test.ups",             6,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+  ("bc-parabolic-inlet-channel-flow-test",  "bc-parabolic-inlet-channel-flow-test.ups",             6,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),  
   ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
