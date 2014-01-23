@@ -81,65 +81,65 @@
     <BCExpression type="XVOL">
       <TaskList>initialization advance_solution</TaskList>
       <NameTag name="mms-right-vel" state="STATE_NONE"/>
-      <VarDensMMSVelocity side="PLUS">
-      </VarDensMMSVelocity>
+      <VarDenMMSVelocity side="PLUS">
+      </VarDenMMSVelocity>
     </BCExpression>
 
     <BCExpression type="XVOL">
       <TaskList>initialization advance_solution</TaskList>
       <NameTag name="mms-left-vel" state="STATE_NONE"/>
-      <VarDensMMSVelocity side="MINUS">
-      </VarDensMMSVelocity>
+      <VarDenMMSVelocity side="MINUS">
+      </VarDenMMSVelocity>
     </BCExpression>
                 
     <BCExpression type="XVOL">
       <TaskList>initialization advance_solution</TaskList>
       <NameTag name="mms-right-mom" state="STATE_NONE"/>
-      <VarDensMMSMomentum side="PLUS">
-      </VarDensMMSMomentum>
+      <VarDenMMSMomentum side="PLUS">
+      </VarDenMMSMomentum>
     </BCExpression>
 
     <BCExpression type="XVOL">
       <TaskList>initialization advance_solution</TaskList>
       <NameTag name="mms-left-mom" state="STATE_NONE"/>
-      <VarDensMMSMomentum side="MINUS">
-      </VarDensMMSMomentum>
+      <VarDenMMSMomentum side="MINUS">
+      </VarDenMMSMomentum>
     </BCExpression>
         
     <BCExpression type="SVOL">
       <TaskList>initialization advance_solution</TaskList>
       <NameTag name="mms-bc-rhof_plus" state="STATE_NONE"/>
-      <VarDensMMSSolnVar/>
+      <VarDenMMSSolnVar/>
     </BCExpression>
 
     <BCExpression type="SVOL">
       <TaskList>initialization advance_solution</TaskList>
       <NameTag name="mms-bc-rhof_minus" state="STATE_NONE"/>
-      <VarDensMMSSolnVar/>
+      <VarDenMMSSolnVar/>
     </BCExpression>
 
     <BCExpression type="SVOL">
       <TaskList>initialization advance_solution</TaskList>
       <NameTag name="mms-bc-f_plus" state="STATE_NONE"/>
-      <VarDensMMSMixtureFraction/>
+      <VarDenMMSMixtureFraction/>
     </BCExpression>
 
     <BCExpression type="SVOL">
       <TaskList>initialization advance_solution</TaskList>
       <NameTag name="mms-bc-f_minus" state="STATE_NONE"/>
-      <VarDensMMSMixtureFraction/>
+      <VarDenMMSMixtureFraction/>
     </BCExpression>
 
     <BCExpression type="SVOL">
       <TaskList>initialization advance_solution</TaskList>
       <NameTag name="mms-bc-rho_minus" state="STATE_NONE"/>
-      <VarDensMMSDensity/>
+      <VarDenMMSDensity/>
     </BCExpression>
 
     <BCExpression type="SVOL">
       <TaskList>initialization advance_solution</TaskList>
       <NameTag name="mms-bc-rho_plus" state="STATE_NONE"/>
-      <VarDensMMSDensity/>
+      <VarDenMMSDensity/>
     </BCExpression>
                 
     <!-- Build a scalar transport equation for mixture fraction -->
@@ -228,7 +228,7 @@
     <save label="x-mom"/>
     <save label="x-mom_rhs_partial"/>
     <save label="u"/>
-    <save label="VarDensMMSSource"/>
+    <save label="mms_mixture_fraction_src"/>
     <save label="f"/>
     <save label="rhof"/>
     <save label="pressure"/>

@@ -117,14 +117,16 @@
   
   
   <!--__________________________________ -->
+  <Temperature>       64.804     </Temperature>
+  <abskg>             999        </abskg>
+  <benchmark>         1          </benchmark>
+  <calc_frequency>    2          </calc_frequency>
+    
   <RMCRT>
     <randomSeed>         false     </randomSeed>
-    <Temperature>       64.804     </Temperature>
-    <abskg>             999        </abskg>
     <nDivQRays>          3          </nDivQRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
-    <benchmark>         1          </benchmark>
     <solveBoundaryFlux> false      </solveBoundaryFlux>
     <CCRays>            false      </CCRays>
   </RMCRT>

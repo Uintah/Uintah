@@ -15,8 +15,8 @@
 //--------------------------------------------------------------------
 
 template<typename FieldT>
-VarDensMMSSourceTerm<FieldT>::
-VarDensMMSSourceTerm( const Expr::Tag& xTag,
+VarDen1DMMSMixFracSrc<FieldT>::
+VarDen1DMMSMixFracSrc( const Expr::Tag& xTag,
                      const Expr::Tag& tTag,
                      const double D,
                      const double rho0,
@@ -35,7 +35,7 @@ tTag_( tTag )
 
 template< typename FieldT >
 void
-VarDensMMSSourceTerm<FieldT>::
+VarDen1DMMSMixFracSrc<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( xTag_ );
@@ -46,7 +46,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 
 template< typename FieldT >
 void
-VarDensMMSSourceTerm<FieldT>::
+VarDen1DMMSMixFracSrc<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   x_ = &fml.template field_manager<FieldT   >().field_ref( xTag_ );
@@ -57,7 +57,7 @@ bind_fields( const Expr::FieldManagerList& fml )
 
 template< typename FieldT >
 void
-VarDensMMSSourceTerm<FieldT>::
+VarDen1DMMSMixFracSrc<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
@@ -103,7 +103,7 @@ evaluate()
 //--------------------------------------------------------------------
 
 template< typename FieldT >
-VarDensMMSSourceTerm<FieldT>::Builder::
+VarDen1DMMSMixFracSrc<FieldT>::Builder::
 Builder( const Expr::Tag& result,
         const Expr::Tag& xTag,
         const Expr::Tag& tTag,
@@ -122,17 +122,17 @@ tTag_( tTag )
 
 template< typename FieldT >
 Expr::ExpressionBase*
-VarDensMMSSourceTerm<FieldT>::Builder::
+VarDen1DMMSMixFracSrc<FieldT>::Builder::
 build() const
 {
-  return new VarDensMMSSourceTerm<FieldT>( xTag_, tTag_, d_, rho0_, rho1_ );
+  return new VarDen1DMMSMixFracSrc<FieldT>( xTag_, tTag_, d_, rho0_, rho1_ );
 }
 
 //--------------------------------------------------------------------
 
 template<typename FieldT>
-VarDensMMSContinuitySrc<FieldT>::
-VarDensMMSContinuitySrc( const double rho0,
+VarDen1DMMSContinuitySrc<FieldT>::
+VarDen1DMMSContinuitySrc( const double rho0,
                         const double rho1,
                         const Expr::Tag& xTag,
                         const Expr::Tag& tTag,
@@ -151,7 +151,7 @@ timestepTag_( timestepTag )
 
 template< typename FieldT >
 void
-VarDensMMSContinuitySrc<FieldT>::
+VarDen1DMMSContinuitySrc<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( xTag_ );
@@ -163,7 +163,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 
 template< typename FieldT >
 void
-VarDensMMSContinuitySrc<FieldT>::
+VarDen1DMMSContinuitySrc<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   x_ = &fml.template field_manager<FieldT>().field_ref( xTag_ );
@@ -177,7 +177,7 @@ bind_fields( const Expr::FieldManagerList& fml )
 
 template< typename FieldT >
 void
-VarDensMMSContinuitySrc<FieldT>::
+VarDen1DMMSContinuitySrc<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
@@ -229,7 +229,7 @@ evaluate()
 //--------------------------------------------------------------------
 
 template< typename FieldT >
-VarDensMMSContinuitySrc<FieldT>::Builder::
+VarDen1DMMSContinuitySrc<FieldT>::Builder::
 Builder( const Expr::Tag& result,
         const double rho0,
         const double rho1,
@@ -248,17 +248,17 @@ timestepTag_( timestepTag )
 
 template< typename FieldT >
 Expr::ExpressionBase*
-VarDensMMSContinuitySrc<FieldT>::Builder::
+VarDen1DMMSContinuitySrc<FieldT>::Builder::
 build() const
 {
-  return new VarDensMMSContinuitySrc<FieldT>( rho0_, rho1_, xTag_, tTag_, timestepTag_ );
+  return new VarDen1DMMSContinuitySrc<FieldT>( rho0_, rho1_, xTag_, tTag_, timestepTag_ );
 }
 
 //--------------------------------------------------------------------
 
 template<typename FieldT>
-VarDensMMSPressureContSrc<FieldT>::
-VarDensMMSPressureContSrc( const Expr::Tag continutySrcTag,
+VarDen1DMMSPressureContSrc<FieldT>::
+VarDen1DMMSPressureContSrc( const Expr::Tag continutySrcTag,
                           const Expr::Tag& timestepTag)
 : Expr::Expression<FieldT>(),
 continutySrcTag_( continutySrcTag ),
@@ -271,7 +271,7 @@ timestepTag_    ( timestepTag     )
 
 template< typename FieldT >
 void
-VarDensMMSPressureContSrc<FieldT>::
+VarDen1DMMSPressureContSrc<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( continutySrcTag_ );
@@ -282,7 +282,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 
 template< typename FieldT >
 void
-VarDensMMSPressureContSrc<FieldT>::
+VarDen1DMMSPressureContSrc<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   continutySrc_ = &fml.template field_manager<FieldT>().field_ref( continutySrcTag_ );
@@ -295,7 +295,7 @@ bind_fields( const Expr::FieldManagerList& fml )
 
 template< typename FieldT >
 void
-VarDensMMSPressureContSrc<FieldT>::
+VarDen1DMMSPressureContSrc<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
@@ -307,7 +307,7 @@ evaluate()
 //--------------------------------------------------------------------
 
 template< typename FieldT >
-VarDensMMSPressureContSrc<FieldT>::Builder::
+VarDen1DMMSPressureContSrc<FieldT>::Builder::
 Builder( const Expr::Tag& result,
         const Expr::Tag continutySrcTag,
         const Expr::Tag& timestepTag )
@@ -320,21 +320,21 @@ timestepTag_    ( timestepTag     )
 
 template< typename FieldT >
 Expr::ExpressionBase*
-VarDensMMSPressureContSrc<FieldT>::Builder::
+VarDen1DMMSPressureContSrc<FieldT>::Builder::
 build() const
 {
-  return new VarDensMMSPressureContSrc<FieldT>( continutySrcTag_, timestepTag_ );
+  return new VarDen1DMMSPressureContSrc<FieldT>( continutySrcTag_, timestepTag_ );
 }
 
 //--------------------------------------------------------------------
 
 // EXPLICIT INSTANTIATION
 #include <CCA/Components/Wasatch/FieldTypes.h>
-template class VarDensMMSSourceTerm<SVolField>;
-template class VarDensMMSSourceTerm<XVolField>;
-template class VarDensMMSSourceTerm<YVolField>;
-template class VarDensMMSSourceTerm<ZVolField>;
+template class VarDen1DMMSMixFracSrc<SVolField>;
+template class VarDen1DMMSMixFracSrc<XVolField>;
+template class VarDen1DMMSMixFracSrc<YVolField>;
+template class VarDen1DMMSMixFracSrc<ZVolField>;
 
-template class VarDensMMSContinuitySrc<SVolField>;
+template class VarDen1DMMSContinuitySrc<SVolField>;
 
-template class VarDensMMSPressureContSrc<SVolField>;
+template class VarDen1DMMSPressureContSrc<SVolField>;

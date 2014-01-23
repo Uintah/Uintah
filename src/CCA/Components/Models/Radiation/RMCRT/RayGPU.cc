@@ -113,7 +113,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   RT_flags.solveDivQ          = _solveDivQ;
   RT_flags.allowReflect       = _allowReflect;
   RT_flags.solveBoundaryFlux  = _solveBoundaryFlux;
-  RT_flags.benchMark          = _benchmark;
   RT_flags.CCRays             = _CCRays;
   
   RT_flags.sigma      = _sigma;;    

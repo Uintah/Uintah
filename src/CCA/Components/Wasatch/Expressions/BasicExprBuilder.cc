@@ -34,6 +34,7 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/TaylorVortex.h>
+#include <CCA/Components/Wasatch/Expressions/MMS/Varden2DMMS.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/VardenMMS.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
@@ -278,14 +279,14 @@ namespace Wasatch{
       builder = scinew Builder( tag, indepVarTag, x1Tag, x2Tag, transitionPoint, lowValue, highValue, frequency, amplitude );
     }
 
-    else if ( params->findBlock("VarDensMMSSourceTerm") ) {
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSSourceTerm");
+    else if ( params->findBlock("VarDen1DMMSMixFracSrc") ) {
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDen1DMMSMixFracSrc");
       double D, rho0, rho1;
       valParams->getAttribute("D",    D);
       valParams->getAttribute("rho0", rho0);
       valParams->getAttribute("rho1", rho1);
       const Expr::Tag xTag = parse_nametag( valParams->findBlock("Coordinate")->findBlock("NameTag") );
-      typedef typename VarDensMMSSourceTerm<FieldT>::Builder Builder;
+      typedef typename VarDen1DMMSMixFracSrc<FieldT>::Builder Builder;
       builder = scinew Builder( tag, xTag, tagNames.time, D, rho0, rho1 );
     }
     
@@ -371,6 +372,18 @@ namespace Wasatch{
       typedef typename TimeDerivative<FieldT>::Builder Builder;
       builder = scinew Builder( tag, srcTag, srcOldTag, tagNames.timestep );
     }
+    
+    else if ( params->findBlock("BurnsChristonAbskg") ){
+      typedef BurnsChristonAbskg<FieldT> BurnsChristonAbskgExpr;
+      std::string fieldType;
+      params->getAttribute("type",fieldType);
+      const Expr::Tag xTag("X" + fieldType, Expr::STATE_NONE);
+      const Expr::Tag yTag("Y" + fieldType, Expr::STATE_NONE);
+      const Expr::Tag zTag("Z" + fieldType, Expr::STATE_NONE);
+      
+      builder = scinew typename BurnsChristonAbskgExpr::Builder( tag, xTag, yTag, zTag  );
+    }
+
 
     return builder;
   }
@@ -456,6 +469,63 @@ namespace Wasatch{
       }
     }
     
+    return builder;
+  }
+  //------------------------------------------------------------------
+  
+  template<typename FieldT>
+  Expr::ExpressionBuilder*
+  build_shunn_varden_2d_mms_expr( Uintah::ProblemSpecP params,
+                                  Uintah::ProblemSpecP varDens2DMMSParams)
+  {
+    const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
+    
+    const TagNames& tagNames = TagNames::self();
+    
+    Expr::ExpressionBuilder* builder = NULL;
+        
+    double rho0=1.29985, rho1=0.081889, uf, vf, k, w, d;
+    varDens2DMMSParams->getAttribute("rho0",rho0);
+    varDens2DMMSParams->getAttribute("rho1",rho1);
+    varDens2DMMSParams->getAttribute("uf",uf);
+    varDens2DMMSParams->getAttribute("vf",vf);
+    varDens2DMMSParams->getAttribute("k",k);
+    varDens2DMMSParams->getAttribute("w",w);
+    varDens2DMMSParams->getAttribute("d",d);
+    
+    if( params->findBlock("VelocityX") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("VelocityX");
+      const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
+      const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
+      const Expr::Tag densityTag = parse_nametag( valParams->findBlock("Density")->findBlock("NameTag") );
+      typedef typename VarDenOscillatingMMSxVel<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, densityTag, indepVarTag1, indepVarTag2, tagNames.time, rho0, rho1, w, k, uf, vf );
+    }
+    
+    else if( params->findBlock("VelocityY") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("VelocityY");
+      const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
+      const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
+      const Expr::Tag densityTag = parse_nametag( valParams->findBlock("Density")->findBlock("NameTag") );
+      typedef typename VarDenOscillatingMMSyVel<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, densityTag, indepVarTag1, indepVarTag2, tagNames.time, rho0, rho1, w, k, uf, vf );
+    }
+    
+    else if( params->findBlock("MixtureFraction") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("MixtureFraction");
+      const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
+      const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
+      typedef typename VarDenOscillatingMMSMixFrac<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, tagNames.time, rho0, rho1, w, k, uf, vf );
+    }
+
+    else if( params->findBlock("DiffusiveConstant") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("DiffusiveConstant");
+      const Expr::Tag densityTag = parse_nametag( valParams->findBlock("Density")->findBlock("NameTag") );
+      typedef typename DiffusiveConstant<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, densityTag, d );
+    }
+
     return builder;
   }
   //------------------------------------------------------------------
@@ -951,12 +1021,12 @@ namespace Wasatch{
       builder = scinew Builder( tag, indepVarTag,x0, phic, R, n);
     }
     
-    else if ( params->findBlock("VarDensMMSVelocity") ){
+    else if ( params->findBlock("VarDenMMSVelocity") ){
       std::string side;
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSVelocity");
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSVelocity");
       valParams->getAttribute("side",side);
       
-      typedef VarDensMMSVelocity<FieldT> VarDensMMSVExpr;
+      typedef VarDen1DMMSVelocity<FieldT> VarDenMMSVExpr;
       SpatialOps::structured::BCSide bcSide;
       if      (side == "PLUS" ) bcSide = SpatialOps::structured::PLUS_SIDE;
       else if (side == "MINUS"  ) bcSide = SpatialOps::structured::MINUS_SIDE;
@@ -964,20 +1034,20 @@ namespace Wasatch{
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
         << "ERROR: The boundary side " << side
-        << " is not supported in VarDensMMSVelocity expression." << std::endl;
+        << " is not supported in VarDen1DMMSVelocity expression." << std::endl;
         throw std::invalid_argument( msg.str() );
       }
-      builder = scinew typename VarDensMMSVExpr::Builder( tag, tagNames.time, bcSide );
+      builder = scinew typename VarDenMMSVExpr::Builder( tag, tagNames.time, bcSide );
     }
 
-    else if ( params->findBlock("VarDensMMSMomentum") ){
+    else if ( params->findBlock("VarDenMMSMomentum") ){
       std::string side;
       double rho0=1.29985, rho1=0.081889;
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSMomentum");
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSMomentum");
       valParams->getAttribute("side",side);
       valParams->get("rho0",rho0);
       valParams->get("rho1",rho1);
-      typedef VarDensMMSMomentum<FieldT> VarDensMMSMomExpr;
+      typedef VarDen1DMMSMomentum<FieldT> VarDenMMSMomExpr;
       SpatialOps::structured::BCSide bcSide;
       if      (side == "PLUS" ) bcSide = SpatialOps::structured::PLUS_SIDE;
       else if (side == "MINUS"  ) bcSide = SpatialOps::structured::MINUS_SIDE;
@@ -985,36 +1055,36 @@ namespace Wasatch{
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
         << "ERROR: The boundary side " << side
-        << " is not supported in VarDensMMSMomentum expression." << std::endl;
+        << " is not supported in VarDen1DMMSMomentum expression." << std::endl;
         throw std::invalid_argument( msg.str() );
       }
-      builder = scinew typename VarDensMMSMomExpr::Builder( tag, tagNames.time, rho0, rho1, bcSide );
+      builder = scinew typename VarDenMMSMomExpr::Builder( tag, tagNames.time, rho0, rho1, bcSide );
     }
 
-    else if ( params->findBlock("VarDensMMSMixtureFraction") ){
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSMixtureFraction");      
-      typedef VarDensMMSMixtureFraction<FieldT> VarDensMMSMixtureFractionExpr;
-      builder = scinew typename VarDensMMSMixtureFractionExpr::Builder( tag, tagNames.time );
+    else if ( params->findBlock("VarDenMMSMixtureFraction") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSMixtureFraction");      
+      typedef VarDen1DMMSMixtureFraction<FieldT> VarDen1DMMSMixtureFractionExpr;
+      builder = scinew typename VarDen1DMMSMixtureFractionExpr::Builder( tag, tagNames.time );
     }
 
-    else if ( params->findBlock("VarDensMMSDensity") ){
+    else if ( params->findBlock("VarDenMMSDensity") ){
       double rho0=1.29985, rho1=0.081889;
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSDensity");
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSDensity");
       valParams->get("rho0",rho0);
       valParams->get("rho1",rho1);
 
-      typedef VarDensMMSDensity<FieldT> VarDensMMSDensityExpr;
-      builder = scinew typename VarDensMMSDensityExpr::Builder( tag, tagNames.time, rho0, rho1 );
+      typedef VarDen1DMMSDensity<FieldT> VarDen1DMMSDensityExpr;
+      builder = scinew typename VarDen1DMMSDensityExpr::Builder( tag, tagNames.time, rho0, rho1 );
     }
 
-    else if ( params->findBlock("VarDensMMSSolnVar") ){
+    else if ( params->findBlock("VarDenMMSSolnVar") ){
       double rho0=1.29985, rho1=0.081889;
-      Uintah::ProblemSpecP valParams = params->findBlock("VarDensMMSSolnVar");
+      Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSSolnVar");
       valParams->get("rho0",rho0);
       valParams->get("rho1",rho1);
 
-      typedef VarDensMMSSolnVar<FieldT> VarDensMMSSolnVarExpr;
-      builder = scinew typename VarDensMMSSolnVarExpr::Builder( tag, tagNames.time, rho0, rho1 );
+      typedef VarDen1DMMSSolnVar<FieldT> VarDen1DMMSSolnVarExpr;
+      builder = scinew typename VarDen1DMMSSolnVarExpr::Builder( tag, tagNames.time, rho0, rho1 );
     }
     
     else if ( params->findBlock("TurbulentInlet") ) {
@@ -1039,7 +1109,6 @@ namespace Wasatch{
       typedef typename TurbulentInletBC<FieldT>::Builder Builder;
       builder = scinew Builder(tag,inputFileName, velDir,period, timePeriod);
     }
-
     
     return builder;
   }
@@ -1090,6 +1159,32 @@ namespace Wasatch{
         case XVOL : builder = build_taylor_vortex_mms_expr< XVolField >( exprParams );  break;
         case YVOL : builder = build_taylor_vortex_mms_expr< YVolField >( exprParams );  break;
         case ZVOL : builder = build_taylor_vortex_mms_expr< ZVolField >( exprParams );  break;
+        default:
+          std::ostringstream msg;
+          msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      
+      const Category cat = parse_tasklist(exprParams,false);
+      gc[cat]->exprFactory->register_expression( builder );
+    }
+    
+    //________________________________________
+    // parse and build Shunn's 2D VarDen MMS
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("ShunnVarden2DMMS");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("ShunnVarden2DMMS") ){
+      
+      Uintah::ProblemSpecP varDens2DMMSParams = parser->findBlock("VariableDensity2DMMS");
+
+      std::string fieldType;
+      exprParams->getAttribute("type",fieldType);
+      
+      switch( get_field_type(fieldType) ){
+        case SVOL : builder = build_shunn_varden_2d_mms_expr< SVolField >( exprParams, varDens2DMMSParams );  break;
+        case XVOL : builder = build_shunn_varden_2d_mms_expr< XVolField >( exprParams, varDens2DMMSParams );  break;
+        case YVOL : builder = build_shunn_varden_2d_mms_expr< YVolField >( exprParams, varDens2DMMSParams );  break;
+        case ZVOL : builder = build_shunn_varden_2d_mms_expr< ZVolField >( exprParams, varDens2DMMSParams );  break;
         default:
           std::ostringstream msg;
           msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;
@@ -1237,7 +1332,51 @@ namespace Wasatch{
       slnGraphHelper->exprFactory->register_expression( scinew xBuilder(xVelTag, inputFileName, "X", period, timePeriod) );
       slnGraphHelper->exprFactory->register_expression( scinew yBuilder(yVelTag, inputFileName, "Y", period, timePeriod) );
       slnGraphHelper->exprFactory->register_expression( scinew zBuilder(zVelTag, inputFileName, "Z", period, timePeriod) );
-    }    
+    }
+    
+    // This is a special parser for variable density MMS
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("VarDenOscillatingMMS");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("VarDenOscillatingMMS") ) {
+      
+      const TagNames& tagNames = TagNames::self();
+
+      double rho0, rho1, uf, vf, k, w, d;
+      exprParams->getAttribute("rho0",rho0);
+      exprParams->getAttribute("rho1",rho1);
+      exprParams->getAttribute("uf",uf);
+      exprParams->getAttribute("vf",vf);
+      exprParams->getAttribute("k",k);
+      exprParams->getAttribute("w",w);
+      exprParams->getAttribute("d",d);
+      
+      std::string x1, x2;
+      exprParams->getWithDefault("x1",x1,"X");
+      exprParams->getWithDefault("x2",x2,"Y");
+
+      Expr::Tag x1Tag, x2Tag;
+
+      if      (x1 == "X")  x1Tag = tagNames.xsvolcoord;
+      else if (x1 == "Y")  x1Tag = tagNames.ysvolcoord;
+      else if (x1 == "Z")  x1Tag = tagNames.zsvolcoord;
+
+      if      (x2 == "X")  x2Tag = tagNames.xsvolcoord;
+      else if (x2 == "Y")  x2Tag = tagNames.ysvolcoord;
+      else if (x2 == "Z")  x2Tag = tagNames.zsvolcoord;
+      
+      GraphHelper* const initGraphHelper = gc[INITIALIZATION];
+
+      std::string mixFracName;
+      exprParams->get("Scalar", mixFracName);
+      const Expr::Tag mixFracTag( mixFracName, Expr::STATE_NONE );
+      typedef VarDenOscillatingMMSMixFrac<SVolField>::Builder MixFracBuilder;
+      initGraphHelper->exprFactory->register_expression( scinew MixFracBuilder( mixFracTag, x1Tag, x2Tag, tagNames.time, rho0, rho1, w, k, uf, vf ) );
+
+      const Expr::Tag diffCoefTag = parse_nametag(exprParams->findBlock("DiffusionCoefficient")->findBlock("NameTag"));
+      const Expr::Tag densityTag = parse_nametag( parser->findBlock("Density")->findBlock("NameTag") );
+      typedef DiffusiveConstant<SVolField>::Builder diffCoefBuilder;
+      gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew diffCoefBuilder( diffCoefTag, densityTag, d ) );
+    }
     
     //___________________________________________________
     // parse and build initial conditions for moment transport

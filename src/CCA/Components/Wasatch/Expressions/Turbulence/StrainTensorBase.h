@@ -116,25 +116,7 @@ protected:
                                           SVolField& S23,
                                           SVolField& S33);
   
-public:
-  class Builder : public Expr::ExpressionBuilder
-  {
-  public:
-    
-    /**
-     *  \param vel1tag the first component of the velocity
-     *  \param vel2tag the second component of the velocity
-     *  \param vel3tag the third component of the velocity
-     */
-    Builder( const Expr::Tag& result,
-             const Expr::TagList& velTags );
-    ~Builder(){}
-    Expr::ExpressionBase* build() const;
-    
-  private:
-    const Expr::TagList velTags_;
-  };
-  
+public:  
   ~StrainTensorBase();
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );

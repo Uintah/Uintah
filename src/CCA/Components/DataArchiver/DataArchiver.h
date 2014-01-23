@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2012 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -189,7 +189,7 @@ using SCIRun::Mutex;
        void updateCheckpointInterval(double inv);
 
        double getOutputInterval(){return d_outputInterval;};
-       double getCheckpointInterval(){return d_checkpointInterval;};
+       double getCheckpointInterval(){return d_checkpointInterval;};       
 
      public:
 
@@ -204,16 +204,17 @@ using SCIRun::Mutex;
 
        class SaveItem {
          public:
-           void setMaterials(int level, const ConsecutiveRangeSet& matls,
-               ConsecutiveRangeSet& prevMatls,
-               MaterialSetP& prevMatlSet);
+           void setMaterials(int level, 
+                             const ConsecutiveRangeSet& matls,
+                             ConsecutiveRangeSet& prevMatls,
+                             MaterialSetP& prevMatlSet);
 
-           MaterialSet* getMaterialSet(int level)
-           { return matlSet_[level].get_rep(); }
+           MaterialSet* getMaterialSet(int level){ 
+             return matlSet[level].get_rep(); 
+           }
 
-           const VarLabel* label_;
-
-           std::map<int, MaterialSetP> matlSet_;
+           const VarLabel* label;
+           std::map<int, MaterialSetP> matlSet;
        };
 
      private:
@@ -230,9 +231,10 @@ using SCIRun::Mutex;
        //! helper for beginOutputTimestep - creates and writes
        //! the necessary directories and xml files to begin the 
        //! output timestep.
-       void outputTimestep(Dir& dir, std::vector<SaveItem>& saveLabels,
-           double time, double delt, const GridP& grid,
-           std::string* pTimestepDir /* passed back */, bool hasGlobals = false);
+       void outputTimestep(Dir& dir, 
+                           std::vector<SaveItem>& saveLabels,
+                           const GridP& grid,
+                           std::string* pTimestepDir );
 
        //! helper for finalizeTimestep - schedules a task for each var's output
        void scheduleOutputTimestep(std::vector<SaveItem>& saveLabels,
@@ -329,8 +331,8 @@ using SCIRun::Mutex;
        std::vector< SaveItem > d_saveReductionLabels;
 
        // for efficiency of SaveItem's
-       ConsecutiveRangeSet prevMatls_;
-       MaterialSetP prevMatlSet_;     
+       ConsecutiveRangeSet d_prevMatls;
+       MaterialSetP d_prevMatlSet;     
 
        //! d_checkpointLabelNames is a temporary list containing
        //! the names of labels to save when checkpointing

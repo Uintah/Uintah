@@ -49,6 +49,7 @@ SRCS +=                                              \
 
 PSELIBS :=                        \
         CCA/Components/Schedulers \
+        CCA/Components/Models \
         CCA/Ports                 \
         Core/Disclosure           \
         Core/Exceptions           \

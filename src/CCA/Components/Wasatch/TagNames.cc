@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,6 +35,8 @@ namespace Wasatch{
   timestep( "timestep", Expr::STATE_NONE ),
   stableTimestep( "StableDT", Expr::STATE_NONE ),
   
+  celltype("CellType", Expr::STATE_NONE),
+  
   xsvolcoord( "XSVOL", Expr::STATE_NONE ),
   ysvolcoord( "YSVOL", Expr::STATE_NONE ),
   zsvolcoord( "ZSVOL", Expr::STATE_NONE ),
@@ -49,8 +51,15 @@ namespace Wasatch{
   zzvolcoord( "ZZVOL", Expr::STATE_NONE ),
   
   // energy related variables
-  kineticEnergy      ("KineticEnergy",      Expr::STATE_NONE ),
-  totalKineticEnergy ("TotalKineticEnergy", Expr::STATE_NONE ),
+  temperature        ( "Temperature"       , Expr::STATE_NONE ),
+  absorption         ( "AbsCoef"           , Expr::STATE_NONE ),
+  radiationsource    ( "RadiationSource"   , Expr::STATE_NONE ),
+  radvolq            ( "radiationVolq"     , Expr::STATE_NONE ),
+  radvrflux          ( "VRFlux"            , Expr::STATE_NONE ),
+  kineticEnergy      ( "KineticEnergy"     , Expr::STATE_NONE ),
+  totalKineticEnergy ( "TotalKineticEnergy", Expr::STATE_NONE ),
+  
+  
   
   // momentum related variables
   pressure  ( "pressure",   Expr::STATE_NONE ),
@@ -82,6 +91,11 @@ namespace Wasatch{
   drhodtstar ( "drhodt_*",     Expr::STATE_NONE ),
   drhodt     ( "drhodt",       Expr::STATE_NONE ),
   drhodtnp1  ( "drhodt",       Expr::STATE_NP1  ),
+  
+  // mms varden
+  mms_mixfracsrc( "mms_mixture_fraction_src", Expr::STATE_NONE ),
+  mms_continuitysrc("mms_continuity_src", Expr::STATE_NONE),
+  mms_pressurecontsrc("mms_pressure_continuity_src", Expr::STATE_NONE),
   
   // postprocessing
   continuityresidual( "ContinuityResidual", Expr::STATE_NONE )

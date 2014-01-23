@@ -327,7 +327,8 @@ Pressure::evaluate()
   // NOTE THE NEGATIVE SIGN! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
   // - Laplacian(p) = - p_rhs
   rhs <<= - *pSource_;
-
+//  rhs <<= 0.0;
+  
   //___________________________________________________
   // calculate the RHS field for the poisson solve.
   // Note that this is "automagically" plugged into

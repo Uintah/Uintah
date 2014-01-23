@@ -54,24 +54,31 @@ namespace Wasatch{
                                             Expr::ExpressionFactory& factory,
                                             FieldTagInfo& info )
   {
-    typedef OpTypes<FieldT> MyOpTypes;
-
-    Expr::Tag diffFluxTag;  // we will populate this.
-
-    diffFluxTag = Expr::Tag( thisPhiName + "_diffFlux_" + dir, Expr::STATE_NONE );
+    const Expr::Tag diffFluxTag( thisPhiName + "_diffFlux_" + dir, Expr::STATE_NONE );
     const Expr::Tag phiTag( thisPhiName, Expr::STATE_N );
 
     Expr::ExpressionBuilder* builder = NULL;
+    FieldSelector fs;
 
     if( dir=="X" ){
-      typedef typename DiffusiveVelocity<typename MyOpTypes::GradX>::Builder Flux;
-      builder = scinew Flux(diffFluxTag,  phiTag, 1.0 );
-    } else if( dir=="Y" ){
-      typedef typename DiffusiveVelocity<typename MyOpTypes::GradY>::Builder Flux;
-      builder = scinew Flux( diffFluxTag, phiTag, 1.0 );
-    } else if( dir=="Z" ){
-      typedef typename DiffusiveVelocity<typename MyOpTypes::GradZ>::Builder Flux;
-      builder = scinew Flux( diffFluxTag, phiTag, 1.0 );
+      typedef typename DiffusiveVelocity<typename FaceTypes<FieldT>::XFace>::Builder XFlux;
+      builder = scinew XFlux( diffFluxTag,  phiTag, 1.0 );
+      fs = DIFFUSIVE_FLUX_X;
+    }
+    else if( dir=="Y" ){
+      typedef typename DiffusiveVelocity<typename FaceTypes<FieldT>::YFace>::Builder YFlux;
+      builder = scinew YFlux( diffFluxTag, phiTag, 1.0 );
+      fs = DIFFUSIVE_FLUX_Y;
+    }
+    else if( dir=="Z" ){
+      typedef typename DiffusiveVelocity<typename FaceTypes<FieldT>::ZFace>::Builder ZFlux;
+      builder = scinew ZFlux( diffFluxTag, phiTag, 1.0 );
+      fs = DIFFUSIVE_FLUX_Z;
+    }
+    else{
+      std::ostringstream msg;
+      msg << "Invalid direction selection for diffusive flux expression" << endl;
+      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
 
     if( builder == NULL ){
@@ -81,17 +88,6 @@ namespace Wasatch{
     }
 
     factory.register_expression( builder );
-
-    FieldSelector fs;
-    if     ( dir=="X" ) fs=DIFFUSIVE_FLUX_X;
-    else if( dir=="Y" ) fs=DIFFUSIVE_FLUX_Y;
-    else if( dir=="Z" ) fs=DIFFUSIVE_FLUX_Z;
-    else{
-      std::ostringstream msg;
-      msg << "Invalid direction selection for diffusive flux expression" << endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }
-
     info[ fs ] = diffFluxTag;
   }
 
@@ -124,11 +120,19 @@ namespace Wasatch{
   void ScalabilityTestTransportEquation<FieldT>::
   setup_diffusive_flux( FieldTagInfo& info )
   {
-    if( params_->findBlock( "DoDiffusion") ){
+    bool doDiffusion = false;
+    params_->get("DoDiffusion",doDiffusion);
+
+    if( doDiffusion ){
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
       setup_diffusive_velocity_expression<FieldT>( "X", solnVarName_, factory, info );
       setup_diffusive_velocity_expression<FieldT>( "Y", solnVarName_, factory, info );
       setup_diffusive_velocity_expression<FieldT>( "Z", solnVarName_, factory, info );
+    }
+    else{
+      info[DIFFUSIVE_FLUX_X] = Expr::Tag();
+      info[DIFFUSIVE_FLUX_Y] = Expr::Tag();
+      info[DIFFUSIVE_FLUX_Z] = Expr::Tag();
     }
   }
 
@@ -138,7 +142,9 @@ namespace Wasatch{
   void ScalabilityTestTransportEquation<FieldT>::
   setup_convective_flux( FieldTagInfo& info )
   {
-    if( params_->findBlock("DoConvection") ){
+    bool doConvection = false;
+    params_->get("DoConvection",doConvection);
+    if( doConvection ){
       const Expr::Tag empty;
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
 
@@ -167,6 +173,11 @@ namespace Wasatch{
                                                 factory,
                                                 info );
      }
+    else{
+      info[CONVECTIVE_FLUX_X] = Expr::Tag();
+      info[CONVECTIVE_FLUX_Y] = Expr::Tag();
+      info[CONVECTIVE_FLUX_Z] = Expr::Tag();
+    }
   }
 
   //------------------------------------------------------------------
@@ -175,10 +186,13 @@ namespace Wasatch{
   void ScalabilityTestTransportEquation<FieldT>::
   setup_source_terms( FieldTagInfo& info, Expr::TagList& sourceTags )
   {
-    if( params_->findBlock("DoSourceTerm") ){
+    bool doSrc = false;
+    params_->get("DoSourceTerm",doSrc);
+    Expr::Tag srcTag;
+
+    if( doSrc ){
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-      const Expr::Tag srcTag( solnVarName_ + "_src", Expr::STATE_NONE );
-      info[SOURCE_TERM] = srcTag;
+      srcTag = Expr::Tag( solnVarName_ + "_src", Expr::STATE_NONE );
 
       int nEqs=0;
       params_->get( "NumberOfEquations", nEqs );
@@ -190,6 +204,7 @@ namespace Wasatch{
       typedef typename ScalabilityTestSrc<FieldT>::Builder coupledSrcTerm;
       factory.register_expression( scinew coupledSrcTerm( srcTag, basePhiTag, nEqs) );
     }
+    info[SOURCE_TERM] = srcTag;
   }
 
   //------------------------------------------------------------------

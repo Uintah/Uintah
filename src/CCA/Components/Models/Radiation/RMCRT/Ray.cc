@@ -45,9 +45,12 @@
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
 #define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
 
+//______________________________________________________________________
+//  TO DO
+//  create a vector (isComputedVarLabels) that contains boundryFlux, VRFlux, radiationVolq
+//  and use it for scheduling.  Add logic to what is actually in that vector.
 
-
-//--------------------------------------------------------------
+//______________________________________________________________________
 //
 using namespace Uintah;
 using namespace std;
@@ -160,32 +163,27 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   d_sharedState = sharedState;
   ProblemSpecP rmcrt_ps = rmcrtps;
   Vector orient;
-  rmcrt_ps->getWithDefault( "nDivQRays" ,       _nDivQRays ,        10 );       // Number of rays per cell used to compute divQ 
-  rmcrt_ps->getWithDefault( "Threshold" ,       _Threshold ,      0.01 );       // When to terminate a ray
-  rmcrt_ps->getWithDefault( "randomSeed",       _isSeedRandom,    true );       // random or deterministic seed.
-  rmcrt_ps->getWithDefault( "benchmark" ,       _benchmark,       0 );  
-  rmcrt_ps->getWithDefault( "StefanBoltzmann",  _sigma,           5.67051e-8);  // Units are W/(m^2-K)
+  rmcrt_ps->getWithDefault( "nDivQRays" ,       _nDivQRays ,        10 );             // Number of rays per cell used to compute divQ 
+  rmcrt_ps->getWithDefault( "Threshold" ,       _Threshold ,      0.01 );             // When to terminate a ray
+  rmcrt_ps->getWithDefault( "randomSeed",       _isSeedRandom,    true );             // random or deterministic seed. 
+  rmcrt_ps->getWithDefault( "StefanBoltzmann",  _sigma,           5.67051e-8);        // Units are W/(m^2-K)
   rmcrt_ps->getWithDefault( "solveBoundaryFlux" , _solveBoundaryFlux, false );
-  rmcrt_ps->getWithDefault( "CCRays"    ,       _CCRays,          false );      // if true, forces rays to always have CC origins
-  rmcrt_ps->getWithDefault( "VirtRadiometer" ,  _virtRad,         false );             // if true, at least one virtual radiometer exists
-  rmcrt_ps->getWithDefault( "VRViewAngle"    ,  _viewAng,         180 );               // view angle of the radiometer in degrees
+  rmcrt_ps->getWithDefault( "CCRays"    ,       _CCRays,          false );            // if true, forces rays to always have CC origins
+  rmcrt_ps->getWithDefault( "VirtRadiometer" ,  _virtRad,         false );            // if true, at least one virtual radiometer exists
+  rmcrt_ps->getWithDefault( "VRViewAngle"    ,  _viewAng,         180 );              // view angle of the radiometer in degrees
   rmcrt_ps->getWithDefault( "VROrientation"  ,  orient,          Vector(0,0,1) );     // Normal vector of the radiometer orientation (Cartesian)
-  rmcrt_ps->getWithDefault( "VRLocationsMin" ,  _VRLocationsMin,  IntVector(0,0,0) );  // minimum extent of the string or block of virtual radiometers
-  rmcrt_ps->getWithDefault( "VRLocationsMax" ,  _VRLocationsMax,  IntVector(0,0,0) );  // maximum extent of the string or block or virtual radiometers
+  rmcrt_ps->getWithDefault( "VRLocationsMin" ,  _VRLocationsMin,  IntVector(0,0,0) ); // minimum extent of the string or block of virtual radiometers
+  rmcrt_ps->getWithDefault( "VRLocationsMax" ,  _VRLocationsMax,  IntVector(0,0,0) ); // maximum extent of the string or block or virtual radiometers
   rmcrt_ps->getWithDefault( "nRadRays"  ,       _nRadRays ,       1000 );
   rmcrt_ps->getWithDefault( "nFluxRays" ,       _nFluxRays,       1 );                 // number of rays per cell for computation of boundary fluxes
   rmcrt_ps->getWithDefault( "sigmaScat"  ,      _sigmaScat  ,      0 );                // scattering coefficient
-  rmcrt_ps->getWithDefault( "abskgBench4"  ,    _abskgBench4,      1 );                // absorption coefficient specific to Bench4
   rmcrt_ps->get(             "shouldSetBCs" ,   _onOff_SetBCs );                       // ignore applying boundary conditions
   rmcrt_ps->getWithDefault( "allowReflect"   ,  _allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
   rmcrt_ps->getWithDefault( "solveDivQ"      ,  _solveDivQ,        true );             // Allow for solving of divQ for flow cells.
   rmcrt_ps->getWithDefault( "applyFilter"    ,  _applyFilter,      false );            // Allow filtering of boundFlux and divQ.
 
-
-
   //__________________________________
   //  Warnings and bulletproofing
-
 #ifndef RAY_SCATTER
   proc0cout<< "sigmaScat: " << _sigmaScat << endl;
   if(_sigmaScat>0){
@@ -210,7 +208,6 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   proc0cout<< endl << "RAY_SCATTER IS DEFINED" << endl;
 #endif
 
-
   if(_nDivQRays==1){
     ostringstream warn;
     warn << "WARNING: You have specified only 1 ray to compute the radiative flux divergence." << endl;
@@ -220,13 +217,6 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     ostringstream warn;
     warn << "WARNING: You have specified only 1 ray to compute radiative fluxes." << endl;
     warn << "For better accuracy and stability, specify nFluxRays greater than 2." << endl;
-  }
-
-  if (_benchmark > 5 || _benchmark < 0  ){
-    ostringstream warn;
-    warn << "ERROR:  Benchmark value ("<< _benchmark <<") not set correctly." << endl;
-    warn << "Specify a value of 1 through 5 to run a benchmark case, or 0 otherwise." << endl;
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
   if ( _viewAng > 360 ){
@@ -253,10 +243,10 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   
   //__________________________________
   //  CONSTANT VR VARIABLES
-  //� In spherical coordinates, the polar angle, theta_rot,
-  //� represents the counterclockwise rotation about the y axis,
-  //� The azimuthal angle represents the negative of the
-  //� counterclockwise rotation about the z axis.
+  //  In spherical coordinates, the polar angle, theta_rot,
+  //  represents the counterclockwise rotation about the y axis,
+  //  The azimuthal angle represents the negative of the
+  //  counterclockwise rotation about the z axis.
   //  Convert the user specified radiometer vector normal into three axial
   //  rotations about the x,y, and z axes.
   _VR.thetaRot  = acos(orient[2]/sqrt(orient[0]*orient[0]+orient[1]*orient[1] +orient[2]*orient[2]));
@@ -382,126 +372,7 @@ Ray::registerVarLabels(int   matlIndex,
   d_matlSet->addAll(m);
   d_matlSet->addReference();
 }
-//---------------------------------------------------------------------------
-//
-void 
-Ray::sched_initProperties( const LevelP& level, 
-                           SchedulerP& sched,
-                           const int radCalc_freq )
-{
 
-  if(_benchmark != 0){
-    Task* tsk = scinew Task( "Ray::initProperties", this, 
-                             &Ray::initProperties, radCalc_freq);
-                              
-    printSchedule(level,dbg,"Ray::initProperties");
-
-    tsk->modifies( d_temperatureLabel );
-    tsk->modifies( d_abskgLabel );
-    tsk->modifies( d_cellTypeLabel );
-
-    sched->addTask( tsk, level->eachPatch(), d_matlSet ); 
-  }
-}
-//______________________________________________________________________
-//
-void
-Ray::initProperties( const ProcessorGroup* pc,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw,
-                     const int radCalc_freq )
-{
-
-  // Only run if it's time
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
-    return;
-  }
-  
-  const Level* level = getLevel(patches);
-
-  for (int p=0; p < patches->size(); p++){
-
-    const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing Ray::InitProperties");
-
-    CCVariable<double> abskg; 
-    CCVariable<double> absorp;
-
-    new_dw->getModifiable( abskg,    d_abskgLabel,     d_matl, patch );  
-    abskg.initialize  ( 0.0 ); 
-    
-    IntVector pLow;
-    IntVector pHigh;
-    level->findInteriorCellIndexRange(pLow, pHigh);
-
-    int Nx = pHigh[0] - pLow[0];
-    int Ny = pHigh[1] - pLow[1];
-    int Nz = pHigh[2] - pLow[2];
-
-    Vector Dx = patch->dCell(); 
-    
-    BBox L_BB;
-    level->getInteriorSpatialRange(L_BB);                 // edge of computational domain
-    Vector L_length = Abs(L_BB.max() - L_BB.min());
-    
-    //__________________________________
-    //  Benchmark initializations
-    if ( _benchmark == 1 || _benchmark == 3 ) {
-  
-      // bulletproofing
-      Vector valid_length(1,1,1);
-      if (L_length != valid_length){
-        ostringstream msg;
-        msg << "\n RMCRT:ERROR: the benchmark problem selected is only valid on the domain \n";
-        msg << valid_length << ".  Your domain is " << L_BB << endl; 
-        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-      }
-    
-      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
-        IntVector c = *iter;
-        abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (Nx - 1.0) /2.0) * Dx[0]) )
-                        * ( 1.0 - 2.0 * fabs( ( c[1] - (Ny - 1.0) /2.0) * Dx[1]) )
-                        * ( 1.0 - 2.0 * fabs( ( c[2] - (Nz - 1.0) /2.0) * Dx[2]) ) 
-                        + 0.1;                  
-      }     
-    } else if (_benchmark == 2) {
-      
-      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
-        IntVector c = *iter;
-        abskg[c] = 1;
-      }
-    }
-    
-    if(_benchmark == 3) {
-      CCVariable<double> temp;
-      new_dw->getModifiable(temp, d_temperatureLabel, d_matl, patch);
-      
-      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
-        IntVector c = *iter; 
-        temp[c] = 1000 * abskg[c];
-
-      }
-    }
-
-    if(_benchmark == 4 || _benchmark == 5) {  // Siegel isotropic scattering
-      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
-        IntVector c = *iter;
-        abskg[c] = _abskgBench4;
-      }
-    }
-
-    if(_benchmark == 5 ) {  // Siegel isotropic scattering for specific abskg and sigma_scat
-      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
-        IntVector c = *iter;
-        abskg[c] = 2;
-        _sigmaScat = 8;
-      }
-    }
-  }
-}
 
 //---------------------------------------------------------------------------
 // 
@@ -543,7 +414,7 @@ Ray::sigmaT4( const ProcessorGroup*,
   if ( doCarryForward( timestep, radCalc_freq) ) {
     printTask( patches, patches->get(0), dbg, "Doing Ray::sigmaT4 carryForward (sigmaT4)" );
     
-    new_dw->transferFrom( old_dw, d_sigmaT4_label, patches, matls );
+    new_dw->transferFrom( old_dw, d_sigmaT4_label, patches, matls, true );
     return;
   }
   
@@ -607,6 +478,13 @@ Ray::sched_rayTrace( const LevelP& level,
   tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
   tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
   tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+  
+  // needed for carry Forward
+  tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
+  tsk->requires( Task::OldDW, d_VRFluxLabel,         d_gn, 0 );
+  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
+  tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
+  
     
   if( modifies_divQ ){
     tsk->modifies( d_divQLabel ); 
@@ -643,7 +521,14 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
   const Level* level = getLevel(patches);
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  
   if ( doCarryForward( timestep, radCalc_freq) ) {
+    printTask(patches,patches->get(0), dbg,"Doing Ray::rayTrace (carryForward)");
+    bool replaceVar = true;
+    new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, replaceVar );
+    new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls, replaceVar );
+    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, replaceVar );
+    new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, replaceVar );
     return;
   }
   
@@ -771,15 +656,19 @@ Ray::rayTrace( const ProcessorGroup* pc,
         // boundaryFaces is the vector that contains the list of which faces are adjacent to a wall
         vector<int> boundaryFaces;
         boundaryFaces.clear();
-        if(_benchmark==4 || _benchmark==5){
-          boundaryFaces.push_back(5);
-        }
+        
+        
+  // if(_benchmark==4 || _benchmark==5){
+  //   boundaryFaces.push_back(5);
+  // }
 
         // determine if origin has one or more boundary faces, and if so, populate boundaryFaces vector
         boundFlux[origin].p = has_a_boundary(origin, celltype, boundaryFaces);
 
 
-        /*  Benchmark4
+//__________________________________
+//  
+/*  Benchmark4
         // Loop over 40 kappa and sigma_s values
 
         // open sigma_s
@@ -824,11 +713,13 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
         //cout << _sigmaScat << endl;
         //cout << _abskgBench4 << endl;
-*/
+
         FILE * f = NULL;
         if(_benchmark==5){
           f=fopen("benchmark5.txt", "w");
         }
+//__________________________________
+*/
         
         //__________________________________
         // Loop over boundary faces of the cell and compute incident radiative flux
@@ -874,16 +765,18 @@ Ray::rayTrace( const ProcessorGroup* pc,
 /*===========TESTING==========`*/
           
           
-
+/*
           if(_benchmark==5){
             fprintf(f, "%lf \n",boundFlux[origin][ face ]);
           }
-
+*/
         } // boundary faces loop
 
+/*
         if(_benchmark==5){
           fclose(f);
         }
+*/ 
       }  // end cell iterator
 
       // if(_applyFilter)
@@ -981,6 +874,11 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   tsk->requires(abskg_dw, d_abskgLabel,     gac, SHRT_MAX);
   tsk->requires(sigma_dw, d_sigmaT4_label,  gac, SHRT_MAX);
   
+  // needed for carry Forward
+  tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
+  tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
+  
+  
   if( _whichROI_algo == dynamic ){
     tsk->requires(Task::NewDW, d_ROI_LoCellLabel);
     tsk->requires(Task::NewDW, d_ROI_HiCellLabel);
@@ -1033,8 +931,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   if ( doCarryForward( timestep, radCalc_freq) ) {
     printTask( fineLevel->getPatch(0), dbg, "Coing Ray::rayTrace_dataOnion carryForward ( divQ )" );
     
-    new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls );
-    new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls );    
+    new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, true );
+    new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, true );
     return;
   } 
   
@@ -1824,7 +1722,7 @@ void Ray::refine_Q(const ProcessorGroup*,
   if ( doCarryForward( timestep, radCalc_freq) ) {
     printTask( fineLevel->getPatch(0), dbg, "Doing Ray::refine_Q carryForward ( divQ )" );
     
-    new_dw->transferFrom( old_dw, d_divQLabel, patches, matls );
+    new_dw->transferFrom( old_dw, d_divQLabel, patches, matls, true );
     return;
   }
 
@@ -2045,55 +1943,6 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
   }  // course patch loop 
 }
 
-
-//______________________________________________________________________
-//  Carry forward variables that are computed on a radiatiion step
-// create a separate task since the Unified scheduler doesn't support
-// pulling data from the old_dw AND not computing something.
-void Ray::sched_carryForward_rayTrace( const LevelP& level, 
-                                       SchedulerP& sched,
-                                       const int radCalc_freq )
-{
-
-  Task* tsk= scinew Task( "Ray::carryForward_rayTrace", this, 
-                           &Ray::carryForward_rayTrace, radCalc_freq );
-
-
-  printSchedule(level,dbg, "Ray::carryForward_rayTrace");
-  
-  tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
-  tsk->requires( Task::OldDW, d_VRFluxLabel,         d_gn, 0 );
-  tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
-  tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
-
-  sched->addTask( tsk, level->eachPatch(), d_matlSet );  
-}
-
-//______________________________________________________________________
-
-void  Ray::carryForward_rayTrace( const ProcessorGroup* pc,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw,
-                                  const int radCalc_freq )
-{ 
-   //__________________________________
-  //  Carry Forward (old_dw -> new_dw)
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  if ( doCarryForward( timestep, radCalc_freq) ) {
-    const Level* level = getLevel( patches );
-    printTask( level->getPatch(0), dbg, "Doing Ray::rayTrace carryForward_rayTrace (divQ, VRFlux, boundFlux, radiationVolq )" );
-    
-    new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls );
-    new_dw->transferFrom( old_dw, d_VRFluxLabel,        patches, matls );
-    new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls );
-    new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls );
-
-    return;
-  }
-}
-
 //______________________________________________________________________
 // Utility task:  move variable from old_dw -> new_dw
 void Ray::sched_CarryForward_Var ( const LevelP& level, 
@@ -2119,7 +1968,7 @@ void Ray::carryForward_Var ( const ProcessorGroup*,
                              DataWarehouse* new_dw,
                              const VarLabel* variable)
 {
-  new_dw->transferFrom(old_dw, variable, patches, matls);
+  new_dw->transferFrom(old_dw, variable, patches, matls, true);
 }
 
 //______________________________________________________________________

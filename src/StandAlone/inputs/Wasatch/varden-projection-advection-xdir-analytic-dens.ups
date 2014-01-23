@@ -22,9 +22,7 @@
       </GaussianFunction> 
     </BasicExpression>
     
-    <TwoStreamMixing>
-      <Density0>1.0</Density0>
-      <Density1>3.0</Density1>
+    <TwoStreamMixing rho0="1.0" rho1="3.0">
       <Density><NameTag name="density" state="CARRY_FORWARD"/></Density>
       <MixtureFraction> <NameTag name="f" state="STATE_NONE"/> </MixtureFraction>
       <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_N"/> </DensityWeightedMixtureFraction>

@@ -39,7 +39,8 @@ MDLabel::MDLabel()
 {
   ///////////////////////////////////////////////////////////////////////////
   // Particle Variables
-  pXLabel = VarLabel::create("p.x", ParticleVariable<Point>::getTypeDescription());
+  pXLabel = VarLabel::create("p.x", ParticleVariable<Point>::getTypeDescription(), IntVector(0, 0, 0),
+                             VarLabel::PositionVariable);
   pXLabel_preReloc = VarLabel::create("p.x+", ParticleVariable<Point>::getTypeDescription(), IntVector(0, 0, 0),
                                       VarLabel::PositionVariable);
 

@@ -15,6 +15,10 @@ if( $#argv < 1 ) then
   exit(1)
 endif
 
+set rootPath = `dirname $0`
+set path = ($rootPath $path)
+
+echo $path
 set udas = ($argv[*])    # make sure you remove the last / from any entry
 
 #__________________________________

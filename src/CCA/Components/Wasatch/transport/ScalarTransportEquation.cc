@@ -293,9 +293,10 @@ namespace Wasatch{
   {            
     namespace SS = SpatialOps::structured;
     const Category taskCat = ADVANCE_SOLUTION;
-    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );    
-    bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, false );
+    bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
     
+    bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, false );
+  
     if( !isConstDensity_ ){
       // set bcs for solnVar_*
       const TagNames& tagNames = TagNames::self();

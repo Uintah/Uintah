@@ -36,12 +36,14 @@
                                        StepFunction,PlusProfile,SineTime,ExprAlgebra,Cylinder,
                                        WallDistanceFunction,ReadFromFile,RandomField,
                                        ExponentialVortex,LambsDipole,TimeDerivative,
-                                       RayleighTaylor)" >
+                                       RayleighTaylor, BurnsChristonAbskg)" >
                                        
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
       <Constant           spec="OPTIONAL DOUBLE" />
 
+      <BurnsChristonAbskg spec="OPTIONAL NO_DATA"/>
+      
       <LinearFunction     spec="OPTIONAL NO_DATA"
                             attribute1="slope REQUIRED DOUBLE"      
                             attribute2="intercept REQUIRED DOUBLE" >
@@ -447,7 +449,7 @@
     <!-- Spec for boundary condition expression types -->
     <BCExpression  spec="MULTIPLE NO_DATA"
                    attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                   children1="ONE_OF(CHILD LinearFunction, ParabolicFunction, PowerLawFunction, VarDensMMSVelocity, VarDensMMSMomentum, VarDensMMSSolnVar, VarDensMMSDensity, VarDensMMSMixtureFraction" >
+                   children1="ONE_OF(CHILD LinearFunction, ParabolicFunction, PowerLawFunction, VarDenMMSVelocity, VarDenMMSMomentum, VarDenMMSSolnVar, VarDenMMSDensity, VarDenMMSMixtureFraction" >
 
       <TaskList    spec="REQUIRED STRING" /> <!-- initialization advance_solution - separate by space -->
       
@@ -484,32 +486,32 @@
       </PowerLawFunction>  
 
       <!-- Velocity profile on the boundaries with respect to time for the variable density MMS !-->
-      <VarDensMMSVelocity  spec="OPTIONAL NO_DATA"
+      <VarDenMMSVelocity  spec="OPTIONAL NO_DATA"
                            attribute1="side REQUIRED STRING 'PLUS,MINUS'">
-      </VarDensMMSVelocity>      
+      </VarDenMMSVelocity>      
 
       <!-- Momentum profile on the boundaries with respect to time for the variable density MMS !-->
-      <VarDensMMSMomentum  spec="OPTIONAL NO_DATA"
+      <VarDenMMSMomentum  spec="OPTIONAL NO_DATA"
                            attribute1="side REQUIRED STRING 'PLUS,MINUS'">
         <rho0              spec="OPTIONAL DOUBLE"/>
         <rho1              spec="OPTIONAL DOUBLE"/>
-      </VarDensMMSMomentum>
+      </VarDenMMSMomentum>
 
       <!-- Scalar solution variable profile on the boundaries with respect to time for the variable density MMS !-->
-      <VarDensMMSSolnVar  spec="OPTIONAL NO_DATA">
+      <VarDenMMSSolnVar  spec="OPTIONAL NO_DATA">
         <rho0             spec="OPTIONAL DOUBLE"/>
         <rho1             spec="OPTIONAL DOUBLE"/>
-      </VarDensMMSSolnVar>
+      </VarDenMMSSolnVar>
        
       <!-- Density profile on the boundaries with respect to time for the variable density MMS !-->
-      <VarDensMMSDensity  spec="OPTIONAL NO_DATA">
+      <VarDenMMSDensity  spec="OPTIONAL NO_DATA">
         <rho0             spec="OPTIONAL DOUBLE"/>
         <rho1             spec="OPTIONAL DOUBLE"/>
-      </VarDensMMSDensity>
+      </VarDenMMSDensity>
 
 
       <!-- Mixture Fraction profile on the boundaries with respect to time for the variable density MMS !-->
-      <VarDensMMSMixtureFraction  spec="OPTIONAL NO_DATA"/>
+      <VarDenMMSMixtureFraction  spec="OPTIONAL NO_DATA"/>
 
     </BCExpression>
 
@@ -650,6 +652,67 @@
       </GradPY>
 
     </TaylorVortexMMS>
+
+    <!-- ========================================= -->
+    <!-- Spec for Shunn's Varden 2D MMS types -->
+    
+    <ShunnVarden2DMMS      spec="MULTIPLE NO_DATA"
+      attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
+      children1="ONE_OF(CHILD VelocityX,VelocityY,MixtureFraction,DiffusiveConstant)" >
+      <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
+      <NameTag            spec="REQUIRED" />
+      
+      <!-- Shunn's Varden 2D MMS Velocity field function in x direction -->
+      <VelocityX          spec="OPTIONAL NO_DATA">
+
+        <Density          spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Density>
+        <XCoordinate      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </XCoordinate>
+        <YCoordinate      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </YCoordinate>
+        
+      </VelocityX>
+      
+      <!-- Shunn's Varden 2D MMS Velocity field function in y direction -->
+      <VelocityY          spec="OPTIONAL NO_DATA">
+
+        <Density          spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Density>
+        <XCoordinate      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </XCoordinate>
+        <YCoordinate      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </YCoordinate>
+      </VelocityY>
+            
+      <!-- Shunn's Varden 2D MMS mixture fraction field function  -->
+      <MixtureFraction          spec="OPTIONAL NO_DATA">
+        
+        <XCoordinate      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </XCoordinate>
+        <YCoordinate      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </YCoordinate>
+
+      </MixtureFraction>
+
+      <!-- Shunn's Varden 2D MMS mixture fraction field function  -->
+      <DiffusiveConstant          spec="OPTIONAL NO_DATA">
+        
+        <Density          spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Density>
+        
+      </DiffusiveConstant>
+
+    </ShunnVarden2DMMS>
     <!-- ========================================= -->
     
     <!-- =========================================================================== -->
@@ -772,7 +835,25 @@
       <rho1    spec="OPTIONAL DOUBLE"/>                               
       <scalar  spec="REQUIRED STRING"/>
     </VariableDensityMMS>
-            
+
+
+    <VarDenOscillatingMMS  spec="OPTIONAL NO_DATA"
+                           attribute1="rho0 REQUIRED DOUBLE"
+                           attribute2="rho1 REQUIRED DOUBLE"
+                           attribute3="w    REQUIRED DOUBLE"
+                           attribute4="k    REQUIRED DOUBLE"
+                           attribute5="uf   REQUIRED DOUBLE"
+                           attribute6="vf   REQUIRED DOUBLE"
+                           attribute7="d    REQUIRED DOUBLE"
+                           attribute8="x1   OPTIONAL STRING 'X, Y, Z'"
+                           attribute9="x2   OPTIONAL STRING 'X, Y, Z'">
+      <DiffusionCoefficient spec="REQUIRED NO_DATA"> <!-- This automatically creates an expression for the diffusion coefficient -->
+        <NameTag               spec="REQUIRED" />
+      </DiffusionCoefficient>
+      <Scalar spec="REQUIRED STRING"/> <!-- input -->      
+      <ConservedScalar  spec="REQUIRED STRING"/> <!-- The conserved scalar is created by the transport equation. just Specify the name here -->
+    </VarDenOscillatingMMS>
+
     <MomentumEquations        spec="OPTIONAL NO_DATA">
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
       <DisablePressureSolve   spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->   
@@ -889,9 +970,11 @@
       It is assumed that there are two streams that are mixing but not reacting.
       Currently, the only property available for calculation is the density.
     -->
-    <TwoStreamMixing    spec="OPTIONAL NO_DATA">
-      <Density0         spec="REQUIRED DOUBLE"/>  <!-- density at mixture fraction 0 -->
-      <Density1         spec="REQUIRED DOUBLE"/>  <!-- density at mixture fraction 1 -->
+    <TwoStreamMixing    spec="OPTIONAL NO_DATA"
+    										attribute1="rho0 REQUIRED DOUBLE"
+    										attribute2="rho1 REQUIRED DOUBLE">
+			<!-- rho0 = density at mixture fraction 0 -->
+			<!-- rho1 = density at mixture fraction 1 -->
       <Density          spec="REQUIRED NO_DATA">
         <NameTag        spec="REQUIRED"/>
       </Density>
@@ -974,7 +1057,11 @@
       </ExtractDensity>
       
     </TabProps>
-
+    
+    <RMCRTBench      spec="OPTIONAL NO_DATA"
+                     attribute="benchmark REQUIRED STRING 'BurnsChriston'">
+    </RMCRTBench>
+    
     <!-- Radiative property calculation specification -->
     <RadProps         spec="OPTIONAL NO_DATA">
         

@@ -49,6 +49,7 @@
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/VardenMMS.h>
+#include <CCA/Components/Wasatch/Expressions/MMS/Varden2DMMS.h>
 //-- Uintah includes --//
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -276,7 +277,7 @@ namespace Wasatch{
 
   //==================================================================
   
-  void parse_var_dens_mms( Uintah::ProblemSpecP wasatchParams,
+  void parse_var_den_mms( Uintah::ProblemSpecP wasatchParams,
                            Uintah::ProblemSpecP varDensMMSParams,
                            const bool computeContinuityResidual,
                            GraphCategories& gc) {
@@ -290,38 +291,38 @@ namespace Wasatch{
         bcExprParams != 0;
         bcExprParams = bcExprParams->findNextBlock("BCExpression") ) {
       
-      if (bcExprParams->findBlock("VarDensMMSMomentum")) {
+      if (bcExprParams->findBlock("VarDenMMSMomentum")) {
         double bcRho0=1.29985, bcRho1=0.081889;
-        Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDensMMSMomentum");
+        Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDenMMSMomentum");
         valParams->get("rho0",bcRho0);
         valParams->get("rho1",bcRho1);
         if (rho0!=bcRho0 || rho1!=bcRho1) {
           std::ostringstream msg;
-          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDensMMSMomentum\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDensMMSMomentum\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
+          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDen1DMMSMomentum\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDen1DMMSMomentum\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
           throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
         }
       }
       
-      else if (bcExprParams->findBlock("VarDensMMSDensity")) {
+      else if (bcExprParams->findBlock("VarDenMMSDensity")) {
         double bcRho0=1.29985, bcRho1=0.081889;
-        Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDensMMSDensity");
+        Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDenMMSDensity");
         valParams->get("rho0",bcRho0);
         valParams->get("rho1",bcRho1);
         if (rho0!=bcRho0 || rho1!=bcRho1) {
           std::ostringstream msg;
-          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDensMMSDensity\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDensMMSDensity\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
+          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDen1DMMSDensity\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDen1DMMSDensity\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
           throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
         }
       }
       
-      else if (bcExprParams->findBlock("VarDensMMSSolnVar")) {
+      else if (bcExprParams->findBlock("VarDenMMSSolnVar")) {
         double bcRho0=1.29985, bcRho1=0.081889;
-        Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDensMMSSolnVar");
+        Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDenMMSSolnVar");
         valParams->get("rho0",bcRho0);
         valParams->get("rho1",bcRho1);
         if (rho0!=bcRho0 || rho1!=bcRho1) {
           std::ostringstream msg;
-          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDensMMSSolnVar\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDensMMSSolnVar\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
+          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDen1DMMSSolnVar\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDen1DMMSSolnVar\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
           throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
         }
       }
@@ -329,31 +330,98 @@ namespace Wasatch{
     varDensMMSParams->get("D",D);
     const TagNames& tagNames = TagNames::self();
 
-    const Expr::Tag solnVarRHSTag = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
+    const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
     const Expr::Tag solnVarRHSStarTag = Expr::Tag(solnVarName+"_rhs"+tagNames.star,Expr::STATE_NONE);
-    const Expr::Tag MMSSourceTag = Expr::Tag("VarDensMMSSource",Expr::STATE_NONE);
-        
+    
     GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];    
-    slngraphHelper->exprFactory->register_expression( new VarDensMMSSourceTerm<SVolField>::Builder(MMSSourceTag,tagNames.xsvolcoord, tagNames.time, D, rho0, rho1));
+    slngraphHelper->exprFactory->register_expression( new VarDen1DMMSMixFracSrc<SVolField>::Builder(tagNames.mms_mixfracsrc,tagNames.xsvolcoord, tagNames.time, D, rho0, rho1));
     
-    slngraphHelper->exprFactory->attach_dependency_to_expression(MMSSourceTag, solnVarRHSTag);
-    slngraphHelper->exprFactory->attach_dependency_to_expression(MMSSourceTag, solnVarRHSStarTag);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSTag);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSStarTag);
     
-    const Expr::Tag varDensMMSContSrc = Expr::Tag( "mms_continuity_src", Expr::STATE_NONE);
     const Expr::Tag varDensMMSPressureContSrc = Expr::Tag( "mms_pressure_continuity_src", Expr::STATE_NONE);
    
-    slngraphHelper->exprFactory->register_expression( new VarDensMMSContinuitySrc<SVolField>::Builder( varDensMMSContSrc, rho0, rho1, tagNames.xsvolcoord, tagNames.time, tagNames.timestep));
-    slngraphHelper->exprFactory->register_expression( new VarDensMMSPressureContSrc<SVolField>::Builder( varDensMMSPressureContSrc, varDensMMSContSrc, tagNames.timestep));
+    slngraphHelper->exprFactory->register_expression( new VarDen1DMMSContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, rho0, rho1, tagNames.xsvolcoord, tagNames.time, tagNames.timestep));
+    slngraphHelper->exprFactory->register_expression( new VarDen1DMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, tagNames.timestep));
     
-    slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSPressureContSrc, tagNames.pressuresrc);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_pressurecontsrc, tagNames.pressuresrc);
     
     if (computeContinuityResidual)
     {
       const Expr::Tag drhodtTag = Expr::Tag( "drhodt", Expr::STATE_NONE);
-      slngraphHelper->exprFactory->attach_dependency_to_expression(varDensMMSContSrc, drhodtTag);
+      slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_continuitysrc, drhodtTag);
     }
   }
+
+  //==================================================================
+  
+  void parse_var_den_oscillating_mms( Uintah::ProblemSpecP wasatchParams,
+                                      Uintah::ProblemSpecP varDens2DMMSParams,
+                                      const bool computeContinuityResidual,
+                                      GraphCategories& gc)
+  {
+    std::string solnVarName;
+    double rho0, rho1, d, w, k, uf, vf;
+    const Expr::Tag diffTag = parse_nametag( varDens2DMMSParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
+    varDens2DMMSParams->get("ConservedScalar",solnVarName);
+    varDens2DMMSParams->getAttribute("rho0",rho0);
+    varDens2DMMSParams->getAttribute("rho1",rho1);
+    varDens2DMMSParams->getAttribute("uf",uf);
+    varDens2DMMSParams->getAttribute("vf",vf);
+    varDens2DMMSParams->getAttribute("k",k);
+    varDens2DMMSParams->getAttribute("w",w);
+    varDens2DMMSParams->getAttribute("d",d);
     
+    const TagNames& tagNames = TagNames::self();
+    
+    const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
+    const Expr::Tag solnVarRHSStarTag = Expr::Tag(solnVarName+"_rhs"+tagNames.star,Expr::STATE_NONE);
+    
+    GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];
+    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingMixFracSrc<SVolField>::Builder(tagNames.mms_mixfracsrc, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, rho0, rho1, d, w, k, uf, vf));
+    
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSTag);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSStarTag);
+    
+    Uintah::ProblemSpecP densityParams  = wasatchParams->findBlock("Density");
+    Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
+    Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
+    
+    Expr::Tag densStarTag = Expr::Tag(densityTag.name() + tagNames.star, Expr::CARRY_FORWARD);
+    Expr::Tag dens2StarTag = Expr::Tag(densityTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD);
+    
+    std::string xvelname, yvelname, zvelname;
+    Uintah::ProblemSpecP doxvel,doyvel, dozvel;
+    Expr::TagList velStarTags;
+    doxvel = momEqnParams->get( "X-Velocity", xvelname );
+    doyvel = momEqnParams->get( "Y-Velocity", yvelname );
+    dozvel = momEqnParams->get( "Z-Velocity", zvelname );
+    if( doxvel ) velStarTags.push_back( Expr::Tag(xvelname + tagNames.star, Expr::STATE_NONE) );
+    else         velStarTags.push_back( Expr::Tag() );
+    if( doyvel ) velStarTags.push_back( Expr::Tag(yvelname + tagNames.star, Expr::STATE_NONE) );
+    else         velStarTags.push_back( Expr::Tag() );
+    if( dozvel ) velStarTags.push_back( Expr::Tag(zvelname + tagNames.star, Expr::STATE_NONE) );
+    else         velStarTags.push_back( Expr::Tag() );
+    
+    //    double a=1.0, b=1.0;
+    //    if (wasatchParams->findBlock("AlphaStudyParams")) {
+    //      Uintah::ProblemSpecP alphaParams = wasatchParams->findBlock("AlphaStudyParams");
+    //      alphaParams->get("a",a);
+    //      alphaParams->get("b",b);
+    //    }
+    
+    slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, densityTag, densStarTag, dens2StarTag, velStarTags, rho0, rho1,w, k, uf, vf, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, tagNames.timestep));
+    slngraphHelper->exprFactory->register_expression( new VarDen1DMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, tagNames.timestep));
+    
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_pressurecontsrc, tagNames.pressuresrc);
+    
+    if (computeContinuityResidual)
+    {
+      const Expr::Tag drhodtTag = Expr::Tag( "drhodt", Expr::STATE_NONE);
+      slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_continuitysrc, drhodtTag);
+    }
+  }
+
   //==================================================================
   
   std::vector<EqnTimestepAdaptorBase*>
@@ -746,7 +814,7 @@ namespace Wasatch{
 
   //-----------------------------------------------------------------
 
-  template< typename OpT >
+  template< typename FluxT >
   Expr::ExpressionBuilder*
   build_diff_flux_expr( Uintah::ProblemSpecP diffFluxParams,
                         const Expr::Tag& diffFluxTag,
@@ -754,13 +822,11 @@ namespace Wasatch{
                         const Expr::Tag& densityTag,
                         const Expr::Tag& turbDiffTag )
   {
+    typedef typename DiffusiveFlux<FluxT>::Builder Flux;
     
     if( diffFluxParams->findBlock("ConstantDiffusivity") ){
       double coef;
       diffFluxParams->get("ConstantDiffusivity",coef);
-      typedef typename DiffusiveFlux< typename OpT::SrcFieldType,
-                                      typename OpT::DestFieldType
-                                      >::Builder Flux;
       return scinew Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
     }
     else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
@@ -774,9 +840,6 @@ namespace Wasatch{
        *        coefficient...  Arrrgghh.
        */
       const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-      typedef typename DiffusiveFlux2< typename OpT::SrcFieldType,
-                                       typename OpT::DestFieldType
-                                       >::Builder Flux;
       return scinew Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
     }
     return NULL;
@@ -791,7 +854,9 @@ namespace Wasatch{
                                         Expr::ExpressionFactory& factory,
                                         FieldTagInfo& info )
   {
-    typedef OpTypes<FieldT> MyOpTypes;
+    typedef typename FaceTypes<FieldT>::XFace XFaceT;
+    typedef typename FaceTypes<FieldT>::YFace YFaceT;
+    typedef typename FaceTypes<FieldT>::ZFace ZFaceT;
     const std::string& primVarName = primVarTag.name();
     Expr::Tag diffFluxTag;  // we will populate this.
 
@@ -805,16 +870,16 @@ namespace Wasatch{
     }
     else{ // build an expression for the diffusive flux.
 
-      diffFluxTag = Expr::Tag( primVarName+"_diffFlux_"+dir+suffix, Expr::STATE_NONE );
+      diffFluxTag = Expr::Tag( primVarName + "_diffFlux_" + dir + suffix, Expr::STATE_NONE );
       // make new Tags for density and primVar by adding the appropriate suffix ( "_*" or nothing ). This
       // is because we need the ScalarRHS at time step n+1 for our pressure projection method
       const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + suffix, Expr::CARRY_FORWARD);
       const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + suffix, Expr::STATE_NONE);
 
       Expr::ExpressionBuilder* builder = NULL;
-      if     ( dir=="X" ) builder = build_diff_flux_expr<typename MyOpTypes::GradX>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
-      else if( dir=="Y" ) builder = build_diff_flux_expr<typename MyOpTypes::GradY>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
-      else if( dir=="Z" ) builder = build_diff_flux_expr<typename MyOpTypes::GradZ>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+      if     ( dir=="X" ) builder = build_diff_flux_expr<XFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+      else if( dir=="Y" ) builder = build_diff_flux_expr<YFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+      else if( dir=="Z" ) builder = build_diff_flux_expr<ZFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
 
       if( builder == NULL ){
         std::ostringstream msg;
@@ -839,16 +904,16 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
-  template< typename GradT, typename InterpT >
+  template< typename VelT >
   Expr::ExpressionBuilder*
   build_diff_vel_expr( Uintah::ProblemSpecP diffVelParams,
                        const Expr::Tag& diffVelTag,
                        const Expr::Tag& primVarTag,
                        const Expr::Tag& turbDiffTag )
   {
+    typedef typename DiffusiveVelocity<VelT>::Builder Velocity;
     
     if( diffVelParams->findBlock("ConstantDiffusivity") ){
-      typedef typename DiffusiveVelocity<GradT>::Builder Velocity;
       double coef;
       diffVelParams->get("ConstantDiffusivity",coef);
       return scinew Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
@@ -863,7 +928,6 @@ namespace Wasatch{
        *        independent variable is used when calculating the
        *        coefficient...  Arrrgghh.
        */
-      typedef typename DiffusiveVelocity2< GradT, InterpT >::Builder Velocity;
       const Expr::Tag coef = parse_nametag( diffVelParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
       return scinew Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
     }
@@ -877,7 +941,10 @@ namespace Wasatch{
                                             Expr::ExpressionFactory& factory,
                                             FieldTagInfo& info )
   {
-    typedef OpTypes<FieldT> MyOpTypes;
+    typedef typename FaceTypes<FieldT>::XFace XFaceT;
+    typedef typename FaceTypes<FieldT>::YFace YFaceT;
+    typedef typename FaceTypes<FieldT>::ZFace ZFaceT;
+
     const std::string& primVarName = primVarTag.name();
     Expr::Tag diffVelTag;  // we will populate this.
 
@@ -894,9 +961,9 @@ namespace Wasatch{
       diffVelTag = Expr::Tag( primVarName+"_diffVelocity_"+dir, Expr::STATE_NONE );
 
       Expr::ExpressionBuilder* builder = NULL;
-      if( dir=="X" )       builder = build_diff_vel_expr<typename MyOpTypes::GradX,typename MyOpTypes::InterpC2FX>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
-      else if( dir=="Y" )  builder = build_diff_vel_expr<typename MyOpTypes::GradY,typename MyOpTypes::InterpC2FY>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
-      else if( dir=="Z")   builder = build_diff_vel_expr<typename MyOpTypes::GradZ,typename MyOpTypes::InterpC2FZ>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
+      if     ( dir=="X" )  builder = build_diff_vel_expr<XFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
+      else if( dir=="Y" )  builder = build_diff_vel_expr<YFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
+      else if( dir=="Z" )  builder = build_diff_vel_expr<ZFaceT>(diffVelParams,diffVelTag,primVarTag,turbDiffTag);
  
       if( builder == NULL ){
         std::ostringstream msg;

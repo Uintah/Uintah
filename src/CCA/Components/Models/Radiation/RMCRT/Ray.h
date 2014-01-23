@@ -106,12 +106,6 @@ namespace Uintah{
                           Task::WhichDW which_divQ_dw,
                           const bool includeEC = true,
                           bool modifies_divQFilt = false);
-
-
-      /** @brief Initializes properties for the algorithm */ 
-      void sched_initProperties( const LevelP&, 
-                                 SchedulerP& sched,
-                                 const int radCalc_freq );
                                  
       /** @brief Set boundary conditions and compute sigmaT4 */
       void  sched_setBoundaryConditions( const LevelP& level, 
@@ -136,17 +130,15 @@ namespace Uintah{
 
       void sched_ROI_Extents ( const LevelP& level, 
                                SchedulerP& scheduler );
+ 
+
       //__________________________________
       //  Carry Forward tasks     
       // transfer a variable from old_dw -> new_dw for convience */   
       void sched_CarryForward_Var ( const LevelP& level,
                                     SchedulerP& scheduler,
                                     const VarLabel* variable );
-                                    
-      void sched_carryForward_rayTrace( const LevelP& level, 
-                                        SchedulerP& sched,
-                                        const int radCalc_freq );
-      
+
                                
       //__________________________________
       //  Helpers
@@ -171,7 +163,8 @@ namespace Uintah{
       
       double _Threshold;
       double _sigma;
-      double _sigmaT4_thld;                  // threshold values for determining the extents of ROI
+      double _sigmaScat;
+      double _sigmaT4_thld;                 // threshold values for determining the extents of ROI
       double _abskg_thld;
       
        
@@ -179,17 +172,12 @@ namespace Uintah{
       int    _nRadRays;                     // number of rays per radiometer used to compute radiative flux
       int    _nFluxRays;                    // number of rays per cell used to compute radiative flux
       int    d_matl;
-      int    d_orderOfInterpolation;         // Order of interpolation for interior fine patch
+      int    d_orderOfInterpolation;        // Order of interpolation for interior fine patch
       
       MaterialSet* d_matlSet;
-      IntVector _halo;                       // number of cells surrounding a coarse patch on coarser levels
+      IntVector _halo;                      // number of cells surrounding a coarse patch on coarser levels
       
       double _sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
-
-
-      double _sigmaScat;
-      double _abskgBench4;
-      int  _benchmark; 
       bool _isSeedRandom;
       bool _solveBoundaryFlux;
       bool _solveDivQ;          
@@ -285,7 +273,8 @@ namespace Uintah{
                                const int radCalc_freq );
                                
                                
-      /** @brief Update the running total of the incident intensity */
+      //__________________________________
+      // @brief Update the running total of the incident intensity */
       void  updateSumI ( Vector& ray_direction, // can change if scattering occurs
                          Vector& ray_location,
                          const IntVector& origin,
@@ -326,14 +315,6 @@ namespace Uintah{
                         IntVector& fineLevel_ROI_Hi,
                         std::vector<IntVector>& regionLo,
                         std::vector<IntVector>& regionHi);
-
-      //----------------------------------------
-      void initProperties( const ProcessorGroup* pc, 
-                           const PatchSubset* patches, 
-                           const MaterialSubset* matls, 
-                           DataWarehouse* old_dw, 
-                           DataWarehouse* new_dw,
-                           const int radCalc_freq ); 
 
       //----------------------------------------
       void sigmaT4( const ProcessorGroup* pc,
@@ -488,13 +469,6 @@ namespace Uintah{
                             DataWarehouse*,
                             DataWarehouse*,
                             const VarLabel* variable);
-                            
-    void  carryForward_rayTrace( const ProcessorGroup* pc,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* matls,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw,
-                                 const int radCalc_freq );
                         
     //______________________________________________________________________
     //  Helpers

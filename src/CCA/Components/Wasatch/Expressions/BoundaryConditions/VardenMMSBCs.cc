@@ -34,7 +34,7 @@
 
 template< typename FieldT >
 void
-VarDensMMSDensity<FieldT>::evaluate()
+VarDen1DMMSDensity<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
@@ -60,7 +60,7 @@ VarDensMMSDensity<FieldT>::evaluate()
 
 template< typename FieldT >
 void
-VarDensMMSMixtureFraction<FieldT>::evaluate()
+VarDen1DMMSMixtureFraction<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
@@ -87,7 +87,7 @@ VarDensMMSMixtureFraction<FieldT>::evaluate()
 
 template< typename FieldT >
 void
-VarDensMMSMomentum<FieldT>::evaluate()
+VarDen1DMMSMomentum<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   namespace SS = SpatialOps::structured;
@@ -137,7 +137,7 @@ VarDensMMSMomentum<FieldT>::evaluate()
 
 template< typename FieldT >
 void
-VarDensMMSSolnVar<FieldT>::evaluate()
+VarDen1DMMSSolnVar<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
@@ -163,7 +163,7 @@ VarDensMMSSolnVar<FieldT>::evaluate()
 
 template< typename FieldT >
 void
-VarDensMMSVelocity<FieldT>::evaluate()
+VarDen1DMMSVelocity<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   namespace SS = SpatialOps::structured;
@@ -209,11 +209,11 @@ VarDensMMSVelocity<FieldT>::evaluate()
 //------------------
 
 #define INSTANTIATE_VARDEN_MMS_BCS( VOLT )        \
-  template class VarDensMMSDensity<VOLT>;         \
-  template class VarDensMMSMixtureFraction<VOLT>; \
-  template class VarDensMMSSolnVar<VOLT>;         \
-  template class VarDensMMSMomentum<VOLT>;        \
-  template class VarDensMMSVelocity<VOLT>;
+  template class VarDen1DMMSDensity<VOLT>;         \
+  template class VarDen1DMMSMixtureFraction<VOLT>; \
+  template class VarDen1DMMSSolnVar<VOLT>;         \
+  template class VarDen1DMMSMomentum<VOLT>;        \
+  template class VarDen1DMMSVelocity<VOLT>;
 
 INSTANTIATE_VARDEN_MMS_BCS(SVolField)
 INSTANTIATE_VARDEN_MMS_BCS(XVolField)

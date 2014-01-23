@@ -218,9 +218,11 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 
         BoundaryFaces boundaryFaces;
 
+ /*
         if(RT_flags.benchMark==4 || RT_flags.benchMark==5){
           boundaryFaces.addFace(5);
         }
+*/
         
         // which surrounding cells are boundaries
         boundFlux[origin].p = has_a_boundaryDevice(origin, celltype, boundaryFaces);

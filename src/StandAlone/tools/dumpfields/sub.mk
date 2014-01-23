@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2012 The University of Utah
+#  Copyright (c) 1997-2014 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -80,11 +80,12 @@ else # Non-static build
 endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS)
+  LIBS := $(CORE_STATIC_LIBS) $(BOOST_LIBRARY)
 else
   # (Note, THREAD_LIBRARY must come after BLAS_LIBRARY.)
   LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(F_LIBRARY) \
-          $(TEEM_LIBRARY) $(PNG_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY)
+          $(TEEM_LIBRARY) $(PNG_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \
+	  $(BOOST_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

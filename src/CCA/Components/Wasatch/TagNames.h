@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -53,6 +53,8 @@ namespace Wasatch{
     static const TagNames& self();
     
     const Expr::Tag time, timestep, stableTimestep;
+
+    const Expr::Tag celltype;
     
     const Expr::Tag
     xsvolcoord,  ysvolcoord,  zsvolcoord,
@@ -63,6 +65,8 @@ namespace Wasatch{
     // energy related variables
     const Expr::Tag
     temperature,
+    absorption,
+    radiationsource, radvolq, radvrflux,
     e0, rhoE0,
     enthalpy,
     xHeatFlux, yHeatFlux, zHeatFlux,
@@ -99,11 +103,17 @@ namespace Wasatch{
     // varden
     const std::string
     star, doubleStar;
+    
     const Expr::Tag
     pressuresrc,
     vardenalpha, vardenbeta,
     divmomstar, drhodtstar,
     drhodt,drhodtnp1;
+    
+    // mms varden
+    const Expr::Tag
+    mms_mixfracsrc, mms_continuitysrc,
+    mms_pressurecontsrc;
     
     // postprocessing-related tags
     const Expr::Tag

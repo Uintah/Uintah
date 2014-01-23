@@ -169,8 +169,8 @@ void PressureSource::evaluate()
 //    alpha <<= cond( beta != beta, 0.0 )
 //                  ( 1.0/(beta + 1.0)  );
     
-//    alpha <<= cond( beta != beta, 0.0 )
-//                  ( exp(log(0.5)*(pow(beta,2))) ); // Increase the value of the exponent to get closer to a step function
+    alpha <<= cond( beta != beta, 0.0 )
+                  ( exp(log(0.2)*(pow(beta,0.2))) ); // Increase the value of the exponent to get closer to a step function
 
     alpha <<= 0.1; // use this for the moment until we figure out the proper model for alpha
 
@@ -188,6 +188,10 @@ void PressureSource::evaluate()
     
     psrc <<= (psrc + drhodt)/ *timestep_;  // P_src = ( div(mom) + drhodt ) / dt
   } // Variable density
+//  int count=1;
+//  for( SVolField::interior_iterator iStrTsr= psrc.begin(); iStrTsr!=psrc.end(); ++iStrTsr, ++count)
+//  std::cout <<count << " : Psource: " << *iStrTsr << std::endl;
+  
 }
 
 //------------------------------------------------------------------

@@ -261,11 +261,10 @@
             
             <RMCRT>
                 <randomSeed>        false      </randomSeed>
-                <abskg>             999        </abskg>
                 <nDivQRays>          5         </nDivQRays>
                 <Threshold>         0.05       </Threshold>
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
-                <solveBoundaryFlux>    true       </solveBoundaryFlux>
+                <solveBoundaryFlux>    true    </solveBoundaryFlux>
                 <nFluxRays>         2          </nFluxRays>
                 <property_calculator type="constant">
                   <abskg>.1</abskg>
