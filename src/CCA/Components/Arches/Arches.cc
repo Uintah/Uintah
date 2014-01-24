@@ -176,6 +176,9 @@ using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
 
+// Used to sync std::cout when output by multiple threads
+extern SCIRun::Mutex coutLock;
+
 const int Arches::NDIM = 3;
 
 // ****************************************************************************
@@ -1829,7 +1832,8 @@ Arches::scalarInit( const ProcessorGroup* ,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw )
 {
-  proc0cout << "Initializing all scalar equations and sources..." << endl;
+  coutLock.lock();
+  std::cout << "Initializing all scalar equations and sources..." << std::endl;
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now
     int archIndex = 0;
@@ -1865,7 +1869,8 @@ Arches::scalarInit( const ProcessorGroup* ,
 
     }
   }
-  proc0cout << endl;
+  std::cout << std::endl;
+  coutLock.unlock();
 }
 //___________________________________________________________________________
 //
