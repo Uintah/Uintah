@@ -270,7 +270,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   densStar_  = &scalarFM.field_ref( densStart_ );
   dens2Star_ = &scalarFM.field_ref( dens2Start_ );
 
-  const Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
   x_ = &fm.field_ref( xTag_ );
   y_ = &fm.field_ref( yTag_ );
   
