@@ -94,7 +94,7 @@ namespace Wasatch{
              const int material,
              Uintah::DataWarehouse* const oldDW,
              Uintah::DataWarehouse* const newDW,
-             const SpatialOps::structured::SingleValueField& deltat,
+             const double deltat,
              const int rkStage,
              const TimeIntegrator& timeInt )
   {
@@ -321,20 +321,13 @@ namespace Wasatch{
         //newDW->get( deltat, deltaTLabel_, Uintah::getLevel(patches), material );
         oldDW->get( deltat, sharedState_->get_delt_label() );
 
-        const SpatialOps::structured::SingleValueField* const dt =
-            wrap_uintah_field_as_spatialops<SpatialOps::structured::SingleValueField,Uintah::ReductionVariableBase>(
-                deltat,
-                patch );  // jcs need to get this GPU ready once we convert this task over.
-
         //____________________________________________
         // update variables on this material and patch
         // jcs note that we could do this in parallel
-        do_update<SO::SVolField>( scalarFields_, patch, material, oldDW, newDW, *dt, rkStage, timeInt_ );
-        do_update<SO::XVolField>( xVolFields_,   patch, material, oldDW, newDW, *dt, rkStage, timeInt_ );
-        do_update<SO::YVolField>( yVolFields_,   patch, material, oldDW, newDW, *dt, rkStage, timeInt_ );
-        do_update<SO::ZVolField>( zVolFields_,   patch, material, oldDW, newDW, *dt, rkStage, timeInt_ );
-
-        delete dt;
+        do_update<SO::SVolField>( scalarFields_, patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
+        do_update<SO::XVolField>( xVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
+        do_update<SO::YVolField>( yVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
+        do_update<SO::ZVolField>( zVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
 
       } // material loop
     } // patch loop
