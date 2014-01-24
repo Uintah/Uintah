@@ -338,7 +338,7 @@ evaluate()
 //      *alpha <<= cond( *beta != *beta, 0.0 )
 //                    ( 1.0/(*beta + 1.0)  );
   
-  const double r = ( r1_/r0_ >= r0_/r1_ ? r0_/r1_ : r1_/r0_ );
+//  const double r = ( r1_/r0_ >= r0_/r1_ ? r0_/r1_ : r1_/r0_ );
   *alpha <<= cond( *beta != *beta, 0.0 )
                  ( exp(log(0.2)*(pow(*beta, 0.2))) ); // Increase the value of the exponent to get closer to a step function
   
