@@ -196,39 +196,39 @@ build() const
 template<typename FieldT>
 VarDenMMSOscillatingContinuitySrc<FieldT>::
 VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
-                           const Expr::Tag densStarTag,
-                           const Expr::Tag dens2StarTag,
-                           const Expr::TagList& velStarTags,
-                                  const double r0,
-                                  const double r1,
-                                  const double w,
-                                  const double k,
-                                  const double uf,
-                                  const double vf,
-                           const Expr::Tag& xTag,
-                           const Expr::Tag& yTag,
-                           const Expr::Tag& tTag,
-                           const Expr::Tag& timestepTag)
+                                   const Expr::Tag densStarTag,
+                                   const Expr::Tag dens2StarTag,
+                                   const Expr::TagList& velStarTags,
+                                   const double r0,
+                                   const double r1,
+                                   const double w,
+                                   const double k,
+                                   const double uf,
+                                   const double vf,
+                                   const Expr::Tag& xTag,
+                                   const Expr::Tag& yTag,
+                                   const Expr::Tag& tTag,
+                                   const Expr::Tag& timestepTag)
 : Expr::Expression<FieldT>(),
-xVelStart_( velStarTags[0] ),
-yVelStart_( velStarTags[1] ),
-zVelStart_( velStarTags[2] ),
-doX_      ( velStarTags[0]!=Expr::Tag() ),
-doY_      ( velStarTags[1]!=Expr::Tag() ),
-doZ_      ( velStarTags[2]!=Expr::Tag() ),
-denst_      ( densTag  ),
-densStart_  ( densStarTag ),
-dens2Start_ ( dens2StarTag ),
-r0_( r0 ),
-r1_( r1 ),
-w_ ( w ),
-k_ ( k ),
-uf_ ( uf ),
-vf_ ( vf ),
-xTag_( xTag ),
-yTag_( yTag ),
-tTag_( tTag ),
-timestepTag_( timestepTag )
+  xVelStart_( velStarTags[0] ),
+  yVelStart_( velStarTags[1] ),
+  zVelStart_( velStarTags[2] ),
+  denst_     ( densTag  ),
+  densStart_ ( densStarTag ),
+  dens2Start_( dens2StarTag ),
+  doX_( velStarTags[0]!=Expr::Tag() ),
+  doY_( velStarTags[1]!=Expr::Tag() ),
+  doZ_( velStarTags[2]!=Expr::Tag() ),
+  r0_( r0 ),
+  r1_( r1 ),
+  w_ ( w ),
+  k_ ( k ),
+  uf_ ( uf ),
+  vf_ ( vf ),
+  xTag_( xTag ),
+  yTag_( yTag ),
+  tTag_( tTag ),
+  timestepTag_( timestepTag )
 {
   this->set_gpu_runnable( true );
 }
@@ -240,15 +240,10 @@ void
 VarDenMMSOscillatingContinuitySrc<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  if( doX_ ){
-    exprDeps.requires_expression( xVelStart_ );
-  }
-  if( doY_ ){
-    exprDeps.requires_expression( yVelStart_ );
-  }
-  if( doZ_ ){
-    exprDeps.requires_expression( zVelStart_ );
-  }
+  if( doX_ ) exprDeps.requires_expression( xVelStart_ );
+  if( doY_ ) exprDeps.requires_expression( yVelStart_ );
+  if( doZ_ ) exprDeps.requires_expression( zVelStart_ );
+
   exprDeps.requires_expression( denst_ );
   exprDeps.requires_expression( densStart_ );
   exprDeps.requires_expression( dens2Start_ );
@@ -266,26 +261,18 @@ void
 VarDenMMSOscillatingContinuitySrc<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldMgrSelector<XVolField>::type& xVolFM  = fml.field_manager<XVolField>();
-  const Expr::FieldMgrSelector<YVolField>::type& yVolFM  = fml.field_manager<YVolField>();
-  const Expr::FieldMgrSelector<ZVolField>::type& zVolFM  = fml.field_manager<ZVolField>();
-  
-  if( doX_ ){
-    uStar_  = &xVolFM.field_ref( xVelStart_ );
-  }
-  if( doY_ ){
-    vStar_  = &yVolFM.field_ref( yVelStart_ );
-  }
-  if( doZ_ ){
-    wStar_  = &zVolFM.field_ref( zVelStart_ );
-  }
-  const Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
-  dens_  = &scalarFM.field_ref( denst_ );
-  densStar_  = &scalarFM.field_ref( densStart_ );
-  dens2Star_  = &scalarFM.field_ref( dens2Start_ );
+  if( doX_ ) uStar_ = &fml.field_ref<XVolField>( xVelStart_ );
+  if( doY_ ) vStar_ = &fml.field_ref<YVolField>( yVelStart_ );
+  if( doZ_ ) wStar_ = &fml.field_ref<ZVolField>( zVelStart_ );
 
-  x_ = &fml.template field_manager<FieldT>().field_ref( xTag_ );
-  y_ = &fml.template field_manager<FieldT>().field_ref( yTag_ );
+  const Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
+  dens_      = &scalarFM.field_ref( denst_ );
+  densStar_  = &scalarFM.field_ref( densStart_ );
+  dens2Star_ = &scalarFM.field_ref( dens2Start_ );
+
+  const Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
+  x_ = &fm.field_ref( xTag_ );
+  y_ = &fm.field_ref( yTag_ );
   
   const typename Expr::FieldMgrSelector<TimeField>::type& tfm = fml.field_manager<TimeField>();
   t_        = &tfm.field_ref( tTag_        );
@@ -387,31 +374,31 @@ Builder( const Expr::Tag& result,
          const Expr::Tag densStarTag,
          const Expr::Tag dens2StarTag,
          const Expr::TagList& velStarTags,
-        const double r0,
-        const double r1,
-        const double w,
-        const double k,
-        const double uf,
-        const double vf,
+         const double r0,
+         const double r1,
+         const double w,
+         const double k,
+         const double uf,
+         const double vf,
          const Expr::Tag& xTag,
          const Expr::Tag& yTag,
          const Expr::Tag& tTag,
          const Expr::Tag& timestepTag )
 : ExpressionBuilder(result),
-velStarTs_ ( velStarTags ),
-denst_     ( densTag      ),
-densStart_ ( densStarTag  ),
-dens2Start_( dens2StarTag ),
-r0_( r0 ),
-r1_( r1 ),
-w_ ( w ),
-k_ ( k ),
-uf_ ( uf ),
-vf_ ( vf ),
-xTag_( xTag ),
-yTag_( yTag ),
-tTag_( tTag ),
-timestepTag_( timestepTag )
+  r0_( r0 ),
+  r1_( r1 ),
+  w_ ( w ),
+  k_ ( k ),
+  uf_ ( uf ),
+  vf_ ( vf ),
+  xTag_( xTag ),
+  yTag_( yTag ),
+  tTag_( tTag ),
+  timestepTag_( timestepTag ),
+  denst_     ( densTag      ),
+  densStart_ ( densStarTag  ),
+  dens2Start_( dens2StarTag ),
+  velStarTs_ ( velStarTags  )
 {}
 
 //--------------------------------------------------------------------
@@ -432,26 +419,26 @@ build() const
 template<typename FieldT>
 VarDenOscillatingMMSxVel<FieldT>::
 VarDenOscillatingMMSxVel( const Expr::Tag& rhoTag,
-           const Expr::Tag& xTag,
-           const Expr::Tag& yTag,
-           const Expr::Tag& tTag,
-           const double r0,
-           const double r1,
-           const double w,
-           const double k,
-           const double uf,
-           const double vf )
+                          const Expr::Tag& xTag,
+                          const Expr::Tag& yTag,
+                          const Expr::Tag& tTag,
+                          const double r0,
+                          const double r1,
+                          const double w,
+                          const double k,
+                          const double uf,
+                          const double vf )
 : Expr::Expression<FieldT>(),
-r0_( r0 ),
-r1_( r1 ),
-w_ ( w ),
-k_ ( k ),
-uf_ ( uf ),
-vf_ ( vf ),
-rhoTag_( rhoTag ),
-xTag_  ( xTag   ),
-yTag_  ( yTag   ),
-tTag_  ( tTag   )
+  r0_( r0 ),
+  r1_( r1 ),
+  w_ ( w ),
+  k_ ( k ),
+  uf_ ( uf ),
+  vf_ ( vf ),
+  xTag_  ( xTag   ),
+  yTag_  ( yTag   ),
+  tTag_  ( tTag   ),
+  rhoTag_( rhoTag )
 {
   this->set_gpu_runnable( true );
 }
@@ -535,23 +522,23 @@ Builder( const Expr::Tag& result,
          const Expr::Tag& xTag,
          const Expr::Tag& yTag,
          const Expr::Tag& tTag,
-        const double r0,
-        const double r1,
-        const double w,
-        const double k,
-        const double uf,
-        const double vf )
+         const double r0,
+         const double r1,
+         const double w,
+         const double k,
+         const double uf,
+         const double vf )
 : ExpressionBuilder(result),
-r0_( r0 ),
-r1_( r1 ),
-w_ ( w ),
-k_ ( k ),
-uf_ ( uf ),
-vf_ ( vf ),
-rhoTag_( rhoTag ),
-xTag_  ( xTag   ),
-yTag_  ( yTag   ),
-tTag_  ( tTag   )
+  r0_( r0 ),
+  r1_( r1 ),
+  w_ ( w ),
+  k_ ( k ),
+  uf_ ( uf ),
+  vf_ ( vf ),
+  xTag_  ( xTag   ),
+  yTag_  ( yTag   ),
+  tTag_  ( tTag   ),
+  rhoTag_( rhoTag )
 {}
 
 //--------------------------------------------------------------------
@@ -571,26 +558,26 @@ build() const
 template<typename FieldT>
 VarDenOscillatingMMSyVel<FieldT>::
 VarDenOscillatingMMSyVel( const Expr::Tag& rhoTag,
-           const Expr::Tag& xTag,
-           const Expr::Tag& yTag,
-           const Expr::Tag& tTag,
-           const double r0,
-           const double r1,
-           const double w,
-           const double k,
-           const double uf,
-           const double vf )
+                          const Expr::Tag& xTag,
+                          const Expr::Tag& yTag,
+                          const Expr::Tag& tTag,
+                          const double r0,
+                          const double r1,
+                          const double w,
+                          const double k,
+                          const double uf,
+                          const double vf )
 : Expr::Expression<FieldT>(),
-r0_( r0 ),
-r1_( r1 ),
-w_ ( w ),
-k_ ( k ),
-uf_ ( uf ),
-vf_ ( vf ),
-rhoTag_( rhoTag ),
-xTag_  ( xTag   ),
-yTag_  ( yTag   ),
-tTag_  ( tTag   )
+  r0_( r0 ),
+  r1_( r1 ),
+  w_ ( w ),
+  k_ ( k ),
+  uf_ ( uf ),
+  vf_ ( vf ),
+  xTag_  ( xTag   ),
+  yTag_  ( yTag   ),
+  tTag_  ( tTag   ),
+  rhoTag_( rhoTag )
 {
   this->set_gpu_runnable( true );
 }
@@ -680,16 +667,16 @@ Builder( const Expr::Tag& result,
           const double uf,
           const double vf )
 : ExpressionBuilder(result),
-r0_( r0 ),
-r1_( r1 ),
-w_ ( w ),
-k_ ( k ),
-uf_ ( uf ),
-vf_ ( vf ),
-rhoTag_( rhoTag ),
-xTag_  ( xTag   ),
-yTag_  ( yTag   ),
-tTag_  ( tTag   )
+  r0_( r0 ),
+  r1_( r1 ),
+  w_ ( w ),
+  k_ ( k ),
+  uf_ ( uf ),
+  vf_ ( vf ),
+  xTag_  ( xTag   ),
+  yTag_  ( yTag   ),
+  tTag_  ( tTag   ),
+  rhoTag_( rhoTag )
 {}
 
 //--------------------------------------------------------------------
