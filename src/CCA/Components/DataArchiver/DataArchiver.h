@@ -75,7 +75,7 @@ using SCIRun::Mutex;
        DataArchiver(const ProcessorGroup* myworld, int udaSuffix = -1);
        virtual ~DataArchiver();
 
-       static bool wereSavesAndCheckpointsInitialized;
+       static bool d_wereSavesAndCheckpointsInitialized;
 
        //! Sets up when the DataArchiver will output and what data, according
        //! to params.  Also stores state to keep track of time and timesteps
@@ -116,38 +116,49 @@ using SCIRun::Mutex;
 
        //! Checks to see if this is an output timestep. 
        //! If it is, setup directories and xml files that we need to output.
-       //! Will also setup the tasks if we are recompiling the taskgraph.
        //! Call once per timestep, and if recompiling,
        //! after all the other tasks are scheduled.
        virtual void finalizeTimestep(double t, double delt, const GridP&,
-           SchedulerP&, bool recompile=false );
+                                     SchedulerP&, bool recompile=false );
+           
+      //! schedule the output tasks if we are recompiling the taskgraph.  
+      virtual void sched_allOutputTasks(double delt, const GridP&,
+				            SchedulerP&, bool recompile = false );
+                                      
 
-       //! Find the next times to output and dumps open files to disk.
+       //! Find the next times to output 
        //! Call after timestep has completed.
-       virtual void executedTimestep(double delt, const GridP&);
+       virtual void findNext_OutputCheckPoint_Timestep(double delt, const GridP&);
+       
+       
+       //! write meta data to xml files 
+       //! Call after timestep has completed.
+       virtual void writeto_xml_files(double delt, const GridP& grid);
 
        //! Returns as a string the name of the top of the output directory.
        virtual const std::string getOutputLocation() const;
 
        //! Asks if we need to recompile the task graph.
-       virtual bool needRecompile(double time, double dt,
-           const GridP& grid);
+       virtual bool needRecompile(double time, double dt, const GridP& grid);
 
        //! The task that handles the outputting.  Scheduled in finalizeTimestep.
        //! Handles outputs and checkpoints and differentiates between them in the
        //! last argument.  Outputs as binary the data acquired from VarLabel in 
        //! p_dir.
-       void output(const ProcessorGroup*, const PatchSubset* patch,
-           const MaterialSubset* matls, DataWarehouse* old_dw,
-           DataWarehouse* new_dw, int type);
+       void outputVariables(const ProcessorGroup*, 
+                            const PatchSubset* patch,
+                            const MaterialSubset* matls, 
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw, 
+                            int type);
 
        //! Task that handles outputting non-checkpoint reduction variables.
        //! Scheduled in finalizeTimestep.
-       void outputReduction(const ProcessorGroup*,
-           const PatchSubset* patch,
-           const MaterialSubset* matls,
-           DataWarehouse* old_dw,
-           DataWarehouse* new_dw);
+       void outputReductionVars(const ProcessorGroup*,
+                                const PatchSubset* patch,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
 
        //! Recommended to use sharedState directly if you can.
        virtual int getCurrentTimestep()
@@ -230,20 +241,20 @@ using SCIRun::Mutex;
        //! helper for beginOutputTimestep - creates and writes
        //! the necessary directories and xml files to begin the 
        //! output timestep.
-       void outputTimestep(Dir& dir, 
-                           std::vector<SaveItem>& saveLabels,
-                           const GridP& grid,
-                           std::string* pTimestepDir );
+       void makeTimestepDirs(Dir& dir, 
+                            std::vector<SaveItem>& saveLabels,
+                            const GridP& grid,
+                            std::string* pTimestepDir );
 
        //! helper for finalizeTimestep - schedules a task for each var's output
        void scheduleOutputTimestep(std::vector<SaveItem>& saveLabels,
-           const GridP& grid, SchedulerP& sched,
-           bool isThisCheckpoint);
+                                   const GridP& grid, 
+                                   SchedulerP& sched,
+                                   bool isThisCheckpoint);
 
        //! Helper for finalizeTimestep - determines if, based on the current
        //! time and timestep, this will be an output or checkpoint timestep.
-       void beginOutputTimestep(double time, double delt,
-           const GridP& grid);
+       void beginOutputTimestep(double time, double delt, const GridP& grid);
 
        //! After a timestep restart (delt adjusted), we need to see if we are 
        //! still an output timestep.
