@@ -2527,13 +2527,13 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
         }
       }
 
-    std::cout << "  ----> BC Label: " << bc_iter->second.name << endl;
-    std::cout << "            area: " << area << endl;
+    std::cout << "  ----> BC Label: " << bc_iter->second.name << std::endl;
+    std::cout << "            area: " << area << std::endl;
     std::cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
     std::cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl;
 
     }
-    std::cout << endl;
+    std::cout << std::endl;
     coutLock.unlock();
   }
 }
