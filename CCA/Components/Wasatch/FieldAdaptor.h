@@ -33,6 +33,7 @@
 #include <Core/Grid/Variables/SFCZVariable.h>  /* z-face variable */
 #include <Core/Grid/Variables/CCVariable.h>    /* cell variable   */
 #include <Core/Grid/Variables/PerPatch.h>      /* single double per patch */
+#include <Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
@@ -85,74 +86,6 @@ namespace Wasatch{
   SpatialOps::structured::MemoryWindow
   get_memory_window_for_uintah_field( const Uintah::Patch* const patch,
                                       const bool withoutGhost=false);
-
-  /**
-   *  \ingroup WasatchFields
-   *
-   *  \brief wrap a uintah field to obtain a SpatialOps field,
-   *         returning a new pointer.  The caller is responsible for
-   *         freeing the memory.
-   *  \param uintahVar the uintah variable to wrap
-   *  \param patch the patch that the field is associated with.
-   *  \param mtype specifies the location for the field (GPU,CPU)
-   *  \param deviceIndex in the case of a GPU field, this specifies which GPU it is on
-   *  \param uintahDeviceVar for GPU fields, this is the pointer to the field on the device
-   */
-  template< typename FieldT, typename UFT >
-  inline FieldT* wrap_uintah_field_as_spatialops( UFT& uintahVar,
-                                                  const Uintah::Patch* const patch,
-                                                  const SpatialOps::MemoryType mtype=SpatialOps::LOCAL_RAM,
-                                                  const unsigned short int deviceIndex=0,
-                                                  double* uintahDeviceVar = NULL )
-  {
-    /*
-     * NOTE: before changing things here, look at the line:
-     *    Uintah::OnDemandDataWarehouse::d_combineMemory = false;
-     * in Wasatch.cc.  This is currently preventing Uintah from
-     * combining patch memory.
-     */
-    namespace SS = SpatialOps::structured;
-    using SCIRun::IntVector;
-
-    const SCIRun::IntVector lowIx       = uintahVar.getLowIndex();
-    const SCIRun::IntVector highIx      = uintahVar.getHighIndex();
-    const SCIRun::IntVector fieldSize   = uintahVar.getWindow()->getData()->size();
-    const SCIRun::IntVector fieldOffset = uintahVar.getWindow()->getOffset();
-    const SCIRun::IntVector fieldExtent = highIx - lowIx;
-
-    const SS::IntVec   size( fieldSize[0],   fieldSize[1],   fieldSize[2]   );
-    const SS::IntVec extent( fieldExtent[0], fieldExtent[1], fieldExtent[2] );
-    const SS::IntVec offset( lowIx[0]-fieldOffset[0], lowIx[1]-fieldOffset[1], lowIx[2]-fieldOffset[2] );
-
-    SS::IntVec bcMinus, bcPlus;
-    get_bc_logicals( patch, bcMinus, bcPlus );
-
-    double* fieldValues_ = NULL;
-    if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
-#     ifdef HAVE_CUDA
-      fieldValues_ = const_cast<double*>( uintahDeviceVar );
-#     endif
-    } else{
-      fieldValues_ = const_cast<typename FieldT::value_type*>( uintahVar.getPointer() );
-    }
-
-    return new FieldT( SpatialOps::structured::MemoryWindow( size, offset, extent ),
-                       SS::BoundaryCellInfo::build<FieldT>(bcPlus),
-                       SS::GhostData(1),  /* for now, we hard-code one ghost cell */
-                       fieldValues_,
-                       SpatialOps::structured::ExternalStorage,
-                       mtype,
-                       deviceIndex );
-  }
-
-  template<>
-  inline SpatialOps::structured::SingleValueField*
-  wrap_uintah_field_as_spatialops<SpatialOps::structured::SingleValueField,Uintah::PerPatch<double*> >(
-      Uintah::PerPatch<double*>& uintahVar,
-      const Uintah::Patch* const patch,
-      const SpatialOps::MemoryType mtype,
-      const unsigned short int deviceIndex,
-      double* uintahDeviceVar );
 
   /**
    *  \ingroup WasatchParser
@@ -308,6 +241,118 @@ namespace Wasatch{
    *  \return The Uintah::Ghost::GhostType for this field type.
    */
   template<typename FieldT> Uintah::Ghost::GhostType get_uintah_ghost_type();
+
+
+
+  /**
+   *  \ingroup WasatchFields
+   *
+   *  \brief wrap a uintah field to obtain a SpatialOps field,
+   *         returning a new pointer.  The caller is responsible for
+   *         freeing the memory.
+   *  \param uintahVar the uintah variable to wrap
+   *  \param patch the patch that the field is associated with.
+   *  \param mtype specifies the location for the field (GPU,CPU)
+   *  \param deviceIndex in the case of a GPU field, this specifies which GPU it is on
+   *  \param uintahDeviceVar for GPU fields, this is the pointer to the field on the device
+   *
+   *  \tparam FieldT the SpatialOps field type to produce
+   *  \tparam UFT the Uintah field type that we began with
+   *
+   *  \todo use type inference to go between FieldT and UFT.  Note that this is tied into ExprLib.
+   */
+  template< typename FieldT, typename UFT >
+  inline FieldT* wrap_uintah_field_as_spatialops( UFT& uintahVar,
+                                                  const Uintah::Patch* const patch,
+                                                  const SpatialOps::MemoryType mtype=SpatialOps::LOCAL_RAM,
+                                                  const unsigned short int deviceIndex=0,
+                                                  double* uintahDeviceVar = NULL )
+  {
+    /*
+     * NOTE: before changing things here, look at the line:
+     *    Uintah::OnDemandDataWarehouse::d_combineMemory = false;
+     * in Wasatch.cc.  This is currently preventing Uintah from
+     * combining patch memory.
+     */
+    namespace SS = SpatialOps::structured;
+
+    using SCIRun::IntVector;
+
+    const SCIRun::IntVector lowIx       = uintahVar.getLowIndex();
+    const SCIRun::IntVector highIx      = uintahVar.getHighIndex();
+    const SCIRun::IntVector fieldSize   = uintahVar.getWindow()->getData()->size();
+    const SCIRun::IntVector fieldOffset = uintahVar.getWindow()->getOffset();
+    const SCIRun::IntVector fieldExtent = highIx - lowIx;
+
+    const SS::IntVec   size( fieldSize[0],   fieldSize[1],   fieldSize[2]   );
+    const SS::IntVec extent( fieldExtent[0], fieldExtent[1], fieldExtent[2] );
+    const SS::IntVec offset( lowIx[0]-fieldOffset[0], lowIx[1]-fieldOffset[1], lowIx[2]-fieldOffset[2] );
+
+    SS::IntVec bcMinus, bcPlus;
+    get_bc_logicals( patch, bcMinus, bcPlus );
+
+    double* fieldValues_ = NULL;
+    if( mtype == SpatialOps::EXTERNAL_CUDA_GPU ){
+#     ifdef HAVE_CUDA
+      fieldValues_ = const_cast<double*>( uintahDeviceVar );
+#     endif
+    } else{
+      fieldValues_ = const_cast<typename FieldT::value_type*>( uintahVar.getPointer() );
+    }
+
+    return new FieldT( SS::MemoryWindow( size, offset, extent ),
+                       SS::BoundaryCellInfo::build<FieldT>(bcPlus),
+                       SS::GhostData( get_n_ghost<FieldT>() ),
+                       fieldValues_,
+                       SS::ExternalStorage,
+                       mtype,
+                       deviceIndex );
+  }
+
+  // NOTE: this wraps a raw uintah field type, whereas the default
+  //       implementations work with an Expr::UintahFieldContainer
+  template<>
+  inline SpatialOps::structured::SingleValueField*
+  wrap_uintah_field_as_spatialops<SpatialOps::structured::SingleValueField,Uintah::PerPatch<double*> >(
+      Uintah::PerPatch<double*>& uintahVar,
+      const Uintah::Patch* const patch,
+      const SpatialOps::MemoryType mtype,
+      const unsigned short int deviceIndex,
+      double* uintahDeviceVar )
+  {
+    namespace SS = SpatialOps::structured;
+    typedef SS::SingleValueField FieldT;
+    return new FieldT( SS::MemoryWindow( SS::IntVec(1,1,1), SS::IntVec(0,0,0), SS::IntVec(1,1,1) ),
+                       SS::BoundaryCellInfo::build<FieldT>(false,false,false),    // bc doesn't matter for single value fields
+                       SS::GhostData( get_n_ghost<FieldT>() ),
+                       uintahVar.get(),
+                       SS::ExternalStorage,
+                       mtype,
+                       deviceIndex );
+  }
+
+  // NOTE: this wraps a raw uintah field type, whereas the default
+  //       implementations work with an Expr::UintahFieldContainer
+  template<>
+  inline SpatialOps::structured::SingleValueField*
+  wrap_uintah_field_as_spatialops<SpatialOps::structured::SingleValueField,Uintah::ReductionVariableBase>(
+      Uintah::ReductionVariableBase& uintahVar,
+      const Uintah::Patch* const patch,
+      const SpatialOps::MemoryType mtype,
+      const unsigned short int deviceIndex,
+      double* uintahDeviceVar )
+  {
+    namespace SS = SpatialOps::structured;
+    typedef SS::SingleValueField FieldT;
+    return new FieldT( SS::MemoryWindow( SS::IntVec(1,1,1), SS::IntVec(0,0,0), SS::IntVec(1,1,1) ),
+                       SS::BoundaryCellInfo::build<FieldT>(false,false,false),    // bc doesn't matter for single value fields
+                       SS::GhostData( get_n_ghost<FieldT>() ),
+                       (double*)( uintahVar.getBasePointer() ),  // jcs this is a bit sketchy because of the type casting.  It will only work for reductions on doubles
+                       SS::ExternalStorage,
+                       mtype,
+                       deviceIndex );
+  }
+
 }
 
 #endif // Wasatch_FieldAdaptor_h
