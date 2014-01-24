@@ -265,7 +265,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   if( doY_ ) vStar_ = &fml.field_ref<YVolField>( yVelStart_ );
   if( doZ_ ) wStar_ = &fml.field_ref<ZVolField>( zVelStart_ );
 
-  const Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
+  const typename Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
   dens_      = &scalarFM.field_ref( denst_ );
   densStar_  = &scalarFM.field_ref( densStart_ );
   dens2Star_ = &scalarFM.field_ref( dens2Start_ );
