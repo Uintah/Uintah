@@ -177,15 +177,15 @@ private:
                              const Expr::Tag& yTag,
                              const Expr::Tag& tTag,
                              const Expr::Tag& timestepTag );
+  const Expr::Tag xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_;
+  const bool doX_, doY_, doZ_;
   const double r0_, r1_, w_, k_, uf_, vf_;
   const Expr::Tag xTag_, yTag_, tTag_, timestepTag_;
-  const Expr::Tag xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_;
   const XVolField *uStar_;
   const YVolField *vStar_;
   const ZVolField *wStar_;
   const SVolField *dens_, *densStar_, *dens2Star_;
   const FieldT *x_, *y_;
-  const bool doX_, doY_, doZ_;
   const TimeField *t_, *timestep_;
   const GradXT* gradXOp_;
   const GradYT* gradYOp_;
@@ -227,12 +227,12 @@ public:
              const Expr::Tag& xTag,  ///< x coordinate
              const Expr::Tag& yTag,  ///< y coordinate
              const Expr::Tag& tTag,  ///< time
-            const double r0,
-            const double r1,
-            const double w,
-            const double k,
-            const double uf,
-            const double vf );
+             const double r0,
+             const double r1,
+             const double w,
+             const double k,
+             const double uf,
+             const double vf );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -248,15 +248,15 @@ public:
 private:
   
   VarDenOscillatingMMSxVel( const Expr::Tag& rhoTag,
-        const Expr::Tag& xTag,
-        const Expr::Tag& yTag,
-        const Expr::Tag& tTag,
-        const double r0,
-        const double r1,
-        const double w,
-        const double k,
-        const double uf,
-        const double vf );
+                            const Expr::Tag& xTag,
+                            const Expr::Tag& yTag,
+                            const Expr::Tag& tTag,
+                            const double r0,
+                            const double r1,
+                            const double w,
+                            const double k,
+                            const double uf,
+                            const double vf );
   const double r0_, r1_, w_, k_, uf_, vf_;
   const Expr::Tag xTag_, yTag_, tTag_, rhoTag_;
   const FieldT* x_;
