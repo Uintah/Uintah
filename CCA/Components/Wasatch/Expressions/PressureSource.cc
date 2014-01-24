@@ -135,19 +135,20 @@ void PressureSource::evaluate()
   typedef std::vector<SVolField*> SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
   
-  SVolField& psrc   = *results[0];
-  SVolField& drhodt = *results[1];
-  SVolField& alpha  = *results[2];
-  SVolField& beta   = *results[3];
-  SVolField& divmomstar   = *results[4];
-  SVolField& drhodtstar   = *results[5];
-  
-  if (isConstDensity_ ){
+  SVolField& psrc = *results[0];
+
+  if( isConstDensity_ ){
     
     psrc <<= *dens_ * *dil_ / *timestep_;
     
   } else { // variable density
     
+    SVolField& drhodt     = *results[1];
+    SVolField& alpha      = *results[2];
+    SVolField& beta       = *results[3];
+    SVolField& divmomstar = *results[4];
+    SVolField& drhodtstar = *results[5];
+
     drhodtstar <<= (*dens2Star_ - *dens_)/(2. * *timestep_);
     
     if (is3d_) {
