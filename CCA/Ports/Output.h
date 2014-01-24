@@ -103,6 +103,10 @@ class SimulationState;
     virtual void finalizeTimestep(double t, double delt, const GridP&,
 				      SchedulerP&, bool recompile = false ) = 0;
 
+    // schedule all output tasks
+    virtual void sched_allOutputTasks(double delt, const GridP&,
+				          SchedulerP&, bool recompile = false ) = 0;
+
     //////////
     // Call this after a timestep restart to make sure we still
     // have an output timestep
@@ -110,7 +114,11 @@ class SimulationState;
 
     //////////
     // Call this after the timestep has been executed.
-    virtual void executedTimestep(double delt, const GridP&) = 0;
+    virtual void findNext_OutputCheckPoint_Timestep(double delt, const GridP&) = 0;
+    
+    //////////
+    // update or write to the xml files
+    virtual void writeto_xml_files(double delt, const GridP& grid) = 0;
      
       //////////
       // Insert Documentation Here:

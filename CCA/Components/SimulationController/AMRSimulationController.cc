@@ -92,6 +92,9 @@ AMRSimulationController::~AMRSimulationController()
 }
 
 double barrier_times[5]={0};
+
+//______________________________________________________________________
+//
 void
 AMRSimulationController::run()
 {
@@ -305,6 +308,7 @@ AMRSimulationController::run()
          // This is not correct if we have switched to a different
          // component, since the delt will be wrong 
          d_output->finalizeTimestep( time, delt, currentGrid, d_scheduler, 0 );
+         d_output->sched_allOutputTasks( delt, currentGrid, d_scheduler, 0 );
        }
      }
 
@@ -387,7 +391,8 @@ AMRSimulationController::run()
      }
 
      if(d_output){
-       d_output->executedTimestep(delt, currentGrid);
+       d_output->findNext_OutputCheckPoint_Timestep(  delt, currentGrid );
+       d_output->writeto_xml_files( delt, currentGrid );
      }
 #ifdef USE_TAU_PROFILING
      TAU_PROFILE_STOP(iteration_timer);
@@ -672,9 +677,7 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
         d_scheduler->advanceDataWarehouse(grid, true);
       }
 
-      if(d_myworld->myrank() == 0){
-        cout << "Compiling initialization taskgraph...\n";
-      }
+      proc0cout << "Compiling initialization taskgraph...\n";
 
       // Initialize the CFD and/or MPM data
       for(int i=grid->numLevels()-1; i >= 0; i--) {
@@ -690,13 +693,17 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
       }
       scheduleComputeStableTimestep(grid,d_scheduler);
 
-      if(d_output)
-        d_output->finalizeTimestep(t, 0, grid, d_scheduler, 1);
+      if(d_output){
+        double delT = 0;
+        bool recompile = true;
+        d_output->finalizeTimestep(t, delT, grid, d_scheduler, recompile);
+        d_output->sched_allOutputTasks( delT,grid, d_scheduler, recompile );
+      }
       
       d_scheduler->compile();
       double end = Time::currentSeconds() - start;
-      if(d_myworld->myrank() == 0)
-        cout << "done taskgraph compile (" << end << " seconds)\n";
+      
+      proc0cout << "done taskgraph compile (" << end << " seconds)\n";
       // No scrubbing for initial step
       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
       d_scheduler->execute();
@@ -704,9 +711,10 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
       needNewLevel = d_regridder && d_regridder->isAdaptive() && grid->numLevels()<d_regridder->maxLevels() && doRegridding(grid, true);
     } while (needNewLevel);
 
-    if(d_output)
-      d_output->executedTimestep(0, grid);
-
+    if(d_output){
+      d_output->findNext_OutputCheckPoint_Timestep( 0, grid );
+      d_output->writeto_xml_files(0, grid );
+    }
   }
 }
 
@@ -857,6 +865,7 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
 
   if(d_output){
     d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, true);
+    d_output->sched_allOutputTasks( delt, currentGrid, d_scheduler, true );
   }
   
   d_scheduler->compile();
