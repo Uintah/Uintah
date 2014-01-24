@@ -701,15 +701,17 @@ namespace Wasatch{
       set_vel_star_tags( velTags_, velStarTags );
       set_mom_tags( params, momTags_ );
       
-      // register the expression for pressure source term
-      Expr::TagList psrcTagList;
-      psrcTagList.push_back(tagNames.pressuresrc);
-      psrcTagList.push_back(tagNames.drhodt);
-      psrcTagList.push_back(tagNames.vardenalpha);
-      psrcTagList.push_back(tagNames.vardenbeta);
-      psrcTagList.push_back(tagNames.divmomstar);
-      psrcTagList.push_back(tagNames.drhodtstar);
-      factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag) );
+        // register the expression for pressure source term
+        Expr::TagList psrcTagList;
+        psrcTagList.push_back(tagNames.pressuresrc);
+        if( !isConstDensity ){
+          psrcTagList.push_back(tagNames.drhodt     );
+          psrcTagList.push_back(tagNames.vardenalpha);
+          psrcTagList.push_back(tagNames.vardenbeta );
+          psrcTagList.push_back(tagNames.divmomstar );
+          psrcTagList.push_back(tagNames.drhodtstar );
+        }
+        factory.register_expression( new typename PressureSource::Builder( psrcTagList, momTags_, velStarTags, isConstDensity, densTag, densStarTag, dens2StarTag) );
     }
     
     //__________________
