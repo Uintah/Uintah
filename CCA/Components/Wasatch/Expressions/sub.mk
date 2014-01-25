@@ -52,6 +52,7 @@ CUDA_ENABLED_SRCS =       \
      ScalarRHS            \
      SolnVarEst           \
      Strain               \
+     ScalabilityTestSrc   \
      WeakConvectiveTerm   \
      ExprAlgebra          \
      VelEst
@@ -77,7 +78,6 @@ endif
 #
 SRCS += \
         $(SRCDIR)/DensityCalculator.cc    \
-        $(SRCDIR)/ScalabilityTestSrc.cc   \
         $(SRCDIR)/SetCurrentTime.cc       \
         $(SRCDIR)/RadPropsEvaluator.cc    \
         $(SRCDIR)/StableTimestep.cc       \
@@ -156,6 +156,9 @@ ifeq ($(HAVE_CUDA),yes)
   $(OBJTOP_ABS)/$(SRCDIR)/Strain.cu : $(SRCTOP_ABS)/$(SRCDIR)/Strain.cc
 	cp $< $@
 
+  $(OBJTOP_ABS)/$(SRCDIR)/ScalabilityTestSrc.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalabilityTestSrc.cc
+	cp $< $@
+	
   $(OBJTOP_ABS)/$(SRCDIR)/WeakConvectiveTerm.cu : $(SRCTOP_ABS)/$(SRCDIR)/WeakConvectiveTerm.cc
 	cp $< $@
 
