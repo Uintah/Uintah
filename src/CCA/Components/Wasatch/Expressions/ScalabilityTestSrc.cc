@@ -22,8 +22,9 @@
  * IN THE SOFTWARE.
  */
 
-#include "ScalabilityTestSrc.h"
+#include <CCA/Components/Wasatch/Expressions/ScalabilityTestSrc.h>
 #include <spatialops/Nebo.h>
+#include <sci_defs/cuda_defs.h>
 
 template< typename FieldT >
 ScalabilityTestSrc<FieldT>::
@@ -33,6 +34,7 @@ ScalabilityTestSrc( const Expr::Tag& varTag,
   phiTag_( varTag ),
   nvar_  ( nvar   )
 {
+  this->set_gpu_runnable( true );
   tmpVec_.resize( nvar, 0.0 );
 }
 
