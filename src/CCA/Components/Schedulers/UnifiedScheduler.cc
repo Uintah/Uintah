@@ -479,11 +479,6 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   // control loop for all tasks of task graph*/
   runTasks(0);
 
-#ifdef HAVE_CUDA  
-  // Free up all the pointer maps for device and pinned host pointers
-  unregisterPageLockedHostMem();   // unregister all registered, page-locked host memory
-#endif
-
   // end while( numTasksDone < ntasks )
   TAU_PROFILE_STOP(doittimer);
 
@@ -718,6 +713,12 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     dbg << me << " UnifiedScheduler finished\n";
   }
   //pg_ = 0;
+
+#ifdef HAVE_CUDA
+  // Free up all the pointer maps for device and pinned host pointers
+  unregisterPageLockedHostMem();   // unregister all registered, page-locked host memory
+#endif
+
 }
 
 void UnifiedScheduler::runTasks(int t_id)
