@@ -1900,7 +1900,7 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
               }
 
               // if offset and size is equal to CPU DW, directly copy back to CPU var memory;
-              if (device_offset.x == host_offset.x() && device_offset.y == host_offset.y() && device_offset.y == host_offset.y()
+              if (device_offset.x == host_offset.x() && device_offset.y == host_offset.y() && device_offset.z == host_offset.z()
                   && device_size.x == host_size.x() && device_size.y == host_size.y() && device_size.z == host_size.z()) {
                 const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
                 if (!pinned) {
