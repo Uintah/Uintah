@@ -105,10 +105,11 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
     d_udaSuffix(udaSuffix),
     d_outputLock("DataArchiver output lock")
 {
-  d_isOutputTimestep = false;
-  d_isCheckpointTimestep = false;
+  d_isOutputTimestep      = false;
+  d_isCheckpointTimestep  = false;
   d_saveParticleVariables = false;
-  d_saveP_x = false;
+  d_saveP_x               = false;
+  d_usingReduceUda        = false;
   //d_currentTime=-1;
   //d_currentTimestep=-1;
 
@@ -634,7 +635,7 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
 
 //______________________________________________________________________
 // This is called after problemSetup. It will copy the dat & checkpoint files to the new directory.
-// This also removes the global (dat) variables from the saveLabels
+// This also removes the global (dat) variables from the saveLabels variables
 void
 DataArchiver::reduceUdaSetup(Dir& fromDir)
 {
@@ -687,6 +688,32 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
       variable = variable->findNextBlock("variable");
     }
   }
+    
+/*`==========TESTING==========*/
+  //__________________________________
+  //  Read in the timestep indicies from the restart and store them
+  ProblemSpecP ts_ps = indexDoc->findBlock("timesteps");
+  ProblemSpecP ts    = ts_ps->findBlock("timestep");
+  int timestep = -9;
+  int count    = 1;
+  
+  while( ts != 0 ) {
+    ts->get(timestep);
+    cout << " timestep " << timestep << endl;
+    d_restartTimestepIndicies[count] = timestep;
+    
+    ts = ts->findNextBlock("timestep");
+    count ++;
+  }
+  
+  d_restartTimestepIndicies[0] = d_restartTimestepIndicies[1];
+  
+  
+ // for (int i=0; i< d_restartTimestepIndicies.size(); i++){
+ //   cout << " timestep indice: " << d_restartTimestepIndicies[i] << endl;
+ // } 
+/*===========TESTING==========`*/
+
 
   // Set checkpoint outputIntervals
   d_checkpointInterval = 0.0;
@@ -696,8 +723,7 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
   // output every timestep -- each timestep is transferring data
   d_outputInterval = 0.0;
   d_outputTimestepInterval = 1;
-
-  //indexDoc->releaseDocument();
+  d_usingReduceUda = true;
 }
 
 //______________________________________________________________________
@@ -1067,7 +1093,7 @@ DataArchiver::beginOutputTimestep( double time,
 {
   // time should be currentTime+delt
   double currentTime = d_sharedState->getElapsedTime();
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  int timestep       = d_sharedState->getCurrentTopLevelTimeStep();
   dbg << "    beginOutputTimestep\n";
 
   // do *not* update d_nextOutputTime or others here.  We need the original
@@ -1176,12 +1202,14 @@ DataArchiver::makeTimestepDirs(Dir& baseDir,
 
   int numLevels = grid->numLevels();
   // time should be currentTime+delt
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  
+  int timestep     = d_sharedState->getCurrentTopLevelTimeStep();
+  int dir_timestep = getTimestepTopLevel();  // could be modified by reduceUda
 
-  dbg << "      makeTimestepDirs for timestep: " << timestep << "\n";
+  dbg << "      makeTimestepDirs for timestep: " << timestep << " dir_timestep: " << dir_timestep<< "\n";
   
   ostringstream tname;
-  tname << "t" << setw(5) << setfill('0') << timestep;
+  tname << "t" << setw(5) << setfill('0') << dir_timestep;
   *pTimestepDir = baseDir.getName() + "/" + tname.str();
 
   // Create the directory for this timestep, if necessary
@@ -1291,7 +1319,7 @@ DataArchiver::findNext_OutputCheckPoint_Timestep(double delt, const GridP& grid)
       if(Time::currentSeconds() >= d_nextCheckpointWalltime)
         d_nextCheckpointWalltime+=static_cast<int>(floor((Time::currentSeconds()-d_nextCheckpointWalltime)/d_checkpointWalltimeInterval)*d_checkpointWalltimeInterval+d_checkpointWalltimeInterval);
     }
-  }
+  }  
   
   dbg << "    next outputTime:     " << d_nextOutputTime << " next outputTimestep: " << d_nextOutputTimestep << "\n";
   dbg << "    next checkpointTime: " << d_nextCheckpointTime << " next checkpoint timestep: " << d_nextCheckpointTimestep << "\n";
@@ -1310,8 +1338,8 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
   //  Writeto XML files
   // to check for output nth proc
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(getPort("load balancer"));
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-
+  int dir_timestep = getTimestepTopLevel();     // could be modified by reduceUda
+  
   // start dumping files to disk
   vector<Dir*> baseDirs;
   if (d_isOutputTimestep)
@@ -1320,7 +1348,7 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
     baseDirs.push_back(&d_checkpointsDir);
 
   ostringstream tname;
-  tname << "t" << setw(5) << setfill('0') << timestep;
+  tname << "t" << setw(5) << setfill('0') << dir_timestep;
 
   for (int i = 0; i < static_cast<int>(baseDirs.size()); i++) {
     // to save the list of vars. up to 2, since in checkpoints, there are two types of vars
@@ -1399,7 +1427,7 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
           int readtimestep;
           if(!n->get(readtimestep))
             throw InternalError("Error parsing timestep number", __FILE__, __LINE__);
-          if(readtimestep == timestep){
+          if(readtimestep == dir_timestep){
             found=true;
             break;
           }
@@ -1410,7 +1438,7 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
         string timestepindex = tname.str()+"/timestep.xml";      
         
         ostringstream value, timeVal, deltVal;
-        value << timestep;
+        value << dir_timestep;
         ProblemSpecP newElem = ts->appendElement("timestep",value.str().c_str());
         newElem->setAttribute("href", timestepindex.c_str());
         timeVal << std::setprecision(17) << d_tempElapsedTime;
@@ -1435,7 +1463,7 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
       
 
       ProblemSpecP timeElem = rootElem->appendChild("Time");
-      timeElem->appendElement("timestepNumber", timestep);
+      timeElem->appendElement("timestepNumber", dir_timestep);
       timeElem->appendElement("currentTime", d_tempElapsedTime);
       timeElem->appendElement("oldDelt", delt);
       int numLevels = grid->numLevels();
@@ -1560,8 +1588,11 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
 
         for (ProblemSpecP ps = rootElem->getFirstChild(); ps != 0; ps = ps->getNextSibling()) {
           string nodeName = ps->getNodeName();
-          if (nodeName == "Meta" || nodeName == "Time" || nodeName == "Grid" || nodeName == "Data") 
+          
+          if (nodeName == "Meta" || nodeName == "Time" || nodeName == "Grid" || nodeName == "Data") {
             continue;
+          }
+          
           ProblemSpecP removeNode = inputDoc->findBlock(nodeName);
           if (removeNode != 0) {
             string comment = "The node " + nodeName + " has been removed.  Its original values are\n"
@@ -1823,7 +1854,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
     dir = d_checkpointsDir;
 
   ostringstream tname;
-  tname << "t" << setw(5) << setfill('0') << d_sharedState->getCurrentTopLevelTimeStep();
+  tname << "t" << setw(5) << setfill('0') << getTimestepTopLevel();    // could be modified by reduceUda
   
   Dir tdir = dir.getSubdir(tname.str());
   
@@ -2473,3 +2504,19 @@ void DataArchiver::updateCheckpointInterval(double newinv)
     d_nextCheckpointTime=0.0;  
   }
 }
+
+
+/*`==========TESTING==========*/
+//__________________________________
+// If your using reduceUda then use use a mapping that's defined in reduceUdaSetup()
+int DataArchiver::getTimestepTopLevel(){
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  
+  if ( d_usingReduceUda ) {
+    cout << "    getTimestepTopLevel timestep: " << timestep << "::"<<d_restartTimestepIndicies[timestep] << endl;
+    return d_restartTimestepIndicies[timestep];
+  }else{
+    return timestep;
+  }
+} 
+/*===========TESTING==========`*/

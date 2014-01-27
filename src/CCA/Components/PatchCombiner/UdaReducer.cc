@@ -46,8 +46,9 @@ using namespace Uintah;
 //  - getPerProcessorePatchSet(level)
 //  - add warning message.
 //  Testing
+//     - oututput double as float
 //     - timestep numbers
-//     - output doubles as floats
+//     - vary the output intervals
 //     - particles on a single level
 //     - On the Fly files/directories?
 //______________________________________________________________________
@@ -149,7 +150,6 @@ void UdaReducer::initialize(const ProcessorGroup*,
   double t = d_times[0];
   delt_vartype delt_var = t;
   new_dw->put( delt_var, delt_label );
-  d_sharedState->setCurrentTopLevelTimeStep( d_timesteps[0] - 1 );
 }
 
 //______________________________________________________________________
@@ -260,8 +260,6 @@ void UdaReducer::computeLabels(const ProcessorGroup*,
   double time = d_times[d_timeIndex];
   int timestep = d_timesteps[d_timeIndex];
 
-  proc0cout << "_________processing timestep: " << timestep << " ( "<< time << ")" << endl;
-
   if ( d_timeIndex >= (int) (d_times.size()-1) ) {
     // error situation - we have run out of timesteps in the uda, but 
     // the time does not satisfy the maxTime, so the simulation wants to 
@@ -275,13 +273,11 @@ void UdaReducer::computeLabels(const ProcessorGroup*,
          << "that you may have to remove manually\n\n";
   }
   
-  proc0cout << "   Incrementing time " << d_timeIndex << " and time " << time << endl;
+  proc0cout << "*** computeLabels Incrementing timeIndex " << d_timeIndex << " timestep: " << timestep << " time " << time << endl;
 
 
   d_dataArchive->restartInitialize(d_timeIndex, d_oldGrid, new_dw, d_lb, &time);
   d_timeIndex++;
-  
-  //d_sharedState->setCurrentTopLevelTimeStep( d_timesteps[d_timeIndex] );
 }
 //______________________________________________________________________
 //
@@ -313,8 +309,8 @@ void UdaReducer::computeDelT(const ProcessorGroup*,
   // don't use the delt produced in restartInitialize.
   double delt = d_times[d_timeIndex] - d_times[d_timeIndex-1];
   delt_vartype delt_var = delt;
-  new_dw->put(delt_var, delt_label);  
-  //d_sharedState->setCurrentTopLevelTimeStep( d_timesteps[d_timeIndex] );
+  new_dw->put(delt_var, delt_label); 
+  proc0cout << "*** computeDelT" << endl; 
 }
 
 
@@ -396,6 +392,7 @@ void UdaReducer::finalizeTimestep(const ProcessorGroup*,
   
 {
   int index = d_timesteps[d_timeIndex];
+  proc0cout << "*** finalizeTimestep" << endl;
   //proc0cout << "*** Now incrementing the timestep index " << index << endl;  
   //d_sharedState->setCurrentTopLevelTimeStep( index );
 }
