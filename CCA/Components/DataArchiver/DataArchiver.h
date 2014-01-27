@@ -408,6 +408,15 @@ using SCIRun::Mutex;
        std::map< int, ProblemSpecP > d_XMLDataDocs;
        std::map< int, ProblemSpecP > d_CheckpointXMLDataDocs;
 
+       //__________________________________
+       //  reduceUda related
+       //  used for migrating timestep directories
+       std::map< int, int> d_restartTimestepIndicies;
+       bool d_usingReduceUda;
+       
+       // returns either the top level timestep or if reduceUda is used
+       // a value from the index.xml file
+       int getTimestepTopLevel();
 
        //-----------------------------------------------------------
        // RNJ - 
