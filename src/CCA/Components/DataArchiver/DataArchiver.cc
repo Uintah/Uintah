@@ -551,9 +551,9 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
     // partial copy of dat files
     copyDatFiles( restartFromDir, d_dir, startTimestep, timestep, removeOldDir );
 
-    copySection( restartFromDir, d_dir, "restarts" );
-    copySection( restartFromDir, d_dir, "variables" );
-    copySection( restartFromDir, d_dir, "globals" );
+    copySection( restartFromDir, d_dir, "index.xml", "restarts" );
+    copySection( restartFromDir, d_dir, "index.xml", "variables" );
+    copySection( restartFromDir, d_dir, "index.xml", "globals" );
 
     // partial copy of index.xml and timestep directories and
     // similarly for checkpoints
@@ -564,8 +564,8 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
       // the restart_merger doesn't need checkpoints, and calls this with time=0.
       copyTimesteps( checkpointsFromDir, d_checkpointsDir, startTimestep,
                      timestep, removeOldDir, areCheckpoints );
-      copySection( checkpointsFromDir, d_checkpointsDir, "variables" );
-      copySection( checkpointsFromDir, d_checkpointsDir, "globals" );
+      copySection( checkpointsFromDir, d_checkpointsDir, "index.xml", "variables" );
+      copySection( checkpointsFromDir, d_checkpointsDir, "index.xml", "globals" );
     }
     if (removeOldDir) {
       // Try to remove the old dir...
@@ -593,7 +593,7 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
     }
   }
   else if( d_writeMeta ) { // Just add <restart from = ".." timestep = ".."> tag.
-    copySection(restartFromDir, d_dir, "restarts");
+    copySection(restartFromDir, d_dir, "index.xml", "restarts");
     string iname = d_dir.getName()+"/index.xml";
     ProblemSpecP indexDoc = loadDocument(iname);
     if (timestep >= 0) {
@@ -641,8 +641,9 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
 {
   // copy dat files and
   if (d_writeMeta) {
+    d_fromDir = fromDir;
     copyDatFiles(fromDir, d_dir, 0, -1, false);
-    copySection(fromDir,  d_dir, "globals");
+    copySection(fromDir,  d_dir, "index.xml", "globals");
 
     // copy checkpoints
     Dir checkpointsFromDir = fromDir.getSubdir("checkpoints");
@@ -654,8 +655,8 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
     copyTimesteps( checkpointsFromDir, d_checkpointsDir, startTimestep,
                    stopTimestep, removeOldDir, areCheckpoints );
 
-    copySection( checkpointsFromDir, d_checkpointsDir, "variables" );
-    copySection( checkpointsFromDir, d_checkpointsDir, "globals" );
+    copySection( checkpointsFromDir, d_checkpointsDir, "index.xml", "variables" );
+    copySection( checkpointsFromDir, d_checkpointsDir, "index.xml", "globals" );
     proc0cout << "\n*** Copied checkpoints to: " << d_checkpointsDir.getName() << endl;
     proc0cout << "*** Copied dat files to:   " << d_dir.getName() << "\n"<<endl;    
     
@@ -689,9 +690,9 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
     }
   }
     
-/*`==========TESTING==========*/
   //__________________________________
-  //  Read in the timestep indicies from the restart and store them
+  //  Read in the timestep indicies from the restart uda and store them
+  //  Use the indicies when creating the timestep directories
   ProblemSpecP ts_ps = indexDoc->findBlock("timesteps");
   ProblemSpecP ts    = ts_ps->findBlock("timestep");
   int timestep = -9;
@@ -699,7 +700,6 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
   
   while( ts != 0 ) {
     ts->get(timestep);
-    cout << " timestep " << timestep << endl;
     d_restartTimestepIndicies[count] = timestep;
     
     ts = ts->findNextBlock("timestep");
@@ -707,13 +707,6 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
   }
   
   d_restartTimestepIndicies[0] = d_restartTimestepIndicies[1];
-  
-  
- // for (int i=0; i< d_restartTimestepIndicies.size(); i++){
- //   cout << " timestep indice: " << d_restartTimestepIndicies[i] << endl;
- // } 
-/*===========TESTING==========`*/
-
 
   // Set checkpoint outputIntervals
   d_checkpointInterval = 0.0;
@@ -729,13 +722,13 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
 //______________________________________________________________________
 //
 void
-DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
+DataArchiver::copySection(Dir& fromDir, Dir& toDir, string filename, string section)
 {
   // copy chunk labeled section between index.xml files
-  string iname = fromDir.getName()+"/index.xml";
+  string iname = fromDir.getName() + "/" +filename;
   ProblemSpecP indexDoc = loadDocument(iname);
 
-  iname = toDir.getName()+"/index.xml";
+  iname = toDir.getName() + "/" + filename;
   ProblemSpecP myIndexDoc = loadDocument(iname);
   
   ProblemSpecP sectionNode = indexDoc->findBlock(section);
@@ -1605,8 +1598,11 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
         //inputDoc->releaseDocument();
       }
       //rootElem->releaseDocument();
-
-
+      
+      // copy the component sections of timestep.xml.
+      if( d_usingReduceUda ){
+        copy_outputProblemSpec( d_fromDir, d_dir );
+      }
     }
   }
   dbg << "  end\n";
@@ -2498,16 +2494,51 @@ void DataArchiver::updateOutputInterval(double newinv)
 // Allow the component to set the checkpoint interval
 void DataArchiver::updateCheckpointInterval(double newinv)
 {
-  if (d_checkpointInterval ==  newinv) return;
-  else {
+  if (d_checkpointInterval ==  newinv){
+   return;
+  }else {
     d_checkpointInterval = newinv;
     d_nextCheckpointTime=0.0;  
   }
 }
 
+//______________________________________________________________________
+//  This will copy the portions of the timestep.xml from the old uda
+//  to the new uda.  Specifically, the sections related to the components.
+void DataArchiver::copy_outputProblemSpec(Dir& fromDir, Dir& toDir)
+{
 
-/*`==========TESTING==========*/
-//__________________________________
+  int dir_timestep = getTimestepTopLevel();     // could be modified by reduceUda
+  
+  ostringstream tname;
+  tname << "t" << setw(5) << setfill('0') << dir_timestep;
+  
+  // define the from/to directories & files
+  string fromPath = fromDir.getName()+"/"+tname.str();
+  Dir myFromDir   = Dir(fromPath);
+  string fromFile = fromPath + "/timestep.xml";
+  
+  string toPath   = toDir.getName() + "/" + tname.str();
+  Dir myToDir     = Dir( toPath );
+  string toFile   = toPath + "/timestep.xml";  
+  
+  //__________________________________
+  //  loop over the blocks in timestep.xml
+  //  and copy the component related nodes 
+  ProblemSpecP inputDoc = loadDocument( fromFile );
+
+  for (ProblemSpecP ps = inputDoc->getFirstChild(); ps != 0; ps = ps->getNextSibling()) {
+    string nodeName = ps->getNodeName();
+
+    if (nodeName == "Meta" || nodeName == "Time" || nodeName == "Grid" || nodeName == "Data") {
+      continue;
+    }
+    cout << "   Now copying the node (" << nodeName << ")       from: " << fromFile << " to: " << toFile << endl;
+    copySection( myFromDir,  myToDir, "timestep.xml", nodeName );
+  }
+} 
+
+//______________________________________________________________________
 // If your using reduceUda then use use a mapping that's defined in reduceUdaSetup()
 int DataArchiver::getTimestepTopLevel(){
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
@@ -2518,5 +2549,4 @@ int DataArchiver::getTimestepTopLevel(){
   }else{
     return timestep;
   }
-} 
-/*===========TESTING==========`*/
+}
