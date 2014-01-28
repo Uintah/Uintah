@@ -107,12 +107,12 @@ using SCIRun::Mutex;
        //! dumping reduction variables.
        virtual void reduceUdaSetup(Dir& fromDir);
 
-       //! Copy a section between udas' index.xml.
-       void copySection(Dir& fromDir, Dir& toDir, std::string section);
+       //! Copy a section between udas .
+       void copySection(Dir& fromDir, Dir& toDir, std::string file, std::string section);
 
        //! Copy a section from another uda's to our index.xml.
        void copySection(Dir& fromDir, std::string section)
-       { copySection(fromDir, d_dir, section); }
+       { copySection(fromDir, d_dir, "index.xml", section); }
 
        //! Checks to see if this is an output timestep. 
        //! If it is, setup directories and xml files that we need to output.
@@ -305,10 +305,10 @@ using SCIRun::Mutex;
        double d_outputInterval;         // In seconds.
        int d_outputTimestepInterval;    // Number of time steps.
 
-       double d_nextOutputTime; // used when d_outputInterval != 0
-       int d_nextOutputTimestep; // used when d_outputTimestepInterval != 0
+       double d_nextOutputTime;         // used when d_outputInterval != 0
+       int d_nextOutputTimestep;        // used when d_outputTimestepInterval != 0
        //int d_currentTimestep;
-       Dir d_dir; //!< top of uda dir
+       Dir d_dir;                       //!< top of uda dir
 
        //! Represents whether this proc will output non-processor-specific
        //! files
@@ -319,8 +319,8 @@ using SCIRun::Mutex;
 
        //! last timestep dir (filebase.000/t#)
        std::string d_lastTimestepLocation;
-       bool d_isOutputTimestep; //!< set if this is an output timestep
-       bool d_isCheckpointTimestep; //!< set if a checkpoint timestep
+       bool d_isOutputTimestep;         //!< set if this is an output timestep
+       bool d_isCheckpointTimestep;     //!< set if a checkpoint timestep
 
        //! Whether or not particle vars are saved
        //! Requires p.x to be set
@@ -367,9 +367,9 @@ using SCIRun::Mutex;
 
        //! List of current checkpoint dirs
        std::list<std::string> d_checkpointTimestepDirs;
-       double d_nextCheckpointTime; //!< used when d_checkpointInterval != 0
-       int d_nextCheckpointTimestep; //!< used when d_checkpointTimestepInterval != 0
-       int d_nextCheckpointWalltime; //!< used when d_checkpointWalltimeInterval != 0
+       double d_nextCheckpointTime;      //!< used when d_checkpointInterval != 0
+       int d_nextCheckpointTimestep;     //!< used when d_checkpointTimestepInterval != 0
+       int d_nextCheckpointWalltime;     //!< used when d_checkpointWalltimeInterval != 0
 
        //-----------------------------------------------------------
        // RNJ - 
@@ -413,6 +413,9 @@ using SCIRun::Mutex;
        //  used for migrating timestep directories
        std::map< int, int> d_restartTimestepIndicies;
        bool d_usingReduceUda;
+       
+       Dir d_fromDir;                   // keep track of the original uda
+       void copy_outputProblemSpec(Dir& fromDir, Dir& toDir);
        
        // returns either the top level timestep or if reduceUda is used
        // a value from the index.xml file
