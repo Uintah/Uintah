@@ -568,6 +568,11 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
 
   finalizeTimestep();
 
+//#ifdef HAVE_CUDA
+//  // clear all registered, page-locked host memory
+//  unregisterPageLockedHostMem();
+//#endif
+
   log.finishTimestep();
   if (timeout.active() && !parentScheduler) {  // only do on toplevel scheduler
     //emitTime("finalize");
@@ -713,12 +718,6 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     dbg << me << " UnifiedScheduler finished\n";
   }
   //pg_ = 0;
-
-#ifdef HAVE_CUDA
-  // Free up all the pointer maps for device and pinned host pointers
-  unregisterPageLockedHostMem();   // unregister all registered, page-locked host memory
-#endif
-
 }
 
 void UnifiedScheduler::runTasks(int t_id)
@@ -1567,15 +1566,16 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
                 }
               }
 
-              // pin/page-lock host memory for H2D cudaMemcpyAsync
-              // cudaHostRegisterPortable flag so pinned mem will be considered pinned by all CUDA contexts
-              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-              if (!pinned) {
-                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-                if (retVal == cudaSuccess) {
-                  pinnedHostPtrs.insert(host_ptr);
-                }
-              }
+//              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
+//              if (!pinned) {
+//                // pin/page-lock host memory for H2D cudaMemcpyAsync
+//                // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
+//                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
+//                if (retVal == cudaSuccess) {
+//                  pinnedHostPtrs.insert(host_ptr);
+//                }
+//              }
+
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
@@ -1627,15 +1627,16 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
               int numElems = 1; // baked in for now: simple reductions on single value
               dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, numElems);
 
-              // pin/page-lock host memory for H2D cudaMemcpyAsync
-              // cudaHostRegisterPortable flag so pinned mem will be considered pinned by all CUDA contexts
-              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-              if (!pinned) {
-                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-                if (retVal == cudaSuccess) {
-                  pinnedHostPtrs.insert(host_ptr);
-                }
-              }
+//              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
+//              if (!pinned) {
+//                // pin/page-lock host memory for H2D cudaMemcpyAsync
+//                // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
+//                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
+//                if (retVal == cudaSuccess) {
+//                  pinnedHostPtrs.insert(host_ptr);
+//                }
+//              }
+
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
@@ -1903,15 +1904,17 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
               // if offset and size is equal to CPU DW, directly copy back to CPU var memory;
               if (device_offset.x == host_offset.x() && device_offset.y == host_offset.y() && device_offset.z == host_offset.z()
                   && device_size.x == host_size.x() && device_size.y == host_size.y() && device_size.z == host_size.z()) {
-                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-                if (!pinned) {
-                  // pin/page-lock host memory for asynchronous host-to-device copy
-                  // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
-                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-                  if (retVal == cudaSuccess) {
-                    pinnedHostPtrs.insert(host_ptr);
-                  }
-                }
+
+//                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
+//                if (!pinned) {
+//                  // pin/page-lock host memory for H2D cudaMemcpyAsync
+//                  // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
+//                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
+//                  if (retVal == cudaSuccess) {
+//                    pinnedHostPtrs.insert(host_ptr);
+//                  }
+//                }
+
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
@@ -1950,15 +1953,17 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
 
               // if size is equal to CPU DW, directly copy back to CPU var memory;
               if (host_bytes == device_bytes) {
-                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-                if (!pinned) {
-                  // pin/page-lock host memory for asynchronous host-to-device copy
-                  // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
-                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-                  if (retVal == cudaSuccess) {
-                    pinnedHostPtrs.insert(host_ptr);
-                  }
-                }
+
+//                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
+//                if (!pinned) {
+//                  // pin/page-lock host memory for H2D cudaMemcpyAsync
+//                  // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
+//                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
+//                  if (retVal == cudaSuccess) {
+//                    pinnedHostPtrs.insert(host_ptr);
+//                  }
+//                }
+
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
