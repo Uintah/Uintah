@@ -2544,7 +2544,6 @@ int DataArchiver::getTimestepTopLevel(){
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   
   if ( d_usingReduceUda ) {
-    cout << "    getTimestepTopLevel timestep: " << timestep << "::"<<d_restartTimestepIndicies[timestep] << endl;
     return d_restartTimestepIndicies[timestep];
   }else{
     return timestep;
