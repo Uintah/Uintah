@@ -53,7 +53,7 @@
 #include <CCA/Components/Solvers/HypreSolver.h>
 #endif
 
-#include <CCA/Components/PatchCombiner/UdaReducer.h>
+#include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <CCA/Components/DataArchiver/DataArchiver.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
 #include <CCA/Components/Regridder/RegridderFactory.h>
