@@ -42,7 +42,7 @@ UintahPetscError::UintahPetscError(int petsc_code, const std::string& msg, const
   d_msg = out.str();
   
 #ifdef EXCEPTIONS_CRASH
-  cout << d_msg << "\n";
+  std::cout << d_msg << "\n";
 #endif  
 }
 
