@@ -163,9 +163,11 @@ AMRSimulationController::run()
      d_timeinfo->delt_factor = 1;
      d_timeinfo->delt_min    = 0;
      d_timeinfo->delt_max    = 1e99;
+     d_timeinfo->initTime    = static_cast<UdaReducer*>(d_sim)->getInitialTime();
      d_timeinfo->maxTime     = static_cast<UdaReducer*>(d_sim)->getMaxTime();
      d_timeinfo->max_delt_increase = 1e99;
      d_timeinfo->max_initial_delt  = 1e99;
+      
    }
 
    // setup, compile, and run the taskgraph for the initialization timestep
