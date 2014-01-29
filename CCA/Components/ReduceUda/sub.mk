@@ -30,7 +30,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/PatchCombiner
+SRCDIR   := CCA/Components/ReduceUda
 
 SRCS     += $(SRCDIR)/UdaReducer.cc
 

@@ -56,7 +56,7 @@ PSELIBS := \
         $(MPM)           \
         $(MPMICE)        \
         $(COMPONENTS)/Examples             \
-        $(COMPONENTS)/PatchCombiner        \
+        $(COMPONENTS)/ReduceUda            \
         $(COMPONENTS)/ProblemSpecification \
         $(COMPONENTS)/Solvers              \
         $(COMPONENTS)/SwitchingCriteria    \

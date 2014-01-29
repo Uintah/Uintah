@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/PatchCombiner/UdaReducer.h>
+#include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <CCA/Components/DataArchiver/DataArchiver.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>

@@ -54,7 +54,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Tracker/TrackerClient.h>
 
-#include <CCA/Components/PatchCombiner/UdaReducer.h>
+#include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>

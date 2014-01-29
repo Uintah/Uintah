@@ -55,8 +55,7 @@ else # Non-static build
         Core/Util                           \
         CCA/Components/DataArchiver         \
         CCA/Components/Schedulers           \
-        CCA/Components/ProblemSpecification \
-        CCA/Components/PatchCombiner
+        CCA/Components/ProblemSpecification
   endif
 endif
 

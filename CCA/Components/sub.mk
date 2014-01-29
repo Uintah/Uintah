@@ -71,7 +71,7 @@ SUBDIRS := \
         $(MPMARCHES)      \
         $(WASATCH)        \
         $(SRCDIR)/ProblemSpecification \
-        $(SRCDIR)/PatchCombiner \
+        $(SRCDIR)/ReduceUda \
         $(SRCDIR)/Solvers \
         $(SRCDIR)/SwitchingCriteria \
         $(SRCDIR)/OnTheFlyAnalysis \
