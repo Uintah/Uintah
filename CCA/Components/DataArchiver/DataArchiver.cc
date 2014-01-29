@@ -647,19 +647,30 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
 
     // copy checkpoints
     Dir checkpointsFromDir = fromDir.getSubdir("checkpoints");
+    checkpointsFromDir.copy( d_dir );
 
-    bool areCheckpoints  = true;
-    int startTimestep    = 0;
-    int stopTimestep     = SHRT_MAX;
-    bool removeOldDir    = false;
-    copyTimesteps( checkpointsFromDir, d_checkpointsDir, startTimestep,
-                   stopTimestep, removeOldDir, areCheckpoints );
-
-    copySection( checkpointsFromDir, d_checkpointsDir, "index.xml", "variables" );
-    copySection( checkpointsFromDir, d_checkpointsDir, "index.xml", "globals" );
     proc0cout << "\n*** Copied checkpoints to: " << d_checkpointsDir.getName() << endl;
-    proc0cout << "*** Copied dat files to:   " << d_dir.getName() << "\n"<<endl;    
+    proc0cout << "*** Copied dat files to:   " << d_dir.getName() << endl; 
+
+    // copy input.xml.orig if it exists
+    string here = fromDir.getName()+"/input.xml.orig";
+    if ( validFile(here) ){
+      string there = d_dir.getName();
+      copyFile(here, there);
+      proc0cout << "*** Copied input.xml.orig to: " << there << endl;
+    }
     
+    // copy the original ups file if it exists
+    vector<string> ups;
+    fromDir.getFilenamesBySuffix( "ups", ups );
+    
+    if ( ups.size() != 0 ){
+      string upsFile = fromDir.getName() + "/" + ups[0];
+      string there = d_dir.getName();
+      copyFile(upsFile, there);
+      proc0cout << "*** Copied ups file ("<< upsFile<< ") to: " << there << endl;
+    }
+    proc0cout << "\n"<<endl;
   }
 
   // removed the global (dat) variables from the saveLabels
@@ -1085,8 +1096,7 @@ DataArchiver::beginOutputTimestep( double time,
                                    const GridP& grid )
 {
   // time should be currentTime+delt
-  double currentTime = d_sharedState->getElapsedTime();
-  int timestep       = d_sharedState->getCurrentTopLevelTimeStep();
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   dbg << "    beginOutputTimestep\n";
 
   // do *not* update d_nextOutputTime or others here.  We need the original
@@ -2533,7 +2543,7 @@ void DataArchiver::copy_outputProblemSpec(Dir& fromDir, Dir& toDir)
     if (nodeName == "Meta" || nodeName == "Time" || nodeName == "Grid" || nodeName == "Data") {
       continue;
     }
-    cout << "   Now copying the node (" << nodeName << ")       from: " << fromFile << " to: " << toFile << endl;
+    cout << "   Now copying the XML node (" << setw(20) << nodeName << ")" << " from: " << fromFile << " to: " << toFile << endl;
     copySection( myFromDir,  myToDir, "timestep.xml", nodeName );
   }
 } 

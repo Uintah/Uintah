@@ -244,7 +244,7 @@ Dir::getFilenamesBySuffix( const std::string& suffix,
     if ((strlen(file->d_name)>=strlen(ext)) && 
 	(strcmp(file->d_name+strlen(file->d_name)-strlen(ext),ext)==0)) {
       filenames.push_back(file->d_name);
-      cout << "  Found " << file->d_name << "\n";
+      //cout << "  Found " << file->d_name << "\n";
     }
   }
 }

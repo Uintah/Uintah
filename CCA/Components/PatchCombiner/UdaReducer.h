@@ -98,9 +98,11 @@ WARNING
                                const GridP& grid);
                                
     virtual void scheduleFinalizeTimestep(const LevelP& level, 
-                                          SchedulerP&);
+                                          SchedulerP&){};
     
     double getMaxTime();
+    
+    double getInitialTime();
 
     GridP getGrid();
   //______________________________________________________________________
