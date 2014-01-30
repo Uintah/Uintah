@@ -1190,7 +1190,7 @@ Arches::paramInit(const ProcessorGroup* pg,
                   DataWarehouse* new_dw)
 {
   double old_delta_t = 0.0;
-  new_dw->put(delt_vartype(old_delta_t), d_lab->d_oldDeltaTLabel,getLevel(patches));
+  new_dw->put(delt_vartype(old_delta_t), d_lab->d_oldDeltaTLabel);
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
