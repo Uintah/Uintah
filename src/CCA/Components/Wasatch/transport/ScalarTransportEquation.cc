@@ -300,7 +300,7 @@ namespace Wasatch{
     if( !isConstDensity_ ){
       // set bcs for solnVar_*
       const TagNames& tagNames = TagNames::self();
-      const Expr::Tag solnVarStarTag( this->solution_variable_name()+tagNames.star, Expr::STATE_NONE );
+      const Expr::Tag solnVarStarTag( this->solution_variable_name() + tagNames.star, Expr::STATE_NONE );
       const Expr::Tag solnVarStarBCTag( solnVarStarTag.name()+"_bc",Expr::STATE_NONE);
       Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
       if( !factory.have_entry(solnVarStarBCTag) ){
@@ -309,7 +309,8 @@ namespace Wasatch{
       
       bcHelper.add_auxiliary_boundary_condition( this->solution_variable_name(), solnVarStarTag.name(), solnVarStarBCTag.name(), Wasatch::DIRICHLET );
       bcHelper.apply_boundary_condition<FieldT>( solnVarStarTag, taskCat );
-      
+
+      bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(rhs_tag().name() + tagNames.star, Expr::STATE_NONE), taskCat, true );
       bcHelper.apply_boundary_condition<FieldT>( primVarTag_, taskCat );
     }
   }

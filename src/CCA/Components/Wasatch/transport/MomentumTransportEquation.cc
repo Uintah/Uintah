@@ -961,15 +961,19 @@ namespace Wasatch{
    
     const Category taskCat = INITIALIZATION;
   
+    // apply velocity boundary condition, if specified
+    bcHelper.apply_boundary_condition<FieldT>(thisVelTag_, taskCat);
+    // apply momentum boundary condition, if specified
     bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );
 
     if (!isConstDensity_) {
+      const TagNames& tagNames = TagNames::self();
+      
       // set bcs for density
       const Expr::Tag densTag( densityTag_.name(), Expr::STATE_NONE );
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
-      const TagNames& tagNames = TagNames::self();
       const Expr::Tag densStarTag( densityTag_.name()+tagNames.star, Expr::STATE_NONE );
       const Expr::Tag densStarBCTag( densStarTag.name()+"_bc",Expr::STATE_NONE);
       if (!factory.have_entry(densStarBCTag)){
@@ -979,8 +983,6 @@ namespace Wasatch{
       bcHelper.add_auxiliary_boundary_condition( densTag.name(), densStarTag.name(), densStarBCTag.name(), DIRICHLET);
       bcHelper.apply_boundary_condition<SVolField>(densStarTag, taskCat);
     }
-    
-    bcHelper.apply_boundary_condition<FieldT>(thisVelTag_, taskCat);
   }
 
   //==================================================================
@@ -1003,14 +1005,18 @@ namespace Wasatch{
     bcHelper.apply_boundary_condition<FieldT>( rhs_tag(), taskCat, true);
 
     if( !isConstDensity_ ){
+      const TagNames& tagNames = TagNames::self();
+      // set bcs for starred velocities, if any
+      const Expr::Tag velStarTag( thisVelTag_.name() + tagNames.star, Expr::STATE_NONE);
+      bcHelper.apply_boundary_condition<FieldT>(velStarTag, taskCat);
+
       // set bcs for density
       const Expr::Tag densTag( densityTag_.name(), Expr::CARRY_FORWARD );
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
-      const TagNames& tagNames = TagNames::self();
-      const Expr::Tag densStarTag( densityTag_.name()+tagNames.star, Expr::CARRY_FORWARD );
-      const Expr::Tag densStarBCTag( densStarTag.name()+"_bc",Expr::STATE_NONE);
+      const Expr::Tag densStarTag  ( densityTag_.name() + tagNames.star, Expr::CARRY_FORWARD );
+      const Expr::Tag densStarBCTag( densStarTag.name() + "_bc",         Expr::STATE_NONE);
       Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
       if (!factory.have_entry(densStarBCTag)){
         factory.register_expression ( new typename BCCopier<SVolField>::Builder(densStarBCTag, densityTag_) );
