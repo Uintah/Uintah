@@ -23,10 +23,11 @@
  */
 
 //-- Wasatch Includes --//
-#include "TimeStepper.h"
-#include "TaskInterface.h"
-#include "TagNames.h"
+#include <CCA/Components/Wasatch/TimeStepper.h>
+#include <CCA/Components/Wasatch/TaskInterface.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/SetCurrentTime.h>
+
 
 //-- ExprLib includes --//
 #include <expression/ExpressionFactory.h>
@@ -44,6 +45,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Grid/SimulationState.h>
+#include <sci_defs/cuda_defs.h>
 
 
 using std::endl;
@@ -89,13 +91,15 @@ namespace Wasatch{
 
   template<typename FieldT>
   void
-  do_update( const std::set< TimeStepper::FieldInfo<FieldT> >& fields,
+  do_update( const Uintah::Task::CallBackEvent event,
+             const std::set< TimeStepper::FieldInfo<FieldT> >& fields,
              const Uintah::Patch* const patch,
              const int material,
              Uintah::DataWarehouse* const oldDW,
              Uintah::DataWarehouse* const newDW,
              const double deltat,
              const int rkStage,
+             void* stream,
              const TimeIntegrator& timeInt )
   {
     const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<FieldT>();
@@ -107,24 +111,66 @@ namespace Wasatch{
       typedef typename SelectUintahFieldType<FieldT>::const_type ConstUintahField;
       typedef typename SelectUintahFieldType<FieldT>::type       UintahField;
 
+      double* phiNewDevice = NULL;                           // Device Variable
       UintahField phiNew;
-      if( rkStage==1 ) newDW->allocateAndPut( phiNew, ifld->varLabel, material, patch, gt, ng );  // note that these fields do have ghost info.
-      else             newDW->getModifiable ( phiNew, ifld->varLabel, material, patch, gt, ng );
+
+#     ifdef HAVE_CUDA
+      const char* philabel = ifld->varLabel->getName().c_str();
+      if( event == Uintah::Task::GPU || event == Uintah::Task::postGPU ){
+        newDW->allocateTemporary( phiNew, patch, gt, ng );
+        Uintah::GPUGridVariable<double> myDeviceVar;
+        newDW->getGPUDW()->getModifiable( myDeviceVar, philabel, patch->getID(), material );
+        phiNewDevice = const_cast<double*>( myDeviceVar.getPointer() );
+      } else{
+        if( rkStage==1 ) newDW->allocateAndPut( phiNew, ifld->varLabel, material, patch, gt, ng );  // note that these fields do have ghost info.
+        else             newDW->getModifiable ( phiNew, ifld->varLabel, material, patch, gt, ng );
+      }
+#     else
+        if( rkStage==1 ) newDW->allocateAndPut( phiNew, ifld->varLabel, material, patch, gt, ng );  // note that these fields do have ghost info.
+        else             newDW->getModifiable ( phiNew, ifld->varLabel, material, patch, gt, ng );
+#     endif
 
       ConstUintahField phiOld, rhs;
+      double* phiOldDevice = NULL;
+      double* rhsDevice    = NULL;
+      SpatialOps::MemoryType mtype = SpatialOps::LOCAL_RAM;
+      const unsigned short int deviceIndex = 0;
+
+#     ifdef HAVE_CUDA
+      const char* rhslabel = ifld->rhsLabel->getName().c_str();
+      if( event == Uintah::Task::GPU || event == Uintah::Task::postGPU ){
+        mtype = SpatialOps::EXTERNAL_CUDA_GPU;
+
+        oldDW->get( phiOld, ifld->varLabel, material, patch, gt, ng );
+        Uintah::GPUGridVariable<double> myOldDeviceVar;
+        oldDW->getGPUDW()->get( myOldDeviceVar, philabel, patch->getID(), material );
+        phiOldDevice = const_cast<double*>( myOldDeviceVar.getPointer() );
+
+        newDW->get( rhs,    ifld->rhsLabel, material, patch, gt, ng );
+        Uintah::GPUGridVariable<double> myrhsDeviceVar;
+        newDW->getGPUDW()->get( myrhsDeviceVar, rhslabel, patch->getID(), material );
+        rhsDevice = const_cast<double*>( myrhsDeviceVar.getPointer() );
+      }else{
+        oldDW->get( phiOld, ifld->varLabel, material, patch, gt, ng );
+        newDW->get( rhs,    ifld->rhsLabel, material, patch, gt, ng );
+      }
+#     else
       oldDW->get( phiOld, ifld->varLabel, material, patch, gt, ng );
       newDW->get( rhs,    ifld->rhsLabel, material, patch, gt, ng );
-
+#     endif
       //______________________________________
       // forward Euler or RK3SSP timestep at each point:
-      FieldT*       const fnew = wrap_uintah_field_as_spatialops<FieldT>(phiNew,patch);
-      const FieldT* const fold = wrap_uintah_field_as_spatialops<FieldT>(phiOld,patch);
-      const FieldT* const frhs = wrap_uintah_field_as_spatialops<FieldT>(rhs,   patch);
+      FieldT*       const fnew = wrap_uintah_field_as_spatialops<FieldT>(phiNew, patch, mtype, deviceIndex, phiNewDevice);
+      const FieldT* const frhs = wrap_uintah_field_as_spatialops<FieldT>(rhs,    patch, mtype, deviceIndex, rhsDevice);
+      const FieldT* const fold = wrap_uintah_field_as_spatialops<FieldT>(phiOld, patch, mtype, deviceIndex, phiOldDevice);
       using namespace SpatialOps;
-      
       const double a = timeInt.alpha[rkStage-1];
       const double b = timeInt.beta[rkStage-1];
-            
+
+#     ifdef HAVE_CUDA
+      if( event == Uintah::Task::GPU || event == Uintah::Task::postGPU ) fnew->set_stream( *(cudaStream_t*)stream );
+#     endif
+
       if( rkStage==1 ) *fnew <<= *fold + deltat * *frhs; // for the first stage, no need to do an extra multiplication
       else             *fnew <<= a * *fold + b * (*fnew  + deltat * *frhs);
 
@@ -213,7 +259,7 @@ namespace Wasatch{
     //_________________________________________________________________
     // Schedule the task to compute the RHS for the transport equations
     //
-
+    bool rhsDeviceTask;
     try{
       // jcs for multistage integrators, we may need to keep the same
       //     field manager list for all of the stages?  Otherwise we
@@ -228,6 +274,9 @@ namespace Wasatch{
 
       taskInterfaceList_.push_back( rhsTask );
       rhsTask->schedule( rkStage ); // must be scheduled after coordHelper_
+#     ifdef HAVE_CUDA
+        //if( rhsTask->get_task_event() == Uintah::Task::GPU ) rhsDeviceTask = true;
+#     endif
     }
     catch( std::exception& e ){
       std::ostringstream msg;
@@ -246,6 +295,10 @@ namespace Wasatch{
     // add a task to advance each solution variable in time
     {
       Uintah::Task* updateTask = scinew Uintah::Task( "update solution vars_" + strRKStage.str(), this, &TimeStepper::update_variables, rkStage );
+
+#     ifdef HAVE_CUDA
+        //if( rhsDeviceTask ) updateTask->usesDevice( true );
+#     endif
 
       const Uintah::PatchSubset* const pss = patches->getUnion();
       set_soln_field_requirements<SO::SVolField>( updateTask, scalarFields_, pss, mss, rkStage );
@@ -296,11 +349,13 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   void
-  TimeStepper::update_variables( const Uintah::ProcessorGroup* const pg,
+  TimeStepper::update_variables( const Uintah::Task::CallBackEvent event,
+                                 const Uintah::ProcessorGroup* const pg,
                                  const Uintah::PatchSubset* const patches,
                                  const Uintah::MaterialSubset* const materials,
                                  Uintah::DataWarehouse* const oldDW,
                                  Uintah::DataWarehouse* const newDW,
+                                 void* stream,
                                  const int rkStage )
   {
     //__________________
@@ -324,10 +379,10 @@ namespace Wasatch{
         //____________________________________________
         // update variables on this material and patch
         // jcs note that we could do this in parallel
-        do_update<SO::SVolField>( scalarFields_, patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
-        do_update<SO::XVolField>( xVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
-        do_update<SO::YVolField>( yVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
-        do_update<SO::ZVolField>( zVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, timeInt_ );
+        do_update<SO::SVolField>( event, scalarFields_, patch, material, oldDW, newDW, deltat, rkStage, stream, timeInt_ );
+        do_update<SO::XVolField>( event, xVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, stream, timeInt_ );
+        do_update<SO::YVolField>( event, yVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, stream, timeInt_ );
+        do_update<SO::ZVolField>( event, zVolFields_,   patch, material, oldDW, newDW, deltat, rkStage, stream, timeInt_ );
 
       } // material loop
     } // patch loop
