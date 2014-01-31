@@ -421,6 +421,46 @@ namespace Wasatch{
       slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_continuitysrc, drhodtTag);
     }
   }
+  
+  //==================================================================
+  
+  void parse_var_den_corrugated_mms( Uintah::ProblemSpecP wasatchParams,
+                                     Uintah::ProblemSpecP varDen2DMMSParams,
+                                     const bool computeContinuityResidual,
+                                     GraphCategories& gc)
+  {
+    std::string solnVarName;
+    double rho0, rho1, d, w, a, b, k, uf, vf;
+    const Expr::Tag diffTag = parse_nametag( varDen2DMMSParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
+    varDen2DMMSParams->get("ConservedScalar",solnVarName);
+    varDen2DMMSParams->getAttribute("rho0",rho0);
+    varDen2DMMSParams->getAttribute("rho1",rho1);
+    varDen2DMMSParams->getAttribute("uf",uf);
+    varDen2DMMSParams->getAttribute("vf",vf);
+    varDen2DMMSParams->getAttribute("k",k);
+    varDen2DMMSParams->getAttribute("w",w);
+    varDen2DMMSParams->getAttribute("d",d);
+    varDen2DMMSParams->getAttribute("a",a);
+    varDen2DMMSParams->getAttribute("b",b);
+    
+    GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];
+    GraphHelper* const icgraphHelper = gc[INITIALIZATION];
+
+    const TagNames& tagNames = TagNames::self();    
+    const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
+    const Expr::Tag solnVarRHSStarTag = Expr::Tag(solnVarName+"_rhs"+tagNames.star,Expr::STATE_NONE);
+    
+
+    slngraphHelper->exprFactory->register_expression( new VarDenCorrugatedMMSMixFracSrc<SVolField>::Builder(tagNames.mms_mixfracsrc, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, rho0, rho1, d, w, k, a, b, uf, vf));
+    
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSTag);
+    slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_mixfracsrc, solnVarRHSStarTag);
+    
+    // register the initial condition for velocities
+    icgraphHelper->exprFactory->register_expression( new VarDenCorrugatedMMSVelocity<XVolField>::Builder(Expr::Tag("u",Expr::STATE_NONE), tagNames.xxvolcoord, tagNames.yxvolcoord, tagNames.time, rho0, rho1, d, w, k, a, b, uf, vf));
+    icgraphHelper->exprFactory->register_expression( new Expr::ConstantExpr<YVolField>::Builder(Expr::Tag("v",Expr::STATE_NONE), vf ));
+
+  }
 
   //==================================================================
   

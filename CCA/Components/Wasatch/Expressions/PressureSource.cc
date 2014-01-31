@@ -163,15 +163,21 @@ void PressureSource::evaluate()
     }
     
     // beta is the ratio of drhodt to div(mom*)
-    beta  <<= cond (abs(drhodtstar - divmomstar) <= 1e-10, 1.0)
-                   (abs(divmomstar) <= 1e-12, 2.0)
-                   (abs(drhodtstar/divmomstar));
+//    beta  <<= cond (abs(drhodtstar - divmomstar) <= 1e-10, 1.0)
+//                   (abs(divmomstar) <= 1e-12, 2.0)
+//                   (abs(drhodtstar/divmomstar));
     
 //    alpha <<= cond( beta != beta, 0.0 )
 //                  ( 1.0/(beta + 1.0)  );
     
-    alpha <<= cond( beta != beta, 0.0 )
-                  ( exp(log(0.2)*(pow(beta,0.2))) ); // Increase the value of the exponent to get closer to a step function
+//    alpha <<= cond( beta != beta, 0.0 )
+//                  ( exp(log(0.2)*(pow(beta,0.2))) ); // Increase the value of the exponent to get closer to a step function
+    
+    // MAYBE THE FOLLOWING BETA BETA BEHAVES A BIT BETTER?
+//    beta  <<= abs( drhodtstar/ (divmomstar + 1) );
+
+    // INSTEAD OF SCALING WITH BETA, TRY DRHODT
+//    alpha <<=  0.9/(abs(drhodtstar) + 1.0) + 0.1 ;
 
     alpha <<= 0.1; // use this for the moment until we figure out the proper model for alpha
 
