@@ -43,13 +43,7 @@ using namespace Uintah;
 
 //__________________________________
 //  ToDo
-//  - add warning message.
 //  - copy On-the-Fly files directories
-//  Testing
-//     - oututput double as float
-//     - particles on a single level
-//     - parallel
-//     
 //______________________________________________________________________
 //
 UdaReducer::UdaReducer(const ProcessorGroup* world, 
@@ -85,18 +79,46 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Add a warning message
   proc0cout << "\n______________________________________________________________________\n";
-  proc0cout << "      R E D U C E _ U D A   C A V E A T S :\n\n";
+  proc0cout << "                      R E D U C E _ U D A \n\n";
   proc0cout << "    - You must manually copy all On-the-Fly files/directories from the original uda\n";
   proc0cout << "      to the new uda, reduce_uda ignores them.\n\n";
   proc0cout << "    - The <outputInterval>, <outputTimestepInterval> tags are ignored and every\n";
   proc0cout << "      timestep in the original uda is processed.  If you want to prune timesteps\n";
   proc0cout << "      you must manually delete timesteps directories and modify the index.xml file.\n\n";
   proc0cout << "    - Use a different uda name for the modifed uda to prevent confusion with the original uda.\n\n";
+  proc0cout << "    - In the timestep.xml files the follow non-essential entries will be changed:\n";
+  proc0cout << "           numProcs:      Number of procs used during the reduceUda run.\n";
+  proc0cout << "           oldDelt:       Difference in timesteps, i.e., time(TS) - time (TS-1), in physical time.\n";
+  proc0cout << "           proc:          The processor to patch assignment.\n\n";
+  proc0cout << "    - The number of files inside of a timestep directory will now equal the number of processors used to reduce the uda\n";
+  proc0cout << "      <<< You should use the same number of processors to reduce the uda as you will use to visualize it >>> \n\n";
+  proc0cout << "      For large runs this should speed up data transfers and post processing utilities\n\n";
   proc0cout << "    - Checkpoint directories are copied with system calls from the original -> modified uda.\n\n";
   proc0cout << "    - ALWAYS, ALWAYS, ALWAYS verify that the new (modified) uda is consistent\n";
   proc0cout << "      with your specfications before deleting the original uda.\n\n";
   proc0cout << "______________________________________________________________________\n\n";
+  
+  //__________________________________
+  /*
+   If you want to process an uda that contains timesteps 
+   that have a different number of variables per timestep add the following hack. 
+  
+    DataArchive.cc 
+    DataArchive::restartInitialize{
 
+Around line 870 add:
+
+    if (label == 0) {
+      continue;
+    }
+#if 0    
+    if (label == 0) {
+      throw UnknownVariable(key.name_, dw->getID(), patch, matl,
+                            "on DataArchive::scheduleRestartInitialize",
+                            __FILE__, __LINE__);
+    }
+#endif 
+  */
   //__________________________________
   //
   d_sharedState = state;
