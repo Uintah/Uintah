@@ -331,7 +331,7 @@ namespace Wasatch{
     const TagNames& tagNames = TagNames::self();
 
     const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
-    const Expr::Tag solnVarRHSStarTag = Expr::Tag(solnVarName+"_rhs"+tagNames.star,Expr::STATE_NONE);
+    const Expr::Tag solnVarRHSStarTag = tagNames.make_star_rhs(solnVarName);
     
     GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];    
     slngraphHelper->exprFactory->register_expression( new VarDen1DMMSMixFracSrc<SVolField>::Builder(tagNames.mms_mixfracsrc,tagNames.xsvolcoord, tagNames.time, D, rho0, rho1));
@@ -375,7 +375,7 @@ namespace Wasatch{
     const TagNames& tagNames = TagNames::self();
     
     const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
-    const Expr::Tag solnVarRHSStarTag = Expr::Tag(solnVarName+"_rhs"+tagNames.star,Expr::STATE_NONE);
+    const Expr::Tag solnVarRHSStarTag = tagNames.make_star_rhs(solnVarName);
     
     GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];
     slngraphHelper->exprFactory->register_expression( new VarDenMMSOscillatingMixFracSrc<SVolField>::Builder(tagNames.mms_mixfracsrc, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, rho0, rho1, d, w, k, uf, vf));
@@ -387,8 +387,8 @@ namespace Wasatch{
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
     Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
     
-    Expr::Tag densStarTag = Expr::Tag(densityTag.name() + tagNames.star, Expr::CARRY_FORWARD);
-    Expr::Tag dens2StarTag = Expr::Tag(densityTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD);
+    Expr::Tag densStarTag  = tagNames.make_star(densityTag, Expr::CARRY_FORWARD);
+    Expr::Tag dens2StarTag = tagNames.make_double_star(densityTag, Expr::CARRY_FORWARD);
     
     std::string xvelname, yvelname, zvelname;
     Uintah::ProblemSpecP doxvel,doyvel, dozvel;
@@ -396,11 +396,11 @@ namespace Wasatch{
     doxvel = momEqnParams->get( "X-Velocity", xvelname );
     doyvel = momEqnParams->get( "Y-Velocity", yvelname );
     dozvel = momEqnParams->get( "Z-Velocity", zvelname );
-    if( doxvel ) velStarTags.push_back( Expr::Tag(xvelname + tagNames.star, Expr::STATE_NONE) );
+    if( doxvel ) velStarTags.push_back( tagNames.make_star(xvelname) );
     else         velStarTags.push_back( Expr::Tag() );
-    if( doyvel ) velStarTags.push_back( Expr::Tag(yvelname + tagNames.star, Expr::STATE_NONE) );
+    if( doyvel ) velStarTags.push_back( tagNames.make_star(yvelname) );
     else         velStarTags.push_back( Expr::Tag() );
-    if( dozvel ) velStarTags.push_back( Expr::Tag(zvelname + tagNames.star, Expr::STATE_NONE) );
+    if( dozvel ) velStarTags.push_back( tagNames.make_star(zvelname) );
     else         velStarTags.push_back( Expr::Tag() );
     
     //    double a=1.0, b=1.0;
@@ -447,8 +447,8 @@ namespace Wasatch{
     GraphHelper* const icgraphHelper = gc[INITIALIZATION];
 
     const TagNames& tagNames = TagNames::self();    
-    const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
-    const Expr::Tag solnVarRHSStarTag = Expr::Tag(solnVarName+"_rhs"+tagNames.star,Expr::STATE_NONE);
+    const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName + "_rhs",Expr::STATE_NONE);
+    const Expr::Tag solnVarRHSStarTag = tagNames.make_star_rhs(solnVarName);
     
 
     slngraphHelper->exprFactory->register_expression( new VarDenCorrugatedMMSMixFracSrc<SVolField>::Builder(tagNames.mms_mixfracsrc, tagNames.xsvolcoord, tagNames.ysvolcoord, tagNames.time, rho0, rho1, d, w, k, a, b, uf, vf));

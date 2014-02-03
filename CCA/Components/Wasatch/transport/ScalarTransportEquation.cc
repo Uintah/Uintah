@@ -226,10 +226,10 @@ namespace Wasatch{
 
       const bool hasConvection_ = params_->findBlock("ConvectiveFluxExpression");
       if( hasConvection_ ){
-        const Expr::Tag rhsStarTag( solnVarName_ + "_rhs" + tagNames.star, Expr::STATE_NONE );
-        const Expr::Tag densityStarTag( densityTag_.name() + tagNames.star, Expr::CARRY_FORWARD );
-        const Expr::Tag primVarStarTag( primVarTag_.name() + tagNames.star, Expr::STATE_NONE );
-        const Expr::Tag solnVarStarTag( solnVarName_       + tagNames.star, Expr::STATE_NONE );
+        const Expr::Tag rhsStarTag = tagNames.make_star_rhs(solnVarName_);
+        const Expr::Tag densityStarTag = tagNames.make_star(densityTag_, Expr::CARRY_FORWARD);
+        const Expr::Tag primVarStarTag = tagNames.make_star(primVarTag_);
+        const Expr::Tag solnVarStarTag = tagNames.make_star(solnVarName_);
         infoStar_[PRIMITIVE_VARIABLE] = primVarStarTag;
         
         EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
@@ -300,7 +300,7 @@ namespace Wasatch{
     if( !isConstDensity_ ){
       // set bcs for solnVar_*
       const TagNames& tagNames = TagNames::self();
-      const Expr::Tag solnVarStarTag( this->solution_variable_name() + tagNames.star, Expr::STATE_NONE );
+      const Expr::Tag solnVarStarTag = tagNames.make_star(this->solution_variable_name());
       const Expr::Tag solnVarStarBCTag( solnVarStarTag.name()+"_bc",Expr::STATE_NONE);
       Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
       if( !factory.have_entry(solnVarStarBCTag) ){

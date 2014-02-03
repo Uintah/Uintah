@@ -148,7 +148,7 @@
 
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f_*" state="STATE_NONE"/>        
+        <NameTag name="f*" state="STATE_NONE"/>        
       </FieldExpression>                    
     </FieldClipping>
 
@@ -160,13 +160,13 @@
 
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="rhof_*" state="STATE_NONE"/>        
+        <NameTag name="rhof*" state="STATE_NONE"/>        
       </FieldExpression>                    
     </FieldClipping>
 
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="rhof_**" state="STATE_NONE"/>        
+        <NameTag name="rhof**" state="STATE_NONE"/>        
       </FieldExpression>                    
     </FieldClipping>
         
@@ -222,13 +222,13 @@
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.001"/>
     <save label="density"/>
-    <save label="u_*"/>
-    <save label="v_*"/>
-    <save label="density_*"/>
-    <save label="density_**"/>
+    <save label="u*"/>
+    <save label="v*"/>
+    <save label="density*"/>
+    <save label="density**"/>
     <save label="varden_alpha"/>    
     <save label="varden_beta"/>        
-    <save label="divmom_*"/>            
+    <save label="divmom*"/>            
     <save label="x-mom"/>
     <save label="y-mom"/>
     <save label="x-mom_rhs_partial"/>
@@ -239,13 +239,13 @@
     <save label="diffcoef"/>    
 <!--     <save label="mms_mixture_fraction_src"/> -->
     <save label="f"/>
-    <save label="f_*"/>
+    <save label="f*"/>
     
     <save label="rhof"/>
-    <save label="rhof_*"/>    
-    <save label="rhof_**"/>    
+    <save label="rhof*"/>    
+    <save label="rhof**"/>    
     <save label="rhof_rhs"/>    
-    <save label="rhof_rhs_*"/>      
+    <save label="rhof_rhs*"/>      
 
     <save label="rhof_convective_flux_Y"/>
     
@@ -254,8 +254,8 @@
     <save label="pressure_rhs"/>    
     <save label="f_diffFlux_X"/>
     <save label="f_diffFlux_Y"/>
-    <save label="f_diffFlux_X_*"/>
-    <save label="f_diffFlux_Y_*"/>    
+    <save label="f_diffFlux_X*"/>
+    <save label="f_diffFlux_Y*"/>    
   </DataArchiver> 
 
   <Grid>
@@ -266,17 +266,17 @@
       <Face side="x-">
         <BCType var="Dirichlet" label="u" value="u-inlet"/>
         <BCType var="Dirichlet" label="x-mom" value="xmom-inlet"/>        
-        <BCType var="Dirichlet" label="u_*" value="u*-inlet"/>        
+        <BCType var="Dirichlet" label="u*" value="u*-inlet"/>        
 
         <BCType var="Dirichlet" label="f" value="1.0"/>        
-        <BCType var="Dirichlet" label="f_*" value="1.0"/>                
+        <BCType var="Dirichlet" label="f*" value="1.0"/>                
 
         <BCType var="Dirichlet" label="rhof_rhs" value="0.0"/>        
-        <BCType var="Dirichlet" label="rhof_rhs_*" value="0.0"/>        
-        <BCType var="Dirichlet" label="rhof_rhs_**" value="0.0"/>        
+        <BCType var="Dirichlet" label="rhof_rhs*" value="0.0"/>        
+        <BCType var="Dirichlet" label="rhof_rhs**" value="0.0"/>        
 
         <BCType var="Dirichlet" label="v" value="0.5"/>
-        <BCType var="Dirichlet" label="v_*" value="0.5"/>        
+        <BCType var="Dirichlet" label="v*" value="0.5"/>        
         <BCType var="Dirichlet" label="y-mom" value="0.5"/>        
 
         <BCType var="Dirichlet" label="x-mom_rhs_partial" value="0.0"/>
@@ -292,9 +292,9 @@
       <Face side="y+">
         <BCType var="Neumann" label="x-mom" value="0.0"/>      
         <BCType var="Neumann" label="u" value="0.0"/>      
-        <BCType var="Neumann" label="u_*" value="0.0"/>              
+        <BCType var="Neumann" label="u*" value="0.0"/>              
         <BCType var="Neumann" label="v" value="0.0"/>              
-        <BCType var="Neumann" label="v_*" value="0.0"/>              
+        <BCType var="Neumann" label="v*" value="0.0"/>              
         <BCType var="Neumann" label="y-mom" value="0.0"/>
         
         <BCType var="Neumann" label="rhof_rhs" value="0.0"/>
@@ -308,18 +308,18 @@
       <Face side="y-">
         <BCType var="Dirichlet" label="x-mom" value="xmom-bottom"/>              
         <BCType var="Dirichlet" label="u" value="u-bottom"/>      
-        <BCType var="Dirichlet" label="u_*" value="u*-bottom"/>              
+        <BCType var="Dirichlet" label="u*" value="u*-bottom"/>              
         
         <BCType var="Dirichlet" label="v"   value="0.5"/>     
-        <BCType var="Dirichlet" label="v_*" value="0.5"/>     
+        <BCType var="Dirichlet" label="v*" value="0.5"/>     
         
         <BCType var="Dirichlet" label="y-mom" value = "ymom-inlet"/>
         
         <BCType var="Dirichlet" label="rhof_rhs" value="0.0"/>
-        <BCType var="Dirichlet" label="rhof_rhs_*" value="0.0"/>
+        <BCType var="Dirichlet" label="rhof_rhs*" value="0.0"/>
 
         <BCType var="Dirichlet" label="f" value="f-bottom"/>
-        <BCType var="Dirichlet" label="f_*" value="f-bottom"/>
+        <BCType var="Dirichlet" label="f*" value="f-bottom"/>
         
         <BCType var="Neumann" label="pressure" value="0.0"/>
 <!--         <BCType var="Dirichlet" label="density" value="rho-bottom"/> -->

@@ -102,7 +102,7 @@ namespace Wasatch{
     
     // varden
     const std::string
-    star, doubleStar;
+    star, doubleStar, rhs;
     
     const Expr::Tag
     pressuresrc,
@@ -118,6 +118,19 @@ namespace Wasatch{
     // postprocessing-related tags
     const Expr::Tag
     continuityresidual;
+
+    template < typename T >
+    const Expr::Tag make_star(T someTag,
+                              Expr::Context newContext=Expr::STATE_NONE) const;
+    template < typename T >
+    const Expr::Tag make_double_star(T someTag,
+                                     Expr::Context newContext=Expr::STATE_NONE) const;
+    template < typename T >
+    const Expr::Tag make_star_rhs(T someTag,
+                                  Expr::Context newContext=Expr::STATE_NONE) const;
+    template < typename T >
+    const Expr::Tag make_double_star_rhs(T someTag,
+                                         Expr::Context newContext=Expr::STATE_NONE) const;
 
   private:
     TagNames();
