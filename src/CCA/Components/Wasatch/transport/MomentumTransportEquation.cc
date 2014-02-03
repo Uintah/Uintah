@@ -306,11 +306,11 @@ namespace Wasatch{
                          Expr::TagList& velStarTags )
   {
     const TagNames& tagNames = TagNames::self();
-    if( velTags[0] != Expr::Tag() ) velStarTags.push_back( Expr::Tag(velTags[0].name() + tagNames.star, Expr::STATE_NONE) );
+    if( velTags[0] != Expr::Tag() ) velStarTags.push_back( tagNames.make_star(velTags[0]) );
     else         velStarTags.push_back( Expr::Tag() );
-    if( velTags[1] != Expr::Tag() ) velStarTags.push_back( Expr::Tag(velTags[1].name() + tagNames.star, Expr::STATE_NONE) );
+    if( velTags[1] != Expr::Tag() ) velStarTags.push_back( tagNames.make_star(velTags[1]) );
     else         velStarTags.push_back( Expr::Tag() );
-    if( velTags[2] != Expr::Tag() ) velStarTags.push_back( Expr::Tag(velTags[2].name() + tagNames.star, Expr::STATE_NONE) );
+    if( velTags[2] != Expr::Tag() ) velStarTags.push_back( tagNames.make_star(velTags[2]) );
     else         velStarTags.push_back( Expr::Tag() );
   }
   
@@ -681,7 +681,7 @@ namespace Wasatch{
     
     if( !isConstDensity ){
       // calculating velocity at the next time step
-      const Expr::Tag thisVelStarTag = Expr::Tag( thisVelTag_.name() + tagNames.star, Expr::STATE_NONE);
+      const Expr::Tag thisVelStarTag = tagNames.make_star(thisVelTag_);
       const Expr::Tag convTermWeak   = Expr::Tag( thisVelTag_.name() + "_weak_convective_term", Expr::STATE_NONE);
       if( !factory.have_entry( thisVelStarTag ) ){
         OldVariable& oldPressure = OldVariable::self();
@@ -694,8 +694,8 @@ namespace Wasatch{
     }
     
     if( !factory.have_entry( tagNames.pressuresrc ) ){
-      const Expr::Tag densStarTag  = Expr::Tag( densTag.name() + tagNames.star,       Expr::CARRY_FORWARD );
-      const Expr::Tag dens2StarTag = Expr::Tag( densTag.name() + tagNames.doubleStar, Expr::CARRY_FORWARD );
+      const Expr::Tag densStarTag  = tagNames.make_star(densTag, Expr::CARRY_FORWARD);
+      const Expr::Tag dens2StarTag = tagNames.make_double_star(densTag, Expr::CARRY_FORWARD);
       Expr::TagList velStarTags = Expr::TagList();
       
       set_vel_star_tags( velTags_, velStarTags );
@@ -974,7 +974,7 @@ namespace Wasatch{
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
-      const Expr::Tag densStarTag( densityTag_.name()+tagNames.star, Expr::STATE_NONE );
+      const Expr::Tag densStarTag = tagNames.make_star(densityTag_);
       const Expr::Tag densStarBCTag( densStarTag.name()+"_bc",Expr::STATE_NONE);
       if (!factory.have_entry(densStarBCTag)){
         factory.register_expression ( new typename BCCopier<SVolField>::Builder(densStarBCTag, densTag) );
@@ -1007,7 +1007,7 @@ namespace Wasatch{
     if( !isConstDensity_ ){
       const TagNames& tagNames = TagNames::self();
       // set bcs for starred velocities, if any
-      const Expr::Tag velStarTag( thisVelTag_.name() + tagNames.star, Expr::STATE_NONE);
+      const Expr::Tag velStarTag = tagNames.make_star(thisVelTag_);
       bcHelper.apply_boundary_condition<FieldT>(velStarTag, taskCat);
 
       // set bcs for density
@@ -1015,7 +1015,7 @@ namespace Wasatch{
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
-      const Expr::Tag densStarTag  ( densityTag_.name() + tagNames.star, Expr::CARRY_FORWARD );
+      const Expr::Tag densStarTag = tagNames.make_star(densityTag_,Expr::CARRY_FORWARD);
       const Expr::Tag densStarBCTag( densStarTag.name() + "_bc",         Expr::STATE_NONE);
       Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
       if (!factory.have_entry(densStarBCTag)){

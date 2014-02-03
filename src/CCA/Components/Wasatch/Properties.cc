@@ -463,8 +463,8 @@ namespace Wasatch{
       }
 
       // Here we get the variables needed for calculations at the stage "**"
-      const Expr::Tag solnVarRHSStarTag( solnVarName+"_rhs"+tagNames.star, Expr::STATE_NONE );
-      const Expr::Tag solnVar2StarTag  ( solnVarName+tagNames.doubleStar,  Expr::STATE_NONE );
+      const Expr::Tag solnVarRHSStarTag = tagNames.make_star_rhs(solnVarName);;
+      const Expr::Tag solnVar2StarTag   = tagNames.make_double_star(solnVarName);
 
       if( !solnGraphHelper.exprFactory->have_entry( solnVar2StarTag ) ){
         solnGraphHelper.exprFactory->register_expression( scinew SolnVarEst<SVolField>::Builder( solnVar2StarTag, solnVarStarTag, solnVarRHSStarTag, tagNames.timestep ));

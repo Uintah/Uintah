@@ -140,13 +140,13 @@
     <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
     <save label="density"/>
-    <save label="u_*"/>
-    <save label="v_*"/>
-    <save label="density_*"/>
-    <save label="density_**"/>
+    <save label="u*"/>
+    <save label="v*"/>
+    <save label="density*"/>
+    <save label="density**"/>
     <save label="varden_alpha"/>    
     <save label="varden_beta"/>        
-    <save label="divmom_*"/>            
+    <save label="divmom*"/>            
     <save label="x-mom"/>
     <save label="y-mom"/>
     <save label="x-mom_rhs_partial"/>
@@ -163,8 +163,8 @@
     <save label="pressure_rhs"/>    
     <save label="f_diffFlux_X"/>
     <save label="f_diffFlux_Y"/>
-    <save label="f_diffFlux_X_*"/>
-    <save label="f_diffFlux_Y_*"/>    
+    <save label="f_diffFlux_X*"/>
+    <save label="f_diffFlux_Y*"/>    
   </DataArchiver> 
 
   <Grid>
