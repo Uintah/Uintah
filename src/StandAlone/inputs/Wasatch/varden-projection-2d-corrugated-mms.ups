@@ -245,7 +245,7 @@
     <save label="rhof*"/>    
     <save label="rhof**"/>    
     <save label="rhof_rhs"/>    
-    <save label="rhof_rhs*"/>      
+    <save label="rhof*_rhs"/>      
 
     <save label="rhof_convective_flux_Y"/>
     

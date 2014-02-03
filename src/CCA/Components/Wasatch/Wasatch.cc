@@ -579,16 +579,8 @@ namespace Wasatch{
     }
 
     //
-    // get the 2D variable density, osicllating (and periodic) mms params, if any, and parse them.
-    //
-    Uintah::ProblemSpecP varDenOscillatingMMSParams = wasatchSpec_->findBlock("VarDenOscillatingMMS");
-    if (varDenOscillatingMMSParams) {
-      const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
-      parse_var_den_oscillating_mms(wasatchSpec_, varDenOscillatingMMSParams, computeContinuityResidual, graphCategories_);
-    }
-    
-    //
     // get the 2D variable density, corrugated mms params, if any, and parse them.
+    // THIS MUST BE PARSED BEFORE THE MOMENTUM EQUATIONS
     //
     Uintah::ProblemSpecP VarDenCorrugatedMMSSpec = wasatchSpec_->findBlock("VarDenCorrugatedMMS");
     if (VarDenCorrugatedMMSSpec) {
@@ -626,6 +618,15 @@ namespace Wasatch{
       }
     }
 
+    //
+    // get the 2D variable density, osicllating (and periodic) mms params, if any, and parse them.
+    //
+    Uintah::ProblemSpecP varDenOscillatingMMSParams = wasatchSpec_->findBlock("VarDenOscillatingMMS");
+    if (varDenOscillatingMMSParams) {
+      const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
+      parse_var_den_oscillating_mms(wasatchSpec_, varDenOscillatingMMSParams, computeContinuityResidual, graphCategories_);
+    }
+    
     //
     // Build moment transport equations.  This registers all expressions
     // required for solution of each momentum equation.

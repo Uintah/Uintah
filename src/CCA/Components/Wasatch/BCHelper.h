@@ -551,7 +551,33 @@ namespace Wasatch {
      * solver first and then apply the BCs
      */
     void apply_pressure_bc( SVolField& pressureField,
+                            const Uintah::Patch* patch );
+
+    /**
+     *  \ingroup WasatchCore
+     *
+     *  \brief Function that updates poisson rhs when boundaries are present.
+     *
+     *  \param poissonTag The Expr::Tag of the poisson variable (e.g. pressure).
+     This Tag is needed to extract the boundary iterators from Uintah.
+     *
+     *  \param poissonMatrix A reference to the poisson coefficient matrix which
+     we intend to modify.
+     *
+     *  \param poissonField A reference to the poisson field. This contains the
+     values of the poisson variable, e.g. pressure.
+     *
+     *  \param poissonRHS A reference to the poisson RHS field. This should be
+     a MODIFIABLE field since it will be updated using bcs on the poisson field.
+     *
+     *  \param patch A pointer to the current patch. If the patch does NOT contain
+     the reference cells, then nothing is set.
+     *
+     *  \param material The Uintah material ID (an integer).
+     */
+    void update_pressure_rhs( SVolField& pressureRHS,
                               const Uintah::Patch* patch );
+
 
     /**
      *  \brief Key member function that applies a boundary condition on a given expression.
