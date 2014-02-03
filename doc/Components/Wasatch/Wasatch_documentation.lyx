@@ -5039,6 +5039,165 @@ reference "eq:wasatch-inlet-wall-bc-ppe-1d-discrete-final"
 \end_layout
 
 \begin_layout Subsection
+Outflow
+\end_layout
+
+\begin_layout Standard
+An outflow boundary condition is one where 
+\begin_inset Quotes eld
+\end_inset
+
+most
+\begin_inset Quotes erd
+\end_inset
+
+ of the flow is leaving the domain.
+ Specifically, an outflow boundary must reduce reflections and promote 
+\begin_inset Quotes eld
+\end_inset
+
+absorption
+\begin_inset Quotes erd
+\end_inset
+
+ of the flow.
+ For simplicity, consider an x+ outflow boundary.
+ we specify the following
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\begin{cases}
+u_{i+\tfrac{1}{2}}^{n}\geq0 & \frac{\partial u^{*}}{\partial x}=0\\
+u_{i+\tfrac{1}{2}}^{n}<0 & u^{*}=0
+\end{cases}
+\end{equation}
+
+\end_inset
+
+where
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+u^{*}=u^{n}+\Delta tF^{n}
+\end{equation}
+
+\end_inset
+
+is the uncorrected velocity field that does not satisfy mass conservation.
+ For wasatch, the first condition implies, at first order
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial u^{*}}{\partial x}\approx\frac{u_{i+\tfrac{1}{2}}^{*}-u_{i-\tfrac{1}{2}}^{*}}{\Delta x}=0
+\end{equation}
+
+\end_inset
+
+or
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+u_{i+\tfrac{1}{2}}^{*}=u_{i-\tfrac{1}{2}}^{*}
+\end{equation}
+
+\end_inset
+
+in other words
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+u_{i+\tfrac{1}{2}}^{n}+\Delta tF_{i+\tfrac{1}{2}}^{n}=u_{i-\tfrac{1}{2}}^{n}+\Delta tF_{i-\tfrac{1}{2}}^{n}
+\end{equation}
+
+\end_inset
+
+All quantities are known except for 
+\begin_inset Formula $F_{i+\tfrac{1}{2}}^{n}$
+\end_inset
+
+.
+ This leads us to specifying
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}u_{i+\tfrac{1}{2}}^{n}+\frac{1}{\Delta t}u_{i-\tfrac{1}{2}}^{n}+F_{i-\tfrac{1}{2}}^{n}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The remaining boundary condition is simple and implies that
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}u_{i+\tfrac{1}{2}}^{n}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In summary, we have the following
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\begin{cases}
+u_{i+\tfrac{1}{2}}^{n}\geq0 & F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}u_{i+\tfrac{1}{2}}^{n}+\frac{1}{\Delta t}u_{i-\tfrac{1}{2}}^{n}+F_{i-\tfrac{1}{2}}^{n}\\
+u_{i+\tfrac{1}{2}}^{n}<0 & F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}u_{i+\tfrac{1}{2}}^{n}
+\end{cases}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Open Boundary Condition
+\end_layout
+
+\begin_layout Standard
+The open boundary condition is the oposite of the outflow BC and is thought
+ of as to encourage the flow to enter the domain.
+ At the outset, we have
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\begin{cases}
+u_{i+\tfrac{1}{2}}^{n}\leq0 & F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}u_{i+\tfrac{1}{2}}^{n}+\frac{1}{\Delta t}u_{i-\tfrac{1}{2}}^{n}+F_{i-\tfrac{1}{2}}^{n}\\
+u_{i+\tfrac{1}{2}}^{n}>0 & F_{i+\tfrac{1}{2}}^{n}=-\frac{1}{\Delta t}u_{i+\tfrac{1}{2}}^{n}
+\end{cases}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
 Pressure Outlet
 \end_layout
 
