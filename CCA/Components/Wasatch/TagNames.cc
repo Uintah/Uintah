@@ -85,6 +85,8 @@ namespace Wasatch{
   star("*"),
   doubleStar("**"),
   rhs("_rhs"),
+  convectiveflux("_convFlux_"),
+  diffusiveflux("_diffFlux_"),
   pressuresrc( "pressure_src", Expr::STATE_NONE ),
   vardenalpha( "varden_alpha", Expr::STATE_NONE ),
   vardenbeta ( "varden_beta",  Expr::STATE_NONE ),
