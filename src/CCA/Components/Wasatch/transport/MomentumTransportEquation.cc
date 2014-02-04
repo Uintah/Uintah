@@ -390,11 +390,12 @@ namespace Wasatch{
                          Expr::TagList& cfTags,
                          const Expr::Tag thisMomTag )
   {
-    if( doMom[0] ) cfTags.push_back( Expr::Tag(thisMomTag.name() + "_convFlux_x", Expr::STATE_NONE) );
+    const TagNames& tagNames = TagNames::self();
+    if( doMom[0] ) cfTags.push_back( Expr::Tag(thisMomTag.name() + tagNames.convectiveflux + "x", Expr::STATE_NONE) );
     else         cfTags.push_back( Expr::Tag() );
-    if( doMom[1] ) cfTags.push_back( Expr::Tag(thisMomTag.name() + "_convFlux_y", Expr::STATE_NONE) );
+    if( doMom[1] ) cfTags.push_back( Expr::Tag(thisMomTag.name() + tagNames.convectiveflux + "y", Expr::STATE_NONE) );
     else         cfTags.push_back( Expr::Tag() );
-    if( doMom[2] ) cfTags.push_back( Expr::Tag(thisMomTag.name() + "_convFlux_z", Expr::STATE_NONE) );
+    if( doMom[2] ) cfTags.push_back( Expr::Tag(thisMomTag.name() + tagNames.convectiveflux + "z", Expr::STATE_NONE) );
     else         cfTags.push_back( Expr::Tag() );
   }
 

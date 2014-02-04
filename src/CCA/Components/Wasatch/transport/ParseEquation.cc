@@ -756,7 +756,8 @@ namespace Wasatch{
     }
 
     if( convFluxTag == Expr::Tag() ){
-      convFluxTag = Expr::Tag( solnVarTag.name() + "_convective_flux_" + dir + suffix, Expr::STATE_NONE );
+      const TagNames& tagNames = TagNames::self();
+      convFluxTag = Expr::Tag( solnVarTag.name() + suffix + tagNames.convectiveflux + dir, Expr::STATE_NONE );
       // make new Tag for solnVar by adding the appropriate suffix ( "_*" or nothing ). This
       // is because we need the ScalarRHS at time step n+1 for our pressure projection method
       Expr::Tag solnVarCorrectedTag;
@@ -911,7 +912,8 @@ namespace Wasatch{
     }
     else{ // build an expression for the diffusive flux.
 
-      diffFluxTag = Expr::Tag( primVarName + "_diffFlux_" + dir + suffix, Expr::STATE_NONE );
+      const TagNames& tagNames = TagNames::self();
+      diffFluxTag = Expr::Tag( primVarName + suffix + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
       // make new Tags for density and primVar by adding the appropriate suffix ( "_*" or nothing ). This
       // is because we need the ScalarRHS at time step n+1 for our pressure projection method
       const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + suffix, Expr::CARRY_FORWARD);

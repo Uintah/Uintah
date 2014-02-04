@@ -104,6 +104,9 @@ namespace Wasatch{
     const std::string
     star, doubleStar, rhs;
     
+    const std::string
+    convectiveflux, diffusiveflux;
+    
     const Expr::Tag
     pressuresrc,
     vardenalpha, vardenbeta,
