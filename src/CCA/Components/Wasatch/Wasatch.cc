@@ -1003,7 +1003,8 @@ namespace Wasatch{
         //______________________________________________________
         // set up boundary conditions on this transport equation
         try{
-          if( isRestarting_ ) transEq->verify_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
+          // only verify boundary conditions on the first stage!
+          if( isRestarting_ && iStage < 2 ) transEq->verify_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
           transEq->setup_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
         }
