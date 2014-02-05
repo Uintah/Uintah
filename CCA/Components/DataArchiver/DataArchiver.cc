@@ -644,13 +644,16 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
     d_fromDir = fromDir;
     copyDatFiles(fromDir, d_dir, 0, -1, false);
     copySection(fromDir,  d_dir, "index.xml", "globals");
-
+    proc0cout << "*** Copied dat files to:   " << d_dir.getName() << endl;
+    
     // copy checkpoints
     Dir checkpointsFromDir = fromDir.getSubdir("checkpoints");
-    checkpointsFromDir.copy( d_dir );
-
-    proc0cout << "\n*** Copied checkpoints to: " << d_checkpointsDir.getName() << endl;
-    proc0cout << "*** Copied dat files to:   " << d_dir.getName() << endl; 
+    string me = checkpointsFromDir.getName();
+    if( validDir(me) ){
+      checkpointsFromDir.copy( d_dir );
+      proc0cout << "\n*** Copied checkpoints to: " << d_checkpointsDir.getName() << endl;
+      proc0cout << "    Only using 1 processor to copy so this will be slow for large checkpoint directories\n" << endl;
+    }
 
     // copy input.xml.orig if it exists
     string here = fromDir.getName()+"/input.xml.orig";
