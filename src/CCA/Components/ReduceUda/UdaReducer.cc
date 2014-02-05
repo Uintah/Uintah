@@ -93,7 +93,9 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
   proc0cout << "    - The number of files inside of a timestep directory will now equal the number of processors used to reduce the uda\n";
   proc0cout << "      <<< You should use the same number of processors to reduce the uda as you will use to visualize it >>> \n\n";
   proc0cout << "      For large runs this should speed up data transfers and post processing utilities\n\n";
-  proc0cout << "    - Checkpoint directories are copied with system calls from the original -> modified uda.\n\n";
+  proc0cout << "    - Checkpoint directories are copied with system calls from the original -> modified uda.\n";
+  proc0cout << "      Only 1 processor is used during the copy so this could be slow for large checkpoing directories.\n";
+  proc0cout << "      Consider moving this manually.\n\n";
   proc0cout << "    - ALWAYS, ALWAYS, ALWAYS verify that the new (modified) uda is consistent\n";
   proc0cout << "      with your specfications before deleting the original uda.\n\n";
   proc0cout << "______________________________________________________________________\n\n";
