@@ -119,7 +119,9 @@ ConvectiveFluxLimiter( const Expr::Tag& phiTag,
   isUpwind_           ( limiterType_ == Wasatch::UPWIND  ),
   isCentral_          ( limiterType_ == Wasatch::CENTRAL ),
   hasEmbeddedBoundary_( volFracTag != Expr::Tag() )
-{}
+{
+  this->set_gpu_runnable( true );
+}
 
 //--------------------------------------------------------------------
 

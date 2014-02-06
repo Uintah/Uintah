@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#include "FluxLimiterInterpolant.h"
-#include "OperatorTypes.h"
+#include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 
 #include <cmath>
