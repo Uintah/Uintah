@@ -656,10 +656,10 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
     }
 
     // copy input.xml.orig if it exists
-    string here = fromDir.getName()+"/input.xml.orig";
+    string there = d_dir.getName();
+    string here  = fromDir.getName() + "/input.xml.orig";
     if ( validFile(here) ){
-      string there = d_dir.getName();
-      copyFile(here, there);
+      fromDir.copy("input.xml.orig", d_dir);     // use OS independent copy functions, needed by mira
       proc0cout << "*** Copied input.xml.orig to: " << there << endl;
     }
     
@@ -668,10 +668,8 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
     fromDir.getFilenamesBySuffix( "ups", ups );
     
     if ( ups.size() != 0 ){
-      string upsFile = fromDir.getName() + "/" + ups[0];
-      string there = d_dir.getName();
-      copyFile(upsFile, there);
-      proc0cout << "*** Copied ups file ("<< upsFile<< ") to: " << there << endl;
+      fromDir.copy(ups[0], d_dir);              // use OS independent copy functions, needed by mira
+      proc0cout << "*** Copied ups file ("<< ups[0]<< ") to: " << there << endl;
     }
     proc0cout << "\n"<<endl;
   }

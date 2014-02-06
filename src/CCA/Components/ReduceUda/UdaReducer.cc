@@ -80,6 +80,9 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
   //  Add a warning message
   proc0cout << "\n______________________________________________________________________\n";
   proc0cout << "                      R E D U C E _ U D A \n\n";
+  proc0cout << "    - If you're using this on a machine with a reduced set of system calls (mira) configure with\n";
+  proc0cout << "          --with-boost\n";
+  proc0cout << "      This will enable the non-system copy functions.\n\n";
   proc0cout << "    - You must manually copy all On-the-Fly files/directories from the original uda\n";
   proc0cout << "      to the new uda, reduce_uda ignores them.\n\n";
   proc0cout << "    - The <outputInterval>, <outputTimestepInterval> tags are ignored and every\n";
