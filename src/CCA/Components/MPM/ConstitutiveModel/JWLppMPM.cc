@@ -586,7 +586,6 @@ void JWLppMPM::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(pProgressFLabel,       matlset);
   task->computes(pProgressdelFLabel,    matlset);
-  task->computes(pVelGradLabel,         matlset);
   task->computes(pLocalizedLabel,       matlset);
 }
 
