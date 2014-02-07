@@ -1141,14 +1141,18 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
       // find patches with new space - but temporarily, refine everywhere... 
       else if (i < oldGrid->numLevels()) {
         refineSets[i] = scinew PatchSet;
+
+        vector<int> myPatchIDs;
         LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel(i);
         
         // go through the patches, and find if there are patches that weren't entirely 
         // covered by patches on the old grid, and interpolate them.  
         // then after, copy the data, and if necessary, overwrite interpolated data
-        
-        for (Level::patchIterator iter = newLevel->patchesBegin(); iter != newLevel->patchesEnd(); iter++) {
-          Patch* newPatch = *iter;
+         const PatchSubset *ps=getLoadBalancer()->getPerProcessorPatchSet(newLevel)->getSubset(d_myworld->myrank());
+
+        //for each patch I own
+         for(int p=0;p<ps->size();p++) {
+           const Patch *newPatch=ps->get(p);
           
           // get the low/high for what we'll need to get
           IntVector lowIndex, highIndex;
@@ -1175,10 +1179,32 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
             sum += dist.x()*dist.y()*dist.z();
           }  // for oldPatches
           if (sum != totalCells) {
-            refineSets[i]->add(newPatch);
+            if (Uintah::Parallel::usingMPI()) myPatchIDs.push_back(newPatch->getID());
+            else refineSets[i]->add(newPatch);
           }
-          
-        } // for patchIterator
+        } // for patch
+        if (Uintah::Parallel::usingMPI())  {
+          //Gather size from all processors
+          int mycount=myPatchIDs.size();
+          vector<int>  counts(d_myworld->size());
+          MPI_Allgather(&mycount,1,MPI_INT,&counts[0],1,MPI_INT,d_myworld->getComm());
+
+          //compute recieve array offset and size
+          vector<int> displs(d_myworld->size());
+          int pos=0;
+          for(int p=0;p<d_myworld->size();p++) {
+            displs[p]=pos;
+            pos+=counts[p];
+          }
+          vector<int> allPatchIDs(pos); //receive array;
+          MPI_Allgatherv(&myPatchIDs[0],counts[d_myworld->myrank()],MPI_INT,&allPatchIDs[0],&counts[0],&displs[0],MPI_INT,d_myworld->getComm());
+          //make refineSets from patch ids
+          set<int> allPatchIDset(allPatchIDs.begin(), allPatchIDs.end());
+          for (Level::patchIterator iter = newLevel->patchesBegin(); iter != newLevel->patchesEnd(); ++iter){
+            Patch* newPatch = *iter;
+            if (allPatchIDset.find(newPatch->getID())!=allPatchIDset.end()) refineSets[i]->add(newPatch);
+          }
+        }
       }
       if (refineSets[i]->size() > 0) {
         dbg << d_myworld->myrank() << "  Calling scheduleRefine for patches " << *refineSets[i].get_rep() << endl;
