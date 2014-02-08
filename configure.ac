@@ -1261,7 +1261,7 @@ if test $? = 0; then
    CXXFLAGS="$CXXFLAGS -fopenmp"
 else
    rm -f conftest-openmp conftest-openmp.cc
-   AC_MSG_ERROR( Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n )
+   AC_MSG_WARN( Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n )
 fi
 
 rm -f conftest-openmp conftest-openmp.cc
