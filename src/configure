@@ -6960,7 +6960,8 @@ if test $? = 0; then
    CXXFLAGS="$CXXFLAGS -fopenmp"
 else
    rm -f conftest-openmp conftest-openmp.cc
-   as_fn_error $? "Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n " "$LINENO" 5
+   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n " >&5
+$as_echo "$as_me: WARNING: Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n " >&2;}
 fi
 
 rm -f conftest-openmp conftest-openmp.cc
