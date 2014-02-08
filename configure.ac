@@ -1240,6 +1240,33 @@ fi
 
 rm -f conftest-fpr conftest-fpr.cc
 
+##  Add the -fopenmp flag ------------------------
+
+cat > conftest-openmp.cc <<EOF
+
+#include <iostream>
+
+int main()
+{
+  double a=1;
+  double b=.01;
+}
+EOF
+
+# Verify that the compiler accepts the -fopenmp flag:
+$CXX $CXXFLAGS -fopenmp conftest-openmp.cc -o conftest-openmp 2>&5
+if test $? = 0; then
+   add_important_warning "Automatically added -fopenmp compiler option to C/CXXFLAGS."
+   CFLAGS="$CFLAGS -fopenmp"
+   CXXFLAGS="$CXXFLAGS -fopenmp"
+else
+   rm -f conftest-openmp conftest-openmp.cc
+   AC_MSG_ERROR( Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n )
+fi
+
+rm -f conftest-openmp conftest-openmp.cc
+
+
 ##  --  search for Zoltan ------------------------
 
 if test "$with_zoltan"; then
