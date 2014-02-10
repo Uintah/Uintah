@@ -95,7 +95,7 @@ namespace Uintah {
   class DataArchive {
     private:
 
-    std::map<std::string, VarLabel*> createdVarLabels_;
+    std::map<std::string, VarLabel*> d_createdVarLabels;
       // what we need to store on a per-variable basis
       // everything else can be retrieved from a higher level
       struct DataFileInfo {
@@ -206,6 +206,16 @@ namespace Uintah {
                                     DataWarehouse * dw,
                                     LoadBalancer  * lb,
                                     double        * pTime /* passed back */ );
+
+
+      //__________________________________
+      //  This is used by reduceUda component
+      //  it reads in the data and put it into the DW
+      //  This is a specialization of restartInitialize()
+      void reduceUda_ReadUda( int timestep,
+                              const GridP  & grid,
+                              const PatchSubset* patches,
+                              DataWarehouse* dw ); 
 
       inline ProblemSpecP getTimestepDoc(int index) { return getTimeData(index).d_tstop; }
 

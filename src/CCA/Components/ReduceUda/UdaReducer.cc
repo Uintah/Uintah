@@ -168,6 +168,7 @@ Around line 870 add:
     d_savedLabels.push_back( VarLabel::create( varNames[i], typeDescriptions[i] ) );
     proc0cout << " *** Labels: " << varNames[i] << endl;
   }
+
   proc0cout << "\n";
 }
 //______________________________________________________________________
@@ -206,25 +207,23 @@ void UdaReducer::initialize(const ProcessorGroup*,
 void  UdaReducer::scheduleTimeAdvance( const LevelP& level, 
                                        SchedulerP& sched )
 {
-  sched_computeLabels( level, sched );
+  sched_readDataArchive( level, sched );
 }
 
 
 //______________________________________________________________________
-//
-//    This tasks determines the material subset for each label
-//    and adds a computes().  You want to compute all of the varLabels on all
-//    levels.  The DataArchiver::output() will cherry pick the variables to output
+//    Schedule for each patch that this processor owns.
+//    The DataArchiver::output() will cherry pick the variables to output
 
-void UdaReducer::sched_computeLabels(const LevelP& level,
+void UdaReducer::sched_readDataArchive(const LevelP& level,
                                       SchedulerP& sched){
   GridP grid = level->getGrid();
   const PatchSet* perProcPatches = d_lb->getPerProcessorPatchSet(grid);
   const PatchSubset* patches = perProcPatches->getSubset(d_myworld->myrank());  
     
     
-  Task* t = scinew Task("UdaReducer::computeLabels", this, 
-                       &UdaReducer::computeLabels);
+  Task* t = scinew Task("UdaReducer::readDataArchive", this, 
+                        &UdaReducer::readDataArchive);
                                                   
 
   // manually determine which matls to use in scheduling.
@@ -280,12 +279,10 @@ void UdaReducer::sched_computeLabels(const LevelP& level,
     allMatlSubset->sort();    
     
     //__________________________________
-    // Compute all of the labels on all levels.  The DataArchiver::output task
+    // schedule the computes for each patch that
+    // this processor owns. The DataArchiver::output task
     // will then pick and choose which variables to write based on the input file
-    for (int L = 0; L < grid->numLevels(); L++) {
-      LevelP level = grid->getLevel(L);
-      t->computes(label, level->allPatches()->getUnion(), matlSet->getUnion());
-    }
+    t->computes(label, patches, matlSet->getUnion());
   }  // loop savedLabels
 
   t->setType(Task::OncePerProc);
@@ -295,24 +292,24 @@ void UdaReducer::sched_computeLabels(const LevelP& level,
 
 
 //______________________________________________________________________
-//  This task outputs diagnostic information every timestep.  Note
-//  The DataArchiever::output() task handles the output
+//  This task reads data from the dataArchive and 'puts' it into the data Warehouse
 //
-void UdaReducer::computeLabels(const ProcessorGroup*,
-                                const PatchSubset*,
-                                const MaterialSubset* matls,
-                                DataWarehouse*,
-                                DataWarehouse* new_dw)
-{
-
+void UdaReducer::readDataArchive(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw)
+{                           
   double time = d_times[d_timeIndex];
   int timestep = d_timesteps[d_timeIndex];
   proc0cout << "*** working on timestep: " << timestep << " physical time: " << time << endl;
 
 
-  d_dataArchive->restartInitialize(d_timeIndex, d_oldGrid, new_dw, d_lb, &time);
+  d_dataArchive->reduceUda_ReadUda(d_timeIndex, d_oldGrid, patches, new_dw );
   d_timeIndex++;
 }
+
+
 //______________________________________________________________________
 //
 void UdaReducer::scheduleComputeStableTimestep(const LevelP& level,
