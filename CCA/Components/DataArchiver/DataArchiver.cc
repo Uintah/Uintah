@@ -639,6 +639,8 @@ DataArchiver::restartSetup( Dir    & restartFromDir,
 void
 DataArchiver::reduceUdaSetup(Dir& fromDir)
 {
+  //__________________________________
+  // copy files
   // copy dat files and
   if (d_writeMeta) {
     d_fromDir = fromDir;
@@ -674,6 +676,8 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
     proc0cout << "\n"<<endl;
   }
 
+  //__________________________________
+  //
   // removed the global (dat) variables from the saveLabels
   string iname = fromDir.getName()+"/index.xml";
   ProblemSpecP indexDoc = loadDocument(iname);
@@ -726,9 +730,10 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
   d_checkpointWalltimeInterval = 0;
 
   // output every timestep -- each timestep is transferring data
-  d_outputInterval = 0.0;
+  d_outputInitTimestep     = true;
+  d_outputInterval         = 0.0;
   d_outputTimestepInterval = 1;
-  d_usingReduceUda = true;
+  d_usingReduceUda         = true;
 }
 
 //______________________________________________________________________

@@ -123,14 +123,14 @@ WARNING
                      DataWarehouse* /*old_dw*/,     
                      DataWarehouse* new_dw);        
 
-    void sched_computeLabels(const LevelP& level,
-                             SchedulerP& sched);
+    void sched_readDataArchive(const LevelP& level,
+                               SchedulerP& sched);
 
-    void computeLabels(const ProcessorGroup*,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* /*old_dw*/,
-                       DataWarehouse* new_dw);
+    void readDataArchive(const ProcessorGroup*,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* /*old_dw*/,
+                         DataWarehouse* new_dw);
 
     void finalizeTimestep(const ProcessorGroup*,
                           const PatchSubset*,
