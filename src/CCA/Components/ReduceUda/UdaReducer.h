@@ -99,6 +99,13 @@ WARNING
                                
     virtual void scheduleFinalizeTimestep(const LevelP& level, 
                                           SchedulerP&){};
+
+    // stubs
+    virtual void scheduleInitialErrorEstimate  ( const LevelP& , SchedulerP&  ){};
+    virtual void scheduleCoarsen               ( const LevelP& , SchedulerP&  ){};
+    virtual void scheduleRefine                ( const PatchSet*, SchedulerP& ){};
+    virtual void scheduleRefineInterface       ( const LevelP& , SchedulerP& , bool, bool){};
+
     
     double getMaxTime();
     
@@ -154,8 +161,6 @@ WARNING
     LoadBalancer* d_lb;
     const VarLabel* delt_label;
     SimulationStateP d_sharedState;
-    const MaterialSet*     d_allMatlSet;
-    const MaterialSubset*  d_allMatlSubset;
     SimpleMaterial*  d_oneMatl;
   };
 } // End namespace Uintah
