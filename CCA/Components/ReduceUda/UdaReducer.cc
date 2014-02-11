@@ -55,12 +55,6 @@ UdaReducer::UdaReducer(const ProcessorGroup* world,
 
 UdaReducer::~UdaReducer()
 {
-  if(d_allMatlSet && d_allMatlSet->removeReference()) {
-    delete d_allMatlSet;
-  }
-   if(d_allMatlSubset && d_allMatlSubset->removeReference()) {
-    delete d_allMatlSubset;
-  }
   delete d_dataArchive;
   
   VarLabel::destroy(delt_label);
@@ -97,7 +91,7 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
   proc0cout << "      <<< You should use the same number of processors to reduce the uda as you will use to visualize it >>> \n\n";
   proc0cout << "      For large runs this should speed up data transfers and post processing utilities\n\n";
   proc0cout << "    - Checkpoint directories are copied with system calls from the original -> modified uda.\n";
-  proc0cout << "      Only 1 processor is used during the copy so this could be slow for large checkpoing directories.\n";
+  proc0cout << "      Only 1 processor is used during the copy so this could be slow for large checkpoints directories.\n";
   proc0cout << "      Consider moving this manually.\n\n";
   proc0cout << "    - ALWAYS, ALWAYS, ALWAYS verify that the new (modified) uda is consistent\n";
   proc0cout << "      with your specfications before deleting the original uda.\n\n";
