@@ -23,11 +23,10 @@
  */
 
 #include <sci_defs/cuda_defs.h>
-#include <Core/Geometry/GPUVector.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
-// linker support for device code not ready yet, need to include the whole source...
 #include <CCA/Components/Schedulers/GPUDataWarehouse.cu>
+#include <Core/Parallel/Parallel.h>
 
 namespace Uintah {
 //______________________________________________________________________
@@ -40,20 +39,23 @@ namespace Uintah {
 // @param old_gpudw the old GPU DataWarehouse
 // @param new_gpudw the new GPU DataWarehouse
 __global__ void unifiedSchedulerTestKernel(int patchID,
-                                           int matlIndex,
+                                           uint3 patchNodeLowIndex,
+                                           uint3 patchNodeHighIndex,
                                            uint3 domainLow,
                                            uint3 domainHigh,
                                            GPUDataWarehouse* old_gpudw,
-                                           GPUDataWarehouse* new_gpudw) {
+                                           GPUDataWarehouse* new_gpudw,
+                                           cudaStream_t* stream) {
 
   const GPUGridVariable<double> phi;
   GPUGridVariable<double> newphi;
-  old_gpudw->get(phi, "phi", patchID, matlIndex);
-  new_gpudw->getModifiable(newphi, "phi", patchID, matlIndex);
+  old_gpudw->get(phi, "phi", patchID, 0);
+  new_gpudw->getModifiable(newphi, "phi", patchID, 0);
 
   // calculate the thread indices
-  int i = blockDim.x * blockIdx.x + threadIdx.x + domainLow.x;
-  int j = blockDim.y * blockIdx.y + threadIdx.y + domainLow.y;
+  int i = blockDim.x * blockIdx.x + threadIdx.x;
+  int j = blockDim.y * blockIdx.y + threadIdx.y;
+
 
   // If the threads are within the bounds of the patch
   //  the algorithm is allowed to stream along the z direction
@@ -61,9 +63,33 @@ __global__ void unifiedSchedulerTestKernel(int patchID,
   //  is streamed because it allows access of x and y elements
   //  that are close to one another which should allow coalesced
   //  memory accesses.
-  if(i < domainHigh.x && j < domainHigh.y) {
+
+  // We also need to copy the boundary cells on the z faces.
+  // These outer cells don't get computed, just preserved across iterations
+  // newphi(i,j,k) = phi(i,j,k)
+  if ((domainLow.x - patchNodeLowIndex.x == 1 && i == patchNodeLowIndex.x) ||
+      (domainLow.y - patchNodeLowIndex.y == 1 && j == patchNodeLowIndex.y) ||
+      (patchNodeHighIndex.x - domainHigh.x == 1 && i == patchNodeHighIndex.x - 1) ||
+      (patchNodeHighIndex.y - domainHigh.y == 1 && j == patchNodeHighIndex.y - 1)) {
+      for (int k = domainLow.z; k < domainHigh.z; k++) {
+        newphi(i,j,k) = phi(i,j,k);
+      }
+
+  }
+  if(i >= patchNodeLowIndex.x && j >= patchNodeLowIndex.y && i < patchNodeHighIndex.x && j < patchNodeHighIndex.y ) {
+    if (domainLow.z - patchNodeLowIndex.z == 1){
+
+      newphi(i,j,patchNodeLowIndex.z) = phi(i,j,patchNodeLowIndex.z);
+    }
+    if (patchNodeHighIndex.z - domainHigh.z == 1) {
+      newphi(i,j,patchNodeHighIndex.z - 1) = phi(i,j,patchNodeHighIndex.z - 1);
+    }
+  }
+
+  if(i >= domainLow.x && j >= domainLow.y && i < domainHigh.x && j < domainHigh.y ) {
+
     for (int k = domainLow.z; k < domainHigh.z; k++) {
-      
+
       newphi(i,j,k) = (1. / 6)
                   * (phi(i-1, j, k)
                    + phi(i+1, j, k)
@@ -79,18 +105,21 @@ void launchUnifiedSchedulerTestKernel(dim3 dimGrid,
                                       dim3 dimBlock,
                                       cudaStream_t* stream,
                                       int patchID,
-                                      int matlIndex,
+                                      uint3 patchNodeLowIndex,
+                                      uint3 patchNodeHighIndex,
                                       uint3 domainLow,
                                       uint3 domainHigh,
                                       GPUDataWarehouse* old_gpudw,
                                       GPUDataWarehouse* new_gpudw)
 {
-  unifiedSchedulerTestKernel<<< dimGrid, dimBlock, 0, *stream >>>(patchID,
-                                                                  matlIndex,
-                                                                  domainLow,
-                                                                  domainHigh,
-                                                                  old_gpudw,
-                                                                  new_gpudw);
+  unifiedSchedulerTestKernel<<< dimGrid, dimBlock, 0, *stream>>>(patchID,
+                                                                 patchNodeLowIndex,
+                                                                 patchNodeHighIndex,
+                                                                 domainLow,
+                                                                 domainHigh,
+                                                                 old_gpudw,
+                                                                 new_gpudw,
+                                                                 stream);
 }
 
 } //end namespace Uintah

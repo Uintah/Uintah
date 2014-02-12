@@ -57,7 +57,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 {
   if (event==Task::GPU) {
 #ifdef HAVE_CUDA
-  cout << " top RayTraceGPU: " << endl;
   
   const Level* level = getLevel(patches);
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();

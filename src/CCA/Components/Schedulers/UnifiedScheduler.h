@@ -108,22 +108,7 @@ WARNING
 
 #ifdef HAVE_CUDA
 
-    double* getDeviceRequiresPtr(const VarLabel* label, int matlIndex, const Patch* patch);
-
-    double* getDeviceComputesPtr(const VarLabel* label, int matlIndex, const Patch* patch);
-
-    double* getHostRequiresPtr(const VarLabel* label, int matlIndex, const Patch* patch);
-
-    double* getHostComputesPtr(const VarLabel* label, int matlIndex, const Patch* patch);
-
-    IntVector getDeviceRequiresSize(const VarLabel* label, int matlIndex, const Patch* patch);
-
-    IntVector getDeviceComputesSize(const VarLabel* label, int matlIndex, const Patch* patch);
-
-    void requestD2HCopy(const VarLabel* label, int matlIndex, const Patch* patch, cudaStream_t* stream, cudaEvent_t* event);
-
     cudaStream_t* getCudaStream(int device);
-
     cudaEvent_t* getCudaEvent(int device);
 
 #endif
@@ -170,7 +155,7 @@ WARNING
 
     void createCudaStreams(int numStreams, int device);
 
-    void reclaimStreams(DetailedTask* dtask);
+    void reclaimCudaStreams(DetailedTask* dtask);
 
     cudaError_t unregisterPageLockedHostMem();
 
