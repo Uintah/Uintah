@@ -57,7 +57,6 @@ UdaReducer::~UdaReducer()
 {
   delete d_dataArchive;
   
-  VarLabel::destroy(delt_label);
   for (unsigned int i = 0; i < d_savedLabels.size(); i++){
     VarLabel::destroy(d_savedLabels[i]);
   }
@@ -97,27 +96,6 @@ void UdaReducer::problemSetup(const ProblemSpecP& prob_spec,
   proc0cout << "      with your specfications before deleting the original uda.\n\n";
   proc0cout << "______________________________________________________________________\n\n";
   
-  //__________________________________
-  /*
-   If you want to process an uda that contains timesteps 
-   that have a different number of variables per timestep add the following hack. 
-  
-    DataArchive.cc 
-    DataArchive::restartInitialize{
-
-Around line 870 add:
-
-    if (label == 0) {
-      continue;
-    }
-#if 0    
-    if (label == 0) {
-      throw UnknownVariable(key.name_, dw->getID(), patch, matl,
-                            "on DataArchive::scheduleRestartInitialize",
-                            __FILE__, __LINE__);
-    }
-#endif 
-  */
   //__________________________________
   //
   d_sharedState = state;
@@ -331,8 +309,14 @@ void UdaReducer::computeDelT(const ProcessorGroup*,
                              DataWarehouse* new_dw)
   
 {
+  ASSERT( d_timeIndex >= 0);
   
-  double delt = d_times[d_timeIndex] - d_times[d_timeIndex-1];
+  double delt = d_times[d_timeIndex];
+  
+  if ( d_timeIndex > 0 ){
+    delt = d_times[d_timeIndex] - d_times[d_timeIndex-1];
+  }
+
   delt_vartype delt_var = delt;
  
   new_dw->put(delt_var, delt_label); 
