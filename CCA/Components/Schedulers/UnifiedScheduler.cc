@@ -963,7 +963,7 @@ void UnifiedScheduler::runTasks(int t_id)
         // run post GPU part of task 
         runTask(readyTask, currentIteration, t_id, Task::postGPU);
         // recycle this task's D2H copies streams and events
-        reclaimStreams(readyTask);
+        reclaimCudaStreams(readyTask);
       }
 #endif
       else {
@@ -1566,6 +1566,9 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
                 }
               }
 
+              // The following is only efficient for large single copies. With multiple smaller copies
+              // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
+              // once we're doing large, single, aggregated cuda memcopies. [APH]
 //              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
 //              if (!pinned) {
 //                // pin/page-lock host memory for H2D cudaMemcpyAsync
@@ -1627,6 +1630,9 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
               int numElems = 1; // baked in for now: simple reductions on single value
               dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, numElems);
 
+              // The following is only efficient for large single copies. With multiple smaller copies
+              // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
+              // once we're doing large, single, aggregated cuda memcopies. [APH]
 //              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
 //              if (!pinned) {
 //                // pin/page-lock host memory for H2D cudaMemcpyAsync
@@ -1905,6 +1911,9 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
               if (device_offset.x == host_offset.x() && device_offset.y == host_offset.y() && device_offset.z == host_offset.z()
                   && device_size.x == host_size.x() && device_size.y == host_size.y() && device_size.z == host_size.z()) {
 
+                // The following is only efficient for large single copies. With multiple smaller copies
+                // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
+                // once we're doing large, single, aggregated cuda memcopies. [APH]
 //                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
 //                if (!pinned) {
 //                  // pin/page-lock host memory for H2D cudaMemcpyAsync
@@ -1954,6 +1963,9 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
               // if size is equal to CPU DW, directly copy back to CPU var memory;
               if (host_bytes == device_bytes) {
 
+                // The following is only efficient for large single copies. With multiple smaller copies
+                // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
+                // once we're doing large, single, aggregated cuda memcopies. [APH]
 //                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
 //                if (!pinned) {
 //                  // pin/page-lock host memory for H2D cudaMemcpyAsync
@@ -2075,7 +2087,7 @@ cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
   return retVal;
 }
 
-void UnifiedScheduler::reclaimStreams(DetailedTask* dtask)
+void UnifiedScheduler::reclaimCudaStreams(DetailedTask* dtask)
 {
   idleStreamsLock_.writeLock();
   // reclaim DetailedTask streams
