@@ -143,7 +143,7 @@ evaluate()
   }
   else{
     if( xconvFluxTag_ == nullTag ) result <<=        -(*divX_)( -(*interpX_)(*dCoef_) * (*gradX_)(*phi_) );
-    else                           result <<=        -(*divX_)( -(*interpX_)(*dCoef_) * (*gradX_)(*phi_) - *convFluxX_ );
+    else                           result <<=        -(*divX_)( -(*interpX_)(*dCoef_) * (*gradX_)(*phi_) + *convFluxX_ );
     if( yconvFluxTag_ == nullTag ) result <<= result -(*divY_)( -(*interpY_)(*dCoef_) * (*gradY_)(*phi_) );
     else                           result <<= result -(*divY_)( -(*interpY_)(*dCoef_) * (*gradY_)(*phi_) + *convFluxY_ );
     if( zconvFluxTag_ == nullTag ) result <<= result -(*divZ_)( -(*interpZ_)(*dCoef_) * (*gradZ_)(*phi_) );
