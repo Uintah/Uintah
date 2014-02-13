@@ -305,8 +305,10 @@ Dir::getFilenamesBySuffix( const std::string& suffix,
                            vector<string>& filenames )
 {
   DIR* dir = opendir(name_.c_str());
-  if (!dir) 
+  if (!dir){ 
     return;
+  }
+    
   const char* ext = suffix.c_str();
   for(dirent* file = readdir(dir); file != 0; file = readdir(dir)){
     if ((strlen(file->d_name)>=strlen(ext)) && 
@@ -315,6 +317,7 @@ Dir::getFilenamesBySuffix( const std::string& suffix,
       //cout << "  Found " << file->d_name << "\n";
     }
   }
+  closedir(dir);
 }
 
 bool
