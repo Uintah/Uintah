@@ -318,6 +318,11 @@ SCALARTRANSPORTTESTS=[
   ("ScalarTransportEquation",       "ScalarTransportEquation.ups",       1,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
 ]
 
+GPUTESTS=[
+  ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups", 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+  ("scalability-test",             "scalability-test.ups",             1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
+]
+
 RADIATIONTESTS=[
   ("RMCRT-Burns-Christon", "RMCRT-Burns-Christon.ups",   8,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
 ]
@@ -327,7 +332,7 @@ RADIATIONTESTS=[
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS BCTESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
+#LIST: LOCALTESTS GPUTESTS BCTESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
 #__________________________________
 ALLTESTS = RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS
 
@@ -336,6 +341,8 @@ ALLTESTS = RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS +
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = ALLTESTS
+  elif me == "GPUTESTS":
+    TESTS = GPUTESTS
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
   elif me == "TURBULENCETESTS":
@@ -372,9 +379,9 @@ def getTestList(me) :
 # TSAAD: As an alternative to the annoying list of if-statements above, consider the following cleaner code... maybe we'll adopt
 # this in the near future
 # ALLTESTS = TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS
-# LOCALTESTS = ALLTESTS
+# LOCALTESTS + GPUTESTS = ALLTESTS
 # 
-# TESTNAMES=["LOCALTESTS","DEBUGTESTS","NIGHTLYTESTS","TURBULENCETESTS","INTRUSIONTESTS","PROJECTIONTESTS","RKTESTS","VARDENTESTS","MISCTESTS","CONVECTIONTESTS","BCTESTS","QMOMTESTS","SCALARTRANSPORTTESTS"]
+# TESTNAMES=["LOCALTESTS","GPUTESTS","DEBUGTESTS","NIGHTLYTESTS","TURBULENCETESTS","INTRUSIONTESTS","PROJECTIONTESTS","RKTESTS","VARDENTESTS","MISCTESTS","CONVECTIONTESTS","BCTESTS","QMOMTESTS","SCALARTRANSPORTTESTS"]
 # TESTSDICTIONARY={}
 # for testname in TESTNAMES:
 # 	TESTSDICTIONARY[testname]=eval(testname)
