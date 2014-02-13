@@ -247,6 +247,7 @@ Dir::getFilenamesBySuffix( const std::string& suffix,
       //cout << "  Found " << file->d_name << "\n";
     }
   }
+  closedir(dir);
 }
 
 bool
