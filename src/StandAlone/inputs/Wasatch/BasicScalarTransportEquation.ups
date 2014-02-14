@@ -131,7 +131,7 @@
     </TransportEquation>
 
 
-    <!-- Set the initial condition for phi3 -->
+    <!-- Set the initial condition for phi4 -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="phi4" state="STATE_N" />
