@@ -119,7 +119,11 @@ for componentTest in $componentTests; do
     if [ $retval = "1" ]; then
       failed=1
     fi
+  else
+    echo "  ERROR:  The component ($componentTest) regression tests did not run."
+    echo "          Either that python script does not exist or it's not executable."
   fi
+  
 done
 
 echo ""
