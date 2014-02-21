@@ -904,12 +904,13 @@ namespace Wasatch{
           } else {
             BndCondSpec rhsFullBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+
+            // after the correction has been made, up
+            BndCondSpec momBCSpec = {solnVarName_, "none", 0.0, NEUMANN, DOUBLE_TYPE};
+            BndCondSpec velBCSpec = {thisVelTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, momBCSpec);
+            bcHelper.add_boundary_condition(bndName, velBCSpec);
           }
-          // after the correction has been made, up
-          BndCondSpec momBCSpec = {solnVarName_, "none", 0.0, NEUMANN, DOUBLE_TYPE};
-          BndCondSpec velBCSpec = {thisVelTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
-          bcHelper.add_boundary_condition(bndName, momBCSpec);
-          bcHelper.add_boundary_condition(bndName, velBCSpec);
 
           BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
@@ -928,12 +929,12 @@ namespace Wasatch{
           } else {
             BndCondSpec rhsFullBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
+            
+            BndCondSpec momBCSpec = {solnVarName_, "none", 0.0, NEUMANN, DOUBLE_TYPE};
+            BndCondSpec velBCSpec = {thisVelTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, momBCSpec);
+            bcHelper.add_boundary_condition(bndName, velBCSpec);
           }
-
-          BndCondSpec momBCSpec = {solnVarName_, "none", 0.0, NEUMANN, DOUBLE_TYPE};
-          BndCondSpec velBCSpec = {thisVelTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
-          bcHelper.add_boundary_condition(bndName, momBCSpec);
-          bcHelper.add_boundary_condition(bndName, velBCSpec);
 
           BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
