@@ -1,5 +1,5 @@
 #!/usr/bin/env python
- 
+  
 from sys import argv, exit
 from os import environ
 from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
