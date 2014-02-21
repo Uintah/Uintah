@@ -69,7 +69,6 @@
         </ReferencePressure -->
         <Use3DLaplacian>    false</Use3DLaplacian>
         <Parameters>
- 	 	 	 	 	 	 <setupFrequency>0</setupFrequency>
  	 	 	 	 	 	 <skip>1</skip>
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
