@@ -91,37 +91,6 @@ namespace Uintah {
   }
   //__________________________________
   //
-  class HypreSolver2Params : public SolverParameters {
-  public:
-    HypreSolver2Params(){}
-    
-    ~HypreSolver2Params() {}
-   
-    // Parameters common for all Hypre Solvers
-    string solvertype;         // String corresponding to solver type
-    string precondtype;        // String corresponding to preconditioner type
-    double tolerance;          // Residual tolerance for solver
-    int    maxiterations;      // Maximum # iterations allowed
-    int    logging;            // Log Hypre solver (using Hypre options)
-    bool   symmetric;          // Is LHS matrix symmetric
-    bool   restart;            // Allow solver to restart if not converged
-    int    setupFrequency;     // Frequency for calling hypre setup calls
-    int    relax_type;         // relaxation type
-    
-    // SMG parameters
-    int    npre;               // # pre relaxations for Hypre SMG solver
-    int    npost;              // # post relaxations for Hypre SMG solver
-
-    // PFMG parameters
-    int    skip;               // Hypre PFMG parameter
-
-    // SparseMSG parameters
-    int    jump;               // Hypre Sparse MSG parameter
-    
-    SimulationStateP state;    // simulation state    
-  };
-  //__________________________________
-  //
   template<class Types>
   class HypreStencil7 : public RefCounted {
   public:
@@ -1175,8 +1144,8 @@ namespace Uintah {
         param->getWithDefault ("npost",           p->npost,          1);          
         param->getWithDefault ("skip",            p->skip,           0);          
         param->getWithDefault ("jump",            p->jump,           0);          
-        param->getWithDefault ("logging",         p->logging,        0);          
-        param->getWithDefault ("setupFrequency",  p->setupFrequency, 1);        
+        param->getWithDefault ("logging",         p->logging,        0);
+        param->getWithDefault ("setupFrequency",  p->setupFrequency, 1);
 
         param->getWithDefault ("relax_type",      p->relax_type,     1); 
         
