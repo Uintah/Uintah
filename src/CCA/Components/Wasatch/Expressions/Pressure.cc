@@ -306,7 +306,7 @@ Pressure::setup_matrix(const SVolField* const volfrac)
     coefs.p = -p;
   }
 
-  //
+  // update the coefficient matrix with intrusion information
   if ( volfract_ != Expr::Tag() && volfrac )
     process_embedded_boundaries(volfrac);
 
@@ -369,12 +369,9 @@ Pressure::evaluate()
   if(patch_->hasBoundaryFaces())
     bcHelper_->update_pressure_rhs(rhs, patch_); // this will update the rhs with relevant boundary conditions.
 
-  if ( hasMovingGeometry_ && volfract_ != Expr::Tag() ) {
+  // if we have moving geometry, then we need to update the coefficient matrix
+  if ( hasMovingGeometry_ && volfract_ != Expr::Tag() )
     setup_matrix(volfrac_);
-  }
-//  // process embedded boundaries
-//  if (volfract_ != Expr::Tag())
-//      process_embedded_boundaries();
 }
 
 //--------------------------------------------------------------------
@@ -389,12 +386,7 @@ void Pressure::process_embedded_boundaries(const SVolField* const volfrac) {
   const double dx2 = dx*dx;
   const double dy2 = dy*dy;
   const double dz2 = dz*dz;
-//  if (hasMovingGeometry_) {
-//    setup_matrix();
-//  }
-  
-  //
-  std::cout << "processing embedded geometry \n";
+
   if (!didMatrixUpdate_ || hasMovingGeometry_) {
     
     // didMatrixUpdate_: boolean that tracks whether we have updated the
