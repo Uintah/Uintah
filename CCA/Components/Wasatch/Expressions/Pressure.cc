@@ -167,6 +167,11 @@ Pressure::declare_uintah_vars( Uintah::Task& task,
 {
   if( RKStage == 1 ) task.computes( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
   else               task.modifies( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
+  if ( volfract_ != Expr::Tag() ) {
+    const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
+    const int ng = 1;
+    task.requires(Uintah::Task::NewDW, Uintah::VarLabel::find(volfract_.name()), gt, ng);
+  }
 }
 
 //--------------------------------------------------------------------
@@ -178,17 +183,28 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
                            const int RKStage )
 {
   materialID_ = material;
+  SVolField* volfrac = NULL;
+  
   if (didAllocateMatrix_) {
     // Todd: instead of checking for allocation - check for new timestep or some other ingenious solution
     // check for transferfrom - transfer matrix from old to new DW
     if (RKStage==1 ) dw->put( matrix_, matrixLabel_, materialID_, patch );
     else             dw->getModifiable( matrix_, matrixLabel_, materialID_, patch );
-    //setup_matrix(patch);
   } else {
     dw->allocateAndPut( matrix_, matrixLabel_, materialID_, patch );
-    setup_matrix();
-    didAllocateMatrix_=true;
+    
+    if (volfract_ != Expr::Tag()) {
+      typedef SelectUintahFieldType<SVolField>::const_type ConstUintahField;
+      ConstUintahField svolFrac;
+      const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
+      const int ng = 1;
+      dw->           get( svolFrac,    Uintah::VarLabel::find(volfract_.name()),    material, patch, gt, ng );
+      volfrac = wrap_uintah_field_as_spatialops<SVolField>(svolFrac, patch);
+    }
+    setup_matrix(volfrac);
   }
+  
+  didAllocateMatrix_=true;
 }
 
 //--------------------------------------------------------------------
@@ -247,7 +263,7 @@ Pressure::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 //--------------------------------------------------------------------
 
 void
-Pressure::setup_matrix()
+Pressure::setup_matrix(const SVolField* const volfrac)
 {
   // construct the coefficient matrix: \nabla^2
   // We should probably move the matrix construction to the evaluate() method.
@@ -290,12 +306,17 @@ Pressure::setup_matrix()
     coefs.p = -p;
   }
 
+  //
+  if ( volfract_ != Expr::Tag() && volfrac )
+    process_embedded_boundaries(volfrac);
+
   // When boundary conditions are present, modify the pressure matrix coefficients at the boundary
   if (patch_->hasBoundaryFaces() && bcHelper_)
-      bcHelper_->update_pressure_matrix(matrix_, patch_);
+    bcHelper_->update_pressure_matrix(matrix_, patch_);
 
   // if the user specified a reference pressure, then modify the appropriate matrix coefficients
-  if ( useRefPressure_ ) set_ref_poisson_coefs(matrix_, patch_, refPressureLocation_);
+  if ( useRefPressure_ )
+    set_ref_poisson_coefs(matrix_, patch_, refPressureLocation_);
 }
 
 //--------------------------------------------------------------------
@@ -345,16 +366,20 @@ Pressure::evaluate()
     set_ref_poisson_rhs( rhs, patch_, refPressureValue_, refPressureLocation_ );
 
   // update pressure rhs for any BCs
-  if(patch_->hasBoundaryFaces()) bcHelper_->update_pressure_rhs(rhs, patch_); // this will update the rhs with relevant boundary conditions.
+  if(patch_->hasBoundaryFaces())
+    bcHelper_->update_pressure_rhs(rhs, patch_); // this will update the rhs with relevant boundary conditions.
 
-  // process embedded boundaries
-  if (volfract_ != Expr::Tag())
-      process_embedded_boundaries();
+  if ( hasMovingGeometry_ && volfract_ != Expr::Tag() ) {
+    setup_matrix(volfrac_);
+  }
+//  // process embedded boundaries
+//  if (volfract_ != Expr::Tag())
+//      process_embedded_boundaries();
 }
 
 //--------------------------------------------------------------------
 
-void Pressure::process_embedded_boundaries() {
+void Pressure::process_embedded_boundaries(const SVolField* const volfrac) {
   // cell offset used to calculate local cell index with respect to patch.
   const SCIRun::IntVector patchCellOffset = patch_->getCellLowIndex(0);
   const Uintah::Vector spacing = patch_->dCell();
@@ -364,11 +389,12 @@ void Pressure::process_embedded_boundaries() {
   const double dx2 = dx*dx;
   const double dy2 = dy*dy;
   const double dz2 = dz*dz;
-  if (hasMovingGeometry_) {
-    setup_matrix();
-  }
+//  if (hasMovingGeometry_) {
+//    setup_matrix();
+//  }
   
   //
+  std::cout << "processing embedded geometry \n";
   if (!didMatrixUpdate_ || hasMovingGeometry_) {
     
     // didMatrixUpdate_: boolean that tracks whether we have updated the
@@ -386,8 +412,8 @@ void Pressure::process_embedded_boundaries() {
                                                         iCellOffset[1],
                                                         iCellOffset[2] );
       
-      const int iInterior = volfrac_->window_without_ghost().flat_index( intCellIJK  );
-      double volFrac = (*volfrac_)[iInterior];
+      const int iInterior = volfrac->window_without_ghost().flat_index( intCellIJK  );
+      double volFrac = (*volfrac)[iInterior];
       
       // we are inside an embedded geometry, set pressure to zero.
       if ( volFrac < 1.0 ) {
@@ -403,50 +429,50 @@ void Pressure::process_embedded_boundaries() {
                                                     iCellOffset[1],
                                                     iCellOffset[2] );
         IntVector eIJKUintah(iCell[0] + 1, iCell[1], iCell[2]);
-        const int ieast = volfrac_->window_without_ghost().flat_index( eIJK  );
+        const int ieast = volfrac->window_without_ghost().flat_index( eIJK  );
         
         // north
         const SpatialOps::structured::IntVec   nIJK( iCellOffset[0],
                                                     iCellOffset[1] + 1,
                                                     iCellOffset[2] );
         IntVector nIJKUintah(iCell[0], iCell[1] + 1, iCell[2]);
-        const int inorth = volfrac_->window_without_ghost().flat_index( nIJK  );
+        const int inorth = volfrac->window_without_ghost().flat_index( nIJK  );
         
         // top
         const SpatialOps::structured::IntVec   tIJK( iCellOffset[0],
                                                     iCellOffset[1],
                                                     iCellOffset[2] + 1);
         IntVector tIJKUintah(iCell[0], iCell[1], iCell[2] + 1);
-        const int itop = volfrac_->window_without_ghost().flat_index( tIJK  );
+        const int itop = volfrac->window_without_ghost().flat_index( tIJK  );
         
         // west
         const SpatialOps::structured::IntVec   wIJK( iCellOffset[0] - 1,
                                                     iCellOffset[1],
                                                     iCellOffset[2] );
         IntVector wIJKUintah(iCell[0] - 1, iCell[1], iCell[2]);
-        const int iwest = volfrac_->window_without_ghost().flat_index( wIJK  );
+        const int iwest = volfrac->window_without_ghost().flat_index( wIJK  );
         
         // south
         const SpatialOps::structured::IntVec   sIJK( iCellOffset[0],
                                                     iCellOffset[1] - 1,
                                                     iCellOffset[2] );
         IntVector sIJKUintah(iCell[0], iCell[1] - 1, iCell[2]);
-        const int isouth = volfrac_->window_without_ghost().flat_index( sIJK  );
+        const int isouth = volfrac->window_without_ghost().flat_index( sIJK  );
         
         // bottom
         const SpatialOps::structured::IntVec   bIJK( iCellOffset[0],
                                                     iCellOffset[1],
                                                     iCellOffset[2] - 1);
         IntVector bIJKUintah(iCell[0], iCell[1], iCell[2] - 1);
-        const int ibot = volfrac_->window_without_ghost().flat_index( bIJK  );
+        const int ibot = volfrac->window_without_ghost().flat_index( bIJK  );
         
         //
-        double volFracEast  = (*volfrac_)[ieast];
-        double volFracNorth = (*volfrac_)[inorth];
-        double volFracTop   = (*volfrac_)[itop];
-        double volFracWest  = (*volfrac_)[iwest];
-        double volFracSouth = (*volfrac_)[isouth];
-        double volFracBot   = (*volfrac_)[ibot];
+        double volFracEast  = (*volfrac)[ieast];
+        double volFracNorth = (*volfrac)[inorth];
+        double volFracTop   = (*volfrac)[itop];
+        double volFracWest  = (*volfrac)[iwest];
+        double volFracSouth = (*volfrac)[isouth];
+        double volFracBot   = (*volfrac)[ibot];
 
         // neighbors are embedded boundaries
         if (doX_ && volFracEast < 1.0 ) {

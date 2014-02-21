@@ -475,8 +475,8 @@ namespace Wasatch{
 
     if( hasPressureExpression_ ){
       Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
-      pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
       pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
+      pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );      
       pexpr.schedule_set_pressure_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );            
     }
     

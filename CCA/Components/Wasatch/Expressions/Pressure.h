@@ -239,9 +239,9 @@ public:
   /**
    * \brief Calculates pressure coefficient matrix.
    */
-  void setup_matrix();
+  void setup_matrix(const SVolField* const volfrac);
   
-  void process_embedded_boundaries();
+  void process_embedded_boundaries(const SVolField* const volfrac);
 
   /**
    * \brief Special function to apply pressure boundary conditions after the pressure solve.
