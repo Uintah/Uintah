@@ -786,6 +786,12 @@ namespace Wasatch{
     //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
+    // handle intrusion boundaries
+    if ( wasatchSpec_->findBlock("EmbeddedGeometry") )
+    {
+      apply_intrusion_boundary_conditions( *bcHelperMap_[level->getID()] );
+    }
+
     //_______________________________________
     // set the time
     const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().dt, TagNames::self().timestep  ) );
