@@ -343,6 +343,7 @@ namespace Wasatch{
       settimeexpr.set_integrator_stage( rkStage );
       settimeexpr.set_deltat( deltat );
       settimeexpr.set_time( sharedState_->getElapsedTime() );
+      settimeexpr.set_timestep( sharedState_->getCurrentTopLevelTimeStep() );
     }
   }
 

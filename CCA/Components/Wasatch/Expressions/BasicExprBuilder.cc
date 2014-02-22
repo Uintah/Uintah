@@ -370,7 +370,7 @@ namespace Wasatch{
       Expr::Tag srcOldTag = Expr::Tag( srcTag.name() + "_old", Expr::STATE_NONE );
       const TagNames& tagNames = TagNames::self();
       typedef typename TimeDerivative<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, srcTag, srcOldTag, tagNames.timestep );
+      builder = scinew Builder( tag, srcTag, srcOldTag, tagNames.dt );
     }
     
     else if ( params->findBlock("BurnsChristonAbskg") ){

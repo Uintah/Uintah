@@ -380,6 +380,7 @@ namespace Wasatch{
         if( tree.name()!="set_time" &&
             tree.name()!="initialization" &&
             (fieldInfo.varlabel->getName()=="time" ||
+             fieldInfo.varlabel->getName()=="dt"   ||
              fieldInfo.varlabel->getName()=="timestep")){
           fieldInfo.mode = Expr::REQUIRES;
         }

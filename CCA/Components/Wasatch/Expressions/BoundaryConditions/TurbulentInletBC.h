@@ -104,7 +104,7 @@ TurbulentInletBC( const std::string inputFileName,
                   const int period,
                   const double timePeriod )
   : timeTag_    ( Wasatch::TagNames::self().time ),
-    timestepTag_( Wasatch::TagNames::self().timestep ),
+    timestepTag_( Wasatch::TagNames::self().dt ),
     velDir_(velDir),
     period_(period),
     timePeriod_(timePeriod)

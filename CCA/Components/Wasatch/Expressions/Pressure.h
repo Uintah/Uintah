@@ -79,7 +79,7 @@ class Pressure
 {
   typedef SpatialOps::structured::SingleValueField TimeField;
 
-  const Expr::Tag fxt_, fyt_, fzt_, pSourcet_, timestept_, currenttimet_, volfract_;
+  const Expr::Tag fxt_, fyt_, fzt_, pSourcet_, dtt_, currenttimet_, timestept_, volfract_;
 
   const bool doX_, doY_, doZ_;
   bool didAllocateMatrix_;
@@ -99,6 +99,7 @@ class Pressure
   const Uintah::VarLabel* prhsLabel_;
   
   const SVolField* pSource_;
+  const TimeField* dt_;
   const TimeField* timestep_;
   const TimeField* currenttime_;
 
@@ -148,7 +149,7 @@ class Pressure
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag fxt_, fyt_, fzt_, psrct_, timestept_, volfract_;
+    const Expr::Tag fxt_, fyt_, fzt_, psrct_, dtt_, volfract_;
     
     const bool hasMovingGeometry_;
     const bool userefpressure_;

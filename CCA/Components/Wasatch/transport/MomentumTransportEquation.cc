@@ -691,7 +691,7 @@ namespace Wasatch{
         const Expr::Tag oldPressureTag = Expr::Tag (pressure_tag().name() + "_old", Expr::STATE_NONE);
         convTermWeakID_ = factory.register_expression( new typename WeakConvectiveTerm<FieldT>::Builder( convTermWeak, thisVelTag_, velTags_));
         factory.cleave_from_parents ( convTermWeakID_ );
-        factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, convTermWeak, tauTags, densTag, viscTag, oldPressureTag, tagNames.timestep ));
+        factory.register_expression( new typename VelEst<FieldT>::Builder( thisVelStarTag, thisVelTag_, convTermWeak, tauTags, densTag, viscTag, oldPressureTag, tagNames.dt ));
       }
     }
     
@@ -771,7 +771,7 @@ namespace Wasatch{
         ptags.push_back( pressure_tag() );
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
         const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
-                                                                                        tagNames.pressuresrc, tagNames.timestep, vNames.vol_frac_tag<SVolField>(),
+                                                                                        tagNames.pressuresrc, tagNames.dt, vNames.vol_frac_tag<SVolField>(),
                                                                                         vNames.has_moving_geometry(), usePressureRefPoint, refPressureValue,
                                                                                         refPressureLocation, use3DLaplacian,
                                                                                         *solverParams_, linSolver);
