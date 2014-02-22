@@ -315,7 +315,7 @@ Pressure::setup_matrix(const SVolField* const volfrac)
 
   // When boundary conditions are present, modify the pressure matrix coefficients at the boundary
   if (patch_->hasBoundaryFaces() && bcHelper_)
-    bcHelper_->update_pressure_matrix(matrix_, patch_);
+    bcHelper_->update_pressure_matrix(matrix_, volfrac, patch_);
 
   // if the user specified a reference pressure, then modify the appropriate matrix coefficients
   if ( useRefPressure_ )
