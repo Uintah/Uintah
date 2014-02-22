@@ -911,6 +911,7 @@ namespace Wasatch {
   //------------------------------------------------------------------------------------------------
   
   void BCHelper::update_pressure_matrix( Uintah::CCVariable<Uintah::Stencil4>& pMatrix,
+                                        const SVolField* const volFrac,
                                         const Uintah::Patch* patch )
   {
     const int patchID = patch->getID();
@@ -934,7 +935,7 @@ namespace Wasatch {
       /*
        1. Inlet/Wall/Moving wall: dp/dx = 0 -> p_outside = p_inside. Therefore for d2p/dx2 = (p_{-1} - 2 p_0 + p_1)/dx2, p_1 = p_0, therefore we decrement the coefficient for p0 by 1.
        2. OUTFLOW/OPEN: p_outside = - p_inside -> we augment the coefficient for p_0
-       3.
+       3. Intrusion: do NOT modify the coefficient matrix since it will be modified inside the pressure expression when modifying the matrix for intrusions
        */
         if (myBndSpec.has_patch(patchID))
         {
@@ -949,6 +950,16 @@ namespace Wasatch {
           
           for( bndMask.reset(); !bndMask.done(); ++bndMask ) {
             Uintah::Stencil4& coefs = pMatrix[*bndMask - unitNormal];
+            
+            // if we are inside a solid, then don't do anything because we already handle this in the pressure expression
+            if (volFrac) {
+              const Uintah::IntVector iCell = *bndMask - unitNormal - patch->getExtraCellLowIndex(1);
+              const SpatialOps::structured::IntVec iiCell(iCell.x(), iCell.y(), iCell.z() );
+              if ((*volFrac)(iiCell) < 1.0)
+                continue;
+            }
+            
+            //
             switch(myBndSpec.face){
               case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p += sign/dx2; break;
               case Uintah::Patch::xplus :                coefs.p += sign/dx2; break;
