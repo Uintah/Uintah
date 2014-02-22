@@ -31,8 +31,9 @@ namespace Wasatch{
   
   TagNames::TagNames() :
   
-  time    ( "time",     Expr::STATE_NONE ),
-  timestep( "timestep", Expr::STATE_NONE ),
+  time    ( "time"    , Expr::STATE_NONE ),
+  dt      ( "dt"      , Expr::STATE_NONE ),
+  timestep ( "timestep", Expr::STATE_NONE ),
   stableTimestep( "StableDT", Expr::STATE_NONE ),
   
   celltype("CellType", Expr::STATE_NONE),

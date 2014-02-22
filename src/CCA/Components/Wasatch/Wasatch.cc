@@ -788,7 +788,7 @@ namespace Wasatch{
     
     //_______________________________________
     // set the time
-    const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().timestep ) );
+    const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().dt, TagNames::self().timestep  ) );
     exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
 
     //_____________________________________________
@@ -1102,7 +1102,7 @@ namespace Wasatch{
     // will be available to all expressions if needed.
     Expr::ExpressionID timeID;
     if( rkStage==1 ){
-      const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().timestep ) );
+      const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().dt, TagNames::self().timestep ) );
       timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
     }
     else{

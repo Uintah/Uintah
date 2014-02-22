@@ -62,7 +62,7 @@ Pressure::Pressure( const std::string& pressureName,
                     const Expr::Tag& fytag,
                     const Expr::Tag& fztag,
                     const Expr::Tag& pSourceTag,
-                    const Expr::Tag& timesteptag,
+                    const Expr::Tag& dtTag,
                     const Expr::Tag& volfractag,
                     const bool hasMovingGeometry,
                     const bool       useRefPressure,
@@ -79,8 +79,9 @@ Pressure::Pressure( const std::string& pressureName,
 
     pSourcet_( pSourceTag ),
 
-    timestept_   ( timesteptag ),
-    currenttimet_(TagNames::self().time ),
+    dtt_         ( dtTag                     ),
+    currenttimet_( TagNames::self().time     ),
+    timestept_   ( TagNames::self().timestep ),
 
     volfract_(volfractag),
 
@@ -218,10 +219,11 @@ Pressure::advertise_dependents( Expr::ExprDeps& exprDeps )
   exprDeps.requires_expression( pSourcet_ );
   if(volfract_ != Expr::Tag() ) exprDeps.requires_expression( volfract_ );
   
-  exprDeps.requires_expression( timestept_ );
+  exprDeps.requires_expression( dtt_ );
   
   const TagNames& tagNames = TagNames::self();
-  exprDeps.requires_expression( tagNames.time );
+  exprDeps.requires_expression( currenttimet_ );
+  exprDeps.requires_expression( timestept_ );
 }
 
 //--------------------------------------------------------------------
@@ -242,8 +244,9 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
   if( volfract_ != Expr::Tag() ) volfrac_ = &svfm.field_ref( volfract_ );
 
   const Expr::FieldMgrSelector<TimeField>::type& doublefm = fml.field_manager<TimeField>();
-  timestep_    = &doublefm.field_ref( timestept_    );
+  dt_    = &doublefm.field_ref( dtt_    );
   currenttime_ = &doublefm.field_ref( currenttimet_ );
+  timestep_ = &doublefm.field_ref( timestept_ );
 }
 
 //--------------------------------------------------------------------
@@ -341,7 +344,7 @@ Pressure::evaluate()
   SVolField& rhs = *results[1];
 
   std::ostringstream strs;
-  strs << "_t_"<< (*currenttime_)[0] << "s_rkstage_"<< rkStage_ << "_patch";
+  strs << "_timestep_"<< (int)(*timestep_)[0] << "_rkstage_"<< rkStage_ << "_patch";
 
   solverParams_.setOutputFileName( "_WASATCH" + strs.str() );
 
@@ -531,7 +534,7 @@ Pressure::Builder::Builder( const Expr::TagList& result,
                             const Expr::Tag& fytag,
                             const Expr::Tag& fztag,
                             const Expr::Tag& pSourceTag,
-                            const Expr::Tag& timesteptag,
+                            const Expr::Tag& dtTag,
                             const Expr::Tag& volfractag,
                             const bool hasMovingGeometry,
                             const bool       userefpressure,
@@ -545,7 +548,7 @@ Pressure::Builder::Builder( const Expr::TagList& result,
    fyt_( fytag ),
    fzt_( fztag ),
    psrct_( pSourceTag ),
-   timestept_( timesteptag ),
+   dtt_( dtTag ),
    volfract_ ( volfractag  ),
    hasMovingGeometry_(hasMovingGeometry),
    userefpressure_( userefpressure ),
@@ -563,7 +566,7 @@ Pressure::Builder::build() const
 {
   const Expr::TagList& ptags = get_tags();
   return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_,
-                       psrct_, timestept_,volfract_,hasMovingGeometry_, userefpressure_,
+                       psrct_, dtt_,volfract_,hasMovingGeometry_, userefpressure_,
                        refpressurevalue_, refpressurelocation_, use3dlaplacian_,
                        sparams_, solver_ );
 }

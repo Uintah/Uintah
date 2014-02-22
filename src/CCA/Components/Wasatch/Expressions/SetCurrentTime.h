@@ -41,7 +41,7 @@ class SetCurrentTime
  : public Expr::Expression<SpatialOps::structured::SingleValueField>
 {
   int rkStage_;
-  double deltat_, simTime_;
+  double deltat_, simTime_, timeStep_;
 
   SetCurrentTime();
 
@@ -62,6 +62,7 @@ public:
   void evaluate();
   void set_integrator_stage( const int rkStage ){rkStage_ = rkStage;}
   void set_deltat( const double deltat ) {deltat_ = deltat;}
+  void set_timestep( const int ts ){ timeStep_ = (double) ts; }
   void set_time( const double t ){ simTime_ = t; }
 };
 

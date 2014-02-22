@@ -30,9 +30,10 @@ namespace Wasatch{
 
   SetCurrentTime::SetCurrentTime()
     : Expr::Expression<SpatialOps::structured::SingleValueField>(),
-      rkStage_( 0 ),
-      deltat_ ( 0.0 ),
-      simTime_( 0.0 )
+      rkStage_ ( 0   ),
+      deltat_  ( 0.0 ),
+      simTime_ ( 0.0 ),
+      timeStep_( 0.0 )
   {}
 
   //--------------------------------------------------------------------
@@ -58,6 +59,7 @@ namespace Wasatch{
       *results[0] <<= *results[0] + 0.5*deltat_;
       *results[1] <<= 0.5*deltat_;
     }
+    *results[2] <<= timeStep_;
   }
 
   //--------------------------------------------------------------------

@@ -28,7 +28,7 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
   densStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : densStarTag    ),
   dens2Start_ ( densStarTag==Expr::Tag() ? Expr::Tag() : dens2StarTag   ),
   dilt_       ( Wasatch::TagNames::self().dilatation ),
-  timestept_  ( Wasatch::TagNames::self().timestep )
+  timestept_  ( Wasatch::TagNames::self().dt )
 {
   set_gpu_runnable( true );
 }

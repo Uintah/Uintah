@@ -52,7 +52,7 @@ namespace Wasatch{
      */
     static const TagNames& self();
     
-    const Expr::Tag time, timestep, stableTimestep;
+    const Expr::Tag time, dt, timestep, stableTimestep;
 
     const Expr::Tag celltype;
     
