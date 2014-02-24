@@ -934,8 +934,9 @@ if(d_myworld->myrank() == 0){
     {
       for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
         if (maxReduce[i].val > 0)
-          stats << statLabels[i] << " avg: " << avgReduce[i] << " max: " << maxReduce[i].val << " maxloc:" << maxReduce[i].loc
-            << " LIB%: " << 1-(avgReduce[i]/maxReduce[i].val) << "\n";
+          stats << "  "<< left << setw(17)<< statLabels[i] << " avg: " << setw(10)<< avgReduce[i] 
+                << " max: " << setw(10) <<maxReduce[i].val << " maxloc:" << maxReduce[i].loc
+                << " LIB%: " << 100*(1-(avgReduce[i]/maxReduce[i].val)) << "\n";
       }
     }
     else //runing in serial
@@ -948,7 +949,7 @@ if(d_myworld->myrank() == 0){
 
     }
     if(d_n>2 && !isnan(d_sharedState->overheadAvg))
-      stats << "Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
+      stats << "  Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
   } 
 
 
