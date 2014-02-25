@@ -1697,7 +1697,7 @@ CC_DEPEND_REGEN=unknown
 # Filename extension
 CC_DEPEND_EXT=unknown
 
-# Try -qmakedep (-MF)
+# Try -qmakedep (qmakedep option is functionally identical to the -M option.)
 # BG/Q specific dpendency generation
 for flag in -qmakedep; do
   if test $CC_DEPEND_MODE = unknown; then
@@ -1707,7 +1707,7 @@ for flag in -qmakedep; do
     (eval $ac_try) 2>&5
     if test -f configure-test-dir/configure-test.d ; then
       CC_DEPEND_MODE=normal
-      CC_DEPEND_REGEN='-MF $(dir $@)depend.mk'
+      CC_DEPEND_REGEN=$flag
       CC_DEPEND_EXT=depend.mk
     else 
       AC_MSG_RESULT( no )
