@@ -64,7 +64,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>mixture fraction</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>

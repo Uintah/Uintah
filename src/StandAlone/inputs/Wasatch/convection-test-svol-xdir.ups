@@ -119,7 +119,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi_central</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>CENTRAL</Method> 
@@ -135,7 +134,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi_upwind</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>UPWIND</Method> 
@@ -151,7 +149,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi_superbee</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>SUPERBEE</Method> 
@@ -168,7 +165,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi_charm</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>CHARM</Method> 
@@ -184,7 +180,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi_koren</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>KOREN</Method> 
@@ -201,7 +196,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi_mc</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>MC</Method> 
@@ -218,7 +212,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi_ospre</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>OSPRE</Method> 
@@ -235,7 +228,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi_smart</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>SMART</Method> 
@@ -251,7 +243,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi_vanleer</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>VANLEER</Method> 
@@ -267,7 +258,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi_hcus</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>HCUS</Method> 
@@ -283,7 +273,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi_minmod</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>MINMOD</Method> 
@@ -299,7 +288,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi_hquick</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>HQUICK</Method> 

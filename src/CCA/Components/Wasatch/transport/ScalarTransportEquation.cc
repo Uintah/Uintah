@@ -84,9 +84,9 @@ namespace Wasatch{
     }
 
     // define the primitive variable and solution variable tags and trap errors
-    isStrong_ = true;
-    if( params->findBlock("StrongForm") )  params->get("StrongForm",isStrong_);
-
+    std::string form;
+    params->getWithDefault("form",form,"strong");
+    isStrong_ = (form == "strong") ? true : false;
     const bool existPrimVar = params->findBlock("PrimitiveVariable");
 
     if( isConstDensity_ ){
@@ -100,7 +100,7 @@ namespace Wasatch{
     else{
       if( isStrong_ && !existPrimVar ){
         std::ostringstream msg;
-        msg << "ERROR: When you are solving a transport equation with constant density in its strong form, you need to specify your primitive and solution variables separately. Please include the \"PrimitiveVariable\" block in your input file in the \"TransportEquation\" block." << endl;
+        msg << "ERROR: When you are solving a transport equation with variable density in its strong form, you need to specify your primitive and solution variables separately. Please include the \"PrimitiveVariable\" block in your input file in the \"TransportEquation\" block." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       else if( isStrong_ && existPrimVar ){

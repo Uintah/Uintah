@@ -743,16 +743,16 @@
     <!-- Spec for a TransportEquation -->
     <!-- ============================ -->
     <TransportEquation          spec="MULTIPLE NO_DATA"
-                                attribute1="equation REQUIRED STRING 'generic, enthalpy">
+                                attribute1="equation REQUIRED STRING 'generic, enthalpy'"
+                                attribute2="form     OPTIONAL STRING 'strong, weak'">
       
       <!-- An Optional Primitive variable tag: -->
       <!-- Sometimes we transport the solution variable and it is itself our primitive variable, So, we write   --> 
       <!-- diffusive term in terms of solution variable. But sometimes the solution variable is density times -->
       <!-- primitive variable and we should just pass the primitive variable into diffusive terms. In these cases -->
       <!-- we separate density from primitive variable in this way -->
-      <SolutionVariable   spec="REQUIRED STRING" />
-      <StrongForm         spec="REQUIRED BOOLEAN"/>  <!-- defaults to true -->
-      <PrimitiveVariable  spec="OPTIONAL STRING" />
+      <SolutionVariable   spec="REQUIRED STRING"/>
+      <PrimitiveVariable  spec="OPTIONAL STRING"/>
 
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />
       <!-- ================================================================================== -->            
