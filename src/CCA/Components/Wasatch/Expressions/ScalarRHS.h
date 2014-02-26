@@ -203,7 +203,7 @@ protected:
   const DensityInterpT* densityInterpOp_;
 
   // things requried for weak form:
-  const Expr::Tag phiTag_, drhodtTag_;;
+  const Expr::Tag phiTag_, drhodtTag_;
   const FieldT    *phi_;
   const SVolField *drhodt_;
 

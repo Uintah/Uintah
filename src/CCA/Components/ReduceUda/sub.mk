@@ -30,9 +30,9 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/PatchCombiner
+SRCDIR   := CCA/Components/ReduceUda
 
-SRCS     += $(SRCDIR)/PatchCombiner.cc $(SRCDIR)/UdaReducer.cc
+SRCS     += $(SRCDIR)/UdaReducer.cc
 
 PSELIBS := \
 	CCA/Ports \

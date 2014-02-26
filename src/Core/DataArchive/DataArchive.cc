@@ -94,7 +94,7 @@ DataArchive::DataArchive(const std::string& filebase,
 
 DataArchive::~DataArchive()
 {
-  // The createdVarLabels_ member variable, is used to keep track of
+  // The d_createdVarLabels member variable, is used to keep track of
   // the VarLabels (for each of the data fields found in the data
   // archive we are reading data out of) for which a varLabel does not
   // already exist.  Now that we have read in the data, we no longer
@@ -102,8 +102,8 @@ DataArchive::~DataArchive()
   // leak.  Note, most of these VarLabels will be 're-created' by
   // individual components when they go to access their data.
 
-  map<string, VarLabel*>::iterator vm_iter = createdVarLabels_.begin();
-  for( ; vm_iter != createdVarLabels_.end(); vm_iter++ ) {
+  map<string, VarLabel*>::iterator vm_iter = d_createdVarLabels.begin();
+  for( ; vm_iter != d_createdVarLabels.end(); vm_iter++ ) {
     VarLabel::destroy( vm_iter->second );
   }
 
@@ -834,7 +834,7 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
 
       // At the end of this routine, we will need to delete the VarLabels that we create here in
       // order to avoid a memory leak.
-      createdVarLabels_[names[i]] = vl;
+      d_createdVarLabels[names[i]] = vl;
     }
     varMap[names[i]] = vl;
   }
@@ -898,6 +898,90 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
   }
 }
 
+
+//______________________________________________________________________
+//  This method is a specialization of restartInitialize().
+//  It's only used by the reduceUda component
+void
+DataArchive::reduceUda_ReadUda(int timeIndex, 
+                               const GridP& grid,
+                               const PatchSubset* patches,
+                               DataWarehouse* dw )
+{
+  vector<int> timesteps;
+  vector<double> times;
+  vector<string> names;
+  vector< const TypeDescription *> typeDescriptions;
+  
+  queryTimesteps(timesteps, times);
+  queryVariables(names, typeDescriptions);
+  queryGlobals(  names, typeDescriptions);  
+  
+  // create varLabels if they don't already exist
+  map<string, VarLabel*> varMap;
+  for (unsigned i = 0; i < names.size(); i++) {
+    VarLabel * vl = VarLabel::find(names[i]);
+    
+    if( vl == NULL ) {
+      vl = VarLabel::create( names[i], typeDescriptions[i], IntVector(0,0,0) );
+      d_createdVarLabels[names[i]] = vl;
+    }
+    
+    varMap[names[i]] = vl;
+  }
+
+  TimeData& timedata = getTimeData(timeIndex);
+
+  // set here instead of the SimCont because we need the DW ID to be set 
+  // before saving particle subsets
+  dw->setID( timesteps[timeIndex] );
+  
+  // make sure to load all the data so we can iterate through it 
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    timedata.parsePatch( patch );
+  }
+
+  //__________________________________
+  // iterate through all entries in the VarData hash table, and loading the 
+  // variables
+  VarHashMapIterator iter(&timedata.d_datafileInfo);
+  iter.first();
+  
+  for (; iter.ok(); ++iter) {
+    VarnameMatlPatch& key = iter.get_key();
+    DataFileInfo& data    = iter.get_data();
+
+    // get the Patch from the Patch ID (ID of -1 = NULL - for reduction vars)
+    const Patch* patch = key.patchid_ == -1 ? NULL : grid->getPatchByID(key.patchid_, 0);
+    int matl = key.matlIndex_;
+
+    VarLabel* label = varMap[key.name_];
+
+    if (label == 0) {
+      continue;
+    }
+
+    // put the data in the DataWarehouse      
+    Variable* var = label->typeDescription()->createInstance();
+    query( *var, key.name_, matl, patch, timeIndex, &data );
+
+    ParticleVariableBase* particles;
+    if ( (particles = dynamic_cast<ParticleVariableBase*>(var)) ) {
+      if ( !dw->haveParticleSubset(matl, patch) ) {
+        dw->saveParticleSubset(particles->getParticleSubset(), matl, patch);
+      } else {
+        ASSERTEQ( dw->getParticleSubset(matl, patch), particles->getParticleSubset() );
+      }
+    }
+
+    dw->put(var, label, matl, patch); 
+    delete var;
+  }
+}
+
+//______________________________________________________________________
+//
 bool
 DataArchive::queryRestartTimestep(int& timestep)
 {

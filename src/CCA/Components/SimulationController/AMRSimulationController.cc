@@ -54,8 +54,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Tracker/TrackerClient.h>
 
-#include <CCA/Components/PatchCombiner/PatchCombiner.h>
-#include <CCA/Components/PatchCombiner/UdaReducer.h>
+#include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
@@ -93,6 +92,9 @@ AMRSimulationController::~AMRSimulationController()
 }
 
 double barrier_times[5]={0};
+
+//______________________________________________________________________
+//
 void
 AMRSimulationController::run()
 {
@@ -153,22 +155,19 @@ AMRSimulationController::run()
 
    calcStartTime();
 
-   if (d_combinePatches) {
-     // combine patches and reduce uda need the same things here
-     Dir combineFromDir(d_fromDir);
-     d_output->combinePatchSetup(combineFromDir);
-
-     // somewhat of a hack, but the patch combiner specifies exact delt's
-     // and should not use a delt factor.
+   //__________________________________
+   //  reduceUda
+   if (d_reduceUda) {
+     Dir fromDir(d_fromDir);
+     d_output->reduceUdaSetup( fromDir );
      d_timeinfo->delt_factor = 1;
-     d_timeinfo->delt_min = 0;
-     if (d_reduceUda){
-       d_timeinfo->maxTime = static_cast<UdaReducer*>(d_sim)->getMaxTime();
-     }else{
-       d_timeinfo->maxTime = static_cast<PatchCombiner*>(d_sim)->getMaxTime();
-     }
-     cout << " MaxTime: " << d_timeinfo->maxTime << endl;
-     d_timeinfo->delt_max = d_timeinfo->maxTime;
+     d_timeinfo->delt_min    = 0;
+     d_timeinfo->delt_max    = 1e99;
+     d_timeinfo->initTime    = static_cast<UdaReducer*>(d_sim)->getInitialTime();
+     d_timeinfo->maxTime     = static_cast<UdaReducer*>(d_sim)->getMaxTime();
+     d_timeinfo->max_delt_increase = 1e99;
+     d_timeinfo->max_initial_delt  = 1e99;
+      
    }
 
    // setup, compile, and run the taskgraph for the initialization timestep
@@ -264,8 +263,10 @@ AMRSimulationController::run()
 
      // Yes, I know this is kind of hacky, but this is the only way to get a new grid from UdaReducer
      //   Needs to be done before advanceDataWarehouse
-     if (d_reduceUda) currentGrid = static_cast<UdaReducer*>(d_sim)->getGrid();
-
+     if (d_reduceUda){
+      currentGrid = static_cast<UdaReducer*>(d_sim)->getGrid();
+     }
+     
      // After one step (either timestep or initialization) and correction
      // the delta we can finally, finalize our old timestep, eg. 
      // finalize and advance the Datawarehouse
@@ -309,6 +310,7 @@ AMRSimulationController::run()
          // This is not correct if we have switched to a different
          // component, since the delt will be wrong 
          d_output->finalizeTimestep( time, delt, currentGrid, d_scheduler, 0 );
+         d_output->sched_allOutputTasks( delt, currentGrid, d_scheduler, 0 );
        }
      }
 
@@ -391,7 +393,8 @@ AMRSimulationController::run()
      }
 
      if(d_output){
-       d_output->executedTimestep(delt, currentGrid);
+       d_output->findNext_OutputCheckPoint_Timestep(  delt, currentGrid );
+       d_output->writeto_xml_files( delt, currentGrid );
      }
 #ifdef USE_TAU_PROFILING
      TAU_PROFILE_STOP(iteration_timer);
@@ -513,7 +516,8 @@ AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwStride,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void
 AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwStride, int levelNum, bool rootCycle)
 {
@@ -675,9 +679,7 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
         d_scheduler->advanceDataWarehouse(grid, true);
       }
 
-      if(d_myworld->myrank() == 0){
-        cout << "Compiling initialization taskgraph...\n";
-      }
+      proc0cout << "Compiling initialization taskgraph...\n";
 
       // Initialize the CFD and/or MPM data
       for(int i=grid->numLevels()-1; i >= 0; i--) {
@@ -693,13 +695,17 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
       }
       scheduleComputeStableTimestep(grid,d_scheduler);
 
-      if(d_output)
-        d_output->finalizeTimestep(t, 0, grid, d_scheduler, 1);
+      if(d_output){
+        double delT = 0;
+        bool recompile = true;
+        d_output->finalizeTimestep(t, delT, grid, d_scheduler, recompile);
+        d_output->sched_allOutputTasks( delT,grid, d_scheduler, recompile );
+      }
       
       d_scheduler->compile();
       double end = Time::currentSeconds() - start;
-      if(d_myworld->myrank() == 0)
-        cout << "done taskgraph compile (" << end << " seconds)\n";
+      
+      proc0cout << "done taskgraph compile (" << end << " seconds)\n";
       // No scrubbing for initial step
       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
       d_scheduler->execute();
@@ -707,9 +713,10 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
       needNewLevel = d_regridder && d_regridder->isAdaptive() && grid->numLevels()<d_regridder->maxLevels() && doRegridding(grid, true);
     } while (needNewLevel);
 
-    if(d_output)
-      d_output->executedTimestep(0, grid);
-
+    if(d_output){
+      d_output->findNext_OutputCheckPoint_Timestep( 0, grid );
+      d_output->writeto_xml_files(0, grid );
+    }
   }
 }
 
@@ -860,6 +867,7 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
 
   if(d_output){
     d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, true);
+    d_output->sched_allOutputTasks( delt, currentGrid, d_scheduler, true );
   }
   
   d_scheduler->compile();
@@ -961,7 +969,8 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
     }
   } while(!success);
 } // end executeTimestep()
-
+//______________________________________________________________________
+//
 void
 AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
                                                         SchedulerP& sched )
@@ -992,7 +1001,8 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
   task->usesMPI(true);
   sched->addTask(task, d_lb->getPerProcessorPatchSet(grid), d_sharedState->allMaterials());
 }
-
+//______________________________________________________________________
+//
 void
 AMRSimulationController::reduceSysVar( const ProcessorGroup*,
                                       const PatchSubset* patches,

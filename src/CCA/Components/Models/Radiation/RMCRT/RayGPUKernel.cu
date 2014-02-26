@@ -76,12 +76,6 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   int tidX = threadIdx.x + blockIdx.x * blockDim.x + patch.loEC.x;
   int tidY = threadIdx.y + blockIdx.y * blockDim.y + patch.loEC.y;
   
-   
-  if(blockID == 0 && threadID == 0){
-    printf("//________________________________rayTraceKernek Modifies: %d\n", RT_flags.modifies_divQ);
-    printf("  Top:RayTraceKernel %d,%d\n", threadIdx.x, threadIdx.y );
-  }
-  
   const GPUGridVariable<double> sigmaT4OverPi;
   const GPUGridVariable<double> abskg;              // Need to use getRegion() to get the data
   const GPUGridVariable<int> celltype;

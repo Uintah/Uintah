@@ -113,21 +113,21 @@ set autoscale
 set pointsize 0.9
 
 set grid xtics ytics
-set title "$date : $machine : $procs Processors \n Averaged over all processors"
+set title "$date : $machine : $procs Processors \n Summed over all processors"
 set xlabel 'Elaspsed Time'
 set ylabel 'Time'
 
 plot '.data' using 1:2 t 'Task Execution'       with linespoints,\
-     '.data' using 1:4 t 'Global Communication' with linespoints,\
-     '.data' using 1:6 t 'Local Communication'  with linespoints,\
-     '.data' using 1:8 t 'Waiting'              with linespoints 
+     '.data' using 1:4 t 'Global Comm'          with linespoints,\
+     '.data' using 1:6 t 'Local Comm'           with linespoints,\
+     '.data' using 1:8 t 'Waiting Comm'         with linespoints 
      
 set origin 0.0,0.0
 set title 'Maximum over all processors'
 plot '.data' using 1:3 t 'Task Execution'       with linespoints,\
-     '.data' using 1:5 t 'Global Communication' with linespoints,\
-     '.data' using 1:7 t 'Local Communication'  with linespoints,\
-     '.data' using 1:9 t 'Waiting'              with linespoints 
+     '.data' using 1:5 t 'Global Comm'          with linespoints,\
+     '.data' using 1:7 t 'Local Comm'           with linespoints,\
+     '.data' using 1:9 t 'Waiting Comm'         with linespoints 
 
 set nomultiplot
 
@@ -161,9 +161,9 @@ set xlabel 'Elaspsed Time'
 set ylabel 'Percentage'
 
 plot '.LIBdata' using 1:2 t 'Task Execution'        with linespoints,\
-     '.LIBdata' using 1:3 t 'Global Communication'  with linespoints,\
-     '.LIBdata' using 1:4 t 'Local Communication'   with linespoints,\
-     '.LIBdata' using 1:5 t 'Waiting'               with linespoints
+     '.LIBdata' using 1:3 t 'Global Comm'           with linespoints,\
+     '.LIBdata' using 1:4 t 'Local Comm'            with linespoints,\
+     '.LIBdata' using 1:5 t 'Waiting Comm'          with linespoints
 fin
 
 if( $hardcopy == "n") then

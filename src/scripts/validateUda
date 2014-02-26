@@ -10,12 +10,10 @@
 #    2)  Does timestep/timestep.xml file exist
 #    3)  Does a level directory for each level exist
 #    4)  for each level directory does a pxxxx.xml file exist
-#    5)  for each level directory does a pxxxx.data file exist and is size > 0 
-#    6)  Does each pxxxxx.data file contain data (RAID stripes exist)
+#    5)  for each level directory does a pxxxx.data file exist and is size > 0
 #______________________________________________________________________
 
 # defaults
-set runTest6 = "1"
 
 set STAT = "stat --format %s"
 if ( `uname` == "Darwin" ) then
@@ -25,39 +23,12 @@ endif
 
 # bulletproofing
 if ($#argv == 0) then
-  echo "Usage validateUda  -6 <udas>"
-  echo "     -6:   Skip do RAID strips exist test"
+  echo "Usage validateUda  <udas>"
   exit
 endif
 
-# parse the user inputs
-set temp=(`getopt --shell tcsh --unquoted --options 6:: -- $argv:q`)
 
-if ($status != 0) then 
-  echo "Terminating..." >/dev/stderr
-  exit 1
-endif
-
-eval set argv=\($temp:q\)
-
-while (1)
-  switch($1:q)  # $1 is first argument
-  case -6:
-    echo "skip test 6" ; shift
-    set runTest6 = "0"
-    breaksw;           
-  case --:
-    shift    
-    break    
-  endsw
-end
-
-
-set udas = ""
-while ($#argv > 0)
-  set udas = ($udas "$1:q" )
-  shift
-end
+set udas = $argv
 
 echo "udas: $udas"
 
@@ -155,106 +126,86 @@ foreach U ($udas[*]:q)
   echo "Test 5:  Do all of the pxxxx.data files exist and have size > 0?      "
   set passed4 = true
   set passed5 = true
-  
-  if( $runTest6 == "1") then 
-    echo "Test 6:  Does each pxxxxx.data file contain data (RAID stripes exist)?"
-    set passed6 = true
-  endif 
 
-  
   
   foreach T ($timesteps[*]:q)
-  
     
     if ( -e $T/timestep.xml ) then
-
-      
+         
       #__________________________________
       #Test 4:  do the pxxxx.xml files for each level
-      set pxxx_xml = `grep Datafile $T/timestep.xml | awk -F '[="]' '{print $3}'`
+      #  You need to do this iteration in chunks, especially when there are a large
+      #  number of files to get around system limitations
+      grep Datafile $T/timestep.xml | awk -F '[="]' '{print $3}'>& xmlFiles
       
-      foreach D ($pxxx_xml[*]:q)
-        set here = "$T/$D"
+      @ chunkSize = 100
+      @ nFiles = `wc -l xmlFiles | awk '{print $1}'` + $chunkSize
+       
+      foreach lo (`seq 1 $chunkSize $nFiles`)
         
-        if( ! -e $here ) then
-          echo "           Missing $here"
-          set passed4 = false
-        endif
+        @ hi = $lo + $chunkSize
+        set pxxx_xml = `sed -n "$lo","$hi"p xmlFiles`
         
-        if ( -e $here ) then 
-          set bytes = `$STAT $here`
-          if ( $bytes == "0" ) then
-            echo "            $here has 0 bytes"
+        #echo $pxxx_xml
+        
+        foreach D ($pxxx_xml[*]:q)
+          set here = "$T/$D"
+
+          if( ! -e $here ) then
+            echo "           Missing $here"
             set passed4 = false
           endif
-        endif
-      end   
-      
+
+          if ( -e $here ) then 
+            set bytes = `$STAT $here`
+            if ( $bytes == "0" ) then
+              echo "            $here has 0 bytes"
+              set passed4 = false
+            endif
+          endif
+        end   
+      end
       #__________________________________
       # do all pxxxx.data files exist and have size > 0
-      set pxxx_data = `grep Datafile $T/timestep.xml | awk -F '[=."]' '{print $3".data"}'`
+      #  You need to do this iteration in chunks, especially when there are a large
+      #  number of files to get around system limitations
+      /bin/rm xmlFiles
+      grep Datafile $T/timestep.xml | awk -F '[=."]' '{print $3".data"}'>& xmlFiles
       
-      foreach D ($pxxx_data[*]:q)
-        set here = "$T/$D"
-        
-        if( ! -e $here ) then
-          echo "           Missing $here"
-        endif
-        
-        if ( -e $here ) then 
-          set bytes = `$STAT $here`                 
-                                                    
-          if ( $bytes == "0" ) then                 
-            echo "            $here has 0 bytes"    
-            set passed5 = false                     
-          endif                                     
-        endif
+      @ chunkSize = 100
+      @ nFiles = `wc -l xmlFiles | awk '{print $1}'` + $chunkSize
+       
+      foreach lo (`seq 1 $chunkSize $nFiles`)
       
-      end
-      
-      #__________________________________
-      #  Test 6:  Does each pxxxxx.data file contain data (RAID stripes exist)?
-      foreach D ($pxxx_data[*]:q)
-        set here = "$T/$D"
+        @ hi = $lo + $chunkSize
+        set pxxx_data = `sed -n "$lo","$hi"p xmlFiles`
 
-        if ( -e $here && $runTest6 == 1) then 
-        
-          set bytes = `$STAT $here`               
-          @ middle = $bytes / 2                                                             
-          @ endoff = $bytes - 16             
-                                                         
-          set first_bytes =  "`xxd -ps -l 16 $here`"                                        
-          set middle_bytes = "`xxd -ps -l 16 -seek $middle $here`"                          
-          set endoff_bytes = "`xxd -ps -l 16 -seek $endoff $here`"                          
-
-          #Ignore t00000 since most data is low-entropy (zero) on the first timestep.       
-          #If middle and (first or last) are empty, stripe missing                          
+        foreach D ($pxxx_data[*]:q)
+          set here = "$T/$D"
           
-          if ( $T != "t00000" &&  $middle_bytes == "00000000000000000000000000000000" \
-                              && ($first_bytes  == "00000000000000000000000000000000" ||  $endoff_bytes == "00000000000000000000000000000000" ) ) then
-
-            #Only fail the test if datafiles are gzip-compressed.                           
-            grep gzip `echo $here | sed -e 's/data$/xml/'`                                  
-            if ( $? == "0" ) then                                                            
-              set passed6 = false                                                           
-              echo "            $here is empty (possible missing RAID stripe)"              
-            endif
-             
+          if( ! -e $here ) then
+            echo "           Missing $here"
+            set passed5 = false
           endif
-                                                                        
-        endif
-        
-      end  # pxxx_data loop
+
+          if ( -e $here ) then 
+            set bytes = `$STAT $here`                 
+
+            if ( $bytes == "0" ) then                 
+              echo "            $here has 0 bytes"    
+              set passed5 = false                     
+            endif                                     
+          endif
+
+        end
+      end
+      /bin/rm xmlFiles
       
     endif  # if timestep exists
     
   end  # timestep loop
   echo "                                                         Test 4:      $passed4"  
   echo "                                                         Test 5:      $passed5"
-  
-  if( $runTest6 == "1") then
-    echo "                                                         Test 6:      $passed6"
-  endif
 bottom:  
   cd ..
 end

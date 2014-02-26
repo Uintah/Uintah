@@ -22,7 +22,9 @@
  * IN THE SOFTWARE.
  */
 
-#include "ScalabilityTestSrc.h"
+#include <CCA/Components/Wasatch/Expressions/ScalabilityTestSrc.h>
+#include <spatialops/Nebo.h>
+#include <sci_defs/cuda_defs.h>
 
 template< typename FieldT >
 ScalabilityTestSrc<FieldT>::
@@ -32,6 +34,7 @@ ScalabilityTestSrc( const Expr::Tag& varTag,
   phiTag_( varTag ),
   nvar_  ( nvar   )
 {
+  this->set_gpu_runnable( true );
   tmpVec_.resize( nvar, 0.0 );
 }
 
@@ -74,33 +77,44 @@ template< typename FieldT >
 void
 ScalabilityTestSrc<FieldT>::evaluate()
 {
+  using namespace SpatialOps;
+
   FieldT& val = this->value();
+  val <<= 0.0;
 
-  // pack iterators into a vector
-  iterVec_.clear();
   for( typename FieldVecT::const_iterator ifld=phi_.begin(); ifld!=phi_.end(); ++ifld ){
-    iterVec_.push_back( (*ifld)->begin() );
+    val <<= val + exp(**ifld);
   }
 
-  for( typename FieldT::iterator ival=val.begin(); ival!=val.end(); ++ival ){
-    // unpack into temporary
-    tmpVec_.clear();
-    for( typename IterVec::const_iterator ii=iterVec_.begin(); ii!=iterVec_.end(); ++ii ){
-      tmpVec_.push_back( **ii );
-    }
-
-    double src=1.0;
-    for( std::vector<double>::const_iterator isrc=tmpVec_.begin(); isrc!=tmpVec_.end(); ++isrc ){
-      src += exp(*isrc);
-    }
-
-    *ival = src;
-
-    // advance iterators to next point
-    for( typename IterVec::iterator ii=iterVec_.begin(); ii!=iterVec_.end(); ++ii ){
-      ++(*ii);
-    }
-  }
+  // NOTE: the following commented code is a mockup for point-wise calls to a
+  //       third-party library.  For now, we aren't going to use this since it
+  //       won't allow GPU execution via Nebo.
+//
+//  // pack iterators into a vector
+//  iterVec_.clear();
+//  for( typename FieldVecT::const_iterator ifld=phi_.begin(); ifld!=phi_.end(); ++ifld ){
+//    iterVec_.push_back( (*ifld)->begin() );
+//  }
+//
+//  for( typename FieldT::iterator ival=val.begin(); ival!=val.end(); ++ival ){
+//    // unpack into temporary
+//    tmpVec_.clear();
+//    for( typename IterVec::const_iterator ii=iterVec_.begin(); ii!=iterVec_.end(); ++ii ){
+//      tmpVec_.push_back( **ii );
+//    }
+//
+//    double src=1.0;
+//    for( std::vector<double>::const_iterator isrc=tmpVec_.begin(); isrc!=tmpVec_.end(); ++isrc ){
+//      src += exp(*isrc);
+//    }
+//
+//    *ival = src;
+//
+//    // advance iterators to next point
+//    for( typename IterVec::iterator ii=iterVec_.begin(); ii!=iterVec_.end(); ++ii ){
+//      ++(*ii);
+//    }
+//  }
 }
 
 //--------------------------------------------------------------------

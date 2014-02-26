@@ -190,7 +190,6 @@
         <Use3DLaplacian>   false</Use3DLaplacian>
 
         <Parameters>
- 	 	 	 	 	 	 <setupFrequency>0</setupFrequency>
  	 	 	 	 	 	 <skip>1</skip>
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
@@ -222,9 +221,9 @@
     <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
     <save label="density"/>
-    <save label="u_*"/>
-    <save label="density_*"/>
-    <save label="density_**"/>
+    <save label="u*"/>
+    <save label="density*"/>
+    <save label="density**"/>
     <save label="x-mom"/>
     <save label="x-mom_rhs_partial"/>
     <save label="u"/>

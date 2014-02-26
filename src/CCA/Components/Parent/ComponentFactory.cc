@@ -47,8 +47,7 @@
 #include <CCA/Components/MD/MD.h>
 #include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
-#include <CCA/Components/PatchCombiner/PatchCombiner.h>
-#include <CCA/Components/PatchCombiner/UdaReducer.h>
+#include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -236,9 +235,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   } 
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(world, ps, doAMR, uda);
-  } 
-  if (sim_comp == "combine_patches") {
-    return scinew PatchCombiner(world, uda);
   } 
   if (sim_comp == "reduce_uda") {
     return scinew UdaReducer(world, uda);

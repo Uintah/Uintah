@@ -75,7 +75,7 @@ SUBDIRS := \
         $(WASATCH)        \
         $(MD)             \
         $(SRCDIR)/ProblemSpecification \
-        $(SRCDIR)/PatchCombiner \
+        $(SRCDIR)/ReduceUda \
         $(SRCDIR)/Solvers \
         $(SRCDIR)/SwitchingCriteria \
         $(SRCDIR)/OnTheFlyAnalysis \

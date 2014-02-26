@@ -28,7 +28,7 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
   densStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : densStarTag    ),
   dens2Start_ ( densStarTag==Expr::Tag() ? Expr::Tag() : dens2StarTag   ),
   dilt_       ( Wasatch::TagNames::self().dilatation ),
-  timestept_  ( Wasatch::TagNames::self().timestep )
+  timestept_  ( Wasatch::TagNames::self().dt )
 {
   set_gpu_runnable( true );
 }
@@ -135,19 +135,20 @@ void PressureSource::evaluate()
   typedef std::vector<SVolField*> SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
   
-  SVolField& psrc   = *results[0];
-  SVolField& drhodt = *results[1];
-  SVolField& alpha  = *results[2];
-  SVolField& beta   = *results[3];
-  SVolField& divmomstar   = *results[4];
-  SVolField& drhodtstar   = *results[5];
-  
-  if (isConstDensity_ ){
+  SVolField& psrc = *results[0];
+
+  if( isConstDensity_ ){
     
     psrc <<= *dens_ * *dil_ / *timestep_;
     
   } else { // variable density
     
+    SVolField& drhodt     = *results[1];
+    SVolField& alpha      = *results[2];
+    SVolField& beta       = *results[3];
+    SVolField& divmomstar = *results[4];
+    SVolField& drhodtstar = *results[5];
+
     drhodtstar <<= (*dens2Star_ - *dens_)/(2. * *timestep_);
     
     if (is3d_) {
@@ -162,15 +163,21 @@ void PressureSource::evaluate()
     }
     
     // beta is the ratio of drhodt to div(mom*)
-    beta  <<= cond (abs(drhodtstar - divmomstar) <= 1e-10, 1.0)
-                   (abs(divmomstar) <= 1e-12, 2.0)
-                   (abs(drhodtstar/divmomstar));
+//    beta  <<= cond (abs(drhodtstar - divmomstar) <= 1e-10, 1.0)
+//                   (abs(divmomstar) <= 1e-12, 2.0)
+//                   (abs(drhodtstar/divmomstar));
     
 //    alpha <<= cond( beta != beta, 0.0 )
 //                  ( 1.0/(beta + 1.0)  );
     
-    alpha <<= cond( beta != beta, 0.0 )
-                  ( exp(log(0.2)*(pow(beta,0.2))) ); // Increase the value of the exponent to get closer to a step function
+//    alpha <<= cond( beta != beta, 0.0 )
+//                  ( exp(log(0.2)*(pow(beta,0.2))) ); // Increase the value of the exponent to get closer to a step function
+    
+    // MAYBE THE FOLLOWING BETA BETA BEHAVES A BIT BETTER?
+//    beta  <<= abs( drhodtstar/ (divmomstar + 1) );
+
+    // INSTEAD OF SCALING WITH BETA, TRY DRHODT
+//    alpha <<=  0.9/(abs(drhodtstar) + 1.0) + 0.1 ;
 
     alpha <<= 0.1; // use this for the moment until we figure out the proper model for alpha
 

@@ -125,8 +125,8 @@ namespace Uintah {
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
 
+      // do not allow copy and assignment
       UnifiedSchedulerTest(const UnifiedSchedulerTest& gst);
-
       UnifiedSchedulerTest& operator=(const UnifiedSchedulerTest& gst);
 
   };
@@ -135,7 +135,8 @@ void launchUnifiedSchedulerTestKernel(dim3 dimGrid,
                                       dim3 dimBlock,
                                       cudaStream_t* stream,
                                       int patchID,
-                                      int matlIndex,
+                                      uint3 patchNodeLowIndex,
+                                      uint3 patchNodeHighIndex,
                                       uint3 domainLow,
                                       uint3 domainHigh,
                                       GPUDataWarehouse* old_gpudw,

@@ -419,6 +419,7 @@ namespace Wasatch{
           constDensParam->getAttribute( "value", densVal );
           constDensParam->getAttribute( "name", densName );
           densityTag = Expr::Tag( densName, Expr::STATE_NONE );
+          graphCategories_[INITIALIZATION]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );          
           graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
         }
       }
@@ -578,6 +579,16 @@ namespace Wasatch{
     }
 
     //
+    // get the 2D variable density, corrugated mms params, if any, and parse them.
+    // THIS MUST BE PARSED BEFORE THE MOMENTUM EQUATIONS
+    //
+    Uintah::ProblemSpecP VarDenCorrugatedMMSSpec = wasatchSpec_->findBlock("VarDenCorrugatedMMS");
+    if (VarDenCorrugatedMMSSpec) {
+      const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
+      parse_var_den_corrugated_mms(wasatchSpec_, VarDenCorrugatedMMSSpec, computeContinuityResidual, graphCategories_);
+    }
+
+    //
     // Build momentum transport equations.  This registers all expressions
     // required for solution of each momentum equation.
     //
@@ -607,6 +618,15 @@ namespace Wasatch{
       }
     }
 
+    //
+    // get the 2D variable density, osicllating (and periodic) mms params, if any, and parse them.
+    //
+    Uintah::ProblemSpecP varDenOscillatingMMSParams = wasatchSpec_->findBlock("VarDenOscillatingMMS");
+    if (varDenOscillatingMMSParams) {
+      const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
+      parse_var_den_oscillating_mms(wasatchSpec_, varDenOscillatingMMSParams, computeContinuityResidual, graphCategories_);
+    }
+    
     //
     // Build moment transport equations.  This registers all expressions
     // required for solution of each momentum equation.
@@ -680,15 +700,6 @@ namespace Wasatch{
 
     }
     
-    //
-    // get the 2D variable density mms params, if any, and parse them.
-    //
-    Uintah::ProblemSpecP varDenOscillatingMMSParams = wasatchSpec_->findBlock("VarDenOscillatingMMS");
-    if (varDenOscillatingMMSParams) {
-      const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
-      parse_var_den_oscillating_mms(wasatchSpec_, varDenOscillatingMMSParams, computeContinuityResidual, graphCategories_);
-    }
-
     // radiation
     if ( params->findBlock("RMCRT") ) {
       doRadiation_ = true;
@@ -775,9 +786,15 @@ namespace Wasatch{
     //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
+    // handle intrusion boundaries
+    if ( wasatchSpec_->findBlock("EmbeddedGeometry") )
+    {
+      apply_intrusion_boundary_conditions( *bcHelperMap_[level->getID()] );
+    }
+
     //_______________________________________
     // set the time
-    const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().timestep ) );
+    const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().dt, TagNames::self().timestep  ) );
     exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
 
     //_____________________________________________
@@ -992,7 +1009,8 @@ namespace Wasatch{
         //______________________________________________________
         // set up boundary conditions on this transport equation
         try{
-          if( isRestarting_ ) transEq->verify_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
+          // only verify boundary conditions on the first stage!
+          if( isRestarting_ && iStage < 2 ) transEq->verify_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
           transEq->setup_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
         }
@@ -1090,7 +1108,7 @@ namespace Wasatch{
     // will be available to all expressions if needed.
     Expr::ExpressionID timeID;
     if( rkStage==1 ){
-      const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().timestep ) );
+      const Expr::TagList timeTags( tag_list( TagNames::self().time, TagNames::self().dt, TagNames::self().timestep ) );
       timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
     }
     else{

@@ -911,6 +911,7 @@ namespace Wasatch {
   //------------------------------------------------------------------------------------------------
   
   void BCHelper::update_pressure_matrix( Uintah::CCVariable<Uintah::Stencil4>& pMatrix,
+                                        const SVolField* const volFrac,
                                         const Uintah::Patch* patch )
   {
     const int patchID = patch->getID();
@@ -924,25 +925,41 @@ namespace Wasatch {
     
     BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
     {
-      const BndSpec& myBndSpec = bndSpecPair.second;
-      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pressure_tag().name());
+      const BndSpec& myBndSpec = bndSpecPair.second; // get the boundary specification
+      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pressure_tag().name()); // get the bc spec - we will check if the user specified anything for pressure here
       const Uintah::IntVector unitNormal = patch->getFaceDirection(myBndSpec.face);
 //      if (myBndCondSpec) {
         //_____________________________________________________________________________________
         // check if we have this patchID in the list of patchIDs
+      // here are the scenarios here:
+      /*
+       1. Inlet/Wall/Moving wall: dp/dx = 0 -> p_outside = p_inside. Therefore for d2p/dx2 = (p_{-1} - 2 p_0 + p_1)/dx2, p_1 = p_0, therefore we decrement the coefficient for p0 by 1.
+       2. OUTFLOW/OPEN: p_outside = - p_inside -> we augment the coefficient for p_0
+       3. Intrusion: do NOT modify the coefficient matrix since it will be modified inside the pressure expression when modifying the matrix for intrusions
+       */
         if (myBndSpec.has_patch(patchID))
         {
           Uintah::Iterator& bndMask = get_uintah_extra_bnd_mask(myBndSpec,patchID);
           
-          double sign = (myBndSpec.type == OUTFLOW || myBndSpec.type == OPEN) ? 1.0 : -1.0;
+          double sign = (myBndSpec.type == OUTFLOW || myBndSpec.type == OPEN) ? 1.0 : -1.0; // For OUTFLOW/OPEN boundaries, augment the P0
           if (myBndCondSpec) {
-            if (myBndCondSpec->bcType == DIRICHLET) {
+            if (myBndCondSpec->bcType == DIRICHLET) { // DIRICHLET on pressure
               sign = 1.0;
             }
           }
           
           for( bndMask.reset(); !bndMask.done(); ++bndMask ) {
             Uintah::Stencil4& coefs = pMatrix[*bndMask - unitNormal];
+            
+            // if we are inside a solid, then don't do anything because we already handle this in the pressure expression
+            if (volFrac) {
+              const Uintah::IntVector iCell = *bndMask - unitNormal - patch->getExtraCellLowIndex(1);
+              const SpatialOps::structured::IntVec iiCell(iCell.x(), iCell.y(), iCell.z() );
+              if ((*volFrac)(iiCell) < 1.0)
+                continue;
+            }
+            
+            //
             switch(myBndSpec.face){
               case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p += sign/dx2; break;
               case Uintah::Patch::xplus :                coefs.p += sign/dx2; break;
@@ -958,6 +975,7 @@ namespace Wasatch {
       }
     }
   }
+  
   //------------------------------------------------------------------------------------------------
   
   void BCHelper::apply_pressure_bc( SVolField& pressureField,
@@ -1019,7 +1037,69 @@ namespace Wasatch {
       }
     }
   }
+
+  //------------------------------------------------------------------------------------------------
   
+  void BCHelper::update_pressure_rhs( SVolField& pressureRHS,
+                                      const Uintah::Patch* patch )
+  {
+    typedef std::vector<SpatialOps::structured::IntVec> MaskT;
+    
+    const int patchID = patch->getID();
+    
+    const Uintah::Vector res = patch->dCell();
+    const double dx = res[0];
+    const double dy = res[1];
+    const double dz = res[2];
+    
+    BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
+    {
+      const BndSpec& myBndSpec = bndSpecPair.second;
+      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pressure_tag().name());
+      
+      double spacing = 1.0;
+      switch( myBndSpec.face ){
+        case Uintah::Patch::xminus: case Uintah::Patch::xplus :  spacing = dx;  break;
+        case Uintah::Patch::yminus: case Uintah::Patch::yplus :  spacing = dy;  break;
+        case Uintah::Patch::zminus: case Uintah::Patch::zplus :  spacing = dz;  break;
+        default:                                                                break;
+      } // switch
+      
+      if (myBndCondSpec) {
+        //_____________________________________________________________________________________
+        // check if we have this patchID in the list of patchIDs
+        if (myBndSpec.has_patch(patchID))
+        {
+          const MaskT* iBndMask = get_interior_bnd_mask<SVolField>(myBndSpec,patchID);
+          const MaskT* eBndMask = get_extra_bnd_mask<SVolField>(myBndSpec,patchID);
+          MaskT::const_iterator ii = iBndMask->begin();
+          MaskT::const_iterator ig = eBndMask->begin();
+          
+          if(!iBndMask || !eBndMask) return;
+          
+          if (myBndSpec.type == OUTFLOW || myBndSpec.type == OPEN) {
+            // do nothing for now
+          } else {
+            switch (myBndCondSpec->bcType) {
+              case DIRICHLET:
+                for (; ii != iBndMask->end(); ++ii, ++ig) {
+                  pressureRHS(*ig) = 2.0*myBndCondSpec->value/spacing/spacing;
+                }
+                break;
+              case NEUMANN:
+                for (; ii != iBndMask->end(); ++ii, ++ig) {
+                  pressureRHS(*ig) =  myBndCondSpec->value/spacing;
+                }
+                break;
+              default:
+                break;
+            }
+          }
+        }
+      }
+    }
+  }
+
   //------------------------------------------------------------------------------------------------
 
   //==========================================================================

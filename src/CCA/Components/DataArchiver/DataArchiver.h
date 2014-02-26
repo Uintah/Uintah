@@ -75,7 +75,7 @@ using SCIRun::Mutex;
        DataArchiver(const ProcessorGroup* myworld, int udaSuffix = -1);
        virtual ~DataArchiver();
 
-       static bool wereSavesAndCheckpointsInitialized;
+       static bool d_wereSavesAndCheckpointsInitialized;
 
        //! Sets up when the DataArchiver will output and what data, according
        //! to params.  Also stores state to keep track of time and timesteps
@@ -103,52 +103,62 @@ using SCIRun::Mutex;
                                   bool     fromScratch,
                                   bool     removeOldDir );
 
-       //! Call this when doing a combine_patches run after calling
-       //! problemSetup.  It will copy the data files over and make it ignore
+       //! Call this after problemSetup it will copy the data and checkpoint files ignore
        //! dumping reduction variables.
-       virtual void combinePatchSetup(Dir& fromDir);
+       virtual void reduceUdaSetup(Dir& fromDir);
 
-       //! Copy a section between udas' index.xml.
-       void copySection(Dir& fromDir, Dir& toDir, std::string section);
+       //! Copy a section between udas .
+       void copySection(Dir& fromDir, Dir& toDir, std::string file, std::string section);
 
        //! Copy a section from another uda's to our index.xml.
        void copySection(Dir& fromDir, std::string section)
-       { copySection(fromDir, d_dir, section); }
+       { copySection(fromDir, d_dir, "index.xml", section); }
 
        //! Checks to see if this is an output timestep. 
        //! If it is, setup directories and xml files that we need to output.
-       //! Will also setup the tasks if we are recompiling the taskgraph.
        //! Call once per timestep, and if recompiling,
        //! after all the other tasks are scheduled.
        virtual void finalizeTimestep(double t, double delt, const GridP&,
-           SchedulerP&, bool recompile=false );
+                                     SchedulerP&, bool recompile=false );
+           
+      //! schedule the output tasks if we are recompiling the taskgraph.  
+      virtual void sched_allOutputTasks(double delt, const GridP&,
+				            SchedulerP&, bool recompile = false );
+                                      
 
-       //! Find the next times to output and dumps open files to disk.
+       //! Find the next times to output 
        //! Call after timestep has completed.
-       virtual void executedTimestep(double delt, const GridP&);
+       virtual void findNext_OutputCheckPoint_Timestep(double delt, const GridP&);
+       
+       
+       //! write meta data to xml files 
+       //! Call after timestep has completed.
+       virtual void writeto_xml_files(double delt, const GridP& grid);
 
        //! Returns as a string the name of the top of the output directory.
        virtual const std::string getOutputLocation() const;
 
        //! Asks if we need to recompile the task graph.
-       virtual bool needRecompile(double time, double dt,
-           const GridP& grid);
+       virtual bool needRecompile(double time, double dt, const GridP& grid);
 
        //! The task that handles the outputting.  Scheduled in finalizeTimestep.
        //! Handles outputs and checkpoints and differentiates between them in the
        //! last argument.  Outputs as binary the data acquired from VarLabel in 
        //! p_dir.
-       void output(const ProcessorGroup*, const PatchSubset* patch,
-           const MaterialSubset* matls, DataWarehouse* old_dw,
-           DataWarehouse* new_dw, int type);
+       void outputVariables(const ProcessorGroup*, 
+                            const PatchSubset* patch,
+                            const MaterialSubset* matls, 
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw, 
+                            int type);
 
        //! Task that handles outputting non-checkpoint reduction variables.
        //! Scheduled in finalizeTimestep.
-       void outputReduction(const ProcessorGroup*,
-           const PatchSubset* patch,
-           const MaterialSubset* matls,
-           DataWarehouse* old_dw,
-           DataWarehouse* new_dw);
+       void outputReductionVars(const ProcessorGroup*,
+                                const PatchSubset* patch,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
 
        //! Recommended to use sharedState directly if you can.
        virtual int getCurrentTimestep()
@@ -231,20 +241,20 @@ using SCIRun::Mutex;
        //! helper for beginOutputTimestep - creates and writes
        //! the necessary directories and xml files to begin the 
        //! output timestep.
-       void outputTimestep(Dir& dir, 
-                           std::vector<SaveItem>& saveLabels,
-                           const GridP& grid,
-                           std::string* pTimestepDir );
+       void makeTimestepDirs(Dir& dir, 
+                            std::vector<SaveItem>& saveLabels,
+                            const GridP& grid,
+                            std::string* pTimestepDir );
 
        //! helper for finalizeTimestep - schedules a task for each var's output
        void scheduleOutputTimestep(std::vector<SaveItem>& saveLabels,
-           const GridP& grid, SchedulerP& sched,
-           bool isThisCheckpoint);
+                                   const GridP& grid, 
+                                   SchedulerP& sched,
+                                   bool isThisCheckpoint);
 
        //! Helper for finalizeTimestep - determines if, based on the current
        //! time and timestep, this will be an output or checkpoint timestep.
-       void beginOutputTimestep(double time, double delt,
-           const GridP& grid);
+       void beginOutputTimestep(double time, double delt, const GridP& grid);
 
        //! After a timestep restart (delt adjusted), we need to see if we are 
        //! still an output timestep.
@@ -295,10 +305,10 @@ using SCIRun::Mutex;
        double d_outputInterval;         // In seconds.
        int d_outputTimestepInterval;    // Number of time steps.
 
-       double d_nextOutputTime; // used when d_outputInterval != 0
-       int d_nextOutputTimestep; // used when d_outputTimestepInterval != 0
+       double d_nextOutputTime;         // used when d_outputInterval != 0
+       int d_nextOutputTimestep;        // used when d_outputTimestepInterval != 0
        //int d_currentTimestep;
-       Dir d_dir; //!< top of uda dir
+       Dir d_dir;                       //!< top of uda dir
 
        //! Represents whether this proc will output non-processor-specific
        //! files
@@ -309,8 +319,8 @@ using SCIRun::Mutex;
 
        //! last timestep dir (filebase.000/t#)
        std::string d_lastTimestepLocation;
-       bool d_isOutputTimestep; //!< set if this is an output timestep
-       bool d_isCheckpointTimestep; //!< set if a checkpoint timestep
+       bool d_isOutputTimestep;         //!< set if this is an output timestep
+       bool d_isCheckpointTimestep;     //!< set if a checkpoint timestep
 
        //! Whether or not particle vars are saved
        //! Requires p.x to be set
@@ -357,9 +367,9 @@ using SCIRun::Mutex;
 
        //! List of current checkpoint dirs
        std::list<std::string> d_checkpointTimestepDirs;
-       double d_nextCheckpointTime; //!< used when d_checkpointInterval != 0
-       int d_nextCheckpointTimestep; //!< used when d_checkpointTimestepInterval != 0
-       int d_nextCheckpointWalltime; //!< used when d_checkpointWalltimeInterval != 0
+       double d_nextCheckpointTime;      //!< used when d_checkpointInterval != 0
+       int d_nextCheckpointTimestep;     //!< used when d_checkpointTimestepInterval != 0
+       int d_nextCheckpointWalltime;     //!< used when d_checkpointWalltimeInterval != 0
 
        //-----------------------------------------------------------
        // RNJ - 
@@ -398,6 +408,18 @@ using SCIRun::Mutex;
        std::map< int, ProblemSpecP > d_XMLDataDocs;
        std::map< int, ProblemSpecP > d_CheckpointXMLDataDocs;
 
+       //__________________________________
+       //  reduceUda related
+       //  used for migrating timestep directories
+       std::map< int, int> d_restartTimestepIndicies;
+       bool d_usingReduceUda;
+       
+       Dir d_fromDir;                   // keep track of the original uda
+       void copy_outputProblemSpec(Dir& fromDir, Dir& toDir);
+       
+       // returns either the top level timestep or if reduceUda is used
+       // a value from the index.xml file
+       int getTimestepTopLevel();
 
        //-----------------------------------------------------------
        // RNJ - 

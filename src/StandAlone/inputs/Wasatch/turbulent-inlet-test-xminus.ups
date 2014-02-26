@@ -68,7 +68,6 @@
             <tolerance>      1e-10  </tolerance>
             <maxiterations>  50    </maxiterations>
             <relax_type>     2       </relax_type>
-            <setupFrequency>0</setupFrequency>
            </Parameters>
       </Pressure>
     </MomentumEquations>

@@ -311,17 +311,13 @@ template <class phiType, class constPhiType>
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight, constCCVariable<double>& eps_v  ) 
 {
   std::string msg = "initializing scalar equation ";
-  if (Uintah::Parallel::getNumThreads() > 1 ) {
-    proc0thread0cout << msg << d_eqnName << std::endl;
-  } else {
-    proc0cout << msg << d_eqnName << std::endl;
-  }
+  std::cout << msg << d_eqnName << std::endl;
 
   // Initialization function bullet proofing 
   if( d_initFunction == "step" || d_initFunction == "env_step" ) {
     if( d_step_dir == "y" ) {
 #ifndef YDIM
-      proc0cout << "WARNING: YDIM not turned on (compiled) with this version of the code, " << std::endl;
+      std::cout << "WARNING: YDIM not turned on (compiled) with this version of the code, " << std::endl;
                 << "but you specified a step function that steps in the y-direction. " << std::endl;
                 << "To get this to work, made sure YDIM is defined in ScalarEqn.h" << std::endl;
                 << "Cannot initialize your scalar in y-dim with step function" << std::endl;
@@ -331,7 +327,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 
     } else if( d_step_dir == "z" ) {
 #ifndef ZDIM
-      proc0cout << "WARNING: ZDIM not turned on (compiled) with this version of the code, " << std::endl;
+      std::cout << "WARNING: ZDIM not turned on (compiled) with this version of the code, " << std::endl;
                 << "but you specified a step function that steps in the z-direction. " << std::endl;
                 << "To get this to work, made sure ZDIM is defined in ScalarEqn.h" << std::endl;
                 << "Cannot initialize your scalar in y-dim with step function" << std::endl;
@@ -425,17 +421,13 @@ template <class phiType>
 void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCVariable<double>& eps_v ) 
 {
   std::string msg = "initializing scalar equation ";
-  if (Uintah::Parallel::getNumThreads() > 1 ) {
-    proc0thread0cout << msg << d_eqnName << std::endl;
-  } else {
-    proc0cout << msg << d_eqnName << std::endl;
-  }
+  std::cout << msg << d_eqnName << std::endl;
 
   // Initialization function bullet proofing 
   if( d_initFunction == "step" || d_initFunction == "env_step" ) {
     if( d_step_dir == "y" ) {
 #ifndef YDIM
-      proc0cout << "WARNING: YDIM not turned on (compiled) with this version of the code, " << std::endl;
+      std::cout << "WARNING: YDIM not turned on (compiled) with this version of the code, " << std::endl;
                 << "but you specified a step function that steps in the y-direction. " << std::endl;
                 << "To get this to work, made sure YDIM is defined in ScalarEqn.h" << std::endl;
                 << "Cannot initialize your scalar in y-dim with step function" << std::endl;
@@ -445,7 +437,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
 
     } else if( d_step_dir == "z" ) {
 #ifndef ZDIM
-      proc0cout << "WARNING: ZDIM not turned on (compiled) with this version of the code, " << std::endl;
+      std::cout << "WARNING: ZDIM not turned on (compiled) with this version of the code, " << std::endl;
                 << "but you specified a step function that steps in the z-direction. " << std::endl;
                 << "To get this to work, made sure ZDIM is defined in ScalarEqn.h" << std::endl;
                 << "Cannot initialize your scalar in y-dim with step function" << std::endl;

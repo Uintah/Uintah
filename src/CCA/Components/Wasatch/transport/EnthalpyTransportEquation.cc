@@ -153,9 +153,10 @@ namespace Wasatch {
     // jcs how will we determine if we have each direction on???
     const bool doX=true, doY=true, doZ=true;
 
-    const Expr::Tag xDiffFluxTag( solnVarName_+"_x_diff_flux", Expr::STATE_NONE );
-    const Expr::Tag yDiffFluxTag( solnVarName_+"_y_diff_flux", Expr::STATE_NONE );
-    const Expr::Tag zDiffFluxTag( solnVarName_+"_z_diff_flux", Expr::STATE_NONE );
+    const TagNames& tagNames = TagNames::self();
+    const Expr::Tag xDiffFluxTag( solnVarName_ + tagNames.diffusiveflux + "x", Expr::STATE_NONE );
+    const Expr::Tag yDiffFluxTag( solnVarName_ + tagNames.diffusiveflux + "y", Expr::STATE_NONE );
+    const Expr::Tag zDiffFluxTag( solnVarName_ + tagNames.diffusiveflux + "z", Expr::STATE_NONE );
 
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     if( doX ){ info[DIFFUSIVE_FLUX_X]=xDiffFluxTag; factory.register_expression( scinew XFlux( xDiffFluxTag, primVarTag_, diffCoeffTag_, turbDiffTag_ ) ); }
@@ -165,11 +166,11 @@ namespace Wasatch {
     // if doing convection, we will likely have a pressure solve that requires
     // predicted scalar values to approximate the density time derivatives
     if( params_->findBlock("ConvectiveFluxExpression") ){
-      const std::string& suffix = TagNames::self().star;
-      const Expr::Tag xFluxTagNew  ( xDiffFluxTag.name()+suffix, Expr::STATE_NONE    );
-      const Expr::Tag yFluxTagNew  ( yDiffFluxTag.name()+suffix, Expr::STATE_NONE    );
-      const Expr::Tag zFluxTagNew  ( zDiffFluxTag.name()+suffix, Expr::STATE_NONE    );
-      const Expr::Tag primVarTagNew( primVarTag_.name() +suffix, Expr::STATE_NONE    );
+      const std::string& suffix = tagNames.star;
+      const Expr::Tag xFluxTagNew  ( solnVarName_ + suffix + tagNames.diffusiveflux + "x", Expr::STATE_NONE    );
+      const Expr::Tag yFluxTagNew  ( solnVarName_ + suffix + tagNames.diffusiveflux + "y", Expr::STATE_NONE    );
+      const Expr::Tag zFluxTagNew  ( solnVarName_ + suffix + tagNames.diffusiveflux + "z", Expr::STATE_NONE    );
+      const Expr::Tag primVarTagNew( primVarTag_.name()  + suffix, Expr::STATE_NONE    );
       if( doX ){ infoStar_[DIFFUSIVE_FLUX_X]=xFluxTagNew; factory.register_expression( scinew XFlux( xFluxTagNew, primVarTagNew, diffCoeffTag_, turbDiffTag_ ) ); }
       if( doY ){ infoStar_[DIFFUSIVE_FLUX_Y]=yFluxTagNew; factory.register_expression( scinew YFlux( yFluxTagNew, primVarTagNew, diffCoeffTag_, turbDiffTag_ ) ); }
       if( doZ ){ infoStar_[DIFFUSIVE_FLUX_Z]=zFluxTagNew; factory.register_expression( scinew ZFlux( zFluxTagNew, primVarTagNew, diffCoeffTag_, turbDiffTag_ ) ); }

@@ -65,7 +65,6 @@
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
             <tolerance>      1e-12  </tolerance>
-            <setupFrequency> 0 </setupFrequency>
             <maxiterations>  500    </maxiterations>
             <relax_type>     2       </relax_type>
            </Parameters>

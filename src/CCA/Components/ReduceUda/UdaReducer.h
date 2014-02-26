@@ -98,9 +98,18 @@ WARNING
                                const GridP& grid);
                                
     virtual void scheduleFinalizeTimestep(const LevelP& level, 
-                                          SchedulerP&);
+                                          SchedulerP&){};
+
+    // stubs
+    virtual void scheduleInitialErrorEstimate  ( const LevelP& , SchedulerP&  ){};
+    virtual void scheduleCoarsen               ( const LevelP& , SchedulerP&  ){};
+    virtual void scheduleRefine                ( const PatchSet*, SchedulerP& ){};
+    virtual void scheduleRefineInterface       ( const LevelP& , SchedulerP& , bool, bool){};
+
     
     double getMaxTime();
+    
+    double getInitialTime();
 
     GridP getGrid();
   //______________________________________________________________________
@@ -121,14 +130,20 @@ WARNING
                      DataWarehouse* /*old_dw*/,     
                      DataWarehouse* new_dw);        
 
-   void sched_readAndSetVars(const LevelP& level,
-                             SchedulerP& sched);
+    void sched_readDataArchive(const LevelP& level,
+                               SchedulerP& sched);
 
-    void readAndSetVars(const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* /*old_dw*/,
-                        DataWarehouse* new_dw);
+    void readDataArchive(const ProcessorGroup*,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* /*old_dw*/,
+                         DataWarehouse* new_dw);
+
+    void finalizeTimestep(const ProcessorGroup*,
+                          const PatchSubset*,
+                          const MaterialSubset*,
+                          DataWarehouse*,
+                          DataWarehouse* );
 
     std::string d_udaDir;
     int d_timeIndex;
@@ -146,8 +161,6 @@ WARNING
     LoadBalancer* d_lb;
     const VarLabel* delt_label;
     SimulationStateP d_sharedState;
-    const MaterialSet*     d_allMatlSet;
-    const MaterialSubset*  d_allMatlSubset;
     SimpleMaterial*  d_oneMatl;
   };
 } // End namespace Uintah
