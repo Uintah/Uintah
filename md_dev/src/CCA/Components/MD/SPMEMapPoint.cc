@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,8 +40,10 @@ SPMEMapPoint::~SPMEMapPoint()
 SPMEMapPoint::SPMEMapPoint(particleIndex _particleID,
                            IntVector _gridOffset,
                            SimpleGrid<double> _chargeGrid,
-                           SimpleGrid<SCIRun::Vector> _forceGrid) :
-    d_particleID(_particleID), d_gridOffset(_gridOffset), d_chargeGrid(_chargeGrid), d_forceGrid(_forceGrid)
+                           SimpleGrid<SCIRun::Vector> _forceGrid,
+                           SimpleGrid<Matrix3> _polarizableGrid) :
+    d_particleID(_particleID), d_gridOffset(_gridOffset), d_chargeGrid(_chargeGrid), d_forceGrid(_forceGrid),
+    d_polarizableForceGrid(_polarizableGrid)
 {
 
 }

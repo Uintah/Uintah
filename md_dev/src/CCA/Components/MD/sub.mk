@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2013 The University of Utah
+#  Copyright (c) 1997-2014 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -27,49 +27,47 @@
 # 
 # Makefile fragment for this subdirectory 
 
-
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR	:= CCA/Components/MD
 
-SRCS += $(SRCDIR)/MD.cc                         \
-        $(SRCDIR)/MDLabel.cc                    \
-        $(SRCDIR)/MDMaterial.cc                 \
-        $(SRCDIR)/LucretiusMaterial.cc          \
-        $(SRCDIR)/MDSystem.cc                   \
-        $(SRCDIR)/ElectrostaticsFactory.cc      \
-        $(SRCDIR)/Electrostatics.cc             \
-        $(SRCDIR)/SPME.cc                       \
-        $(SRCDIR)/NonBondedFactory.cc           \
-        $(SRCDIR)/NonBonded.cc                  \
-        $(SRCDIR)/AnalyticNonBonded.cc          \
-        $(SRCDIR)/SPMEMapPoint.cc               \
-        $(SRCDIR)/SPMEPatch.cc                  \
-        $(SRCDIR)/SimpleGrid.cc                 \
+SRCS += $(SRCDIR)/MD.cc                           \
+        $(SRCDIR)/MDLabel.cc                      \
+        $(SRCDIR)/MDMaterial.cc                   \
+        $(SRCDIR)/MDSystem.cc                     \
+        $(SRCDIR)/ElectrostaticsFactory.cc        \
+        $(SRCDIR)/Electrostatics.cc               \
+        $(SRCDIR)/SPMERealspaceChargeDipole.cc	  \
+        $(SRCDIR)/SPMEBaseLogic.cc                \
+        $(SRCDIR)/SPMEReciprocalChargeDipole.cc   \
+        $(SRCDIR)/SPMEReciprocalGeneric.cc        \
+        $(SRCDIR)/NonBondedFactory.cc             \
+        $(SRCDIR)/NonBonded.cc                    \
+        $(SRCDIR)/AnalyticNonBonded.cc            \
+        $(SRCDIR)/SPMEMapPoint.cc                 \
+        $(SRCDIR)/SPMEPatch.cc                    \
+        $(SRCDIR)/SimpleGrid.cc                   \
         $(SRCDIR)/ShiftedCardinalBSpline.cc
 
-SUBDIRS := \
+SUBDIRS := $(SRCDIR)/Potentials
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
-	CCA/Components/OnTheFlyAnalysis \
-	CCA/Ports           \
-	Core/Disclosure     \
-	Core/Exceptions     \
-	Core/Containers     \
-	Core/Geometry       \
-	Core/GeometryPiece  \
-	Core/Grid           \
-	Core/Labels         \
-	Core/Math           \
-	Core/Parallel       \
-	Core/ProblemSpec    \
-	Core/Thread         \
-	Core/Util           
+       CCA/Ports                       \
+       Core/Disclosure                 \
+       Core/Exceptions                 \
+       Core/Geometry                   \
+       Core/Grid                       \
+       Core/Labels                     \
+       Core/Math                       \
+       Core/Parallel                   \
+       Core/ProblemSpec                \
+       Core/Thread                     \
+       Core/Util             
 
-LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
-	      $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(FFTW_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
+	      $(THREAD_LIBRARY) $(FFTW_LIBRARY)
 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

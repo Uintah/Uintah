@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -105,6 +105,13 @@ namespace Uintah {
                  DataWarehouse* old_dw,
                  DataWarehouse* new_dw);
 
+      void newCalculate(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* materials,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw,
+                        SchedulerP& subscheduler,
+                        const LevelP& level);
       /**
        * @brief
        * @param

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -71,7 +71,8 @@ namespace Uintah {
       SPMEMapPoint(particleIndex particleID,
                    IntVector gridOffset,
                    SimpleGrid<double> chargeGrid,
-                   SimpleGrid<SCIRun::Vector> forceGrid);
+                   SimpleGrid<SCIRun::Vector> forceGrid,
+                   SimpleGrid<Matrix3> dipoleForceGrid);
 
       /**
        * @brief
@@ -103,6 +104,17 @@ namespace Uintah {
         return d_chargeGrid;
       }
 
+      inline const SimpleGrid<Vector>& getGradientGrid() const
+		{
+    	  return d_forceGrid;
+		}
+
+      inline const SimpleGrid<Vector>& getPotentialDerivativeGrid() const
+		{
+    	  // d_forceGrid is the derivative of the potential at a point
+    	  return d_forceGrid;
+		}
+
       /**
        * @brief
        * @param
@@ -113,12 +125,18 @@ namespace Uintah {
         return d_forceGrid;
       }
 
+      inline const SimpleGrid<Matrix3>& getDipoleGrid() const
+	  {
+    	  return d_polarizableForceGrid;
+	  }
+
     private:
 
       particleIndex d_particleID;
       IntVector d_gridOffset;
       SimpleGrid<double> d_chargeGrid;
       SimpleGrid<SCIRun::Vector> d_forceGrid;
+      SimpleGrid<Matrix3> d_polarizableForceGrid;
 
   };
 

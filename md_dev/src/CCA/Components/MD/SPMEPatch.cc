@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -96,23 +96,45 @@ SPMEPatch::SPMEPatch(IntVector extents,
    * systems.
    */
 
-//  const int estimatedMaximumMultiplier = 2;
+  const IntVector IV_FLAG(-1,-1,-1);
+  const IntVector IV_SPLINE(splineSupport,splineSupport,splineSupport);
+  const int estimatedMaximumMultiplier = 2;
   size_t numAtomTypes = system->getNumAtomTypes();
   d_chargeMapVector.resize(numAtomTypes);
-  for (size_t AtomType = 0; AtomType < numAtomTypes; ++AtomType) {
-    std::vector<SPMEMapPoint> gridmapTemp;
-//    gridmapTemp.reserve(10);
-    d_chargeMapVector.push_back(gridmapTemp);
+  SimpleGrid<double> sg_doubleNull(IV_SPLINE, IV_FLAG, IV_FLAG, 0);
+  sg_doubleNull.fill(0.0);
+  SimpleGrid<Vector> sg_VectorNull(IV_SPLINE, IV_FLAG, IV_FLAG, 0);
+  sg_VectorNull.fill(Vector(0.0, 0.0, 0.0));
+  SimpleGrid<Matrix3> sg_Matrix3Null(IV_SPLINE, IV_FLAG, IV_FLAG, 0);
+  sg_Matrix3Null.fill(Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
 
-    //int totalNumberOfAtomType = system->getNumAtomsOfType(AtomType);
-    //int estimatedLocalNumberOfAtomType = patchVolumeFraction * estimatedMaximumMultiplier * totalNumberOfAtomType;
-    //std::vector<SPMEMapPoint>* gridmap = new std::vector<SPMEMapPoint>();
-    //gridmap.reserve(estimatedLocalNumberOfAtomType);
-    //(*gridmap).reserve(10);
-    //d_chargeMapVector[AtomType] = *gridmap;
-    //d_chargeMapVector[AtomType].reserve(10);
-    //std::cout << d_chargeMapVector[AtomType].capacity() << " XXXXX " << endl;
+  for (size_t AtomType = 0; AtomType < numAtomTypes; ++AtomType) {
+	size_t totalNumberOfType = system->getNumAtomsOfType(AtomType);
+	size_t numberBuffered = totalNumberOfType * estimatedMaximumMultiplier * patchVolumeFraction;
+	for (size_t mapIndex = 0; mapIndex < numberBuffered; ++mapIndex) {
+	  // Instantiate a null map point to reserve the appropriate memory
+	  SPMEMapPoint tempMapPoint(-1,IV_FLAG,sg_doubleNull,sg_VectorNull,sg_Matrix3Null);
+	  // And build vector directly
+	  d_chargeMapVector[AtomType].push_back(tempMapPoint);
+	}
   }
+////  const int estimatedMaximumMultiplier = 2;
+//  size_t numAtomTypes = system->getNumAtomTypes();
+//  d_chargeMapVector.resize(numAtomTypes);
+//  for (size_t AtomType = 0; AtomType < numAtomTypes; ++AtomType) {
+//    std::vector<SPMEMapPoint> gridmapTemp;
+////    gridmapTemp.reserve(10);
+//    d_chargeMapVector.push_back(gridmapTemp);
+//
+//    //int totalNumberOfAtomType = system->getNumAtomsOfType(AtomType);
+//    //int estimatedLocalNumberOfAtomType = patchVolumeFraction * estimatedMaximumMultiplier * totalNumberOfAtomType;
+//    //std::vector<SPMEMapPoint>* gridmap = new std::vector<SPMEMapPoint>();
+//    //gridmap.reserve(estimatedLocalNumberOfAtomType);
+//    //(*gridmap).reserve(10);
+//    //d_chargeMapVector[AtomType] = *gridmap;
+//    //d_chargeMapVector[AtomType].reserve(10);
+//    //std::cout << d_chargeMapVector[AtomType].capacity() << " XXXXX " << endl;
+//  }
 }
 
 void SPMEPatch::verifyChargeMapAllocation(const int dataSize, const int globalAtomTypeIndex) {
@@ -121,10 +143,23 @@ void SPMEPatch::verifyChargeMapAllocation(const int dataSize, const int globalAt
   int currentVectorSize = static_cast<int> (d_chargeMapVector[globalAtomTypeIndex].capacity());
   if (dataSize <= currentVectorSize) { return; }
   int newVectorSize = currentVectorSize * 2;
-  while (dataSize < newVectorSize) { newVectorSize *= 2; }
-  std::vector<SPMEMapPoint> tempStorage = d_chargeMapVector[globalAtomTypeIndex];
-//  d_chargeMapVector[globalAtomTypeIndex].reserve(static_cast<size_t> (newVectorSize));
-  // Not sure we need the insert?
-  d_chargeMapVector[globalAtomTypeIndex].insert(d_chargeMapVector[globalAtomTypeIndex].begin(),tempStorage.begin(),tempStorage.end());
+  while (dataSize > newVectorSize) { newVectorSize *= 2; }
+  std::vector<SPMEMapPoint> tempStorage(newVectorSize);
+
+  // Pre-allocate memory for entire new vector
+  IntVector currentMapPointExtents = ((d_chargeMapVector[globalAtomTypeIndex][0]).getChargeGrid()).getExtents();
+  const IntVector IV_FLAG(-1,-1,-1);
+  SimpleGrid<double> sg_doubleNull(currentMapPointExtents, IV_FLAG, IV_FLAG, 0);
+  sg_doubleNull.fill(0.0);
+  SimpleGrid<Vector> sg_VectorNull(currentMapPointExtents, IV_FLAG, IV_FLAG, 0);
+  sg_VectorNull.fill(Vector(0.0, 0.0, 0.0));
+  SimpleGrid<Matrix3> sg_Matrix3Null(currentMapPointExtents, IV_FLAG, IV_FLAG, 0);
+  sg_Matrix3Null.fill(Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+  for (size_t vectorIndex = 0; vectorIndex < newVectorSize; ++vectorIndex) {
+	  SPMEMapPoint tempMapPoint(-1,IV_FLAG,sg_doubleNull,sg_VectorNull,sg_Matrix3Null);
+      tempStorage[vectorIndex]=tempMapPoint;
+  }
+  d_chargeMapVector[globalAtomTypeIndex].swap(tempStorage);
+
   return;
 }

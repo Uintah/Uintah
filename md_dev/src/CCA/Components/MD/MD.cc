@@ -1,28 +1,25 @@
 /*
-
- The MIT License
-
- Copyright (c) 1997-2013 The University of Utah
-
- License for the specific language governing rights and limitations under
- Permission is hereby granted, free of charge, to any person obtaining a
- copy of this software and associated documentation files (the "Software"),
- to deal in the Software without restriction, including without limitation
- the rights to use, copy, modify, merge, publish, distribute, sublicense,
- and/or sell copies of the Software, and to permit persons to whom the
- Software is furnished to do so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included
- in all copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- DEALINGS IN THE SOFTWARE.
-
+ * The MIT License
+ *
+ * Copyright (c) 1997-2014 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  */
 
 #include <CCA/Components/MD/MD.h>
@@ -55,6 +52,7 @@
 #include <fstream>
 
 using namespace Uintah;
+using namespace UintahMD;
 
 extern SCIRun::Mutex cerrLock;
 
@@ -181,9 +179,9 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
 
   Task* task = scinew Task("MD::computeStableTimestep", this, &MD::computeStableTimestep);
 
-  task->requires(Task::NewDW, d_lb->vdwEnergyLabel);
-  task->requires(Task::NewDW, d_lb->spmeFourierEnergyLabel);
-  task->requires(Task::NewDW, d_lb->spmeFourierStressLabel);
+  task->requires(Task::NewDW, d_lb->nonbondedEnergyLabel);
+  task->requires(Task::NewDW, d_lb->electrostaticReciprocalEnergyLabel);
+  task->requires(Task::NewDW, d_lb->electrostaticReciprocalStressLabel);
 
   task->computes(d_sharedState->get_delt_label(), level.get_rep());
 
@@ -235,7 +233,7 @@ void MD::scheduleNonbondedInitialize(SchedulerP& sched,
   task->requires(Task::NewDW, d_lb->pXLabel, Ghost::None, 0);
 
    // initialize reduction variable; van der Waals energy
-  task->computes(d_lb->vdwEnergyLabel);
+  task->computes(d_lb->nonbondedEnergyLabel);
   task->computes(d_lb->nonbondedDependencyLabel);
 
   task->setType(Task::OncePerProc);
@@ -277,7 +275,7 @@ void MD::scheduleNonbondedCalculate(SchedulerP& sched,
 
   task->computes(d_lb->pNonbondedForceLabel_preReloc);
   task->computes(d_lb->pEnergyLabel_preReloc);
-  task->computes(d_lb->vdwEnergyLabel);
+  task->computes(d_lb->nonbondedEnergyLabel);
 
   sched->addTask(task, patches, matls);
 }
@@ -307,8 +305,8 @@ void MD::scheduleElectrostaticsInitialize(SchedulerP& sched,
     if (d_electrostatics->getType() == Electrostatics::SPME) {
 
       // reduction variables
-      task->computes(d_lb->spmeFourierEnergyLabel);
-      task->computes(d_lb->spmeFourierStressLabel);
+      task->computes(d_lb->electrostaticReciprocalEnergyLabel);
+      task->computes(d_lb->electrostaticReciprocalStressLabel);
 
       // sole variables
       task->computes(d_lb->electrostaticsDependencyLabel);
@@ -351,8 +349,8 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   task->requires(Task::OldDW, d_lb->subSchedulerDependencyLabel, Ghost::None, 0);
 
   task->computes(d_lb->subSchedulerDependencyLabel);
-  task->computes(d_lb->spmeFourierEnergyLabel);
-  task->computes(d_lb->spmeFourierStressLabel);
+  task->computes(d_lb->electrostaticReciprocalEnergyLabel);
+  task->computes(d_lb->electrostaticReciprocalStressLabel);
 
   task->hasSubScheduler(true);
   task->setType(Task::OncePerProc);
@@ -520,9 +518,9 @@ void MD::computeStableTimestep(const ProcessorGroup* pg,
   sum_vartype spmeFourierEnergy;
   matrix_sum spmeFourierStress;
 
-  new_dw->get(vdwEnergy, d_lb->vdwEnergyLabel);
-  new_dw->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
-  new_dw->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
+  new_dw->get(vdwEnergy, d_lb->nonbondedEnergyLabel);
+  new_dw->get(spmeFourierEnergy, d_lb->electrostaticReciprocalEnergyLabel);
+  new_dw->get(spmeFourierStress, d_lb->electrostaticReciprocalStressLabel);
 
   proc0cout << std::endl;
   proc0cout << "-----------------------------------------------------"           << std::endl;
