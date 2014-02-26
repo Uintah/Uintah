@@ -34,7 +34,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-scalar</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <SourceTermExpression>
         <NameTag name="phi-source" state="STATE_NONE" />

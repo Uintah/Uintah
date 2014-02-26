@@ -64,7 +64,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi0-scalar</SolutionVariable>
-      <StrongForm>true</StrongForm>
       
       <ConvectiveFluxExpression>
         <Method>SUPERBEE</Method> 
@@ -80,7 +79,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi1-scalar</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>SUPERBEE</Method>
@@ -96,7 +94,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi2-scalar</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>SUPERBEE</Method>
