@@ -193,7 +193,6 @@
 <!-- create scalar with no conv/diff for rxn extent in wasatch -->
     <TransportEquation equation="generic">
       <SolutionVariable> rxn_extent </SolutionVariable>
-      <StrongForm> true </StrongForm>
       <SourceTermExpression>
         <NameTag name="rxn_src_expr" state="STATE_N"/>
       </SourceTermExpression>

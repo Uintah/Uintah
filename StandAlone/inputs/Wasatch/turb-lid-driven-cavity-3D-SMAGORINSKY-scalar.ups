@@ -109,7 +109,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>f</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>

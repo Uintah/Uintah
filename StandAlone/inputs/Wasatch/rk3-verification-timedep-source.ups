@@ -30,7 +30,6 @@
 
     <!-- Build a cell centered scalar transport equation -->
     <TransportEquation equation="generic">
-      <StrongForm>true</StrongForm>
       <SolutionVariable>phi</SolutionVariable>
       <SourceTermExpression>
         <NameTag name="sine-source" state="STATE_NONE" />
