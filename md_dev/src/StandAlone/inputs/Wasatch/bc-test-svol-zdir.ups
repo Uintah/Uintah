@@ -52,7 +52,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-dirichlet-dirichlet-a</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>Z</Direction>
@@ -65,7 +64,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-dirichlet-dirichlet-b</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>Z</Direction>
@@ -78,7 +76,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-dirichlet-neumann</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>Z</Direction>
@@ -91,7 +88,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-neumann-dirichlet</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>Z</Direction>
@@ -104,7 +100,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-neumann-neumann</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>Z</Direction>

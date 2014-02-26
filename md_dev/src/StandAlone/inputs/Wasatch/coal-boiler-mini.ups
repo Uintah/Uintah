@@ -251,7 +251,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-scalar</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -362,7 +361,7 @@
     <filebase>coal-boiler-mini_no_intrusions.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="5e-4"/>
+    <checkpoint cycle="2" interval="1e-5"/>
     <compression>gzip</compression>
 		<save label="svolFraction"/>    
 		<save label="xvolFraction"/>    

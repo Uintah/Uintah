@@ -146,7 +146,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>rhof</SolutionVariable>
-      <StrongForm>true</StrongForm>
       <PrimitiveVariable>f</PrimitiveVariable>
 
       <DiffusiveFluxExpression>

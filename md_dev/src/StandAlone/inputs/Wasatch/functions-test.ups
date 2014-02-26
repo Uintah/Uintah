@@ -23,7 +23,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi0-scalar</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -55,7 +54,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi1-scalar</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -86,7 +84,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi2-scalar</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -117,7 +114,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi3-scalar</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -148,7 +144,6 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi4-scalar</SolutionVariable>
-      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
