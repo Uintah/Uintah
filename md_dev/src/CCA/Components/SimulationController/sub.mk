@@ -44,7 +44,7 @@ PSELIBS := \
 	Core/Tracker     \
 	Core/Util        \
 	CCA/Components/DataArchiver    \
-	CCA/Components/PatchCombiner   \
+	CCA/Components/ReduceUda       \
 	CCA/Components/Regridder       \
 	CCA/Ports        \
 	Core/OS       \

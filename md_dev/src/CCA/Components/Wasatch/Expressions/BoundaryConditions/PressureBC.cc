@@ -31,7 +31,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( velTag_ );
   const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
-  exprDeps.requires_expression( tagNames.timestep );
+  exprDeps.requires_expression( tagNames.dt );
 }
 
 template<typename FieldT>
@@ -41,7 +41,7 @@ bind_fields( const Expr::FieldManagerList& fml )
 {
   u_ = &fml.template field_ref<FieldT>( velTag_ );
   const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
-  dt_ = &fml.template field_ref<SpatialOps::structured::SingleValueField>( tagNames.timestep );
+  dt_ = &fml.template field_ref<SpatialOps::structured::SingleValueField>( tagNames.dt );
 }
 
 template<typename FieldT>

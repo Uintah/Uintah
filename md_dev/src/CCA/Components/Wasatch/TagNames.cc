@@ -31,8 +31,9 @@ namespace Wasatch{
   
   TagNames::TagNames() :
   
-  time    ( "time",     Expr::STATE_NONE ),
-  timestep( "timestep", Expr::STATE_NONE ),
+  time    ( "time"    , Expr::STATE_NONE ),
+  dt      ( "dt"      , Expr::STATE_NONE ),
+  timestep ( "timestep", Expr::STATE_NONE ),
   stableTimestep( "StableDT", Expr::STATE_NONE ),
   
   celltype("CellType", Expr::STATE_NONE),
@@ -82,13 +83,16 @@ namespace Wasatch{
   dynamicsmagcoef   ( "DynamicSmagorinskyCoefficient", Expr::STATE_NONE ),
   
   // predictor related variables
-  star("_*"), 
-  doubleStar("_**"),
+  star("*"),
+  doubleStar("**"),
+  rhs("_rhs"),
+  convectiveflux("_convFlux_"),
+  diffusiveflux("_diffFlux_"),
   pressuresrc( "pressure_src", Expr::STATE_NONE ),
   vardenalpha( "varden_alpha", Expr::STATE_NONE ),
   vardenbeta ( "varden_beta",  Expr::STATE_NONE ),
-  divmomstar ( "divmom_*",     Expr::STATE_NONE ),
-  drhodtstar ( "drhodt_*",     Expr::STATE_NONE ),
+  divmomstar ( "divmom*",     Expr::STATE_NONE ),
+  drhodtstar ( "drhodt*",     Expr::STATE_NONE ),
   drhodt     ( "drhodt",       Expr::STATE_NONE ),
   drhodtnp1  ( "drhodt",       Expr::STATE_NP1  ),
   
@@ -103,7 +107,65 @@ namespace Wasatch{
   {}
   
   //------------------------------------------------------------------
+  template<>
+  const Expr::Tag TagNames::make_star(Expr::Tag someTag,
+                                      Expr::Context newContext) const
+  {
+    return Expr::Tag(someTag.name() + star, newContext);
+  }
+
+  template<>
+  const Expr::Tag TagNames::make_double_star(Expr::Tag someTag,
+                                             Expr::Context newContext) const
+  {
+    return Expr::Tag(someTag.name() + doubleStar, newContext);
+  }
   
+  template<>
+  const Expr::Tag TagNames::make_star_rhs(Expr::Tag someTag,
+                                      Expr::Context newContext) const
+  {
+    return Expr::Tag(someTag.name() + star + rhs, newContext);
+  }
+
+  template<>
+  const Expr::Tag TagNames::make_double_star_rhs(Expr::Tag someTag,
+                                             Expr::Context newContext) const
+  {
+    return Expr::Tag(someTag.name() + doubleStar + rhs, newContext);
+  }
+
+  template<>
+  const Expr::Tag TagNames::make_star(std::string someName,
+                                      Expr::Context newContext) const
+  {
+    return Expr::Tag(someName + star, newContext);
+  }
+  
+  template<>
+  const Expr::Tag TagNames::make_double_star(std::string someName,
+                                             Expr::Context newContext) const
+  {
+    return Expr::Tag(someName + doubleStar, newContext);
+  }
+  
+  template<>
+  const Expr::Tag TagNames::make_star_rhs(std::string someName,
+                                          Expr::Context newContext) const
+  {
+    return Expr::Tag(someName + star + rhs, newContext);
+  }
+  
+  template<>
+  const Expr::Tag TagNames::make_double_star_rhs(std::string someName,
+                                                 Expr::Context newContext) const
+  {
+    return Expr::Tag(someName + doubleStar + rhs, newContext);
+  }
+
+
+  //------------------------------------------------------------------
+
   const TagNames&
   TagNames::self()
   {

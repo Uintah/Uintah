@@ -114,7 +114,6 @@
         <Use3DLaplacian>   false</Use3DLaplacian>
 
         <Parameters>
- 	 	 	 	 	 	 <setupFrequency>0</setupFrequency>
 
             <!-- Hypre options -->
             <solver>         cg      </solver>
@@ -150,7 +149,7 @@
     <save label="z-mom"/>
     <save label="z-mom_rhs_partial"/>
     <save label="w"/>
-    <save label="w_*"/>
+    <save label="w*"/>
     <save label="f"/>
     <save label="rhof"/>
     <save label="pressure"/>

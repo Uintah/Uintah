@@ -44,7 +44,7 @@ InvalidCompressionMode::InvalidCompressionMode(const std::string& invalidmode,
   }
   
 #ifdef EXCEPTIONS_CRASH
-  cout << d_msg << "\n";
+  std::cout << d_msg << "\n";
 #endif
 }
 

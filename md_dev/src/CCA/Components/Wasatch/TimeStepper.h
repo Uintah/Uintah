@@ -30,6 +30,7 @@
 #include <vector>
 
 #include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Task.h>
 
 #include <expression/ExprFwd.h>
 
@@ -186,11 +187,13 @@ namespace Wasatch{
     /**
      *  \brief the call-back for Uintah to execute this.
      */
-    void update_variables( const Uintah::ProcessorGroup* const,
+    void update_variables( Uintah::Task::CallBackEvent event, 
+                           const Uintah::ProcessorGroup* const,
                            const Uintah::PatchSubset* const,
                            const Uintah::MaterialSubset* const,
                            Uintah::DataWarehouse* const,
                            Uintah::DataWarehouse* const,
+                           void* stream,
                            const int rkStage );
 
     void

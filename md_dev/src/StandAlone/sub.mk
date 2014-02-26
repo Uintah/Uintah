@@ -95,7 +95,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
     CCA/Components/Schedulers           \
     CCA/Components/OnTheFlyAnalysis     \
     CCA/Components/Models               \
-    CCA/Components/PatchCombiner        \
+    CCA/Components/ReduceUda            \
                                         \
     Core/Datatypes                      \
     Core/DataArchive                    \

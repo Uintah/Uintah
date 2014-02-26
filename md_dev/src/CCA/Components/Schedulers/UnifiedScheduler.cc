@@ -506,11 +506,6 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   // control loop for all tasks of task graph*/
 //  runTasks(0);
 
-#ifdef HAVE_CUDA  
-  // Free up all the pointer maps for device and pinned host pointers
-  unregisterPageLockedHostMem();   // unregister all registered, page-locked host memory
-#endif
-
   // end while( numTasksDone < ntasks )
   TAU_PROFILE_STOP(doittimer);
 
@@ -599,6 +594,11 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   }
 
   finalizeTimestep();
+
+//#ifdef HAVE_CUDA
+//  // clear all registered, page-locked host memory
+//  unregisterPageLockedHostMem();
+//#endif
 
   log.finishTimestep();
   if (timeout.active() && !parentScheduler) {  // only do on toplevel scheduler
@@ -990,7 +990,7 @@ void UnifiedScheduler::runTasks(int t_id)
         // run post GPU part of task 
         runTask(readyTask, currentIteration, t_id, Task::postGPU);
         // recycle this task's D2H copies streams and events
-        reclaimStreams(readyTask);
+        reclaimCudaStreams(readyTask);
       }
 #endif
       else {
@@ -1593,15 +1593,19 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
                 }
               }
 
-              // pin/page-lock host memory for H2D cudaMemcpyAsync
-              // cudaHostRegisterPortable flag so pinned mem will be considered pinned by all CUDA contexts
-              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-              if (!pinned) {
-                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-                if (retVal == cudaSuccess) {
-                  pinnedHostPtrs.insert(host_ptr);
-                }
-              }
+              // The following is only efficient for large single copies. With multiple smaller copies
+              // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
+              // once we're doing large, single, aggregated cuda memcopies. [APH]
+//              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
+//              if (!pinned) {
+//                // pin/page-lock host memory for H2D cudaMemcpyAsync
+//                // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
+//                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
+//                if (retVal == cudaSuccess) {
+//                  pinnedHostPtrs.insert(host_ptr);
+//                }
+//              }
+
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
@@ -1653,15 +1657,19 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
               int numElems = 1; // baked in for now: simple reductions on single value
               dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, numElems);
 
-              // pin/page-lock host memory for H2D cudaMemcpyAsync
-              // cudaHostRegisterPortable flag so pinned mem will be considered pinned by all CUDA contexts
-              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-              if (!pinned) {
-                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-                if (retVal == cudaSuccess) {
-                  pinnedHostPtrs.insert(host_ptr);
-                }
-              }
+              // The following is only efficient for large single copies. With multiple smaller copies
+              // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
+              // once we're doing large, single, aggregated cuda memcopies. [APH]
+//              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
+//              if (!pinned) {
+//                // pin/page-lock host memory for H2D cudaMemcpyAsync
+//                // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
+//                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
+//                if (retVal == cudaSuccess) {
+//                  pinnedHostPtrs.insert(host_ptr);
+//                }
+//              }
+
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
@@ -1927,17 +1935,22 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
               }
 
               // if offset and size is equal to CPU DW, directly copy back to CPU var memory;
-              if (device_offset.x == host_offset.x() && device_offset.y == host_offset.y() && device_offset.y == host_offset.y()
+              if (device_offset.x == host_offset.x() && device_offset.y == host_offset.y() && device_offset.z == host_offset.z()
                   && device_size.x == host_size.x() && device_size.y == host_size.y() && device_size.z == host_size.z()) {
-                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-                if (!pinned) {
-                  // pin/page-lock host memory for asynchronous host-to-device copy
-                  // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
-                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-                  if (retVal == cudaSuccess) {
-                    pinnedHostPtrs.insert(host_ptr);
-                  }
-                }
+
+                // The following is only efficient for large single copies. With multiple smaller copies
+                // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
+                // once we're doing large, single, aggregated cuda memcopies. [APH]
+//                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
+//                if (!pinned) {
+//                  // pin/page-lock host memory for H2D cudaMemcpyAsync
+//                  // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
+//                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
+//                  if (retVal == cudaSuccess) {
+//                    pinnedHostPtrs.insert(host_ptr);
+//                  }
+//                }
+
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
@@ -1976,15 +1989,20 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
 
               // if size is equal to CPU DW, directly copy back to CPU var memory;
               if (host_bytes == device_bytes) {
-                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-                if (!pinned) {
-                  // pin/page-lock host memory for asynchronous host-to-device copy
-                  // returned memory using <cudaHostRegisterPortable> flag will be considered pinned by all CUDA contexts
-                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-                  if (retVal == cudaSuccess) {
-                    pinnedHostPtrs.insert(host_ptr);
-                  }
-                }
+
+                // The following is only efficient for large single copies. With multiple smaller copies
+                // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
+                // once we're doing large, single, aggregated cuda memcopies. [APH]
+//                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
+//                if (!pinned) {
+//                  // pin/page-lock host memory for H2D cudaMemcpyAsync
+//                  // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
+//                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
+//                  if (retVal == cudaSuccess) {
+//                    pinnedHostPtrs.insert(host_ptr);
+//                  }
+//                }
+
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
@@ -2096,7 +2114,7 @@ cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
   return retVal;
 }
 
-void UnifiedScheduler::reclaimStreams(DetailedTask* dtask)
+void UnifiedScheduler::reclaimCudaStreams(DetailedTask* dtask)
 {
   idleStreamsLock_.writeLock();
   // reclaim DetailedTask streams

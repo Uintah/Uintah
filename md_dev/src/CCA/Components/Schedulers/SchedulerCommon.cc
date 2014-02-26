@@ -1126,6 +1126,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   const Grid* oldGrid = oldDataWarehouse->getGrid();
   vector<Task*> dataTasks;
   vector<Handle<PatchSet> > refineSets(grid->numLevels(),(PatchSet*)0);
+  vector<Handle<PatchSet> > copySets(grid->numLevels(),(PatchSet*)0);
   SchedulerP sched(dynamic_cast<Scheduler*>(this));
 
   d_sharedState->setCopyDataTimestep(true);
@@ -1137,18 +1138,24 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
       if (i >= oldGrid->numLevels()) {
         // new level - refine everywhere
         refineSets[i] = const_cast<PatchSet*>(newLevel->eachPatch());
+        copySets[i] = scinew PatchSet;
       }
       // find patches with new space - but temporarily, refine everywhere... 
       else if (i < oldGrid->numLevels()) {
         refineSets[i] = scinew PatchSet;
+        copySets[i] = scinew PatchSet;
+
+        vector<int> myPatchIDs;
         LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel(i);
         
         // go through the patches, and find if there are patches that weren't entirely 
         // covered by patches on the old grid, and interpolate them.  
         // then after, copy the data, and if necessary, overwrite interpolated data
-        
-        for (Level::patchIterator iter = newLevel->patchesBegin(); iter != newLevel->patchesEnd(); iter++) {
-          Patch* newPatch = *iter;
+         const PatchSubset *ps=getLoadBalancer()->getPerProcessorPatchSet(newLevel)->getSubset(d_myworld->myrank());
+
+        //for each patch I own
+         for(int p=0;p<ps->size();p++) {
+           const Patch *newPatch=ps->get(p);
           
           // get the low/high for what we'll need to get
           IntVector lowIndex, highIndex;
@@ -1175,47 +1182,74 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
             sum += dist.x()*dist.y()*dist.z();
           }  // for oldPatches
           if (sum != totalCells) {
-            refineSets[i]->add(newPatch);
+            if (Uintah::Parallel::usingMPI()) myPatchIDs.push_back(newPatch->getID());
+            else refineSets[i]->add(newPatch);
+          } else {
+            if (!Uintah::Parallel::usingMPI()) copySets[i]->add(newPatch);
           }
-          
-        } // for patchIterator
+        } // for patch
+        if (Uintah::Parallel::usingMPI())  {
+          //Gather size from all processors
+          int mycount=myPatchIDs.size();
+          vector<int>  counts(d_myworld->size());
+          MPI_Allgather(&mycount,1,MPI_INT,&counts[0],1,MPI_INT,d_myworld->getComm());
+
+          //compute recieve array offset and size
+          vector<int> displs(d_myworld->size());
+          int pos=0;
+          for(int p=0;p<d_myworld->size();p++) {
+            displs[p]=pos;
+            pos+=counts[p];
+          }
+          vector<int> allPatchIDs(pos); //receive array;
+          MPI_Allgatherv(&myPatchIDs[0],counts[d_myworld->myrank()],MPI_INT,&allPatchIDs[0],&counts[0],&displs[0],MPI_INT,d_myworld->getComm());
+          //make refineSets from patch ids
+          set<int> allPatchIDset(allPatchIDs.begin(), allPatchIDs.end());
+          for (Level::patchIterator iter = newLevel->patchesBegin(); iter != newLevel->patchesEnd(); ++iter){
+            Patch* newPatch = *iter;
+            if (allPatchIDset.find(newPatch->getID())!=allPatchIDset.end()) refineSets[i]->add(newPatch);
+            else copySets[i]->add(newPatch);
+          }
+        }
       }
       if (refineSets[i]->size() > 0) {
         dbg << d_myworld->myrank() << "  Calling scheduleRefine for patches " << *refineSets[i].get_rep() << endl;
         sim->scheduleRefine(refineSets[i].get_rep(), sched);
       }
+    } else {
+        refineSets[i] = scinew PatchSet;
+        copySets[i] = const_cast<PatchSet*>(newLevel->eachPatch());
     }
 
-    // find the patches that you don't refine
-    Handle<PatchSubset> temp = scinew PatchSubset; // temp only to show empty set.  Don't pass into computes
-    constHandle<PatchSubset> modset, levelset, compset; 
-    if (refineSets[i])
-      modset = refineSets[i]->getUnion();
-    else {
-      modset = temp;
-    }
-    levelset = newLevel->eachPatch()->getUnion();
-    //levelset = patches;
-    
-    PatchSubset::difference(levelset, modset, compset);
-
-    dataTasks.push_back(scinew Task("SchedulerCommon::copyDataToNewGrid", this,                          
+    if (copySets[i]->size()>0) {
+      dataTasks.push_back(scinew Task("SchedulerCommon::copyDataToNewGrid", this,                          
                                      &SchedulerCommon::copyDataToNewGrid));
-    for ( label_matl_map::iterator iter = label_matls_[i].begin(); iter != label_matls_[i].end(); iter++) {
-      const VarLabel* var = iter->first;
-      MaterialSubset* matls = iter->second;
+      for ( label_matl_map::iterator iter = label_matls_[i].begin(); iter != label_matls_[i].end(); iter++) {
+        const VarLabel* var = iter->first;
+        MaterialSubset* matls = iter->second;
 
-      dataTasks[i]->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
-      if (compset && compset->size() > 0) {
-        dbg << "  Scheduling copy for var " << *var << " matl " << *matls << " Computes: " << *compset.get_rep() << endl;
-        dataTasks[i]->computes(var, compset.get_rep(), matls);
+        dataTasks.back()->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
+        dbg << "  Scheduling copy for var " << *var << " matl " << *matls << " Copies: " << *copySets[i].get_rep() << endl;
+        dataTasks.back()->computes(var,matls);
       }
-      if (modset && modset->size() > 0) {
-        dbg << "  Scheduling copy for var " << *var << " matl " << *matls << " Modifies: " << *modset.get_rep() << endl;
-        dataTasks[i]->modifies(var, modset.get_rep(), matls);
-      }
+      addTask(dataTasks.back(), copySets[i].get_rep(), d_sharedState->allMaterials());
     }
-    addTask(dataTasks[i], newLevel->eachPatch(), d_sharedState->allMaterials());
+    
+    if (refineSets[i]->size()>0) {
+      dataTasks.push_back(scinew Task("SchedulerCommon::modifyDataOnNewGrid", this,                          
+                                     &SchedulerCommon::copyDataToNewGrid));
+      for ( label_matl_map::iterator iter = label_matls_[i].begin(); iter != label_matls_[i].end(); iter++) {
+        const VarLabel* var = iter->first;
+        MaterialSubset* matls = iter->second;
+
+        dataTasks.back()->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
+        dbg << "  Scheduling modify for var " << *var << " matl " << *matls << " Modifies: " << *refineSets[i].get_rep() << endl;
+        dataTasks.back()->modifies(var,matls);
+      }
+      addTask(dataTasks.back(), refineSets[i].get_rep(), d_sharedState->allMaterials());
+    }
+ 
+
     //addTask(dataTasks[i], patches, d_sharedState->allMaterials());
     if (i > 0) {
       sim->scheduleRefineInterface(newLevel, sched, 0, 1);

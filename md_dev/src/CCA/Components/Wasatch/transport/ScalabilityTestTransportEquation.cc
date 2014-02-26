@@ -26,6 +26,7 @@
 #include "ScalabilityTestTransportEquation.h"
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ScalabilityTestSrc.h>
@@ -54,7 +55,8 @@ namespace Wasatch{
                                             Expr::ExpressionFactory& factory,
                                             FieldTagInfo& info )
   {
-    const Expr::Tag diffFluxTag( thisPhiName + "_diffFlux_" + dir, Expr::STATE_NONE );
+    const TagNames& tagNames = TagNames::self();
+    const Expr::Tag diffFluxTag( thisPhiName + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
     const Expr::Tag phiTag( thisPhiName, Expr::STATE_N );
 
     Expr::ExpressionBuilder* builder = NULL;

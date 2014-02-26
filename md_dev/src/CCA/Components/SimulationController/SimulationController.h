@@ -92,9 +92,8 @@ class DataArchive;
       //! Execute the simulation
       virtual void run() = 0;
 
-      // notifies (before calling run) the simulationController
-      //! that this run is a combinePatches run.
-      void doCombinePatches(std::string fromDir, bool reduceUda);
+      //  sets simulationController flags
+      void setReduceUdaFlags(std::string fromDir);
      
    protected:
 
@@ -134,11 +133,9 @@ class DataArchive;
       std::string d_fromDir;
       int d_restartTimestep;
       int d_restartIndex;
-
       int d_lastRecompileTimestep;
-
-      bool d_combinePatches;
       bool d_reduceUda;
+      
       // If d_restartFromScratch is true then don't copy or move any of
       // the old timesteps or dat files from the old directory.  Run as
       // as if it were running from scratch but with initial conditions

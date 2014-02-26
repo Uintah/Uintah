@@ -449,7 +449,11 @@
     <!-- Spec for boundary condition expression types -->
     <BCExpression  spec="MULTIPLE NO_DATA"
                    attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                   children1="ONE_OF(CHILD LinearFunction, ParabolicFunction, PowerLawFunction, VarDenMMSVelocity, VarDenMMSMomentum, VarDenMMSSolnVar, VarDenMMSDensity, VarDenMMSMixtureFraction" >
+                   children1="ONE_OF(CHILD LinearFunction, ParabolicFunction, PowerLawFunction, 
+                                           VarDenMMSVelocity, VarDenMMSMomentum, VarDenMMSSolnVar, 
+                                           VarDenMMSDensity, VarDenMMSMixtureFraction,
+                                           VDCorMMSVelocity, VDCorMMSMixtureFraction, VDCorMMSMomentum,
+                                           VDCorMMSRhof, VDCorMMSYMomentum, VDCorMMSRho" >
 
       <TaskList    spec="REQUIRED STRING" /> <!-- initialization advance_solution - separate by space -->
       
@@ -512,6 +516,13 @@
 
       <!-- Mixture Fraction profile on the boundaries with respect to time for the variable density MMS !-->
       <VarDenMMSMixtureFraction  spec="OPTIONAL NO_DATA"/>
+
+      <VDCorMMSVelocity         spec="OPTIONAL NO_DATA"/>
+      <VDCorMMSMomentum         spec="OPTIONAL NO_DATA"/>      
+      <VDCorMMSYMomentum         spec="OPTIONAL NO_DATA"/>            
+      <VDCorMMSMixtureFraction  spec="OPTIONAL NO_DATA"/>
+      <VDCorMMSRhof  spec="OPTIONAL NO_DATA"/>      
+      <VDCorMMSRho  spec="OPTIONAL NO_DATA"/>      
 
     </BCExpression>
 
@@ -836,6 +847,24 @@
       <scalar  spec="REQUIRED STRING"/>
     </VariableDensityMMS>
 
+    <VarDenCorrugatedMMS  spec="OPTIONAL NO_DATA"
+                          attribute1="rho0 REQUIRED DOUBLE"
+                          attribute2="rho1 REQUIRED DOUBLE"
+                          attribute3="w    REQUIRED DOUBLE"
+                          attribute4="k    REQUIRED DOUBLE"
+													attribute5="uf   REQUIRED DOUBLE"
+													attribute6="vf   REQUIRED DOUBLE"
+													attribute7="d    REQUIRED DOUBLE"
+													attribute8="a    REQUIRED DOUBLE"
+													attribute9="b    REQUIRED DOUBLE"                           
+													attribute10="x1  OPTIONAL STRING 'X, Y, Z'"
+													attribute11="x2  OPTIONAL STRING 'X, Y, Z'">
+      <DiffusionCoefficient spec="REQUIRED NO_DATA"> <!-- This creates an expression for the diffusion coefficient -->
+        <NameTag            spec="REQUIRED" />
+      </DiffusionCoefficient>
+      <Scalar           spec="REQUIRED STRING"/> <!-- The expression for the primitve scalar (e.g. f) is created by the transport equation. just specify the string name here -->      
+      <ConservedScalar  spec="REQUIRED STRING"/> <!-- The conserved scalar is created by the transport equation. just Specify the name here -->
+    </VarDenCorrugatedMMS>
 
     <VarDenOscillatingMMS  spec="OPTIONAL NO_DATA"
                            attribute1="rho0 REQUIRED DOUBLE"
@@ -850,7 +879,7 @@
       <DiffusionCoefficient spec="REQUIRED NO_DATA"> <!-- This automatically creates an expression for the diffusion coefficient -->
         <NameTag               spec="REQUIRED" />
       </DiffusionCoefficient>
-      <Scalar spec="REQUIRED STRING"/> <!-- input -->      
+      <Scalar           spec="REQUIRED STRING"/> <!-- input -->      
       <ConservedScalar  spec="REQUIRED STRING"/> <!-- The conserved scalar is created by the transport equation. just Specify the name here -->
     </VarDenOscillatingMMS>
 

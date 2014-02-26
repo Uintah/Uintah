@@ -209,12 +209,13 @@ Dir::copy(Dir& destDir)
 {
    bfs::path from(name_);  
    bfs::path to(destDir.name_);
-
-
    bfs::path new_to(to);
+  
    new_to /= from.filename();
+      
    bsys::error_code ec;
    bfs::create_directories(new_to,ec);
+   
    if (ec != 0) {
      cout << "error code: " << ec << endl;
      cout << "error message: " << ec.message() << endl;
@@ -225,24 +226,29 @@ Dir::copy(Dir& destDir)
    bfs::recursive_directory_iterator it(from);     
    bfs::recursive_directory_iterator end;   
 
-
-   // Iterate all entries in the directory and sub directories
+   // Iterate over all entries in the directory and sub directories
    while (it!=end) {
      std::string it_string = it->path().c_str();
      unsigned int pos = it_string.find(from.filename().c_str());
      std::string to_string = it_string.substr (pos);
 
-     bfs::path new_entry = to;
-     new_entry /= to_string;
-     bfs::copy(*it,new_entry,ec);
-     if (ec != 0) {
-       cout << "error code: " << ec << endl;
-       cout << "error message: " << ec.message() << endl;
-       throw InternalError(string("Dir::copy failed to copy: ") + name_, __FILE__, __LINE__);
-     }
-     // When a symbolic link, don't iterate it. Can cause infinite loop.
-     if (bfs::is_symlink(it->status())) it.no_push();
+     bfs::path new_entry = to/to_string;
      
+     // only copy if it does not  exist.
+     if ( !bfs::exists(new_entry) ){
+     
+       bfs::copy(*it, new_entry, ec);
+
+       if (ec != 0) {
+         cout << "  ERROR: from: " << it_string << " to " << new_entry.c_str() << endl;
+         cout << "  error code: " << ec << endl;
+         cout << "  error message: " << ec.message() << endl;
+         throw InternalError(string("Dir::copy failed to copy: ") + name_, __FILE__, __LINE__);
+       }
+       // When a symbolic link, don't iterate it. Can cause infinite loop.
+       if (bfs::is_symlink(it->status())) it.no_push();
+     
+     }
      // Next directory entry
      it++;
    }
@@ -299,16 +305,19 @@ Dir::getFilenamesBySuffix( const std::string& suffix,
                            vector<string>& filenames )
 {
   DIR* dir = opendir(name_.c_str());
-  if (!dir) 
+  if (!dir){ 
     return;
+  }
+    
   const char* ext = suffix.c_str();
   for(dirent* file = readdir(dir); file != 0; file = readdir(dir)){
     if ((strlen(file->d_name)>=strlen(ext)) && 
 	(strcmp(file->d_name+strlen(file->d_name)-strlen(ext),ext)==0)) {
       filenames.push_back(file->d_name);
-      cout << "  Found " << file->d_name << "\n";
+      //cout << "  Found " << file->d_name << "\n";
     }
   }
+  closedir(dir);
 }
 
 bool

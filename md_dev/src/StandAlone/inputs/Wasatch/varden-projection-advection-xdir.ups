@@ -114,7 +114,6 @@
         <Use3DLaplacian>   false</Use3DLaplacian>
 
         <Parameters>
- 	 	 	 	 	 	 <setupFrequency>0</setupFrequency>
  	 	 	 	 	 	 <skip>1</skip>
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
@@ -149,7 +148,7 @@
     <save label="x-mom"/>
     <save label="x-mom_rhs_partial"/>
     <save label="u"/>
-    <save label="u_*"/>
+    <save label="u*"/>
     <save label="f"/>
     <save label="rhof"/>
     <save label="pressure"/>

@@ -69,11 +69,14 @@ evaluate()
   const double cg = this->cg_;
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+    double bcVal = 0.0;
     std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
     std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     if(this->isStaggered_) {
-      for( ; ig != (this->vecGhostPts_)->end(); ++ig ){
-        f(*ig) = a_ * (*x_)(*ig) + b_;
+      for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+        bcVal  = a_ * (*x_)(*ii) + b_;
+        f(*ii) = bcVal;
+        f(*ig) = bcVal;
       }
     } else {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
@@ -97,12 +100,15 @@ evaluate()
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
     double x = 0.0;
+    double bcVal = 0.0;
     std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
     std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     if(this->isStaggered_) {
-      for( ; ig != (this->vecGhostPts_)->end(); ++ig ){
-        x = (*x_)(*ig) - x0_;
-        f(*ig) = a_ * x*x + b_ * x + c_;
+      for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+        x = (*x_)(*ii) - x0_;
+        bcVal = a_ * x*x + b_ * x + c_;
+        f(*ii) = bcVal;
+        f(*ig) = bcVal; // if the field is staggered, set the extra-cell value equal to the "boundary" value
       }
     } else {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
@@ -126,18 +132,19 @@ evaluate()
   const double cg = this->cg_;
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
-    double val = 0.0;
+    double bcVal = 0.0;
     std::vector<SpatialOps::structured::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
     std::vector<SpatialOps::structured::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     if(this->isStaggered_) {
-      for( ; ig != (this->vecGhostPts_)->end(); ++ig ){
-        val = phic_ * std::pow( 1.0 - std::fabs( (*x_)(*ig) - x0_ ) / R_ , 1.0/n_ );
-        f(*ig) = val;
+      for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+        bcVal  = phic_ * std::pow( 1.0 - std::fabs( (*x_)(*ig) - x0_ ) / R_ , 1.0/n_ );
+        f(*ii) = bcVal;
+        f(*ig) = bcVal;
       }
     } else {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
-        val = phic_ * std::pow( 1.0 - std::fabs( (*x_)(*ig) - x0_ ) / R_ , 1.0/n_ );
-        f(*ig) = ( val - ci*f(*ii) ) / cg;
+        bcVal = phic_ * std::pow( 1.0 - std::fabs( (*x_)(*ig) - x0_ ) / R_ , 1.0/n_ );
+        f(*ig) = ( bcVal - ci*f(*ii) ) / cg;
       }
     }
   }

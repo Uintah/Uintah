@@ -8,7 +8,413 @@
 #define PI 3.1415926535897932384626433832795
 #endif
 
+//**********************************************************************
+// CORRUGATED MMS: BASE CLASS
+//**********************************************************************
+
+template<typename FieldT>
+VarDenCorrugatedMMSBase<FieldT>::
+VarDenCorrugatedMMSBase( const Expr::Tag& xTag,
+                           const Expr::Tag& yTag,
+                           const Expr::Tag& tTag,
+                           const double r0,
+                           const double r1,
+                           const double d,
+                           const double w,
+                           const double k,
+                           const double a,
+                           const double b,
+                           const double uf,
+                           const double vf)
+: Expr::Expression<FieldT>(),
+r0_( r0 ),
+r1_( r1 ),
+d_ ( d ),
+w_ ( w ),
+k_ ( k ),
+a_ ( a ),
+b_ ( b ),
+uf_ ( uf ),
+vf_ ( vf ),
+xTag_( xTag ),
+yTag_( yTag ),
+tTag_( tTag )
+{
+  this->set_gpu_runnable( true );
+}
+
 //--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+VarDenCorrugatedMMSBase<FieldT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( xTag_ );
+  exprDeps.requires_expression( yTag_ );
+  exprDeps.requires_expression( tTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+VarDenCorrugatedMMSBase<FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  x_ = &fml.template field_manager<FieldT   >().field_ref( xTag_ );
+  y_ = &fml.template field_manager<FieldT   >().field_ref( yTag_ );
+  t_ = &fml.template field_manager<TimeField>().field_ref( tTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+VarDenCorrugatedMMSBase<FieldT>::
+evaluate()
+{}
+
+//**********************************************************************
+// CORRUGATED MMS: MIXTURE FRACTION (initialization, etc...)
+//**********************************************************************
+
+template<typename FieldT>
+VarDenCorrugatedMMSMixFrac<FieldT>::
+VarDenCorrugatedMMSMixFrac( const Expr::Tag& xTag,
+                              const Expr::Tag& yTag,
+                              const Expr::Tag& tTag,
+                              const double r0,
+                              const double r1,
+                              const double d,
+                              const double w,
+                              const double k,
+                              const double a,
+                              const double b,
+                              const double uf,
+                              const double vf)
+: VarDenCorrugatedMMSBase<FieldT>(xTag, yTag, tTag, r0, r1, d, w, k, a, b, uf, vf)
+{
+  this->set_gpu_runnable( true );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+VarDenCorrugatedMMSMixFrac<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  
+  const double k = this->k_;
+  const double uf = this->uf_;
+  const double vf = this->vf_;
+  const double w = this->w_;
+  const double a = this->a_;
+  const double b = this->b_;
+  const double r0 = this->r0_;
+  const double r1 = this->r1_;
+  
+  const double dn1 = 1.0 + r0/r1;
+  const double dn2 = 1.0 - r0/r1;
+  
+  const FieldT& x = *(this->x_);
+  const FieldT& y = *(this->y_);
+  
+  typedef SpatialOps::structured::SingleValueField TimeField;
+  const TimeField& t = *(this->t_);
+  
+  SpatFldPtr<FieldT> xh_ = SpatialFieldStore::get<FieldT>( result );
+  FieldT& xh = *xh_;
+  xh <<= uf * t - x + a * cos(k*(vf * t - y));
+  
+  SpatFldPtr<FieldT> s0_ = SpatialFieldStore::get<FieldT>( result );
+  FieldT& s0  = *s0_;
+  
+  s0 <<= tanh(b*xh*exp(w * t));
+  
+  result <<= (1.0 + s0)/(dn1 + dn2 * s0);
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+VarDenCorrugatedMMSMixFrac<FieldT>::Builder::
+Builder( const Expr::Tag& result,
+        const Expr::Tag& xTag,
+        const Expr::Tag& yTag,
+        const Expr::Tag& tTag,
+        const double r0,
+        const double r1,
+        const double d,
+        const double w,
+        const double k,
+        const double a,
+        const double b,
+        const double uf,
+        const double vf)
+: ExpressionBuilder(result),
+r0_( r0 ),
+r1_( r1 ),
+d_ ( d ),
+w_ ( w ),
+k_ ( k ),
+a_ ( a ),
+b_ ( b ),
+uf_ ( uf ),
+vf_ ( vf ),
+xTag_( xTag ),
+yTag_( yTag ),
+tTag_( tTag )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+VarDenCorrugatedMMSMixFrac<FieldT>::Builder::
+build() const
+{
+  return new VarDenCorrugatedMMSMixFrac<FieldT>( xTag_, yTag_, tTag_, r0_, r1_, d_, w_, k_, a_, b_, uf_, vf_ );
+}
+
+
+//**********************************************************************
+// CORRUGATED MMS: MIXTURE FRACTION SOURCE TERM
+//**********************************************************************
+
+template<typename FieldT>
+VarDenCorrugatedMMSMixFracSrc<FieldT>::
+VarDenCorrugatedMMSMixFracSrc( const Expr::Tag& xTag,
+                               const Expr::Tag& yTag,
+                               const Expr::Tag& tTag,
+                               const double r0,
+                               const double r1,
+                               const double d,
+                               const double w,
+                               const double k,
+                               const double a,
+                               const double b,
+                               const double uf,
+                               const double vf)
+: VarDenCorrugatedMMSBase<FieldT>(xTag, yTag, tTag, r0, r1, d, w, k, a, b, uf, vf)
+{
+  this->set_gpu_runnable( true );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+VarDenCorrugatedMMSMixFracSrc<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+
+  const double k = this->k_;
+  const double uf = this->uf_;
+  const double vf = this->vf_;
+  const double w = this->w_;
+  const double a = this->a_;
+  const double b = this->b_;
+    const double d = this->d_;
+  const double r0 = this->r0_;
+  const double r1 = this->r1_;
+
+  const double k2 = k * k;
+  const double b2 = b * b;
+  const double a2 = a * a;
+
+  const FieldT& x = *(this->x_);
+  const FieldT& y = *(this->y_);
+  typedef SpatialOps::structured::SingleValueField TimeField;
+  const TimeField& t = *(this->t_);
+  
+  SpatFldPtr<FieldT> s0_ = SpatialFieldStore::get<FieldT>( result );
+  SpatFldPtr<FieldT> s1_ = SpatialFieldStore::get<FieldT>( result );
+  SpatFldPtr<FieldT> s2_ = SpatialFieldStore::get<FieldT>( result );
+  
+  FieldT& s0  = *s0_;
+  FieldT& s1  = *s1_;
+  FieldT& s2  = *s2_;
+  
+  s0 <<= exp(w * t);
+  s1 <<= uf * t - x + a * cos(k * (vf * t - y));
+  s2 <<= exp(2*b*s1/s0);
+
+  result <<= (r0*r1*s2)/(s0*s0*pow(r0 + r1*s2,3))*(-4*d*b2*r0 -
+                        2*a2*d*b2*k2*r0 +
+                        4*d*b2*r1*s2 +
+                        2*a2*d*b2*k2*r1*s2 +
+                        2*b*r0*r1*s0*uf + 2*b*r1*r1*s0*s2*uf -
+                        2*b*r0*r0*s0*t*uf*w - 2*b*r0*r1*s0*s2*t*uf*w +
+                        2*b*r0*r0*s0*w*x + 2*b*r0*r1*s0*s2*w*x +
+                        2*a*b*s0*(r0 + r1*s2)*(d*k2 - r0*w)*
+                        cos(k*(t*vf - y)) +
+                        2*a2*d*b2*k2*(r0 - r1*s2)*
+                        cos(2*k*(t*vf - y)) +
+                        r0*r0*s0*s0*w*log(1 + s2) -
+                        r0*r1*s0*s0*w*log(1 + s2) +
+                        r0*r1*s0*s0*s2*w*log(1 + s2) -
+                        r1*r1*s0*s0*s2*w*log(1 + s2));
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+VarDenCorrugatedMMSMixFracSrc<FieldT>::Builder::
+Builder( const Expr::Tag& result,
+        const Expr::Tag& xTag,
+        const Expr::Tag& yTag,
+        const Expr::Tag& tTag,
+        const double r0,
+        const double r1,
+        const double d,
+        const double w,
+        const double k,
+        const double a,
+        const double b,
+        const double uf,
+        const double vf)
+: ExpressionBuilder(result),
+r0_( r0 ),
+r1_( r1 ),
+d_ ( d ),
+w_ ( w ),
+k_ ( k ),
+a_ ( a ),
+b_ ( b ),
+uf_ ( uf ),
+vf_ ( vf ),
+xTag_( xTag ),
+yTag_( yTag ),
+tTag_( tTag )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+VarDenCorrugatedMMSMixFracSrc<FieldT>::Builder::
+build() const
+{
+  return new VarDenCorrugatedMMSMixFracSrc<FieldT>( xTag_, yTag_, tTag_, r0_, r1_, d_, w_, k_, a_, b_, uf_, vf_ );
+}
+
+//**********************************************************************
+// CORRUGATED MMS: AXIAL VELOCITY (initialization, etc...)
+//**********************************************************************
+
+template<typename FieldT>
+VarDenCorrugatedMMSVelocity<FieldT>::
+VarDenCorrugatedMMSVelocity( const Expr::Tag& xTag,
+                           const Expr::Tag& yTag,
+                           const Expr::Tag& tTag,
+                           const double r0,
+                           const double r1,
+                           const double d,
+                           const double w,
+                           const double k,
+                           const double a,
+                           const double b,
+                           const double uf,
+                           const double vf)
+: VarDenCorrugatedMMSBase<FieldT>(xTag, yTag, tTag, r0, r1, d, w, k, a, b, uf, vf)
+{
+  this->set_gpu_runnable( true );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+VarDenCorrugatedMMSVelocity<FieldT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& result = this->value();
+  
+  const double k = this->k_;
+  const double uf = this->uf_;
+  const double vf = this->vf_;
+  const double w = this->w_;
+  const double a = this->a_;
+  const double b = this->b_;
+  const double r0 = this->r0_;
+  const double r1 = this->r1_;
+  
+  const double dn1 = 1.0 + r0/r1;
+  const double dn2 = 1.0 - r0/r1;
+  
+  const FieldT& x = *(this->x_);
+  const FieldT& y = *(this->y_);
+  
+  typedef SpatialOps::structured::SingleValueField TimeField;
+  const TimeField& t = *(this->t_);
+  
+  SpatFldPtr<FieldT> xh_ = SpatialFieldStore::get<FieldT>( result );
+  FieldT& xh = *xh_;
+  xh <<= uf * t - x + a * cos(k*(vf * t - y));
+  
+  SpatFldPtr<FieldT> s0_ = SpatialFieldStore::get<FieldT>( result );
+  FieldT& s0  = *s0_;
+  s0 <<= exp(2.0*b*xh*exp(w * t)) + 1;
+  
+  SpatFldPtr<FieldT> rho_ = SpatialFieldStore::get<FieldT>( result );
+  FieldT& rho = *rho_;
+  rho <<= 0.5*(r0 + r1 + (r1-r0)*tanh( b*exp(-w*t)*xh ));
+  result <<= (r1 - r0) / rho * ( - w * xh + (w*xh - uf)/s0 + w*log(s0)/(2.0*b*exp(-w*t)) );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+VarDenCorrugatedMMSVelocity<FieldT>::Builder::
+Builder(const Expr::Tag& result,
+        const Expr::Tag& xTag,
+        const Expr::Tag& yTag,
+        const Expr::Tag& tTag,
+        const double r0,
+        const double r1,
+        const double d,
+        const double w,
+        const double k,
+        const double a,
+        const double b,
+        const double uf,
+        const double vf)
+: ExpressionBuilder(result),
+r0_( r0 ),
+r1_( r1 ),
+d_ ( d ),
+w_ ( w ),
+k_ ( k ),
+a_ ( a ),
+b_ ( b ),
+uf_ ( uf ),
+vf_ ( vf ),
+xTag_( xTag ),
+yTag_( yTag ),
+tTag_( tTag )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+VarDenCorrugatedMMSVelocity<FieldT>::Builder::
+build() const
+{
+  return new VarDenCorrugatedMMSVelocity<FieldT>(xTag_, yTag_, tTag_, r0_, r1_, d_, w_, k_, a_, b_, uf_, vf_ );
+}
+
+
+//**********************************************************************
+// OSCILLATING MMS: MIXTURE FRACTION SOURCE TERM
+//**********************************************************************
 
 template<typename FieldT>
 VarDenMMSOscillatingMixFracSrc<FieldT>::
@@ -188,47 +594,46 @@ build() const
   return new VarDenMMSOscillatingMixFracSrc<FieldT>( xTag_, yTag_, tTag_, r0_, r1_, d_, w_, k_, uf_, vf_ );
 }
 
-
-//--------------------------------------------------------------------
-//--------------------------------------------------------------------
-
+//**********************************************************************
+// OSCILLATING MMS: CONTINUITY SOURCE TERM
+//**********************************************************************
 
 template<typename FieldT>
 VarDenMMSOscillatingContinuitySrc<FieldT>::
 VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
-                           const Expr::Tag densStarTag,
-                           const Expr::Tag dens2StarTag,
-                           const Expr::TagList& velStarTags,
-                                  const double r0,
-                                  const double r1,
-                                  const double w,
-                                  const double k,
-                                  const double uf,
-                                  const double vf,
-                           const Expr::Tag& xTag,
-                           const Expr::Tag& yTag,
-                           const Expr::Tag& tTag,
-                           const Expr::Tag& timestepTag)
+                                   const Expr::Tag densStarTag,
+                                   const Expr::Tag dens2StarTag,
+                                   const Expr::TagList& velStarTags,
+                                   const double r0,
+                                   const double r1,
+                                   const double w,
+                                   const double k,
+                                   const double uf,
+                                   const double vf,
+                                   const Expr::Tag& xTag,
+                                   const Expr::Tag& yTag,
+                                   const Expr::Tag& tTag,
+                                   const Expr::Tag& timestepTag)
 : Expr::Expression<FieldT>(),
-xVelStart_( velStarTags[0] ),
-yVelStart_( velStarTags[1] ),
-zVelStart_( velStarTags[2] ),
-doX_      ( velStarTags[0]!=Expr::Tag() ),
-doY_      ( velStarTags[1]!=Expr::Tag() ),
-doZ_      ( velStarTags[2]!=Expr::Tag() ),
-denst_      ( densTag  ),
-densStart_  ( densStarTag ),
-dens2Start_ ( dens2StarTag ),
-r0_( r0 ),
-r1_( r1 ),
-w_ ( w ),
-k_ ( k ),
-uf_ ( uf ),
-vf_ ( vf ),
-xTag_( xTag ),
-yTag_( yTag ),
-tTag_( tTag ),
-timestepTag_( timestepTag )
+  xVelStart_( velStarTags[0] ),
+  yVelStart_( velStarTags[1] ),
+  zVelStart_( velStarTags[2] ),
+  denst_     ( densTag  ),
+  densStart_ ( densStarTag ),
+  dens2Start_( dens2StarTag ),
+  doX_( velStarTags[0]!=Expr::Tag() ),
+  doY_( velStarTags[1]!=Expr::Tag() ),
+  doZ_( velStarTags[2]!=Expr::Tag() ),
+  r0_( r0 ),
+  r1_( r1 ),
+  w_ ( w ),
+  k_ ( k ),
+  uf_ ( uf ),
+  vf_ ( vf ),
+  xTag_( xTag ),
+  yTag_( yTag ),
+  tTag_( tTag ),
+  timestepTag_( timestepTag )
 {
   this->set_gpu_runnable( true );
 }
@@ -240,15 +645,10 @@ void
 VarDenMMSOscillatingContinuitySrc<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  if( doX_ ){
-    exprDeps.requires_expression( xVelStart_ );
-  }
-  if( doY_ ){
-    exprDeps.requires_expression( yVelStart_ );
-  }
-  if( doZ_ ){
-    exprDeps.requires_expression( zVelStart_ );
-  }
+  if( doX_ ) exprDeps.requires_expression( xVelStart_ );
+  if( doY_ ) exprDeps.requires_expression( yVelStart_ );
+  if( doZ_ ) exprDeps.requires_expression( zVelStart_ );
+
   exprDeps.requires_expression( denst_ );
   exprDeps.requires_expression( densStart_ );
   exprDeps.requires_expression( dens2Start_ );
@@ -266,26 +666,18 @@ void
 VarDenMMSOscillatingContinuitySrc<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldMgrSelector<XVolField>::type& xVolFM  = fml.field_manager<XVolField>();
-  const Expr::FieldMgrSelector<YVolField>::type& yVolFM  = fml.field_manager<YVolField>();
-  const Expr::FieldMgrSelector<ZVolField>::type& zVolFM  = fml.field_manager<ZVolField>();
-  
-  if( doX_ ){
-    uStar_  = &xVolFM.field_ref( xVelStart_ );
-  }
-  if( doY_ ){
-    vStar_  = &yVolFM.field_ref( yVelStart_ );
-  }
-  if( doZ_ ){
-    wStar_  = &zVolFM.field_ref( zVelStart_ );
-  }
-  const Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
-  dens_  = &scalarFM.field_ref( denst_ );
-  densStar_  = &scalarFM.field_ref( densStart_ );
-  dens2Star_  = &scalarFM.field_ref( dens2Start_ );
+  if( doX_ ) uStar_ = &fml.field_ref<XVolField>( xVelStart_ );
+  if( doY_ ) vStar_ = &fml.field_ref<YVolField>( yVelStart_ );
+  if( doZ_ ) wStar_ = &fml.field_ref<ZVolField>( zVelStart_ );
 
-  x_ = &fml.template field_manager<FieldT>().field_ref( xTag_ );
-  y_ = &fml.template field_manager<FieldT>().field_ref( yTag_ );
+  const typename Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
+  dens_      = &scalarFM.field_ref( denst_ );
+  densStar_  = &scalarFM.field_ref( densStart_ );
+  dens2Star_ = &scalarFM.field_ref( dens2Start_ );
+
+  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
+  x_ = &fm.field_ref( xTag_ );
+  y_ = &fm.field_ref( yTag_ );
   
   const typename Expr::FieldMgrSelector<TimeField>::type& tfm = fml.field_manager<TimeField>();
   t_        = &tfm.field_ref( tTag_        );
@@ -351,7 +743,7 @@ evaluate()
 //      *alpha <<= cond( *beta != *beta, 0.0 )
 //                    ( 1.0/(*beta + 1.0)  );
   
-  const double r = ( r1_/r0_ >= r0_/r1_ ? r0_/r1_ : r1_/r0_ );
+//  const double r = ( r1_/r0_ >= r0_/r1_ ? r0_/r1_ : r1_/r0_ );
   *alpha <<= cond( *beta != *beta, 0.0 )
                  ( exp(log(0.2)*(pow(*beta, 0.2))) ); // Increase the value of the exponent to get closer to a step function
   
@@ -387,31 +779,31 @@ Builder( const Expr::Tag& result,
          const Expr::Tag densStarTag,
          const Expr::Tag dens2StarTag,
          const Expr::TagList& velStarTags,
-        const double r0,
-        const double r1,
-        const double w,
-        const double k,
-        const double uf,
-        const double vf,
+         const double r0,
+         const double r1,
+         const double w,
+         const double k,
+         const double uf,
+         const double vf,
          const Expr::Tag& xTag,
          const Expr::Tag& yTag,
          const Expr::Tag& tTag,
          const Expr::Tag& timestepTag )
 : ExpressionBuilder(result),
-velStarTs_ ( velStarTags ),
-denst_     ( densTag      ),
-densStart_ ( densStarTag  ),
-dens2Start_( dens2StarTag ),
-r0_( r0 ),
-r1_( r1 ),
-w_ ( w ),
-k_ ( k ),
-uf_ ( uf ),
-vf_ ( vf ),
-xTag_( xTag ),
-yTag_( yTag ),
-tTag_( tTag ),
-timestepTag_( timestepTag )
+  r0_( r0 ),
+  r1_( r1 ),
+  w_ ( w ),
+  k_ ( k ),
+  uf_ ( uf ),
+  vf_ ( vf ),
+  xTag_( xTag ),
+  yTag_( yTag ),
+  tTag_( tTag ),
+  timestepTag_( timestepTag ),
+  denst_     ( densTag      ),
+  densStart_ ( densStarTag  ),
+  dens2Start_( dens2StarTag ),
+  velStarTs_ ( velStarTags  )
 {}
 
 //--------------------------------------------------------------------
@@ -432,26 +824,26 @@ build() const
 template<typename FieldT>
 VarDenOscillatingMMSxVel<FieldT>::
 VarDenOscillatingMMSxVel( const Expr::Tag& rhoTag,
-           const Expr::Tag& xTag,
-           const Expr::Tag& yTag,
-           const Expr::Tag& tTag,
-           const double r0,
-           const double r1,
-           const double w,
-           const double k,
-           const double uf,
-           const double vf )
+                          const Expr::Tag& xTag,
+                          const Expr::Tag& yTag,
+                          const Expr::Tag& tTag,
+                          const double r0,
+                          const double r1,
+                          const double w,
+                          const double k,
+                          const double uf,
+                          const double vf )
 : Expr::Expression<FieldT>(),
-r0_( r0 ),
-r1_( r1 ),
-w_ ( w ),
-k_ ( k ),
-uf_ ( uf ),
-vf_ ( vf ),
-rhoTag_( rhoTag ),
-xTag_  ( xTag   ),
-yTag_  ( yTag   ),
-tTag_  ( tTag   )
+  r0_( r0 ),
+  r1_( r1 ),
+  w_ ( w ),
+  k_ ( k ),
+  uf_ ( uf ),
+  vf_ ( vf ),
+  xTag_  ( xTag   ),
+  yTag_  ( yTag   ),
+  tTag_  ( tTag   ),
+  rhoTag_( rhoTag )
 {
   this->set_gpu_runnable( true );
 }
@@ -535,23 +927,23 @@ Builder( const Expr::Tag& result,
          const Expr::Tag& xTag,
          const Expr::Tag& yTag,
          const Expr::Tag& tTag,
-        const double r0,
-        const double r1,
-        const double w,
-        const double k,
-        const double uf,
-        const double vf )
+         const double r0,
+         const double r1,
+         const double w,
+         const double k,
+         const double uf,
+         const double vf )
 : ExpressionBuilder(result),
-r0_( r0 ),
-r1_( r1 ),
-w_ ( w ),
-k_ ( k ),
-uf_ ( uf ),
-vf_ ( vf ),
-rhoTag_( rhoTag ),
-xTag_  ( xTag   ),
-yTag_  ( yTag   ),
-tTag_  ( tTag   )
+  r0_( r0 ),
+  r1_( r1 ),
+  w_ ( w ),
+  k_ ( k ),
+  uf_ ( uf ),
+  vf_ ( vf ),
+  xTag_  ( xTag   ),
+  yTag_  ( yTag   ),
+  tTag_  ( tTag   ),
+  rhoTag_( rhoTag )
 {}
 
 //--------------------------------------------------------------------
@@ -571,26 +963,26 @@ build() const
 template<typename FieldT>
 VarDenOscillatingMMSyVel<FieldT>::
 VarDenOscillatingMMSyVel( const Expr::Tag& rhoTag,
-           const Expr::Tag& xTag,
-           const Expr::Tag& yTag,
-           const Expr::Tag& tTag,
-           const double r0,
-           const double r1,
-           const double w,
-           const double k,
-           const double uf,
-           const double vf )
+                          const Expr::Tag& xTag,
+                          const Expr::Tag& yTag,
+                          const Expr::Tag& tTag,
+                          const double r0,
+                          const double r1,
+                          const double w,
+                          const double k,
+                          const double uf,
+                          const double vf )
 : Expr::Expression<FieldT>(),
-r0_( r0 ),
-r1_( r1 ),
-w_ ( w ),
-k_ ( k ),
-uf_ ( uf ),
-vf_ ( vf ),
-rhoTag_( rhoTag ),
-xTag_  ( xTag   ),
-yTag_  ( yTag   ),
-tTag_  ( tTag   )
+  r0_( r0 ),
+  r1_( r1 ),
+  w_ ( w ),
+  k_ ( k ),
+  uf_ ( uf ),
+  vf_ ( vf ),
+  xTag_  ( xTag   ),
+  yTag_  ( yTag   ),
+  tTag_  ( tTag   ),
+  rhoTag_( rhoTag )
 {
   this->set_gpu_runnable( true );
 }
@@ -680,16 +1072,16 @@ Builder( const Expr::Tag& result,
           const double uf,
           const double vf )
 : ExpressionBuilder(result),
-r0_( r0 ),
-r1_( r1 ),
-w_ ( w ),
-k_ ( k ),
-uf_ ( uf ),
-vf_ ( vf ),
-rhoTag_( rhoTag ),
-xTag_  ( xTag   ),
-yTag_  ( yTag   ),
-tTag_  ( tTag   )
+  r0_( r0 ),
+  r1_( r1 ),
+  w_ ( w ),
+  k_ ( k ),
+  uf_ ( uf ),
+  vf_ ( vf ),
+  xTag_  ( xTag   ),
+  yTag_  ( yTag   ),
+  tTag_  ( tTag   ),
+  rhoTag_( rhoTag )
 {}
 
 //--------------------------------------------------------------------
@@ -895,6 +1287,15 @@ build() const
 // EXPLICIT INSTANTIATION
 #include <CCA/Components/Wasatch/FieldTypes.h>
 template class VarDenMMSOscillatingMixFracSrc<SVolField>;
+
+template class VarDenCorrugatedMMSBase<SVolField>;
+template class VarDenCorrugatedMMSMixFrac<SVolField>;
+template class VarDenCorrugatedMMSMixFracSrc<SVolField>;
+
+template class VarDenCorrugatedMMSBase<XVolField>;
+template class VarDenCorrugatedMMSVelocity<XVolField>;
+
+
 template class VarDenMMSOscillatingMixFracSrc<XVolField>;
 template class VarDenMMSOscillatingMixFracSrc<YVolField>;
 template class VarDenMMSOscillatingMixFracSrc<ZVolField>;

@@ -12,9 +12,260 @@
 #include <fstream>
 #include <algorithm>
 
-#include <ctime>            // std::time
+#include <ctime>
 
-//--------------------------------------------------------------------
+//**********************************************************************
+// CORRUGATED MMS: BASE CLASS
+//**********************************************************************
+
+/**
+ *  \class  VarDenCorrugatedMMSBase
+ *  \author Tony Saad
+ *  \date   January, 2014
+ *  \brief  A convenient base class for easy implementation of the 2D Corrugated MMS found in 
+ 
+ Shunn, L., Ham, F., & Moin, P. (2012). Verification of variable-density flow solvers using
+ manufactured solutions. Journal of Computational Physics, 231(9), 3801–3827. 
+ doi:10.1016/j.jcp.2012.01.027
+ 
+ *
+ */
+template< typename FieldT >
+class VarDenCorrugatedMMSBase : public Expr::Expression<FieldT>
+{
+  
+public:
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+  
+protected:
+  typedef SpatialOps::structured::SingleValueField TimeField;
+  
+  VarDenCorrugatedMMSBase( const Expr::Tag& xTag,
+                             const Expr::Tag& yTag,
+                             const Expr::Tag& tTag,
+                             const double r0,
+                             const double r1,
+                             const double d,
+                             const double w,
+                             const double k,
+                             const double a,
+                             const double b,
+                             const double uf,
+                             const double vf);
+  const double r0_, r1_, d_, w_, k_, a_, b_, uf_, vf_;
+  const Expr::Tag xTag_, yTag_, tTag_;
+  const FieldT *x_, *y_;
+  const TimeField* t_;
+};
+
+//**********************************************************************
+// CORRUGATED MMS: MIXTURE FRACTION (initialization, etc...)
+//**********************************************************************
+
+/**
+ *  \class  VarDenCorrugatedMMSMixFrac
+ *  \author Tony Saad
+ *  \date   January, 2014
+ *  \brief  Implements the mixture fraction ansatz for the corrugated MMS. This is used for initializing
+ the mixture fraction. it can also be used for verification. See eqs 23 in:
+ 
+ Shunn, L., Ham, F., & Moin, P. (2012). Verification of variable-density flow solvers using
+ manufactured solutions. Journal of Computational Physics, 231(9), 3801–3827.
+ doi:10.1016/j.jcp.2012.01.027
+
+ *
+ */
+template< typename FieldT >
+class VarDenCorrugatedMMSMixFrac : public VarDenCorrugatedMMSBase<FieldT>
+{
+  
+public:
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    /**
+     * @param result Tag of the resulting expression.
+     * @param xTag   Tag of the first coordinate.
+     * @param yTag   Tag of the second coordinate.
+     * @param tTag   Tag of time.
+     * @param D      a double containing the diffusivity constant.
+     * @param r0   a double holding the density value at f=0.
+     * @param r1   a double holding the density value at f=1.
+     */
+    Builder( const Expr::Tag& result,
+            const Expr::Tag& xTag,
+            const Expr::Tag& yTag,
+            const Expr::Tag& tTag,
+            const double r0,
+            const double r1,
+            const double d,
+            const double w,
+            const double k,
+            const double a,
+            const double b,
+            const double uf,
+            const double vf);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const double r0_, r1_, d_, w_, k_, a_, b_, uf_, vf_;
+    const Expr::Tag xTag_, yTag_, tTag_;
+  };
+  
+  void evaluate();
+  
+private:
+  VarDenCorrugatedMMSMixFrac( const Expr::Tag& xTag,
+                                const Expr::Tag& yTag,
+                                const Expr::Tag& tTag,
+                                const double r0,
+                                const double r1,
+                                const double d,
+                                const double w,
+                                const double k,
+                                const double a,
+                                const double b,
+                                const double uf,
+                                const double vf);
+};
+
+//**********************************************************************
+// CORRUGATED MMS: MIXTURE FRACTION SOURCE TERM
+//**********************************************************************
+
+/**
+ *  \class  VarDenCorrugatedMMSMixFracSrc
+ *  \author Tony Saad
+ *  \date   January, 2014
+ *  \brief  Implements the mixture fraction source term that results from using the corrugated ansatz/MMS 
+ for the mixture fraction.
+ *
+ */
+template< typename FieldT >
+class VarDenCorrugatedMMSMixFracSrc : public VarDenCorrugatedMMSBase<FieldT>
+{
+  
+public:
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    /**
+     * @param result Tag of the resulting expression.
+     * @param xTag   Tag of the first coordinate.
+     * @param yTag   Tag of the second coordinate.
+     * @param tTag   Tag of time.
+     * @param D      a double containing the diffusivity constant.
+     * @param r0   a double holding the density value at f=0.
+     * @param r1   a double holding the density value at f=1.
+     */
+    Builder( const Expr::Tag& result,
+            const Expr::Tag& xTag,
+            const Expr::Tag& yTag,
+            const Expr::Tag& tTag,
+            const double r0,
+            const double r1,
+            const double d,
+            const double w,
+            const double k,
+            const double a,
+            const double b,
+            const double uf,
+            const double vf);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+  const double r0_, r1_, d_, w_, k_, a_, b_, uf_, vf_;
+    const Expr::Tag xTag_, yTag_, tTag_;
+  };
+
+  void evaluate();
+  
+private:
+  typedef SpatialOps::structured::SingleValueField TimeField;
+  
+  VarDenCorrugatedMMSMixFracSrc( const Expr::Tag& xTag,
+                                 const Expr::Tag& yTag,
+                                 const Expr::Tag& tTag,
+                                 const double r0,
+                                 const double r1,
+                                 const double d,
+                                 const double w,
+                                 const double k,                                
+                                 const double a,
+                                 const double b,
+                                 const double uf,
+                                 const double vf);
+};
+
+//**********************************************************************
+// CORRUGATED MMS: VELOCITY
+//**********************************************************************
+
+/**
+ *  \class  VarDenCorrugatedMMSVelocity
+ *  \author Tony Saad
+ *  \date   January, 2014
+ *  \brief  Implements the corrugated ansatz/MMS for the axial velocity
+ *
+ */
+template< typename FieldT >
+class VarDenCorrugatedMMSVelocity : public VarDenCorrugatedMMSBase<FieldT>
+{
+  
+public:
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    /**
+     * @param result Tag of the resulting expression.
+     * @param xTag   Tag of the first coordinate.
+     * @param yTag   Tag of the second coordinate.
+     * @param tTag   Tag of time.
+     * @param D      a double containing the diffusivity constant.
+     * @param r0   a double holding the density value at f=0.
+     * @param r1   a double holding the density value at f=1.
+     */
+    Builder( const Expr::Tag& result,
+            const Expr::Tag& xTag,
+            const Expr::Tag& yTag,
+            const Expr::Tag& tTag,
+            const double r0,
+            const double r1,
+            const double d,
+            const double w,
+            const double k,
+            const double a,
+            const double b,
+            const double uf,
+            const double vf);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const double r0_, r1_, d_, w_, k_, a_, b_, uf_, vf_;
+    const Expr::Tag xTag_, yTag_, tTag_;
+  };
+  
+  void evaluate();
+  
+private:
+  typedef SpatialOps::structured::SingleValueField TimeField;
+  
+  VarDenCorrugatedMMSVelocity( const Expr::Tag& xTag,
+                             const Expr::Tag& yTag,
+                             const Expr::Tag& tTag,
+                             const double r0,
+                             const double r1,
+                             const double d,
+                             const double w,
+                             const double k,
+                             const double a,
+                             const double b,
+                             const double uf,
+                             const double vf);
+};
+
+//**********************************************************************
+// OSCILLATING MMS: MIXTURE FRACTION SOURCE TERM
+//**********************************************************************
 
 /**
  *  \class VarDenMMSOscillatingMixFracSrc
@@ -99,6 +350,10 @@ private:
   const TimeField* t_;
 };
 
+//**********************************************************************
+// OSCILLATING MMS: CONTINUITY SOURCE TERM
+//**********************************************************************
+
 /**
  *  \class VarDenMMSOscillatingContinuitySrc
  *  \author Amir Biglari
@@ -177,15 +432,15 @@ private:
                              const Expr::Tag& yTag,
                              const Expr::Tag& tTag,
                              const Expr::Tag& timestepTag );
+  const Expr::Tag xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_;
+  const bool doX_, doY_, doZ_;
   const double r0_, r1_, w_, k_, uf_, vf_;
   const Expr::Tag xTag_, yTag_, tTag_, timestepTag_;
-  const Expr::Tag xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_;
   const XVolField *uStar_;
   const YVolField *vStar_;
   const ZVolField *wStar_;
   const SVolField *dens_, *densStar_, *dens2Star_;
   const FieldT *x_, *y_;
-  const bool doX_, doY_, doZ_;
   const TimeField *t_, *timestep_;
   const GradXT* gradXOp_;
   const GradYT* gradYOp_;
@@ -195,8 +450,12 @@ private:
   const S2ZInterpOpT* s2ZInterpOp_;
 };
 
+//**********************************************************************
+// OSCILLATING MMS: X VELOCITY
+//**********************************************************************
+
 /**
- *  \class XMom
+ *  \class VarDenOscillatingMMSxVel
  *  \author Amir Biglari
  *  \date December, 2013
  *  \brief Implements Shunn's 2D mms momentum field in x direction
@@ -227,12 +486,12 @@ public:
              const Expr::Tag& xTag,  ///< x coordinate
              const Expr::Tag& yTag,  ///< y coordinate
              const Expr::Tag& tTag,  ///< time
-            const double r0,
-            const double r1,
-            const double w,
-            const double k,
-            const double uf,
-            const double vf );
+             const double r0,
+             const double r1,
+             const double w,
+             const double k,
+             const double uf,
+             const double vf );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -248,15 +507,15 @@ public:
 private:
   
   VarDenOscillatingMMSxVel( const Expr::Tag& rhoTag,
-        const Expr::Tag& xTag,
-        const Expr::Tag& yTag,
-        const Expr::Tag& tTag,
-        const double r0,
-        const double r1,
-        const double w,
-        const double k,
-        const double uf,
-        const double vf );
+                            const Expr::Tag& xTag,
+                            const Expr::Tag& yTag,
+                            const Expr::Tag& tTag,
+                            const double r0,
+                            const double r1,
+                            const double w,
+                            const double k,
+                            const double uf,
+                            const double vf );
   const double r0_, r1_, w_, k_, uf_, vf_;
   const Expr::Tag xTag_, yTag_, tTag_, rhoTag_;
   const FieldT* x_;
@@ -265,10 +524,12 @@ private:
   const TimeField* t_;
 };
 
-//====================================================================
+//**********************************************************************
+// OSCILLATING MMS: Y VELOCITY
+//**********************************************************************
 
 /**
- *  \class YMom
+ *  \class VarDenOscillatingMMSyVel
  *  \author Amir Biglari
  *  \date December, 2013
  *  \brief Implements Shunn's 2D mms momentum field in y direction
@@ -337,7 +598,9 @@ private:
   const TimeField* t_;
 };
 
-//====================================================================
+//**********************************************************************
+// OSCILLATING MMS: MIXTURE FRACTION (INITIALIZATION, ETC...)
+//**********************************************************************
 
 /**
  *  \class VarDenOscillatingMMSMixFrac
@@ -403,7 +666,9 @@ private:
   const TimeField* t_;
 };
 
-//====================================================================
+//**********************************************************************
+// ALL MMS: DIFFUSION COEFFICENT: rho * D = constant -> D = constant/rho
+//**********************************************************************
 
 /**
  *  \class DiffusiveConstant

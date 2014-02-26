@@ -103,7 +103,6 @@ namespace Uintah {
     d_movingAverage=0;
 
     d_restarting = false;
-    d_combinePatches = false;
     d_reduceUda = false;
     d_doMultiTaskgraphing = false;
     d_archive = NULL;
@@ -173,10 +172,8 @@ namespace Uintah {
     // some PAPI boiler plate
     retp = PAPI_library_init(PAPI_VER_CURRENT);
     if (retp != PAPI_VER_CURRENT) {
-      if (d_myworld->myrank() == 0) {
-        cout << "Error: Cannot initialize PAPI library!" << endl
-             << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
-      }
+      proc0cout << "Error: Cannot initialize PAPI library!" << endl
+                << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
       throw PapiInitializationError("PAPI library initialization error occurred. Check that your PAPI library can be initialized correctly.", __FILE__, __LINE__);
     }
     retp = PAPI_thread_init(pthread_self);
@@ -192,25 +189,21 @@ namespace Uintah {
 
     // query all the events to find that are supported, flag those that are unsupported
     for (map<int, PapiEvent>::iterator iter=d_papiEvents.begin(); iter!=d_papiEvents.end(); iter++) {
-    	retp = PAPI_query_event(iter->first);
-        if (retp != PAPI_OK) {
-          if (d_myworld->myrank() == 0) {
-            cout << "WARNNING: Cannot query PAPI event: " << iter->second.name << "!" << endl
-            	 << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
-           		 << "          No stats will be printed for " << iter->second.simStatName << endl;
-          }
-        } else {
-        	iter->second.isSupported = true;
-        }
+      retp = PAPI_query_event(iter->first);
+      if (retp != PAPI_OK) {
+        proc0cout << "WARNNING: Cannot query PAPI event: " << iter->second.name << "!" << endl
+            	    << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
+           	    << "          No stats will be printed for " << iter->second.simStatName << endl;
+      } else {
+        iter->second.isSupported = true;
+      }
     }
 
     // create a new empty PAPI event set
     retp = PAPI_create_eventset(&d_eventSet);
     if (retp != PAPI_OK) {
-      if (d_myworld->myrank() == 0) {
-        cout << "Error: Cannot create PAPI event set!" << endl
-             << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
-      }
+      proc0cout << "Error: Cannot create PAPI event set!" << endl
+                << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
       throw PapiInitializationError("PAPI event set creation error. Unable to create hardware counter event set.", __FILE__, __LINE__);
     }
 
@@ -220,33 +213,32 @@ namespace Uintah {
      */
     int index = 0;
     for (map<int, PapiEvent>::iterator iter = d_papiEvents.begin(); iter != d_papiEvents.end(); iter++) {
-		if (iter->second.isSupported) {
-			retp = PAPI_add_event(d_eventSet, iter->first);
-			if (retp != PAPI_OK) { // this means the event queried OK but could not be added
-				if (d_myworld->myrank() == 0) {
-					cout << "WARNNING: Cannot add PAPI event: " << iter->second.name << "!"  << endl
-                         << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
-                         << "          No stats will be printed for " << iter->second.simStatName << endl;
-				}
-				iter->second.isSupported = false;
-			} else {
-				iter->second.eventValueIndex = index;
-				index++;
-			}
-		}
-	}
+      if (iter->second.isSupported) {
+        retp = PAPI_add_event(d_eventSet, iter->first);
+        if (retp != PAPI_OK) { // this means the event queried OK but could not be added
+          if (d_myworld->myrank() == 0) {
+            cout << "WARNNING: Cannot add PAPI event: " << iter->second.name << "!"  << endl
+                 << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
+                 << "          No stats will be printed for " << iter->second.simStatName << endl;
+          }
+          iter->second.isSupported = false;
+        } else {
+          iter->second.eventValueIndex = index;
+          index++;
+        }
+      }
+    }
 
     retp = PAPI_start(d_eventSet);
     if (retp != PAPI_OK) {
-      if (d_myworld->myrank() == 0) {
-        cout << "WARNNING: Cannot start PAPI event set!"  << endl
-             << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
-      }
+      proc0cout << "WARNNING: Cannot start PAPI event set!"  << endl
+                << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
       throw PapiInitializationError("PAPI event set start error. Unable to start hardware counter event set.", __FILE__, __LINE__);
     }
 #endif
   } // end SimulationController constructor
-
+  //______________________________________________________________________
+  //
   SimulationController::~SimulationController()
   {
     delete d_archive;
@@ -255,15 +247,17 @@ namespace Uintah {
     delete d_eventValues;
 #endif
   }
-
-  void SimulationController::doCombinePatches(std::string fromDir, bool reduceUda)
+  
+  //______________________________________________________________________
+  //
+  void SimulationController::setReduceUdaFlags(std::string fromDir )
   {
-    d_doAMR = false;
-    d_combinePatches = true;
-    d_reduceUda = reduceUda;
-    d_fromDir = fromDir;
+    d_doAMR       = false;
+    d_reduceUda   = true;
+    d_fromDir     = fromDir;
   }
-
+  //______________________________________________________________________
+  //
   void SimulationController::doRestart(std::string restartFromDir, int timestep,
                                        bool fromScratch, bool removeOldDir)
   {
@@ -273,7 +267,8 @@ namespace Uintah {
     d_restartFromScratch = fromScratch;
     d_restartRemoveOldDir = removeOldDir;
   }
-
+  //______________________________________________________________________
+  //
   void SimulationController::preGridSetup( void )
   {
     d_sharedState = scinew SimulationState(d_ups);
@@ -294,28 +289,13 @@ namespace Uintah {
     if (amr_ps) {
       amr_ps->get("doMultiTaskgraphing", d_doMultiTaskgraphing);
     }
-    
+  
     // Parse time struct
     d_timeinfo = scinew SimulationTime(d_ups);
     d_sharedState->d_simTime = d_timeinfo;
-    
-    if (d_reduceUda && d_timeinfo->max_delt_increase < 1e99) {
-      d_timeinfo->max_delt_increase = 1e99;
-      if (d_myworld->myrank() == 0)
-        cout << "  For UdaReducer: setting max_delt_increase to 1e99\n";
-    }
-    if (d_reduceUda && d_timeinfo->delt_max < 1e99) {
-     d_timeinfo->delt_max = 1e99;
-      if (d_myworld->myrank() == 0)
-        cout << "  For UdaReducer: setting delt_max to 1e99\n";
-    }
-    if (d_reduceUda && d_timeinfo->max_initial_delt < 1e99) {
-     d_timeinfo->max_initial_delt = 1e99;
-      if (d_myworld->myrank() == 0)
-        cout << "  For UdaReducer: setting max_initial_delt to 1e99\n";
-    }
   }
-
+  //______________________________________________________________________
+  //
   GridP SimulationController::gridSetup( void ) 
   {
     GridP grid;
@@ -405,7 +385,8 @@ namespace Uintah {
 
     return grid;
   }
-
+  //______________________________________________________________________
+  //
   void SimulationController::postGridSetup( GridP& grid, double& t)
   {
     
@@ -499,7 +480,8 @@ namespace Uintah {
     }
 
   }
-  
+  //______________________________________________________________________
+  //
   void SimulationController::adjustDelT(double& delt, double prev_delt, bool first, double t) 
   {
 #if 0
@@ -570,7 +552,8 @@ namespace Uintah {
        delt = d_timeinfo->maxTime - t;
     }
   }
-
+  //______________________________________________________________________
+  //
   double SimulationController::getWallTime  ( void )
   {
     return d_wallTime;
@@ -614,7 +597,8 @@ toHumanUnits( unsigned long value )
   sprintf( tmp, "%.2lf", value / 1000000.0 );
   return tmp;
 }
-
+//______________________________________________________________________
+//
 void
 SimulationController::printSimulationStats ( int timestep, double delt, double time )
 {
@@ -950,8 +934,9 @@ if(d_myworld->myrank() == 0){
     {
       for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
         if (maxReduce[i].val > 0)
-          stats << statLabels[i] << " avg: " << avgReduce[i] << " max: " << maxReduce[i].val << " maxloc:" << maxReduce[i].loc
-            << " LIB%: " << 1-(avgReduce[i]/maxReduce[i].val) << "\n";
+          stats << "  "<< left << setw(17)<< statLabels[i] << " avg: " << setw(10)<< avgReduce[i] 
+                << " max: " << setw(10) <<maxReduce[i].val << " maxloc:" << maxReduce[i].loc
+                << " LIB%: " << 100*(1-(avgReduce[i]/maxReduce[i].val)) << "\n";
       }
     }
     else //runing in serial
@@ -964,7 +949,7 @@ if(d_myworld->myrank() == 0){
 
     }
     if(d_n>2 && !isnan(d_sharedState->overheadAvg))
-      stats << "Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
+      stats << "  Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
   } 
 
 

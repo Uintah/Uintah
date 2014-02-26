@@ -29,6 +29,7 @@
 #include <expression/Expression.h>
 
 #include <CCA/Components/Wasatch/GraphHelperTools.h>
+#include <CCA/Components/Wasatch/BCHelper.h>
 #include <Core/Exceptions/InvalidState.h>
 
 /**
@@ -97,6 +98,9 @@ namespace Wasatch{
   parse_embedded_geometry( Uintah::ProblemSpecP parser,
                            GraphCategories& gc );
   
+  void
+  apply_intrusion_boundary_conditions(BCHelper& bcHelper);
+
 } // namespace Wasatch
 
 

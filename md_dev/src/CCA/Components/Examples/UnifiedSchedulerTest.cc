@@ -40,7 +40,7 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <sci_defs/cuda_defs.h>
 
-#define BLOCKSIZE 8
+#define BLOCKSIZE 16
 
 using namespace std;
 using namespace Uintah;
@@ -65,8 +65,8 @@ void UnifiedSchedulerTest::problemSetup(const ProblemSpecP& params,
                                         SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
-  ProblemSpecP gpuSchedTest = params->findBlock("UnifiedSchedulerTest");
-  gpuSchedTest->require("delt", delt_);
+  ProblemSpecP unifiedSchedTest = params->findBlock("UnifiedSchedulerTest");
+  unifiedSchedTest->require("delt", delt_);
   simpleMaterial_ = scinew SimpleMaterial();
   sharedState->registerSimpleMaterial(simpleMaterial_);
 }
@@ -98,11 +98,16 @@ void UnifiedSchedulerTest::scheduleTimeAdvance(const LevelP& level,
                                                SchedulerP& sched)
 {
   Task* task = scinew Task("UnifiedSchedulerTest::timeAdvanceUnified", this, &UnifiedSchedulerTest::timeAdvanceUnified);
-//  Task* task = scinew Task("GPUSchedulerTest::timeAdvanceCPU", this, &GPUSchedulerTest::timeAdvanceCPU);
-//  Task* task = scinew Task("GPUSchedulerTest::timeAdvance1DP", this, &GPUSchedulerTest::timeAdvance1DP);
-//  Task* task = scinew Task("GPUSchedulerTest::timeAdvance3DP", this, &GPUSchedulerTest::timeAdvance3DP);
+  //Task* task = scinew Task("UnifiedSchedulerTest::timeAdvanceCPU", this, &UnifiedSchedulerTest::timeAdvanceCPU);
+  //Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance1DP", this, &UnifiedSchedulerTest::timeAdvance1DP);
+  //Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance3DP", this, &UnifiedSchedulerTest::timeAdvance3DP);
 
-  task->usesDevice(true);
+#ifdef HAVE_CUDA
+  if (Uintah::Parallel::usingDevice()) {
+    task->usesDevice(true);
+  }
+#endif
+
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
   task->computes(residual_label);
@@ -200,10 +205,10 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
       for (NodeIterator iter(l, h); !iter.done(); iter++) {
         IntVector n = *iter;
 
+
         newphi[n] = (1. / 6)
                 * (phi[n + IntVector(1, 0, 0)] + phi[n + IntVector(-1, 0, 0)] + phi[n + IntVector(0, 1, 0)]
                 + phi[n + IntVector(0, -1, 0)] + phi[n + IntVector(0, 0, 1)] + phi[n + IntVector(0, 0, -1)]);
-
         double diff = newphi[n] - phi[n];
         residual += diff * diff;
       }
@@ -214,8 +219,6 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
   // When Task is scheduled to GPU
   if (event == Task::GPU) {
     // Do time steps
-    int matl = 0;
-
     int numPatches = patches->size();
     for (int p = 0; p < numPatches; p++) {
       const Patch* patch = patches->get(p);
@@ -224,6 +227,19 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
       IntVector l = patch->getNodeLowIndex();
       IntVector h = patch->getNodeHighIndex();
 
+      uint3 patchNodeLowIndex = make_uint3(l.x(), l.y(), l.z());
+      uint3 patchNodeHighIndex = make_uint3(h.x(), h.y(), h.z());
+      IntVector s = h - l;
+      int xdim = s.x();
+      int ydim = s.y();
+
+      // define dimensions of the thread grid to be launched
+      int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
+      int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
+      dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
+      dim3 dimGrid(xblocks, yblocks, 1);
+
+      //now calculate the computation domain (ignoring the outside cell regions)
       l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
               patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
               patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
@@ -231,18 +247,9 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
               patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
               patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
-      IntVector s = h - l;
-      int xdim = s.x(), ydim = s.y();
-
       // Domain extents used by the kernel to prevent out of bounds accesses.
       uint3 domainLow = make_uint3(l.x(), l.y(), l.z());
       uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
-
-      // define dimensions of the thread grid to be launched
-      int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
-      int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
-      dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
-      dim3 dimGrid(xblocks, yblocks, 1);
 
       // setup and launch kernel
       GPUDataWarehouse* old_gpudw = old_dw->getGPUDW()->getdevice_ptr();
@@ -252,7 +259,8 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
                                        dimBlock,
                                        (cudaStream_t*) stream,
                                        patch->getID(),
-                                       matl,
+                                       patchNodeLowIndex,
+                                       patchNodeHighIndex,
                                        domainLow,
                                        domainHigh,
                                        old_gpudw,
@@ -317,7 +325,7 @@ void UnifiedSchedulerTest::timeAdvance1DP(const ProcessorGroup*,
     for (int k = l.z(); k < zhigh; k++) {
       for (int j = l.y(); j < yhigh; j++) {
         for (int i = l.x(); i < xhigh; i++) {
-          cout << "(x,y,z): " << k << "," << j << "," << i << endl;
+          //cout << "(x,y,z): " << k << "," << j << "," << i << endl;
           // For an array of [ A ][ B ][ C ], we can index it thus:
           // (a * B * C) + (b * C) + (c * 1)
           int idx = i + (j * xstride) + (k * xstride * ystride);
@@ -385,8 +393,6 @@ void UnifiedSchedulerTest::timeAdvance3DP(const ProcessorGroup*,
     int zhigh = h.z();
     int yhigh = h.y();
     int xhigh = h.x();
-
-//    cout << "high(x,y,z): " << xhigh << "," << yhigh << "," << zhigh << endl;
 
     for (int i = l.z(); i < zhigh; i++) {
       for (int j = l.y(); j < yhigh; j++) {

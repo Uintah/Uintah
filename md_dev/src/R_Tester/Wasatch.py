@@ -1,5 +1,5 @@
 #!/usr/bin/env python
- 
+  
 from sys import argv, exit
 from os import environ
 from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
@@ -123,6 +123,9 @@ DEBUGTESTS = [
   ]
 
 NIGHTLYTESTS = [
+  ("coal-boiler-mini",                         "coal-boiler-mini.ups",    16,  "Linux",  ["exactComparison","no_restart"]                                          ),
+  ("bc-linear-inlet-channel-flow-test",     "bc-linear-inlet-channel-flow-test.ups",             6,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
+  ("bc-parabolic-inlet-channel-flow-test",  "bc-parabolic-inlet-channel-flow-test.ups",             6,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("RMCRT-Burns-Christon", "RMCRT-Burns-Christon.ups",   8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("clip-with-intrusions-test",           "clip-with-intrusions-test.ups",    4,  "Linux",  ["exactComparison","no_restart"] ),
   ("reduction-test",       "reduction-test.ups",  4,  "Linux",  ["exactComparison","no_restart"] ),
@@ -224,6 +227,7 @@ TURBULENCETESTS =[
 ]
 
 INTRUSIONTESTS=[
+  ("coal-boiler-mini",                         "coal-boiler-mini.ups",    16,  "All",  ["exactComparison","no_restart"]               ),
   ("intrusion_flow_past_cylinder_xy",          "intrusion_flow_past_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         
   ("intrusion_flow_past_cylinder_xz",          "intrusion_flow_past_cylinder_xz.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         
   ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         
@@ -292,6 +296,8 @@ CONVECTIONTESTS=[
 ]
 
 BCTESTS=[
+  ("bc-linear-inlet-channel-flow-test",     "bc-linear-inlet-channel-flow-test.ups",             6,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+  ("bc-parabolic-inlet-channel-flow-test",  "bc-parabolic-inlet-channel-flow-test.ups",             6,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),  
   ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
   ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",             4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   
@@ -314,6 +320,13 @@ SCALARTRANSPORTTESTS=[
   ("ScalarTransportEquation",       "ScalarTransportEquation.ups",       1,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
 ]
 
+GPUTESTS=[
+#  ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups", 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+#  ("BasicScalarTransportEq_2L",    "BasicScalarTransportEq_2L.ups",    1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+#  ("ScalarTransportEquation",      "ScalarTransportEquation.ups",      1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+  ("scalability-test",             "scalability-test.ups",             1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
+]
+
 RADIATIONTESTS=[
   ("RMCRT-Burns-Christon", "RMCRT-Burns-Christon.ups",   8,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
 ]
@@ -323,7 +336,7 @@ RADIATIONTESTS=[
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS BCTESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
+#LIST: LOCALTESTS GPUTESTS BCTESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
 #__________________________________
 ALLTESTS = RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS
 
@@ -332,6 +345,8 @@ ALLTESTS = RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS +
 def getTestList(me) :
   if me == "LOCALTESTS":
     TESTS = ALLTESTS
+  elif me == "GPUTESTS":
+    TESTS = GPUTESTS
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
   elif me == "TURBULENCETESTS":
@@ -368,9 +383,9 @@ def getTestList(me) :
 # TSAAD: As an alternative to the annoying list of if-statements above, consider the following cleaner code... maybe we'll adopt
 # this in the near future
 # ALLTESTS = TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS
-# LOCALTESTS = ALLTESTS
+# LOCALTESTS + GPUTESTS = ALLTESTS
 # 
-# TESTNAMES=["LOCALTESTS","DEBUGTESTS","NIGHTLYTESTS","TURBULENCETESTS","INTRUSIONTESTS","PROJECTIONTESTS","RKTESTS","VARDENTESTS","MISCTESTS","CONVECTIONTESTS","BCTESTS","QMOMTESTS","SCALARTRANSPORTTESTS"]
+# TESTNAMES=["LOCALTESTS","GPUTESTS","DEBUGTESTS","NIGHTLYTESTS","TURBULENCETESTS","INTRUSIONTESTS","PROJECTIONTESTS","RKTESTS","VARDENTESTS","MISCTESTS","CONVECTIONTESTS","BCTESTS","QMOMTESTS","SCALARTRANSPORTTESTS"]
 # TESTSDICTIONARY={}
 # for testname in TESTNAMES:
 # 	TESTSDICTIONARY[testname]=eval(testname)

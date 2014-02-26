@@ -47,7 +47,7 @@ ConvergenceFailure::ConvergenceFailure(const std::string& message,
   d_msg = s.str();
   
 #ifdef EXCEPTIONS_CRASH
-  cout << d_msg << "\n";
+  std::cout << d_msg << "\n";
 #endif
 }
 

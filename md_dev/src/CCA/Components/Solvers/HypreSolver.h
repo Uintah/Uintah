@@ -50,7 +50,40 @@
 
 namespace Uintah {
 
-  
+  //__________________________________
+  //
+  class HypreSolver2Params : public SolverParameters {
+  public:
+    HypreSolver2Params(){}
+    
+    ~HypreSolver2Params() {}
+    
+    // Parameters common for all Hypre Solvers
+    std::string solvertype;         // String corresponding to solver type
+    std::string precondtype;        // String corresponding to preconditioner type
+    double tolerance;          // Residual tolerance for solver
+    int    maxiterations;      // Maximum # iterations allowed
+    int    logging;            // Log Hypre solver (using Hypre options)
+    bool   symmetric;          // Is LHS matrix symmetric
+    bool   restart;            // Allow solver to restart if not converged
+    int    setupFrequency;     // Frequency for calling hypre setup calls
+    int    relax_type;         // relaxation type
+    
+    // SMG parameters
+    int    npre;               // # pre relaxations for Hypre SMG solver
+    int    npost;              // # post relaxations for Hypre SMG solver
+    
+    // PFMG parameters
+    int    skip;               // Hypre PFMG parameter
+    
+    // SparseMSG parameters
+    int    jump;               // Hypre Sparse MSG parameter
+    
+    SimulationStateP state;    // simulation state
+    
+    void setSetupFrequency(const int freq) {setupFrequency = freq;}
+  };
+
 
   enum SolverType {
     smg,
