@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,6 +27,7 @@
 
 #include <vector>
 #include <cmath>
+#include <Core/Geometry/Vector.h>
 
 namespace Uintah {
 
@@ -89,6 +90,17 @@ namespace Uintah {
        *                               values of the spline.  First point at x.
        */
       std::vector<double> derivativeGridAligned(const double x) const;
+      /*
+       * @brief  Generate spline, 1st, and 2nd derivatives at Vector 0 <= S <= 1
+       * @param  splineValues:  Vector with offsets in R^3 for spline in each vector direction
+       * @return base:   vector<Vector> for all related grid points (0..p+1) of spline of order p with values of splineValues
+       * @return first:  vector<Vector> for all related grid points of 1st order spline derivative
+       * @return second: vector<Vector> for all related grid points of 2nd order spline derivative
+       */
+      void evaluateThroughSecondDerivative(const SCIRun::Vector& splineValues,
+                                           std::vector<SCIRun::Vector>& base,
+                                           std::vector<SCIRun::Vector>& first,
+                                           std::vector<SCIRun::Vector>& second) const;
 
       /*
        * @brief The maximum support range (number of grid points) the spline will occupy.
@@ -128,8 +140,37 @@ namespace Uintah {
         return (1.0 - std::abs(x - 1.0));
       }
 
+      inline SCIRun::Vector S2(const SCIRun::Vector In) const
+      {
+    	  double xVal = In.x();
+    	  double yVal = In.y();
+    	  double zVal = In.z();
+
+    	  if (xVal < 0 || xVal > 2) {
+    		  xVal = 0;
+    	  }
+    	  else {
+    		  xVal = (1.0 - std::abs(xVal - 1.0));
+    	  }
+    	  if (yVal < 0 || yVal > 2) {
+    		  yVal = 0;
+    	  }
+    	  else {
+    		  yVal = (1.0 - std::abs(yVal - 1.0));
+    	  }
+    	  if (zVal < 0 || zVal > 2) {
+    		  zVal = 0;
+    	  }
+    	  else {
+    		  zVal = (1.0 - std::abs(zVal - 1.0));
+    	  }
+    	  return SCIRun::Vector(xVal,yVal,zVal);
+      }
       std::vector<double> evaluateInternal(const double,
                                            const int) const;
+      void evaluateVectorizedInternalInPlace(const SCIRun::Vector&,
+                                             const int,
+                                             std::vector<SCIRun::Vector>&) const;
 
   };
 }

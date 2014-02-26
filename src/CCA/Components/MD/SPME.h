@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,6 +33,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Thread/ConditionVariable.h>
+#include <Core/Util/DebugStream.h>
 
 #include <vector>
 
@@ -50,6 +51,9 @@ namespace Uintah {
   class SPMEMapPoint;
   class ParticleSubset;
   class MDLabel;
+
+  static SCIRun::DebugStream spme_cout("SPMECout", false);
+  static SCIRun::DebugStream spme_dbg("SPMEDBG", false);
 
   /**
    *  @class SPME
@@ -173,10 +177,41 @@ namespace Uintah {
                               const PatchSubset* patches,
                               const MaterialSubset* materials,
                               DataWarehouse* old_dw,
-                              DataWarehouse* new_dw,
-                              SchedulerP& subscheduler,
-                              const LevelP& level);
-      /**
+                              DataWarehouse* new_dw);
+      /*
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleCalculateRealspace(SchedulerP& sched,
+                                      const ProcessorGroup* pg,
+                                      const PatchSet* patches,
+                                      const MaterialSet* materials,
+                                      DataWarehouse* subOldDW,
+                                      DataWarehouse* subNewDW);
+      /*
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleCalculateNewDipoles(SchedulerP& sched,
+                                       const ProcessorGroup* pg,
+                                       const PatchSet* patches,
+                                       const MaterialSet* materials,
+                                       DataWarehouse* subOldDW,
+                                       DataWarehouse* subNewDW);
+      /*
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleUpdateFieldandStress(SchedulerP& sched,
+                                        const ProcessorGroup* pg,
+                                        const PatchSet* patches,
+                                        const MaterialSet* materials,
+                                        DataWarehouse* subOldDW,
+                                        DataWarehouse* subNewDW);
+      /*
        * @brief
        * @param
        * @return
@@ -187,8 +222,7 @@ namespace Uintah {
                                          const MaterialSet* materials,
                                          DataWarehouse* subOldDW,
                                          DataWarehouse* subNewDW);
-
-      /**
+      /*
        * @brief
        * @param
        * @return
@@ -199,8 +233,41 @@ namespace Uintah {
                                     const MaterialSet* materials,
                                     DataWarehouse* subOldDW,
                                     DataWarehouse* subNewDW);
-
-      /**
+      /*
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleDistributeNodeLocalQ(SchedulerP& sched,
+                                        const ProcessorGroup* pg,
+                                        const PatchSet* patches,
+                                        const MaterialSet* materials,
+                                        DataWarehouse* subOldDW,
+                                        DataWarehouse* subNewDW);
+      /*
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleCalculateInFourierSpace(SchedulerP& sched,
+                                           const ProcessorGroup* pg,
+                                           const PatchSet* patches,
+                                           const MaterialSet* materials,
+                                           DataWarehouse* subOldDW,
+                                           DataWarehouse* subNewDW);
+      /*
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleTransformFourierToReal(SchedulerP& sched,
+                                          const ProcessorGroup* pg,
+                                          const PatchSet* perProcPatches,
+                                          const MaterialSet* materials,
+                                          DataWarehouse* subOldDW,
+                                          DataWarehouse* subNewDW,
+                                          const LevelP& level);
+      /*
        * @brief
        * @param
        * @return
@@ -216,43 +283,6 @@ namespace Uintah {
       /**
        * @brief
        * @param
-       * @return
-       */
-      void scheduleCalculateInFourierSpace(SchedulerP& sched,
-                                           const ProcessorGroup* pg,
-                                           const PatchSet* patches,
-                                           const MaterialSet* materials,
-                                           DataWarehouse* subOldDW,
-                                           DataWarehouse* subNewDW);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleTransformFourierToReal(SchedulerP& sched,
-                                          const ProcessorGroup* pg,
-                                          const PatchSet* perProcPatches,
-                                          const MaterialSet* materials,
-                                          DataWarehouse* subOldDW,
-                                          DataWarehouse* subNewDW,
-                                          const LevelP& level);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleDistributeNodeLocalQ(SchedulerP& sched,
-                                        const ProcessorGroup* pg,
-                                        const PatchSet* patches,
-                                        const MaterialSet* materials,
-                                        DataWarehouse* subOldDW,
-                                        DataWarehouse* subNewDW);
-
-      /**
-       * @brief
-       * @param
        * @param
        * @return
        */
@@ -260,6 +290,12 @@ namespace Uintah {
                              ParticleSubset* pset,
                              constParticleVariable<Point>& particlePositions,
                              constParticleVariable<long64>& particleIDs);
+
+      void dipoleGenerateChargeMap(const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* materials,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
 
       /**
        * @brief Map points (charges) onto the underlying grid.
@@ -271,7 +307,13 @@ namespace Uintah {
       void mapChargeToGrid(SPMEPatch* spmePatch,
                            const std::vector<SPMEMapPoint>* gridMap,
                            ParticleSubset* pset,
-                           constParticleVariable<double>& charges);
+                           double charge);
+
+      void dipoleMapChargeToGrid(SPMEPatch* spmePatch,
+                                 const std::vector<SPMEMapPoint>* gridMap,
+                                 ParticleSubset* pset,
+                                 double charge,
+                                 ParticleVariable<Vector>& p_Dipole);
 
       /**
        * @brief Map forces from grid back to points.
@@ -283,6 +325,37 @@ namespace Uintah {
                             ParticleSubset* pset,
                             constParticleVariable<double>& charges,
                             ParticleVariable<Vector>& pforcenew);
+
+      void dipoleMapForceFromGrid(SPMEPatch* spmePatch,
+                                  const std::vector<SPMEMapPoint>* gridMap,
+                                  ParticleSubset* pset,
+                                  double charge,
+                                  ParticleVariable<Vector>& pforcenew,
+                                  ParticleVariable<Vector>& p_Dipole);
+
+      void calculatePreTransform(const ProcessorGroup* pg,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* materials,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
+
+      void dipoleCalculatePreTransform(const ProcessorGroup* pg,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* materials,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
+      void updateFieldAndStress(const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* materials,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+
+      void calculateNewDipoles(const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* materials,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
 
       /**
        * @brief
@@ -392,20 +465,6 @@ namespace Uintah {
         }
       }
 
-      /**
-       * @brief Perform all calculations preceding the FFT transform of the charge grid to Fourier space.
-       * @param const ProcessorGroup* pg -- All processors processing SPME patches
-       * @param const PatchSubset* patches -- Patches to be processed by this thread
-       * @param const MaterialSubset* materials -- Material subset belonging to this patch
-       * @param DataWarehouse* old_dw -- Last time step's data warehouse
-       * @param DataWarehouse* new_dw -- This time step's data warehouse
-       * @return None
-       */
-      void calculatePreTransform(const ProcessorGroup* pg,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* materials,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw);
 
       /**
        * @brief Perform all Fourier space calculations.

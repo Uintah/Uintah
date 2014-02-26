@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -207,6 +207,22 @@ namespace Uintah {
        *              as the specified SimpleGrid, false otherwise.
        */
       bool verifyRegistration(const SimpleGrid<T>& other);
+
+      /**
+       * @brief Fill the grid with the given value.
+       * @param fillValue A reference to the value to fill the grid with.
+       * @return None
+       */
+      inline void fill(const T& fillValue)
+      {
+    	 for (int x = 0; x < d_internalExtents.x() + d_numGhostCells; ++x) {
+           for (int y = 0; y < d_internalExtents.y() + d_numGhostCells; ++y) {
+             for (int z = 0; z < d_internalExtents.z() + d_numGhostCells; ++z) {
+            	 d_values(x, y, z) = fillValue;
+             }
+           }
+    	 }
+      }
 
       /**
        * @brief Multiplication of grids; be sure to check for same.

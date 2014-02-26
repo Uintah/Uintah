@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,9 +31,14 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Containers/Array2.h>
+//#include <CCA/Components/MD/Forcefields/Lucretius/Lucretius.h>
+#include <CCA/Components/MD/Potentials/TwoBody/NonbondedTwoBodyPotential.h>
+#include <CCA/Components/MD/MDMaterial.h>
 
 namespace Uintah {
 
+  using namespace UintahMD;
   using namespace SCIRun;
 
   /**
@@ -196,6 +201,10 @@ namespace Uintah {
        */
       inline size_t getElectrostaticGhostCells() const { return d_electrostaticGhostCells; }
 
+      inline double getAtomicCharge(size_t atomType) const {
+    	return homoAtoms[atomType]->getCharge();
+      }
+
     private:
 
       std::vector<size_t> d_atomTypeList;     //!< List of total number of each atom type in the simulation
@@ -220,6 +229,8 @@ namespace Uintah {
       size_t d_nonbondedGhostCells;     //!< Number of ghost cells for nonbonded realspace neighbor calculations
       size_t d_electrostaticGhostCells; //!< Number of ghost cells for electrostatic realspace neighbor calculations
 
+      std::vector<MDMaterial*> homoAtoms;
+      SCIRun::Array2<NonbondedTwoBodyPotential*> forceField;
       inline size_t max(int a, int b){ return (a > b ? a : b); }
       inline double max(int a, int b, int c) { return (max(max(a,b),c)); }
 

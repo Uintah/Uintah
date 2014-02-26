@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -123,7 +123,7 @@ SPME::~SPME()
 void SPME::initialize(const ProcessorGroup* pg,
                       const PatchSubset* perProcPatches,
                       const MaterialSubset* materials,
-                      DataWarehouse* /* old_dw */,
+                      DataWarehouse* old_dw,
                       DataWarehouse* new_dw)
 {
   // We call SPME::initialize from MD::initialize, or if we've somehow maintained our object across a system change
@@ -168,8 +168,8 @@ void SPME::initialize(const ProcessorGroup* pg,
   d_backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
 
   // Initially register sole and reduction variables in the DW (initial timestep)
-  new_dw->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
-  new_dw->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
+  new_dw->put(sum_vartype(0.0), d_lb->electrostaticReciprocalEnergyLabel);
+  new_dw->put(matrix_sum(0.0), d_lb->electrostaticReciprocalStressLabel);
 
   SoleVariable<double> dependency;
   new_dw->put(dependency, d_lb->electrostaticsDependencyLabel);
@@ -306,6 +306,7 @@ void SPME::calculate(const ProcessorGroup* pg,
   subNewDW->transferFrom(parentOldDW, d_lb->pParticleIDLabel, perProcPatches, allMaterialsUnion);
 
   // reduction variables
+
 //    sum_vartype spmeFourierEnergy;
 //    matrix_sum spmeFourierStress;
 //    parentOldDW->get(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
@@ -372,10 +373,10 @@ void SPME::calculate(const ProcessorGroup* pg,
   // Push Reduction Variables up to the parent DW
   sum_vartype spmeFourierEnergyNew;
   matrix_sum spmeFourierStressNew;
-  subNewDW->get(spmeFourierEnergyNew, d_lb->spmeFourierEnergyLabel);
-  subNewDW->get(spmeFourierStressNew, d_lb->spmeFourierStressLabel);
-  parentNewDW->put(spmeFourierEnergyNew, d_lb->spmeFourierEnergyLabel);
-  parentNewDW->put(spmeFourierStressNew, d_lb->spmeFourierStressLabel);
+  subNewDW->get(spmeFourierEnergyNew, d_lb->electrostaticReciprocalEnergyLabel);
+  subNewDW->get(spmeFourierStressNew, d_lb->electrostaticReciprocalStressLabel);
+  parentNewDW->put(spmeFourierEnergyNew, d_lb->electrostaticReciprocalEnergyLabel);
+  parentNewDW->put(spmeFourierStressNew, d_lb->electrostaticReciprocalStressLabel);
 
   //  Turn scrubbing back on
   parentOldDW->setScrubbing(parentOldDW_scrubmode);
@@ -472,8 +473,8 @@ void SPME::scheduleCalculateInFourierSpace(SchedulerP& sched,
   task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
 
   task->modifies(d_lb->subSchedulerDependencyLabel);
-  task->computes(d_lb->spmeFourierEnergyLabel);
-  task->computes(d_lb->spmeFourierStressLabel);
+  task->computes(d_lb->electrostaticReciprocalEnergyLabel);
+  task->computes(d_lb->electrostaticReciprocalStressLabel);
 
   sched->addTask(task, patches, materials);
 }
@@ -905,8 +906,8 @@ void SPME::calculateInFourierSpace(const ProcessorGroup* pg,
   }  // end SPME Patch loop
 
   // put updated values for reduction variables into the DW
-  new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->spmeFourierEnergyLabel);
-  new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->spmeFourierStressLabel);
+  new_dw->put(sum_vartype(0.5 * spmeFourierEnergy), d_lb->electrostaticReciprocalEnergyLabel);
+  new_dw->put(matrix_sum(0.5 * spmeFourierStress), d_lb->electrostaticReciprocalStressLabel);
 
 }
 

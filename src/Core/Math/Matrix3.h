@@ -170,6 +170,9 @@ namespace Uintah {
     // Logarithm of a matrix
     Matrix3 Logarithm(int num_terms) const;
     
+    // Return as Matrix3 the outer product of two vectors
+    friend inline Matrix3 OuterProduct(const SCIRun::Vector&, const SCIRun::Vector&);
+
     // Get a left or right polar decomposition of a non-singular square matrix
     // Returns right stretch and rotation if rightFlag == true
     // Returns left stretch and rotation if rightFlag == false
@@ -742,6 +745,12 @@ namespace Uintah {
       return mat;
     }
 
+  inline Matrix3 OuterProduct(const SCIRun::Vector& v1, SCIRun::Vector& v2)
+  {
+    return Matrix3(v1.x()*v2.x(), v1.x()*v2.y(), v1.x()*v2.z(),
+                   v1.y()*v2.x(), v1.y()*v2.y(), v1.y()*v2.z(),
+                   v1.z()*v2.x(), v1.z()*v2.y(), v1.z()*v2.z());
+  }
 
 } // End namespace Uintah
 

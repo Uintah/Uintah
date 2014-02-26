@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,6 +27,7 @@
 
 #include <Core/Grid/Material.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Geometry/Vector.h>
 
 namespace Uintah {
 
@@ -43,12 +44,18 @@ namespace Uintah {
 
       virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps) = 0;
 
-      virtual void calculateForce() = 0;
-      virtual void calculateEnergy() = 0;
+      virtual void calculateForce(SCIRun::Vector& Force) const = 0;
+      virtual void calculateEnergy(double& Energy) const = 0;
+      virtual void calculateForceAndEnergy(SCIRun::Vector& Force, double& Energy) const = 0;
+      virtual SCIRun::Vector getForce() const = 0;
+      virtual double getEnergy() const = 0;
+
+      virtual std::string getMaterialDescriptor() const = 0;
+
       virtual double getCharge() const = 0;
+      virtual double getPolarizability() const = 0;
 
     private:
-
       // Prevent copying or assignment
       MDMaterial(const MDMaterial &material);
       MDMaterial& operator=(const MDMaterial &material);

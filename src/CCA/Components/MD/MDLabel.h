@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -61,39 +61,89 @@ namespace Uintah {
 
       ~MDLabel();
 
-      ///////////////////////////////////////////////////////////////////////////
+      //--------------------------------------------------------------
       // Particle Variables
-      const VarLabel* pXLabel;
-      const VarLabel* pXLabel_preReloc;
+
+      //  Particle variables for electrostatic calculation
+      ////  Realspace
+      const VarLabel* pRealDipoles;
+      const VarLabel* pRealDipoles_preReloc;
+      const VarLabel* pElectrostaticsRealForce;
+      const VarLabel* pElectrostaticsRealForce_preReloc;
+      const VarLabel* pElectrostaticsRealField;
+      const VarLabel* pElectrostaticsRealField_preReloc;
+      ////  ReciprocalSpace
+      const VarLabel* pReciprocalDipoles;
+      const VarLabel* pReciprocalDipoles_preReloc;
+      const VarLabel* pElectrostaticsReciprocalForce;
+      const VarLabel* pElectrostaticsReciprocalForce_preReloc;
+      //// Total converged dipoles
+      const VarLabel* pTotalDipoles;
+      const VarLabel* pTotalDipoles_preReloc;
+
+      //  Particle variables for Nonbonded
       const VarLabel* pNonbondedForceLabel;
       const VarLabel* pNonbondedForceLabel_preReloc;
-      const VarLabel* pElectrostaticsForceLabel;
-      const VarLabel* pElectrostaticsForceLabel_preReloc;
+
+      //  (Future facing)  Particle variables for Valence interactions
+      const VarLabel* pValenceForceLabel;
+      const VarLabel* pValenceForceLabel_preReloc;
+
+      //  Particle variables for Integrator
       const VarLabel* pAccelLabel;
       const VarLabel* pAccelLabel_preReloc;
       const VarLabel* pVelocityLabel;
       const VarLabel* pVelocityLabel_preReloc;
-      const VarLabel* pEnergyLabel;
-      const VarLabel* pEnergyLabel_preReloc;
+
+      // Particle variables needed across all modules
+      const VarLabel* pParticleIDLabel;
+      const VarLabel* pParticleIDLabel_preReloc;
+      const VarLabel* pXLabel;
+      const VarLabel* pXLabel_preReloc;  // Technically only need this for integrator since that is only location it should change
+
+      // !!Slated for removal!!
+      //!!  The following should be folded into the material system
       const VarLabel* pMassLabel;
       const VarLabel* pMassLabel_preReloc;
       const VarLabel* pChargeLabel;
       const VarLabel* pChargeLabel_preReloc;
-      const VarLabel* pParticleIDLabel;
-      const VarLabel* pParticleIDLabel_preReloc;
 
-      ///////////////////////////////////////////////////////////////////////////
-      // Reduction Variables - Nonbonded
-      const VarLabel* vdwEnergyLabel;
+      //!! Replaced by pElectrostaticsReciprocalForce above
+      const VarLabel* pElectrostaticsForceLabel;
+      const VarLabel* pElectrostaticsForceLabel_preReloc;
+
+      //!!  Energy is a collective, not a per-particle property.
+      const VarLabel* pEnergyLabel;
+      const VarLabel* pEnergyLabel_preReloc;
+
+      // ------------------------------------------
+      // Reduction Variables
+      // Nonbonded
+      const VarLabel* nonbondedEnergyLabel;
+      const VarLabel* nonbondedStressLabel;
+
+      // Electrostatics
+      const VarLabel* electrostaticRealEnergyLabel;
+      const VarLabel* electrostaticRealStressLabel;
+      const VarLabel* electrostaticReciprocalEnergyLabel;
+      const VarLabel* electrostaticReciprocalStressLabel;
+
+      // Valence
+      const VarLabel* bondEnergyLabel;
+      const VarLabel* bondStressLabel;
+      const VarLabel* bendEnergyLabel;
+      const VarLabel* bendStressLabel;
+      const VarLabel* torsionEnergyLabel;
+      const VarLabel* torsionStressLabel;
+      const VarLabel* oopEnergyLabel;
+      const VarLabel* oopStressLabel;
+      const VarLabel* valenceEnergyLabel;
+      const VarLabel* valenceStressLabel;
 
       ///////////////////////////////////////////////////////////////////////////
       // Sole Variables - Nonbonded
       const VarLabel* nonbondedDependencyLabel;
 
-      ///////////////////////////////////////////////////////////////////////////
-      // Reduction Variables - Electrostatics
-      const VarLabel* spmeFourierEnergyLabel;
-      const VarLabel* spmeFourierStressLabel;
 
 #ifdef HAVE_FFTW
 

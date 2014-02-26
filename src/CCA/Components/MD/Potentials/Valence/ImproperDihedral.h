@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,45 +22,38 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_LUCRETIUS_MATERIAL_H
-#define UINTAH_LUCRETIUS_MATERIAL_H
+/*
+ * ImproperDihedral.h
+ *
+ *  Created on: Feb 20, 2014
+ *      Author: jbhooper
+ */
 
-#include <CCA/Ports/DataWarehouseP.h>
-#include <CCA/Components/MD/MDMaterial.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Geometry/Vector.h>
+#ifndef IMPROPERDIHEDRAL_H_
+#define IMPROPERDIHEDRAL_H_
 
-namespace Uintah {
+#include <string>
 
-  class LucretiusMaterial : public MDMaterial {
+namespace UintahMD {
 
+
+  class ImproperDihedralPotential : public Potential {
     public:
-
-      LucretiusMaterial(ProblemSpecP&, SimulationStateP& sharedState);
-
-      virtual ~LucretiusMaterial();
-
-      virtual ProblemSpecP outputProblemSpec(ProblemSpecP& ps);
-
-      virtual void calculateForce();
-      virtual void calculateEnergy();
-      virtual double getCharge() const;
-      virtual double getPolarizability() const;
-
+      virtual const std::string getPotentialDescriptor() const = 0;
+      virtual const std::string getPotentialBaseType() const = 0;
+      const std::string getPotentialSuperType() {
+        return d_potentialSuperType;
+      }
 
     private:
-
-      SCIRun::Vector d_force;
-      double d_energy;
-      double d_charge;
-      double d_polarizability;
-
-      // Prevent copying or assignment
-      LucretiusMaterial(const LucretiusMaterial &material);
-      LucretiusMaterial& operator=(const LucretiusMaterial &material);
+      static const std::string d_potentialSuperType;
 
   };
 
-}  // End namespace Uintah
+  const std::string ImproperDihedralPotential::d_potentialSuperType = "ImproperDihedral::";
 
-#endif // UINTAH_LUCRETIUS_MATERIAL_H
+}
+
+
+
+#endif /* IMPROPERDIHEDRAL_H_ */

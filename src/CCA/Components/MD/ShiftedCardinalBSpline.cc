@@ -1,6 +1,7 @@
-/* The MIT License
+/*
+ * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -64,6 +65,77 @@ vector<double> ShiftedCardinalBSpline::evaluateGridAligned(const double X) const
   return splineArray;
 }
 
+void ShiftedCardinalBSpline::evaluateThroughSecondDerivative(const SCIRun::Vector& inputValues,
+                                                             std::vector<SCIRun::Vector>& base,
+                                                             std::vector<SCIRun::Vector>& first,
+                                                             std::vector<SCIRun::Vector>& second) const
+{
+	// Generate the raw splines of two orders lower than our base order
+	vector<SCIRun::Vector> rawSpline(d_splineOrder + 1, SCIRun::Vector(0.0));
+
+	evaluateVectorizedInternalInPlace(inputValues, d_splineOrder - 2, rawSpline);
+	size_t currentMaxIndex = d_splineOrder - 2; // Set the index backstop for the raw Spline's current order
+
+	// rawSpline is currently order d_splineOrder - 2 to allow calculation of 2nd derivative
+//	d2S
+//	---  =  S   (u) - 2S   (u-1) + S   (u-2)
+//	dU2      p-2        p-2         p-2
+
+	second[0]=rawSpline[0];
+	second[1]=rawSpline[1] - 2*rawSpline[0];
+	for (size_t Index=2; Index <= currentMaxIndex; ++Index) {
+		second[Index] = rawSpline[Index] - 2*rawSpline[Index-1] + rawSpline[Index-2];
+	}
+	second[currentMaxIndex+1] = -2*rawSpline[currentMaxIndex] + rawSpline[currentMaxIndex-1];
+	second[currentMaxIndex+2] = rawSpline[currentMaxIndex];
+
+
+	// Bring raw Spline up to order d_splineOrder - 1
+//           u            (p-1)-u
+//	S (u) = --- S   (u) + ------- S   (u-1)
+//	 p      p-2  p-2        p-2    p-2
+    ++currentMaxIndex;
+	rawSpline[currentMaxIndex] = -inputValues * rawSpline[currentMaxIndex - 1];
+	SCIRun::Vector rightmost = SCIRun::Vector(static_cast<double>(d_splineOrder - 1));
+	for ( int k = currentMaxIndex - 1; k > 0; --k) {
+		SCIRun::Vector input_plus_k = inputValues + SCIRun::Vector(static_cast<double>(k));
+		rawSpline[k] = input_plus_k * rawSpline[k] + (rightmost - input_plus_k) * rawSpline[k-1];
+	}
+	rawSpline[0] = inputValues * rawSpline[0];
+	double denom = 1.0/static_cast<double> (d_splineOrder - 1);
+	for (size_t Index = 0; Index <= currentMaxIndex; ++Index) {
+		rawSpline[Index] *= denom;
+	}
+
+	//raw Spline is now order p-1
+//	dS
+//	-- = S   (u) - S   (u-1)
+//	du    p-1       p-1
+	first[0] = rawSpline[0];
+	for (size_t Index=1; Index <= currentMaxIndex; ++Index) {
+		first[Index] = rawSpline[Index] - rawSpline[Index-1];
+	}
+	first[currentMaxIndex+1] = - rawSpline[currentMaxIndex];
+
+	// Bring raw Spline up to order d_splineOrder
+//	          u            p - u
+//	S  (u) = --- S   (u) + ----- S   (u-1)
+//	  p      p-1  p-1      p - 1  p-1
+	++currentMaxIndex;
+	rawSpline[currentMaxIndex] = -inputValues * rawSpline[currentMaxIndex - 1];
+	rightmost = SCIRun::Vector(static_cast<double> (d_splineOrder));
+	for ( int k = currentMaxIndex - 1; k > 0; --k) {
+		SCIRun::Vector input_plus_k = inputValues + SCIRun::Vector(static_cast<double>(k));
+		rawSpline[k] = input_plus_k * rawSpline[k] + (rightmost - input_plus_k) * rawSpline[k-1];
+	}
+	rawSpline[0] = inputValues * rawSpline[0];
+	denom = 1.0/static_cast<double> (d_splineOrder);
+	for (size_t Index = 0; Index <= currentMaxIndex; ++Index) {
+		base[Index] = rawSpline[Index]*denom;
+	}
+    return;
+}
+
 vector<double> ShiftedCardinalBSpline::derivativeGridAligned(double X) const
 {
 
@@ -89,6 +161,37 @@ vector<double> ShiftedCardinalBSpline::derivativeGridAligned(double X) const
 }
 
 // Private Methods
+void ShiftedCardinalBSpline::evaluateVectorizedInternalInPlace(const SCIRun::Vector& offset,
+                                                               const int Order,
+                                                               vector<SCIRun::Vector>& array) const
+{
+	// Initialize the second order spline into the array
+	size_t arraySize = array.size();
+	assert(arraySize >= (Order + 1));
+
+	array.assign(arraySize,SCIRun::Vector(0.0,0.0,0.0));
+	array[0] = S2(offset);
+	array[1] = S2(offset + SCIRun::Vector(1));
+	array[2] = S2(offset + SCIRun::Vector(2));
+
+	double denominator = 1.0;
+	for (int n = 3; n <= Order; ++n) {
+		int n_minus_1 = n - 1;
+		denominator /= static_cast<double> (n_minus_1);
+		array[n] = -offset * array[n_minus_1];
+		SCIRun::Vector n_double = SCIRun::Vector(static_cast<double>(n));
+		for (int k = n - 1; k > 0; --k) {
+			SCIRun::Vector offset_plus_k = offset + SCIRun::Vector(static_cast<double>(k));
+			array[k] = offset_plus_k * array[k] + (n_double - offset_plus_k) * array[k-1];
+		}
+		array[0] = offset * array[0];
+	}
+	size_t splineSize = array.size();
+	for (size_t Index = 0; Index < splineSize; ++Index) {
+		array[Index] *= denominator;
+	}
+}
+
 vector<double> ShiftedCardinalBSpline::evaluateInternal(const double X,
                                                         const int splineOrder) const
 {

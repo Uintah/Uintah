@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -59,12 +59,6 @@
 #define IV_ZERO IntVector(0,0,0)
 
 using namespace Uintah;
-
-extern SCIRun::Mutex cerrLock;
-extern SCIRun::Mutex coutLock;
-
-static DebugStream spme_cout("SPMECout", false);
-static DebugStream spme_dbg("SPMEDBG", false);
 
 // This file implements the core of the SPME implementation of the electrostatics factory
 //  Constructors, destructors, the four basic interface operation
@@ -171,8 +165,8 @@ void SPME::initialize(const ProcessorGroup* pg,
   d_backwardPlan = fftw_mpi_plan_dft_3d(xdim, ydim, zdim, complexData, complexData, pg->getComm(), FFTW_BACKWARD, FFTW_MEASURE);
 
   // Initially register sole and reduction variables in the DW (initial timestep)
-  new_dw->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
-  new_dw->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
+  new_dw->put(sum_vartype(0.0), d_lb->electrostaticReciprocalEnergyLabel);
+  new_dw->put(matrix_sum(0.0), d_lb->electrostaticReciprocalStressLabel);
   //!FIXME JBH
   // new_dw->put(vector_sum(0.0), d_lb->spmeDipoleVectorLabel);
 
@@ -317,8 +311,8 @@ void SPME::calculate(const ProcessorGroup* pg,
   //  parentOldDW->get(spmeFourierStress, d_lb->spmeFourierStressLabel);
   //  subNewDW->put(spmeFourierEnergy, d_lb->spmeFourierEnergyLabel);
   //  subNewDW->put(spmeFourierStress, d_lb->spmeFourierStressLabel);
-    parentNewDW->put(sum_vartype(0.0), d_lb->spmeFourierEnergyLabel);
-    parentNewDW->put(matrix_sum(0.0), d_lb->spmeFourierStressLabel);
+    parentNewDW->put(sum_vartype(0.0), d_lb->electrostaticReciprocalEnergyLabel);
+    parentNewDW->put(matrix_sum(0.0), d_lb->electrostaticReciprocalStressLabel);
 
 
   bool converged = false;
@@ -329,7 +323,7 @@ void SPME::calculate(const ProcessorGroup* pg,
   subscheduler->initialize(3,1);
 
   // Realspace portion of SPME
-  scheduleCalculateRealSpace(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
+  scheduleCalculateRealspace(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
 
   // Calc local Q grid chunks
   scheduleCalculatePreTransform(subscheduler, pg, patches, allMaterials, subOldDW, subNewDW);
@@ -420,10 +414,10 @@ void SPME::calculate(const ProcessorGroup* pg,
   // Push Reduction Variables up to the parent DW
   sum_vartype spmeFourierEnergyNew;
   matrix_sum spmeFourierStressNew;
-  subNewDW->get(spmeFourierEnergyNew, d_lb->spmeFourierEnergyLabel);
-  subNewDW->get(spmeFourierStressNew, d_lb->spmeFourierStressLabel);
-  parentNewDW->put(spmeFourierEnergyNew, d_lb->spmeFourierEnergyLabel);
-  parentNewDW->put(spmeFourierStressNew, d_lb->spmeFourierStressLabel);
+  subNewDW->get(spmeFourierEnergyNew, d_lb->electrostaticReciprocalEnergyLabel);
+  subNewDW->get(spmeFourierStressNew, d_lb->electrostaticReciprocalStressLabel);
+  parentNewDW->put(spmeFourierEnergyNew, d_lb->electrostaticReciprocalEnergyLabel);
+  parentNewDW->put(spmeFourierStressNew, d_lb->electrostaticReciprocalStressLabel);
 
   //  Turn scrubbing back on
   parentOldDW->setScrubbing(parentOldDW_scrubmode);
@@ -438,6 +432,47 @@ void SPME::finalize(const ProcessorGroup* pg,
 {
   // Do force spreading
   SPME::calculatePostTransform(pg, patches, materials, old_dw, new_dw);
+}
+
+void SPME::scheduleUpdateFieldandStress(SchedulerP& sched,
+                                        const ProcessorGroup* pg,
+                                        const PatchSet* patches,
+                                        const MaterialSet* materials,
+                                        DataWarehouse* subOldDW,
+                                        DataWarehouse* subNewDW)
+{
+  printSchedule(patches, spme_cout, "SPME::scheduleUpdateFieldandStress");
+
+  Task* task = scinew Task("SPME::updateFieldAndStress", this, &SPME::updateFieldAndStress);
+
+  // Requires converged dipoles from both reciprocal and realspace calculation
+  task->requires(Task::OldDW, d_lb->pTotalDipoles);
+
+  task->computes(d_lb->pTotalDipoles_preReloc);
+}
+
+void SPME::scheduleCalculateNewDipoles(SchedulerP& sched,
+                                       const ProcessorGroup* pg,
+                                       const PatchSet* patches,
+                                       const MaterialSet* materials,
+                                       DataWarehouse* subOldDW,
+                                       DataWarehouse* subNewDW)
+{
+	printSchedule(patches, spme_cout, "SPME::scheduleCalculateNewDipoles");
+
+	Task* task = scinew Task("SPME::calculateNewDipoles", this, &SPME::calculateNewDipoles);
+
+	// Requires dipoles from both the realspace and the reciprocal calculation
+	task->requires(Task::OldDW, d_lb->pRealDipoles, Ghost::None, 0);  // Should pull from the sub old DW
+	task->requires(Task::OldDW, d_lb->pReciprocalDipoles, Ghost::None, 0);
+
+	// Overwrites each dipole array at iteration n with the full estimate of dipole array at iteration n+1
+	task->computes(d_lb->pRealDipoles);
+	task->computes(d_lb->pReciprocalDipoles);
+
+	sched->addTask(task, patches, materials);
+
+
 }
 
 void SPME::scheduleCalculateRealspace(SchedulerP& sched,
@@ -455,7 +490,7 @@ void SPME::scheduleCalculateRealspace(SchedulerP& sched,
 	task->requires(Task::ParentNewDW, d_lb->pXLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
 	task->requires(Task::OldDW, d_lb->pParticleIDLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
 	//FIXME Not complete!
-	task->requires(Task::ParentNewDW, d_lb->pDipoleLabel, Ghost::AroundNodes, CUTOFF_RADIUS);
+	task->requires(Task::ParentNewDW, d_lb->pTotalDipoles, Ghost::AroundNodes, CUTOFF_RADIUS);
 }
 
 void SPME::scheduleCalculatePreTransform(SchedulerP& sched,
@@ -538,8 +573,8 @@ void SPME::scheduleCalculateInFourierSpace(SchedulerP& sched,
   task->requires(Task::NewDW, d_lb->subSchedulerDependencyLabel, Ghost:: Ghost::None, 0);
 
   task->modifies(d_lb->subSchedulerDependencyLabel);
-  task->computes(d_lb->spmeFourierEnergyLabel);
-  task->computes(d_lb->spmeFourierStressLabel);
+  task->computes(d_lb->electrostaticReciprocalEnergyLabel);
+  task->computes(d_lb->electrostaticReciprocalStressLabel);
 
   sched->addTask(task, patches, materials);
 }

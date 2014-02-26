@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -37,91 +37,155 @@ using namespace Uintah;
 
 MDLabel::MDLabel()
 {
-  ///////////////////////////////////////////////////////////////////////////
-  // Particle Variables
-  pXLabel = VarLabel::create("p.x", ParticleVariable<Point>::getTypeDescription(), IntVector(0, 0, 0),
-                             VarLabel::PositionVariable);
-  pXLabel_preReloc = VarLabel::create("p.x+", ParticleVariable<Point>::getTypeDescription(), IntVector(0, 0, 0),
-                                      VarLabel::PositionVariable);
+//.......1.........2.........3.........4.........5.........6.........7.........8.........9.........A.........B.........C.........D.........E
 
-  pNonbondedForceLabel = VarLabel::create("p.nonbonded_force", ParticleVariable<Vector>::getTypeDescription());
-  pNonbondedForceLabel_preReloc = VarLabel::create("p.nonbonded_force+", ParticleVariable<Vector>::getTypeDescription());
+  //PER-PARTICLE VARIABLES
+  //**********************
+  //1>Force calculation variables (main simulation body)
+  //1.1-> for electrostatic calculation
+  //1.1.1-> real space
+  pRealDipoles                            = VarLabel::create("p.realDipole", ParticleVariable<Vector>::getTypeDescription());
+  //pRealDipoles_preReloc                   = VarLabel::create("p.realDipole+", ParticleVariable<Vector>::getTypeDescription());
+  pElectrostaticsRealForce                = VarLabel::create("p.electrostaticsRealForce", ParticleVariable<Vector>::getTypeDescription());
+  pElectrostaticsRealForce_preReloc       = VarLabel::create("p.electrostaticsRealForce+", ParticleVariable<Vector>::getTypeDescription());
+  pElectrostaticsRealField                = VarLabel::create("p.electrostaticsRealField", ParticleVariable<Vector>::getTypeDescription());
+  pElectrostaticsRealField_preReloc       = VarLabel::create("p.electrostaticsRealField+", ParticleVariable<Vector>::getTypeDescription());
 
-  pElectrostaticsForceLabel = VarLabel::create("p.electrostatics_force", ParticleVariable<Vector>::getTypeDescription());
-  pElectrostaticsForceLabel_preReloc = VarLabel::create("p.electrostatics_force+", ParticleVariable<Vector>::getTypeDescription());
+  //1.1.2-> reciprocal space
+  pReciprocalDipoles                      = VarLabel::create("p.recipDipole", ParticleVariable<Vector>::getTypeDescription());
+  //pReciprocalDipoles_preReloc             = VarLabel::create("p.recipDipole+", ParticleVariable<Vector>::getTypeDescription());
+  pElectrostaticsReciprocalForce          = VarLabel::create("p.recipElectrostaticsForce", ParticleVariable<Vector>::getTypeDescription());
+  //pElectrostaticsReciprocalForce_preReloc = VarLabel::create("p.recipElectrostaticsForce+", ParticleVariable<Vector>::getTypeDescription());
+  //1.1.3-> total dipoles
+  pTotalDipoles                           = VarLabel::create("p.totalDipole", ParticleVariable<Vector>::getTypeDescription());
+  pTotalDipoles_preReloc                  = VarLabel::create("p.totalDipole+", ParticleVariable<Vector>::getTypeDescription());
 
-  pAccelLabel = VarLabel::create("p.accel", ParticleVariable<Vector>::getTypeDescription());
-  pAccelLabel_preReloc = VarLabel::create("p.accel+", ParticleVariable<Vector>::getTypeDescription());
-
-  pVelocityLabel = VarLabel::create("p.velocity", ParticleVariable<Vector>::getTypeDescription());
+  //1.2-> for nonbonded calculation
+  pNonbondedForceLabel          = VarLabel::create("p.nonbonded_force", ParticleVariable<Vector>::getTypeDescription());
+  //pNonbondedForceLabel_preReloc = VarLabel::create("p.nonbonded_force+", ParticleVariable<Vector>::getTypeDescription());
+  //1.3-> for valence calculation
+  pValenceForceLabel          = VarLabel::create("p.valence_force", ParticleVariable<Vector>::getTypeDescription());
+  //pValenceForceLabel_preReloc = VarLabel::create("p.valence_force+", ParticleVariable<Vector>::getTypeDescription());
+  //2>Integrator related variables
+  pXLabel                 = VarLabel::create("p.x", ParticleVariable<Point>::getTypeDescription(),
+                                             IntVector(0, 0, 0), VarLabel::PositionVariable);
+  pXLabel_preReloc        = VarLabel::create("p.x+", ParticleVariable<Point>::getTypeDescription(),
+                                             IntVector(0, 0, 0), VarLabel::PositionVariable);
+  pAccelLabel             = VarLabel::create("p.accel", ParticleVariable<Vector>::getTypeDescription());
+  pAccelLabel_preReloc    = VarLabel::create("p.accel+", ParticleVariable<Vector>::getTypeDescription());
+  pVelocityLabel          = VarLabel::create("p.velocity", ParticleVariable<Vector>::getTypeDescription());
   pVelocityLabel_preReloc = VarLabel::create("p.velocity+", ParticleVariable<Vector>::getTypeDescription());
+  //3>General particle quantities
+  pParticleIDLabel          = VarLabel::create("p.particleID", ParticleVariable<long64>::getTypeDescription());
+  pParticleIDLabel_preReloc = VarLabel::create("p.particleID+", ParticleVariable<long64>::getTypeDescription());
 
-  pEnergyLabel = VarLabel::create("p.energy", ParticleVariable<double>::getTypeDescription());
-  pEnergyLabel_preReloc = VarLabel::create("p.energy+", ParticleVariable<double>::getTypeDescription());
+  // These should be removed
+  //pEnergyLabel = VarLabel::create("p.energy", ParticleVariable<double>::getTypeDescription());
+  //pEnergyLabel_preReloc = VarLabel::create("p.energy+", ParticleVariable<double>::getTypeDescription());
 
-  pMassLabel = VarLabel::create("p.mass", ParticleVariable<double>::getTypeDescription());
-  pMassLabel_preReloc = VarLabel::create("p.mass+", ParticleVariable<double>::getTypeDescription());
+  //pMassLabel = VarLabel::create("p.mass", ParticleVariable<double>::getTypeDescription());
+  //pMassLabel_preReloc = VarLabel::create("p.mass+", ParticleVariable<double>::getTypeDescription());
 
   pChargeLabel = VarLabel::create("p.charge", ParticleVariable<double>::getTypeDescription());
   pChargeLabel_preReloc = VarLabel::create("p.charge+", ParticleVariable<double>::getTypeDescription());
 
-  pParticleIDLabel = VarLabel::create("p.particleID", ParticleVariable<long64>::getTypeDescription());
-  pParticleIDLabel_preReloc = VarLabel::create("p.particleID+", ParticleVariable<long64>::getTypeDescription());
-
-  ///////////////////////////////////////////////////////////////////////////
-  // Reduction Variables - Nonbonded
-  vdwEnergyLabel = VarLabel::create("vdwEnergy", sum_vartype::getTypeDescription());
+  // PER SYSTEM VARIABLES (reduction variables)
+  // ********************
+  //1---> for nonbonded calculation
+  nonbondedEnergyLabel = VarLabel::create("nonbondedEnergy", sum_vartype::getTypeDescription());
+  nonbondedStressLabel = VarLabel::create("nonbondedStress", matrix_sum::getTypeDescription());
+  //2---> for electrostatic calculation
+  //2.1---> real space
+  electrostaticRealEnergyLabel       = VarLabel::create("electrostaticRealEnergy", sum_vartype::getTypeDescription());
+  electrostaticRealStressLabel       = VarLabel::create("electrostaticRealStress", matrix_sum::getTypeDescription());
+  //2.2--->  reciprocal space
+  electrostaticReciprocalEnergyLabel = VarLabel::create("electrostaticReciprocalEnergy", sum_vartype::getTypeDescription());
+  electrostaticReciprocalStressLabel = VarLabel::create("electrostaticReciprocalStress", matrix_sum::getTypeDescription());
+  //3---> for valence calculation
+  //3.1---> by component
+  bondEnergyLabel    = VarLabel::create("bondEnergy", sum_vartype::getTypeDescription());
+  bondStressLabel    = VarLabel::create("bondStress", matrix_sum::getTypeDescription());
+  bendEnergyLabel    = VarLabel::create("bendEnergy", sum_vartype::getTypeDescription());
+  bendStressLabel    = VarLabel::create("bendStress", matrix_sum::getTypeDescription());
+  torsionEnergyLabel = VarLabel::create("torsionEnergy", sum_vartype::getTypeDescription());
+  torsionStressLabel = VarLabel::create("torsionStress", matrix_sum::getTypeDescription());
+  oopEnergyLabel     = VarLabel::create("improperTorsionEnergy", sum_vartype::getTypeDescription());
+  oopStressLabel     = VarLabel::create("improperTorsionStress", matrix_sum::getTypeDescription());
+  //3.2---> total
+  valenceEnergyLabel = VarLabel::create("valenceEnergy", sum_vartype::getTypeDescription());
+  valenceStressLabel = VarLabel::create("valenceStress", matrix_sum::getTypeDescription());
 
   ///////////////////////////////////////////////////////////////////////////
   // Sole Variables - Nonbonded
   nonbondedDependencyLabel = VarLabel::create("nonbondedDependency", SoleVariable<double>::getTypeDescription());
 
-  ///////////////////////////////////////////////////////////////////////////
-  // Reduction Variables - Electrostatic
-  spmeFourierEnergyLabel = VarLabel::create("spmeFourierEnergy", sum_vartype::getTypeDescription());
-  spmeFourierStressLabel = VarLabel::create("spmeFourierStress", matrix_sum::getTypeDescription());
 
 #ifdef HAVE_FFTW
-
   ///////////////////////////////////////////////////////////////////////////
   // Sole Variables - SPME
   forwardTransformPlanLabel = VarLabel::create("forwardTransformPlan", SoleVariable<fftw_plan>::getTypeDescription());
   backwardTransformPlanLabel = VarLabel::create("backwardTransformPlan", SoleVariable<fftw_plan>::getTypeDescription());
   electrostaticsDependencyLabel = VarLabel::create("electrostaticsDependency", SoleVariable<double>::getTypeDescription());
   subSchedulerDependencyLabel = VarLabel::create("subschedulerDependency", CCVariable<int>::getTypeDescription());
-
 #endif
-
 }
 
 MDLabel::~MDLabel()
 {
-  ///////////////////////////////////////////////////////////////////////////
-  // Particle Variables
-  VarLabel::destroy(pXLabel);
-  VarLabel::destroy(pXLabel_preReloc);
-  VarLabel::destroy(pNonbondedForceLabel);
-  VarLabel::destroy(pNonbondedForceLabel_preReloc);
-  VarLabel::destroy(pElectrostaticsForceLabel);
-  VarLabel::destroy(pElectrostaticsForceLabel_preReloc);
-  VarLabel::destroy(pAccelLabel);
-  VarLabel::destroy(pAccelLabel_preReloc);
-  VarLabel::destroy(pVelocityLabel);
-  VarLabel::destroy(pVelocityLabel_preReloc);
+	// PER PARTICLE VARIABLES
+	//   Force calculation Variables
+	VarLabel::destroy(pRealDipoles);
+	VarLabel::destroy(pRealDipoles_preReloc);
+	VarLabel::destroy(pElectrostaticsRealForce);
+	VarLabel::destroy(pElectrostaticsRealForce_preReloc);
+	VarLabel::destroy(pReciprocalDipoles);
+	VarLabel::destroy(pReciprocalDipoles_preReloc);
+	VarLabel::destroy(pElectrostaticsReciprocalForce);
+	VarLabel::destroy(pTotalDipoles);
+	VarLabel::destroy(pTotalDipoles_preReloc);
+	VarLabel::destroy(pElectrostaticsReciprocalForce_preReloc);
+	VarLabel::destroy(pNonbondedForceLabel);
+	VarLabel::destroy(pNonbondedForceLabel_preReloc);
+	VarLabel::destroy(pValenceForceLabel);
+	VarLabel::destroy(pValenceForceLabel_preReloc);
+	//   Integrator variables
+	VarLabel::destroy(pXLabel);
+	VarLabel::destroy(pXLabel_preReloc);
+	VarLabel::destroy(pAccelLabel);
+	VarLabel::destroy(pAccelLabel_preReloc);
+	VarLabel::destroy(pVelocityLabel);
+	VarLabel::destroy(pVelocityLabel_preReloc);
+	//   General
+	VarLabel::destroy(pParticleIDLabel);
+	VarLabel::destroy(pParticleIDLabel_preReloc);
+	// PER SYSTEM VARIABLES
+    VarLabel::destroy(nonbondedEnergyLabel);
+    VarLabel::destroy(nonbondedStressLabel);
+    VarLabel::destroy(electrostaticRealEnergyLabel);
+    VarLabel::destroy(electrostaticRealStressLabel);
+    VarLabel::destroy(electrostaticReciprocalEnergyLabel);
+    VarLabel::destroy(electrostaticReciprocalStressLabel);
+    VarLabel::destroy(bondEnergyLabel);
+    VarLabel::destroy(bondStressLabel);
+    VarLabel::destroy(bendEnergyLabel);
+    VarLabel::destroy(bendStressLabel);
+    VarLabel::destroy(torsionEnergyLabel);
+    VarLabel::destroy(torsionStressLabel);
+    VarLabel::destroy(oopEnergyLabel);
+    VarLabel::destroy(oopStressLabel);
+    VarLabel::destroy(valenceEnergyLabel);
+    VarLabel::destroy(valenceStressLabel);
+
+
+// !!!!! TO BE DELETED
   VarLabel::destroy(pEnergyLabel);
   VarLabel::destroy(pEnergyLabel_preReloc);
   VarLabel::destroy(pMassLabel);
   VarLabel::destroy(pMassLabel_preReloc);
   VarLabel::destroy(pChargeLabel);
   VarLabel::destroy(pChargeLabel_preReloc);
-  VarLabel::destroy(pParticleIDLabel);
-  VarLabel::destroy(pParticleIDLabel_preReloc);
+// !!!!! TO BE DELETED (end)
 
-  ///////////////////////////////////////////////////////////////////////////
-  // Reduction Variables
-  VarLabel::destroy(vdwEnergyLabel);
-  VarLabel::destroy(spmeFourierEnergyLabel);
-  VarLabel::destroy(spmeFourierStressLabel);
 
   ///////////////////////////////////////////////////////////////////////////
   // Sole Variables
