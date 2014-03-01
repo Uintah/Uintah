@@ -123,7 +123,7 @@ DEBUGTESTS = [
   ]
 
 NIGHTLYTESTS = [
-  ("coal-boiler-mini",                         "coal-boiler-mini.ups",    16,  "Linux",  ["exactComparison","no_restart"]                                          ),
+  ("coal-boiler-mini",                         "coal-boiler-mini.ups",    16,  "Linux",  ["exactComparison","no_restart","no_memoryTest"]                                          ),
   ("bc-linear-inlet-channel-flow-test",     "bc-linear-inlet-channel-flow-test.ups",             6,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("bc-parabolic-inlet-channel-flow-test",  "bc-parabolic-inlet-channel-flow-test.ups",             6,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("RMCRT-Burns-Christon", "RMCRT-Burns-Christon.ups",   8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
