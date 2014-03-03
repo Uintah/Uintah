@@ -118,8 +118,7 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #______________________________________________________________________
 
 DEBUGTESTS = [
-  ("channel-flow-xy-xminus-pressure-outlet",   "channel-flow-xy-xminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               
-  ("channel-flow-xz-zminus-pressure-outlet",   "channel-flow-xz-zminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart","do_not_validate"] )
+              ("turb-lid-driven-cavity-3D-scalar",         "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "All",  ["exactComparison","no_restart"] )
   ]
 
 NIGHTLYTESTS = [
