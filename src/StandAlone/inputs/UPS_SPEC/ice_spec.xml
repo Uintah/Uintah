@@ -7,6 +7,9 @@
                                           attribute1="type                REQUIRED STRING 'FirstOrder, FirstOrderGPU, SecondOrder'" 
                                           attribute2="useCompatibleFluxes OPTIONAL BOOLEAN"
                                           attribute3="compatibleFluxes OPTIONAL BOOLEAN" />
+      
+      <applyHydrostaticPressure         spec="OPTIONAL BOOLEAN" />
+      
       <ADD_HEAT                         spec="OPTIONAL NO_DATA" >
        <add_heat_matls                  spec="REQUIRED STRING" />
        <add_heat_coeff                  spec="REQUIRED STRING" />
