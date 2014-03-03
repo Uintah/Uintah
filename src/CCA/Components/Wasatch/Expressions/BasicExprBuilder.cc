@@ -39,6 +39,7 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/VardenMMS.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/TimeDerivative.h>
+#include <CCA/Components/Wasatch/Expressions/GeometryBased.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/WallDistance.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
 
@@ -195,21 +196,7 @@ namespace Wasatch{
         throw std::invalid_argument( msg.str() );
       }
       builder = scinew typename AlgExpr::Builder( tag, srcFieldTagList, optype );
-    }
-    
-    else if ( params->findBlock("Cylinder") ) {
-      Uintah::ProblemSpecP valParams = params->findBlock("Cylinder");
-      double radius, insideValue, outsideValue;
-      std::vector<double> origin;
-      valParams->getAttribute("radius",radius);
-      valParams->getAttribute("insideValue",insideValue);
-      valParams->getAttribute("outsideValue",outsideValue);
-      valParams->get("Origin",origin);
-      const Expr::Tag field1Tag = parse_nametag( valParams->findBlock("Coordinate1")->findBlock("NameTag") );
-      const Expr::Tag field2Tag = parse_nametag( valParams->findBlock("Coordinate2")->findBlock("NameTag") );
-      typedef typename CylinderPatch<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, field1Tag, field2Tag, origin, insideValue, outsideValue, radius );
-    }
+    }    
     
     else if( params->findBlock("WallDistanceFunction") ){
       Uintah::ProblemSpecP valParams = params->findBlock("WallDistanceFunction");
@@ -245,21 +232,6 @@ namespace Wasatch{
       builder = scinew Builder( tag, indepVarTag, transitionPoint, lowValue, highValue );
     }
     
-    else if ( params->findBlock("PlusProfile") ) {
-      Uintah::ProblemSpecP valParams = params->findBlock("PlusProfile");
-      double xStart, yStart, xWidth, yWidth, lowValue, highValue;
-      valParams->getAttribute("xStart",xStart);
-      valParams->getAttribute("yStart",yStart);
-      valParams->getAttribute("xWidth",xWidth);
-      valParams->getAttribute("xWidth",yWidth);
-      valParams->getAttribute("lowValue",lowValue);
-      valParams->getAttribute("highValue",highValue);
-      const Expr::Tag xTag = parse_nametag( valParams->findBlock("Coordinate1")->findBlock("NameTag") );
-      const Expr::Tag yTag = parse_nametag( valParams->findBlock("Coordinate2")->findBlock("NameTag") );
-      typedef typename PlusProfile<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, xTag, yTag, xStart, yStart, xWidth, yWidth, lowValue, highValue );
-    }
-
     else if ( params->findBlock("RayleighTaylor") ) {
       Uintah::ProblemSpecP valParams = params->findBlock("RayleighTaylor");
       double transitionPoint, lowValue, highValue, frequency, amplitude;
@@ -384,6 +356,27 @@ namespace Wasatch{
       builder = scinew typename BurnsChristonAbskgExpr::Builder( tag, xTag, yTag, zTag  );
     }
 
+    else if ( params->findBlock("GeometryBased") ) {
+      std::multimap <Uintah::GeometryPieceP, double > geomObjectsMap;
+      double outsideValue = 1.0;
+      Uintah::ProblemSpecP geomBasedSpec = params->findBlock("GeometryBased");
+      geomBasedSpec->getAttribute("value", outsideValue);
+      // parse all intrusions
+      std::vector<Uintah::GeometryPieceP> geomObjects;
+      
+      for( Uintah::ProblemSpecP intrusionParams = geomBasedSpec->findBlock("Intrusion");
+          intrusionParams != 0;
+          intrusionParams = intrusionParams->findNextBlock("Intrusion") )
+      {
+        std::cout << "intrusion " << std::endl;
+        Uintah::GeometryPieceFactory::create(intrusionParams->findBlock("geom_object"),geomObjects);
+        double insideValue = 0.0;
+        intrusionParams->getAttribute("value", insideValue);
+        geomObjectsMap.insert(std::pair<Uintah::GeometryPieceP, double>(geomObjects.back(), insideValue));
+      }
+      std::cout << "number of objects = " << geomObjects.size() << std::endl;
+      builder = scinew GeometryBased::Builder(tag, geomObjectsMap, outsideValue);
+    }
 
     return builder;
   }
