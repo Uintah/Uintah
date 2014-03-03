@@ -374,7 +374,6 @@ namespace Wasatch{
         intrusionParams->getAttribute("value", insideValue);
         geomObjectsMap.insert(std::pair<Uintah::GeometryPieceP, double>(geomObjects.back(), insideValue));
       }
-      std::cout << "number of objects = " << geomObjects.size() << std::endl;
       builder = scinew GeometryBased::Builder(tag, geomObjectsMap, outsideValue);
     }
 
