@@ -12,8 +12,8 @@ if ( ($#argv != 1) || (! -e $out ) ) then
   exit(1)
 endif
 
-set created   = ( `grep ^"Created VarLabel" $out | cut -f2 -d:` )
-set destroyed = ( `grep ^"Deleted VarLabel" $out | cut -f2 -d:` )
+set created   = ( `grep ^"Created VarLabel"  $out | awk '{print $3}'` )
+set destroyed = ( `grep ^"Deleting VarLabel" $out | awk '{print $3}'` )
 
 if ( $#created == 0 ) then
   echo "You must set the environmental variable:"
@@ -22,16 +22,18 @@ if ( $#created == 0 ) then
 endif
 echo ""
 
+@ count = 0
 foreach C ( $created[*] )
   set found = "false"
   foreach D ( $destroyed[*] )
      if ($C == $D) then
-       set found = "true"
+       set found = "true"  
      endif
    end
    if ($found == "false") then
+     @ count ++
      echo "            <<<  VarLabel ($C) was not deleted >>>"
    endif
 end
-echo ""
+echo "Number of VarLabels that were not deleted: "$count
 exit 
