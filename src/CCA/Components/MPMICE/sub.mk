@@ -34,7 +34,6 @@ SRCDIR := CCA/Components/MPMICE
 
 SRCS   += \
         $(SRCDIR)/MPMICE.cc \
-        $(SRCDIR)/MPMICEDebug.cc \
 
 PSELIBS := \
 	CCA/Components/MPM \
