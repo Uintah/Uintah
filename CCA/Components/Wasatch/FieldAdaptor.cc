@@ -105,13 +105,11 @@ namespace Wasatch{
 
   template< typename FieldT >
   SpatialOps::structured::MemoryWindow
-  get_memory_window_for_uintah_field( const Uintah::Patch* const patch,
-                                      const bool withoutGhost)
+  get_memory_window_for_uintah_field( const Uintah::Patch* const patch )
   {
     SS::IntVec bcMinus, bcPlus;
     get_bc_logicals( patch, bcMinus, bcPlus );
 
-//    const SCIRun::IntVector gs = patch->getExtraCellHighIndex(0) - patch->getExtraCellLowIndex(0);
     const SCIRun::IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
 
     const int nGhost = get_n_ghost<FieldT>();
@@ -120,18 +118,16 @@ namespace Wasatch{
                            gs[2] + nGhost*2 + (bcPlus[2] ? FieldT::Location::BCExtra::Z : 0) );
     
     const SS::IntVec extent = glob;
-    const int nOffset = withoutGhost ? nGhost : 0;
-    const SS::IntVec offset(nOffset,nOffset,nOffset);
+    const SS::IntVec offset(nGhost,nGhost,nGhost);
 
     return SS::MemoryWindow( glob, offset, extent );
   }
 
   template<>
   SpatialOps::structured::MemoryWindow
-  get_memory_window_for_uintah_field<SS::SingleValueField>( const Uintah::Patch* const patch,
-                                                            const bool withoutGhost )
+  get_memory_window_for_uintah_field<SS::SingleValueField>( const Uintah::Patch* const patch )
   {
-    const int nGhost = withoutGhost ? 0 : get_n_ghost<SS::SingleValueField>();
+    const int nGhost = get_n_ghost<SS::SingleValueField>();
     return SS::MemoryWindow( SS::IntVec(1,1,1), SS::IntVec(0,0,0), SS::IntVec(nGhost,nGhost,nGhost) );
   }
 
@@ -162,10 +158,9 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   // macro shortcuts for explicit template instantiation
-#define declare_method( FIELDT )                                                \
-  template SS::MemoryWindow                                 \
-  get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const,       \
-                                              const bool withoutGhost );        \
+#define declare_method( FIELDT )                                              \
+  template SS::MemoryWindow                                                   \
+  get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const  );  \
   template Uintah::Ghost::GhostType get_uintah_ghost_type<FIELDT>();
 
 #define declare_variants( VOLT )                \
