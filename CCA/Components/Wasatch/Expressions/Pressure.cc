@@ -216,12 +216,11 @@ Pressure::advertise_dependents( Expr::ExprDeps& exprDeps )
   if( doX_    )  exprDeps.requires_expression( fxt_ );
   if( doY_    )  exprDeps.requires_expression( fyt_ );
   if( doZ_    )  exprDeps.requires_expression( fzt_ );
-  exprDeps.requires_expression( pSourcet_ );
+
   if(volfract_ != Expr::Tag() ) exprDeps.requires_expression( volfract_ );
   
+  exprDeps.requires_expression( pSourcet_ );
   exprDeps.requires_expression( dtt_ );
-  
-  const TagNames& tagNames = TagNames::self();
   exprDeps.requires_expression( currenttimet_ );
   exprDeps.requires_expression( timestept_ );
 }
