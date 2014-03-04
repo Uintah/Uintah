@@ -83,7 +83,7 @@ class RadiationSource
   
   const SVolField* divQ_;
   const Uintah::Patch* patch_;
-  Uintah::Ray* RMCRT_;
+  Uintah::Ray* rmcrt_;
   void schedule_setup_bndflux( const Uintah::LevelP& level,
                               Uintah::SchedulerP sched,
                               const Uintah::MaterialSet* const materials );
@@ -155,11 +155,11 @@ public:
                          const int material,
                          const int RKStage );
 
-  void setup_bndflux ( const Uintah::ProcessorGroup* const pg,
-                       const Uintah::PatchSubset* const patches,
-                       const Uintah::MaterialSubset* const materials,
-                       Uintah::DataWarehouse* const oldDW,
-                       Uintah::DataWarehouse* const newDW );
+  void setup_bndflux( const Uintah::ProcessorGroup* const pg,
+                      const Uintah::PatchSubset* const patches,
+                      const Uintah::MaterialSubset* const materials,
+                      Uintah::DataWarehouse* const oldDW,
+                      Uintah::DataWarehouse* const newDW );
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );

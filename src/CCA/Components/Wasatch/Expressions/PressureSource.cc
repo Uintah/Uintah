@@ -145,7 +145,7 @@ void PressureSource::evaluate()
     
     SVolField& drhodt     = *results[1];
     SVolField& alpha      = *results[2];
-    SVolField& beta       = *results[3];
+//    SVolField& beta       = *results[3];
     SVolField& divmomstar = *results[4];
     SVolField& drhodtstar = *results[5];
 

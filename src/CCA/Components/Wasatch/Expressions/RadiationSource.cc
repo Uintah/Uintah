@@ -83,16 +83,16 @@ RadiationSource::RadiationSource( const std::string& radiationSourceName,
                                                Wasatch::get_uintah_ghost_descriptor<SVolField>() ) )
   
 {
-  RMCRT_ = scinew Uintah::Ray();
+  rmcrt_ = scinew Uintah::Ray();
   
-  RMCRT_->registerVarLabels(0,
+  rmcrt_->registerVarLabels(0,
                             absorptionLabel_,
                             absorptionLabel_,
                             temperatureLabel_,
                             celltypeLabel_,
                             divqLabel_);
   
-  RMCRT_->problemSetup(radiationSpec, radiationSpec, sharedState);
+  rmcrt_->problemSetup(radiationSpec, radiationSpec, sharedState);
 }
 //--------------------------------------------------------------------
   void
@@ -149,9 +149,9 @@ RadiationSource::schedule_ray_tracing( const Uintah::LevelP& level,
   using namespace Uintah;
   
   GridP grid = level->getGrid();
-  bool modifies_divQ     = true;
+  const bool modifiesDivQ      = true;
   const bool includeExtraCells = false;  // domain for sigmaT4 computation
-  const int _radiation_calc_freq =5;
+  const int radiationCalcFreq = 5;
   // only sched on RK step 0 and on arches level
   if ( RKStage > 1 ) {
     return;
@@ -162,26 +162,24 @@ RadiationSource::schedule_ray_tracing( const Uintah::LevelP& level,
   int maxLevels = grid->numLevels();
   {
     const LevelP& fineLevel = grid->getLevel(0);
-    Uintah::Task::WhichDW temp_dw = Task::NewDW;
+    Uintah::Task::WhichDW tempDW = Task::NewDW;
 
-    RMCRT_->sched_sigmaT4( fineLevel,  sched, temp_dw, 1, includeExtraCells );
+    rmcrt_->sched_sigmaT4( fineLevel,  sched, tempDW, 1, includeExtraCells );
     
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const bool modifies_abskg   = false;
       const bool modifies_sigmaT4 = false;
-      const bool backoutTemp      = true;
       
-      RMCRT_->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4, _radiation_calc_freq);
+      rmcrt_->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4, radiationCalcFreq );
       
       if(level->hasFinerLevel() || maxLevels == 1){
-        Task::WhichDW abskg_dw    = Task::NewDW;
-        Task::WhichDW sigmaT4_dw  = Task::NewDW;
-        Task::WhichDW celltype_dw = Task::NewDW;
+        const Task::WhichDW abskgDW    = Task::NewDW;
+        const Task::WhichDW sigmaT4DW  = Task::NewDW;
+        const Task::WhichDW celltypeDW = Task::NewDW;
 
-        RMCRT_->sched_setBoundaryConditions( level, sched, temp_dw, _radiation_calc_freq, false );
-        
-        RMCRT_->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq );
+        rmcrt_->sched_setBoundaryConditions( level, sched, tempDW, radiationCalcFreq, false );
+        rmcrt_->sched_rayTrace( level, sched, abskgDW, sigmaT4DW, celltypeDW, modifiesDivQ, radiationCalcFreq );
       }
     }
     
@@ -189,7 +187,7 @@ RadiationSource::schedule_ray_tracing( const Uintah::LevelP& level,
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const PatchSet* patches = level->eachPatch();
-      RMCRT_->sched_Refine_Q (sched,  patches, materials, _radiation_calc_freq);
+      rmcrt_->sched_Refine_Q( sched,  patches, materials, radiationCalcFreq );
     }
   }
 
