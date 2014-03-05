@@ -60,15 +60,13 @@ ConstSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 
     tsk->computes(_src_label);
 
-    if ( _density_weight ){ 
-      tsk->requires( Task::OldDW, VarLabel::find("density"), Ghost::None, 0 ); 
-    }
   } else {
     tsk->modifies(_src_label); 
 
-    if ( _density_weight ){ 
-      tsk->requires( Task::NewDW, VarLabel::find("density"), Ghost::None, 0 ); 
-    }
+  }
+
+  if ( _density_weight ){ 
+    tsk->requires( Task::NewDW, VarLabel::find("density"), Ghost::None, 0 ); 
   }
 
   for (vector<std::string>::iterator iter = _required_labels.begin(); 
@@ -103,18 +101,14 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
     if ( new_dw->exists(_src_label, matlIndex, patch ) ){
       new_dw->getModifiable( constSrc, _src_label, matlIndex, patch ); 
       constSrc.initialize(0.0);
-
-      if ( _density_weight ){ 
-        new_dw->get( density, VarLabel::find("density"), matlIndex, patch, Ghost::None, 0 );
-      }
     } else {
       new_dw->allocateAndPut( constSrc, _src_label, matlIndex, patch );
       constSrc.initialize(0.0);
-
-      if ( _density_weight ){ 
-        old_dw->get( density, VarLabel::find("density"), matlIndex, patch, Ghost::None, 0 );
-      }
     } 
+
+    if ( _density_weight ){ 
+      new_dw->get( density, VarLabel::find("density"), matlIndex, patch, Ghost::None, 0 );
+    }
 
     for (vector<std::string>::iterator iter = _required_labels.begin(); 
          iter != _required_labels.end(); iter++) { 
