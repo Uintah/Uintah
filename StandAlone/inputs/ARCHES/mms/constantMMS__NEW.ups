@@ -58,6 +58,8 @@
 <!-- ARCHES specification -->
     <ARCHES>
 
+      <BoundaryConditions/>
+
       <TimeIntegrator>
         <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
