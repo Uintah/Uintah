@@ -107,7 +107,6 @@ public:
   void calculatePressureSourcePred(const ProcessorGroup* pc,
                                    const Patch* patch,
                                    double delta_t,
-                                   CellInformation* cellinfo,
                                    ArchesVariables* vars,
                                    ArchesConstVariables* constvars); 
   ////////////////////////////////////////////////////////////////////////

@@ -221,17 +221,10 @@
       </TransportEqns>
 
       <Properties>
-        <ColdFlow>
-          <mixture_fraction_label>mixture_f</mixture_fraction_label>
-          <Stream_1>
-            <density>1.18</density>
-            <temperature>64.804</temperature>
-          </Stream_1>
-          <Stream_2>
-            <density>1.18</density>
-            <temperature>64.804</temperature>
-          </Stream_2>
-        </ColdFlow>
+        <ConstantProps>
+          <density>1.18</density>
+          <temperature>64.804</temperature>
+        </ConstantProps>
       </Properties>
 
       <ExplicitSolver>

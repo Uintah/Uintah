@@ -296,6 +296,7 @@
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_gogolek.mix.gz</inputfile>
           <rcce eta_label = "mixture_fraction" fp_label = "mixture_fraction_2" hl_label="heat_loss"/>
+          <reference_state eta="0.0" fp="0.0" hl="0.0"/>
         </ClassicTable>
       </Properties>
 

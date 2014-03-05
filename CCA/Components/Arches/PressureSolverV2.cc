@@ -219,8 +219,6 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel,       gn, 0);
-
   
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,     gaf, 1);
@@ -318,12 +316,8 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     vars.pressLinearSrc.initialize(0.0);   
     vars.pressNonlinearSrc.initialize(0.0);   
 
-    PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, d_indx, patch);
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-
     //__________________________________
-    calculatePressureCoeff(patch, cellinfo, &vars, &constVars);
+    calculatePressureCoeff(patch, &vars, &constVars);
 
     // Modify pressure coefficients for multimaterial formulation
     if (d_MAlab) {
@@ -334,7 +328,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
 
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
-                                          cellinfo, &vars,
+                                          &vars,
                                           &constVars);
 
     // Add other source terms to the pressure: 
@@ -756,7 +750,6 @@ PressureSolver::sched_addHydrostaticTermtoPressure(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel,    gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel,  gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel,      gn, 0 ); 
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     tsk->computes(d_lab->d_pressPlusHydroLabel);
@@ -795,11 +788,6 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
     
     int indx = d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex();
     
-    // Get the PerPatch CellInformation data
-    PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
     Ghost::GhostType  gn = Ghost::None;
     old_dw->get(prel,     d_lab->d_pressurePSLabel,     indx, patch, gn, 0);
     old_dw->get(denMicro, d_lab->d_densityMicroLabel,   indx, patch, gn, 0);
@@ -818,9 +806,10 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
 
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
       IntVector c = *iter;
-      double xx = cellinfo->xx[c.x()];
-      double yy = cellinfo->yy[c.y()];
-      double zz = cellinfo->zz[c.z()];
+      Point P = patch->getCellPosition(c); 
+      double xx = P.x();
+      double yy = P.y();
+      double zz = P.z();
       if( cellType[c] != mmwallid){
         pPlusHydro[c] = prel[c] + denMicro[c] * (gx * xx + gy * yy + gz * zz);
       }
@@ -833,10 +822,15 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
 //______________________________________________________________________
 void 
 PressureSolver::calculatePressureCoeff(const Patch* patch,
-                                       CellInformation* cellinfo,
                                        ArchesVariables* coeff_vars,
                                        ArchesConstVariables* constcoeff_vars)
 {
+
+  Vector DX = patch->dCell(); 
+  double area_EW = DX.y()*DX.z(); 
+  double area_NS = DX.x()*DX.z(); 
+  double area_TB = DX.x()*DX.y(); 
+
   for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
     IntVector c = *iter;
     int i = c.x();
@@ -849,17 +843,13 @@ PressureSolver::calculatePressureCoeff(const Patch* patch,
   
     //__________________________________
     //compute areas
-    double area_N  = cellinfo->sew[i] * cellinfo->stb[k];
-    double area_S  = area_N;
-    double area_EW = cellinfo->sns[j] * cellinfo->stb[k];
-    double area_TB = cellinfo->sns[j] * cellinfo->sew[i];
     Stencil7& A = coeff_vars->pressCoeff[c];
-    A.e = area_EW/(cellinfo->dxep[i]);
-    A.w = area_EW/(cellinfo->dxpw[i]);
-    A.n = area_N /(cellinfo->dynp[j]);
-    A.s = area_S /(cellinfo->dyps[j]);
-    A.t = area_TB/(cellinfo->dztp[k]);
-    A.b = area_TB/(cellinfo->dzpb[k]);
+    A.e = area_EW/DX.x(); 
+    A.w = area_EW/DX.x();
+    A.n = area_NS/DX.y();
+    A.s = area_NS/DX.y();
+    A.t = area_TB/DX.z();
+    A.b = area_TB/DX.z(); 
   }
 
 #ifdef divergenceconstraint

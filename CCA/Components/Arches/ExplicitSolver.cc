@@ -440,7 +440,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     //1st TABLE LOOKUP
     bool initialize_it  = false;
-    bool modify_ref_den = true;
+    bool modify_ref_den = false;
     if ( curr_level == 0 ) initialize_it = true;
     d_props->sched_computeProps( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
 
@@ -486,7 +486,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                             false);
 //    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
     d_props->sched_computeDenRefArray(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level]);
+                                      false, curr_level);
 
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes

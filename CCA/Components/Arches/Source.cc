@@ -192,13 +192,17 @@ void
 Source::calculatePressureSourcePred(const ProcessorGroup* ,
                                     const Patch* patch,
                                     double delta_t,
-                                    CellInformation* cellinfo,
                                     ArchesVariables* vars,
                                     ArchesConstVariables* constvars)
 {
   // Get the patch and variable indices
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
+
+  Vector DX = patch->dCell(); 
+  double dx = DX.x();
+  double dy = DX.y(); 
+  double dz = DX.z(); 
 
 #ifdef divergenceconstraint
   fort_pressrcpred_var(idxLo, idxHi, vars->pressNonlinearSrc,
@@ -209,7 +213,7 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
   fort_pressrcpred(idxLo, idxHi, vars->pressNonlinearSrc,
                    constvars->density, constvars->uVelRhoHat,
                    constvars->vVelRhoHat, constvars->wVelRhoHat, delta_t,
-                   cellinfo->sew, cellinfo->sns, cellinfo->stb);
+                   dx, dy, dz);
 #endif
   
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {

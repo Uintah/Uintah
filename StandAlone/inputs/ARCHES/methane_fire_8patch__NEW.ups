@@ -268,6 +268,7 @@
           <standard_equilibrium f_label="mixture_fraction"
                                 hl_label="heat_loss"
                                 var_label="scalar_var"/>
+          <reference_state f="0.0" hl="0.0" var="0.0"/>
         </ClassicTable>
       </Properties>
 

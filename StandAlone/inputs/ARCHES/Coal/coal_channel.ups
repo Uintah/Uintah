@@ -96,30 +96,6 @@
     <compression>gzip</compression>
   </DataArchiver>
 
-  <MPM>
-    <time_integrator>explicit</time_integrator>
-    <interpolator>linear</interpolator>
-  </MPM>
-  <MaterialProperties>
-    <MPM>
-      <material name="Composite Cylinder">
-        <density>   2489.0   </density>
-        <constitutive_model type="comp_mooney_rivlin">
-          <he_constant_1>5.0</he_constant_1>
-          <he_constant_2>1.0</he_constant_2>
-          <he_PR>.49</he_PR>
-        </constitutive_model>
-        <thermal_conductivity>  0.4494           </thermal_conductivity>
-        <specific_heat>         940.36           </specific_heat>
-        <!-- NO GEOMETRY OBJECT NEEDED FOR THIS CASE -->
-      </material>
-      <contact>
-        <type>null</type>
-        <vel_fields>              [0,0,0]         </vel_fields>
-        <mu> 0.0 </mu>
-      </contact>
-    </MPM>
-  </MaterialProperties>
   <Grid>
 
     <BoundaryConditions>
@@ -144,12 +120,6 @@
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="Velocity" var="Dirichlet">
-          <value>[0.0,0.0,0.0]</value>
-        </BCType>
-        <BCType id="all" label="Temperature" var="Dirichlet">
-          <value>1000.0</value>
         </BCType>
         <BCType id="all" label="eta" var="Dirichlet">
           <value>0.0</value>
@@ -256,12 +226,6 @@
         <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Velocity" var="Neumann">
-          <value> [0.0,0.0,0.0] </value>
-        </BCType>
-        <BCType id="all" label="Temperature" var="Neumann">
-          <value> 298.0 </value>
-        </BCType>
         <BCType id="all" label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -366,12 +330,6 @@
         </BCType>
         <BCType id="all" label="test_scalar" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="Velocity" var="Dirichlet">
-          <value> [0.0,0.0,0.0] </value>
-        </BCType>
-        <BCType id="all" label="Temperature" var="Dirichlet">
-          <value> 298.0 </value>
         </BCType>
         <BCType id="all" label="eta" var="Neumann">
           <value>0.0</value>
@@ -482,12 +440,6 @@
         <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Velocity" var="Dirichlet">
-          <value> [0.0,0.0,0.0] </value>
-        </BCType>
-        <BCType id="all" label="Temperature" var="Dirichlet">
-          <value> 298.0 </value>
-        </BCType>
         <BCType id="all" label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -596,12 +548,6 @@
         <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Velocity" var="Dirichlet">
-          <value> [0.0,0.0,0.0] </value>
-        </BCType>
-        <BCType id="all" label="Temperature" var="Dirichlet">
-          <value> 298.0 </value>
-        </BCType>
         <BCType id="all" label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -709,12 +655,6 @@
         </BCType>
         <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="Velocity" var="Dirichlet">
-          <value> [0.0,0.0,0.0] </value>
-        </BCType>
-        <BCType id="all" label="Temperature" var="Neumann">
-          <value> 298.0 </value>
         </BCType>
         <BCType id="all" label="eta" var="Neumann">
           <value>0.0</value>
@@ -979,6 +919,7 @@
           <inputfile>inputs/ARCHES/ClassicMixingTables/coal/DQMOM_coal.mix.gz</inputfile>
           <hl_scalar_init>0.885</hl_scalar_init>
           <coal fp_label="mixture_fraction_2" eta_label="coal_gas_mix_frac" hl_label="heat_loss"/>
+          <reference_state fp="0.0" eta="0.0" hl="0.0"/>
         </ClassicTable>
       </Properties>
 

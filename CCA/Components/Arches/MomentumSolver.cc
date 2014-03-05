@@ -472,7 +472,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-  if (!(this->get_use_wasatch_mom_rhs())) tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,   gac, 1);
+  if (!(this->get_use_wasatch_mom_rhs())) tsk->requires(Task::OldDW, d_lab->d_denRefArrayLabel,   gac, 1);
 //#endif // WASATCH_IN_ARCHES
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,  gac, 2);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 2);
@@ -589,7 +589,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     new_dw->get(constVelocityVars.new_density, d_lab->d_densityCPLabel,     indx, patch, gac, 1);
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-    if (!(this->get_use_wasatch_mom_rhs())) new_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayLabel,   indx, patch, gac, 1);
+    if (!(this->get_use_wasatch_mom_rhs())) old_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayLabel,   indx, patch, gac, 1);
 //#endif // WASATCH_IN_ARCHES
     new_dw->get(constVelocityVars.viscosity,   d_lab->d_viscosityCTSLabel,  indx, patch, gac, 2);
     new_dw->get(constVelocityVars.uVelocity,   d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 2);

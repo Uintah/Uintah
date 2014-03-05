@@ -119,6 +119,10 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
 
     _iv_transform = scinew SingleMF( d_constants, model ); 
 
+  } else if ( db->findBlock("single_iv") ) {
+
+    _iv_transform = scinew SingleIV( d_constants, model ); 
+
   } else { 
 
     _iv_transform = scinew NoTransform();
@@ -296,3 +300,5 @@ MixingRxnModel::InertMixing::InertMixing( std::map<string,double>& keys, MixingR
 MixingRxnModel::InertMixing::~InertMixing(){}
 MixingRxnModel::SingleMF::SingleMF( std::map<string,double>& keys, MixingRxnModel* const model) : _keys(keys), _model(model) {}; 
 MixingRxnModel::SingleMF::~SingleMF(){}; 
+MixingRxnModel::SingleIV::SingleIV( std::map<string,double>& keys, MixingRxnModel* const model) : _keys(keys), _model(model) {}; 
+MixingRxnModel::SingleIV::~SingleIV(){}; 

@@ -141,6 +141,8 @@
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/acidbase/MixTable1D.mix.gz</inputfile>
           <cold_flow>true</cold_flow>
+          <single_iv iv_label="mixture_fraction"/>
+          <reference_state iv="0.0"/>
         </ClassicTable>
       </Properties>
 

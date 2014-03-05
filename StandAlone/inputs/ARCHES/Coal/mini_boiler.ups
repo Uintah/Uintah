@@ -14,7 +14,7 @@
     <delt_min>1e-16</delt_min>
     <delt_max>2e-4</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
-    <!--max_Timesteps>1000000</max_Timesteps-->
+    <max_Timesteps>10</max_Timesteps>
   </Time>
 
   <DataArchiver>
@@ -5550,7 +5550,6 @@
           <initialization type ="constant">
             <constant>0.0</constant>
           </initialization>
-          <soot_label>soot</soot_label>
         </model>
       </PropertyModels>
 
@@ -5565,6 +5564,7 @@
           <inputfile>inputs/ARCHES/ClassicMixingTables/coal/simon5hi.mix.gz</inputfile>
           <hl_scalar_init>0.885</hl_scalar_init>
           <coal fp_label="mixture_fraction_2" eta_label="coal_gas_mix_frac" hl_label="heat_loss"/>
+          <reference_state fp="0.0" eta="0.0" hl="0.0"/>
         </ClassicTable>
       </Properties>
 
