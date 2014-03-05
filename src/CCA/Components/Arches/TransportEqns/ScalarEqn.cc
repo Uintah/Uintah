@@ -915,8 +915,9 @@ ScalarEqn::advClipping( const ProcessorGroup* pc,
 
 		for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++)
 		{
-			IntVector c = *iter; 
-      int id_pos;
+			IntVector c = *iter;
+      int bounds = 9999;
+      int id_pos=bounds;
 			// find where independent vector is
 			for(int i=0; i < (length_clip_ind_vec-1); i = i + 1)
 			{
@@ -931,6 +932,9 @@ ScalarEqn::advClipping( const ProcessorGroup* pc,
 					break;
 				}	
 			}
+      if ( id_pos = bounds){
+        throw InvalidValue("Error: For Clipping on equation: "+d_eqnName+" cannot find the dependent clipping variable.", __FILE__, __LINE__);
+      }
 			double see_value;
 			double see_value_n;
 			if ( (ivcon[c]>0) && (ivcon[c]<1) )
