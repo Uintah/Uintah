@@ -172,6 +172,8 @@
     <!-- ARCHES specification -->
     <ARCHES>
 
+      <BoundaryConditions/>
+
       <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
