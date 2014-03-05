@@ -147,6 +147,7 @@ c               VIST = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J,K+1))+
 c     &              0.5D0*(VIS(I-1,J,K)+VIS(I-1,J,K+1)))
 c               VISB = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J,K-1))+
 c     &              0.5D0*(VIS(I-1,J,K)+VIS(I-1,J,K-1)))  
+
                VISN = FAC1NS(J)*0.5D0*(VIS(I,J+1,K)+VIS(I-1,J+1,K))+
      +                FAC2NS(J)*0.5D0*(VIS(I,J+N_shift(J),K)+
      +                                 VIS(I-1,J+N_shift(J),K))

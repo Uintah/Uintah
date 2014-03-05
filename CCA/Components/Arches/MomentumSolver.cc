@@ -107,14 +107,24 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   d_discretize = scinew Discretization();
 
   string conv_scheme;
+  d_central = false;
   db->getWithDefault("convection_scheme",conv_scheme,"upwind");
   if (conv_scheme == "upwind"){
-    d_central = false;
+    d_conv_scheme = Discretization::UPWIND; 
   }else if (conv_scheme == "central"){
     d_central = true;     
+    d_conv_scheme = Discretization::CENTRAL; 
+  } else if (conv_scheme == "wall_upwind") {
+    d_conv_scheme = Discretization::WALLUPWIND; 
+  } else if (conv_scheme == "old_upwind"){ 
+    d_conv_scheme = Discretization::OLD;
+  } else if (conv_scheme == "old_central"){ 
+    d_conv_scheme = Discretization::OLD;
+    d_central = true; 
   }else{
     throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
   }
+  db->getWithDefault("Re_limit",d_re_limit,2.0);
 
   // -------------- initialization   
   if ( db->findBlock("initialization") ){ 
@@ -652,17 +662,18 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
       //__________________________________
       //  compute coefficients
-      d_discretize->calculateVelocityCoeff(patch, 
-                                       delta_t, d_central, 
-                                       cellinfo, &velocityVars,
-                                       &constVelocityVars);
+      d_discretize->calculateVelocityCoeff( patch, 
+                                            delta_t, d_central, 
+                                            cellinfo, &velocityVars,
+                                            &constVelocityVars, d_conv_scheme, 
+                                            d_re_limit );
       
       //__________________________________
       //  Compute the sources
-      d_source->calculateVelocitySource(patch, 
-                                        delta_t,
-                                        cellinfo, &velocityVars,
-                                        &constVelocityVars);
+      d_source->calculateVelocitySource( patch, 
+                                         delta_t,
+                                         cellinfo, &velocityVars,
+                                         &constVelocityVars);
 
       //----------------------------------
       // If not doing MPMArches, then need to 
