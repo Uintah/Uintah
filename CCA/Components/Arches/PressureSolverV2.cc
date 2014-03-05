@@ -112,6 +112,10 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
                                                            state);
   d_hypreSolver_parameters->setSolveOnExtraCells(false);
 
+  //force a zero setup frequency since nothing else
+  //makes any sense at the moment. 
+  d_hypreSolver_parameters->setSetupFrequency(0.0); 
+
   //__________________________________
   // allow for addition of mass source terms
   if (db->findBlock("src")){

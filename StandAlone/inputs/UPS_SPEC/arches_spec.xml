@@ -764,7 +764,7 @@
                 <max_iter                 spec="REQUIRED INTEGER" />
               </LinearSolver>
               <spherical_harmonics        spec="OPTIONAL BOOLEAN" />                                   <!-- Spherical harmonics, default = false (works?) --> 
-              <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon, radprops'">
+              <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon, radprops, hottel_sarofim'">
                 <min                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
                 <max                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
                 <abskg                   spec="REQUIRED DOUBLE" need_applies_to="type constant" />
@@ -777,6 +777,10 @@
                   <complex_ir_real       spec="REQUIRED DOUBLE 'positive'"/> <!-- Real part of the complex index of refraction --> 
                   <complex_ir_imag       spec="REQUIRED DOUBLE 'negative'"/> <!-- Imaginary part of the complex index of refraction --> 
                 </particles>
+                <opl                     spec="REQUIRED DOUBLE 'positive'" need_applies_to="type hottel_sarofim"/> <!-- Optical Path Length --> 
+                <co2_name                spec="OPTIONAL STRING" need_applies_to="type hottel_sarofim"/> <!-- Default = CO2 --> 
+                <h2o_name                spec="OPTIONAL STRING" need_applies_to="type hottel_sarofim"/> <!-- Default = H2O --> 
+                <soot_name               spec="OPTIONAL STRING" need_applies_to="type hottel_sarofim"/> <!-- Default = soot --> 
               </property_calculator> 
             </DORadiationModel>
 
