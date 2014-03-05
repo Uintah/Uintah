@@ -245,7 +245,7 @@ namespace Uintah {
         constCCVariable<double>& density, 
         Iterator bound_ptr, Vector value );
 
-      void setVel__NEW( const Patch* patch, const Patch::FaceType& face, 
+      void setVel( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel, 
         constCCVariable<double>& density, 
         Iterator bound_iter, Vector value );
@@ -1042,12 +1042,14 @@ BoundaryCondition::delPForOutletPressure__NEW( const Patch* patch,
                  IntVector c = *bound_ptr; 
 
                  double ave_density = 0.5 * ( density[c] + density[c - insideCellDir] ); 
+  
+                 if ( ave_density > 1e-10 ){ 
+                   double gradP = FOS.sign * 2.0 * dt * P[c - insideCellDir] / ( FOS.dx * ave_density ); 
 
-                 double gradP = FOS.sign * 2.0 * dt * P[c - insideCellDir] / ( FOS.dx * ave_density ); 
+                   vel[c - FOS.bo] += gradP; 
 
-                 vel[c - FOS.bo] += gradP; 
-
-                 vel[c - FOS.eo] = vel[c - FOS.bo]; 
+                   vel[c - FOS.eo] = vel[c - FOS.bo]; 
+                 }
 
                }
             }

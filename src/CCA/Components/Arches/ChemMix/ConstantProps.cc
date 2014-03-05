@@ -302,14 +302,8 @@ ConstantProps::getState( const ProcessorGroup* pc,
     // reference density modification 
     if ( modify_ref_den ) {
 
-      double den_ref = 0.0;
+      new_dw->put(sum_vartype(_density),time_labels->ref_density);
 
-      if (patch->containsCell(d_ijk_den_ref)) {
-
-        den_ref = arches_density[d_ijk_den_ref];
-
-      }
-      new_dw->put(sum_vartype(den_ref),time_labels->ref_density);
     }
   }
 }
