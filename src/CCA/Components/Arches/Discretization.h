@@ -42,6 +42,7 @@
 #include <Core/Containers/Array1.h>
 namespace Uintah {
   class ProcessorGroup;
+  class PhysicalConstants;
 
 using namespace SCIRun;
 
@@ -86,30 +87,17 @@ public:
 
   enum MOMCONV { UPWIND, WALLUPWIND, CENTRAL, OLD };
 
-  // GROUP: Constructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Construct an instance of a Discretization.
-  // PRECONDITIONS
-  // POSTCONDITIONS
-  // Default constructor.
-  Discretization();
+  Discretization(PhysicalConstants* physConst);
 
-  // GROUP: Destructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Virtual Destructor
   virtual ~Discretization();
 
-  // GROUP:  Action Methods
-  ////////////////////////////////////////////////////////////////////////
-  // Set stencil weights. (Velocity)
-  // It uses second order hybrid differencing for computing
-  // coefficients
   void calculateVelocityCoeff(const Patch* patch,
                               double delta_t,
                               bool lcentral,
                               CellInformation* cellinfo,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars, 
+                              constCCVariable<double> volFraction,
                               MOMCONV scheme, double re_limit);
 
   template<class T>
@@ -123,13 +111,9 @@ public:
                                  T& source);   
   
                   
-  ////////////////////////////////////////////////////////////////////////
-  // Documentation here
   void calculateVelDiagonal(const Patch* patch,
                             ArchesVariables* vars);
 
-  ////////////////////////////////////////////////////////////////////////
-  // Documentation here
   void calculatePressDiagonal(const Patch* patch, 
                               ArchesVariables* vars);
 
@@ -144,18 +128,11 @@ public:
 protected:
 
 private:
-   
-      // Stencil weights.
-      // Array of size NDIM and of depth determined by stencil coefficients
-      //StencilMatrix<CCVariable<double> >* d_press_stencil_matrix;
-      // stores coefficients for all the velocity components
-      // coefficients should be saved on staggered grid
-      //StencilMatrix<FCVariable<double> >* d_mom_stencil_matrix;
-      // coefficients for all the scalar components
-      //StencilMatrix<CCVariable<double> >* d_scalar_stencil_matrix;
 
       Filter* d_filter;
       double d_turbPrNo;
+      PhysicalConstants* d_physicalConsts;
+
 }; // end class Discretization
 
 } // End namespace Uintah

@@ -72,6 +72,8 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
   // in the principal direction
   IntVector noNeighborsLow = patch->noNeighborsLow();
   IntVector noNeighborsHigh = patch->noNeighborsHigh();
+
+  Vector DX = patch->dCell(); 
   
   //__________________________________
   //    X dir
@@ -86,7 +88,7 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
                                vars->uVelRhoHat,               
                                constvars->new_density,         
                                vars->uVelocityCoeff,                    
-                               cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+                               DX,
                                volFrac,
                                delta_t);
 
@@ -103,7 +105,7 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
                                vars->vVelRhoHat,               
                                constvars->new_density,         
                                vars->vVelocityCoeff,                    
-                               cellinfo->sew, cellinfo->snsv, cellinfo->stb,          
+                               DX,
                                volFrac,
                                delta_t);
   //__________________________________
@@ -119,7 +121,7 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
                                vars->wVelRhoHat,               
                                constvars->new_density,         
                                vars->wVelocityCoeff,                    
-                               cellinfo->sew, cellinfo->sns, cellinfo->stbw,          
+                               DX,
                                volFrac,
                                delta_t);
 
@@ -206,19 +208,22 @@ RHSSolver::explicitUpdate_stencilMatrix(CellIterator iter,
                                         T& new_phi,
                                         constCCVariable<double> density,
                                         StencilMatrix<T>& A,
-                                        const OffsetArray1<double>& sew,
-                                        const OffsetArray1<double>& sns,
-                                        const OffsetArray1<double>& stb,
+                                        const Vector Dx,
                                         constCCVariable<double>& volFraction, 
                                         double delta_t)
 {
+
+  double vol = Dx.x()*Dx.y()*Dx.z(); 
+
   for (; !iter.done(); iter++) {
+
     IntVector c = *iter;                                                            
     IntVector adj = c + shift;
+
     int i = c.x();
     int j = c.y();
     int k = c.z();                                                 
-    double vol = sew[i]*sns[j]*stb[k];    
+
     double apo = 0.5 * (density[c] + density[adj])*vol/delta_t;
 
     double rhs = A[Arches::AE][c] * old_phi[c + IntVector(1,0,0)] +                             
@@ -230,10 +235,11 @@ RHSSolver::explicitUpdate_stencilMatrix(CellIterator iter,
                  source[c] - A[Arches::AP][c] * old_phi[c];
 
     rhs *= volFraction[c] * volFraction[c+shift]; 
+
     
     //Note: volume fraction use here is a hack until the momentum solver is rewritten.
     if ( std::abs(apo) > 1e-16 )
       new_phi[c] = rhs/apo;
-
+    
   } 
 }

@@ -7,5 +7,8 @@ void uvelcoef_central( constSFCXVariable<double> uu, SFCXVariable<double> cesav,
                        SFCXVariable<double> at, SFCXVariable<double> ab,
                        constSFCYVariable<double> vv, constSFCZVariable<double> ww,
                        constCCVariable<double> den, constCCVariable<double> vis,
-                       double deltat, double dx, double dy, double dz, 
-                       IntVector idxLoU, IntVector idxHiU);
+                       constCCVariable<double> den_ref, SFCXVariable<double> SU,
+                       constCCVariable<double> old_den, constSFCXVariable<double> old_UU,
+                       constCCVariable<double> eps, 
+                       double deltat, double grav, double dx, double dy, double dz, 
+                       IntVector idxLoU, IntVector idxHiU );

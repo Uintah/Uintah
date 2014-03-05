@@ -120,13 +120,15 @@ public:
                                ArchesConstVariables* constvars);
 
   template<class T>
-  void compute_massSource(CellIterator iter,
+  void compute_massSource(CellIterator iter, IntVector D, 
+                           constCCVariable<double> volFraction, 
                            const T& vel,
                            StencilMatrix<T>& velCoeff,
                            T& velNonLinearSrc,
                            StencilMatrix<T>& velConvectCoeff);
                            
   void modifyVelMassSource(const Patch* patch,
+                           constCCVariable<double> volFraction, 
                            ArchesVariables* vars,
                            ArchesConstVariables* constvars);
 
