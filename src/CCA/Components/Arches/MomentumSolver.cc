@@ -450,7 +450,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 2);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
-  tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, gac, 1); 
+  tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, gac, 2); 
 
   if (timelabels->multiple_steps){
     tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,gac, 2);
@@ -565,7 +565,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 2);
     constCCVariable<double> volFraction; 
-    new_dw->get(volFraction, d_lab->d_volFractionLabel, indx, patch, gac, 1);
+    new_dw->get(volFraction, d_lab->d_volFractionLabel, indx, patch, gac, 2);
 
     if (timelabels->multiple_steps){
       new_dw->get(constVelocityVars.density, d_lab->d_densityTempLabel, indx, patch, gac, 2);
