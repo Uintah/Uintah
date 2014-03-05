@@ -398,9 +398,10 @@ namespace Wasatch{
         case Expr::COMPUTES:
           dbg_fields << std::setw(10) << "COMPUTES";
           ASSERT( dw == Uintah::Task::NewDW );
-          task.computes( fieldInfo.varlabel,
-                         patches, Uintah::Task::ThisLevel,
-                         materials, Uintah::Task::NormalDomain );
+          task.computesWithScratchGhost( fieldInfo.varlabel,
+                                         materials, Uintah::Task::NormalDomain,
+                                         fieldInfo.ghostType, fieldInfo.nghost );
+
           break;
 
         case Expr::REQUIRES:
