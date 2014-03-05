@@ -145,8 +145,17 @@ $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mm_explicit_vel_fort.h
 $(SRCDIR)/CellInformation.$(OBJEXT): $(SRCDIR)/fortran/cellg_fort.h
 $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/prescoef_var_fort.h
 $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/uvelcoef_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/uvelcoef_central_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/uvelcoef_upwind_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/uvelcoef_mixed_fort.h
 $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/vvelcoef_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/vvelcoef_central_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/vvelcoef_upwind_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/vvelcoef_mixed_fort.h
 $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/wvelcoef_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/wvelcoef_central_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/wvelcoef_upwind_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/wvelcoef_mixed_fort.h
 $(SRCDIR)/SmagorinskyModel.$(OBJEXT): $(SRCDIR)/fortran/smagmodel_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/pressrcpred_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/pressrcpred_var_fort.h

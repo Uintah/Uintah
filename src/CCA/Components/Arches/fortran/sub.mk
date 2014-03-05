@@ -43,12 +43,21 @@ SRCS += \
         $(SRCDIR)/prescoef_var.F \
         $(SRCDIR)/pressrcpred.F \
         $(SRCDIR)/pressrcpred_var.F \
-        $(SRCDIR)/uvelcoef.F \
+				$(SRCDIR)/uvelcoef.F \
+				$(SRCDIR)/uvelcoef_central.F \
+				$(SRCDIR)/uvelcoef_upwind.F \
+				$(SRCDIR)/uvelcoef_mixed.F \
         $(SRCDIR)/uvelsrc.F \
         $(SRCDIR)/vvelcoef.F \
+        $(SRCDIR)/vvelcoef_central.F \
+        $(SRCDIR)/vvelcoef_upwind.F \
+        $(SRCDIR)/vvelcoef_mixed.F \
         $(SRCDIR)/vvelsrc.F \
         $(SRCDIR)/wallbc.F \
         $(SRCDIR)/wvelcoef.F \
+        $(SRCDIR)/wvelcoef_central.F \
+        $(SRCDIR)/wvelcoef_upwind.F \
+        $(SRCDIR)/wvelcoef_mixed.F \
         $(SRCDIR)/wvelsrc.F 
 
 PSELIBS := 
@@ -72,10 +81,19 @@ $(SRCDIR)/prescoef_var.$(OBJEXT): $(SRCDIR)/prescoef_var_fort.h
 $(SRCDIR)/pressrcpred.$(OBJEXT): $(SRCDIR)/pressrcpred_fort.h
 $(SRCDIR)/pressrcpred_var.$(OBJEXT): $(SRCDIR)/pressrcpred_var_fort.h
 $(SRCDIR)/uvelcoef.$(OBJEXT): $(SRCDIR)/uvelcoef_fort.h
+$(SRCDIR)/uvelcoef_central.$(OBJEXT): $(SRCDIR)/uvelcoef_central_fort.h
+$(SRCDIR)/uvelcoef_upwind.$(OBJEXT): $(SRCDIR)/uvelcoef_upwind_fort.h
+$(SRCDIR)/uvelcoef_mixed.$(OBJEXT): $(SRCDIR)/uvelcoef_mixed_fort.h
 $(SRCDIR)/uvelsrc.$(OBJEXT): $(SRCDIR)/uvelsrc_fort.h
 $(SRCDIR)/vvelcoef.$(OBJEXT): $(SRCDIR)/vvelcoef_fort.h
+$(SRCDIR)/vvelcoef_central.$(OBJEXT): $(SRCDIR)/vvelcoef_central_fort.h
+$(SRCDIR)/vvelcoef_upwind.$(OBJEXT): $(SRCDIR)/vvelcoef_upwind_fort.h
+$(SRCDIR)/vvelcoef_mixed.$(OBJEXT): $(SRCDIR)/vvelcoef_mixed_fort.h
 $(SRCDIR)/vvelsrc.$(OBJEXT): $(SRCDIR)/vvelsrc_fort.h
 $(SRCDIR)/wallbc.$(OBJEXT): $(SRCDIR)/wallbc_fort.h
 $(SRCDIR)/wvelcoef.$(OBJEXT): $(SRCDIR)/wvelcoef_fort.h
+$(SRCDIR)/wvelcoef_central.$(OBJEXT): $(SRCDIR)/wvelcoef_central_fort.h
+$(SRCDIR)/wvelcoef_upwind.$(OBJEXT): $(SRCDIR)/wvelcoef_upwind_fort.h
+$(SRCDIR)/wvelcoef_mixed.$(OBJEXT): $(SRCDIR)/wvelcoef_mixed_fort.h
 $(SRCDIR)/wvelsrc.$(OBJEXT): $(SRCDIR)/wvelsrc_fort.h
 

@@ -50,9 +50,19 @@ using namespace Uintah;
 #ifdef divergenceconstraint
 #include <CCA/Components/Arches/fortran/prescoef_var_fort.h>
 #endif
+#include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/fortran/uvelcoef_fort.h>
+#include <CCA/Components/Arches/fortran/uvelcoef_central_fort.h>
+#include <CCA/Components/Arches/fortran/uvelcoef_upwind_fort.h>
+#include <CCA/Components/Arches/fortran/uvelcoef_mixed_fort.h>
 #include <CCA/Components/Arches/fortran/vvelcoef_fort.h>
+#include <CCA/Components/Arches/fortran/vvelcoef_central_fort.h>
+#include <CCA/Components/Arches/fortran/vvelcoef_upwind_fort.h>
+#include <CCA/Components/Arches/fortran/vvelcoef_mixed_fort.h>
 #include <CCA/Components/Arches/fortran/wvelcoef_fort.h>
+#include <CCA/Components/Arches/fortran/wvelcoef_central_fort.h>
+#include <CCA/Components/Arches/fortran/wvelcoef_upwind_fort.h>
+#include <CCA/Components/Arches/fortran/wvelcoef_mixed_fort.h>
 
 //****************************************************************************
 // Default constructor for Discretization
@@ -78,7 +88,9 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                                        bool lcentral,
                                        CellInformation* cellinfo,
                                        ArchesVariables* coeff_vars,
-                                       ArchesConstVariables* coeff_constvars)
+                                       ArchesConstVariables* coeff_constvars, 
+                                       MOMCONV conv_scheme, 
+                                       double Re_limit)
 {
    // ignore faces that lie on the edge of the computational domain
   // in the principal direction
@@ -90,39 +102,114 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
   IntVector idxLoU = patch->getSFCXLowIndex() - noNeighborsLow * oci;
   IntVector idxHiU = patch->getSFCXHighIndex()+ noNeighborsHigh * oci - IntVector(1,1,1);
 
+  Vector DX = patch->dCell(); 
+  double dx = DX.x(); 
+  double dy = DX.y(); 
+  double dz = DX.z(); 
+
+  int wall1 = BoundaryCondition::WALL; 
+  int wall2 = BoundaryCondition::INTRUSION; 
+
   // Calculate the coeffs
-  fort_uvelcoef(coeff_constvars->uVelocity,
-                coeff_vars->uVelocityConvectCoeff[Arches::AE],
-                coeff_vars->uVelocityConvectCoeff[Arches::AW],
-                coeff_vars->uVelocityConvectCoeff[Arches::AN],
-                coeff_vars->uVelocityConvectCoeff[Arches::AS],
-                coeff_vars->uVelocityConvectCoeff[Arches::AT],
-                coeff_vars->uVelocityConvectCoeff[Arches::AB],
-                coeff_vars->uVelocityCoeff[Arches::AP],
-                coeff_vars->uVelocityCoeff[Arches::AE],
-                coeff_vars->uVelocityCoeff[Arches::AW],
-                coeff_vars->uVelocityCoeff[Arches::AN],
-                coeff_vars->uVelocityCoeff[Arches::AS],
-                coeff_vars->uVelocityCoeff[Arches::AT],
-                coeff_vars->uVelocityCoeff[Arches::AB],
-                coeff_constvars->vVelocity, coeff_constvars->wVelocity,
-                coeff_constvars->density, coeff_constvars->viscosity,
-                delta_t, lcentral,
-                cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-                cellinfo->cnn, cellinfo->csn, cellinfo->css,
-                cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-                cellinfo->sewu, cellinfo->sew, cellinfo->sns,
-                cellinfo->stb, cellinfo->dxepu, cellinfo->dxpwu,
-                cellinfo->dxpw, cellinfo->dynp, cellinfo->dyps,
-                cellinfo->dztp, cellinfo->dzpb, cellinfo->fac1u,
-                cellinfo->fac2u, cellinfo->fac3u, cellinfo->fac4u,
-                cellinfo->iesdu, cellinfo->iwsdu, cellinfo->nfac,
-                cellinfo->sfac, cellinfo->tfac, cellinfo->bfac,
-                cellinfo->fac1ns, cellinfo->fac2ns, cellinfo->fac3ns,
-                cellinfo->fac4ns, cellinfo->n_shift, cellinfo->s_shift,
-                cellinfo->fac1tb, cellinfo->fac2tb, cellinfo->fac3tb,
-                cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
-                idxLoU, idxHiU);
+  switch (conv_scheme){ 
+    case Discretization::CENTRAL: 
+      fort_uvelcoef_central( coeff_constvars->uVelocity,
+                             coeff_vars->uVelocityConvectCoeff[Arches::AE],
+                             coeff_vars->uVelocityConvectCoeff[Arches::AW],
+                             coeff_vars->uVelocityConvectCoeff[Arches::AN],
+                             coeff_vars->uVelocityConvectCoeff[Arches::AS],
+                             coeff_vars->uVelocityConvectCoeff[Arches::AT],
+                             coeff_vars->uVelocityConvectCoeff[Arches::AB],
+                             coeff_vars->uVelocityCoeff[Arches::AP],
+                             coeff_vars->uVelocityCoeff[Arches::AE],
+                             coeff_vars->uVelocityCoeff[Arches::AW],
+                             coeff_vars->uVelocityCoeff[Arches::AN],
+                             coeff_vars->uVelocityCoeff[Arches::AS],
+                             coeff_vars->uVelocityCoeff[Arches::AT],
+                             coeff_vars->uVelocityCoeff[Arches::AB],
+                             coeff_constvars->vVelocity, coeff_constvars->wVelocity,
+                             coeff_constvars->density, coeff_constvars->viscosity,
+                             delta_t, dx, dy, dz,
+                             idxLoU, idxHiU);
+      break; 
+    case Discretization::UPWIND: 
+      fort_uvelcoef_upwind( coeff_constvars->uVelocity,
+                            coeff_vars->uVelocityConvectCoeff[Arches::AE],
+                            coeff_vars->uVelocityConvectCoeff[Arches::AW],
+                            coeff_vars->uVelocityConvectCoeff[Arches::AN],
+                            coeff_vars->uVelocityConvectCoeff[Arches::AS],
+                            coeff_vars->uVelocityConvectCoeff[Arches::AT],
+                            coeff_vars->uVelocityConvectCoeff[Arches::AB],
+                            coeff_vars->uVelocityCoeff[Arches::AP],
+                            coeff_vars->uVelocityCoeff[Arches::AE],
+                            coeff_vars->uVelocityCoeff[Arches::AW],
+                            coeff_vars->uVelocityCoeff[Arches::AN],
+                            coeff_vars->uVelocityCoeff[Arches::AS],
+                            coeff_vars->uVelocityCoeff[Arches::AT],
+                            coeff_vars->uVelocityCoeff[Arches::AB],
+                            coeff_constvars->vVelocity, coeff_constvars->wVelocity,
+                            coeff_constvars->density, coeff_constvars->viscosity,
+                            delta_t, dx, dy, dz,
+                            idxLoU, idxHiU);
+      break; 
+    case Discretization::WALLUPWIND: 
+      fort_uvelcoef_mixed( coeff_constvars->uVelocity, coeff_constvars->cellType, 
+                           coeff_vars->uVelocityConvectCoeff[Arches::AE],
+                           coeff_vars->uVelocityConvectCoeff[Arches::AW],
+                           coeff_vars->uVelocityConvectCoeff[Arches::AN],
+                           coeff_vars->uVelocityConvectCoeff[Arches::AS],
+                           coeff_vars->uVelocityConvectCoeff[Arches::AT],
+                           coeff_vars->uVelocityConvectCoeff[Arches::AB],
+                           coeff_vars->uVelocityCoeff[Arches::AP],
+                           coeff_vars->uVelocityCoeff[Arches::AE],
+                           coeff_vars->uVelocityCoeff[Arches::AW],
+                           coeff_vars->uVelocityCoeff[Arches::AN],
+                           coeff_vars->uVelocityCoeff[Arches::AS],
+                           coeff_vars->uVelocityCoeff[Arches::AT],
+                           coeff_vars->uVelocityCoeff[Arches::AB],
+                           coeff_constvars->vVelocity, coeff_constvars->wVelocity,
+                           coeff_constvars->density, coeff_constvars->viscosity,
+                           delta_t, dx, dy, dz,
+                           wall1, wall2, Re_limit,
+                           idxLoU, idxHiU);
+      break; 
+    case Discretization::OLD: 
+      fort_uvelcoef(coeff_constvars->uVelocity,
+                    coeff_vars->uVelocityConvectCoeff[Arches::AE],
+                    coeff_vars->uVelocityConvectCoeff[Arches::AW],
+                    coeff_vars->uVelocityConvectCoeff[Arches::AN],
+                    coeff_vars->uVelocityConvectCoeff[Arches::AS],
+                    coeff_vars->uVelocityConvectCoeff[Arches::AT],
+                    coeff_vars->uVelocityConvectCoeff[Arches::AB],
+                    coeff_vars->uVelocityCoeff[Arches::AP],
+                    coeff_vars->uVelocityCoeff[Arches::AE],
+                    coeff_vars->uVelocityCoeff[Arches::AW],
+                    coeff_vars->uVelocityCoeff[Arches::AN],
+                    coeff_vars->uVelocityCoeff[Arches::AS],
+                    coeff_vars->uVelocityCoeff[Arches::AT],
+                    coeff_vars->uVelocityCoeff[Arches::AB],
+                    coeff_constvars->vVelocity, coeff_constvars->wVelocity,
+                    coeff_constvars->density, coeff_constvars->viscosity,
+                    delta_t, lcentral,
+                    cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
+                    cellinfo->cnn, cellinfo->csn, cellinfo->css,
+                    cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
+                    cellinfo->sewu, cellinfo->sew, cellinfo->sns,
+                    cellinfo->stb, cellinfo->dxepu, cellinfo->dxpwu,
+                    cellinfo->dxpw, cellinfo->dynp, cellinfo->dyps,
+                    cellinfo->dztp, cellinfo->dzpb, cellinfo->fac1u,
+                    cellinfo->fac2u, cellinfo->fac3u, cellinfo->fac4u,
+                    cellinfo->iesdu, cellinfo->iwsdu, cellinfo->nfac,
+                    cellinfo->sfac, cellinfo->tfac, cellinfo->bfac,
+                    cellinfo->fac1ns, cellinfo->fac2ns, cellinfo->fac3ns,
+                    cellinfo->fac4ns, cellinfo->n_shift, cellinfo->s_shift,
+                    cellinfo->fac1tb, cellinfo->fac2tb, cellinfo->fac3tb,
+                    cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
+                    idxLoU, idxHiU);
+
+    default: 
+      break; 
+  }
 
   //__________________________________
   //      Y DIR
@@ -130,78 +217,211 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
   IntVector idxLoV = patch->getSFCYLowIndex() - noNeighborsLow * oci;
   IntVector idxHiV = patch->getSFCYHighIndex()+ noNeighborsHigh * oci - IntVector(1,1,1);
 
-  // Calculate the coeffs
-  fort_vvelcoef(coeff_constvars->vVelocity,
-                coeff_vars->vVelocityConvectCoeff[Arches::AE],
-                coeff_vars->vVelocityConvectCoeff[Arches::AW],
-                coeff_vars->vVelocityConvectCoeff[Arches::AN],
-                coeff_vars->vVelocityConvectCoeff[Arches::AS],
-                coeff_vars->vVelocityConvectCoeff[Arches::AT],
-                coeff_vars->vVelocityConvectCoeff[Arches::AB],
-                coeff_vars->vVelocityCoeff[Arches::AP],
-                coeff_vars->vVelocityCoeff[Arches::AE],
-                coeff_vars->vVelocityCoeff[Arches::AW],
-                coeff_vars->vVelocityCoeff[Arches::AN],
-                coeff_vars->vVelocityCoeff[Arches::AS],
-                coeff_vars->vVelocityCoeff[Arches::AT],
-                coeff_vars->vVelocityCoeff[Arches::AB],
-                coeff_constvars->uVelocity, coeff_constvars->wVelocity,
-                coeff_constvars->density, coeff_constvars->viscosity,
-                delta_t,lcentral,
-                cellinfo->cee, cellinfo->cwe, cellinfo->cww,
-                cellinfo->cnnv, cellinfo->csnv, cellinfo->cssv,
-                cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-                cellinfo->sew, cellinfo->snsv, cellinfo->sns,
-                cellinfo->stb, cellinfo->dxep, cellinfo->dxpw,
-                cellinfo->dynpv, cellinfo->dypsv, cellinfo->dyps,
-                cellinfo->dztp, cellinfo->dzpb, cellinfo->fac1v,
-                cellinfo->fac2v, cellinfo->fac3v, cellinfo->fac4v,
-                cellinfo->jnsdv, cellinfo->jssdv, cellinfo->efac,
-                cellinfo->wfac, cellinfo->tfac, cellinfo->bfac,
-                cellinfo->fac1ew, cellinfo->fac2ew, cellinfo->fac3ew,
-                cellinfo->fac4ew, cellinfo->e_shift, cellinfo->w_shift,
-                cellinfo->fac1tb, cellinfo->fac2tb, cellinfo->fac3tb,
-                cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
-                idxLoV, idxHiV);
+  switch (conv_scheme){ 
+    case Discretization::CENTRAL: 
+      fort_vvelcoef_central( coeff_constvars->vVelocity,
+                             coeff_vars->vVelocityConvectCoeff[Arches::AE],
+                             coeff_vars->vVelocityConvectCoeff[Arches::AW],
+                             coeff_vars->vVelocityConvectCoeff[Arches::AN],
+                             coeff_vars->vVelocityConvectCoeff[Arches::AS],
+                             coeff_vars->vVelocityConvectCoeff[Arches::AT],
+                             coeff_vars->vVelocityConvectCoeff[Arches::AB],
+                             coeff_vars->vVelocityCoeff[Arches::AP],
+                             coeff_vars->vVelocityCoeff[Arches::AE],
+                             coeff_vars->vVelocityCoeff[Arches::AW],
+                             coeff_vars->vVelocityCoeff[Arches::AN],
+                             coeff_vars->vVelocityCoeff[Arches::AS],
+                             coeff_vars->vVelocityCoeff[Arches::AT],
+                             coeff_vars->vVelocityCoeff[Arches::AB],
+                             coeff_constvars->uVelocity, coeff_constvars->wVelocity,
+                             coeff_constvars->density, coeff_constvars->viscosity,
+                             delta_t, dx, dy, dz, 
+                             idxLoV, idxHiV);
+      break;
+    case Discretization::UPWIND: 
+      fort_vvelcoef_upwind( coeff_constvars->vVelocity,
+                            coeff_vars->vVelocityConvectCoeff[Arches::AE],
+                            coeff_vars->vVelocityConvectCoeff[Arches::AW],
+                            coeff_vars->vVelocityConvectCoeff[Arches::AN],
+                            coeff_vars->vVelocityConvectCoeff[Arches::AS],
+                            coeff_vars->vVelocityConvectCoeff[Arches::AT],
+                            coeff_vars->vVelocityConvectCoeff[Arches::AB],
+                            coeff_vars->vVelocityCoeff[Arches::AP],
+                            coeff_vars->vVelocityCoeff[Arches::AE],
+                            coeff_vars->vVelocityCoeff[Arches::AW],
+                            coeff_vars->vVelocityCoeff[Arches::AN],
+                            coeff_vars->vVelocityCoeff[Arches::AS],
+                            coeff_vars->vVelocityCoeff[Arches::AT],
+                            coeff_vars->vVelocityCoeff[Arches::AB],
+                            coeff_constvars->uVelocity, coeff_constvars->wVelocity,
+                            coeff_constvars->density, coeff_constvars->viscosity,
+                            delta_t, dx, dy, dz, 
+                            idxLoV, idxHiV);
+      break; 
+    case Discretization::WALLUPWIND: 
+      fort_vvelcoef_mixed( coeff_constvars->vVelocity, coeff_constvars->cellType,
+                           coeff_vars->vVelocityConvectCoeff[Arches::AE],
+                           coeff_vars->vVelocityConvectCoeff[Arches::AW],
+                           coeff_vars->vVelocityConvectCoeff[Arches::AN],
+                           coeff_vars->vVelocityConvectCoeff[Arches::AS],
+                           coeff_vars->vVelocityConvectCoeff[Arches::AT],
+                           coeff_vars->vVelocityConvectCoeff[Arches::AB],
+                           coeff_vars->vVelocityCoeff[Arches::AP],
+                           coeff_vars->vVelocityCoeff[Arches::AE],
+                           coeff_vars->vVelocityCoeff[Arches::AW],
+                           coeff_vars->vVelocityCoeff[Arches::AN],
+                           coeff_vars->vVelocityCoeff[Arches::AS],
+                           coeff_vars->vVelocityCoeff[Arches::AT],
+                           coeff_vars->vVelocityCoeff[Arches::AB],
+                           coeff_constvars->uVelocity, coeff_constvars->wVelocity,
+                           coeff_constvars->density, coeff_constvars->viscosity,
+                           delta_t, dx, dy, dz, 
+                           wall1, wall2, Re_limit,
+                           idxLoV, idxHiV);
+      break; 
+    case Discretization::OLD: 
+      fort_vvelcoef(coeff_constvars->vVelocity,
+                    coeff_vars->vVelocityConvectCoeff[Arches::AE],
+                    coeff_vars->vVelocityConvectCoeff[Arches::AW],
+                    coeff_vars->vVelocityConvectCoeff[Arches::AN],
+                    coeff_vars->vVelocityConvectCoeff[Arches::AS],
+                    coeff_vars->vVelocityConvectCoeff[Arches::AT],
+                    coeff_vars->vVelocityConvectCoeff[Arches::AB],
+                    coeff_vars->vVelocityCoeff[Arches::AP],
+                    coeff_vars->vVelocityCoeff[Arches::AE],
+                    coeff_vars->vVelocityCoeff[Arches::AW],
+                    coeff_vars->vVelocityCoeff[Arches::AN],
+                    coeff_vars->vVelocityCoeff[Arches::AS],
+                    coeff_vars->vVelocityCoeff[Arches::AT],
+                    coeff_vars->vVelocityCoeff[Arches::AB],
+                    coeff_constvars->uVelocity, coeff_constvars->wVelocity,
+                    coeff_constvars->density, coeff_constvars->viscosity,
+                    delta_t,lcentral,
+                    cellinfo->cee, cellinfo->cwe, cellinfo->cww,
+                    cellinfo->cnnv, cellinfo->csnv, cellinfo->cssv,
+                    cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
+                    cellinfo->sew, cellinfo->snsv, cellinfo->sns,
+                    cellinfo->stb, cellinfo->dxep, cellinfo->dxpw,
+                    cellinfo->dynpv, cellinfo->dypsv, cellinfo->dyps,
+                    cellinfo->dztp, cellinfo->dzpb, cellinfo->fac1v,
+                    cellinfo->fac2v, cellinfo->fac3v, cellinfo->fac4v,
+                    cellinfo->jnsdv, cellinfo->jssdv, cellinfo->efac,
+                    cellinfo->wfac, cellinfo->tfac, cellinfo->bfac,
+                    cellinfo->fac1ew, cellinfo->fac2ew, cellinfo->fac3ew,
+                    cellinfo->fac4ew, cellinfo->e_shift, cellinfo->w_shift,
+                    cellinfo->fac1tb, cellinfo->fac2tb, cellinfo->fac3tb,
+                    cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
+                    idxLoV, idxHiV);
+    default: 
+      break; 
+  } 
+
   //__________________________________
   //    Z DIR
   oci = IntVector(0,0,-1); //one cell inward.  Only offset at the edge of the computational domain. 
   IntVector idxLoW = patch->getSFCZLowIndex() - noNeighborsLow * oci;
   IntVector idxHiW = patch->getSFCZHighIndex()+ noNeighborsHigh * oci - IntVector(1,1,1);
-  
-  // Calculate the coeffs
-  fort_wvelcoef(coeff_constvars->wVelocity,
-                coeff_vars->wVelocityConvectCoeff[Arches::AE],
-                coeff_vars->wVelocityConvectCoeff[Arches::AW],
-                coeff_vars->wVelocityConvectCoeff[Arches::AN],
-                coeff_vars->wVelocityConvectCoeff[Arches::AS],
-                coeff_vars->wVelocityConvectCoeff[Arches::AT],
-                coeff_vars->wVelocityConvectCoeff[Arches::AB],
-                coeff_vars->wVelocityCoeff[Arches::AP],
-                coeff_vars->wVelocityCoeff[Arches::AE],
-                coeff_vars->wVelocityCoeff[Arches::AW],
-                coeff_vars->wVelocityCoeff[Arches::AN],
-                coeff_vars->wVelocityCoeff[Arches::AS],
-                coeff_vars->wVelocityCoeff[Arches::AT],
-                coeff_vars->wVelocityCoeff[Arches::AB],
-                coeff_constvars->uVelocity, coeff_constvars->vVelocity,
-                coeff_constvars->density, coeff_constvars->viscosity,
-                delta_t,lcentral,
-                cellinfo->cee, cellinfo->cwe, cellinfo->cww,
-                cellinfo->cnn, cellinfo->csn, cellinfo->css,
-                cellinfo->cttw, cellinfo->cbtw, cellinfo->cbbw,
-                cellinfo->sew, cellinfo->sns, cellinfo->stbw,
-                cellinfo->stb, cellinfo->dxep, cellinfo->dxpw,
-                cellinfo->dynp, cellinfo->dyps, cellinfo->dztpw,
-                cellinfo->dzpbw, cellinfo->dzpb, cellinfo->fac1w,
-                cellinfo->fac2w, cellinfo->fac3w, cellinfo->fac4w,
-                cellinfo->ktsdw, cellinfo->kbsdw, cellinfo->efac,
-                cellinfo->wfac, cellinfo->nfac, cellinfo->sfac,
-                cellinfo->fac1ew, cellinfo->fac2ew, cellinfo->fac3ew,
-                cellinfo->fac4ew, cellinfo->e_shift, cellinfo->w_shift,
-                cellinfo->fac1ns, cellinfo->fac2ns, cellinfo->fac3ns,
-                cellinfo->fac4ns, cellinfo->n_shift, cellinfo->s_shift,
-                idxLoW, idxHiW);
+
+  switch (conv_scheme){ 
+    case Discretization::CENTRAL: 
+      fort_wvelcoef_central( coeff_constvars->wVelocity,
+                             coeff_vars->wVelocityConvectCoeff[Arches::AE],
+                             coeff_vars->wVelocityConvectCoeff[Arches::AW],
+                             coeff_vars->wVelocityConvectCoeff[Arches::AN],
+                             coeff_vars->wVelocityConvectCoeff[Arches::AS],
+                             coeff_vars->wVelocityConvectCoeff[Arches::AT],
+                             coeff_vars->wVelocityConvectCoeff[Arches::AB],
+                             coeff_vars->wVelocityCoeff[Arches::AP],
+                             coeff_vars->wVelocityCoeff[Arches::AE],
+                             coeff_vars->wVelocityCoeff[Arches::AW],
+                             coeff_vars->wVelocityCoeff[Arches::AN],
+                             coeff_vars->wVelocityCoeff[Arches::AS],
+                             coeff_vars->wVelocityCoeff[Arches::AT],
+                             coeff_vars->wVelocityCoeff[Arches::AB],
+                             coeff_constvars->uVelocity, coeff_constvars->vVelocity,
+                             coeff_constvars->density, coeff_constvars->viscosity,
+                             delta_t, dx, dy, dz,
+                             idxLoW, idxHiW);
+      break;
+    case Discretization::UPWIND: 
+      fort_wvelcoef_upwind( coeff_constvars->wVelocity,
+                            coeff_vars->wVelocityConvectCoeff[Arches::AE],
+                            coeff_vars->wVelocityConvectCoeff[Arches::AW],
+                            coeff_vars->wVelocityConvectCoeff[Arches::AN],
+                            coeff_vars->wVelocityConvectCoeff[Arches::AS],
+                            coeff_vars->wVelocityConvectCoeff[Arches::AT],
+                            coeff_vars->wVelocityConvectCoeff[Arches::AB],
+                            coeff_vars->wVelocityCoeff[Arches::AP],
+                            coeff_vars->wVelocityCoeff[Arches::AE],
+                            coeff_vars->wVelocityCoeff[Arches::AW],
+                            coeff_vars->wVelocityCoeff[Arches::AN],
+                            coeff_vars->wVelocityCoeff[Arches::AS],
+                            coeff_vars->wVelocityCoeff[Arches::AT],
+                            coeff_vars->wVelocityCoeff[Arches::AB],
+                            coeff_constvars->uVelocity, coeff_constvars->vVelocity,
+                            coeff_constvars->density, coeff_constvars->viscosity,
+                            delta_t, dx, dy, dz,
+                            idxLoW, idxHiW);
+      break; 
+    case Discretization::WALLUPWIND: 
+      fort_wvelcoef_mixed( coeff_constvars->wVelocity, coeff_constvars->cellType, 
+                           coeff_vars->wVelocityConvectCoeff[Arches::AE],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AW],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AN],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AS],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AT],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AB],
+                           coeff_vars->wVelocityCoeff[Arches::AP],
+                           coeff_vars->wVelocityCoeff[Arches::AE],
+                           coeff_vars->wVelocityCoeff[Arches::AW],
+                           coeff_vars->wVelocityCoeff[Arches::AN],
+                           coeff_vars->wVelocityCoeff[Arches::AS],
+                           coeff_vars->wVelocityCoeff[Arches::AT],
+                           coeff_vars->wVelocityCoeff[Arches::AB],
+                           coeff_constvars->uVelocity, coeff_constvars->vVelocity,
+                           coeff_constvars->density, coeff_constvars->viscosity,
+                           delta_t, dx, dy, dz,
+                           wall1, wall2, Re_limit, 
+                           idxLoW, idxHiW);
+      break;
+    case Discretization::OLD: 
+      fort_wvelcoef(coeff_constvars->wVelocity,
+                    coeff_vars->wVelocityConvectCoeff[Arches::AE],
+                    coeff_vars->wVelocityConvectCoeff[Arches::AW],
+                    coeff_vars->wVelocityConvectCoeff[Arches::AN],
+                    coeff_vars->wVelocityConvectCoeff[Arches::AS],
+                    coeff_vars->wVelocityConvectCoeff[Arches::AT],
+                    coeff_vars->wVelocityConvectCoeff[Arches::AB],
+                    coeff_vars->wVelocityCoeff[Arches::AP],
+                    coeff_vars->wVelocityCoeff[Arches::AE],
+                    coeff_vars->wVelocityCoeff[Arches::AW],
+                    coeff_vars->wVelocityCoeff[Arches::AN],
+                    coeff_vars->wVelocityCoeff[Arches::AS],
+                    coeff_vars->wVelocityCoeff[Arches::AT],
+                    coeff_vars->wVelocityCoeff[Arches::AB],
+                    coeff_constvars->uVelocity, coeff_constvars->vVelocity,
+                    coeff_constvars->density, coeff_constvars->viscosity,
+                    delta_t,lcentral,
+                    cellinfo->cee, cellinfo->cwe, cellinfo->cww,
+                    cellinfo->cnn, cellinfo->csn, cellinfo->css,
+                    cellinfo->cttw, cellinfo->cbtw, cellinfo->cbbw,
+                    cellinfo->sew, cellinfo->sns, cellinfo->stbw,
+                    cellinfo->stb, cellinfo->dxep, cellinfo->dxpw,
+                    cellinfo->dynp, cellinfo->dyps, cellinfo->dztpw,
+                    cellinfo->dzpbw, cellinfo->dzpb, cellinfo->fac1w,
+                    cellinfo->fac2w, cellinfo->fac3w, cellinfo->fac4w,
+                    cellinfo->ktsdw, cellinfo->kbsdw, cellinfo->efac,
+                    cellinfo->wfac, cellinfo->nfac, cellinfo->sfac,
+                    cellinfo->fac1ew, cellinfo->fac2ew, cellinfo->fac3ew,
+                    cellinfo->fac4ew, cellinfo->e_shift, cellinfo->w_shift,
+                    cellinfo->fac1ns, cellinfo->fac2ns, cellinfo->fac3ns,
+                    cellinfo->fac4ns, cellinfo->n_shift, cellinfo->s_shift,
+                    idxLoW, idxHiW);
+      
+
+    default: 
+      break; 
+  } 
 }
   
 //****************************************************************************

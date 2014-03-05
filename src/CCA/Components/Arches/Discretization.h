@@ -84,6 +84,8 @@ class Discretization {
 
 public:
 
+  enum MOMCONV { UPWIND, WALLUPWIND, CENTRAL, OLD };
+
   // GROUP: Constructors:
   ////////////////////////////////////////////////////////////////////////
   // Construct an instance of a Discretization.
@@ -107,7 +109,8 @@ public:
                               bool lcentral,
                               CellInformation* cellinfo,
                               ArchesVariables* vars,
-                              ArchesConstVariables* constvars);
+                              ArchesConstVariables* constvars, 
+                              MOMCONV scheme, double re_limit);
 
   template<class T>
   void compute_Ap(CellIterator iter,
