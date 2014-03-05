@@ -53,6 +53,12 @@ c*********************************************************************
       double precision COEFE, COEFW, COEFN, COEFS, COEFT, COEFB
       double precision TEW, TNS, TTB
       double precision AEC, AWC, ANC, ASC, ATC, ABC
+      double precision DUDZE, DUDZW
+      double precision DVDZN, DVDZS
+      double precision DWDZB, DWDZT
+      double precision PT5, PT25, small 
+      double precision EPSN, EPSS, EPSE, EPSW, EPST, EPSB
+      double precision EPSP
 
 c*********************************************************************
 c     Start :
@@ -63,6 +69,10 @@ c*********************************************************************
       IENDW = idxHiW(1)
       JENDW = idxHiW(2)
       KENDW = idxHiW(3)
+
+      PT5 = 0.5D0
+      PT25 = 0.25D0
+      small = 1.0D-10
 
 c*********************************************************************
 c     Set all flags
@@ -76,6 +86,17 @@ c*********************************************************************
       DO 220 K = KSTW,KENDW
          DO 210 J = JSTW,JENDW
             DO 200 I = ISTW,IENDW   
+
+              EPSP = eps(I,J,K)*eps(I,J,K-1)
+
+              IF ( EPSP .gt. SMALL ) THEN 
+
+              EPSE = eps(I+1,J,K)*eps(I+1,J,K-1)
+              EPSW = eps(I-1,J,K)*eps(I-1,J,K-1)
+              EPSN = eps(I,J+1,K)*eps(I,J+1,K-1)
+              EPSS = eps(I,J-1,K)*eps(I,J-1,K-1)
+              EPST = eps(I,J,K+1)
+              EPSB = eps(I,J,K-2)
 C-----------------------------------------------------------------------
 C     COMPUTE AREAS AND VOLUME
 C-----------------------------------------------------------------------
@@ -107,12 +128,13 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C      NEW DIFFERENCING STUFF
 C-----------------------------------------------------------------------
-               CE = CEE(I)*CEO + CWE(I)*CWO
-               CW = CWW(I)*CWO - CWE(I)*CEO   
-               CN = CNN(J)*CNO + CSN(J)*CSO
-               CS = CSS(J)*CSO - CSN(J)*CNO
-               CT = CTTW(K)*CTO + CBTW(K)*CBO
-               CB = CBBW(K)*CBO - CBTW(K)*CTO
+               CE = (CEE(I)*CEO + CWE(I)*CWO)*EPSE
+               CW = (CWW(I)*CWO - CWE(I)*CEO)*EPSW
+               CN = (CNN(J)*CNO + CSN(J)*CSO)*EPSN
+               CS = (CSS(J)*CSO - CSN(J)*CNO)*EPSS
+               CT = (CTTW(K)*CTO + CBTW(K)*CBO)*EPST
+               CB = (CBBW(K)*CBO - CBTW(K)*CTO)*EPSB
+
                CESAV(I,J,K) = CE
                CWSAV(I,J,K) = CW
                CNSAV(I,J,K) = CN
@@ -156,12 +178,12 @@ c     &              0.5D0*(VIS(I,J,K-1)+VIS(I,J-1,K-1)))
      +                                 VIS(I,J+S_shift(J),K-1))
                VIST = FAC1W(K)*VIS(I,J,K)+FAC2W(K)*VIS(I,J,K+KTSDW(K))
                VISB = FAC3W(K)*VIS(I,J,K-1)+FAC4W(K)*VIS(I,J,K+KBSDW(K))
-               DEO = VISE*AREAEW/DXEP(I)
-               DWO = VISW*AREAEW/DXPW(I)
-               DNO = VISN*AREAN/DYNP(J)
-               DSO = VISS*AREAS/DYPS(J)
-               DTO = VIST*AREATB/DZTPW(K)
-               DBO = VISB*AREATB/DZPBW(K)
+               DEO = VISE*AREAEW/DXEP(I)*EPSE
+               DWO = VISW*AREAEW/DXPW(I)*EPSW
+               DNO = VISN*AREAN/DYNP(J)*EPSN
+               DSO = VISS*AREAS/DYPS(J)*EPSS
+               DTO = VIST*AREATB/DZTPW(K)*EPST
+               DBO = VISB*AREATB/DZPBW(K)*EPSB
 C-----------------------------------------------------------------------
 C     NEW DIFFUSION TERMS
 C-----------------------------------------------------------------------
@@ -246,6 +268,47 @@ C----------------------------------------------------------------------
                   AT(I,J,K) = ATC + DT
                   AB(I,J,K) = ABC + DB
                END IF
+
+               DUDZE = (UU(I+1,J,K)-UU(I+1,J,K-1))/DZPB(K)
+               DUDZW = (UU(I,J,K)-UU(I,J,K-1))/DZPB(K)
+               DVDZN = (VV(I,J+1,K)-VV(I,J+1,K-1))/DZPB(K)
+               DVDZS = (VV(I,J,K)-VV(I,J,K-1))/DZPB(K)
+               DWDZT = (WW(I,J,K+1)-WW(I,J,K))/STB(K)
+               DWDZB = (WW(I,J,K)-WW(I,J,K-1))/STB(K-1)
+
+               SU(I,J,K) = 
+     &              ((VISE*DUDZE-VISW*DUDZW)/SEW(I) +
+     &              (VISN*DVDZN-VISS*DVDZS)/SNS(J) +
+     &              (VIST*DWDZT-VISB*DWDZB)/STBW(K)+
+     &              pt5*(DEN(I,J,K)+DEN(i,j,k-1))*
+     $              (WW(I,J,K))/
+     $              DELTAT 
+     &              + (PT5*(DEN(I,J,K-1)+DEN(I,J,K))-
+     $              pt5*(den_ref(i,j,k) + den_ref(i,j,k-1)))*
+     $              GRAV
+     $              )*VOL*EPSP
+
+                SU(I,J,K) = SU(I,J,K) - WW(I,J,K)*(
+     $               CE-CW+CN-CS+CT-CB)
+
+              else 
+                
+                CESAV(I,J,K) = 0.0D0
+                CWSAV(I,J,K) = 0.0D0
+                CNSAV(I,J,K) = 0.0D0
+                CSSAV(I,J,K) = 0.0D0
+                CTSAV(I,J,K) = 0.0D0
+                CBSAV(I,J,K) = 0.0D0
+                AE(I,J,K) = 0.0D0
+                AW(I,J,K) = 0.0D0
+                AN(I,J,K) = 0.0D0
+                AS(I,J,K) = 0.0D0
+                AT(I,J,K) = 0.0D0
+                AB(I,J,K) = 0.0D0
+                SU(I,J,K) = 0.0D0
+
+              endif 
+
  200        CONTINUE
  210     CONTINUE
  220  CONTINUE

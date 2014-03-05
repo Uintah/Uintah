@@ -115,6 +115,9 @@ Source::calculateVelocitySource(const Patch* patch,
   IntVector oci(-1,0,0);  //one cell inward.  Only offset at the edge of the computational domain.
   IntVector idxLoU = patch->getSFCXLowIndex() - noNeighborsLow * oci;
   IntVector idxHiU = patch->getSFCXHighIndex()+ noNeighborsHigh * oci - IntVector(1,1,1);
+
+  vars->uVelLinearSrc.initialize(0.0);
+  vars->uVelNonlinearSrc.initialize(0.0);
   
   fort_uvelsrc(idxLoU, idxHiU, constvars->uVelocity, constvars->old_uVelocity,
                vars->uVelNonlinearSrc, vars->uVelLinearSrc,
@@ -221,7 +224,8 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
 // conservative form of the pde
 //****************************************************************************
 template<class T> void
-Source::compute_massSource(CellIterator iter,
+Source::compute_massSource(CellIterator iter, IntVector D, 
+                           constCCVariable<double> eps, 
                            const T& vel,
                            StencilMatrix<T>& velCoeff,
                            T& velNonLinearSrc,
@@ -249,7 +253,7 @@ Source::compute_massSource(CellIterator iter,
                       + velConvectCoeff[Arches::AE][c] - velConvectCoeff[Arches::AW][c]
                       + velConvectCoeff[Arches::AT][c] - velConvectCoeff[Arches::AB][c];
  
-    velNonLinearSrc[c] = velNonLinearSrc[c] - difference * vel[c];
+    velNonLinearSrc[c] = velNonLinearSrc[c] - difference * vel[c] * eps[c] * eps[c+D];
     
   }
 }
@@ -258,28 +262,34 @@ Source::compute_massSource(CellIterator iter,
 // 
 //****************************************************************************
 void 
-Source::modifyVelMassSource(const Patch* patch,
+Source::modifyVelMassSource(const Patch* patch, constCCVariable<double> volFraction, 
                             ArchesVariables* vars,
                             ArchesConstVariables* constvars)
 {
   //__________________________________
   //    X dir
   CellIterator iter = patch->getSFCXIterator();
-  compute_massSource<SFCXVariable<double> >(iter, constvars->uVelocity, 
+  IntVector D = IntVector(-1,0,0); 
+  compute_massSource<SFCXVariable<double> >(iter, D, volFraction, 
+                                            constvars->uVelocity, 
                                             vars->uVelocityCoeff,
                                             vars->uVelNonlinearSrc, 
                                             vars->uVelocityConvectCoeff);
   //__________________________________
   //    Y dir
   iter = patch->getSFCYIterator();
-  compute_massSource<SFCYVariable<double> >(iter, constvars->vVelocity, 
+  D = IntVector(0,-1,0); 
+  compute_massSource<SFCYVariable<double> >(iter, D, volFraction, 
+                                            constvars->vVelocity, 
                                             vars->vVelocityCoeff,
                                             vars->vVelNonlinearSrc, 
                                             vars->vVelocityConvectCoeff);  
   //__________________________________
   //    Z dir
   iter = patch->getSFCZIterator();
-  compute_massSource<SFCZVariable<double> >(iter, constvars->wVelocity, 
+  D = IntVector(0,0,-1); 
+  compute_massSource<SFCZVariable<double> >(iter, D, volFraction, 
+                                            constvars->wVelocity, 
                                             vars->wVelocityCoeff,
                                             vars->wVelNonlinearSrc, 
                                             vars->wVelocityConvectCoeff);

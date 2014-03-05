@@ -85,6 +85,8 @@ c     viscous sources
      &              VIS(I,J-1,K)+VIS(I,J-1,K+1))
                VISB = PT25*(VIS(I,J,K)+VIS(I,J,K-1)+
      &              VIS(I,J-1,K)+VIS(I,J-1,K-1))
+
+
                DUDYE = (UU(I+1,J,K)-UU(I+1,J-1,K))/DYPS(J)
                DUDYW = (UU(I,J,K)-UU(I,J-1,K))/DYPS(J)
                VISEI = CEE(I)*VISE + CWE(I)*VISW

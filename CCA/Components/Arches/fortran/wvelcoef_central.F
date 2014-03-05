@@ -41,8 +41,14 @@ c*********************************************************************
 
       double precision AREANS, AREAEW, AREATB, VOL
       double precision GE, GEB, GW, GWB, GN, GNB, GS, GSB, GT, GPB, GB
+      double precision CE, CW, CN, CS, CT, CB
       double precision VISE, VISW, VISN, VISS, VIST, VISB
       double precision DE, DW, DN, DS, DT, DB
+      double precision DUDZE, DUDZW
+      double precision DVDZN, DVDZS
+      double precision DWDZB, DWDZT
+      double precision PT5, PT25, small 
+      double precision EPSN, EPSS, EPSE, EPSW, EPST, EPSB, EPSP
 
 c*********************************************************************
 c     Start :
@@ -59,62 +65,124 @@ c*********************************************************************
       AREATB = dx*dy
       VOL = dx*dy*dz
 
+      PT5 = 0.5D0
+      PT25 = 0.25D0
+      small = 1.0D-10
+
       DO 220 K = KSTW,KENDW
          DO 210 J = JSTW,JENDW
             DO 200 I = ISTW,IENDW   
 
+              EPSP = eps(I,J,K)*eps(I,J,K-1)
+
+              IF ( EPSP .gt. SMALL ) THEN 
+
+              EPSE = eps(I+1,J,K)*eps(I+1,J,K-1)
+              EPSW = eps(I-1,J,K)*eps(I-1,J,K-1)
+              EPSN = eps(I,J+1,K)*eps(I,J+1,K-1)
+              EPSS = eps(I,J-1,K)*eps(I,J-1,K-1)
+              EPST = eps(I,J,K+1)
+              EPSB = eps(I,J,K-2)
 C-----------------------------------------------------------------------
 C     CALCULATE CONVECTION COEFFICIENTS
 C-----------------------------------------------------------------------
-               GE = 0.5D0*(DEN(I+1,J,K)+DEN(I,J,K))*UU(I+1,J,K)
-               GEB = 0.5D0*(DEN(I+1,J,K-1)+DEN(I,J,K-1))*UU(I+1,J,K-1)
-               GW = 0.5D0*(DEN(I-1,J,K)+DEN(I,J,K))*UU(I,J,K)
-               GWB = 0.5D0*(DEN(I,J,K-1)+DEN(I-1,J,K-1))*UU(I,J,K-1)
-               GN = 0.5D0*(DEN(I,J+1,K)+DEN(I,J,K))*VV(I,J+1,K)
-               GNB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J+1,K-1))*VV(I,J+1,K-1)
-               GS = 0.5D0*(DEN(I,J-1,K)+DEN(I,J,K))*VV(I,J,K)
-               GSB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J-1,K-1))*VV(I,J,K-1)
-               GT = 0.5D0*(DEN(I,J,K)+DEN(I,J,K+1))*WW(I,J,K+1)
-               GPB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J,K))*WW(I,J,K)
-               GB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J,K-2))*WW(I,J,K-1)
+               GE = PT5*(DEN(I+1,J,K)+DEN(I,J,K))*UU(I+1,J,K)
+               GEB = PT5*(DEN(I+1,J,K-1)+DEN(I,J,K-1))*UU(I+1,J,K-1)
+               GW = PT5*(DEN(I-1,J,K)+DEN(I,J,K))*UU(I,J,K)
+               GWB = PT5*(DEN(I,J,K-1)+DEN(I-1,J,K-1))*UU(I,J,K-1)
+               GN = PT5*(DEN(I,J+1,K)+DEN(I,J,K))*VV(I,J+1,K)
+               GNB = PT5*(DEN(I,J,K-1)+DEN(I,J+1,K-1))*VV(I,J+1,K-1)
+               GS = PT5*(DEN(I,J-1,K)+DEN(I,J,K))*VV(I,J,K)
+               GSB = PT5*(DEN(I,J,K-1)+DEN(I,J-1,K-1))*VV(I,J,K-1)
+               GT = PT5*(DEN(I,J,K)+DEN(I,J,K+1))*WW(I,J,K+1)
+               GPB = PT5*(DEN(I,J,K-1)+DEN(I,J,K))*WW(I,J,K)
+               GB = PT5*(DEN(I,J,K-1)+DEN(I,J,K-2))*WW(I,J,K-1)
 
-               CESAV(I,J,K) = (0.5D0*GE+0.5D0*GEB)*AREAEW
-               CWSAV(I,J,K) = (0.5D0*GW+0.5D0*GWB)*AREAEW
-               CNSAV(I,J,K) = (0.5D0*GN+0.5D0*GNB)*AREANS
-               CSSAV(I,J,K) = (0.5D0*GS+0.5D0*GSB)*AREANS
-               CTSAV(I,J,K) = 0.5D0*(GT+GPB)*AREATB
-               CBSAV(I,J,K) = 0.5D0*(GPB+GB)*AREATB
+               CE = PT5*(GE+GEB)*AREAEW*EPSE
+               CW = PT5*(GW+GWB)*AREAEW*EPSW
+               CN = PT5*(GN+GNB)*AREANS*EPSN
+               CS = PT5*(GS+GSB)*AREANS*EPSS
+               CT = PT5*(GT+GPB)*AREATB*EPST
+               CB = PT5*(GPB+GB)*AREATB*EPSB
+
+               CESAV(I,J,K) = CE
+               CWSAV(I,J,K) = CW
+               CNSAV(I,J,K) = CN
+               CSSAV(I,J,K) = CS
+               CTSAV(I,J,K) = CT
+               CBSAV(I,J,K) = CB
 
 C-----------------------------------------------------------------------
 C     CALCULATE DIFFUSION COEFFICIENTS
 C-----------------------------------------------------------------------
-               VISE = 0.25D0*(VIS(I+1,J,K)+VIS(I+1,J,K-1))+
-     +                0.25D0*(VIS(I,J,K)+VIS(I,J,K-1))
-               VISW = 0.25D0*(VIS(I-1,J,K)+VIS(I-1,J,K-1))+
-     +                0.25D0*(VIS(I,J,K)+VIS(I,J,K-1))
-               VISN = 0.25D0*(VIS(I,J+1,K)+VIS(I,J+1,K-1))+
-     +                0.25D0*(VIS(I,J,K)+VIS(I,J,K-1))
-               VISS = 0.25D0*(VIS(I,J-1,K)+VIS(I,J-1,K-1))+
-     +                0.25D0*(VIS(I,J,K)+VIS(I,J,K-1))
+               VISE = PT25*(VIS(I+1,J,K)+VIS(I+1,J,K-1)+
+     +                        VIS(I,J,K)+VIS(I,J,K-1))
+               VISW = PT25*(VIS(I-1,J,K)+VIS(I-1,J,K-1)+
+     +                        VIS(I,J,K)+VIS(I,J,K-1))
+               VISN = PT25*(VIS(I,J+1,K)+VIS(I,J+1,K-1)+
+     +                        VIS(I,J,K)+VIS(I,J,K-1))
+               VISS = PT25*(VIS(I,J-1,K)+VIS(I,J-1,K-1)+
+     +                        VIS(I,J,K)+VIS(I,J,K-1))
                VIST = VIS(I,J,K)
                VISB = VIS(I,J,K-1)
 
-               DE = VISE*AREAEW/DX
-               DW = VISW*AREAEW/DX
-               DN = VISN*AREANS/DY
-               DS = VISS*AREANS/DY
-               DT = VIST*AREATB/DZ
-               DB = VISB*AREATB/DZ
+               DE = VISE*AREAEW/DX*EPSE
+               DW = VISW*AREAEW/DX*EPSW
+               DN = VISN*AREANS/DY*EPSN
+               DS = VISS*AREANS/DY*EPSS
+               DT = VIST*AREATB/DZ*EPST
+               DB = VISB*AREATB/DZ*EPSB
 
 C----------------------------------------------------------------------
 C      PROVISIONS FOR VARIOUS CONVECTION DIFFERENCING SCHEMES
 C----------------------------------------------------------------------
-               AE(I,J,K) = DE-CESAV(I,J,K)*0.5D0
-               AW(I,J,K) = DW+CWSAV(I,J,K)*0.5D0
-               AN(I,J,K) = DN-CNSAV(I,J,K)*0.5D0
-               AS(I,J,K) = DS+CSSAV(I,J,K)*0.5D0
-               AT(I,J,K) = DT-CTSAV(I,J,K)*0.5D0
-               AB(I,J,K) = DB+CBSAV(I,J,K)*0.5D0
+               AE(I,J,K) = DE-CE*PT5
+               AW(I,J,K) = DW+CW*PT5
+               AN(I,J,K) = DN-CN*PT5
+               AS(I,J,K) = DS+CS*PT5
+               AT(I,J,K) = DT-CT*PT5
+               AB(I,J,K) = DB+CB*PT5
+
+C----------------------------------------------------------------------
+C      Velocity source term calculation 
+C----------------------------------------------------------------------
+               DUDZE = (UU(I+1,J,K)-UU(I+1,J,K-1))/DZ
+               DUDZW = (UU(I,J,K)-UU(I,J,K-1))/DZ
+               DVDZN = (VV(I,J+1,K)-VV(I,J+1,K-1))/DZ
+               DVDZS = (VV(I,J,K)-VV(I,J,K-1))/DZ
+               DWDZT = (WW(I,J,K+1)-WW(I,J,K))/DZ
+               DWDZB = (WW(I,J,K)-WW(I,J,K-1))/DZ
+
+               SU(I,J,K) =
+     &              ((VISE*DUDZE-VISW*DUDZW)/DX +
+     &               (VISN*DVDZN-VISS*DVDZS)/DY  +
+     &               (VIST*DWDZT-VISB*DWDZB)/DZ  +
+     &               pt5*(DEN(I,J,K)+DEN(i,j,k-1))*
+     $               (WW(I,J,K))/DELTAT 
+     &               + (PT5*(DEN(I,J,K-1)+DEN(I,J,K))-
+     $               pt5*(den_ref(i,j,k) + den_ref(i,j,k-1)))*
+     $               GRAV ) * VOL * EPSP
+
+                SU(I,J,K) = SU(I,J,K) - WW(I,J,K)*(
+     $               CE-CW+CN-CS+CT-CB)
+
+              else 
+                
+                CESAV(I,J,K) = 0.0D0
+                CWSAV(I,J,K) = 0.0D0
+                CNSAV(I,J,K) = 0.0D0
+                CSSAV(I,J,K) = 0.0D0
+                CTSAV(I,J,K) = 0.0D0
+                CBSAV(I,J,K) = 0.0D0
+                AE(I,J,K) = 0.0D0
+                AW(I,J,K) = 0.0D0
+                AN(I,J,K) = 0.0D0
+                AS(I,J,K) = 0.0D0
+                AT(I,J,K) = 0.0D0
+                AB(I,J,K) = 0.0D0
+                SU(I,J,K) = 0.0D0
+
+              endif 
 
  200        CONTINUE
  210     CONTINUE

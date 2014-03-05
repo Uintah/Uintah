@@ -756,6 +756,12 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
       double den_ref = 0.0;
 
+      if ( eps_vol[d_ijk_den_ref] < 1.0e-6 ){
+        //This needs to be a real flow cell: 
+        throw InvalidValue("Error: Your reference density is in a wall. Choose another reference location.",__FILE__,__LINE__); 
+
+      }
+
       if (patch->containsCell(d_ijk_den_ref)) {
 
         den_ref = arches_density[d_ijk_den_ref];

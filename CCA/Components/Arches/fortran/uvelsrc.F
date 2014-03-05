@@ -95,6 +95,9 @@ c     viscous sources
                DWDXB = (WW(I,J,K)-WW(I-1,J,K))/DXPW(I)
                VISTI = CTT(K)*VIST + CBT(K)*VISB
                VISBI = CBB(K)*VISB - CBT(K)*VIST
+
+               print*,I, ' ',J, ' ', K
+               print*,DUDXE
 c
 c   Add all the source terms at one go (don't need as many array searches)
 c

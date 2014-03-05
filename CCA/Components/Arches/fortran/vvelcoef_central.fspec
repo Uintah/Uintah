@@ -7,5 +7,7 @@ void vvelcoef_central(constSFCYVariable<double> vv, SFCYVariable<double> cesav,
      SFCYVariable<double> at, SFCYVariable<double> ab,
      constSFCXVariable<double> uu, constSFCZVariable<double> ww,
      constCCVariable<double> den, constCCVariable<double> vis,
-     double deltat, double dx, double dy, double dz,
+     constCCVariable<double> den_ref, SFCYVariable<double> SU, 
+     constCCVariable<double> eps, 
+     double deltat, double grav, double dx, double dy, double dz,
      IntVector idxLoV, IntVector idxHiV);

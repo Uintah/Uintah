@@ -7,5 +7,7 @@ void uvelcoef_upwind( constSFCXVariable<double> uu, SFCXVariable<double> cesav,
                       SFCXVariable<double> at, SFCXVariable<double> ab,
                       constSFCYVariable<double> vv, constSFCZVariable<double> ww,
                       constCCVariable<double> den, constCCVariable<double> vis,
-                      double deltat, double dx, double dy, double dz, 
+                      constCCVariable<double> den_ref, SFCXVariable<double> SU,
+                      constCCVariable<double> eps,
+                      double deltat, double grav, double dx, double dy, double dz, 
                       IntVector idxLoU, IntVector idxHiU);

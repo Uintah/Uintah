@@ -8,6 +8,8 @@ void uvelcoef_mixed( constSFCXVariable<double> uu, constCCVariable<int> celltype
                      SFCXVariable<double> at, SFCXVariable<double> ab,
                      constSFCYVariable<double> vv, constSFCZVariable<double> ww,
                      constCCVariable<double> den, constCCVariable<double> vis,
-                     double deltat, double dx, double dy, double dz, 
+                     constCCVariable<double> den_ref, SFCXVariable<double> SU,
+                     constCCVariable<double> eps,
+                     double deltat, double grav, double dx, double dy, double dz, 
                      int WALL, int INTR, double Relimit, 
                      IntVector idxLoU, IntVector idxHiU);

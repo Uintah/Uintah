@@ -283,7 +283,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
-  Discretization* discrete = scinew Discretization();
+  Discretization* discrete = scinew Discretization(d_physicalConsts);
   
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p); 
