@@ -34,6 +34,7 @@
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/DebugStream.h>
@@ -243,6 +244,9 @@ namespace Uintah {
         /** @brief Check to see if this table deals with heat loss **/ 
         virtual bool has_heat_loss() = 0; 
 
+        /** @brief Return the independent variable space for the reference point as specified in the input UPS **/ 
+        virtual std::vector<double> get_reference_iv() = 0;
+
       protected: 
         int _index_1;
         int _index_2;
@@ -279,6 +283,101 @@ namespace Uintah {
           hl_bounds.push_back(1.0);
           return hl_bounds; 
         };  
+
+        std::vector<double> get_reference_iv(){ 
+          throw InvalidValue("Error: Cannot return the reference values. Make sure you have identified your table properly (e.g., coal, rcce, standard_flamelet, etc... )",__FILE__,__LINE__); 
+        };
+    };
+
+    class SingleIV : public TransformBase { 
+
+      //Single IV assumes that the IVs are ordered: 
+      //(1) mixture fraction (for example)
+
+      public: 
+        SingleIV( std::map<std::string, double>& keys, MixingRxnModel* const model);
+        ~SingleIV(); 
+
+        bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
+
+          bool sf_transform = false; 
+          ProblemSpecP p = ps; 
+          typedef std::map<std::string,double> key_map;
+
+          bool cold_flow; 
+          p->getWithDefault( "cold_flow",cold_flow,false); 
+
+          if ( p->findBlock("single_iv")){
+
+            p->findBlock("single_iv")->getAttribute("iv_label",_f_name); 
+            sf_transform = true; 
+          
+          }
+
+          if ( p->findBlock("reference_state") ){
+            p->findBlock("reference_state")->getAttribute("iv",_f_ref); 
+          } else { 
+            throw ProblemSetupException("Error: Reference state not defined.",__FILE__, __LINE__ ); 
+          }
+
+          _f_index = 0;
+
+          if ( !cold_flow ){ 
+            std::vector<double> my_ivs;
+            my_ivs.push_back(1);
+            double h = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+            _H_fuel = h; 
+
+            my_ivs[0] = 0; 
+            h = _model->getTableValue( my_ivs, "adiabaticenthalpy" ); 
+            _H_ox = h; 
+          } else { 
+            _H_ox = 0.0; 
+            _H_fuel = 0.0; 
+          }
+
+          return sf_transform; 
+
+        };  
+
+        bool inline has_heat_loss(){ return false; }; 
+
+        void inline transform( std::vector<double>& iv, double inert ){
+          //do nothing here since there is only one iv. 
+        };
+
+        double inline get_adiabatic_enthalpy( std::vector<double>& iv, double inerts ){
+          return iv[0]*_H_fuel + ( 1.0 - iv[0] )*_H_ox;
+        };
+
+        const std::vector<double> get_hl_bounds( std::vector<std::vector<double> > const iv_grids, std::vector<int> const size )
+        {
+          //no heat loss
+          std::vector<double> hl_b;
+          return hl_b; 
+        };  
+
+        std::vector<double> get_reference_iv(){ 
+          std::vector<double> iv; 
+          iv.push_back(_f_ref); 
+          return iv; 
+        };
+
+      private: 
+
+        std::string _f_name;
+
+        double _f_ref; 
+
+        std::map<std::string,double> _keys;
+
+        int _f_index; 
+
+        double _H_fuel; 
+        double _H_ox;
+
+        MixingRxnModel* const _model; 
+
     };
 
     class SingleMF : public TransformBase { 
@@ -315,6 +414,14 @@ namespace Uintah {
             sf_transform = true; 
 
           } 
+
+          if ( p->findBlock("reference_state") ){
+            p->findBlock("reference_state")->getAttribute("f",_f_ref); 
+            p->findBlock("reference_state")->getAttribute("hl",_hl_ref); 
+            p->findBlock("reference_state")->getAttribute("var",_var_ref); 
+          } else { 
+            throw ProblemSetupException("Error: Reference state not defined.",__FILE__, __LINE__ ); 
+          }
 
           if ( sf_transform ){ 
             _f_index= -1; 
@@ -391,11 +498,24 @@ namespace Uintah {
           return hl_bounds; 
         };  
 
+        std::vector<double> get_reference_iv(){ 
+          std::vector<double> iv; 
+          iv.push_back(_f_ref); 
+          iv.push_back(_var_ref); 
+          iv.push_back(_hl_ref); 
+
+          return iv; 
+        };
+
       private: 
 
         std::string _f_name;
         std::string _var_name;
         std::string _hl_name;
+
+        double _f_ref; 
+        double _var_ref; 
+        double _hl_ref; 
 
         std::map<std::string,double> _keys;
 
@@ -438,6 +558,14 @@ namespace Uintah {
             p->findBlock("coal")->getAttribute("hl_label",_hl_name); 
             doit = true; 
 
+            if ( p->findBlock("reference_state") ){
+              p->findBlock("reference_state")->getAttribute("fp",_fp_ref); 
+              p->findBlock("reference_state")->getAttribute("eta",_eta_ref); 
+              p->findBlock("reference_state")->getAttribute("hl",_hl_ref); 
+            } else { 
+              throw ProblemSetupException("Error: Reference state not defined.",__FILE__, __LINE__ ); 
+            }
+
           } else if ( p->findBlock("rcce") ){ 
 
             p->findBlock("rcce")->getAttribute("fp_label", _fp_name );
@@ -445,12 +573,27 @@ namespace Uintah {
             p->findBlock("rcce")->getAttribute("hl_label",_hl_name); 
             doit = true; 
 
+            if ( p->findBlock("reference_state") ){
+              p->findBlock("reference_state")->getAttribute("fp",_fp_ref); 
+              p->findBlock("reference_state")->getAttribute("eta",_eta_ref); 
+              p->findBlock("reference_state")->getAttribute("hl",_hl_ref); 
+            } else { 
+              throw ProblemSetupException("Error: Reference state not defined.",__FILE__, __LINE__ ); 
+            }
+
           } else if ( p->findBlock("acidbase") ){
 
             p->findBlock("acidbase")->getAttribute("extent_label", _fp_name );
             p->findBlock("acidbase")->getAttribute("f_label",      _eta_name ); 
             doit = true; 
             _is_acidbase = true; 
+
+            if ( p->findBlock("reference_state") ){
+              p->findBlock("reference_state")->getAttribute("f",_eta_ref); 
+              p->findBlock("reference_state")->getAttribute("extent",_fp_ref); 
+            } else { 
+              throw ProblemSetupException("Error: Reference state not defined.",__FILE__, __LINE__ ); 
+            }
 
           } 
 
@@ -556,6 +699,32 @@ namespace Uintah {
           return hl_bounds; 
         };  
 
+        std::vector<double> get_reference_iv(){ 
+
+          if ( _is_acidbase ){ 
+            std::vector<double> iv(2); 
+
+            iv[_fp_index] = _fp_ref; 
+            iv[_eta_index] = _eta_ref; 
+
+            this->transform(iv, 0.0); 
+
+            std::cout << "IV=" << iv[0] << " " << iv[1] << std::endl;
+
+            return iv; 
+          } else { 
+            std::vector<double> iv(3); 
+
+            iv[_fp_index] = _fp_ref; 
+            iv[_eta_index] = _eta_ref; 
+            iv[_hl_index] = _hl_ref; 
+
+            this->transform(iv, 0.0); 
+
+            return iv; 
+          }
+        };
+
 
       private: 
 
@@ -564,6 +733,10 @@ namespace Uintah {
         std::string _eta_name; 
         std::string _fp_name; 
         std::string _hl_name; 
+
+        double _fp_ref;
+        double _eta_ref; 
+        double _hl_ref;
 
         int _eta_index; 
         int _fp_index; 
@@ -605,6 +778,13 @@ namespace Uintah {
 
             p->findBlock("acidbase")->getAttribute("extent_label", _fp_name );
             p->findBlock("acidbase")->getAttribute("f_label",      _eta_name ); 
+
+            if ( p->findBlock("reference_state") ){
+              p->findBlock("reference_state")->getAttribute("extent",_fp_ref); 
+              p->findBlock("reference_state")->getAttribute("f",_eta_ref); 
+            } else { 
+              throw ProblemSetupException("Error: Reference state not defined.",__FILE__, __LINE__ ); 
+            }
 
             doit = true; 
           } 
@@ -654,7 +834,7 @@ namespace Uintah {
 
             f = ( fp - _constant * eta ) / ( 1.0 - eta ); 
 
-            if ( f < 0.0 )
+            if ( f < 1.0e-16 )
               f = 0.0;
             if ( f > 1.0 )
               f = 1.0; 
@@ -676,6 +856,17 @@ namespace Uintah {
           throw InvalidValue("Error: No ability to return heat loss bounds for the acid base transform",__FILE__,__LINE__); 
         };  
 
+        std::vector<double> get_reference_iv(){ 
+          std::vector<double> iv(2); 
+
+          iv[_fp_index] = _fp_ref; 
+          iv[_eta_index] = _eta_ref; 
+
+          this->transform(iv, 0.0); 
+
+          return iv; 
+        };
+
 
       private: 
 
@@ -683,6 +874,9 @@ namespace Uintah {
 
         std::string _eta_name; 
         std::string _fp_name; 
+
+        double _eta_ref; 
+        double _fp_ref; 
 
         int _eta_index; 
         int _fp_index; 
@@ -713,6 +907,14 @@ namespace Uintah {
             p->findBlock("rcce_fp")->getAttribute("xi_label", _xi_name ); 
             p->findBlock("rcce_fp")->getAttribute("hl_label", _hl_name ); 
             _rcce_fp = true; 
+            
+            if ( p->findBlock("reference_state") ){
+              p->findBlock("reference_state")->getAttribute("fp",_fp_ref); 
+              p->findBlock("reference_state")->getAttribute("xi",_xi_ref); 
+              p->findBlock("reference_state")->getAttribute("hl",_hl_ref); 
+            } else { 
+              throw ProblemSetupException("Error: Reference state not defined.",__FILE__, __LINE__ ); 
+            }
 
           } else if ( p->findBlock("rcce_eta") ){ 
 
@@ -720,6 +922,14 @@ namespace Uintah {
             p->findBlock("rcce_eta")->getAttribute("xi_label",  _xi_name ); 
             p->findBlock("rcce_eta")->getAttribute("hl_label",  _hl_name ); 
             _rcce_eta = true; 
+
+            if ( p->findBlock("reference_state") ){
+              p->findBlock("reference_state")->getAttribute("eta",_eta_ref); 
+              p->findBlock("reference_state")->getAttribute("xi",_xi_ref); 
+              p->findBlock("reference_state")->getAttribute("hl",_hl_ref); 
+            } else { 
+              throw ProblemSetupException("Error: Reference state not defined.",__FILE__, __LINE__ ); 
+            }
 
           }
 
@@ -893,6 +1103,24 @@ namespace Uintah {
           return hl_bounds; 
         };  
 
+        std::vector<double> get_reference_iv(){ 
+          std::vector<double> iv(3); 
+
+          if ( _rcce_fp ){ 
+            iv[_fp_index] = _fp_ref; 
+            iv[_xi_index] = _xi_ref; 
+            iv[_hl_index] = _hl_ref; 
+          } else if ( _rcce_eta ){ 
+            iv[_eta_index] = _eta_ref; 
+            iv[_xi_index] = _xi_ref; 
+            iv[_hl_index] = _hl_ref; 
+          }
+
+          this->transform(iv, 0.0); 
+
+          return iv; 
+        };
+
       private: 
 
         bool _rcce_eta; 
@@ -902,6 +1130,11 @@ namespace Uintah {
         std::string _hl_name; 
         std::string _fp_name; 
         std::string _xi_name; 
+
+        double _eta_ref; 
+        double _fp_ref; 
+        double _xi_ref; 
+        double _hl_ref; 
 
         int _eta_index;
         int _fp_index; 
@@ -937,6 +1170,15 @@ namespace Uintah {
             p->findBlock("inert_mixing")->getAttribute("fp_label",  _fp_name );
             p->findBlock("inert_mixing")->getAttribute("eta_label", _eta_name );
             p->findBlock("inert_mixing")->getAttribute("hl_label",  _hl_name );
+
+            if ( p->findBlock("reference_state") ){
+              p->findBlock("reference_state")->getAttribute("eta",_eta_ref); 
+              p->findBlock("reference_state")->getAttribute("fp",_fp_ref); 
+              p->findBlock("reference_state")->getAttribute("hl",_hl_ref); 
+            } else { 
+              throw ProblemSetupException("Error: Reference state not defined.",__FILE__, __LINE__ ); 
+            }
+
             doit = true; 
 
           } 
@@ -1054,6 +1296,18 @@ namespace Uintah {
           return hl_bounds; 
         };  
 
+        std::vector<double> get_reference_iv(){ 
+          std::vector<double> iv(3); 
+
+          iv[_fp_index] = _fp_ref; 
+          iv[_eta_index] = _eta_ref; 
+          iv[_hl_index] = _hl_ref; 
+
+          this->transform(iv, 0.0); 
+
+          return iv; 
+        };
+
       private:
 
         std::string _eta_name; 
@@ -1063,6 +1317,10 @@ namespace Uintah {
         int _eta_index; 
         int _fp_index; 
         int _hl_index; 
+
+        double _eta_ref; 
+        double _fp_ref; 
+        double _hl_ref; 
 
         double _H_F1; 
         double _H_F0; 

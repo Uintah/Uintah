@@ -264,6 +264,11 @@
                                         attribute2="value REQUIRED DOUBLE"/>
             </stream> 
           </post_mix>
+          <!-- NOTE on the REFERENCE DENSITY --> 
+          <!-- The reference density sets the fluid density for the relative buoyant force.  Specifically, the 
+          buoyant term on the RHS of the momentum equation is computed as: F = (rho_ref - rho_local)*g 
+          In general, one would choose the heaviest stream as the reference state, but one is encouraged to think 
+          carefully about this --> 
           <reference_density            spec="OPTIONAL NO_DATA"
                                         attribute1="value REQUIRED DOUBLE 'positive'"/>
         </ColdFlow>
@@ -292,6 +297,9 @@
           <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature --> 
 
           <!-- IV specs for various table types --> 
+          <!-- Single mixture (or other indep. var.) fraction table --> 
+          <single_iv                    spec="OPTIONAL NO_DATA"
+                                        attribute1="iv_label REQUIRED STRING"/>
           <!-- IV ordering for table write: (1) mixture fraction (2) scalar variance (3) heat loss --> 
           <standard_flamelet            spec="OPTIONAL NO_DATA"
                                         attribute1="f_label   REQUIRED STRING"
@@ -343,8 +351,25 @@
                                         attribute2="value REQUIRED DOUBLE"/>
             </stream> 
           </post_mix>
+          <!-- NOTE on the REFERENCE DENSITY --> 
+          <!-- The reference density sets the fluid density for the relative buoyant force.  Specifically, the 
+          buoyant term on the RHS of the momentum equation is computed as: F = (rho_ref - rho_local)*g 
+          Here the user has two options: 1. specify the reference density directly using <reference_density> or 
+                                         2. specify the table independent variables resulting a table lookup on the
+                                            reference density. 
+          In general, one would choose the heaviest stream as the reference state, but one is encouraged to think 
+          carefully about this --> 
           <reference_density            spec="OPTIONAL NO_DATA"
-                                        attribute1="value REQUIRED DOUBLE 'positive'"/>
+                                        attribute1="value REQUIRED DOUBLE 'positive'"/> <!-- Set the reference density directly: Better to use reference_state --> 
+          <reference_state              spec="OPTIONAL NO_DATA"
+                                        attribute1="fp OPTIONAL DOUBLE 'positive'"
+                                        attribute2="eta OPTIONAL DOUBLE 'positive'"
+                                        attribute3="xi OPTIONAL DOUBLE 'positive'"
+                                        attribute4="hl OPTIONAL DOUBLE"
+                                        attribute5="f OPTIONAL DOUBLE"
+                                        attribute6="var OPTIONAL DOUBLE 'positive'"
+                                        attribute7="extent OPTIONAL DOUBLE 'positive'"
+                                        attribute8="iv OPTIONAL DOUBLE 'positive'"/> <!-- Set the reference state from a fix set of IV --> 
         </ClassicTable>
 
         <ConstantProps                  spec="OPTIONAL NO_DATA">

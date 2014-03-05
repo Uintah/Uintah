@@ -134,7 +134,7 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 
     int mmWallID = d_boundaryCondition->getMMWallId();
     if (mmWallID > 0)
-      tsk->requires(Task::NewDW, timelabels->ref_density);
+      tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel, Ghost::None, 0);
 
     // Computes
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -562,9 +562,10 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     d_filter->applyFilter_noPetsc<constCCVariable<double> >(pc, patch, density, filterVolume, cellType, filterRho); 
 
     // making filterRho nonzero 
-    sum_vartype den_ref_var;
     if (mmWallID > 0) {
-      new_dw->get(den_ref_var, timelabels->ref_density);
+
+      constCCVariable<double> ref_density; 
+      new_dw->get(ref_density, d_lab->d_denRefArrayLabel, indx, patch, Ghost::None, 0); 
 
       idxLo = patch->getExtraCellLowIndex();
       idxHi = patch->getExtraCellHighIndex();
@@ -576,7 +577,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
             IntVector currCell(colX, colY, colZ);
 
             if (filterRho[currCell] < 1.0e-15) 
-              filterRho[currCell]=den_ref_var;
+              filterRho[currCell]=ref_density[currCell];
 
           }
         }

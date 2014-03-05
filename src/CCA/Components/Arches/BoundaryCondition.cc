@@ -270,6 +270,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
         }
       }
     }
+  } else { 
+    //band-aid
+    throw ProblemSetupException("Error: Please insert a <BoundaryConditions/> in your <ARCHES> node of the UPS.", __FILE__, __LINE__);
   }
 }
 

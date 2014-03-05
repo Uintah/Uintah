@@ -24,17 +24,15 @@
     <save label="passive_scalar"/>
 <!-- Table Variables -->
 <!-- iv's -->
-    <save label="scalarVarSP"/>
+    <save label="normalizedScalarVar"/>
     <save label="mixture_fraction"/>
-    <save label="heatLoss"/>
+    <save label="heat_loss"/>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>
-    <save label="uvelRhoHat"/>
-<!--save label = "enthalpySP"/-->
+    <save label="enthalpy"/>
     <save label="cellType"/>
-    <save label="heatLoss"/>
-    <save label="CCVelocity"/>
+    <save label="volFraction"/>
 <!-- dv's -->
     <save label="CH4" table_lookup="true"/>
     <save label="O2" table_lookup="true"/>
@@ -61,20 +59,23 @@
         <BCType id="all" label="bottom wall" var="WallBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="passive_scalar" var="Dirichlet">
+        <BCType id="all" label="passive_scalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="heat_loss" var="Dirichlet">
+        <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="scalar_variance" var="Dirichlet">
+        <BCType id="all" label="normalizedScalarVar" var="Neumann">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
-      <Face circle="x-" origin="0 1.5 1.5" radius="1.0">
+      <Face circle="x-" origin="0 1.5 1.5" radius="1.0" name="circleinlet">
         <BCType id="all" label="a swirl inlet" var="Swirl">
           <value>1.0</value>
           <swirl_no>10.0</swirl_no>
@@ -86,11 +87,14 @@
         <BCType id="all" label="passive_scalar" var="Dirichlet">
           <value>1.0</value>
         </BCType>
-        <BCType id="all" label="heat_loss" var="Neumann">
+        <BCType id="all" label="heat_loss" var="Dirichlet">
           <value>0.</value>
         </BCType>
-        <BCType id="all" label="scalar_variance" var="Dirichlet">
+        <BCType id="all" label="normalizedScalarVar" var="Dirichlet">
           <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Tabulated">
+          <value>adiabaticenthalpy</value>
         </BCType>
       </Face>
       <Face side="x+" name="x+ wall">
@@ -106,7 +110,10 @@
         <BCType id="all" label="heat_loss" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="scalar_variance" var="Dirichlet">
+        <BCType id="all" label="normalizedScalarVar" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
@@ -123,7 +130,10 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="scalar_variance" var="Dirichlet">
+        <BCType id="all" label="normalizedScalarVar" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
@@ -140,7 +150,10 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="scalar_variance" var="Dirichlet">
+        <BCType id="all" label="normalizedScalarVar" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
@@ -157,7 +170,10 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="scalar_variance" var="Dirichlet">
+        <BCType id="all" label="normalizedScalarVar" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
@@ -174,7 +190,10 @@
         <BCType id="all" label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="scalar_variance" var="Dirichlet">
+        <BCType id="all" label="normalizedScalarVar" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="all" label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
@@ -191,6 +210,8 @@
   <CFD>
 <!-- ARCHES specification -->
     <ARCHES>
+
+      <BoundaryConditions/>
 
 <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
@@ -226,13 +247,66 @@
           </Clipping>
         </Eqn>
 
+        <Eqn label="enthalpy" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <determines_properties/>
+          <initialization type="tabulated">
+            <depend_varname>adiabaticenthalpy</depend_varname>
+          </initialization>
+          <src label="divQ"/>
+        </Eqn>
+
+        <Sources>
+          <src label="divQ" type="do_radiation">
+            <calc_frequency>5</calc_frequency>
+            <calc_on_all_RKsteps>false</calc_on_all_RKsteps>
+            <soot_label>soot</soot_label>
+            <DORadiationModel>
+              <opl>3.0</opl>
+              <LinearSolver type="hypre">
+                <res_tol>1.0e-10</res_tol>
+                <ksptype>gmres</ksptype>
+                <pctype>jacobi</pctype>
+                <max_iter>75</max_iter>
+              </LinearSolver>
+            </DORadiationModel>
+          </src>
+        </Sources>
+
       </TransportEqns>
+
+      <PropertyModels>
+        <model type="heat_loss" label="heat_loss">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <enthalpy_label>enthalpy</enthalpy_label>
+        </model>
+        <model type="scalsim_variance" label="normalizedScalarVar">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
+          <density_label>density</density_label>
+          <variance_coefficient>0.1</variance_coefficient>
+        </model>
+        <model type="cc_constant" label="soot">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <constant>0.0</constant>
+        </model>
+      </PropertyModels>
 
       <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
+          <standard_flamelet f_label="mixture_fraction" hl_label="heat_loss" var_label="normalizedScalarVar"/>
+          <reference_state f="0.0" hl="0.0" var="0.0"/>
         </ClassicTable>
       </Properties>
 

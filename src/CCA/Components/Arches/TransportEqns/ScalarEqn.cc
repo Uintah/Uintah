@@ -932,7 +932,7 @@ ScalarEqn::advClipping( const ProcessorGroup* pc,
 					break;
 				}	
 			}
-      if ( id_pos = bounds){
+      if ( id_pos == bounds){
         throw InvalidValue("Error: For advanced Clipping on equation: "+d_eqnName+" cannot find the dependent clipping variable.", __FILE__, __LINE__);
       }
 			double see_value;
