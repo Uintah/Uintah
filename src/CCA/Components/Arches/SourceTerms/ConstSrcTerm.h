@@ -60,7 +60,9 @@ public:
 
 private:
 
-  double d_constant; 
+  double _constant; 
+  bool _density_weight; 
+
 
 }; // end ConstSrcTerm
 } // end namespace Uintah
