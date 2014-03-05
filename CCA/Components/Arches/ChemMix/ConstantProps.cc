@@ -302,6 +302,7 @@ ConstantProps::getState( const ProcessorGroup* pc,
     // reference density modification 
     if ( modify_ref_den ) {
 
+      //just set it rather than calling the base class function.  
       new_dw->put(sum_vartype(_density),time_labels->ref_density);
 
     }

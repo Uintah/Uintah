@@ -754,20 +754,9 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     // reference density modification 
     if ( modify_ref_den ) {
 
-      double den_ref = 0.0;
-
-      if ( cell_type[d_ijk_den_ref] != -1 ){
-        //This needs to be a real flow cell: 
-        throw InvalidValue("Error: Your reference density is in a wall. Choose another reference location.",__FILE__,__LINE__); 
-
-      }
-
-      if (patch->containsCell(d_ijk_den_ref)) {
-
-        den_ref = arches_density[d_ijk_den_ref];
-
-      }
+      double den_ref = get_reference_density(arches_density, cell_type);       
       new_dw->put(sum_vartype(den_ref),time_labels->ref_density);
+
     }
   }
 }

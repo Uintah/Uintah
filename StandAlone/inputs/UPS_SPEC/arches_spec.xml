@@ -264,6 +264,8 @@
                                         attribute2="value REQUIRED DOUBLE"/>
             </stream> 
           </post_mix>
+          <reference_density            spec="OPTIONAL NO_DATA"
+                                        attribute1="value REQUIRED DOUBLE 'positive'"/>
         </ColdFlow>
 
         <TabProps                       spec="OPTIONAL NO_DATA" >
@@ -341,12 +343,15 @@
                                         attribute2="value REQUIRED DOUBLE"/>
             </stream> 
           </post_mix>
+          <reference_density            spec="OPTIONAL NO_DATA"
+                                        attribute1="value REQUIRED DOUBLE 'positive'"/>
         </ClassicTable>
 
-        <ConstantProps                spec="OPTIONAL NO_DATA">
-          <density                    spec="REQUIRED DOUBLE 'positive'"/>
-          <temperature                spec="REQUIRED DOUBLE 'positive'"/>
-          <temperature_label_name     spec="OPTIONAL STRING"/> <!-- default = temperature -->
+        <ConstantProps                  spec="OPTIONAL NO_DATA">
+          <density                      spec="REQUIRED DOUBLE 'positive'"/>
+          <temperature                  spec="REQUIRED DOUBLE 'positive'"/>
+          <temperature_label_name       spec="OPTIONAL STRING"/> <!-- default = temperature -->
+          <!-- no reference density specified here since the entire world is considered constant --> 
         </ConstantProps>
 
       </Properties>

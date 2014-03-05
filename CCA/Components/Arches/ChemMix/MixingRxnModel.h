@@ -191,7 +191,23 @@ namespace Uintah {
       double ha = _iv_transform->get_adiabatic_enthalpy( iv, inerts ); 
       return ha; 
 
-    } 
+    };
+
+    inline double get_reference_density(CCVariable<double>& density, constCCVariable<int> cell_type){
+
+      int FLOW = -1; 
+
+
+      if ( d_user_ref_density ){ 
+        return d_reference_density; 
+      } else { 
+        if ( cell_type[d_ijk_den_ref] == FLOW ){
+          return density[d_ijk_den_ref]; }
+        else 
+          throw InvalidValue("Error: Your reference density is in a wall. Choose another reference location.",__FILE__,__LINE__); 
+      }
+    
+    };
 
     /** @brief Get a dependant variable's index **/ 
     virtual int findIndex(std::string) = 0; 
@@ -1129,6 +1145,9 @@ namespace Uintah {
     bool d_adiabatic;                       ///< Will not compute heat loss
     bool d_does_post_mixing;                ///< Turn on/off post mixing of inerts
     bool d_has_transform;                   ///< Indicates if a variable transform is used
+    bool d_user_ref_density;                ///< Indicates if the user is setting the reference density from input
+
+    double d_reference_density;             ///< User defined reference density
 
     std::string d_fp_label;                 ///< Primary mixture fraction name for a coal table
     std::string d_eta_label;                ///< Eta mixture fraction name for a coal table
