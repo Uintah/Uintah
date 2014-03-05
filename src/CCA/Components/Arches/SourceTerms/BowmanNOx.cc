@@ -212,7 +212,7 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
       double my_exp = -1.0 * _E_R / T[c]; 
 
 //      rate[c] = T[c];
-      rate[c] = _A / T_pow * exp( my_exp ) * n2 * o2_pow * 30000;
+      rate[c] = _A / T_pow * exp( my_exp ) * n2 * o2_pow * 2200o;
 
 //      rate[c] = 30000.0 * _A / sqrt(T[c]) * exp( -_E_R / T[c] ) * ( 1.0e-3/_MW_N2 * N2[c] * rho[c]) * sqrt(1.0e-3/ _MW_O2 * O2[c] * rho[c]);
       
