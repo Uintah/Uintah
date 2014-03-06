@@ -16,6 +16,11 @@ if( $#argv < 1 ) then
 endif
 
 set rootPath = `dirname $0`
+
+if ( -l $0 ) then
+  set rootPath  = `readlink $0 | xargs dirname`  # if you're using a symbolic link to script
+endif
+
 set path = ($rootPath $path)
 
 echo $path
@@ -29,6 +34,9 @@ if ( $status ) then
   exit
 endif
 
+
+echo ""
+echo "---------------------------------------"
 foreach X ($udas[*])
   echo "Passing $X through bulletproofing section"
   
@@ -57,13 +65,15 @@ end
 #__________________________________
 # Look for difference in the variable lists between the udas
 # and warn the users if one is detected
-echo 
-echo "Looking for differences in the variable list"
+echo ""
+echo "---------------------------------------"
+echo "Looking for differences in the variable lists"
 
-mkdir ~/.scratch
+mkdir ~/.scratch  >&/dev/null
 
-foreach X ($udas[*])
-  grep variable $X/index.xml > ~/.scratch/$X:t
+foreach X ( $udas[*] )
+  set here = `basename $X`
+  grep variable $X/index.xml > ~/.scratch/$here
 end
 
 set n = $#argv    # counters
@@ -71,8 +81,8 @@ set n = $#argv    # counters
 @ cc = 2
 
 while ( $c != $n)  
-  set X = $udas[$c]:t
-  set Y = $udas[$cc]:t
+  set X = `basename $udas[$c]`
+  set Y = `basename $udas[$cc]`
   
   #only look for differences if both index.xml files have a variable list
   set ans1 = `grep -c variables ~/.scratch/$X`
@@ -81,7 +91,7 @@ while ( $c != $n)
   if ($ans1 == "2" && $ans2 == "2") then
     diff -B ~/.scratch/$X ~/.scratch/$Y >& /dev/null
     if ($status != 0 ) then
-      echo "Difference in the variable list detected between $X/index.xml and $Y/index.xml"
+      echo "  more Difference in the variable list detected between $X/index.xml and $Y/index.xml"
       sdiff -s -w 170 ~/.scratch/$X ~/.scratch/$Y
     endif
   endif
@@ -92,7 +102,7 @@ end
 #__________________________________
 # copy the index.xml file from uda[1]
 # remove all the timestep data
-echo 
+echo ""
 echo "---------------------------------------"
 echo "Creating the base index file from the $udas[1]"
 
