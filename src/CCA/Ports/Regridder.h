@@ -88,6 +88,12 @@ WARNING
     //! Asks if we are going to do regridding
     virtual bool isAdaptive() = 0;
 
+    //! switch for setting adaptivity
+    virtual void setAdaptivity(const bool ans) =0;
+    
+    //! Ask if regridding only once.
+    virtual bool doRegridOnce() =0;
+
     //! Schedules task to initialize the error flags to 0
     virtual void scheduleInitializeErrorEstimate(const LevelP& level) = 0;
 

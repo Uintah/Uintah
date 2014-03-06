@@ -677,6 +677,9 @@
                                            attribute1="type REQUIRED STRING 'BNR, Hierarchical, Tiled'" >
       <adaptive                         spec="OPTIONAL BOOLEAN" /> <!-- FIXME: optional? does this only apply to one of the types of regridder? -->
       <!--Generic Required Regridder Options --> 
+      
+      <regrid_once                      spec="OPTIONAL BOOLEAN" />
+      <regrid_L0                        spec="OPTIONAL BOOLEAN" />
       <max_levels                       spec="REQUIRED INTEGER 'positive'" />
       <cell_refinement_ratio            spec="REQUIRED STRING" />
       <min_boundary_cells               spec="REQUIRED VECTOR" />

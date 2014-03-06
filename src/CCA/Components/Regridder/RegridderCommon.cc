@@ -56,7 +56,9 @@ RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), Uintah
   d_filterType = FILTER_BOX;
   d_lastRegridTimestep = 0;
   d_dilationTimestep = 3;
-  d_newGrid = true;
+  d_newGrid          = true;
+  d_regridOnce       = false;
+  
   d_dilatedCellsStabilityLabel  = VarLabel::create("DilatedCellsStability",
                              CCVariable<int>::getTypeDescription());
   d_dilatedCellsRegridLabel  = VarLabel::create("DilatedCellsRegrid",
@@ -391,16 +393,21 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   d_amrOverheadHigh=.15;
 
   d_dynamicDilation=false;
+  d_regridOnce = false;
+  d_regridCoarsestLevel = false;
+  
+  regrid_spec->get("regrid_L0",               d_regridCoarsestLevel);  
+  regrid_spec->get("regrid_once",             d_regridOnce);
   regrid_spec->get("cell_stability_dilation", d_cellStabilityDilation);
-  regrid_spec->get("cell_regrid_dilation", d_cellRegridDilation);
-  regrid_spec->get("cell_deletion_dilation", d_cellDeletionDilation);
-  regrid_spec->get("min_boundary_cells", d_minBoundaryCells);
-  regrid_spec->get("max_timestep_interval", d_maxTimestepsBetweenRegrids);
-  regrid_spec->get("min_timestep_interval", d_minTimestepsBetweenRegrids);
-  regrid_spec->get("dynamic_dilation",d_dynamicDilation);
-  regrid_spec->get("amr_overhead_low",d_amrOverheadLow);
-  regrid_spec->get("amr_overhead_high",d_amrOverheadHigh);
-  regrid_spec->get("max_dilation",d_maxDilation);
+  regrid_spec->get("cell_regrid_dilation",    d_cellRegridDilation);
+  regrid_spec->get("cell_deletion_dilation",  d_cellDeletionDilation);
+  regrid_spec->get("min_boundary_cells",      d_minBoundaryCells);
+  regrid_spec->get("max_timestep_interval",   d_maxTimestepsBetweenRegrids);
+  regrid_spec->get("min_timestep_interval",   d_minTimestepsBetweenRegrids);
+  regrid_spec->get("dynamic_dilation",        d_dynamicDilation);
+  regrid_spec->get("amr_overhead_low",        d_amrOverheadLow);
+  regrid_spec->get("amr_overhead_high",       d_amrOverheadHigh);
+  regrid_spec->get("max_dilation",            d_maxDilation);
   ASSERT(d_amrOverheadLow<=d_amrOverheadHigh);
 
   // set up filters
