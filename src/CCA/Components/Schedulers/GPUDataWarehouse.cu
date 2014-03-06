@@ -123,7 +123,7 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, char const* name, int patchID, i
   var.getArray3(d_varDB[i].var_offset, d_varDB[i].var_size, d_varDB[i].var_ptr);
   
   if (d_debug){
-    printf("host put \"%s\" (patch: %d) loc 0x%x into GPUDW 0x%x on device %d, size [%d,%d,%d]\n", name, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
+    printf("host put \"%s\" (patch: %d) loc %p into GPUDW %p on device %d, size [%d,%d,%d]\n", name, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
   }
   d_dirty=true;
 #endif
@@ -151,7 +151,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* name, int
   if (d_debug && retVal == cudaSuccess) {
     printf("cudaMalloc for \"%s\", size %ld from (%d,%d,%d) to (%d,%d,%d) ", name, var.getMemSize(),
             low.x, low.y, low.z, high.x, high.y, high.z);
-    printf(" at 0x%x on device %d\n", addr, d_device_id);
+    printf(" at %p on device %d\n", addr, d_device_id);
   }
   
   var.setArray3(offset, size, addr);
@@ -244,7 +244,7 @@ GPUDataWarehouse::put(GPUParticleVariableBase& var, char const* name, int patchI
   var.getData(d_varDB[i].num_elems, d_varDB[i].var_ptr);
 
   if (d_debug){
-    printf("host put \"%s\" (patch: %d) loc 0x%x into GPUDW 0x%x on device %d, size %d\n", name, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].num_elems);
+    printf("host put \"%s\" (patch: %d) loc %p into GPUDW %p on device %d, size %lu\n", name, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].num_elems);
   }
   d_dirty=true;
 #endif
@@ -269,7 +269,7 @@ GPUDataWarehouse::allocateAndPut(GPUParticleVariableBase& var, char const* name,
 
   if (d_debug && retVal == cudaSuccess) {
     printf("cudaMalloc for \"%s\", size %ld", name, var.getMemSize());
-    printf(" at 0x%x on device %d\n", addr, d_device_id);
+    printf(" at %p on device %d\n", addr, d_device_id);
   }
 
   var.setData(numVals, addr);
@@ -361,7 +361,7 @@ GPUDataWarehouse::put(GPUReductionVariableBase& var, char const* name, int patch
   var.getData(d_varDB[i].num_elems, d_varDB[i].var_ptr);
 
   if (d_debug){
-    printf("host put \"%s\" (patch: %d) loc 0x%x into GPUDW 0x%x on device %d, size %d\n", name, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].num_elems);
+    printf("host put \"%s\" (patch: %d) loc %p into GPUDW %p on device %d, size %lu\n", name, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].num_elems);
   }
   d_dirty=true;
 #endif
@@ -386,7 +386,7 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* name
 
   if (d_debug && retVal == cudaSuccess) {
     printf("cudaMalloc for \"%s\", size %ld", name, var.getMemSize());
-    printf(" at 0x%x on device %d\n", addr, d_device_id);
+    printf(" at %p on device %d\n", addr, d_device_id);
   }
 
   var.setData(numVals, addr);
@@ -410,7 +410,7 @@ GPUDataWarehouse::getItem(char const* name, int patchID, int matlIndex)
   index = -1;
 
   if (d_debug && threadID == 0 && blockID==0) {
-    printf("device getting item \"%s\" from GPUDW 0x%x", name, this);
+    printf("device getting item \"%s\" from GPUDW %p", name, this);
     printf("size (%d vars)\n Available labels:", d_numItems);
   }
 
@@ -454,7 +454,7 @@ GPUDataWarehouse::getItem(char const* name, int patchID, int matlIndex)
   }
 
   if (d_debug){
-    printf("host got \"%s\" loc 0x%x from GPUDW 0x%x on device %u\n", name, d_varDB[i].var_ptr, d_device_copy, d_device_id);
+    printf("host got \"%s\" loc %p from GPUDW %p on device %u\n", name, d_varDB[i].var_ptr, d_device_copy, d_device_id);
   }
   return &d_varDB[i];
 #endif
@@ -496,10 +496,10 @@ GPUDataWarehouse::remove(char const* name, int patchID, int matlID)
       CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
 
       if (d_debug){
-        printf("cuda Free for \"%s\" at 0x%x on device %d\n" , d_varDB[i].label, d_varDB[i].var_ptr, d_device_id );
+        printf("cuda Free for \"%s\" at %p on device %d\n" , d_varDB[i].label, d_varDB[i].var_ptr, d_device_id );
       }
 
-      d_varDB[i].label[0] = NULL; // leave a hole in the flat array, not deleted.
+      d_varDB[i].label[0] = 0; // leave a hole in the flat array, not deleted.
       d_dirty=true;
     }
     i++;
@@ -522,7 +522,7 @@ GPUDataWarehouse::init_device(int id)
   CUDA_RT_SAFE_CALL( retVal = cudaMalloc((void**)&d_device_copy, sizeof(GPUDataWarehouse)));
   
   if(d_debug){
-    printf("Init GPUDW on-device copy %d bytes to 0x%x on device %u\n", sizeof(GPUDataWarehouse), d_device_copy, d_device_id);
+    printf("Init GPUDW on-device copy %lu bytes to %p on device %d\n", sizeof(GPUDataWarehouse), d_device_copy, d_device_id);
   }
   
   d_dirty=true;
@@ -548,7 +548,7 @@ GPUDataWarehouse::syncto_device()
     CUDA_RT_SAFE_CALL (retVal = cudaMemcpy( d_device_copy,this, sizeof(GPUDataWarehouse), cudaMemcpyHostToDevice));
     
     if (d_debug) {
-      printf("sync GPUDW 0x%x to device %d\n", d_device_copy, d_device_id);
+      printf("sync GPUDW %p to device %d\n", d_device_copy, d_device_id);
     }
   }
   d_dirty=false;
@@ -567,11 +567,11 @@ GPUDataWarehouse::clear()
   cudaError_t retVal;
   CUDA_RT_SAFE_CALL(retVal = cudaSetDevice( d_device_id ));
   for (int i=0; i<d_numItems; i++) {
-    if (d_varDB[i].label[0] != NULL){
+    if (d_varDB[i].label[0] != 0){
       CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
       
       if (d_debug){
-        printf("cudaFree for \"%s\" at 0x%x on device %d\n", d_varDB[i].label, d_varDB[i].var_ptr, d_device_id );
+        printf("cudaFree for \"%s\" at %p on device %d\n", d_varDB[i].label, d_varDB[i].var_ptr, d_device_id );
       }
     }
   }
@@ -580,7 +580,7 @@ GPUDataWarehouse::clear()
   if ( d_device_copy ) {
     CUDA_RT_SAFE_CALL(retVal =  cudaFree( d_device_copy ));
     if(d_debug){
-      printf("Delete GPUDW on-device copy at 0x%x on device %d \n",  d_device_copy, d_device_id);
+      printf("Delete GPUDW on-device copy at %p on device %d \n",  d_device_copy, d_device_id);
     }
   }
 #endif
