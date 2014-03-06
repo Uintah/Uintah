@@ -1,0 +1,187 @@
+#!/bin/csh -f
+#__________________________________
+#  This script pulls out data from sus 
+#   output and plots it using gnuplot.
+#  Usage:
+#     plot_explosion_AMR <uda> <dump postScript File (y/Y), default is no>
+#__________________________________
+
+if( $#argv == 0 ) then
+  echo "plot_explosion_AMR <uda directory> <dump postScript File (y/Y), default is no>"
+  exit(1)
+endif
+set uda = $argv[1]
+
+set ans = 1
+set whichDatFile = "explosion2D.dat"
+echo " What type of problems are you running"
+echo " 1) explosion or 2) implosion? [1]"
+set ans = $<
+if ( $ans == "2" ) then
+  set whichDatFile = "implosion2D.dat"
+endif
+
+#__________________________________
+# bulletproofing
+if ( !(-e $uda) ) then
+    echo "Couldn't find your uda $uda"
+  exit(1)
+endif
+
+set tmp = (`which lineextract` `which puda`)
+
+if ( $status ) then
+  echo " ERROR: Could not find one of the following Uintah utilities"
+  echo "    lineextract"
+  echo "    puda"
+  exit(0)
+endif
+
+if( ! -e scripts/ICE/$whichDatFile ) then
+  echo " ERROR: could not find the exact solution dat file ($whichDatFile)"
+  echo " Please make sure there is a symbolic link to the inputs directory"
+  echo " Try running:"
+  echo "      make link_inputs"
+  exit
+endif
+
+set hardcopy = "n"
+if ( $#argv == 2 ) then
+  set hardcopy = $argv[2]
+endif 
+
+unalias rm
+#__________________________________
+#  bulletproofing.  Only 3 levels
+set nLevels = `puda -gridstats $uda | grep -m1 "Number of levels:" | cut -f 2 -d":"`
+if ( $nLevels != "3" ) then
+  echo " ERROR:  This script only works on a 3 level problem"
+  exit
+endif
+
+
+#__________________________________
+# find the timestep to plot
+set ts = (`puda -timesteps $uda | grep : | cut -f 2 -d":"`)
+
+echo "----------------------"
+@ count = 0
+foreach X ( $ts[*]:q) 
+  echo "$count) $X"
+  @ count = $count + 1
+end 
+echo "What timestep would you like to plot?"
+set timeStep = $<
+
+#__________________________________
+# ExtractData from the data file
+# coarse Level data
+lineextract -v temp_CC   -o temp_L0.dat  -l 0 -cellCoords -timestep $timeStep -istart 16 16 0 -iend 10000 16 0 -m 0 -uda $uda
+lineextract -v vel_CC    -o vel_L0.dat   -l 0 -cellCoords -timestep $timeStep -istart 16 16 0 -iend 10000 16 0 -m 0 -uda $uda
+lineextract -v press_CC  -o press_L0.dat -l 0 -cellCoords -timestep $timeStep -istart 16 16 0 -iend 10000 16 0 -m 0 -uda $uda
+lineextract -v rho_CC    -o rho_L0.dat   -l 0 -cellCoords -timestep $timeStep -istart 16 16 0 -iend 10000 16 0 -m 0 -uda $uda
+
+#Level-1 data
+lineextract -v temp_CC   -o temp_L1.dat  -l 1 -cellCoords -timestep $timeStep -istart 64 64 0 -iend 10000 64 0 -m 0 -uda $uda
+lineextract -v vel_CC    -o vel_L1.dat   -l 1 -cellCoords -timestep $timeStep -istart 64 64 0 -iend 10000 64 0 -m 0 -uda $uda
+lineextract -v press_CC  -o press_L1.dat -l 1 -cellCoords -timestep $timeStep -istart 64 64 0 -iend 10000 64 0 -m 0 -uda $uda
+lineextract -v rho_CC    -o rho_L1.dat   -l 1 -cellCoords -timestep $timeStep -istart 64 64 0 -iend 10000 64 0 -m 0 -uda $uda
+
+#Level-2 data
+lineextract -v temp_CC   -o temp_L2.dat  -l 2 -cellCoords -timestep $timeStep -istart 256 256 0 -iend 10000 256 0 -m 0 -uda $uda
+lineextract -v vel_CC    -o vel_L2.dat   -l 2 -cellCoords -timestep $timeStep -istart 256 256 0 -iend 10000 256 0 -m 0 -uda $uda
+lineextract -v press_CC  -o press_L2.dat -l 2 -cellCoords -timestep $timeStep -istart 256 256 0 -iend 10000 256 0 -m 0 -uda $uda
+lineextract -v rho_CC    -o rho_L2.dat   -l 2 -cellCoords -timestep $timeStep -istart 256 256 0 -iend 10000 256 0 -m 0 -uda $uda
+
+scripts/removeBraces vel_L0.dat
+scripts/removeBraces vel_L1.dat
+scripts/removeBraces vel_L2.dat
+
+cp scripts/ICE/$whichDatFile $uda/exactSolution.dat
+mv *.dat $uda/.
+
+
+echo "set terminal x11 1" > gp
+
+#__________________________________
+# if making a hardcopy
+if( $hardcopy == "y" || $hardcopy == "Y" ) then 
+echo "Generating the postscript file explode_AMR.ps"
+rm -f gp
+
+cat > gp << fin
+set terminal postscript color solid "Times-Roman" 9 portrait
+set output "explode_AMR.ps"
+fin
+endif
+
+#__________________________________
+# generate the  plot script
+cat >> gp << fin
+set ytics
+set xtics
+set mxtics
+set mytics
+set grid xtics ytics
+set pointsize 0.5
+set title ""
+
+#__________________________________
+#   Pressure
+#__________________________________
+set autoscale
+set multiplot
+set size 1.0,0.25 
+set origin 0.0,0.0
+set key off
+set ylabel "Pressure"
+set y2tics
+set xrange [0:1]
+plot  '$uda/exactSolution.dat'     using 1:4 t 'exact' with lines, \
+      '$uda/press_L0.dat'          using 1:4 t 'L-0',\
+      '$uda/press_L1.dat'          using 1:4 t 'L-1',\
+      '$uda/press_L2.dat'          using 1:4 t 'L-2'
+#__________________________________
+#   Temperature
+#__________________________________
+set origin 0.0,0.25
+
+set ylabel "Temperature"
+plot  '$uda/exactSolution.dat'     using 1:5 t 'exact' with lines, \
+      '$uda/temp_L0.dat'           using 1:4 t 'L-0',\
+      '$uda/temp_L1.dat'           using 1:4 t 'L-1',\
+      '$uda/temp_L2.dat'           using 1:4 t 'L-2'
+
+#__________________________________
+#  velocity x-component
+#__________________________________
+set origin 0.0,0.5
+
+set ylabel "Velocity"
+plot  '$uda/exactSolution.dat'     using 1:3 t 'exact'  with lines, \
+      '$uda/vel_L0.dat'               using 1:4 t 'L-0',\
+      '$uda/vel_L1.dat'               using 1:4 t 'L-1',\
+      '$uda/vel_L2.dat'               using 1:4 t 'L-2'
+#__________________________________
+#   density
+#__________________________________
+set origin 0.0,0.75
+set key on 
+set ylabel "Density"
+plot  '$uda/exactSolution.dat'    using 1:2 t 'exact'  with lines, \
+      '$uda/rho_L0.dat'              using 1:4 t 'L-0',\
+      '$uda/rho_L1.dat'              using 1:4 t 'L-1',\
+      '$uda/rho_L2.dat'              using 1:4 t 'L-2'
+      
+      
+set nomultiplot 
+pause -1 "Hit return to continue"
+fin
+#__________________________________
+# plot it up
+gnuplot gp
+
+
+#__________________________________
+# clean up
+rm -f gp 
