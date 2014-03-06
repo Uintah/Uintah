@@ -229,7 +229,7 @@ AMRSimulationController::run()
     // regridOnce flag is set
     counter ++;
 
-    if(d_regridder->doRegridOnce() && counter == 5){
+    if(d_regridder && d_regridder->doRegridOnce() && counter == 5){
       doRegridding(currentGrid, false);
       d_regridder->setAdaptivity(false);
     } 
