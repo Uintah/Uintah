@@ -93,6 +93,9 @@ AMRSimulationController::~AMRSimulationController()
 }
 
 double barrier_times[5]={0};
+
+//______________________________________________________________________
+//
 void
 AMRSimulationController::run()
 {
@@ -185,6 +188,7 @@ AMRSimulationController::run()
    bool   first = true;
    int    iterations = d_sharedState->getCurrentTopLevelTimeStep();
    double delt = 0;
+   int    counter = 0;
 
    double start;
   
@@ -215,9 +219,22 @@ AMRSimulationController::run()
      TAU_PROFILE_START(iteration_timer); 
 #endif
      
-     if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (d_restarting))) {
+     if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (!d_restarting))) {
+       proc0cout << "** AMRSimulatiionController: checking if we need to regrid" << endl;
        doRegridding(currentGrid, false);
      }
+    
+/*`==========TESTING==========*/
+    // For Jacqueline:  Regrid on the 5th timestep if 
+    // regridOnce flag is set
+    counter ++;
+
+    if(d_regridder->doRegridOnce() && counter == 5){
+      doRegridding(currentGrid, false);
+      d_regridder->setAdaptivity(false);
+    } 
+/*===========TESTING==========`*/
+    
     
      // Compute number of dataWarehouses - multiplies by the time refinement
      // ratio for each level you increase
@@ -510,7 +527,8 @@ AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwStride,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void
 AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwStride, int levelNum, bool rootCycle)
 {
@@ -990,7 +1008,8 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
   task->usesMPI(true);
   sched->addTask(task, d_lb->getPerProcessorPatchSet(grid), d_sharedState->allMaterials());
 }
-
+//______________________________________________________________________
+//
 void
 AMRSimulationController::reduceSysVar( const ProcessorGroup*,
                                       const PatchSubset* patches,
