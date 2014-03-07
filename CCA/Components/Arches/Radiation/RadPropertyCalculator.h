@@ -85,7 +85,7 @@ namespace Uintah {
 
       }
 
-      const bool does_scattering(){ 
+      bool does_scattering() { 
 
         return _calculator->does_scattering(); 
 
@@ -116,7 +116,7 @@ namespace Uintah {
                                                   CCVariable<double>& abskg,
                                                   CCVariable<double>& abskp ) = 0;
           virtual std::vector<std::string> get_sp() = 0;
-          virtual const bool does_scattering() = 0;
+          virtual bool does_scattering() = 0;
       };
       //______________________________________________________________________
       //
@@ -134,8 +134,8 @@ namespace Uintah {
           std::vector<std::string> get_sp(){
             std::vector<std::string> void_vec; 
             return void_vec; 
-          };
-          const bool does_scattering(){ return false; }; 
+          }
+          bool does_scattering(){ return false; }
 
         private: 
           double _value; 
@@ -155,8 +155,8 @@ namespace Uintah {
           std::vector<std::string> get_sp(){
             std::vector<std::string> void_vec; 
             return void_vec; 
-          };
-          const bool does_scattering(){ return false; }; 
+          }
+          bool does_scattering(){ return false; }
         private: 
           double _value;
           Point _notSetMin;
@@ -178,7 +178,7 @@ namespace Uintah {
                                           double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weight_scaling_constant, RadCalcSpeciesList weight, 
                                           const int N, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp );
           std::vector<std::string> get_sp();
-          const bool does_scattering(); 
+          bool does_scattering(); 
 
         private: 
 
@@ -209,8 +209,8 @@ namespace Uintah {
                                           double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
                                           const int Nqn, constCCVariable<double>& mixT, CCVariable<double>& abskg, CCVariable<double>& abskp );
 
-          std::vector<std::string> get_sp(){ return _species; };
-          const bool does_scattering(){ return _does_scattering; }; 
+          std::vector<std::string> get_sp(){ return _species; }
+          bool does_scattering(){ return _does_scattering; }
 
         private: 
 
