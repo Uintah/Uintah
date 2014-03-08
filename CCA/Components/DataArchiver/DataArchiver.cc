@@ -728,6 +728,8 @@ DataArchiver::reduceUdaSetup(Dir& fromDir)
   d_checkpointInterval = 0.0;
   d_checkpointTimestepInterval = 0;
   d_checkpointWalltimeInterval = 0;
+  d_nextCheckpointTimestep  = SHRT_MAX;
+  
 
   // output every timestep -- each timestep is transferring data
   d_outputInitTimestep     = true;
