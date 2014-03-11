@@ -157,21 +157,21 @@ public:
     } else { 
       return false; 
     }
-  };
+  }
 
   /** @brief Set the density guess -- eqn stage = 0 **/ 
   inline void setDensityGuessBool( bool set_point ){ 
     if ( set_point ) _stage = 0; 
-  };
+  }
 
   /** @brief Check for RK bool **/ 
-  inline const int get_stage(){
+  inline int get_stage() {
     return _stage; 
-  };
+  }
 
   /** @brief Return a list of all sources associated with this transport equation */ 
   inline const std::vector<SourceContainer> getSourcesList(){
-    return d_sources; };
+    return d_sources; }
 
   /** @brief Compute the boundary conditions for this transport equation object */
   template<class phiType> void
@@ -180,26 +180,26 @@ public:
                        phiType& phi )
   {
     d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
-  };
+  }
 
   /** @brief Set the intrusion machinery **/ 
   inline void set_intrusion( IntrusionBC* intrusions ){ 
     _intrusions = intrusions; 
-  };  
+  }
 
   /** @brief Set boolean for new intrusions **/ 
   inline void set_intrusion_bool( bool using_new_intrusions ){ 
     _using_new_intrusion = using_new_intrusions; 
-  };
+  }
 
   /** @brief Set a reference to the mix/rxn table **/ 
   inline void set_table( MixingRxnModel* table ){
   	_table = table; 	
-  }; 
+  }
   
   inline bool does_table_initialization(){ 
   	return _table_init; 
-  };
+  }
 
   // Clipping:
   struct ClipInfo{ 

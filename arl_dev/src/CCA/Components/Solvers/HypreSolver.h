@@ -81,7 +81,13 @@ namespace Uintah {
     
     SimulationStateP state;    // simulation state
     
-    void setSetupFrequency(const int freq) {setupFrequency = freq;}
+    void setSetupFrequency(const int freq) {
+      setupFrequency = freq;
+    }
+
+    int getSetupFrequency() const { 
+      return setupFrequency;
+    }
   };
 
 

@@ -754,14 +754,11 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     // reference density modification 
     if ( modify_ref_den ) {
 
-      double den_ref = 0.0;
-
-      if (patch->containsCell(d_ijk_den_ref)) {
-
-        den_ref = arches_density[d_ijk_den_ref];
-
-      }
+      DepVarMap::iterator i = depend_storage.find("density");
+      std::vector<double> iv = _iv_transform->get_reference_iv(); 
+      double den_ref = ND_interp->find_val( iv, i->second.index ); 
       new_dw->put(sum_vartype(den_ref),time_labels->ref_density);
+
     }
   }
 }
@@ -794,19 +791,22 @@ ClassicTableInterface::getIndexInfo()
   void 
 ClassicTableInterface::getEnthalpyIndexInfo()
 {
-  d_enthalpyVarIndexMapLock.writeLock();
-  cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up sensible enthalpy" << endl;
-  int index = findIndex( "sensibleenthalpy" ); 
+  if ( !d_coldflow){ 
+    
+    d_enthalpyVarIndexMapLock.writeLock();
+    cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up sensible enthalpy" << endl;
+    int index = findIndex( "sensibleenthalpy" ); 
 
-  d_enthalpyVarIndexMap.insert( make_pair( "sensibleenthalpy", index ));
+    d_enthalpyVarIndexMap.insert( make_pair( "sensibleenthalpy", index ));
 
-  cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up adiabatic enthalpy" << endl;
-  index = findIndex( "adiabaticenthalpy" ); 
-  d_enthalpyVarIndexMap.insert( make_pair( "adiabaticenthalpy", index ));
+    cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up adiabatic enthalpy" << endl;
+    index = findIndex( "adiabaticenthalpy" ); 
+    d_enthalpyVarIndexMap.insert( make_pair( "adiabaticenthalpy", index ));
 
-  index = findIndex( "density" ); 
-  d_enthalpyVarIndexMap.insert( make_pair( "density", index ));
-  d_enthalpyVarIndexMapLock.writeUnlock();
+    index = findIndex( "density" ); 
+    d_enthalpyVarIndexMap.insert( make_pair( "density", index ));
+    d_enthalpyVarIndexMapLock.writeUnlock();
+  }
 }
 
 //-------------------------------------

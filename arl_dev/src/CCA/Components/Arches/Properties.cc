@@ -154,25 +154,27 @@ void
 Properties::sched_computeDenRefArray(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* matls,
-                                     const TimeIntegratorLabel* timelabels)
+                                     bool initialize_me, int time_substep)
 
 {
 
   // primitive variable initialization
-  string taskname =  "Properties::computeDenRefArray" +
-                     timelabels->integrator_step_name;
+  string taskname =  "Properties::computeDenRefArray";
   Task* tsk = scinew Task(taskname,
                           this, &Properties::computeDenRefArray,
-                          timelabels);
+                          initialize_me, time_substep);
 
-
-  tsk->requires(Task::NewDW, timelabels->ref_density);
+  if ( !initialize_me ){
+    tsk->requires(Task::OldDW, d_lab->d_denRefArrayLabel, Ghost::None, 0); 
+  } else { 
+    tsk->computes(d_lab->d_refDensity_label); 
+  }
 
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, Ghost::None, 0);
   }
 
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+  if (time_substep == 0){
     tsk->computes(d_lab->d_denRefArrayLabel);
   }else{
     tsk->modifies(d_lab->d_denRefArrayLabel);
@@ -188,9 +190,10 @@ void
 Properties::computeDenRefArray(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset*,
-                               DataWarehouse*,
+                               DataWarehouse* old_dw,
                                DataWarehouse* new_dw,
-                               const TimeIntegratorLabel* timelabels)
+                               bool initialize_me, 
+                               int time_substep)
 
 {
   for (int p = 0; p < patches->size(); p++) {
@@ -200,24 +203,35 @@ Properties::computeDenRefArray(const ProcessorGroup*,
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> denRefArray;
+    constCCVariable<double> oldDenRefArray; 
     constCCVariable<double> voidFraction;
-
-    sum_vartype den_ref_var;
-    new_dw->get(den_ref_var, timelabels->ref_density);
-
-    double den_Ref = den_ref_var;
 
     if (d_MAlab) {
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch, Ghost::None, 0);
     }
 
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+    if ( initialize_me ){
+
+      sum_vartype den_ref_var;
+      new_dw->get(den_ref_var, d_lab->d_refDensity_label);
+
+      double den_Ref = den_ref_var;
       new_dw->allocateAndPut(denRefArray, d_lab->d_denRefArrayLabel,  indx, patch);
-    }else{
-      new_dw->getModifiable(denRefArray, d_lab->d_denRefArrayLabel,   indx, patch);
-    }  
+
+      denRefArray.initialize( den_ref_var ); 
+
+    } else { 
+
+      //already computed so just copy it forward.
+      if (time_substep == 0){
+        old_dw->get(oldDenRefArray, d_lab->d_denRefArrayLabel, indx, patch, Ghost::None, 0);
+        new_dw->allocateAndPut(denRefArray, d_lab->d_denRefArrayLabel,  indx, patch);
+        denRefArray.copy(oldDenRefArray);
+      }else{
+        new_dw->getModifiable(denRefArray, d_lab->d_denRefArrayLabel,   indx, patch);
+      }  
+    }
               
-    denRefArray.initialize(den_Ref);
 
     if (d_MAlab) {
       for (CellIterator iter = patch->getCellIterator(); !iter.done();iter++){

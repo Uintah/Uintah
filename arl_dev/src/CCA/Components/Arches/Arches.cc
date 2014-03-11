@@ -1028,7 +1028,11 @@ Arches::scheduleInitialize(const LevelP& level,
   bool modify_ref_den = true;
   d_props->doTableMatching();
   d_props->sched_computeProps( level, sched, init_timelabel, initialize_it, modify_ref_den );
-  
+
+  //compute the density reference array
+  d_props->sched_computeDenRefArray(sched, patches, matls,
+                                    true, 0);
+
 
   //Setup BC areas
   d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls );
@@ -1090,6 +1094,7 @@ Arches::scheduleInitialize(const LevelP& level,
 
   }
 
+
   // check to make sure that all the scalar variables have BCs set and set intrusions:
   EqnFactory& eqnFactory = EqnFactory::self();
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
@@ -1102,6 +1107,7 @@ Arches::scheduleInitialize(const LevelP& level,
       eqn->sched_tableInitialization( level, sched ); 
     }
   }
+
 # ifdef WASATCH_IN_ARCHES
   // must set wasatch materials after problemsetup so that we can access
   // sharedState->allArchesMaterials(). This is dictated by Uintah.

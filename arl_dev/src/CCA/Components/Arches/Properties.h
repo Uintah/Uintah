@@ -105,7 +105,7 @@ public:
   void sched_computeDenRefArray(SchedulerP&, 
                                 const PatchSet* patches,
                                 const MaterialSet* matls,
-                                const TimeIntegratorLabel* timelabels);
+                                bool initialize, int time_substep);
 
   void sched_averageRKProps(SchedulerP&, 
                             const PatchSet* patches,
@@ -185,7 +185,7 @@ private:
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
-                          const TimeIntegratorLabel* timelabels);
+                          bool initialize, int time_substep);
 
   void averageRKProps(const ProcessorGroup*,
                       const PatchSubset* patches,

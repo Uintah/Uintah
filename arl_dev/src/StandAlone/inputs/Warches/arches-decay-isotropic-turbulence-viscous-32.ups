@@ -86,17 +86,9 @@
       </TransportEqns>
 
       <Properties>
-        <ColdFlow>
-          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
-          <Stream_1>
-            <density>1.0</density>
-            <temperature>298</temperature>
-          </Stream_1>
-          <Stream_2>
-            <density>1.0</density>
-            <temperature>298</temperature>
-          </Stream_2>
-        </ColdFlow>
+        <ConstantProps>
+          <density>1.0</density>
+          <temperature>298</temperature>
       </Properties>
 
       <BoundaryConditions>

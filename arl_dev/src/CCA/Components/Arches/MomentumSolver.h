@@ -278,6 +278,8 @@ private:
 
   VelocityInitBase* _init_function; 
   std::string _init_type; 
+  Discretization::MOMCONV d_conv_scheme; 
+  double d_re_limit; 
 
   // constant initialization ------------------------
   class ConstantVel : public VelocityInitBase { 
@@ -527,8 +529,8 @@ private:
 
           } else if ( _plane == "z-x" ){ 
 
-            uvel[c] = 1.0 + _B * sin( 2.0*_pi*p.x() ) 
-                               * cos( 2.0*_pi*p.z() ); 
+            uvel[c] = 1.0 + _B * sin( 2.0*_pi*p.z() ) 
+                               * cos( 2.0*_pi*p.x() ); 
 
           } else { 
             uvel[c] = 0.0; 

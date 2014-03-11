@@ -233,11 +233,9 @@
         </ConstantProps>
       </Properties>
 
-<!--
       <BoundaryConditions>
       </BoundaryConditions>
 
--->
       <ExplicitSolver>
         <initial_dt>1</initial_dt>
         <PressureSolver>

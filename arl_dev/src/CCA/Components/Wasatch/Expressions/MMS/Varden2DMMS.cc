@@ -346,9 +346,6 @@ evaluate()
   const double r0 = this->r0_;
   const double r1 = this->r1_;
   
-  const double dn1 = 1.0 + r0/r1;
-  const double dn2 = 1.0 - r0/r1;
-  
   const FieldT& x = *(this->x_);
   const FieldT& y = *(this->y_);
   

@@ -98,7 +98,6 @@
             <calc_frequency>1</calc_frequency>
             
             <RMCRT>
-                <opl>               0.01       </opl>
                 <randomSeed>        false      </randomSeed>
                 <abskg>             999        </abskg>
                 <nDivQRays>          10         </nDivQRays>

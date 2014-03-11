@@ -633,6 +633,7 @@ void BoundaryCondition_new::setAreaFraction( const Patch* patch,
           Vector T = areaFraction[c]; 
           T[P_dir] = 0.;
           areaFraction[c] = T; 
+          volFraction[c] = 0.0; 
 
         }
       }

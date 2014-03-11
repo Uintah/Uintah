@@ -665,10 +665,10 @@ void setBC(CCVariable<double>& press_CC,
                                        localVars->sine);
         }
         
-        
-        HydrostaticPressureAdjustment(press_CC, rho_micro, gravity, surroundingMatl_indx,
-                                      bc_kind, patch, face, bound_ptr, isNotInitialTimestep);
-
+        if( globalVars->applyHydrostaticPress ){
+          HydrostaticPressureAdjustment(press_CC, rho_micro, gravity, surroundingMatl_indx,
+                                        bc_kind, patch, face, bound_ptr, isNotInitialTimestep);
+        }
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {

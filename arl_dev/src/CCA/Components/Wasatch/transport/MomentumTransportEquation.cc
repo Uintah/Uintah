@@ -758,8 +758,7 @@ namespace Wasatch{
         
         // matrix update in hypre: If we have a moving geometry, then update every timestep.
         // Otherwise, no update is needed since the coefficient matrix is constant        
-        Uintah::HypreSolver2Params* dparams = dynamic_cast<Uintah::HypreSolver2Params*>(solverParams_);
-        dparams->setSetupFrequency(vNames.has_moving_geometry() ? 1 : 0);
+        solverParams_->setSetupFrequency(vNames.has_moving_geometry() ? 1 : 0);
         
         // if pressure expression has not be registered, then register it
         Expr::Tag fxt, fyt, fzt;

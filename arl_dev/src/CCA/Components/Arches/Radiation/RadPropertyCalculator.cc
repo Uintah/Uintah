@@ -179,7 +179,7 @@ RadPropertyCalculator::HottelSarofim::get_sp(){
 
 }
 
-const bool 
+bool 
 RadPropertyCalculator::HottelSarofim::does_scattering(){ return false; } 
 
 /// --------------------------------------

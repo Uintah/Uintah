@@ -87,8 +87,11 @@ namespace Uintah {
       fname.push_back( "b" + outputFileName );
       fname.push_back( "x" + outputFileName );
     }
-    
-    
+
+    void setSetupFrequency(const int freq) {}
+
+    int getSetupFrequency() const { return 1;}
+        
     virtual ~SolverParameters();
   private:
     bool   useStencil4;
@@ -128,7 +131,8 @@ namespace Uintah {
 #endif
 
     virtual std::string getName()=0;
-  
+
+
   private: 
     SolverInterface(const SolverInterface&);
     SolverInterface& operator=(const SolverInterface&);

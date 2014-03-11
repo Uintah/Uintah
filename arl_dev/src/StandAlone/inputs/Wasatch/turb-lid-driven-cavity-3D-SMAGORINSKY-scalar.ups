@@ -69,15 +69,23 @@
     <!-- Set the initial condition expression for mixture fraction -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f" state="STATE_N"/>
-      <PlusProfile xStart="0.45" yStart="0.45" xWidth="0.1" yWidth="0.1" lowValue="0.0" highValue="1.0">
-        <Coordinate1>
-          <NameTag name="XSVOL" state="STATE_NONE"/>
-        </Coordinate1>
-        <Coordinate2>
-          <NameTag name="YSVOL" state="STATE_NONE"/>
-        </Coordinate2>
-      </PlusProfile>
+			<NameTag name="f" state="STATE_N"/>      
+      <GeometryBased value="0.0">
+      	<Intrusion value="1.0">
+      		<geom_object>
+      			<union>
+      				<box>
+								<min>[0.45,0,0]</min>
+								<max>[0.55,1,1]</max>
+      				</box>
+      				<box>
+								<min>[0,0.45,0]</min>
+								<max>[1,0.55,1]</max>
+      				</box>      				
+      			</union>
+      		</geom_object>
+      	</Intrusion>
+      </GeometryBased>
     </BasicExpression>
     
     <!-- Set the initial condition expression for x-momentum -->

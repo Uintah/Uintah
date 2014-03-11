@@ -250,6 +250,7 @@ ColdFlow::sched_getState( const LevelP& level,
     tsk->computes(time_labels->ref_density); 
   }
   tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
+  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, gn, 0 ); 
 
   // for inert mixing 
   for ( InertMasterMap::iterator iter = d_inertMap.begin(); iter != d_inertMap.end(); iter++ ){ 
@@ -281,7 +282,9 @@ ColdFlow::getState( const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<double> eps_vol; 
+    constCCVariable<int> cell_type; 
     new_dw->get( eps_vol, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
+    new_dw->get( cell_type, d_lab->d_cellTypeLabel, matlIndex, patch, gn, 0 ); 
 
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
@@ -615,14 +618,9 @@ ColdFlow::getState( const ProcessorGroup* pc,
     // reference density modification 
     if ( modify_ref_den ) {
 
-      double den_ref = 0.0;
-
-      if (patch->containsCell(d_ijk_den_ref)) {
-
-        den_ref = arches_density[d_ijk_den_ref];
-
-      }
+      double den_ref = get_reference_density(arches_density, cell_type);       
       new_dw->put(sum_vartype(den_ref),time_labels->ref_density);
+
     }
   }
 }

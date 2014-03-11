@@ -186,7 +186,6 @@ private:
   //__________________________________
   // Set stencil weights
   void calculatePressureCoeff(const Patch* patch,
-                              CellInformation* cellinfo,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars); 
 

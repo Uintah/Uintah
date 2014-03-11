@@ -154,7 +154,6 @@
               <Turbulence model="compdynamicprocedure"/>
             
             <Properties>
-              <use_mixing_model>false</use_mixing_model>
               <ColdFlow>
                 <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
                 <Stream_1>
@@ -165,6 +164,7 @@
                   <density>1.18</density>
                   <temperature>298</temperature>
                 </Stream_2>
+                <reference_density value="1.18"/>
               </ColdFlow>
             </Properties>
             

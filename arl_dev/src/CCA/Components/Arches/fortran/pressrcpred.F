@@ -33,7 +33,7 @@ c
       integer i, j, k
       double precision dene, denw, denn, dens, dent, denb
       double precision ce, cw, cn, cs, ct, cb
-      double precision arean, areas, areaew, areatb, vol
+      double precision areans, areaew, areatb, vol
       double precision apo, smp
 
 c-----------------------------------------------------------------------
@@ -47,16 +47,17 @@ c-----------------------------------------------------------------------
       JEND = idxHi(2)
       KEND = idxHi(3)
 
+      areaew = dy*dz
+      areans = dx*dz
+      areatb = dx*dy
+      vol = dx*dy*dz
+
 c-----------------------------------------------------------------------
 
       do 120 k = KST, KEND
          do 110 j = JST, JEND
             do 100 i = IST, IEND
-               arean = sew(i)*stb(k)
-               areas = sew(i)*stb(k)
-               areaew = sns(j)*stb(k)
-               areatb = sns(j)*sew(i)
-               vol = sns(j)*sew(i)*stb(k)
+
                dene = pt5*(den(i+1,j,k)+den(i,j,k))
                denw = pt5*(den(i-1,j,k)+den(i,j,k))
                denn = pt5*(den(i,j+1,k)+den(i,j,k))
@@ -65,8 +66,8 @@ c-----------------------------------------------------------------------
                denb = pt5*(den(i,j,k-1)+den(i,j,k))
                ce = areaew*dene
                cw = areaew*denw
-               cn = arean*denn
-               cs = areas*dens
+               cn = areans*denn
+               cs = areans*dens
                ct = areatb*dent
                cb = areatb*denb
 c drho/dt is added in C code
