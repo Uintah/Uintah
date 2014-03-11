@@ -1609,8 +1609,9 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Post H2D copy of " << reqVarName << ", size (bytes) = " << host_bytes << " from " << host_ptr
-                            << " to " << device_ptr << ", using stream " << dtask->getCUDAStream() << std::endl;
+                  gpu_stats << "Post H2D copy of " << reqVarName <<  ", size (bytes) = "  << std::dec << host_bytes
+                            << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr << ", using stream "
+                            << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
                 }
                 cerrLock.unlock();
               }
@@ -1673,8 +1674,9 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Post H2D copy of \"" << reqVarName << "\", size = " << host_bytes << " from " << host_ptr
-                            << " to " << device_var.getPointer() << ", using stream " << dtask->getCUDAStream() << std::endl;
+                  gpu_stats << "Post H2D copy of \"" << reqVarName << "\", size = " << std::dec << host_bytes << " from "
+                            << std::hex << host_ptr << " to " << std::hex << device_var.getPointer() << ", using stream "
+                            << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
                 }
                 cerrLock.unlock();
               }
@@ -1721,7 +1723,7 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
     OnDemandDataWarehouseP dw = dws[dwIndex];
 
     void* device_ptr = NULL;  // device base pointer to raw data
-    size_t host_bytes = 0;
+    size_t num_bytes = 0;
 
     int numPatches = patches->size();
     int numMatls = matls->size();
@@ -1772,18 +1774,21 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
                                                make_int3(low.x(), low.y(), low.z()),
                                                make_int3(high.x(), high.y(), high.z()));
                 device_ptr = device_var.getPointer();
+                num_bytes = device_var.getMemSize();
               } else if (name.compare("double") == 0) {
                 GPUGridVariable<double> device_var;
                 dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID,
                                                make_int3(low.x(), low.y(), low.z()),
                                                make_int3(high.x(), high.y(), high.z()));
                 device_ptr = device_var.getPointer();
+                num_bytes = device_var.getMemSize();
               } else if (name.compare("Stencil7") == 0) {
                 GPUGridVariable<GPUStencil7> device_var;
                 dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID,
                                                make_int3(low.x(), low.y(), low.z()),
                                                make_int3(high.x(), high.y(), high.z()));
                 device_ptr = device_var.getPointer();
+                num_bytes = device_var.getMemSize();
               } else {
                 SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + compVarName, __FILE__, __LINE__));
               }
@@ -1791,8 +1796,9 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "allocated device copy of \"" << compVarName << "\", size = " << host_bytes
-                            << " at " << device_ptr << " on device " << dtask->getDeviceNum() << std::endl;
+                  gpu_stats << "Allocated device copy of \"" << compVarName << "\", size = " << std::dec << num_bytes
+                            << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
+                            << std::dec << std::endl;
                 }
                 cerrLock.unlock();
               }
@@ -1810,11 +1816,13 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
               int numElems = 1; // baked in for now: simple reductions on single value
               dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID, numElems);
               device_ptr = device_var.getPointer();
+              num_bytes = device_var.getMemSize();
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "allocated device copy of \"" << compVarName << "\", size = " << host_bytes
-                            << " at " << device_ptr << " on device " << dtask->getDeviceNum() << std::endl;
+                  gpu_stats << "Allocated device copy of \"" << compVarName << "\", size = " << std::dec << num_bytes
+                            << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
+                            << std::dec << std::endl;
                 }
                 cerrLock.unlock();
               }
@@ -1954,8 +1962,9 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "post D2H copy of \"" << compVarName << "\", size = " << host_bytes << " to "
-                              << host_ptr << " from " << device_ptr << ", using stream " << dtask->getCUDAStream() << std::endl;
+                    gpu_stats << "Post D2H copy of \"" << compVarName << "\", size = " << std::dec << host_bytes << " to "
+                              << std::hex << host_ptr << " from " << std::hex << device_ptr << ", using stream "
+                              << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
                   }
                   cerrLock.unlock();
                 }
@@ -2006,8 +2015,9 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "post D2H copy of \"" << compVarName << "\", size = " << host_bytes << " to "
-                              << host_ptr << " from " << device_ptr << ", using stream " << dtask->getCUDAStream() << std::endl;
+                    gpu_stats << "Post D2H copy of \"" << compVarName << "\", size = " << std::dec << host_bytes << " to "
+                              << std::hex << host_ptr << " from " << std::hex << device_ptr << ", using stream "
+                              << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
                   }
                   cerrLock.unlock();
                 }
@@ -2091,7 +2101,7 @@ cudaStream_t* UnifiedScheduler::getCudaStream(int device)
     CUDA_RT_SAFE_CALL( retVal = cudaStreamCreate(&(*stream)));
     if (gpu_stats.active()) {
       cerrLock.lock();
-      gpu_stats << "created CUDA stream " << stream << " on device " << device << std::endl;
+      gpu_stats << "created CUDA stream " << stream << " on device " << std::dec << device << std::endl;
       cerrLock.unlock();
     }
   }

@@ -456,6 +456,32 @@ Task::computes(const VarLabel* var,
 
 //__________________________________
 void
+Task::computesWithScratchGhost(const VarLabel* var,
+               const MaterialSubset* matls,
+               MaterialDomainSpec matls_dom,
+               Ghost::GhostType gtype,
+               int numGhostCells,
+               bool oldTG)
+{
+  if (var->typeDescription()->isReductionVariable()) {
+    SCI_THROW(InternalError("ComputeswithScratchGhost should not be used for reduction variable", __FILE__, __LINE__));
+  }
+  
+  Dependency* dep = scinew Dependency(Computes, this, NewDW, var, oldTG, NULL, matls,
+                                      ThisLevel, matls_dom, gtype, numGhostCells);
+  dep->next=0;
+  if (comp_tail)
+    comp_tail->next=dep;
+  else
+    comp_head=dep;
+  comp_tail=dep;
+  
+  d_computes.insert(make_pair(var, dep));
+}
+
+
+//__________________________________
+void
 Task::modifiesWithScratchGhost(const VarLabel* var,
                const PatchSubset* patches,
                PatchDomainSpec patches_dom,

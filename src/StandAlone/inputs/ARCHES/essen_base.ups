@@ -166,6 +166,7 @@
                             <density>1.15218</density>
                             <temperature>305.15</temperature>
                         </Stream_2>
+                        <reference_density value="1.15218"/>
                 </ColdFlow> 
             </Properties>
 

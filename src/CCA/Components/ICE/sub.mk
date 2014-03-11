@@ -33,7 +33,6 @@ SRCDIR   := CCA/Components/ICE
 
 SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/AMRICE.cc \
-       $(SRCDIR)/ICEDebug.cc \
        $(SRCDIR)/ICEMaterial.cc \
        $(SRCDIR)/Diffusion.cc \
        $(SRCDIR)/BoundaryCond.cc \

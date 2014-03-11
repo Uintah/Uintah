@@ -164,15 +164,10 @@
         </Eqn>
       </TransportEqns>
 
-      <Turbulence model="smagorinsky">
-        <cf>0.0</cf> <!-- turn off turbulence model --> 
-        <fac_mesh>1.0</fac_mesh>
-        <filterl>0.000001</filterl>
-      </Turbulence>
-
       <Properties>
         <ColdFlow>
           <mixture_fraction_label>mixture_fraction_gaussian</mixture_fraction_label>
+          <reference_density value="1.18"/>
           <Stream_1>
             <density>1.18</density>
             <temperature>298</temperature>

@@ -104,17 +104,27 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("MomentumSolver");
 
-  d_discretize = scinew Discretization();
+  d_discretize = scinew Discretization(d_physicalConsts);
 
   string conv_scheme;
+  d_central = false;
   db->getWithDefault("convection_scheme",conv_scheme,"upwind");
   if (conv_scheme == "upwind"){
-    d_central = false;
+    d_conv_scheme = Discretization::UPWIND; 
   }else if (conv_scheme == "central"){
     d_central = true;     
+    d_conv_scheme = Discretization::CENTRAL; 
+  } else if (conv_scheme == "wall_upwind") {
+    d_conv_scheme = Discretization::WALLUPWIND; 
+  } else if (conv_scheme == "old_upwind"){ 
+    d_conv_scheme = Discretization::OLD;
+  } else if (conv_scheme == "old_central"){ 
+    d_conv_scheme = Discretization::OLD;
+    d_central = true; 
   }else{
     throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
   }
+  db->getWithDefault("Re_limit",d_re_limit,2.0);
 
   // -------------- initialization   
   if ( db->findBlock("initialization") ){ 
@@ -440,7 +450,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 2);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
-  tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, gac, 1); 
+  tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, gac, 2); 
 
   if (timelabels->multiple_steps){
     tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,gac, 2);
@@ -462,7 +472,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-  if (!(this->get_use_wasatch_mom_rhs())) tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,   gac, 1);
+  if (!(this->get_use_wasatch_mom_rhs())) tsk->requires(Task::OldDW, d_lab->d_denRefArrayLabel,   gac, 1);
 //#endif // WASATCH_IN_ARCHES
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,  gac, 2);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 2);
@@ -555,7 +565,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 2);
     constCCVariable<double> volFraction; 
-    new_dw->get(volFraction, d_lab->d_volFractionLabel, indx, patch, gac, 1);
+    new_dw->get(volFraction, d_lab->d_volFractionLabel, indx, patch, gac, 2);
 
     if (timelabels->multiple_steps){
       new_dw->get(constVelocityVars.density, d_lab->d_densityTempLabel, indx, patch, gac, 2);
@@ -579,7 +589,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     new_dw->get(constVelocityVars.new_density, d_lab->d_densityCPLabel,     indx, patch, gac, 1);
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-    if (!(this->get_use_wasatch_mom_rhs())) new_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayLabel,   indx, patch, gac, 1);
+    if (!(this->get_use_wasatch_mom_rhs())) old_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayLabel,   indx, patch, gac, 1);
 //#endif // WASATCH_IN_ARCHES
     new_dw->get(constVelocityVars.viscosity,   d_lab->d_viscosityCTSLabel,  indx, patch, gac, 2);
     new_dw->get(constVelocityVars.uVelocity,   d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 2);
@@ -625,10 +635,18 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       new_dw->allocateTemporary(velocityVars.uVelLinearSrc,     patch);
       new_dw->allocateTemporary(velocityVars.vVelLinearSrc,     patch);
       new_dw->allocateTemporary(velocityVars.wVelLinearSrc,     patch);
+
+      velocityVars.uVelLinearSrc.initialize(0.0);
+      velocityVars.vVelLinearSrc.initialize(0.0);
+      velocityVars.wVelLinearSrc.initialize(0.0);
       
       new_dw->allocateTemporary(velocityVars.uVelNonlinearSrc,  patch);
       new_dw->allocateTemporary(velocityVars.vVelNonlinearSrc,  patch);
       new_dw->allocateTemporary(velocityVars.wVelNonlinearSrc,  patch);
+
+      velocityVars.uVelNonlinearSrc.initialize(0.0);
+      velocityVars.vVelNonlinearSrc.initialize(0.0);
+      velocityVars.wVelNonlinearSrc.initialize(0.0);
     }
 //#endif // WASATCH_IN_ARCHES
 
@@ -637,32 +655,34 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->getModifiable(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel,indx, patch);
 
 //#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
+
     if (!(this->get_use_wasatch_mom_rhs())) {
-      velocityVars.uVelRhoHat.copy(constVelocityVars.old_uVelocity,
-                                   velocityVars.uVelRhoHat.getLowIndex(),
-                                   velocityVars.uVelRhoHat.getHighIndex());
-                                   
-      velocityVars.vVelRhoHat.copy(constVelocityVars.old_vVelocity,
-                                   velocityVars.vVelRhoHat.getLowIndex(),
-                                   velocityVars.vVelRhoHat.getHighIndex());
-                                   
-      velocityVars.wVelRhoHat.copy(constVelocityVars.old_wVelocity,
-                                   velocityVars.wVelRhoHat.getLowIndex(),
-                                   velocityVars.wVelRhoHat.getHighIndex());
+//      velocityVars.uVelRhoHat.copy(constVelocityVars.old_uVelocity,
+//                                   velocityVars.uVelRhoHat.getLowIndex(),
+//                                   velocityVars.uVelRhoHat.getHighIndex());
+//                                   
+//      velocityVars.vVelRhoHat.copy(constVelocityVars.old_vVelocity,
+//                                   velocityVars.vVelRhoHat.getLowIndex(),
+//                                   velocityVars.vVelRhoHat.getHighIndex());
+//                                   
+//      velocityVars.wVelRhoHat.copy(constVelocityVars.old_wVelocity,
+//                                   velocityVars.wVelRhoHat.getLowIndex(),
+//                                   velocityVars.wVelRhoHat.getHighIndex());
 
       //__________________________________
-      //  compute coefficients
-      d_discretize->calculateVelocityCoeff(patch, 
-                                       delta_t, d_central, 
-                                       cellinfo, &velocityVars,
-                                       &constVelocityVars);
+      //  compute coefficients and vel src
+      d_discretize->calculateVelocityCoeff( patch, 
+                                            delta_t, d_central, 
+                                            cellinfo, &velocityVars,
+                                            &constVelocityVars, volFraction, d_conv_scheme, 
+                                            d_re_limit );
       
-      //__________________________________
-      //  Compute the sources
-      d_source->calculateVelocitySource(patch, 
-                                        delta_t,
-                                        cellinfo, &velocityVars,
-                                        &constVelocityVars);
+//      //__________________________________
+//      //  Compute the sources
+//      d_source->calculateVelocitySource( patch, 
+//                                         delta_t,
+//                                         cellinfo, &velocityVars,
+//                                         &constVelocityVars);
 
       //----------------------------------
       // If not doing MPMArches, then need to 
@@ -865,12 +885,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
         }
       }
 
-      // sets coefs in the direction of the wall to zero
-      d_boundaryCondition->wallVelocityBC(patch, cellinfo,
-                                        &velocityVars, &constVelocityVars);
+//      // sets coefs in the direction of the wall to zero
+//      d_boundaryCondition->wallVelocityBC(patch, cellinfo,
+//                                        &velocityVars, &constVelocityVars);
 
-      d_source->modifyVelMassSource(patch,
-                                    &velocityVars, &constVelocityVars);
+//      d_source->modifyVelMassSource(patch, volFraction, 
+//                                    &velocityVars, &constVelocityVars);
 
       d_discretize->calculateVelDiagonal(patch,&velocityVars);
 

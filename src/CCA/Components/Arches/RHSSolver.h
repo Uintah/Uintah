@@ -139,9 +139,7 @@ public:
                                T& new_phi,                              
                                constCCVariable<double> density,         
                                StencilMatrix<T>& A,
-                               const OffsetArray1<double>& sew,
-                               const OffsetArray1<double>& sns,
-                               const OffsetArray1<double>& stb,
+                               const Vector DX,
                                constCCVariable<double>& volFracion, 
                                double delta_t);              
 

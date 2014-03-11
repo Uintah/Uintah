@@ -49,11 +49,19 @@ c*********************************************************************
       double precision CPE, CPW, GVP, CPN, CPS, CPT, CPB
       double precision CP, GEP, GWP
       double precision VISE, VISW, VISN, VISS, VIST, VISB
+      double precision VISEI, VISWI, VISNI, VISSI, VISTI, VISBI
       double precision DEO, DWO, DNO, DSO, DTO, DBO
       double precision DE, DW, DN, DS, DT, DB
       double precision COEFE, COEFW, COEFN, COEFS, COEFT, COEFB
       double precision TEW, TNS, TTB
       double precision AEC, AWC, ANC, ASC, ATC, ABC
+
+      double precision DUDXE, DUDXW
+      double precision DVDXN, DVDXS
+      double precision DWDXB, DWDXT
+      double precision PT5, PT25, small 
+      double precision EPSN, EPSS, EPSE, EPSW, EPST, EPSB
+      double precision EPSP
 
 c*********************************************************************
 c     Start :
@@ -64,6 +72,10 @@ c*********************************************************************
       IENDU = idxHiU(1)
       JENDU = idxHiU(2)
       KENDU = idxHiU(3)
+
+      PT5 = 0.5D0
+      PT25 = 0.25D0
+      small = 1.0D-10
 
 c*********************************************************************
 c     Set all flags
@@ -76,6 +88,18 @@ c*********************************************************************
       DO 220 K = KSTU,KENDU
          DO 210 J = JSTU,JENDU
             DO 200 I = ISTU,IENDU   
+
+              EPSP = eps(I,J,K)*eps(I-1,J,K)
+
+              IF ( EPSP .gt. SMALL) THEN 
+
+              EPSE = eps(I+1,J,K)
+              EPSW = eps(I-2,J,K)
+              EPSN = eps(I,J+1,K)*eps(I-1,J+1,K)
+              EPSS = eps(I,J-1,K)*eps(I-1,J-1,K)
+              EPST = eps(I,J,K+1)*eps(I-1,J,K+1)
+              EPSB = eps(I,J,K-1)*eps(I-1,J,K-1)
+
 C-----------------------------------------------------------------------
 C     COMPUTE AREAS AND VOLUME 
 C-----------------------------------------------------------------------
@@ -110,12 +134,12 @@ c               GW = DEN(I-1,J,K)*(UU(I,J,K)+UU(I-1,J,K))
 C-----------------------------------------------------------------------
 C      NEW DIFFERENCING STUFF
 C-----------------------------------------------------------------------
-               CE = CEEU(I)*CEO + CWEU(I)*CWO
-               CW = CWWU(I)*CWO - CWEU(I)*CEO   
-               CN = CNN(J)*CNO + CSN(J)*CSO
-               CS = CSS(J)*CSO - CSN(J)*CNO
-               CT = CTT(K)*CTO + CBT(K)*CBO
-               CB = CBB(K)*CBO - CBT(K)*CTO
+               CE = (CEEU(I)*CEO + CWEU(I)*CWO)*EPSE
+               CW = (CWWU(I)*CWO - CWEU(I)*CEO)*EPSW
+               CN = (CNN(J)*CNO + CSN(J)*CSO)*EPSN
+               CS = (CSS(J)*CSO - CSN(J)*CNO)*EPSS
+               CT = (CTT(K)*CTO + CBT(K)*CBO)*EPST
+               CB = (CBB(K)*CBO - CBT(K)*CTO)*EPSB
                CESAV(I,J,K) = CE
                CWSAV(I,J,K) = CW
                CNSAV(I,J,K) = CN
@@ -147,6 +171,7 @@ c               VIST = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J,K+1))+
 c     &              0.5D0*(VIS(I-1,J,K)+VIS(I-1,J,K+1)))
 c               VISB = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J,K-1))+
 c     &              0.5D0*(VIS(I-1,J,K)+VIS(I-1,J,K-1)))  
+
                VISN = FAC1NS(J)*0.5D0*(VIS(I,J+1,K)+VIS(I-1,J+1,K))+
      +                FAC2NS(J)*0.5D0*(VIS(I,J+N_shift(J),K)+
      +                                 VIS(I-1,J+N_shift(J),K))
@@ -159,12 +184,12 @@ c     &              0.5D0*(VIS(I-1,J,K)+VIS(I-1,J,K-1)))
                VISB = FAC3TB(K)*0.5D0*(VIS(I,J,K-1)+VIS(I-1,J,K-1))+
      +                FAC4TB(K)*0.5D0*(VIS(I,J,K+B_shift(K))+
      +                                 VIS(I-1,J,K+B_shift(K)))
-               DEO = VISE*AREAEW/DXEPU(I)
-               DWO = VISW*AREAEW/DXPWU(I)
-               DNO = VISN*AREAN/DYNP(J)
-               DSO = VISS*AREAS/DYPS(J)
-               DTO = VIST*AREATB/DZTP(K)
-               DBO = VISB*AREATB/DZPB(K)
+               DEO = VISE*AREAEW/DXEPU(I)*EPSE
+               DWO = VISW*AREAEW/DXPWU(I)*EPSW
+               DNO = VISN*AREAN/DYNP(J)*EPSN
+               DSO = VISS*AREAS/DYPS(J)*EPSS
+               DTO = VIST*AREATB/DZTP(K)*EPST
+               DBO = VISB*AREATB/DZPB(K)*EPSB
 C-----------------------------------------------------------------------
 C     NEW DIFFUSION TERMS
 C-----------------------------------------------------------------------
@@ -248,6 +273,49 @@ C----------------------------------------------------------------------
                   AT(I,J,K) = ATC + DT
                   AB(I,J,K) = ABC + DB
                END IF
+
+C-----------------------------------------------------------------------
+C     velocity source
+C-----------------------------------------------------------------------
+               DUDXE  = (UU(I+1,J,K)-UU(I,J,K))/SEW(I)
+               DUDXW  = (UU(I,J,K)-UU(I-1,J,K))/SEW(I-1)
+               DVDXN  = (VV(I,J+1,K)-VV(I-1,J+1,K))/DXPW(I)
+               DVDXS  = (VV(I,J,K)-VV(I-1,J,K))/DXPW(I)
+               DWDXT = (WW(I,J,K+1)-WW(I-1,J,K+1))/DXPW(I)
+               DWDXB = (WW(I,J,K)-WW(I-1,J,K))/DXPW(I)
+
+               SU(I,J,K) = SU(I,J,K)+
+     &              ((VISE*DUDXE-VISW*DUDXW)/SEWU(I) +
+     &              (VISN*DVDXN-VISS*DVDXS)/SNS(J)   +
+     &              (VIST*DWDXT-VISB*DWDXB)/STB(K)   +
+     &              pt5*(DEN(I,J,K)+DEN(I-1,J,K))*
+     $              (UU(I,J,K))/
+     $              DELTAT
+     &              + (PT5*(DEN(I,J,K)+DEN(I-1,J,K))-
+     $              pt5*(den_ref(i,j,k)+den_ref(i-1,j,k)))*
+     $              GRAV
+     $              )*VOL*EPSP 
+
+                SU(I,J,K) = SU(I,J,K) - UU(I,J,K)*(
+     $               CE - CW + CN - CS + CT - CB ) 
+             else
+               
+               CESAV(I,J,K) = 0.0D0
+               CWSAV(I,J,K) = 0.0D0
+               CNSAV(I,J,K) = 0.0D0
+               CSSAV(I,J,K) = 0.0D0
+               CTSAV(I,J,K) = 0.0D0
+               CBSAV(I,J,K) = 0.0D0
+               AE(I,J,K) = 0.0D0
+               AW(I,J,K) = 0.0D0
+               AN(I,J,K) = 0.0D0
+               AS(I,J,K) = 0.0D0
+               AT(I,J,K) = 0.0D0
+               AB(I,J,K) = 0.0D0
+               SU(I,J,K) = 0.0D0
+
+             endif 
+
  200        CONTINUE
  210     CONTINUE
  220  CONTINUE

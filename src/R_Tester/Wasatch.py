@@ -118,12 +118,12 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #______________________________________________________________________
 
 DEBUGTESTS = [
-  ("channel-flow-xy-xminus-pressure-outlet",   "channel-flow-xy-xminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart"] ),               
-  ("channel-flow-xz-zminus-pressure-outlet",   "channel-flow-xz-zminus-pressure-outlet.ups",   6,  "All",  ["exactComparison","no_restart","do_not_validate"] )
+              ("turb-lid-driven-cavity-3D-scalar",         "turb-lid-driven-cavity-3D-SMAGORINSKY-scalar.ups",   8,  "All",  ["exactComparison","no_restart"] )
   ]
 
 NIGHTLYTESTS = [
-  ("coal-boiler-mini",                         "coal-boiler-mini.ups",    16,  "Linux",  ["exactComparison","no_restart"]                                          ),
+  ("turbulent-flow-over-cavity",                         "turbulent-flow-over-cavity.ups",    8,  "Linux",  ["exactComparison","no_restart","no_memoryTest","no_dbg"]                                          ),
+  ("coal-boiler-mini",                         "coal-boiler-mini.ups",    16,  "Linux",  ["exactComparison","no_restart","no_memoryTest"]                                          ),
   ("bc-linear-inlet-channel-flow-test",     "bc-linear-inlet-channel-flow-test.ups",             6,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("bc-parabolic-inlet-channel-flow-test",  "bc-parabolic-inlet-channel-flow-test.ups",             6,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("RMCRT-Burns-Christon", "RMCRT-Burns-Christon.ups",   8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
@@ -233,7 +233,8 @@ INTRUSIONTESTS=[
   ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "All",  ["exactComparison","no_restart"] ),                         
   ("intrusion_flow_past_objects_xy",           "intrusion_flow_past_objects_xy.ups",    16,  "All",  ["exactComparison","no_restart"] ),                         
   ("intrusion_flow_over_icse",                 "intrusion_flow_over_icse.ups",          16,  "All",  ["exactComparison","no_restart"] ),                         
-  ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] )
+  ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ),
+  ("turbulent-flow-over-cavity",                         "turbulent-flow-over-cavity.ups",    8,  "All",  ["exactComparison","no_restart","no_memoryTest","no_dbg"] )
 #   ("clip-with-intrusions-test",           "clip-with-intrusions-test.ups",    4,  "All",  ["exactComparison","no_restart"] )
 ]
 
@@ -321,9 +322,8 @@ SCALARTRANSPORTTESTS=[
 ]
 
 GPUTESTS=[
-#  ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups", 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
-#  ("BasicScalarTransportEq_2L",    "BasicScalarTransportEq_2L.ups",    1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
-#  ("ScalarTransportEquation",      "ScalarTransportEquation.ups",      1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+  ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups", 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+  ("ScalarTransportEquation",      "ScalarTransportEquation.ups",      1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
   ("scalability-test",             "scalability-test.ups",             1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
 ]
 

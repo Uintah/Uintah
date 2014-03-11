@@ -33,14 +33,24 @@
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL'"
                             children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,
                                        SineFunction,GaussianFunction,DoubleTanhFunction,
-                                       StepFunction,PlusProfile,SineTime,ExprAlgebra,Cylinder,
+                                       StepFunction,SineTime,ExprAlgebra,
                                        WallDistanceFunction,ReadFromFile,RandomField,
                                        ExponentialVortex,LambsDipole,TimeDerivative,
-                                       RayleighTaylor, BurnsChristonAbskg)" >
+                                       RayleighTaylor, BurnsChristonAbskg, GeometryBased)" >
                                        
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
       <Constant           spec="OPTIONAL DOUBLE" />
+
+			<!-- provides a way to initialize a field using geometry primitives -->
+			<GeometryBased      spec="OPTIONAL NO_DATA"
+													attribute1="value REQUIRED DOUBLE"> <!-- this is the outside value -->
+				<Intrusion      spec       = "MULTIPLE NO_DATA"
+												attribute1 = "name OPTIONAL STRING"
+												attribute2 = "value REQUIRED DOUBLE"> <!-- value of field inside this intrusion -->
+					<geom_object  spec="REQUIRED"/>
+      	</Intrusion>			
+			</GeometryBased>
 
       <BurnsChristonAbskg spec="OPTIONAL NO_DATA"/>
       
@@ -86,22 +96,6 @@
         <NameTag            spec="REQUIRED"/>        
       </RayleighTaylor>
       
-
-      <!-- Plus Profile makes a + sign as the initial condition with HighValue on + area and LowValue everywhere else!-->
-      <PlusProfile       spec="OPTIONAL NO_DATA"
-                         attribute1="xStart REQUIRED DOUBLE"
-                         attribute2="yStart REQUIRED DOUBLE"
-                         attribute3="xWidth REQUIRED DOUBLE"
-                         attribute4="yWidth REQUIRED DOUBLE"
-                         attribute5="lowValue REQUIRED DOUBLE"
-                         attribute6="highValue REQUIRED DOUBLE">
-        <Coordinate1     spec="REQUIRED NO_DATA">
-          <NameTag       spec="REQUIRED"/>
-        </Coordinate1>
-        <Coordinate2     spec="REQUIRED NO_DATA">
-          <NameTag       spec="REQUIRED"/>
-        </Coordinate2>
-      </PlusProfile>
                   
       <!-- Sine function with frequency, amplitude, and offset !-->
       <SineFunction       spec="OPTIONAL NO_DATA"
@@ -134,22 +128,7 @@
                      attribute1="algebraicOperation REQUIRED STRING 'SUM, DIFFERENCE, PRODUCT'">
       <NameTag       spec="MULTIPLE" />
       </ExprAlgebra>
-      
-      <!-- creates a circular cylinder "patch" in the domain. this can be used for initialization of scalars for example  !-->
-      <Cylinder       spec="OPTIONAL NO_DATA"
-                      attribute1="radius       REQUIRED DOUBLE"
-                      attribute2="insideValue  REQUIRED DOUBLE"
-                      attribute3="outsideValue REQUIRED DOUBLE">
-        <Origin       spec="REQUIRED VECTOR" />                            
-        <Coordinate1  spec="REQUIRED NO_DATA">
-          <NameTag    spec="REQUIRED"/>
-        </Coordinate1>
-        <Coordinate2  spec="REQUIRED NO_DATA">
-          <NameTag    spec="REQUIRED"/>
-        </Coordinate2>
-      </Cylinder>
-
-      
+            
       <WallDistanceFunction     spec="OPTIONAL NO_DATA">
         <NameTag                spec="REQUIRED" />
       </WallDistanceFunction>

@@ -119,6 +119,10 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
 
     _iv_transform = scinew SingleMF( d_constants, model ); 
 
+  } else if ( db->findBlock("single_iv") ) {
+
+    _iv_transform = scinew SingleIV( d_constants, model ); 
+
   } else { 
 
     _iv_transform = scinew NoTransform();
@@ -209,6 +213,12 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
   const ProblemSpecP db_root = db->getRootNode(); 
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
+  d_user_ref_density = false; 
+  d_reference_density = 1.0; 
+  if ( db->findBlock("reference_density") ){
+    db->findBlock("reference_density")->getAttribute("value",d_reference_density); 
+    d_user_ref_density = true; 
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -290,3 +300,5 @@ MixingRxnModel::InertMixing::InertMixing( std::map<string,double>& keys, MixingR
 MixingRxnModel::InertMixing::~InertMixing(){}
 MixingRxnModel::SingleMF::SingleMF( std::map<string,double>& keys, MixingRxnModel* const model) : _keys(keys), _model(model) {}; 
 MixingRxnModel::SingleMF::~SingleMF(){}; 
+MixingRxnModel::SingleIV::SingleIV( std::map<string,double>& keys, MixingRxnModel* const model) : _keys(keys), _model(model) {}; 
+MixingRxnModel::SingleIV::~SingleIV(){}; 

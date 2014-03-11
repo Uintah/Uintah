@@ -69,6 +69,14 @@ namespace Wasatch{
     PERPATCH
   };
 
+  /**
+   * \fn void get_bc_logicals( const Uintah::Patch* const, SpatialOps::structured::IntVec&, SpatialOps::structured::IntVec& );
+   * \brief Given the patch, populate information about whether a physical
+   *        boundary exists on each side of the patch.
+   * \param patch   - the patch of interest
+   * \param bcMinus - assigned to 0 if no BC present on (-) faces, 1 if present
+   * \param bcPlus  - assigned to 0 if no BC present on (+) faces, 1 if present
+   */
   void get_bc_logicals( const Uintah::Patch* const patch,
                         SpatialOps::structured::IntVec& bcMinus,
                         SpatialOps::structured::IntVec& bcPlus );
@@ -76,16 +84,15 @@ namespace Wasatch{
   /**
    *  \ingroup WasatchFields
    *  \brief obtain the memory window for a uintah field that is to be wrapped as a SpatialOps field
-   *  \param globSize - the full size of the parent field.
    *  \param patch - the patch that the field is associated with.
    *
-   *  Note that if this signature is used, the field size will be deduced from the patch size as well
-   *  as the field type traits.  For most use cases from Wasatch, the other signature should be used.
+   *  Note that this method is only intended for use by the UintahFieldManager
+   *  when obtaining scratch fields from patch information. When an actual field
+   *  from Uintah is available, you should use wrap_uintah_field_as_spatialops
    */
   template< typename FieldT >
   SpatialOps::structured::MemoryWindow
-  get_memory_window_for_uintah_field( const Uintah::Patch* const patch,
-                                      const bool withoutGhost=false);
+  get_memory_window_for_uintah_field( const Uintah::Patch* const patch );
 
   /**
    *  \ingroup WasatchParser
@@ -296,7 +303,8 @@ namespace Wasatch{
 #     ifdef HAVE_CUDA
       fieldValues_ = const_cast<double*>( uintahDeviceVar );
 #     endif
-    } else{
+    }
+    else{
       fieldValues_ = const_cast<typename FieldT::value_type*>( uintahVar.getPointer() );
     }
 

@@ -300,6 +300,7 @@
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
           <standard_flamelet f_label="mixture_fraction" hl_label="heat_loss" var_label="normalizedScalarVar"/>
+          <reference_state f="0.0" hl="0.0" var="0.0"/>
         </ClassicTable>
       </Properties>
 

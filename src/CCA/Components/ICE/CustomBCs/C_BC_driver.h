@@ -52,6 +52,7 @@ namespace Uintah {
       using_MMS_BCs     = false;
       using_Sine_BCs    = false;
       using_inletVel_BCs= false;
+      applyHydrostaticPress = true;
 
     };
     
@@ -78,6 +79,7 @@ namespace Uintah {
     
     SimulationStateP sharedState;
     Vector d_gravity;
+    bool applyHydrostaticPress;
 
   };
   

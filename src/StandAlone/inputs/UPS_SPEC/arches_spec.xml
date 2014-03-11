@@ -264,6 +264,13 @@
                                         attribute2="value REQUIRED DOUBLE"/>
             </stream> 
           </post_mix>
+          <!-- NOTE on the REFERENCE DENSITY --> 
+          <!-- The reference density sets the fluid density for the relative buoyant force.  Specifically, the 
+          buoyant term on the RHS of the momentum equation is computed as: F = (rho_ref - rho_local)*g 
+          In general, one would choose the heaviest stream as the reference state, but one is encouraged to think 
+          carefully about this --> 
+          <reference_density            spec="OPTIONAL NO_DATA"
+                                        attribute1="value REQUIRED DOUBLE 'positive'"/>
         </ColdFlow>
 
         <TabProps                       spec="OPTIONAL NO_DATA" >
@@ -290,6 +297,9 @@
           <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature --> 
 
           <!-- IV specs for various table types --> 
+          <!-- Single mixture (or other indep. var.) fraction table --> 
+          <single_iv                    spec="OPTIONAL NO_DATA"
+                                        attribute1="iv_label REQUIRED STRING"/>
           <!-- IV ordering for table write: (1) mixture fraction (2) scalar variance (3) heat loss --> 
           <standard_flamelet            spec="OPTIONAL NO_DATA"
                                         attribute1="f_label   REQUIRED STRING"
@@ -341,12 +351,32 @@
                                         attribute2="value REQUIRED DOUBLE"/>
             </stream> 
           </post_mix>
+          <!-- NOTE on the REFERENCE DENSITY --> 
+          <!-- The reference density sets the fluid density for the relative buoyant force.  Specifically, the 
+          buoyant term on the RHS of the momentum equation is computed as: F = (rho_ref - rho_local)*g 
+          Here the user has two options: 1. specify the reference density directly using <reference_density> or 
+                                         2. specify the table independent variables resulting a table lookup on the
+                                            reference density. 
+          In general, one would choose the heaviest stream as the reference state, but one is encouraged to think 
+          carefully about this --> 
+          <reference_density            spec="OPTIONAL NO_DATA"
+                                        attribute1="value REQUIRED DOUBLE 'positive'"/> <!-- Set the reference density directly: Better to use reference_state --> 
+          <reference_state              spec="OPTIONAL NO_DATA"
+                                        attribute1="fp OPTIONAL DOUBLE 'positive'"
+                                        attribute2="eta OPTIONAL DOUBLE 'positive'"
+                                        attribute3="xi OPTIONAL DOUBLE 'positive'"
+                                        attribute4="hl OPTIONAL DOUBLE"
+                                        attribute5="f OPTIONAL DOUBLE"
+                                        attribute6="var OPTIONAL DOUBLE 'positive'"
+                                        attribute7="extent OPTIONAL DOUBLE 'positive'"
+                                        attribute8="iv OPTIONAL DOUBLE 'positive'"/> <!-- Set the reference state from a fix set of IV --> 
         </ClassicTable>
 
-        <ConstantProps                spec="OPTIONAL NO_DATA">
-          <density                    spec="REQUIRED DOUBLE 'positive'"/>
-          <temperature                spec="REQUIRED DOUBLE 'positive'"/>
-          <temperature_label_name     spec="OPTIONAL STRING"/> <!-- default = temperature -->
+        <ConstantProps                  spec="OPTIONAL NO_DATA">
+          <density                      spec="REQUIRED DOUBLE 'positive'"/>
+          <temperature                  spec="REQUIRED DOUBLE 'positive'"/>
+          <temperature_label_name       spec="OPTIONAL STRING"/> <!-- default = temperature -->
+          <!-- no reference density specified here since the entire world is considered constant --> 
         </ConstantProps>
 
       </Properties>
@@ -498,7 +528,9 @@
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
           <use_wasatch_momentum_rhs spec="OPTIONAL NO_DATA" />
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
-          <convection_scheme            spec="REQUIRED STRING 'central, upwind'" />
+          <convection_scheme            spec="REQUIRED STRING 'central, upwind, wallupwind, old_central, old_upwind'" /> 
+          <!-- wallupwind = upwinding on walls, central otherwise (cheap wall model)--> 
+          <Re_limit                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- for Upwind and Wallupwind: Upwind > this Re, Central < this Re --> 
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
 
@@ -684,6 +716,9 @@
             <!-- Spec for constant and multi-point constant source term model -->
             <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant_src, fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
 
+            <!-- Density weighting for the constant source --> 
+            <density_weighted           spec="OPTIONAL NO_DATA" need_applies_to="type constant_src"/>
+
             <!-- Spec for the char oxidation source --> 
             <char_oxidation_model_name  spec="REQUIRED STRING" need_applies_to="type coal_gas_oxi" />
 
@@ -729,7 +764,7 @@
                 <max_iter                 spec="REQUIRED INTEGER" />
               </LinearSolver>
               <spherical_harmonics        spec="OPTIONAL BOOLEAN" />                                   <!-- Spherical harmonics, default = false (works?) --> 
-              <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon, radprops'">
+              <property_calculator       spec="OPTIONAL NO_DATA" attribute="type REQUIRED STRING 'constant, burns_christon, radprops, hottel_sarofim'">
                 <min                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
                 <max                     spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
                 <abskg                   spec="REQUIRED DOUBLE" need_applies_to="type constant" />
@@ -742,6 +777,10 @@
                   <complex_ir_real       spec="REQUIRED DOUBLE 'positive'"/> <!-- Real part of the complex index of refraction --> 
                   <complex_ir_imag       spec="REQUIRED DOUBLE 'negative'"/> <!-- Imaginary part of the complex index of refraction --> 
                 </particles>
+                <opl                     spec="REQUIRED DOUBLE 'positive'" need_applies_to="type hottel_sarofim"/> <!-- Optical Path Length --> 
+                <co2_name                spec="OPTIONAL STRING" need_applies_to="type hottel_sarofim"/> <!-- Default = CO2 --> 
+                <h2o_name                spec="OPTIONAL STRING" need_applies_to="type hottel_sarofim"/> <!-- Default = H2O --> 
+                <soot_name               spec="OPTIONAL STRING" need_applies_to="type hottel_sarofim"/> <!-- Default = soot --> 
               </property_calculator> 
             </DORadiationModel>
 

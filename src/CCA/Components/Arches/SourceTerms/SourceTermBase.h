@@ -67,32 +67,32 @@ public:
   virtual void sched_initialize( const LevelP& level, SchedulerP& sched ) = 0;
 
   /** @brief Work to be performed after properties are setup */ 
-  virtual void extraSetup(GridP& grid){ };
+  virtual void extraSetup(GridP& grid){ }
 
   /** @brief reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
   // Note I need two of these flags; 1 for scheduling and 1 for actual execution.
   inline void reinitializeLabel(){ 
-    _label_sched_init  = false; };
+    _label_sched_init  = false; }
 
   /** @brief Returns the source label **/ 
   inline const VarLabel* getSrcLabel(){
-    return _src_label; };
+    return _src_label; }
 
   /** @brief Returns a list of any extra local labels this source may compute **/ 
   inline const std::vector<const VarLabel*> getExtraLocalLabels(){
-    return _extra_local_labels; }; 
+    return _extra_local_labels; }
 
 	/** @brief Return the grid type of source (CC, FCX, etc... ) **/
-  inline MY_GRID_TYPE getSourceGridType(){ return _source_grid_type; };
+  inline MY_GRID_TYPE getSourceGridType(){ return _source_grid_type; }
 
   /** @brief Return the type of source (constant, do_radation, etc... ) **/ 
-  inline std::string getSourceType(){ return _type; }; 
+  inline std::string getSourceType(){ return _type; }
 
 	/** @brief Return the list of table lookup species needed for this source term **/ 
 	inline ChemHelper::TableLookup* get_tablelookup_species(){ return _table_lookup_species; };  
 
   /** @brief Return an int indicating the stage this source should be executed **/
-  const int stage_compute(){ return _stage; };
+  int stage_compute() const { return _stage; } 
 
   /** @brief Set the stage number **/
   void set_stage( const int stage );

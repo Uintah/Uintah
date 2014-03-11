@@ -14,6 +14,7 @@
     <delt_min>0.00001</delt_min>
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.35</timestep_multiplier>
+    <max_Timesteps>5</max_Timesteps>
   </Time>
 
   <DataArchiver>
@@ -30,7 +31,6 @@
 
     <save label="mixture_fraction"/>
     <save label="enthalpy"/>
-    <save label="scalarVarSP"/>
     <save label="heat_loss"/>
     <save label="areaFraction"/>
 
@@ -85,6 +85,9 @@
         <BCType id="0" label="enthalpy"             var="Tabulated">
                             <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
+        <BCType id="0" label="enthalpy_do"             var="Tabulated">
+                            <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
+        </BCType>
         <!-- for RMCRT-->
         <BCType id="0"  label= "temperature"        var="Neumann">
                             <value> 0. </value>
@@ -114,6 +117,9 @@
         <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value> 
         </BCType> 
+        <BCType id="0" label="enthalpy_do"             var="Neumann">
+                            <value>0.0</value> <!-- Pure oxidizer enthalpy --> 
+        </BCType>
         <!-- for RMCRT-->
         <BCType id="0"  label= "temperature"        var="Neumann">
                             <value> 0. </value>
@@ -142,6 +148,9 @@
         <!-- Energy BC --> 
         <BCType id="0" label="enthalpy"             var="Tabulated">
                             <value>adiabaticenthalpy</value> <!-- Pure fuel enthalpy --> 
+        </BCType>
+        <BCType id="0" label="enthalpy_do"             var="Tabulated">
+                            <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
         <!-- for RMCRT-->
         <BCType id="0"  label= "temperature"        var="Neumann">
@@ -173,6 +182,9 @@
         <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value> 
         </BCType>
+        <BCType id="0" label="enthalpy_do"             var="Neumann">
+                            <value>0.0</value> 
+        </BCType>
         <!-- for RMCRT-->
         <BCType id="0"  label= "temperature"        var="Neumann">
                             <value> 0. </value>
@@ -199,6 +211,9 @@
         </BCType>
         <!-- Energy BC --> 
         <BCType id="0" label="enthalpy"             var="Neumann">
+                            <value>0.0</value> 
+        </BCType>
+        <BCType id="0" label="enthalpy_do"             var="Neumann">
                             <value>0.0</value> 
         </BCType>
         <!-- for RMCRT-->
@@ -229,6 +244,9 @@
         <BCType id="0" label="enthalpy"             var="Neumann">
                             <value>0.0</value> 
         </BCType>
+        <BCType id="0" label="enthalpy_do"             var="Neumann">
+                            <value>0.0</value> 
+        </BCType>
         <!-- for RMCRT-->
         <BCType id="0"  label= "temperature"        var="Neumann">
                             <value> 0. </value>
@@ -255,6 +273,9 @@
         </BCType>
         <!-- Energy BC --> 
         <BCType id="0" label="enthalpy"             var="Neumann">
+                            <value>0.0</value> 
+        </BCType>
+        <BCType id="0" label="enthalpy_do"             var="Neumann">
                             <value>0.0</value> 
         </BCType>
         <!-- for RMCRT-->
@@ -284,6 +305,9 @@
         </BCType>
         <!-- Energy BC --> 
         <BCType id="0" label="enthalpy"             var="Neumann">
+                            <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="enthalpy_do"             var="Neumann">
                             <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
@@ -342,13 +366,13 @@
           <initialization type="tabulated">
             <depend_varname>adiabaticenthalpy</depend_varname>
           </initialization>
-          <src label="divQ_do" >
+          <src label="divQ" >
             <weight>1</weight> 
           </src>        
         </Eqn>
         <Sources>
           <!-- define a DO radiation model for comparison --> 
-          <src label="divQ_do" type="do_radiation">
+          <!--src label="divQ_do" type="do_radiation">
             <calc_frequency>10</calc_frequency>
             <soot_label>soot</soot_label>
             <abskp_label>absorpIN</abskp_label>
@@ -361,7 +385,7 @@
                   <max_iter>275</max_iter>
               </LinearSolver>
             </DORadiationModel>
-          </src>
+          </src-->
           <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>1</calc_frequency>
             
@@ -372,47 +396,46 @@
                 <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
                 <solveBoundaryFlux>    true    </solveBoundaryFlux>
                 <nFluxRays>         2          </nFluxRays>
-                <property_calculator type="radprops">
-                  <grey_gas>
-                    <inputfile>inputs/ARCHES/RMCRT/GreyGasProperties.txt</inputfile>
-                  </grey_gas> 
+                <property_calculator type="hottel_sarofim">
+                  <opl>.1</opl>
                 </property_calculator>
             </RMCRT>
           </src>
        </Sources> 
       </TransportEqns>
 
-      <PropertyModels> 
-        <model label="heat_loss" type="heat_loss">
+      <PropertyModels>
+        <model type="heat_loss" label="heat_loss">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
           <enthalpy_label>enthalpy</enthalpy_label>
         </model>
-        <model label="soot" type="empirical_soot"> 
+        <model type="scalsim_variance" label="normalizedScalarVar">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
-          <carbon_content_fuel>.75</carbon_content_fuel> 
-          <carbon_content_ox>0.0</carbon_content_ox>
-          <C1>0.1</C1>
-          <E_cr>1.0</E_cr>
-          <E_inf>2.0</E_inf>
-          <E_st>0.25</E_st>
-          <soot_density>1950</soot_density>
-          <density_label>density</density_label>
-          <temperature_label>temperature</temperature_label>
           <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
-        </model> 
-      </PropertyModels> 
+          <density_label>density</density_label>
+          <variance_coefficient>0.1</variance_coefficient>
+        </model>
+        <model type="cc_constant" label="soot">
+          <initialization type="constant">
+            <constant>0.0</constant>
+          </initialization>
+          <constant>0.0</constant>
+        </model>
+      </PropertyModels>
 
       <Turbulence model="compdynamicprocedure"/>
 
       <Properties>
-          <ClassicTable>
-            <enthalpy_label>enthalpy</enthalpy_label>
-            <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
-          </ClassicTable>
+        <ClassicTable>
+          <enthalpy_label>enthalpy</enthalpy_label>
+          <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
+          <standard_flamelet f_label="mixture_fraction" hl_label="heat_loss" var_label="normalizedScalarVar"/>
+          <reference_state f="0.0" hl="0.0" var="0.0"/>
+        </ClassicTable>
       </Properties>
 
       <BoundaryConditions>

@@ -270,6 +270,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
         }
       }
     }
+  } else { 
+    //band-aid
+    throw ProblemSetupException("Error: Please insert a <BoundaryConditions/> in your <ARCHES> node of the UPS.", __FILE__, __LINE__);
   }
 }
 
@@ -892,12 +895,9 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
           bound_ptr.reset(); 
 
           if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == MASSFLOW_INLET
-//#ifdef WASATCH_IN_ARCHES
-//                || WALL
-//#endif
               ) {
 
-            setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity );
+            setVel( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity );
 
           } else if ( bc_iter->second.type == STABL ) {
 
@@ -929,7 +929,6 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
           } else if ( bc_iter->second.type == VELOCITY_FILE ) {
 
             setVelFromExtraValue__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
-            //enthalpy? 
 
           }
 
@@ -2549,7 +2548,6 @@ BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
   Task* tsk = scinew Task("BoundaryCondition::setInitProfile__NEW",
                           this, &BoundaryCondition::setInitProfile__NEW);
 
-  // Momentum
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
@@ -2558,8 +2556,9 @@ BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
   tsk->modifies(d_lab->d_vVelRhoHatLabel);
   tsk->modifies(d_lab->d_wVelRhoHatLabel);
 
-  // Density
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0); 
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None, 0); 
+  tsk->requires(Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0); 
+
 
   MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
   MixingRxnModel::VarMap iv_vars = mixingTable->getIVVars(); 
@@ -2597,6 +2596,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
     SFCYVariable<double> vRhoHat; 
     SFCZVariable<double> wRhoHat; 
     constCCVariable<double> density; 
+    constCCVariable<double> volFraction; 
 
     new_dw->getModifiable( uVelocity, d_lab->d_uVelocitySPBCLabel, matl_index, patch ); 
     new_dw->getModifiable( vVelocity, d_lab->d_vVelocitySPBCLabel, matl_index, patch ); 
@@ -2605,6 +2605,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
     new_dw->getModifiable( vRhoHat, d_lab->d_vVelRhoHatLabel, matl_index, patch ); 
     new_dw->getModifiable( wRhoHat, d_lab->d_wVelRhoHatLabel, matl_index, patch ); 
     new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
+    new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 ); 
 
     MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
     MixingRxnModel::VarMap iv_vars = mixingTable->getIVVars(); 
@@ -2664,7 +2665,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
               
               if ( bc_iter->second.type != TURBULENT_INLET && bc_iter->second.type != STABL ) {
 
-                setVel__NEW( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.velocity ); 
+                setVel( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.velocity ); 
 
               } else if ( bc_iter->second.type == STABL ) { 
 
@@ -3040,9 +3041,9 @@ void BoundaryCondition::setStABL( const Patch* patch, const Patch::FaceType& fac
  }
 }
 
-void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& face, 
+void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
-        constCCVariable<double>& density, 
+        constCCVariable<double>& density,
         Iterator bound_ptr, Vector value )
 {
 
@@ -3061,13 +3062,9 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        uVel[c]  = value.x();
        uVel[cp] = value.x(); 
 
-       vVel[c] = value.y(); 
-       wVel[c] = value.z(); 
+       vVel[c] = value.y();
+       wVel[c] = value.z();
 
-//#ifdef WASATCH_IN_ARCHES
-//       vVel[c] = - vVel[cp];
-//       wVel[c] = - wVel[cp];
-//#endif
      }
 
      break; 
@@ -3077,18 +3074,13 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
 
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr + insideCellDir; 
-       IntVector cm = *bound_ptr - insideCellDir; 
 
        uVel[cp]  = value.x();
        uVel[c]   = value.x(); 
 
-       vVel[c] = value.y(); 
-       wVel[c] = value.z(); 
+       vVel[c] = value.y();
+       wVel[c] = value.z();
        
-//#ifdef WASATCH_IN_ARCHES
-//       vVel[c] = - vVel[cm];
-//       wVel[c] = - wVel[cm];
-//#endif
      }
      break; 
    case Patch::yminus: 
@@ -3103,11 +3095,6 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
 
        uVel[c] = value.x(); 
        wVel[c] = value.z(); 
-
-//#ifdef WASATCH_IN_ARCHES
-//       uVel[c] = - uVel[cp];
-//       wVel[c] = - wVel[cp];
-//#endif
        
      }
      break; 
@@ -3117,7 +3104,6 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
 
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr + insideCellDir; 
-       IntVector cm = *bound_ptr - insideCellDir; 
 
        vVel[cp] = value.y();
        vVel[c] = value.y(); 
@@ -3125,10 +3111,6 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        uVel[c] = value.x(); 
        wVel[c] = value.z(); 
 
-//#ifdef WASATCH_IN_ARCHES
-//       uVel[c] = - uVel[cm];
-//       wVel[c] = - wVel[cm];
-//#endif
      }
      break; 
    case Patch::zminus: 
@@ -3144,10 +3126,6 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        uVel[c] = value.x(); 
        vVel[c] = value.y(); 
 
-//#ifdef WASATCH_IN_ARCHES
-//       uVel[c] = - uVel[cp];
-//       vVel[c] = - vVel[cp];
-//#endif
      }
      break; 
    case Patch::zplus: 
@@ -3156,7 +3134,6 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
 
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr + insideCellDir; 
-       IntVector cm = *bound_ptr - insideCellDir; 
 
        wVel[cp] = value.z();
        wVel[c] = value.z(); 
@@ -3164,10 +3141,6 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        uVel[c] = value.x(); 
        vVel[c] = value.y(); 
 
-//#ifdef WASATCH_IN_ARCHES
-//       uVel[c] = - uVel[cm];
-//       vVel[c] = - vVel[cm];
-//#endif
      }
      break; 
    default:

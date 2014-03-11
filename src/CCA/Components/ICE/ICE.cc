@@ -103,23 +103,24 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
                                         SoleVariable<hypre_solver_structP>::getTypeDescription());
 #endif
 
-  d_doAMR               = doAMR;
-  d_doRefluxing         = false;
-  d_add_heat            = false;
-  d_impICE              = false;
-  d_useCompatibleFluxes = true;
-  d_viscousFlow         = false;
+  d_doAMR                 = doAMR;
+  d_doRefluxing           = false;
+  d_add_heat              = false;
+  d_impICE                = false;
+  d_useCompatibleFluxes   = true;
+  d_viscousFlow           = false;
+  d_applyHydrostaticPress = true;
   
   d_max_iter_equilibration  = 100;
   d_delT_knob               = 1.0;
   d_delT_scheme             = "aggressive";
   d_surroundingMatl_indx    = -9;
-  d_dbgVar1   = 0;     //inputs for debugging                               
-  d_dbgVar2   = 0;
-  d_EVIL_NUM  = -9.99e30;                                                    
-  d_SMALL_NUM = 1.0e-100;                                                   
-  d_modelInfo = 0;
-  d_modelSetup = 0;
+  d_dbgVar1                 = 0;     //inputs for debugging                 
+  d_dbgVar2                 = 0;                                    
+  d_EVIL_NUM                = -9.99e30;                                      
+  d_SMALL_NUM               = 1.0e-100;                                     
+  d_modelInfo               = 0;                                    
+  d_modelSetup              = 0;                                   
   d_recompile               = false;
   d_with_mpm                = false;
   d_with_rigid_mpm          = false;
@@ -237,7 +238,8 @@ double ICE::recomputeTimestep(double current_dt)
 _____________________________________________________________________*/
 void ICE::problemSetup(const ProblemSpecP& prob_spec, 
                        const ProblemSpecP& restart_prob_spec,
-                       GridP& grid, SimulationStateP&   sharedState)
+                       GridP& grid, 
+                       SimulationStateP&   sharedState)
 {
   cout_doing << d_myworld->myrank() << " Doing ICE::problemSetup " << "\t\t\t ICE" << endl;
   d_sharedState = sharedState;
@@ -294,17 +296,17 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
    
   
   cfd_ice_ps->get("max_iteration_equilibration",d_max_iter_equilibration);
-  cfd_ice_ps->get("ClampSpecificVolume",d_clampSpecificVolume);
+  cfd_ice_ps->get("ClampSpecificVolume",        d_clampSpecificVolume);
+  cfd_ice_ps->get("applyHydrostaticPressure",   d_applyHydrostaticPress );
   
-  d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes,
-                                        d_OrderOfAdvection);
+  d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes, d_OrderOfAdvection);
   //__________________________________
   //  Pull out add heat section
   ProblemSpecP add_heat_ps = cfd_ice_ps->findBlock("ADD_HEAT");
   if(add_heat_ps) {
     d_add_heat = true;
-    add_heat_ps->require("add_heat_matls",d_add_heat_matls);
-    add_heat_ps->require("add_heat_coeff",d_add_heat_coeff);
+    add_heat_ps->require("add_heat_matls",  d_add_heat_matls);
+    add_heat_ps->require("add_heat_coeff",  d_add_heat_coeff);
     add_heat_ps->require("add_heat_t_start",d_add_heat_t_start);
     add_heat_ps->require("add_heat_t_final",d_add_heat_t_final); 
   }
@@ -486,6 +488,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   //  Custom BC setup
   d_BC_globalVars->d_gravity    = d_gravity;
   d_BC_globalVars->sharedState  = sharedState;
+  d_BC_globalVars->applyHydrostaticPress = d_applyHydrostaticPress;
   
   d_BC_globalVars->usingLodi = 
         read_LODI_BC_inputs(prob_spec,       sharedState, d_BC_globalVars->lodi);
@@ -687,7 +690,8 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   // after the models have initialized the flowfield
   Vector grav = getGravity();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
-  if (grav.length() > 0 ) {
+
+  if (grav.length() > 0 && d_applyHydrostaticPress ) {
     cout_doing << d_myworld->myrank() << " Doing ICE::scheduleHydroStaticAdj " << endl;
     Task* t2 = scinew Task("ICE::initializeSubTask_hydrostaticAdj",
                      this, &ICE::initializeSubTask_hydrostaticAdj);
@@ -701,7 +705,6 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
 
     sched->addTask(t2, level->eachPatch(), ice_matls);
   }
-  
 }
 
 /* _____________________________________________________________________
@@ -751,7 +754,7 @@ void ICE::restartInitialize()
   //__________________________________
   // bulletproofing
   Vector grav = getGravity();
-  if (grav.length() >0.0 && d_surroundingMatl_indx == -9)  {
+  if (grav.length() >0.0 && d_surroundingMatl_indx == -9 && d_applyHydrostaticPress)  {
     throw ProblemSetupException("ERROR ICE::restartInitialize \n"
           "You must have \n" 
           "       <isSurroundingMatl> true </isSurroundingMatl> \n "
@@ -1949,7 +1952,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
             cout << d_myworld->myrank() << " Bad cell " << c << " (" << patch->getID() << "-" << level->getIndex() << "): " << vel_CC[c]<< endl;
           }
         }
-//      cout << " Aggressive delT Based on currant number "<< delt_CFL << endl;
+        // cout << " Aggressive delT Based on currant number "<< delt_CFL << endl;
         //__________________________________
         // stability constraint due to diffusion
         //  I C E  O N L Y
@@ -1970,7 +1973,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
             }
           }
         }  //
-//      cout << "delT based on diffusion  "<< delt_diff<<endl;
+        // cout << "delT based on diffusion  "<< delt_diff<<endl;
         delt = std::min(delt_CFL, delt_diff);
       } // aggressive Timestep 
 
@@ -2050,7 +2053,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
             badCell = c;
           }
         }  // iter loop
-//      cout << " Conservative delT based on swept volumes "<< delt<<endl;
+        // cout << " Conservative delT based on swept volumes "<< delt<<endl;
       }  
     }  // matl loop   
 
@@ -2144,14 +2147,16 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       }
        
     }
+    
     // --------bulletproofing
-    if (grav.length() >0.0 && d_surroundingMatl_indx == -9)  {
+    if (grav.length() >0.0 && d_surroundingMatl_indx == -9 && d_applyHydrostaticPress)  {
       throw ProblemSetupException("ERROR ICE::actuallyInitialize \n"
             "You must have \n" 
             "       <isSurroundingMatl> true </isSurroundingMatl> \n "
             "specified inside the ICE material that is the background matl\n",
                                   __FILE__, __LINE__);
     }
+
   //__________________________________
   // Note:
   // The press_CC isn't material dependent even though
@@ -2182,13 +2187,13 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       // if specified, overide the initialization             
       customInitialization( patch,rho_CC[indx], Temp_CC[indx],vel_CC[indx], press_CC,
                             ice_matl, d_customInitialize_basket);
-                                                    
-      setBC(rho_CC[indx],     "Density",     patch, d_sharedState, indx, new_dw);
-      setBC(rho_micro[indx],  "Density",     patch, d_sharedState, indx, new_dw);
-      setBC(Temp_CC[indx],    "Temperature", patch, d_sharedState, indx, new_dw);
-      setBC(speedSound[indx], "zeroNeumann", patch, d_sharedState, indx, new_dw); 
-      setBC(vel_CC[indx],     "Velocity",    patch, d_sharedState, indx, new_dw); 
-      setBC(press_CC, rho_micro, placeHolder, d_surroundingMatl_indx, 
+
+      setBC( rho_CC[indx],     "Density",     patch, d_sharedState, indx, new_dw );
+      setBC( rho_micro[indx],  "Density",     patch, d_sharedState, indx, new_dw );
+      setBC( Temp_CC[indx],    "Temperature", patch, d_sharedState, indx, new_dw );
+      setBC( speedSound[indx], "zeroNeumann", patch, d_sharedState, indx, new_dw ); 
+      setBC( vel_CC[indx],     "Velocity",    patch, d_sharedState, indx, new_dw ); 
+      setBC( press_CC, rho_micro, placeHolder, d_surroundingMatl_indx, 
             "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
             
       SpecificHeat *cvModel = ice_matl->getSpecificHeatModel();
@@ -2268,7 +2273,9 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
                                           const MaterialSubset* /*ice_matls*/,
                                           DataWarehouse* /*old_dw*/,
                                           DataWarehouse* new_dw)
-{ 
+{
+  proc0cout << " ICE::Initialization adding hydrostatic pressure adjustment " << endl;
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -2279,10 +2286,10 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
     //__________________________________
     // adjust the pressure field
     CCVariable<double> rho_micro, press_CC;
-    new_dw->getModifiable(press_CC, lb->press_CCLabel,0, patch);
-    new_dw->getModifiable(rho_micro,lb->rho_micro_CCLabel,
-                                            d_surroundingMatl_indx, patch);
+    new_dw->getModifiable(press_CC, lb->press_CCLabel,     0,  patch);
+    new_dw->getModifiable(rho_micro,lb->rho_micro_CCLabel, d_surroundingMatl_indx, patch);
     
+  
     hydrostaticPressureAdjustment(patch, rho_micro, press_CC);
     
     //__________________________________
@@ -3068,6 +3075,7 @@ template<class T> void ICE::updateVelFace(int dir, CellIterator it,
                              (sp_vol_CC[L] + sp_vol_CC[R]); 
     
     grad_dp_FC[R] = (imp_delP[R] - imp_delP[L])*inv_dx;
+    
     double term2 = delT * sp_vol_brack * grad_dp_FC[R];
     
     vel_FC[R] -= term2;
@@ -3233,16 +3241,18 @@ template<class constSFC, class SFC>
       //  - Form RHS (b) 
       for(int m = 0; m < numMatls; m++)  {
         b_sp_vol[m] = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/
-          (sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
+                            (sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
+                            
         tmp[m] = -0.5 * delT * (vol_frac_CC[m][adj] + vol_frac_CC[m][c]);
         vel[m] = vel_FC[m][c];
       }
 
       for(int m = 0; m < numMatls; m++)  {
         double betasum = 1;
-        double bsum = 0;
-        double bm = b_sp_vol[m];
-        double vm = vel[m];
+        double bsum    = 0;
+        double bm      = b_sp_vol[m];
+        double vm      = vel[m];
+        
         for(int n = 0; n < numMatls; n++)  {
           double b = bm * tmp[n] * K(n,m);
           a(m,n)    = b;

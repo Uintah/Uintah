@@ -827,6 +827,7 @@ namespace Uintah {
       bool d_with_mpm;
       bool d_with_rigid_mpm;
       bool d_viscousFlow;
+      bool d_applyHydrostaticPress;
       
       int d_max_iter_equilibration;
       int d_max_iter_implicit;
@@ -942,34 +943,16 @@ namespace Uintah {
       SimulationStateP d_sharedState;
       Output* dataArchiver;
       SchedulerP d_subsched;
-      bool d_recompileSubsched;
+      
+      bool   d_recompileSubsched;
+      bool   d_applyHydrostaticPressure;
       double d_EVIL_NUM;
       double d_SMALL_NUM; 
       double d_CFL;
       double d_delT_knob;
-      int d_max_iceMatl_indx;
+      int    d_max_iceMatl_indx;
       Vector d_gravity;
 
-      //__________________________________
-      // needed by printData
-      double d_dbgTime; 
-      double d_dbgStartTime;
-      double d_dbgStopTime;
-      double d_dbgOutputInterval;
-      double d_dbgNextDumpTime;
-      double d_dbgSym_relative_tol;
-      double d_dbgSym_absolute_tol;
-      double d_dbgSym_cutoff_value;
-      
-      bool   d_dbgGnuPlot;
-      bool   d_dbgTime_to_printData;
-      bool   d_dbgSymmetryTest;
-      std::vector<IntVector> d_dbgBeginIndx;
-      std::vector<IntVector> d_dbgEndIndx;
-      IntVector d_dbgSymPlanes;
-      std::vector<int> d_dbgMatls;
-      std::vector<int> d_dbgLevel;
-      int d_dbgSigFigs;
       
       //__________________________________
       // Misc
