@@ -96,8 +96,8 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   
   cout << " abskg:   " << d_abskgLabel->getName() << endl;
   cout << " sigmaT4: " << d_sigmaT4_label->getName() << endl;
-  cout << " divQ:    " <<d_divQLabel->getName() << endl;
-  cout << " cellType:" <<d_cellTypeLabel->getName() << endl;
+  cout << " divQ:    " << d_divQLabel->getName() << endl;
+  cout << " cellType:" << d_cellTypeLabel->getName() << endl;
   cout << " VRFlux:  " << d_VRFluxLabel->getName() << endl;
   cout << " boundFlux: " << d_boundFluxLabel->getName() << endl;
   cout << " radVolQ:   " << d_radiationVolqLabel->getName() << endl;
@@ -108,19 +108,19 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   RMCRT_flags RT_flags;
   RT_flags.modifies_divQ = modifies_divQ;
   
-  RT_flags.virtRad            = _virtRad;
-  RT_flags.solveDivQ          = _solveDivQ;
-  RT_flags.allowReflect       = _allowReflect;
-  RT_flags.solveBoundaryFlux  = _solveBoundaryFlux;
-  RT_flags.CCRays             = _CCRays;
+  RT_flags.virtRad            = d_virtRad;
+  RT_flags.solveDivQ          = d_solveDivQ;
+  RT_flags.allowReflect       = d_allowReflect;
+  RT_flags.solveBoundaryFlux  = d_solveBoundaryFlux;
+  RT_flags.CCRays             = d_CCRays;
   
-  RT_flags.sigma      = _sigma;;    
-  RT_flags.sigmaScat  = _sigmaScat; 
-  RT_flags.threshold  = _Threshold;
+  RT_flags.sigma      = d_sigma;    
+  RT_flags.sigmaScat  = d_sigmaScat; 
+  RT_flags.threshold  = d_threshold;
   
-  RT_flags.nDivQRays = _nDivQRays;   
-  RT_flags.nRadRays  = _nRadRays;    
-  RT_flags.nFluxRays = _nFluxRays;
+  RT_flags.nDivQRays = d_nDivQRays;   
+  RT_flags.nRadRays  = d_nRadRays;    
+  RT_flags.nFluxRays = d_nFluxRays;
   
   double start=clock();  
   
