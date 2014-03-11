@@ -132,7 +132,7 @@
 
 
   <DataArchiver>
-    <filebase>varden-projection-2d-mms_1.uda</filebase>
+    <filebase>varden-projection-2d-oscillating-periodic-mms.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.001"/>
@@ -161,8 +161,8 @@
     <save label="pressure_rhs"/>    
     <save label="f_diffFlux_X"/>
     <save label="f_diffFlux_Y"/>
-    <save label="f_diffFlux_X*"/>
-    <save label="f_diffFlux_Y*"/>    
+    <save label="f*_diffFlux_X"/>
+    <save label="f*_diffFlux_Y"/>    
   </DataArchiver> 
 
   <Grid>
