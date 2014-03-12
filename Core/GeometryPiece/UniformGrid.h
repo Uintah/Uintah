@@ -29,7 +29,6 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Geometry/Ray.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Plane.h>
 #include <vector>
